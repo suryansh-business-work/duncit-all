@@ -52,4 +52,16 @@ describe('LeadTabs', () => {
     expect(screen.getByText('Logs body')).toBeInTheDocument();
     expect(screen.queryByText('Comms body')).not.toBeInTheDocument();
   });
+
+  it('shows the first panel when `defaultValue` names no tab', () => {
+    renderTabs(<LeadTabs tabs={tabs} defaultValue="gone" />);
+    expect(screen.getByTestId('lead-tabpanel-overview')).toHaveTextContent('Overview body');
+  });
+
+  it('renders an empty panel when there are no tabs', () => {
+    renderTabs(<LeadTabs tabs={[]} data-testid="lead-tabs" />);
+    expect(screen.getByTestId('lead-tabs')).toBeInTheDocument();
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+    expect(screen.getByTestId('lead-tabpanel-')).toBeEmptyDOMElement();
+  });
 });

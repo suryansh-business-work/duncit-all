@@ -38,6 +38,9 @@ export function useAccountDeletionSettings(onToast: (message: string) => void) {
     formState: { errors, isSubmitting },
   } = useForm<DeletionSettingsValues, any, DeletionSettingsValues>({
     resolver: zodResolver(deletionSettingsSchema) as unknown as Resolver<DeletionSettingsValues, any, DeletionSettingsValues>,
+    // What the controlled selects show until the server answers — the same
+    // Daily / Sunday the fields used to set themselves.
+    defaultValues: { cron_enabled: false, cron_frequency: 'DAILY', cron_weekday: 0 },
     // `values` rather than `defaultValues`: the card re-seeds from the server
     // whenever the query answers, so a save elsewhere is not overwritten by a
     // form that hydrated once at mount.

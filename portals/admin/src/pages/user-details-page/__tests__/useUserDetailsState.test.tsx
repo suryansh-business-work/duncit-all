@@ -1,15 +1,18 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { ZodError } from 'zod';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { useUserDetailsState } from '../useUserDetailsState';
 import {
   ASSIGN_ROLES,
   DELETE_USER,
+  SET_HOST_CATEGORIES,
   UPDATE_USER,
   USER,
   USER_HOST_PROFILE,
   type EditForm,
 } from '../queries';
+import { userProfileSchema } from '../user-profile.form';
 import { makeWrapper } from './testkit';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
@@ -489,5 +492,221 @@ describe('useUserDetailsState — delete', () => {
     expect(nav.fn).not.toHaveBeenCalled();
     expect(result.current.opError).toBe('User has active pods');
     expect(result.current.busy).toBe(false);
+  });
+});
+
+describe('useUserDetailsState — host categories', () => {
+  const hostCategory = (over: Record<string, unknown> = {}) => ({
+    __typename: 'HostCategory',
+    super_category_id: 'sc-1',
+    category_id: 'c-1',
+    sub_category_id: 'sub-1',
+    super_category_name: 'Sports',
+    category_name: 'Running',
+    sub_category_name: 'Trail',
+    ...over,
+  });
+
+  /** USER plus a host profile, both answerable any number of times. */
+  const hostMocks = (roles: string[], hostByUser: Record<string, unknown>): MockedResponse[] => [
+    {
+      request: { query: USER, variables: { user_id: USER_ID } },
+      result: { data: { user: userDoc({ roles }), roles: rolesDoc } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    },
+    {
+      request: { query: USER_HOST_PROFILE, variables: { user_id: USER_ID } },
+      result: { data: { hostByUser: { __typename: 'Host', id: 'h-1', status: 'APPROVED', ...hostByUser } } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    },
+  ];
+
+  const mountWithProfile = async (mocks: MockedResponse[]) => {
+    const view = await mountHook(mocks);
+    await waitFor(() => expect(view.result.current.hostProfile).not.toBeNull());
+    return view;
+  };
+
+  it('hydrates the stored categories on open, blanking whatever a partial or empty row lacks', async () => {
+    const { result } = await mountWithProfile(
+      hostMocks(['USER', 'HOST'], {
+        host_categories: [
+          hostCategory(),
+          hostCategory({
+            super_category_id: 'sc-2',
+            category_id: null,
+            sub_category_id: null,
+            super_category_name: 'Arts',
+            category_name: null,
+            sub_category_name: null,
+          }),
+          hostCategory({
+            super_category_id: null,
+            category_id: null,
+            sub_category_id: null,
+            super_category_name: null,
+            category_name: null,
+            sub_category_name: null,
+          }),
+        ],
+      }),
+    );
+
+    act(() => result.current.openRoles());
+
+    expect(result.current.hostCategories).toEqual([
+      {
+        super_id: 'sc-1',
+        super_name: 'Sports',
+        category_id: 'c-1',
+        category_name: 'Running',
+        sub_id: 'sub-1',
+        sub_name: 'Trail',
+      },
+      { super_id: 'sc-2', super_name: 'Arts', category_id: '', category_name: '', sub_id: '', sub_name: '' },
+      { super_id: '', super_name: '', category_id: '', category_name: '', sub_id: '', sub_name: '' },
+    ]);
+  });
+
+  it('saves only the complete category rows for a host, then closes and toasts', async () => {
+    const onAssign = vi.fn();
+    const onSetCategories = vi.fn();
+    const { result } = await mountWithProfile([
+      ...hostMocks(['USER', 'HOST'], { host_categories: [hostCategory(), hostCategory({ sub_category_id: null })] }),
+      {
+        request: { query: ASSIGN_ROLES, variables: { user_id: USER_ID, role_keys: ['USER', 'HOST'] } },
+        result: () => {
+          onAssign();
+          return { data: { assignUserRoles: { __typename: 'User', user_id: USER_ID, roles: ['USER', 'HOST'] } } };
+        },
+      },
+      {
+        request: {
+          query: SET_HOST_CATEGORIES,
+          variables: (variables) => {
+            onSetCategories(variables);
+            return true;
+          },
+        },
+        result: { data: { adminSetHostCategories: { __typename: 'Host', id: 'h-1' } } },
+      },
+    ]);
+
+    act(() => result.current.openRoles());
+    await act(async () => {
+      await result.current.saveRoles();
+    });
+
+    expect(onAssign).toHaveBeenCalledTimes(1);
+    expect(onSetCategories).toHaveBeenCalledWith({
+      host_doc_id: 'h-1',
+      categories: [{ super_category_id: 'sc-1', category_id: 'c-1', sub_category_id: 'sub-1' }],
+    });
+    expect(result.current.rolesOpen).toBe(false);
+    expect(setToast).toHaveBeenCalledWith('Roles updated');
+    expect(result.current.opError).toBeNull();
+  });
+
+  it('opens with no categories for a profile that has none and skips saving them without the HOST role', async () => {
+    const onSetCategories = vi.fn();
+    const { result } = await mountWithProfile([
+      ...hostMocks(['USER'], { host_categories: null }),
+      {
+        request: { query: ASSIGN_ROLES, variables: { user_id: USER_ID, role_keys: ['USER'] } },
+        result: { data: { assignUserRoles: { __typename: 'User', user_id: USER_ID, roles: ['USER'] } } },
+      },
+      {
+        request: { query: SET_HOST_CATEGORIES, variables: () => true },
+        result: () => {
+          onSetCategories();
+          return { data: { adminSetHostCategories: { __typename: 'Host', id: 'h-1' } } };
+        },
+      },
+    ]);
+
+    act(() => result.current.openRoles());
+    expect(result.current.hostCategories).toEqual([]);
+
+    await act(async () => {
+      await result.current.saveRoles();
+    });
+
+    expect(onSetCategories).not.toHaveBeenCalled();
+    expect(setToast).toHaveBeenCalledWith('Roles updated');
+  });
+});
+
+describe('useUserDetailsState — edge failures', () => {
+  it('falls back to a generic message when validation fails without any issue', async () => {
+    const parse = vi.spyOn(userProfileSchema, 'parseAsync').mockRejectedValueOnce(new ZodError([]));
+    const { result } = await mountHook(userMocks(1));
+
+    await act(async () => {
+      await result.current.save();
+    });
+
+    expect(result.current.opError).toBe('Invalid profile');
+    expect(setToast).not.toHaveBeenCalled();
+    expect(result.current.busy).toBe(false);
+    parse.mockRestore();
+  });
+
+  it('reports a photo mutation failure without toasting or changing the form', async () => {
+    const { result } = await mountHook([
+      ...userMocks(1),
+      {
+        request: {
+          query: UPDATE_USER,
+          variables: { user_id: USER_ID, input: { profile_photo: 'https://cdn.test/new.jpg' } },
+        },
+        error: new Error('Upload rejected'),
+      },
+    ]);
+
+    await act(async () => {
+      await result.current.updatePhoto('https://cdn.test/new.jpg');
+    });
+
+    expect(result.current.opError).toBe('Upload rejected');
+    expect(result.current.form?.profile_photo).toBe('');
+    expect(setToast).not.toHaveBeenCalled();
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('applies status and photo changes for a user that never loaded, leaving the form empty', async () => {
+    const onUpdate = vi.fn();
+    const missingUser: MockedResponse = {
+      request: { query: USER, variables: { user_id: USER_ID } },
+      result: { data: { user: null, roles: rolesDoc } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    };
+    const noProfile: MockedResponse = {
+      request: { query: USER_HOST_PROFILE, variables: { user_id: USER_ID } },
+      result: { data: { hostByUser: null } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    };
+    const { result } = renderHook(() => useUserDetailsState(USER_ID, setToast), {
+      wrapper: makeWrapper([
+        missingUser,
+        noProfile,
+        updateMock({ status: 'SUSPENDED' }, onUpdate),
+        updateMock({ profile_photo: 'https://cdn.test/riya.jpg' }, onUpdate),
+      ]),
+    });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.user).toBeNull();
+
+    await act(async () => {
+      await result.current.setStatus('SUSPENDED');
+    });
+    await act(async () => {
+      await result.current.updatePhoto('https://cdn.test/riya.jpg');
+    });
+
+    expect(onUpdate).toHaveBeenCalledTimes(2);
+    expect(setToast).toHaveBeenCalledWith('Status set to Blocked');
+    expect(setToast).toHaveBeenCalledWith('Profile photo updated');
+    expect(result.current.form).toBeNull();
+    expect(result.current.opError).toBeNull();
   });
 });

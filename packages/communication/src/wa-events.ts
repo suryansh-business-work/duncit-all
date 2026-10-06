@@ -19,8 +19,9 @@
  *
  * THE TEMPLATE ITSELF IS NEVER HARDCODED HERE. Bodies, arity and approval state
  * come live from AiSensy's Project API; this registry only says which campaign a
- * domain event points at. The server mirrors it (rule 40 — `server/src` imports
- * no `@duncit/*`); change one, change the other.
+ * domain event points at. The server reads a GENERATED copy (rule 40 —
+ * `server/src` imports no `@duncit/*`): after editing, run
+ * `node scripts/generate-wa-events.mjs` and commit both files.
  */
 
 /** Who the message is written for. */
@@ -589,6 +590,22 @@ export const WA_EVENTS: readonly WaEvent[] = [
     category: 'account',
     fires: 'A brand or product deletion request is approved, rejected or carried out',
     params: ['Recipient name', 'Brand or product', 'Status'],
+  },
+  {
+    key: 'USER_REPORT_RECEIVED',
+    campaign: 'user_report_received',
+    audience: 'USER',
+    category: 'account',
+    fires: 'A member reports a post, story or profile — the reporter is told Legal has it',
+    params: ['Recipient name', 'Report reference'],
+  },
+  {
+    key: 'USER_PROFILE_BLOCKED',
+    campaign: 'user_profile_blocked',
+    audience: 'USER',
+    category: 'account',
+    fires: 'A member blocks another account — only the blocker is told, never the blocked member',
+    params: ['Recipient name', 'Blocked account'],
   },
   {
     key: 'STORE_ORDER_SHIPPED',

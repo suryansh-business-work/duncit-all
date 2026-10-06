@@ -372,9 +372,10 @@ each has an obvious home under `packages/` (rule 40):
 | 76 | `app/mweb/src/forms/components/country-codes.ts` ↔ `app/mobile-app/src/forms/components/country-codes.ts` | `@duncit/forms` — framework-free data, the exact shape rule 40 says to share |
 | 75 | `portals/admin/src/components/BankAccountVerificationSection.tsx` ↔ `portals/onboarding/src/components/BankAccountVerificationSection.tsx` | `@duncit/forms` or a finance package |
 
-The 600-line `packages/communication/src/wa-events.ts` ↔
-`server/src/modules/platform/whatsapp/whatsapp.events.ts` pair is **not** on that
-list: `server/src` imports zero `@duncit/*` packages by design (rule 40, "Server
-is the boundary"), so that copy is the architecture rather than an oversight.
-If it is ever paid down it has to be by moving the logic into
-`server/src/utils/*` and having the package read from there, not the reverse.
+The `packages/communication/src/wa-events.ts` ↔ server registry pair (786 lines
+by 2026-10) is **paid down**: `server/src` still imports zero `@duncit/*`
+packages (rule 40), but the server's copy is now
+`whatsapp.events.generated.ts`, written by `node scripts/generate-wa-events.mjs`
+and held to the package by Shared Gates (`--check`). A generated file is not a
+clone (`.jscpd.json` ignores `*.generated.*`), and new scenarios no longer grow
+the baseline.

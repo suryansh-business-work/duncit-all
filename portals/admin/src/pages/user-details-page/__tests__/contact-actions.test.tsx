@@ -15,11 +15,13 @@
  * Opening the native app is a `tel:` or a `mailto:`, built here rather than
  * typed by the person, because the subject has to survive being put in a URL.
  */
-import { fireEvent } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import type { MockedResponse } from '@apollo/client/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithProviders } from './testkit';
 import ContactActionDialog from '../ContactActionDialog';
+import { RECORD_USER_CONTACT_ACTION, START_RECORDED_USER_CALL } from '../queries';
 import {
   buildContactTarget,
   openNativeContact,
@@ -235,5 +237,215 @@ describe('ContactActionDialog', () => {
     if (cancel) fireEvent.click(cancel);
 
     expect(document.body.innerHTML).not.toBe('');
+  });
+});
+
+describe('ContactActionDialog — logging and calling', () => {
+  const CALL_TARGET = '+919000000001';
+
+  const recordMock = (
+    input: Record<string, unknown>,
+    outcome: { error?: Error; delay?: number } = {},
+  ): MockedResponse => ({
+    request: { query: RECORD_USER_CONTACT_ACTION, variables: { input } },
+    ...(outcome.error
+      ? { error: outcome.error }
+      : {
+          result: {
+            data: { recordUserContactAction: { __typename: 'UserContactAction', id: 'ca-9' } },
+          },
+        }),
+    delay: outcome.delay,
+  });
+
+  const startCallMock = (notes: string, error?: Error): MockedResponse => ({
+    request: {
+      query: START_RECORDED_USER_CALL,
+      variables: { input: { user_id: 'u-1', target: CALL_TARGET, notes } },
+    },
+    ...(error
+      ? { error }
+      : {
+          result: {
+            data: {
+              startRecordedUserCall: {
+                __typename: 'UserContactAction',
+                id: 'ca-10',
+                status: 'QUEUED',
+                twilio_call_sid: 'CA123',
+              },
+            },
+          },
+        }),
+  });
+
+  const loggedCall = (notes: string) => ({
+    user_id: 'u-1',
+    type: 'CALL',
+    target: CALL_TARGET,
+    subject: '',
+    notes,
+    status: 'LOGGED',
+    duration_seconds: 0,
+    recording_url: '',
+  });
+
+  const renderDialog = (
+    type: 'CALL' | 'EMAIL',
+    mocks: MockedResponse[] = [],
+    user: Record<string, unknown> = USER,
+  ) => {
+    const onClose = vi.fn();
+    const onSaved = vi.fn();
+    renderWithProviders(
+      <ContactActionDialog open type={type} user={user} onClose={onClose} onSaved={onSaved} />,
+      { mocks },
+    );
+    return { onClose, onSaved };
+  };
+
+  const typeNotes = (notes: string) =>
+    fireEvent.change(screen.getByRole('textbox', { name: 'Notes' }), { target: { value: notes } });
+
+  it('saves the call log with what was typed, then tells the page and closes', async () => {
+    const { onClose, onSaved } = renderDialog('CALL', [
+      recordMock(loggedCall('Called about the refund')),
+    ]);
+
+    expect(screen.getByText('Call User')).toBeInTheDocument();
+    expect(screen.getByText('Meera N')).toBeInTheDocument();
+    typeNotes('Called about the refund');
+    fireEvent.click(screen.getByRole('button', { name: 'Save Log' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the save in flight, refuses a second save and will not be dismissed meanwhile', async () => {
+    const { onClose, onSaved } = renderDialog('CALL', [recordMock(loggedCall(''), { delay: 300 })]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Log' }));
+
+    const saving = await screen.findByRole('button', { name: 'Saving...' });
+    expect(saving).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Start Recorded Call' })).toBeDisabled();
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('can be dismissed with Escape while nothing is being saved', () => {
+    const { onClose } = renderDialog('CALL');
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the dialog open and shows why, when the server refuses the log', async () => {
+    const { onClose, onSaved } = renderDialog('CALL', [
+      recordMock(loggedCall(''), { error: new Error('Contact log service offline') }),
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Log' }));
+
+    expect(await screen.findByText('Contact log service offline')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save Log' })).toBeEnabled();
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a generic reason when the save fails without one', async () => {
+    const { onSaved } = renderDialog('CALL', [recordMock(loggedCall(''), { error: new Error('') })]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Log' }));
+
+    expect(await screen.findByText('Failed to save contact log')).toBeInTheDocument();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing while a field is invalid, and says which', async () => {
+    const { onSaved } = renderDialog('CALL');
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Recording URL' }), {
+      target: { value: 'file:///tmp/call.mp3' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Log' }));
+
+    expect(
+      await screen.findByText('Recording URL must start with http:// or https://'),
+    ).toBeInTheDocument();
+    // No mock is registered: a request would have surfaced as an error alert.
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('starts a recorded call to the number with the notes typed, then closes', async () => {
+    const { onClose, onSaved } = renderDialog('CALL', [startCallMock('Refund follow-up')]);
+
+    typeNotes('Refund follow-up');
+    fireEvent.click(screen.getByRole('button', { name: 'Start Recorded Call' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows why a recorded call could not be started', async () => {
+    const { onSaved } = renderDialog('CALL', [
+      startCallMock('', new Error('Twilio is not configured')),
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start Recorded Call' }));
+
+    expect(await screen.findByText('Twilio is not configured')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start Recorded Call' })).toBeEnabled();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a generic reason when the recorded call fails without one', async () => {
+    renderDialog('CALL', [startCallMock('', new Error(''))]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start Recorded Call' }));
+
+    expect(await screen.findByText('Failed to start recorded call')).toBeInTheDocument();
+  });
+
+  it('opens the dialer on the number for a call', () => {
+    renderDialog('CALL');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Dialer' }));
+
+    expect(opened).toEqual([`tel:${CALL_TARGET}`]);
+  });
+
+  it('opens the mail app with the subject typed for an email, and offers no recorded call', () => {
+    renderDialog('EMAIL');
+
+    expect(screen.getByText('Email User')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start Recorded Call' })).toBeNull();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Subject' }), {
+      target: { value: 'Your refund' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Open Email' }));
+
+    expect(opened).toEqual(['mailto:meera@duncit.com?subject=Your%20refund']);
+  });
+
+  it('names the member by email when there is no full name', () => {
+    renderDialog('EMAIL', [], { ...USER, full_name: '' });
+
+    expect(screen.getByText('meera@duncit.com', { selector: 'p' })).toBeInTheDocument();
+  });
+
+  it('falls back to the member id, and blocks saving and opening, when nothing is on file', () => {
+    renderDialog('EMAIL', [], { user_id: 'u-2' });
+
+    expect(screen.getByText('u-2')).toBeInTheDocument();
+    expect(screen.getByText('No target available for this contact action.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save Log' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Open Email' })).toBeDisabled();
   });
 });

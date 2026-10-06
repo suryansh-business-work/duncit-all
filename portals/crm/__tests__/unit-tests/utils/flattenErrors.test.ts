@@ -45,6 +45,19 @@ describe('flattenErrors', () => {
     expect(result[0].path).toBe('services_offered[0].custom_name');
   });
 
+  it('skips RHF bookkeeping keys on a message-less node and walks its nested root error', () => {
+    const result = flattenErrors({
+      contacts: { type: 'too_small', ref: { name: 'contacts' }, root: { message: 'Add at least one contact', type: 'too_small' } },
+    } as any);
+    expect(result).toEqual([
+      { path: 'contacts.root', label: 'Contacts Root', message: 'Add at least one contact' },
+    ]);
+  });
+
+  it('ignores a message at the tree root, which has no field path to point at', () => {
+    expect(flattenErrors({ message: 'Form is invalid', type: 'custom' } as any)).toEqual([]);
+  });
+
   it('surfaces the super category label', () => {
     const result = flattenErrors({ super_category_id: 'Super category is required' });
     expect(result[0].label).toBe('Super category');

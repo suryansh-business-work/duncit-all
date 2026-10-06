@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router';
 import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
@@ -33,6 +33,7 @@ vi.mock('@duncit/utils', async (importOriginal) => ({
 
 import ShortLinksPage from '../../src/pages/short-links-page/ShortLinksPage';
 import CopyableUrl from '../../src/pages/short-links-page/CopyableUrl';
+import CreateShortLinkDialog from '../../src/pages/short-links-page/CreateShortLinkDialog';
 import { getShortLinkColumns } from '../../src/pages/short-links-page/columns';
 import type {
   CampaignChoice,
@@ -166,6 +167,62 @@ describe('short link columns', () => {
     expect(await screen.findByTestId('cell-is_active')).toHaveTextContent('ActiveActive');
   });
 
+  it('leaves out where a link lands unless asked to show it', () => {
+    expect(cols().map((column) => column.field)).not.toContain('destination_url');
+  });
+
+  // On External Links the destination is the whole point — shown by its host.
+  describe('with the destination shown', () => {
+    const externalCols = () =>
+      getShortLinkColumns(
+        {
+          sources: SOURCES,
+          mediums: MEDIUMS,
+          campaigns: CAMPAIGNS,
+          showDestination: true,
+          onView: vi.fn(),
+          onDelete: vi.fn(),
+        },
+        t,
+      );
+    const destination = () => externalCols().find((column) => column.field === 'destination_url');
+
+    it('adds a Where it lands column straight after the link', () => {
+      const fields = externalCols().map((column) => column.field);
+      expect(fields.indexOf('destination_url')).toBe(fields.indexOf('label') + 1);
+      expect(destination()?.headerName).toBe('Where it lands');
+    });
+
+    it('reads the host of the destination, without its www', () => {
+      const row = makeShortLinkRow({ destination_url: 'https://www.partner.example.com/offer?x=1' });
+      expect(destination()?.valueGetter?.(row)).toBe('partner.example.com');
+    });
+
+    it('keeps a destination that will not parse as it was stored', () => {
+      const row = makeShortLinkRow({ destination_url: 'not a url' });
+      expect(destination()?.valueGetter?.(row)).toBe('not a url');
+    });
+
+    it('renders the host in the cell', async () => {
+      renderWithProviders(
+        <DuncitTable
+          columns={externalCols()}
+          fetchRows={fetchRowsFrom([
+            makeShortLinkRow({ destination_url: 'https://www.partner.example.com/offer' }),
+          ])}
+          getRowId={(row: ShortLinkRow) => row.id}
+        />,
+      );
+      const cell = await screen.findByTestId('cell-destination_url');
+      expect(cell).toHaveTextContent('partner.example.compartner.example.com');
+      expect(cell).not.toHaveTextContent('/offer');
+      // The full address is one hover away.
+      expect(within(cell).getByLabelText('https://www.partner.example.com/offer')).toHaveTextContent(
+        'partner.example.com',
+      );
+    });
+  });
+
   it('opens and deletes a row from its actions', async () => {
     const onView = vi.fn();
     const onDelete = vi.fn();
@@ -176,6 +233,35 @@ describe('short link columns', () => {
     expect(onView).toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Delete link' }));
     expect(onDelete).toHaveBeenCalled();
+  });
+});
+
+// ===========================================================================
+describe('CreateShortLinkDialog', () => {
+  const renderDialog = (external?: boolean) =>
+    renderWithProviders(
+      <CreateShortLinkDialog
+        options={{ sources: SOURCES, mediums: MEDIUMS }}
+        external={external}
+        onClose={vi.fn()}
+        onCreated={vi.fn()}
+      />,
+      { mocks: pageMocks() },
+    );
+
+  it('introduces a duncit.com short link by default', () => {
+    renderDialog();
+    expect(screen.getByText('New short link')).toBeInTheDocument();
+    expect(screen.getByText(/tags its destination for you/)).toBeInTheDocument();
+    expect(screen.queryByText('New external link')).not.toBeInTheDocument();
+  });
+
+  // A link to somebody else's page is a different rule, so it reads differently.
+  it('introduces an external link as a link to somebody else’s page', () => {
+    renderDialog(true);
+    expect(screen.getByText('New external link')).toBeInTheDocument();
+    expect(screen.getByText(/link to somebody else’s page/)).toBeInTheDocument();
+    expect(screen.queryByText('New short link')).not.toBeInTheDocument();
   });
 });
 

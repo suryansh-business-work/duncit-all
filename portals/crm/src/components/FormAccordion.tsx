@@ -40,9 +40,11 @@ export default function FormAccordion({ title, children, defaultExpanded, fieldP
   const { errors, touchedFields, submitCount } = useFormState({ control });
   const [expanded, setExpanded] = useState(!!defaultExpanded);
 
-  // Respond to Expand All / Collapse All from the parent.
+  // Respond to Expand All / Collapse All from the parent. The nonce starts at 0
+  // (or is absent) until the parent presses one: until then each section keeps
+  // its own defaultExpanded instead of every section opening on mount.
   useEffect(() => {
-    if (expandSignal === undefined) return;
+    if (!expandSignal) return;
     setExpanded(!!expandSignalValue);
   }, [expandSignal, expandSignalValue]);
 

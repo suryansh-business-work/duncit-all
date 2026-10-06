@@ -17,6 +17,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { logs } from '@observability/log';
 import { emitNotifyForUsers } from '@modules/engagement/notification/notification.events';
 import { toPublic } from './user.public';
+import { isBlockedEitherWay } from '@modules/access/block/userBlock.model';
 
 /**
  * Tell these users' open inboxes to re-read. Every follow transition changes a
@@ -112,6 +113,11 @@ export const userFollowMethods = {
     );
     if (!target || (target as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    // A block either way shuts the door both ways — the blocked member must not
+    // be able to follow (or ask to follow) back in.
+    if (await isBlockedEitherWay(user_id, targetUserId)) {
+      throw new GraphQLError('You cannot follow this account', { extensions: { code: 'FORBIDDEN' } });
     }
     // A PRIVATE profile is asked, not taken: the edge is only written when the
     // owner accepts, so following must never be a side effect of this call.
@@ -481,10 +487,12 @@ export const userFollowMethods = {
   },
 
   // Can `viewerId` see `ownerId`'s posts/stories/private details? Owner always
-  // can; PUBLIC profiles are open; PRIVATE profiles need a follow edge.
+  // can; a block either way never can; PUBLIC profiles are open; PRIVATE
+  // profiles need a follow edge.
   async canViewContent(ownerId: string, viewerId: string | null) {
     if (!Types.ObjectId.isValid(ownerId)) return false;
     if (viewerId && viewerId === ownerId) return true;
+    if (await isBlockedEitherWay(viewerId, ownerId)) return false;
     const owner = await UserModel.findById(ownerId).select('metadata.profile_visibility');
     if (!owner) return false;
     const visibility = (owner as any).metadata?.profile_visibility ?? 'PUBLIC';

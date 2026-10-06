@@ -145,6 +145,11 @@ describe('getUsersColumns / value getters', () => {
     expect(valueOf('last_login_provider', makeUser({ last_login_provider: 'OTP' }))).toBe('admin.users.phoneOtp');
   });
 
+  it('sorts the Google account column by the linked address and blanks an unlinked one', () => {
+    expect(valueOf('google_email', makeUser({ google_email: 'jane@gmail.com' }))).toBe('jane@gmail.com');
+    expect(valueOf('google_email', makeUser({ google_email: null }))).toBe('');
+  });
+
   it('defaults a missing status to ACTIVE', () => {
     expect(valueOf('status', makeUser({ status: 'SUSPENDED' }))).toBe('SUSPENDED');
     expect(valueOf('status', makeUser({ status: null }))).toBe('ACTIVE');

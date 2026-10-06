@@ -23,4 +23,20 @@ describe('MapEmbed', () => {
     const link = screen.getByRole('link', { name: /open in google maps/i }) as HTMLAnchorElement;
     expect(link.href).toBe('https://goo.gl/maps/abc');
   });
+
+  it('shows the empty state for an empty address string', () => {
+    const { container } = render(<MapEmbed address="" />);
+    expect(screen.getByText(/add an address to preview the map/i)).toBeInTheDocument();
+    expect(container.querySelector('iframe')).toBeNull();
+  });
+
+  it('trims the address and builds a search deeplink when no map_link is set', () => {
+    render(<MapEmbed address="  Indiranagar  " mapLink={null} />);
+    expect(screen.getByTitle('Map of Indiranagar')).toHaveAttribute(
+      'src',
+      'https://www.google.com/maps?q=Indiranagar&output=embed',
+    );
+    const link = screen.getByRole('link', { name: /open in google maps/i }) as HTMLAnchorElement;
+    expect(link.href).toBe('https://www.google.com/maps?q=Indiranagar');
+  });
 });

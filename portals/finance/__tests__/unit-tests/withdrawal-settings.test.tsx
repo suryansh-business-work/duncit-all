@@ -10,6 +10,7 @@ import {
   toFormValues,
   withdrawalMinimumsSchema,
 } from '../../src/pages/finance/withdrawals-page/withdrawal-minimums.schema';
+import { UPDATE_WITHDRAWAL_MINIMUMS } from '../../src/pages/finance/withdrawals-page/queries';
 import { notifySuccess } from './mocks/dialogs';
 import { renderWithProviders } from '../testkit';
 import {
@@ -88,6 +89,32 @@ describe('WithdrawalSettingsPage', () => {
     await waitFor(() => expect(within(card('Host')).getByRole('button', { name: 'Save' })).toBeDisabled());
     expect(amountIn('Club Admin')).toHaveValue('750');
     expect(within(card('Club Admin')).getByRole('button', { name: 'Save' })).toBeEnabled();
+  });
+
+  it('keeps the typed amount as saved when the server echoes nothing back', async () => {
+    const sent: unknown[] = [];
+    renderWithProviders(<WithdrawalSettingsPage />, {
+      mocks: [
+        withdrawalMinimumsMock(),
+        {
+          request: { query: UPDATE_WITHDRAWAL_MINIMUMS, variables: () => true },
+          result: (variables: Record<string, unknown>) => {
+            sent.push(variables);
+            return { data: { updateWithdrawalMinimums: null } };
+          },
+        },
+      ],
+    });
+    await waitFor(() => expect(amountIn('Club Admin')).toHaveValue('500'));
+
+    fireEvent.change(amountIn('Club Admin'), { target: { value: '0750' } });
+    fireEvent.click(within(card('Club Admin')).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Club Admin minimum saved'));
+    // The whole-rupee number went up, and with no echo it becomes the field's clean value.
+    expect(sent).toEqual([{ input: { club_admin: 750 } }]);
+    await waitFor(() => expect(amountIn('Club Admin')).toHaveValue('750'));
+    expect(within(card('Club Admin')).getByRole('button', { name: 'Save' })).toBeDisabled();
   });
 
   it('refuses to save an invalid floor and says why under the field', async () => {

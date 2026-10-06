@@ -209,4 +209,22 @@ describe('logUtils', () => {
     expect(groupLogs(notes, 'week').flatMap(([, day]) => day).map((n) => n.body_text)).toEqual(['today', 'also today', 'last week']);
     expect(groupLogs(notes, 'month').flatMap(([, day]) => day)).toHaveLength(4);
   });
+
+  it('keeps only notes, and with no window sorts undated notes last under the epoch day', () => {
+    const epoch = new Date(0);
+    const epochKey = `${epoch.getFullYear()}-${String(epoch.getMonth() + 1).padStart(2, '0')}-${String(epoch.getDate()).padStart(2, '0')}`;
+    const activities = [
+      note({ body_text: 'undated one' }),
+      note({ body_text: 'dated', created_at: '2026-09-15T11:00:00.000Z' }),
+      note({ body_text: 'undated two' }),
+      note({ type: 'CALL', body_text: 'a call', created_at: '2026-09-15T09:00:00.000Z' }),
+    ];
+
+    const grouped = groupLogs(activities, 'all');
+
+    expect(grouped.map(([day]) => day)).toEqual(['2026-09-15', epochKey]);
+    expect(grouped[0][1].map((n) => n.body_text)).toEqual(['dated']);
+    expect(grouped[1][1].map((n) => n.body_text)).toEqual(['undated one', 'undated two']);
+    expect(groupLogs(activities, 'week').flatMap(([, day]) => day).map((n) => n.body_text)).toEqual(['dated']);
+  });
 });

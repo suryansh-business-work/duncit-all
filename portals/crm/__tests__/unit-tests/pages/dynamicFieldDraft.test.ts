@@ -132,3 +132,41 @@ describe('draftFromRow', () => {
     expect(draft.options).toEqual([{ value: 'lo', label: 'Low' }]);
   });
 });
+
+describe('draftFromRow blanks', () => {
+  it('turns null placeholder, default and hint into empty strings', () => {
+    const draft = draftFromRow({
+      id: 'f2',
+      name: 'region',
+      label: 'Region',
+      kind: 'text',
+      options: [],
+      multi: null,
+      placeholder: null,
+      default_value: null,
+      hint: null,
+      applies_to_venue: false,
+      applies_to_host: true,
+      applies_to_ecomm: true,
+      required: false,
+      sort_order: 0,
+      is_active: true,
+    } as unknown as CrmDynamicField);
+    expect(draft).toMatchObject({ multi: false, placeholder: '', default_value: '', hint: '', applies_to_ecomm: true });
+  });
+});
+
+describe('buildDynamicFieldInput key derivation', () => {
+  it('rejects a new label that has no letters or numbers to derive a key from', () => {
+    const r = buildDynamicFieldInput({ ...blankDraft, label: '%%% !!' }, 0);
+    expect(r).toEqual({ ok: false, error: 'Label must contain letters or numbers.' });
+  });
+
+  it('accepts an ecomm-only field', () => {
+    const r = buildDynamicFieldInput(
+      { ...blankDraft, label: 'SKU count', applies_to_venue: false, applies_to_host: false, applies_to_ecomm: true },
+      0,
+    );
+    expect(r.ok && r.input.name).toBe('sku_count');
+  });
+});

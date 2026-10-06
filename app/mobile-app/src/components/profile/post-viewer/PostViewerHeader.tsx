@@ -128,7 +128,7 @@ export function PostViewerHeader({ post, canDelete, onDelete, onClose }: Readonl
           }}
         />
       ) : null}
-      <ReportContentSheet kind="POST" postId={reporting} onClose={() => setReporting(null)} />
+      <ReportContentSheet kind="POST" targetId={reporting} onClose={() => setReporting(null)} />
     </>
   );
 }

@@ -441,6 +441,11 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.contentReport.footerOwner': "You're receiving this because it concerns content you shared on Duncit.",
   'email.contentReportMessage.help':
     'Reply to this email if you want to tell us more, and quote the report reference so we can find it.',
+  'email.profileBlocked.title': 'You blocked an account',
+  'email.profileBlocked.body':
+    'They can no longer follow you or see your posts and stories, and you will not see theirs. They have not been told.',
+  'email.profileBlocked.help':
+    'Changed your mind? Open their profile, tap the three dots and choose Unblock. If they are harassing you, report the profile too so our Legal team can look into it.',
 
   // --- Security ----------------------------------------------------------------
   'email.recentAccountLogin.title': 'A new sign-in to your account',

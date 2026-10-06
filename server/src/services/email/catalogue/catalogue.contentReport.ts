@@ -121,8 +121,36 @@ const reportStepEmail = (step: ReportStep): EmailDef =>
     },
   });
 
+/**
+ * A member blocked another account. Sent to the BLOCKER only — the blocked
+ * member is never told, which is the point of a block.
+ */
+const PROFILE_BLOCKED_EMAIL: EmailDef = defineEmail({
+  slug: 'profile-blocked',
+  name: 'Profile Blocked',
+  description: 'Confirms to a member that the account they blocked can no longer follow them or see their posts.',
+  audience: 'USER',
+  category: 'legal',
+  fires: 'A member blocks another account from its profile',
+  subject: 'You blocked {{blocked_name}}',
+  footerNote: FOOTER.account,
+  vars: [
+    v('name', 'The first name of the member who made the block.', 'Aarav'),
+    v('blocked_name', 'The name (or @handle) of the account they blocked.', 'Rohan Mehta'),
+  ],
+  body: {
+    copyKey: 'email.profileBlocked',
+    nameVar: 'name',
+    tone: CALM,
+    calloutLabelKey: LABEL.account,
+    calloutVar: 'blocked_name',
+    helpKey: 'email.profileBlocked.help',
+  },
+});
+
 export const CONTENT_REPORT_EMAILS: readonly EmailDef[] = [
   ...REPORT_STEPS.map(reportStepEmail),
+  PROFILE_BLOCKED_EMAIL,
   {
     slug: 'content-report-message',
     name: 'Content Report Message',

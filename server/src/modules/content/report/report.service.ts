@@ -15,6 +15,7 @@ import {
 } from './contentReport.model';
 import { sendContentReportMessage, sendReportNotice, type ReportNotice } from './report.email';
 import { reportCategoryService } from './reportCategory.service';
+import { sendReportReceivedWhatsApp } from './report.whatsapp';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -318,6 +319,11 @@ export const reportService = {
         reason: category.label,
       },
     ]);
+    sendReportReceivedWhatsApp(report.reporter_id, String(report.id), report.report_no ?? '').catch(
+      (error: unknown) => {
+        logs.server.error('report.service', 'whatsapp-failed', { report_no: report.report_no, error });
+      }
+    );
     return { id: String(report.id), report_no: report.report_no ?? '' };
   },
 

@@ -1,7 +1,8 @@
+import { useEffect } from 'react';
 import { describe, expect, it } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import SuperCategoryField from '@/forms/fields/SuperCategoryField';
 import { SUPER_CATEGORIES } from '@/api/crm.gql';
 
@@ -18,21 +19,30 @@ const superCategoriesMock = {
   },
 };
 
-function Harness() {
-  const methods = useForm({ defaultValues: { super_category_id: '' } });
+function ValueProbe() {
+  const value = useWatch({ name: 'super_category_id' }) as string | undefined;
+  return <output data-testid="value">{JSON.stringify(value ?? null)}</output>;
+}
+
+function Harness({ unset = false, error }: Readonly<{ unset?: boolean; error?: string }>) {
+  const methods = useForm<{ super_category_id?: string }>({ defaultValues: unset ? {} : { super_category_id: '' } });
+  useEffect(() => {
+    if (error) methods.setError('super_category_id', { message: error });
+  }, [error, methods]);
   return (
     <FormProvider {...methods}>
       <form>
         <SuperCategoryField name="super_category_id" />
+        <ValueProbe />
       </form>
     </FormProvider>
   );
 }
 
-function renderField(mocks = [superCategoriesMock]) {
+function renderField(mocks = [superCategoriesMock], unset = false, error?: string) {
   return render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
-      <Harness />
+      <Harness unset={unset} error={error} />
     </MockedProvider>
   );
 }
@@ -56,5 +66,25 @@ describe('SuperCategoryField', () => {
     await waitFor(() => {
       expect(screen.getByText(/no super categories yet/i)).toBeInTheDocument();
     });
+  });
+
+  it('renders an unset value as None and writes the picked super category id', async () => {
+    renderField([superCategoriesMock], true);
+    const combo = await screen.findByRole('combobox', { name: /super category/i });
+    expect(screen.getByTestId('value')).toHaveTextContent('null');
+
+    fireEvent.mouseDown(combo);
+    const listbox = screen.getByRole('listbox');
+    expect(within(listbox).getByRole('option', { name: 'None' })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(within(listbox).getByRole('option', { name: 'Music' }));
+
+    expect(screen.getByTestId('value')).toHaveTextContent('"cat-music"');
+    expect(screen.getByRole('combobox', { name: /super category/i })).toHaveTextContent('Music');
+  });
+
+  it('shows the validation error instead of the hint', async () => {
+    renderField([superCategoriesMock], false, 'Pick a super category');
+    expect(await screen.findByText('Pick a super category')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /super category/i })).toHaveAttribute('aria-invalid', 'true');
   });
 });

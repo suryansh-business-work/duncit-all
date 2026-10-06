@@ -82,6 +82,7 @@ export const BULK_DELETE_TARGETS: Readonly<Record<string, BulkDeleteTarget>> = {
   // Website
   jobApplicationsTable: { mutation: 'deleteJobApplication', idArg: 'application_id', roles: WEBSITE },
   websiteNavTable: { mutation: 'deleteWebsiteNavItem', idArg: 'item_id', roles: WEBSITE },
+  websiteReelsTable: { mutation: 'deleteWebsiteReel', idArg: 'reel_id', roles: WEBSITE },
   websiteContentTable: { mutation: 'deleteWebsiteContent', idArg: 'content_id', roles: WEBSITE },
   // Support
   faqsTable: {

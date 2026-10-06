@@ -48,6 +48,10 @@ export const venueTypeDefs = /* GraphQL */ `
   type VenueRegistrationConfig {
     venue_types: [String!]!
     doc_types: [String!]!
+    "The doc_types entry uploaded beside a GSTIN, not from the general list."
+    gstin_doc_type: String!
+    "The doc_types entry uploaded beside a PAN, not from the general list."
+    pan_doc_type: String!
     capacity_item_limit: Int!
     amenities: [String!]!
     facilities: [String!]!

@@ -1,4 +1,5 @@
 import { userService } from '@modules/access/user/user.service';
+import { hasBlocked } from '@modules/access/block/userBlock.model';
 import { USER_SCHEMA_FLAGS } from '@modules/access/user/user.featureFlags';
 import {
   updateMyProfileSchema,
@@ -39,6 +40,8 @@ interface ViewerRelation {
   hasRequested: boolean;
   followsViewer: boolean;
   inboundRequestId: string | null;
+  /** The viewer has blocked this user: nothing past the name and avatar shows. */
+  blocked?: boolean;
 }
 
 const NO_RELATION: ViewerRelation = {
@@ -53,7 +56,7 @@ function toPublicProfile(u: any, viewerId: string | null = null, rel: ViewerRela
   const { isFollowing, hasRequested } = rel;
   const isPrivate = (u.profile_visibility ?? 'PUBLIC') === 'PRIVATE';
   const isOwner = !!viewerId && viewerId === u.user_id;
-  const canView = isOwner || !isPrivate || isFollowing;
+  const canView = !rel.blocked && (isOwner || !isPrivate || isFollowing);
   // A pending request grants nothing — it only changes the button. Following
   // still wins outright so an accepted follow can never read as REQUESTED.
   const requested = !isFollowing && hasRequested;
@@ -179,6 +182,15 @@ export async function mapPublicProfiles(ids: string[], viewerId: string | null) 
 }
 
 export const profileResolvers = {
+  PublicProfile: {
+    // Set by publicUserProfile; anywhere else it is looked up only when a
+    // client actually asks for it, so the follow lists pay nothing for it.
+    blocked_by_viewer: (
+      parent: { user_id: string; blocked_by_viewer?: boolean },
+      _a: unknown,
+      ctx: GraphQLContext
+    ) => parent.blocked_by_viewer ?? hasBlocked(ctx.user?.id ?? null, parent.user_id),
+  },
   Query: {
     me: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       if (!ctx.user) return null;
@@ -208,17 +220,24 @@ export const profileResolvers = {
       const u = await userService.getByHandle(args.user_id).catch(() => null);
       if (!u) return null;
       const viewerId = ctx.user?.id ?? null;
-      const [status, followsViewer, inboundRequestId] = await Promise.all([
+      const [status, followsViewer, inboundRequestId, blocksViewer, blockedByViewer] = await Promise.all([
         userService.followStatus(viewerId, u.user_id),
         viewerId ? userService.isFollowing(u.user_id, viewerId) : false,
         viewerId ? userService.pendingFollowRequestId(u.user_id, viewerId) : null,
+        viewerId ? hasBlocked(u.user_id, viewerId) : false,
+        hasBlocked(viewerId, u.user_id),
       ]);
-      return toPublicProfile(u, viewerId, {
+      // Someone who blocked the viewer reads as an account that is not there —
+      // "you have been blocked" is not something a blocker owes anyone.
+      if (blocksViewer) return null;
+      const profile = toPublicProfile(u, viewerId, {
         isFollowing: status === 'FOLLOWING',
         hasRequested: status === 'REQUESTED',
         followsViewer,
         inboundRequestId,
+        blocked: blockedByViewer,
       });
+      return profile && { ...profile, blocked_by_viewer: blockedByViewer };
     },
     usernameAvailability: async (
       _p: unknown,

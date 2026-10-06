@@ -30,8 +30,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A mobile-only commit used to rebuild mWeb too, and the other way round.
+  # The native app is npm, outside the pnpm workspace, but it links @duncit/*
+  # packages by name — so --extra puts it in the same dependency graph.
+  plan:
+    name: Plan apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      dirs: ${{ steps.plan.outputs.dirs }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Affected apps
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-affected.mjs plan --under app/ --extra app/mobile-app --global .github/workflows/apps-ci.yml
+
   mweb:
     name: mWeb (test → typecheck → lint → build)
+    needs: plan
+    if: contains(fromJSON(needs.plan.outputs.dirs), 'app/mweb')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -73,6 +97,8 @@ jobs:
   mobile:
     # The Expo app is a standalone npm project (NOT a pnpm workspace member).
     name: Mobile App (test → typecheck → lint → build)
+    needs: plan
+    if: contains(fromJSON(needs.plan.outputs.dirs), 'app/mobile-app')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

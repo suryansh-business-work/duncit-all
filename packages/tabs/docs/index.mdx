@@ -32,6 +32,7 @@ exports:
   - 'useTabSearch'
   - 'filterTabItems'
   - 'tabSearchText'
+  - 'TAB_SEARCH_MIN_TABS'
   - 'TAB_SEARCH_DEBOUNCE_MS'
   - 'FilteredTabs'
   - 'TabSearchState'
@@ -103,8 +104,11 @@ ask a server for; a round trip could only tell it what it already knows.
 // On by default in a portal — this strip already has the box:
 <DuncitTabs {...tabs} variant="scrollable" />
 
-// A two-tab segmented control has nothing to search:
-<DuncitTabs {...tabs} variant="fullWidth" searchable={false} />
+// Fewer than five tabs (TAB_SEARCH_MIN_TABS) never get the box — nothing to pass:
+<DuncitTabs {...tabs} variant="fullWidth" />
+
+// A long strip that is still better without one:
+<DuncitTabs {...tabs} searchable={false} />
 
 // A strip whose tabs are not "tabs" to the reader:
 <DuncitTabs {...tabs} searchPlaceholder={t('admin.cities.searchCity')} />
@@ -133,7 +137,7 @@ add `searchable={false}` to a new mWeb strip — it already has none.
 | Prop / field | Type | What it does |
 | --- | --- | --- |
 | `TabSearchDefaultProvider` | `{ searchable: boolean; children }` | Sets what every strip below falls back to when it passes no `searchable`. With no provider above it, a strip is searchable. |
-| `searchable` | `boolean` (default: the surface's — on in portals, off in mWeb) | The box. A strip's own value wins over the provider. `false` renders exactly the strip this package shipped before it existed — no wrapper, no row. |
+| `searchable` | `boolean` (default: the surface's — on in portals, off in mWeb) | The box. A strip's own value wins over the provider, but a strip of fewer than `TAB_SEARCH_MIN_TABS` (5) tabs never shows it, even with `searchable`. `false` renders exactly the strip this package shipped before it existed — no wrapper, no row. |
 | `searchPlaceholder` | `string` | Overrides `tabs.search.placeholder` ("Search tabs"). It is also the field's accessible name, so it must read as a label. |
 | `searchText` (per item) | `string` | What that tab is matched on when its `label` is not a plain string. |
 

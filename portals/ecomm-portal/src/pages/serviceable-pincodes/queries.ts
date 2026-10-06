@@ -1,4 +1,5 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
+import type { AiLocationAreasInput } from '@duncit/gql-types';
 
 /** A pincode the store delivers to; once any exist, only the active ones are served. */
 export interface StoreServiceablePincode {
@@ -43,5 +44,15 @@ export const SAVE_SERVICEABLE_PINCODE = gql`
 export const DELETE_SERVICEABLE_PINCODE = gql`
   mutation StoreDeleteServiceablePincode($id: ID!) {
     storeDeleteServiceablePincode(id: $id)
+  }
+`;
+
+/** The same answer Admin › Locations fills a city's areas from: JSON `{ zones: [{ zone_name, pincode }] }`. */
+export const AI_FILL_LOCATION_AREAS: TypedDocumentNode<
+  { aiFillLocationAreas: string },
+  { input: AiLocationAreasInput }
+> = gql`
+  mutation StoreAiFillPincodeAreas($input: AiLocationAreasInput!) {
+    aiFillLocationAreas(input: $input)
   }
 `;

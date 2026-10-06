@@ -499,6 +499,12 @@ this design: the same provider split, the same categories, the same
 "success is a string" check on AiSensy, in the server's own idioms and errors.
 Same precedent as `@duncit/slack`.
 
+`WA_EVENTS` is the exception that is **data, not logic**, so it is not
+re-implemented: `node scripts/generate-wa-events.mjs` copies `src/wa-events.ts`
+into `server/src/modules/platform/whatsapp/whatsapp.events.generated.ts`, and
+Shared Gates fails a stale copy (`--check`). Edit the registry here, regenerate,
+and commit both files.
+
 On the server the provider is chosen by the Tech portal's active default entry
 — an **EMAIL** entry sends over SMTP, a **RESEND** entry sends over the API —
 so switching vendor is one click and no deploy. Both the transactional service

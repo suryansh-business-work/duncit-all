@@ -21,6 +21,8 @@ const account = { name: 'Owner Name', email: 'owner@example.com' };
 const config: VenueRegistrationConfig = {
   venue_types: ['Cafe', 'Banquet'],
   doc_types: ['PAN Card', 'Trade License'],
+  gstin_doc_type: '',
+  pan_doc_type: '',
   capacity_item_limit: 5,
   amenities: ['AC'],
   facilities: ['Parking'],

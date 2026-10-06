@@ -9,11 +9,15 @@ type FontField = 'mobile_font_family' | 'mweb_font_family' | 'portals_font_famil
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const platforms = (t: Translate): { field: FontField; label: string; hint: string }[] => [
-  { field: 'mobile_font_family', label: t('admin.branding.mobileApp'), hint: 'Native app (Tamagui) text.' },
-  { field: 'mweb_font_family', label: 'mWeb', hint: 'The consumer PWA (MUI theme).' },
-  { field: 'portals_font_family', label: t('admin.branding.portals'), hint: 'All 17 admin consoles (shared shell).' },
-];
+/** The tabs, in order. */
+const FIELDS: readonly FontField[] = ['mobile_font_family', 'mweb_font_family', 'portals_font_family'];
+
+/** Each platform's copy, keyed by its field — a total map, so the selected tab always has one. */
+const platforms = (t: Translate): Record<FontField, { label: string; hint: string }> => ({
+  mobile_font_family: { label: t('admin.branding.mobileApp'), hint: 'Native app (Tamagui) text.' },
+  mweb_font_family: { label: 'mWeb', hint: 'The consumer PWA (MUI theme).' },
+  portals_font_family: { label: t('admin.branding.portals'), hint: 'All 17 admin consoles (shared shell).' },
+});
 
 /** Loads the picked family into the ADMIN page so the preview below renders
  * with the real font. */
@@ -39,12 +43,13 @@ interface Props {
  * Empty = the platform's built-in default (Quicksand). */
 export default function FontsSection({ form, setForm }: Readonly<Props>) {
   const { t } = useTranslation();
-  const list = useMemo(() => platforms(t), [t]);
+  const copy = useMemo(() => platforms(t), [t]);
   const tabs = useTabParam<FontField>({
-    items: list.map((p) => ({ value: p.field, label: p.label })),
+    items: FIELDS.map((field) => ({ value: field, label: copy[field].label })),
     fallback: 'mobile_font_family',
   });
-  const platform = list.find((p) => p.field === tabs.value) ?? list[0];
+  // useTabParam only ever answers one of the items or the fallback — both are fields.
+  const platform = { field: tabs.value, ...copy[tabs.value] };
   const value = form[platform.field];
   useFontPreview(value);
 

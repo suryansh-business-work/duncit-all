@@ -13,13 +13,16 @@
     "./SiteMenu.astro": "./src/SiteMenu.astro",
     "./AppDownload.astro": "./src/AppDownload.astro",
     "./AppPhone.astro": "./src/AppPhone.astro",
+    "./EarnShowcase.astro": "./src/EarnShowcase.astro",
     "./site-i18n": "./src/site-i18n.ts",
     "./SiteMeta.astro": "./src/SiteMeta.astro",
     "./GoogleAnalytics.astro": "./src/GoogleAnalytics.astro",
     "./google-analytics": "./src/google-analytics.ts",
     "./ConsentBanner.astro": "./src/ConsentBanner.astro",
     "./consent-banner": "./src/consent-banner.ts",
-    "./site-meta": "./src/site-meta.ts"
+    "./site-meta": "./src/site-meta.ts",
+    "./ReelSlider.astro": "./src/ReelSlider.astro",
+    "./reel-slider": "./src/reel-slider.ts"
   },
   "files": [
     "src"

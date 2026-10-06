@@ -162,6 +162,9 @@ describe('REGISTRATION_CONFIG', () => {
     expect(fieldsAt(REGISTRATION_CONFIG, 'venueRegistrationConfig')).toEqual([
       'venue_types',
       'doc_types',
+      // The doc types the GST and PAN toggles upload against.
+      'gstin_doc_type',
+      'pan_doc_type',
       'capacity_item_limit',
       'amenities',
       'facilities',

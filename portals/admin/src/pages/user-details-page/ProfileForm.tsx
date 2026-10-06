@@ -34,6 +34,12 @@ export default function ProfileForm({ form, gender, isPetOwner, busy, opError, o
     reset(form);
   }, [form, reset]);
 
+  // Read BOTH flags on every render: formState is a proxy that only tracks what
+  // is read, and `!isDirty || !isValid` short-circuits past isValid while the
+  // form is pristine — so the first edit left Save disabled until a second one.
+  const { isDirty, isValid } = formState;
+  const canSave = isDirty && isValid;
+
   const submit = handleSubmit((values) => onSave(values));
   const setField = (field: keyof EditForm, value: string) =>
     setValue(field, value, { shouldDirty: true, shouldValidate: true });
@@ -58,7 +64,7 @@ export default function ProfileForm({ form, gender, isPetOwner, busy, opError, o
             variant="contained"
             size="small"
             startIcon={<SaveIcon />}
-            loading={busy} disabled={!formState.isDirty || !formState.isValid}
+            loading={busy} disabled={!canSave}
           >
             {busy ? 'Saving…' : 'Save Changes'}
           </DuncitButton>

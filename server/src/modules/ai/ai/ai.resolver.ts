@@ -554,7 +554,10 @@ export const aiResolvers = {
     aiDescribeInventoryProduct: async (_: unknown, args: { input: DescribeProductInput }) => {
       return generateProductDescription(args.input);
     },
-    aiFillLocationAreas: async (_: unknown, args: { input: LocationAreasInput }) => {
+    aiFillLocationAreas: async (_: unknown, args: { input: LocationAreasInput }, ctx: GraphQLContext) => {
+      // Admin › Locations fills a city's areas, and the ecomm console's
+      // Serviceable pincodes form fills one pincode from the same answer.
+      requireRole(ctx, [...ADMIN_ROLES, 'ECOMM_MANAGER']);
       return generateLocationAreas(args.input);
     },
     adminAiChat: async (_: unknown, args: { prompt: string }, ctx: GraphQLContext) => {

@@ -3,6 +3,8 @@ import Layout from '../layouts/Layout.astro';
 import DownloadApps from '../components/DownloadApps.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import ReelSlider from '@duncit/brand/ReelSlider.astro';
+import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 import { partnerLanding } from '../config/landing';
 import { urlConfigs } from '../config/url-configs';
 import { getSiteTranslator } from '@duncit/brand/site-i18n';
@@ -100,8 +102,11 @@ const hostUrl = `${urlConfigs.partnersAppUrl}/become-host`;
       </div>
     </section>
 
+    <EarnShowcase href={urlConfigs.earnwithUrl} t={t} class="rounded-3xl mt-3" />
+
     <DownloadApps />
     <SiteFooter />
+    <ReelSlider graphqlUrl={urlConfigs.graphqlUrl} site="PARTNERS" t={t} />
   </main>
 </Layout>
 

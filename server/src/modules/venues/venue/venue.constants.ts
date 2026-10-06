@@ -12,9 +12,14 @@ export const VENUE_TYPES = [
   'Other',
 ];
 
+/** The document types that prove a venue's GSTIN and PAN — partners upload
+ * them beside the matching number, not from the general document list. */
+export const VENUE_GSTIN_DOC_TYPE = 'GST Certificate';
+export const VENUE_PAN_DOC_TYPE = 'PAN Card';
+
 export const VENUE_DOC_TYPES = [
-  'GST Certificate',
-  'PAN Card',
+  VENUE_GSTIN_DOC_TYPE,
+  VENUE_PAN_DOC_TYPE,
   'Property Document',
   'Trade License',
   'Other',

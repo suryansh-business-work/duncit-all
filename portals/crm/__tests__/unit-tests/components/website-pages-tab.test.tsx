@@ -192,6 +192,25 @@ describe('WebsitePagesTab', () => {
     await waitFor(() => expect(remove).toHaveBeenCalled());
   });
 
+  it('ignores a second Delete click on the closing confirmation instead of deleting again', async () => {
+    const remove = vi.fn(() => ({ data: { crmDeleteWebsitePage: true } }));
+    renderTab([
+      listMock([discovered]),
+      { request: { query: DELETE_CRM_WEBSITE_PAGE, variables: { id: 'pg-1' } }, result: remove },
+    ]);
+    await screen.findByText('1 page saved');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete page' }));
+    fireEvent.click(await screen.findByTestId('confirm-dialog-confirm'));
+    // The page is cleared while the dialog is still fading out; its button is still clickable.
+    expect(await screen.findByText('Remove "" from the saved pages?')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('confirm-dialog-confirm'));
+
+    await waitFor(() => expect(screen.queryByTestId('confirm-dialog-confirm')).toBeNull());
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('reports a failed delete and closes the confirmation', async () => {
     renderTab([
       listMock([discovered]),

@@ -10,9 +10,11 @@ import {
   founderDashboardErrorMock,
   founderDashboardLoadingMock,
   founderDashboardMock,
+  makeFounderDashboard,
   makeFounderMetric,
   saveFounderSettingMock,
 } from '../mocks/startup.mock';
+import { SAVE_FOUNDER_SETTING } from '../../src/pages/finance/startup-dashboard/queries';
 import { dashboardLayoutMock } from '../mocks/dashboard-layout.mock';
 
 describe('Sparkline', () => {
@@ -171,7 +173,56 @@ describe('StartupDashboardPage', () => {
     const settingsBtn = (await screen.findAllByRole('button', { name: /settings for mrr/i }))[0];
     fireEvent.click(settingsBtn);
     fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('saves every edited setting, re-reads the dashboard and closes the drawer', async () => {
+    const saved: { key: string; value: number }[] = [];
+    const saveMock = (key: string, value: number) => ({
+      request: { query: SAVE_FOUNDER_SETTING, variables: { input: { key, value } } },
+      result: () => {
+        saved.push({ key, value });
+        return { data: { saveFounderSetting: { __typename: 'FounderSettingKV', key, value } } };
+      },
+    });
+    renderWithProviders(<StartupDashboardPage />, {
+      mocks: [
+        { ...founderDashboardMock(), maxUsageCount: 1 },
+        founderDashboardMock(
+          makeFounderDashboard({
+            settings: [
+              { __typename: 'FounderSettingKV', key: 'a', value: 7 },
+              { __typename: 'FounderSettingKV', key: 'b', value: 3 },
+            ],
+          }),
+        ),
+        saveMock('a', 7),
+        saveMock('b', 3),
+        dashboardLayoutMock('finance.startup'),
+      ],
+    });
+    await screen.findByText('Founder Overview');
+
+    fireEvent.click(screen.getAllByRole('button', { name: /settings for mrr/i })[0]);
+    const values = () => screen.getAllByRole('spinbutton').map((f) => (f as HTMLInputElement).value);
+    // `a` is saved at 10; `b` was never set, so it starts at 0.
+    await waitFor(() => expect(values()).toEqual(['10', '0']));
+    const [a, b] = screen.getAllByRole('spinbutton');
+    fireEvent.change(a, { target: { value: '7' } });
+    fireEvent.change(b, { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    // Two sequential saves, a refetch and the drawer's exit transition: allow
+    // for a loaded CI runner rather than the 1s default.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), { timeout: 5000 });
+    expect(saved).toEqual([
+      { key: 'a', value: 7 },
+      { key: 'b', value: 3 },
+    ]);
+
+    // Reopening reads the refetched settings, not the ones the page loaded with.
+    fireEvent.click(screen.getAllByRole('button', { name: /settings for mrr/i })[0]);
+    await waitFor(() => expect(values()).toEqual(['7', '3']));
   });
 
   it('opens and closes the info drawer', async () => {

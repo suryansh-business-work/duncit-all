@@ -11,10 +11,36 @@ name: A11Y Report
 on:
   # No `main` here: a PR into main is the staging tip (rule 32), which the push
   # run above already checks on the same commit — listing it ran every job twice.
+  #
+  # Path-filtered: a server-, infra- or docs-only push has no UI to lint. Safe
+  # because both lints cover the WHOLE tree — whichever run fires next checks
+  # everything a skipped commit changed.
   pull_request:
     branches: [master, develop, staging]
+    paths:
+      - 'app/**'
+      - 'portals/**'
+      - 'packages/**'
+      - 'lite/**'
+      - 'eslint.a11y.config.mjs'
+      - 'scripts/a11y-report.mjs'
+      - 'scripts/verify-contrast.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/a11y-report.yml'
   push:
     branches: [staging]
+    paths:
+      - 'app/**'
+      - 'portals/**'
+      - 'packages/**'
+      - 'lite/**'
+      - 'eslint.a11y.config.mjs'
+      - 'scripts/a11y-report.mjs'
+      - 'scripts/verify-contrast.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/a11y-report.yml'
   workflow_dispatch:
 
 concurrency:

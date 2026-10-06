@@ -8,7 +8,7 @@ import { PageHeader } from '@duncit/ui';
 import StoreTable from '../../components/StoreTable';
 import { useRowDelete, useTableRefresh } from '../../components/useTableActions';
 import type { Editing } from '../../components/useListEditor';
-import ServiceablePincodeForm, { type ServiceablePincodeValues } from './serviceable-pincode-form';
+import ServiceablePincodeForm, { toServiceablePincodeInput, type ServiceablePincodeValues } from './serviceable-pincode-form';
 import {
   DELETE_SERVICEABLE_PINCODE,
   SAVE_SERVICEABLE_PINCODE,
@@ -32,7 +32,8 @@ export default function ServiceablePincodesPage() {
   const onDelete = useCallback((row: StoreServiceablePincode) => removeRow(row.id, row.pincode), [removeRow]);
   const columns = useServiceablePincodeColumns({ onEdit: setEditing, onDelete });
 
-  const submit = async (input: ServiceablePincodeValues) => {
+  const submit = async (values: ServiceablePincodeValues) => {
+    const input = toServiceablePincodeInput(values);
     const id = editing && editing !== 'new' ? editing.id : null;
     const saved = await run(() => save({ variables: { id, input } }), t('ecommPortal.common.saved'));
     if (saved) setEditing(null);

@@ -1,8 +1,11 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router';
+import type { MockedResponse } from '@apollo/client/testing';
 import BackoutRefundPage, { BackoutRefundDetailPage } from '../../src/pages/finance/backout-refund-page';
 import RefundBreakupDialog from '../../src/pages/finance/backout-refund-page/RefundBreakupDialog';
+import RefundPartAccordion from '../../src/pages/finance/backout-refund-page/RefundPartAccordion';
+import type { RefundSection } from '../../src/pages/finance/backout-refund-page/refundParts';
 import { notifyError, notifySuccess } from './mocks/dialogs';
 import { resetTableControls, tableControls } from './mocks/table';
 import { renderWithProviders } from '../testkit';
@@ -15,11 +18,23 @@ import {
   makeBackoutDetail,
   makeBackoutRow,
   makeDetailPod,
+  type BackoutRowMock,
   processBackoutRefundMock,
   processBackoutRefundErrorMock,
 } from '../mocks/backout.mock';
 
 const rowFull = makeBackoutRow();
+
+/** The CASH-part mutation answering with `processBackoutRefund` replaced. */
+const processAnswering = (processBackoutRefund: Record<string, unknown> | null): MockedResponse => ({
+  ...processBackoutRefundMock(),
+  result: { data: { processBackoutRefund } },
+});
+
+/** The success mock's processed row, for overriding what the server echoes. */
+const processedRow = () =>
+  (processBackoutRefundMock().result as { data: { processBackoutRefund: Record<string, unknown> } }).data
+    .processBackoutRefund;
 
 beforeEach(() => {
   resetTableControls();
@@ -51,6 +66,48 @@ describe('BackoutRefundPage', () => {
     expect(within(dialog).getAllByText('Razorpay').length).toBeGreaterThan(0);
     fireEvent.click(within(dialog).getByTestId('refund-part-cash-action'));
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Refund processed'));
+  });
+
+  it('keeps the dialog open on the updated row while another part is still pending', async () => {
+    const split: Partial<BackoutRowMock> = { refund_parts: ['CASH', 'COINS'], coins_paid: 40, coins_refunded: 36 };
+    tableControls.rows = [makeBackoutRow({ ...split, pending_refund_parts: ['CASH', 'COINS'] })];
+    renderWithProviders(<BackoutRefundPage />, {
+      path: '/',
+      mocks: [
+        backoutFinanceSettingsMock(),
+        processAnswering({
+          ...processedRow(),
+          ...split,
+          refund_processed_at: null,
+          refund_status: 'PENDING',
+          pending_refund_parts: ['COINS'],
+        }),
+      ],
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: /process refund/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByTestId('refund-part-cash-action'));
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Refund part processed'));
+
+    // The cash box is now done; the coins box still waits on its own action.
+    await waitFor(() => expect(within(dialog).queryByTestId('refund-part-cash-action')).not.toBeInTheDocument());
+    expect(screen.getByRole('dialog')).toBe(dialog);
+    expect(within(dialog).getByTestId('refund-part-coins-action')).toBeEnabled();
+    expect(within(within(dialog).getByTestId('refund-part-coins')).getByText('Pending')).toBeInTheDocument();
+  });
+
+  it('treats an empty mutation answer as the refund being finished', async () => {
+    tableControls.rows = [rowFull];
+    renderWithProviders(<BackoutRefundPage />, {
+      path: '/',
+      mocks: [backoutFinanceSettingsMock(), processAnswering(null)],
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: /process refund/i }));
+    fireEvent.click(await screen.findByTestId('refund-part-cash-action'));
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Refund processed'));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('surfaces a mutation failure inside an error toast', async () => {
@@ -130,6 +187,61 @@ describe('BackoutRefundPage', () => {
     await waitFor(() => expect(screen.getByText('Yoga')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('row-open'));
     expect(screen.getByTestId('detail-probe')).toBeInTheDocument();
+  });
+});
+
+describe('RefundPartAccordion', () => {
+  const section = (over: Partial<RefundSection> = {}): RefundSection => ({
+    part: 'EARN_REVOKE',
+    title: 'Earned coins revoked',
+    summary: '- 18',
+    lines: [
+      { key: 'earn-share', label: 'Coins earned', value: '20' },
+      { key: 'earn-revoke', label: 'Coins to revoke', value: '18', bold: true },
+    ],
+    processedAt: null,
+    blockedReason: null,
+    ...over,
+  });
+
+  it('offers Revoke coins for a pending revocation and passes its part back', () => {
+    const onProcess = vi.fn();
+    renderWithProviders(<RefundPartAccordion section={section()} busy={false} onProcess={onProcess} />);
+    const box = screen.getByTestId('refund-part-earn-revoke');
+    expect(within(box).getByText('Earned coins revoked')).toBeInTheDocument();
+    expect(within(box).getByText('Coins to revoke')).toBeInTheDocument();
+    expect(within(box).getByText('Pending').closest('.MuiChip-root')).toHaveClass('MuiChip-colorWarning');
+    expect(within(box).queryByRole('alert')).not.toBeInTheDocument();
+
+    const action = screen.getByTestId('refund-part-earn-revoke-action');
+    expect(action).toHaveTextContent('Revoke coins');
+    fireEvent.click(action);
+    expect(onProcess).toHaveBeenCalledWith('EARN_REVOKE');
+  });
+
+  it('explains and blocks a pending part that has to wait', () => {
+    renderWithProviders(
+      <RefundPartAccordion
+        section={section({ blockedReason: 'Refund the Duncit Coins first.' })}
+        busy={false}
+        onProcess={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Refund the Duncit Coins first.');
+    expect(screen.getByTestId('refund-part-earn-revoke-action')).toBeDisabled();
+  });
+
+  it('shows a processed part as done, with no action and no blocking note', () => {
+    renderWithProviders(
+      <RefundPartAccordion
+        section={section({ processedAt: '2024-01-04T10:00:00Z', blockedReason: 'stale reason' })}
+        busy={false}
+        onProcess={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/^Processed /).closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('refund-part-earn-revoke-action')).not.toBeInTheDocument();
   });
 });
 

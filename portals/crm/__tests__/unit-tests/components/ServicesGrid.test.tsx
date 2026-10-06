@@ -33,4 +33,25 @@ describe('ServicesGrid', () => {
     render(<ServicesGrid services={[{ service: 'Other', custom_name: '', description: '' }]} />);
     expect(screen.getByText('Other')).toBeInTheDocument();
   });
+
+  it('falls back to "Other" when an Other row has no custom_name at all', () => {
+    render(<ServicesGrid services={[{ service: 'Other', custom_name: null, description: null }]} />);
+    expect(screen.getByText('Other')).toBeInTheDocument();
+    expect(screen.getByText('Custom')).toBeInTheDocument();
+  });
+
+  it('trims catalogue names and renders a blank name when the service is missing', () => {
+    render(
+      <ServicesGrid
+        services={[
+          { service: '  Decor  ', description: 'Flowers' },
+          { service: undefined as unknown as string, description: 'Unnamed service' },
+        ]}
+      />
+    );
+    expect(screen.getByText('Decor')).toBeInTheDocument();
+    const unnamed = screen.getByText('Unnamed service').closest('.MuiCard-root');
+    expect(unnamed?.querySelector('.MuiTypography-subtitle2')?.textContent).toBe('');
+    expect(screen.queryByText('Custom')).toBeNull();
+  });
 });

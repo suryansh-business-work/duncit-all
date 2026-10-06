@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReportCategoryOption } from '@duncit/utils';
 
-import { ReportCategoriesDocument, ReportPostDocument } from '@/graphql/report';
+import {
+  ReportCategoriesDocument,
+  ReportPostDocument,
+  ReportProfileDocument,
+} from '@/graphql/report';
 import { graphqlRequest } from '@/services/graphql.client';
 
 type LoadState = 'loading' | 'ready' | 'failed';
@@ -63,4 +67,13 @@ export async function reportPost(id: string, reason: string, details: string): P
     { id: string; reason: string; details: string }
   >(ReportPostDocument, { id, reason, details }, { auth: true });
   return data.reportPost.report_no;
+}
+
+/** Report a member's profile — same contract and receipt as `reportPost`. */
+export async function reportProfile(id: string, reason: string, details: string): Promise<string> {
+  const data = await graphqlRequest<
+    { reportProfile: { id: string; report_no: string } },
+    { id: string; reason: string; details: string }
+  >(ReportProfileDocument, { id, reason, details }, { auth: true });
+  return data.reportProfile.report_no;
 }

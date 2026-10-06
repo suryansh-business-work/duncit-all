@@ -29,29 +29,52 @@ on:
 
 concurrency:
   group: portals-ci-${{ github.ref }}
+  # Safe to cancel: `plan` diffs against the last GREEN run, so whatever a
+  # cancelled run would have checked is carried into the next one.
+  cancel-in-progress: true
+
 jobs:
-  # Four shards, not one runner per portal. Each portal's real work (typecheck,
-  # lint, build) is about a minute, but every runner also pays a full workspace
-  # install and a wait in the shared runner queue — 28 of them per push is what
-  # kept every other workflow queued. Each shard checks all of its portals and
-  # fails at the end with the list, so one red portal never hides another.
+  # Only the portals a change can reach: the ones whose own files changed since
+  # this workflow last passed on the branch, plus every portal depending on a
+  # changed package (scripts/ci-affected.mjs). A one-portal commit used to
+  # typecheck and build all 28.
+  plan:
+    name: Plan portals
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      any: ${{ steps.plan.outputs.any }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Affected portals
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-affected.mjs plan --under portals/ --shards 4 --global .github/workflows/portals-ci.yml
+
+  # Up to four shards, not one runner per portal. Each portal's real work
+  # (typecheck, lint, build) is about a minute, but every runner also pays a full
+  # workspace install and a wait in the shared runner queue — 28 of them per push
+  # is what kept every other workflow queued. Each shard checks all of its
+  # portals and fails at the end with the list, so one red portal never hides
+  # another.
   portal:
     name: Portals ${{ matrix.shard.name }} (typecheck → lint → build)
+    needs: plan
+    if: needs.plan.outputs.any == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
-        shard:
-          - name: '1/4'
-            dirs: portals/admin portals/finance portals/hr portals/support portals/challenge-portal portals/hosts portals/analytics
-          - name: '2/4'
-            dirs: portals/tech portals/ads-portal portals/legal portals/website-app portals/developers portals/pods portals/ecomm-portal
-          - name: '3/4'
-            dirs: portals/partners-app portals/marketing portals/employee portals/regional-club-admin portals/clubs portals/communications portals/localization
-          - name: '4/4'
-            dirs: portals/crm portals/products portals/onboarding portals/ai portals/venues portals/club-admins portals/logs
+        shard: ${{ fromJSON(needs.plan.outputs.matrix) }}
 
     steps:
       - name: Checkout

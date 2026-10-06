@@ -6,6 +6,7 @@ import { Alert, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
 import { DuncitIconButton } from '@duncit/buttons';
 import ProfileFollowActions from './ProfileFollowActions';
+import ProfileActionsMenu from './ProfileActionsMenu';
 import PublicProfileHeader from './PublicProfileHeader';
 import PublicProfileOwnerActions from './PublicProfileOwnerActions';
 import PublicProfileBadges from './PublicProfileBadges';
@@ -33,6 +34,7 @@ const PUBLIC_PROFILE = gql`
       inbound_request_id
       can_view_content
       is_host
+      blocked_by_viewer
     }
     me {
       user_id
@@ -80,6 +82,9 @@ export default function PublicProfilePage() {
     );
   }
   const isOwner = data?.me?.user_id && data.me.user_id === u.user_id;
+  // Block / Report need a signed-in viewer, and make no sense on your own profile.
+  const canAct = !!data?.me?.user_id && !isOwner;
+  const blocked = Boolean(u.blocked_by_viewer);
 
   return (
     <Stack data-testid="public-profile-page" spacing={3} sx={{ pt: 1, pb: 4 }}>
@@ -95,10 +100,20 @@ export default function PublicProfilePage() {
         <Typography data-testid="public-profile-page-title" component="h2" sx={{ fontSize: 17, fontWeight: 600 }}>
           Profile
         </Typography>
+        {canAct && (
+          <Stack sx={{ ml: 'auto' }}>
+            <ProfileActionsMenu profile={u} onChanged={refetch} />
+          </Stack>
+        )}
       </Stack>
 
       <PublicProfileHeader user={u} viewerId={data?.me?.user_id} />
-      {!isOwner && <ProfileFollowActions profile={u} onChanged={refetch} />}
+      {blocked && (
+        <Alert data-testid="public-profile-blocked" severity="info">
+          {t('contentReport.blockedNotice')}
+        </Alert>
+      )}
+      {!isOwner && !blocked && <ProfileFollowActions profile={u} onChanged={refetch} />}
       {isOwner && <PublicProfileOwnerActions />}
       <PublicProfileBadges userId={u.user_id} />
       <PublicProfilePosts

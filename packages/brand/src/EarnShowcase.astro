@@ -1,0 +1,264 @@
+---
+/**
+ * "Earn with Duncit" — a drifting wall of the people who earn on Duncit, with
+ * one way out: earnwith.duncit.com. Rendered on every site's home page except
+ * earnwith's own.
+ *
+ * The photos are decoration (the words below say what they show), so the wall
+ * is hidden from screen readers and the one link is the CTA. Someone who asked
+ * for less motion gets a still wall.
+ */
+import { siteT, type SiteTranslate } from './site-i18n';
+import { EARN_SHOWCASE_COLUMNS, earnShowcaseImage } from './earn-showcase';
+
+interface Props {
+  /** earnwith.duncit.com for this environment, from the site's URL config. */
+  href: string;
+  /** The site's build-time translator. Omit it and the shipped copy renders. */
+  t?: SiteTranslate;
+  id?: string;
+  class?: string;
+}
+
+const { href, t = siteT, id = 'earn-with-duncit', class: className = '' } = Astro.props;
+const headingId = `${id}-heading`;
+// Each tile's place in the whole wall staggers its float.
+const columns = EARN_SHOWCASE_COLUMNS.map((column, col) => ({
+  ...column,
+  depth: (col % 3) + 1,
+  first: EARN_SHOWCASE_COLUMNS.slice(0, col).reduce((count, prev) => count + prev.photos.length, 0),
+}));
+---
+
+<section id={id} class:list={['earn-showcase', className]} aria-labelledby={headingId} data-earn-showcase>
+  <div class="earn-card">
+    <div class="earn-wall" aria-hidden="true">
+      {columns.map((column) => (
+        <div class="earn-col" style={`--offset:${column.offset};--depth:${column.depth}`}>
+          <span class="earn-ghost" />
+          {column.photos.map((photo, row) => (
+            <span class="earn-tile" style={`--i:${column.first + row}`}>
+              <img
+                src={earnShowcaseImage(photo, 240)}
+                srcset={`${earnShowcaseImage(photo, 240)} 1x, ${earnShowcaseImage(photo, 480)} 2x`}
+                alt=""
+                width="240"
+                height="300"
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+
+    <div class="earn-copy">
+      <span class="earn-eyebrow">{t('website.brand.earnShowcase.eyebrow')}</span>
+      <h2 id={headingId} class="earn-heading">
+        {t('website.brand.earnShowcase.heading')}
+        <span>{t('website.brand.earnShowcase.headingMuted')}</span>
+      </h2>
+      <p class="earn-text">{t('website.brand.earnShowcase.text')}</p>
+      <a class="earn-cta" href={href}>
+        {t('website.brand.earnShowcase.cta')}
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { bindEarnShowcaseParallax } from './earn-showcase-dom';
+
+  document.querySelectorAll<HTMLElement>('[data-earn-showcase]').forEach(bindEarnShowcaseParallax);
+</script>
+
+<style>
+  .earn-showcase {
+    padding: 4rem 1rem;
+    background: var(--color-cream, #faf6f0);
+  }
+  .earn-card {
+    position: relative;
+    overflow: hidden;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding: 0 1rem 3.5rem;
+    border: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+    border-radius: 2rem;
+    background: var(--color-surface, #fff);
+    box-shadow: 0 30px 60px -40px color-mix(in srgb, var(--color-frame, #100e14) 35%, transparent);
+  }
+
+  .earn-wall {
+    --gap: clamp(0.5rem, 1.2vw, 1rem);
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--gap);
+    align-items: start;
+  }
+  .earn-col {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    /* The ghost tile sits one tile height above, half cut off by the card. */
+    margin-top: calc((var(--offset) - 1) * 125%);
+    transform: translateX(calc(var(--earn-px, 0) * var(--depth) * 1px));
+    transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .earn-col::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    height: 6rem;
+    border-left: 1px dashed var(--color-line, rgba(22, 19, 26, 0.12));
+    mask-image: linear-gradient(to bottom, #000, transparent);
+  }
+  .earn-col:nth-child(-n + 2),
+  .earn-col:nth-child(n + 8) {
+    display: none;
+  }
+
+  .earn-ghost,
+  .earn-tile {
+    display: block;
+    aspect-ratio: 4 / 5;
+    border-radius: clamp(0.5rem, 1vw, 0.875rem);
+  }
+  .earn-ghost {
+    background: var(--color-line, rgba(22, 19, 26, 0.06));
+    opacity: 0.6;
+  }
+  .earn-tile {
+    animation: earn-float 7s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.9s);
+  }
+  .earn-tile img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    border: 2px solid var(--color-surface, #fff);
+    box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--color-frame, #100e14) 45%, transparent);
+    transition:
+      transform 350ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 350ms ease;
+  }
+  .earn-tile:hover img {
+    transform: perspective(600px) rotateY(-12deg) scale(1.08);
+    box-shadow: 0 24px 40px -16px color-mix(in srgb, var(--color-frame, #100e14) 55%, transparent);
+  }
+  @keyframes earn-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .earn-copy {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    max-width: 36rem;
+    margin: 2.5rem auto 0;
+    text-align: center;
+  }
+  .earn-eyebrow {
+    padding: 0.375rem 0.875rem;
+    border-radius: 999px;
+    background: var(--color-cream, #faf6f0);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-ink, #16131a);
+  }
+  .earn-heading {
+    margin: 0;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--color-ink, #16131a);
+  }
+  .earn-heading span {
+    display: block;
+    color: var(--color-ink-soft, #4b4651);
+    opacity: 0.75;
+  }
+  .earn-text {
+    margin: 0;
+    max-width: 28rem;
+    font-size: 1rem;
+    color: var(--color-ink-soft, #4b4651);
+  }
+  .earn-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    margin-top: 0.5rem;
+    padding: 0.625rem 1.375rem;
+    border-radius: 999px;
+    background: var(--color-ink, #16131a);
+    font-weight: 700;
+    color: var(--color-cream, #faf6f0);
+    text-decoration: none;
+    transition: transform 200ms ease;
+  }
+  .earn-cta:hover {
+    transform: translateY(-2px) scale(1.03);
+  }
+  .earn-cta:hover i {
+    transform: translateX(3px);
+  }
+  .earn-cta i {
+    transition: transform 200ms ease;
+  }
+  .earn-cta:focus-visible {
+    outline: 3px solid var(--color-primary, #ff5757);
+    outline-offset: 3px;
+  }
+
+  @media (min-width: 640px) {
+    .earn-wall {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+    .earn-col:nth-child(2),
+    .earn-col:nth-child(8) {
+      display: flex;
+    }
+  }
+  @media (min-width: 1024px) {
+    .earn-card {
+      padding-inline: 2rem;
+    }
+    .earn-wall {
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+    }
+    .earn-col:nth-child(1),
+    .earn-col:nth-child(9) {
+      display: flex;
+    }
+    /* The headline rises into the gap the short middle columns leave. */
+    .earn-copy {
+      margin-top: -7.5rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .earn-tile,
+    .earn-tile img,
+    .earn-col {
+      animation: none;
+      transition: none;
+    }
+  }
+</style>

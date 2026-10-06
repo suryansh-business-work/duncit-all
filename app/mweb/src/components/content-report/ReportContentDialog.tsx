@@ -15,20 +15,20 @@ import {
   parseApiError,
   reportReasonNeedsDetails,
   reportSubmitError,
-  REPORT_COPY,
+  REPORT_DIALOG_TITLE,
   type ReportCategoryOption,
-  type ReportableKind,
+  type ReportDialogKind,
 } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { notify } from '../notify';
 import ReportCategoryPicker from './ReportCategoryPicker';
-import { REPORT_CATEGORIES, REPORT_POST } from './queries';
+import { REPORT_CATEGORIES, REPORT_POST, REPORT_PROFILE } from './queries';
 
 interface Props {
-  /** The post or story being reported; null keeps the dialog closed. */
-  postId: string | null;
-  /** Which of the two it is — only the wording differs. */
-  kind: ReportableKind;
+  /** The post, story or member being reported; null keeps the dialog closed. */
+  targetId: string | null;
+  /** What it is — picks the heading, and for a profile the mutation. */
+  kind: ReportDialogKind;
   onClose: () => void;
 }
 
@@ -36,12 +36,18 @@ interface CategoriesData {
   reportCategories: ReportCategoryOption[];
 }
 
-interface ReportPostData {
-  reportPost: { id: string; report_no: string };
+interface ReportReceipt {
+  id: string;
+  report_no: string;
+}
+
+interface ReportData {
+  reportPost?: ReportReceipt;
+  reportProfile?: ReportReceipt;
 }
 
 /**
- * Report a post or a story to the Legal team. Native twin (rule 27).
+ * Report a post, a story or a profile to the Legal team. Native twin (rule 27).
  *
  * Open to ANY signed-in viewer — that is the whole point of it. The reasons
  * are not compiled in: they are the categories Legal manages in the Legal
@@ -49,9 +55,9 @@ interface ReportPostData {
  * report from the same person edits their existing one rather than filing a
  * second, so tapping it twice cannot be used to manufacture a pile-on.
  */
-export default function ReportContentDialog({ postId, kind, onClose }: Readonly<Props>) {
+export default function ReportContentDialog({ targetId, kind, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const open = !!postId;
+  const open = !!targetId;
   const [reason, setReason] = useState('');
   const [details, setDetails] = useState('');
   const [error, setError] = useState('');
@@ -61,15 +67,15 @@ export default function ReportContentDialog({ postId, kind, onClose }: Readonly<
     // category that has since been switched off.
     fetchPolicy: 'cache-and-network',
   });
-  const [report, { loading }] = useMutation<ReportPostData>(REPORT_POST);
+  const [report, { loading }] = useMutation<ReportData>(kind === 'PROFILE' ? REPORT_PROFILE : REPORT_POST);
 
   // Re-seed on every open: one dialog instance serves every post and story.
   useEffect(() => {
-    if (!postId) return;
+    if (!targetId) return;
     setReason('');
     setDetails('');
     setError('');
-  }, [postId]);
+  }, [targetId]);
 
   const options = categories.data?.reportCategories ?? [];
   const picked = options.find((option) => option.key === reason) ?? null;
@@ -82,9 +88,9 @@ export default function ReportContentDialog({ postId, kind, onClose }: Readonly<
       return;
     }
     try {
-      const { data } = await report({ variables: { id: postId, reason, details: details.trim() } });
+      const { data } = await report({ variables: { id: targetId, reason, details: details.trim() } });
       // The reference is the one the acknowledgement email carries.
-      const ref = data?.reportPost.report_no;
+      const ref = (data?.reportPost ?? data?.reportProfile)?.report_no;
       notify(
         ref ? t('contentReport.submittedRef', { vars: { ref } }) : t('contentReport.submitted'),
         'success'
@@ -105,7 +111,7 @@ export default function ReportContentDialog({ postId, kind, onClose }: Readonly<
       aria-labelledby="report-content-title"
     >
       <DialogTitle id="report-content-title" sx={{ fontWeight: 600 }}>
-        {t(REPORT_COPY[kind].title)}
+        {t(REPORT_DIALOG_TITLE[kind])}
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>

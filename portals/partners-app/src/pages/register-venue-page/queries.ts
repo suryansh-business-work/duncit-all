@@ -114,6 +114,8 @@ export const REGISTRATION_CONFIG = gql`
     venueRegistrationConfig {
       venue_types
       doc_types
+      gstin_doc_type
+      pan_doc_type
       capacity_item_limit
       amenities
       facilities

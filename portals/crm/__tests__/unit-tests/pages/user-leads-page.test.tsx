@@ -261,6 +261,21 @@ describe('UserLeadsPage', () => {
     expect(await screen.findByText('Deleted 1 lead.')).toBeTruthy();
   });
 
+  it('words the delete toast in the plural when the server removed no lead', async () => {
+    renderPage([
+      {
+        request: { query: WA_DELETE_USER_LEADS, variables: { ids: ['l1'] } },
+        result: { data: { waDeleteUserLeads: 0 } },
+      },
+    ]);
+    await screen.findByText('Asha Rao');
+
+    fireEvent.click(screen.getByLabelText('Delete lead'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
+
+    expect(await screen.findByText('Deleted 0 leads.')).toBeTruthy();
+  });
+
   it('reports zeros when the import mutation answers without counts', async () => {
     renderPage([
       {

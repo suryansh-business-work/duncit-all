@@ -118,6 +118,9 @@ component that fetched again would double each page's build-time requests for a 
 caller is already holding. So the caller passes the URL, and this package owns only how
 the mark is DRAWN.
 
+The one exception is `ReelSlider`, which reads its reels in the browser at visit time on
+purpose — see its section below.
+
 ## API
 
 ### `BrandLogo.astro`
@@ -265,6 +268,79 @@ unticked, "Reject all" is a first-level button as prominent as "Accept all", and
 withdrawing is as easy as agreeing. The answer is the shared `.duncit.com` cookie from
 `@duncit/utils`, so it covers mWeb and every other subdomain too. Withdrawing analytics also
 deletes GA's `_ga*` cookies.
+
+### `EarnShowcase.astro`
+
+The "Earn with Duncit" section: a wall of portraits — hosts, venue owners, shopkeepers and
+sellers from India, the US, Africa, East Asia, Latin America and Europe — drifting gently,
+with one CTA to earnwith.duncit.com. On every site's home page except earnwith's own.
+
+```astro
+---
+import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
+---
+
+<EarnShowcase href={urlConfigs.earnwithUrl} t={t} />
+```
+
+| Prop | Type | Meaning |
+| --- | --- | --- |
+| `href` | `string` | earnwith for this environment (`PUBLIC_EARNWITH_URL`), never a literal. |
+| `t` | `SiteTranslate` | The site's build-time translator (`website.brand.earnShowcase.*`). |
+| `id` / `class` | `string` | Anchor id (default `earn-with-duncit`) and extra classes for the section. |
+
+The photos live in `earn-showcase.ts` (`EARN_SHOWCASE_COLUMNS`), imported from Pexels onto
+ImageKit under `website/earn-showcase/`; `earnShowcaseImage(url, width)` asks ImageKit for a
+face-cropped 4:5 tile at 1x and 2x. Nine columns on desktop, seven on tablet, five on a
+phone. The wall is decoration (`aria-hidden`), the CTA is the one link, tiles tilt on hover,
+the wall leans toward a fine pointer (`earn-showcase-dom.ts`), and reduced-motion visitors
+get a still wall.
+
+### `ReelSlider.astro` and `reel-slider`
+
+The home-page Reel Slider: a 3D coverflow of the reels the Website portal manages
+(**Website portal > Reel Slider**, one tab per site). Every site mounts it right under its
+footer.
+
+```astro
+---
+import ReelSlider from '@duncit/brand/ReelSlider.astro';
+---
+
+<ReelSlider graphqlUrl={urlConfigs.graphqlUrl} site="MAIN" t={t} />
+```
+
+| Prop | Type | Meaning |
+| --- | --- | --- |
+| `graphqlUrl` | `string` | Where `publicWebsiteReels` is read from. |
+| `site` | `'MAIN' \| 'PARTNERS' \| 'ADS' \| 'EARNWITH'` | Whose reels to show. |
+| `t` | `SiteTranslate` | The site's build-time translator (`website.brand.reels.*`). |
+
+**This is the one component that reads at visit time, not build time.** A reel edit should
+not wait for a deploy, so the bundled script asks `publicWebsiteReels` when the page opens
+(a cached, public query). The section ships `hidden` and stays hidden when a site has no
+reels or the API does not answer.
+
+What it guarantees: every visible reel plays muted and looping; at most ONE reel has sound —
+turning one on mutes the rest, and the sound follows the visitor to the next reel; nothing
+plays while the section is off screen or the tab is hidden; reduced-motion visitors get
+posters until they press play. Reels more than two places from the centre are not loaded at
+all (`preload="none"`, no `src`), so ten reels never means ten downloads.
+
+The limits live in **Website portal > Reel Slider Settings**: max reel size (checked in the
+browser before an upload starts, default 20 MB) and max reels per site (default 10, enforced
+by the server on every write and again on the public read).
+
+| Export (`reel-slider`) | Signature | Notes |
+| --- | --- | --- |
+| `fetchSiteReels` | `(graphqlUrl, site) => Promise<SiteReel[]>` | Never rejects; a failure logs and answers `[]`. |
+| `slideOffset` | `(index, active, total) => number` | Signed distance from centre on a circular track. |
+| `wrapIndex` | `(active, delta, total) => number` | Steps around the circle. |
+| `reelPoster` | `(videoUrl) => string` | ImageKit's `ik-thumbnail.jpg` still for a hosted video. |
+| `reelSliderCopy` / `REEL_SLIDER_KEYS` | `(t) => ReelSliderCopy` | Control labels through the site's translator. |
+
+The slides are built by script, so the component's CSS is `is:global` and every class is
+prefixed `reel-` — Astro's scoped styles never reach a node created at runtime.
 
 ## The wordmark is plain CSS on purpose
 

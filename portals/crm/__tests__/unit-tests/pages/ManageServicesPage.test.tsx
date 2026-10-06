@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { GraphQLError } from 'graphql';
 import { MockedProvider } from '@apollo/client/testing/react';
 import ManageServicesPage from '@/pages/ManageServicesPage';
 import {
@@ -149,5 +150,191 @@ describe('ManageServicesPage', () => {
     expect(await screen.findByRole('heading', { name: /Delete service/i })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /^Delete$/i }));
     await waitFor(() => expect(deleteCalled).toHaveBeenCalled());
+  });
+});
+
+const buttonLabelled = (label: string) =>
+  screen.getAllByLabelText(label).find((el) => el.tagName === 'BUTTON') as HTMLButtonElement;
+
+const updateMock = (input: Record<string, unknown>, result: () => unknown) => ({
+  request: { query: UPDATE_CRM_SERVICE, variables: { id: 'svc-1', input } },
+  result,
+});
+
+describe('ManageServicesPage — editing an existing row', () => {
+  it('opens the inline editor with the row values and locks the other rows', async () => {
+    wrap([listMock()]);
+    await screen.findByText('Catering');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+
+    expect(screen.getByRole('textbox', { name: 'Service name' })).toHaveValue('Catering');
+    expect(screen.getByRole('textbox', { name: 'Order' })).toHaveValue('1');
+    // The other row cannot be edited or deleted while a draft is open.
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
+    screen.getAllByRole('button', { name: 'Delete' }).forEach((btn) => expect(btn).toBeDisabled());
+    expect(screen.getByRole('button', { name: /Add service/i })).toBeDisabled();
+  });
+
+  it('saves the edited name, order and active flag through the update mutation', async () => {
+    const updated = vi.fn(() => ({
+      data: { updateCrmService: { id: 'svc-1', name: 'Buffet', kind: 'VENUE', sort_order: 5, is_active: false } },
+    }));
+    wrap([
+      listMock(),
+      updateMock({ name: 'Buffet', kind: 'VENUE', sort_order: 5, is_active: false }, updated),
+      listMock(),
+      configMock(),
+    ]);
+    await screen.findByText('Catering');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Service name' }), { target: { value: '  Buffet ' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Order' }), { target: { value: '5' } });
+    const activeSwitch = screen.getByRole('switch', { name: 'Active: Catering' });
+    // While editing, the switch only changes the draft — no mutation fires yet.
+    fireEvent.click(activeSwitch);
+    expect(activeSwitch).not.toBeChecked();
+    expect(updated).not.toHaveBeenCalled();
+
+    fireEvent.click(buttonLabelled('Save'));
+    await waitFor(() => expect(updated).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Service name' })).toBeNull());
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('falls back to order 0 when the order field is not a number', async () => {
+    const updated = vi.fn(() => ({
+      data: { updateCrmService: { id: 'svc-1', name: 'Catering', kind: 'VENUE', sort_order: 0, is_active: true } },
+    }));
+    wrap([
+      listMock(),
+      updateMock({ name: 'Catering', kind: 'VENUE', sort_order: 0, is_active: true }, updated),
+      listMock(),
+      configMock(),
+    ]);
+    await screen.findByText('Catering');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Order' }), { target: { value: 'first' } });
+    fireEvent.click(buttonLabelled('Save'));
+    await waitFor(() => expect(updated).toHaveBeenCalledTimes(1));
+  });
+
+  it('keeps the editor open and shows the server error when the save is rejected', async () => {
+    wrap([
+      listMock(),
+      {
+        request: {
+          query: UPDATE_CRM_SERVICE,
+          variables: { id: 'svc-1', input: { name: 'Photography', kind: 'VENUE', sort_order: 1, is_active: true } },
+        },
+        result: { errors: [new GraphQLError('A service with that name already exists')] },
+      },
+    ]);
+    await screen.findByText('Catering');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Service name' }), { target: { value: 'Photography' } });
+    fireEvent.click(buttonLabelled('Save'));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('A service with that name already exists');
+    expect(screen.getByRole('textbox', { name: 'Service name' })).toHaveValue('Photography');
+
+    fireEvent.click(within(alert).getByRole('button', { name: /close/i }));
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+  });
+
+  it('discards the edit on cancel and restores the read-only row', async () => {
+    wrap([listMock()]);
+    await screen.findByText('Catering');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Service name' }), { target: { value: 'Changed' } });
+    fireEvent.click(buttonLabelled('Cancel'));
+
+    expect(screen.queryByRole('textbox', { name: 'Service name' })).toBeNull();
+    expect(screen.getByText('Catering')).toBeInTheDocument();
+    expect(screen.queryByText('Changed')).toBeNull();
+  });
+});
+
+describe('ManageServicesPage — empty catalogue', () => {
+  it('invites the first service and starts its draft at order 0', async () => {
+    wrap([
+      {
+        request: { query: CRM_SERVICES, variables: { kind: 'VENUE', include_inactive: true } },
+        result: { data: { crmServices: [] } },
+      },
+    ]);
+    expect(await screen.findByText(/No services yet/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Add service/i }));
+
+    expect(screen.queryByText(/No services yet/)).toBeNull();
+    expect(screen.getByDisplayValue('0')).toBeInTheDocument();
+  });
+});
+
+describe('ManageServicesPage — failures outside the editor', () => {
+  it('reports a rejected active toggle', async () => {
+    wrap([
+      listMock(),
+      {
+        request: {
+          query: UPDATE_CRM_SERVICE,
+          variables: { id: 'svc-2', input: { name: 'Photography', kind: 'VENUE', sort_order: 2, is_active: true } },
+        },
+        result: { errors: [new GraphQLError('Not allowed to reactivate')] },
+      },
+    ]);
+    await screen.findByText('Photography');
+    fireEvent.click(screen.getByRole('switch', { name: 'Active: Photography' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Not allowed to reactivate');
+  });
+
+  it('closes the confirm dialog and reports a rejected delete', async () => {
+    wrap([
+      listMock(),
+      {
+        request: { query: DELETE_CRM_SERVICE, variables: { id: 'svc-1' } },
+        result: { errors: [new GraphQLError('Service is used by 3 leads')] },
+      },
+    ]);
+    await screen.findByText('Catering');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Delete$/i }));
+
+    expect(await screen.findByText('Service is used by 3 leads')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByText('Catering')).toBeInTheDocument();
+  });
+
+  it('ignores a second confirm clicked while the dialog is closing', async () => {
+    const deleteCalled = vi.fn(() => ({ data: { deleteCrmService: true } }));
+    wrap([
+      listMock(),
+      { request: { query: DELETE_CRM_SERVICE, variables: { id: 'svc-1' } }, result: deleteCalled },
+      listMock(),
+      configMock(),
+    ]);
+    await screen.findByText('Catering');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
+    const confirm = within(await screen.findByRole('dialog')).getByRole('button', { name: /^Delete$/i });
+    fireEvent.click(confirm);
+    await waitFor(() => expect(deleteCalled).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(confirm).not.toBeDisabled());
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(deleteCalled).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('closes the confirm dialog without deleting on cancel', async () => {
+    wrap([listMock()]);
+    await screen.findByText('Catering');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('Delete "Catering"?');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

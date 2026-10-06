@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import type { MockedResponse } from '@apollo/client/testing';
 import { logs } from '@duncit/logs';
 import { ExtractionProvider, ExtractionWidget, useExtraction } from '@/pages/tools/whatsapp/extraction';
-import { WA_CANCEL_EXTRACTION, WA_EXTRACTION, type WaExtraction } from '@/pages/tools/whatsapp/whatsappQueries';
+import { WA_CANCEL_EXTRACTION, WA_EXTRACTION, WA_START_EXTRACTION, type WaExtraction } from '@/pages/tools/whatsapp/whatsappQueries';
 import { clearToken, setToken } from '@/lib/session';
 import { renderWithApollo } from '../helpers/renderWithApollo';
 import { extractionJob } from './fixtures';
@@ -22,6 +22,22 @@ function DoneListener({ onFinish }: Readonly<{ onFinish: () => void }>) {
     setOnDone(() => onFinish);
   }, [setOnDone, onFinish]);
   return null;
+}
+
+/** Drives the context the way the WhatsApp browser does, and prints what it exposes. */
+function Controls({ onSettled }: Readonly<{ onSettled: (action: string) => void }>) {
+  const { job, open, start, cancel } = useExtraction();
+  return (
+    <div>
+      <output data-testid="extraction-state">{`${job?.status ?? 'none'}|${open ? 'open' : 'closed'}`}</output>
+      <button type="button" onClick={() => start().then(() => onSettled('start'))}>
+        start
+      </button>
+      <button type="button" onClick={() => cancel().then(() => onSettled('cancel'))}>
+        cancel
+      </button>
+    </div>
+  );
 }
 
 /** Reads the hook with no provider above it. */
@@ -163,6 +179,63 @@ describe('ExtractionWidget', () => {
 });
 
 describe('useExtraction', () => {
+  const renderControls = (mocks: MockedResponse[], onSettled: (action: string) => void) =>
+    renderWithApollo(
+      <ExtractionProvider>
+        <Controls onSettled={onSettled} />
+      </ExtractionProvider>,
+      mocks,
+    );
+
+  it('starts a job by opening the widget, then refreshes the job and cancels it', async () => {
+    const onSettled = vi.fn();
+    const running = extractionJob({ status: 'RUNNING', total: 10, processed: 1 });
+    const cancelled = extractionJob({ status: 'CANCELLED', total: 10, processed: 1 });
+    const startCalled = vi.fn(() => ({ data: { waStartExtraction: running } }));
+    const cancelCalled = vi.fn(() => ({ data: { waCancelExtraction: cancelled } }));
+    renderControls(
+      [
+        jobMock(null),
+        { request: { query: WA_START_EXTRACTION }, result: startCalled },
+        jobMock(running),
+        { request: { query: WA_CANCEL_EXTRACTION }, result: cancelCalled },
+        jobMock(cancelled, 5),
+      ],
+      onSettled,
+    );
+    const state = screen.getByTestId('extraction-state');
+    await waitFor(() => expect(state).toHaveTextContent('none|closed'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'start' }));
+    expect(state).toHaveTextContent('none|open');
+    await waitFor(() => expect(onSettled).toHaveBeenCalledWith('start'));
+    expect(startCalled).toHaveBeenCalledTimes(1);
+    expect(state).toHaveTextContent('RUNNING|open');
+
+    fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+    await waitFor(() => expect(onSettled).toHaveBeenCalledWith('cancel'));
+    expect(cancelCalled).toHaveBeenCalledTimes(1);
+    expect(state).toHaveTextContent('CANCELLED|open');
+  });
+
+  it('still refreshes the job when the server refuses to start one', async () => {
+    const onSettled = vi.fn();
+    renderControls(
+      [
+        jobMock(null),
+        { request: { query: WA_START_EXTRACTION }, error: new Error('Session not connected') },
+        jobMock(extractionJob({ status: 'FAILED', error: 'Session not connected' }), 5),
+      ],
+      onSettled,
+    );
+    const state = screen.getByTestId('extraction-state');
+    await waitFor(() => expect(state).toHaveTextContent('none|closed'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'start' }));
+    await waitFor(() => expect(onSettled).toHaveBeenCalledWith('start'));
+    expect(state).toHaveTextContent('FAILED|open');
+  });
+
   it('refuses to run outside its provider', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() => render(<Orphan />)).toThrow('useExtraction must be used within an ExtractionProvider');

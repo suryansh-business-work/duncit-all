@@ -94,7 +94,7 @@ export function PublicProfileStories({
         onClose={() => setOpenIndex(null)}
         onReport={canReport ? setReporting : undefined}
       />
-      <ReportContentSheet kind="STORY" postId={reporting} onClose={() => setReporting(null)} />
+      <ReportContentSheet kind="STORY" targetId={reporting} onClose={() => setReporting(null)} />
     </>
   );
 }

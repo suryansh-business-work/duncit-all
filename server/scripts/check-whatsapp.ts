@@ -4,11 +4,13 @@
  *
  * Three things have to line up, and none of them is visible to `tsc`:
  *
- *  1. THE MIRROR. `whatsapp.events.ts` is a hand-kept copy of
+ *  1. THE MIRROR. `whatsapp.events.generated.ts` is a generated copy of
  *     `@duncit/communication`'s `wa-events.ts` — the server imports no
  *     `@duncit/*` package (rule 40), so the registry exists twice. A campaign
  *     renamed on one side and not the other sends to a campaign AiSensy does
- *     not have, and the console labels it from the other copy.
+ *     not have, and the console labels it from the other copy. Shared Gates
+ *     also fails a stale copy (`generate-wa-events.mjs --check`); this compares
+ *     the loaded values, which still holds if the copy is ever edited by hand.
  *
  *  2. THE ARITY. A send fills `params` positionally. Too few and AiSensy
  *     refuses the message outright ("Template param count mismatch!"); where it
@@ -33,7 +35,7 @@ import { EMAIL_BY_WA_EVENT } from '@services/email/catalogue';
 const REPO = path.resolve(__dirname, '..', '..');
 const SERVER_SRC = path.join(REPO, 'server', 'src');
 const MIRROR = path.join(REPO, 'packages', 'communication', 'src', 'wa-events.ts');
-const REGISTRY_FILE = path.join(SERVER_SRC, 'modules', 'platform', 'whatsapp', 'whatsapp.events.ts');
+const REGISTRY_FILE = path.join(SERVER_SRC, 'modules', 'platform', 'whatsapp', 'whatsapp.events.generated.ts');
 const CATALOGUE_DIR = path.join(SERVER_SRC, 'services', 'email', 'catalogue');
 
 const problems: string[] = [];

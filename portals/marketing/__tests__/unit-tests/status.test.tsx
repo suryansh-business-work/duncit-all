@@ -47,6 +47,9 @@ vi.mock('@duncit/media-picker', async (importOriginal) => {
           <button type="button" onClick={() => onPicked('https://cdn.duncit.com/status/pick.mp4')}>
             pick-video
           </button>
+          <button type="button" onClick={() => onPicked('data:image/png;base64,AAAA')}>
+            pick-inline
+          </button>
           <button type="button" onClick={onClose}>
             close-picker
           </button>
@@ -264,6 +267,27 @@ describe('StatusPage', () => {
 
     await waitFor(() => expect(screen.queryByText('pick-image')).not.toBeInTheDocument());
     expect(screen.getByTestId('status-media-pick')).toHaveTextContent('Choose image or video');
+  });
+
+  it('swaps the size hint for the error when the picked media is not an uploaded link', async () => {
+    renderPage();
+    fireEvent.click(await screen.findByTestId('status-new'));
+    expect(screen.getByText(/^Image up to \d+ MB, video up to \d+ MB$/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'Diwali sale is live' } });
+    fireEvent.click(screen.getByTestId('status-media-pick'));
+    fireEvent.click(await screen.findByText('pick-inline'));
+
+    expect(await screen.findByText('The media has to be an uploaded http(s) link')).toBeInTheDocument();
+    expect(screen.queryByText(/^Image up to/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('form-actions-row-submit')).toBeDisabled();
+
+    await pickImage();
+    await waitFor(() =>
+      expect(screen.queryByText('The media has to be an uploaded http(s) link')).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText(/^Image up to \d+ MB, video up to \d+ MB$/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('form-actions-row-submit')).toBeEnabled());
   });
 
   it('reveals the city select for a LOCATION scope, flags an emptied pick, and accepts one', async () => {

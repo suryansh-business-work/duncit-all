@@ -30,6 +30,10 @@ const siteUrl =
   import.meta.env.PUBLIC_ADS_SITE_URL ||
   (isDevelopment ? 'http://localhost:2020' : 'https://ads.duncit.com');
 
+const earnwithUrl =
+  import.meta.env.PUBLIC_EARNWITH_URL ||
+  (isDevelopment ? 'http://localhost:2025' : 'https://earnwith.duncit.com');
+
 export interface Feature {
   icon: string;
   title: string;
@@ -48,7 +52,7 @@ export interface WhyItem {
 }
 
 /** Everything that is not copy: the environment, and where each link goes. */
-export const siteUrls = { isDevelopment, portalUrl, graphqlUrl, mainSiteUrl, siteUrl };
+export const siteUrls = { isDevelopment, portalUrl, graphqlUrl, mainSiteUrl, siteUrl, earnwithUrl };
 
 const build = (t: SiteTranslate) => ({
   ...siteUrls,

@@ -121,12 +121,32 @@ jobs:
           - { name: websites, filters: './website/**' }
     steps:
       - uses: actions/checkout@v5
+      # REUSE, don't re-run. The key is the git tree of the group's workspaces,
+      # every @duncit/* package they reach, the root config and this pipeline
+      # (scripts/ci-affected.mjs hash). Same key ⇒ byte-identical code ⇒ the same
+      # lcov and the same test log, so a push that only touched the CRM no longer
+      # re-runs the other twelve groups (~25 minutes for packages alone). Saved
+      # only after the ratchet passes, so a red result is never replayed.
+      - name: Coverage key
+        id: key
+        run: echo "hash=$(node scripts/ci-affected.mjs hash ${{ matrix.group.filters }} scripts/ci-coverage-run.sh .github/workflows/sonar.yml)" >> "$GITHUB_OUTPUT"
+      - name: Reuse coverage of unchanged code
+        id: reuse
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            lcov-out
+            test-logs
+          key: coverage-${{ matrix.group.name }}-${{ steps.key.outputs.hash }}
       - uses: pnpm/action-setup@v4.4.0
+        if: steps.reuse.outputs.cache-hit != 'true'
       - uses: actions/setup-node@v5
+        if: steps.reuse.outputs.cache-hit != 'true'
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+        if: steps.reuse.outputs.cache-hit != 'true'
       # A workspace whose OWN threshold is unmet must not veto the scan:
       # challenge-portal's 100%-line target needs its Cypress e2e coverage merged
       # in, which does not happen here. The lcov is written either way, and the
@@ -138,6 +158,7 @@ jobs:
       # coverage.yml needs the identical behaviour, and two copies of "how a
       # workspace's coverage is produced" is exactly the drift rule 34 forbids.
       - name: Run coverage
+        if: steps.reuse.outputs.cache-hit != 'true'
         continue-on-error: true
         run: bash scripts/ci-coverage-run.sh ${{ matrix.group.name }} ${{ matrix.group.filters }}
       - name: Upload test logs
@@ -148,6 +169,7 @@ jobs:
           path: test-logs
           if-no-files-found: warn
       - name: Collect lcov
+        if: steps.reuse.outputs.cache-hit != 'true'
         run: |
           mkdir -p lcov-out
           find . -name 'lcov.info' -not -path '*/node_modules/*' -print0 |
@@ -170,6 +192,14 @@ jobs:
       # scripts/test-failure-baseline.json — see the script for why.
       - name: Test failure ratchet
         run: node scripts/verify-test-baseline.mjs test-logs
+      - name: Save coverage for the next unchanged run
+        if: steps.reuse.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            lcov-out
+            test-logs
+          key: coverage-${{ matrix.group.name }}-${{ steps.key.outputs.hash }}
 
   coverage-mobile:
     name: Coverage — mobile app
@@ -179,7 +209,21 @@ jobs:
     if: ${{ !inputs.skip_coverage }}
     steps:
       - uses: actions/checkout@v5
+      # Same reuse as the workspace groups. The app links @duncit/* packages and
+      # its codegen reads the server's schema, so both trees are in the key.
+      - name: Coverage key
+        id: key
+        run: echo "hash=$(node scripts/ci-affected.mjs hash app/mobile-app packages server .github/workflows/sonar.yml)" >> "$GITHUB_OUTPUT"
+      - name: Reuse coverage of unchanged code
+        id: reuse
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            app/mobile-app/coverage/lcov.info
+            app/mobile-app/jest-coverage.log
+          key: coverage-mobile-${{ steps.key.outputs.hash }}
       - uses: actions/setup-node@v5
+        if: steps.reuse.outputs.cache-hit != 'true'
         with:
           node-version: 24
           cache: npm
@@ -195,6 +239,7 @@ jobs:
       # prints what was actually produced — a partial report must never again be
       # indistinguishable from a complete one.
       - name: Run coverage
+        if: steps.reuse.outputs.cache-hit != 'true'
         continue-on-error: true
         working-directory: app/mobile-app
         env:
@@ -246,6 +291,16 @@ jobs:
       # LAST, for the same reason as the workspace jobs' ratchet step.
       - name: Test failure ratchet
         run: node scripts/verify-test-baseline.mjs mobile-app=app/mobile-app/jest-coverage.log
+      # Nothing to replay when jest died before writing its report — and saving
+      # a missing path would fail the job.
+      - name: Save coverage for the next unchanged run
+        if: steps.reuse.outputs.cache-hit != 'true' && hashFiles('app/mobile-app/coverage/lcov.info') != ''
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            app/mobile-app/coverage/lcov.info
+            app/mobile-app/jest-coverage.log
+          key: coverage-mobile-${{ steps.key.outputs.hash }}
 
   # ---------------------------------------------------------------------------
   # The scan itself. Needs the full history (fetch-depth: 0) for accurate

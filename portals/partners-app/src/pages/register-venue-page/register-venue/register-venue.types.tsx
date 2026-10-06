@@ -81,11 +81,25 @@ export type RegisterVenueMode = 'register' | 'edit-approved' | 'view';
 export interface VenueRegistrationConfig {
   venue_types: string[];
   doc_types: string[];
+  /** The doc_types entries uploaded beside the GSTIN / PAN toggles, never from the general list. */
+  gstin_doc_type: string;
+  pan_doc_type: string;
   capacity_item_limit: number;
   amenities: string[];
   facilities: string[];
   security: string[];
 }
+
+/** The optional tax-id switches. */
+export type TaxToggle = 'has_gstin' | 'has_pan';
+
+/** The document type each tax-id switch asks for while it is on ('' = none). */
+export type TaxDocTypes = Readonly<Record<TaxToggle, string>>;
+
+export const taxDocTypesOf = (config: VenueRegistrationConfig): TaxDocTypes => ({
+  has_gstin: config.gstin_doc_type,
+  has_pan: config.pan_doc_type,
+});
 
 export const blankRegisterVenueValues: RegisterVenueValues = {
   venue_name: '',

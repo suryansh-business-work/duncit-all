@@ -92,7 +92,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
         onClose={closePost}
         onDeleted={onPostDeleted}
       />
-      <ReportContentDialog kind="POST" postId={reportPostId} onClose={() => setReportPostId(null)} />
+      <ReportContentDialog kind="POST" targetId={reportPostId} onClose={() => setReportPostId(null)} />
     </Stack>
   );
 }

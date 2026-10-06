@@ -1,10 +1,10 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 
 /**
  * A lightweight stand-in for `@duncit/table`. It renders each column's
  * `headerName`, runs every `valueGetter` AND `cellRenderer` against the fetched
  * rows (so those functions are exercised for real), and wires
- * `emptyText`/`getRowId`/`refetchRef`/`toolbarActions`. Rows come from
+ * `emptyText`/`getRowId`/`getRowStyle`/`refetchRef`/`toolbarActions`. Rows come from
  * `fetchRows`, exactly as the real grid would call it.
  *
  * The real package renders through AG Grid, which needs a layout engine jsdom
@@ -22,6 +22,7 @@ interface MockTableProps {
   columns: MockColumn[];
   fetchRows: (q: unknown) => Promise<{ rows: unknown[]; total: number }>;
   getRowId: (row: never) => string;
+  getRowStyle?: (row: never) => CSSProperties | undefined;
   emptyText?: string;
   toolbarActions?: ReactNode;
   defaultSort?: { field: string; dir: string };
@@ -31,7 +32,7 @@ interface MockTableProps {
 }
 
 export function DuncitTable(props: Readonly<MockTableProps>) {
-  const { columns, fetchRows, getRowId, emptyText, toolbarActions, defaultSort, refetchRef } = props;
+  const { columns, fetchRows, getRowId, getRowStyle, emptyText, toolbarActions, defaultSort, refetchRef } = props;
   const [rows, setRows] = useState<unknown[]>([]);
 
   const load = () => {
@@ -66,7 +67,7 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
       </div>
       {rows.length === 0 && <div data-testid="table-empty">{emptyText}</div>}
       {rows.map((row) => (
-        <div key={getRowId(row as never)} data-testid="table-row">
+        <div key={getRowId(row as never)} data-testid="table-row" style={getRowStyle?.(row as never)}>
           {columns.map((c) => (
             <span key={c.field} data-testid={`cell-${c.field}`}>
               {c.valueGetter ? <span data-testid={`value-${c.field}`}>{String(c.valueGetter(row as never) ?? '')}</span> : null}

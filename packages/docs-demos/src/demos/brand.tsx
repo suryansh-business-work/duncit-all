@@ -25,6 +25,16 @@ export default defineDemos('brand', [
         { name: 'AppDownload.astro', renders: 'The store badges, pointed at the live listings.' },
         { name: 'AppPhone.astro', renders: 'The phone mockup used on landing hero sections.' },
         {
+          name: 'EarnShowcase.astro',
+          renders:
+            'The "Earn with Duncit" drifting photo wall on every home page except earnwith\'s own; its one CTA goes to earnwith.duncit.com.',
+        },
+        {
+          name: 'ReelSlider.astro',
+          renders:
+            'The 3D reel slider under each home-page footer: the reels from Website portal > Reel Slider, muted and looping, one reel with sound at a time.',
+        },
+        {
           name: 'GoogleAnalytics.astro',
           renders: 'The gtag.js tag this website has in Tech → Google Analytics (e.g. G-V0CTVZFGM0 for MAIN), read as the page opens.',
         },

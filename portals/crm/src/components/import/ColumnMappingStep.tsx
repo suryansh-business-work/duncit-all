@@ -28,7 +28,7 @@ export default function ColumnMappingStep({ fields, headers, mapping, onChange }
               alignItems: "center"
             }}>
               <Box sx={{ width: 200, flexShrink: 0 }}>
-                <Typography variant="body2" noWrap>
+                <Typography variant="body2" component="div" noWrap>
                   {f.label}
                   {f.required && <Chip size="small" color="error" label="required" sx={{ ml: 0.5, height: 18 }} />}
                 </Typography>

@@ -10,6 +10,8 @@ import {
   ContactSubmissionsPage,
   JobApplicationsPage,
   NavigationPage,
+  ReelsPage,
+  ReelSettingsPage,
 } from './pages/website';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -29,6 +31,8 @@ export default function App() {
       <Route path="/contact-submissions" element={authed(<ContactSubmissionsPage />)} />
       <Route path="/job-applications" element={authed(<JobApplicationsPage />)} />
       <Route path="/navigation" element={authed(<NavigationPage />)} />
+      <Route path="/reels" element={authed(<ReelsPage />)} />
+      <Route path="/reels/settings" element={authed(<ReelSettingsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

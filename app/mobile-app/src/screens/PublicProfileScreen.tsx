@@ -4,7 +4,11 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
 
+import { useState } from 'react';
 import {
+  ProfileActionsMenu,
+  ProfileActionsTrigger,
+  ProfileBlockNotices,
   ProfileFollowActions,
   PublicProfileBadges,
   PublicProfileHeader,
@@ -12,6 +16,7 @@ import {
 } from '@/components/public-profile';
 import { StackScreen } from '@/components/StackScreen';
 import { usePublicProfile } from '@/hooks/usePublicProfile';
+import { useProfileBlock } from '@/hooks/useProfileBlock';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -55,6 +60,7 @@ export function PublicProfileScreen() {
     meId,
     badges,
     posts,
+    reload,
     reloadPosts,
     stories,
     canView,
@@ -69,6 +75,11 @@ export function PublicProfileScreen() {
     error,
   } = usePublicProfile(userId);
   const { t } = useTranslation();
+  const block = useProfileBlock(user, reload);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Block / Report need a signed-in viewer, and make no sense on your own profile.
+  const canAct = !!user && !!meId && !isOwner;
+  const blocked = Boolean(user?.blocked_by_viewer);
 
   let body;
   if (isLoading && !user) {
@@ -90,34 +101,45 @@ export function PublicProfileScreen() {
     );
   } else if (user) {
     body = (
-      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
-        <PublicProfileHeader user={user} />
-        {isOwner ? null : (
-          <ProfileFollowActions
-            followStatus={followStatus}
-            followsViewer={followsViewer}
-            followBusy={followBusy}
-            inboundRequestId={inboundRequestId}
-            answerBusy={answerBusy}
-            onToggleFollow={toggleFollow}
-            onAnswer={answerRequest}
+      <YStack flex={1}>
+        <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
+          <PublicProfileHeader user={user} />
+          <ProfileBlockNotices blocked={blocked} error={block.error} />
+          {isOwner || blocked ? null : (
+            <ProfileFollowActions
+              followStatus={followStatus}
+              followsViewer={followsViewer}
+              followBusy={followBusy}
+              inboundRequestId={inboundRequestId}
+              answerBusy={answerBusy}
+              onToggleFollow={toggleFollow}
+              onAnswer={answerRequest}
+            />
+          )}
+          {isOwner ? <EditProfileButton onPress={() => navigation.navigate('Account')} /> : null}
+          <PublicProfileBadges badges={badges} />
+          <PublicProfilePosts
+            posts={posts}
+            stories={stories}
+            canView={canView}
+            authorId={user.user_id}
+            authorName={user.full_name || user.username || ''}
+            authorPhoto={user.profile_photo}
+            isHost={Boolean(user.is_host)}
+            isOwner={isOwner}
+            meId={meId}
+            onPostsChanged={reloadPosts}
           />
-        )}
-        {isOwner ? <EditProfileButton onPress={() => navigation.navigate('Account')} /> : null}
-        <PublicProfileBadges badges={badges} />
-        <PublicProfilePosts
-          posts={posts}
-          stories={stories}
-          canView={canView}
-          authorId={user.user_id}
-          authorName={user.full_name || user.username || ''}
-          authorPhoto={user.profile_photo}
-          isHost={Boolean(user.is_host)}
-          isOwner={isOwner}
-          meId={meId}
-          onPostsChanged={reloadPosts}
-        />
-      </RefreshScrollView>
+        </RefreshScrollView>
+        {canAct ? (
+          <ProfileActionsMenu
+            block={block}
+            userId={user.user_id}
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+          />
+        ) : null}
+      </YStack>
     );
   } else {
     body = (
@@ -128,7 +150,20 @@ export function PublicProfileScreen() {
   }
 
   return (
-    <StackScreen title={t('mweb.publicProfile.profile')} testID="public-profile-screen">
+    <StackScreen
+      title={t('mweb.publicProfile.profile')}
+      testID="public-profile-screen"
+      right={
+        canAct ? (
+          <ProfileActionsTrigger
+            open={menuOpen}
+            busy={block.busy}
+            busyLabel={t(block.copy.busy)}
+            onPress={() => setMenuOpen((open) => !open)}
+          />
+        ) : undefined
+      }
+    >
       {body}
     </StackScreen>
   );

@@ -293,6 +293,26 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Ananya, your request to delete Yonex Mavis 350 on Duncit has been approved, it will be deleted on 12 Nov 2026. ' +
       'You can follow it in the partner portal. — Team Duncit',
   },
+  USER_REPORT_RECEIVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thanks for your report. Our Legal team reviews every report and will email you when it is decided. ' +
+      'Your reference is {{2}}. — Team Duncit',
+    sample:
+      'Hi Aarav, thanks for your report. Our Legal team reviews every report and will email you when it is decided. ' +
+      'Your reference is RPT-000042. — Team Duncit',
+  },
+  USER_PROFILE_BLOCKED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, you blocked {{2}} on Duncit. They can no longer follow you or see your posts, and they have not been told. ' +
+      'You can unblock them from their profile at any time. — Team Duncit',
+    sample:
+      'Hi Aarav, you blocked Rohan Mehta on Duncit. They can no longer follow you or see your posts, and they have not been told. ' +
+      'You can unblock them from their profile at any time. — Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

@@ -9,7 +9,9 @@ import { CoinSettingsPage } from '../../src/pages/finance/duncit-coin';
 import { notifySuccess } from './mocks/dialogs';
 import { renderWithProviders } from '../testkit';
 import {
+  adjustUserCoinsMock,
   coinCurrencyMock,
+  coinUserSearchMock,
   coinSettingsMock,
   makeCoinSettings,
   updateCoinSettingsMock,
@@ -69,6 +71,33 @@ describe('CoinSettingsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
     expect(await screen.findByText('A rate cannot go above 100%.')).toBeInTheDocument();
     expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  it('reloads the saved rules after a one-off adjustment is applied', async () => {
+    renderWithProviders(<CoinSettingsPage />, {
+      mocks: [
+        { ...coinSettingsMock(), maxUsageCount: 1 },
+        coinSettingsMock(makeCoinSettings({ shop_earn_pct: 7 })),
+        coinCurrencyMock(),
+        coinUserSearchMock('as'),
+        coinUserSearchMock('Asha Rao — asha@duncit.com'),
+        adjustUserCoinsMock(),
+      ],
+    });
+    await waitFor(() => expect(field(/^Shop earn rate/).value).toBe('3'));
+
+    const userBox = screen.getByRole('combobox', { name: /^User/ });
+    fireEvent.focus(userBox);
+    fireEvent.change(userBox, { target: { value: 'as' } });
+    fireEvent.click(await screen.findByRole('option', { name: /Asha Rao/ }, { timeout: 2000 }));
+    // "Coins per referral" on the rates card shares the prefix.
+    fireEvent.change(screen.getByLabelText(/^Coins(?! per)/), { target: { value: '50' } });
+    fireEvent.change(screen.getByLabelText(/^Reason/), { target: { value: 'Goodwill for the rained-out pod' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply adjustment' }));
+
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Asha Rao now holds 170 coins'));
+    // The page fetched the rules again and shows what the server holds now.
+    await waitFor(() => expect(field(/^Shop earn rate/).value).toBe('7'));
   });
 
   it('shows what the server refused above the cards', async () => {

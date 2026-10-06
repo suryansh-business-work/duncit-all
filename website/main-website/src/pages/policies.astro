@@ -3,6 +3,7 @@
 // browser so newly published policies appear without a site redeploy.
 import PageLayout from '../layouts/PageLayout.astro';
 import { getTranslator } from '../lib/i18n';
+import { urlConfigs } from '../config/url-configs';
 
 const { t } = await getTranslator();
 ---
@@ -17,7 +18,7 @@ const { t } = await getTranslator();
   <!-- Thirteen policies is more than anyone scans. The field filters the list
        as you type; it stays hidden until the list has actually loaded, because
        a search box over four skeletons is a control that does nothing. -->
-  <div class="not-prose mb-6 hidden" id="policySearchWrap">
+  <div class="not-prose mb-6 hidden" id="policySearchWrap" data-policy-search-wrap>
     <label class="sr-only" for="policySearch">{t('website.main.policies.searchLabel')}</label>
     <div class="relative">
       <i
@@ -25,16 +26,17 @@ const { t } = await getTranslator();
         aria-hidden="true"></i>
       <input
         id="policySearch"
+        data-policy-search
         type="search"
         autocomplete="off"
         placeholder={t('website.main.policies.searchPlaceholder')}
         class="w-full rounded-xl border-2 border-ink/10 bg-surface py-3 pl-11 pr-4 text-ink outline-none transition focus:border-primary"
       />
     </div>
-    <p class="mt-2 text-sm text-ink-soft" id="policyCount" role="status" aria-live="polite"></p>
+    <p class="mt-2 text-sm text-ink-soft" id="policyCount" data-policy-count role="status" aria-live="polite"></p>
   </div>
 
-  <div id="policyList" data-copy={JSON.stringify({ readCurrent: t('website.main.policies.readCurrent'), showAll: t('website.main.policies.showAll'), empty: t('website.main.policies.empty'), error: t('website.main.policies.error'), matchOne: t('website.main.policies.matchOne'), matchMany: t('website.main.policies.matchMany'), nothingMatches: t('website.main.policies.nothingMatches') })} class="not-prose grid sm:grid-cols-2 gap-4">
+  <div id="policyList" data-cms-widget="policy-list" data-graphql-url={urlConfigs.graphqlUrl} data-copy={JSON.stringify({ readCurrent: t('website.main.policies.readCurrent'), showAll: t('website.main.policies.showAll'), empty: t('website.main.policies.empty'), error: t('website.main.policies.error'), matchOne: t('website.main.policies.matchOne'), matchMany: t('website.main.policies.matchMany'), nothingMatches: t('website.main.policies.nothingMatches') })} class="not-prose grid sm:grid-cols-2 gap-4">
     <div class="skeleton h-28" aria-hidden="true"></div>
     <div class="skeleton h-28" aria-hidden="true"></div>
     <div class="skeleton h-28" aria-hidden="true"></div>
@@ -43,92 +45,7 @@ const { t } = await getTranslator();
 </PageLayout>
 
 <script>
-  import { urlConfigs } from '../config/url-configs';
+  import { mount } from '@duncit/brand/widgets/policy-list';
 
-  const target = document.getElementById('policyList');
-  const searchWrap = document.getElementById('policySearchWrap');
-  const search = document.getElementById('policySearch') as HTMLInputElement | null;
-  const count = document.getElementById('policyCount');
-  // Handed over by the markup — a module script cannot read Astro frontmatter.
-  const COPY = JSON.parse(target?.dataset.copy ?? '{}');
-
-  type Policy = { slug: string; title: string };
-  let policies: Policy[] = [];
-
-  function esc(value: string) {
-    const div = document.createElement('div');
-    div.textContent = value ?? '';
-    return div.innerHTML;
-  }
-
-  function card(policy: Policy) {
-    return `
-      <a href="/policy/${encodeURIComponent(policy.slug)}"
-         class="glass rounded-2xl p-5 flex items-center justify-between gap-3 hover:-translate-y-0.5 transition">
-        <span>
-          <span class="block font-head font-extrabold text-lg text-ink">${esc(policy.title)}</span>
-          <span class="block text-xs text-ink-soft mt-1">${COPY.readCurrent}</span>
-        </span>
-        <i class="fa-solid fa-arrow-right text-primary" aria-hidden="true"></i>
-      </a>`;
-  }
-
-  function render(query: string) {
-    if (!target) return;
-    const needle = query.trim().toLowerCase();
-    // The slug is searched as well as the title: someone who arrived with
-    // "data deletion" in mind types that, and the policy is called something
-    // longer.
-    const matches = needle
-      ? policies.filter(
-          (policy) =>
-            policy.title.toLowerCase().includes(needle) ||
-            policy.slug.toLowerCase().replaceAll('-', ' ').includes(needle)
-        )
-      : policies;
-
-    if (count) {
-      const noun = matches.length === 1 ? COPY.matchOne : COPY.matchMany;
-      count.textContent = needle ? `${matches.length} ${noun} “${query.trim()}”` : '';
-    }
-
-    target.innerHTML = matches.length
-      ? matches.map(card).join('')
-      : `<p class="text-ink-soft col-span-full">${COPY.nothingMatches} “${esc(query.trim())}”. <button type="button" data-clear-search class="font-bold text-primary underline">${COPY.showAll}</button></p>`;
-  }
-
-  async function load() {
-    if (!target) return;
-    try {
-      const res = await fetch(urlConfigs.graphqlUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: 'query { publicPolicies { id slug title } }' }),
-      });
-      const json = await res.json();
-      policies = json?.data?.publicPolicies ?? [];
-      if (!policies.length) {
-        target.innerHTML =
-          `<p class="text-ink-soft col-span-full">${COPY.empty}</p>`;
-        return;
-      }
-      searchWrap?.classList.remove('hidden');
-      render('');
-    } catch {
-      target.innerHTML =
-        `<p class="text-ink-soft col-span-full">${COPY.error}</p>`;
-    }
-  }
-
-  search?.addEventListener('input', () => render(search.value));
-  // The empty-state's own way out, wired once by delegation because the button
-  // is re-created on every render.
-  target?.addEventListener('click', (event) => {
-    if (!(event.target as HTMLElement)?.closest('[data-clear-search]')) return;
-    if (search) search.value = '';
-    render('');
-    search?.focus();
-  });
-
-  load();
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="policy-list"]')) mount(root);
 </script>

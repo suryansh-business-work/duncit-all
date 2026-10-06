@@ -39,6 +39,21 @@ export default defineDemos('brand', [
           renders: 'The gtag.js tag this website has in Tech → Google Analytics (e.g. G-V0CTVZFGM0 for MAIN), read as the page opens.',
         },
         {
+          name: 'widgets',
+          renders:
+            'WIDGET_LOADERS — the client behaviour of every interactive website block (calculators, contact/FAQ/grievance forms, help & policy lists, site nav/header), mounted on any [data-cms-widget] root from its data attributes, so a CMS HTML snapshot keeps working.',
+        },
+        {
+          name: 'cms-block',
+          renders:
+            'cmsBlockProps / CMS_BLOCKS — the data-cms-block + data-cms-props markers on Newsletter, ReelSlider, EarnShowcase, AppDownload, SocialLinks and PolicyStrip.',
+        },
+        {
+          name: 'cms-design',
+          renders:
+            'tokensCss / googleFontsHref / fontStack / fontCss — a CMS website\'s design system (tokens, Google + uploaded fonts) as CSS, shared by the cms-site renderer and the Website portal editor so both draw a page identically.',
+        },
+        {
           name: 'google-analytics',
           renders: 'loadGoogleAnalytics(graphqlUrl, site) — the same loader for the React sites (STATUS, ECOMM).',
         },

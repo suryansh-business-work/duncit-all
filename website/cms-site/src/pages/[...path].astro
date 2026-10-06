@@ -1,0 +1,78 @@
+---
+/**
+ * Every address of every CMS site. The hostname picks the site, the path picks
+ * the page (or a collection list / entry), and the API answers with the page
+ * already composed — this route only renders it into the site's document.
+ */
+import CmsLayout from '../layouts/CmsLayout.astro';
+import CmsBlock from '../components/CmsBlock.astro';
+import Pagination from '../components/Pagination.astro';
+import NotFound from '../components/NotFound.astro';
+import { CmsUnavailableError, publicGraphqlUrl, renderPage, requestHost } from '../lib/cms-api';
+import { isUrlSlug } from '@duncit/regex';
+import { splitSegments } from '../lib/segments';
+import { localiseDates } from '../lib/design';
+import { SITE_LOCALE, translator } from '../lib/translator';
+
+const host = requestHost(Astro.request);
+const path = `/${Astro.params.path ?? ''}`;
+
+// The hand-built blog read posts from /blog/post?slug=…; a migrated site
+// serves them at /blog/<slug>. Shared links and search results keep working.
+const legacySlug = path === '/blog/post' ? Astro.url.searchParams.get('slug') : null;
+if (legacySlug && isUrlSlug(legacySlug)) return Astro.redirect(`/blog/${legacySlug}`, 301);
+const pageNumber = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10) || 1;
+const t = await translator();
+const graphqlUrl = publicGraphqlUrl();
+
+let result: Awaited<ReturnType<typeof renderPage>> | null = null;
+try {
+  result = await renderPage(host, path, pageNumber);
+} catch (error) {
+  if (!(error instanceof CmsUnavailableError)) throw error;
+  console.error('[cms-site] render failed', { host, path, reason: error.message });
+}
+
+if (!result) {
+  Astro.response.status = 503;
+  Astro.response.headers.set('retry-after', '30');
+} else {
+  Astro.response.status = result.status;
+  // Short and shared: a publish shows up within a minute, a traffic spike
+  // hits the edge instead of the API.
+  if (result.status === 200) Astro.response.headers.set('cache-control', 'public, max-age=60, stale-while-revalidate=300');
+}
+
+const site = result?.site ?? null;
+const segments = result ? splitSegments(localiseDates(result.html, SITE_LOCALE)) : [];
+const url = `${Astro.url.protocol}//${host}${path === '/' ? '' : path}`;
+---
+
+{!result && <NotFound kind="unavailable" t={t} />}
+{result && !site && <NotFound kind="missing" t={t} />}
+{result && site && (
+  <CmsLayout
+    site={site}
+    title={result.title}
+    seo={result.seo}
+    url={url}
+    pageCss={result.css}
+    pageHead={result.head_html}
+    pageJs={result.custom_js}
+    graphqlUrl={graphqlUrl}
+    t={t}
+  >
+    {result.html === '' && result.status === 404 ? (
+      <main id="main"><NotFound kind="missing" t={t} bare /></main>
+    ) : (
+      segments.map((segment) =>
+        segment.kind === 'html' ? (
+          <Fragment set:html={segment.html} />
+        ) : (
+          <CmsBlock block={segment.block} props={segment.props} graphqlUrl={graphqlUrl} legacySite={site.legacy_site ?? null} t={t} />
+        )
+      )
+    )}
+    {result.pagination && <Pagination pagination={result.pagination} t={t} />}
+  </CmsLayout>
+)}

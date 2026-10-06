@@ -123,6 +123,18 @@ const MAX_HOSTNAME = 253;
  */
 const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** A URL slug such as `summer-meetups-2026`. See regex.mjs for the full note. */
+const URL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** A website page path: `/`, `/about`, `/safety/tools`. See regex.mjs. */
+const SITE_PATH = /^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/;
+
+/** A design token's name: a CSS custom property like `--color-primary`. See regex.mjs. */
+const CSS_VARIABLE = /^--[a-z0-9-]{1,60}$/;
+
+/** A font family name like `Plus Jakarta Sans`. See regex.mjs. */
+const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/;
+
 module.exports = {
   PHONE_NUMBER,
   PHONE_NUMBER_IN,
@@ -143,6 +155,10 @@ module.exports = {
   GA_MEASUREMENT_ID,
   HOSTNAME_LABEL,
   USERNAME,
+  URL_SLUG,
+  SITE_PATH,
+  CSS_VARIABLE,
+  FONT_FAMILY,
   toDigits: (v) => String(v ?? '').replaceAll(NON_DIGITS, ''),
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
@@ -157,6 +173,10 @@ module.exports = {
   isPersonName: (v) => PERSON_NAME.test(v),
   isReferralCode: (v) => REFERRAL_CODE.test(v),
   isUsername: (v) => USERNAME.test(v),
+  isUrlSlug: (v) => URL_SLUG.test(v),
+  isSitePath: (v) => SITE_PATH.test(v),
+  isCssVariable: (v) => CSS_VARIABLE.test(v),
+  isFontFamily: (v) => FONT_FAMILY.test(v),
   isHostname: (v) => {
     const name = String(v ?? '').replace(/\.$/, '');
     const labels = name.split('.');

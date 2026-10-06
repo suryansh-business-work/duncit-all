@@ -37,16 +37,19 @@ export function useBreadcrumbOverride(): Crumb[] | null {
  * cleared automatically when the page unmounts.
  */
 export function useSetBreadcrumbs(crumbs: Crumb[] | null | undefined): void {
-  const ctx = useContext(BreadcrumbContext);
+  // The setter, not the context value: the value is rebuilt whenever the
+  // override changes, so depending on it re-ran this effect after every set —
+  // clear, set again, rebuild — an endless update loop.
+  const setOverride = useContext(BreadcrumbContext)?.setOverride;
   const key = crumbs && crumbs.length > 0 ? crumbs.map((c) => `${c.label}|${c.to ?? ''}`).join('>') : '';
 
   useEffect(() => {
-    if (!ctx) return undefined;
+    if (!setOverride) return undefined;
     // `key` is non-empty only when `crumbs` is a non-empty array, so the
     // truthy branch never sees null/undefined (hence the non-null assertion).
-    ctx.setOverride(key ? crumbs! : null);
-    return () => ctx.setOverride(null);
-    // `key` captures the crumbs' identity; `ctx.setOverride` is stable.
+    setOverride(key ? crumbs! : null);
+    return () => setOverride(null);
+    // `key` captures the crumbs' identity; `setOverride` is a stable useState setter.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ctx, key]);
+  }, [setOverride, key]);
 }

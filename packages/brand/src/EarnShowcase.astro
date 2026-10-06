@@ -10,6 +10,7 @@
  */
 import { siteT, type SiteTranslate } from './site-i18n';
 import { EARN_SHOWCASE_COLUMNS, earnShowcaseImage } from './earn-showcase';
+import { cmsBlockProps } from './cms-block';
 
 interface Props {
   /** earnwith.duncit.com for this environment, from the site's URL config. */
@@ -30,7 +31,7 @@ const columns = EARN_SHOWCASE_COLUMNS.map((column, col) => ({
 }));
 ---
 
-<section id={id} class:list={['earn-showcase', className]} aria-labelledby={headingId} data-earn-showcase>
+<section id={id} class:list={['earn-showcase', className]} aria-labelledby={headingId} data-earn-showcase data-cms-block="earn-showcase" data-cms-props={cmsBlockProps(Astro.props)}>
   <div class="earn-card">
     <div class="earn-wall" aria-hidden="true">
       {columns.map((column) => (

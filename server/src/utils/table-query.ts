@@ -245,8 +245,9 @@ export async function runTableQuery<TDoc>(
   input: TableQueryInput | null | undefined,
   config: TableEntityConfig,
   /** Soft-delete opt-in — applied to BOTH the page and the count, so a table
-   * that lists deleted rows still paginates over the same set. */
-  options?: { includeDeleted?: boolean }
+   * that lists deleted rows still paginates over the same set.
+   * `projection` leaves heavy fields a row never shows out of the page read. */
+  options?: { includeDeleted?: boolean; projection?: Record<string, 0 | 1> }
 ): Promise<TablePageResult<TDoc>> {
   const q = input ?? {};
   const filter = combineFilters(baseFilter, buildTableFilter(q, config));
@@ -260,6 +261,7 @@ export async function runTableQuery<TDoc>(
     .sort(sort)
     .skip((page - 1) * pageSize)
     .limit(pageSize);
+  if (options?.projection) find.select(options.projection);
   const count = Model.countDocuments(filter);
   if (options?.includeDeleted) {
     find.setOptions({ includeDeleted: true });

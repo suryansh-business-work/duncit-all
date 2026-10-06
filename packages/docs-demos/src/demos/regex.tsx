@@ -7,7 +7,9 @@ import {
   isPhoneNumber,
   isPincode,
   isReferralCode,
+  isSitePath,
   isUpiId,
+  isUrlSlug,
   isUsername,
   toDigits,
 } from '@duncit/regex';
@@ -28,6 +30,12 @@ interface TypedPhoneMock {
 interface NameServerMock {
   first: string;
   second: string;
+}
+
+interface CmsAddressMock {
+  page_path: string;
+  post_slug: string;
+  domain: string;
 }
 
 interface BankMock {
@@ -104,6 +112,23 @@ export default defineDemos('regex', [
     compute: (mock) => ({
       'isHostname(first)': isHostname(mock.first),
       'isHostname(second)': isHostname(mock.second),
+    }),
+  }),
+
+  defineDemo<CmsAddressMock>({
+    id: 'cms-addresses',
+    title: 'What the Website CMS accepts as an address',
+    note:
+      'A page path, a post slug and the domain a site answers on. Add a trailing slash, a capital or a doubled hyphen and the row turns false — the CMS keeps one spelling of every URL.',
+    mock: {
+      page_path: '/safety/tools',
+      post_slug: 'summer-meetups-2026',
+      domain: 'main.localhost',
+    },
+    compute: (mock) => ({
+      'isSitePath(page_path)': isSitePath(mock.page_path),
+      'isUrlSlug(post_slug)': isUrlSlug(mock.post_slug),
+      'isHostname(domain)': isHostname(mock.domain),
     }),
   }),
 ]);

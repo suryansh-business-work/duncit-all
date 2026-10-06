@@ -79,6 +79,28 @@ export const USERNAME: RegExp;
 /** Handle shape check. Lower-case before calling it — the pattern is strict. */
 export function isUsername(value: string): boolean;
 /**
+ * A URL slug such as `summer-meetups-2026`: lowercase letters, digits and
+ * single inner hyphens, any length.
+ */
+export const URL_SLUG: RegExp;
+/** Slug shape check. Lower-case before calling it — the pattern is strict. */
+export function isUrlSlug(value: string): boolean;
+/**
+ * A website page path: `/` alone, or slug-shaped segments joined by single
+ * slashes — `/about`, `/safety/tools`. No trailing slash, query or `..`.
+ */
+export const SITE_PATH: RegExp;
+/** Page-path shape check. */
+export function isSitePath(value: string): boolean;
+/** A design token's name: a CSS custom property like `--color-primary`. */
+export const CSS_VARIABLE: RegExp;
+/** Design-token name shape check. */
+export function isCssVariable(value: string): boolean;
+/** A font family name like `Plus Jakarta Sans`: letters, digits, spaces and hyphens, 80 max. */
+export const FONT_FAMILY: RegExp;
+/** Font-family name shape check. */
+export function isFontFamily(value: string): boolean;
+/**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
  * root) is accepted. Case-insensitive, as DNS is.

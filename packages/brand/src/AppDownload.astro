@@ -11,6 +11,7 @@
  * one section on a light page that inverted the wrong way in dark mode.
  */
 import AppPhone from './AppPhone.astro';
+import { cmsBlockProps } from './cms-block';
 
 interface Store {
   /** Font Awesome brand class. */
@@ -51,7 +52,7 @@ const {
 } = Astro.props;
 ---
 
-<section id={id} class:list={['app-download', className]}>
+<section id={id} class:list={['app-download', className]} data-cms-block="app-download" data-cms-props={cmsBlockProps(Astro.props)}>
   <div class="app-download-glow is-one" aria-hidden="true"></div>
   <div class="app-download-glow is-two" aria-hidden="true"></div>
 

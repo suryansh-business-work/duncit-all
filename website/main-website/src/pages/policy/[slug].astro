@@ -11,6 +11,7 @@ import PageLayout from '../../layouts/PageLayout.astro';
 import { fetchPolicies } from '../../lib/site-data';
 import { getTranslator } from '../../lib/i18n';
 import { POLICY_READER_SLUG } from '../../lib/policy-page';
+import { urlConfigs } from '../../config/url-configs';
 
 export async function getStaticPaths() {
   const policies = await fetchPolicies();
@@ -34,7 +35,7 @@ const { title } = Astro.props;
   intro={t('website.main.policyDetail.intro')}
   heroImage="https://images.pexels.com/photos/7654588/pexels-photo-7654588.jpeg?auto=compress&cs=tinysrgb&w=1600"
 >
-  <div id="policyBody"
+  <div id="policyBody" data-cms-widget="policy-reader" data-graphql-url={urlConfigs.graphqlUrl}
     data-copy={JSON.stringify({ notFound: t('website.main.policyDetail.notFound'), empty: t('website.main.policyDetail.empty'), error: t('website.main.policyDetail.error') })}>
     <div class="not-prose space-y-3" aria-hidden="true">
       <div class="skeleton h-8 w-2/3"></div>
@@ -52,47 +53,7 @@ const { title } = Astro.props;
 </PageLayout>
 
 <script>
-  import { urlConfigs } from '../../config/url-configs';
-  import { POLICY_PAGE_PATTERN } from '../../lib/policy-page';
+  import { mount } from '@duncit/brand/widgets/policy-reader';
 
-  const body = document.getElementById('policyBody');
-  // Handed over by the markup — a module script cannot read Astro frontmatter.
-  const COPY = JSON.parse(body?.dataset.copy ?? '{}');
-  // Read from the address, not baked into the page: the reader page serves
-  // every policy published after the build, under that policy's own path.
-  const slug = POLICY_PAGE_PATTERN.exec(window.location.pathname)?.[1] ?? '';
-
-  async function load() {
-    if (!body) return;
-    if (!slug) {
-      window.location.replace('/policies');
-      return;
-    }
-    try {
-      const res = await fetch(urlConfigs.graphqlUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query:
-            'query Policy($slug: String!) { policyBySlug(slug: $slug) { title content updated_at } }',
-          variables: { slug },
-        }),
-      });
-      const json = await res.json();
-      const policy = json?.data?.policyBySlug;
-      if (!policy) {
-        body.innerHTML = `<p>${COPY.notFound}</p>`;
-        return;
-      }
-      document.title = `${policy.title} — Duncit`;
-      const heading = document.querySelector('[data-page-heading]') ?? document.querySelector('h1');
-      if (heading) heading.textContent = policy.title;
-      // Policy content is trusted HTML authored by our own Legal portal editor.
-      body.innerHTML = policy.content || `<p>${COPY.empty}</p>`;
-    } catch {
-      body.innerHTML = `<p>${COPY.error}</p>`;
-    }
-  }
-
-  load();
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="policy-reader"]')) mount(root);
 </script>

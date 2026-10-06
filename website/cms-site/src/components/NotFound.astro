@@ -1,0 +1,46 @@
+---
+/**
+ * The renderer's own fallback pages: no site answers on this hostname, the
+ * site has no page at this path (and no designed /404), or the API is down.
+ * `bare` draws only the message, inside a site's own header and footer.
+ */
+import type { SiteTranslate } from '@duncit/brand/site-i18n';
+import { SITE_LOCALE } from '../lib/translator';
+import '../styles/cms.css';
+
+interface Props {
+  kind: 'missing' | 'unavailable';
+  t: SiteTranslate;
+  bare?: boolean;
+}
+
+const { kind, t, bare = false } = Astro.props;
+// Literal keys, one per branch: the translation-key gate can only see a
+// t('…') it can read.
+const missing = kind === 'missing';
+const title = missing ? t('website.cms.notFound.title') : t('website.cms.unavailable.title');
+const text = missing ? t('website.cms.notFound.text') : t('website.cms.unavailable.text');
+---
+
+{bare ? (
+  <section class="cms-message">
+    <h1>{title}</h1>
+    <p>{text}</p>
+    {kind === 'missing' && <p><a href="/">{t('website.cms.notFound.home')}</a></p>}
+  </section>
+) : (
+  <html lang={SITE_LOCALE.split('-')[0]}>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="robots" content="noindex" />
+      <title>{title}</title>
+    </head>
+    <body>
+      <main id="main" class="cms-message">
+        <h1>{title}</h1>
+        <p>{text}</p>
+      </main>
+    </body>
+  </html>
+)}

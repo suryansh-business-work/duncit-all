@@ -1051,5 +1051,25 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         goTo: 'Go to reel {index}',
       },
     },
+    // The CMS renderer (website/cms-site): only the words it draws itself —
+    // everything on a CMS page is written in the Website portal.
+    cms: {
+      pagination: {
+        label: 'Pages',
+        previous: 'Newer',
+        next: 'Older',
+        pageOf: 'Page {page} of {total}',
+      },
+      notFound: {
+        title: 'Page not found',
+        text: 'There is nothing at this address. It may have moved or been unpublished.',
+        home: 'Go to the home page',
+      },
+      unavailable: {
+        title: 'We will be right back',
+        text: 'This page could not be loaded just now. Please try again in a moment.',
+      },
+      skipToContent: 'Skip to content',
+    },
   },
 };

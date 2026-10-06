@@ -13,6 +13,7 @@ import {
   ReelsPage,
   ReelSettingsPage,
 } from './pages/website';
+import { CmsEditorPage, EntryEditorPage, SitesPage, SiteWorkspacePage } from './pages/cms';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -33,6 +34,10 @@ export default function App() {
       <Route path="/navigation" element={authed(<NavigationPage />)} />
       <Route path="/reels" element={authed(<ReelsPage />)} />
       <Route path="/reels/settings" element={authed(<ReelSettingsPage />)} />
+      <Route path="/sites" element={authed(<SitesPage />)} />
+      <Route path="/sites/:siteId" element={authed(<SiteWorkspacePage />)} />
+      <Route path="/sites/:siteId/:target/:docId/design" element={authed(<CmsEditorPage />)} />
+      <Route path="/sites/:siteId/:collectionSlug/:entryId" element={authed(<EntryEditorPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

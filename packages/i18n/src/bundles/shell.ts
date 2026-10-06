@@ -746,6 +746,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       reelSlider: 'Reel Slider',
       reelSliderReels: 'Reels',
       reelSliderSettings: 'Reel Slider Settings',
+      websites: 'Websites',
       productDeletionRequests: 'Product Deletion Requests',
       productReturns: 'Product Returns',
       referrals: 'Referrals',

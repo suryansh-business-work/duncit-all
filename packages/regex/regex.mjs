@@ -168,6 +168,50 @@ export const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const isUsername = (v) => USERNAME.test(v);
 
 /**
+ * A URL slug — the last segment of a page or post address, such as
+ * `summer-meetups-2026`. Lowercase letters, digits and single inner hyphens,
+ * any length; the same shape as {@link USERNAME} without its 3–30 bound. Every
+ * `-` must be followed by an alphanumeric, so the pattern can never backtrack.
+ */
+export const URL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Slug shape check. Lower-case before calling it — the pattern is strict. */
+export const isUrlSlug = (v) => URL_SLUG.test(v);
+
+/**
+ * A website page path: `/` alone, or `/` followed by {@link URL_SLUG}-shaped
+ * segments joined by single slashes — `/about`, `/safety/tools`. No trailing
+ * slash, no query, no `..`: the CMS stores ONE spelling of each address.
+ * Written as alphanumeric runs joined by ONE `-` or `/`, which accepts exactly
+ * the same strings as "slugs joined by slashes" with half the complexity.
+ */
+export const SITE_PATH = /^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/;
+
+/** Page-path shape check. */
+export const isSitePath = (v) => SITE_PATH.test(v);
+
+/**
+ * A design token's name: a CSS custom property such as `--color-primary` —
+ * `--` then 1–60 lowercase letters, digits or hyphens. Kept narrow on purpose:
+ * the name is written straight into a `:root{}` rule on a public page.
+ */
+export const CSS_VARIABLE = /^--[a-z0-9-]{1,60}$/;
+
+/** Design-token name shape check. */
+export const isCssVariable = (v) => CSS_VARIABLE.test(v);
+
+/**
+ * A font family name the Website CMS writes into css and into Google Fonts'
+ * css2 URL — `Plus Jakarta Sans`, `Inter`. A letter or digit first, then up
+ * to 79 letters, digits, spaces and hyphens: no quotes, commas or semicolons,
+ * so it can never close the `font-family: "<name>"` it is written into.
+ */
+export const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/;
+
+/** Font-family name shape check. */
+export const isFontFamily = (v) => FONT_FAMILY.test(v);
+
+/**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
  * root) is accepted. Case-insensitive, as DNS is.

@@ -38,6 +38,8 @@ packages:
   - website/ecomm-store
   - website/status-website
   - website/earnwith-website
+  # The Website CMS renderer: every CMS site, chosen by hostname.
+  - website/cms-site
   # Duncit Lite: its API, web app and console, built as one workspace.
   - lite
   - docs-site

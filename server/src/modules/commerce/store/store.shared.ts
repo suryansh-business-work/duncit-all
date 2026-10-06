@@ -32,16 +32,7 @@ export function forbidden(message: string): never {
 export const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
 /** `Dry Food & Treats!` → `dry-food-treats`. Used for every public URL key. */
-export function slugify(value: string): string {
-  return String(value ?? '')
-    .normalize('NFKD')
-    .replaceAll(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .split(/[^a-z\d]+/)
-    .filter(Boolean)
-    .join('-')
-    .slice(0, 120);
-}
+export { slugify } from '@utils/slug';
 
 /** A JSON scalar: the only values whose String() reads as what was sent. */
 function isScalar(value: unknown): value is string | number | boolean | bigint {

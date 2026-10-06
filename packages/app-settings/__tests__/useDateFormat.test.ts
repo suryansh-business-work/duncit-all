@@ -1,4 +1,6 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, renderHook } from '@testing-library/react';
 
 const { useQueryMock } = vi.hoisted(() => ({ useQueryMock: vi.fn() }));
 
@@ -25,6 +27,9 @@ vi.mock('date-fns', async (importOriginal) => {
 // Import AFTER the mocks are registered.
 const { useDateFormat } = await import('../src/useDateFormat');
 
+// The hook memoises its formatter, so it runs inside a component like any hook.
+const format = (options?: Parameters<typeof useDateFormat>[0]) => renderHook(() => useDateFormat(options)).result.current;
+
 type Settings = { date_format?: string; time_format?: string; time_zone?: string };
 
 const withSettings = (settings?: Settings) => {
@@ -37,19 +42,20 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  cleanup();
   vi.useRealTimers();
 });
 
 describe('useDateFormat — local mode (default)', () => {
   it('falls back to the built-in patterns and zone when settings are absent', () => {
-    const f = useDateFormat();
+    const f = format();
     expect(f.dateFormat).toBe('dd MMM yyyy');
     expect(f.timeFormat).toBe('hh:mm a');
     expect(f.timeZone).toBe('Asia/Kolkata');
   });
 
   it('formats Date, ISO string and epoch-millis inputs with the local patterns', () => {
-    const f = useDateFormat();
+    const f = format();
     expect(f.formatDate(new Date(2024, 0, 15))).toBe('15 Jan 2024');
     expect(f.formatDate('2024-03-09')).toBe('09 Mar 2024');
     expect(f.formatDate(new Date(2024, 0, 15).getTime())).toBe('15 Jan 2024');
@@ -59,7 +65,7 @@ describe('useDateFormat — local mode (default)', () => {
   });
 
   it('returns "" for empty, nullish and invalid Date inputs', () => {
-    const f = useDateFormat();
+    const f = format();
     expect(f.formatDate('')).toBe('');
     expect(f.formatDate(null)).toBe('');
     expect(f.formatDate(undefined)).toBe('');
@@ -67,18 +73,18 @@ describe('useDateFormat — local mode (default)', () => {
   });
 
   it('returns "" when parseISO throws (coercion guard)', () => {
-    const f = useDateFormat();
+    const f = format();
     expect(f.formatDate('__throws__')).toBe('');
   });
 
   it('returns "" when the formatter itself throws on an unparseable string', () => {
-    const f = useDateFormat();
+    const f = format();
     expect(f.formatDate('not-a-real-date')).toBe('');
   });
 
   it('uses admin-configured patterns and zone when provided', () => {
     withSettings({ date_format: 'yyyy/MM/dd', time_format: 'HH:mm', time_zone: 'America/New_York' });
-    const f = useDateFormat();
+    const f = format();
     expect(f.dateFormat).toBe('yyyy/MM/dd');
     expect(f.timeFormat).toBe('HH:mm');
     expect(f.timeZone).toBe('America/New_York');
@@ -87,7 +93,7 @@ describe('useDateFormat — local mode (default)', () => {
 
   it('falls back when settings fields are present but empty', () => {
     withSettings({ date_format: '', time_format: '', time_zone: '' });
-    const f = useDateFormat();
+    const f = format();
     expect(f.dateFormat).toBe('dd MMM yyyy');
     expect(f.timeFormat).toBe('hh:mm a');
     expect(f.timeZone).toBe('Asia/Kolkata');
@@ -96,7 +102,7 @@ describe('useDateFormat — local mode (default)', () => {
   it('labels Today / Yesterday / an explicit date', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2024, 5, 15, 12, 0, 0));
-    const f = useDateFormat();
+    const f = format();
     expect(f.dayLabel(new Date(2024, 5, 15, 8, 0, 0))).toBe('Today');
     expect(f.dayLabel(new Date(2024, 5, 14, 8, 0, 0))).toBe('Yesterday');
     expect(f.dayLabel(new Date(2024, 5, 10))).toBe('10 Jun 2024');
@@ -108,14 +114,14 @@ describe('useDateFormat — time-zone-aware mode', () => {
   it('uses the shared fallback time pattern when settings are absent', () => {
     // Same fallback zoned or not: it matches the server default for
     // time_format, so nothing changes once settings load.
-    const f = useDateFormat({ timeZoneAware: true });
+    const f = format({ timeZoneAware: true });
     expect(f.timeFormat).toBe('hh:mm a');
     expect(f.timeZone).toBe('Asia/Kolkata');
   });
 
   it('formats an instant in the configured zone', () => {
     withSettings({ date_format: 'yyyy-MM-dd', time_format: 'HH:mm', time_zone: 'Asia/Kolkata' });
-    const f = useDateFormat({ timeZoneAware: true });
+    const f = format({ timeZoneAware: true });
     // 12:00 UTC is 17:30 IST on the same calendar day.
     expect(f.formatDate('2024-01-15T12:00:00Z')).toBe('2024-01-15');
     expect(f.formatTime('2024-01-15T12:00:00Z')).toBe('17:30');
@@ -123,12 +129,12 @@ describe('useDateFormat — time-zone-aware mode', () => {
 
   it('accepts a Date instance directly in zoned mode', () => {
     withSettings({ date_format: 'yyyy-MM-dd', time_format: 'HH:mm', time_zone: 'UTC' });
-    const f = useDateFormat({ timeZoneAware: true });
+    const f = format({ timeZoneAware: true });
     expect(f.formatDate(new Date(Date.UTC(2024, 0, 15, 12, 0)))).toBe('2024-01-15');
   });
 
   it('returns "" for empty and invalid inputs in zoned mode', () => {
-    const f = useDateFormat({ timeZoneAware: true });
+    const f = format({ timeZoneAware: true });
     expect(f.formatDate('')).toBe('');
     expect(f.formatDate(null)).toBe('');
     expect(f.formatDate('totally-not-a-date')).toBe('');
@@ -136,7 +142,30 @@ describe('useDateFormat — time-zone-aware mode', () => {
 
   it('returns "" when zoned formatting throws on a bad pattern', () => {
     withSettings({ date_format: 'D', time_format: 'HH:mm', time_zone: 'Asia/Kolkata' });
-    const f = useDateFormat({ timeZoneAware: true });
+    const f = format({ timeZoneAware: true });
     expect(f.formatDate('2024-01-15T12:00:00Z')).toBe('');
+  });
+});
+
+describe('useDateFormat — identity', () => {
+  // Callers put its functions in memo deps (table columns); a new formatter on
+  // every render rebuilt those columns endlessly.
+  it('keeps the same formatter across re-renders while the settings are unchanged', () => {
+    withSettings({ date_format: 'dd/MM/yyyy', time_format: 'HH:mm', time_zone: 'Asia/Kolkata' });
+    const { result, rerender } = renderHook(() => useDateFormat());
+    const first = result.current;
+    rerender();
+    expect(result.current).toBe(first);
+    expect(result.current.formatDateTime).toBe(first.formatDateTime);
+  });
+
+  it('builds a new formatter when a setting changes', () => {
+    withSettings({ date_format: 'dd/MM/yyyy', time_format: 'HH:mm', time_zone: 'Asia/Kolkata' });
+    const { result, rerender } = renderHook(() => useDateFormat());
+    const first = result.current;
+    withSettings({ date_format: 'yyyy-MM-dd', time_format: 'HH:mm', time_zone: 'Asia/Kolkata' });
+    rerender();
+    expect(result.current).not.toBe(first);
+    expect(result.current.dateFormat).toBe('yyyy-MM-dd');
   });
 });

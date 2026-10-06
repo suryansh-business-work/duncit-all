@@ -49,6 +49,8 @@ jobs:
           - { name: status-website, dir: website/status-website }
           - { name: earnwith-website, dir: website/earnwith-website }
           - { name: ecomm-store, dir: website/ecomm-store }
+          # The Website CMS renderer — serves every CMS site by hostname.
+          - { name: cms-site, dir: website/cms-site }
           # Duncit Lite: its web app, console and API build as one workspace.
           - { name: duncit-lite, dir: lite }
 

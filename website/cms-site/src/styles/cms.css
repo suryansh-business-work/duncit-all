@@ -5,6 +5,12 @@
  * design system restyles these too; the fallbacks keep an unstyled site legible.
  */
 
+/* The wrapper the server puts around every component: invisible to layout, so a
+   page built from components renders exactly like the markup they came from. */
+[data-cms-fragment] {
+  display: contents;
+}
+
 .cms-skip {
   position: absolute;
   left: -9999px;

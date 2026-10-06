@@ -39,6 +39,15 @@ export const CMS_VERSIONS_KEPT = 30;
 /** Entries a collection list page shows per page of results. */
 export const CMS_LIST_PAGE_SIZE = 12;
 
+/**
+ * Error pages a site designs as ordinary pages at /404, /500 and /503: not found,
+ * something broke, and down for maintenance / API unreachable. Served with their
+ * own status, never in the sitemap.
+ */
+export const CMS_ERROR_CODES = [404, 500, 503] as const;
+export const CMS_ERROR_PATHS = CMS_ERROR_CODES.map((code) => `/${code}`);
+export const errorCodeOf = (path: string): number | null => CMS_ERROR_CODES.find((code) => path === `/${code}`) ?? null;
+
 // The three address shapes below MIRROR `@duncit/regex` (`SITE_PATH`,
 // `URL_SLUG`, `isHostname`) — `server/src` imports no `@duncit/*` package
 // (rule 40), and the portal validates with the package copies first.

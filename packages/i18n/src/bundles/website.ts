@@ -996,6 +996,23 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
      * proper nouns, and a translator has nothing to do with them.
      */
     brand: {
+      /** The careers Apply button and dialog (CareersApply.astro / ApplyButton.astro). */
+      apply: {
+        button: 'Apply now',
+        applyFor: 'Apply for',
+        close: 'Close',
+        fullName: 'Full name *',
+        email: 'Email *',
+        phone: 'Phone (digits, optional +)',
+        resume: 'Resume / CV link (Drive, LinkedIn…)',
+        portfolio: 'Portfolio link (optional)',
+        why: 'Why you? (optional)',
+        submit: 'Submit application',
+        sending: 'Sending…',
+        sent: 'Application received!',
+        failed: 'Could not submit — please check the form.',
+        failedRetry: 'Network hiccup — please try again.',
+      },
       /**
        * The illustrated phone on the marketing heroes.
        *
@@ -1054,6 +1071,11 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
     // The CMS renderer (website/cms-site): only the words it draws itself —
     // everything on a CMS page is written in the Website portal.
     cms: {
+      preview: {
+        active: 'Preview — this is not the live page. Only people with this link can see it.',
+        expired: 'This preview link has expired, so you are seeing the live page. Ask for a new link from the Website portal.',
+        viewLive: 'View the live page',
+      },
       pagination: {
         label: 'Pages',
         previous: 'Newer',
@@ -1064,6 +1086,10 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         title: 'Page not found',
         text: 'There is nothing at this address. It may have moved or been unpublished.',
         home: 'Go to the home page',
+      },
+      error: {
+        title: 'Something went wrong',
+        text: 'This page could not be shown just now. Please try again in a moment.',
       },
       unavailable: {
         title: 'We will be right back',

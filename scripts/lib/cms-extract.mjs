@@ -7,6 +7,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { attr, bodyOf, decodeEntities, escapeAttr, findElements, hasAttr, headOf, replaceElements, topLevelNodes } from './cms-html.mjs';
+import { splitIntoComponents } from './cms-components.mjs';
 
 /** Built pages that do not become CMS pages: a query-string reader the
  * collection detail replaces, a redirect stub and a build-time fallback. */
@@ -201,6 +202,7 @@ export function extractSite(site, { dist, publicDir }) {
     return { key, name: `${site.name} — ${key}`, kind: 'SECTION', html };
   });
   const out = { pages: [], templates: [] };
+  const plain = [];
   for (const page of pages) {
     let html = page.html;
     for (const fragment of fragments) html = html.replaceAll(fragment.html, `<cms-fragment data-key="${fragment.key}"></cms-fragment>`);
@@ -214,8 +216,12 @@ export function extractSite(site, { dist, publicDir }) {
         { ...common, kind: 'COLLECTION_DETAIL', collection, html: list.replace(ENTRY_LIST, ENTRY_DETAIL) }
       );
     }
-    else out.pages.push({ ...common, path: page.path, html });
+    else plain.push({ ...common, path: page.path, html });
   }
+  // Every regular page becomes a sequence of components (cms-components.mjs).
+  const split = splitIntoComponents(site, plain, fragments.map((f) => f.key));
+  out.pages.push(...split.pages);
+  fragments.push(...split.components);
   const baseCss = [...css].join('\n');
   return {
     design: { tokens: tokensFrom(baseCss), font_urls: [...external], base_css: baseCss },

@@ -3,8 +3,9 @@ import { CmsSiteModel, type ICmsSite } from './cmsSite.model';
 import { CmsPageModel, type ICmsPage } from './cmsPage.model';
 import { CmsFragmentModel } from './cmsFragment.model';
 import { CmsEntryModel, type ICmsEntry } from './cmsEntry.model';
+import { CmsVersionModel } from './cmsVersion.model';
 import { assertId, collectionPathsOf, iso, notFound, seoOf, toSite } from './cms.mappers';
-import { CMS_LIST_PAGE_SIZE, type CmsCollection } from './cms.constants';
+import { CMS_ERROR_CODES, CMS_ERROR_PATHS, CMS_LIST_PAGE_SIZE, errorCodeOf, type CmsCollection } from './cms.constants';
 import {
   bindEntry,
   DEFAULT_DETAIL_TEMPLATE,
@@ -23,6 +24,8 @@ type Mode = 'published' | 'draft';
 interface Resolved {
   page: ICmsPage | null;
   template: string;
+  /** The page's own css when it is not the draft/published copy (a saved version). */
+  css?: string;
   title: string;
   seo: CmsSeo;
   status: number;
@@ -48,6 +51,8 @@ export function normalisePath(path: string): string {
 }
 
 const toRenderEntry = (entry: ICmsEntry): RenderEntry => ({
+  id: String(entry._id),
+  apply: entry.collection_type === 'CAREER',
   title: entry.title,
   slug: entry.slug,
   summary: entry.summary ?? '',
@@ -138,7 +143,10 @@ async function resolveCollection(site: ICmsSite, path: string, pageNumber: numbe
 async function resolve(site: ICmsSite, path: string, pageNumber: number): Promise<Resolved> {
   const page = await CmsPageModel.findOne({ site_id: site._id, kind: 'PAGE', path, is_published: true }).exec();
   if (page) {
-    return { page, template: page.published.html, title: page.title, seo: mergeSeo(seoOf(page.seo), site.seo), status: 200 };
+    // An error page opened directly keeps its own status, and is never indexed.
+    const code = errorCodeOf(path);
+    const seo = mergeSeo(seoOf(page.seo), site.seo);
+    return { page, template: page.published.html, title: page.title, seo: code ? { ...seo, noindex: true } : seo, status: code ?? 200 };
   }
   const collection = await resolveCollection(site, path, pageNumber, 'published');
   if (collection) return collection;
@@ -156,7 +164,7 @@ async function resolve(site: ICmsSite, path: string, pageNumber: number): Promis
 /** Header + page + footer, fragments expanded and fields bound. */
 async function compose(site: ICmsSite, resolved: Resolved, mode: Mode) {
   const page = resolved.page;
-  const ownCss = page ? contentOf(page, mode).css : '';
+  const ownCss = resolved.css ?? (page ? contentOf(page, mode).css : '');
   const chromeIds = [
     page?.show_header === false ? null : site.header_fragment_id,
     page?.show_footer === false ? null : site.footer_fragment_id,
@@ -229,14 +237,21 @@ export const cmsRenderService = {
     return respond(site, await resolve(site, normalisePath(path), pageNumber), 'published');
   },
 
-  /** A page's draft (and its fragments' drafts) exactly as it would render. */
-  async preview(pageId: string, entryId?: string | null) {
+  /**
+   * A page exactly as it would render: its draft (with its fragments' drafts),
+   * or — given `version` — that published version beside the live fragments.
+   */
+  async preview(pageId: string, entryId?: string | null, version?: number | null) {
     const page = await CmsPageModel.findById(assertId(pageId, 'page')).exec();
     if (!page) throw notFound('Page');
     const site = await CmsSiteModel.findById(page.site_id).exec();
     if (!site) throw notFound('Site');
-    const template = contentOf(page, 'draft').html;
+    const saved = version ? await CmsVersionModel.findOne({ owner_kind: 'PAGE', owner_id: page._id, version }).exec() : null;
+    if (version && !saved) throw notFound('Version');
+    const mode: Mode = saved ? 'published' : 'draft';
+    const template = saved ? saved.html : contentOf(page, 'draft').html;
     const resolved: Resolved = { page, template, title: page.title, seo: mergeSeo(seoOf(page.seo), site.seo), status: 200 };
+    if (saved) resolved.css = saved.css;
     if (page.kind !== 'PAGE' && page.collection_type) {
       const filter = { site_id: site._id, collection_type: page.collection_type };
       if (page.kind === 'COLLECTION_LIST') {
@@ -250,7 +265,22 @@ export const cmsRenderService = {
       resolved.collectionBase = collectionPathsOf(site)[page.collection_type];
       resolved.template ||= page.kind === 'COLLECTION_LIST' ? DEFAULT_LIST_TEMPLATE : DEFAULT_DETAIL_TEMPLATE;
     }
-    return respond(site, resolved, 'draft');
+    return respond(site, resolved, mode);
+  },
+
+  /**
+   * Public: a site's designed error page for `code` (404, 500, 503), or null
+   * when it has none. The renderer keeps the last good copy, so it can still
+   * show the 503 page while this API is the thing that is down.
+   */
+  async errorPage(host: string, code: number) {
+    if (!CMS_ERROR_CODES.some((known) => known === code)) return null;
+    const site = await CmsSiteModel.findOne({ domains: normaliseHost(host), is_active: true }).exec();
+    if (!site) return null;
+    const page = await CmsPageModel.findOne({ site_id: site._id, kind: 'PAGE', path: `/${code}`, is_published: true }).exec();
+    if (!page) return null;
+    const seo = { ...mergeSeo(seoOf(page.seo), site.seo), noindex: true };
+    return respond(site, { page, template: page.published.html, title: page.title, seo, status: code }, 'published');
   },
 
   /** Public: every indexable live address of a site. */
@@ -258,7 +288,7 @@ export const cmsRenderService = {
     const site = await CmsSiteModel.findOne({ domains: normaliseHost(host), is_active: true }).exec();
     if (!site) return [];
     const [pages, entries] = await Promise.all([
-      CmsPageModel.find({ site_id: site._id, kind: 'PAGE', is_published: true, 'seo.noindex': { $ne: true }, path: { $ne: '/404' } })
+      CmsPageModel.find({ site_id: site._id, kind: 'PAGE', is_published: true, 'seo.noindex': { $ne: true }, path: { $nin: CMS_ERROR_PATHS } })
         .select('path updated_at')
         .exec(),
       CmsEntryModel.find({ site_id: site._id, collection_type: { $in: site.collections }, is_published: true, published_at: { $lte: new Date() }, 'seo.noindex': { $ne: true } })

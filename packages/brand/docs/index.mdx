@@ -25,6 +25,9 @@ exports:
   - 'consent-banner'
   - 'cms-block'
   - 'cms-design'
+  - 'CareersApply.astro'
+  - 'ApplyButton.astro'
+  - 'widgets/careers-apply'
   - 'widgets'
   - 'widgets/earnings-calculator'
   - 'widgets/campaign-calculator'
@@ -395,6 +398,7 @@ Every string a widget shows comes from them — the modules carry no copy.
 | `earnings-calculator` | the calculator `<section>` | `data-graphql-url`; `data-print-logo` (PDF logo URL, PNG/JPEG, else a wordmark); `data-config` `{ roles, fields, rowLabels, currency }`; `data-copy` `{ note, shortfallNote, noShareNote, loadError, disclaimer, pdf: { title, inputsTitle, breakdownTitle, footer, preparing, error, fileName } }` | tabs `[data-role-tab="<role key>"]`; `form[data-earn-form]` with range inputs `ticket`, `spots`, `venue`, `pods` in `[data-field][data-field-roles]`, each labelled by `[data-out="<name>"]` (prefix from `data-prefix`); `[data-earn-label]`, `[data-earn-takehome]`, `[data-earn-rows]`, `[data-earn-note]`, `[data-duties-title]`, `[data-duties]`, `[data-print-estimate]` |
 | `campaign-calculator` | the calculator `<section>` | `data-graphql-url`; `data-config` `{ initial: RateCard, defaultPick }`; `data-copy` `{ perDaySuffix, note, emptyNote, failedNote, dayOne, daysMany }` | `form[data-ads-form]` with `[data-placements]` (`input[name="placement"]` chips) and `input[name="days"]`; `[data-days-out]`, `[data-total]`, `[data-rows]`, `[data-note]`; phone slots `[data-zone="<position>"]` (get `is-live`). Page-level, optional: `[data-rate-rows][data-rate-empty]` + `[data-placement-notes]` |
 | `contact-form` | the `<form>` | `data-graphql-url`; `data-copy` `{ sending, sent, send, failed, failedRetry }` | fields `name`, `email`, `subject`, `message`; the captcha widget; error line `[data-form-error]` |
+| `careers-apply` | the `<dialog>` (`CareersApply.astro`) | `data-graphql-url`; `data-copy` `{ sending, sent, send, failed, failedRetry }` | a `<form>` with `name`, `email`, `phone`, `resume_url`, `portfolio_url`, `cover_note`; `[data-apply-role-title]`; `[data-apply-close]` outside the form; error line `[data-form-error]`. Opened by any `[data-apply-role]` on the page (`ApplyButton.astro`), which carries `data-role-title` and `data-role-id`; submits `submitJobApplication` into the Job Applications inbox. |
 | `faq` | the FAQ list element **or** the ask `<form>` (two roots) | both: `data-graphql-url`. List: `data-copy` `{ empty, error }`. Form: `data-copy` `{ ask, sending, gotIt, tooShort, needEmail, failed, failedRetry }` | form: fields `question`, `email`, the captcha widget, `[data-form-error]` |
 | `help-center` | the topic grid | `data-graphql-url`; `data-copy` `{ empty, error, general, one, many }` | page-level `input[data-help-search]` |
 | `grievance-form` | the `<form>` | `data-graphql-url`; `data-source` (e.g. `WEBSITE`); `data-failed`; `data-sending` | fields `support_ticket_ref`, `name`, `email`, `phone`, `address`, `subject`, `description`; captcha; `[data-form-error]`. Page-level: `[data-grievance-done]`, `[data-grievance-ref]`, `[data-grievance-ladder]` |
@@ -422,6 +426,26 @@ so a migration can swap the snapshot back for the live block. `cmsBlockProps` (f
 | `policy-strip` | `PolicyStrip.astro` (only when it has policies) | `{ policies: { slug, title }[], baseUrl?, heading?, allLabel?, class? }` |
 
 A prop the page did not pass is absent, and the component's default applies on redraw.
+
+### Careers Apply (`CareersApply.astro`, `ApplyButton.astro`)
+
+A careers opening's "Apply now" and the dialog it opens, for any site. Render
+`CareersApply` once per page and an `ApplyButton` per role; the `careers-apply` widget
+wires them. The CMS renderer draws both from the `apply` block the server puts on every
+Careers card and career page.
+
+```astro
+---
+import CareersApply from '@duncit/brand/CareersApply.astro';
+import ApplyButton from '@duncit/brand/ApplyButton.astro';
+import { PHONE_INTL_PLUS } from '@duncit/regex';
+---
+<ApplyButton role="QA Tester" roleId={entry.id} t={t} />
+<CareersApply graphqlUrl={graphqlUrl} phonePattern={PHONE_INTL_PLUS.source.slice(1, -1)} t={t} />
+```
+
+`phonePattern` is the field's HTML `pattern`; pass it from `@duncit/regex` (the server's
+own rule) — this package keeps no regex of its own.
 
 ### Design system CSS (`cms-design`)
 

@@ -116,3 +116,14 @@ export interface CmsPreviewData {
     site: { design: NonNullable<CmsRenderResult['site']>['design']; custom_css: string } | null;
   };
 }
+
+/** The draft on the page's own domain, behind a signed short-lived preview flag. */
+export const CMS_PREVIEW_LINK = gql`
+  query CmsPreviewLink($pageId: ID!) {
+    cmsPreviewLink(page_id: $pageId) { url expires_at }
+  }
+`;
+
+export interface CmsPreviewLinkData {
+  cmsPreviewLink: { url: string; expires_at: string };
+}

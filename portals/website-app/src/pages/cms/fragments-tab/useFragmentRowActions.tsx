@@ -5,6 +5,7 @@ import BrushIcon from '@mui/icons-material/Brush';
 import EditIcon from '@mui/icons-material/Edit';
 import PublishIcon from '@mui/icons-material/Publish';
 import HistoryIcon from '@mui/icons-material/History';
+import MovieIcon from '@mui/icons-material/Movie';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
@@ -15,6 +16,8 @@ import type { RowAction } from '../components/RowActions';
 interface Dialogs {
   rename: (fragment: CmsFragmentRow) => void;
   versions: (fragment: CmsFragmentRow) => void;
+  /** The reels a Reel Slider component plays. */
+  reels: () => void;
 }
 
 /** The menu every fragment row carries. */
@@ -64,6 +67,13 @@ export function useFragmentRowActions(siteId: string, refresh: () => void, dialo
         label: t('websiteApp.cms.pages.design'),
         icon: <BrushIcon fontSize="small" />,
         onClick: () => navigate(`/sites/${siteId}/fragments/${fragment.id}/design`),
+      },
+      {
+        key: 'reels',
+        label: t('websiteApp.cms.fragments.manageReels'),
+        icon: <MovieIcon fontSize="small" />,
+        hidden: !fragment.blocks.includes('reel-slider'),
+        onClick: dialogs.reels,
       },
       { key: 'rename', label: t('websiteApp.cms.fragments.rename'), icon: <EditIcon fontSize="small" />, onClick: () => dialogs.rename(fragment) },
       {

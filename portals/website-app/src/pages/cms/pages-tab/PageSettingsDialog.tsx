@@ -5,13 +5,13 @@ import { useTranslation } from '@duncit/shell';
 import type { CmsCollection } from '@duncit/gql-types';
 import { CREATE_CMS_PAGE, UPDATE_CMS_PAGE, type CmsPageRow } from '../queries/pages';
 import { cmsErrorMessage } from '../lib/errors';
-import { PageForm, toPageInput, type PageFormOutput } from './page-form';
+import { PageForm, toPageInput, type PageFormOutput, type PagePreset } from './page-form';
 
 interface Props {
   siteId: string;
   collections: CmsCollection[];
   /** null: closed. `{ page: null }`: a new page. */
-  state: { page: CmsPageRow | null } | null;
+  state: { page: CmsPageRow | null; preset?: PagePreset } | null;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -47,8 +47,9 @@ export default function PageSettingsDialog({ siteId, collections, state, onClose
       <DialogContent dividers>
         {state && (
           <PageForm
-            key={page?.id ?? 'new'}
+            key={page?.id ?? state.preset?.path ?? 'new'}
             page={page}
+            preset={state?.preset ?? null}
             collections={collections}
             submitting={submitting}
             errorMessage={saveError}

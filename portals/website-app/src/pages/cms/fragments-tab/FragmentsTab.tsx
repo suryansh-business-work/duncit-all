@@ -15,10 +15,11 @@ import RowActions from '../components/RowActions';
 import VersionsDialog from '../components/VersionsDialog';
 import { FragmentForm, toFragmentInput, type FragmentFormOutput } from './fragment-form';
 import { useFragmentRowActions } from './useFragmentRowActions';
+import ReelsDialog from './ReelsDialog';
 
 const getRowId = (fragment: CmsFragmentRow) => fragment.id;
 
-/** Headers, footers and reusable sections — designed once, used on every page. */
+/** The site's components: headers, footers, sections and live blocks — designed once, dragged into any page. */
 export default function FragmentsTab({ site }: Readonly<{ site: CmsSiteRow }>) {
   const { t } = useTranslation();
   const labels = useCmsLabels();
@@ -28,20 +29,21 @@ export default function FragmentsTab({ site }: Readonly<{ site: CmsSiteRow }>) {
   const refresh = useCallback(() => refetchRef.current?.(), []);
   const [editing, setEditing] = useState<{ fragment: CmsFragmentRow | null } | null>(null);
   const [versions, setVersions] = useState<CmsFragmentRow | null>(null);
+  const [reelsOpen, setReelsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [createFragment] = useMutation(CREATE_CMS_FRAGMENT);
   const [updateFragment] = useMutation(UPDATE_CMS_FRAGMENT);
 
   const fetchRows = useApolloTableFetch<CmsFragmentRow>(client, CMS_FRAGMENTS_TABLE, 'cmsFragmentsTable', { extraVariables: { siteId: site.id } }, [site.id]);
-  const dialogs = useMemo(() => ({ rename: (fragment: CmsFragmentRow) => setEditing({ fragment }), versions: setVersions }), []);
+  const dialogs = useMemo(() => ({ rename: (fragment: CmsFragmentRow) => setEditing({ fragment }), versions: setVersions, reels: () => setReelsOpen(true) }), []);
   const actionsFor = useFragmentRowActions(site.id, refresh, dialogs);
 
   const columns = useMemo<DuncitColumn<CmsFragmentRow>[]>(
     () => [
       { field: 'name', headerName: t('websiteApp.cms.fragments.colName'), type: 'text', flex: 1, minWidth: 180 },
       { field: 'key', headerName: t('websiteApp.cms.fragments.colKey'), type: 'text', width: 180 },
-      { field: 'kind', headerName: t('websiteApp.cms.fragments.colKind'), type: 'text', width: 130, valueGetter: (f) => labels.fragmentKind[f.kind] },
+      { field: 'kind', headerName: t('websiteApp.cms.fragments.colKind'), type: 'text', width: 130, valueGetter: (f) => (f.blocks.length ? labels.liveComponent : labels.fragmentKind[f.kind]) },
       {
         field: 'is_published',
         headerName: t('shell.common.status'),
@@ -105,6 +107,7 @@ export default function FragmentsTab({ site }: Readonly<{ site: CmsSiteRow }>) {
         </DialogContent>
       </Dialog>
       <VersionsDialog owner={versions ? { kind: 'FRAGMENT', id: versions.id, name: versions.name } : null} onClose={() => setVersions(null)} onRestored={refresh} />
+      <ReelsDialog site={site} open={reelsOpen} onClose={() => setReelsOpen(false)} />
     </>
   );
 }

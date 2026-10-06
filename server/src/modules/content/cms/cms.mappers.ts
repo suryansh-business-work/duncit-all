@@ -122,12 +122,22 @@ export const toPage = (page: ICmsPage) => ({
   updated_at: iso(page.updated_at) ?? '',
 });
 
+/** The exact marker the editor writes for a live block (see cmsRender.compose.ts). */
+const BLOCK_MARKER = /<cms-block data-block="([a-z0-9-]+)"/g;
+
+/** The live blocks (reel slider, newsletter…) a component holds, from its draft, else its live copy. */
+const blocksOf = (fragment: ICmsFragment): string[] => {
+  const html = fragment.draft?.html || fragment.published?.html || '';
+  return [...new Set([...html.matchAll(BLOCK_MARKER)].map((match) => match[1]))];
+};
+
 export const toFragment = (fragment: ICmsFragment) => ({
   id: idOf(fragment._id),
   site_id: idOf(fragment.site_id),
   key: fragment.key,
   name: fragment.name,
   kind: fragment.kind ?? 'SECTION',
+  blocks: blocksOf(fragment),
   is_published: fragment.is_published ?? false,
   has_unpublished_changes: hasUnpublishedChanges(fragment),
   draft: draftOf(fragment.draft),

@@ -229,6 +229,24 @@ services:
     ports:
       - "127.0.0.1:2025:8080"
 
+  # The Website CMS renderer: serves every CMS site by hostname. A path the CMS
+  # has no page for (a short link, a newer policy) is passed to that site's old
+  # container below, so moving a domain here loses nothing.
+  cms-site:
+    image: ${DOCKERHUB_USERNAME}/duncit-cms-site:${IMAGE_TAG:-latest}
+    container_name: duncit-cms-site
+    restart: unless-stopped
+    environment:
+      # The API over the internal network — the public domain from inside a
+      # container fails on hairpin NAT (see the server's OPENWA_INTERNAL_URL).
+      GRAPHQL_URL: http://server:2001/graphql
+      LEGACY_ORIGIN_MAIN: http://website:8080
+      LEGACY_ORIGIN_PARTNERS: http://partners-website:8080
+      LEGACY_ORIGIN_ADS: http://ads-website:8080
+      LEGACY_ORIGIN_EARNWITH: http://earnwith:8080
+    ports:
+      - "127.0.0.1:2043:8080"
+
   challenge:
     image: ${DOCKERHUB_USERNAME}/duncit-challenge:${IMAGE_TAG:-latest}
     container_name: duncit-challenge

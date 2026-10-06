@@ -1,0 +1,49 @@
+---
+/**
+ * Shown on a page opened with a `cms_preview` link: says it is a preview (or
+ * that the link expired and this is the live page), with a way to the live one.
+ */
+import type { SiteTranslate } from '@duncit/brand/site-i18n';
+
+interface Props {
+  state: 'active' | 'expired';
+  liveUrl: string;
+  t: SiteTranslate;
+}
+
+const { state, liveUrl, t } = Astro.props;
+---
+
+<div class:list={['cms-preview-banner', `cms-preview-banner--${state}`]} role="status">
+  <span>{state === 'active' ? t('website.cms.preview.active') : t('website.cms.preview.expired')}</span>
+  {state === 'active' && <a href={liveUrl}>{t('website.cms.preview.viewLive')}</a>}
+</div>
+
+<style>
+  .cms-preview-banner {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+    font: 600 0.875rem/1.4 var(--font-body, system-ui, sans-serif);
+    text-align: center;
+    color: var(--color-ink, #16131a);
+    background: var(--color-tertiary, #ffd166);
+  }
+  .cms-preview-banner--expired {
+    background: var(--color-line, #e7e2da);
+  }
+  .cms-preview-banner a {
+    color: inherit;
+    text-decoration: underline;
+  }
+  .cms-preview-banner a:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+  }
+</style>

@@ -1,0 +1,63 @@
+---
+/**
+ * One composed CMS page as a full document, inside its site's layout: the
+ * page's html with its live blocks drawn in place, pagination, the careers
+ * Apply dialog when the page has openings, and the preview banner. Shared by
+ * the page route and the 500 page, so an error page renders like any other.
+ */
+import CareersApply from '@duncit/brand/CareersApply.astro';
+import { PHONE_INTL_PLUS } from '@duncit/regex';
+import type { SiteTranslate } from '@duncit/brand/site-i18n';
+import CmsLayout from '../layouts/CmsLayout.astro';
+import CmsBlock from './CmsBlock.astro';
+import Pagination from './Pagination.astro';
+import NotFound from './NotFound.astro';
+import PreviewBanner from './PreviewBanner.astro';
+import type { CmsRenderResult } from '@duncit/gql-types';
+import { splitSegments } from '../lib/segments';
+import { localiseDates } from '../lib/design';
+import { SITE_LOCALE } from '../lib/translator';
+
+interface Props {
+  result: CmsRenderResult & { site: NonNullable<CmsRenderResult['site']> };
+  url: string;
+  graphqlUrl: string;
+  t: SiteTranslate;
+  preview?: 'none' | 'active' | 'expired';
+  liveUrl?: string;
+}
+
+const { result, url, graphqlUrl, t, preview = 'none', liveUrl = url } = Astro.props;
+const site = result.site;
+const segments = splitSegments(localiseDates(result.html, SITE_LOCALE));
+// One Apply dialog for every careers opening on the page. HTML `pattern` is anchored itself, so the regex's ^ and $ go.
+const hasApply = segments.some((segment) => segment.kind === 'block' && segment.block === 'apply');
+const phonePattern = PHONE_INTL_PLUS.source.slice(1, -1);
+---
+
+<CmsLayout
+  site={site}
+  title={result.title}
+  seo={result.seo}
+  url={url}
+  pageCss={result.css}
+  pageHead={result.head_html}
+  pageJs={result.custom_js}
+  graphqlUrl={graphqlUrl}
+  t={t}
+>
+  {preview !== 'none' && <PreviewBanner state={preview} liveUrl={liveUrl} t={t} />}
+  {result.html === '' && result.status === 404 ? (
+    <main id="main"><NotFound kind="missing" t={t} bare /></main>
+  ) : (
+    segments.map((segment) =>
+      segment.kind === 'html' ? (
+        <Fragment set:html={segment.html} />
+      ) : (
+        <CmsBlock block={segment.block} props={segment.props} graphqlUrl={graphqlUrl} legacySite={site.legacy_site ?? null} t={t} />
+      )
+    )
+  )}
+  {result.pagination && <Pagination pagination={result.pagination} t={t} />}
+  {hasApply && <CareersApply graphqlUrl={graphqlUrl} phonePattern={phonePattern} t={t} />}
+</CmsLayout>

@@ -8,6 +8,7 @@ export const CMS_FRAGMENT_ROW = gql`
     key
     name
     kind
+    blocks
     is_published
     has_unpublished_changes
     published { version published_at }
@@ -15,7 +16,7 @@ export const CMS_FRAGMENT_ROW = gql`
   }
 `;
 
-export type CmsFragmentRow = Pick<CmsFragment, 'id' | 'site_id' | 'key' | 'name' | 'kind' | 'is_published' | 'has_unpublished_changes' | 'updated_at'> & {
+export type CmsFragmentRow = Pick<CmsFragment, 'id' | 'site_id' | 'key' | 'name' | 'kind' | 'blocks' | 'is_published' | 'has_unpublished_changes' | 'updated_at'> & {
   published: Pick<CmsFragment['published'], 'version' | 'published_at'>;
 };
 
@@ -93,13 +94,20 @@ export const DELETE_CMS_FRAGMENT = gql`
 
 export const CMS_VERSIONS = gql`
   query CmsVersions($owner: CmsVersionOwner!, $id: ID!) {
-    cmsVersions(owner_kind: $owner, owner_id: $id) { id version published_by created_at }
+    cmsVersions(owner_kind: $owner, owner_id: $id) { id version published_by created_at preview_url }
   }
 `;
 
 export interface CmsVersionsData {
-  cmsVersions: Pick<CmsVersion, 'id' | 'version' | 'published_by' | 'created_at'>[];
+  cmsVersions: Pick<CmsVersion, 'id' | 'version' | 'published_by' | 'created_at' | 'preview_url'>[];
 }
+
+/** Makes one saved version live: it becomes the draft and is published. */
+export const PUBLISH_CMS_VERSION = gql`
+  mutation PublishCmsVersion($id: ID!) {
+    publishCmsVersion(version_id: $id)
+  }
+`;
 
 export const RESTORE_CMS_VERSION = gql`
   mutation RestoreCmsVersion($id: ID!) {

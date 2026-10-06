@@ -10,7 +10,9 @@ import { escapeHtml } from '@utils/html';
  *   <cms-entry-list data-variant="cards"></cms-entry-list>  a collection list
  *
  * `<cms-block …>` (newsletter, reel slider, calculators…) is NOT handled here:
- * those are live widgets the Astro renderer draws itself.
+ * those are live widgets the Astro renderer draws itself. This file only
+ * WRITES one: the `apply` block on a careers opening, because the opening is
+ * data, not something a designer places.
  */
 
 export interface ComposedPart {
@@ -19,6 +21,9 @@ export interface ComposedPart {
 }
 
 export interface RenderEntry {
+  id: string;
+  /** A careers opening: its card and its page carry an Apply button. */
+  apply: boolean;
   title: string;
   slug: string;
   summary: string;
@@ -88,6 +93,8 @@ export function fieldHtml(entry: RenderEntry, field: string): string {
       return dateText(entry.published_at);
     case 'tags':
       return entry.tags.map((tag) => `<span class="cms-tag">${escapeHtml(tag)}</span>`).join('');
+    case 'apply':
+      return applyBlock(entry);
     case 'cover_image':
       return entry.cover_image_url
         ? `<img class="cms-cover" src="${escapeHtml(entry.cover_image_url)}" alt="${escapeHtml(entry.title)}" loading="lazy">`
@@ -97,8 +104,24 @@ export function fieldHtml(entry: RenderEntry, field: string): string {
   }
 }
 
+const APPLY_FIELD = '<cms-field data-field="apply"></cms-field>';
+const BODY_FIELD = '<cms-field data-field="body_html"></cms-field>';
+
+/** The renderer draws this as a localised Apply button opening the job-application dialog. */
+function applyBlock(entry: RenderEntry): string {
+  if (!entry.apply) return '';
+  const props = JSON.stringify({ role: entry.title, role_id: entry.id });
+  return `<cms-block data-block="apply" data-props="${escapeHtml(props)}"></cms-block>`;
+}
+
+/** A careers page gets its Apply button even when its template never placed one: under the body, else at the end. */
+function withApply(html: string, entry: RenderEntry): string {
+  if (!entry.apply || html.includes(APPLY_FIELD)) return html;
+  return html.includes(BODY_FIELD) ? html.replace(BODY_FIELD, BODY_FIELD + APPLY_FIELD) : html + APPLY_FIELD;
+}
+
 export const bindEntry = (html: string, entry: RenderEntry) =>
-  html.replaceAll(FIELD_TAG, (_match, field: string) => fieldHtml(entry, field));
+  withApply(html, entry).replaceAll(FIELD_TAG, (_match, field: string) => fieldHtml(entry, field));
 
 function entryCard(entry: RenderEntry, basePath: string, variant: string): string {
   const href = escapeHtml(`${basePath}/${entry.slug}`);
@@ -110,7 +133,7 @@ function entryCard(entry: RenderEntry, basePath: string, variant: string): strin
     (cover ? `<a class="cms-card__media" href="${href}" tabindex="-1" aria-hidden="true">${cover}</a>` : '') +
     `<div class="cms-card__body">${category}` +
     `<h2 class="cms-card__title"><a href="${href}">${escapeHtml(entry.title)}</a></h2>` +
-    `${summary}<div class="cms-card__meta">${dateText(entry.published_at)}</div></div></article>`
+    `${summary}<div class="cms-card__meta">${dateText(entry.published_at)}</div>${applyBlock(entry)}</div></article>`
   );
 }
 

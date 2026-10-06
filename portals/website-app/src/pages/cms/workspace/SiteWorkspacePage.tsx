@@ -27,7 +27,6 @@ export default function SiteWorkspacePage() {
       { value: 'pages', label: t('websiteApp.cms.tabs.pages') },
       { value: 'fragments', label: t('websiteApp.cms.tabs.fragments') },
       ...(site?.collections ?? []).map((collection) => ({ value: COLLECTION_SLUG[collection], label: labels.collection[collection] })),
-      { value: 'reels', label: t('websiteApp.cms.tabs.reels') },
       { value: 'design', label: t('websiteApp.cms.tabs.design') },
       { value: 'code', label: t('websiteApp.cms.tabs.code') },
       { value: 'settings', label: t('websiteApp.cms.tabs.settings') },

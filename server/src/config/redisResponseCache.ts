@@ -34,13 +34,17 @@
  * Invalidation is TTL-only (REDIS_CACHE_TTL_SECONDS, default 60): an admin
  * edit to whitelisted data appears within a minute everywhere, and
  * `?noRedis=true` shows it instantly while verifying.
+ *
+ * The ONE exception is the Website CMS (`CMS_EPOCH_FIELDS`): its keys carry
+ * the CMS epoch, which every CMS write bumps (bumpCmsEpoch), so a publish is
+ * live on the next request instead of up to a TTL later.
  */
 import { createHash } from 'node:crypto';
 import { HeaderMap, type ApolloServerPlugin } from '@apollo/server';
 import { Kind, type OperationDefinitionNode } from 'graphql';
 import type { GraphQLContext } from '../context';
 import { logs } from '../observability/log';
-import { cacheGet, cacheSet, redisAvailable } from './redis';
+import { cacheGet, cacheIncr, cacheSet, redisAvailable } from './redis';
 
 /**
  * Public queries whose result depends only on their arguments — never on the
@@ -76,6 +80,7 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   // TTL. cmsPreview (drafts) is role-gated and deliberately NOT listed.
   'cmsRender',
   'cmsSitemap',
+  'cmsErrorPage',
   'publicPodPlans',
   'publicFaqGroups',
   'publicPartnerFaqs',
@@ -147,6 +152,18 @@ const PERSONAL_CACHEABLE_FIELDS = new Set([
   'myPodIdeas',
   'myAddresses',
 ]);
+
+/** CMS render fields: cached, but keyed by the CMS epoch so any CMS write retires every entry at once. */
+const CMS_EPOCH_FIELDS = new Set(['cmsRender', 'cmsSitemap', 'cmsErrorPage']);
+const CMS_EPOCH_KEY = 'cms:epoch';
+
+/** Called after every Website CMS write: the next render of every CMS page reads fresh. */
+export async function bumpCmsEpoch(): Promise<void> {
+  await cacheIncr(CMS_EPOCH_KEY);
+}
+
+const selectsCms = (operation: OperationDefinitionNode | undefined) =>
+  operation?.selectionSet.selections.some((s) => s.kind === Kind.FIELD && CMS_EPOCH_FIELDS.has(s.name.value)) ?? false;
 
 const DEFAULT_TTL_SECONDS = 60;
 
@@ -225,7 +242,8 @@ export const redisResponseCachePlugin: ApolloServerPlugin<GraphQLContext> = {
         const identity = scope === 'personal' ? contextValue.user?.id ?? null : null;
         if (scope === 'personal' && !identity) return null;
         if (!redisAvailable()) return null;
-        const key = cacheKey(scope, identity, ctx.request.query, ctx.request.variables, ctx.request.operationName);
+        const epoch = selectsCms(ctx.operation) ? `cms${(await cacheGet<number>(CMS_EPOCH_KEY)) ?? 0}:` : '';
+        const key = epoch + cacheKey(scope, identity, ctx.request.query, ctx.request.variables, ctx.request.operationName);
         const data = await cacheGet<Record<string, unknown>>(key);
         if (data == null) {
           attempts.set(contextValue, { key, state: 'miss' });

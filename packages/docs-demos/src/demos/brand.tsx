@@ -49,6 +49,11 @@ export default defineDemos('brand', [
             'cmsBlockProps / CMS_BLOCKS — the data-cms-block + data-cms-props markers on Newsletter, ReelSlider, EarnShowcase, AppDownload, SocialLinks and PolicyStrip.',
         },
         {
+          name: 'CareersApply.astro + ApplyButton.astro',
+          renders:
+            'The careers "Apply now" button per role and the one dialog it opens; the careers-apply widget posts submitJobApplication into the Job Applications inbox of the Website portal.',
+        },
+        {
           name: 'cms-design',
           renders:
             'tokensCss / googleFontsHref / fontStack / fontCss — a CMS website\'s design system (tokens, Google + uploaded fonts) as CSS, shared by the cms-site renderer and the Website portal editor so both draw a page identically.',

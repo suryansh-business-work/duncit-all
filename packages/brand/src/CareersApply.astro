@@ -1,0 +1,176 @@
+---
+/**
+ * The "apply for this role" dialog, once per page. Any element marked
+ * `data-apply-role` (see ApplyButton.astro) opens it for its role; the
+ * `careers-apply` widget (./widgets/careers-apply.ts) posts the application to
+ * the Website portal's Job Applications inbox.
+ *
+ * `phonePattern` is the HTML `pattern` for the optional phone field. The
+ * caller passes it from @duncit/regex (PHONE_INTL_PLUS, the server's own
+ * rule), so this package keeps no regex of its own.
+ */
+import { siteT, type SiteTranslate } from './site-i18n';
+
+interface Props {
+  graphqlUrl: string;
+  phonePattern: string;
+  t?: SiteTranslate;
+}
+
+const { graphqlUrl, phonePattern, t = siteT } = Astro.props;
+const copy = JSON.stringify({
+  sending: t('website.brand.apply.sending'),
+  sent: t('website.brand.apply.sent'),
+  send: t('website.brand.apply.submit'),
+  failed: t('website.brand.apply.failed'),
+  failedRetry: t('website.brand.apply.failedRetry'),
+});
+const titleId = `apply-title-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<dialog class="apply-dialog" data-cms-widget="careers-apply" data-graphql-url={graphqlUrl} data-copy={copy} aria-labelledby={titleId}>
+  <div class="apply-head">
+    <div>
+      <p class="apply-eyebrow">{t('website.brand.apply.applyFor')}</p>
+      <h2 class="apply-title" id={titleId} data-apply-role-title></h2>
+    </div>
+    <button type="button" class="apply-close" data-apply-close aria-label={t('website.brand.apply.close')}>
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </div>
+  <form class="apply-form" novalidate>
+    <label class="apply-field">
+      <span>{t('website.brand.apply.fullName')}</span>
+      <input name="name" required minlength="2" maxlength="120" autocomplete="name" />
+    </label>
+    <label class="apply-field">
+      <span>{t('website.brand.apply.email')}</span>
+      <input name="email" type="email" required maxlength="254" autocomplete="email" />
+    </label>
+    <label class="apply-field">
+      <span>{t('website.brand.apply.phone')}</span>
+      <input name="phone" type="tel" pattern={phonePattern} autocomplete="tel" />
+    </label>
+    <label class="apply-field">
+      <span>{t('website.brand.apply.resume')}</span>
+      <input name="resume_url" type="url" />
+    </label>
+    <label class="apply-field">
+      <span>{t('website.brand.apply.portfolio')}</span>
+      <input name="portfolio_url" type="url" />
+    </label>
+    <label class="apply-field">
+      <span>{t('website.brand.apply.why')}</span>
+      <textarea name="cover_note" rows="3" maxlength="4000"></textarea>
+    </label>
+    <p class="apply-error hidden" data-form-error role="alert"></p>
+    <button type="submit" class="apply-submit">
+      <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+      {t('website.brand.apply.submit')}
+    </button>
+  </form>
+</dialog>
+
+<style>
+  /* Plain CSS on purpose: this package sits outside every site's Tailwind
+     source scan. Only the tokens are borrowed, and every site declares those. */
+  .apply-dialog {
+    width: min(92%, 32rem);
+    margin: auto;
+    padding: 1.5rem;
+    border: 0;
+    border-radius: 1.5rem;
+    background: var(--color-cream, #fbf7f0);
+    color: var(--color-ink, #16131a);
+  }
+  .apply-dialog::backdrop {
+    background: rgba(22, 19, 26, 0.6);
+    backdrop-filter: blur(4px);
+  }
+  .apply-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .apply-eyebrow {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-primary, #e8344e);
+  }
+  .apply-title {
+    margin: 0.25rem 0 0;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+  .apply-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-ink, #16131a);
+    color: var(--color-cream, #fbf7f0);
+    cursor: pointer;
+  }
+  .apply-form {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .apply-field {
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .apply-field input,
+  .apply-field textarea {
+    padding: 0.625rem 1rem;
+    border: 2px solid rgba(22, 19, 26, 0.1);
+    border-radius: 0.5rem;
+    background: var(--color-surface, #fff);
+    font: inherit;
+    font-weight: 400;
+  }
+  .apply-field input:focus-visible,
+  .apply-field textarea:focus-visible,
+  .apply-close:focus-visible,
+  .apply-submit:focus-visible {
+    outline: 3px solid var(--color-primary, #e8344e);
+    outline-offset: 2px;
+  }
+  .apply-error {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary, #e8344e);
+  }
+  .apply-error.hidden {
+    display: none;
+  }
+  .apply-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-radius: 0.75rem;
+    background: var(--color-primary, #e8344e);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .apply-submit:disabled {
+    opacity: 0.7;
+    cursor: progress;
+  }
+</style>

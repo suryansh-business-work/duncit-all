@@ -12,6 +12,7 @@ import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 import AppDownload from '@duncit/brand/AppDownload.astro';
 import SocialLinks from '@duncit/brand/SocialLinks.astro';
 import PolicyStrip from '@duncit/brand/PolicyStrip.astro';
+import ApplyButton from '@duncit/brand/ApplyButton.astro';
 import type { SiteTranslate } from '@duncit/brand/site-i18n';
 import { list, record, text } from '../lib/props';
 
@@ -64,3 +65,4 @@ const accounts = list(props.accounts).map(record).map((a) => ({ icon: text(a.ico
 {block === 'policy-strip' && policies.length > 0 && (
   <PolicyStrip policies={policies} baseUrl={text(props.baseUrl) || undefined} heading={text(props.heading) || undefined} t={t} />
 )}
+{block === 'apply' && text(props.role) && <ApplyButton role={text(props.role)} roleId={text(props.role_id) || null} t={t} />}

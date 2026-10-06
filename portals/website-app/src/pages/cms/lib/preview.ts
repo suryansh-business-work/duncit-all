@@ -13,6 +13,8 @@ export const PLACEHOLDER_CSS = [
   'cms-fragment::before{content:attr(data-key)}',
   'cms-field{display:inline-block;min-height:0}cms-field::before{content:"{" attr(data-field) "}"}',
   'cms-entry-list::before{content:attr(data-variant)}',
+  // The composed preview wraps each component like the live site does: no box of its own.
+  '[data-cms-fragment]{display:contents}',
 ].join('');
 
 const STYLE_CLOSE = /<\/style/gi;

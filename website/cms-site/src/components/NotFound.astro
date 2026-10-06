@@ -1,7 +1,8 @@
 ---
 /**
  * The renderer's own fallback pages: no site answers on this hostname, the
- * site has no page at this path (and no designed /404), or the API is down.
+ * site has no page at this path (and no designed /404), the API is down (and
+ * the site has no designed /503), or rendering failed (and no /500).
  * `bare` draws only the message, inside a site's own header and footer.
  */
 import type { SiteTranslate } from '@duncit/brand/site-i18n';
@@ -9,7 +10,7 @@ import { SITE_LOCALE } from '../lib/translator';
 import '../styles/cms.css';
 
 interface Props {
-  kind: 'missing' | 'unavailable';
+  kind: 'missing' | 'unavailable' | 'error';
   t: SiteTranslate;
   bare?: boolean;
 }
@@ -17,9 +18,12 @@ interface Props {
 const { kind, t, bare = false } = Astro.props;
 // Literal keys, one per branch: the translation-key gate can only see a
 // t('…') it can read.
-const missing = kind === 'missing';
-const title = missing ? t('website.cms.notFound.title') : t('website.cms.unavailable.title');
-const text = missing ? t('website.cms.notFound.text') : t('website.cms.unavailable.text');
+const COPY = {
+  missing: { title: t('website.cms.notFound.title'), text: t('website.cms.notFound.text') },
+  unavailable: { title: t('website.cms.unavailable.title'), text: t('website.cms.unavailable.text') },
+  error: { title: t('website.cms.error.title'), text: t('website.cms.error.text') },
+};
+const { title, text } = COPY[kind];
 ---
 
 {bare ? (

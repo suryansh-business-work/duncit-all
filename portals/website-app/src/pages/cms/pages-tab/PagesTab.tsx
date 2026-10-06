@@ -9,6 +9,8 @@ import { CMS_PAGES_TABLE, type CmsPageRow } from '../queries/pages';
 import PreviewDialog from '../components/PreviewDialog';
 import VersionsDialog from '../components/VersionsDialog';
 import PagesTable from './PagesTable';
+import ErrorPagesMenu from './ErrorPagesMenu';
+import type { PagePreset } from './page-form';
 import PageSettingsDialog from './PageSettingsDialog';
 import DuplicateDialog from './DuplicateDialog';
 import { usePageRowActions } from './usePageRowActions';
@@ -19,7 +21,7 @@ export default function PagesTab({ site }: Readonly<{ site: CmsSiteRow }>) {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
-  const [settings, setSettings] = useState<{ page: CmsPageRow | null } | null>(null);
+  const [settings, setSettings] = useState<{ page: CmsPageRow | null; preset?: PagePreset } | null>(null);
   const [preview, setPreview] = useState<CmsPageRow | null>(null);
   const [duplicate, setDuplicate] = useState<CmsPageRow | null>(null);
   const [versions, setVersions] = useState<CmsPageRow | null>(null);
@@ -44,9 +46,12 @@ export default function PagesTab({ site }: Readonly<{ site: CmsSiteRow }>) {
         refetchRef={refetchRef}
         actionsFor={actionsFor}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setSettings({ page: null })} data-testid="cms-new-page">
-            {t('websiteApp.cms.pages.new')}
-          </DuncitButton>
+          <>
+            <ErrorPagesMenu onCreate={(preset) => setSettings({ page: null, preset })} />
+            <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setSettings({ page: null })} data-testid="cms-new-page">
+              {t('websiteApp.cms.pages.new')}
+            </DuncitButton>
+          </>
         }
       />
       <PageSettingsDialog

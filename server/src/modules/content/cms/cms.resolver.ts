@@ -1,5 +1,6 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { bumpCmsEpoch } from '@config/redisResponseCache';
 import { validate } from '@utils/validate';
 import type { TableQueryInput } from '@utils/table-query';
 import { CMS_ROLES, type CmsCollection } from './cms.constants';
@@ -18,6 +19,7 @@ import { cmsContentService } from './cmsContent.service';
 import { cmsRenderService } from './cmsRender.service';
 import { cmsGoogleFontsService } from './cmsGoogleFonts.service';
 import { cmsSiteDnsService } from './cmsSiteDns.service';
+import { cmsPreviewLinkService } from './cmsPreviewLink.service';
 import { cmsSiteRevisionService } from './cmsSiteRevision.service';
 import type { CmsSiteSection } from './cmsSiteRevision.model';
 import { toFragment, toPage } from './cms.mappers';
@@ -36,17 +38,43 @@ const editor = (ctx: GraphQLContext) => String(requireRole(ctx, CMS_ROLES).id);
  * live host down. A website manager without it sees the records refused. */
 const DNS_ROLES = ['SUPER_ADMIN', 'TECH_MANAGER'];
 
+type Resolver = (parent: unknown, args: never, ctx: GraphQLContext) => unknown;
+
+/**
+ * Every CMS write retires every cached CMS render (bumpCmsEpoch), so what is
+ * published is what the next visitor sees — not what Redis held for a minute.
+ * Wrapping the whole map means a new mutation cannot forget to.
+ */
+function bumpingEpoch(mutations: Record<string, Resolver>): Record<string, Resolver> {
+  const wrapped: Record<string, Resolver> = {};
+  for (const [name, resolve] of Object.entries(mutations)) {
+    wrapped[name] = async (parent, args, ctx) => {
+      const result = await resolve(parent, args, ctx);
+      await bumpCmsEpoch();
+      return result;
+    };
+  }
+  return wrapped;
+}
+
 export const cmsResolvers = {
   Query: {
     // Public — the website renderer calls these on every uncached request.
     cmsRender: (_p: unknown, args: Args<{ host: string; path: string; page?: number | null }>) =>
       cmsRenderService.render(args.host, args.path, args.page ?? 1),
     cmsSitemap: (_p: unknown, args: Args<{ host: string }>) => cmsRenderService.sitemap(args.host),
+    cmsErrorPage: (_p: unknown, args: Args<{ host: string; code: number }>) => cmsRenderService.errorPage(args.host, args.code),
 
     cmsPreview: (_p: unknown, args: Args<{ page_id: string; entry_id?: string | null }>, ctx: GraphQLContext) => {
       editor(ctx);
       return cmsRenderService.preview(args.page_id, args.entry_id);
     },
+    cmsPreviewLink: (_p: unknown, args: Args<{ page_id: string; version?: number | null; entry_id?: string | null }>, ctx: GraphQLContext) => {
+      editor(ctx);
+      return cmsPreviewLinkService.link(args.page_id, args.version, args.entry_id);
+    },
+    // Public: the signed token IS the permission (cmsPreviewLink.service). Never cached.
+    cmsRenderPreview: (_p: unknown, args: Args<{ token: string }>) => cmsPreviewLinkService.render(args.token),
     cmsSiteRevisions: (_p: unknown, args: Args<{ site_id: string; section?: CmsSiteSection | null }>, ctx: GraphQLContext) => {
       editor(ctx);
       return cmsSiteRevisionService.list(args.site_id, args.section);
@@ -91,9 +119,11 @@ export const cmsResolvers = {
       editor(ctx);
       return cmsFragmentService.get(args.fragment_id);
     },
-    cmsVersions: (_p: unknown, args: Args<{ owner_kind: CmsVersionOwner; owner_id: string }>, ctx: GraphQLContext) => {
+    cmsVersions: async (_p: unknown, args: Args<{ owner_kind: CmsVersionOwner; owner_id: string }>, ctx: GraphQLContext) => {
       editor(ctx);
-      return cmsContentService.versions(args.owner_kind, args.owner_id);
+      const versions = await cmsContentService.versions(args.owner_kind, args.owner_id);
+      // A page version opens on the live domain; a fragment only renders inside pages.
+      return args.owner_kind === 'PAGE' ? cmsPreviewLinkService.withPreviewUrls(args.owner_id, versions) : versions;
     },
     cmsEntriesTable: (
       _p: unknown,
@@ -109,7 +139,7 @@ export const cmsResolvers = {
     },
   },
 
-  Mutation: {
+  Mutation: bumpingEpoch({
     createCmsSite: async (_p: unknown, args: Args<{ input: unknown }>, ctx: GraphQLContext) => {
       editor(ctx);
       return cmsSiteService.create(await validate(cmsSiteInputSchema, args.input));
@@ -188,6 +218,8 @@ export const cmsResolvers = {
       return cmsFragmentService.remove(args.fragment_id);
     },
 
+    publishCmsVersion: (_p: unknown, args: Args<{ version_id: string }>, ctx: GraphQLContext) =>
+      cmsContentService.publishVersion(args.version_id, editor(ctx)),
     restoreCmsVersion: (_p: unknown, args: Args<{ version_id: string }>, ctx: GraphQLContext) => {
       const userId = editor(ctx);
       return cmsContentService.restore(args.version_id, userId);
@@ -205,5 +237,5 @@ export const cmsResolvers = {
       editor(ctx);
       return cmsEntryService.remove(args.entry_id);
     },
-  },
+  }),
 };

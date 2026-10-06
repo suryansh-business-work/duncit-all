@@ -4,18 +4,13 @@
  * the page (or a collection list / entry), and the API answers with the page
  * already composed — this route only renders it into the site's document.
  */
-import CmsLayout from '../layouts/CmsLayout.astro';
-import CmsBlock from '../components/CmsBlock.astro';
-import Pagination from '../components/Pagination.astro';
 import NotFound from '../components/NotFound.astro';
-import CareersApply from '@duncit/brand/CareersApply.astro';
 import { CmsUnavailableError, publicGraphqlUrl, renderPage, renderPreview, requestHost } from '../lib/cms-api';
-import PreviewBanner from '../components/PreviewBanner.astro';
 import { fromLegacy, legacyOrigin } from '../lib/legacy-fallback';
-import { isUrlSlug, PHONE_INTL_PLUS } from '@duncit/regex';
-import { splitSegments } from '../lib/segments';
-import { localiseDates } from '../lib/design';
-import { SITE_LOCALE, translator } from '../lib/translator';
+import { isUrlSlug } from '@duncit/regex';
+import CmsDocument from '../components/CmsDocument.astro';
+import { cachedErrorPage, rememberErrorPages } from '../lib/error-pages';
+import { translator } from '../lib/translator';
 
 const host = requestHost(Astro.request);
 const path = `/${Astro.params.path ?? ''}`;
@@ -52,11 +47,16 @@ if (fallbackOrigin) {
   if (legacy) return legacy;
 }
 
+// The API is unreachable: the site's own maintenance page, from the last good copy.
+result ??= cachedErrorPage(host, 503);
+if (result?.status === 200 && preview === 'none') rememberErrorPages(host);
+
 if (!result) {
   Astro.response.status = 503;
   Astro.response.headers.set('retry-after', '30');
 } else {
   Astro.response.status = result.status;
+  if (result.status === 503) Astro.response.headers.set('retry-after', '30');
   // Revalidated on every visit: a publish is live on the next load. The API's
   // Redis render cache (retired by every CMS write) keeps that cheap.
   if (result.status === 200) Astro.response.headers.set('cache-control', 'public, max-age=0, must-revalidate');
@@ -68,10 +68,6 @@ if (previewToken) {
 }
 
 const site = result?.site ?? null;
-const segments = result ? splitSegments(localiseDates(result.html, SITE_LOCALE)) : [];
-// One Apply dialog for every careers opening on the page. HTML `pattern` is anchored itself, so the regex's ^ and $ go.
-const hasApply = segments.some((segment) => segment.kind === 'block' && segment.block === 'apply');
-const phonePattern = PHONE_INTL_PLUS.source.slice(1, -1);
 // TLS ends at nginx, so the scheme the visitor used comes from its forwarded header.
 const scheme = Astro.request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || Astro.url.protocol.replace(':', '');
 const url = `${scheme}://${host}${path === '/' ? '' : path}`;
@@ -80,31 +76,4 @@ const liveUrl = `${scheme}://${host}${path}`;
 
 {!result && <NotFound kind="unavailable" t={t} />}
 {result && !site && <NotFound kind="missing" t={t} />}
-{result && site && (
-  <CmsLayout
-    site={site}
-    title={result.title}
-    seo={result.seo}
-    url={url}
-    pageCss={result.css}
-    pageHead={result.head_html}
-    pageJs={result.custom_js}
-    graphqlUrl={graphqlUrl}
-    t={t}
-  >
-    {preview !== 'none' && <PreviewBanner state={preview} liveUrl={liveUrl} t={t} />}
-    {result.html === '' && result.status === 404 ? (
-      <main id="main"><NotFound kind="missing" t={t} bare /></main>
-    ) : (
-      segments.map((segment) =>
-        segment.kind === 'html' ? (
-          <Fragment set:html={segment.html} />
-        ) : (
-          <CmsBlock block={segment.block} props={segment.props} graphqlUrl={graphqlUrl} legacySite={site.legacy_site ?? null} t={t} />
-        )
-      )
-    )}
-    {result.pagination && <Pagination pagination={result.pagination} t={t} />}
-    {hasApply && <CareersApply graphqlUrl={graphqlUrl} phonePattern={phonePattern} t={t} />}
-  </CmsLayout>
-)}
+{result && site && <CmsDocument result={{ ...result, site }} url={url} graphqlUrl={graphqlUrl} t={t} preview={preview} liveUrl={liveUrl} />}

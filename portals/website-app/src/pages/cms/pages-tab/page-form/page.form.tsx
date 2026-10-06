@@ -10,10 +10,12 @@ import type { CmsPageRow } from '../../queries/pages';
 import { useCmsLabels } from '../../lib/labels';
 import RhfSwitch from '../../components/RhfSwitch';
 import PageAdvancedFields from './PageAdvancedFields';
-import { pageSchema, toPageFormValues, type PageFormOutput, type PageFormValues } from './page.types';
+import { pageSchema, toPageFormValues, type PageFormOutput, type PageFormValues, type PagePreset } from './page.types';
 
 interface Props {
   page: CmsPageRow | null;
+  /** For a new page: a starting address and title (the error-page shortcuts). */
+  preset?: PagePreset | null;
   /** The collections this site has — the only ones a template can be for. */
   collections: CmsCollection[];
   submitting: boolean;
@@ -23,12 +25,12 @@ interface Props {
 }
 
 /** A page's address, kind, chrome, SEO and page-level code — not its design. */
-export default function PageForm({ page, collections, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
+export default function PageForm({ page, preset = null, collections, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = useCmsLabels();
   const schema = useMemo(() => pageSchema((key) => t(key)), [t]);
   const { control, handleSubmit } = useForm<PageFormValues, unknown, PageFormOutput>({
-    defaultValues: toPageFormValues(page),
+    defaultValues: toPageFormValues(page, preset),
     resolver: zodResolver(schema) as Resolver<PageFormValues, unknown, PageFormOutput>,
     mode: 'onTouched',
   });

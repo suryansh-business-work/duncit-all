@@ -173,6 +173,8 @@ export const cmsTypeDefs = /* GraphQL */ `
     key: String!
     name: String!
     kind: CmsFragmentKind!
+    "The live blocks this component holds (reel-slider, newsletter…); empty for a plain section."
+    blocks: [String!]!
     is_published: Boolean!
     has_unpublished_changes: Boolean!
     draft: CmsDraftContent!
@@ -445,6 +447,8 @@ export const cmsTypeDefs = /* GraphQL */ `
     cmsRender(host: String!, path: String!, page: Int): CmsRenderResult!
     "Public: every published address of a site, for sitemap.xml."
     cmsSitemap(host: String!): [CmsSitemapUrl!]!
+    "Public: a site's designed error page (404, 500, 503), or null when it has none."
+    cmsErrorPage(host: String!, code: Int!): CmsRenderResult
     "A page's DRAFT rendered exactly as cmsRender would serve it."
     cmsPreview(page_id: ID!, entry_id: ID): CmsRenderResult!
     "A shareable live-demo link: the draft, or (with version) that published version. Editors only."

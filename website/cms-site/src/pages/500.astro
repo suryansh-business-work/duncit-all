@@ -1,0 +1,23 @@
+---
+/**
+ * Rendering failed. The site's own designed 500 page, from the last good copy
+ * (lib/error-pages.ts) — or the renderer's built-in one when it has none.
+ */
+import CmsDocument from '../components/CmsDocument.astro';
+import NotFound from '../components/NotFound.astro';
+import { publicGraphqlUrl, requestHost } from '../lib/cms-api';
+import { cachedErrorPage } from '../lib/error-pages';
+import { translator } from '../lib/translator';
+
+const host = requestHost(Astro.request);
+const page = cachedErrorPage(host, 500);
+const t = await translator().catch(() => null);
+console.error('[cms-site] render error', { host, path: Astro.url.pathname, reason: Astro.props.error instanceof Error ? Astro.props.error.message : String(Astro.props.error) });
+const site = page?.site ?? null;
+---
+
+{page && site && t ? (
+  <CmsDocument result={{ ...page, site }} url={`https://${host}/500`} graphqlUrl={publicGraphqlUrl()} t={t} />
+) : (
+  t && <NotFound kind="error" t={t} />
+)}

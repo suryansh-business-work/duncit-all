@@ -4471,6 +4471,8 @@ export type CmsFontSource =
 
 export type CmsFragment = {
   __typename?: 'CmsFragment';
+  /** The live blocks this component holds (reel-slider, newsletter…); empty for a plain section. */
+  blocks: Array<Scalars['String']['output']>;
   created_at: Scalars['String']['output'];
   draft: CmsDraftContent;
   has_unpublished_changes: Scalars['Boolean']['output'];

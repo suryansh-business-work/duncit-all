@@ -1087,6 +1087,10 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         text: 'There is nothing at this address. It may have moved or been unpublished.',
         home: 'Go to the home page',
       },
+      error: {
+        title: 'Something went wrong',
+        text: 'This page could not be shown just now. Please try again in a moment.',
+      },
       unavailable: {
         title: 'We will be right back',
         text: 'This page could not be loaded just now. Please try again in a moment.',

@@ -41,16 +41,22 @@ export const pageSchema = (t: Translate) =>
 export type PageFormValues = z.input<ReturnType<typeof pageSchema>>;
 export type PageFormOutput = z.output<ReturnType<typeof pageSchema>>;
 
-export const toPageFormValues = (page: CmsPageRow | null): PageFormValues => ({
+/** A new page started from a shortcut (an error page): its address and title, kept out of search. */
+export interface PagePreset {
+  path: string;
+  title: string;
+}
+
+export const toPageFormValues = (page: CmsPageRow | null, preset?: PagePreset | null): PageFormValues => ({
   kind: page?.kind ?? 'PAGE',
   collection_type: page?.collection_type ?? '',
-  title: page?.title ?? '',
-  path: page?.path ?? '',
+  title: page?.title ?? preset?.title ?? '',
+  path: page?.path ?? preset?.path ?? '',
   seo_title: page?.seo.title ?? '',
   seo_description: page?.seo.description ?? '',
   seo_image: page?.seo.og_image_url ?? '',
   canonical_url: page?.seo.canonical_url ?? '',
-  noindex: page?.seo.noindex ?? false,
+  noindex: page?.seo.noindex ?? Boolean(preset),
   show_header: page?.show_header ?? true,
   show_footer: page?.show_footer ?? true,
   sort_order: page?.sort_order ?? 0,

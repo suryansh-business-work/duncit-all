@@ -63,6 +63,7 @@ export const cmsResolvers = {
     cmsRender: (_p: unknown, args: Args<{ host: string; path: string; page?: number | null }>) =>
       cmsRenderService.render(args.host, args.path, args.page ?? 1),
     cmsSitemap: (_p: unknown, args: Args<{ host: string }>) => cmsRenderService.sitemap(args.host),
+    cmsErrorPage: (_p: unknown, args: Args<{ host: string; code: number }>) => cmsRenderService.errorPage(args.host, args.code),
 
     cmsPreview: (_p: unknown, args: Args<{ page_id: string; entry_id?: string | null }>, ctx: GraphQLContext) => {
       editor(ctx);

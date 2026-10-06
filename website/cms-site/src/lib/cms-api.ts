@@ -72,6 +72,12 @@ const RENDER = /* GraphQL */ `
   }
 `;
 
+const ERROR_PAGE = /* GraphQL */ `
+  query CmsErrorPage($host: String!, $code: Int!) {
+    cmsErrorPage(host: $host, code: $code) { ${RESULT_FIELDS} }
+  }
+`;
+
 /** Never cached server-side: the signed token is the permission, and it expires. */
 const RENDER_PREVIEW = /* GraphQL */ `
   query CmsRenderPreview($token: String!) {
@@ -94,6 +100,12 @@ export async function renderPage(host: string, path: string, page: number): Prom
 export async function renderPreview(token: string): Promise<CmsRenderResult | null> {
   const data = await query<{ cmsRenderPreview: CmsRenderResult | null }>(RENDER_PREVIEW, { token });
   return data.cmsRenderPreview;
+}
+
+/** A site's designed error page (404, 500, 503), or null when it has none. */
+export async function errorPage(host: string, code: number): Promise<CmsRenderResult | null> {
+  const data = await query<{ cmsErrorPage: CmsRenderResult | null }>(ERROR_PAGE, { host, code });
+  return data.cmsErrorPage;
 }
 
 export async function sitemapUrls(host: string): Promise<CmsSitemapUrl[]> {

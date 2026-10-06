@@ -80,6 +80,7 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   // TTL. cmsPreview (drafts) is role-gated and deliberately NOT listed.
   'cmsRender',
   'cmsSitemap',
+  'cmsErrorPage',
   'publicPodPlans',
   'publicFaqGroups',
   'publicPartnerFaqs',
@@ -153,7 +154,7 @@ const PERSONAL_CACHEABLE_FIELDS = new Set([
 ]);
 
 /** CMS render fields: cached, but keyed by the CMS epoch so any CMS write retires every entry at once. */
-const CMS_EPOCH_FIELDS = new Set(['cmsRender', 'cmsSitemap']);
+const CMS_EPOCH_FIELDS = new Set(['cmsRender', 'cmsSitemap', 'cmsErrorPage']);
 const CMS_EPOCH_KEY = 'cms:epoch';
 
 /** Called after every Website CMS write: the next render of every CMS page reads fresh. */

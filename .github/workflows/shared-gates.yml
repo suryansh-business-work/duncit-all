@@ -75,6 +75,12 @@ jobs:
       - name: Shipped keys match the bundles
         run: node scripts/generate-shipped-keys.mjs --check
 
+      # Same contract for the WhatsApp scenario registry: the server's copy is
+      # generated from @duncit/communication, and a stale one would send to a
+      # campaign the package no longer names.
+      - name: Server WhatsApp registry matches the package
+        run: node scripts/generate-wa-events.mjs --check
+
       # Every shared package ships a runnable demo the Tech portal renders under
       # Package Documentation. The registry indexing them is generated, so a demo
       # added without regenerating is a file nothing loads — an empty Live demos

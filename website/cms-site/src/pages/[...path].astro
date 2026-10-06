@@ -8,8 +8,10 @@ import CmsLayout from '../layouts/CmsLayout.astro';
 import CmsBlock from '../components/CmsBlock.astro';
 import Pagination from '../components/Pagination.astro';
 import NotFound from '../components/NotFound.astro';
+import CareersApply from '@duncit/brand/CareersApply.astro';
 import { CmsUnavailableError, publicGraphqlUrl, renderPage, requestHost } from '../lib/cms-api';
-import { isUrlSlug } from '@duncit/regex';
+import { fromLegacy, legacyOrigin } from '../lib/legacy-fallback';
+import { isUrlSlug, PHONE_INTL_PLUS } from '@duncit/regex';
 import { splitSegments } from '../lib/segments';
 import { localiseDates } from '../lib/design';
 import { SITE_LOCALE, translator } from '../lib/translator';
@@ -33,6 +35,13 @@ try {
   console.error('[cms-site] render failed', { host, path, reason: error.message });
 }
 
+// Not a CMS page: the site's old server may still answer it (a short link, a newer policy).
+const fallbackOrigin = result?.status === 404 ? legacyOrigin(result.site?.legacy_site) : null;
+if (fallbackOrigin) {
+  const legacy = await fromLegacy(fallbackOrigin, Astro.request);
+  if (legacy) return legacy;
+}
+
 if (!result) {
   Astro.response.status = 503;
   Astro.response.headers.set('retry-after', '30');
@@ -45,6 +54,9 @@ if (!result) {
 
 const site = result?.site ?? null;
 const segments = result ? splitSegments(localiseDates(result.html, SITE_LOCALE)) : [];
+// One Apply dialog for every careers opening on the page. HTML `pattern` is anchored itself, so the regex's ^ and $ go.
+const hasApply = segments.some((segment) => segment.kind === 'block' && segment.block === 'apply');
+const phonePattern = PHONE_INTL_PLUS.source.slice(1, -1);
 const url = `${Astro.url.protocol}//${host}${path === '/' ? '' : path}`;
 ---
 
@@ -74,5 +86,6 @@ const url = `${Astro.url.protocol}//${host}${path === '/' ? '' : path}`;
       )
     )}
     {result.pagination && <Pagination pagination={result.pagination} t={t} />}
+    {hasApply && <CareersApply graphqlUrl={graphqlUrl} phonePattern={phonePattern} t={t} />}
   </CmsLayout>
 )}

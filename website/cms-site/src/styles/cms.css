@@ -1,0 +1,159 @@
+/*
+ * The renderer's own styles: only the markup the CMS generates itself — the
+ * default collection list/detail and pagination. Pages designed in the editor
+ * carry their own css. Every value reads a design token first, so a site's
+ * design system restyles these too; the fallbacks keep an unstyled site legible.
+ */
+
+.cms-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface, #fff);
+  color: var(--color-ink, #111);
+}
+
+.cms-skip:focus-visible {
+  left: 1rem;
+  top: 1rem;
+  outline: 2px solid var(--color-primary, #d92d2d);
+}
+
+.cms-collection,
+.cms-entry,
+.cms-pagination,
+.cms-message {
+  max-width: var(--cms-content-width, 72rem);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.cms-collection {
+  padding-block: 3rem;
+}
+
+.cms-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.cms-list--cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}
+
+.cms-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-line, #e5e5e5);
+  border-radius: var(--radius-card, 1rem);
+  background: var(--color-surface, #fff);
+}
+
+.cms-list--rows .cms-card,
+.cms-list--compact .cms-card {
+  flex-direction: row;
+}
+
+.cms-card__media img,
+.cms-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.cms-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+}
+
+.cms-card__category,
+.cms-entry__category {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary, #d92d2d);
+}
+
+.cms-card__title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.cms-card__title a {
+  color: var(--color-ink, #111);
+  text-decoration: none;
+}
+
+.cms-card__title a:hover,
+.cms-card__title a:focus-visible {
+  text-decoration: underline;
+}
+
+.cms-card__summary,
+.cms-card__meta,
+.cms-entry__meta {
+  margin: 0;
+  color: var(--color-ink-soft, #555);
+}
+
+.cms-entry {
+  padding-block: 3rem;
+  max-width: var(--cms-article-width, 48rem);
+}
+
+.cms-entry__title {
+  margin: 0.25rem 0 0.5rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.15;
+  color: var(--color-ink, #111);
+}
+
+.cms-entry .cms-cover {
+  margin-block: 1.5rem;
+  border-radius: var(--radius-card, 1rem);
+}
+
+.cms-entry__body {
+  line-height: 1.7;
+  color: var(--color-ink, #111);
+}
+
+.cms-entry__body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.cms-tag {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-line, #eee);
+  font-size: 0.75rem;
+}
+
+.cms-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-block: 2rem;
+}
+
+.cms-pagination a {
+  color: var(--color-primary, #d92d2d);
+  font-weight: 700;
+}
+
+.cms-message {
+  padding-block: 6rem;
+  text-align: center;
+}

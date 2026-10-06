@@ -1,0 +1,66 @@
+---
+/**
+ * One live block in a CMS page: the editor stores `<cms-block data-block="…">`
+ * and this draws the real component in its place, on the server, with the
+ * same @duncit/brand components the hand-built sites use. Props come from the
+ * page (the editor's traits), so every one is narrowed before it is used; an
+ * unknown block renders nothing rather than breaking a live page.
+ */
+import NewsletterSignup from '@duncit/brand/NewsletterSignup.astro';
+import ReelSlider from '@duncit/brand/ReelSlider.astro';
+import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
+import AppDownload from '@duncit/brand/AppDownload.astro';
+import SocialLinks from '@duncit/brand/SocialLinks.astro';
+import PolicyStrip from '@duncit/brand/PolicyStrip.astro';
+import type { SiteTranslate } from '@duncit/brand/site-i18n';
+import { list, record, text } from '../lib/props';
+
+interface Props {
+  block: string;
+  props: Record<string, unknown>;
+  graphqlUrl: string;
+  legacySite: string | null;
+  t: SiteTranslate;
+}
+
+const { block, props, graphqlUrl, legacySite, t } = Astro.props;
+const reelSite = legacySite === 'MAIN' || legacySite === 'PARTNERS' || legacySite === 'ADS' || legacySite === 'EARNWITH' ? legacySite : null;
+const variant = text(props.variant) === 'inline' ? 'inline' : 'card';
+const stores = list(props.stores).map(record).map((s) => ({
+  icon: text(s.icon),
+  eyebrow: text(s.eyebrow),
+  name: text(s.name),
+  url: text(s.url) || null,
+}));
+const policies = list(props.policies).map(record).map((p) => ({ slug: text(p.slug), title: text(p.title) }));
+const accounts = list(props.accounts).map(record).map((a) => ({ icon: text(a.icon), label: text(a.label), href: text(a.href) }));
+---
+
+{block === 'newsletter' && (
+  <NewsletterSignup
+    graphqlUrl={graphqlUrl}
+    source={text(props.source) || 'WEBSITE_PAGE'}
+    variant={variant}
+    heading={text(props.heading) || undefined}
+    text={text(props.text)}
+    t={t}
+  />
+)}
+{block === 'reel-slider' && reelSite && <ReelSlider graphqlUrl={graphqlUrl} site={reelSite} t={t} />}
+{block === 'earn-showcase' && text(props.href) && <EarnShowcase href={text(props.href)} t={t} />}
+{block === 'app-download' && stores.length > 0 && (
+  <AppDownload
+    eyebrow={text(props.eyebrow) || undefined}
+    heading={text(props.heading)}
+    headingAccent={text(props.headingAccent) || undefined}
+    text={text(props.text) || undefined}
+    perks={list(props.perks).map(text).filter(Boolean)}
+    stores={stores}
+    soonLabel={text(props.soonLabel) || undefined}
+    screenshot={text(props.screenshot) || null}
+  />
+)}
+{block === 'social-links' && <SocialLinks accounts={accounts.length ? accounts : undefined} heading={text(props.heading) || null} />}
+{block === 'policy-strip' && policies.length > 0 && (
+  <PolicyStrip policies={policies} baseUrl={text(props.baseUrl) || undefined} heading={text(props.heading) || undefined} t={t} />
+)}

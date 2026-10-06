@@ -1,0 +1,75 @@
+---
+/**
+ * The document every CMS page is served in: the site's design system and
+ * custom code around the composed page. Order in <head> is deliberate — the
+ * site's base css first, then tokens, then the page's own css, then custom css,
+ * so the most specific author always wins.
+ */
+import { buildSiteMetaTags } from '@duncit/brand/site-meta';
+import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
+import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
+import type { CmsRenderSite, CmsSeo } from '@duncit/gql-types';
+import type { SiteTranslate } from '@duncit/brand/site-i18n';
+import { fontCss, googleFontsHref, tokensCss } from '@duncit/brand/cms-design';
+import { scriptSafe, styleSafe } from '../lib/design';
+import { SITE_LOCALE } from '../lib/translator';
+import '../styles/cms.css';
+
+interface Props {
+  site: CmsRenderSite;
+  title: string;
+  seo: CmsSeo;
+  url: string;
+  pageCss: string;
+  pageHead: string;
+  pageJs: string;
+  graphqlUrl: string;
+  t: SiteTranslate;
+}
+
+const { site, title, seo, url, pageCss, pageHead, pageJs, graphqlUrl, t } = Astro.props;
+const meta = buildSiteMetaTags({
+  title: seo.title || title || site.name,
+  description: seo.description,
+  url: seo.canonical_url || url,
+  siteName: site.name,
+  imageUrl: seo.og_image_url || null,
+  largeImage: Boolean(seo.og_image_url),
+});
+const tracked = site.legacy_site;
+const privacyUrl = import.meta.env.PUBLIC_PRIVACY_URL || '/policy/privacy-policy';
+// Fonts after the base stylesheet and tokens, so a chosen typeface's role
+// variables win over the ones the base css declares.
+const css = [site.design.base_css, tokensCss(site.design.tokens), fontCss(site.design.fonts), pageCss, site.custom_css].filter(Boolean).map(styleSafe);
+const googleFonts = googleFontsHref(site.design.fonts);
+const js = [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
+---
+
+<!doctype html>
+<html lang={SITE_LOCALE.split('-')[0]} data-graphql-url={graphqlUrl} data-cms-site={site.key}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <Fragment set:html={meta} />
+    {seo.noindex && <meta name="robots" content="noindex" />}
+    {site.favicon_url && <link rel="icon" href={site.favicon_url} />}
+    {googleFonts && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
+    {googleFonts && <link rel="stylesheet" href={googleFonts} />}
+    {site.design.font_urls.map((href) => <link rel="stylesheet" href={href} />)}
+    {css.map((rule) => <style is:inline set:html={rule} />)}
+    {site.head_html && <Fragment set:html={site.head_html} />}
+    {pageHead && <Fragment set:html={pageHead} />}
+    {tracked && <GoogleAnalytics site={tracked} graphqlUrl={graphqlUrl} />}
+  </head>
+  <body>
+    <a class="cms-skip" href="#main">{t('website.cms.skipToContent')}</a>
+    <slot />
+    {tracked && <ConsentBanner policyUrl={privacyUrl} t={t} />}
+    <script>
+      import { mountWidgets } from '../scripts/widgets';
+      mountWidgets(document);
+    </script>
+    {site.body_end_html && <Fragment set:html={site.body_end_html} />}
+    {js.map((source) => <script is:inline set:html={source} />)}
+  </body>
+</html>

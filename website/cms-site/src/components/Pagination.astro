@@ -1,0 +1,22 @@
+---
+/** Older/newer links under a collection list. Hidden when there is one page. */
+import type { CmsPagination } from '@duncit/gql-types';
+import type { SiteTranslate } from '@duncit/brand/site-i18n';
+
+interface Props {
+  pagination: CmsPagination;
+  t: SiteTranslate;
+}
+
+const { pagination, t } = Astro.props;
+const { page, total_pages: total, base_path: base } = pagination;
+const href = (n: number) => (n <= 1 ? base : `${base}?page=${n}`);
+---
+
+{total > 1 && (
+  <nav class="cms-pagination" aria-label={t('website.cms.pagination.label')}>
+    {page > 1 ? <a href={href(page - 1)} rel="prev">{t('website.cms.pagination.previous')}</a> : <span aria-hidden="true"></span>}
+    <span>{t('website.cms.pagination.pageOf', { vars: { page, total } })}</span>
+    {page < total ? <a href={href(page + 1)} rel="next">{t('website.cms.pagination.next')}</a> : <span aria-hidden="true"></span>}
+  </nav>
+)}

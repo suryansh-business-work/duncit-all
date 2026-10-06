@@ -196,6 +196,8 @@ const branding = await fetchBranding();
 | `imageUrl` | `string \| null` | `null` | The card picture. |
 | `largeImage` | `boolean` | `false` | True only when the picture is the page's own, not the logo standing in. |
 | `type` | `'website' \| 'article'` | `'website'` | `article` for a blog post. |
+| `socialTitle` / `socialDescription` | `string` | the title / description | The share card's own copy (`og:*` and `twitter:*`) when it should differ from the search title. |
+| `twitterCard` | `'summary' \| 'summary_large_image'` | from `largeImage` | Forces the X card type. |
 
 The component writes the tags between `<!-- meta:start -->` and `<!-- meta:end -->`
 markers, and `site-meta` exports the same builder as a plain function
@@ -303,6 +305,7 @@ import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 | --- | --- | --- |
 | `href` | `string` | earnwith for this environment (`PUBLIC_EARNWITH_URL`), never a literal. |
 | `t` | `SiteTranslate` | The site's build-time translator (`website.brand.earnShowcase.*`). |
+| `eyebrow` / `heading` / `headingMuted` / `text` / `cta` | `string` | The section's words, set per page in the Website CMS; each one omitted renders the shipped copy. |
 | `id` / `class` | `string` | Anchor id (default `earn-with-duncit`) and extra classes for the section. |
 
 The photos live in `earn-showcase.ts` (`EARN_SHOWCASE_COLUMNS`), imported from Pexels onto
@@ -419,8 +422,8 @@ so a migration can swap the snapshot back for the live block. `cmsBlockProps` (f
 | Key | Component | `data-cms-props` |
 |---|---|---|
 | `newsletter` | `NewsletterSignup.astro` | `{ source, heading?, text?, placeholder?, button?, variant?, consent?, consentLinkLabel?, consentLinkHref?, captcha?, busyText?, okText?, errorText?, class? }` |
-| `reel-slider` | `ReelSlider.astro` | `{ site, class? }` |
-| `earn-showcase` | `EarnShowcase.astro` | `{ href, id?, class? }` |
+| `reel-slider` | `ReelSlider.astro` | `{ site, eyebrow?, heading?, class? }` |
+| `earn-showcase` | `EarnShowcase.astro` | `{ href, eyebrow?, heading?, headingMuted?, text?, cta?, id?, class? }` |
 | `app-download` | `AppDownload.astro` | `{ eyebrow?, heading, headingAccent?, text?, perks?, stores: { icon, eyebrow, name, url? }[], soonLabel?, screenshot?, id?, class? }` |
 | `social-links` | `SocialLinks.astro` | `{ accounts?: { icon, label, href }[], heading?, class? }` |
 | `policy-strip` | `PolicyStrip.astro` (only when it has policies) | `{ policies: { slug, title }[], baseUrl?, heading?, allLabel?, class? }` |
@@ -460,6 +463,7 @@ Pure functions: no DOM, no fetch.
 | `googleFontsHref(fonts)` | One Google Fonts css2 URL for every `GOOGLE` font (weights + italics), or `null` |
 | `fontStack(font)` | A CSS `font-family` value: the quoted family, then its fallback (`sans-serif` when blank) |
 | `fontCss(fonts)` | `@font-face` for every uploaded file, plus the role variables (`--font-heading`, `--font-body`, `--font-accent`) and any extra token a font is bound to |
+| `designVariables(tokens, fonts)` | Every CSS variable the design declares as `{ name, value }[]` — tokens, then font variables (which win on a clash, as in the stylesheet). The Website portal lists these beside every SCSS editor |
 
 ```ts
 import { fontCss, googleFontsHref, tokensCss } from '@duncit/brand/cms-design';

@@ -46,7 +46,7 @@ const RESULT_FIELDS = `
   css
   head_html
   custom_js
-  seo { title description og_image_url canonical_url noindex }
+  seo { title description og_image_url canonical_url noindex og_title og_description twitter_card keywords json_ld meta_tags { name content } }
   pagination { page total_pages base_path }
   site {
     key
@@ -115,6 +115,6 @@ export async function sitemapUrls(host: string): Promise<CmsSitemapUrl[]> {
 
 /** The hostname the visitor asked for, as the proxy in front of us saw it. */
 export function requestHost(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  const forwarded = request.headers.get('x-forwarded-host')?.split(',')[0].trim();
   return forwarded || request.headers.get('host') || new URL(request.url).host;
 }

@@ -35,7 +35,15 @@ const meta = buildSiteMetaTags({
   siteName: site.name,
   imageUrl: seo.og_image_url || null,
   largeImage: Boolean(seo.og_image_url),
+  socialTitle: seo.og_title || undefined,
+  socialDescription: seo.og_description || undefined,
+  twitterCard: seo.twitter_card === 'summary' || seo.twitter_card === 'summary_large_image' ? seo.twitter_card : undefined,
 });
+// Open Graph / Facebook / article names are properties; everything else is a name.
+const PROPERTY_PREFIXES = ['og:', 'article:', 'fb:', 'profile:', 'book:'];
+const extraMeta = seo.meta_tags.map((tag) => ({ ...tag, isProperty: PROPERTY_PREFIXES.some((prefix) => tag.name.startsWith(prefix)) }));
+// Inside <script>, only `</` can end the block early; JSON stays valid with it escaped.
+const jsonLd = seo.json_ld.trim() ? seo.json_ld.replaceAll('</', '<\\/') : '';
 const tracked = site.legacy_site;
 const privacyUrl = import.meta.env.PUBLIC_PRIVACY_URL || '/policy/privacy-policy';
 // Fonts after the base stylesheet and tokens, so a chosen typeface's role
@@ -52,6 +60,9 @@ const js = [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <Fragment set:html={meta} />
     {seo.noindex && <meta name="robots" content="noindex" />}
+    {seo.keywords && <meta name="keywords" content={seo.keywords} />}
+    {extraMeta.map((tag) => (tag.isProperty ? <meta property={tag.name} content={tag.content} /> : <meta name={tag.name} content={tag.content} />))}
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
     {site.favicon_url && <link rel="icon" href={site.favicon_url} />}
     {googleFonts && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
     {googleFonts && <link rel="stylesheet" href={googleFonts} />}

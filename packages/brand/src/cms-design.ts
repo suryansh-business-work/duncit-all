@@ -63,7 +63,10 @@ export function googleFontsHref(fonts: readonly CmsDesignFont[]): string | null 
 
 const FORMAT: Record<string, string> = { woff2: 'woff2', woff: 'woff', ttf: 'truetype', otf: 'opentype' };
 
-const formatOf = (url: string) => FORMAT[url.split('?')[0].split('.').pop()?.toLowerCase() ?? ''] ?? 'woff2';
+const formatOf = (url: string) => {
+  const path = url.split('?')[0];
+  return FORMAT[path.slice(path.lastIndexOf('.') + 1).toLowerCase()] ?? 'woff2';
+};
 
 /** A family as a css value: quoted name, then its fallback stack. */
 export const fontStack = (font: Pick<CmsDesignFont, 'family' | 'fallback'>) => [JSON.stringify(font.family), font.fallback || 'sans-serif'].join(', ');
@@ -79,8 +82,23 @@ export function fontCss(fonts: readonly CmsDesignFont[]): string {
           `font-weight:${file.weight};font-style:${file.style};font-display:swap}`
       )
     );
-  const variables = fonts.flatMap((font) =>
-    [ROLE_VARIABLE[font.role], font.variable].filter(Boolean).map((name) => `${name}:${fontStack(font)};`)
-  );
+  const variables = fontVariables(fonts).map(({ name, value }) => `${name}:${value};`);
   return [...faces, variables.length ? `:root{${variables.join('')}}` : ''].join('');
+}
+
+/** The variables a site's fonts declare: each role's (--font-heading…) and any extra token a font is bound to. */
+function fontVariables(fonts: readonly CmsDesignFont[]): { name: string; value: string }[] {
+  return fonts.flatMap((font) => [ROLE_VARIABLE[font.role], font.variable].filter(Boolean).map((name) => ({ name, value: fontStack(font) })));
+}
+
+/**
+ * Every CSS variable a site's design system declares, as name and value: its
+ * tokens, then its font variables (which win, as in the stylesheet). What the
+ * Website portal lists beside a stylesheet as the variables code can use.
+ */
+export function designVariables(tokens: readonly CmsDesignToken[], fonts: readonly CmsDesignFont[]): { name: string; value: string }[] {
+  const byName = new Map<string, string>();
+  for (const token of tokens) byName.set(token.name, token.value);
+  for (const variable of fontVariables(fonts)) byName.set(variable.name, variable.value);
+  return [...byName].map(([name, value]) => ({ name, value }));
 }

@@ -27,7 +27,7 @@ const ESCAPES: Record<string, string> = {
 };
 
 const escapeHtml = (value: string): string =>
-  String(value).replaceAll(/[&<>"']/g, (char) => ESCAPES[char] ?? char);
+  String(value).replaceAll(/[&<>"']/g, (char) => ESCAPES[char]);
 
 export interface SiteMetaInput {
   /** The page's own title, without the site name — the suffix is added here. */
@@ -43,6 +43,11 @@ export interface SiteMetaInput {
   largeImage?: boolean;
   /** `article` for a blog post, so it is unfurled as one. */
   type?: 'website' | 'article';
+  /** The share card's own title and text (OG + Twitter), when they differ from the page's. */
+  socialTitle?: string;
+  socialDescription?: string;
+  /** Forces the Twitter card; omitted, a page with its own image gets the wide one. */
+  twitterCard?: 'summary' | 'summary_large_image';
 }
 
 export function buildSiteMetaTags(meta: SiteMetaInput): string {
@@ -56,18 +61,22 @@ export function buildSiteMetaTags(meta: SiteMetaInput): string {
   const namesItself = meta.title.toLowerCase().includes(meta.siteName.toLowerCase());
   const fullTitle = namesItself ? title : `${title} | ${siteName}`;
 
+  const socialTitle = meta.socialTitle ? escapeHtml(meta.socialTitle) : title;
+  const socialDescription = meta.socialDescription ? escapeHtml(meta.socialDescription) : description;
+  const twitterCard = meta.twitterCard ?? (meta.largeImage ? 'summary_large_image' : 'summary');
+
   const tags = [
     `<title>${fullTitle}</title>`,
     `<meta name="description" content="${description}" />`,
     `<link rel="canonical" href="${url}" />`,
     `<meta property="og:type" content="${meta.type ?? 'website'}" />`,
     `<meta property="og:site_name" content="${siteName}" />`,
-    `<meta property="og:title" content="${title}" />`,
-    `<meta property="og:description" content="${description}" />`,
+    `<meta property="og:title" content="${socialTitle}" />`,
+    `<meta property="og:description" content="${socialDescription}" />`,
     `<meta property="og:url" content="${url}" />`,
-    `<meta name="twitter:card" content="${meta.largeImage ? 'summary_large_image' : 'summary'}" />`,
-    `<meta name="twitter:title" content="${title}" />`,
-    `<meta name="twitter:description" content="${description}" />`,
+    `<meta name="twitter:card" content="${twitterCard}" />`,
+    `<meta name="twitter:title" content="${socialTitle}" />`,
+    `<meta name="twitter:description" content="${socialDescription}" />`,
   ];
   if (image) {
     tags.push(

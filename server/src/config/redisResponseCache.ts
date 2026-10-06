@@ -71,6 +71,11 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   // Every website's home-page Reel Slider. Argument-keyed (site), no auth, no
   // ctx; a Website portal edit reaches the sliders within the TTL.
   'publicWebsiteReels',
+  // The website CMS renderer: every page view of every CMS site. Argument-keyed
+  // (host, path, page), no auth, no ctx — a publish reaches the site within the
+  // TTL. cmsPreview (drafts) is role-gated and deliberately NOT listed.
+  'cmsRender',
+  'cmsSitemap',
   'publicPodPlans',
   'publicFaqGroups',
   'publicPartnerFaqs',

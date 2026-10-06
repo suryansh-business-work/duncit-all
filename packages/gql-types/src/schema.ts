@@ -4312,6 +4312,440 @@ export type ClubTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type CmsCollection =
+  | 'BLOG'
+  | 'CAREER'
+  | 'CASE_STUDY'
+  | 'NEWSLETTER'
+  | 'NEWSROOM';
+
+export type CmsCollectionPath = {
+  __typename?: 'CmsCollectionPath';
+  collection: CmsCollection;
+  path: Scalars['String']['output'];
+};
+
+export type CmsCollectionPathInput = {
+  collection: CmsCollection;
+  path: Scalars['String']['input'];
+};
+
+/** A site's design system: tokens become CSS variables, base_css is its stylesheet. */
+export type CmsDesign = {
+  __typename?: 'CmsDesign';
+  base_css: Scalars['String']['output'];
+  font_urls: Array<Scalars['String']['output']>;
+  fonts: Array<CmsFont>;
+  tokens: Array<CmsToken>;
+};
+
+export type CmsDesignInput = {
+  base_css: Scalars['String']['input'];
+  font_urls: Array<Scalars['String']['input']>;
+  fonts?: InputMaybe<Array<CmsFontInput>>;
+  tokens: Array<CmsTokenInput>;
+};
+
+export type CmsDraftContent = {
+  __typename?: 'CmsDraftContent';
+  css: Scalars['String']['output'];
+  html: Scalars['String']['output'];
+  project: Scalars['String']['output'];
+};
+
+/** base_updated_at guards against two editors overwriting each other. */
+export type CmsDraftInput = {
+  base_updated_at?: InputMaybe<Scalars['String']['input']>;
+  css: Scalars['String']['input'];
+  html: Scalars['String']['input'];
+  project: Scalars['String']['input'];
+};
+
+/** A blog post, job opening, newsletter issue, case study or press item. */
+export type CmsEntry = {
+  __typename?: 'CmsEntry';
+  author_name: Scalars['String']['output'];
+  body_html: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  collection_type: CmsCollection;
+  cover_image_url: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  fields: Array<CmsEntryField>;
+  id: Scalars['ID']['output'];
+  is_published: Scalars['Boolean']['output'];
+  published_at?: Maybe<Scalars['String']['output']>;
+  seo: CmsSeo;
+  site_id: Scalars['ID']['output'];
+  slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  summary: Scalars['String']['output'];
+  tags: Array<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  updated_by: Scalars['String']['output'];
+};
+
+export type CmsEntryField = {
+  __typename?: 'CmsEntryField';
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type CmsEntryFieldInput = {
+  key: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+};
+
+export type CmsEntryInput = {
+  author_name?: InputMaybe<Scalars['String']['input']>;
+  body_html?: InputMaybe<Scalars['String']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  collection_type: CmsCollection;
+  cover_image_url?: InputMaybe<Scalars['String']['input']>;
+  fields?: InputMaybe<Array<CmsEntryFieldInput>>;
+  is_published?: InputMaybe<Scalars['Boolean']['input']>;
+  published_at?: InputMaybe<Scalars['String']['input']>;
+  seo?: InputMaybe<CmsSeoInput>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  summary?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  title: Scalars['String']['input'];
+};
+
+export type CmsEntryTablePage = {
+  __typename?: 'CmsEntryTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CmsEntry>;
+  total: Scalars['Int']['output'];
+};
+
+/** A typeface a site uses: a Google font in chosen weights, or uploaded files. */
+export type CmsFont = {
+  __typename?: 'CmsFont';
+  fallback: Scalars['String']['output'];
+  family: Scalars['String']['output'];
+  files: Array<CmsFontFile>;
+  italic: Scalars['Boolean']['output'];
+  role: CmsFontRole;
+  source: CmsFontSource;
+  /** Another CSS variable to bind the family to, e.g. --font-display. */
+  variable: Scalars['String']['output'];
+  weights: Array<Scalars['Int']['output']>;
+};
+
+export type CmsFontFile = {
+  __typename?: 'CmsFontFile';
+  style: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+  weight: Scalars['Int']['output'];
+};
+
+export type CmsFontFileInput = {
+  style: Scalars['String']['input'];
+  url: Scalars['String']['input'];
+  weight: Scalars['Int']['input'];
+};
+
+export type CmsFontInput = {
+  fallback?: InputMaybe<Scalars['String']['input']>;
+  family: Scalars['String']['input'];
+  files?: InputMaybe<Array<CmsFontFileInput>>;
+  italic?: InputMaybe<Scalars['Boolean']['input']>;
+  role?: InputMaybe<CmsFontRole>;
+  source: CmsFontSource;
+  variable?: InputMaybe<Scalars['String']['input']>;
+  weights: Array<Scalars['Int']['input']>;
+};
+
+export type CmsFontRole =
+  | 'ACCENT'
+  | 'BODY'
+  | 'HEADING'
+  | 'NONE';
+
+export type CmsFontSource =
+  | 'CUSTOM'
+  | 'GOOGLE';
+
+export type CmsFragment = {
+  __typename?: 'CmsFragment';
+  created_at: Scalars['String']['output'];
+  draft: CmsDraftContent;
+  has_unpublished_changes: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  is_published: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  kind: CmsFragmentKind;
+  name: Scalars['String']['output'];
+  published: CmsPublishedContent;
+  site_id: Scalars['ID']['output'];
+  updated_at: Scalars['String']['output'];
+  updated_by: Scalars['String']['output'];
+};
+
+export type CmsFragmentInput = {
+  key: Scalars['String']['input'];
+  kind: CmsFragmentKind;
+  name: Scalars['String']['input'];
+};
+
+export type CmsFragmentKind =
+  | 'FOOTER'
+  | 'HEADER'
+  | 'SECTION';
+
+export type CmsFragmentTablePage = {
+  __typename?: 'CmsFragmentTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CmsFragment>;
+  total: Scalars['Int']['output'];
+};
+
+/** A family in the Google Fonts catalogue. */
+export type CmsGoogleFont = {
+  __typename?: 'CmsGoogleFont';
+  category: Scalars['String']['output'];
+  family: Scalars['String']['output'];
+  italic: Scalars['Boolean']['output'];
+  popularity: Scalars['Int']['output'];
+  /** Weights it ships (100–900). */
+  weights: Array<Scalars['Int']['output']>;
+};
+
+export type CmsGoogleFontPage = {
+  __typename?: 'CmsGoogleFontPage';
+  categories: Array<Scalars['String']['output']>;
+  fonts: Array<CmsGoogleFont>;
+  total: Scalars['Int']['output'];
+};
+
+export type CmsPage = {
+  __typename?: 'CmsPage';
+  collection_type?: Maybe<CmsCollection>;
+  created_at: Scalars['String']['output'];
+  custom_css: Scalars['String']['output'];
+  custom_js: Scalars['String']['output'];
+  draft: CmsDraftContent;
+  /** The draft differs from what is live. */
+  has_unpublished_changes: Scalars['Boolean']['output'];
+  head_html: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_published: Scalars['Boolean']['output'];
+  kind: CmsPageKind;
+  path: Scalars['String']['output'];
+  published: CmsPublishedContent;
+  seo: CmsSeo;
+  show_footer: Scalars['Boolean']['output'];
+  show_header: Scalars['Boolean']['output'];
+  site_id: Scalars['ID']['output'];
+  sort_order: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  updated_by: Scalars['String']['output'];
+};
+
+export type CmsPageInput = {
+  collection_type?: InputMaybe<CmsCollection>;
+  custom_css?: InputMaybe<Scalars['String']['input']>;
+  custom_js?: InputMaybe<Scalars['String']['input']>;
+  head_html?: InputMaybe<Scalars['String']['input']>;
+  kind?: InputMaybe<CmsPageKind>;
+  path?: InputMaybe<Scalars['String']['input']>;
+  seo?: InputMaybe<CmsSeoInput>;
+  show_footer?: InputMaybe<Scalars['Boolean']['input']>;
+  show_header?: InputMaybe<Scalars['Boolean']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type CmsPageKind =
+  | 'COLLECTION_DETAIL'
+  | 'COLLECTION_LIST'
+  | 'PAGE';
+
+export type CmsPageTablePage = {
+  __typename?: 'CmsPageTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CmsPage>;
+  total: Scalars['Int']['output'];
+};
+
+export type CmsPagination = {
+  __typename?: 'CmsPagination';
+  base_path: Scalars['String']['output'];
+  page: Scalars['Int']['output'];
+  total_pages: Scalars['Int']['output'];
+};
+
+export type CmsPublishedContent = {
+  __typename?: 'CmsPublishedContent';
+  css: Scalars['String']['output'];
+  html: Scalars['String']['output'];
+  published_at?: Maybe<Scalars['String']['output']>;
+  published_by: Scalars['String']['output'];
+  version: Scalars['Int']['output'];
+};
+
+/**
+ * One request's page, fully composed by the server: header + page + footer
+ * html (fragments expanded, collection fields bound), their css joined, and the
+ * SEO to put in <head>. status is 200, or 404 when nothing lives at the path.
+ */
+export type CmsRenderResult = {
+  __typename?: 'CmsRenderResult';
+  css: Scalars['String']['output'];
+  custom_js: Scalars['String']['output'];
+  head_html: Scalars['String']['output'];
+  html: Scalars['String']['output'];
+  pagination?: Maybe<CmsPagination>;
+  seo: CmsSeo;
+  site?: Maybe<CmsRenderSite>;
+  status: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+};
+
+/** The site-wide part of a rendered response. */
+export type CmsRenderSite = {
+  __typename?: 'CmsRenderSite';
+  body_end_html: Scalars['String']['output'];
+  custom_css: Scalars['String']['output'];
+  custom_js: Scalars['String']['output'];
+  design: CmsDesign;
+  favicon_url: Scalars['String']['output'];
+  head_html: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  legacy_site?: Maybe<WebsiteNavSite>;
+  name: Scalars['String']['output'];
+};
+
+export type CmsSeo = {
+  __typename?: 'CmsSeo';
+  canonical_url: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  noindex: Scalars['Boolean']['output'];
+  og_image_url: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type CmsSeoInput = {
+  canonical_url?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  noindex?: InputMaybe<Scalars['Boolean']['input']>;
+  og_image_url?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A website the CMS serves, chosen by the request's hostname. */
+export type CmsSite = {
+  __typename?: 'CmsSite';
+  body_end_html: Scalars['String']['output'];
+  collection_paths: Array<CmsCollectionPath>;
+  collections: Array<CmsCollection>;
+  created_at: Scalars['String']['output'];
+  custom_css: Scalars['String']['output'];
+  custom_js: Scalars['String']['output'];
+  design: CmsDesign;
+  domains: Array<Scalars['String']['output']>;
+  favicon_url: Scalars['String']['output'];
+  footer_fragment_id?: Maybe<Scalars['ID']['output']>;
+  head_html: Scalars['String']['output'];
+  header_fragment_id?: Maybe<Scalars['ID']['output']>;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  legacy_site?: Maybe<WebsiteNavSite>;
+  name: Scalars['String']['output'];
+  page_count: Scalars['Int']['output'];
+  seo: CmsSeo;
+  updated_at: Scalars['String']['output'];
+};
+
+export type CmsSiteARecordInput = {
+  /** The record's current IPv4, to repoint it; omit to add a new A record. */
+  current?: InputMaybe<Scalars['String']['input']>;
+  host: Scalars['String']['input'];
+  /** IPv4 the hostname should point at. */
+  ip: Scalars['String']['input'];
+  ttl?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CmsSiteCodeInput = {
+  body_end_html: Scalars['String']['input'];
+  custom_css: Scalars['String']['input'];
+  custom_js: Scalars['String']['input'];
+  head_html: Scalars['String']['input'];
+};
+
+export type CmsSiteDns = {
+  __typename?: 'CmsSiteDns';
+  /** Whether Tech → Domain holds a GoDaddy key for a zone. */
+  configured: Scalars['Boolean']['output'];
+  hosts: Array<CmsSiteDnsHost>;
+  zone: Scalars['String']['output'];
+};
+
+/** One of a website's hostnames, and its address records in the GoDaddy zone. */
+export type CmsSiteDnsHost = {
+  __typename?: 'CmsSiteDnsHost';
+  host: Scalars['String']['output'];
+  /** False when the hostname is outside the zone configured in Tech → Domain. */
+  in_zone: Scalars['Boolean']['output'];
+  /** The record name inside the zone: @ for the apex, www for www.<zone>. */
+  name: Scalars['String']['output'];
+  records: Array<DnsRecord>;
+};
+
+export type CmsSiteInput = {
+  collection_paths?: InputMaybe<Array<CmsCollectionPathInput>>;
+  collections?: InputMaybe<Array<CmsCollection>>;
+  domains: Array<Scalars['String']['input']>;
+  favicon_url?: InputMaybe<Scalars['String']['input']>;
+  footer_fragment_id?: InputMaybe<Scalars['ID']['input']>;
+  header_fragment_id?: InputMaybe<Scalars['ID']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  key: Scalars['String']['input'];
+  legacy_site?: InputMaybe<WebsiteNavSite>;
+  name: Scalars['String']['input'];
+  seo?: InputMaybe<CmsSeoInput>;
+};
+
+export type CmsSitemapUrl = {
+  __typename?: 'CmsSitemapUrl';
+  path: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type CmsToken = {
+  __typename?: 'CmsToken';
+  group: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type CmsTokenInput = {
+  group?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+};
+
+export type CmsVersion = {
+  __typename?: 'CmsVersion';
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  owner_id: Scalars['ID']['output'];
+  owner_kind: CmsVersionOwner;
+  published_by: Scalars['String']['output'];
+  version: Scalars['Int']['output'];
+};
+
+export type CmsVersionOwner =
+  | 'FRAGMENT'
+  | 'PAGE';
+
 /** A host who can be invited as a co-host. Carries ONLY what the picker needs — never onboarding PII. */
 export type CoHostCandidate = {
   __typename?: 'CoHostCandidate';
@@ -11617,6 +12051,10 @@ export type Mutation = {
   /** Adds the domain to Cloudflare as a full-setup zone. Does nothing when it is already there. */
   createCloudflareZone: Scalars['Boolean']['output'];
   createClub: Club;
+  createCmsEntry: CmsEntry;
+  createCmsFragment: CmsFragment;
+  createCmsPage: CmsPage;
+  createCmsSite: CmsSite;
   createCommsProvider: CommsProvider;
   createContract: Contract;
   createCoupon: Coupon;
@@ -11755,6 +12193,10 @@ export type Mutation = {
    * Re-confirmed with the caller's own credentials; it cannot be undone.
    */
   deleteClubAdminProfile: Scalars['Boolean']['output'];
+  deleteCmsEntry: Scalars['Boolean']['output'];
+  deleteCmsFragment: Scalars['Boolean']['output'];
+  deleteCmsPage: Scalars['Boolean']['output'];
+  deleteCmsSite: Scalars['Boolean']['output'];
   deleteCommsProvider: Scalars['Boolean']['output'];
   deleteContract: Scalars['Boolean']['output'];
   deleteCoupon: Scalars['Boolean']['output'];
@@ -11920,6 +12362,7 @@ export type Mutation = {
   /** Standalone product-cart checkout via the dummy gateway. */
   dummyProductCheckout: Payment;
   duplicateAutomationFlow: AutomationFlow;
+  duplicateCmsPage: CmsPage;
   duplicateInventoryProduct: InventoryProduct;
   /**
    * Reserve a place in Slack for one suite's recording. Tech/Super admin only.
@@ -12190,6 +12633,8 @@ export type Mutation = {
   productOrderShipmentFile: ShipmentFile;
   /** Create at AiSensy what a drafted scenario is missing: its template, or — once Meta approved it — its campaign. The row's provision_step says which. */
   provisionWhatsappScenario: WaScenarioBoard;
+  publishCmsFragment: CmsFragment;
+  publishCmsPage: CmsPage;
   publishPodDraft: Pod;
   /**
    * Clear every remaining trace and then the account itself. Permanent.
@@ -12530,6 +12975,8 @@ export type Mutation = {
   respondToCoHostInvite: Pod;
   /** The offered partner answering: APPROVE takes the place, PASS declines it. */
   respondToPodChange: PodChangeRequest;
+  /** Copies a published version back into the draft; publish to make it live. */
+  restoreCmsVersion: Scalars['Boolean']['output'];
   /**
    * Restore the live database from one archive. DESTRUCTIVE: every collection
    * the archive carries is dropped and rewritten, and anything written since it
@@ -12615,6 +13062,8 @@ export type Mutation = {
   /** Create or update a flow. A draft may be incomplete; the returned issues say what is left. */
   saveAutomationFlow: AutomationFlow;
   saveBrandPickupLocation: BrandPickupLocation;
+  saveCmsFragmentDraft: CmsFragment;
+  saveCmsPageDraft: CmsPage;
   /**
    * Store the caller's arrangement of one dashboard, replacing any previous
    * one. Positions only — widget ids the running build does not define are
@@ -12710,6 +13159,8 @@ export type Mutation = {
   /** Set the pay commission. Null or 0 inherits the platform default. */
   setClubAdminCommission: ClubAdminProfile;
   setClubAdminProfileActive: ClubAdminProfile;
+  /** Adds or repoints an A record for one of the website's own hostnames (Tech managers). */
+  setCmsSiteARecord: Scalars['Boolean']['output'];
   /**
    * Store this account's contact number, with no code behind it.
    *
@@ -13174,6 +13625,7 @@ export type Mutation = {
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
+  unpublishCmsPage: CmsPage;
   unsubscribeAllByToken: MailPreference;
   unsubscribeNewsletter: Scalars['Boolean']['output'];
   /** Change when the sweep runs, and whether it runs at all. */
@@ -13215,6 +13667,12 @@ export type Mutation = {
   updateChallenge: Challenge;
   updateClub: Club;
   updateClubAdminProfile: ClubAdminProfile;
+  updateCmsEntry: CmsEntry;
+  updateCmsFragment: CmsFragment;
+  updateCmsPage: CmsPage;
+  updateCmsSite: CmsSite;
+  updateCmsSiteCode: CmsSite;
+  updateCmsSiteDesign: CmsSite;
   /** Finance: set what a pod join, a shop order, a referral and a pod rating each pay, and how long a grant lasts. */
   updateCoinSettings: CoinSettings;
   updateCommsProvider: CommsProvider;
@@ -14088,6 +14546,29 @@ export type MutationCreateClubArgs = {
 };
 
 
+export type MutationCreateCmsEntryArgs = {
+  input: CmsEntryInput;
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateCmsFragmentArgs = {
+  input: CmsFragmentInput;
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateCmsPageArgs = {
+  input: CmsPageInput;
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateCmsSiteArgs = {
+  input: CmsSiteInput;
+};
+
+
 export type MutationCreateCommsProviderArgs = {
   input: CreateCommsProviderInput;
 };
@@ -14545,6 +15026,26 @@ export type MutationDeleteClubAdminProfileArgs = {
   email: Scalars['String']['input'];
   id: Scalars['ID']['input'];
   password: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteCmsEntryArgs = {
+  entry_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCmsFragmentArgs = {
+  fragment_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCmsPageArgs = {
+  page_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCmsSiteArgs = {
+  site_id: Scalars['ID']['input'];
 };
 
 
@@ -15081,6 +15582,13 @@ export type MutationDuplicateAutomationFlowArgs = {
 };
 
 
+export type MutationDuplicateCmsPageArgs = {
+  page_id: Scalars['ID']['input'];
+  path: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
+
+
 export type MutationDuplicateInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -15485,6 +15993,16 @@ export type MutationProductOrderShipmentFileArgs = {
 
 export type MutationProvisionWhatsappScenarioArgs = {
   event_key: Scalars['String']['input'];
+};
+
+
+export type MutationPublishCmsFragmentArgs = {
+  fragment_id: Scalars['ID']['input'];
+};
+
+
+export type MutationPublishCmsPageArgs = {
+  page_id: Scalars['ID']['input'];
 };
 
 
@@ -16008,6 +16526,11 @@ export type MutationRespondToPodChangeArgs = {
 };
 
 
+export type MutationRestoreCmsVersionArgs = {
+  version_id: Scalars['ID']['input'];
+};
+
+
 export type MutationRestoreDbBackupArgs = {
   id: Scalars['ID']['input'];
 };
@@ -16162,6 +16685,18 @@ export type MutationSaveAutomationFlowArgs = {
 export type MutationSaveBrandPickupLocationArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   input: BrandPickupLocationInput;
+};
+
+
+export type MutationSaveCmsFragmentDraftArgs = {
+  fragment_id: Scalars['ID']['input'];
+  input: CmsDraftInput;
+};
+
+
+export type MutationSaveCmsPageDraftArgs = {
+  input: CmsDraftInput;
+  page_id: Scalars['ID']['input'];
 };
 
 
@@ -16406,6 +16941,12 @@ export type MutationSetClubAdminCommissionArgs = {
 export type MutationSetClubAdminProfileActiveArgs = {
   id: Scalars['ID']['input'];
   is_active: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetCmsSiteARecordArgs = {
+  input: CmsSiteARecordInput;
+  site_id: Scalars['ID']['input'];
 };
 
 
@@ -17551,6 +18092,11 @@ export type MutationUnfollowUserArgs = {
 };
 
 
+export type MutationUnpublishCmsPageArgs = {
+  page_id: Scalars['ID']['input'];
+};
+
+
 export type MutationUnsubscribeAllByTokenArgs = {
   e: Scalars['String']['input'];
   t: Scalars['String']['input'];
@@ -17676,6 +18222,42 @@ export type MutationUpdateClubArgs = {
 export type MutationUpdateClubAdminProfileArgs = {
   id: Scalars['ID']['input'];
   input: UpdateClubAdminProfileInput;
+};
+
+
+export type MutationUpdateCmsEntryArgs = {
+  entry_id: Scalars['ID']['input'];
+  input: CmsEntryInput;
+};
+
+
+export type MutationUpdateCmsFragmentArgs = {
+  fragment_id: Scalars['ID']['input'];
+  input: CmsFragmentInput;
+};
+
+
+export type MutationUpdateCmsPageArgs = {
+  input: CmsPageInput;
+  page_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateCmsSiteArgs = {
+  input: CmsSiteInput;
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateCmsSiteCodeArgs = {
+  input: CmsSiteCodeInput;
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateCmsSiteDesignArgs = {
+  input: CmsDesignInput;
+  site_id: Scalars['ID']['input'];
 };
 
 
@@ -22732,6 +23314,26 @@ export type Query = {
   clubStories: Array<Post>;
   clubs: Array<Club>;
   clubsTable: ClubTablePage;
+  cmsEntriesTable: CmsEntryTablePage;
+  cmsEntry?: Maybe<CmsEntry>;
+  cmsFragment?: Maybe<CmsFragment>;
+  cmsFragments: Array<CmsFragment>;
+  cmsFragmentsTable: CmsFragmentTablePage;
+  /** The Google Fonts catalogue, searchable, most popular first. */
+  cmsGoogleFonts: CmsGoogleFontPage;
+  cmsPage?: Maybe<CmsPage>;
+  cmsPagesTable: CmsPageTablePage;
+  /** A page's DRAFT rendered exactly as cmsRender would serve it. */
+  cmsPreview: CmsRenderResult;
+  /** Public: the page a CMS site serves at a path, composed and ready to send. */
+  cmsRender: CmsRenderResult;
+  cmsSite?: Maybe<CmsSite>;
+  /** A website's hostnames and their A/AAAA/CNAME records (Tech managers). */
+  cmsSiteDns: CmsSiteDns;
+  /** Public: every published address of a site, for sitemap.xml. */
+  cmsSitemap: Array<CmsSitemapUrl>;
+  cmsSites: Array<CmsSite>;
+  cmsVersions: Array<CmsVersion>;
   /** Approved hosts in the same sub-category who can be invited as co-hosts. Excludes the caller and anyone already invited. */
   coHostCandidates: Array<CoHostCandidate>;
   /** Finance > Duncit Coin > Dashboard. 'months' bounds the distribution series (default 12, max 36). */
@@ -24622,6 +25224,87 @@ export type QueryClubsArgs = {
 
 export type QueryClubsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCmsEntriesTableArgs = {
+  collection_type: CmsCollection;
+  query?: InputMaybe<TableQueryInput>;
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsEntryArgs = {
+  entry_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsFragmentArgs = {
+  fragment_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsFragmentsArgs = {
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsFragmentsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsGoogleFontsArgs = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryCmsPageArgs = {
+  page_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsPagesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsPreviewArgs = {
+  entry_id?: InputMaybe<Scalars['ID']['input']>;
+  page_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsRenderArgs = {
+  host: Scalars['String']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  path: Scalars['String']['input'];
+};
+
+
+export type QueryCmsSiteArgs = {
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsSiteDnsArgs = {
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsSitemapArgs = {
+  host: Scalars['String']['input'];
+};
+
+
+export type QueryCmsVersionsArgs = {
+  owner_id: Scalars['ID']['input'];
+  owner_kind: CmsVersionOwner;
 };
 
 

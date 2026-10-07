@@ -82,6 +82,8 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
         { label: 'Venue Dashboard', to: '/venues/dashboard', icon: 'analytics' },
         { label: 'Venue Management', to: '/register-venue', icon: 'storefront' },
         { label: 'Slot Requests', to: '/venues/requests', icon: 'calendar' },
+        { label: 'Pod Requests', labelKey: 'podRequests.navTitle', to: '/venues/pod-requests', icon: 'host-request' },
+        { label: 'Search Nearby Hosts', labelKey: 'podRequests.searchHostsTitle', to: '/venues/nearby-hosts', icon: 'user-search' },
         {
           label: 'Change Requests',
           labelKey: 'changeRequest.sectionTitle',
@@ -106,12 +108,15 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
       children: [
         { label: 'Host Dashboard', labelKey: 'shell.nav.hostDashboard', to: '/host/dashboard', icon: 'analytics' },
         { label: 'Your Pods', to: '/host/pods', icon: 'orders' },
+        { label: 'Pod Requests', labelKey: 'podRequests.navTitle', to: '/host/pod-requests', icon: 'host-request' },
+        { label: 'Search Nearby Venues', labelKey: 'podRequests.searchVenuesTitle', to: '/host/nearby-venues', icon: 'location' },
         {
           label: 'Change Requests',
           labelKey: 'changeRequest.sectionTitle',
           to: '/host/change-requests',
           icon: 'rule',
         },
+        { label: 'Host Settings', labelKey: 'podRequests.hostSettingsTitle', to: '/host/settings', icon: 'settings' },
       ],
     },
   },

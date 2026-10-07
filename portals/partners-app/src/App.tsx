@@ -8,6 +8,11 @@ import VenueListingsPage from './pages/venue-listings-page/VenueListingsPage';
 import VenueAvailabilityPage from './pages/venue-availability-page/VenueAvailabilityPage';
 import VenueDashboardPage from './pages/venue-dashboard-page/VenueDashboardPage';
 import SlotRequestsPage from './pages/slot-requests-page/SlotRequestsPage';
+import PodRequestsPage from './pages/pod-requests/PodRequestsPage';
+import PodRequestDetailPage from './pages/pod-requests/detail/PodRequestDetailPage';
+import NearbyHostsPage from './pages/pod-requests/search/NearbyHostsPage';
+import NearbyVenuesPage from './pages/pod-requests/search/NearbyVenuesPage';
+import HostSettingsPage from './pages/host-settings-page/HostSettingsPage';
 import ChangeRequestsPage from './pages/change-requests-page';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenuePodsPage from './pages/venue-pods-page/VenuePodsPage';
@@ -71,6 +76,10 @@ export default function App() {
       <Route path="/venues/requests" element={authed(<SlotRequestsPage />)} />
       {/* Opened by the request email's Approve / Decline buttons (?action=…). */}
       <Route path="/venues/requests/:slotId" element={authed(<SlotDecisionPage />)} />
+      {/* Pod Requests between venues and hosts — each studio scoped to its own side. */}
+      <Route path="/venues/nearby-hosts" element={authed(<NearbyHostsPage />)} />
+      <Route path="/venues/pod-requests" element={authed(<PodRequestsPage side="VENUE" />)} />
+      <Route path="/venues/pod-requests/:id" element={authed(<PodRequestDetailPage side="VENUE" />)} />
       <Route path="/venues/pods" element={authed(<VenuePodsPage />)} />
       {/* One page, three routes: each studio scopes the board to its own role
           so a venue owner who also hosts is never shown the wrong queue. */}
@@ -86,6 +95,10 @@ export default function App() {
       <Route path="/host/pods" element={authed(<HostPodsPage />)} />
       <Route path="/host/change-requests" element={authed(<ChangeRequestsPage role="HOST" />)} />
       <Route path="/host/auto-pods" element={authed(<HostAutoPodsPage />)} />
+      <Route path="/host/nearby-venues" element={authed(<NearbyVenuesPage />)} />
+      <Route path="/host/pod-requests" element={authed(<PodRequestsPage side="HOST" />)} />
+      <Route path="/host/pod-requests/:id" element={authed(<PodRequestDetailPage side="HOST" />)} />
+      <Route path="/host/settings" element={authed(<HostSettingsPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       {/* The two sidebar entries a not-yet-partner sees: each opens the Earn with
           Duncit page ON its own journey, so the click lands in the onboarding

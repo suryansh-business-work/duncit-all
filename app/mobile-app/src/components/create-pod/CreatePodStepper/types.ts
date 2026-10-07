@@ -26,6 +26,8 @@ export interface CreatePodStepperProps {
   subCategories: CreatePodSubCategory[];
   hostCategories: CreatePodHostCategory[];
   viewerUserId: string;
+  /** A Pod Request's venue, kept on offer in step 3 (see VenueSlotStep). */
+  pinnedVenueId?: string;
   finance: CreatePodFinance;
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
   onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;

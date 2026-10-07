@@ -3,7 +3,7 @@ import type { StudioMode } from '@/utils/studio-mode';
 import type { ProfileTile } from './profileSections';
 
 /**
- * The venue partner's calendar and settings rows, appended after Venue
+ * The venue partner's calendar, settings and Search Nearby Hosts rows, appended after Venue
  * Earnings while the sidebar is in Venue mode. Built here with the caller's
  * translator rather than in `profileSections` so their labels are real copy
  * from the bundle (rule 38); the routes are mWeb's exact paths (rule 27).
@@ -24,6 +24,13 @@ export function buildVenueMenuItems(mode: StudioMode, t: Translate): ProfileTile
       caption: '',
       icon: 'settings',
       route: 'VenueSettings',
+    },
+    {
+      key: 'venue-nearby-hosts',
+      label: t('podRequests.searchHostsTitle'),
+      caption: '',
+      icon: 'person-search',
+      route: 'NearbyHosts',
     },
   ];
 }

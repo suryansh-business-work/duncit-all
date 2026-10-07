@@ -234,6 +234,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),
       venue_id: z.string(),
       venue_slot_id: z.string(),
+      partner_request_id: z.string().default(''),
       meeting_platform: z.string().trim().max(80),
       meeting_url: z.string().trim(),
       meeting_notes: z.string().trim().max(1000),
@@ -414,6 +415,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     // The booked slot drives the pod window server-side; the venue must
     // approve it before the pod goes live (own venues confirm instantly).
     venue_slot_id: virtual ? null : values.venue_slot_id || null,
+    // A Pod Request's confirmed slot is adopted as-is (no second venue approval).
+    partner_request_id: values.partner_request_id || null,
     location_id: values.location_id || null,
     zone_name: virtual ? null : values.locality || null,
     meeting_platform: virtual ? values.meeting_platform.trim() || null : null,

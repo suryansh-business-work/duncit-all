@@ -45,6 +45,11 @@ export function NotificationsBell() {
       navigation.navigate('PodDetails', { clubSlug: target.clubSlug, podSlug: target.podSlug });
       return;
     }
+    if (target.kind === 'podRequest') {
+      setOpen(false);
+      navigation.navigate('PodRequestDetail', { id: target.id });
+      return;
+    }
     if (target.kind === 'screen') {
       setOpen(false);
       navigation.navigate(target.route);

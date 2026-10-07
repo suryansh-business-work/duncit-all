@@ -60,13 +60,20 @@ export type RootStackParamList = {
   HostApply: undefined;
   HostDashboard: undefined;
   Wallet: undefined;
-  CreatePod: { draftId?: string } | undefined;
+  /** `partnerRequestId` opens a fresh pod on a Pod Request's confirmed venue + slot. */
+  CreatePod: { draftId?: string; partnerRequestId?: string } | undefined;
   /** Post-create waiting screen while the venue slot request is PENDING. */
   PodPending: { podId: string };
   RegisterVenue: undefined;
   VenueManage: undefined;
   VenueEarnings: undefined;
   VenueSlotRequests: undefined;
+  /** /venues/nearby-hosts — Venue Studio's Search Nearby Hosts (mWeb's exact path). */
+  NearbyHosts: undefined;
+  /** /host/nearby-venues — Host Studio's Search Nearby Venues (mWeb's exact path). */
+  NearbyVenues: undefined;
+  /** /pod-requests/:id — one Pod Request; its notifications land here. */
+  PodRequestDetail: { id: string };
   ChangeRequests: undefined;
   /** /venues/availability — the owner's slot calendar (mWeb's exact path). */
   VenueAvailability: undefined;
@@ -179,6 +186,7 @@ export type MenuStackRoute = Exclude<
   keyof RootStackParamList,
   | 'Menu'
   | 'CreatePod'
+  | 'PodRequestDetail'
   | 'PodPending'
   | 'PodAttendance'
   | 'PodMedia'

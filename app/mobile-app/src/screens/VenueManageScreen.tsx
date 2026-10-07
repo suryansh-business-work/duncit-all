@@ -9,6 +9,8 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { PublishPageCard } from '@/components/public-page';
 import { StackScreen } from '@/components/StackScreen';
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { PodRequestsSection } from '@/components/pod-requests/PodRequestsSection';
+import { PartnerSide } from '@/generated/graphql/graphql';
 import {
   StatTile,
   VenueQuickActions,
@@ -87,6 +89,7 @@ export function VenueManageScreen() {
             <VenueStudioPods state={podsState} testID="venue-studio-pods" />
           ) : null}
           {venues.length > 0 ? <StudioChangeRequests role="VENUE" /> : null}
+          {venue ? <PodRequestsSection side={PartnerSide.Venue} venueId={venue.id} /> : null}
           {!isLoading && venues.length === 0 ? (
             <Text testID="venue-dashboard-empty" fontSize={14} color="$muted" textAlign="center">
               No venues yet — register one to start hosting pods.

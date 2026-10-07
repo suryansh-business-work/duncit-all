@@ -10,9 +10,17 @@ export type LocationItem = LocationsData['locations'][number];
 // Best-effort persist of the user's selected location. Promise-safe so it never
 // throws on a non-promise (e.g. a mocked client) and never breaks the UI on a
 // network error — the local selection is the source of truth for the session.
-const persistSelection = (locationId: string) => {
+// The area travels with the city: the nearby Pod Request searches find hosts by
+// this saved city + area (mWeb sends the same pair).
+const persistSelection = (locationId: string, zoneName: string) => {
   Promise.resolve()
-    .then(() => graphqlRequest(SetSelectedLocationDocument, { locationId }, { auth: true }))
+    .then(() =>
+      graphqlRequest(
+        SetSelectedLocationDocument,
+        { locationId, zoneName: zoneName || null },
+        { auth: true },
+      ),
+    )
     .catch(() => undefined);
 };
 
@@ -50,7 +58,7 @@ export const useLocationStore = create<LocationState>((set, get) => ({
       countryName: location.country ?? '',
       zoneName,
     });
-    if (persist) persistSelection(location.id);
+    if (persist) persistSelection(location.id, zoneName);
   },
   hydrateFromUser: (locationId) => {
     const { selectedId, data } = get();

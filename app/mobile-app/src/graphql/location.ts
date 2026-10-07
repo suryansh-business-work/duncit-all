@@ -31,8 +31,8 @@ export const LocationsDocument = gql(`
 
 /** Persist the user's selected header location (parity with mWeb's header). */
 export const SetSelectedLocationDocument = gql(`
-  mutation MobileSetSelectedLocation($locationId: ID) {
-    setMySelectedLocation(location_id: $locationId) {
+  mutation MobileSetSelectedLocation($locationId: ID, $zoneName: String) {
+    setMySelectedLocation(location_id: $locationId, zone_name: $zoneName) {
       user_id
       selected_location_id
     }

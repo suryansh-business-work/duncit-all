@@ -171,8 +171,8 @@ export const SuggestedTicketPricesDocument = gql(`
 
 /** Open availability slots on a venue partner's calendar (step 3). */
 export const VenueAvailableSlotsDocument = gql(`
-  query MobileVenueAvailableSlots($venue_id: ID!) {
-    venueAvailableSlots(venue_id: $venue_id) {
+  query MobileVenueAvailableSlots($venue_id: ID!, $partner_request_id: ID) {
+    venueAvailableSlots(venue_id: $venue_id, partner_request_id: $partner_request_id) {
       id
       start_at
       end_at

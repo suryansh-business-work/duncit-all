@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { logs } from '@duncit/logs';
 
 import {
   CreatePodOptionsDocument,
@@ -19,6 +20,8 @@ import {
   type PodModerationResult,
 } from '@/components/create-pod';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useDateFormat } from '@/hooks/useDateFormat';
+import { loadPartnerRequestPrefill } from '@/hooks/partnerRequestPrefill';
 
 type OptionsData = ResultOf<typeof CreatePodOptionsDocument>;
 type DraftData = ResultOf<typeof MyPodDraftDocument>['myPodDraft'];
@@ -30,34 +33,64 @@ const clampStep = (step: number) => Math.min(Math.max(step, 0), STEP_TITLES.leng
 /** Fallbacks keep the pricing panel rendering while settings load. */
 const blankFinance = { platform_fee_pct: 0, gst_pct: 0, currency_symbol: '₹' };
 
-async function loadCreatePodData(draftId?: string) {
+/** publicVenues are already APPROVED; keep only active venue partners. */
+const activeVenues = (options: OptionsData | null) =>
+  (options?.publicVenues ?? []).filter((venue) => venue.is_active !== false);
+
+async function loadCreatePodData(
+  draftId: string | undefined,
+  partnerRequestId: string,
+  dateFormat: string,
+) {
   const options = await graphqlRequest(CreatePodOptionsDocument, undefined, { auth: true });
   const draft = draftId
     ? (await graphqlRequest(MyPodDraftDocument, { draft_id: draftId }, { auth: true })).myPodDraft
     : null;
-  return { options, draft };
+  // A Pod Request only seeds a FRESH pod — a resumed draft is already the host's.
+  const prefill =
+    !draft && partnerRequestId
+      ? await loadPartnerRequestPrefill(partnerRequestId, activeVenues(options), dateFormat).catch(
+          (error: unknown) => {
+            // The pod can still be created by hand; the failure is reported, not dropped.
+            logs.mobileApp.error('useCreatePod', 'loadPartnerRequestPrefill', { error });
+            return null;
+          },
+        )
+      : null;
+  return { options, draft, prefill };
 }
 
 /**
  * Data layer for the host Create Pod stepper: loads the host status, the
  * clubs/approved venues/products to pick from, hydrates a draft when resuming,
- * and autosaves/publishes the draft server-side.
+ * lays a confirmed Pod Request's venue + slot over a fresh pod, and
+ * autosaves/publishes the draft server-side.
  */
-export function useCreatePod(draftId?: string) {
+export function useCreatePod(draftId?: string, partnerRequestId = '') {
   const [data, setData] = useState<OptionsData | null>(null);
   const [initialValues, setInitialValues] = useState<CreatePodFormValues>(blankCreatePodForm);
   const [initialStep, setInitialStep] = useState(0);
   const [resolvedDraftId, setResolvedDraftId] = useState<string | null>(draftId ?? null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pinnedVenueId, setPinnedVenueId] = useState<string | undefined>(undefined);
+  // Read when the request resolves, so a late settings load does not refetch everything.
+  const { dateTimeInputFormat } = useDateFormat();
+  const dateFormat = useRef(dateTimeInputFormat);
+  useEffect(() => {
+    dateFormat.current = dateTimeInputFormat;
+  });
 
   useEffect(() => {
     let active = true;
     const applyDraft = (draft: NonNullable<DraftData>) => {
-      setInitialValues(hydrateDraft(draft.payload));
+      const values = hydrateDraft(draft.payload);
+      setInitialValues(values);
+      // A draft started from a Pod Request keeps that venue on offer too.
+      setPinnedVenueId(values.partner_request_id ? values.venue_id : undefined);
       setInitialStep(clampStep(draft.step));
       setResolvedDraftId(draft.id);
     };
-    loadCreatePodData(draftId)
+    loadCreatePodData(draftId, partnerRequestId, dateFormat.current)
       .then((result) => {
         if (!active) return;
         setData(result.options);
@@ -70,7 +103,12 @@ export function useCreatePod(draftId?: string) {
             locations.find((item) => item.id === result.options.me?.selected_location_id)?.id ??
             locations[0]?.id ??
             '';
-          setInitialValues({ ...blankCreatePodForm, location_id: preferred });
+          setInitialValues({
+            ...blankCreatePodForm,
+            location_id: preferred,
+            ...result.prefill?.values,
+          });
+          setPinnedVenueId(result.prefill?.pinnedVenueId);
         }
       })
       .catch(() => undefined)
@@ -78,7 +116,7 @@ export function useCreatePod(draftId?: string) {
     return () => {
       active = false;
     };
-  }, [draftId]);
+  }, [draftId, partnerRequestId]);
 
   const saveDraft = async (id: string | null, payload: ReturnType<typeof serializeDraft>) => {
     const res = await graphqlRequest(
@@ -116,8 +154,7 @@ export function useCreatePod(draftId?: string) {
     viewerUserId: data?.me?.user_id ?? '',
     clubs: data?.clubs ?? [],
     locations: data?.locations ?? [],
-    // publicVenues are already APPROVED; keep only active venue partners.
-    venues: (data?.publicVenues ?? []).filter((venue) => venue.is_active !== false),
+    venues: activeVenues(data),
     products: data?.availablePodProducts ?? [],
     // SUB categories carry the admin-set minimum pax that floors the spots slider.
     subCategories: data?.subCategories ?? [],
@@ -127,6 +164,7 @@ export function useCreatePod(draftId?: string) {
     initialValues,
     initialStep,
     initialDraftId: resolvedDraftId,
+    pinnedVenueId,
     saveDraft,
     moderate,
     publish,

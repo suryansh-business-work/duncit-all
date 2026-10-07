@@ -19,6 +19,7 @@ import {
   type CancellationPolicyValues,
 } from './cancellation-policy';
 import { MY_VENUES_SETTINGS, UPDATE_VENUE_CANCELLATION, type VenueSettingsVenue } from './queries';
+import HostRequestLimitCard from './HostRequestLimitCard';
 
 /**
  * Venue Owner → Settings. One venue at a time, because the policy is the
@@ -31,12 +32,12 @@ export default function VenueSettingsPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { data, loading, refetch } = useQuery<any>(MY_VENUES_SETTINGS, {
+  const { data, loading, refetch } = useQuery<{ myVenues: VenueSettingsVenue[] }>(MY_VENUES_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [saveSettings, saveState] = useMutation<any>(UPDATE_VENUE_CANCELLATION);
+  const [saveSettings, saveState] = useMutation(UPDATE_VENUE_CANCELLATION);
 
-  const venues: VenueSettingsVenue[] = data?.myVenues ?? [];
+  const venues = data?.myVenues ?? [];
   const selected = venues.find((venue) => venue.id === venueId) ?? null;
 
   // Land on the first venue rather than an empty form nobody can act on.
@@ -133,6 +134,16 @@ export default function VenueSettingsPage() {
               </Stack>
             </CardContent>
           </Card>
+
+          {selected && (
+            <HostRequestLimitCard
+              venue={selected}
+              onSaved={async () => {
+                setMessage(t('podRequests.limitSaved'));
+                await refetch();
+              }}
+            />
+          )}
         </>
       )}
 

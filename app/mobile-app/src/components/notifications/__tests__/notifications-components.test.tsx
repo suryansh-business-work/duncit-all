@@ -243,6 +243,35 @@ describe('NotificationsBell', () => {
     expect(screen.queryByTestId('notifications-screen')).toBeNull();
   });
 
+  it('deep-links a /pod-requests/:id notification to the Pod Request detail screen', async () => {
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
+    mockedUseNotifications.mockReturnValue({
+      notifs: [
+        notif({
+          notification: {
+            id: 'a',
+            title: 'T',
+            body: 'B',
+            image_url: null,
+            link_url: '/pod-requests/req7',
+          },
+        }),
+      ],
+      unreadCount: 1,
+      refetch,
+      markRead,
+      markAll,
+    });
+    renderWithProviders(<NotificationsBell />);
+    fireEvent.press(screen.getByTestId('notifications-bell'));
+    fireEvent.press(screen.getByTestId('notification-n1'));
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith('PodRequestDetail', { id: 'req7' }),
+    );
+    expect(openURL).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('notifications-screen')).toBeNull();
+  });
+
   it('routes an in-app /earn link to the Earn screen instead of opening a URL (BUG-5)', async () => {
     const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
     mockedUseNotifications.mockReturnValue({

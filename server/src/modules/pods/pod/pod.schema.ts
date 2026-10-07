@@ -382,6 +382,8 @@ export const podTypeDefs = /* GraphQL */ `
     location_id: ID
     venue_id: ID
     venue_slot_id: ID
+    "The Pod Request whose confirmed slot this pod books (host only; the slot is adopted, no second venue approval)."
+    partner_request_id: ID
     club_id: ID!
     zone_name: String
     pod_mode: PodMode

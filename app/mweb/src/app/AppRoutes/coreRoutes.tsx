@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, PodAttendancePage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
+import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, PodAttendancePage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
 import { PartnerRedirect, withAuth, type AppRoutesProps } from './routeGuards';
 
 /** Home, profile, pod and host routes. Rendered as a fragment so `<Routes>` still sees plain `<Route>` children. */
@@ -53,6 +53,9 @@ export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<App
         <Route path="/host/dashboard" element={withAuth(<HostDashboardPage />)} />
         <Route path="/verification" element={withAuth(<VerificationPage />)} />
         <Route path="/host/manage" element={withAuth(<HostManagePage />)} />
+        <Route path="/host/nearby-venues" element={withAuth(<NearbyVenuesPage />)} />
+        {/* One Pod Request, for either side — where its notifications link. */}
+        <Route path="/pod-requests/:id" element={withAuth(<PodRequestDetailPage />)} />
         <Route
           path="/host/pod/:podId/attendance"
           element={withAuth(<PodAttendancePage />)}

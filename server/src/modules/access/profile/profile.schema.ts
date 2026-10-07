@@ -158,8 +158,8 @@ export const profileTypeDefs = gql`
     updateMyProfileVisibility(visibility: ProfileVisibility!): User!
     "Change the signed-in account's @handle. Rejects a taken or reserved one."
     setMyUsername(username: String!): User!
-    "Persist the user's selected header location (pass null to clear)."
-    setMySelectedLocation(location_id: ID): User!
+    "Persist the user's selected header location (pass null to clear) and, optionally, the area inside it (omitted = the whole city)."
+    setMySelectedLocation(location_id: ID, zone_name: String): User!
     "Persist the signed-in users language. Validated against active locales."
     setMyLocale(locale: String!): User!
     requestEmailVerificationOtp: OtpRequestResult!

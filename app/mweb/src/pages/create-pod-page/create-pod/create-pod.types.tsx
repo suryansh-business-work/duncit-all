@@ -75,6 +75,8 @@ export interface CreatePodFormValues {
   payment_terms: string;
   /** Client-side publish gate — host must accept the Organizer Terms (last step). */
   agreed_to_terms: boolean;
+  /** Hidden: the Pod Request this pod answers ('' when none) — the server books its confirmed slot. */
+  partner_request_id: string;
 }
 
 export const blankCreatePodForm: CreatePodFormValues = {
@@ -110,6 +112,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   ticket_discount_tiers: [],
   payment_terms: '',
   agreed_to_terms: false,
+  partner_request_id: '',
 };
 
 /** The catalogue row Step 4's product picker renders. Aliased to the shared

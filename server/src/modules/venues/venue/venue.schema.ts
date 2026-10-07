@@ -72,6 +72,8 @@ export const venueTypeDefs = /* GraphQL */ `
     allow_waitlist: Boolean!
     booking_approval_required: Boolean!
     allow_multiple_bookings: Boolean!
+    "Pod Requests this venue may send to hosts per month (an admin override wins)."
+    max_host_requests_per_month: Int!
   }
 
   type VenueAutoExtend {
@@ -138,6 +140,7 @@ export const venueTypeDefs = /* GraphQL */ `
     allow_waitlist: Boolean
     booking_approval_required: Boolean
     allow_multiple_bookings: Boolean
+    max_host_requests_per_month: Int
   }
 
   input VenueAutoExtendInput {
@@ -214,6 +217,8 @@ export const venueTypeDefs = /* GraphQL */ `
     tags: [String!]!
     venue_share_pct: Float!
     venue_commission_pct: Float!
+    "Admin cap on monthly host Pod Requests; null = the owner's own rule."
+    host_requests_limit_override: Int
     settings: VenueSettings!
     step_completed: Int!
     "Permanent human id (VEN-000001) — Onboarded Venues table."
@@ -412,6 +417,8 @@ export const venueTypeDefs = /* GraphQL */ `
     ): Venue!
     setVenueActive(venue_doc_id: ID!, active: Boolean!): Venue!
     setVenueDeductions(venue_doc_id: ID!, venue_share_pct: Float!, venue_commission_pct: Float!): Venue!
+    "Admin override for the venue's monthly host Pod Requests (null clears it)."
+    setVenueHostRequestLimit(venue_doc_id: ID!, limit: Int): Venue!
     "Onboarding review: how long before a pod starts a finance-negative pod at this venue is auto-cancelled, and what its attendees are refunded."
     setVenueCancellationTrigger(venue_doc_id: ID!, trigger_hours: Int!, refund_tiers: [VenueCancellationRefundTierInput!]!): Venue!
     "Owner (or admin) updates operating hours, weekly-off, holidays + booking rules."

@@ -15,6 +15,7 @@ import type { VenueFormValues } from '../types';
  * reads at the end of a pod, so they are shown WITH the status rather than
  * buried: an approved venue whose commission was never set is settled on the
  * platform default, and the person approving it is the person who should know.
+ * The Pod Request override is governance too: empty leaves the owner's own cap.
  */
 export default function StatusSection({
   control,
@@ -59,6 +60,17 @@ export default function StatusSection({
                 type="number"
                 disabled={!canGovern}
                 hint={t('directory.venueEditor.commissionPctHint')}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <RhfTextField
+                control={control}
+                name="host_requests_limit_override"
+                label={t('podRequests.overrideLabel')}
+                size="small"
+                type="number"
+                disabled={!canGovern}
+                hint={t('podRequests.overrideHint')}
               />
             </Grid>
           </>

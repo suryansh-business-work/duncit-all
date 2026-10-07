@@ -44,6 +44,11 @@ describe('navigateForPushLink', () => {
     expect(openURL).toHaveBeenCalledWith('https://x.com');
   });
 
+  it('deep-links a Pod Request link to PodRequestDetail', () => {
+    navigateForPushLink(nav, '/pod-requests/r5');
+    expect(mockNavigate).toHaveBeenCalledWith('PodRequestDetail', { id: 'r5' });
+  });
+
   it('navigates to a known param-less screen', () => {
     navigateForPushLink(nav, '/earn');
     expect(mockNavigate).toHaveBeenCalledWith('Earn');

@@ -38,6 +38,10 @@ function openCta(url: string) {
     navigationRef.navigate('PodDetails', { clubSlug: target.clubSlug, podSlug: target.podSlug });
     return;
   }
+  if (target.kind === 'podRequest') {
+    navigationRef.navigate('PodRequestDetail', { id: target.id });
+    return;
+  }
   if (target.kind === 'screen') {
     navigationRef.navigate(target.route);
   }

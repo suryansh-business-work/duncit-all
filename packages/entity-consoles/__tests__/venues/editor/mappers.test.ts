@@ -150,6 +150,15 @@ describe('venueToValues', () => {
     expect(values.settings.charge_tiers).toEqual([]);
     expect(values.settings.refund_tiers).toEqual([]);
   });
+
+  it('shows the Pod Request override as text, and none as an empty box', () => {
+    expect(venueToValues(venueRecord).host_requests_limit_override).toBe('25');
+    expect(
+      venueToValues({ ...venueRecord, host_requests_limit_override: null }).host_requests_limit_override,
+    ).toBe('');
+    // 0 is a real override (no requests at all), not "unset".
+    expect(venueToValues({ ...venueRecord, host_requests_limit_override: 0 }).host_requests_limit_override).toBe('0');
+  });
 });
 
 describe('valuesToStep1', () => {

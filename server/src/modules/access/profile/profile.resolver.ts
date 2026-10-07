@@ -313,7 +313,7 @@ export const profileResolvers = {
     },
     setMySelectedLocation: async (
       _p: unknown,
-      args: { location_id?: string | null },
+      args: { location_id?: string | null; zone_name?: string | null },
       ctx: GraphQLContext
     ) => {
       if (!ctx.user) {
@@ -322,7 +322,7 @@ export const profileResolvers = {
           extensions: { code: 'UNAUTHENTICATED' },
         });
       }
-      return userService.setMySelectedLocation(ctx.user.id, args.location_id ?? null);
+      return userService.setMySelectedLocation(ctx.user.id, args.location_id ?? null, args.zone_name ?? null);
     },
     setMyLocale: async (_p: unknown, args: { locale: string }, ctx: GraphQLContext) => {
       if (!ctx.user) {

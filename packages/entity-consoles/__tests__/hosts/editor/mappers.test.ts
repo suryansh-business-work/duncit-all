@@ -81,6 +81,11 @@ describe('hostToValues', () => {
     expect(values.categories).toEqual([]);
     expect(values.tags).toEqual([]);
   });
+
+  it('shows an unset Pod Request override as an empty box and a set one as its digits', () => {
+    expect(hostToValues(hostRecord).venue_requests_limit_override).toBe('');
+    expect(hostToValues({ ...hostRecord, venue_requests_limit_override: 40 }).venue_requests_limit_override).toBe('40');
+  });
 });
 
 describe('valuesToHostStep1', () => {

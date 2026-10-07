@@ -52,6 +52,8 @@ export interface IVenueRules {
   allow_waitlist: boolean;
   booking_approval_required: boolean;
   allow_multiple_bookings: boolean;
+  /** Pod Requests this venue may send to hosts per month (an admin override wins). */
+  max_host_requests_per_month: number;
 }
 
 /** Auto-extend: keep a rolling window of availability published automatically.
@@ -169,6 +171,8 @@ export interface IVenue extends Document {
   venue_commission_pct: number;
   // Venue Settings (operating hours, weekly-off, holidays) + booking rules.
   settings: IVenueSettings;
+  /** Admin-set cap on monthly host Pod Requests; null = the owner's own rule applies. */
+  host_requests_limit_override: number | null;
   // Workflow
   step_completed: number; // 0..4
   status: VenueStatus;
@@ -220,6 +224,7 @@ const venueRulesSchema = new Schema<IVenueRules>(
     allow_waitlist: { type: Boolean, default: false },
     booking_approval_required: { type: Boolean, default: false },
     allow_multiple_bookings: { type: Boolean, default: false },
+    max_host_requests_per_month: { type: Number, default: 10, min: 0, max: 100 },
   },
   { _id: false }
 );
@@ -323,6 +328,7 @@ const venueSchema = new Schema<IVenue>(
     venue_share_pct: { type: Number, default: 0, min: 0, max: 100 },
     venue_commission_pct: { type: Number, default: 0, min: 0, max: 100 },
     settings: { type: venueSettingsSchema, default: () => ({}) },
+    host_requests_limit_override: { type: Number, default: null, min: 0 },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },

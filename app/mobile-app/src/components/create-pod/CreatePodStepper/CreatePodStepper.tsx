@@ -31,6 +31,7 @@ export function CreatePodStepper({
   subCategories,
   hostCategories,
   viewerUserId,
+  pinnedVenueId,
   finance,
   onSaveDraft,
   onModerate,
@@ -85,6 +86,7 @@ export function CreatePodStepper({
       venues={venues}
       clubVenueIds={clubVenueIds}
       viewerUserId={viewerUserId}
+      pinnedVenueId={pinnedVenueId}
     />,
     <PricingStep
       key="pricing"

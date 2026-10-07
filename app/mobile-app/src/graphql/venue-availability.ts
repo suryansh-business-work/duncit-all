@@ -19,6 +19,7 @@ export const MyVenuesWithSettingsDocument = gql(`
       venue_name
       city
       status
+      host_requests_limit_override
       capacity
       capacity_items {
         label
@@ -40,6 +41,7 @@ export const MyVenuesWithSettingsDocument = gql(`
           allow_waitlist
           booking_approval_required
           allow_multiple_bookings
+          max_host_requests_per_month
         }
         auto_extend {
           enabled

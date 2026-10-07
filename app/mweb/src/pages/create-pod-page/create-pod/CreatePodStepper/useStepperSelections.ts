@@ -9,7 +9,6 @@ import type {
   CreatePodForm,
   CreatePodHostCategory,
   CreatePodProduct,
-  CreatePodSlot,
   CreatePodSubCategory,
 } from '../create-pod.types';
 
@@ -18,13 +17,15 @@ interface SelectionSources {
   hostCategories: CreatePodHostCategory[];
   products: CreatePodProduct[];
   subCategories: CreatePodSubCategory[];
+  /** The venue of a confirmed Pod Request — on offer whatever the club matches. */
+  pinnedVenueId?: string;
 }
 
 /** Everything the steps derive from the live selections: the scoped clubs,
  * venues and products, the spot bounds and the Step-4 earnings preview. */
 export function useStepperSelections(
   form: CreatePodForm,
-  { clubs, hostCategories, products, subCategories }: SelectionSources
+  { clubs, hostCategories, products, subCategories, pinnedVenueId }: SelectionSources
 ) {
   // Clubs are scoped by the selected host category (Super + Sub), then the picked
   // city and locality (helper shared with mobile + covered by unit tests). The
@@ -43,6 +44,8 @@ export function useStepperSelections(
   const clubId = form.watch('club_id');
   const selectedClub = clubs.find((club) => club.id === clubId) ?? null;
   const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
+  // The slot path is not club-scoped on the server, so a pre-chosen venue stays offered.
+  if (pinnedVenueId) clubVenueIds.add(pinnedVenueId);
   // Only offer products whose category matches the selected club (Super + Sub).
   const availableProducts = filterProductsForClub(products, selectedClub) as CreatePodProduct[];
 
@@ -61,8 +64,8 @@ export function useStepperSelections(
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const venueId = form.watch('venue_id');
   const slotId = form.watch('venue_slot_id');
-  const slotsQuery = useQuery<{ venueAvailableSlots: CreatePodSlot[] }>(VENUE_AVAILABLE_SLOTS, {
-    variables: { venue_id: venueId },
+  const slotsQuery = useQuery(VENUE_AVAILABLE_SLOTS, {
+    variables: { venue_id: venueId, partner_request_id: form.watch('partner_request_id') || null },
     skip: podMode !== 'PHYSICAL' || !venueId,
     fetchPolicy: 'cache-first',
   });

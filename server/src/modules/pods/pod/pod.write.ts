@@ -45,6 +45,10 @@ import {
 } from './pod.products';
 import { insertPodWithFreeSlug, resolvePodSlugForCreate } from './pod.slug';
 import {
+  assertRequestReadyForPod,
+  markPartnerRequestPodCreated,
+} from '@modules/venues/podPartnerRequest/podPartnerRequest.lifecycle';
+import {
   applyPodEditCore,
   applyRerouteState,
   applyResubmitPhysicalVenue,
@@ -78,9 +82,16 @@ export const podWriteMethods = {
   async create(
     input: any,
     audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null },
-    opts?: { autoPodSlot?: { slotId: string; autoPodId: string }; autoPodId?: string }
+    opts?: {
+      autoPodSlot?: { slotId: string; autoPodId: string };
+      autoPodId?: string;
+      partnerRequestSlot?: { slotId: string; requestId: string };
+    }
   ) {
     const autoPodSlot = opts?.autoPodSlot ?? null;
+    // A host↔venue Pod Request's confirmed slot, adopted like an Auto Pod's.
+    const partnerRequestSlot = opts?.partnerRequestSlot ?? null;
+    delete input.partner_request_id;
     // A VIRTUAL Auto Pod hands over no slot, but the pod is still its child.
     const autoPodId = opts?.autoPodId ?? autoPodSlot?.autoPodId ?? null;
     const { slug: pod_id, base: slugBase } = await resolvePodSlugForCreate(input);
@@ -103,7 +114,8 @@ export const podWriteMethods = {
     const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(
       input,
       podMode,
-      autoPodSlot?.autoPodId
+      autoPodSlot?.autoPodId,
+      partnerRequestSlot?.requestId
     );
 
     validateFutureDates(input.pod_date_time, input.pod_end_date_time, podMode === 'VIRTUAL');
@@ -190,14 +202,21 @@ export const podWriteMethods = {
         ...ticketDiscount,
         // A pod awaiting the venue's slot approval stays offline until approved.
         is_active: needsVenueApproval ? false : input.is_active ?? true,
-        venue_approval_status: venueApprovalForCreate(autoPodSlot, needsVenueApproval),
+        venue_approval_status: venueApprovalForCreate(autoPodSlot ?? partnerRequestSlot, needsVenueApproval),
         source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
       },
       input.club_id,
       slugBase
     );
 
-    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot);
+    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot);
+    if (partnerRequestSlot) {
+      // The pod exists and holds the slot; closing the request is bookkeeping and
+      // must never undo that, so a failure here is logged, not thrown.
+      markPartnerRequestPodCreated(partnerRequestSlot.requestId, String(doc._id)).catch((error: unknown) =>
+        logs.server.error('pods', 'markPartnerRequestPodCreated', { error, pod_id: String(doc._id) })
+      );
+    }
     await podAuditService.record({
       pod: doc,
       action: 'CREATE',
@@ -217,9 +236,14 @@ export const podWriteMethods = {
     if (podMode === 'PHYSICAL') {
       await assertPartnerVenue(input, userObjectId);
     }
+    // Arriving from a Pod Request: only its host, only on its confirmed slot.
+    const partnerRequestSlot = input.partner_request_id
+      ? await assertRequestReadyForPod(userId, String(input.partner_request_id), input.venue_slot_id)
+      : null;
     return this.create(
       { ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] },
       { actorUserId: userId, source: 'HOST' },
+      partnerRequestSlot ? { partnerRequestSlot } : undefined,
     );
   },
 

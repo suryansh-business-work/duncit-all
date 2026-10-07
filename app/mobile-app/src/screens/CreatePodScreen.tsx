@@ -37,10 +37,11 @@ export function CreatePodScreen() {
     initialValues,
     initialStep,
     initialDraftId,
+    pinnedVenueId,
     saveDraft,
     moderate,
     publish,
-  } = useCreatePod(route.params?.draftId);
+  } = useCreatePod(route.params?.draftId, route.params?.partnerRequestId);
 
   return (
     <StackScreen title={t('mweb.createPod.title')} testID="create-pod-screen">
@@ -80,6 +81,7 @@ export function CreatePodScreen() {
               subCategories={subCategories}
               hostCategories={hostCategories}
               viewerUserId={viewerUserId}
+              pinnedVenueId={pinnedVenueId}
               finance={finance}
               onSaveDraft={saveDraft}
               onModerate={moderate}

@@ -6,8 +6,10 @@ import type { CreatePodSlot } from '@/components/create-pod';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** Open availability slots on a venue partner's calendar (create-pod step 3).
- * Refetches whenever the picked venue changes; empty venue = no request. */
-export function useVenueSlots(venueId: string) {
+ * Refetches whenever the picked venue changes; empty venue = no request.
+ * `partnerRequestId` also returns the slot a Pod Request holds for this host,
+ * so a pod created from that request can still book it. */
+export function useVenueSlots(venueId: string, partnerRequestId = '') {
   const [slots, setSlots] = useState<CreatePodSlot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,7 +23,11 @@ export function useVenueSlots(venueId: string) {
     }
     let active = true;
     setIsLoading(true);
-    graphqlRequest(VenueAvailableSlotsDocument, { venue_id: venueId }, { auth: true })
+    graphqlRequest(
+      VenueAvailableSlotsDocument,
+      { venue_id: venueId, partner_request_id: partnerRequestId || null },
+      { auth: true },
+    )
       .then((res) => {
         if (active) setSlots(res.venueAvailableSlots ?? []);
       })
@@ -32,7 +38,7 @@ export function useVenueSlots(venueId: string) {
     return () => {
       active = false;
     };
-  }, [venueId, attempt]);
+  }, [venueId, partnerRequestId, attempt]);
 
   useRefreshRegistration(refetch);
 

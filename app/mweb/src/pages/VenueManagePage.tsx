@@ -14,6 +14,7 @@ import VenueOwnerStatsStrip from './venue-manage-page/VenueOwnerStatsStrip';
 import VenuePodsSection from './venue-manage-page/VenuePodsSection';
 import StudioChangeRequests from '../components/studio-pods/StudioChangeRequests';
 import VenueQuickActions from './venue-manage-page/VenueQuickActions';
+import PodRequestsSection from './pod-requests/PodRequestsSection';
 import VenueStatTiles from './venue-manage-page/VenueStatTiles';
 import VenueStudioHeader from './venue-manage-page/VenueStudioHeader';
 import VenueSwitcher from './venue-manage-page/VenueSwitcher';
@@ -74,6 +75,8 @@ export default function VenueManagePage() {
       {venue?.id && isApproved && (
         <PublishPageCard kind="VENUE" refId={venue.id} title={venue.venue_name ?? ''} />
       )}
+
+      {venue?.id && <PodRequestsSection side="VENUE" venueId={venue.id} />}
 
       <VenueEarningsLinkCard />
 

@@ -129,6 +129,16 @@ export const hostResolvers = {
         categories: args.categories,
       });
     },
+    setMyVenueRequestLimit: async (_p: unknown, args: { limit: number }, ctx: GraphQLContext) =>
+      hostService.setMyVenueRequestLimit(uid(ctx), args.limit),
+    setHostVenueRequestLimit: async (
+      _p: unknown,
+      args: { host_doc_id: string; limit?: number | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, HOST_GOVERN);
+      return hostService.setVenueRequestLimitOverride(args.host_doc_id, args.limit ?? null);
+    },
     setHostActive: async (
       _p: unknown,
       args: { host_doc_id: string; active: boolean },

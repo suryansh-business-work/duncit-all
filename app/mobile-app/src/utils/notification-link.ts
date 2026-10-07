@@ -25,6 +25,7 @@ export type NotificationLinkTarget =
   | { kind: 'screen'; route: ParamlessRoute }
   | { kind: 'post'; postId: string }
   | { kind: 'pod'; clubSlug: string; podSlug: string }
+  | { kind: 'podRequest'; id: string }
   | { kind: 'none' };
 
 /**
@@ -33,6 +34,7 @@ export type NotificationLinkTarget =
  *   - http(s) → open externally
  *   - /post/:id → the PostDetail screen (post-activity notifications)
  *   - /club/:clubSlug/pod/:podSlug → PodDetails (pod like/comment notifications)
+ *   - /pod-requests/:id → PodRequestDetail (every Pod Request notification)
  *   - a known param-less path (e.g. /earn, /pod-ideas) → its screen
  *   - anything else → no navigation
  */
@@ -45,6 +47,9 @@ export function resolveNotificationLink(link: string | null | undefined): Notifi
 
   const pod = /^\/club\/([^/?#]+)\/pod\/([^/?#]+)/.exec(link);
   if (pod?.[1] && pod[2]) return { kind: 'pod', clubSlug: pod[1], podSlug: pod[2] };
+
+  const podRequest = /^\/pod-requests\/([^/?#]+)/.exec(link);
+  if (podRequest?.[1]) return { kind: 'podRequest', id: podRequest[1] };
 
   const route = IN_APP_ROUTES[link];
   if (route) return { kind: 'screen', route };

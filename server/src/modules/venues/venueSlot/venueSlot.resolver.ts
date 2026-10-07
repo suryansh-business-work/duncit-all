@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { venueSlotService } from './venueSlot.service';
+import { heldRequestFor } from './venueSlot.partnerHold';
 
 const ONBOARDING_RW = ['SUPER_ADMIN', 'ONBOARDING_MANAGER'];
 
@@ -14,9 +15,14 @@ export const venueSlotResolvers = {
       const user = requireAuth(ctx);
       return venueSlotService.listForVenue(user.id, args.venue_id, args.from, args.to);
     },
-    venueAvailableSlots: (_p: unknown, args: { venue_id: string; from?: string | null }, ctx: GraphQLContext) => {
-      requireAuth(ctx);
-      return venueSlotService.listAvailable(args.venue_id, args.from);
+    venueAvailableSlots: async (
+      _p: unknown,
+      args: { venue_id: string; from?: string | null; partner_request_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const heldFor = args.partner_request_id ? await heldRequestFor(user.id, args.partner_request_id) : null;
+      return venueSlotService.listAvailable(args.venue_id, args.from, heldFor);
     },
     adminVenueSlots: (
       _p: unknown,

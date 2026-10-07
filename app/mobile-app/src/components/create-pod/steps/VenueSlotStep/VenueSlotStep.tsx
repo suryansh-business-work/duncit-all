@@ -23,12 +23,20 @@ interface Props {
   /** Ids of the venues that match the selected club — the venue picker is scoped to these. */
   clubVenueIds: Set<string>;
   viewerUserId: string;
+  /** A Pod Request's venue — always offered, whatever club or city is picked. */
+  pinnedVenueId?: string;
 }
 
 /** Step 3 — pick a venue partner in the pod's city and book one of its
  * published availability slots (physical), or meeting details + schedule
  * (virtual). The slot sets the pod's date/time. mWeb twin. */
-export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Readonly<Props>) {
+export function VenueSlotStep({
+  form,
+  venues,
+  clubVenueIds,
+  viewerUserId,
+  pinnedVenueId,
+}: Readonly<Props>) {
   const {
     control,
     watch,
@@ -43,16 +51,22 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
   const venueId = watch('venue_id');
   const slotId = watch('venue_slot_id');
 
-  // Venues are scoped to the selected club's auto-matched venues, then the city.
+  // Venues are scoped to the selected club's auto-matched venues, then the city;
+  // a Pod Request's venue stays on offer regardless.
   const clubVenues = venues.filter(
-    (venue) => clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId),
+    (venue) =>
+      venue.id === pinnedVenueId ||
+      (clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId)),
   );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   const ownVenue = selectedVenue?.owner_user_id === viewerUserId;
   const spaces = venueSpaces(selectedVenue);
   const spaceLabel = watch('venue_space_label');
   const selectedSpace = spaces.find((space) => space.label === spaceLabel) ?? null;
-  const { slots, isLoading } = useVenueSlots(mode === 'PHYSICAL' ? venueId : '');
+  const { slots, isLoading } = useVenueSlots(
+    mode === 'PHYSICAL' ? venueId : '',
+    watch('partner_request_id'),
+  );
   const slotsForSpace = spaceSlots(slots, selectedSpace);
 
   // Each chip carries its own space, so picking one fills spots with no lookup.

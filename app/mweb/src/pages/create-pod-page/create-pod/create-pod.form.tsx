@@ -48,6 +48,8 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),
       venue_id: z.string(),
       venue_slot_id: z.string(),
+      // Hidden; '' when the pod answers no Pod Request (old drafts hydrate over the blank form).
+      partner_request_id: z.string(),
       meeting_platform: z.string().trim().max(80),
       meeting_url: z.string().trim(),
       meeting_notes: z.string().trim().max(1000),

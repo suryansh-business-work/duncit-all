@@ -160,6 +160,9 @@ const profileSchema = new Schema(
     // The location the user last picked in the header (persists their choice
     // across sessions/devices). References platform locations; null = unset.
     selected_location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
+    // The area inside that city the header has selected ('' = the whole city).
+    // "Nearby" partner searches measure a host's distance from it.
+    selected_zone_name: { type: String, default: '', trim: true },
   },
   { _id: false }
 );

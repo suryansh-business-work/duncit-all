@@ -4,6 +4,9 @@ export interface ILocationZone {
   zone_name: string;
   zone_code?: string;
   pincode?: string;
+  /** Geocoded once on first use (Google Maps), then reused — null until then. */
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export interface ILocation extends Document {
@@ -17,6 +20,9 @@ export interface ILocation extends Document {
   location_image: string;
   location_pincode: string;
   location_zones: ILocationZone[];
+  /** The city's geocoded centre — "nearby" searches measure from it. Null until first used. */
+  lat?: number | null;
+  lng?: number | null;
   is_active: boolean;
   /** Off: the city is listed in the app but opens its subscribe-for-launch page. */
   is_launched: boolean;
@@ -83,6 +89,8 @@ const zoneSchema = new Schema<ILocationZone>(
     zone_name: { type: String, required: true, trim: true },
     zone_code: { type: String, default: '' },
     pincode: { type: String, default: '' },
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
   },
   { _id: false }
 );
@@ -116,6 +124,8 @@ const locationSchema = new Schema<ILocation>(
     location_image: { type: String, required: true },
     location_pincode: { type: String, required: true, trim: true },
     location_zones: { type: [zoneSchema], default: [] },
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
     is_active: { type: Boolean, default: true },
     is_launched: { type: Boolean, default: true },
     launch_target: { type: Number, default: DEFAULT_LAUNCH_TARGET, min: 1, max: MAX_LAUNCH_TARGET },

@@ -60,7 +60,10 @@ export function useCreatePodScope({
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const podMode = form.watch('pod_mode');
   const slotId = form.watch('venue_slot_id');
-  const { slots } = useVenueSlots(podMode === 'PHYSICAL' ? form.watch('venue_id') : '');
+  const { slots } = useVenueSlots(
+    podMode === 'PHYSICAL' ? form.watch('venue_id') : '',
+    form.watch('partner_request_id'),
+  );
   const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
 
   // How big this pod may be: floored by the sub-category's admin-set minimum

@@ -26,6 +26,16 @@ describe('resolveNotificationLink', () => {
     expect(resolveNotificationLink('/post/')).toEqual({ kind: 'none' });
   });
 
+  it('routes a /pod-requests/:id link to the Pod Request target (stripping query/hash)', () => {
+    expect(resolveNotificationLink('/pod-requests/r1')).toEqual({ kind: 'podRequest', id: 'r1' });
+    expect(resolveNotificationLink('/pod-requests/r1?from=push#top')).toEqual({
+      kind: 'podRequest',
+      id: 'r1',
+    });
+    // No id → not a Pod Request link.
+    expect(resolveNotificationLink('/pod-requests/')).toEqual({ kind: 'none' });
+  });
+
   it('maps a known param-less path to its screen', () => {
     expect(resolveNotificationLink('/earn')).toEqual({ kind: 'screen', route: 'Earn' });
   });

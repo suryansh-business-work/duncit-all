@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AccessibilityInfo, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { YStack } from 'tamagui';
-import { logs } from '@duncit/logs';
 import { imageSourceUrl, videoSourceUrl } from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
+import { useReduceMotion } from '@/hooks/useReduceMotion';
 
 /** The widest a backdrop image draws, device pixels included — mWeb asks for the same. */
 const BACKDROP_IMAGE_WIDTH = 1080;
@@ -48,27 +48,6 @@ function BackdropVideo({
       nativeControls={false}
     />
   );
-}
-
-/** Whether the device asked for less motion — read once, then followed while the screen is open. */
-function useReduceMotion(): boolean {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((enabled) => {
-        if (mounted) setReduce(enabled);
-      })
-      .catch((error: unknown) =>
-        logs.mobileApp.error('LaunchBackdrop', 'isReduceMotionEnabled', { error }),
-      );
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduce);
-    return () => {
-      mounted = false;
-      sub.remove();
-    };
-  }, []);
-  return reduce;
 }
 
 interface Props {

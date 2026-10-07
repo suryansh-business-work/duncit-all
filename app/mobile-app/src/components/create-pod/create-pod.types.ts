@@ -38,6 +38,8 @@ export interface CreatePodFormValues {
   venue_slot_id: string;
   /** Selected venue space/type (a capacity item label) — drives No. of spots. */
   venue_space_label: string;
+  /** Hidden: the Pod Request whose confirmed slot this pod books ('' = none). */
+  partner_request_id: string;
   meeting_platform: string;
   meeting_url: string;
   meeting_notes: string;
@@ -78,6 +80,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   venue_id: '',
   venue_slot_id: '',
   venue_space_label: '',
+  partner_request_id: '',
   meeting_platform: '',
   meeting_url: '',
   meeting_notes: '',

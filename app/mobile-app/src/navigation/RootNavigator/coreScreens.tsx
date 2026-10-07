@@ -27,6 +27,9 @@ import { HostDashboardScreen } from '@/screens/HostDashboardScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { LiveChatScreen } from '@/screens/LiveChatScreen';
 import { MailPreferenceScreen } from '@/screens/MailPreferenceScreen';
+import { NearbyHostsScreen } from '@/screens/NearbyHostsScreen';
+import { NearbyVenuesScreen } from '@/screens/NearbyVenuesScreen';
+import { PodRequestDetailScreen } from '@/screens/PodRequestDetailScreen';
 import { PrivacyScreen } from '@/screens/PrivacyScreen';
 import { MainTabs } from '@/navigation/MainTabs';
 import { MenuScreen } from '@/screens/MenuScreen';
@@ -100,6 +103,9 @@ export function renderCoreScreens() {
       <Stack.Screen name="ChangeRequests" component={ChangeRequestsScreen} />
       <Stack.Screen name="VenueAvailability" component={VenueAvailabilityScreen} />
       <Stack.Screen name="VenueSettings" component={VenueSettingsScreen} />
+      <Stack.Screen name="NearbyHosts" component={NearbyHostsScreen} />
+      <Stack.Screen name="NearbyVenues" component={NearbyVenuesScreen} />
+      <Stack.Screen name="PodRequestDetail" component={PodRequestDetailScreen} />
       <Stack.Screen name="VenueAutoPods" component={VenueAutoPodsScreen} />
       <Stack.Screen name="HostAutoPods" component={HostAutoPodsScreen} />
       <Stack.Screen name="ClubAutoPods" component={ClubAutoPodsScreen} />

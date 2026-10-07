@@ -108,11 +108,13 @@ function VenueSlotHarness({
   venues = [venue],
   viewerUserId = 'me-1',
   clubVenueIds = new Set(venues.map((item) => item.id)),
+  pinnedVenueId,
 }: Readonly<{
   initial: Partial<CreatePodFormValues>;
   venues?: CreatePodVenue[];
   viewerUserId?: string;
   clubVenueIds?: Set<string>;
+  pinnedVenueId?: string;
 }>) {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
@@ -123,6 +125,7 @@ function VenueSlotHarness({
       venues={venues}
       clubVenueIds={clubVenueIds}
       viewerUserId={viewerUserId}
+      pinnedVenueId={pinnedVenueId}
     />
   );
 }
@@ -270,6 +273,34 @@ describe('VenueSlotStep', () => {
       />,
     );
     expect(screen.getByTestId('create-pod-venue-empty')).toBeOnTheScreen();
+  });
+
+  it("keeps a Pod Request's venue on offer outside the club and city, asking for its held slot", async () => {
+    const other: CreatePodVenue = { ...venue, id: 'v2', venue_name: 'Terrace', location_id: 'l7' };
+    renderWithProviders(
+      <VenueSlotHarness
+        initial={{
+          pod_mode: 'PHYSICAL',
+          location_id: 'l1',
+          venue_id: 'v2',
+          partner_request_id: 'req1',
+        }}
+        venues={[venue, other]}
+        clubVenueIds={new Set()}
+        pinnedVenueId="v2"
+      />,
+    );
+    expect(screen.getByTestId('create-pod-venue-v2')).toBeOnTheScreen();
+    // The club matches nothing and v1 is not pinned, so only the request's venue shows.
+    expect(screen.queryByTestId('create-pod-venue-v1')).toBeNull();
+    expect(screen.queryByTestId('create-pod-venue-empty')).toBeNull();
+    await waitFor(() =>
+      expect(mockGraphqlRequest).toHaveBeenCalledWith(
+        expect.anything(),
+        { venue_id: 'v2', partner_request_id: 'req1' },
+        { auth: true },
+      ),
+    );
   });
 
   it('books a slot on your own venue with the instant-confirm note', async () => {

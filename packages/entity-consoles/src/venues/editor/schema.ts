@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { GSTIN_PATTERN, PAN_PATTERN, POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
+import { podRequestOverrideField } from '../../shared/podRequestLimit';
 
 /**
  * The venue record's validation (rule 30: React Hook Form + Zod).
@@ -239,6 +240,7 @@ export function makeVenueFormSchema(t: Translate) {
 
     venue_share_pct: percent(m, t('directory.venueEditor.sharePct')),
     venue_commission_pct: percent(m, t('directory.venueEditor.commissionPct')),
+    host_requests_limit_override: podRequestOverrideField(t),
 
     status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']),
     is_active: z.boolean(),

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { AADHAR_PATTERN, PAN_PATTERN, zodRules } from '@duncit/forms';
 import type { Translate } from '../../venues/editor/schema';
+import { podRequestOverrideField } from '../../shared/podRequestLimit';
 
 /**
  * The host record's validation (rule 30), as a factory over the surface's `t`
@@ -89,6 +90,7 @@ export function makeHostFormSchema(t: Translate) {
       .number({ error: t('directory.venueEditor.errNumber', { vars: { field: t('directory.hostEditor.colCommission') } }) })
       .min(0, t('directory.venueEditor.errMin', { vars: { field: t('directory.hostEditor.colCommission'), min: 0 } }))
       .max(100, t('directory.venueEditor.errMax', { vars: { field: t('directory.hostEditor.colCommission'), max: 100 } })),
+    venue_requests_limit_override: podRequestOverrideField(t),
   });
 }
 

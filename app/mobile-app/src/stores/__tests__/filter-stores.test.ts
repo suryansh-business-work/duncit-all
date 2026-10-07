@@ -61,11 +61,11 @@ describe('location store', () => {
     expect(useLocationStore.getState().selectedId).toBe('l1');
     expect(useLocationStore.getState().cityLabel).toBe('Mumbai');
     expect(useLocationStore.getState().zoneName).toBe('Z1');
-    // An explicit pick persists the choice to the server.
+    // An explicit pick persists the choice — city AND area — to the server.
     await Promise.resolve();
     expect(mockRequest).toHaveBeenLastCalledWith(
       expect.anything(),
-      { locationId: 'l1' },
+      { locationId: 'l1', zoneName: 'Z1' },
       { auth: true },
     );
 
@@ -91,6 +91,12 @@ describe('location store', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(useLocationStore.getState().selectedId).toBe('l9');
+    // A city with no area sends the area as null, not an empty string.
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { locationId: 'l9', zoneName: null },
+      { auth: true },
+    );
   });
 
   it('hydrates a saved location only when nothing is selected', async () => {

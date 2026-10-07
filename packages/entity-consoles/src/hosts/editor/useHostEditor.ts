@@ -5,6 +5,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
+import { podRequestOverrideInput } from '../../shared/podRequestLimit';
 import { useConsoleAccess } from '../../shared/useConsoleAccess';
 import { savedRecordPath, useRecordParentPath } from '../../shared/recordPaths';
 import {
@@ -13,6 +14,7 @@ import {
   HOST_DETAIL,
   SET_HOST_ACTIVE,
   SET_HOST_DEDUCTIONS,
+  SET_HOST_VENUE_REQUEST_LIMIT,
   type HostDetail,
 } from '../queries';
 import {
@@ -65,6 +67,28 @@ export function useHostEditor(hostId: string) {
   const [updateHost] = useMutation(ADMIN_UPDATE_HOST);
   const [setActive] = useMutation(SET_HOST_ACTIVE);
   const [setDeductions] = useMutation(SET_HOST_DEDUCTIONS);
+  const [setRequestLimit] = useMutation(SET_HOST_VENUE_REQUEST_LIMIT);
+
+  /**
+   * The governance writes, in order: the commission, then the live switch and
+   * the Pod Request override — each of those two only when it actually moved
+   * (setHostActive notifies; a new host record is created active).
+   */
+  const applyGovernance = useCallback(
+    async (id: string, values: HostFormValues) => {
+      await setDeductions({
+        variables: { user_id: values.user_id, host_commission_pct: values.host_commission_pct },
+      });
+      if (values.is_active !== (host?.is_active ?? true)) {
+        await setActive({ variables: { host_doc_id: id, active: values.is_active } });
+      }
+      const limit = podRequestOverrideInput(t, values.venue_requests_limit_override);
+      if (limit !== (host?.venue_requests_limit_override ?? null)) {
+        await setRequestLimit({ variables: { host_doc_id: id, limit } });
+      }
+    },
+    [host?.is_active, host?.venue_requests_limit_override, setActive, setDeductions, setRequestLimit, t],
+  );
 
   const submit = useCallback(
     async (values: HostFormValues) => {
@@ -104,16 +128,7 @@ export function useHostEditor(hostId: string) {
         if (!id) throw new Error(t('directory.hostEditor.errNoId'));
         // The commission and the live switch are GOVERNANCE: a console-role
         // editor would be refused, so the request is never made.
-        if (canGovern) {
-          await setDeductions({
-            variables: { user_id: values.user_id, host_commission_pct: values.host_commission_pct },
-          });
-          // setHostActive is the write that notifies, so it only runs on a
-          // switch that actually moved. A new host record is created active.
-          if (values.is_active !== (host?.is_active ?? true)) {
-            await setActive({ variables: { host_doc_id: id, active: values.is_active } });
-          }
-        }
+        if (canGovern) await applyGovernance(id, values);
         notifySuccess(isEdit ? t('directory.hostEditor.saved') : t('directory.hostEditor.created'));
         navigate(savedRecordPath(parentPath, isEdit, id));
       } catch (err) {
@@ -123,14 +138,12 @@ export function useHostEditor(hostId: string) {
       }
     },
     [
+      applyGovernance,
       canGovern,
       createHost,
-      host?.is_active,
       isEdit,
       navigate,
       parentPath,
-      setActive,
-      setDeductions,
       t,
       updateHost,
     ],

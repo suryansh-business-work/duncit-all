@@ -58,6 +58,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     products_enabled: values.product_requests.length > 0,
     product_requests: values.product_requests,
     is_active: true,
+    // A Pod Request's pod: the server checks the slot is the one the request confirmed.
+    partner_request_id: values.partner_request_id || null,
   };
 }
 

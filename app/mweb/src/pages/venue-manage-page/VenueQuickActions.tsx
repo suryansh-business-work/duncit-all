@@ -1,3 +1,4 @@
+import PersonSearchRoundedIcon from '@mui/icons-material/PersonSearchRounded';
 import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded';
 import EventRepeatRoundedIcon from '@mui/icons-material/EventRepeatRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
@@ -45,6 +46,12 @@ export default function VenueQuickActions({ approved, pendingRequests }: Readonl
       label: t('mweb.venueManagePage.slotRequestsAction'),
       badge: pendingBadge,
       to: '/venues/slot-requests',
+    },
+    {
+      key: 'nearby-hosts',
+      icon: <PersonSearchRoundedIcon fontSize="small" />,
+      label: t('podRequests.searchHostsTitle'),
+      to: '/venues/nearby-hosts',
     },
   ];
 

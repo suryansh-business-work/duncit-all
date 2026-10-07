@@ -1,4 +1,5 @@
 import type { HostDetail } from '../queries';
+import { podRequestOverrideText } from '../../shared/podRequestLimit';
 import { blankHostValues, type HostFormValues } from './types';
 
 /**
@@ -43,6 +44,7 @@ export function hostToValues(host: HostDetail): HostFormValues {
     // Null and 0 both mean "inherit the platform default", and the form shows
     // that as 0 — so an unset commission reads the same as one set to inherit.
     host_commission_pct: host.host_commission_pct ?? blankHostValues.host_commission_pct,
+    venue_requests_limit_override: podRequestOverrideText(host.venue_requests_limit_override),
   };
 }
 

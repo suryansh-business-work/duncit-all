@@ -1,0 +1,108 @@
+import type { NestedCatalogue } from '../catalogue';
+
+/**
+ * Pod Requests between venues and hosts, both ways: the nearby searches, the
+ * request lists and tabs in Host Studio and Venue Studio, one request's
+ * detail (accept → slot → confirm → Create Pod), and the two monthly-limit
+ * settings.
+ *
+ * Rendered by the Partners console, mWeb AND native, so it is one namespace
+ * every surface ships rather than a copy per bundle (rule 40).
+ */
+export const POD_REQUESTS_BUNDLE: NestedCatalogue = {
+  podRequests: {
+    // Studio sections and tabs.
+    fromVenuesTitle: 'Pod Requests from Venues',
+    fromHostsTitle: 'Pod Requests from Hosts',
+    sentToVenuesTitle: 'Your requests to venues',
+    sentToHostsTitle: 'Your requests to hosts',
+    tabRequests: 'Requests',
+    tabVenueAccepted: 'Venue Accepted Requests',
+    tabHostAccepted: 'Host Accepted Requests',
+    emptyIncoming: 'No new Pod Requests yet.',
+    emptyAccepted: 'Requests you accept appear here.',
+    emptySent: 'Requests you send appear here.',
+    // Nearby search.
+    searchHostsTitle: 'Search Nearby Hosts',
+    searchVenuesTitle: 'Search Nearby Venues',
+    searchingHosts: 'Searching Nearby Hosts...',
+    searchingVenues: 'Searching Nearby Venues...',
+    searchingHint: 'Looking within {km} km of {place}',
+    radiusLabel: 'Radius',
+    radiusValue: '{km} km',
+    categoryLabel: 'Category',
+    allCategories: 'All categories',
+    venueLabel: 'Venue',
+    noHostsFound: 'No hosts found within {km} km.',
+    noVenuesFound: 'No venues found within {km} km.',
+    expandSearch: 'Search within {km} km',
+    tryAllCategories: 'Try all categories',
+    distanceAway: '{km} km away',
+    requestPod: 'Request Pod',
+    requestSent: 'Pod Request sent.',
+    noteLabel: 'Note (optional)',
+    noteHint: 'Tell them what kind of pod you have in mind.',
+    noteTooLong: 'Keep the note under {max} characters.',
+    noteTitle: 'Note',
+    quotaLeft: '{remaining} of {limit} requests left this month',
+    quotaReached: 'You have used all {limit} Pod Requests for this month.',
+    pickLocation: 'Pick your city in the location picker to search nearby.',
+    noApprovedVenue: 'Pod Requests open once one of your venues is approved.',
+    // Statuses.
+    statusRequested: 'Requested',
+    statusAccepted: 'Accepted',
+    statusSlotRequested: 'Slot requested',
+    statusSlotConfirmed: 'Slot confirmed',
+    statusPodCreated: 'Pod created',
+    statusRejected: 'Declined',
+    statusCancelled: 'Withdrawn',
+    statusExpired: 'Expired',
+    // One request.
+    detailTitle: 'Pod Request',
+    hostDetails: 'Host',
+    venueDetails: 'Venue',
+    slotDetails: 'Slot',
+    capacity: 'Capacity {count}',
+    accept: 'Accept',
+    decline: 'Decline',
+    withdraw: 'Withdraw',
+    pickSlot: 'Pick a slot',
+    pickSlotHint: "Choose one of the venue's open slots. The other side confirms it before the pod is created.",
+    sendSlot: 'Send Slot Request',
+    noSlots: 'This venue has no open slots right now.',
+    confirmSlot: 'Confirm slot',
+    declineSlot: 'Decline slot',
+    waitingAnswer: 'Waiting for the other side to answer.',
+    waitingSlot: 'Waiting for the other side to pick a slot.',
+    waitingConfirm: 'Waiting for the other side to confirm the slot.',
+    createPod: 'Create Pod',
+    createPodHint: 'The slot is confirmed. Create the pod: the venue and slot are already chosen.',
+    hostCreatesPod: 'The slot is confirmed. The host creates the pod next.',
+    viewPod: 'View pod',
+    contactTitle: 'Contact',
+    contactHidden: 'Contact details are shared once the pod is created.',
+    phone: 'Phone',
+    email: 'Email',
+    address: 'Address',
+    // Monthly limits.
+    venueLimitLabel: 'Maximum Host Requests / Month',
+    hostLimitLabel: 'Maximum Venue Requests / Month',
+    limitHint: 'How many Pod Requests you can send each month (0-100).',
+    limitOverridden: 'Set by Duncit: {limit} per month.',
+    limitInvalid: 'Enter a whole number from 0 to 100.',
+    limitSaved: 'Saved.',
+    save: 'Save',
+    hostSettingsTitle: 'Host Settings',
+    overrideLabel: 'Monthly Pod Request limit (override)',
+    overrideHint: "Leave empty to use the partner's own setting.",
+    overrideInvalid: 'Enter a whole number from 0 to 1000, or leave it empty.',
+    // Partners console.
+    navTitle: 'Pod Requests',
+    backToList: 'Back to Pod Requests',
+    requestedOn: 'Requested on {date}',
+    notFound: 'This Pod Request could not be found.',
+    venueUnplaced: 'This venue has no city yet. Add one in Venue Management to search nearby.',
+    spaceLabel: 'Space',
+    noHost: 'Your host profile is not available yet.',
+  },
+};

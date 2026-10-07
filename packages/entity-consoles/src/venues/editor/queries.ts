@@ -90,6 +90,16 @@ export const SET_VENUE_DEDUCTIONS = gql`
   }
 `;
 
+/** Admin override of the owner's monthly Pod Request cap; null clears it. */
+export const SET_VENUE_HOST_REQUEST_LIMIT = gql`
+  mutation VenueEditorHostRequestLimit($venue_doc_id: ID!, $limit: Int) {
+    setVenueHostRequestLimit(venue_doc_id: $venue_doc_id, limit: $limit) {
+      id
+      host_requests_limit_override
+    }
+  }
+`;
+
 export const SET_VENUE_ACTIVE = gql`
   mutation VenueEditorActive($venue_doc_id: ID!, $active: Boolean!) {
     setVenueActive(venue_doc_id: $venue_doc_id, active: $active) {

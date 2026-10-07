@@ -30,6 +30,30 @@ describe('useVenueSlots', () => {
     expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 
+  it('asks for the slot a Pod Request holds and refetches when the request changes', async () => {
+    mockRequest.mockResolvedValue({ venueAvailableSlots: [slot] });
+    const { result, rerender } = renderHook(
+      ({ id, requestId }: { id: string; requestId: string }) => useVenueSlots(id, requestId),
+      { initialProps: { id: 'v1', requestId: '' } },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    // No request → the argument is sent as null, not an empty id.
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { venue_id: 'v1', partner_request_id: null },
+      { auth: true },
+    );
+
+    rerender({ id: 'v1', requestId: 'req1' });
+    await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(2));
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { venue_id: 'v1', partner_request_id: 'req1' },
+      { auth: true },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+  });
+
   it('falls back to an empty list when the request fails', async () => {
     mockRequest.mockRejectedValueOnce(new Error('boom'));
     const { result } = renderHook(() => useVenueSlots('v1'));

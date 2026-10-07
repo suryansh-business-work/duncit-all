@@ -92,6 +92,11 @@ export function startSlotRequestExpiryScheduler(): () => void {
     run: async () => {
       const declined = await runSlotRequestExpirySweep();
       if (declined > 0) logs.server.info('venue-slot-expiry', 'sweep', { declined });
+      // Pod Requests holding a slot that has started with no pod free it on the same tick.
+      const { runPartnerRequestExpirySweep } = await import(
+        '@modules/venues/podPartnerRequest/podPartnerRequest.lifecycle'
+      );
+      await runPartnerRequestExpirySweep();
     },
   });
 }

@@ -5,6 +5,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
+import { podRequestOverrideInput } from '../../shared/podRequestLimit';
 import { useConsoleAccess } from '../../shared/useConsoleAccess';
 import { VENUE_DETAIL, type AdminVenueDetail } from '../detail/queries';
 import {
@@ -12,6 +13,7 @@ import {
   ADMIN_UPDATE_VENUE,
   SET_VENUE_ACTIVE,
   SET_VENUE_DEDUCTIONS,
+  SET_VENUE_HOST_REQUEST_LIMIT,
   UPDATE_VENUE_SETTINGS,
   VENUE_REGISTRATION_CONFIG,
   type VenueRegistrationConfig,
@@ -92,6 +94,7 @@ export function useVenueEditor(venueId: string) {
   const [updateSettings] = useMutation(UPDATE_VENUE_SETTINGS);
   const [setDeductions] = useMutation(SET_VENUE_DEDUCTIONS);
   const [setActive] = useMutation(SET_VENUE_ACTIVE);
+  const [setRequestLimit] = useMutation(SET_VENUE_HOST_REQUEST_LIMIT);
 
   /**
    * The writes that follow the record itself.
@@ -117,8 +120,13 @@ export function useVenueEditor(venueId: string) {
       if (values.is_active !== wasActive) {
         await setActive({ variables: { venue_doc_id: id, active: values.is_active } });
       }
+      // The Pod Request override is only written when it actually moved.
+      const limit = podRequestOverrideInput(t, values.host_requests_limit_override);
+      if (limit !== (venue?.host_requests_limit_override ?? null)) {
+        await setRequestLimit({ variables: { venue_doc_id: id, limit } });
+      }
     },
-    [canGovern, setActive, setDeductions, updateSettings],
+    [canGovern, setActive, setDeductions, setRequestLimit, t, updateSettings, venue?.host_requests_limit_override],
   );
 
   const submit = useCallback(

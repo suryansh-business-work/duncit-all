@@ -131,13 +131,10 @@ export {
 } from './venue-cancel-pod';
 
 export {
-  POD_REQUEST_LIMIT_MAX,
   POD_REQUEST_NOTE_MAX,
   POD_REQUEST_OVERRIDE_MAX,
-  makePodRequestLimitSchema,
   makePodRequestNoteSchema,
   makePodRequestOverrideSchema,
-  type PodRequestLimitValues,
   type PodRequestNoteValues,
 } from './pod-request';
 

@@ -6163,6 +6163,9 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../../packages/forms
       '@duncit/location':
         specifier: workspace:*
         version: link:../../packages/location

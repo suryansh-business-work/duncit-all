@@ -23,9 +23,7 @@ export const hostTypeDefs = /* GraphQL */ `
     email: String!
     phone: String!
     dob: String
-    "Host Settings: Pod Requests this host may send to venues per month."
-    max_venue_requests_per_month: Int!
-    "Admin cap that wins over the host's own setting; null = not set."
+    "Admin-set cap on monthly Pod Requests to venues; null = the default of 10."
     venue_requests_limit_override: Int
     aadhar_number: String!
     pan_number: String!
@@ -153,9 +151,7 @@ export const hostTypeDefs = /* GraphQL */ `
       categories: [HostCategoryInput!]
     ): Host!
     setHostActive(host_doc_id: ID!, active: Boolean!): Host!
-    "Host Settings: the signed-in host's own monthly cap on Pod Requests to venues (0-100)."
-    setMyVenueRequestLimit(limit: Int!): Host!
-    "Admin override for a host's monthly Pod Requests to venues (null clears it)."
+    "Admin-only: a host's monthly Pod Request limit to venues (null = the default of 10)."
     setHostVenueRequestLimit(host_doc_id: ID!, limit: Int): Host!
     "Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods."
     deleteHost(host_doc_id: ID!, email: String!, password: String!): Boolean!

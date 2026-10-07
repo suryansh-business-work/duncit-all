@@ -90,7 +90,7 @@ export const SET_VENUE_DEDUCTIONS = gql`
   }
 `;
 
-/** Admin override of the owner's monthly Pod Request cap; null clears it. */
+/** Admin-only monthly host Pod Request limit of the venue; null = the default of 10. */
 export const SET_VENUE_HOST_REQUEST_LIMIT = gql`
   mutation VenueEditorHostRequestLimit($venue_doc_id: ID!, $limit: Int) {
     setVenueHostRequestLimit(venue_doc_id: $venue_doc_id, limit: $limit) {

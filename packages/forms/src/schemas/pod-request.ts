@@ -4,9 +4,7 @@ import type { Translate } from './translate';
 
 /** The server's own cap (`PARTNER_REQUEST_NOTE_MAX`): the note travels with the request. */
 export const POD_REQUEST_NOTE_MAX = 500;
-/** What a partner may set as their own monthly cap — the server clamps to the same range. */
-export const POD_REQUEST_LIMIT_MAX = 100;
-/** An admin override may go past the partner range, never past this. */
+/** The most an admin may set as a partner's monthly Pod Request limit — the server refuses past it. */
 export const POD_REQUEST_OVERRIDE_MAX = 1000;
 
 /** Typed text → whole number in range. A blank box is refused, never read as 0 (`Number('')` is 0). */
@@ -32,14 +30,10 @@ export function makePodRequestNoteSchema(t: Translate) {
 
 export type PodRequestNoteValues = z.infer<ReturnType<typeof makePodRequestNoteSchema>>;
 
-/** Venue Settings' "Maximum Host Requests / Month" and Host Settings' "Maximum Venue Requests / Month". */
-export function makePodRequestLimitSchema(t: Translate) {
-  return z.object({ limit: wholeNumber(POD_REQUEST_LIMIT_MAX, t('podRequests.limitInvalid')) });
-}
-
-export type PodRequestLimitValues = z.infer<ReturnType<typeof makePodRequestLimitSchema>>;
-
-/** The admin override: empty clears it (null), else a whole number up to POD_REQUEST_OVERRIDE_MAX. */
+/**
+ * The admin-only monthly Pod Request limit (Venues / Hosts portals and Onboarding): empty clears
+ * it (null, the default of 10 applies), else a whole number up to POD_REQUEST_OVERRIDE_MAX.
+ */
 export function makePodRequestOverrideSchema(t: Translate) {
   const message = t('podRequests.overrideInvalid');
   return z.object({

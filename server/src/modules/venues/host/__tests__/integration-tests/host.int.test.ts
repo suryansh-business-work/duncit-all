@@ -340,38 +340,17 @@ describe('Pod Request limits', () => {
   const badInput = expect.objectContaining({ extensions: expect.objectContaining({ code: 'BAD_USER_INPUT' }) });
   const notFound = expect.objectContaining({ extensions: expect.objectContaining({ code: 'NOT_FOUND' }) });
 
-  it("defaults a host's monthly venue-request cap to 10 with no override", async () => {
+  it('leaves a new host with no admin-set limit and no partner-editable one', async () => {
     const h = await HostModel.create({ user_id: new Types.ObjectId() });
     const pub = await hostService.getById(String(h._id));
-    expect(pub).toMatchObject({ max_venue_requests_per_month: 10, venue_requests_limit_override: null });
-  });
-
-  it('lets the host set their own cap anywhere from 0 to 100', async () => {
-    const owner = new Types.ObjectId();
-    await HostModel.create({ user_id: owner });
-    expect(await hostService.setMyVenueRequestLimit(String(owner), 0)).toMatchObject({ max_venue_requests_per_month: 0 });
-    expect(await hostService.setMyVenueRequestLimit(String(owner), 100)).toMatchObject({ max_venue_requests_per_month: 100 });
-    expect((await HostModel.findOne({ user_id: owner }).lean())?.max_venue_requests_per_month).toBe(100);
-  });
-
-  it.each([[-1], [101], [2.5], [Number.NaN]])('refuses a host cap of %p and leaves it unchanged', async (limit) => {
-    const owner = new Types.ObjectId();
-    await HostModel.create({ user_id: owner, max_venue_requests_per_month: 7 });
-    await expect(hostService.setMyVenueRequestLimit(String(owner), limit)).rejects.toEqual(badInput);
-    expect((await HostModel.findOne({ user_id: owner }).lean())?.max_venue_requests_per_month).toBe(7);
-  });
-
-  it('refuses a host cap for someone with no host profile', async () => {
-    await expect(hostService.setMyVenueRequestLimit(new Types.ObjectId().toString(), 5)).rejects.toEqual(notFound);
+    expect(pub).toMatchObject({ venue_requests_limit_override: null });
+    expect(pub).not.toHaveProperty('max_venue_requests_per_month');
   });
 
   it('lets an admin override up to 1000, and clear it with null', async () => {
-    const h = await HostModel.create({ user_id: new Types.ObjectId(), max_venue_requests_per_month: 4 });
+    const h = await HostModel.create({ user_id: new Types.ObjectId() });
     const id = String(h._id);
-    expect(await hostService.setVenueRequestLimitOverride(id, 1000)).toMatchObject({
-      max_venue_requests_per_month: 4,
-      venue_requests_limit_override: 1000,
-    });
+    expect(await hostService.setVenueRequestLimitOverride(id, 1000)).toMatchObject({ venue_requests_limit_override: 1000 });
     expect(await hostService.setVenueRequestLimitOverride(id, 0)).toMatchObject({ venue_requests_limit_override: 0 });
     expect(await hostService.setVenueRequestLimitOverride(id, null)).toMatchObject({ venue_requests_limit_override: null });
   });

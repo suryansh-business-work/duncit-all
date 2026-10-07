@@ -6,9 +6,9 @@ import {
 } from '../../src/shared/podRequestLimit';
 
 /**
- * The admin override of a partner's monthly Pod Request cap: typed as text in
- * the venue and host editors, sent as `Int | null`. Empty must mean "no
- * override" — never 0, which would stop the partner sending any request.
+ * The admin-only monthly Pod Request limit of a venue or host: typed as text in
+ * the venue and host editors, sent as `Int | null`. Empty must mean "not set"
+ * (the default of 10) — never 0, which would stop the partner sending any request.
  */
 const t = (key: string) => key;
 const field = podRequestOverrideField(t);

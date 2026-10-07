@@ -154,4 +154,7 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "podRequests.capacity": ["Capacity {{count}}"],
   "podRequests.limitOverridden": ["Set by Duncit: {{limit}} per month."],
   "podRequests.requestedOn": ["Requested on {{date}}"],
+  // The monthly Pod Request limit became admin-only (no partner setting to fall
+  // back to): an empty admin field now means the default of 10.
+  "podRequests.overrideHint": ["Leave empty to use the partner's own setting."],
 };

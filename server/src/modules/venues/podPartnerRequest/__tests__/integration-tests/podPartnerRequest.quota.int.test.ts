@@ -1,8 +1,8 @@
 /**
- * The monthly Pod Request allowance: which cap applies (admin override, then
- * the partner's own rule, then the default), the atomic reservation up to the
- * cap, a cap of 0 refusing outright, the release a failed send gives back, and
- * the status the search screens show — counted for the current month only.
+ * The monthly Pod Request allowance: which cap applies (the admin-set limit,
+ * else the default of 10 — partners have no say), the atomic reservation up to
+ * the cap, a cap of 0 refusing outright, the release a failed send gives back,
+ * and the status the search screens show — counted for the current month only.
  */
 import { Types } from 'mongoose';
 import { appFormat } from '@utils/app-time';
@@ -19,21 +19,21 @@ import {
 const refusal = (limit: number) =>
   expect.objectContaining({ extensions: expect.objectContaining({ code: 'LIMIT_REACHED', limit }) });
 
-async function seedVenue(rule?: number, override?: number | null) {
+/** A venue whose admin-set limit is `limit` (left unset when undefined). */
+async function seedVenue(limit?: number | null) {
   const v = await VenueModel.create({
     owner_user_id: new Types.ObjectId(),
-    ...(rule === undefined ? {} : { settings: { rules: { max_host_requests_per_month: rule } } }),
-    ...(override === undefined ? {} : { host_requests_limit_override: override }),
+    ...(limit === undefined ? {} : { host_requests_limit_override: limit }),
   });
   return String(v._id);
 }
 
-async function seedHost(own?: number, override?: number | null) {
+/** A host whose admin-set limit is `limit` (left unset when undefined). */
+async function seedHost(limit?: number | null) {
   const userId = new Types.ObjectId();
   await HostModel.create({
     user_id: userId,
-    ...(own === undefined ? {} : { max_venue_requests_per_month: own }),
-    ...(override === undefined ? {} : { venue_requests_limit_override: override }),
+    ...(limit === undefined ? {} : { venue_requests_limit_override: limit }),
   });
   return String(userId);
 }
@@ -44,22 +44,22 @@ beforeAll(async () => {
 });
 
 describe('monthlyLimit', () => {
-  it('reads a venue: override, else its own rule, else the default', async () => {
+  it('reads a venue: the admin-set limit, else the default of 10', async () => {
     expect(DEFAULT_MONTHLY_PARTNER_REQUESTS).toBe(10);
-    expect(await monthlyLimit('VENUE', await seedVenue(4, 25))).toBe(25);
-    expect(await monthlyLimit('VENUE', await seedVenue(4, null))).toBe(4);
+    expect(await monthlyLimit('VENUE', await seedVenue(25))).toBe(25);
+    expect(await monthlyLimit('VENUE', await seedVenue(null))).toBe(10);
     expect(await monthlyLimit('VENUE', await seedVenue())).toBe(10);
     expect(await monthlyLimit('VENUE', new Types.ObjectId().toString())).toBe(10);
   });
 
-  it('keeps an override of 0 instead of falling through to the rule', async () => {
-    expect(await monthlyLimit('VENUE', await seedVenue(4, 0))).toBe(0);
-    expect(await monthlyLimit('HOST', await seedHost(7, 0))).toBe(0);
+  it('keeps an admin limit of 0 instead of falling through to the default', async () => {
+    expect(await monthlyLimit('VENUE', await seedVenue(0))).toBe(0);
+    expect(await monthlyLimit('HOST', await seedHost(0))).toBe(0);
   });
 
-  it('reads a host by user id: override, else their own cap, else the default', async () => {
-    expect(await monthlyLimit('HOST', await seedHost(7, 30))).toBe(30);
-    expect(await monthlyLimit('HOST', await seedHost(7))).toBe(7);
+  it('reads a host by user id: the admin-set limit, else the default of 10', async () => {
+    expect(await monthlyLimit('HOST', await seedHost(250))).toBe(250);
+    expect(await monthlyLimit('HOST', await seedHost(null))).toBe(10);
     expect(await monthlyLimit('HOST', await seedHost())).toBe(10);
     expect(await monthlyLimit('HOST', new Types.ObjectId().toString())).toBe(10);
   });

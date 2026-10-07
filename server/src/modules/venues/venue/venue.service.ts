@@ -59,7 +59,6 @@ const toRulesPub = (r?: Partial<IVenueRules> | null) => ({
   allow_waitlist: r?.allow_waitlist ?? false,
   booking_approval_required: r?.booking_approval_required ?? false,
   allow_multiple_bookings: r?.allow_multiple_bookings ?? false,
-  max_host_requests_per_month: r?.max_host_requests_per_month ?? 10,
 });
 
 const toAutoExtendPub = (a?: Partial<IVenueAutoExtend> | null) => ({
@@ -118,7 +117,6 @@ function normalizeRulesInput(base: ReturnType<typeof toRulesPub>, input: any) {
     allow_waitlist: boolField(input.allow_waitlist, base.allow_waitlist),
     booking_approval_required: boolField(input.booking_approval_required, base.booking_approval_required),
     allow_multiple_bookings: boolField(input.allow_multiple_bookings, base.allow_multiple_bookings),
-    max_host_requests_per_month: intField(input.max_host_requests_per_month, 0, 100, base.max_host_requests_per_month),
   };
 }
 
@@ -1006,7 +1004,7 @@ export const venueService = {
     return toPub(v);
   },
 
-  /** Admin cap on the venue's monthly host Pod Requests; null hands it back to the owner's rule. */
+  /** Admin-set cap on the venue's monthly host Pod Requests; null falls back to the default of 10. */
   async setHostRequestLimit(venueId: string, limit: number | null) {
     if (limit !== null && (!Number.isInteger(limit) || limit < 0 || limit > 1000)) {
       throw new GraphQLError('The limit must be a whole number from 0 to 1000', { extensions: { code: 'BAD_USER_INPUT' } });

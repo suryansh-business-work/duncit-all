@@ -140,4 +140,18 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "websiteApp.cms.editor.blocks.fragments": ["Fragments"],
   "websiteApp.cms.editor.live.fragment": ["Fragment: {name}"],
   "websiteApp.cms.editor.live.missingFragment": ["Fragment \"{key}\" is not published yet"],
+  // Pod Requests: placeholders were written {{x}}, which the translator never
+  // fills (it reads {x}), so screens showed the braces.
+  "podRequests.searchingHint": ["Looking within {{km}} km of {{place}}"],
+  "podRequests.radiusValue": ["{{km}} km"],
+  "podRequests.noHostsFound": ["No hosts found within {{km}} km."],
+  "podRequests.noVenuesFound": ["No venues found within {{km}} km."],
+  "podRequests.expandSearch": ["Search within {{km}} km"],
+  "podRequests.distanceAway": ["{{km}} km away"],
+  "podRequests.noteTooLong": ["Keep the note under {{max}} characters."],
+  "podRequests.quotaLeft": ["{{remaining}} of {{limit}} requests left this month"],
+  "podRequests.quotaReached": ["You have used all {{limit}} Pod Requests for this month."],
+  "podRequests.capacity": ["Capacity {{count}}"],
+  "podRequests.limitOverridden": ["Set by Duncit: {{limit}} per month."],
+  "podRequests.requestedOn": ["Requested on {{date}}"],
 };

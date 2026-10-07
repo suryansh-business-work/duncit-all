@@ -39,6 +39,7 @@ describe('HostRequestLimitPanel', () => {
   it('saves the limit through setHostVenueRequestLimit, then refreshes the table', async () => {
     const onSaved = renderPanel([saved(12)]);
     fireEvent.change(input(), { target: { value: '12' } });
+    await waitFor(() => expect(screen.getByTestId('host-request-limit-save')).toBeEnabled());
     fireEvent.click(screen.getByTestId('host-request-limit-save'));
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
     expect(await screen.findByRole('status')).toHaveTextContent('Saved');
@@ -47,6 +48,7 @@ describe('HostRequestLimitPanel', () => {
   it('clears the limit with null so the default of 10 applies again', async () => {
     const onSaved = renderPanel([saved(null)], 30);
     fireEvent.change(input(), { target: { value: '' } });
+    await waitFor(() => expect(screen.getByTestId('host-request-limit-save')).toBeEnabled());
     fireEvent.click(screen.getByTestId('host-request-limit-save'));
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
   });
@@ -54,6 +56,7 @@ describe('HostRequestLimitPanel', () => {
   it('shows a server refusal and does not refresh', async () => {
     const onSaved = renderPanel([refused]);
     fireEvent.change(input(), { target: { value: '12' } });
+    await waitFor(() => expect(screen.getByTestId('host-request-limit-save')).toBeEnabled());
     fireEvent.click(screen.getByTestId('host-request-limit-save'));
     expect(await screen.findByTestId('host-request-limit-error')).toHaveTextContent('Not authorized');
     expect(onSaved).not.toHaveBeenCalled();

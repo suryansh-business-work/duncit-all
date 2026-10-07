@@ -52,9 +52,9 @@ describe('makePodRequestOverrideSchema', () => {
     expect(schema.parse({ limit: POD_REQUEST_OVERRIDE_MAX })).toEqual({ limit: POD_REQUEST_OVERRIDE_MAX });
   });
 
-  it('refuses anything else with the override key', () => {
+  it('refuses anything else with exactly one issue, the override key', () => {
     for (const limit of [-1, 1.5, POD_REQUEST_OVERRIDE_MAX + 1, 'lots', '   ']) {
-      expect(issues(schema.safeParse({ limit }))).toContain('podRequests.overrideInvalid');
+      expect(issues(schema.safeParse({ limit }))).toEqual(['podRequests.overrideInvalid']);
     }
   });
 });

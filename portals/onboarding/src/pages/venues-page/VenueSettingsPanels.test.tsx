@@ -40,6 +40,7 @@ describe('VenueSettingsPanels — monthly host Pod Request limit', () => {
   it('saves through setVenueHostRequestLimit, keeps the saved value and refreshes the table', async () => {
     const onSaved = renderPanels([defaults, limitSaved(20)]);
     fireEvent.change(limitInput(), { target: { value: '20' } });
+    await waitFor(() => expect(screen.getByTestId('venue-request-limit-save')).toBeEnabled());
     fireEvent.click(screen.getByTestId('venue-request-limit-save'));
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
@@ -50,6 +51,7 @@ describe('VenueSettingsPanels — monthly host Pod Request limit', () => {
   it('clears the limit with null, so the default of 10 applies', async () => {
     const onSaved = renderPanels([defaults, limitSaved(null)]);
     fireEvent.change(limitInput(), { target: { value: '' } });
+    await waitFor(() => expect(screen.getByTestId('venue-request-limit-save')).toBeEnabled());
     fireEvent.click(screen.getByTestId('venue-request-limit-save'));
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));

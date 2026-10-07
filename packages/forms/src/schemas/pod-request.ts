@@ -36,7 +36,16 @@ export type PodRequestNoteValues = z.infer<ReturnType<typeof makePodRequestNoteS
  */
 export function makePodRequestOverrideSchema(t: Translate) {
   const message = t('podRequests.overrideInvalid');
+  const whole = wholeNumber(POD_REQUEST_OVERRIDE_MAX, message);
+  // One issue with the one key, never a union's per-branch messages: form
+  // resolvers surface the first nested issue of a union, not its own message.
   return z.object({
-    limit: z.union([z.literal('').transform(() => null), wholeNumber(POD_REQUEST_OVERRIDE_MAX, message)], { message }),
+    limit: z.unknown().transform((value, ctx): number | null => {
+      if (value === '') return null;
+      const parsed = whole.safeParse(value);
+      if (parsed.success) return parsed.data;
+      ctx.addIssue({ code: 'custom', message });
+      return z.NEVER;
+    }),
   });
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import { logs } from '@duncit/logs';
 
@@ -20,7 +20,8 @@ import {
   type PodModerationResult,
 } from '@/components/create-pod';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useDateFormat } from '@/hooks/useDateFormat';
+import { useAppSettingsStore } from '@/stores/app-settings.store';
+import { appFormatter } from '@/utils/app-formatter';
 import { loadPartnerRequestPrefill } from '@/hooks/partnerRequestPrefill';
 
 type OptionsData = ResultOf<typeof CreatePodOptionsDocument>;
@@ -37,11 +38,15 @@ const blankFinance = { platform_fee_pct: 0, gst_pct: 0, currency_symbol: '₹' }
 const activeVenues = (options: OptionsData | null) =>
   (options?.publicVenues ?? []).filter((venue) => venue.is_active !== false);
 
-async function loadCreatePodData(
-  draftId: string | undefined,
-  partnerRequestId: string,
-  dateFormat: string,
-) {
+/**
+ * The admin's date-time input pattern, read once when the prefill is built — the
+ * same pattern step 3 types a picked slot in. Read from the store rather than a
+ * subscribing hook so opening Create Pod does not re-render or refetch settings.
+ */
+const slotInputFormat = () =>
+  appFormatter(useAppSettingsStore.getState().data?.publicAppSettings).dateTimeInputFormat;
+
+async function loadCreatePodData(draftId: string | undefined, partnerRequestId: string) {
   const options = await graphqlRequest(CreatePodOptionsDocument, undefined, { auth: true });
   const draft = draftId
     ? (await graphqlRequest(MyPodDraftDocument, { draft_id: draftId }, { auth: true })).myPodDraft
@@ -49,13 +54,15 @@ async function loadCreatePodData(
   // A Pod Request only seeds a FRESH pod — a resumed draft is already the host's.
   const prefill =
     !draft && partnerRequestId
-      ? await loadPartnerRequestPrefill(partnerRequestId, activeVenues(options), dateFormat).catch(
-          (error: unknown) => {
-            // The pod can still be created by hand; the failure is reported, not dropped.
-            logs.mobileApp.error('useCreatePod', 'loadPartnerRequestPrefill', { error });
-            return null;
-          },
-        )
+      ? await loadPartnerRequestPrefill(
+          partnerRequestId,
+          activeVenues(options),
+          slotInputFormat(),
+        ).catch((error: unknown) => {
+          // The pod can still be created by hand; the failure is reported, not dropped.
+          logs.mobileApp.error('useCreatePod', 'loadPartnerRequestPrefill', { error });
+          return null;
+        })
       : null;
   return { options, draft, prefill };
 }
@@ -73,12 +80,6 @@ export function useCreatePod(draftId?: string, partnerRequestId = '') {
   const [resolvedDraftId, setResolvedDraftId] = useState<string | null>(draftId ?? null);
   const [isLoading, setIsLoading] = useState(true);
   const [pinnedVenueId, setPinnedVenueId] = useState<string | undefined>(undefined);
-  // Read when the request resolves, so a late settings load does not refetch everything.
-  const { dateTimeInputFormat } = useDateFormat();
-  const dateFormat = useRef(dateTimeInputFormat);
-  useEffect(() => {
-    dateFormat.current = dateTimeInputFormat;
-  });
 
   useEffect(() => {
     let active = true;
@@ -90,7 +91,7 @@ export function useCreatePod(draftId?: string, partnerRequestId = '') {
       setInitialStep(clampStep(draft.step));
       setResolvedDraftId(draft.id);
     };
-    loadCreatePodData(draftId, partnerRequestId, dateFormat.current)
+    loadCreatePodData(draftId, partnerRequestId)
       .then((result) => {
         if (!active) return;
         setData(result.options);

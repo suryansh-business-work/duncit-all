@@ -61,11 +61,11 @@ describe('location store', () => {
     expect(useLocationStore.getState().selectedId).toBe('l1');
     expect(useLocationStore.getState().cityLabel).toBe('Mumbai');
     expect(useLocationStore.getState().zoneName).toBe('Z1');
-    // An explicit pick persists the choice to the server.
+    // An explicit pick persists the choice — city AND area — to the server.
     await Promise.resolve();
     expect(mockRequest).toHaveBeenLastCalledWith(
       expect.anything(),
-      { locationId: 'l1' },
+      { locationId: 'l1', zoneName: 'Z1' },
       { auth: true },
     );
 

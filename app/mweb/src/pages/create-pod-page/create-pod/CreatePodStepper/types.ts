@@ -27,4 +27,7 @@ export interface CreatePodStepperProps {
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
   onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
+  /** Set when the host arrives from a confirmed Pod Request: step 3 keeps
+   * this venue on offer whatever the club matches. */
+  pinnedVenueId?: string;
 }

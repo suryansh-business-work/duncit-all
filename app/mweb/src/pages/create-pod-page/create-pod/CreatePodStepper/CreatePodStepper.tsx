@@ -43,6 +43,7 @@ export default function CreatePodStepper({
   subCategories,
   hostCategories,
   viewerUserId,
+  pinnedVenueId,
   onSaveDraft,
   onModerate,
   onPublish,
@@ -126,7 +127,7 @@ export default function CreatePodStepper({
   };
 
   const { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, preview } =
-    useStepperSelections(form, { clubs, hostCategories, products, subCategories });
+    useStepperSelections(form, { clubs, hostCategories, products, subCategories, pinnedVenueId });
 
   const steps = [
     <LocationClubStep

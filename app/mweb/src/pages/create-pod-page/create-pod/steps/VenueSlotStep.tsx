@@ -1,10 +1,10 @@
-import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { Controller } from 'react-hook-form';
 import { Alert, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { formatDurationBetween } from '../../../../utils/dateFormat';
 import SlotPicker from '../SlotPicker';
+import { VENUE_AVAILABLE_SLOTS } from '../venueSlots';
 import VenuePicker from '../VenuePicker';
 import VenueContactCard from '../VenueContactCard';
 import VirtualMeetingFields from '../VirtualMeetingFields';
@@ -15,14 +15,14 @@ import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod
 
 /** `label` is what the host sees; `slotSpaceLabel` is the VenueSlot.space_label
  * this space books ('' = whole venue), used to filter the slot list. */
-type VenueSpace = { label: string; capacity: number; slotSpaceLabel: string };
+export type VenueSpace = { label: string; capacity: number; slotSpaceLabel: string };
 
 /** The venue's bookable spaces: its named capacity items, else the whole venue
  * as a single option. Always ≥1 when a venue is picked, so capacity selection is
  * always required before slots/prices show. Picking one fills No. of spots.
  * The whole-venue `label` stays in English: it is the stored value identifying
  * the space, so it is translated where it is DISPLAYED instead. */
-const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
+export const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
   if (!venue) return [];
   const items = venue.capacity_items ?? [];
   if (items.length > 0) {
@@ -31,20 +31,8 @@ const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
   return [{ label: 'Whole venue', capacity: venue.capacity ?? 0, slotSpaceLabel: '' }];
 };
 
-export const VENUE_AVAILABLE_SLOTS = gql`
-  query CreatePodVenueSlots($venue_id: ID!) {
-    venueAvailableSlots(venue_id: $venue_id) {
-      id
-      start_at
-      end_at
-      whole_day
-      price
-      space_label
-      capacity
-      status
-    }
-  }
-`;
+// Re-exported: the stepper's pricing query and its tests import it from here.
+export { VENUE_AVAILABLE_SLOTS };
 
 interface Props {
   form: CreatePodForm;
@@ -99,8 +87,9 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
     setValue('no_of_spots', 0, { shouldDirty: true });
   };
 
-  const slotsQuery = useQuery<{ venueAvailableSlots: CreatePodSlot[] }>(VENUE_AVAILABLE_SLOTS, {
-    variables: { venue_id: venueId },
+  // From a Pod Request, its held slot is only listed when the request's id is sent.
+  const slotsQuery = useQuery(VENUE_AVAILABLE_SLOTS, {
+    variables: { venue_id: venueId, partner_request_id: watch('partner_request_id') || null },
     skip: mode !== 'PHYSICAL' || !venueId,
     fetchPolicy: 'cache-and-network',
   });

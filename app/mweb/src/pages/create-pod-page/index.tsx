@@ -22,6 +22,7 @@ import {
   PUBLISH_POD_DRAFT,
   SAVE_POD_DRAFT,
 } from './queries';
+import { usePartnerRequestPrefill } from './usePartnerRequestPrefill';
 
 /** Host-only page to create a pod via the 4-step stepper, reached from the Home
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
@@ -54,12 +55,15 @@ export default function CreatePodPage() {
   const hostCategories = options.data?.myHost?.host_categories ?? [];
   const viewerUserId = options.data?.me?.user_id ?? '';
 
+  // Arriving from a confirmed Pod Request: its venue and slot come pre-chosen.
+  const prefill = usePartnerRequestPrefill(venues, !draftId);
+
   const draft = draftQuery.data?.myPodDraft;
   // A new pod is in the city the header has selected — step 1 lists that city's
   // localities. The page re-mounts when the header's pick changes.
   const initialValues: CreatePodFormValues = draft
     ? hydrateDraft(draft.payload)
-    : { ...blankCreatePodForm, location_id: globalLocationId };
+    : { ...blankCreatePodForm, location_id: globalLocationId, ...prefill.values };
   const initialStep = draft ? Math.min(Math.max(draft.step ?? 0, 0), STEP_TITLES.length - 1) : 0;
 
   const saveDraft = async (id: string | null, payload: DraftPayload) => {
@@ -82,7 +86,8 @@ export default function CreatePodPage() {
     return res.data.moderatePodContent;
   };
 
-  const loading = (options.loading && !options.data) || (!!draftId && draftQuery.loading && !draftQuery.data);
+  const loading =
+    (options.loading && !options.data) || (!!draftId && draftQuery.loading && !draftQuery.data) || prefill.loading;
   let body: React.ReactNode;
   if (loading) {
     body = (
@@ -90,8 +95,8 @@ export default function CreatePodPage() {
         <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Box>
     );
-  } else if (options.error) {
-    body = <Alert data-testid="create-pod-page-error" severity="error">{options.error.message}</Alert>;
+  } else if (options.error || prefill.error) {
+    body = <Alert data-testid="create-pod-page-error" severity="error">{options.error?.message ?? prefill.error}</Alert>;
   } else if (isHost) {
     body = (
       <CreatePodStepper
@@ -105,6 +110,7 @@ export default function CreatePodPage() {
         subCategories={subCategories}
         hostCategories={hostCategories}
         viewerUserId={viewerUserId}
+        pinnedVenueId={prefill.pinnedVenueId}
         onSaveDraft={saveDraft}
         onModerate={moderate}
         onPublish={publish}

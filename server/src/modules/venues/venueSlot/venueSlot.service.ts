@@ -779,7 +779,7 @@ export const venueSlotService = {
     return listSlotsForVenue(venueId, from, to);
   },
 
-  async listAvailable(venueId: string, from?: string | null) {
+  async listAvailable(venueId: string, from?: string | null, heldForRequestId?: string | null) {
     if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
     const venue = await VenueModel.findOne({
       _id: venueId,
@@ -788,9 +788,13 @@ export const venueSlotService = {
     });
     if (!venue) fail('NOT_FOUND', 'Venue not found or not approved');
     const cutoff = from ? parseDate(from, 'from') : new Date();
+    // A Pod Request's own held slot is bookable for that request's host only.
+    const bookable = heldForRequestId
+      ? { $or: [{ status: 'AVAILABLE' }, { booked_by_partner_request_id: new Types.ObjectId(heldForRequestId) }] }
+      : { status: 'AVAILABLE' };
     const docs = await VenueSlotModel.find({
       venue_id: new Types.ObjectId(venueId),
-      status: 'AVAILABLE',
+      ...bookable,
       start_at: { $gte: cutoff },
     })
       .sort({ start_at: 1 })

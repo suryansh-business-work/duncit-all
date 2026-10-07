@@ -310,7 +310,7 @@ export const userProfileMethods = {
   // Persist the user's selected header location. A null/empty id clears it.
   // A non-empty id must reference an existing location, so a stale/invalid id
   // can never be stored.
-  async setMySelectedLocation(user_id: string, location_id: string | null) {
+  async setMySelectedLocation(user_id: string, location_id: string | null, zone_name: string | null = null) {
     let value: Types.ObjectId | null = null;
     if (location_id) {
       if (!Types.ObjectId.isValid(location_id)) {
@@ -322,7 +322,12 @@ export const userProfileMethods = {
       }
       value = new Types.ObjectId(location_id);
     }
-    const updated = await applyUserUpdate(user_id, { 'profile.selected_location_id': value });
+    // The area only means something inside its city, so a cleared city clears it too.
+    const zone = value ? (zone_name ?? '').trim().slice(0, 120) : '';
+    const updated = await applyUserUpdate(user_id, {
+      'profile.selected_location_id': value,
+      'profile.selected_zone_name': zone,
+    });
     return toPublic(updated);
   },
 

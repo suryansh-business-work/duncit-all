@@ -437,6 +437,15 @@ async function bootstrap() {
     );
     await PodChangeRequestModel.syncIndexes();
   });
+  // Builds the Pod Request guards: one live request per venue↔host pair and
+  // one monthly-quota row per sender. Both ARE the duplicate/limit guards, and
+  // unique indexes only land on a deployed database through syncIndexes.
+  await safeSeed('podPartnerRequestIndexes', async () => {
+    const { PodPartnerRequestModel } = await import('@modules/venues/podPartnerRequest/podPartnerRequest.model');
+    const { PartnerRequestQuotaModel } = await import('@modules/venues/podPartnerRequest/podPartnerRequest.quota');
+    await PodPartnerRequestModel.syncIndexes();
+    await PartnerRequestQuotaModel.syncIndexes();
+  });
   // Creates the gift card sales policy singleton (amount presets, validity) so
   // the buy page has amounts on day one.
   await safeSeed('giftCardSettings', async () => {

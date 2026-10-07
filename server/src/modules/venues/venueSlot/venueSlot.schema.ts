@@ -159,7 +159,8 @@ export const venueSlotTypeDefs = /* GraphQL */ `
 
   extend type Query {
     venueSlots(venue_id: ID!, from: String, to: String): [VenueSlot!]!
-    venueAvailableSlots(venue_id: ID!, from: String): [VenueSlot!]!
+    "partner_request_id: also return the slot that Pod Request holds (its host only) — Create Pod step 3 shows it as picked."
+    venueAvailableSlots(venue_id: ID!, from: String, partner_request_id: ID): [VenueSlot!]!
     "Onboarding/admin: all slots for any venue (role-gated, no owner check)."
     adminVenueSlots(venue_id: ID!, from: String, to: String): [VenueSlot!]!
     "Owner: pending booking requests across their venues (or one venue)."

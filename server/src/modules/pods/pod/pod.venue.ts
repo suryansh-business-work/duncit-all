@@ -14,6 +14,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { venueService } from '@modules/venues/venue/venue.service';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { transferPartnerRequestHold } from '@modules/venues/venueSlot/venueSlot.partnerHold';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import { sendVenueSlotRequestEmail } from '@services/email/email.service';
@@ -288,10 +289,30 @@ export async function assertPartnerVenue(input: any, userObjectId: Types.ObjectI
 export async function resolveSlotForCreate(
   input: any,
   podMode: PodMode,
-  autoPodId?: string | null
+  autoPodId?: string | null,
+  partnerRequestId?: string | null
 ): Promise<{ slotDoc: any; needsVenueApproval: boolean }> {
   if (!(podMode === 'PHYSICAL' && input.venue_slot_id)) {
     return { slotDoc: null, needsVenueApproval: false };
+  }
+  // A Pod Request's slot was confirmed by both sides and has been held for it
+  // (BOOKED under booked_by_partner_request_id) — that confirmation is the
+  // approval, exactly like an Auto Pod's.
+  if (partnerRequestId) {
+    const held = await VenueSlotModel.findOne({
+      _id: input.venue_slot_id,
+      booked_by_partner_request_id: new Types.ObjectId(partnerRequestId),
+      status: 'BOOKED',
+    });
+    if (!held) {
+      throw new GraphQLError('The slot for this Pod Request is no longer held', {
+        extensions: { code: 'CONFLICT' },
+      });
+    }
+    input.venue_id = String(held.venue_id);
+    input.pod_date_time = held.start_at.toISOString();
+    input.pod_end_date_time = held.end_at.toISOString();
+    return { slotDoc: held, needsVenueApproval: false };
   }
   // An Auto Pod's venue already accepted the offer and has been HOLDING this
   // slot (BOOKED under booked_by_auto_pod_id) ever since, so the AVAILABLE and
@@ -349,10 +370,10 @@ export async function resolveSlotForCreate(
 /** An Auto Pod's venue approved when it accepted the offer; every other pod
  * either waits for its venue or needs no approval at all. */
 export function venueApprovalForCreate(
-  autoPodSlot: { slotId: string; autoPodId: string } | null,
+  preApprovedSlot: { slotId: string } | null,
   needsVenueApproval: boolean
 ): 'NONE' | 'PENDING' | 'APPROVED' {
-  if (autoPodSlot) return 'APPROVED';
+  if (preApprovedSlot) return 'APPROVED';
   return needsVenueApproval ? 'PENDING' : 'NONE';
 }
 
@@ -376,9 +397,21 @@ export async function bookOrHoldSlotForPod(
   doc: any,
   slotDoc: any,
   needsVenueApproval: boolean,
-  autoPodSlot?: { slotId: string; autoPodId: string } | null
+  autoPodSlot?: { slotId: string; autoPodId: string } | null,
+  partnerRequestSlot?: { slotId: string; requestId: string } | null
 ) {
   if (!slotDoc) return;
+  // A Pod Request already holds this slot: hand it over in one conditional
+  // write, the same way an Auto Pod's hold moves to its pod.
+  if (partnerRequestSlot) {
+    try {
+      await transferPartnerRequestHold(partnerRequestSlot.slotId, partnerRequestSlot.requestId, String(doc._id));
+    } catch (e) {
+      await doc.deleteOne();
+      throw e;
+    }
+    return;
+  }
   // The Auto Pod already holds this slot: hand the booking over in ONE
   // conditional write rather than booking it again, so it is never AVAILABLE
   // in between for an ordinary pod to snatch.

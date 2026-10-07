@@ -186,6 +186,14 @@ export const venueResolvers = {
       requireRole(ctx, VENUE_GOVERN);
       return venueService.setActive(args.venue_doc_id, args.active);
     },
+    setVenueHostRequestLimit: async (
+      _p: unknown,
+      args: { venue_doc_id: string; limit?: number | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, VENUE_GOVERN);
+      return venueService.setHostRequestLimit(args.venue_doc_id, args.limit ?? null);
+    },
     setVenueDeductions: async (
       _p: unknown,
       args: { venue_doc_id: string; venue_share_pct: number; venue_commission_pct: number },

@@ -44,6 +44,10 @@ export interface IHost extends Document {
   step_completed: number;
   status: HostStatus;
   is_active: boolean;
+  /** Pod Requests this host may send to venues per month (Host Settings). */
+  max_venue_requests_per_month: number;
+  /** Admin-set cap that wins over the host's own setting; null = not set. */
+  venue_requests_limit_override: number | null;
   reviewer_notes: string;
   submitted_at: Date | null;
   approved_at: Date | null;
@@ -84,6 +88,8 @@ const hostSchema = new Schema<IHost>(
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },
+    max_venue_requests_per_month: { type: Number, default: 10, min: 0, max: 100 },
+    venue_requests_limit_override: { type: Number, default: null, min: 0 },
     reviewer_notes: { type: String, default: '' },
     submitted_at: { type: Date, default: null },
     approved_at: { type: Date, default: null },

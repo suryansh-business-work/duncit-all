@@ -138,10 +138,9 @@ jobs:
           {
             echo "BUILD_STARTED_AT=$NOW"
             # App Store Connect refuses a build number it has already seen.
-            # Seconds since 2020 are monotonic and replace the CFBundleVersion 1
-            # that Expo prebuild otherwise writes every run — the same clock
-            # the Android versionCode uses.
-            echo "IOS_BUILD_NUMBER=$((NOW - 1577836800))"
+            # app.json's buildNumber moves +1 with every commit's version bump
+            # and always equals the Android versionCode.
+            echo "IOS_BUILD_NUMBER=$(node -p "require('./app.json').expo.ios.buildNumber")"
           } >> "$GITHUB_ENV"
 
       - name: Validate App Store request

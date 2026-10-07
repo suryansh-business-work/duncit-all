@@ -351,6 +351,29 @@ describe('setDeductions', () => {
   });
 });
 
+describe('setHostRequestLimit', () => {
+  it.each([[-1], [1001], [2.5]])('refuses an override of %p', async (limit) => {
+    await expect(venueService.setHostRequestLimit(missingId(), limit)).rejects.toThrow(
+      'The limit must be a whole number from 0 to 1000'
+    );
+  });
+
+  it('refuses a venue that does not exist', async () => {
+    await expect(venueService.setHostRequestLimit(missingId(), 5)).rejects.toThrow('Venue not found');
+  });
+
+  it("sets the override at both bounds and clears it back to the owner's rule", async () => {
+    const v = await VenueModel.create({ owner_user_id: new Types.ObjectId() });
+    const id = String(v._id);
+    expect(await venueService.setHostRequestLimit(id, 0)).toMatchObject({ host_requests_limit_override: 0 });
+    expect(await venueService.setHostRequestLimit(id, 1000)).toMatchObject({ host_requests_limit_override: 1000 });
+    const cleared = await venueService.setHostRequestLimit(id, null);
+    expect(cleared.host_requests_limit_override).toBeNull();
+    expect(cleared.settings.rules.max_host_requests_per_month).toBe(10);
+    expect((await VenueModel.findById(id).lean())?.host_requests_limit_override).toBeNull();
+  });
+});
+
 describe('setCancellationTrigger', () => {
   it('refuses a malformed venue id', async () => {
     await expect(venueService.setCancellationTrigger('nope', 6, [])).rejects.toThrow('Invalid venue id');

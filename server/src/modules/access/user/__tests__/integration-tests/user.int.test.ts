@@ -498,6 +498,33 @@ describe("userService integration", () => {
       expect(cleared!.selected_location_id).toBeNull();
     });
 
+    it("saves the selected area trimmed, and clears it together with the city", async () => {
+      const userId = await newUser("loc-zone@duncit.com");
+      const loc = await LocationModel.create({
+        location_id: "pune",
+        location_name: "Pune",
+        city: "Pune",
+        location_image: "https://img/pune.jpg",
+        location_pincode: "411001",
+      });
+      const zoneOf = async () => (await UserModel.findById(userId).lean())?.profile?.selected_zone_name;
+
+      await userService.setMySelectedLocation(userId, String(loc._id), "  Baner  ");
+      expect(await zoneOf()).toBe("Baner");
+
+      // Changing only the city drops the old area: it belonged to the old city.
+      await userService.setMySelectedLocation(userId, String(loc._id));
+      expect(await zoneOf()).toBe("");
+
+      await userService.setMySelectedLocation(userId, String(loc._id), "x".repeat(200));
+      expect(await zoneOf()).toHaveLength(120);
+
+      // No city, no area — even when one is passed.
+      const cleared = await userService.setMySelectedLocation(userId, null, "Baner");
+      expect(cleared!.selected_location_id).toBeNull();
+      expect(await zoneOf()).toBe("");
+    });
+
     it("rejects an invalid or unknown location id", async () => {
       const userId = await newUser("loc-bad@duncit.com");
       await expect(userService.setMySelectedLocation(userId, "not-an-id")).rejects.toThrow(

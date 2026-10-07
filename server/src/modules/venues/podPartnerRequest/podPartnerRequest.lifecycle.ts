@@ -21,7 +21,9 @@ export async function assertRequestReadyForPod(hostUserId: string, requestId: st
   if (doc.status !== 'SLOT_CONFIRMED' || !doc.slot_id) {
     throw new GraphQLError('This Pod Request has no confirmed slot to create a pod on', { extensions: { code: 'CONFLICT' } });
   }
-  if (slotId && String(doc.slot_id) !== String(slotId)) {
+  // The slot is required: without it the pod would be stamped venue-APPROVED and
+  // close the request while the request's slot stayed held with no pod on it.
+  if (!slotId || String(doc.slot_id) !== String(slotId)) {
     throw new GraphQLError('Use the slot confirmed on the Pod Request', { extensions: { code: 'BAD_USER_INPUT' } });
   }
   return { requestId, slotId: String(doc.slot_id) };

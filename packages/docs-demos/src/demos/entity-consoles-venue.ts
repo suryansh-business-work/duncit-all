@@ -70,6 +70,7 @@ const VENUE: VenueRecordMock = {
   },
   venue_share_pct: 30,
   venue_commission_pct: 8,
+  host_requests_limit_override: null,
   settings: {
     operating_hours: { open: '08:00', close: '23:00' },
     weekly_off_days: [1],

@@ -25,10 +25,13 @@ import {
 } from '../../podPartnerRequest.lifecycle';
 
 const inDays = (d: number) => new Date(Date.now() + d * 86_400_000);
+// Phone numbers are unique per user, so every seeded account gets its own.
+let phoneSeq = 0;
 
 async function seedUser(first: string, email: string, isHost: boolean) {
+  phoneSeq += 1;
   const user = await UserModel.create({
-    auth: { email, phone: { number: '9876543210', extension: '91' } },
+    auth: { email, phone: { number: String(9876543200 + phoneSeq), extension: '91' } },
     profile: { first_name: first, last_name: 'Test' },
   });
   if (isHost) await UserRoleModel.create({ user_id: user._id, role: 'HOST' });
@@ -112,7 +115,10 @@ describe('venue → host, end to end', () => {
     await markPartnerRequestPodCreated(sent.id, new Types.ObjectId().toString());
 
     const venueView = await podPartnerRequestService.get(ownerId, sent.id);
-    expect(venueView).toMatchObject({ status: 'POD_CREATED', contact: { email: 'host@duncit.com', phone: '+919876543210' } });
+    expect(venueView).toMatchObject({
+      status: 'POD_CREATED',
+      contact: { email: 'host@duncit.com', phone: expect.stringMatching(/^\+91\d{10}$/) },
+    });
     const hostView = await podPartnerRequestService.get(hostId, sent.id);
     expect(hostView.contact).toMatchObject({ email: 'venue@duncit.com', phone: '+911234567890' });
   });

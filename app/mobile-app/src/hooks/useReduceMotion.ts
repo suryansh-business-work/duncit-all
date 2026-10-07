@@ -11,7 +11,9 @@ export function useReduceMotion(): boolean {
       .then((enabled) => {
         if (mounted) setReduce(enabled);
       })
-      .catch((error: unknown) => logs.mobileApp.error('useReduceMotion', 'isReduceMotionEnabled', { error }));
+      .catch((error: unknown) =>
+        logs.mobileApp.error('useReduceMotion', 'isReduceMotionEnabled', { error }),
+      );
     const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduce);
     return () => {
       mounted = false;

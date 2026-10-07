@@ -91,6 +91,12 @@ describe('location store', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(useLocationStore.getState().selectedId).toBe('l9');
+    // A city with no area sends the area as null, not an empty string.
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { locationId: 'l9', zoneName: null },
+      { auth: true },
+    );
   });
 
   it('hydrates a saved location only when nothing is selected', async () => {

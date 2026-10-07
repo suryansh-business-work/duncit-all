@@ -251,6 +251,21 @@ describe('buildCreatePodInput', () => {
     expect(input.location_id).toBe('l1');
     expect(input.meeting_url).toBeNull();
     expect(input.is_active).toBe(true);
+    // An ordinary pod is not published against a Pod Request.
+    expect(input.partner_request_id).toBeNull();
+  });
+
+  it('publishes a pod against its Pod Request when it was started from one', () => {
+    expect(buildCreatePodInput(valid({ partner_request_id: 'req1' })).partner_request_id).toBe(
+      'req1',
+    );
+  });
+
+  it('round-trips the hidden Pod Request id through a draft', () => {
+    const payload = serializeDraft(valid({ partner_request_id: 'req1' }), 2).payload;
+    expect(hydrateDraft(payload).partner_request_id).toBe('req1');
+    // A draft saved before the field existed resumes without one.
+    expect(hydrateDraft(JSON.stringify({ pod_title: 'Old' })).partner_request_id).toBe('');
   });
 
   it('derives the shop flag from the product rows and nulls virtual extras', () => {

@@ -155,8 +155,8 @@ const flagsMock = (enabled: boolean) => ({
   maxUsageCount: Number.POSITIVE_INFINITY,
 });
 
-const setLocationMock = (locationId: string) => ({
-  request: { query: SET_MY_SELECTED_LOCATION, variables: { locationId } },
+const setLocationMock = (locationId: string, zoneName: string | null) => ({
+  request: { query: SET_MY_SELECTED_LOCATION, variables: { locationId, zoneName } },
   result: { data: { setMySelectedLocation: { user_id: 'u1', selected_location_id: locationId } } },
 });
 
@@ -256,7 +256,7 @@ describe('AppHeader', () => {
     const { props } = renderHeader({ selectedLocationId: 'loc-1' }, [
       ...headerMocks(),
       policiesMock,
-      setLocationMock('loc-2'),
+      setLocationMock('loc-2', 'ZoneB'),
     ]);
     await screen.findByTestId('greeting');
     fireEvent.click(screen.getByText('open-location'));

@@ -24,6 +24,8 @@ export const ClubDetailsPage = lazy(() => import('../../pages/ClubDetailsPage'))
 export const HostsVenuesPage = lazy(() => import('../../pages/HostsVenuesPage'));
 export const SurveyGatePage = lazy(() => import('../../pages/survey-gate'));
 export const HostManagePage = lazy(() => import('../../pages/HostManagePage'));
+export const NearbyVenuesPage = lazy(() => import('../../pages/nearby-partners-page/NearbyVenuesPage'));
+export const PodRequestDetailPage = lazy(() => import('../../pages/pod-request-detail-page'));
 export const PodAttendancePage = lazy(() => import('../../pages/pod-attendance-page'));
 export const HostApplyPage = lazy(() => import('../../pages/host-apply-page'));
 export const HostDashboardPage = lazy(() => import('../../pages/host-dashboard-page'));
@@ -32,6 +34,7 @@ export const WalletPage = lazy(() => import('../../pages/wallet-page'));
 export const VenueManagePage = lazy(() => import('../../pages/VenueManagePage'));
 export const VenueEarningsPage = lazy(() => import('../../pages/venue-earnings-page'));
 export const VenueSlotRequestsPage = lazy(() => import('../../pages/venue-slot-requests-page'));
+export const NearbyHostsPage = lazy(() => import('../../pages/nearby-partners-page/NearbyHostsPage'));
 export const ChangeRequestsPage = lazy(() => import('../../pages/change-requests-page'));
 export const VenueAvailabilityPage = lazy(() => import('../../pages/venue-availability-page'));
 export const VenueSettingsPage = lazy(() => import('../../pages/venue-settings-page'));

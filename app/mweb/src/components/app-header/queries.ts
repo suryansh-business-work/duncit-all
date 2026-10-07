@@ -94,10 +94,11 @@ export const MARK_ALL = gql`
   }
 `;
 
-/** Persist the user's selected header location so it sticks across sessions. */
+/** Persist the user's selected header city AND area so they stick across
+ * sessions — the saved area is also where nearby Pod Request searches find hosts. */
 export const SET_MY_SELECTED_LOCATION = gql`
-  mutation SetMySelectedLocation($locationId: ID) {
-    setMySelectedLocation(location_id: $locationId) {
+  mutation SetMySelectedLocation($locationId: ID, $zoneName: String) {
+    setMySelectedLocation(location_id: $locationId, zone_name: $zoneName) {
       user_id
       selected_location_id
     }

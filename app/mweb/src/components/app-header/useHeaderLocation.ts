@@ -41,14 +41,15 @@ export function useHeaderLocation({
   const [draftLocationId, setDraftLocationId] = useState('');
   const [draftZone, setDraftZone] = useState('');
 
-  // Persist an explicit location choice so it sticks across sessions/devices.
-  // The auto-default below does NOT persist — only a real user pick does.
+  // Persist an explicit location choice — the city AND its area — so it sticks
+  // across sessions/devices. The auto-default below does NOT persist — only a
+  // real user pick does. A new area in the same city is a change too.
   const persistLocation = useCallback(
-    (id: string) => {
-      if (!id || id === me?.selected_location_id) return;
-      persistSelectedLocation({ variables: { locationId: id } }).catch(() => undefined);
+    (id: string, zone: string) => {
+      if (!id || (id === me?.selected_location_id && zone === selectedZoneName)) return;
+      persistSelectedLocation({ variables: { locationId: id, zoneName: zone || null } }).catch(() => undefined);
     },
-    [persistSelectedLocation, me?.selected_location_id]
+    [persistSelectedLocation, me?.selected_location_id, selectedZoneName]
   );
 
   // Both defaults wait for `me`, so they land in ONE commit: each re-keys the
@@ -90,7 +91,7 @@ export function useHeaderLocation({
       const { locationId, zoneName } = (event as CustomEvent<ApplyLocationDetail>).detail;
       onLocationChange(locationId);
       onZoneChange(zoneName);
-      persistLocation(locationId);
+      persistLocation(locationId, zoneName);
     };
     globalThis.addEventListener(APPLY_LOCATION_EVENT, applyLocation);
     return () => globalThis.removeEventListener(APPLY_LOCATION_EVENT, applyLocation);
@@ -108,7 +109,7 @@ export function useHeaderLocation({
     onApply: () => {
       onLocationChange(draftLocationId);
       onZoneChange(draftZone);
-      persistLocation(draftLocationId);
+      persistLocation(draftLocationId, draftZone);
       setDialogOpen(false);
     },
     // A GPS match with live pods: commit it outright and close.
@@ -117,7 +118,7 @@ export function useHeaderLocation({
       setDraftZone(zoneName);
       onLocationChange(locationId);
       onZoneChange(zoneName);
-      persistLocation(locationId);
+      persistLocation(locationId, zoneName);
       setDialogOpen(false);
     },
   };

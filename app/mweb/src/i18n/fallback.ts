@@ -18,6 +18,7 @@ import {
   AVAILABILITY_BUNDLE,
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
   type NestedCatalogue,
@@ -69,6 +70,8 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   // The public venue / host pages, the publish card and the pod on the sign-in screens.
   ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
+  // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
+  ...POD_REQUESTS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,
   ...FULFILMENT_BUNDLE,
 };

@@ -4,10 +4,8 @@ import { appFormat } from '@utils/app-time';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 
-/** The cap a partner starts with until they or an admin change it. */
+/** The cap that applies until an admin sets one. */
 export const DEFAULT_MONTHLY_PARTNER_REQUESTS = 10;
-/** The most a partner may set for themselves; an admin override is not bound by it. */
-export const MAX_MONTHLY_PARTNER_REQUESTS = 100;
 
 export type QuotaOwner = 'VENUE' | 'HOST';
 
@@ -38,25 +36,21 @@ const currentMonth = () => appFormat(new Date(), 'yyyy-MM');
 const DUPLICATE_KEY = 11000;
 
 /**
- * The cap that applies: an admin's override when set, else the partner's own
- * setting, else the default. VENUE quotas count per venue (`ownerId` = the
- * venue id); HOST quotas per host user.
+ * The cap that applies: the admin-set limit when there is one, else the
+ * default. Partners cannot change it. VENUE quotas count per venue
+ * (`ownerId` = the venue id); HOST quotas per host user.
  */
 export async function monthlyLimit(kind: QuotaOwner, ownerId: string): Promise<number> {
   if (kind === 'VENUE') {
     const venue = await VenueModel.findById(ownerId)
-      .select('settings.rules.max_host_requests_per_month host_requests_limit_override')
-      .lean<{ settings?: { rules?: { max_host_requests_per_month?: number } }; host_requests_limit_override?: number | null }>();
-    return (
-      venue?.host_requests_limit_override ??
-      venue?.settings?.rules?.max_host_requests_per_month ??
-      DEFAULT_MONTHLY_PARTNER_REQUESTS
-    );
+      .select('host_requests_limit_override')
+      .lean<{ host_requests_limit_override?: number | null }>();
+    return venue?.host_requests_limit_override ?? DEFAULT_MONTHLY_PARTNER_REQUESTS;
   }
   const host = await HostModel.findOne({ user_id: new Types.ObjectId(ownerId) })
-    .select('max_venue_requests_per_month venue_requests_limit_override')
-    .lean<{ max_venue_requests_per_month?: number; venue_requests_limit_override?: number | null }>();
-  return host?.venue_requests_limit_override ?? host?.max_venue_requests_per_month ?? DEFAULT_MONTHLY_PARTNER_REQUESTS;
+    .select('venue_requests_limit_override')
+    .lean<{ venue_requests_limit_override?: number | null }>();
+  return host?.venue_requests_limit_override ?? DEFAULT_MONTHLY_PARTNER_REQUESTS;
 }
 
 /** This month's {limit, used, remaining}, for the search screens. */

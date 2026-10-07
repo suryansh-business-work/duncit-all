@@ -129,8 +129,6 @@ export const hostResolvers = {
         categories: args.categories,
       });
     },
-    setMyVenueRequestLimit: async (_p: unknown, args: { limit: number }, ctx: GraphQLContext) =>
-      hostService.setMyVenueRequestLimit(uid(ctx), args.limit),
     setHostVenueRequestLimit: async (
       _p: unknown,
       args: { host_doc_id: string; limit?: number | null },

@@ -9692,8 +9692,6 @@ export type Host = {
   host_no?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
-  /** Host Settings: Pod Requests this host may send to venues per month. */
-  max_venue_requests_per_month: Scalars['Int']['output'];
   pan_number: Scalars['String']['output'];
   passport_photo_url: Scalars['String']['output'];
   phone: Scalars['String']['output'];
@@ -9716,7 +9714,7 @@ export type Host = {
   tags: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
-  /** Admin cap that wins over the host's own setting; null = not set. */
+  /** Admin-set cap on monthly Pod Requests to venues; null = the default of 10. */
   venue_requests_limit_override?: Maybe<Scalars['Int']['output']>;
 };
 
@@ -13298,7 +13296,7 @@ export type Mutation = {
   setFeedbackReportStatus: FeedbackReport;
   setHostActive: Host;
   setHostDeductions: Scalars['Boolean']['output'];
-  /** Admin override for a host's monthly Pod Requests to venues (null clears it). */
+  /** Admin-only: a host's monthly Pod Request limit to venues (null = the default of 10). */
   setHostVenueRequestLimit: Host;
   /** Staff: temporarily deactivate/reactivate any catalogue product (reversible is_active flip; archive/restore own the ARCHIVED lifecycle). */
   setInventoryProductActive: InventoryProduct;
@@ -13333,8 +13331,6 @@ export type Mutation = {
   setMyTrackingConsent: TrackingConsent;
   /** Change the signed-in account's @handle. Rejects a taken or reserved one. */
   setMyUsername: User;
-  /** Host Settings: the signed-in host's own monthly cap on Pod Requests to venues (0-100). */
-  setMyVenueRequestLimit: Host;
   setMyWhatsappPreference: WaPreference;
   setPodIdeaStatus: PodIdea;
   /**
@@ -13357,7 +13353,7 @@ export type Mutation = {
   /** Onboarding review: how long before a pod starts a finance-negative pod at this venue is auto-cancelled, and what its attendees are refunded. */
   setVenueCancellationTrigger: Venue;
   setVenueDeductions: Venue;
-  /** Admin override for the venue's monthly host Pod Requests (null clears it). */
+  /** Admin-only: the venue's monthly host Pod Request limit (null = the default of 10). */
   setVenueHostRequestLimit: Venue;
   /** Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it. */
   setWhatsappDefaultMedia: WaScenarioBoard;
@@ -17253,11 +17249,6 @@ export type MutationSetMyTrackingConsentArgs = {
 
 export type MutationSetMyUsernameArgs = {
   username: Scalars['String']['input'];
-};
-
-
-export type MutationSetMyVenueRequestLimitArgs = {
-  limit: Scalars['Int']['input'];
 };
 
 
@@ -36625,7 +36616,7 @@ export type Venue = {
   facilities: Array<Scalars['String']['output']>;
   gallery: Array<Scalars['String']['output']>;
   gstin: Scalars['String']['output'];
-  /** Admin cap on monthly host Pod Requests; null = the owner's own rule. */
+  /** Admin-set cap on monthly host Pod Requests; null = the default of 10. */
   host_requests_limit_override?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
@@ -36996,8 +36987,6 @@ export type VenueRules = {
   buffer_minutes: Scalars['Int']['output'];
   max_advance_days: Scalars['Int']['output'];
   max_bookings_per_slot: Scalars['Int']['output'];
-  /** Pod Requests this venue may send to hosts per month (an admin override wins). */
-  max_host_requests_per_month: Scalars['Int']['output'];
   min_notice_minutes: Scalars['Int']['output'];
 };
 
@@ -37009,7 +36998,6 @@ export type VenueRulesInput = {
   buffer_minutes?: InputMaybe<Scalars['Int']['input']>;
   max_advance_days?: InputMaybe<Scalars['Int']['input']>;
   max_bookings_per_slot?: InputMaybe<Scalars['Int']['input']>;
-  max_host_requests_per_month?: InputMaybe<Scalars['Int']['input']>;
   min_notice_minutes?: InputMaybe<Scalars['Int']['input']>;
 };
 

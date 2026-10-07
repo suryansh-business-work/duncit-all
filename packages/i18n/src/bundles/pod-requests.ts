@@ -3,8 +3,8 @@ import type { NestedCatalogue } from '../catalogue';
 /**
  * Pod Requests between venues and hosts, both ways: the nearby searches, the
  * request lists and tabs in Host Studio and Venue Studio, one request's
- * detail (accept → slot → confirm → Create Pod), and the two monthly-limit
- * settings.
+ * detail (accept → slot → confirm → Create Pod), and the admin-only monthly
+ * limit fields.
  *
  * Rendered by the Partners console, mWeb AND native, so it is one namespace
  * every surface ships rather than a copy per bundle (rule 40).
@@ -84,17 +84,10 @@ export const POD_REQUESTS_BUNDLE: NestedCatalogue = {
     phone: 'Phone',
     email: 'Email',
     address: 'Address',
-    // Monthly limits.
+    // The monthly limit — set by admins only (Venues / Hosts portals, Onboarding).
     venueLimitLabel: 'Maximum Host Requests / Month',
     hostLimitLabel: 'Maximum Venue Requests / Month',
-    limitHint: 'How many Pod Requests you can send each month (0-100).',
-    limitOverridden: 'Set by Duncit: {limit} per month.',
-    limitInvalid: 'Enter a whole number from 0 to 100.',
-    limitSaved: 'Saved.',
-    save: 'Save',
-    hostSettingsTitle: 'Host Settings',
-    overrideLabel: 'Monthly Pod Request limit (override)',
-    overrideHint: "Leave empty to use the partner's own setting.",
+    overrideHint: 'Leave empty to use the default of 10 per month.',
     overrideInvalid: 'Enter a whole number from 0 to 1000, or leave it empty.',
     // Partners console.
     navTitle: 'Pod Requests',

@@ -116,7 +116,6 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
           to: '/host/change-requests',
           icon: 'rule',
         },
-        { label: 'Host Settings', labelKey: 'podRequests.hostSettingsTitle', to: '/host/settings', icon: 'settings' },
       ],
     },
   },

@@ -15,8 +15,8 @@ import type { HostFormValues } from '../types';
  * The commission sits beside the status because it is the figure settlement
  * reads at the end of a pod, and the person changing a host's status is the
  * person who should see it. 0 inherits the platform default — it is not "no
- * commission". The Pod Request override beside it is governance too: empty
- * leaves the host's own monthly cap.
+ * commission". The monthly venue Pod Request limit beside it is admin-only
+ * governance too: empty = the default of 10.
  */
 export default function StatusSection({
   control,
@@ -57,7 +57,7 @@ export default function StatusSection({
                 <RhfTextField
                   control={control}
                   name="venue_requests_limit_override"
-                  label={t('podRequests.overrideLabel')}
+                  label={t('podRequests.hostLimitLabel')}
                   size="small"
                   type="number"
                   disabled={!canGovern}

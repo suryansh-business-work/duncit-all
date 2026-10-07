@@ -38,7 +38,7 @@ async function seedUser(first: string, email: string, isHost: boolean) {
   return String(user._id);
 }
 
-async function seedVenue(ownerId: string, maxPerMonth = 10) {
+async function seedVenue(ownerId: string) {
   const venue = await VenueModel.create({
     owner_user_id: ownerId,
     status: 'APPROVED',
@@ -46,7 +46,6 @@ async function seedVenue(ownerId: string, maxPerMonth = 10) {
     venue_name: 'Flow Sports Life',
     owner_phone: '+911234567890',
     owner_email: 'venue@duncit.com',
-    settings: { rules: { max_host_requests_per_month: maxPerMonth } },
   });
   return String(venue._id);
 }
@@ -175,8 +174,8 @@ describe('one live request per pair', () => {
 });
 
 describe('monthly limits', () => {
-  it("enforces the venue's own rule and lets an admin override win", async () => {
-    await VenueModel.updateOne({ _id: venueId }, { $set: { 'settings.rules.max_host_requests_per_month': 1 } });
+  it('enforces the admin-set limit, and an admin raising it lets the venue send again', async () => {
+    await VenueModel.updateOne({ _id: venueId }, { $set: { host_requests_limit_override: 1 } });
     const secondHost = await seedUser('Dev', 'dev@duncit.com', true);
     expect(await codeOf(podPartnerRequestService.send(ownerId, { direction: 'VENUE_TO_HOST', venue_id: venueId, host_user_id: hostId }))).toBe('OK');
     expect(

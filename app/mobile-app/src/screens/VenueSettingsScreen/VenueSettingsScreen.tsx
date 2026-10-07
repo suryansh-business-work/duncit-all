@@ -15,7 +15,6 @@ import { useVenuesWithSettings } from '@/hooks/useVenuesWithSettings';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
-import { HostRequestLimitCard } from './HostRequestLimitCard';
 
 /**
  * Venue settings — the Tamagui twin of mWeb's /venues/settings (rule 27): the
@@ -93,9 +92,6 @@ export function VenueSettingsScreen() {
                 save(values).catch(() => undefined);
               }}
             />
-          ) : null}
-          {venue ? (
-            <HostRequestLimitCard key={`limit-${venue.id}`} venue={venue} onSaved={refetch} />
           ) : null}
         </YStack>
       </RefreshScrollView>

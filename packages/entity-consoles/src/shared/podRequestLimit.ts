@@ -3,9 +3,10 @@ import { makePodRequestOverrideSchema } from '@duncit/forms/schemas';
 import type { Translate } from '../venues/editor/schema';
 
 /**
- * The admin override of a partner's monthly Pod Request limit, as the venue
- * and host editors hold it: TEXT in the form (so an empty box means "no
- * override" rather than 0), turned into the mutation's `Int | null` on save.
+ * The admin-only monthly Pod Request limit of a venue or host, as the venue
+ * and host editors hold it: TEXT in the form (so an empty box means "not set",
+ * i.e. the default of 10, rather than 0), turned into the mutation's
+ * `Int | null` on save.
  *
  * Both directions read the one rule in `@duncit/forms/schemas` — '' clears,
  * else a whole number 0–1000 — so the editors cannot drift from it.

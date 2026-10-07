@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
 import type { HostCategoryValue } from '../../forms/host';
 
 export const HOSTS = gql`
@@ -113,6 +113,8 @@ export interface HostRow {
   is_active?: boolean | null;
   submitted_at?: string | null;
   host_commission_pct?: number | null;
+  /** Admin-only monthly limit on Pod Requests to venues; null = the default of 10. */
+  venue_requests_limit_override?: number | null;
   host_categories?: HostCategoryRow[] | null;
   // Rest of the HostRowFields selection. Optional so the table's own fixtures
   // stay valid; the Review dialog reads them off the same row object.
@@ -172,6 +174,7 @@ const HOST_ROW_FIELDS = gql`
     updated_at
     reviewer_notes
     host_commission_pct
+    venue_requests_limit_override
     host_categories {
       super_category_id
       category_id
@@ -237,6 +240,20 @@ export const UPDATE_HOST = gql`
 export const SET_HOST_DEDUCTIONS = gql`
   mutation SetHostDeductions($user_id: ID!, $host_commission_pct: Float!) {
     setHostDeductions(user_id: $user_id, host_commission_pct: $host_commission_pct)
+  }
+`;
+
+/** The admin-only monthly limit on Pod Requests this host may send to venues
+ * (null = the default of 10). Partners never see or change it. */
+export const SET_HOST_VENUE_REQUEST_LIMIT: TypedDocumentNode<
+  { setHostVenueRequestLimit: { id: string; venue_requests_limit_override: number | null } },
+  { id: string; limit: number | null }
+> = gql`
+  mutation OnboardingHostVenueRequestLimit($id: ID!, $limit: Int) {
+    setHostVenueRequestLimit(host_doc_id: $id, limit: $limit) {
+      id
+      venue_requests_limit_override
+    }
   }
 `;
 

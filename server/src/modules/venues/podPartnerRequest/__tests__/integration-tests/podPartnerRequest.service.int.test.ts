@@ -145,8 +145,8 @@ describe('send — validation', () => {
     expect(await codeOf(svc.send(plain, { direction: 'HOST_TO_VENUE', venue_id: venueId }))).toBe('FORBIDDEN');
   });
 
-  it("spends the host's own allowance on a host request, and records the pair's distance", async () => {
-    await HostModel.create({ user_id: hostId, status: 'APPROVED', max_venue_requests_per_month: 1 });
+  it("spends the host's admin-set allowance on a host request, and records the pair's distance", async () => {
+    await HostModel.create({ user_id: hostId, status: 'APPROVED', venue_requests_limit_override: 1 });
     const sent = await svc.send(hostId, { direction: 'HOST_TO_VENUE', venue_id: venueId });
     expect(sent).toMatchObject({ status: 'REQUESTED', viewer_side: 'HOST', distance_km: null });
     expect(await svc.quota(hostId, 'HOST')).toEqual({ limit: 1, used: 1, remaining: 0 });

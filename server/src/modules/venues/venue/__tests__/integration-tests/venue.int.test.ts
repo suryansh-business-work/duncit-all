@@ -276,22 +276,15 @@ describe('venueService integration', () => {
     expect(updated.settings.rules.max_advance_days).toBe(60); // clamped to the 60-day max
   });
 
-  it('keeps the monthly host Pod Request rule within 0-100, defaulting to 10', async () => {
+  it('gives the owner no say over the monthly host Pod Request limit (admin-only)', async () => {
     const v = await VenueModel.create({ owner_user_id: userId, venue_name: 'Request Cafe' });
     const id = String(v._id);
-    expect((await venueService.getById(id))!.settings.rules.max_host_requests_per_month).toBe(10);
-
-    const set = (value: unknown) =>
-      venueService.updateSettings(userId, false, id, { rules: { max_host_requests_per_month: value } });
-    expect((await set(0)).settings.rules.max_host_requests_per_month).toBe(0);
-    expect((await set(250)).settings.rules.max_host_requests_per_month).toBe(100);
-    expect((await set(-3)).settings.rules.max_host_requests_per_month).toBe(0);
-    expect((await set(12.9)).settings.rules.max_host_requests_per_month).toBe(12);
-    // A value that is not a number keeps the stored one; leaving it out does too.
-    expect((await set('lots')).settings.rules.max_host_requests_per_month).toBe(12);
-    const untouched = await venueService.updateSettings(userId, false, id, { rules: { buffer_minutes: 5 } });
-    expect(untouched.settings.rules.max_host_requests_per_month).toBe(12);
-    expect((await VenueModel.findById(id).lean())?.settings?.rules?.max_host_requests_per_month).toBe(12);
+    const out = await venueService.updateSettings(userId, false, id, { rules: { max_host_requests_per_month: 50 } });
+    expect(out.settings.rules).not.toHaveProperty('max_host_requests_per_month');
+    expect(out.host_requests_limit_override).toBeNull();
+    const stored = await VenueModel.findById(id).lean();
+    expect(stored?.settings?.rules).not.toHaveProperty('max_host_requests_per_month');
+    expect(stored?.host_requests_limit_override).toBeNull();
   });
 
   it('validates settings input and guards ownership', async () => {

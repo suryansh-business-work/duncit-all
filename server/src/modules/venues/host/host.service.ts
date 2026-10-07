@@ -180,7 +180,6 @@ const toPub = (h: IHost) => ({
   email: h.email ?? '',
   phone: h.phone ?? '',
   dob: h.dob ? h.dob.toISOString() : null,
-  max_venue_requests_per_month: h.max_venue_requests_per_month ?? 10,
   venue_requests_limit_override: h.venue_requests_limit_override ?? null,
   aadhar_number: h.aadhar_number ?? '',
   pan_number: h.pan_number ?? '',
@@ -531,21 +530,7 @@ export const hostService = {
     return toPub(h);
   },
 
-  /** Host Settings: the host's own monthly cap on Pod Requests to venues (0–100). */
-  async setMyVenueRequestLimit(userId: string, limit: number) {
-    if (!Number.isInteger(limit) || limit < 0 || limit > 100) {
-      throw new GraphQLError('The limit must be a whole number from 0 to 100', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    const h = await HostModel.findOneAndUpdate(
-      { user_id: new Types.ObjectId(userId) },
-      { $set: { max_venue_requests_per_month: limit } },
-      { new: true }
-    );
-    if (!h) throw new GraphQLError('Host profile not found', { extensions: { code: 'NOT_FOUND' } });
-    return toPub(h);
-  },
-
-  /** Admin override of that cap; null hands it back to the host's own setting. */
+  /** Admin-set cap on the host's monthly Pod Requests to venues; null falls back to the default of 10. */
   async setVenueRequestLimitOverride(hostId: string, limit: number | null) {
     if (limit !== null && (!Number.isInteger(limit) || limit < 0 || limit > 1000)) {
       throw new GraphQLError('The limit must be a whole number from 0 to 1000', { extensions: { code: 'BAD_USER_INPUT' } });

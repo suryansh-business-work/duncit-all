@@ -362,14 +362,13 @@ describe('setHostRequestLimit', () => {
     await expect(venueService.setHostRequestLimit(missingId(), 5)).rejects.toThrow('Venue not found');
   });
 
-  it("sets the override at both bounds and clears it back to the owner's rule", async () => {
+  it('sets the limit at both bounds and clears it back to the default', async () => {
     const v = await VenueModel.create({ owner_user_id: new Types.ObjectId() });
     const id = String(v._id);
     expect(await venueService.setHostRequestLimit(id, 0)).toMatchObject({ host_requests_limit_override: 0 });
     expect(await venueService.setHostRequestLimit(id, 1000)).toMatchObject({ host_requests_limit_override: 1000 });
     const cleared = await venueService.setHostRequestLimit(id, null);
     expect(cleared.host_requests_limit_override).toBeNull();
-    expect(cleared.settings.rules.max_host_requests_per_month).toBe(10);
     expect((await VenueModel.findById(id).lean())?.host_requests_limit_override).toBeNull();
   });
 });

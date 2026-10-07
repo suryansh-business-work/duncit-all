@@ -13,7 +13,6 @@ import { HostCategoriesCard } from '@/components/host-manage/HostCategoriesCard'
 import { HostDraftsSection } from '@/components/host-manage/HostDraftsSection';
 import { StudioChangeRequests } from '@/components/change-requests/StudioChangeRequests';
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
-import { HostSettingsCard } from '@/components/host-manage/HostSettingsCard';
 import { HostShareSection } from '@/components/host-manage/HostShareSection';
 import { PodRequestsSection } from '@/components/pod-requests/PodRequestsSection';
 import { PartnerSide } from '@/generated/graphql/graphql';
@@ -103,8 +102,6 @@ export function HostManageScreen() {
           <StudioChangeRequests role="HOST" />
 
           {isHost ? <PodRequestsSection side={PartnerSide.Host} /> : null}
-
-          {isHost ? <HostSettingsCard /> : null}
 
           <HostShareSection {...payoutsApi} />
 

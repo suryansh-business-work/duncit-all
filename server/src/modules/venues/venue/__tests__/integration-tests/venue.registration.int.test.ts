@@ -435,7 +435,6 @@ describe('updateSettings — cancellation and auto-extend', () => {
         max_bookings_per_slot: 'abc',
         allow_instant_booking: 0,
         booking_approval_required: 'yes',
-        max_host_requests_per_month: 500,
       },
     });
     expect(out.settings.rules).toEqual({
@@ -447,7 +446,6 @@ describe('updateSettings — cancellation and auto-extend', () => {
       allow_waitlist: false,
       booking_approval_required: true,
       allow_multiple_bookings: false,
-      max_host_requests_per_month: 100,
     });
   });
 });

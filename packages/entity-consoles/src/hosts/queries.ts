@@ -184,7 +184,7 @@ export const SET_HOST_DEDUCTIONS = gql`
   }
 `;
 
-/** Admin override of the host's monthly Pod Request cap; null clears it. */
+/** Admin-only monthly Pod Request limit of the host; null = the default of 10. */
 export const SET_HOST_VENUE_REQUEST_LIMIT = gql`
   mutation HostConsoleVenueRequestLimit($host_doc_id: ID!, $limit: Int) {
     setHostVenueRequestLimit(host_doc_id: $host_doc_id, limit: $limit) {

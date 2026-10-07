@@ -116,6 +116,16 @@ exports:
   - 'DEFAULT_HAPPENING_NEARBY_DAYS'
   - 'hostPodSection'
   - 'splitHostPods'
+  - 'podRequestNextAction'
+  - 'splitPodRequests'
+  - 'podRequestStatusLabel'
+  - 'podRequestStatusTone'
+  - 'podRequestSender'
+  - 'sentByViewer'
+  - 'clampPodRequestRadius'
+  - 'widerPodRequestRadius'
+  - 'POD_REQUEST_DEFAULT_RADIUS_KM'
+  - 'POD_REQUEST_MAX_RADIUS_KM'
   - 'POD_LIVE_TAIL_MS'
   - 'clubCategoryKey'
   - 'productMatchesClub'
@@ -2464,6 +2474,25 @@ else. Two consequences a surface must render, and both come from here:
 
 `autoPodMissingRoles(row)` feeds `labels.waitingFor(roles)` — "Waiting for a venue, a host" —
 the card's line naming everyone still to come, in the order they will.
+
+## Pod Requests between venues and hosts — `pod-partner-request`
+
+A venue asks a nearby host (or a host a nearby venue) to run a pod together. The server owns the
+state machine — REQUESTED → ACCEPTED → SLOT_REQUESTED → SLOT_CONFIRMED → POD_CREATED, with
+REJECTED / CANCELLED / EXPIRED — and every surface reads it through these helpers, so the Partners
+console, mWeb and native agree on what each side may do (rules 27 + 40).
+
+| Export | Shape | Notes |
+| --- | --- | --- |
+| `podRequestNextAction` | `(req) => PodRequestAction` | The receiver answers and picks the slot, the sender confirms it, the host creates the pod. |
+| `splitPodRequests` | `(requests) => { incoming, accepted, sent }` | A studio's Requests tab, its Accepted tab, and what this side sent. Closed received requests drop out. |
+| `podRequestStatusLabel` / `podRequestStatusTone` | `(status, t)` / `(status)` | Every key written out for the translation gate; tone is warning / success / neutral. |
+| `clampPodRequestRadius` / `widerPodRequestRadius` | `(km)` | The nearby search's 0–10 km range (default 5) and the "search wider" step on an empty result. |
+
+```ts
+podRequestNextAction({ direction: 'VENUE_TO_HOST', status: 'ACCEPTED', viewer_side: 'HOST' }); // 'PICK_SLOT'
+widerPodRequestRadius(5); // 10
+```
 
 ## Adding a helper
 

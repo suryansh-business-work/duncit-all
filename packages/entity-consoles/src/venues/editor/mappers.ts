@@ -1,4 +1,5 @@
 import type { AdminVenueDetail } from '../detail/queries';
+import { podRequestOverrideText } from '../../shared/podRequestLimit';
 import { blankVenueValues, type VenueFormValues } from './types';
 
 /**
@@ -80,6 +81,7 @@ export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
 
     venue_share_pct: venue.venue_share_pct,
     venue_commission_pct: venue.venue_commission_pct,
+    host_requests_limit_override: podRequestOverrideText(venue.host_requests_limit_override),
 
     status: venue.status,
     is_active: venue.is_active,

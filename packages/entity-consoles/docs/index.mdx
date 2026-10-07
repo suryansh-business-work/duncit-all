@@ -197,6 +197,10 @@ Two things about a host save are worth knowing before touching it:
   category is taken away — and why a row with an incomplete Super→Category→Sub
   triple is dropped from the payload rather than sent. The server rejects a
   partial triple outright, and one abandoned row must not fail the whole save.
+- **The Pod Request override is its own write.** The venue and host editors
+  hold it as text (empty = no override) and save it with
+  `setVenueHostRequestLimit` / `setHostVenueRequestLimit` only when it moved;
+  `shared/podRequestLimit.ts` reads the one rule in `@duncit/forms/schemas`.
 
 **What the two editors share, and what they do not.** The frame is one component:
 `EditorPageShell` owns the form, the back arrow, Save (in the header AND at the
@@ -227,7 +231,7 @@ There are now three levels, defined once in
 | --- | --- | --- |
 | READ | platform admins, onboarding, **the console role** | the list, the record, its change log |
 | EDIT | same | the record's own details — name, address, photos, documents, contact, operating hours, categories, which clubs an admin runs |
-| GOVERN | platform admins, onboarding — **NOT the console role** | approve and reject, the commission and share percentages, the live on/off switch, and appointing a Club Admin |
+| GOVERN | platform admins, onboarding — **NOT the console role** | approve and reject, the commission and share percentages, the live on/off switch, the monthly Pod Request limit override, and appointing a Club Admin |
 
 `useConsoleAccess()` is the client half. It does not decide anything — the server
 enforces the split, including refusing a `status` argument on `adminUpdateVenue`

@@ -80,6 +80,12 @@ exports:
   - 'emptyTier'
   - 'makeVenueCancelPodSchema'
   - 'venueCancelPodDefaults'
+  - 'makePodRequestNoteSchema'
+  - 'makePodRequestLimitSchema'
+  - 'makePodRequestOverrideSchema'
+  - 'POD_REQUEST_NOTE_MAX'
+  - 'POD_REQUEST_LIMIT_MAX'
+  - 'POD_REQUEST_OVERRIDE_MAX'
   - 'makeForceMarkSchema'
   - 'forceMarkInitialValues'
   - 'ForceMarkValues'
@@ -479,6 +485,9 @@ directly.
 | `makeWhatsappNumberSchema` | the Google door's number step | the WhatsApp row on its own — see below |
 | `makeCancellationPolicySchema` | a venue's cancellation policy | any number of bands, each a window + a charge — see below |
 | `makeVenueCancelPodSchema` | a venue owner cancelling a pod | the reason that goes into the cancellation email, at least 5 characters — see below |
+| `makePodRequestNoteSchema` | a venue or host sending a Pod Request | an optional note of at most 500 characters — see below |
+| `makePodRequestLimitSchema` | Venue Settings / Host Settings | the partner's own monthly Pod Request cap, a whole number 0–100 — see below |
+| `makePodRequestOverrideSchema` | an admin overriding that cap | empty (clears it) or a whole number 0–1000 — see below |
 | `makeForceMarkSchema` | a Club Admin marking attendance by name | the names they were read for a multi-seat booking — see below |
 
 `makeContactValueSchema(channel, t, current?)` returns a different object schema per channel
@@ -686,6 +695,22 @@ const schema = makeVenueCancelPodSchema(t);
 
 schema.safeParse({ reason: '  Venue flooded overnight  ' }); // { success: true, data: { reason: 'Venue flooded overnight' } }
 schema.safeParse({ reason: 'Rain' });                        // reason — mweb.venuePods.reasonRequired
+```
+
+### Pod Requests between venues and hosts
+
+`makePodRequestNoteSchema(t)` is the optional note sent with a Pod Request, trimmed and capped at
+`POD_REQUEST_NOTE_MAX` (500, the server's own limit; `podRequests.noteTooLong` names it).
+`makePodRequestLimitSchema(t)` backs Venue Settings' "Maximum Host Requests / Month" and Host
+Settings' "Maximum Venue Requests / Month": typed text coerced to a whole number 0–
+`POD_REQUEST_LIMIT_MAX`, with a blank box refused rather than read as 0 (`podRequests.limitInvalid`).
+`makePodRequestOverrideSchema(t)` is the admin override: an empty field becomes `null` (the partner's
+own setting applies again), else a whole number up to `POD_REQUEST_OVERRIDE_MAX`.
+
+```ts
+makePodRequestLimitSchema(t).safeParse({ limit: '12' });    // { success: true, data: { limit: 12 } }
+makePodRequestLimitSchema(t).safeParse({ limit: '' });      // limit — podRequests.limitInvalid
+makePodRequestOverrideSchema(t).safeParse({ limit: '' }); // { success: true, data: { limit: null } }
 ```
 
 ### A Club Admin marking attendance without a scan

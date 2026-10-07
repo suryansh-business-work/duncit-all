@@ -103,6 +103,8 @@ export interface VenueFormValues {
 
   venue_share_pct: number;
   venue_commission_pct: number;
+  /** Admin override of the monthly Pod Request cap, as typed; '' = none. */
+  host_requests_limit_override: string;
 
   status: VenueStatus;
   is_active: boolean;
@@ -154,6 +156,7 @@ export const blankVenueValues: VenueFormValues = {
   bank_account: blankBankValues,
   venue_share_pct: 0,
   venue_commission_pct: 0,
+  host_requests_limit_override: '',
   status: 'DRAFT',
   is_active: true,
   settings: {

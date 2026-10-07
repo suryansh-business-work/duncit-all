@@ -76,6 +76,14 @@ describe('makeHostFormSchema', () => {
     );
   });
 
+  it('allows an empty Pod Request override and refuses a negative one', () => {
+    expect(schema.safeParse({ ...valid(), venue_requests_limit_override: '' }).success).toBe(true);
+    expect(schema.safeParse({ ...valid(), venue_requests_limit_override: '300' }).success).toBe(true);
+    expect(errorAt({ ...valid(), venue_requests_limit_override: '-5' }, 'venue_requests_limit_override')).toBe(
+      'podRequests.overrideInvalid',
+    );
+  });
+
   it('validates the contact through the shared rules', () => {
     expect(errorAt({ ...valid(), email: 'nope' }, 'email')).toBeTruthy();
     expect(errorAt({ ...valid(), phone: '12' }, 'phone')).toBeTruthy();

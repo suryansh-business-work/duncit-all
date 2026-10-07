@@ -116,6 +116,13 @@ describe('makeVenueFormSchema', () => {
     );
   });
 
+  it('allows an empty Pod Request override and refuses one past 1000', () => {
+    expect(schema.safeParse({ ...valid(), host_requests_limit_override: '' }).success).toBe(true);
+    expect(errorAt({ ...valid(), host_requests_limit_override: '1001' }, 'host_requests_limit_override')).toBe(
+      'podRequests.overrideInvalid',
+    );
+  });
+
   it('checks GSTIN and PAN only when they are filled in', () => {
     expect(errorAt({ ...valid(), gstin: 'nope' }, 'gstin')).toBe('directory.venueEditor.errGstin');
     expect(errorAt({ ...valid(), pan: 'nope' }, 'pan')).toBe('directory.venueEditor.errPan');

@@ -68,6 +68,7 @@ export const venueRecord: AdminVenueDetail = {
   },
   venue_share_pct: 30,
   venue_commission_pct: 8,
+  host_requests_limit_override: 25,
   settings: {
     operating_hours: { open: '08:00', close: '23:00' },
     weekly_off_days: [1],
@@ -149,6 +150,7 @@ export const hostRecord: HostDetail = {
   is_active: true,
   reviewer_notes: 'Police verification checked.',
   host_commission_pct: 12,
+  venue_requests_limit_override: null,
   submitted_at: '2026-03-04T07:20:00.000Z',
   approved_at: '2026-03-06T10:05:00.000Z',
   rejected_at: null,

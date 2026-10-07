@@ -28,6 +28,7 @@ import { WITHDRAW_BUNDLE } from './bundles/withdraw';
 import { AVAILABILITY_BUNDLE } from './bundles/availability';
 import { PUBLIC_PAGE_BUNDLE } from './bundles/public-page';
 import { VENUE_SETTINGS_BUNDLE } from './bundles/venue-settings';
+import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
 import { PACKAGING_BUNDLE } from './bundles/packaging';
@@ -126,6 +127,7 @@ export {
   AVAILABILITY_BUNDLE,
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
   PACKAGING_BUNDLE,
@@ -165,6 +167,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   availability: AVAILABILITY_BUNDLE,
   publicPage: PUBLIC_PAGE_BUNDLE,
   venueSettings: VENUE_SETTINGS_BUNDLE,
+  podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,
   packaging: PACKAGING_BUNDLE,

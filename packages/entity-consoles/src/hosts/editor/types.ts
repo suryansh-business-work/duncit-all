@@ -42,6 +42,8 @@ export interface HostFormValues {
   is_active: boolean;
   /** 0 inherits the platform default at settlement. */
   host_commission_pct: number;
+  /** Admin override of the monthly Pod Request cap, as typed; '' = none. */
+  venue_requests_limit_override: string;
 }
 
 export const blankHostCategory: HostCategoryRow = {
@@ -71,4 +73,5 @@ export const blankHostValues: HostFormValues = {
   status: 'DRAFT',
   is_active: true,
   host_commission_pct: 0,
+  venue_requests_limit_override: '',
 };

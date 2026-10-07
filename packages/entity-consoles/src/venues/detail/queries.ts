@@ -63,6 +63,7 @@ export const VENUE_DETAIL = gql`
       }
       venue_share_pct
       venue_commission_pct
+      host_requests_limit_override
       settings {
         operating_hours {
           open
@@ -222,6 +223,8 @@ export interface AdminVenueDetail {
   };
   venue_share_pct: number;
   venue_commission_pct: number;
+  /** Admin override of the owner's monthly Pod Request cap; null = the owner's own. */
+  host_requests_limit_override: number | null;
   settings: VenueSettings;
   documents: VenueDocument[];
   reviewer_notes: string;

@@ -6039,6 +6039,8 @@ export type CreatePodInput = {
   meeting_platform?: InputMaybe<Scalars['String']['input']>;
   meeting_url?: InputMaybe<Scalars['String']['input']>;
   no_of_spots?: InputMaybe<Scalars['Int']['input']>;
+  /** The Pod Request whose confirmed slot this pod books (host only; the slot is adopted, no second venue approval). */
+  partner_request_id?: InputMaybe<Scalars['ID']['input']>;
   payment_terms?: InputMaybe<Scalars['String']['input']>;
   place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
   pod_amount?: InputMaybe<Scalars['Int']['input']>;
@@ -9690,6 +9692,8 @@ export type Host = {
   host_no?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
+  /** Host Settings: Pod Requests this host may send to venues per month. */
+  max_venue_requests_per_month: Scalars['Int']['output'];
   pan_number: Scalars['String']['output'];
   passport_photo_url: Scalars['String']['output'];
   phone: Scalars['String']['output'];
@@ -9712,6 +9716,8 @@ export type Host = {
   tags: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
+  /** Admin cap that wins over the host's own setting; null = not set. */
+  venue_requests_limit_override?: Maybe<Scalars['Int']['output']>;
 };
 
 /** The account-side copy of a host's personal details (see Host.account_profile). */
@@ -12009,6 +12015,8 @@ export type Mutation = {
    * Finance, not by a live gateway call.
    */
   cancelPodForChange: PodChangeRequest;
+  /** Sender: withdraw before it is answered. */
+  cancelPodPartnerRequest: PodPartnerRequest;
   /** Call off a scheduled send before it runs. */
   cancelWaCampaign: WaCampaign;
   /** Auth-required: confirm the OTP and set the new password. */
@@ -13011,6 +13019,8 @@ export type Mutation = {
    * is why the host verifies them one at a time.
    */
   requestPodCompanionOtp: PhoneOtpRequestResult;
+  /** Receiver: pick one of the venue's open slots (held until the sender answers). */
+  requestPodPartnerSlot: PodPartnerRequest;
   /** Buyer: ask to return items of a delivered pod-shop order. One return per brand on the order. */
   requestPodShopReturn: Array<PodShopReturn>;
   /** Ask an admin for console access — lands in Admin > Portal Access; the decision is emailed. */
@@ -13065,6 +13075,10 @@ export type Mutation = {
   resolveSupportChat: SupportChatSession;
   /** Mark a ticket resolved (owner OR an agent) — appends a SYSTEM timeline bubble. */
   resolveTicket: Ticket;
+  /** Receiver: accept (true) or decline (false). */
+  respondPodPartnerRequest: PodPartnerRequest;
+  /** Sender: confirm (true) or decline (false) the picked slot. */
+  respondPodPartnerSlot: PodPartnerRequest;
   /** The invited user accepts or declines. */
   respondToCoHostInvite: Pod;
   /** The offered partner answering: APPROVE takes the place, PASS declines it. */
@@ -13223,6 +13237,8 @@ export type Mutation = {
   sendLocationLaunchMessage: LocationLaunchSendResult;
   sendMarketingCampaign: MarketingCampaign;
   sendPodMessage: PodMessage;
+  /** Send a Pod Request. LIMIT_REACHED past the monthly cap; CONFLICT if the pair already has a live one. */
+  sendPodPartnerRequest: PodPartnerRequest;
   /** One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands. */
   sendReelMessage: ReelProject;
   /** Post a message to a Slack channel (full message surface). */
@@ -13282,6 +13298,8 @@ export type Mutation = {
   setFeedbackReportStatus: FeedbackReport;
   setHostActive: Host;
   setHostDeductions: Scalars['Boolean']['output'];
+  /** Admin override for a host's monthly Pod Requests to venues (null clears it). */
+  setHostVenueRequestLimit: Host;
   /** Staff: temporarily deactivate/reactivate any catalogue product (reversible is_active flip; archive/restore own the ARCHIVED lifecycle). */
   setInventoryProductActive: InventoryProduct;
   /**
@@ -13309,12 +13327,14 @@ export type Mutation = {
   setMyOtpChannel: CommPreference;
   /** Partner: temporarily deactivate/reactivate an OWN approved listing (reversible; hidden from the shop while paused, placed orders unaffected). */
   setMyProductListingActive: InventoryProduct;
-  /** Persist the user's selected header location (pass null to clear). */
+  /** Persist the user's selected header location (pass null to clear) and, optionally, the area inside it (omitted = the whole city). */
   setMySelectedLocation: User;
   /** Record the signed-in member's tracking choice. Every answer is kept. */
   setMyTrackingConsent: TrackingConsent;
   /** Change the signed-in account's @handle. Rejects a taken or reserved one. */
   setMyUsername: User;
+  /** Host Settings: the signed-in host's own monthly cap on Pod Requests to venues (0-100). */
+  setMyVenueRequestLimit: Host;
   setMyWhatsappPreference: WaPreference;
   setPodIdeaStatus: PodIdea;
   /**
@@ -13337,6 +13357,8 @@ export type Mutation = {
   /** Onboarding review: how long before a pod starts a finance-negative pod at this venue is auto-cancelled, and what its attendees are refunded. */
   setVenueCancellationTrigger: Venue;
   setVenueDeductions: Venue;
+  /** Admin override for the venue's monthly host Pod Requests (null clears it). */
+  setVenueHostRequestLimit: Venue;
   /** Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it. */
   setWhatsappDefaultMedia: WaScenarioBoard;
   /** Flip one scenario. Pass __global__ as the key for the kill switch. */
@@ -14424,6 +14446,11 @@ export type MutationCancelMyPodShopReturnArgs = {
 export type MutationCancelPodForChangeArgs = {
   reason: Scalars['String']['input'];
   request_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelPodPartnerRequestArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -16536,6 +16563,12 @@ export type MutationRequestPodCompanionOtpArgs = {
 };
 
 
+export type MutationRequestPodPartnerSlotArgs = {
+  id: Scalars['ID']['input'];
+  slot_id: Scalars['ID']['input'];
+};
+
+
 export type MutationRequestPodShopReturnArgs = {
   input: RequestPodShopReturnInput;
 };
@@ -16617,6 +16650,18 @@ export type MutationResolveSupportChatArgs = {
 
 export type MutationResolveTicketArgs = {
   ticket_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRespondPodPartnerRequestArgs = {
+  accept: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRespondPodPartnerSlotArgs = {
+  confirm: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
 };
 
 
@@ -16957,6 +17002,11 @@ export type MutationSendPodMessageArgs = {
 };
 
 
+export type MutationSendPodPartnerRequestArgs = {
+  input: SendPodPartnerRequestInput;
+};
+
+
 export type MutationSendReelMessageArgs = {
   input: ReelMessageInput;
 };
@@ -17135,6 +17185,12 @@ export type MutationSetHostDeductionsArgs = {
 };
 
 
+export type MutationSetHostVenueRequestLimitArgs = {
+  host_doc_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type MutationSetInventoryProductActiveArgs = {
   active: Scalars['Boolean']['input'];
   product_doc_id: Scalars['ID']['input'];
@@ -17186,6 +17242,7 @@ export type MutationSetMyProductListingActiveArgs = {
 
 export type MutationSetMySelectedLocationArgs = {
   location_id?: InputMaybe<Scalars['ID']['input']>;
+  zone_name?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -17196,6 +17253,11 @@ export type MutationSetMyTrackingConsentArgs = {
 
 export type MutationSetMyUsernameArgs = {
   username: Scalars['String']['input'];
+};
+
+
+export type MutationSetMyVenueRequestLimitArgs = {
+  limit: Scalars['Int']['input'];
 };
 
 
@@ -17278,6 +17340,12 @@ export type MutationSetVenueDeductionsArgs = {
   venue_commission_pct: Scalars['Float']['input'];
   venue_doc_id: Scalars['ID']['input'];
   venue_share_pct: Scalars['Float']['input'];
+};
+
+
+export type MutationSetVenueHostRequestLimitArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  venue_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -19112,6 +19180,42 @@ export type NameServerTarget =
   /** GoDaddy's own nameservers, read from the NS records its zone still holds. */
   | 'GODADDY';
 
+export type NearbyHost = {
+  __typename?: 'NearbyHost';
+  categories: Array<Scalars['String']['output']>;
+  distance_km: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  /** Set while this venue and host already have a live request. */
+  open_request_status?: Maybe<PartnerRequestStatus>;
+  photo_url: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type NearbyPartnerSearchInput = {
+  /** Category ids at any level (Super, Category or Sub); empty = all. */
+  category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /** The city selected in the location picker — the search centre. */
+  location_id: Scalars['ID']['input'];
+  /** 0–10 km; default 5. */
+  radius_km?: InputMaybe<Scalars['Float']['input']>;
+  /** The area inside it, when one is selected. */
+  zone_name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type NearbyVenue = {
+  __typename?: 'NearbyVenue';
+  capacity: Scalars['Int']['output'];
+  category: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  cover_image_url: Scalars['String']['output'];
+  distance_km: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  locality: Scalars['String']['output'];
+  open_request_status?: Maybe<PartnerRequestStatus>;
+  venue_name: Scalars['String']['output'];
+  venue_type: Scalars['String']['output'];
+};
+
 export type NewsletterSource =
   | 'ADMIN'
   | 'MWEB'
@@ -19693,6 +19797,14 @@ export type PackageType =
   | 'OTHER'
   | 'POLYBAG';
 
+/** The other side's contact — only ever filled once the pod is created. */
+export type PartnerContact = {
+  __typename?: 'PartnerContact';
+  address?: Maybe<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+};
+
 export type PartnerDashboard = {
   __typename?: 'PartnerDashboard';
   from: Scalars['String']['output'];
@@ -19739,6 +19851,15 @@ export type PartnerFaqTopic =
   | 'PRODUCTS'
   | 'VENUE';
 
+/** A host as a venue sees them before any pod — no phone or email. */
+export type PartnerHostSummary = {
+  __typename?: 'PartnerHostSummary';
+  categories: Array<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  photo_url: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
 /**
  * A Razorpay or ShipRocket account a brand partner saved once on the
  * Integrations page and picks for any of their brands. Picking copies it onto
@@ -19780,6 +19901,58 @@ export type PartnerProductPerformance = {
   net_earnings: Scalars['Float']['output'];
   product_id: Scalars['ID']['output'];
   units_sold: Scalars['Int']['output'];
+};
+
+export type PartnerRequestDirection =
+  | 'HOST_TO_VENUE'
+  | 'VENUE_TO_HOST';
+
+export type PartnerRequestQuota = {
+  __typename?: 'PartnerRequestQuota';
+  limit: Scalars['Int']['output'];
+  remaining: Scalars['Int']['output'];
+  used: Scalars['Int']['output'];
+};
+
+export type PartnerRequestSlot = {
+  __typename?: 'PartnerRequestSlot';
+  end_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  price: Scalars['Float']['output'];
+  space_label: Scalars['String']['output'];
+  start_at: Scalars['String']['output'];
+  whole_day: Scalars['Boolean']['output'];
+};
+
+/**
+ * REQUESTED → ACCEPTED → SLOT_REQUESTED → SLOT_CONFIRMED → POD_CREATED; REJECTED and
+ * CANCELLED end it before a slot; EXPIRED when a held slot started with no pod.
+ */
+export type PartnerRequestStatus =
+  | 'ACCEPTED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'POD_CREATED'
+  | 'REJECTED'
+  | 'REQUESTED'
+  | 'SLOT_CONFIRMED'
+  | 'SLOT_REQUESTED';
+
+export type PartnerSide =
+  | 'HOST'
+  | 'VENUE';
+
+/** A venue as a host sees it before any pod — the place, not its owner's contact. */
+export type PartnerVenueSummary = {
+  __typename?: 'PartnerVenueSummary';
+  capacity: Scalars['Int']['output'];
+  category: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  cover_image_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  locality: Scalars['String']['output'];
+  venue_name: Scalars['String']['output'];
+  venue_type: Scalars['String']['output'];
 };
 
 export type PartyInvoiceTemplate = {
@@ -21742,6 +21915,25 @@ export type PodParticipation = {
   pod_cancelled_at?: Maybe<Scalars['String']['output']>;
   /** Set only when the pod itself was cancelled — then nothing else applies. */
   pod_cancelled_by?: Maybe<PodMemberCancelActor>;
+};
+
+export type PodPartnerRequest = {
+  __typename?: 'PodPartnerRequest';
+  /** Null until POD_CREATED — contact is never shared before the pod exists. */
+  contact?: Maybe<PartnerContact>;
+  created_at: Scalars['String']['output'];
+  direction: PartnerRequestDirection;
+  distance_km?: Maybe<Scalars['Float']['output']>;
+  host?: Maybe<PartnerHostSummary>;
+  id: Scalars['ID']['output'];
+  note: Scalars['String']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
+  slot?: Maybe<PartnerRequestSlot>;
+  status: PartnerRequestStatus;
+  updated_at: Scalars['String']['output'];
+  venue?: Maybe<PartnerVenueSummary>;
+  /** Which side the signed-in user is on. */
+  viewer_side: PartnerSide;
 };
 
 /** One photo or video FROM the pod, with who put it there. */
@@ -24079,6 +24271,8 @@ export type Query = {
   myPodDrafts: Array<PodDraft>;
   myPodIdeas: Array<PodIdea>;
   myPodMemberships: Array<PodMember>;
+  /** The caller's Pod Requests on one side (venue_id narrows a venue owner's list). */
+  myPodPartnerRequests: Array<PodPartnerRequest>;
   /** The signed-in buyer's pod-shop returns. */
   myPodShopReturns: Array<PodShopReturn>;
   /** My own pods that carry at least one co-host. */
@@ -24138,6 +24332,10 @@ export type Query = {
   /** The signed-in person's own WhatsApp switches. */
   myWhatsappPreference: WaPreference;
   myWithdrawals: Array<WalletWithdrawal>;
+  /** Venue owner: approved hosts near the selected location, for one of their venues. */
+  nearbyHostsForVenue: Array<NearbyHost>;
+  /** Active host: approved venues near the selected location. */
+  nearbyVenuesForHost: Array<NearbyVenue>;
   newsletterSubscribers: Array<NewsletterSubscriber>;
   newsletterSubscribersTable: NewsletterSubscriberTablePage;
   notifications: Array<Notification>;
@@ -24241,6 +24439,10 @@ export type Query = {
   podMembers: Array<PodMember>;
   podMembershipState: PodMembershipState;
   podMessages: Array<PodMessage>;
+  /** One Pod Request the caller is a party to. */
+  podPartnerRequest: PodPartnerRequest;
+  /** This month's sending allowance: as a host, or for one venue you own. */
+  podPartnerRequestQuota: PartnerRequestQuota;
   podPlans: Array<PodPlan>;
   podPlansTable: PodPlanTablePage;
   /** What revoking this pod's cancellation would cost, and whether it is allowed. */
@@ -24804,6 +25006,7 @@ export type Query = {
    * what ONE of the caller's venues could accept (its category and city).
    */
   venueAutoPods: Array<AutoPod>;
+  /** partner_request_id: also return the slot that Pod Request holds (its host only) — Create Pod step 3 shows it as picked. */
   venueAvailableSlots: Array<VenueSlot>;
   /**  Admin-only: health for a specific venue.  */
   venueHealth?: Maybe<HealthScore>;
@@ -26590,6 +26793,13 @@ export type QueryMyPodMembershipsArgs = {
 };
 
 
+export type QueryMyPodPartnerRequestsArgs = {
+  direction?: InputMaybe<PartnerRequestDirection>;
+  side: PartnerSide;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryMyProductAnalyticsArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -26654,6 +26864,17 @@ export type QueryMyVenueHealthArgs = {
 
 export type QueryMyVenuesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryNearbyHostsForVenueArgs = {
+  search: NearbyPartnerSearchInput;
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryNearbyVenuesForHostArgs = {
+  search: NearbyPartnerSearchInput;
 };
 
 
@@ -26941,6 +27162,17 @@ export type QueryPodMessagesArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   pod_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodPartnerRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodPartnerRequestQuotaArgs = {
+  side: PartnerSide;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -28016,6 +28248,7 @@ export type QueryVenueAutoPodsArgs = {
 
 export type QueryVenueAvailableSlotsArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
+  partner_request_id?: InputMaybe<Scalars['ID']['input']>;
   venue_id: Scalars['ID']['input'];
 };
 
@@ -29504,6 +29737,14 @@ export type SendAppReleaseEmailInput = {
   /** Optional override; defaults to the built-in release distribution list. */
   recipients?: InputMaybe<Array<Scalars['String']['input']>>;
   version: Scalars['String']['input'];
+};
+
+export type SendPodPartnerRequestInput = {
+  direction: PartnerRequestDirection;
+  /** Required for VENUE_TO_HOST; ignored for HOST_TO_VENUE (the sender is the host). */
+  host_user_id?: InputMaybe<Scalars['ID']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+  venue_id: Scalars['ID']['input'];
 };
 
 /** Post a message — supports the full Slack message surface. Provide at least one of text/blocks/attachments. */
@@ -36384,6 +36625,8 @@ export type Venue = {
   facilities: Array<Scalars['String']['output']>;
   gallery: Array<Scalars['String']['output']>;
   gstin: Scalars['String']['output'];
+  /** Admin cap on monthly host Pod Requests; null = the owner's own rule. */
+  host_requests_limit_override?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
   lat?: Maybe<Scalars['Float']['output']>;
@@ -36753,6 +36996,8 @@ export type VenueRules = {
   buffer_minutes: Scalars['Int']['output'];
   max_advance_days: Scalars['Int']['output'];
   max_bookings_per_slot: Scalars['Int']['output'];
+  /** Pod Requests this venue may send to hosts per month (an admin override wins). */
+  max_host_requests_per_month: Scalars['Int']['output'];
   min_notice_minutes: Scalars['Int']['output'];
 };
 
@@ -36764,6 +37009,7 @@ export type VenueRulesInput = {
   buffer_minutes?: InputMaybe<Scalars['Int']['input']>;
   max_advance_days?: InputMaybe<Scalars['Int']['input']>;
   max_bookings_per_slot?: InputMaybe<Scalars['Int']['input']>;
+  max_host_requests_per_month?: InputMaybe<Scalars['Int']['input']>;
   min_notice_minutes?: InputMaybe<Scalars['Int']['input']>;
 };
 

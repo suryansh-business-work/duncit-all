@@ -87,6 +87,7 @@ export const makeVenue = (over: Partial<AdminVenueDetail> = {}): AdminVenueDetai
   },
   venue_share_pct: 70,
   venue_commission_pct: 12,
+  host_requests_limit_override: null,
   settings: venueSettings(),
   documents: [
     { type: 'GST Certificate', url: 'https://ik.imagekit.io/duncit/gst.pdf', uploaded_at: '2026-03-04T10:15:00.000Z' },

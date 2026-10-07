@@ -15,7 +15,8 @@ import type { HostFormValues } from '../types';
  * The commission sits beside the status because it is the figure settlement
  * reads at the end of a pod, and the person changing a host's status is the
  * person who should see it. 0 inherits the platform default — it is not "no
- * commission".
+ * commission". The Pod Request override beside it is governance too: empty
+ * leaves the host's own monthly cap.
  */
 export default function StatusSection({
   control,
@@ -40,17 +41,30 @@ export default function StatusSection({
           canGovern={canGovern}
           governedByNote={t('directory.venueEditor.governedBy')}
           extraFields={
-            <Grid size={{ xs: 12, md: 4 }}>
-              <RhfTextField
-                control={control}
-                name="host_commission_pct"
-                label={t('directory.hostEditor.colCommission')}
-                size="small"
-                type="number"
-                disabled={!canGovern}
-                hint={t('directory.hostEditor.commissionHint')}
-              />
-            </Grid>
+            <>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <RhfTextField
+                  control={control}
+                  name="host_commission_pct"
+                  label={t('directory.hostEditor.colCommission')}
+                  size="small"
+                  type="number"
+                  disabled={!canGovern}
+                  hint={t('directory.hostEditor.commissionHint')}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <RhfTextField
+                  control={control}
+                  name="venue_requests_limit_override"
+                  label={t('podRequests.overrideLabel')}
+                  size="small"
+                  type="number"
+                  disabled={!canGovern}
+                  hint={t('podRequests.overrideHint')}
+                />
+              </Grid>
+            </>
           }
         />
 

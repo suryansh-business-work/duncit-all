@@ -316,7 +316,7 @@ function readVersion() {
 
 /**
  * The store's build identifier the workflow minted at its start — CFBundleVersion
- * on iOS, versionCode on Android (both are seconds since 2020). Uploading the
+ * on iOS, versionCode on Android (one shared counter from app.json). Uploading the
  * build to App Store Connect from the Tech portal has to name it first, and only
  * the runner ever knew it.
  */

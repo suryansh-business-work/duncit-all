@@ -120,9 +120,11 @@ jobs:
           NOW=$(date +%s)
           {
             echo "BUILD_STARTED_AT=$NOW"
-            # Seconds since 2020 are monotonic, Play-safe (< 2.1bn), and avoid
-            # the versionCode=1 that Expo prebuild otherwise writes every run.
-            echo "ANDROID_VERSION_CODE=$((NOW - 1577836800))"
+            # The pre-commit version bump moves app.json's versionCode +1 per
+            # commit (shared with iOS's build number). A clock-derived code
+            # jumped millions per release, which Play flags as "significantly
+            # higher than your previous version code".
+            echo "ANDROID_VERSION_CODE=$(node -p "require('./app.json').expo.android.versionCode")"
           } >> "$GITHUB_ENV"
 
       - name: Normalise the artifact list

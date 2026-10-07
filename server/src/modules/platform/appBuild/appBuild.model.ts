@@ -127,7 +127,7 @@ export interface IAppBuild extends Document {
   version: string;
   /**
    * The store's build identifier: CFBundleVersion on iOS, versionCode on
-   * Android. The runner mints it (seconds since 2020) and reports it, because
+   * Android. The runner reads it from app.json (one counter, +1 per commit) and reports it, because
    * uploading a build to App Store Connect has to NAME it first. Empty on rows
    * from before the reporter sent it — those cannot be pushed to Apple.
    */

@@ -48,14 +48,15 @@ const INERT_ROOT = /^(?:[^/]+\.md|\.gitignore|\.mcp\.json|\.env\.example|\.easig
 // The pre-commit hook (scripts/bump-version.mjs) restamps the app version in
 // these on EVERY commit. Counted as a change, mWeb and the native app would be
 // "affected" by every push and their coverage could never be reused, so a diff
-// or a hash ignores their `"version"` lines.
+// or a hash ignores their `"version"` lines — and app.json's store build number
+// (`"versionCode"` / `"buildNumber"`), which the same hook moves +1.
 const VERSION_STAMPED = new Set([
   'app/mobile-app/app.json',
   'app/mobile-app/package.json',
   'app/mobile-app/package-lock.json',
   'app/mweb/package.json',
 ]);
-const VERSION_LINE = /^[ \t]*"version": "[^"\n]*",?$/;
+const VERSION_LINE = /^[ \t]*(?:"(?:version|buildNumber)": "[^"\n]*"|"versionCode": \d+),?$/;
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 

@@ -7,6 +7,8 @@
  * Source of truth = app/mobile-app/app.json (expo.version). The same new
  * version is written to app/mobile-app/package.json and app/mweb/package.json so
  * every surface (login screens, sidebars) and the deploy's DB sync agree.
+ * The store build number (expo.android.versionCode = expo.ios.buildNumber)
+ * goes up by exactly 1 on every bump.
  *
  * Called by the husky pre-commit hook (which asks major/minor/patch), and the
  * deploy workflow reads app.json's version into the DB on push.
@@ -42,7 +44,25 @@ const appJson = readJson(APP_JSON);
 const current = appJson.expo?.version ?? '0.0.0';
 const next = bump(current, kind);
 
+// The store build number (Android versionCode, iOS CFBundleVersion) moves +1
+// with every version, one number shared by both platforms. Google Play flags a
+// versionCode that jumps far past the previous release and refuses anything
+// above 2,100,000,000, so it never derives from a clock.
+const MAX_VERSION_CODE = 2_100_000_000;
+const versionCode = Number(appJson.expo.android?.versionCode);
+if (!Number.isSafeInteger(versionCode) || versionCode < 1) {
+  console.error('app.json expo.android.versionCode must be a positive integer');
+  process.exit(1);
+}
+const nextCode = versionCode + 1;
+if (nextCode > MAX_VERSION_CODE) {
+  console.error(`versionCode ${nextCode} exceeds Google Play's ${MAX_VERSION_CODE} limit`);
+  process.exit(1);
+}
+
 appJson.expo.version = next;
+appJson.expo.android.versionCode = nextCode;
+appJson.expo.ios.buildNumber = String(nextCode);
 writeJson(APP_JSON, appJson);
 
 for (const pkgPath of [MOBILE_PKG, MWEB_PKG]) {
@@ -63,4 +83,4 @@ for (const indent of [2, 6]) {
 }
 writeFileSync(MOBILE_LOCK, lockText);
 
-console.log(`Version bumped (${kind}): ${current} -> ${next}`);
+console.log(`Version bumped (${kind}): ${current} -> ${next}, build ${versionCode} -> ${nextCode}`);

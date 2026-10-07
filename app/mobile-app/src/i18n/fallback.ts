@@ -20,6 +20,7 @@ import {
   AVAILABILITY_BUNDLE,
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   CLUB_FORM_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -76,6 +77,8 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   // The publish card in Venue Studio and Host Studio.
   ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
+  // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
+  ...POD_REQUESTS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,
   // The club edit screen labels its fields with the shared club form's words
   // — the same ones the MUI form renders on mWeb (rule 27).

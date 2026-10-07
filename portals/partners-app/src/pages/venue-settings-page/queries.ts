@@ -6,9 +6,7 @@ export interface VenueSettingsVenue {
   id: string;
   venue_name: string;
   status: string;
-  settings: { cancellation: VenueCancellationPolicy; rules: { max_host_requests_per_month: number } };
-  /** Set by Duncit; wins over the owner's own monthly cap. */
-  host_requests_limit_override?: number | null;
+  settings: { cancellation: VenueCancellationPolicy };
 }
 
 const CANCELLATION_FIELDS = `
@@ -29,12 +27,8 @@ export const MY_VENUES_SETTINGS = gql`
       id
       venue_name
       status
-      host_requests_limit_override
       settings {
         ${CANCELLATION_FIELDS}
-        rules {
-          max_host_requests_per_month
-        }
       }
     }
   }
@@ -50,20 +44,6 @@ export const UPDATE_VENUE_CANCELLATION = gql`
       id
       settings {
         ${CANCELLATION_FIELDS}
-      }
-    }
-  }
-`;
-
-/** Venue Settings' "Maximum Host Requests / Month" — the same settings mutation, rules only. */
-export const UPDATE_VENUE_REQUEST_LIMIT = gql`
-  mutation UpdateVenueRequestLimit($venue_doc_id: ID!, $input: VenueSettingsInput!) {
-    updateVenueSettings(venue_doc_id: $venue_doc_id, input: $input) {
-      id
-      settings {
-        rules {
-          max_host_requests_per_month
-        }
       }
     }
   }

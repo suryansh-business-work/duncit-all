@@ -198,26 +198,6 @@ export const PodRequestHostCategoriesDocument = gql(`
   }
 `);
 
-export const MyHostRequestLimitDocument = gql(`
-  query MobileMyHostVenueRequestLimit {
-    myHost {
-      id
-      max_venue_requests_per_month
-      venue_requests_limit_override
-    }
-  }
-`);
-
-export const SetMyVenueRequestLimitDocument = gql(`
-  mutation MobileSetMyVenueRequestLimit($limit: Int!) {
-    setMyVenueRequestLimit(limit: $limit) {
-      id
-      max_venue_requests_per_month
-      venue_requests_limit_override
-    }
-  }
-`);
-
 /** Create Pod's prefill: only what it sets — never the other side's contact. */
 export const CreatePodPartnerRequestDocument = gql(`
   query MobileCreatePodPartnerRequest($id: ID!) {

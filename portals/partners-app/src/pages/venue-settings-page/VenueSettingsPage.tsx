@@ -19,7 +19,6 @@ import {
   type CancellationPolicyValues,
 } from './cancellation-policy';
 import { MY_VENUES_SETTINGS, UPDATE_VENUE_CANCELLATION, type VenueSettingsVenue } from './queries';
-import HostRequestLimitCard from './HostRequestLimitCard';
 
 /**
  * Venue Owner → Settings. One venue at a time, because the policy is the
@@ -134,16 +133,6 @@ export default function VenueSettingsPage() {
               </Stack>
             </CardContent>
           </Card>
-
-          {selected && (
-            <HostRequestLimitCard
-              venue={selected}
-              onSaved={async () => {
-                setMessage(t('podRequests.limitSaved'));
-                await refetch();
-              }}
-            />
-          )}
         </>
       )}
 

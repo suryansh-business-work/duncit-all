@@ -12,7 +12,6 @@ import PodRequestsPage from './pages/pod-requests/PodRequestsPage';
 import PodRequestDetailPage from './pages/pod-requests/detail/PodRequestDetailPage';
 import NearbyHostsPage from './pages/pod-requests/search/NearbyHostsPage';
 import NearbyVenuesPage from './pages/pod-requests/search/NearbyVenuesPage';
-import HostSettingsPage from './pages/host-settings-page/HostSettingsPage';
 import ChangeRequestsPage from './pages/change-requests-page';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenuePodsPage from './pages/venue-pods-page/VenuePodsPage';
@@ -98,7 +97,6 @@ export default function App() {
       <Route path="/host/nearby-venues" element={authed(<NearbyVenuesPage />)} />
       <Route path="/host/pod-requests" element={authed(<PodRequestsPage side="HOST" />)} />
       <Route path="/host/pod-requests/:id" element={authed(<PodRequestDetailPage side="HOST" />)} />
-      <Route path="/host/settings" element={authed(<HostSettingsPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       {/* The two sidebar entries a not-yet-partner sees: each opens the Earn with
           Duncit page ON its own journey, so the click lands in the onboarding

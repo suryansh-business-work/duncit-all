@@ -13,7 +13,6 @@ import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
 import HostPodSections from './host-manage-page/HostPodSections';
 import HostShareCard from './host-manage-page/HostShareCard';
 import PodRequestsSection from './pod-requests/PodRequestsSection';
-import HostSettingsCard from './host-manage-page/HostSettingsCard';
 import StudioChangeRequests from '../components/studio-pods/StudioChangeRequests';
 import HostApplyBanner from './host-apply-page/HostApplyBanner';
 import HostCategoriesCard from './host-apply-page/HostCategoriesCard';
@@ -122,8 +121,6 @@ export default function HostManagePage() {
       {isHost && <PublishPageCard kind="HOST" title={meQ.data?.me?.full_name ?? ''} />}
 
       {isHost && <PodRequestsSection side="HOST" />}
-
-      {isHost && <HostSettingsCard />}
 
       <HostDraftsCard />
 

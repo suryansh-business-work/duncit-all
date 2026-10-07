@@ -15,7 +15,6 @@ import {
 } from './cancellation-policy-form';
 import { MY_VENUES_CANCELLATION, UPDATE_VENUE_CANCELLATION_POLICY, type SettingsVenue } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
-import HostRequestLimitCard from './HostRequestLimitCard';
 
 /**
  * Venue Settings, for a venue owner on their phone: the cancellation policy of
@@ -70,22 +69,19 @@ export default function VenueSettingsPage() {
       error={error}
       noVenuesMessage={t('mweb.venueSettingsPage.noVenues')}
     >
-      <Stack spacing={2.5}>
-        <Card sx={{ overflow: 'visible' }} data-testid="venue-settings-page">
-          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-            <Stack spacing={1.5}>
-              <SectionHeader testId="venue-settings-page-header" title={t('venueSettings.cancellationTitle')} />
-              <CancellationPolicyForm
-                initialValues={initialValues}
-                saving={saveState.loading}
-                error={apiError}
-                onSubmit={submit}
-              />
-            </Stack>
-          </CardContent>
-        </Card>
-        {venue && <HostRequestLimitCard venue={venue} />}
-      </Stack>
+      <Card sx={{ overflow: 'visible' }} data-testid="venue-settings-page">
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Stack spacing={1.5}>
+            <SectionHeader testId="venue-settings-page-header" title={t('venueSettings.cancellationTitle')} />
+            <CancellationPolicyForm
+              initialValues={initialValues}
+              saving={saveState.loading}
+              error={apiError}
+              onSubmit={submit}
+            />
+          </Stack>
+        </CardContent>
+      </Card>
     </VenuePageFrame>
   );
 }

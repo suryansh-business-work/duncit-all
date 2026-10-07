@@ -17,6 +17,7 @@ import HostReviewCategories from './HostReviewCategories';
 import HostReviewCommission from './HostReviewCommission';
 import HostReviewDetails from './HostReviewDetails';
 import HostReviewDocuments from './HostReviewDocuments';
+import HostRequestLimitPanel from '../HostRequestLimitPanel';
 import type { HostRow } from '../queries';
 import type { HostCategoryValue } from '../../../forms/host';
 
@@ -37,6 +38,8 @@ interface Props {
   onReject: () => void;
   onSaveCommission: (pct: number) => Promise<boolean>;
   onSaveCategories: (categories: HostCategoryValue[]) => Promise<boolean>;
+  /** Refresh the table once the admin-only monthly Pod Request limit is saved. */
+  onLimitSaved: () => void;
   savingCommission: boolean;
   savingCategories: boolean;
   deciding: boolean;
@@ -64,6 +67,7 @@ export default function HostReviewDialog({
   onReject,
   onSaveCommission,
   onSaveCategories,
+  onLimitSaved,
   savingCommission,
   savingCategories,
   deciding,
@@ -157,6 +161,8 @@ export default function HostReviewDialog({
               onSave={onSaveCommission}
             />
           )}
+
+          <HostRequestLimitPanel host={active} onSaved={onLimitSaved} />
 
           <TextField
             label={t('onboarding.common.reviewerNotes')}

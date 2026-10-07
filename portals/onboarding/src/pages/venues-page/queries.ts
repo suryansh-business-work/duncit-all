@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
 
 export const VENUES = gql`
   query Venues($status: VenueStatus) {
@@ -151,6 +151,7 @@ const VENUE_ROW_FIELDS = gql`
     owner_address
     venue_share_pct
     venue_commission_pct
+    host_requests_limit_override
     gstin
     pan
     bank_account {
@@ -240,6 +241,20 @@ export const SET_VENUE_DEDUCTIONS = gql`
       id
       venue_share_pct
       venue_commission_pct
+    }
+  }
+`;
+
+/** The admin-only monthly limit on Pod Requests this venue may send to hosts
+ * (null = the default of 10). Partners never see or change it. */
+export const SET_VENUE_HOST_REQUEST_LIMIT: TypedDocumentNode<
+  { setVenueHostRequestLimit: { id: string; host_requests_limit_override: number | null } },
+  { id: string; limit: number | null }
+> = gql`
+  mutation OnboardingVenueHostRequestLimit($id: ID!, $limit: Int) {
+    setVenueHostRequestLimit(venue_doc_id: $id, limit: $limit) {
+      id
+      host_requests_limit_override
     }
   }
 `;

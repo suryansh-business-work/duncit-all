@@ -17,6 +17,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { Controller, FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HostAccordionForm from '../../components/host-form/HostAccordionForm';
+import HostRequestLimitPanel from './HostRequestLimitPanel';
 import { HOST_ACCOUNT_PROFILE, STATUSES, UPDATE_HOST, type HostAccountProfile } from './queries';
 import {
   hostEditInitialValues,
@@ -120,6 +121,7 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
                   );
                 }}
               />
+              {host && <HostRequestLimitPanel host={host} onSaved={onSaved} />}
             </Stack>
           </DialogContent>
           <DialogActions>

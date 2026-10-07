@@ -89,6 +89,7 @@ export default function HostsPage() {
         onReject={review.doReject}
         onSaveCommission={review.saveCommission}
         onSaveCategories={review.saveCategories}
+        onLimitSaved={refresh}
         savingCategories={review.savingCategories}
         savingCommission={review.savingCommission}
         deciding={review.deciding}

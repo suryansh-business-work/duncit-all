@@ -3,7 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { PartnerAvatar } from '@/components/pod-requests/PartnerAvatar';
 import { PodRequestStatusChip } from '@/components/pod-requests/PodRequestStatusChip';
-import { formatKm } from '@/components/pod-requests/counterpart';
+import { formatPodRequestKm } from '@duncit/utils';
 import type { PodRequestDetail } from '@/hooks/usePodRequestDetail';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -48,7 +48,7 @@ export function CounterpartCard({ request }: Readonly<Props>) {
           ))}
           {distance === null || distance === undefined ? null : (
             <Text fontSize={12} fontWeight="600" color="$primary">
-              {t('podRequests.distanceAway', { vars: { km: formatKm(distance) } })}
+              {t('podRequests.distanceAway', { vars: { km: formatPodRequestKm(distance) } })}
             </Text>
           )}
         </YStack>

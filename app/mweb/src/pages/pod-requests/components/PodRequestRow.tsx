@@ -4,7 +4,7 @@ import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import { useDateFormat } from '../../../utils/dateFormat';
-import { counterpartOf } from '../counterpart';
+import { podRequestCounterpart } from '@duncit/utils';
 import type { PodRequestRowData } from '../queries';
 import PodRequestStatusChip from './PodRequestStatusChip';
 
@@ -23,7 +23,7 @@ const CLAMP_SX = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 
  */
 export default function PodRequestRow({ request, actions }: Readonly<Props>) {
   const fmt = useDateFormat();
-  const other = counterpartOf(request);
+  const other = podRequestCounterpart(request);
   return (
     <Stack spacing={1} sx={{ p: 2 }} data-testid={`pod-request-row-${request.id}`}>
       <ButtonBase

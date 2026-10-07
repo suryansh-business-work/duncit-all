@@ -3,7 +3,7 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import type { PodRequestDetail } from '../pod-requests/queries';
 import PodRequestStatusChip from '../pod-requests/components/PodRequestStatusChip';
-import { formatKm } from '../pod-requests/counterpart';
+import { formatPodRequestKm } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -55,7 +55,7 @@ export default function CounterpartCard({ request }: Readonly<Props>) {
             ))}
             {request.distance_km !== null && (
               <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
-                {t('podRequests.distanceAway', { vars: { km: formatKm(request.distance_km) } })}
+                {t('podRequests.distanceAway', { vars: { km: formatPodRequestKm(request.distance_km) } })}
               </Typography>
             )}
           </Box>

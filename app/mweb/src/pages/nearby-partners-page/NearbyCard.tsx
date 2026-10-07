@@ -3,9 +3,8 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import { DuncitButton } from '@duncit/buttons';
-import type { PodRequestStatus } from '@duncit/utils';
+import { formatPodRequestKm, type PodRequestStatus } from '@duncit/utils';
 import PodRequestStatusChip from '../pod-requests/components/PodRequestStatusChip';
-import { formatKm } from '../pod-requests/counterpart';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** One search result, host or venue, in the shape the card draws. */
@@ -59,7 +58,7 @@ export default function NearbyCard({ item, disabled, onRequest }: Readonly<Props
             </Typography>
           )}
           <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
-            {t('podRequests.distanceAway', { vars: { km: formatKm(item.distanceKm) } })}
+            {t('podRequests.distanceAway', { vars: { km: formatPodRequestKm(item.distanceKm) } })}
           </Typography>
         </Box>
       </Stack>

@@ -127,3 +127,49 @@ export function clampPodRequestRadius(km: unknown): number {
 export function widerPodRequestRadius(km: number): number | null {
   return km < POD_REQUEST_MAX_RADIUS_KM ? POD_REQUEST_MAX_RADIUS_KM : null;
 }
+
+/** The other party of a request, as one row or card draws it. */
+export interface PodRequestCounterpart {
+  kind: PodRequestSide;
+  name: string;
+  imageUrl: string;
+  /** Category and place for a venue; the categories for a host. */
+  subtitle: string;
+}
+
+interface CounterpartSource {
+  viewer_side: PodRequestLike['viewer_side'];
+  venue?: {
+    venue_name?: string | null;
+    cover_image_url?: string | null;
+    category?: string | null;
+    locality?: string | null;
+    city?: string | null;
+  } | null;
+  host?: { name?: string | null; photo_url?: string | null; categories?: readonly string[] | null } | null;
+}
+
+const joinParts = (parts: readonly (string | null | undefined)[]): string => parts.filter(Boolean).join(' · ');
+
+/** A host looks at the venue; a venue owner looks at the host. */
+export function podRequestCounterpart(request: CounterpartSource): PodRequestCounterpart {
+  if (request.viewer_side === 'HOST') {
+    const venue = request.venue;
+    return {
+      kind: 'VENUE',
+      name: venue?.venue_name ?? '',
+      imageUrl: venue?.cover_image_url ?? '',
+      subtitle: joinParts([venue?.category, venue?.locality, venue?.city]),
+    };
+  }
+  const host = request.host;
+  return {
+    kind: 'HOST',
+    name: host?.name ?? '',
+    imageUrl: host?.photo_url ?? '',
+    subtitle: joinParts(host?.categories ?? []),
+  };
+}
+
+/** A distance to one decimal, as the "{{km}} km away" line shows it. */
+export const formatPodRequestKm = (km: number): string => String(Math.round(km * 10) / 10);

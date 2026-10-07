@@ -7,7 +7,7 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import type { PodRequestRow as Row } from '@/hooks/usePodRequests';
 import type { RootStackParamList } from '@/navigation/types';
-import { counterpartOf } from './counterpart';
+import { podRequestCounterpart } from '@duncit/utils';
 import { PartnerAvatar } from './PartnerAvatar';
 import { PodRequestStatusChip } from './PodRequestStatusChip';
 
@@ -20,7 +20,7 @@ interface Props {
 /** One request in a studio list: who it is with, its status; a tap opens its detail. */
 export function PodRequestRow({ request, actions }: Readonly<Props>) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const who = counterpartOf(request);
+  const who = podRequestCounterpart(request);
   return (
     <SurfaceCard testID={`pod-request-row-${request.id}`} gap={10}>
       <XStack

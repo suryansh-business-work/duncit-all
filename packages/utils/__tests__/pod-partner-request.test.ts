@@ -3,6 +3,8 @@ import {
   POD_REQUEST_DEFAULT_RADIUS_KM,
   POD_REQUEST_MAX_RADIUS_KM,
   clampPodRequestRadius,
+  formatPodRequestKm,
+  podRequestCounterpart,
   podRequestNextAction,
   podRequestSender,
   podRequestStatusLabel,
@@ -124,5 +126,39 @@ describe('radius helpers', () => {
   it('offers the full radius until the search is already at it', () => {
     expect(widerPodRequestRadius(POD_REQUEST_DEFAULT_RADIUS_KM)).toBe(POD_REQUEST_MAX_RADIUS_KM);
     expect(widerPodRequestRadius(POD_REQUEST_MAX_RADIUS_KM)).toBeNull();
+  });
+});
+
+describe('podRequestCounterpart', () => {
+  it('shows a host the venue, with category and place', () => {
+    expect(
+      podRequestCounterpart({
+        viewer_side: 'HOST',
+        venue: { venue_name: 'Flow Sports', cover_image_url: 'c.jpg', category: 'Sports', locality: 'HSR', city: 'Bengaluru' },
+        host: { name: 'Meera', photo_url: 'm.jpg', categories: ['Board games'] },
+      })
+    ).toEqual({ kind: 'VENUE', name: 'Flow Sports', imageUrl: 'c.jpg', subtitle: 'Sports · HSR · Bengaluru' });
+  });
+
+  it('shows a venue owner the host, with their categories', () => {
+    expect(
+      podRequestCounterpart({ viewer_side: 'VENUE', host: { name: 'Meera', photo_url: 'm.jpg', categories: ['Chess', 'Quiz'] } })
+    ).toEqual({ kind: 'HOST', name: 'Meera', imageUrl: 'm.jpg', subtitle: 'Chess · Quiz' });
+  });
+
+  it('falls back to blanks when the summary is missing, skipping empty parts', () => {
+    expect(podRequestCounterpart({ viewer_side: 'HOST', venue: null })).toEqual({ kind: 'VENUE', name: '', imageUrl: '', subtitle: '' });
+    expect(podRequestCounterpart({ viewer_side: 'VENUE', host: null })).toEqual({ kind: 'HOST', name: '', imageUrl: '', subtitle: '' });
+    expect(
+      podRequestCounterpart({ viewer_side: 'HOST', venue: { venue_name: 'X', category: '', locality: null, city: 'Pune' } }).subtitle
+    ).toBe('Pune');
+  });
+});
+
+describe('formatPodRequestKm', () => {
+  it('rounds to one decimal and drops a trailing .0', () => {
+    expect(formatPodRequestKm(2.46)).toBe('2.5');
+    expect(formatPodRequestKm(3)).toBe('3');
+    expect(formatPodRequestKm(0)).toBe('0');
   });
 });

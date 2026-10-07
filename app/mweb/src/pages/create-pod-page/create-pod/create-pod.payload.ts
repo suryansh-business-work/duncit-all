@@ -23,8 +23,6 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     // The booked slot drives the pod window server-side; the venue must
     // approve it before the pod goes live (own venues confirm instantly).
     venue_slot_id: virtual ? null : values.venue_slot_id || null,
-    // A Pod Request's pod: the server checks the slot is the one the request confirmed.
-    partner_request_id: values.partner_request_id || null,
     location_id: values.location_id || null,
     zone_name: virtual ? null : values.locality || null,
     meeting_platform: virtual ? values.meeting_platform.trim() || null : null,
@@ -60,6 +58,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     products_enabled: values.product_requests.length > 0,
     product_requests: values.product_requests,
     is_active: true,
+    // A Pod Request's pod: the server checks the slot is the one the request confirmed.
+    partner_request_id: values.partner_request_id || null,
   };
 }
 

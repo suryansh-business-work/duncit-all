@@ -5,7 +5,7 @@ import { DuncitButton } from '@/components/DuncitButton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { PartnerAvatar } from '@/components/pod-requests/PartnerAvatar';
 import { PodRequestStatusChip } from '@/components/pod-requests/PodRequestStatusChip';
-import { formatKm } from '@/components/pod-requests/counterpart';
+import { formatPodRequestKm } from '@duncit/utils';
 import type { NearbyItem } from '@/hooks/useNearbyPartners';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -40,7 +40,7 @@ export function NearbyCard({ item, disabled, onRequest }: Readonly<Props>) {
             </Text>
           ) : null}
           <Text fontSize={12} fontWeight="600" color="$primary">
-            {t('podRequests.distanceAway', { vars: { km: formatKm(item.distanceKm) } })}
+            {t('podRequests.distanceAway', { vars: { km: formatPodRequestKm(item.distanceKm) } })}
           </Text>
         </YStack>
       </XStack>

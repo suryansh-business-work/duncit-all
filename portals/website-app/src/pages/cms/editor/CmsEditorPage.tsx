@@ -17,6 +17,7 @@ import { useCopyPreviewLink } from '../lib/useCopyPreviewLink';
 import { useEditorLabels } from './useEditorLabels';
 import { useEditorSave, type EditorTarget } from './useEditorSave';
 import { useGrapesEditor, type AssetRequest } from './useGrapesEditor';
+import { blockFrameUrl } from './blockFrame';
 
 /** The full-screen GrapesJS designer for one page or one fragment. */
 export default function CmsEditorPage() {
@@ -62,6 +63,8 @@ export default function CmsEditorPage() {
     () => [googleFontsHref(site?.design.fonts ?? []), ...(site?.design.font_urls ?? [])].filter((href): href is string => Boolean(href)),
     [site],
   );
+  // Live blocks are drawn by the site on its first domain; a site without one keeps the labelled stand-ins.
+  const blockUrl = useMemo(() => blockFrameUrl(site?.domains[0], globalThis.location.origin), [site]);
 
   const grapes = useGrapesEditor({
     host,
@@ -74,6 +77,7 @@ export default function CmsEditorPage() {
     template: target === 'pages' && page.data?.cmsPage?.kind !== 'PAGE',
     selfKey: target === 'fragments' ? fragment.data?.cmsFragment?.key : undefined,
     onPickAsset: setAssetRequest,
+    blockUrl,
     onOpenFragment: (fragment) => {
       openFragment(fragment.id).catch(() => navigate(`/sites/${siteId}/fragments/${fragment.id}/design`));
     },

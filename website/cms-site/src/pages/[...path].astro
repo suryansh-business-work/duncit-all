@@ -9,11 +9,16 @@ import { CmsUnavailableError, publicGraphqlUrl, renderPage, renderPreview, reque
 import { fromLegacy, legacyOrigin } from '../lib/legacy-fallback';
 import { isUrlSlug } from '@duncit/regex';
 import CmsDocument from '../components/CmsDocument.astro';
+import BlockFrame from '../components/BlockFrame.astro';
+import { blockFrameRequest } from '../lib/block-frame';
 import { cachedErrorPage, rememberErrorPages } from '../lib/error-pages';
 import { translator } from '../lib/translator';
 
 const host = requestHost(Astro.request);
 const path = `/${Astro.params.path ?? ''}`;
+// One live block for the portal's designer (lib/block-frame.ts): the render below only supplies its site.
+const frame = blockFrameRequest(path, Astro.url, Astro.request);
+if (frame === 'refused') return new Response(null, { status: 404 });
 
 // The hand-built blog read posts from /blog/post?slug=…; a migrated site
 // serves them at /blog/<slug>. Shared links and search results keep working.
@@ -41,7 +46,7 @@ try {
 }
 
 // Not a CMS page: the site's old server may still answer it (a short link, a newer policy).
-const fallbackOrigin = result?.status === 404 && preview === 'none' ? legacyOrigin(result.site?.legacy_site) : null;
+const fallbackOrigin = result?.status === 404 && preview === 'none' && !frame ? legacyOrigin(result.site?.legacy_site) : null;
 if (fallbackOrigin) {
   const legacy = await fromLegacy(fallbackOrigin, Astro.request);
   if (legacy) return legacy;
@@ -61,7 +66,8 @@ if (!result) {
   // Redis render cache (retired by every CMS write) keeps that cheap.
   if (result.status === 200) Astro.response.headers.set('cache-control', 'public, max-age=0, must-revalidate');
 }
-if (previewToken) {
+if (frame && result?.site) Astro.response.status = 200;
+if (previewToken || frame) {
   // A preview is for the people it was shared with: never stored, never indexed.
   Astro.response.headers.set('cache-control', 'private, no-store');
   Astro.response.headers.set('x-robots-tag', 'noindex, nofollow');
@@ -76,4 +82,5 @@ const liveUrl = `${scheme}://${host}${path}`;
 
 {!result && <NotFound kind="unavailable" t={t} />}
 {result && !site && <NotFound kind="missing" t={t} />}
-{result && site && <CmsDocument result={{ ...result, site }} url={url} graphqlUrl={graphqlUrl} t={t} preview={preview} liveUrl={liveUrl} />}
+{result && site && frame && <BlockFrame site={site} frame={frame} url={url} graphqlUrl={graphqlUrl} t={t} />}
+{result && site && !frame && <CmsDocument result={{ ...result, site }} url={url} graphqlUrl={graphqlUrl} t={t} preview={preview} liveUrl={liveUrl} />}

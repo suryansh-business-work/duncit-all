@@ -51,6 +51,7 @@ export const CMS_SITE_DESIGN = gql`
   query CmsSiteDesign($id: ID!) {
     cmsSite(site_id: $id) {
       id
+      domains
       design { tokens { name value group } fonts { family source weights italic role variable fallback files { weight style url } } font_urls base_css }
       head_html
       body_end_html
@@ -62,7 +63,7 @@ export const CMS_SITE_DESIGN = gql`
 `;
 
 export interface CmsSiteDesignData {
-  cmsSite: Pick<CmsSite, 'id' | 'design' | 'head_html' | 'body_end_html' | 'custom_css' | 'custom_js' | 'updated_at'> | null;
+  cmsSite: Pick<CmsSite, 'id' | 'domains' | 'design' | 'head_html' | 'body_end_html' | 'custom_css' | 'custom_js' | 'updated_at'> | null;
 }
 
 export const CREATE_CMS_SITE = gql`

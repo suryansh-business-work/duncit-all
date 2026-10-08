@@ -16,17 +16,20 @@ interface Props {
 }
 
 /**
- * A page's DRAFT, composed by the server exactly as the live site would serve
- * it (header, footer, fragments, bound collection fields), shown in a sandboxed
- * frame. Scripts do not run in it: the page's custom JS is for the live site,
- * not for the console — "Open on site" shows the draft at its real address,
- * scripts and all, behind a signed preview flag.
+ * A page's DRAFT as the live site renders it: its signed preview link, framed —
+ * live blocks (reel slider, earn showcase, newsletter…) and scripts included,
+ * running on the site's own domain, never the console's. A site that cannot
+ * be previewed on a domain (none added yet) falls back to the server-composed
+ * html in a script-less frame, where live blocks are labelled outlines.
+ * "Open on site" shows the same draft in its own tab.
  */
 export default function PreviewDialog({ pageId, title, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
+  const link = useQuery<CmsPreviewLinkData>(CMS_PREVIEW_LINK, { variables: { pageId }, skip: !pageId, fetchPolicy: 'network-only' });
+  const liveUrl = link.data?.cmsPreviewLink.url;
   const { data, loading, error } = useQuery<CmsPreviewData>(CMS_PREVIEW, {
     variables: { pageId },
-    skip: !pageId,
+    skip: !pageId || !link.error,
     fetchPolicy: 'network-only',
   });
   const [fetchLink, { loading: linking }] = useLazyQuery<CmsPreviewLinkData>(CMS_PREVIEW_LINK, { fetchPolicy: 'network-only' });
@@ -54,9 +57,19 @@ export default function PreviewDialog({ pageId, title, onClose }: Readonly<Props
     <Dialog open={Boolean(pageId)} onClose={onClose} fullWidth maxWidth="xl">
       <DialogTitle>{t('websiteApp.cms.preview.title', { vars: { title } })}</DialogTitle>
       <DialogContent dividers sx={{ p: 0, height: '80vh' }}>
-        {loading && <LinearProgress />}
+        {(link.loading || loading) && <LinearProgress />}
         {error && <Alert severity="error">{t('websiteApp.cms.preview.failed')}</Alert>}
-        {doc && (
+        {liveUrl && (
+          <Box
+            component="iframe"
+            title={t('websiteApp.cms.preview.frameTitle')}
+            // Another origin, so its scripts never reach the console; it may not navigate the console away.
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            src={liveUrl}
+            sx={{ border: 0, width: '100%', height: '100%', display: 'block' }}
+          />
+        )}
+        {!liveUrl && doc && (
           <Box
             component="iframe"
             title={t('websiteApp.cms.preview.frameTitle')}

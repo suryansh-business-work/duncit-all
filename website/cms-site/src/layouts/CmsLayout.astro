@@ -25,9 +25,12 @@ interface Props {
   pageJs: string;
   graphqlUrl: string;
   t: SiteTranslate;
+  /** Only the design system around the content: no analytics, consent banner,
+   * skip link or site/page code — a block drawn for the portal's designer. */
+  bare?: boolean;
 }
 
-const { site, title, seo, url, pageCss, pageHead, pageJs, graphqlUrl, t } = Astro.props;
+const { site, title, seo, url, pageCss, pageHead, pageJs, graphqlUrl, t, bare = false } = Astro.props;
 const meta = buildSiteMetaTags({
   title: seo.title || title || site.name,
   description: seo.description,
@@ -44,13 +47,13 @@ const PROPERTY_PREFIXES = ['og:', 'article:', 'fb:', 'profile:', 'book:'];
 const extraMeta = seo.meta_tags.map((tag) => ({ ...tag, isProperty: PROPERTY_PREFIXES.some((prefix) => tag.name.startsWith(prefix)) }));
 // Inside <script>, only `</` can end the block early; JSON stays valid with it escaped.
 const jsonLd = seo.json_ld.trim() ? seo.json_ld.replaceAll('</', '<\\/') : '';
-const tracked = site.legacy_site;
+const tracked = bare ? null : site.legacy_site;
 const privacyUrl = import.meta.env.PUBLIC_PRIVACY_URL || '/policy/privacy-policy';
 // Fonts after the base stylesheet and tokens, so a chosen typeface's role
 // variables win over the ones the base css declares.
 const css = [site.design.base_css, tokensCss(site.design.tokens), fontCss(site.design.fonts), pageCss, site.custom_css].filter(Boolean).map(styleSafe);
 const googleFonts = googleFontsHref(site.design.fonts);
-const js = [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
+const js = bare ? [] : [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
 ---
 
 <!doctype html>
@@ -68,19 +71,19 @@ const js = [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
     {googleFonts && <link rel="stylesheet" href={googleFonts} />}
     {site.design.font_urls.map((href) => <link rel="stylesheet" href={href} />)}
     {css.map((rule) => <style is:inline set:html={rule} />)}
-    {site.head_html && <Fragment set:html={site.head_html} />}
+    {!bare && site.head_html && <Fragment set:html={site.head_html} />}
     {pageHead && <Fragment set:html={pageHead} />}
     {tracked && <GoogleAnalytics site={tracked} graphqlUrl={graphqlUrl} />}
   </head>
   <body>
-    <a class="cms-skip" href="#main">{t('website.cms.skipToContent')}</a>
+    {!bare && <a class="cms-skip" href="#main">{t('website.cms.skipToContent')}</a>}
     <slot />
     {tracked && <ConsentBanner policyUrl={privacyUrl} t={t} />}
     <script>
       import { mountWidgets } from '../scripts/widgets';
       mountWidgets(document);
     </script>
-    {site.body_end_html && <Fragment set:html={site.body_end_html} />}
+    {!bare && site.body_end_html && <Fragment set:html={site.body_end_html} />}
     {js.map((source) => <script is:inline set:html={source} />)}
   </body>
 </html>

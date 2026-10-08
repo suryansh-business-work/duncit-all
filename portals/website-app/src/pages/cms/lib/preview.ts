@@ -10,6 +10,8 @@ export const PLACEHOLDER_CSS = [
   'cms-block,cms-fragment,cms-field,cms-entry-list{display:block;min-height:3rem;margin:0.5rem 0;padding:0.75rem;',
   'border:1px dashed currentColor;border-radius:0.5rem;opacity:0.7;font:600 0.85rem/1.4 system-ui,sans-serif}',
   'cms-block::before{content:attr(data-block)}',
+  // A block the site draws for the designer (editor/blockFrame.ts) is shown as it is, edge to edge.
+  'cms-block[data-cms-live]{padding:0;border-style:solid;opacity:1}cms-block[data-cms-live]::before{content:none}',
   'cms-fragment::before{content:attr(data-key)}',
   'cms-field{display:inline-block;min-height:0}cms-field::before{content:"{" attr(data-field) "}"}',
   'cms-entry-list::before{content:attr(data-variant)}',

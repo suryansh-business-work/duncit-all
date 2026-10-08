@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Editor, Property, PropertySelect } from 'grapesjs';
 import { fontStack, type CmsDesignFont } from '@duncit/brand/cms-design';
 import { registerCmsComponents, type EditorLabels, type FragmentPreview } from './editorComponents';
+import type { BlockFrameUrl } from './blockFrame';
 import { registerBlocks, type BlockLabels } from './editorBlocks';
 
 export interface EditorSource {
@@ -32,6 +33,8 @@ interface Args {
   onPickAsset: (request: AssetRequest) => void;
   /** A component placed in this document was opened (double-click / its Edit button). */
   onOpenFragment: (fragment: FragmentPreview) => void;
+  /** Where the site draws a live block, so the canvas can show it (blockFrame.ts). */
+  blockUrl: BlockFrameUrl;
 }
 
 function parseProject(project: string): Record<string, unknown> | null {
@@ -97,7 +100,7 @@ export function useGrapesEditor(args: Args) {
           },
         },
         plugins: [
-          (ed) => registerCmsComponents(ed, a.labels.components, a.fragments, a.labels.fields, (fragment) => argsRef.current.onOpenFragment(fragment)),
+          (ed) => registerCmsComponents(ed, a.labels.components, a.fragments, a.labels.fields, (fragment) => argsRef.current.onOpenFragment(fragment), a.blockUrl),
           (ed) => registerBlocks(ed, a.labels.blocks, a.fragments, { template: a.template, selfKey: a.selfKey }),
         ],
       });

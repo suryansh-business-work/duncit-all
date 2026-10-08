@@ -1,0 +1,49 @@
+---
+/**
+ * One live block on its own, in its site's design system — what the Website
+ * portal's designer frames in place of a `<cms-block>` (lib/block-frame.ts).
+ * Its height goes to the designer on every change, so the frame fits it.
+ */
+import type { CmsRenderSite } from '@duncit/gql-types';
+import type { SiteTranslate } from '@duncit/brand/site-i18n';
+import CmsLayout from '../layouts/CmsLayout.astro';
+import CmsBlock from './CmsBlock.astro';
+import type { BlockFrame as Frame } from '../lib/block-frame';
+
+interface Props {
+  site: CmsRenderSite;
+  frame: Frame;
+  url: string;
+  graphqlUrl: string;
+  t: SiteTranslate;
+}
+
+const { site, frame, url, graphqlUrl, t } = Astro.props;
+const seo = { title: site.name, description: '', og_image_url: '', canonical_url: '', noindex: true, og_title: '', og_description: '', twitter_card: '', keywords: '', json_ld: '', meta_tags: [] };
+---
+
+<CmsLayout site={site} title={site.name} seo={seo} url={url} pageCss="" pageHead="" pageJs="" graphqlUrl={graphqlUrl} t={t} bare>
+  <!-- flow-root: the block's own margins count in the height reported below. -->
+  <main id="main" style="display:flow-root">
+    <CmsBlock block={frame.block} props={frame.props} graphqlUrl={graphqlUrl} legacySite={site.legacy_site ?? null} t={t} />
+  </main>
+  {
+    frame.origin && (
+      <script is:inline define:vars={{ origin: frame.origin }}>
+        (function () {
+          var main = document.getElementById('main');
+          var last = -1;
+          // The content's own height, not the document's: that never drops below the frame's, so the frame could only grow.
+          function report() {
+            var height = Math.ceil(main.getBoundingClientRect().height);
+            if (height === last) return;
+            last = height;
+            window.parent.postMessage({ type: 'cms-block-height', height: height }, origin);
+          }
+          new ResizeObserver(report).observe(main);
+          report();
+        })();
+      </script>
+    )
+  }
+</CmsLayout>

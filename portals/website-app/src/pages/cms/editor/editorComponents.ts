@@ -1,4 +1,5 @@
 import type { Component, Editor } from 'grapesjs';
+import { mountBlockFrame, releaseBlockFrames, type BlockFrameUrl } from './blockFrame';
 
 /**
  * The CMS's own elements in the GrapesJS canvas. Each serialises to the EXACT
@@ -11,8 +12,9 @@ import type { Component, Editor } from 'grapesjs';
  *
  * — so toHTML is overridden: GrapesJS would otherwise add an `id` to a
  * styled element and the strict patterns downstream would stop matching it.
- * In the canvas each one is drawn as a labelled stand-in (a fragment as its
- * real published markup); none of them can be edited from the inside.
+ * In the canvas a live block is drawn by the site itself (blockFrame.ts), a
+ * fragment as its real published markup and the rest as labelled stand-ins;
+ * none of them can be edited from the inside.
  */
 
 export interface EditorLabels {
@@ -64,18 +66,33 @@ const standIn = (el: HTMLElement, text: string) => {
   el.setAttribute('contenteditable', 'false');
 };
 
-function blockHtml(model: Component): string {
-  const block = String(model.getAttributes()['data-block'] ?? '');
+/** A block's props: the ones it was placed with, then what its traits say now. */
+function blockProps(model: Component, block: string): Record<string, unknown> {
   const props: Record<string, unknown> = { ...(model.get('cmsProps') as Record<string, unknown> | undefined) };
   for (const key of BLOCK_TRAITS[block] ?? []) {
     const value = model.get(`prop_${key}`);
     if (typeof value === 'string' && value !== '') props[key] = value;
   }
+  return props;
+}
+
+/** Every `<cms-block>` in a fragment's markup, drawn live where the site can draw it. */
+function drawNestedBlocks(owner: HTMLElement, labels: EditorLabels, blockUrl: BlockFrameUrl) {
+  for (const target of Array.from(owner.querySelectorAll<HTMLElement>('cms-block'))) {
+    const block = target.dataset.block ?? '';
+    const src = blockUrl(block, parseProps(target.dataset.props ?? null));
+    if (src) mountBlockFrame(owner, target, src, labels.block(block));
+  }
+}
+
+function blockHtml(model: Component): string {
+  const block = String(model.getAttributes()['data-block'] ?? '');
+  const props = blockProps(model, block);
   const json = Object.keys(props).length ? ` data-props="${escapeAttr(JSON.stringify(props))}"` : '';
   return `<cms-block data-block="${block}"${json}></cms-block>`;
 }
 
-function addBlockType(editor: Editor, labels: EditorLabels) {
+function addBlockType(editor: Editor, labels: EditorLabels, blockUrl: BlockFrameUrl) {
   editor.DomComponents.addType('cms-block', {
     isComponent: (el) => {
       if (el.tagName !== 'CMS-BLOCK') return false;
@@ -102,15 +119,26 @@ function addBlockType(editor: Editor, labels: EditorLabels) {
         this.listenTo(this.model, 'change', this.render);
       },
       onRender({ el, model }) {
+        releaseBlockFrames(el);
+        const block = String(model.getAttributes()['data-block'] ?? '');
+        const name = labels.block(block);
+        const src = blockUrl(block, blockProps(model, block));
+        if (src) {
+          el.setAttribute('contenteditable', 'false');
+          mountBlockFrame(el, el, src, name);
+          return;
+        }
         const heading = model.get('prop_heading');
-        const name = labels.block(String(model.getAttributes()['data-block'] ?? ''));
         standIn(el, typeof heading === 'string' && heading ? `${name} · ${heading}` : name);
+      },
+      removed({ el }) {
+        releaseBlockFrames(el);
       },
     },
   });
 }
 
-function addFragmentType(editor: Editor, labels: EditorLabels, fragments: FragmentPreview[], onOpen: (fragment: FragmentPreview) => void) {
+function addFragmentType(editor: Editor, labels: EditorLabels, fragments: FragmentPreview[], onOpen: (fragment: FragmentPreview) => void, blockUrl: BlockFrameUrl) {
   const byKey = new Map(fragments.map((f) => [f.key, f]));
   editor.DomComponents.addType('cms-fragment', {
     isComponent: (el) => el.tagName === 'CMS-FRAGMENT',
@@ -142,14 +170,20 @@ function addFragmentType(editor: Editor, labels: EditorLabels, fragments: Fragme
         this.listenTo(this.model, 'change:attributes', this.render);
       },
       onRender({ el, model }) {
+        releaseBlockFrames(el);
         const key = String(model.getAttributes()['data-key'] ?? '');
         const fragment = byKey.get(key);
         // A component is edited in its own editor: double-click opens it (a property, so re-renders replace it).
         el.ondblclick = fragment ? () => onOpen(fragment) : null;
         el.setAttribute('contenteditable', 'false');
         el.setAttribute('title', fragment ? labels.fragment(fragment.name) : labels.missingFragment(key));
-        if (fragment?.html) el.innerHTML = fragment.html;
-        else standIn(el, labels.missingFragment(key));
+        if (fragment?.html) {
+          el.innerHTML = fragment.html;
+          drawNestedBlocks(el, labels, blockUrl);
+        } else standIn(el, labels.missingFragment(key));
+      },
+      removed({ el }) {
+        releaseBlockFrames(el);
       },
     },
   });
@@ -204,8 +238,9 @@ export function registerCmsComponents(
   fragments: FragmentPreview[],
   fields: { id: string; label: string }[],
   onOpenFragment: (fragment: FragmentPreview) => void,
+  blockUrl: BlockFrameUrl,
 ) {
-  addBlockType(editor, labels);
-  addFragmentType(editor, labels, fragments, onOpenFragment);
+  addBlockType(editor, labels, blockUrl);
+  addFragmentType(editor, labels, fragments, onOpenFragment, blockUrl);
   addFieldTypes(editor, labels, fields);
 }

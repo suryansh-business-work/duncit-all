@@ -308,9 +308,8 @@ import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 | `eyebrow` / `heading` / `headingMuted` / `text` / `cta` | `string` | The section's words, set per page in the Website CMS; each one omitted renders the shipped copy. |
 | `id` / `class` | `string` | Anchor id (default `earn-with-duncit`) and extra classes for the section. |
 
-The photos live in `earn-showcase.ts` (`EARN_SHOWCASE_COLUMNS`), imported from Pexels onto
-ImageKit under `website/earn-showcase/`; `earnShowcaseImage(url, width)` asks ImageKit for a
-face-cropped 4:5 tile at 1x and 2x. Nine columns on desktop, seven on tablet, five on a
+The photos live in `earn-showcase.ts` (`EARN_SHOWCASE_COLUMNS`), served from the Pexels CDN;
+`earnShowcaseImage(url, width)` asks it for a cropped, compressed 4:5 tile at 1x and 2x. Nine columns on desktop, seven on tablet, five on a
 phone. The wall is decoration (`aria-hidden`), the CTA is the one link, tiles tilt on hover,
 the wall leans toward a fine pointer (`earn-showcase-dom.ts`), and reduced-motion visitors
 get a still wall.

@@ -1,10 +1,11 @@
 /**
  * The "Earn with Duncit" photo wall (EarnShowcase.astro).
  *
- * Portraits from Pexels, imported onto Duncit's ImageKit so the sites never
- * hotlink a stock host. A deliberately mixed audience — India, the US, Africa,
- * East Asia, Latin America, Europe — of the people who earn on Duncit: hosts,
- * café and venue owners, shopkeepers and sellers.
+ * Portraits from Pexels (free to use, hotlinking allowed), served from the
+ * Pexels CDN: the copies meant for Duncit's ImageKit were never uploaded, and
+ * every one of those URLs answered 404. A deliberately mixed audience — India,
+ * the US, Africa, East Asia, Latin America, Europe — of the people who earn on
+ * Duncit: hosts, café and venue owners, shopkeepers and sellers.
  *
  * Nine columns, the outer two on each side two photos deep, so the headline
  * sits in the gap the short middle columns leave. `offset` drops a column by
@@ -16,21 +17,21 @@ export interface EarnShowcaseColumn {
   photos: string[];
 }
 
-const IK = 'https://ik.imagekit.io/esdata1/website/earn-showcase';
+const pexels = (id: number) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg`;
 
 export const EARN_SHOWCASE_COLUMNS: EarnShowcaseColumn[] = [
-  { offset: 0.55, photos: [`${IK}/earn-8178754.jpg`, `${IK}/earn-7289739.jpg`] },
-  { offset: 0.15, photos: [`${IK}/earn-16537980.jpg`, `${IK}/earn-28386407.jpg`] },
-  { offset: 0.6, photos: [`${IK}/earn-18766134.jpg`] },
-  { offset: 0.2, photos: [`${IK}/earn-5409662.jpg`] },
-  { offset: 0.45, photos: [`${IK}/earn-6102858.jpg`] },
-  { offset: 0.15, photos: [`${IK}/earn-6205471.jpg`] },
-  { offset: 0.6, photos: [`${IK}/earn-7821525.jpg`] },
-  { offset: 0.15, photos: [`${IK}/earn-36330752.jpg`, `${IK}/earn-29086752.jpg`] },
-  { offset: 0.55, photos: [`${IK}/earn-7580822.jpg`, `${IK}/earn-8124422.jpg`] },
+  { offset: 0.55, photos: [pexels(8178754), pexels(7289739)] },
+  { offset: 0.15, photos: [pexels(16537980), pexels(28386407)] },
+  { offset: 0.6, photos: [pexels(18766134)] },
+  { offset: 0.2, photos: [pexels(5409662)] },
+  { offset: 0.45, photos: [pexels(6102858)] },
+  { offset: 0.15, photos: [pexels(6205471)] },
+  { offset: 0.6, photos: [pexels(7821525)] },
+  { offset: 0.15, photos: [pexels(36330752), pexels(29086752)] },
+  { offset: 0.55, photos: [pexels(7580822), pexels(8124422)] },
 ];
 
-/** Tiles are 4:5. ImageKit crops to the face and picks the format per browser. */
+/** Tiles are 4:5. The Pexels CDN crops to the size and compresses for the browser. */
 export function earnShowcaseImage(url: string, width: number): string {
-  return `${url}?tr=w-${width},h-${Math.round(width * 1.25)},fo-face,q-70`;
+  return `${url}?auto=compress&cs=tinysrgb&fit=crop&w=${width}&h=${Math.round(width * 1.25)}`;
 }

@@ -27,4 +27,8 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, ProfileIconKe
   brands: 'ecomm',
   integrations: 'integrations',
   returns: 'returns',
+  // The brand desk: its Pod Shop orders wear the shipping truck the buyer's
+  // own orders do, its pickup addresses a warehouse.
+  orders: 'orders',
+  warehouses: 'warehouses',
 };

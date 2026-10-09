@@ -7,6 +7,8 @@
  * classified into, the processing fallback, and the spooled-image path.
  */
 jest.mock('@observability/log', () => ({
+  // Uploads are filed under the environment's root (uploadFolder.ts).
+  SERVER_ENV: 'production',
   logs: { server: { error: jest.fn(), warn: jest.fn(), info: jest.fn() } },
 }));
 jest.mock('@utils/outboundFetch', () => ({ outboundFetch: jest.fn() }));
@@ -133,7 +135,8 @@ describe('uploadToImagekit', () => {
     const form = sentForm();
     expect(form.get('fileName')).toBe('a.jpg');
     expect(form.get('useUniqueFileName')).toBe('true');
-    expect(form.get('folder')).toBe('/pods');
+    // No uploader known at this level, so an owned feature waits in incoming.
+    expect(form.get('folder')).toBe('/production/pods/incoming/anonymous/media');
     expect(form.get('tags')).toBe('pexels,import');
     const file = form.get('file') as Blob;
     expect(Buffer.from(await file.arrayBuffer()).toString()).toBe('jpeg-bytes');
@@ -192,7 +195,7 @@ describe('uploadFileToImagekit', () => {
       const res = await uploadFileToImagekit({ filePath: file, fileName: 'app.apk', folder: '/builds' });
 
       expect(res).toEqual({ url: 'https://ik.example.test/app.apk', fileId: 'f-apk', thumbnailUrl: undefined });
-      expect(sentForm().get('folder')).toBe('/builds');
+      expect(sentForm().get('folder')).toBe('/production/builds');
       const sent = sentForm().get('file') as Blob;
       expect(Buffer.from(await sent.arrayBuffer()).toString()).toBe('apk-bytes');
     } finally {
@@ -387,7 +390,7 @@ describe('uploadSpooledFileToImagekit — images', () => {
         fileName: 'my_shot.jpg',
         isImage: true,
       });
-      expect(sentForm().get('folder')).toBe('/reviews');
+      expect(sentForm().get('folder')).toBe('/production/reviews');
       const sent = sentForm().get('file') as Blob;
       expect(Buffer.from(await sent.arrayBuffer()).toString()).toBe('smaller');
     } finally {

@@ -717,6 +717,12 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'localization', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Localization console.' },
 
+  // ---- Targets (targets) ---------------------------------------------
+  { surface: 'targets', path: '/', label: 'Dashboard',
+    description: 'A welcome page with your name, your access roles and your account details. The Targets console has no other screens yet.' },
+  { surface: 'targets', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Targets console.' },
+
   // ---- Duncit Pet Store (ecomm) ---------------------------------------
   { surface: 'ecomm', path: '/', label: 'Home',
     description: 'The pet store home page: offers, shop by pet, categories, curated collections and brands.' },

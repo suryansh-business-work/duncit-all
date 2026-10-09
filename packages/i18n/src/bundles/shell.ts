@@ -397,6 +397,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoTitle: 'Every language, one console',
         promoText: 'Add a language, then let AI keep it in sync with English while you work on.',
       },
+      targets: {
+        tagline: 'Every goal Duncit is chasing, in one place.',
+        promoTitle: 'Every target, one console',
+        promoText: 'Set the numbers each team is working towards and see how close they are.',
+      },
       ecommPortal: {
         tagline: 'Run the Duncit Pet Store — shelves, orders and customers in one place.',
         promoTitle: 'Everything your pet store needs',
@@ -1897,6 +1902,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         analytics: 'Analytics',
         ecommerce: 'E-commerce',
         localization: 'Localization',
+        targets: 'Targets',
       },
       header: {
         back: 'Back to coworkers',

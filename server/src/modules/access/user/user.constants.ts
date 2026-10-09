@@ -38,6 +38,7 @@ export const ROLES = [
   'LOGS_MANAGER',
   'ANALYTICS_MANAGER',
   'LOCALIZATION_MANAGER',
+  'TARGETS_MANAGER',
 ] as const;
 
 export type UserRole = (typeof ROLES)[number];
@@ -95,6 +96,7 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'LOGS_MANAGER', name: 'Logs Manager', description: 'Logs console — logs.duncit.com.' },
   { key: 'ANALYTICS_MANAGER', name: 'Analytics Manager', description: 'Analytics console — analytics.duncit.com.' },
   { key: 'LOCALIZATION_MANAGER', name: 'Localization Manager', description: 'Localization console — localization.duncit.com.' },
+  { key: 'TARGETS_MANAGER', name: 'Targets Manager', description: 'Targets console — targets.duncit.com.' },
 ];
 
 // The portal login gate (PORTAL_ROLE_REQUIREMENTS / PORTAL_GATE_EXEMPT_KEYS /

@@ -333,6 +333,13 @@ services:
     ports:
       - "127.0.0.1:2142:8080"
 
+  targets:
+    image: ${DOCKERHUB_USERNAME}/duncit-targets:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-targets
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2144:8080"
+
   ecomm-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-staging}
     container_name: duncit-staging-ecomm-portal

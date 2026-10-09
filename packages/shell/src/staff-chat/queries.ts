@@ -454,6 +454,7 @@ export const ROLE_FILTERS = [
   { value: 'ANALYTICS_MANAGER', labelKey: 'shell.chat.team.analytics' },
   { value: 'ECOMM_MANAGER', labelKey: 'shell.chat.team.ecommerce' },
   { value: 'LOCALIZATION_MANAGER', labelKey: 'shell.chat.team.localization' },
+  { value: 'TARGETS_MANAGER', labelKey: 'shell.chat.team.targets' },
 ];
 
 /** Label KEYS for the chips under a coworker's name, by role. */

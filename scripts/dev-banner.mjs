@@ -48,6 +48,7 @@ const projects = [
   { label: 'lite (web + console)',     port: 2041 },
   { label: 'localization',             port: 2042 },
   { label: 'cms-site (CMS renderer)',  port: 2043 },
+  { label: 'targets',                  port: 2044 },
   // External: not a pnpm workspace, so `pnpm --recursive dev` doesn't start it.
   // Listed for reference; excluded from the "all ready" gate. Run via `pnpm dev:mobile`.
   { label: 'native (mobile web)',      port: 2022, external: true },

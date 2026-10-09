@@ -121,6 +121,10 @@ export type RootStackParamList = {
   VenuePods: undefined;
   /** Host Options → Publish Your Host Page. */
   HostPublish: undefined;
+  /** Brand Options → Brand Orders, one order, and ShipRocket Warehouses. */
+  BrandOrders: undefined;
+  BrandOrderDetail: { id: string };
+  BrandWarehouses: undefined;
   Support: undefined;
   Sos: undefined;
   Callback: undefined;
@@ -233,6 +237,7 @@ export type MenuStackRoute = Exclude<
   | 'ClubPodEdit'
   | 'ClubPodDetails'
   | 'ClubEdit'
+  | 'BrandOrderDetail'
 >;
 
 declare global {

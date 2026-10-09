@@ -16,6 +16,9 @@ const config: CodegenConfig = {
       preset: 'client',
       presetConfig: {
         gqlTagName: 'gql',
+        // A shared selection is a plain fragment spread, typed inline into each
+        // operation's result — no useFragment unmasking at every read.
+        fragmentMasking: false,
       },
     },
   },

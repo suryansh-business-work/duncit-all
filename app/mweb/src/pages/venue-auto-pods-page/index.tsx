@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useQuery } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
@@ -7,6 +8,7 @@ import {
   AutoPodQueue,
   AutoPodVenuePicker,
   AutoPodWithdrawAction,
+  MY_VENUES_FOR_AUTO_POD,
   VENUE_AUTO_PODS,
   VenueAcceptDialog,
   VenueEarningsDialog,
@@ -17,6 +19,7 @@ import type { AutoPodRow } from '@duncit/utils';
 import AutoPodLocationBar from '../../components/auto-pods/AutoPodLocationBar';
 import { useAutoPodCityLabel } from '../../hooks/useAutoPodCityLabel';
 import { useAutoPodQueue } from '../../hooks/useAutoPodQueue';
+import { useSelectedVenue } from '../../hooks/useSelectedVenue';
 
 interface Props {
   /** The header's selected location — '' shows every city's offers. */
@@ -38,7 +41,12 @@ interface Props {
  */
 export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
   const navigate = useNavigate();
-  const [venue, setVenue] = useState<AutoPodVenueOption | null>(null);
+  // The picker's own list (same query, answered from the cache), narrowed the
+  // way the picker narrows it, so the queue opens on the venue the Venue
+  // Options page selected instead of the picker's first-row default.
+  const venuesQuery = useQuery<{ myVenues: AutoPodVenueOption[] }>(MY_VENUES_FOR_AUTO_POD, { fetchPolicy: 'cache-first' });
+  const venues = (venuesQuery.data?.myVenues ?? []).filter((row) => row.status === 'APPROVED' && row.is_active);
+  const { venue, selectVenue } = useSelectedVenue(venues);
   const queue = useAutoPodQueue(VENUE_AUTO_PODS, 'venueAutoPods', {
     location_id: locationId || null,
     venue_id: venue?.id ?? null,
@@ -53,7 +61,7 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
         {queue.labels.venueTitle}
       </Typography>
 
-      <AutoPodVenuePicker value={venue} onChange={setVenue} labels={queue.labels} />
+      <AutoPodVenuePicker value={venue} onChange={(next) => next && selectVenue(next.id)} labels={queue.labels} />
       <AutoPodLocationBar locationId={locationId} cityLabel={cityLabel} labels={queue.labels} />
 
       <AutoPodQueue

@@ -110,6 +110,15 @@ export const linking: LinkingOptions<RootStackParamList> = {
       HostAutoPods: 'host/auto-pods',
       ClubAutoPods: 'clubs/auto-pods',
       ProductsManage: 'products/manage',
+      // The studios' Options pages and the venue pages they open, on mWeb's paths.
+      VenueOptions: 'venues/options',
+      HostOptions: 'host/options',
+      ClubOptions: 'clubs/options',
+      BrandOptions: 'products/options',
+      VenueList: 'venues/list',
+      VenuePublish: 'venues/publish',
+      HostPublish: 'host/publish',
+      VenuePods: 'venues/pods',
       ClubManage: 'clubs/manage',
       // The Club Admin's pages, on mWeb's exact paths (rule 27).
       ClubAdminDashboard: 'clubs/dashboard',

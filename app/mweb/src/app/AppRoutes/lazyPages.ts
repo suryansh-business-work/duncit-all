@@ -122,3 +122,8 @@ export const MenuPage = lazy(() => import('../../pages/menu-page'));
 export const VenueAutoPodsPage = lazy(() => import('../../pages/venue-auto-pods-page'));
 export const HostAutoPodsPage = lazy(() => import('../../pages/host-auto-pods-page'));
 export const ClubAutoPodsPage = lazy(() => import('../../pages/club-auto-pods-page'));
+export const StudioOptionsPage = lazy(() => import('../../pages/studio-options'));
+export const VenueListPage = lazy(() => import('../../pages/venue-list-page'));
+export const VenuePublishPage = lazy(() => import('../../pages/venue-publish-page'));
+export const VenuePodsPage = lazy(() => import('../../pages/venue-pods-page'));
+export const HostPublishPage = lazy(() => import('../../pages/host-publish-page'));

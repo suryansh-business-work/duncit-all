@@ -1,9 +1,29 @@
 import {
   flattenCatalogue,
+  MWEB_BUNDLE,
   PACKAGING_BUNDLE,
   PARTNERS_BUNDLE,
   useTranslation as useSharedTranslation,
 } from '@duncit/app-settings';
+
+/**
+ * The studio Options copy is the one catalogue mWeb, native and this console
+ * all render (`mweb.studioOptions.*`, keyed by @duncit/utils studio-options),
+ * plus the venue words the Venue Earnings page and venue picker share with mWeb. Only
+ * those slices are layered in — not the rest of the mWeb namespace.
+ */
+const SHARED_MWEB_PREFIXES = [
+  'mweb.studioOptions.',
+  'mweb.venueEarnings.',
+  'mweb.common.podsCompleted',
+  'mweb.venueManagePage.untitledVenue',
+];
+
+const sharedMwebCopy = Object.fromEntries(
+  Object.entries(flattenCatalogue(MWEB_BUNDLE)).filter(([key]) =>
+    SHARED_MWEB_PREFIXES.some((prefix) => key.startsWith(prefix)),
+  ),
+);
 
 /**
  * The portal's own bundled copy, flattened once: `main.tsx` mounts it as the
@@ -20,6 +40,7 @@ import {
 export const PARTNERS_FALLBACK = {
   ...flattenCatalogue(PARTNERS_BUNDLE),
   ...flattenCatalogue(PACKAGING_BUNDLE),
+  ...sharedMwebCopy,
 };
 
 export const useTranslation = () => useSharedTranslation(PARTNERS_FALLBACK);

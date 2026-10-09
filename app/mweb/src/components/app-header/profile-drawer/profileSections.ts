@@ -31,7 +31,7 @@ export type ProfileIconKey =
   | 'membership'
   | 'giftcards'
   | 'giftcardRedeem'
-  | 'host'
+  | 'pods'
   | 'venue'
   | 'ecomm'
   | 'insights'
@@ -43,7 +43,12 @@ export type ProfileIconKey =
   | 'monitoring'
   | 'requests'
   | 'change'
-  | 'nearby';
+  | 'nearby'
+  | 'create'
+  | 'publish'
+  | 'clubs'
+  | 'integrations'
+  | 'returns';
 
 export interface ProfileTile {
   key: string;

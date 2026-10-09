@@ -165,15 +165,18 @@ exports:
   - 'EarningsBucket'
   - 'EarningsBucketKey'
   - 'EarningsBucketLine'
-  - 'STUDIO_NAV'
-  - 'studioNavFor'
-  - 'studioMenuSections'
-  - 'StudioMenuSection'
   - 'PartnerStudioMode'
-  - 'StudioNavGroup'
-  - 'StudioNavGroupKey'
-  - 'StudioNavIcon'
-  - 'StudioNavItem'
+  - 'STUDIO_OPTIONS_ENTRY'
+  - 'STUDIO_OPTION_LIST'
+  - 'studioOptionsEntryFor'
+  - 'studioOptionsFor'
+  - 'StudioOptionItem'
+  - 'StudioOptionIcon'
+  - 'StudioOptionsEntry'
+  - 'VENUE_POD_PHASES'
+  - 'venuePodPhase'
+  - 'podsByPhase'
+  - 'VenuePodPhase'
   - 'GRIEVANCE_FIELDS'
   - 'GRIEVANCE_MAX_LENGTH'
   - 'GRIEVANCE_OPTIONAL_FIELDS'
@@ -579,12 +582,13 @@ The Duncit bucket is GST + platform fee + both commissions. It is NOT the server
 `duncit_revenue`, which also carries the club admin cut — showing that beside a separate club
 row would count the cut twice.
 
-The partner studio menu — one definition mWeb and the native app both render, so their menus cannot drift. Every studio reads Dashboard · Pods · Requests · Withdrawal (+ Venues for a venue owner), each row carrying an mWeb `path`, a native `route` and a translation key:
+The partner studio OPTIONS — one catalogue mWeb, the native app and the Partner console all render. Switching into a studio puts ONE highlighted entry in the sidebar (`studioOptionsEntryFor`); it opens the studio's Options page, which lists `studioOptionsFor(mode, roles, { autoPods })` — each option with a title, a hint, an icon, and its mWeb `path`, native `route` and Partner console `portal` path (an app with no screen for an option opens the console).
 
 ```ts
-import { studioNavFor } from '@duncit/utils';
+import { studioOptionsFor, venuePodPhase } from '@duncit/utils';
 
-studioNavFor('HOST', roles, { autoPods }); // [] in User mode or once the role is revoked
+studioOptionsFor('VENUE', roles, { autoPods }); // [] in User mode or once the role is revoked
+venuePodPhase('ONGOING'); // 'CURRENT' — the Upcoming / Current / Past tabs of Pods at your venue
 ```
 
 ## Sample data

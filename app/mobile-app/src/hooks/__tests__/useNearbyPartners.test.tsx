@@ -15,6 +15,7 @@ import { useNearbySearch } from '@/hooks/useNearbySearch';
 import { useNearbyVenues } from '@/hooks/useNearbyVenues';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useLocationStore } from '@/stores/location.store';
+import { useSelectedVenueStore } from '@/stores/selected-venue.store';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
@@ -43,6 +44,8 @@ const item: NearbyItem = {
 beforeEach(() => {
   mockRequest.mockReset();
   useLocationStore.setState({ selectedId: 'l1', zoneName: 'Andheri', cityLabel: 'Mumbai' });
+  // The venue pick is shared app state; each test starts with none saved.
+  useSelectedVenueStore.setState({ venueId: null, status: 'ready' });
 });
 
 describe('useNearbySearch', () => {
@@ -284,6 +287,31 @@ describe('useNearbyHosts', () => {
         openStatus: null,
       },
     ]);
+  });
+
+  it('opens on the venue picked on another Venue Studio screen', async () => {
+    useSelectedVenueStore.setState({ venueId: 'v2', status: 'ready' });
+    respondByDocument(
+      new Map<unknown, (vars: never) => unknown>([
+        [PodRequestSearchVenuesDocument, () => venues],
+        [NearbyHostsForVenueDocument, () => hosts],
+        [PodRequestQuotaDocument, () => quota],
+      ]),
+    );
+    const { result } = renderHook(() => useNearbyHosts());
+    await waitFor(() => expect(result.current.venue?.id).toBe('v2'));
+    await waitFor(() =>
+      expect(mockRequest).toHaveBeenCalledWith(
+        NearbyHostsForVenueDocument,
+        expect.objectContaining({ venue_id: 'v2' }),
+        { auth: true },
+      ),
+    );
+    expect(mockRequest).not.toHaveBeenCalledWith(
+      NearbyHostsForVenueDocument,
+      expect.objectContaining({ venue_id: 'v1' }),
+      { auth: true },
+    );
   });
 
   it('switching venue brings back that venue’s own default category', async () => {

@@ -5,7 +5,7 @@
  * return the same fields, so everything from the row up is one implementation:
  * the sections cannot drift in layout, wording or arithmetic (rules 27/34/40).
  */
-export { default as StudioPodsSection } from './StudioPodsSection';
+export { default as StudioPodsSection, StudioPodsBody } from './StudioPodsSection';
 export { default as StudioPodsFigures } from './StudioPodsFigures';
 export { default as StudioPodRow } from './StudioPodRow';
 export { default as FigureTile } from './FigureTile';

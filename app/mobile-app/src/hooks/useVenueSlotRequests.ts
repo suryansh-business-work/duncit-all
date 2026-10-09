@@ -8,6 +8,7 @@ import {
 } from '@/graphql/venue-slot-requests';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useSelectedVenue } from '@/hooks/useSelectedVenue';
 
 type Data = ResultOf<typeof VenueSlotRequestsDocument>;
 export type SlotRequestRow = Data['venueSlotRequests'][number];
@@ -24,8 +25,19 @@ export const ALL_VENUES = 'ALL';
  * would show a stale row the next person to look would not.
  */
 export function useVenueSlotRequests() {
-  const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const [venues, setVenues] = useState<OwnedVenue[]>([]);
+  // The screen opens on the venue picked on any Venue Studio screen; "All
+  // venues" stays one tap away, and picking a venue here moves that shared pick.
+  const [showAll, setShowAll] = useState(false);
+  const { venueId: selectedId, selectVenue } = useSelectedVenue(venues);
+  const venueId = showAll || !selectedId ? ALL_VENUES : selectedId;
+  const setVenueId = useCallback(
+    (id: string) => {
+      setShowAll(id === ALL_VENUES);
+      if (id !== ALL_VENUES) selectVenue(id);
+    },
+    [selectVenue],
+  );
   const [requests, setRequests] = useState<SlotRequestRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [busy, setBusy] = useState(false);

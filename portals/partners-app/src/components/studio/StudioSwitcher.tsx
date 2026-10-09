@@ -19,10 +19,10 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import VolunteerActivismOutlinedIcon from '@mui/icons-material/VolunteerActivismOutlined';
 import { useTranslation } from '@duncit/shell';
 import {
+  optionsPathOf,
   PARTNER_SECTIONS,
   visibleSections,
   type PartnerRole,
-  type PartnerSection,
 } from '../../config/partner-sections';
 import { useStudioCopy } from './studioCopy';
 
@@ -38,9 +38,6 @@ interface Props {
   products: boolean;
   active: PartnerRole | null;
 }
-
-/** First page of a studio — its Home. */
-const homeOf = (section: PartnerSection) => section.nav.children?.[0]?.to ?? '/';
 
 /**
  * The control at the top of the sidebar that picks which ONE studio the menu
@@ -110,7 +107,7 @@ export default function StudioSwitcher({ roles, products, active }: Readonly<Pro
             <MenuItem
               key={section.role}
               selected={section === current}
-              onClick={() => go(homeOf(section))}
+              onClick={() => go(optionsPathOf(section))}
               data-testid={`studio-option-${section.role}`}
             >
               <ListItemIcon>

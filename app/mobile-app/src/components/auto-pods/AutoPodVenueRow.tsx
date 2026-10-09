@@ -9,6 +9,7 @@ import {
   venueCategoryPath,
   type AutoPodVenueOption,
 } from '@/hooks/useAutoPodVenues';
+import { useSelectedVenue } from '@/hooks/useSelectedVenue';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
@@ -22,7 +23,8 @@ interface Props {
  * The venue queue's own picker: which of the owner's approved venues is
  * looking. The offers shown are the ones THAT venue could take — its category
  * and its city — so the category is written under the chips to say why the
- * list is what it is. The first venue is chosen on arrival; a venue with no
+ * list is what it is. It opens on the venue picked on any Venue Studio screen
+ * (the first one when that pick is not an approved venue); a venue with no
  * category is offered nothing, and says so.
  *
  * The Tamagui twin of `@duncit/auto-pods`' `AutoPodVenuePicker` (rule 27).
@@ -31,10 +33,13 @@ export function AutoPodVenueRow({ value, onChange, labels }: Readonly<Props>) {
   const { warning } = useThemeColors();
   const { venues, loaded } = useAutoPodVenues();
 
+  // The shared pick drives the queue: a chip tap moves it, and the queue
+  // follows — so the next venue screen opens on the same venue.
+  const { venue: picked, selectVenue } = useSelectedVenue(venues);
+
   useEffect(() => {
-    const first = venues[0];
-    if (!value && first) onChange(first);
-  }, [value, venues, onChange]);
+    if (picked && picked.id !== value?.id) onChange(picked);
+  }, [picked, value, onChange]);
 
   // A picker that is simply empty mid-read is indistinguishable from a venue
   // owner with no venues, which is exactly the wrong thing to tell them.
@@ -63,7 +68,7 @@ export function AutoPodVenueRow({ value, onChange, labels }: Readonly<Props>) {
         testIDPrefix="auto-pods-venue"
         options={options}
         value={value?.id ?? ''}
-        onSelect={(id) => onChange(venues.find((venue) => venue.id === id) ?? null)}
+        onSelect={selectVenue}
       />
       {value && path ? (
         <Text testID="auto-pods-venue-category" fontSize={12} color="$muted">

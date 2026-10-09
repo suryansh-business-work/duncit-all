@@ -1,20 +1,11 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import {
-  changeRequestMenuKey,
-  venueCancelSuccessMessage,
-  type VenueCancelPodResult,
-} from '@duncit/utils';
-import { useRequestPodChange } from '@duncit/pod-change-requests';
 import {
   StudioPodsSection,
   EMPTY_STUDIO_SUMMARY,
   VENUE_STUDIO_PODS,
   type StudioPod,
 } from '../../components/studio-pods';
-import { notifySuccess } from '../../components/notify';
-import VenueCancelPodDialog from './VenueCancelPodDialog';
-import VenuePodDetailDialog from './VenuePodDetailDialog';
+import { useVenuePodActions } from './useVenuePodActions';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -26,8 +17,8 @@ interface Props {
 
 /**
  * "Pods hosted on your Venue" — every pod booked at the owner's venue with the
- * shared figures strip above it, plus the two things only the venue side can
- * do with a row: open its detail sheet, and cancel it.
+ * shared figures strip above it, plus the things only the venue side can do
+ * with a row (open its detail sheet, cancel it, ask for a change).
  *
  * The figures come from the server (venuePodsSummary), computed over EVERY
  * approved booking while the list stays capped — the client used to fold the
@@ -35,8 +26,6 @@ interface Props {
  */
 export default function VenuePodsSection({ venueId, onPodsChanged }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [openPod, setOpenPod] = useState<StudioPod | null>(null);
-  const [podToCancel, setPodToCancel] = useState<StudioPod | null>(null);
   const { data, loading, error, refetch } = useQuery<any>(VENUE_STUDIO_PODS, {
     variables: { venue_id: venueId },
     skip: !venueId,
@@ -45,19 +34,7 @@ export default function VenuePodsSection({ venueId, onPodsChanged }: Readonly<Pr
 
   const pods: StudioPod[] = data?.studioPods ?? [];
   const summary = data?.studioSummary ?? EMPTY_STUDIO_SUMMARY;
-
-  // "Request Change Venue" — the venue owner asking Duncit to move the pod
-  // rather than cancelling it and refunding everybody. The dialog behind it is
-  // rendered once, below.
-  const change = useRequestPodChange({ onFiled: notifySuccess });
-
-  // The line is the shared one — every number in it comes from the server.
-  const handleCancelled = async (result: VenueCancelPodResult) => {
-    setPodToCancel(null);
-    notifySuccess(venueCancelSuccessMessage(result, t));
-    await refetch();
-    await onPodsChanged?.();
-  };
+  const actions = useVenuePodActions({ currencySymbol: summary.currency_symbol, refetch, onPodsChanged });
 
   return (
     <>
@@ -73,24 +50,9 @@ export default function VenuePodsSection({ venueId, onPodsChanged }: Readonly<Pr
         onRetry={() => {
           refetch().catch(() => undefined);
         }}
-        onOpenPod={setOpenPod}
-        onCancelPod={setPodToCancel}
-        onRequestChange={(pod) =>
-          change.open({ podDocId: pod.id, role: 'VENUE', attendeeCount: pod.attendee_count })
-        }
-        requestChangeLabel={t(changeRequestMenuKey('VENUE'))}
+        {...actions.rowActions}
       />
-      <VenuePodDetailDialog
-        pod={openPod}
-        currencySymbol={summary.currency_symbol}
-        onClose={() => setOpenPod(null)}
-      />
-      <VenueCancelPodDialog
-        pod={podToCancel}
-        onClose={() => setPodToCancel(null)}
-        onCancelled={handleCancelled}
-      />
-      {change.dialog}
+      {actions.dialogs}
     </>
   );
 }

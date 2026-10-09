@@ -46,7 +46,7 @@ const renderTable = (data: VenuePodRow[] = rows) => {
   render(
     <VenuePodsTable
       rows={data}
-      externalFilters={[{ field: 'tab', op: 'eq', value: 'ALL' }]}
+      externalFilters={[]}
       refetchRef={{ current: null }}
       onRowClick={onRowClick}
       onRequestChange={vi.fn()}

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { pickVenue } from '@duncit/utils';
 
 import { MyVenuesWithSettingsDocument } from '@/graphql/venue-availability';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useSelectedVenue } from '@/hooks/useSelectedVenue';
 
 export type SettingsVenue = ResultOf<typeof MyVenuesWithSettingsDocument>['myVenues'][number];
 
@@ -13,8 +13,8 @@ export type SettingsVenue = ResultOf<typeof MyVenuesWithSettingsDocument>['myVen
  * The owner's venues with their settings, and which one the screen is about.
  *
  * Shared by the availability calendar and the venue settings screen: both edit
- * one venue picked from the same switcher, and `pickVenue` (shared with mWeb)
- * decides where that lands before the owner has touched anything. `refetch`
+ * one venue picked from the same switcher — the persisted pick every Venue
+ * Studio screen shares (`useSelectedVenue`). `refetch`
  * re-reads the list after a write so a saved rule or policy is what the screen
  * shows next, never a guess patched into local state.
  *
@@ -24,7 +24,6 @@ export type SettingsVenue = ResultOf<typeof MyVenuesWithSettingsDocument>['myVen
  */
 export function useVenuesWithSettings() {
   const [venues, setVenues] = useState<SettingsVenue[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -52,13 +51,14 @@ export function useVenuesWithSettings() {
     };
   }, [attempt]);
 
-  const venue = pickVenue(venues, selectedId);
+  // The pick every Venue Studio screen shares, remembered across launches.
+  const { venue, venueId, selectVenue } = useSelectedVenue(venues);
 
   return {
     venues,
     venue,
-    venueId: venue?.id ?? null,
-    selectVenue: setSelectedId,
+    venueId,
+    selectVenue,
     isLoading,
     error,
     refetch,

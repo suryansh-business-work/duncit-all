@@ -82,45 +82,8 @@ describe('SidebarUserContent', () => {
     fireEvent.press(screen.getByTestId('sidebar-item-Cart'));
     expect(onNavigate).toHaveBeenCalledWith('Cart');
 
-    // No partner menu, and so no Withdrawal row, for a pure consumer.
-    expect(screen.queryByTestId('sidebar-item-Withdrawal')).toBeNull();
-  });
-
-  it('reveals the Host studio menu only once switched into Host Studio', () => {
-    const onNavigate = jest.fn();
-    // A host still in User mode gets the plain consumer sidebar.
-    const { rerender } = renderWithProviders(
-      <SidebarUserContent
-        me={{ full_name: 'Host Roy' }}
-        account={FULL_ACCOUNT}
-        roles={['HOST']}
-        mode="USER"
-        showPodPlans={false}
-        onNavigate={onNavigate}
-      />,
-    );
-    expect(screen.queryByTestId('sidebar-item-Your Pods')).toBeNull();
-    expect(screen.queryByTestId('sidebar-item-Withdrawal')).toBeNull();
-
-    rerender(
-      <SidebarUserContent
-        me={{ full_name: 'Host Roy' }}
-        account={FULL_ACCOUNT}
-        roles={['HOST']}
-        mode="HOST"
-        showPodPlans={false}
-        onNavigate={onNavigate}
-      />,
-    );
-    // Grouped the way the Partner console reads: Pods, Requests, Withdrawal.
-    fireEvent.press(screen.getByTestId('sidebar-item-Your Pods'));
-    expect(onNavigate).toHaveBeenCalledWith('HostManage');
-    fireEvent.press(screen.getByTestId('sidebar-item-Pod Requests'));
-    expect(onNavigate).toHaveBeenCalledWith('HostPodRequests');
-    fireEvent.press(screen.getByTestId('sidebar-item-Change Requests'));
-    expect(onNavigate).toHaveBeenCalledWith('ChangeRequests');
-    fireEvent.press(screen.getByTestId('sidebar-item-Withdrawal'));
-    expect(onNavigate).toHaveBeenCalledWith('Wallet');
+    // No studio Options entry for a pure consumer.
+    expect(screen.queryByTestId('sidebar-studio-options')).toBeNull();
   });
 
   it('hides the banner at 100% and shows Pod Plans when the flag is on', () => {

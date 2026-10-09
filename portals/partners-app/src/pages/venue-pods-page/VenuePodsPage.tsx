@@ -4,10 +4,10 @@ import { Alert, Box, Card, MenuItem, Snackbar, Stack, TextField, Typography } fr
 import type { TableFilterValue } from '@duncit/table';
 import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import {
-  tabCounts,
-  TAB_ORDER,
+  podsByPhase,
+  VENUE_POD_PHASES,
   type VenueCancelPodResult,
-  type VenuePodTab,
+  type VenuePodPhase,
 } from '@duncit/utils';
 import { MY_VENUES } from '../register-venue-page/queries';
 import { useRequestPodChange } from '@duncit/pod-change-requests';
@@ -15,19 +15,19 @@ import { changeRequestMenuKey } from '@duncit/utils';
 import VenuePodsTable from './VenuePodsTable';
 import VenuePodDetailDialog from './VenuePodDetailDialog';
 import VenueCancelPodDialog from './VenueCancelPodDialog';
-import {
-  cancelSuccessMessage,
-  TAB_LABELS,
-  VENUE_PODS,
-  type VenuePodRow,
-} from './queries';
+import { cancelSuccessMessage, VENUE_PODS, type VenuePodRow } from './queries';
 import { useTranslation } from '@duncit/shell';
+import { ALL_VENUES, useVenueFilter } from '../../components/venue/useSelectedVenue';
 
-const ALL_VENUES = 'ALL';
+/** Each phase tab's words — the copy mWeb and native render too. */
+const PHASE_COPY: Record<VenuePodPhase, { label: string; empty: string }> = {
+  UPCOMING: { label: 'mweb.studioOptions.podsUpcoming', empty: 'mweb.studioOptions.noPodsUpcoming' },
+  CURRENT: { label: 'mweb.studioOptions.podsCurrent', empty: 'mweb.studioOptions.noPodsCurrent' },
+  PAST: { label: 'mweb.studioOptions.podsPast', empty: 'mweb.studioOptions.noPodsPast' },
+};
 
 export default function VenuePodsPage() {
   const { t } = useTranslation();
-  const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const [selected, setSelected] = useState<VenuePodRow | null>(null);
   const [podToCancel, setPodToCancel] = useState<VenuePodRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -37,23 +37,32 @@ export default function VenuePodsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
 
   const venuesQuery = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-first' });
+  const venues = venuesQuery.data?.myVenues ?? [];
+  // Opens on the venue picked last on any venue page; "All my venues" stays a choice.
+  const filter = useVenueFilter(venues);
   const podsQuery = useQuery<any>(VENUE_PODS, {
-    variables: { venue_id: venueId === ALL_VENUES ? null : venueId },
+    variables: { venue_id: filter.venueIdOrNull },
+    // Wait for the venue list, so the page does not fetch every venue first
+    // and then the selected one.
+    skip: venuesQuery.loading && !venuesQuery.data,
     fetchPolicy: 'cache-and-network',
   });
 
-  const venues = venuesQuery.data?.myVenues ?? [];
   const rows: VenuePodRow[] = useMemo(() => podsQuery.data?.venuePods ?? [], [podsQuery.data]);
-  const counts = useMemo(() => tabCounts(rows), [rows]);
+  const phases = useMemo(() => podsByPhase(rows), [rows]);
 
-  // Declared after `counts` on purpose: useTabParam reads `items` during the
-  // call, so building the labels any earlier dereferences `counts` in its
+  // Declared after `phases` on purpose: useTabParam reads `items` during the
+  // call, so building the labels any earlier dereferences `phases` in its
   // temporal dead zone and the whole page throws on first render.
   const tabItems = useMemo(
-    () => TAB_ORDER.map((key) => ({ value: key, label: `${TAB_LABELS[key]} (${counts[key]})` })),
-    [counts],
+    () =>
+      VENUE_POD_PHASES.map((phase) => ({
+        value: phase,
+        label: `${t(PHASE_COPY[phase].label)} (${phases[phase].length})`,
+      })),
+    [phases, t],
   );
-  const tabs = useTabParam<VenuePodTab>({ items: tabItems, fallback: 'ALL' });
+  const tabs = useTabParam<VenuePodPhase>({ items: tabItems, fallback: 'UPCOMING' });
   const tab = tabs.value;
 
   // DuncitTable does not refetch when its fetchRows changes identity, so a fresh
@@ -62,10 +71,10 @@ export default function VenuePodsPage() {
     refetchRef.current?.();
   }, [rows]);
 
-  // Tab selection rides externalFilters — a value change resets to page 1 and
+  // The phase rides externalFilters — a value change resets to page 1 and
   // re-runs fetchRows without a second data source.
   const externalFilters = useMemo<TableFilterValue[]>(
-    () => [{ field: 'tab', op: 'eq', value: tab }],
+    () => [{ field: 'phase', op: 'eq', value: tab }],
     [tab],
   );
 
@@ -95,21 +104,20 @@ export default function VenuePodsPage() {
             <Typography variant="h5" component="h1" sx={{
               fontWeight: 950
             }}>
-              {t('shell.nav.pods')}
+              {t('mweb.studioOptions.venuePods')}
             </Typography>
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              Every pod booked at your venues — upcoming, completed and cancelled. Click a pod for
-              its attendees.
+              {t('mweb.studioOptions.venuePodsHint')}
             </Typography>
           </Stack>
           <TextField
             select
             size="small"
             label={t('partners.common.venue')}
-            value={venueId}
-            onChange={(event) => setVenueId(event.target.value)}
+            value={filter.value}
+            onChange={(event) => filter.change(event.target.value)}
             sx={{ minWidth: 220 }}
           >
             <MenuItem value={ALL_VENUES}>{t('partners.venuePodsPage.allMyVenues')}</MenuItem>
@@ -137,6 +145,7 @@ export default function VenuePodsPage() {
             change.open({ podDocId: row.id, role: 'VENUE', attendeeCount: row.attendee_count })
           }
           requestChangeLabel={t(changeRequestMenuKey('VENUE'))}
+          emptyText={t(PHASE_COPY[tab].empty)}
         />
       </Box>
       {change.dialog}

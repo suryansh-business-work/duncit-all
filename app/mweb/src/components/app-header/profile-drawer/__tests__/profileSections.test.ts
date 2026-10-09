@@ -5,7 +5,6 @@ import {
   SHOP_ITEMS,
   buildManageItems,
 } from '../profileSections';
-import { studioMenuSections } from '../studioNavMenus';
 
 /** The drawer's Badges row arrives already translated, so the test passes the
  * label the same way the component does. */
@@ -73,15 +72,10 @@ describe('profileSections', () => {
   });
 
   it('every route is absolute', () => {
-    const everyRole = ['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'];
-    const partnerTiles = (['HOST', 'VENUE', 'ECOMM', 'CLUB'] as const).flatMap((mode) =>
-      studioMenuSections(mode, everyRole, true, (key) => key).flatMap((m) => m.items),
-    );
     const all = [
       ...PROFILE_GRID,
       REFERRAL_TILE,
       ...buildManageItems(true, true, BADGES_LABEL, CONTACTS_LABEL),
-      ...partnerTiles,
       ...SHOP_ITEMS,
     ];
     expect(all.every((t) => t.to.startsWith('/'))).toBe(true);

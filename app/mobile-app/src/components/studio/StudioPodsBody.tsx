@@ -30,6 +30,8 @@ export interface PodActions {
 }
 
 interface StudioPodsBodyProps extends PodActions {
+  /** The rows to list — a tab's slice of `state.pods`; all of them when omitted. */
+  rows?: readonly StudioPod[];
   state: StudioPodsState;
   emptyKey: string;
   scopeKey: string;
@@ -42,6 +44,7 @@ export function StudioPodsBody({
   state,
   emptyKey,
   scopeKey,
+  rows = state.pods,
   testID,
   onOpenPod,
   onCancelPod,
@@ -111,7 +114,7 @@ export function StudioPodsBody({
         figures={state.figures}
         scopeLabelKey={scopeKey}
       />
-      {state.pods.length === 0 ? (
+      {rows.length === 0 ? (
         <Text testID={`${testID}-empty`} fontSize={13} color="$muted">
           {t(emptyKey)}
         </Text>
@@ -123,7 +126,7 @@ export function StudioPodsBody({
       ) : null}
       {/* One list, hairlines between the rows — not a card per pod. */}
       <YStack>
-        {state.pods.map((pod, index) => (
+        {rows.map((pod, index) => (
           <YStack key={pod.id} borderTopWidth={index === 0 ? 0 : 1} borderColor="$borderColor">
             <StudioPodRow
               testID={`${testID}-row-${pod.id}`}

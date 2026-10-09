@@ -122,32 +122,42 @@ describe('UserModeContent', () => {
     expect(screen.getByText('Pod Plans')).toBeInTheDocument();
   });
 
-  it('reveals the Host studio menu only once switched into Host Studio', () => {
+  it('shows ONE highlighted studio entry only once switched into a studio', () => {
     const onNavigate = vi.fn();
     // A host still in User mode gets the plain consumer drawer.
-    const { rerender } = renderContent({
-      me: FULL_ME,
-      roles: ['HOST'],
-      showPodPlans: false,
-      onNavigate,
-    });
-    expect(screen.queryByText('Pod Requests')).not.toBeInTheDocument();
-    expect(screen.queryByText('Withdrawal')).not.toBeInTheDocument();
+    const { rerender } = renderContent({ me: FULL_ME, roles: ['HOST'], showPodPlans: false, onNavigate });
+    expect(screen.queryByTestId('sidebar-studio-options')).not.toBeInTheDocument();
 
     rerender(
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
         <UserModeContent me={FULL_ME} roles={['HOST']} mode="HOST" showPodPlans={false} onNavigate={onNavigate} />
       </MockedProvider>,
     );
-    // Grouped the way the Partner console reads: Pods, Requests, Withdrawal.
-    expect(screen.getByText('Requests')).toBeInTheDocument();
-    expect(screen.getByText('Your Pods')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Pod Requests'));
-    expect(onNavigate).toHaveBeenCalledWith('/host/pod-requests');
-    fireEvent.click(screen.getByText('Change Requests'));
-    expect(onNavigate).toHaveBeenCalledWith('/change-requests');
-    fireEvent.click(screen.getByText('Withdrawal'));
-    expect(onNavigate).toHaveBeenCalledWith('/host/wallet');
+    // The options live on the Options page the one entry opens.
+    expect(screen.queryByText('Pod Requests')).not.toBeInTheDocument();
+    expect(screen.queryByText('Withdrawal')).not.toBeInTheDocument();
+    const entry = screen.getByRole('button', { name: 'Host Options' });
+    expect(entry).toHaveAccessibleDescription('Everything for your pods in one place');
+    fireEvent.click(entry);
+    expect(onNavigate).toHaveBeenCalledWith('/host/options');
+    fireEvent.keyDown(entry, { key: 'Enter' });
+    expect(onNavigate).toHaveBeenCalledTimes(2);
+  });
+
+  it('opens Venue Options from the venue entry, and drops it once the role is gone', () => {
+    const onNavigate = vi.fn();
+    const venue = (roles: string[]) => (
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
+        <UserModeContent me={FULL_ME} roles={roles} mode="VENUE" showPodPlans={false} onNavigate={onNavigate} />
+      </MockedProvider>
+    );
+    const { rerender } = render(venue(['VENUE_OWNER']));
+    fireEvent.click(screen.getByRole('button', { name: 'Venue Options' }));
+    expect(onNavigate).toHaveBeenCalledWith('/venues/options');
+    // The coin card is a consumer reward — a studio's entry takes its slot.
+    expect(screen.queryByTestId('sidebar-duncit-coin')).not.toBeInTheDocument();
+    rerender(venue([]));
+    expect(screen.queryByTestId('sidebar-studio-options')).not.toBeInTheDocument();
   });
 
   it('navigates to /profile when the identity row is clicked', () => {

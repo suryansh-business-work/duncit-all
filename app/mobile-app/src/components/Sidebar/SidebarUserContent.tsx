@@ -1,4 +1,5 @@
 import { YStack } from 'tamagui';
+import { studioOptionsEntryFor } from '@duncit/utils';
 
 import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-completion';
 import type { MenuRoute } from '@/navigation/types';
@@ -14,12 +15,13 @@ import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarManageList } from './SidebarManageList';
 import { buildSidebarTiles } from './sidebarTiles';
 import { buildManageItems, SHOP_ITEMS } from './profileSections';
-import { studioMenuSections } from './studioNavMenus';
+import { SidebarStudioOptionsCard } from './SidebarStudioOptionsCard';
 
 /** The profile layout every mode shares — RN twin of mWeb's <UserModeContent/>:
- * identity, incomplete nudge, quick-action grid, referral card, the Manage
- * Account list and — once switched into a partner mode — that studio's menu,
- * grouped the way the Partner console reads: Dashboard, Pods, Requests, Withdrawal. Identity and completion both come from the user info
+ * identity, incomplete nudge, quick-action grid, referral card and the Manage
+ * Account list. Once switched into a partner studio, ONE highlighted entry —
+ * "Venue Options", "Host Options", … — opens that studio's Options page, where
+ * every option lives. Identity and completion both come from the user info
  * record (useMe). */
 export function SidebarUserContent({
   me,
@@ -32,7 +34,6 @@ export function SidebarUserContent({
   showMembership = false,
   showGiftCards = false,
   showTourGuide = false,
-  showAutoPods = false,
   showProducts = false,
   onNavigate,
 }: Readonly<{
@@ -46,7 +47,7 @@ export function SidebarUserContent({
    */
   accountLoading?: boolean;
   roles: readonly string[];
-  /** Studio mode in effect — decides which partner menu (if any) is shown. */
+  /** Studio mode in effect — decides which studio's Options entry (if any) is shown. */
   mode: StudioMode;
   showPodPlans: boolean;
   /** Server `leaderboard` feature flag — the whole section hides without it. */
@@ -57,8 +58,6 @@ export function SidebarUserContent({
   showGiftCards?: boolean;
   /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
   showTourGuide?: boolean;
-  /** Server `auto_pods` feature flag — hides the partner Auto Pods row without it. */
-  showAutoPods?: boolean;
   /** Server `is_product_visible` flag — the whole Shop group hides without it. */
   showProducts?: boolean;
   onNavigate: (route: MenuRoute) => void;
@@ -66,9 +65,8 @@ export function SidebarUserContent({
   const { t } = useTranslation();
   const percent = profileCompletion(account ?? {});
   const showIncomplete = !accountLoading && percent < 100;
-  // The switched-in studio's menu — Dashboard, Pods, Requests, Withdrawal and
-  // every option under them — from the definition mWeb renders too.
-  const partnerMenus = studioMenuSections(mode, roles, showAutoPods, t);
+  // The switched-in studio's one entry — null in User mode or once the role is gone.
+  const studioEntry = studioOptionsEntryFor(mode, roles);
   // The flag-gated sections and the grid's translated tiles (rule 38).
   const tiles = buildSidebarTiles(t);
   return (
@@ -80,6 +78,9 @@ export function SidebarUserContent({
         <SidebarIncompleteBanner percent={percent} onComplete={() => onNavigate('Account')} />
       ) : null}
       <SidebarQuickGrid tiles={tiles.grid} onNavigate={onNavigate} />
+      {studioEntry ? (
+        <SidebarStudioOptionsCard entry={studioEntry} onNavigate={onNavigate} />
+      ) : null}
       <AdSlot position="SIDEBAR" variant="card" />
       {mode === 'USER' ? <SidebarDuncitCoinCard onNavigate={onNavigate} /> : null}
       <SidebarReferralCard onNavigate={onNavigate} />
@@ -114,14 +115,6 @@ export function SidebarUserContent({
         )}
         onNavigate={onNavigate}
       />
-      {partnerMenus.map((menu) => (
-        <SidebarManageList
-          key={menu.key}
-          title={menu.title}
-          items={menu.items}
-          onNavigate={onNavigate}
-        />
-      ))}
       {showProducts ? (
         <SidebarManageList
           title={t('mweb.common.shop')}

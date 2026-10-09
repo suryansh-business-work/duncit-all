@@ -32,6 +32,10 @@ import ClubAdminPodEditorPage from './pages/club-admin-pod-editor-page';
 import ClubAdminAutoPodEditorPage from './pages/club-admin-auto-pod-editor-page';
 import VerificationPage from './pages/verification-page/VerificationPage';
 import EarnPage from './pages/earn-page/EarnPage';
+import StudioOptionsPage from './pages/studio-options-page/StudioOptionsPage';
+import VenueEarningsPage from './pages/venue-earnings-page/VenueEarningsPage';
+import VenuePublishPage from './pages/publish-page/VenuePublishPage';
+import HostPublishPage from './pages/publish-page/HostPublishPage';
 import {
   ClubsHub,
   HelpHub,
@@ -69,6 +73,8 @@ export default function App() {
       <Route path="/register-venue/new" element={authed(<RegisterVenuePage />)} />
       <Route path="/register-venue/current" element={authed(<RegisterVenuePage />)} />
       <Route path="/register-venue/:venueId" element={authed(<RegisterVenuePage />)} />
+      {/* Each studio's ONE sidebar entry: its Options page, listing every option. */}
+      <Route path="/venues/options" element={authed(<StudioOptionsPage mode="VENUE" />)} />
       <Route path="/venues/dashboard" element={authed(<VenueDashboardPage />)} />
       <Route path="/venues/requests" element={authed(<VenuePodsHub />)} />
       {/* Opened by the request email's Approve / Decline buttons (?action=…). */}
@@ -83,9 +89,15 @@ export default function App() {
       <Route path="/venues/change-requests" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/auto-pods" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/settings" element={authed(<VenuesHub />)} />
+      {/* The selected venue's calendar (Venue Options); the :venueId form still opens a named one. */}
+      <Route path="/venues/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
+      <Route path="/venues/earnings" element={authed(<VenueEarningsPage />)} />
+      <Route path="/venues/publish" element={authed(<VenuePublishPage />)} />
       <Route path="/host" element={authed(<Navigate to="/host/dashboard" replace />)} />
+      <Route path="/host/options" element={authed(<StudioOptionsPage mode="HOST" />)} />
       <Route path="/host/dashboard" element={authed(<HostDashboardPage />)} />
+      <Route path="/host/publish" element={authed(<HostPublishPage />)} />
       <Route path="/host/pods" element={authed(<HostPodsHub />)} />
       <Route path="/host/change-requests" element={authed(<HostRequestsHub />)} />
       <Route path="/host/auto-pods" element={authed(<HostPodsHub />)} />
@@ -108,6 +120,7 @@ export default function App() {
       {/* A brand row opens its details page (overview, logs, analytics). */}
       <Route path="/ecomm-brand/:brandId" element={authed(<BrandDetailsRoute />)} />
       <Route path="/ecomm-brand/:brandId/edit" element={authed(<BrandWizardRoute />)} />
+      <Route path="/ecomm/options" element={authed(<StudioOptionsPage mode="ECOMM" />)} />
       <Route path="/ecomm/dashboard" element={authed(<EcommDashboardPage />)} />
       <Route path="/ecomm-brand/:brandId/settings" element={authed(<BrandSettingsPage />)} />
       <Route path="/pods" element={<Navigate to="/host/pods" replace />} />
@@ -118,6 +131,7 @@ export default function App() {
       <Route path="/ecomm-brand/:brandId/products/:productId" element={authed(<ProductListingEditorPage />)} />
       <Route path="/list-products" element={<Navigate to="/ecomm-brand" replace />} />
       <Route path="/club-admin" element={authed(<Navigate to="/club-admin/dashboard" replace />)} />
+      <Route path="/club-admin/options" element={authed(<StudioOptionsPage mode="CLUB" />)} />
       <Route path="/club-admin/dashboard" element={authed(<ClubAdminDashboardPage />)} />
       <Route path="/club-admin/clubs" element={authed(<ClubsHub />)} />
       <Route

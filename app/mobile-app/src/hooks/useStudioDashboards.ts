@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { pickVenue } from '@duncit/utils';
 
 import {
   EcommDashboardDocument,
@@ -9,6 +8,7 @@ import {
 } from '@/graphql/studio-dashboard';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useSelectedVenue } from '@/hooks/useSelectedVenue';
 
 export type DashboardVenue = ResultOf<typeof VenueDashboardDocument>['myVenues'][number];
 export type DashboardProduct = ResultOf<
@@ -19,14 +19,12 @@ export type DashboardProduct = ResultOf<
  * Venue studio dashboard — every venue the partner owns, plus the booked-pod
  * dates at the ONE the switcher has selected.
  *
- * The selection lives here rather than in the screen because the pod-dates
- * fetch hangs off it: a switch has to re-ask for the chart's bookings, and
- * `pickVenue` (shared with mWeb) decides which venue that is before the user
- * has touched anything.
+ * The selection is the persisted pick every Venue Studio screen shares
+ * (`useSelectedVenue`); the pod-dates fetch hangs off it, so a switch re-asks
+ * for the chart's bookings.
  */
 export function useVenueDashboard() {
   const [venues, setVenues] = useState<DashboardVenue[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [podDates, setPodDates] = useState<(string | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -46,8 +44,7 @@ export function useVenueDashboard() {
 
   useRefreshRegistration(refetch);
 
-  const venue = pickVenue(venues, selectedId);
-  const venueId = venue?.id ?? null;
+  const { venue, venueId, selectVenue } = useSelectedVenue(venues);
 
   useEffect(() => {
     if (!venueId) return undefined;
@@ -60,7 +57,7 @@ export function useVenueDashboard() {
     };
   }, [venueId]);
 
-  return { venues, venue, venueId, selectVenue: setSelectedId, podDates, isLoading };
+  return { venues, venue, venueId, selectVenue, podDates, isLoading };
 }
 
 /** ecomm studio dashboard — the product catalogue with stock + price. The

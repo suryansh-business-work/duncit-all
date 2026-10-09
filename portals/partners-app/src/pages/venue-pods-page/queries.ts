@@ -9,11 +9,11 @@ import type { StatusColorMap } from '@duncit/ui';
 import { formatDateTime } from '@duncit/app-settings';
 import {
   cancelDisabledReason,
-  matchesTab,
+  VENUE_POD_PHASES,
+  venuePodPhase,
   type VenueCancelDisabledReason,
   type VenueCancelPodResult,
   type VenuePodBucket,
-  type VenuePodTab,
 } from '@duncit/utils';
 
 export const VENUE_PODS = gql`
@@ -75,7 +75,7 @@ export const VENUE_CANCEL_PENALTY = gql`
   }
 `;
 
-/** One `venuePods` row. The cancel and tab rules read `bucket` + `cancelled_at` (@duncit/utils). */
+/** One `venuePods` row. The cancel and phase rules read `bucket` + `cancelled_at` (@duncit/utils). */
 export interface VenuePodRow {
   id: string;
   pod_slug: string;
@@ -137,13 +137,6 @@ export const BUCKET_COLORS: StatusColorMap = {
   CANCELLED: 'error',
 };
 
-export const TAB_LABELS: Record<VenuePodTab, string> = {
-  ALL: 'All',
-  UPCOMING: 'Upcoming',
-  CANCELLED: 'Cancelled',
-  COMPLETED: 'Completed',
-};
-
 export const fmtDate = (iso?: string | null) => {
   if (!iso) return '—';
   return formatDateTime(iso) || '—';
@@ -153,18 +146,20 @@ const venuePodSearchText = (row: VenuePodRow) =>
   [row.pod_title, row.venue_name, row.host_names.join(' ')].join(' ');
 
 /**
- * In-memory search/filter/sort/page over the venuePods rows. The active tab
- * arrives through the table's externalFilters (field "tab"), so switching tabs
- * re-slices without a second data source; every other filter and the sort are
- * the columns' own, compared by their types.
+ * In-memory search/filter/sort/page over the venuePods rows. The active phase
+ * tab (Upcoming / Current / Past) arrives through the table's externalFilters
+ * (field "phase"), so switching tabs re-slices without a second data source;
+ * with no phase every row shows. Every other filter and the sort are the
+ * columns' own, compared by their types.
  */
 export function applyVenuePodsQuery(
   rows: readonly VenuePodRow[],
   q: TableQueryState,
   columns: ReadonlyArray<DuncitColumn<VenuePodRow>>,
 ): Promise<TablePage<VenuePodRow>> {
-  const tab = (q.filters.find((f) => f.field === 'tab')?.value ?? 'ALL') as VenuePodTab;
-  const inTab = rows.filter((row) => matchesTab(row, tab));
-  const columnFilters = q.filters.filter((f) => f.field !== 'tab');
-  return clientTableFetch(inTab, venuePodSearchText, columns)({ ...q, filters: columnFilters });
+  const wanted = q.filters.find((f) => f.field === 'phase')?.value;
+  const phase = VENUE_POD_PHASES.find((candidate) => candidate === wanted);
+  const inPhase = phase ? rows.filter((row) => venuePodPhase(row.bucket) === phase) : rows;
+  const columnFilters = q.filters.filter((f) => f.field !== 'phase');
+  return clientTableFetch(inPhase, venuePodSearchText, columns)({ ...q, filters: columnFilters });
 }

@@ -33,6 +33,7 @@
     "@duncit/buttons-native": "workspace:*",
     "@duncit/captcha": "workspace:*",
     "@duncit/category": "workspace:*",
+    "@duncit/challenges": "workspace:*",
     "@duncit/club-form": "workspace:*",
     "@duncit/communication": "workspace:*",
     "@duncit/coupons": "workspace:*",

@@ -3,6 +3,9 @@ import { ProfilePage, createAuthed } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ChallengesPage from './pages/challenges/ChallengesPage';
+import ToolsPage from './pages/tools/ToolsPage';
+import PresetsPage from './pages/presets/PresetsPage';
+import MappingPage from './pages/mapping/MappingPage';
 import LeaderboardBoardsPage from './pages/leaderboard/LeaderboardBoardsPage';
 import LeaderboardPointsPage from './pages/leaderboard/LeaderboardPointsPage';
 import LeaderboardSettingsPage from './pages/leaderboard/LeaderboardSettingsPage';
@@ -17,6 +20,9 @@ export default function App() {
         <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
+      <Route path="/tools" element={authed(<ToolsPage />)} />
+      <Route path="/tools/presets" element={authed(<PresetsPage />)} />
+      <Route path="/category-mapping" element={authed(<MappingPage />)} />
       <Route path="/challenges" element={authed(<ChallengesPage />)} />
       <Route path="/leaderboard" element={authed(<LeaderboardBoardsPage />)} />
       <Route path="/leaderboard/points" element={authed(<LeaderboardPointsPage />)} />

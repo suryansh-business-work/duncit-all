@@ -3775,6 +3775,8 @@ export type ChallengeTool = {
   mapped_category_ids: Array<Scalars['ID']['output']>;
   name: Scalars['String']['output'];
   output_types: Array<Scalars['String']['output']>;
+  /** True when the tool yields a number per competitor (it can rank or count toward the total). */
+  produces_score: Scalars['Boolean']['output'];
   /** ACTIVE or INACTIVE. Only active tools can be added to new templates or mappings. */
   status: Scalars['String']['output'];
   tool_type: Scalars['String']['output'];

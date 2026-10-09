@@ -25,7 +25,10 @@ export const appConfig = {
   accent: { light: '#fdba74', main: '#f97316', hover: '#ea580c', active: '#c2410c' },
   nav: [
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
-    { label: 'Challenges', labelKey: 'shell.nav.challenges', to: '/challenges', icon: 'challenge' },
+    { label: 'Tool Master', labelKey: 'shell.nav.toolMaster', to: '/tools', icon: 'tools' },
+    { label: 'Tool Presets', labelKey: 'shell.nav.toolPresets', to: '/tools/presets', icon: 'tune' },
+    { label: 'Category Mapping', labelKey: 'shell.nav.categoryMapping', to: '/category-mapping', icon: 'hub' },
+    { label: 'Challenge Templates', labelKey: 'shell.nav.challengeTemplates', to: '/challenges', icon: 'challenge' },
     {
       label: 'Leaderboard', labelKey: 'shell.nav.leaderboard',
       icon: 'trophy',

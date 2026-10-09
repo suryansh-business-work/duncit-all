@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
+  Alert,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,12 +13,14 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { DuncitButton } from '@duncit/buttons';
+import { fireAndForget, logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
 import { useApolloTableFetch } from '@duncit/table';
 import {
   CHALLENGES_TABLE,
   CHALLENGE_STATS,
   DELETE_CHALLENGE,
+  DUPLICATE_CHALLENGE,
   type Challenge,
 } from '../../graphql/challenges';
 import ChallengesTable from './ChallengesTable';
@@ -34,6 +37,14 @@ export default function ChallengesPage() {
   const [deleteChallenge, deleteState] = useMutation<any>(DELETE_CHALLENGE, {
     refetchQueries: [{ query: CHALLENGE_STATS }],
   });
+
+  const [duplicateChallenge, duplicateState] = useMutation<{ duplicateChallenge: { id: string } }>(DUPLICATE_CHALLENGE, {
+    refetchQueries: [{ query: CHALLENGE_STATS }],
+  });
+  const duplicate = async (challenge: Challenge) => {
+    await duplicateChallenge({ variables: { id: challenge.id } });
+    refetchRef.current?.();
+  };
 
   const fetchRows = useApolloTableFetch<Challenge>(client, CHALLENGES_TABLE, 'challengesTable');
 
@@ -61,7 +72,7 @@ export default function ChallengesPage() {
         <EmojiEventsIcon color="primary" />
         <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
-        }}>{t('challenge.list.title')}</Typography>
+        }}>{t('challenge.templates.title')}</Typography>
       </Stack>
 
       <ChallengesTable
@@ -69,12 +80,14 @@ export default function ChallengesPage() {
         refetchRef={refetchRef}
         toolbarActions={
           <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-            {t('challenge.list.create')}
+            {t('challenge.templates.create')}
           </DuncitButton>
         }
         onEdit={openEdit}
         onDelete={setDeleting}
+        onDuplicate={(c) => fireAndForget(duplicate(c), logs.portal['challenge-portal'], 'ChallengesPage', 'duplicate')}
       />
+      {duplicateState.error && <Alert severity="error">{duplicateState.error.message}</Alert>}
 
       <ChallengeFormDialog
         open={formOpen}

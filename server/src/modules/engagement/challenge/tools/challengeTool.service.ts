@@ -47,6 +47,7 @@ function toolPub(d: Stamped<ChallengeToolDoc>) {
     version: d.version ?? 1,
     engine_ready: def?.engine_ready ?? false,
     live_updates: def?.live_updates ?? false,
+    produces_score: (def?.metric ?? 'NONE') !== 'NONE',
     input_types: def?.input_types ?? [],
     output_types: def?.output_types ?? [],
     config_schema_json: JSON.stringify(def?.fields ?? []),

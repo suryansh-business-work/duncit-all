@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { ChallengeToolInstance, ChallengeWinnerRules } from '@duncit/gql-types';
 
 export interface Challenge {
   id: string;
@@ -12,6 +13,9 @@ export interface Challenge {
   sub_category_name?: string | null;
   is_active: boolean;
   created_at: string;
+  participant_mode: string;
+  tool_instances: ChallengeToolInstance[];
+  winner_rules: ChallengeWinnerRules;
 }
 
 export interface ChallengeStats {
@@ -45,6 +49,25 @@ const CHALLENGE_FIELDS = gql`
     sub_category_name
     is_active
     created_at
+    participant_mode
+    tool_instances {
+      instance_id
+      tool_id
+      tool_type
+      tool_version
+      preset_id
+      label
+      config_json
+    }
+    winner_rules {
+      rank_by
+      direction
+      tie_breakers {
+        rank_by
+        direction
+      }
+      podium_size
+    }
   }
 `;
 
@@ -102,6 +125,14 @@ export const UPDATE_CHALLENGE = gql`
   mutation UpdateChallenge($id: ID!, $input: UpdateChallengeInput!) {
     updateChallenge(id: $id, input: $input) {
       ...ChallengeFields
+    }
+  }
+`;
+
+export const DUPLICATE_CHALLENGE = gql`
+  mutation DuplicateChallenge($id: ID!) {
+    duplicateChallenge(id: $id) {
+      id
     }
   }
 `;

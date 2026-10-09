@@ -59,6 +59,7 @@ COPY packages/brand/package.json ./packages/brand/
 COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/category/package.json ./packages/category/
+COPY packages/challenges/package.json ./packages/challenges/
 COPY packages/club-form/package.json ./packages/club-form/
 COPY packages/communication/package.json ./packages/communication/
 COPY packages/coupons/package.json ./packages/coupons/

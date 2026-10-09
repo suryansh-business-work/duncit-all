@@ -13,6 +13,8 @@ export const challengeToolTypeDefs = gql`
     "False for catalogued tools the engine cannot run yet; they cannot be activated."
     engine_ready: Boolean!
     live_updates: Boolean!
+    "True when the tool yields a number per competitor (it can rank or count toward the total)."
+    produces_score: Boolean!
     input_types: [String!]!
     output_types: [String!]!
     "The editable settings, as a JSON array of { key, kind, default, min, max, options }."

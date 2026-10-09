@@ -86,7 +86,7 @@ describe('SidebarUserContent', () => {
     expect(screen.queryByTestId('sidebar-item-Withdrawal')).toBeNull();
   });
 
-  it('reveals the Host Menu only once switched into Host Studio', () => {
+  it('reveals the Host studio menu only once switched into Host Studio', () => {
     const onNavigate = jest.fn();
     // A host still in User mode gets the plain consumer sidebar.
     const { rerender } = renderWithProviders(
@@ -99,7 +99,7 @@ describe('SidebarUserContent', () => {
         onNavigate={onNavigate}
       />,
     );
-    expect(screen.queryByTestId('sidebar-item-Host Studio')).toBeNull();
+    expect(screen.queryByTestId('sidebar-item-Your Pods')).toBeNull();
     expect(screen.queryByTestId('sidebar-item-Withdrawal')).toBeNull();
 
     rerender(
@@ -112,8 +112,13 @@ describe('SidebarUserContent', () => {
         onNavigate={onNavigate}
       />,
     );
-    fireEvent.press(screen.getByTestId('sidebar-item-Host Studio'));
+    // Grouped the way the Partner console reads: Pods, Requests, Withdrawal.
+    fireEvent.press(screen.getByTestId('sidebar-item-Your Pods'));
     expect(onNavigate).toHaveBeenCalledWith('HostManage');
+    fireEvent.press(screen.getByTestId('sidebar-item-Pod Requests'));
+    expect(onNavigate).toHaveBeenCalledWith('HostPodRequests');
+    fireEvent.press(screen.getByTestId('sidebar-item-Change Requests'));
+    expect(onNavigate).toHaveBeenCalledWith('ChangeRequests');
     fireEvent.press(screen.getByTestId('sidebar-item-Withdrawal'));
     expect(onNavigate).toHaveBeenCalledWith('Wallet');
   });

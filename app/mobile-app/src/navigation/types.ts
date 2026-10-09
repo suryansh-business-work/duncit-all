@@ -72,6 +72,9 @@ export type RootStackParamList = {
   NearbyHosts: undefined;
   /** /host/nearby-venues — Host Studio's Search Nearby Venues (mWeb's exact path). */
   NearbyVenues: undefined;
+  /** Studio menu → Requests → Pod Requests, one inbox per side. */
+  HostPodRequests: undefined;
+  VenuePodRequests: undefined;
   /** /pod-requests/:id — one Pod Request; its notifications land here. */
   PodRequestDetail: { id: string };
   ChangeRequests: undefined;

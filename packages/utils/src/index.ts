@@ -711,6 +711,15 @@ export {
   type StudioOption,
 } from './studio-mode';
 export {
+  STUDIO_NAV,
+  studioNavFor,
+  type PartnerStudioMode,
+  type StudioNavGroup,
+  type StudioNavGroupKey,
+  type StudioNavIcon,
+  type StudioNavItem,
+} from './studio-nav';
+export {
   AUTO_POD_ROLES,
   autoPodActionable,
   autoPodCityLabel,

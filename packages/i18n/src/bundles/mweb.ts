@@ -4539,6 +4539,27 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueStudio: 'Venue Studio',
     },
     // The venue partner menu's two calendar rows — native renders the same keys.
+    // The partner studio menu (@duncit/utils studio-nav): the same groups the
+    // Partner console's studios use. mWeb and native render these keys.
+    studioNav: {
+      dashboardGroup: 'Dashboard',
+      dashboard: 'Dashboard',
+      podsGroup: 'Pods',
+      yourPods: 'Your Pods',
+      autoPods: 'Auto Pods',
+      clubsGroup: 'Clubs',
+      yourClubs: 'Your Clubs',
+      venuesGroup: 'Venues',
+      venueEarnings: 'Venue Earnings',
+      slotRequests: 'Slot Requests',
+      requestsGroup: 'Requests',
+      podRequests: 'Pod Requests',
+      changeRequests: 'Change Requests',
+      nearbyVenues: 'Search Nearby Venues',
+      nearbyHosts: 'Search Nearby Hosts',
+      withdrawalGroup: 'Earnings',
+      withdrawal: 'Withdrawal',
+    },
     venueMenu: {
       availability: 'Availability Calendar',
       settings: 'Venue Settings',

@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, NearbyHostsPage, ProductsManagePage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueManagePage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
+import { ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueManagePage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
 import { withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
 /** Earn, venue, club and Auto Pod routes. */
@@ -13,6 +13,9 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
         <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />
         <Route path="/venues/nearby-hosts" element={withAuth(<NearbyHostsPage />)} />
+        {/* The studio menu's Requests → Pod Requests, one inbox per side. */}
+        <Route path="/venues/pod-requests" element={withAuth(<PodRequestsPage side="VENUE" />)} />
+        <Route path="/host/pod-requests" element={withAuth(<PodRequestsPage side="HOST" />)} />
         {/* One route for all three roles: a person can be a venue owner AND a
             host, and it is where the offer email, the WhatsApp CTA and the
             notification all land. */}

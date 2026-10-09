@@ -1,4 +1,3 @@
-import type { StudioMode } from '../../../studio-mode';
 
 /**
  * Static configuration for the consumer profile drawer's card layout. Labels +
@@ -41,7 +40,10 @@ export type ProfileIconKey =
   | 'settings'
   | 'autopods'
   | 'dashboard'
-  | 'monitoring';
+  | 'monitoring'
+  | 'requests'
+  | 'change'
+  | 'nearby';
 
 export interface ProfileTile {
   key: string;
@@ -116,108 +118,6 @@ export function buildManageItems(
     { key: 'badges', label: badgesLabel, caption: '', icon: 'badges', to: '/badges' }
   );
   return items;
-}
-
-/** One partner role's own grouped drawer section. */
-export interface PartnerMenu {
-  key: string;
-  title: string;
-  items: ProfileTile[];
-}
-
-/** Withdrawal points at the one shared wallet page whichever role earned into
- * it, so every partner menu ends with this same row. A pure consumer holds none
- * of these roles, gets no menu, and therefore never sees Withdrawal. */
-const WITHDRAWAL_TILE: ProfileTile = {
-  key: 'withdrawal',
-  label: 'Withdrawal',
-  caption: 'Withdraw your earnings',
-  icon: 'wallet',
-  to: '/host/wallet',
-};
-
-interface PartnerMenuSpec {
-  /** Studio mode that reveals the section — it shows only while switched in. */
-  mode: StudioMode;
-  /** Role that unlocks the section. */
-  role: string;
-  key: string;
-  title: string;
-  /** Destinations unique to the role — Withdrawal is appended to every menu. */
-  items: readonly ProfileTile[];
-}
-
-const PARTNER_MENUS: readonly PartnerMenuSpec[] = [
-  {
-    mode: 'HOST',
-    role: 'HOST',
-    key: 'host',
-    title: 'Host Menu',
-    items: [
-      { key: 'host-studio', label: 'Host Studio', caption: '', icon: 'host', to: '/host/manage' },
-      { key: 'host-dashboard', label: 'Host Dashboard', caption: '', icon: 'insights', to: '/host/dashboard' },
-    ],
-  },
-  {
-    mode: 'VENUE',
-    role: 'VENUE_OWNER',
-    key: 'venue',
-    title: 'Venue Menu',
-    items: [
-      { key: 'venue-studio', label: 'Venue Studio', caption: '', icon: 'venue', to: '/venues/manage' },
-      { key: 'venue-slot-requests', label: 'Slot Requests', caption: '', icon: 'calendar', to: '/venues/slot-requests' },
-      { key: 'venue-earnings', label: 'Venue Earnings', caption: '', icon: 'insights', to: '/venues/earnings' },
-    ],
-  },
-  {
-    mode: 'ECOMM',
-    role: 'ECOMM_MANAGER',
-    key: 'ecomm',
-    title: 'E-commerce Menu',
-    items: [
-      { key: 'products-studio', label: 'Product Studio', caption: '', icon: 'ecomm', to: '/products/manage' },
-    ],
-  },
-  {
-    mode: 'CLUB',
-    role: 'CLUB_ADMIN',
-    key: 'club',
-    title: 'Club Admin Menu',
-    // Club Studio is the in-app home this role finally has; Withdrawal is
-    // appended below like every other partner menu.
-    items: [
-      { key: 'club-studio', label: 'Club Studio', caption: '', icon: 'host', to: '/clubs/manage' },
-    ],
-  },
-];
-
-/**
- * The partner section for the studio mode the user is currently switched into,
- * ending in Withdrawal. Returns a list (never more than one entry) so the caller
- * renders it the same way whether or not a mode is active.
- *
- * Gated on the MODE, not merely the role: in User mode the drawer stays a
- * consumer drawer, and a partner sees exactly the one menu they switched to
- * rather than every menu they qualify for. The role is still checked because a
- * revoked role must not keep a persisted mode alive.
- */
-export function buildPartnerMenus(
-  roles: readonly string[],
-  mode: StudioMode,
-  autoPods?: ProfileTile | null,
-  extraItems: readonly ProfileTile[] = []
-): PartnerMenu[] {
-  const active = PARTNER_MENUS.find((menu) => menu.mode === mode && roles.includes(menu.role));
-  if (!active) return [];
-  // Rows the caller builds with translated labels (the venue calendar pair)
-  // follow the mode's own rows — this module holds no copy for them (rule 38).
-  const items = [...active.items, ...extraItems];
-  // Auto Pods sits above Withdrawal: it is work waiting on the partner, and the
-  // caller only passes it when the `auto_pods` flag is on for a role that has a
-  // queue. Its label arrives translated — this module holds no copy (rule 38).
-  if (autoPods) items.push(autoPods);
-  items.push(WITHDRAWAL_TILE);
-  return [{ key: active.key, title: active.title, items }];
 }
 
 /** The "Shop" grouped list — the e-commerce destinations, a section that sits

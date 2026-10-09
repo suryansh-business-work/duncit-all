@@ -12,15 +12,14 @@ import { SidebarQuickGrid } from './SidebarQuickGrid';
 import { SidebarDuncitCoinCard } from './SidebarDuncitCoinCard';
 import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarManageList } from './SidebarManageList';
-import { buildClubMenuItems } from './clubMenuItems';
-import { buildVenueMenuItems } from './venueMenuItems';
 import { buildSidebarTiles } from './sidebarTiles';
-import { buildManageItems, buildPartnerMenus, SHOP_ITEMS } from './profileSections';
+import { buildManageItems, SHOP_ITEMS } from './profileSections';
+import { studioMenuSections } from './studioNavMenus';
 
 /** The profile layout every mode shares — RN twin of mWeb's <UserModeContent/>:
  * identity, incomplete nudge, quick-action grid, referral card, the Manage
- * Account list and — once switched into a partner mode — that role's own menu,
- * ending in Withdrawal. Identity and completion both come from the user info
+ * Account list and — once switched into a partner mode — that studio's menu,
+ * grouped the way the Partner console reads: Dashboard, Pods, Requests, Withdrawal. Identity and completion both come from the user info
  * record (useMe). */
 export function SidebarUserContent({
   me,
@@ -67,21 +66,9 @@ export function SidebarUserContent({
   const { t } = useTranslation();
   const percent = profileCompletion(account ?? {});
   const showIncomplete = !accountLoading && percent < 100;
-  // Each enrolling role reads its own queue, so the row is named for the mode
-  // it appears in. Written as literal `t('…')` calls because the translation
-  // gate greps source for the literal key (rule 38).
-  const autoPodTitles: Partial<Record<StudioMode, string>> = {
-    VENUE: t('mweb.autoPods.venueTitle'),
-    HOST: t('mweb.autoPods.hostTitle'),
-    CLUB: t('mweb.autoPods.clubTitle'),
-  };
-  const partnerMenus = buildPartnerMenus(
-    roles,
-    mode,
-    showAutoPods ? autoPodTitles[mode] : undefined,
-    // Each builder answers only for its own mode, so at most one contributes.
-    [...buildVenueMenuItems(mode, t), ...buildClubMenuItems(mode, t)],
-  );
+  // The switched-in studio's menu — Dashboard, Pods, Requests, Withdrawal and
+  // every option under them — from the definition mWeb renders too.
+  const partnerMenus = studioMenuSections(mode, roles, showAutoPods, t);
   // The flag-gated sections and the grid's translated tiles (rule 38).
   const tiles = buildSidebarTiles(t);
   return (

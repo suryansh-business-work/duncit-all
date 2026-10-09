@@ -122,7 +122,7 @@ describe('UserModeContent', () => {
     expect(screen.getByText('Pod Plans')).toBeInTheDocument();
   });
 
-  it('reveals the Host Menu only once switched into Host Studio', () => {
+  it('reveals the Host studio menu only once switched into Host Studio', () => {
     const onNavigate = vi.fn();
     // A host still in User mode gets the plain consumer drawer.
     const { rerender } = renderContent({
@@ -131,7 +131,7 @@ describe('UserModeContent', () => {
       showPodPlans: false,
       onNavigate,
     });
-    expect(screen.queryByText('Host Studio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pod Requests')).not.toBeInTheDocument();
     expect(screen.queryByText('Withdrawal')).not.toBeInTheDocument();
 
     rerender(
@@ -139,7 +139,13 @@ describe('UserModeContent', () => {
         <UserModeContent me={FULL_ME} roles={['HOST']} mode="HOST" showPodPlans={false} onNavigate={onNavigate} />
       </MockedProvider>,
     );
-    expect(screen.getByText('Host Menu')).toBeInTheDocument();
+    // Grouped the way the Partner console reads: Pods, Requests, Withdrawal.
+    expect(screen.getByText('Requests')).toBeInTheDocument();
+    expect(screen.getByText('Your Pods')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Pod Requests'));
+    expect(onNavigate).toHaveBeenCalledWith('/host/pod-requests');
+    fireEvent.click(screen.getByText('Change Requests'));
+    expect(onNavigate).toHaveBeenCalledWith('/change-requests');
     fireEvent.click(screen.getByText('Withdrawal'));
     expect(onNavigate).toHaveBeenCalledWith('/host/wallet');
   });

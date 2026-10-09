@@ -25,6 +25,7 @@ export const HostsVenuesPage = lazy(() => import('../../pages/HostsVenuesPage'))
 export const SurveyGatePage = lazy(() => import('../../pages/survey-gate'));
 export const HostManagePage = lazy(() => import('../../pages/HostManagePage'));
 export const NearbyVenuesPage = lazy(() => import('../../pages/nearby-partners-page/NearbyVenuesPage'));
+export const PodRequestsPage = lazy(() => import('../../pages/pod-requests/PodRequestsPage'));
 export const PodRequestDetailPage = lazy(() => import('../../pages/pod-request-detail-page'));
 export const PodAttendancePage = lazy(() => import('../../pages/pod-attendance-page'));
 export const HostApplyPage = lazy(() => import('../../pages/host-apply-page'));

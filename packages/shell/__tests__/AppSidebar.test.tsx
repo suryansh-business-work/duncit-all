@@ -76,6 +76,21 @@ describe('AppSidebar', () => {
     expect(screen.getByRole('button', { name: /Collapse all/ })).toBeInTheDocument();
   });
 
+  it('renders the portal’s header slot above the menu (the partner studio switcher)', () => {
+    renderSidebar({ header: <button type="button">Host Studio</button> });
+    const slot = screen.getByTestId('shell-sidebar-header');
+    expect(slot).toHaveTextContent('Host Studio');
+    // Above the menu: the slot comes before the first nav entry in the DOM.
+    expect(slot.compareDocumentPosition(screen.getByText('Dashboard')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('hides the header slot on the icon rail, and renders none when not given', () => {
+    renderSidebar({ header: <button type="button">Host Studio</button>, collapsed: true });
+    expect(screen.queryByTestId('shell-sidebar-header')).not.toBeInTheDocument();
+    renderSidebar();
+    expect(screen.queryByTestId('shell-sidebar-header')).not.toBeInTheDocument();
+  });
+
   it('shrinks to the icon rail with no footer caption, when collapsed', () => {
     renderSidebar({ collapsed: true });
     expect(screen.queryByText('© Duncit')).not.toBeInTheDocument();

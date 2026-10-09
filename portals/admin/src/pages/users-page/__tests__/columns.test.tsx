@@ -50,6 +50,7 @@ describe('getUsersColumns / column set', () => {
   it('builds the users grid columns in order', () => {
     expect(buildColumns().map((c) => c.field)).toEqual([
       'first_name',
+      'data_issues',
       'phone_number',
       'roles',
       'role',
@@ -59,6 +60,7 @@ describe('getUsersColumns / column set', () => {
       'city',
       'zone',
       'last_login_at',
+      'last_active_on',
       'created_at',
     ]);
   });
@@ -66,6 +68,7 @@ describe('getUsersColumns / column set', () => {
   it('labels the headers the grid shows', () => {
     expect(Object.fromEntries(buildColumns().map((c) => [c.field, c.headerName]))).toEqual({
       first_name: 'admin.users.colUser',
+      data_issues: 'admin.users.colIssues',
       phone_number: 'admin.users.colContact',
       roles: 'admin.roles.title',
       role: 'admin.users.colRole',
@@ -75,6 +78,7 @@ describe('getUsersColumns / column set', () => {
       city: 'admin.profile.city',
       zone: 'admin.profile.zone',
       last_login_at: 'admin.users.colLastLogin',
+      last_active_on: 'admin.users.colLastActive',
       created_at: 'shell.common.created',
     });
   });

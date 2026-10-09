@@ -163,7 +163,7 @@ describe('UsersPage — the table', () => {
     );
     expect(screen.getByTestId('duncit-table')).toHaveAttribute(
       'data-search-placeholder',
-      'Search name, email or phone'
+      'Search name, email or phone…'
     );
     expect(screen.queryByRole('dialog')).toBeNull();
   });

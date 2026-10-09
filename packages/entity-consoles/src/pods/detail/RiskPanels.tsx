@@ -1,5 +1,5 @@
 import { Divider, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
-import { FinanceWaterfallList, buildWaterfallLines, type PodFinanceWaterfall } from '@duncit/ui';
+import { EarningsSplitView } from '@duncit/ui';
 import { formatDateTime } from '@duncit/app-settings';
 import { usePodDetailsTranslation } from '@duncit/pod-details';
 import type { PodCancellationRiskView } from './queries';
@@ -37,20 +37,14 @@ function PanelTitle({ title, intro }: Readonly<{ title: string; intro?: string }
   );
 }
 
-/** The money: the waterfall on today's collections, ending below zero. */
+/** The money: today's collections split four ways — a host earning below
+ * zero is exactly the shortfall the panel is warning about. */
 export function FinancePanel({ risk }: Readonly<{ risk: PodCancellationRiskView }>) {
   const { t } = usePodDetailsTranslation();
-  const lines = buildWaterfallLines(
-    risk.waterfall as unknown as PodFinanceWaterfall,
-    risk.currency_symbol,
-    true,
-    t,
-    risk.collected_total
-  );
   return (
     <Stack spacing={1.25}>
       <PanelTitle title={t('admin.podRisk.financeTitle')} intro={t('admin.podRisk.financeIntro')} />
-      <FinanceWaterfallList symbol={risk.currency_symbol} lines={lines} />
+      <EarningsSplitView waterfall={risk.waterfall} symbol={risk.currency_symbol} viewer="staff" />
       <Divider />
       <Line label={t('admin.podRisk.shortfall')} value={money(risk.currency_symbol, risk.shortfall)} strong />
     </Stack>

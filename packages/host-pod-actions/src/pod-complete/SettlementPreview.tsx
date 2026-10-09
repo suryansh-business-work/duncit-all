@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
-import { FinanceWaterfallList } from '@duncit/ui';
+import { EarningsSplitView } from '@duncit/ui';
 import AttendanceRoster from './AttendanceRoster';
-import { buildHostShareLines } from './host-share-lines';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodSettlement } from '../types';
@@ -47,7 +46,7 @@ function AttendanceNote({ settlement }: Readonly<{ settlement: PodSettlement }>)
   );
 }
 
-/** Live "Host Share" preview — the finance-engine waterfall for this pod. */
+/** Live "Host Share" preview — the finance-engine split for this pod. */
 export default function SettlementPreview({
   podId,
   venueBillAmount,
@@ -102,9 +101,14 @@ export default function SettlementPreview({
         />
         <Divider />
         <AttendanceNote settlement={settlement} />
-        <FinanceWaterfallList
+        {/* The same four-way split (the host's earning first) as Create Pod
+            and every portal. Where the release pays less than the engine's
+            host figure — an expired window, or a host side below zero — the
+            two notes below say so. */}
+        <EarningsSplitView
+          waterfall={settlement.waterfall}
           symbol={settlement.currency_symbol}
-          lines={buildHostShareLines(settlement, labels)}
+          viewer="host"
         />
         {settlement.complete_expired && (
           <Typography variant="caption" color="error" data-testid="settlement-expired">

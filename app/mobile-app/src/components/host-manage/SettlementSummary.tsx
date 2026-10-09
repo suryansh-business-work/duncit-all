@@ -1,5 +1,7 @@
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
+import { buildEarningsSplit, formatStatementMoney } from '@duncit/utils';
 
+import { EarningsSplitAccordion } from '@/components/create-pod/price-panel/EarningsSplitAccordion';
 import type { PodSettlement } from '@/hooks/useSettlementPreview';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -8,61 +10,17 @@ interface Props {
   isLoading: boolean;
 }
 
-interface Line {
-  label: string;
-  value: number;
-  strong?: boolean;
-}
-
-function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }>) {
-  return (
-    <XStack justifyContent="space-between" testID={`settlement-row-${line.label}`}>
-      <Text fontSize={12.5} color={line.strong ? '$color' : '$muted'} fontWeight="600">
-        {line.label}
-      </Text>
-      <Text
-        fontSize={12.5}
-        color={line.strong ? '$accent' : '$color'}
-        fontWeight={line.strong ? '700' : '600'}
-      >
-        {symbol}
-        {line.value.toFixed(2)}
-      </Text>
-    </XStack>
-  );
-}
-
-/** "Host Share" preview of the reconciled split for the entered venue bill. */
+/** "Host Share" preview: the pod's money split four ways for the entered venue
+ * bill, the host's earning first. */
 export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
   const { t } = useTranslation();
   let body;
   if (settlement) {
-    const w = settlement.waterfall;
-    const lines: Line[] = [
-      { label: t('mweb.hostManage.customerPaid'), value: w.amount },
-      { label: `− GST (${w.gst_pct}%)`, value: w.gst_amount },
-      { label: `− Platform Fee (${w.platform_fee_pct}%)`, value: w.platform_fee_amount },
-      { label: t('mweb.hostManage.pool'), value: w.pool_amount },
-    ];
-    if (settlement.has_venue) {
-      lines.push(
-        { label: t('mweb.hostManage.venuePrice'), value: w.venue_amount },
-        { label: t('mweb.hostManage.venueReceives'), value: w.venue_receives },
-      );
-    }
-    lines.push(
-      // `host_payout_amount`, not `w.host_receives`: it is the number the
-      // release will actually carry — floored at zero on a pod that took less
-      // than the room cost, and zeroed outright once the completion window has
-      // expired — so this line and the money that lands cannot differ. mWeb's
-      // buildHostShareLines reads the same field.
-      {
-        label: t('mweb.hostManage.youReceive'),
-        value: settlement.host_payout_amount,
-        strong: true,
-      },
-      { label: t('mweb.hostManage.duncitRevenue'), value: w.duncit_revenue },
-    );
+    const symbol = settlement.currency_symbol;
+    // The same four-way split as Create Pod and every portal, the host's own
+    // earning first. Where the release pays less than the engine's host figure
+    // (an expired window, or a host side below zero) the notes below say so.
+    const split = buildEarningsSplit(settlement.waterfall, { symbol, t, viewer: 'host' });
     body = (
       <YStack gap={4}>
         {/* The head count these figures come from. A completed pod settles on
@@ -72,12 +30,19 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
           Based on {settlement.paying_attendees} paying{' '}
           {settlement.paying_attendees === 1 ? 'attendee' : 'attendees'} — your own spot is free.
         </Text>
-        {lines.map((line) => (
-          <SettlementRow key={line.label} symbol={settlement.currency_symbol} line={line} />
-        ))}
+        <EarningsSplitAccordion
+          split={split}
+          money={(value) => formatStatementMoney(value, symbol)}
+          venueShortfall={false}
+        />
         {settlement.complete_expired ? (
           <Text testID="settlement-expired" fontSize={12} color="$danger">
             {t('mweb.hostShare.expired')}
+          </Text>
+        ) : null}
+        {settlement.waterfall.host_receives < 0 ? (
+          <Text testID="settlement-shortfall" fontSize={12} color="$danger">
+            {t('mweb.hostShare.shortfall')}
           </Text>
         ) : null}
       </YStack>

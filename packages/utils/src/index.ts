@@ -470,6 +470,14 @@ export {
   type StatementSection,
 } from './earnings-statement';
 export {
+  buildEarningsSplit,
+  type EarningsBucket,
+  type EarningsBucketKey,
+  type EarningsBucketLine,
+  type EarningsSplit,
+  type EarningsSplitOptions,
+} from './earnings-split';
+export {
   MAX_COVER_IMAGES,
   addToSelection,
   coverCategoryName,

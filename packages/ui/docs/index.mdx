@@ -25,6 +25,8 @@ consumers:
   - 'portals/tech'
   - 'portals/website-app'
 exports:
+  - 'EarningsSplitView'
+  - 'EarningsSplitViewProps'
   - 'StatCard'
   - 'usageColor'
   - 'StatusChip'
@@ -906,3 +908,22 @@ recovery first and pick the log level; mWeb uses it to reload once for a stale c
 The native app cannot import React from a package, so its Tamagui twin
 (`app/mobile-app/src/components/ErrorBoundary`) builds the same report from `@duncit/utils`. It
 wraps the app root and every screen through the navigators' `screenLayout`.
+
+## Pod money: `EarningsSplitView`
+
+The one web view of a pod's money — mWeb Create Pod Step 4, the shared Pod Details Finance
+card (Pods, Clubs, Regional Club Admin, Partners, mWeb club pages), Finance `/pod-finance/:podId`,
+the Admin and host Complete-pod previews and the cancellation-risk panel. The host's earning
+comes first and highlighted, then where the rest goes (venue, club admin, Duncit & govt), each
+row opening its own hand-checkable breakdown. Every figure is read off the server waterfall via
+`@duncit/utils`' `buildEarningsSplit`; the native twin is `EarningsSplitAccordion`.
+
+```tsx
+import { EarningsSplitView } from '@duncit/ui';
+
+<EarningsSplitView waterfall={breakdown.waterfall} symbol="₹" viewer="staff" />
+<EarningsSplitView waterfall={w} symbol={currency} viewer="host" venueError={shortfallMessage} />
+```
+
+`venueError` pins a blocking reason to the Venue Take row; it stays visible while the row is
+collapsed. A waterfall whose buckets do not add back to the collection shows a reconcile warning.

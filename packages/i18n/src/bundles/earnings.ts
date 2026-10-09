@@ -23,6 +23,34 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const EARNINGS_BUNDLE: NestedCatalogue = {
   earnings: {
+    // The simplified four-bucket split (buildEarningsSplit): who takes what
+    // from the total collection. The four amounts add back to the collection.
+    split: {
+      heading: 'Where the rest goes',
+      shareOfCollection: '{pct}% of collection',
+      venueTitle: 'Venue Take',
+      venueSlotLabel: 'Venue slot price',
+      venueSlotFormula: 'Fixed price the venue set for your slot (once per pod)',
+      lessVenueCommissionLabel: 'Less: Duncit commission from venue @{pct}%',
+      clubTitle: 'Club Admin Take',
+      clubAdminLabel: 'Club admin share @{pct}%',
+      clubAdminFormula: '{pool} (after GST & platform fee) × {pct}%',
+      duncitTitle: 'Duncit Commission & Govt Charges',
+      hostCommissionLabel: 'Commission from host @{pct}%',
+      venueCommissionLabel: 'Commission from venue @{pct}%',
+      gstLabel: 'GST @{pct}% (paid to Govt.)',
+      gstFormula: '{amount} (total collection) × {pct} ÷ {divisor}',
+      platformFeeLabel: 'Platform fee @{pct}%',
+      percentOf: '{base} × {pct}%',
+      // The host reading their own pod sees "Your Earning"; portals see "Host Earning".
+      yourEarningTitle: 'Your Earning (Host)',
+      hostTitle: 'Host Earning',
+      hostNetLabel: 'You will receive',
+      hostReceivesLabel: 'Host receives',
+      reconcileWarning:
+        'These figures do not reconcile — refresh, or contact support if this persists.',
+      hostNetFormula: '{amount} − {venue} venue − {club} club admin − {duncit} Duncit & Govt.',
+    },
     statement: {
       clubAdminFormula: '{pool} × {pct}%',
       clubAdminLabel: 'Club Admin Fee @{pct}%',

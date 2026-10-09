@@ -15,13 +15,21 @@ export const PodSettlementPreviewDocument = gql(`
         amount
         gst_pct
         gst_amount
+        net_amount
         platform_fee_pct
         platform_fee_amount
         pool_amount
+        club_admin_pct
+        club_admin_amount
         venue_amount
+        venue_commission_pct
+        venue_commission_amount
         venue_receives
+        host_amount
+        host_commission_pct
+        host_commission_amount
         host_receives
-        duncit_revenue
+        host_earn_pct
       }
     }
   }

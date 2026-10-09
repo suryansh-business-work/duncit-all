@@ -159,6 +159,12 @@ exports:
   - 'TicketDiscountTranslate'
   - 'buildEarningsStatement'
   - 'formatStatementMoney'
+  - 'buildEarningsSplit'
+  - 'EarningsSplit'
+  - 'EarningsSplitOptions'
+  - 'EarningsBucket'
+  - 'EarningsBucketKey'
+  - 'EarningsBucketLine'
   - 'GRIEVANCE_FIELDS'
   - 'GRIEVANCE_MAX_LENGTH'
   - 'GRIEVANCE_OPTIONAL_FIELDS'
@@ -544,6 +550,25 @@ import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
 const statement = buildEarningsStatement(waterfall, { has_venue: !!slotId, symbol, t });
 ```
+
+And the four-way split every surface shows a pod's money as — the host's earning first, then
+Venue Take, Club Admin Take and Duncit Commission & Govt Charges, adding back to the collection
+exactly (the engine's own invariant). `viewer: 'host'` titles the first bucket "Your Earning
+(Host)"; `'staff'` titles it "Host Earning". Rendered by `@duncit/ui`'s `EarningsSplitView`
+on the web and `EarningsSplitAccordion` in the native app:
+
+```ts
+import { buildEarningsSplit } from '@duncit/utils';
+
+const split = buildEarningsSplit(waterfall, { symbol: '₹', t, viewer: 'staff' });
+split.buckets.map((b) => [b.key, b.amount]);
+// [['host', …], ['venue', …], ['club', …], ['duncit', …]] — always sums to waterfall.amount
+split.reconciled; // true
+```
+
+The Duncit bucket is GST + platform fee + both commissions. It is NOT the server's
+`duncit_revenue`, which also carries the club admin cut — showing that beside a separate club
+row would count the cut twice.
 
 ## Sample data
 

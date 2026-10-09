@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
-import { FinanceWaterfallList, buildWaterfallLines } from '@duncit/ui';
+import { EarningsSplitView } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import type { SettlementPreviewProps } from './complete-pod.types';
@@ -34,10 +34,10 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
         </Typography>
       );
     }
-    const lines = buildWaterfallLines(s.waterfall, s.currency_symbol, s.has_venue, t, s.collected_total);
+    // The same four-way split (host first) as every other pod money view.
     return (
       <Stack spacing={1}>
-        <FinanceWaterfallList symbol={s.currency_symbol} lines={lines} />
+        <EarningsSplitView waterfall={s.waterfall} symbol={s.currency_symbol} viewer="staff" />
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>

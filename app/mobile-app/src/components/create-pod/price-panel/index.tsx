@@ -1,14 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
-import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
+import { buildEarningsSplit, buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodFinance } from '../create-pod.types';
-import { ChargesAccordion } from './ChargesAccordion';
-import { PayoutCard } from './PayoutCard';
+import { EarningsSplitAccordion } from './EarningsSplitAccordion';
 import type { PodPricingState } from './usePodPricing';
 
 interface Props {
@@ -90,17 +89,10 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
               {statement.collection.included_gst_note}
             </Text>
           </YStack>
-          <ChargesAccordion
-            statement={statement}
+          <EarningsSplitAccordion
+            split={buildEarningsSplit(waterfall, { symbol, t, viewer: 'host' })}
             money={money}
             venueShortfall={pricing.venueShortfall}
-          />
-          <PayoutCard
-            amount={money(waterfall.host_receives)}
-            payingPax={projection.payable_spots}
-            earnPct={waterfall.host_earn_pct}
-            collection={money(statement.net_payout.collection)}
-            totalDeductions={money(statement.net_payout.total_deductions)}
           />
         </YStack>
       ) : null}

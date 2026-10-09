@@ -557,6 +557,10 @@ async function assertNotAlreadyBooked(podId: unknown, userId: string) {
   throw new GraphQLError(message, { extensions: { code: 'ALREADY_BOOKED' } });
 }
 
+/** A ship-to a courier can book: an object alone (even `{}`) is not one. */
+const hasShipTo = (address?: { line1?: string | null; pincode?: string | null } | null) =>
+  !!(address?.line1?.trim() && address?.pincode?.trim());
+
 /** Resolve what the user actually pays (pod ticket + selected products, or a raw
  * amount) plus the human description. Shared by the dummy + Razorpay flows. */
 async function resolvePayable(input: any, userId?: string) {
@@ -583,7 +587,7 @@ async function resolvePayable(input: any, userId?: string) {
     products = await resolveProductLines(pod, input.selected_products ?? []);
     // A ShipRocket-delivered product cannot be ordered without somewhere to
     // ship it — reject up-front instead of creating a doomed SHIP order.
-    if (products.needs_shipping && !input.shipping_address) {
+    if (products.needs_shipping && !hasShipTo(input.shipping_address)) {
       throw new GraphQLError('A delivery address is required for shipped products', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
@@ -647,7 +651,7 @@ async function resolveProductPayable(input: any): Promise<ProductPayableResoluti
     productsTotal = round2(productsTotal + resolution.total);
     if (resolution.needs_shipping) needsShipping = true;
   }
-  if (needsShipping && !input.shipping_address) {
+  if (needsShipping && !hasShipTo(input.shipping_address)) {
     throw new GraphQLError('A delivery address is required for shipped products', {
       extensions: { code: 'BAD_USER_INPUT' },
     });

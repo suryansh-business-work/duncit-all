@@ -210,3 +210,53 @@ export function buildOrderTimeline(
 export function trackingUrl(awb: string): string {
   return awb ? `https://shiprocket.co/tracking/${awb}` : '';
 }
+
+/**
+ * The order in the ShipRocket seller panel — empty until ShipRocket has it.
+ * It opens in whichever ShipRocket account the browser is signed in to, so it
+ * serves a brand shipping on its own account; a Duncit-courier order lives in
+ * Duncit's account.
+ */
+export function shiprocketOrderUrl(shiprocketOrderId: string | null | undefined): string {
+  return shiprocketOrderId ? `https://app.shiprocket.in/seller/orders/details/${shiprocketOrderId}` : '';
+}
+
+/** What a brand's order desk can do with one order right now. */
+export interface BrandOrderActions {
+  /** Book the ShipRocket shipment, or resume a booking that stopped. */
+  book: boolean;
+  /** Correct the ship-to — only while ShipRocket does not have the order. */
+  editAddress: boolean;
+  /** Label and invoice exist once the courier has assigned an AWB. */
+  documents: boolean;
+  /** Pull the courier's latest scans. */
+  refreshTracking: boolean;
+}
+
+/** The order facts the brand-desk rules read. */
+export interface BrandOrderFacts {
+  fulfilment_method: string;
+  fulfilment_status: string;
+  cancelled_at?: string | null;
+  shiprocket: Readonly<{ order_id?: string | null; awb?: string | null }>;
+}
+
+/** States a booking can still be (re)started from. */
+const BOOKABLE = new Set<string>(['PENDING', 'AWAITING_SHIPMENT', 'FAILED']);
+
+/**
+ * One rule for the Partner console, mWeb and the native Studio: which order
+ * actions to offer. Only a shipped, live order has any — a pickup order and a
+ * cancelled one are read-only on the brand's desk.
+ */
+export function brandOrderActions(order: Readonly<BrandOrderFacts>): BrandOrderActions {
+  const live = order.fulfilment_method === 'SHIP' && !order.cancelled_at;
+  const booked = !!order.shiprocket.order_id;
+  const awb = !!order.shiprocket.awb;
+  return {
+    book: live && !awb && BOOKABLE.has(order.fulfilment_status),
+    editAddress: live && !booked,
+    documents: live && awb,
+    refreshTracking: live && awb,
+  };
+}

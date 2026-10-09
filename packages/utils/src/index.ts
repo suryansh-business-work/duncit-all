@@ -826,6 +826,7 @@ export {
 } from './host-insights';
 export {
   ALL_FULFILMENT_STATUSES,
+  brandOrderActions,
   buildOrderTimeline,
   FULFILMENT_METHOD_KEYS,
   FULFILMENT_STATUS_KEYS,
@@ -837,13 +838,35 @@ export {
   SHIP_FLOW,
   statusLabel,
   TONE_CHIP_COLOR,
+  shiprocketOrderUrl,
   trackingUrl,
   type FulfilmentMethod,
   type FulfilmentStatus,
   type FulfilmentTone,
   type FulfilmentTranslate,
+  type BrandOrderActions,
+  type BrandOrderFacts,
   type TimelineStep,
 } from './product-orders';
+export {
+  BRAND_ORDERS_PAGE_SIZE,
+  brandOrdersPageCount,
+  brandOrdersTableQuery,
+  PICKUP_SHIPROCKET_STATE_KEYS,
+  PICKUP_SHIPROCKET_TONE,
+  pickupReview,
+  pickupShiprocketState,
+  shipToLines,
+  SHIPMENT_DOCUMENTS,
+  type ShipmentDocumentKind,
+  type ShipToAddress,
+  type PickupReviewStatus,
+  type BrandOrdersFilter,
+  type BrandOrdersTableQuery,
+  type BrandOrdersView,
+  type PickupShiprocketFacts,
+  type PickupShiprocketState,
+} from './brand-desk';
 export {
   PACKAGE_TYPES,
   PACKAGING_LIMITS,

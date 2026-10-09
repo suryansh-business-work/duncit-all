@@ -60,6 +60,14 @@ describe('STUDIO_OPTION_LIST', () => {
     const portalOnly = STUDIO_OPTION_LIST.ECOMM.filter((option) => !option.path).map((option) => option.portal);
     expect(portalOnly).toEqual(['/ecomm-brand', '/ecomm-brand/integrations', '/ecomm-brand/returns']);
   });
+
+  it('lets a brand work its orders and ShipRocket warehouses in the app as well as the console', () => {
+    const inApp = STUDIO_OPTION_LIST.ECOMM.filter((option) => ['orders', 'warehouses'].includes(option.key));
+    expect(inApp.map(({ path, route, portal }) => ({ path, route, portal }))).toEqual([
+      { path: '/products/orders', route: 'BrandOrders', portal: '/ecomm-brand/orders' },
+      { path: '/products/warehouses', route: 'BrandWarehouses', portal: '/ecomm-brand/warehouses' },
+    ]);
+  });
 });
 
 describe('studioOptionsEntryFor', () => {

@@ -93,6 +93,13 @@ export {
 } from './address';
 
 export {
+  makeShipToSchema,
+  shipToValues,
+  type ShipToSource,
+  type ShipToValues,
+} from './ship-to';
+
+export {
   makeContactOtpSchema,
   makeContactValueSchema,
   type ContactOtpValues,

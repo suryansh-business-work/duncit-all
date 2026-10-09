@@ -191,6 +191,34 @@ export const mediaLibraryService = {
     return !!metadata?.audioCodec;
   },
 
+  /**
+   * Create a folder, parents included — ImageKit creates every missing folder
+   * in `parentFolderPath` itself. Asking for one that already exists is not an
+   * error worth stopping for, so the caller decides whether a failure matters.
+   */
+  async createFolder(folderPath: string): Promise<void> {
+    const segments = folderPath.split('/').filter(Boolean);
+    const folderName = segments.pop();
+    if (!folderName) return;
+    await call('/folder', {
+      method: 'POST',
+      body: JSON.stringify({ folderName, parentFolderPath: `/${segments.join('/')}` }),
+    });
+  },
+
+  /**
+   * Copy one file into a folder, keeping its name. The source is left exactly
+   * where it was, so every URL already pointing at it keeps working. A file of
+   * the same name already at the destination gains a version rather than a
+   * duplicate, which is what makes a retried copy harmless.
+   */
+  async copy(sourceFilePath: string, destinationPath: string): Promise<void> {
+    await call('/files/copy', {
+      method: 'POST',
+      body: JSON.stringify({ sourceFilePath, destinationPath, includeFileVersions: false }),
+    });
+  },
+
   /** Drop a URL from ImageKit's CDN cache after replacing what sits behind it. */
   async purge(url: string): Promise<string> {
     const result = await call<{ requestId?: string }>('/files/purge', {

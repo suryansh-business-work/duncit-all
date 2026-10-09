@@ -117,7 +117,61 @@ export const uploadTypeDefs = /* GraphQL */ `
     versionId: String
   }
 
+  """
+  One media organizer run: how many files it found in each state.
+  PENDING files are owned by one record and not yet copied; DONE were copied
+  into their owner's folder and the record rewritten; IN_PLACE were already
+  there; SHARED are used by more than one record and stay where they are;
+  FAILED could not be copied; ROLLED_BACK were put back.
+  """
+  type MediaOrganizerRun {
+    run_id: ID!
+    started_at: String!
+    PENDING: Int!
+    DONE: Int!
+    IN_PLACE: Int!
+    SHARED: Int!
+    FAILED: Int!
+    ROLLED_BACK: Int!
+  }
+
+  enum MediaRelocationStatus {
+    PENDING
+    DONE
+    IN_PLACE
+    SHARED
+    FAILED
+    ROLLED_BACK
+  }
+
+  type MediaRelocationTablePage {
+    rows: [MediaRelocation!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "One file a media organizer run found."
+  type MediaRelocation {
+    id: ID!
+    file_path: String!
+    new_file_path: String!
+    target_folder: String!
+    "Every owner (bucket/id) referencing it."
+    owners: [String!]!
+    status: MediaRelocationStatus!
+    error: String!
+    "Fields that held it."
+    references: Int!
+    "Fields pointed at the copy. Fewer than references means a record changed meanwhile and kept the original URL, which still works."
+    rewritten: Int!
+  }
+
   extend type Query {
+    "Media organizer runs, newest first."
+    mediaOrganizerRuns(limit: Int): [MediaOrganizerRun!]!
+    "One run's files as a portal table page."
+    mediaOrganizerFilesTable(run_id: ID!, query: TableQueryInput): MediaRelocationTablePage!
     pexelsSearch(query: String, page: Int, perPage: Int, orientation: String): PexelsSearchResult!
     pexelsSearchVideos(
       query: String
@@ -149,7 +203,26 @@ export const uploadTypeDefs = /* GraphQL */ `
     Ask for somewhere to put a file. The folder is fixed on the pass, so one
     issued for avatars cannot be spent writing somewhere else.
     """
-    getImagekitAuth(folder: String, surface: UploadSurface): ImagekitAuth!
+    getImagekitAuth(
+      "A feature folder (/pods, /clubs/moments, /users…). The server files it under the owner: /{env}/{bucket}/{owner id}/{kind}."
+      folder: String
+      surface: UploadSurface
+      "The record the file is for (pod, club, venue, product…) when known — files it into that record's folder."
+      entity_id: ID
+    ): ImagekitAuth!
+
+    """
+    Scan every pod, club, venue, user, product and brand record for the
+    ImageKit files it uses, and copy each file used by exactly one record into
+    that record's folder, rewriting the record to the copy. Originals are never
+    moved or deleted, so every existing URL keeps working. dry_run stops after
+    the scan.
+    """
+    startMediaOrganizer(dry_run: Boolean!, url: String): BackgroundJob!
+    "Carry out a dry run's findings without scanning again."
+    applyMediaOrganizerRun(run_id: ID!, url: String): BackgroundJob!
+    "Point every field a run rewrote back at the original file."
+    rollbackMediaOrganizerRun(run_id: ID!, url: String): BackgroundJob!
 
     "Delete files by id. Returns how many ImageKit actually removed."
     deleteMediaFiles(fileIds: [ID!]!): Int!
@@ -168,6 +241,8 @@ export const uploadTypeDefs = /* GraphQL */ `
     importRemoteImageToImagekit(
       remoteUrl: String!
       folder: String
+      "The record the file is for (pod, club, venue, product…) when known — files it into that record's folder."
+      entity_id: ID
       fileName: String
       "Upload Settings surface of the caller (PORTALS | MOBILE | MWEB) — decides the size cap and the compression applied to the import."
       surface: String
@@ -180,6 +255,8 @@ export const uploadTypeDefs = /* GraphQL */ `
     importRemoteMediaToImagekit(
       remoteUrl: String!
       folder: String
+      "The record the file is for (pod, club, venue, product…) when known — files it into that record's folder."
+      entity_id: ID
       fileName: String
       "Upload Settings surface of the caller (PORTALS | MOBILE | MWEB) — decides the size cap and the compression applied to the import."
       surface: String
@@ -194,6 +271,8 @@ export const uploadTypeDefs = /* GraphQL */ `
       fileName: String!
       mimeType: String
       folder: String
+      "The record the file is for (pod, club, venue, product…) when known — files it into that record's folder."
+      entity_id: ID
       "Allow document files (PDF/Office/txt/csv) in addition to image/video — used by support chat attachments."
       allow_documents: Boolean
       "Upload Settings surface of the caller (PORTALS | MOBILE | MWEB)."
@@ -214,6 +293,8 @@ export const uploadTypeDefs = /* GraphQL */ `
     startVideoCompression(
       remote_url: String!
       folder: String
+      "The record the file is for (pod, club, venue, product…) when known — files it into that record's folder."
+      entity_id: ID
       surface: String
       trim_start_seconds: Float
       trim_duration_seconds: Float

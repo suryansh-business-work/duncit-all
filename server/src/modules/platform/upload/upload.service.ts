@@ -8,6 +8,7 @@ import { outboundFetch } from '@utils/outboundFetch';
 import { isTrustedMediaHost } from '@utils/url';
 import { getUrlConfigs } from '../../../config/url-configs';
 import { issueUploadTicket } from './uploadTicket';
+import { resolveUploadFolder } from './uploadFolder';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { mediaScanService } from '@modules/ai/aiMonitoring/aiMonitoring.service';
 import {
@@ -138,7 +139,10 @@ async function postToImagekit(
   form.append('file', file, opts.fileName);
   form.append('fileName', opts.fileName);
   form.append('useUniqueFileName', 'true');
-  if (opts.folder) form.append('folder', opts.folder);
+  // Callers resolve the owner's folder with the uploader in hand; this is the
+  // floor under the ones that cannot (AI fills, status-report screenshots), so
+  // nothing lands outside its environment's root. Resolving twice is a no-op.
+  form.append('folder', resolveUploadFolder(opts.folder));
   if (opts.tags?.length) form.append('tags', opts.tags.join(','));
 
   const auth = 'Basic ' + Buffer.from(privateKey + ':').toString('base64');

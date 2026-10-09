@@ -10,7 +10,10 @@ import { getVideoCompressionJob, startVideoCompression } from './videoCompressio
 import type { CropRect } from './mediaProcessing';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
+import type { TableQueryInput } from '@utils/table-query';
 import { mediaLibraryService } from './mediaLibrary.service';
+import { MEDIA_ORGANIZER_ROLES, mediaOrganizerService } from './mediaOrganizer.service';
+import { resolveUploadFolder } from './uploadFolder';
 
 /**
  * Anyone signed in may browse and upload — the file manager is a shared drawer
@@ -71,17 +74,36 @@ export const uploadResolvers = {
       requireAuth(ctx);
       return getVideoCompressionJob(args.job_id);
     },
+    mediaOrganizerRuns: (_p: unknown, args: { limit?: number | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, MEDIA_ORGANIZER_ROLES);
+      return mediaOrganizerService.runs(args.limit ?? 20);
+    },
+    mediaOrganizerFilesTable: (
+      _p: unknown,
+      args: { run_id: string; query?: TableQueryInput | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, MEDIA_ORGANIZER_ROLES);
+      return mediaOrganizerService.filesTable(args.run_id, args.query);
+    },
   },
   Mutation: {
+    startMediaOrganizer: (_p: unknown, args: { dry_run: boolean; url?: string | null }, ctx: GraphQLContext) =>
+      mediaOrganizerService.start(requireRole(ctx, MEDIA_ORGANIZER_ROLES), args.dry_run, args.url),
+    applyMediaOrganizerRun: (_p: unknown, args: { run_id: string; url?: string | null }, ctx: GraphQLContext) =>
+      mediaOrganizerService.apply(requireRole(ctx, MEDIA_ORGANIZER_ROLES), args.run_id, args.url),
+    rollbackMediaOrganizerRun: (_p: unknown, args: { run_id: string; url?: string | null }, ctx: GraphQLContext) =>
+      mediaOrganizerService.rollback(requireRole(ctx, MEDIA_ORGANIZER_ROLES), args.run_id, args.url),
     getImagekitAuth: (
       _p: unknown,
-      args: { folder?: string | null; surface?: string | null },
+      args: { folder?: string | null; surface?: string | null; entity_id?: string | null },
       ctx: GraphQLContext,
     ) => {
       const user = requireAuth(ctx);
       // The folder is fixed on the pass rather than trusted from the upload, so
       // one issued for /avatars cannot be spent writing into /legal.
-      return getImagekitAuth(user.id, args.folder?.trim() || '/uploads', args.surface ?? '');
+      const folder = resolveUploadFolder(args.folder, { userId: user.id, entityId: args.entity_id });
+      return getImagekitAuth(user.id, folder, args.surface ?? '');
     },
     deleteMediaFiles: (_p: unknown, args: { fileIds: string[] }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, MEDIA_WRITE_ROLES);
@@ -109,26 +131,26 @@ export const uploadResolvers = {
     },
     importRemoteImageToImagekit: (
       _p: unknown,
-      args: { remoteUrl: string; folder?: string; fileName?: string; surface?: string },
+      args: { remoteUrl: string; folder?: string; fileName?: string; surface?: string; entity_id?: string | null },
       ctx: GraphQLContext
     ) => {
-      requireAuth(ctx);
+      const user = requireAuth(ctx);
       return importRemoteImage({
         remoteUrl: args.remoteUrl,
-        folder: args.folder,
+        folder: resolveUploadFolder(args.folder, { userId: user.id, entityId: args.entity_id }),
         fileName: args.fileName,
         surface: args.surface,
       });
     },
     importRemoteMediaToImagekit: (
       _p: unknown,
-      args: { remoteUrl: string; folder?: string; fileName?: string; surface?: string },
+      args: { remoteUrl: string; folder?: string; fileName?: string; surface?: string; entity_id?: string | null },
       ctx: GraphQLContext
     ) => {
-      requireAuth(ctx);
+      const user = requireAuth(ctx);
       return importRemoteMedia({
         remoteUrl: args.remoteUrl,
-        folder: args.folder,
+        folder: resolveUploadFolder(args.folder, { userId: user.id, entityId: args.entity_id }),
         fileName: args.fileName,
         surface: args.surface,
       });
@@ -140,6 +162,7 @@ export const uploadResolvers = {
         fileName: string;
         mimeType?: string;
         folder?: string;
+        entity_id?: string | null;
         allow_documents?: boolean;
         surface?: string;
         crop?: CropRect | null;
@@ -147,9 +170,10 @@ export const uploadResolvers = {
       },
       ctx: GraphQLContext
     ) => {
-      requireAuth(ctx);
+      const user = requireAuth(ctx);
       return uploadBase64Image({
         ...args,
+        folder: resolveUploadFolder(args.folder, { userId: user.id, entityId: args.entity_id }),
         allowDocuments: args.allow_documents,
         cropPresetKey: args.crop_preset,
         userId: ctx.user?.id ?? null,
@@ -160,6 +184,7 @@ export const uploadResolvers = {
       args: {
         remote_url: string;
         folder?: string;
+        entity_id?: string | null;
         surface?: string;
         trim_start_seconds?: number | null;
         trim_duration_seconds?: number | null;
@@ -167,10 +192,10 @@ export const uploadResolvers = {
       },
       ctx: GraphQLContext
     ) => {
-      requireAuth(ctx);
+      const user = requireAuth(ctx);
       return startVideoCompression({
         remoteUrl: args.remote_url,
-        folder: args.folder,
+        folder: resolveUploadFolder(args.folder, { userId: user.id, entityId: args.entity_id }),
         surface: args.surface,
         trimStartSeconds: args.trim_start_seconds,
         trimDurationSeconds: args.trim_duration_seconds,

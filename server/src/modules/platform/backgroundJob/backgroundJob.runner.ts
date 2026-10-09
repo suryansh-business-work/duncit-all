@@ -3,6 +3,7 @@ import { hostname } from 'node:os';
 import { logs } from '@observability/log';
 import { translateNextWave } from '@modules/platform/localization/aiTranslate.step';
 import { deleteBatch } from './bulkDelete.runner';
+import { organizeMediaStep } from '@modules/platform/upload/mediaOrganizer.step';
 import {
   BackgroundJobModel,
   type BackgroundJobKind,
@@ -34,6 +35,7 @@ type JobStep = (job: LeanBackgroundJob) => Promise<boolean>;
 const STEPS: Readonly<Record<BackgroundJobKind, JobStep>> = {
   BULK_DELETE: deleteBatch,
   AI_TRANSLATE: translateNextWave,
+  MEDIA_ORGANIZE: organizeMediaStep,
 };
 
 const scheduled = new Set<string>();

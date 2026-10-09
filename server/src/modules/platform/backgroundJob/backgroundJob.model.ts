@@ -16,7 +16,7 @@ export const JOB_STATUSES = ['RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'] as c
 export type BackgroundJobStatus = (typeof JOB_STATUSES)[number];
 
 /** What a job does — the runner hands each kind to its own step. */
-export const JOB_KINDS = ['BULK_DELETE', 'AI_TRANSLATE'] as const;
+export const JOB_KINDS = ['BULK_DELETE', 'AI_TRANSLATE', 'MEDIA_ORGANIZE'] as const;
 export type BackgroundJobKind = (typeof JOB_KINDS)[number];
 
 /** SELECTED acts on the ticked ids; ALL on every row matching the table's view. */

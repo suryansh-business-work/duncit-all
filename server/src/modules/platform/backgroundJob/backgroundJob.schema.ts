@@ -10,6 +10,7 @@ export const backgroundJobTypeDefs = /* GraphQL */ `
   enum BackgroundJobKind {
     BULK_DELETE
     AI_TRANSLATE
+    MEDIA_ORGANIZE
   }
 
   "SELECTED deletes the ticked rows; ALL deletes every row matching the table's current view."

@@ -7,6 +7,7 @@ import type { FulfilmentMethod, FulfilmentStatus } from './productOrder.model';
 import type { ShipmentDocument } from '@modules/commerce/shiprocket/shiprocket.shipment';
 import { cancelPodShopOrder, retryOrderRefund } from './productOrder.cancel';
 import type { TableQueryInput } from '@utils/table-query';
+import { brandProductOrderService, type ShipToInput } from './productOrder.brand';
 
 const OPS_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER', 'FINANCE_MANAGER'];
 // Cancelling sends money back — the Products team and Finance only.
@@ -47,6 +48,10 @@ export const productOrderResolvers = {
       requireAuth(ctx);
       return productOrderService.trackingByOrderNo(args.order_no);
     },
+    brandProductOrdersTable: (_p: unknown, args: { query?: TableQueryInput | null; brand_id?: string | null }, ctx: GraphQLContext) =>
+      brandProductOrderService.table(requireAuth(ctx).id, args.query, args.brand_id),
+    brandProductOrder: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      brandProductOrderService.get(requireAuth(ctx).id, args.id),
   },
   Mutation: {
     advanceProductOrderStatus: (
@@ -94,5 +99,15 @@ export const productOrderResolvers = {
       requireRole(ctx, OPS_RW);
       return productOrderService.shipmentFile(args.ids, args.kind);
     },
+    brandBookProductOrderShipment: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      brandProductOrderService.book(requireAuth(ctx).id, args.id),
+    brandRefreshProductOrderTracking: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      brandProductOrderService.refreshTracking(requireAuth(ctx).id, args.id),
+    brandUpdateProductOrderAddress: (_p: unknown, args: { id: string; address: ShipToInput }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return brandProductOrderService.updateAddress(user.id, args.id, args.address, user.email ?? 'Partner');
+    },
+    brandProductOrderShipmentFile: (_p: unknown, args: { ids: string[]; kind: ShipmentDocument }, ctx: GraphQLContext) =>
+      brandProductOrderService.shipmentFile(requireAuth(ctx).id, args.ids, args.kind),
   },
 };

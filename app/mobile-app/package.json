@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.83.8",
+  "version": "1.83.9",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@12.2.0",

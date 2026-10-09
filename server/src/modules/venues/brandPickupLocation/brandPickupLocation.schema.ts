@@ -45,6 +45,16 @@ export const brandPickupLocationTypeDefs = /* GraphQL */ `
     is_default: Boolean
   }
 
+  "A brand's warehouses after a check against the ShipRocket account it ships on."
+  type BrandPickupSync {
+    warehouses: [BrandPickupLocation!]!
+    "Why ShipRocket could not be read ('' when it was) — the warehouses are still listed."
+    shiprocket_error: String!
+    "Pickup addresses taken in from the brand's own ShipRocket account on this sync."
+    adopted: Int!
+    synced_at: String!
+  }
+
   extend type Query {
     "Pickup/warehouse locations for a Duncit or brand owner (Products portal)."
     brandPickupLocations(owner_kind: PickupOwnerKind, brand_doc_id: ID): [BrandPickupLocation!]!
@@ -58,6 +68,8 @@ export const brandPickupLocationTypeDefs = /* GraphQL */ `
     setDefaultBrandPickupLocation(id: ID!): BrandPickupLocation!
     "Register the location with ShipRocket so SHIP orders can pick up from it."
     registerBrandPickupWithShiprocket(id: ID!): BrandPickupLocation!
+    "Check an own brand's warehouses against its ShipRocket account; on its own account, take in pickups it has there."
+    syncMyBrandPickupLocations(brand_doc_id: ID!): BrandPickupSync!
     "Create/update a warehouse on one of the caller's OWN brands (owner_kind/brand_id are forced server-side)."
     saveMyBrandPickupLocation(brand_doc_id: ID!, id: ID, input: BrandPickupLocationInput!): BrandPickupLocation!
     "Delete an own-brand warehouse. Blocked while any product still ships from it."

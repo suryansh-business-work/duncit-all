@@ -262,3 +262,9 @@ ecommBrandSchema.pre('save', function deriveLive(this: IEcommBrand) {
 attachEntityAudit(ecommBrandSchema, 'BRAND');
 
 export const EcommBrandModel = model<IEcommBrand>('EcommBrand', ecommBrandSchema);
+
+/** The brands a partner owns — the scope of everything they may see or act on for a brand. */
+export async function ownedBrandIds(userId: string): Promise<Types.ObjectId[]> {
+  const brands = await EcommBrandModel.find({ owner_user_id: new Types.ObjectId(userId) }).select('_id').lean();
+  return brands.map((b) => b._id as Types.ObjectId);
+}

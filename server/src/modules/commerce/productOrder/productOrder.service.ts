@@ -724,6 +724,17 @@ export const productOrderService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
 
+  /** Pod-shop orders of the given brands — the scope is fixed here, so a client filter cannot widen it. */
+  async tableForBrands(brandIds: Types.ObjectId[], input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IProductOrder>(
+      ProductOrderModel,
+      { 'line_items.brand_id': { $in: brandIds }, channel: 'POD_SHOP' },
+      input,
+      PRODUCT_ORDER_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
   async getById(id: string) {
     const d = await ProductOrderModel.findById(id);
     return d ? toPub(d) : null;

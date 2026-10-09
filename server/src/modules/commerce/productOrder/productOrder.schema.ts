@@ -241,6 +241,10 @@ export const productOrderTypeDefs = /* GraphQL */ `
     productOrderTracking(order_no: String!): OrderTracking
     "Admin › User details › Shop Orders: one member's pod-shop orders."
     userProductOrdersTable(user_id: ID!, query: TableQueryInput): ProductOrderTablePage!
+    "Partner: pod-shop orders of the caller's own brands (one brand when brand_id is given)."
+    brandProductOrdersTable(query: TableQueryInput, brand_id: ID): ProductOrderTablePage!
+    "Partner: one order of the caller's own brands."
+    brandProductOrder(id: ID!): ProductOrder
   }
 
   extend type Mutation {
@@ -258,5 +262,13 @@ export const productOrderTypeDefs = /* GraphQL */ `
     forceCancelProductOrder(id: ID!, reason: String!): ProductOrder!
     "Products portal: retry a cancelled order's refund that Razorpay refused."
     retryProductOrderRefund(id: ID!): ProductOrder!
+    "Partner: book, or resume booking, the ShipRocket shipment of an own-brand order."
+    brandBookProductOrderShipment(id: ID!): ProductOrder!
+    "Partner: pull the latest tracking of an own-brand order."
+    brandRefreshProductOrderTracking(id: ID!): ProductOrder!
+    "Partner: correct an own-brand order's ship-to before ShipRocket has it."
+    brandUpdateProductOrderAddress(id: ID!, address: OrderShippingAddressInput!): ProductOrder!
+    "Partner: one PDF (label, invoice or manifest) for own-brand orders."
+    brandProductOrderShipmentFile(ids: [ID!]!, kind: ShipmentDocumentKind!): ShipmentFile!
   }
 `;

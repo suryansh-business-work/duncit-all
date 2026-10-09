@@ -177,6 +177,14 @@ export const brandPickupLocationService = {
     return this.list({ owner_kind: 'BRAND', brand_id: brandDocId });
   },
 
+  /** The brand's warehouses checked against its ShipRocket account (its own pickups taken in). */
+  async syncMine(userId: string, brandDocId: string) {
+    await loadOwnedBrand(userId, brandDocId);
+    const { syncBrandPickupLocations } = await import('@modules/commerce/shiprocket/shiprocket.ops');
+    const result = await syncBrandPickupLocations(brandDocId);
+    return { ...result, warehouses: result.warehouses.map(toPub) };
+  },
+
   async saveMine(userId: string, brandDocId: string, id: string | null | undefined, input: any) {
     await loadOwnedBrand(userId, brandDocId);
     if (id) await ownedLocation(brandDocId, id);

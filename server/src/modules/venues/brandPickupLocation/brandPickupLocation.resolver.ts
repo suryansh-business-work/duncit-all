@@ -35,6 +35,10 @@ export const brandPickupLocationResolvers = {
       requireRole(ctx, ADMIN_RW);
       return brandPickupLocationService.registerWithShiprocket(args.id);
     },
+    syncMyBrandPickupLocations: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return brandPickupLocationService.syncMine(user.id, args.brand_doc_id);
+    },
     saveMyBrandPickupLocation: (
       _p: unknown,
       args: { brand_doc_id: string; id?: string | null; input: any },

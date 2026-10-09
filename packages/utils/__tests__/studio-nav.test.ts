@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STUDIO_NAV, studioNavFor, type StudioNavGroup } from '../src/studio-nav';
+import { STUDIO_NAV, studioMenuSections, studioNavFor, type StudioNavGroup } from '../src/studio-nav';
 
 const ALL_ROLES = ['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER'];
 const groupKeys = (groups: readonly StudioNavGroup[]) => groups.map((group) => group.key);
@@ -103,5 +103,33 @@ describe('studioNavFor', () => {
       expect(paths(off).some((path) => path.endsWith('/auto-pods'))).toBe(false);
       expect(groupKeys(off)).toEqual(groupKeys(STUDIO_NAV[mode]));
     }
+  });
+});
+
+describe('studioMenuSections', () => {
+  const t = (key: string) => `t:${key}`;
+
+  it('translates each group and builds every row with the calling app’s shape', () => {
+    const sections = studioMenuSections('CLUB', ['CLUB_ADMIN'], {
+      autoPods: false,
+      t,
+      row: (item, label) => ({ label, where: item.path }),
+    });
+    expect(sections.map((section) => [section.key, section.title])).toEqual([
+      ['dashboard', 't:mweb.studioNav.dashboardGroup'],
+      ['pods', 't:mweb.studioNav.clubsGroup'],
+      ['requests', 't:mweb.studioNav.requestsGroup'],
+      ['withdrawal', 't:mweb.studioNav.withdrawalGroup'],
+    ]);
+    expect(sections[1].items).toEqual([
+      { label: 't:mweb.studioNav.yourClubs', where: '/clubs/manage' },
+      { label: 't:mweb.clubMenu.monitoring', where: '/clubs/monitoring' },
+    ]);
+  });
+
+  it('is empty wherever studioNavFor is', () => {
+    const row = () => 'row';
+    expect(studioMenuSections('USER', ['HOST'], { autoPods: true, t, row })).toEqual([]);
+    expect(studioMenuSections('ECOMM', ['HOST'], { autoPods: true, t, row })).toEqual([]);
   });
 });

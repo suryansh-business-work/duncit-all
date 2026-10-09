@@ -712,8 +712,10 @@ export {
 } from './studio-mode';
 export {
   STUDIO_NAV,
+  studioMenuSections,
   studioNavFor,
   type PartnerStudioMode,
+  type StudioMenuSection,
   type StudioNavGroup,
   type StudioNavGroupKey,
   type StudioNavIcon,

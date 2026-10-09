@@ -1,4 +1,4 @@
-import { studioNavFor, type StudioNavIcon } from '@duncit/utils';
+import { studioMenuSections as sharedSections, type StudioMenuSection, type StudioNavIcon } from '@duncit/utils';
 import type { StudioMode } from '../../../studio-mode';
 import type { ProfileIconKey, ProfileTile } from './profileSections';
 
@@ -20,34 +20,20 @@ const ICON: Record<StudioNavIcon, ProfileIconKey> = {
   ecomm: 'ecomm',
 };
 
-/** One drawer section of the studio menu. */
-export interface StudioMenuSection {
-  key: string;
-  title: string;
-  items: ProfileTile[];
-}
-
 /**
- * The switched-in studio's menu as drawer sections — Dashboard, Pods (or
- * Clubs), Venues, Requests, Withdrawal — from the ONE definition the native
- * app renders too (@duncit/utils studio-nav). Empty in User mode, or when the
- * studio's role is gone.
+ * The switched-in studio's menu as drawer sections, from the ONE definition
+ * the native app renders too (@duncit/utils studio-nav). This app only says
+ * what a row is here: a path and a drawer icon.
  */
 export function studioMenuSections(
   mode: StudioMode,
   roles: readonly string[],
   autoPods: boolean,
   t: (key: string) => string,
-): StudioMenuSection[] {
-  return studioNavFor(mode, roles, { autoPods }).map((group) => ({
-    key: group.key,
-    title: t(group.labelKey),
-    items: group.items.map((item) => ({
-      key: item.key,
-      label: t(item.labelKey),
-      caption: '',
-      icon: ICON[item.icon],
-      to: item.path,
-    })),
-  }));
+): StudioMenuSection<ProfileTile>[] {
+  return sharedSections<ProfileTile>(mode, roles, {
+    autoPods,
+    t,
+    row: (item, label) => ({ key: item.key, label, caption: '', icon: ICON[item.icon], to: item.path }),
+  });
 }

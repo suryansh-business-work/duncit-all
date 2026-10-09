@@ -206,3 +206,32 @@ export function studioNavFor(
     items: group.items.filter((item) => options.autoPods || !item.autoPods),
   }));
 }
+
+/** One menu section — a group, translated, with the app's own row shape. */
+export interface StudioMenuSection<Row> {
+  key: StudioNavGroupKey;
+  title: string;
+  items: Row[];
+}
+
+/**
+ * The switched-in studio's menu as translated sections, each row built by the
+ * calling app — mWeb gives its drawer rows a path and an MUI icon, native its
+ * sidebar rows a route and a vector icon. The grouping, the flag and role
+ * gating and the translation live here once, so the two apps cannot differ.
+ */
+export function studioMenuSections<Row>(
+  mode: StudioMode,
+  roles: readonly string[],
+  options: {
+    autoPods: boolean;
+    t: (key: string) => string;
+    row: (item: StudioNavItem, label: string) => Row;
+  },
+): StudioMenuSection<Row>[] {
+  return studioNavFor(mode, roles, options).map((group) => ({
+    key: group.key,
+    title: options.t(group.labelKey),
+    items: group.items.map((item) => options.row(item, options.t(item.labelKey))),
+  }));
+}

@@ -24,6 +24,8 @@ interface Props {
   onRequestChange: (row: VenuePodRow) => void;
   /** Already translated — the label lives in the shared `changeRequest.*`. */
   requestChangeLabel: string;
+  /** Already translated — what an empty tab says. Defaults to "no pods yet". */
+  emptyText?: string;
 }
 
 /** All pods booked at the partner's venues; click a row for attendees. */
@@ -35,6 +37,7 @@ export default function VenuePodsTable({
   onCancel,
   onRequestChange,
   requestChangeLabel,
+  emptyText,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<VenuePodRow>[]>(
@@ -121,7 +124,7 @@ export default function VenuePodsTable({
       onRowClick={onRowClick}
       externalFilters={externalFilters}
       refetchRef={refetchRef}
-      emptyText={t('partners.venuePodsPage.noPodsAtYourVenuesYet')}
+      emptyText={emptyText ?? t('partners.venuePodsPage.noPodsAtYourVenuesYet')}
       searchPlaceholder="Search pod, host or venue"
       defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
     />

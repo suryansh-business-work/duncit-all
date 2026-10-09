@@ -5,23 +5,23 @@ import { MY_VENUES } from '../register-venue-page/queries';
 import { APPROVE_SLOT_REQUEST, DECLINE_SLOT_REQUEST, VENUE_SLOT_REQUESTS, type SlotRequestRow } from './queries';
 import SlotRequestCard from './SlotRequestCard';
 import { useTranslation } from '@duncit/shell';
-
-const ALL_VENUES = 'ALL';
+import { ALL_VENUES, useVenueFilter } from '../../components/venue/useSelectedVenue';
 
 export default function SlotRequestsPage() {
   const { t } = useTranslation();
-  const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
 
   const venuesQuery = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-first' });
+  const venues = venuesQuery.data?.myVenues ?? [];
+  // Opens on the venue picked last on any venue page; "All venues" stays a choice.
+  const filter = useVenueFilter(venues);
   const requestsQuery = useQuery<any>(VENUE_SLOT_REQUESTS, {
-    variables: { venue_id: venueId === ALL_VENUES ? null : venueId },
+    variables: { venue_id: filter.venueIdOrNull },
     fetchPolicy: 'cache-and-network',
   });
   const [approve, approveState] = useMutation<any>(APPROVE_SLOT_REQUEST);
   const [decline, declineState] = useMutation<any>(DECLINE_SLOT_REQUEST);
 
-  const venues = venuesQuery.data?.myVenues ?? [];
   const requests: SlotRequestRow[] = requestsQuery.data?.venueSlotRequests ?? [];
   const busy = approveState.loading || declineState.loading;
 
@@ -71,8 +71,8 @@ export default function SlotRequestsPage() {
             select
             size="small"
             label={t('partners.common.venue')}
-            value={venueId}
-            onChange={(e) => setVenueId(e.target.value)}
+            value={filter.value}
+            onChange={(e) => filter.change(e.target.value)}
             helperText={t('partners.slotRequestsPage.filterRequestsByVenue')}
             sx={{ minWidth: 220 }}
           >

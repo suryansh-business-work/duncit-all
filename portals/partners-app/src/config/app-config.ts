@@ -1,5 +1,13 @@
 import type { AppNavItem } from '@duncit/shell';
-import { AUTO_POD_PATHS, hasPartnerRole, PARTNER_SECTIONS, visibleSections, type PartnerRole } from './partner-sections';
+import { STUDIO_OPTIONS_ENTRY } from '@duncit/utils';
+import {
+  hasPartnerRole,
+  optionsPathOf,
+  PARTNER_SECTIONS,
+  visibleSections,
+  type PartnerRole,
+  type PartnerSection,
+} from './partner-sections';
 
 /**
  * Per-app configuration for the Duncit Partners console. Reusable configuration
@@ -58,7 +66,7 @@ export const appConfig: AppConfig = {
 };
 
 /**
- * Where `/` sends somebody: the dashboard of the first partner area they hold.
+ * Where `/` sends somebody: the Options page of the first partner area they hold.
  *
  * This surface is open to any signed-in user, and somebody with no partner
  * access yet lands on Earn with Duncit — the page that says how to get it, and
@@ -66,13 +74,10 @@ export const appConfig: AppConfig = {
  */
 export function landingPath(roles?: readonly string[] | null, productsVisible = true): string {
   const first = visibleSections(roles, productsVisible)[0];
-  return first?.nav.children?.[0]?.to ?? '/earn';
+  return first ? optionsPathOf(first) : '/earn';
 }
 
 export interface BuildNavOptions {
-  /** The `auto_pods` feature flag. Off by default, so the Auto Pods options
-   * stay out of the menu until an admin turns the feature on. */
-  autoPods?: boolean;
   /** The `is_product_visible` system flag. Off by default, so the Brand
    * Studio — listings, warehouses, ShipRocket — is absent. */
   products?: boolean;
@@ -84,16 +89,28 @@ export interface BuildNavOptions {
 /** Withdrawal for a partner with no studio to show it (see buildNav). */
 const WITHDRAWAL_NAV: AppNavItem = { label: 'Withdrawal', labelKey: 'shell.nav.withdrawal', to: '/wallet', icon: 'wallet' };
 
-/** A nav tree without the Auto Pods options (the `auto_pods` flag is off). */
-function withoutAutoPods(items: readonly AppNavItem[]): AppNavItem[] {
-  return items
-    .filter((item) => !(item.to && AUTO_POD_PATHS.includes(item.to)))
-    .map((item) => (item.children ? { ...item, children: withoutAutoPods(item.children) } : item));
+/**
+ * A studio's ONE sidebar entry: its Options page, highlighted like Earn with
+ * Duncit. Its words are the shared catalogue's keys; the shell always renders
+ * `labelKey` / `captionKey`, so the key also stands in for the required
+ * `label` rather than pinning English here.
+ */
+export function studioOptionsNavItem(section: PartnerSection): AppNavItem {
+  const entry = STUDIO_OPTIONS_ENTRY[section.mode];
+  return {
+    label: entry.labelKey,
+    labelKey: entry.labelKey,
+    caption: entry.hintKey,
+    captionKey: entry.hintKey,
+    to: entry.portal,
+    icon: section.icon,
+    featured: true,
+  };
 }
 
 /**
- * Sidebar nav for the signed-in user: ONE studio at a time — Dashboard, Pods,
- * Requests, Withdrawal and every option grouped under them — then the
+ * Sidebar nav for the signed-in user: ONE studio at a time — its Options entry,
+ * which opens the page listing every option the studio has — then the
  * role-independent tail. The studio switcher above it moves between studios.
  *
  * Somebody who holds no studio yet sees the ways in instead (Be a Host, become
@@ -104,18 +121,17 @@ export function buildNav(
   options?: Readonly<BuildNavOptions>,
 ): AppNavItem[] {
   const products = options?.products === true;
-  const autoPods = options?.autoPods === true;
   const held = visibleSections(roles, products);
   const active = held.find((section) => section.role === options?.activeRole) ?? held[0];
   const studio = active
-    ? (active.nav.children ?? [])
+    ? [studioOptionsNavItem(active)]
     : PARTNER_SECTIONS.filter((section) => products || !section.products)
         .map((section) => section.onboarding)
         .filter((item): item is AppNavItem => item !== undefined);
-  // Withdrawal is in every studio's own list. A partner whose only studio is
-  // hidden (the shop switched off) holds no studio to show it — but money they
-  // already earned must stay withdrawable, so it follows the ROLE here.
+  // Withdrawal is on every studio's Options page. A partner whose only studio
+  // is hidden (the shop switched off) holds no studio to show it — but money
+  // they already earned must stay withdrawable, so it follows the ROLE here.
   const earns = PARTNER_SECTIONS.some((section) => hasPartnerRole(roles, section.role));
   const withdrawal = !active && earns ? [WITHDRAWAL_NAV] : [];
-  return [...(autoPods ? studio : withoutAutoPods(studio)), ...withdrawal, ...appConfig.nav];
+  return [...studio, ...withdrawal, ...appConfig.nav];
 }

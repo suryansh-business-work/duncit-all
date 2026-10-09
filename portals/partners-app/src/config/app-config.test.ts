@@ -1,94 +1,65 @@
 import { describe, expect, it } from 'vitest';
 import type { AppNavItem } from '@duncit/shell';
 import { appConfig, buildNav, landingPath } from './app-config';
+import { PARTNER_SECTIONS, type PartnerRole } from './partner-sections';
 
-/** Every route in a nav tree, depth-first — the options a partner can reach. */
+/** Every route in a nav tree, depth-first — the entries a partner can reach. */
 const routes = (items: readonly AppNavItem[]): string[] =>
   items.flatMap((item) => [...(item.to ? [item.to] : []), ...routes(item.children ?? [])]);
 const labels = (items: readonly AppNavItem[]) => items.map((item) => item.label);
 const tail = labels(appConfig.nav);
 
+/** The Options page each studio's ONE sidebar entry opens. */
+const OPTIONS: Record<PartnerRole, string> = {
+  VENUE_OWNER: '/venues/options',
+  HOST: '/host/options',
+  CLUB_ADMIN: '/club-admin/options',
+  ECOMM_MANAGER: '/ecomm/options',
+};
+
 describe('buildNav', () => {
-  it('shows ONE studio: Dashboard, Pods, Requests, Withdrawal, then the account tail', () => {
-    const nav = buildNav(['HOST'], { autoPods: true });
-    expect(labels(nav)).toEqual(['Dashboard', 'Pods', 'Requests', 'Withdrawal', ...tail]);
-    expect(nav[0].to).toBe('/host/dashboard');
-    expect(nav.find((i) => i.label === 'Withdrawal')?.to).toBe('/wallet');
+  it('shows ONE highlighted Options entry for the studio, then the account tail', () => {
+    const nav = buildNav(['VENUE_OWNER']);
+    expect(nav).toHaveLength(1 + tail.length);
+    expect(nav[0]).toEqual({
+      label: 'mweb.studioOptions.venueEntry',
+      labelKey: 'mweb.studioOptions.venueEntry',
+      caption: 'mweb.studioOptions.venueEntryHint',
+      captionKey: 'mweb.studioOptions.venueEntryHint',
+      to: '/venues/options',
+      icon: 'storefront',
+      featured: true,
+    });
+    expect(labels(nav.slice(1))).toEqual(tail);
   });
 
-  it('keeps every former Host option in the menu, grouped', () => {
-    const all = routes(buildNav(['HOST'], { autoPods: true }));
-    for (const to of [
-      '/host/dashboard',
-      '/host/pods',
-      '/host/auto-pods',
-      '/host/pod-requests',
-      '/host/change-requests',
-      '/host/nearby-venues',
-      '/wallet',
-    ]) {
-      expect(all).toContain(to);
-    }
+  it.each([
+    ['HOST', 'mweb.studioOptions.hostEntry', 'mweb.studioOptions.hostEntryHint'],
+    ['CLUB_ADMIN', 'mweb.studioOptions.clubEntry', 'mweb.studioOptions.clubEntryHint'],
+    ['ECOMM_MANAGER', 'mweb.studioOptions.brandEntry', 'mweb.studioOptions.brandEntryHint'],
+  ] as const)('gives the %s studio its own Options entry, label and hint', (role, labelKey, captionKey) => {
+    const [entry] = buildNav([role], { products: true });
+    expect(entry).toMatchObject({ labelKey, captionKey, to: OPTIONS[role], featured: true });
   });
 
-  it('keeps every former Venue option in the menu, grouped', () => {
-    const nav = buildNav(['VENUE_OWNER'], { autoPods: true });
-    expect(labels(nav)).toEqual(['Dashboard', 'Venues', 'Pods', 'Requests', 'Withdrawal', ...tail]);
-    const all = routes(nav);
-    for (const to of [
-      '/venues/dashboard',
-      '/register-venue',
-      '/venues/settings',
-      '/venues/pods',
-      '/venues/requests',
-      '/venues/pod-requests',
-      '/venues/change-requests',
-      '/venues/auto-pods',
-      '/venues/nearby-hosts',
-    ]) {
-      expect(all).toContain(to);
-    }
-  });
-
-  it('keeps every former Club Admin option in the menu, grouped', () => {
-    const all = routes(buildNav(['CLUB_ADMIN'], { autoPods: true }));
-    for (const to of [
-      '/club-admin/dashboard',
-      '/club-admin/clubs',
-      '/club-admin/auto-pods',
-      '/club-admin/monitoring',
-      '/club-admin/change-requests',
-      '/wallet',
-    ]) {
-      expect(all).toContain(to);
-    }
-  });
-
-  it('keeps every former Brand option in the menu while products are on', () => {
-    const all = routes(buildNav(['ECOMM_MANAGER'], { products: true }));
-    for (const to of ['/ecomm/dashboard', '/ecomm-brand', '/ecomm-brand/integrations', '/ecomm-brand/returns', '/wallet']) {
-      expect(all).toContain(to);
+  it('no longer lists the studio options one by one in the sidebar', () => {
+    const all = routes(buildNav(['VENUE_OWNER']));
+    for (const to of ['/venues/dashboard', '/venues/pods', '/venues/requests', '/register-venue', '/wallet']) {
+      expect(all).not.toContain(to);
     }
   });
 
   it('shows the active studio, and falls back to the first one held', () => {
     const roles = ['HOST', 'VENUE_OWNER'];
-    expect(buildNav(roles, { activeRole: 'HOST' })[0].to).toBe('/host/dashboard');
-    expect(buildNav(roles, { activeRole: 'VENUE_OWNER' })[0].to).toBe('/venues/dashboard');
+    expect(buildNav(roles, { activeRole: 'HOST' })[0].to).toBe('/host/options');
+    expect(buildNav(roles, { activeRole: 'VENUE_OWNER' })[0].to).toBe('/venues/options');
     // Not held → the first studio held (catalogue order: Venue before Host).
-    expect(buildNav(roles, { activeRole: 'CLUB_ADMIN' })[0].to).toBe('/venues/dashboard');
-    expect(buildNav(roles)[0].to).toBe('/venues/dashboard');
-    // Never two studios' menus at once.
-    expect(routes(buildNav(roles, { activeRole: 'HOST' }))).not.toContain('/register-venue');
-  });
-
-  it('leaves the Auto Pods options out while the flag is off', () => {
-    const off = routes(buildNav(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN']));
-    expect(off.some((to) => to.endsWith('/auto-pods'))).toBe(false);
-    for (const role of ['HOST', 'VENUE_OWNER', 'CLUB_ADMIN'] as const) {
-      const on = routes(buildNav([role], { autoPods: true, activeRole: role }));
-      expect(on.some((to) => to.endsWith('/auto-pods'))).toBe(true);
-    }
+    expect(buildNav(roles, { activeRole: 'CLUB_ADMIN' })[0].to).toBe('/venues/options');
+    expect(buildNav(roles)[0].to).toBe('/venues/options');
+    // Never two studios at once.
+    const nav = routes(buildNav(roles, { activeRole: 'HOST' }));
+    expect(nav).not.toContain('/venues/options');
+    expect(nav.filter((to) => to.endsWith('/options'))).toEqual(['/host/options']);
   });
 
   it('groups FAQs, Support and Policies under Help', () => {
@@ -101,6 +72,7 @@ describe('buildNav', () => {
     expect(labels(nav)).toEqual(['Be a Host', ...tail]);
     expect(nav[0].to).toBe('/be-a-host');
     expect(routes(nav)).not.toContain('/wallet');
+    expect(routes(nav).some((to) => to.endsWith('/options'))).toBe(false);
     expect(buildNav([], { products: true })[1].to).toBe('/become-a-brand-partner');
   });
 
@@ -118,13 +90,30 @@ describe('buildNav', () => {
 
   it('keeps Withdrawal for an e-commerce partner while the shop is switched off', () => {
     const off = buildNav(['ECOMM_MANAGER']);
-    expect(routes(off)).not.toContain('/ecomm-brand');
+    expect(routes(off)).not.toContain('/ecomm/options');
     // Money already earned must stay withdrawable.
     expect(routes(off)).toContain('/wallet');
+  });
+});
+
+describe('landingPath', () => {
+  it('lands each studio on its Options page', () => {
+    for (const section of PARTNER_SECTIONS) {
+      expect(landingPath([section.role], true)).toBe(OPTIONS[section.role]);
+    }
+  });
+
+  it('lands somebody holding several studios on the first one, in sidebar order', () => {
+    expect(landingPath(['HOST', 'CLUB_ADMIN'])).toBe('/club-admin/options');
   });
 
   it('lands an e-commerce-only partner on Earn while products are off', () => {
     expect(landingPath(['ECOMM_MANAGER'], false)).toBe('/earn');
-    expect(landingPath(['ECOMM_MANAGER'], true)).toBe('/ecomm/dashboard');
+    expect(landingPath(['ECOMM_MANAGER'], true)).toBe('/ecomm/options');
+  });
+
+  it('lands somebody with no partner role on Earn', () => {
+    expect(landingPath([])).toBe('/earn');
+    expect(landingPath(null)).toBe('/earn');
   });
 });

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Link as RouterLink } from 'react-router';
 import { Alert, Box, Card, MenuItem, Stack, TextField, Typography } from '@mui/material';
@@ -13,8 +12,7 @@ import { VENUE_OWNER_STATS } from './queries';
 import VenueStatCards from './VenueStatCards';
 import { publicPageWidget } from '../../components/publicPageWidget';
 import { useTranslation } from '@duncit/shell';
-
-const ALL_VENUES = 'ALL';
+import { ALL_VENUES, useVenueFilter } from '../../components/venue/useSelectedVenue';
 
 /** Same banner as the host console — page identity, and the venue picker that
  *  every widget below is scoped by. */
@@ -34,16 +32,17 @@ const PICKER_SX = {
 
 export default function VenueDashboardPage() {
   const { t } = useTranslation();
-  const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const venuesQuery = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-and-network' });
+  const venues = venuesQuery.data?.myVenues ?? [];
+  // Opens on the venue picked last on any venue page; "All venues" stays a choice.
+  const filter = useVenueFilter(venues);
   const statsQuery = useQuery<any>(VENUE_OWNER_STATS, {
-    variables: { venue_id: venueId === ALL_VENUES ? null : venueId },
+    variables: { venue_id: filter.venueIdOrNull },
     fetchPolicy: 'cache-and-network',
   });
 
-  const venues = venuesQuery.data?.myVenues ?? [];
   const stats = statsQuery.data?.venueOwnerStats ?? emptyVenueOwnerStats;
-  const selectedVenue = venues.find((venue: any) => venue.id === venueId);
+  const selectedVenue = venues.find((venue: any) => venue.id === filter.venueIdOrNull);
 
   const widgets: DashboardWidget[] = [
     {
@@ -111,8 +110,8 @@ export default function VenueDashboardPage() {
                 select
                 size="small"
                 label={t('partners.common.venue')}
-                value={venueId}
-                onChange={(e) => setVenueId(e.target.value)}
+                value={filter.value}
+                onChange={(e) => filter.change(e.target.value)}
                 helperText={t('partners.venueDashboardPage.pickOneVenueOrViewAll')}
                 sx={PICKER_SX}
               >

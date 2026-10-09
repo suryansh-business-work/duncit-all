@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
@@ -18,6 +18,7 @@ import {
   toPolicyValues,
   type CancellationPolicyValues,
 } from './cancellation-policy';
+import { useSelectedVenue } from '../../components/venue/useSelectedVenue';
 import { MY_VENUES_SETTINGS, UPDATE_VENUE_CANCELLATION, type VenueSettingsVenue } from './queries';
 
 /**
@@ -27,7 +28,6 @@ import { MY_VENUES_SETTINGS, UPDATE_VENUE_CANCELLATION, type VenueSettingsVenue 
  */
 export default function VenueSettingsPage() {
   const { t } = useTranslation();
-  const [venueId, setVenueId] = useState('');
   const [apiError, setApiError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -37,12 +37,8 @@ export default function VenueSettingsPage() {
   const [saveSettings, saveState] = useMutation(UPDATE_VENUE_CANCELLATION);
 
   const venues = data?.myVenues ?? [];
-  const selected = venues.find((venue) => venue.id === venueId) ?? null;
-
-  // Land on the first venue rather than an empty form nobody can act on.
-  useEffect(() => {
-    if (!selected && venues.length > 0) setVenueId(venues[0].id);
-  }, [selected, venues, setVenueId]);
+  // Opens on the venue picked last on any venue page, never on an empty form.
+  const { venue: selected, selectVenue } = useSelectedVenue(venues);
 
   // The form resets whenever these change, so they key off the policy's
   // CONTENT rather than its identity: a background refresh hands back a fresh
@@ -106,7 +102,7 @@ export default function VenueSettingsPage() {
             fullWidth
             label={t('venueSettings.venue')}
             value={selected?.id ?? ''}
-            onChange={(event) => setVenueId(event.target.value)}
+            onChange={(event) => selectVenue(event.target.value)}
           >
             {venues.map((venue) => (
               <MenuItem key={venue.id} value={venue.id}>

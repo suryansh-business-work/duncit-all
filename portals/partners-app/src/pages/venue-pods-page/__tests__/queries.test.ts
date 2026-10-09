@@ -116,13 +116,26 @@ describe('applyVenuePodsQuery', () => {
     makeRow({ id: '4', bucket: 'CANCELLED', cancelled_at: '2026-07-03T00:00:00.000Z' }),
   ];
 
-  it('applies the tab from externalFilters plus search, sort and paging', async () => {
-    const cancelled = await applyVenuePodsQuery(rows, {
-      ...baseQuery,
-      filters: [{ field: 'tab', op: 'eq', value: 'CANCELLED' }],
-    }, columns);
-    expect(cancelled.total).toBe(1);
-    expect(cancelled.rows[0].id).toBe('4');
+  const phase = (value: string) => ({
+    ...baseQuery,
+    filters: [{ field: 'phase', op: 'eq', value }] as TableFilterValue[],
+  });
+  const ids = async (value: string) => (await applyVenuePodsQuery(rows, phase(value), columns)).rows.map((row) => row.id);
+
+  it('splits the pods into Upcoming, Current (running now) and Past (finished or cancelled)', async () => {
+    expect(await ids('UPCOMING')).toEqual(['1']);
+    expect(await ids('CURRENT')).toEqual(['2']);
+    expect(await ids('PAST').then((past) => past.sort())).toEqual(['3', '4']);
+  });
+
+  it('shows every pod with no phase, and never treats the phase as a column filter', async () => {
+    const all = await applyVenuePodsQuery(rows, baseQuery, columns);
+    expect(all.total).toBe(4);
+    // An unknown phase matches no tab, so it falls back to every row rather than none.
+    expect(await ids('SOMEDAY')).toHaveLength(4);
+  });
+
+  it('applies search, sort and paging inside the phase', async () => {
 
     const searched = await applyVenuePodsQuery(
       [makeRow(), makeRow({ id: '2', pod_title: 'Book Club', host_names: ['Ravi'] })],

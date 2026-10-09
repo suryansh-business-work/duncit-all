@@ -106,25 +106,25 @@ describe('Step-4 pricing guards', () => {
     expect(isVenueShortfall({ ...base, slotPrice: null })).toBe(false);
   });
 
-  it('states the venue rule inside the Venue Charges section', async () => {
+  it('states the venue rule on the Venue Take row', async () => {
     render(
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[financeMock]}>
         <PricePanel preview={previewWith({ venueShortfall: true, blocked: true })} />
       </MockedProvider>,
     );
-    expect(await screen.findByTestId('price-panel-venue-error')).toHaveTextContent(
+    expect(await screen.findByTestId('earnings-split-venue')).toHaveTextContent(
       VENUE_SHORTFALL_MESSAGE,
     );
   });
 
-  it('keeps the charges tree clean when the pod covers the venue', async () => {
+  it('keeps the split clean when the pod covers the venue', async () => {
     render(
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[financeMock]}>
         <PricePanel preview={previewWith({})} />
       </MockedProvider>,
     );
-    await screen.findByTestId('price-panel-charges');
-    expect(screen.queryByTestId('price-panel-venue-error')).not.toBeInTheDocument();
+    await screen.findByTestId('earnings-split');
+    expect(screen.queryByText(VENUE_SHORTFALL_MESSAGE)).not.toBeInTheDocument();
   });
 
   it('renders the zero-earnings notice copy', () => {

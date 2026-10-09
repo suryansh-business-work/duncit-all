@@ -16,6 +16,8 @@ const waterfall = {
   platform_fee_pct: 5,
   platform_fee_amount: 42.37,
   pool_amount: 805.09,
+  club_admin_pct: 0,
+  club_admin_amount: 0,
   venue_amount: 300,
   venue_commission_pct: 10,
   venue_commission_amount: 30,
@@ -58,11 +60,16 @@ describe('SettlementPreview', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('renders the waterfall once the preview resolves', async () => {
+  it('renders the four-way split, host first, once the preview resolves', async () => {
     renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} hostUserId="u1" />, {
       mocks: [previewMock()],
     });
-    expect(await screen.findByText(/customer paid/i)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Host Earning' })).toBeInTheDocument();
+    // Host 454.58 · venue keeps 270 · Duncit & govt = GST 152.54 + fee 42.37
+    // + host commission 50.51 + venue commission 30.
+    expect(screen.getByText('₹454.58')).toBeInTheDocument();
+    expect(screen.getByText('₹270.00')).toBeInTheDocument();
+    expect(screen.getByText('₹275.42')).toBeInTheDocument();
     expect(screen.getByText(/credited to the beneficiary wallets/i)).toBeInTheDocument();
   });
 
@@ -78,7 +85,7 @@ describe('SettlementPreview', () => {
     renderWithProviders(<SettlementPreview podId="pod-1" venueBillAmount={1500} hostUserId="" />, {
       mocks: [mock],
     });
-    await screen.findByText(/customer paid/i);
+    await screen.findByRole('button', { name: 'Host Earning' });
     expect(sentVariables).toMatchObject({ host_user_id: null });
   });
 

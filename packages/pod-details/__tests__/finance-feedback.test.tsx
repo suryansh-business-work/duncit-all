@@ -25,6 +25,8 @@ const waterfall = {
   platform_fee_pct: 10,
   platform_fee_amount: 84.75,
   pool_amount: 762.71,
+  club_admin_pct: 0,
+  club_admin_amount: 0,
   venue_amount: 300,
   venue_commission_pct: 10,
   venue_commission_amount: 30,
@@ -67,10 +69,21 @@ describe('PodFinanceSection', () => {
 
     expect(screen.getByText('Live')).toBeInTheDocument();
     expect(screen.getByText('4')).toBeInTheDocument();
-    // Once in the summary, once as the waterfall's "Customer Paid" line.
-    expect(screen.getAllByText('₹1000.00')).toHaveLength(2);
-    expect(screen.getByText('Venue price')).toBeInTheDocument();
-    expect(screen.getByText('Host receives')).toBeInTheDocument();
+    expect(screen.getByText('₹1000.00')).toBeInTheDocument();
+    // The same four-way split every surface shows, host first: host 370.17,
+    // venue keeps 270 of its 300, Duncit & govt = GST 152.54 + fee 84.75 +
+    // host commission 92.54 + venue commission 30.
+    const rows = screen.getAllByRole('button').map((node) => node.getAttribute('aria-label'));
+    expect(rows).toEqual([
+      'Host Earning',
+      'Venue Take',
+      'Club Admin Take',
+      'Duncit Commission & Govt Charges',
+    ]);
+    expect(screen.getByText('₹370.17')).toBeInTheDocument();
+    expect(screen.getByText('₹270.00')).toBeInTheDocument();
+    expect(screen.getByText('₹359.83')).toBeInTheDocument();
+    expect(screen.queryByTestId('earnings-split-reconcile-warning')).not.toBeInTheDocument();
     expect(screen.getByText('Payouts are released after Finance approval.')).toBeInTheDocument();
     expect(screen.queryByText('Frozen snapshot')).not.toBeInTheDocument();
     expect(screen.queryByText('Multi-ticket discounts given')).not.toBeInTheDocument();
@@ -96,14 +109,25 @@ describe('PodFinanceSection', () => {
     expect(screen.getByText('Frozen snapshot')).toBeInTheDocument();
   });
 
-  it('leaves the venue line out of a pod that has no venue', async () => {
+  it('shows a nil venue take for a pod that has no venue', async () => {
+    const noVenue = {
+      ...waterfall,
+      venue_amount: 0,
+      venue_commission_amount: 0,
+      venue_receives: 0,
+      host_amount: 762.71,
+      host_commission_amount: 152.54,
+      host_receives: 610.17,
+    };
     mountSection(<PodFinanceSection podId={POD_ID} />, [
-      financeMock(breakdown({ settlement_status: 'SETTLED', has_venue: false })),
+      financeMock(breakdown({ settlement_status: 'SETTLED', has_venue: false, waterfall: noVenue })),
     ]);
     await settle();
 
     expect(screen.getByText('Settled')).toBeInTheDocument();
-    expect(screen.queryByText('Venue price')).not.toBeInTheDocument();
+    expect(screen.getByText('Venue Take')).toBeInTheDocument();
+    expect(screen.getAllByText('₹0.00')).toHaveLength(2); // venue + club admin
+    expect(screen.getByText('₹610.17')).toBeInTheDocument();
   });
 
   it('shows no status chip for a settlement state it has no word for', async () => {

@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { EarningsWaterfall } from '@duncit/utils';
 
 /** One line of the finance waterfall, as `@duncit/ui` draws it. */
 const WATERFALL_FIELDS = `
@@ -85,7 +86,7 @@ export interface PodCancellationRiskView {
   collected_total: number;
   venue_amount: number;
   shortfall: number;
-  waterfall: Record<string, number>;
+  waterfall: EarningsWaterfall;
   attendees: PodCancellationRiskAttendees;
   alerted_at: string | null;
   alert_count: number;

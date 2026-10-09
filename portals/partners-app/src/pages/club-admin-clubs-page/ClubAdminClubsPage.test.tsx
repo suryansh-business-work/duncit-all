@@ -80,12 +80,12 @@ describe('ClubAdminClubsPage', () => {
     );
   });
 
-  it('opens the club’s details when its row is clicked', async () => {
+  it('opens the club (its pods) when its row is clicked', async () => {
     mount([clubInfo()]);
 
     fireEvent.click(await screen.findByText('Sunrise Tennis Club'));
     await waitFor(() =>
-      expect(screen.getByTestId('location').textContent).toBe('/club-admin/clubs/club-1/edit'),
+      expect(screen.getByTestId('location').textContent).toBe('/club-admin/clubs/club-1'),
     );
   });
 

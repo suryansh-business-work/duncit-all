@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client/react';
 import { Chip, Divider, Stack, Typography } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';
-import { FinanceWaterfallList, buildWaterfallLines } from '@duncit/ui';
+import { EarningsSplitView } from '@duncit/ui';
 import SectionCard from './SectionCard';
 import { POD_FINANCE_BREAKDOWN } from './queries';
 import type { Translate } from './i18n/useTranslation';
@@ -39,7 +39,8 @@ function SummaryRow({ label, value }: Readonly<{ label: string; value: string | 
   );
 }
 
-/** "Finance" card on the pod detail page: settlement status + money waterfall. */
+/** "Finance" card on the pod detail page: settlement status + the pod's money
+ * split four ways (host first), the same view every surface shows. */
 export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>) {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<any>(POD_FINANCE_BREAKDOWN, {
@@ -49,16 +50,6 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
   });
   const breakdown = data?.podFinanceBreakdown;
   const statusChip = breakdown ? statusChips(t)[breakdown.settlement_status as SettlementStatus] : null;
-
-  const lines = breakdown
-    ? buildWaterfallLines(
-        breakdown.waterfall,
-        breakdown.currency_symbol,
-        breakdown.has_venue,
-        t,
-        breakdown.collected_total
-      )
-    : [];
 
   return (
     <SectionCard
@@ -109,7 +100,11 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
             </>
           )}
           <Divider />
-          <FinanceWaterfallList symbol={breakdown.currency_symbol} lines={lines} />
+          <EarningsSplitView
+            waterfall={breakdown.waterfall}
+            symbol={breakdown.currency_symbol}
+            viewer="staff"
+          />
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>

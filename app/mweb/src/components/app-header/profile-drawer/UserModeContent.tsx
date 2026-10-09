@@ -9,23 +9,14 @@ import ManageAccountList from './ManageAccountList';
 import AdSlot from '../../ads/AdSlot';
 import {
   buildManageItems,
-  buildPartnerMenus,
   PROFILE_GRID,
   SHOP_ITEMS,
   type ProfileTile,
 } from './profileSections';
-import { AUTO_POD_PATH, type StudioMode } from '../../../studio-mode';
+import type { StudioMode } from '../../../studio-mode';
+import { studioMenuSections } from './studioNavMenus';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
 import { useTranslation } from '../../../i18n/useTranslation';
-
-/** The Auto Pods row reads as that role's own queue, so it borrows the page
- * title. Written out as literals — a composed key is invisible to the shipped-
- * key check (rule 38). Modes with no queue are absent. */
-const AUTO_POD_TITLE_KEY: Partial<Record<StudioMode, string>> = {
-  VENUE: 'mweb.autoPods.venueTitle',
-  HOST: 'mweb.autoPods.hostTitle',
-  CLUB: 'mweb.autoPods.clubTitle',
-};
 
 interface UserModeContentProps {
   me: any;
@@ -46,43 +37,10 @@ interface UserModeContentProps {
   onNavigate: (to: string) => void;
 }
 
-/**
- * The rows a partner mode adds after its own: the venue menu's calendar pair,
- * the club admin menu's dashboard and AI pod monitor. Built here so the labels
- * are translated; native renders the same keys (rule 27).
- */
-function partnerModeItems(mode: StudioMode, translate: (key: string) => string): ProfileTile[] {
-  if (mode === 'VENUE') {
-    return [
-      { key: 'venue-availability', label: translate('mweb.venueMenu.availability'), caption: '', icon: 'availability', to: '/venues/availability' },
-      { key: 'venue-settings', label: translate('mweb.venueMenu.settings'), caption: '', icon: 'settings', to: '/venues/settings' },
-    ];
-  }
-  if (mode === 'CLUB') {
-    return [
-      { key: 'club-dashboard', label: translate('mweb.clubMenu.dashboard'), caption: '', icon: 'dashboard', to: '/clubs/dashboard' },
-      { key: 'club-monitoring', label: translate('mweb.clubMenu.monitoring'), caption: '', icon: 'monitoring', to: '/clubs/monitoring' },
-    ];
-  }
-  return [];
-}
-
-/** The partner menu's Auto Pods row, or null when the flag is off or the mode
- * has no queue (USER, ECOMM). */
-function autoPodsTile(
-  mode: StudioMode,
-  enabled: boolean,
-  translate: (key: string) => string
-): ProfileTile | null {
-  const to = AUTO_POD_PATH[mode];
-  const titleKey = AUTO_POD_TITLE_KEY[mode];
-  if (!enabled || !to || !titleKey) return null;
-  return { key: 'auto-pods', label: translate(titleKey), caption: '', icon: 'autopods', to };
-}
-
 /** The profile layout every mode shares: identity, incomplete nudge,
  * quick-action grid, referral card, the Manage Account list and — once switched
- * into a partner mode — that role's own menu, ending in Withdrawal. */
+ * into a partner mode — that studio's menu, grouped the way the Partner console
+ * reads: Dashboard, Pods, Requests, Withdrawal. */
 export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showGiftCards = false, showTourGuide = false, showAutoPods = false, onNavigate }: Readonly<UserModeContentProps>) {
   const { t } = useTranslation();
   // The Shop group is the drawer's whole e-commerce entry point, so it lives
@@ -90,7 +48,9 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
   // destinations that redirect straight back home.
   const { visible: productsVisible } = useProductVisibility();
   const percent = profileCompletion(me ?? {});
-  const partnerMenus = buildPartnerMenus(roles, mode, autoPodsTile(mode, showAutoPods, t), partnerModeItems(mode, t));
+  // The switched-in studio's menu — Dashboard, Pods, Requests, Withdrawal and
+  // every option under them — from the definition native renders too.
+  const partnerMenus = studioMenuSections(mode, roles, showAutoPods, t);
   // Built here rather than in profileSections so the label is translated —
   // the section ships flag-gated and localized from day one (rule 38).
   const leaderboardItems: ProfileTile[] = [

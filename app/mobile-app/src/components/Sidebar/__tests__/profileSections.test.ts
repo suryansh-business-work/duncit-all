@@ -1,10 +1,4 @@
-import {
-  PROFILE_GRID,
-  REFERRAL_TILE,
-  SHOP_ITEMS,
-  buildManageItems,
-  buildPartnerMenus,
-} from '../profileSections';
+import { PROFILE_GRID, REFERRAL_TILE, SHOP_ITEMS, buildManageItems } from '../profileSections';
 
 /** The sidebar's Badges row arrives already translated, so the test passes the
  * label the same way the component does. */
@@ -60,45 +54,6 @@ describe('profileSections', () => {
       'PodPlans',
       'Faqs',
       'Badges',
-    ]);
-  });
-
-  it('shows only the switched-into mode’s menu, each ending in Withdrawal', () => {
-    // User mode is a consumer sidebar even for someone who holds every role.
-    const everyRole = ['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'];
-    expect(buildPartnerMenus(everyRole, 'USER')).toEqual([]);
-    expect(buildPartnerMenus([], 'HOST')).toEqual([]);
-    // A revoked role cannot keep a persisted mode alive.
-    expect(buildPartnerMenus(['VENUE_OWNER'], 'HOST')).toEqual([]);
-
-    const [hostMenu] = buildPartnerMenus(['HOST'], 'HOST');
-    expect(hostMenu?.title).toBe('Host Menu');
-    expect(hostMenu?.items.map((i) => i.label)).toEqual([
-      'Host Studio',
-      'Host Dashboard',
-      'Withdrawal',
-    ]);
-    expect(hostMenu?.items.map((i) => i.route)).toEqual(['HostManage', 'HostDashboard', 'Wallet']);
-
-    expect(buildPartnerMenus(['VENUE_OWNER'], 'VENUE')[0]?.items.map((i) => i.route)).toEqual([
-      'VenueManage',
-      // Slot Requests sits above earnings: a request is the thing waiting on you.
-      'VenueSlotRequests',
-      'VenueEarnings',
-      'Wallet',
-    ]);
-    expect(buildPartnerMenus(['ECOMM_MANAGER'], 'ECOMM')[0]?.items.map((i) => i.route)).toEqual([
-      'ProductsManage',
-      'Wallet',
-    ]);
-    // Club administration has its own in-app studio, then Withdrawal.
-    const [clubMenu] = buildPartnerMenus(['CLUB_ADMIN'], 'CLUB');
-    expect(clubMenu?.items.map((i) => i.label)).toEqual(['Club Studio', 'Withdrawal']);
-    expect(clubMenu?.items.map((i) => i.route)).toEqual(['ClubManage', 'Wallet']);
-
-    // A dual-role user sees one menu at a time — whichever they switched to.
-    expect(buildPartnerMenus(['HOST', 'VENUE_OWNER'], 'VENUE').map((m) => m.title)).toEqual([
-      'Venue Menu',
     ]);
   });
 

@@ -1,11 +1,10 @@
 import { Alert, Card, CircularProgress, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
+import { EarningsSplitView } from '@duncit/ui';
 import SectionHeader from '../../../../components/SectionHeader';
 import { usePricing } from '../../../../hooks/usePricing';
 import { useTranslation } from '../../../../i18n/useTranslation';
-import ChargesAccordion from './ChargesAccordion';
-import PayoutCard from './PayoutCard';
 import type { EarningsPreview } from './useEarningsPreview';
 
 export { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES } from './queries';
@@ -20,8 +19,9 @@ interface Props {
  * The host's final calculation for a pod. The server owns every number: it
  * bills PAYABLE spots (total − 1, because the host's own seat is free) and
  * deducts the venue's fixed slot price once for the pod — not once per booking —
- * matching how the pod is actually settled. Charges are grouped in a
- * collapsible tree; the payout card is the strongest element.
+ * matching how the pod is actually settled. The collection is split four ways
+ * with the host's own earning first — the same view as the native twin and
+ * every portal's pod page.
  */
 export default function PricePanel({ preview }: Readonly<Props>) {
   const { currency } = usePricing();
@@ -88,17 +88,11 @@ export default function PricePanel({ preview }: Readonly<Props>) {
             {statement.collection.included_gst_note}
           </Typography>
         </Stack>
-        <ChargesAccordion
-          statement={statement}
-          money={fmt}
+        <EarningsSplitView
+          waterfall={w}
+          symbol={currency}
+          viewer="host"
           venueError={venueShortfall ? t('mweb.createPod.venueShortfall') : null}
-        />
-        <PayoutCard
-          amount={fmt(w.host_receives)}
-          payingPax={projection.payable_spots}
-          earnPct={w.host_earn_pct}
-          collection={fmt(statement.net_payout.collection)}
-          totalDeductions={fmt(statement.net_payout.total_deductions)}
         />
       </Stack>
     );

@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -49,6 +50,18 @@ function HostPodsContent() {
   );
   const products = data?.availablePodProducts ?? [];
   const approvedHost = data?.myHost?.status === 'APPROVED';
+  // The Dashboard's "Create pod" links here with ?new=1 — open the dialog for
+  // it (once the host is known to be approved), then drop the flag so a
+  // refresh or Back does not open it again.
+  const [params, setParams] = useSearchParams();
+  const wantsNew = params.get('new') === '1';
+  useEffect(() => {
+    if (!wantsNew || !approvedHost) return;
+    setOpen(true);
+    const next = new URLSearchParams(params);
+    next.delete('new');
+    setParams(next, { replace: true });
+  }, [wantsNew, approvedHost, params, setParams]);
   const clubName = (id: string) =>
     clubs.find((club: any) => club.id === id)?.club_name ?? 'Club';
   const venueName = (id?: string | null) =>

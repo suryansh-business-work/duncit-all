@@ -470,6 +470,14 @@ export {
   type StatementSection,
 } from './earnings-statement';
 export {
+  buildEarningsSplit,
+  type EarningsBucket,
+  type EarningsBucketKey,
+  type EarningsBucketLine,
+  type EarningsSplit,
+  type EarningsSplitOptions,
+} from './earnings-split';
+export {
   MAX_COVER_IMAGES,
   addToSelection,
   coverCategoryName,
@@ -702,6 +710,17 @@ export {
   type StudioModeAccess,
   type StudioOption,
 } from './studio-mode';
+export {
+  STUDIO_NAV,
+  studioMenuSections,
+  studioNavFor,
+  type PartnerStudioMode,
+  type StudioMenuSection,
+  type StudioNavGroup,
+  type StudioNavGroupKey,
+  type StudioNavIcon,
+  type StudioNavItem,
+} from './studio-nav';
 export {
   AUTO_POD_ROLES,
   autoPodActionable,

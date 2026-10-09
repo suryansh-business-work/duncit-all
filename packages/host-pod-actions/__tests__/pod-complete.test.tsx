@@ -9,7 +9,7 @@
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodCompleteDialog from '../src/pod-complete/PodCompleteDialog';
@@ -43,6 +43,8 @@ const waterfall = {
   platform_fee_pct: 10,
   platform_fee_amount: 82,
   pool_amount: 738,
+  club_admin_pct: 0,
+  club_admin_amount: 0,
   venue_amount: 300,
   venue_commission_pct: 5,
   venue_commission_amount: 15,
@@ -50,9 +52,9 @@ const waterfall = {
   host_amount: 438,
   host_commission_pct: 0,
   host_commission_amount: 0,
-  host_receives: 400,
-  duncit_revenue: 197,
-  host_earn_pct: 40,
+  host_receives: 438,
+  duncit_revenue: 97,
+  host_earn_pct: 43.8,
 };
 
 const attendee = (over: Record<string, unknown> = {}) => ({
@@ -81,7 +83,7 @@ const settlement = (over: Record<string, unknown> = {}) => ({
   complete_expired: false,
   // The "You receive" line reads this, not waterfall.host_receives — it is what
   // the release will actually carry.
-  host_payout_amount: 400,
+  host_payout_amount: 438,
   waterfall,
   ...over,
 });
@@ -150,8 +152,30 @@ describe('SettlementPreview', () => {
     expect(screen.getByTestId('settlement-attendees').textContent).toContain(
       'Based on 8 attended seats of 10 booked',
     );
-    expect(screen.getByText(/was collected from seats nobody scanned in/)).toContain;
+    expect(screen.getByText(/was collected from seats nobody scanned in/)).toBeInTheDocument();
     expect(screen.getByText(/200\.00/)).toBeInTheDocument();
+  });
+
+  // The same four-way split as Create Pod and every portal, the host's own
+  // earning first: host 438 · venue keeps 285 of its 300 · Duncit & govt =
+  // GST 180 + fee 82 + venue commission 15 — adding back to the ₹1,000 basis.
+  it('splits the settled money four ways with the host’s earning first', async () => {
+    preview([previewMock()]);
+    await settle();
+
+    const rows = within(screen.getByTestId('earnings-split'))
+      .getAllByRole('button')
+      .map((node) => node.getAttribute('aria-label'));
+    expect(rows).toEqual([
+      'Your Earning (Host)',
+      'Venue Take',
+      'Club Admin Take',
+      'Duncit Commission & Govt Charges',
+    ]);
+    expect(screen.getByText('₹438.00')).toBeInTheDocument();
+    expect(screen.getByText('₹285.00')).toBeInTheDocument();
+    expect(screen.getByText('₹277.00')).toBeInTheDocument();
+    expect(screen.queryByTestId('earnings-split-reconcile-warning')).not.toBeInTheDocument();
   });
 
   it('words a single attended seat in the singular', async () => {

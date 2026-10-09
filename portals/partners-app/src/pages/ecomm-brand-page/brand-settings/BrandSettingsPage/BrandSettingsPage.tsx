@@ -34,7 +34,13 @@ type Editing = BrandWarehouse | 'new' | null;
 /** Full-screen Brand Settings: the brand's warehouses (pickup locations) with
  * add/edit/delete/set-default. ShipRocket registration stays admin-side — a
  * pending warehouse ships with the manual delivery charge until registered. */
-export default function BrandSettingsPage() {
+export default function BrandSettingsPage({
+  embedded = false,
+}: Readonly<{
+  /** Inside the brand page's Warehouses tab: that page already carries the
+   * brand's header and the way back, so this one drops its own hero. */
+  embedded?: boolean;
+}>) {
   const { t } = useTranslation();
   const { brandId = '' } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
@@ -111,7 +117,7 @@ export default function BrandSettingsPage() {
 
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
-      <BrandSettingsHero brand={brand} onBack={() => navigate('/ecomm-brand')} />
+      {!embedded && <BrandSettingsHero brand={brand} onBack={() => navigate('/ecomm-brand')} />}
       {brandMissing && <Alert severity="warning">{t('partners.ecommBrandPage.brandWasNotFoundInYour')}</Alert>}
       {error && !brandMissing && <Alert severity="error">{parseApiError(error)}</Alert>}
       {!brandMissing && (

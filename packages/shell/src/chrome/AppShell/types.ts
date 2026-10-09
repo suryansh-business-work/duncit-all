@@ -33,5 +33,8 @@ export interface AppShellProps {
   tools?: ShellTool[];
   /** Change logs also show who-by email and roles, surface, address and browser (the Finance console). */
   detailedChangeLogs?: boolean;
+  /** Rendered under the sidebar's branding, above the menu (e.g. the Partner
+   * console's studio switcher). Hidden while the sidebar is the icon rail. */
+  sidebarHeader?: ReactNode;
   children: ReactNode;
 }

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { Box, Drawer } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import { tokens } from '@duncit/theme';
@@ -22,6 +22,8 @@ export interface AppShellNavProps {
   name: string;
   footerCaption?: string;
   nav: AppNavItem[];
+  /** Above the menu, below the branding — see AppShellProps.sidebarHeader. */
+  header?: ReactNode;
   user?: ShellUser;
   mobileOpen: boolean;
   onCloseMobile: () => void;
@@ -42,6 +44,7 @@ export function AppShellNav({
   name,
   footerCaption,
   nav,
+  header,
   user,
   mobileOpen,
   onCloseMobile,
@@ -74,6 +77,7 @@ export function AppShellNav({
         <AppSidebar
           name={name}
           nav={nav}
+          header={header}
           user={user}
           footerCaption={footerCaption}
           onNavigate={onCloseMobile}
@@ -100,6 +104,7 @@ export function AppShellNav({
         <AppSidebar
           name={name}
           nav={nav}
+          header={header}
           user={user}
           footerCaption={footerCaption}
           collapsed={collapsed}

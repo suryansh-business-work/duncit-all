@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
-import type { PodFinanceWaterfall } from '@duncit/ui';
-import type { TicketDiscountTier } from '@duncit/utils';
+import type { EarningsWaterfall, TicketDiscountTier } from '@duncit/utils';
 
 /** The media a pod carries, as the dialogs read and write it. */
 export interface HostPodMedia {
@@ -125,7 +124,7 @@ export interface PodSettlement {
   /** Money from the attended bookings: what the payout was computed from. */
   attended_total: number;
   attendees: PodSettlementAttendee[];
-  waterfall: PodFinanceWaterfall;
+  waterfall: EarningsWaterfall;
   /** When the host's window to complete this pod closes (ISO), or null. */
   complete_deadline: string | null;
   /** True once it has closed — the host's share of this pod is nil. */

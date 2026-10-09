@@ -65,3 +65,7 @@ export function QueryGuard({ loading, error, children }: any): ReactNode {
   if (error) return <div data-testid="qg-error">error</div>;
   return <>{children()}</>;
 }
+
+// The money view is the thing these suites assert on, so it is the REAL one —
+// a stub would only prove the stub renders.
+export { default as EarningsSplitView } from '../../../../../packages/ui/src/finance-waterfall/EarningsSplitView';

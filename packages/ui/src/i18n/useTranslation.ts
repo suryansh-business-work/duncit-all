@@ -1,6 +1,7 @@
 import {
   createBundleTranslation,
   createTranslator,
+  EARNINGS_BUNDLE,
   flattenCatalogue,
   POD_TIMELINE_BUNDLE,
   UI_BUNDLE,
@@ -11,7 +12,7 @@ import {
  * app, so its wording is its own namespace rather than a third copy — layered
  * in so a PORTAL mounting `PodParticipationTimeline` resolves it too.
  */
-const UI_CATALOGUE = { ...UI_BUNDLE, ...POD_TIMELINE_BUNDLE };
+const UI_CATALOGUE = { ...UI_BUNDLE, ...POD_TIMELINE_BUNDLE, ...EARNINGS_BUNDLE };
 
 /**
  * This package's LOCAL FALLBACK bundle (CLAUDE.md rule 38).

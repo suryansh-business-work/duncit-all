@@ -93,12 +93,15 @@ export const linking: LinkingOptions<RootStackParamList> = {
       RegisterVenue: 'register-venue',
       VenueManage: 'venues/manage',
       VenueEarnings: 'venues/earnings',
+      VenueSlotRequests: 'venues/slot-requests',
       // The owner's calendar and policy, on mWeb's exact paths.
       VenueAvailability: 'venues/availability',
       VenueSettings: 'venues/settings',
       // Pod Requests, on mWeb's exact paths — notifications carry /pod-requests/:id.
       NearbyHosts: 'venues/nearby-hosts',
       NearbyVenues: 'host/nearby-venues',
+      HostPodRequests: 'host/pod-requests',
+      VenuePodRequests: 'venues/pod-requests',
       PodRequestDetail: 'pod-requests/:id',
       // Auto Pods, on mWeb's exact paths — the server's enrolment
       // notifications carry these three URLs verbatim.

@@ -34,6 +34,9 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
+import MoveToInboxIcon from '@mui/icons-material/MoveToInbox';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -86,6 +89,9 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   // the two pages open with, so a row reads like the page it leads to.
   dashboard: <SpaceDashboardIcon />,
   monitoring: <MonitorHeartIcon />,
+  requests: <MoveToInboxIcon />,
+  change: <SwapHorizIcon />,
+  nearby: <TravelExploreIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

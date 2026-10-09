@@ -7,6 +7,7 @@ import { resetTableControls, tableControls } from './mocks/table';
 import { renderWithProviders } from '../testkit';
 import {
   makePodBreakdown,
+  makeWaterfall,
   podBreakdownLoadingMock,
   podBreakdownMock,
   podFinanceReleasesMock,
@@ -89,20 +90,39 @@ describe('PodFinanceDetailPage', () => {
     mount(podBreakdownMock());
     expect(await screen.findByRole('heading', { name: 'Yoga' })).toBeInTheDocument();
     expect(screen.getByText('Frozen snapshot')).toBeInTheDocument();
-    expect(screen.getByText('5. Venue Amount')).toBeInTheDocument();
-    expect(screen.getByText('Host Earnings Summary')).toBeInTheDocument();
+    // The shared four-way split, host first: GST 150 + fee 42 + host
+    // commission 40 + venue commission 40 = 272 to Duncit & govt.
+    expect(screen.getByRole('button', { name: 'Host Earning' })).toBeInTheDocument();
+    expect(screen.getByText('₹368.00')).toBeInTheDocument();
+    expect(screen.getByText('₹360.00')).toBeInTheDocument();
+    expect(screen.getByText('₹272.00')).toBeInTheDocument();
+    expect(screen.queryByTestId('earnings-split-reconcile-warning')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /back to pod finance/i }));
     expect(screen.getByTestId('list-probe')).toBeInTheDocument();
   });
 
-  it('renders a pod without a venue (no venue step, not frozen, not completed)', async () => {
+  it('renders a pod without a venue (nil venue take, not frozen, not completed)', async () => {
     mount(
       podBreakdownMock(
-        makePodBreakdown({ has_venue: false, frozen: false, completed_at: null, settlement_status: 'LIVE' }),
+        makePodBreakdown({
+          has_venue: false,
+          frozen: false,
+          completed_at: null,
+          settlement_status: 'LIVE',
+          waterfall: makeWaterfall({
+            venue_amount: 0,
+            venue_commission_amount: 0,
+            venue_receives: 0,
+            host_amount: 808,
+            host_commission_amount: 80.8,
+            host_receives: 727.2,
+          }),
+        }),
       ),
     );
     await screen.findByRole('heading', { name: 'Yoga' });
-    expect(screen.queryByText('5. Venue Amount')).not.toBeInTheDocument();
+    expect(screen.getAllByText('₹0.00')).toHaveLength(2); // venue + club admin
+    expect(screen.getByText('₹727.20')).toBeInTheDocument();
     expect(screen.queryByText('Frozen snapshot')).not.toBeInTheDocument();
   });
 

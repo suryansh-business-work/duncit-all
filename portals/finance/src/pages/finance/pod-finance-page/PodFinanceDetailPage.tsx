@@ -3,10 +3,8 @@ import { useNavigate, useParams } from 'react-router';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitIconButton } from '@duncit/buttons';
-import { QueryGuard } from '@duncit/ui';
-import HostEarningsCard from './HostEarningsCard';
+import { EarningsSplitView, QueryGuard } from '@duncit/ui';
 import SettlementStatusChip, { FrozenBadge } from './SettlementStatusChip';
-import WaterfallAccordions from './WaterfallAccordions';
 import { POD_FINANCE_BREAKDOWN, money, type PodFinanceBreakdown } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
@@ -71,26 +69,13 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
         </Box>
       </Stack>
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
-        alignItems: "flex-start"
-      }}>
-        <Card variant="outlined" sx={{ borderRadius: 3, flex: 2, width: '100%' }}>
-          <CardContent>
-            <Typography component="h2"
-              variant="subtitle1"
-              sx={{
-                fontWeight: 700,
-                mb: 1.5
-              }}>
-              Money Waterfall
-            </Typography>
-            <WaterfallAccordions breakdown={breakdown} />
-          </CardContent>
-        </Card>
-        <Box sx={{ flex: 1, width: '100%' }}>
-          <HostEarningsCard breakdown={breakdown} />
-        </Box>
-      </Stack>
+      {/* The same four-way split (host first) every surface shows for a pod,
+          read straight off the server waterfall that settles it. */}
+      <Card variant="outlined" sx={{ borderRadius: 3, maxWidth: 720 }}>
+        <CardContent>
+          <EarningsSplitView waterfall={breakdown.waterfall} symbol={sym} viewer="staff" />
+        </CardContent>
+      </Card>
     </Box>
   );
 }

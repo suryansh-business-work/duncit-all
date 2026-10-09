@@ -327,6 +327,8 @@ export const POD_SETTLEMENT_PREVIEW = gql`
         platform_fee_pct
         platform_fee_amount
         pool_amount
+        club_admin_pct
+        club_admin_amount
         venue_amount
         venue_commission_pct
         venue_commission_amount

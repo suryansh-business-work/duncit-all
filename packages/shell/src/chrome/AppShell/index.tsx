@@ -34,6 +34,7 @@ export function AppShell({
   breadcrumbLabelMap,
   tools,
   detailedChangeLogs = false,
+  sidebarHeader,
   children,
 }: Readonly<AppShellProps>) {
   const navigate = useNavigate();
@@ -112,6 +113,7 @@ export function AppShell({
                 name={config.name}
                 footerCaption={config.footerCaption}
                 nav={localizedNav}
+                header={sidebarHeader}
                 user={user}
                 mobileOpen={mobileOpen}
                 onCloseMobile={closeMobileNav}

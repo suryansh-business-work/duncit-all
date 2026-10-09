@@ -43,7 +43,6 @@ export {
 } from './pod-complete/PodCompleteDialog';
 export type { PodCompleteValues } from './pod-complete/PodCompleteDialog';
 export { default as SettlementPreview } from './pod-complete/SettlementPreview';
-export { buildHostShareLines } from './pod-complete/host-share-lines';
 
 export { default as PodResubmitDialog } from './pod-resubmit/PodResubmitDialog';
 export {

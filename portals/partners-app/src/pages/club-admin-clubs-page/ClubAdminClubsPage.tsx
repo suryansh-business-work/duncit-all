@@ -41,7 +41,9 @@ export default function ClubAdminClubsPage() {
         columns={clubAdminClubsColumns(t)}
         fetchRows={fetchRows}
         getRowId={getClubRowId}
-        onRowClick={(club) => navigate(`/club-admin/clubs/${club.id}/edit`)}
+        // The club itself (its pods, with Edit club in its header) — the same
+        // place a club opens from the Dashboard, so a click means one thing.
+        onRowClick={(club) => navigate(`/club-admin/clubs/${club.id}`)}
         emptyText={t('clubAdmin.clubs.noClubs')}
         defaultSort={{ field: 'club_name', dir: 'asc' }}
         searchPlaceholder={t('clubAdmin.clubs.search')}

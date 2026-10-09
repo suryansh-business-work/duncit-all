@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
@@ -96,7 +96,7 @@ function setup(podAmount: number, noOfSpots = 0) {
   );
 }
 
-describe('PricePanel (auditable earnings statement)', () => {
+describe('PricePanel (four-way earnings split, host first)', () => {
   it('renders the header as a section heading and the free-spot message', () => {
     setup(1000, 30);
     expect(screen.getByTestId('create-pod-price-panel')).toBeInTheDocument();
@@ -117,141 +117,55 @@ describe('PricePanel (auditable earnings statement)', () => {
     );
   });
 
-  it('shows every section with its subtotal and the exact total deductions', async () => {
+  it('leads with the host’s own earning, then where the rest goes', async () => {
     setup(1000, 30);
-    await screen.findByText('You will receive');
-    expect(screen.getByText('Govt. and other charges')).toBeInTheDocument();
-    // Total deductions = collection − payout, on the header and the footer row.
-    expect(screen.getAllByText('₹8,257.29').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Total deductions')).toBeInTheDocument();
-    expect(screen.getByText('Taxes')).toBeInTheDocument();
-    expect(screen.getByText('₹4,423.73')).toBeInTheDocument();
-    // Platform Charges = fee ₹1,228.81 + Duncit's commission on the host's
-    // remainder ₹2,304.75; Venue Charges is the slot price alone, because
-    // Duncit's cut of the venue comes out of that ₹300, not on top of it.
-    expect(screen.getByText('Platform Charges')).toBeInTheDocument();
-    expect(screen.getByText('₹3,533.56')).toBeInTheDocument();
-    expect(screen.getByText('Venue Charges')).toBeInTheDocument();
-    expect(screen.getByText('₹300.00')).toBeInTheDocument();
-    // Reconciled statement → no warning.
-    expect(screen.queryByTestId('price-panel-reconcile-warning')).not.toBeInTheDocument();
-    // The old commission naming is gone.
-    expect(screen.queryByText(/Your Commission/)).not.toBeInTheDocument();
-  });
-
-  it('reveals the taxable base, rates and formulas inside each section', async () => {
-    setup(1000, 30);
-    await screen.findByText('You will receive');
-    fireEvent.click(screen.getByRole('button', { name: /Taxes/ }));
-    // The GST row shows its taxable base and the formula that produced it.
-    expect(screen.getByText('Taxable Amount')).toBeVisible();
-    expect(screen.getByText('₹24,576.27')).toBeVisible();
-    expect(screen.getByText('GST @18%')).toBeVisible();
-    // Quoted on the ₹29,000.00 total collection printed at the top of the
-    // panel, not on the taxable base — same ₹4,423.73, checkable by hand.
-    expect(screen.getByText('Formula: ₹29,000.00 (total collection) × 18 ÷ 118')).toBeVisible();
-
-    fireEvent.click(screen.getByRole('button', { name: /Platform Charges/ }));
-    expect(screen.getByText('Platform Fee @5%')).toBeVisible();
-    expect(screen.getByText('Formula: ₹24,576.27 × 5%')).toBeVisible();
-    expect(screen.getByText('Duncit Commission @10%')).toBeVisible();
-    expect(screen.getByText('Formula: ₹23,047.46 × 10% (your remainder)')).toBeVisible();
-
-    fireEvent.click(screen.getByRole('button', { name: /Venue Charges/ }));
-    expect(screen.getByText('Venue Slot Price')).toBeVisible();
-    // The section header and the slot row both read ₹300.00 — the commission
-    // below is 10% of THAT, not of the host's remainder.
-    expect(screen.getAllByText('₹300.00')).toHaveLength(2);
-    expect(screen.getByText('Formula: Fixed booked slot price (deducted once per pod)')).toBeVisible();
-    expect(screen.getByText('Duncit Commission from Venue @10%')).toBeVisible();
-    expect(screen.getByText('₹30.00')).toBeVisible();
-    expect(
-      screen.getByText(
-        'Formula: ₹300.00 × 10% of the slot price above — the venue receives ₹270.00',
-      ),
-    ).toBeVisible();
-  });
-
-  it('explains why each charge exists behind the section info button', async () => {
-    setup(1000, 30);
-    await screen.findByText('You will receive');
-    // Nothing is shown until asked for — the description is not extra chrome
-    // on a panel whose job is the numbers.
-    expect(screen.queryByTestId('price-panel-taxes-group-description')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId('price-panel-taxes-group-info'));
-    const taxes = screen.getByTestId('price-panel-taxes-group-description');
-    expect(taxes).toBeVisible();
-    expect(taxes).toHaveTextContent(/government tax on every ticket sold/i);
-    // It names GST as the government's, not Duncit's — that is the question
-    // the button exists to answer.
-    expect(taxes).toHaveTextContent(/not a Duncit charge/i);
-
-    fireEvent.click(screen.getByTestId('price-panel-platform-group-info'));
-    expect(screen.getByTestId('price-panel-platform-group-description')).toHaveTextContent(
-      /payment-gateway charges, booking and ticketing/i,
-    );
-
-    fireEvent.click(screen.getByTestId('price-panel-venue-group-info'));
-    expect(screen.getByTestId('price-panel-venue-group-description')).toHaveTextContent(
-      /deducted once for the whole pod, not per guest/i,
-    );
-
-    // Pressing again closes it.
-    fireEvent.click(screen.getByTestId('price-panel-taxes-group-info'));
-    await waitFor(() =>
-      expect(screen.queryByTestId('price-panel-taxes-group-description')).not.toBeInTheDocument(),
-    );
-  });
-
-  it('keeps the info button independent of the section it sits on', async () => {
-    setup(1000, 30);
-    await screen.findByText('You will receive');
-    // Opening the reason must not open the arithmetic, or the panel jumps
-    // under a host who only wanted the explanation.
-    fireEvent.click(screen.getByTestId('price-panel-taxes-group-info'));
-    expect(screen.getByTestId('price-panel-taxes-group-description')).toBeVisible();
-    expect(screen.queryByText('Taxable Amount')).not.toBeInTheDocument();
-
-    // And the reverse: expanding the rows leaves the description closed.
-    fireEvent.click(screen.getByTestId('price-panel-platform-group'));
-    expect(screen.getByText('Platform Fee @5%')).toBeVisible();
-    expect(screen.queryByTestId('price-panel-platform-group-description')).not.toBeInTheDocument();
-  });
-
-  it('labels every info control for screen readers', async () => {
-    setup(1000, 30);
-    await screen.findByText('You will receive');
-    // One per rendered section (taxes, platform, venue — no club cut here).
-    const info = screen.getAllByRole('button', { name: 'Why this charge?' });
-    expect(info).toHaveLength(3);
-    for (const button of info) {
-      expect(button).toHaveAttribute('aria-expanded', 'false');
-    }
-    fireEvent.click(info[0]);
-    expect(info[0]).toHaveAttribute('aria-expanded', 'true');
-  });
-
-  it('renders the Net Payout arithmetic inside the payout card', async () => {
-    setup(1000, 30);
-    await screen.findByText('You will receive');
-    const netPayout = screen.getByTestId('price-panel-net-payout');
-    expect(netPayout).toHaveTextContent('Total Collection');
-    expect(netPayout).toHaveTextContent('− Total Deductions');
-    expect(netPayout).toHaveTextContent('₹8,257.29');
-    expect(netPayout).toHaveTextContent('= You will receive');
-    expect(netPayout).toHaveTextContent('₹20,742.71');
-    expect(screen.getByText('For 29 paying pax')).toBeInTheDocument();
+    await screen.findByText('Your Earning (Host)');
+    const rows = within(screen.getByTestId('earnings-split'))
+      .getAllByRole('button')
+      .map((node) => node.getAttribute('aria-label'));
+    expect(rows).toEqual([
+      'Your Earning (Host)',
+      'Venue Take',
+      'Club Admin Take',
+      'Duncit Commission & Govt Charges',
+    ]);
+    expect(screen.getByText('Where the rest goes')).toBeInTheDocument();
+    // Host 20,742.71 · venue keeps 270 of its 300 · Duncit & govt = GST
+    // 4,423.73 + fee 1,228.81 + host commission 2,304.75 + venue commission 30.
+    expect(screen.getByText('₹20,742.71')).toBeInTheDocument();
     expect(screen.getByText('71.53% of collection')).toBeInTheDocument();
-    expect(screen.getByText(/Estimates at today's rates/)).toBeInTheDocument();
+    expect(screen.getByText('₹270.00')).toBeInTheDocument();
+    expect(screen.getByText('₹7,987.29')).toBeInTheDocument();
+    expect(screen.queryByTestId('earnings-split-reconcile-warning')).not.toBeInTheDocument();
+    // The old charges tree and payout card are gone.
+    expect(screen.queryByText('Govt. and other charges')).not.toBeInTheDocument();
+    expect(screen.queryByText('Total deductions')).not.toBeInTheDocument();
   });
 
-  it('collapses the main charges accordion', async () => {
+  it('opens each row onto its own hand-checkable breakdown', async () => {
     setup(1000, 30);
-    await screen.findByText('You will receive');
-    fireEvent.click(screen.getByRole('button', { name: /Govt\. and other charges/ }));
-    await waitFor(() => expect(screen.queryByText('Taxes')).not.toBeInTheDocument());
-    expect(screen.getByText('You will receive')).toBeVisible();
+    await screen.findByText('Your Earning (Host)');
+    expect(screen.queryByText('Commission from host @10%')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Duncit Commission & Govt Charges' }));
+    expect(await screen.findByText('Commission from host @10%')).toBeVisible();
+    expect(screen.getByText('₹23,047.46 × 10%')).toBeVisible();
+    expect(screen.getByText('GST @18% (paid to Govt.)')).toBeVisible();
+    expect(screen.getByText('₹29,000.00 (total collection) × 18 ÷ 118')).toBeVisible();
+    expect(screen.getByText('Platform fee @5%')).toBeVisible();
+    expect(screen.getByText('₹24,576.27 × 5%')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Venue Take' }));
+    expect(await screen.findByText('Venue slot price')).toBeVisible();
+    expect(screen.getByText('₹300.00')).toBeVisible();
+    // Duncit's ₹30 venue commission: less'd on the venue row, counted in Duncit's.
+    expect(screen.getAllByText('₹30.00')).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Your Earning (Host)' }));
+    expect(await screen.findByText('You will receive')).toBeVisible();
+    expect(
+      screen.getByText('₹29,000.00 − ₹270.00 venue − ₹0.00 club admin − ₹7,987.29 Duncit & Govt.'),
+    ).toBeVisible();
   });
 
   it('shows a loading spinner while the waterfall is in flight', () => {
@@ -264,7 +178,7 @@ describe('PricePanel (auditable earnings statement)', () => {
     expect(
       screen.getByText('Set a ticket price and the number of spots to preview your earnings.'),
     ).toBeInTheDocument();
-    expect(screen.queryByText('You will receive')).not.toBeInTheDocument();
+    expect(screen.queryByText('Your Earning (Host)')).not.toBeInTheDocument();
     expect(screen.queryByTestId('price-panel-host-free-note')).not.toBeInTheDocument();
   });
 
@@ -280,13 +194,22 @@ describe('PricePanel (auditable earnings statement)', () => {
     expect(screen.getByTestId('price-panel-host-only')).toHaveTextContent(
       'This pod only has your own spot, which is free. Add more spots to earn.',
     );
-    expect(screen.queryByText('You will receive')).not.toBeInTheDocument();
+    expect(screen.queryByText('Your Earning (Host)')).not.toBeInTheDocument();
   });
 
-  it('renders the Club Charges section with the pool-based formula when a cut applies', async () => {
+  it('shows the club admin take with its pool-based formula when a cut applies', async () => {
+    // Club admin 3% of the ₹23,347.46 pool; the host side shrinks by it.
     const clubProjection = {
       ...projection,
-      waterfall: { ...waterfall, club_admin_pct: 3, club_admin_amount: 700.42 },
+      waterfall: {
+        ...waterfall,
+        club_admin_pct: 3,
+        club_admin_amount: 700.42,
+        host_amount: 22347.04,
+        host_commission_amount: 2234.7,
+        host_receives: 20112.34,
+        host_earn_pct: 69.35,
+      },
     };
     render(
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
@@ -301,17 +224,28 @@ describe('PricePanel (auditable earnings statement)', () => {
         <Harness slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical />
       </MockedProvider>,
     );
-    await screen.findByText('You will receive');
-    fireEvent.click(screen.getByRole('button', { name: /Club Charges/ }));
-    expect(screen.getByText('Club Admin Fee @3%')).toBeVisible();
-    expect(screen.getAllByText('₹700.42').length).toBeGreaterThanOrEqual(2); // header total + row
-    expect(screen.getByText('Formula: ₹23,347.46 × 3%')).toBeVisible();
+    await screen.findByText('Your Earning (Host)');
+    expect(screen.getByText('₹20,112.34')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Club Admin Take' }));
+    expect(await screen.findByText('Club admin share @3%')).toBeVisible();
+    expect(screen.getAllByText('₹700.42')).toHaveLength(2); // row header + breakdown
+    expect(screen.getByText('₹23,347.46 (after GST & platform fee) × 3%')).toBeVisible();
+    expect(screen.queryByTestId('earnings-split-reconcile-warning')).not.toBeInTheDocument();
   });
 
-  it('keeps the Duncit commission in Platform Charges for a non-physical pod', async () => {
+  it('shows a nil venue take for a non-physical pod', async () => {
     const onlineProjection = {
       ...projection,
-      waterfall: { ...waterfall, venue_amount: 0, venue_commission_amount: 0, venue_receives: 0 },
+      waterfall: {
+        ...waterfall,
+        venue_amount: 0,
+        venue_commission_amount: 0,
+        venue_receives: 0,
+        host_amount: 23347.46,
+        host_commission_amount: 2334.75,
+        host_receives: 21012.71,
+        host_earn_pct: 72.46,
+      },
     };
     render(
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
@@ -329,9 +263,7 @@ describe('PricePanel (auditable earnings statement)', () => {
         <Harness slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical={false} />
       </MockedProvider>,
     );
-    expect(await screen.findByText('You will receive')).toBeInTheDocument();
-    expect(screen.queryByText('Venue Charges')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Platform Charges/ }));
-    expect(screen.getByText('Duncit Commission @10%')).toBeVisible();
+    expect(await screen.findByText('₹21,012.71')).toBeInTheDocument();
+    expect(screen.getAllByText('₹0.00')).toHaveLength(2); // venue + club admin
   });
 });

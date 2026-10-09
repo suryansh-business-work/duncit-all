@@ -41,7 +41,7 @@ const renderClub = (club: ClubAdminClubInfoRow) => (
   </Stack>
 );
 
-/** "Pods" jump to the club's pod list (row click opens the club details). */
+/** "Pods" jump to the club's pod list — where a row click goes too. */
 const renderActions = (club: ClubAdminClubInfoRow, t: Translate) => (
   <Stack direction="row" component="span" sx={{
     justifyContent: "flex-end"

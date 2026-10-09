@@ -281,6 +281,6 @@ shape, and same reasons, as `@duncit/slots`' `buildSlotLabels`.
 ## What it deliberately does not own
 
 The **Admin** console's Complete Pod dialog. That is a different job — staff pick which co-host is
-the payout beneficiary and attach notes — and its settlement preview already renders through
-`@duncit/ui`'s `FinanceWaterfallList`. This package renders the same list with host-voiced lines
-(`buildHostShareLines`): "You receive", not "Host receives".
+the payout beneficiary and attach notes. Both previews render the SAME `@duncit/ui`
+`EarningsSplitView` — the pod's collection split four ways with the host's earning first — the
+Admin one as `viewer="staff"` ("Host Earning"), this package's as `viewer="host"` ("Your Earning").

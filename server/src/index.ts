@@ -95,6 +95,7 @@ import { initSocketServer } from './realtime/io';
 import { attachChatHandlers } from '@modules/engagement/chat/chat.socket';
 import { attachStaffChatHandlers } from '@modules/engagement/staffChat/staffChat.socket';
 import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
+import { attachChallengeHandlers } from '@modules/engagement/challenge/runtime/challenge.socket';
 import { attachSupportChatHandlers } from '@modules/support/supportChat/supportChat.socket';
 import { attachCallHandlers } from '@modules/crm/call/call.socket';
 import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
@@ -331,6 +332,18 @@ async function bootstrap() {
   });
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());
   await safeSeed('surveyIndexes', () => surveyService.syncIndexes());
+  // Universal challenge tools (Tool Master) and the ledgers' unique indexes,
+  // which make score/vote retries and result publishing idempotent.
+  await safeSeed('challengeEngine', async () => {
+    const { challengeToolService } = await import('@modules/engagement/challenge/tools/challengeTool.service');
+    const ledgers = await import('@modules/engagement/challenge/runtime/challengeLedger.model');
+    await challengeToolService.seedDefaults();
+    await Promise.all([
+      ledgers.ChallengeScoreEventModel.createIndexes(),
+      ledgers.ChallengeVoteModel.createIndexes(),
+      ledgers.ChallengeResultModel.createIndexes(),
+    ]);
+  });
   // Drops the superseded single-field referral guard on the coin ledger so one
   // referral can pay both the referrer and the member they brought in.
   await safeSeed('coinIndexes', async () => {
@@ -1002,6 +1015,7 @@ async function bootstrap() {
   attachBouncerHandlers();
   attachSupportChatHandlers();
   attachCallHandlers();
+  attachChallengeHandlers();
 
   const port = Number(process.env.PORT || 2001);
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));

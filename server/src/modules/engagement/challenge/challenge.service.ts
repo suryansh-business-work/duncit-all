@@ -1,8 +1,15 @@
 import { GraphQLError } from 'graphql';
 import type { Types } from 'mongoose';
 import { ChallengeModel } from './challenge.model';
+import { ChallengeCategoryMappingModel } from './mapping/challengeMapping.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  buildToolInstances,
+  buildWinnerRules,
+  type ToolInstanceInput,
+  type WinnerRulesInput,
+} from './challenge.template';
 
 export interface ChallengeInput {
   name?: string;
@@ -11,6 +18,9 @@ export interface ChallengeInput {
   category_id?: string | null;
   sub_category_id?: string | null;
   is_active?: boolean;
+  tool_instances?: ToolInstanceInput[] | null;
+  participant_mode?: 'INDIVIDUAL' | 'TEAM' | null;
+  winner_rules?: WinnerRulesInput | null;
 }
 
 /** A Category reference as it comes off a lean doc (ObjectId) or an input (string). */
@@ -24,6 +34,17 @@ async function nameMap(ids: unknown[]): Promise<Map<string, string>> {
   if (!unique.length) return new Map();
   const cats = await CategoryModel.find({ _id: { $in: unique } }).select('name').lean();
   return new Map(cats.map((c: { _id: unknown; name: string }) => [String(c._id), c.name]));
+}
+
+/** A tool instance as stored on a template (lean). */
+interface StoredInstance {
+  instance_id: string;
+  tool_id: unknown;
+  tool_type: string;
+  tool_version?: number | null;
+  preset_id?: unknown;
+  label: string;
+  config?: unknown;
 }
 
 function toPub(d: Record<string, any> | null, names: Map<string, string>) {
@@ -40,6 +61,22 @@ function toPub(d: Record<string, any> | null, names: Map<string, string>) {
     category_name: nameOf(d.category_id),
     sub_category_name: nameOf(d.sub_category_id),
     is_active: !!d.is_active,
+    participant_mode: d.participant_mode ?? 'INDIVIDUAL',
+    tool_instances: ((d.tool_instances ?? []) as StoredInstance[]).map((t) => ({
+      instance_id: t.instance_id,
+      tool_id: String(t.tool_id),
+      tool_type: t.tool_type,
+      tool_version: t.tool_version ?? 1,
+      preset_id: t.preset_id ? String(t.preset_id) : null,
+      label: t.label,
+      config_json: JSON.stringify(t.config ?? {}),
+    })),
+    winner_rules: {
+      rank_by: d.winner_rules?.rank_by ?? 'TOTAL',
+      direction: d.winner_rules?.direction ?? 'DESC',
+      tie_breakers: d.winner_rules?.tie_breakers ?? [],
+      podium_size: d.winner_rules?.podium_size ?? 3,
+    },
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };
@@ -119,12 +156,16 @@ export const challengeService = {
     if (!input.name?.trim()) {
       throw new GraphQLError('A challenge name is required', { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    const toolInstances = await buildToolInstances(input.tool_instances ?? []);
     const doc = await ChallengeModel.create({
       name: input.name.trim(),
       description: input.description ?? '',
       super_category_id: input.super_category_id ?? null,
       category_id: input.category_id ?? null,
       sub_category_id: input.sub_category_id ?? null,
+      tool_instances: toolInstances,
+      participant_mode: input.participant_mode ?? 'INDIVIDUAL',
+      winner_rules: buildWinnerRules(input.winner_rules, toolInstances),
     });
     return challengeService.getById(String(doc._id));
   },
@@ -138,14 +179,46 @@ export const challengeService = {
     if (input.category_id !== undefined) doc.category_id = (input.category_id ?? null) as never;
     if (input.sub_category_id !== undefined) doc.sub_category_id = (input.sub_category_id ?? null) as never;
     if (input.is_active !== undefined) doc.is_active = input.is_active;
+    if (input.participant_mode) doc.participant_mode = input.participant_mode;
+    // Tools and rules are rebuilt together: a rule may only point at a tool the
+    // template still has. Pod challenges already created keep their own
+    // snapshot, so editing a template never alters a challenge in progress.
+    if (input.tool_instances || input.winner_rules) {
+      const current = doc.toObject();
+      const instances = input.tool_instances
+        ? await buildToolInstances(input.tool_instances)
+        : current.tool_instances;
+      doc.set('tool_instances', instances);
+      doc.set('winner_rules', buildWinnerRules(input.winner_rules ?? (current.winner_rules as WinnerRulesInput), instances));
+    }
     await doc.save();
     return challengeService.getById(id);
+  },
+
+  /** A copy to adapt for another activity; starts inactive so it is reviewed first. */
+  async duplicate(id: string) {
+    const src = await ChallengeModel.findById(id).lean();
+    if (!src) notFound();
+    const doc = await ChallengeModel.create({
+      name: `${src.name} (copy)`,
+      description: src.description,
+      super_category_id: src.super_category_id,
+      category_id: src.category_id,
+      sub_category_id: src.sub_category_id,
+      tool_instances: src.tool_instances,
+      participant_mode: src.participant_mode,
+      winner_rules: src.winner_rules,
+      is_active: false,
+    });
+    return challengeService.getById(doc._id.toString());
   },
 
   async remove(id: string) {
     const doc = await ChallengeModel.findById(id);
     if (!doc) notFound();
     await doc.deleteOne();
+    // A category whose default template is gone falls back to no default.
+    await ChallengeCategoryMappingModel.updateMany({ default_template_id: doc._id }, { $set: { default_template_id: null } });
     return true;
   },
 };

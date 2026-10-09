@@ -241,6 +241,15 @@ export const SURFACES: readonly Surface[] = [
       'The console for the languages Duncit ships in (Locales) and every user-facing string (Translations) — add a language, see how complete and up to date each one is, edit entries page by page, and have AI translate a language from English as a background job.',
   },
   {
+    key: 'targets',
+    name: 'Targets',
+    kind: 'PORTAL',
+    host: 'targets.duncit.com',
+    dev_port: 2044,
+    summary:
+      'The console for the goals each team is working towards. It holds the dashboard and your profile today; its screens are still being built.',
+  },
+  {
     key: 'ecomm',
     name: 'Duncit Pet Store',
     kind: 'WEBSITE',

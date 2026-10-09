@@ -27,7 +27,7 @@ docker compose up -d --no-deps redis redis-ui || true
 # Its own line: a compose file without it must not stop redis coming up.
 docker compose up -d --no-deps redis-queue || true
 
-ALL_SERVICES=(server admin mweb website partners-website partners-app ads-portal ads-website native crm open-wa finance tech support website-app legal ai products marketing onboarding hr employee status earnwith challenge developers regional-club-admin venues clubs club-admins hosts pods communications logs analytics ecomm-portal ecomm-store lite localization cms-site)
+ALL_SERVICES=(server admin mweb website partners-website partners-app ads-portal ads-website native crm open-wa finance tech support website-app legal ai products marketing onboarding hr employee status earnwith challenge developers regional-club-admin venues clubs club-admins hosts pods communications logs analytics ecomm-portal ecomm-store lite localization cms-site targets)
 declare -A PORT_OF=(
   [server]=2001 [admin]=2002 [mweb]=2003 [website]=2000
   [partners-website]=2004 [partners-app]=2005 [ads-portal]=2006 [ads-website]=2020 [native]=2022
@@ -40,6 +40,7 @@ declare -A PORT_OF=(
   [communications]=2035 [logs]=2036 [analytics]=2037
   [ecomm-portal]=2038 [ecomm-store]=2039
   [lite]=2040 [localization]=2042 [cms-site]=2043
+  [targets]=2044
 )
 
 requested_raw="${SERVICES:-}"

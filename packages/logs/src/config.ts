@@ -37,6 +37,8 @@ export const PORTALS = [
   'ecomm-portal',
   // Locales and translations.
   'localization',
+  // Team goals and progress.
+  'targets',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

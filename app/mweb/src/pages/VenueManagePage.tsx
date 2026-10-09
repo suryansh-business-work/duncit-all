@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
 import { Card, CardContent, Chip, Stack } from '@mui/material';
 import SectionHeader from '../components/SectionHeader';
-import { emptyVenueOwnerStats, pickVenue, type VenueOwnerStats } from '@duncit/utils';
+import { emptyVenueOwnerStats, type VenueOwnerStats } from '@duncit/utils';
 import { PublishPageCard } from '@duncit/public-page';
 import UserVenuePanel from './profile-page/UserVenuePanel';
 import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
@@ -20,6 +19,7 @@ import VenueStudioHeader from './venue-manage-page/VenueStudioHeader';
 import VenueSwitcher from './venue-manage-page/VenueSwitcher';
 import { MY_VENUES_DETAILS, PODS_AT_VENUE, VENUE_OWNER_STATS } from './venue-manage-page/queries';
 import { useTranslation } from '../i18n/useTranslation';
+import { useSelectedVenue } from '../hooks/useSelectedVenue';
 
 /**
  * Venue Studio.
@@ -31,12 +31,11 @@ import { useTranslation } from '../i18n/useTranslation';
  */
 export default function VenueManagePage() {
   const { t } = useTranslation();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, loading, error } = useQuery<any>(MY_VENUES_DETAILS, {
     fetchPolicy: 'cache-and-network',
   });
   const venues: any[] = data?.myVenues ?? [];
-  const venue = pickVenue(venues, selectedId);
+  const { venue, selectVenue } = useSelectedVenue(venues);
   const { data: healthData } = useQuery<{ myVenueHealth: HealthScore | null }>(MY_VENUE_HEALTH, {
     variables: { venue_id: venue?.id ?? '' },
     skip: !venue?.id,
@@ -64,7 +63,7 @@ export default function VenueManagePage() {
     <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }} data-testid="venue-manage-screen">
       <VenueStudioHeader />
 
-      <VenueSwitcher venues={venues} venueId={venue?.id ?? null} onChange={setSelectedId} />
+      <VenueSwitcher venues={venues} venueId={venue?.id ?? null} onChange={selectVenue} />
 
       <VenueStatTiles listed={venues.length} capacity={capacity} status={venue?.status ?? 'New'} />
 

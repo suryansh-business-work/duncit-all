@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueManagePage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
+import { ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, HostPublishPage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
 import { withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
 /** Earn, venue, club and Auto Pod routes. */
@@ -9,6 +9,16 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
         <Route path="/earn" element={withAuth(<EarnPage />)} />
         <Route path="/tour-guide" element={withAuth(<TourGuidePage />)} />
         <Route path="/products/manage" element={withProducts(<ProductsManagePage />)} />
+        {/* Each studio's Options page — the drawer's one highlighted entry
+            opens it. `/clubs/options` for the reason Club Studio is `/clubs`. */}
+        <Route path="/venues/options" element={withAuth(<StudioOptionsPage mode="VENUE" />)} />
+        <Route path="/host/options" element={withAuth(<StudioOptionsPage mode="HOST" />)} />
+        <Route path="/clubs/options" element={withAuth(<StudioOptionsPage mode="CLUB" />)} />
+        <Route path="/products/options" element={withProducts(<StudioOptionsPage mode="ECOMM" />)} />
+        <Route path="/venues/list" element={withAuth(<VenueListPage />)} />
+        <Route path="/venues/publish" element={withAuth(<VenuePublishPage />)} />
+        <Route path="/venues/pods" element={withAuth(<VenuePodsPage />)} />
+        <Route path="/host/publish" element={withAuth(<HostPublishPage />)} />
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
         <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />

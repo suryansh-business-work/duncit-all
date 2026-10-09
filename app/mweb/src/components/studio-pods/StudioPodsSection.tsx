@@ -21,7 +21,7 @@ interface RowActions {
   requestChangeLabel?: string;
 }
 
-interface BodyProps extends RowActions {
+export interface StudioPodsBodyProps extends RowActions {
   loading: boolean;
   failed: boolean;
   pods: readonly StudioPod[];
@@ -31,8 +31,10 @@ interface BodyProps extends RowActions {
   sectionId: string;
 }
 
-/** Loading / error / empty / list — hoisted so it is not redefined per render. */
-function StudioPodsBody({
+/** Loading / error / empty / list — hoisted so it is not redefined per render.
+ * Exported for a page that lists a slice of the pods without the figures (the
+ * phase tabs of "Pods at Your Venue"). */
+export function StudioPodsBody({
   loading,
   failed,
   pods,
@@ -44,7 +46,7 @@ function StudioPodsBody({
   onRequestChange,
   requestChangeLabel,
   sectionId,
-}: Readonly<BodyProps>) {
+}: Readonly<StudioPodsBodyProps>) {
   const { t } = useTranslation();
   if (loading) {
     return (

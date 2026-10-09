@@ -1,4 +1,5 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
+import type { SwitchableVenue } from '@duncit/utils';
 
 /** Bookings feeding the "Pods at your venue" bar chart (counts only). */
 export const PODS_AT_VENUE = gql`
@@ -6,6 +7,22 @@ export const PODS_AT_VENUE = gql`
     pods(filter: { venue_id: $venue_id, is_active: true }) {
       id
       pod_date_time
+    }
+  }
+`;
+
+/**
+ * Every venue the signed-in partner owns, newest first, with only what the
+ * switcher and the venue list print — for the pages that show a venue but not
+ * its detail (Venue Options, Your Venues, Publish, Pods, Pod Requests).
+ */
+export const MY_VENUES_SWITCHER: TypedDocumentNode<{ myVenues: SwitchableVenue[] }> = gql`
+  query MyVenuesSwitcher {
+    myVenues {
+      id
+      venue_name
+      city
+      status
     }
   }
 `;

@@ -13,14 +13,28 @@ interface VenueSwitcherProps {
  * had. Everything below it on the page (capacity, status, bookings, health,
  * application) belongs to the venue picked here.
  *
- * Hidden for a single venue: there is nothing to switch to, and an empty
- * dropdown reads as a missing venue.
+ * A single venue has nothing to switch to, so it reads as a plain field naming
+ * the venue — every venue page still says, at its top, which venue it is for
+ * (the native twin does the same). No venues → nothing.
  */
 export default function VenueSwitcher({ venues, venueId, onChange }: Readonly<VenueSwitcherProps>) {
   const { t } = useTranslation();
   const untitled = t('mweb.venueManagePage.untitledVenue');
 
-  if (!canSwitchVenues(venues)) return null;
+  if (venues.length === 0) return null;
+  if (!canSwitchVenues(venues)) {
+    return (
+      <TextField
+        fullWidth
+        size="small"
+        label={t('mweb.studioOptions.selectedVenue')}
+        value={venueLabel(venues[0], untitled)}
+        data-testid="venue-switcher-single"
+        slotProps={{ input: { readOnly: true } }}
+        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', fontWeight: 600 } }}
+      />
+    );
+  }
 
   return (
     <TextField

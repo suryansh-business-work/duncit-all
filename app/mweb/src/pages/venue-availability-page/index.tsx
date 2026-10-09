@@ -1,12 +1,11 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert } from '@mui/material';
 import EventRepeatRoundedIcon from '@mui/icons-material/EventRepeatRounded';
 import { VenueAvailabilityEditor } from '@duncit/availability-calendar';
-import { pickVenue } from '@duncit/utils';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
 import { MY_VENUES_AVAILABILITY, type AvailabilityVenue } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useSelectedVenue } from '../../hooks/useSelectedVenue';
 
 interface EditorProps {
   venue: AvailabilityVenue;
@@ -36,13 +35,12 @@ function AvailabilityEditor({ venue, onVenueChanged }: Readonly<EditorProps>) {
  */
 export default function VenueAvailabilityPage() {
   const { t } = useTranslation();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, loading, error, refetch } = useQuery<{ myVenues: AvailabilityVenue[] }>(
     MY_VENUES_AVAILABILITY,
     { fetchPolicy: 'cache-and-network' }
   );
   const venues = data?.myVenues ?? [];
-  const venue = pickVenue(venues, selectedId);
+  const { venue, selectVenue } = useSelectedVenue(venues);
 
   return (
     <VenuePageFrame
@@ -50,7 +48,7 @@ export default function VenueAvailabilityPage() {
       title={t('mweb.venueAvailabilityPage.title')}
       venues={venues}
       venue={venue}
-      onSelect={setSelectedId}
+      onSelect={selectVenue}
       loading={loading && !data}
       // The recurring dialog writes venue rules, then this page re-reads them:
       // the calendar dims for that round trip instead of sitting there stale.

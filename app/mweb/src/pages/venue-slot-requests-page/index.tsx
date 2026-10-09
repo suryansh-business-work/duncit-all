@@ -14,6 +14,7 @@ import {
   type SlotRequestRow,
 } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useSelectedVenue } from '../../hooks/useSelectedVenue';
 
 /**
  * Slot Requests, for a venue owner on their phone.
@@ -24,20 +25,27 @@ import { useTranslation } from '../../i18n/useTranslation';
  */
 export default function VenueSlotRequestsPage() {
   const { t } = useTranslation();
-  const [venueId, setVenueId] = useState<string>(ALL_VENUES);
+  // null until the owner taps a chip: the page opens on the venue the Venue
+  // Options page selected, and "All venues" stays one tap away.
+  const [chosenId, setChosenId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'error'; text: string } | null>(
     null
   );
 
   const venuesQuery = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-first' });
+  const venues: { id: string; venue_name?: string }[] = venuesQuery.data?.myVenues ?? [];
+  const selected = useSelectedVenue(venues);
+  const venueId = chosenId ?? selected.venueId ?? ALL_VENUES;
   const requestsQuery = useQuery<any>(VENUE_SLOT_REQUESTS, {
     variables: { venue_id: venueId === ALL_VENUES ? null : venueId },
+    // Wait for the venue list, or the page would read every venue's queue
+    // first and then the selected one's.
+    skip: venuesQuery.loading && !venuesQuery.data,
     fetchPolicy: 'cache-and-network',
   });
   const [approve, approveState] = useMutation<any>(APPROVE_SLOT_REQUEST);
   const [decline, declineState] = useMutation<any>(DECLINE_SLOT_REQUEST);
 
-  const venues: { id: string; venue_name?: string }[] = venuesQuery.data?.myVenues ?? [];
   const requests: SlotRequestRow[] = requestsQuery.data?.venueSlotRequests ?? [];
   const venueOptions = useMemo(
     () => [
@@ -68,7 +76,17 @@ export default function VenueSlotRequestsPage() {
       />
 
       {venues.length > 1 && (
-        <PillChips label={t('mweb.common.venue')} options={venueOptions} value={venueId} onChange={setVenueId} />
+        <PillChips
+          label={t('mweb.common.venue')}
+          options={venueOptions}
+          value={venueId}
+          onChange={(id) => {
+            setChosenId(id);
+            // A specific venue is remembered for every venue page; All is not
+            // a venue, so it stays this page's own choice.
+            if (id !== ALL_VENUES) selected.selectVenue(id);
+          }}
+        />
       )}
 
       {feedback && (

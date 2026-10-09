@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import PersonSearchRoundedIcon from '@mui/icons-material/PersonSearchRounded';
-import { pickVenue } from '@duncit/utils';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
 import { MY_POD_PARTNER_REQUESTS } from '../pod-requests/queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useSelectedVenue } from '../../hooks/useSelectedVenue';
 import type { NearbyItem } from './NearbyCard';
 import NearbySearchBody from './NearbySearchBody';
 import {
@@ -34,13 +34,12 @@ const toItem = (host: NearbyHostRow): NearbyItem => ({
  */
 export default function NearbyHostsPage() {
   const { t } = useTranslation();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const venuesQuery = useQuery(SEARCH_OWNER_VENUES, { fetchPolicy: 'cache-and-network' });
   const venues = useMemo(
     () => (venuesQuery.data?.myVenues ?? []).filter((row) => row.status === 'APPROVED'),
     [venuesQuery.data]
   );
-  const venue = pickVenue(venues, selectedId);
+  const { venue, selectVenue } = useSelectedVenue(venues);
   const venueId = venue?.id ?? '';
   const venueCategory = venue?.venue_category.category_id ?? '';
   const defaults = useMemo(() => (venueCategory ? [venueCategory] : []), [venueCategory]);
@@ -74,7 +73,7 @@ export default function NearbyHostsPage() {
       venues={venues}
       venue={venue}
       onSelect={(id) => {
-        setSelectedId(id);
+        selectVenue(id);
         state.resetCategories();
       }}
       loading={venuesQuery.loading && !venuesQuery.data}

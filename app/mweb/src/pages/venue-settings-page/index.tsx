@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { Card, CardContent, Stack } from '@mui/material';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import type { VenueCancellationPolicy } from '@duncit/forms/schemas';
-import { parseApiError, pickVenue } from '@duncit/utils';
+import { parseApiError } from '@duncit/utils';
 import SectionHeader from '../../components/SectionHeader';
 import { notifySuccess } from '../../components/notify';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
@@ -15,6 +15,7 @@ import {
 } from './cancellation-policy-form';
 import { MY_VENUES_CANCELLATION, UPDATE_VENUE_CANCELLATION_POLICY, type SettingsVenue } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useSelectedVenue } from '../../hooks/useSelectedVenue';
 
 /**
  * Venue Settings, for a venue owner on their phone: the cancellation policy of
@@ -25,7 +26,6 @@ import { useTranslation } from '../../i18n/useTranslation';
  */
 export default function VenueSettingsPage() {
   const { t } = useTranslation();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const { data, loading, error, refetch } = useQuery<{ myVenues: SettingsVenue[] }>(
     MY_VENUES_CANCELLATION,
@@ -33,7 +33,7 @@ export default function VenueSettingsPage() {
   );
   const [savePolicy, saveState] = useMutation<any>(UPDATE_VENUE_CANCELLATION_POLICY);
   const venues = data?.myVenues ?? [];
-  const venue = pickVenue(venues, selectedId);
+  const { venue, selectVenue } = useSelectedVenue(venues);
 
   // Keyed off the policy's CONTENT rather than its identity: a background
   // refresh hands back a fresh object every time, and resetting the form on
@@ -64,7 +64,7 @@ export default function VenueSettingsPage() {
       title={t('mweb.venueSettingsPage.title')}
       venues={venues}
       venue={venue}
-      onSelect={setSelectedId}
+      onSelect={selectVenue}
       loading={loading && !data}
       error={error}
       noVenuesMessage={t('mweb.venueSettingsPage.noVenues')}

@@ -24,7 +24,7 @@ import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import RedeemIcon from '@mui/icons-material/Redeem';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import ExploreIcon from '@mui/icons-material/Explore';
-import DashboardIcon from '@mui/icons-material/Dashboard';
+import EventNoteIcon from '@mui/icons-material/EventNote';
 import StoreIcon from '@mui/icons-material/Store';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import InsightsIcon from '@mui/icons-material/Insights';
@@ -37,6 +37,11 @@ import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import MoveToInboxIcon from '@mui/icons-material/MoveToInbox';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
+import PublicIcon from '@mui/icons-material/Public';
+import GroupsIcon from '@mui/icons-material/Groups';
+import ExtensionIcon from '@mui/icons-material/Extension';
+import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -69,9 +74,9 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   // the wrapped-present glyph — and redemption the coin-exchange glyph.
   giftcards: <RedeemIcon />,
   giftcardRedeem: <CurrencyExchangeIcon />,
-  // The partner menus reuse the Earn cards' icon vocabulary, so a role reads
-  // the same on the card that unlocked it and in its own drawer section.
-  host: <DashboardIcon />,
+  // The studio Options pages' glyphs — a pod is a dated event, so it wears a
+  // dated note rather than a second dashboard beside the Dashboard row.
+  pods: <EventNoteIcon />,
   venue: <StoreIcon />,
   ecomm: <Inventory2Icon />,
   insights: <InsightsIcon />,
@@ -92,6 +97,12 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   requests: <MoveToInboxIcon />,
   change: <SwapHorizIcon />,
   nearby: <TravelExploreIcon />,
+  create: <AddCircleOutlineIcon />,
+  // The public page — the same globe the Publish card opens with.
+  publish: <PublicIcon />,
+  clubs: <GroupsIcon />,
+  integrations: <ExtensionIcon />,
+  returns: <AssignmentReturnIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

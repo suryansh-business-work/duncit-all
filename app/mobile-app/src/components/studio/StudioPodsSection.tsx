@@ -2,6 +2,7 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StudioPodsBody, type PodActions } from './StudioPodsBody';
+import type { StudioPod } from './studio-pods';
 import type { StudioPodsState } from './useStudioPods';
 
 /** Which studio is rendering — the only thing that differs between the two. */
@@ -24,6 +25,10 @@ interface StudioPodsSectionProps extends PodActions {
   variant: StudioPodsVariant;
   state: StudioPodsState;
   testID: string;
+  /** A tab's slice of `state.pods` (Pods at your venue); every pod when omitted. */
+  rows?: readonly StudioPod[];
+  /** The slice's own empty sentence; the variant's when omitted. */
+  emptyKey?: string;
 }
 
 /**
@@ -37,6 +42,8 @@ export function StudioPodsSection({
   variant,
   state,
   testID,
+  rows,
+  emptyKey,
   onOpenPod,
   onCancelPod,
   onRequestChange,
@@ -50,7 +57,8 @@ export function StudioPodsSection({
       <SectionHeader title={t(copy.title)} />
       <StudioPodsBody
         state={state}
-        emptyKey={copy.empty}
+        rows={rows}
+        emptyKey={emptyKey ?? copy.empty}
         scopeKey={copy.scope}
         testID={testID}
         onOpenPod={onOpenPod}

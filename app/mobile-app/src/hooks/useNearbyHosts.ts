@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { pickVenue } from '@duncit/utils';
 
 import { PartnerRequestDirection, PartnerSide } from '@/generated/graphql/graphql';
 import {
@@ -10,6 +9,7 @@ import {
 import { useNearbyPartners, type NearbyItem } from '@/hooks/useNearbyPartners';
 import { useNearbySearch } from '@/hooks/useNearbySearch';
 import { useReloadableQuery } from '@/hooks/useReloadableQuery';
+import { useSelectedVenue } from '@/hooks/useSelectedVenue';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
@@ -37,7 +37,6 @@ export function useNearbyHosts() {
   const { t } = useTranslation();
   const [venues, setVenues] = useState<SearchVenue[]>([]);
   const [venuesError, setVenuesError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const loadVenues = useCallback(async () => {
     const res = await graphqlRequest(PodRequestSearchVenuesDocument, undefined, { auth: true });
@@ -47,7 +46,8 @@ export function useNearbyHosts() {
     onError: (err) => setVenuesError(toErrorMessage(err, t('mweb.account.somethingWentWrong'))),
   });
 
-  const venue = pickVenue(venues, selectedId);
+  // Opens on the venue picked on any Venue Studio screen.
+  const { venue, selectVenue } = useSelectedVenue(venues);
   const venueId = venue?.id ?? '';
   const venueCategory = venue?.venue_category.category_id ?? '';
   const defaults = useMemo(() => (venueCategory ? [venueCategory] : []), [venueCategory]);
@@ -76,7 +76,7 @@ export function useNearbyHosts() {
     venuesLoading: venuesQuery.isLoading,
     venuesError,
     selectVenue: (id: string) => {
-      setSelectedId(id);
+      selectVenue(id);
       state.resetCategories();
     },
     partners,

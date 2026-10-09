@@ -16,6 +16,10 @@ import { RequestChangeSheet } from '@/components/change-requests/RequestChangeSh
 import { usePodChangeRequests } from '@/hooks/usePodChangeRequests';
 
 interface Props {
+  /** A tab's slice of `state.pods`; every pod when omitted. */
+  rows?: readonly StudioPod[];
+  /** The slice's own empty sentence. */
+  emptyKey?: string;
   state: StudioPodsState;
   testID: string;
 }
@@ -25,7 +29,7 @@ interface Props {
  * detail sheet, or cancel an upcoming pod through the confirm-and-explain
  * sheet. Club Studio renders the plain section — a club admin has no cancel.
  */
-export function VenueStudioPods({ state, testID }: Readonly<Props>) {
+export function VenueStudioPods({ state, testID, rows, emptyKey }: Readonly<Props>) {
   const { t } = useTranslation();
   const [detail, setDetail] = useState<StudioPod | null>(null);
   const [cancelling, setCancelling] = useState<StudioPod | null>(null);
@@ -52,6 +56,8 @@ export function VenueStudioPods({ state, testID }: Readonly<Props>) {
         variant="VENUE"
         state={state}
         testID={testID}
+        rows={rows}
+        emptyKey={emptyKey}
         onOpenPod={setDetail}
         onCancelPod={setCancelling}
         onRequestChange={setChangePod}

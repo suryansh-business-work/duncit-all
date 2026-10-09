@@ -59,12 +59,22 @@ import { WalletScreen } from '@/screens/WalletScreen';
 import { WhatsAppPreferenceScreen } from '@/screens/WhatsAppPreferenceScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
+import { HostPublishScreen, VenuePublishScreen } from '@/screens/PublishPageScreens';
+import {
+  BrandOptionsScreen,
+  ClubOptionsScreen,
+  HostOptionsScreen,
+  VenueOptionsScreen,
+} from '@/screens/StudioOptionsScreen';
+import { VenueListScreen } from '@/screens/VenueListScreen';
+import { VenuePodsScreen } from '@/screens/VenuePodsScreen';
 import { withProductGate } from '@/navigation/withProductGate';
 import { Stack } from './stack';
 
 /** Product screens behind the one system flag, built at module scope (S6478). */
 const GatedListProductScreen = withProductGate(ListProductScreen);
 const GatedProductsManageScreen = withProductGate(ProductsManageScreen);
+const GatedBrandOptionsScreen = withProductGate(BrandOptionsScreen);
 
 /** First half of the signed-in app stack — Home, account, studio and support routes. */
 export function renderCoreScreens() {
@@ -124,6 +134,14 @@ export function renderCoreScreens() {
       <Stack.Screen name="ClubPodDetails" component={ClubPodDetailsScreen} />
       <Stack.Screen name="ClubEdit" component={ClubEditScreen} />
       <Stack.Screen name="ProductsManage" component={GatedProductsManageScreen} />
+      <Stack.Screen name="VenueOptions" component={VenueOptionsScreen} />
+      <Stack.Screen name="HostOptions" component={HostOptionsScreen} />
+      <Stack.Screen name="ClubOptions" component={ClubOptionsScreen} />
+      <Stack.Screen name="BrandOptions" component={GatedBrandOptionsScreen} />
+      <Stack.Screen name="VenueList" component={VenueListScreen} />
+      <Stack.Screen name="VenuePublish" component={VenuePublishScreen} />
+      <Stack.Screen name="HostPublish" component={HostPublishScreen} />
+      <Stack.Screen name="VenuePods" component={VenuePodsScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="Sos" component={SosScreen} />
       <Stack.Screen name="Callback" component={CallbackScreen} />

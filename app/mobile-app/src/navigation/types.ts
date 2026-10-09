@@ -110,6 +110,17 @@ export type RootStackParamList = {
   /** /clubs/:clubId/edit — the club's own page. */
   ClubEdit: { clubId: string };
   ProductsManage: undefined;
+  /** The studios' Options pages — the one highlighted sidebar entry per studio. */
+  VenueOptions: undefined;
+  HostOptions: undefined;
+  ClubOptions: undefined;
+  BrandOptions: undefined;
+  /** Venue Options → Your Venues, Publish Your Venue, Pods at Your Venue. */
+  VenueList: undefined;
+  VenuePublish: undefined;
+  VenuePods: undefined;
+  /** Host Options → Publish Your Host Page. */
+  HostPublish: undefined;
   Support: undefined;
   Sos: undefined;
   Callback: undefined;

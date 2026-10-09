@@ -2,11 +2,16 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { graphqlRequest } from '@/services/graphql.client';
 import { useEcommDashboard, useVenueDashboard } from '@/hooks/useStudioDashboards';
+import { useSelectedVenueStore } from '@/stores/selected-venue.store';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
-beforeEach(() => mockRequest.mockReset());
+beforeEach(() => {
+  mockRequest.mockReset();
+  // The venue pick is shared app state; each test starts with none saved.
+  useSelectedVenueStore.setState({ venueId: null, status: 'ready' });
+});
 
 describe('useVenueDashboard', () => {
   it('loads venues then the first venue’s pod dates', async () => {
@@ -17,6 +22,29 @@ describe('useVenueDashboard', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.venues).toHaveLength(1);
     expect(result.current.podDates).toEqual(['2026-06-20T10:00:00Z']);
+  });
+
+  it('opens on the saved venue and remembers a switch for the next screen', async () => {
+    useSelectedVenueStore.setState({ venueId: 'v2', status: 'ready' });
+    mockRequest.mockImplementation((_doc: unknown, vars?: { venue_id?: string }) =>
+      Promise.resolve(
+        vars?.venue_id
+          ? { pods: [{ id: `p-${vars.venue_id}`, pod_date_time: `${vars.venue_id}-date` }] }
+          : {
+              myVenues: [
+                { id: 'v1', venue_name: 'Hall' },
+                { id: 'v2', venue_name: 'Turf' },
+              ],
+            },
+      ),
+    );
+    const { result } = renderHook(() => useVenueDashboard());
+    await waitFor(() => expect(result.current.podDates).toEqual(['v2-date']));
+    expect(result.current.venue?.venue_name).toBe('Turf');
+
+    act(() => result.current.selectVenue('v1'));
+    await waitFor(() => expect(result.current.podDates).toEqual(['v1-date']));
+    expect(useSelectedVenueStore.getState().venueId).toBe('v1');
   });
 
   it('skips the pods query without venues and tolerates a pods failure', async () => {

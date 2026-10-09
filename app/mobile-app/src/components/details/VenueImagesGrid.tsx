@@ -26,6 +26,9 @@ export function VenueImagesGrid({ images, onOpen }: Readonly<Props>) {
   const { width } = useWindowDimensions();
   if (images.length < 2) return null;
   const tileWidth = Math.floor((width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS);
+  // An explicit height, not `aspectRatio`: inside a wrapping row Yoga stretches
+  // the tile to its line height, which collapses to 0 and hides every photo.
+  const tileHeight = Math.round((tileWidth * 3) / 4);
 
   return (
     <YStack gap={10}>
@@ -41,8 +44,9 @@ export function VenueImagesGrid({ images, onOpen }: Readonly<Props>) {
             aria-label={t('mweb.podDetails.viewImage')}
             onPress={() => onOpen(tileIndex + 1)}
             width={tileWidth}
-            aspectRatio={4 / 3}
+            height={tileHeight}
             borderRadius={18}
+            backgroundColor="$soft"
             overflow="hidden"
           >
             <AppImage

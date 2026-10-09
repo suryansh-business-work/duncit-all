@@ -627,8 +627,6 @@
   "portals/onboarding/src/pages/venues-page/VenueReviewDialog.tsx": 1,
   "portals/onboarding/src/pages/venues-page/VenuesPage.tsx": 1,
   "portals/onboarding/src/utils/hostDob.ts": 1,
-  "portals/partners-app/src/config/app-config.ts": 1,
-  "portals/partners-app/src/config/partner-sections.ts": 10,
   "portals/partners-app/src/forms/auth/auth.form.ts": 2,
   "portals/partners-app/src/forms/support/support.form.tsx": 1,
   "portals/partners-app/src/forms/validation/rules.ts": 3,

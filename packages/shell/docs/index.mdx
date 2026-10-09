@@ -395,6 +395,7 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 | `onDenied` | `() => void` | no | `undefined` | Called before the denied redirect (clear the token here). |
 | `breadcrumbLabelMap` | `Record<string, string>` | no | `undefined` | Route-segment → label overrides. |
 | `detailedChangeLogs` | `boolean` | no | `false` | Every grid's **Change logs** drawer also shows the account's email and roles, the surface, the IP address and the browser. The Finance console turns it on. |
+| `sidebarHeader` | `ReactNode` | no | `undefined` | Rendered under the sidebar branding, above the menu; hidden on the icon rail. The Partner console puts its studio switcher here. |
 | `children` | `ReactNode` | yes | — | The routed page. |
 
 ### `<PortalAppShell>` — `PortalAppShellProps`

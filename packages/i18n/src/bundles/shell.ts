@@ -819,6 +819,24 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       withdrawal: 'Withdrawal',
       withdrawalPayments: 'Withdrawal Payments',
       withdrawalSettings: 'Withdrawal Settings',
+      // Partner console: one studio at a time, picked by the switcher above the menu.
+      studio: 'Studio',
+      switchStudio: 'Switch studio',
+      hostStudio: 'Host Studio',
+      hostStudioCaption: 'Pods you run',
+      venueStudio: 'Venue Studio',
+      venueStudioCaption: 'Your spaces and slots',
+      clubAdminStudio: 'Club Admin Studio',
+      clubAdminStudioCaption: 'Clubs you manage',
+      brandStudio: 'Brand Studio',
+      brandStudioCaption: 'Brands and products',
+      // The studio menu's groups and the options under them.
+      requests: 'Requests',
+      yourPods: 'Your Pods',
+      venueManagement: 'Venue Management',
+      slotRequests: 'Slot Requests',
+      yourBrands: 'Your Brands',
+      help: 'Help',
     },
 
     /** Auto Pods in the Partners portal — the same copy mWeb and native render

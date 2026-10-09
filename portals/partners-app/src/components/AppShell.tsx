@@ -5,21 +5,24 @@ import { useFeatureFlag, useProductVisibility } from '@duncit/app-settings';
 import { AppShell as ShellAppShell } from '@duncit/shell';
 import { appConfig, buildNav } from '../config/app-config';
 import { clearToken } from '../lib/session';
+import StudioSwitcher from './studio/StudioSwitcher';
+import { useActiveStudio } from './studio/useActiveStudio';
 
 /**
  * Thin adapter over the shared @duncit/shell chrome: wires this portal's
  * user-context + session into the one common header/sidebar/breadcrumbs.
  * Partners is a portal-gate-exempt surface (any authenticated user may sign in);
- * access is per area instead — buildNav() shows the partner sections the user
- * holds, and SectionGate keeps their routes to the same roles.
+ * access is per area instead — buildNav() shows the ONE studio the user is in
+ * (the switcher picks among those they hold), and SectionGate keeps each
+ * studio's routes to its role.
  */
 export default function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const navigate = useNavigate();
   const { user, loading, logout: ctxLogout } = useUserData();
-  // The shell's nav config has no flag of its own, so the gate is applied here,
-  // where the portal already assembles its role-adaptive sidebar.
   const autoPods = useFeatureFlag('auto_pods');
   const { visible: products } = useProductVisibility();
+  // ONE studio's menu at a time; the switcher above it moves between them.
+  const activeRole = useActiveStudio();
 
   const logout = () => {
     clearToken();
@@ -30,7 +33,8 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   return (
     <ShellAppShell
       config={appConfig}
-      nav={buildNav(user?.roles, { autoPods, products })}
+      nav={buildNav(user?.roles, { autoPods, products, activeRole })}
+      sidebarHeader={<StudioSwitcher roles={user?.roles} products={products} active={activeRole} />}
       user={user ?? undefined}
       loading={loading}
       profileTo="/profile"

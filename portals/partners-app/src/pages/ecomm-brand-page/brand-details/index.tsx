@@ -10,14 +10,17 @@ import { BrandAnalyticsPanel, BrandLogsPanel, useTranslation } from '@duncit/she
 import { MY_BRAND, type EcommBrand } from '../queries';
 import BrandDetailsHeader from './BrandDetailsHeader';
 import BrandOverviewTab from './BrandOverviewTab';
+import ListProductsPage from '../../list-products-page/ListProductsPage';
+import BrandSettingsPage from '../brand-settings/BrandSettingsPage';
 
 const BRANDS_PATH = '/ecomm-brand';
 const TAB_PREFIX = 'brand-details';
-type BrandTab = 'overview' | 'logs' | 'analytics';
+type BrandTab = 'overview' | 'products' | 'warehouses' | 'analytics' | 'logs';
 
 /**
  * `/ecomm-brand/:brandId` — one of the partner's own brands: going live,
- * setup progress, its activity log and its sales. Rows of "Your brands" open here.
+ * setup progress, its products, its warehouses, its sales and its activity
+ * log. Rows of "Brands" open here.
  */
 export default function BrandDetailsRoute() {
   const { t } = useTranslation();
@@ -29,8 +32,12 @@ export default function BrandDetailsRoute() {
   const items = useMemo(
     () => [
       { value: 'overview' as const, label: t('partners.brandDetails.tabOverview') },
-      { value: 'logs' as const, label: t('partners.brandDetails.tabLogs') },
+      // Products and warehouses used to be pages behind the brand row's menu;
+      // they belong to the brand, so they are its tabs.
+      { value: 'products' as const, label: t('partners.brandDetails.tabProducts') },
+      { value: 'warehouses' as const, label: t('partners.brandDetails.tabWarehouses') },
       { value: 'analytics' as const, label: t('partners.brandDetails.tabAnalytics') },
+      { value: 'logs' as const, label: t('partners.brandDetails.tabLogs') },
     ],
     [t]
   );
@@ -78,6 +85,8 @@ export default function BrandDetailsRoute() {
       <DuncitTabs {...tabs} idPrefix={TAB_PREFIX} aria-label={t('partners.brandDetails.tabsLabel')} searchable={false} />
       <Box {...tabPanelProps(TAB_PREFIX, tabs.value)}>
         {tabs.value === 'overview' && <BrandOverviewTab brand={brand} />}
+        {tabs.value === 'products' && <ListProductsPage embedded />}
+        {tabs.value === 'warehouses' && <BrandSettingsPage embedded />}
         {tabs.value === 'logs' && <BrandLogsPanel brandId={brand.id} tableId="partners-app-brand-logs" />}
         {tabs.value === 'analytics' && <BrandAnalyticsPanel brandId={brand.id} />}
       </Box>

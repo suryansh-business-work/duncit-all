@@ -13,15 +13,35 @@ import {
 import { useTranslation } from '@duncit/shell';
 import { primaryHeroBackground } from '../../components/primaryHero';
 
-export default function ListProductsPage() {
+export default function ListProductsPage({
+  embedded = false,
+}: Readonly<{
+  /** Inside the brand page's Products tab: no hero and no "Back to brands" —
+   * the brand page has both — just the Add Product action above the table. */
+  embedded?: boolean;
+}>) {
   const { t } = useTranslation();
   const { brandId = '' } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery<any>(PRODUCT_LISTING_ACCESS, { fetchPolicy: 'cache-and-network' });
   const canManageProducts = canManageProductListings(data?.me?.roles);
 
+  const addProduct = (
+    <DuncitButton
+      component={canManageProducts ? RouterLink : 'button'}
+      to={canManageProducts ? `/ecomm-brand/${brandId}/products/new` : undefined}
+      disabled={!canManageProducts}
+      variant="contained"
+      startIcon={<AddIcon />}
+    >
+      {t('partners.listProductsPage.addProduct')}
+    </DuncitButton>
+  );
+
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
+      {embedded && <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>{addProduct}</Stack>}
+      {!embedded && (
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'common.white', background: primaryHeroBackground }}>
         <BackButton onClick={() => navigate('/ecomm-brand')} sx={{ color: 'inherit', mb: 1 }}>
           Back to brands
@@ -55,6 +75,7 @@ export default function ListProductsPage() {
           </DuncitButton>
         </Stack>
       </Box>
+      )}
       {error && <Alert severity="error">{error.message}</Alert>}
       {!loading && !canManageProducts && <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>}
       <ProductListingsTable

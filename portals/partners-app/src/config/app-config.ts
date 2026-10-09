@@ -1,5 +1,5 @@
 import type { AppNavItem } from '@duncit/shell';
-import { hasPartnerRole, PARTNER_SECTIONS, visibleSections, type PartnerSection } from './partner-sections';
+import { AUTO_POD_PATHS, hasPartnerRole, PARTNER_SECTIONS, visibleSections, type PartnerRole } from './partner-sections';
 
 /**
  * Per-app configuration for the Duncit Partners console. Reusable configuration
@@ -33,9 +33,17 @@ export const appConfig: AppConfig = {
     // Account-level — same section as mWeb/native's Manage Account list, which
     // also places it right before FAQs.
     { label: 'Verification', labelKey: 'shell.nav.verification', to: '/verification', icon: 'verified-user' },
-    { label: 'FAQs', labelKey: 'shell.nav.faqs', to: '/faqs', icon: 'help' },
-    { label: 'Support', labelKey: 'shell.nav.support', to: '/support', icon: 'support' },
-    { label: 'Policies', labelKey: 'shell.nav.policies', to: '/policies', icon: 'policy' },
+    // FAQs, Support and Policies — one Help group (and one page with tabs).
+    {
+      label: 'Help',
+      labelKey: 'shell.nav.help',
+      icon: 'help',
+      children: [
+        { label: 'FAQs', labelKey: 'shell.nav.faqs', to: '/faqs', icon: 'help' },
+        { label: 'Support', labelKey: 'shell.nav.support', to: '/support', icon: 'support' },
+        { label: 'Policies', labelKey: 'shell.nav.policies', to: '/policies', icon: 'policy' },
+      ],
+    },
     // Featured invitation into the other earn journeys — the same entry
     // mWeb/native show in their profile grids, styled as a highlighted card.
     // Last on purpose: it closes the sidebar for everyone, partner or not yet.
@@ -48,32 +56,6 @@ export const appConfig: AppConfig = {
     },
   ],
 };
-
-/** Wallet/Withdrawal is shown to partner roles that can earn payouts. */
-const WALLET_NAV: AppNavItem = { label: 'Wallet', to: '/wallet', icon: 'wallet' };
-
-const AUTO_PODS_LABEL = 'Auto Pods';
-const AUTO_PODS_ICON = 'handshake';
-
-/**
- * Adds a partner section's Auto Pods entry, directly AFTER its Dashboard child.
- *
- * Never first: `landingPath()` opens the first child of the user's first
- * section, so a first-position insert would silently move where `/` sends them.
- */
-function withAutoPods(section: PartnerSection, enabled: boolean): AppNavItem {
-  const { nav, autoPodsTo } = section;
-  if (!enabled || !autoPodsTo) return nav;
-  const children = nav.children ?? [];
-  return {
-    ...nav,
-    children: [
-      ...children.slice(0, 1),
-      { label: AUTO_PODS_LABEL, to: autoPodsTo, icon: AUTO_PODS_ICON },
-      ...children.slice(1),
-    ],
-  };
-}
 
 /**
  * Where `/` sends somebody: the dashboard of the first partner area they hold.
@@ -88,51 +70,52 @@ export function landingPath(roles?: readonly string[] | null, productsVisible = 
 }
 
 export interface BuildNavOptions {
-  /** The `auto_pods` feature flag. Off by default, so the three Auto Pod
-   * entries stay hidden until an admin turns the feature on. */
+  /** The `auto_pods` feature flag. Off by default, so the Auto Pods options
+   * stay out of the menu until an admin turns the feature on. */
   autoPods?: boolean;
-  /** The `is_product_visible` system flag. Off by default, so the E-Commerce
-   * Brand area — listings, warehouses, ShipRocket — is absent from the sidebar. */
+  /** The `is_product_visible` system flag. Off by default, so the Brand
+   * Studio — listings, warehouses, ShipRocket — is absent. */
   products?: boolean;
+  /** The studio the user is in (see useActiveStudio). Ignored when they do
+   * not hold it; the first studio they hold is used instead. */
+  activeRole?: PartnerRole | null;
+}
+
+/** Withdrawal for a partner with no studio to show it (see buildNav). */
+const WITHDRAWAL_NAV: AppNavItem = { label: 'Withdrawal', labelKey: 'shell.nav.withdrawal', to: '/wallet', icon: 'wallet' };
+
+/** A nav tree without the Auto Pods options (the `auto_pods` flag is off). */
+function withoutAutoPods(items: readonly AppNavItem[]): AppNavItem[] {
+  return items
+    .filter((item) => !(item.to && AUTO_POD_PATHS.includes(item.to)))
+    .map((item) => (item.children ? { ...item, children: withoutAutoPods(item.children) } : item));
 }
 
 /**
- * One partner section as the sidebar shows it, or `null` when it shows nothing.
+ * Sidebar nav for the signed-in user: ONE studio at a time — Dashboard, Pods,
+ * Requests, Withdrawal and every option grouped under them — then the
+ * role-independent tail. The studio switcher above it moves between studios.
  *
- * Holding the role gives the area's own entries. Without it, a section that
- * defines an `onboarding` entry (Host, E-Commerce Brand) keeps its dropdown with
- * that single way in; one that does not (Club Admin, Venue Owner) stays absent.
- */
-function sectionNav(
-  section: PartnerSection,
-  roles: readonly string[] | null | undefined,
-  autoPods: boolean,
-): AppNavItem | null {
-  if (hasPartnerRole(roles, section.role)) return withAutoPods(section, autoPods);
-  if (!section.onboarding) return null;
-  return { ...section.nav, children: [section.onboarding] };
-}
-
-/**
- * Sidebar nav for the signed-in user: the partner sections they hold (in
- * catalogue order) plus the two that invite them in, Wallet when any of them can
- * earn a payout, then the role-independent tail.
+ * Somebody who holds no studio yet sees the ways in instead (Be a Host, become
+ * a Brand partner), so the sidebar still says what this console is for.
  */
 export function buildNav(
   roles?: readonly string[] | null,
   options?: Readonly<BuildNavOptions>,
 ): AppNavItem[] {
-  const autoPods = options?.autoPods === true;
   const products = options?.products === true;
-  // The product switch is a kill switch for the whole E-Commerce Brand area —
-  // with it off there is nothing to invite anyone into either.
-  const sections = PARTNER_SECTIONS.filter((section) => products || !section.products)
-    .map((section) => sectionNav(section, roles, autoPods))
-    .filter((item): item is AppNavItem => item !== null);
-  // Wallet follows the ROLE, not the product switch: an e-commerce partner with
-  // earnings already banked must still be able to withdraw them after the shop
-  // is switched off.
+  const autoPods = options?.autoPods === true;
+  const held = visibleSections(roles, products);
+  const active = held.find((section) => section.role === options?.activeRole) ?? held[0];
+  const studio = active
+    ? (active.nav.children ?? [])
+    : PARTNER_SECTIONS.filter((section) => products || !section.products)
+        .map((section) => section.onboarding)
+        .filter((item): item is AppNavItem => item !== undefined);
+  // Withdrawal is in every studio's own list. A partner whose only studio is
+  // hidden (the shop switched off) holds no studio to show it — but money they
+  // already earned must stay withdrawable, so it follows the ROLE here.
   const earns = PARTNER_SECTIONS.some((section) => hasPartnerRole(roles, section.role));
-  const wallet = earns ? [WALLET_NAV] : [];
-  return [...sections, ...wallet, ...appConfig.nav];
+  const withdrawal = !active && earns ? [WITHDRAWAL_NAV] : [];
+  return [...(autoPods ? studio : withoutAutoPods(studio)), ...withdrawal, ...appConfig.nav];
 }

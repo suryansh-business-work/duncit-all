@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -14,6 +15,8 @@ export interface AppSidebarProps {
   /** Portal short name shown next to the branding logo. */
   name: string;
   nav: AppNavItem[];
+  /** Rendered under the branding, above the menu; hidden on the icon rail. */
+  header?: ReactNode;
   user?: ShellUser;
   /** Sidebar footer caption (defaults to `© Duncit`). */
   footerCaption?: string;
@@ -30,6 +33,7 @@ export interface AppSidebarProps {
 export function AppSidebar({
   name,
   nav,
+  header,
   user,
   footerCaption,
   onNavigate,
@@ -41,6 +45,11 @@ export function AppSidebar({
   return (
     <Stack sx={{ height: '100%' }}>
       <SidebarBrand name={name} collapsed={collapsed} onNavigate={onNavigate} />
+      {header && !collapsed && (
+        <Box sx={{ px: 1.25, pb: 1 }} data-testid="shell-sidebar-header">
+          {header}
+        </Box>
+      )}
       {collapsed ? (
         <NavRail nav={nav} onNavigate={onNavigate} />
       ) : (

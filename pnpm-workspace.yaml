@@ -60,6 +60,9 @@ allowBuilds:
   # its postinstall downloads a mongod binary, and the suites that need one
   # fetch it themselves at run time.
   mongodb-memory-server: false
+  # Also NO: bullmq's msgpackr only uses it as an optional native speed-up and
+  # falls back to plain JS without it, so the server image needs no build tools.
+  msgpackr-extract: false
   protobufjs: true
   sharp: true
   unrs-resolver: true

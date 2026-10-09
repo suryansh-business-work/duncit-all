@@ -72,6 +72,7 @@ import { describeFetchFailure, humanFetchMessage } from '@utils/outboundFetch';
 import { duplicateKeyMessage } from '@utils/mongo-error';
 import { connectDB } from './config/db';
 import { initRedis } from './config/redis';
+import { startNotifyWorker } from '@services/notify/notify.service';
 import { redisResponseCachePlugin } from './config/redisResponseCache';
 import { typeDefs, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
@@ -517,6 +518,11 @@ async function bootstrap() {
   // earliest of them ticks. The samplers and flushers further down are per
   // process by nature and do not take part.
   startSchedulerLease();
+
+  // Job queue consumers (gated on REDIS_QUEUE_URL — a no-op without it). Every
+  // process consumes; BullMQ hands each job to one of them, and the notify
+  // queue's global concurrency keeps AiSensy at one message in flight.
+  startNotifyWorker();
 
   // Status-page history: probe every monitored service every 5 minutes.
   if (process.env.NODE_ENV !== 'test' && process.env.STATUS_PROBES_DISABLED !== '1') {

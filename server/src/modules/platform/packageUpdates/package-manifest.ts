@@ -3443,6 +3443,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@opentelemetry/sdk-node", range: "^0.222.0", kind: "dependencies" },
       { name: "acorn", range: "^8.16.0", kind: "dependencies" },
       { name: "bcryptjs", range: "^3.0.3", kind: "dependencies" },
+      { name: "bullmq", range: "^6.3.11", kind: "dependencies" },
       { name: "busboy", range: "^1.6.0", kind: "dependencies" },
       { name: "cors", range: "^2.8.6", kind: "dependencies" },
       { name: "date-fns", range: "^4.4.0", kind: "dependencies" },

@@ -185,6 +185,11 @@ settings, translations, website content, FAQs, …). See
   host.
 - **Infra services**: `redis` and `redis-ui` are external images, not build
   targets — `deploy/redeploy.sh` `up -d`s them on every deploy.
+- **Job queues**: a second container, `redis-queue` (`noeviction` + AOF), backs
+  the BullMQ queues in `server/src/config/queue.ts` via
+  `REDIS_QUEUE_URL=redis://redis-queue:6379`. It is separate because the cache's
+  `allkeys-lru` would evict waiting jobs. Unset = no queue: callers such as
+  `notifyEach` do their work inline, which is also the rollback.
 
 ## 📐 Coding standards
 

@@ -80,3 +80,28 @@ export const tabCounts = (rows: readonly VenuePodRow[]): Record<VenuePodTab, num
   Object.fromEntries(
     TAB_ORDER.map((tab) => [tab, rows.filter((row) => matchesTab(row, tab)).length])
   ) as Record<VenuePodTab, number>;
+
+/**
+ * "Pods at your venue" reads in three tabs: Upcoming, Current (running right
+ * now) and Past (finished or cancelled — a cancelled pod is history too, and
+ * its row says so). Driven by the server's own `bucket`, so every app and the
+ * Partner console split a venue's pods the same way.
+ */
+export type VenuePodPhase = 'UPCOMING' | 'CURRENT' | 'PAST';
+
+export const VENUE_POD_PHASES: readonly VenuePodPhase[] = ['UPCOMING', 'CURRENT', 'PAST'];
+
+export function venuePodPhase(bucket: VenuePodBucket): VenuePodPhase {
+  if (bucket === 'UPCOMING') return 'UPCOMING';
+  if (bucket === 'ONGOING') return 'CURRENT';
+  return 'PAST';
+}
+
+/** The pods each phase tab holds, in the order the server sent them. */
+export function podsByPhase<T extends { bucket: VenuePodBucket }>(
+  rows: readonly T[],
+): Record<VenuePodPhase, T[]> {
+  const out: Record<VenuePodPhase, T[]> = { UPCOMING: [], CURRENT: [], PAST: [] };
+  for (const row of rows) out[venuePodPhase(row.bucket)].push(row);
+  return out;
+}

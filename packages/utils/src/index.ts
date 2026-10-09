@@ -711,17 +711,6 @@ export {
   type StudioOption,
 } from './studio-mode';
 export {
-  STUDIO_NAV,
-  studioMenuSections,
-  studioNavFor,
-  type PartnerStudioMode,
-  type StudioMenuSection,
-  type StudioNavGroup,
-  type StudioNavGroupKey,
-  type StudioNavIcon,
-  type StudioNavItem,
-} from './studio-nav';
-export {
   AUTO_POD_ROLES,
   autoPodActionable,
   autoPodCityLabel,
@@ -933,14 +922,28 @@ export {
   cancelDisabledReason,
   cancelPenaltyHeadline,
   matchesTab,
+  podsByPhase,
   tabCounts,
+  VENUE_POD_PHASES,
+  venuePodPhase,
   type CancelPenaltyHeadline,
   type VenueCancelDisabledReason,
   type VenueCancelPodResult,
   type VenuePodBucket,
   type VenuePodRow,
+  type VenuePodPhase,
   type VenuePodTab,
 } from './venue-pods';
+export {
+  STUDIO_OPTIONS_ENTRY,
+  STUDIO_OPTION_LIST,
+  studioOptionsEntryFor,
+  studioOptionsFor,
+  type StudioOptionIcon,
+  type StudioOptionItem,
+  type PartnerStudioMode,
+  type StudioOptionsEntry,
+} from './studio-options';
 export {
   emptyVenueOwnerStats,
   venueOwnerStatTiles,

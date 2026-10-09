@@ -1941,6 +1941,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/auto-pods", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/challenges", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/club-form", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/coupons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },

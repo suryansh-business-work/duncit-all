@@ -817,6 +817,11 @@ changeRequests: {
     categories: {
       title: 'Category Management',
       categories: 'Categories',
+      challengeTools: {
+        title: 'Challenge Tools',
+        titleFor: 'Challenge Tools · {name}',
+        pick: 'Select a super category, category or sub-category to configure the challenge tools it allows.',
+      },
       superCategories: 'Super Categories',
       image: 'Category image',
       imageHint: 'Upload or pick an image to use as the category visual.',

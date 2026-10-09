@@ -6,8 +6,10 @@ import { useTranslation } from '@duncit/shell';
 interface Props {
   superSel: CatItem | null;
   catSel: CatItem | null;
+  subSel: CatItem | null;
   setSuperSel: (it: CatItem | null) => void;
   setCatSel: (it: CatItem | null) => void;
+  setSubSel: (it: CatItem | null) => void;
   openCreate: (level: Level, parentId: string | null) => void;
   openEdit: (level: Level, parentId: string | null, item: CatItem) => void;
   remove: (level: Level, item: CatItem) => void;
@@ -16,8 +18,10 @@ interface Props {
 export default function CategoriesColumns({
   superSel,
   catSel,
+  subSel,
   setSuperSel,
   setCatSel,
+  setSubSel,
   openCreate,
   openEdit,
   remove,
@@ -43,6 +47,7 @@ export default function CategoriesColumns({
         onSelect={(it) => {
           setSuperSel(it);
           setCatSel(null);
+          setSubSel(null);
         }}
         onCreate={() => openCreate('SUPER', null)}
         onEdit={(it) => openEdit('SUPER', null, it)}
@@ -54,7 +59,10 @@ export default function CategoriesColumns({
         parentId={superSel?.id}
         parentName={superSel?.name}
         selectedId={catSel?.id ?? null}
-        onSelect={(it) => setCatSel(it)}
+        onSelect={(it) => {
+          setCatSel(it);
+          setSubSel(null);
+        }}
         onCreate={() => superSel && openCreate('CATEGORY', superSel.id)}
         onEdit={(it) => superSel && openEdit('CATEGORY', superSel.id, it)}
         onDelete={(it) => remove('CATEGORY', it)}
@@ -64,8 +72,8 @@ export default function CategoriesColumns({
         level="SUB"
         parentId={catSel?.id}
         parentName={catSel?.name}
-        selectedId={null}
-        onSelect={() => undefined}
+        selectedId={subSel?.id ?? null}
+        onSelect={setSubSel}
         onCreate={() => catSel && openCreate('SUB', catSel.id)}
         onEdit={(it) => catSel && openEdit('SUB', catSel.id, it)}
         onDelete={(it) => remove('SUB', it)}

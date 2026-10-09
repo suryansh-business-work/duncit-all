@@ -142,13 +142,13 @@ describe('uploadToImagekit', () => {
     expect(Buffer.from(await file.arrayBuffer()).toString()).toBe('jpeg-bytes');
   });
 
-  it('uses the configured key and leaves folder and tags off when not given', async () => {
+  it('uses the configured key, files a folderless upload under the environment root and leaves tags off', async () => {
     okUpload();
 
     await uploadToImagekit({ fileBytes: Buffer.from('x'), fileName: 'x.jpg', tags: [] });
 
     expect(fetchMock.mock.calls[0][2].headers).toEqual({ Authorization: basicAuth(PRIVATE_KEY) });
-    expect(sentForm().has('folder')).toBe(false);
+    expect(sentForm().get('folder')).toBe('/production/uploads');
     expect(sentForm().has('tags')).toBe(false);
   });
 

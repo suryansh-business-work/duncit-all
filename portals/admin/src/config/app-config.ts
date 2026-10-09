@@ -45,6 +45,7 @@ export const appConfig = {
       label: 'User Management', labelKey: 'shell.nav.userManagement',
       icon: 'people',
       children: [
+        { label: 'Users Dashboard', labelKey: 'shell.nav.usersDashboard', to: '/users-dashboard', icon: 'insights' },
         { label: 'All Users', labelKey: 'shell.nav.allUsers', to: '/users', icon: 'people' },
         { label: 'Roles', labelKey: 'shell.nav.roles', to: '/rbac/roles', icon: 'shield' },
       ],
@@ -103,6 +104,12 @@ export const appConfig = {
       to: '/users',
       section: 'User Management', sectionKey: 'shell.nav.userManagement',
       keywords: ['members', 'customers', 'user', 'roles'],
+    },
+    {
+      label: 'Users Dashboard', labelKey: 'shell.nav.usersDashboard',
+      to: '/users-dashboard',
+      section: 'User Management', sectionKey: 'shell.nav.userManagement',
+      keywords: ['insights', 'analytics', 'last active', 'data issues', 'duplicate', 'missing email', 'missing phone'],
     },
     { label: 'Roles', labelKey: 'shell.nav.roles', to: '/rbac/roles', section: 'User Management', sectionKey: 'shell.nav.userManagement', keywords: ['rbac', 'permissions', 'access'] },
     { label: 'Partners', labelKey: 'shell.nav.partners', to: '/partners', section: 'Partners', sectionKey: 'shell.nav.partners', keywords: ['host', 'venue partner', 'seller', 'club admin'] },

@@ -17,6 +17,8 @@ import BrandDetailsRoute from './pages/ecomm-brand-page/brand-details';
 import BrandSettingsPage from './pages/ecomm-brand-page/brand-settings/BrandSettingsPage';
 import IntegrationsPage from './pages/ecomm-brand-page/integrations/IntegrationsPage';
 import ReturnsPage from './pages/ecomm-brand-page/returns';
+import OrdersPage, { OrderDetailPage } from './pages/ecomm-brand-page/orders';
+import WarehousesPage from './pages/ecomm-brand-page/warehouses';
 import EcommDashboardPage from './pages/ecomm-dashboard-page/EcommDashboardPage';
 import ListProductsPage from './pages/list-products-page/ListProductsPage';
 import ProductListingEditorPage from './pages/list-products-page/ProductListingEditorPage';
@@ -117,6 +119,10 @@ export default function App() {
       <Route path="/ecomm-brand/integrations" element={authed(<IntegrationsPage />)} />
       {/* Buyer returns on the partner's brands — under /ecomm-brand so SectionGate keeps it to ECOMM_MANAGER. */}
       <Route path="/ecomm-brand/returns" element={authed(<ReturnsPage />)} />
+      {/* Pod Shop orders and every brand's warehouses — before :brandId, or the segment reads as a brand id. */}
+      <Route path="/ecomm-brand/orders" element={authed(<OrdersPage />)} />
+      <Route path="/ecomm-brand/orders/:orderId" element={authed(<OrderDetailPage />)} />
+      <Route path="/ecomm-brand/warehouses" element={authed(<WarehousesPage />)} />
       {/* A brand row opens its details page (overview, logs, analytics). */}
       <Route path="/ecomm-brand/:brandId" element={authed(<BrandDetailsRoute />)} />
       <Route path="/ecomm-brand/:brandId/edit" element={authed(<BrandWizardRoute />)} />

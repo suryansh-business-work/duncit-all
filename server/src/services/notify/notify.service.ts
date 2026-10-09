@@ -1,4 +1,5 @@
 import { logs } from '@observability/log';
+import { enqueue, startWorker } from '@config/queue';
 import { whatsappService, type WaSendInput, type WaSendOutcome } from '@modules/platform/whatsapp/whatsapp.service';
 import { applyVars } from '@modules/content/emailTemplate/emailTemplate.service';
 import { sendEmail, type SendResult } from '@services/email/email.service';
@@ -133,19 +134,50 @@ export async function notifyEvent(input: NotifyInput): Promise<NotifyOutcome> {
   return { wa: waOutcome, mail };
 }
 
+const NOTIFY_QUEUE = 'notify';
+
 /**
- * A fan-out, one recipient at a time.
- *
- * Sequential for the reason `whatsappService.sendEach` is: AiSensy rate-limits
- * the campaign API and there is no limiter anywhere in the server, so a
- * forty-attendee cancellation fired through `Promise.all` is forty concurrent
- * POSTs. The email leg rides the same loop rather than racing ahead of it.
+ * The only parts of the account the two legs read: the id the WhatsApp log is
+ * filed under, the two numbers `destinationFor` chooses between, and the email
+ * address. A job is stored in Redis, so the whole user document — password hash
+ * included — must never travel with it.
  */
-export async function notifyEach(inputs: readonly NotifyInput[]): Promise<NotifyOutcome[]> {
-  const outcomes: NotifyOutcome[] = [];
+function recipientOf(user: NotifyInput['user']): NotifyInput['user'] {
+  if (!user) return null;
+  const pick = (source?: { number?: unknown; extension?: unknown } | null) =>
+    source ? { number: source.number ?? null, extension: source.extension ?? null } : null;
+  return {
+    _id: user._id ? String(user._id) : null,
+    auth: { email: user.auth?.email ?? null, phone: pick(user.auth?.phone) },
+    communication: { whatsapp: pick(user.communication?.whatsapp) },
+  };
+}
+
+/**
+ * A fan-out, one recipient at a time — off the caller's path when it can be.
+ *
+ * With the job queue up, every recipient becomes a job and this returns as soon
+ * as they are queued: a forty-attendee cancellation no longer holds its request
+ * open for eighty provider calls. Without it (no REDIS_QUEUE_URL, or the queue
+ * refused them) the sends run here, as they always did.
+ *
+ * Either way ONE message is in flight at a time, for the reason
+ * `whatsappService.sendEach` gives: AiSensy rate-limits the campaign API. The
+ * worker enforces that with a global concurrency of 1.
+ */
+export async function notifyEach(inputs: readonly NotifyInput[]): Promise<void> {
+  const jobs = inputs.map((input) => ({
+    name: input.event,
+    data: { ...input, user: recipientOf(input.user) },
+  }));
+  if (await enqueue(NOTIFY_QUEUE, jobs)) return;
   for (const input of inputs) {
     // eslint-disable-next-line no-await-in-loop
-    outcomes.push(await notifyEvent(input));
+    await notifyEvent(input);
   }
-  return outcomes;
+}
+
+/** Consume the fan-out queue in this process (a no-op without REDIS_QUEUE_URL). */
+export function startNotifyWorker(): void {
+  startWorker<NotifyInput>(NOTIFY_QUEUE, (job) => notifyEvent(job.data), { globalConcurrency: 1 });
 }

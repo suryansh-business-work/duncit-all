@@ -57,6 +57,9 @@ import { VenueSlotRequestsScreen } from '@/screens/VenueSlotRequestsScreen';
 import { VerificationScreen } from '@/screens/VerificationScreen';
 import { WalletScreen } from '@/screens/WalletScreen';
 import { WhatsAppPreferenceScreen } from '@/screens/WhatsAppPreferenceScreen';
+import { BrandOrderDetailScreen } from '@/screens/BrandOrderDetailScreen';
+import { BrandOrdersScreen } from '@/screens/BrandOrdersScreen';
+import { BrandWarehousesScreen } from '@/screens/BrandWarehousesScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { HostPublishScreen, VenuePublishScreen } from '@/screens/PublishPageScreens';
@@ -75,6 +78,9 @@ import { Stack } from './stack';
 const GatedListProductScreen = withProductGate(ListProductScreen);
 const GatedProductsManageScreen = withProductGate(ProductsManageScreen);
 const GatedBrandOptionsScreen = withProductGate(BrandOptionsScreen);
+const GatedBrandOrdersScreen = withProductGate(BrandOrdersScreen);
+const GatedBrandOrderDetailScreen = withProductGate(BrandOrderDetailScreen);
+const GatedBrandWarehousesScreen = withProductGate(BrandWarehousesScreen);
 
 /** First half of the signed-in app stack — Home, account, studio and support routes. */
 export function renderCoreScreens() {
@@ -142,6 +148,9 @@ export function renderCoreScreens() {
       <Stack.Screen name="VenuePublish" component={VenuePublishScreen} />
       <Stack.Screen name="HostPublish" component={HostPublishScreen} />
       <Stack.Screen name="VenuePods" component={VenuePodsScreen} />
+      <Stack.Screen name="BrandOrders" component={GatedBrandOrdersScreen} />
+      <Stack.Screen name="BrandOrderDetail" component={GatedBrandOrderDetailScreen} />
+      <Stack.Screen name="BrandWarehouses" component={GatedBrandWarehousesScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="Sos" component={SosScreen} />
       <Stack.Screen name="Callback" component={CallbackScreen} />

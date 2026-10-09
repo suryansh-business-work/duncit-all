@@ -20,6 +20,7 @@ import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import TerminalPage from './pages/server/TerminalPage';
 import DataClonePage from './pages/data-clone';
+import MediaOrganizerPage from './pages/media-organizer';
 import AccountDeletionsPage from './pages/account-deletions';
 import DbBackupsPage from './pages/database/backups';
 import DbInfoPage from './pages/database/info';
@@ -123,6 +124,7 @@ export default function App() {
         <Route path="/database/info" element={authed(<DbInfoPage />)} />
         <Route path="/database/backups" element={authed(<DbBackupsPage />)} />
         <Route path="/database/data-clone" element={authed(<DataClonePage />)} />
+        <Route path="/database/media-organizer" element={authed(<MediaOrganizerPage />)} />
         <Route path="/server/data-clone" element={<Navigate to="/database/data-clone" replace />} />
         {/* The domain at GoDaddy and the zone behind every *.duncit.com host.
             The old /dns paths still resolve, so a bookmark keeps working. */}

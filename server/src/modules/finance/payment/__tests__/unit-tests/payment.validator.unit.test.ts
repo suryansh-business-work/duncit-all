@@ -1,6 +1,8 @@
 import {
   dummyCheckoutSchema,
   dummyProductCheckoutSchema,
+  productCheckoutSchema,
+  razorpayOrderSchema,
 } from '../../payment.validator';
 
 const podInput = (over: Record<string, any> = {}) => ({
@@ -86,5 +88,46 @@ describe('checkout validators — an email and a billing address are mandatory',
         productInput({ billing: { line1: '12 Main Street', city: '', state: 'MH', pincode: '411001' } }),
       ),
     ).rejects.toThrow(/city/i);
+  });
+});
+
+// The yup → zod port declared shipping_address as an EMPTY shape, which drops
+// every key it does not name: the address reached the order as `{}`, and every
+// pod-shop ShipRocket booking was refused for a blank ship-to.
+describe('checkout validators — the delivery address survives validation', () => {
+  const shipTo = {
+    name: 'Riya Sharma',
+    phone: '9876543210',
+    email: null,
+    line1: '  12 Main Street  ',
+    line2: null,
+    landmark: 'Near the park',
+    city: 'Pune',
+    state: 'MH',
+    pincode: '411001',
+    country: 'India',
+  };
+
+  it('keeps every field of a product checkout address, trimmed, with nulls for omitted lines', async () => {
+    const parsed = await productCheckoutSchema.parseAsync(
+      productInput({ fulfilment_method: 'SHIP', shipping_address: shipTo }),
+    );
+    expect(parsed.shipping_address).toEqual({ ...shipTo, line1: '12 Main Street' });
+  });
+
+  it('keeps the address on a pod checkout that ships add-on products', async () => {
+    const parsed = await razorpayOrderSchema.parseAsync(podInput({ shipping_address: shipTo }));
+    expect(parsed.shipping_address).toMatchObject({ line1: '12 Main Street', city: 'Pune', pincode: '411001' });
+  });
+
+  it('still defaults to null when no address is sent (pickup orders)', async () => {
+    const parsed = await dummyProductCheckoutSchema.parseAsync(productInput());
+    expect(parsed.shipping_address).toBeNull();
+  });
+
+  it('refuses an address line longer than the order model stores', async () => {
+    await expect(
+      productCheckoutSchema.parseAsync(productInput({ shipping_address: { ...shipTo, line1: 'x'.repeat(201) } })),
+    ).rejects.toThrow();
   });
 });

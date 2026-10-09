@@ -3167,6 +3167,17 @@ export type BrandPickupLocationInput = {
   state?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** A brand's warehouses after a check against the ShipRocket account it ships on. */
+export type BrandPickupSync = {
+  __typename?: 'BrandPickupSync';
+  /** Pickup addresses taken in from the brand's own ShipRocket account on this sync. */
+  adopted: Scalars['Int']['output'];
+  /** Why ShipRocket could not be read ('' when it was) — the warehouses are still listed. */
+  shiprocket_error: Scalars['String']['output'];
+  synced_at: Scalars['String']['output'];
+  warehouses: Array<BrandPickupLocation>;
+};
+
 export type BrandRazorpayInput = {
   key_id: Scalars['String']['input'];
   /** Omitted or blank keeps the secret already on file. */
@@ -11978,6 +11989,14 @@ export type Mutation = {
    * the blocked member is never told.
    */
   blockUser: Scalars['Boolean']['output'];
+  /** Partner: book, or resume booking, the ShipRocket shipment of an own-brand order. */
+  brandBookProductOrderShipment: ProductOrder;
+  /** Partner: one PDF (label, invoice or manifest) for own-brand orders. */
+  brandProductOrderShipmentFile: ShipmentFile;
+  /** Partner: pull the latest tracking of an own-brand order. */
+  brandRefreshProductOrderTracking: ProductOrder;
+  /** Partner: correct an own-brand order's ship-to before ShipRocket has it. */
+  brandUpdateProductOrderAddress: ProductOrder;
   /** Bulk-manage a venue's upcoming non-booked slots (owner-scoped). */
   bulkDeleteVenueSlots: BulkSlotResult;
   bulkUpdateVenueSlots: BulkSlotResult;
@@ -13654,6 +13673,8 @@ export type Mutation = {
    * slice, and the replacing happens when the slice marked `last` arrives.
    */
   syncContacts: ContactsSyncResult;
+  /** Check an own brand's warehouses against its ShipRocket account; on its own account, take in pickups it has there. */
+  syncMyBrandPickupLocations: BrandPickupSync;
   /** Mirror the signed-in member's device cart so the reminder email knows what is waiting. An empty list clears it. */
   syncMyProductCart: Scalars['Boolean']['output'];
   /** Read the account now instead of waiting for the scheduler. */
@@ -14361,6 +14382,28 @@ export type MutationBackoutPodArgs = {
 
 export type MutationBlockUserArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationBrandBookProductOrderShipmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationBrandProductOrderShipmentFileArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  kind: ShipmentDocumentKind;
+};
+
+
+export type MutationBrandRefreshProductOrderTrackingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationBrandUpdateProductOrderAddressArgs = {
+  address: OrderShippingAddressInput;
+  id: Scalars['ID']['input'];
 };
 
 
@@ -18093,6 +18136,11 @@ export type MutationSupportCreateUserArgs = {
 export type MutationSyncContactsArgs = {
   batch?: InputMaybe<ContactSyncBatchInput>;
   entries: Array<ContactEntryInput>;
+};
+
+
+export type MutationSyncMyBrandPickupLocationsArgs = {
+  brand_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -23508,6 +23556,10 @@ export type Query = {
   brandConsentPolicy?: Maybe<Policy>;
   /** Pickup/warehouse locations for a Duncit or brand owner (Products portal). */
   brandPickupLocations: Array<BrandPickupLocation>;
+  /** Partner: one order of the caller's own brands. */
+  brandProductOrder?: Maybe<ProductOrder>;
+  /** Partner: pod-shop orders of the caller's own brands (one brand when brand_id is given). */
+  brandProductOrdersTable: ProductOrderTablePage;
   branding: Branding;
   bug?: Maybe<Bug>;
   /** Recent persisted error logs that roll up into this bug (same fingerprint). */
@@ -25375,6 +25427,17 @@ export type QueryBrandAnalyticsArgs = {
 export type QueryBrandPickupLocationsArgs = {
   brand_doc_id?: InputMaybe<Scalars['ID']['input']>;
   owner_kind?: InputMaybe<PickupOwnerKind>;
+};
+
+
+export type QueryBrandProductOrderArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryBrandProductOrdersTableArgs = {
+  brand_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -36210,6 +36273,8 @@ export type User = {
   city?: Maybe<Scalars['String']['output']>;
   country: Scalars['String']['output'];
   created_at?: Maybe<Scalars['String']['output']>;
+  /** What is wrong with this account's contact data (staff only). Empty when nothing is. */
+  data_issues: Array<UserDataIssue>;
   dob: Scalars['String']['output'];
   email?: Maybe<Scalars['String']['output']>;
   first_name: Scalars['String']['output'];
@@ -36232,6 +36297,8 @@ export type User = {
   /** Null until the member answers on Edit profile. */
   is_pet_owner?: Maybe<Scalars['Boolean']['output']>;
   is_phone_verified?: Maybe<Scalars['Boolean']['output']>;
+  /** The last calendar day (UTC, yyyy-MM-dd) the app saw this account (staff only); null when never. */
+  last_active_on?: Maybe<Scalars['String']['output']>;
   last_login_at?: Maybe<Scalars['String']['output']>;
   last_login_provider?: Maybe<AuthProvider>;
   last_name: Scalars['String']['output'];
@@ -36445,6 +36512,18 @@ export type UserContactActionTablePage = {
   rows: Array<UserContactAction>;
   total: Scalars['Int']['output'];
 };
+
+/** A problem with an account's contact data, flagged red in Admin > Users. */
+export type UserDataIssue =
+  /** The account's WhatsApp differs from its mobile, or its linked Gmail from its email. */
+  | 'CONTACT_MISMATCH'
+  /** Another live account holds this email, as its email or its linked Gmail. */
+  | 'DUPLICATE_EMAIL'
+  /** Another live account holds this mobile or WhatsApp number, in either field. */
+  | 'DUPLICATE_PHONE'
+  | 'MISSING_EMAIL'
+  | 'MISSING_NAME'
+  | 'MISSING_PHONE';
 
 /** One account's Duncit Coin wallet, for the Admin user page. */
 export type UserFinanceCoins = {

@@ -7,7 +7,7 @@ import { ProductOrderModel, type IProductOrder } from '@modules/commerce/product
 import { issueRefund, retryRefund } from '@modules/commerce/productOrder/productOrder.refund';
 import { notifyReturnUpdate } from '@modules/commerce/productOrder/productOrder.notify';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
-import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { ownedBrandIds } from '@modules/venues/ecommBrand/ecommBrand.model';
 import {
   OPEN_RETURN_STATUSES,
   PodShopReturnModel,
@@ -105,12 +105,6 @@ const RETURN_TABLE: TableEntityConfig = {
   },
   defaultSort: { created_at: -1 },
 };
-
-/** The brands a partner owns — the only returns they may see or decide. */
-async function ownedBrandIds(userId: string): Promise<Types.ObjectId[]> {
-  const brands = await EcommBrandModel.find({ owner_user_id: new Types.ObjectId(userId) }).select('_id').lean();
-  return brands.map((b) => b._id as Types.ObjectId);
-}
 
 /** A return the actor may act on. */
 async function loadFor(actor: ReturnActor, id: string) {

@@ -86,6 +86,9 @@ export const appConfig = {
         { label: 'Info', labelKey: 'shell.nav.info', to: '/database/info', icon: 'info' },
         { label: 'Backups', labelKey: 'shell.nav.backups', to: '/database/backups', icon: 'backup' },
         { label: 'Data Clone', labelKey: 'shell.nav.dataClone', to: '/database/data-clone', icon: 'warehouse' },
+        // Files, not rows — but the same act: walks every record and rewrites
+        // the ImageKit URLs it holds, so it sits with the other whole-database tools.
+        { label: 'Media Organizer', labelKey: 'shell.nav.mediaOrganizer', to: '/database/media-organizer', icon: 'image' },
       ],
     },
     {

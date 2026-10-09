@@ -98,6 +98,21 @@ export const SLICE_COPY: Partial<Record<string, Partial<Record<string, string>>>
     EMAIL: 'analytics.slice.signInEmail',
     OTP: 'analytics.slice.signInOtp',
   },
+  last_seen: {
+    seen_today: 'analytics.slice.seenToday',
+    seen_1_7: 'analytics.slice.seen1To7',
+    seen_8_30: 'analytics.slice.seen8To30',
+    seen_31_90: 'analytics.slice.seen31To90',
+    seen_over_90: 'analytics.slice.seenOver90',
+  },
+  user_data_issues: {
+    MISSING_NAME: 'analytics.slice.missingName',
+    MISSING_EMAIL: 'analytics.slice.missingEmail',
+    MISSING_PHONE: 'analytics.slice.missingPhone',
+    DUPLICATE_EMAIL: 'analytics.slice.duplicateEmail',
+    DUPLICATE_PHONE: 'analytics.slice.duplicatePhone',
+    CONTACT_MISMATCH: 'analytics.slice.contactMismatch',
+  },
   weekday: {
     mon: 'analytics.slice.mon',
     tue: 'analytics.slice.tue',

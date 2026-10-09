@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ALL_FULFILMENT_STATUSES,
+  brandOrderActions,
   buildOrderTimeline,
   FULFILMENT_STATUS_KEYS,
   FULFILMENT_TONE,
@@ -18,6 +19,7 @@ import {
   SHIP_FLOW,
   statusLabel,
   TONE_CHIP_COLOR,
+  shiprocketOrderUrl,
   trackingUrl,
   type FulfilmentStatus,
 } from '../src';
@@ -160,5 +162,59 @@ describe('trackingUrl', () => {
 
   it('is empty before one is assigned, so the caller shows no link', () => {
     expect(trackingUrl('')).toBe('');
+  });
+});
+
+describe('brandOrderActions', () => {
+  const ship = (status: string, shiprocket: { order_id?: string; awb?: string } = {}, cancelled_at: string | null = null) => ({
+    fulfilment_method: 'SHIP',
+    fulfilment_status: status,
+    cancelled_at,
+    shiprocket,
+  });
+
+  it('offers booking and an address fix while ShipRocket has nothing yet', () => {
+    expect(brandOrderActions(ship('AWAITING_SHIPMENT'))).toEqual({
+      book: true,
+      editAddress: true,
+      documents: false,
+      refreshTracking: false,
+    });
+  });
+
+  it('lets a failed booking resume, but locks the address once ShipRocket holds the order', () => {
+    const actions = brandOrderActions(ship('FAILED', { order_id: 'SR-1' }));
+    expect(actions.book).toBe(true);
+    expect(actions.editAddress).toBe(false);
+  });
+
+  it('switches to documents and tracking once an AWB is assigned, and never books twice', () => {
+    expect(brandOrderActions(ship('AWB_ASSIGNED', { order_id: 'SR-1', awb: 'AWB1' }))).toEqual({
+      book: false,
+      editAddress: false,
+      documents: true,
+      refreshTracking: true,
+    });
+  });
+
+  it('does not offer booking for a status past the booking stage', () => {
+    expect(brandOrderActions(ship('DELIVERED', { order_id: 'SR-1' })).book).toBe(false);
+  });
+
+  it('leaves a cancelled or pickup order read-only', () => {
+    const none = { book: false, editAddress: false, documents: false, refreshTracking: false };
+    expect(brandOrderActions(ship('AWAITING_SHIPMENT', { awb: 'AWB1' }, '2026-10-01T00:00:00.000Z'))).toEqual(none);
+    expect(brandOrderActions({ ...ship('PENDING'), fulfilment_method: 'PICKUP' })).toEqual(none);
+  });
+});
+
+describe('shiprocketOrderUrl', () => {
+  it('opens the order in the ShipRocket seller panel once ShipRocket has it', () => {
+    expect(shiprocketOrderUrl('812345678')).toBe('https://app.shiprocket.in/seller/orders/details/812345678');
+  });
+
+  it('is empty before the order is booked, so the caller shows no link', () => {
+    expect(shiprocketOrderUrl('')).toBe('');
+    expect(shiprocketOrderUrl(null)).toBe('');
   });
 });

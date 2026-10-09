@@ -392,6 +392,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis for the BullMQ job queues (server.env: REDIS_QUEUE_URL=
+  # redis://redis-queue:6379). NOT the cache above: `noeviction` + AOF, because
+  # an evicted job is a message nobody ever sends and nobody ever hears about.
+  # Full memory makes enqueues fail, and the server then does the work inline.
+  # No host port, infra service — redeploy.sh `up -d`s it like redis.
+  redis-queue:
+    image: redis:7-alpine
+    container_name: duncit-redis-queue
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - /opt/duncit/redis-queue-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
   # redis.duncit.com — Redis Commander UI. Loopback-only; nginx fronts it WITH
   # basic auth (/etc/nginx/.htpasswd-redis, created once on the VPS — see
   # README "Redis"), so the cache contents are never publicly readable.

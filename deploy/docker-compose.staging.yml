@@ -380,6 +380,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # Staging job-queue Redis — same shape as production's (`noeviction` + AOF,
+  # see docker-compose.yml), with its own data dir.
+  redis-queue:
+    image: redis:7-alpine
+    container_name: duncit-staging-redis-queue
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - /opt/duncit-staging/redis-queue-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
   # staging.redis.duncit.com — staging Redis Commander UI (same nginx basic
   # auth file as production's: /etc/nginx/.htpasswd-redis).
   redis-ui:

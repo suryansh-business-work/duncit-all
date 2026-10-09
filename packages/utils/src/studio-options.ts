@@ -35,7 +35,9 @@ export type StudioOptionIcon =
   | 'monitoring'
   | 'brands'
   | 'integrations'
-  | 'returns';
+  | 'returns'
+  | 'orders'
+  | 'warehouses';
 
 export interface StudioOptionItem {
   key: string;
@@ -155,9 +157,12 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
   ECOMM: [
     { key: 'dashboard', labelKey: 'mweb.studioOptions.dashboard', hintKey: 'mweb.studioOptions.brandDashboardHint', icon: 'dashboard', path: '/products/manage', route: 'ProductsManage', portal: '/ecomm/dashboard' },
     // The brand catalogue, its integrations and returns are Partner console
-    // screens — the apps open them there.
+    // screens — the apps open them there. Orders and warehouses are worked in
+    // the app too, so a brand can ship from wherever it is.
     { key: 'brands', labelKey: 'mweb.studioOptions.yourBrands', hintKey: 'mweb.studioOptions.yourBrandsHint', icon: 'brands', portal: '/ecomm-brand' },
     { key: 'integrations', labelKey: 'mweb.studioOptions.integrations', hintKey: 'mweb.studioOptions.integrationsHint', icon: 'integrations', portal: '/ecomm-brand/integrations' },
+    { key: 'orders', labelKey: 'mweb.studioOptions.brandOrders', hintKey: 'mweb.studioOptions.brandOrdersHint', icon: 'orders', path: '/products/orders', route: 'BrandOrders', portal: '/ecomm-brand/orders' },
+    { key: 'warehouses', labelKey: 'mweb.studioOptions.brandWarehouses', hintKey: 'mweb.studioOptions.brandWarehousesHint', icon: 'warehouses', path: '/products/warehouses', route: 'BrandWarehouses', portal: '/ecomm-brand/warehouses' },
     { key: 'returns', labelKey: 'mweb.studioOptions.productReturns', hintKey: 'mweb.studioOptions.productReturnsHint', icon: 'returns', portal: '/ecomm-brand/returns' },
     VERIFICATION,
     WITHDRAWAL,

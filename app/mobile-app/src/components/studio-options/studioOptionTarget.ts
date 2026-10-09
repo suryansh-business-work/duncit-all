@@ -29,6 +29,8 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, IconName>> = 
   brands: 'storefront',
   integrations: 'extension',
   returns: 'assignment-return',
+  orders: 'local-shipping',
+  warehouses: 'warehouse',
 };
 
 /**

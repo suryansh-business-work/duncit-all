@@ -42,6 +42,7 @@ import PublicIcon from '@mui/icons-material/Public';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ExtensionIcon from '@mui/icons-material/Extension';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
+import WarehouseIcon from '@mui/icons-material/Warehouse';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -103,6 +104,8 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   clubs: <GroupsIcon />,
   integrations: <ExtensionIcon />,
   returns: <AssignmentReturnIcon />,
+  // A brand's ShipRocket pickup addresses.
+  warehouses: <WarehouseIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

@@ -7,7 +7,7 @@ import '@fontsource/open-sans/700.css';
 import '@fontsource/open-sans/800.css';
 import { mountPortal } from '@duncit/shell';
 import { logs } from '@duncit/logs';
-import { ADMIN_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
+import { ADMIN_BUNDLE, ANALYTICS_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import { urlConfigs } from './config/url-configs';
 import { appConfig } from './config/app-config';
 import { apolloClient } from './apollo';
@@ -24,7 +24,8 @@ mountPortal({
   logsPortal: logs.portal.admin,
   // This portal's OWN namespace, layered over the shell chrome's. The WhatsApp
   // console lives in Marketing now, so the whatsapp namespace is loaded there.
-  i18nFallback: flattenCatalogue(ADMIN_BUNDLE),
+  // ANALYTICS_BUNDLE for User Management → Users Dashboard, the Analytics console's own page.
+  i18nFallback: { ...flattenCatalogue(ADMIN_BUNDLE), ...flattenCatalogue(ANALYTICS_BUNDLE) },
   loadUser,
   children: <App />,
 });

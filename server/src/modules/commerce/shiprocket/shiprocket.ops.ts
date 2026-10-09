@@ -6,7 +6,8 @@ import {
   type IBrandPickupLocation,
 } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import type { IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
-import { getShiprocketAccount } from './shiprocket.account';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { brandShippingMode, getBrandShiprocketAccount, getShiprocketAccount } from './shiprocket.account';
 import { shiprocketLoginState, withShiprocketAccount } from './shiprocket.client';
 import { accountForOrder } from './shiprocket.shipment';
 import {
@@ -159,6 +160,63 @@ export async function syncPickupLocations() {
     rows.push({ warehouse: w, shiprocket_state: state });
   }
   return { warehouses: rows, shiprocket_error: error, synced_at: new Date().toISOString() };
+}
+
+/** Take in a brand's own-account pickups it has no warehouse for yet — a nickname another owner holds is left alone. */
+async function adoptBrandPickups(brandId: Types.ObjectId, pickups: ShiprocketPickup[]) {
+  const known = await BrandPickupLocationModel.find({}).select('nickname').lean();
+  const held = new Set(known.map((w) => nicknameKey(w.nickname)));
+  const hasDefault = await BrandPickupLocationModel.exists({ owner_kind: 'BRAND', brand_id: brandId, is_default: true });
+  let needsDefault = !hasDefault;
+  let adopted = 0;
+  for (const pickup of pickups.filter((p) => !held.has(nicknameKey(p.nickname)))) {
+    try {
+      // Already on the brand's own ShipRocket account — the address the approval
+      // gate would have sent there — so it is usable as it stands.
+      await BrandPickupLocationModel.create({
+        ...mirrorOf(pickup),
+        owner_kind: 'BRAND',
+        brand_id: brandId,
+        review_status: 'APPROVED',
+        is_default: needsDefault,
+      });
+      needsDefault = false;
+      adopted += 1;
+    } catch (error) {
+      if ((error as { code?: number }).code !== 11000) throw error;
+      logs.server.warn('shiprocket', 'adoptBrandPickup', { nickname: pickup.nickname, msg: 'already taken in' });
+    }
+  }
+  return adopted;
+}
+
+/**
+ * One brand's warehouses, checked against the ShipRocket account the brand
+ * ships on. On the brand's OWN account every pickup there is taken in as the
+ * brand's warehouse; on the Duncit courier the account is shared by every
+ * partner brand, so nothing is adopted — the brand's rows are only matched.
+ * A warehouse still awaiting approval keeps its state unless ShipRocket has it.
+ */
+export async function syncBrandPickupLocations(brandId: string) {
+  const oid = new Types.ObjectId(brandId);
+  let pickups: ShiprocketPickup[] | null = null;
+  let error = '';
+  let adopted = 0;
+  try {
+    const brand = await EcommBrandModel.findById(oid).select('shipping_mode integrations.shiprocket').lean();
+    const account = await getBrandShiprocketAccount(brandId);
+    pickups = await withShiprocketAccount(account, () => listPickupLocations());
+    if (brand && brandShippingMode(brand) === 'OWN_SHIPROCKET') adopted = await adoptBrandPickups(oid, pickups);
+  } catch (caught) {
+    error = (caught as Error).message;
+  }
+  const warehouses = await BrandPickupLocationModel.find({ owner_kind: 'BRAND', brand_id: oid }).sort({ is_default: -1, nickname: 1 });
+  const byNickname = new Map((pickups ?? []).map((p) => [nicknameKey(p.nickname), p]));
+  for (const w of warehouses) {
+    const match = byNickname.get(nicknameKey(w.nickname)) ?? null;
+    if (pickups && (match || w.review_status === 'APPROVED')) await recordMatch(w, match, stateOf(match));
+  }
+  return { warehouses, shiprocket_error: error, adopted, synced_at: new Date().toISOString() };
 }
 
 export interface PickupInput {

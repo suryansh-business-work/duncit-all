@@ -128,9 +128,27 @@ const checkoutUrl = () =>
 const optionalBilling = () => obj(checkoutBillingShape.optional(), { default: undefined });
 const simulateFailure = () => bool(z.boolean(), { default: false });
 const fulfilmentMethod = () => str(z.enum(FULFILMENT_METHODS), { oneOf: FULFILMENT_METHODS, default: 'PICKUP' });
-// Kept as pass-through (lenient) shapes so they are declared — their sub-fields
-// are already enforced by the GraphQL input types.
-const shippingAddress = () => obj(shape({}).nullable(), { default: null });
+// Every field of OrderShippingAddressInput must be declared here: a shape drops
+// the keys it does not name, and an address stripped to `{}` reached ShipRocket
+// as a blank ship-to that every pod-shop booking refused.
+// GraphQL sends an omitted optional line as null, so each field accepts null too.
+const addressText = (max: number) => str(z.string().check(maxLen(max)).nullish(), { transforms: [trim] });
+const shippingAddress = () =>
+  obj(
+    shape({
+      name: addressText(160),
+      phone: addressText(32),
+      email: addressText(254),
+      line1: addressText(200),
+      line2: addressText(200),
+      landmark: addressText(200),
+      city: addressText(120),
+      state: addressText(120),
+      pincode: addressText(10),
+      country: addressText(80),
+    }).nullable(),
+    { default: null }
+  );
 const cartItems = () =>
   arr(z.array(z.unknown()).check(minItems(1, 'Your cart is empty')), { required: 'Items are required' });
 

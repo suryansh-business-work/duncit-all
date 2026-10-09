@@ -36,6 +36,17 @@ exports:
   - 'fulfilmentFlow'
   - 'isTerminalFulfilment'
   - 'trackingUrl'
+  - 'brandOrderActions'
+  - 'shiprocketOrderUrl'
+  - 'BRAND_ORDERS_PAGE_SIZE'
+  - 'brandOrdersTableQuery'
+  - 'brandOrdersPageCount'
+  - 'pickupShiprocketState'
+  - 'PICKUP_SHIPROCKET_STATE_KEYS'
+  - 'PICKUP_SHIPROCKET_TONE'
+  - 'pickupReview'
+  - 'shipToLines'
+  - 'SHIPMENT_DOCUMENTS'
   - 'ALL_FULFILMENT_STATUSES'
   - 'SHIP_FLOW'
   - 'PICKUP_FLOW'
@@ -2676,6 +2687,8 @@ buildOrderTimeline(order, t); // the flow with `done` / `current` marked
 isTerminalFulfilment('RTO'); // true — the timeline collapses to one step
 statusLabel('AWB_ASSIGNED', t); // 'Courier assigned'
 trackingUrl(awb); // '' until an AWB exists, so the caller shows no link
+shiprocketOrderUrl(order.shiprocket.order_id); // the order in the ShipRocket seller panel, '' until ShipRocket has it
+brandOrderActions(order); // { book, editAddress, documents, refreshTracking } — the brand desk in the Partner console, mWeb and the native Studio
 ```
 
 Labels are `fulfilment.*` keys (rule 38). The portal previously ran a `humaniseStatus` that
@@ -2686,6 +2699,24 @@ knows about it, and a visible `AWAITING_QUANTUM_TUNNEL` beats a blank chip.
 `FULFILMENT_TONE` names the chip weight by meaning (`pending` / `moving` / `done` / `failed` /
 `neutral`) and `TONE_CHIP_COLOR` maps it onto MUI's palette, so no surface picks its own
 colours — the same shape [@duncit/verification](/packages/verification) uses.
+
+### The brand desk in the apps — `brand-desk`
+
+mWeb and the native Studio both render Brand Orders and ShipRocket Warehouses, so what those
+screens decide lives here:
+
+```ts
+brandOrdersTableQuery({ page: 2, status: 'FAILED', search: ' DUN-12 ' });
+// { page: 2, page_size: 20, search: 'DUN-12', sort_by: 'created_at', sort_dir: 'desc',
+//   filters: [{ field: 'fulfilment_status', op: 'eq', value: 'FAILED' }] } — brandProductOrdersTable's `query`
+brandOrdersPageCount(41); // 3 — never 0, so a pager never reads "of 0"
+pickupShiprocketState({ shiprocket_registered: true, shiprocket_error: 'Awaiting phone verification' }); // 'AWAITING_VERIFICATION'
+PICKUP_SHIPROCKET_STATE_KEYS.NOT_IN_SHIPROCKET; // 'mweb.brandWarehouses.stateNotInShiprocket'
+SHIPMENT_DOCUMENTS; // LABEL, INVOICE, MANIFEST — each with its print and download copy keys
+shipToLines(order.shipping_address); // ['Riya', '98450…', '221B Indiranagar, 2nd Stage', 'Bengaluru, Karnataka 560038', 'India'] — blanks dropped
+PICKUP_SHIPROCKET_TONE.REGISTERED; // 'done' — map it with TONE_CHIP_COLOR like a status chip
+pickupReview('PENDING'); // { key: 'mweb.brandWarehouses.reviewPending', tone: 'pending' } — an unknown status reads as pending, never approved
+```
 
 ## Pod Shop returns and refunds — `pod-shop-returns`
 

@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import HubPage from './pages/HubPage';
 import UsersPage from './pages/UsersPage';
 import UserDetailsPage from './pages/UserDetailsPage';
+import UsersDashboardPage from './pages/users-dashboard/UsersDashboardPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
 import PortalAppSettingsPage from './pages/portal-app-settings';
@@ -39,6 +40,7 @@ export default function App() {
                   <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/users/:user_id" element={<UserDetailsPage />} />
+                  <Route path="/users-dashboard" element={<UsersDashboardPage />} />
                   <Route path="/categories" element={<CategoriesPage />} />
                   <Route path="/locations" element={<LocationsPage />} />
                   <Route path="/location-subscriptions" element={<LocationSubscriptionsPage />} />

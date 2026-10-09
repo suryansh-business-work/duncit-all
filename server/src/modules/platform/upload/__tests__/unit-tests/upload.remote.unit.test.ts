@@ -7,6 +7,8 @@
  * the search URL, clamping, orientation filter and response shaping.
  */
 jest.mock('@observability/log', () => ({
+  // Uploads are filed under the environment's root (uploadFolder.ts).
+  SERVER_ENV: 'production',
   logs: { server: { error: jest.fn(), warn: jest.fn(), info: jest.fn() } },
 }));
 jest.mock('@utils/outboundFetch', () => ({ outboundFetch: jest.fn() }));
@@ -125,7 +127,7 @@ describe('importRemoteImage', () => {
     expect(res).toEqual({ url: 'https://ik.example.test/imported', fileId: 'f-imp', thumbnailUrl: undefined });
     expect(uploadedName()).toMatch(/^import-\d+-[0-9a-f]{8}\.jpg$/);
     const form = uploadCall()?.[2].body as FormData;
-    expect(form.get('folder')).toBe('/stock');
+    expect(form.get('folder')).toBe('/production/stock');
     expect(form.get('tags')).toBe('pexels');
   });
 

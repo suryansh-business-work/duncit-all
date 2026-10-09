@@ -7,6 +7,7 @@ import WarehouseIcon from '@mui/icons-material/Warehouse';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { BrandWarehouse, WarehouseReviewStatus } from './warehouse.queries';
 import { useTranslation } from '@duncit/shell';
+import { WarehouseShiprocketChip, WarehouseShiprocketNote } from './WarehouseShiprocketState';
 
 interface WarehouseCardProps {
   warehouse: BrandWarehouse;
@@ -21,9 +22,9 @@ const addressLine = (warehouse: BrandWarehouse) =>
     .filter(Boolean)
     .join(', ');
 
-/** What the partner can act on. ShipRocket registration is Duncit-side plumbing
- * that never gates the partner, so showing it here (as this card used to) read
- * as "still not approved" long after the Products portal had approved it. */
+/** What the partner can act on: the Duncit review. ShipRocket's side is its own
+ * chip (WarehouseShiprocketChip) beside it — once read as "still not approved"
+ * when it shared this one, so the two never merge. */
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const reviewChip = (t: Translate): Record<WarehouseReviewStatus, { label: string; color: 'success' | 'warning' | 'error' }> => ({
@@ -64,6 +65,7 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
               }}>{warehouse.nickname}</Typography>
               {warehouse.is_default && <Chip size="small" color="primary" label={t('partners.common.default')} />}
               <Chip size="small" color={review.color} label={review.label} />
+              <WarehouseShiprocketChip warehouse={warehouse} />
             </Stack>
             <Typography
               variant="body2"
@@ -83,6 +85,7 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
                 {REVIEW_HINT[warehouse.review_status] ?? REVIEW_HINT.PENDING}
               </Typography>
             )}
+            <WarehouseShiprocketNote warehouse={warehouse} />
           </Box>
           <Stack direction="row" spacing={0.5} sx={{
             alignItems: "flex-start"

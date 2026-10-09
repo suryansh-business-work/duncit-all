@@ -24,6 +24,8 @@ cd "$STACK_DIR"
 # older compose file without them must not fail the deploy.
 echo ">>> Ensuring infra services (redis, redis-ui) are up..."
 docker compose up -d --no-deps redis redis-ui || true
+# Its own line: a compose file without it must not stop redis coming up.
+docker compose up -d --no-deps redis-queue || true
 
 ALL_SERVICES=(server admin mweb website partners-website partners-app ads-portal ads-website native crm open-wa finance tech support website-app legal ai products marketing onboarding hr employee status earnwith challenge developers regional-club-admin venues clubs club-admins hosts pods communications logs analytics ecomm-portal ecomm-store lite localization cms-site)
 declare -A PORT_OF=(

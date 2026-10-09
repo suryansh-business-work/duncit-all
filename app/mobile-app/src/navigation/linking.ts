@@ -119,6 +119,10 @@ export const linking: LinkingOptions<RootStackParamList> = {
       VenuePublish: 'venues/publish',
       HostPublish: 'host/publish',
       VenuePods: 'venues/pods',
+      // The brand desk, on mWeb's paths.
+      BrandOrders: 'products/orders',
+      BrandOrderDetail: 'products/orders/:id',
+      BrandWarehouses: 'products/warehouses',
       ClubManage: 'clubs/manage',
       // The Club Admin's pages, on mWeb's exact paths (rule 27).
       ClubAdminDashboard: 'clubs/dashboard',

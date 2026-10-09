@@ -75,3 +75,22 @@ export interface BrandWarehouse {
   shiprocket_pickup_id: string;
   updated_at: string;
 }
+
+/** Check an own brand's warehouses against the ShipRocket account it ships on (own account: its pickups are taken in). */
+export const SYNC_MY_WAREHOUSES = gql`
+  mutation SyncMyBrandPickupLocations($brand_doc_id: ID!) {
+    syncMyBrandPickupLocations(brand_doc_id: $brand_doc_id) {
+      warehouses { ${WAREHOUSE_FIELDS} }
+      shiprocket_error
+      adopted
+      synced_at
+    }
+  }
+`;
+
+export interface WarehouseSyncResult {
+  warehouses: BrandWarehouse[];
+  shiprocket_error: string;
+  adopted: number;
+  synced_at: string;
+}

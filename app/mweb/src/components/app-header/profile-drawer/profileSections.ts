@@ -48,7 +48,8 @@ export type ProfileIconKey =
   | 'publish'
   | 'clubs'
   | 'integrations'
-  | 'returns';
+  | 'returns'
+  | 'warehouses';
 
 export interface ProfileTile {
   key: string;

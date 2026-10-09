@@ -92,6 +92,9 @@ RUN pnpm install --frozen-lockfile
 
 COPY packages ./packages
 COPY portals/admin ./portals/admin
+# User Management → Users Dashboard is the Analytics console's own Users page,
+# mounted from its source. Its package.json is copied above, so its dependencies are installed.
+COPY portals/analytics/src ./portals/analytics/src
 RUN pnpm --filter admin build
 
 # --- runner ---

@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client/react';
-import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Stack } from '@mui/material';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
-import { primaryHeroBackground } from '../../../components/primaryHero';
+import BrandToolHero from '../BrandToolHero';
 import ReturnDetailDrawer from './ReturnDetailDrawer';
 import { buildReturnColumns, getReturnRowId } from './returns-columns';
 import { POD_SHOP_RETURNS_TABLE, type ReturnRow } from './returns.queries';
@@ -24,17 +24,7 @@ export default function ReturnsPage() {
 
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
-      <Box sx={{ p: 2.5, borderRadius: 2, color: 'common.white', background: primaryHeroBackground }}>
-        <Typography variant="overline" sx={{ fontWeight: 800 }}>
-          {t('partners.common.partnerTools')}
-        </Typography>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 900, lineHeight: 1.05 }}>
-          {t('partners.returns.title')}
-        </Typography>
-        <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
-          {t('partners.returns.intro')}
-        </Typography>
-      </Box>
+      <BrandToolHero title={t('partners.returns.title')} intro={t('partners.returns.intro')} />
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
           <DuncitTable<ReturnRow>

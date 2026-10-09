@@ -233,6 +233,8 @@ jobs:
               - '.github/workflows/deploy.yml'
             admin:
               - 'portals/admin/**'
+              # User Management → Users Dashboard is the Analytics console's Users page.
+              - 'portals/analytics/src/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -2245,6 +2247,7 @@ jobs:
           SERVER_URL=${{ env.SERVER_URL }}
           ECOMM_URL=${{ env.ECOMM_URL }}
           REDIS_URL=redis://redis:6379
+          REDIS_QUEUE_URL=redis://redis-queue:6379
           RUN_POD_TYPE_MIGRATION=1
           RUN_CLUB_ADMIN_BACKFILL=1
           DATA_CLONE_TARGET_DB=duncit-staging
@@ -2253,6 +2256,9 @@ jobs:
           # on the stack's own network, so the same value works on both stacks
           # (each resolves its own container). Infra-level like MONGO_URI, so it
           # lives here and not in the Tech portal's EnvEntry store.
+          # REDIS_QUEUE_URL: the BullMQ job queues — the `redis-queue` service,
+          # a separate noeviction Redis (an LRU cache would evict queued jobs).
+          # Removing it is the rollback: the server then sends inline again.
           # DATA_CLONE_TARGET_DB: the ONLY database the Tech portal's Data Clone
           # is allowed to overwrite, and it is pinned on BOTH stacks — that pin,
           # not which portal you start from, is what keeps a clone from ever

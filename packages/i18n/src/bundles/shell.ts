@@ -239,6 +239,27 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         one: '{count} key came back unusable — the next sync retries it',
         other: '{count} keys came back unusable — the next sync retries them',
       },
+      // Media organizer (Tech console): records while scanning, files while copying.
+      organizing: {
+        one: 'Organizing media — {count} item',
+        other: 'Organizing media — {count} items',
+      },
+      organized: {
+        one: 'Media organized — {count} item',
+        other: 'Media organized — {count} items',
+      },
+      organizeStopped: 'Media organizer stopped',
+      organizeCancelled: 'Media organizer cancelled',
+      unmovedFiles: {
+        one: '{count} file could not be copied — it stays where it was and still loads',
+        other: '{count} files could not be copied — they stay where they were and still load',
+      },
+      organizeDoneNotice: {
+        one: '{label}: done, 1 item.',
+        other: '{label}: done, {count} items.',
+      },
+      organizePartialNotice: '{label}: {moved} done, {failed} left where they were — they still load.',
+      organizeStoppedNotice: '{label}: stopped — {reason}',
       translateDoneNotice: {
         one: '{label}: 1 key translated.',
         other: '{label}: {count} keys translated.',
@@ -691,6 +712,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       mailAutomation: 'Mail Automation',
       mailPreferences: 'Mail Preferences',
       maintenance: 'Maintenance',
+      mediaOrganizer: 'Media Organizer',
       meetingAvailability: 'Meeting Availability',
       meetingSchedule: 'Meeting Schedule',
       membership: 'Membership',
@@ -804,6 +826,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       userManagement: 'User Management',
       userRefundLogs: 'User Refund Logs',
       users: 'Users',
+      usersDashboard: 'Users Dashboard',
       venueCancel: 'Venue Cancel',
       venueInvoice: 'Venue Invoice',
       venueLeads: 'Venue Leads',

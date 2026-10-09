@@ -12,9 +12,13 @@ const ANALYTICS_ROLES = ['SUPER_ADMIN', 'ANALYTICS_MANAGER'];
 /** The Tech console's staff: SonarQube is also Tech → Security → SonarQube. */
 const TECH_READER = 'TECH_MANAGER';
 
+/** Admin > User Management's staff: the Users page is also Admin's Users Dashboard. */
+const USER_MANAGERS = ['CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
+
 /** Who may read one page: a dashboard another console mounts too is read by that console's staff as well. */
 export const entityReaders = (entity: AnalyticsEntity) => {
   if (entity === 'LOGS') return [...ANALYTICS_ROLES, LOGS_READER];
+  if (entity === 'USERS') return [...ANALYTICS_ROLES, ...USER_MANAGERS];
   if (entity === 'SONARQUBE') return [...ANALYTICS_ROLES, TECH_READER];
   return ANALYTICS_ROLES;
 };

@@ -17,6 +17,11 @@ const NOTICE_COPY: Readonly<Record<BackgroundJobKind, { stopped: string; partial
     partial: 'shell.jobs.translatePartialNotice',
     done: 'shell.jobs.translateDoneNotice',
   },
+  MEDIA_ORGANIZE: {
+    stopped: 'shell.jobs.organizeStoppedNotice',
+    partial: 'shell.jobs.organizePartialNotice',
+    done: 'shell.jobs.organizeDoneNotice',
+  },
 };
 
 /** Say how a job ended. A cancel was the person's own doing, so it passes quietly. */
@@ -26,8 +31,8 @@ function announce(job: BackgroundJob, t: Translate): void {
   if (job.status === 'FAILED') {
     notifyError(t(copy.stopped, { vars }));
   } else if (job.status === 'COMPLETED' && job.failed > 0) {
-    // `deleted` and `translated` are the same count, named for each kind's sentence.
-    const counts = { deleted: job.succeeded, translated: job.succeeded, failed: job.failed };
+    // `deleted`, `translated` and `moved` are the same count, named for each kind's sentence.
+    const counts = { deleted: job.succeeded, translated: job.succeeded, moved: job.succeeded, failed: job.failed };
     notify(t(copy.partial, { vars: { ...vars, ...counts } }), 'warning');
   } else if (job.status === 'COMPLETED') {
     notifySuccess(t(copy.done, { count: job.succeeded, vars }));

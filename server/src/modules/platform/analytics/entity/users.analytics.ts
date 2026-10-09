@@ -13,6 +13,7 @@ import {
   signupIds,
 } from './users.data';
 import { userBreakdowns } from './users.breakdowns';
+import { dataHealth, lastSeenBreakdown, mostActiveMembers } from './users.health';
 import { kpi, pct, trend, type EntityAnalyticsSections } from './shapes';
 
 /**
@@ -77,7 +78,7 @@ export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnal
   const span = to.getTime() - from.getTime();
   const beforeFrom = new Date(prevFrom.getTime() - (prevTo.getTime() - prevFrom.getTime()));
   const comparedWithLastPeriod = prevTo.getTime() === from.getTime();
-  const [now, before, earliest, precedingNow, live, signupsPerDay, users, devices, createdBefore] = await Promise.all([
+  const [now, before, earliest, precedingNow, live, signupsPerDay, users, devices, createdBefore, health] = await Promise.all([
     periodFigures(from, to, days),
     periodFigures(prevFrom, prevTo, days),
     activeUserDays(beforeFrom, prevFrom),
@@ -87,6 +88,12 @@ export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnal
     distinctPerBucket(from, to, granularity, 'user_id'),
     distinctPerBucket(from, to, granularity, 'device_id'),
     UserModel.countDocuments({ 'metadata.created_at': { $lt: from } }),
+    dataHealth(),
+  ]);
+  const [breakdowns, lastSeen, leaderboard] = await Promise.all([
+    userBreakdowns(window, now.active),
+    lastSeenBreakdown(live.total),
+    mostActiveMembers(now.active),
   ]);
   const signups = seriesFromDays(signupsPerDay, window);
   const earliestIds = new Set(earliest.keys());
@@ -108,6 +115,7 @@ export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnal
       kpi('new_user_activation', now.activation, before.activation, { format: 'PERCENT' }),
       kpi('phone_verified_share', live.phoneVerified, null, { format: 'PERCENT' }),
       kpi('inactive_accounts', live.inactive, null, { higherIsBetter: false }),
+      health.kpi,
     ],
     trends: [
       trend('user_activity', window, [
@@ -117,7 +125,7 @@ export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnal
       trend('signups', window, [{ key: 'new_signups', values: signups }]),
       trend('accounts_total', window, [{ key: 'accounts_total', values: cumulative(createdBefore, signups) }]),
     ],
-    breakdowns: await userBreakdowns(window, now.active),
-    leaderboard: null,
+    breakdowns: [...breakdowns, lastSeen, health.breakdown],
+    leaderboard,
   };
 }

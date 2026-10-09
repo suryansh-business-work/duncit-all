@@ -4,6 +4,7 @@ import type { DuncitColumn } from '@duncit/table';
 import { loginMeta, STATUS_OPTIONS } from '../helpers';
 import type { UserRow } from '../queries';
 import { renderContact, renderRoles, renderStatus, renderUser, rolesValue } from './cells';
+import { issueOptions, issuesValue, renderIssues } from './issues';
 
 const STATUS_FILTER_OPTIONS = STATUS_OPTIONS.filter(Boolean).map((s) => ({ value: s, label: s }));
 const providerOptions = (t: ColumnDeps['t']) => [
@@ -56,6 +57,17 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
       minWidth: 240,
       cellRenderer: renderUser,
       valueGetter: (u) => u.full_name ?? '',
+    },
+    {
+      // Computed on the server, so it filters (any of the picked issues) but cannot sort.
+      field: 'data_issues',
+      headerName: t('admin.users.colIssues'),
+      type: 'enum',
+      options: issueOptions(t),
+      sortable: false,
+      minWidth: 220,
+      cellRenderer: (u) => renderIssues(u, t),
+      valueGetter: (u) => issuesValue(u, t),
     },
     {
       field: 'phone_number',
@@ -118,6 +130,18 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
       hide: true,
       width: 150,
       valueGetter: (u) => (u.last_login_at ? formatDate(u.last_login_at) : ''),
+    },
+    {
+      // Read from the app's daily presence pings — not stored on the account, so no sort or filter.
+      field: 'last_active_on',
+      headerName: t('admin.users.colLastActive'),
+      type: 'text',
+      sortable: false,
+      filterable: false,
+      width: 140,
+      // A UTC calendar day: read at its midday so the admin zone (±12h) shows that same date.
+      valueGetter: (u) =>
+        u.last_active_on ? formatDate(`${u.last_active_on}T12:00:00.000Z`) : t('admin.users.neverActive'),
     },
     {
       field: 'created_at',

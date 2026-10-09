@@ -8,6 +8,8 @@ import {
 import { validate } from '@utils/validate';
 import type { GraphQLContext } from '@context';
 import { requireRole, assertScope } from '@middleware/rbac';
+import { loadUserDataIssues, type ContactRow } from './user.data-issues';
+import { loadLastActiveOn } from './user.last-active';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
 const MUTATING_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
@@ -22,6 +24,15 @@ export const userResolvers = {
   User: {
     interest_categories: async (parent: any) =>
       userService.getInterestCategories(parent.interest_category_ids ?? []),
+    // Whether another account holds your number is not yours to read — staff only.
+    data_issues: (parent: ContactRow, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, DIRECTORY_ROLES);
+      return loadUserDataIssues(ctx, parent);
+    },
+    last_active_on: (parent: { user_id: string }, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, DIRECTORY_ROLES);
+      return loadLastActiveOn(ctx, parent.user_id);
+    },
   },
   Query: {
     users: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {

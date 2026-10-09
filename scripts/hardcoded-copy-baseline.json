@@ -375,7 +375,6 @@
   "portals/admin/src/pages/user-details-page/useUserDetailsState.ts": 3,
   "portals/admin/src/pages/user-details-page/VerificationCells.tsx": 1,
   "portals/admin/src/pages/users-page/create-user/create-user.form.ts": 5,
-  "portals/admin/src/pages/users-page/UsersPage.tsx": 1,
   "portals/ads-portal/src/pages/dashboard/AdsOverview.tsx": 7,
   "portals/ai/src/config/app-config.ts": 5,
   "portals/ai/src/pages/ai-monitoring/logs/MonitoringLogDrawer.tsx": 3,

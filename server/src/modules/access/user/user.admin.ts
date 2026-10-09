@@ -28,6 +28,7 @@ import {
   welcomeNewAccount,
 } from './user.accounts';
 import { PARTNER_ROLE_LABELS, replaceUserRoles } from './user.roles';
+import { splitDataIssuesFilter } from './user.data-issues.query';
 
 // Escape user-supplied search terms before building a RegExp so special chars
 // (., *, (, etc.) are matched literally and cannot break the query.
@@ -300,12 +301,14 @@ export const userAdminMethods = {
     return Promise.all(all.map((u) => toPublic(u)));
   },
 
-  /** Server-side table page (search/filter/sort/paginate) for the usersTable query. */
+  /** Server-side table page (search/filter/sort/paginate) for the usersTable query.
+   * A `data_issues` filter is not a stored field, so it becomes the base filter here. */
   async table(input?: TableQueryInput | null) {
+    const { base, rest } = await splitDataIssuesFilter(input);
     const { docs, total, page, page_size } = await runTableQuery(
       UserModel,
-      {},
-      input,
+      base,
+      rest,
       USER_TABLE_CONFIG
     );
     return { rows: await Promise.all(docs.map((u) => toPublic(u))), total, page, page_size };

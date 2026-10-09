@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Box, Stack, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
@@ -9,14 +10,19 @@ import { useDateFormat } from '@duncit/app-settings';
 import { CREATE_USER, ROLES, USERS_TABLE, type UserRow } from './queries';
 import { blankForm, genPassword, type CreateForm } from './helpers';
 import { getUsersColumns } from './columns';
+import { hasDataIssues } from './columns/issues';
 import CreateUserDialog from './CreateUserDialog';
 import { createUserSchema, toCreateUserInput } from './create-user.form';
 import { useTranslation } from '@duncit/shell';
 
 const getUserRowId = (u: UserRow) => u.user_id;
 
+/** How strongly a row with data issues is tinted — the same weight as the other tinted admin tables. */
+const ISSUE_ROW_TINT = 0.14;
+
 export default function UsersPage() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -63,6 +69,12 @@ export default function UsersPage() {
     return getUsersColumns({ formatDate, formatDateTime, roleOptions, t });
   }, [formatDate, formatDateTime, roles]);
 
+  // An account with missing, duplicate or mismatched contact data reads red; its chips say why.
+  const getRowStyle = useCallback(
+    (u: UserRow) => (hasDataIssues(u) ? { backgroundColor: alpha(theme.palette.error.main, ISSUE_ROW_TINT) } : undefined),
+    [theme]
+  );
+
   return (
     <Stack spacing={2}>
       <Box>
@@ -70,7 +82,7 @@ export default function UsersPage() {
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Manage accounts, login methods, roles and access state. Click a row to open details.
+          {t('admin.users.subtitle')}
         </Typography>
       </Box>
 
@@ -80,6 +92,7 @@ export default function UsersPage() {
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getUserRowId}
+        getRowStyle={getRowStyle}
         onRowClick={(u) => navigate(`/users/${u.user_id}`)}
         toolbarActions={
           <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
@@ -88,7 +101,7 @@ export default function UsersPage() {
         }
         emptyText={t('admin.users.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
-        searchPlaceholder="Search name, email or phone"
+        searchPlaceholder={t('admin.users.searchPlaceholder')}
         refetchRef={refetchRef}
       />
 

@@ -233,6 +233,8 @@ jobs:
               - '.github/workflows/deploy.yml'
             admin:
               - 'portals/admin/**'
+              # User Management → Users Dashboard is the Analytics console's Users page.
+              - 'portals/analytics/src/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'

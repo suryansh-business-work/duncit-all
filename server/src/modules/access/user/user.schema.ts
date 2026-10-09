@@ -149,6 +149,24 @@ export const userTypeDefs = gql`
 
     created_at: String
     updated_at: String
+
+    "What is wrong with this account's contact data (staff only). Empty when nothing is."
+    data_issues: [UserDataIssue!]!
+    "The last calendar day (UTC, yyyy-MM-dd) the app saw this account (staff only); null when never."
+    last_active_on: String
+  }
+
+  "A problem with an account's contact data, flagged red in Admin > Users."
+  enum UserDataIssue {
+    MISSING_NAME
+    MISSING_EMAIL
+    MISSING_PHONE
+    "Another live account holds this email, as its email or its linked Gmail."
+    DUPLICATE_EMAIL
+    "Another live account holds this mobile or WhatsApp number, in either field."
+    DUPLICATE_PHONE
+    "The account's WhatsApp differs from its mobile, or its linked Gmail from its email."
+    CONTACT_MISMATCH
   }
 
   type PetProfile {

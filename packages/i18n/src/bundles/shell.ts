@@ -826,6 +826,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       userManagement: 'User Management',
       userRefundLogs: 'User Refund Logs',
       users: 'Users',
+      usersDashboard: 'Users Dashboard',
       venueCancel: 'Venue Cancel',
       venueInvoice: 'Venue Invoice',
       venueLeads: 'Venue Leads',

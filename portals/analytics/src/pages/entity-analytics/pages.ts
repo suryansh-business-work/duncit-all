@@ -41,15 +41,22 @@ export const SONARQUBE_PAGE: AnalyticsPageSpec = {
   dashboardId: 'analytics.sonarqube',
 };
 
+/**
+ * Who the members are and how they use the app. Also Admin > User Management >
+ * Users Dashboard, which mounts this same spec — so a layout saved in one
+ * console is the layout in the other.
+ */
+export const USERS_PAGE: AnalyticsPageSpec = {
+  path: '/users',
+  entity: 'USERS',
+  title: 'analytics.page.users.title',
+  subtitle: 'analytics.page.users.subtitle',
+  dashboardId: 'analytics.users',
+};
+
 /** The console's dashboards, in sidebar order. The first is where `/` lands. */
 export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
-  {
-    path: '/users',
-    entity: 'USERS',
-    title: 'analytics.page.users.title',
-    subtitle: 'analytics.page.users.subtitle',
-    dashboardId: 'analytics.users',
-  },
+  USERS_PAGE,
   {
     path: '/pods',
     entity: 'PODS',

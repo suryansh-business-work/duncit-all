@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { UserDataIssue } from '@duncit/gql-types';
 
 export const USERS = gql`
   query Users($filter: UsersFilter) {
@@ -48,6 +49,10 @@ export interface UserRow {
   zone?: string | null;
   status?: string | null;
   created_at?: string | null;
+  /** Missing, duplicate or mismatched contact data; the row is red when any. */
+  data_issues?: UserDataIssue[] | null;
+  /** The last day (yyyy-MM-dd, UTC) the app saw the account; null when never. */
+  last_active_on?: string | null;
 }
 
 /** Same selection as USERS rows — table rows keep feeding the details deep-link. */
@@ -70,6 +75,8 @@ const USER_ROW_FIELDS = gql`
     zone
     status
     created_at
+    data_issues
+    last_active_on
   }
 `;
 

@@ -52,6 +52,7 @@ export const KPI_COPY: CopyMap<TitledCopy> = {
   new_user_activation: { title: 'analytics.kpi.newUserActivation', hint: 'analytics.kpi.newUserActivationHint' },
   phone_verified_share: { title: 'analytics.kpi.phoneVerifiedShare', hint: 'analytics.kpi.phoneVerifiedShareHint' },
   inactive_accounts: { title: 'analytics.kpi.inactiveAccounts', hint: 'analytics.kpi.inactiveAccountsHint' },
+  users_with_issues: { title: 'analytics.kpi.usersWithIssues', hint: 'analytics.kpi.usersWithIssuesHint' },
   pods_held: { title: 'analytics.kpi.podsHeld', hint: 'analytics.kpi.podsHeldHint' },
   pods_created: { title: 'analytics.kpi.podsCreated', hint: 'analytics.kpi.podsCreatedHint' },
   seats_booked: { title: 'analytics.kpi.seatsBooked', hint: 'analytics.kpi.seatsBookedHint' },
@@ -153,6 +154,8 @@ export const BREAKDOWN_COPY: CopyMap<string> = {
   pet_owners: 'analytics.breakdown.petOwners',
   user_language: 'analytics.breakdown.userLanguage',
   sign_in_method: 'analytics.breakdown.signInMethod',
+  last_seen: 'analytics.breakdown.lastSeen',
+  user_data_issues: 'analytics.breakdown.userDataIssues',
   pods_by_category: 'analytics.breakdown.podsByCategory',
   pods_by_city: 'analytics.breakdown.podsByCity',
   weekday: 'analytics.breakdown.weekday',
@@ -205,6 +208,12 @@ export const LEADERBOARD_COPY: CopyMap<LeaderboardCopy> = {
     hint: 'analytics.leaderboard.topHostsHint',
     name: 'analytics.leaderboard.host',
   },
+  most_active_members: {
+    title: 'analytics.leaderboard.mostActiveMembers',
+    hint: 'analytics.leaderboard.mostActiveMembersHint',
+    name: 'analytics.leaderboard.member',
+    empty: 'analytics.leaderboard.membersEmpty',
+  },
   ...PLATFORM_COPY.leaderboards,
 };
 
@@ -219,5 +228,7 @@ export const COLUMN_COPY: CopyMap<string> = {
   avg_rating: 'analytics.leaderboard.avgRating',
   forced_marks: 'analytics.leaderboard.forcedMarks',
   admin_rating: 'analytics.leaderboard.adminRating',
+  active_days: 'analytics.leaderboard.activeDays',
+  days_since_seen: 'analytics.leaderboard.daysSinceSeen',
   ...PLATFORM_COPY.columns,
 };

@@ -13,12 +13,14 @@ import InboxOutlined from '@mui/icons-material/InboxOutlined';
 import InsightsOutlined from '@mui/icons-material/InsightsOutlined';
 import LocalMallOutlined from '@mui/icons-material/LocalMallOutlined';
 import PaymentsOutlined from '@mui/icons-material/PaymentsOutlined';
+import ReceiptLongOutlined from '@mui/icons-material/ReceiptLongOutlined';
 import PublicOutlined from '@mui/icons-material/PublicOutlined';
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
 import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
 import SwapHorizOutlined from '@mui/icons-material/SwapHorizOutlined';
 import TravelExploreOutlined from '@mui/icons-material/TravelExploreOutlined';
 import VerifiedUserOutlined from '@mui/icons-material/VerifiedUserOutlined';
+import WarehouseOutlined from '@mui/icons-material/WarehouseOutlined';
 import type { StudioOptionIcon } from '@duncit/utils';
 
 /** The console's glyph for each option the shared catalogue names by meaning. */
@@ -43,4 +45,6 @@ export const STUDIO_OPTION_ICONS: Readonly<Record<StudioOptionIcon, SvgIconCompo
   brands: LocalMallOutlined,
   integrations: HubOutlined,
   returns: AssignmentReturnOutlined,
+  orders: ReceiptLongOutlined,
+  warehouses: WarehouseOutlined,
 };

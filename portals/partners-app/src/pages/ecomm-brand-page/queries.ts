@@ -92,6 +92,15 @@ export const MY_BRANDS = gql`
   }
 `;
 
+/** Just the names — what a brand picker needs (Orders, Warehouses). */
+export const MY_BRAND_OPTIONS = gql`
+  query PartnerBrandOptions {
+    myEcommBrands { id brand_name }
+  }
+`;
+
+export type BrandOption = Pick<EcommBrand, 'id' | 'brand_name'>;
+
 /** Server-paged sibling of myEcommBrands (shared table engine). Rows keep the
  * full BRAND_FIELDS selection plus the progress and connection facts the
  * "Your brands" table shows. */

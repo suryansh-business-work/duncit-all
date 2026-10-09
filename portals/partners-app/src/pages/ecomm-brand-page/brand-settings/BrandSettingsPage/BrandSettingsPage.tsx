@@ -16,6 +16,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
+import { fireAndForget, logs } from '@duncit/logs';
 import { MY_BRANDS, type EcommBrand } from '../../queries';
 import {
   WarehouseForm, toSaveWarehouseVariables, warehouseToValues, type WarehouseFormValues,
@@ -28,6 +29,7 @@ import {
 import { useTranslation } from '@duncit/shell';
 import BrandSettingsHero from './BrandSettingsHero';
 import DeleteWarehouseDialog from './DeleteWarehouseDialog';
+import WarehouseSync from '../WarehouseSync';
 
 type Editing = BrandWarehouse | 'new' | null;
 
@@ -36,13 +38,17 @@ type Editing = BrandWarehouse | 'new' | null;
  * pending warehouse ships with the manual delivery charge until registered. */
 export default function BrandSettingsPage({
   embedded = false,
+  brandId: brandIdProp,
 }: Readonly<{
   /** Inside the brand page's Warehouses tab: that page already carries the
    * brand's header and the way back, so this one drops its own hero. */
   embedded?: boolean;
+  /** The brand to show when it is not in the URL (the Warehouses page picks it). */
+  brandId?: string;
 }>) {
   const { t } = useTranslation();
-  const { brandId = '' } = useParams<{ brandId: string }>();
+  const { brandId: brandParam = '' } = useParams<{ brandId: string }>();
+  const brandId = brandIdProp ?? brandParam;
   const navigate = useNavigate();
   const { data: brandsData, loading: brandsLoading } = useQuery<any>(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
   const { data, loading, error, refetch } = useQuery<any>(MY_BRAND_WAREHOUSES, {
@@ -132,6 +138,7 @@ export default function BrandSettingsPage({
                 A product can only be listed against an approved warehouse, so saving changes here sends
                 it back for review.
               </Alert>
+              <WarehouseSync brandId={brandId} onSynced={() => fireAndForget(refetch(), logs.portal['partners-app'], 'BrandSettingsPage', 'refetch')} />
               <WarehouseList
                 warehouses={warehouses}
                 busy={busy}

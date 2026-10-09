@@ -1,5 +1,6 @@
 import {
   flattenCatalogue,
+  FULFILMENT_BUNDLE,
   MWEB_BUNDLE,
   PACKAGING_BUNDLE,
   PARTNERS_BUNDLE,
@@ -17,6 +18,10 @@ const SHARED_MWEB_PREFIXES = [
   'mweb.venueEarnings.',
   'mweb.common.podsCompleted',
   'mweb.venueManagePage.untitledVenue',
+  // The shared ship-to rules (@duncit/forms makeAddressSchema) the Orders desk's address fix reuses.
+  'mweb.address.validation.',
+  // Warehouse ShipRocket states (@duncit/utils pickupShiprocketState) — one wording in all three.
+  'mweb.brandWarehouses.state',
 ];
 
 const sharedMwebCopy = Object.fromEntries(
@@ -40,6 +45,8 @@ const sharedMwebCopy = Object.fromEntries(
 export const PARTNERS_FALLBACK = {
   ...flattenCatalogue(PARTNERS_BUNDLE),
   ...flattenCatalogue(PACKAGING_BUNDLE),
+  // Order status / method words (@duncit/utils statusLabel) — shared with mWeb and the Products portal.
+  ...flattenCatalogue(FULFILMENT_BUNDLE),
   ...sharedMwebCopy,
 };
 

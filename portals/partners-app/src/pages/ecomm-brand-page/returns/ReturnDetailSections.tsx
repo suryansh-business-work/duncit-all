@@ -18,7 +18,7 @@ export function DetailSection({ title, children }: Readonly<{ title: string; chi
 }
 
 /** One "label: value" line; nothing when the value is blank. */
-function Fact({ label, value }: Readonly<{ label: string; value: string | number }>) {
+export function Fact({ label, value }: Readonly<{ label: string; value: string | number }>) {
   if (value === '') return null;
   return (
     <Typography variant="body2">

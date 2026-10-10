@@ -50,6 +50,12 @@ const toolStateSchema = new Schema(
     clock_started_at: { type: Date, default: null },
     clock_elapsed_ms: { type: Number, default: 0 },
     voting_open: { type: Boolean, default: false },
+    /** Quiz: the question currently open ('' when none). */
+    active_item: { type: String, default: '' },
+    /** Buzzer: which arming this is; presses are ordered within one round. */
+    buzz_round: { type: Number, default: 0 },
+    /** Random Picker: competitor ids picked so far, in order. */
+    picked: { type: [String], default: [] },
   },
   { _id: false }
 );

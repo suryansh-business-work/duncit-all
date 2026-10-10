@@ -1,4 +1,10 @@
-import { ChallengeResultModel, ChallengeScoreEventModel, ChallengeVoteModel } from './challengeLedger.model';
+import {
+  ChallengeResultModel,
+  ChallengeScoreEventModel,
+  ChallengeSubmissionModel,
+  ChallengeVoteModel,
+} from './challengeLedger.model';
+import { publicConfig, toolStateFor, type Ledger } from './podChallenge.toolState';
 import { computeStandings, winnersOf, type Standing, type WinnerRules } from './challenge.standings';
 import { allowedActions } from './challenge.lifecycle';
 import { toolDefinition } from '../tools/challengeTool.catalogue';
@@ -27,29 +33,69 @@ const standingPub = (s: Standing) => ({
   metrics_json: JSON.stringify(s.metrics ?? {}),
 });
 
-export async function liveStandings(doc: PodChallengeDoc) {
-  const [events, votes] = await Promise.all([
+/** Everything the challenge has persisted: one read each, shared by the standings and every tool's state. */
+async function loadLedger(doc: PodChallengeDoc) {
+  const [events, votes, entries] = await Promise.all([
     ChallengeScoreEventModel.find({ challenge_id: doc._id, voided: false })
-      .select('tool_instance_id competitor_id event_type value')
+      .select('tool_instance_id competitor_id event_type value item_key')
       .sort({ created_at: 1 })
       .lean(),
-    ChallengeVoteModel.find({ challenge_id: doc._id }).select('tool_instance_id kind candidate_id value criteria').lean(),
+    ChallengeVoteModel.find({ challenge_id: doc._id })
+      .select('tool_instance_id kind candidate_id value criteria scope_key created_at')
+      .lean(),
+    ChallengeSubmissionModel.find({ challenge_id: doc._id })
+      .select('tool_instance_id competitor_id media_url media_type caption')
+      .sort({ created_at: 1 })
+      .lean(),
   ]);
+  return { events, votes, entries };
+}
+
+type LoadedLedger = Awaited<ReturnType<typeof loadLedger>>;
+
+function standingsFrom(doc: PodChallengeDoc, ledger: LoadedLedger) {
   return computeStandings({
     tools: doc.tools.map((t) => ({ ...t, config: (t.config ?? {}) as Record<string, unknown> })),
     competitors: doc.competitors,
-    events,
-    votes: votes.map((v) => ({ ...v, criteria: v.criteria?.map((c) => ({ key: c.key ?? '', value: c.value ?? 0 })) })),
+    events: ledger.events,
+    votes: ledger.votes.map((v) => ({
+      ...v,
+      criteria: v.criteria?.map((c) => ({ key: c.key ?? '', value: c.value ?? 0 })),
+      created_at: (v as { created_at?: Date }).created_at ?? null,
+    })),
     rules: doc.winner_rules as WinnerRules,
   });
 }
 
+export async function liveStandings(doc: PodChallengeDoc) {
+  return standingsFrom(doc, await loadLedger(doc));
+}
+
+/** The competitor this user is, or plays for ('' when they are a spectator). */
+export function competitorOfUser(doc: PodChallengeDoc, userId: string | undefined): string {
+  if (!userId) return '';
+  const own = doc.competitors.find((c) => c.user_id?.toString() === userId);
+  if (own) return own.competitor_id;
+  return doc.players.find((p) => p.user_id?.toString() === userId)?.team_id ?? '';
+}
+
 async function myVotes(doc: PodChallengeDoc, userId: string | undefined) {
   if (!userId) return [];
-  const votes = await ChallengeVoteModel.find({ challenge_id: doc._id, voter_id: userId, round: doc.current_round })
-    .select('tool_instance_id kind candidate_id value criteria')
+  // Round 0 holds the ballots that are not per round (poll picks, quiz answers, buzzes).
+  const votes = await ChallengeVoteModel.find({
+    challenge_id: doc._id,
+    voter_id: userId,
+    round: { $in: [doc.current_round, 0] },
+  })
+    .select('tool_instance_id kind candidate_id value scope_key')
     .lean();
-  return votes.map((v) => ({ tool_instance_id: v.tool_instance_id, kind: v.kind, candidate_id: v.candidate_id, value: v.value }));
+  return votes.map((v) => ({
+    tool_instance_id: v.tool_instance_id,
+    kind: v.kind,
+    candidate_id: v.candidate_id,
+    value: v.value,
+    scope_key: v.scope_key ?? '',
+  }));
 }
 
 export async function toView(
@@ -65,7 +111,9 @@ export async function toView(
     : null;
   const finished = doc.status === 'COMPLETED' || doc.status === 'ARCHIVED';
   const hideLive = finished && !access.canManage;
-  const standings = hideLive ? [] : await liveStandings(doc);
+  const ledger = await loadLedger(doc);
+  const standings = hideLive ? [] : standingsFrom(doc, ledger);
+  const toolLedger: Ledger = { events: ledger.events, votes: ledger.votes, entries: ledger.entries };
   const judge = isJudge(doc, userId);
   const live = doc.status === 'LIVE';
 
@@ -96,7 +144,8 @@ export async function toView(
         tool_type: t.tool_type,
         input_kind: toolDefinition(t.tool_type)?.input ?? 'NONE',
         label: t.label,
-        config_json: JSON.stringify(t.config ?? {}),
+        config_json: JSON.stringify(publicConfig(t, access.canManage)),
+        state_json: JSON.stringify(toolStateFor(doc, t, state, toolLedger, access.canManage)),
         clock_running: !!state?.clock_running,
         clock_elapsed_ms: state ? clockElapsed(state, now) : 0,
         voting_open: !!state?.voting_open,
@@ -131,6 +180,7 @@ export async function toView(
       is_staff: access.isStaff,
       is_attendee: access.isAttendee,
       is_judge: judge,
+      my_competitor_id: competitorOfUser(doc, userId),
       can_interact: live && doc.audience_interaction_enabled && access.isAttendee,
       can_judge: live && judge,
       allowed_actions: access.canManage ? allowedActions(doc.status) : [],

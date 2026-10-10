@@ -19,6 +19,19 @@ export interface RosterValues {
   competitors: { competitor_id: string; name: string; user_id: string }[];
 }
 
+/** A file picked on the device, as the upload service takes it. */
+export interface PickedEntryFile {
+  uri: string;
+  name: string;
+  type: string;
+}
+
+export interface SubmissionValues {
+  file: PickedEntryFile | null;
+  caption: string;
+  competitor_id: string;
+}
+
 export interface ReasonValues {
   reason: string;
 }

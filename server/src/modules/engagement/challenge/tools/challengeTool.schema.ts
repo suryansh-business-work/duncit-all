@@ -109,7 +109,7 @@ export const challengeToolTypeDefs = gql`
     updateChallengeToolPreset(id: ID!, input: UpdateChallengeToolPresetInput!): ChallengeToolPreset!
     duplicateChallengeToolPreset(id: ID!): ChallengeToolPreset!
     upsertChallengeCategoryMapping(category_id: ID!, input: ChallengeCategoryMappingInput!): ChallengeCategoryMapping!
-    "Removes the category's own row so it inherits from its parent."
+    "Removes a sub-category's challenge settings (challenges are then off for it)."
     clearChallengeCategoryMapping(category_id: ID!): ChallengeCategoryMapping!
   }
 `;

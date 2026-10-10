@@ -13,10 +13,14 @@ import { ChallengeClock } from '@/components/challenge/ChallengeClock';
 import { ChallengeJudgeSheet } from '@/components/challenge/ChallengeJudgeSheet';
 import { ChallengeResultCard } from '@/components/challenge/ChallengeResultCard';
 import { ChallengeStandings } from '@/components/challenge/ChallengeStandings';
+import { ChallengeToolPanels } from '@/components/challenge/tools/ChallengeToolPanels';
+import { useCheckpointScan } from '@/hooks/useCheckpointScan';
 import { usePodChallengeLive, type PodChallengeView } from '@/hooks/usePodChallengeLive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+
+const FINISHED_PANELS = ['SUBMIT'] as const;
 
 /** The arena during play: clocks, the leaderboard, and whatever this viewer may do. */
 function LiveBody({
@@ -67,6 +71,7 @@ function LiveBody({
         </Text>
         <ChallengeStandings standings={challenge.standings} large />
       </YStack>
+      <ChallengeToolPanels challenge={challenge} onChanged={onChanged} />
       {ballots.map((tool) => (
         <ChallengeBallots
           key={tool.instance_id}
@@ -101,6 +106,8 @@ export function ChallengeArenaScreen() {
     params?.challengeId ?? '',
   );
 
+  const scan = useCheckpointScan(challenge, params?.checkpoint, adopt);
+
   const body = () => {
     if (isLoading) return <LoadingIndicator />;
     if (!challenge) {
@@ -114,8 +121,18 @@ export function ChallengeArenaScreen() {
     if (!isChallengeFinished(challenge.status)) {
       return <LiveBody challenge={challenge} receivedAt={receivedAt} onChanged={adopt} />;
     }
-    if (!challenge.result)
-      return <NoticeCard tone="info" title={t('mweb.challenge.resultsPending')} />;
+    // The gallery outlives play: entries stay on show beside the result.
+    const gallery = (
+      <ChallengeToolPanels challenge={challenge} onChanged={adopt} only={FINISHED_PANELS} />
+    );
+    if (!challenge.result) {
+      return (
+        <YStack gap={16}>
+          <NoticeCard tone="info" title={t('mweb.challenge.resultsPending')} />
+          {gallery}
+        </YStack>
+      );
+    }
     const winners = challenge.result.standings
       .filter((s) => challenge.result?.winner_ids.includes(s.competitor_id))
       .map((s) => s.name)
@@ -129,6 +146,7 @@ export function ChallengeArenaScreen() {
           </Text>
         </YStack>
         <ChallengeResultCard challenge={challenge} />
+        {gallery}
       </YStack>
     );
   };
@@ -139,6 +157,11 @@ export function ChallengeArenaScreen() {
       testID="challenge-arena-screen"
     >
       <RefreshScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {scan ? (
+          <YStack marginBottom={16}>
+            <NoticeCard tone={scan.tone} title={scan.message} testID="challenge-checkpoint-scan" />
+          </YStack>
+        ) : null}
         {body()}
       </RefreshScrollView>
     </StackScreen>

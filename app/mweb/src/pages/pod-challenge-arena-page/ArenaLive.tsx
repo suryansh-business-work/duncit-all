@@ -5,6 +5,7 @@ import ChallengeClock from '../../components/pod-challenge/ChallengeClock';
 import ChallengeStandings from '../../components/pod-challenge/ChallengeStandings';
 import ChallengeBallotPanel from '../../components/pod-challenge/ChallengeBallotPanel';
 import ChallengeJudgePanel from '../../components/pod-challenge/ChallengeJudgePanel';
+import ChallengeToolPanels from '../../components/pod-challenge/ChallengeToolPanels';
 import { ballotToolsOf, judgeToolsOf, leadersOf, parseConfig, roundToolOf, timersOf } from '../../components/pod-challenge/challengeView';
 import type { PodChallengeView } from '../../components/pod-challenge/queries';
 import LeaderAnnouncer from './LeaderAnnouncer';
@@ -19,7 +20,8 @@ interface Props {
 /**
  * The arena during play. Its layout follows the challenge's own tools: clocks
  * for Timer tools, the leaderboard for anything that scores, ballots for an
- * attendee while voting is open, the score sheet for an assigned judge.
+ * attendee while voting is open, the score sheet for an assigned judge, and a
+ * panel for every tool that is run rather than scored (poll, quiz, buzzer…).
  */
 export default function ArenaLive({ challenge, receivedAt, tv }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -46,6 +48,7 @@ export default function ArenaLive({ challenge, receivedAt, tv }: Readonly<Props>
         </Typography>
         <ChallengeStandings standings={challenge.standings} large={tv} />
       </Box>
+      <ChallengeToolPanels challenge={challenge} interactive={!tv} />
       {ballots.map((tool) => (
         <ChallengeBallotPanel key={tool.instance_id} challenge={challenge} tool={tool} />
       ))}

@@ -9,6 +9,8 @@ import { podChallengeControls, type ClockAction } from './podChallenge.controls'
 import { podChallengeBallots, type CriterionScore } from './podChallenge.ballots';
 import { podChallengeResults } from './podChallenge.result';
 import { podChallengeNotices } from './podChallenge.notices';
+import { podChallengeHostTools } from './podChallenge.hostTools';
+import { podChallengePlayerTools } from './podChallenge.playerTools';
 
 /**
  * Pod challenge API. Reads are open to signed-out spectators (the service
@@ -40,6 +42,8 @@ export const podChallengeResolvers = {
     },
     podChallengeScoreLog: (_p: unknown, args: { challenge_id: string; limit?: number | null }, ctx: GraphQLContext) =>
       podChallengeScoring.recent(args.challenge_id, requireAuth(ctx), args.limit ?? 50),
+    podChallengeCheckpointLinks: (_p: unknown, args: ToolArgs, ctx: GraphQLContext) =>
+      podChallengeHostTools.checkpointLinks(args.id, args.tool_instance_id, requireAuth(ctx)),
     podChallengeNotifications: (_p: unknown, args: { challenge_id: string }, ctx: GraphQLContext) =>
       podChallengeNotices.history(args.challenge_id, requireAuth(ctx)),
   },
@@ -79,6 +83,41 @@ export const podChallengeResolvers = {
       args: ToolArgs & { candidate_id: string; scores: CriterionScore[] },
       ctx: GraphQLContext
     ) => podChallengeBallots.judge(args.id, args.tool_instance_id, args.candidate_id, args.scores, requireAuth(ctx)),
+    setPodChallengeItem: (
+      _p: unknown,
+      args: ToolArgs & { competitor_id: string; item_key: string; done: boolean; reason?: string | null },
+      ctx: GraphQLContext
+    ) =>
+      podChallengeHostTools.setItem(
+        args.id,
+        args.tool_instance_id,
+        args.competitor_id,
+        args.item_key,
+        args.done,
+        args.reason,
+        requireAuth(ctx)
+      ),
+    reachPodChallengeCheckpoint: (_p: unknown, args: ToolArgs & { code: string }, ctx: GraphQLContext) =>
+      podChallengePlayerTools.checkpoint(args.id, args.tool_instance_id, args.code, requireAuth(ctx)),
+    castPodChallengePoll: (_p: unknown, args: ToolArgs & { option_key: string }, ctx: GraphQLContext) =>
+      podChallengePlayerTools.poll(args.id, args.tool_instance_id, args.option_key, requireAuth(ctx)),
+    controlPodChallengeQuiz: (_p: unknown, args: ToolArgs & { question_key?: string | null }, ctx: GraphQLContext) =>
+      podChallengeHostTools.quiz(args.id, args.tool_instance_id, args.question_key, requireAuth(ctx)),
+    answerPodChallengeQuiz: (_p: unknown, args: ToolArgs & { option_index: number }, ctx: GraphQLContext) =>
+      podChallengePlayerTools.answer(args.id, args.tool_instance_id, args.option_index, requireAuth(ctx)),
+    controlPodChallengeBuzzer: (_p: unknown, args: ToolArgs & { arm: boolean }, ctx: GraphQLContext) =>
+      podChallengeHostTools.buzzer(args.id, args.tool_instance_id, args.arm, requireAuth(ctx)),
+    buzzPodChallenge: (_p: unknown, args: ToolArgs, ctx: GraphQLContext) =>
+      podChallengePlayerTools.buzz(args.id, args.tool_instance_id, requireAuth(ctx)),
+    pickPodChallengeRandom: (_p: unknown, args: ToolArgs & { reset?: boolean | null }, ctx: GraphQLContext) =>
+      podChallengeHostTools.pick(args.id, args.tool_instance_id, !!args.reset, requireAuth(ctx)),
+    submitPodChallengeEntry: (
+      _p: unknown,
+      args: ToolArgs & { input: { competitor_id?: string | null; media_url: string; media_type: string; caption?: string | null } },
+      ctx: GraphQLContext
+    ) => podChallengePlayerTools.submit(args.id, args.tool_instance_id, args.input, requireAuth(ctx)),
+    removePodChallengeEntry: (_p: unknown, args: { entry_id: string }, ctx: GraphQLContext) =>
+      podChallengePlayerTools.removeEntry(args.entry_id, requireAuth(ctx)),
     publishPodChallengeResult: (_p: unknown, args: Id & { reason?: string | null }, ctx: GraphQLContext) =>
       podChallengeResults.publish(args.id, args.reason, requireAuth(ctx)),
   },

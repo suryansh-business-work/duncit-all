@@ -14,6 +14,7 @@ import {
   UPDATE_POD_CHALLENGE_SETTINGS,
   VOID_POD_CHALLENGE_SCORE,
 } from './queries';
+import { CONTROL_POD_CHALLENGE_BUZZER, CONTROL_POD_CHALLENGE_QUIZ, PICK_POD_CHALLENGE_RANDOM, SET_POD_CHALLENGE_ITEM } from './toolQueries';
 
 /**
  * Every host action on one challenge. Each returns whether it succeeded; a
@@ -32,6 +33,10 @@ export function useHostChallengeActions(challengeId: string) {
   const [votingMut, votingState] = useMutation(SET_POD_CHALLENGE_VOTING);
   const [roundMut, roundState] = useMutation(SET_POD_CHALLENGE_ROUND);
   const [publishMut, publishState] = useMutation(PUBLISH_POD_CHALLENGE_RESULT);
+  const [itemMut, itemState] = useMutation(SET_POD_CHALLENGE_ITEM);
+  const [quizMut, quizState] = useMutation(CONTROL_POD_CHALLENGE_QUIZ);
+  const [buzzerMut, buzzerState] = useMutation(CONTROL_POD_CHALLENGE_BUZZER);
+  const [pickMut, pickState] = useMutation(PICK_POD_CHALLENGE_RANDOM);
 
   const attempt = async (job: () => Promise<unknown>) => {
     try {
@@ -52,8 +57,11 @@ export function useHostChallengeActions(challengeId: string) {
       clockState.loading ||
       votingState.loading ||
       roundState.loading ||
-      publishState.loading,
-    scoring: scoreState.loading || voidState.loading,
+      publishState.loading ||
+      quizState.loading ||
+      buzzerState.loading ||
+      pickState.loading,
+    scoring: scoreState.loading || voidState.loading || itemState.loading,
     settings: (input: PodChallengeSettingsInput) => attempt(() => settingsMut({ variables: { id, input } })),
     roster: (input: PodChallengeRosterInput) => attempt(() => rosterMut({ variables: { id, input } })),
     transition: (action: string) => attempt(() => transitionMut({ variables: { id, action } })),
@@ -71,6 +79,12 @@ export function useHostChallengeActions(challengeId: string) {
     voting: (toolInstanceId: string, open: boolean) => attempt(() => votingMut({ variables: { id, toolInstanceId, open } })),
     round: (round: number) => attempt(() => roundMut({ variables: { id, round } })),
     publish: (reason?: string) => attempt(() => publishMut({ variables: { id, reason } })),
+    item: (toolInstanceId: string, competitorId: string, itemKey: string, done: boolean) =>
+      attempt(() => itemMut({ variables: { id, toolInstanceId, competitorId, itemKey, done } })),
+    // A null question closes the open one.
+    quiz: (toolInstanceId: string, questionKey: string | null) => attempt(() => quizMut({ variables: { id, toolInstanceId, questionKey } })),
+    buzzer: (toolInstanceId: string, arm: boolean) => attempt(() => buzzerMut({ variables: { id, toolInstanceId, arm } })),
+    pick: (toolInstanceId: string, reset: boolean) => attempt(() => pickMut({ variables: { id, toolInstanceId, reset } })),
   };
 }
 

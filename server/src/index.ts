@@ -338,10 +338,12 @@ async function bootstrap() {
     const { challengeToolService } = await import('@modules/engagement/challenge/tools/challengeTool.service');
     const ledgers = await import('@modules/engagement/challenge/runtime/challengeLedger.model');
     await challengeToolService.seedDefaults();
+    await challengeToolService.activateNewlyRunnable();
     await Promise.all([
       ledgers.ChallengeScoreEventModel.createIndexes(),
       ledgers.ChallengeVoteModel.createIndexes(),
       ledgers.ChallengeResultModel.createIndexes(),
+      ledgers.ChallengeSubmissionModel.createIndexes(),
     ]);
   });
   // Drops the superseded single-field referral guard on the coin ledger so one

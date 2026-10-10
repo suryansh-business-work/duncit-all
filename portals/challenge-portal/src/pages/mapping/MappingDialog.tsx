@@ -6,7 +6,7 @@ import { ChallengeMappingEditor } from '@duncit/challenges';
 
 interface Props {
   open: boolean;
-  /** Edit this category directly; when null the admin picks one first. */
+  /** Edit this sub-category directly; when null the admin picks one first. */
   categoryId: string | null;
   categoryLabel?: string;
   onClose: () => void;
@@ -15,13 +15,11 @@ interface Props {
 
 const EMPTY: AdminCategoryValue = { super_id: '', super_name: '', category_id: '', category_name: '', sub_id: '', sub_name: '' };
 
-/** The deepest level chosen is the node being configured (Super, Category or Sub). */
-const deepest = (v: AdminCategoryValue) => v.sub_id || v.category_id || v.super_id;
-
 export default function MappingDialog({ open, categoryId, categoryLabel, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const [picked, setPicked] = useState<AdminCategoryValue>(EMPTY);
-  const target = categoryId ?? deepest(picked);
+  // Tools are chosen per sub-category, so nothing is configured until one is picked.
+  const target = categoryId ?? picked.sub_id;
   const close = () => {
     setPicked(EMPTY);
     onClose();

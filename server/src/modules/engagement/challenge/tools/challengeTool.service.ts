@@ -69,6 +69,9 @@ function presetPub(d: Stamped<ChallengeToolPresetDoc>) {
   };
 }
 
+/** Tools the engine learned to run after they were first seeded as roadmap entries. */
+const NEWLY_RUNNABLE = ['SUBMISSION', 'QUIZ', 'BUZZER', 'CHECKLIST', 'CHECKPOINT', 'RANDOM_PICKER', 'POLL', 'CUSTOM_FORMULA'];
+
 export const challengeToolService = {
   /**
    * Inserts any catalogue tool the database does not have yet. Existing rows
@@ -89,6 +92,7 @@ export const challengeToolService = {
               description: def.description,
               default_config: catalogueDefaults(def.type),
               status: def.engine_ready ? 'ACTIVE' : 'INACTIVE',
+              engine_activated: def.engine_ready,
               version: 1,
               sort_order: (i + 1) * 10,
             },
@@ -97,6 +101,28 @@ export const challengeToolService = {
         },
       })) as never[]
     );
+  },
+
+  /**
+   * Switches on the tools that shipped INACTIVE only because the engine could
+   * not run them yet — activating them was refused then, so "off" was never an
+   * admin's choice. Limited to exactly those tools, and done once per tool
+   * (`engine_activated`): an admin who turns one off afterwards is not
+   * overruled on the next deploy.
+   */
+  async activateNewlyRunnable() {
+    const waiting = await ChallengeToolModel.find({
+      tool_type: { $in: NEWLY_RUNNABLE },
+      status: 'INACTIVE',
+      engine_activated: { $ne: true },
+    });
+    for (const doc of waiting) {
+      doc.status = 'ACTIVE';
+      doc.engine_activated = true;
+      doc.default_config = catalogueDefaults(doc.tool_type);
+      doc.markModified('default_config');
+      await doc.save();
+    }
   },
 
   async list() {

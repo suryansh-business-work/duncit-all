@@ -16,6 +16,8 @@ const scoreEventSchema = new Schema(
     event_type: { type: String, enum: ['INCREMENT', 'SET'], required: true },
     value: { type: Number, required: true },
     round: { type: Number, default: 1 },
+    /** Checklist/Checkpoint: the task this SET ticks (1) or unticks (0). */
+    item_key: { type: String, default: '' },
     voided: { type: Boolean, default: false },
     voided_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     void_reason: { type: String, default: '' },
@@ -39,14 +41,18 @@ const voteSchema = new Schema(
     tool_instance_id: { type: String, required: true },
     round: { type: Number, default: 1 },
     voter_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    kind: { type: String, enum: ['VOTE', 'RATING', 'JUDGE'], required: true },
+    kind: { type: String, enum: ['VOTE', 'RATING', 'JUDGE', 'POLL', 'ANSWER', 'BUZZ'], required: true },
     candidate_id: { type: String, required: true },
     value: { type: Number, default: 1 },
     criteria: {
       type: [new Schema({ key: String, value: Number }, { _id: false })],
       default: [],
     },
-    /** '' for a VOTE (one per voter per round); the candidate for ratings/judging. */
+    /**
+     * What makes a ballot "the same ballot": '' for a VOTE or POLL (one per
+     * voter per round), the candidate for ratings/judging, the question for a
+     * quiz ANSWER, the buzz round for a BUZZ.
+     */
     scope_key: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
@@ -61,6 +67,25 @@ voteSchema.index({ challenge_id: 1, tool_instance_id: 1 });
 
 export type ChallengeVoteDoc = InferSchemaType<typeof voteSchema> & { _id: Types.ObjectId };
 export const ChallengeVoteModel = model('ChallengeVote', voteSchema);
+
+/** One competitor's submitted piece for a Submission tool (one per competitor per tool). */
+const submissionSchema = new Schema(
+  {
+    challenge_id: { type: Schema.Types.ObjectId, ref: 'PodChallenge', required: true },
+    tool_instance_id: { type: String, required: true },
+    competitor_id: { type: String, required: true },
+    submitted_by: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    media_url: { type: String, required: true },
+    media_type: { type: String, enum: ['IMAGE', 'VIDEO', 'AUDIO'], required: true },
+    caption: { type: String, default: '' },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+// Resubmitting replaces the entry; a competitor never has two in one tool.
+submissionSchema.index({ challenge_id: 1, tool_instance_id: 1, competitor_id: 1 }, { unique: true });
+
+export const ChallengeSubmissionModel = model('ChallengeSubmission', submissionSchema);
 
 const standingSchema = new Schema(
   {

@@ -58,7 +58,8 @@ export type RootStackParamList = {
   /** Host Studio > Your Pods > actions > Challenges. */
   HostPodChallenges: { podId: string };
   /** The full-screen Live Challenge Arena (also the published result). */
-  ChallengeArena: { podId: string; challengeId: string };
+  /** `checkpoint` is what a scanned checkpoint QR link carries (`<tool>.<code>`). */
+  ChallengeArena: { podId: string; challengeId: string; checkpoint?: string };
   /** A pod's own photos and videos — the host's, and the guests' from the link. */
   PodMedia: { podId: string };
   HostApply: undefined;

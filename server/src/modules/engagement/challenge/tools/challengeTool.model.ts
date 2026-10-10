@@ -16,6 +16,8 @@ const challengeToolSchema = new Schema(
     status: { type: String, enum: ['ACTIVE', 'INACTIVE'], default: 'INACTIVE' },
     version: { type: Number, default: 1 },
     sort_order: { type: Number, default: 0 },
+    /** Set once the engine has switched on a tool it could not run before, so a later admin "off" sticks. */
+    engine_activated: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }, minimize: false }
 );

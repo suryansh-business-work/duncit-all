@@ -16,7 +16,7 @@ type Row = MappingRow & { path: string; tool_names: string };
 const rowId = (r: Row) => r.category_id;
 const searchOf = (r: Row) => `${r.path} ${r.tool_names}`;
 
-/** Challenge Portal > Category Mapping: which tools each category node allows. */
+/** Challenge Portal > Category Mapping: which tools each sub-category runs. */
 export default function MappingPage() {
   const { t } = useTranslation();
   const mappings = useQuery(CHALLENGE_CATEGORY_MAPPINGS, { fetchPolicy: 'cache-and-network' });
@@ -36,7 +36,6 @@ export default function MappingPage() {
   const columns = useMemo<DuncitColumn<Row>[]>(
     () => [
       { field: 'path', headerName: t('challenge.mapping.colCategory'), type: 'text', flex: 1, minWidth: 240 },
-      { field: 'level', headerName: t('challenge.mapping.colLevel'), type: 'text', width: 120 },
       activeChipColumn<Row>({ field: 'enabled', width: 130, outlineInactive: true }),
       { field: 'tool_names', headerName: t('challenge.mapping.colTools'), type: 'text', flex: 1, minWidth: 240 },
       dateColumn<Row>({ field: 'updated_at', hide: false }),

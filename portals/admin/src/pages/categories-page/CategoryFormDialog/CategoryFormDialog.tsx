@@ -18,6 +18,7 @@ import GiftCardArtworkSection from '../GiftCardArtworkSection';
 import { useTranslation } from '@duncit/shell';
 import { levelLabel, type DialogState } from './constants';
 import CoHostSection from './CoHostSection';
+import CategoryChallengeTools from '../CategoryChallengeTools';
 
 interface Props {
   dialog: DialogState | null;
@@ -163,6 +164,9 @@ export default function CategoryFormDialog({
             {/* Co-hosting is configured per SUB-category — the server rejects
                 these fields on SUPER/CATEGORY, so they are only offered here. */}
             {dialog.level === 'SUB' && <CoHostSection dialog={dialog} setDialog={setDialog} />}
+            {/* Challenge tools are chosen per SUB-category and nowhere else —
+                nothing is inherited from the levels above. */}
+            {dialog.level === 'SUB' && <CategoryChallengeTools categoryId={dialog.form.id} />}
             {opError && <Alert severity="error">{opError}</Alert>}
           </Stack>
         )}

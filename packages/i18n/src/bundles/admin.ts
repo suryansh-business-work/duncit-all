@@ -819,8 +819,8 @@ changeRequests: {
       categories: 'Categories',
       challengeTools: {
         title: 'Challenge Tools',
-        titleFor: 'Challenge Tools · {name}',
-        pick: 'Select a super category, category or sub-category to configure the challenge tools it allows.',
+        hint: 'Switch challenges on, then choose the scoring tools hosts can use for pods in this sub-category.',
+        saveFirst: 'Save this sub-category first, then edit it to choose its challenge tools.',
       },
       superCategories: 'Super Categories',
       image: 'Category image',

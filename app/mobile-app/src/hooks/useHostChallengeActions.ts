@@ -14,6 +14,12 @@ import {
   UpdatePodChallengeSettingsDocument,
   VoidPodChallengeScoreDocument,
 } from '@/graphql/challenges';
+import {
+  ControlPodChallengeBuzzerDocument,
+  ControlPodChallengeQuizDocument,
+  PickPodChallengeRandomDocument,
+  SetPodChallengeItemDocument,
+} from '@/graphql/challenge-tools';
 import type { PodChallengeView } from '@/hooks/usePodChallengeLive';
 import { graphqlRequest } from '@/services/graphql.client';
 
@@ -136,6 +142,51 @@ export function useHostChallengeActions(
         async () =>
           (await graphqlRequest(PublishPodChallengeResultDocument, { id, reason }, auth))
             .publishPodChallengeResult,
+      ),
+    item: (toolInstanceId: string, competitorId: string, itemKey: string, done: boolean) =>
+      attempt(
+        async () =>
+          (
+            await graphqlRequest(
+              SetPodChallengeItemDocument,
+              { id, toolInstanceId, competitorId, itemKey, done },
+              auth,
+            )
+          ).setPodChallengeItem,
+      ),
+    // A null question closes the open one.
+    quiz: (toolInstanceId: string, questionKey: string | null) =>
+      attempt(
+        async () =>
+          (
+            await graphqlRequest(
+              ControlPodChallengeQuizDocument,
+              { id, toolInstanceId, questionKey },
+              auth,
+            )
+          ).controlPodChallengeQuiz,
+      ),
+    buzzer: (toolInstanceId: string, arm: boolean) =>
+      attempt(
+        async () =>
+          (
+            await graphqlRequest(
+              ControlPodChallengeBuzzerDocument,
+              { id, toolInstanceId, arm },
+              auth,
+            )
+          ).controlPodChallengeBuzzer,
+      ),
+    pick: (toolInstanceId: string, reset: boolean) =>
+      attempt(
+        async () =>
+          (
+            await graphqlRequest(
+              PickPodChallengeRandomDocument,
+              { id, toolInstanceId, reset },
+              auth,
+            )
+          ).pickPodChallengeRandom,
       ),
     notify: (kind: string, retryFailed: boolean) =>
       attempt(async () => {

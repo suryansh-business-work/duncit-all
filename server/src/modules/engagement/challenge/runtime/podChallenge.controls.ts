@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import type { AuthUser } from '@context';
+import { toolDefinition } from '../tools/challengeTool.catalogue';
 import { commit } from './podChallenge.commit';
 import { managed, toolOf } from './podChallenge.scoring';
 import { toView } from './podChallenge.view';
@@ -56,8 +57,8 @@ export const podChallengeControls = {
 
   async voting(challengeId: string, instanceId: string, open: boolean, user: AuthUser) {
     const { doc, pod, access } = await managed(challengeId, user);
-    const type = toolOf(doc, instanceId).tool_type;
-    if (type !== 'VOTING' && type !== 'RATING') bad('This tool does not take votes');
+    const input = toolDefinition(toolOf(doc, instanceId).tool_type)?.input;
+    if (input !== 'VOTE' && input !== 'RATE' && input !== 'POLL') bad('This tool does not take votes');
     if (open && doc.status !== 'LIVE') bad('Voting can only open while the challenge is live');
     const next = await commit(
       doc,

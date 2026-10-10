@@ -1,6 +1,7 @@
 import type { AppNavItem } from '@duncit/shell';
 import { STUDIO_OPTIONS_ENTRY } from '@duncit/utils';
 import {
+  activeSection,
   hasPartnerRole,
   optionsPathOf,
   PARTNER_SECTIONS,
@@ -38,9 +39,8 @@ export const appConfig: AppConfig = {
   // The role-independent tail of the sidebar. The four partner sections live in
   // partner-sections.ts, and buildNav() puts the ones the user holds above this.
   nav: [
-    // Account-level — same section as mWeb/native's Manage Account list, which
-    // also places it right before FAQs.
-    { label: 'Verification', labelKey: 'shell.nav.verification', to: '/verification', icon: 'verified-user' },
+    // Verification is not listed here: it is one of every studio's options (the
+    // Options page and the studio menu beside each page), and its route stays.
     // FAQs, Support and Policies — one Help group (and one page with tabs).
     {
       label: 'Help',
@@ -121,8 +121,7 @@ export function buildNav(
   options?: Readonly<BuildNavOptions>,
 ): AppNavItem[] {
   const products = options?.products === true;
-  const held = visibleSections(roles, products);
-  const active = held.find((section) => section.role === options?.activeRole) ?? held[0];
+  const active = activeSection(roles, products, options?.activeRole);
   const studio = active
     ? [studioOptionsNavItem(active)]
     : PARTNER_SECTIONS.filter((section) => products || !section.products)

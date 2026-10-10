@@ -49,6 +49,14 @@ describe('buildNav', () => {
     }
   });
 
+  it('does not list Verification in the sidebar, whoever is signed in', () => {
+    const navs = [buildNav([]), buildNav(['HOST']), buildNav(['ECOMM_MANAGER'], { products: true })];
+    for (const nav of navs) {
+      expect(routes(nav)).not.toContain('/verification');
+      expect(labels(nav)).not.toContain('Verification');
+    }
+  });
+
   it('shows the active studio, and falls back to the first one held', () => {
     const roles = ['HOST', 'VENUE_OWNER'];
     expect(buildNav(roles, { activeRole: 'HOST' })[0].to).toBe('/host/options');

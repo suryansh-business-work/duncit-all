@@ -7,8 +7,8 @@ import type { PodRef } from './podChallenge.access';
 
 /**
  * What a pod may run, derived from its category (a pod's category is its
- * club's Super + Sub). The nearest category mapping decides whether challenges
- * are on and which tools are allowed; a template is eligible when it is
+ * club's Super + Sub). The sub-category's own mapping — nothing is inherited
+ * from above it — decides whether challenges are on and which tools are allowed; a template is eligible when it is
  * active, every one of its tools is allowed and still active, and its own
  * category scope (if any) covers the pod's category.
  */

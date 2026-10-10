@@ -1,20 +1,16 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack } from '@mui/material';
 import type { ChallengeCategoryMapping, ChallengeCategoryMappingInput } from '@duncit/gql-types';
 import { useTranslation } from '../i18n';
-import {
-  CHALLENGE_MAPPING_EDITOR,
-  CLEAR_CHALLENGE_MAPPING,
-  UPSERT_CHALLENGE_MAPPING,
-  type MappingEditorData as EditorData,
-} from '../queries';
+import { CHALLENGE_MAPPING_EDITOR, UPSERT_CHALLENGE_MAPPING, type MappingEditorData as EditorData } from '../queries';
 import { ChallengeMappingForm } from './challenge-mapping.form';
 import type { ChallengeMappingOptions, ChallengeMappingValues } from './challenge-mapping.types';
 
 export interface ChallengeMappingEditorProps {
+  /** A SUB-category: challenge tools are chosen per sub-category and nowhere else. */
   categoryId: string;
-  /** Called after a save or clear, e.g. to refresh a list of mappings. */
+  /** Called after a save, e.g. to refresh a list of mappings. */
   onSaved?: () => void;
 }
 
@@ -47,10 +43,10 @@ function toOptions(data: EditorData, keep: string[]): ChallengeMappingOptions {
 }
 
 /**
- * Challenge settings for one category node — the same editor in Challenge
- * Portal > Category Mapping and Admin > Categories > Challenge Tools, over the
- * same server rows. An inherited category shows its parent's values; saving
- * creates the category's own override, "Inherit from parent" removes it.
+ * Challenge settings for one sub-category — the same editor in Admin >
+ * Categories > edit sub-category and Challenge Portal > Category Mapping, over
+ * the same server rows Tool Master's "Mapped sub-categories" writes. Nothing is
+ * inherited: a sub-category runs exactly the tools chosen here.
  */
 export function ChallengeMappingEditor({ categoryId, onSaved }: Readonly<ChallengeMappingEditorProps>) {
   const { t } = useTranslation();
@@ -59,7 +55,6 @@ export function ChallengeMappingEditor({ categoryId, onSaved }: Readonly<Challen
     fetchPolicy: 'cache-and-network',
   });
   const [upsert, upsertState] = useMutation(UPSERT_CHALLENGE_MAPPING);
-  const [clear, clearState] = useMutation(CLEAR_CHALLENGE_MAPPING);
   const mapping = data?.challengeCategoryMapping;
   const values = useMemo(() => (mapping ? toValues(mapping) : null), [mapping]);
   const options = useMemo(() => (data ? toOptions(data, mapping?.allowed_tool_ids ?? []) : null), [data, mapping]);
@@ -73,28 +68,11 @@ export function ChallengeMappingEditor({ categoryId, onSaved }: Readonly<Challen
     await upsert({ variables: { categoryId, input } });
     onSaved?.();
   };
-  const inherit = async () => {
-    await clear({ variables: { categoryId } });
-    onSaved?.();
-  };
-  const ownRow = !!mapping.id && !mapping.inherited;
-  const saveError = upsertState.error ?? clearState.error;
 
   return (
     <Stack spacing={2}>
-      <Typography variant="body2" sx={{ color: 'text.secondary' }} role="status">
-        {mapping.inherited
-          ? t('challenge.mapping.inheritedFrom')
-          : t(ownRow ? 'challenge.mapping.ownRow' : 'challenge.mapping.noRow')}
-      </Typography>
-      {saveError && <Alert severity="error">{saveError.message}</Alert>}
-      <ChallengeMappingForm
-        values={values}
-        options={options}
-        saving={upsertState.loading || clearState.loading}
-        onSubmit={save}
-        onClear={ownRow ? inherit : undefined}
-      />
+      {upsertState.error && <Alert severity="error">{upsertState.error.message}</Alert>}
+      <ChallengeMappingForm values={values} options={options} saving={upsertState.loading} onSubmit={save} />
     </Stack>
   );
 }

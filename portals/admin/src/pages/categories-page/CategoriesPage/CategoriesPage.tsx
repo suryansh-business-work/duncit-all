@@ -16,7 +16,6 @@ import CategoriesColumns from '../CategoriesColumns';
 import CategoryDeleteDialog from '../CategoryDeleteDialog';
 import AllVibeIconCard from '../AllVibeIconCard';
 import VibeHeadingCard from '../VibeHeadingCard';
-import CategoryChallengeTools from '../CategoryChallengeTools';
 import { buildCreateInput, buildMediaFromText, buildUpdateInput } from '../helpers';
 import { useTranslation } from '@duncit/shell';
 import { editFormFor, type DialogState } from './dialogState';
@@ -162,8 +161,6 @@ export default function CategoriesPage() {
         openEdit={openEdit}
         remove={remove}
       />
-
-      <CategoryChallengeTools category={subSel ?? catSel ?? superSel} />
 
       <CategoryFormDialog
         dialog={dialog}

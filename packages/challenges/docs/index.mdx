@@ -36,10 +36,11 @@ client ever computes a score; it renders what the server returns.
 
 ## The category mapping editor
 
-One node of the category tree (Super, Category or Sub) and the tools it
-allows. Resolution walks **Sub → Category → Super** and the nearest row wins,
-so a subcategory without its own row inherits. Saving creates the node's own
-row; "Inherit from parent" removes it.
+One **sub-category** and the tools it runs. Challenge tools are chosen per
+sub-category and nowhere else — nothing is inherited from the category or super
+category above it. Only the "Enable challenges" switch shows until it is on;
+the tool, preset and template pickers follow. Tool Master's "Mapped
+sub-categories" writes the same rows, so the two always agree.
 
 ```tsx
 import { ChallengeMappingEditor } from '@duncit/challenges';
@@ -72,8 +73,17 @@ const fields = parseToolFields(tool.config_schema_json);
 ```
 
 `toolConfigIssues` mirrors the server's checks (ranges, non-zero score buttons,
-complete judging criteria) so a doomed save is stopped early; the server
-remains the authority.
+complete judging criteria, complete list entries) so a doomed save is stopped
+early; the server remains the authority.
+
+List-valued settings have their own row editors, picked by the field's `kind`:
+
+| `kind`      | Used by               | A row holds                                   |
+| ----------- | --------------------- | --------------------------------------------- |
+| `items`     | Checklist, Checkpoint | a label and its points                        |
+| `options`   | Poll                  | a label (at least two rows)                   |
+| `questions` | Quiz                  | the question, its answers, the correct one, points |
+| `weights`   | Custom Formula        | a scoring tool and the weight its score gets  |
 
 ## Copy
 

@@ -31,15 +31,30 @@ function assertIds(ids: string[]) {
 
 const ids = (list: unknown[] | null | undefined) => (list ?? []).map(String);
 
-function pub(row: Row | null, category: CategoryRef, source: Row | null) {
+/**
+ * Challenge tools are chosen per SUB-category and nowhere else: a sub-category
+ * runs exactly what its own row says, and nothing is inherited from the
+ * category or super category above it.
+ */
+const MAPPED_LEVEL = 'SUB';
+
+/** A row that is actually in force: a sub-category's, with challenges on. */
+const MAPPED = { level: MAPPED_LEVEL, enabled: true } as const;
+
+function assertMappable(category: { level: string }) {
+  if (category.level !== MAPPED_LEVEL) fail('Challenge tools are chosen per sub-category');
+}
+
+function pub(row: Row | null, category: CategoryRef) {
   const r = row ?? {};
   return {
     id: r._id ? String(r._id) : null,
     category_id: category._id.toString(),
     category_name: category.name,
     level: category.level,
-    source_category_id: source ? String(source.category_id) : null,
-    inherited: !!source && String(source.category_id) !== category._id.toString(),
+    // Kept for older clients: a row is always the category's own now.
+    source_category_id: r._id ? category._id.toString() : null,
+    inherited: false,
     enabled: !!r.enabled,
     allowed_tool_ids: ids(r.allowed_tool_ids),
     preset_ids: ids(r.preset_ids),
@@ -51,21 +66,6 @@ function pub(row: Row | null, category: CategoryRef, source: Row | null) {
     max_competitors: r.max_competitors ?? 0,
     updated_at: r.updated_at?.toISOString?.() ?? '',
   };
-}
-
-/** The category and its ancestors, nearest first (at most Sub → Category → Super). */
-async function chainOf(categoryId: string) {
-  const chain: CategoryRef[] = [];
-  let next: string | null = categoryId;
-  while (next && chain.length < 3) {
-    const cat: { _id: Types.ObjectId; name: string; level: string; parent_id?: unknown } | null = await CategoryModel.findById(next)
-      .select('name level parent_id')
-      .lean();
-    if (!cat) break;
-    chain.push({ _id: cat._id, name: cat.name, level: cat.level });
-    next = cat.parent_id ? String(cat.parent_id) : null;
-  }
-  return chain;
 }
 
 /** Rejects newly added tools that are inactive or not runnable by the engine. */
@@ -96,20 +96,23 @@ async function assertTemplate(templateId: string | null, toolIds: string[]) {
 }
 
 export const challengeMappingService = {
-  /** The nearest mapping row for a category, walking up the tree. */
+  /**
+   * A category's own challenge settings. Only a sub-category can have any; a
+   * category or super category (and a sub-category nobody has configured)
+   * reads as challenges off.
+   */
   async effective(categoryId: string) {
     assertIds([categoryId]);
-    const chain = await chainOf(categoryId);
-    if (!chain.length) fail('Category not found', 'NOT_FOUND');
-    const rows = await ChallengeCategoryMappingModel.find({ category_id: { $in: chain.map((c) => c._id) } }).lean();
-    const byCat = new Map(rows.map((r) => [String(r.category_id), r]));
-    const source = chain.map((c) => byCat.get(String(c._id))).find(Boolean) ?? null;
-    return pub(source, chain[0], source);
+    const category = await CategoryModel.findById(categoryId).select('name level').lean();
+    if (!category) fail('Category not found', 'NOT_FOUND');
+    const ref: CategoryRef = { _id: category._id, name: category.name, level: category.level };
+    if (category.level !== MAPPED_LEVEL) return pub(null, ref);
+    return pub(await ChallengeCategoryMappingModel.findOne({ category_id: categoryId }).lean(), ref);
   },
 
-  /** Every category row, for the Category Mapping table. */
+  /** Every sub-category row, for the Category Mapping table. */
   async list() {
-    const rows = await ChallengeCategoryMappingModel.find({}).sort({ updated_at: -1 }).lean();
+    const rows = await ChallengeCategoryMappingModel.find({ level: MAPPED_LEVEL }).sort({ updated_at: -1 }).lean();
     const cats = await CategoryModel.find({ _id: { $in: rows.map((r) => r.category_id) } })
       .select('name level')
       .lean();
@@ -118,7 +121,7 @@ export const challengeMappingService = {
     );
     return rows.flatMap((r) => {
       const category = byId.get(String(r.category_id));
-      return category ? [pub(r, category, r)] : [];
+      return category ? [pub(r, category)] : [];
     });
   },
 
@@ -126,6 +129,7 @@ export const challengeMappingService = {
     assertIds([categoryId]);
     const category = await CategoryModel.findById(categoryId).select('name level').lean();
     if (!category) fail('Category not found', 'NOT_FOUND');
+    assertMappable(category);
     const current = await ChallengeCategoryMappingModel.findOne({ category_id: categoryId }).lean();
     const toolIds = input.allowed_tool_ids ?? ids(current?.allowed_tool_ids);
     const presetIds = input.preset_ids ?? ids(current?.preset_ids);
@@ -160,16 +164,16 @@ export const challengeMappingService = {
     return challengeMappingService.effective(categoryId);
   },
 
-  /** Drops a category's own row so it inherits from its parent again. */
+  /** Drops a sub-category's row: challenges are off for it until it is configured again. */
   async clear(categoryId: string) {
     assertIds([categoryId]);
     await ChallengeCategoryMappingModel.deleteOne({ category_id: categoryId });
     return challengeMappingService.effective(categoryId);
   },
 
-  /** Tool id → category ids whose own row allows it, for the whole Tool Master list. */
+  /** Tool id → the sub-categories running it (challenges on, tool allowed), for the whole Tool Master list. */
   async categoriesByTool() {
-    const rows = await ChallengeCategoryMappingModel.find({ 'allowed_tool_ids.0': { $exists: true } })
+    const rows = await ChallengeCategoryMappingModel.find({ ...MAPPED, 'allowed_tool_ids.0': { $exists: true } })
       .select('category_id allowed_tool_ids')
       .lean();
     const out = new Map<string, string[]>();
@@ -181,17 +185,19 @@ export const challengeMappingService = {
     return out;
   },
 
-  /** Category ids whose own row allows the tool (Tool Master > Mapped Categories). */
+  /** The sub-categories running the tool (Tool Master > Mapped Categories). */
   async categoriesForTool(toolId: string) {
     assertIds([toolId]);
-    const rows = await ChallengeCategoryMappingModel.find({ allowed_tool_ids: toolId }).select('category_id').lean();
+    const rows = await ChallengeCategoryMappingModel.find({ ...MAPPED, allowed_tool_ids: toolId }).select('category_id').lean();
     return rows.map((r) => String(r.category_id));
   },
 
   /**
-   * Makes `categoryIds` exactly the categories whose own row allows the tool —
-   * the Tool Master side of the same rows Category Mapping edits. New rows are
-   * created disabled so mapping a tool never switches challenges on by itself.
+   * Makes `categoryIds` exactly the sub-categories running the tool — the Tool
+   * Master side of the SAME rows a sub-category's own Challenge section edits,
+   * so the two screens always agree. Mapping a tool to a sub-category switches
+   * its challenges on (that is what choosing it there means) and keeps the
+   * tools it already had; taking away its last tool switches them off again.
    */
   async setToolCategories(toolId: string, categoryIds: string[], actorId: string) {
     assertIds([toolId, ...categoryIds]);
@@ -203,6 +209,7 @@ export const challengeMappingService = {
 
     const cats = await CategoryModel.find({ _id: { $in: added } }).select('level').lean();
     if (cats.length !== added.length) fail('Category not found', 'NOT_FOUND');
+    cats.forEach(assertMappable);
     // Unmapping a tool also unmaps its presets, so no row keeps a preset for a
     // tool it no longer allows.
     const toolPresets = removed.length
@@ -214,8 +221,7 @@ export const challengeMappingService = {
           filter: { category_id: c._id },
           update: {
             $addToSet: { allowed_tool_ids: new Types.ObjectId(toolId) },
-            $set: { updated_by: actorId },
-            $setOnInsert: { level: c.level, enabled: false },
+            $set: { updated_by: actorId, enabled: true, level: c.level },
           },
           upsert: true,
         },
@@ -230,6 +236,13 @@ export const challengeMappingService = {
         },
       })),
     ] as never[]);
+    if (removed.length) {
+      // Challenges cannot stay on with nothing to run.
+      await ChallengeCategoryMappingModel.updateMany(
+        { category_id: { $in: removed.map((id) => new Types.ObjectId(id)) }, allowed_tool_ids: { $size: 0 } },
+        { $set: { enabled: false } }
+      );
+    }
     return challengeMappingService.categoriesForTool(toolId);
   },
 };

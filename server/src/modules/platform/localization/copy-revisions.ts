@@ -160,4 +160,18 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // Challenges became Challenge Templates (the universal tool engine), and the
   // create button now reads "New template".
   "challenge.table.empty": ["No challenges yet. Create one with “New challenge”."],
+  // Every catalogue tool now runs in the engine, so "on the roadmap" no longer
+  // describes any of them.
+  // Challenge tools are chosen per sub-category now, with no inheritance.
+  "challenge.tools.categoriesHint": ["Categories whose own mapping allows this tool. Newly mapped categories start with challenges off."],
+  "challenge.tools.fields.categories": ["Mapped categories"],
+  "challenge.tools.colMapped": ["Mapped categories"],
+  "challenge.mapping.subtitle": ["Choose which tools each category allows. A subcategory without its own settings inherits from its category, and a category from its super category."],
+  "challenge.mapping.configure": ["Configure a category"],
+  "challenge.mapping.pickHint": ["Pick a super category, category or subcategory — the deepest level you choose is configured."],
+  "challenge.mapping.pickFirst": ["Pick a category to see its challenge settings."],
+  "challenge.mapping.empty": ["No category has challenge settings yet."],
+  "challenge.mapping.colCategory": ["Category"],
+  "challenge.mapping.save": ["Save mapping"],
+  "challenge.tools.notReady": ["This tool is on the roadmap. It can be renamed now, and activated once the engine supports it."],
 };

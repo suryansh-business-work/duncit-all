@@ -17,16 +17,15 @@ export interface ChallengeMappingFormProps {
   options: ChallengeMappingOptions;
   saving: boolean;
   onSubmit: (values: ChallengeMappingValues) => Promise<void> | void;
-  /** Shown only when the category has its own row (inherited rows have nothing to clear). */
-  onClear?: () => void;
 }
 
 /**
- * The challenge settings of one category. Presets and the default template
- * only offer what the selected tools can run, so an admin cannot save a
- * combination the server would refuse.
+ * The challenge settings of one sub-category. Everything but the switch stays
+ * out of the way until challenges are switched on; presets and the default
+ * template then only offer what the selected tools can run, so an admin cannot
+ * save a combination the server would refuse.
  */
-export function ChallengeMappingForm({ values, options, saving, onSubmit, onClear }: Readonly<ChallengeMappingFormProps>) {
+export function ChallengeMappingForm({ values, options, saving, onSubmit }: Readonly<ChallengeMappingFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => buildChallengeMappingSchema(t), [t]);
   const { control, handleSubmit, reset, setValue, getValues, formState } = useForm<ChallengeMappingValues>({
@@ -63,71 +62,70 @@ export function ChallengeMappingForm({ values, options, saving, onSubmit, onClea
           />
         )}
       />
-      <Controller
-        name="allowed_tool_ids"
-        control={control}
-        render={({ field, fieldState }) => (
-          <MultiOptionPicker
-            label={t('challenge.mapping.fields.allowed_tool_ids')}
-            options={options.tools}
-            value={field.value}
-            onChange={changeTools}
-            error={fieldState.error?.message}
-            disabled={saving}
+      {enabled && (
+        <>
+          <Controller
+            name="allowed_tool_ids"
+            control={control}
+            render={({ field, fieldState }) => (
+              <MultiOptionPicker
+                label={t('challenge.mapping.fields.allowed_tool_ids')}
+                options={options.tools}
+                value={field.value}
+                onChange={changeTools}
+                error={fieldState.error?.message}
+                disabled={saving}
+              />
+            )}
           />
-        )}
-      />
-      <Controller
-        name="preset_ids"
-        control={control}
-        render={({ field }) => (
-          <MultiOptionPicker
-            label={t('challenge.mapping.fields.preset_ids')}
-            options={presets}
-            value={field.value}
-            onChange={field.onChange}
-            disabled={saving || !enabled}
+          <Controller
+            name="preset_ids"
+            control={control}
+            render={({ field }) => (
+              <MultiOptionPicker
+                label={t('challenge.mapping.fields.preset_ids')}
+                options={presets}
+                value={field.value}
+                onChange={field.onChange}
+                disabled={saving}
+              />
+            )}
           />
-        )}
-      />
-      <Controller
-        name="default_template_id"
-        control={control}
-        render={({ field }) => (
-          <SingleOptionPicker
-            label={t('challenge.mapping.fields.default_template_id')}
-            noneLabel={t('challenge.mapping.noTemplate')}
-            options={templates}
-            value={field.value}
-            onChange={field.onChange}
-            disabled={saving || !enabled}
+          <Controller
+            name="default_template_id"
+            control={control}
+            render={({ field }) => (
+              <SingleOptionPicker
+                label={t('challenge.mapping.fields.default_template_id')}
+                noneLabel={t('challenge.mapping.noTemplate')}
+                options={templates}
+                value={field.value}
+                onChange={field.onChange}
+                disabled={saving}
+              />
+            )}
           />
-        )}
-      />
-      <Controller
-        name="max_competitors"
-        control={control}
-        render={({ field, fieldState }) => (
-          <TextField
-            type="number"
-            size="small"
-            label={t('challenge.mapping.fields.max_competitors')}
-            helperText={fieldState.error?.message ?? t('challenge.mapping.maxCompetitorsHint')}
-            error={!!fieldState.error}
-            value={Number.isNaN(field.value) ? '' : field.value}
-            onChange={(e) => field.onChange(e.target.value === '' ? Number.NaN : Number(e.target.value))}
-            slotProps={{ htmlInput: { min: 0, step: 1 } }}
-            disabled={saving || !enabled}
+          <Controller
+            name="max_competitors"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                type="number"
+                size="small"
+                label={t('challenge.mapping.fields.max_competitors')}
+                helperText={fieldState.error?.message ?? t('challenge.mapping.maxCompetitorsHint')}
+                error={!!fieldState.error}
+                value={Number.isNaN(field.value) ? '' : field.value}
+                onChange={(e) => field.onChange(e.target.value === '' ? Number.NaN : Number(e.target.value))}
+                slotProps={{ htmlInput: { min: 0, step: 1 } }}
+                disabled={saving}
+              />
+            )}
           />
-        )}
-      />
-      <MappingToggles control={control} disabled={saving || !enabled} />
+          <MappingToggles control={control} disabled={saving} />
+        </>
+      )}
       <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-        {onClear && (
-          <DuncitButton onClick={onClear} disabled={saving}>
-            {t('challenge.mapping.inherit')}
-          </DuncitButton>
-        )}
         <DuncitButton type="submit" variant="contained" disabled={saving || !formState.isDirty}>
           {saving ? t('challenge.mapping.saving') : t('challenge.mapping.save')}
         </DuncitButton>

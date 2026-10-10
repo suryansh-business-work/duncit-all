@@ -15,7 +15,9 @@ const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((
 export default function ToolsPage() {
   const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(CHALLENGE_TOOLS, { fetchPolicy: 'cache-and-network' });
-  const { options: categories } = useCategoryPaths();
+  const { options: allCategories } = useCategoryPaths();
+  // A tool is mapped to sub-categories only: that is the level challenges are chosen at.
+  const categories = useMemo(() => allCategories.filter((c) => c.level === 'SUB'), [allCategories]);
   const [editing, setEditing] = useState<ToolRow | null>(null);
   const [updateTool, updateState] = useMutation(UPDATE_CHALLENGE_TOOL);
   const [setCategories, categoriesState] = useMutation(SET_CHALLENGE_TOOL_CATEGORIES);

@@ -34,8 +34,8 @@ import WarehouseSync from '../WarehouseSync';
 type Editing = BrandWarehouse | 'new' | null;
 
 /** Full-screen Brand Settings: the brand's warehouses (pickup locations) with
- * add/edit/delete/set-default. ShipRocket registration stays admin-side — a
- * pending warehouse ships with the manual delivery charge until registered. */
+ * add/edit/delete/set-default. An approved warehouse is sent to ShipRocket by
+ * the server — on approval, and again whenever this page opens (WarehouseSync). */
 export default function BrandSettingsPage({
   embedded = false,
   brandId: brandIdProp,

@@ -83,7 +83,8 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
 export const hasPartnerRole = (roles: readonly string[] | null | undefined, role: PartnerRole): boolean =>
   roles?.includes(role) ?? false;
 
-const underPath = (pathname: string, prefix: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
+/** Whether a route is the given path or sits beneath it. */
+export const underPath = (pathname: string, prefix: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
 
 /** Where a studio opens — its Options page. `/` and the switcher land there. */
 export const optionsPathOf = (section: PartnerSection): string => STUDIO_OPTIONS_ENTRY[section.mode].portal;
@@ -112,4 +113,19 @@ export function visibleSections(
   return PARTNER_SECTIONS.filter(
     (section) => hasPartnerRole(roles, section.role) && (productsVisible || !section.products),
   );
+}
+
+/**
+ * The ONE studio whose menu shows: the one the user is in when they hold it,
+ * else the first they hold — `null` for somebody with no studio yet. The
+ * sidebar's Options entry and the studio menu beside a page both read it, so
+ * the two can never name different studios.
+ */
+export function activeSection(
+  roles: readonly string[] | null | undefined,
+  productsVisible: boolean,
+  activeRole: PartnerRole | null | undefined,
+): PartnerSection | null {
+  const held = visibleSections(roles, productsVisible);
+  return held.find((section) => section.role === activeRole) ?? held[0] ?? null;
 }

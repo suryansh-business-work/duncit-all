@@ -1,4 +1,10 @@
+jest.mock('@modules/commerce/shiprocket/shiprocket.gateway', () => ({
+  ...jest.requireActual('@modules/commerce/shiprocket/shiprocket.gateway'),
+  addPickupLocation: jest.fn(),
+}));
+
 import { Types } from 'mongoose';
+import { addPickupLocation } from '@modules/commerce/shiprocket/shiprocket.gateway';
 import { approvalService } from '../../approval.service';
 import { ApprovalRequestModel } from '../../approval.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
@@ -6,6 +12,7 @@ import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 
 const ADMIN = { id: 'admin-1', name: 'admin@example.com' };
+const mockAddPickup = addPickupLocation as jest.Mock;
 
 // The generic Admin approval inbox now serves cross-portal (ecomm change)
 // requests only — onboarding-meeting approvals are decided in the Onboarding
@@ -221,6 +228,51 @@ describe('approval — warehouse approval requests', () => {
     await approvalService.reviewWarehouse(req!.id, 'APPROVE', ADMIN);
     const wh: any = await BrandPickupLocationModel.findById(whId);
     expect(wh.review_status).toBe('APPROVED');
+  });
+
+  it('sends the approved warehouse to ShipRocket, and keeps the approval when ShipRocket refuses it', async () => {
+    const address = {
+      contact_name: 'Store Desk',
+      phone: '9876543210',
+      email: 'desk@brand.in',
+      address_line1: '14 Industrial Estate, Phase 2',
+      city: 'Pune',
+      state: 'Maharashtra',
+      pincode: '411019',
+    };
+    const approve = async (nickname: string) => {
+      const wh = await BrandPickupLocationModel.create({ ...address, owner_kind: 'BRAND', brand_id: null, nickname, review_status: 'PENDING' });
+      const req = await approvalService.submitWarehouseApproval(String(wh._id), nickname, false, 'u1');
+      const reviewed = await approvalService.reviewWarehouse(req!.id, 'APPROVE', ADMIN);
+      return { reviewed, wh: await BrandPickupLocationModel.findById(wh._id).lean() };
+    };
+
+    mockAddPickup.mockReset().mockResolvedValue({ registered: true, pickup_id: '4411' });
+    const taken = await approve('APPROVE-SENT');
+    expect(mockAddPickup).toHaveBeenCalledWith(expect.objectContaining({ pickup_location: 'APPROVE-SENT', pin_code: '411019' }));
+    expect([taken.wh?.review_status, taken.wh?.shiprocket_registered, taken.wh?.shiprocket_pickup_id, taken.wh?.shiprocket_error]).toEqual([
+      'APPROVED',
+      true,
+      '4411',
+      '',
+    ]);
+
+    mockAddPickup.mockReset().mockRejectedValue(new Error('ShipRocket refused addPickup: Invalid pincode'));
+    const refused = await approve('APPROVE-REFUSED');
+    expect(refused.reviewed!.status).toBe('APPROVED');
+    expect([refused.wh?.review_status, refused.wh?.shiprocket_registered, refused.wh?.shiprocket_error]).toEqual([
+      'APPROVED',
+      false,
+      'ShipRocket refused addPickup: Invalid pincode',
+    ]);
+  });
+
+  it('never sends a denied warehouse to ShipRocket', async () => {
+    mockAddPickup.mockReset();
+    const whId = await insertWarehouse();
+    const req = await approvalService.submitWarehouseApproval(String(whId), 'WH Denied', false, 'u1');
+    await approvalService.reviewWarehouse(req!.id, 'DENY', ADMIN, 'wrong address');
+    expect(mockAddPickup).not.toHaveBeenCalled();
   });
 
   it('supersedes a prior pending request and denies — marking the warehouse REJECTED', async () => {

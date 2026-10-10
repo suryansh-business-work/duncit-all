@@ -51,13 +51,16 @@ import ChangeRequestsPage from './pages/change-requests-page';
 import PartnerPoliciesPage from './pages/policies-page/PartnerPoliciesPage';
 import AppShell from './components/AppShell';
 import SectionGate from './components/SectionGate';
+import StudioWorkspace from './components/studio/StudioWorkspace';
 import { getToken } from './lib/session';
 
 const authed = createAuthed({
   getToken,
   wrap: (el) => (
     <AppShell>
-      <SectionGate>{el}</SectionGate>
+      <SectionGate>
+        <StudioWorkspace>{el}</StudioWorkspace>
+      </SectionGate>
     </AppShell>
   ),
 });

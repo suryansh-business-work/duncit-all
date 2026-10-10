@@ -19,11 +19,19 @@ export function WarehouseShiprocketChip({ warehouse }: Props) {
   );
 }
 
-/** ShipRocket's reason, when the warehouse is not ready to ship from. */
+/**
+ * ShipRocket's reason, when the warehouse is not ready to ship from. One it
+ * does not hold at all reads as an error — nothing can be dispatched from it —
+ * while one only awaiting its phone check stays a quiet note.
+ */
 export function WarehouseShiprocketNote({ warehouse }: Props) {
   if (!warehouse.shiprocket_error) return null;
   return (
-    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.secondary' }}>
+    <Typography
+      variant="caption"
+      data-testid="warehouse-shiprocket-note"
+      sx={{ display: 'block', mt: 0.5, color: warehouse.shiprocket_registered ? 'text.secondary' : 'error.main' }}
+    >
       {warehouse.shiprocket_error}
     </Typography>
   );

@@ -65,8 +65,26 @@ const stateOf = (match: ShiprocketPickup | null): PickupSyncState => {
   return match.verified ? 'READY' : 'AWAITING_VERIFICATION';
 };
 
+/**
+ * ShipRocket's copy of the address, written over ours. Its API can neither edit
+ * nor delete a pickup, so what it holds is where the courier is sent — the
+ * warehouse shown here must read exactly the same. The nickname is the join and
+ * stays ours; a part ShipRocket left blank does not blank ours.
+ */
+function mirrorAddress(w: IBrandPickupLocation, p: ShiprocketPickup) {
+  w.contact_name = p.name || w.contact_name;
+  w.phone = p.phone || w.phone;
+  w.email = p.email || w.email;
+  w.address_line2 = p.address_line1 ? p.address_line2 : w.address_line2;
+  w.address_line1 = p.address_line1 || w.address_line1;
+  w.city = p.city || w.city;
+  w.state = p.state || w.state;
+  w.pincode = p.pincode || w.pincode;
+}
+
 /** Record on the warehouse what ShipRocket says about it. */
 async function recordMatch(w: IBrandPickupLocation, match: ShiprocketPickup | null, state: PickupSyncState) {
+  if (match && w.review_status === 'APPROVED') mirrorAddress(w, match);
   w.shiprocket_registered = !!match;
   w.shiprocket_pickup_id = match?.id ?? w.shiprocket_pickup_id;
   w.shiprocket_error = state === 'AWAITING_VERIFICATION' ? AWAITING_VERIFICATION : '';
@@ -191,30 +209,82 @@ async function adoptBrandPickups(brandId: Types.ObjectId, pickups: ShiprocketPic
 }
 
 /**
- * One brand's warehouses, checked against the ShipRocket account the brand
- * ships on. On the brand's OWN account every pickup there is taken in as the
- * brand's warehouse; on the Duncit courier the account is shared by every
- * partner brand, so nothing is adopted — the brand's rows are only matched.
+ * Send every approved warehouse ShipRocket does not hold to the account the
+ * brand ships on. Approval is what is meant to put it there; this is the same
+ * step run again for one that never landed (the account was not connected yet,
+ * ShipRocket was down, or it was approved before approval registered anything).
+ * Answers each warehouse it tried and whether ShipRocket took it — a refusal's
+ * reason is written on the warehouse (shiprocket_error), where the partner reads it.
+ */
+async function pushMissingWarehouses(warehouses: IBrandPickupLocation[], held: Set<string>): Promise<Map<string, boolean>> {
+  const missing = warehouses
+    .filter((w) => w.review_status === 'APPROVED' && !held.has(nicknameKey(w.nickname)))
+    .map((w) => String(w.id));
+  if (missing.length === 0) return new Map();
+  const { brandPickupLocationService } = await import('@modules/venues/brandPickupLocation/brandPickupLocation.service');
+  const outcomes = await Promise.all(
+    missing.map(async (id): Promise<[string, boolean]> => {
+      try {
+        return [id, (await brandPickupLocationService.registerWithShiprocket(id)).shiprocket_registered];
+      } catch (error) {
+        logs.server.warn('shiprocket', 'pushMissingWarehouse', { error, warehouseId: id, msg: 'not registered' });
+        return [id, false];
+      }
+    }),
+  );
+  return new Map(outcomes);
+}
+
+/**
+ * Where one warehouse stands once the account has been read. One ShipRocket
+ * lists is recorded from its copy. One just sent and not listed keeps the
+ * outcome of the send — taken, or refused with ShipRocket's own reason rather
+ * than "no such address". One still awaiting approval is left as it was.
+ */
+async function settleWarehouse(w: IBrandPickupLocation, match: ShiprocketPickup | null, sent: boolean | undefined) {
+  if (match) {
+    await recordMatch(w, match, stateOf(match));
+    return;
+  }
+  if (sent === false && w.shiprocket_registered) {
+    w.shiprocket_registered = false;
+    await w.save();
+  }
+}
+
+/**
+ * One brand's warehouses, brought in step with the ShipRocket account the brand
+ * ships on — in both directions. An approved warehouse the account lacks is
+ * sent there; on the brand's OWN account every pickup there is taken in as the
+ * brand's warehouse (on the Duncit courier the account is shared by every
+ * partner brand, so nothing is adopted — the brand's rows are only matched).
  * A warehouse still awaiting approval keeps its state unless ShipRocket has it.
  */
 export async function syncBrandPickupLocations(brandId: string) {
   const oid = new Types.ObjectId(brandId);
+  const mine = { owner_kind: 'BRAND', brand_id: oid };
   let pickups: ShiprocketPickup[] | null = null;
   let error = '';
   let adopted = 0;
+  let sent = new Map<string, boolean>();
   try {
     const brand = await EcommBrandModel.findById(oid).select('shipping_mode integrations.shiprocket').lean();
     const account = await getBrandShiprocketAccount(brandId);
     pickups = await withShiprocketAccount(account, () => listPickupLocations());
     if (brand && brandShippingMode(brand) === 'OWN_SHIPROCKET') adopted = await adoptBrandPickups(oid, pickups);
+    const held = new Set(pickups.map((p) => nicknameKey(p.nickname)));
+    sent = await pushMissingWarehouses(await BrandPickupLocationModel.find(mine), held);
+    // What was just sent is read back, so each warehouse is judged on what the account now holds.
+    if (sent.size > 0) pickups = await withShiprocketAccount(account, () => listPickupLocations());
   } catch (caught) {
     error = (caught as Error).message;
   }
-  const warehouses = await BrandPickupLocationModel.find({ owner_kind: 'BRAND', brand_id: oid }).sort({ is_default: -1, nickname: 1 });
-  const byNickname = new Map((pickups ?? []).map((p) => [nicknameKey(p.nickname), p]));
-  for (const w of warehouses) {
-    const match = byNickname.get(nicknameKey(w.nickname)) ?? null;
-    if (pickups && (match || w.review_status === 'APPROVED')) await recordMatch(w, match, stateOf(match));
+  const warehouses = await BrandPickupLocationModel.find(mine).sort({ is_default: -1, nickname: 1 });
+  if (pickups) {
+    const byNickname = new Map(pickups.map((p) => [nicknameKey(p.nickname), p]));
+    await Promise.all(
+      warehouses.map((w) => settleWarehouse(w, byNickname.get(nicknameKey(w.nickname)) ?? null, sent.get(String(w.id)))),
+    );
   }
   return { warehouses, shiprocket_error: error, adopted, synced_at: new Date().toISOString() };
 }
@@ -238,7 +308,8 @@ const NICKNAME = /^[\w .-]{2,60}$/;
 
 const text = (v: string | null | undefined) => (v ?? '').trim();
 
-function cleanPickupInput(input: PickupInput) {
+/** The address as ShipRocket will take it, or a refusal naming what to fix — asked before anything is saved. */
+export function cleanPickupInput(input: PickupInput) {
   const clean = {
     nickname: text(input.nickname),
     contact_name: text(input.contact_name),

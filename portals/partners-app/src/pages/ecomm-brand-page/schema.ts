@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { EMAIL } from '@duncit/regex';
-import { GSTIN_PATTERN, PAN_PATTERN, PHONE_NUMBER_PATTERN, POSTAL_CODE_PATTERN, PUBLIC_URL_PATTERN } from '@duncit/forms';
+import { EMAIL, PHONE_NUMBER_IN, PINCODE, toDigits } from '@duncit/regex';
+import { GSTIN_PATTERN, PAN_PATTERN, PUBLIC_URL_PATTERN } from '@duncit/forms';
 import type { EcommBrand } from './queries';
 
 // Lenient form schema — drafts can be partial. The server enforces the
@@ -48,10 +48,16 @@ type Translate = (key: string) => string;
 const whenFilled = (pattern: RegExp, message: string) =>
   z.string().trim().refine((value) => value === '' || pattern.test(value), message);
 
+/** ShipRocket refuses a street line shorter than this — the same floor a warehouse address has. */
+const MIN_STREET_LENGTH = 10;
+
 /**
  * The wizard's schema: `brandSchema` with proper formats wherever a value is
  * present, so a typo is caught on its own step rather than by the server at
- * submit. Messages come from the localization bundle.
+ * submit. The address and the phone are held to what ShipRocket accepts — a
+ * street line of ten characters, a six-digit PIN, a ten-digit mobile — because
+ * the courier is handed these same details. Messages come from the
+ * localization bundle.
  */
 export const makeBrandSchema = (t: Translate) =>
   brandSchema.extend({
@@ -63,11 +69,19 @@ export const makeBrandSchema = (t: Translate) =>
     website_url: whenFilled(PUBLIC_URL_PATTERN, t('partners.brandWizard.validation.url')),
     instagram_url: whenFilled(PUBLIC_URL_PATTERN, t('partners.brandWizard.validation.url')),
     contact_email: whenFilled(EMAIL, t('partners.brandWizard.validation.email')),
-    contact_phone: whenFilled(PHONE_NUMBER_PATTERN, t('partners.brandWizard.validation.phone')),
+    contact_phone: z
+      .string()
+      .trim()
+      .refine((value) => value === '' || PHONE_NUMBER_IN.test(toDigits(value).slice(-10)), t('partners.brandWizard.validation.phone')),
     gstin: whenFilled(GSTIN_PATTERN, t('partners.brandWizard.validation.gstin')),
     pan: whenFilled(PAN_PATTERN, t('partners.brandWizard.validation.pan')),
     established_year: whenFilled(YEAR_PATTERN, t('partners.brandWizard.validation.establishedYear')),
-    postal_code: whenFilled(POSTAL_CODE_PATTERN, t('partners.brandWizard.validation.postalCode')),
+    address_line1: z
+      .string()
+      .trim()
+      .max(300)
+      .refine((value) => value === '' || value.length >= MIN_STREET_LENGTH, t('partners.brandWizard.validation.addressMin')),
+    postal_code: whenFilled(PINCODE, t('partners.brandWizard.validation.pincode')),
     ifsc_code: whenFilled(IFSC_PATTERN, t('partners.brandWizard.validation.ifsc')),
     upi_id: whenFilled(UPI_PATTERN, t('partners.brandWizard.validation.upi')),
   });

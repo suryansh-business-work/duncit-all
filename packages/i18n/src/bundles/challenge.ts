@@ -81,6 +81,68 @@ export const CHALLENGE_BUNDLE: NestedCatalogue = {
       },
     },
 
+    status: {
+      DRAFT: 'Draft',
+      SCHEDULED: 'Scheduled',
+      LIVE: 'Live',
+      PAUSED: 'Paused',
+      COMPLETED: 'Completed',
+      CANCELLED: 'Cancelled',
+      ARCHIVED: 'Archived',
+    },
+
+    podChallenges: {
+      title: 'Pod Challenges',
+      subtitle: 'Every challenge hosts have set up on their pods.',
+      liveTitle: 'Live Challenge Monitor',
+      liveSubtitle: 'Challenges running right now. This list refreshes every few seconds.',
+      resultsTitle: 'Results & Leaderboards',
+      resultsSubtitle: 'Finished challenges and the winners of their published results.',
+      empty: 'No challenges to show.',
+      search: 'Search challenges by name…',
+      colChallenge: 'Challenge',
+      colPod: 'Pod',
+      colStatus: 'Stage',
+      colCompetitors: 'Competitors',
+      colWinners: 'Winner',
+      colStarted: 'Started',
+      colUpdated: 'Updated',
+      colOpen: 'Arena',
+      openArena: 'Open the live arena',
+    },
+
+    audit: {
+      title: 'Audit Logs',
+      subtitle: 'Every lifecycle step, setting change, score correction and result publication, with who did it and why.',
+      empty: 'No audit entries yet.',
+      search: 'Search actions or reasons…',
+      colWhen: 'When',
+      colChallenge: 'Challenge',
+      colAction: 'Action',
+      colActor: 'By',
+      colReason: 'Reason',
+      colChange: 'Change',
+    },
+
+    notices: {
+      title: 'Notifications',
+      subtitle:
+        'What each challenge sent its attendees. Per-message delivery is in the Communications Portal’s WhatsApp and email logs.',
+      loading: 'Loading notifications…',
+      loadError: 'Notifications could not be loaded. Refresh to try again.',
+      empty: 'No challenge notifications have been sent yet.',
+      search: 'Search challenges or pods…',
+      colWhen: 'Last sent',
+      colChallenge: 'Challenge',
+      colPod: 'Pod',
+      colKind: 'Notification',
+      colRecipients: 'Recipients',
+      colWhatsapp: 'WhatsApp',
+      colEmail: 'Email',
+      kindLive: 'Challenge started',
+      kindResult: 'Result published',
+    },
+
     tools: {
       title: 'Tool Master',
       subtitle:

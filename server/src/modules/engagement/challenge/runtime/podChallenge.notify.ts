@@ -53,12 +53,13 @@ export interface NoticeChannels {
 }
 
 type ChallengeRef = Pick<PodChallengeDoc, '_id' | 'pod_id' | 'name' | 'result_version'>;
+type LinkRef = Pick<PodChallengeDoc, '_id' | 'pod_id'>;
 type Recipient = Record<string, unknown>;
 
 const versionOf = (challenge: ChallengeRef, kind: ChallengeNoticeKind) => (kind === 'RESULT' ? challenge.result_version : 0);
 
 /** The public viewer link (mirrors @duncit/utils podChallengeLivePath; the server imports no @duncit package). */
-function linkFor(mwebUrl: string, challenge: ChallengeRef): string {
+export function challengeLiveLink(mwebUrl: string, challenge: LinkRef): string {
   return `${trimTrailingSlash(mwebUrl)}/pod/${challenge.pod_id.toString()}/challenges/${challenge._id.toString()}/live`;
 }
 
@@ -130,7 +131,7 @@ export const podChallengeNotify = {
     if (!fresh.length) return 0;
 
     const [{ mwebUrl }, users] = await Promise.all([getUrlConfigs(), loadRecipients(fresh)]);
-    const link = linkFor(mwebUrl, challenge);
+    const link = challengeLiveLink(mwebUrl, challenge);
     const skip = { whatsapp: !channels.whatsapp, email: !channels.email };
     await notifyEach(users.map((user) => noticeFor(challenge, podTitle, kind, user, link, skip)));
     return users.length;
@@ -155,7 +156,7 @@ export const podChallengeNotify = {
       .lean();
     if (!claimed.length) return 0;
     const [{ mwebUrl }, users] = await Promise.all([getUrlConfigs(), loadRecipients(claimed.map((c) => c.recipient_id))]);
-    const link = linkFor(mwebUrl, challenge);
+    const link = challengeLiveLink(mwebUrl, challenge);
     await notifyEach(users.map((user) => noticeFor(challenge, podTitle, kind, user, link, { whatsapp: false, email: true })));
     return users.length;
   },

@@ -3695,6 +3695,27 @@ export type Challenge = {
   winner_rules: ChallengeWinnerRules;
 };
 
+export type ChallengeAuditRow = {
+  __typename?: 'ChallengeAuditRow';
+  action: Scalars['String']['output'];
+  actor_name: Scalars['String']['output'];
+  challenge_id: Scalars['ID']['output'];
+  challenge_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  new_value_json: Scalars['String']['output'];
+  old_value_json: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+};
+
+export type ChallengeAuditTablePage = {
+  __typename?: 'ChallengeAuditTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ChallengeAuditRow>;
+  total: Scalars['Int']['output'];
+};
+
 /** Challenge settings for one category node, or the nearest ancestor's when inherited. */
 export type ChallengeCategoryMapping = {
   __typename?: 'ChallengeCategoryMapping';
@@ -3728,6 +3749,20 @@ export type ChallengeCategoryMappingInput = {
   preset_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   require_challenge?: InputMaybe<Scalars['Boolean']['input']>;
   show_on_pod_details_default?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type ChallengeNotificationRow = {
+  __typename?: 'ChallengeNotificationRow';
+  challenge_id: Scalars['ID']['output'];
+  challenge_name: Scalars['String']['output'];
+  email: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  last_sent_at: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  recipients: Scalars['Int']['output'];
+  version: Scalars['Int']['output'];
+  whatsapp: Scalars['Int']['output'];
 };
 
 /** One ranking key: TOTAL or a scoring tool instance id. */
@@ -21571,6 +21606,32 @@ export type PodChallengeRosterInput = {
   players?: InputMaybe<Array<PodChallengePlayerInput>>;
 };
 
+/** One pod challenge as the Challenge Portal lists it. */
+export type PodChallengeRow = {
+  __typename?: 'PodChallengeRow';
+  competitor_count: Scalars['Int']['output'];
+  completed_at?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** The public arena link for this challenge. */
+  live_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  participant_mode: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  published_at?: Maybe<Scalars['String']['output']>;
+  /** 0 until a result is published. */
+  result_version: Scalars['Int']['output'];
+  show_on_pod_details: Scalars['Boolean']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  tool_count: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+  /** Winner name(s) of the current published result. */
+  winners: Scalars['String']['output'];
+};
+
 export type PodChallengeScoreEntry = {
   __typename?: 'PodChallengeScoreEntry';
   competitor_id: Scalars['String']['output'];
@@ -21625,6 +21686,22 @@ export type PodChallengeStanding = {
   name: Scalars['String']['output'];
   rank: Scalars['Int']['output'];
   total: Scalars['Float']['output'];
+};
+
+export type PodChallengeStats = {
+  __typename?: 'PodChallengeStats';
+  completed: Scalars['Int']['output'];
+  live: Scalars['Int']['output'];
+  published: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type PodChallengeTablePage = {
+  __typename?: 'PodChallengeTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodChallengeRow>;
+  total: Scalars['Int']['output'];
 };
 
 /** One tool of a running challenge, with its live state. */
@@ -24186,10 +24263,12 @@ export type Query = {
   categoryTree: Array<Category>;
   /** A single challenge by id. */
   challenge?: Maybe<Challenge>;
+  challengeAuditTable: ChallengeAuditTablePage;
   /** The effective mapping for a category (its own row, or inherited). */
   challengeCategoryMapping: ChallengeCategoryMapping;
   /** Every category with its own challenge mapping row. */
   challengeCategoryMappings: Array<ChallengeCategoryMapping>;
+  challengeNotifications: Array<ChallengeNotificationRow>;
   /** Total + active challenge counts for the dashboard. */
   challengeStats: ChallengeStats;
   challengeTool?: Maybe<ChallengeTool>;
@@ -25059,8 +25138,11 @@ export type Query = {
   podChallengeNotifications: Array<PodChallengeNoticeBatch>;
   podChallengeScoreLog: Array<PodChallengeScoreEntry>;
   podChallengeSetup: PodChallengeSetup;
+  podChallengeStats: PodChallengeStats;
   /** Challenges on a pod the viewer may see (managers see drafts too). */
   podChallenges: Array<PodChallenge>;
+  /** Every pod challenge; statuses narrows it (Live Monitor, Results). */
+  podChallengesTable: PodChallengeTablePage;
   /** Admin: partners matching this pod's category (and city, where they have one). */
   podChangeCandidates: Array<PodChangeCandidate>;
   /** Admin: one request, for the assign drawer's header. */
@@ -26108,8 +26190,19 @@ export type QueryChallengeArgs = {
 };
 
 
+export type QueryChallengeAuditTableArgs = {
+  challenge_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryChallengeCategoryMappingArgs = {
   category_id: Scalars['ID']['input'];
+};
+
+
+export type QueryChallengeNotificationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -27784,6 +27877,12 @@ export type QueryPodChallengeSetupArgs = {
 
 export type QueryPodChallengesArgs = {
   pod_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodChallengesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 

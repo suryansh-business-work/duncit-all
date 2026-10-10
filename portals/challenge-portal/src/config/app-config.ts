@@ -29,6 +29,11 @@ export const appConfig = {
     { label: 'Tool Presets', labelKey: 'shell.nav.toolPresets', to: '/tools/presets', icon: 'tune' },
     { label: 'Category Mapping', labelKey: 'shell.nav.categoryMapping', to: '/category-mapping', icon: 'hub' },
     { label: 'Challenge Templates', labelKey: 'shell.nav.challengeTemplates', to: '/challenges', icon: 'challenge' },
+    { label: 'Pod Challenges', labelKey: 'shell.nav.podChallenges', to: '/pod-challenges', icon: 'flag' },
+    { label: 'Live Challenge Monitor', labelKey: 'shell.nav.challengeLiveMonitor', to: '/live', icon: 'speed' },
+    { label: 'Results & Leaderboards', labelKey: 'shell.nav.challengeResults', to: '/results', icon: 'insights' },
+    { label: 'Notifications', labelKey: 'shell.nav.notifications', to: '/notifications', icon: 'notifications' },
+    { label: 'Audit Logs', labelKey: 'shell.nav.challengeAuditLogs', to: '/audit-logs', icon: 'timeline' },
     {
       label: 'Leaderboard', labelKey: 'shell.nav.leaderboard',
       icon: 'trophy',

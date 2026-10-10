@@ -26,6 +26,7 @@
     "@duncit/auto-pods": "workspace:*",
     "@duncit/buttons": "workspace:*",
     "@duncit/category": "workspace:*",
+    "@duncit/challenges": "workspace:*",
     "@duncit/club-form": "workspace:*",
     "@duncit/coupons": "workspace:*",
     "@duncit/dashboard": "workspace:*",

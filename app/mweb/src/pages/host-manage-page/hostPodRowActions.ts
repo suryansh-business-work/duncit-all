@@ -13,6 +13,8 @@ export interface HostPodRowActions {
   onClubAdmin: () => void;
   /** Opens the pod's attendance PAGE — a route, so mWeb owns the navigation. */
   onSeeAttendance: () => void;
+  /** Opens the pod's Challenges PAGE in Host Studio — a route, same as above. */
+  onChallenges: () => void;
   /** Opens the pod's "Slot Request Sent" PAGE — a route, same as above. */
   onSlotRequest: () => void;
   /** "Request Change Host" — asks Duncit for a different host instead of

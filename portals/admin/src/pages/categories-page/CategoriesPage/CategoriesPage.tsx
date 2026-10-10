@@ -16,6 +16,7 @@ import CategoriesColumns from '../CategoriesColumns';
 import CategoryDeleteDialog from '../CategoryDeleteDialog';
 import AllVibeIconCard from '../AllVibeIconCard';
 import VibeHeadingCard from '../VibeHeadingCard';
+import CategoryChallengeTools from '../CategoryChallengeTools';
 import { buildCreateInput, buildMediaFromText, buildUpdateInput } from '../helpers';
 import { useTranslation } from '@duncit/shell';
 import { editFormFor, type DialogState } from './dialogState';
@@ -24,6 +25,7 @@ export default function CategoriesPage() {
   const { t } = useTranslation();
   const [superSel, setSuperSel] = useState<CatItem | null>(null);
   const [catSel, setCatSel] = useState<CatItem | null>(null);
+  const [subSel, setSubSel] = useState<CatItem | null>(null);
 
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [busy, setBusy] = useState(false);
@@ -108,10 +110,13 @@ export default function CategoriesPage() {
       if (delTarget.level === 'SUPER' && superSel?.id === delTarget.item.id) {
         setSuperSel(null);
         setCatSel(null);
+        setSubSel(null);
       }
       if (delTarget.level === 'CATEGORY' && catSel?.id === delTarget.item.id) {
         setCatSel(null);
+        setSubSel(null);
       }
+      if (subSel?.id === delTarget.item.id) setSubSel(null);
       setToast(t('shell.common.deleted'));
       setDelTarget(null);
     } catch (e: any) {
@@ -149,12 +154,16 @@ export default function CategoriesPage() {
       <CategoriesColumns
         superSel={superSel}
         catSel={catSel}
+        subSel={subSel}
         setSuperSel={setSuperSel}
         setCatSel={setCatSel}
+        setSubSel={setSubSel}
         openCreate={openCreate}
         openEdit={openEdit}
         remove={remove}
       />
+
+      <CategoryChallengeTools category={subSel ?? catSel ?? superSel} />
 
       <CategoryFormDialog
         dialog={dialog}

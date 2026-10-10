@@ -157,4 +157,7 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // The monthly Pod Request limit became admin-only (no partner setting to fall
   // back to): an empty admin field now means the default of 10.
   "podRequests.overrideHint": ["Leave empty to use the partner's own setting."],
+  // Challenges became Challenge Templates (the universal tool engine), and the
+  // create button now reads "New template".
+  "challenge.table.empty": ["No challenges yet. Create one with “New challenge”."],
 };

@@ -25,6 +25,7 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/buttons": "workspace:*",
     "@duncit/category": "workspace:*",
+    "@duncit/challenges": "workspace:*",
     "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/logs": "workspace:*",

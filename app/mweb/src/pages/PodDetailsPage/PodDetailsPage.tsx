@@ -10,6 +10,7 @@ import StickyPodActionPanel from '../pod-details-page/StickyPodActionPanel';
 import PodDetailAccordions from '../pod-details-page/PodDetailAccordions';
 import PodMapSection from '../../components/pod-details/PodMapSection';
 import PodSocialBar from '../pod-details-page/PodSocialBar';
+import PodChallengesSection from '../../components/pod-challenge/PodChallengesSection';
 import AdSlot from '../../components/ads/AdSlot';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { useStudioMode } from '../../StudioModeContext';
@@ -114,6 +115,8 @@ export default function PodDetailsPage() {
       />
 
       <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => openPodPicker(pod.id)} categoryCrumbs={clubCategoryCrumbs} />
+
+      <PodChallengesSection podId={pod.id} />
 
       <PodMapSection pod={pod} location={location} venue={venue} onJoinMeeting={onJoinMeeting} />
 

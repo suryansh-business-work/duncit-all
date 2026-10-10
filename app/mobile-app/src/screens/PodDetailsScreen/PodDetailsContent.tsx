@@ -16,6 +16,8 @@ import type { usePublicFinance } from '@/hooks/usePublicFinance';
 import type { CartLineMeta } from '@/stores/cart.store';
 import type { RootStackParamList } from '@/navigation/types';
 
+import { PodChallengesSection } from '@/components/challenge/PodChallengesSection';
+
 import { PodShopSection } from './PodShopSection';
 import type { PodDetailActions } from './usePodDetailActions';
 
@@ -103,6 +105,8 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
           onOpenComments={props.onOpenComments}
         />
       </Reveal>
+      <YStack height={16} />
+      <PodChallengesSection podId={pod.id} />
       <PodShopSection
         pod={pod}
         showProducts={props.showProducts}

@@ -3,11 +3,14 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
 const RW = ['SUPER_ADMIN', 'CHALLENGE_MANAGER'];
+// Admin > Categories edits challenge mappings too, and its editor lists the
+// templates a category may default to.
+const READ = [...RW, 'CITY_ADMIN'];
 
 export const challengeResolvers = {
   Query: {
     challenges: async (_p: unknown, args: { search?: string | null }, ctx: GraphQLContext) => {
-      requireRole(ctx, RW);
+      requireRole(ctx, READ);
       return challengeService.list(args.search ?? null);
     },
     challengesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
@@ -39,6 +42,10 @@ export const challengeResolvers = {
     deleteChallenge: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return challengeService.remove(args.id);
+    },
+    duplicateChallenge: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return challengeService.duplicate(args.id);
     },
   },
 };

@@ -1,5 +1,8 @@
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
+import { logs } from '@duncit/logs';
+import { hostPodChallengesPath, mustSetUpChallenge } from '@duncit/utils';
+import { POD_CHALLENGE_SETUP } from '../host-pod-challenges-page/queries';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
@@ -28,6 +31,7 @@ import { usePartnerRequestPrefill } from './usePartnerRequestPrefill';
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
 export default function CreatePodPage() {
   const navigate = useNavigate();
+  const client = useApolloClient();
   const { t } = useTranslation();
   const { draftId } = useParams<{ draftId?: string }>();
   const { locationId: globalLocationId } = useAppLocation();
@@ -70,6 +74,16 @@ export default function CreatePodPage() {
     const res = await saveMut({ variables: { draft_id: id, input: payload } });
     return res.data.savePodDraft.id as string;
   };
+  /** Never blocks the publish it follows: an unreadable setup means "not required". */
+  const challengeRequired = async (podId: string) => {
+    try {
+      const res = await client.query({ query: POD_CHALLENGE_SETUP, variables: { podId }, fetchPolicy: 'network-only' });
+      return mustSetUpChallenge(res.data?.podChallengeSetup);
+    } catch (error) {
+      logs.mWeb.warn('create-pod', 'challengeSetup', { error });
+      return false;
+    }
+  };
   const publish = async (id: string, input: any) => {
     const res = await publishMut({ variables: { draft_id: id, input } });
     const created = res.data.publishPodDraft;
@@ -77,6 +91,9 @@ export default function CreatePodPage() {
     // the waiting page instead of Host Management (native twin, rule 27).
     if (created.venue_approval_status === 'PENDING') {
       navigate(`/host/pod-pending/${created.id}`);
+    } else if (await challengeRequired(created.id)) {
+      // The pod's category requires a challenge: take the host to set it up.
+      navigate(hostPodChallengesPath(created.id));
     } else {
       navigate('/host/manage');
     }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
-import { changeRequestMenuKey, splitHostPods } from '@duncit/utils';
+import { changeRequestMenuKey, hostPodChallengesPath, splitHostPods } from '@duncit/utils';
 import { useHostPodActions } from '@duncit/host-pod-actions';
 import { useRequestPodChange } from '@duncit/pod-change-requests';
 import { notifySuccess } from '../../components/notify';
@@ -53,6 +53,7 @@ export default function HostPodSections({
     actions: menuHandlers(pod),
     onClubAdmin: () => setClubAdminPod(pod),
     onSeeAttendance: () => navigate(`/host/pod/${pod.id}/attendance`),
+    onChallenges: () => navigate(hostPodChallengesPath(pod.id)),
     onSlotRequest: () => navigate(`/host/pod-pending/${pod.id}`),
     onRequestChange: () =>
       change.open({

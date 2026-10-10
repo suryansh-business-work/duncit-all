@@ -1,5 +1,5 @@
 import { Share } from 'react-native';
-import { profileUrl } from '@duncit/utils';
+import { podChallengeLiveLink, profileUrl } from '@duncit/utils';
 
 import { shareUrl } from '@/services/share-link';
 import { POD_WEB_BASE } from '@/utils/pod-format';
@@ -49,6 +49,17 @@ export async function shareProfile(userId: string, name: string, handle?: string
   const url = buildProfileUrl(handle || userId);
   try {
     await Share.share({ message: `${name} on Duncit\n${url}`, url, title: name });
+  } catch {
+    /* user cancelled */
+  }
+}
+
+/** Opens the OS share sheet for a challenge's live/result page. The link carries
+ * no authority: whoever opens it sees only what the server lets them see. */
+export async function shareChallenge(podId: string, challengeId: string, name: string) {
+  const url = podChallengeLiveLink(podId, challengeId, POD_WEB_BASE);
+  try {
+    await Share.share({ message: `${name}\n${url}`, url, title: name });
   } catch {
     /* user cancelled */
   }

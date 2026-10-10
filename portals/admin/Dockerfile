@@ -56,6 +56,7 @@ COPY packages/theme/package.json ./packages/theme/
 COPY packages/auth-tokens/package.json ./packages/auth-tokens/
 COPY packages/availability-calendar/package.json ./packages/availability-calendar/
 COPY packages/category/package.json ./packages/category/
+COPY packages/challenges/package.json ./packages/challenges/
 COPY packages/location/package.json ./packages/location/
 COPY packages/portal-pod-form/package.json ./packages/portal-pod-form/
 COPY packages/pod-form/package.json ./packages/pod-form/

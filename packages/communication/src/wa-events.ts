@@ -111,6 +111,22 @@ export const WA_EVENTS: readonly WaEvent[] = [
     params: ['Recipient name', 'Pod title', 'Pod', 'Date', 'Time', 'Refund Amount', 'Pod Link', 'Refund working days'],
   },
   {
+    key: 'USER_CHALLENGE_LIVE',
+    campaign: 'challenge_live_user',
+    audience: 'USER',
+    category: 'notification',
+    fires: 'A host starts a challenge on a pod the member joined',
+    params: ['Recipient name', 'Pod', 'Challenge', 'Challenge Link'],
+  },
+  {
+    key: 'USER_CHALLENGE_RESULT',
+    campaign: 'challenge_result_user',
+    audience: 'USER',
+    category: 'notification',
+    fires: 'A host publishes the final result of a challenge',
+    params: ['Recipient name', 'Challenge', 'Pod', 'Result Link'],
+  },
+  {
     key: 'USER_POD_REMINDER',
     campaign: 'pod_reminder_user',
     audience: 'USER',

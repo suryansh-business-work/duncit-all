@@ -7,6 +7,7 @@ import { canRejoin, podHistoryGate } from '@/utils/pod-history';
 import { PodHistoryActions } from '../PodHistoryActions';
 import { PodHistoryTimeline } from '../PodHistoryTimeline';
 import { PodProductOrdersCard } from '../PodProductOrdersCard';
+import { PodChallengesSection } from '@/components/challenge/PodChallengesSection';
 import { ReplacementNotice } from '../ReplacementNotice';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -74,6 +75,8 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
       </Card>
 
       <PodProductOrdersCard orders={productOrders ?? []} loading={ordersLoading ?? false} />
+
+      {pod?.id ? <PodChallengesSection podId={pod.id} finishedOnly /> : null}
 
       <Card title={t('mweb.podHistory.timeline')}>
         <PodHistoryTimeline item={item} />

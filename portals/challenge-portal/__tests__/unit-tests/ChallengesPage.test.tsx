@@ -2,7 +2,12 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { MutableRefObject, ReactNode } from 'react';
 import { renderWithProviders } from '../testkit';
-import { makeChallenge, deleteChallengeMock, challengeStatsMock } from '../mocks';
+import {
+  makeChallenge,
+  deleteChallengeMock,
+  duplicateChallengeMock,
+  challengeStatsMock,
+} from '../mocks';
 
 const refetchSpy = vi.hoisted(() => vi.fn());
 
@@ -17,17 +22,22 @@ vi.mock('../../src/pages/challenges/ChallengesTable', () => ({
     toolbarActions,
     onEdit,
     onDelete,
+    onDuplicate,
     refetchRef,
   }: {
     toolbarActions?: ReactNode;
     onEdit: (c: typeof sample) => void;
     onDelete: (c: typeof sample) => void;
+    onDuplicate: (c: typeof sample) => void;
     refetchRef: MutableRefObject<(() => void) | null>;
   }) => (
     <div>
       {toolbarActions}
       <button type="button" onClick={() => onEdit(sample)}>
         row-edit
+      </button>
+      <button type="button" onClick={() => onDuplicate(sample)}>
+        row-duplicate
       </button>
       <button type="button" onClick={() => onDelete(sample)}>
         row-delete
@@ -81,10 +91,15 @@ describe('ChallengesPage', () => {
     refetchSpy.mockReset();
   });
 
-  it('opens a blank form via "New challenge" and closes it', () => {
+  it('is titled Challenge Templates', () => {
+    renderWithProviders(<ChallengesPage />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Challenge Templates' })).toBeInTheDocument();
+  });
+
+  it('opens a blank form via "New template" and closes it', () => {
     renderWithProviders(<ChallengesPage />);
     expect(screen.queryByTestId('form-editing')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText('New challenge'));
+    fireEvent.click(screen.getByText('New template'));
     expect(screen.getByTestId('form-editing')).toHaveTextContent('new');
     fireEvent.click(screen.getByText('form-close'));
     expect(screen.queryByTestId('form-editing')).not.toBeInTheDocument();
@@ -99,15 +114,35 @@ describe('ChallengesPage', () => {
   it('onSaved calls the registered table refetch', () => {
     renderWithProviders(<ChallengesPage />);
     fireEvent.click(screen.getByText('set-refetch'));
-    fireEvent.click(screen.getByText('New challenge'));
+    fireEvent.click(screen.getByText('New template'));
     fireEvent.click(screen.getByText('form-saved'));
     expect(refetchSpy).toHaveBeenCalledTimes(1);
   });
 
   it('onSaved is a no-op when no refetch has been registered', () => {
     renderWithProviders(<ChallengesPage />);
-    fireEvent.click(screen.getByText('New challenge'));
+    fireEvent.click(screen.getByText('New template'));
     fireEvent.click(screen.getByText('form-saved'));
+    expect(refetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('duplicates a template and reloads the table to show the copy', async () => {
+    renderWithProviders(<ChallengesPage />, {
+      mocks: [duplicateChallengeMock({ id: 'c9' }), challengeStatsMock()],
+    });
+    fireEvent.click(screen.getByText('set-refetch'));
+    fireEvent.click(screen.getByText('row-duplicate'));
+    await waitFor(() => expect(refetchSpy).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows why a duplicate failed and leaves the table alone', async () => {
+    renderWithProviders(<ChallengesPage />, {
+      mocks: [duplicateChallengeMock({ id: 'c9', error: 'Template limit reached' })],
+    });
+    fireEvent.click(screen.getByText('set-refetch'));
+    fireEvent.click(screen.getByText('row-duplicate'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Template limit reached');
     expect(refetchSpy).not.toHaveBeenCalled();
   });
 

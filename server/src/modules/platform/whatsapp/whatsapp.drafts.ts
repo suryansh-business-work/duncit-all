@@ -33,6 +33,32 @@ export interface WaTemplateDraft {
 }
 
 export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
+  USER_CHALLENGE_LIVE: {
+    // UTILITY: it reaches only confirmed attendees of a pod they booked, about
+    // something happening at that pod right now.
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit challenge is now LIVE! Pod: {{2}}. Challenge: {{3}}. ' +
+      'Follow live scores and participate here: {{4}} ' +
+      'Enjoy your Pod! — Team Duncit',
+    sample:
+      'Hi Aarav, your Duncit challenge is now LIVE! Pod: Sunday Badminton Doubles. Challenge: Doubles Knockout. ' +
+      'Follow live scores and participate here: https://mweb.duncit.com/pod/66f0a1/challenges/66f0b2/live ' +
+      'Enjoy your Pod! — Team Duncit',
+  },
+  USER_CHALLENGE_RESULT: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the results for {{2}} are now available! Pod: {{3}}. ' +
+      'View final scores and winners: {{4}} ' +
+      'Thanks for participating with Duncit!',
+    sample:
+      'Hi Aarav, the results for Doubles Knockout are now available! Pod: Sunday Badminton Doubles. ' +
+      'View final scores and winners: https://mweb.duncit.com/pod/66f0a1/challenges/66f0b2/live ' +
+      'Thanks for participating with Duncit!',
+  },
   USER_CONTACT_INVITE: {
     // MARKETING: everything but the city launch below tells somebody about a pod
     // they are already part of, and this one arrives at a number that has never

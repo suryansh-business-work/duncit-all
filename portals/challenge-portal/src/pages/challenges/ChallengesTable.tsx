@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useTranslation } from '@duncit/shell';
 import {
   DuncitTable,
@@ -18,6 +19,7 @@ interface Props {
   toolbarActions?: ReactNode;
   onEdit: (challenge: Challenge) => void;
   onDelete: (challenge: Challenge) => void;
+  onDuplicate: (challenge: Challenge) => void;
 }
 
 const getChallengeRowId = (c: Challenge) => c.id;
@@ -63,6 +65,7 @@ export default function ChallengesTable({
   toolbarActions,
   onEdit,
   onDelete,
+  onDuplicate,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const superOptions = useLevelOptions('SUPER');
@@ -106,16 +109,42 @@ export default function ChallengesTable({
         options: subOptions,
         valueGetter: (c) => dash(c.sub_category_name),
       },
+      {
+        field: 'participant_mode',
+        headerName: t('challenge.templates.colMode'),
+        type: 'text',
+        width: 130,
+        sortable: false,
+        filterable: false,
+        valueGetter: (c) => t(c.participant_mode === 'TEAM' ? 'challenge.templates.modeTeam' : 'challenge.templates.modeIndividual'),
+      },
+      {
+        field: 'tool_instances',
+        headerName: t('challenge.templates.colTools'),
+        type: 'text',
+        minWidth: 200,
+        flex: 1,
+        sortable: false,
+        filterable: false,
+        valueGetter: (c) => c.tool_instances.map((i) => i.label).join(', ') || '—',
+      },
       activeChipColumn<Challenge>({ width: 120, outlineInactive: true }),
       dateColumn<Challenge>(),
       actionsColumn<Challenge>({
         onEdit,
         onDelete,
         edit: { ariaLabel: t('challenge.table.editAria') },
+        renderExtra: (c) => (
+          <Tooltip title={t('challenge.templates.duplicate')}>
+            <IconButton size="small" aria-label={t('challenge.templates.duplicate')} onClick={() => onDuplicate(c)}>
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ),
         delete: { ariaLabel: t('challenge.table.deleteAria') },
       }),
     ];
-  }, [onEdit, onDelete, superOptions, categoryOptions, subOptions, t]);
+  }, [onEdit, onDelete, onDuplicate, superOptions, categoryOptions, subOptions, t]);
 
   return (
     <DuncitTable<Challenge>

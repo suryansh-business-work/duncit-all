@@ -61,6 +61,7 @@ COPY packages/geo/package.json ./packages/geo/
 COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
 COPY packages/category/package.json ./packages/category/
+COPY packages/challenges/package.json ./packages/challenges/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/ai-monitoring/package.json ./packages/ai-monitoring/

@@ -17,6 +17,7 @@
 export const CATALOGUE_FALLBACK: Record<string, string> = {
   // --- Shared field labels -------------------------------------------------
   'email.field.pod': 'Pod',
+  'email.field.challenge': 'Challenge',
   'email.field.podTitle': 'Pod',
   'email.field.date': 'Date',
   'email.field.time': 'Time',
@@ -81,6 +82,8 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
 
   // --- Shared buttons ------------------------------------------------------
   'email.cta.viewPod': 'View the pod',
+  'email.cta.viewChallenge': 'Watch the live challenge',
+  'email.cta.viewChallengeResult': 'View final scores',
   'email.cta.openApp': 'Open Duncit',
   'email.cta.openPartners': 'Open the Partners console',
   'email.cta.giveFeedback': 'Leave your feedback',
@@ -164,6 +167,12 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
     'We have had to cancel the pod below. The refund due to you is shown here, and you do not need to do anything to claim it.',
 
   // --- Member: the rest ----------------------------------------------------
+  'email.userChallengeLive.title': 'Your challenge is now live',
+  'email.userChallengeLive.body':
+    'The challenge below has just started at your pod. Follow the live scores, and take part where the host has opened voting.',
+  'email.userChallengeResult.title': 'The results are in',
+  'email.userChallengeResult.body':
+    'The final result of the challenge below has been published. See the winners and the full leaderboard.',
   'email.userPodReminder.title': 'Your pod is coming up',
   'email.userPodReminder.body':
     'This is your reminder for the pod below. Bring what you need, get there a few minutes early, and your host will check you in on the door.',

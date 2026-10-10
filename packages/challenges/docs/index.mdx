@@ -1,0 +1,83 @@
+---
+name: '@duncit/challenges'
+summary: 'The MUI challenge editors shared by the Challenge Portal and Admin > Categories: the category mapping editor and the universal-tool settings editor.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/challenge-portal'
+  - 'portals/admin'
+exports:
+  - 'ChallengeMappingEditor'
+  - 'ChallengeMappingForm'
+  - 'buildChallengeMappingSchema'
+  - 'ToolConfigFields'
+  - 'CriteriaEditor'
+  - 'parseToolFields'
+  - 'parseToolConfig'
+  - 'withDefaults'
+  - 'toolConfigIssues'
+  - 'CHALLENGE_MAPPING_EDITOR'
+  - 'UPSERT_CHALLENGE_MAPPING'
+  - 'CLEAR_CHALLENGE_MAPPING'
+  - 'useChallengeTranslation'
+---
+
+The **Universal Challenge Engine** is configuration, not code per sport: a
+handful of reusable tools (Score Counter, Timer, Voting, Judge Scoring, …) are
+mapped to categories and combined into templates. This package holds the two
+editors more than one surface needs, so every surface edits the same server
+rows the same way.
+
+The engine itself — lifecycle, scoring, ranking, tie-breaks, permissions —
+lives on the **server only** (`server/src/modules/engagement/challenge`). No
+client ever computes a score; it renders what the server returns.
+
+## The category mapping editor
+
+One node of the category tree (Super, Category or Sub) and the tools it
+allows. Resolution walks **Sub → Category → Super** and the nearest row wins,
+so a subcategory without its own row inherits. Saving creates the node's own
+row; "Inherit from parent" removes it.
+
+```tsx
+import { ChallengeMappingEditor } from '@duncit/challenges';
+
+<ChallengeMappingEditor categoryId={categoryId} onSaved={refetchList} />;
+```
+
+Presets and the default template only offer what the selected tools can run;
+unmapping a tool drops the presets and default template that need it. The
+server re-checks every rule (only active tools may be newly mapped, presets must
+belong to an allowed tool, the default template's tools must all be allowed).
+
+## The tool settings editor
+
+`ToolConfigFields` renders any tool's settings from the field list the server
+publishes (`ChallengeTool.config_schema_json`). It is controlled — the parent
+form owns the config object — so tool defaults, presets and a template's
+per-tool overrides all use it.
+
+```tsx
+import { ToolConfigFields, parseToolFields, toolConfigIssues } from '@duncit/challenges';
+
+const fields = parseToolFields(tool.config_schema_json);
+<ToolConfigFields
+  fields={fields}
+  value={config}
+  onChange={setConfig}
+  issues={toolConfigIssues(fields, config)}
+/>;
+```
+
+`toolConfigIssues` mirrors the server's checks (ranges, non-zero score buttons,
+complete judging criteria) so a doomed save is stopped early; the server
+remains the authority.
+
+## Copy
+
+All copy is `challenge.*` in `@duncit/i18n`. The package layers that bundle
+over the host surface's provider (`createBundleTranslation`), so Admin, whose
+provider only knows `admin.*`, still resolves it — and a server translation of
+any key wins.

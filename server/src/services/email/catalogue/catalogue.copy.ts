@@ -15,6 +15,7 @@
 /** Label/value line captions, shared across every audience. */
 export const FIELD = {
   pod: 'email.field.pod',
+  challenge: 'email.field.challenge',
   podTitle: 'email.field.podTitle',
   date: 'email.field.date',
   time: 'email.field.time',
@@ -83,6 +84,8 @@ export const LABEL = {
 /** Button captions. One per action, never one per template. */
 export const CTA = {
   viewPod: 'email.cta.viewPod',
+  viewChallenge: 'email.cta.viewChallenge',
+  viewChallengeResult: 'email.cta.viewChallengeResult',
   openApp: 'email.cta.openApp',
   openPartners: 'email.cta.openPartners',
   giveFeedback: 'email.cta.giveFeedback',

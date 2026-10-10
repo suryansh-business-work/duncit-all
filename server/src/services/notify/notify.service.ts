@@ -56,6 +56,12 @@ export interface NotifyInput extends WaSendInput {
    * a positional value the email wants to say differently.
    */
   vars?: Record<string, string>;
+  /**
+   * Channels the sender has switched off for this message (a host's own
+   * "send WhatsApp / send email automatically" toggles). Absent sends both, as
+   * every existing call site does.
+   */
+  skip?: { whatsapp?: boolean; email?: boolean };
 }
 
 export interface NotifyOutcome {
@@ -126,13 +132,16 @@ async function mailLeg(input: NotifyInput): Promise<SendResult | null> {
  * starting in an hour.
  */
 export async function notifyEvent(input: NotifyInput): Promise<NotifyOutcome> {
-  const { email, vars, ...wa } = input;
+  const { email, vars, skip, ...wa } = input;
   const [waOutcome, mail] = await Promise.all([
-    whatsappService.send(wa),
-    mailLeg({ ...wa, email, vars }),
+    skip?.whatsapp ? WA_SWITCHED_OFF : whatsappService.send(wa),
+    skip?.email ? null : mailLeg({ ...wa, email, vars }),
   ]);
   return { wa: waOutcome, mail };
 }
+
+/** The WhatsApp leg's outcome when the sender switched that channel off. */
+const WA_SWITCHED_OFF: WaSendOutcome = { status: 'SKIPPED', reason: 'Channel switched off by the sender', message_id: '' };
 
 const NOTIFY_QUEUE = 'notify';
 

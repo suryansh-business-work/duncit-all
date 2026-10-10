@@ -609,6 +609,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       cartSettings: 'Cart Settings',
       catalog: 'Catalog',
       categories: 'Categories',
+      categoryMapping: 'Category Mapping',
+      challengeAuditLogs: 'Audit Logs',
+      challengeLiveMonitor: 'Live Challenge Monitor',
+      challengeResults: 'Results & Leaderboards',
+      challengeTemplates: 'Challenge Templates',
       challenges: 'Challenges',
       chatWithUs: 'Chat with Us',
       clubAdminMeetings: 'Club Admin Meetings',
@@ -753,6 +758,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       podMonitoringAi: 'Pod Monitoring (AI)',
       podPlans: 'Pod Plans',
       podProfit: 'Pod Profit',
+      podChallenges: 'Pod Challenges',
       pods: 'Pods',
       podsDashboard: 'Pods Dashboard',
       podSettings: 'Pod Settings',
@@ -822,6 +828,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       sonarqubeSettings: 'SonarQube Settings',
       unitTestCoverage: 'Unit Test Coverage',
       tickets: 'Tickets',
+      toolMaster: 'Tool Master',
+      toolPresets: 'Tool Presets',
       tools: 'Tools',
       transactions: 'Transactions',
       translations: 'Translations',
@@ -1508,6 +1516,10 @@ export const SHELL_BUNDLE: NestedCatalogue = {
      * both consoles. */
     podMonitoring: {
       aiMonitoring: 'AI Monitoring',
+    },
+    // The pod actions menu's Challenges entry on portal surfaces.
+    challenge: {
+      menuItem: 'Challenges',
     },
     // The attendance page (Host Studio > Your Pods > three dots > See Marked
     // Attendance, and the Club Admin's Mark Attendance section). Attendance is

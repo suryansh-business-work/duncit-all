@@ -39,8 +39,10 @@ const item = (over: Partial<CatItem> = {}): CatItem => ({
 interface Props {
   superSel: CatItem | null;
   catSel: CatItem | null;
+  subSel: CatItem | null;
   setSuperSel: (it: CatItem | null) => void;
   setCatSel: (it: CatItem | null) => void;
+  setSubSel: (it: CatItem | null) => void;
   openCreate: (level: Level, parentId: string | null) => void;
   openEdit: (level: Level, parentId: string | null, item: CatItem) => void;
   remove: (level: Level, item: CatItem) => void;
@@ -50,8 +52,10 @@ const setup = (over: Partial<Props> = {}) => {
   const props: Props = {
     superSel: null,
     catSel: null,
+    subSel: null,
     setSuperSel: vi.fn(),
     setCatSel: vi.fn(),
+    setSubSel: vi.fn(),
     openCreate: vi.fn(),
     openEdit: vi.fn(),
     remove: vi.fn(),
@@ -145,13 +149,15 @@ describe('CategoriesColumns', () => {
 
   it('scopes the SUB column to the picked category, with its title hard-coded', () => {
     const catSel = item({ id: 'c1', name: 'Cricket' });
-    setup({ catSel });
+    const props = setup({ catSel });
     expect(panelProps.SUB.title).toBe('Sub-Categories');
     expect(panelProps.SUB.parentId).toBe('c1');
     expect(panelProps.SUB.parentName).toBe('Cricket');
-    // The SUB column never drives a fourth column, so it never reports a selection.
+    // Picking a sub-category selects it (it drives the Challenge Tools section).
     expect(panelProps.SUB.selectedId).toBeNull();
-    expect(panelProps.SUB.onSelect(item({ id: 'b1', level: 'SUB' }))).toBeUndefined();
+    const t20 = item({ id: 'b1', level: 'SUB' });
+    panelProps.SUB.onSelect(t20);
+    expect(props.setSubSel).toHaveBeenCalledWith(t20);
   });
 
   it('guards SUB create/edit behind a picked category', () => {

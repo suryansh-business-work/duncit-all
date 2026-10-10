@@ -15,6 +15,7 @@ import { useTranslation } from '../../../i18n/useTranslation';
 import SectionHeader from '../../../components/SectionHeader';
 import PodHistoryTimeline from '../PodHistoryTimeline';
 import PodProductOrdersCard from '../PodProductOrdersCard';
+import PodChallengesSection from '../../../components/pod-challenge/PodChallengesSection';
 import ReplacementNotice from '../ReplacementNotice';
 import { STATUS_CHIP } from '../statusChip';
 import type { PodHistoryItem } from '../queries';
@@ -131,6 +132,8 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
       </Card>
 
       <PodProductOrdersCard podId={pod?.id} />
+
+      {pod?.id && <PodChallengesSection podId={pod.id} finishedOnly />}
 
       <Card data-testid="ph-timeline-card">
         <CardContent>

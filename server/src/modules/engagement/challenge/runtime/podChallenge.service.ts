@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { ChallengeModel } from '../challenge.model';
+import { toolDefinition } from '../tools/challengeTool.catalogue';
 import { normalizeToolConfig, parseConfigJson, type ToolConfig } from '../tools/challengeTool.config';
 import { PodChallengeModel, type PodChallengeDoc } from './podChallenge.model';
 import { accessFor, assertManage, assertView, canView, loadPod, type PodRef } from './podChallenge.access';
@@ -44,7 +45,9 @@ export interface RosterInput {
 }
 
 const OPEN: readonly ChallengeStatus[] = ['DRAFT', 'SCHEDULED', 'LIVE', 'PAUSED'];
-const STATE_TOOLS = new Set(['TIMER', 'VOTING', 'RATING']);
+/** Tools that keep live state (a clock, an open window, a current question, picks). */
+const STATEFUL_INPUTS = new Set(['CLOCK', 'VOTE', 'RATE', 'POLL', 'QUIZ', 'BUZZ', 'PICK']);
+const isStateful = (toolType: string) => STATEFUL_INPUTS.has(toolDefinition(toolType)?.input ?? 'NONE');
 
 function bad(message: string): never {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -144,7 +147,7 @@ export const podChallengeService = {
       participant_mode: tpl.participant_mode,
       tools,
       winner_rules: tpl.winner_rules,
-      tool_state: tools.filter((t) => STATE_TOOLS.has(t.tool_type)).map((t) => ({ instance_id: t.instance_id })),
+      tool_state: tools.filter((t) => isStateful(t.tool_type)).map((t) => ({ instance_id: t.instance_id })),
       show_on_pod_details: eligibility.mapping?.show_on_pod_details_default ?? true,
       audience_interaction_enabled: eligibility.mapping?.allow_audience_voting ?? false,
       created_by: user.id,

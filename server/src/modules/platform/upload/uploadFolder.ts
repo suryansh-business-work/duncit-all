@@ -67,6 +67,7 @@ const ROUTES: Record<string, Route> = {
   users: r('users', 'user', 'avatar'),
   pets: r('users', 'user', 'pets'),
   posts: r('users', 'user', 'posts'),
+  'challenge-submissions': r('users', 'user', 'challenge_submissions'),
   hosts: r('users', 'user', 'host'),
   'hosts/photo': r('users', 'user', 'host'),
   'hosts/docs': r('users', 'user', 'host_documents'),

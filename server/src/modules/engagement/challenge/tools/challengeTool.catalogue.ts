@@ -37,12 +37,55 @@ export const CHALLENGE_TOOL_TYPES = [
 export type ChallengeToolType = (typeof CHALLENGE_TOOL_TYPES)[number];
 
 /** How a tool turns its events into one number per competitor. */
-export type ToolMetric = 'SUM' | 'AGGREGATE' | 'VOTE_COUNT' | 'AVERAGE' | 'JUDGE_AVERAGE' | 'NONE';
+export type ToolMetric =
+  | 'SUM'
+  | 'AGGREGATE'
+  | 'VOTE_COUNT'
+  | 'AVERAGE'
+  | 'JUDGE_AVERAGE'
+  /** Points of the tasks/checkpoints marked done. */
+  | 'ITEMS'
+  /** Points of the questions answered correctly. */
+  | 'QUIZ'
+  /** Points for each buzz round won. */
+  | 'BUZZ'
+  /** A weighted sum of the other tools' metrics. */
+  | 'FORMULA'
+  | 'NONE';
 
 /** What an operator does with a tool while the challenge is live. */
-export type ToolInput = 'INCREMENT' | 'SET_VALUE' | 'VOTE' | 'RATE' | 'JUDGE' | 'CLOCK' | 'ROUND' | 'NONE';
+export type ToolInput =
+  | 'INCREMENT'
+  | 'SET_VALUE'
+  | 'VOTE'
+  | 'RATE'
+  | 'JUDGE'
+  | 'CLOCK'
+  | 'ROUND'
+  | 'CHECK'
+  | 'CHECKPOINT'
+  | 'POLL'
+  | 'QUIZ'
+  | 'BUZZ'
+  | 'PICK'
+  | 'SUBMIT'
+  | 'NONE';
 
-export type ConfigFieldKind = 'number' | 'boolean' | 'text' | 'select' | 'number_list' | 'criteria';
+export type ConfigFieldKind =
+  | 'number'
+  | 'boolean'
+  | 'text'
+  | 'select'
+  | 'number_list'
+  | 'criteria'
+  /** Labelled tasks or checkpoints, each worth points. */
+  | 'items'
+  /** Labelled choices (a poll's options). */
+  | 'options'
+  /** Quiz questions: text, choices, the correct one, and points. */
+  | 'questions'
+  /** Weights per scoring tool type (a formula's terms). */
+  | 'weights';
 
 /** One editable setting of a tool. Labels are localized on the client by key. */
 export interface ConfigField {
@@ -82,6 +125,23 @@ const COUNTER_FIELDS = (unit: string, increments: number[], counts: boolean): Co
   { key: 'max_value', kind: 'number', default: 0, min: 0 },
   ...SCORING_FIELDS(counts),
 ];
+
+/** Tool types a Custom Formula can weigh: every one that yields a number, except formulas themselves. */
+export const FORMULA_SOURCE_TYPES = [
+  'SCORE_COUNTER',
+  'NUMERIC_COUNTER',
+  'PENALTY_BONUS',
+  'VOTING',
+  'RATING',
+  'JUDGE_SCORING',
+  'MEASUREMENT',
+  'TIMER',
+  'RANKING',
+  'CHECKLIST',
+  'CHECKPOINT',
+  'QUIZ',
+  'BUZZER',
+] as const;
 
 export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   {
@@ -173,13 +233,16 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
     type: 'SUBMISSION',
     name: 'Submission',
     description: 'Images, videos, audio or artwork submitted by competitors.',
-    engine_ready: false,
+    engine_ready: true,
     metric: 'NONE',
-    input: 'NONE',
+    input: 'SUBMIT',
     live_updates: true,
     input_types: ['MEDIA'],
     output_types: ['GALLERY'],
-    fields: [],
+    fields: [
+      { key: 'media_kind', kind: 'select', default: 'ANY', options: ['ANY', 'IMAGE', 'VIDEO', 'AUDIO'] },
+      { key: 'allow_caption', kind: 'boolean', default: true },
+    ],
   },
   {
     type: 'LEADERBOARD',
@@ -224,49 +287,62 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
     type: 'QUIZ',
     name: 'Quiz / Answer Tool',
     description: 'Questions and answers with automatic marks.',
-    engine_ready: false,
-    metric: 'NONE',
-    input: 'NONE',
+    engine_ready: true,
+    metric: 'QUIZ',
+    input: 'QUIZ',
     live_updates: true,
     input_types: ['ANSWER'],
     output_types: ['SCORE'],
-    fields: [],
+    fields: [
+      {
+        key: 'questions',
+        kind: 'questions',
+        default: [{ key: 'q1', label: 'Question 1', options: ['Option A', 'Option B'], correct: 0, points: 1 }],
+      },
+      ...SCORING_FIELDS(true),
+    ],
   },
   {
     type: 'BUZZER',
     name: 'Buzzer',
     description: 'Fastest response wins the turn.',
-    engine_ready: false,
-    metric: 'NONE',
-    input: 'NONE',
+    engine_ready: true,
+    metric: 'BUZZ',
+    input: 'BUZZ',
     live_updates: true,
     input_types: ['BUZZ'],
     output_types: ['ORDER'],
-    fields: [],
+    fields: [{ key: 'points_per_win', kind: 'number', default: 0, min: 0, max: 1000 }, ...SCORING_FIELDS(false)],
   },
   {
     type: 'CHECKLIST',
     name: 'Checklist',
     description: 'Task completion tracking.',
-    engine_ready: false,
-    metric: 'NONE',
-    input: 'NONE',
+    engine_ready: true,
+    metric: 'ITEMS',
+    input: 'CHECK',
     live_updates: true,
     input_types: ['CHECK'],
     output_types: ['COUNT'],
-    fields: [],
+    fields: [
+      { key: 'items', kind: 'items', default: [{ key: 'i1', label: 'Task 1', points: 1 }] },
+      ...SCORING_FIELDS(true),
+    ],
   },
   {
     type: 'CHECKPOINT',
     name: 'Checkpoint Tool',
     description: 'QR-based checkpoints along a course.',
-    engine_ready: false,
-    metric: 'NONE',
-    input: 'NONE',
+    engine_ready: true,
+    metric: 'ITEMS',
+    input: 'CHECKPOINT',
     live_updates: true,
-    input_types: ['SCAN'],
+    input_types: ['SCAN', 'CHECK'],
     output_types: ['COUNT'],
-    fields: [],
+    fields: [
+      { key: 'items', kind: 'items', default: [{ key: 'i1', label: 'Checkpoint 1', points: 1 }] },
+      ...SCORING_FIELDS(true),
+    ],
   },
   {
     type: 'MEASUREMENT',
@@ -316,37 +392,49 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
     type: 'RANDOM_PICKER',
     name: 'Random Picker',
     description: 'Random selection of a competitor or option.',
-    engine_ready: false,
+    engine_ready: true,
     metric: 'NONE',
-    input: 'NONE',
+    input: 'PICK',
     live_updates: true,
     input_types: [],
     output_types: ['PICK'],
-    fields: [],
+    fields: [{ key: 'without_repeats', kind: 'boolean', default: true }],
   },
   {
     type: 'POLL',
     name: 'Poll Tool',
     description: 'Polls and preferences.',
-    engine_ready: false,
+    engine_ready: true,
     metric: 'NONE',
-    input: 'NONE',
+    input: 'POLL',
     live_updates: true,
     input_types: ['VOTE'],
     output_types: ['VOTES'],
-    fields: [],
+    fields: [
+      {
+        key: 'options',
+        kind: 'options',
+        default: [
+          { key: 'o1', label: 'Option 1' },
+          { key: 'o2', label: 'Option 2' },
+        ],
+      },
+    ],
   },
   {
     type: 'CUSTOM_FORMULA',
     name: 'Custom Formula',
     description: 'Weighted scoring and calculations.',
-    engine_ready: false,
-    metric: 'NONE',
+    engine_ready: true,
+    metric: 'FORMULA',
     input: 'NONE',
-    live_updates: false,
+    live_updates: true,
     input_types: [],
     output_types: ['SCORE'],
-    fields: [],
+    fields: [
+      { key: 'terms', kind: 'weights', default: [{ type: 'SCORE_COUNTER', weight: 1 }], options: FORMULA_SOURCE_TYPES },
+      ...SCORING_FIELDS(true),
+    ],
   },
 ];
 

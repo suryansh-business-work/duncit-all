@@ -9,6 +9,11 @@ export const podChallengeTypeDefs = gql`
     input_kind: String!
     label: String!
     config_json: String!
+    """
+    What the tool shows beyond a number, as a JSON object: a poll's tallies,
+    the buzz order, the quiz's open question, ticked tasks, picks, the gallery.
+    """
+    state_json: String!
     clock_running: Boolean!
     "Elapsed clock time at server_now; add (now - server_now) while running."
     clock_elapsed_ms: Float!
@@ -53,6 +58,8 @@ export const podChallengeTypeDefs = gql`
     kind: String!
     candidate_id: String!
     value: Float!
+    "The question a quiz answer is for, or the buzz round a buzz is in."
+    scope_key: String!
   }
 
   "What the current viewer may do — decided on the server."
@@ -61,6 +68,8 @@ export const podChallengeTypeDefs = gql`
     is_staff: Boolean!
     is_attendee: Boolean!
     is_judge: Boolean!
+    "The competitor this viewer is or plays for ('' for a spectator)."
+    my_competitor_id: String!
     can_interact: Boolean!
     can_judge: Boolean!
     "Lifecycle actions available to a manager right now."
@@ -194,6 +203,25 @@ export const podChallengeTypeDefs = gql`
     reason: String
   }
 
+  "Where a checkpoint's QR points. Hosts only: the code inside proves a competitor reached it."
+  type PodChallengeCheckpointLink {
+    item_key: String!
+    label: String!
+    url: String!
+    "A PNG data URL of the QR code for this link."
+    qr_data_url: String!
+  }
+
+  input PodChallengeEntryInput {
+    "Hosts only: submit on this competitor's behalf."
+    competitor_id: String
+    "An https link from the media store (upload first)."
+    media_url: String!
+    "IMAGE, VIDEO or AUDIO."
+    media_type: String!
+    caption: String
+  }
+
   input PodChallengeCriterionInput {
     key: String!
     value: Float!
@@ -205,6 +233,8 @@ export const podChallengeTypeDefs = gql`
     podChallenge(id: ID!): PodChallenge
     podChallengeSetup(pod_id: ID!): PodChallengeSetup!
     podChallengeScoreLog(challenge_id: ID!, limit: Int): [PodChallengeScoreEntry!]!
+    "Hosts only: the link and QR to post at each checkpoint of a Checkpoint tool."
+    podChallengeCheckpointLinks(id: ID!, tool_instance_id: String!): [PodChallengeCheckpointLink!]!
     "Managers only: who was told what about this challenge, newest first."
     podChallengeNotifications(challenge_id: ID!): [PodChallengeNoticeBatch!]!
   }
@@ -229,6 +259,32 @@ export const podChallengeTypeDefs = gql`
       candidate_id: String!
       scores: [PodChallengeCriterionInput!]!
     ): PodChallenge!
+    "Host: tick or untick one task/checkpoint for a competitor (a reason is needed after the end)."
+    setPodChallengeItem(
+      id: ID!
+      tool_instance_id: String!
+      competitor_id: String!
+      item_key: String!
+      done: Boolean!
+      reason: String
+    ): PodChallenge!
+    "Competitor: check in at a checkpoint with the code its QR link carries."
+    reachPodChallengeCheckpoint(id: ID!, tool_instance_id: String!, code: String!): PodChallenge!
+    "Attendee: pick one poll option (picking again moves the vote)."
+    castPodChallengePoll(id: ID!, tool_instance_id: String!, option_key: String!): PodChallenge!
+    "Host: open one quiz question for answers, or close the open one (question_key null)."
+    controlPodChallengeQuiz(id: ID!, tool_instance_id: String!, question_key: String): PodChallenge!
+    "Competitor: answer the open question. The first answer stands."
+    answerPodChallengeQuiz(id: ID!, tool_instance_id: String!, option_index: Int!): PodChallenge!
+    "Host: arm the buzzer for a fresh round, or disarm it."
+    controlPodChallengeBuzzer(id: ID!, tool_instance_id: String!, arm: Boolean!): PodChallenge!
+    "Competitor: buzz. The server orders the presses."
+    buzzPodChallenge(id: ID!, tool_instance_id: String!): PodChallenge!
+    "Host: draw one competitor at random on the server, or reset the draw."
+    pickPodChallengeRandom(id: ID!, tool_instance_id: String!, reset: Boolean): PodChallenge!
+    "Competitor (or host on their behalf): submit or replace an entry."
+    submitPodChallengeEntry(id: ID!, tool_instance_id: String!, input: PodChallengeEntryInput!): PodChallenge!
+    removePodChallengeEntry(entry_id: ID!): PodChallenge!
     "Finalize & Publish. Republishing is a staff-only correction and needs a reason."
     publishPodChallengeResult(id: ID!, reason: String): PodChallenge!
     """

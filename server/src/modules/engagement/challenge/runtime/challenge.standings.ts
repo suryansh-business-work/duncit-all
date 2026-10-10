@@ -1,5 +1,6 @@
 import { toolDefinition } from '../tools/challengeTool.catalogue';
-import type { JudgeCriterion } from '../tools/challengeTool.config';
+import type { JudgeCriterion, QuizQuestion } from '../tools/challengeTool.config';
+import { doneItems } from './podChallenge.toolState';
 
 /**
  * Turns a challenge's persisted events into standings. Pure: no I/O, so the
@@ -29,6 +30,7 @@ export interface StandingsScoreEvent {
   competitor_id: string;
   event_type: string;
   value: number;
+  item_key?: string | null;
 }
 
 export interface StandingsVote {
@@ -37,6 +39,8 @@ export interface StandingsVote {
   candidate_id: string;
   value: number;
   criteria?: { key: string; value: number }[] | null;
+  scope_key?: string | null;
+  created_at?: Date | null;
 }
 
 export interface RankKey {
@@ -110,9 +114,55 @@ function metricFor(
       const sheets = votes.filter((v) => mine(v) && v.kind === 'JUDGE' && v.candidate_id === competitorId);
       return mean(sheets.map((v) => judgeTotal(v, criteria)));
     }
+    case 'ITEMS':
+      return itemPoints(tool, competitorId, events);
+    case 'QUIZ':
+      return quizPoints(tool, competitorId, votes);
+    case 'BUZZ':
+      return buzzWins(tool, competitorId, votes) * Number(tool.config.points_per_win ?? 0);
     default:
       return null;
   }
+}
+
+/** Points of the tasks or checkpoints this competitor has done (the latest tick per task wins). */
+function itemPoints(tool: StandingsTool, competitorId: string, events: StandingsScoreEvent[]): number {
+  const points = new Map(((tool.config.items as { key: string; points: number }[] | undefined) ?? []).map((i) => [i.key, i.points]));
+  const done = doneItems(events, tool.instance_id).get(competitorId) ?? new Set<string>();
+  return [...done].reduce((sum, key) => sum + (points.get(key) ?? 0), 0);
+}
+
+/** Points of the questions this competitor got right — once per question, however many of its players answered. */
+function quizPoints(tool: StandingsTool, competitorId: string, votes: StandingsVote[]): number {
+  const questions = (tool.config.questions as QuizQuestion[] | undefined) ?? [];
+  const mine = votes.filter((v) => v.tool_instance_id === tool.instance_id && v.kind === 'ANSWER' && v.candidate_id === competitorId);
+  return questions
+    .filter((q) => mine.some((v) => v.scope_key === q.key && v.value === q.correct))
+    .reduce((sum, q) => sum + q.points, 0);
+}
+
+/** Buzz rounds this competitor pressed first in. */
+function buzzWins(tool: StandingsTool, competitorId: string, votes: StandingsVote[]): number {
+  const rounds = new Set(
+    votes.filter((v) => v.tool_instance_id === tool.instance_id && v.kind === 'BUZZ').map((v) => v.scope_key ?? '')
+  );
+  let wins = 0;
+  for (const scope of rounds) {
+    const first = votes
+      .filter((v) => v.tool_instance_id === tool.instance_id && v.kind === 'BUZZ' && v.scope_key === scope)
+      .sort((a, b) => new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime())[0];
+    if (first?.candidate_id === competitorId) wins += 1;
+  }
+  return wins;
+}
+
+/** A Custom Formula: the weighted sum of every instance of each tool type it names. */
+function formulaValue(tool: StandingsTool, tools: StandingsTool[], metrics: Record<string, number | null>): number {
+  const terms = (tool.config.terms as { type: string; weight: number }[] | undefined) ?? [];
+  return terms.reduce((sum, term) => {
+    const sources = tools.filter((t) => t.tool_type === term.type);
+    return sum + term.weight * sources.reduce((acc, t) => acc + (metrics[t.instance_id] ?? 0), 0);
+  }, 0);
 }
 
 /** Instances that produce a number (layout tools such as Leaderboard do not). */
@@ -148,13 +198,18 @@ export function computeStandings(input: {
   const rows: Standing[] = input.competitors.map((c) => {
     const metrics: Record<string, number | null> = {};
     let total = 0;
-    for (const tool of scoring) {
-      const value = metricFor(tool, c.competitor_id, input.events, input.votes);
+    const record = (tool: StandingsTool, value: number | null) => {
       metrics[tool.instance_id] = value === null ? null : round4(value);
       if (tool.config.counts_toward_total === true && value !== null) {
         total += value * Number(tool.config.weight ?? 1);
       }
+    };
+    // Formulas read the other tools' metrics, so they are worked out last.
+    const formulas = scoring.filter((tool) => toolDefinition(tool.tool_type)?.metric === 'FORMULA');
+    for (const tool of scoring) {
+      if (!formulas.includes(tool)) record(tool, metricFor(tool, c.competitor_id, input.events, input.votes));
     }
+    for (const tool of formulas) record(tool, formulaValue(tool, scoring, metrics));
     return { competitor_id: c.competitor_id, name: c.name, rank: 0, total: round4(total), metrics };
   });
 

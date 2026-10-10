@@ -12145,6 +12145,8 @@ export type Mutation = {
   analyzeSocialComments: SocialAnalysisResult;
   /** Ask the AI why this post did as it did; the answer is kept on the post. */
   analyzeSocialPost: SocialPostDetail;
+  /** Competitor: answer the open question. The first answer stands. */
+  answerPodChallengeQuiz: PodChallenge;
   /** Authorise one build-artifact upload through the server. Tech/Super admin only. */
   appBuildUploadAuth: AppBuildUploadAuth;
   /** Carry out a dry run's findings without scanning again. */
@@ -12234,6 +12236,8 @@ export type Mutation = {
   /** Bulk-manage a venue's upcoming non-booked slots (owner-scoped). */
   bulkDeleteVenueSlots: BulkSlotResult;
   bulkUpdateVenueSlots: BulkSlotResult;
+  /** Competitor: buzz. The server orders the presses. */
+  buzzPodChallenge: PodChallenge;
   callEcommLeadContact: LeadContactActionResult;
   callHostLeadContact: LeadContactActionResult;
   callVenueLeadContact: LeadContactActionResult;
@@ -12270,6 +12274,8 @@ export type Mutation = {
   cancelPodPartnerRequest: PodPartnerRequest;
   /** Call off a scheduled send before it runs. */
   cancelWaCampaign: WaCampaign;
+  /** Attendee: pick one poll option (picking again moves the vote). */
+  castPodChallengePoll: PodChallenge;
   castPodChallengeVote: PodChallenge;
   /** Auth-required: confirm the OTP and set the new password. */
   changePasswordWithOtp: Scalars['Boolean']['output'];
@@ -12282,7 +12288,7 @@ export type Mutation = {
   claimStressRun: StressClaimResult;
   /** Agent picks up an unassigned chat — announced as a SYSTEM bubble. */
   claimSupportChat: SupportChatSession;
-  /** Removes the category's own row so it inherits from its parent. */
+  /** Removes a sub-category's challenge settings (challenges are then off for it). */
   clearChallengeCategoryMapping: ChallengeCategoryMapping;
   /** Hide every finished job; returns how many. */
   clearFinishedBackgroundJobs: Scalars['Int']['output'];
@@ -12376,8 +12382,12 @@ export type Mutation = {
   connectBrandShiprocket: BrandIntegrationStatus;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
+  /** Host: arm the buzzer for a fresh round, or disarm it. */
+  controlPodChallengeBuzzer: PodChallenge;
   /** START, STOP or RESET a timer tool. */
   controlPodChallengeClock: PodChallenge;
+  /** Host: open one quiz question for answers, or close the open one (question_key null). */
+  controlPodChallengeQuiz: PodChallenge;
   /** Copies the named GoDaddy-only records onto Cloudflare, DNS-only. Never writes GoDaddy. */
   copyDnsToCloudflare: DnsSyncResult;
   /** Creates an AI prompt. Code prompts come from the catalogue and cannot be created here. */
@@ -12982,6 +12992,8 @@ export type Mutation = {
   /** Admin: offer the place to one matching partner. Nothing on the pod moves yet. */
   offerPodChange: PodChangeRequest;
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
+  /** Host: draw one competitor at random on the server, or reset the draw. */
+  pickPodChallengeRandom: PodChallenge;
   /** Pin, or take the pin off. Pins belong to the thread, so both people see them. */
   pinStaffMessage: StaffMessage;
   /**
@@ -13053,6 +13065,8 @@ export type Mutation = {
   pushAppBuildToPlayStore: AppBuild;
   raiseBouncerSos: BouncerSosAlert;
   ratePodChallengeCompetitor: PodChallenge;
+  /** Competitor: check in at a checkpoint with the code its QR link carries. */
+  reachPodChallengeCheckpoint: PodChallenge;
   reactToPodMessage: PodMessage;
   /**
    * React, or take the reaction back. The same kind again removes it; a
@@ -13134,6 +13148,7 @@ export type Mutation = {
   removeExpenseRefund: Expense;
   /** Onboarding staff remove a holiday / leave day. */
   removeMeetingHoliday: Scalars['Boolean']['output'];
+  removePodChallengeEntry: PodChallenge;
   /** Takes one item down — your own, or any of them if you host the pod. */
   removePodPartyMedia: PodMediaBoard;
   /** Remove footage from a reel. Scenes that used it are dropped from the edit. */
@@ -13610,6 +13625,8 @@ export type Mutation = {
   /** Change the signed-in account's @handle. Rejects a taken or reserved one. */
   setMyUsername: User;
   setMyWhatsappPreference: WaPreference;
+  /** Host: tick or untick one task/checkpoint for a competitor (a reason is needed after the end). */
+  setPodChallengeItem: PodChallenge;
   setPodChallengeRoster: PodChallenge;
   setPodChallengeRound: PodChallenge;
   setPodChallengeVoting: PodChallenge;
@@ -13903,6 +13920,8 @@ export type Mutation = {
   submitLatestBuildToStore: AppBuild;
   /** Public — submit answers via a share token (no auth). */
   submitLeadSurveyByToken: Scalars['Boolean']['output'];
+  /** Competitor (or host on their behalf): submit or replace an entry. */
+  submitPodChallengeEntry: PodChallenge;
   submitProductListing: InventoryProduct;
   /**
    * PUBLIC and unauthenticated, on purpose: somebody locked out of every
@@ -14539,6 +14558,13 @@ export type MutationAnalyzeSocialPostArgs = {
 };
 
 
+export type MutationAnswerPodChallengeQuizArgs = {
+  id: Scalars['ID']['input'];
+  option_index: Scalars['Int']['input'];
+  tool_instance_id: Scalars['String']['input'];
+};
+
+
 export type MutationApplyMediaOrganizerRunArgs = {
   run_id: Scalars['ID']['input'];
   url?: InputMaybe<Scalars['String']['input']>;
@@ -14700,6 +14726,12 @@ export type MutationBulkUpdateVenueSlotsArgs = {
 };
 
 
+export type MutationBuzzPodChallengeArgs = {
+  id: Scalars['ID']['input'];
+  tool_instance_id: Scalars['String']['input'];
+};
+
+
 export type MutationCallEcommLeadContactArgs = {
   contact_number: Scalars['String']['input'];
   id: Scalars['ID']['input'];
@@ -14778,6 +14810,13 @@ export type MutationCancelPodPartnerRequestArgs = {
 
 export type MutationCancelWaCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCastPodChallengePollArgs = {
+  id: Scalars['ID']['input'];
+  option_key: Scalars['String']['input'];
+  tool_instance_id: Scalars['String']['input'];
 };
 
 
@@ -14932,9 +14971,23 @@ export type MutationConnectGoogleAccountArgs = {
 };
 
 
+export type MutationControlPodChallengeBuzzerArgs = {
+  arm: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  tool_instance_id: Scalars['String']['input'];
+};
+
+
 export type MutationControlPodChallengeClockArgs = {
   action: Scalars['String']['input'];
   id: Scalars['ID']['input'];
+  tool_instance_id: Scalars['String']['input'];
+};
+
+
+export type MutationControlPodChallengeQuizArgs = {
+  id: Scalars['ID']['input'];
+  question_key?: InputMaybe<Scalars['String']['input']>;
   tool_instance_id: Scalars['String']['input'];
 };
 
@@ -16469,6 +16522,13 @@ export type MutationPermanentlyDeleteInventoryProductArgs = {
 };
 
 
+export type MutationPickPodChallengeRandomArgs = {
+  id: Scalars['ID']['input'];
+  reset?: InputMaybe<Scalars['Boolean']['input']>;
+  tool_instance_id: Scalars['String']['input'];
+};
+
+
 export type MutationPinStaffMessageArgs = {
   id: Scalars['ID']['input'];
 };
@@ -16566,6 +16626,13 @@ export type MutationRatePodChallengeCompetitorArgs = {
   id: Scalars['ID']['input'];
   tool_instance_id: Scalars['String']['input'];
   value: Scalars['Int']['input'];
+};
+
+
+export type MutationReachPodChallengeCheckpointArgs = {
+  code: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  tool_instance_id: Scalars['String']['input'];
 };
 
 
@@ -16770,6 +16837,11 @@ export type MutationRemoveExpenseRefundArgs = {
 
 export type MutationRemoveMeetingHolidayArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRemovePodChallengeEntryArgs = {
+  entry_id: Scalars['ID']['input'];
 };
 
 
@@ -17672,6 +17744,16 @@ export type MutationSetMyWhatsappPreferenceArgs = {
 };
 
 
+export type MutationSetPodChallengeItemArgs = {
+  competitor_id: Scalars['String']['input'];
+  done: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  item_key: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  tool_instance_id: Scalars['String']['input'];
+};
+
+
 export type MutationSetPodChallengeRosterArgs = {
   id: Scalars['ID']['input'];
   input: PodChallengeRosterInput;
@@ -18452,6 +18534,13 @@ export type MutationSubmitLatestBuildToStoreArgs = {
 export type MutationSubmitLeadSurveyByTokenArgs = {
   answers: Array<SurveyAnswerInput>;
   token: Scalars['String']['input'];
+};
+
+
+export type MutationSubmitPodChallengeEntryArgs = {
+  id: Scalars['ID']['input'];
+  input: PodChallengeEntryInput;
+  tool_instance_id: Scalars['String']['input'];
 };
 
 
@@ -21538,8 +21627,20 @@ export type PodChallengeBallot = {
   __typename?: 'PodChallengeBallot';
   candidate_id: Scalars['String']['output'];
   kind: Scalars['String']['output'];
+  /** The question a quiz answer is for, or the buzz round a buzz is in. */
+  scope_key: Scalars['String']['output'];
   tool_instance_id: Scalars['String']['output'];
   value: Scalars['Float']['output'];
+};
+
+/** Where a checkpoint's QR points. Hosts only: the code inside proves a competitor reached it. */
+export type PodChallengeCheckpointLink = {
+  __typename?: 'PodChallengeCheckpointLink';
+  item_key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  /** A PNG data URL of the QR code for this link. */
+  qr_data_url: Scalars['String']['output'];
+  url: Scalars['String']['output'];
 };
 
 /** A ranked player (INDIVIDUAL) or team (TEAM). */
@@ -21559,6 +21660,16 @@ export type PodChallengeCompetitorInput = {
 export type PodChallengeCriterionInput = {
   key: Scalars['String']['input'];
   value: Scalars['Float']['input'];
+};
+
+export type PodChallengeEntryInput = {
+  caption?: InputMaybe<Scalars['String']['input']>;
+  /** Hosts only: submit on this competitor's behalf. */
+  competitor_id?: InputMaybe<Scalars['String']['input']>;
+  /** IMAGE, VIDEO or AUDIO. */
+  media_type: Scalars['String']['input'];
+  /** An https link from the media store (upload first). */
+  media_url: Scalars['String']['input'];
 };
 
 /** One notification about a challenge, summed over its recipients. */
@@ -21715,6 +21826,11 @@ export type PodChallengeTool = {
   input_kind: Scalars['String']['output'];
   instance_id: Scalars['String']['output'];
   label: Scalars['String']['output'];
+  /**
+   * What the tool shows beyond a number, as a JSON object: a poll's tallies,
+   * the buzz order, the quiz's open question, ticked tasks, picks, the gallery.
+   */
+  state_json: Scalars['String']['output'];
   tool_type: Scalars['String']['output'];
   voting_open: Scalars['Boolean']['output'];
 };
@@ -21735,6 +21851,8 @@ export type PodChallengeViewer = {
   is_attendee: Scalars['Boolean']['output'];
   is_judge: Scalars['Boolean']['output'];
   is_staff: Scalars['Boolean']['output'];
+  /** The competitor this viewer is or plays for ('' for a spectator). */
+  my_competitor_id: Scalars['String']['output'];
   /** The viewer's ballots in the current round. */
   my_votes: Array<PodChallengeBallot>;
 };
@@ -25134,6 +25252,8 @@ export type Query = {
   podCancellationStats: PodCancellationStats;
   podCancellations: Array<PodCancellation>;
   podChallenge?: Maybe<PodChallenge>;
+  /** Hosts only: the link and QR to post at each checkpoint of a Checkpoint tool. */
+  podChallengeCheckpointLinks: Array<PodChallengeCheckpointLink>;
   /** Managers only: who was told what about this challenge, newest first. */
   podChallengeNotifications: Array<PodChallengeNoticeBatch>;
   podChallengeScoreLog: Array<PodChallengeScoreEntry>;
@@ -27856,6 +27976,12 @@ export type QueryPodCancellationsArgs = {
 
 export type QueryPodChallengeArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodChallengeCheckpointLinksArgs = {
+  id: Scalars['ID']['input'];
+  tool_instance_id: Scalars['String']['input'];
 };
 
 

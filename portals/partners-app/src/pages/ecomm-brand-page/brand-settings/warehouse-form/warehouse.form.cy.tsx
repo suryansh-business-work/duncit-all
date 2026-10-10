@@ -59,6 +59,31 @@ describe('warehouseSchema', () => {
   it('allows address line 2 to stay blank', () => {
     expect(warehouseSchema.safeParse({ ...validWarehouse, address_line2: '' }).success).toBe(true);
   });
+
+  // A warehouse is a ShipRocket pickup address: the form refuses what ShipRocket would.
+  it('keeps the name to the 36 characters ShipRocket holds', () => {
+    expect(warehouseSchema.safeParse({ ...validWarehouse, nickname: 'W'.repeat(36) }).success).toBe(true);
+    expect(messages(warehouseSchema.safeParse({ ...validWarehouse, nickname: 'W'.repeat(37) }))).toMatch(
+      /warehouse name must be 36 characters or fewer/i,
+    );
+  });
+
+  it('needs a street line of at least ten characters', () => {
+    expect(messages(warehouseSchema.safeParse({ ...validWarehouse, address_line1: 'Sector 5' }))).toMatch(
+      /address line 1 must be at least 10 characters/i,
+    );
+    expect(warehouseSchema.safeParse({ ...validWarehouse, address_line1: '12 MG Road' }).success).toBe(true);
+  });
+
+  it('needs a ten-digit Indian mobile, judged on its last ten digits', () => {
+    expect(messages(warehouseSchema.safeParse({ ...validWarehouse, phone: '1234567890' }))).toMatch(/10-digit mobile/i);
+    expect(messages(warehouseSchema.safeParse({ ...validWarehouse, phone: '98765' }))).toMatch(/10-digit mobile/i);
+    expect(warehouseSchema.safeParse({ ...validWarehouse, phone: '+91 98765 43210' }).success).toBe(true);
+  });
+
+  it('refuses a PIN that starts with zero', () => {
+    expect(messages(warehouseSchema.safeParse({ ...validWarehouse, pincode: '010020' }))).toMatch(/6-digit pincode/i);
+  });
 });
 
 describe('toSaveWarehouseVariables', () => {

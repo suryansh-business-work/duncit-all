@@ -8,6 +8,17 @@ beforeEach(async () => {
   await BrandPickupLocationModel.deleteMany({});
 });
 
+/** A pickup address ShipRocket would take — a partner save is held to its rules. */
+const ADDRESS = {
+  contact_name: 'Store Desk',
+  phone: '9876543210',
+  email: 'desk@brand.in',
+  address_line1: '14 Industrial Estate, Phase 2',
+  city: 'Pune',
+  state: 'Maharashtra',
+  pincode: '411019',
+};
+
 /*
   A DUNCIT warehouse IS a ShipRocket pickup address now: save() hands it to
   saveDuncitPickup, which validates the address and puts it on the account
@@ -66,9 +77,8 @@ describe('brandPickupLocationService partner-scoped ops', () => {
       // Hostile client values — the server must force BRAND + the owned brand.
       owner_kind: 'DUNCIT',
       brand_id: String(new Types.ObjectId()),
+      ...ADDRESS,
       nickname: 'OWN-WH',
-      city: 'Pune',
-      pincode: '411001',
       is_default: true,
     });
     expect(saved.owner_kind).toBe('BRAND');
@@ -80,6 +90,7 @@ describe('brandPickupLocationService partner-scoped ops', () => {
 
     // Edits stay scoped to the same brand and update in place.
     const renamed = await brandPickupLocationService.saveMine(userId, String(brand._id), saved.id, {
+      ...ADDRESS,
       owner_kind: 'BRAND',
       nickname: 'OWN-WH-2',
     });
@@ -115,6 +126,7 @@ describe('brandPickupLocationService partner-scoped ops', () => {
     const userId = new Types.ObjectId().toString();
     const brand = await seedOwnedBrand(userId, 'Del Co');
     const wh = await brandPickupLocationService.saveMine(userId, String(brand._id), null, {
+      ...ADDRESS,
       owner_kind: 'BRAND',
       nickname: 'DEL-WH',
     });
@@ -137,11 +149,13 @@ describe('brandPickupLocationService partner-scoped ops', () => {
     const userId = new Types.ObjectId().toString();
     const brand = await seedOwnedBrand(userId, 'Default Co');
     const first = await brandPickupLocationService.saveMine(userId, String(brand._id), null, {
+      ...ADDRESS,
       owner_kind: 'BRAND',
       nickname: 'DEF-A',
       is_default: true,
     });
     const second = await brandPickupLocationService.saveMine(userId, String(brand._id), null, {
+      ...ADDRESS,
       owner_kind: 'BRAND',
       nickname: 'DEF-B',
     });
@@ -156,6 +170,7 @@ describe('brandPickupLocationService partner-scoped ops', () => {
     const userId = new Types.ObjectId().toString();
     const brand = await seedOwnedBrand(userId, 'Gate Co');
     const saved = await brandPickupLocationService.saveMine(userId, String(brand._id), null, {
+      ...ADDRESS,
       owner_kind: 'BRAND',
       nickname: 'GATE-WH',
     });
@@ -183,11 +198,58 @@ describe('brandPickupLocationService partner-scoped ops', () => {
     // Duncit warehouse already holding the name blocks the partner's.
     await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUP-WH' });
     await expect(
-      brandPickupLocationService.saveMine(userId, String(brand._id), null, { owner_kind: 'BRAND', nickname: 'DUP-WH' })
+      brandPickupLocationService.saveMine(userId, String(brand._id), null, { ...ADDRESS, owner_kind: 'BRAND', nickname: 'DUP-WH' })
     ).rejects.toThrow(/already exists/i);
     // A non-duplicate failure (missing nickname) is not masked as a conflict.
     await expect(
-      brandPickupLocationService.saveMine(userId, String(brand._id), null, { owner_kind: 'BRAND', nickname: '' })
-    ).rejects.toThrow(/nickname/i);
+      brandPickupLocationService.saveMine(userId, String(brand._id), null, { ...ADDRESS, owner_kind: 'BRAND', nickname: '' })
+    ).rejects.toThrow(/Name the warehouse/);
+  });
+
+  it('turns back an address ShipRocket would refuse, saving nothing and raising no request', async () => {
+    const { ApprovalRequestModel } = await import('@modules/approval/approval.model');
+    const userId = new Types.ObjectId().toString();
+    const brand = await seedOwnedBrand(userId, 'Strict Co');
+    const save = (input: Record<string, unknown>) =>
+      brandPickupLocationService.saveMine(userId, String(brand._id), null, { ...ADDRESS, owner_kind: 'BRAND', ...input });
+
+    await expect(save({ nickname: 'SHORT-ST', address_line1: 'Sector 5' })).rejects.toThrow(/at least 10 characters/);
+    await expect(save({ nickname: 'BAD-PIN', pincode: '4110' })).rejects.toThrow(/6-digit pincode/);
+    await expect(save({ nickname: 'BAD-PHONE', phone: '98765' })).rejects.toThrow(/10-digit phone number/);
+    await expect(save({ nickname: 'NO-MAIL', email: '' })).rejects.toThrow(/contact email/);
+    await expect(save({ nickname: 'N'.repeat(37) })).rejects.toThrow(/36 characters/);
+    // The boundary is taken: 36 characters is the longest name ShipRocket holds.
+    expect((await save({ nickname: 'N'.repeat(36) })).nickname).toHaveLength(36);
+
+    expect(await BrandPickupLocationModel.countDocuments({ brand_id: brand._id })).toBe(1);
+    expect(await ApprovalRequestModel.countDocuments({ type: 'WAREHOUSE_APPROVAL' })).toBe(1);
+  });
+
+  it('refuses a changed address on a warehouse ShipRocket holds, but lets the same address be saved again', async () => {
+    const userId = new Types.ObjectId().toString();
+    const brand = await seedOwnedBrand(userId, 'Held Co');
+    const held = await BrandPickupLocationModel.create({
+      ...ADDRESS,
+      owner_kind: 'BRAND',
+      brand_id: brand._id,
+      nickname: 'HELD-WH',
+      // As ShipRocket hands the number back — still the same ten digits.
+      phone: '+91 98765 43210',
+      shiprocket_registered: true,
+    });
+    const save = (input: Record<string, unknown>) =>
+      brandPickupLocationService.saveMine(userId, String(brand._id), held.id, {
+        ...ADDRESS,
+        owner_kind: 'BRAND',
+        nickname: 'HELD-WH',
+        ...input,
+      });
+
+    await expect(save({ address_line1: '99 Another Road, Phase 1' })).rejects.toThrow(/ShipRocket already holds/);
+    expect((await BrandPickupLocationModel.findById(held._id).lean())?.address_line1).toBe(ADDRESS.address_line1);
+
+    const same = await save({ city: 'PUNE', is_default: true });
+    expect(same.id).toBe(held.id);
+    expect(same.is_default).toBe(true);
   });
 });

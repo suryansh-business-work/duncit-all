@@ -1,10 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { Alert, Stack, Typography } from '@mui/material';
-import SyncIcon from '@mui/icons-material/Sync';
+import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import { formatDateTime } from '@duncit/app-settings';
-import { DuncitButton } from '@duncit/buttons';
-import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { fireAndForget, logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
 import { parseApiError } from '@duncit/utils';
@@ -12,57 +9,70 @@ import { SYNC_MY_WAREHOUSES, type WarehouseSyncResult } from './warehouse.querie
 
 interface Props {
   brandId: string;
-  /** Called after a sync so the list re-reads — a sync can take in new warehouses. */
+  /** Called after a sync so the list re-reads — a sync can register warehouses and take in new ones. */
   onSynced: () => void;
 }
 
 const WAREHOUSES_LOGGER = logs.portal['partners-app'];
 
 /**
- * "Sync with ShipRocket": checks the brand's warehouses against the ShipRocket
- * account it ships on and, on the brand's own account, takes in the pickup
- * addresses it already has there. When ShipRocket cannot be read the
- * warehouses still list — the reason is shown above them.
+ * Keeps the brand's warehouses in step with ShipRocket, with nothing to press:
+ * every time the page opens for a brand, its approved warehouses are sent to
+ * the ShipRocket account it ships on (if they are not there yet) and, on the
+ * brand's own account, the pickup addresses it already has there are taken in.
+ * When ShipRocket cannot be read the warehouses still list — the reason is
+ * shown above them, and each warehouse carries its own.
  */
 export default function WarehouseSync({ brandId, onSynced }: Readonly<Props>) {
   const { t } = useTranslation();
   const [sync, { loading }] = useMutation<{ syncMyBrandPickupLocations: WarehouseSyncResult }>(SYNC_MY_WAREHOUSES);
   const [result, setResult] = useState<WarehouseSyncResult | null>(null);
+  const [failure, setFailure] = useState('');
+  // The page hands a new callback on every render; the sync must run once per brand, not once per render.
+  const onSyncedRef = useRef(onSynced);
+  useEffect(() => {
+    onSyncedRef.current = onSynced;
+  }, [onSynced]);
 
-  const run = async () => {
-    try {
-      const { data } = await sync({ variables: { brand_doc_id: brandId } });
-      const synced = data?.syncMyBrandPickupLocations ?? null;
-      setResult(synced);
-      if (synced?.shiprocket_error) notifyError(t('partners.warehouses.syncFailed'));
-      else notifySuccess(t('partners.warehouses.synced', { vars: { adopted: synced?.adopted ?? 0 } }));
-      onSynced();
-    } catch (error) {
-      notifyError(parseApiError(error));
-    }
-  };
+  useEffect(() => {
+    let current = true;
+    const run = async () => {
+      try {
+        const { data } = await sync({ variables: { brand_doc_id: brandId } });
+        if (!current) return;
+        setFailure('');
+        setResult(data?.syncMyBrandPickupLocations ?? null);
+        onSyncedRef.current();
+      } catch (error) {
+        if (current) setFailure(parseApiError(error));
+      }
+    };
+    fireAndForget(run(), WAREHOUSES_LOGGER, 'WarehouseSync', 'sync');
+    return () => {
+      current = false;
+    };
+  }, [brandId, sync]);
+
+  const unreadable = failure || result?.shiprocket_error || '';
 
   return (
-    <Stack spacing={1}>
-      <Stack direction="row" spacing={1.5} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-        <DuncitButton
-          variant="outlined"
-          startIcon={<SyncIcon />}
-          loading={loading}
-          onClick={() => fireAndForget(run(), WAREHOUSES_LOGGER, 'WarehouseSync', 'sync')}
-          data-testid="warehouse-sync"
-        >
-          {t('partners.warehouses.sync')}
-        </DuncitButton>
-        {result?.synced_at && (
+    <Stack spacing={1} data-testid="warehouse-sync">
+      {loading && (
+        <Stack direction="row" spacing={1} role="status" sx={{ alignItems: 'center' }}>
+          <CircularProgress size={16} aria-hidden />
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {t('partners.warehouses.syncedAt', { vars: { at: formatDateTime(result.synced_at) } })}
+            {t('partners.warehouses.syncing')}
           </Typography>
-        )}
-      </Stack>
-      {result?.shiprocket_error && (
+        </Stack>
+      )}
+      {!loading && result?.synced_at && (
+        <Typography variant="caption" sx={{ color: 'text.secondary' }} data-testid="warehouse-synced-at">
+          {t('partners.warehouses.syncedAt', { vars: { at: formatDateTime(result.synced_at) } })}
+        </Typography>
+      )}
+      {!loading && unreadable && (
         <Alert severity="warning" data-testid="warehouse-sync-error">
-          {t('partners.warehouses.shiprocketUnreadable', { vars: { error: result.shiprocket_error } })}
+          {t('partners.warehouses.shiprocketUnreadable', { vars: { error: unreadable } })}
         </Alert>
       )}
     </Stack>

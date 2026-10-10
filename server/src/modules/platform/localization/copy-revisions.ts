@@ -174,4 +174,10 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "challenge.mapping.colCategory": ["Category"],
   "challenge.mapping.save": ["Save mapping"],
   "challenge.tools.notReady": ["This tool is on the roadmap. It can be renamed now, and activated once the engine supports it."],
+  // Warehouses sync with ShipRocket when the page opens now; there is no button to point at.
+  // A brand's phone is held to ShipRocket's ten digits now, and the message says so.
+  "partners.brandWizard.validation.phone": ["Enter a valid phone number (digits only)."],
+  "partners.warehouses.intro": [
+    "The addresses your products ship from. Sync with ShipRocket to check each one is ready for pickups.",
+  ],
 };

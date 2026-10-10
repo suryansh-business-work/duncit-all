@@ -55,6 +55,28 @@ const isDuplicateKeyError = (error: unknown) =>
 
 const REVIEW_STATUSES = new Set(['PENDING', 'APPROVED', 'REJECTED']);
 
+/** ShipRocket's limit on `pickup_location`, the name every order names its warehouse by. */
+const SHIPROCKET_NICKNAME_MAX = 36;
+
+/** What ShipRocket keeps of a pickup address — none of it can be edited through its API. */
+const ADDRESS_FIELDS = [
+  'nickname',
+  'contact_name',
+  'phone',
+  'email',
+  'address_line1',
+  'address_line2',
+  'city',
+  'state',
+  'pincode',
+] as const;
+
+/** A part of the address as it is compared: the phone by its ten digits, the rest without case or edge spaces. */
+const comparable = (field: (typeof ADDRESS_FIELDS)[number], value: string | null | undefined) => {
+  const text = String(value ?? '').trim();
+  return field === 'phone' ? text.replaceAll(/\D/g, '').slice(-10) : text.toLowerCase();
+};
+
 const toPub = (d: IBrandPickupLocation) => ({
   id: String(d._id),
   owner_kind: d.owner_kind,
@@ -187,12 +209,30 @@ export const brandPickupLocationService = {
 
   async saveMine(userId: string, brandDocId: string, id: string | null | undefined, input: any) {
     await loadOwnedBrand(userId, brandDocId);
-    if (id) await ownedLocation(brandDocId, id);
+    const existing = id ? await ownedLocation(brandDocId, id) : null;
+    // Held to ShipRocket's own rules now, so an address it would refuse is
+    // turned back here — not after a reviewer has approved it.
+    const { cleanPickupInput } = await import('@modules/commerce/shiprocket/shiprocket.ops');
+    const clean = cleanPickupInput(input);
+    if (clean.nickname.length > SHIPROCKET_NICKNAME_MAX) {
+      throw new GraphQLError(`Keep the warehouse name to ${SHIPROCKET_NICKNAME_MAX} characters — ShipRocket takes no longer`, {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const changed = (field: (typeof ADDRESS_FIELDS)[number]) =>
+      comparable(field, clean[field]) !== comparable(field, existing?.[field]);
+    if (existing?.shiprocket_registered && ADDRESS_FIELDS.some(changed)) {
+      throw new GraphQLError(
+        'ShipRocket already holds this pickup address and cannot change it — add the new address as another warehouse',
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
+    }
     try {
       // Partner warehouses are gated: saved as PENDING and blocked from product
       // use until a Products Manager approves the raised request.
       const saved = await this.save(id, {
         ...input,
+        ...clean,
         owner_kind: 'BRAND',
         brand_id: brandDocId,
         review_status: 'PENDING',

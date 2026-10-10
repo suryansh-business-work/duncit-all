@@ -134,15 +134,39 @@ async function applyPortalAccessDecision(doc: any, status: 'APPROVED' | 'DENIED'
   }
 }
 
+/**
+ * An approved warehouse goes to ShipRocket there and then — approval is the
+ * gate it was waiting behind, and nothing ships from an address the courier
+ * does not hold. A refusal does not undo the approval: the reason is recorded
+ * on the warehouse (shiprocket_error) for both portals, and the partner's
+ * warehouse page sends it again on its next load.
+ */
+async function registerApprovedWarehouse(warehouseId: string) {
+  try {
+    const { brandPickupLocationService } = await import(
+      '@modules/venues/brandPickupLocation/brandPickupLocation.service'
+    );
+    await brandPickupLocationService.registerWithShiprocket(warehouseId);
+  } catch (err) {
+    logs.server.warn('approval', 'registerApprovedWarehouse', {
+      error: err,
+      msg: 'approved warehouse was not registered with ShipRocket',
+      target_id: warehouseId,
+    });
+  }
+}
+
 /** Apply a warehouse-approval decision to its BrandPickupLocation: APPROVED makes
- * it usable, REJECTED keeps it blocked. Best-effort — never blocks the decision. */
+ * it usable and sends it to ShipRocket, REJECTED keeps it blocked. Best-effort —
+ * never blocks the decision. */
 async function applyWarehouseReview(doc: any, status: 'APPROVED' | 'REJECTED') {
   if (!doc.target_id) return;
   try {
     const { BrandPickupLocationModel } = await import(
       '@modules/venues/brandPickupLocation/brandPickupLocation.model'
     );
-    await BrandPickupLocationModel.findByIdAndUpdate(doc.target_id, { $set: { review_status: status } });
+    const updated = await BrandPickupLocationModel.findByIdAndUpdate(doc.target_id, { $set: { review_status: status } });
+    if (updated && status === 'APPROVED') await registerApprovedWarehouse(String(updated.id));
   } catch (err) {
     logs.server.error('approval', 'applyWarehouseReview', {
       error: err,

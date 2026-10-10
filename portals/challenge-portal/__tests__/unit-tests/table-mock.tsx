@@ -70,10 +70,12 @@ interface ActionsOptions {
   onDelete?: (row: unknown) => void;
   edit?: ActionConfig;
   delete?: ActionConfig;
+  /** Page-specific actions, drawn before Edit — as the real column does. */
+  renderExtra?: (row: unknown) => ReactNode;
 }
 
 export function actionsColumn(options: ActionsOptions): MockColumn {
-  const { onEdit, onDelete, edit, delete: del } = options;
+  const { onEdit, onDelete, edit, delete: del, renderExtra } = options;
   return {
     field: 'actions',
     headerName: 'Actions',
@@ -81,6 +83,7 @@ export function actionsColumn(options: ActionsOptions): MockColumn {
     opts: options,
     cellRenderer: (row) => (
       <span>
+        {renderExtra?.(row)}
         {onEdit && (
           <button type="button" aria-label={edit?.ariaLabel ?? 'Edit'} onClick={() => onEdit(row)}>
             edit

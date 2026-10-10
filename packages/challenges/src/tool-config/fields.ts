@@ -1,3 +1,5 @@
+import { parseJsonObject } from '@duncit/utils';
+
 /**
  * The settings a universal tool exposes, as the server describes them in
  * `config_schema_json`. Framework-free: the same parsing and checks serve every
@@ -25,6 +27,7 @@ export interface JudgeCriterion {
 
 export type ToolConfig = Record<string, unknown>;
 
+
 const KINDS: readonly ToolFieldKind[] = ['number', 'boolean', 'text', 'select', 'number_list', 'criteria'];
 
 function parseJson(json: string | null | undefined): unknown {
@@ -45,10 +48,8 @@ export function parseToolFields(json: string | null | undefined): ToolField[] {
   );
 }
 
-export function parseToolConfig(json: string | null | undefined): ToolConfig {
-  const raw = parseJson(json);
-  return raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as ToolConfig) : {};
-}
+/** A tool's stored settings (a `*_config_json` field), empty when malformed. */
+export const parseToolConfig = (json: string | null | undefined): ToolConfig => parseJsonObject(json);
 
 /** Every field present: the stored value, else the field's default. */
 export function withDefaults(fields: ToolField[], config: ToolConfig): ToolConfig {

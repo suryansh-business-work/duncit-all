@@ -24,6 +24,8 @@ export interface HostPodMenuItemsProps {
   onScan: () => void;
   onComplete: () => void;
   onSeeAttendance?: () => void;
+  /** Host Studio's challenge controls for this pod (a page the surface routes to). */
+  onChallenges?: () => void;
   onSlotRequest?: () => void;
   onEdit: () => void;
   onOpenPodMedia?: () => void;

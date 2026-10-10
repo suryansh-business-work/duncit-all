@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
-    "@duncit/buttons": "workspace:*"
+    "@duncit/buttons": "workspace:*",
+    "@duncit/utils": "workspace:*"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",

@@ -222,6 +222,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "slick-carousel", range: "^1.8.1", kind: "dependencies" },
       { name: "socket.io-client", range: "^4.8.4", kind: "dependencies" },
       { name: "zod", range: "^4.6.5", kind: "dependencies" },
+      { name: "@duncit/gql-types", range: "workspace:*", kind: "devDependencies" },
       { name: "@testing-library/jest-dom", range: "^7.0.1", kind: "devDependencies" },
       { name: "@testing-library/react", range: "^16.3.3", kind: "devDependencies" },
       { name: "@types/node", range: "^26.6.3", kind: "devDependencies" },
@@ -721,6 +722,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^4.3.1", kind: "devDependencies" },
       { name: "@duncit/gql-types", range: "workspace:*", kind: "devDependencies" },
       { name: "@hookform/resolvers", range: "^5.9.1", kind: "devDependencies" },

@@ -1,6 +1,7 @@
 import { ListItemIcon, ListItemText, MenuItem } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import EditIcon from '@mui/icons-material/Edit';
@@ -32,6 +33,7 @@ export default function HostPodActionsItems({
   onScan,
   onComplete,
   onSeeAttendance,
+  onChallenges,
   onSlotRequest,
   onEdit,
   onOpenPodMedia,
@@ -67,6 +69,14 @@ export default function HostPodActionsItems({
             <FactCheckIcon fontSize="small" color="success" />
           </ListItemIcon>
           <ListItemText primary={labels.seeAttendance} />
+        </MenuItem>
+      )}
+      {onChallenges && (
+        <MenuItem onClick={pick(onChallenges)} data-testid={`host-pod-action-challenges-${podId}`}>
+          <ListItemIcon>
+            <EmojiEventsIcon fontSize="small" color="primary" />
+          </ListItemIcon>
+          <ListItemText primary={labels.challenges} />
         </MenuItem>
       )}
       {onSlotRequest && (

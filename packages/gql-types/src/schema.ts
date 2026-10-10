@@ -21518,6 +21518,7 @@ export type PodChallengePlayer = {
   name: Scalars['String']['output'];
   player_id: Scalars['String']['output'];
   team_id: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
 };
 
 export type PodChallengePlayerInput = {
@@ -21607,6 +21608,8 @@ export type PodChallengeTool = {
   clock_elapsed_ms: Scalars['Float']['output'];
   clock_running: Scalars['Boolean']['output'];
   config_json: Scalars['String']['output'];
+  /** How an operator feeds this tool: INCREMENT, SET_VALUE, VOTE, RATE, JUDGE, CLOCK, ROUND or NONE. */
+  input_kind: Scalars['String']['output'];
   instance_id: Scalars['String']['output'];
   label: Scalars['String']['output'];
   tool_type: Scalars['String']['output'];

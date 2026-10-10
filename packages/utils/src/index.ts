@@ -242,6 +242,31 @@ export {
 } from './pod-feedback';
 export { podMediaLink, podMediaPath } from './pod-media';
 export {
+  CHALLENGE_CHANGED_EVENT,
+  CHALLENGE_POLL_MS,
+  clockDisplayMs,
+  clockElapsedMs,
+  formatClock,
+  hostPodChallengesPath,
+  isChallengeFinished,
+  isChallengeInPlay,
+  parseJsonObject,
+  podChallengeLiveLink,
+  podChallengeLivePath,
+  watchChallenge,
+  type ChallengeChangedFrame,
+  type ChallengeClock,
+  type ChallengeSocketLike,
+  type PodChallengeStatus,
+} from './pod-challenge';
+export {
+  CHALLENGE_ACTION_KEYS,
+  CHALLENGE_CONFIRM_KEYS,
+  CHALLENGE_STATUS_KEYS,
+  CHALLENGE_TOGGLES,
+  type ChallengeToggle,
+} from './pod-challenge-copy';
+export {
   buildPodMediaLabels,
   mwebPodMediaLabels,
   shellPodMediaLabels,

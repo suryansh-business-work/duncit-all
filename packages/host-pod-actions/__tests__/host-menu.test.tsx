@@ -214,6 +214,18 @@ describe('HostPodActionsMenu rows', () => {
     expect(onSlotRequest).toHaveBeenCalledTimes(1);
   });
 
+  it('offers Challenges only on a surface that owns that page, and reports the pick to it', async () => {
+    await open();
+    expect(screen.queryByText(labels.challenges)).toBeNull();
+    cleanup();
+
+    const onChallenges = vi.fn();
+    await open({ onChallenges, podId: 'pod-7' });
+    fireEvent.click(screen.getByTestId('host-pod-action-challenges-pod-7'));
+
+    expect(onChallenges).toHaveBeenCalledTimes(1);
+  });
+
   it('reports See attendance, Scan, Edit and Cancel to their own handlers', async () => {
     const onSeeAttendance = vi.fn();
     const handlers = await open({ onSeeAttendance, canComplete: true });

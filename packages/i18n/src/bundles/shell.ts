@@ -1513,6 +1513,10 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     podMonitoring: {
       aiMonitoring: 'AI Monitoring',
     },
+    // The pod actions menu's Challenges entry on portal surfaces.
+    challenge: {
+      menuItem: 'Challenges',
+    },
     // The attendance page (Host Studio > Your Pods > three dots > See Marked
     // Attendance, and the Club Admin's Mark Attendance section). Attendance is
     // what the host is PAID on, which is why the earnings note is not a

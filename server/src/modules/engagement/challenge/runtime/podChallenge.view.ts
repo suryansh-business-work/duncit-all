@@ -1,6 +1,7 @@
 import { ChallengeResultModel, ChallengeScoreEventModel, ChallengeVoteModel } from './challengeLedger.model';
 import { computeStandings, winnersOf, type Standing, type WinnerRules } from './challenge.standings';
 import { allowedActions } from './challenge.lifecycle';
+import { toolDefinition } from '../tools/challengeTool.catalogue';
 import { isJudge, type ChallengeAccess, type PodRef } from './podChallenge.access';
 import type { PodChallengeDoc } from './podChallenge.model';
 
@@ -93,6 +94,7 @@ export async function toView(
       return {
         instance_id: t.instance_id,
         tool_type: t.tool_type,
+        input_kind: toolDefinition(t.tool_type)?.input ?? 'NONE',
         label: t.label,
         config_json: JSON.stringify(t.config ?? {}),
         clock_running: !!state?.clock_running,
@@ -105,7 +107,12 @@ export async function toView(
       name: c.name,
       user_id: c.user_id ? c.user_id.toString() : null,
     })),
-    players: doc.players.map((p) => ({ player_id: p.player_id, name: p.name, team_id: p.team_id })),
+    players: doc.players.map((p) => ({
+      player_id: p.player_id,
+      name: p.name,
+      team_id: p.team_id,
+      user_id: p.user_id ? p.user_id.toString() : null,
+    })),
     judge_user_ids: access.canManage ? doc.judge_user_ids.map(String) : [],
     standings: standings.map(standingPub),
     live_winner_ids: hideLive ? [] : winnersOf(standings),

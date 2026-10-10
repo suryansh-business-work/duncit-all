@@ -5,6 +5,8 @@ export const podChallengeTypeDefs = gql`
   type PodChallengeTool {
     instance_id: String!
     tool_type: String!
+    "How an operator feeds this tool: INCREMENT, SET_VALUE, VOTE, RATE, JUDGE, CLOCK, ROUND or NONE."
+    input_kind: String!
     label: String!
     config_json: String!
     clock_running: Boolean!
@@ -24,6 +26,7 @@ export const podChallengeTypeDefs = gql`
     player_id: String!
     name: String!
     team_id: String!
+    user_id: ID
   }
 
   type PodChallengeStanding {

@@ -29,6 +29,7 @@ export default function HostPodRow({
   actions,
   onClubAdmin,
   onSeeAttendance,
+  onChallenges,
   onSlotRequest,
   onRequestChange,
   requestChangeLabel,
@@ -90,6 +91,7 @@ export default function HostPodRow({
           podId={pod.id}
           onClubAdmin={onClubAdmin}
           onSeeAttendance={onSeeAttendance}
+          onChallenges={onChallenges}
           onSlotRequest={onSlotRequest}
           onRequestChange={onRequestChange}
           requestChangeLabel={requestChangeLabel}

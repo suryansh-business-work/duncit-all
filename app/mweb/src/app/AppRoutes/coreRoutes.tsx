@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, PodAttendancePage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
+import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, HostPodChallengesPage, PodAttendancePage, PodChallengeArenaPage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
 import { PartnerRedirect, withAuth, type AppRoutesProps } from './routeGuards';
 
 /** Home, profile, pod and host routes. Rendered as a fragment so `<Routes>` still sees plain `<Route>` children. */
@@ -45,6 +45,10 @@ export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<App
             Signed-in like the rating link: the server answers on who was
             marked present, which it can only do for someone it knows. */}
         <Route path="/pod/:podId/media" element={withAuth(<PodMediaPage />)} />
+        {/* The Live Challenge Arena. Public on purpose: a spectator or a
+            projector needs no session, and the server decides what each
+            viewer may see (signed-in attendees can also vote). */}
+        <Route path="/pod/:podId/challenges/:challengeId/live" element={<PodChallengeArenaPage />} />
         <Route path="/u/:handle" element={withAuth(<PublicProfilePage />)} />
         <Route path="/become-host" element={<PartnerRedirect path="/become-host" />} />
         <Route path="/register-venue" element={<PartnerRedirect path="/register-venue" />} />
@@ -60,6 +64,7 @@ export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<App
           path="/host/pod/:podId/attendance"
           element={withAuth(<PodAttendancePage />)}
         />
+        <Route path="/host/pod/:podId/challenges" element={withAuth(<HostPodChallengesPage />)} />
         <Route path="/host/apply" element={withAuth(<HostApplyPage />)} />
         <Route path="/host/wallet" element={withAuth(<WalletPage />)} />
         <Route path="/create-pod" element={withAuth(<CreatePodPage />)} />

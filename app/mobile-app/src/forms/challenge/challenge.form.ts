@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { CHALLENGE_CAPTION_MAX } from '@duncit/utils';
 
-import type { JudgeCriterion, JudgeSheetValues } from './challenge.types';
+import type { JudgeCriterion, JudgeSheetValues, SubmissionValues } from './challenge.types';
 
 /**
  * The challenge forms' schemas — the native twins of mWeb's judge-sheet,
@@ -68,6 +69,35 @@ export const makeRosterSchema = (t: Translate) =>
       )
       .min(1, t('mweb.challenge.errors.noCompetitors')),
   });
+
+/**
+ * A competitor's piece: a picked file (its kind and size are checked when it is
+ * picked, against the tool's settings and the upload caps) and an optional
+ * caption. A host submitting on someone's behalf must also say for whom.
+ */
+export const makeSubmissionSchema = (t: Translate, pickCompetitor: boolean) =>
+  z.object({
+    file: z
+      .object({ uri: z.string(), name: z.string(), type: z.string() })
+      .nullable()
+      .refine((file) => file !== null, t('mweb.challenge.tools.errors.file')),
+    caption: z
+      .string()
+      .trim()
+      .max(
+        CHALLENGE_CAPTION_MAX,
+        t('mweb.challenge.tools.errors.caption', { vars: { max: CHALLENGE_CAPTION_MAX } }),
+      ),
+    competitor_id: pickCompetitor
+      ? z.string().min(1, t('mweb.challenge.errors.pickCompetitor'))
+      : z.string(),
+  });
+
+export const SUBMISSION_INITIAL_VALUES: SubmissionValues = {
+  file: null,
+  caption: '',
+  competitor_id: '',
+};
 
 /** Why a score is removed or a result corrected — kept in the audit trail. */
 export const makeReasonSchema = (t: Translate, required: boolean) =>

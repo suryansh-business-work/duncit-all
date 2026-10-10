@@ -8,9 +8,14 @@ import type { PodChallengeView } from '@/hooks/usePodChallengeLive';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
+import { HostChallengeItems } from './HostChallengeItems';
+import { HostChallengeTools } from './HostChallengeTools';
 import { ValueEntry } from './ValueEntry';
 
 type Tool = PodChallengeView['tools'][number];
+
+/** The tools whose window a host opens and closes: votes, ratings and polls. */
+const VOTING_KINDS = new Set(['VOTE', 'RATE', 'POLL']);
 
 interface Props {
   challenge: PodChallengeView;
@@ -81,7 +86,7 @@ export function HostChallengeLive({ challenge, receivedAt, actions }: Readonly<P
           </YStack>
         ))}
       {challenge.tools
-        .filter((tool) => tool.input_kind === 'VOTE' || tool.input_kind === 'RATE')
+        .filter((tool) => VOTING_KINDS.has(tool.input_kind))
         .map((tool) => (
           <XStack key={tool.instance_id} alignItems="center" gap={8}>
             <Text flex={1} fontSize={14} color="$color">
@@ -102,6 +107,8 @@ export function HostChallengeLive({ challenge, receivedAt, actions }: Readonly<P
             />
           </XStack>
         ))}
+      <HostChallengeTools challenge={challenge} actions={actions} />
+      {live && <HostChallengeItems challenge={challenge} actions={actions} />}
       {totalRounds > 0 && (
         <XStack alignItems="center" gap={8}>
           <DuncitButton

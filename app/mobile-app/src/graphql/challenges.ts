@@ -30,6 +30,7 @@ export const PodChallengeFieldsFragment = gql(`
       input_kind
       label
       config_json
+      state_json
       clock_running
       clock_elapsed_ms
       voting_open
@@ -69,6 +70,7 @@ export const PodChallengeFieldsFragment = gql(`
     viewer {
       can_manage
       is_staff
+      my_competitor_id
       can_interact
       can_judge
       allowed_actions
@@ -77,6 +79,7 @@ export const PodChallengeFieldsFragment = gql(`
         kind
         candidate_id
         value
+        scope_key
       }
     }
   }

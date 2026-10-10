@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
-import { CHALLENGE_STATUS_KEYS, isChallengeFinished, isChallengeInPlay } from '@duncit/utils';
+import {
+  CHALLENGE_STATUS_KEYS,
+  isChallengeFinished,
+  isChallengeInPlay,
+  toolsFedBy,
+} from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { NoticeCard } from '@/components/attendance/NoticeCard';
+import { ChallengeToolPanels } from '@/components/challenge/tools/ChallengeToolPanels';
 import { useHostChallengeActions } from '@/hooks/useHostChallengeActions';
 import { usePodChallengeLive } from '@/hooks/usePodChallengeLive';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,6 +22,8 @@ import { HostChallengeFinish } from './HostChallengeFinish';
 import { HostChallengeLive } from './HostChallengeLive';
 import { HostChallengeLog } from './HostChallengeLog';
 import { RosterSheet } from './RosterSheet';
+
+const SUBMISSION_PANELS = ['SUBMIT'] as const;
 
 interface Props {
   challengeId: string;
@@ -31,6 +39,11 @@ export function HostChallengeCard({ challengeId, onOpenArena }: Readonly<Props>)
   if (!challenge) return null;
   const inPlay = isChallengeInPlay(challenge.status);
   const finished = isChallengeFinished(challenge.status);
+  // Entries open as soon as the challenge is scheduled, so the gallery is not a live-only control.
+  const hasSubmissions =
+    challenge.status !== 'DRAFT' &&
+    challenge.status !== 'CANCELLED' &&
+    toolsFedBy(challenge.tools, 'SUBMIT').length > 0;
 
   return (
     <SurfaceCard gap={14} testID={`host-challenge-${challenge.id}`}>
@@ -81,6 +94,9 @@ export function HostChallengeCard({ challengeId, onOpenArena }: Readonly<Props>)
       </XStack>
       {inPlay && (
         <HostChallengeLive challenge={challenge} receivedAt={receivedAt} actions={actions} />
+      )}
+      {hasSubmissions && (
+        <ChallengeToolPanels challenge={challenge} onChanged={adopt} only={SUBMISSION_PANELS} />
       )}
       {(inPlay || finished) && (
         <YStack gap={8}>

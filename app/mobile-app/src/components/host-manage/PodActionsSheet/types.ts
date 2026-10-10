@@ -31,6 +31,8 @@ export interface PodActionsSheetProps {
   onClose: () => void;
   onScan: () => void;
   onSeeAttendance: () => void;
+  /** Opens Host Studio's challenge controls for this pod. */
+  onChallenges: () => void;
   /** Opens the pod's "Slot Request Sent" screen — the venue decision, re-checkable. */
   onSlotRequest: () => void;
   onComplete: () => void;

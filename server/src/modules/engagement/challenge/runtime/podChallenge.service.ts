@@ -193,7 +193,11 @@ export const podChallengeService = {
     const competitors = await buildCompetitors(pod, input.competitors, limits);
     const ids = competitors.map((c) => c.competitor_id);
     await assertRemovable(doc._id, doc.competitors.map((c) => c.competitor_id).filter((id) => !ids.includes(id)));
-    const players = doc.participant_mode === 'TEAM' ? await buildPlayers(pod, input.players ?? [], ids, limits) : [];
+    // An omitted players list means "leave the rosters alone" (a surface that
+    // only edits names); players of a team that was just removed go with it.
+    const keptPlayers = doc.players.filter((p) => ids.includes(p.team_id));
+    const teamPlayers = input.players ? await buildPlayers(pod, input.players, ids, limits) : keptPlayers;
+    const players = doc.participant_mode === 'TEAM' ? teamPlayers : [];
     const judges = input.judge_user_ids ? await buildJudges(pod, input.judge_user_ids) : doc.judge_user_ids;
     const next = await commit(
       doc,

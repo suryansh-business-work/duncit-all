@@ -89,6 +89,10 @@ export const linking: LinkingOptions<RootStackParamList> = {
       PodPending: 'host/pod-pending/:podId',
       // Mirrors mWeb's /host/pod/:podId/attendance exactly.
       PodAttendance: 'host/pod/:podId/attendance',
+      // Both mirror mWeb exactly, so a shared challenge link opens the app when
+      // it is installed and the browser when it is not.
+      HostPodChallenges: 'host/pod/:podId/challenges',
+      ChallengeArena: 'pod/:podId/challenges/:challengeId/live',
       Earn: 'earn',
       RegisterVenue: 'register-venue',
       VenueManage: 'venues/manage',

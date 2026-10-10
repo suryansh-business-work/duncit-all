@@ -35,6 +35,8 @@ import { PrivacyScreen } from '@/screens/PrivacyScreen';
 import { MainTabs } from '@/navigation/MainTabs';
 import { MenuScreen } from '@/screens/MenuScreen';
 import { PodAttendanceScreen } from '@/screens/PodAttendanceScreen';
+import { HostPodChallengesScreen } from '@/screens/HostPodChallengesScreen';
+import { ChallengeArenaScreen } from '@/screens/ChallengeArenaScreen';
 import { PodHistoryDetailsScreen } from '@/screens/PodHistoryDetailsScreen';
 import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { PodMediaScreen } from '@/screens/PodMediaScreen';
@@ -106,6 +108,8 @@ export function renderCoreScreens() {
       <Stack.Screen name="BecomeHost" component={BecomeHostScreen} />
       <Stack.Screen name="HostManage" component={HostManageScreen} />
       <Stack.Screen name="PodAttendance" component={PodAttendanceScreen} />
+      <Stack.Screen name="HostPodChallenges" component={HostPodChallengesScreen} />
+      <Stack.Screen name="ChallengeArena" component={ChallengeArenaScreen} />
       <Stack.Screen name="PodMedia" component={PodMediaScreen} />
       <Stack.Screen name="HostApply" component={HostApplyScreen} />
       <Stack.Screen name="HostDashboard" component={HostDashboardScreen} />

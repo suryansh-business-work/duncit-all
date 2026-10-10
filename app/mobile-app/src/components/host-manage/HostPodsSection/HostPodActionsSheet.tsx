@@ -36,6 +36,10 @@ export function HostPodActionsSheet({ s }: Readonly<{ s: HostPodSheetState }>) {
         if (actionsPod) navigation.navigate('PodAttendance', { podId: actionsPod.id });
         setActionsPod(null);
       }}
+      onChallenges={() => {
+        if (actionsPod) navigation.navigate('HostPodChallenges', { podId: actionsPod.id });
+        setActionsPod(null);
+      }}
       onSlotRequest={() => {
         if (actionsPod) navigation.navigate('PodPending', { podId: actionsPod.id });
         setActionsPod(null);

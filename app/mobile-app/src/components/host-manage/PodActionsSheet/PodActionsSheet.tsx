@@ -22,6 +22,7 @@ export function PodActionsSheet({
   onClose,
   onScan,
   onSeeAttendance,
+  onChallenges,
   onSlotRequest,
   onComplete,
   onEdit,
@@ -80,6 +81,13 @@ export function PodActionsSheet({
             onPress={onSeeAttendance}
           />
         ) : null}
+        <ActionRow
+          testID="pod-action-challenges"
+          icon="emoji-events"
+          label={t('mweb.challenge.menuItem')}
+          tint={primary}
+          onPress={onChallenges}
+        />
         <ActionRow
           testID="pod-action-slot-request"
           icon="pending-actions"

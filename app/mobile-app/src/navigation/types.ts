@@ -55,6 +55,10 @@ export type RootStackParamList = {
   HostManage: undefined;
   /** Host Studio > Your Pods > actions > See Marked Attendance. */
   PodAttendance: { podId: string };
+  /** Host Studio > Your Pods > actions > Challenges. */
+  HostPodChallenges: { podId: string };
+  /** The full-screen Live Challenge Arena (also the published result). */
+  ChallengeArena: { podId: string; challengeId: string };
   /** A pod's own photos and videos — the host's, and the guests' from the link. */
   PodMedia: { podId: string };
   HostApply: undefined;
@@ -207,6 +211,8 @@ export type MenuStackRoute = Exclude<
   | 'PodRequestDetail'
   | 'PodPending'
   | 'PodAttendance'
+  | 'HostPodChallenges'
+  | 'ChallengeArena'
   | 'PodMedia'
   | 'Policy'
   | 'TicketDetails'

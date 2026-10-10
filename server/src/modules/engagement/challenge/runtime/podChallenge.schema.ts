@@ -129,6 +129,18 @@ export const podChallengeTypeDefs = gql`
     created_at: String!
   }
 
+  "One notification about a challenge, summed over its recipients."
+  type PodChallengeNoticeBatch {
+    "LIVE or RESULT."
+    kind: String!
+    "The result version a RESULT notice announced (0 for LIVE)."
+    version: Int!
+    recipients: Int!
+    whatsapp: Int!
+    email: Int!
+    last_sent_at: String!
+  }
+
   input PodChallengeToolOverrideInput {
     instance_id: String!
     config_json: String!
@@ -193,6 +205,8 @@ export const podChallengeTypeDefs = gql`
     podChallenge(id: ID!): PodChallenge
     podChallengeSetup(pod_id: ID!): PodChallengeSetup!
     podChallengeScoreLog(challenge_id: ID!, limit: Int): [PodChallengeScoreEntry!]!
+    "Managers only: who was told what about this challenge, newest first."
+    podChallengeNotifications(challenge_id: ID!): [PodChallengeNoticeBatch!]!
   }
 
   extend type Mutation {
@@ -217,5 +231,11 @@ export const podChallengeTypeDefs = gql`
     ): PodChallenge!
     "Finalize & Publish. Republishing is a staff-only correction and needs a reason."
     publishPodChallengeResult(id: ID!, reason: String): PodChallenge!
+    """
+    Send the LIVE link or the RESULT link to confirmed attendees who have not
+    had it yet; retry_failed instead retries WhatsApp for those already sent.
+    Returns how many people it went out to.
+    """
+    sendPodChallengeNotice(id: ID!, kind: String!, retry_failed: Boolean): Int!
   }
 `;

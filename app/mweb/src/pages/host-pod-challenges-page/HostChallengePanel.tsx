@@ -9,6 +9,7 @@ import ShareChallengeButton from '../../components/pod-challenge/ShareChallengeB
 import { usePodChallengeLive } from '../../components/pod-challenge/usePodChallengeLive';
 import HostLifecycle from './HostLifecycle';
 import HostLiveControls from './HostLiveControls';
+import HostNotifications from './HostNotifications';
 import HostResultPanel from './HostResultPanel';
 import HostRosterDialog from './HostRosterDialog';
 import HostScoreLog from './HostScoreLog';
@@ -70,6 +71,11 @@ export default function HostChallengePanel({ challengeId }: Readonly<{ challenge
       {(inPlay || finished) && (
         <Section title={t('mweb.challenge.scoreLog')}>
           <HostScoreLog challenge={challenge} actions={actions} />
+        </Section>
+      )}
+      {(inPlay || finished) && (
+        <Section title={t('mweb.challenge.notifications')}>
+          <HostNotifications challenge={challenge} />
         </Section>
       )}
       {finished && <HostResultPanel challenge={challenge} actions={actions} />}

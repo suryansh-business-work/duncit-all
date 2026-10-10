@@ -8,6 +8,7 @@ import { emitChallengeChanged } from './challenge.socket';
 import { managed } from './podChallenge.scoring';
 import { liveStandings, toView } from './podChallenge.view';
 import { winnersOf } from './challenge.standings';
+import { podChallengeNotify } from './podChallenge.notify';
 
 /**
  * Finalize & Publish. A published result is an immutable snapshot (standings,
@@ -83,6 +84,8 @@ export const podChallengeResults = {
       return updated;
     });
     emitChallengeChanged(next._id.toString(), next.revision, 'RESULT');
+    // Attendees hear about the result only after it is committed and locked.
+    await podChallengeNotify.auto(next, pod.pod_title, 'RESULT', user.id);
     return toView(next, pod, access, user.id);
   },
 };

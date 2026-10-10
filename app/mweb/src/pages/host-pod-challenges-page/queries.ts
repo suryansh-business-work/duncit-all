@@ -150,3 +150,34 @@ export const POD_CHALLENGE_SCORE_LOG: TypedDocumentNode<{ podChallengeScoreLog: 
     }
   }
 `;
+
+export interface NoticeBatch {
+  kind: string;
+  version: number;
+  recipients: number;
+  whatsapp: number;
+  email: number;
+  last_sent_at: string;
+}
+
+export const POD_CHALLENGE_NOTIFICATIONS: TypedDocumentNode<{ podChallengeNotifications: NoticeBatch[] }, { id: string }> = gql`
+  query PodChallengeNotifications($id: ID!) {
+    podChallengeNotifications(challenge_id: $id) {
+      kind
+      version
+      recipients
+      whatsapp
+      email
+      last_sent_at
+    }
+  }
+`;
+
+export const SEND_POD_CHALLENGE_NOTICE: TypedDocumentNode<
+  { sendPodChallengeNotice: number },
+  { id: string; kind: string; retryFailed?: boolean }
+> = gql`
+  mutation SendPodChallengeNotice($id: ID!, $kind: String!, $retryFailed: Boolean) {
+    sendPodChallengeNotice(id: $id, kind: $kind, retry_failed: $retryFailed)
+  }
+`;

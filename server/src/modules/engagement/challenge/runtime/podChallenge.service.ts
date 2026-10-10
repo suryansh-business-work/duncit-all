@@ -9,6 +9,7 @@ import { eligibleTemplates, podEligibility, templateEligible } from './podChalle
 import { CHALLENGE_STATUSES, nextStatus, type ChallengeAction, type ChallengeStatus } from './challenge.lifecycle';
 import { commit, loadChallenge } from './podChallenge.commit';
 import { toView } from './podChallenge.view';
+import { podChallengeNotify } from './podChallenge.notify';
 import {
   assertRemovable,
   buildCompetitors,
@@ -235,6 +236,9 @@ export const podChallengeService = {
       oldValue: { status: doc.status },
       newValue: { status: to },
     });
+    // The live link goes to confirmed attendees once the challenge has
+    // actually started (the write above), on the channels the host left on.
+    if (action === 'START') await podChallengeNotify.auto(next, pod.pod_title, 'LIVE', user.id);
     return viewOf(next, pod, user);
   },
 

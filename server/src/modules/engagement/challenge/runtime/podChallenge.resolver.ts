@@ -8,6 +8,7 @@ import { podChallengeScoring, type ScoreInput } from './podChallenge.scoring';
 import { podChallengeControls, type ClockAction } from './podChallenge.controls';
 import { podChallengeBallots, type CriterionScore } from './podChallenge.ballots';
 import { podChallengeResults } from './podChallenge.result';
+import { podChallengeNotices } from './podChallenge.notices';
 
 /**
  * Pod challenge API. Reads are open to signed-out spectators (the service
@@ -39,8 +40,15 @@ export const podChallengeResolvers = {
     },
     podChallengeScoreLog: (_p: unknown, args: { challenge_id: string; limit?: number | null }, ctx: GraphQLContext) =>
       podChallengeScoring.recent(args.challenge_id, requireAuth(ctx), args.limit ?? 50),
+    podChallengeNotifications: (_p: unknown, args: { challenge_id: string }, ctx: GraphQLContext) =>
+      podChallengeNotices.history(args.challenge_id, requireAuth(ctx)),
   },
   Mutation: {
+    sendPodChallengeNotice: (
+      _p: unknown,
+      args: Id & { kind: string; retry_failed?: boolean | null },
+      ctx: GraphQLContext
+    ) => podChallengeNotices.send(args.id, args.kind, !!args.retry_failed, requireAuth(ctx)),
     createPodChallenge: (_p: unknown, args: { input: CreatePodChallengeInput }, ctx: GraphQLContext) =>
       podChallengeService.create(args.input, requireAuth(ctx)),
     updatePodChallengeSettings: (_p: unknown, args: Id & { input: PodChallengeSettingsInput }, ctx: GraphQLContext) =>

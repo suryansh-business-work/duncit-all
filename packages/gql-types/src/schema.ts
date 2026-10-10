@@ -13469,6 +13469,12 @@ export type Mutation = {
   /** Admin. Sends the WhatsApp launch message to the city's subscribers who are not SENT yet. The city must be launched. */
   sendLocationLaunchMessage: LocationLaunchSendResult;
   sendMarketingCampaign: MarketingCampaign;
+  /**
+   * Send the LIVE link or the RESULT link to confirmed attendees who have not
+   * had it yet; retry_failed instead retries WhatsApp for those already sent.
+   * Returns how many people it went out to.
+   */
+  sendPodChallengeNotice: Scalars['Int']['output'];
   sendPodMessage: PodMessage;
   /** Send a Pod Request. LIMIT_REACHED past the monthly cap; CONFLICT if the pair already has a live one. */
   sendPodPartnerRequest: PodPartnerRequest;
@@ -17347,6 +17353,13 @@ export type MutationSendLocationLaunchMessageArgs = {
 
 export type MutationSendMarketingCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSendPodChallengeNoticeArgs = {
+  id: Scalars['ID']['input'];
+  kind: Scalars['String']['input'];
+  retry_failed?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -21513,6 +21526,19 @@ export type PodChallengeCriterionInput = {
   value: Scalars['Float']['input'];
 };
 
+/** One notification about a challenge, summed over its recipients. */
+export type PodChallengeNoticeBatch = {
+  __typename?: 'PodChallengeNoticeBatch';
+  email: Scalars['Int']['output'];
+  /** LIVE or RESULT. */
+  kind: Scalars['String']['output'];
+  last_sent_at: Scalars['String']['output'];
+  recipients: Scalars['Int']['output'];
+  /** The result version a RESULT notice announced (0 for LIVE). */
+  version: Scalars['Int']['output'];
+  whatsapp: Scalars['Int']['output'];
+};
+
 export type PodChallengePlayer = {
   __typename?: 'PodChallengePlayer';
   name: Scalars['String']['output'];
@@ -25029,6 +25055,8 @@ export type Query = {
   podCancellationStats: PodCancellationStats;
   podCancellations: Array<PodCancellation>;
   podChallenge?: Maybe<PodChallenge>;
+  /** Managers only: who was told what about this challenge, newest first. */
+  podChallengeNotifications: Array<PodChallengeNoticeBatch>;
   podChallengeScoreLog: Array<PodChallengeScoreEntry>;
   podChallengeSetup: PodChallengeSetup;
   /** Challenges on a pod the viewer may see (managers see drafts too). */
@@ -27735,6 +27763,11 @@ export type QueryPodCancellationsArgs = {
 
 export type QueryPodChallengeArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodChallengeNotificationsArgs = {
+  challenge_id: Scalars['ID']['input'];
 };
 
 

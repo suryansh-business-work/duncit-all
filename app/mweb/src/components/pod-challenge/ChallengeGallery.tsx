@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import { DuncitIconButton } from '@duncit/buttons';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { videoSourceUrl, type ChallengeEntry } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { ToolNote } from './ToolCard';
@@ -15,16 +16,30 @@ interface Props {
   busy: boolean;
 }
 
-const MEDIA_SX = { width: '100%', maxHeight: 280, borderRadius: 1, display: 'block', bgcolor: 'action.hover' } as const;
+const IMAGE_SX = { width: '100%', maxHeight: 280, borderRadius: 1, display: 'block', bgcolor: 'action.hover', objectFit: 'contain' } as const;
 
-function EntryMedia({ entry, label }: Readonly<{ entry: ChallengeEntry; label: string }>) {
+/**
+ * A photo shows inline. A video or audio piece is a competitor's own upload
+ * with no captions track, so it is not embedded: it opens in the browser's own
+ * player, which carries the viewer's caption and playback settings.
+ */
+function EntryMedia({ entry, name }: Readonly<{ entry: ChallengeEntry; name: string }>) {
+  const { t } = useTranslation();
   if (entry.media_type === 'IMAGE') {
-    return <Box component="img" src={entry.media_url} alt={label} loading="lazy" sx={{ ...MEDIA_SX, objectFit: 'contain' }} />;
+    return <Box component="img" src={entry.media_url} alt={t('mweb.challenge.tools.entryBy', { vars: { name } })} loading="lazy" sx={IMAGE_SX} />;
   }
-  if (entry.media_type === 'VIDEO') {
-    return <Box component="video" src={videoSourceUrl(entry.media_url)} controls playsInline preload="metadata" aria-label={label} sx={MEDIA_SX} />;
-  }
-  return <Box component="audio" src={entry.media_url} controls preload="metadata" aria-label={label} sx={{ width: '100%' }} />;
+  const video = entry.media_type === 'VIDEO';
+  return (
+    <DuncitButton
+      variant="outlined"
+      startIcon={<PlayCircleOutlineIcon />}
+      href={video ? videoSourceUrl(entry.media_url) : entry.media_url}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {video ? t('mweb.challenge.tools.playVideo', { vars: { name } }) : t('mweb.challenge.tools.playAudio', { vars: { name } })}
+    </DuncitButton>
+  );
 }
 
 /** A Submission tool's entries: one piece per competitor, with who it is by. */
@@ -37,7 +52,7 @@ export default function ChallengeGallery({ entries, names, canRemove, onRemove, 
         const name = names.get(entry.competitor_id) ?? '';
         return (
           <Stack key={entry.id} spacing={0.5} component="figure" sx={{ m: 0 }}>
-            <EntryMedia entry={entry} label={t('mweb.challenge.tools.entryBy', { vars: { name } })} />
+            <EntryMedia entry={entry} name={name} />
             <Stack direction="row" spacing={1} component="figcaption" sx={{ alignItems: 'center' }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="body2" sx={{ fontWeight: 700 }}>

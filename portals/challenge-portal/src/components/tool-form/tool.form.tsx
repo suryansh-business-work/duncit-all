@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Autocomplete, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
+import { FormSaveCancel } from '../FormSaveCancel';
 import { useTranslation } from '@duncit/shell';
 import { ToolConfigFields, toolConfigIssues, type ToolField } from '@duncit/challenges';
 import type { CategoryPathOption } from '../../lib/categoryPaths';
@@ -88,14 +88,7 @@ export function ToolForm({ values, fields, engineReady, categories, saving, onSu
           />
         )}
       />
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-        <DuncitButton onClick={onCancel} disabled={saving}>
-          {t('shell.common.cancel')}
-        </DuncitButton>
-        <DuncitButton type="submit" variant="contained" disabled={saving || !formState.isDirty}>
-          {saving ? t('shell.common.saving') : t('shell.common.save')}
-        </DuncitButton>
-      </Stack>
+      <FormSaveCancel saving={saving} pristine={!formState.isDirty} onCancel={onCancel} />
     </Stack>
   );
 }

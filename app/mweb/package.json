@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.83.21",
+  "version": "1.83.22",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",
@@ -91,6 +91,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@duncit/gql-types": "workspace:*",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^26.6.3",

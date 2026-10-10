@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MenuItem, Stack, TextField, Typography } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
+import { FormSaveCancel } from '../FormSaveCancel';
 import { useTranslation } from '@duncit/shell';
 import { AdminCategorySelect } from '@duncit/category';
 import { parseToolConfig, parseToolFields, withDefaults } from '@duncit/challenges';
@@ -99,12 +99,7 @@ export function TemplateForm({ values, tools, presets, saving, onSubmit, onCance
         ))}
       </TextField>
       <WinnerRulesEditor control={control} options={rankOptions} error={formState.errors.winner_rules?.rank_by?.message} disabled={saving} />
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-        <DuncitButton onClick={onCancel} disabled={saving}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton type="submit" variant="contained" disabled={saving || !formState.isDirty}>
-          {saving ? t('shell.common.saving') : t('shell.common.save')}
-        </DuncitButton>
-      </Stack>
+      <FormSaveCancel saving={saving} pristine={!formState.isDirty} onCancel={onCancel} />
     </Stack>
   );
 }

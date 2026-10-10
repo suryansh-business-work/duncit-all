@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormControlLabel, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
+import { FormSaveCancel } from '../FormSaveCancel';
 import { useTranslation } from '@duncit/shell';
 import { ToolConfigFields, parseToolConfig, parseToolFields, toolConfigIssues, withDefaults } from '@duncit/challenges';
 import type { ToolRow } from '../../graphql/engine';
@@ -89,14 +89,7 @@ export function PresetForm({ values, tools, isNew, saving, onSubmit, onCancel }:
           />
         </Stack>
       )}
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-        <DuncitButton onClick={onCancel} disabled={saving}>
-          {t('shell.common.cancel')}
-        </DuncitButton>
-        <DuncitButton type="submit" variant="contained" disabled={saving || !formState.isDirty}>
-          {saving ? t('shell.common.saving') : t('shell.common.save')}
-        </DuncitButton>
-      </Stack>
+      <FormSaveCancel saving={saving} pristine={!formState.isDirty} onCancel={onCancel} />
     </Stack>
   );
 }

@@ -10,9 +10,13 @@ import { isChallengeFinished } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import PageBackHeader from '../pod-pending-page/PageBackHeader';
 import ChallengeResultCard from '../../components/pod-challenge/ChallengeResultCard';
+import ChallengeToolPanels from '../../components/pod-challenge/ChallengeToolPanels';
 import { usePodChallengeLive } from '../../components/pod-challenge/usePodChallengeLive';
 import ArenaLive from './ArenaLive';
+import { useCheckpointScan } from './useCheckpointScan';
 import { useFullscreen } from './useFullscreen';
+
+const FINISHED_PANELS = ['SUBMIT'] as const;
 
 /**
  * The Live Challenge Arena — /pod/:podId/challenges/:challengeId/live.
@@ -29,6 +33,7 @@ export default function PodChallengeArenaPage() {
   const arenaRef = useRef<HTMLDivElement>(null);
   const fullscreen = useFullscreen(arenaRef);
   const { challenge, loading, error, receivedAt } = usePodChallengeLive(challengeId);
+  const scanWaiting = useCheckpointScan(challenge);
 
   const toggleTv = () => {
     const next = new URLSearchParams(params);
@@ -71,6 +76,7 @@ export default function PodChallengeArenaPage() {
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {challenge.pod_title}
         </Typography>
+        {scanWaiting && <Alert severity="warning">{t('mweb.challenge.tools.checkpointNeedCompetitor')}</Alert>}
         {finished && challenge.result && (
           <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }} role="status" aria-live="polite">
             <EmojiEventsIcon color="warning" sx={{ fontSize: tv ? 120 : 64 }} />
@@ -88,6 +94,8 @@ export default function PodChallengeArenaPage() {
         )}
         {finished && challenge.result && <ChallengeResultCard challenge={challenge} showViewLink={false} />}
         {finished && !challenge.result && <Alert severity="info">{t('mweb.challenge.resultsPending')}</Alert>}
+        {/* The gallery outlives play: entries stay on show beside the result. */}
+        {finished && <ChallengeToolPanels challenge={challenge} interactive={!tv} only={FINISHED_PANELS} />}
         {!finished && <ArenaLive challenge={challenge} receivedAt={receivedAt} tv={tv} />}
       </Stack>
     </Box>

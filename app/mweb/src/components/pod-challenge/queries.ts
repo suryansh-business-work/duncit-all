@@ -59,6 +59,7 @@ export const POD_CHALLENGE_FIELDS = gql`
       input_kind
       label
       config_json
+      state_json
       clock_running
       clock_elapsed_ms
       voting_open
@@ -102,6 +103,7 @@ export const POD_CHALLENGE_FIELDS = gql`
       is_staff
       is_attendee
       is_judge
+      my_competitor_id
       can_interact
       can_judge
       allowed_actions
@@ -110,6 +112,7 @@ export const POD_CHALLENGE_FIELDS = gql`
         kind
         candidate_id
         value
+        scope_key
       }
     }
   }

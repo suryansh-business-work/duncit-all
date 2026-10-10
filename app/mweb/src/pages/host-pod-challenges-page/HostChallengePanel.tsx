@@ -3,19 +3,25 @@ import { Accordion, AccordionDetails, AccordionSummary, Alert, Chip, Stack, Typo
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { DuncitButton } from '@duncit/buttons';
-import { CHALLENGE_STATUS_KEYS, isChallengeFinished, isChallengeInPlay } from '@duncit/utils';
+import { CHALLENGE_STATUS_KEYS, isChallengeFinished, isChallengeInPlay, toolsFedBy } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
+import ChallengeToolPanels from '../../components/pod-challenge/ChallengeToolPanels';
 import ShareChallengeButton from '../../components/pod-challenge/ShareChallengeButton';
 import { usePodChallengeLive } from '../../components/pod-challenge/usePodChallengeLive';
+import HostItemsControl from './HostItemsControl';
 import HostLifecycle from './HostLifecycle';
 import HostLiveControls from './HostLiveControls';
 import HostNotifications from './HostNotifications';
+import HostQuizControl from './HostQuizControl';
 import HostResultPanel from './HostResultPanel';
 import HostRosterDialog from './HostRosterDialog';
+import HostRunControls from './HostRunControls';
 import HostScoreLog from './HostScoreLog';
 import HostScorePad from './HostScorePad';
 import HostToggles from './HostToggles';
 import { useHostChallengeActions } from './useHostChallengeActions';
+
+const SUBMISSION_PANELS = ['SUBMIT'] as const;
 
 function Section({ title, children, defaultExpanded = false }: Readonly<{ title: string; children: ReactNode; defaultExpanded?: boolean }>) {
   return (
@@ -40,6 +46,8 @@ export default function HostChallengePanel({ challengeId }: Readonly<{ challenge
   const inPlay = isChallengeInPlay(challenge.status);
   const finished = isChallengeFinished(challenge.status);
   const editable = !finished && challenge.status !== 'CANCELLED';
+  // Entries open as soon as the challenge is scheduled, so the gallery is not a live-only control.
+  const hasSubmissions = challenge.status !== 'DRAFT' && challenge.status !== 'CANCELLED' && toolsFedBy(challenge.tools, 'SUBMIT').length > 0;
 
   return (
     <Stack spacing={1.5} component="section" aria-labelledby={`host-challenge-${challenge.id}`} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
@@ -64,7 +72,17 @@ export default function HostChallengePanel({ challengeId }: Readonly<{ challenge
         <Section title={t('mweb.challenge.liveControls')} defaultExpanded>
           <Stack spacing={2}>
             <HostLiveControls challenge={challenge} receivedAt={receivedAt} actions={actions} />
+            <HostQuizControl challenge={challenge} actions={actions} />
+            <HostRunControls challenge={challenge} actions={actions} />
             {challenge.status === 'LIVE' && <HostScorePad challenge={challenge} actions={actions} />}
+            {challenge.status === 'LIVE' && <HostItemsControl challenge={challenge} actions={actions} />}
+          </Stack>
+        </Section>
+      )}
+      {hasSubmissions && (
+        <Section title={t('mweb.challenge.tools.submissions')}>
+          <Stack spacing={2}>
+            <ChallengeToolPanels challenge={challenge} interactive only={SUBMISSION_PANELS} />
           </Stack>
         </Section>
       )}

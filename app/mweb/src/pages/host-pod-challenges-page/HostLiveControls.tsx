@@ -1,11 +1,11 @@
 import { MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { fireAndForget, logs } from '@duncit/logs';
-import { parseJsonObject } from '@duncit/utils';
+import { parseJsonObject, toolsFedBy } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import ChallengeClock from '../../components/pod-challenge/ChallengeClock';
 import type { PodChallengeView } from '../../components/pod-challenge/queries';
-import { ballotToolsOf, roundToolOf, timersOf } from '../../components/pod-challenge/challengeView';
+import { roundToolOf, timersOf } from '../../components/pod-challenge/challengeView';
 import type { HostChallengeActions } from './useHostChallengeActions';
 
 interface Props {
@@ -40,7 +40,7 @@ export default function HostLiveControls({ challenge, receivedAt, actions }: Rea
             </Stack>
           </Stack>
         ))}
-      {ballotToolsOf(challenge.tools).map((tool) => (
+      {toolsFedBy(challenge.tools, 'VOTE', 'RATE', 'POLL').map((tool) => (
           <Stack key={tool.instance_id} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Typography variant="body2" sx={{ flex: 1 }}>
               {tool.label} · {t(tool.voting_open ? 'mweb.challenge.votingOpen' : 'mweb.challenge.votingClosedShort')}

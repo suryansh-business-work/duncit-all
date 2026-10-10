@@ -1,5 +1,11 @@
-import type { Path } from 'react-hook-form';
-import { brandShippingReady, type BrandWizardFacts, type BrandWizardStepKey } from '@duncit/utils';
+import { get, type FieldErrors, type Path } from 'react-hook-form';
+import {
+  BRAND_WIZARD_STEPS,
+  brandShippingReady,
+  type BrandStepState,
+  type BrandWizardFacts,
+  type BrandWizardStepKey,
+} from '@duncit/utils';
 import type { BrandFormValues } from '../schema';
 import type { BrandConsent, BrandIntegrations, BrandShippingMode } from '../queries';
 
@@ -27,6 +33,50 @@ export const STEP_FIELDS: Record<BrandWizardStepKey, Path<BrandFormValues>[]> = 
   review: [],
   consent: [],
 };
+
+/** What is wrong on each step, as the messages its heading lists. */
+export type StepProblems = Record<BrandWizardStepKey, string[]>;
+
+/** A field's validation message, when the form holds one for it. */
+const messageOf = (errors: FieldErrors<BrandFormValues>, field: Path<BrandFormValues>): string | null => {
+  const message: unknown = get(errors, field)?.message;
+  return typeof message === 'string' && message !== '' ? message : null;
+};
+
+/**
+ * Every step's problems: the validation message of each of its own fields, in
+ * field order and without repeats, and — for a required step the partner has
+ * already moved past while it is still incomplete — the line saying something
+ * it needs is missing. A step that is open, or not reached yet, is not nagged
+ * about what has simply not been typed.
+ */
+export function stepProblems(
+  errors: FieldErrors<BrandFormValues>,
+  states: readonly BrandStepState[],
+  activeStep: number,
+  missing: string,
+): StepProblems {
+  const of = (key: BrandWizardStepKey): string[] => {
+    const fields = STEP_FIELDS[key];
+    const messages = fields.map((field) => messageOf(errors, field)).filter((message) => message !== null);
+    const index = BRAND_WIZARD_STEPS.findIndex((step) => step.key === key);
+    const state = states[index];
+    const skipped = index < activeStep && state?.required === true && !state.complete && fields.length > 0;
+    return [...new Set(skipped ? [...messages, missing] : messages)];
+  };
+  return {
+    details: of('details'),
+    business: of('business'),
+    address: of('address'),
+    payout: of('payout'),
+    categories: of('categories'),
+    media: of('media'),
+    documents: of('documents'),
+    integration: of('integration'),
+    review: of('review'),
+    consent: of('consent'),
+  };
+}
 
 /** Literal keys, one per step — the localization gate greps for `t('…')` calls. */
 export const stepLabels = (t: Translate): Record<BrandWizardStepKey, string> => ({

@@ -62,8 +62,17 @@ export function useBrandWizardActions({ brandId, form, onChanged }: Readonly<Opt
     return Boolean(id);
   };
 
-  /** True once the brand is in review — the wizard then moves on to Integration. */
+  /**
+   * True once the brand is in review — the wizard then moves on to Integration.
+   * The whole form is checked first: the steps are closed by now, so each one
+   * that is wrong says so in its own heading instead of the server refusing
+   * the submission with one line about one of them.
+   */
   const submit = async (): Promise<boolean> => {
+    if (!(await form.trigger())) {
+      notifyError(t('partners.brandWizard.fixErrors'));
+      return false;
+    }
     const id = await persist();
     if (!id) return false;
     try {

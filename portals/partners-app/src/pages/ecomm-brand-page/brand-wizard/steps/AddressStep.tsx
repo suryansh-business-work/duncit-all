@@ -17,6 +17,7 @@ export default function AddressStep({ control, locked }: Readonly<BrandStepProps
         label={t('partners.common.addressLine1')}
         required
         disabled={locked}
+        hint={t('partners.brandWizard.address.line1Hint')}
         data-testid="brand-wizard-address-line1"
       />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -45,7 +46,7 @@ export default function AddressStep({ control, locked }: Readonly<BrandStepProps
           required
           disabled={locked}
           hint={t('partners.brandWizard.address.postalCodeHint')}
-          slotProps={{ htmlInput: { inputMode: 'numeric' } }}
+          slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
           data-testid="brand-wizard-postal-code"
         />
         <RhfTextField

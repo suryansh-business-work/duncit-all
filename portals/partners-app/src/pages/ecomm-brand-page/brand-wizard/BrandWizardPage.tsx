@@ -10,7 +10,7 @@ import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import { MY_ACCOUNT, MY_BRAND, type EcommBrand } from '../queries';
 import { useBrandWizard } from './useBrandWizard';
 import { useBrandWizardActions } from './useBrandWizardActions';
-import { STEP_FIELDS } from './wizard-steps';
+import { STEP_FIELDS, stepProblems } from './wizard-steps';
 import BrandWizardAlerts from './BrandWizardAlerts';
 import BrandWizardStepper from './BrandWizardStepper';
 import BrandStepBody from './BrandStepBody';
@@ -72,6 +72,8 @@ export default function BrandWizardPage({ brandId }: Readonly<Props>) {
   };
 
   const locked = brand?.status === 'SUBMITTED' || brand?.status === 'APPROVED';
+  // Read here, on every render, so a message raised on a step that has since closed still reaches its heading.
+  const problems = stepProblems(wizard.form.formState.errors, wizard.states, activeStep, t('partners.brandWizard.stepMissing'));
   const canSubmit = wizard.states.every((state) => !REVIEW_STEPS.has(state.key) || state.complete);
   const submit = async () => {
     if (await actions.submit()) setActiveStep(LAST_STEP);
@@ -113,6 +115,7 @@ export default function BrandWizardPage({ brandId }: Readonly<Props>) {
           <BrandWizardStepper
             activeStep={activeStep}
             states={wizard.states}
+            problems={problems}
             locked={locked}
             onJump={setActiveStep}
             renderBody={(key, index) => (

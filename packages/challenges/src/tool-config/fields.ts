@@ -7,7 +7,17 @@ import { parseJsonObject } from '@duncit/utils';
  * server re-validates everything; these checks only stop a doomed save early.
  */
 
-export type ToolFieldKind = 'number' | 'boolean' | 'text' | 'select' | 'number_list' | 'criteria';
+export type ToolFieldKind =
+  | 'number'
+  | 'boolean'
+  | 'text'
+  | 'select'
+  | 'number_list'
+  | 'criteria'
+  | 'items'
+  | 'options'
+  | 'questions'
+  | 'weights';
 
 export interface ToolField {
   key: string;
@@ -28,7 +38,18 @@ export interface JudgeCriterion {
 export type ToolConfig = Record<string, unknown>;
 
 
-const KINDS: readonly ToolFieldKind[] = ['number', 'boolean', 'text', 'select', 'number_list', 'criteria'];
+const KINDS: readonly ToolFieldKind[] = [
+  'number',
+  'boolean',
+  'text',
+  'select',
+  'number_list',
+  'criteria',
+  'items',
+  'options',
+  'questions',
+  'weights',
+];
 
 function parseJson(json: string | null | undefined): unknown {
   if (!json) return null;
@@ -56,7 +77,36 @@ export function withDefaults(fields: ToolField[], config: ToolConfig): ToolConfi
   return Object.fromEntries(fields.map((f) => [f.key, config[f.key] ?? f.default]));
 }
 
-export type ToolConfigIssue = { key: string; code: 'number' | 'min' | 'max' | 'list' | 'criteria' };
+export type ToolConfigIssue = {
+  key: string;
+  code: 'number' | 'min' | 'max' | 'list' | 'criteria' | 'entries' | 'questions' | 'terms';
+};
+
+type Entry = Record<string, unknown>;
+const entriesOf = (value: unknown): Entry[] => (Array.isArray(value) ? (value as Entry[]) : []);
+const labelled = (list: Entry[]) => list.every((e) => String(e.label ?? '').trim() !== '');
+
+/** A quiz question needs text, at least two answers and a correct answer from its own list. */
+function questionOk(q: Entry): boolean {
+  const options = Array.isArray(q.options) ? q.options : [];
+  const correct = Number(q.correct);
+  return String(q.label ?? '').trim() !== '' && options.length >= 2 && Number.isInteger(correct) && correct >= 0 && correct < options.length;
+}
+
+/** The list-valued kinds: enough entries, every one complete, nothing repeated. */
+function listIssue(f: ToolField, value: unknown): ToolConfigIssue | null {
+  const list = entriesOf(value);
+  if (f.kind === 'questions') return list.length > 0 && list.every(questionOk) ? null : { key: f.key, code: 'questions' };
+  if (f.kind === 'weights') {
+    const types = list.map((e) => String(e.type ?? ''));
+    const ok = list.length > 0 && new Set(types).size === types.length && list.every((e) => Number.isFinite(Number(e.weight)));
+    return ok ? null : { key: f.key, code: 'terms' };
+  }
+  const min = f.kind === 'options' ? 2 : 1;
+  return list.length >= min && labelled(list) ? null : { key: f.key, code: 'entries' };
+}
+
+const LIST_KINDS: readonly ToolFieldKind[] = ['items', 'options', 'questions', 'weights'];
 
 function numberIssue(f: ToolField, value: unknown): ToolConfigIssue | null {
   const n = Number(value);
@@ -87,6 +137,7 @@ export function toolConfigIssues(fields: ToolField[], config: ToolConfig): ToolC
       }
     }
     if (f.kind === 'criteria') issue = criteriaIssue(f, value);
+    if (LIST_KINDS.includes(f.kind)) issue = listIssue(f, value);
     return issue ? [issue] : [];
   });
 }

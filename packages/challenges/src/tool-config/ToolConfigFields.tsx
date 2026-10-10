@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
 import { useTranslation, type Translate } from '../i18n';
 import { CriteriaEditor } from './CriteriaEditor';
+import { ListField } from './ListField';
 import type { JudgeCriterion, ToolConfig, ToolConfigIssue, ToolField } from './fields';
 
 export interface ToolConfigFieldsProps {
@@ -81,6 +82,11 @@ export function ToolConfigFields({ fields, value, onChange, issues, disabled }: 
             );
           case 'number_list':
             return <NumberListField key={f.key} f={f} value={current} onChange={(v) => set(f.key, v)} error={error} disabled={disabled} />;
+          case 'items':
+          case 'options':
+          case 'questions':
+          case 'weights':
+            return <ListField key={f.key} field={f} value={current} onChange={(v) => set(f.key, v)} error={error} disabled={disabled} />;
           case 'criteria':
             return <CriteriaEditor key={f.key} value={(current as JudgeCriterion[]) ?? []} onChange={(v) => set(f.key, v)} error={error} disabled={disabled} />;
           case 'number':

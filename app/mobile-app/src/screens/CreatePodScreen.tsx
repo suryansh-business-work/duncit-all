@@ -11,6 +11,7 @@ import { useCreatePod } from '@/hooks/useCreatePod';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useHomeStore } from '@/stores/home.store';
 import type { RootStackParamList } from '@/navigation/types';
+import { challengeRequired } from '@/services/challenge-setup';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
@@ -92,6 +93,9 @@ export function CreatePodScreen() {
                 // the host on the waiting screen instead of Host Management.
                 if (created.venue_approval_status === PodVenueApproval.Pending) {
                   navigation.replace('PodPending', { podId: created.id });
+                } else if (await challengeRequired(created.id)) {
+                  // The pod's category requires a challenge: take the host to set it up.
+                  navigation.replace('HostPodChallenges', { podId: created.id });
                 } else {
                   navigation.replace('HostManage');
                 }

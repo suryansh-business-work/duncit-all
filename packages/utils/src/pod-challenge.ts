@@ -125,3 +125,20 @@ export function watchChallenge(
 /** How often a viewer without a live socket (signed out, or reconnecting) re-reads. */
 export const CHALLENGE_POLL_MS = 5000;
 
+
+/** What a pod's category says about challenges (the server's `podChallengeSetup`). */
+export interface PodChallengeRequirement {
+  enabled: boolean;
+  require_challenge: boolean;
+  templates: ReadonlyArray<unknown>;
+}
+
+/**
+ * Whether a host who has just published a pod should be taken straight to its
+ * Challenges page: only when the category REQUIRES a challenge and there is a
+ * template to pick. Where challenges are merely allowed they stay optional and
+ * the host adds one from Host Studio whenever they like.
+ */
+export function mustSetUpChallenge(setup: PodChallengeRequirement | null | undefined): boolean {
+  return !!setup && setup.enabled && setup.require_challenge && setup.templates.length > 0;
+}

@@ -250,6 +250,7 @@ export {
   hostPodChallengesPath,
   isChallengeFinished,
   isChallengeInPlay,
+  mustSetUpChallenge,
   parseJsonObject,
   podChallengeLiveLink,
   podChallengeLivePath,
@@ -257,6 +258,7 @@ export {
   type ChallengeChangedFrame,
   type ChallengeClock,
   type ChallengeSocketLike,
+  type PodChallengeRequirement,
   type PodChallengeStatus,
 } from './pod-challenge';
 export {

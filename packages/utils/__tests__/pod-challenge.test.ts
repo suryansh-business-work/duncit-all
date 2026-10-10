@@ -8,6 +8,7 @@ import {
   hostPodChallengesPath,
   isChallengeFinished,
   isChallengeInPlay,
+  mustSetUpChallenge,
   parseJsonObject,
   podChallengeLiveLink,
   podChallengeLivePath,
@@ -170,5 +171,21 @@ describe('watchChallenge', () => {
 describe('CHALLENGE_POLL_MS', () => {
   it('polls a socketless viewer every five seconds', () => {
     expect(CHALLENGE_POLL_MS).toBe(5000);
+  });
+});
+
+describe('mustSetUpChallenge', () => {
+  const required = { enabled: true, require_challenge: true, templates: [{ id: 't1' }] };
+
+  it('sends the host to Challenges only when the category requires one and offers a template', () => {
+    expect(mustSetUpChallenge(required)).toBe(true);
+  });
+
+  it('leaves challenges optional everywhere else', () => {
+    expect(mustSetUpChallenge({ ...required, require_challenge: false })).toBe(false);
+    expect(mustSetUpChallenge({ ...required, enabled: false })).toBe(false);
+    expect(mustSetUpChallenge({ ...required, templates: [] })).toBe(false);
+    expect(mustSetUpChallenge(null)).toBe(false);
+    expect(mustSetUpChallenge(undefined)).toBe(false);
   });
 });

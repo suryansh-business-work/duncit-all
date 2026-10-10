@@ -16,6 +16,12 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({ params: { draftId: 'd1' } }),
 }));
 jest.mock('@/hooks/useCreatePod', () => ({ useCreatePod: jest.fn() }));
+// Whether the pod's category requires a challenge is a server answer; each
+// test says which one it is exercising.
+const mockChallengeRequired = jest.fn().mockResolvedValue(false);
+jest.mock('@/services/challenge-setup', () => ({
+  challengeRequired: (podId: string) => mockChallengeRequired(podId),
+}));
 const mockFetch = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/stores/home.store', () => ({
   useHomeStore: { getState: () => ({ fetch: mockFetch }) },
@@ -79,6 +85,21 @@ describe('CreatePodScreen', () => {
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('HostManage'));
     expect(screenApi.publish).toHaveBeenCalledWith('draft-1', {});
     expect(mockFetch).toHaveBeenCalledWith(true);
+  });
+
+  it('lands on the pod’s Challenges screen when its category requires a challenge', async () => {
+    mockChallengeRequired.mockResolvedValueOnce(true);
+    const screenApi = api({
+      publish: jest.fn().mockResolvedValue({ id: 'pod-9', venue_approval_status: 'NONE' }),
+    });
+    mockedUse.mockReturnValue(screenApi);
+    renderWithProviders(<CreatePodScreen />);
+    fireEvent.press(screen.getByTestId('mock-publish'));
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith('HostPodChallenges', { podId: 'pod-9' }),
+    );
+    expect(mockChallengeRequired).toHaveBeenCalledWith('pod-9');
+    expect(mockReplace).not.toHaveBeenCalledWith('HostManage');
   });
 
   it('lands on the waiting screen when the venue slot request is PENDING', async () => {

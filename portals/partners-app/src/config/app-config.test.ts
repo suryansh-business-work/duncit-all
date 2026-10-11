@@ -111,8 +111,17 @@ describe('landingPath', () => {
     }
   });
 
-  it('lands somebody holding several studios on the first one, in sidebar order', () => {
-    expect(landingPath(['HOST', 'CLUB_ADMIN'])).toBe('/club-admin/options');
+  it('lands somebody holding several studios on the one they are in, else the first in sidebar order', () => {
+    const roles = ['HOST', 'CLUB_ADMIN', 'ECOMM_MANAGER'];
+    // "Home" (breadcrumb root, logo) reopens the studio the partner is in.
+    expect(landingPath(roles, true, 'ECOMM_MANAGER')).toBe('/ecomm/options');
+    expect(landingPath(roles, true, 'HOST')).toBe('/host/options');
+    // No studio remembered yet → the first one held.
+    expect(landingPath(roles)).toBe('/club-admin/options');
+    expect(landingPath(roles, true, null)).toBe('/club-admin/options');
+    // A remembered studio they do not hold, or one the product flag hides.
+    expect(landingPath(roles, true, 'VENUE_OWNER')).toBe('/club-admin/options');
+    expect(landingPath(roles, false, 'ECOMM_MANAGER')).toBe('/club-admin/options');
   });
 
   it('lands an e-commerce-only partner on Earn while products are off', () => {

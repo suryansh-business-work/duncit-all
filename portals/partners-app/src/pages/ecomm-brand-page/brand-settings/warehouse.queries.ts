@@ -16,6 +16,7 @@ const WAREHOUSE_FIELDS = `
   pincode
   country
   is_default
+  is_active
   shiprocket_registered
   shiprocket_error
   shiprocket_pickup_id
@@ -51,7 +52,9 @@ export const SET_DEFAULT_MY_WAREHOUSE = gql`
  * so only be picked on a product — once it is APPROVED. */
 export type WarehouseReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-export const isWarehouseUsable = (warehouse: BrandWarehouse) => warehouse.review_status === 'APPROVED';
+/** Approved by the Products team AND switched on — the two things a product needs of its pickup address. */
+export const isWarehouseUsable = (warehouse: BrandWarehouse) =>
+  warehouse.review_status === 'APPROVED' && warehouse.is_active !== false;
 
 /** One brand warehouse (BrandPickupLocation) as listed in Brand Settings. */
 export interface BrandWarehouse {
@@ -70,6 +73,8 @@ export interface BrandWarehouse {
   pincode: string;
   country: string;
   is_default: boolean;
+  /** Enabled for use. An inactive pickup address cannot be chosen for a product or made primary. */
+  is_active: boolean;
   shiprocket_registered: boolean;
   shiprocket_error: string;
   shiprocket_pickup_id: string;
@@ -94,3 +99,35 @@ export interface WarehouseSyncResult {
   adopted: number;
   synced_at: string;
 }
+
+export const SET_MY_WAREHOUSE_ACTIVE = gql`
+  mutation SetMyBrandPickupLocationActive($brand_doc_id: ID!, $id: ID!, $active: Boolean!) {
+    setMyBrandPickupLocationActive(brand_doc_id: $brand_doc_id, id: $id, active: $active) { ${WAREHOUSE_FIELDS} }
+  }
+`;
+
+/** A product that ships from a pickup address — what must be moved before it can be disabled or deleted. */
+export interface PickupProductRef {
+  id: string;
+  name: string;
+  status: string;
+}
+
+export interface PickupUsage {
+  count: number;
+  products: PickupProductRef[];
+}
+
+export interface MyWarehouseUsageData {
+  myBrandPickupLocationUsage: PickupUsage;
+}
+
+/** The products shipping from one own-brand pickup address. */
+export const MY_WAREHOUSE_USAGE = gql`
+  query MyBrandPickupLocationUsage($brand_doc_id: ID!, $id: ID!) {
+    myBrandPickupLocationUsage(brand_doc_id: $brand_doc_id, id: $id) {
+      count
+      products { id name status }
+    }
+  }
+`;

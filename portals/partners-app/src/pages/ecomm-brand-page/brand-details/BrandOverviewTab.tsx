@@ -10,11 +10,9 @@ import { integrationReady } from '../brand-wizard/wizard-steps';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const shippingLabel = (brand: EcommBrand, t: Translate) => {
-  if (brand.shipping_mode === 'DUNCIT_COURIER') return t('partners.brandDetails.shippingDuncit');
-  if (brand.shipping_mode === 'OWN_SHIPROCKET') return t('partners.brandDetails.shippingOwn');
-  return t('partners.brandDetails.shippingNotChosen');
-};
+/** Every brand ships on its own ShipRocket account; one from the Duncit-courier days still says so. */
+const shippingLabel = (brand: EcommBrand, t: Translate) =>
+  brand.shipping_mode === 'DUNCIT_COURIER' ? t('partners.brandDetails.shippingDuncit') : t('partners.brandDetails.shippingOwn');
 
 /** Where the brand stands on going live, with both providers and the way to finish. */
 function GoLiveCard({ brand }: Readonly<{ brand: EcommBrand }>) {

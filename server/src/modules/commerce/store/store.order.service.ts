@@ -19,8 +19,8 @@ import { shipmentView } from '@modules/commerce/shiprocket/shiprocket.shipment';
 import { StoreReturnModel } from './storeReturn.model';
 import { mailOrderUpdate } from './store.emails';
 import { whatsappOrderUpdate } from './store.whatsapp';
-import { CANCELLABLE, toStoreOrder } from './store.order.mapper';
-import { badInput, forbidden, notFound, round2, sameSecret, toObjectId } from './store.shared';
+import { CANCELLABLE, storeOrderCash, toStoreOrder } from './store.order.mapper';
+import { badInput, forbidden, notFound, sameSecret, toObjectId } from './store.shared';
 
 /**
  * A pet-store order after checkout: the buyer's view of it (their orders, a
@@ -139,14 +139,57 @@ async function cancelOrder(order: IProductOrder, opts: CancelOptions) {
   await whatsappOrderUpdate(order);
 }
 
+/**
+ * Write down what a cancellation gave back, on the order it was for — where the
+ * pod shop has always kept it. A RECORD only: the money and the coins are moved
+ * by the callers exactly as before, and nothing reads this to move either.
+ * Finance › Ecomm › Order Refunds lists it; without it that page has to work the
+ * figures out again and cannot tell a cash refund from one taken as coins.
+ *
+ * RECORDED is the pod shop's own word for "nothing was sent to a gateway" —
+ * true of every pet-store refund, which Finance pays out from the refund log.
+ * Never fails the cancellation: the money has already moved by now.
+ */
+async function recordRefundFacts(
+  order: IProductOrder,
+  facts: { cash: number; coins: number; initiatedBy: string }
+) {
+  try {
+    await ProductOrderModel.updateOne(
+      { _id: order._id },
+      {
+        $set: {
+          refund: {
+            status: 'RECORDED',
+            amount: facts.cash,
+            coins: facts.coins,
+            razorpay_refund_id: '',
+            attempted_at: null,
+            refunded_at: new Date(),
+            error: '',
+            initiated_by: facts.initiatedBy,
+            finance_recorded: facts.cash > 0,
+          },
+        },
+      }
+    );
+  } catch (error) {
+    logs.server.error('store', 'recordRefundFacts', { error, order_no: order.order_no, ...facts });
+  }
+}
+
 async function settleCancellationMoney(order: IProductOrder, opts: CancelOptions) {
   const payment = await PaymentModel.findById(order.payment_id);
   if (!payment) return;
   const siblings = await ProductOrderModel.find({ payment_id: payment._id }).select('cancelled_at').lean();
   const allCancelled = siblings.every((s) => s.cancelled_at);
+  const initiatedBy = opts.by === 'ADMIN' ? 'STORE_ADMIN_CANCEL' : 'STORE_CUSTOMER_CANCEL';
+  // A guest has no wallet: `creditCoinsBack` credits nothing, so none is recorded.
+  const coinsBack = payment.user_id ? Math.max(0, Math.floor(order.coins_share ?? 0)) : 0;
   if (order.payment_method === 'COD') {
     // Nothing was paid. The coins that were spent on it come back.
     await creditCoinsBack(payment, order.coins_share, `store-cancel:${String(order._id)}`, `Order ${order.order_no} cancelled`);
+    await recordRefundFacts(order, { cash: 0, coins: coinsBack, initiatedBy });
     if (allCancelled) {
       await PaymentModel.updateOne(
         { _id: payment._id },
@@ -155,14 +198,16 @@ async function settleCancellationMoney(order: IProductOrder, opts: CancelOptions
     }
     return;
   }
-  const cash = round2(Math.max(0, order.total - (order.discount_total ?? 0)));
+  const cash = storeOrderCash(order);
   const reason = `Order ${order.order_no} cancelled`;
   await creditCoinsBack(payment, order.coins_share, `store-cancel:${String(order._id)}`, reason);
   if (opts.refundMode === 'COINS' && payment.user_id) {
     await creditCoinsBack(payment, Math.floor(cash), `store-cancel-cash:${String(order._id)}`, reason);
+    await recordRefundFacts(order, { cash: 0, coins: coinsBack + Math.floor(cash), initiatedBy });
     return;
   }
-  await recordPaymentRefund(payment, cash, reason, opts.by === 'ADMIN' ? 'STORE_ADMIN_CANCEL' : 'STORE_CUSTOMER_CANCEL');
+  await recordPaymentRefund(payment, cash, reason, initiatedBy);
+  await recordRefundFacts(order, { cash, coins: coinsBack, initiatedBy });
 }
 
 /* ------------------------------------------------------------------ *

@@ -229,6 +229,8 @@ export interface BrandOrderActions {
   editAddress: boolean;
   /** Label and invoice exist once the courier has assigned an AWB. */
   documents: boolean;
+  /** Call the order off with a full refund — only while the parcel is still with the brand. */
+  cancel: boolean;
   /** Pull the courier's latest scans. */
   refreshTracking: boolean;
 }
@@ -241,13 +243,28 @@ export interface BrandOrderFacts {
   shiprocket: Readonly<{ order_id?: string | null; awb?: string | null }>;
 }
 
+/**
+ * States a brand may still cancel its own order in: before the courier has the
+ * parcel (a pickup order: before it is handed over). Mirrors the server's
+ * `BEFORE_PICKUP` in `productOrder.cancel.ts`, which enforces it.
+ */
+export const BRAND_CANCELLABLE: ReadonlySet<string> = new Set<string>([
+  'PENDING',
+  'AWAITING_SHIPMENT',
+  'AWB_ASSIGNED',
+  'PICKUP_SCHEDULED',
+  'READY_FOR_PICKUP',
+  'FAILED',
+]);
+
 /** States a booking can still be (re)started from. */
 const BOOKABLE = new Set<string>(['PENDING', 'AWAITING_SHIPMENT', 'FAILED']);
 
 /**
  * One rule for the Partner console, mWeb and the native Studio: which order
- * actions to offer. Only a shipped, live order has any — a pickup order and a
- * cancelled one are read-only on the brand's desk.
+ * actions to offer. The courier steps belong to a shipped, live order; calling
+ * an order off (`cancel`) is open to a pickup order too, until it is handed
+ * over. A cancelled order is read-only on the brand's desk.
  */
 export function brandOrderActions(order: Readonly<BrandOrderFacts>): BrandOrderActions {
   const live = order.fulfilment_method === 'SHIP' && !order.cancelled_at;
@@ -257,6 +274,7 @@ export function brandOrderActions(order: Readonly<BrandOrderFacts>): BrandOrderA
     book: live && !awb && BOOKABLE.has(order.fulfilment_status),
     editAddress: live && !booked,
     documents: live && awb,
+    cancel: !order.cancelled_at && BRAND_CANCELLABLE.has(order.fulfilment_status),
     refreshTracking: live && awb,
   };
 }

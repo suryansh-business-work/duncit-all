@@ -1,5 +1,6 @@
 import { Alert, AlertTitle, Chip, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
 import { formatDate } from '@duncit/app-settings';
+import { formatMoney } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import type { DeletionOrder, DeletionPreview, DeletionProduct } from './deletion.queries';
 
@@ -11,13 +12,21 @@ function RunningOrders({ orders, total }: Readonly<{ orders: DeletionOrder[]; to
       <Typography variant="subtitle2" component="h3" sx={{ fontWeight: 800 }}>
         {t('partners.deletionRequest.ordersHeading')}
       </Typography>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {t('partners.deletionRequest.ordersRefundHint')}
+      </Typography>
       <List dense disablePadding aria-label={t('partners.deletionRequest.ordersHeading')}>
         {orders.map((order) => (
           <ListItem key={order.id} disableGutters divider secondaryAction={<Chip size="small" variant="outlined" label={order.fulfilment_status} />}>
             <ListItemText
               primary={order.order_no}
               secondary={t('partners.deletionRequest.orderLine', {
-                vars: { date: formatDate(order.created_at), units: order.units },
+                vars: {
+                  date: formatDate(order.created_at),
+                  units: order.units,
+                  buyer: order.buyer_name,
+                  amount: formatMoney(order.total, { decimals: 2, symbol: order.currency_symbol || undefined }),
+                },
               })}
             />
           </ListItem>

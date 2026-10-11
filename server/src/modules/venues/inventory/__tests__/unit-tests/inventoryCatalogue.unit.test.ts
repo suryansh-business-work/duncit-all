@@ -631,14 +631,22 @@ describe('inventoryService.create', () => {
   it('requires a warehouse on every Duncit-owned product', async () => {
     await expect(
       inventoryService.create(createInput({ pickup_location_id: null }), ADMIN)
-    ).rejects.toThrow('A warehouse (pickup location) is required');
+    ).rejects.toThrow('A pickup address is required');
   });
 
   it('rejects a warehouse that is not owned by Duncit', async () => {
     warehouseModel.findById.mockReturnValue(query({ owner_kind: 'BRAND' }));
     await expect(inventoryService.create(createInput(), ADMIN)).rejects.toThrow(
-      'Select a valid Duncit warehouse'
+      'Select a valid Duncit pickup address'
     );
+  });
+
+  it('rejects a Duncit pickup address that has been switched off', async () => {
+    warehouseModel.findById.mockReturnValue(query({ owner_kind: 'DUNCIT', is_active: false }));
+    await expect(inventoryService.create(createInput(), ADMIN)).rejects.toThrow(
+      'This pickup address is disabled — enable it under Duncit Pickup Addresses, or choose another one'
+    );
+    expect(productModel.create).not.toHaveBeenCalled();
   });
 
   it('rejects a SKU that is already taken', async () => {
@@ -755,7 +763,7 @@ describe('inventoryService.update', () => {
     productModel.findById.mockResolvedValue(productDoc());
     await expect(
       inventoryService.update(PRODUCT_ID, { pickup_location_id: null }, ADMIN)
-    ).rejects.toThrow('A warehouse (pickup location) is required');
+    ).rejects.toThrow('A pickup address is required');
   });
 
   it('does not require a warehouse on a BRAND-owned product', async () => {

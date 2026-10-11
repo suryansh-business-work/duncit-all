@@ -136,7 +136,8 @@ export default function MenuPanel({
         onSelect={(next) => {
           setMode(next);
           setSwitchOpen(false);
-          // An Auto Pod waiting on the new role wins over its dashboard.
+          // Lands on the new role's Studio page; an Auto Pod waiting on the
+          // role wins over it.
           go(studioSwitchPath(next, autoPods.counts));
         }}
       />

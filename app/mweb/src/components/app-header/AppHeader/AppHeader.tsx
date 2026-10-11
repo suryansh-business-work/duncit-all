@@ -161,8 +161,8 @@ export default function AppHeader({
               onSelect={(next) => {
                 setStudioMode(next);
                 setStudioSwitchOpen(false);
-                // Jump straight to the selected role's dashboard (B3-2) — or to
-                // its Auto Pod queue when one is waiting on that role.
+                // Jump straight to the selected role's Studio page — or to its
+                // Auto Pod queue when one is waiting on that role.
                 navigate(studioSwitchPath(next, autoPods.counts));
               }}
             />

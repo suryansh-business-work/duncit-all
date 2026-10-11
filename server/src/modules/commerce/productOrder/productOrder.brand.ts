@@ -101,6 +101,30 @@ export const brandProductOrderService = {
     return productOrderService.toPub(order);
   },
 
+  /**
+   * The brand calls off its own order: the shipment is stopped, the stock goes
+   * back and the buyer is refunded in full and told why. Only while the parcel
+   * is still with the brand (`cancelPodShopOrder` refuses a BRAND cancel once
+   * the courier has it). Every line must be the partner's — an order is one
+   * brand's by construction, and this holds it to that.
+   */
+  async cancel(userId: string, id: string, reason: string, actor: string) {
+    const order = await ownedOrder(userId, id);
+    const owned = new Set((await ownedBrandIds(userId)).map(String));
+    if (order.line_items.some((line) => !line.brand_id || !owned.has(String(line.brand_id)))) {
+      bad('This order holds items that are not your brand’s, so it can only be cancelled by Duncit support');
+    }
+    const { cancelPodShopOrder } = await import('./productOrder.cancel');
+    return productOrderService.toPub(await cancelPodShopOrder(String(order._id), { source: 'BRAND', actor, reason }));
+  },
+
+  /** The partner's own orders that a deletion request cancelled, with each buyer's refund. */
+  async deletionRefunds(userId: string, query?: TableQueryInput | null, brandId?: string | null) {
+    const owned = await ownedBrandIds(userId);
+    const brandIds = brandId ? owned.filter((b) => String(b) === brandId) : owned;
+    return productOrderService.tableForDeletionRefunds({ brandIds }, query);
+  },
+
   /** One PDF for the given orders — every one of them must be the partner's. */
   async shipmentFile(userId: string, ids: string[], kind: ShipmentDocument) {
     const valid = ids.filter((id) => Types.ObjectId.isValid(id));

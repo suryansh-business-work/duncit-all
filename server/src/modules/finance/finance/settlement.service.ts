@@ -5,6 +5,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { roundOffOf } from '@modules/finance/payment/payment.roundoff';
 import { getFinanceSettings } from './finance.model';
 import { podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
 import {
@@ -118,28 +119,52 @@ export const SETTLEMENT_ENGINE_VERSION = 2;
  * payment at checkout, taken off the ticket money only), so the discount is
  * host-funded by construction — never add `ticket_discount_amount` back here.
  */
-const ticketMoneyOf = (p: { total?: number; metadata?: any }) => {
+const ticketMoneyOf = (p: { total?: number; round_off?: number; metadata?: any }) => {
   const products = Number(p.metadata?.product_cost_total) || 0;
   const refunded = Number(p.metadata?.refunded_amount) || 0;
-  return Math.max(0, (Number(p.total) || 0) - products - refunded);
+  // What the buyer paid for the tickets, and what of it they still hold.
+  const paid = (Number(p.total) || 0) - products;
+  const kept = Math.max(0, paid - refunded);
+  // The round-off is Duncit's, never the pod's: it comes out before the
+  // waterfall sees the money. A part refund gave back its share of it, so only
+  // the share still held is taken off. Zero for every payment without one.
+  const roundOff = paid > 0 ? (roundOffOf(p) * kept) / paid : 0;
+  return Math.max(0, kept - roundOff);
 };
 
 /** The same netting as `ticketMoneyOf`, as a Mongo aggregation expression. */
 const TICKET_MONEY_EXPR = {
-  $max: [
-    0,
-    {
-      $subtract: [
-        { $ifNull: ['$total', 0] },
-        {
-          $add: [
-            { $ifNull: ['$metadata.product_cost_total', 0] },
-            { $ifNull: ['$metadata.refunded_amount', 0] },
+  $let: {
+    vars: {
+      paid: {
+        $subtract: [{ $ifNull: ['$total', 0] }, { $ifNull: ['$metadata.product_cost_total', 0] }],
+      },
+      refunded: { $ifNull: ['$metadata.refunded_amount', 0] },
+      round_off: { $ifNull: ['$round_off', 0] },
+    },
+    in: {
+      $let: {
+        vars: { kept: { $max: [0, { $subtract: ['$$paid', '$$refunded'] }] } },
+        in: {
+          $max: [
+            0,
+            {
+              $subtract: [
+                '$$kept',
+                {
+                  $cond: [
+                    { $gt: ['$$paid', 0] },
+                    { $divide: [{ $multiply: ['$$round_off', '$$kept'] }, '$$paid'] },
+                    0,
+                  ],
+                },
+              ],
+            },
           ],
         },
-      ],
+      },
     },
-  ],
+  },
 };
 
 /** TICKET money a pod actually took in = sum of its SUCCESS payments net of
@@ -205,7 +230,7 @@ export async function podAttendanceRoster(podDocId: string): Promise<PodAttendan
     TicketModel.find({ membership_id: { $in: memberIds }, status: 'CHECKED_IN' })
       .select('membership_id checked_in_at')
       .lean(),
-    PaymentModel.find({ pod_id: podId, status: 'SUCCESS' }).select('_id total metadata').lean(),
+    PaymentModel.find({ pod_id: podId, status: 'SUCCESS' }).select('_id total round_off metadata').lean(),
     UserModel.find({ _id: { $in: members.map((m: any) => m.user_id) } })
       .select('_id profile.first_name profile.last_name')
       .lean(),

@@ -21,6 +21,7 @@ import {
   type PaymentSegment,
 } from './payment.steps';
 import { toPub } from './payment.service';
+import { roundOffOf } from './payment.roundoff';
 
 /**
  * The audit behind Finance > Payment Logs > detail.
@@ -628,7 +629,9 @@ function originalTotal(payment: IPayment, meta: Record<string, unknown> | undefi
     payment.total +
       (payment.ticket_discount_amount ?? 0) +
       (payment.coupon_discount ?? 0) +
-      (payment.coins_redeemed ?? 0)
+      (payment.coins_redeemed ?? 0) -
+      // The round-off was added to the bill after every discount; it is not cart value.
+      roundOffOf(payment)
   );
 }
 

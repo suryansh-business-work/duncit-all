@@ -4,30 +4,23 @@ import DownloadIcon from '@mui/icons-material/Download';
 import UndoIcon from '@mui/icons-material/Undo';
 import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { useTranslation, type Translator } from '@duncit/app-settings';
-import { StatusChip } from '@duncit/ui';
-import { STATUS_COLORS, fmt } from './helpers';
-import { renderPaymentCustomer, renderPaymentIds } from './cells';
-import type { PaymentRow } from './queries';
-
-/** The filter's options carry translated labels but untranslated values — the
- * value is the PaymentStatus the server filters on, not copy. */
-const statusOptions = (t: Translator['t']) => [
-  { value: 'PENDING', label: t('finance.payment.statusPending') },
-  { value: 'SUCCESS', label: t('finance.payment.statusSuccess') },
-  { value: 'FAILED', label: t('finance.payment.statusFailed') },
-  { value: 'REFUNDED', label: t('finance.payment.statusRefunded') },
-];
+import { useTranslation } from '@duncit/app-settings';
+import { buildPaymentColumns } from './paymentColumns';
+import type { PaymentRow, PaymentShop } from './queries';
 
 const getPaymentRowId = (p: PaymentRow) => p.id;
 
-const whenValue = (p: PaymentRow) => new Date(p.created_at).toLocaleString('en-IN');
-
-const renderStatus = (p: PaymentRow) => (
-  <StatusChip status={p.status} colorMap={STATUS_COLORS} />
-);
+/** Each log keeps its own saved column layout: the shops' tables differ from the all-payments one. */
+const TABLE_ID: Record<PaymentShop, string> = {
+  POD_SHOP: 'finance-pod-shop-payments',
+  ECOMM: 'finance-ecomm-payments',
+};
 
 interface Props {
+  /** One shop's log. Absent is the all-payments log, exactly as it always was. */
+  shop?: PaymentShop;
+  /** The page's own title, which names the table for a screen reader. */
+  title: string;
   fetchRows: TableFetch<PaymentRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   downloadingId: string | null;
@@ -38,6 +31,8 @@ interface Props {
 }
 
 export default function PaymentsTable({
+  shop,
+  title,
   fetchRows,
   refetchRef,
   downloadingId,
@@ -90,93 +85,12 @@ export default function PaymentsTable({
       </Stack>
       );
     };
-    return [
-      { field: 'created_at', headerName: t('finance.payment.colWhen'), width: 160, type: 'date', valueGetter: whenValue },
-      {
-        field: 'user_name',
-        headerName: t('finance.payment.colCustomer'),
-        flex: 1,
-        minWidth: 170,
-        type: 'text',
-        cellRenderer: renderPaymentCustomer,
-        valueGetter: (p) => p.user_name,
-      },
-      { field: 'description', headerName: t('finance.payment.colDescription'), minWidth: 160, type: 'text' },
-      // Ahead of the subtotal: the tier came off the price before GST was
-      // worked out, so the row reads discount → taxable subtotal → GST → total,
-      // the same order as the payment's Amount Breakup and the checkout.
-      {
-        field: 'ticket_discount_amount',
-        headerName: t('finance.payment.colTicketDiscount'),
-        width: 150,
-        type: 'number',
-        valueGetter: (p) => fmt(p.ticket_discount_amount, p.currency_symbol),
-      },
-      { field: 'subtotal', headerName: t('finance.payment.colSubtotal'), width: 100, type: 'number', valueGetter: (p) => fmt(p.subtotal, p.currency_symbol) },
-      { field: 'platform_fee_amount', headerName: t('finance.payment.colFee'), width: 90, type: 'number', valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
-      { field: 'gst_amount', headerName: t('finance.payment.colGst'), width: 90, type: 'number', valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },
-      {
-        field: 'coins_redeemed',
-        headerName: t('finance.payment.colCoinsUsed'),
-        width: 110,
-        hide: true,
-        type: 'number',
-        valueGetter: (p) => Math.max(0, Math.floor(Number(p.coins_redeemed) || 0)),
-      },
-      {
-        field: 'coins_earned',
-        headerName: t('finance.payment.colCoinsEarned'),
-        width: 120,
-        hide: true,
-        type: 'number',
-        valueGetter: (p) => Math.max(0, Math.floor(Number(p.coins_earned) || 0)),
-      },
-      {
-        field: 'total',
-        headerName: t('finance.payment.colTotal'),
-        width: 100,
-        type: 'number',
-        valueGetter: (p) => fmt(p.total, p.currency_symbol),
-      },
-      {
-        field: 'status',
-        headerName: t('finance.payment.colStatus'),
-        width: 120,
-        type: 'enum',
-        options: statusOptions(t),
-        cellRenderer: renderStatus,
-        valueGetter: (p) => p.status,
-      },
-      {
-        field: 'payment_id',
-        headerName: t('finance.payment.colIds'),
-        minWidth: 190,
-        type: 'text',
-        cellRenderer: renderPaymentIds,
-        valueGetter: (p) => [p.payment_id, p.invoice_no].filter(Boolean).join(' '),
-      },
-      {
-        field: 'paid_at',
-        headerName: t('finance.payment.colPaidAt'),
-        hide: true,
-        width: 160,
-        type: 'date',
-        valueGetter: (p) => (p.paid_at ? new Date(p.paid_at).toLocaleString('en-IN') : '—'),
-      },
-      {
-        field: 'gateway',
-        headerName: t('finance.payment.colGateway'),
-        hide: true,
-        width: 120,
-        type: 'text',
-      },
-      { field: 'actions', headerName: t('finance.payment.colActions'), type: 'actions', width: 110, cellRenderer: renderActions },
-    ];
-  }, [downloadingId, onDownload, onRefund, t]);
+    return buildPaymentColumns({ t, renderActions, shop });
+  }, [downloadingId, onDownload, onRefund, shop, t]);
 
   return (
     <DuncitTable<PaymentRow>
-      tableId="finance-payments"
+      tableId={shop ? TABLE_ID[shop] : 'finance-payments'}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getPaymentRowId}
@@ -185,7 +99,7 @@ export default function PaymentsTable({
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder={t('finance.payment.logsSearch')}
       refetchRef={refetchRef}
-      ariaLabel={t('finance.payment.logsTitle')}
+      ariaLabel={title}
     />
   );
 }

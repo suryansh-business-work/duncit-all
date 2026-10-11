@@ -44,7 +44,7 @@ async function productCounts(ids: Types.ObjectId[]): Promise<Map<string, number>
 async function ownWarehouse(id: string): Promise<IBrandPickupLocation> {
   const oid = toObjectId(id);
   const doc = oid ? await BrandPickupLocationModel.findOne({ _id: oid, owner_kind: 'DUNCIT' }) : null;
-  if (!doc) notFound('Warehouse not found');
+  if (!doc) notFound('Pickup address not found');
   return doc;
 }
 
@@ -84,7 +84,7 @@ export const storeWarehouseService = {
       badInput('ShipRocket holds this pickup address — remove it in ShipRocket, then sync');
     }
     const used = (await productCounts([doc._id as Types.ObjectId])).get(String(doc._id)) ?? 0;
-    if (used > 0) badInput(`${used} product(s) ship from this warehouse — move them to another one first`);
+    if (used > 0) badInput(`${used} product(s) ship from this pickup address — move them to another one first`);
     await doc.deleteOne();
     return true;
   },

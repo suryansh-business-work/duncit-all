@@ -8,6 +8,7 @@ import {
   makeBrandPickupLocation,
   registerBrandPickupMock,
   saveBrandPickupMock,
+  setBrandPickupActiveMock,
   setDefaultBrandPickupMock,
 } from '../mocks/pickup.mock';
 
@@ -46,8 +47,8 @@ describe('BrandPickupPanel', () => {
   it('opens and closes the create dialog', async () => {
     renderWithProviders(<BrandPickupPanel brandId="b1" />, { mocks: [brandPickupLocationsMock([])] });
     await waitFor(() => expect(screen.getByText(/No pickup locations yet/i)).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /Add location/i }));
-    expect(screen.getByText('Add pickup location')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add pickup address' }));
+    expect(screen.getByTestId('pickup-form')).toHaveTextContent('Add pickup address');
     // Closing the form runs the panel's onClose handler.
     act(() => form.props?.onClose());
     await waitFor(() => expect(screen.queryByTestId('pickup-form')).not.toBeInTheDocument());
@@ -57,7 +58,7 @@ describe('BrandPickupPanel', () => {
     renderWithProviders(<BrandPickupPanel brandId="b1" />, { mocks: [brandPickupLocationsMock([location])] });
     await waitFor(() => expect(screen.getByText('Main WH')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    expect(screen.getByText('Edit pickup location')).toBeInTheDocument();
+    expect(screen.getByTestId('pickup-form')).toHaveTextContent('Edit pickup address');
   });
 
   it('saves a submitted location and notifies success', async () => {
@@ -65,7 +66,7 @@ describe('BrandPickupPanel', () => {
       mocks: [brandPickupLocationsMock([location]), saveBrandPickupMock()],
     });
     await waitFor(() => expect(screen.getByText('Main WH')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /Add location/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add pickup address' }));
     await form.props?.onSubmit({ nickname: 'Main WH' });
     await waitFor(() => expect(dialogs.success).toHaveBeenCalledWith('Pickup location saved'));
   });
@@ -107,8 +108,46 @@ describe('BrandPickupPanel', () => {
     await waitFor(() => expect(screen.getByText('Main WH')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('StarBorderIcon').closest('button') as HTMLElement);
     await waitFor(() =>
-      expect(dialogs.success).toHaveBeenCalledWith('Default pickup location updated'),
+      expect(dialogs.success).toHaveBeenCalledWith('Primary pickup address updated'),
     );
+  });
+
+  it('switches an address off through its Active switch and says it can no longer be chosen', async () => {
+    renderWithProviders(<BrandPickupPanel brandId="b1" />, {
+      mocks: [brandPickupLocationsMock([location]), setBrandPickupActiveMock(false)],
+    });
+    await waitFor(() => expect(screen.getByText('Main WH')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('switch', { name: 'Active — switch off to disable this pickup address' }));
+    await waitFor(() =>
+      expect(dialogs.success).toHaveBeenCalledWith(
+        'Pickup address is now inactive — it can no longer be chosen for a product',
+      ),
+    );
+    expect(dialogs.error).not.toHaveBeenCalled();
+  });
+
+  it('switches an inactive address back on', async () => {
+    renderWithProviders(<BrandPickupPanel brandId="b1" />, {
+      mocks: [
+        brandPickupLocationsMock([makeBrandPickupLocation({ is_active: false })]),
+        setBrandPickupActiveMock(true),
+      ],
+    });
+    await waitFor(() => expect(screen.getByText('Main WH')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('switch', { name: 'Inactive — switch on to enable this pickup address' }));
+    await waitFor(() => expect(dialogs.success).toHaveBeenCalledWith('Pickup address is active again'));
+  });
+
+  it('shows the server’s reason when an address still in use cannot be switched off', async () => {
+    const refusal =
+      'This pickup address cannot be disabled — 1 product(s) ship from it. Move them to another pickup address first: Masala Chai.';
+    renderWithProviders(<BrandPickupPanel brandId="b1" />, {
+      mocks: [brandPickupLocationsMock([location]), setBrandPickupActiveMock(false, { refusal })],
+    });
+    await waitFor(() => expect(screen.getByText('Main WH')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('switch', { name: 'Active — switch off to disable this pickup address' }));
+    await waitFor(() => expect(dialogs.error).toHaveBeenCalledWith(refusal));
+    expect(dialogs.success).not.toHaveBeenCalled();
   });
 
   it('surfaces a query error', async () => {

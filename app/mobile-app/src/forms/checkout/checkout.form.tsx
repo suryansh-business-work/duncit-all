@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { CheckoutRequirementsCard } from '@/components/checkout/CheckoutRequirementsCard';
+import { DeliveryQuoteNotice } from '@/components/checkout/DeliveryQuoteNotice';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useCheckoutEligibility } from '@/hooks/useCheckoutEligibility';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -20,6 +21,7 @@ import {
   type CheckoutMainAddress,
 } from './checkout.types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import type { DeliveryQuoteStatus } from '@duncit/utils';
 
 export interface CheckoutFormProps {
   initialValues?: Partial<CheckoutFormValues>;
@@ -44,6 +46,10 @@ export interface CheckoutFormProps {
   /** Notified with the live delivery pincode — the product checkout uses it to
    * fetch a live shipping quote. Omitted by the pod (membership) checkout. */
   onPincodeChange?: (pincode: string) => void;
+  /** Where the delivery quote stands — the product checkout passes it, and Pay
+   * stays shut until it is READY. The pod checkout ships nothing and omits it. */
+  deliveryStatus?: DeliveryQuoteStatus;
+  onRetryDelivery?: () => void;
   onSubmit: (values: CheckoutFormValues) => void | Promise<void>;
 }
 
@@ -59,6 +65,8 @@ export function CheckoutForm({
   payLabel,
   addressRequired = true,
   onPincodeChange,
+  deliveryStatus = 'READY',
+  onRetryDelivery,
   onSubmit,
 }: Readonly<CheckoutFormProps>) {
   const { primary, color } = useThemeColors();
@@ -123,11 +131,12 @@ export function CheckoutForm({
       ) : null}
 
       <CheckoutRequirementsCard missing={eligibility.missing} />
+      <DeliveryQuoteNotice status={deliveryStatus} onRetry={onRetryDelivery} />
       <PrimaryButton
         testID="checkout-submit"
         label={loading ? t('mweb.checkout.processing') : (payLabel ?? t('mweb.checkout.payNow'))}
         loading={loading}
-        disabled={eligibility.missing.length > 0}
+        disabled={eligibility.missing.length > 0 || deliveryStatus !== 'READY'}
         onPress={handleSubmit(onSubmit)}
       />
       <Text fontSize={11} color="$muted" textAlign="center">

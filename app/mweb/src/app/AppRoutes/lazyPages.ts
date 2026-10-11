@@ -95,6 +95,7 @@ export const CartPage = lazy(() => import('../../pages/CartPage'));
 export const ShopPage = lazy(() => import('../../pages/shop-page'));
 export const ProductDetailPage = lazy(() => import('../../pages/ProductDetailPage'));
 export const OrdersHistoryPage = lazy(() => import('../../pages/OrdersHistoryPage'));
+export const OrderDetailPage = lazy(() => import('../../pages/order-detail-page'));
 export const AddressBookPage = lazy(() => import('../../pages/AddressBookPage'));
 export const ExplorePage = lazy(() => import('../../pages/ExplorePage'));
 export const SearchPage = lazy(() => import('../../pages/search-page'));

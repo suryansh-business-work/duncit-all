@@ -3,6 +3,7 @@ import { CircularProgress, Box } from '@mui/material';
 import { useUserData } from '@duncit/user-context';
 import { useProductVisibility, useTranslation } from '@duncit/app-settings';
 import { landingPath } from '../config/app-config';
+import { useActiveStudio } from './studio/useActiveStudio';
 
 /**
  * What `/` does now that the portal has no dashboard of its own.
@@ -17,6 +18,9 @@ export default function PartnerLanding() {
   // The product flag decides as much as the roles do: an E-commerce partner
   // must not land on a brand dashboard the feature switch has taken away.
   const { pending: productsPending, visible: productsVisible } = useProductVisibility();
+  // `/` names no studio, so this is the one the partner was last in: "home"
+  // (breadcrumb root, logo) reopens THEIR studio, not the first one they hold.
+  const activeRole = useActiveStudio();
 
   if ((loading && !user) || productsPending) {
     return (
@@ -26,5 +30,5 @@ export default function PartnerLanding() {
     );
   }
 
-  return <Navigate to={landingPath(user?.roles, productsVisible)} replace />;
+  return <Navigate to={landingPath(user?.roles, productsVisible, activeRole)} replace />;
 }

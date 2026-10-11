@@ -194,6 +194,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/cart', titleKey: 'mweb.meta.cart.title' },
   { pattern: '/shop', titleKey: 'mweb.meta.shop.title', descriptionKey: 'mweb.meta.shop.description' },
   { pattern: '/orders', titleKey: 'mweb.meta.orders.title' },
+  { pattern: '/orders/:orderId', titleKey: 'mweb.meta.orders.title' },
   { pattern: '/address-book', titleKey: 'mweb.meta.addressBook.title' },
   { pattern: '/explore', titleKey: 'mweb.meta.explore.title', descriptionKey: 'mweb.meta.explore.description' },
   { pattern: '/previous-pods', titleKey: 'mweb.meta.previousPods.title' },

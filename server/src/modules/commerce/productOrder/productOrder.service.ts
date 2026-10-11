@@ -17,7 +17,9 @@ import { availableOf, notifyStockCrossings } from '@modules/venues/inventory/inv
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import type { IPayment } from '@modules/finance/payment/payment.model';
+import { roundOffOf } from '@modules/finance/payment/payment.roundoff';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
@@ -99,6 +101,7 @@ const toPub = (d: IProductOrder) => ({
     etd: d.shiprocket?.etd ?? '',
     pickup_scheduled_date: d.shiprocket?.pickup_scheduled_date ?? '',
     last_synced_at: d.shiprocket?.last_synced_at?.toISOString?.() ?? null,
+    sandbox: d.shiprocket?.sandbox === true,
   },
   tracking_events: (d.tracking_events ?? []).map((e) => ({
     status: e.status,
@@ -117,6 +120,8 @@ const toPub = (d: IProductOrder) => ({
   cancelled_at: d.cancelled_at?.toISOString?.() ?? null,
   cancel_reason: d.cancel_reason ?? '',
   cancelled_by: d.cancelled_by ?? '',
+  deletion_request_id: d.deletion_request_id ? String(d.deletion_request_id) : null,
+  deletion_request_no: d.deletion_request_no ?? '',
   delivered_at: d.delivered_at?.toISOString?.() ?? null,
   refund: {
     status: d.refund?.status || 'NONE',
@@ -137,9 +142,58 @@ const toPub = (d: IProductOrder) => ({
   updated_at: d.updated_at?.toISOString?.() ?? '',
 });
 
+/**
+ * An order as its BUYER may read it. Same shape as `toPub`, with what belongs
+ * to the people working the order blanked: operators' notes, the booking
+ * error, who cancelled or refunded it (staff emails), the gateway's refusal
+ * text, and ShipRocket's document links — a label or manifest is the seller's,
+ * and a stored invoice link can be one batch PDF covering other buyers' orders
+ * (the buyer's own copy comes from `sellerInvoiceForBuyer`). An event the
+ * platform wrote (code 0) keeps its status and time but not its note, which an
+ * operator typed; courier scans pass through.
+ */
+const toBuyerPub = (d: IProductOrder) => {
+  const pub = toPub(d);
+  return {
+    ...pub,
+    notes: [],
+    last_error: '',
+    cancelled_by: '',
+    shiprocket: { ...pub.shiprocket, label_url: '', invoice_url: '', manifest_url: '' },
+    tracking_events: pub.tracking_events.map((e) => (e.code ? e : { ...e, note: '' })),
+    refund: { ...pub.refund, error: '', initiated_by: '' },
+  };
+};
+
+/**
+ * The Pod Shop, as a buyer-side filter: everything that is not the pet store's.
+ * Written as "not PET_STORE" so an order saved before `channel` existed (the
+ * field's default is POD_SHOP, and `toPub` reads it that way) still belongs to
+ * its buyer's history.
+ */
+const BUYER_POD_SHOP = { $ne: 'PET_STORE' } as const;
+
+/** The buyer's own pod-shop order document, or null — someone else's, the pet store's and a bad id all read the same. */
+async function findBuyerOrder(userId: string, id: string): Promise<IProductOrder | null> {
+  if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(userId)) return null;
+  return ProductOrderModel.findOne({
+    _id: new Types.ObjectId(id),
+    buyer_id: new Types.ObjectId(userId),
+    channel: BUYER_POD_SHOP,
+  });
+}
+
+const BUYER_INVOICE_NOT_READY =
+  'The seller’s invoice is not ready yet — it is issued once your order is booked with the courier.';
+const BUYER_INVOICE_UNAVAILABLE =
+  'We could not fetch the seller’s invoice right now. Please try again in a little while.';
+
+/** How a deletion request signs the orders it cancels (`cancelPodShopOrder`: "<source>:<actor>"). */
+const DELETION_CANCELLED_BY = /^DELETION:/;
+
 /** Allowlists for the shared table engine (productOrdersTable — DUNCIT TABLE CONTRACT v1). */
 const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['order_no', 'buyer_name', 'buyer_email', 'shiprocket.awb'],
+  searchFields: ['order_no', 'buyer_name', 'buyer_email', 'shiprocket.awb', 'deletion_request_no'],
   sortFields: {
     order_no: 'order_no',
     buyer_name: 'buyer_name',
@@ -150,6 +204,11 @@ const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
     awb: 'shiprocket.awb',
     buyer_email: 'buyer_email',
+    cancelled_at: 'cancelled_at',
+    refund_status: 'refund.status',
+    refund_amount: 'refund.amount',
+    refunded_at: 'refund.refunded_at',
+    deletion_request_no: 'deletion_request_no',
   },
   filterFields: {
     buyer_name: { type: 'string' },
@@ -163,6 +222,11 @@ const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
     // Admin › User › Shop Orders scopes the table to one buyer and one shop.
     buyer_id: { type: 'string' },
     channel: { type: 'enum' },
+    // Refund lists (deletion refunds, Finance): where the money going back stands.
+    cancelled_at: { type: 'date' },
+    refund_status: { path: 'refund.status', type: 'enum' },
+    refund_amount: { path: 'refund.amount', type: 'number' },
+    deletion_request_no: { type: 'string' },
   },
   defaultSort: { created_at: -1 },
 };
@@ -511,6 +575,7 @@ interface StoreOrderShare {
   cod_amount: number;
   discount_total: number;
   coins_share: number;
+  round_off: number;
   access_key: string;
 }
 
@@ -520,6 +585,7 @@ const POD_SHOP_SHARE: StoreOrderShare = {
   cod_amount: 0,
   discount_total: 0,
   coins_share: 0,
+  round_off: 0,
   access_key: '',
 };
 
@@ -537,12 +603,16 @@ function storeSharesFor(
   const coinsTotal = Math.max(0, Math.floor(payment.coins_redeemed ?? 0));
   const coins = splitAcross(coinsTotal, weights).map(Math.floor);
   coins[coins.length - 1] = coinsTotal - coins.slice(0, -1).reduce((s, c) => s + c, 0);
+  // The payment's round-off, shared out the same way: an order's cash is then
+  // `total − discount_total + round_off`, and a cancelled order refunds all of it.
+  const roundOffs = splitAcross(roundOffOf(payment), weights);
   return groups.map((_g, i) => ({
     channel: 'PET_STORE',
     payment_method: facts.payment_method,
     cod_amount: cod[i] ?? 0,
     discount_total: discounts[i] ?? 0,
     coins_share: coins[i] ?? 0,
+    round_off: roundOffs[i] ?? 0,
     access_key: facts.access_key,
   }));
 }
@@ -735,16 +805,86 @@ export const productOrderService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
 
+  /**
+   * The orders a deletion request cancelled — one row per order, with what went
+   * back to the buyer and where that refund stands. The Products portal reads
+   * all of them (or one request's); a partner reads their own brands'. The scope
+   * is fixed here, so a client filter cannot widen it.
+   */
+  async tableForDeletionRefunds(
+    scope: { brandIds?: Types.ObjectId[]; requestId?: string | null },
+    input?: TableQueryInput | null
+  ) {
+    const base: Record<string, unknown> = { channel: 'POD_SHOP', cancelled_by: DELETION_CANCELLED_BY };
+    if (scope.brandIds) base['line_items.brand_id'] = { $in: scope.brandIds };
+    if (scope.requestId) {
+      if (!Types.ObjectId.isValid(scope.requestId)) return { rows: [], total: 0, page: 1, page_size: 25 };
+      // A brand request cancels through the product requests raised under it too,
+      // so "this request's orders" means its own and its children's.
+      const requestId = new Types.ObjectId(scope.requestId);
+      const { CatalogDeletionRequestModel } = await import('@modules/commerce/catalogDeletion/catalogDeletion.model');
+      const children = await CatalogDeletionRequestModel.find({ parent_id: requestId }).select('_id').lean();
+      base.deletion_request_id = { $in: [requestId, ...children.map((child) => child._id)] };
+    }
+    const { docs, total, page, page_size } = await runTableQuery<IProductOrder>(
+      ProductOrderModel,
+      base,
+      input,
+      PRODUCT_ORDER_TABLE_CONFIG
+    );
+    // One read names every brand on the page — never one per row.
+    const brandIds = [...new Set(docs.flatMap((d) => d.line_items.map((l) => String(l.brand_id ?? ''))).filter(Boolean))];
+    const brands = await EcommBrandModel.find({ _id: { $in: brandIds } }).select('brand_name').lean();
+    const nameOf = new Map(brands.map((b) => [String(b._id), b.brand_name ?? '']));
+    const rows = docs.map((d) => {
+      const brandId = d.line_items.find((l) => l.brand_id)?.brand_id;
+      return { ...toPub(d), brand_name: brandId ? (nameOf.get(String(brandId)) ?? '') : '' };
+    });
+    return { rows, total, page, page_size };
+  },
+
   async getById(id: string) {
     const d = await ProductOrderModel.findById(id);
     return d ? toPub(d) : null;
   },
 
+  /**
+   * The buyer's own POD-SHOP orders, as a buyer may read them. Pinned to the
+   * channel: a member's pet-store orders belong to ecomm.duncit.com's own
+   * queries (`storeMyOrders`), never to the app's Pod Shop history.
+   */
   async listForBuyer(userId: string, podId?: string) {
-    const q: any = { buyer_id: new Types.ObjectId(userId) };
+    const q: any = { buyer_id: new Types.ObjectId(userId), channel: BUYER_POD_SHOP };
     if (podId) q.pod_id = new Types.ObjectId(podId);
     const docs = await ProductOrderModel.find(q).sort({ created_at: -1 });
-    return docs.map(toPub);
+    return docs.map(toBuyerPub);
+  },
+
+  /** One order of the buyer's own (null for anyone else's, so ids cannot be probed). */
+  async getForBuyer(userId: string, id: string) {
+    const doc = await findBuyerOrder(userId, id);
+    return doc ? toBuyerPub(doc) : null;
+  },
+
+  /**
+   * The seller's tax invoice for the buyer's own order — the INVOICE document
+   * only, never the label or manifest, fetched for this one order on the
+   * account it was booked on (`documentFile` runs inside that account).
+   */
+  async sellerInvoiceForBuyer(userId: string, id: string) {
+    const order = await findBuyerOrder(userId, id);
+    if (!order) throw new GraphQLError('Order not found', { extensions: { code: 'NOT_FOUND' } });
+    if (order.fulfilment_method !== 'SHIP' || !order.shiprocket?.shipment_id || !order.shiprocket?.order_id) {
+      throw new GraphQLError(BUYER_INVOICE_NOT_READY, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const { documentFile } = await import('@modules/commerce/shiprocket/shiprocket.shipment');
+    try {
+      return await documentFile([order], 'INVOICE');
+    } catch (error) {
+      // ShipRocket's own words are written for the seller's desk — the buyer gets a plain answer.
+      logs.server.warn('productOrder', 'sellerInvoiceForBuyer', { error, order_no: order.order_no });
+      throw new GraphQLError(BUYER_INVOICE_UNAVAILABLE, { extensions: { code: 'UPSTREAM_UNAVAILABLE' } });
+    }
   },
 
   async advanceStatus(id: string, status: FulfilmentStatus, note = '') {
@@ -798,7 +938,7 @@ export const productOrderService = {
       }
       const warehouse = await BrandPickupLocationModel.findOne({ nickname: pickupLocation }).select('nickname').lean();
       if (!warehouse) {
-        throw new GraphQLError(`There is no warehouse named "${pickupLocation}"`, { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError(`There is no pickup address named "${pickupLocation}"`, { extensions: { code: 'BAD_USER_INPUT' } });
       }
       doc.pickup_location_id = warehouse.nickname;
     }
@@ -824,22 +964,34 @@ export const productOrderService = {
     return toPub(doc);
   },
 
-  async trackingByOrderNo(orderNo: string) {
-    const doc = await ProductOrderModel.findOne({ order_no: orderNo });
+  /**
+   * An order's tracking by its number. Staff read any order (`buyerId` null);
+   * a member reads only an order they bought — anyone else's answers null, the
+   * same as a number that does not exist — and never the seller's label link
+   * or an operator's event note.
+   */
+  async trackingByOrderNo(orderNo: string, buyerId: string | null = null) {
+    const scope: Record<string, unknown> = { order_no: orderNo };
+    if (buyerId !== null) {
+      if (!Types.ObjectId.isValid(buyerId)) return null;
+      scope.buyer_id = new Types.ObjectId(buyerId);
+    }
+    const doc = await ProductOrderModel.findOne(scope);
     if (!doc) return null;
+    const forBuyer = buyerId !== null;
     return {
       order_no: doc.order_no,
       fulfilment_method: doc.fulfilment_method,
       fulfilment_status: doc.fulfilment_status,
       awb: doc.shiprocket.awb,
       courier_name: doc.shiprocket.courier_name,
-      label_url: doc.shiprocket.label_url,
+      label_url: forBuyer ? '' : doc.shiprocket.label_url,
       tracking_status: doc.shiprocket.tracking_status,
       events: (doc.tracking_events ?? []).map((e) => ({
         status: e.status,
         code: e.code,
         location: e.location,
-        note: e.note,
+        note: forBuyer && !e.code ? '' : e.note,
         at: e.at?.toISOString?.() ?? '',
       })),
     };

@@ -14,6 +14,8 @@ interface PickupOption {
   city: string;
   is_default: boolean;
   shiprocket_registered: boolean;
+  /** Switched on. Absent on an older answer, which reads as active. */
+  is_active?: boolean;
 }
 
 /**
@@ -31,7 +33,7 @@ export default function WarehouseSelect() {
     fetchPolicy: 'cache-and-network',
   });
   const locations: PickupOption[] = useMemo(() => data?.brandPickupLocations ?? [], [data]);
-  const ready = useMemo(() => locations.filter((loc) => loc.shiprocket_registered), [locations]);
+  const ready = useMemo(() => locations.filter((loc) => loc.shiprocket_registered && loc.is_active !== false), [locations]);
 
   // New product (nothing chosen yet): preselect the default warehouse ShipRocket
   // can collect from, else the first one that it can.
@@ -62,7 +64,7 @@ export default function WarehouseSelect() {
       data-testid="product-pickup-location"
     >
       {locations.map((loc) => (
-        <MenuItem key={loc.id} value={loc.id} disabled={!loc.shiprocket_registered}>
+        <MenuItem key={loc.id} value={loc.id} disabled={!loc.shiprocket_registered || loc.is_active === false}>
           <ListItemText
             primary={`${loc.nickname} — ${loc.city}${loc.is_default ? defaultTag : ''}`}
             secondary={loc.shiprocket_registered ? undefined : t('products.pickup.warehouseNotInShiprocket')}

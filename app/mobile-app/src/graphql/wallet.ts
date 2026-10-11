@@ -31,6 +31,18 @@ export const MyWalletDocument = gql(`
   }
 `);
 
+/** The caller's own wallet statement for a period, as a PDF or CSV file (base64). */
+export const WalletStatementFileDocument = gql(`
+  query MobileWalletStatementFile($input: WalletStatementInput!, $format: WalletStatementFormat!) {
+    myWalletStatementFile(input: $input, format: $format) {
+      filename
+      mime
+      content_base64
+      transaction_count
+    }
+  }
+`);
+
 /** Request a withdrawal from the wallet balance. */
 export const RequestWithdrawalDocument = gql(`
   mutation MobileRequestWithdrawal($input: RequestWithdrawalInput!) {

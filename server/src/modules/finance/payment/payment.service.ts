@@ -10,6 +10,8 @@ import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { invoiceDataForPayment } from './payment.invoice';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { paymentFinalizer } from './payment.finalize';
+import { roundOffOf, roundUpBill } from './payment.roundoff';
+import { PAYMENT_SHOP_FILTER, type PaymentShop } from './payment.source';
 import {
   createRazorpayOrder,
   getRazorpayKeys,
@@ -72,6 +74,8 @@ export const toPub = (p: IPayment) => ({
   gst_pct: p.gst_pct,
   gst_amount: p.gst_amount,
   total: p.total,
+  // Payments taken before bills were rounded up carry no round-off.
+  round_off: roundOffOf(p),
   currency_symbol: p.currency_symbol,
   coupon_code: p.coupon_code ?? null,
   coupon_discount: p.coupon_discount ?? 0,
@@ -107,6 +111,7 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     coins_redeemed: 'coins_redeemed',
     coins_earned: 'coins_earned',
     total: 'total',
+    round_off: 'round_off',
     ticket_discount_amount: 'ticket_discount_amount',
     status: 'status',
     gateway: 'gateway',
@@ -130,6 +135,7 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     coins_redeemed: { type: 'number' },
     coins_earned: { type: 'number' },
     total: { type: 'number' },
+    round_off: { type: 'number' },
     ticket_discount_amount: { type: 'number' },
     paid_at: { type: 'date' },
     created_at: { type: 'date' },
@@ -144,6 +150,9 @@ export interface QuoteBreakup {
   gst_pct: number;
   gst_amount: number;
   total: number;
+  /** What rounding the bill up to a whole rupee added — inside `total`, outside
+   * `subtotal` and `gst_amount`. 0 until `applyCoins` settles the bill. */
+  round_off: number;
   currency_symbol: string;
   dummy_mode: boolean;
 }
@@ -171,6 +180,7 @@ export async function computeQuote(amount: number, opts?: { inclusive?: boolean 
     gst_pct: fs.gst_pct,
     gst_amount,
     total,
+    round_off: 0,
     currency_symbol: fs.currency_symbol,
     dummy_mode: fs.dummy_mode,
   };
@@ -475,36 +485,57 @@ async function applyCoupon(
   };
 }
 
-/** Smallest amount the gateway will accept for an order (Razorpay: ₹1). */
-const MIN_GATEWAY_CHARGE = 1;
+/**
+ * The whole coins a buyer may spend on a bill of `billRupees`. The requested
+ * count is the client's ASK, never the authority: it is clamped to the live
+ * balance and to the (already rounded) bill, so a tampered request can neither
+ * overdraw the balance nor redeem more than is owed. A guest has no balance.
+ */
+async function redeemableCoins(
+  requested: unknown,
+  userId: string | null | undefined,
+  billRupees: number
+): Promise<number> {
+  const wanted = Math.floor(Number(requested) || 0);
+  if (wanted <= 0 || !userId) return 0;
+  const balance = await coinService.balanceOf(userId);
+  return Math.max(0, Math.min(wanted, Math.floor(balance), billRupees));
+}
 
 /**
- * Spend the buyer's Duncit Coins against an already-couponed quote. Coins work
- * exactly like the coupon discount — they cut the gross and the quote is
- * re-priced on the reduced amount — so the invoice total always equals the
- * amount actually charged, and GST is charged on what was really paid.
+ * Settle an already-couponed quote: round the bill UP to a whole rupee, then
+ * spend the buyer's Duncit Coins against the rounded bill. EVERY checkout ends
+ * here — with or without coins — so there is one place a payable total is made.
  *
- * The requested count is the client's ASK, never the authority: it is clamped
- * to the live balance and to the bill, so a tampered request can neither
- * overdraw the balance nor push the total below zero. The coins are not debited
- * here — that happens on payment success, the same way a coupon's redemption is
- * only recorded once the money actually lands.
+ * The order matters. Rounding comes after the coupon (a coupon can then never
+ * leave paise, or a negative amount, to charge) and before the coins (whole
+ * coins can then always clear the whole bill: the old code floored the coins to
+ * a ₹101.47 bill, handed one back to stay over the gateway's ₹1 minimum, and
+ * charged ₹1.47 on an order "fully paid" in coins).
+ *
+ * Coins still work exactly like the coupon discount — they cut the gross and
+ * the tax lines are re-priced on what is left, so GST is charged on what was
+ * really paid. The round-off is NOT part of that value: it is added to the
+ * total after the tax lines are final and is never re-priced. See
+ * payment.roundoff.ts for the identity the stored fields keep.
+ *
+ * The coins are not debited here — that happens on payment success, the same
+ * way a coupon's redemption is only recorded once the money actually lands.
  */
-export async function applyCoins(requested: unknown, userId: string, quote: QuoteBreakup) {
-  const wanted = Math.floor(Number(requested) || 0);
-  if (wanted <= 0) return { quote, coinsRedeemed: 0 };
-  const balance = await coinService.balanceOf(userId);
-  let coinsRedeemed = Math.min(wanted, Math.floor(balance), Math.floor(quote.total));
-  if (coinsRedeemed <= 0) return { quote, coinsRedeemed: 0 };
-  // Coins are whole rupees but a bill need not be, so redeeming the floor of a
-  // ₹499.50 total would leave 50 paise to charge — under Razorpay's ₹1 minimum,
-  // which rejects the order outright. Hand one coin back to lift the remainder
-  // clear. Redeeming the bill down to exactly zero is fine: that path skips the
-  // gateway altogether.
-  const remainder = round2(quote.total - coinsRedeemed);
-  if (remainder > 0 && remainder < MIN_GATEWAY_CHARGE) coinsRedeemed -= 1;
-  if (coinsRedeemed <= 0) return { quote, coinsRedeemed: 0 };
-  return { quote: await computeQuote(round2(quote.total - coinsRedeemed)), coinsRedeemed };
+export async function applyCoins(
+  requested: unknown,
+  userId: string | null | undefined,
+  quote: QuoteBreakup
+): Promise<{ quote: QuoteBreakup; coinsRedeemed: number }> {
+  const bill = roundUpBill(quote.total);
+  const coinsRedeemed = await redeemableCoins(requested, userId, bill.rounded);
+  // Coins that also cover the round-off take the taxable value to zero, never below.
+  const priced =
+    coinsRedeemed > 0 ? await computeQuote(Math.max(0, round2(quote.total - coinsRedeemed))) : quote;
+  return {
+    quote: { ...priced, total: bill.rounded - coinsRedeemed, round_off: bill.round_off },
+    coinsRedeemed,
+  };
 }
 
 /** How a zero-charge order was settled. It skips the gateway either way, but the
@@ -715,13 +746,17 @@ const giftCardPaymentMetadata = (input: any, facts: GiftCardPurchaseFacts) => ({
  * no coupon or coin discounts — stored value must not buy stored value. */
 async function giftCardQuote(amount: number): Promise<QuoteBreakup> {
   const fs = await getFinanceSettings();
+  // Face values are whole rupees, so this adds nothing today — but a gift card
+  // is a payment like any other, and no payment is charged in paise.
+  const bill = roundUpBill(amount);
   return {
     subtotal: round2(amount),
     platform_fee_pct: 0,
     platform_fee_amount: 0,
     gst_pct: 0,
     gst_amount: 0,
-    total: round2(amount),
+    total: bill.rounded,
+    round_off: bill.round_off,
     currency_symbol: fs.currency_symbol,
     dummy_mode: fs.dummy_mode,
   };
@@ -897,9 +932,13 @@ export const paymentService = {
     // amount already carries any add-on products); only the multi-seat case
     // needs the server to re-price, and only the ticket multiplies. A single
     // seat never earns a multi-ticket discount — every tier starts at 2.
+    // Settled like a charge with no coins, so the preview carries the same
+    // whole-rupee total and round-off a checkout of this amount would.
+    const settled = async (amount: number) =>
+      (await applyCoins(0, null, await computeQuote(amount))).quote;
     if (!input.pod_id || seats <= 1) {
       return {
-        ...(await computeQuote(input.amount)),
+        ...(await settled(input.amount)),
         ticket_discount_amount: 0,
         ticket_discount_pct: 0,
       };
@@ -913,7 +952,7 @@ export const paymentService = {
     const extras = Math.max(round2(Number(input.amount) || 0) - ticket, 0);
     const { ticketDiscount, payableAmount } = pricePodBooking(pod, seats, extras);
     return {
-      ...(await computeQuote(payableAmount)),
+      ...(await settled(payableAmount)),
       ticket_discount_amount: ticketDiscount.amount,
       ticket_discount_pct: ticketDiscount.pct,
     };
@@ -930,13 +969,16 @@ export const paymentService = {
    * (no row cap), counting SUCCESS money only — so a filter narrowed to another
    * status matches nothing, exactly like SUCCESS-only cards over that list.
    */
-  async totals(filter?: PaymentListFilter) {
+  async totals(filter?: PaymentListFilter, shop?: PaymentShop | null) {
     const empty = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0 };
     const q = buildListFilter(filter);
     if (q.status && q.status !== 'SUCCESS') return empty;
     q.status = 'SUCCESS';
+    // One shop's cards: AND-ed with the shop's own filter, never merged into
+    // it — both sides can carry an `$or` (the search, the pod shop's rule).
+    const match = shop ? { $and: [PAYMENT_SHOP_FILTER[shop], q] } : q;
     const [row] = await PaymentModel.aggregate([
-      { $match: q },
+      { $match: match },
       {
         $group: {
           _id: null,
@@ -988,6 +1030,21 @@ export const paymentService = {
     const { docs, total, page, page_size } = await runTableQuery<IPayment>(
       PaymentModel,
       { 'metadata.store.channel': 'PET_STORE' },
+      input,
+      PAYMENT_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
+  /**
+   * Finance's payment log for ONE shop — the pod shop or the pet store, never
+   * both. The shop is the BASE filter (payment.source.ts), so nothing in the
+   * query input can widen a pod-shop log into the pet store's or back.
+   */
+  async tableForShop(shop: PaymentShop, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IPayment>(
+      PaymentModel,
+      PAYMENT_SHOP_FILTER[shop],
       input,
       PAYMENT_TABLE_CONFIG
     );
@@ -1078,6 +1135,7 @@ export const paymentService = {
       gst_pct: quote.gst_pct,
       gst_amount: quote.gst_amount,
       total: quote.total,
+      round_off: quote.round_off,
       currency_symbol: quote.currency_symbol,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
@@ -1132,6 +1190,7 @@ export const paymentService = {
       gst_pct: quote.gst_pct,
       gst_amount: quote.gst_amount,
       total: quote.total,
+      round_off: quote.round_off,
       currency_symbol: quote.currency_symbol,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
@@ -1279,6 +1338,7 @@ export const paymentService = {
       gst_pct: quote.gst_pct,
       gst_amount: quote.gst_amount,
       total: quote.total,
+      round_off: quote.round_off,
       currency_symbol: quote.currency_symbol,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
@@ -1331,6 +1391,7 @@ export const paymentService = {
       gst_pct: quote.gst_pct,
       gst_amount: quote.gst_amount,
       total: quote.total,
+      round_off: quote.round_off,
       currency_symbol: quote.currency_symbol,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
@@ -1435,6 +1496,7 @@ export const paymentService = {
       gst_pct: quote.gst_pct,
       gst_amount: quote.gst_amount,
       total: quote.total,
+      round_off: quote.round_off,
       currency_symbol: quote.currency_symbol,
       coupon_code: null,
       coupon_discount: 0,
@@ -1488,6 +1550,7 @@ export const paymentService = {
       gst_pct: quote.gst_pct,
       gst_amount: quote.gst_amount,
       total: quote.total,
+      round_off: quote.round_off,
       currency_symbol: quote.currency_symbol,
       coupon_code: null,
       coupon_discount: 0,

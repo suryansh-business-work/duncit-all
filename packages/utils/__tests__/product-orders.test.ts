@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ALL_FULFILMENT_STATUSES,
+  BRAND_CANCELLABLE,
   brandOrderActions,
   buildOrderTimeline,
   FULFILMENT_STATUS_KEYS,
@@ -178,6 +179,7 @@ describe('brandOrderActions', () => {
       book: true,
       editAddress: true,
       documents: false,
+      cancel: true,
       refreshTracking: false,
     });
   });
@@ -193,6 +195,7 @@ describe('brandOrderActions', () => {
       book: false,
       editAddress: false,
       documents: true,
+      cancel: true,
       refreshTracking: true,
     });
   });
@@ -201,10 +204,28 @@ describe('brandOrderActions', () => {
     expect(brandOrderActions(ship('DELIVERED', { order_id: 'SR-1' })).book).toBe(false);
   });
 
-  it('leaves a cancelled or pickup order read-only', () => {
-    const none = { book: false, editAddress: false, documents: false, refreshTracking: false };
+  it('leaves a cancelled order read-only', () => {
+    const none = { book: false, editAddress: false, documents: false, cancel: false, refreshTracking: false };
     expect(brandOrderActions(ship('AWAITING_SHIPMENT', { awb: 'AWB1' }, '2026-10-01T00:00:00.000Z'))).toEqual(none);
-    expect(brandOrderActions({ ...ship('PENDING'), fulfilment_method: 'PICKUP' })).toEqual(none);
+  });
+
+  it('gives a pickup order no courier step, but lets the brand call it off until it is handed over', () => {
+    const pickup = (status: string) => brandOrderActions({ ...ship(status), fulfilment_method: 'PICKUP' });
+    expect(pickup('READY_FOR_PICKUP')).toEqual({
+      book: false,
+      editAddress: false,
+      documents: false,
+      cancel: true,
+      refreshTracking: false,
+    });
+    expect(pickup('PICKED_UP').cancel).toBe(false);
+  });
+
+  it('stops offering a cancel once the courier has the parcel', () => {
+    for (const status of BRAND_CANCELLABLE) expect(brandOrderActions(ship(status)).cancel).toBe(true);
+    for (const status of ['SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'NDR', 'RTO_DELIVERED', 'CANCELLED']) {
+      expect(brandOrderActions(ship(status, { order_id: 'SR-1', awb: 'AWB1' })).cancel).toBe(false);
+    }
   });
 });
 

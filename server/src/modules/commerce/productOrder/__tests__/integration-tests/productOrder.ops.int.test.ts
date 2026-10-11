@@ -213,7 +213,7 @@ describe('createShipmentForOrder', () => {
     );
     const open = await seedOrder({ pickup_location_id: 'WH-OLD-2' });
     await expect(svc.createShipmentForOrder(String(open._id), 'WH-NOWHERE')).rejects.toThrow(
-      'There is no warehouse named "WH-NOWHERE"'
+      'There is no pickup address named "WH-NOWHERE"'
     );
     expect(mockCreateShipment).not.toHaveBeenCalled();
   });
@@ -270,7 +270,7 @@ describe('courier helpers', () => {
 });
 
 describe('reads', () => {
-  it('trackingByOrderNo returns the public tracking shape, or null', async () => {
+  it('trackingByOrderNo returns the public tracking shape to staff, or null', async () => {
     expect(await svc.trackingByOrderNo('nope')).toBeNull();
     const at = new Date('2026-10-01T10:00:00Z');
     await seedOrder({
@@ -288,6 +288,28 @@ describe('reads', () => {
       tracking_status: 'In transit',
       events: [{ status: 'SHIPPED', code: 6, location: 'Delhi', note: 'Picked', at: at.toISOString() }],
     });
+  });
+
+  it('trackingByOrderNo shows a member only an order they bought, without the seller’s label or an operator’s note', async () => {
+    const buyer = new Types.ObjectId();
+    const at = new Date('2026-10-01T10:00:00Z');
+    await seedOrder({
+      order_no: 'ord_track_mine',
+      buyer_id: buyer,
+      shiprocket: { awb: 'AWB9', courier_name: 'Delhivery', tracking_status: 'In transit', label_url: 'https://l' },
+      tracking_events: [
+        { status: 'AWB_ASSIGNED', code: 0, location: '', note: 'AWB AWB9 with Delhivery', at },
+        { status: 'SHIPPED', code: 6, location: 'Delhi', note: 'Picked', at },
+      ],
+    });
+
+    const mine = await svc.trackingByOrderNo('ord_track_mine', String(buyer));
+    expect(mine?.awb).toBe('AWB9');
+    expect(mine?.label_url).toBe('');
+    expect(mine?.events.map((e) => e.note)).toEqual(['', 'Picked']);
+    // Someone else's order number reads exactly like one that does not exist.
+    expect(await svc.trackingByOrderNo('ord_track_mine', new Types.ObjectId().toHexString())).toBeNull();
+    expect(await svc.trackingByOrderNo('ord_track_mine', 'not-an-id')).toBeNull();
   });
 
   it('list filters by buyer, pod, method, status and an escaped search', async () => {
@@ -316,5 +338,36 @@ describe('reads', () => {
     expect(await svc.getById(new Types.ObjectId().toHexString())).toBeNull();
     expect(await svc.listForBuyer(String(buyer))).toHaveLength(2);
     expect((await svc.listForBuyer(String(buyer), String(pod))).map((o) => o.id)).toEqual([String(a._id)]);
+  });
+
+  it('listForBuyer is the Pod Shop history only, and blanks what belongs to the people working the order', async () => {
+    const buyer = new Types.ObjectId();
+    const at = new Date('2026-10-01T10:00:00Z');
+    const podShop = await seedOrder({
+      buyer_id: buyer,
+      last_error: 'ShipRocket: wallet low',
+      cancelled_by: 'ADMIN:ops@duncit.com',
+      notes: [{ text: 'Buyer called twice', by_id: 'u1', by_name: 'Ops', at }],
+      shiprocket: { awb: 'AWB1', label_url: 'https://l', invoice_url: 'https://i', manifest_url: 'https://m' },
+      refund: { status: 'FAILED', amount: 300, error: 'BAD_REQUEST_ERROR', initiated_by: 'ADMIN:ops@duncit.com' },
+      tracking_events: [
+        { status: 'AWAITING_SHIPMENT', code: 0, location: '', note: 'ShipRocket order 1 created', at },
+        { status: 'IN TRANSIT', code: 18, location: 'Delhi', note: 'Bag received', at },
+      ],
+    });
+    // The same member's pet-store order is ecomm.duncit.com's, not the app's.
+    await seedOrder({ buyer_id: buyer, channel: 'PET_STORE' });
+
+    const mine = await svc.listForBuyer(String(buyer));
+    expect(mine.map((o) => o.id)).toEqual([String(podShop._id)]);
+    expect(mine[0]).toMatchObject({ notes: [], last_error: '', cancelled_by: '' });
+    expect(mine[0].shiprocket).toMatchObject({ awb: 'AWB1', label_url: '', invoice_url: '', manifest_url: '' });
+    expect(mine[0].refund).toMatchObject({ status: 'FAILED', amount: 300, error: '', initiated_by: '' });
+    expect(mine[0].tracking_events.map((e) => e.note)).toEqual(['', 'Bag received']);
+    // Staff still read all of it.
+    const staff = await svc.getById(String(podShop._id));
+    expect(staff).toMatchObject({ last_error: 'ShipRocket: wallet low', cancelled_by: 'ADMIN:ops@duncit.com' });
+    expect(staff?.shiprocket.label_url).toBe('https://l');
+    expect(staff?.tracking_events[0].note).toBe('ShipRocket order 1 created');
   });
 });

@@ -120,16 +120,24 @@ describe('brandPickupLocationService partner-scoped ops', () => {
       brandPickupLocationService.setDefaultMine(userId, String(mine._id), otherWh.id)
     ).rejects.toThrow(/not found/i);
     await expect(brandPickupLocationService.removeMine(userId, String(mine._id), 'nope')).rejects.toThrow(/not found/i);
+    // Reading what ships from it, and switching it on or off, are held to the same ownership.
+    await expect(brandPickupLocationService.usageMine(userId, String(mine._id), otherWh.id)).rejects.toThrow(/not found/i);
+    await expect(
+      brandPickupLocationService.setActiveMine(userId, String(mine._id), otherWh.id, false)
+    ).rejects.toThrow(/not found/i);
+    expect((await BrandPickupLocationModel.findById(otherWh._id).lean())?.is_active).toBe(true);
   });
 
-  it('blocks deleting a warehouse still used by a product, then allows once freed', async () => {
+  it('blocks deleting a pickup address still used by a product — naming the product — then allows once freed', async () => {
     const userId = new Types.ObjectId().toString();
     const brand = await seedOwnedBrand(userId, 'Del Co');
     const wh = await brandPickupLocationService.saveMine(userId, String(brand._id), null, {
       ...ADDRESS,
       owner_kind: 'BRAND',
       nickname: 'DEL-WH',
+      is_default: true,
     });
+    expect(String((await EcommBrandModel.findById(brand._id).lean())?.default_pickup_location_id)).toBe(wh.id);
     const product = await InventoryProductModel.create({
       product_name: 'Uses warehouse',
       sku: 'BPL-REF-1',
@@ -138,11 +146,80 @@ describe('brandPickupLocationService partner-scoped ops', () => {
       ownership: 'BRAND',
       pickup_location_id: wh.id,
     });
-    await expect(brandPickupLocationService.removeMine(userId, String(brand._id), wh.id)).rejects.toThrow(
-      /used by 1 product/i
-    );
+    // What the partner is shown before confirming: the products to move.
+    expect(await brandPickupLocationService.usageMine(userId, String(brand._id), wh.id)).toMatchObject({
+      count: 1,
+      products: [{ id: String(product._id), name: 'Uses warehouse', channel: 'POD_SHOP' }],
+    });
+    const refusal = await brandPickupLocationService.removeMine(userId, String(brand._id), wh.id).catch((err: unknown) => err);
+    expect(refusal).toMatchObject({
+      message:
+        'This pickup address cannot be deleted — 1 product(s) ship from it. Move them to another pickup address first: Uses warehouse.',
+      extensions: {
+        code: 'BAD_REQUEST',
+        reason: 'PICKUP_IN_USE',
+        count: 1,
+        products: [expect.objectContaining({ id: String(product._id), name: 'Uses warehouse' })],
+      },
+    });
+    expect(await BrandPickupLocationModel.countDocuments({ _id: wh.id })).toBe(1);
+
     await InventoryProductModel.deleteOne({ _id: product._id });
+    expect(await brandPickupLocationService.usageMine(userId, String(brand._id), wh.id)).toEqual({ count: 0, products: [] });
     expect(await brandPickupLocationService.removeMine(userId, String(brand._id), wh.id)).toBe(true);
+    // The brand no longer points at an address that does not exist.
+    expect((await EcommBrandModel.findById(brand._id).lean())?.default_pickup_location_id).toBeNull();
+  });
+
+  it('switches an address off and on: refused for the primary one and for one in use, and an inactive one cannot be made primary', async () => {
+    const userId = new Types.ObjectId().toString();
+    const brand = await seedOwnedBrand(userId, 'Active Co');
+    const brandId = String(brand._id);
+    const primary = await brandPickupLocationService.saveMine(userId, brandId, null, {
+      ...ADDRESS,
+      owner_kind: 'BRAND',
+      nickname: 'ACT-A',
+      is_default: true,
+    });
+    const second = await brandPickupLocationService.saveMine(userId, brandId, null, { ...ADDRESS, owner_kind: 'BRAND', nickname: 'ACT-B' });
+    // A new address is active.
+    expect([primary.is_active, second.is_active]).toEqual([true, true]);
+
+    const primaryRefusal = await brandPickupLocationService.setActiveMine(userId, brandId, primary.id, false).catch((err: unknown) => err);
+    expect(primaryRefusal).toMatchObject({
+      message: 'This is the primary pickup address — make another one primary before disabling it',
+      extensions: { code: 'BAD_REQUEST', reason: 'PICKUP_IS_PRIMARY' },
+    });
+
+    const product = await InventoryProductModel.create({
+      product_name: 'Ships from B',
+      sku: 'BPL-ACT-1',
+      unit_cost: 10,
+      brand_id: brand._id,
+      ownership: 'BRAND',
+      pickup_location_id: second.id,
+    });
+    const inUse = await brandPickupLocationService.setActiveMine(userId, brandId, second.id, false).catch((err: unknown) => err);
+    expect(inUse).toMatchObject({
+      message:
+        'This pickup address cannot be disabled — 1 product(s) ship from it. Move them to another pickup address first: Ships from B.',
+      extensions: { reason: 'PICKUP_IN_USE', count: 1 },
+    });
+    const listed = await brandPickupLocationService.listMine(userId, brandId);
+    expect(listed.map((l) => [l.nickname, l.is_active])).toEqual([
+      ['ACT-A', true],
+      ['ACT-B', true],
+    ]);
+
+    await InventoryProductModel.deleteOne({ _id: product._id });
+    expect((await brandPickupLocationService.setActiveMine(userId, brandId, second.id, false)).is_active).toBe(false);
+    await expect(brandPickupLocationService.setDefaultMine(userId, brandId, second.id)).rejects.toThrow(
+      'Enable this pickup address before making it the primary one'
+    );
+    expect((await brandPickupLocationService.listMine(userId, brandId)).find((l) => l.id === primary.id)?.is_default).toBe(true);
+
+    expect((await brandPickupLocationService.setActiveMine(userId, brandId, second.id, true)).is_active).toBe(true);
+    expect((await brandPickupLocationService.setDefaultMine(userId, brandId, second.id)).is_default).toBe(true);
   });
 
   it('setDefaultMine flips the default within the brand', async () => {
@@ -203,7 +280,7 @@ describe('brandPickupLocationService partner-scoped ops', () => {
     // A non-duplicate failure (missing nickname) is not masked as a conflict.
     await expect(
       brandPickupLocationService.saveMine(userId, String(brand._id), null, { ...ADDRESS, owner_kind: 'BRAND', nickname: '' })
-    ).rejects.toThrow(/Name the warehouse/);
+    ).rejects.toThrow(/Name the pickup address/);
   });
 
   it('turns back an address ShipRocket would refuse, saving nothing and raising no request', async () => {

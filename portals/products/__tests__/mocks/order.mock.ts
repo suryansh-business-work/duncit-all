@@ -30,7 +30,7 @@ export type OrderLineItemMock = Pick<
 > & { __typename?: 'OrderLineItem' };
 export type ShipRocketInfoMock = Pick<
   ShipRocketInfo,
-  'order_id' | 'shipment_id' | 'awb' | 'courier_name' | 'tracking_status' | 'label_url' | 'last_synced_at'
+  'order_id' | 'shipment_id' | 'awb' | 'courier_name' | 'tracking_status' | 'label_url' | 'last_synced_at' | 'sandbox'
 > & { __typename?: 'ShipRocketInfo' };
 export type OrderTrackingEventMock = Pick<
   OrderTrackingEvent,
@@ -122,6 +122,7 @@ export const makeProductOrder = (over: Partial<ProductOrderMock> = {}): ProductO
     tracking_status: '',
     label_url: '',
     last_synced_at: null,
+    sandbox: false,
   },
   tracking_events: [],
   last_error: '',

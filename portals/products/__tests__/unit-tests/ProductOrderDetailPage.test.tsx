@@ -64,6 +64,8 @@ describe('ProductOrderDetailPage', () => {
   it('renders the order and updates the fulfilment method', async () => {
     renderPage([productOrderMock(order), setFulfilmentMethodMock()]);
     await waitFor(() => expect(screen.getByText('PO-1')).toBeInTheDocument());
+    // A live booking carries no sandbox marker.
+    expect(screen.queryByTestId('order-sandbox-chip')).not.toBeInTheDocument();
     await panel.props?.onSetMethod('PICKUP');
     await waitFor(() =>
       expect(screen.getByText('Fulfilment method updated')).toBeInTheDocument(),
@@ -75,6 +77,25 @@ describe('ProductOrderDetailPage', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /Back to orders/i }));
     expect(nav.fn).toHaveBeenCalledWith('/orders');
+  });
+
+  it('marks an order booked on the ShipRocket sandbox as a test order', async () => {
+    const sandboxOrder = makeProductOrder({
+      fulfilment_status: 'PENDING',
+      shiprocket: {
+        __typename: 'ShipRocketInfo',
+        order_id: 'SR-O1',
+        shipment_id: 'SR-S1',
+        awb: '',
+        courier_name: '',
+        tracking_status: '',
+        label_url: '',
+        last_synced_at: null,
+        sandbox: true,
+      },
+    });
+    renderPage([productOrderMock(sandboxOrder)]);
+    expect(await screen.findByTestId('order-sandbox-chip')).toHaveTextContent('ShipRocket sandbox — test order');
   });
 
   it('advances the status', async () => {

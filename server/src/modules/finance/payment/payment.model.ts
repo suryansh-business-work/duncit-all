@@ -85,6 +85,10 @@ export interface IPayment extends Document {
   gst_pct: number;
   gst_amount: number;
   total: number;
+  /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1), already
+   * inside `total`. Never taxable and never part of a fee, commission or
+   * settlement — see payment.roundoff.ts. Absent on older payments: read as 0. */
+  round_off: number;
   currency_symbol: string;
   coupon_code: string | null;
   coupon_discount: number;
@@ -181,6 +185,7 @@ const paymentSchema = new Schema<IPayment>(
     gst_pct: { type: Number, default: 0 },
     gst_amount: { type: Number, default: 0 },
     total: { type: Number, required: true, min: 0 },
+    round_off: { type: Number, default: 0, min: 0, max: 0.99 },
     currency_symbol: { type: String, default: '₹' },
     coupon_code: { type: String, default: null, index: true },
     coupon_discount: { type: Number, default: 0, min: 0 },
@@ -230,6 +235,14 @@ paymentSchema.index(
 paymentSchema.index(
   { 'metadata.refunded_at': -1 },
   { partialFilterExpression: { 'metadata.refunded_at': { $exists: true } } }
+);
+
+// Finance > Round Offs, which lists only the payments rounding added something
+// to, newest first. PARTIAL like the two above: most bills are already whole,
+// and the page's base filter carries this exact predicate.
+paymentSchema.index(
+  { created_at: -1 },
+  { name: 'round_off_created_at', partialFilterExpression: { round_off: { $gt: 0 } } }
 );
 
 export const PaymentModel = model<IPayment>('Payment', paymentSchema);

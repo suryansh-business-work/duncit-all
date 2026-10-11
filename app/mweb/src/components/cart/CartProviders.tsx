@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { CartProvider } from './CartContext';
 import { WishlistProvider } from './WishlistContext';
+import CartAddedToast from './CartAddedToast';
 import CartReminderHost from './cart-reminder';
 
 /**
@@ -17,6 +18,7 @@ export default function CartProviders({
     <CartProvider>
       <WishlistProvider>
         {children}
+        <CartAddedToast />
         {signedIn && <CartReminderHost />}
       </WishlistProvider>
     </CartProvider>

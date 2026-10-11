@@ -2,6 +2,7 @@ import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { normalizeSeats } from '@modules/pods/pod/pod.seats';
 import type { InvoiceData, InvoiceLineItem } from '@services/invoice/invoice.pdf';
 import type { IPayment } from './payment.model';
+import { chargedRoundOff } from './payment.roundoff';
 
 /**
  * One payment, as an invoice.
@@ -145,6 +146,9 @@ export async function invoiceDataForPayment(
     subtotal: doc.subtotal,
     gst_amount: doc.gst_amount,
     gst_pct: doc.gst_pct,
+    // Only the round-off that was actually charged: when coins cleared the whole
+    // bill it was paid in coins, and the invoice's total is ₹0.
+    round_off: chargedRoundOff(doc),
     total: doc.total,
     payment_id: doc.payment_id,
     payment_method: options.paymentMethod,

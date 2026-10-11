@@ -60,6 +60,7 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // picker no longer sends the operator to the Products console for them.
   "ecommPortal.productEditor.noWarehouses": [
     "No Duncit warehouses yet — add one under Pickup locations in the Products console.",
+    "No warehouses yet — add one under Shipping › Pickup addresses.",
   ],
   // A pickup address now belongs to the ShipRocket account: the page takes in
   // whatever the account has, adding one creates it there first, and one the
@@ -84,10 +85,13 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
     "Connect the ShipRocket and Razorpay accounts this brand ships and gets paid through. Both must connect before the brand can be submitted.",
     "Choose who ships this brand’s parcels — your own ShipRocket account or the Duncit courier — and connect the Razorpay account it gets paid through.",
     "The last step. Choose who ships this brand’s parcels — your own ShipRocket account or the Duncit courier — and connect the Razorpay account it gets paid through. You can do this while your brand is in review.",
+    // The Duncit courier is no longer offered: every brand ships on its own ShipRocket.
+    "The last step. Choose who ships this brand’s parcels — your own ShipRocket account or the Duncit courier — and pick the Razorpay account it gets paid through. Both are picked from the accounts you saved under Integrations. You can do this while your brand is in review.",
   ],
   "partners.brandWizard.integration.bothRequired": [
     "Both connections must succeed before the brand can be submitted for review.",
     "Razorpay must connect, and shipping must be settled — the Duncit courier chosen or your ShipRocket connected — before the brand can be submitted for review.",
+    "Your brand goes live in the Pod Shop only once Razorpay is connected and shipping is settled — the Duncit courier chosen or your ShipRocket connected.",
   ],
   "partners.brandWizard.review.integrationsOk": ["ShipRocket and Razorpay are connected."],
   "partners.brandWizard.review.integrationsMissing": [
@@ -179,5 +183,83 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "partners.brandWizard.validation.phone": ["Enter a valid phone number (digits only)."],
   "partners.warehouses.intro": [
     "The addresses your products ship from. Sync with ShipRocket to check each one is ready for pickups.",
+    "The addresses your products ship from. Each one is checked with ShipRocket when this page opens, and an approved warehouse is added there for you.",
+  ],
+  // "Warehouse" became ShipRocket's own term everywhere: a Pickup Address, with
+  // an Address Nickname, one of them the Primary.
+  "ecommPortal.products.published": [
+    "{changed} of {total} products published. A product still missing a price, photo, category, warehouse or weight is skipped.",
+  ],
+  "ecommPortal.listing.noWarehouse": [
+    "No Duncit warehouse is set for this product, so it ships from the default pickup location.",
+  ],
+  "ecommPortal.productEditor.warehouse": ["Warehouse"],
+  "ecommPortal.productEditor.noWarehouse": ["Choose a warehouse"],
+  "ecommPortal.productEditor.warehouseNotReady": [
+    "This warehouse is not registered with ShipRocket yet, so parcels cannot be booked from it.",
+  ],
+  "ecommPortal.shipping.shiprocketSubtitle": [
+    "The ShipRocket account behind every parcel: its health, and its pickup addresses against our warehouses.",
+  ],
+  "ecommPortal.shipping.noWarehouses": ["No warehouses yet."],
+  "ecommPortal.shipping.warehouseInUse": ["Products ship from this warehouse — move them first"],
+  "ecommPortal.shipping.addWarehouse": ["Add warehouse"],
+  "ecommPortal.shipping.editWarehouse": ["Edit warehouse"],
+  "ecommPortal.shipping.defaultWarehouse": ["Default warehouse"],
+  "ecommPortal.shipping.defaultWarehouseHint": [
+    "New products ship from this warehouse unless they choose another.",
+  ],
+  "ecommPortal.shipping.ndrReturn": ["Return it to the warehouse"],
+  "fulfilment.statusRtoDelivered": ["Back at the warehouse"],
+  "mweb.studioOptions.brandWarehouses": ["ShipRocket Warehouses"],
+  "mweb.brandWarehouses.empty": ["This brand has no warehouses yet."],
+  "mweb.brandWarehouses.loadFailed": ["Could not load the warehouses. Try again."],
+  "mweb.brandWarehouses.manageHint": ["Warehouses are added and edited in the Partner app."],
+  "partners.brandDetails.tabWarehouses": ["Warehouses"],
+  "partners.ecommBrandPage.deleteWarehouse": ["Delete warehouse"],
+  "partners.ecommBrandPage.useAsTheDefaultWarehouseFor": ["Use as the default warehouse for this brand"],
+  "partners.ecommBrandPage.warehouseDeleted": ["Warehouse deleted."],
+  "partners.ecommBrandPage.warehouseName": ["Warehouse name"],
+  "partners.ecommBrandPage.warehouseSaved": ["Warehouse saved."],
+  "partners.ecommBrandPage.warehouses": ["Warehouses"],
+  "partners.ecommDashboardPage.totalWarehouses": ["Total Warehouses"],
+  "partners.listProductsPage.shipFromWarehouse": ["Ship-from warehouse"],
+  "partners.brandWizard.address.intro": [
+    "The registered business address. Warehouses are added later under Brand settings.",
+  ],
+  "partners.brandWizard.integration.shiprocketStep3": [
+    "Add your warehouse under Settings → Pickup Addresses and note its nickname.",
+  ],
+  "partners.brandWizard.danger.deleteBody": [
+    "Permanently removes this brand, its warehouses and its review history. An approved brand with products cannot be deleted — deactivate it instead.",
+  ],
+  "partners.warehouses.title": ["Warehouses"],
+  "partners.warehouses.syncing": ["Checking your warehouses with ShipRocket…"],
+  "products.pickup.panelTitle": ["Pickup / warehouse locations"],
+  "products.pickup.noReadyWarehouses": [
+    "No warehouse is on the ShipRocket account yet — add one under Settings › Duncit Warehouse Locations. A product can only ship from an address ShipRocket can collect from.",
+  ],
+  "products.brandReview.pickupHint": [
+    "Registering a location with ShipRocket lets SHIP orders pick up from this brand’s warehouse.",
+  ],
+  "products.delivery.targetHint": [
+    "ShipRocket rates and books the courier live from the warehouse below. Host and Venue delivery are hand-carried and never quoted.",
+  ],
+  "products.delivery.chargeFallbackHint": [
+    "Fallback only — charged when ShipRocket cannot rate the warehouse to the buyer.",
+  ],
+  "products.media.warehouse": ["Warehouse"],
+  "products.settings.duncitWarehouses": ["Duncit warehouses"],
+  "products.settings.warehouseRequestsEmpty": ["No warehouse requests."],
+  "shell.nav.duncitWarehouseLocations": ["Duncit Warehouse Locations"],
+  "shell.nav.warehouseApproval": ["Warehouse Approval"],
+  "email.ecommBrandDeleted.body": [
+    "The brand below has been removed from Duncit, along with its warehouses. Orders already placed are not affected. You can register a new brand from the Partners console at any time.",
+  ],
+  // Deletion requests: the running-order line names the buyer and the amount going back,
+  // and the cancel option points at the Deletion Refunds page.
+  "partners.deletionRequest.orderLine": ["Placed {date} · {units} unit(s) of this item"],
+  "partners.deletionRequest.modeCancelBody": [
+    "Once the Products team approves, each running order is cancelled and the buyer gets a full refund with an apology. An order that also contains other items keeps running for those items.",
   ],
 };

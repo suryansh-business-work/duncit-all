@@ -2,7 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { Sidebar } from '@/components/Sidebar';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
-import { STUDIO_HOME_ROUTE } from '@/utils/studio-mode';
+import { STUDIO_ROUTE } from '@/utils/studio-mode';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
@@ -96,7 +96,8 @@ describe('Sidebar', () => {
     fireEvent.press(screen.getByTestId('studio-switch-confirm'));
     // Every role now shares the same profile card layout — no studio-only list.
     expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
-    expect(mockNavigate).toHaveBeenCalledWith(STUDIO_HOME_ROUTE.HOST);
+    // The switch lands on the role's Studio screen, not its dashboard.
+    expect(mockNavigate).toHaveBeenCalledWith(STUDIO_ROUTE.HOST);
   });
 
   it('logs out from the footer', () => {

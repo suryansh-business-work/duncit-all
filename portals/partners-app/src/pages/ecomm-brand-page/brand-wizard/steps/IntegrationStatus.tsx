@@ -33,6 +33,15 @@ export function IntegrationChips({ status }: Readonly<ChipsProps>) {
             data-testid="integration-chip-mode"
           />
         )}
+        {status.sandbox && (
+          <Chip
+            size="small"
+            variant="outlined"
+            color="warning"
+            label={t('partners.brandWizard.integration.sandboxChip')}
+            data-testid="integration-chip-sandbox"
+          />
+        )}
       </Stack>
       {status.checked_at && (
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>

@@ -101,11 +101,12 @@ describe('syncBrandPickupLocations', () => {
     const brand = await seedBrand('DUNCIT_COURIER');
     await BrandPickupLocationModel.create({ owner_kind: 'BRAND', brand_id: brand._id, nickname: 'MINE', review_status: 'APPROVED' });
     await BrandPickupLocationModel.create({ owner_kind: 'BRAND', brand_id: brand._id, nickname: 'WAITING', review_status: 'PENDING' });
-    // No SHIPROCKET entry is mapped to the Partners app, so the courier account cannot be resolved.
+    // No SHIPROCKET entry is mapped to the Partners app, so the retired courier account cannot be
+    // resolved: the brand is told to connect its own account instead.
     const result = await syncBrandPickupLocations(String(brand._id));
 
     expect(mockList).not.toHaveBeenCalled();
-    expect(result.shiprocket_error).toMatch(/Duncit courier is not set up/);
+    expect(result.shiprocket_error).toMatch(/Duncit courier, which is no longer offered\. Connect the brand's own ShipRocket account/);
     expect(result.adopted).toBe(0);
     expect(result.warehouses.map((w) => w.nickname).sort()).toEqual(['MINE', 'WAITING']);
   });

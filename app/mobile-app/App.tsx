@@ -24,6 +24,7 @@ import { APP_BG } from '@/components/AppBackground';
 import { AppPopup } from '@/components/AppPopup';
 import { ConsentHost } from '@/components/consent';
 import { ExitConfirmGate } from '@/components/ExitConfirmGate';
+import { CartAddedToast } from '@/components/cart/CartAddedToast';
 import { linking } from '@/navigation/linking';
 import {
   initShortLinkAttribution,
@@ -180,6 +181,7 @@ export default function App() {
                 {/* The first-launch tracking question, and the signed-in sync
                     that records the answer on the server. */}
                 <ConsentHost />
+                <CartAddedToast />
                 <ForceUpdateGate />
                 {/* Global, like the two above: the back button is pressed from
                     every screen, so the guard cannot live inside one. */}

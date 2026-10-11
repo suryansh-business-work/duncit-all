@@ -4,6 +4,7 @@ import { razorpayConnection, shiprocketConnection, type EnvConnectionResult } fr
 import { PolicyModel, type IPolicy } from '@modules/content/policy/policy.model';
 import { policyContentHash } from '@modules/content/policyAcceptance/policyAcceptance.model';
 import { logs } from '@observability/log';
+import { platformSandboxApiUrl } from '@modules/commerce/shiprocket/shiprocket.account';
 import type { IBrandRazorpayIntegration, IBrandShiprocketIntegration, IEcommBrand } from './ecommBrand.model';
 import type { ConsentContext } from './ecommBrand.completion';
 
@@ -38,6 +39,8 @@ export interface BrandIntegrationStatus {
   pickup_location: string;
   live_mode: boolean;
   has_webhook_secret: boolean;
+  /** ShipRocket: the account is in sandbox mode — test orders only, nothing real is booked. Always false for Razorpay. */
+  sandbox: boolean;
   /** The partner's Integrations connection this credential was copied from; null when typed in on the brand. */
   connection_id: string | null;
 }
@@ -83,6 +86,7 @@ function shiprocketStatus(s: IBrandShiprocketIntegration | undefined, link: Link
     pickup_location: integration.pickup_location ?? '',
     live_mode: false,
     has_webhook_secret: !!integration.webhook_secret,
+    sandbox: integration.sandbox === true,
     connection_id: link ? link.toHexString() : null,
   };
 }
@@ -102,6 +106,7 @@ function razorpayStatus(r: IBrandRazorpayIntegration | undefined, link: LinkId):
     pickup_location: '',
     live_mode: (integration.key_id ?? '').startsWith('rzp_live'),
     has_webhook_secret: !!integration.webhook_secret,
+    sandbox: false,
     connection_id: link ? link.toHexString() : null,
   };
 }
@@ -130,6 +135,7 @@ export function copyIntegration(from: IntegrationHolder, to: IntegrationHolder, 
       password: s.password,
       pickup_location: s.pickup_location,
       webhook_secret: s.webhook_secret,
+      sandbox: s.sandbox === true,
       connected: s.connected,
       checked_at: s.checked_at,
       message: s.message,
@@ -154,7 +160,8 @@ export function sameCredential(a: IntegrationHolder, b: IntegrationHolder, provi
   if (provider === 'SHIPROCKET') {
     const x = a.integrations.shiprocket;
     const y = b.integrations.shiprocket;
-    return x.email === y.email && x.password === y.password;
+    // Sandbox and live are different accounts as far as pickups and orders go.
+    return x.email === y.email && x.password === y.password && (x.sandbox === true) === (y.sandbox === true);
   }
   const x = a.integrations.razorpay;
   const y = b.integrations.razorpay;
@@ -168,9 +175,12 @@ export function applyShiprocketInput(brand: IntegrationHolder, input: Record<str
   if (!email) bad('Enter the ShipRocket API user email');
   const password = typeof input.password === 'string' && input.password ? input.password : current.password;
   if (!password) bad('Enter the ShipRocket API user password');
-  const changed = email !== current.email || password !== current.password;
+  // Left out (an older client) keeps the saved mode; only an explicit choice moves the account.
+  const sandbox = typeof input.sandbox === 'boolean' ? input.sandbox : current.sandbox === true;
+  const changed = email !== current.email || password !== current.password || sandbox !== (current.sandbox === true);
   current.email = email;
   current.password = password;
+  current.sandbox = sandbox;
   if (input.pickup_location !== undefined) current.pickup_location = str(input.pickup_location);
   if (str(input.webhook_secret)) current.webhook_secret = str(input.webhook_secret);
   return changed;
@@ -194,20 +204,26 @@ export function applyRazorpayInput(brand: IntegrationHolder, input: Record<strin
 export function clearIntegration(brand: IntegrationHolder, provider: BrandIntegrationProvider) {
   const cleared = { connected: false, checked_at: null, message: '', details: [] };
   if (provider === 'SHIPROCKET') {
-    brand.integrations.shiprocket = { email: '', password: '', pickup_location: '', webhook_secret: '', ...cleared };
+    brand.integrations.shiprocket = { email: '', password: '', pickup_location: '', webhook_secret: '', sandbox: false, ...cleared };
     return;
   }
   brand.integrations.razorpay = { key_id: '', key_secret: '', webhook_secret: '', ...cleared };
 }
 
-/** A reader over the brand's stored config, in the field names the Tech portal's probes read. */
-function readerFor(brand: IntegrationHolder, provider: BrandIntegrationProvider) {
+/**
+ * A reader over the brand's stored config, in the field names the Tech portal's
+ * probes read. `sandboxApiUrl` is the platform's sandbox address: a partner
+ * never types one, so a brand in sandbox mode is checked against that.
+ */
+function readerFor(brand: IntegrationHolder, provider: BrandIntegrationProvider, sandboxApiUrl: string) {
   const config: Record<string, string> =
     provider === 'SHIPROCKET'
       ? {
           email: brand.integrations.shiprocket.email,
           password: brand.integrations.shiprocket.password,
           pickup_location: brand.integrations.shiprocket.pickup_location,
+          sandbox: brand.integrations.shiprocket.sandbox === true ? 'true' : 'false',
+          sandbox_api_url: sandboxApiUrl,
         }
       : {
           key_id: brand.integrations.razorpay.key_id,
@@ -220,7 +236,8 @@ function readerFor(brand: IntegrationHolder, provider: BrandIntegrationProvider)
 /** The vendor's answer, or the transport failure as one — a probe never throws. */
 async function runProbe(brand: IntegrationHolder, provider: BrandIntegrationProvider): Promise<EnvConnectionResult> {
   try {
-    const read = readerFor(brand, provider);
+    const sandboxed = provider === 'SHIPROCKET' && brand.integrations.shiprocket.sandbox === true;
+    const read = readerFor(brand, provider, sandboxed ? await platformSandboxApiUrl() : '');
     return provider === 'SHIPROCKET' ? await shiprocketConnection(read) : await razorpayConnection(read);
   } catch (error) {
     logs.server.warn('ecommBrand', 'probe', { error, provider, brandId: String(brand._id), msg: 'vendor check failed' });

@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { Spinner, Text, YStack } from 'tamagui';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { StackScreen } from '@/components/StackScreen';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useLoadingRegion } from '@/components/Skeleton';
 import { WithdrawCta } from '@/components/wallet/WithdrawCta';
+import { StatementDialog } from '@/components/wallet/StatementDialog';
 import { WithdrawDialog } from '@/components/wallet/WithdrawDialog';
 import { fmtDate, TxnRow, WalletSection, WithdrawalRow } from '@/components/wallet/WalletRows';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useWallet } from '@/hooks/useWallet';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
@@ -22,6 +26,8 @@ export function WalletScreen() {
   const { t } = useTranslation();
   const { wallet, transactions, withdrawals, isLoading, refetch } = useWallet();
   const [open, setOpen] = useState(false);
+  const [statementOpen, setStatementOpen] = useState(false);
+  const { color: ink } = useThemeColors();
   const loadingRegion = useLoadingRegion();
   const symbol = wallet?.currency_symbol ?? '₹';
   const balance = wallet?.balance ?? 0;
@@ -71,6 +77,16 @@ export function WalletScreen() {
               disabled={!eligible || balance <= 0}
               onPress={() => setOpen(true)}
             />
+            <XStack marginTop={8}>
+              <DuncitButton
+                testID="wallet-statement"
+                label={t('withdraw.statement.title')}
+                variant="outline"
+                tone="neutral"
+                icon={<MaterialIcons name="download" size={18} color={ink} />}
+                onPress={() => setStatementOpen(true)}
+              />
+            </XStack>
           </SurfaceCard>
 
           <WalletSection title={t('mweb.wallet.withdrawals')} empty={noWithdrawals}>
@@ -98,6 +114,9 @@ export function WalletScreen() {
           refetch().catch(() => undefined);
         }}
       />
+
+      {/* Mounted only while open: the form starts fresh each time. */}
+      {statementOpen ? <StatementDialog onClose={() => setStatementOpen(false)} /> : null}
     </StackScreen>
   );
 }

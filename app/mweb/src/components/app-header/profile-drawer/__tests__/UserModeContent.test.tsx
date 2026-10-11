@@ -122,40 +122,56 @@ describe('UserModeContent', () => {
     expect(screen.getByText('Pod Plans')).toBeInTheDocument();
   });
 
-  it('shows ONE highlighted studio entry only once switched into a studio', () => {
+  it('gives a partner ONE "Studio" entry in any mode, and a consumer none', () => {
     const onNavigate = vi.fn();
-    // A host still in User mode gets the plain consumer drawer.
-    const { rerender } = renderContent({ me: FULL_ME, roles: ['HOST'], showPodPlans: false, onNavigate });
+    // No partner role — no Studio entry at all.
+    const { unmount } = renderContent({ me: FULL_ME, roles: [], showPodPlans: false, onNavigate });
     expect(screen.queryByTestId('sidebar-studio-options')).not.toBeInTheDocument();
+    unmount();
+
+    // A host still in User mode already has the entry: it opens the Studio on
+    // the first role they hold.
+    const { rerender } = renderContent({ me: FULL_ME, roles: ['HOST'], showPodPlans: false, onNavigate });
+    fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
+    expect(onNavigate).toHaveBeenLastCalledWith('/host/options');
 
     rerender(
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
         <UserModeContent me={FULL_ME} roles={['HOST']} mode="HOST" showPodPlans={false} onNavigate={onNavigate} />
       </MockedProvider>,
     );
-    // The options live on the Options page the one entry opens.
+    // The role's options live on the Studio page the one entry opens — and the
+    // entry no longer carries a role's name.
     expect(screen.queryByText('Pod Requests')).not.toBeInTheDocument();
     expect(screen.queryByText('Withdrawal')).not.toBeInTheDocument();
-    const entry = screen.getByRole('button', { name: 'Host Options' });
-    expect(entry).toHaveAccessibleDescription('Everything for your pods in one place');
+    expect(screen.queryByRole('button', { name: 'Host Options' })).not.toBeInTheDocument();
+    const entry = screen.getByRole('button', { name: 'Studio' });
+    expect(entry).toHaveAccessibleDescription('Every option for your partner roles in one place');
     fireEvent.click(entry);
-    expect(onNavigate).toHaveBeenCalledWith('/host/options');
+    expect(onNavigate).toHaveBeenLastCalledWith('/host/options');
     fireEvent.keyDown(entry, { key: 'Enter' });
-    expect(onNavigate).toHaveBeenCalledTimes(2);
+    expect(onNavigate).toHaveBeenCalledTimes(3);
   });
 
-  it('opens Venue Options from the venue entry, and drops it once the role is gone', () => {
+  it('opens the Studio on the role in effect, and drops the entry once every role is gone', () => {
     const onNavigate = vi.fn();
     const venue = (roles: string[]) => (
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
         <UserModeContent me={FULL_ME} roles={roles} mode="VENUE" showPodPlans={false} onNavigate={onNavigate} />
       </MockedProvider>
     );
-    const { rerender } = render(venue(['VENUE_OWNER']));
-    fireEvent.click(screen.getByRole('button', { name: 'Venue Options' }));
+    // A host who is also a venue owner, switched into Venue: still one entry,
+    // and it opens the Venue options — not the first role in the list.
+    const { rerender } = render(venue(['HOST', 'VENUE_OWNER']));
+    expect(screen.getAllByTestId('sidebar-studio-options')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
     expect(onNavigate).toHaveBeenCalledWith('/venues/options');
-    // The coin card is a consumer reward — a studio's entry takes its slot.
+    // The coin card is a consumer reward — it stays out of a studio.
     expect(screen.queryByTestId('sidebar-duncit-coin')).not.toBeInTheDocument();
+    // The Venue role revoked: the entry falls back to the role still held.
+    rerender(venue(['HOST']));
+    fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
+    expect(onNavigate).toHaveBeenLastCalledWith('/host/options');
     rerender(venue([]));
     expect(screen.queryByTestId('sidebar-studio-options')).not.toBeInTheDocument();
   });

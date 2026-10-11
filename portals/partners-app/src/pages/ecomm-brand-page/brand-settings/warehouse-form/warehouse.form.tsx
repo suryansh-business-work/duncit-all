@@ -16,7 +16,7 @@ import { useTranslation } from '@duncit/shell';
  * characters and a six-digit PIN. The server holds a save to the same rules.
  */
 export const warehouseSchema = z.object({
-  nickname: zodRules.requiredText('Warehouse name', 2, 36),
+  nickname: zodRules.requiredText('Address nickname', 2, 36),
   contact_name: zodRules.requiredText('Contact name', 2, 80),
   phone: z
     .string()
@@ -116,7 +116,7 @@ export default function WarehouseForm({ defaultValues, busy, apiError = null, on
           {t('shell.common.cancel')}
         </DuncitButton>
         <DuncitButton type="submit" variant="contained" loading={busy}>
-          {busy ? 'Saving...' : 'Save warehouse'}
+          {busy ? 'Saving...' : 'Save pickup address'}
         </DuncitButton>
       </Stack>
     </Stack>

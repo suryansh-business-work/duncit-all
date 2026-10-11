@@ -52,6 +52,7 @@ export function QuoteSummary({ quote }: Readonly<{ quote: StoreCheckoutQuote }>)
         </Typography>
       ) : null}
       {quote.cod_fee > 0 ? <Row label={t('ecommStore.quote.codFee')} value={money(quote.cod_fee)} /> : null}
+      {quote.round_off > 0 ? <Row label={t('ecommStore.quote.roundOff')} value={`+${money(quote.round_off)}`} /> : null}
       <Divider />
       <Row label={t('ecommStore.quote.total')} value={money(quote.total)} strong />
       {quote.gst_amount > 0 ? (

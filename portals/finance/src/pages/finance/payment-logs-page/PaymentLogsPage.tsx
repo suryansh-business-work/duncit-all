@@ -4,14 +4,16 @@ import { useNavigate } from 'react-router';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { useTranslation } from '@duncit/app-settings';
+import { useTranslation, type Translator } from '@duncit/app-settings';
 import { downloadBase64File } from '@duncit/utils';
 import {
   INVOICE_PDF,
   PAYMENT_TOTALS,
   PAYMENTS_TABLE,
   REFUND_PAYMENT,
+  SHOP_PAYMENTS_TABLE,
   type PaymentRow,
+  type PaymentShop,
   type PaymentTotals,
 } from './queries';
 import { paymentTableFilter } from './helpers';
@@ -22,8 +24,26 @@ import RefundDialog from './RefundDialog';
 const POLL_MS = 30000;
 const EMPTY_TOTALS: PaymentTotals = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0 };
 
-export default function PaymentLogsPage() {
+/** A log's heading, and for a shop's log a line saying what is — and is not — in
+ * it. Every key is a literal so the localization gate can see it rendered. */
+function logCopy(t: Translator['t'], shop?: PaymentShop): { title: string; subtitle: string } {
+  if (shop === 'POD_SHOP') {
+    return { title: t('finance.payment.logsTitlePodShop'), subtitle: t('finance.payment.logsSubtitlePodShop') };
+  }
+  if (shop === 'ECOMM') {
+    return { title: t('finance.payment.logsTitleEcomm'), subtitle: t('finance.payment.logsSubtitleEcomm') };
+  }
+  return { title: t('finance.payment.logsTitle'), subtitle: '' };
+}
+
+/**
+ * Payment Logs. With no `shop` it is every payment, as it always was (the Logs
+ * console mounts it that way too). With one it is that shop's payments only —
+ * the server fixes the scope, this page just asks for it.
+ */
+export default function PaymentLogsPage({ shop }: Readonly<{ shop?: PaymentShop }>) {
   const { t } = useTranslation();
+  const { title, subtitle } = logCopy(t, shop);
   const client = useApolloClient();
   const navigate = useNavigate();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -34,7 +54,7 @@ export default function PaymentLogsPage() {
   const [totalsFilter, setTotalsFilter] = useState<Record<string, string> | undefined>(undefined);
   const totalsKeyRef = useRef('null');
   const { data, refetch } = useQuery<any>(PAYMENT_TOTALS, {
-    variables: { filter: totalsFilter },
+    variables: shop ? { filter: totalsFilter, shop } : { filter: totalsFilter },
     fetchPolicy: 'cache-and-network',
     pollInterval: POLL_MS,
   });
@@ -50,16 +70,14 @@ export default function PaymentLogsPage() {
         setTotalsFilter(filter);
       }
       const { data: page } = await client.query<any>({
-        query: PAYMENTS_TABLE,
-        variables: tableQueryToGql(q),
+        query: shop ? SHOP_PAYMENTS_TABLE : PAYMENTS_TABLE,
+        variables: shop ? { ...tableQueryToGql(q), shop } : tableQueryToGql(q),
         fetchPolicy: 'network-only',
       });
-      return {
-        rows: page.paymentsTable.rows as PaymentRow[],
-        total: page.paymentsTable.total as number,
-      };
+      const table = shop ? page.shopPaymentsTable : page.paymentsTable;
+      return { rows: table.rows as PaymentRow[], total: table.total as number };
     },
-    [client],
+    [client, shop],
   );
 
   // The old page auto-refreshed via pollInterval — keep the table live too.
@@ -130,7 +148,7 @@ export default function PaymentLogsPage() {
         spacing={1.5}
         sx={{
           alignItems: "center",
-          mb: 3
+          mb: shop ? 1 : 3
         }}>
         <ReceiptLongIcon color="primary" />
         <Typography component="h1"
@@ -139,13 +157,20 @@ export default function PaymentLogsPage() {
             fontWeight: 700,
             flex: 1
           }}>
-          {t('finance.payment.logsTitle')}
+          {title}
         </Typography>
       </Stack>
+      {subtitle && (
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+          {subtitle}
+        </Typography>
+      )}
 
       <TotalsCards totals={totals} />
 
       <PaymentsTable
+        shop={shop}
+        title={title}
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         downloadingId={downloadingId}

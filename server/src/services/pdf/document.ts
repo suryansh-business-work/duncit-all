@@ -11,11 +11,17 @@ import PDFDocument from 'pdfkit';
  *
  * The caller does nothing but draw. `doc.end()` is called here, so a generator
  * cannot forget it and leave a request waiting on a promise that never settles.
+ *
+ * `options` is for the one thing a multi-page document needs that a single page
+ * does not: `bufferPages`, so "Page x of y" can be written once y is known.
  */
-export function renderPdf(draw: (doc: PDFKit.PDFDocument) => void): Promise<Buffer> {
+export function renderPdf(
+  draw: (doc: PDFKit.PDFDocument) => void,
+  options: PDFKit.PDFDocumentOptions = {}
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: 'A4', margin: 0 });
+      const doc = new PDFDocument({ size: 'A4', margin: 0, ...options });
       const chunks: Buffer[] = [];
       doc.on('data', (chunk: Buffer) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));

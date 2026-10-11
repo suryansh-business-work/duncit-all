@@ -22,6 +22,7 @@ import { defineDemo, defineDemos } from '../types';
 // The rendered packaging section and the long schema demo live beside this file.
 import { PackagingDemo, type PackagingMock } from './forms/PackagingDemo';
 import { schemasDemo } from './forms/schemas-demo';
+import { WalletStatementDemo, type WalletStatementMock } from './forms/WalletStatementDemo';
 
 interface WithdrawMock {
   /** The wallet balance — nobody may withdraw more than they hold. */
@@ -56,6 +57,14 @@ export default defineDemos('forms', [
       'A 10 kg food bag packed 60 × 40 × 15 cm bills at its own weight. Press "Bed / large" and the box (70 × 50 × 20) out-weighs the bed: the readout jumps to 14 kg and the warning appears. Every value stays editable. Set required to true and every measurement label gains its asterisk, as the parcel edit before a booking shows it.',
     mock: { weight_kg: 10.4, length_cm: 60, breadth_cm: 40, height_cm: 15, hsn_code: '2309', required: false },
     render: (mock) => <PackagingDemo mock={mock} />,
+  }),
+  defineDemo<WalletStatementMock>({
+    id: 'wallet-statement',
+    title: 'Download statement — one dialog for mWeb and the partner console',
+    note:
+      'Open it and press Download: a preset needs no checking, so the stand-in server answers at once. Set answer to EMPTY for the nil-statement note, or FAILURE for the error with Retry. Choose Custom range and submit it blank to see the same refusals the server enforces. Set partnerConsole to true for the console\'s look: the two days side by side, the heavier title and a spinner on Download. "Today" is fixed at 11 October 2026, Kolkata.',
+    mock: { answer: 'FILE', partnerConsole: false },
+    render: (mock) => <WalletStatementDemo mock={mock} />,
   }),
   defineDemo<FieldMock>({
     id: 'rules',

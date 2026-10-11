@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STUDIO_LABEL, availableModes, resolveMode } from '../studio-mode';
+import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../studio-mode';
 
 /** mWeb twin of the native studio-mode test (rule 27) — the two files hold the
  * same rules, so the E-commerce studio cannot go dark on one app only. */
@@ -34,6 +34,24 @@ describe('studio-mode', () => {
     expect(resolveMode('ECOMM', ['ECOMM_MANAGER'], { products: true })).toBe('ECOMM');
     // Only the product studio is affected — the other partner modes stand.
     expect(resolveMode('HOST', ['HOST'], { products: false })).toBe('HOST');
+  });
+
+  it('lands a role switch on the role’s Studio page, and User mode on Home', () => {
+    expect(studioSwitchPath('HOST', null)).toBe('/host/options');
+    expect(studioSwitchPath('VENUE', undefined)).toBe('/venues/options');
+    expect(studioSwitchPath('CLUB', { venue: 0, host: 0, club: 0 })).toBe('/clubs/options');
+    expect(studioSwitchPath('ECOMM', null)).toBe('/products/options');
+    expect(studioSwitchPath('USER', null)).toBe('/');
+  });
+
+  it('opens the Auto Pod queue instead while one is waiting on the role', () => {
+    const counts = { venue: 2, host: 0, club: 1 };
+    expect(studioSwitchPath('VENUE', counts)).toBe('/venues/auto-pods');
+    expect(studioSwitchPath('CLUB', counts)).toBe('/clubs/auto-pods');
+    // Nothing waiting on the host, and a brand never enrols in an Auto Pod.
+    expect(studioSwitchPath('HOST', counts)).toBe('/host/options');
+    expect(studioSwitchPath('ECOMM', counts)).toBe('/products/options');
+    expect(studioSwitchPath('USER', counts)).toBe('/');
   });
 
   it('exposes labels for every mode', () => {

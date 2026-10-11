@@ -358,7 +358,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
     'The brand below was not approved this time. The reason from our reviewer is beneath it. Update the brand in the Partners console and submit it again whenever you are ready.',
   'email.ecommBrandDeleted.title': 'Your brand has been removed',
   'email.ecommBrandDeleted.body':
-    'The brand below has been removed from Duncit, along with its warehouses. Orders already placed are not affected. You can register a new brand from the Partners console at any time.',
+    'The brand below has been removed from Duncit, along with its pickup addresses. Orders already placed are not affected. You can register a new brand from the Partners console at any time.',
   'email.ecommBrandReviewRequested.title': 'A brand is waiting for review',
   'email.ecommBrandReviewRequested.body':
     'A partner has submitted the brand below. Open Brands Review, check every section — business, documents, integrations and the signed consent — and approve or reject it.',

@@ -38,7 +38,7 @@ export default function BrandSettingsHero({ brand, onBack }: Readonly<Props>) {
         {brand?.brand_name || 'Brand'} settings
       </Typography>
       <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
-        Warehouses your products ship from. Orders pick up from the warehouse chosen on each product.
+        Pickup addresses your products ship from. Orders are collected from the pickup address chosen on each product.
       </Typography>
     </Box>
   );

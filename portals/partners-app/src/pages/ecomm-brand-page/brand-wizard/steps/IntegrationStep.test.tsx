@@ -3,7 +3,6 @@ import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/re
 import type { MockedResponse } from '@apollo/client/testing';
 import IntegrationStep from './IntegrationStep';
 import {
-  SET_BRAND_SHIPPING_MODE,
   type BrandIntegrationStatus,
   type BrandIntegrations,
   type BrandShippingMode,
@@ -30,6 +29,7 @@ const status = (provider: 'SHIPROCKET' | 'RAZORPAY', over: Partial<BrandIntegrat
   pickup_location: '',
   live_mode: false,
   has_webhook_secret: false,
+  sandbox: false,
   connection_id: null,
   ...over,
 });
@@ -78,45 +78,39 @@ const mount = (
 };
 
 const shiprocketPicker = () => screen.queryByTestId('integration-picker-shiprocket');
-const checked = (label: RegExp) => (screen.getByLabelText(label) as HTMLInputElement).checked;
-const notReady = () => screen.queryByText(/goes live in the Pod Shop only once Razorpay is connected/);
+const notReady = () => screen.queryByText(/goes live in the Pod Shop only once both Razorpay and your ShipRocket account are connected/);
 
 describe('IntegrationStep — who ships the parcels', () => {
-  it('asks a new brand to choose, and hides the ShipRocket picker until it picks its own account', () => {
+  it('shows the ShipRocket picker to a new brand: its own account is the only way to ship', () => {
     mount(null, integrations(true));
-    expect(checked(/My own ShipRocket account/)).toBe(false);
-    expect(checked(/Duncit courier service/)).toBe(false);
-    expect(shiprocketPicker()).toBeNull();
+    expect(shiprocketPicker()).not.toBeNull();
+    expect(screen.queryByText(/Duncit courier service/)).toBeNull();
+    expect(screen.queryByTestId('brand-shipping-mode-duncit')).toBeNull();
     expect(notReady()).not.toBeNull();
   });
 
-  it('needs no ShipRocket account from a brand on the Duncit courier — Razorpay alone settles the step', () => {
+  it('tells a brand still on the retired Duncit courier to move, and offers the ShipRocket picker to do it', () => {
     mount('DUNCIT_COURIER', integrations(true));
-    expect(checked(/Duncit courier service/)).toBe(true);
-    expect(shiprocketPicker()).toBeNull();
+    expect(screen.getByTestId('brand-shipping-legacy-courier').textContent).toMatch(/no longer offered/);
+    expect(shiprocketPicker()).not.toBeNull();
+    // It keeps shipping on that account until it moves, so the step still reads as settled.
     expect(notReady()).toBeNull();
   });
 
-  it('shows the ShipRocket picker for a brand that ships on its own account', () => {
+  it('shows no courier notice to a brand that ships on its own account', () => {
     mount('OWN_SHIPROCKET', integrations(true));
-    expect(checked(/My own ShipRocket account/)).toBe(true);
     expect(shiprocketPicker()).not.toBeNull();
+    expect(screen.queryByTestId('brand-shipping-legacy-courier')).toBeNull();
   });
 
-  it('reads a brand from before the choice that saved its own ShipRocket as shipping on it', () => {
-    mount(null, integrations(true, { configured: true, connected: true }));
-    expect(checked(/My own ShipRocket account/)).toBe(true);
+  it('marks a ShipRocket account in sandbox mode as test orders only', () => {
+    mount('OWN_SHIPROCKET', integrations(true, { configured: true, connected: true, sandbox: true }));
+    expect(screen.getByTestId('integration-chip-sandbox').textContent).toMatch(/Sandbox/);
   });
 
-  it('saves the choice the moment it is picked, then reloads the brand', async () => {
-    const onChanged = mount(null, integrations(true), [
-      {
-        request: { query: SET_BRAND_SHIPPING_MODE, variables: { brand_doc_id: 'b1', mode: 'DUNCIT_COURIER' } },
-        result: { data: { setBrandShippingMode: { __typename: 'EcommBrand', id: 'b1', shipping_mode: 'DUNCIT_COURIER' } } },
-      },
-    ]);
-    fireEvent.click(screen.getByTestId('brand-shipping-mode-duncit').querySelector('input') as HTMLInputElement);
-    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+  it('shows no sandbox chip for a live ShipRocket account', () => {
+    mount('OWN_SHIPROCKET', integrations(true, { configured: true, connected: true }));
+    expect(screen.queryByTestId('integration-chip-sandbox')).toBeNull();
   });
 });
 
@@ -124,8 +118,10 @@ describe('IntegrationStep — picking a saved account', () => {
   it('asks a partner with no saved Razorpay account to add one, and links to the Integrations page', async () => {
     mount('DUNCIT_COURIER', integrations(false));
     expect(await screen.findByText(/You have not saved a Razorpay account yet/)).not.toBeNull();
-    const manage = screen.getByRole('link', { name: 'Manage integrations' });
-    expect(manage.getAttribute('href')).toBe('/ecomm-brand/integrations');
+    // One link per picker (ShipRocket, Razorpay) — both lead to the Integrations page.
+    const links = screen.getAllByRole('link', { name: 'Manage integrations' });
+    expect(links.length).toBeGreaterThan(0);
+    for (const manage of links) expect(manage.getAttribute('href')).toBe('/ecomm-brand/integrations');
   });
 
   it('offers only the accounts that passed their check, and picks one for the brand', async () => {

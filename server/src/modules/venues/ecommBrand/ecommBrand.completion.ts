@@ -127,7 +127,7 @@ export function brandCompletion(brand: BrandFacts, consent: ConsentContext): Bra
 export const missingBrandSteps = (brand: BrandFacts, consent: ConsentContext): BrandStepKey[] =>
   BRAND_STEPS.filter((s) => s.gatesReview && !brandStepComplete(brand, s.key, consent)).map((s) => s.key);
 
-/** Razorpay connected, and shipping settled (own ShipRocket connected or the Duncit courier). */
+/** Razorpay connected, and the brand's own ShipRocket connected (a brand from the Duncit-courier days counts as settled). */
 export function brandIntegrationReady(b: BrandFacts): boolean {
   return (
     b.integrations?.razorpay?.connected === true &&

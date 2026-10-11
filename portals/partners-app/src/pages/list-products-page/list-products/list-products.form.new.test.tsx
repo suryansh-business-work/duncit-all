@@ -125,7 +125,7 @@ describe('ListProductsForm — a new listing', () => {
     next();
 
     // Delivery: pick the approved warehouse.
-    fireEvent.mouseDown(await screen.findByRole('combobox', { name: /Ship-from warehouse/ }));
+    fireEvent.mouseDown(await screen.findByRole('combobox', { name: /Pickup address/ }));
     fireEvent.click(within(await screen.findByRole('listbox')).getByRole('option', { name: 'Delhi warehouse — New Delhi' }));
     next();
 

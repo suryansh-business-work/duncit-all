@@ -86,7 +86,7 @@ export default function CheckoutView({
         )}
         <SavedAddressPicker onPick={session.pickAddress} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <OrderSummaryCard pod={pod} stateTitle={stateTitle} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} coins={coinSummary} />
+          <OrderSummaryCard pod={pod} stateTitle={stateTitle} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} coins={coinSummary} roundOff={payBreakup ? coins.roundOff : 0} />
           <PaymentDetailsCard
             control={session.control}
             onSubmit={submit}

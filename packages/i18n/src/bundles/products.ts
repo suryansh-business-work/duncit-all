@@ -84,9 +84,19 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
     },
 
     pickup: {
-      panelTitle: 'Pickup / warehouse locations',
+      panelTitle: 'Pickup addresses',
       formTitle: 'Pickup location',
       location: 'Pickup location',
+      add: 'Add pickup address',
+      addTitle: 'Add pickup address',
+      editTitle: 'Edit pickup address',
+      inactive: 'Inactive',
+      activeHint: 'Active — switch off to disable this pickup address',
+      inactiveHint: 'Inactive — switch on to enable this pickup address',
+      enabledDone: 'Pickup address is active again',
+      disabledDone: 'Pickup address is now inactive — it can no longer be chosen for a product',
+      primaryUpdated: 'Primary pickup address updated',
+      registeredDone: 'Registered with ShipRocket',
       default: 'Default',
       noDefault: 'No default',
       registered: 'Registered',
@@ -100,7 +110,7 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
       deleted: 'Pickup location deleted',
       emptyHint: 'No pickup locations yet. Add one to enable SHIP fulfilment.',
       shiprocketFirst: 'A pickup address is added to the ShipRocket account first and kept here as the account’s copy. One the account already holds is changed or removed in ShipRocket, then synced.',
-      noReadyWarehouses: 'No warehouse is on the ShipRocket account yet — add one under Settings › Duncit Warehouse Locations. A product can only ship from an address ShipRocket can collect from.',
+      noReadyWarehouses: 'No pickup address is on the ShipRocket account yet — add one under Settings › Duncit Pickup Addresses. A product can only ship from an address ShipRocket can collect from.',
       warehouseNotInShiprocket: 'ShipRocket does not hold this address, so nothing can be collected from it',
       nickname: 'Nickname',
       contactName: 'Contact name',
@@ -167,6 +177,20 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
       checkedAt: 'Checked {when}',
       liveMode: 'Live mode',
       testMode: 'Test mode',
+      sandboxChip: 'Sandbox — test orders',
+      sandboxLabel: 'Sandbox mode — test orders only',
+      sandboxHint:
+        'On: this brand’s orders are booked on ShipRocket’s sandbox — no courier collects them and nothing is charged. Off: real shipments. The partner’s saved connection switches with it, and it must hold the sandbox API user from ShipRocket → Settings → Additional Settings → Sandbox.',
+      sandboxOnTitle: 'Switch this brand to sandbox?',
+      sandboxOnBody:
+        'Every new order for this brand will be a TEST order on ShipRocket’s sandbox. Buyers will not receive a parcel. The brand’s pickup addresses are registered again on the sandbox account.',
+      sandboxOnConfirm: 'Switch to sandbox',
+      sandboxOffTitle: 'Switch this brand to live?',
+      sandboxOffBody:
+        'New orders for this brand will be booked as real shipments and billed to its ShipRocket wallet. The brand’s pickup addresses are registered again on the live account.',
+      sandboxOffConfirm: 'Switch to live',
+      sandboxTurnedOn: 'Sandbox mode is on — this brand now books test orders only.',
+      sandboxTurnedOff: 'Sandbox mode is off — this brand now books real shipments.',
       identifier: 'Account',
       pickupNickname: 'Default pickup',
       consentSigned: 'Signed by {name} on {when}',
@@ -209,7 +233,7 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
       stepOptional: 'Optional',
       approvedAt: 'Approved on',
       rejectedAt: 'Rejected on',
-      pickupHint: 'Registering a location with ShipRocket lets SHIP orders pick up from this brand’s warehouse.',
+      pickupHint: 'Registering a location with ShipRocket lets SHIP orders pick up from this brand’s pickup address.',
       step: {
         details: 'Brand details',
         business: 'Business & legal',
@@ -313,8 +337,8 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
     delivery: {
       charge: 'Delivery charge',
       target: 'Delivery method',
-      targetHint: 'ShipRocket rates and books the courier live from the warehouse below. Host and Venue delivery are hand-carried and never quoted.',
-      chargeFallbackHint: 'Fallback only — charged when ShipRocket cannot rate the warehouse to the buyer.',
+      targetHint: 'ShipRocket rates and books the courier live from the pickup address below. Host and Venue delivery are hand-carried and never quoted.',
+      chargeFallbackHint: 'Fallback only — charged when ShipRocket cannot rate the pickup address to the buyer.',
       packagingNote: 'ShipRocket rates the packed parcel — fill in Shipping & packaging below before saving.',
       availableInPods: 'Available in pods',
       hostsCanRequest: 'Hosts can request this',
@@ -334,7 +358,7 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
       productImages: 'Product images',
       tags: 'Tags',
       tagsHint: 'Press Enter to add a tag',
-      warehouse: 'Warehouse',
+      warehouse: 'Pickup address',
     },
 
     activity: {
@@ -360,6 +384,7 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
 
     // Order page: force cancel a Pod Shop order with a full refund.
     orderCancel: {
+      sandboxChip: 'ShipRocket sandbox — test order',
       title: 'Cancel & refund',
       hint: 'Cancels the order, stops the courier, puts the stock back and refunds the buyer {amount} in full through Razorpay. The buyer gets an apology by email and WhatsApp.',
       action: 'Cancel order & refund',
@@ -379,6 +404,37 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
     },
 
     // Delete Requests: partners asking to delete a live brand or product.
+    // Delete Requests › Deletion Refunds: the orders a deletion request cancelled, and each buyer's refund.
+    deletionRefunds: {
+      title: 'Deletion Refunds',
+      description:
+        'Every order cancelled because a brand or product was deleted with “cancel all running orders now and refund buyers in full”. One row per order: who is refunded, how much goes back to the original payment through Razorpay, how many Duncit Coins are returned, and where the refund stands. Open a row to see the order and retry a refused refund; use Download for a CSV.',
+      empty: 'No order has been cancelled by a deletion request yet.',
+      search: 'Search order, buyer or deletion request',
+      requestFilter: 'Showing the orders cancelled by deletion request {request}.',
+      viewForRequest: 'View these orders and their refunds',
+      colOrder: 'Order',
+      colRequest: 'Deletion request',
+      colBuyer: 'Buyer',
+      colBuyerEmail: 'Buyer email',
+      colItems: 'Items',
+      colOrderTotal: 'Order total',
+      colRefundStatus: 'Refund status',
+      colRefundAmount: 'Refund to payment',
+      colRefundCoins: 'Coins returned',
+      colCancelledOn: 'Cancelled on',
+      colRefundedOn: 'Refunded on',
+      colRefundRef: 'Razorpay refund ref',
+      colProblem: 'Refund problem',
+      status: {
+        NONE: 'No refund',
+        PENDING: 'Refund started',
+        PROCESSED: 'Refunded',
+        RECORDED: 'Recorded — no money to send back',
+        FAILED: 'Refund failed — manual payout needed',
+      },
+    },
+
     deletionRequests: {
       search: 'Search request, brand or product',
       colRequest: 'Request',
@@ -554,8 +610,8 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
     },
 
     settings: {
-      duncitWarehouses: 'Duncit warehouses',
-      warehouseRequestsEmpty: 'No warehouse requests.',
+      duncitWarehouses: 'Duncit pickup addresses',
+      warehouseRequestsEmpty: 'No pickup address requests.',
       sliderSaveFailed: 'Could not save the slider',
       moveUp: 'Move up',
       moveDown: 'Move down',

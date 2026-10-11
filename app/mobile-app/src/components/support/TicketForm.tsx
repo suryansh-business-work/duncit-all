@@ -8,7 +8,7 @@ import { createTicket } from '@/hooks/useSupport';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { CategorySelect } from './CategorySelect';
 import { TicketAttachments } from './TicketAttachments';
-import { DEFAULT_TICKET_CATEGORY, toServerCategory } from './ticketCategories';
+import { initialTicketCategory, toServerCategory } from './ticketCategories';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -17,6 +17,12 @@ interface Props {
   initialEmail?: string;
   podId?: string;
   podTitle?: string;
+  /** What the form opens with — a caller that already knows what the ticket
+   * is about (an order, say) hands over a draft the user then edits. */
+  initialSubject?: string;
+  initialMessage?: string;
+  /** One of TICKET_CATEGORIES' values; anything else falls back to the default. */
+  initialCategory?: string;
 }
 
 /**
@@ -39,12 +45,15 @@ export function TicketForm({
   initialEmail = '',
   podId,
   podTitle,
+  initialSubject = '',
+  initialMessage = '',
+  initialCategory,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary } = useThemeColors();
-  const [category, setCategory] = useState<string>(DEFAULT_TICKET_CATEGORY);
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
+  const [category, setCategory] = useState<string>(() => initialTicketCategory(initialCategory));
+  const [subject, setSubject] = useState(initialSubject);
+  const [message, setMessage] = useState(initialMessage);
   const [attachments, setAttachments] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');

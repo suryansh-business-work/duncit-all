@@ -8,7 +8,7 @@ import { useLocation } from 'react-router';
 import { tokens } from '@duncit/theme';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { AppNavItem } from '../../types';
-import { filterNav } from './helpers';
+import { filterNav, splitPinned } from './helpers';
 import { NavNode, type ExpandSignal } from './nav-items';
 
 /** A quiet filter field on the sidebar ground: control height, no fill of its own. */
@@ -29,6 +29,8 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
   const location = useLocation();
   const [query, setQuery] = useState('');
   const nav = useMemo(() => filterNav(navItems, query.trim()), [navItems, query]);
+  // Entries pinned to the sidebar's foot stay out of the scrolling list.
+  const { main, pinned } = useMemo(() => splitPinned(nav), [nav]);
   // Expand-all / Collapse-all toggle: `allOpen` flips the label; `expandAll`
   // carries a nonce so every group re-syncs even after manual toggling.
   const [allOpen, setAllOpen] = useState(false);
@@ -39,6 +41,16 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
     setExpandAll({ open, nonce: Date.now() });
   };
   const toggleAllLabel = allOpen ? t('shell.chrome.collapseAll') : t('shell.chrome.expandAll');
+  const renderNode = (item: AppNavItem) => (
+    <NavNode
+      key={item.label}
+      item={item}
+      pathname={location.pathname}
+      onNavigate={onNavigate}
+      searching={!!query.trim()}
+      expandAll={expandAll}
+    />
+  );
   return (
     <>
       <Box sx={{ px: 1.25, pt: 0.5, pb: 0.5 }}>
@@ -81,18 +93,14 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
             {t('shell.chrome.noMenuMatch')}
           </Typography>
         ) : (
-          nav.map((item) => (
-            <NavNode
-              key={item.label}
-              item={item}
-              pathname={location.pathname}
-              onNavigate={onNavigate}
-              searching={!!query.trim()}
-              expandAll={expandAll}
-            />
-          ))
+          main.map(renderNode)
         )}
       </List>
+      {pinned.length > 0 && (
+        <List sx={{ px: 1.25, py: 0 }} data-testid="shell-nav-pinned">
+          {pinned.map(renderNode)}
+        </List>
+      )}
     </>
   );
 }

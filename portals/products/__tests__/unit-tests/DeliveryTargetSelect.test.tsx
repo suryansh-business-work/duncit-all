@@ -10,7 +10,7 @@ import {
 } from '../../src/pages/inventory-page/inventory-product-page/types';
 import { renderWithProviders } from '../testkit';
 
-const HINT = /ShipRocket rates and books the courier live from the warehouse below/i;
+const HINT = /ShipRocket rates and books the courier live from the pickup address below/i;
 
 function Harness({
   children,

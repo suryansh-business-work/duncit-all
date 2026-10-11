@@ -21,6 +21,12 @@ export interface IBrandPickupLocation extends Document {
   pincode: string;
   country: string;
   is_default: boolean;
+  /**
+   * Enabled for use. A disabled pickup address is kept but cannot be chosen for
+   * a product or made primary; it can only be disabled once nothing ships from
+   * it, so no order is ever booked from a disabled address.
+   */
+  is_active: boolean;
   shiprocket_registered: boolean;
   shiprocket_pickup_id: string;
   /**
@@ -56,6 +62,7 @@ const brandPickupLocationSchema = new Schema<IBrandPickupLocation>(
     pincode: { type: String, default: '', trim: true, maxlength: 12 },
     country: { type: String, default: 'India', trim: true, maxlength: 80 },
     is_default: { type: Boolean, default: false },
+    is_active: { type: Boolean, default: true },
     shiprocket_registered: { type: Boolean, default: false },
     shiprocket_pickup_id: { type: String, default: '' },
     shiprocket_error: { type: String, default: '', trim: true, maxlength: 500 },

@@ -106,11 +106,22 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     {
       name: 'pickup_location',
       label: 'Default Pickup Location Nickname',
-      hint: 'Must match a warehouse configured in ShipRocket (Settings → Pickup Addresses)',
+      hint: 'Must match a pickup address configured in ShipRocket (Settings → Pickup Addresses)',
     },
     { name: 'channel_id', label: 'Channel ID (optional)', number: true, hint: 'ShipRocket channel id, if any' },
     { name: 'webhook_secret', label: 'Webhook x-api-key (optional)', secret: true, hint: 'Verifies inbound ShipRocket webhooks' },
     { name: 'token_ttl_hours', label: 'Token TTL hours (optional)', number: true, hint: 'Auth token cache lifetime; default 240 (~10 days)' },
+    {
+      name: 'sandbox',
+      label: 'Sandbox mode — book test orders only',
+      bool: true,
+      hint: 'On: every order, rate and pickup call for this account goes to the ShipRocket sandbox (https://api-sandbox.shiprocket.in), so nothing real is booked or charged. Off: production (https://apiv2.shiprocket.in) — live shipments, exactly as before. Use the sandbox API user from ShipRocket → Settings → Additional Settings → Sandbox (https://app.shiprocket.in/seller/settings/additional-settings/sandbox) as the email and password above.',
+    },
+    {
+      name: 'sandbox_api_url',
+      label: 'Sandbox API URL (optional)',
+      hint: 'Leave blank to use ShipRocket’s standard sandbox, https://api-sandbox.shiprocket.in. Fill it only if ShipRocket moves its sandbox: the address must be https and end in shiprocket.in, and it then applies to every account in sandbox mode, partner brands included. It is never used while sandbox mode is off.',
+    },
   ],
   // What carries a staff call when the two browsers cannot reach each other
   // directly — which is most of the time once the people on it are on different

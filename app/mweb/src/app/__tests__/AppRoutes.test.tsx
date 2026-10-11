@@ -104,7 +104,7 @@ describe('AppRoutes', () => {
   });
 
   it('sends every product route home while the flag is off', async () => {
-    for (const path of ['/shop', '/cart', '/orders', '/product-checkout', '/products/manage']) {
+    for (const path of ['/shop', '/cart', '/orders', '/orders/ord-1', '/product-checkout', '/products/manage']) {
       const view = renderAt(path, [flagsMock(false)]);
       await waitFor(() => expect(screen.getByTestId('pathname')).toHaveTextContent('/'));
       expect(screen.queryByText('ShopPageStub')).toBeNull();

@@ -178,6 +178,10 @@ export const ecommBrandResolvers = {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.reviewIntegration(args.brand_doc_id, args.provider);
     },
+    setBrandShiprocketSandbox: (_p: unknown, args: { brand_doc_id: string; sandbox: boolean }, ctx: GraphQLContext) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return partnerIntegrationService.reviewerSetSandbox(args.brand_doc_id, args.sandbox);
+    },
     adminDeleteEcommBrand: (_p: unknown, args: { brand_doc_id: string; notes?: string | null }, ctx: GraphQLContext) => {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.adminDelete(args.brand_doc_id, args.notes ?? '');

@@ -291,7 +291,7 @@ export const podShopReturnService = {
   /** Goods checked: back on the shelf, money back to the buyer. */
   async refund(actor: ReturnActor, id: string) {
     const ret = await loadFor(actor, id);
-    if (ret.status !== 'RECEIVED') bad('Refund once the goods are back at the warehouse');
+    if (ret.status !== 'RECEIVED') bad('Refund once the goods are back at the pickup address');
     const claimed = await PodShopReturnModel.updateOne(
       { _id: ret._id, status: 'RECEIVED', 'refund.status': '' },
       { $set: { 'refund.status': 'PENDING' } }

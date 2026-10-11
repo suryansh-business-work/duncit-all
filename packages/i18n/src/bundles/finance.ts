@@ -35,6 +35,24 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       // smaller than its line items explainable.
       colCoinsUsed: 'Coins used',
       colCoinsEarned: 'Coins earned',
+      // What rounding the bill up to a whole rupee added. A hidden column on
+      // Payment Logs, the lead figure on Round Offs.
+      colRoundOff: 'Round off',
+      // One shop's Payment Logs (Pod Shop / Ecomm): its own heading, a line
+      // saying what is in it, and the columns only a shop's log needs.
+      logsTitlePodShop: 'Pod Shop — Payment Logs',
+      logsSubtitlePodShop:
+        'Payments that bought Pod Shop products: shop carts, and pod bookings that carried shop add-ons. Pet-store payments are never listed here.',
+      logsTitleEcomm: 'Ecomm (Pet Store) — Payment Logs',
+      logsSubtitleEcomm:
+        'Payments taken by the pet store, Cash on Delivery included. Pod Shop payments are never listed here.',
+      colCheckout: 'Checkout',
+      checkoutShopCart: 'Shop cart',
+      checkoutPodAddOn: 'Pod booking add-on',
+      colPaymentMethod: 'Payment method',
+      methodPrepaid: 'Prepaid',
+      methodCod: 'Cash on Delivery',
+      colCashPaid: 'Cash paid',
       // The multi-ticket tier frozen on the payment at checkout, and its sum
       // across the filtered payments on the KPI card.
       colTicketDiscount: 'Multi-ticket discount',
@@ -95,6 +113,8 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       subtotalExclGst: 'Subtotal (excl. GST)',
       taxableValue: 'Taxable value',
       gstPct: 'GST ({pct}%)',
+      // After the tax lines: taxable value + GST + round off = total charged.
+      roundOffLine: 'Round off',
       totalCharged: 'Total charged',
       duncitShare: "Of which Duncit's share",
       platformFeeOfSubtotal: 'Platform fee ({pct}% of subtotal)',
@@ -240,6 +260,73 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       kindPartial: 'Part',
       kindPartialHint: 'Only some of the seats came back — the buyer is still attending on the rest, so the payment stays successful.',
       initiatedByConsole: 'Finance console',
+    },
+    /**
+     * Finance > Round Offs: every payment whose bill was rounded up to a whole
+     * rupee. Columns it shares with Payment Logs read finance.payment.col*.
+     */
+    roundOffs: {
+      title: 'Round Offs',
+      subtitle:
+        'Every bill is rounded up to the next whole rupee before coins are applied. This is each payment that rounding added something to — pod bookings, the Pod Shop cart, the pet store and gift cards.',
+      empty: 'No payment has needed rounding yet.',
+      colSource: 'Source',
+      colBillAmount: 'Amount before round off',
+      sourcePodBooking: 'Pod booking',
+      sourcePodShop: 'Pod Shop cart',
+      sourceEcomm: 'Ecomm (pet store)',
+      sourceOther: 'Gift card / other',
+      totalCount: 'Payments rounded',
+      totalRoundOff: 'Round off added',
+      totalRoundOffHint: 'On every matching payment, whatever its status.',
+      totalCollected: 'Round off collected',
+      totalCollectedHint: 'Successful payments where something was charged.',
+    },
+    /**
+     * Finance > Pod Shop > Order Refunds and Finance > Ecomm > Order Refunds:
+     * one row per refund at order level, one shop per page. The copy is shared;
+     * only the titles and the manual-payout hint differ by shop.
+     */
+    orderRefunds: {
+      titlePodShop: 'Pod Shop — Order Refunds',
+      subtitlePodShop:
+        'One row per Pod Shop refund: a cancelled order, or an item sent back. Pet-store refunds are never listed here.',
+      titleEcomm: 'Ecomm (Pet Store) — Order Refunds',
+      subtitleEcomm:
+        'One row per pet-store refund: a cancelled order, or a return that was refunded. Pod Shop refunds are never listed here.',
+      destinationHint:
+        'The amount that was paid goes back to the original payment method; the coins that were redeemed go back to the buyer\'s Duncit Coin wallet.',
+      empty: 'No order refunds yet.',
+      search: 'Search order no, return no, name or email',
+      colRefundedAt: 'Refunded on',
+      colRef: 'Order / return no',
+      colKind: 'Kind',
+      kindCancellation: 'Cancellation',
+      kindReturn: 'Return',
+      colPayment: 'Payment id',
+      colOrderTotal: 'Order total',
+      colCash: 'To original payment (Razorpay)',
+      colCoins: 'Duncit Coins refunded',
+      colRefundValue: 'Total refunded',
+      colMode: 'Refunded to',
+      modeRazorpay: 'Razorpay',
+      modeCoins: 'Coins',
+      modeBoth: 'Razorpay + Coins',
+      statusPending: 'Pending',
+      statusProcessed: 'Processed',
+      statusRecorded: 'Recorded',
+      statusFailed: 'Failed',
+      manualPayout: 'Manual payout needed',
+      manualPayoutHintPodShop: 'Razorpay refused this refund — pay it out by hand, or retry it from the order.',
+      manualPayoutHintEcomm:
+        'Pet-store refunds are not sent to Razorpay: Finance pays the amount back to the original payment method.',
+      derivedHint:
+        'This order was cancelled before refunds were recorded on the order, so these figures are worked out from the cancellation rules. An amount shown as going to the original payment may have been given as coins instead.',
+      colError: 'Failure reason',
+      totalCount: 'Refunds',
+      totalCash: 'Refunded to original payment',
+      totalCoins: 'Duncit Coins refunded',
+      totalManual: 'Manual payout needed',
     },
     // Finance > Gift Cards — the dashboard, the card book and the ledger.
     /**

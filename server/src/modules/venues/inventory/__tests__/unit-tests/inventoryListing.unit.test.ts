@@ -454,7 +454,7 @@ describe('partner warehouse rules', () => {
   it('rejects a warehouse id that is not a valid object id', async () => {
     await expect(
       inventoryService.submitProductListing(listingInput({ pickup_location_id: 'nope' }), PARTNER)
-    ).rejects.toThrow('Select a valid warehouse');
+    ).rejects.toThrow('Select a valid pickup address');
   });
 
   it("rejects a warehouse that belongs to another brand", async () => {
@@ -466,7 +466,7 @@ describe('partner warehouse rules', () => {
         listingInput({ pickup_location_id: WAREHOUSE_ID }),
         PARTNER
       )
-    ).rejects.toThrow('Select a warehouse that belongs to this brand');
+    ).rejects.toThrow('Select a pickup address that belongs to this brand');
   });
 
   it('rejects a warehouse row that carries no brand at all', async () => {
@@ -476,7 +476,7 @@ describe('partner warehouse rules', () => {
         listingInput({ pickup_location_id: WAREHOUSE_ID }),
         PARTNER
       )
-    ).rejects.toThrow('Select a warehouse that belongs to this brand');
+    ).rejects.toThrow('Select a pickup address that belongs to this brand');
   });
 
   it('rejects a same-brand warehouse that is still awaiting approval', async () => {
@@ -489,6 +489,19 @@ describe('partner warehouse rules', () => {
         PARTNER
       )
     ).rejects.toThrow('awaiting approval');
+  });
+
+  it('rejects an approved same-brand pickup address the partner has switched off', async () => {
+    warehouseModel.findById.mockReturnValue(
+      query({ owner_kind: 'BRAND', brand_id: BRAND_ID, review_status: 'APPROVED', is_active: false })
+    );
+    await expect(
+      inventoryService.submitProductListing(
+        listingInput({ pickup_location_id: WAREHOUSE_ID }),
+        PARTNER
+      )
+    ).rejects.toThrow('This pickup address is disabled — enable it under Pickup Addresses, or choose another one');
+    expect(productModel.create).not.toHaveBeenCalled();
   });
 
   it('accepts an approved warehouse of the listing brand', async () => {

@@ -1,165 +1,31 @@
-import { Box, Card, CardContent, Chip, Stack, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import StarIcon from '@mui/icons-material/Star';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
+import { Stack, Typography } from '@mui/material';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import type { BrandWarehouse, WarehouseReviewStatus } from './warehouse.queries';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
-import { WarehouseShiprocketChip, WarehouseShiprocketNote } from './WarehouseShiprocketState';
+import type { BrandWarehouse } from './warehouse.queries';
+import WarehouseCard, { type WarehouseCardProps } from './WarehouseCard';
 
-interface WarehouseCardProps {
-  warehouse: BrandWarehouse;
-  busy: boolean;
-  onEdit: (warehouse: BrandWarehouse) => void;
-  onDelete: (warehouse: BrandWarehouse) => void;
-  onSetDefault: (warehouse: BrandWarehouse) => void;
-}
-
-const addressLine = (warehouse: BrandWarehouse) =>
-  [warehouse.address_line1, warehouse.address_line2, warehouse.city, warehouse.state, warehouse.pincode]
-    .filter(Boolean)
-    .join(', ');
-
-/** What the partner can act on: the Duncit review. ShipRocket's side is its own
- * chip (WarehouseShiprocketChip) beside it — once read as "still not approved"
- * when it shared this one, so the two never merge. */
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-const reviewChip = (t: Translate): Record<WarehouseReviewStatus, { label: string; color: 'success' | 'warning' | 'error' }> => ({
-  APPROVED: { label: t('partners.ecommBrandPage.approved'), color: 'success' },
-  PENDING: { label: t('partners.ecommBrandPage.awaitingApproval'), color: 'warning' },
-  REJECTED: { label: t('partners.ecommBrandPage.rejected'), color: 'error' },
-});
-
-/** Says what the state means for the partner — a bare chip left them guessing
- * whether the wait was theirs to end. */
-const REVIEW_HINT: Record<WarehouseReviewStatus, string> = {
-  APPROVED: '',
-  PENDING: 'Products cannot ship from this warehouse until the Duncit team approves it.',
-  REJECTED: 'This warehouse was rejected — edit the address and save to request another review.',
-};
-
-/** One warehouse card: address summary, approval status, edit/delete/default. */
-function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Readonly<WarehouseCardProps>) {
-  const { t } = useTranslation();
-  const review = reviewChip(t)[warehouse.review_status] ?? reviewChip(t).PENDING;
-  return (
-    <Card variant="outlined" sx={{ borderRadius: 2 }}>
-      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
-          justifyContent: "space-between"
-        }}>
-          <Box sx={{ minWidth: 0 }}>
-            <Stack
-              direction="row"
-              spacing={1}
-              useFlexGap
-              sx={{
-                alignItems: "center",
-                flexWrap: "wrap"
-              }}>
-              <Typography component="h3" sx={{
-                fontWeight: 900
-              }}>{warehouse.nickname}</Typography>
-              {warehouse.is_default && <Chip size="small" color="primary" label={t('partners.common.default')} />}
-              <Chip size="small" color={review.color} label={review.label} />
-              <WarehouseShiprocketChip warehouse={warehouse} />
-            </Stack>
-            <Typography
-              variant="body2"
-              sx={{
-                color: "text.secondary",
-                mt: 0.5
-              }}>
-              {addressLine(warehouse)}
-            </Typography>
-            <Typography variant="caption" sx={{
-              color: "text.secondary"
-            }}>
-              {warehouse.contact_name} · {warehouse.phone} · {warehouse.email}
-            </Typography>
-            {warehouse.review_status !== 'APPROVED' && (
-              <Typography variant="caption" color={`${review.color}.main`} sx={{ display: 'block', mt: 0.5 }}>
-                {REVIEW_HINT[warehouse.review_status] ?? REVIEW_HINT.PENDING}
-              </Typography>
-            )}
-            <WarehouseShiprocketNote warehouse={warehouse} />
-          </Box>
-          <Stack direction="row" spacing={0.5} sx={{
-            alignItems: "flex-start"
-          }}>
-            <Tooltip title={warehouse.is_default ? 'Default warehouse' : 'Make default'}>
-              <span>
-                <DuncitIconButton
-                  size="small"
-                  color="primary"
-                  disabled={busy || warehouse.is_default}
-                  onClick={() => onSetDefault(warehouse)}
-                  aria-label={`Make ${warehouse.nickname} default`}
-                >
-                  {warehouse.is_default ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
-                </DuncitIconButton>
-              </span>
-            </Tooltip>
-            <Tooltip title={t('shell.common.edit')}>
-              <DuncitIconButton size="small" disabled={busy} onClick={() => onEdit(warehouse)} aria-label={`Edit ${warehouse.nickname}`}>
-                <EditIcon fontSize="small" />
-              </DuncitIconButton>
-            </Tooltip>
-            <Tooltip title={t('shell.common.delete')}>
-              <DuncitIconButton size="small" color="error" disabled={busy} onClick={() => onDelete(warehouse)} aria-label={`Delete ${warehouse.nickname}`}>
-                <DeleteOutlineIcon fontSize="small" />
-              </DuncitIconButton>
-            </Tooltip>
-          </Stack>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface Props {
+interface Props extends Omit<WarehouseCardProps, 'warehouse'> {
   warehouses: BrandWarehouse[];
-  busy: boolean;
   onAdd: () => void;
-  onEdit: (warehouse: BrandWarehouse) => void;
-  onDelete: (warehouse: BrandWarehouse) => void;
-  onSetDefault: (warehouse: BrandWarehouse) => void;
 }
 
-/** The brand's warehouses as cards with add/edit/delete/set-default actions. */
-export default function WarehouseList({ warehouses, busy, onAdd, onEdit, onDelete, onSetDefault }: Readonly<Props>) {
+/** The brand's pickup addresses as cards, with the way to add another. */
+export default function WarehouseList({ warehouses, onAdd, ...card }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.5}>
       {warehouses.length === 0 && (
-        <Stack
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            py: 3
-          }}>
-          <WarehouseIcon color="disabled" sx={{ fontSize: 40 }} />
-          <Typography sx={{
-            color: "text.secondary"
-          }}>
-            No warehouses yet — add the location your products ship from.
-          </Typography>
+        <Stack spacing={1} sx={{ alignItems: 'center', py: 3 }}>
+          <WarehouseIcon color="disabled" sx={{ fontSize: 40 }} aria-hidden />
+          <Typography sx={{ color: 'text.secondary' }}>{t('partners.warehouses.empty')}</Typography>
         </Stack>
       )}
       {warehouses.map((warehouse) => (
-        <WarehouseCard
-          key={warehouse.id}
-          warehouse={warehouse}
-          busy={busy}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onSetDefault={onSetDefault}
-        />
+        <WarehouseCard key={warehouse.id} warehouse={warehouse} {...card} />
       ))}
       <DuncitButton variant="contained" onClick={onAdd} sx={{ alignSelf: 'flex-start' }}>
-        Add warehouse
+        {t('partners.warehouses.add')}
       </DuncitButton>
     </Stack>
   );

@@ -19,7 +19,7 @@ import { notifyOrderCancelled } from './productOrder.notify';
 /** States an order is finished in — nothing left to cancel or wait for. */
 export const CLOSED_STATUSES: FulfilmentStatus[] = ['DELIVERED', 'PICKED_UP', 'CANCELLED', 'RTO_DELIVERED'];
 
-/** Before the courier has the parcel: a refused courier cancel here means the parcel would still ship. */
+/** Before the courier has the parcel: a refused courier cancel here means the parcel would still ship. Mirrors `BRAND_CANCELLABLE` in `@duncit/utils`. */
 const BEFORE_PICKUP = new Set<FulfilmentStatus>([
   'PENDING',
   'AWAITING_SHIPMENT',
@@ -37,13 +37,16 @@ export const openPodShopOrderFilter = (extra: Record<string, unknown> = {}) => (
   ...extra,
 });
 
-export type CancelSource = 'ADMIN' | 'DELETION';
+/** Who cancelled: the Products/Finance team, a deletion request, or the brand that sold it. */
+export type CancelSource = 'ADMIN' | 'DELETION' | 'BRAND';
 
 export interface CancelInput {
   source: CancelSource;
   /** Who pressed it (email or id) — written on the order and in the logs. */
   actor: string;
   reason: string;
+  /** The deletion request this cancel belongs to — kept on the order, so its refund can be listed under the request. */
+  deletionRequest?: { id: Types.ObjectId; no: string };
 }
 
 function bad(message: string): never {
@@ -53,6 +56,7 @@ function bad(message: string): never {
 const INITIATED_BY: Record<CancelSource, string> = {
   ADMIN: 'POD_SHOP_ADMIN_CANCEL',
   DELETION: 'POD_SHOP_DELETION_CANCEL',
+  BRAND: 'POD_SHOP_BRAND_CANCEL',
 };
 
 /** Stop the courier. Answers a warning when the parcel is already moving and cannot be stopped. */
@@ -109,12 +113,22 @@ export async function cancelPodShopOrder(orderId: string, input: CancelInput): P
   if (!current) throw new GraphQLError('Order not found', { extensions: { code: 'NOT_FOUND' } });
   if (current.channel !== 'POD_SHOP') bad('Pet-store orders are cancelled from the E-Commerce portal');
   const status = current.fulfilment_status;
+  // The brand may stop an order only while the parcel is still with it. Once the
+  // courier has it, stopping it is a courier matter the Products team handles.
+  if (input.source === 'BRAND' && !BEFORE_PICKUP.has(status) && !CLOSED_STATUSES.includes(status)) {
+    bad('The courier already has this parcel, so it can no longer be cancelled from here. Ask Duncit support to stop it, or let the buyer return it once it arrives.');
+  }
   const cancelledBy = `${input.source}:${input.actor}`;
+  const claim: Record<string, unknown> = { cancelled_at: new Date(), cancel_reason: reason, cancelled_by: cancelledBy };
+  if (input.deletionRequest) {
+    claim.deletion_request_id = input.deletionRequest.id;
+    claim.deletion_request_no = input.deletionRequest.no;
+  }
 
   // The claim: only one caller gets past this for an open order.
   const order = await ProductOrderModel.findOneAndUpdate(
     { _id: current._id, ...openPodShopOrderFilter() },
-    { $set: { cancelled_at: new Date(), cancel_reason: reason, cancelled_by: cancelledBy } },
+    { $set: claim },
     { new: true }
   );
   if (!order) bad('This order is already delivered or cancelled');
@@ -125,7 +139,7 @@ export async function cancelPodShopOrder(orderId: string, input: CancelInput): P
   } catch (error) {
     await ProductOrderModel.updateOne(
       { _id: current._id },
-      { $set: { cancelled_at: null, cancel_reason: '', cancelled_by: '' } }
+      { $set: { cancelled_at: null, cancel_reason: '', cancelled_by: '', deletion_request_id: null, deletion_request_no: '' } }
     );
     bad(`The courier could not cancel this shipment, so the order was left as it is: ${(error as Error).message}`);
   }

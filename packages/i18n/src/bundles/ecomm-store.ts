@@ -525,6 +525,7 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
       free: 'Free',
       etd: 'Estimated delivery: {etd}',
       codFee: 'Cash on Delivery fee',
+      roundOff: 'Round off',
       total: 'Total',
       gstIncluded: 'Includes {amount} GST',
       notServiceable: 'We cannot deliver to this pincode yet.',

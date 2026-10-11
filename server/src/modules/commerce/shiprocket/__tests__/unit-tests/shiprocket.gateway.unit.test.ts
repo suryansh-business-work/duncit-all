@@ -35,7 +35,7 @@ const couriers = (list: Record<string, unknown>[], recommended?: number) => ({
   data: { recommended_courier_company_id: recommended, available_courier_companies: list },
 });
 
-const techAccount = { email: 'ops@duncit.com', password: '', pickupLocation: '', webhookSecret: '', tokenTtlHours: 240, hash: 'h', sessionKey: 'default' };
+const techAccount = { email: 'ops@duncit.com', password: '', pickupLocation: '', webhookSecret: '', tokenTtlHours: 240, hash: 'h', sessionKey: 'default', sandbox: false, sandboxApiUrl: '' };
 
 beforeEach(() => {
   mockAccount.mockResolvedValue(techAccount);
@@ -117,9 +117,17 @@ describe('getServiceability', () => {
 
   it('keeps each account apart — a brand never reads a rate cached for another account', async () => {
     mockRequest.mockResolvedValue(couriers([{ courier_company_id: 12, courier_name: 'Delhivery Surface', rate: 68 }]));
-    const brand = { email: 'ops@yonex.in', password: '', pickupLocation: '', webhookSecret: '', tokenTtlHours: 240, hash: 'h', sessionKey: 'brand:b1' };
+    const brand = { email: 'ops@yonex.in', password: '', pickupLocation: '', webhookSecret: '', tokenTtlHours: 240, hash: 'h', sessionKey: 'brand:b1', sandbox: false, sandboxApiUrl: '' };
     await withShiprocketAccount(brand, () => getServiceability(lane));
     expect(mockGet).toHaveBeenCalledWith('sr:svc:brand:b1:201301:560034:0.5:0');
+  });
+
+  it('keeps a sandbox answer apart from the same account’s live one, so switching sandbox off never serves a test quote', async () => {
+    mockRequest.mockResolvedValue(couriers([{ courier_company_id: 12, courier_name: 'Delhivery Surface', rate: 68 }]));
+    const sandboxed = { email: 'ops@yonex.in', password: '', pickupLocation: '', webhookSecret: '', tokenTtlHours: 240, hash: 'h', sessionKey: 'brand:b1', sandbox: true, sandboxApiUrl: '' };
+    const quote = await withShiprocketAccount(sandboxed, () => getServiceability(lane));
+    expect(mockGet).toHaveBeenCalledWith('sr:svc:brand:b1:sandbox:201301:560034:0.5:0');
+    expect(mockSet).toHaveBeenCalledWith('sr:svc:brand:b1:sandbox:201301:560034:0.5:0', { quote }, 6 * 3600);
   });
 
   it('answers from the cache without calling ShipRocket', async () => {

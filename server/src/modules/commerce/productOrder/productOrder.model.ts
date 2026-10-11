@@ -84,6 +84,8 @@ export interface IShipRocketInfo {
   shipment_id: string;
   /** When "create order" was last sent. Set before the call, so an answer we never received is looked for on the next attempt. */
   create_attempted_at: Date | null;
+  /** Booked on the ShipRocket SANDBOX: a test order — no courier collects it and nothing is charged. */
+  sandbox: boolean;
   awb: string;
   courier_name: string;
   courier_company_id: string;
@@ -212,11 +214,19 @@ export interface IProductOrder extends Document {
   discount_total: number;
   /** The Duncit Coins within `discount_total` — what a cancellation gives back as coins. */
   coins_share: number;
+  /** This order's share of the payment's round-off (pet store only; 0 elsewhere
+   * and on older orders) — so `total − discount_total + round_off` across a
+   * payment's orders is exactly what was charged. */
+  round_off: number;
   /** A secret that opens a guest's order page from the confirmation email. */
   access_key: string;
   cancelled_at: Date | null;
   cancel_reason: string;
   cancelled_by: string;
+  /** The deletion request that cancelled this order (a brand or product being removed), when one did. */
+  deletion_request_id: Types.ObjectId | null;
+  /** That request's number, kept beside the id so refund lists need no second read. */
+  deletion_request_no: string;
   notes: Types.DocumentArray<IOrderNote & Types.Subdocument>;
   created_at: Date;
   updated_at: Date;
@@ -282,6 +292,7 @@ const shiprocketSchema = new Schema<IShipRocketInfo>(
     order_id: { type: String, default: '' },
     shipment_id: { type: String, default: '' },
     create_attempted_at: { type: Date, default: null },
+    sandbox: { type: Boolean, default: false },
     awb: { type: String, default: '' },
     courier_name: { type: String, default: '' },
     courier_company_id: { type: String, default: '' },
@@ -375,10 +386,13 @@ const productOrderSchema = new Schema<IProductOrder>(
     cod_collected_at: { type: Date, default: null },
     discount_total: { type: Number, default: 0, min: 0 },
     coins_share: { type: Number, default: 0, min: 0 },
+    round_off: { type: Number, default: 0, min: 0 },
     access_key: { type: String, default: '', select: false },
     cancelled_at: { type: Date, default: null },
     cancel_reason: { type: String, default: '', trim: true, maxlength: 500 },
     cancelled_by: { type: String, default: '' },
+    deletion_request_id: { type: Schema.Types.ObjectId, ref: 'CatalogDeletionRequest', default: null },
+    deletion_request_no: { type: String, default: '' },
     notes: { type: [orderNoteSchema], default: [] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
@@ -407,5 +421,12 @@ productOrderSchema.index({ 'shiprocket.awb': 1 });
 // A partner brand's sales: brand analytics and the partner dashboard match on
 // the line item's brand, windowed by date (multikey; additive, built by autoIndex).
 productOrderSchema.index({ 'line_items.brand_id': 1, created_at: -1 });
+// Deletion refunds: the orders one request cancelled, and every deletion-cancelled order by date.
+productOrderSchema.index({ deletion_request_id: 1 }, { sparse: true });
+productOrderSchema.index({ cancelled_by: 1, cancelled_at: -1 });
+// Finance › Order Refunds, one list per shop: the pod shop's orders carrying a
+// refund record, and the pet store's cancelled orders (additive, built by autoIndex).
+productOrderSchema.index({ channel: 1, 'refund.status': 1 });
+productOrderSchema.index({ channel: 1, cancelled_at: -1 });
 
 export const ProductOrderModel = model<IProductOrder>('ProductOrder', productOrderSchema);

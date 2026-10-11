@@ -56,9 +56,9 @@ describe('STUDIO_OPTION_LIST', () => {
     }
   });
 
-  it('opens the brand catalogue, integrations and returns in the Partner console', () => {
+  it('opens the brand catalogue, integrations, returns and deletion refunds in the Partner console', () => {
     const portalOnly = STUDIO_OPTION_LIST.ECOMM.filter((option) => !option.path).map((option) => option.portal);
-    expect(portalOnly).toEqual(['/ecomm-brand', '/ecomm-brand/integrations', '/ecomm-brand/returns']);
+    expect(portalOnly).toEqual(['/ecomm-brand', '/ecomm-brand/integrations', '/ecomm-brand/returns', '/ecomm-brand/deletion-refunds']);
   });
 
   it('lets a brand work its orders and ShipRocket warehouses in the app as well as the console', () => {

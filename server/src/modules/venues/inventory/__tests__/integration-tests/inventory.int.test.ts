@@ -582,7 +582,7 @@ describe('partner listing warehouse + free-delivery threshold', () => {
     // A malformed id is rejected up front.
     await expect(
       inventoryService.submitProductListing(listingInput(brand._id, { pickup_location_id: 'nope' }), user)
-    ).rejects.toThrow(/valid warehouse/i);
+    ).rejects.toThrow(/valid pickup address/i);
   });
 
   it('blocks a same-brand warehouse that is still awaiting approval', async () => {
@@ -651,7 +651,7 @@ describe('inventoryService Duncit warehouse guard', () => {
     // Missing warehouse → hard error (the field is mandatory for Duncit products).
     await expect(
       inventoryService.create({ product_name: 'No WH', unit_cost: 5 }, admin),
-    ).rejects.toThrow(/warehouse/i);
+    ).rejects.toThrow('A pickup address is required');
 
     // A BRAND-owned warehouse is not a valid origin for a Duncit product.
     const brandWh = await BrandPickupLocationModel.create({ owner_kind: 'BRAND', nickname: 'BR-WH' });
@@ -660,7 +660,16 @@ describe('inventoryService Duncit warehouse guard', () => {
         { product_name: 'Brand WH', unit_cost: 5, pickup_location_id: String(brandWh._id) },
         admin,
       ),
-    ).rejects.toThrow(/valid Duncit warehouse/i);
+    ).rejects.toThrow(/valid Duncit pickup address/i);
+
+    // A Duncit address that has been switched off cannot be chosen either.
+    const disabledWh = await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUN-WH-OFF', is_active: false });
+    await expect(
+      inventoryService.create(
+        { product_name: 'Disabled WH', unit_cost: 5, pickup_location_id: String(disabledWh._id) },
+        admin,
+      ),
+    ).rejects.toThrow('This pickup address is disabled — enable it under Duncit Pickup Addresses, or choose another one');
 
     // A valid Duncit warehouse succeeds and serializes onto the public shape.
     const duncitWh = await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUN-WH' });
@@ -687,7 +696,7 @@ describe('inventoryService Duncit warehouse guard', () => {
 
     await expect(
       inventoryService.update(created.id, { pickup_location_id: '' }, admin),
-    ).rejects.toThrow(/warehouse/i);
+    ).rejects.toThrow('A pickup address is required');
   });
 
   it('does not require a warehouse when updating a BRAND-owned product', async () => {
@@ -716,7 +725,7 @@ describe('inventoryService Duncit warehouse guard', () => {
     });
     await expect(
       inventoryService.update(String(doc._id), { delivery_target: 'SHIPROCKET' }, admin),
-    ).rejects.toThrow(/warehouse this product ships from/i);
+    ).rejects.toThrow(/pickup address this product ships from/i);
   });
 
   it('accepts ShipRocket once the product has a warehouse to ship from', async () => {

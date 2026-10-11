@@ -244,7 +244,7 @@ const STEP_NAME: Record<BrandStepKey, string> = {
   categories: 'Product categories',
   media: 'Brand media (logo)',
   documents: 'Documents',
-  integration: 'Integration (Razorpay connected, and ShipRocket connected or the Duncit courier chosen)',
+  integration: 'Integration (Razorpay and ShipRocket connected)',
   review: 'Review',
   consent: 'Final consent (sign the Brand Consent)',
 };
@@ -731,25 +731,40 @@ export const ecommBrandService = {
   async connectIntegration(userId: string, brandId: string, provider: BrandIntegrationProvider, input: any) {
     assertProvider(provider);
     const brand = await loadOwned(userId, brandId);
-    if (provider === 'SHIPROCKET') applyShiprocketInput(brand, input);
-    else applyRazorpayInput(brand, input);
+    // A brand still recorded on the retired Duncit courier moves to its own
+    // account by typing one in — its pickup addresses were registered on the
+    // courier's account and do not exist on this one.
+    let accountMoved = false;
+    if (provider === 'SHIPROCKET') {
+      accountMoved = brand.shipping_mode === 'DUNCIT_COURIER';
+      applyShiprocketInput(brand, input);
+      brand.shipping_mode = 'OWN_SHIPROCKET';
+    } else applyRazorpayInput(brand, input);
     // Typed in on the brand: it no longer follows a saved connection.
     brand.integration_links[PROVIDER_KEY[provider]] = null;
     const status = await probeBrandIntegration(brand, provider);
     await brand.save();
+    if (accountMoved) await resetOwnShiprocketWarehouses(brand);
     return status;
   },
 
   /**
-   * Choose who ships the brand's parcels — its own ShipRocket account or the
-   * Duncit courier. Same window as the credentials. A pickup address
-   * registered on one ShipRocket account does not exist on another, so a real
-   * change re-registers the brand's warehouses on the new account (at once for
-   * a live brand; on approval otherwise).
+   * Record that the brand ships on its own ShipRocket account. The Duncit
+   * courier is no longer offered, so choosing it is refused; a brand that chose
+   * it earlier moves to its own account here or by connecting one. A pickup
+   * address registered on one ShipRocket account does not exist on another, so
+   * a real change re-registers the brand's pickup addresses on the new account
+   * (at once for a live brand; on approval otherwise).
    */
   async setShippingMode(userId: string, brandId: string, mode: BrandShippingMode) {
     if (!SHIPPING_MODES.has(mode)) {
       throw new GraphQLError('Unknown shipping mode', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (mode === 'DUNCIT_COURIER') {
+      throw new GraphQLError(
+        'The Duncit courier service is no longer offered. Connect your own ShipRocket account under E-Commerce Brand → Integrations.',
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
     }
     const brand = await loadOwned(userId, brandId);
     const { brandShippingMode } = await import('@modules/commerce/shiprocket/shiprocket.account');
@@ -779,9 +794,12 @@ export const ecommBrandService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    const accountChanged = provider === 'SHIPROCKET' && !sameCredential(connection, brand, provider);
+    // A brand still recorded on the retired Duncit courier moves to its own account by picking one.
+    const leavingCourier = provider === 'SHIPROCKET' && brand.shipping_mode === 'DUNCIT_COURIER';
+    const accountChanged = provider === 'SHIPROCKET' && (leavingCourier || !sameCredential(connection, brand, provider));
     copyIntegration(connection, brand, provider);
     brand.integration_links[PROVIDER_KEY[provider]] = connection._id;
+    if (provider === 'SHIPROCKET') brand.shipping_mode = 'OWN_SHIPROCKET';
     await brand.save();
     if (accountChanged) await resetOwnShiprocketWarehouses(brand);
     return integrationStatus(brand, provider);

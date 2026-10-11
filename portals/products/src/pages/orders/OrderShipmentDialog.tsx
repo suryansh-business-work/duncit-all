@@ -58,7 +58,7 @@ export default function OrderShipmentDialog({ open, order, submitting, onClose, 
       <DialogTitle>{t('products.orders.createShipment')}</DialogTitle>
       <DialogContent dividers>
         <DialogContentText sx={{ mb: 2 }}>
-          Pick the warehouse the courier should collect this order from.
+          Pick the pickup address the courier should collect this order from.
         </DialogContentText>
         {loading && locations.length === 0 ? (
           <CircularProgress size={22} />

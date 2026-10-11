@@ -26,6 +26,11 @@ interface Props {
   /** Opens the product-detail sheet for a line. Products and pods are separate
    * entities — the checkout lists products only, each with an info button. */
   onInfo: (productId: string) => void;
+  /** What rounding the charge up to a whole rupee adds. Zero hides the row. */
+  roundOff?: number;
+  /** What is actually charged — after the coupon, the round-off and the coins.
+   * Absent falls back to the undiscounted bill. */
+  payable?: number;
 }
 
 /** Product-only order summary for the combined product checkout: a flat product
@@ -42,6 +47,8 @@ export function ProductOrderSummary({
   pincodeValid,
   onInfo,
   coins = null,
+  roundOff = 0,
+  payable,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { accent } = useThemeColors();
@@ -97,8 +104,11 @@ export function ProductOrderSummary({
         label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })}
         value={fmt(breakup.gst)}
       />
+      {roundOff > 0 ? (
+        <Row label={t('mweb.checkout.roundOff')} value={`+ ${fmt(roundOff)}`} />
+      ) : null}
       <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
-      <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+      <Row label={t('mweb.checkout.totalPayable')} value={fmt(payable ?? breakup.total)} bold />
       <CoinSummaryRows coins={coins} />
     </YStack>
   );

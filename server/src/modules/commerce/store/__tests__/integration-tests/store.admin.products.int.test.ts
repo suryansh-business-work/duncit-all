@@ -88,14 +88,21 @@ describe('storeAdminProductsService.save — drafts', () => {
     const partner = await BrandPickupLocationModel.create({ owner_kind: 'BRAND', nickname: 'PARTNER-WH', pincode: '110001' });
     await expect(
       storeAdminProductsService.save(OPERATOR, null, { product_name: 'Harness', warehouse_id: String(partner._id) }, 'DRAFT')
-    ).rejects.toThrow('Pick one of Duncit’s warehouses');
+    ).rejects.toThrow('Pick one of Duncit’s pickup addresses');
+
+    // A Duncit address that has been switched off is one nothing may ship from.
+    const disabled = await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUN-WH-OFF', pincode: '110001', is_active: false });
+    await expect(
+      storeAdminProductsService.save(OPERATOR, null, { product_name: 'Harness', warehouse_id: String(disabled._id) }, 'DRAFT')
+    ).rejects.toThrow('Pick one of Duncit’s pickup addresses');
+    expect(await StoreProductModel.countDocuments()).toBe(0);
   });
 });
 
 describe('storeAdminProductsService.save — publishing', () => {
   it('names every gap between a draft and the shelf', async () => {
     await expect(storeAdminProductsService.save(OPERATOR, null, { product_name: 'Cat tree' }, 'PUBLISHED')).rejects.toThrow(
-      /Before publishing, add a selling price, at least one photo, a category, the warehouse it ships from, a brand, the packaging/
+      /Before publishing, add a selling price, at least one photo, a category, the pickup address it ships from, a brand, the packaging/
     );
     expect(await StoreProductModel.countDocuments()).toBe(0);
   });

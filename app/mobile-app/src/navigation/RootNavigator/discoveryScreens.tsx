@@ -31,6 +31,7 @@ import { ReferralScreen } from '@/screens/ReferralScreen';
 import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
 import { TourGuideScreen } from '@/screens/TourGuideScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
+import { OrderDetailScreen } from '@/screens/OrderDetailScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
 import { ProductCheckoutScreen } from '@/screens/ProductCheckoutScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
@@ -40,6 +41,7 @@ import { Stack } from './stack';
 
 /** Product screens behind the one system flag, built at module scope (S6478). */
 const GatedOrdersHistoryScreen = withProductGate(OrdersHistoryScreen);
+const GatedOrderDetailScreen = withProductGate(OrderDetailScreen);
 const GatedProductCheckoutScreen = withProductGate(ProductCheckoutScreen);
 const GatedProductDetailScreen = withProductGate(ProductDetailScreen);
 const GatedShopScreen = withProductGate(ShopScreen);
@@ -78,6 +80,7 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="Shop" component={GatedShopScreen} />
       <Stack.Screen name="ProductDetail" component={GatedProductDetailScreen} />
       <Stack.Screen name="OrdersHistory" component={GatedOrdersHistoryScreen} />
+      <Stack.Screen name="OrderDetail" component={GatedOrderDetailScreen} />
       <Stack.Screen name="AddressBook" component={AddressBookScreen} />
       <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
       <Stack.Screen name="Membership" component={MembershipScreen} />

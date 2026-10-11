@@ -17,6 +17,14 @@ export const brandPickupLocationResolvers = {
       const user = requireAuth(ctx);
       return brandPickupLocationService.listMine(user.id, args.brand_doc_id);
     },
+    brandPickupLocationUsage: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return brandPickupLocationService.usage(args.id);
+    },
+    myBrandPickupLocationUsage: (_p: unknown, args: { brand_doc_id: string; id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return brandPickupLocationService.usageMine(user.id, args.brand_doc_id, args.id);
+    },
   },
   Mutation: {
     saveBrandPickupLocation: (_p: unknown, args: { id?: string; input: any }, ctx: GraphQLContext) => {
@@ -34,6 +42,10 @@ export const brandPickupLocationResolvers = {
     registerBrandPickupWithShiprocket: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return brandPickupLocationService.registerWithShiprocket(args.id);
+    },
+    setBrandPickupLocationActive: (_p: unknown, args: { id: string; active: boolean }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return brandPickupLocationService.setActive(args.id, args.active);
     },
     syncMyBrandPickupLocations: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
@@ -62,6 +74,14 @@ export const brandPickupLocationResolvers = {
     ) => {
       const user = requireAuth(ctx);
       return brandPickupLocationService.setDefaultMine(user.id, args.brand_doc_id, args.id);
+    },
+    setMyBrandPickupLocationActive: (
+      _p: unknown,
+      args: { brand_doc_id: string; id: string; active: boolean },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return brandPickupLocationService.setActiveMine(user.id, args.brand_doc_id, args.id, args.active);
     },
   },
 };

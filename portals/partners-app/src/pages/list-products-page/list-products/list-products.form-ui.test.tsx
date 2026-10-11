@@ -34,7 +34,7 @@ const renderStep = ({ step, brandId = 'b1', mocks = [], defaultValues }: RenderA
 };
 
 const openWarehouses = () => {
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: /Ship-from warehouse/ }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: /Pickup address/ }));
   return screen.findByRole('listbox');
 };
 
@@ -78,6 +78,8 @@ describe('StepBody — delivery', () => {
           warehouseRow(),
           warehouseRow({ id: 'w2', nickname: 'Pune hub', city: 'Pune', review_status: 'PENDING', is_default: false }),
           warehouseRow({ id: 'w3', nickname: 'Old depot', city: 'Agra', review_status: 'REJECTED', is_default: false }),
+          // Approved, but switched off by the partner: listed, not selectable.
+          warehouseRow({ id: 'w4', nickname: 'Kochi store', city: 'Kochi', is_active: false, is_default: false }),
         ]),
       ],
     });
@@ -86,27 +88,28 @@ describe('StepBody — delivery', () => {
     const listbox = await openWarehouses();
     expect(within(listbox).getByRole('option', { name: 'Pune hub — Pune (awaiting approval)' }).getAttribute('aria-disabled')).toBe('true');
     expect(within(listbox).getByRole('option', { name: 'Old depot — Agra (rejected)' }).getAttribute('aria-disabled')).toBe('true');
+    expect(within(listbox).getByRole('option', { name: 'Kochi store — Kochi (Inactive)' }).getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(within(listbox).getByRole('option', { name: 'Delhi warehouse — New Delhi' }));
 
     await waitFor(() => expect(apiRef.current?.getValues('pickup_location_id')).toBe('w1'));
-    expect(screen.queryByText(/has no warehouses yet/)).toBeNull();
-    expect(screen.queryByText(/None of this brand's warehouses is approved yet/)).toBeNull();
-    expect(screen.getByText('Orders for this product are shipped through ShipRocket using the warehouse selected above.')).toBeTruthy();
+    expect(screen.queryByText(/has no pickup addresses yet/)).toBeNull();
+    expect(screen.queryByText(/None of this brand's pickup addresses is approved yet/)).toBeNull();
+    expect(screen.getByText('Orders for this product are shipped through ShipRocket using the pickup address selected above.')).toBeTruthy();
   });
 
   it('sends the partner to Brand Settings when the brand has no warehouse', async () => {
     renderStep({ step: 4, mocks: [warehousesMock([])] });
 
-    const warning = (await screen.findByText(/This brand has no warehouses yet/)).closest('[role="alert"]') as HTMLElement;
+    const warning = (await screen.findByText(/This brand has no pickup addresses yet/)).closest('[role="alert"]') as HTMLElement;
     expect(within(warning).getByRole('link', { name: 'Brand Settings' }).getAttribute('href')).toBe('/ecomm-brand/b1/settings');
   });
 
   it('explains the wait when no warehouse is approved yet', async () => {
     renderStep({ step: 4, mocks: [warehousesMock([warehouseRow({ review_status: 'PENDING' })])] });
 
-    const warning = (await screen.findByText(/None of this brand's warehouses is approved yet/)).closest('[role="alert"]') as HTMLElement;
+    const warning = (await screen.findByText(/None of this brand's pickup addresses is approved yet/)).closest('[role="alert"]') as HTMLElement;
     expect(within(warning).getByRole('link', { name: 'Brand Settings' }).getAttribute('href')).toBe('/ecomm-brand/b1/settings');
-    expect(screen.queryByText(/has no warehouses yet/)).toBeNull();
+    expect(screen.queryByText(/has no pickup addresses yet/)).toBeNull();
   });
 
   it('moves a legacy host-delivered listing onto ShipRocket when the partner picks it', async () => {

@@ -30,6 +30,11 @@ export interface InvoiceData {
   subtotal: number;
   gst_amount: number;
   gst_pct: number;
+  // What rounding the bill up to a whole rupee added to the charge. Its own row,
+  // after the tax lines: it is not taxable value, and without it the rows above
+  // would not add up to the total. Optional so older callers keep working; zero
+  // prints nothing.
+  round_off?: number;
   total: number;
   payment_id: string;
   payment_method: string;
@@ -250,6 +255,9 @@ export function drawInvoice(
   if (discountRow) totalsRow(discountRow.label, discountRow.value);
   totalsRow('Taxable value', fmt(data.subtotal));
   totalsRow(`GST (${data.gst_pct}%)`, fmt(data.gst_amount));
+  // After the taxes, before the total: taxable + GST + round off = total paid.
+  const roundOff = Math.max(0, Number(data.round_off) || 0);
+  if (roundOff > 0) totalsRow('Round off', `+ ${fmt(roundOff)}`);
   doc.moveTo(300, y).lineTo(R, y).strokeColor('#cbd5e1').stroke();
   y += 8;
   totalsRow('Total Paid', fmt(data.total), true);

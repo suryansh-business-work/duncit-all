@@ -56,7 +56,7 @@ function returnParcel(ret: ReturnShipment, order: IProductOrder): Parcel {
 
 async function returnPayload(ret: ReturnShipment, order: IProductOrder): Promise<Json> {
   const warehouse = await BrandPickupLocationModel.findOne({ nickname: order.pickup_location_id }).lean();
-  if (!warehouse) throw shiprocketError(`There is no warehouse "${order.pickup_location_id}" to return this to`);
+  if (!warehouse) throw shiprocketError(`There is no pickup address "${order.pickup_location_id}" to return this to`);
   const addr = (order.shipping_address ?? {}) as unknown as Record<string, string>;
   const [first = 'Customer', ...rest] = String(addr.name || order.buyer_name).trim().split(/\s+/);
   const parcel = returnParcel(ret, order);
@@ -182,7 +182,7 @@ export async function applyReturnTracking<R extends ReturnShipment>(
   const next = returnPickupStatus(t.current_status);
   if (next && ret.pickup.status !== 'DELIVERED') ret.pickup.status = next;
   const arrived = next === 'DELIVERED' && (ret.status === 'APPROVED' || ret.status === 'PICKUP_SCHEDULED');
-  if (arrived) moveReturn(ret, 'RECEIVED', 'Reached the warehouse');
+  if (arrived) moveReturn(ret, 'RECEIVED', 'Reached the pickup address');
   await ret.save();
   if (arrived) await onArrived(ret);
 }

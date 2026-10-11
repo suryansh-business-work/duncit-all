@@ -11,10 +11,12 @@ export interface IntegrationFormValues {
   webhook_secret: string;
   key_id: string;
   key_secret: string;
+  /** ShipRocket only: book test orders on the sandbox instead of real shipments. */
+  sandbox: boolean;
 }
 
 export interface IntegrationFieldDef {
-  name: keyof IntegrationFormValues;
+  name: Exclude<keyof IntegrationFormValues, 'sandbox'>;
   label: string;
   hint?: string;
   type?: 'email' | 'password' | 'text';
@@ -69,6 +71,7 @@ export const integrationDefaults = (status: BrandIntegrationStatus | undefined):
   webhook_secret: '',
   key_id: status?.provider === 'RAZORPAY' ? status.identifier : '',
   key_secret: '',
+  sandbox: status?.provider === 'SHIPROCKET' && status.sandbox === true,
 });
 
 /** Required halves per provider; a secret already on file may be left blank. */
@@ -81,6 +84,7 @@ export const makeIntegrationSchema = (t: Translate, provider: BrandIntegrationPr
       webhook_secret: z.string(),
       key_id: z.string().trim(),
       key_secret: z.string(),
+      sandbox: z.boolean(),
     })
     .superRefine((values, ctx) => {
       const required = t('partners.brandWizard.validation.required');
@@ -105,6 +109,7 @@ export const toShiprocketInput = (values: IntegrationFormValues): BrandShiprocke
   password: orUndefined(values.password),
   pickup_location: values.pickup_location,
   webhook_secret: orUndefined(values.webhook_secret),
+  sandbox: values.sandbox,
 });
 
 /** The Razorpay input — a blank secret is omitted so the server keeps the saved one. */

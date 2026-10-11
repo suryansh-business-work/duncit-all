@@ -10,6 +10,7 @@ import {
   DELETE_BRAND_PICKUP_LOCATION,
   REGISTER_BRAND_PICKUP_WITH_SHIPROCKET,
   SAVE_BRAND_PICKUP_LOCATION,
+  SET_BRAND_PICKUP_LOCATION_ACTIVE,
   SET_DEFAULT_BRAND_PICKUP_LOCATION,
 } from './queries';
 import {
@@ -54,11 +55,12 @@ export default function PickupLocationsPanel({
   const [remove, { loading: removing }] = useMutation<any>(DELETE_BRAND_PICKUP_LOCATION);
   const [setDefault, { loading: settingDefault }] = useMutation<any>(SET_DEFAULT_BRAND_PICKUP_LOCATION);
   const [register, { loading: registering }] = useMutation<any>(REGISTER_BRAND_PICKUP_WITH_SHIPROCKET);
+  const [setActive, { loading: settingActive }] = useMutation(SET_BRAND_PICKUP_LOCATION_ACTIVE);
 
   const [editing, setEditing] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const busy = saving || removing || settingDefault || registering;
+  const busy = saving || removing || settingDefault || registering || settingActive;
   const locations = data?.brandPickupLocations ?? [];
 
   const runAction = async (label: string, action: () => Promise<unknown>) => {
@@ -110,7 +112,7 @@ export default function PickupLocationsPanel({
           {heading}
         </Typography>
         <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          Add location
+          {t('products.pickup.add')}
         </DuncitButton>
       </Stack>
 
@@ -133,10 +135,16 @@ export default function PickupLocationsPanel({
               onEdit={() => openEdit(location)}
               onDelete={() => runAction(t('products.pickup.deleted'), () => remove({ variables: { id: location.id } }))}
               onSetDefault={() =>
-                runAction('Default pickup location updated', () => setDefault({ variables: { id: location.id } }))
+                runAction(t('products.pickup.primaryUpdated'), () => setDefault({ variables: { id: location.id } }))
               }
               onRegister={() =>
-                runAction('Registered with ShipRocket', () => register({ variables: { id: location.id } }))
+                runAction(t('products.pickup.registeredDone'), () => register({ variables: { id: location.id } }))
+              }
+              onToggleActive={(active) =>
+                // A refusal names the products still shipping from the address.
+                runAction(active ? t('products.pickup.enabledDone') : t('products.pickup.disabledDone'), () =>
+                  setActive({ variables: { id: location.id, active } }),
+                )
               }
             />
           ))}
@@ -145,7 +153,7 @@ export default function PickupLocationsPanel({
 
       <PickupLocationForm
         open={dialogOpen}
-        title={editing ? 'Edit pickup location' : 'Add pickup location'}
+        title={editing ? t('products.pickup.editTitle') : t('products.pickup.addTitle')}
         initialValues={toFormValues(editing)}
         saving={saving}
         onClose={() => setDialogOpen(false)}

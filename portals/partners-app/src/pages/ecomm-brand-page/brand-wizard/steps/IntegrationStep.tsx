@@ -6,7 +6,6 @@ import type { BrandIntegrations, BrandShippingMode, EcommBrand } from '../../que
 import { MY_PARTNER_INTEGRATIONS } from '../../integrations/integrations.queries';
 import { integrationReady } from '../wizard-steps';
 import IntegrationPicker from './IntegrationPicker';
-import ShippingModeChooser from './ShippingModeChooser';
 
 /** The brand facts the live banner reads. */
 type LiveFacts = Pick<EcommBrand, 'status' | 'live' | 'integration_waived'>;
@@ -20,15 +19,6 @@ interface Props {
   ensureBrandId: () => Promise<string | null>;
   onChanged: () => void;
 }
-
-/**
- * The mode the chooser shows. A brand from before the choice that saved its
- * own ShipRocket already ships on it; one that has done neither has not chosen.
- */
-const shownMode = (mode: BrandShippingMode | null | undefined, integrations: BrandIntegrations | undefined) => {
-  if (mode) return mode;
-  return integrations?.shiprocket.configured ? 'OWN_SHIPROCKET' : null;
-};
 
 /** Where the brand stands on going live — the reason this step exists. */
 function LiveBanner({ brand, ready }: Readonly<{ brand: LiveFacts | null; ready: boolean }>) {
@@ -45,14 +35,16 @@ function LiveBanner({ brand, ready }: Readonly<{ brand: LiveFacts | null; ready:
 }
 
 /**
- * The LAST step — who ships the brand's parcels, and the Razorpay account it
- * gets paid through, each PICKED from the partner's saved Integrations. Not
- * needed to submit; the approved brand goes live once both are settled, so it
- * stays editable while the brand is in review or live.
+ * The LAST step — the ShipRocket account that ships the brand's parcels and the
+ * Razorpay account it gets paid through, each PICKED from the partner's saved
+ * Integrations. Not needed to submit; the approved brand goes live once both
+ * are connected, so it stays editable while the brand is in review or live.
+ *
+ * Every brand ships on its own ShipRocket account. A brand that chose the
+ * Duncit courier while it was offered is told so, and moves by picking one.
  */
 export default function IntegrationStep({ shippingMode, integrations, brand, locked, ensureBrandId, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
-  const mode = shownMode(shippingMode, integrations);
   const { data, error } = useQuery(MY_PARTNER_INTEGRATIONS, { fetchPolicy: 'cache-and-network' });
   // Undefined until the first answer, so a picker never reads "none saved" while loading.
   const saved = data?.myPartnerIntegrations;
@@ -63,20 +55,22 @@ export default function IntegrationStep({ shippingMode, integrations, brand, loc
         {t('partners.brandWizard.integration.intro')}
       </Typography>
       <LiveBanner brand={brand} ready={integrationReady(shippingMode, integrations)} />
+      {shippingMode === 'DUNCIT_COURIER' && (
+        <Alert severity="warning" data-testid="brand-shipping-legacy-courier">
+          {t('partners.brandWizard.integration.legacyCourier')}
+        </Alert>
+      )}
       {error && !data && (
         <Alert severity="error">
           {t('partners.integrations.loadFailed')} {parseApiError(error)}
         </Alert>
       )}
-      <ShippingModeChooser mode={mode} locked={locked} ensureBrandId={ensureBrandId} onChanged={onChanged} />
-      {mode === 'OWN_SHIPROCKET' && (
-        <IntegrationPicker
-          provider="SHIPROCKET"
-          status={integrations?.shiprocket}
-          connections={saved?.filter((c) => c.provider === 'SHIPROCKET')}
-          {...shared}
-        />
-      )}
+      <IntegrationPicker
+        provider="SHIPROCKET"
+        status={integrations?.shiprocket}
+        connections={saved?.filter((c) => c.provider === 'SHIPROCKET')}
+        {...shared}
+      />
       <IntegrationPicker
         provider="RAZORPAY"
         status={integrations?.razorpay}

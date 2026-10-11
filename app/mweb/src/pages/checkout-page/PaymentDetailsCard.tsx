@@ -11,6 +11,8 @@ import type { CoinRedemption } from './useCoinRedemption';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import { CheckoutRequirementsCard, useCheckoutEligibility } from '../../components/checkout-gate';
+import type { DeliveryQuoteStatus } from '@duncit/utils';
+import DeliveryQuoteNotice, { DELIVERY_QUOTE_NOTICE_ID } from './DeliveryQuoteNotice';
 
 interface Props {
   control: Control<CheckoutForm>;
@@ -36,6 +38,10 @@ interface Props {
   coins: CoinRedemption;
   /** Show required markers on the invoice-address fields. */
   addressRequired?: boolean;
+  /** Where the delivery quote stands — the product checkout passes it, and Pay
+   * stays shut until it is READY. The pod checkout ships nothing and omits it. */
+  deliveryStatus?: DeliveryQuoteStatus;
+  onRetryDelivery?: () => void;
 }
 
 export default function PaymentDetailsCard({
@@ -61,6 +67,8 @@ export default function PaymentDetailsCard({
   onRemoveCoupon,
   coins,
   addressRequired = true,
+  deliveryStatus = 'READY',
+  onRetryDelivery,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const discounted = effectiveTotal < total;
@@ -126,13 +134,15 @@ export default function PaymentDetailsCard({
             </Typography>
           )}
           <CheckoutRequirementsCard missing={eligibility.missing} />
+          <DeliveryQuoteNotice status={deliveryStatus} onRetry={onRetryDelivery} />
           <DuncitButton
             data-testid="checkout-submit"
             variant="contained"
             size="large"
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}
             onClick={onSubmit}
-            disabled={submitting || total <= 0 || blocked}
+            disabled={submitting || total <= 0 || blocked || deliveryStatus !== 'READY'}
+            aria-describedby={deliveryStatus === 'READY' ? undefined : DELIVERY_QUOTE_NOTICE_ID}
             sx={{ minHeight: 52 }}
           >
             {submitting

@@ -98,6 +98,7 @@ describe('DeliveryAvailabilitySection', () => {
     expect(screen.getByText(/Enable "Delivery available" to set a charge/i)).toBeInTheDocument();
     // The required warehouse picker is rendered alongside the shipping fields.
     await waitFor(() => expect(screen.getByText('Main WH — Pune')).toBeInTheDocument());
+    expect(screen.getByRole('combobox', { name: /Pickup address/i })).toBeInTheDocument();
     // Toggle the "Delivery available" switch on. MUI's Switch exposes role
     // "switch", not "checkbox", so the label is the stable way in.
     fireEvent.click(screen.getByLabelText('Delivery available'));
@@ -132,7 +133,7 @@ describe('DeliveryAvailabilitySection', () => {
     // (Parcel weight and dimensions live in the Shipping & packaging section now.)
     expect(screen.getByLabelText(/Delivery charge/i)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText('Main WH — Pune')).not.toBeInTheDocument());
-    expect(screen.queryByLabelText(/Warehouse/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: /Pickup address/i })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Delivery method/i)).not.toBeInTheDocument();
   });
 });

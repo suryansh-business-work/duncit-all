@@ -9,7 +9,7 @@ import { VenueChargesSheet } from '@/components/checkout/VenueChargesSheet';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutPod } from '@/hooks/useCheckout';
-import { coverImageUrl, exclusiveOfGstBill, type CoinCheckoutSummary } from '@duncit/utils';
+import { coverImageUrl, exclusiveOfGstBill, round2, type CoinCheckoutSummary } from '@duncit/utils';
 import { CoinSummaryRows } from '@/components/checkout/CoinSummaryRows';
 import { SummaryRow as Row } from '@/components/checkout/SummaryRow';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
@@ -36,6 +36,7 @@ export function OrderSummary({
   seats = 1,
   unitAmount = 0,
   coins = null,
+  roundOff = 0,
 }: Readonly<{
   pod: CheckoutPod;
   /**
@@ -55,6 +56,8 @@ export function OrderSummary({
   unitAmount?: number;
   /** Coins spent, left and earned on this bill. Absent hides the coin block. */
   coins?: CoinCheckoutSummary | null;
+  /** What rounding the charge up to a whole rupee adds, on top of `breakup`. Zero hides the row. */
+  roundOff?: number;
 }>) {
   const { primary, muted } = useThemeColors();
   const { t } = useTranslation();
@@ -144,8 +147,15 @@ export function OrderSummary({
           label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })}
           value={fmt(breakup.gst)}
         />
+        {roundOff > 0 ? (
+          <Row label={t('mweb.checkout.roundOff')} value={`+ ${fmt(roundOff)}`} />
+        ) : null}
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
-        <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+        <Row
+          label={t('mweb.checkout.totalPayable')}
+          value={fmt(round2(breakup.total + roundOff))}
+          bold
+        />
         <CoinSummaryRows coins={coins} />
         {venueCharges.length > 0 ? (
           <YStack

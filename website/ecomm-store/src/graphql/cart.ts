@@ -149,6 +149,8 @@ export interface StoreCheckoutQuote {
   autoship_discount: number;
   discount_total: number;
   gst_amount: number;
+  /** What rounding the bill up to a whole rupee added — already inside `total`. */
+  round_off: number;
   total: number;
   currency_symbol: string;
   cod_available: boolean;
@@ -177,6 +179,7 @@ export const CHECKOUT_QUOTE: TypedDocumentNode<{ storeCheckoutQuote: StoreChecko
       autoship_discount
       discount_total
       gst_amount
+      round_off
       total
       currency_symbol
       cod_available

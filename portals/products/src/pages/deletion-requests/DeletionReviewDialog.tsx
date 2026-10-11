@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link as RouterLink } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
@@ -8,6 +9,7 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  Link,
   Stack,
   TextField,
   Typography,
@@ -95,6 +97,11 @@ export default function DeletionReviewDialog({ requestId, onClose, onReviewed }:
           fact(t('products.deletionRequests.cancelledOrders'), t('products.deletionRequests.cancelledLine', {
             vars: { cancelled: req.cancelled_orders, failed: req.failed_refunds },
           }))}
+        {req.mode === 'CANCEL_AND_REFUND' && req.status !== 'PENDING' && (
+          <Link component={RouterLink} to={`/deletion-requests/refunds?request=${req.id}&no=${encodeURIComponent(req.request_no)}`} variant="body2">
+            {t('products.deletionRefunds.viewForRequest')}
+          </Link>
+        )}
         {req.review_note && fact(t('products.deletionRequests.reviewNote'), req.review_note)}
         {req.parent_id && <Alert severity="info">{t('products.deletionRequests.childHint')}</Alert>}
         <Divider />

@@ -13,12 +13,12 @@ export default function DuncitWarehousesPage() {
         <Typography component="h1" variant="h4" sx={{
           fontWeight: 700
         }}>
-          Duncit Warehouse Locations
+          Duncit Pickup Addresses
         </Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Add and manage the warehouses Duncit products ship from. Each Duncit
+          Add and manage the pickup addresses Duncit products ship from. Each Duncit
           product must select one of these as its pickup origin.
         </Typography>
       </Box>
@@ -28,7 +28,7 @@ export default function DuncitWarehousesPage() {
           <PickupLocationsPanel
             owner={{ owner_kind: 'DUNCIT', brandId: null }}
             title={t('products.settings.duncitWarehouses')}
-            emptyHint="No Duncit warehouses yet. Add one so products have a shipping origin."
+            emptyHint="No Duncit pickup addresses yet. Add one so products have a shipping origin."
           />
           <Divider sx={{ mt: 2 }} />
           <Typography
@@ -38,7 +38,7 @@ export default function DuncitWarehousesPage() {
               mt: 1,
               display: 'block'
             }}>
-            Registering a warehouse with ShipRocket lets SHIP orders pick up from it and enables live delivery rates.
+            Registering a pickup address with ShipRocket lets SHIP orders pick up from it and enables live delivery rates.
           </Typography>
         </CardContent>
       </Card>

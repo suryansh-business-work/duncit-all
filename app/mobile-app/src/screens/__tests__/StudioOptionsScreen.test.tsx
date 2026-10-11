@@ -12,11 +12,18 @@ import {
   HostOptionsScreen,
   VenueOptionsScreen,
 } from '@/screens/StudioOptionsScreen';
+import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({
+    canGoBack: () => true,
+    navigate: mockNavigate,
+    replace: mockReplace,
+    goBack: jest.fn(),
+  }),
 }));
 jest.mock('@/hooks/useMe', () => ({ useMe: jest.fn() }));
 jest.mock('@/hooks/useFeatureFlag', () => ({ useFeatureFlag: jest.fn() }));
@@ -42,10 +49,21 @@ const venuesState = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** Tamagui hands the selected state down as either prop, by platform build. */
+const isSelected = (testID: string) => {
+  const { props } = screen.getByTestId(testID);
+  return props.accessibilityState?.selected === true || props['aria-selected'] === true;
+};
+
+/** Every flag on, except the ones named off. */
+const flagsOff = (...off: string[]) =>
+  mockedFlag.mockImplementation((key: string) => !off.includes(key));
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockedFlag.mockReturnValue(true);
   mockedVenues.mockReturnValue(venuesState());
+  useStudioModeStore.setState({ mode: 'USER' });
 });
 
 describe('Studio Options screens', () => {
@@ -143,6 +161,51 @@ describe('Studio Options screens', () => {
     renderWithProviders(<ClubOptionsScreen />);
     fireEvent.press(screen.getByTestId('studio-option-clubs'));
     expect(mockNavigate).toHaveBeenCalledWith('ClubManage');
+  });
+
+  it('shows no role switcher to a partner with a single role', () => {
+    signedIn(['HOST']);
+    renderWithProviders(<HostOptionsScreen />);
+    expect(screen.getByTestId('studio-options-list')).toBeOnTheScreen();
+    expect(screen.queryByTestId('studio-role-switcher')).toBeNull();
+  });
+
+  it('lists only the roles the partner holds on the switcher, the open one selected', () => {
+    signedIn(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN']);
+    renderWithProviders(<VenueOptionsScreen />);
+    expect(screen.getByTestId('studio-role-switcher')).toBeOnTheScreen();
+    expect(screen.getByTestId('studio-role-host')).toHaveTextContent('Host');
+    expect(screen.getByTestId('studio-role-club')).toHaveTextContent('Club Admin');
+    expect(isSelected('studio-role-venue')).toBe(true);
+    expect(isSelected('studio-role-host')).toBe(false);
+    expect(screen.queryByTestId('studio-role-ecomm')).toBeNull();
+  });
+
+  it('switches role from inside the Studio: remembers it and swaps to that role’s screen', () => {
+    signedIn(['HOST', 'VENUE_OWNER']);
+    renderWithProviders(<HostOptionsScreen />);
+
+    fireEvent.press(screen.getByTestId('studio-role-venue'));
+
+    expect(useStudioModeStore.getState().mode).toBe('VENUE');
+    // Replaced, not pushed — Back leaves the Studio.
+    expect(mockReplace).toHaveBeenCalledWith('VenueOptions');
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('offers the Brand role only while products are switched on', () => {
+    signedIn(['HOST', 'ECOMM_MANAGER']);
+    flagsOff('is_product_visible');
+    const { unmount } = renderWithProviders(<HostOptionsScreen />);
+    // Products off leaves the host one role to be in — nothing to switch to.
+    expect(screen.queryByTestId('studio-role-switcher')).toBeNull();
+    unmount();
+
+    flagsOff();
+    renderWithProviders(<HostOptionsScreen />);
+    fireEvent.press(screen.getByTestId('studio-role-ecomm'));
+    expect(useStudioModeStore.getState().mode).toBe('ECOMM');
+    expect(mockReplace).toHaveBeenCalledWith('BrandOptions');
   });
 
   it('lists nothing once the studio role is gone', () => {

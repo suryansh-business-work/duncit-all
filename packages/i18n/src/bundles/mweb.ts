@@ -1967,6 +1967,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       nudgeLater: 'Remind me next time',
       nudgeMute: "Don't remind me again",
       nudgeDismiss: 'Dismiss cart reminder',
+      // The toast after a product reaches the cart from anywhere outside the
+      // cart itself, and the button on it (mWeb + native).
+      addedToast: 'Added to your cart. Go to your cart to place the order.',
+      addedToastAction: 'Go to cart',
+      // The Cart tab's accessible name while it carries a count — it starts
+      // with the visible "Cart" label. Explicit One/Many pair for the key gate.
+      navCountOne: 'Cart, 1 item',
+      navCountMany: 'Cart, {count} items',
     },
     // The money path: the pod-membership checkout, the standalone product
     // checkout, and the confirmation both of them end on. mWeb and the native
@@ -2017,6 +2025,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // coupon and coins; the Saved label names it on the payment result.
       ticketDiscount: 'Multi-ticket discount ({pct}% on {count} tickets)',
       ticketDiscountSaved: 'Multi-ticket discount',
+      // Every charge is rounded UP to the whole rupee. The difference is its own
+      // row, after the tax lines — it is not taxed — and only when above zero.
+      roundOff: 'Round off',
       totalPayable: 'Total payable',
       // What an account must have before it can pay. The server refuses the
       // payment without these, so the buyer is told BEFORE entering a card
@@ -2128,6 +2139,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       deliveryFree: 'Free',
       deliveryEstimated: '{courier} (estimated)',
       deliveryEstimatedNote: 'Estimated delivery — final charge confirmed at checkout.',
+      // Under the Pay button while it is shut because the delivery charge for
+      // the cart and pincode on screen is not known yet. The key names come
+      // from DELIVERY_QUOTE_BLOCK_KEYS in @duncit/utils, so they must match.
+      deliveryBlockPincode: 'Add a delivery address with a valid pincode to see the delivery charge.',
+      deliveryBlockCalculating: 'Calculating the delivery charge…',
+      deliveryBlockFailed: 'We could not calculate the delivery charge. Please try again before you pay.',
+      deliveryRetry: 'Try again',
       viewProduct: 'View {name} details',
       // The confirmation.
       successTitle: 'Payment successful',
@@ -4113,6 +4131,67 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       refundFailed: 'Refund failed — our team will pay it out',
       coinsReturned: '{coins} coins returned to your wallet',
     },
+    // One pod-shop order in full — mWeb /orders/:orderId and the app's
+    // OrderDetail screen. Both surfaces render every key (rule 27); the
+    // support* lines are the prefilled ticket (@duncit/utils orderSupportDraft).
+    orderDetail: {
+      title: 'Order details',
+      orderNo: 'Order #{orderNo}',
+      placedOn: 'Placed on {date}',
+      total: 'Total {amount}',
+      viewDetails: 'View details',
+      openOrder: 'View details of order #{orderNo}',
+      loadFailed: 'We could not load this order.',
+      notFoundTitle: 'We could not find this order',
+      notFoundBody: 'It may belong to another account, or the link may be out of date.',
+      backToOrders: 'Back to my orders',
+      tracking: 'Tracking',
+      stepDone: 'Completed',
+      stepCurrent: 'Current status',
+      stepUpcoming: 'Upcoming',
+      shipment: 'Shipment',
+      notShippedYet: 'Courier details appear here once the seller books your shipment.',
+      courier: 'Courier',
+      awb: 'Tracking number (AWB)',
+      copyAwb: 'Copy tracking number',
+      awbCopied: 'Tracking number copied',
+      copyFailed: 'Could not copy. Select the number and copy it by hand.',
+      estimatedDelivery: 'Estimated delivery',
+      courierStatus: 'Courier status',
+      trackShipment: 'Track shipment',
+      pickup: 'Pickup',
+      pickupCode: 'Pickup code',
+      pickupLocation: 'Pickup location',
+      pickupHint: 'Show this code when you collect your order.',
+      deliveryAddress: 'Delivery address',
+      items: 'Items',
+      qtyPrice: 'Qty {qty} × {price}',
+      priceDetails: 'Price details',
+      itemsTotal: 'Items total',
+      deliveryCharge: 'Delivery charge',
+      discount: 'Discount',
+      coinsUsed: 'Coins used',
+      totalPaid: 'Total paid',
+      paymentMethod: 'Payment method',
+      paymentPrepaid: 'Paid online',
+      paymentCod: 'Cash on delivery',
+      paymentRef: 'Payment reference',
+      documents: 'Invoices',
+      downloadInvoice: 'Download invoice',
+      downloadSellerInvoice: 'Download seller invoice',
+      sellerInvoicePending: 'The seller’s tax invoice becomes available once your order is booked with the courier.',
+      downloadFailed: 'We could not download this document. Please try again.',
+      noShareSheet: 'This device cannot save or share files.',
+      needHelp: 'Need help?',
+      getHelp: 'Get help with this order',
+      supportSubject: 'Help with order #{orderNo}',
+      supportIntro: 'I need help with this order.',
+      supportOrder: 'Order: #{orderNo}',
+      supportItems: 'Items: {items}',
+      supportStatus: 'Status: {status}',
+      supportAwb: 'AWB: {awb}',
+      supportPaymentRef: 'Payment reference: {ref}',
+    },
     // Pod-shop returns — asked for from a delivered order on My Product Orders.
     // Both surfaces render every key.
     podShopReturns: {
@@ -4784,6 +4863,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       clubEntryHint: 'Everything for your clubs in one place',
       brandEntry: 'Brand Options',
       brandEntryHint: 'Everything for your brands in one place',
+      // The ONE sidebar entry every partner gets, and the role switcher at the
+      // top of the Studio page it opens (@duncit/utils studio-switcher).
+      studioEntry: 'Studio',
+      studioEntryHint: 'Every option for your partner roles in one place',
+      roleSwitcherLabel: 'Choose a role',
+      roleHost: 'Host',
+      roleVenue: 'Venue',
+      roleClub: 'Club Admin',
+      roleBrand: 'Brand',
       dashboard: 'Dashboard',
       venueDashboardHint: 'Bookings, earnings and requests at a glance',
       hostDashboardHint: 'Earnings, pods and insights at a glance',
@@ -4833,9 +4921,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       integrationsHint: 'Payment and shipping accounts for your brands',
       productReturns: 'Product Returns',
       productReturnsHint: 'Return requests from your buyers',
+      deletionRefunds: 'Deletion Refunds',
+      deletionRefundsHint: 'Buyers refunded when you deleted a brand or product — who, how much and the refund status',
       brandOrders: 'Brand Orders',
       brandOrdersHint: 'Pod Shop orders for your brands: ship, track, print labels',
-      brandWarehouses: 'ShipRocket Warehouses',
+      brandWarehouses: 'ShipRocket Pickup Addresses',
       brandWarehousesHint: 'Your pickup addresses, synced with ShipRocket',
       verification: 'Verification',
       verificationHint: 'Identity, address and email checks',
@@ -4929,8 +5019,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     brandWarehouses: {
       brand: 'Brand',
       noBrands: 'You have no brands yet. Create one in the Partner app.',
-      empty: 'This brand has no warehouses yet.',
-      loadFailed: 'Could not load the warehouses. Try again.',
+      empty: 'This brand has no pickup addresses yet.',
+      loadFailed: 'Could not load the pickup addresses. Try again.',
       retry: 'Try again',
       isDefault: 'Default',
       reviewPending: 'Awaiting approval',
@@ -4948,7 +5038,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       syncFailed: 'ShipRocket could not be read: {error}',
       manage: 'Add / edit in Partner app',
-      manageHint: 'Warehouses are added and edited in the Partner app.',
+      manageHint: 'Pickup addresses are added and edited in the Partner app.',
     },
     // The partner studio menu (@duncit/utils studio-nav): the same groups the
     // Partner console's studios use. mWeb and native render these keys.

@@ -127,7 +127,7 @@ export const productSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['pickup_location_id'],
-        message: 'Warehouse is required',
+        message: 'Pickup address is required',
       });
     }
   });

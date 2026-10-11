@@ -1,4 +1,4 @@
-import { Alert, Box, Card, CardContent, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, Stack, Switch, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import StarIcon from '@mui/icons-material/Star';
@@ -24,6 +24,8 @@ interface Props {
   onDelete: () => void;
   onSetDefault: () => void;
   onRegister: () => void;
+  /** Switch the address on or off (ShipRocket's Active / Inactive). */
+  onToggleActive: (active: boolean) => void;
 }
 
 export default function BrandPickupRow({
@@ -33,9 +35,11 @@ export default function BrandPickupRow({
   onDelete,
   onSetDefault,
   onRegister,
+  onToggleActive,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const review = reviewChip(t)[location.review_status] ?? reviewChip(t).PENDING;
+  const active = location.is_active !== false;
   const defaultTitle = location.is_default ? t('products.a11y.defaultLocation') : t('products.a11y.setAsDefault');
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -61,6 +65,7 @@ export default function BrandPickupRow({
                 {location.nickname}
               </Typography>
               {location.is_default && <Chip size="small" color="primary" label={t('products.pickup.default')} />}
+              {!active && <Chip size="small" variant="outlined" label={t('products.pickup.inactive')} />}
               <Chip size="small" color={review.color} label={review.label} />
               {location.shiprocket_registered ? (
                 <Chip size="small" color="success" variant="outlined" label={t('products.pickup.shiprocketReady')} />
@@ -81,14 +86,24 @@ export default function BrandPickupRow({
                 .join(', ')}
             </Typography>
           </Box>
-          <Stack direction="row" spacing={0.5}>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', flexShrink: 0 }}>
+            <Tooltip title={active ? t('products.pickup.activeHint') : t('products.pickup.inactiveHint')}>
+              <Switch
+                size="small"
+                checked={active}
+                disabled={busy}
+                onChange={(_event, checked) => onToggleActive(checked)}
+                slotProps={{ input: { 'aria-label': active ? t('products.pickup.activeHint') : t('products.pickup.inactiveHint') } }}
+                data-testid="products-pickup-active"
+              />
+            </Tooltip>
             <Tooltip title={defaultTitle}>
               <span>
                 <DuncitIconButton
                   size="small"
                   aria-label={defaultTitle}
                   data-testid="products-pickup-set-default"
-                  disabled={busy || location.is_default}
+                  disabled={busy || location.is_default || !active}
                   onClick={onSetDefault}
                 >
                   {location.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}

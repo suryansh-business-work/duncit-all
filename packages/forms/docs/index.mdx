@@ -24,6 +24,10 @@ exports:
   - 'PackagingFields'
   - 'PackagingFieldsProps'
   - 'PackagingTranslate'
+  - 'WalletStatementDialog'
+  - 'WalletStatementDialogProps'
+  - 'WalletStatementFields'
+  - 'WalletStatementFieldsProps'
   - 'FormField'
   - 'zodRules'
   - 'validationRules'
@@ -62,6 +66,9 @@ exports:
   - 'buildWithdrawInput'
   - 'blankWithdrawValues'
   - 'WITHDRAW_METHODS'
+  - 'makeWalletStatementSchema'
+  - 'buildWalletStatementVariables'
+  - 'blankWalletStatementValues'
   - 'BANK_PAYOUT_METHODS'
   - 'loginDefaults'
   - 'forgotPasswordDefaults'
@@ -340,6 +347,72 @@ import { PackagingFields } from '@duncit/forms';
 The values stay the form's own — the consumer's Zod schema validates them. Copy comes from
 `PACKAGING_BUNDLE` (`packaging.*`), which each consuming portal layers into its `i18nFallback`.
 
+## `WalletStatementDialog` — the wallet's "Download statement"
+
+One dialog for mWeb's wallet and the partner console's. It picks a period (a preset or a custom
+range) and a format, validates with `makeWalletStatementSchema`, runs the surface's own
+`myWalletStatementFile` query and hands the file to the browser. It then shows one of three
+outcomes: downloaded, downloaded but the period was empty, or failed with Retry.
+
+The package imports no app hook. Each surface passes what it resolved:
+
+```tsx
+import { WalletStatementDialog, WalletStatementFields, type WalletStatementFormFieldsProps } from '@duncit/forms';
+
+// The fields, bound once to the surface's translator, date format and date picker.
+function StatementFields(props: Readonly<WalletStatementFormFieldsProps>) {
+  const { t } = useTranslation();
+  return <WalletStatementFields {...props} t={t} dateFormat={useDateFormat()} DateField={DateField} />;
+}
+
+// Mounted only while open, so the form starts blank.
+function StatementForm({ onClose }: Readonly<{ onClose: () => void }>) {
+  const { t } = useTranslation();
+  const [fetchFile] = useLazyQuery(WALLET_STATEMENT_FILE, { fetchPolicy: 'no-cache' });
+  return (
+    <WalletStatementDialog
+      t={t}
+      dateFormat={useDateFormat()}
+      Fields={StatementFields}
+      runQuery={fetchFile}
+      closeLabel={t('mweb.common.close')}
+      onClose={onClose}
+    />
+  );
+}
+```
+
+| `WalletStatementDialog` prop | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `t` | `Translate` | — | The surface's translator. The copy is `withdraw.statement.*` (`WITHDRAW_BUNDLE`). |
+| `dateFormat` | `WalletStatementClock` | — | `now()` and `timeZone`. `useDateFormat()` satisfies it. "Today" is read in the business zone. |
+| `Fields` | `ComponentType<WalletStatementFormFieldsProps>` | — | The surface's bound `WalletStatementFields`. Pass a stable component, not an inline function. |
+| `runQuery` | `({ variables }) => Promise<WalletStatementQueryResult>` | — | The surface's statement query. Apollo's lazy-query function fits as it is. Use `fetchPolicy: 'no-cache'`. |
+| `closeLabel` | `string` | — | The Close button's label, from the surface's own common copy. |
+| `onClose` | `() => void` | — | Ignored while the file is being fetched. |
+| `fontWeight` | `number` | `700` | The weight of the title and the Download button. The partner console passes `900`. |
+| `spinner` | `boolean` | off | Show a spinner on Download while fetching, instead of only disabling it. |
+
+| `WalletStatementFields` prop | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `control`, `errors`, `preset`, `disabled` | `WalletStatementFormFieldsProps` | — | Handed over by the dialog. |
+| `t` | `Translate` | — | The surface's translator. |
+| `dateFormat` | `WalletStatementDateFormat` | — | The clock plus `formatDay`, which prints a preset's days in the admin's format. |
+| `DateField` | `ComponentType<WalletStatementDateFieldProps>` | — | The surface's own date picker. It takes and emits `yyyy-MM-dd`. |
+| `datesInline` | `boolean` | off | Put the two custom days side by side from `sm` up. Stacked when off. |
+
+The dialog owns its busy state: from the moment a valid form is submitted until the query
+settles, the fields lock, Close is disabled and Escape does nothing. A query that resolves
+without a file is a failure, with the query's own error message when it has one and
+`withdraw.statement.failed` when it does not.
+
+Every control keeps a `data-testid`: `statement-dialog`, `statement-preset` (options
+`statement-preset-<PRESET>`), `statement-range`, `statement-custom-days`, `statement-from`,
+`statement-to`, `statement-format` (options `statement-format-<FORMAT>`), `statement-done`,
+`statement-error`, `statement-retry`, `statement-close` and `statement-submit`.
+
+`@duncit/buttons` and `@hookform/resolvers` are optional peers, needed only by this dialog.
+
 ## `RhfTextField` vs `FormField`
 
 `RhfTextField` is the one to use in new code. `FormField` is the legacy wrapper kept for the
@@ -478,6 +551,7 @@ directly.
 | `makeAddressSchema` | one saved address | recipient name, number and postal code from @duncit/regex |
 | `makeShipToSchema` | a brand correcting an order's courier ship-to | the address contract without `label`; name required, Indian mobile (last ten digits) and a six-digit PIN — see below |
 | `makeWithdrawSchema` | wallet withdrawal | balance ceiling, role-wise floor, per-method payout details |
+| `makeWalletStatementSchema` | wallet "Download statement" | a period preset or a custom range, and PDF or CSV — see below |
 | `makePasswordWithOtpSchema` | both password flows | what reset and change-password each aliased |
 | `makePasswordPairSchema` | recovery step 3 | the same pair WITHOUT a code — recovery proves its code a step earlier |
 | `makeSignupSchema` | joining Duncit | the whole four-step signup, in ONE contract — see below |
@@ -633,6 +707,31 @@ The messages live in the shared `withdraw.*` namespace rather than `mweb.wallet.
 `partners.walletPage.*`, because all three surfaces render them — it rides into the portals
 through `SHELL_FALLBACK` and into the apps through their own fallback bundles. The partner
 console's amount rules were plain English literals before this moved.
+
+### The wallet statement period
+
+`makeWalletStatementSchema(now, timeZone, t)` is the "Download statement" form on the partner
+console, mWeb and the native app. The form holds a preset, two custom days (`yyyy-MM-dd`) and a
+format. A preset is never validated, because its days are computed. A `CUSTOM` period is checked
+with `statementRangeError` from `@duncit/utils` — the same rules the server enforces.
+
+Pass the surface's own clock and the business time zone (`useDateFormat().now()` and
+`.timeZone`). "Today" and the financial year are read in that zone, not the device's.
+
+```ts
+const schema = makeWalletStatementSchema(fmt.now(), fmt.timeZone, t);
+
+schema.safeParse({ preset: 'CUSTOM', from: '', to: '2026-06-30', format: 'PDF' });
+// issue on `from`: withdraw.statement.errorMissing
+schema.safeParse({ preset: 'CUSTOM', from: '2026-06-30', to: '2026-04-01', format: 'PDF' });
+// issue on `to`: withdraw.statement.errorOrder
+
+buildWalletStatementVariables({ preset: 'LAST_MONTH', from: '', to: '', format: 'CSV' }, now, 'Asia/Kolkata');
+// { input: { from: '2026-09-01', to: '2026-09-30' }, format: 'CSV' } — the myWalletStatementFile variables
+```
+
+A missing start day is reported on `from`. Every other problem is reported on `to`, the box the
+reader moves to fix it. The too-long message receives `{days}` (366).
 
 ### A Pod Shop return
 

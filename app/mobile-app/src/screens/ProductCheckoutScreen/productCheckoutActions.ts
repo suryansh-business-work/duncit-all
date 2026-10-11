@@ -2,6 +2,7 @@ import type { CheckoutFormValues } from '@/forms/checkout';
 import type { RazorpaySignature } from '@/hooks/useCheckout';
 import type { ProductPayment } from '@/hooks/useProductCheckout';
 import { toErrorMessage } from '@/utils/errors';
+import { DELIVERY_QUOTE_BLOCK_KEYS } from '@duncit/utils';
 
 import type { ProductCheckoutState } from './useProductCheckoutState';
 
@@ -58,6 +59,12 @@ export function productCheckoutActions(s: ProductCheckoutState) {
   };
 
   const submit = async (values: CheckoutFormValues) => {
+    // The button is shut until the delivery charge is known; this is the same
+    // rule on the handler, so no other route to submit pays an unquoted amount.
+    if (s.deliveryStatus !== 'READY') {
+      setError(t(DELIVERY_QUOTE_BLOCK_KEYS[s.deliveryStatus]));
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {

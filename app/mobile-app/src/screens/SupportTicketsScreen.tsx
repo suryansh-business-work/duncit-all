@@ -94,6 +94,9 @@ export function SupportTicketsScreen() {
           initialEmail={me?.email || ''}
           podId={podId}
           podTitle={podTitle}
+          initialSubject={route.params?.subject}
+          initialMessage={route.params?.message}
+          initialCategory={route.params?.category}
           onCreated={(id) => navigation.navigate('TicketDetails', { ticketId: id })}
         />
 

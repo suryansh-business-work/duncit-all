@@ -182,7 +182,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
           setStudioMode(next);
           setSwitchOpen(false);
           onClose();
-          // Jump straight to the selected role's dashboard (B3-2) — or to its
+          // Jump straight to the selected role's Studio screen — or to its
           // Auto Pod queue when offers are waiting on that role.
           navigation.navigate(studioSwitchRoute(next, autoPods.counts));
         }}

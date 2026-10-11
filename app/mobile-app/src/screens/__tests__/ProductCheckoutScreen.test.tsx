@@ -138,7 +138,15 @@ beforeEach(() => {
     currency_symbol: '₹',
     status: 'SUCCESS',
   });
-  mockedShipping.mockReturnValue({ quote: null, loading: false, pincodeValid: false });
+  // The delivery charge is settled by default (a cart of hand-carried products
+  // answers with no delivery lines) — Pay stays shut until the quote is READY.
+  mockedShipping.mockReturnValue({
+    quote: null,
+    loading: false,
+    pincodeValid: false,
+    status: 'READY',
+    retry: jest.fn(),
+  });
   mockedCheckout.mockReturnValue(baseHook());
   // Empty address book by default → the picker stays hidden.
   (graphqlRequest as jest.Mock).mockResolvedValue({ myAddresses: [] });
@@ -395,6 +403,8 @@ describe('ProductCheckoutScreen', () => {
       },
       loading: false,
       pincodeValid: true,
+      status: 'READY',
+      retry: jest.fn(),
     });
     previewCoupon.mockResolvedValue({
       ok: true,

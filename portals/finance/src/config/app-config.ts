@@ -44,6 +44,25 @@ export const appConfig = {
     },
     { label: 'User Refund Logs', labelKey: 'shell.nav.userRefundLogs', to: '/user-refund-logs', icon: 'quote' },
     { label: 'Payment Logs', labelKey: 'shell.nav.paymentLogs', to: '/payment-logs', icon: 'receipt' },
+    { label: 'Round Offs', labelKey: 'shell.nav.roundOffs', to: '/round-offs', icon: 'percent' },
+    // The two shops are separate products and are tracked separately: each
+    // group is one shop's own payment log and its order-level refunds.
+    {
+      label: 'Pod Shop', labelKey: 'shell.nav.podShop',
+      icon: 'storefront',
+      children: [
+        { label: 'Payment Logs', labelKey: 'shell.nav.paymentLogs', to: '/pod-shop/payment-logs', icon: 'receipt' },
+        { label: 'Order Refunds', labelKey: 'shell.nav.orderRefunds', to: '/pod-shop/order-refunds', icon: 'quote' },
+      ],
+    },
+    {
+      label: 'Ecomm (Pet Store)', labelKey: 'shell.nav.ecommPetStore',
+      icon: 'marketplace',
+      children: [
+        { label: 'Payment Logs', labelKey: 'shell.nav.paymentLogs', to: '/ecomm/payment-logs', icon: 'receipt' },
+        { label: 'Order Refunds', labelKey: 'shell.nav.orderRefunds', to: '/ecomm/order-refunds', icon: 'quote' },
+      ],
+    },
     { label: 'Payment Release', labelKey: 'shell.nav.paymentRelease', to: '/payment-release', icon: 'payments' },
     {
       label: 'Withdrawal', labelKey: 'shell.nav.withdrawal',

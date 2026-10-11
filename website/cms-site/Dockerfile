@@ -14,6 +14,10 @@ WORKDIR /repo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY website/cms-site/package.json ./website/cms-site/
 COPY packages/brand/package.json ./packages/brand/
+# @duncit/forms lists @duncit/buttons (and it, @duncit/buttons-native) as a
+# workspace dependency; a frozen install refuses a workspace package it cannot find.
+COPY packages/buttons/package.json ./packages/buttons/
+COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/forms/package.json ./packages/forms/
@@ -29,6 +33,8 @@ ARG PUBLIC_GRAPHQL_URL=
 ENV PUBLIC_GRAPHQL_URL=$PUBLIC_GRAPHQL_URL
 
 COPY packages/brand ./packages/brand
+COPY packages/buttons ./packages/buttons
+COPY packages/buttons-native ./packages/buttons-native
 COPY packages/captcha ./packages/captcha
 COPY packages/datetime ./packages/datetime
 COPY packages/forms ./packages/forms

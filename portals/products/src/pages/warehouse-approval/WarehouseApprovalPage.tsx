@@ -62,12 +62,12 @@ export default function WarehouseApprovalPage() {
           <Typography component="h1" variant="h4" sx={{
             fontWeight: 950
           }}>
-            Warehouse Approval
+            Pickup Address Approval
           </Typography>
           <Typography sx={{
             color: "text.secondary"
           }}>
-            Approve partner warehouses before they can be used for shipping.
+            Approve partner pickup addresses before they can be used for shipping.
           </Typography>
         </Box>
         <ToggleButtonGroup

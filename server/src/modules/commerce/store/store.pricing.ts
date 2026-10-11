@@ -424,10 +424,10 @@ export async function priceStoreCart(input: StoreQuoteInput): Promise<StoreQuote
   const codFee = cod ? round2(s.cod_fee) : 0;
   const payable = round2(afterCoupon - prepaidDiscount - autoshipDiscount + shipping.total + codFee);
   const baseQuote = await computeQuote(payable);
-  const coins =
-    input.userId && Number(input.redeemCoins) > 0
-      ? await applyCoins(input.redeemCoins, input.userId, baseQuote)
-      : { quote: baseQuote, coinsRedeemed: 0 };
+  // Always settled through the checkout's one rule — it rounds the bill up to a
+  // whole rupee whether or not coins are spent (a guest simply has none), so a
+  // COD parcel is collected, and a card is charged, in whole rupees.
+  const coins = await applyCoins(input.redeemCoins, input.userId, baseQuote);
   const original = round2(itemsTotal + shipping.total + codFee);
   return {
     lines: input.lines,

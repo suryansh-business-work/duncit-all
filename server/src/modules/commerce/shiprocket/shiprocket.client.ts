@@ -1,7 +1,8 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
-import { DEFAULT_SESSION_KEY, getShiprocketAccount, type ShiprocketAccount } from './shiprocket.account';
+import { DEFAULT_SESSION_KEY, getShiprocketAccount, shiprocketBaseFor, type ShiprocketAccount } from './shiprocket.account';
+import { SANDBOX_GATEWAY_DENIED, SANDBOX_GATEWAY_DENIED_STATUS } from './shiprocket.endpoint';
 import { ShiprocketSessionModel } from './shiprocketSession.model';
 
 /**
@@ -28,8 +29,10 @@ import { ShiprocketSessionModel } from './shiprocketSession.model';
  *   `withShiprocketAccount(account, fn)` runs fn on a brand's own account, and
  *   every `srRequest` inside it — however deep — logs in and books on that
  *   account, with its own session row. Outside it, the Tech portal's account.
+ * - WHERE a call goes follows the account too: an account in sandbox mode is
+ *   sent to ShipRocket's sandbox and nowhere else (`shiprocket.endpoint.ts`),
+ *   so a brand testing its integration can never book a real parcel.
  */
-export const SR_BASE = 'https://apiv2.shiprocket.in/v1/external';
 
 const TIMEOUT_MS = 20_000;
 const RENEW_BEFORE_MS = 24 * 3_600_000;
@@ -53,8 +56,28 @@ export function withShiprocketAccount<T>(account: ShiprocketAccount | null, fn: 
   return account ? accountContext.run(account, fn) : fn();
 }
 
-/** The session key of the account this call chain runs on — what a per-account cache keys on. */
-export const currentAccountKey = (): string => accountContext.getStore()?.sessionKey ?? DEFAULT_SESSION_KEY;
+/**
+ * The key of the account this call chain runs on — what a per-account cache
+ * keys on. A sandbox answer (rates, serviceability) is kept apart from the
+ * live account's, so switching sandbox off never serves a test quote.
+ */
+export const currentAccountKey = (): string => {
+  const chosen = accountContext.getStore();
+  if (!chosen) return DEFAULT_SESSION_KEY;
+  return chosen.sandbox ? `${chosen.sessionKey}:sandbox` : chosen.sessionKey;
+};
+
+/** Whether the account this call chain runs on is in sandbox mode (test orders only). */
+export async function isSandboxCall(): Promise<boolean> {
+  return (accountContext.getStore() ?? (await getShiprocketAccount()))?.sandbox === true;
+}
+
+/** The API address for this account, or the refusal that explains why a sandbox call cannot be sent. */
+async function baseUrl(acc: ShiprocketAccount): Promise<string> {
+  const base = await shiprocketBaseFor(acc);
+  if (!base.ok) throw shiprocketError(base.message);
+  return base.url;
+}
 
 /** Whether ANY account can take the next call: the chosen brand's, else the Tech portal's. */
 export async function hasShiprocketAccount(): Promise<boolean> {
@@ -77,10 +100,40 @@ function jwtExpiry(token: string): Date | null {
   }
 }
 
-/** ShipRocket's reason, however it phrased it (message, errors map or status). */
+/** One field's complaints as ShipRocket wrote them: a string, or a list of them. */
+function fieldComplaint(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string').join(' ');
+  return '';
+}
+
+/**
+ * ShipRocket's per-field validation answer (`errors: { phone: ["…"] }`) as the
+ * sentences it wrote, in its own words — never the raw JSON. Blank when the
+ * answer carries no readable field errors.
+ */
+function fieldErrors(errors: unknown): string {
+  if (typeof errors === 'string') return errors.trim();
+  if (!errors || typeof errors !== 'object') return '';
+  return Object.values(errors as Record<string, unknown>)
+    .map(fieldComplaint)
+    .filter(Boolean)
+    .join(' ');
+}
+
+/**
+ * ShipRocket's reason, in its own words: its message AND every field error it
+ * listed. Its headline alone is often just "Oops! Invalid Data." — what the
+ * operator has to fix is in the field errors, so both are shown.
+ */
 function reasonOf(data: Json, status: number): string {
-  const raw = data?.message ?? data?.errors ?? data?.error ?? `HTTP ${status}`;
-  return typeof raw === 'string' ? raw : JSON.stringify(raw);
+  const message = typeof data?.message === 'string' ? data.message.trim() : '';
+  const fields = fieldErrors(data?.errors);
+  if (message && fields && !message.includes(fields)) return `${withoutClosingStop(message)}. ${fields}`;
+  if (message || fields) return message || fields;
+  const raw = data?.message ?? data?.errors ?? data?.error;
+  if (typeof raw === 'string' && raw) return raw;
+  return raw ? JSON.stringify(raw) : `HTTP ${status}`;
 }
 
 function refusal(message: string): GraphQLError {
@@ -90,9 +143,10 @@ function refusal(message: string): GraphQLError {
 }
 
 async function login(account: ShiprocketAccount): Promise<string> {
+  const base = await baseUrl(account);
   let res: Response;
   try {
-    res = await fetch(`${SR_BASE}/auth/login`, {
+    res = await fetch(`${base}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: account.email, password: account.password }),
@@ -121,6 +175,13 @@ async function login(account: ShiprocketAccount): Promise<string> {
       { upsert: true }
     );
     return data.token;
+  }
+  // The sandbox gateway refusing the network is not a refused credential: it is
+  // not remembered against the login, so the next call tries again once
+  // ShipRocket has allowed this server.
+  if (account.sandbox && res.status === SANDBOX_GATEWAY_DENIED_STATUS) {
+    logs.server.error('shiprocket', 'login', { status: res.status, msg: 'sandbox gateway denied' });
+    throw shiprocketError(SANDBOX_GATEWAY_DENIED, res.status);
   }
   const message = reasonOf(data, res.status);
   logs.server.error('shiprocket', 'login', { status: res.status, msg: message });
@@ -214,9 +275,9 @@ async function account(): Promise<ShiprocketAccount> {
 const route = (path: string) => path.split('?')[0];
 
 /** One HTTP attempt; null when ShipRocket never answered (timeout, network). */
-async function send(path: string, init: RequestInit, bearer: string, opts: RequestOptions, attempt: number) {
+async function send(base: string, path: string, init: RequestInit, bearer: string, opts: RequestOptions, attempt: number) {
   try {
-    return await fetch(`${SR_BASE}${path}`, {
+    return await fetch(`${base}${path}`, {
       ...init,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bearer}`, ...init.headers },
       signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -258,10 +319,13 @@ async function parse<T>(res: Response, path: string, opts: RequestOptions): Prom
  */
 export async function srRequest<T = Json>(path: string, init: RequestInit, opts: RequestOptions): Promise<T> {
   const acc = await account();
+  // Resolved before the login, so a sandbox account with no sandbox address is
+  // refused without spending a login attempt — and never reaches the live API.
+  const base = await baseUrl(acc);
   let bearer = await token(acc, false);
   let reauthed = false;
   for (let attempt = 0; ; attempt += 1) {
-    const res = await send(path, init, bearer, opts, attempt);
+    const res = await send(base, path, init, bearer, opts, attempt);
     // 401 and 403 both read as "this token is no good" from here; re-sending is
     // worth an attempt only when the login handed back a different one.
     if (res && AUTH_STATUS.has(res.status) && !reauthed) {

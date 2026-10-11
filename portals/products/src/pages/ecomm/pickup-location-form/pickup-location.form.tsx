@@ -61,7 +61,7 @@ export default function PickupLocationForm({
         <DialogContent dividers>
           <Grid container spacing={2}>
             <Grid size={12}>
-              <RhfTextField control={control} name="nickname" label={t('products.pickup.nickname')} required hint="e.g. Main warehouse" />
+              <RhfTextField control={control} name="nickname" label={t('products.pickup.nickname')} required hint="e.g. Main pickup address" />
             </Grid>
             <Grid
               size={{

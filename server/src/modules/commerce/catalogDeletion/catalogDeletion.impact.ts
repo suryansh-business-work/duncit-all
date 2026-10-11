@@ -49,7 +49,7 @@ export async function deletionImpact(target: DeletionTarget) {
   const [counts, orders, products] = await Promise.all([
     countOpenWork(target),
     ProductOrderModel.find(targetOrderFilter(target))
-      .select('order_no fulfilment_status fulfilment_method created_at total currency_symbol line_items.product_id line_items.brand_id line_items.qty')
+      .select('order_no buyer_name fulfilment_status fulfilment_method created_at total currency_symbol line_items.product_id line_items.brand_id line_items.qty')
       .sort({ created_at: 1 })
       .limit(LISTED_ORDERS),
     target.kind === 'BRAND' ? liveBrandProducts(target.brandId) : Promise.resolve([]),
@@ -67,6 +67,7 @@ export async function deletionImpact(target: DeletionTarget) {
       fulfilment_status: o.fulfilment_status,
       fulfilment_method: o.fulfilment_method,
       created_at: o.created_at?.toISOString?.() ?? '',
+      buyer_name: o.buyer_name ?? '',
       total: o.total,
       currency_symbol: o.currency_symbol,
       // Units of the item being deleted — what the partner owes or will refund.

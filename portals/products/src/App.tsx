@@ -22,6 +22,7 @@ import PodShopSliderPage from './pages/settings/PodShopSliderPage';
 import CartSettingsPage from './pages/cart-settings/CartSettingsPage';
 import DeletionRequestsPage from './pages/deletion-requests/DeletionRequestsPage';
 import DeletionSettingsPage from './pages/deletion-requests/DeletionSettingsPage';
+import DeletionRefundsPage from './pages/deletion-requests/DeletionRefundsPage';
 import ReturnsPage from './pages/returns/ReturnsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -77,6 +78,7 @@ export default function App() {
       <Route path="/returns" element={products(<ReturnsPage />)} />
       <Route path="/deletion-requests/products" element={products(<DeletionRequestsPage key="PRODUCT" kind="PRODUCT" />)} />
       <Route path="/deletion-requests/brands" element={products(<DeletionRequestsPage key="BRAND" kind="BRAND" />)} />
+      <Route path="/deletion-requests/refunds" element={products(<DeletionRefundsPage />)} />
       <Route path="/deletion-requests/settings" element={products(<DeletionSettingsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

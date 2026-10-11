@@ -12,10 +12,9 @@ interface Props {
 }
 
 /**
- * The ONE studio row the drawer shows once switched into a studio — "Venue
- * Options", "Host Options", … — a primary-tinted featured card (the Refer &
- * Earn card's shape) that opens the studio's Options page, where every option
- * is listed with its hint.
+ * The ONE "Studio" row the drawer shows a partner — a primary-tinted featured
+ * card (the Refer & Earn card's shape) that opens the Studio page, where every
+ * option of the role is listed with its hint and the role can be switched.
  */
 export default function StudioOptionsCard({ entry, onNavigate }: Readonly<Props>) {
   const { t } = useTranslation();

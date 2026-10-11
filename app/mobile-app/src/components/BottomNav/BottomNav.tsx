@@ -1,4 +1,5 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
@@ -10,6 +11,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { TAB_CONFIG } from '@/navigation/tabs';
 import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+import { useCartBump } from './useCartBump';
 
 /**
  * How much is in the basket, on the Cart tab's icon. The other four pass 0 and
@@ -55,7 +58,14 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const { muted, accent } = useThemeColors();
   const { t } = useTranslation();
   const cartCount = useCartStore(selectCartCount);
+  const cartBump = useCartBump();
   const comingSoon = useComingSoonCity();
+  // The badge is a bare number; the tab's name says what it counts. It starts
+  // with the visible label (WCAG 2.5.3), and an empty cart keeps the plain name.
+  const cartCountLabel =
+    cartCount === 1
+      ? t('mweb.cart.navCountOne')
+      : t('mweb.cart.navCountMany', { vars: { count: cartCount } });
 
   // A "Coming soon" city's Home has nowhere to send the bar until it launches.
   if (comingSoon && state.routes[state.index]?.name === 'HomeTab') return null;
@@ -83,6 +93,7 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
         const focused = state.index === index;
         const cfg = TAB_CONFIG.find((t) => t.name === route.name);
         if (!cfg) return null;
+        const isCart = cfg.name === 'Cart';
 
         const onPress = () => {
           const event = navigation.emit({
@@ -100,7 +111,7 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
             // A tab with a selected state, not a toggle button: `aria-pressed`
             // never reached a native screen reader, `aria-selected` does.
             role="tab"
-            aria-label={t(cfg.labelKey)}
+            aria-label={isCart && cartCount > 0 ? cartCountLabel : t(cfg.labelKey)}
             aria-selected={focused}
             tabIndex={0}
             onPress={onPress}
@@ -111,10 +122,13 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
             pressStyle={PRESS_STYLE.control}
           >
             {/* Active tab = accent tint only, no background shape (user ask). */}
-            <YStack width={44} height={28} alignItems="center" justifyContent="center">
-              <MaterialIcons name={cfg.icon} size={24} color={focused ? accent : muted} />
-              <TabBadge count={cfg.name === 'Cart' ? cartCount : 0} />
-            </YStack>
+            {/* The Cart glyph lifts and settles when something is added. */}
+            <Animated.View style={isCart ? { transform: [{ scale: cartBump }] } : undefined}>
+              <YStack width={44} height={28} alignItems="center" justifyContent="center">
+                <MaterialIcons name={cfg.icon} size={24} color={focused ? accent : muted} />
+                <TabBadge count={isCart ? cartCount : 0} />
+              </YStack>
+            </Animated.View>
             <Text fontSize={11} fontWeight="600" color={focused ? '$accent' : '$muted'}>
               {t(cfg.labelKey)}
             </Text>

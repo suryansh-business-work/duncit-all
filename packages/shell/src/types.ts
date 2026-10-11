@@ -28,6 +28,13 @@ export interface AppNavItem {
   captionKey?: string;
   /** Highlighted "featured" card treatment for a leaf (e.g. Partners' "Earn with Duncit"). */
   featured?: boolean;
+  /**
+   * Top-level only: the entry leaves the scrolling menu and sits in its own
+   * block at the foot of the sidebar, just above the signed-in user — on the
+   * full sidebar, the icon rail and the mobile drawer alike. Opt-in; a nav
+   * without it renders exactly as before.
+   */
+  pinBottom?: boolean;
 }
 
 /** One entry of the header-wide global search. */

@@ -15,6 +15,8 @@ import {
   UserRefundLogsPage,
   PaymentLogsPage,
   PaymentDetailPage,
+  RoundOffsPage,
+  OrderRefundsPage,
   PaymentReleasePage,
   WithdrawalsPage,
   PodWithdrawalDetailPage,
@@ -59,6 +61,12 @@ export default function App() {
       <Route path="/user-refund-logs" element={authed(<UserRefundLogsPage />)} />
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-logs/:id" element={authed(<PaymentDetailPage />)} />
+      <Route path="/round-offs" element={authed(<RoundOffsPage />)} />
+      {/* One shop per route — the pod shop and the pet store never share a list. */}
+      <Route path="/pod-shop/payment-logs" element={authed(<PaymentLogsPage key="pod-shop" shop="POD_SHOP" />)} />
+      <Route path="/pod-shop/order-refunds" element={authed(<OrderRefundsPage key="pod-shop" shop="POD_SHOP" />)} />
+      <Route path="/ecomm/payment-logs" element={authed(<PaymentLogsPage key="ecomm" shop="ECOMM" />)} />
+      <Route path="/ecomm/order-refunds" element={authed(<OrderRefundsPage key="ecomm" shop="ECOMM" />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />
       <Route path="/withdrawals/settings" element={authed(<WithdrawalSettingsPage />)} />

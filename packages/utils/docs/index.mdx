@@ -37,6 +37,7 @@ exports:
   - 'isTerminalFulfilment'
   - 'trackingUrl'
   - 'brandOrderActions'
+  - 'BRAND_CANCELLABLE'
   - 'shiprocketOrderUrl'
   - 'BRAND_ORDERS_PAGE_SIZE'
   - 'brandOrdersTableQuery'
@@ -184,6 +185,10 @@ exports:
   - 'StudioOptionItem'
   - 'StudioOptionIcon'
   - 'StudioOptionsEntry'
+  - 'STUDIO_ROLE_LABEL_KEY'
+  - 'heldStudioModes'
+  - 'studioModeFor'
+  - 'studioEntryFor'
   - 'VENUE_POD_PHASES'
   - 'venuePodPhase'
   - 'podsByPhase'
@@ -602,6 +607,28 @@ studioOptionsFor('VENUE', roles, { autoPods }); // [] in User mode or once the r
 venuePodPhase('ONGOING'); // 'CURRENT' — the Upcoming / Current / Past tabs of Pods at your venue
 ```
 
+The Studio role switcher (mWeb and native). The apps show ONE "Studio" sidebar entry for every partner and put the role switcher at the top of the Studio page itself; which roles it offers, which role the Studio opens on and where the entry points are one rule, here.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `heldStudioModes` | `(roles, access?) => PartnerStudioMode[]` | The partner roles the switcher offers, in switcher order (`HOST`, `VENUE`, `ECOMM`, `CLUB`) — only the ones held, and never `ECOMM` while `access.products` is off. One entry means no switcher is drawn. |
+| `studioModeFor` | `(mode, roles, access?) => PartnerStudioMode \| null` | The role the Studio opens on: the remembered mode while it is still held, otherwise the first held role. `null` without a partner role. |
+| `studioEntryFor` | `(mode, roles, access?) => StudioOptionsEntry \| null` | The single "Studio" sidebar entry — the `studioModeFor` role's Options `path` / `route` / `portal` under the `mweb.studioOptions.studioEntry` title and hint. `null` without a partner role. |
+| `STUDIO_ROLE_LABEL_KEY` | `Record<PartnerStudioMode, string>` | The translation key of each role's short name on the switcher (Host, Venue, Brand, Club Admin). |
+
+```ts
+import { heldStudioModes, studioEntryFor, studioModeFor } from '@duncit/utils';
+
+const roles = ['VENUE_OWNER', 'ECOMM_MANAGER'];
+
+heldStudioModes(roles);                       // ['VENUE', 'ECOMM']
+heldStudioModes(roles, { products: false });  // ['VENUE'] — one role, so no switcher
+studioModeFor('USER', roles);                 // 'VENUE' — first held role
+studioModeFor('ECOMM', roles);                // 'ECOMM' — the remembered role
+studioEntryFor('ECOMM', roles)?.path;         // '/products/options'
+studioEntryFor('USER', []);                   // null — a consumer has no Studio entry
+```
+
 ## Sample data
 
 One fixture per family, using the real field names. Copy it into a scratch file and the
@@ -916,9 +943,10 @@ four literals that drift apart.
 | `round2` | `(n: number) => number` | The finance engine's single-round rule; non-numbers become `0`. |
 | `clampPayable` | `(amount: number) => number` | What is left to charge: rounded, never below zero. |
 | `applyBillDiscounts` | `(gross: number, discounts: BillDiscount[]) => DiscountedBill` | Takes the deductions off in order, stopping at zero. |
-| `maxRedeemableCoins` | `(balance: number, payableAfterCoupon: number) => number` | Whole coins the bill can absorb — balance, bill and gateway minimum. |
+| `roundUpBill` | `(amount: number) => { rounded, roundOff }` | The round-off rule: a bill rounded UP to the next whole rupee, and what that added (`0 ≤ roundOff < 1`). Server twin: `roundUpBill` in `payment.roundoff.ts`. |
+| `maxRedeemableCoins` | `(balance: number, payableAfterCoupon: number) => number` | Whole coins the bill can absorb — the balance, capped at the bill rounded up to the whole rupee. |
+| `settleBill` | `(payableAfterCoupon: number, coinsApplied: number) => { coins, payable, roundOff, taxable }` | The couponed bill settled the way the server does it: rounded up, then coins taken. `payable` is always whole rupees; `taxable` is what GST is extracted from (never includes the round-off). |
 | `exclusiveOfGstBill` | `(gross, discounts, taxable, gstPct) => { subtotal, discounts }` | The bill restated GST-compliantly: subtotal and each deduction net of GST, so subtotal − discounts = taxable value. |
-| `MIN_GATEWAY_CHARGE` | `1` | Smallest amount Razorpay accepts; server twin of the same constant. |
 
 A coupon and Duncit Coins cut the same gross and neither may cut past zero. `applyBillDiscounts`
 caps each line at what was still owed when its turn came, so the printed rows always reconcile
@@ -928,9 +956,28 @@ to `payable` and the leftover discount is simply dropped — never refunded, nev
 applyBillDiscounts(399, [{ key: 'coupon', label: 'WELCOME', amount: 500 }])
 // { discounts: [{ key: 'coupon', label: 'WELCOME', amount: 399 }], discountTotal: 399, payable: 0 }
 
-maxRedeemableCoins(500, 359.1)      // 358 — 359 would leave ₹0.10, under the ₹1 gateway minimum
 clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
 ```
+
+Every payment is charged in whole rupees. The bill is rounded UP **after the coupon and before
+the coins**, so whole coins can always clear all of it, and whatever is left to charge is a
+whole number. The difference is the payment's round-off — its own row on the bill, never part
+of the taxable value, the GST or a fee:
+
+```ts
+roundUpBill(101.47)                 // { rounded: 102, roundOff: 0.53 }
+roundUpBill(118)                    // { rounded: 118, roundOff: 0 } — already whole, nothing added
+maxRedeemableCoins(500, 101.47)     // 102 — the whole rounded bill (the floor used to leave ₹1.47 to pay)
+
+settleBill(101.47, 0)               // { coins: 0,   payable: 102, roundOff: 0.53, taxable: 101.47 }
+settleBill(101.47, 60)              // { coins: 60,  payable: 42,  roundOff: 0.53, taxable: 41.47 }
+settleBill(101.47, 102)             // { coins: 102, payable: 0,   roundOff: 0,    taxable: 0 }
+```
+
+`taxable + roundOff = payable` whenever anything is charged. When coins clear the whole bill the
+round-off was paid in coins, so `roundOff` is `0` and there is no charge left for a row to explain.
+mWeb and native both read `settleBill` through their `useCoinRedemption` hook and print the
+"Round off" row (`mweb.checkout.roundOff`) only when it is above zero.
 
 A discount shown on the invoice comes off the value BEFORE GST (CGST Act s.15(3)(a)), so every
 breakdown — mWeb, native and the Finance payment card — reads ticket → subtotal (excl. GST) →
@@ -941,6 +988,53 @@ from the charged quote, so the GST row is always the tax actually charged:
 exclusiveOfGstBill(750, [{ key: 'ticketDiscount', amount: 37.5 }], 603.81, 18)
 // { subtotal: 635.59, discounts: [{ key: 'ticketDiscount', amount: 31.78 }] }
 // 635.59 − 31.78 = 603.81 taxable, + 108.69 GST = 712.50
+```
+
+### Delivery quote gate — `delivery-quote-gate`
+
+The product checkout's Pay button stays shut until the delivery charge for the cart and pincode
+**on screen** is known. mWeb and the native app both ask this module, so the rule cannot drift.
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `deliveryQuoteRequestKey` | `(items: readonly unknown[], pincode: string) => string` | — | One comparable key for "this cart, delivered to this pincode". The pincode is trimmed. |
+| `deliveryQuoteStatus` | `(input: DeliveryQuoteGateInput) => DeliveryQuoteStatus` | — | `READY`, `NEEDS_PINCODE`, `CALCULATING` or `FAILED`. Only `READY` may pay. |
+| `DELIVERY_QUOTE_BLOCK_KEYS` | `Record<DeliveryQuoteBlock, string>` | — | The `mweb.checkout.deliveryBlock*` key that tells the buyer why they cannot pay yet. |
+| `deliveryQuoteView` | `<Q>(input: DeliveryQuoteViewInput<Q>) => { quote: Q \| null; status: DeliveryQuoteStatus }` | — | The quote a surface holds (`settled`: a `SettledDeliveryQuote<Q>` or null) and its status against the cart and pincode on screen. Both `useProductShippingQuote` hooks return this. |
+
+```ts
+const key = deliveryQuoteRequestKey(items, '560001');
+
+deliveryQuoteStatus({ hasItems: true, pincodeValid: false, requestKey: key, settledKey: null, failed: false })
+// 'NEEDS_PINCODE'
+deliveryQuoteStatus({ hasItems: true, pincodeValid: true, requestKey: key, settledKey: null, failed: false })
+// 'CALCULATING' — nothing has come back yet
+deliveryQuoteStatus({ hasItems: true, pincodeValid: true, requestKey: key, settledKey: key, failed: false })
+// 'READY'
+deliveryQuoteStatus({ hasItems: true, pincodeValid: true, requestKey: key, settledKey: key, failed: true })
+// 'FAILED' — show the error with Retry, never a Pay button
+
+// The buyer changes the pincode: the answer in hand is for the old one.
+const next = deliveryQuoteRequestKey(items, '110001');
+deliveryQuoteStatus({ hasItems: true, pincodeValid: true, requestKey: next, settledKey: key, failed: false })
+// 'CALCULATING'
+```
+
+Any answer from the server is a calculated charge: a live courier rate, a free group, a product's
+manual fallback charge (`quoted: false`), or no delivery lines at all for a cart of hand-carried
+products. Only an unknown charge blocks the payment. The caller records the key it **asked** with
+when an answer settles (`settledKey`) and clears it to retry.
+
+`deliveryQuoteView` reads that bookkeeping in one place. A hook keeps the last answer as
+`{ key, quote }` — the key it asked with, and a null quote for a failure — and passes it in:
+
+```ts
+deliveryQuoteView({ hasItems: true, pincodeValid: true, requestKey: key, settled: null })
+// { quote: null, status: 'CALCULATING' }
+deliveryQuoteView({ hasItems: true, pincodeValid: true, requestKey: key, settled: { key, quote } })
+// { quote, status: 'READY' }
+deliveryQuoteView({ hasItems: true, pincodeValid: true, requestKey: key, settled: { key, quote: null } })
+// { quote: null, status: 'FAILED' }
 ```
 
 ### Multi-ticket discount — `pod-ticket-discount` + `pod-ticket-discount-copy`
@@ -2688,7 +2782,8 @@ isTerminalFulfilment('RTO'); // true — the timeline collapses to one step
 statusLabel('AWB_ASSIGNED', t); // 'Courier assigned'
 trackingUrl(awb); // '' until an AWB exists, so the caller shows no link
 shiprocketOrderUrl(order.shiprocket.order_id); // the order in the ShipRocket seller panel, '' until ShipRocket has it
-brandOrderActions(order); // { book, editAddress, documents, refreshTracking } — the brand desk in the Partner console, mWeb and the native Studio
+brandOrderActions(order); // { book, editAddress, documents, cancel, refreshTracking } — the brand desk in the Partner console, mWeb and the native Studio
+BRAND_CANCELLABLE.has(order.fulfilment_status); // the states `cancel` is offered in: before the courier has the parcel (the server enforces the same set)
 ```
 
 Labels are `fulfilment.*` keys (rule 38). The portal previously ran a `humaniseStatus` that
@@ -2744,6 +2839,65 @@ without an amount: the buyer is promised the team will pay it out, not a figure.
 The "Return items" form pairs `returnFormDefaults(order)` (one empty row per line that can still
 go back) with `toReturnInput(orderId, values, reasonText)` (only picked lines, trimmed comments)
 and the Zod schema `makePodShopReturnSchema` in [@duncit/forms](/packages/forms).
+
+## The buyer's order detail page — `order-tracking`
+
+mWeb's `/orders/:orderId` and the app's `OrderDetail` screen render one order in full (rule 27).
+What they decide is here; each app only draws it.
+
+```ts
+buildDetailedOrderTimeline(order, t);
+// SHIP order that is SHIPPED → the whole ladder, first rung first:
+// [{ status: 'PENDING', done: true, at: order.created_at, scans: [] }, …,
+//  { status: 'SHIPPED', current: true, tone: 'moving', at: '2026-10-02T09:00:00.000Z',
+//    location: 'Hyderabad Hub', note: 'Bag received',
+//    scans: [{ label: 'PICKED UP', location: 'Bengaluru', note: '…', at: '…' }, { label: 'IN TRANSIT', … }] },
+//  { status: 'OUT_FOR_DELIVERY', at: null, tone: 'neutral', scans: [] }, …]
+
+courierScanStatus('Reached at destination hub'); // 'SHIPPED' — null for a label that says nothing we track
+orderSupportDraft(order, t); // { subject: 'Help with order #ord_1', category: 'QUESTION', message: '…' }
+orderDownloads(order); // { invoice: true, sellerInvoice: false }
+```
+
+**The timeline** is `buildOrderTimeline`'s ladder with the stored `tracking_events` folded in.
+It is always in **ladder order** (first rung first, scans oldest first under their rung) on both
+apps.
+
+| Order | What is drawn |
+| --- | --- |
+| On its ladder | Every rung of the flow: done, current, still ahead (`at: null`). |
+| Came to rest off the ladder — cancelled, lost, failed, returned (`RTO`, `RTO_DELIVERED`) | The rungs it really reached, then **one closing step** for where it stands. Nothing it never reached is drawn. |
+| Still moving, in a status its ladder does not carry — a booked shipment waiting for its courier pickup (`PICKUP_SCHEDULED` on a `SHIP` order), a failed attempt (`NDR`), a status no client knows yet | The rungs it reached, then that status as the current step, then the rest of the ladder still ahead — never an empty timeline, and never "Order placed" again. |
+
+A rung's `at` is the order's own date where it has one (`created_at` for the first rung,
+`delivered_at` for delivery or collection, `cancelled_at` for a cancellation), else the first
+event that proves the rung. Two kinds of event are stored and they are treated differently:
+
+- **Courier scans** (`code` set) carry the courier's label, place and note. `courierScanStatus`
+  maps the label onto our lifecycle — the same rules as the server's `mapShiprocketStatus` — to
+  file the scan under its rung. A scan it cannot place stays on the rung the parcel was already
+  on; a scan never files under a rung the order has not reached.
+- **Platform events** (`code` 0 — a booking step, an operator's manual move) give a rung its
+  time only. Their notes are written for operators and are never shown; a cancelled step's
+  `note` is the order's `cancel_reason`.
+
+**The support draft** is what "Get help with this order" prefills. A ticket can only reference a
+pod, so the order's references go in the body, as `paymentTicketDraft` does: order number, items,
+status, and the AWB and payment reference when they exist. The copy is `mweb.orderDetail.support*`
+through `t`, because the buyer reads and edits it before sending. `category` is one of the
+values both ticket forms offer: `PAYMENT` when the order is cancelled or a refund is recorded,
+else `QUESTION`.
+
+**Downloads**: the Duncit invoice whenever a payment stands behind the order; the seller's tax
+invoice once a `SHIP` order has a ShipRocket shipment — the server refuses it before that, and a
+collected order never has one.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `buildDetailedOrderTimeline` | `(order, t) => DetailedTimelineStep[]` | The ladder with times, places, notes and scans. |
+| `courierScanStatus` | `(label) => FulfilmentStatus \| null` | A courier scan label as one of our statuses. |
+| `orderSupportDraft` | `(order, t) => { subject, category, message }` | The prefilled support ticket for an order. |
+| `orderDownloads` | `(order) => { invoice, sellerInvoice }` | Which documents the detail page offers. |
 
 ## Employee expense claims
 
@@ -3107,3 +3261,76 @@ const problem = reportSubmitError(pickedCategory, details); // a translation key
 | `REPORT_DIALOG_TITLE` | `Record<ReportDialogKind, string>` | The report dialog's heading key for a story, post or profile. |
 | `REPORT_COPY` | `Record<ReportableKind, ReportKindCopy>` | The content menu's label, Delete and Report keys for a story or post. |
 | `reportSubmitError` | `(category, details) => string \| null` | The first thing wrong with a report about to be sent, as a key. |
+
+## Wallet statement periods — `statement-period`
+
+The partner console, mWeb and the native app all offer "Download statement" on the wallet. This
+module is the one definition of what each period preset means, so the same tap asks the server
+for the same days on every surface.
+
+A period is two calendar days, both inclusive, written `yyyy-MM-dd` — the shape the server's
+`WalletStatementInput` takes. "Today" is read in the **business time zone** you pass in (the
+admin's `time_zone`, from `useDateFormat().timeZone`), never the device's. The Indian financial
+year runs 1 April – 31 March and turns over at midnight in that zone.
+
+```ts
+import {
+  STATEMENT_PRESETS,
+  STATEMENT_PRESET_LABEL_KEYS,
+  STATEMENT_RANGE_ERROR_KEYS,
+  resolveStatementRange,
+  statementPresetRange,
+  statementRangeError,
+} from '@duncit/utils';
+
+const now = new Date('2026-10-11T06:30:00Z'); // 12:00 on 11 Oct in Kolkata
+const zone = 'Asia/Kolkata';
+
+statementPresetRange('THIS_MONTH', now, zone); // { from: '2026-10-01', to: '2026-10-11' }
+statementPresetRange('LAST_MONTH', now, zone); // { from: '2026-09-01', to: '2026-09-30' }
+statementPresetRange('LAST_3_MONTHS', now, zone); // { from: '2026-07-12', to: '2026-10-11' }
+statementPresetRange('THIS_FINANCIAL_YEAR', now, zone); // { from: '2026-04-01', to: '2026-10-11' }
+statementPresetRange('LAST_FINANCIAL_YEAR', now, zone); // { from: '2025-04-01', to: '2026-03-31' }
+statementPresetRange('CUSTOM', now, zone); // null — the reader picks the days
+
+// One minute apart, two financial years:
+statementPresetRange('THIS_FINANCIAL_YEAR', new Date('2026-03-31T23:59:00+05:30'), zone);
+// { from: '2025-04-01', to: '2026-03-31' }
+statementPresetRange('THIS_FINANCIAL_YEAR', new Date('2026-04-01T00:00:00+05:30'), zone);
+// { from: '2026-04-01', to: '2026-04-01' }
+
+statementRangeError({ from: '2026-06-30', to: '2026-04-01' }, now, zone); // 'ORDER'
+statementRangeError({ from: '2026-10-01', to: '2026-10-12' }, now, zone); // 'FUTURE'
+statementRangeError({ from: '2025-10-09', to: '2026-10-10' }, now, zone); // 'TOO_LONG' (367 days)
+statementRangeError({ from: '2026-04-01', to: '2026-06-30' }, now, zone); // null
+
+// What the form sends: the preset's days, or the custom ones exactly as picked.
+resolveStatementRange({ preset: 'CUSTOM', from: '2026-04-01', to: '2026-06-30' }, now, zone);
+// { from: '2026-04-01', to: '2026-06-30' }
+
+const label = t(STATEMENT_PRESET_LABEL_KEYS.LAST_FINANCIAL_YEAR); // 'Last financial year'
+const problem = t(STATEMENT_RANGE_ERROR_KEYS.FUTURE); // 'A statement cannot include future dates'
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `STATEMENT_PRESETS` | `readonly StatementPreset[]` | The seven presets in picker order: this month, last month, last 3 and 6 months, this and last financial year, custom. |
+| `STATEMENT_FORMATS` | `readonly ['PDF', 'CSV']` | The file formats; the values are the server's `WalletStatementFormat` members. |
+| `STATEMENT_MAX_DAYS` | `366` | The longest period a statement may cover — one leap financial year. |
+| `STATEMENT_PRESET_LABEL_KEYS` | `Record<StatementPreset, string>` | The `withdraw.statement.preset*` key for each preset. |
+| `STATEMENT_RANGE_ERROR_KEYS` | `Record<StatementRangeError, string>` | The `withdraw.statement.error*` key for each refusal. |
+| `zonedToday` | `(now: Date, timeZone: string) => string` | Today's `yyyy-MM-dd` in that zone. An unknown zone falls back to the UTC day. |
+| `financialYearStartYear` | `(day: string) => number` | The year a day's financial year starts in: `2026-03-31` → 2025, `2026-04-01` → 2026. |
+| `statementPresetRange` | `(preset, now, timeZone) => StatementRange \| null` | The preset's days. `null` for `CUSTOM`. |
+| `statementRangeDays` | `(range) => number` | Calendar days covered, both ends counted. |
+| `statementRangeError` | `(range, now, timeZone) => StatementRangeError \| null` | `MISSING`, `INVALID`, `ORDER`, `FUTURE`, `TOO_LONG`, or `null` when the range is fine. |
+| `resolveStatementRange` | `(choice, now, timeZone) => StatementRange` | The range a form's `{ preset, from, to }` asks for. |
+
+"Last 3 months" and "Last 6 months" are rolling windows that end today, clamped to month length:
+three months back from 31 May starts on 1 March, in a leap year or not. "This financial year" ends
+today, not on 31 March, because a statement never reaches into the future.
+
+The server validates the same rules again and is the authority. It reads the two days in its own
+app time zone, so a device clock or zone that disagrees can only produce a refusal, never a
+statement for the wrong period. The Zod schema the three forms share is `makeWalletStatementSchema`
+in `@duncit/forms/schemas`, which calls `statementRangeError`.

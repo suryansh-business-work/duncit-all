@@ -104,7 +104,7 @@ describe('productListingSchema', () => {
 
   it('requires a ship-from warehouse', () => {
     const result = productListingSchema.safeParse({ ...validListing, pickup_location_id: '' });
-    expect(messages(result)).toMatch(/select a warehouse/i);
+    expect(messages(result)).toMatch(/select a pickup address/i);
   });
 
   it('treats a blank free-delivery amount as no offer (null)', () => {

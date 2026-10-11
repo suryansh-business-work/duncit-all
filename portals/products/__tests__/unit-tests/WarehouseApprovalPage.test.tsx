@@ -72,7 +72,7 @@ describe('WarehouseApprovalPage', () => {
   it('shows the empty state when there are no requests', () => {
     m.query = { data: { warehouseApprovalRequests: [] }, loading: false, error: undefined, refetch: vi.fn() };
     render(<WarehouseApprovalPage />);
-    expect(screen.getByText('No warehouse requests.')).toBeInTheDocument();
+    expect(screen.getByText('No pickup address requests.')).toBeInTheDocument();
   });
 
   it('renders name/date/status variants and approves + denies a pending request', () => {

@@ -31,4 +31,6 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, ProfileIconKe
   // own orders do, its pickup addresses a warehouse.
   orders: 'orders',
   warehouses: 'warehouses',
+  // Money going back to buyers after a deletion — the returns glyph, the nearest the drawer has.
+  refunds: 'returns',
 };

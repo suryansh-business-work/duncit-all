@@ -31,13 +31,13 @@ describe('WarehouseSync', () => {
     const onSynced = vi.fn();
     renderWithProviders(<WarehouseSync brandId="b1" onSynced={onSynced} />, { mocks: [syncMock('b1', synced())] });
 
-    expect(screen.getByText('Checking your warehouses with ShipRocket…').closest('[role="status"]')).not.toBeNull();
+    expect(screen.getByText('Checking your pickup addresses with ShipRocket…').closest('[role="status"]')).not.toBeNull();
     expect(screen.queryByRole('button')).toBeNull();
 
     expect((await screen.findByTestId('warehouse-synced-at')).textContent).toMatch(/^Last synced /);
     expect(onSynced).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('warehouse-sync-error')).toBeNull();
-    expect(screen.queryByText('Checking your warehouses with ShipRocket…')).toBeNull();
+    expect(screen.queryByText('Checking your pickup addresses with ShipRocket…')).toBeNull();
   });
 
   it('runs once for a brand however often the page re-renders, and again for another brand', async () => {

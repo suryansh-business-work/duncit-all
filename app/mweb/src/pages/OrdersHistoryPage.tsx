@@ -10,6 +10,7 @@ import { useTranslation } from '../i18n/useTranslation';
 import PodProductOrderItem from './pod-history-page/PodProductOrderItem';
 import { MY_PRODUCT_ORDERS, type ProductOrder } from './pod-history-page/productOrders';
 import CancelReturnDialog from './orders-history-page/CancelReturnDialog';
+import OrderCardHeader from './orders-history-page/OrderCardHeader';
 import OrderReturnsSection from './orders-history-page/OrderReturnsSection';
 import PodShopReturnDialog from './orders-history-page/PodShopReturnDialog';
 import {
@@ -21,8 +22,9 @@ import {
 const NO_RETURNS: readonly PodShopReturn[] = [];
 
 /** My Product Order History — every product order the buyer has placed across
- * all pods (newest first), each in its own card with full fulfilment tracking,
- * its cancellation/refund state, and its returns. Native twin: OrdersHistoryScreen. */
+ * all pods (newest first), each in its own card with its date and total, the
+ * way into its detail page (/orders/:orderId), fulfilment tracking, its
+ * cancellation/refund state, and its returns. Native twin: OrdersHistoryScreen. */
 export default function OrdersHistoryPage() {
   const { t } = useTranslation();
   const orders = useQuery<{ myProductOrders: ProductOrder[] }>(MY_PRODUCT_ORDERS, {
@@ -92,6 +94,7 @@ export default function OrdersHistoryPage() {
                   {order.pod.pod_title}
                 </Typography>
               )}
+              <OrderCardHeader order={order} />
               <PodProductOrderItem order={order} />
               <OrderReturnsSection
                 order={order}

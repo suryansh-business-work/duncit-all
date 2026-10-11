@@ -10,10 +10,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { MenuRoute } from '@/navigation/types';
 
 /**
- * The ONE highlighted sidebar entry of the studio the user is switched into —
- * "Venue Options", "Host Options", … with its hint — opening that studio's
- * Options page. Tinted with the primary tokens so it reads as the way into the
- * studio, in the shape of the Coin and Referral cards. mWeb twin:
+ * The ONE highlighted "Studio" sidebar entry a partner gets, with its hint —
+ * opening the Studio screen, where every option of the role is listed and the
+ * role can be switched. Tinted with the primary tokens so it reads as the way
+ * into the studio, in the shape of the Coin and Referral cards. mWeb twin:
  * profile-drawer/StudioOptionsCard.
  */
 export function SidebarStudioOptionsCard({

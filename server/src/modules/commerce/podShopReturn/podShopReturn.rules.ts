@@ -82,7 +82,7 @@ export const RETURN_STATUS_WORDS: Record<PodShopReturnStatus, string> = {
   APPROVED: 'approved — a courier pickup is being booked',
   REJECTED: 'not accepted',
   PICKUP_SCHEDULED: 'pickup scheduled — keep the item packed and ready',
-  RECEIVED: 'received at the warehouse — your refund is next',
+  RECEIVED: 'received at the pickup address — your refund is next',
   REFUNDED: 'refunded',
   CANCELLED: 'cancelled',
 };

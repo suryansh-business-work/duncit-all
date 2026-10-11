@@ -244,8 +244,9 @@ async function brandOf(id: unknown) {
 async function warehouseOf(id: unknown) {
   const oid = toObjectId(id);
   if (!oid) return null;
-  const found = await BrandPickupLocationModel.exists({ _id: oid, owner_kind: 'DUNCIT' });
-  if (!found) badInput('Pick one of Duncit’s warehouses');
+  // A disabled address is one nothing may ship from, so it cannot be picked.
+  const found = await BrandPickupLocationModel.exists({ _id: oid, owner_kind: 'DUNCIT', is_active: { $ne: false } });
+  if (!found) badInput('Pick one of Duncit’s pickup addresses');
   return oid;
 }
 
@@ -359,7 +360,7 @@ export function publishGaps(
   if (variants.length > 0 && !p.variant_option) gaps.push('what the variants differ by (e.g. Size)');
   if (p.images.length === 0) gaps.push('at least one photo');
   if (listingOf(p).category_ids.length === 0) gaps.push('a category');
-  if (!p.pickup_location_id) gaps.push('the warehouse it ships from');
+  if (!p.pickup_location_id) gaps.push('the pickup address it ships from');
   if (!p.brand_id) gaps.push('a brand');
   // ShipRocket bills the packed parcel: every variant's (falling back to the
   // product's) weight and L × B × H, and the HSN code for the GST invoice.

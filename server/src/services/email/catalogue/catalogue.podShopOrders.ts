@@ -46,7 +46,7 @@ export const POD_SHOP_ORDER_EMAILS: readonly EmailDef[] = [
     slug: 'pod-shop-return-update',
     name: 'Pod Shop — Return Update',
     description:
-      'The buyer, at each step of a Pod Shop return: requested, approved (courier pickup booked), rejected, received at the warehouse, refunded.',
+      'The buyer, at each step of a Pod Shop return: requested, approved (courier pickup booked), rejected, received at the pickup address, refunded.',
     audience: 'USER',
     category: 'transactional',
     fires: 'A pod-shop return changes status',

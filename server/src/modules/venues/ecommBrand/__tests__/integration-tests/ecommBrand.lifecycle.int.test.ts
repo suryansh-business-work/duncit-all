@@ -272,12 +272,47 @@ describe('vendor integrations', () => {
       identifier: 'api@acme.com',
       has_secret: true,
       pickup_location: 'Pune WH',
+      sandbox: false,
     });
     expect(JSON.stringify(status)).not.toContain('s3cret');
     const read = mockShiprocket.mock.calls[0][0];
     expect(read('email')).toBe('api@acme.com');
     expect(read('password')).toBe('s3cret');
-    expect((await EcommBrandModel.findById(brand.id).lean())?.integrations.shiprocket.connected).toBe(true);
+    expect(read('sandbox')).toBe('false');
+    const saved = await EcommBrandModel.findById(brand.id).lean();
+    expect(saved?.integrations.shiprocket.connected).toBe(true);
+    // Its own account is now the one the brand is recorded as shipping on.
+    expect(saved?.shipping_mode).toBe('OWN_SHIPROCKET');
+  });
+
+  it('connecting ShipRocket moves a brand off the retired Duncit courier onto its own account', async () => {
+    const uid = owner();
+    const brand = await readyBrand(uid);
+    await EcommBrandModel.updateOne({ _id: brand.id }, { $set: { shipping_mode: 'DUNCIT_COURIER' } });
+    mockShiprocket.mockResolvedValue({ ok: true, message: 'Logged in', details: [] });
+
+    await svc.connectIntegration(uid, brand.id, 'SHIPROCKET', { email: 'api@acme.com', password: 's3cret' });
+
+    expect((await EcommBrandModel.findById(brand.id).lean())?.shipping_mode).toBe('OWN_SHIPROCKET');
+  });
+
+  it('saves sandbox mode with the ShipRocket login, checks it as a sandbox account, and keeps the mode when it is left out', async () => {
+    const uid = owner();
+    const brand = await readyBrand(uid);
+    mockShiprocket.mockResolvedValue({ ok: true, message: 'Logged in', details: [] });
+
+    const on = await svc.connectIntegration(uid, brand.id, 'SHIPROCKET', { email: 'api@acme.com', password: 's3cret', sandbox: true });
+    expect(on.sandbox).toBe(true);
+    expect(mockShiprocket.mock.calls[0][0]('sandbox')).toBe('true');
+
+    // An older client sends no mode: the saved one stays.
+    const kept = await svc.connectIntegration(uid, brand.id, 'SHIPROCKET', { email: 'api@acme.com' });
+    expect(kept.sandbox).toBe(true);
+
+    const off = await svc.connectIntegration(uid, brand.id, 'SHIPROCKET', { email: 'api@acme.com', sandbox: false });
+    expect(off.sandbox).toBe(false);
+    expect(mockShiprocket.mock.calls[2][0]('sandbox')).toBe('false');
+    expect((await EcommBrandModel.findById(brand.id).lean())?.integrations.shiprocket.sandbox).toBe(false);
   });
 
   it('a live Razorpay key reads as live mode; a blank secret keeps the saved one', async () => {
@@ -352,7 +387,20 @@ describe('vendor integrations', () => {
 });
 
 describe('shipping mode', () => {
-  it('a real change un-registers the brand’s warehouses, and re-registers at once for a live brand', async () => {
+  it('refuses the Duncit courier — it is no longer offered — and leaves the brand as it was', async () => {
+    const uid = owner();
+    const brand = await readyBrand(uid);
+
+    await expect(svc.setShippingMode(uid, brand.id, 'DUNCIT_COURIER')).rejects.toMatchObject({
+      message:
+        'The Duncit courier service is no longer offered. Connect your own ShipRocket account under E-Commerce Brand → Integrations.',
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+    expect((await EcommBrandModel.findById(brand.id).lean())?.shipping_mode).toBeNull();
+    expect(brandPickupLocationService.registerBrandWarehouses).not.toHaveBeenCalled();
+  });
+
+  it('recording the own account for a brand with no recorded choice changes nothing — it already ships on it', async () => {
     const uid = owner();
     const brand = await readyBrand(uid);
     const wh = await BrandPickupLocationModel.create({
@@ -364,8 +412,28 @@ describe('shipping mode', () => {
     });
     await setStatus(brand.id, 'APPROVED');
 
-    // No mode saved and no ShipRocket login on file reads as the Duncit
-    // courier, so choosing the brand's own account is a real change.
+    const saved = await svc.setShippingMode(uid, brand.id, 'OWN_SHIPROCKET');
+
+    expect(saved.shipping_mode).toBe('OWN_SHIPROCKET');
+    expect(await BrandPickupLocationModel.findById(wh._id).lean()).toMatchObject({ shiprocket_registered: true, shiprocket_error: 'old' });
+    expect(brandPickupLocationService.registerBrandWarehouses).not.toHaveBeenCalled();
+  });
+
+  it('a real change un-registers the brand’s warehouses, and re-registers at once for a live brand', async () => {
+    const uid = owner();
+    const brand = await readyBrand(uid);
+    const wh = await BrandPickupLocationModel.create({
+      owner_kind: 'BRAND',
+      brand_id: brand.id,
+      nickname: `brand-wh-${seq}`,
+      shiprocket_registered: true,
+      shiprocket_error: 'old',
+    });
+    await setStatus(brand.id, 'APPROVED');
+    // Recorded on the Duncit courier while it was offered: moving to the brand's
+    // own account is a change of ShipRocket account, so it is a real change.
+    await EcommBrandModel.updateOne({ _id: brand.id }, { $set: { shipping_mode: 'DUNCIT_COURIER' } });
+
     await svc.setShippingMode(uid, brand.id, 'OWN_SHIPROCKET');
 
     expect(await BrandPickupLocationModel.findById(wh._id).lean()).toMatchObject({ shiprocket_registered: false, shiprocket_error: '' });

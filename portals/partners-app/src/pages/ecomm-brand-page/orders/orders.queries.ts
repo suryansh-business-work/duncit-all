@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client';
 import type {
   OrderLineItem,
+  OrderRefund,
   OrderShippingAddress,
   OrderTrackingEvent,
   ProductOrder,
@@ -21,10 +22,13 @@ const ORDER_FIELDS = `
   fulfilment_method
   fulfilment_status
   shipping_address { name phone email line1 line2 landmark city state pincode country }
-  shiprocket { order_id shipment_id awb courier_name tracking_status etd pickup_scheduled_date }
+  shiprocket { order_id shipment_id awb courier_name tracking_status etd pickup_scheduled_date sandbox }
   tracking_events { status location at }
   last_error
   cancelled_at
+  cancel_reason
+  deletion_request_no
+  refund { status amount coins razorpay_refund_id refunded_at error }
   created_at
 `;
 
@@ -73,6 +77,8 @@ export type OrderItem = Pick<OrderLineItem, 'product_id' | 'variant_id' | 'name'
 export type OrderShipTo = Pick<OrderShippingAddress, 'name' | 'phone' | 'email' | 'line1' | 'line2' | 'landmark' | 'city' | 'state' | 'pincode' | 'country'>;
 export type OrderScan = Pick<OrderTrackingEvent, 'status' | 'location' | 'at'>;
 export type OrderDocumentKind = ShipmentDocumentKind;
+/** Where the money going back to the buyer stands. */
+export type OrderRefundFacts = Pick<OrderRefund, 'status' | 'amount' | 'coins' | 'razorpay_refund_id' | 'refunded_at' | 'error'>;
 export type OrderShipmentFile = Pick<ShipmentFile, 'filename' | 'mime' | 'content_base64'>;
 
 export type OrderRow = Pick<
@@ -87,13 +93,35 @@ export type OrderRow = Pick<
   | 'fulfilment_status'
   | 'last_error'
   | 'cancelled_at'
+  | 'cancel_reason'
+  | 'deletion_request_no'
   | 'created_at'
 > & {
   line_items: OrderItem[];
   shipping_address: OrderShipTo | null;
   shiprocket: Pick<
     ShipRocketInfo,
-    'order_id' | 'shipment_id' | 'awb' | 'courier_name' | 'tracking_status' | 'etd' | 'pickup_scheduled_date'
+    'order_id' | 'shipment_id' | 'awb' | 'courier_name' | 'tracking_status' | 'etd' | 'pickup_scheduled_date' | 'sandbox'
   >;
   tracking_events: OrderScan[];
+  refund: OrderRefundFacts;
+  /** The selling brand's name — only the deletion-refunds list asks for it. */
+  brand_name?: string | null;
 };
+
+/** Call an own-brand order off: shipment stopped, stock back, the buyer refunded in full and told why. */
+export const CANCEL_ORDER = gql`
+  mutation PartnerCancelProductOrder($id: ID!, $reason: String!) {
+    brandCancelProductOrder(id: $id, reason: $reason) { ${ORDER_FIELDS} }
+  }
+`;
+
+/** The partner's orders that a deletion request cancelled, with each buyer's refund. */
+export const MY_DELETION_REFUNDS_TABLE = gql`
+  query PartnerDeletionRefundsTable($query: TableQueryInput, $brand_id: ID) {
+    myDeletionRefundsTable(query: $query, brand_id: $brand_id) {
+      total
+      rows { ${ORDER_FIELDS} brand_name }
+    }
+  }
+`;

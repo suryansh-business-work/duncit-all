@@ -20,7 +20,6 @@ import {
   MY_BRAND_WAREHOUSES,
   isWarehouseUsable,
   type BrandWarehouse,
-  type WarehouseReviewStatus,
 } from '../../ecomm-brand-page/brand-settings/warehouse.queries';
 import type { ProductListingValues } from './list-products.types';
 import { GST_RATE_OPTIONS } from './list-products.map';
@@ -30,13 +29,7 @@ import VariantTabs from './VariantTabs';
 import ListProductsPreview from './ListProductsPreview';
 import PackagingSection from './PackagingSection';
 import { useTranslation } from '@duncit/shell';
-
-/** Why a warehouse cannot be picked, shown inline on its disabled option. */
-const WAREHOUSE_STATE_SUFFIX: Record<WarehouseReviewStatus, string> = {
-  APPROVED: '',
-  PENDING: 'awaiting approval',
-  REJECTED: 'rejected',
-};
+import { unusableReason } from './warehouse-option';
 
 interface StepProps {
   step: number;
@@ -144,7 +137,7 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
       />
       {!loading && warehouses.length === 0 && (
         <Alert severity="warning">
-          This brand has no warehouses yet — add one in{' '}
+          This brand has no pickup addresses yet — add one in{' '}
           <Link component={RouterLink} to={`/ecomm-brand/${brandId}/settings`} sx={{
             fontWeight: 800
           }}>
@@ -158,7 +151,7 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
        * wait the partner understands and a form that just refuses. */}
       {!loading && warehouses.length > 0 && approvedWarehouses.length === 0 && (
         <Alert severity="warning">
-          None of this brand's warehouses is approved yet. A product can be listed once the Duncit
+          None of this brand's pickup addresses is approved yet. A product can be listed once the Duncit
           team approves one — check the status in{' '}
           <Link component={RouterLink} to={`/ecomm-brand/${brandId}/settings`} sx={{
             fontWeight: 800
@@ -174,12 +167,12 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
         label={t('partners.listProductsPage.shipFromWarehouse')}
         select
         required
-        hint="The warehouse ShipRocket picks this product up from. Only approved warehouses can be selected."
+        hint="The pickup address ShipRocket picks this product up from. Only approved pickup addresses can be selected."
       >
         {warehouses.map((warehouse) => (
           <MenuItem key={warehouse.id} value={warehouse.id} disabled={!isWarehouseUsable(warehouse)}>
             {warehouse.nickname} — {warehouse.city}
-            {isWarehouseUsable(warehouse) ? '' : ` (${WAREHOUSE_STATE_SUFFIX[warehouse.review_status]})`}
+            {isWarehouseUsable(warehouse) ? '' : ` (${unusableReason(warehouse, t('partners.warehouses.inactive'))})`}
           </MenuItem>
         ))}
       </RhfTextField>
@@ -193,7 +186,7 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
         sx={{ maxWidth: 320 }}
       />
       <Alert severity="info">
-        Orders for this product are shipped through ShipRocket using the warehouse selected above.
+        Orders for this product are shipped through ShipRocket using the pickup address selected above.
       </Alert>
     </Stack>
   );

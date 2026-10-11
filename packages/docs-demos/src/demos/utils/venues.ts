@@ -1,6 +1,9 @@
 import {
   availableModes,
   resolveMode,
+  heldStudioModes,
+  studioEntryFor,
+  studioModeFor,
   canSwitchVenues,
   defaultVenueId,
   pickVenue,
@@ -38,6 +41,9 @@ export const venuesDemos: PackageDemo[] = [
         'The mode actually in effect': resolveMode(mock.saved_mode, mock.roles, access),
         'If products were on': resolveMode(mock.saved_mode, mock.roles, { products: true }),
         'Can switch at all': availableModes(mock.roles, access).length > 1,
+        'Roles on the Studio page switcher': heldStudioModes(mock.roles, access),
+        'The role the Studio opens on': studioModeFor(mock.saved_mode, mock.roles, access),
+        'Where the one Studio sidebar entry goes': studioEntryFor(mock.saved_mode, mock.roles, access)?.path ?? null,
       };
     },
   }),

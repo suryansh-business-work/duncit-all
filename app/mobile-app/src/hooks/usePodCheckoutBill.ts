@@ -76,7 +76,9 @@ export function usePodCheckoutBill(
   const coins = useCoinRedemption(payableAfterCoupon);
   // What is actually charged, broken up the same way: every deduction cuts the
   // GROSS and the server re-quotes on what is left, so the tax drops with it.
-  const payBreakup = buildBreakup(coins.effectiveTotal, finance);
+  // Broken up on the TAXABLE value: the round-off that takes the charge to a
+  // whole rupee is not taxed, so it is its own row and never inside these lines.
+  const payBreakup = buildBreakup(coins.taxable, finance);
   const discounts = buildDiscounts(ticket, seats, coupon, coins.applied, t);
   return { ticket, breakup, coins, payBreakup, discounts };
 }

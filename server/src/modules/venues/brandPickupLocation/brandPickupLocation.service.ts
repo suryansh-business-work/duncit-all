@@ -93,12 +93,69 @@ const toPub = (d: IBrandPickupLocation) => ({
   pincode: d.pincode,
   country: d.country,
   is_default: d.is_default,
+  is_active: d.is_active !== false,
   shiprocket_registered: d.shiprocket_registered,
   shiprocket_pickup_id: d.shiprocket_pickup_id,
   shiprocket_error: d.shiprocket_error ?? '',
   created_at: d.created_at?.toISOString?.() ?? '',
   updated_at: d.updated_at?.toISOString?.() ?? '',
 });
+
+/** How many of the products shipping from an address are named back to the console. */
+const USAGE_LISTED = 100;
+
+interface PickupProductRef {
+  id: string;
+  name: string;
+  status: string;
+  channel: 'POD_SHOP' | 'PET_STORE';
+}
+
+/**
+ * Every product that ships from a pickup address, across both shops: the pod
+ * shop's inventory and — for a Duncit-owned address — the pet store's own
+ * catalogue. Counted in full; named up to USAGE_LISTED, pod shop first.
+ */
+async function usageOf(id: Types.ObjectId): Promise<{ count: number; products: PickupProductRef[] }> {
+  const filter = { pickup_location_id: id };
+  const { StoreProductModel } = await import('@modules/commerce/store/storeProduct.model');
+  const [podCount, storeCount, pod, store] = await Promise.all([
+    InventoryProductModel.countDocuments(filter),
+    StoreProductModel.countDocuments(filter),
+    InventoryProductModel.find(filter).select('product_name status').sort({ product_name: 1 }).limit(USAGE_LISTED).lean(),
+    StoreProductModel.find(filter).select('product_name status').sort({ product_name: 1 }).limit(USAGE_LISTED).lean(),
+  ]);
+  const ref = (channel: PickupProductRef['channel']) => (p: { _id: unknown; product_name?: string; status?: string }) => ({
+    id: String(p._id),
+    name: p.product_name ?? '',
+    status: p.status ?? '',
+    channel,
+  });
+  return {
+    count: podCount + storeCount,
+    products: [...pod.map(ref('POD_SHOP')), ...store.map(ref('PET_STORE'))].slice(0, USAGE_LISTED),
+  };
+}
+
+/** How many product names the refusal itself spells out; the console lists the rest. */
+const NAMED_IN_ERROR = 5;
+
+/**
+ * Refuse to delete or disable an address products still ship from — and say
+ * WHICH products, so the operator knows what to move instead of hunting for
+ * them. The full list rides on `extensions.products` for the console.
+ */
+async function assertUnused(id: Types.ObjectId, action: 'deleted' | 'disabled') {
+  const { count, products } = await usageOf(id);
+  if (count === 0) return;
+  const named = products.slice(0, NAMED_IN_ERROR).map((p) => p.name).filter(Boolean).join(', ');
+  const more = count > NAMED_IN_ERROR ? ` and ${count - NAMED_IN_ERROR} more` : '';
+  const list = named ? `: ${named}${more}` : '';
+  throw new GraphQLError(
+    `This pickup address cannot be ${action} — ${count} product(s) ship from it. Move them to another pickup address first${list}.`,
+    { extensions: { code: 'BAD_REQUEST', reason: 'PICKUP_IN_USE', count, products } }
+  );
+}
 
 async function clearOtherDefaults(owner_kind: string, brand_id: Types.ObjectId | null, keepId?: string) {
   const q: any = { owner_kind, is_default: true };
@@ -175,14 +232,29 @@ export const brandPickupLocationService = {
     return toPub(doc);
   },
 
+  /** Delete a pickup address nothing ships from. One still in use is refused with the products to move. */
   async remove(id: string) {
+    if (!Types.ObjectId.isValid(id)) return false;
+    await assertUnused(new Types.ObjectId(id), 'deleted');
     const res = await BrandPickupLocationModel.findByIdAndDelete(id);
+    if (res?.brand_id) {
+      // The brand must not keep pointing at an address that no longer exists.
+      await EcommBrandModel.updateOne(
+        { _id: res.brand_id, default_pickup_location_id: res._id },
+        { $set: { default_pickup_location_id: null } }
+      );
+    }
     return !!res;
   },
 
   async setDefault(id: string) {
     const doc = await BrandPickupLocationModel.findById(id);
     if (!doc) throw notFound();
+    if (doc.is_active === false) {
+      throw new GraphQLError('Enable this pickup address before making it the primary one', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
     await clearOtherDefaults(doc.owner_kind, doc.brand_id, String(doc._id));
     doc.is_default = true;
     await doc.save();
@@ -215,7 +287,7 @@ export const brandPickupLocationService = {
     const { cleanPickupInput } = await import('@modules/commerce/shiprocket/shiprocket.ops');
     const clean = cleanPickupInput(input);
     if (clean.nickname.length > SHIPROCKET_NICKNAME_MAX) {
-      throw new GraphQLError(`Keep the warehouse name to ${SHIPROCKET_NICKNAME_MAX} characters — ShipRocket takes no longer`, {
+      throw new GraphQLError(`Keep the address nickname to ${SHIPROCKET_NICKNAME_MAX} characters — ShipRocket takes no longer`, {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
@@ -223,7 +295,7 @@ export const brandPickupLocationService = {
       comparable(field, clean[field]) !== comparable(field, existing?.[field]);
     if (existing?.shiprocket_registered && ADDRESS_FIELDS.some(changed)) {
       throw new GraphQLError(
-        'ShipRocket already holds this pickup address and cannot change it — add the new address as another warehouse',
+        'ShipRocket already holds this pickup address and cannot change it — add the new address as another pickup address',
         { extensions: { code: 'BAD_USER_INPUT' } }
       );
     }
@@ -242,7 +314,7 @@ export const brandPickupLocationService = {
       return saved;
     } catch (error) {
       if (isDuplicateKeyError(error)) {
-        throw new GraphQLError('A warehouse with this nickname already exists', {
+        throw new GraphQLError('A pickup address with this nickname already exists', {
           extensions: { code: 'CONFLICT' },
         });
       }
@@ -252,15 +324,7 @@ export const brandPickupLocationService = {
 
   async removeMine(userId: string, brandDocId: string, id: string) {
     await loadOwnedBrand(userId, brandDocId);
-    const doc = await ownedLocation(brandDocId, id);
-    // Reference guard: a warehouse still shipping products cannot be deleted.
-    const referenced = await InventoryProductModel.countDocuments({ pickup_location_id: doc._id });
-    if (referenced > 0) {
-      throw new GraphQLError(
-        `This warehouse is used by ${referenced} product(s) — move them to another warehouse first`,
-        { extensions: { code: 'BAD_REQUEST' } }
-      );
-    }
+    await ownedLocation(brandDocId, id);
     return this.remove(id);
   },
 
@@ -268,6 +332,48 @@ export const brandPickupLocationService = {
     await loadOwnedBrand(userId, brandDocId);
     await ownedLocation(brandDocId, id);
     return this.setDefault(id);
+  },
+
+  /** Products portal: what ships from a pickup address. */
+  async usage(id: string) {
+    if (!Types.ObjectId.isValid(id)) throw notFound();
+    const doc = await BrandPickupLocationModel.findById(id).select('_id');
+    if (!doc) throw notFound();
+    return usageOf(doc._id as Types.ObjectId);
+  },
+
+  /** Partner: what ships from one of their own brand's pickup addresses. */
+  async usageMine(userId: string, brandDocId: string, id: string) {
+    await loadOwnedBrand(userId, brandDocId);
+    const doc = await ownedLocation(brandDocId, id);
+    return usageOf(doc._id as Types.ObjectId);
+  },
+
+  /**
+   * Enable or disable a pickup address. Disabling is refused while it is the
+   * primary one or while anything ships from it: a disabled address is one no
+   * order can be booked from, so nothing may still point at it.
+   */
+  async setActive(id: string, active: boolean) {
+    const doc = Types.ObjectId.isValid(id) ? await BrandPickupLocationModel.findById(id) : null;
+    if (!doc) throw notFound();
+    if (!active) {
+      if (doc.is_default) {
+        throw new GraphQLError('This is the primary pickup address — make another one primary before disabling it', {
+          extensions: { code: 'BAD_REQUEST', reason: 'PICKUP_IS_PRIMARY' },
+        });
+      }
+      await assertUnused(doc._id as Types.ObjectId, 'disabled');
+    }
+    doc.is_active = active;
+    await doc.save();
+    return toPub(doc);
+  },
+
+  async setActiveMine(userId: string, brandDocId: string, id: string, active: boolean) {
+    await loadOwnedBrand(userId, brandDocId);
+    await ownedLocation(brandDocId, id);
+    return this.setActive(id, active);
   },
 
   /**
@@ -286,6 +392,8 @@ export const brandPickupLocationService = {
       owner_kind: 'BRAND',
       brand_id: new Types.ObjectId(brandDocId),
       shiprocket_registered: false,
+      // A disabled address is not in use, so it is not pushed to the account.
+      is_active: { $ne: false },
     });
     if (docs.length === 0) return { attempted: 0, registered: 0 };
 
@@ -332,7 +440,7 @@ export const brandPickupLocationService = {
     const doc = await BrandPickupLocationModel.findById(id);
     if (!doc) throw notFound();
     if (doc.review_status !== 'APPROVED') {
-      throw new GraphQLError('Approve this warehouse before adding it to ShipRocket', {
+      throw new GraphQLError('Approve this pickup address before adding it to ShipRocket', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }

@@ -50,6 +50,16 @@ export function paymentStateOf(order: IProductOrder, payment: IPayment | null): 
   return payment.status === 'FAILED' ? 'FAILED' : 'PENDING';
 }
 
+/**
+ * The money one pet-store order's buyer actually paid for it: its goods and
+ * delivery, less its share of the discounts and coins, plus its share of the
+ * payment's round-off. Across a payment's orders this adds up to exactly what
+ * was charged — so it is also what a cancelled prepaid order gives back.
+ * Orders placed before bills were rounded up carry no round-off share.
+ */
+export const storeOrderCash = (order: Pick<IProductOrder, 'total' | 'discount_total' | 'round_off'>) =>
+  round2(Math.max(0, order.total - (order.discount_total ?? 0) + (order.round_off ?? 0)));
+
 export interface StoreOrderContext {
   returnsEnabled?: boolean;
   returnWindowDays?: number;
@@ -98,7 +108,7 @@ export function toStoreOrder(order: IProductOrder, payment: IPayment | null, ctx
     items_total: order.items_total,
     shipping_charge: order.shipping_charge,
     discount_total: order.discount_total ?? 0,
-    amount_paid: round2(Math.max(0, order.total - (order.discount_total ?? 0))),
+    amount_paid: storeOrderCash(order),
     cod_amount: order.cod_amount ?? 0,
     total: order.total,
     currency_symbol: order.currency_symbol,

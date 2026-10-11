@@ -1,7 +1,10 @@
 import {
   HOST_FREE_SPOT_NOTE,
   formatMoney,
+  maxRedeemableCoins,
   payableSpots,
+  roundUpBill,
+  settleBill,
   payingSeats,
   mwebTicketDiscountLabels,
   nextTicketDiscountTier,
@@ -108,4 +111,25 @@ export const podMoneyDemos: PackageDemo[] = [
     },
   }),
 
+  defineDemo<{ bill_after_coupon: number; coin_balance: number; coins_applied: number }>({
+    id: 'round-off',
+    title: 'Every bill is rounded up to the whole rupee',
+    note:
+      'Change bill_after_coupon to an amount ending in paise: the bill is rounded UP before coins are taken, so whole coins can clear all of it and whatever is charged is a whole number. The round-off is its own row and is never taxed.',
+    mock: { bill_after_coupon: 101.47, coin_balance: 500, coins_applied: 60 },
+    compute: (mock) => {
+      const bill = settleBill(mock.bill_after_coupon, mock.coins_applied);
+      return {
+        'roundUpBill(bill_after_coupon)': roundUpBill(mock.bill_after_coupon),
+        'maxRedeemableCoins(coin_balance, bill_after_coupon)': maxRedeemableCoins(
+          mock.coin_balance,
+          mock.bill_after_coupon,
+        ),
+        'settleBill(bill_after_coupon, coins_applied)': bill,
+        'Taxed on (GST extracted from this)': formatMoney(bill.taxable, { decimals: 2 }),
+        'Round off row': bill.roundOff > 0 ? `+ ${formatMoney(bill.roundOff, { decimals: 2 })}` : 'hidden',
+        'Total payable': formatMoney(bill.payable, { decimals: 2 }),
+      };
+    },
+  }),
 ];

@@ -11,7 +11,7 @@ const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'warning' | 
 
 export const percentOf = (brand: EcommBrandRow) => brand.completion?.percent ?? 0;
 
-/** A brand on the Duncit courier needs no ShipRocket account — its shipping is settled. */
+/** A brand still on the retired Duncit courier needs no ShipRocket account of its own — its shipping is settled. */
 const shippingSettled = (brand: EcommBrandRow) =>
   brand.shipping_mode === 'DUNCIT_COURIER' || brand.integrations?.shiprocket?.connected === true;
 

@@ -53,6 +53,7 @@ const ORDER_DETAIL_FIELDS = `
     tracking_status
     label_url
     last_synced_at
+    sandbox
   }
   tracking_events {
     status

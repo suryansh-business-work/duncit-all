@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STUDIO_OPTION_LIST, type PartnerStudioMode } from '@duncit/utils';
 import StudioOptionsPage from '..';
@@ -10,7 +10,12 @@ import { SELECTED_VENUE_KEY } from '../../../hooks/useSelectedVenue';
 const userInfo = vi.fn();
 vi.mock('../../../user-info/useUserInfo', () => ({ useUserInfo: () => userInfo() }));
 const autoPodsOn = vi.fn();
-vi.mock('../../../hooks/useFeatureFlag', () => ({ useFeatureFlag: () => autoPodsOn() }));
+const productsOn = vi.fn();
+vi.mock('../../../hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string) => (key === 'auto_pods' ? autoPodsOn() : productsOn()),
+}));
+const setMode = vi.fn();
+vi.mock('../../../StudioModeContext', () => ({ useStudioMode: () => ({ mode: 'USER', setMode }) }));
 const openPartnerPortal = vi.fn();
 vi.mock('../openPartnerPortal', () => ({ openPartnerPortal: (path: string) => openPartnerPortal(path) }));
 
@@ -47,7 +52,36 @@ function renderPage(mode: PartnerStudioMode, roles: string[]) {
 
 beforeEach(() => {
   autoPodsOn.mockReturnValue(true);
+  productsOn.mockReturnValue(true);
 });
+
+function Back() {
+  const navigate = useNavigate();
+  return (
+    <button type="button" onClick={() => navigate(-1)}>
+      back
+    </button>
+  );
+}
+
+/** The Studio mounted on its real role paths, so a switch can be followed. */
+function renderStudio(start: string, roles: string[]) {
+  userInfo.mockReturnValue({ me: { roles }, loading: false });
+  return render(
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[venuesMock]}>
+      <MemoryRouter initialEntries={['/before', start]} initialIndex={1}>
+        <Back />
+        <Routes>
+          <Route path="/host/options" element={<StudioOptionsPage mode="HOST" />} />
+          <Route path="/venues/options" element={<StudioOptionsPage mode="VENUE" />} />
+          <Route path="/clubs/options" element={<StudioOptionsPage mode="CLUB" />} />
+          <Route path="/products/options" element={<StudioOptionsPage mode="ECOMM" />} />
+          <Route path="*" element={<Where />} />
+        </Routes>
+      </MemoryRouter>
+    </MockedProvider>,
+  );
+}
 
 afterEach(() => {
   localStorage.clear();
@@ -97,12 +131,68 @@ describe('StudioOptionsPage', () => {
   it('opens a brand option the app has no page for in the Partner app, and says so', () => {
     renderPage('ECOMM', ['ECOMM_MANAGER']);
     expect(screen.getByTestId('studio-option-brands-external')).toBeInTheDocument();
-    // Brands, integrations and returns — the three Partner-console-only screens.
-    expect(screen.getAllByTitle('Opens in the Partner app')).toHaveLength(3);
+    // Brands, integrations, returns and deletion refunds — the four Partner-console-only screens.
+    expect(screen.getAllByTitle('Opens in the Partner app')).toHaveLength(4);
     fireEvent.click(screen.getByTestId('studio-option-brands'));
     expect(openPartnerPortal).toHaveBeenCalledWith('/ecomm-brand');
     // An option with an app page keeps its chevron and stays in the app.
     expect(screen.queryByTestId('studio-option-dashboard-external')).not.toBeInTheDocument();
+  });
+
+  it('shows no role switcher to a partner with a single role', () => {
+    renderStudio('/host/options', ['HOST']);
+    expect(screen.getByTestId('studio-options-list')).toBeInTheDocument();
+    expect(screen.queryByTestId('studio-role-switcher')).not.toBeInTheDocument();
+  });
+
+  it('lists only the roles the partner holds on the switcher, the open one selected', () => {
+    renderStudio('/host/options', ['HOST', 'VENUE_OWNER', 'CLUB_ADMIN']);
+    const switcher = screen.getByRole('tablist', { name: 'Choose a role' });
+    expect(within(switcher).getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Host',
+      'Venue',
+      'Club Admin',
+    ]);
+    expect(within(switcher).getByRole('tab', { name: 'Host' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByTestId('studio-role-ecomm')).not.toBeInTheDocument();
+  });
+
+  it('swaps to the picked role’s options in place, remembers the role and moves the path', () => {
+    renderStudio('/host/options', ['HOST', 'VENUE_OWNER']);
+    expect(screen.getByTestId('studio-option-create')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('studio-role-venue'));
+
+    expect(setMode).toHaveBeenCalledWith('VENUE');
+    // Still the Studio — now every Venue option, none of the Host-only ones.
+    expect(screen.getByTestId('studio-options-venue')).toBeInTheDocument();
+    expect(screen.getByTestId('studio-page-header-title')).toHaveTextContent('Venue Options');
+    const rendered = within(screen.getByTestId('studio-options-list'))
+      .getAllByTestId(/^studio-option-(?!.*-external$)[a-z-]+$/)
+      .map((row) => row.getAttribute('data-testid'));
+    expect(rendered).toEqual(STUDIO_OPTION_LIST.VENUE.map((option) => `studio-option-${option.key}`));
+    expect(screen.queryByTestId('studio-option-create')).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Venue' })).toHaveAttribute('aria-selected', 'true');
+
+    // The switch replaced the Host entry, so Back leaves the Studio rather
+    // than stepping back through the role that was looked at.
+    fireEvent.click(screen.getByRole('button', { name: 'back' }));
+    expect(screen.getByTestId('where')).toHaveTextContent('/before');
+  });
+
+  it('offers the Brand role only while products are switched on', () => {
+    productsOn.mockReturnValue(false);
+    const { unmount } = renderStudio('/host/options', ['HOST', 'ECOMM_MANAGER']);
+    // Products off leaves the host one role to be in — nothing to switch to.
+    expect(screen.queryByTestId('studio-role-switcher')).not.toBeInTheDocument();
+    unmount();
+
+    productsOn.mockReturnValue(true);
+    renderStudio('/host/options', ['HOST', 'ECOMM_MANAGER']);
+    fireEvent.click(screen.getByRole('tab', { name: 'Brand' }));
+    expect(setMode).toHaveBeenCalledWith('ECOMM');
+    expect(screen.getByTestId('studio-options-ecomm')).toBeInTheDocument();
+    expect(screen.getByTestId('studio-option-brands')).toBeInTheDocument();
   });
 
   it('sends a visitor without the studio role home', () => {

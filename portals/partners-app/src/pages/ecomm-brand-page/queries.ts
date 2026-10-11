@@ -53,6 +53,7 @@ export const BRAND_INTEGRATION_FIELDS = `
   pickup_location
   live_mode
   has_webhook_secret
+  sandbox
   connection_id
 `;
 
@@ -92,14 +93,14 @@ export const MY_BRANDS = gql`
   }
 `;
 
-/** Just the names — what a brand picker needs (Orders, Warehouses). */
+/** The names a brand picker needs (Orders, Pickup Addresses), and each brand's status — what deleting it from there turns on. */
 export const MY_BRAND_OPTIONS = gql`
   query PartnerBrandOptions {
-    myEcommBrands { id brand_name }
+    myEcommBrands { id brand_name status }
   }
 `;
 
-export type BrandOption = Pick<EcommBrand, 'id' | 'brand_name'>;
+export type BrandOption = Pick<EcommBrand, 'id' | 'brand_name' | 'status'>;
 
 /** Server-paged sibling of myEcommBrands (shared table engine). Rows keep the
  * full BRAND_FIELDS selection plus the progress and connection facts the
@@ -202,6 +203,8 @@ export interface BrandIntegrationStatus {
   pickup_location: string;
   live_mode: boolean;
   has_webhook_secret: boolean;
+  /** ShipRocket: the account is in sandbox mode — test orders only. */
+  sandbox: boolean;
   /** The saved Integrations connection the brand's credential was copied from (brand reads only). */
   connection_id?: string | null;
 }

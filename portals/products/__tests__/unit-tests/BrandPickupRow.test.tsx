@@ -24,6 +24,7 @@ const handlers = () => ({
   onDelete: vi.fn(),
   onSetDefault: vi.fn(),
   onRegister: vi.fn(),
+  onToggleActive: vi.fn(),
 });
 
 describe('BrandPickupRow', () => {
@@ -90,5 +91,29 @@ describe('BrandPickupRow', () => {
     renderWithProviders(<BrandPickupRow location={location()} busy {...h} />);
 
     expect(screen.getByRole('button', { name: /Register with ShipRocket/i })).toBeDisabled();
+    expect(screen.getByRole('switch')).toBeDisabled();
+  });
+
+  it('shows an address as active and asks to switch it off from its Active switch', () => {
+    const h = handlers();
+    renderWithProviders(<BrandPickupRow location={location()} busy={false} {...h} />);
+
+    const toggle = screen.getByRole('switch', { name: 'Active — switch off to disable this pickup address' });
+    expect(toggle).toBeChecked();
+    expect(screen.queryByText('Inactive')).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(h.onToggleActive).toHaveBeenCalledWith(false);
+  });
+
+  it('marks an inactive address, offers to switch it on and will not make it the default', () => {
+    const h = handlers();
+    renderWithProviders(<BrandPickupRow location={location({ is_active: false })} busy={false} {...h} />);
+
+    expect(screen.getByText('Inactive')).toBeInTheDocument();
+    const toggle = screen.getByRole('switch', { name: 'Inactive — switch on to enable this pickup address' });
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle);
+    expect(h.onToggleActive).toHaveBeenCalledWith(true);
+    expect(screen.getByTestId('products-pickup-set-default')).toBeDisabled();
   });
 });

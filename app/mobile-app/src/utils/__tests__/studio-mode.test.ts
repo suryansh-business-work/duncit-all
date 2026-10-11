@@ -1,4 +1,12 @@
-import { STUDIO_LABEL, availableModes, resolveMode } from '@/utils/studio-mode';
+import { STUDIO_OPTIONS_ENTRY } from '@duncit/utils';
+
+import {
+  STUDIO_LABEL,
+  STUDIO_ROUTE,
+  availableModes,
+  resolveMode,
+  studioSwitchRoute,
+} from '@/utils/studio-mode';
 
 describe('studio-mode', () => {
   it('lists the modes a user qualifies for (always USER)', () => {
@@ -37,6 +45,33 @@ describe('studio-mode', () => {
     expect(resolveMode('ECOMM', ['ECOMM_MANAGER'], { products: true })).toBe('ECOMM');
     // Only the product studio is affected — the other partner modes stand.
     expect(resolveMode('HOST', ['HOST'], { products: false })).toBe('HOST');
+  });
+
+  it('names each role’s Studio screen exactly as the shared catalogue does', () => {
+    expect(STUDIO_ROUTE).toEqual({
+      HOST: STUDIO_OPTIONS_ENTRY.HOST.route,
+      VENUE: STUDIO_OPTIONS_ENTRY.VENUE.route,
+      ECOMM: STUDIO_OPTIONS_ENTRY.ECOMM.route,
+      CLUB: STUDIO_OPTIONS_ENTRY.CLUB.route,
+    });
+  });
+
+  it('lands a role switch on the role’s Studio screen, and User mode on Home', () => {
+    expect(studioSwitchRoute('HOST', null)).toBe('HostOptions');
+    expect(studioSwitchRoute('VENUE', undefined)).toBe('VenueOptions');
+    expect(studioSwitchRoute('CLUB', { venue: 0, host: 0, club: 0 })).toBe('ClubOptions');
+    expect(studioSwitchRoute('ECOMM', null)).toBe('BrandOptions');
+    expect(studioSwitchRoute('USER', null)).toBe('Home');
+  });
+
+  it('opens the Auto Pod queue instead while one is waiting on the role', () => {
+    const counts = { venue: 2, host: 0, club: 1 };
+    expect(studioSwitchRoute('VENUE', counts)).toBe('VenueAutoPods');
+    expect(studioSwitchRoute('CLUB', counts)).toBe('ClubAutoPods');
+    // Nothing waiting on the host, and a brand never enrols in an Auto Pod.
+    expect(studioSwitchRoute('HOST', counts)).toBe('HostOptions');
+    expect(studioSwitchRoute('ECOMM', counts)).toBe('BrandOptions');
+    expect(studioSwitchRoute('USER', counts)).toBe('Home');
   });
 
   it('exposes labels for every mode', () => {

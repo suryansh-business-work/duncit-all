@@ -114,3 +114,39 @@ describe('AppSidebar', () => {
     expect(screen.queryByLabelText(/Minimise the menu|Expand the menu/)).not.toBeInTheDocument();
   });
 });
+
+describe('AppSidebar — an entry pinned to the foot', () => {
+  const pinnedNav: AppNavItem[] = [
+    { label: 'Dashboard', to: '/' },
+    { label: 'Earn with Duncit', to: '/earn', featured: true, pinBottom: true },
+    { label: 'Help', to: '/help' },
+  ];
+
+  beforeEach(() => {
+    mockQuery.mockReturnValue({ data: { branding: { portals_logo_url: '/l.png', app_name: 'Acme' } }, loading: false } as never);
+  });
+
+  it('draws it in its own block below the scrolling menu, whatever its place in the list', () => {
+    renderSidebar({ nav: pinnedNav });
+    const pinned = screen.getByTestId('shell-nav-pinned');
+    expect(pinned).toHaveTextContent('Earn with Duncit');
+    expect(pinned).not.toHaveTextContent('Dashboard');
+    expect(pinned).not.toHaveTextContent('Help');
+    // Help is listed after Earn, yet sits above it: the pinned block closes the sidebar.
+    const help = screen.getByText('Help');
+    expect(help.compareDocumentPosition(pinned) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('still filters a pinned entry with the menu search', async () => {
+    const u = userEvent.setup();
+    renderSidebar({ nav: pinnedNav });
+    await u.type(screen.getByPlaceholderText('Search menu…'), 'Dash');
+    expect(screen.queryByTestId('shell-nav-pinned')).not.toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+
+  it('draws no pinned block for a nav that pins nothing', () => {
+    renderSidebar();
+    expect(screen.queryByTestId('shell-nav-pinned')).not.toBeInTheDocument();
+  });
+});

@@ -6,7 +6,7 @@ import { PACKAGING_LIMITS } from '@modules/venues/inventory/inventory.packaging'
 import type { IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
 import { getBrandShiprocketAccount, getShiprocketAccount, type ShiprocketAccount } from './shiprocket.account';
 import { addressProblems } from './shiprocket.address';
-import { hasShiprocketAccount, shiprocketError, withShiprocketAccount, type Json } from './shiprocket.client';
+import { hasShiprocketAccount, isSandboxCall, shiprocketError, withShiprocketAccount, type Json } from './shiprocket.client';
 import {
   assignAwb,
   couriersForOrder,
@@ -134,7 +134,7 @@ async function pickupFor(order: IProductOrder): Promise<string> {
   const account = (await accountForOrder(order)) ?? (await getShiprocketAccount());
   if (account?.pickupLocation) return account.pickupLocation;
   throw shiprocketError(
-    'This order has no pickup location — give the product a warehouse, or set a default pickup nickname on the account'
+    'This order has no pickup address — give the product a pickup address, or set a default pickup nickname on the account'
   );
 }
 
@@ -228,9 +228,12 @@ async function book(order: IProductOrder) {
   order.pickup_location_id = pickup;
   order.shiprocket.order_id = booked.order_id;
   order.shiprocket.shipment_id = booked.shipment_id;
+  // Recorded on the order: a sandbox booking is a test, and every console says so.
+  order.shiprocket.sandbox = await isSandboxCall();
   order.parcel = { ...parcel, source: order.parcel?.source ?? 'AUTO', sent_at: new Date() };
   order.fulfilment_status = 'AWAITING_SHIPMENT';
-  addEvent(order, 'AWAITING_SHIPMENT', `ShipRocket order ${booked.order_id} created`);
+  const where = order.shiprocket.sandbox ? 'ShipRocket SANDBOX (test) order' : 'ShipRocket order';
+  addEvent(order, 'AWAITING_SHIPMENT', `${where} ${booked.order_id} created`);
 }
 
 /**

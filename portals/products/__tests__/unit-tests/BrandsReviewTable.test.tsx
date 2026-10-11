@@ -29,6 +29,7 @@ const integration = (provider: BrandIntegrationProvider, connected = false): Bra
   pickup_location: '',
   live_mode: false,
   has_webhook_secret: false,
+  sandbox: false,
 });
 
 /** A row as `ecommBrandsTable` returns it: wizard progress, integrations and consent included. */

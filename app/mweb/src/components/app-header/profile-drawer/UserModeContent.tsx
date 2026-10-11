@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useProductVisibility } from '@duncit/app-settings';
-import { studioOptionsEntryFor } from '@duncit/utils';
+import { studioEntryFor } from '@duncit/utils';
 import ProfileIdentity from './ProfileIdentity';
 import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
@@ -22,7 +22,7 @@ import { useTranslation } from '../../../i18n/useTranslation';
 interface UserModeContentProps {
   me: any;
   roles: string[];
-  /** Studio mode in effect — decides which studio's Options entry (if any) is shown. */
+  /** Studio mode in effect — the role the one Studio entry opens on. */
   mode: StudioMode;
   showPodPlans: boolean;
   /** Server `leaderboard` feature flag — the whole section hides without it. */
@@ -38,9 +38,9 @@ interface UserModeContentProps {
 
 /** The profile layout every mode shares: identity, incomplete nudge,
  * quick-action grid, referral card and the Manage Account list. In User mode
- * the Duncit Coin card is featured; once switched into a partner studio that
- * slot holds the studio's ONE highlighted entry — "Venue Options", "Host
- * Options", … — which opens the page listing every option. */
+ * the Duncit Coin card is featured. A partner — in any mode — also gets ONE
+ * highlighted "Studio" entry, which opens the Studio page: every option of the
+ * role in effect, with the role switcher at its top. */
 export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showGiftCards = false, showTourGuide = false, onNavigate }: Readonly<UserModeContentProps>) {
   const { t } = useTranslation();
   // The Shop group is the drawer's whole e-commerce entry point, so it lives
@@ -48,9 +48,10 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
   // destinations that redirect straight back home.
   const { visible: productsVisible } = useProductVisibility();
   const percent = profileCompletion(me ?? {});
-  // The switched-in studio's entry, from the definition native and the
-  // Partner console render too; null in User mode or once the role is gone.
-  const studioEntry = studioOptionsEntryFor(mode, roles);
+  // The ONE "Studio" entry every partner gets, whichever role is active — the
+  // rule native reads too. It opens the Studio on the role in effect (or the
+  // first role held, from User mode); null for an account with no partner role.
+  const studioEntry = studioEntryFor(mode, roles, { products: productsVisible });
   // Built here rather than in profileSections so the label is translated —
   // the section ships flag-gated and localized from day one (rule 38).
   const leaderboardItems: ProfileTile[] = [

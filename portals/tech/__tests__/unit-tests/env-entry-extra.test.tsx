@@ -83,6 +83,18 @@ describe('ConfigField boolean variant', () => {
     expect(onToggleBool).toHaveBeenCalledWith('secure', true);
   });
 
+  it('shows a boolean field’s hint under its switch and ties the two together', () => {
+    const field = makeEnvFieldDef({ name: 'sandbox', label: 'Sandbox mode', bool: true });
+    render(
+      <ConfigField field={field} value="true" helperText="Test orders only" onChange={vi.fn()} onBlur={vi.fn()} onToggleBool={vi.fn()} />,
+    );
+    const toggle = screen.getByRole('switch', { name: 'Sandbox mode' });
+    expect((toggle as HTMLInputElement).checked).toBe(true);
+    const hint = screen.getByText('Test orders only');
+    expect(hint.id).toBe('config-sandbox-hint');
+    expect(toggle.getAttribute('aria-describedby')).toBe('config-sandbox-hint');
+  });
+
   it('uses a numeric input for number fields', () => {
     const field = makeEnvFieldDef({ name: 'port', label: 'Port', number: true });
     render(<ConfigField field={field} value="587" helperText=" " onChange={vi.fn()} onBlur={vi.fn()} onToggleBool={vi.fn()} />);

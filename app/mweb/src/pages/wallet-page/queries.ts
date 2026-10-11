@@ -1,4 +1,6 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
+import type { WalletStatementVariables } from '@duncit/forms/schemas';
+import type { WalletStatementFileData } from './statement/statement.types';
 
 export const MY_WALLET = gql`
   query MyWallet {
@@ -28,6 +30,18 @@ export const MY_WALLET = gql`
       scheduled_for
       reject_reason
       created_at
+    }
+  }
+`;
+
+/** The caller's own wallet statement for a period, as a PDF or CSV file (base64). */
+export const WALLET_STATEMENT_FILE: TypedDocumentNode<WalletStatementFileData, WalletStatementVariables> = gql`
+  query WalletStatementFile($input: WalletStatementInput!, $format: WalletStatementFormat!) {
+    myWalletStatementFile(input: $input, format: $format) {
+      filename
+      mime
+      content_base64
+      transaction_count
     }
   }
 `;

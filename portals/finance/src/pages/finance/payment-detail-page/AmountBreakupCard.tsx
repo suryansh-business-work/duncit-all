@@ -71,6 +71,13 @@ function buildLines(detail: PaymentDetail, t: Translator['t']): BreakupLine[] {
     label: t('finance.payment.gstPct', { vars: { pct: p.gst_pct.toFixed(2) } }),
     value: money(sym, p.gst_amount),
   });
+  // Added after the tax lines, never taxed: taxable + GST + round off = total
+  // charged. When coins cleared the whole bill nothing was charged, so the
+  // round-off went in coins and there is no charge for this line to explain.
+  const roundOff = p.total > 0 ? Number(p.round_off) || 0 : 0;
+  if (roundOff > 0) {
+    lines.push({ key: 'round-off', label: t('finance.payment.roundOffLine'), value: `+ ${money(sym, roundOff)}` });
+  }
   return lines;
 }
 

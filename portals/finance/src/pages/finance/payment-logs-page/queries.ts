@@ -1,8 +1,11 @@
 import { gql } from '@apollo/client';
 
+/** The two shops Finance tracks separately — never mixed in one list. */
+export type PaymentShop = 'POD_SHOP' | 'ECOMM';
+
 export const PAYMENT_TOTALS = gql`
-  query PaymentTotals($filter: PaymentFilterInput) {
-    paymentTotals(filter: $filter) {
+  query PaymentTotals($filter: PaymentFilterInput, $shop: PaymentShop) {
+    paymentTotals(filter: $filter, shop: $shop) {
       count
       gross
       fee
@@ -39,6 +42,10 @@ export interface PaymentRow {
   ticket_discount_amount: number;
   ticket_discount_pct: number;
   total: number;
+  /** What rounding the bill up to a whole rupee added — inside `total` (0 when none). */
+  round_off?: number | null;
+  /** POD for a booking (with or without shop add-ons), PRODUCT for a shop cart. */
+  target_type?: string | null;
   currency_symbol: string;
   status: string;
   gateway: string;
@@ -64,6 +71,8 @@ const PAYMENT_ROW_FIELDS = gql`
     ticket_discount_amount
     ticket_discount_pct
     total
+    round_off
+    target_type
     currency_symbol
     status
     gateway
@@ -71,6 +80,19 @@ const PAYMENT_ROW_FIELDS = gql`
     paid_at
     created_at
   }
+`;
+
+/** One shop's payment log — the shop is fixed by the server, so no filter here can widen it. */
+export const SHOP_PAYMENTS_TABLE = gql`
+  query ShopPaymentsTable($shop: PaymentShop!, $query: TableQueryInput) {
+    shopPaymentsTable(shop: $shop, query: $query) {
+      total
+      rows {
+        ...PaymentRowFields
+      }
+    }
+  }
+  ${PAYMENT_ROW_FIELDS}
 `;
 
 export const PAYMENTS_TABLE = gql`

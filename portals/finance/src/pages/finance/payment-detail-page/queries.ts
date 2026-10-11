@@ -33,6 +33,7 @@ export const PAYMENT_DETAIL_FIELDS = gql`
       platform_fee_amount
       gst_pct
       gst_amount
+      round_off
       total
       currency_symbol
       coupon_code
@@ -181,6 +182,8 @@ export interface DetailPayment {
   platform_fee_amount: number;
   gst_pct: number;
   gst_amount: number;
+  /** What rounding the bill up to a whole rupee added — inside `total`, outside the tax lines. */
+  round_off?: number | null;
   total: number;
   currency_symbol: string;
   coupon_code: string | null;

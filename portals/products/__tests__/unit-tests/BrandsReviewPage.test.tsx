@@ -30,6 +30,7 @@ const integration = (provider: 'SHIPROCKET' | 'RAZORPAY') => ({
   pickup_location: '',
   live_mode: false,
   has_webhook_secret: false,
+  sandbox: false,
 });
 
 /** A brand a partner just submitted — the row that never used to reach this page.

@@ -34,6 +34,7 @@ const integration = (provider: 'SHIPROCKET' | 'RAZORPAY'): BrandIntegrationStatu
   pickup_location: '',
   live_mode: false,
   has_webhook_secret: false,
+  sandbox: false,
 });
 
 /** The review-only fields `ecommBrand` selects on top of the shared factory. */

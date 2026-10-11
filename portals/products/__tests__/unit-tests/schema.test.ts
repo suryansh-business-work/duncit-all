@@ -63,7 +63,7 @@ describe('productSchema', () => {
   });
 
   it('requires a warehouse (pickup location) on a Duncit product', () => {
-    expect(messages({ ...valid, pickup_location_id: '' })).toContain('Warehouse is required');
+    expect(messages({ ...valid, pickup_location_id: '' })).toContain('Pickup address is required');
   });
 
   it('does not require a warehouse on a brand-owned product', () => {

@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
@@ -10,6 +10,8 @@ import { useTranslation } from '@duncit/shell';
 import type { BrandIntegrationStatus } from '../queries';
 
 interface Props {
+  /** Extra controls under the check button — the ShipRocket sandbox switch. */
+  footer?: ReactNode;
   title: string;
   status: BrandIntegrationStatus;
   checking: boolean;
@@ -37,7 +39,7 @@ const stateChip = (status: BrandIntegrationStatus, t: Translate): StateChip => {
   return { label: t('products.brandReview.notConnected'), color: 'error', icon: <ErrorOutlineIcon /> };
 };
 
-export default function BrandIntegrationCard({ title, status, checking, onCheck }: Readonly<Props>) {
+export default function BrandIntegrationCard({ title, status, checking, onCheck, footer }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat({ timeZoneAware: true });
   const chip = stateChip(status, t);
@@ -53,6 +55,9 @@ export default function BrandIntegrationCard({ title, status, checking, onCheck 
           </Typography>
           {status.provider === 'RAZORPAY' && status.configured && (
             <Chip size="small" variant="outlined" color={status.live_mode ? 'warning' : 'default'} label={modeLabel} />
+          )}
+          {status.sandbox && (
+            <Chip size="small" variant="outlined" color="warning" label={t('products.brandReview.sandboxChip')} data-testid="brand-integration-sandbox-chip" />
           )}
           <Chip size="small" color={chip.color} icon={chip.icon} label={chip.label} />
         </Stack>
@@ -93,6 +98,7 @@ export default function BrandIntegrationCard({ title, status, checking, onCheck 
         >
           {t('products.brandReview.recheck')}
         </DuncitButton>
+        {footer}
       </CardContent>
     </Card>
   );

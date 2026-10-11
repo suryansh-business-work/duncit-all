@@ -5,6 +5,7 @@ import {
   DELETE_BRAND_PICKUP_LOCATION,
   REGISTER_BRAND_PICKUP_WITH_SHIPROCKET,
   SAVE_BRAND_PICKUP_LOCATION,
+  SET_BRAND_PICKUP_LOCATION_ACTIVE,
   SET_DEFAULT_BRAND_PICKUP_LOCATION,
 } from '../../src/pages/ecomm/queries';
 
@@ -27,6 +28,7 @@ export const makeBrandPickupLocation = (
   pincode: '411001',
   country: 'India',
   is_default: false,
+  is_active: true,
   review_status: 'APPROVED',
   shiprocket_registered: false,
   shiprocket_pickup_id: '',
@@ -88,3 +90,14 @@ export const setDefaultBrandPickupMock = (id = 'l1'): MockedResponse => ({
   },
   maxUsageCount: 20,
 });
+
+/** Answers the Active switch for exactly this id and direction; `refusal` is the server's reason for turning it down. */
+export const setBrandPickupActiveMock = (active: boolean, over: { id?: string; refusal?: string } = {}): MockedResponse => {
+  const id = over.id ?? 'l1';
+  return {
+    request: { query: SET_BRAND_PICKUP_LOCATION_ACTIVE, variables: { id, active } },
+    result: over.refusal
+      ? { errors: [{ message: over.refusal }] }
+      : { data: { setBrandPickupLocationActive: { __typename: 'BrandPickupLocation', id, is_active: active } } },
+  };
+};

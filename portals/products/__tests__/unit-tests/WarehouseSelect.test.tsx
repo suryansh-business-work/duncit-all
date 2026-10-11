@@ -36,10 +36,10 @@ describe('WarehouseSelect', () => {
       { mocks: [brandPickupLocationsMock([])] },
     );
     await waitFor(() =>
-      expect(screen.getByText(/No warehouse is on the ShipRocket account yet/i)).toBeInTheDocument(),
+      expect(screen.getByText(/No pickup address is on the ShipRocket account yet/i)).toBeInTheDocument(),
     );
     fireEvent.click(screen.getByRole('button', { name: 'validate' }));
-    await waitFor(() => expect(screen.getByText('Warehouse is required')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Pickup address is required')).toBeInTheDocument());
   });
 
   it('preselects the default warehouse and marks it in the option label', async () => {
@@ -98,6 +98,27 @@ describe('WarehouseSelect', () => {
     expect(unregistered).toHaveAttribute('aria-disabled', 'true');
   });
 
+  it('skips a pickup address that is switched off, even when it is the default, and lists it disabled', async () => {
+    renderWithProviders(
+      <Harness>
+        <WarehouseSelect />
+      </Harness>,
+      {
+        mocks: [
+          brandPickupLocationsMock([
+            wh({ id: 'w1', nickname: 'Main WH', city: 'Pune', is_default: true, is_active: false }),
+            wh({ id: 'w2', nickname: 'South WH', city: 'Chennai', is_default: false }),
+          ]),
+        ],
+      },
+    );
+    await waitFor(() => expect(screen.getByText('South WH — Chennai')).toBeInTheDocument());
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    const listbox = within(screen.getByRole('listbox'));
+    const inactive = listbox.getByText('Main WH — Pune (Default)').closest('li');
+    expect(inactive).toHaveAttribute('aria-disabled', 'true');
+  });
+
   it('shows the empty hint when every warehouse is missing from ShipRocket', async () => {
     renderWithProviders(
       <Harness>
@@ -106,7 +127,7 @@ describe('WarehouseSelect', () => {
       { mocks: [brandPickupLocationsMock([wh({ id: 'w1', shiprocket_registered: false })])] },
     );
     await waitFor(() =>
-      expect(screen.getByText(/No warehouse is on the ShipRocket account yet/i)).toBeInTheDocument(),
+      expect(screen.getByText(/No pickup address is on the ShipRocket account yet/i)).toBeInTheDocument(),
     );
   });
 

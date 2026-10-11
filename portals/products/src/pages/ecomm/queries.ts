@@ -62,6 +62,8 @@ export interface BrandIntegrationStatus {
   /** Razorpay: the key id is a live key, so real money moves. */
   live_mode: boolean;
   has_webhook_secret: boolean;
+  /** ShipRocket: the account is in sandbox mode — test orders only. */
+  sandbox: boolean;
 }
 
 export interface BrandIntegrations {
@@ -160,6 +162,7 @@ const BRAND_INTEGRATION_STATUS_FIELDS = gql`
     pickup_location
     live_mode
     has_webhook_secret
+    sandbox
   }
 `;
 
@@ -384,6 +387,7 @@ export const BRAND_PICKUP_LOCATIONS = gql`
       pincode
       country
       is_default
+      is_active
       shiprocket_registered
       shiprocket_error
       shiprocket_pickup_id
@@ -421,6 +425,30 @@ export const REGISTER_BRAND_PICKUP_WITH_SHIPROCKET = gql`
       shiprocket_registered
       shiprocket_error
       shiprocket_pickup_id
+    }
+  }
+`;
+
+export interface SetBrandShiprocketSandboxData {
+  setBrandShiprocketSandbox: BrandIntegrationStatus;
+}
+
+/** Switch a brand's ShipRocket account between sandbox (test orders only) and live, then check it again. */
+export const SET_BRAND_SHIPROCKET_SANDBOX = gql`
+  mutation SetBrandShiprocketSandbox($brand_doc_id: ID!, $sandbox: Boolean!) {
+    setBrandShiprocketSandbox(brand_doc_id: $brand_doc_id, sandbox: $sandbox) {
+      ...BrandIntegrationStatusFields
+    }
+  }
+  ${BRAND_INTEGRATION_STATUS_FIELDS}
+`;
+
+/** Enable or disable a pickup address. Refused while products ship from it or while it is the primary one. */
+export const SET_BRAND_PICKUP_LOCATION_ACTIVE = gql`
+  mutation SetBrandPickupLocationActive($id: ID!, $active: Boolean!) {
+    setBrandPickupLocationActive(id: $id, active: $active) {
+      id
+      is_active
     }
   }
 `;

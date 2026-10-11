@@ -49,7 +49,7 @@ export const appConfig = {
         { label: 'Product Request', labelKey: 'shell.nav.productRequest', to: '/ecomm/product-request', icon: 'inventory' },
       ],
     },
-    { label: 'Warehouse Approval', labelKey: 'shell.nav.warehouseApproval', to: '/warehouse-approval', icon: 'warehouse' },
+    { label: 'Pickup Address Approval', labelKey: 'shell.nav.warehouseApproval', to: '/warehouse-approval', icon: 'warehouse' },
     {
       label: 'Fulfilment', labelKey: 'shell.nav.fulfilment',
       icon: 'local_shipping',
@@ -64,6 +64,7 @@ export const appConfig = {
       children: [
         { label: 'Product Deletion Requests', labelKey: 'shell.nav.productDeletionRequests', to: '/deletion-requests/products', icon: 'inventory' },
         { label: 'Brand Deletion Requests', labelKey: 'shell.nav.brandDeletionRequests', to: '/deletion-requests/brands', icon: 'storefront' },
+        { label: 'Deletion Refunds', labelKey: 'shell.nav.deletionRefunds', to: '/deletion-requests/refunds', icon: 'receipt' },
         { label: 'Deletion Settings', labelKey: 'shell.nav.deletionSettings', to: '/deletion-requests/settings', icon: 'settings' },
       ],
     },
@@ -78,7 +79,7 @@ export const appConfig = {
       label: 'Settings', labelKey: 'shell.nav.settings',
       icon: 'settings',
       children: [
-        { label: 'Duncit Warehouse Locations', labelKey: 'shell.nav.duncitWarehouseLocations', to: '/settings/warehouses', icon: 'warehouse' },
+        { label: 'Duncit Pickup Addresses', labelKey: 'shell.nav.duncitWarehouseLocations', to: '/settings/warehouses', icon: 'warehouse' },
         { label: 'Pod Shop Slider', labelKey: 'shell.nav.podShopSlider', to: '/settings/pod-shop-slider', icon: 'view_carousel' },
       ],
     },

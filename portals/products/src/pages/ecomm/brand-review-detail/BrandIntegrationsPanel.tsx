@@ -11,6 +11,7 @@ import {
   type BrandIntegrationStatus,
 } from '../queries';
 import BrandIntegrationCard from './BrandIntegrationCard';
+import ShiprocketSandboxControl from './ShiprocketSandboxControl';
 
 interface Props {
   brandId: string;
@@ -40,13 +41,24 @@ export default function BrandIntegrationsPanel({ brandId, integrations }: Readon
     }
   };
 
+  const shiprocket = checked.SHIPROCKET ?? integrations.shiprocket;
+
   return (
     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
       <BrandIntegrationCard
         title={t('products.brandReview.shiprocket')}
-        status={checked.SHIPROCKET ?? integrations.shiprocket}
+        status={shiprocket}
         checking={checking === 'SHIPROCKET'}
         onCheck={() => check('SHIPROCKET')}
+        footer={
+          shiprocket.configured ? (
+            <ShiprocketSandboxControl
+              brandId={brandId}
+              status={shiprocket}
+              onChanged={(status) => setChecked((prev) => ({ ...prev, SHIPROCKET: status }))}
+            />
+          ) : null
+        }
       />
       <BrandIntegrationCard
         title={t('products.brandReview.razorpay')}

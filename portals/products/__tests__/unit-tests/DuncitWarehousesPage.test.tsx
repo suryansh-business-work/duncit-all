@@ -12,12 +12,12 @@ vi.mock('@duncit/dialogs', () => ({
 describe('DuncitWarehousesPage', () => {
   it('renders the settings header, ShipRocket note and the Duncit empty state', async () => {
     renderWithProviders(<DuncitWarehousesPage />, { mocks: [brandPickupLocationsMock([])] });
-    expect(screen.getByText('Duncit Warehouse Locations')).toBeInTheDocument();
+    expect(screen.getByText('Duncit Pickup Addresses')).toBeInTheDocument();
     expect(screen.getByText(/Each Duncit\s+product must select one/i)).toBeInTheDocument();
-    expect(screen.getByText('Duncit warehouses')).toBeInTheDocument();
-    expect(screen.getByText(/Registering a warehouse with ShipRocket/i)).toBeInTheDocument();
+    expect(screen.getByText('Duncit pickup addresses')).toBeInTheDocument();
+    expect(screen.getByText(/Registering a pickup address with ShipRocket/i)).toBeInTheDocument();
     await waitFor(() =>
-      expect(screen.getByText(/No Duncit warehouses yet/i)).toBeInTheDocument(),
+      expect(screen.getByText(/No Duncit pickup addresses yet/i)).toBeInTheDocument(),
     );
   });
 

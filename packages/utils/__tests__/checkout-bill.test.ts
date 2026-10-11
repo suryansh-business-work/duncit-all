@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MIN_GATEWAY_CHARGE,
   applyBillDiscounts,
   clampPayable,
   exclusiveOfGstBill,
   maxRedeemableCoins,
   round2,
+  roundUpBill,
+  settleBill,
   type BillDiscount,
 } from '../src/checkout-bill';
 
@@ -52,9 +53,72 @@ describe('round2', () => {
   });
 });
 
-describe('MIN_GATEWAY_CHARGE', () => {
-  it('is the ₹1 floor the gateway accepts for an order', () => {
-    expect(MIN_GATEWAY_CHARGE).toBe(1);
+describe('roundUpBill', () => {
+  it.each([
+    // [bill, rounded, roundOff]
+    [101.47, 102, 0.53],
+    [359.1, 360, 0.9],
+    [499.5, 500, 0.5],
+    [0.01, 1, 0.99],
+    [1179.99, 1180, 0.01],
+  ])('rounds ₹%p up to ₹%p, adding ₹%p', (bill, rounded, roundOff) => {
+    expect(roundUpBill(bill)).toEqual({ rounded, roundOff });
+  });
+
+  it.each([0, 1, 399, 1180])('adds nothing to a bill of ₹%p that is already whole', (bill) => {
+    expect(roundUpBill(bill)).toEqual({ rounded: bill, roundOff: 0 });
+  });
+
+  it('always rounds up — never to the nearest rupee', () => {
+    expect(roundUpBill(100.01)).toEqual({ rounded: 101, roundOff: 0.99 });
+  });
+
+  // 0.1 + 0.2-style residue must not turn a whole bill into the next rupee.
+  it('does not let float residue tip a whole amount over', () => {
+    expect(roundUpBill(118.00000000000001)).toEqual({ rounded: 118, roundOff: 0 });
+    expect(roundUpBill(359.1 - 0.1)).toEqual({ rounded: 359, roundOff: 0 });
+  });
+
+  it('treats a negative or non-numeric bill as nothing to charge', () => {
+    expect(roundUpBill(-12.5)).toEqual({ rounded: 0, roundOff: 0 });
+    expect(roundUpBill(Number.NaN)).toEqual({ rounded: 0, roundOff: 0 });
+  });
+});
+
+describe('settleBill', () => {
+  it('rounds a bill up when no coins are spent, keeping the round-off out of the taxable value', () => {
+    expect(settleBill(101.47, 0)).toEqual({ coins: 0, payable: 102, roundOff: 0.53, taxable: 101.47 });
+  });
+
+  it('leaves an already-whole bill exactly as it was', () => {
+    expect(settleBill(399, 0)).toEqual({ coins: 0, payable: 399, roundOff: 0, taxable: 399 });
+  });
+
+  // The ₹1.47 bug: coins used to stop at 100 and ₹1.47 went through the gateway.
+  it('lets whole coins clear a bill that ended in paise', () => {
+    expect(settleBill(101.47, 102)).toEqual({ coins: 102, payable: 0, roundOff: 0, taxable: 0 });
+  });
+
+  it('charges whole rupees when coins cover only part of the bill', () => {
+    const bill = settleBill(101.47, 60);
+    expect(bill).toEqual({ coins: 60, payable: 42, roundOff: 0.53, taxable: 41.47 });
+    // What is charged is the taxed value plus the round-off, to the paisa.
+    expect(round2(bill.taxable + bill.roundOff)).toBe(bill.payable);
+  });
+
+  it('never spends more coins than the rounded bill', () => {
+    expect(settleBill(101.47, 5000)).toMatchObject({ coins: 102, payable: 0 });
+  });
+
+  it('floors a fractional coin count and ignores a negative or non-numeric one', () => {
+    expect(settleBill(200, 10.9)).toMatchObject({ coins: 10, payable: 190 });
+    expect(settleBill(200, -4)).toMatchObject({ coins: 0, payable: 200 });
+    expect(settleBill(200, Number.NaN)).toMatchObject({ coins: 0, payable: 200 });
+  });
+
+  it('settles a bill a coupon took to zero at zero', () => {
+    expect(settleBill(0, 25)).toEqual({ coins: 0, payable: 0, roundOff: 0, taxable: 0 });
+    expect(settleBill(-30, 0)).toEqual({ coins: 0, payable: 0, roundOff: 0, taxable: 0 });
   });
 });
 
@@ -193,38 +257,32 @@ describe('maxRedeemableCoins', () => {
     expect(maxRedeemableCoins(10.9, 50)).toBe(10);
   });
 
-  // Coins are whole rupees but a bill need not be: the floor of ₹359.10 is 359
-  // coins, which would leave ₹0.10 — under the gateway's ₹1 minimum, which
-  // rejects the order. The server hands one coin back, so the preview must too.
-  it('hands one coin back when the leftover would be under the gateway minimum', () => {
-    expect(maxRedeemableCoins(500, 359.1)).toBe(358);
-    expect(maxRedeemableCoins(359, 359.1)).toBe(358);
+  // Coins are whole rupees but a bill need not be, so the bill is rounded UP to
+  // the whole rupee before coins are spent on it: ₹359.10 is a ₹360 bill, and
+  // 360 coins clear it. (The floor used to leave paise for the gateway.)
+  it('covers a bill that ends in paise by rounding it up first', () => {
+    expect(maxRedeemableCoins(500, 359.1)).toBe(360);
+    expect(maxRedeemableCoins(360, 359.1)).toBe(360);
   });
 
-  it('hands nothing back once the balance stops short and the leftover is chargeable', () => {
-    // 358 coins leave ₹1.10 to charge — at or above the minimum, so no hand-back.
-    expect(maxRedeemableCoins(358, 359.1)).toBe(358);
+  it('spends the whole balance when it stops short of the rounded bill', () => {
+    // 359 coins off a ₹360 bill leave exactly ₹1 — a whole rupee to charge.
+    expect(maxRedeemableCoins(359, 359.1)).toBe(359);
+    expect(maxRedeemableCoins(1, 1.5)).toBe(1);
   });
 
-  // The gateway accepts exactly ₹1, so a leftover of precisely the minimum is
-  // chargeable and costs no coin — the cut-off is strictly below ₹1, not at it.
-  it('keeps every coin when the leftover is exactly the gateway minimum', () => {
-    expect(maxRedeemableCoins(358, 359)).toBe(358);
-    expect(maxRedeemableCoins(1, 2)).toBe(1);
+  it('never leaves paise behind: what is left after the coins is a whole number', () => {
+    for (const [balance, bill] of [[358, 359.1], [1, 2], [40, 101.47], [7, 0.5]] as const) {
+      const coinsTaken = maxRedeemableCoins(balance, bill);
+      expect(Number.isInteger(settleBill(bill, coinsTaken).payable)).toBe(true);
+    }
   });
 
-  // The hand-back can take the only coin: 1 coin off ₹1.50 leaves ₹0.50, which
-  // the gateway refuses, so the buyer pays the full ₹1.50 and keeps the coin.
-  it('can hand back the only affordable coin rather than strand a sub-minimum charge', () => {
-    expect(maxRedeemableCoins(1, 1.5)).toBe(0);
+  it('spends one coin on a sub-rupee bill, which is a ₹1 bill once rounded', () => {
+    expect(maxRedeemableCoins(10, 0.5)).toBe(1);
   });
 
-  it('redeems nothing against a sub-rupee bill, since a coin cannot be split', () => {
-    expect(maxRedeemableCoins(10, 0.5)).toBe(0);
-  });
-
-  // Without the 2dp rounding ₹398.999 would floor to 398, leave ₹0.999 and hand
-  // a coin back; as money it is ₹399.00, which 399 coins clear exactly.
+  // ₹398.999 is ₹399.00 as money — a whole bill, not one a paisa over ₹398.
   it('rounds the bill to paise before deciding', () => {
     expect(maxRedeemableCoins(500, 398.999)).toBe(399);
   });

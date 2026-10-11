@@ -450,7 +450,7 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 | --- | --- |
 | `PortalBootConfig` | `key`, `name`, `tokenKey`, `colorModeKey`, `accent?`, `fullName?`, `nav?`, `searchItems?`, `requiredRoles?`, `footerCaption?` (default `© Duncit`) |
 | `AppConfig` | `PortalBootConfig` + `fullName`, `tagline`, `promoTitle`, `promoText`, `portalLabel`, `loginImage`, `requiredRoles`, `nav`, `modules?` |
-| `AppNavItem` | `{ label, to?, icon?, children? }` — `children` renders a collapsible group |
+| `AppNavItem` | `{ label, to?, icon?, children?, pinBottom? }` — `children` renders a collapsible group; `pinBottom` (top-level, opt-in) moves the entry out of the scrolling menu to the sidebar's foot, just above the signed-in user, on the full sidebar, the icon rail and the mobile drawer |
 | `SearchItem` | `{ label, to, keywords?, section? }` |
 | `AppModule` | `{ title, description, icon }` — a "Coming soon" dashboard card |
 

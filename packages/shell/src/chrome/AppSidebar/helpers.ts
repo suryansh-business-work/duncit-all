@@ -33,6 +33,15 @@ export function bestChild(pathname: string, children: AppNavItem[]): AppNavItem 
   return winner;
 }
 
+/** The menu's two blocks: the scrolling entries, and the ones pinned to the
+ * sidebar's foot (`AppNavItem.pinBottom`). Order within each is kept. */
+export function splitPinned(items: AppNavItem[]): { main: AppNavItem[]; pinned: AppNavItem[] } {
+  return {
+    main: items.filter((item) => !item.pinBottom),
+    pinned: items.filter((item) => item.pinBottom),
+  };
+}
+
 /** Filter nav by query: keep a group if its label matches (whole subtree) or any descendant matches. */
 export function filterNav(items: AppNavItem[], q: string): AppNavItem[] {
   if (!q) return items;

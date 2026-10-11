@@ -3,7 +3,7 @@ import { Divider, List, ListItemButton, ListItemIcon, Popover, Tooltip, Typograp
 import { NavLink, useLocation } from 'react-router';
 import type { AppNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
-import { groupActive, matches } from './helpers';
+import { groupActive, matches, splitPinned } from './helpers';
 import { tokens } from '@duncit/theme';
 import { NavNode } from './nav-items';
 
@@ -100,19 +100,27 @@ export function NavRail({ nav, onNavigate }: Readonly<NavRailProps>) {
     setMenu(null);
     onNavigate?.();
   }, [onNavigate]);
+  // Entries pinned to the sidebar's foot stay out of the scrolling rail.
+  const { main, pinned } = splitPinned(nav);
+  const renderItem = (item: AppNavItem) => (
+    <RailItem
+      key={item.label}
+      item={item}
+      pathname={location.pathname}
+      onNavigate={onNavigate}
+      onOpenMenu={openMenu}
+    />
+  );
   return (
     <>
       <List sx={{ px: 1, py: 1, flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-        {nav.map((item) => (
-          <RailItem
-            key={item.label}
-            item={item}
-            pathname={location.pathname}
-            onNavigate={onNavigate}
-            onOpenMenu={openMenu}
-          />
-        ))}
+        {main.map(renderItem)}
       </List>
+      {pinned.length > 0 && (
+        <List sx={{ px: 1, py: 0 }} data-testid="shell-nav-rail-pinned">
+          {pinned.map(renderItem)}
+        </List>
+      )}
       <Popover
         open={menu !== null}
         anchorEl={menu?.anchor ?? null}

@@ -2,7 +2,7 @@ import { productOrderService } from './productOrder.service';
 import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
 import type { IdLike } from '@utils/request-cache';
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
 import type { FulfilmentMethod, FulfilmentStatus } from './productOrder.model';
 import type { ShipmentDocument } from '@modules/commerce/shiprocket/shiprocket.shipment';
 import { cancelPodShopOrder, retryOrderRefund } from './productOrder.cancel';
@@ -28,6 +28,8 @@ export const productOrderResolvers = {
       const u = requireAuth(ctx);
       return productOrderService.listForBuyer(u.id, args.pod_doc_id);
     },
+    myProductOrder: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      productOrderService.getForBuyer(requireAuth(ctx).id, args.id),
     productOrders: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, OPS_RW);
       return productOrderService.list(args.filter);
@@ -45,13 +47,20 @@ export const productOrderResolvers = {
       return productOrderService.tableForUser(args.user_id, args.query);
     },
     productOrderTracking: (_p: unknown, args: { order_no: string }, ctx: GraphQLContext) => {
-      requireAuth(ctx);
-      return productOrderService.trackingByOrderNo(args.order_no);
+      // Staff read any order's tracking; a member only an order they bought.
+      const u = requireAuth(ctx);
+      return productOrderService.trackingByOrderNo(args.order_no, hasRole(u, OPS_RW) ? null : u.id);
     },
     brandProductOrdersTable: (_p: unknown, args: { query?: TableQueryInput | null; brand_id?: string | null }, ctx: GraphQLContext) =>
       brandProductOrderService.table(requireAuth(ctx).id, args.query, args.brand_id),
     brandProductOrder: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
       brandProductOrderService.get(requireAuth(ctx).id, args.id),
+    deletionRefundsTable: (_p: unknown, args: { query?: TableQueryInput | null; request_id?: string | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, CANCEL_RW);
+      return productOrderService.tableForDeletionRefunds({ requestId: args.request_id }, args.query);
+    },
+    myDeletionRefundsTable: (_p: unknown, args: { query?: TableQueryInput | null; brand_id?: string | null }, ctx: GraphQLContext) =>
+      brandProductOrderService.deletionRefunds(requireAuth(ctx).id, args.query, args.brand_id),
   },
   Mutation: {
     advanceProductOrderStatus: (
@@ -99,6 +108,8 @@ export const productOrderResolvers = {
       requireRole(ctx, OPS_RW);
       return productOrderService.shipmentFile(args.ids, args.kind);
     },
+    myProductOrderSellerInvoice: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      productOrderService.sellerInvoiceForBuyer(requireAuth(ctx).id, args.id),
     brandBookProductOrderShipment: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
       brandProductOrderService.book(requireAuth(ctx).id, args.id),
     brandRefreshProductOrderTracking: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
@@ -109,5 +120,9 @@ export const productOrderResolvers = {
     },
     brandProductOrderShipmentFile: (_p: unknown, args: { ids: string[]; kind: ShipmentDocument }, ctx: GraphQLContext) =>
       brandProductOrderService.shipmentFile(requireAuth(ctx).id, args.ids, args.kind),
+    brandCancelProductOrder: (_p: unknown, args: { id: string; reason: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return brandProductOrderService.cancel(user.id, args.id, args.reason, user.email ?? user.id);
+    },
   },
 };

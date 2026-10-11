@@ -102,6 +102,8 @@ export const productOrderTypeDefs = /* GraphQL */ `
     etd: String!
     pickup_scheduled_date: String!
     last_synced_at: String
+    "Booked on the ShipRocket sandbox: a test order — no courier collects it and nothing is charged."
+    sandbox: Boolean!
   }
 
   "A ShipRocket document: the shipping label, the GST invoice or the pickup manifest."
@@ -183,6 +185,11 @@ export const productOrderTypeDefs = /* GraphQL */ `
     cancelled_at: String
     cancel_reason: String!
     cancelled_by: String!
+    "The deletion request (a brand or product being removed) that cancelled this order, when one did."
+    deletion_request_id: ID
+    deletion_request_no: String!
+    "The selling brand's name. Filled only by the deletion-refund tables; null elsewhere."
+    brand_name: String
     "When the buyer got the goods — the return window counts from here."
     delivered_at: String
     "Money going back after a cancellation."
@@ -234,6 +241,8 @@ export const productOrderTypeDefs = /* GraphQL */ `
     "The signed-in buyer's product orders (optionally scoped to one pod)."
     myProductOrders: [ProductOrder!]!
     myProductOrdersForPod(pod_doc_id: ID!): [ProductOrder!]!
+    "One of the signed-in buyer's own pod-shop orders — null for anyone else's, so ids cannot be probed."
+    myProductOrder(id: ID!): ProductOrder
     "Ops: all pod-placed product orders (Products portal)."
     productOrders(filter: ProductOrderFilter): [ProductOrder!]!
     productOrdersTable(query: TableQueryInput): ProductOrderTablePage!
@@ -245,6 +254,14 @@ export const productOrderTypeDefs = /* GraphQL */ `
     brandProductOrdersTable(query: TableQueryInput, brand_id: ID): ProductOrderTablePage!
     "Partner: one order of the caller's own brands."
     brandProductOrder(id: ID!): ProductOrder
+    """
+    Products portal: the orders deletion requests cancelled, one row per order,
+    with the refund each buyer is owed and where it stands. Pass request_id for
+    one request's orders.
+    """
+    deletionRefundsTable(query: TableQueryInput, request_id: ID): ProductOrderTablePage!
+    "Partner: the same list for the caller's own brands (one brand when brand_id is given)."
+    myDeletionRefundsTable(query: TableQueryInput, brand_id: ID): ProductOrderTablePage!
   }
 
   extend type Mutation {
@@ -262,6 +279,8 @@ export const productOrderTypeDefs = /* GraphQL */ `
     forceCancelProductOrder(id: ID!, reason: String!): ProductOrder!
     "Products portal: retry a cancelled order's refund that Razorpay refused."
     retryProductOrderRefund(id: ID!): ProductOrder!
+    "Buyer: the seller's tax invoice (PDF) for one of their own pod-shop orders, once its shipment is booked."
+    myProductOrderSellerInvoice(id: ID!): ShipmentFile!
     "Partner: book, or resume booking, the ShipRocket shipment of an own-brand order."
     brandBookProductOrderShipment(id: ID!): ProductOrder!
     "Partner: pull the latest tracking of an own-brand order."
@@ -270,5 +289,11 @@ export const productOrderTypeDefs = /* GraphQL */ `
     brandUpdateProductOrderAddress(id: ID!, address: OrderShippingAddressInput!): ProductOrder!
     "Partner: one PDF (label, invoice or manifest) for own-brand orders."
     brandProductOrderShipmentFile(ids: [ID!]!, kind: ShipmentDocumentKind!): ShipmentFile!
+    """
+    Partner: cancel an own-brand order the courier has not collected yet —
+    shipment stopped, stock back, the buyer refunded in full and told why.
+    Refused once the parcel is with the courier.
+    """
+    brandCancelProductOrder(id: ID!, reason: String!): ProductOrder!
   }
 `;

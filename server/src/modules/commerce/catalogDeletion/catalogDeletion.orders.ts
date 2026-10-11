@@ -1,3 +1,4 @@
+import type { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { cancelPodShopOrder } from '@modules/commerce/productOrder/productOrder.cancel';
@@ -36,6 +37,7 @@ export async function cancelRunningOrders(req: ICatalogDeletionRequest, by: stri
         source: 'DELETION',
         actor: by,
         reason: `${item} is no longer sold on Duncit`,
+        deletionRequest: { id: req._id as Types.ObjectId, no: req.request_no },
       });
       cancelled += 1;
       if (done.refund.status === 'FAILED') failedRefunds += 1;

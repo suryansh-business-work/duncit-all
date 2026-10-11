@@ -83,6 +83,8 @@ export const catalogDeletionTypeDefs = /* GraphQL */ `
     fulfilment_status: FulfilmentStatus!
     fulfilment_method: FulfilmentMethod!
     created_at: String!
+    "Who placed it — the buyer a cancel-and-refund deletion pays back."
+    buyer_name: String!
     total: Float!
     currency_symbol: String!
     "Units of the deleted item on this order."

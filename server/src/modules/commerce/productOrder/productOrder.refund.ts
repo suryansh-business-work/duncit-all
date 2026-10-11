@@ -1,6 +1,7 @@
 import { logs } from '@observability/log';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
 import { creditCoinsBack, recordPaymentRefund } from '@modules/finance/payment/payment.refundRecord';
+import { roundOffOf } from '@modules/finance/payment/payment.roundoff';
 import { createRazorpayRefund, listRazorpayRefunds } from '@modules/finance/payment/razorpay.gateway';
 import type { IOrderRefund } from './productOrder.model';
 
@@ -41,7 +42,14 @@ export interface RefundRequest {
 /** What the buyer gets back for `gross` worth of goods on this payment. */
 export function refundShare(payment: IPayment, gross: number) {
   const coinsSpent = Math.max(0, Math.floor(payment.coins_redeemed ?? 0));
-  const before = (payment.total ?? 0) + (payment.coupon_discount ?? 0) + coinsSpent;
+  // The round-off is not goods: it is taken out of the base so that all of the
+  // goods is a ratio of exactly 1 — a full refund then returns every rupee
+  // charged (round-off included) and every coin spent, and a part refund
+  // returns its share of both.
+  const before = Math.max(
+    0,
+    (payment.total ?? 0) + (payment.coupon_discount ?? 0) + coinsSpent - roundOffOf(payment)
+  );
   const ratio = before > 0 ? Math.min(1, Math.max(0, gross) / before) : 0;
   const alreadyBack = Number(payment.metadata?.refunded_amount) || 0;
   const cashLeft = Math.max(0, round2((payment.total ?? 0) - alreadyBack));

@@ -6,18 +6,15 @@
  * leftover discount is simply dropped — never refunded, never carried, never
  * turned into a negative total. That rule is expressed ONCE here and mirrors
  * the server (`couponService.evaluate` clamps `final_total` at 0 and
- * `applyCoins` clamps the redemption to `floor(quote.total)`), so mWeb and the
- * native app can never preview a bill the server would price differently.
+ * `applyCoins` rounds the bill up to a whole rupee before clamping the
+ * redemption to it), so mWeb and the native app can never preview a bill the
+ * server would price differently.
  */
 
 /** Money rounding to 2dp — the finance engine's single-round rule. Without it a
  * discounted total carries float residue (₹359.10 − 359 = ₹0.10000000000002274)
  * straight onto the screen. */
 export const round2 = (n: number): number => Math.round((Number(n) || 0) * 100) / 100;
-
-/** Smallest amount the gateway will accept for an order (Razorpay: ₹1).
- * Server twin: `MIN_GATEWAY_CHARGE` in payment.service.ts. */
-export const MIN_GATEWAY_CHARGE = 1;
 
 /** What is left to pay once a deduction is taken: rounded, and never below zero. */
 export const clampPayable = (amount: number): number => round2(Math.max(0, Number(amount) || 0));
@@ -113,23 +110,71 @@ export function exclusiveOfGstBill<T extends { amount: number }>(
   return { subtotal, discounts: net };
 }
 
+/** A bill rounded up to the whole rupee, and what the rounding added. */
+export interface RoundedBill {
+  /** The bill in whole rupees — what coins are spent against. */
+  rounded: number;
+  /** What rounding added: 0 for an already-whole bill, always under ₹1. */
+  roundOff: number;
+}
+
+/**
+ * Round a bill UP to the next whole rupee — the rule every Duncit checkout
+ * charges by. Server twin: `roundUpBill` in payment.roundoff.ts.
+ *
+ * Worked in paise so float residue cannot tip a whole amount over: ₹118 held as
+ * 118.00000000000001 stays ₹118 with nothing added, not ₹119.
+ */
+export function roundUpBill(amount: number): RoundedBill {
+  const paise = Math.round(clampPayable(amount) * 100);
+  const rounded = Math.ceil(paise / 100);
+  return { rounded, roundOff: (rounded * 100 - paise) / 100 };
+}
+
 /**
  * The most whole coins a bill can absorb — capped by the balance and by what is
- * owed after the coupon, floored because `redeem_coins` is an Int. Never
- * negative.
+ * owed after the coupon, ROUNDED UP to the whole rupee first. Never negative.
  *
- * Coins are whole rupees but a bill need not be, so redeeming the floor of a
- * ₹359.10 bill would leave ₹0.10 to charge — under the gateway's ₹1 minimum,
- * which rejects the order outright. The server hands one coin back in exactly
- * that case, so the preview does too; otherwise the screen promises a total the
- * buyer is never charged. Redeeming down to exactly ₹0 is fine — that path
- * skips the gateway altogether.
+ * Coins are whole rupees but a bill need not be. The bill is therefore rounded
+ * up before coins are spent on it, exactly as the server does, so whole coins
+ * can always clear all of it: a ₹359.10 bill is ₹360, and 360 coins leave ₹0.
+ * (Capping at the floor instead left paise that had to go through the gateway.)
  */
 export function maxRedeemableCoins(balance: number, payableAfterCoupon: number): number {
+  const { rounded } = roundUpBill(payableAfterCoupon);
+  return Math.max(0, Math.min(Math.floor(Number(balance) || 0), rounded));
+}
+
+/** A bill once it is rounded up and the coins are taken: what the buyer sees. */
+export interface SettledBill {
+  /** Coins actually spent — the ask, capped at the rounded bill. */
+  coins: number;
+  /** What is charged: always a whole number of rupees, never negative. */
+  payable: number;
+  /** The round-off inside `payable`. Zero when coins cleared the whole bill —
+   * it was then paid in coins and there is no charge for a row to explain. */
+  roundOff: number;
+  /** The GST-inclusive value the tax lines are worked out on: the bill less the
+   * coins, WITHOUT the round-off, never below zero. */
+  taxable: number;
+}
+
+/**
+ * Settle a couponed bill the way the server's `applyCoins` does: round it up to
+ * the whole rupee, then take the coins off the rounded figure.
+ *
+ * The round-off is not taxable — `taxable` is what the screen extracts GST
+ * from, and `taxable + roundOff = payable` whenever anything is charged.
+ */
+export function settleBill(payableAfterCoupon: number, coinsApplied: number): SettledBill {
   const owed = clampPayable(payableAfterCoupon);
-  const affordable = Math.min(Math.floor(Number(balance) || 0), Math.floor(owed));
-  if (affordable <= 0) return 0;
-  const remainder = clampPayable(owed - affordable);
-  if (remainder > 0 && remainder < MIN_GATEWAY_CHARGE) return Math.max(0, affordable - 1);
-  return affordable;
+  const bill = roundUpBill(owed);
+  const coins = Math.max(0, Math.min(Math.floor(Number(coinsApplied) || 0), bill.rounded));
+  const payable = bill.rounded - coins;
+  return {
+    coins,
+    payable,
+    roundOff: payable > 0 ? bill.roundOff : 0,
+    taxable: clampPayable(owed - coins),
+  };
 }

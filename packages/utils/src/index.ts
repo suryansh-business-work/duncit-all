@@ -349,15 +349,18 @@ export {
   type AiMonitorRing,
 } from './ai-monitor';
 export {
-  MIN_GATEWAY_CHARGE,
   applyBillDiscounts,
   clampPayable,
   exclusiveOfGstBill,
   maxRedeemableCoins,
   round2,
+  roundUpBill,
+  settleBill,
   type BillDiscount,
   type DiscountedBill,
   type ExclusiveOfGstBill,
+  type RoundedBill,
+  type SettledBill,
 } from './checkout-bill';
 export {
   DEFAULT_TICKET_DISCOUNT_MAX_PCT,
@@ -880,6 +883,7 @@ export {
 } from './host-insights';
 export {
   ALL_FULFILMENT_STATUSES,
+  BRAND_CANCELLABLE,
   brandOrderActions,
   buildOrderTimeline,
   FULFILMENT_METHOD_KEYS,
@@ -1298,3 +1302,54 @@ export {
   type PodRequestSide,
   type PodRequestStatus,
 } from './pod-partner-request';
+export {
+  DELIVERY_QUOTE_BLOCK_KEYS,
+  deliveryQuoteRequestKey,
+  deliveryQuoteStatus,
+  deliveryQuoteView,
+  type DeliveryQuoteBlock,
+  type DeliveryQuoteGateInput,
+  type DeliveryQuoteStatus,
+  type DeliveryQuoteViewInput,
+  type SettledDeliveryQuote,
+} from './delivery-quote-gate';
+export {
+  STUDIO_ROLE_LABEL_KEY,
+  heldStudioModes,
+  studioEntryFor,
+  studioModeFor,
+} from './studio-switcher';
+export {
+  buildDetailedOrderTimeline,
+  courierScanStatus,
+  orderDownloads,
+  orderSupportDraft,
+  type DetailedTimelineStep,
+  type OrderDownloads,
+  type OrderForDownloads,
+  type OrderForSupport,
+  type OrderForTimeline,
+  type OrderScan,
+  type OrderSupportDraft,
+  type OrderTicketCategory,
+  type OrderTrackingEvent,
+  type OrderTranslate,
+} from './order-tracking';
+export {
+  STATEMENT_FORMATS,
+  STATEMENT_MAX_DAYS,
+  STATEMENT_PRESETS,
+  STATEMENT_PRESET_LABEL_KEYS,
+  STATEMENT_RANGE_ERROR_KEYS,
+  financialYearStartYear,
+  resolveStatementRange,
+  statementPresetRange,
+  statementRangeDays,
+  statementRangeError,
+  zonedToday,
+  type StatementFormat,
+  type StatementPeriodChoice,
+  type StatementPreset,
+  type StatementRange,
+  type StatementRangeError,
+} from './statement-period';

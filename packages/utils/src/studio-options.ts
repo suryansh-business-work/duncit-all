@@ -37,7 +37,8 @@ export type StudioOptionIcon =
   | 'integrations'
   | 'returns'
   | 'orders'
-  | 'warehouses';
+  | 'warehouses'
+  | 'refunds';
 
 export interface StudioOptionItem {
   key: string;
@@ -164,6 +165,8 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'orders', labelKey: 'mweb.studioOptions.brandOrders', hintKey: 'mweb.studioOptions.brandOrdersHint', icon: 'orders', path: '/products/orders', route: 'BrandOrders', portal: '/ecomm-brand/orders' },
     { key: 'warehouses', labelKey: 'mweb.studioOptions.brandWarehouses', hintKey: 'mweb.studioOptions.brandWarehousesHint', icon: 'warehouses', path: '/products/warehouses', route: 'BrandWarehouses', portal: '/ecomm-brand/warehouses' },
     { key: 'returns', labelKey: 'mweb.studioOptions.productReturns', hintKey: 'mweb.studioOptions.productReturnsHint', icon: 'returns', portal: '/ecomm-brand/returns' },
+    // Buyers refunded because a brand or product was deleted with its running orders cancelled.
+    { key: 'deletion-refunds', labelKey: 'mweb.studioOptions.deletionRefunds', hintKey: 'mweb.studioOptions.deletionRefundsHint', icon: 'refunds', portal: '/ecomm-brand/deletion-refunds' },
     VERIFICATION,
     WITHDRAWAL,
   ],

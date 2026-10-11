@@ -3118,6 +3118,8 @@ export type BrandIntegrationStatus = {
   /** ShipRocket: the default pickup nickname on that account. */
   pickup_location: Scalars['String']['output'];
   provider: BrandIntegrationProvider;
+  /** ShipRocket: the account is in sandbox mode — its calls go to the ShipRocket sandbox and book test orders only. Always false for Razorpay. */
+  sandbox: Scalars['Boolean']['output'];
 };
 
 export type BrandIntegrations = {
@@ -3137,6 +3139,8 @@ export type BrandPickupLocation = {
   created_at: Scalars['String']['output'];
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /** Enabled for use. A disabled pickup address cannot be chosen for a product or made primary. */
+  is_active: Scalars['Boolean']['output'];
   is_default: Scalars['Boolean']['output'];
   nickname: Scalars['String']['output'];
   owner_kind: PickupOwnerKind;
@@ -3168,7 +3172,7 @@ export type BrandPickupLocationInput = {
   state?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** A brand's warehouses after a check against the ShipRocket account it ships on. */
+/** A brand's pickup addresses after a check against the ShipRocket account it ships on. */
 export type BrandPickupSync = {
   __typename?: 'BrandPickupSync';
   /** Pickup addresses taken in from the brand's own ShipRocket account on this sync. */
@@ -3179,6 +3183,15 @@ export type BrandPickupSync = {
   warehouses: Array<BrandPickupLocation>;
 };
 
+/** Everything that still ships from one pickup address. */
+export type BrandPickupUsage = {
+  __typename?: 'BrandPickupUsage';
+  /** How many products ship from it, across both shops. */
+  count: Scalars['Int']['output'];
+  /** Those products, by name (the first 100). */
+  products: Array<PickupProductRef>;
+};
+
 export type BrandRazorpayInput = {
   key_id: Scalars['String']['input'];
   /** Omitted or blank keeps the secret already on file. */
@@ -3187,9 +3200,9 @@ export type BrandRazorpayInput = {
 };
 
 /**
- * Who carries a brand's parcels: its OWN ShipRocket account, or Duncit's
- * courier service (the ShipRocket account the Tech portal maps to the
- * Partners console — never the pet store's).
+ * Who carries a brand's parcels. Every brand ships on its OWN ShipRocket
+ * account. DUNCIT_COURIER is no longer offered and cannot be set; it remains
+ * only as the value a brand that chose it earlier still reports.
  */
 export type BrandShippingMode =
   | 'DUNCIT_COURIER'
@@ -3202,6 +3215,8 @@ export type BrandShiprocketInput = {
   password?: InputMaybe<Scalars['String']['input']>;
   /** Default pickup nickname on that account — must match a ShipRocket pickup address. */
   pickup_location?: InputMaybe<Scalars['String']['input']>;
+  /** Sandbox mode: book test orders on the ShipRocket sandbox instead of real shipments. Omitted keeps the saved mode. */
+  sandbox?: InputMaybe<Scalars['Boolean']['input']>;
   /** Omitted or blank keeps the one on file. */
   webhook_secret?: InputMaybe<Scalars['String']['input']>;
 };
@@ -3503,6 +3518,8 @@ export type CatalogDeletionMode =
 /** A running order on the item being deleted. */
 export type CatalogDeletionOrder = {
   __typename?: 'CatalogDeletionOrder';
+  /** Who placed it — the buyer a cancel-and-refund deletion pays back. */
+  buyer_name: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
   currency_symbol: Scalars['String']['output'];
   fulfilment_method: FulfilmentMethod;
@@ -3955,11 +3972,14 @@ export type CheckoutQuote = {
   gst_pct: Scalars['Float']['output'];
   platform_fee_amount: Scalars['Float']['output'];
   platform_fee_pct: Scalars['Float']['output'];
+  /** What that rounding added (0 when the amount was already whole). Inside total, outside subtotal and gst_amount. */
+  round_off: Scalars['Float']['output'];
   subtotal: Scalars['Float']['output'];
   /** Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies). */
   ticket_discount_amount: Scalars['Float']['output'];
   /** Percentage of the multi-ticket tier that applied (0 when none). */
   ticket_discount_pct: Scalars['Int']['output'];
+  /** The quoted amount rounded UP to a whole rupee — what a checkout with no coupon and no coins is charged. */
   total: Scalars['Float']['output'];
 };
 
@@ -12227,6 +12247,12 @@ export type Mutation = {
   blockUser: Scalars['Boolean']['output'];
   /** Partner: book, or resume booking, the ShipRocket shipment of an own-brand order. */
   brandBookProductOrderShipment: ProductOrder;
+  /**
+   * Partner: cancel an own-brand order the courier has not collected yet —
+   * shipment stopped, stock back, the buyer refunded in full and told why.
+   * Refused once the parcel is with the courier.
+   */
+  brandCancelProductOrder: ProductOrder;
   /** Partner: one PDF (label, invoice or manifest) for own-brand orders. */
   brandProductOrderShipmentFile: ShipmentFile;
   /** Partner: pull the latest tracking of an own-brand order. */
@@ -12629,7 +12655,7 @@ export type Mutation = {
   deleteMembershipBenefit: Scalars['Boolean']['output'];
   deleteMembershipPlan: Scalars['Boolean']['output'];
   deleteMyAddress: Scalars['Boolean']['output'];
-  /** Delete an own-brand warehouse. Blocked while any product still ships from it. */
+  /** Delete an own-brand pickup address. Blocked while any product still ships from it — see myBrandPickupLocationUsage. */
   deleteMyBrandPickupLocation: Scalars['Boolean']['output'];
   /** Partner: delete an OWN brand. Refused for an approved brand that still has products — deactivate it instead. */
   deleteMyEcommBrand: Scalars['Boolean']['output'];
@@ -12982,6 +13008,8 @@ export type Mutation = {
   moderatePodContent: ModerationResult;
   /** Deep-analyses a product listing's content against community guidelines before submit. */
   moderateProductContent: ModerationResult;
+  /** Buyer: the seller's tax invoice (PDF) for one of their own pod-shop orders, once its shipment is booked. */
+  myProductOrderSellerInvoice: ShipmentFile;
   /**
    * Send the change notice on its own, without editing anything.
    *
@@ -13482,7 +13510,7 @@ export type Mutation = {
   saveLeadSurveyResponse: LeadSurveyEntry;
   /** Create (no id) or update (with id) one of my saved addresses. */
   saveMyAddress: UserAddress;
-  /** Create/update a warehouse on one of the caller's OWN brands (owner_kind/brand_id are forced server-side). */
+  /** Create/update a pickup address on one of the caller's OWN brands (owner_kind/brand_id are forced server-side). */
   saveMyBrandPickupLocation: BrandPickupLocation;
   /** Partner: add (omit id) or update a saved connection and check it against the vendor right away. */
   savePartnerIntegration: PartnerIntegration;
@@ -13555,8 +13583,16 @@ export type Mutation = {
   setAutomationFlowStatus: AutomationFlow;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
-  /** Partner: choose who ships the brand's parcels — its own ShipRocket account, or the Duncit courier. */
+  /** Products portal: enable or disable a pickup address. Disabling is refused while products ship from it or while it is the primary one. */
+  setBrandPickupLocationActive: BrandPickupLocation;
+  /** Partner: record that the brand ships on its own ShipRocket account. DUNCIT_COURIER is refused — it is no longer offered. */
   setBrandShippingMode: EcommBrand;
+  /**
+   * Products portal: switch a brand's ShipRocket account between sandbox (test
+   * orders only) and live, and check it again. The partner's saved connection
+   * the brand uses is switched with it, so the two never disagree.
+   */
+  setBrandShiprocketSandbox: BrandIntegrationStatus;
   /** Makes these categories exactly the ones whose own mapping allows the tool. */
   setChallengeToolCategories: ChallengeTool;
   /** Set the pay commission. Null or 0 inherits the platform default. */
@@ -13603,6 +13639,8 @@ export type Mutation = {
   setLegalDocumentActive: LegalDocument;
   /** The same two actions from an unsubscribe link, with no sign-in. */
   setMailPreferenceByToken: MailPreference;
+  /** Partner: enable or disable an own-brand pickup address. Disabling is refused while products ship from it or while it is the primary one. */
+  setMyBrandPickupLocationActive: BrandPickupLocation;
   /** Partner: temporarily deactivate/reactivate an OWN brand — same reversible hide as setEcommBrandActive; placed orders are unaffected. */
   setMyEcommBrandActive: EcommBrand;
   /** Persist the signed-in users language. Validated against active locales. */
@@ -13962,7 +14000,7 @@ export type Mutation = {
    * slice, and the replacing happens when the slice marked `last` arrives.
    */
   syncContacts: ContactsSyncResult;
-  /** Check an own brand's warehouses against its ShipRocket account; on its own account, take in pickups it has there. */
+  /** Check an own brand's pickup addresses against its ShipRocket account; on its own account, take in pickups it has there. */
   syncMyBrandPickupLocations: BrandPickupSync;
   /** Mirror the signed-in member's device cart so the reminder email knows what is waiting. An empty list clears it. */
   syncMyProductCart: Scalars['Boolean']['output'];
@@ -14696,6 +14734,12 @@ export type MutationBlockUserArgs = {
 
 export type MutationBrandBookProductOrderShipmentArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationBrandCancelProductOrderArgs = {
+  id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
 };
 
 
@@ -16506,6 +16550,11 @@ export type MutationModerateProductContentArgs = {
 };
 
 
+export type MutationMyProductOrderSellerInvoiceArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationNotifyPolicyAcceptedUsersArgs = {
   policy_doc_id: Scalars['ID']['input'];
   summary?: InputMaybe<Scalars['String']['input']>;
@@ -17564,9 +17613,21 @@ export type MutationSetBrandCommissionArgs = {
 };
 
 
+export type MutationSetBrandPickupLocationActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationSetBrandShippingModeArgs = {
   brand_doc_id: Scalars['ID']['input'];
   mode: BrandShippingMode;
+};
+
+
+export type MutationSetBrandShiprocketSandboxArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  sandbox: Scalars['Boolean']['input'];
 };
 
 
@@ -17690,6 +17751,13 @@ export type MutationSetMailPreferenceByTokenArgs = {
   e: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
   t: Scalars['String']['input'];
+};
+
+
+export type MutationSetMyBrandPickupLocationActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  brand_doc_id: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
 };
 
 
@@ -20625,6 +20693,8 @@ export type Payment = {
   platform_fee_pct: Scalars['Float']['output'];
   pod?: Maybe<Pod>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
+  round_off: Scalars['Float']['output'];
   status: PaymentStatus;
   subtotal: Scalars['Float']['output'];
   target_type: PaymentTargetType;
@@ -20866,6 +20936,50 @@ export type PaymentReleaseStatus =
   | 'PENDING'
   | 'REJECTED';
 
+/** One payment whose bill was rounded up to a whole rupee (Finance › Round Offs). */
+export type PaymentRoundOff = {
+  __typename?: 'PaymentRoundOff';
+  /** The bill before rounding: total + coins_redeemed − round_off. */
+  bill_amount: Scalars['Float']['output'];
+  coins_redeemed: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  gateway: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  invoice_no?: Maybe<Scalars['String']['output']>;
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_id: Scalars['String']['output'];
+  /** What rounding the bill up to a whole rupee added (0 < x < 1). */
+  round_off: Scalars['Float']['output'];
+  source: PaymentSource;
+  status: PaymentStatus;
+  /** What was actually charged. */
+  total: Scalars['Float']['output'];
+  user_email: Scalars['String']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+/** Totals over EVERY payment the Round Offs filter matches — a server aggregate, never a sum of one page. */
+export type PaymentRoundOffSummary = {
+  __typename?: 'PaymentRoundOffSummary';
+  /** The part that reached Duncit as money: SUCCESS payments with something charged. */
+  collected_round_off_total: Scalars['Float']['output'];
+  count: Scalars['Int']['output'];
+  /** Round-off on every matching payment, whatever its status. */
+  round_off_total: Scalars['Float']['output'];
+};
+
+/** Server-side table page for the shared table engine (paymentRoundOffsTable). */
+export type PaymentRoundOffTablePage = {
+  __typename?: 'PaymentRoundOffTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PaymentRoundOff>;
+  summary: PaymentRoundOffSummary;
+  total: Scalars['Int']['output'];
+};
+
 /**
  * Which part of checkout a step or artifact belongs to — one per thing a
  * checkout can buy, plus the PAYMENT work every checkout does whatever it bought.
@@ -20876,6 +20990,23 @@ export type PaymentSegment =
   | 'PAYMENT'
   | 'POD'
   | 'PRODUCT';
+
+/** The two shops Finance keeps separate ledgers for. They are different products and are never mixed. */
+export type PaymentShop =
+  /** The pet store, ecomm.duncit.com. */
+  | 'ECOMM'
+  /** Partner-brand products bought in the app. */
+  | 'POD_SHOP';
+
+/** The checkout a payment came from. A pod booking that carried shop add-ons is still a POD_BOOKING. */
+export type PaymentSource =
+  /** The pet store, ecomm.duncit.com. */
+  | 'ECOMM'
+  /** Gift cards and anything else. */
+  | 'OTHER'
+  | 'POD_BOOKING'
+  /** The pod shop's standalone cart (partner-brand products bought in the app). */
+  | 'POD_SHOP';
 
 export type PaymentStatus =
   | 'FAILED'
@@ -21056,6 +21187,17 @@ export type PhoneOtpRequestResult = {
 export type PickupOwnerKind =
   | 'BRAND'
   | 'DUNCIT';
+
+/** A product that ships from a pickup address — what has to be moved before the address can be disabled or deleted. */
+export type PickupProductRef = {
+  __typename?: 'PickupProductRef';
+  /** PET_STORE for a pet-store product, POD_SHOP for a pod-shop one. */
+  channel: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** The product's own status (ACTIVE, PAUSED, ARCHIVED…). */
+  status: Scalars['String']['output'];
+};
 
 /**
  * PUSHING while the server is uploading and committing with Google — that takes
@@ -23756,6 +23898,8 @@ export type ProductOptionInput = {
 
 export type ProductOrder = {
   __typename?: 'ProductOrder';
+  /** The selling brand's name. Filled only by the deletion-refund tables; null elsewhere. */
+  brand_name?: Maybe<Scalars['String']['output']>;
   buyer_email: Scalars['String']['output'];
   /** Null for a pet-store guest checkout. */
   buyer_id?: Maybe<Scalars['ID']['output']>;
@@ -23771,6 +23915,9 @@ export type ProductOrder = {
   coins_share: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
   currency_symbol: Scalars['String']['output'];
+  /** The deletion request (a brand or product being removed) that cancelled this order, when one did. */
+  deletion_request_id?: Maybe<Scalars['ID']['output']>;
+  deletion_request_no: Scalars['String']['output'];
   /** When the buyer got the goods — the return window counts from here. */
   delivered_at?: Maybe<Scalars['String']['output']>;
   /** This order's share of the coupon, prepaid discount and coins. */
@@ -24349,7 +24496,9 @@ export type Query = {
   brandAnalytics: BrandAnalytics;
   /** The Brand Consent Legal publishes for brand partners to sign (slug brand-partner-consent). Null until Legal writes one. */
   brandConsentPolicy?: Maybe<Policy>;
-  /** Pickup/warehouse locations for a Duncit or brand owner (Products portal). */
+  /** Products portal: the products that ship from a pickup address. */
+  brandPickupLocationUsage: BrandPickupUsage;
+  /** Pickup addresses of a Duncit or brand owner (Products portal). */
   brandPickupLocations: Array<BrandPickupLocation>;
   /** Partner: one order of the caller's own brands. */
   brandProductOrder?: Maybe<ProductOrder>;
@@ -24659,6 +24808,12 @@ export type Query = {
    * will actually apply when the venue carries no override of its own.
    */
   defaultVenueCommissionPct: Scalars['Float']['output'];
+  /**
+   * Products portal: the orders deletion requests cancelled, one row per order,
+   * with the refund each buyer is owed and where it stands. Pass request_id for
+   * one request's orders.
+   */
+  deletionRefundsTable: ProductOrderTablePage;
   /** The domain itself at GoDaddy: expiry, renewal and the locks on it. */
   dnsDomainInfo: DnsDomainInfo;
   /** Every record in the configured GoDaddy zone, grouped and compared against staging. */
@@ -25018,7 +25173,9 @@ export type Query = {
   myBackgroundJobs: Array<BackgroundJob>;
   myBadgeProgress: Array<BadgeProgress>;
   myBadges: Array<UserBadge>;
-  /** Warehouses of one of the caller's OWN brands (partner portal Brand Settings). */
+  /** Partner: the products of an own-brand pickup address — shown before it is disabled or deleted. */
+  myBrandPickupLocationUsage: BrandPickupUsage;
+  /** Pickup addresses of one of the caller's OWN brands (partner portal Brand Settings). */
   myBrandPickupLocations: Array<BrandPickupLocation>;
   /** The signed-in user's own callback request history, newest first. */
   myCallbackRequests: Array<BouncerCallbackRequest>;
@@ -25064,6 +25221,8 @@ export type Query = {
    * (GDPR right of access and portability). Credentials are never included.
    */
   myDataExport: Scalars['String']['output'];
+  /** Partner: the same list for the caller's own brands (one brand when brand_id is given). */
+  myDeletionRefundsTable: ProductOrderTablePage;
   /** Partner: one of the caller's own brands, at any status — what the brand wizard opens. */
   myEcommBrand?: Maybe<EcommBrand>;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
@@ -25136,6 +25295,8 @@ export type Query = {
   myProductListings: Array<InventoryProduct>;
   /** Server-side table sibling of myProductListings — always scoped to the caller's own listings. */
   myProductListingsTable: InventoryProductTablePage;
+  /** One of the signed-in buyer's own pod-shop orders — null for anyone else's, so ids cannot be probed. */
+  myProductOrder?: Maybe<ProductOrder>;
   /** The signed-in buyer's product orders (optionally scoped to one pod). */
   myProductOrders: Array<ProductOrder>;
   myProductOrdersForPod: Array<ProductOrder>;
@@ -25179,6 +25340,10 @@ export type Query = {
   /** All verification types for the signed-in user (NOT_SUBMITTED when absent). */
   myVerifications: Array<Verification>;
   myWallet: Wallet;
+  /** The caller's own wallet statement. There is no user argument: nobody can ask for another account's. */
+  myWalletStatement: WalletStatement;
+  /** The same statement as a PDF or CSV file, base64-encoded. */
+  myWalletStatementFile: WalletStatementFile;
   myWalletTransactions: Array<WalletTransaction>;
   /** The signed-in person's own WhatsApp switches. */
   myWhatsappPreference: WaPreference;
@@ -25218,6 +25383,8 @@ export type Query = {
   paymentInvoicePdfBase64: Scalars['String']['output'];
   paymentReleaseRequests: Array<PaymentReleaseRequest>;
   paymentReleaseRequestsTable: PaymentReleaseRequestTablePage;
+  /** Payments whose bill was rounded up, with filter-wide totals. Accepts a derived 'source' filter (PaymentSource values). */
+  paymentRoundOffsTable: PaymentRoundOffTablePage;
   /** Aggregated totals over EVERY payment matching the filter (no row cap), SUCCESS only. */
   paymentTotals: PaymentTotals;
   payments: Array<Payment>;
@@ -25545,6 +25712,10 @@ export type Query = {
    * personal preference and is never readable for anybody else.
    */
   shellWorkspaceState: ShellWorkspaceState;
+  /** One shop's order-level refunds (cancellations and returns), with filter-wide totals. */
+  shopOrderRefundsTable: ShopOrderRefundTablePage;
+  /** One shop's payment log. The shop is fixed server-side: the query input can only narrow it. */
+  shopPaymentsTable: PaymentTablePage;
   shortLink: ShortLink;
   /** Every campaign a link can be filed under — the share campaigns and the email ones. */
   shortLinkCampaigns: Array<ShortLinkCampaign>;
@@ -26244,6 +26415,11 @@ export type QueryBrandAnalyticsArgs = {
 };
 
 
+export type QueryBrandPickupLocationUsageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryBrandPickupLocationsArgs = {
   brand_doc_id?: InputMaybe<Scalars['ID']['input']>;
   owner_kind?: InputMaybe<PickupOwnerKind>;
@@ -26866,6 +27042,12 @@ export type QueryDbBackupsTableArgs = {
 
 export type QueryDbRestoreJobArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryDeletionRefundsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  request_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -27597,6 +27779,12 @@ export type QueryMyApiKeysTableArgs = {
 };
 
 
+export type QueryMyBrandPickupLocationUsageArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryMyBrandPickupLocationsArgs = {
   brand_doc_id: Scalars['ID']['input'];
 };
@@ -27629,6 +27817,12 @@ export type QueryMyCoHostedPodsArgs = {
 
 export type QueryMyDashboardLayoutArgs = {
   dashboard_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyDeletionRefundsTableArgs = {
+  brand_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -27727,6 +27921,11 @@ export type QueryMyProductListingsTableArgs = {
 };
 
 
+export type QueryMyProductOrderArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryMyProductOrdersForPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -27775,6 +27974,17 @@ export type QueryMyVenueHealthArgs = {
 
 export type QueryMyVenuesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMyWalletStatementArgs = {
+  input: WalletStatementInput;
+};
+
+
+export type QueryMyWalletStatementFileArgs = {
+  format: WalletStatementFormat;
+  input: WalletStatementInput;
 };
 
 
@@ -27880,8 +28090,14 @@ export type QueryPaymentReleaseRequestsTableArgs = {
 };
 
 
+export type QueryPaymentRoundOffsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryPaymentTotalsArgs = {
   filter?: InputMaybe<PaymentFilterInput>;
+  shop?: InputMaybe<PaymentShop>;
 };
 
 
@@ -28530,6 +28746,18 @@ export type QuerySearchStaffMessagesArgs = {
 export type QuerySearchSuggestionsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
+};
+
+
+export type QueryShopOrderRefundsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  shop: PaymentShop;
+};
+
+
+export type QueryShopPaymentsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  shop: PaymentShop;
 };
 
 
@@ -30868,6 +31096,8 @@ export type ShipRocketInfo = {
   manifest_url: Scalars['String']['output'];
   order_id: Scalars['String']['output'];
   pickup_scheduled_date: Scalars['String']['output'];
+  /** Booked on the ShipRocket sandbox: a test order — no courier collects it and nothing is charged. */
+  sandbox: Scalars['Boolean']['output'];
   shipment_id: Scalars['String']['output'];
   tracking_status: Scalars['String']['output'];
 };
@@ -30884,6 +31114,84 @@ export type ShipmentFile = {
   content_base64: Scalars['String']['output'];
   filename: Scalars['String']['output'];
   mime: Scalars['String']['output'];
+};
+
+/**
+ * One refund event at ORDER level — a cancelled order or a refunded return — in
+ * one shop. cash_amount returns to the original payment method; coins return to
+ * the buyer's Duncit Coin wallet.
+ */
+export type ShopOrderRefund = {
+  __typename?: 'ShopOrderRefund';
+  buyer_email: Scalars['String']['output'];
+  buyer_name: Scalars['String']['output'];
+  /** Money going back to the original payment method. */
+  cash_amount: Scalars['Float']['output'];
+  /** Duncit Coins going back to the buyer's wallet. */
+  coins: Scalars['Int']['output'];
+  currency_symbol: Scalars['String']['output'];
+  /** True for a pet-store order cancelled before refunds were recorded on the order: the figures are worked out from the cancel rule, not read back. */
+  derived: Scalars['Boolean']['output'];
+  /** Why the gateway refused, when it did. */
+  error: Scalars['String']['output'];
+  event_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  initiated_by: Scalars['String']['output'];
+  kind: ShopOrderRefundKind;
+  /** True when Finance has to pay the cash out by hand: a refund Razorpay refused, or any pet-store cash refund. */
+  manual_payout: Scalars['Boolean']['output'];
+  mode: ShopOrderRefundMode;
+  order_id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  order_total: Scalars['Float']['output'];
+  /** The payment this refund reverses; null when that payment no longer exists. */
+  payment_doc_id?: Maybe<Scalars['ID']['output']>;
+  payment_ref: Scalars['String']['output'];
+  /** Razorpay's refund id — pod shop only; the pet store's refunds are paid out by Finance. */
+  razorpay_refund_id: Scalars['String']['output'];
+  /** The order number for a cancellation, the return number for a return. */
+  ref_no: Scalars['String']['output'];
+  /** cash_amount + coins (1 coin = 1 rupee). */
+  refund_value: Scalars['Float']['output'];
+  /** PENDING, PROCESSED, RECORDED (ledger only, nothing sent to a gateway) or FAILED. */
+  status: Scalars['String']['output'];
+};
+
+export type ShopOrderRefundKind =
+  /** An order called off before delivery. */
+  | 'CANCELLATION'
+  /** Goods sent back after delivery. */
+  | 'RETURN';
+
+/** Where a refund's money went. */
+export type ShopOrderRefundMode =
+  /** Duncit Coins only. */
+  | 'COINS'
+  /** Back to the original payment method only. */
+  | 'RAZORPAY'
+  /** Part to the original payment method, part as Duncit Coins. */
+  | 'RAZORPAY_COINS';
+
+/** Totals over EVERY refund the filter matches — a server aggregate, never a sum of one page. */
+export type ShopOrderRefundSummary = {
+  __typename?: 'ShopOrderRefundSummary';
+  /** Money going back to original payment methods. */
+  cash_total: Scalars['Float']['output'];
+  /** Duncit Coins going back to wallets. */
+  coins_total: Scalars['Int']['output'];
+  count: Scalars['Int']['output'];
+  /** The part of cash_total Finance has to pay out by hand. */
+  manual_payout_total: Scalars['Float']['output'];
+};
+
+/** Server-side table page for the shared table engine (shopOrderRefundsTable). */
+export type ShopOrderRefundTablePage = {
+  __typename?: 'ShopOrderRefundTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ShopOrderRefund>;
+  summary: ShopOrderRefundSummary;
+  total: Scalars['Int']['output'];
 };
 
 export type ShortLink = {
@@ -32765,6 +33073,8 @@ export type StoreCheckoutQuote = {
   lines: Array<StoreCartLine>;
   mrp_total: Scalars['Float']['output'];
   prepaid_discount: Scalars['Float']['output'];
+  /** What rounding the bill up to a whole rupee added (0 when it was already whole). Already inside total. */
+  round_off: Scalars['Float']['output'];
   savings: Scalars['Float']['output'];
   serviceable: Scalars['Boolean']['output'];
   /** True when every parcel was rated live by the courier. */
@@ -38823,6 +39133,94 @@ export type Wallet = {
   payout_mode: PayoutMode;
   /** Which of the four capacities this wallet withdraws in (precedence: VENUE_OWNER, CLUB_ADMIN, ECOMM_MANAGER, HOST). */
   withdrawer_role: WithdrawerRole;
+};
+
+/**
+ * The signed-in user's wallet account statement for a period.
+ *
+ * opening_balance + total_credits - total_debits = closing_balance, always. When
+ * the stored ledger does not agree with that sum, balances_reconciled is false
+ * and every balance is null rather than a number that does not add up.
+ */
+export type WalletStatement = {
+  __typename?: 'WalletStatement';
+  account_email: Scalars['String']['output'];
+  account_name: Scalars['String']['output'];
+  balances_reconciled: Scalars['Boolean']['output'];
+  closing_balance?: Maybe<Scalars['Float']['output']>;
+  currency_symbol: Scalars['String']['output'];
+  generated_at: Scalars['String']['output'];
+  opening_balance?: Maybe<Scalars['Float']['output']>;
+  period_from: Scalars['String']['output'];
+  period_to: Scalars['String']['output'];
+  rows: Array<WalletStatementRow>;
+  time_zone: Scalars['String']['output'];
+  totals: WalletStatementTotals;
+};
+
+/** The statement as a file to save under this name. */
+export type WalletStatementFile = {
+  __typename?: 'WalletStatementFile';
+  content_base64: Scalars['String']['output'];
+  filename: Scalars['String']['output'];
+  mime: Scalars['String']['output'];
+  /** 0 for a nil statement — a period with no transactions still downloads. */
+  transaction_count: Scalars['Int']['output'];
+};
+
+export type WalletStatementFormat =
+  | 'CSV'
+  | 'PDF';
+
+/**
+ * A statement period as two calendar days, both inclusive, written yyyy-MM-dd
+ * and read in the app time zone (Admin > Settings) — never the device's. The
+ * server refuses a period that is back to front, reaches into the future, or
+ * covers more than 366 days (one financial year).
+ */
+export type WalletStatementInput = {
+  from: Scalars['String']['input'];
+  to: Scalars['String']['input'];
+};
+
+/** One wallet ledger entry. Exactly one of debit / credit is non-zero. */
+export type WalletStatementRow = {
+  __typename?: 'WalletStatementRow';
+  /** Balance after this entry. Null when the statement could not be reconciled. */
+  balance?: Maybe<Scalars['Float']['output']>;
+  credit: Scalars['Float']['output'];
+  debit: Scalars['Float']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** POD_COMPLETION, WITHDRAWAL or WITHDRAWAL_REVERSAL — the ledger's own source. */
+  kind: Scalars['String']['output'];
+  occurred_at: Scalars['String']['output'];
+  /** The withdrawal id, else the payout release id, else the entry's own id. */
+  reference: Scalars['String']['output'];
+  status: WalletStatementRowStatus;
+};
+
+/** Where a withdrawal's debit stands today, or what a credit was: CREDITED (an earning), REVERSED (a rejected withdrawal handed back), else the withdrawal's own status. */
+export type WalletStatementRowStatus =
+  | 'CREDITED'
+  | 'PAID'
+  | 'PENDING'
+  | 'REJECTED'
+  | 'REVERSED';
+
+export type WalletStatementTotals = {
+  __typename?: 'WalletStatementTotals';
+  earnings_credited: Scalars['Float']['output'];
+  /** Rejected withdrawals whose amount came back to the wallet in the period. */
+  reversals_credited: Scalars['Float']['output'];
+  total_credits: Scalars['Float']['output'];
+  total_debits: Scalars['Float']['output'];
+  transaction_count: Scalars['Int']['output'];
+  withdrawals_paid: Scalars['Float']['output'];
+  withdrawals_pending: Scalars['Float']['output'];
+  withdrawals_rejected: Scalars['Float']['output'];
+  /** Every withdrawal requested in the period; the three below split it by where each stands today. */
+  withdrawals_requested: Scalars['Float']['output'];
 };
 
 export type WalletTransaction = {

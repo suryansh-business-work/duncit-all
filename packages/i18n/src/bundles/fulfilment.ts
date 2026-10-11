@@ -28,7 +28,7 @@ export const FULFILMENT_BUNDLE: NestedCatalogue = {
     statusPickedUp: 'Picked up',
     statusCancelled: 'Cancelled',
     statusReturnedToOrigin: 'Returned to origin',
-    statusRtoDelivered: 'Back at the warehouse',
+    statusRtoDelivered: 'Back at the pickup address',
     statusNdr: 'Delivery attempt failed',
     statusLost: 'Lost in transit',
     statusFailed: 'Fulfilment failed',

@@ -1,6 +1,5 @@
 import { Link as RouterLink } from 'react-router';
 import { Box, Link, List, ListItemButton, ListItemIcon, ListItemText, Stack, Tooltip } from '@mui/material';
-import type { Theme } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -17,9 +16,13 @@ interface Props {
   onToggle: () => void;
 }
 
-/** The open menu, and the icon rail it minimises to (md and up). */
-const menuWidth = (theme: Theme) => theme.spacing(28);
-const railWidth = (theme: Theme) => theme.spacing(7);
+/**
+ * The open menu, and the icon rail it minimises to (md and up), in px. Plain
+ * numbers: `sx` does not call a theme function nested in a breakpoint object,
+ * so one there leaves the menu unsized and it takes the page's room.
+ */
+const MENU_WIDTH = 250;
+const RAIL_WIDTH = 75;
 
 const MENU_ID = 'studio-menu-options';
 
@@ -51,7 +54,7 @@ export default function StudioMenu({ mode, options, active, collapsed, onToggle 
         alignSelf: { md: 'flex-start' },
         position: { md: 'sticky' },
         top: { md: 0 },
-        width: { xs: '100%', md: collapsed ? railWidth : menuWidth },
+        width: { xs: '100%', md: collapsed ? RAIL_WIDTH : MENU_WIDTH },
         border: 1,
         borderColor: 'divider',
         borderRadius: 1,

@@ -124,5 +124,7 @@ const podShopReturnSchema = new Schema<IPodShopReturn>(
 
 podShopReturnSchema.index({ created_at: -1 });
 podShopReturnSchema.index({ 'items.product_id': 1, status: 1 });
+// Finance › Pod Shop › Order Refunds: the returns that carry a refund record.
+podShopReturnSchema.index({ 'refund.status': 1 });
 
 export const PodShopReturnModel = model<IPodShopReturn>('PodShopReturn', podShopReturnSchema);

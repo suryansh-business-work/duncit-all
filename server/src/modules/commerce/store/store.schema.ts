@@ -584,6 +584,8 @@ export const storeTypeDefs = /* GraphQL */ `
     coins_redeemed: Int!
     discount_total: Float!
     gst_amount: Float!
+    "What rounding the bill up to a whole rupee added (0 when it was already whole). Already inside total."
+    round_off: Float!
     total: Float!
     currency_symbol: String!
     cod_available: Boolean!

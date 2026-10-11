@@ -139,6 +139,92 @@ export const walletTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  enum WalletStatementFormat {
+    PDF
+    CSV
+  }
+
+  "Where a withdrawal's debit stands today, or what a credit was: CREDITED (an earning), REVERSED (a rejected withdrawal handed back), else the withdrawal's own status."
+  enum WalletStatementRowStatus {
+    CREDITED
+    REVERSED
+    PENDING
+    PAID
+    REJECTED
+  }
+
+  """
+  A statement period as two calendar days, both inclusive, written yyyy-MM-dd
+  and read in the app time zone (Admin > Settings) — never the device's. The
+  server refuses a period that is back to front, reaches into the future, or
+  covers more than 366 days (one financial year).
+  """
+  input WalletStatementInput {
+    from: String!
+    to: String!
+  }
+
+  "One wallet ledger entry. Exactly one of debit / credit is non-zero."
+  type WalletStatementRow {
+    id: ID!
+    occurred_at: String!
+    "POD_COMPLETION, WITHDRAWAL or WITHDRAWAL_REVERSAL — the ledger's own source."
+    kind: String!
+    "The withdrawal id, else the payout release id, else the entry's own id."
+    reference: String!
+    description: String!
+    debit: Float!
+    credit: Float!
+    "Balance after this entry. Null when the statement could not be reconciled."
+    balance: Float
+    status: WalletStatementRowStatus!
+  }
+
+  type WalletStatementTotals {
+    transaction_count: Int!
+    total_credits: Float!
+    total_debits: Float!
+    earnings_credited: Float!
+    "Every withdrawal requested in the period; the three below split it by where each stands today."
+    withdrawals_requested: Float!
+    withdrawals_paid: Float!
+    withdrawals_pending: Float!
+    withdrawals_rejected: Float!
+    "Rejected withdrawals whose amount came back to the wallet in the period."
+    reversals_credited: Float!
+  }
+
+  """
+  The signed-in user's wallet account statement for a period.
+
+  opening_balance + total_credits - total_debits = closing_balance, always. When
+  the stored ledger does not agree with that sum, balances_reconciled is false
+  and every balance is null rather than a number that does not add up.
+  """
+  type WalletStatement {
+    account_name: String!
+    account_email: String!
+    currency_symbol: String!
+    time_zone: String!
+    period_from: String!
+    period_to: String!
+    generated_at: String!
+    balances_reconciled: Boolean!
+    opening_balance: Float
+    closing_balance: Float
+    rows: [WalletStatementRow!]!
+    totals: WalletStatementTotals!
+  }
+
+  "The statement as a file to save under this name."
+  type WalletStatementFile {
+    filename: String!
+    mime: String!
+    content_base64: String!
+    "0 for a nil statement — a period with no transactions still downloads."
+    transaction_count: Int!
+  }
+
   input RequestWithdrawalInput {
     amount: Float!
     payout_method: WithdrawalMethod!
@@ -157,6 +243,10 @@ export const walletTypeDefs = /* GraphQL */ `
     myWallet: Wallet!
     myWalletTransactions: [WalletTransaction!]!
     myWithdrawals: [WalletWithdrawal!]!
+    "The caller's own wallet statement. There is no user argument: nobody can ask for another account's."
+    myWalletStatement(input: WalletStatementInput!): WalletStatement!
+    "The same statement as a PDF or CSV file, base64-encoded."
+    myWalletStatementFile(input: WalletStatementInput!, format: WalletStatementFormat!): WalletStatementFile!
     withdrawalRequests(status: WithdrawalStatus): [WalletWithdrawal!]!
     withdrawalRequestsTable(query: TableQueryInput): WalletWithdrawalTablePage!
     """

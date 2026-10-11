@@ -2,11 +2,15 @@ import { GraphQLError } from 'graphql';
 import { paymentService } from './payment.service';
 import { paymentDetailService } from './payment.detail.service';
 import { paymentRefundService } from './payment.refund.service';
+import { paymentRoundOffService } from './payment.roundoff.service';
+import { orderRefundService } from './payment.orderRefund.service';
+import type { PaymentShop } from './payment.source';
 import { paymentUserSummaryService } from './payment.userSummary.service';
 import { COIN_LOG_READ } from '../coin/coin.resolver';
 import { assertCheckoutEligible } from './checkout-eligibility';
 import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
 import type { IdLike } from '@utils/request-cache';
+import type { TableQueryInput } from '@utils/table-query';
 import type { GraphQLContext } from '@context';
 import { hasRole, LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
@@ -39,9 +43,24 @@ export const paymentResolvers = {
       requireRole(ctx, ADMIN_READ);
       return paymentService.list(args.filter, args.limit ?? 200);
     },
-    paymentTotals: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
+    paymentTotals: (_p: unknown, args: { filter?: any; shop?: PaymentShop | null }, ctx: GraphQLContext) => {
       requireRole(ctx, LOG_READ);
-      return paymentService.totals(args.filter);
+      return paymentService.totals(args.filter, args.shop);
+    },
+    // The three reads below are Payment Logs seen another way — one shop's
+    // payments, the payments rounding added to, one shop's order refunds — so
+    // they carry the same read roles and nothing wider.
+    shopPaymentsTable: (_p: unknown, args: { shop: PaymentShop; query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, LOG_READ);
+      return paymentService.tableForShop(args.shop, args.query);
+    },
+    paymentRoundOffsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, LOG_READ);
+      return paymentRoundOffService.table(args.query);
+    },
+    shopOrderRefundsTable: (_p: unknown, args: { shop: PaymentShop; query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, LOG_READ);
+      return orderRefundService.table(args.shop, args.query);
     },
     paymentsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, LOG_READ);

@@ -182,6 +182,8 @@ const quoteOut = (q: StoreQuote, currencySymbol: string) => ({
   coins_redeemed: q.coins_redeemed,
   discount_total: q.discount_total,
   gst_amount: q.quote.gst_amount,
+  // Already inside `total`: the bill is rounded up to a whole rupee before coins.
+  round_off: q.quote.round_off,
   total: q.quote.total,
   currency_symbol: currencySymbol,
   cod_available: q.cod_block === null,
@@ -299,6 +301,7 @@ export function draftStorePayment(input: {
     gst_pct: q.gst_pct,
     gst_amount: q.gst_amount,
     total: q.total,
+    round_off: q.round_off,
     currency_symbol: q.currency_symbol,
     coupon_code: quote.coupon_code,
     coupon_discount: quote.coupon_discount,

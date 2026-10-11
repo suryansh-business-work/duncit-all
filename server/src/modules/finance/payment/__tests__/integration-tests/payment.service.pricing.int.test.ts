@@ -54,6 +54,8 @@ describe('computeQuote', () => {
       gst_pct: 18,
       gst_amount: 180,
       total: 1180,
+      // A quote is priced to the paisa; rounding belongs to applyCoins.
+      round_off: 0,
       currency_symbol: '₹',
       dummy_mode: true,
     });
@@ -84,6 +86,7 @@ describe('computeQuote', () => {
       gst_pct: 0,
       gst_amount: 0,
       total: 200,
+      round_off: 0,
       currency_symbol: '$',
       dummy_mode: false,
     });
@@ -117,21 +120,63 @@ describe('applyCoins', () => {
     expect(quote.total).toBe(0);
   });
 
-  it('hands one coin back rather than leave a sub-₹1 remainder the gateway would reject', async () => {
-    const id = user();
-    await wallet(id, 1000);
-    // ₹499.50: flooring to 499 coins would leave ₹0.50 to charge.
-    const { quote, coinsRedeemed } = await applyCoins(1000, id, await computeQuote(499.5));
-    expect(coinsRedeemed).toBe(498);
-    expect(quote.total).toBe(1.5);
+  it('rounds a bill up to the whole rupee even when no coins are spent', async () => {
+    // ₹101.47 → ₹102: 53 paise of round-off on top of untouched tax lines.
+    const priced = await computeQuote(101.47);
+    const { quote, coinsRedeemed } = await applyCoins(0, null, priced);
+    expect(coinsRedeemed).toBe(0);
+    expect(quote).toEqual({ ...priced, total: 102, round_off: 0.53 });
+    // GST 101.47 × 18/118 = 15.48, net 85.99 — the round-off is in neither.
+    expect(quote.subtotal + quote.gst_amount).toBeCloseTo(101.47, 2);
+    expect(quote.platform_fee_amount).toBe(priced.platform_fee_amount);
   });
 
-  it('a bill too small to absorb any whole coin spends none', async () => {
+  it('adds nothing to a bill that is already whole', async () => {
+    const { quote } = await applyCoins(0, null, await computeQuote(1180));
+    expect(quote.total).toBe(1180);
+    expect(quote.round_off).toBe(0);
+  });
+
+  it('lets whole coins clear a bill that ended in paise: nothing is left to charge', async () => {
+    const id = user();
+    await wallet(id, 1000);
+    // The ₹1.47 bug: 101 coins used to be cut to 100 and ₹1.47 charged. The
+    // bill is ₹102 now, and 102 coins pay all of it.
+    const { quote, coinsRedeemed } = await applyCoins(1000, id, await computeQuote(101.47));
+    expect(coinsRedeemed).toBe(102);
+    expect(quote).toMatchObject({ total: 0, round_off: 0.53, subtotal: 0, gst_amount: 0, platform_fee_amount: 0 });
+  });
+
+  it('charges whole rupees when coins cover only part, taxing what is left after them', async () => {
+    const id = user();
+    await wallet(id, 60);
+    // ₹101.47 → ₹102, less 60 coins = ₹42 charged. Tax is on 101.47 − 60 = 41.47:
+    // GST 41.47 × 18/118 = 6.33, net 35.14, and 35.14 + 6.33 + 0.53 = 42.
+    const { quote, coinsRedeemed } = await applyCoins(500, id, await computeQuote(101.47));
+    expect(coinsRedeemed).toBe(60);
+    expect(quote).toMatchObject({ total: 42, round_off: 0.53, gst_amount: 6.33, subtotal: 35.14 });
+  });
+
+  it('never redeems more than the rounded bill, and nothing for a guest or an empty wallet', async () => {
     const id = user();
     await wallet(id, 10);
-    const tiny = await computeQuote(1.5);
-    expect(await applyCoins(10, id, tiny)).toEqual({ quote: tiny, coinsRedeemed: 0 });
+    // ₹1.50 → ₹2: two coins clear it, the other eight stay in the wallet.
+    expect(await applyCoins(10, id, await computeQuote(1.5))).toMatchObject({
+      coinsRedeemed: 2,
+      quote: { total: 0, round_off: 0.5 },
+    });
     expect(await applyCoins(10, user(), await computeQuote(100))).toMatchObject({ coinsRedeemed: 0 });
+    expect(await applyCoins(10, null, await computeQuote(100))).toMatchObject({
+      coinsRedeemed: 0,
+      quote: { total: 100, round_off: 0 },
+    });
+  });
+
+  it('leaves a bill a coupon took to zero at zero', async () => {
+    expect(await applyCoins(5, null, await computeQuote(0))).toMatchObject({
+      coinsRedeemed: 0,
+      quote: { total: 0, round_off: 0 },
+    });
   });
 });
 

@@ -122,6 +122,8 @@ const returnSchema = new Schema<IStoreReturn>(
 );
 
 returnSchema.index({ created_at: -1 });
+// Finance › Ecomm › Order Refunds: the returns that were refunded, newest first.
+returnSchema.index({ refunded_at: -1 });
 
 export const StoreReturnModel = model<IStoreReturn>('StoreReturn', returnSchema);
 

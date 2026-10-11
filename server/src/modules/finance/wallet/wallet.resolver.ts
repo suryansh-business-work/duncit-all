@@ -1,4 +1,9 @@
 import { walletService } from './wallet.service';
+import {
+  walletStatementService,
+  type WalletStatementFormat,
+  type WalletStatementInput,
+} from './walletStatement.service';
 import type { IMinWithdrawal } from '@modules/finance/finance/finance.model';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
@@ -20,6 +25,20 @@ export const walletResolvers = {
     myWithdrawals: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return walletService.listMyWithdrawals(user.id);
+    },
+    // Owner-scoped by construction: both read the ledger of `ctx.user.id` and
+    // take no user argument, so there is no id for a caller to swap.
+    myWalletStatement: async (_p: unknown, args: { input: WalletStatementInput }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return walletStatementService.statement(user.id, args.input);
+    },
+    myWalletStatementFile: async (
+      _p: unknown,
+      args: { input: WalletStatementInput; format: WalletStatementFormat },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return walletStatementService.file(user.id, args.input, args.format);
     },
     withdrawalRequests: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, FINANCE_RW);

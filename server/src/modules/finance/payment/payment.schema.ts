@@ -64,6 +64,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     gst_pct: Float!
     gst_amount: Float!
     total: Float!
+    "What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement."
+    round_off: Float!
     currency_symbol: String!
     coupon_code: String
     coupon_discount: Float!
@@ -274,6 +276,143 @@ export const paymentTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  "The checkout a payment came from. A pod booking that carried shop add-ons is still a POD_BOOKING."
+  enum PaymentSource {
+    POD_BOOKING
+    "The pod shop's standalone cart (partner-brand products bought in the app)."
+    POD_SHOP
+    "The pet store, ecomm.duncit.com."
+    ECOMM
+    "Gift cards and anything else."
+    OTHER
+  }
+
+  "The two shops Finance keeps separate ledgers for. They are different products and are never mixed."
+  enum PaymentShop {
+    "Partner-brand products bought in the app."
+    POD_SHOP
+    "The pet store, ecomm.duncit.com."
+    ECOMM
+  }
+
+  "One payment whose bill was rounded up to a whole rupee (Finance › Round Offs)."
+  type PaymentRoundOff {
+    id: ID!
+    payment_id: String!
+    invoice_no: String
+    user_name: String!
+    user_email: String!
+    description: String!
+    source: PaymentSource!
+    "The bill before rounding: total + coins_redeemed − round_off."
+    bill_amount: Float!
+    "What rounding the bill up to a whole rupee added (0 < x < 1)."
+    round_off: Float!
+    coins_redeemed: Float!
+    "What was actually charged."
+    total: Float!
+    currency_symbol: String!
+    status: PaymentStatus!
+    gateway: String!
+    paid_at: String
+    created_at: String!
+  }
+
+  "Totals over EVERY payment the Round Offs filter matches — a server aggregate, never a sum of one page."
+  type PaymentRoundOffSummary {
+    count: Int!
+    "Round-off on every matching payment, whatever its status."
+    round_off_total: Float!
+    "The part that reached Duncit as money: SUCCESS payments with something charged."
+    collected_round_off_total: Float!
+  }
+
+  "Server-side table page for the shared table engine (paymentRoundOffsTable)."
+  type PaymentRoundOffTablePage {
+    rows: [PaymentRoundOff!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+    summary: PaymentRoundOffSummary!
+  }
+
+  enum ShopOrderRefundKind {
+    "An order called off before delivery."
+    CANCELLATION
+    "Goods sent back after delivery."
+    RETURN
+  }
+
+  "Where a refund's money went."
+  enum ShopOrderRefundMode {
+    "Back to the original payment method only."
+    RAZORPAY
+    "Duncit Coins only."
+    COINS
+    "Part to the original payment method, part as Duncit Coins."
+    RAZORPAY_COINS
+  }
+
+  """
+  One refund event at ORDER level — a cancelled order or a refunded return — in
+  one shop. cash_amount returns to the original payment method; coins return to
+  the buyer's Duncit Coin wallet.
+  """
+  type ShopOrderRefund {
+    id: ID!
+    kind: ShopOrderRefundKind!
+    "The order number for a cancellation, the return number for a return."
+    ref_no: String!
+    order_no: String!
+    order_id: ID!
+    buyer_name: String!
+    buyer_email: String!
+    "The payment this refund reverses; null when that payment no longer exists."
+    payment_doc_id: ID
+    payment_ref: String!
+    currency_symbol: String!
+    order_total: Float!
+    "Money going back to the original payment method."
+    cash_amount: Float!
+    "Duncit Coins going back to the buyer's wallet."
+    coins: Int!
+    "cash_amount + coins (1 coin = 1 rupee)."
+    refund_value: Float!
+    "Razorpay's refund id — pod shop only; the pet store's refunds are paid out by Finance."
+    razorpay_refund_id: String!
+    "PENDING, PROCESSED, RECORDED (ledger only, nothing sent to a gateway) or FAILED."
+    status: String!
+    mode: ShopOrderRefundMode!
+    initiated_by: String!
+    "Why the gateway refused, when it did."
+    error: String!
+    "True for a pet-store order cancelled before refunds were recorded on the order: the figures are worked out from the cancel rule, not read back."
+    derived: Boolean!
+    "True when Finance has to pay the cash out by hand: a refund Razorpay refused, or any pet-store cash refund."
+    manual_payout: Boolean!
+    event_at: String
+  }
+
+  "Totals over EVERY refund the filter matches — a server aggregate, never a sum of one page."
+  type ShopOrderRefundSummary {
+    count: Int!
+    "Money going back to original payment methods."
+    cash_total: Float!
+    "Duncit Coins going back to wallets."
+    coins_total: Int!
+    "The part of cash_total Finance has to pay out by hand."
+    manual_payout_total: Float!
+  }
+
+  "Server-side table page for the shared table engine (shopOrderRefundsTable)."
+  type ShopOrderRefundTablePage {
+    rows: [ShopOrderRefund!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+    summary: ShopOrderRefundSummary!
+  }
+
   "Filter-wide KPI totals for the Payment Logs cards (SUCCESS payments only, no row cap)."
   type PaymentTotals {
     count: Int!
@@ -290,7 +429,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     platform_fee_amount: Float!
     gst_pct: Float!
     gst_amount: Float!
+    "The quoted amount rounded UP to a whole rupee — what a checkout with no coupon and no coins is charged."
     total: Float!
+    "What that rounding added (0 when the amount was already whole). Inside total, outside subtotal and gst_amount."
+    round_off: Float!
     currency_symbol: String!
     dummy_mode: Boolean!
     "Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies)."
@@ -563,8 +705,14 @@ export const paymentTypeDefs = /* GraphQL */ `
     userFinanceSummary(user_id: ID!): UserFinanceSummary!
     payments(filter: PaymentFilterInput, limit: Int): [Payment!]!
     "Aggregated totals over EVERY payment matching the filter (no row cap), SUCCESS only."
-    paymentTotals(filter: PaymentFilterInput): PaymentTotals!
+    paymentTotals(filter: PaymentFilterInput, "Narrow the totals to one shop's payments." shop: PaymentShop): PaymentTotals!
     paymentsTable(query: TableQueryInput): PaymentTablePage!
+    "One shop's payment log. The shop is fixed server-side: the query input can only narrow it."
+    shopPaymentsTable(shop: PaymentShop!, query: TableQueryInput): PaymentTablePage!
+    "Payments whose bill was rounded up, with filter-wide totals. Accepts a derived 'source' filter (PaymentSource values)."
+    paymentRoundOffsTable(query: TableQueryInput): PaymentRoundOffTablePage!
+    "One shop's order-level refunds (cancellations and returns), with filter-wide totals."
+    shopOrderRefundsTable(shop: PaymentShop!, query: TableQueryInput): ShopOrderRefundTablePage!
     "Every refund already paid back to a buyer, from all four refund flows."
     userRefundsTable(query: TableQueryInput): UserRefundTablePage!
     payment(payment_doc_id: ID!): Payment

@@ -29,7 +29,7 @@ describe('warehouseSchema', () => {
 
   it('requires a nickname of at least 2 characters', () => {
     const result = warehouseSchema.safeParse({ ...validWarehouse, nickname: 'A' });
-    expect(messages(result)).toMatch(/warehouse name/i);
+    expect(messages(result)).toMatch(/address nickname must be at least 2 characters/i);
   });
 
   it('requires a digits-only phone number', () => {
@@ -64,7 +64,7 @@ describe('warehouseSchema', () => {
   it('keeps the name to the 36 characters ShipRocket holds', () => {
     expect(warehouseSchema.safeParse({ ...validWarehouse, nickname: 'W'.repeat(36) }).success).toBe(true);
     expect(messages(warehouseSchema.safeParse({ ...validWarehouse, nickname: 'W'.repeat(37) }))).toMatch(
-      /warehouse name must be 36 characters or fewer/i,
+      /address nickname must be 36 characters or fewer/i,
     );
   });
 

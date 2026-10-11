@@ -19,6 +19,7 @@ import IntegrationsPage from './pages/ecomm-brand-page/integrations/Integrations
 import ReturnsPage from './pages/ecomm-brand-page/returns';
 import OrdersPage, { OrderDetailPage } from './pages/ecomm-brand-page/orders';
 import WarehousesPage from './pages/ecomm-brand-page/warehouses';
+import DeletionRefundsPage from './pages/ecomm-brand-page/deletion-refunds';
 import EcommDashboardPage from './pages/ecomm-dashboard-page/EcommDashboardPage';
 import ListProductsPage from './pages/list-products-page/ListProductsPage';
 import ProductListingEditorPage from './pages/list-products-page/ProductListingEditorPage';
@@ -126,6 +127,7 @@ export default function App() {
       <Route path="/ecomm-brand/orders" element={authed(<OrdersPage />)} />
       <Route path="/ecomm-brand/orders/:orderId" element={authed(<OrderDetailPage />)} />
       <Route path="/ecomm-brand/warehouses" element={authed(<WarehousesPage />)} />
+      <Route path="/ecomm-brand/deletion-refunds" element={authed(<DeletionRefundsPage />)} />
       {/* A brand row opens its details page (overview, logs, analytics). */}
       <Route path="/ecomm-brand/:brandId" element={authed(<BrandDetailsRoute />)} />
       <Route path="/ecomm-brand/:brandId/edit" element={authed(<BrandWizardRoute />)} />

@@ -5,7 +5,6 @@ import {
   hasPartnerRole,
   optionsPathOf,
   PARTNER_SECTIONS,
-  visibleSections,
   type PartnerRole,
   type PartnerSection,
 } from './partner-sections';
@@ -54,27 +53,36 @@ export const appConfig: AppConfig = {
     },
     // Featured invitation into the other earn journeys — the same entry
     // mWeb/native show in their profile grids, styled as a highlighted card.
-    // Last on purpose: it closes the sidebar for everyone, partner or not yet.
+    // Last on purpose, and pinned to the sidebar's foot (just above the
+    // signed-in user): it closes the sidebar for everyone, partner or not yet.
     {
       label: 'Earn with Duncit', labelKey: 'shell.nav.earnWithDuncit',
       caption: 'Host, list or sell', captionKey: 'shell.nav.hostListOrSell',
       to: '/earn',
       icon: 'volunteer-activism',
       featured: true,
+      pinBottom: true,
     },
   ],
 };
 
 /**
- * Where `/` sends somebody: the Options page of the first partner area they hold.
+ * Where `/` sends somebody: the Options page of the studio they are IN (see
+ * useActiveStudio) — the breadcrumb's root crumb and the logo both link to `/`,
+ * so "home" must never swap studios. A studio they do not hold, or none
+ * remembered yet, falls back to the first partner area they hold.
  *
  * This surface is open to any signed-in user, and somebody with no partner
  * access yet lands on Earn with Duncit — the page that says how to get it, and
  * the one entry their sidebar shows besides the account pages.
  */
-export function landingPath(roles?: readonly string[] | null, productsVisible = true): string {
-  const first = visibleSections(roles, productsVisible)[0];
-  return first ? optionsPathOf(first) : '/earn';
+export function landingPath(
+  roles?: readonly string[] | null,
+  productsVisible = true,
+  activeRole?: PartnerRole | null,
+): string {
+  const studio = activeSection(roles, productsVisible, activeRole);
+  return studio ? optionsPathOf(studio) : '/earn';
 }
 
 export interface BuildNavOptions {

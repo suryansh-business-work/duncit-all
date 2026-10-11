@@ -117,6 +117,7 @@ export const warehouseRow = (over: Record<string, unknown> = {}) => ({
   pincode: '110020',
   country: 'India',
   is_default: true,
+  is_active: true,
   shiprocket_registered: true,
   shiprocket_error: '',
   shiprocket_pickup_id: 'SR-1',

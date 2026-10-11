@@ -22,28 +22,30 @@ import {
   WarehouseForm, toSaveWarehouseVariables, warehouseToValues, type WarehouseFormValues,
 } from '../warehouse-form';
 import WarehouseList from '../WarehouseList';
-import {
-  DELETE_MY_WAREHOUSE, MY_BRAND_WAREHOUSES, SAVE_MY_WAREHOUSE, SET_DEFAULT_MY_WAREHOUSE,
-  type BrandWarehouse,
-} from '../warehouse.queries';
+import { MY_BRAND_WAREHOUSES, SAVE_MY_WAREHOUSE, type BrandWarehouse } from '../warehouse.queries';
 import { useTranslation } from '@duncit/shell';
 import BrandSettingsHero from './BrandSettingsHero';
 import DeleteWarehouseDialog from './DeleteWarehouseDialog';
 import WarehouseSync from '../WarehouseSync';
+import { usePickupActions } from './usePickupActions';
 
 type Editing = BrandWarehouse | 'new' | null;
 
-/** Full-screen Brand Settings: the brand's warehouses (pickup locations) with
- * add/edit/delete/set-default. An approved warehouse is sent to ShipRocket by
- * the server — on approval, and again whenever this page opens (WarehouseSync). */
+/** How long a confirmation stays up. A refusal stays until it is dismissed — it names what to fix. */
+const NOTICE_MS = 4000;
+
+/** Full-screen Brand Settings: the brand's pickup addresses with add / edit /
+ * delete / make-primary / active-inactive. An approved address is sent to
+ * ShipRocket by the server — on approval, and again whenever this page opens
+ * (WarehouseSync). */
 export default function BrandSettingsPage({
   embedded = false,
   brandId: brandIdProp,
 }: Readonly<{
-  /** Inside the brand page's Warehouses tab: that page already carries the
+  /** Inside the brand page's Pickup Addresses tab: that page already carries the
    * brand's header and the way back, so this one drops its own hero. */
   embedded?: boolean;
-  /** The brand to show when it is not in the URL (the Warehouses page picks it). */
+  /** The brand to show when it is not in the URL (the Pickup Addresses page picks it). */
   brandId?: string;
 }>) {
   const { t } = useTranslation();
@@ -56,17 +58,15 @@ export default function BrandSettingsPage({
     fetchPolicy: 'cache-and-network',
   });
   const [saveWarehouse, saveState] = useMutation<any>(SAVE_MY_WAREHOUSE);
-  const [deleteWarehouse, deleteState] = useMutation<any>(DELETE_MY_WAREHOUSE);
-  const [setDefaultWarehouse, defaultState] = useMutation<any>(SET_DEFAULT_MY_WAREHOUSE);
+  const actions = usePickupActions(brandId, refetch);
+  const { notice, setNotice } = actions;
   const [editing, setEditing] = useState<Editing>(null);
-  const [deleteTarget, setDeleteTarget] = useState<BrandWarehouse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const brand: EcommBrand | null =
     brandsData?.myEcommBrands?.find((item: EcommBrand) => item.id === brandId) ?? null;
   const warehouses: BrandWarehouse[] = data?.myBrandPickupLocations ?? [];
-  const busy = saveState.loading || deleteState.loading || defaultState.loading;
+  const busy = saveState.loading || actions.busy;
   const editingWarehouse = editing && editing !== 'new' ? editing : null;
   const defaultValues = useMemo(() => warehouseToValues(editingWarehouse), [editingWarehouse]);
   const brandMissing = !brandsLoading && brandsData && !brand;
@@ -81,41 +81,17 @@ export default function BrandSettingsPage({
       await saveWarehouse({
         variables: toSaveWarehouseVariables(brandId, editingWarehouse?.id ?? null, values),
       });
-      setMessage(t('partners.ecommBrandPage.warehouseSaved'));
+      setNotice({ severity: 'success', text: t('partners.ecommBrandPage.warehouseSaved') });
       closeDialog();
       await refetch();
     } catch (saveError) {
       setApiError(parseApiError(saveError));
     }
   };
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteWarehouse({ variables: { brand_doc_id: brandId, id: deleteTarget.id } });
-      setMessage(t('partners.ecommBrandPage.warehouseDeleted'));
-      await refetch();
-    } catch (deleteError) {
-      setMessage(parseApiError(deleteError));
-    }
-    setDeleteTarget(null);
-  };
-  const makeDefault = async (warehouse: BrandWarehouse) => {
-    try {
-      await setDefaultWarehouse({ variables: { brand_doc_id: brandId, id: warehouse.id } });
-      setMessage(`${warehouse.nickname} is now the default warehouse.`);
-      await refetch();
-    } catch (defaultError) {
-      setMessage(parseApiError(defaultError));
-    }
-  };
 
   if ((brandsLoading && !brandsData) || (loading && !data)) {
     return (
-      <Stack
-        sx={{
-          alignItems: "center",
-          py: 5
-        }}>
+      <Stack sx={{ alignItems: 'center', py: 5 }}>
         <CircularProgress size={24} aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
@@ -130,22 +106,19 @@ export default function BrandSettingsPage({
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Stack spacing={2}>
-              <Typography variant="h6" component="h2" sx={{
-                fontWeight: 950
-              }}>{t('partners.ecommBrandPage.warehouses')}</Typography>
-              <Alert severity="info">
-                Every new warehouse — and every edit to an existing one — is reviewed by the Duncit team.
-                A product can only be listed against an approved warehouse, so saving changes here sends
-                it back for review.
-              </Alert>
+              <Typography variant="h6" component="h2" sx={{ fontWeight: 950 }}>
+                {t('partners.ecommBrandPage.warehouses')}
+              </Typography>
+              <Alert severity="info">{t('partners.warehouses.reviewNotice')}</Alert>
               <WarehouseSync brandId={brandId} onSynced={() => fireAndForget(refetch(), logs.portal['partners-app'], 'BrandSettingsPage', 'refetch')} />
               <WarehouseList
                 warehouses={warehouses}
                 busy={busy}
                 onAdd={() => { setApiError(null); setEditing('new'); }}
                 onEdit={(warehouse) => { setApiError(null); setEditing(warehouse); }}
-                onDelete={setDeleteTarget}
-                onSetDefault={makeDefault}
+                onDelete={actions.askDelete}
+                onSetDefault={actions.makeDefault}
+                onToggleActive={actions.toggleActive}
               />
             </Stack>
           </CardContent>
@@ -154,7 +127,9 @@ export default function BrandSettingsPage({
 
       <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm" aria-labelledby="warehouse-dialog-title">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-          <span id="warehouse-dialog-title">{editingWarehouse ? 'Edit warehouse' : 'New warehouse'}</span>
+          <span id="warehouse-dialog-title">
+            {editingWarehouse ? t('partners.warehouses.editTitle') : t('partners.warehouses.newTitle')}
+          </span>
           <DuncitIconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
         </DialogTitle>
         <DialogContent dividers>
@@ -170,12 +145,24 @@ export default function BrandSettingsPage({
       </Dialog>
 
       <DeleteWarehouseDialog
-        deleteTarget={deleteTarget}
-        busy={deleteState.loading}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={confirmDelete}
+        brandId={brandId}
+        target={actions.removal}
+        busy={actions.removing}
+        onCancel={actions.cancelRemoval}
+        onConfirm={actions.confirmRemoval}
       />
-      <Snackbar open={!!message} autoHideDuration={3000} message={message ?? ''} onClose={() => setMessage(null)} />
+      <Snackbar
+        open={!!notice}
+        autoHideDuration={notice?.severity === 'error' ? null : NOTICE_MS}
+        onClose={(_event, reason) => {
+          // A refusal is not dismissed by a stray click elsewhere on the page.
+          if (reason !== 'clickaway' || notice?.severity !== 'error') setNotice(null);
+        }}
+      >
+        <Alert severity={notice?.severity ?? 'success'} variant="filled" onClose={() => setNotice(null)} sx={{ width: '100%' }}>
+          {notice?.text}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }

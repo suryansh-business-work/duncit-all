@@ -3,7 +3,7 @@ import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing
 import type { MockedResponse } from '@apollo/client/testing';
 import BrandSettingsPage from './BrandSettingsPage';
 import { MY_BRANDS } from '../queries';
-import { DELETE_MY_WAREHOUSE, MY_BRAND_WAREHOUSES, SAVE_MY_WAREHOUSE } from './warehouse.queries';
+import { DELETE_MY_WAREHOUSE, MY_BRAND_WAREHOUSES, MY_WAREHOUSE_USAGE, SAVE_MY_WAREHOUSE } from './warehouse.queries';
 import { renderWithProviders } from '../../../__tests__/render';
 
 configure({ asyncUtilTimeout: 5000 });
@@ -64,6 +64,7 @@ const warehouse = {
   pincode: '110020',
   country: 'India',
   is_default: false,
+  is_active: true,
   shiprocket_registered: false,
   shiprocket_error: '',
   shiprocket_pickup_id: '',
@@ -109,8 +110,8 @@ const newWarehouseInput = {
   owner_kind: 'BRAND',
 };
 
-describe('BrandSettingsPage adding a warehouse', () => {
-  it('creates a new default warehouse with no id, then lets the partner dismiss the confirmation', async () => {
+describe('BrandSettingsPage adding a pickup address', () => {
+  it('creates a new primary pickup address with no id, then lets the partner dismiss the confirmation', async () => {
     let sent: Record<string, unknown> | null = null;
     renderSettings([
       brandsMock,
@@ -134,10 +135,10 @@ describe('BrandSettingsPage adding a warehouse', () => {
       },
     ]);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Add warehouse' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Add pickup address' }));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('New warehouse')).toBeTruthy();
-    fireEvent.change(within(dialog).getByLabelText(/Warehouse name/), { target: { value: 'Pune hub' } });
+    expect(within(dialog).getByText('New pickup address')).toBeTruthy();
+    fireEvent.change(within(dialog).getByLabelText(/Address nickname/), { target: { value: 'Pune hub' } });
     fireEvent.change(within(dialog).getByLabelText(/Contact name/), { target: { value: 'Ravi Kumar' } });
     fireEvent.change(within(dialog).getByLabelText(/Phone/), { target: { value: '9123456780' } });
     fireEvent.change(within(dialog).getByLabelText(/Email/), { target: { value: 'ravi@duncit.com' } });
@@ -146,19 +147,19 @@ describe('BrandSettingsPage adding a warehouse', () => {
     fireEvent.change(within(dialog).getByLabelText(/State/), { target: { value: 'Maharashtra' } });
     fireEvent.change(within(dialog).getByLabelText(/Pincode/), { target: { value: '411057' } });
 
-    const makeDefault = within(dialog).getByRole('switch', { name: 'Use as the default warehouse for this brand' });
+    const makeDefault = within(dialog).getByRole('switch', { name: 'Use as the primary pickup address for this brand' });
     expect((makeDefault as HTMLInputElement).checked).toBe(false);
     fireEvent.click(makeDefault);
     expect((makeDefault as HTMLInputElement).checked).toBe(true);
 
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save warehouse' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save pickup address' }));
 
-    expect(await screen.findByText('Warehouse saved.')).toBeTruthy();
+    expect(await screen.findByText('Pickup address saved.')).toBeTruthy();
     expect(sent).toEqual({ brand_doc_id: BRAND_ID, id: null, input: newWarehouseInput });
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
 
     fireEvent.keyDown(document, { key: 'Escape' });
-    await waitFor(() => expect(screen.queryByText('Warehouse saved.')).toBeNull());
+    await waitFor(() => expect(screen.queryByText('Pickup address saved.')).toBeNull());
   });
 });
 
@@ -168,6 +169,13 @@ describe('BrandSettingsPage delete dialog', () => {
     renderSettings([
       brandsMock,
       warehousesMock([warehouse]),
+      {
+        // Nothing ships from it, so the dialog offers the deletion.
+        request: { query: MY_WAREHOUSE_USAGE, variables: { brand_doc_id: BRAND_ID, id: 'w1' } },
+        result: {
+          data: { myBrandPickupLocationUsage: { __typename: 'BrandPickupUsage', count: 0, products: [] } },
+        },
+      },
       {
         request: { query: DELETE_MY_WAREHOUSE, variables: { brand_doc_id: BRAND_ID, id: 'w1' } },
         result: () => {
@@ -179,14 +187,16 @@ describe('BrandSettingsPage delete dialog', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Delete Delhi warehouse' }));
     const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByText('Delhi warehouse will be deleted. No product ships from it.');
     const confirm = within(dialog).getByRole('button', { name: 'Delete' });
+    expect(confirm.hasAttribute('disabled')).toBe(false);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     // Still on screen while it fades out — a late click must not delete anything.
     fireEvent.click(confirm);
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(deleted).toBe(false);
-    expect(screen.queryByText('Warehouse deleted.')).toBeNull();
+    expect(screen.queryByText('Pickup address deleted.')).toBeNull();
     expect(screen.getByText('Delhi warehouse')).toBeTruthy();
   });
 });

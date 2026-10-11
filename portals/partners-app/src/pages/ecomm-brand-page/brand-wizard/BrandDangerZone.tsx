@@ -1,18 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useMutation } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import { DuncitButton } from '@duncit/buttons';
-import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
+import { notifySuccess } from '@duncit/dialogs';
 import { SectionCard } from '@duncit/ui';
-import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
+import BrandDeleteButton from '../BrandDeleteButton';
 import BrandPauseDialog from '../BrandPauseDialog';
-import { DELETE_MY_BRAND, type EcommBrand } from '../queries';
-import { DeletionRequestDialog, DeletionStateChip, useDeletionRequests } from '../deletion-request';
+import type { EcommBrand } from '../queries';
 
 interface Props {
   brand: EcommBrand;
@@ -23,31 +20,8 @@ interface Props {
 export default function BrandDangerZone({ brand, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [deleteBrand, deleteState] = useMutation<any>(DELETE_MY_BRAND);
   const [pauseOpen, setPauseOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [requestOpen, setRequestOpen] = useState(false);
-  const { openFor, reload } = useDeletionRequests(brand.id);
-  const openRequest = openFor('BRAND', brand.id);
   const paused = brand.is_active === false;
-  const brandName = brand.brand_name || t('partners.ecommBrandPage.untitledBrand');
-
-  // A LIVE brand is a deletion request the Products team reviews; one still in setup is deleted outright.
-  const startDelete = () => {
-    if (brand.status === 'APPROVED') setRequestOpen(true);
-    else setDeleteOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      await deleteBrand({ variables: { brand_doc_id: brand.id } });
-      notifySuccess(t('partners.brandWizard.danger.deleted'));
-      navigate('/ecomm-brand', { replace: true });
-    } catch (error) {
-      notifyError(parseApiError(error));
-      setDeleteOpen(false);
-    }
-  };
 
   return (
     <SectionCard title={t('partners.brandWizard.danger.title')}>
@@ -79,22 +53,13 @@ export default function BrandDangerZone({ brand, onChanged }: Readonly<Props>) {
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('partners.brandWizard.danger.deleteBody')}
           </Typography>
-          {openRequest ? (
-            <Stack direction="row" sx={{ alignSelf: 'flex-start' }}>
-              <DeletionStateChip request={openRequest} />
-            </Stack>
-          ) : (
-            <DuncitButton
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteForeverIcon />}
-              onClick={startDelete}
-              sx={{ alignSelf: 'flex-start' }}
-              data-testid="brand-danger-delete"
-            >
-              {t('partners.brandWizard.danger.delete')}
-            </DuncitButton>
-          )}
+          {/* The one delete rule (request for a LIVE brand, outright otherwise) — shared with the Orders page. */}
+          <BrandDeleteButton
+            brand={brand}
+            label={t('partners.brandWizard.danger.delete')}
+            onRequested={onChanged}
+            onDeleted={() => navigate('/ecomm-brand', { replace: true })}
+          />
         </Stack>
       </Stack>
       <BrandPauseDialog
@@ -102,25 +67,6 @@ export default function BrandDangerZone({ brand, onChanged }: Readonly<Props>) {
         onClose={() => setPauseOpen(false)}
         onDone={(text) => {
           notifySuccess(text);
-          onChanged();
-        }}
-      />
-      <ConfirmDialog
-        open={deleteOpen}
-        title={t('partners.brandWizard.danger.deleteConfirmTitle', { vars: { brand: brandName } })}
-        message={t('partners.brandWizard.danger.deleteConfirmBody')}
-        destructive
-        busy={deleteState.loading}
-        busyLabel={t('shell.common.deleting')}
-        confirmLabel={t('shell.common.delete')}
-        onConfirm={confirmDelete}
-        onClose={() => setDeleteOpen(false)}
-      />
-      <DeletionRequestDialog
-        target={requestOpen ? { kind: 'BRAND', id: brand.id, name: brandName } : null}
-        onClose={() => setRequestOpen(false)}
-        onDone={() => {
-          reload();
           onChanged();
         }}
       />

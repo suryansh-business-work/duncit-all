@@ -109,7 +109,8 @@ export default function WalletStatementDialog({
     <Dialog open onClose={loading ? undefined : onClose} fullWidth maxWidth="xs" data-testid="statement-dialog">
       <DialogTitle sx={{ fontWeight }}>{t('withdraw.statement.title')}</DialogTitle>
       <DialogContent dividers>
-        <Stack component="form" id="wallet-statement-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
+        {/* noValidate: the range rules and their localized messages are the schema's, shown beside the field — not the browser's own bubble. */}
+        <Stack component="form" id="wallet-statement-form" onSubmit={submit} noValidate spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('withdraw.statement.intro')}
           </Typography>

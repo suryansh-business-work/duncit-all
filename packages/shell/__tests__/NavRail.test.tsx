@@ -130,3 +130,29 @@ describe('NavRail', () => {
     expect(screen.queryByRole('presentation')).not.toBeInTheDocument();
   });
 });
+
+describe('NavRail — entries pinned to the foot', () => {
+  const PINNED: AppNavItem[] = [
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Earn', to: '/earn', icon: 'help', pinBottom: true },
+    { label: 'Help', to: '/help', icon: 'help' },
+  ];
+
+  it('keeps a pinned entry out of the scrolling rail and draws it in its own block below', () => {
+    rail({ nav: PINNED });
+
+    const pinned = screen.getByTestId('shell-nav-rail-pinned');
+    expect(pinned).toContainElement(screen.getByRole('link', { name: 'Earn' }));
+    expect(pinned).not.toContainElement(screen.getByRole('link', { name: 'Dashboard' }));
+    expect(pinned).not.toContainElement(screen.getByRole('link', { name: 'Help' }));
+    // The pinned block comes after every scrolling entry, whatever its place in the list.
+    const order = screen.getAllByRole('link').map((link) => link.getAttribute('aria-label'));
+    expect(order).toEqual(['Dashboard', 'Help', 'Earn']);
+  });
+
+  it('draws no pinned block when nothing is pinned', () => {
+    rail();
+
+    expect(screen.queryByTestId('shell-nav-rail-pinned')).not.toBeInTheDocument();
+  });
+});

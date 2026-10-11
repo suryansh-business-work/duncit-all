@@ -77,6 +77,10 @@ COPY packages/utils ./packages/utils
 # The localization runtime + the shared RHF/MUI field the report form renders.
 COPY packages/i18n ./packages/i18n
 COPY packages/forms ./packages/forms
+# @duncit/forms imports @duncit/buttons (its shared statement dialog), which in
+# turn imports @duncit/buttons-native — the compiler follows both from the root.
+COPY packages/buttons ./packages/buttons
+COPY packages/buttons-native ./packages/buttons-native
 # @duncit/captcha — the human check on the report form.
 COPY packages/captcha ./packages/captcha
 # @duncit/brand — main.tsx loads the Google Analytics tag set in Tech.

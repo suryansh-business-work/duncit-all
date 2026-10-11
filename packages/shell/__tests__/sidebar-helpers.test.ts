@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AppNavItem } from '../src/types';
-import { matches, groupActive, bestChild, filterNav } from '../src/chrome/AppSidebar/helpers';
+import { matches, groupActive, bestChild, filterNav, splitPinned } from '../src/chrome/AppSidebar/helpers';
 
 describe('matches', () => {
   it('returns false without a target', () => {
@@ -80,5 +80,24 @@ describe('filterNav', () => {
 
   it('drops non-matching items', () => {
     expect(filterNav(nav, 'zzz')).toEqual([]);
+  });
+});
+
+describe('splitPinned', () => {
+  it('separates the entries pinned to the foot, keeping the order within each block', () => {
+    const items: AppNavItem[] = [
+      { label: 'A', to: '/a' },
+      { label: 'Earn', to: '/earn', pinBottom: true },
+      { label: 'B', to: '/b' },
+      { label: 'Legal', to: '/legal', pinBottom: true },
+    ];
+    const { main, pinned } = splitPinned(items);
+    expect(main.map((item) => item.label)).toEqual(['A', 'B']);
+    expect(pinned.map((item) => item.label)).toEqual(['Earn', 'Legal']);
+  });
+
+  it('leaves a nav with nothing pinned whole', () => {
+    const items: AppNavItem[] = [{ label: 'A', to: '/a' }];
+    expect(splitPinned(items)).toEqual({ main: items, pinned: [] });
   });
 });

@@ -103,7 +103,7 @@ describe('useBrandWarehouses', () => {
     mockRequest.mockRejectedValueOnce({});
     const { result } = renderHook(() => useBrandWarehouses());
     await waitFor(() =>
-      expect(result.current.error).toBe('Could not load the warehouses. Try again.'),
+      expect(result.current.error).toBe('Could not load the pickup addresses. Try again.'),
     );
     serve({ b1: [W1] });
     act(() => result.current.retry());

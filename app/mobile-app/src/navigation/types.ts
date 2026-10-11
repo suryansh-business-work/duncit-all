@@ -147,7 +147,10 @@ export type RootStackParamList = {
   TourGuide: undefined;
   PodPlans: undefined;
   Policies: undefined;
-  SupportTickets: { podId?: string; podTitle?: string } | undefined;
+  // Every field prefills the create-ticket form (mWeb passes the same as query params).
+  SupportTickets:
+    | { podId?: string; podTitle?: string; subject?: string; message?: string; category?: string }
+    | undefined;
   Policy: { slug: string };
   ChatRoom: { podId: string; title: string };
   // Always the slug pair (/club/:clubSlug/pod/:podSlug) — both in-app taps and
@@ -169,6 +172,8 @@ export type RootStackParamList = {
   ProductCheckout: undefined;
   Shop: undefined;
   OrdersHistory: undefined;
+  // One of the buyer's own pod-shop orders (mWeb /orders/:orderId).
+  OrderDetail: { orderId: string };
   AddressBook: undefined;
   Leaderboard: undefined;
   Membership: undefined;
@@ -245,6 +250,7 @@ export type MenuStackRoute = Exclude<
   | 'ClubPodDetails'
   | 'ClubEdit'
   | 'BrandOrderDetail'
+  | 'OrderDetail'
 >;
 
 declare global {

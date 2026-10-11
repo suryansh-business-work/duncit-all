@@ -33,6 +33,8 @@ export function ProductCheckoutForm({ s, actions, breakup }: Readonly<ProductChe
         pincodeValid={s.pincodeValid}
         onInfo={s.setInfoProductId}
         coins={s.coinSummary}
+        roundOff={coins.roundOff}
+        payable={coins.effectiveTotal}
       />
       <CheckoutSavingsCard
         code={s.couponCode}
@@ -61,6 +63,8 @@ export function ProductCheckoutForm({ s, actions, breakup }: Readonly<ProductChe
           vars: { amount: formatMoney(breakup.currency, coins.effectiveTotal) },
         })}
         addressRequired
+        deliveryStatus={s.deliveryStatus}
+        onRetryDelivery={s.retryDelivery}
         onPincodeChange={s.setDeliveryPincode}
         onSubmit={actions.submit}
       />

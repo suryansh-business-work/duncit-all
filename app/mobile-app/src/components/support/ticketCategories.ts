@@ -14,6 +14,13 @@ export const TICKET_CATEGORIES = [
 
 export const DEFAULT_TICKET_CATEGORY = 'QUESTION';
 
+/** The category a prefilled form opens on: the one asked for when the form
+ * offers it, else the default — a deep link cannot select a value the picker
+ * does not have. */
+export function initialTicketCategory(requested?: string): string {
+  return TICKET_CATEGORIES.find((c) => c.value === requested)?.value ?? DEFAULT_TICKET_CATEGORY;
+}
+
 const TO_SERVER: Record<string, string> = {
   BUG: 'TECHNICAL',
   QUESTION: 'GENERAL',

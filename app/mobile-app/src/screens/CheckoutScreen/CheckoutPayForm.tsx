@@ -36,6 +36,7 @@ export function CheckoutPayForm({ s, actions, breakup }: Readonly<CheckoutPayFor
         seats={s.seats}
         unitAmount={Number(pod?.pod_amount) || 0}
         coins={s.coinSummary}
+        roundOff={s.payBreakup ? coins.roundOff : 0}
       />
       <CheckoutSavingsCard
         code={s.couponCode}

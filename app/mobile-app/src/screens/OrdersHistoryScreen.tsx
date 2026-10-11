@@ -1,10 +1,16 @@
 import { useMemo, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
 
-import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DuncitButton } from '@/components/DuncitButton';
 import { EmptyState } from '@/components/EmptyState';
-import { OrderReturnsSection, PodShopReturnSheet } from '@/components/orders-history';
+import {
+  OrderCardHeader,
+  OrderReturnsSection,
+  PodShopReturnSheet,
+  PodShopReturnWithdrawDialog,
+} from '@/components/orders-history';
 import { PodProductOrderItem } from '@/components/pod-history';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { useLoadingRegion } from '@/components/Skeleton';
@@ -13,17 +19,20 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { useCancelPodShopReturn } from '@/hooks/useCancelPodShopReturn';
 import { useOrdersHistory } from '@/hooks/useOrdersHistory';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { RootStackParamList } from '@/navigation/types';
 import { groupReturnsByOrder } from '@duncit/utils';
 import type { HistoryOrder, PodShopReturn } from '@/utils/product-orders';
 
 const NO_RETURNS: readonly PodShopReturn[] = [];
 
 /** My Product Order History — every product order the buyer has placed across
- * all pods (newest first), each in its own card with full fulfilment tracking,
- * its cancellation/refund state, and its returns. RN twin of mWeb's OrdersHistoryPage. */
+ * all pods (newest first), each in its own card with its date and total, the
+ * way into its detail screen, fulfilment tracking, its cancellation/refund
+ * state, and its returns. RN twin of mWeb's OrdersHistoryPage. */
 export function OrdersHistoryScreen() {
   const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { orders, returns, isLoading, error, returnsError, reload } = useOrdersHistory();
   const [returnOrder, setReturnOrder] = useState<HistoryOrder | null>(null);
   const [notice, setNotice] = useState('');
@@ -79,6 +88,10 @@ export function OrdersHistoryScreen() {
                 {order.pod.pod_title}
               </Text>
             ) : null}
+            <OrderCardHeader
+              order={order}
+              onOpen={() => navigation.navigate('OrderDetail', { orderId: order.id })}
+            />
             <PodProductOrderItem order={order} />
             <OrderReturnsSection
               order={order}
@@ -125,20 +138,7 @@ export function OrdersHistoryScreen() {
           reload().catch(() => undefined);
         }}
       />
-      <ConfirmDialog
-        open={!!cancel.target}
-        title={t('mweb.podShopReturns.cancelConfirmTitle')}
-        message={t('mweb.podShopReturns.cancelConfirmMessage', {
-          vars: { returnNo: cancel.target?.return_no ?? '' },
-        })}
-        confirmLabel={t('mweb.podShopReturns.cancelReturn')}
-        cancelLabel={t('mweb.podShopReturns.keepReturn')}
-        destructive
-        busy={cancel.busy}
-        onConfirm={cancel.confirm}
-        onCancel={cancel.dismiss}
-        testID="pod-shop-return-withdraw-dialog"
-      />
+      <PodShopReturnWithdrawDialog cancel={cancel} />
     </StackScreen>
   );
 }

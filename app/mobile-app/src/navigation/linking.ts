@@ -191,6 +191,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // the app on NotFound — the one outcome worse than staying in the browser.
       Shop: 'shop',
       OrdersHistory: 'orders',
+      OrderDetail: 'orders/:orderId',
       ProductDetail: 'product/:productId',
       Feedback: 'support/feedback',
       Grievance: 'support/grievance',

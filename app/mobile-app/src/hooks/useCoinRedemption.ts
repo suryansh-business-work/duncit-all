@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { clampPayable, maxRedeemableCoins } from '@duncit/utils';
+import { maxRedeemableCoins, settleBill } from '@duncit/utils';
 
 import { useFreshCoinBalance } from '@/hooks/useCoins';
 
@@ -9,7 +9,12 @@ export interface CoinRedemption {
   balance: number;
   applied: number;
   max: number;
+  /** What is charged: the bill rounded UP to the whole rupee, less the coins. */
   effectiveTotal: number;
+  /** The round-off inside `effectiveTotal` (0 when the bill was already whole). */
+  roundOff: number;
+  /** The value GST is worked out on — `effectiveTotal` without the round-off. */
+  taxable: number;
   onApply: () => void;
   onRemove: () => void;
 }
@@ -38,14 +43,18 @@ export function useCoinRedemption(payableAfterCoupon: number): CoinRedemption {
   // Clamp on read too, so the render before the effect settles never shows a
   // redemption larger than the bill.
   const applied = Math.min(coinsApplied, max);
+  // The server's own settlement, mirrored once in @duncit/utils: the bill is
+  // rounded up to the whole rupee, then the coins come off it — so what is
+  // previewed here is a whole number and is exactly what gets charged.
+  const bill = settleBill(payableAfterCoupon, applied);
 
   return {
     balance: coinBalance,
     applied,
     max,
-    // Rounded and floored at zero: coins can never cut a bill past ₹0, and the
-    // subtraction must not leak float residue (₹359.10 − 359) onto the screen.
-    effectiveTotal: clampPayable(payableAfterCoupon - applied),
+    effectiveTotal: bill.payable,
+    roundOff: bill.roundOff,
+    taxable: bill.taxable,
     onApply: () => setCoinsApplied(max),
     onRemove: () => setCoinsApplied(0),
   };

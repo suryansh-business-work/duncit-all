@@ -38,6 +38,8 @@ export function useProductCheckoutState() {
     quote,
     loading: shippingLoading,
     pincodeValid,
+    status: deliveryStatus,
+    retry: retryDelivery,
   } = useProductShippingQuote(items, deliveryPincode);
 
   // Picking a saved address prefills the billing/delivery form (incl. pincode) —
@@ -103,6 +105,8 @@ export function useProductCheckoutState() {
     quote,
     shippingLoading,
     pincodeValid,
+    deliveryStatus,
+    retryDelivery,
     formInitial,
     submitting,
     setSubmitting,

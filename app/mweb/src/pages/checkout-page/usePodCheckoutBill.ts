@@ -41,9 +41,11 @@ export function usePodCheckoutBill({ session, pod, seats, linkTotal }: Readonly<
   // What is actually charged, broken up the same way. The tier, coupon and coins
   // all cut the GROSS, and the server re-quotes on what is left, so the tax owed
   // drops with it — the undiscounted breakup would print a GST nobody pays.
+  // Broken up on the TAXABLE value: the round-off that takes the charge to a
+  // whole rupee is not taxed, so it is its own row and never inside these lines.
   const payBreakup = useMemo(
-    () => buildBreakup(coins.effectiveTotal, session.finance),
-    [coins.effectiveTotal, session.finance],
+    () => buildBreakup(coins.taxable, session.finance),
+    [coins.taxable, session.finance],
   );
   // Earned on what is ACTUALLY charged — the server credits on the total after
   // coins are spent, so previewing off the gross would promise coins that never

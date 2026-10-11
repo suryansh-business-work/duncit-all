@@ -304,7 +304,8 @@ describe('AppHeader', () => {
     expect(dialog).toBeInTheDocument();
     fireEvent.click(screen.getByText('select-host'));
     expect(mockSetMode).toHaveBeenCalledWith('HOST');
-    expect(mockNavigate).toHaveBeenCalledWith('/host/manage');
+    // A role switch lands on the role's Studio page, not its dashboard.
+    expect(mockNavigate).toHaveBeenCalledWith('/host/options');
   });
 
   it('falls back to USER when the persisted studio mode is not in the user roles', async () => {

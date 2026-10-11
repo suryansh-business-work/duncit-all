@@ -117,8 +117,10 @@ describe('MenuPanel', () => {
     // Confirming is what actually switches.
     fireEvent.click(screen.getByRole('button', { name: 'Switch to Venue Studio' }));
     expect(studioState.setMode).toHaveBeenCalledWith('VENUE');
-    // Leaving the menu replaces its history entry, so Back skips the menu.
-    expect(mockNavigate).toHaveBeenCalledWith('/venues/manage', { replace: true });
+    // It lands on the role's Studio page — every Venue option, with the role
+    // switcher at its top. Leaving the menu replaces its history entry, so
+    // Back skips the menu.
+    expect(mockNavigate).toHaveBeenCalledWith('/venues/options', { replace: true });
   });
 
   it('falls a persisted mode the user no longer qualifies for back to USER', () => {

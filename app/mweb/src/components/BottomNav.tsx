@@ -1,5 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Badge, Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
+import { useEffect, useRef } from 'react';
+import { Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
 import ExploreIcon from '@mui/icons-material/Explore';
@@ -7,9 +7,9 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import StoreIcon from '@mui/icons-material/Store';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useLocation, useNavigate } from 'react-router';
-import { CART_BADGE_MAX } from '@duncit/utils';
 import { useProductVisibility } from '@duncit/app-settings';
 import { APP_SHELL_MAX_WIDTH } from '../app/appLayout';
+import BottomNavIcon from './BottomNavIcon';
 import { useCart } from './cart/CartContext';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -29,25 +29,6 @@ const TABS = [
  * remaining four keep the whole bar — MUI gives every action `flex: 1`, so they
  * redistribute on their own rather than leaving a gap where the cart was. */
 const CART_TAB = { value: CART_PATH, labelKey: 'mweb.nav.cart', icon: <ShoppingCartIcon />, testId: 'Cart' };
-
-/**
- * One tab's glyph. Every tab is drawn through the badge, not just the cart:
- * MUI renders nothing for `badgeContent={0}`, so a single branchless wrapper
- * carries the cart count and leaves the other four untouched.
- */
-function NavIcon({
-  icon,
-  count,
-  badgeTestId,
-}: Readonly<{ icon: ReactNode; count: number; badgeTestId?: string }>) {
-  return (
-    <Box className="nav-icon-wrap">
-      <Badge data-testid={badgeTestId} badgeContent={count} color="secondary" max={CART_BADGE_MAX}>
-        {icon}
-      </Badge>
-    </Box>
-  );
-}
 
 const NAV_BOTTOM_GAP = 0;
 const NAV_CONTENT_GAP = 56;
@@ -101,6 +82,13 @@ export default function BottomNav() {
     return false;
   };
   const active = matchActive();
+  // The badge is a bare number; the tab's name says what it counts. It starts
+  // with the visible label (WCAG 2.5.3), and an empty cart keeps the plain name.
+  const cartCountLabel =
+    totalCount === 1
+      ? t('mweb.cart.navCountOne')
+      : t('mweb.cart.navCountMany', { vars: { count: totalCount } });
+  const cartLabel = totalCount > 0 ? cartCountLabel : undefined;
 
   // Edge-to-edge flat surface bar — full width, no radius, active tab in the
   // coral accent. Light: no top line, a faint lift; dark: the card hairline
@@ -181,9 +169,10 @@ export default function BottomNav() {
             data-testid={`tab-bar-${tab.testId}`}
             value={tab.value}
             aria-current={tab.value === active ? 'page' : undefined}
+            aria-label={tab.value === CART_PATH ? cartLabel : undefined}
             label={t(tab.labelKey)}
             icon={
-              <NavIcon
+              <BottomNavIcon
                 icon={tab.icon}
                 count={tab.value === CART_PATH ? totalCount : 0}
                 badgeTestId={tab.value === CART_PATH ? 'tab-bar-cart-count' : undefined}

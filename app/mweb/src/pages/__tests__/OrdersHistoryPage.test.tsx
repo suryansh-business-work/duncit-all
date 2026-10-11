@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { GraphQLError } from 'graphql';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { MockedProvider } from '@apollo/client/testing/react';
 import OrdersHistoryPage from '../OrdersHistoryPage';
 import { MY_PRODUCT_ORDERS, type ProductOrder } from '../pod-history-page/productOrders';
@@ -52,10 +53,16 @@ const returnsMock = {
   result: { data: { myPodShopReturns: [] } },
 };
 
+// Each card links to its order's detail page, so the page needs a router.
 const renderPage = (mocks: readonly unknown[]) =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks, returnsMock] as never}>
-      <OrdersHistoryPage />
+      <MemoryRouter initialEntries={['/orders']}>
+        <Routes>
+          <Route path="/orders" element={<OrdersHistoryPage />} />
+          <Route path="/orders/:orderId" element={<div data-testid="order-detail-stub" />} />
+        </Routes>
+      </MemoryRouter>
     </MockedProvider>,
   );
 
@@ -83,6 +90,16 @@ describe('OrdersHistoryPage', () => {
     // order item content (from PodProductOrderItem)
     expect(screen.getByText('#PO-1001')).toBeInTheDocument();
     expect(screen.getByText(/Yoga Mat/)).toBeInTheDocument();
+  });
+
+  it('shows each order’s total and opens its detail page from the card', async () => {
+    renderPage([ordersMock([baseOrder()])]);
+    await screen.findByText('My Product Orders');
+    expect(screen.getByTestId('orders-history-meta-ord-1')).toHaveTextContent('Total ₹1,600');
+    const view = screen.getByRole('link', { name: 'View details of order #PO-1001' });
+    expect(view).toHaveAttribute('href', '/orders/ord-1');
+    fireEvent.click(view);
+    expect(await screen.findByTestId('order-detail-stub')).toBeInTheDocument();
   });
 
   it('omits the pod title caption when the order has no pod', async () => {

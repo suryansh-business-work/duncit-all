@@ -132,6 +132,7 @@ const PAGES: PageEntry[] = [
   ['/shop', '/shop', () => import('../pages/shop-page')],
   ['/product/:productId', '/product/smoke-id', () => import('../pages/ProductDetailPage')],
   ['/orders', '/orders', () => import('../pages/OrdersHistoryPage')],
+  ['/orders/:orderId', '/orders/smoke-id', () => import('../pages/order-detail-page')],
   ['/address-book', '/address-book', () => import('../pages/AddressBookPage')],
   ['/explore', '/explore', () => import('../pages/ExplorePage')],
   ['/previous-pods', '/previous-pods', () => import('../pages/PreviousPodsPage')],

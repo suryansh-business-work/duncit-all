@@ -8,7 +8,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
 import CoinSummaryRows from './CoinSummaryRows';
-import { exclusiveOfGstBill, isVideoMedia, videoSourceUrl, type CoinCheckoutSummary } from '@duncit/utils';
+import { exclusiveOfGstBill, isVideoMedia, round2, videoSourceUrl, type CoinCheckoutSummary } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
 /** One line of money taken off the bill — the multi-ticket tier, a coupon, redeemed coins. */
@@ -39,6 +39,9 @@ interface Props {
   unitAmount?: number;
   /** Coins spent, left and earned on this bill. Absent hides the coin block. */
   coins?: CoinCheckoutSummary | null;
+  /** What rounding the charge up to a whole rupee adds — on top of `breakup`,
+   * which is the taxed value. Zero hides the row. */
+  roundOff?: number;
 }
 
 export default function OrderSummaryCard({
@@ -50,6 +53,7 @@ export default function OrderSummaryCard({
   seats = 1,
   unitAmount = 0,
   coins = null,
+  roundOff = 0,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // The buyer chose this on Pod Details and the ticket price is × it, so the
@@ -121,8 +125,11 @@ export default function OrderSummaryCard({
             <Row label={t('mweb.checkout.taxableValue')} value={fmt(breakup.subtotal)} />
           )}
           <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
+          {roundOff > 0 && (
+            <Row testId="order-summary-round-off" label={t('mweb.checkout.roundOff')} value={`+ ${fmt(roundOff)}`} />
+          )}
           <Divider sx={{ my: 1 }} />
-          <Row testId="order-summary-total" label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+          <Row testId="order-summary-total" label={t('mweb.checkout.totalPayable')} value={fmt(round2(breakup.total + roundOff))} bold />
           <CoinSummaryRows coins={coins} />
           {venueCharges.length > 0 && (
             <Box data-testid="venue-charges-row" sx={{ mt: 1, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>

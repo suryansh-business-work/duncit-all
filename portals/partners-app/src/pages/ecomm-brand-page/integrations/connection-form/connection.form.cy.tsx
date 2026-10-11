@@ -14,6 +14,7 @@ const blank: ConnectionFormValues = {
   webhook_secret: '',
   key_id: '',
   key_secret: '',
+  sandbox: false,
 };
 
 const razorpay = { ...blank, label: 'Main Razorpay', key_id: 'rzp_test_abc', key_secret: 'secret' };
@@ -73,7 +74,7 @@ describe('toSaveConnectionVariables', () => {
       provider: 'SHIPROCKET',
       input: {
         label: 'Warehouse SR',
-        shiprocket: { email: 'api@brand.example.com', password: undefined, pickup_location: 'Delhi', webhook_secret: undefined },
+        shiprocket: { email: 'api@brand.example.com', password: undefined, pickup_location: 'Delhi', webhook_secret: undefined, sandbox: false },
       },
     });
   });
@@ -102,6 +103,7 @@ describe('connectionToValues', () => {
         pickup_location: '',
         live_mode: true,
         has_webhook_secret: true,
+        sandbox: false,
       },
     };
     expect(connectionToValues(saved)).toEqual({ ...blank, label: 'Main Razorpay', key_id: 'rzp_live_abc' });

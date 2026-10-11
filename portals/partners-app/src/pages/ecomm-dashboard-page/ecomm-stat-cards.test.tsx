@@ -29,7 +29,7 @@ describe('ecommStatCards', () => {
     expect(cards.map((card) => card.label)).toEqual([
       'Total Brands',
       'Total Products',
-      'Total Warehouses',
+      'Total Pickup Addresses',
       'Total Orders',
       'Total Items Sold',
       'Total Revenue',

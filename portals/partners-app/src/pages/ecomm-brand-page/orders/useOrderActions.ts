@@ -6,20 +6,26 @@ import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import type { Translate } from '../brand-wizard/wizard-steps';
 import type { OrderAddressValues } from './order-address';
-import { BOOK_ORDER_SHIPMENT, REFRESH_ORDER_TRACKING, UPDATE_ORDER_ADDRESS, type OrderRow } from './orders.queries';
+import { BOOK_ORDER_SHIPMENT, CANCEL_ORDER, REFRESH_ORDER_TRACKING, UPDATE_ORDER_ADDRESS, type OrderRow } from './orders.queries';
 
-export type OrderAction = 'book' | 'refresh' | 'address';
+export type OrderAction = 'book' | 'refresh' | 'address' | 'cancel';
+
+/** What an action sends beside the order id: the corrected ship-to, or the reason for cancelling. */
+export type OrderActionInput = { address: OrderAddressValues } | { reason: string };
 
 const ACTIONS: Record<OrderAction, { mutation: DocumentNode; resultKey: string }> = {
   book: { mutation: BOOK_ORDER_SHIPMENT, resultKey: 'brandBookProductOrderShipment' },
   refresh: { mutation: REFRESH_ORDER_TRACKING, resultKey: 'brandRefreshProductOrderTracking' },
   address: { mutation: UPDATE_ORDER_ADDRESS, resultKey: 'brandUpdateProductOrderAddress' },
+  cancel: { mutation: CANCEL_ORDER, resultKey: 'brandCancelProductOrder' },
 };
 
 function successText(t: Translate, action: OrderAction): string {
   switch (action) {
     case 'book':
       return t('partners.orders.booked');
+    case 'cancel':
+      return t('partners.orders.cancelDone');
     case 'refresh':
       return t('partners.orders.trackingRefreshed');
     default:
@@ -34,11 +40,11 @@ export function useOrderActions(onUpdated: (row: OrderRow) => void) {
   const [busy, setBusy] = useState<OrderAction | null>(null);
 
   const run = useCallback(
-    async (action: OrderAction, id: string, address?: OrderAddressValues): Promise<boolean> => {
+    async (action: OrderAction, id: string, input?: OrderActionInput): Promise<boolean> => {
       const { mutation, resultKey } = ACTIONS[action];
       setBusy(action);
       try {
-        const variables = address ? { id, address } : { id };
+        const variables = { id, ...input };
         const { data } = await client.mutate<Record<string, OrderRow>>({ mutation, variables });
         const row = data?.[resultKey];
         // ShipRocket can stop a booking part-way without the mutation failing — the order then carries why.

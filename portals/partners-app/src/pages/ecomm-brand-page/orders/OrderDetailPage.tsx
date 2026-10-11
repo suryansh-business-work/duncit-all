@@ -1,11 +1,12 @@
 import { useParams } from 'react-router';
 import { useQuery } from '@apollo/client/react';
-import { Alert, Box, Card, CardContent, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Divider, Stack, Tooltip, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { StatusChip, BackHeader } from '@duncit/ui';
 import { brandOrderActions, fulfilmentLabel, parseApiError, statusLabel } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import OrderActions from './OrderActions';
+import OrderCancellation from './OrderCancellation';
 import { ORDER_STATUS_COLORS, orderTotal } from './order-labels';
 import { OrderItems, OrderShipment, OrderShipTo, OrderTimeline } from './OrderDetailSections';
 import { BRAND_ORDER, type OrderRow } from './orders.queries';
@@ -75,6 +76,11 @@ export default function OrderDetailPage() {
           <Stack spacing={2.25}>
             <Stack direction="row" spacing={1.5} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
               <StatusChip status={row.fulfilment_status} colorMap={ORDER_STATUS_COLORS} label={statusLabel(row.fulfilment_status, t)} />
+              {row.shiprocket.sandbox && (
+                <Tooltip title={t('partners.orders.sandboxHint')}>
+                  <Chip size="small" variant="outlined" color="warning" label={t('partners.orders.sandboxChip')} tabIndex={0} data-testid="order-sandbox-chip" />
+                </Tooltip>
+              )}
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {t('partners.orders.detailSubtitle', {
                   vars: { buyer: row.buyer_name, amount: orderTotal(row), method: fulfilmentLabel(row.fulfilment_method, t) },
@@ -82,6 +88,7 @@ export default function OrderDetailPage() {
               </Typography>
             </Stack>
             <OrderActions row={row} allowed={allowed} onUpdated={keepCached} />
+            <OrderCancellation row={row} />
             <Divider />
             <Box sx={{ display: 'grid', gap: 2.25, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
               <Stack spacing={2.25}>

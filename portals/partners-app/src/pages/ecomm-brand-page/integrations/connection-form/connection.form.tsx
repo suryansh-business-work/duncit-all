@@ -11,6 +11,7 @@ import type { Translate } from '../../brand-wizard/wizard-steps';
 import { integrationFields, makeIntegrationSchema } from '../../brand-wizard/steps/integration-forms';
 import IntegrationGuide from '../../brand-wizard/steps/IntegrationGuide';
 import { CONNECTION_LABEL_MAX, type ConnectionFormValues } from './connection.types';
+import SandboxField from './SandboxField';
 
 /** The provider's credential rules, plus a name for the connection. */
 export const makeConnectionSchema = (t: Translate, provider: BrandIntegrationProvider, hasSecret: boolean) =>
@@ -71,6 +72,7 @@ export default function ConnectionForm({ provider, defaultValues, hasSecret, bus
           data-testid={`integration-${key}-${field.name}`}
         />
       ))}
+      {provider === 'SHIPROCKET' && <SandboxField control={control} />}
       <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
         <DuncitButton onClick={onCancel} disabled={busy}>
           {t('shell.common.cancel')}

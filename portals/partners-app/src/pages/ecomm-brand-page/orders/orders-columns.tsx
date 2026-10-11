@@ -3,7 +3,9 @@ import { formatDate } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { ALL_FULFILMENT_STATUSES, fulfilmentLabel, statusLabel } from '@duncit/utils';
 import type { Translate } from '../brand-wizard/wizard-steps';
-import { ORDER_STATUS_COLORS, orderItemsSummary, orderTotal } from './order-labels';
+import {
+  ORDER_STATUS_COLORS, REFUND_STATUS_COLORS, REFUND_STATUSES, orderItemsSummary, orderTotal, refundStatusLabel,
+} from './order-labels';
 import type { OrderRow } from './orders.queries';
 
 export const getOrderRowId = (row: OrderRow) => row.id;
@@ -43,6 +45,21 @@ export const buildOrderColumns = (t: Translate): DuncitColumn<OrderRow>[] => [
       <StatusChip status={row.fulfilment_status} colorMap={ORDER_STATUS_COLORS} label={statusLabel(row.fulfilment_status, t)} />
     ),
     valueGetter: (row) => statusLabel(row.fulfilment_status, t),
+  },
+  {
+    // Blank until an order is cancelled; then where the buyer's refund stands.
+    field: 'refund_status',
+    headerName: t('partners.orders.colRefund'),
+    type: 'enum',
+    width: 220,
+    options: REFUND_STATUSES.map((value) => ({ value, label: refundStatusLabel(value, t) })),
+    cellRenderer: (row) =>
+      row.refund.status === 'NONE' ? (
+        '—'
+      ) : (
+        <StatusChip status={row.refund.status} colorMap={REFUND_STATUS_COLORS} label={refundStatusLabel(row.refund.status, t)} />
+      ),
+    valueGetter: (row) => (row.refund.status === 'NONE' ? '—' : refundStatusLabel(row.refund.status, t)),
   },
   {
     field: 'awb',

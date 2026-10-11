@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Card, CardContent, Stack } from '@mui/material';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
+import { fireAndForget, logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
+import BrandDeleteButton from '../BrandDeleteButton';
 import BrandPicker, { ALL_BRANDS } from '../BrandPicker';
 import BrandToolHero from '../BrandToolHero';
 import { MY_BRAND_OPTIONS, type BrandOption } from '../queries';
@@ -17,7 +19,15 @@ export default function OrdersPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const navigate = useNavigate();
   const [brandId, setBrandId] = useState(ALL_BRANDS);
-  const { data: brandsData } = useQuery<{ myEcommBrands: BrandOption[] }>(MY_BRAND_OPTIONS, { fetchPolicy: 'cache-and-network' });
+  const { data: brandsData, refetch: refetchBrands } = useQuery<{ myEcommBrands: BrandOption[] }>(MY_BRAND_OPTIONS, { fetchPolicy: 'cache-and-network' });
+  const brands = brandsData?.myEcommBrands ?? [];
+  // The brand the page is on: the one picked, or the only one a single-brand partner has.
+  const brand = brands.find((option) => option.id === brandId) ?? (brands.length === 1 ? brands[0] : null);
+  const afterBrandChange = () => {
+    setBrandId(ALL_BRANDS);
+    fireAndForget(refetchBrands(), logs.portal['partners-app'], 'OrdersPage', 'refetchBrands');
+    refetchRef.current?.();
+  };
   const fetchRows = useApolloTableFetch<OrderRow>(
     client,
     BRAND_ORDERS_TABLE,
@@ -45,7 +55,21 @@ export default function OrdersPage() {
             defaultSort={{ field: 'created_at', dir: 'desc' }}
             searchPlaceholder={t('partners.orders.searchPlaceholder')}
             refetchRef={refetchRef}
-            toolbarActions={<BrandPicker brands={brandsData?.myEcommBrands ?? []} value={brandId} onChange={setBrandId} allowAll />}
+            toolbarActions={
+              <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                <BrandPicker brands={brands} value={brandId} onChange={setBrandId} allowAll />
+                {brand && (
+                  <BrandDeleteButton
+                    key={brand.id}
+                    brand={brand}
+                    size="small"
+                    label={t('partners.orders.deleteBrand')}
+                    onRequested={() => refetchRef.current?.()}
+                    onDeleted={afterBrandChange}
+                  />
+                )}
+              </Stack>
+            }
           />
         </CardContent>
       </Card>

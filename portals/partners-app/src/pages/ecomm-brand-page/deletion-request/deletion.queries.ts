@@ -27,6 +27,9 @@ export const CATALOG_DELETION_PREVIEW = gql`
           order_no
           fulfilment_status
           created_at
+          buyer_name
+          total
+          currency_symbol
           units
         }
         products {
@@ -69,7 +72,10 @@ export const WITHDRAW_CATALOG_DELETION = gql`
   }
 `;
 
-export type DeletionOrder = Pick<CatalogDeletionOrder, 'id' | 'order_no' | 'fulfilment_status' | 'created_at' | 'units'>;
+export type DeletionOrder = Pick<
+  CatalogDeletionOrder,
+  'id' | 'order_no' | 'fulfilment_status' | 'created_at' | 'units' | 'buyer_name' | 'total' | 'currency_symbol'
+>;
 export type DeletionProduct = Pick<CatalogDeletionProduct, 'id' | 'product_name' | 'is_active'>;
 
 export interface DeletionPreview {

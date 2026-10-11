@@ -10,8 +10,10 @@ import {
   Typography,
 } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import DownloadIcon from '@mui/icons-material/Download';
 import { DuncitButton } from '@duncit/buttons';
 import { MY_WALLET } from '../queries';
+import { StatementForm } from '../statement';
 import { WithdrawForm } from '../withdraw';
 import { useTranslation } from '@duncit/shell';
 import { PAYOUT_LABEL, fmtDate } from './helpers';
@@ -27,6 +29,7 @@ export default function WalletPage() {
     fetchPolicy: 'cache-and-network',
   });
   const [open, setOpen] = useState(false);
+  const [statementOpen, setStatementOpen] = useState(false);
 
   if (loading && !data) {
     return (
@@ -62,6 +65,9 @@ export default function WalletPage() {
         <Typography variant="h4" component="h1" sx={{ fontWeight: 950, flex: 1 }}>
           Wallet
         </Typography>
+        <DuncitButton variant="outlined" startIcon={<DownloadIcon />} onClick={() => setStatementOpen(true)}>
+          {t('withdraw.statement.title')}
+        </DuncitButton>
       </Stack>
 
       {error && <Alert severity="error">{error.message}</Alert>}
@@ -130,6 +136,10 @@ export default function WalletPage() {
           refetch().catch(() => undefined);
         }}
       />
+
+      {/* Mounted only while open: the form starts fresh each time, and a wallet
+          nobody downloads from asks for nothing extra. */}
+      {statementOpen && <StatementForm onClose={() => setStatementOpen(false)} />}
     </Stack>
   );
 }

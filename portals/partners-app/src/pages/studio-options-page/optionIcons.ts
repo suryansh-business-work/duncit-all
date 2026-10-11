@@ -4,6 +4,7 @@ import AddCircleOutlineOutlined from '@mui/icons-material/AddCircleOutlineOutlin
 import AssignmentReturnOutlined from '@mui/icons-material/AssignmentReturnOutlined';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import CalendarMonthOutlined from '@mui/icons-material/CalendarMonthOutlined';
+import CurrencyExchangeOutlined from '@mui/icons-material/CurrencyExchangeOutlined';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import EventOutlined from '@mui/icons-material/EventOutlined';
@@ -47,4 +48,5 @@ export const STUDIO_OPTION_ICONS: Readonly<Record<StudioOptionIcon, SvgIconCompo
   returns: AssignmentReturnOutlined,
   orders: ReceiptLongOutlined,
   warehouses: WarehouseOutlined,
+  refunds: CurrencyExchangeOutlined,
 };

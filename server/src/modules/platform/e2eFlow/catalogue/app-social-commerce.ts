@@ -1408,7 +1408,7 @@ export const APP_SOCIAL_COMMERCE_FLOWS: readonly CatalogueFlow[] = [
         description: 'Happy path: pick a saved address, get the delivery quote and pay through Razorpay.',
         steps: [
           ['Open /product-checkout with items in the cart', '"Product checkout" shows "Your order" (lines, Subtotal, Delivery, GST, "Total payable") and "Payment details"'],
-          ['Choose an address in "Deliver to a saved address"', 'The billing fields fill from the address and delivery shows "Calculating…" then one row per warehouse plus "Delivery total"'],
+          ['Choose an address in "Deliver to a saved address"', 'The billing fields fill from the address and delivery shows "Calculating…" then one row per pickup address plus "Delivery total"'],
           ['Look at the pay button', 'It reads "Pay <total>" with "Receipt and invoice will be sent after successful payment." below'],
           ['Tap "Pay <total>" and complete the Razorpay sheet', 'A blocking overlay says "Processing your payment…" / "Please don’t close this tab."'],
           ['Wait for verification', '"Payment successful" shows Payment ID, Amount paid, Paid on, Invoice, "Download invoice", "Home" and "My orders"; the cart is empty'],
@@ -1429,7 +1429,7 @@ export const APP_SOCIAL_COMMERCE_FLOWS: readonly CatalogueFlow[] = [
         name: 'Estimated or free delivery',
         description: 'Groups ShipRocket could not price live are marked estimated; groups meeting the free-delivery threshold are free.',
         steps: [
-          ['Checkout with a warehouse ShipRocket cannot quote', 'That row reads "<courier> (estimated)" and "Estimated delivery — final charge confirmed at checkout." is shown'],
+          ['Checkout with a pickup address ShipRocket cannot quote', 'That row reads "<courier> (estimated)" and "Estimated delivery — final charge confirmed at checkout." is shown'],
           ['Checkout with every line of a group over its free-delivery threshold', 'That group\'s delivery row reads "Free"'],
         ],
       },

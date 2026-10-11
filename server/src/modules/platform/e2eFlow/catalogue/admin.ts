@@ -1160,7 +1160,7 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
   },
   {
     name: 'Admin: Approvals',
-    description: 'The cross-portal approval inbox at /approvals (brand/product change requests, portal access, warehouse approvals); reviewable by SUPER_ADMIN, CITY_ADMIN and ZONAL_ADMIN.',
+    description: 'The cross-portal approval inbox at /approvals (brand/product change requests, portal access, pickup address approvals); reviewable by SUPER_ADMIN, CITY_ADMIN and ZONAL_ADMIN.',
     sub_flows: [
       {
         name: 'Browse approval requests',

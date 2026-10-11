@@ -21,13 +21,18 @@ interface Props {
   /** Opens the product-detail dialog for a line. Products and Pods are separate
    * entities — the checkout lists products only, each with an info button. */
   onInfo: (productId: string) => void;
+  /** What rounding the charge up to a whole rupee adds. Zero hides the row. */
+  roundOff?: number;
+  /** What is actually charged — after the coupon, the round-off and the coins.
+   * Absent falls back to the undiscounted bill. */
+  payable?: number;
 }
 
 /** Product-only order summary for the combined product checkout: a flat product
  * line list (each with an info button), products subtotal, per-warehouse
  * delivery (ShipRocket) and the payable total. No pod title / "Event ticket"
  * line — pods and products are separate entities and never share a payment. */
-export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quote, shippingLoading, pincodeValid, onInfo, coins = null }: Readonly<Props>) {
+export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quote, shippingLoading, pincodeValid, onInfo, coins = null, roundOff = 0, payable }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const estimated = !!quote && !quote.all_quoted;
@@ -59,8 +64,11 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
           label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })}
           value={fmt(breakup.gst)}
         />
+        {roundOff > 0 && (
+          <Row testId="product-order-summary-card-round-off" label={t('mweb.checkout.roundOff')} value={`+ ${fmt(roundOff)}`} />
+        )}
         <Divider sx={{ my: 1 }} />
-        <Row testId="product-order-summary-card-total" label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+        <Row testId="product-order-summary-card-total" label={t('mweb.checkout.totalPayable')} value={fmt(payable ?? breakup.total)} bold />
         <CoinSummaryRows coins={coins} />
       </Stack>
     </Card>

@@ -15,7 +15,7 @@ import SavedAddressPicker from '../checkout-page/SavedAddressPicker';
 import ProductDetailDialog from '../pod-details-page/ProductDetailDialog';
 import { useCheckoutSession } from '../checkout-page/useCheckoutSession';
 import { useCoinRedemption } from '../checkout-page/useCoinRedemption';
-import { coinCheckoutSummary } from '@duncit/utils';
+import { DELIVERY_QUOTE_BLOCK_KEYS, coinCheckoutSummary } from '@duncit/utils';
 import ProductOrderSummaryCard from './ProductOrderSummaryCard';
 import { mapLinesToItems, productSubtotal } from './productCheckoutInput';
 import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
@@ -39,13 +39,16 @@ export default function ProductCheckoutPage() {
     // Products are shipped — the delivery address stays mandatory here.
     requireAddress: true,
   });
-  // The delivery quote follows the chosen saved address (its pincode); until one
-  // is picked it falls back to the pincode typed into the billing form.
+  // The delivery quote follows the pincode in the billing form — the one the
+  // order is sent with. Picking a saved address fills that field; the picked
+  // pincode only covers the moment before the form catches up, so an edit made
+  // after picking is quoted for, never paid against the picked address's charge.
   const [pickedPincode, setPickedPincode] = useState('');
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
   const formPincode = useWatch({ control: session.control, name: 'pincode' }) || '';
-  const deliveryPincode = pickedPincode || formPincode;
-  const { quote, loading: shippingLoading, pincodeValid } = useProductShippingQuote(items, deliveryPincode);
+  const deliveryPincode = formPincode || pickedPincode;
+  const delivery = useProductShippingQuote(items, deliveryPincode);
+  const { quote, loading: shippingLoading, pincodeValid } = delivery;
 
   const shippingTotal = quote?.total ?? 0;
   const amount = subtotal + shippingTotal;
@@ -71,7 +74,13 @@ export default function ProductCheckoutPage() {
     currencySymbol: breakup?.currency,
   }));
   const onCheckout = useProductPayment({ session, items, coins, onPaymentFailure: payment.report });
-  const submit = session.handleSubmit(onCheckout);
+  // The button is shut until the delivery charge is known; this is the same
+  // rule on the handler, so no other route to submit pays an unquoted amount.
+  const submit = session.handleSubmit((values) => {
+    if (delivery.status === 'READY') return onCheckout(values);
+    session.setError(t(DELIVERY_QUOTE_BLOCK_KEYS[delivery.status]));
+    return undefined;
+  });
 
   if (session.success) {
     return (
@@ -122,6 +131,8 @@ export default function ProductCheckoutPage() {
             pincodeValid={pincodeValid}
             onInfo={setInfoProductId}
             coins={coinSummary}
+            roundOff={coins.roundOff}
+            payable={coins.effectiveTotal}
           />
           <PaymentDetailsCard
             control={session.control}
@@ -146,6 +157,8 @@ export default function ProductCheckoutPage() {
             onRemoveCoupon={session.removeCoupon}
             coins={coins}
             addressRequired
+            deliveryStatus={delivery.status}
+            onRetryDelivery={delivery.retry}
           />
         </Stack>
       </Stack>

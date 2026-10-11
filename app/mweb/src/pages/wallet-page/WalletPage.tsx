@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Card, CircularProgress, Stack, Typography } from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
 import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import PageHeader from '../../components/PageHeader';
 import { useTranslation } from '../../i18n/useTranslation';
 import { MY_WALLET } from './queries';
+import { StatementForm } from './statement';
 import { WithdrawForm } from './withdraw';
 import { fmtDate, TxnRow, WalletSection, WithdrawalRow } from './WalletRows';
 
@@ -18,6 +20,7 @@ const PAYOUT_LABEL: Record<string, string> = {
 export default function WalletPage() {
   const { data, loading, error, refetch } = useQuery<any>(MY_WALLET, { fetchPolicy: 'cache-and-network' });
   const [open, setOpen] = useState(false);
+  const [statementOpen, setStatementOpen] = useState(false);
   const { t } = useTranslation();
 
   if (loading && !data) {
@@ -87,6 +90,16 @@ export default function WalletPage() {
         >
           {t('mweb.wallet.withdraw')}
         </DuncitButton>
+        <DuncitButton
+          variant="outlined"
+          size="large"
+          startIcon={<DownloadIcon />}
+          onClick={() => setStatementOpen(true)}
+          sx={{ mt: 2, ml: 1 }}
+          data-testid="wallet-statement"
+        >
+          {t('withdraw.statement.title')}
+        </DuncitButton>
       </Card>
 
       <WalletSection title={t('mweb.wallet.withdrawals')} emptyText={t('mweb.wallet.noWithdrawalsYet')} testId="wallet-withdrawals">
@@ -112,6 +125,10 @@ export default function WalletPage() {
           refetch().catch(() => undefined);
         }}
       />
+
+      {/* Mounted only while open: the form starts fresh each time, and a wallet
+          nobody downloads from asks for nothing extra. */}
+      {statementOpen && <StatementForm onClose={() => setStatementOpen(false)} />}
     </Stack>
   );
 }

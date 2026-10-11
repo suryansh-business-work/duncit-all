@@ -233,6 +233,7 @@ const BRAND_FIELDS: readonly DiffField[] = [
   { path: 'documents', label: 'Documents', ordered: true },
   { path: 'product_commission_pct', label: 'Commission %' },
   { path: 'shipping_mode', label: 'Shipping Mode' },
+  { path: 'integrations.shiprocket.sandbox', label: 'ShipRocket Sandbox Mode' },
   { path: 'integrations.shiprocket.connected', label: 'ShipRocket Connected' },
   { path: 'integrations.shiprocket.message', label: 'ShipRocket Check Result' },
   { path: 'integrations.razorpay.connected', label: 'Razorpay Connected' },
@@ -241,7 +242,7 @@ const BRAND_FIELDS: readonly DiffField[] = [
   { path: 'integration_links.razorpay', label: 'Razorpay Connection' },
   { path: 'consent.accepted', label: 'Consent Signed' },
   { path: 'consent.signed_name', label: 'Consent Signed By' },
-  { path: 'default_pickup_location_id', label: 'Default Warehouse' },
+  { path: 'default_pickup_location_id', label: 'Primary Pickup Address' },
   ...reviewFields,
 ];
 

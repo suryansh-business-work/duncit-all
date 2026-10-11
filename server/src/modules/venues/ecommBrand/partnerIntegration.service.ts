@@ -159,6 +159,36 @@ export const partnerIntegrationService = {
     return published(doc);
   },
 
+  /**
+   * Products portal: put a brand's ShipRocket account in sandbox mode, or back
+   * to live, and check it again. A brand that follows a saved connection has
+   * the CONNECTION switched — every brand using it moves with it, and the
+   * partner's Integrations page shows the same mode. A sandbox account holds
+   * its own pickup addresses, so the brand's are registered again on it.
+   */
+  async reviewerSetSandbox(brandId: string, sandbox: boolean) {
+    if (!Types.ObjectId.isValid(brandId)) bad('Invalid brand');
+    const brand = await EcommBrandModel.findById(brandId);
+    if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+    if (!integrationStatus(brand, 'SHIPROCKET').configured) bad('This brand has no ShipRocket account saved yet');
+    const linkId = brand.integration_links?.shiprocket;
+    const connection = linkId ? await PartnerIntegrationModel.findById(linkId) : null;
+    if (connection) {
+      connection.integrations.shiprocket.sandbox = sandbox;
+      await probeBrandIntegration(connection, 'SHIPROCKET');
+      await connection.save();
+      await refreshLinkedBrands(connection);
+      const fresh = await EcommBrandModel.findById(brandId);
+      return integrationStatus(fresh ?? brand, 'SHIPROCKET');
+    }
+    const changed = (brand.integrations.shiprocket.sandbox === true) !== sandbox;
+    brand.integrations.shiprocket.sandbox = sandbox;
+    const status = await probeBrandIntegration(brand, 'SHIPROCKET');
+    await brand.save();
+    if (changed) await resetOwnShiprocketWarehouses(brand);
+    return status;
+  },
+
   /** Delete a connection no brand uses. One in use is refused: the brand would be left on a key nobody can manage. */
   async remove(userId: string, id: string) {
     const doc = await loadOwned(userId, id);

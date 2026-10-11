@@ -87,17 +87,26 @@ describe('ecommBrandService integration', () => {
     });
     await EcommBrandModel.updateOne({ _id: draft.id }, { $set: { 'integrations.razorpay.connected': true } });
 
-    // Shipping is not chosen yet — integration is not owed for review.
+    // ShipRocket is not connected yet — integration is not owed for review.
     const submitted = await ecommBrandService.submit(owner, draft.id);
     expect(submitted.status).toBe('SUBMITTED');
 
+    // The Duncit courier is no longer offered: choosing it is refused and nothing is recorded.
+    const refusal = await ecommBrandService.setShippingMode(owner, draft.id, 'DUNCIT_COURIER').catch((err: unknown) => err);
+    expect(refusal).toMatchObject({
+      message: expect.stringMatching(/The Duncit courier service is no longer offered\. Connect your own ShipRocket account/),
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+    expect((await EcommBrandModel.findById(draft.id).lean())?.shipping_mode).toBeNull();
+
     // Integration changes are no longer frozen while the brand is in review.
-    const chosen = await ecommBrandService.setShippingMode(owner, draft.id, 'DUNCIT_COURIER');
-    expect(chosen.shipping_mode).toBe('DUNCIT_COURIER');
+    const chosen = await ecommBrandService.setShippingMode(owner, draft.id, 'OWN_SHIPROCKET');
+    expect(chosen.shipping_mode).toBe('OWN_SHIPROCKET');
     expect(chosen.status).toBe('SUBMITTED');
     expect(chosen.live).toBe(false);
 
-    // Razorpay connected + the Duncit courier = ready, so approval puts it live.
+    // Razorpay connected + its own ShipRocket connected = ready, so approval puts it live.
+    await EcommBrandModel.updateOne({ _id: draft.id }, { $set: { 'integrations.shiprocket.connected': true } });
     const approved = await ecommBrandService.approve(draft.id);
     expect(approved).toMatchObject({ status: 'APPROVED', live: true, integration_waived: false });
     expect(approved.live_since).not.toBeNull();

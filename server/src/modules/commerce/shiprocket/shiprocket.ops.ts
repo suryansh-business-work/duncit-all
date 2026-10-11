@@ -323,7 +323,7 @@ export function cleanPickupInput(input: PickupInput) {
     country: text(input.country) || 'India',
   };
   if (!NICKNAME.test(clean.nickname)) {
-    bad('Name the warehouse with 2–60 letters, digits, spaces, dots, dashes or underscores');
+    bad('Name the pickup address with 2–60 letters, digits, spaces, dots, dashes or underscores');
   }
   const problems = pickupProblems({ ...clean, name: clean.contact_name, line1: clean.address_line1 });
   if (problems.length > 0) bad(`Enter ${problems.join(' and ')}`);
@@ -371,10 +371,10 @@ export async function saveDuncitPickup(id: string | null | undefined, input: Pic
   const clean = cleanPickupInput(input);
   const oid = id && Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : null;
   const existing = oid ? await BrandPickupLocationModel.findOne({ _id: oid, owner_kind: 'DUNCIT' }) : null;
-  if (id && !existing) bad('Warehouse not found');
+  if (id && !existing) bad('Pickup address not found');
   if (existing?.shiprocket_registered) bad('ShipRocket holds this pickup address — change it in ShipRocket, then sync');
   const clash = await BrandPickupLocationModel.findOne({ nickname: clean.nickname }).select('_id').lean();
-  if (clash && String(clash._id) !== id) bad(`A warehouse named "${clean.nickname}" already exists`);
+  if (clash && String(clash._id) !== id) bad(`A pickup address named "${clean.nickname}" already exists`);
   const held = await pushPickup(clean);
   const fields = {
     ...mirrorOf(held),

@@ -10,6 +10,7 @@ jest.mock('../../shiprocket.gateway', () => ({
   walletBalance: jest.fn(),
 }));
 
+import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { shiprocketError } from '../../shiprocket.client';
 import {
   assignAwb,
@@ -131,7 +132,7 @@ describe('createShipment — what it will not ship', () => {
     const { order } = await seedPaidOrder({ product: await seedProduct(), over: { pickup_location_id: '' } });
     await createShipment(order);
     expect((await reloadOrder(order._id)).last_error).toBe(
-      'This order has no pickup location — give the product a warehouse, or set a default pickup nickname on the account'
+      'This order has no pickup address — give the product a pickup address, or set a default pickup nickname on the account'
     );
   });
 });
@@ -168,6 +169,26 @@ describe('createShipment — booking', () => {
     await createShipment(order);
     expect(sentPayload()).toMatchObject({ pickup_location: WAREHOUSE });
     expect((await reloadOrder(order._id)).pickup_location_id).toBe(WAREHOUSE);
+  });
+
+  it('records a live booking as a real shipment', async () => {
+    const order = await paidOrder();
+    await createShipment(order);
+    const booked = await reloadOrder(order._id);
+    expect(booked.shiprocket.sandbox).toBe(false);
+    expect(booked.tracking_events.map((event) => event.note)).toContain('ShipRocket order 7300001 created');
+  });
+
+  it('stamps a booking made in sandbox mode as a test order, and says so in its tracking', async () => {
+    const order = await paidOrder();
+    await EnvEntryModel.updateMany(
+      { category: 'SHIPROCKET' },
+      { $set: { 'config.sandbox': 'true', 'config.sandbox_api_url': 'https://sandbox.shiprocket.in/v1/external' } }
+    );
+    await createShipment(order);
+    const booked = await reloadOrder(order._id);
+    expect(booked.shiprocket.sandbox).toBe(true);
+    expect(booked.tracking_events.map((event) => event.note)).toContain('ShipRocket SANDBOX (test) order 7300001 created');
   });
 
   it("declares the operator's parcel instead of the computed one", async () => {

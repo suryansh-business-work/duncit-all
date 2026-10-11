@@ -48,6 +48,8 @@ export const ecommBrandTypeDefs = gql`
     live_mode: Boolean!
     "A webhook secret is on file for this account."
     has_webhook_secret: Boolean!
+    "ShipRocket: the account is in sandbox mode — its calls go to the ShipRocket sandbox and book test orders only. Always false for Razorpay."
+    sandbox: Boolean!
     "The partner's saved Integrations connection this credential was copied from. Null when typed in on the brand."
     connection_id: ID
   }
@@ -82,9 +84,9 @@ export const ecommBrandTypeDefs = gql`
   }
 
   """
-  Who carries a brand's parcels: its OWN ShipRocket account, or Duncit's
-  courier service (the ShipRocket account the Tech portal maps to the
-  Partners console — never the pet store's).
+  Who carries a brand's parcels. Every brand ships on its OWN ShipRocket
+  account. DUNCIT_COURIER is no longer offered and cannot be set; it remains
+  only as the value a brand that chose it earlier still reports.
   """
   enum BrandShippingMode {
     OWN_SHIPROCKET
@@ -134,6 +136,8 @@ export const ecommBrandTypeDefs = gql`
     pickup_location: String
     "Omitted or blank keeps the one on file."
     webhook_secret: String
+    "Sandbox mode: book test orders on the ShipRocket sandbox instead of real shipments. Omitted keeps the saved mode."
+    sandbox: Boolean
   }
 
   input BrandRazorpayInput {
@@ -317,7 +321,7 @@ export const ecommBrandTypeDefs = gql`
     setMyEcommBrandActive(brand_doc_id: ID!, active: Boolean!): EcommBrand!
     "Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the brand still has products."
     deleteEcommBrand(brand_doc_id: ID!, email: String!, password: String!): Boolean!
-    "Partner: choose who ships the brand's parcels — its own ShipRocket account, or the Duncit courier."
+    "Partner: record that the brand ships on its own ShipRocket account. DUNCIT_COURIER is refused — it is no longer offered."
     setBrandShippingMode(brand_doc_id: ID!, mode: BrandShippingMode!): EcommBrand!
     "Partner: save the brand's ShipRocket API user and check it against ShipRocket right away."
     connectBrandShiprocket(brand_doc_id: ID!, input: BrandShiprocketInput!): BrandIntegrationStatus!
@@ -333,6 +337,12 @@ export const ecommBrandTypeDefs = gql`
     deleteMyEcommBrand(brand_doc_id: ID!): Boolean!
     "Products portal: check a submitted brand's credential against the vendor during review."
     reviewBrandIntegration(brand_doc_id: ID!, provider: BrandIntegrationProvider!): BrandIntegrationStatus!
+    """
+    Products portal: switch a brand's ShipRocket account between sandbox (test
+    orders only) and live, and check it again. The partner's saved connection
+    the brand uses is switched with it, so the two never disagree.
+    """
+    setBrandShiprocketSandbox(brand_doc_id: ID!, sandbox: Boolean!): BrandIntegrationStatus!
     "Products portal: delete a brand that is not approved (or approved with no products). The owner is told."
     adminDeleteEcommBrand(brand_doc_id: ID!, notes: String): Boolean!
     "Partner: add (omit id) or update a saved connection and check it against the vendor right away."

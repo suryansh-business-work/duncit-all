@@ -27,6 +27,12 @@ import {
 } from '@modules/platform/cloudflare/cloudflare.gateway';
 import { probeSocialApps } from '@modules/crm/marketing/social/social.probe';
 import { googleOAuthConnection } from './googleOAuth.probe';
+import {
+  isSandboxOn,
+  resolveShiprocketBase,
+  SANDBOX_GATEWAY_DENIED,
+  SANDBOX_GATEWAY_DENIED_STATUS,
+} from '@modules/commerce/shiprocket/shiprocket.endpoint';
 
 /**
  * "Does this credential actually work?" for the providers where the answer
@@ -193,11 +199,20 @@ export async function shiprocketConnection(str: EnvConfigReader): Promise<EnvCon
   if (!str('email') || !str('password')) {
     return { ok: false, message: 'Account email and password are required', details: [] };
   }
-  const res = await fetchJson('https://apiv2.shiprocket.in/v1/external/auth/login', {
+  // Sandbox mode is checked against the sandbox, never the live API: the test
+  // must answer for the account the shipments will actually be booked on.
+  const sandbox = isSandboxOn(str('sandbox'));
+  const base = resolveShiprocketBase(sandbox, str('sandbox_api_url'));
+  if (!base.ok) return { ok: false, message: base.message, details: [] };
+  const res = await fetchJson(`${base.url}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: str('email'), password: str('password') }),
   });
+  // The sandbox gateway turning the network away is not a credential problem.
+  if (sandbox && res.status === SANDBOX_GATEWAY_DENIED_STATUS) {
+    return { ok: false, message: SANDBOX_GATEWAY_DENIED, details: [] };
+  }
   const token = typeof res.data.token === 'string' ? res.data.token : '';
   if (!res.ok || !token) {
     const reason = res.data.message ? `: ${String(res.data.message)}` : '';
@@ -214,14 +229,21 @@ export async function shiprocketConnection(str: EnvConfigReader): Promise<EnvCon
     };
   }
   const details = [tokenLifetime(token)];
+  if (sandbox) details.unshift('SANDBOX mode — orders booked with this account are test orders; no courier collects them.');
   if (res.data.company_id) details.push(`ShipRocket company id ${String(res.data.company_id)}`);
   const pickup = str('pickup_location');
   details.push(
     pickup
-      ? `Default pickup location "${pickup}" — it must match a warehouse in ShipRocket.`
+      ? `Default pickup location "${pickup}" — it must match a pickup address in ShipRocket.`
       : 'No default pickup location set — shipments cannot be booked without one.'
   );
-  return { ok: true, message: 'ShipRocket accepted the credentials and issued a token', details };
+  return {
+    ok: true,
+    message: sandbox
+      ? 'ShipRocket sandbox accepted the credentials and issued a token'
+      : 'ShipRocket accepted the credentials and issued a token',
+    details,
+  };
 }
 
 // --- Razorpay ---------------------------------------------------------------

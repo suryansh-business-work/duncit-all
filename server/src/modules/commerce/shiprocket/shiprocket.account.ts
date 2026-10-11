@@ -8,6 +8,7 @@ import {
   type IBrandShiprocketIntegration,
   type IEcommBrand,
 } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { isSandboxOn, resolveShiprocketBase, type ShiprocketBase } from './shiprocket.endpoint';
 
 /**
  * Which ShipRocket account ships the store's parcels.
@@ -21,9 +22,12 @@ import {
  * A partner BRAND holds its own account (wizard step 8, `integrations.shiprocket`):
  * its warehouses are registered on it and its orders are booked on it, so one
  * brand's parcels never draw on another's wallet. `getBrandShiprocketAccount`
- * is that account — or, for a brand that chose `DUNCIT_COURIER`, Duncit's courier
- * account mapped to the Partners console. The pet store and Duncit-owned
- * warehouses stay on the Tech portal's (ecomm) account.
+ * is that account — or, for a brand that chose `DUNCIT_COURIER` while it was
+ * still offered, Duncit's courier account mapped to the Partners console. The
+ * pet store and Duncit-owned warehouses stay on the Tech portal's (ecomm) account.
+ *
+ * Any of these can be in SANDBOX mode (`sandbox`): its calls then go to
+ * ShipRocket's sandbox (`shiprocket.endpoint.ts`) and book test orders only.
  */
 
 /** The console whose Portal Mapping picks the account (portalMode registry key). */
@@ -36,16 +40,54 @@ export interface ShiprocketAccount {
   pickupLocation: string;
   webhookSecret: string;
   tokenTtlHours: number;
-  /** sha256 of email + password: what the token and a refusal are keyed on. */
+  /** sha256 of email + password (and the sandbox it points at): what the token and a refusal are keyed on. */
   hash: string;
   /** Which session row holds this account's token: 'default' for the Tech portal's, one per brand otherwise. */
   sessionKey: string;
+  /** Sandbox mode: every call goes to ShipRocket's sandbox, so only test orders are booked. */
+  sandbox: boolean;
+  /** The sandbox API address saved WITH this account (a Tech entry's own); blank falls back to the platform's. */
+  sandboxApiUrl: string;
 }
 
 /** The Tech portal's account — the session row every pre-brand shipment used. */
 export const DEFAULT_SESSION_KEY = 'default';
 
 const DEFAULT_TTL_HOURS = 240;
+
+/**
+ * What a token is cached against. A live account hashes exactly as it always
+ * has; switching sandbox on or off (or moving the sandbox address) changes the
+ * hash, so a live token is never replayed at the sandbox or the reverse.
+ */
+function credentialHash(email: string, password: string, sandbox: boolean, sandboxApiUrl: string): string {
+  const scope = sandbox ? `:sandbox:${sandboxApiUrl}` : '';
+  return createHash('sha256').update(`${email}:${password}${scope}`).digest('hex');
+}
+
+/**
+ * The sandbox API address the Tech portal OVERRIDES the standard one with, if
+ * any (blank = the standard sandbox, `SR_SANDBOX_BASE`): the one saved on an active
+ * SHIPROCKET entry in the Tech portal (the default entry first). Partner brands
+ * never type an address — a brand in sandbox mode is sent here.
+ */
+export async function platformSandboxApiUrl(): Promise<string> {
+  const entry = await EnvEntryModel.findOne({
+    category: 'SHIPROCKET',
+    is_active: true,
+    'config.sandbox_api_url': { $nin: ['', null] },
+  })
+    .sort({ is_default: -1, updated_at: -1 })
+    .select('config.sandbox_api_url')
+    .lean();
+  return configText((entry?.config as Record<string, unknown> | undefined)?.sandbox_api_url).trim();
+}
+
+/** The API address this account's calls go to — live, or the sandbox when it is in sandbox mode. */
+export async function shiprocketBaseFor(account: Pick<ShiprocketAccount, 'sandbox' | 'sandboxApiUrl'>): Promise<ShiprocketBase> {
+  if (!account.sandbox) return resolveShiprocketBase(false, '');
+  return resolveShiprocketBase(true, account.sandboxApiUrl || (await platformSandboxApiUrl()));
+}
 
 async function activeEntry() {
   const mapped = await EnvEntryModel.findOne({
@@ -74,14 +116,18 @@ function accountFromConfig(config: Record<string, unknown>): ShiprocketAccount |
   const password = configText(config.password);
   if (!email || !password) return null;
   const ttl = Number(config.token_ttl_hours);
+  const sandbox = isSandboxOn(config.sandbox);
+  const sandboxApiUrl = configText(config.sandbox_api_url).trim();
   return {
     email,
     password,
     pickupLocation: configText(config.pickup_location).trim(),
     webhookSecret: configText(config.webhook_secret).trim(),
     tokenTtlHours: ttl > 0 ? ttl : DEFAULT_TTL_HOURS,
-    hash: createHash('sha256').update(`${email}:${password}`).digest('hex'),
+    hash: credentialHash(email, password, sandbox, sandboxApiUrl),
     sessionKey: DEFAULT_SESSION_KEY,
+    sandbox,
+    sandboxApiUrl,
   };
 }
 
@@ -97,14 +143,18 @@ export function accountFromBrandIntegration(
   const email = String(s?.email ?? '').trim();
   const password = String(s?.password ?? '');
   if (!email || !password) return null;
+  const sandbox = s?.sandbox === true;
   return {
     email,
     password,
     pickupLocation: String(s?.pickup_location ?? '').trim(),
     webhookSecret: String(s?.webhook_secret ?? '').trim(),
     tokenTtlHours: DEFAULT_TTL_HOURS,
-    hash: createHash('sha256').update(`${email}:${password}`).digest('hex'),
+    // A brand saves no address of its own, so its sandbox hash carries none.
+    hash: credentialHash(email, password, sandbox, ''),
     sessionKey: `brand:${brandId}`,
+    sandbox,
+    sandboxApiUrl: '',
   };
 }
 
@@ -137,20 +187,21 @@ type BrandShippingFacts = Pick<IEcommBrand, 'shipping_mode'> & {
 };
 
 /**
- * Who carries a brand's parcels: its choice; for a brand from before the
- * choice existed, its own account when it saved one, else Duncit's courier
- * (the account such a brand already shipped on).
+ * Who carries a brand's parcels. Every brand ships on its OWN ShipRocket
+ * account; the Duncit courier is no longer offered. `DUNCIT_COURIER` survives
+ * only as the recorded choice of a brand that picked it while it was — such a
+ * brand keeps shipping on that account until it connects its own, so no parcel
+ * in flight is stranded. A brand with no recorded choice is on its own account.
  */
 export function brandShippingMode(brand: BrandShippingFacts): BrandShippingMode {
-  if (brand.shipping_mode) return brand.shipping_mode;
-  return accountFromBrandIntegration('', brand.integrations?.shiprocket) ? 'OWN_SHIPROCKET' : 'DUNCIT_COURIER';
+  return brand.shipping_mode ?? 'OWN_SHIPROCKET';
 }
 
 const UNAVAILABLE: Record<BrandShippingMode, string> = {
   OWN_SHIPROCKET:
-    "This brand ships on its own ShipRocket account, but none is saved. Connect it in the brand's Integration step, or switch the brand to the Duncit courier.",
+    "This brand has no ShipRocket account connected. Connect one in the brand's Integration step (Partner portal → E-Commerce Brand → Integrations).",
   DUNCIT_COURIER:
-    'The Duncit courier is not set up. In the Tech portal open Environment Variables → Portal Mapping and map a SHIPROCKET entry to the Partners App.',
+    "This brand was set to the Duncit courier, which is no longer offered. Connect the brand's own ShipRocket account in its Integration step (Partner portal → E-Commerce Brand → Integrations).",
 };
 
 /**

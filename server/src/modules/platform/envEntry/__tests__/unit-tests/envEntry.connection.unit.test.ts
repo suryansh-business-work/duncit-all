@@ -176,9 +176,67 @@ describe('shiprocketConnection', () => {
       details: [
         `Token valid until ${new Date(exp * 1000).toUTCString()}`,
         'ShipRocket company id 9876',
-        'Default pickup location "Main Warehouse" — it must match a warehouse in ShipRocket.',
+        'Default pickup location "Main Warehouse" — it must match a pickup address in ShipRocket.',
       ],
     });
+    // A live account is checked against the live API.
+    expect(fetchMock.mock.calls[0][0]).toBe('https://apiv2.shiprocket.in/v1/external/auth/login');
+  });
+
+  it('checks an account in sandbox mode against the saved sandbox address, and says the orders are tests', async () => {
+    const exp = Date.UTC(2030, 0, 2, 3, 4, 5) / 1000;
+    respond(200, { token: jwtWith({ exp }) });
+    const res = await shiprocketConnection(
+      entry({ ...creds, sandbox: 'true', sandbox_api_url: 'https://sandbox.shiprocket.in/v1/external/', pickup_location: 'Main Warehouse' }),
+    );
+    expect(fetchMock.mock.calls[0][0]).toBe('https://sandbox.shiprocket.in/v1/external/auth/login');
+    expect(res).toEqual({
+      ok: true,
+      message: 'ShipRocket sandbox accepted the credentials and issued a token',
+      details: [
+        'SANDBOX mode — orders booked with this account are test orders; no courier collects them.',
+        `Token valid until ${new Date(exp * 1000).toUTCString()}`,
+        'Default pickup location "Main Warehouse" — it must match a pickup address in ShipRocket.',
+      ],
+    });
+  });
+
+  it('checks sandbox mode against the standard ShipRocket sandbox when no address is saved', async () => {
+    respond(200, { token: jwtWith({ exp: Date.UTC(2030, 0, 2) / 1000 }) });
+    const res = await shiprocketConnection(entry({ ...creds, sandbox: 'true' }));
+    expect(res.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api-sandbox.shiprocket.in/v1/external/auth/login');
+  });
+
+  it('gives a sandbox address saved as a bare host the API path', async () => {
+    respond(200, { token: jwtWith({ exp: Date.UTC(2030, 0, 2) / 1000 }) });
+    await shiprocketConnection(entry({ ...creds, sandbox: 'true', sandbox_api_url: 'https://api-sandbox.shiprocket.in' }));
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api-sandbox.shiprocket.in/v1/external/auth/login');
+  });
+
+  it('names the sandbox gateway, not the credentials, when the sandbox turns the network away', async () => {
+    respond(498, 'Access Denied....');
+    const res = await shiprocketConnection(entry({ ...creds, sandbox: 'true' }));
+    expect(res.ok).toBe(false);
+    expect(res.message).toMatch(/sandbox gateway, not the email or password/);
+    expect(res.message).toMatch(/Nothing was sent to production/);
+  });
+
+  it('reads a 498 from the live API as an ordinary rejection — the gateway rule is the sandbox’s alone', async () => {
+    respond(498, { message: 'Token expired' });
+    const res = await shiprocketConnection(entry(creds));
+    expect(res.message).toBe('ShipRocket rejected the credentials (HTTP 498): Token expired');
+  });
+
+  it('refuses an unusable sandbox address, and never falls back to the live API', async () => {
+    // Not https, or not a ShipRocket host: the password must not be sent there.
+    for (const sandbox_api_url of ['http://sandbox.shiprocket.in/v1/external', 'https://shiprocket.in.example.com/v1/external', 'not a url']) {
+      const invalid = await shiprocketConnection(entry({ ...creds, sandbox: 'true', sandbox_api_url }));
+      expect(invalid.ok).toBe(false);
+      expect(invalid.message).toMatch(/The saved Sandbox API URL is not a ShipRocket address/);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it.each([

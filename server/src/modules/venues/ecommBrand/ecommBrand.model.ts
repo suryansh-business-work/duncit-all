@@ -22,6 +22,8 @@ export interface IBrandShiprocketIntegration {
   password: string;
   pickup_location: string;
   webhook_secret: string;
+  /** Sandbox mode: this account's calls go to ShipRocket's sandbox — test orders only, nothing real is booked. */
+  sandbox: boolean;
   connected: boolean;
   checked_at: Date | null;
   message: string;
@@ -29,10 +31,12 @@ export interface IBrandShiprocketIntegration {
 }
 
 /**
- * Who carries a brand's parcels. A brand either ships on its OWN ShipRocket
- * account (connected in the wizard), or hands its parcels to DUNCIT's courier
- * service — the ShipRocket account the Tech portal maps to the Partners
- * console. Never the pet store's account: the two businesses do not share one.
+ * Who carries a brand's parcels. Every brand ships on its OWN ShipRocket account
+ * (connected in the wizard). DUNCIT_COURIER is kept only so a brand that chose
+ * Duncit's courier while it was offered keeps its record; it can no longer be
+ * chosen (`ecommBrandService.setShippingMode`). That courier was the ShipRocket
+ * account the Tech portal maps to the Partners console — never the pet
+ * store's account: the two businesses do not share one.
  */
 export const BRAND_SHIPPING_MODES = ['OWN_SHIPROCKET', 'DUNCIT_COURIER'] as const;
 export type BrandShippingMode = (typeof BRAND_SHIPPING_MODES)[number];
@@ -158,6 +162,7 @@ export const shiprocketIntegrationSchema = new Schema<IBrandShiprocketIntegratio
     password: { type: String, default: '' },
     pickup_location: { type: String, default: '', trim: true },
     webhook_secret: { type: String, default: '', trim: true },
+    sandbox: { type: Boolean, default: false },
     ...probeFields,
   },
   { _id: false }

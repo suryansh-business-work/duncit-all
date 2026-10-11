@@ -296,7 +296,7 @@ describe('approval — warehouse approval requests', () => {
       { kind: 'PRODUCT', target_id: new Types.ObjectId().toString(), target_name: 'X', details: [], payload: '{}' },
       ADMIN,
     );
-    await expect(approvalService.reviewWarehouse(ecomm!.id, 'APPROVE', ADMIN)).rejects.toThrow(/not a warehouse/i);
+    await expect(approvalService.reviewWarehouse(ecomm!.id, 'APPROVE', ADMIN)).rejects.toThrow(/not a pickup address/i);
   });
 
   it('tolerates a missing target_id and a malformed target id when applying the decision', async () => {

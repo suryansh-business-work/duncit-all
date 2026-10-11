@@ -512,7 +512,7 @@ const DEFAULT_FLAGS: {
     key: "is_product_visible",
     name: "Product Features Visible",
     description:
-      "Show every product feature — the Pod Shop on a pod, the cart, the catalogue, the Create-a-Pod products step, brand and ShipRocket warehouse registration, product orders and the E-commerce studio — across the apps and the portals. Off, and product operations are refused server-side too.",
+      "Show every product feature — the Pod Shop on a pod, the cart, the catalogue, the Create-a-Pod products step, brand and ShipRocket pickup address registration, product orders and the E-commerce studio — across the apps and the portals. Off, and product operations are refused server-side too.",
     enabled: false,
   },
   {

@@ -226,9 +226,9 @@ export const approvalService = {
     const doc = await ApprovalRequestModel.create({
       type: 'WAREHOUSE_APPROVAL',
       source_portal: 'partners',
-      title: `Warehouse approval — ${targetName}`,
-      summary: `${verb} warehouse "${targetName}" is awaiting approval before it can be used for shipping.`,
-      details: [{ label: 'Warehouse', value: targetName }],
+      title: `Pickup address approval — ${targetName}`,
+      summary: `${verb} pickup address "${targetName}" is awaiting approval before it can be used for shipping.`,
+      details: [{ label: 'Pickup address', value: targetName }],
       target_id: targetId,
       requested_by: requestedById,
     });
@@ -241,7 +241,7 @@ export const approvalService = {
     const existing = await ApprovalRequestModel.findById(id);
     if (!existing) throw notFound();
     if (existing.type !== 'WAREHOUSE_APPROVAL') {
-      throw new GraphQLError('Not a warehouse approval request', { extensions: { code: 'BAD_USER_INPUT' } });
+      throw new GraphQLError('Not a pickup address approval request', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     return decision === 'APPROVE' ? this.approve(id, reviewer, notes) : this.deny(id, reviewer, notes);
   },

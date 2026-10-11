@@ -410,16 +410,21 @@ async function assertBrandWarehouse(pickupLocationId: IdLike, brandId: IdLike) {
   if (pickupLocationId === null || pickupLocationId === undefined || pickupLocationId === '') return;
   const id = String(pickupLocationId);
   if (!Types.ObjectId.isValid(id)) {
-    throw new GraphQLError('Select a valid warehouse', { extensions: { code: 'BAD_USER_INPUT' } });
+    throw new GraphQLError('Select a valid pickup address', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind brand_id review_status');
+  const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind brand_id review_status is_active');
   const sameBrand = warehouse?.owner_kind === 'BRAND' && String(warehouse.brand_id ?? '') === String(brandId ?? '');
   if (!sameBrand) {
-    throw new GraphQLError('Select a warehouse that belongs to this brand', { extensions: { code: 'BAD_USER_INPUT' } });
+    throw new GraphQLError('Select a pickup address that belongs to this brand', { extensions: { code: 'BAD_USER_INPUT' } });
   }
   // A partner warehouse must be approved before products can ship from it.
   if (warehouse!.review_status !== 'APPROVED') {
-    throw new GraphQLError('This warehouse is awaiting approval — it can be used once approved', {
+    throw new GraphQLError('This pickup address is awaiting approval — it can be used once approved', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (warehouse!.is_active === false) {
+    throw new GraphQLError('This pickup address is disabled — enable it under Pickup Addresses, or choose another one', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
@@ -828,13 +833,18 @@ function applyInput(target: any, input: any) {
 async function assertDuncitWarehouse(pickupLocationId: IdLike) {
   const id = pickupLocationId ? String(pickupLocationId) : '';
   if (!id || !Types.ObjectId.isValid(id)) {
-    throw new GraphQLError('A warehouse (pickup location) is required', {
+    throw new GraphQLError('A pickup address is required', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind');
+  const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind is_active');
   if (warehouse?.owner_kind !== 'DUNCIT') {
-    throw new GraphQLError('Select a valid Duncit warehouse', {
+    throw new GraphQLError('Select a valid Duncit pickup address', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (warehouse.is_active === false) {
+    throw new GraphQLError('This pickup address is disabled — enable it under Duncit Pickup Addresses, or choose another one', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
@@ -1618,7 +1628,7 @@ export const inventoryService = {
     // start at that pincode — so no product may carry the target without one.
     // Without this guard the checkout quotes it at ₹0 instead of failing loudly.
     if (doc.delivery_target === 'SHIPROCKET' && !doc.pickup_location_id) {
-      throw new GraphQLError('Select the warehouse this product ships from', {
+      throw new GraphQLError('Select the pickup address this product ships from', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }

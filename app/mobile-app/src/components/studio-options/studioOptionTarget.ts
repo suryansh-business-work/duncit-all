@@ -31,6 +31,7 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, IconName>> = 
   returns: 'assignment-return',
   orders: 'local-shipping',
   warehouses: 'warehouse',
+  refunds: 'currency-exchange',
 };
 
 /**

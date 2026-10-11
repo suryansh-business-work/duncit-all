@@ -4,35 +4,11 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { shiprocketOrderUrl, trackingUrl } from '@duncit/utils';
 
+import { ShipmentFact } from '@/components/ShipmentFact';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { BrandOrder } from '@/hooks/useBrandOrder';
 import { fireAndForget } from '@/utils/fire-and-forget';
-
-function Fact({
-  label,
-  value,
-  testID,
-}: Readonly<{ label: string; value: string; testID: string }>) {
-  if (!value) return null;
-  return (
-    <XStack justifyContent="space-between" gap={8}>
-      <Text fontSize={13} color="$muted">
-        {label}
-      </Text>
-      <Text
-        fontSize={13}
-        fontWeight="600"
-        color="$color"
-        testID={testID}
-        flexShrink={1}
-        textAlign="right"
-      >
-        {value}
-      </Text>
-    </XStack>
-  );
-}
 
 function OutLink({ url, label, testID }: Readonly<{ url: string; label: string; testID: string }>) {
   const { primary } = useThemeColors();
@@ -94,29 +70,33 @@ export function BrandOrderShipment({ order }: Readonly<{ order: BrandOrder }>) {
           {t('mweb.brandOrders.notBooked')}
         </Text>
       ) : null}
-      <Fact
+      <ShipmentFact
         label={t('mweb.brandOrders.shiprocketOrderId')}
         value={sr.order_id}
         testID="brand-order-sr-order"
       />
-      <Fact
+      <ShipmentFact
         label={t('mweb.brandOrders.shipmentId')}
         value={sr.shipment_id}
         testID="brand-order-sr-shipment"
       />
-      <Fact label={t('mweb.brandOrders.awbLabel')} value={sr.awb} testID="brand-order-awb" />
-      <Fact
+      <ShipmentFact
+        label={t('mweb.brandOrders.awbLabel')}
+        value={sr.awb}
+        testID="brand-order-awb"
+      />
+      <ShipmentFact
         label={t('mweb.brandOrders.courier')}
         value={sr.courier_name}
         testID="brand-order-courier"
       />
-      <Fact label={t('mweb.brandOrders.etd')} value={sr.etd} testID="brand-order-etd" />
-      <Fact
+      <ShipmentFact label={t('mweb.brandOrders.etd')} value={sr.etd} testID="brand-order-etd" />
+      <ShipmentFact
         label={t('mweb.brandOrders.pickupScheduled')}
         value={sr.pickup_scheduled_date}
         testID="brand-order-pickup-date"
       />
-      <Fact
+      <ShipmentFact
         label={t('mweb.brandOrders.trackingStatus')}
         value={sr.tracking_status}
         testID="brand-order-tracking"

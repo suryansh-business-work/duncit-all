@@ -1,5 +1,5 @@
 import { YStack } from 'tamagui';
-import { studioOptionsEntryFor } from '@duncit/utils';
+import { studioEntryFor } from '@duncit/utils';
 
 import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-completion';
 import type { MenuRoute } from '@/navigation/types';
@@ -19,10 +19,10 @@ import { SidebarStudioOptionsCard } from './SidebarStudioOptionsCard';
 
 /** The profile layout every mode shares — RN twin of mWeb's <UserModeContent/>:
  * identity, incomplete nudge, quick-action grid, referral card and the Manage
- * Account list. Once switched into a partner studio, ONE highlighted entry —
- * "Venue Options", "Host Options", … — opens that studio's Options page, where
- * every option lives. Identity and completion both come from the user info
- * record (useMe). */
+ * Account list. A partner — in any mode — also gets ONE highlighted "Studio"
+ * entry, which opens the Studio screen: every option of the role in effect,
+ * with the role switcher at its top. Identity and completion both come from
+ * the user info record (useMe). */
 export function SidebarUserContent({
   me,
   account,
@@ -47,7 +47,7 @@ export function SidebarUserContent({
    */
   accountLoading?: boolean;
   roles: readonly string[];
-  /** Studio mode in effect — decides which studio's Options entry (if any) is shown. */
+  /** Studio mode in effect — the role the one Studio entry opens on. */
   mode: StudioMode;
   showPodPlans: boolean;
   /** Server `leaderboard` feature flag — the whole section hides without it. */
@@ -65,8 +65,10 @@ export function SidebarUserContent({
   const { t } = useTranslation();
   const percent = profileCompletion(account ?? {});
   const showIncomplete = !accountLoading && percent < 100;
-  // The switched-in studio's one entry — null in User mode or once the role is gone.
-  const studioEntry = studioOptionsEntryFor(mode, roles);
+  // The ONE "Studio" entry every partner gets, whichever role is active — it
+  // opens the Studio on the role in effect (or the first role held, from User
+  // mode). Null for an account with no partner role.
+  const studioEntry = studioEntryFor(mode, roles, { products: showProducts });
   // The flag-gated sections and the grid's translated tiles (rule 38).
   const tiles = buildSidebarTiles(t);
   return (

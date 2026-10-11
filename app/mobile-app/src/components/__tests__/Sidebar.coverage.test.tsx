@@ -2,7 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { Sidebar } from '@/components/Sidebar';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
-import { STUDIO_HOME_ROUTE } from '@/utils/studio-mode';
+import { STUDIO_ROUTE } from '@/utils/studio-mode';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
@@ -68,14 +68,14 @@ describe('Sidebar branch coverage', () => {
     expect(screen.queryByTestId('profile-completion')).toBeNull();
   });
 
-  it('jumps to the venue dashboard after switching modes, keeping the card layout', () => {
+  it('jumps to the venue Studio screen after switching modes, keeping the card layout', () => {
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     fireEvent.press(screen.getByTestId('studio-switch-VENUE'));
     fireEvent.press(screen.getByTestId('studio-switch-confirm'));
-    // The unified card layout stays; switching jumps to the venue dashboard.
+    // The unified card layout stays; switching jumps to the venue Studio screen.
     expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
-    expect(mockNavigate).toHaveBeenCalledWith(STUDIO_HOME_ROUTE.VENUE);
+    expect(mockNavigate).toHaveBeenCalledWith(STUDIO_ROUTE.VENUE);
   });
 
   it('copes with no signed-in user and no policies (no switch button)', () => {

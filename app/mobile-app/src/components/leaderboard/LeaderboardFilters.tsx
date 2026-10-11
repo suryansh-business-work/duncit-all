@@ -23,7 +23,14 @@ interface ChipProps {
   segment?: boolean;
 }
 
-function FilterChip({ label, selected, testID, onPress, segment = false }: Readonly<ChipProps>) {
+/** One pill of a chip row — also the Studio's role switcher (studio-options). */
+export function FilterChip({
+  label,
+  selected,
+  testID,
+  onPress,
+  segment = false,
+}: Readonly<ChipProps>) {
   const ink: ChipTone = selected ? '$onPrimary' : '$color';
   const rest = segment ? 'transparent' : '$surface';
   return (

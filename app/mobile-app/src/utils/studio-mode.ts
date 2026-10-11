@@ -26,7 +26,8 @@ export const STUDIO_LABEL: Record<StudioMode, string> = {
   CLUB: 'Club Admin',
 };
 
-/** Landing screen for each mode — switching roles jumps straight to its dashboard. */
+/** Each mode's dashboard. A role switch lands on the role's Studio screen
+ * instead ({@link studioSwitchRoute}). */
 export const STUDIO_HOME_ROUTE = {
   USER: 'Home',
   HOST: 'HostManage',
@@ -42,27 +43,41 @@ export const AUTO_POD_ROUTE = {
   CLUB: 'ClubAutoPods',
 } as const;
 
+/**
+ * The Studio screen of each partner role — every option of the role, with the
+ * role switcher at its top. The names are the shared catalogue's own
+ * (`STUDIO_OPTIONS_ENTRY[mode].route`); studio-mode.test pins the two together.
+ */
+export const STUDIO_ROUTE = {
+  HOST: 'HostOptions',
+  VENUE: 'VenueOptions',
+  ECOMM: 'BrandOptions',
+  CLUB: 'ClubOptions',
+} as const;
+
 /** Any screen a role switch can land on. */
 export type StudioSwitchRoute =
-  (typeof STUDIO_HOME_ROUTE)[StudioMode] | (typeof AUTO_POD_ROUTE)[keyof typeof AUTO_POD_ROUTE];
+  | (typeof STUDIO_HOME_ROUTE)['USER']
+  | (typeof STUDIO_ROUTE)[keyof typeof STUDIO_ROUTE]
+  | (typeof AUTO_POD_ROUTE)[keyof typeof AUTO_POD_ROUTE];
 
 /**
  * Where switching into `mode` should land.
  *
- * An Auto Pod waiting on a partner is time-critical — a venue's slot, a host's
- * evening and a club's pod all hang on someone enrolling — so when the mode
- * being switched into has any waiting, the switch goes straight to its queue
- * instead of its dashboard. Every other switch lands on the usual home.
+ * A switch lands on the role's Studio screen. An Auto Pod waiting on a partner
+ * is time-critical — a venue's slot, a host's evening and a club's pod all hang
+ * on someone enrolling — so when the mode being switched into has any waiting,
+ * the switch goes straight to its queue instead. User mode goes Home.
  *
  * Counts are read from state the caller already fetched, never awaited here, so
  * a switch never stalls on the network; unloaded counts simply fall through to
- * the static home.
+ * the Studio screen.
  */
 export function studioSwitchRoute(
   mode: StudioMode,
   counts: AutoPodActionCounts | null | undefined,
 ): StudioSwitchRoute {
-  const home = STUDIO_HOME_ROUTE[mode];
-  if (autoPodModeCount(counts, mode) <= 0) return home;
-  return AUTO_POD_ROUTE[mode as keyof typeof AUTO_POD_ROUTE] ?? home;
+  const studio = mode === 'USER' ? STUDIO_HOME_ROUTE.USER : STUDIO_ROUTE[mode];
+  if (autoPodModeCount(counts, mode) <= 0) return studio;
+  return AUTO_POD_ROUTE[mode as keyof typeof AUTO_POD_ROUTE] ?? studio;
 }

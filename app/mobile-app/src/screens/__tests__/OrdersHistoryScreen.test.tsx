@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { MyPodShopReturnsDocument } from '@/graphql/pod-shop-returns';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
@@ -6,8 +6,9 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: mockNavigate }),
 }));
 
 const mockRequest = graphqlRequest as jest.Mock;
@@ -85,7 +86,10 @@ const respond = (orders: unknown[], returns: unknown[] = []) =>
     ),
   );
 
-beforeEach(() => mockRequest.mockReset());
+beforeEach(() => {
+  mockRequest.mockReset();
+  mockNavigate.mockReset();
+});
 
 describe('OrdersHistoryScreen', () => {
   it('lists every order with its pod title and the bought variant', async () => {
@@ -94,6 +98,15 @@ describe('OrdersHistoryScreen', () => {
     expect(screen.getByTestId('orders-loading')).toBeOnTheScreen();
     await waitFor(() => expect(screen.getByText('Sunset Jam')).toBeOnTheScreen());
     expect(screen.getAllByText(/Hoodie — L \/ Blue × 1/)).toHaveLength(2);
+  });
+
+  it('shows each order’s total and opens its detail screen from the card', async () => {
+    respond([order()]);
+    renderWithProviders(<OrdersHistoryScreen />);
+    await waitFor(() => expect(screen.getByTestId('orders-history-meta-o1')).toBeOnTheScreen());
+    expect(screen.getByTestId('orders-history-meta-o1')).toHaveTextContent(/Total ₹200/);
+    fireEvent.press(screen.getByLabelText('View details of order #ord_1'));
+    expect(mockNavigate).toHaveBeenCalledWith('OrderDetail', { orderId: 'o1' });
   });
 
   it('shows the empty state when there are no orders', async () => {

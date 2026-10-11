@@ -5,6 +5,7 @@ import {
   Alert,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   Grid,
   Snackbar,
@@ -116,6 +117,9 @@ export default function ProductOrderDetailPage() {
           label={humaniseStatus(order.fulfilment_status, t)}
           colorMap={STATUS_COLOR}
         />
+        {order.shiprocket?.sandbox && (
+          <Chip size="small" variant="outlined" color="warning" label={t('products.orderCancel.sandboxChip')} data-testid="order-sandbox-chip" />
+        )}
       </Stack>
 
       {error && (

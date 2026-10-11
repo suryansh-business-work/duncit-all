@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FocusEvent } from 'react';
-import { FormControlLabel, InputAdornment, Switch, TextField, Tooltip } from '@mui/material';
+import { FormControl, FormControlLabel, FormHelperText, InputAdornment, Switch, TextField, Tooltip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -25,13 +25,21 @@ export default function ConfigField({ field, value, error, helperText, required,
   const [reveal, setReveal] = useState(false);
 
   if (field.bool) {
+    const hintId = `config-${field.name}-hint`;
     return (
-      <FormControlLabel
-        control={
-          <Switch checked={value === 'true'} onChange={(e) => onToggleBool(field.name, e.target.checked)} />
-        }
-        label={field.label}
-      />
+      <FormControl>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={value === 'true'}
+              onChange={(e) => onToggleBool(field.name, e.target.checked)}
+              slotProps={{ input: { 'aria-describedby': helperText ? hintId : undefined } }}
+            />
+          }
+          label={field.label}
+        />
+        {helperText ? <FormHelperText id={hintId} sx={{ mx: 0 }}>{helperText}</FormHelperText> : null}
+      </FormControl>
     );
   }
 

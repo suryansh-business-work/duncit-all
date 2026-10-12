@@ -37,7 +37,9 @@ export default function ReleaseMediaGallery({ media }: Readonly<Props>) {
         return (
           <Box component="li" key={item.url}>
             {item.type === 'VIDEO' ? (
-              <Box component="video" src={item.url} controls preload="metadata" aria-label={label} sx={frame} />
+              <Box component="video" src={item.url} controls preload="metadata" aria-label={label} sx={frame}>
+                <track kind="captions" />
+              </Box>
             ) : (
               <Link href={item.url} target="_blank" rel="noreferrer" aria-label={label}>
                 <Box component="img" src={item.url} alt="" loading="lazy" sx={frame} />

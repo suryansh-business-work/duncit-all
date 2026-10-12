@@ -269,5 +269,26 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // The sandbox API user has its own fields now, apart from the production email and password.
   "partners.brandWizard.integration.sandboxHint": [
     "On: orders for brands using this connection are booked on ShipRocket’s sandbox, so no courier collects them and nothing is charged. Enter your sandbox API user (ShipRocket → Settings → Additional Settings → Sandbox) as the email and password above. Off: real shipments.",
+  ],  // Completing a pod no longer pays anyone by itself: the payouts wait for
+  // Finance to approve the request, so every line that promised an instant
+  // wallet credit was reworded.
+  "mweb.hostShare.title": ["Your share (credited to your wallet on completion)"],
+  "shell.hostShare.title": ["Your share (credited to your wallet on completion)"],
+  "mweb.hostPodActions.completeHint": [
+    "This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. Your payout is credited to your wallet as soon as the pod is completed.",
+  ],
+  "shell.hostPodActions.completeHint": [
+    "This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. Your payout is credited to your wallet as soon as the pod is completed.",
+  ],
+  "admin.completePod.released": ["Pod completed — payouts released"],
+  "admin.completePod.payoutNote": [
+    "Payouts are credited to the beneficiary wallets when the pod is completed.",
+  ],
+  "admin.completePod.releasedBody": [
+    "Each payout below has been credited to its beneficiary's wallet.",
+  ],
+  "finance.paymentRelease.venueAmountBookedSlotPrice": ["Venue amount (booked slot price)"],
+  "finance.paymentRelease.approveVenueBillingAndHostPayment": [
+    "Approve venue billing and host payment release requests.",
   ],
 };

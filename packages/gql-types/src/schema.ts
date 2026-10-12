@@ -5453,9 +5453,22 @@ export type CompletePasswordResetInput = {
 export type CompletePodInput = {
   evidence_media?: InputMaybe<Array<PaymentReleaseMediaInput>>;
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
+  /**
+   * true: pay the bill on top of the booked slot price. false: the bill replaces
+   * it. Left out: the bill is recorded as evidence only and the slot price
+   * stands — what app builds from before the bill could move money rely on.
+   */
+  include_slot_price?: InputMaybe<Scalars['Boolean']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
   pod_id: Scalars['ID']['input'];
+  /**
+   * The venue's final bill. 0 leaves the booked slot price standing; anything
+   * above it replaces the slot price (include_slot_price: false) or is paid on
+   * top of it (true), and needs venue_bill_url.
+   */
   venue_bill_amount: Scalars['Float']['input'];
+  /** The uploaded bill itself — required whenever a bill is to change the venue's money. */
+  venue_bill_url?: InputMaybe<Scalars['String']['input']>;
 };
 
 /**
@@ -12261,6 +12274,11 @@ export type Mutation = {
   approveEcommBrand: EcommBrand;
   approveHost: Host;
   approveHostRequest: HostRequest;
+  /**
+   * Approve every payout still pending on one pod request, in full, and credit
+   * each beneficiary's wallet. Finance roles only.
+   */
+  approvePodPaymentRelease: PodPaymentReleaseDetail;
   /** Brand owner or Products team: accept — a SHIP order gets a ShipRocket reverse pickup on the brand's account. */
   approvePodShopReturn: PodShopReturn;
   /** Admin approves a request — runs the request type's side effect (e.g. drafts the onboarded host/venue/seller, or applies an ecomm change). */
@@ -14734,6 +14752,11 @@ export type MutationApproveHostArgs = {
 export type MutationApproveHostRequestArgs = {
   id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationApprovePodPaymentReleaseArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -20970,6 +20993,8 @@ export type PaymentReleaseBreakdown = {
   duncit_revenue: Scalars['Float']['output'];
   gst_amount: Scalars['Float']['output'];
   gst_pct: Scalars['Float']['output'];
+  /** True when the final bill was paid on top of the slot price rather than instead of it. */
+  include_slot_price: Scalars['Boolean']['output'];
   net_amount: Scalars['Float']['output'];
   payout_amount: Scalars['Float']['output'];
   payout_pct: Scalars['Float']['output'];
@@ -20979,6 +21004,12 @@ export type PaymentReleaseBreakdown = {
   share_amount: Scalars['Float']['output'];
   share_pct: Scalars['Float']['output'];
   venue_bill: Scalars['Float']['output'];
+  /**
+   * The venue's booked slot price at completion. Beside venue_bill (the final
+   * bill entered then) it is how the venue's amount was arrived at. 0 on
+   * snapshots written before a bill could change the venue's money.
+   */
+  venue_slot_price: Scalars['Float']['output'];
   version: Scalars['Int']['output'];
 };
 
@@ -21016,6 +21047,8 @@ export type PaymentReleaseRequest = {
   approval_reason: Scalars['String']['output'];
   approval_type?: Maybe<PaymentReleaseApprovalType>;
   approved_amount?: Maybe<Scalars['Float']['output']>;
+  /** The Complete Pod submission this payout belongs to. Null on releases written before they were grouped. */
+  batch_id?: Maybe<Scalars['String']['output']>;
   beneficiary_email: Scalars['String']['output'];
   beneficiary_name: Scalars['String']['output'];
   bill_url: Scalars['String']['output'];
@@ -23056,6 +23089,43 @@ export type PodPartyMedia = {
   url: Scalars['String']['output'];
 };
 
+/**
+ * One pod's completion request: every payout it asks for — host, venue, club
+ * admin, product sellers — as a single Payment Release row.
+ */
+export type PodPaymentRelease = {
+  __typename?: 'PodPaymentRelease';
+  /** True when a venue bill was uploaded with the request. */
+  has_bill: Scalars['Boolean']['output'];
+  /** The request's id: its batch, or the pod id for releases written before batches. */
+  id: Scalars['ID']['output'];
+  kinds: Array<PaymentReleaseKind>;
+  media_count: Scalars['Int']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  release_count: Scalars['Int']['output'];
+  requested_at: Scalars['String']['output'];
+  /** PENDING while any payout on it is waiting, APPROVED once one was paid, REJECTED when all were turned down. */
+  status: PaymentReleaseStatus;
+  /** Everything the request asks for, across its payouts. */
+  total_requested: Scalars['Float']['output'];
+};
+
+/** One request with every payout on it — the Payment Release page. */
+export type PodPaymentReleaseDetail = {
+  __typename?: 'PodPaymentReleaseDetail';
+  releases: Array<PaymentReleaseRequest>;
+  summary: PodPaymentRelease;
+};
+
+export type PodPaymentReleaseTablePage = {
+  __typename?: 'PodPaymentReleaseTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodPaymentRelease>;
+  total: Scalars['Int']['output'];
+};
+
 export type PodPlaceCharge = {
   __typename?: 'PodPlaceCharge';
   amount: Scalars['Int']['output'];
@@ -23227,6 +23297,8 @@ export type PodSettlement = {
   host_commission_pct: Scalars['Float']['output'];
   /** What the host is actually paid on completion: the floored host remainder, or 0 once the completion window has expired. */
   host_payout_amount: Scalars['Float']['output'];
+  /** True when the bill is being paid on top of the slot price rather than instead of it. */
+  include_slot_price: Scalars['Boolean']['output'];
   /**
    * SEATS the settlement was computed on — the ones a host scanned in. Kept
    * under its original name for older consumers; attended_seats is the same
@@ -23236,8 +23308,11 @@ export type PodSettlement = {
   pod_id: Scalars['ID']['output'];
   pod_title: Scalars['String']['output'];
   venue?: Maybe<PodSettlementParty>;
+  /** The venue's final bill as entered. 0 when none was. */
   venue_bill: Scalars['Float']['output'];
   venue_commission_pct: Scalars['Float']['output'];
+  /** The slot's booked price — what the venue was promised before any bill. 0 without a slot. */
+  venue_slot_price: Scalars['Float']['output'];
   waterfall: PodFinanceWaterfall;
 };
 
@@ -25605,6 +25680,10 @@ export type Query = {
   podPartnerRequest: PodPartnerRequest;
   /** This month's sending allowance: as a host, or for one venue you own. */
   podPartnerRequestQuota: PartnerRequestQuota;
+  /** One pod request with every payout on it (finance roles only). */
+  podPaymentRelease: PodPaymentReleaseDetail;
+  /** Payment Release, one row per pod request (finance roles only). */
+  podPaymentReleasesTable: PodPaymentReleaseTablePage;
   podPlans: Array<PodPlan>;
   podPlansTable: PodPlanTablePage;
   /** What revoking this pod's cancellation would cost, and whether it is allowed. */
@@ -28479,6 +28558,16 @@ export type QueryPodPartnerRequestQuotaArgs = {
 };
 
 
+export type QueryPodPaymentReleaseArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodPaymentReleasesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryPodPlansTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -28491,6 +28580,7 @@ export type QueryPodRevokePreviewArgs = {
 
 export type QueryPodSettlementPreviewArgs = {
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
+  include_slot_price?: InputMaybe<Scalars['Boolean']['input']>;
   pod_id: Scalars['ID']['input'];
   venue_bill_amount: Scalars['Float']['input'];
 };

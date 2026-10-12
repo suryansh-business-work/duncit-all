@@ -8,6 +8,7 @@ import {
   type IFinanceSettings,
 } from './finance.model';
 import { paymentReleaseService } from './paymentRelease.service';
+import { paymentReleaseGroupService } from './paymentReleaseGroup.service';
 import { computePodSettlement } from './settlement.service';
 import { breakdownService } from './breakdown.service';
 import { podCancellationService, type PodCancelKind } from './podCancellation.service';
@@ -17,6 +18,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
+import type { TableQueryInput } from '@utils/table-query';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 const ADMIN_POD = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
@@ -158,13 +160,35 @@ export const financeResolvers = {
       requireRole(ctx, ADMIN_RW);
       return paymentReleaseService.table(args.query);
     },
+    podPaymentReleasesTable: async (
+      _p: unknown,
+      args: { query?: TableQueryInput | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return paymentReleaseGroupService.table(args.query);
+    },
+    podPaymentRelease: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return paymentReleaseGroupService.detail(args.id);
+    },
     podSettlementPreview: async (
       _p: unknown,
-      args: { pod_id: string; venue_bill_amount: number; host_user_id?: string | null },
+      args: {
+        pod_id: string;
+        venue_bill_amount: number;
+        host_user_id?: string | null;
+        include_slot_price?: boolean | null;
+      },
       ctx: GraphQLContext
     ) => {
       await assertPodActor(ctx, args.pod_id);
-      return computePodSettlement(args.pod_id, args.venue_bill_amount, args.host_user_id ?? null);
+      return computePodSettlement(
+        args.pod_id,
+        args.venue_bill_amount,
+        args.host_user_id ?? null,
+        args.include_slot_price
+      );
     },
     myHostPayouts: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
@@ -312,6 +336,11 @@ export const financeResolvers = {
     reviewPaymentReleaseRequest: async (_p: unknown, args: { request_id: string; input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return paymentReleaseService.review(args.request_id, args.input, ctx.user?.id ?? null);
+    },
+    approvePodPaymentRelease: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ADMIN_RW);
+      await paymentReleaseService.approveGroup(args.id, user.id);
+      return paymentReleaseGroupService.detail(args.id);
     },
     completePodSettlement: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const { user, isAdmin } = await assertPodActor(ctx, args.input.pod_id);

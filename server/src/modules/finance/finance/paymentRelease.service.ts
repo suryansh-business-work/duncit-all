@@ -19,14 +19,18 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { appDate, appTime } from '@utils/app-time';
 
 const releaseId = () => `rel_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
+/** One per Complete Pod submission — see `IPaymentRelease.batch_id`. Never a
+ * 24-hex string, so it cannot be mistaken for the pod id legacy rows group by. */
+const batchId = () => `set_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 
 const mediaType = (url: string) => (/\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url) ? 'VIDEO' : 'IMAGE');
 const clean = (value: string | number | null | undefined) => String(value ?? '').trim();
 
-function toPub(doc: IPaymentRelease) {
+export function toPub(doc: IPaymentRelease) {
   return {
     id: String(doc._id),
     release_id: doc.release_id,
+    batch_id: doc.batch_id ?? null,
     kind: doc.kind,
     status: doc.status,
     pod_id: String(doc.pod_id),
@@ -71,6 +75,8 @@ function toPub(doc: IPaymentRelease) {
           attended_seats: doc.breakdown.attended_seats ?? 0,
           booked_seats: doc.breakdown.booked_seats ?? 0,
           attended_total: doc.breakdown.attended_total ?? 0,
+          venue_slot_price: doc.breakdown.venue_slot_price ?? 0,
+          include_slot_price: doc.breakdown.include_slot_price ?? false,
         }
       : null,
     created_at: doc.created_at?.toISOString?.() ?? '',
@@ -135,12 +141,23 @@ async function clubAdminBeneficiary(pod: any) {
  * the same reason the other kinds require one: there is nobody to send the
  * statement to. Best-effort — a product hiccup must never fail a completion.
  */
-async function ecommReleases(pod: any, actorId: string, notes: string): Promise<IPaymentRelease[]> {
+async function ecommReleases(
+  pod: any,
+  actorId: string,
+  notes: string,
+  batch: string | null = null
+): Promise<IPaymentRelease[]> {
   // Idempotency guard, because there are two ways in: completePod creates
   // these up front (so they ride back to the caller and show in the completion
   // summary), and the legacy manual-release path creates them when the host
   // payment is approved. Whichever runs first wins; the other is a no-op.
-  const already = await PaymentReleaseModel.exists({ pod_id: pod._id, kind: 'ECOMM_PAYMENT' });
+  // Rejected ones do not count: a request Finance turned down in full can be
+  // submitted again, and the sellers have to be on the new one too.
+  const already = await PaymentReleaseModel.exists({
+    pod_id: pod._id,
+    kind: 'ECOMM_PAYMENT',
+    status: { $in: ['PENDING', 'APPROVED'] },
+  });
   if (already) return [];
   // Dynamic, like sendProductInvoices below: productInvoice.service pulls in
   // the inventory + order models, which this module must not load eagerly.
@@ -171,6 +188,7 @@ async function ecommReleases(pod: any, actorId: string, notes: string): Promise<
     created.push(
       await PaymentReleaseModel.create({
         release_id: releaseId(),
+        batch_id: batch,
         kind: 'ECOMM_PAYMENT',
         pod_id: pod._id,
         pod_title: pod.pod_title,
@@ -249,7 +267,7 @@ const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE' | 'CLUB
       commission_pct: 0,
       commission_amount: 0,
       duncit_revenue: w.duncit_revenue,
-      ...attendanceOf(s),
+      ...frozenInputsOf(s),
     };
   }
   const isHost = party === 'HOST';
@@ -277,17 +295,20 @@ const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE' | 'CLUB
     commission_pct: isHost ? w.host_commission_pct : w.venue_commission_pct,
     commission_amount: isHost ? w.host_commission_amount : w.venue_commission_amount,
     duncit_revenue: w.duncit_revenue,
-    ...attendanceOf(s),
+    ...frozenInputsOf(s),
   };
 };
 
-/** The attendance the payout was computed from, frozen onto the release. A
- * later scan changes the pod's attendance, so a reviewer could never re-derive
- * what this payout actually stood on — it has to be stamped. */
-const attendanceOf = (s: PodSettlement) => ({
+/** What the payout was computed from, frozen onto the release: the attendance
+ * (a later scan changes it) and the venue's slot price beside its final bill (a
+ * slot can be re-priced). A reviewer could never re-derive either afterwards —
+ * they have to be stamped. */
+const frozenInputsOf = (s: PodSettlement) => ({
   attended_seats: s.attended_seats,
   booked_seats: s.booked_seats,
   attended_total: s.attended_total,
+  venue_slot_price: s.venue_slot_price,
+  include_slot_price: s.include_slot_price,
 });
 
 function statementTypeLabel(kind: PaymentReleaseKind): string {
@@ -636,6 +657,45 @@ async function autoApprove(doc: IPaymentRelease, actorId: string) {
   await notifyApproval(doc);
 }
 
+/**
+ * Submitting a pod for settlement is what completes it — the payouts then wait
+ * on Finance, the pod does not. Stamps `completed_at` once, frees the unsold
+ * reserved stock and leaves the COMPLETE entry in the monitored trail.
+ */
+async function markPodSubmitted(pod: any, actorId: string | null) {
+  // An atomic stamp, not pod.save(): a save re-validates the WHOLE document, so
+  // one unrelated invalid field on an old pod would throw here — after the
+  // releases exist — and leave a request Finance can pay on a pod that never
+  // completed. The guard also makes two racing submissions stamp it once.
+  const stamped = await PodModel.updateOne(
+    { _id: pod._id, completed_at: null },
+    { $set: { completed_at: new Date() } }
+  );
+  if (stamped.modifiedCount === 0) return;
+  // Completion frees the pod's unsold reserved stock back to the brand.
+  const { podService } = await import('@modules/pods/pod/pod.service');
+  await podService.releaseCompletedPodStock(pod._id).catch((e: Error) => {
+    logs.server.warn('paymentRelease', 'markPodSubmitted', { error: e, msg: 'stock release failed' });
+  });
+  // AI-monitored audit trail: completion is a critical pod action.
+  const { podAuditService } = await import('@modules/pods/podAudit/podAudit.service');
+  await podAuditService.record({
+    pod,
+    action: 'COMPLETE',
+    source: actorId ? 'HOST' : 'SYSTEM',
+    actorUserId: actorId,
+    note: 'Pod submitted for completion / settlement',
+  });
+}
+
+/** The releases one Finance row stands for: a completion's batch, or — for
+ * rows written before batches — everything unbatched on the pod. */
+export function releaseGroupFilter(groupId: string): Record<string, unknown> {
+  return Types.ObjectId.isValid(groupId)
+    ? { pod_id: new Types.ObjectId(groupId), batch_id: null }
+    : { batch_id: groupId };
+}
+
 export const paymentReleaseService = {
   async list(filter?: { status?: string | null; kind?: PaymentReleaseKind | null }) {
     const query: any = {};
@@ -695,24 +755,7 @@ export const paymentReleaseService = {
       requested_by: actorId ? new Types.ObjectId(actorId) : null,
       requested_at: new Date(),
     });
-    if (!(pod as any).completed_at) {
-      (pod as any).completed_at = new Date();
-      await pod.save();
-      // Completion frees the pod's unsold reserved stock back to the brand.
-      const { podService } = await import('@modules/pods/pod/pod.service');
-      await podService.releaseCompletedPodStock(pod._id).catch((e: Error) => {
-        logs.server.warn('paymentRelease', 'create', { error: e, msg: 'stock release failed' });
-      });
-      // AI-monitored audit trail: completion is a critical pod action.
-      const { podAuditService } = await import('@modules/pods/podAudit/podAudit.service');
-      await podAuditService.record({
-        pod,
-        action: 'COMPLETE',
-        source: actorId ? 'HOST' : 'SYSTEM',
-        actorUserId: actorId,
-        note: 'Pod submitted for completion / settlement',
-      });
-    }
+    await markPodSubmitted(pod, actorId ?? null);
     return toPub(doc);
   },
 
@@ -737,9 +780,11 @@ export const paymentReleaseService = {
     return toPub(doc);
   },
 
-  /** Host (or admin) completes a pod: enter the venue bill amount + upload party
-   * media, and the reconciled host/venue payout releases are created PENDING for
-   * Finance to approve. Returns the computed settlement + the created releases. */
+  /** Host (or admin) completes a pod: optionally enter the venue's final bill
+   * (amount + the bill itself), and the reconciled payout releases — host,
+   * venue, club admin, product sellers — are created PENDING as ONE request for
+   * Finance to approve. No wallet moves until then. Returns the computed
+   * settlement + the created releases. */
   async completePod(input: any, actor: { id: string; isAdmin: boolean }) {
     const pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
@@ -781,13 +826,36 @@ export const paymentReleaseService = {
             type: media.type ?? mediaType(media.url),
           }));
 
+    // The venue's final bill is optional — without one the booked slot price
+    // stands. With one, the bill itself has to come along: the amount changes
+    // what the venue is paid, and Finance approves it against the document.
+    // A build from before any of this sends an amount and no slot-price
+    // choice; its bill is evidence only (see venueChargeForPod), so it is not
+    // asked for a document it has no way to upload.
+    const billAmount = pod.venue_id ? Math.max(0, Number(input.venue_bill_amount) || 0) : 0;
+    const billUrl = billAmount > 0 ? clean(input.venue_bill_url) : '';
+    if (input.include_slot_price != null && billAmount > 0 && !billUrl) {
+      throw new GraphQLError('Upload the venue bill for the amount you entered', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+
     // The chosen beneficiary's commission override prices the settlement — a
     // co-host with a negotiated rate must not settle at the primary host's %.
     const settlement = await computePodSettlement(
       String(pod._id),
-      Number(input.venue_bill_amount) || 0,
-      input.host_user_id ?? null
+      billAmount,
+      input.host_user_id ?? null,
+      input.include_slot_price
     );
+
+    // A venue pod with no slot link has no booked price to fall back on, so
+    // without a bill its venue would silently be paid nothing.
+    if (settlement.has_venue && !settlement.venue_slot_linked && billAmount <= 0) {
+      throw new GraphQLError('Enter the venue bill amount — this pod has no booked slot price', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
 
     // A pod settles on the seats a host scanned in, so completing with nothing
     // scanned would pay everyone zero and freeze that as the answer — a
@@ -823,10 +891,16 @@ export const paymentReleaseService = {
     const notes = [clean(input.notes), forfeitNote].filter(Boolean).join(' ');
 
     const releases: IPaymentRelease[] = [];
+    // Every release this submission creates carries the same batch id — that is
+    // the one row Finance opens.
+    const batch = batchId();
+    const paysVenue =
+      settlement.has_venue && !!settlement.venue && settlement.venue.payout_amount > 0;
     const hostBeneficiary = await beneficiaryFor('HOST_PAYMENT', pod, input.host_user_id);
     releases.push(
       await PaymentReleaseModel.create({
         release_id: releaseId(),
+        batch_id: batch,
         kind: 'HOST_PAYMENT',
         pod_id: pod._id,
         pod_title: pod.pod_title,
@@ -835,7 +909,9 @@ export const paymentReleaseService = {
         beneficiary_name: hostBeneficiary.name,
         beneficiary_email: hostBeneficiary.email,
         amount_requested: hostPayout,
-        bill_url: '',
+        // The bill belongs on the venue's release; it rides here only when the
+        // venue is owed nothing and so has no release of its own.
+        bill_url: paysVenue ? '' : billUrl,
         evidence_media: evidence,
         notes,
         requested_by: new Types.ObjectId(actor.id),
@@ -844,11 +920,12 @@ export const paymentReleaseService = {
       })
     );
 
-    if (settlement.has_venue && settlement.venue && settlement.venue.payout_amount > 0) {
+    if (paysVenue && settlement.venue) {
       const venueBeneficiary = await beneficiaryFor('VENUE_BILLING', pod);
       releases.push(
         await PaymentReleaseModel.create({
           release_id: releaseId(),
+          batch_id: batch,
           kind: 'VENUE_BILLING',
           pod_id: pod._id,
           pod_title: pod.pod_title,
@@ -857,7 +934,7 @@ export const paymentReleaseService = {
           beneficiary_name: venueBeneficiary.name,
           beneficiary_email: venueBeneficiary.email,
           amount_requested: settlement.venue.payout_amount,
-          bill_url: '',
+          bill_url: billUrl,
           evidence_media: [],
           notes: clean(input.notes),
           requested_by: new Types.ObjectId(actor.id),
@@ -875,6 +952,7 @@ export const paymentReleaseService = {
         releases.push(
           await PaymentReleaseModel.create({
             release_id: releaseId(),
+            batch_id: batch,
             kind: 'CLUB_ADMIN',
             pod_id: pod._id,
             pod_title: pod.pod_title,
@@ -894,17 +972,15 @@ export const paymentReleaseService = {
       }
     }
 
-    // Product sellers are paid on the same trigger, one release each for what
-    // they actually sold on this pod.
-    releases.push(...(await ecommReleases(pod, actor.id, clean(input.notes))));
+    // Product sellers ride the same request, one release each for what they
+    // actually sold on this pod.
+    releases.push(...(await ecommReleases(pod, actor.id, clean(input.notes), batch)));
 
-    // Completion is the trigger: every payout is approved and credited to the
-    // beneficiary wallets right here — host, venue owner, club admin and each
-    // product seller — no manual Finance step in between. The releases stay as
-    // the audit trail.
-    for (const doc of releases) {
-      await autoApprove(doc, actor.id);
-    }
+    // The pod is complete from here; its money is not. Every release above is
+    // PENDING and no wallet is credited until Finance approves the request —
+    // the venue's amount can now come from a bill somebody typed in, and that
+    // is checked against the uploaded document before it is paid.
+    await markPodSubmitted(pod, actor.id);
 
     // Leaderboard points for host, venue owner and club admin ride the same
     // trigger. Best-effort and idempotent inside the service — a points hiccup
@@ -915,6 +991,77 @@ export const paymentReleaseService = {
     await leaderboardService.awardForCompletedPod(pod, String(hostBeneficiary.host_user_id));
 
     return { settlement, releases: releases.map(toPub) };
+  },
+
+  /**
+   * Approve everything still pending on one pod's request, in full — the
+   * Finance "Approve" on the request page. Each release is CLAIMED atomically
+   * (PENDING → APPROVED in one write), so two reviewers pressing the button
+   * together cannot both pay it.
+   *
+   * A release whose wallet credit fails is put back to PENDING rather than left
+   * APPROVED with no money behind it; the credit is idempotent per release_id,
+   * so approving again is a safe retry. The others still go through.
+   */
+  async approveGroup(groupId: string, reviewerId: string) {
+    const pending = await PaymentReleaseModel.find({
+      ...releaseGroupFilter(groupId),
+      status: 'PENDING',
+    }).sort({ created_at: 1 });
+    if (pending.length === 0) {
+      throw new GraphQLError('Nothing on this request is waiting for approval', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const failed: string[] = [];
+    for (const row of pending) {
+      const doc = await PaymentReleaseModel.findOneAndUpdate(
+        { _id: row._id, status: 'PENDING' },
+        {
+          $set: {
+            status: 'APPROVED',
+            approval_type: 'FULL',
+            approved_amount: row.amount_requested,
+            approval_reason: '',
+            reviewed_by: new Types.ObjectId(reviewerId),
+            reviewed_at: new Date(),
+          },
+        },
+        { new: true }
+      );
+      // Somebody else reviewed it between the read and the claim.
+      if (!doc) continue;
+      try {
+        await applyApproval(doc);
+      } catch (error) {
+        await PaymentReleaseModel.updateOne(
+          { _id: doc._id },
+          {
+            $set: {
+              status: 'PENDING',
+              approval_type: null,
+              approved_amount: null,
+              reviewed_by: null,
+              reviewed_at: null,
+            },
+          }
+        );
+        logs.server.error('paymentRelease', 'approveGroup', {
+          error,
+          release_id: doc.release_id,
+          msg: 'payout credit failed — release returned to PENDING',
+        });
+        failed.push(doc.release_id);
+        continue;
+      }
+      await notifyApproval(doc);
+    }
+    if (failed.length > 0) {
+      throw new GraphQLError(
+        `Could not pay ${failed.join(', ')}. Nothing was lost — those are still pending, approve again to retry.`,
+        { extensions: { code: 'INTERNAL_SERVER_ERROR' } }
+      );
+    }
   },
 
   /** A host's own completion payouts (their "Host Share" history). */

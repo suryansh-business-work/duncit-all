@@ -13,6 +13,7 @@
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks';
+import type { PipelineStage } from 'mongoose';
 
 export type TableSortDir = 'asc' | 'desc';
 export type TableFilterOp =
@@ -269,6 +270,42 @@ export async function runTableQuery<TDoc>(
   }
   const [docs, total] = await Promise.all([find, count]);
   return { docs, total, page, page_size: pageSize };
+}
+
+/**
+ * The same page for a table whose rows come out of an aggregation: `stages`
+ * build the rows, then the client's filters, sort and page are applied to what
+ * they produced — so a column that only exists after a `$group` is as sortable
+ * and filterable as a stored one. The count is taken over the same filtered set.
+ */
+export async function runTableAggregate<TRow>(
+  Model: { aggregate: (pipeline: PipelineStage[]) => PromiseLike<unknown[]> },
+  stages: readonly PipelineStage[],
+  input: TableQueryInput | null | undefined,
+  config: TableEntityConfig
+): Promise<TablePageResult<TRow>> {
+  const q = input ?? {};
+  const match = buildTableFilter(q, config);
+  const { page, pageSize } = clampPage(q);
+  const matchStage: PipelineStage[] = Object.keys(match).length > 0 ? [{ $match: match }] : [];
+  const rows = await Model.aggregate([
+    ...stages,
+    ...matchStage,
+    { $sort: resolveSort(q, config) },
+    {
+      $facet: {
+        docs: [{ $skip: (page - 1) * pageSize }, { $limit: pageSize }],
+        count: [{ $count: 'total' }],
+      },
+    },
+  ]);
+  const result = rows[0] as { docs?: TRow[]; count?: { total: number }[] } | undefined;
+  return {
+    docs: result?.docs ?? [],
+    total: result?.count?.[0]?.total ?? 0,
+    page,
+    page_size: pageSize,
+  };
 }
 
 /* ------------------------- in-memory variant ------------------------- */

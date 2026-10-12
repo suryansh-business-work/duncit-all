@@ -33,4 +33,19 @@ describe('finance unit', () => {
       (financeResolvers.Query as any).paymentReleaseRequests({}, {}, makeContext({ roles: ['USER'] }))
     ).rejects.toThrow(/access denied/i);
   });
+
+  // The grouped Payment Release surface moves money, so every door onto it is
+  // closed to anyone who is not Finance — before a single row is read.
+  it.each([
+    ['Query', 'podPaymentReleasesTable', { query: {} }],
+    ['Query', 'podPaymentRelease', { id: 'set_abc' }],
+    ['Mutation', 'approvePodPaymentRelease', { id: 'set_abc' }],
+  ] as const)('%s.%s is gated to finance roles', async (type, field, args) => {
+    const resolver = (financeResolvers[type] as any)[field];
+    for (const roles of [['USER'], ['HOST'], ['ONBOARDING_MANAGER'], ['ZONAL_ADMIN']]) {
+      await expect(resolver({}, args, makeContext({ roles }))).rejects.toThrow(/access denied/i);
+    }
+    // Signed out is refused too, not treated as "no roles to check".
+    await expect(resolver({}, args, makeContext(null))).rejects.toThrow();
+  });
 });

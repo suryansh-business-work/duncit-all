@@ -50,10 +50,26 @@ export interface IPaymentReleaseBreakdown {
   booked_seats: number;
   /** Money from the attended bookings — the amount the waterfall started from. */
   attended_total: number;
+  /**
+   * The venue's booked slot price at completion, and whether the final bill
+   * (`venue_bill`) was paid on top of it rather than instead of it. Together
+   * with the bill they are how the venue's amount was arrived at — frozen,
+   * because a slot's price can be edited after the pod ran. 0 / false on docs
+   * written before a bill could change the venue's money.
+   */
+  venue_slot_price: number;
+  include_slot_price: boolean;
 }
 
 export interface IPaymentRelease extends Document {
   release_id: string;
+  /**
+   * The completion this release was created by — every payout one Complete Pod
+   * submission asks for shares it, which is what lets Finance review a pod's
+   * request as one row. Null on docs written before releases were grouped (and
+   * on manual ones); those group by their pod instead.
+   */
+  batch_id?: string | null;
   kind: PaymentReleaseKind;
   status: PaymentReleaseStatus;
   pod_id: Types.ObjectId;
@@ -114,6 +130,8 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
     attended_seats: { type: Number, default: 0 },
     booked_seats: { type: Number, default: 0 },
     attended_total: { type: Number, default: 0 },
+    venue_slot_price: { type: Number, default: 0 },
+    include_slot_price: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -121,6 +139,7 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
 const paymentReleaseSchema = new Schema<IPaymentRelease>(
   {
     release_id: { type: String, required: true, unique: true, index: true },
+    batch_id: { type: String, default: null, index: true },
     kind: {
       type: String,
       enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN', 'ECOMM_PAYMENT'],

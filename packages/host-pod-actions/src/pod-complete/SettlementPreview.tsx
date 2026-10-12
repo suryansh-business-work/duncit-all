@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
-import { EarningsSplitView } from '@duncit/ui';
+import { EarningsSplitView, VenueBillSummary } from '@duncit/ui';
+import { buildVenueBillLines } from '@duncit/utils';
 import AttendanceRoster from './AttendanceRoster';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
@@ -10,6 +11,8 @@ import type { PodSettlement } from '../types';
 interface Props {
   podId: string;
   venueBillAmount: number;
+  /** The bill is paid on top of the booked slot price rather than instead of it. */
+  includeSlotPrice: boolean;
   /** Opens the ticket scanner for this pod. Attendance is only ever created by
    * scanning a ticket, so the roster's action defers to the host's scanner. */
   onScan: () => void;
@@ -50,6 +53,7 @@ function AttendanceNote({ settlement }: Readonly<{ settlement: PodSettlement }>)
 export default function SettlementPreview({
   podId,
   venueBillAmount,
+  includeSlotPrice,
   onScan,
   refreshToken,
 }: Readonly<Props>) {
@@ -61,7 +65,7 @@ export default function SettlementPreview({
   }, [venueBillAmount]);
 
   const { data, loading, error, refetch } = useQuery<any>(POD_SETTLEMENT_PREVIEW, {
-    variables: { pod_id: podId, venue_bill_amount: amount },
+    variables: { pod_id: podId, venue_bill_amount: amount, include_slot_price: includeSlotPrice },
     fetchPolicy: 'cache-and-network',
   });
 
@@ -101,6 +105,24 @@ export default function SettlementPreview({
         />
         <Divider />
         <AttendanceNote settlement={settlement} />
+        {/* What the venue's side comes to: the earlier slot price, the bill
+            entered above and the total the split below takes off the pool. */}
+        {settlement.has_venue && (
+          <VenueBillSummary
+            lines={buildVenueBillLines(
+              {
+                slot_price: settlement.venue_slot_price,
+                bill: settlement.venue_bill,
+                slot_included: settlement.include_slot_price,
+                venue_amount: settlement.waterfall.venue_amount,
+                attended_seats: settlement.attended_seats,
+                booked_seats: settlement.booked_seats,
+              },
+              labels.venueBill,
+              settlement.currency_symbol,
+            )}
+          />
+        )}
         {/* The same four-way split (the host's earning first) as Create Pod
             and every portal. Where the release pays less than the engine's
             host figure — an expired window, or a host side below zero — the

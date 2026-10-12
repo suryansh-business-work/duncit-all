@@ -43,6 +43,20 @@ describe('the two namespaces', () => {
     expect(suffix(mwebHostPodLabels(t))).toEqual(suffix(shellHostPodLabels(t)));
   });
 
+  // The venue-bill words are @duncit/utils' own block, nested rather than flat
+  // — so the string checks above never see them.
+  it('reads the venue-bill block from the same namespace as the rest of the surface', () => {
+    const mweb = mwebHostPodLabels(t).venueBill;
+    const shell = shellHostPodLabels(t).venueBill;
+
+    expect(mweb.amount).toBe('mweb.venueBill.amount');
+    expect(mweb.uploadRequired).toBe('mweb.venueBill.uploadRequired');
+    expect(mweb.attendeesValue(8, 10)).toBe('mweb.venueBill.attendeesValue({"attended":8,"booked":10})');
+    expect(shell.amount).toBe('shell.venueBill.amount');
+    expect(shell.sentToFinance).toBe('shell.venueBill.sentToFinance');
+    expect(Object.keys(shell).sort()).toEqual(Object.keys(mweb).sort());
+  });
+
   it('ships no English of its own — every string came from the translator', () => {
     const seen: string[] = [];
     const labels = mwebHostPodLabels((key) => {

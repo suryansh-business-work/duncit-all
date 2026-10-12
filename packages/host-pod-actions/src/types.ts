@@ -116,6 +116,12 @@ export interface PodSettlementAttendee {
 export interface PodSettlement {
   currency_symbol: string;
   collected_total: number;
+  /** The venue’s final bill as entered. 0 when none was. */
+  venue_bill: number;
+  /** The slot’s booked price — what the venue was promised before any bill. */
+  venue_slot_price: number;
+  /** True when the bill is paid on top of the slot price, not instead of it. */
+  include_slot_price: boolean;
   has_venue: boolean;
   /** Seats the settlement was computed on — the ones scanned in. */
   paying_attendees: number;

@@ -270,6 +270,19 @@ Both the ⋮ menu's row and the page's own card hand out the SAME link through
 old inline picker was a second place to upload the same photos, whose answer only ever reached
 the payment release.
 
+## Completing a pod: the venue's final bill
+
+`PodCompleteDialog` asks for the venue's final bill, and it is optional. Left empty, the venue is
+paid its booked slot price. With an amount, the bill itself must be uploaded (through the
+surface's own `renderMediaField`) and a checkbox says whether the bill comes on top of the slot
+price or replaces it. `SettlementPreview` re-reads the server's settlement as either changes and
+shows the earlier slot price, the bill, the venue total and the attendee count above the split —
+the words and the lines are `@duncit/utils`' `venue-bill`, drawn by `@duncit/ui`'s
+`VenueBillSummary`.
+
+Submitting creates the payout releases PENDING: nothing reaches a wallet until Finance approves
+the request on its Payment Release page, and the dialog says so through `notifySuccess`.
+
 ## Copy lives in two namespaces
 
 `mweb.podFeedback.*` / `mweb.hostScan.*` / `mweb.podMedia.*` for mWeb and native,

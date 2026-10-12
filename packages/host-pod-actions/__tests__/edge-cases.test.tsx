@@ -340,7 +340,7 @@ describe('SettlementPreview thin answers', () => {
     ({
       request: {
         query: POD_SETTLEMENT_PREVIEW,
-        variables: { pod_id: 'pod-1', venue_bill_amount: 0 },
+        variables: { pod_id: 'pod-1', venue_bill_amount: 0, include_slot_price: false },
       },
       maxUsageCount: Number.POSITIVE_INFINITY,
       ...over,
@@ -348,7 +348,7 @@ describe('SettlementPreview thin answers', () => {
 
   it('reads the server sentence off a refusal, not the transport wrapper', async () => {
     wrap(
-      <SettlementPreview podId="pod-1" venueBillAmount={0} onScan={vi.fn()} refreshToken={0} />,
+      <SettlementPreview podId="pod-1" venueBillAmount={0} includeSlotPrice={false} onScan={vi.fn()} refreshToken={0} />,
       [previewMock({ result: { errors: [{ message: 'This pod took no money' } as never] } })],
     );
     await settle();
@@ -360,7 +360,7 @@ describe('SettlementPreview thin answers', () => {
 
   it('renders a settlement whose roster came back as nothing at all', async () => {
     wrap(
-      <SettlementPreview podId="pod-1" venueBillAmount={0} onScan={vi.fn()} refreshToken={0} />,
+      <SettlementPreview podId="pod-1" venueBillAmount={0} includeSlotPrice={false} onScan={vi.fn()} refreshToken={0} />,
       [
         previewMock({
           result: {
@@ -368,6 +368,9 @@ describe('SettlementPreview thin answers', () => {
               podSettlementPreview: {
                 currency_symbol: '₹',
                 collected_total: 0,
+                venue_bill: 0,
+                venue_slot_price: 0,
+                include_slot_price: false,
                 has_venue: false,
                 paying_attendees: 0,
                 attended_seats: 0,

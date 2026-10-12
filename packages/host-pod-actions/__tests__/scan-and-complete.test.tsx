@@ -120,19 +120,23 @@ describe('PodCompleteDialog', () => {
   });
 
   // Only a pod booked into a venue owes the venue anything, so only that one
-  // is asked for a bill — an unbooked pod's dialog has no such box to fill.
-  it('asks for the venue bill only when the pod was booked into a venue', async () => {
+  // is offered the bill box — an unbooked pod's dialog has no such box to fill.
+  it('offers the venue bill only when the pod was booked into a venue', async () => {
     wrap(
       <PodCompleteDialog pod={{ ...POD, venue_id: 'venue-1' }} onClose={vi.fn()} onCompleted={vi.fn()} />,
     );
     await settle();
-    expect(document.body.textContent).toContain(labels.venueBillAmount);
+    expect(document.body.textContent).toContain(labels.venueBill.title);
+    expect(document.body.textContent).toContain(labels.venueBill.amount);
+    // Optional, and it says what leaving it empty pays.
+    expect(document.body.textContent).toContain(labels.venueBill.amountHint);
 
     cleanup();
     wrap(<PodCompleteDialog pod={POD} onClose={vi.fn()} onCompleted={vi.fn()} />);
     await settle();
 
-    expect(document.body.textContent).not.toContain(labels.venueBillAmount);
+    expect(document.body.textContent).not.toContain(labels.venueBill.amount);
+    expect(document.body.textContent).not.toContain(labels.venueBill.title);
   });
 
   it('survives the settlement preview failing rather than blanking the dialog', async () => {

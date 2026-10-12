@@ -1709,9 +1709,33 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       venueReceives: 'Venue receives',
       venueSlotPrice: 'Venue slot price',
       youReceive: 'You receive',
-      title: 'Your share (credited to your wallet on completion)',
+      title: 'Your share (credited to your wallet once Finance approves)',
       shortfall:
         "The venue's booked price is more than this pod took at the door. The venue is paid in full and your share is nil — it is never taken back from you.",
+    },
+    // The venue's final bill at Complete Pod — @duncit/utils' venue-bill.ts.
+    // `mweb.venueBill` must stay word-for-word identical: the same builder
+    // reads both, and the server stores one row per key path.
+    venueBill: {
+      title: 'Venue bill',
+      amount: 'Venue final bill amount (optional)',
+      amountHint: 'Leave this empty to pay the venue its booked slot price.',
+      amountInvalid: 'Enter a valid bill amount',
+      upload: 'Upload the venue bill',
+      uploadRequired: 'Upload the venue bill for the amount you entered',
+      includeSlot: 'Also pay the booked slot price with this bill',
+      includeSlotHint:
+        'Tick this when the bill covers extras only. Left unticked, the bill replaces the slot price.',
+      viewBill: 'View bill',
+      attendees: 'Total attendees',
+      attendeesValue: '{attended} of {booked} seats',
+      slotPrice: 'Earlier slot price',
+      finalBill: 'Final bill uploaded',
+      noBill: 'None',
+      venueTotal: 'Venue total',
+      venueTotalWithSlot: 'Venue total (slot price + bill)',
+      sentToFinance:
+        'Pod completed. The payouts are with Finance and reach each wallet once approved.',
     },
     hostPodActions: {
       menuTooltip: 'Pod actions',
@@ -1742,9 +1766,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       venue: 'Venue',
       venueHint: 'Pick the venue to request',
       completeHint:
-        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. Your payout is credited to your wallet as soon as the pod is completed.',
-      venueBillAmount: 'Venue Bill Amount',
-      venueBillRequired: 'Enter the venue bill amount',
+        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. Your payout is credited to your wallet once Finance approves the completion.',
       podMedia: 'Pod Media',
       completing: 'Completing…',
       cancelIntro: 'You are cancelling {title}. This cannot be undone.',

@@ -388,6 +388,16 @@ export {
   type TicketDiscountLimits,
   type TicketDiscountTranslate,
 } from './pod-ticket-discount-copy';
+export {
+  buildVenueBillLines,
+  firstMediaUrl,
+  mwebVenueBillLabels,
+  shellVenueBillLabels,
+  type VenueBillLabels,
+  type VenueBillLine,
+  type VenueBillTerms,
+  type VenueBillTranslate,
+} from './venue-bill';
 export type {
   TicketDiscountFieldErrors,
   TicketDiscountFieldProps,

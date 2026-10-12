@@ -1,11 +1,20 @@
-import { z } from 'zod';
+import {
+  blankPodCompleteValues,
+  buildPodCompleteInput,
+  makePodCompleteSchema,
+  type PodCompleteValues,
+} from '@duncit/forms/schemas';
 
 import { type CompletePodInput } from '@/generated/graphql/graphql';
 
-/** Shapes for the host's "Complete Pod" flow (the venue bill amount). */
-export interface PodCompleteValues {
-  venue_bill_amount: string;
-}
+/**
+ * The host's "Complete Pod" form. The contract — the optional venue bill, the
+ * upload it needs, the input it maps to — is `@duncit/forms/schemas`'
+ * `pod-complete`, shared with mWeb (rule 27); this file only names the pod and
+ * ties the input to the generated GraphQL type.
+ */
+export { blankPodCompleteValues };
+export type { PodCompleteValues };
 
 export interface HostPodForComplete {
   id: string;
@@ -13,43 +22,8 @@ export interface HostPodForComplete {
   venue_id?: string | null;
 }
 
-export const blankPodCompleteValues: PodCompleteValues = {
-  venue_bill_amount: '',
-};
+export const buildPodCompleteSchema = makePodCompleteSchema;
 
-/**
- * Schema depends on whether the pod has a venue: only then is the bill amount
- * required. Media is NOT asked for here — it belongs to the pod, uploaded on
- * its own screen by the host and by the guests who came, and a pod that took
- * money still owes its host that money whether or not anybody photographed the
- * evening.
- */
-export const buildPodCompleteSchema = (hasVenue: boolean) =>
-  z
-    .object({
-      venue_bill_amount: z.string().trim(),
-    })
-    .superRefine((values, ctx) => {
-      if (!hasVenue) return;
-      const amount = Number(values.venue_bill_amount);
-      if (!Number.isFinite(amount) || amount <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['venue_bill_amount'],
-          message: 'Enter the venue bill amount',
-        });
-      }
-    });
-
-/**
- * Maps the validated values onto the server's CompletePodInput.
- *
- * No `evidence_media`: the release carries the pod's OWN media, which the
- * server reads off the pod rather than taking from whoever completes it.
- */
-export function buildCompleteInput(values: PodCompleteValues, podId: string): CompletePodInput {
-  return {
-    pod_id: podId,
-    venue_bill_amount: Number(values.venue_bill_amount) || 0,
-  };
-}
+/** Typed against the server's input, so a field the schema drops fails here. */
+export const buildCompleteInput = (values: PodCompleteValues, podId: string): CompletePodInput =>
+  buildPodCompleteInput(values, podId);

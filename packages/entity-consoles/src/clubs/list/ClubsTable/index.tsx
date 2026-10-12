@@ -16,6 +16,7 @@ import type { ClubRow } from '../queries';
 import { clubTabPath } from '../../records/clubTabPath';
 import { useTranslation } from '@duncit/shell';
 import { clubNameRenderer, hasNoClubAdmin, renderCover, renderWhatsApp, whatsAppValue } from './cells';
+import { HiddenChip, VisibilityIconButton } from '../../../shared/visibility/VisibilityViews';
 
 export { hasNoClubAdmin } from './cells';
 
@@ -29,6 +30,8 @@ interface Props {
   onEdit: (c: ClubRow) => void;
   onRemove: (c: ClubRow) => void;
   onView: (c: ClubRow) => void;
+  /** Hide or show the club. Omitted for a viewer who may not — no button then. */
+  onToggleHidden?: (c: ClubRow) => void;
 }
 
 const getClubRowId = (c: ClubRow) => c.id;
@@ -42,18 +45,25 @@ export default function ClubsTable({
   onEdit,
   onRemove,
   onView,
+  onToggleHidden,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ClubRow>[]>(() => {
     const renderCategory = (c: ClubRow) =>
       c.category_id ? <Chip size="small" label={catName(c.category_id)} /> : '—';
     const renderViewPods = (c: ClubRow) => (
-      <Tooltip title={t('admin.clubs.viewPods')}>
-        <DuncitIconButton size="small" component={RouterLink} to={clubTabPath(c.id, 'pods')}>
-          <EventIcon fontSize="small" />
-        </DuncitIconButton>
-      </Tooltip>
+      <>
+        {onToggleHidden && (
+          <VisibilityIconButton hidden={!!c.is_hidden} onClick={() => onToggleHidden(c)} />
+        )}
+        <Tooltip title={t('admin.clubs.viewPods')}>
+          <DuncitIconButton size="small" component={RouterLink} to={clubTabPath(c.id, 'pods')}>
+            <EventIcon fontSize="small" />
+          </DuncitIconButton>
+        </Tooltip>
+      </>
     );
+    const renderHidden = (c: ClubRow) => <HiddenChip hidden={!!c.is_hidden} reason={c.hidden_reason} />;
     return [
       { field: 'cover', headerName: t('admin.clubs.colCover'), type: 'text', width: 80, cellRenderer: renderCover },
       {
@@ -101,6 +111,18 @@ export default function ClubsTable({
       { field: 'locality', headerName: t('admin.clubs.colLocality'), type: 'text', hide: true, minWidth: 140 },
       activeChipColumn<ClubRow>({ inactiveLabel: 'Draft' }),
       {
+        field: 'is_hidden',
+        headerName: t('directory.visibility.colVisibility'),
+        type: 'boolean',
+        width: 120,
+        cellRenderer: renderHidden,
+        // Keyed on the reason too, so the chip's tooltip repaints when it changes.
+        valueGetter: (c) =>
+          c.is_hidden
+            ? `${t('directory.visibility.hiddenChip')} ${c.hidden_reason ?? ''}`.trim()
+            : t('directory.visibility.visible'),
+      },
+      {
         field: 'is_verified',
         headerName: t('admin.clubs.verified'),
         type: 'boolean',
@@ -110,14 +132,14 @@ export default function ClubsTable({
       },
       dateColumn<ClubRow>(),
       actionsColumn<ClubRow>({
-        width: 140,
+        width: 176,
         onEdit,
         onDelete: onRemove,
         delete: { color: 'default' },
         renderExtra: renderViewPods,
       }),
     ];
-  }, [catName, onEdit, onRemove]);
+  }, [catName, onEdit, onRemove, onToggleHidden, t]);
 
   // Pinned page filter rather than a column one: it belongs to the toolbar, so
   // it never shows as a removable chip and a change resets to page 1.

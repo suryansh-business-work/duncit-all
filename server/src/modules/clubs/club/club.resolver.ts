@@ -5,6 +5,7 @@ import { venueService } from '@modules/venues/venue/venue.service';
 import { countOpenSlotsForClub } from './club.slots';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
+import { canSeeHidden } from '@utils/hidden';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
@@ -22,8 +23,19 @@ const matchCriteria = (parent: ClubMatchParent) => ({
   category_id: parent.category_id ?? null,
 });
 
+/** A hidden club reads as "no such club" to everyone but a console. The
+ * services stay unfiltered on purpose: a member's ticket for a pod in a hidden
+ * club still has to name the club it belongs to (`Pod.club`). */
+const visibleTo = <T extends { is_hidden?: boolean } | null>(ctx: GraphQLContext, club: T): T | null =>
+  club?.is_hidden && !canSeeHidden(ctx) ? null : club;
+
 export const clubResolvers = {
   Club: {
+    // Resolved here rather than trusted to the mapper: `Club` is built by more
+    // than one of them, and this is non-null.
+    is_hidden: (parent: { is_hidden?: boolean }) => !!parent.is_hidden,
+    hidden_reason: (parent: { hidden_reason?: string | null }, _a: unknown, ctx: GraphQLContext) =>
+      canSeeHidden(ctx) ? parent.hidden_reason || null : null,
     hosts: (parent: { id: string; host_ids?: string[] }) =>
       clubService.getHosts(parent.id, parent.host_ids ?? []),
     club_admins: (parent: { admin_user_ids?: string[] }) =>
@@ -46,20 +58,23 @@ export const clubResolvers = {
   },
   Query: {
     clubs: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
-      const rows = await clubService.list(args.filter);
+      // Varies by caller for a console — the response cache stands down for
+      // exactly that request (CONSOLE_VARIANT_FIELDS in redisResponseCache.ts).
+      const rows = await clubService.list(args.filter, { includeHidden: canSeeHidden(ctx) });
       throwIfClientGone(ctx);
       await primeClubStats(ctx, rows.map((c: any) => String(c?.id ?? '')));
       return rows;
     },
     clubsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      const page = await clubService.table(args.query);
+      const page = await clubService.table(args.query, { includeHidden: canSeeHidden(ctx) });
       throwIfClientGone(ctx);
       await primeClubStats(ctx, page.rows.map((c: any) => String(c?.id ?? '')));
       return page;
     },
-    club: async (_p: unknown, args: { club_doc_id: string }) => clubService.getById(args.club_doc_id),
-    clubBySlug: async (_p: unknown, args: { club_slug: string }) =>
-      clubService.getBySlug(args.club_slug),
+    club: async (_p: unknown, args: { club_doc_id: string }, ctx: GraphQLContext) =>
+      visibleTo(ctx, await clubService.getById(args.club_doc_id)),
+    clubBySlug: async (_p: unknown, args: { club_slug: string }, ctx: GraphQLContext) =>
+      visibleTo(ctx, await clubService.getBySlug(args.club_slug)),
     clubRatings: async (_p: unknown, args: { club_doc_id: string }) =>
       clubService.listRatings(args.club_doc_id),
     // Shaped by the same mapper the user follow lists use, so each row arrives
@@ -87,6 +102,14 @@ export const clubResolvers = {
     deleteClub: async (_p: unknown, args: { club_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);
       return clubService.remove(args.club_doc_id);
+    },
+    setClubHidden: async (
+      _p: unknown,
+      args: { club_doc_id: string; hidden: boolean; reason?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, ADMIN_WRITE);
+      return clubService.setHidden(args.club_doc_id, args.hidden, args.reason, user.id);
     },
     addClubRating: async (
       _p: unknown,

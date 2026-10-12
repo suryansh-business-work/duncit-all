@@ -27,6 +27,8 @@ consumers:
 exports:
   - 'EarningsSplitView'
   - 'EarningsSplitViewProps'
+  - 'VenueBillSummary'
+  - 'VenueBillSummaryProps'
   - 'StatCard'
   - 'usageColor'
   - 'StatusChip'
@@ -927,3 +929,22 @@ import { EarningsSplitView } from '@duncit/ui';
 
 `venueError` pins a blocking reason to the Venue Take row; it stays visible while the row is
 collapsed. A waterfall whose buckets do not add back to the collection shows a reconcile warning.
+
+## Venue bill: `VenueBillSummary`
+
+The summary under the venue-bill fields at Complete Pod (host and Admin dialogs) and on Finance's
+Payment Release page: attendees, the earlier slot price, the final bill and the venue total they
+come to. It draws the lines `@duncit/utils`' `buildVenueBillLines` returns and computes nothing.
+
+```tsx
+import { VenueBillSummary } from '@duncit/ui';
+import { buildVenueBillLines, shellVenueBillLabels } from '@duncit/utils';
+
+const labels = shellVenueBillLabels(t);
+<VenueBillSummary
+  title={labels.title}
+  lines={buildVenueBillLines(terms, labels, '₹')}
+  billUrl={billUrl}
+  viewBillLabel={labels.viewBill}
+/>
+```

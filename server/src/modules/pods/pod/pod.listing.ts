@@ -20,6 +20,7 @@ import { LEGACY_POD_TYPE_MAP } from './pod-type.migration';
 import { logs } from '@observability/log';
 import { loadClubSlugMap, toPub } from './pod.shared';
 import { buildPodPlaceFilter } from './pod.venue';
+import { POD_VISIBLE_FILTER } from '@utils/hidden';
 
 /**
  * Ceiling on the unpaginated `pods` read.
@@ -45,6 +46,7 @@ const POD_TABLE_CONFIG: TableEntityConfig = {
     pod_hits: 'pod_hits',
     no_of_spots: 'no_of_spots',
     is_active: 'is_active',
+    is_hidden: 'is_hidden',
     completed_at: 'completed_at',
     created_at: 'created_at',
     updated_at: 'updated_at',
@@ -72,6 +74,8 @@ const POD_TABLE_CONFIG: TableEntityConfig = {
     pod_occurrence: { type: 'enum' },
     venue_approval_status: { type: 'enum' },
     is_active: { type: 'boolean' },
+    is_hidden: { type: 'boolean' },
+    hidden_by_club: { type: 'boolean' },
     products_enabled: { type: 'boolean' },
     pod_amount: { type: 'number' },
     pod_date_time: { type: 'date' },
@@ -126,6 +130,8 @@ export const podListingMethods = {
     },
     opts?: {
       includePendingApproval?: boolean;
+      /** Consoles only — everyone else is never handed a hidden pod. */
+      includeHidden?: boolean;
       /** Runs over the raw rows alongside the club-slug read — a caller's
        * per-page prime reads other collections off the same rows, so the two
        * go out together rather than one round trip after the other. */
@@ -149,6 +155,9 @@ export const podListingMethods = {
     // unfiltered public read) until the owner approves — a server guarantee, not
     // just a client `is_active` filter. Admin/onboarding reviewers opt in.
     if (!opts?.includePendingApproval) q.venue_approval_status = { $ne: 'PENDING' };
+    // Hidden pods are the same kind of guarantee: unconditional for every
+    // caller but a console, never something a client filter decides.
+    if (!opts?.includeHidden) Object.assign(q, POD_VISIBLE_FILTER);
     // Bounded and lean. Unbounded, this hydrated every matching pod into a full
     // Mongoose document, so the discovery feed grew with the collection until it
     // outran the client's request timeout. The sort is date-DESCENDING, so the
@@ -195,6 +204,7 @@ export const podListingMethods = {
       _id: { $in: memberships.map((m) => m.pod_id) },
       is_active: true,
       venue_approval_status: { $ne: 'PENDING' },
+      ...POD_VISIBLE_FILTER,
     })
       .sort({ pod_date_time: -1 })
       .lean();
@@ -212,6 +222,8 @@ export const podListingMethods = {
     opts?: {
       includePendingApproval?: boolean;
       includeDeleted?: boolean;
+      /** Consoles only — see list(). */
+      includeHidden?: boolean;
       /** Narrows the page to one derived bucket (Admin > Pods > All Pods). */
       lifecycle?: PodLifecycle | null;
     }
@@ -233,6 +245,7 @@ export const podListingMethods = {
     if (opts?.lifecycle) {
       Object.assign(baseFilter, podLifecycleFilter(opts.lifecycle, new Date()));
     }
+    if (!opts?.includeHidden) Object.assign(baseFilter, POD_VISIBLE_FILTER);
     const { docs, total, page, page_size } = await runTableQuery<any>(
       PodModel,
       baseFilter,
@@ -299,6 +312,7 @@ export const podListingMethods = {
     // Locations that currently host at least one live pod (active and not past).
     const ids = await PodModel.distinct('location_id', {
       is_active: true,
+      ...POD_VISIBLE_FILTER,
       location_id: { $ne: null },
       pod_date_time: { $gte: new Date() },
     });

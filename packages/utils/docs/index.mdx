@@ -166,6 +166,14 @@ exports:
   - 'mwebTicketDiscountLabels'
   - 'shellTicketDiscountLabels'
   - 'podFormTicketDiscountLabels'
+  - 'buildVenueBillLines'
+  - 'firstMediaUrl'
+  - 'mwebVenueBillLabels'
+  - 'shellVenueBillLabels'
+  - 'VenueBillLabels'
+  - 'VenueBillLine'
+  - 'VenueBillTerms'
+  - 'VenueBillTranslate'
   - 'TicketDiscountLabels'
   - 'TicketDiscountLimits'
   - 'TicketDiscountTranslate'
@@ -3334,3 +3342,33 @@ The server validates the same rules again and is the authority. It reads the two
 app time zone, so a device clock or zone that disagrees can only produce a refusal, never a
 statement for the wrong period. The Zod schema the three forms share is `makeWalletStatementSchema`
 in `@duncit/forms/schemas`, which calls `statementRangeError`.
+
+## The venue bill at Complete Pod — `venue-bill`
+
+Whoever completes a pod may enter the venue final bill. The server decides the money
+(`venueChargeForPod`): no bill leaves the booked slot price standing, a bill replaces it, and a bill
+with "include slot price" is paid on top of it. This module only holds the words and arranges the
+figures the settlement returned, for the four surfaces that show them: the host dialog on mWeb and
+native, the Admin dialog and the Finance Payment Release page.
+
+```ts
+import { buildVenueBillLines, mwebVenueBillLabels, firstMediaUrl } from '@duncit/utils';
+
+const labels = mwebVenueBillLabels(t); // shellVenueBillLabels(t) in a portal
+const lines = buildVenueBillLines(
+  {
+    slot_price: settlement.venue_slot_price,
+    bill: settlement.venue_bill,
+    slot_included: settlement.include_slot_price,
+    venue_amount: settlement.waterfall.venue_amount,
+    attended_seats: settlement.attended_seats,
+    booked_seats: settlement.booked_seats,
+  },
+  labels,
+  settlement.currency_symbol,
+);
+```
+
+The slot-price line is left out when there is none to state (a legacy pod with no slot link).
+`firstMediaUrl` reads the single bill URL out of a media picker newline-separated value. Web
+renderer: `VenueBillSummary` in `@duncit/ui`.

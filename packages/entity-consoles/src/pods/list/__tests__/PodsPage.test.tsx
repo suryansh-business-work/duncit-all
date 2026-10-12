@@ -23,6 +23,12 @@ const harness = vi.hoisted(() => ({
   settlePicker: vi.fn(),
 }));
 
+// The Hide / Show action is offered to a governor only — the page reads who is
+// signed in to decide, and the harness mounts no UserProvider.
+vi.mock('@duncit/user-context', () => ({
+  useUserData: () => ({ user: { roles: ['SUPER_ADMIN'] } }),
+}));
+
 vi.mock('@duncit/table', () => ({
   useApolloTableFetch: (_client: unknown, _document: unknown, rootField: string, options: unknown) => {
     harness.fetchCalls.push({ rootField, options });
@@ -145,6 +151,8 @@ vi.mock('../complete-pod-dialog', async (importOriginal) => {
             props.onSubmit({
               host_user_id: 'u1',
               venue_bill_amount: 1500,
+              venue_bill_media: 'https://cdn.test/bill.pdf',
+              include_slot_price: false,
               media_text: 'https://cdn.test/party.jpg',
               notes: '',
             })
@@ -532,6 +540,8 @@ describe('PodsPage / complete a pod', () => {
     const values = {
       host_user_id: 'u1',
       venue_bill_amount: 1500,
+      venue_bill_media: 'https://cdn.test/bill.pdf',
+      include_slot_price: false,
       media_text: 'https://cdn.test/party.jpg',
       notes: '',
     };
@@ -552,7 +562,8 @@ describe('PodsPage / complete a pod', () => {
                   id: 'r1',
                   release_id: 'DUN-REL-1',
                   kind: 'HOST',
-                  status: 'APPROVED',
+                  // Nothing is credited at completion — the release waits on Finance.
+                  status: 'PENDING',
                   amount_requested: 454.58,
                 },
               ],

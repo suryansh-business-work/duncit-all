@@ -94,20 +94,72 @@ const RELEASE_ROW_FIELDS = gql`
       attended_seats
       booked_seats
       attended_total
+      venue_slot_price
+      include_slot_price
     }
   }
 `;
 
-export const PAYMENT_RELEASE_REQUESTS_TABLE = gql`
-  query PaymentReleaseRequestsTable($query: TableQueryInput) {
-    paymentReleaseRequestsTable(query: $query) {
+/** Payment Release, one row per pod request (server-paged). */
+export const POD_PAYMENT_RELEASES_TABLE = gql`
+  query PodPaymentReleasesTable($query: TableQueryInput) {
+    podPaymentReleasesTable(query: $query) {
       total
       rows {
-        ...PaymentReleaseRowFields
+        id
+        pod_id
+        pod_title
+        status
+        total_requested
+        release_count
+        kinds
+        has_bill
+        media_count
+        requested_at
       }
     }
   }
+`;
+
+const POD_RELEASE_DETAIL_FIELDS = gql`
+  fragment PodPaymentReleaseDetailFields on PodPaymentReleaseDetail {
+    summary {
+      id
+      pod_id
+      pod_title
+      status
+      total_requested
+      release_count
+      requested_at
+    }
+    releases {
+      ...PaymentReleaseRowFields
+    }
+  }
   ${RELEASE_ROW_FIELDS}
+`;
+
+/** One pod request with every payout on it — the Payment Release page. */
+export const POD_PAYMENT_RELEASE = gql`
+  query PodPaymentRelease($id: ID!) {
+    podPaymentRelease(id: $id) {
+      ...PodPaymentReleaseDetailFields
+    }
+    publicFinanceSettings {
+      currency_symbol
+    }
+  }
+  ${POD_RELEASE_DETAIL_FIELDS}
+`;
+
+/** Approve every payout still pending on the request, in full. */
+export const APPROVE_POD_PAYMENT_RELEASE = gql`
+  mutation ApprovePodPaymentRelease($id: ID!) {
+    approvePodPaymentRelease(id: $id) {
+      ...PodPaymentReleaseDetailFields
+    }
+  }
+  ${POD_RELEASE_DETAIL_FIELDS}
 `;
 
 export const PUBLIC_FINANCE_SETTINGS = gql`
@@ -134,8 +186,42 @@ export const REVIEW_PAYMENT_RELEASE = gql`
 export type ReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT';
 export type ReleaseStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-/** Row shape for the payment-release table (fields the columns touch — rows
- * also carry the approval/breakdown fields the review dialog reads). */
+/** One pod request — a Payment Release table row. */
+export interface PodPaymentReleaseRow {
+  id: string;
+  pod_id: string;
+  pod_title: string;
+  status: ReleaseStatus;
+  total_requested: number;
+  release_count: number;
+  kinds: ReleaseKind[];
+  has_bill: boolean;
+  media_count: number;
+  requested_at: string;
+}
+
+/** The settlement snapshot a release carries, as the request page reads it. */
+export interface ReleaseBreakdown {
+  version: number;
+  venue_bill: number;
+  share_amount: number;
+  attended_seats: number;
+  booked_seats: number;
+  venue_slot_price: number;
+  include_slot_price: boolean;
+}
+
+/** One request with every payout on it. */
+export interface PodPaymentReleaseDetail {
+  summary: Pick<
+    PodPaymentReleaseRow,
+    'id' | 'pod_id' | 'pod_title' | 'status' | 'total_requested' | 'release_count' | 'requested_at'
+  >;
+  releases: PaymentReleaseRow[];
+}
+
+/** One payout on a request (rows also carry the full breakdown the review
+ * dialog reads). */
 export interface PaymentReleaseRow {
   id: string;
   release_id: string;
@@ -150,6 +236,8 @@ export interface PaymentReleaseRow {
   evidence_media: { url: string; type: string }[] | null;
   notes: string | null;
   requested_at: string;
+  approved_amount?: number | null;
+  breakdown?: ReleaseBreakdown | null;
 }
 /** The pod's coin movement and multi-ticket discounts, for the release review's
  * explanatory lines. Live rather than from the frozen settlement snapshot:

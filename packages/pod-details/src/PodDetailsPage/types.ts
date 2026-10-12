@@ -1,12 +1,17 @@
 import type { ReactNode } from 'react';
 import type { PodDetailsScope } from '../scope';
 
-/** The pod as a header action needs it: which pod, what it is called, and
- * whether it is currently cancelled. */
+/** The pod as a header action needs it: which pod, what it is called, whether
+ * it is currently cancelled, and whether it is hidden from the app — on its
+ * own, or with its club. The reasons are null outside a staff console. */
 export interface PodDetailsActionPod {
   id: string;
   pod_title: string;
   is_deleted: boolean;
+  is_hidden?: boolean | null;
+  hidden_by_club?: boolean | null;
+  hidden_reason?: string | null;
+  club_hidden_reason?: string | null;
 }
 
 /** An extra action rendered beside Edit, decided by the portal that mounts the

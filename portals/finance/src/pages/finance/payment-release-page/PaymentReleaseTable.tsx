@@ -5,9 +5,10 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import { ReleaseKindChip } from './ReleaseStatusChip';
-import type { PaymentReleaseRow } from './queries';
-import { useTranslation } from '@duncit/app-settings';
+import { money } from '../pod-finance-page/queries';
+import type { PodPaymentReleaseRow } from './queries';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -24,95 +25,66 @@ const statusOptions = (t: Translate) => [
   { value: 'REJECTED', label: t('finance.common.rejected') },
 ];
 
-const getReleaseRowId = (row: PaymentReleaseRow) => row.id;
+/** Where one pod's request opens. */
+export const releasePath = (row: Pick<PodPaymentReleaseRow, 'id'>) =>
+  `/payment-release/${encodeURIComponent(row.id)}`;
 
-const renderKind = (row: PaymentReleaseRow) => <ReleaseKindChip kind={row.kind} />;
+const getRowId = (row: PodPaymentReleaseRow) => row.id;
 
-const renderPod = (row: PaymentReleaseRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Link component={RouterLink} to={`/pod-finance/${row.pod_id}`} underline="hover">
-      <Typography variant="body2" component="span" sx={{
-        fontWeight: 700
-      }}>
-        {row.pod_title}
-      </Typography>
-    </Link>
-    <Typography variant="caption" component="span" sx={{
-      color: "text.secondary"
-    }}>
-      {row.release_id}
+const renderPod = (row: PodPaymentReleaseRow) => (
+  <Link component={RouterLink} to={releasePath(row)} underline="hover">
+    <Typography variant="body2" component="span" sx={{ fontWeight: 700 }}>
+      {row.pod_title}
     </Typography>
+  </Link>
+);
+
+const renderKinds = (row: PodPaymentReleaseRow) => (
+  <Stack direction="row" spacing={0.5} useFlexGap component="span" sx={{ flexWrap: 'wrap' }}>
+    {row.kinds.map((kind) => (
+      <ReleaseKindChip key={kind} kind={kind} />
+    ))}
   </Stack>
 );
 
-const renderBeneficiary = (row: PaymentReleaseRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" component="span">
-      {row.beneficiary_name}
-    </Typography>
-    <Typography variant="caption" component="span" sx={{
-      color: "text.secondary"
-    }}>
-      {row.beneficiary_email}
-    </Typography>
-  </Stack>
+const renderStatus = (row: PodPaymentReleaseRow) => (
+  <StatusChip status={row.status} fallbackColor="warning" />
 );
 
-const renderProof = (row: PaymentReleaseRow) => (
-  <Stack spacing={0.25} component="span" sx={{ lineHeight: 1.2 }}>
-    {row.bill_url && (
-      <Link href={row.bill_url} target="_blank" rel="noreferrer" variant="caption">
-        Bill
-      </Link>
-    )}
-    {row.evidence_media?.length ? (
-      <Typography variant="caption" component="span">{row.evidence_media.length} media files</Typography>
-    ) : null}
-    {row.notes && (
-      <Typography variant="caption" component="span" sx={{
-        color: "text.secondary"
-      }}>
-        {row.notes}
-      </Typography>
-    )}
-  </Stack>
-);
-
-const proofValue = (row: PaymentReleaseRow) =>
+/** "Bill · Media: 3" — what came with the request, as text for the cell and the export. */
+const proofValue = (row: PodPaymentReleaseRow, t: Translate) =>
   [
-    row.bill_url ? 'Bill' : '',
-    row.evidence_media?.length ? `${row.evidence_media.length} media files` : '',
-    row.notes ?? '',
+    row.has_bill ? t('finance.paymentRelease.billUploaded') : '',
+    row.media_count > 0
+      ? t('finance.paymentRelease.mediaCount', { vars: { count: row.media_count } })
+      : '',
   ]
     .filter(Boolean)
     .join(' · ');
 
-const renderStatus = (row: PaymentReleaseRow) => <StatusChip status={row.status} fallbackColor="warning" />;
-
 interface Props {
-  fetchRows: TableFetch<PaymentReleaseRow>;
+  fetchRows: TableFetch<PodPaymentReleaseRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
-  onReview: (row: PaymentReleaseRow) => void;
+  /** Currency symbol from Finance settings. */
+  symbol: string;
+  onOpen: (row: PodPaymentReleaseRow) => void;
 }
 
-export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }: Readonly<Props>) {
+/** Payment Release: one row per completed pod's request. */
+export default function PaymentReleaseTable({
+  fetchRows,
+  refetchRef,
+  symbol,
+  onOpen,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const columns = useMemo<DuncitColumn<PaymentReleaseRow>[]>(() => {
-    const renderActions = (row: PaymentReleaseRow) => (
-      <DuncitButton size="small" startIcon={<RateReviewIcon />} disabled={row.status !== 'PENDING'} onClick={() => onReview(row)}>
-        Review
+  const columns = useMemo<DuncitColumn<PodPaymentReleaseRow>[]>(() => {
+    const renderActions = (row: PodPaymentReleaseRow) => (
+      <DuncitButton size="small" startIcon={<RateReviewIcon />} onClick={() => onOpen(row)}>
+        {t('finance.paymentRelease.review')}
       </DuncitButton>
     );
     return [
-      {
-        field: 'kind',
-        headerName: t('shell.common.type'),
-        width: 140,
-        type: 'enum',
-        options: kindOptions(t),
-        cellRenderer: renderKind,
-        valueGetter: (row) => row.kind,
-      },
       {
         field: 'pod_title',
         headerName: t('finance.common.pod'),
@@ -123,35 +95,37 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
         valueGetter: (row) => row.pod_title,
       },
       {
-        field: 'beneficiary_name',
-        headerName: t('finance.paymentRelease.beneficiary'),
-        minWidth: 180,
-        type: 'text',
-        cellRenderer: renderBeneficiary,
-        valueGetter: (row) => row.beneficiary_name,
+        field: 'kinds',
+        headerName: t('finance.paymentRelease.payouts'),
+        minWidth: 260,
+        type: 'enum',
+        options: kindOptions(t),
+        // A set of kinds per row — filterable, but there is no order to sort by.
+        sortable: false,
+        cellRenderer: renderKinds,
+        valueGetter: (row) => row.kinds.join(', '),
       },
       {
-        field: 'amount_requested',
-        headerName: t('finance.common.requested'),
-        width: 120,
+        field: 'total_requested',
+        headerName: t('finance.paymentRelease.totalRequested'),
+        width: 150,
         type: 'number',
-        valueGetter: (row) => `Rs ${Number(row.amount_requested || 0).toFixed(2)}`,
+        valueGetter: (row) => money(symbol, row.total_requested),
       },
       {
         field: 'proof',
         headerName: t('finance.paymentRelease.proof'),
         type: 'text',
-        // Assembled from bill_url, evidence_media and notes — no one stored path.
+        // Assembled from the bill and the media count — no one stored path.
         sortable: false,
         filterable: false,
-        minWidth: 160,
-        cellRenderer: renderProof,
-        valueGetter: proofValue,
+        minWidth: 140,
+        valueGetter: (row) => proofValue(row, t),
       },
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        width: 120,
+        width: 130,
         type: 'enum',
         options: statusOptions(t),
         cellRenderer: renderStatus,
@@ -163,25 +137,29 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
         hide: true,
         width: 170,
         type: 'date',
-        valueGetter: (row) => {
-          const d = new Date(row.requested_at);
-          return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-IN');
-        },
+        valueGetter: (row) => formatDateTime(row.requested_at),
       },
-      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 130, cellRenderer: renderActions },
+      {
+        field: 'actions',
+        headerName: t('shell.common.actions'),
+        type: 'actions',
+        width: 130,
+        cellRenderer: renderActions,
+      },
     ];
-  }, [onReview]);
+  }, [onOpen, symbol, t]);
 
   return (
-    <DuncitTable<PaymentReleaseRow>
+    <DuncitTable<PodPaymentReleaseRow>
       ariaLabel={t('shell.nav.paymentRelease')}
-      tableId="finance-payment-releases"
+      tableId="finance-pod-payment-releases"
       columns={columns}
       fetchRows={fetchRows}
-      getRowId={getReleaseRowId}
+      getRowId={getRowId}
+      onRowClick={onOpen}
       emptyText={t('finance.paymentRelease.noPaymentReleaseRequestsFound')}
       defaultSort={{ field: 'requested_at', dir: 'desc' }}
-      searchPlaceholder="Search release, pod or beneficiary"
+      searchPlaceholder={t('finance.paymentRelease.searchPlaceholder')}
       refetchRef={refetchRef}
     />
   );

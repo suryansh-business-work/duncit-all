@@ -18,6 +18,7 @@ import { logs } from '@observability/log';
 import { emitNotifyForUsers } from '@modules/engagement/notification/notification.events';
 import { toPublic } from './user.public';
 import { isBlockedEitherWay } from '@modules/access/block/userBlock.model';
+import { isPodHidden } from '@utils/hidden';
 
 /**
  * Tell these users' open inboxes to re-read. Every follow transition changes a
@@ -35,8 +36,8 @@ export const userFollowMethods = {
     if (!Types.ObjectId.isValid(clubId)) {
       throw new GraphQLError('Invalid club', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const club = await ClubModel.findById(clubId).select('_id is_active');
-    if (!club?.is_active) {
+    const club = await ClubModel.findById(clubId).select('_id is_active is_hidden');
+    if (!club?.is_active || club.is_hidden) {
       throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
     }
     const oid = new Types.ObjectId(user_id);
@@ -69,8 +70,8 @@ export const userFollowMethods = {
     if (!Types.ObjectId.isValid(podId)) {
       throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const pod = await PodModel.findById(podId).select('_id is_active');
-    if (!pod?.is_active) {
+    const pod = await PodModel.findById(podId).select('_id is_active is_hidden hidden_by_club');
+    if (!pod?.is_active || isPodHidden(pod)) {
       throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     }
     const oid = new Types.ObjectId(user_id);

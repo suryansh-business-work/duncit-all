@@ -13,6 +13,7 @@ import {
 } from '@utils/table-query';
 import { contactNumber, userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
+import { CLUB_VISIBLE_FILTER, hideReasonFor } from '@utils/hidden';
 
 /** Projection for a ClubActor; admins additionally carry their contact details. */
 const ACTOR_FIELDS = 'profile.first_name profile.last_name profile.profile_photo';
@@ -66,6 +67,10 @@ const toPub = (d: any) => {
     super_category_id: d.super_category_id ? String(d.super_category_id) : null,
     is_verified: !!d.is_verified,
     is_active: !!d.is_active,
+    is_hidden: !!d.is_hidden,
+    // Carried raw for the console-gated `Club.hidden_reason` field resolver.
+    hidden_reason: d.hidden_reason ?? '',
+    hidden_at: d.hidden_at?.toISOString?.() ?? null,
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };
@@ -84,6 +89,7 @@ const CLUB_TABLE_CONFIG: TableEntityConfig = {
     created_at: 'created_at',
     updated_at: 'updated_at',
     is_active: 'is_active',
+    is_hidden: 'is_hidden',
     is_verified: 'is_verified',
     category_id: 'category_id',
     cover: 'club_feature_images_and_videos.url',
@@ -92,6 +98,7 @@ const CLUB_TABLE_CONFIG: TableEntityConfig = {
     club_name: { type: 'string' },
     cover: { path: 'club_feature_images_and_videos.url', type: 'string' },
     is_active: { type: 'boolean' },
+    is_hidden: { type: 'boolean' },
     is_verified: { type: 'boolean' },
     category_id: { type: 'string' },
     super_category_id: { type: 'string' },
@@ -115,8 +122,9 @@ export const clubService = {
     locality?: string;
     is_active?: boolean;
     is_verified?: boolean;
-  }) {
-    const q: any = {};
+  }, opts?: { includeHidden?: boolean }) {
+    // A hidden club is listed for a console only — see utils/hidden.ts.
+    const q: any = opts?.includeHidden ? {} : { ...CLUB_VISIBLE_FILTER };
     if (filter?.search) {
       // ESCAPED: the raw string used to be compiled as a pattern, so a search of
       // ".*" listed every club and a crafted one could pin the event loop.
@@ -146,10 +154,12 @@ export const clubService = {
   },
 
   /** Server-side table page (search/filter/sort/paginate) for the clubsTable query. */
-  async table(input?: TableQueryInput | null) {
+  async table(input?: TableQueryInput | null, opts?: { includeHidden?: boolean }) {
+    // In the baseFilter, where a client filter can never widen it
+    // (runTableQuery $and-merges the two).
     const { docs, total, page, page_size } = await runTableQuery(
       ClubModel,
-      {},
+      opts?.includeHidden ? {} : { ...CLUB_VISIBLE_FILTER },
       input,
       CLUB_TABLE_CONFIG
     );
@@ -262,6 +272,37 @@ export const clubService = {
     if (input.admin_user_ids !== undefined) {
       await this.syncClubAdminRoles(prevAdminIds, (doc!.admin_user_ids ?? []).map(String));
     }
+    return toPub(doc);
+  },
+
+  /**
+   * Hide a club from every member-facing surface, or show it again — and take
+   * its pods with it.
+   *
+   * The club's own flag is written FIRST: from that moment a pod saved into
+   * the club inherits it through the pod model's save hook, so the sweep below
+   * cannot miss one created while it runs. Both writes set a state rather than
+   * toggle it, so repeating the call after a failed sweep heals the pods
+   * instead of flipping them.
+   *
+   * Only `hidden_by_club` is touched on the pods. A pod an admin hid on its
+   * own keeps `is_hidden`, and is still hidden after the club comes back.
+   */
+  async setHidden(id: string, hidden: boolean, reason: string | null | undefined, actorUserId: string) {
+    const hiddenReason = hideReasonFor(hidden, reason);
+    if (!isValidObjectId(id)) notFound();
+    const doc = await ClubModel.findById(id);
+    if (!doc) notFound();
+    doc.is_hidden = hidden;
+    doc.hidden_reason = hiddenReason;
+    doc.hidden_at = hidden ? new Date() : null;
+    doc.hidden_by = hidden && isValidObjectId(actorUserId) ? new Types.ObjectId(actorUserId) : null;
+    await doc.save();
+    // Cancelled pods included: one that is revoked later must come back hidden.
+    await PodModel.updateMany(
+      { club_id: doc._id },
+      { $set: { hidden_by_club: hidden } }
+    ).setOptions({ includeDeleted: true });
     return toPub(doc);
   },
 
@@ -431,7 +472,7 @@ export const clubService = {
    * "<N> Clubs" under each city. */
   async activeClubCountsByLocation(): Promise<Record<string, number>> {
     const rows = await ClubModel.aggregate([
-      { $match: { is_active: true, location_id: { $ne: null } } },
+      { $match: { is_active: true, ...CLUB_VISIBLE_FILTER, location_id: { $ne: null } } },
       { $group: { _id: '$location_id', count: { $sum: 1 } } },
     ]);
     const map: Record<string, number> = {};
@@ -445,7 +486,14 @@ export const clubService = {
    * zone_name; clubs with no locality are not counted. */
   async activeClubCountsByLocality(): Promise<Record<string, number>> {
     const rows = await ClubModel.aggregate([
-      { $match: { is_active: true, location_id: { $ne: null }, locality: { $nin: [null, ''] } } },
+      {
+        $match: {
+          is_active: true,
+          ...CLUB_VISIBLE_FILTER,
+          location_id: { $ne: null },
+          locality: { $nin: [null, ''] },
+        },
+      },
       { $group: { _id: { location_id: '$location_id', locality: '$locality' }, count: { $sum: 1 } } },
     ]);
     const map: Record<string, number> = {};

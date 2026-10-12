@@ -67,6 +67,9 @@ exports:
   - 'blankWithdrawValues'
   - 'WITHDRAW_METHODS'
   - 'makeWalletStatementSchema'
+  - 'makePodCompleteSchema'
+  - 'buildPodCompleteInput'
+  - 'blankPodCompleteValues'
   - 'buildWalletStatementVariables'
   - 'blankWalletStatementValues'
   - 'BANK_PAYOUT_METHODS'
@@ -872,3 +875,17 @@ the options and what the server accepts cannot drift (rules 2 + 34).
 bio caps at 500 on mWeb and 280 on native, GSTIN at 20 vs 15, and mWeb trims before length
 checks where the app does not (so `"   "` passes as a city there). Those are behaviour changes,
 not a refactor, and want their own review.
+
+### Complete Pod — `makePodCompleteSchema`
+
+The host completion form on mWeb, the Partners console and the native app: the venue final bill is
+optional (empty leaves the booked slot price standing), an amount needs its uploaded bill, and
+`buildPodCompleteInput` sends the bill file and an explicit `include_slot_price` only with an
+amount. The messages come from `@duncit/utils` `mwebVenueBillLabels` / `shellVenueBillLabels`.
+
+```ts
+import { makePodCompleteSchema, buildPodCompleteInput } from '@duncit/forms/schemas';
+
+const schema = makePodCompleteSchema(hasVenue, venueBillLabels);
+const input = buildPodCompleteInput(values, pod.id);
+```

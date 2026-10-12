@@ -102,6 +102,43 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       subtitle: 'Every host on Duncit — an application awaiting review and a host already running pods sit in one list.',
       dashboardTitle: 'Hosts at a glance',
     },
+    // Hiding a pod or a club, and showing it again. ONE block for both
+    // consoles: a pod hidden with its club reads the same on the Pods list as
+    // on the club's own page, which is what keeps the two in step.
+    visibility: {
+      hide: 'Hide',
+      show: 'Show',
+      hiddenChip: 'Hidden',
+      hiddenWithClubChip: 'Hidden with club',
+      colVisibility: 'Visibility',
+      visible: 'Visible',
+      hidePodTitle: 'Hide this pod?',
+      hidePodBody:
+        '"{name}" will stop appearing in the app — feeds, search, its club page and new bookings. People who already booked keep their ticket, and nothing is refunded.',
+      hideClubTitle: 'Hide this club?',
+      hideClubBody:
+        '"{name}" and every pod in it will stop appearing in the app. People who already booked a pod keep their ticket, and nothing is refunded.',
+      reasonLabel: 'Reason for hiding',
+      reasonHelper: 'Required. Staff see this beside the hidden record.',
+      reasonRequired: 'Enter a reason for hiding.',
+      reasonTooLong: 'Keep the reason within 500 characters.',
+      showPodTitle: 'Show this pod again?',
+      showPodBody: '"{name}" will be offered in the app again.',
+      showClubTitle: 'Show this club again?',
+      showClubBody:
+        '"{name}" and its pods will be offered in the app again. A pod that was hidden on its own stays hidden.',
+      podHidden: 'Pod hidden.',
+      podShown: 'Pod is visible again.',
+      clubHidden: 'Club and its pods hidden.',
+      clubShown: 'Club and its pods are visible again.',
+      failed: 'Could not change the visibility. Please try again.',
+      podHiddenBanner: 'This pod is hidden from the app.',
+      podHiddenWithClubBanner:
+        'This pod is hidden from the app because its club is hidden. Show the club to bring it back.',
+      clubHiddenBanner: 'This club and every pod in it are hidden from the app.',
+      reasonPrefix: 'Reason: {reason}',
+      alsoHiddenWithClub: 'Its club is hidden too, so it stays hidden until the club is shown.',
+    },
     // The change log every console's detail page shows. ONE block, because the
     // trail is one collection with the entity as a column — five copies of
     // "Updated By" is how five consoles start disagreeing about what a column

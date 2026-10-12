@@ -24,6 +24,7 @@ import { instrumentCampaignHtml } from './tracking.service';
 import { logs } from '@observability/log';
 import { appDateTime } from '@utils/app-time';
 import { bool, filled, maxLen, messagesOf, minLen, mixed, obj, shape, str, trim } from '@utils/zod-fields';
+import { CLUB_VISIBLE_FILTER, POD_VISIBLE_FILTER } from '@utils/hidden';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
 const timers = new Map<string, NodeJS.Timeout>();
@@ -125,7 +126,7 @@ async function mwebUrl(pathname: string) {
 }
 
 async function podCards() {
-  const pods = await PodModel.find({ is_active: true })
+  const pods = await PodModel.find({ is_active: true, ...POD_VISIBLE_FILTER })
     .sort({ pod_date_time: -1 })
     .limit(100)
     .lean()
@@ -150,7 +151,7 @@ async function podCards() {
 }
 
 async function clubCards() {
-  const clubs = await ClubModel.find({ is_active: true })
+  const clubs = await ClubModel.find({ is_active: true, ...CLUB_VISIBLE_FILTER })
     .sort({ club_name: 1 })
     .limit(100)
     .lean()

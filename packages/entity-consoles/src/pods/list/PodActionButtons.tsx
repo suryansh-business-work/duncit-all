@@ -5,18 +5,28 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
+import { VisibilityIconButton } from '../../shared/visibility/VisibilityViews';
 
 interface Props {
-  pod: { is_deleted?: boolean | null };
+  pod: { is_deleted?: boolean | null; is_hidden?: boolean | null };
   onEdit: (pod: any) => void;
   onQuickEdit: (pod: any) => void;
   onDelete: (pod: any) => void;
   onComplete: (pod: any) => void;
+  /** Already bound to this row by the column — absent for a viewer who may not. */
+  onToggleHidden?: () => void;
 }
 
 /** A cancelled pod stays editable (that is the point of listing it), but it can
  * no longer be completed or deleted — both would fail at the server. */
-export default function PodActionButtons({ pod, onEdit, onQuickEdit, onDelete, onComplete }: Readonly<Props>) {
+export default function PodActionButtons({
+  pod,
+  onEdit,
+  onQuickEdit,
+  onDelete,
+  onComplete,
+  onToggleHidden,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const cancelled = !!pod.is_deleted;
   return (
@@ -29,6 +39,9 @@ export default function PodActionButtons({ pod, onEdit, onQuickEdit, onDelete, o
             <TaskAltIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
+      )}
+      {onToggleHidden && (
+        <VisibilityIconButton hidden={!!pod.is_hidden} onClick={onToggleHidden} />
       )}
       <Tooltip title={t('admin.pods.quickEditHint')}>
         <DuncitIconButton size="small" onClick={() => onQuickEdit(pod)}>

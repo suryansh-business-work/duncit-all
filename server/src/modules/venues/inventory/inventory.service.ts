@@ -30,6 +30,7 @@ import {
 } from './inventory.packaging';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
+import { POD_VISIBLE_FILTER } from '@utils/hidden';
 
 const ECOMM_MANAGER_ROLE = 'ECOMM_MANAGER';
 const SKU_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1210,6 +1211,7 @@ export const inventoryService = {
       'product_requests.product_id': { $in: productIds },
       products_enabled: true,
       is_active: true,
+      ...POD_VISIBLE_FILTER,
       venue_approval_status: { $ne: 'PENDING' },
       pod_date_time: { $gte: new Date() },
     })
@@ -1701,6 +1703,7 @@ export const inventoryService = {
       'product_requests.product_id': productId,
       products_enabled: true,
       is_active: true,
+      ...POD_VISIBLE_FILTER,
       venue_approval_status: { $ne: 'PENDING' },
       pod_date_time: { $gte: new Date() },
     })

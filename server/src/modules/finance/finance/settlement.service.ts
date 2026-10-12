@@ -71,6 +71,12 @@ export interface PodSettlement {
   currency_symbol: string;
   collected_total: number;
   venue_bill: number;
+  /** The slot's booked price — what the venue was promised before any bill. */
+  venue_slot_price: number;
+  /** False for a legacy venue pod with no slot link: its bill is its only price. */
+  venue_slot_linked: boolean;
+  /** True when the bill is being paid on top of the slot price. */
+  include_slot_price: boolean;
   gst_pct: number;
   host_commission_pct: number;
   venue_commission_pct: number;
@@ -321,18 +327,70 @@ export async function resolveEffectiveRates(options: {
   };
 }
 
-/** The venue's money for a pod = its booked slot price (Partners portal).
- * Legacy pods without a slot link fall back to the host-entered venue bill. */
+/** What a pod owes its venue, and the two figures that answer was built from. */
+export interface VenueCharge {
+  /** The slot's price as booked in the Partners portal. 0 without a slot link. */
+  slot_price: number;
+  /** A slot is linked, so `slot_price` is a real price and not an absent one. */
+  slot_linked: boolean;
+  /** The final bill entered at completion. 0 when none was. */
+  bill: number;
+  /** True when the bill is paid ON TOP of the slot price rather than instead of it. */
+  slot_included: boolean;
+  /** The venue's money — what the waterfall takes off the pool. */
+  amount: number;
+}
+
+/**
+ * The venue's money for a pod.
+ *
+ * It starts as the booked slot price (Partners portal). What the venue finally
+ * charges can differ from that — extra hours, food, breakage — so whoever
+ * completes the pod may enter the venue's final bill:
+ *
+ *   - no bill          → the booked slot price stands;
+ *   - a bill           → the bill REPLACES the slot price (it is the final
+ *                        figure for the evening);
+ *   - a bill + include → the bill is paid on top of the slot price.
+ *
+ * A legacy pod with no slot link has no slot price, so its bill is the whole
+ * amount either way.
+ *
+ * `includeSlotPrice` left out (null / undefined) is how a caller says it does
+ * not know about any of this: app builds from before the bill could move money
+ * REQUIRED an amount and sent it as evidence only, with no document behind it.
+ * For those the bill is recorded and the slot price still stands — exactly what
+ * they were built against — so an installed build keeps completing pods and
+ * can never change a venue's payout with a number nobody can check.
+ */
+export async function venueChargeForPod(
+  pod: { venue_id?: Types.ObjectId | null; venue_slot_id?: Types.ObjectId | null },
+  venueBill: number,
+  includeSlotPrice?: boolean | null
+): Promise<VenueCharge> {
+  const none = { slot_price: 0, slot_linked: false, bill: 0, slot_included: false, amount: 0 };
+  if (!pod.venue_id) return none;
+  const slot = pod.venue_slot_id
+    ? await VenueSlotModel.findById(pod.venue_slot_id).select('price')
+    : null;
+  const slotPrice = slot ? round2(slot.price) : 0;
+  const bill = Math.max(0, round2(venueBill));
+  const base = { slot_price: slotPrice, slot_linked: !!slot, bill };
+  const evidenceOnly = includeSlotPrice == null && !!slot;
+  if (bill <= 0 || evidenceOnly) return { ...base, slot_included: false, amount: slotPrice };
+  const slotIncluded = !!includeSlotPrice && slotPrice > 0;
+  return { ...base, slot_included: slotIncluded, amount: slotIncluded ? round2(slotPrice + bill) : bill };
+}
+
+/** The venue's money for a pod when only the amount is wanted — the live views
+ * and risk checks that run before any bill exists pass 0 and get the booked
+ * slot price (a bill passed here is evidence only, so a slot's price wins).
+ * One rule, {@link venueChargeForPod}'s. */
 export async function venueAmountForPod(
   pod: { venue_id?: Types.ObjectId | null; venue_slot_id?: Types.ObjectId | null },
   venueBill: number
 ): Promise<number> {
-  if (!pod.venue_id) return 0;
-  if (pod.venue_slot_id) {
-    const slot = await VenueSlotModel.findById(pod.venue_slot_id).select('price');
-    if (slot) return round2(slot.price);
-  }
-  return venueBill;
+  return (await venueChargeForPod(pod, venueBill)).amount;
 }
 
 /** Paise engine output → rupee waterfall for GraphQL/persistence. */
@@ -387,8 +445,9 @@ export function waterfallForAmount(
  * extracted from the money collected (GST-inclusive), the platform fee comes
  * off the net, the venue's booked slot price (Partners portal) comes off the
  * remaining pool, and the host keeps the remainder — Duncit takes its
- * commission % from each side. The venue bill the host enters is evidence
- * (and the venue-amount fallback for legacy pods without a slot link).
+ * commission % from each side. The venue's final bill, when one is entered,
+ * replaces the slot price (`includeSlotPrice: false`) or is paid on top of it
+ * (`true`); left out, the bill is evidence only — see {@link venueChargeForPod}.
  *
  * `hostUserId` is the host actually being PAID (a pod can have co-hosts and
  * completion picks one) — their commission override must price the settlement,
@@ -397,7 +456,8 @@ export function waterfallForAmount(
 export async function computePodSettlement(
   podDocId: string,
   venueBillAmount: number,
-  hostUserId?: string | null
+  hostUserId?: string | null,
+  includeSlotPrice?: boolean | null
 ): Promise<PodSettlement> {
   if (!Types.ObjectId.isValid(podDocId)) {
     throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -426,16 +486,16 @@ export async function computePodSettlement(
   // and the difference is visible rather than silent.
   const collected = roster.collected_total;
   const basis = roster.attended_total;
-  // The bill is evidence (and the legacy venue-amount fallback) — it may
-  // legitimately exceed a small pod's collection (offline venue costs).
-  const venueBill = Math.max(0, round2(venueBillAmount));
-
+  // The bill may legitimately exceed a small pod's collection (offline venue
+  // costs) — it is never capped to what the pod took.
   const hasVenue = !!pod.venue_id;
   const rates = await resolveEffectiveRates({
     hostUserId: hostUserId ?? pod.pod_hosts_id?.[0] ?? null,
     venueId: hasVenue ? pod.venue_id : null,
   });
-  const venueAmount = await venueAmountForPod(pod, venueBill);
+  const charge = await venueChargeForPod(pod, venueBillAmount, includeSlotPrice);
+  const venueBill = charge.bill;
+  const venueAmount = charge.amount;
   const waterfall = toWaterfall(
     computePodFinanceBreakdown(toPaise(basis), Math.max(0, toPaise(venueAmount)), rates, {
       // The venue is owed its BOOKED slot price whatever the pod took at the
@@ -480,6 +540,9 @@ export async function computePodSettlement(
     currency_symbol: fs.currency_symbol,
     collected_total: collected,
     venue_bill: venueBill,
+    venue_slot_price: charge.slot_price,
+    venue_slot_linked: charge.slot_linked,
+    include_slot_price: charge.slot_included,
     gst_pct: waterfall.gst_pct,
     host_commission_pct: waterfall.host_commission_pct,
     venue_commission_pct: waterfall.venue_commission_pct,

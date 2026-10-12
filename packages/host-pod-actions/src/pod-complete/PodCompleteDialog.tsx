@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { z } from 'zod';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client/react';
@@ -9,63 +8,26 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  InputAdornment,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import SettlementPreview from './SettlementPreview';
 import PodMediaSummary from './PodMediaSummary';
+import VenueBillFields from './VenueBillFields';
 import TicketScanDialog from '../ticket-scan/TicketScanDialog';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { COMPLETE_POD } from '../queries';
-import type { HostPodActionLabels } from '../labels';
 import type { HostPodForComplete } from '../types';
+import {
+  blankPodCompleteValues,
+  buildCompleteInput,
+  buildPodCompleteSchema,
+  type PodCompleteValues,
+} from './pod-complete.form';
 
-export interface PodCompleteValues {
-  venue_bill_amount: string;
-}
-
-export const blankPodCompleteValues: PodCompleteValues = {
-  venue_bill_amount: '',
-};
-
-/**
- * Schema depends on whether the pod has a venue: only then is a bill amount
- * required. Media is NOT asked for here — it belongs to the pod, uploaded on
- * its own page, and a pod that took money still owes its host that money
- * whether or not anybody photographed the evening.
- */
-export const buildPodCompleteSchema = (hasVenue: boolean, labels: HostPodActionLabels) =>
-  z
-    .object({
-      venue_bill_amount: z.string().trim(),
-    })
-    .superRefine((values, ctx) => {
-      if (!hasVenue) return;
-      const amount = Number(values.venue_bill_amount);
-      if (!Number.isFinite(amount) || amount <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['venue_bill_amount'],
-          message: labels.venueBillRequired,
-        });
-      }
-    });
-
-/**
- * Maps the validated values onto the server's CompletePodInput.
- *
- * No `evidence_media`: the release carries the pod's OWN media, which the
- * server reads off the pod rather than taking from whoever completes it.
- */
-export function buildCompleteInput(values: PodCompleteValues, podId: string) {
-  return {
-    pod_id: podId,
-    venue_bill_amount: Number(values.venue_bill_amount) || 0,
-  };
-}
+export { blankPodCompleteValues, buildCompleteInput, buildPodCompleteSchema };
+export type { PodCompleteValues };
 
 interface Props {
   pod: HostPodForComplete | null;
@@ -73,18 +35,13 @@ interface Props {
   onCompleted: () => void;
 }
 
-/** Host completes a pod: enter the venue bill amount + upload party media. The
- * split is previewed live; on submit the payout releases are created for Finance. */
+/** Host completes a pod: optionally enter the venue's final bill. The split is
+ * previewed live; on submit the payout releases are created for Finance to
+ * approve — nothing is credited until then. */
 export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
-  const { labels } = useHostPodActionsConfig();
+  const { labels, notifySuccess } = useHostPodActionsConfig();
   const hasVenue = !!pod?.venue_id;
-  const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { errors },
-  } = useForm<PodCompleteValues, any, PodCompleteValues>({
+  const { control, handleSubmit, reset, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
     resolver: zodResolver(buildPodCompleteSchema(hasVenue, labels)) as unknown as Resolver<PodCompleteValues, any, PodCompleteValues>,
     defaultValues: blankPodCompleteValues,
   });
@@ -98,7 +55,8 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
     reset(blankPodCompleteValues);
   }, [pod, reset]);
 
-  const billAmount = Number(watch('venue_bill_amount')) || 0;
+  const billAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
+  const includeSlotPrice = watch('include_slot_price');
   // Read once: the dialog only submits while a pod is open, so the id the
   // write carries is settled here rather than re-checked inside the handler.
   const podId = pod?.id ?? '';
@@ -106,6 +64,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
   const submit = handleSubmit(async (values) => {
     try {
       await complete({ variables: { input: buildCompleteInput(values, podId) } });
+      notifySuccess(labels.venueBill.sentToFinance);
       onCompleted();
     } catch {
       // completeState.error, read below, is what renders the failure.
@@ -134,26 +93,13 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           }}>
             {labels.completeHint}
           </Typography>
-          {hasVenue && (
-            <TextField
-              label={labels.venueBillAmount}
-              required
-              type="number"
-              fullWidth
-              data-testid="pod-complete-venue-bill"
-              {...register('venue_bill_amount')}
-              error={!!errors.venue_bill_amount}
-              helperText={errors.venue_bill_amount?.message}
-              slotProps={{
-                input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> }
-              }}
-            />
-          )}
+          {hasVenue && <VenueBillFields control={control} billAmount={billAmount} />}
           {pod && <PodMediaSummary podId={pod.id} />}
           {pod && (
             <SettlementPreview
               podId={pod.id}
               venueBillAmount={billAmount}
+              includeSlotPrice={billAmount > 0 && includeSlotPrice}
               refreshToken={scansDone}
               onScan={() => setScanOpen(true)}
             />

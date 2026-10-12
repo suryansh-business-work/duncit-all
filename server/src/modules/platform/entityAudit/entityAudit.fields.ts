@@ -169,6 +169,8 @@ const CLUB_FIELDS: readonly DiffField[] = [
   { path: 'admin_user_ids', label: 'Club Admins' },
   { path: 'is_verified', label: 'Verified' },
   { path: 'is_active', label: 'Active' },
+  { path: 'is_hidden', label: 'Hidden' },
+  { path: 'hidden_reason', label: 'Hidden Reason' },
 ];
 
 const CLUB_ADMIN_FIELDS: readonly DiffField[] = [

@@ -14,8 +14,10 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
+import { firstMediaUrl } from '@duncit/utils';
 import { MediaListField } from '@duncit/media-picker';
 import SettlementPreview from './SettlementPreview';
+import VenueBillFields from './VenueBillFields';
 import type { CompletePodDialogProps, CompletePodValues } from './complete-pod.types';
 import { useTranslation } from '@duncit/shell';
 
@@ -28,24 +30,41 @@ export const mediaTextToInput = (value: string) =>
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-/** Schema depends on whether the pod has a venue: only then is a bill amount
- *  required. Messages are copy, so the translator comes in with it. */
+/** The venue bill is optional — without one the booked slot price stands. With
+ *  one, the bill itself must be uploaded (the server enforces the same rule).
+ *  Messages are copy, so the translator comes in with it. */
 export const buildCompleteSchema = (hasVenue: boolean, t: Translate) =>
-  z.object({
-    host_user_id: z.string().trim().min(1, t('admin.completePod.selectHost')),
-    venue_bill_amount: hasVenue
-      ? z.coerce.number({ message: t('admin.completePod.invalidAmount') }).gt(0, t('admin.completePod.billPositive'))
-      : z.coerce.number({ message: t('admin.completePod.invalidAmount') }).min(0),
-    media_text: z.string().trim().min(1, t('admin.completePod.mediaRequired')),
-    notes: z.string().trim().max(1000, t('admin.completePod.notesTooLong')),
-  });
+  z
+    .object({
+      host_user_id: z.string().trim().min(1, t('admin.completePod.selectHost')),
+      venue_bill_amount: z.coerce
+        .number({ message: t('admin.completePod.invalidAmount') })
+        .min(0, t('admin.completePod.invalidAmount')),
+      venue_bill_media: z.string(),
+      include_slot_price: z.boolean(),
+      media_text: z.string().trim().min(1, t('admin.completePod.mediaRequired')),
+      notes: z.string().trim().max(1000, t('admin.completePod.notesTooLong')),
+    })
+    .superRefine((values, ctx) => {
+      if (hasVenue && values.venue_bill_amount > 0 && !firstMediaUrl(values.venue_bill_media)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['venue_bill_media'],
+          message: t('shell.venueBill.uploadRequired'),
+        });
+      }
+    });
 
-/** Maps validated values onto the server's CompletePodInput. */
+/** Maps validated values onto the server's CompletePodInput. The bill's file
+ *  and the slot-price choice ride only with an amount. */
 export function buildCompleteInput(values: CompletePodValues, podId: string) {
+  const billAmount = Number(values.venue_bill_amount) || 0;
   return {
     pod_id: podId,
     host_user_id: values.host_user_id || undefined,
-    venue_bill_amount: Number(values.venue_bill_amount) || 0,
+    venue_bill_amount: billAmount,
+    venue_bill_url: billAmount > 0 ? firstMediaUrl(values.venue_bill_media) : undefined,
+    include_slot_price: billAmount > 0 ? values.include_slot_price : undefined,
     evidence_media: mediaTextToInput(values.media_text),
     notes: values.notes.trim() || undefined,
   };
@@ -67,6 +86,8 @@ export default function CompletePodDialog({
   const initialValues: CompletePodValues = {
     host_user_id: hostOptions[0]?.user_id ?? '',
     venue_bill_amount: 0,
+    venue_bill_media: '',
+    include_slot_price: false,
     media_text: '',
     notes: '',
   };
@@ -83,7 +104,8 @@ export default function CompletePodDialog({
   }, [pod, reset]);
 
   const submit = handleSubmit((values) => onSubmit(values));
-  const venueBillAmount = Number(watch('venue_bill_amount')) || 0;
+  const venueBillAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
+  const includeSlotPrice = venueBillAmount > 0 && watch('include_slot_price');
   const selectedHostId = watch('host_user_id') || '';
 
   return (
@@ -102,9 +124,7 @@ export default function CompletePodDialog({
                   </MenuItem>
                 ))}
               </RhfTextField>
-              {hasVenue && (
-                <RhfTextField control={control} name="venue_bill_amount" type="number" label={t('admin.completePod.venueBill')} required />
-              )}
+              {hasVenue && <VenueBillFields control={control} billAmount={venueBillAmount} />}
               <Controller
                 control={control}
                 name="media_text"
@@ -120,7 +140,12 @@ export default function CompletePodDialog({
                 )}
               />
               {pod && (
-                <SettlementPreview podId={pod.id} venueBillAmount={venueBillAmount} hostUserId={selectedHostId} />
+                <SettlementPreview
+                  podId={pod.id}
+                  venueBillAmount={venueBillAmount}
+                  includeSlotPrice={includeSlotPrice}
+                  hostUserId={selectedHostId}
+                />
               )}
               <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={2} />
               <DuncitButton type="submit" variant="contained" loading={busy}>

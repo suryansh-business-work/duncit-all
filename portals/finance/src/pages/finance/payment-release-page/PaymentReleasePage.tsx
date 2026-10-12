@@ -1,41 +1,39 @@
-import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useCallback, useRef } from 'react';
+import { useApolloClient, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Box, Stack, Typography } from '@mui/material';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import { useApolloTableFetch } from '@duncit/table';
-import PaymentReleaseReviewForm, { toReviewInput, type PaymentReleaseReviewValues } from './payment-release-review';
-import PaymentReleaseTable from './PaymentReleaseTable';
-import { PAYMENT_RELEASE_REQUESTS_TABLE, REVIEW_PAYMENT_RELEASE, type PaymentReleaseRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
+import PaymentReleaseTable, { releasePath } from './PaymentReleaseTable';
+import {
+  POD_PAYMENT_RELEASES_TABLE,
+  PUBLIC_FINANCE_SETTINGS,
+  type PodPaymentReleaseRow,
+} from './queries';
 
+/** Payment Release: one row per completed pod. Opening a row is where its
+ * payouts — host, venue, club admin, product sellers — are reviewed. */
 export default function PaymentReleasePage() {
   const { t } = useTranslation();
   const client = useApolloClient();
+  const navigate = useNavigate();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [reviewFor, setReviewFor] = useState<PaymentReleaseRow | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [review, reviewState] = useMutation<any>(REVIEW_PAYMENT_RELEASE);
-
-  const fetchRows = useApolloTableFetch<PaymentReleaseRow>(
-    client,
-    PAYMENT_RELEASE_REQUESTS_TABLE,
-    'paymentReleaseRequestsTable',
+  const settings = useQuery<{ publicFinanceSettings: { currency_symbol: string } }>(
+    PUBLIC_FINANCE_SETTINGS,
+    { fetchPolicy: 'cache-first' },
   );
 
-  const submitReview = async (values: PaymentReleaseReviewValues) => {
-    // The review form is only mounted (and submittable) while a request is selected.
-    const request = reviewFor as PaymentReleaseRow;
-    setActionError(null);
-    try {
-      await review({ variables: { id: request.id, input: toReviewInput(values, Number(request.amount_requested || 0)) } });
-      setReviewFor(null);
-      refetchRef.current?.();
-    } catch (e: any) {
-      // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
-      const message = e.message ?? /* istanbul ignore next */ 'Could not review payment release';
-      setActionError(message);
-    }
-  };
+  const fetchRows = useApolloTableFetch<PodPaymentReleaseRow>(
+    client,
+    POD_PAYMENT_RELEASES_TABLE,
+    'podPaymentReleasesTable',
+  );
+
+  const open = useCallback(
+    (row: PodPaymentReleaseRow) => navigate(releasePath(row)),
+    [navigate],
+  );
 
   return (
     <Box>
@@ -57,9 +55,12 @@ export default function PaymentReleasePage() {
         </Box>
       </Stack>
 
-      <PaymentReleaseTable fetchRows={fetchRows} refetchRef={refetchRef} onReview={setReviewFor} />
-
-      <PaymentReleaseReviewForm request={reviewFor} busy={reviewState.loading} errorMessage={actionError} onClose={() => setReviewFor(null)} onSubmit={submitReview} />
+      <PaymentReleaseTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        symbol={settings.data?.publicFinanceSettings?.currency_symbol ?? ''}
+        onOpen={open}
+      />
     </Box>
   );
 }

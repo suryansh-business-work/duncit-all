@@ -86,10 +86,21 @@ export const HOST_DELETE_POD = gql`
 
 /** Live money waterfall for the pod being completed, at the entered bill amount. */
 export const POD_SETTLEMENT_PREVIEW = gql`
-  query HostPodSettlementPreview($pod_id: ID!, $venue_bill_amount: Float!) {
-    podSettlementPreview(pod_id: $pod_id, venue_bill_amount: $venue_bill_amount) {
+  query HostPodSettlementPreview(
+    $pod_id: ID!
+    $venue_bill_amount: Float!
+    $include_slot_price: Boolean
+  ) {
+    podSettlementPreview(
+      pod_id: $pod_id
+      venue_bill_amount: $venue_bill_amount
+      include_slot_price: $include_slot_price
+    ) {
       currency_symbol
       collected_total
+      venue_bill
+      venue_slot_price
+      include_slot_price
       has_venue
       paying_attendees
       attended_seats

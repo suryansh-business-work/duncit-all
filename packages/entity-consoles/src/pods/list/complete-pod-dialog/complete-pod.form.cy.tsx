@@ -1,20 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { ADMIN_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/app-settings';
+import { ADMIN_BUNDLE, SHELL_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/app-settings';
 import { buildCompleteInput, buildCompleteSchema, mediaTextToInput } from './complete-pod.form';
 import type { CompletePodValues } from './complete-pod.types';
 import { buildWaterfallLines, fallbackT, type PodFinanceWaterfall } from '@duncit/ui';
 
 // The real English copy, not a bare key — errorsOf's assertions read like an
 // admin would, and a stub `(key) => key` can never fail when a key is renamed
-// out from under it.
+// out from under it. The venue-bill words are the shell's (`shell.venueBill.*`,
+// shared with every portal), so both bundles are in play.
 const adminFallbackT = createTranslator({
   locale: 'en-IN',
-  fallback: flattenCatalogue(ADMIN_BUNDLE),
+  fallback: { ...flattenCatalogue(ADMIN_BUNDLE), ...flattenCatalogue(SHELL_BUNDLE) },
 }).t;
+
+const BILL = 'https://cdn.test/bill.pdf';
 
 const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
   host_user_id: 'u1',
   venue_bill_amount: 1500,
+  venue_bill_media: BILL,
+  include_slot_price: false,
   media_text: 'https://cdn.test/party.jpg',
   notes: '',
   ...over,
@@ -35,16 +40,36 @@ describe('buildCompleteSchema', () => {
     expect(errorsOf(false, valid({ media_text: '' })).join(' ')).toMatch(/party/i);
   });
 
-  it('requires a bill amount only for venue pods', () => {
-    const errs = errorsOf(true, valid({ venue_bill_amount: 0 })).join(' ');
-    expect(errs).toMatch(/venue bill/i);
+  // The bill is optional: without one the venue is paid its booked slot price.
+  it('accepts a venue pod with no bill entered, and a virtual pod likewise', () => {
+    expect(errorsOf(true, valid({ venue_bill_amount: 0, venue_bill_media: '' }))).toEqual([]);
     // Virtual pod (no venue): no bill amount needed.
-    expect(errorsOf(false, valid({ venue_bill_amount: 0 }))).toEqual([]);
+    expect(errorsOf(false, valid({ venue_bill_amount: 0, venue_bill_media: '' }))).toEqual([]);
   });
 
-  it('accepts a venue submission with no bill document', () => {
-    expect(errorsOf(true, valid())).toEqual([]);
-    expect(buildCompleteInput(valid(), 'pod1')).not.toHaveProperty('bill_url');
+  it('refuses a bill below zero or one that is not a number', () => {
+    expect(errorsOf(true, valid({ venue_bill_amount: -1 }))).toEqual(['Enter a valid amount']);
+    expect(errorsOf(true, valid({ venue_bill_amount: 'abc' as never }))).toEqual(['Enter a valid amount']);
+  });
+
+  // Finance approves the payout against the document, so an amount needs it.
+  it('requires the uploaded bill once a venue pod has a bill amount', () => {
+    expect(errorsOf(true, valid({ venue_bill_media: '' }))).toEqual([
+      'Upload the venue bill for the amount you entered',
+    ]);
+    expect(errorsOf(true, valid({ venue_bill_amount: 0.01, venue_bill_media: ' \n ' }))).toEqual([
+      'Upload the venue bill for the amount you entered',
+    ]);
+    const issues = buildCompleteSchema(true, adminFallbackT).safeParse(valid({ venue_bill_media: '' }));
+    expect(issues.error?.issues.map((issue) => issue.path)).toEqual([['venue_bill_media']]);
+  });
+
+  it('asks a pod with no venue for no bill document, whatever amount it carries', () => {
+    expect(errorsOf(false, valid({ venue_bill_media: '' }))).toEqual([]);
+  });
+
+  it('accepts the bill paid on top of the slot price', () => {
+    expect(errorsOf(true, valid({ include_slot_price: true }))).toEqual([]);
   });
 });
 
@@ -57,6 +82,31 @@ describe('buildCompleteInput', () => {
       { url: 'https://cdn.test/a.jpg', type: 'IMAGE' },
       { url: 'https://cdn.test/b.mp4', type: 'VIDEO' },
     ]);
+  });
+
+  it('sends the bill’s first file and the slot-price choice with an amount', () => {
+    const input = buildCompleteInput(
+      valid({ venue_bill_media: `\n${BILL}\nhttps://cdn.test/other.jpg`, include_slot_price: true }),
+      'pod1',
+    );
+    expect(input.venue_bill_url).toBe(BILL);
+    expect(input.include_slot_price).toBe(true);
+    expect(buildCompleteInput(valid(), 'pod1').include_slot_price).toBe(false);
+  });
+
+  // A file or a ticked box left behind means nothing without an amount.
+  it('sends neither the file nor the slot-price choice without an amount', () => {
+    const input = buildCompleteInput(valid({ venue_bill_amount: 0, include_slot_price: true }), 'pod1');
+    expect(input.venue_bill_amount).toBe(0);
+    expect(input.venue_bill_url).toBeUndefined();
+    expect(input.include_slot_price).toBeUndefined();
+  });
+
+  it('leaves the host and the notes out when they are blank', () => {
+    const input = buildCompleteInput(valid({ host_user_id: '', notes: '   ' }), 'pod1');
+    expect(input.host_user_id).toBeUndefined();
+    expect(input.notes).toBeUndefined();
+    expect(buildCompleteInput(valid({ notes: ' Paid in cash ' }), 'pod1').notes).toBe('Paid in cash');
   });
 });
 

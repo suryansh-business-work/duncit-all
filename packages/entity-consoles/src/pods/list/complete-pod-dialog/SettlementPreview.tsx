@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
-import { EarningsSplitView } from '@duncit/ui';
+import { EarningsSplitView, VenueBillSummary } from '@duncit/ui';
+import { buildVenueBillLines, shellVenueBillLabels } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import type { SettlementPreviewProps } from './complete-pod.types';
 
 /** Live waterfall preview of the settlement for the pod being completed. */
-export default function SettlementPreview({ podId, venueBillAmount, hostUserId }: Readonly<SettlementPreviewProps>) {
+export default function SettlementPreview({
+  podId,
+  venueBillAmount,
+  includeSlotPrice,
+  hostUserId,
+}: Readonly<SettlementPreviewProps>) {
   const { t } = useTranslation();
   const [amount, setAmount] = useState(venueBillAmount);
   useEffect(() => {
@@ -16,7 +22,12 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
   }, [venueBillAmount]);
 
   const { data, loading, error } = useQuery<any>(POD_SETTLEMENT_PREVIEW, {
-    variables: { pod_id: podId, venue_bill_amount: amount, host_user_id: hostUserId || null },
+    variables: {
+      pod_id: podId,
+      venue_bill_amount: amount,
+      host_user_id: hostUserId || null,
+      include_slot_price: includeSlotPrice,
+    },
     fetchPolicy: 'cache-and-network',
   });
   const s = data?.podSettlementPreview;
@@ -37,6 +48,22 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
     // The same four-way split (host first) as every other pod money view.
     return (
       <Stack spacing={1}>
+        {s.has_venue && (
+          <VenueBillSummary
+            lines={buildVenueBillLines(
+              {
+                slot_price: s.venue_slot_price,
+                bill: s.venue_bill,
+                slot_included: s.include_slot_price,
+                venue_amount: s.waterfall.venue_amount,
+                attended_seats: s.attended_seats,
+                booked_seats: s.booked_seats,
+              },
+              shellVenueBillLabels(t),
+              s.currency_symbol,
+            )}
+          />
+        )}
         <EarningsSplitView waterfall={s.waterfall} symbol={s.currency_symbol} viewer="staff" />
         <Typography variant="caption" sx={{
           color: "text.secondary"

@@ -93,6 +93,14 @@ export const clubTypeDefs = /* GraphQL */ `
     "Verified badge for official clubs (explore item 15)."
     is_verified: Boolean!
     is_active: Boolean!
+    """
+    An admin took this club — and every pod in it — off every member-facing
+    surface. Distinct from is_active, the Draft flag.
+    """
+    is_hidden: Boolean!
+    "Why the club was hidden. Consoles only — every other audience reads null."
+    hidden_reason: String
+    hidden_at: String
     "Average star rating (1-5) across all user ratings. 0 when no ratings yet."
     rating: Float!
     "Total number of user ratings submitted."
@@ -186,6 +194,12 @@ export const clubTypeDefs = /* GraphQL */ `
     createClub(input: CreateClubInput!): Club!
     updateClub(club_doc_id: ID!, input: UpdateClubInput!): Club!
     deleteClub(club_doc_id: ID!): Boolean!
+    """
+    Hide a club from every member-facing surface, or show it again. A reason is
+    required to hide. Every pod of the club is hidden and shown with it; a pod an
+    admin hid on its own stays hidden when the club comes back.
+    """
+    setClubHidden(club_doc_id: ID!, hidden: Boolean!, reason: String): Club!
     "Submit or update a star rating (1-5) on a club. Requires authentication."
     addClubRating(club_doc_id: ID!, stars: Int!, comment: String): Club!
   }

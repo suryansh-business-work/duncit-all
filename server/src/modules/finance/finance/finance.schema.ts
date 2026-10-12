@@ -192,6 +192,14 @@ export const financeTypeDefs = /* GraphQL */ `
     booked_seats: Int!
     "Money from the attended bookings — what the waterfall started from."
     attended_total: Float!
+    """
+    The venue's booked slot price at completion. Beside venue_bill (the final
+    bill entered then) it is how the venue's amount was arrived at. 0 on
+    snapshots written before a bill could change the venue's money.
+    """
+    venue_slot_price: Float!
+    "True when the final bill was paid on top of the slot price rather than instead of it."
+    include_slot_price: Boolean!
   }
 
   # The complete GST-inclusive money waterfall for one pod (engine v2):
@@ -344,6 +352,8 @@ export const financeTypeDefs = /* GraphQL */ `
   type PaymentReleaseRequest {
     id: ID!
     release_id: String!
+    "The Complete Pod submission this payout belongs to. Null on releases written before they were grouped."
+    batch_id: String
     kind: PaymentReleaseKind!
     status: PaymentReleaseStatus!
     pod_id: ID!
@@ -376,6 +386,40 @@ export const financeTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  """
+  One pod's completion request: every payout it asks for — host, venue, club
+  admin, product sellers — as a single Payment Release row.
+  """
+  type PodPaymentRelease {
+    "The request's id: its batch, or the pod id for releases written before batches."
+    id: ID!
+    pod_id: ID!
+    pod_title: String!
+    "PENDING while any payout on it is waiting, APPROVED once one was paid, REJECTED when all were turned down."
+    status: PaymentReleaseStatus!
+    "Everything the request asks for, across its payouts."
+    total_requested: Float!
+    release_count: Int!
+    kinds: [PaymentReleaseKind!]!
+    "True when a venue bill was uploaded with the request."
+    has_bill: Boolean!
+    media_count: Int!
+    requested_at: String!
+  }
+
+  type PodPaymentReleaseTablePage {
+    rows: [PodPaymentRelease!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "One request with every payout on it — the Payment Release page."
+  type PodPaymentReleaseDetail {
+    summary: PodPaymentRelease!
+    releases: [PaymentReleaseRequest!]!
+  }
+
   # One party's reconciled settlement lines for a completed pod.
   type PodSettlementParty {
     collected_total: Float!
@@ -393,7 +437,12 @@ export const financeTypeDefs = /* GraphQL */ `
     pod_title: String!
     currency_symbol: String!
     collected_total: Float!
+    "The venue's final bill as entered. 0 when none was."
     venue_bill: Float!
+    "The slot's booked price — what the venue was promised before any bill. 0 without a slot."
+    venue_slot_price: Float!
+    "True when the bill is being paid on top of the slot price rather than instead of it."
+    include_slot_price: Boolean!
     gst_pct: Float!
     host_commission_pct: Float!
     venue_commission_pct: Float!
@@ -448,7 +497,20 @@ export const financeTypeDefs = /* GraphQL */ `
 
   input CompletePodInput {
     pod_id: ID!
+    """
+    The venue's final bill. 0 leaves the booked slot price standing; anything
+    above it replaces the slot price (include_slot_price: false) or is paid on
+    top of it (true), and needs venue_bill_url.
+    """
     venue_bill_amount: Float!
+    "The uploaded bill itself — required whenever a bill is to change the venue's money."
+    venue_bill_url: String
+    """
+    true: pay the bill on top of the booked slot price. false: the bill replaces
+    it. Left out: the bill is recorded as evidence only and the slot price
+    stands — what app builds from before the bill could move money rely on.
+    """
+    include_slot_price: Boolean
     host_user_id: ID
     evidence_media: [PaymentReleaseMediaInput!]
     notes: String
@@ -556,10 +618,21 @@ export const financeTypeDefs = /* GraphQL */ `
     defaultProductCommissionPct: Float!
     paymentReleaseRequests(filter: PaymentReleaseFilterInput): [PaymentReleaseRequest!]!
     paymentReleaseRequestsTable(query: TableQueryInput): PaymentReleaseRequestTablePage!
+    "Payment Release, one row per pod request (finance roles only)."
+    podPaymentReleasesTable(query: TableQueryInput): PodPaymentReleaseTablePage!
+    "One pod request with every payout on it (finance roles only)."
+    podPaymentRelease(id: ID!): PodPaymentReleaseDetail!
     # Live preview of the host/venue split for a pod given a venue bill.
     # host_user_id picks which co-host's commission override prices it
-    # (default: the primary host) — must match the completion input.
-    podSettlementPreview(pod_id: ID!, venue_bill_amount: Float!, host_user_id: ID): PodSettlement!
+    # (default: the primary host) — must match the completion input, as must
+    # include_slot_price (true: the bill on top of the slot price; false: instead
+    # of it; left out: the bill is evidence only — see CompletePodInput).
+    podSettlementPreview(
+      pod_id: ID!
+      venue_bill_amount: Float!
+      host_user_id: ID
+      include_slot_price: Boolean
+    ): PodSettlement!
     # The signed-in host's own completion payouts (Host Share history).
     myHostPayouts: [PaymentReleaseRequest!]!
     # A venue owner's payouts across every venue they own (Venue Earnings).
@@ -632,6 +705,11 @@ export const financeTypeDefs = /* GraphQL */ `
     updateFinanceSettings(input: UpdateFinanceSettingsInput!): FinanceSettings!
     createPaymentReleaseRequest(input: CreatePaymentReleaseInput!): PaymentReleaseRequest!
     reviewPaymentReleaseRequest(request_id: ID!, input: ReviewPaymentReleaseInput!): PaymentReleaseRequest!
+    """
+    Approve every payout still pending on one pod request, in full, and credit
+    each beneficiary's wallet. Finance roles only.
+    """
+    approvePodPaymentRelease(id: ID!): PodPaymentReleaseDetail!
     # Host (or admin) completes a pod: enter venue bill + party media, create
     # the reconciled payout releases for Finance to approve.
     completePodSettlement(input: CompletePodInput!): PodSettlementResult!

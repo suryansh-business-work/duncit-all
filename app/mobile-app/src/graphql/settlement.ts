@@ -2,12 +2,25 @@ import { gql } from '@/generated/graphql';
 
 /** Live money-waterfall preview for a pod given the entered venue bill. */
 export const PodSettlementPreviewDocument = gql(`
-  query MobilePodSettlementPreview($pod_id: ID!, $venue_bill_amount: Float!) {
-    podSettlementPreview(pod_id: $pod_id, venue_bill_amount: $venue_bill_amount) {
+  query MobilePodSettlementPreview(
+    $pod_id: ID!
+    $venue_bill_amount: Float!
+    $include_slot_price: Boolean
+  ) {
+    podSettlementPreview(
+      pod_id: $pod_id
+      venue_bill_amount: $venue_bill_amount
+      include_slot_price: $include_slot_price
+    ) {
       currency_symbol
       collected_total
       has_venue
       paying_attendees
+      attended_seats
+      booked_seats
+      venue_bill
+      venue_slot_price
+      include_slot_price
       complete_deadline
       complete_expired
       host_payout_amount

@@ -19,6 +19,7 @@ import QuickEditPodDialog from './QuickEditPodDialog';
 import usePodDelete from './usePodDelete';
 import usePodPageData from './usePodPageData';
 import usePodReleaseRequest from './usePodReleaseRequest';
+import usePodVisibility from './usePodVisibility';
 import { useTranslation } from '@duncit/shell';
 
 /** An empty club scope is answered here: the table engine drops an `in` with
@@ -58,6 +59,7 @@ export default function PodsPage() {
       refetchRef.current?.();
     },
   });
+  const visibility = usePodVisibility(() => refetchRef.current?.());
 
   // The editor is its own route now, so the club filter rides along and comes
   // back with the author when they cancel or save.
@@ -146,11 +148,12 @@ export default function PodsPage() {
         onDelete={remove}
         onComplete={releaseRequest.openCompletePod}
         onMonitor={setTrailPod}
+        onToggleHidden={visibility.onToggle}
         onView={(p) => navigate(`/pods/${p.id}`)}
       />
 
       <PodActivityDialog pod={trailPod} onClose={() => setTrailPod(null)} />
-
+      {visibility.dialog}
       <CompletePodDialog
         open={!!releaseRequest.completePod}
         pod={releaseRequest.completePod}
@@ -160,12 +163,10 @@ export default function PodsPage() {
         onClose={() => releaseRequest.setCompletePod(null)}
         onSubmit={(values) => releaseRequest.submitComplete(values)}
       />
-
       <ReleaseSummaryDialog
         summary={releaseRequest.releaseSummary}
         onClose={releaseRequest.closeReleaseSummary}
       />
-
       <QuickEditPodDialog
         pod={quickPod}
         clubName={lookups.clubName}
@@ -178,7 +179,6 @@ export default function PodsPage() {
         }}
         onPickImage={picker.pickImage}
       />
-
       <MediaPickerDialog
         open={picker.pickerOpen}
         onClose={() => picker.settlePicker(null)}

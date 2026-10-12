@@ -157,10 +157,10 @@ describe('breakdownService.podFinanceBreakdown', () => {
       isAdmin: false,
     });
 
-    // Completion is the trigger now: the releases auto-approve, so the pod is
-    // SETTLED and stamped complete immediately.
+    // Submitting completes the pod and freezes its numbers, but the money
+    // waits on Finance: the request is PENDING_APPROVAL, not SETTLED.
     let view = await breakdownService.podFinanceBreakdown(String(pod._id));
-    expect(view.settlement_status).toBe('SETTLED');
+    expect(view.settlement_status).toBe('PENDING_APPROVAL');
     expect(view.frozen).toBe(true);
     expect(view.completed_at).not.toBeNull();
     expect(view.waterfall.host_receives).toBe(432.85);
@@ -180,8 +180,16 @@ describe('breakdownService.podFinanceBreakdown', () => {
     );
 
     const rel = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'HOST_PAYMENT' });
-    expect(rel!.status).toBe('APPROVED');
-    expect(rel!.approval_reason).toBe('Auto-approved on pod completion');
+    expect(rel!.status).toBe('PENDING');
+    expect(rel!.approval_reason).toBe('');
+
+    // Finance approving the request is what settles it, on the same frozen numbers.
+    await paymentReleaseService.approveGroup(String(rel!.batch_id), new Types.ObjectId().toString());
+    view = await breakdownService.podFinanceBreakdown(String(pod._id));
+    expect(view.settlement_status).toBe('SETTLED');
+    expect(view.frozen).toBe(true);
+    expect(view.waterfall.host_receives).toBe(432.85);
+    expect(view.waterfall.venue_receives).toBe(270);
   });
 
   it('handles a hostless, venueless, zero-collected pod (all-zero waterfall)', async () => {
@@ -355,12 +363,27 @@ describe('breakdownService.potentialPodEarnings', () => {
 describe('earnings summaries', () => {
   it('aggregates host lifetime/pending/this-month and venue equivalents', async () => {
     const { host, pod } = await seedCanonicalPod();
-    await paymentReleaseService.completePod(completeInput(pod._id), {
+    const { releases } = await paymentReleaseService.completePod(completeInput(pod._id), {
       id: String(host._id),
       isAdmin: false,
     });
 
-    // Completion auto-approves every release: nothing stays pending.
+    // Completion only ASKS for the money: it is all pending, none of it earned.
+    const hostWaiting = await breakdownService.hostEarningsSummary(String(host._id));
+    expect(hostWaiting.lifetime_earnings).toBe(0);
+    expect(hostWaiting.pending_amount).toBe(432.85);
+    expect(hostWaiting.pods_completed).toBe(0);
+    expect(hostWaiting.this_month_earnings).toBe(0);
+    const venueWaiting = await breakdownService.venueEarningsSummary(String(host._id));
+    expect(venueWaiting.lifetime_earnings).toBe(0);
+    expect(venueWaiting.pending_amount).toBe(270);
+    expect(venueWaiting.pods_completed).toBe(0);
+
+    // Finance approves the request: pending becomes earned, nothing stays behind.
+    await paymentReleaseService.approveGroup(
+      String(releases[0]!.batch_id),
+      new Types.ObjectId().toString()
+    );
     const hostSummary = await breakdownService.hostEarningsSummary(String(host._id));
     expect(hostSummary.lifetime_earnings).toBe(432.85);
     expect(hostSummary.pending_amount).toBe(0);
@@ -369,6 +392,7 @@ describe('earnings summaries', () => {
 
     const venueSummary = await breakdownService.venueEarningsSummary(String(host._id));
     expect(venueSummary.lifetime_earnings).toBe(270);
+    expect(venueSummary.pending_amount).toBe(0);
     expect(venueSummary.pods_completed).toBe(1);
   });
 
@@ -517,9 +541,20 @@ describe('breakdownService.dashboardStats', () => {
       id: String(host._id),
       isAdmin: false,
     });
-    // Completion auto-approves both releases (host + venue).
+    // Completion leaves both releases (host 432.85 + venue 270) waiting on
+    // Finance: the dashboard counts them as pending, not as paid.
     const hostRel = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'HOST_PAYMENT' });
-    expect(hostRel!.status).toBe('APPROVED');
+    expect(hostRel!.status).toBe('PENDING');
+    const waiting = await breakdownService.dashboardStats();
+    expect(waiting.pending_payouts.total).toBe(702.85);
+    expect(waiting.pending_payouts.this_month).toBe(702.85);
+    expect(waiting.completed_payouts.total).toBe(0);
+    expect(waiting.duncit_revenue.total).toBe(0);
+
+    await paymentReleaseService.approveGroup(
+      String(hostRel!.batch_id),
+      new Types.ObjectId().toString()
+    );
 
     // What Duncit itself spent to put this pod on: one bill dated this month,
     // one dated last month. Pod spend is dated by when the money LEFT, so the
@@ -548,8 +583,9 @@ describe('breakdownService.dashboardStats', () => {
     expect(stats.total_revenue.this_month).toBeGreaterThanOrEqual(1000);
     expect(stats.gst_collected.this_month).toBeGreaterThanOrEqual(152.54);
     expect(stats.duncit_revenue.this_month).toBeGreaterThanOrEqual(144.61);
-    // Both payouts (host 432.85 + venue 270) complete immediately.
+    // Both payouts (host 432.85 + venue 270) are paid once approved.
     expect(stats.completed_payouts.this_month).toBeGreaterThanOrEqual(702.85);
+    expect(stats.pending_payouts.total).toBe(0);
     // Nothing last month yet → +100% growth branch.
     expect(stats.total_revenue.mom_change_pct).toBe(100);
     expect(stats.pod_expenses.total).toBe(420);

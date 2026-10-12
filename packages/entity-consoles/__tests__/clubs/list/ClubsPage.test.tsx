@@ -12,6 +12,12 @@ const refetchSpy = vi.hoisted(() => vi.fn());
 
 vi.mock('@duncit/table', () => import('../../table-mock'));
 
+// The Hide / Show action is offered to a governor only — the page reads who is
+// signed in to decide, and the harness mounts no UserProvider.
+vi.mock('@duncit/user-context', () => ({
+  useUserData: () => ({ user: { roles: ['SUPER_ADMIN'] } }),
+}));
+
 const ROW: ClubRow = {
   id: 'c1',
   club_id: 'CLB-1',

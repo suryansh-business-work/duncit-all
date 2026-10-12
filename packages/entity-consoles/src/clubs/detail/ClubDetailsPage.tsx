@@ -13,6 +13,9 @@ import ClubPodsTab from './ClubPodsTab';
 import ChangeLogsSection from '../../shared/change-logs';
 import type { ClubDetail } from './types';
 import { useTranslation } from '@duncit/shell';
+import { useConsoleAccess } from '../../shared/useConsoleAccess';
+import { useVisibility } from '../../shared/visibility/useVisibility';
+import { ClubHiddenBanner, HiddenChip, VisibilityButton } from '../../shared/visibility/VisibilityViews';
 
 /**
  * The record, the people and pods it runs, and its history, behind a tab strip.
@@ -49,6 +52,8 @@ export default function ClubDetailsPage() {
   });
   const club = data?.club;
   const podCount = data?.podCount.total ?? 0;
+  const { canGovern } = useConsoleAccess();
+  const visibility = useVisibility('CLUB');
 
   return (
     <QueryGuard
@@ -95,6 +100,7 @@ export default function ClubDetailsPage() {
                 label={club.is_active ? t('admin.profile.active') : t('admin.profile.inactive')}
                 color={club.is_active ? 'success' : 'default'}
               />
+              <HiddenChip hidden={!!club.is_hidden} reason={club.hidden_reason} />
             </Stack>
             <Typography variant="caption" sx={{
               color: "text.secondary"
@@ -103,14 +109,26 @@ export default function ClubDetailsPage() {
             </Typography>
           </Box>
         </Stack>
-        <DuncitButton
-          variant="contained"
-          startIcon={<EditIcon />}
-          onClick={() => navigate(`/clubs/${club.id}/edit`)}
-        >
-          Edit club
-        </DuncitButton>
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          {canGovern && (
+            <VisibilityButton
+              hidden={!!club.is_hidden}
+              onClick={() =>
+                visibility.request({ id: club.id, name: club.club_name, hidden: !!club.is_hidden })
+              }
+            />
+          )}
+          <DuncitButton
+            variant="contained"
+            startIcon={<EditIcon />}
+            onClick={() => navigate(`/clubs/${club.id}/edit`)}
+          >
+            Edit club
+          </DuncitButton>
+        </Stack>
       </Stack>
+
+      <ClubHiddenBanner hidden={!!club.is_hidden} reason={club.hidden_reason} />
 
       <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
 
@@ -118,7 +136,9 @@ export default function ClubDetailsPage() {
       {tabs.value === 'hosts' && (
         <ClubHostsTab clubId={club.id} hostUserIds={club.hosts.map((host) => host.id)} />
       )}
-      {tabs.value === 'pods' && <ClubPodsTab clubId={club.id} />}
+      {/* Keyed on the flag: the tab's table is not a watched query, and the
+          club's hide is what changes every row in it. */}
+      {tabs.value === 'pods' && <ClubPodsTab key={String(!!club.is_hidden)} clubId={club.id} />}
       {tabs.value === 'changeLogs' && (
         <ChangeLogsSection
           entityType="CLUB"
@@ -126,6 +146,7 @@ export default function ClubDetailsPage() {
           tableId="clubs-console-change-logs"
         />
       )}
+      {visibility.dialog}
     </Stack>
       )}
     </QueryGuard>

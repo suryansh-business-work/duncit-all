@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
+import type { PodVisibilityFields } from '../../shared/visibility/queries';
 
 export const PODS = gql`
   query Pods($filter: PodFilterInput) {
@@ -57,7 +58,7 @@ export const PODS = gql`
   }
 `;
 /** Row shape used by the pods table and the deep-link edit fetch. */
-export interface PodRow {
+export interface PodRow extends PodVisibilityFields {
   id: string;
   pod_id: string;
   pod_title: string;
@@ -106,6 +107,10 @@ const POD_ROW_FIELDS = gql`
     venue_slot_id
     venue_approval_status
     is_deleted
+    is_hidden
+    hidden_by_club
+    hidden_reason
+    club_hidden_reason
     cancellation_risk { at_risk shortfall spots_needed }
     club_id
     pod_mode
@@ -313,11 +318,26 @@ export const COMPLETE_POD_SETTLEMENT = gql`
 `;
 
 export const POD_SETTLEMENT_PREVIEW = gql`
-  query AdminPodSettlementPreview($pod_id: ID!, $venue_bill_amount: Float!, $host_user_id: ID) {
-    podSettlementPreview(pod_id: $pod_id, venue_bill_amount: $venue_bill_amount, host_user_id: $host_user_id) {
+  query AdminPodSettlementPreview(
+    $pod_id: ID!
+    $venue_bill_amount: Float!
+    $host_user_id: ID
+    $include_slot_price: Boolean
+  ) {
+    podSettlementPreview(
+      pod_id: $pod_id
+      venue_bill_amount: $venue_bill_amount
+      host_user_id: $host_user_id
+      include_slot_price: $include_slot_price
+    ) {
       currency_symbol
       collected_total
       has_venue
+      attended_seats
+      booked_seats
+      venue_bill
+      venue_slot_price
+      include_slot_price
       waterfall {
         version
         amount

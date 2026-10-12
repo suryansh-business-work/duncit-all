@@ -17,8 +17,11 @@ import { mwebSpotsLabels, shellSpotsLabels, type SpotsStepperLabels } from '@dun
 import {
   POD_SCAN_LEAD_MINUTES,
   mwebTicketDiscountLabels,
+  mwebVenueBillLabels,
   shellTicketDiscountLabels,
+  shellVenueBillLabels,
   type TicketDiscountLabels,
+  type VenueBillLabels,
 } from '@duncit/utils';
 
 export type HostPodTranslate = (
@@ -152,8 +155,8 @@ export interface HostPodActionLabels {
   venueRequired: string;
   slotRequired: string;
   completeHint: string;
-  venueBillAmount: string;
-  venueBillRequired: string;
+  /** The venue’s final bill in the completion dialog — @duncit/utils’ own words. */
+  venueBill: VenueBillLabels;
   /**
    * The settlement waterfall in the HOST's voice. `@duncit/ui` writes the same
    * numbers for staff — "Host receives", the venue commission spelled out —
@@ -320,8 +323,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     venueRequired: t('mweb.hostPodActions.venueRequired'),
     slotRequired: t('mweb.hostPodActions.slotRequired'),
     completeHint: t('mweb.hostPodActions.completeHint'),
-    venueBillAmount: t('mweb.hostPodActions.venueBillAmount'),
-    venueBillRequired: t('mweb.hostPodActions.venueBillRequired'),
+    venueBill: mwebVenueBillLabels(t),
     shareTitle: t('mweb.hostShare.title'),
     shareShortfall: t('mweb.hostShare.shortfall'),
     sharePreviewHint: t('mweb.hostShare.previewHint'),
@@ -452,8 +454,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     venueRequired: t('shell.hostPodActions.venueRequired'),
     slotRequired: t('shell.hostPodActions.slotRequired'),
     completeHint: t('shell.hostPodActions.completeHint'),
-    venueBillAmount: t('shell.hostPodActions.venueBillAmount'),
-    venueBillRequired: t('shell.hostPodActions.venueBillRequired'),
+    venueBill: shellVenueBillLabels(t),
     shareTitle: t('shell.hostShare.title'),
     shareShortfall: t('shell.hostShare.shortfall'),
     sharePreviewHint: t('shell.hostShare.previewHint'),

@@ -16,6 +16,8 @@ import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { primePodRelations } from './pod.loaders';
 import { throwIfClientGone } from '@utils/clientPresence';
 import { reelHasAudio } from './pod.reelAudio';
+import { podVisibleTo } from './pod.visibility';
+import { canSeeHidden } from '@utils/hidden';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 // Roles allowed to see pods still awaiting a venue's slot approval (admin +
@@ -37,6 +39,20 @@ const getProductThresholdCache = (ctx: GraphQLContext) => {
   return bag.__podProductThresholdCache;
 };
 
+/** The part of a mapped pod the visibility fields read. */
+interface HiddenPodParent {
+  is_hidden?: boolean;
+  hidden_by_club?: boolean;
+  hidden_reason?: string | null;
+  club_id?: string | null;
+}
+
+/** Who is reading a single pod, for the hidden-pod rule (pod.visibility.ts). */
+const podReader = (ctx: GraphQLContext) => ({
+  userId: ctx.user?.id ?? null,
+  seesHidden: canSeeHidden(ctx),
+});
+
 async function canViewMeeting(parent: any, ctx: GraphQLContext) {
   if ((parent.pod_mode ?? 'PHYSICAL') !== 'VIRTUAL') return false;
   if (isAdminCtx(ctx)) return true;
@@ -51,6 +67,24 @@ async function canViewMeeting(parent: any, ctx: GraphQLContext) {
 export const podResolvers = {
   Pod: {
     pod_mode: (parent: any): string => parent.pod_mode ?? 'PHYSICAL',
+    // Resolved here rather than trusted to the mapper: `Pod` is built by more
+    // than one of them, and these are non-null.
+    is_hidden: (parent: HiddenPodParent): boolean => !!parent.is_hidden,
+    hidden_by_club: (parent: HiddenPodParent): boolean => !!parent.hidden_by_club,
+    // Staff's note to staff. Gated here, like cancellation_risk, because the
+    // pod type is served to every audience.
+    hidden_reason: (parent: HiddenPodParent, _a: unknown, ctx: GraphQLContext): string | null =>
+      canSeeHidden(ctx) ? parent.hidden_reason || null : null,
+    club_hidden_reason: async (
+      parent: HiddenPodParent,
+      _a: unknown,
+      ctx: GraphQLContext
+    ): Promise<string | null> => {
+      if (!parent.hidden_by_club || !parent.club_id || !canSeeHidden(ctx)) return null;
+      // Same batched read `Pod.club` uses, so a page of rows costs one lookup.
+      const club = await loadClub(ctx, String(parent.club_id));
+      return club?.hidden_reason || null;
+    },
     reel_has_audio: (parent: any): Promise<boolean | null> => reelHasAudio(parent),
     /**
      * The stored risk flag, for admins only. Mapped here rather than in the
@@ -188,6 +222,7 @@ export const podResolvers = {
     pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       const rows = await podService.list(args.filter, {
         includePendingApproval: canReviewPendingPods(ctx),
+        includeHidden: canSeeHidden(ctx),
         // Every club, host and place for the whole page, in one read each and
         // in the same round trip as the club slugs. Without this the Pod field
         // resolvers below run once per row and the feed costs hundreds of
@@ -217,6 +252,7 @@ export const podResolvers = {
       const canReview = canReviewPendingPods(ctx);
       const page = await podService.table(args.query, {
         includePendingApproval: canReview,
+        includeHidden: canSeeHidden(ctx),
         // Cancelled pods stay editable, so reviewers must be able to find them.
         // Filtering TO the cancelled bucket is that same request spelled out, so
         // it carries the same opt-in rather than quietly returning nothing.
@@ -249,13 +285,17 @@ export const podResolvers = {
     ) =>
       // Admin reviewers may open a cancelled pod's detail page (timeline shows
       // the Cancelled stage); everyone else keeps the soft-delete guarantee.
-      podService.getById(args.pod_doc_id, {
-        includeDeleted: args.include_deleted === true && canReviewPendingPods(ctx),
-      }),
+      podVisibleTo(
+        await podService.getById(args.pod_doc_id, {
+          includeDeleted: args.include_deleted === true && canReviewPendingPods(ctx),
+        }),
+        podReader(ctx)
+      ),
     podBySlugs: async (
       _p: unknown,
-      args: { club_slug: string; pod_slug: string }
-    ) => podService.getBySlugs(args.club_slug, args.pod_slug),
+      args: { club_slug: string; pod_slug: string },
+      ctx: GraphQLContext
+    ) => podVisibleTo(await podService.getBySlugs(args.club_slug, args.pod_slug), podReader(ctx)),
     podComments: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.listComments(args.pod_doc_id),
     activePodLocationIds: async () => podService.activeLocationIds(),
@@ -421,6 +461,14 @@ export const podResolvers = {
     ) => {
       const user = requireRole(ctx, ADMIN_WRITE);
       return podService.revokeCancellation(args.pod_doc_id, user.id);
+    },
+    setPodHidden: async (
+      _p: unknown,
+      args: { pod_doc_id: string; hidden: boolean; reason?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, ADMIN_WRITE);
+      return podService.setHidden(args.pod_doc_id, args.hidden, args.reason, user.id);
     },
     incrementPodHits: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.incrementHits(args.pod_doc_id),

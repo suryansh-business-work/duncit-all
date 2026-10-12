@@ -44,6 +44,7 @@ import { HeaderMap, type ApolloServerPlugin } from '@apollo/server';
 import { Kind, type OperationDefinitionNode } from 'graphql';
 import type { GraphQLContext } from '../context';
 import { logs } from '../observability/log';
+import { canSeeHidden } from '../utils/hidden';
 import { cacheGet, cacheIncr, cacheSet, redisAvailable } from './redis';
 
 /**
@@ -196,6 +197,22 @@ function operationScope(operation: OperationDefinitionNode | undefined): CacheSc
   return personal ? 'personal' : 'public';
 }
 
+/**
+ * Whitelisted fields whose answer is wider for a staff console than for
+ * everybody else: `clubs` lists hidden clubs there and nowhere else.
+ *
+ * The shared entry must only ever hold the member answer, so a console request
+ * selecting one of these neither reads nor writes the cache — it is a handful
+ * of staff page loads against a key every app session shares. Anyone else,
+ * signed in or not, still gets and fills the one public entry.
+ */
+const CONSOLE_VARIANT_FIELDS = new Set(['clubs']);
+
+const selectsConsoleVariant = (operation: OperationDefinitionNode | undefined) =>
+  operation?.selectionSet.selections.some(
+    (s) => s.kind === Kind.FIELD && CONSOLE_VARIANT_FIELDS.has(s.name.value)
+  ) ?? false;
+
 type CacheState = 'hit' | 'miss' | 'bypass';
 
 interface CacheAttempt {
@@ -230,7 +247,7 @@ export const redisResponseCachePlugin: ApolloServerPlugin<GraphQLContext> = {
         const scope = operationScope(ctx.operation);
         if (!scope) return null;
         const { contextValue } = ctx;
-        if (contextValue.noRedis) {
+        if (contextValue.noRedis || (selectsConsoleVariant(ctx.operation) && canSeeHidden(contextValue))) {
           attempts.set(contextValue, { key: '', state: 'bypass' });
           return null;
         }

@@ -2,6 +2,8 @@ import { gql } from '@apollo/client';
 import { Chip } from '@mui/material';
 import type { DuncitColumn } from '@duncit/table';
 import { formatDateTime } from '@duncit/app-settings';
+import { PodHiddenChip, podVisibilityValue } from './visibility/VisibilityViews';
+import type { PodVisibilityFields } from './visibility/queries';
 
 /**
  * The pods of a venue or a club, as one table.
@@ -22,6 +24,10 @@ export const RECORD_PODS_TABLE = gql`
         pod_mode
         no_of_spots
         is_active
+        is_hidden
+        hidden_by_club
+        hidden_reason
+        club_hidden_reason
         venue_approval_status
         host_names
       }
@@ -29,7 +35,7 @@ export const RECORD_PODS_TABLE = gql`
   }
 `;
 
-export interface RecordPodRow {
+export interface RecordPodRow extends PodVisibilityFields {
   id: string;
   pod_title: string;
   pod_date_time: string;
@@ -49,6 +55,8 @@ const whenValue = (p: RecordPodRow) => (p.pod_date_time ? formatDateTime(p.pod_d
 const hostsValue = (p: RecordPodRow) => p.host_names.join(', ') || EMPTY;
 
 const renderApproval = (p: RecordPodRow) => <Chip size="small" label={p.venue_approval_status} />;
+
+const renderVisibility = (p: RecordPodRow) => <PodHiddenChip pod={p} />;
 
 /** The approval chip shows the stored code as it is, so its filter offers the same words. */
 export const VENUE_APPROVAL_OPTIONS = (
@@ -98,5 +106,15 @@ export const recordPodColumns = (t: Translate): DuncitColumn<RecordPodRow>[] => 
     width: 150,
     cellRenderer: renderApproval,
     valueGetter: (p) => p.venue_approval_status,
+  },
+  {
+    // A pod hidden with its club says so here, on the club's own list — the
+    // same words the Pods console uses for it.
+    field: 'is_hidden',
+    headerName: t('directory.visibility.colVisibility'),
+    type: 'boolean',
+    width: 160,
+    cellRenderer: renderVisibility,
+    valueGetter: (p) => podVisibilityValue(p, t),
   },
 ];

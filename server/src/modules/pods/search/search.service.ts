@@ -5,6 +5,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 import { mapClubToPublic } from '@modules/clubs/club/club.service';
 import { mapPodToPublic, loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
+import { CLUB_VISIBLE_FILTER, POD_VISIBLE_FILTER } from '@utils/hidden';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const SUGGESTION_CAP = 20;
@@ -59,7 +60,11 @@ async function categoryIdsMatchingName(query: string): Promise<string[]> {
 
 async function clubIdsWithMatchingPods(query: string): Promise<string[]> {
   const rx = new RegExp(escapeRegex(query), 'i');
-  const pods = await PodModel.find({ is_active: true, $or: [{ pod_title: rx }, { pod_hashtag: rx }] })
+  const pods = await PodModel.find({
+    is_active: true,
+    ...POD_VISIBLE_FILTER,
+    $or: [{ pod_title: rx }, { pod_hashtag: rx }],
+  })
     .select('club_id')
     .lean();
   return Array.from(new Set(pods.map((p: any) => p.club_id && String(p.club_id)).filter(Boolean)));
@@ -94,7 +99,7 @@ async function findCandidateClubs(input: DiscoveryInput): Promise<any[]> {
   if (and.length === 0) {
     return [];
   }
-  return ClubModel.find({ is_active: true, $and: and }).lean();
+  return ClubModel.find({ is_active: true, ...CLUB_VISIBLE_FILTER, $and: and }).lean();
 }
 
 async function upcomingPodsByClub(clubIds: string[]): Promise<Map<string, any[]>> {
@@ -106,6 +111,7 @@ async function upcomingPodsByClub(clubIds: string[]): Promise<Map<string, any[]>
   const until = new Date(now.getTime() + WEEK_MS);
   const docs = await PodModel.find({
     is_active: true,
+    ...POD_VISIBLE_FILTER,
     club_id: { $in: clubIds },
     pod_date_time: { $gte: now, $lte: until },
   }).sort({ pod_date_time: 1 });
@@ -228,9 +234,13 @@ export const searchService = {
     const cap = Math.max(1, Math.min(limit, SUGGESTION_CAP));
     const rx = new RegExp(escapeRegex(trimmed), 'i');
     const [clubs, cats, pods] = await Promise.all([
-      ClubModel.find({ is_active: true, club_name: rx }).select('club_name').limit(25).lean(),
+      ClubModel.find({ is_active: true, ...CLUB_VISIBLE_FILTER, club_name: rx }).select('club_name').limit(25).lean(),
       CategoryModel.find({ is_active: true, name: rx }).select('name').limit(25).lean(),
-      PodModel.find({ is_active: true, $or: [{ pod_title: rx }, { pod_hashtag: rx }] })
+      PodModel.find({
+        is_active: true,
+        ...POD_VISIBLE_FILTER,
+        $or: [{ pod_title: rx }, { pod_hashtag: rx }],
+      })
         .select('pod_title pod_hashtag')
         .limit(40)
         .lean(),

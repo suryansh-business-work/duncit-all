@@ -21,7 +21,15 @@ describe('ReleaseSummaryDialog', () => {
   it('lists every payout release with its label, amount, status and id', () => {
     render(<ReleaseSummaryDialog summary={summary} onClose={vi.fn()} />);
 
-    expect(screen.getByText('Pod completed — payouts released')).toBeInTheDocument();
+    // Nothing is credited at completion: the heading and the body both say the
+    // payouts wait on Finance.
+    expect(screen.getByText('Pod completed — sent to Finance for approval')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Each payout below is waiting for Finance. It is credited to its beneficiary's wallet once approved.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/payouts released/i)).not.toBeInTheDocument();
     expect(screen.getByText('Host payout ₹454.58 (APPROVED)')).toBeInTheDocument();
     expect(screen.getByText('Venue payout ₹270.00 (APPROVED)')).toBeInTheDocument();
     expect(screen.getByText('Club admin payout ₹40.50 (PENDING)')).toBeInTheDocument();

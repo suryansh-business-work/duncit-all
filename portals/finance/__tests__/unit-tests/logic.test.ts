@@ -26,6 +26,14 @@ import {
   type PodReleaseRow,
 } from '../../src/pages/finance/pod-finance-page/queries';
 import { toReviewInput } from '../../src/pages/finance/payment-release-page/payment-release-review/payment-release-review.form';
+import { releasePath } from '../../src/pages/finance/payment-release-page/PaymentReleaseTable';
+import { buildReleaseRequestView } from '../../src/pages/finance/payment-release-page/detail/release-terms';
+import {
+  makeClubAdminDetailRelease,
+  makeDetailBreakdown,
+  makeDetailRelease,
+  makeHostDetailRelease,
+} from '../mocks/payment-release.mock';
 
 describe('payment-logs helpers', () => {
   it('formats money with default and custom symbol', () => {
@@ -338,5 +346,116 @@ describe('payment-release toReviewInput', () => {
       approved_amount: 5,
       approval_reason: 'no',
     });
+  });
+});
+
+describe('payment-release releasePath', () => {
+  it('opens a request on its own page', () => {
+    expect(releasePath({ id: 'batch-1' })).toBe('/payment-release/batch-1');
+  });
+
+  it('keeps an id that is not URL-safe in one path segment', () => {
+    expect(releasePath({ id: 'pod 1/legacy' })).toBe('/payment-release/pod%201%2Flegacy');
+  });
+});
+
+describe('payment-release buildReleaseRequestView', () => {
+  // One completion: the venue's ₹750 side (₹300 slot + ₹450 bill), the host's
+  // payout and a club-admin cut that is already approved.
+  const venue = makeDetailRelease();
+  const host = makeHostDetailRelease();
+  const club = makeClubAdminDetailRelease();
+
+  it('reads the venue terms off the venue’s own release, wherever it sits in the list', () => {
+    const view = buildReleaseRequestView([host, club, venue]);
+    expect(view.terms).toEqual({
+      slot_price: 300,
+      bill: 450,
+      slot_included: true,
+      // The venue release's share, not the host's ₹361.67 that came first.
+      venue_amount: 750,
+      attended_seats: 8,
+      booked_seats: 10,
+    });
+    expect(view.hasVenue).toBe(true);
+    expect(view.billUrl).toBe('https://cdn.test/bill.pdf');
+  });
+
+  it('falls back to any payout’s snapshot on a pod with no venue payout, with no venue amount', () => {
+    const view = buildReleaseRequestView([
+      makeHostDetailRelease({ breakdown: makeDetailBreakdown({ venue_bill: 0, venue_slot_price: 0, include_slot_price: false }) }),
+    ]);
+    expect(view.terms).toEqual({
+      slot_price: 0,
+      bill: 0,
+      slot_included: false,
+      venue_amount: 0,
+      attended_seats: 8,
+      booked_seats: 10,
+    });
+    expect(view.hasVenue).toBe(false);
+    expect(view.billUrl).toBe('');
+  });
+
+  it('skips a venue release that carries no snapshot', () => {
+    const view = buildReleaseRequestView([makeDetailRelease({ breakdown: null }), host]);
+    expect(view.hasVenue).toBe(false);
+    expect(view.terms?.venue_amount).toBe(0);
+    expect(view.terms?.bill).toBe(450);
+  });
+
+  it('has no terms for a legacy v1 snapshot, or for a request with no breakdown at all', () => {
+    expect(buildReleaseRequestView([makeDetailRelease({ breakdown: makeDetailBreakdown({ version: 1 }) })]).terms).toBeNull();
+    expect(buildReleaseRequestView([makeDetailRelease({ breakdown: null })]).terms).toBeNull();
+    expect(buildReleaseRequestView([]).terms).toBeNull();
+  });
+
+  it('lists each media file once, in the order first seen', () => {
+    const clip = { url: 'https://cdn.test/clip.mp4', type: 'VIDEO' };
+    const photo = { url: 'https://cdn.test/a.jpg', type: 'IMAGE' };
+    const extra = { url: 'https://cdn.test/b.jpg', type: 'IMAGE' };
+    const view = buildReleaseRequestView([
+      makeDetailRelease({ evidence_media: [photo, clip] }),
+      makeHostDetailRelease({ evidence_media: [clip, extra, photo] }),
+      makeClubAdminDetailRelease({ evidence_media: null }),
+    ]);
+    expect(view.media).toEqual([photo, clip, extra]);
+  });
+
+  it('lists each distinct note once, trimmed, and skips the empty ones', () => {
+    const view = buildReleaseRequestView([
+      makeDetailRelease({ notes: ' Paid in cash ' }),
+      makeHostDetailRelease({ notes: 'Paid in cash' }),
+      makeClubAdminDetailRelease({ notes: null }),
+      makeDetailRelease({ id: 'rel-4', notes: '   ' }),
+      makeDetailRelease({ id: 'rel-5', notes: 'Bill covers extras only' }),
+    ]);
+    expect(view.notes).toEqual(['Paid in cash', 'Bill covers extras only']);
+  });
+
+  it('takes the first bill that was uploaded', () => {
+    const view = buildReleaseRequestView([
+      makeHostDetailRelease(),
+      makeDetailRelease({ bill_url: 'https://cdn.test/first.pdf' }),
+      makeDetailRelease({ id: 'rel-4', bill_url: 'https://cdn.test/second.pdf' }),
+    ]);
+    expect(view.billUrl).toBe('https://cdn.test/first.pdf');
+  });
+
+  it('totals only what is still pending', () => {
+    const view = buildReleaseRequestView([venue, host, club]);
+    expect(view.pending.map((r) => r.id)).toEqual(['rel-venue', 'rel-host']);
+    // 675 + 325.50 — the approved ₹40 is not asked for again.
+    expect(view.pendingTotal).toBe(1000.5);
+  });
+
+  it('totals zero when nothing is pending, and counts a zero-amount payout as pending', () => {
+    const decided = buildReleaseRequestView([club, makeDetailRelease({ status: 'REJECTED' })]);
+    expect(decided.pending).toEqual([]);
+    expect(decided.pendingTotal).toBe(0);
+
+    const zero = buildReleaseRequestView([makeHostDetailRelease({ amount_requested: 0 })]);
+    expect(zero.pending).toHaveLength(1);
+    expect(zero.pendingTotal).toBe(0);
   });
 });

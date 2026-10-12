@@ -73,6 +73,13 @@ to decide which sections render; the builder uses it to decide which keys are al
 mutation input. Passing two different configs is how a hidden field ends up being written
 anyway.
 
+## FAQs
+
+FAQs have their own accordion section ("FAQs") in the editor, after "Page content". They are
+optional, but a row with only a question or only an answer fails validation
+(`Each FAQ needs both a question and an answer`) instead of being dropped silently; fully blank
+rows are still removed by `cleanFaqs` on save.
+
 ## Sample data
 
 A complete Club as the admin dialog holds it, mid-edit. The deliberately messy entries — a

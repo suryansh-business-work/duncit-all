@@ -1,7 +1,7 @@
 import { XStack, YStack } from 'tamagui';
 
 import { DuncitButton } from '@/components/DuncitButton';
-import { FieldLabel } from '@/components/Field';
+import { Field } from '@/components/Field';
 import { LabeledInput } from '@/components/LabeledInput';
 import { useTranslation } from '@/hooks/useTranslation';
 import { nextFaqId, type ClubFaqRow } from './club-edit.form';
@@ -9,18 +9,18 @@ import { nextFaqId, type ClubFaqRow } from './club-edit.form';
 interface Props {
   value: ClubFaqRow[];
   onChange: (next: ClubFaqRow[]) => void;
+  error?: string;
 }
 
 /** Question/answer rows, added and removed one at a time — the Tamagui twin
  * of the club form's FAQ list (rule 27). Each pair sits on a soft tile. */
-export function FaqListField({ value, onChange }: Readonly<Props>) {
+export function FaqListField({ value, onChange, error }: Readonly<Props>) {
   const { t } = useTranslation();
   const update = (id: string, patch: Partial<ClubFaqRow>) =>
     onChange(value.map((row) => (row.id === id ? { ...row, ...patch } : row)));
 
   return (
-    <YStack gap={10} testID="club-edit-faqs">
-      <FieldLabel label={t('mweb.clubEdit.faqs')} testID="club-edit-faqs" />
+    <Field label={t('mweb.clubEdit.faqs')} error={error} testID="club-edit-faqs" gap={10}>
       {value.map((row) => (
         <YStack
           key={row.id}
@@ -64,6 +64,6 @@ export function FaqListField({ value, onChange }: Readonly<Props>) {
           tone="neutral"
         />
       </XStack>
-    </YStack>
+    </Field>
   );
 }

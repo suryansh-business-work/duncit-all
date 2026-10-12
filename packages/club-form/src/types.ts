@@ -123,6 +123,7 @@ export const SECTION_OF: Record<string, string> = {
   what_we_do: 'content',
   perks: 'content',
   values: 'content',
+  faqs: 'faqs',
   admin_user_ids: 'admins',
   host_ids: 'hosts',
 };

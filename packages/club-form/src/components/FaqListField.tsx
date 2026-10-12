@@ -2,7 +2,7 @@ import { Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
+import { Controller, useFieldArray, useFormContext, useFormState } from 'react-hook-form';
 import type { ClubFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -11,15 +11,19 @@ import { useTranslation } from '../i18n/useTranslation';
 export default function FaqListField() {
   const { t } = useTranslation();
   const { control } = useFormContext<ClubFormValues>();
+  const { errors } = useFormState({ control });
   const { fields, append, remove } = useFieldArray({ control, name: 'faqs' });
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" sx={{
-        fontWeight: 700
-      }}>
-        FAQs
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        Optional — questions members often ask. Each one needs a question and an answer.
       </Typography>
+      {errors.faqs?.message && (
+        <Typography role="alert" variant="caption" sx={{ color: 'error.main' }}>
+          {errors.faqs.message}
+        </Typography>
+      )}
       {fields.map((field, index) => (
         <Stack
           key={field.id}

@@ -39,12 +39,12 @@ afterEach(() => useQueryMock.mockReset());
 describe('ClubSections', () => {
   it('includes the Club Admin section only when governance is on', () => {
     const { unmount } = renderSections(withAdmins);
-    expect(screen.getByText('5. Club Admin')).toBeInTheDocument();
+    expect(screen.getByText('6. Club Admin')).toBeInTheDocument();
     expect(screen.getByText('1. Basic Information')).toBeInTheDocument();
     unmount();
 
     renderSections({ showAdmins: false, showVerified: false, showIsActive: false });
-    expect(screen.queryByText('5. Club Admin')).not.toBeInTheDocument();
+    expect(screen.queryByText('6. Club Admin')).not.toBeInTheDocument();
     expect(screen.queryByText(/Club Admin/)).not.toBeInTheDocument();
   });
 

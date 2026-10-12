@@ -57,6 +57,20 @@ describe('makeClubSchema', () => {
     }
   });
 
+  it('rejects a FAQ that has only a question or only an answer', () => {
+    const msg = 'Each FAQ needs both a question and an answer';
+    expectIssue({ ...validValues(), faqs: [{ question: 'When?', answer: '  ' }] }, msg);
+    expectIssue({ ...validValues(), faqs: [{ question: '', answer: 'Sundays' }] }, msg);
+  });
+
+  it('accepts complete and fully blank FAQ rows', () => {
+    const faqs = [
+      { question: 'When?', answer: 'Sundays' },
+      { question: ' ', answer: '' },
+    ];
+    expect(schema.safeParse({ ...validValues(), faqs }).success).toBe(true);
+  });
+
   it('requires club_name', () => {
     expectIssue({ ...validValues(), club_name: '   ' }, 'Club name is required');
   });

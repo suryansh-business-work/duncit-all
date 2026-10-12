@@ -126,4 +126,37 @@ describe('Rate limit rules page', () => {
       input: { priority: 5, operations: ['login', 'signup'] },
     });
   });
+
+  it('uses the generic message when a flip, delete or save fails with a non-Error', async () => {
+    ops.confirm.mockResolvedValue(true);
+    ops.mut.SetRateLimitRuleEnabled = vi.fn().mockRejectedValue('boom');
+    ops.mut.DeleteRateLimitRule = vi.fn().mockRejectedValue('boom');
+    ops.mut.UpdateRateLimitRule = vi.fn().mockRejectedValue('boom');
+    await mount();
+    fireEvent.click(within(rowOf('Login ceiling')).getByTestId('rate-limit-rules-enabled-toggle'));
+    await waitFor(() => expect(ops.notifyError).toHaveBeenCalledTimes(1));
+    fireEvent.click(within(rowOf('Login ceiling')).getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(ops.notifyError).toHaveBeenCalledTimes(2));
+    expect(ops.notifyError).toHaveBeenNthCalledWith(1, 'Could not save. Please try again.');
+    expect(ops.notifyError).toHaveBeenNthCalledWith(2, 'Could not save. Please try again.');
+    fireEvent.click(within(rowOf('Login ceiling')).getByRole('button', { name: 'Edit' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(await within(dialog).findByText('Could not save. Please try again.')).toBeInTheDocument();
+  });
+
+  it('shows nothing but the loader on the first load', () => {
+    ops.q.RateLimitOptions = { loading: true };
+    renderWithProviders(<RateLimitRulesPage />);
+    expect(screen.queryByRole('button', { name: 'New rule' })).not.toBeInTheDocument();
+  });
+
+  it('closes the dialog on Escape without saving', async () => {
+    await mount();
+    fireEvent.click(screen.getByRole('button', { name: 'New rule' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(mutation('CreateRateLimitRule')).not.toHaveBeenCalled();
+  });
 });

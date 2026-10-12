@@ -116,6 +116,42 @@ describe('Rate limit settings page', () => {
   });
 });
 
+describe('Rate limit settings page edge cases', () => {
+  it('sends the flipped master switch', async () => {
+    renderWithProviders(<RateLimitSettingsPage />);
+    await screen.findByLabelText('Keep breaches for (days)');
+    const [master] = screen.getAllByRole('switch');
+    expect(master).toBeChecked();
+    fireEvent.click(master);
+    expect(master).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(mutation('UpdateRateLimitSettings')).toHaveBeenCalled());
+    expect(mutation('UpdateRateLimitSettings').mock.calls[0][0].variables.input).toMatchObject({ enabled: false });
+  });
+
+  it('shows the generic message when saving fails with a non-Error', async () => {
+    ops.mut.UpdateRateLimitSettings = vi.fn().mockRejectedValue('boom');
+    renderWithProviders(<RateLimitSettingsPage />);
+    await screen.findByLabelText('Keep breaches for (days)');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('Could not save. Please try again.')).toBeInTheDocument();
+  });
+
+  it('uses the generic message when a counter reset fails with a non-Error', async () => {
+    ops.confirm.mockResolvedValue(true);
+    ops.mut.ResetRateLimitCounters = vi.fn().mockRejectedValue('boom');
+    renderWithProviders(<RateLimitSettingsPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Reset live counters' }));
+    await waitFor(() => expect(ops.notifyError).toHaveBeenCalledWith('Could not save. Please try again.'));
+  });
+
+  it('shows nothing but the loader on the first load', () => {
+    ops.q.RateLimitSettings = { loading: true };
+    renderWithProviders(<RateLimitSettingsPage />);
+    expect(screen.queryByLabelText('Keep breaches for (days)')).not.toBeInTheDocument();
+  });
+});
+
 describe('Rate limit blocked page', () => {
   it('lists breaches with who, what and the stats strip', async () => {
     ops.tableRows = [
@@ -148,6 +184,41 @@ describe('Rate limit blocked page', () => {
     renderWithProviders(<RateLimitBlockedPage />);
     fireEvent.click(await screen.findByRole('button', { name: 'Clear recorded breaches' }));
     await waitFor(() => expect(ops.notifyError).toHaveBeenCalledWith('cannot clear'));
+  });
+});
+
+describe('Rate limit blocked page edge cases', () => {
+  it('describes a call by its method and path, or by whichever of them exists', async () => {
+    ops.tableRows = [
+      rateLimitEvent({ id: 'a', operation: null, method: 'GET', path: '/health', limit_key: 'k-a' }),
+      rateLimitEvent({ id: 'b', operation: null, method: null, path: '/only-path', limit_key: 'k-b' }),
+      rateLimitEvent({ id: 'c', operation: null, method: 'DELETE', path: null, limit_key: 'k-c' }),
+    ];
+    renderWithProviders(<RateLimitBlockedPage />);
+    expect(await screen.findByText('GET /health')).toBeInTheDocument();
+    expect(screen.getByText('/only-path')).toBeInTheDocument();
+    expect(screen.getByText('DELETE')).toBeInTheDocument();
+  });
+
+  it('still lists breaches while the filter options have not loaded', async () => {
+    delete ops.q.RateLimitOptions;
+    ops.tableRows = [rateLimitEvent()];
+    renderWithProviders(<RateLimitBlockedPage />);
+    expect(await screen.findByText('user@example.test')).toBeInTheDocument();
+  });
+
+  it('shows the generic message when clearing fails with a non-Error', async () => {
+    ops.confirm.mockResolvedValue(true);
+    ops.mut.ClearRateLimitEvents = vi.fn().mockRejectedValue('boom');
+    renderWithProviders(<RateLimitBlockedPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Clear recorded breaches' }));
+    await waitFor(() => expect(ops.notifyError).toHaveBeenCalledWith('Could not save. Please try again.'));
+  });
+
+  it('shows the shared-store hint and no memory warning when counters are in Redis', async () => {
+    ops.q.RateLimitStats = { data: { rateLimitStats: { ...stats, store: 'REDIS', top_rules: [], top_systems: [] } } };
+    renderWithProviders(<RateLimitBlockedPage />);
+    expect(await screen.findByText(/shared/i)).toBeInTheDocument();
   });
 });
 

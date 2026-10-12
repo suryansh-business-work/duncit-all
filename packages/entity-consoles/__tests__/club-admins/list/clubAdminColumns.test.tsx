@@ -92,4 +92,38 @@ describe('clubAdminColumns', () => {
   it('shows an em-dash for a record that never joined', () => {
     expect(column('joined_at').valueGetter?.({ ...row, joined_at: null })).toBe('—');
   });
+
+  it('sorts and exports by the plain record values', () => {
+    expect(column('full_name').valueGetter?.(row)).toBe('Kabir Sethi');
+    expect(column('email').valueGetter?.(row)).toBe('kabir.sethi@example.com');
+    expect(column('status').valueGetter?.(row)).toBe('APPROVED');
+    expect(column('is_active').valueGetter?.(row)).toBe('true');
+    expect(column('is_active').valueGetter?.({ ...row, is_active: false })).toBe('false');
+  });
+
+  it('formats a join date and treats a missing club list like an empty one', () => {
+    expect(column('joined_at').valueGetter?.(row)).not.toBe('—');
+    expect(
+      column('assigned_clubs').valueGetter?.({ ...row, assigned_clubs: undefined } as unknown as ClubAdminRow),
+    ).toBe('—');
+  });
+
+  it('em-dashes a name, id and email the record does not have', () => {
+    render(<>{column('full_name').cellRenderer?.({ ...row, full_name: '', club_admin_no: '' })}</>);
+    expect(screen.getAllByText('—')).toHaveLength(2);
+
+    render(<>{column('email').cellRenderer?.({ ...row, email: '' })}</>);
+    expect(screen.getByText('9711203344')).toBeInTheDocument();
+  });
+
+  it('colours each status, with a live chip for an active admin', () => {
+    render(<>{column('status').cellRenderer?.({ ...row, status: 'REJECTED' })}</>);
+    expect(screen.getByText('directory.venueEditor.statusRejected')).toBeInTheDocument();
+
+    render(<>{column('status').cellRenderer?.({ ...row, status: 'DRAFT' })}</>);
+    expect(screen.getByText('directory.clubAdminEditor.statusDraft')).toBeInTheDocument();
+
+    render(<>{column('is_active').cellRenderer?.(row)}</>);
+    expect(screen.getByText('directory.hostEditor.live')).toBeInTheDocument();
+  });
 });

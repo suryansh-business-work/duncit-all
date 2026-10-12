@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { shellAutoPodLabels } from '@duncit/utils';
 import type { DuncitColumn } from '@duncit/table';
 import AutoPodsTable from '../AutoPodsTable';
+import { hostClaim } from './fixtures';
 import type { AutoPodTableRow } from '../queries';
 
 const captured = vi.hoisted(() => ({ props: null as Record<string, unknown> | null }));
@@ -23,6 +24,19 @@ vi.mock('@duncit/table', async (importOriginal) => {
     },
   };
 });
+
+// The dialog reads the partner over GraphQL and has its own suite; the table only
+// owns which row and role it is opened on, and closing it.
+vi.mock('../enrolled/AutoPodEnrolledDialog', () => ({
+  default: ({ row, role, onClose }: { row: { auto_pod_no: string }; role: string; onClose: () => void }) => (
+    <div data-testid="enrolled-dialog">
+      {`${row.auto_pod_no}|${role}`}
+      <button type="button" onClick={onClose}>
+        close-enrolled
+      </button>
+    </div>
+  ),
+}));
 
 const t = (key: string) => key;
 const labels = shellAutoPodLabels(t);
@@ -183,5 +197,37 @@ describe('AutoPodsTable', () => {
     expect(onEdit).toHaveBeenCalledWith(row);
     expect(onDelete).toHaveBeenCalledWith(row);
     expect(onToggleActive).toHaveBeenCalledWith(row);
+  });
+
+  it('opens the enrolled partner\'s details for the clicked row and role, and closes them again', () => {
+    render(
+      <AutoPodsTable
+        t={t}
+        labels={labels}
+        fetchRows={vi.fn()}
+        refetchRef={{ current: null }}
+        formatDateTime={(v) => v}
+        onRowClick={vi.fn()}
+        onViewDetails={vi.fn()}
+        onEdit={vi.fn()}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+        onViewPod={vi.fn()}
+        onToggleActive={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId('enrolled-dialog')).not.toBeInTheDocument();
+
+    const columns = captured.props?.columns as DuncitColumn<AutoPodTableRow>[];
+    const pending = columns.find((c) => c.field === 'pending');
+    if (!pending?.cellRenderer) throw new Error('pending column missing a cellRenderer');
+    const row = makeRow({ auto_pod_no: 'AP-77', host_claim: hostClaim });
+    render(<>{pending.cellRenderer(row)}</>);
+
+    fireEvent.click(screen.getByTestId('auto-pod-dependency-host'));
+    expect(screen.getByTestId('enrolled-dialog')).toHaveTextContent('AP-77|host');
+
+    fireEvent.click(screen.getByRole('button', { name: 'close-enrolled' }));
+    expect(screen.queryByTestId('enrolled-dialog')).not.toBeInTheDocument();
   });
 });

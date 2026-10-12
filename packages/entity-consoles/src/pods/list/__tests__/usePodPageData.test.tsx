@@ -12,6 +12,7 @@ import {
   LOCATIONS,
   USERS,
 } from '../queries';
+import { ADMIN_CATEGORIES } from '@duncit/category';
 import usePodPageData from '../usePodPageData';
 
 const club = {
@@ -118,5 +119,49 @@ describe('usePodPageData', () => {
     expect(result.current.clubName('club-missing')).toBe('—');
     expect(result.current.locName('loc-missing')).toBe('—');
     expect(result.current.venueName('venue-missing')).toBe('—');
+  });
+});
+
+describe('usePodPageData / club location and activity floor', () => {
+  const placedClub = {
+    ...club,
+    __typename: 'Club',
+    location_id: 'loc1',
+    locality: 'Gomti Nagar',
+  };
+  const subCategory = {
+    __typename: 'Category',
+    id: 'cat1',
+    name: 'Badminton',
+    slug: 'badminton',
+    level: 'SUB',
+    parent_id: 'cat0',
+    min_pax: 6,
+  };
+
+  const mocks = () => [
+    ...allMocks().filter((m) => m.request.query !== CLUBS),
+    ok(CLUBS, { clubs: [placedClub, { ...placedClub, id: 'club2', location_id: null, category_id: null }] }),
+    ok(ADMIN_CATEGORIES, { categories: [subCategory] }),
+  ];
+
+  it('labels where a club runs and answers empty for an unknown club', async () => {
+    const { result } = renderHook(() => usePodPageData(), { wrapper: wrapperWith(mocks()) });
+
+    expect(result.current.clubLocation('club1')).toBe('');
+    await waitFor(() => expect(result.current.clubLocation('club1')).toBe('Gomti Nagar, Bengaluru'));
+    expect(result.current.clubLocation('club-missing')).toBe('');
+    // A club whose location is not in the directory has no label to show.
+    expect(result.current.clubLocation('club2')).toBe('');
+  });
+
+  it('reads a club\'s minimum pax off its sub-category, and 0 when it has none', async () => {
+    const { result } = renderHook(() => usePodPageData(), { wrapper: wrapperWith(mocks()) });
+
+    expect(result.current.minPax('club1')).toBe(0); // nothing loaded yet
+    await waitFor(() => expect(result.current.categories).toHaveLength(1));
+    await waitFor(() => expect(result.current.minPax('club1')).toBe(6));
+    expect(result.current.minPax('club2')).toBe(0);
+    expect(result.current.minPax('club-missing')).toBe(0);
   });
 });

@@ -87,4 +87,16 @@ describe('Host IdentitySection', () => {
 
     expect(form().getValues('tags')).toEqual(['repeat-host']);
   });
+
+  it('clears the account id when the pick is cleared, leaving the copied details alone', async () => {
+    const { form } = renderIdentity(false);
+
+    fireEvent.mouseDown(await screen.findByRole('combobox', { name: /Duncit account/ }));
+    fireEvent.click(await screen.findByText('Ananya Iyer · ananya@example.com'));
+    await waitFor(() => expect(form().getValues('user_id')).toBe('u1'));
+
+    fireEvent.click(screen.getByTitle('Clear'));
+    await waitFor(() => expect(form().getValues('user_id')).toBe(''));
+    expect(form().getValues('full_name')).toBe('Ananya Iyer');
+  });
 });

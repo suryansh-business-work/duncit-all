@@ -365,4 +365,59 @@ describe('buildAiFilledPod', () => {
     expect(next.pod_title).toBe('');
     expect(next.club_id).toBe('club-1');
   });
+
+  it('coerces a malformed charge row instead of trusting it: no text label drops it, bad amounts become 0', async () => {
+    const next = await buildAiFilledPod(
+      {
+        place_charges: [
+          { label: 42, amount: 10 },
+          { label: ' Court ', amount: 'abc', note: 7 },
+          null,
+        ],
+      },
+      prev(),
+      lookups(),
+      oneSlot
+    );
+
+    expect(next.place_charges).toEqual([{ label: 'Court', amount: 0, note: '' }]);
+  });
+
+  it('takes payment terms the model wrote, and keeps the old ones when it sent a non-string', async () => {
+    const written = await buildAiFilledPod({ payment_terms: 'Pay at venue' }, prev(), lookups(), oneSlot);
+    expect(written.payment_terms).toBe('Pay at venue');
+
+    const kept = await buildAiFilledPod(
+      { payment_terms: { text: 'x' } },
+      prev({ payment_terms: 'Advance 50%' }),
+      lookups(),
+      oneSlot
+    );
+    expect(kept.payment_terms).toBe('Advance 50%');
+  });
+
+  it('still takes the club the model NAMED for a VIRTUAL pod when that club has no venue', async () => {
+    const next = await buildAiFilledPod(
+      { pod_mode: 'VIRTUAL', club_name: 'orphan club' },
+      prev(),
+      lookups(),
+      noSlots
+    );
+    expect(next.club_id).toBe('club-2');
+  });
+
+  it('falls back to the named club when no club at all can host a physical pod', async () => {
+    const next = await buildAiFilledPod(
+      { club_name: 'Orphan Club' },
+      prev(),
+      lookups({ clubVenueIds: () => [] }),
+      noSlots
+    );
+    expect(next.club_id).toBe('club-2');
+  });
+
+  it('leaves the club empty when there is no club to choose and none was named', async () => {
+    const next = await buildAiFilledPod({}, prev(), lookups({ clubs: [] }), noSlots);
+    expect(next.club_id).toBe('');
+  });
 });

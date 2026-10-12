@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import ClubAdminsCard from '../../../src/clubs/detail/ClubAdminsCard';
 import type { ClubActor } from '../../../src/clubs/detail/types';
 
@@ -33,5 +34,26 @@ describe('ClubAdminsCard', () => {
     const admins: ClubActor[] = [{ id: 'a3', name: '', avatar_url: null }];
     render(<ClubAdminsCard admins={admins} />);
     expect(screen.getByText('?')).toBeInTheDocument();
+  });
+
+  it('turns a name into a link only for admins that have a record to open', () => {
+    const admins: ClubActor[] = [
+      { id: 'a1', name: 'Asha Rao' },
+      { id: 'a2', name: 'Bala' },
+    ];
+    render(
+      <MemoryRouter>
+        <ClubAdminsCard
+          admins={admins}
+          adminPath={(admin) => (admin.id === 'a1' ? '/clubs/c1/club-admins/rec-1' : undefined)}
+        />
+      </MemoryRouter>,
+    );
+
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/clubs/c1/club-admins/rec-1');
+    expect(links[0]).toHaveTextContent('Asha Rao');
+    expect(screen.getByText('Bala').closest('a')).toBeNull();
   });
 });

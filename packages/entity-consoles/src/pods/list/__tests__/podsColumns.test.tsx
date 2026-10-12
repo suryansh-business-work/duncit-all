@@ -348,4 +348,106 @@ describe('buildPodsColumns / cell renderers', () => {
     expect(deps.onEdit).toHaveBeenCalledWith(pod);
     expect(deps.onDelete).toHaveBeenCalledWith(pod);
   });
+
+  it('shows the pod\'s club with where it runs, and exports the joined text', () => {
+    const deps = { clubLocation: () => 'Gomti Nagar, Lucknow' };
+    const pod = makePod();
+    const { container } = renderCell('club_id', pod, deps);
+    expect(container).toHaveTextContent('Club<club1> | Gomti Nagar, Lucknow');
+    expect(valueOf('club_id', pod, deps)).toBe('Club<club1> | Gomti Nagar, Lucknow');
+    // No location known: just the name, in the cell and in the export.
+    expect(valueOf('club_id', pod)).toBe('Club<club1>');
+    expect(renderCell('club_id', pod).container).toHaveTextContent(/^Club<club1>$/);
+  });
+
+  it('flags a short pod in the Spots cell using the club\'s own minimum', () => {
+    const short = makePod({ seats_taken: 1, pod_attendees: ['u1'] });
+    renderCell('no_of_spots', short, { minPax: (clubId) => (clubId === 'club1' ? 4 : 0) });
+    expect(screen.getByTestId('pods-below-min-pax-doc1')).toBeInTheDocument();
+  });
+
+  it('prints scanned over booked seats, and nothing before any seat was booked', () => {
+    const scanned = makePod({ attendance: { attended_seats: 3, booked_seats: 5, recorded: true } });
+    expect(valueOf('attendance', scanned)).toBe('3/5');
+    expect(valueOf('attendance', makePod({ attendance: null }))).toBe('');
+    expect(
+      valueOf('attendance', makePod({ attendance: { attended_seats: 0, booked_seats: 0, recorded: false } })),
+    ).toBe('');
+  });
+
+  it('shows the attendance chip with the scanned count', () => {
+    const { container } = renderCell(
+      'attendance',
+      makePod({ attendance: { attended_seats: 5, booked_seats: 5, recorded: true } }),
+    );
+    expect(container).toHaveTextContent('5');
+  });
+
+  it('reports visibility as its own column, from the pod\'s own flag or its club\'s', () => {
+    const t = (key: string) => key;
+    expect(valueOf('is_hidden', makePod({ is_hidden: true }))).toBe(
+      t('directory.visibility.hiddenChip'),
+    );
+    expect(valueOf('is_hidden', makePod({ hidden_by_club: true }))).toBe(
+      t('directory.visibility.hiddenWithClubChip'),
+    );
+    expect(valueOf('is_hidden', makePod())).toBe(t('directory.visibility.visible'));
+
+    renderCell('is_hidden', makePod({ is_hidden: true }));
+    expect(screen.getByText('Hidden')).toBeInTheDocument();
+  });
+
+  it('keys the AI monitoring column on the title and opens the monitor for that pod', () => {
+    const onMonitor = vi.fn();
+    const pod = makePod({ pod_title: 'Renamed pod' });
+    const { container } = renderCell('ai_monitor', pod, { onMonitor });
+    expect(valueOf('ai_monitor', pod)).toBe('Renamed pod');
+
+    fireEvent.click(within(container).getByRole('button'));
+    expect(onMonitor).toHaveBeenCalledWith(pod);
+  });
+
+  it('offers the Hide / Show action only when the page supplied a handler', () => {
+    const onToggleHidden = vi.fn();
+    const pod = makePod({ is_hidden: false });
+
+    const withHandler = renderCell('actions', pod, { onToggleHidden });
+    fireEvent.click(within(withHandler.container).getByRole('button', { name: 'Hide' }));
+    expect(onToggleHidden).toHaveBeenCalledWith(pod);
+    withHandler.unmount();
+
+    const without = renderCell('actions', pod);
+    expect(
+      within(without.container).queryByRole('button', { name: 'Hide' }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('buildPodsColumns / status chips', () => {
+  const statusText = (pod: PodRow) => {
+    const { container } = renderCell('is_active', pod);
+    return container.textContent;
+  };
+
+  it('names every state the pod can be in, most final first', () => {
+    expect(statusText(makePod({ is_deleted: true }))).toBe('admin.eventTickets.cancelled');
+    expect(
+      statusText(makePod({ cancellation_risk: { at_risk: true, shortfall: 100 }, is_active: true })),
+    ).toBe('admin.pods.cancellationRisk');
+    expect(statusText(makePod({ venue_approval_status: 'PENDING' }))).toBe('admin.podsDashboard.awaitingVenue');
+    expect(statusText(makePod({ venue_approval_status: 'DECLINED' }))).toBe('admin.pods.venueRejected');
+    expect(statusText(makePod({ is_active: false }))).toBe('admin.pods.draft');
+  });
+
+  it('looks up an empty location when a physical pod has neither venue nor location', () => {
+    const seen: string[] = [];
+    const value = valueOf('place', makePod({ venue_id: null, location_id: null }), {
+      locName: (id) => {
+        seen.push(id);
+        return '—';
+      },
+    });
+    expect(value).toBe('—');
+    expect(seen).toEqual(['']);
+  });
 });

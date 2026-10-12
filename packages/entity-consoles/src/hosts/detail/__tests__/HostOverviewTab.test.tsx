@@ -67,4 +67,24 @@ describe('HostOverviewTab', () => {
     ).toBeInTheDocument();
     expect(valueUnder('Payout method')).toHaveTextContent('—');
   });
+
+  it('copes with a record the server returned without its optional blocks', () => {
+    const sparse = {
+      ...hostRecord,
+      tags: null,
+      host_categories: null,
+      bank_account: null,
+      reviewer_notes: null,
+    } as unknown as typeof hostRecord;
+    render(<HostOverviewTab host={sparse} />);
+
+    expect(valueUnder('Tags')).toHaveTextContent('—');
+    expect(
+      screen.getByText('No categories yet — this host cannot be assigned a pod until they have one.'),
+    ).toBeInTheDocument();
+    for (const label of ['Payout method', 'Account holder', 'Account number', 'IFSC code', 'UPI ID']) {
+      expect(valueUnder(label)).toHaveTextContent('—');
+    }
+    expect(valueUnder('Reviewer notes')).toHaveTextContent('—');
+  });
 });

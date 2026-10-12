@@ -223,4 +223,17 @@ describe('AiFillButton', () => {
     openPopover(/Fill with AI/);
     expect(errorText()).toBeNull();
   });
+
+  it('falls back to a generic message when applying the fill fails without one', async () => {
+    const onFill = vi.fn().mockRejectedValue(new Error(''));
+    renderButton(<AiFillButton entity="CLUB" onFill={onFill} />, [
+      okMock('CLUB', null, JSON.stringify({ title: 'Chess' })),
+    ]);
+
+    openPopover(/Fill with AI/);
+    fireEvent.click(screen.getByRole('button', { name: 'Generate' }));
+
+    await waitFor(() => expect(errorText()).toBe('Failed to generate'));
+    expect(onFill).toHaveBeenCalledWith({ title: 'Chess' });
+  });
 });

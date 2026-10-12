@@ -135,6 +135,11 @@ describe('getAutoPodColumns / value getters', () => {
     expect(valueOf('pod_title', makeRow({ pod_title: 'Sunset Hike' }))).toBe('Sunset Hike');
   });
 
+  it('reads the mode as the translated Physical / Virtual word', () => {
+    expect(valueOf('pod_mode', makeRow({ pod_mode: 'VIRTUAL' }))).toBe(labels.modeVirtual);
+    expect(valueOf('pod_mode', makeRow({ pod_mode: 'PHYSICAL' }))).toBe(labels.modePhysical);
+  });
+
   it('joins the category path, skipping blanks, and dashes an empty one', () => {
     expect(valueOf('category_path', makeRow())).toBe('Outdoors › Hiking › Adventure');
     expect(valueOf('category_path', makeRow({ category_path: ['Outdoors', '', 'Adventure'] }))).toBe('Outdoors › Adventure');

@@ -8,7 +8,7 @@ import {
   type IBrandShiprocketIntegration,
   type IEcommBrand,
 } from '@modules/venues/ecommBrand/ecommBrand.model';
-import { isSandboxOn, resolveShiprocketBase, type ShiprocketBase } from './shiprocket.endpoint';
+import { resolveShiprocketBase, resolveShiprocketLogin, type ShiprocketBase } from './shiprocket.endpoint';
 
 /**
  * Which ShipRocket account ships the store's parcels.
@@ -46,7 +46,7 @@ export interface ShiprocketAccount {
   sessionKey: string;
   /** Sandbox mode: every call goes to ShipRocket's sandbox, so only test orders are booked. */
   sandbox: boolean;
-  /** The sandbox API address saved WITH this account (a Tech entry's own); blank falls back to the platform's. */
+  /** The sandbox API address saved WITH this account (a Tech entry's or a brand's own); blank falls back to the platform's. */
   sandboxApiUrl: string;
 }
 
@@ -68,8 +68,8 @@ function credentialHash(email: string, password: string, sandbox: boolean, sandb
 /**
  * The sandbox API address the Tech portal OVERRIDES the standard one with, if
  * any (blank = the standard sandbox, `SR_SANDBOX_BASE`): the one saved on an active
- * SHIPROCKET entry in the Tech portal (the default entry first). Partner brands
- * never type an address — a brand in sandbox mode is sent here.
+ * SHIPROCKET entry in the Tech portal (the default entry first). A partner
+ * brand in sandbox mode that saved no address of its own is sent here.
  */
 export async function platformSandboxApiUrl(): Promise<string> {
   const entry = await EnvEntryModel.findOne({
@@ -112,12 +112,9 @@ const configText = (value: unknown): string =>
 
 /** A Tech-portal SHIPROCKET entry's config as an account, or null without an email and password. */
 function accountFromConfig(config: Record<string, unknown>): ShiprocketAccount | null {
-  const email = configText(config.email).trim();
-  const password = configText(config.password);
+  const { email, password, sandbox, sandboxApiUrl } = resolveShiprocketLogin(config);
   if (!email || !password) return null;
   const ttl = Number(config.token_ttl_hours);
-  const sandbox = isSandboxOn(config.sandbox);
-  const sandboxApiUrl = configText(config.sandbox_api_url).trim();
   return {
     email,
     password,
@@ -140,21 +137,18 @@ export function accountFromBrandIntegration(
   brandId: string,
   s: IBrandShiprocketIntegration | undefined,
 ): ShiprocketAccount | null {
-  const email = String(s?.email ?? '').trim();
-  const password = String(s?.password ?? '');
+  const { email, password, sandbox, sandboxApiUrl } = resolveShiprocketLogin(s);
   if (!email || !password) return null;
-  const sandbox = s?.sandbox === true;
   return {
     email,
     password,
     pickupLocation: String(s?.pickup_location ?? '').trim(),
     webhookSecret: String(s?.webhook_secret ?? '').trim(),
     tokenTtlHours: DEFAULT_TTL_HOURS,
-    // A brand saves no address of its own, so its sandbox hash carries none.
-    hash: credentialHash(email, password, sandbox, ''),
+    hash: credentialHash(email, password, sandbox, sandboxApiUrl),
     sessionKey: `brand:${brandId}`,
     sandbox,
-    sandboxApiUrl: '',
+    sandboxApiUrl,
   };
 }
 

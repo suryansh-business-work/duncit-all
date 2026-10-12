@@ -125,6 +125,41 @@ export const TEST_ENV_MSG91: TypedDocumentNode<
   }
 `;
 
+/** Where one entry's test-attempt count stands. `max` 0 is unlimited, and `left` is then null. */
+export interface EnvTestAttempts {
+  used: number;
+  max: number;
+  left: number | null;
+  window_hours: number;
+  resets_at: string | null;
+}
+
+export const ENV_TEST_ATTEMPTS: TypedDocumentNode<{ envTestAttempts: EnvTestAttempts }, { id: string }> = gql`
+  query EnvTestAttempts($id: ID!) {
+    envTestAttempts(id: $id) { used max left window_hours resets_at }
+  }
+`;
+
+export interface EnvAttemptSettings {
+  window_hours: number;
+  limits: { category: EnvCategory; label: string; max_attempts: number }[];
+  updated_at: string | null;
+}
+
+const ENV_ATTEMPT_SETTINGS_FIELDS = `window_hours limits { category label max_attempts } updated_at`;
+
+export const ENV_ATTEMPT_SETTINGS = gql`
+  query EnvAttemptSettings {
+    envAttemptSettings { ${ENV_ATTEMPT_SETTINGS_FIELDS} }
+  }
+`;
+
+export const UPDATE_ENV_ATTEMPT_SETTINGS = gql`
+  mutation UpdateEnvAttemptSettings($input: EnvAttemptSettingsInput!) {
+    updateEnvAttemptSettings(input: $input) { ${ENV_ATTEMPT_SETTINGS_FIELDS} }
+  }
+`;
+
 export interface RichTestResult {
   ok: boolean;
   message: string;

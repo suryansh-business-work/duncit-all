@@ -82,13 +82,18 @@ async function loadOwned(userId: string, id: string) {
 
 /** One account is saved once per partner — a second copy would drift from the first. */
 async function assertNotDuplicate(doc: IPartnerIntegration) {
-  const status = integrationStatus(doc, doc.provider);
+  // A sandbox-only ShipRocket connection has no production user yet, so it is known by its sandbox one.
+  const accountOf = (d: IPartnerIntegration) => {
+    const status = integrationStatus(d, d.provider);
+    return status.identifier || status.sandbox_identifier;
+  };
+  const account = accountOf(doc);
   const others = await PartnerIntegrationModel.find({
     owner_user_id: doc.owner_user_id,
     provider: doc.provider,
     _id: { $ne: doc._id },
   });
-  const twin = others.find((other) => integrationStatus(other, other.provider).identifier === status.identifier);
+  const twin = others.find((other) => accountOf(other) === account);
   if (twin) bad(`This ${PROVIDER_NAME[doc.provider]} account is already saved as "${twin.label}". Edit that one instead.`);
 }
 

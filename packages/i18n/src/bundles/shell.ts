@@ -2757,9 +2757,17 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       noCommits: 'No commit details were recorded for this build.',
       settingsTitle: 'App Build Settings',
       settingsSubtitle:
-        'Which Slack channels a finished build announces itself in — one for Android, one for iOS. The bot must be a member of each channel.',
+        'Which Slack channels a finished build announces itself in — one per platform for production builds, and one per platform for staging builds. The bot must be a member of each channel.',
       androidChannel: 'Android builds channel',
       iosChannel: 'iOS builds channel',
+      productionChannels: 'Production builds',
+      stagingChannels: 'Staging builds',
+      androidStagingChannel: 'Android staging builds channel',
+      iosStagingChannel: 'iOS staging builds channel',
+      stagingChannelHint:
+        'Pick a channel or paste its ID (e.g. C0123ABCD). Leave empty to announce staging builds in the production channel above.',
+      envAll: 'All builds',
+      envFilterLabel: 'Builds by environment',
       channelHint: 'Pick a channel or paste its ID (e.g. C0123ABCD). Leave empty to post nothing.',
       channelFormat: 'A Slack channel ID looks like C0123ABCD.',
       channelUnknown:
@@ -2802,6 +2810,13 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       playPushingTip: 'Pushing to Google Play {track} since {when}…',
       playReleasedTip: 'On Google Play {track} as version code {code} — pushed by {by} on {when}.',
       playFailedTip: 'Push to {track} failed: {error} Press to try again.',
+      releaseLogOpen: 'View the logs of the failed push to {track}',
+      releaseLogTitle: 'Push failed — logs',
+      releaseLogNoReason: 'The store gave no reason.',
+      releaseLogMeta: 'Pushed by {by} · ended {when}',
+      releaseLogMetaAnon: 'Ended {when}',
+      releaseLogSteps: 'Steps of the push',
+      releaseLogEmpty: 'No step log was kept for this push — the reason above is everything the store reported.',
       playUnavailable: 'Only a successful production build with a stored AAB can go to Google Play.',
       playConfirmTitle: 'Push {build} to Google Play {track}?',
       playConfirmInternal:

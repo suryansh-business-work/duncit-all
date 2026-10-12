@@ -262,4 +262,12 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "partners.deletionRequest.modeCancelBody": [
     "Once the Products team approves, each running order is cancelled and the buyer gets a full refund with an apology. An order that also contains other items keeps running for those items.",
   ],
+  // Staging builds have their own channels now, beside the production ones.
+  "tech.appBuilds.settingsSubtitle": [
+    "Which Slack channels a finished build announces itself in — one for Android, one for iOS. The bot must be a member of each channel.",
+  ],
+  // The sandbox API user has its own fields now, apart from the production email and password.
+  "partners.brandWizard.integration.sandboxHint": [
+    "On: orders for brands using this connection are booked on ShipRocket’s sandbox, so no courier collects them and nothing is charged. Enter your sandbox API user (ShipRocket → Settings → Additional Settings → Sandbox) as the email and password above. Off: real shipments.",
+  ],
 };

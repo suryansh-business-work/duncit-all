@@ -1,17 +1,26 @@
+import type { ReactElement } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import EnvVariablesTab from './EnvVariablesTab';
 import PortalMappingTab from './PortalMappingTab';
+import EnvSettingsTab from './attempt-settings';
 import { useTranslation } from '@duncit/app-settings';
 
-type Section = 'variables' | 'mapping';
+type Section = 'variables' | 'mapping' | 'settings';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const sections = (t: Translate): DuncitTabItem<Section>[] => [
   { value: 'variables', label: t('tech.common.variables') },
   { value: 'mapping', label: t('tech.environment.portalMapping') },
+  { value: 'settings', label: t('shell.nav.settings') },
 ];
+
+const PANELS: Record<Section, () => ReactElement> = {
+  variables: () => <EnvVariablesTab />,
+  mapping: () => <PortalMappingTab />,
+  settings: () => <EnvSettingsTab />,
+};
 
 export default function EnvironmentPage() {
   const { t } = useTranslation();
@@ -37,7 +46,7 @@ export default function EnvironmentPage() {
 
       <DuncitTabs {...tabs} />
 
-      {tabs.value === 'variables' ? <EnvVariablesTab /> : <PortalMappingTab />}
+      {PANELS[tabs.value]()}
     </Stack>
   );
 }

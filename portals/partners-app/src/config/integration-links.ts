@@ -11,6 +11,8 @@ export const INTEGRATION_LINKS = {
     docs: 'https://apidocs.shiprocket.in/',
     /** Where ShipRocket shows the sandbox API user — the credentials a connection in sandbox mode uses. */
     sandbox: 'https://app.shiprocket.in/seller/settings/additional-settings/sandbox',
+    /** ShipRocket's standard sandbox API address — what a connection uses when it saves none of its own. */
+    sandboxApi: 'https://api-sandbox.shiprocket.in',
   },
   RAZORPAY: {
     openApi: 'https://dashboard.razorpay.com/app/website-app-settings/api-keys',

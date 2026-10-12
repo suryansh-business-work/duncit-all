@@ -15,6 +15,7 @@ import {
   type EnvConnectionResult,
 } from './envEntry.connection';
 import type { EnvEntryConfig } from './envEntry.service';
+import { envAttemptService, type EnvTestAttempts } from './envAttempt.service';
 import { normalizePhone } from '@modules/platform/otp/otp.service';
 import {
   msg91Identifier,
@@ -31,6 +32,7 @@ export interface EnvTestRichResult {
   message: string;
   url?: string | null;
   data?: string | null;
+  attempts?: EnvTestAttempts;
 }
 
 /** Load an entry's category + raw config (incl. secrets) or throw. */
@@ -60,11 +62,27 @@ async function record(id: string, ok: boolean) {
   await EnvEntryModel.updateOne({ _id: id }, { $set: { last_tested_at: new Date(), last_test_ok: ok } });
 }
 
-/** Run a test fn and persist its pass/fail outcome before returning it. */
-async function tracked<T extends { ok: boolean }>(id: string, fn: () => Promise<T>): Promise<T> {
+/** What a test answers once the entry's attempts for this window are used up. Nothing was sent to the vendor. */
+function capReached(attempts: EnvTestAttempts) {
+  return {
+    ok: false,
+    message: `Test limit reached: ${attempts.used} of ${attempts.max} attempts used in the last ${attempts.window_hours} hours. Nothing was sent, so another try cannot lock the account. The limit is set in Environment Variables → Settings.`,
+    details: [] as string[],
+    attempts,
+  };
+}
+
+/**
+ * Run a test fn and persist its pass/fail outcome before returning it. Every
+ * test spends one of the entry's attempts first; one over the cap is answered
+ * without running, and without stamping an outcome the credentials never earned.
+ */
+async function tracked<T extends { ok: boolean }>(id: string, fn: () => Promise<T>): Promise<T & { attempts: EnvTestAttempts }> {
+  const { allowed, attempts } = await envAttemptService.spend(id);
+  if (!allowed) return capReached(attempts) as unknown as T & { attempts: EnvTestAttempts };
   const result = await fn();
   await record(id, result.ok);
-  return result;
+  return { ...result, attempts };
 }
 
 /** Digits only — every provider here wants a country code + number, no separators. */

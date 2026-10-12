@@ -83,3 +83,37 @@ export function resolveShiprocketBase(sandbox: boolean, sandboxUrl: unknown): Sh
 
 /** A stored on/off value however it was saved (boolean on a brand, 'true' text from the Tech portal's form). */
 export const isSandboxOn = (value: unknown): boolean => value === true || value === 'true' || value === '1';
+
+/** The two API users one ShipRocket account holds, as saved on a brand, a partner connection or a Tech entry. */
+export interface ShiprocketLoginFields {
+  email?: unknown;
+  password?: unknown;
+  sandbox?: unknown;
+  sandbox_email?: unknown;
+  sandbox_password?: unknown;
+  sandbox_api_url?: unknown;
+}
+
+const text = (value: unknown): string => (typeof value === 'string' || typeof value === 'number' ? String(value) : '');
+
+/**
+ * The API user an account signs in with RIGHT NOW: the production one, or — in
+ * sandbox mode — the sandbox one saved beside it, sent to the sandbox address
+ * saved with it (blank = the platform's). An account in sandbox mode with no
+ * sandbox user of its own sends its production one to the sandbox, which is
+ * how every sandbox account was saved before the two were kept apart.
+ */
+export function resolveShiprocketLogin(s: ShiprocketLoginFields | null | undefined) {
+  const sandbox = isSandboxOn(s?.sandbox);
+  const sandboxEmail = text(s?.sandbox_email).trim();
+  const sandboxPassword = text(s?.sandbox_password);
+  const ownSandboxUser = sandbox && !!sandboxEmail && !!sandboxPassword;
+  return {
+    email: ownSandboxUser ? sandboxEmail : text(s?.email).trim(),
+    password: ownSandboxUser ? sandboxPassword : text(s?.password),
+    sandbox,
+    /** The sandbox user is the account's own, not its production user sent to the sandbox. */
+    ownSandboxUser,
+    sandboxApiUrl: sandbox ? text(s?.sandbox_api_url).trim() : '',
+  };
+}

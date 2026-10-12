@@ -652,8 +652,18 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
           'This brand was set up on the Duncit courier service, which is no longer offered. It keeps shipping that way for now — pick your own ShipRocket account below to move it.',
         sandboxLabel: 'Sandbox mode — test orders only',
         sandboxHint:
-          'On: orders for brands using this connection are booked on ShipRocket’s sandbox, so no courier collects them and nothing is charged. Enter your sandbox API user (ShipRocket → Settings → Additional Settings → Sandbox) as the email and password above. Off: real shipments.',
+          'On: orders for brands using this connection are booked on ShipRocket’s sandbox, so no courier collects them and nothing is charged. Enter your sandbox API user (ShipRocket → Settings → Additional Settings → Sandbox) in the sandbox fields that appear below. Off: real shipments.',
         sandboxOpen: 'Open ShipRocket sandbox settings',
+        sandboxInfo:
+          'Sandbox is the testing mode. The production email and password above are kept, but not used while sandbox is on.',
+        sandboxSection: 'Sandbox settings',
+        sandboxUrl: 'Sandbox API URL (optional)',
+        sandboxUrlHint: 'Leave blank to use ShipRocket’s standard sandbox, {url}.',
+        sandboxUrlInvalid: 'Enter a full https:// address, or leave it blank.',
+        sandboxEmail: 'Sandbox API user email',
+        sandboxPassword: 'Sandbox API user password',
+        showSecret: 'Show {field}',
+        hideSecret: 'Hide {field}',
         sandboxOnWarning:
           'Sandbox is on. Every order for a brand using this connection is a TEST order — buyers will not receive a parcel. Switch it off before you start selling.',
         sandboxChip: 'Sandbox — test orders',

@@ -273,22 +273,28 @@ export function serverSchema(): GraphQLSchema | null {
 
 const ISO = '2026-08-30T12:30:00.000Z';
 
-let idCounter = 0;
-
 /** A dull, deterministic value for a leaf, chosen from the field's name. */
-function scalarValue(typeName: string, fieldName: string): unknown {
+function scalarValue(typeName: string, fieldName: string, idSeed: string): unknown {
   const name = fieldName.toLowerCase();
-  // Unique per value: Apollo normalises by __typename + id, so a list whose
-  // items shared one id would collapse into a single row — fewer render paths
-  // run, and React reports duplicate keys.
-  if (typeName === 'ID') {
-    idCounter += 1;
-    return (fieldName || 'id') + '-' + idCounter;
-  }
+  // Unique per POSITION in the response, and stable across responses. Apollo
+  // normalises by __typename + id, so a list whose items shared one id would
+  // collapse into a single row — fewer render paths run, and React reports
+  // duplicate keys. A global counter was unique but NOT stable: a page that
+  // reads `me.user_id` from a query whose own variables depend on it (the
+  // pod-ideas page) saw a new id on every response, re-ran the query, got a new
+  // id again and spun for ever — a loop the real server cannot produce, since
+  // it answers the same id every time.
+  if (typeName === 'ID') return (fieldName || 'id') + '-' + idSeed;
   if (typeName === 'Int') return 3;
   if (typeName === 'Float') return 100.5;
   if (typeName === 'Boolean') return !name.includes('deleted') && !name.includes('disabled');
   if (typeName !== 'String') return null; // custom scalars (JSON, Upload…)
+  // The app-settings zone and patterns are strings the app FEEDS to a formatter,
+  // so an ISO timestamp here (they contain 'time' / 'date') makes date-fns-tz
+  // throw `Invalid time value` on every page that formats in the zone.
+  if (name === 'time_zone' || name === 'timezone') return 'Asia/Kolkata';
+  if (name === 'date_format') return 'dd MMM yyyy';
+  if (name === 'time_format') return 'hh:mm a';
   if (name.endsWith('_at') || name.includes('date') || name.includes('time')) return ISO;
   if (name.includes('email')) return 'smoke@duncit.com';
   if (name.includes('url') || name.includes('image') || name.includes('photo') || name.includes('avatar')) {
@@ -300,20 +306,29 @@ function scalarValue(typeName: string, fieldName: string): unknown {
   return fieldName || 'Smoke';
 }
 
-function fabricate(type: GraphQLOutputType, fieldName: string): unknown {
-  if (type instanceof GraphQLNonNull) return fabricate(type.ofType as GraphQLOutputType, fieldName);
+function fabricate(type: GraphQLOutputType, fieldName: string, idSeed: string): unknown {
+  if (type instanceof GraphQLNonNull) return fabricate(type.ofType as GraphQLOutputType, fieldName, idSeed);
   if (type instanceof GraphQLList) {
     const inner = type.ofType as GraphQLOutputType;
-    return [fabricate(inner, fieldName), fabricate(inner, fieldName)];
+    return [fabricate(inner, fieldName, idSeed + '-0'), fabricate(inner, fieldName, idSeed + '-1')];
   }
   if (type instanceof GraphQLEnumType) return type.getValues()[0]?.value ?? null;
-  if (type instanceof GraphQLScalarType) return scalarValue(type.name, fieldName);
+  if (type instanceof GraphQLScalarType) return scalarValue(type.name, fieldName, idSeed);
   if (type instanceof GraphQLObjectType || type instanceof GraphQLInterfaceType || type instanceof GraphQLUnionType) {
     // graphql-js walks into the selection set from here and calls the field
     // resolver again for each child, so an empty object is all that is needed.
     return {};
   }
   return null;
+}
+
+/** A field's response path, as `podIdeas.0.author.user_id`; its id seed. */
+function pathSeed(path: { key: string | number; prev?: unknown }): string {
+  const keys: Array<string | number> = [];
+  for (let node: typeof path | undefined = path; node; node = node.prev as typeof path | undefined) {
+    keys.unshift(node.key);
+  }
+  return keys.join('.');
 }
 
 /**
@@ -338,7 +353,7 @@ export function schemaMockLink(): ApolloLink {
             schema,
             document: operation.query,
             variableValues: operation.variables,
-            fieldResolver: (_source, _args, _context, info) => fabricate(info.returnType, info.fieldName),
+            fieldResolver: (_source, _args, _context, info) => fabricate(info.returnType, info.fieldName, pathSeed(info.path)),
             typeResolver: (_value, _context, _info, abstractType) =>
               schema.getPossibleTypes(abstractType)[0]?.name,
           })

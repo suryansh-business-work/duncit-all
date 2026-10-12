@@ -60,13 +60,26 @@ describe('createPodSchema', () => {
     expect(createPodSchema.safeParse(valid({ what_this_pod_offers: ['Coaching'] })).success).toBe(true);
   });
 
-  it('requires a valid meeting link for virtual pods (and no venue/slot)', () => {
-    expect(issuesOf(valid({ pod_mode: 'VIRTUAL', venue_id: '', venue_slot_id: '', meeting_url: '' }))).toContain('meeting_url');
-    expect(issuesOf(valid({ pod_mode: 'VIRTUAL', venue_id: '', venue_slot_id: '', meeting_url: 'not-a-url' }))).toContain('meeting_url');
+  it('requires a listed platform and a valid meeting link for virtual pods (and no venue/slot)', () => {
+    // A virtual pod has no slot to bound it, so it must carry its own end time.
+    const virtual = {
+      pod_mode: 'VIRTUAL',
+      venue_id: '',
+      venue_slot_id: '',
+      meeting_platform: 'GOOGLE_MEET',
+      pod_end_date_time: future(26),
+    } as const;
+    expect(issuesOf(valid({ ...virtual, meeting_url: '' }))).toContain('meeting_url');
+    expect(issuesOf(valid({ ...virtual, meeting_url: 'not-a-url' }))).toContain('meeting_url');
+    // The platform is picked from the shared list; free text is refused.
     expect(
-      createPodSchema.safeParse(
-        valid({ pod_mode: 'VIRTUAL', venue_id: '', venue_slot_id: '', meeting_url: 'https://meet.duncit.com/x' }),
-      ).success,
+      issuesOf(valid({ ...virtual, meeting_platform: 'Google meet', meeting_url: 'https://meet.duncit.com/x' })),
+    ).toContain('meeting_platform');
+    expect(issuesOf(valid({ ...virtual, meeting_platform: '', meeting_url: 'https://meet.duncit.com/x' }))).toContain(
+      'meeting_platform',
+    );
+    expect(
+      createPodSchema.safeParse(valid({ ...virtual, meeting_url: 'https://meet.duncit.com/x' })).success,
     ).toBe(true);
   });
 
@@ -97,14 +110,22 @@ describe('createPodSchema', () => {
           pod_mode: 'VIRTUAL',
           venue_id: '',
           venue_slot_id: '',
+          meeting_platform: 'ZOOM',
+          pod_end_date_time: future(26),
           meeting_url: 'https://meet.duncit.com/x',
         }),
       ).success,
     ).toBe(true);
   });
 
-  it('requires at least one product when products are enabled', () => {
-    expect(issuesOf(valid({ products_enabled: true, product_requests: [] }))).toContain('product_requests');
+  it('keeps a physical pod paid — a free pod is only valid when it is virtual', () => {
+    expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 0 }))).toContain('pod_type');
+  });
+
+  it('treats products as optional — a pod with none, or with rows, both validate', () => {
+    // The "Attach products" switch is gone: the shop is open exactly when the
+    // pod carries rows, so "enabled but empty" is no longer a failure state.
+    expect(createPodSchema.safeParse(valid({ products_enabled: true, product_requests: [] })).success).toBe(true);
     expect(
       createPodSchema.safeParse(
         valid({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
@@ -139,9 +160,10 @@ describe('createPodSchema', () => {
 
   it('exposes one field group and title per step (4 steps)', () => {
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
+    // The club step comes first, so its title leads.
     expect(STEP_TITLES).toEqual([
-      'Pod Basics',
       'Location, Category & Club',
+      'Pod Basics',
       'Venue & Slot',
       'Pricing & Publish',
     ]);
@@ -182,11 +204,16 @@ describe('buildCreatePodInput', () => {
     expect(buildCreatePodInput(valid({ reel_url: 'https://cdn/reel.mp4' })).reel_url).toBe('https://cdn/reel.mp4');
   });
 
-  it('drops product requests when products are disabled', () => {
-    const input = buildCreatePodInput(
+  it('opens the pod shop exactly when product rows exist, whatever a stale flag says', () => {
+    const withRows = buildCreatePodInput(
       valid({ products_enabled: false, product_requests: [{ product_id: 'p1', quantity: 3 }] }),
     );
-    expect(input.product_requests).toEqual([]);
+    expect(withRows.products_enabled).toBe(true);
+    expect(withRows.product_requests).toEqual([{ product_id: 'p1', quantity: 3 }]);
+
+    const staleFlag = buildCreatePodInput(valid({ products_enabled: true, product_requests: [] }));
+    expect(staleFlag.products_enabled).toBe(false);
+    expect(staleFlag.product_requests).toEqual([]);
   });
 
   it('maps a virtual pod with meeting fields and no venue or slot', () => {
@@ -195,14 +222,14 @@ describe('buildCreatePodInput', () => {
         pod_mode: 'VIRTUAL',
         venue_id: 'ignored',
         venue_slot_id: 'ignored-slot',
-        meeting_platform: 'Meet',
+        meeting_platform: 'GOOGLE_MEET',
         meeting_url: 'https://meet.duncit.com/x',
         meeting_notes: 'Join early',
       }),
     );
     expect(input.venue_id).toBeNull();
     expect(input.venue_slot_id).toBeNull();
-    expect(input.meeting_platform).toBe('Meet');
+    expect(input.meeting_platform).toBe('GOOGLE_MEET');
     expect(input.meeting_url).toBe('https://meet.duncit.com/x');
     expect(input.meeting_notes).toBe('Join early');
   });

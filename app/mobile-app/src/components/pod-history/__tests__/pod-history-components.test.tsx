@@ -17,6 +17,16 @@ import type { PodMembership } from '@/utils/pod-history';
 jest.mock('@/hooks/usePolicies', () => ({ usePolicy: jest.fn() }));
 const mockedUsePolicy = usePolicy as jest.Mock;
 
+// Pod History details embeds the pod's finished challenges, which read the
+// navigator (to open the arena) and the challenges query. Neither is under
+// test here; with no challenges the section renders nothing.
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn() }),
+}));
+jest.mock('@/hooks/usePodChallenges', () => ({
+  usePodChallenges: () => ({ challenges: [] }),
+}));
+
 const basePod = {
   id: 'pod1',
   pod_id: 'p1',

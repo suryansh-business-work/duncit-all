@@ -106,6 +106,7 @@ function BucketRow({
       </XStack>
       {invalid ? (
         <Text
+          testID={`price-panel-${bucket.key}-group-invalid`}
           fontSize={12}
           fontWeight="600"
           color="$danger"

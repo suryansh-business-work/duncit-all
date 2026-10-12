@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { productListingSchema } from './list-products.form';
+import { makeProductListingSchema } from './list-products.schema';
 import { toSubmitInput } from './list-products.map';
 import type { ProductListingValues } from './list-products.types';
 
@@ -29,6 +30,14 @@ const validVariant = {
 const validListing = {
   categories: [validCategory],
   product_name: 'Cold brew kit',
+  // The packed parcel every variant falls back to, and the tax slab.
+  height_cm: 24,
+  weight_kg: 1.2,
+  length_cm: 20,
+  breadth_cm: 15,
+  hsn_code: '2309',
+  tax_percent: 12,
+  shelf_life_days: '',
   variants: [validVariant],
   commission_pct: 15,
   delivery_target: 'SHIPROCKET' as const,
@@ -74,14 +83,25 @@ describe('productListingSchema', () => {
     expect(messages(shortDesc)).toMatch(/at least 20 characters/i);
   });
 
-  it('requires per-variant dimensions and price', () => {
-    const result = productListingSchema.safeParse({
+  it('requires a positive per-variant price and stock', () => {
+    const free = productListingSchema.safeParse({
       ...validListing,
-      variants: [{ ...validVariant, height_cm: '', length_cm: '', unit_cost: 0 }],
+      variants: [{ ...validVariant, unit_cost: 0 }],
     });
-    expect(messages(result)).toMatch(/height/i);
-    expect(messages(result)).toMatch(/length/i);
-    expect(messages(result)).toMatch(/price/i);
+    expect(messages(free)).toMatch(/price must be greater than 0/i);
+
+    const blank = productListingSchema.safeParse({
+      ...validListing,
+      variants: [{ ...validVariant, unit_cost: '', inventory_count: '' }],
+    });
+    expect(messages(blank)).toMatch(/enter the variant price/i);
+    expect(messages(blank)).toMatch(/enter the variant stock/i);
+  });
+
+  it('requires a tax slab between 0 and 28 percent', () => {
+    expect(productListingSchema.safeParse({ ...validListing, tax_percent: 29 }).success).toBe(false);
+    expect(productListingSchema.safeParse({ ...validListing, tax_percent: -1 }).success).toBe(false);
+    expect(productListingSchema.safeParse({ ...validListing, tax_percent: 0 }).success).toBe(true);
   });
 
   it('requires total stock across variants to be at least 1', () => {
@@ -116,6 +136,59 @@ describe('productListingSchema', () => {
   it('rejects a negative free-delivery amount', () => {
     const result = productListingSchema.safeParse({ ...validListing, free_delivery_above: -1 });
     expect(messages(result)).toMatch(/negative/i);
+  });
+});
+
+describe('makeProductListingSchema packaging rules', () => {
+  // The catalogue key stands in for the copy, so a message names its rule.
+  const schema = makeProductListingSchema((key) => key);
+  const keys = (result: ReturnType<typeof schema.safeParse>) =>
+    result.success ? [] : result.error.issues.map((issue) => `${issue.path.join('.')}:${issue.message}`);
+
+  it('accepts a listing whose product parcel and HSN code are complete', () => {
+    expect(schema.safeParse(validListing).success).toBe(true);
+  });
+
+  it('requires the product parcel and HSN code once the listing ships through ShipRocket', () => {
+    const result = schema.safeParse({
+      ...validListing,
+      height_cm: '',
+      weight_kg: '',
+      length_cm: '',
+      breadth_cm: '',
+      hsn_code: '',
+    });
+    expect(keys(result)).toEqual(
+      expect.arrayContaining([
+        'weight_kg:partners.listProductsPage.weightRequired',
+        'length_cm:partners.listProductsPage.lengthRequired',
+        'breadth_cm:partners.listProductsPage.breadthRequired',
+        'height_cm:partners.listProductsPage.heightRequired',
+        'hsn_code:partners.listProductsPage.hsnRequired',
+      ]),
+    );
+  });
+
+  it('lets a variant leave its parcel blank (it ships with the product) but bounds a filled one', () => {
+    const blank = schema.safeParse({
+      ...validListing,
+      variants: [{ ...validVariant, height_cm: '', length_cm: '' }],
+    });
+    expect(blank.success).toBe(true);
+
+    const tooHeavy = schema.safeParse({
+      ...validListing,
+      variants: [{ ...validVariant, weight_kg: 51 }],
+    });
+    expect(keys(tooHeavy)).toContain('variants.0.weight_kg:partners.listProductsPage.weightRange');
+  });
+
+  it('rejects a malformed HSN code and an MRP below the price', () => {
+    expect(keys(schema.safeParse({ ...validListing, hsn_code: '23' }))).toContain(
+      'hsn_code:partners.listProductsPage.hsnFormat',
+    );
+    const mrp = schema.safeParse({ ...validListing, variants: [{ ...validVariant, mrp: 100 }] });
+    expect(keys(mrp)).toContain('variants.0.mrp:partners.listProductsPage.mrpBelowPrice');
   });
 });
 

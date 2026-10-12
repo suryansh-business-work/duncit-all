@@ -101,13 +101,17 @@ describe('OnboardingSettingsPage', () => {
   });
 
   it('saves the intros and says so', async () => {
-    renderPage([introMock(), updateMock({ delay: 50 })]);
+    // A long enough request that the in-flight state outlives a slow CI tick.
+    renderPage([introMock(), updateMock({ delay: 400 })]);
     await editVenueIntro();
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByRole('button', { name: 'Saving…' })).toBeDisabled();
-    await waitFor(() =>
-      expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Onboarding intro saved.'),
+    // Find and assert in ONE retried step: a find that resolves and a separate
+    // assertion can straddle the response, by which time the label is "Save" again.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled());
+    await waitFor(
+      () => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Onboarding intro saved.'),
+      { timeout: 4000 },
     );
   });
 

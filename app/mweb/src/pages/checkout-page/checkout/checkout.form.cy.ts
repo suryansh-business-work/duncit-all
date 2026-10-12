@@ -68,9 +68,23 @@ describe('checkoutSchema', () => {
     expect(firstError(checkoutSchema.safeParse({ ...valid, email: 'not-an-email' }))).toMatch(/email/i);
   });
 
-  it('never blocks the pod checkout on a missing billing address', () => {
+  it('requires a billing address on the pod checkout — the invoice needs one', () => {
     const result = checkoutSchema.safeParse({
       ...valid,
+      line1: '',
+      city: '',
+      state: '',
+      pincode: '',
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((i) => i.path[0]);
+    expect(paths).toEqual(expect.arrayContaining(['line1', 'city', 'state', 'pincode']));
+  });
+
+  it('lets the pod checkout skip the typed address when it reuses the main one', () => {
+    const result = checkoutSchema.safeParse({
+      ...valid,
+      same_as_main: true,
       line1: '',
       city: '',
       state: '',

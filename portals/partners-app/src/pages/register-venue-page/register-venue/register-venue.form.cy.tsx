@@ -256,7 +256,7 @@ describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
       owner_name: 'Owner Name',
       owner_phone: '+919876543210',
       owner_dob: null,
-      owner_address: '',
+      owner_address: '12 Main Street, Indiranagar',
     });
     expect('owner_email' in input).toBe(false);
   });

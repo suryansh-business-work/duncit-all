@@ -205,6 +205,14 @@ const gridRow = (cell: HTMLElement): HTMLElement => {
   return row as HTMLElement;
 };
 
+/**
+ * These drive the listings grid and its dialogs through a real grid / wizard under MUI, which takes about
+ * a second on a developer machine and several times that under the coverage
+ * job's instrumentation, where vitest's 5-second default cut them off. Bounded
+ * at 20 seconds, like the routes smoke in this workspace.
+ */
+vi.setConfig({ testTimeout: 20_000 });
+
 describe('ProductListingsTable', () => {
   it('lists each product with its image count, size, price and review status', async () => {
     renderTable([tableMock([listing()])]);

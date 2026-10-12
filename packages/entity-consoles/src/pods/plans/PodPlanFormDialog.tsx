@@ -57,7 +57,9 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <form onSubmit={submit}>
+      {/* noValidate: the required fields are checked by the Zod schema, so its
+          localized messages show instead of the browser's own bubble. */}
+      <form noValidate onSubmit={submit}>
         <DialogTitle>{editing ? 'Edit plan' : 'New plan'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
@@ -79,7 +81,7 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
               render={({ field }) => (
                 <TextField
                   label={t('admin.podPlans.featuresField')}
-                  value={(field.value ?? []).join('\n')}
+                  value={field.value.join('\n')}
                   onChange={(event) => field.onChange(parsePodPlanFeatures(event.target.value))}
                   multiline
                   minRows={3}

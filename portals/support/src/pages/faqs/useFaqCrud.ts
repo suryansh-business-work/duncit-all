@@ -24,7 +24,7 @@ interface Options {
 }
 
 const messageOf = (cause: unknown, fallback: string) =>
-  cause instanceof Error ? cause.message : fallback;
+  cause instanceof Error && cause.message ? cause.message : fallback;
 
 /**
  * The create/edit/delete wiring both FAQ audiences share. Everything that

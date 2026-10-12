@@ -37,7 +37,7 @@ export default function PodPlansPage() {
       setEditing(null);
       refetchRef.current?.();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not save plan');
+      notifyError(e.message);
     }
   };
 
@@ -54,7 +54,7 @@ export default function PodPlansPage() {
       notifySuccess('Plan deleted');
       refetchRef.current?.();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not delete plan');
+      notifyError(e.message);
     }
   };
 

@@ -16,6 +16,7 @@ const harness = vi.hoisted(() => ({
     venue_id: 'venue1',
   },
   fetchCalls: [] as { rootField: string; options: unknown }[],
+  lastPage: null as { rows: unknown[]; total: number } | null,
   tableRefetch: vi.fn(),
   pickerOpen: false,
   pickImage: vi.fn(),
@@ -32,7 +33,7 @@ vi.mock('@duncit/user-context', () => ({
 vi.mock('@duncit/table', () => ({
   useApolloTableFetch: (_client: unknown, _document: unknown, rootField: string, options: unknown) => {
     harness.fetchCalls.push({ rootField, options });
-    return async () => ({ rows: [], total: 0 });
+    return async () => ({ rows: [], total: 999 });
   },
 }));
 
@@ -63,6 +64,23 @@ vi.mock('@duncit/pod-form', () => ({
   }),
 }));
 
+// The real select loads the category tree over GraphQL; one button standing in
+// for "the author picked a Super Category" is all the page's scoping needs.
+vi.mock('@duncit/category', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    AdminCategorySelect: (props: { onChange: (v: unknown) => void }) => (
+      <button
+        type="button"
+        onClick={() => props.onChange({ super_id: 'super-none', category_id: '', sub_id: '' })}
+      >
+        pick-empty-super
+      </button>
+    ),
+  };
+});
+
 vi.mock('../usePodPageData', () => ({
   default: () => ({
     clubs: [
@@ -87,6 +105,7 @@ vi.mock('../usePodPageData', () => ({
 vi.mock('../PodsTable', () => ({
   default: (props: {
     refetchRef: { current: (() => void) | null };
+    fetchRows: (query: unknown) => Promise<{ rows: unknown[]; total: number }>;
     toolbarActions: React.ReactNode;
     clubName: (id: string) => string;
     venueName: (id: string) => string;
@@ -105,6 +124,16 @@ vi.mock('../PodsTable', () => ({
           {props.clubName('club1')}|{props.venueName('venue1')}|{props.locName('loc1')}
         </div>
         {props.toolbarActions}
+        <button
+          type="button"
+          onClick={() => {
+            props.fetchRows({}).then((page) => {
+              harness.lastPage = page;
+            });
+          }}
+        >
+          row-fetch
+        </button>
         <button type="button" onClick={() => props.onView(harness.pod)}>
           row-view
         </button>
@@ -331,6 +360,38 @@ describe('PodsPage / club filter', () => {
     );
     expect(screen.getByRole('combobox', { name: 'Status' })).toHaveTextContent('Upcoming');
     await waitFor(() => expect(harness.tableRefetch).toHaveBeenCalled());
+  });
+
+  it('switches "Include cancelled" on by itself when the status select asks for Cancelled', async () => {
+    renderPage('/pods');
+    expect(screen.getByRole('switch', { name: /include cancelled/i })).not.toBeChecked();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Cancelled'));
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: /include cancelled/i })).toBeChecked(),
+    );
+    expect(
+      (harness.fetchCalls.at(-1)?.options as { extraVariables?: { lifecycle?: string | null } })
+        .extraVariables?.lifecycle,
+    ).toBe('CANCELLED');
+  });
+
+  it('answers a category with no clubs with an empty page instead of asking the server', async () => {
+    renderPage('/pods');
+    const before = harness.fetchCalls.length;
+    expect(
+      (harness.fetchCalls[before - 1].options as { extraFilters?: unknown }).extraFilters,
+    ).toBeUndefined();
+    fireEvent.click(screen.getByText('pick-empty-super'));
+    await waitFor(() =>
+      expect(
+        (harness.fetchCalls.at(-1)?.options as { extraFilters?: unknown }).extraFilters,
+      ).toEqual([{ field: 'club_id', op: 'in', values: [] }]),
+    );
+    // The page hands the table its own empty answer, not the Apollo fetcher.
+    await waitFor(() => expect(harness.tableRefetch).toHaveBeenCalled());
+    fireEvent.click(screen.getByText('row-fetch'));
+    await waitFor(() => expect(harness.lastPage).toEqual({ rows: [], total: 0 }));
   });
 
   it('reloads the grid when the club filter changes', async () => {

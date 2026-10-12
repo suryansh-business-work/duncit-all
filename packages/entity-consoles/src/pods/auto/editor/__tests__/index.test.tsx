@@ -5,7 +5,7 @@ import { Route, useLocation } from 'react-router';
 import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import { renderWithProviders } from '../../../../../__tests__/testkit';
-import { FINANCE_FOR_PODS } from '../../../list/queries';
+import { FINANCE_FOR_PODS, INVENTORY_PRODUCTS } from '../../../list/queries';
 import { AUTO_POD_FOR_EDIT, CREATE_AUTO_POD, UPDATE_AUTO_POD } from '../../queries';
 import AdminAutoPodEditorPage from '..';
 
@@ -17,6 +17,7 @@ interface FakeEditorArgs {
 }
 
 const harness = vi.hoisted(() => ({
+  productsFlag: false,
   editorArgs: null as FakeEditorArgs | null,
   editorState: {
     initialValues: { pod_title: '' },
@@ -33,6 +34,13 @@ const harness = vi.hoisted(() => ({
     accept: 'image/*',
   },
 }));
+
+// Only the flag is faked; every other export (the date format, the translator)
+// stays the real one so labels resolve exactly as in the app.
+vi.mock('@duncit/app-settings', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return { ...actual, useFeatureFlag: () => harness.productsFlag };
+});
 
 vi.mock('@duncit/pod-form', () => ({
   makeNativeParityPodConfig: (opts: { showProducts: boolean }) => ({
@@ -54,6 +62,7 @@ vi.mock('@duncit/pod-form', () => ({
     error: string | null;
     config: Record<string, unknown>;
     finance: unknown;
+    products: { id: string }[];
     getClubVenueIds: () => string[];
     onBack: () => void;
     onPickImage: () => void;
@@ -70,6 +79,7 @@ vi.mock('@duncit/pod-form', () => ({
       <span data-testid="error">{props.error ?? ''}</span>
       <span data-testid="config">{JSON.stringify(props.config)}</span>
       <span data-testid="finance">{JSON.stringify(props.finance ?? null)}</span>
+      <span data-testid="product-ids">{JSON.stringify(props.products.map((p) => p.id))}</span>
       <span data-testid="club-venue-ids">{JSON.stringify(props.getClubVenueIds())}</span>
       <button type="button" onClick={props.onBack}>
         editor-back
@@ -198,6 +208,7 @@ const renderPage = (entry: string, extraMocks: MockedResponse[] = []) =>
   });
 
 beforeEach(() => {
+  harness.productsFlag = false;
   harness.editorArgs = null;
   harness.editorState = { initialValues: { pod_title: '' }, busy: false, opError: null, submit: vi.fn() };
   harness.picker = {
@@ -237,6 +248,61 @@ describe('AdminAutoPodEditorPage / new offer', () => {
         currency_symbol: '₹',
       }),
     );
+  });
+
+  it('hands the editor no products and never asks for the catalogue while the products flag is off', () => {
+    let asked = false;
+    const productsMock: MockedResponse = {
+      request: { query: INVENTORY_PRODUCTS },
+      result: () => {
+        asked = true;
+        return { data: { inventoryProducts: [] } };
+      },
+    };
+    renderPage('/auto-pods/new', [productsMock]);
+    expect(screen.getByTestId('product-ids')).toHaveTextContent('[]');
+    expect(JSON.parse(screen.getByTestId('config').textContent ?? '{}')).toMatchObject({
+      showProducts: false,
+    });
+    expect(asked).toBe(false);
+  });
+
+  it('loads the product catalogue into the editor once the products flag is on', async () => {
+    harness.productsFlag = true;
+    const product = {
+      __typename: 'InventoryProduct',
+      id: 'prod-1',
+      product_name: 'Yoga Mat',
+      unit_cost: 499,
+      available_count: 10,
+      brand_name: 'Zen',
+      sku: 'SKU-1',
+      short_description: null,
+      description: null,
+      image_url: null,
+      images: [],
+      unit_type: 'PIECE',
+      weight_volume: null,
+      tags: [],
+      super_category_id: null,
+      category_id: null,
+      sub_category_id: null,
+      categories: [],
+      inventory_count: 10,
+      requested_count: 0,
+      is_active: true,
+      listing_review_status: 'APPROVED',
+      listing_submitted_by_name: null,
+    };
+    const productsMock: MockedResponse = {
+      request: { query: INVENTORY_PRODUCTS },
+      result: { data: { inventoryProducts: [product] } },
+    };
+    renderPage('/auto-pods/new', [productsMock]);
+    await waitFor(() => expect(screen.getByTestId('product-ids')).toHaveTextContent('["prod-1"]'));
+    expect(JSON.parse(screen.getByTestId('config').textContent ?? '{}')).toMatchObject({
+      showProducts: true,
+    });
   });
 
   it("getClubVenueIds always answers empty — an Auto Pod has no club to narrow venues by", () => {

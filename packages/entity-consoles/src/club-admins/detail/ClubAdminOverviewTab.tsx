@@ -14,9 +14,10 @@ import type { ClubAdminDetail } from '../queries';
  */
 export default function ClubAdminOverviewTab({ admin }: Readonly<{ admin: ClubAdminDetail }>) {
   const { t } = useTranslation();
-  const clubs = admin.assigned_clubs ?? [];
-  const category =
-    [admin.super_category, admin.category, admin.sub_category].filter(Boolean).join(' › ') || '';
+  const clubs = admin.assigned_clubs;
+  const category = [admin.super_category, admin.category, admin.sub_category]
+    .filter(Boolean)
+    .join(' › ');
 
   return (
     <Stack spacing={2}>

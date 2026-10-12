@@ -9,13 +9,14 @@ import { CATEGORIES, DELETE, type ClubRow } from '../../../src/clubs/list/querie
 import ClubsPage from '../../../src/clubs/list/ClubsPage';
 
 const refetchSpy = vi.hoisted(() => vi.fn());
+const session = vi.hoisted(() => ({ roles: ['SUPER_ADMIN'] as string[] }));
 
 vi.mock('@duncit/table', () => import('../../table-mock'));
 
 // The Hide / Show action is offered to a governor only — the page reads who is
 // signed in to decide, and the harness mounts no UserProvider.
 vi.mock('@duncit/user-context', () => ({
-  useUserData: () => ({ user: { roles: ['SUPER_ADMIN'] } }),
+  useUserData: () => ({ user: { roles: session.roles } }),
 }));
 
 const ROW: ClubRow = {
@@ -37,6 +38,7 @@ vi.mock('../../../src/clubs/list/ClubsTable', () => ({
     onEdit,
     onRemove,
     onView,
+    onToggleHidden,
   }: {
     toolbarActions?: ReactNode;
     catName: (id: string) => string;
@@ -44,6 +46,7 @@ vi.mock('../../../src/clubs/list/ClubsTable', () => ({
     onEdit: (c: ClubRow) => void;
     onRemove: (c: ClubRow) => void;
     onView: (c: ClubRow) => void;
+    onToggleHidden?: (c: ClubRow) => void;
   }) => (
     <div>
       {toolbarActions}
@@ -57,6 +60,10 @@ vi.mock('../../../src/clubs/list/ClubsTable', () => ({
       </button>
       <button type="button" onClick={() => onView(ROW)}>
         row-view
+      </button>
+      <span data-testid="can-toggle">{String(!!onToggleHidden)}</span>
+      <button type="button" onClick={() => onToggleHidden?.(ROW)}>
+        row-toggle
       </button>
       <button
         type="button"
@@ -106,6 +113,22 @@ const renderPage = (mocks: MockedResponse[] = [], entry = '/clubs') =>
 describe('ClubsPage', () => {
   beforeEach(() => {
     refetchSpy.mockReset();
+    session.roles = ['SUPER_ADMIN'];
+  });
+
+  it('offers Hide / Show to a governor and opens the reason dialog for a visible club', async () => {
+    renderPage();
+    expect(screen.getByTestId('can-toggle')).toHaveTextContent('true');
+    fireEvent.click(screen.getByText('row-toggle'));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('Hide this club?');
+    expect(dialog).toHaveTextContent('"Chess Club"');
+  });
+
+  it('withholds Hide / Show from a viewer who may not govern', () => {
+    session.roles = ['VENUE_OWNER'];
+    renderPage();
+    expect(screen.getByTestId('can-toggle')).toHaveTextContent('false');
   });
 
   it('resolves category names for the table and dashes out unknown ids', async () => {

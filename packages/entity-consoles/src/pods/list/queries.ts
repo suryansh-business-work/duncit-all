@@ -318,11 +318,26 @@ export const COMPLETE_POD_SETTLEMENT = gql`
 `;
 
 export const POD_SETTLEMENT_PREVIEW = gql`
-  query AdminPodSettlementPreview($pod_id: ID!, $venue_bill_amount: Float!, $host_user_id: ID) {
-    podSettlementPreview(pod_id: $pod_id, venue_bill_amount: $venue_bill_amount, host_user_id: $host_user_id) {
+  query AdminPodSettlementPreview(
+    $pod_id: ID!
+    $venue_bill_amount: Float!
+    $host_user_id: ID
+    $include_slot_price: Boolean
+  ) {
+    podSettlementPreview(
+      pod_id: $pod_id
+      venue_bill_amount: $venue_bill_amount
+      host_user_id: $host_user_id
+      include_slot_price: $include_slot_price
+    ) {
       currency_symbol
       collected_total
       has_venue
+      attended_seats
+      booked_seats
+      venue_bill
+      venue_slot_price
+      include_slot_price
       waterfall {
         version
         amount

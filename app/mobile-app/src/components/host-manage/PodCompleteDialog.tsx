@@ -1,15 +1,16 @@
 import { formResolver } from '../../utils/form-resolver';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
+import { mwebVenueBillLabels } from '@duncit/utils';
 
-import { FormTextField } from '@/components/FormTextField';
 import { PodMediaSummary } from '@/components/pod-media/PodMediaSummary';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { SettlementSummary } from './SettlementSummary';
+import { VenueBillFields } from './VenueBillFields';
 import { usePodCompleteSubmit } from './usePodCompleteSubmit';
 import { PodCompleteFooter, footerLook } from './PodCompleteFooter';
 import {
@@ -26,24 +27,27 @@ interface Props {
   onCompleted: () => void;
 }
 
-/** Host completes a pod: enter the venue bill amount. The pod's own media is
- * shown, not asked for — it is uploaded on the Upload Pod Media screen. The
- * split is previewed live; on submit two payout releases are created for Finance. */
+/** Host completes a pod: optionally enter the venue's final bill. The pod's own
+ * media is shown, not asked for — it is uploaded on the Upload Pod Media screen.
+ * The split is previewed live; on submit the payout releases are created for
+ * Finance to approve — nothing is credited until then. */
 export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const hasVenue = !!pod?.venue_id;
+  const billLabels = useMemo(() => mwebVenueBillLabels(t), [t]);
   const { control, handleSubmit, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
-    resolver: formResolver<PodCompleteValues>(buildPodCompleteSchema(hasVenue)),
+    resolver: formResolver<PodCompleteValues>(buildPodCompleteSchema(hasVenue, billLabels)),
     defaultValues: blankPodCompleteValues,
   });
 
-  const billAmount = Number(watch('venue_bill_amount')) || 0;
+  const billAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
+  const includeSlotPrice = billAmount > 0 && watch('include_slot_price');
   const {
     settlement,
     isLoading,
     error: previewError,
-  } = useSettlementPreview(pod?.id ?? null, billAmount);
+  } = useSettlementPreview(pod?.id ?? null, billAmount, includeSlotPrice);
 
   const { busy, error, run } = usePodCompleteSubmit(
     pod,
@@ -83,13 +87,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
   );
 
   const billField = hasVenue ? (
-    <FormTextField
-      control={control}
-      name="venue_bill_amount"
-      label={t('mweb.hostManage.venueBillAmount')}
-      keyboardType="numeric"
-      required
-    />
+    <VenueBillFields control={control} labels={billLabels} billAmount={billAmount} />
   ) : null;
   const mediaSummary = pod ? <PodMediaSummary podId={pod.id} onLeave={onClose} /> : null;
   // The preview error only speaks when there is nothing better to show.

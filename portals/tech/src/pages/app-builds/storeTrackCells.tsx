@@ -1,10 +1,12 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Box, Chip, CircularProgress, Tooltip } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { DuncitButton } from '@duncit/buttons';
+import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { DuncitColumn } from '@duncit/table';
 import { formatDateTime } from '@duncit/app-settings';
 import type { AppBuildRow } from './queries';
+import ReleaseLogDialog from './ReleaseLogDialog';
 
 /**
  * The store column, for either store: one cell per track, each showing where
@@ -18,6 +20,9 @@ import type { AppBuildRow } from './queries';
 export interface TrackRelease {
   status: 'PUSHING' | 'RELEASED' | 'FAILED';
   error: string;
+  by?: string;
+  /** The push's step log, when the store's push keeps one. */
+  log?: string[];
   started_at: string;
   finished_at: string | null;
 }
@@ -41,6 +46,8 @@ export interface StoreTrackConfig<T extends string, R extends TrackRelease> {
     pushing: (track: T, release: R, when: string) => string;
     released: (track: T, release: R, when: string) => string;
     failed: (track: T, error: string) => string;
+    /** Names the button that opens a failed push's log. */
+    logs: (track: T) => string;
     unavailable: string;
   };
   onPush: (row: AppBuildRow, track: T) => Promise<void>;
@@ -56,9 +63,11 @@ interface TrackCellProps<T extends string, R extends TrackRelease> {
 /**
  * One track's state on one build: a spinner while a push is in flight, a green
  * chip once it landed, and otherwise the button — including after a failure,
- * where the tooltip carries the store's reason and the press retries.
+ * where the tooltip carries the store's reason, the press retries, and a second
+ * button opens the failed push's log.
  */
 function TrackCell<T extends string, R extends TrackRelease>({ row, track, cfg }: Readonly<TrackCellProps<T, R>>) {
+  const [logOpen, setLogOpen] = useState(false);
   const release = cfg.latest(row, track);
   const id = `app-builds-${cfg.testId}-${track.toLowerCase()}`;
   if (release && cfg.inFlight(release)) {
@@ -93,21 +102,44 @@ function TrackCell<T extends string, R extends TrackRelease>({ row, track, cfg }
   }
   const color = failed ? 'error' : cfg.color[track];
   return (
-    <Tooltip title={tip}>
-      <span>
-        <DuncitButton
-          size="small"
-          variant="outlined"
-          color={color}
-          disabled={!enabled}
-          startIcon={cfg.icon}
-          onClick={() => cfg.onPush(row, track)}
-          data-testid={`${id}-push`}
-        >
-          {cfg.short[track]}
-        </DuncitButton>
-      </span>
-    </Tooltip>
+    <>
+      <Tooltip title={tip}>
+        <span>
+          <DuncitButton
+            size="small"
+            variant="outlined"
+            color={color}
+            disabled={!enabled}
+            startIcon={cfg.icon}
+            onClick={() => cfg.onPush(row, track)}
+            data-testid={`${id}-push`}
+          >
+            {cfg.short[track]}
+          </DuncitButton>
+        </span>
+      </Tooltip>
+      {failed && (
+        <>
+          <Tooltip title={cfg.tips.logs(track)}>
+            <DuncitIconButton
+              size="small"
+              color="error"
+              aria-label={cfg.tips.logs(track)}
+              onClick={() => setLogOpen(true)}
+              data-testid={`${id}-logs`}
+            >
+              <ArticleOutlinedIcon fontSize="small" />
+            </DuncitIconButton>
+          </Tooltip>
+          <ReleaseLogDialog
+            open={logOpen}
+            subject={`${row.build_no} · ${cfg.short[track]}`}
+            release={release}
+            onClose={() => setLogOpen(false)}
+          />
+        </>
+      )}
+    </>
   );
 }
 
@@ -134,7 +166,8 @@ export function makeStoreTrackColumn<T extends string, R extends TrackRelease>(
   return {
     field: cfg.field,
     headerName: cfg.header,
-    width: 235,
+    // Room for both tracks with a failed push's log button beside each.
+    width: 300,
     // Push buttons per track — a row control, not a value.
     type: 'actions',
     cellRenderer: render,

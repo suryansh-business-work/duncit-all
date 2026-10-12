@@ -30,6 +30,8 @@ export interface AppBuildPlayRelease {
   /** Why it FAILED. Empty otherwise. */
   error: string;
   by: string;
+  /** What each step of the push did, in order; empty on a push made before logs were kept. */
+  log?: string[];
   started_at: string;
   finished_at: string | null;
 }
@@ -139,6 +141,9 @@ export interface IosSigningFile {
 export interface AppBuildSettings {
   android_channel: string | null;
   ios_channel: string | null;
+  /** Where staging builds are announced; null sends them to the production channel. */
+  android_staging_channel: string | null;
+  ios_staging_channel: string | null;
   last_reported_at: string | null;
   last_reported_by: string | null;
   play_store_configured: boolean;
@@ -157,8 +162,8 @@ export interface AppBuildCiToken {
 }
 
 export const APP_BUILDS_TABLE = gql`
-  query AppBuildsTable($platform: AppBuildPlatform!, $query: TableQueryInput) {
-    appBuildsTable(platform: $platform, query: $query) {
+  query AppBuildsTable($platform: AppBuildPlatform!, $query: TableQueryInput, $app_env: AppBuildEnv) {
+    appBuildsTable(platform: $platform, query: $query, app_env: $app_env) {
       total
       rows {
         id
@@ -210,6 +215,7 @@ export const APP_BUILDS_TABLE = gql`
           version_code
           error
           by
+          log
           started_at
           finished_at
         }
@@ -239,6 +245,8 @@ export const APP_BUILD_SETTINGS = gql`
     appBuildSettings {
       android_channel
       ios_channel
+      android_staging_channel
+      ios_staging_channel
       last_reported_at
       last_reported_by
       play_store_configured
@@ -264,6 +272,8 @@ export const UPDATE_APP_BUILD_SETTINGS = gql`
     updateAppBuildSettings(input: $input) {
       android_channel
       ios_channel
+      android_staging_channel
+      ios_staging_channel
       last_reported_at
       last_reported_by
       play_store_configured
@@ -347,6 +357,7 @@ export const PUSH_APP_BUILD_TO_PLAY_STORE = gql`
         version_code
         error
         by
+        log
         started_at
         finished_at
       }

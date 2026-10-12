@@ -32,6 +32,7 @@ const STORE = 'Google Play';
  * nothing is coming back to finish it, so the button is offered again.
  */
 const PUSH_STALE_MS = 15 * 60_000;
+const MAX_LOG_LINES = 200;
 
 const API_TRACK: Record<PlayStoreTrack, PlayTrack> = { INTERNAL: 'internal', PRODUCTION: 'production' };
 const TRACK_LABEL: Record<PlayStoreTrack, string> = {
@@ -101,9 +102,14 @@ async function runRelease(
   const releaseName = `v${build.version} (${build.commit_sha.slice(0, 7)})`;
   let versionCode = '';
   let error = '';
+  // The push's own log, shown in the portal when it fails. Bounded: a retried upload is the longest it gets.
+  const log: string[] = [];
+  const onStep = (line: string) => {
+    if (log.length < MAX_LOG_LINES) log.push(`${new Date().toISOString()} ${clip(line, 300)}`);
+  };
   try {
     versionCode = String(
-      await releaseBundle(cfg, aabPath, API_TRACK[track], releaseName, releaseExtras(cfg, listing))
+      await releaseBundle(cfg, aabPath, API_TRACK[track], releaseName, { ...releaseExtras(cfg, listing), onStep })
     );
   } catch (err) {
     error = clip(err instanceof Error ? err.message : String(err), 500);
@@ -115,6 +121,7 @@ async function runRelease(
         [`play_releases.${index}.status`]: error ? 'FAILED' : 'RELEASED',
         [`play_releases.${index}.version_code`]: versionCode,
         [`play_releases.${index}.error`]: error,
+        [`play_releases.${index}.log`]: log,
         [`play_releases.${index}.finished_at`]: new Date(),
       },
     }
@@ -152,6 +159,7 @@ export async function pushBuildToPlayStore(id: string, track: PlayStoreTrack, by
     version_code: '',
     error: '',
     by,
+    log: [],
     started_at: new Date(),
     finished_at: null,
   });

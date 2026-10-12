@@ -48,10 +48,35 @@ const WORKFLOW_FILE: Record<AppBuildPlatform, string> = {
 /** Where CI build artifacts land on ImageKit (release-notify's folder). */
 export const APP_BUILDS_FOLDER = '/app-builds';
 
+/** Where production builds are announced — and store pushes, which only a production build can be. */
 const CHANNEL_ENV_KEY: Record<AppBuildPlatform, string> = {
   ANDROID: 'SLACK_ANDROID_BUILDS_CHANNEL',
   IOS: 'SLACK_IOS_BUILDS_CHANNEL',
 };
+
+/** Where staging builds are announced, so testers and release watchers each get their own channel. */
+const STAGING_CHANNEL_ENV_KEY: Record<AppBuildPlatform, string> = {
+  ANDROID: 'SLACK_ANDROID_STAGING_BUILDS_CHANNEL',
+  IOS: 'SLACK_IOS_STAGING_BUILDS_CHANNEL',
+};
+
+const ENV_LABEL: Record<AppBuildEnv, string> = {
+  PRODUCTION: 'Production',
+  STAGING: 'Staging',
+};
+
+const APP_ENVS = new Set<string>(['PRODUCTION', 'STAGING']);
+
+/**
+ * The channel one build is announced in. A staging build goes to the staging
+ * channel; until one is chosen it keeps going where every build went before,
+ * so choosing nothing loses no announcement.
+ */
+async function channelFor(build: Pick<IAppBuild, 'platform' | 'app_env'>): Promise<string> {
+  const production = optionalStr(await getRuntimeEnvValue(CHANNEL_ENV_KEY[build.platform]));
+  if (build.app_env !== 'STAGING') return production;
+  return optionalStr(await getRuntimeEnvValue(STAGING_CHANNEL_ENV_KEY[build.platform])) || production;
+}
 
 const PLATFORM_LABEL: Record<AppBuildPlatform, string> = {
   ANDROID: 'Android',
@@ -206,6 +231,7 @@ const pub = (doc: IAppBuild) => ({
     version_code: r.version_code ?? '',
     error: r.error ?? '',
     by: r.by ?? '',
+    log: r.log ?? [],
     started_at: r.started_at?.toISOString() ?? '',
     finished_at: r.finished_at?.toISOString() ?? null,
   })),
@@ -235,7 +261,9 @@ function commitUrl(build: IAppBuild): string {
 }
 
 function headline(build: IAppBuild): string {
-  const label = PLATFORM_LABEL[build.platform];
+  // Production reads as it always has; a staging build says so in the first words.
+  const staging = build.app_env === 'STAGING' ? `${ENV_LABEL.STAGING} ` : '';
+  const label = `${staging}${PLATFORM_LABEL[build.platform]}`;
   if (build.status === 'FAILED') {
     return `:x: ${label} build failed — v${build.version} (${build.build_no})`;
   }
@@ -253,6 +281,7 @@ const normaliseStatus = (v: unknown): AppBuildStatus =>
 function factLines(build: IAppBuild): string[] {
   const facts: string[] = [
     `*Version:* ${escapeMrkdwn(build.version)}`,
+    `*Environment:* ${ENV_LABEL[build.app_env] ?? ENV_LABEL.PRODUCTION}`,
     `*Branch:* ${escapeMrkdwn(build.branch) || '—'}`,
   ];
   // One line covering every file, so an Android build shows its APK next to its
@@ -353,7 +382,7 @@ function buildBlocks(build: IAppBuild): unknown[] {
 async function announce(
   build: IAppBuild
 ): Promise<{ channel?: string | null; ts?: string | null; skipped?: string | null }> {
-  const channel = optionalStr(await getRuntimeEnvValue(CHANNEL_ENV_KEY[build.platform]));
+  const channel = await channelFor(build);
   if (!channel) {
     return { skipped: `No Slack channel is configured for ${PLATFORM_LABEL[build.platform]} builds` };
   }
@@ -537,6 +566,23 @@ function nextStages(existing: IAppBuild | null, stage: string): { stages?: IAppB
  * and at each stage, then its outcome — and all of them describe one build, so
  * later reports overwrite earlier ones instead of multiplying the table.
  */
+/**
+ * Which server the built app talks to, as this report knows it. The runner says
+ * so; a reporter that predates the field does not, and then a NEW row built
+ * from the staging branch is still a staging build — never the PRODUCTION the
+ * model defaults to, which would offer it to the stores. A row that already
+ * exists keeps what dispatch recorded.
+ */
+function appEnvOf(
+  input: { app_env?: string | null; branch?: string | null },
+  existing: IAppBuild | null
+): { app_env?: AppBuildEnv } {
+  const said = optionalStr(input.app_env).toUpperCase();
+  if (APP_ENVS.has(said)) return { app_env: said as AppBuildEnv };
+  if (!existing && optionalStr(input.branch) === DEFAULT_REF.STAGING) return { app_env: 'STAGING' };
+  return {};
+}
+
 async function upsertBuild(
   input: any,
   status: AppBuildStatus,
@@ -553,6 +599,7 @@ async function upsertBuild(
     platform: input.platform,
     status,
     version,
+    ...appEnvOf(input, existing),
     // Minted once per run, so a report that lacks it (an older reporter) must
     // not blank the one an earlier report of the same run carried.
     ...(optionalStr(input.build_number) ? { build_number: optionalStr(input.build_number) } : {}),
@@ -628,10 +675,10 @@ export const appBuildService = {
     return pub(build);
   },
 
-  async table(platform: AppBuildPlatform, input?: TableQueryInput | null) {
+  async table(platform: AppBuildPlatform, input?: TableQueryInput | null, appEnv?: AppBuildEnv | null) {
     const { docs, total, page, page_size } = await runTableQuery<IAppBuild>(
       AppBuildModel,
-      { platform, ...presenceFilter(input, 'slack_ts') },
+      { platform, ...(appEnv ? { app_env: appEnv } : {}), ...presenceFilter(input, 'slack_ts') },
       input,
       APP_BUILD_TABLE_CONFIG
     );
@@ -781,8 +828,10 @@ export const appBuildService = {
     const play = await playStoreSettings();
     const appStore = await appStoreSettings();
     return {
-      android_channel: optionalStr(await getRuntimeEnvValue('SLACK_ANDROID_BUILDS_CHANNEL')) || null,
-      ios_channel: optionalStr(await getRuntimeEnvValue('SLACK_IOS_BUILDS_CHANNEL')) || null,
+      android_channel: optionalStr(await getRuntimeEnvValue(CHANNEL_ENV_KEY.ANDROID)) || null,
+      ios_channel: optionalStr(await getRuntimeEnvValue(CHANNEL_ENV_KEY.IOS)) || null,
+      android_staging_channel: optionalStr(await getRuntimeEnvValue(STAGING_CHANNEL_ENV_KEY.ANDROID)) || null,
+      ios_staging_channel: optionalStr(await getRuntimeEnvValue(STAGING_CHANNEL_ENV_KEY.IOS)) || null,
       last_reported_at: latest?.created_at?.toISOString() ?? null,
       last_reported_by: optionalStr(latest?.reported_by) || null,
       play_store_configured: play.configured,
@@ -830,7 +879,12 @@ export const appBuildService = {
 
   /** Writes the channel fields onto the default SLACK env entry (the same
    * place the bot token lives, so the Environment page shows them too). */
-  async updateSettings(input: { android_channel?: string | null; ios_channel?: string | null }) {
+  async updateSettings(input: {
+    android_channel?: string | null;
+    ios_channel?: string | null;
+    android_staging_channel?: string | null;
+    ios_staging_channel?: string | null;
+  }) {
     const entry = await slackEntry();
     if (!entry) {
       throw badInput(
@@ -843,6 +897,12 @@ export const appBuildService = {
     }
     if (input.ios_channel !== undefined) {
       set['config.ios_builds_channel'] = optionalStr(input.ios_channel);
+    }
+    if (input.android_staging_channel !== undefined) {
+      set['config.android_staging_builds_channel'] = optionalStr(input.android_staging_channel);
+    }
+    if (input.ios_staging_channel !== undefined) {
+      set['config.ios_staging_builds_channel'] = optionalStr(input.ios_staging_channel);
     }
     if (Object.keys(set).length > 0) {
       await EnvEntryModel.updateOne({ _id: entry._id }, { $set: set });

@@ -202,6 +202,8 @@ describe('configuration surfaces', () => {
     expect(await appBuildService.settings()).toEqual({
       android_channel: null,
       ios_channel: null,
+      android_staging_channel: null,
+      ios_staging_channel: null,
       last_reported_at: null,
       last_reported_by: null,
       play_store_configured: true,

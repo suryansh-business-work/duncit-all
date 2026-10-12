@@ -87,6 +87,8 @@ export const appBuildTypeDefs = gql`
     error: String!
     "Who pressed the button."
     by: String!
+    "What each step of the push did, in order, each line stamped with its time. Empty on a push made before logs were kept."
+    log: [String!]!
     started_at: String!
     finished_at: String
   }
@@ -293,8 +295,14 @@ export const appBuildTypeDefs = gql`
 
   "Which Slack channels build announcements post to (stored on the SLACK env entry)."
   type AppBuildSettings {
+    "Where production Android builds are announced."
     android_channel: String
+    "Where production iOS builds are announced."
     ios_channel: String
+    "Where staging Android builds are announced. Null sends them to the production channel."
+    android_staging_channel: String
+    "Where staging iOS builds are announced. Null sends them to the production channel."
+    ios_staging_channel: String
     "When CI last reported any build. Null means the workflows have never reached us."
     last_reported_at: String
     "Which account the last report authenticated as."
@@ -410,6 +418,8 @@ export const appBuildTypeDefs = gql`
 
   input ReportAppBuildInput {
     platform: AppBuildPlatform!
+    "Which server the built app talks to. Left out, a new build from the staging branch is STAGING and any other PRODUCTION."
+    app_env: AppBuildEnv
     "Defaults to SUCCESS. FAILED rows carry no artifact."
     status: AppBuildStatus
     version: String!
@@ -499,6 +509,10 @@ export const appBuildTypeDefs = gql`
     android_channel: String
     "Slack channel ID iOS builds announce to. Empty clears it."
     ios_channel: String
+    "Slack channel ID staging Android builds announce to. Empty sends them to the production channel."
+    android_staging_channel: String
+    "Slack channel ID staging iOS builds announce to. Empty sends them to the production channel."
+    ios_staging_channel: String
   }
 
   "Whether the portal can start builds, and what it would build from."
@@ -523,8 +537,8 @@ export const appBuildTypeDefs = gql`
   }
 
   extend type Query {
-    "CI builds of one platform, newest first (Tech portal App Builds tables)."
-    appBuildsTable(platform: AppBuildPlatform!, query: TableQueryInput): AppBuildTablePage!
+    "CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both."
+    appBuildsTable(platform: AppBuildPlatform!, query: TableQueryInput, app_env: AppBuildEnv): AppBuildTablePage!
     appBuildSettings: AppBuildSettings!
     appBuildTriggerConfig: AppBuildTriggerConfig!
     "The iOS signing identity a build was signed with. Null on Android and on builds from before one existed."

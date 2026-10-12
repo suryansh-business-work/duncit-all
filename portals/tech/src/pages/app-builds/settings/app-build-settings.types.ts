@@ -7,7 +7,10 @@ export interface AppBuildSettingsMessages {
   channelFormat: string;
 }
 
-/** Both fields optional — an empty value clears that platform's channel. */
+/**
+ * Every field optional — an empty value clears that channel. An empty staging
+ * channel sends that platform's staging builds to its production channel.
+ */
 export const appBuildSettingsSchema = (messages: AppBuildSettingsMessages) => {
   const channel = z
     .string()
@@ -16,7 +19,22 @@ export const appBuildSettingsSchema = (messages: AppBuildSettingsMessages) => {
   return z.object({
     android_channel: channel,
     ios_channel: channel,
+    android_staging_channel: channel,
+    ios_staging_channel: channel,
   });
 };
 
 export type AppBuildSettingsValues = z.infer<ReturnType<typeof appBuildSettingsSchema>>;
+
+/** What the form opens with, and re-arms to after a save: the channels now stored. */
+export const toAppBuildSettingsForm = (settings: {
+  android_channel: string | null;
+  ios_channel: string | null;
+  android_staging_channel: string | null;
+  ios_staging_channel: string | null;
+}): AppBuildSettingsValues => ({
+  android_channel: settings.android_channel ?? '',
+  ios_channel: settings.ios_channel ?? '',
+  android_staging_channel: settings.android_staging_channel ?? '',
+  ios_staging_channel: settings.ios_staging_channel ?? '',
+});

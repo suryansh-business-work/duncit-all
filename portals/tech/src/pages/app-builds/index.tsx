@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -6,6 +6,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { useConfirm, notifySuccess, notifyError } from '@duncit/dialogs';
 import { useApolloTableFetch, type TableFetch } from '@duncit/table';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import AppBuildsTable from './AppBuildsTable';
 import BuildDetailsDialog from './BuildDetailsDialog';
 import { CreateBuildDialog } from './create-build';
@@ -30,6 +31,15 @@ import {
  */
 const LIVE_POLL_MS = 15_000;
 
+/** Which environment's builds the table lists — its own URL param, so a link keeps the filter. */
+type EnvFilter = 'all' | 'production' | 'staging';
+const ENV_PARAM = 'env';
+const ENV_OF: Record<EnvFilter, 'PRODUCTION' | 'STAGING' | null> = {
+  all: null,
+  production: 'PRODUCTION',
+  staging: 'STAGING',
+};
+
 interface Props {
   platform: AppBuildPlatform;
 }
@@ -48,12 +58,22 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
   const [creating, setCreating] = useState(false);
   const [removeBuild] = useMutation<any>(DELETE_APP_BUILD);
   const [hasLiveBuild, setHasLiveBuild] = useState(false);
+  const envItems = useMemo<DuncitTabItem<EnvFilter>[]>(
+    () => [
+      { value: 'all', label: t('tech.appBuilds.envAll'), testId: 'app-builds-env-all' },
+      { value: 'production', label: t('tech.appBuilds.envProduction'), testId: 'app-builds-env-production' },
+      { value: 'staging', label: t('tech.appBuilds.envStaging'), testId: 'app-builds-env-staging' },
+    ],
+    [t]
+  );
+  const envTabs = useTabParam<EnvFilter>({ items: envItems, fallback: 'all', param: ENV_PARAM });
+  const appEnv = ENV_OF[envTabs.value];
   const baseFetch = useApolloTableFetch<AppBuildRow>(
     client,
     APP_BUILDS_TABLE,
     'appBuildsTable',
-    { extraVariables: { platform } },
-    [platform]
+    { extraVariables: { platform, app_env: appEnv } },
+    [platform, appEnv]
   );
 
   // The page it just fetched is what decides whether to keep polling: no live
@@ -141,6 +161,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
           {t('tech.appBuilds.triggerAction')}
         </DuncitButton>
       </Stack>
+      <DuncitTabs {...envTabs} aria-label={t('tech.appBuilds.envFilterLabel')} />
       <AppBuildsTable
         platform={platform}
         fetchRows={fetchRows}

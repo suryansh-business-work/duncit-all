@@ -33,6 +33,9 @@
  *                            no changelog, no diff stat, no upload.
  *   DISPATCH_ID              set by the Tech portal; claims the row it already
  *                            created instead of opening a second one.
+ *   APP_ENV                  production | staging — which server the built app
+ *                            talks to. Recorded on the build; a staging build is
+ *                            never recorded as anything else.
  *   DUNCIT_GRAPHQL_URL       where to record the build. Defaults to production;
  *                            a portal-started build points this at the server
  *                            that started it, which is not necessarily the one
@@ -296,6 +299,14 @@ async function reportBuild(input, token) {
   } catch (err) {
     const unknown = unknownInputFields(err);
     if (unknown.length === 0) throw err;
+    // Every other field can be lost to an older server; this one cannot. Without
+    // it the row would say PRODUCTION, and a build that talks to the staging
+    // database would be offered to the stores.
+    if (unknown.includes('app_env') && input.app_env === 'STAGING') {
+      throw new Error(
+        'This server cannot record staging builds yet (it predates the app_env field). Deploy it, then build again.'
+      );
+    }
     console.warn(
       `⚠ server predates this commit — resending without: ${unknown.join(', ')}`
     );
@@ -353,9 +364,16 @@ const STATUSES = new Set(['RUNNING', 'SUCCESS', 'FAILED']);
  * second one — the dispatch REST call answers with no run id, so this is the
  * only join key that exists on the first report.
  */
+/** APP_ENV as the server spells it; absent when the workflow did not say. */
+function appEnv() {
+  const value = (process.env.APP_ENV || '').trim().toUpperCase();
+  return value === 'PRODUCTION' || value === 'STAGING' ? { app_env: value } : {};
+}
+
 function reportIdentity(platform) {
   return {
     platform,
+    ...appEnv(),
     dispatch_id: (process.env.DISPATCH_ID || '').trim(),
     // Only a push build has a GitHub actor worth naming; a portal build already
     // recorded who pressed the button, and the server keeps that.

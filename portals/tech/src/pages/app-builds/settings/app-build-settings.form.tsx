@@ -1,13 +1,17 @@
 import { useEffect } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import SlackChannelField from '../../../components/SlackChannelField';
 import type { SlackChannel } from '../../../lib/slack-queries';
 import type { AppBuildSettings } from '../queries';
-import { appBuildSettingsSchema, type AppBuildSettingsValues } from './app-build-settings.types';
+import {
+  appBuildSettingsSchema,
+  toAppBuildSettingsForm,
+  type AppBuildSettingsValues,
+} from './app-build-settings.types';
 
 interface Props {
   settings: AppBuildSettings;
@@ -25,26 +29,28 @@ export default function AppBuildSettingsForm({
   const { t } = useTranslation();
   const messages = { channelFormat: t('tech.appBuilds.channelFormat') };
   const { control, handleSubmit, reset } = useForm<AppBuildSettingsValues, any, AppBuildSettingsValues>({
-    defaultValues: {
-      android_channel: settings.android_channel ?? '',
-      ios_channel: settings.ios_channel ?? '',
-    },
+    defaultValues: toAppBuildSettingsForm(settings),
     resolver: zodResolver(appBuildSettingsSchema(messages)) as unknown as Resolver<AppBuildSettingsValues, any, AppBuildSettingsValues>,
     mode: 'all',
   });
 
   // Server round-trips (load + save) re-arm the form with what is now stored.
   useEffect(() => {
-    reset({
-      android_channel: settings.android_channel ?? '',
-      ios_channel: settings.ios_channel ?? '',
-    });
+    reset(toAppBuildSettingsForm(settings));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.android_channel, settings.ios_channel]);
+  }, [
+    settings.android_channel,
+    settings.ios_channel,
+    settings.android_staging_channel,
+    settings.ios_staging_channel,
+  ]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack spacing={2.5}>
+        <Typography variant="subtitle2" component="h2">
+          {t('tech.appBuilds.productionChannels')}
+        </Typography>
         <SlackChannelField
           control={control}
           name="android_channel"
@@ -58,6 +64,25 @@ export default function AppBuildSettingsForm({
           name="ios_channel"
           label={t('tech.appBuilds.iosChannel')}
           hint={t('tech.appBuilds.channelHint')}
+          channels={channels}
+          unknownHint={t('tech.appBuilds.channelUnknown')}
+        />
+        <Typography variant="subtitle2" component="h2">
+          {t('tech.appBuilds.stagingChannels')}
+        </Typography>
+        <SlackChannelField
+          control={control}
+          name="android_staging_channel"
+          label={t('tech.appBuilds.androidStagingChannel')}
+          hint={t('tech.appBuilds.stagingChannelHint')}
+          channels={channels}
+          unknownHint={t('tech.appBuilds.channelUnknown')}
+        />
+        <SlackChannelField
+          control={control}
+          name="ios_staging_channel"
+          label={t('tech.appBuilds.iosStagingChannel')}
+          hint={t('tech.appBuilds.stagingChannelHint')}
           channels={channels}
           unknownHint={t('tech.appBuilds.channelUnknown')}
         />

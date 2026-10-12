@@ -1,7 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { appBuildService } from './appBuild.service';
-import type { AppBuildPlatform, AppStoreTrack, PlayStoreTrack } from './appBuild.model';
+import type { AppBuildEnv, AppBuildPlatform, AppStoreTrack, PlayStoreTrack } from './appBuild.model';
 import {
   generateIosSigning,
   iosSigningBundle,
@@ -20,11 +20,11 @@ export const appBuildResolvers = {
   Query: {
     appBuildsTable: (
       _p: unknown,
-      args: { platform: AppBuildPlatform; query?: TableQueryInput | null },
+      args: { platform: AppBuildPlatform; query?: TableQueryInput | null; app_env?: AppBuildEnv | null },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, BUILDS_MANAGE);
-      return appBuildService.table(args.platform, args.query);
+      return appBuildService.table(args.platform, args.query, args.app_env);
     },
     appBuildSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, BUILDS_MANAGE);

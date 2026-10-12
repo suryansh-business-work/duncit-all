@@ -69,3 +69,7 @@ export function QueryGuard({ loading, error, children }: any): ReactNode {
 // The money view is the thing these suites assert on, so it is the REAL one —
 // a stub would only prove the stub renders.
 export { default as EarningsSplitView } from '../../../../../packages/ui/src/finance-waterfall/EarningsSplitView';
+// Likewise the venue-bill summary on the Payment Release request page: its
+// lines are what Finance approves against, and omitting it made the import
+// `undefined`.
+export { default as VenueBillSummary } from '../../../../../packages/ui/src/finance-waterfall/VenueBillSummary';

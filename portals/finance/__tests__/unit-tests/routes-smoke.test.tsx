@@ -103,6 +103,7 @@ const ROUTES = [
   '/ecomm/payment-logs',
   '/ecomm/order-refunds',
   '/payment-release',
+  '/payment-release/smoke-id',
   '/withdrawals',
   '/withdrawals/settings',
   '/withdrawals/smoke-id',

@@ -18,6 +18,7 @@ import {
   RoundOffsPage,
   OrderRefundsPage,
   PaymentReleasePage,
+  PaymentReleaseDetailPage,
   WithdrawalsPage,
   PodWithdrawalDetailPage,
   WithdrawalSettingsPage,
@@ -68,6 +69,7 @@ export default function App() {
       <Route path="/ecomm/payment-logs" element={authed(<PaymentLogsPage key="ecomm" shop="ECOMM" />)} />
       <Route path="/ecomm/order-refunds" element={authed(<OrderRefundsPage key="ecomm" shop="ECOMM" />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
+      <Route path="/payment-release/:requestId" element={authed(<PaymentReleaseDetailPage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />
       <Route path="/withdrawals/settings" element={authed(<WithdrawalSettingsPage />)} />
       {/* Static /settings outranks this dynamic segment in the router's own

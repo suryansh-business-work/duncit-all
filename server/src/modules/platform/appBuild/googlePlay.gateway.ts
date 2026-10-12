@@ -158,7 +158,8 @@ async function uploadState(res: Response): Promise<UploadState> {
   }
   const data = (await res.json().catch(() => ({}))) as { versionCode?: unknown; sha256?: unknown };
   if (!res.ok) throw googleError(res.status, data);
-  return { bundle: { versionCode: Number(data.versionCode), sha256: String(data.sha256 ?? '') } };
+  const sha256 = typeof data.sha256 === 'string' ? data.sha256 : '';
+  return { bundle: { versionCode: Number(data.versionCode), sha256 } };
 }
 
 /** Open a resumable upload; the address it answers with takes the parts and needs no token. */

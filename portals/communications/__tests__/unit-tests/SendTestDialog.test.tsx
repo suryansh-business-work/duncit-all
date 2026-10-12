@@ -90,6 +90,43 @@ describe('SendTestDialog', () => {
     expect(Object.keys(parsed)).not.toContain('t:email.common.greeting');
   });
 
+  it.each([
+    ['unparseable text', 'not json {'],
+    ['JSON null', 'null'],
+    ['a bare JSON string', '"hello"'],
+  ])('ignores a Variables tab holding %s and seeds from the template samples', (_label, varsJson) => {
+    render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+        <SendTestDialog
+          open
+          template={template}
+          detected={[]}
+          varsJson={varsJson}
+          onClose={vi.fn()}
+          onResult={vi.fn()}
+        />
+      </MockedProvider>
+    );
+    expect(screen.getByLabelText('name')).toHaveValue('Asha');
+    expect(screen.getByLabelText('amount')).toHaveValue('');
+  });
+
+  it('renders nothing while closed', () => {
+    render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+        <SendTestDialog
+          open={false}
+          template={template}
+          detected={[]}
+          varsJson="{}"
+          onClose={vi.fn()}
+          onResult={vi.fn()}
+        />
+      </MockedProvider>
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('says a template with no variables has nothing to fill', () => {
     render(
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>

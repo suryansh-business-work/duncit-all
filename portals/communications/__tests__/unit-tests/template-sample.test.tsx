@@ -301,6 +301,11 @@ describe('the catalogue helpers', () => {
     expect(paramContext('Hi {{1}}.', 5)).toBe('');
   });
 
+  it('gives a placeholder at either edge of the body only the words on its one side', () => {
+    expect(paramContext('{{1}} is on.', 1)).toBe('…{{1}} is on.…');
+    expect(paramContext('Your pod is on {{1}}', 1)).toBe('…Your pod is on {{1}}…');
+  });
+
   it('flattens the wording onto one line, since a row is one line high', () => {
     const context = paramContext('Hi {{1}},\n\n  your pod is on.', 1);
 

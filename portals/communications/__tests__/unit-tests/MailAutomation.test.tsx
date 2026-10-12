@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MailAutomationAccount } from '../../src/pages/mail-automation/queries';
 import { renderWithProviders } from '../testkit';
+import { columnValue, searchRows } from '../mocks/table-stub';
 
 const m = vi.hoisted(() => ({
   configured: undefined as unknown,
@@ -108,6 +109,15 @@ describe('MailAutomationPage - states', () => {
     expect(screen.getByText('Accounts unavailable')).toBeInTheDocument();
   });
 
+  it('keeps the table empty, not crashed, when the list could not be read at all', async () => {
+    m.accounts = undefined;
+    m.accountsError = new Error('Accounts unavailable');
+    mount();
+    expect(screen.getByText('Accounts unavailable')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+    expect(screen.queryByTestId('row-a1')).not.toBeInTheDocument();
+  });
+
   it('shows a lost grant, a paused mailbox, a poll error and a never-polled mailbox', async () => {
     m.accounts = [
       account({ id: 'lost', email: 'lost@example.test', is_connected: false }),
@@ -171,6 +181,26 @@ describe('MailAutomationPage - actions', () => {
   });
 });
 
+describe('MailAutomationPage - table behaviour', () => {
+  it('searches by mailbox address only', async () => {
+    m.accounts = [account(), account({ id: 'a2', email: 'billing@example.test', display_name: 'Billing' })];
+    mount();
+    await screen.findByTestId('row-a1');
+    const hit = await searchRows('billing@');
+    expect(hit?.rows).toEqual([expect.objectContaining({ id: 'a2' })]);
+    const miss = await searchRows('nobody@');
+    expect(miss?.rows).toEqual([]);
+  });
+
+  it('sorts and filters the queue by its label and the connected date by its formatted value', async () => {
+    mount();
+    await screen.findByTestId('row-a1');
+    expect(columnValue('ticket_type', account({ ticket_type: 'SUPPORT' }))).toEqual(expect.any(String));
+    expect(columnValue('ticket_type', account({ ticket_type: 'SUPPORT' }))).not.toBe('SUPPORT');
+    expect(columnValue('connected_at', account())).toEqual(expect.stringMatching(/2026/));
+  });
+});
+
 describe('MailAutomationPage - OAuth return', () => {
   it('toasts a first connection and refreshes the list', async () => {
     mount('/?connected=help@example.test');
@@ -185,6 +215,13 @@ describe('MailAutomationPage - OAuth return', () => {
     const alerts = await screen.findAllByRole('alert');
     expect(alerts.some((a) => a.textContent?.includes('help@example.test'))).toBe(true);
     expect(m.notify).not.toHaveBeenCalled();
+  });
+
+  it('lets the held reconnect warning be dismissed', async () => {
+    mount('/?connected=help@example.test&reconnected=1');
+    const warning = (await screen.findAllByRole('alert')).find((a) => a.textContent?.includes('help@example.test'));
+    fireEvent.click(within(warning as HTMLElement).getByRole('button'));
+    await waitFor(() => expect(screen.queryByText(/help@example.test.*rule/i)).not.toBeInTheDocument());
   });
 
   it('says a cancelled consent was cancelled', async () => {

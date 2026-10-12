@@ -1,6 +1,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../testkit';
+import { columnValue } from '../mocks/table-stub';
 
 vi.mock('@duncit/table', async (io) => ({
   ...(await io<typeof import('@duncit/table')>()),
@@ -91,6 +92,14 @@ describe('EmailLogMeta', () => {
     expect(screen.getByText(/14 recipients on this message/)).toBeInTheDocument();
   });
 
+  it('dashes a blank provider and shows an unknown status in a neutral chip', () => {
+    renderWithProviders(
+      <EmailLogMeta row={detail({ provider: '', status: 'QUEUED' as EmailLogRow['status'] })} />
+    );
+    expect(screen.getByText('QUEUED').closest('.MuiChip-root')).toHaveClass('MuiChip-colorDefault');
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
+  });
+
   it('shows the source detail in place of the source when there is one', () => {
     renderWithProviders(<EmailLogMeta row={detail({ source_detail: 'cron:weekly' })} />);
     expect(screen.getByText('cron:weekly')).toBeInTheDocument();
@@ -131,6 +140,32 @@ describe('EmailLogsTable', () => {
     mount([row({ to: '', subject: '', template: '', reason: '', provider: '', message_id: '' })]);
     const r = await screen.findByTestId('row-L1');
     expect(within(r).getAllByText('—').length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('sorts, filters and exports by plain values, with a dash for what is blank', async () => {
+    mount([row()]);
+    await screen.findByTestId('row-L1');
+    const full = row({ reason: 'Mailbox full' });
+    const blank = row({ to: '', reason: '', template: '', provider: '', message_id: '' });
+    expect(columnValue('status', full)).toBe('SENT');
+    expect(columnValue('to', full)).toBe('asha@example.test');
+    expect(columnValue('to', blank)).toBe('—');
+    expect(columnValue('reason', full)).toBe('Mailbox full');
+    expect(columnValue('reason', blank)).toBe('—');
+    expect(columnValue('template', full)).toBe('pod-spot-filled');
+    expect(columnValue('template', blank)).toBe('—');
+    expect(columnValue('category', full)).toBe('transactional');
+    expect(columnValue('source', full)).toBe('SERVER');
+    expect(columnValue('provider', blank)).toBe('—');
+    expect(columnValue('duration_ms', full)).toBe('42 ms');
+    expect(columnValue('message_id', full)).toBe('m-1');
+    expect(columnValue('message_id', blank)).toBe('—');
+  });
+
+  it('falls back to a neutral chip for a status the page does not know', async () => {
+    mount([row({ status: 'QUEUED' as EmailLogRow['status'] })]);
+    const r = await screen.findByTestId('row-L1');
+    expect(within(r).getByText('QUEUED').closest('.MuiChip-root')).toHaveClass('MuiChip-colorDefault');
   });
 
   it('opens the drawer for the clicked row', async () => {

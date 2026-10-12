@@ -2,6 +2,7 @@ import { act, fireEvent, renderHook, screen, waitFor, within } from '@testing-li
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../testkit';
+import { columnValue, searchRows } from '../mocks/table-stub';
 
 const m = vi.hoisted(() => ({
   configured: true as boolean | undefined,
@@ -142,6 +143,31 @@ describe('Msg91LogsPage', () => {
     expect(screen.queryByText(/of 1\b/)).not.toBeInTheDocument();
   });
 
+  it('searches by number, request id and IP, and sorts by plain values', async () => {
+    m.report = {
+      msg91WidgetLogs: {
+        total: 2,
+        rows: [logRow(), logRow({ request_id: 'req-2', identifier: '918888888888', user_ip: '10.9.9.9' })],
+      },
+    };
+    renderWithProviders(<Msg91LogsPage />);
+    await screen.findByTestId('row-req-1');
+    expect((await searchRows('918888'))?.rows).toEqual([expect.objectContaining({ request_id: 'req-2' })]);
+    expect((await searchRows('req-1'))?.rows).toEqual([expect.objectContaining({ request_id: 'req-1' })]);
+    expect((await searchRows('10.9.9.9'))?.rows).toHaveLength(1);
+    expect((await searchRows('nothing'))?.rows).toEqual([]);
+
+    const row = logRow();
+    expect(columnValue('identifier', row)).toBe('919000000000');
+    expect(columnValue('verified', row)).toBe(true);
+    expect(columnValue('token_verified', row)).toBe(false);
+    expect(columnValue('verify_attempts', row)).toBe(2);
+    expect(columnValue('retries', row)).toBe(1);
+    expect(columnValue('request_id', row)).toBe('req-1');
+    expect(columnValue('user_ip', row)).toBe('10.0.0.1');
+    expect(columnValue('channels', row)).toBe('SMS ×2 · WhatsApp ×1');
+  });
+
   it('refreshes when Load is pressed for the same window', async () => {
     m.report = { msg91WidgetLogs: { total: 1, rows: [logRow()] } };
     renderWithProviders(<Msg91LogsPage />);
@@ -174,6 +200,21 @@ describe('Msg91AnalyticsPage', () => {
     };
     renderWithProviders(<Msg91AnalyticsPage />);
     expect(await screen.findByText('— of requests were verified')).toBeInTheDocument();
+  });
+
+  it('searches the daily table by date', async () => {
+    m.report = analytics();
+    renderWithProviders(<Msg91AnalyticsPage />);
+    await screen.findByTestId('row-2026-08-05');
+    expect((await searchRows('2026-08-06'))?.rows).toEqual([expect.objectContaining({ date: '2026-08-06' })]);
+    expect((await searchRows('1999'))?.rows).toEqual([]);
+  });
+
+  it('draws neither board nor empty notice before MSG91 has answered', () => {
+    m.report = undefined;
+    renderWithProviders(<Msg91AnalyticsPage />);
+    expect(screen.queryByText('No OTP traffic in this window.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'chart' })).not.toBeInTheDocument();
   });
 
   it('says there was no traffic for an empty window', async () => {
@@ -215,6 +256,15 @@ describe('useMsg91Report', () => {
       result.current.onRange(result.current.range);
     });
     expect(m.refetch).toHaveBeenCalled();
+  });
+
+  it('survives a refetch that rejects with something that is not an Error', async () => {
+    m.refetch.mockRejectedValue('offline');
+    const { result } = mount();
+    await act(async () => {
+      result.current.onRange(result.current.range);
+    });
+    expect(m.refetch).toHaveBeenCalledTimes(1);
   });
 
   it('asks nothing while MSG91 is not configured', () => {

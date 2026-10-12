@@ -107,24 +107,24 @@ export function useEmailTemplateEditor() {
   const renderPreview = async () => {
     if (!draft) return [];
     setPreviewLoading(true);
+    let errors: string[];
     try {
       const res = await client.query<any>({
         query: RENDER,
         variables: { mjml: draft.mjml, vars: varsJson, fragment: draft.fragment_key ?? null },
         fetchPolicy: 'network-only',
       });
-      const errors = res.data?.renderEmailTemplate?.errors ?? [];
+      errors = res.data?.renderEmailTemplate?.errors ?? [];
       setPreviewHtml(res.data?.renderEmailTemplate?.html ?? '');
       setPreviewErrors(errors);
       setDetected(res.data?.renderEmailTemplate?.detected_variables ?? []);
-      return errors;
     } catch (e: any) {
-      const errors = [e.message];
+      errors = [e.message];
       setPreviewErrors(errors);
-      return errors;
     } finally {
       setPreviewLoading(false);
     }
+    return errors;
   };
 
   // MJML compiles on the SERVER, so the frame shows the previous render from

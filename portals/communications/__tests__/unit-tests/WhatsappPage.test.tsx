@@ -7,6 +7,7 @@ const m = vi.hoisted(() => ({
   refetch: vi.fn(),
   actions: {} as Record<string, unknown>,
   onChanged: undefined as undefined | (() => void),
+  logsRefetch: vi.fn(),
 }));
 vi.mock('@apollo/client/react', async (io) => ({
   ...(await io<typeof import('@apollo/client/react')>()),
@@ -62,7 +63,7 @@ vi.mock('../../src/pages/whatsapp-page/wa-logs', () => ({
     onDuplicate: (c: unknown) => void;
     refetchRef: { current: (() => void) | null };
   }) => {
-    p.refetchRef.current = () => undefined;
+    p.refetchRef.current = m.logsRefetch;
     return (
       <div>
         <span>logs:{p.campaigns.join(',')}</span>
@@ -95,6 +96,10 @@ vi.mock('../../src/pages/whatsapp-page/wa-campaign-form', async (io) => ({
     open: boolean;
     campaignName: string;
     initial: { name: string } | null;
+    names: unknown[];
+    variables: unknown[];
+    audienceLists: unknown[];
+    onClose: () => void;
     onSubmit: (i: unknown) => void;
   }) =>
     p.open ? (
@@ -102,15 +107,28 @@ vi.mock('../../src/pages/whatsapp-page/wa-campaign-form', async (io) => ({
         <span>
           send-form:{p.campaignName}:{p.initial?.name ?? 'blank'}
         </span>
+        <span>
+          form-data:{p.names.length}:{p.variables.length}:{p.audienceLists.length}
+        </span>
         <button type="button" onClick={() => p.onSubmit({ name: 'x' })}>
           submit-send
+        </button>
+        <button type="button" onClick={p.onClose}>
+          close-send
         </button>
       </div>
     ) : null,
 }));
 vi.mock('../../src/pages/whatsapp-page/wa-test-form', () => ({
-  WaTestForm: (p: { open: boolean; campaignName: string }) =>
-    p.open ? <span>test-form:{p.campaignName}</span> : null,
+  WaTestForm: (p: { open: boolean; campaignName: string; names: unknown[]; onClose: () => void }) =>
+    p.open ? (
+      <div>
+        <span>test-form:{p.campaignName}:{p.names.length}</span>
+        <button type="button" onClick={p.onClose}>
+          close-test
+        </button>
+      </div>
+    ) : null,
 }));
 
 import WhatsappCampaignsPage from '../../src/pages/whatsapp-page';
@@ -128,6 +146,7 @@ beforeEach(() => {
     audienceLists: [],
   };
   m.refetch.mockReset().mockResolvedValue({});
+  m.logsRefetch.mockReset();
   m.actions = {
     send: vi.fn().mockResolvedValue(true),
     testMessage: vi.fn(),
@@ -192,7 +211,60 @@ describe('WhatsappCampaignsPage', () => {
   it('opens the test form for a campaign', () => {
     mount('campaigns');
     fireEvent.click(screen.getByRole('button', { name: 'start-test' }));
-    expect(screen.getByText('test-form:diwali_camp')).toBeInTheDocument();
+    expect(screen.getByText('test-form:diwali_camp:1')).toBeInTheDocument();
+  });
+
+  it('closes the send form and the test form without sending anything', () => {
+    mount('campaigns');
+    fireEvent.click(screen.getByRole('button', { name: 'start-send' }));
+    fireEvent.click(screen.getByRole('button', { name: 'close-send' }));
+    expect(screen.queryByText(/send-form:/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'start-test' }));
+    fireEvent.click(screen.getByRole('button', { name: 'close-test' }));
+    expect(screen.queryByText(/test-form:/)).not.toBeInTheDocument();
+    expect(m.actions.send).not.toHaveBeenCalled();
+  });
+
+  it('hands the forms the loaded setup lists', () => {
+    m.setup = { ...(m.setup as object), waCampaignVariables: [{ key: 'v' }], audienceLists: [{ id: 'l1' }, { id: 'l2' }] };
+    mount('campaigns');
+    fireEvent.click(screen.getByRole('button', { name: 'start-send' }));
+    expect(screen.getByText('form-data:1:1:2')).toBeInTheDocument();
+  });
+
+  it('gives every tab and form empty lists, and no missing-key warning, before the setup has loaded', () => {
+    m.setup = undefined;
+    const campaigns = mount('campaigns');
+    expect(screen.getByText('names:0')).toBeInTheDocument();
+    expect(screen.queryByText(/No AiSensy API key yet/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'start-send' }));
+    expect(screen.getByText('form-data:0:0:0')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'start-test' }));
+    expect(screen.getByText('test-form:diwali_camp:0')).toBeInTheDocument();
+    campaigns.unmount();
+
+    const settings = mount('settings');
+    expect(screen.getByText('tab:settings:0:true')).toBeInTheDocument();
+    settings.unmount();
+
+    mount('logs');
+    expect(screen.getByText('logs:')).toBeInTheDocument();
+  });
+
+  it('refreshes the open Logs table when a change lands', () => {
+    mount('logs');
+    m.onChanged?.();
+    expect(m.refetch).toHaveBeenCalled();
+    expect(m.logsRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not fail a change when the setup refetch rejects', async () => {
+    m.refetch.mockRejectedValue(new Error('offline'));
+    mount('logs');
+    m.onChanged?.();
+    await waitFor(() => expect(m.refetch).toHaveBeenCalled());
+    expect(m.logsRefetch).toHaveBeenCalledTimes(1);
   });
 
   it('opens Logs narrowed to a template campaigns, then clears the narrowing', () => {

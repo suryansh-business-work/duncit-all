@@ -30,7 +30,7 @@ function Field({ label, value }: Readonly<{ label: string; value?: string | null
 
 export default function EmailLogMeta({ row }: Readonly<Props>) {
   const { t } = useTranslation();
-  const recipients = [row.to, ...(row.cc ?? []), ...(row.bcc ?? [])].filter(Boolean).join(', ');
+  const recipients = [row.to, ...row.cc, ...row.bcc].filter(Boolean).join(', ');
 
   return (
     <Stack spacing={1.5} sx={{ p: 2 }}>
@@ -76,8 +76,8 @@ export default function EmailLogMeta({ row }: Readonly<Props>) {
         {/* No Subject field — the drawer's own title is the subject, and
             printing it twice reads as two different things. */}
         <Field label="To" value={row.to} />
-        {row.cc?.length > 0 && <Field label="CC" value={row.cc.join(', ')} />}
-        {row.bcc?.length > 0 && <Field label="BCC" value={row.bcc.join(', ')} />}
+        {row.cc.length > 0 && <Field label="CC" value={row.cc.join(', ')} />}
+        {row.bcc.length > 0 && <Field label="BCC" value={row.bcc.join(', ')} />}
         <Field label={t('tech.emailLogs.provider')} value={row.provider} />
         <Field label={t('tech.emailLogs.messageId')} value={row.message_id} />
         <Box>

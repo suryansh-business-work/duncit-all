@@ -3,7 +3,7 @@ import {
   emailTemplateCreateSchema,
   slugify,
   toCreateTemplateInput,
-} from '../../src/pages/email-templates-page/email-template-create/email-template-create.form';
+} from '../../src/pages/email-templates-page/email-template-create';
 
 const firstError = (result: ReturnType<typeof emailTemplateCreateSchema.safeParse>) =>
   result.success ? '' : result.error.issues.map((i) => i.message).join(' ');

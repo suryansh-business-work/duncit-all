@@ -6,6 +6,7 @@ import { makeTpl } from '../mocks/email-template.mock';
 const m = vi.hoisted(() => ({
   data: undefined as unknown,
   loading: false,
+  error: undefined as Error | undefined,
   refetch: vi.fn(),
   run: vi.fn(),
   clientQuery: vi.fn(),
@@ -15,7 +16,7 @@ vi.mock('@apollo/client/react', async (io) => {
   const actual = await io<typeof import('@apollo/client/react')>();
   return {
     ...actual,
-    useQuery: () => ({ data: m.data, loading: m.loading, refetch: m.refetch }),
+    useQuery: () => ({ data: m.data, loading: m.loading, error: m.error, refetch: m.refetch }),
     useMutation: () => [m.run, {}] as const,
     useApolloClient: () => ({ query: m.clientQuery }),
   };
@@ -33,6 +34,7 @@ const tpl = makeTpl({
 beforeEach(() => {
   m.data = undefined;
   m.loading = false;
+  m.error = undefined;
   m.refetch = vi.fn().mockResolvedValue({});
   m.run.mockReset();
   m.run.mockResolvedValue({ data: {} });
@@ -158,6 +160,24 @@ describe('useEmailTemplateEditor — with data', () => {
       await result.current.validateMjml();
     });
     expect(result.current.previewErrors).toEqual(['render failed']);
+  });
+
+  it('hands the fragments query failure to the picker as a message', async () => {
+    m.error = new Error('fragments unavailable');
+    const { result } = mount();
+    await waitFor(() => expect(result.current.fragmentsError).toBe('fragments unavailable'));
+  });
+
+  it('treats a render answer with no data at all as an empty preview', async () => {
+    m.clientQuery.mockResolvedValue({});
+    const { result } = mount();
+    await waitFor(() => expect(result.current.draft).not.toBeNull());
+    await act(async () => {
+      await result.current.validateMjml();
+    });
+    expect(result.current.previewHtml).toBe('');
+    expect(result.current.previewErrors).toEqual([]);
+    expect(result.current.detected).toEqual([]);
   });
 
   it('handles a render response missing optional fields', async () => {

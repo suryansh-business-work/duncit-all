@@ -28,6 +28,10 @@ export default defineConfig({
       exclude: [
         'src/**/*.{cy,test,spec}.{ts,tsx}',
         'src/**/*.d.ts',
+        // Type-only re-export modules: erased at compile time, so there is no
+        // runtime to execute and v8 reports them as an empty file.
+        'src/pages/email-templates-page/email-template-create/email-template-create.types.ts',
+        'src/pages/email-templates-page/email-template-test/email-template-test.types.ts',
         // React root bootstrap — mountPortal render side-effect, no unit logic.
         'src/main.tsx',
         // Static per-portal config data.

@@ -8,6 +8,7 @@ const m = vi.hoisted(() => ({
   counts: new Map<string, { sent: number; attempts: number }>(),
   drafts: {} as Record<string, unknown>,
   confirm: vi.fn(),
+  onChanged: undefined as undefined | (() => void),
 }));
 vi.mock('@duncit/table', async (io) => ({
   ...(await io<typeof import('@duncit/table')>()),
@@ -26,14 +27,32 @@ vi.mock('../../src/pages/whatsapp-page/wa-aisensy/useWaSendCounts', async (io) =
   useWaSendCounts: () => m.counts,
 }));
 vi.mock('../../src/pages/whatsapp-page/wa-aisensy/useAisensyDrafts', () => ({
-  useAisensyDrafts: () => m.drafts,
+  useAisensyDrafts: (onChanged: () => void) => {
+    m.onChanged = onChanged;
+    return m.drafts;
+  },
 }));
 vi.mock('../../src/pages/whatsapp-page/wa-aisensy/create-campaign-form', () => ({
   CreateCampaignForm: (p: { open: boolean; orphans: { name: string }[]; onClose: () => void }) =>
-    p.open ? <div>campaign-form:{p.orphans.map((o) => o.name).join(',')}</div> : null,
+    p.open ? (
+      <div>
+        campaign-form:{p.orphans.map((o) => o.name).join(',')}
+        <button type="button" onClick={p.onClose}>
+          close-campaign-form
+        </button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../src/pages/whatsapp-page/wa-aisensy/create-template-form', () => ({
-  CreateTemplateForm: (p: { open: boolean }) => (p.open ? <div>template-form</div> : null),
+  CreateTemplateForm: (p: { open: boolean; onClose: () => void }) =>
+    p.open ? (
+      <div>
+        template-form
+        <button type="button" onClick={p.onClose}>
+          close-template-form
+        </button>
+      </div>
+    ) : null,
 }));
 
 import AisensyCampaigns from '../../src/pages/whatsapp-page/wa-aisensy/AisensyCampaigns';
@@ -157,6 +176,32 @@ describe('AisensyCampaigns', () => {
     expect(await screen.findByText(/campaign-form:orphan_tpl/)).toBeInTheDocument();
   });
 
+  it('opens the create form from the warning about templates no campaign sends, and closes it', async () => {
+    mount();
+    const warning = (await screen.findByText('orphan_tpl')).closest('.MuiAlert-root') as HTMLElement;
+    fireEvent.click(within(warning).getByRole('button', { name: /campaign/i }));
+    expect(await screen.findByText(/campaign-form:orphan_tpl/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'close-campaign-form' }));
+    await waitFor(() => expect(screen.queryByText(/campaign-form:/)).not.toBeInTheDocument());
+  });
+
+  it('shows a dash for a campaign AiSensy gave no type', async () => {
+    m.catalogue = catalogue({ campaigns: [campaign({ type: '' })] });
+    mount();
+    fireEvent.click(await screen.findByRole('button', { name: 'open-diwali_camp' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Type').parentElement).toHaveTextContent('—');
+  });
+
+  it('re-reads the catalogue after a draft changes it, and tolerates that read failing', async () => {
+    const refetch = vi.fn().mockRejectedValue(new Error('offline'));
+    m.catalogue = catalogue({ refetch });
+    mount();
+    await screen.findByTestId('row-diwali_camp');
+    m.onChanged?.();
+    await waitFor(() => expect(refetch).toHaveBeenCalledTimes(1));
+  });
+
   it('falls back to the saved names with a warning when the Project API is not answering', async () => {
     m.catalogue = catalogue({ configured: false, campaigns: [], templates: [] });
     mount({ names: [{ id: 'n1', name: 'saved_camp', description: 'Festival' }] });
@@ -195,6 +240,37 @@ describe('AisensyTemplates', () => {
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('MARKETING')).toBeInTheDocument();
     expect(within(dialog).getByText('None')).toBeInTheDocument();
+  });
+
+  it('shows a dash for a template with no category or language, and closes the detail', async () => {
+    m.catalogue = catalogue({ templates: [template({ category: '', language: '' })] });
+    mount();
+    fireEvent.click(await screen.findByRole('button', { name: /^open-diwali_tpl/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Category').parentElement).toHaveTextContent('—');
+    expect(within(dialog).getByText('Language').parentElement).toHaveTextContent('—');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('closes the create form, and re-reads the catalogue after a change', async () => {
+    const refetch = vi.fn().mockResolvedValue({});
+    m.catalogue = catalogue({ refetch });
+    mount();
+    fireEvent.click(await screen.findByRole('button', { name: /new template/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'close-template-form' }));
+    await waitFor(() => expect(screen.queryByText('template-form')).not.toBeInTheDocument());
+    m.onChanged?.();
+    await waitFor(() => expect(refetch).toHaveBeenCalledTimes(1));
+  });
+
+  it('tolerates the catalogue re-read failing after a change', async () => {
+    const refetch = vi.fn().mockRejectedValue(new Error('offline'));
+    m.catalogue = catalogue({ refetch });
+    mount();
+    await screen.findByTestId('row-diwali_tpl-en');
+    m.onChanged?.();
+    await waitFor(() => expect(refetch).toHaveBeenCalledTimes(1));
   });
 
   it('lists buttons in the detail when the template has them', async () => {

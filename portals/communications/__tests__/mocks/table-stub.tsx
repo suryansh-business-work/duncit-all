@@ -9,16 +9,18 @@ interface StubColumn<T> {
   valueGetter?: (row: T) => unknown;
 }
 
+interface SearchQuery {
+  search: string;
+  page: number;
+  pageSize: number;
+  sortBy: string | null;
+  sortDir: 'asc' | 'desc';
+  filters: never[];
+}
+
 interface StubTableProps<T> {
   columns: StubColumn<T>[];
-  fetchRows: (q: {
-    search: string;
-    page: number;
-    pageSize: number;
-    sortBy: string | null;
-    sortDir: 'asc' | 'desc';
-    filters: never[];
-  }) => Promise<{ rows: T[]; total: number }>;
+  fetchRows: (q: SearchQuery) => Promise<{ rows: T[]; total: number }>;
   getRowId: (row: T) => string;
   emptyText?: string;
   refetchRef?: MutableRefObject<(() => void) | null>;
@@ -27,11 +29,35 @@ interface StubTableProps<T> {
 }
 
 /**
+ * The columns the most recent stub grid was handed. A cell renderer shadows its
+ * column's `valueGetter`, so a test reads the getter (what the real grid sorts,
+ * filters and exports by) straight from here.
+ */
+export const tableProbe: {
+  columns: StubColumn<never>[];
+  fetchRows: ((q: SearchQuery) => Promise<{ rows: unknown[]; total: number }>) | null;
+} = { columns: [], fetchRows: null };
+
+/** Runs the page's own `fetchRows` with a search term, as the grid's search box would. */
+export const searchRows = (search: string) =>
+  tableProbe.fetchRows?.({ search, page: 1, pageSize: 100, sortBy: null, sortDir: 'asc', filters: [] });
+
+/** What the real grid would sort, filter and export `field` by for this row. */
+export const columnValue = (field: string, row: unknown): unknown =>
+  (
+    tableProbe.columns.find((c) => c.field === field)?.valueGetter as
+      | ((r: unknown) => unknown)
+      | undefined
+  )?.(row);
+
+/**
  * A grid stand-in for page tests: it runs the page's own `fetchRows`, then draws
  * every column through its real `cellRenderer` / `valueGetter`, so the page's
  * data flow and cell code are exercised without AG Grid's virtualisation.
  */
 export function StubTable<T>(p: Readonly<StubTableProps<T>>) {
+  tableProbe.columns = p.columns as unknown as StubColumn<never>[];
+  tableProbe.fetchRows = p.fetchRows as unknown as typeof tableProbe.fetchRows;
   const [rows, setRows] = useState<T[] | null>(null);
   const [tick, setTick] = useState(0);
 

@@ -111,6 +111,20 @@ describe('EmailLogsPage — arriving from a template send count', () => {
     ]);
   });
 
+  it('toggles a source chip on and off with the same gesture', () => {
+    renderAt('');
+    fireEvent.click(screen.getByText('Portal'));
+    expect(m.filters).toEqual([{ field: 'source', op: 'eq', value: 'PORTAL' }]);
+    fireEvent.click(screen.getByText('Portal'));
+    expect(m.filters).toEqual([]);
+  });
+
+  it('un-asks an active status chip when it is clicked again', () => {
+    renderAt('?status=FAILED');
+    fireEvent.click(screen.getByText('Failed'));
+    expect(m.filters).toEqual([]);
+  });
+
   it('renders an unfiltered table when the URL carries nothing', () => {
     renderAt('');
     expect(m.filters).toEqual([]);

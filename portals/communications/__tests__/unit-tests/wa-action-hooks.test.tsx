@@ -135,6 +135,17 @@ describe('useWaCampaignActions', () => {
     expect(m.notifyError).toHaveBeenCalledWith('Number not opted in');
   });
 
+  it('still confirms a test send when AiSensy returns no message id', async () => {
+    on('SendWaTestMessage', () => ({ data: { sendWaTestMessage: null } }));
+    const { result } = mount();
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.testMessage({} as never);
+    });
+    expect(ok).toBe(true);
+    expect(m.notifySuccess).toHaveBeenCalledWith('Test sent — message id ');
+  });
+
   it('deletes a campaign and reports whether it went', async () => {
     const { result, onChanged } = mount();
     let ok = false;
@@ -286,6 +297,25 @@ describe('useWhatsappBoard', () => {
     });
     await waitFor(() => expect(result.current.reconciling).toBe(false));
     expect(m.notify).toHaveBeenCalledWith('Timeout', 'error');
+  });
+});
+
+describe('useWhatsappBoard — a write that answers without a board', () => {
+  it('keeps showing the board the query read, for every kind of write', async () => {
+    m.data = { whatsappScenarios: { rows: [{ event_key: 'order_placed' }], tag: 'read' } };
+    const { result } = renderHook(() => useWhatsappBoard());
+
+    await act(async () => {
+      await result.current.toggle('order_placed', true);
+      await result.current.saveMedia('order_placed', 'https://cdn.example.test/a.png', 'a.png');
+      await result.current.provision({ event_key: 'order_placed', provision_step: 'TEMPLATE' } as never);
+      await result.current.runReconcile();
+    });
+
+    expect(result.current.board).toEqual({ rows: [{ event_key: 'order_placed' }], tag: 'read' });
+    expect(m.notify).toHaveBeenCalledWith('adminWhatsapp.mediaSaved', 'success');
+    expect(m.notify).toHaveBeenCalledWith('adminWhatsapp.reconciled', 'success');
+    expect(m.notify).not.toHaveBeenCalledWith(expect.anything(), 'error');
   });
 });
 

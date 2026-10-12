@@ -50,6 +50,12 @@ describe('scenario columns - values', () => {
     const { value } = build();
     const row = makeScenario({ blocker: '' });
     expect(value('event_key', row)).toBe('order_placed When an order is placed');
+    // Category sorts and filters by its human label, which is what the cell shows.
+    expect(value('category', makeScenario({ category: 'billing' }))).toBe(
+      'whatsappPreference.categories.billing.label'
+    );
+    // A category the bundle has no copy for yet still reads as itself.
+    expect(value('category', makeScenario({ category: 'NINTH_ONE' }))).toBe('NINTH_ONE');
     expect(value('campaign', row)).toBe('order_camp LIVE');
     expect(value('template_name', row)).toBe('order_tpl APPROVED');
     expect(value('campaign_status', row)).toBe('LIVE / APPROVED');

@@ -188,6 +188,33 @@ describe('CreateCampaignForm', () => {
     await waitFor(() => expect(h.onClose).toHaveBeenCalled());
   });
 
+  it('closes on Escape when idle, but not while a submission is in flight', async () => {
+    const idle = mount();
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    await waitFor(() => expect(idle.onClose).toHaveBeenCalled());
+  });
+
+  it('ignores Escape and locks the actions while busy, and says it is submitting', () => {
+    const busy = mount({ busy: true });
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(busy.onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Create campaign' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submitting/i })).toBeDisabled();
+  });
+
+  it('keeps the dialog open when the campaign was refused', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(false);
+    const h = { ...mount({ onSubmit }), onSubmit };
+    await choose(/Approved template/, 'orphan_tpl · 2 parameters');
+    type(/Campaign name/, 'welcome_to_duncit');
+    const submit = screen.getByRole('button', { name: 'Create campaign' });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    await waitFor(() => expect(h.onSubmit).toHaveBeenCalled());
+    expect(h.onClose).not.toHaveBeenCalled();
+  });
+
   it('refuses a campaign name that AiSensy would not accept', async () => {
     mount();
     await choose(/Approved template/, 'bound_tpl · 1 parameter');

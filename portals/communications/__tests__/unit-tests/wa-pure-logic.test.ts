@@ -24,6 +24,7 @@ import {
 } from '../../src/pages/whatsapp-page/wa-campaign-form/template-fields';
 import type { AisensyTemplate } from '../../src/pages/whatsapp-page/queries';
 import { channelLabels, channelSummary } from '../../src/pages/msg91-otp/channels';
+import { labelFor } from '../../src/pages/whatsapp-page/helpers';
 
 const defaults: WaDefaultUrls = { image: 'https://cdn.example.test/i.png', document: '' };
 
@@ -189,5 +190,17 @@ describe('MSG91 channel summary', () => {
 
   it('shows a dash when nothing was sent', () => {
     expect(channelSummary({ sms: 0, whatsapp: 0, email: 0, voice: 0 }, labels)).toBe('—');
+  });
+});
+
+describe('labelFor', () => {
+  const labels = { SENT: 'Delivered' };
+
+  it('uses the supplied label for a known value', () => {
+    expect(labelFor(labels, 'SENT')).toBe('Delivered');
+  });
+
+  it('shows an unknown value as it came rather than hiding it', () => {
+    expect(labelFor(labels, 'BOUNCED')).toBe('BOUNCED');
   });
 });

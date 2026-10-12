@@ -120,6 +120,18 @@ describe('WaAutomation page', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  it('closes the media dialog on Cancel without saving anything', async () => {
+    const saveMedia = vi.fn();
+    m.hook = hook({ saveMedia, board: makeBoard({ rows: [makeScenario({ needs_media: true })] }) });
+    renderWithProviders(<WaAutomation />);
+    const row = await screen.findByTestId('row-order_placed');
+    fireEvent.click(within(row).getByRole('button', { name: /set|media/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(saveMedia).not.toHaveBeenCalled();
+  });
+
   it('keeps the dialog open when the save did not stick', async () => {
     const saveMedia = vi.fn().mockResolvedValue(false);
     m.hook = hook({ saveMedia, board: makeBoard({ rows: [makeScenario({ needs_media: true })] }) });

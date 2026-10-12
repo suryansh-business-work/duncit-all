@@ -34,7 +34,7 @@ export default function SlackSettingsPage() {
   // conversation rather than the "invite the bot" warning on first load.
   useEffect(() => {
     if (selected || channels.length === 0) return;
-    setSelected(channels.find((c) => c.is_member) ?? channels[0] ?? null);
+    setSelected(channels.find((c) => c.is_member) ?? channels[0]);
   }, [channels, selected]);
 
   if (configured.loading && !configured.data) {

@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WaCampaignRecipientRow, WaCampaignRow } from '../../src/pages/whatsapp-page/queries';
 import { renderWithProviders } from '../testkit';
+import { columnValue } from '../mocks/table-stub';
 
 const m = vi.hoisted(() => ({
   campaign: undefined as unknown,
@@ -180,6 +181,34 @@ describe('WaCampaignDetailDialog - content', () => {
     expect(within(personal).getByText('Not on WhatsApp')).toBeInTheDocument();
     expect(within(personal).getByText('+910000000001')).toBeInTheDocument();
     expect(within(personal).queryByText(/^message:/)).not.toBeInTheDocument();
+  });
+});
+
+describe('WaCampaignDetailDialog - recipient table', () => {
+  it('sorts, filters and exports by plain values, with a dash for what is blank', async () => {
+    m.recipients = [recipient()];
+    show();
+    await screen.findByTestId('row-r1');
+    const full = recipient({ reason: 'Not on WhatsApp' });
+    const blank = recipient({ name: '', reason: '', submitted_message_id: '', template_params: [] });
+    expect(columnValue('name', full)).toBe('Asha');
+    expect(columnValue('status', full)).toBe('SENT');
+    expect(columnValue('reason', full)).toBe('Not on WhatsApp');
+    expect(columnValue('reason', blank)).toBe('—');
+    expect(columnValue('template_params', full)).toBe('Asha · Diwali');
+    expect(columnValue('template_params', blank)).toBe('—');
+    expect(columnValue('submitted_message_id', full)).toBe('mid-1');
+    expect(columnValue('submitted_message_id', blank)).toBe('—');
+  });
+
+  it('titles a nameless recipient by their number, and closes the message', async () => {
+    m.recipients = [recipient({ id: 'r3', name: '' })];
+    show();
+    fireEvent.click(await screen.findByRole('button', { name: 'open-r3' }));
+    const personal = (await screen.findAllByRole('dialog')).at(-1)!;
+    expect(within(personal).getAllByText('+910000000001').length).toBeGreaterThanOrEqual(2);
+    fireEvent.keyDown(personal, { key: 'Escape' });
+    await waitFor(() => expect(screen.getAllByRole('dialog')).toHaveLength(1));
   });
 });
 

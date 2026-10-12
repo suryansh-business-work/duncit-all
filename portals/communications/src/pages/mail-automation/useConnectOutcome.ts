@@ -28,17 +28,17 @@ export function useConnectOutcome(onConnected: () => void) {
   const reconnected = params.get('reconnected') === '1';
 
   useEffect(() => {
-    if (!connected && !failure) return;
-    if (connected && reconnected) {
-      setReconnectWarning(connected);
-    } else if (connected) {
-      notify(t('tech.mailAutomation.connected', { vars: { email: connected } }), 'success');
+    if (connected) {
+      if (reconnected) setReconnectWarning(connected);
+      else notify(t('tech.mailAutomation.connected', { vars: { email: connected } }), 'success');
+      onConnected();
     } else if (failure === 'access_denied') {
       notify(t('tech.mailAutomation.cancelled'), 'info');
+    } else if (failure) {
+      setConnectError(failure);
     } else {
-      setConnectError(failure ?? '');
+      return;
     }
-    if (connected) onConnected();
     setParams({}, { replace: true });
     // A one-shot read of the landing URL. `onConnected`/`setParams`/`t` are
     // stable enough here; including them re-runs the effect and re-notifies on

@@ -20,7 +20,7 @@ interface Props {
   onDelete: (campaign: WaCampaignRow) => void;
   /** Absent where no send can be started (the Logs console): no button then. */
   onDuplicate?: (campaign: WaCampaignRow) => void;
-  onExportCsv: () => void;
+  onExportCsv: (campaign: WaCampaignRow) => void;
 }
 
 /**
@@ -47,8 +47,8 @@ export default function DetailActions({
   const unreached = (campaign?.failed_count ?? 0) + (campaign?.skipped_count ?? 0);
   // Only a send that has not started can be called off, and one mid-send cannot
   // be deleted — the server refuses both, so the buttons say so first.
-  const cancellable = Boolean(campaign) && canCancel(campaign?.status ?? '');
-  const deletable = Boolean(campaign) && canDelete(campaign?.status ?? '');
+  const cancellable = campaign ? canCancel(campaign.status) : false;
+  const deletable = campaign ? canDelete(campaign.status) : false;
 
   let retryLabel = t('marketingWhatsapp.logs.retryNone');
   if (unreached > 0) {
@@ -71,7 +71,9 @@ export default function DetailActions({
       >
         {retryLabel}
       </DuncitButton>
-      <DuncitButton startIcon={<DownloadIcon />} disabled={!campaign || exporting} onClick={onExportCsv}>
+      <DuncitButton startIcon={<DownloadIcon />} disabled={!campaign || exporting}
+        onClick={() => campaign && onExportCsv(campaign)}
+      >
         {exporting
           ? t('marketingWhatsapp.logs.building')
           : t('marketingWhatsapp.logs.downloadCsv')}

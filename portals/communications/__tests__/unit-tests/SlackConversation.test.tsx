@@ -166,6 +166,20 @@ describe('ConversationPane', () => {
     await waitFor(() => expect(m.notifyError).toHaveBeenCalledWith('missing_scope: channels:join'));
   });
 
+  it('shows the join failure as text when the rejection is not an Error', async () => {
+    m.join.mockRejectedValue('channels:join scope missing');
+    mount(channel({ is_member: false }));
+    fireEvent.click(screen.getByRole('button', { name: /add the bot/i }));
+    await waitFor(() => expect(m.notifyError).toHaveBeenCalledWith('channels:join scope missing'));
+  });
+
+  it('shows the channel meta without a topic suffix when the channel has none', () => {
+    mount(channel({ topic: '' }));
+    expect(screen.getByText('ops-alerts')).toBeInTheDocument();
+    expect(screen.queryByText(/Pager noise/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ · $/)).not.toBeInTheDocument();
+  });
+
   it('refreshes the history after a message is sent', () => {
     mount(channel());
     fireEvent.click(screen.getByRole('button', { name: 'composer:C1' }));
@@ -273,6 +287,15 @@ describe('SlackPermissionsButton', () => {
     renderWithProviders(<SlackPermissionsButton />);
     open();
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
+
+  it('closes the scopes popover with Escape', async () => {
+    m.permissions = perms();
+    renderWithProviders(<SlackPermissionsButton />);
+    open();
+    const popover = await screen.findByRole('presentation');
+    fireEvent.keyDown(within(popover).getByText('chat:write'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('presentation')).not.toBeInTheDocument());
   });
 
   it('shows a spinner while the first answer loads', async () => {

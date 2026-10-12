@@ -32,8 +32,6 @@ export default defineConfig({
         'src/apollo.ts',
         // Runtime URL config — branches switch on the build-time `DEV` flag.
         'src/config/url-configs.ts',
-        // GraphQL documents + TypeScript interfaces only — no runtime logic.
-        'src/graphql/challenges.ts',
         'src/**/*.d.ts',
         'src/vite-env.d.ts',
       ],

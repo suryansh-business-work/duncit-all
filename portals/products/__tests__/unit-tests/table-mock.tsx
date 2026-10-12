@@ -9,6 +9,8 @@ import { useEffect, useState, type ReactNode } from 'react';
  *
  * Tests set the rows a page will see via `__setTableRows(...)`.
  */
+export const EM_DASH = '—';
+
 let ROWS: unknown[] = [];
 
 export function __setTableRows(rows: unknown[]): void {

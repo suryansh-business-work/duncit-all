@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { productSchema } from '../../src/pages/inventory-page/inventory-product-page/schema';
+import { makeProductSchema, productSchema } from '../../src/pages/inventory-page/inventory-product-page/schema';
 import { blankProductForm } from '../../src/pages/inventory-page/inventory-product-page/types';
 
 const valid = { ...blankProductForm, product_name: 'Cold Brew', unit_cost: 10, pickup_location_id: 'wh1' };
@@ -75,5 +75,47 @@ describe('productSchema', () => {
       pickup_location_id: '',
     });
     expect(result.success).toBe(true);
+  });
+
+  it('reads a blank shelf life as "does not expire" and a typed one as a number', () => {
+    const shelfLife = (value: unknown) => {
+      const result = productSchema.safeParse({ ...valid, shelf_life_days: value });
+      return result.success ? result.data.shelf_life_days : 'invalid';
+    };
+    expect(shelfLife('')).toBeNull();
+    expect(shelfLife(null)).toBeNull();
+    expect(shelfLife(undefined)).toBeNull();
+    expect(shelfLife('45')).toBe(45);
+    expect(shelfLife(30)).toBe(30);
+    expect(shelfLife('abc')).toBe('invalid');
+  });
+});
+
+describe('makeProductSchema', () => {
+  const t = (key: string) => key;
+  const full = {
+    ...valid,
+    brand_name: 'Acme',
+    delivery_target: 'DUNCIT',
+    mrp: 0,
+  };
+
+  it('adds the catalogue rules on top of the structural schema', () => {
+    const result = makeProductSchema(t).safeParse({ ...full, brand_name: ' ' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((i) => i.message)).toContain('products.validation.brandRequired');
+  });
+
+  it('still reports the catalogue rules when another field has a type error', () => {
+    const result = makeProductSchema(t).safeParse({ ...full, brand_name: '', unit_cost: 'x' });
+    const messages = result.error?.issues.map((i) => i.message) ?? [];
+    expect(messages).toContain('Cost is required');
+    expect(messages).toContain('products.validation.brandRequired');
+  });
+
+  it('does not run the catalogue rules on a non-object payload', () => {
+    const result = makeProductSchema(t).safeParse('not an object');
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((i) => i.message)).not.toContain('products.validation.brandRequired');
   });
 });

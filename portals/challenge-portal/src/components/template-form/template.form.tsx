@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MenuItem, Stack, TextField, Typography } from '@mui/material';
@@ -36,15 +36,11 @@ export function TemplateForm({ values, tools, presets, saving, onSubmit, onCance
   const instances = useFieldArray({ control, name: 'tool_instances' });
   const watched = useWatch({ control, name: 'tool_instances' });
   const [superId, categoryId, subId] = useWatch({ control, name: ['super_id', 'category_id', 'sub_id'] });
-  const [adding, setAdding] = useState('');
   const runnable = tools.filter((tool) => tool.status === 'ACTIVE' && tool.engine_ready);
   const defaultsOf = (tool: ToolRow | undefined) => (tool ? withDefaults(fieldsFor(tool.id), parseToolConfig(tool.default_config_json)) : {});
 
-  const addTool = (toolId: string) => {
-    const tool = byId.get(toolId);
-    if (!tool) return;
+  const addTool = (tool: ToolRow) => {
     instances.append({ instance_id: newInstanceId(), tool_id: tool.id, tool_type: tool.tool_type, preset_id: '', label: tool.name, config: defaultsOf(tool) });
-    setAdding('');
   };
   const rankOptions: RankOption[] = [
     { value: TOTAL_KEY, label: t('challenge.templates.total') },
@@ -93,9 +89,9 @@ export function TemplateForm({ values, tools, presets, saving, onSubmit, onCance
           />
         );
       })}
-      <TextField select size="small" label={t('challenge.templates.addTool')} value={adding} onChange={(e) => addTool(e.target.value)} disabled={saving || instances.fields.length >= MAX_TOOL_INSTANCES}>
+      <TextField select size="small" label={t('challenge.templates.addTool')} value="" disabled={saving || instances.fields.length >= MAX_TOOL_INSTANCES}>
         {runnable.map((tool) => (
-          <MenuItem key={tool.id} value={tool.id}>{tool.name}</MenuItem>
+          <MenuItem key={tool.id} value={tool.id} onClick={() => addTool(tool)}>{tool.name}</MenuItem>
         ))}
       </TextField>
       <WinnerRulesEditor control={control} options={rankOptions} error={formState.errors.winner_rules?.rank_by?.message} disabled={saving} />

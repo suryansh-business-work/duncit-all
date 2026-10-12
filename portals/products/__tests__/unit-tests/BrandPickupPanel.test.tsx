@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import BrandPickupPanel from '../../src/pages/ecomm/BrandPickupPanel';
+import { SAVE_BRAND_PICKUP_LOCATION } from '../../src/pages/ecomm/queries';
 import { renderWithProviders } from '../testkit';
 import {
   brandPickupLocationsMock,
@@ -79,6 +80,20 @@ describe('BrandPickupPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     await form.props?.onSubmit({ nickname: 'Main WH Edited' });
     await waitFor(() => expect(dialogs.success).toHaveBeenCalledWith('Pickup location saved'));
+  });
+
+  it('keeps the dialog open and reports the reason when ShipRocket refuses the save', async () => {
+    const refused = {
+      request: { query: SAVE_BRAND_PICKUP_LOCATION, variables: () => true },
+      error: new Error('ShipRocket refused the address'),
+    };
+    renderWithProviders(<BrandPickupPanel brandId="b1" />, { mocks: [brandPickupLocationsMock([location]), refused] });
+    await waitFor(() => expect(screen.getByText('Main WH')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Add pickup address' }));
+    await form.props?.onSubmit({ nickname: 'Main WH' });
+    await waitFor(() => expect(dialogs.error).toHaveBeenCalledWith('ShipRocket refused the address'));
+    expect(dialogs.success).not.toHaveBeenCalled();
+    expect(screen.getByTestId('pickup-form')).toBeInTheDocument();
   });
 
   it('registers a location via runAction and notifies success', async () => {

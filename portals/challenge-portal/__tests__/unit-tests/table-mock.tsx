@@ -26,6 +26,23 @@ export function useApolloTableFetch(): () => Promise<{ rows: unknown[]; total: n
   return resolveRows;
 }
 
+/**
+ * Stand-in for the real client-side fetch: filters the rows by the page's
+ * `searchOf` text and returns them. The page's own search function runs for
+ * every row so it is exercised; sorting/paging belong to the real package.
+ */
+export function clientTableFetch<T>(
+  data: T[],
+  searchOf: (row: T) => string,
+  _columns: unknown
+): (q: { search?: string }) => Promise<{ rows: T[]; total: number }> {
+  return async (q) => {
+    const needle = (q?.search ?? '').toLowerCase();
+    const rows = data.filter((row) => searchOf(row).toLowerCase().includes(needle));
+    return { rows, total: rows.length };
+  };
+}
+
 export interface MockColumn {
   field: string;
   headerName: string;
@@ -52,13 +69,15 @@ export function dateColumn(options: Record<string, unknown> = {}): MockColumn {
 export function activeChipColumn(options: Record<string, unknown> = {}): MockColumn {
   const field = (options.field as string) ?? 'is_active';
   const label = (active: boolean) => (active ? 'Active' : 'Inactive');
+  const getActive = options.getActive as ((row: unknown) => boolean) | undefined;
+  const isActive = (row: unknown) => (getActive ? getActive(row) : Boolean((row as Record<string, unknown>)[field]));
   return {
     field,
     headerName: (options.headerName as string) ?? 'Status',
     kind: 'active',
     opts: options,
-    valueGetter: (row) => label(Boolean((row as Record<string, unknown>)[field])),
-    cellRenderer: (row) => <span>{label(Boolean((row as Record<string, unknown>)[field]))}</span>,
+    valueGetter: (row) => label(isActive(row)),
+    cellRenderer: (row) => <span>{label(isActive(row))}</span>,
   };
 }
 

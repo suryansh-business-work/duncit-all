@@ -4,6 +4,8 @@ import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Routes } from 'react-router';
 import { ColorModeProvider } from '@duncit/shell';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 interface Options {
   mocks?: MockedResponse[];
@@ -28,9 +30,11 @@ export function renderWithProviders(ui: ReactElement, options: Options = {}) {
   return render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ColorModeProvider>
-        <MemoryRouter initialEntries={initialEntries}>
-          {routes ? <Routes>{routes}</Routes> : ui}
-        </MemoryRouter>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <MemoryRouter initialEntries={initialEntries}>
+            {routes ? <Routes>{routes}</Routes> : ui}
+          </MemoryRouter>
+        </LocalizationProvider>
       </ColorModeProvider>
     </MockedProvider>,
   );

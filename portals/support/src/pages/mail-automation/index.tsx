@@ -98,12 +98,10 @@ export default function MailAutomationPage() {
 
       {/* Closes on Save or on Close, and on nothing else. The wizard holds an
           unsaved reply message, so a stray backdrop click or an Escape must not
-          throw away what somebody has just written. */}
+          throw away what somebody has just written — which is why this Dialog
+          has no onClose: the only reasons it could be given are those two. */}
       <Dialog
         open={Boolean(editing)}
-        onClose={(_event, reason) => {
-          if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') closeDialog();
-        }}
         fullWidth
         maxWidth="md"
       >

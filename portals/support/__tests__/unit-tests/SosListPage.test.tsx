@@ -88,4 +88,9 @@ describe('SosListPage', () => {
     });
     expect(screen.getByText('Dev')).toBeInTheDocument();
   });
+
+  it('reads a response that carries no page as an empty list rather than crashing', async () => {
+    renderWithProviders(<SosListPage />, { mocks: [{ ...sosAlertsMock([]), result: { data: null } }] });
+    await waitFor(() => expect(screen.getByText(/no sos alerts found/i)).toBeInTheDocument());
+  });
 });

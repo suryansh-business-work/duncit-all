@@ -58,8 +58,14 @@ const SOURCE_KEY: Record<TicketSource, string> = {
   STORE: 'support.tickets.sourceStore',
 };
 
+/** The source in words; a source this console has no wording for shows as stored. */
+const sourceLabel = (t: Ticket, translate: Translate) => {
+  const key = SOURCE_KEY[t.source];
+  return (key && translate(key)) || t.source;
+};
+
 const renderSource = (t: Ticket, translate: Translate) => (
-  <StatusChip status={translate(SOURCE_KEY[t.source]) || t.source} colorMap={TICKET_SOURCE_COLORS} />
+  <StatusChip status={sourceLabel(t, translate)} colorMap={TICKET_SOURCE_COLORS} />
 );
 
 const renderStatus = (t: Ticket) => <StatusChip status={t.status} colorMap={TICKET_STATUS_COLORS} />;
@@ -125,7 +131,7 @@ export const buildColumns = (translate: Translate): DuncitColumn<Ticket>[] => [
       label: translate(key),
     })),
     cellRenderer: (row: Ticket) => renderSource(row, translate),
-    valueGetter: (t) => translate(SOURCE_KEY[t.source]) || t.source,
+    valueGetter: (t) => sourceLabel(t, translate),
   },
   {
     field: 'status',

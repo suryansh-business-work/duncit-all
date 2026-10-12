@@ -133,6 +133,10 @@ describe('AcceptanceDetailDialog — what is missing is said in words', () => {
             content_hash: ACCEPTED_HASH,
           }),
           versions: [makePolicyVersion({ updated_by_name: '', created_at: '' })],
+          // The same acceptance id in a trail would be normalised over the blank
+          // policy_updated_at above in the Apollo cache, so the trails are empty.
+          policy_history: [],
+          user_acceptances: [],
         }),
       ),
     ]);

@@ -50,6 +50,7 @@ export default function ReportMailDialog({ pending, onClose, onSent }: Readonly<
   const name = (toReporter ? report?.reporter_name : report?.target_owner_name) || '—';
 
   const submit = async (values: ReportMailFormValues) => {
+    /* v8 ignore next -- the form only submits through a dialog opened on a pending mail; a reset empties it before a late click can validate */
     if (!pending) return;
     setError('');
     try {

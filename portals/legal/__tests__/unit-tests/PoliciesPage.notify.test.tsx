@@ -62,6 +62,21 @@ describe('PoliciesPage — change notices from the row', () => {
     );
   });
 
+  it('reads an answer that carries no count as nobody reached', async () => {
+    renderPage([
+      {
+        request: notifyPolicyMock(0).request,
+        result: { data: { notifyPolicyAcceptedUsers: null } },
+      },
+    ]);
+    const dialog = await openNotice();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send the notice now' }));
+
+    await waitFor(() =>
+      expect(notifySuccess).toHaveBeenCalledWith('Nobody has accepted this policy yet, so no notice was sent.'),
+    );
+  });
+
   it('backs out without sending anything', async () => {
     renderPage();
     const dialog = await openNotice();

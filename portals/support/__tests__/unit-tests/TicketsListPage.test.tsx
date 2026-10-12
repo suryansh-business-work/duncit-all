@@ -166,4 +166,16 @@ describe('TicketsListPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => expect(screen.getByText('Created elsewhere')).toBeInTheDocument());
   });
+
+  it('reads a response that carries no page as an empty list rather than crashing', async () => {
+    renderWithProviders(<TicketsListPage />, { mocks: [{ ...ticketsListMock([]), result: { data: null } }] });
+    await waitFor(() => expect(screen.getByText(/no tickets here yet/i)).toBeInTheDocument());
+  });
+
+  it('names a ticket source this console does not know by its stored value', async () => {
+    const legacy = { ...makeListTicket({ id: 't9', subject: 'Phoned in' }), source: 'PHONE' as never };
+    renderWithProviders(<TicketsListPage />, { mocks: [ticketsListMock([legacy])] });
+    await waitFor(() => expect(screen.getByText('Phoned in')).toBeInTheDocument());
+    expect(screen.getAllByText('PHONE').length).toBeGreaterThan(0);
+  });
 });

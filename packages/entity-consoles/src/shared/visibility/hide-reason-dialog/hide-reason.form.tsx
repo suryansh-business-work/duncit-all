@@ -63,7 +63,6 @@ export default function HideReasonDialog({
               label={t('directory.visibility.reasonLabel')}
               hint={t('directory.visibility.reasonHelper')}
               required
-              autoFocus
               multiline
               minRows={3}
               slotProps={{ htmlInput: { maxLength: HIDE_REASON_MAX } }}

@@ -115,7 +115,18 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       name: 'sandbox',
       label: 'Sandbox mode — book test orders only',
       bool: true,
-      hint: 'On: every order, rate and pickup call for this account goes to the ShipRocket sandbox (https://api-sandbox.shiprocket.in), so nothing real is booked or charged. Off: production (https://apiv2.shiprocket.in) — live shipments, exactly as before. Use the sandbox API user from ShipRocket → Settings → Additional Settings → Sandbox (https://app.shiprocket.in/seller/settings/additional-settings/sandbox) as the email and password above.',
+      hint: 'On: every order, rate and pickup call for this account goes to the ShipRocket sandbox (https://api-sandbox.shiprocket.in), so nothing real is booked or charged. Off: production (https://apiv2.shiprocket.in) — live shipments, exactly as before. Enter the sandbox API user from ShipRocket → Settings → Additional Settings → Sandbox (https://app.shiprocket.in/seller/settings/additional-settings/sandbox) in the two sandbox fields below; the production email and password above are kept and not used while this is on.',
+    },
+    {
+      name: 'sandbox_email',
+      label: 'Sandbox Account Email',
+      hint: 'ShipRocket sandbox API user email — used only while sandbox mode is on. Left blank, the email and password above are sent to the sandbox.',
+    },
+    {
+      name: 'sandbox_password',
+      label: 'Sandbox Account Password',
+      secret: true,
+      hint: 'ShipRocket sandbox API user password — used only while sandbox mode is on',
     },
     {
       name: 'sandbox_api_url',
@@ -142,6 +153,8 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'feedback_channel', label: 'Feedback Channel (optional)', hint: 'Channel ID in-app feedback posts to (falls back to Default Channel)' },
     { name: 'android_builds_channel', label: 'Android Builds Channel (optional)', hint: 'Channel ID CI Android builds announce to (Tech → App Builds → Settings)' },
     { name: 'ios_builds_channel', label: 'iOS Builds Channel (optional)', hint: 'Channel ID CI iOS builds announce to (Tech → App Builds → Settings)' },
+    { name: 'android_staging_builds_channel', label: 'Android Staging Builds Channel (optional)', hint: 'Channel ID staging Android builds announce to; blank uses the Android builds channel (Tech → App Builds → Settings)' },
+    { name: 'ios_staging_builds_channel', label: 'iOS Staging Builds Channel (optional)', hint: 'Channel ID staging iOS builds announce to; blank uses the iOS builds channel (Tech → App Builds → Settings)' },
     { name: 'e2e_channel', label: 'E2E Results Channel (optional)', hint: 'Channel ID e2e run results announce to (Tech → E2E Tests → Settings)' },
   ],
   // Two different AiSensy credentials, on purpose. The campaign API key SENDS
@@ -492,6 +505,8 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SLACK_FEEDBACK_CHANNEL: { category: 'SLACK', field: 'feedback_channel' },
   SLACK_ANDROID_BUILDS_CHANNEL: { category: 'SLACK', field: 'android_builds_channel' },
   SLACK_IOS_BUILDS_CHANNEL: { category: 'SLACK', field: 'ios_builds_channel' },
+  SLACK_ANDROID_STAGING_BUILDS_CHANNEL: { category: 'SLACK', field: 'android_staging_builds_channel' },
+  SLACK_IOS_STAGING_BUILDS_CHANNEL: { category: 'SLACK', field: 'ios_staging_builds_channel' },
   SLACK_E2E_CHANNEL: { category: 'SLACK', field: 'e2e_channel' },
   TURN_URLS: { category: 'TURN', field: 'urls' },
   TURN_USERNAME: { category: 'TURN', field: 'username' },

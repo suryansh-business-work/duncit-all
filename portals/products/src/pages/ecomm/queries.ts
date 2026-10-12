@@ -64,6 +64,8 @@ export interface BrandIntegrationStatus {
   has_webhook_secret: boolean;
   /** ShipRocket: the account is in sandbox mode — test orders only. */
   sandbox: boolean;
+  /** ShipRocket: the sandbox API user's email, saved beside the production one (`identifier`). */
+  sandbox_identifier?: string;
 }
 
 export interface BrandIntegrations {
@@ -163,6 +165,7 @@ const BRAND_INTEGRATION_STATUS_FIELDS = gql`
     live_mode
     has_webhook_secret
     sandbox
+    sandbox_identifier
   }
 `;
 

@@ -1420,6 +1420,8 @@ export type AppBuildPlayRelease = {
   /** Why it FAILED. Empty otherwise. */
   error: Scalars['String']['output'];
   finished_at?: Maybe<Scalars['String']['output']>;
+  /** What each step of the push did, in order, each line stamped with its time. Empty on a push made before logs were kept. */
+  log: Array<Scalars['String']['output']>;
   started_at: Scalars['String']['output'];
   status: PlayReleaseStatus;
   track: PlayStoreTrack;
@@ -1430,7 +1432,10 @@ export type AppBuildPlayRelease = {
 /** Which Slack channels build announcements post to (stored on the SLACK env entry). */
 export type AppBuildSettings = {
   __typename?: 'AppBuildSettings';
+  /** Where production Android builds are announced. */
   android_channel?: Maybe<Scalars['String']['output']>;
+  /** Where staging Android builds are announced. Null sends them to the production channel. */
+  android_staging_channel?: Maybe<Scalars['String']['output']>;
   /** The bundle ID iOS signing files are made for. Empty when not configured. */
   app_store_bundle_id: Scalars['String']['output'];
   /**
@@ -1439,9 +1444,12 @@ export type AppBuildSettings = {
    * needs it.
    */
   app_store_configured: Scalars['Boolean']['output'];
+  /** Where production iOS builds are announced. */
   ios_channel?: Maybe<Scalars['String']['output']>;
   /** The newest iOS signing identity — what the next iOS build signs with. Null until one is generated. */
   ios_signing?: Maybe<IosSigning>;
+  /** Where staging iOS builds are announced. Null sends them to the production channel. */
+  ios_staging_channel?: Maybe<Scalars['String']['output']>;
   /** When CI last reported any build. Null means the workflows have never reached us. */
   last_reported_at?: Maybe<Scalars['String']['output']>;
   /** Which account the last report authenticated as. */
@@ -3107,6 +3115,8 @@ export type BrandIntegrationStatus = {
   /** The partner's saved Integrations connection this credential was copied from. Null when typed in on the brand. */
   connection_id?: Maybe<Scalars['ID']['output']>;
   details: Array<Scalars['String']['output']>;
+  /** ShipRocket: a sandbox API user password is on file. */
+  has_sandbox_secret: Scalars['Boolean']['output'];
   has_secret: Scalars['Boolean']['output'];
   /** A webhook secret is on file for this account. */
   has_webhook_secret: Scalars['Boolean']['output'];
@@ -3120,6 +3130,10 @@ export type BrandIntegrationStatus = {
   provider: BrandIntegrationProvider;
   /** ShipRocket: the account is in sandbox mode — its calls go to the ShipRocket sandbox and book test orders only. Always false for Razorpay. */
   sandbox: Scalars['Boolean']['output'];
+  /** ShipRocket: this account's own sandbox API address. Blank uses the standard ShipRocket sandbox. */
+  sandbox_api_url: Scalars['String']['output'];
+  /** ShipRocket: the sandbox API user's email, saved beside the production one (identifier). Blank when none is saved. */
+  sandbox_identifier: Scalars['String']['output'];
 };
 
 export type BrandIntegrations = {
@@ -3209,7 +3223,7 @@ export type BrandShippingMode =
   | 'OWN_SHIPROCKET';
 
 export type BrandShiprocketInput = {
-  /** The ShipRocket API user's email (Settings → API → Configure). */
+  /** The ShipRocket API user's email (Settings → API → Configure). Required unless sandbox mode is on with a sandbox user; blank then keeps the one on file. */
   email: Scalars['String']['input'];
   /** Omitted or blank keeps the password already on file. */
   password?: InputMaybe<Scalars['String']['input']>;
@@ -3217,6 +3231,12 @@ export type BrandShiprocketInput = {
   pickup_location?: InputMaybe<Scalars['String']['input']>;
   /** Sandbox mode: book test orders on the ShipRocket sandbox instead of real shipments. Omitted keeps the saved mode. */
   sandbox?: InputMaybe<Scalars['Boolean']['input']>;
+  /** This account's own sandbox API address (https, a ShipRocket host). Blank uses the standard sandbox; omitted keeps the one on file. */
+  sandbox_api_url?: InputMaybe<Scalars['String']['input']>;
+  /** The sandbox API user's email (Settings → Additional Settings → Sandbox), kept apart from the production one. Omitted or blank keeps the one on file. */
+  sandbox_email?: InputMaybe<Scalars['String']['input']>;
+  /** Omitted or blank keeps the sandbox password already on file. */
+  sandbox_password?: InputMaybe<Scalars['String']['input']>;
   /** Omitted or blank keeps the one on file. */
   webhook_secret?: InputMaybe<Scalars['String']['input']>;
 };
@@ -8543,6 +8563,36 @@ export type EntityIdBackfillResult = {
   repaired: Scalars['Int']['output'];
 };
 
+/** One category's cap, with its label for the settings form. */
+export type EnvAttemptLimit = {
+  __typename?: 'EnvAttemptLimit';
+  category: EnvCategory;
+  label: Scalars['String']['output'];
+  /** 0 means unlimited. */
+  max_attempts: Scalars['Int']['output'];
+};
+
+export type EnvAttemptLimitInput = {
+  category: EnvCategory;
+  /** 0 means unlimited. */
+  max_attempts: Scalars['Int']['input'];
+};
+
+/** The test-attempt caps for every category (Environment Variables → Settings). */
+export type EnvAttemptSettings = {
+  __typename?: 'EnvAttemptSettings';
+  limits: Array<EnvAttemptLimit>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  window_hours: Scalars['Int']['output'];
+};
+
+export type EnvAttemptSettingsInput = {
+  /** The categories to change. One left out keeps its cap. */
+  limits: Array<EnvAttemptLimitInput>;
+  /** How long a count lasts before it starts again, in hours (1 to 720). */
+  window_hours: Scalars['Int']['input'];
+};
+
 export type EnvCategory =
   | 'AISENSY'
   | 'APPLE_SIGNIN'
@@ -8610,6 +8660,8 @@ export type EnvConnectionTestInput = {
  */
 export type EnvConnectionTestResult = {
   __typename?: 'EnvConnectionTestResult';
+  /** Where the entry's attempt count stands after this test. */
+  attempts?: Maybe<EnvTestAttempts>;
   details: Array<Scalars['String']['output']>;
   message: Scalars['String']['output'];
   ok: Scalars['Boolean']['output'];
@@ -8704,6 +8756,26 @@ export type EnvSecretFlag = {
   present: Scalars['Boolean']['output'];
 };
 
+/**
+ * How many times one entry has been tested in the current window, against the
+ * cap its category is set to. Every test spends one, and a test over the cap is
+ * answered without reaching the vendor — repeated wrong sign-ins are what get
+ * an account locked.
+ */
+export type EnvTestAttempts = {
+  __typename?: 'EnvTestAttempts';
+  /** Tests left in the window. Null when unlimited. */
+  left?: Maybe<Scalars['Int']['output']>;
+  /** The most tests one window allows. 0 means unlimited. */
+  max: Scalars['Int']['output'];
+  /** When the count starts again. Null when no test has run in this window. */
+  resets_at?: Maybe<Scalars['String']['output']>;
+  /** Tests run in the current window, the one that returned this included. */
+  used: Scalars['Int']['output'];
+  /** How long a window lasts, in hours. */
+  window_hours: Scalars['Int']['output'];
+};
+
 export type EnvTestResult = {
   __typename?: 'EnvTestResult';
   message: Scalars['String']['output'];
@@ -8713,6 +8785,8 @@ export type EnvTestResult = {
 /** Richer result for the interactive per-category tests (returns a URL or data payload). */
 export type EnvTestRichResult = {
   __typename?: 'EnvTestRichResult';
+  /** Where the entry's attempt count stands after this test. Null for a step that spends none. */
+  attempts?: Maybe<EnvTestAttempts>;
   data?: Maybe<Scalars['String']['output']>;
   message: Scalars['String']['output'];
   ok: Scalars['Boolean']['output'];
@@ -14164,6 +14238,8 @@ export type Mutation = {
   updateEmailTemplate: EmailTemplate;
   /** Edit one of your own claims. Only while it is still PENDING. */
   updateEmployeeExpense: EmployeeExpense;
+  /** Set how many times an entry of each category may be tested per window. */
+  updateEnvAttemptSettings: EnvAttemptSettings;
   updateEnvEntry: EnvEntry;
   updateExpense: Expense;
   updateExpenseOption: ExpenseOption;
@@ -19174,6 +19250,11 @@ export type MutationUpdateEmailTemplateArgs = {
 export type MutationUpdateEmployeeExpenseArgs = {
   expense_doc_id: Scalars['ID']['input'];
   input: EmployeeExpenseInput;
+};
+
+
+export type MutationUpdateEnvAttemptSettingsArgs = {
+  input: EnvAttemptSettingsInput;
 };
 
 
@@ -24406,7 +24487,7 @@ export type Query = {
   analyticsMailSubscriptions: Array<AnalyticsMailSubscription>;
   appBuildSettings: AppBuildSettings;
   appBuildTriggerConfig: AppBuildTriggerConfig;
-  /** CI builds of one platform, newest first (Tech portal App Builds tables). */
+  /** CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both. */
   appBuildsTable: AppBuildTablePage;
   appPopupsTable: AppPopupTablePage;
   appSettings: AppSettings;
@@ -24895,12 +24976,16 @@ export type Query = {
   entityChangeFeedTable: EntityChangeLogTablePage;
   /** The complete change history of ONE directory record, newest first. */
   entityChangeLogsTable: EntityChangeLogTablePage;
+  /** The test-attempt caps for every category. */
+  envAttemptSettings: EnvAttemptSettings;
   envCategories: Array<EnvCategoryDef>;
   envEntries: Array<EnvEntry>;
   /** Entries currently assigned to a portal (by portal key). */
   envEntriesForPortal: Array<EnvEntry>;
   envEntriesTable: EnvEntryTablePage;
   envEntry?: Maybe<EnvEntry>;
+  /** Where one entry's test-attempt count stands. Spends nothing. */
+  envTestAttempts: EnvTestAttempts;
   eventTicket?: Maybe<EventTicket>;
   eventTicketPdfBase64: Scalars['String']['output'];
   eventTickets: Array<EventTicket>;
@@ -26237,6 +26322,7 @@ export type QueryAiTranslationPendingArgs = {
 
 
 export type QueryAppBuildsTableArgs = {
+  app_env?: InputMaybe<AppBuildEnv>;
   platform: AppBuildPlatform;
   query?: InputMaybe<TableQueryInput>;
 };
@@ -27194,6 +27280,11 @@ export type QueryEnvEntriesTableArgs = {
 
 
 export type QueryEnvEntryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryEnvTestAttemptsArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -30421,6 +30512,8 @@ export type ReportActionType =
   | 'TAKEN_DOWN';
 
 export type ReportAppBuildInput = {
+  /** Which server the built app talks to. Left out, a new build from the staging branch is STAGING and any other PRODUCTION. */
+  app_env?: InputMaybe<AppBuildEnv>;
   /**
    * Why the artifact is missing on an otherwise successful build. Send this
    * instead of failing the report: a build that compiled still deserves its row
@@ -36636,8 +36729,12 @@ export type UpdateAiPromptInput = {
 export type UpdateAppBuildSettingsInput = {
   /** Slack channel ID (e.g. C0123ABCD) Android builds announce to. Empty clears it. */
   android_channel?: InputMaybe<Scalars['String']['input']>;
+  /** Slack channel ID staging Android builds announce to. Empty sends them to the production channel. */
+  android_staging_channel?: InputMaybe<Scalars['String']['input']>;
   /** Slack channel ID iOS builds announce to. Empty clears it. */
   ios_channel?: InputMaybe<Scalars['String']['input']>;
+  /** Slack channel ID staging iOS builds announce to. Empty sends them to the production channel. */
+  ios_staging_channel?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateAppSettingsInput = {

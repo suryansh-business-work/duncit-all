@@ -3,11 +3,21 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { EnvEntry } from '../../src/pages/environment/queries';
 import { makeEnvEntry } from '../mocks/env-entry.mock';
 
-// ---- Apollo: control useMutation per test -------------------------------
-const h = vi.hoisted(() => ({ run: vi.fn(), loading: false }));
+// ---- Apollo: control useMutation (and the drawer's attempt count) per test
+type Attempts = { used: number; max: number; left: number | null; window_hours: number; resets_at: string | null };
+const h = vi.hoisted(() => ({
+  run: vi.fn(),
+  loading: false,
+  attempts: null as Attempts | null,
+  refetchAttempts: vi.fn(async () => undefined),
+}));
 vi.mock('@apollo/client/react', async (io) => {
   const actual = await io<typeof import('@apollo/client/react')>();
-  return { ...actual, useMutation: () => [h.run, { loading: h.loading }] as const };
+  return {
+    ...actual,
+    useMutation: () => [h.run, { loading: h.loading }] as const,
+    useQuery: () => ({ data: h.attempts ? { envTestAttempts: h.attempts } : undefined, refetch: h.refetchAttempts }),
+  };
 });
 
 // ---- @duncit deps -------------------------------------------------------
@@ -348,5 +358,37 @@ describe('TestDrawer', () => {
   it('renders no panel for an unknown category', () => {
     render(<TestDrawer entry={entry({ category: 'UNKNOWN' as unknown as EnvEntry['category'] })} onClose={vi.fn()} onTested={vi.fn()} />);
     expect(screen.getByText(/This test is running/i)).toBeInTheDocument();
+  });
+  it('shows the max attempts, the requests used and how many are left, and re-reads them after a test', async () => {
+    h.attempts = { used: 2, max: 5, left: 3, window_hours: 24, resets_at: null };
+    h.refetchAttempts.mockClear();
+    render(<TestDrawer entry={entry({ category: 'EMAIL' })} onClose={vi.fn()} onTested={vi.fn()} />);
+    const note = screen.getByTestId('env-test-attempts');
+    expect(note).toHaveTextContent('Max attempts: 5 per 24 hours · Test requests used: 2 · Left: 3.');
+    expect(note).not.toHaveTextContent(/No attempts are left/);
+    fireEvent.change(screen.getByLabelText('Recipient email'), { target: { value: 'a@b.c' } });
+    h.run.mockResolvedValueOnce({ data: { testEnvEmail: { ok: true, message: 'Sent' } } });
+    fireEvent.click(screen.getByRole('button', { name: /send test email/i }));
+    await waitFor(() => expect(h.refetchAttempts).toHaveBeenCalledTimes(1));
+    h.attempts = null;
+  });
+  it('warns when no attempt is left and says when the count starts again', () => {
+    h.attempts = { used: 5, max: 5, left: 0, window_hours: 24, resets_at: '2030-01-02T03:04:05.000Z' };
+    render(<TestDrawer entry={entry({ category: 'SHIPROCKET' as EnvEntry['category'] })} onClose={vi.fn()} onTested={vi.fn()} />);
+    const note = screen.getByTestId('env-test-attempts');
+    expect(note).toHaveTextContent('Left: 0.');
+    expect(note).toHaveTextContent(/No attempts are left, so the next test is not sent\./);
+    expect(note).toHaveTextContent(/The count starts again at .*2030/);
+    h.attempts = null;
+  });
+  it('says a category with no cap is unlimited, and shows no count at all before it is read', () => {
+    const { rerender } = render(<TestDrawer entry={entry({ category: 'EMAIL' })} onClose={vi.fn()} onTested={vi.fn()} />);
+    expect(screen.queryByTestId('env-test-attempts')).not.toBeInTheDocument();
+    h.attempts = { used: 7, max: 0, left: null, window_hours: 12, resets_at: null };
+    rerender(<TestDrawer entry={entry({ category: 'EMAIL' })} onClose={vi.fn()} onTested={vi.fn()} />);
+    expect(screen.getByTestId('env-test-attempts')).toHaveTextContent(
+      'No attempt limit is set · Test requests in the last 12 hours: 7.',
+    );
+    h.attempts = null;
   });
 });

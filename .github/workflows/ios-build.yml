@@ -25,8 +25,10 @@
 name: iOS Build
 
 on:
+  # main builds the production app; staging builds the app that talks to the
+  # staging server, from the code that is running there.
   push:
-    branches: [main]
+    branches: [main, staging]
   # No artifact choice here, unlike Android: a signed IPA is the only thing this
   # workflow produces, so the build-time questions are which stack the app
   # talks to and whether it goes on to App Store Connect.
@@ -61,11 +63,15 @@ permissions:
   contents: read
 
 env:
+  # Which server the built app talks to: what a dispatch asked for, else the
+  # branch decides — a push to staging builds the staging app, a push to main
+  # the production one. The reporter records it, so a staging build is labelled
+  # as one and can never be pushed to a store.
+  APP_ENV: ${{ inputs.app_env || (github.ref_name == 'staging' && 'staging' || 'production') }}
   # Baked into the binary at compile time, which is why it is a build-time
-  # choice and not a setting in the app. A push to main always means production;
-  # only an explicit dispatch can ask for staging.
+  # choice and not a setting in the app.
   EXPO_PUBLIC_API_URL: >-
-    ${{ inputs.app_env == 'staging' && 'https://staging.server.duncit.com' || 'https://server.duncit.com' }}
+    ${{ (inputs.app_env || (github.ref_name == 'staging' && 'staging' || 'production')) == 'staging' && 'https://staging.server.duncit.com' || 'https://server.duncit.com' }}
   # WHERE the build records itself, which is deliberately NOT the same question
   # as which server its app talks to: a build always reports to the portal that
   # started it, so a staging-pointed build triggered from production is still

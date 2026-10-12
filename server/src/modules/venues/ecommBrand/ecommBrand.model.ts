@@ -24,6 +24,15 @@ export interface IBrandShiprocketIntegration {
   webhook_secret: string;
   /** Sandbox mode: this account's calls go to ShipRocket's sandbox — test orders only, nothing real is booked. */
   sandbox: boolean;
+  /**
+   * The sandbox API user, kept apart from the production one above so switching
+   * sandbox on or off never overwrites either. Blank on a connection saved
+   * before sandbox had its own: that one sends `email`/`password` to the sandbox.
+   */
+  sandbox_email: string;
+  sandbox_password: string;
+  /** This account's own sandbox API address; blank uses the platform's. */
+  sandbox_api_url: string;
   connected: boolean;
   checked_at: Date | null;
   message: string;
@@ -163,6 +172,9 @@ export const shiprocketIntegrationSchema = new Schema<IBrandShiprocketIntegratio
     pickup_location: { type: String, default: '', trim: true },
     webhook_secret: { type: String, default: '', trim: true },
     sandbox: { type: Boolean, default: false },
+    sandbox_email: { type: String, default: '', trim: true },
+    sandbox_password: { type: String, default: '' },
+    sandbox_api_url: { type: String, default: '', trim: true },
     ...probeFields,
   },
   { _id: false }

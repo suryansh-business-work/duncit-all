@@ -50,6 +50,12 @@ export const ecommBrandTypeDefs = gql`
     has_webhook_secret: Boolean!
     "ShipRocket: the account is in sandbox mode — its calls go to the ShipRocket sandbox and book test orders only. Always false for Razorpay."
     sandbox: Boolean!
+    "ShipRocket: the sandbox API user's email, saved beside the production one (identifier). Blank when none is saved."
+    sandbox_identifier: String!
+    "ShipRocket: a sandbox API user password is on file."
+    has_sandbox_secret: Boolean!
+    "ShipRocket: this account's own sandbox API address. Blank uses the standard ShipRocket sandbox."
+    sandbox_api_url: String!
     "The partner's saved Integrations connection this credential was copied from. Null when typed in on the brand."
     connection_id: ID
   }
@@ -128,7 +134,7 @@ export const ecommBrandTypeDefs = gql`
   }
 
   input BrandShiprocketInput {
-    "The ShipRocket API user's email (Settings → API → Configure)."
+    "The ShipRocket API user's email (Settings → API → Configure). Required unless sandbox mode is on with a sandbox user; blank then keeps the one on file."
     email: String!
     "Omitted or blank keeps the password already on file."
     password: String
@@ -138,6 +144,12 @@ export const ecommBrandTypeDefs = gql`
     webhook_secret: String
     "Sandbox mode: book test orders on the ShipRocket sandbox instead of real shipments. Omitted keeps the saved mode."
     sandbox: Boolean
+    "The sandbox API user's email (Settings → Additional Settings → Sandbox), kept apart from the production one. Omitted or blank keeps the one on file."
+    sandbox_email: String
+    "Omitted or blank keeps the sandbox password already on file."
+    sandbox_password: String
+    "This account's own sandbox API address (https, a ShipRocket host). Blank uses the standard sandbox; omitted keeps the one on file."
+    sandbox_api_url: String
   }
 
   input BrandRazorpayInput {

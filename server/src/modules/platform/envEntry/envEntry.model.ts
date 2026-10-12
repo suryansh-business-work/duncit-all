@@ -54,6 +54,9 @@ const envEntrySchema = new Schema(
     last_used_at: { type: Date, default: null },
     last_tested_at: { type: Date, default: null },
     last_test_ok: { type: Boolean, default: null },
+    // Tests run in the current window, and when it began (`envAttempt.service.ts`).
+    test_attempts: { type: Number, default: 0 },
+    test_window_started_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

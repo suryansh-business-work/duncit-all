@@ -28,8 +28,8 @@ import {
 import { probeSocialApps } from '@modules/crm/marketing/social/social.probe';
 import { googleOAuthConnection } from './googleOAuth.probe';
 import {
-  isSandboxOn,
   resolveShiprocketBase,
+  resolveShiprocketLogin,
   SANDBOX_GATEWAY_DENIED,
   SANDBOX_GATEWAY_DENIED_STATUS,
 } from '@modules/commerce/shiprocket/shiprocket.endpoint';
@@ -196,18 +196,27 @@ export async function slackConnection(str: EnvConfigReader): Promise<EnvConnecti
  * answers.
  */
 export async function shiprocketConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
-  if (!str('email') || !str('password')) {
-    return { ok: false, message: 'Account email and password are required', details: [] };
+  // Sandbox mode is checked against the sandbox, never the live API, and with
+  // the sandbox user when one is saved: the test must answer for the account
+  // the shipments will actually be booked on.
+  const login = resolveShiprocketLogin({
+    email: str('email'),
+    password: str('password'),
+    sandbox: str('sandbox'),
+    sandbox_email: str('sandbox_email'),
+    sandbox_password: str('sandbox_password'),
+  });
+  const { sandbox } = login;
+  if (!login.email || !login.password) {
+    const which = sandbox ? 'Sandbox mode is on: the sandbox email and password' : 'Account email and password';
+    return { ok: false, message: `${which} are required`, details: [] };
   }
-  // Sandbox mode is checked against the sandbox, never the live API: the test
-  // must answer for the account the shipments will actually be booked on.
-  const sandbox = isSandboxOn(str('sandbox'));
   const base = resolveShiprocketBase(sandbox, str('sandbox_api_url'));
   if (!base.ok) return { ok: false, message: base.message, details: [] };
   const res = await fetchJson(`${base.url}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: str('email'), password: str('password') }),
+    body: JSON.stringify({ email: login.email, password: login.password }),
   });
   // The sandbox gateway turning the network away is not a credential problem.
   if (sandbox && res.status === SANDBOX_GATEWAY_DENIED_STATUS) {
@@ -229,7 +238,16 @@ export async function shiprocketConnection(str: EnvConfigReader): Promise<EnvCon
     };
   }
   const details = [tokenLifetime(token)];
-  if (sandbox) details.unshift('SANDBOX mode — orders booked with this account are test orders; no courier collects them.');
+  if (sandbox) {
+    details.unshift(
+      'SANDBOX mode — orders booked with this account are test orders; no courier collects them.',
+      login.ownSandboxUser
+        ? 'Signed in with the sandbox API user; the production email and password are kept and not used.'
+        : 'No sandbox API user is saved, so the production email and password were sent to the sandbox.'
+    );
+  } else {
+    details.unshift('PRODUCTION mode — real shipments, billed to this ShipRocket wallet.');
+  }
   if (res.data.company_id) details.push(`ShipRocket company id ${String(res.data.company_id)}`);
   const pickup = str('pickup_location');
   details.push(

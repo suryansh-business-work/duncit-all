@@ -44,6 +44,8 @@ export default function BrandIntegrationCard({ title, status, checking, onCheck,
   const { formatDateTime } = useDateFormat({ timeZoneAware: true });
   const chip = stateChip(status, t);
   const provider = status.provider.toLowerCase();
+  // The user the account signs in with now: a sandbox account's own sandbox user when it saved one.
+  const identifier = (status.sandbox && status.sandbox_identifier) || status.identifier;
   const modeLabel = status.live_mode ? t('products.brandReview.liveMode') : t('products.brandReview.testMode');
   return (
     <Card variant="outlined" sx={{ flex: 1 }} data-testid={`brand-integration-${provider}`}>
@@ -63,7 +65,7 @@ export default function BrandIntegrationCard({ title, status, checking, onCheck,
         </Stack>
 
         <Stack spacing={1} sx={{ mt: 1.5 }}>
-          <InfoRow variant="inline" label={t('products.brandReview.identifier')} value={status.identifier || DASH} />
+          <InfoRow variant="inline" label={t('products.brandReview.identifier')} value={identifier || DASH} />
           {status.provider === 'SHIPROCKET' && (
             <InfoRow
               variant="inline"

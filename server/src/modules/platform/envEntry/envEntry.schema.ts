@@ -194,12 +194,61 @@ export const envEntryTypeDefs = gql`
     message: String!
   }
 
+  """
+  How many times one entry has been tested in the current window, against the
+  cap its category is set to. Every test spends one, and a test over the cap is
+  answered without reaching the vendor — repeated wrong sign-ins are what get
+  an account locked.
+  """
+  type EnvTestAttempts {
+    "Tests run in the current window, the one that returned this included."
+    used: Int!
+    "The most tests one window allows. 0 means unlimited."
+    max: Int!
+    "Tests left in the window. Null when unlimited."
+    left: Int
+    "How long a window lasts, in hours."
+    window_hours: Int!
+    "When the count starts again. Null when no test has run in this window."
+    resets_at: String
+  }
+
+  "One category's cap, with its label for the settings form."
+  type EnvAttemptLimit {
+    category: EnvCategory!
+    label: String!
+    "0 means unlimited."
+    max_attempts: Int!
+  }
+
+  "The test-attempt caps for every category (Environment Variables → Settings)."
+  type EnvAttemptSettings {
+    window_hours: Int!
+    limits: [EnvAttemptLimit!]!
+    updated_at: String
+  }
+
+  input EnvAttemptLimitInput {
+    category: EnvCategory!
+    "0 means unlimited."
+    max_attempts: Int!
+  }
+
+  input EnvAttemptSettingsInput {
+    "How long a count lasts before it starts again, in hours (1 to 720)."
+    window_hours: Int!
+    "The categories to change. One left out keeps its cap."
+    limits: [EnvAttemptLimitInput!]!
+  }
+
   "Richer result for the interactive per-category tests (returns a URL or data payload)."
   type EnvTestRichResult {
     ok: Boolean!
     message: String!
     url: String
     data: String
+    "Where the entry's attempt count stands after this test. Null for a step that spends none."
+    attempts: EnvTestAttempts
   }
 
   """
@@ -214,6 +263,8 @@ export const envEntryTypeDefs = gql`
     ok: Boolean!
     message: String!
     details: [String!]!
+    "Where the entry's attempt count stands after this test."
+    attempts: EnvTestAttempts
   }
 
   "One call of MSG91's OTP widget, run from the Tech portal against a saved entry."
@@ -260,6 +311,10 @@ export const envEntryTypeDefs = gql`
     envCategories: [EnvCategoryDef!]!
     "Entries currently assigned to a portal (by portal key)."
     envEntriesForPortal(portalKey: String!): [EnvEntry!]!
+    "Where one entry's test-attempt count stands. Spends nothing."
+    envTestAttempts(id: ID!): EnvTestAttempts!
+    "The test-attempt caps for every category."
+    envAttemptSettings: EnvAttemptSettings!
   }
 
   extend type Mutation {
@@ -268,6 +323,8 @@ export const envEntryTypeDefs = gql`
     deleteEnvEntry(id: ID!): Boolean!
     setDefaultEnvEntry(id: ID!): EnvEntry!
     testEnvEntry(id: ID!): EnvTestResult!
+    "Set how many times an entry of each category may be tested per window."
+    updateEnvAttemptSettings(input: EnvAttemptSettingsInput!): EnvAttemptSettings!
     "Replace the full set of entries assigned to a portal."
     setPortalEnvEntries(portalKey: String!, entryIds: [ID!]!): [EnvEntry!]!
 

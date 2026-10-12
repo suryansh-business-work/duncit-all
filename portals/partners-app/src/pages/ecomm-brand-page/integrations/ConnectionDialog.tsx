@@ -73,6 +73,7 @@ export default function ConnectionDialog({ open, provider, connection, onClose, 
           provider={provider}
           defaultValues={connectionToValues(connection)}
           hasSecret={connection?.status.has_secret === true}
+          hasSandboxSecret={connection?.status.has_sandbox_secret === true}
           busy={loading}
           apiError={apiError}
           onSave={submit}

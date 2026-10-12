@@ -1,7 +1,9 @@
-import { useId } from 'react';
+import { useCallback, useId } from 'react';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Divider, Drawer, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
-import type { EnvEntry } from '../queries';
+import { ENV_TEST_ATTEMPTS, type EnvEntry } from '../queries';
+import TestAttempts from './TestAttempts';
 import EmailTestPanel from './EmailTestPanel';
 import ImagekitTestPanel from './ImagekitTestPanel';
 import PexelsTestPanel from './PexelsTestPanel';
@@ -78,6 +80,17 @@ interface Props {
 /** Right-side drawer hosting the category-specific interactive test. */
 export default function TestDrawer({ entry, onClose, onTested }: Readonly<Props>) {
   const titleId = useId();
+  // Read when the drawer opens and again after every test: each one spends an attempt.
+  const attempts = useQuery(ENV_TEST_ATTEMPTS, {
+    variables: { id: entry?.id ?? '' },
+    skip: !entry,
+    fetchPolicy: 'network-only',
+  });
+  const { refetch } = attempts;
+  const tested = useCallback(() => {
+    onTested();
+    refetch().catch(() => undefined);
+  }, [onTested, refetch]);
   return (
     <Drawer anchor="right" open={!!entry} onClose={onClose} slotProps={{
       paper: { 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 440 } } }
@@ -98,7 +111,8 @@ export default function TestDrawer({ entry, onClose, onTested }: Readonly<Props>
               This test is running using config: <strong>{entry.name}</strong>
               {entry.is_default ? ' (default)' : ''}. Keys are read from the saved config — you don't enter them here.
             </Alert>
-            <EnvTestedContext.Provider value={onTested}>
+            <TestAttempts attempts={attempts.data?.envTestAttempts ?? null} />
+            <EnvTestedContext.Provider value={tested}>
               <Panel entry={entry} />
             </EnvTestedContext.Provider>
           </Box>

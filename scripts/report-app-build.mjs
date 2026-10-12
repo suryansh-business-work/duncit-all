@@ -33,6 +33,9 @@
  *                            no changelog, no diff stat, no upload.
  *   DISPATCH_ID              set by the Tech portal; claims the row it already
  *                            created instead of opening a second one.
+ *   APP_ENV                  production | staging — which server the built app
+ *                            talks to. Recorded on the build; a staging build is
+ *                            never recorded as anything else.
  *   DUNCIT_GRAPHQL_URL       where to record the build. Defaults to production;
  *                            a portal-started build points this at the server
  *                            that started it, which is not necessarily the one
@@ -271,6 +274,20 @@ const REPORT_MUTATION = `mutation($input: ReportAppBuildInput!){
   reportAppBuild(input:$input){ build_no artifact_url slack_ts slack_error }
 }`;
 
+/**
+ * The server this build reports to has never heard of `app_env`, so it cannot
+ * tell a staging build from a production one. Not a failure of the build: the
+ * app compiled and its files are kept on the run. It is simply not recorded
+ * until that server is deployed, and the run says so instead of going red.
+ */
+class StagingNotRecordable extends Error {
+  constructor() {
+    super(
+      'This server cannot record staging builds yet (it predates the app_env field), so this build was not recorded or announced. Its files are on this run as artifacts. Deploy the server, then build again.'
+    );
+  }
+}
+
 const UNKNOWN_FIELD_RE = /Field "([^"]+)" is not defined by type "ReportAppBuildInput"/g;
 
 /** Every input field the server said it has never heard of, across all errors. */
@@ -296,6 +313,10 @@ async function reportBuild(input, token) {
   } catch (err) {
     const unknown = unknownInputFields(err);
     if (unknown.length === 0) throw err;
+    // Every other field can be lost to an older server; this one cannot. Without
+    // it the row would say PRODUCTION, and a build that talks to the staging
+    // database would be offered to the stores.
+    if (unknown.includes('app_env') && input.app_env === 'STAGING') throw new StagingNotRecordable();
     console.warn(
       `⚠ server predates this commit — resending without: ${unknown.join(', ')}`
     );
@@ -353,9 +374,16 @@ const STATUSES = new Set(['RUNNING', 'SUCCESS', 'FAILED']);
  * second one — the dispatch REST call answers with no run id, so this is the
  * only join key that exists on the first report.
  */
+/** APP_ENV as the server spells it; absent when the workflow did not say. */
+function appEnv() {
+  const value = (process.env.APP_ENV || '').trim().toUpperCase();
+  return value === 'PRODUCTION' || value === 'STAGING' ? { app_env: value } : {};
+}
+
 function reportIdentity(platform) {
   return {
     platform,
+    ...appEnv(),
     dispatch_id: (process.env.DISPATCH_ID || '').trim(),
     // Only a push build has a GitHub actor worth naming; a portal build already
     // recorded who pressed the button, and the server keeps that.
@@ -437,6 +465,10 @@ try {
     process.exit(0);
   }
 
+  // Asked before anything is uploaded: a staging build the server cannot record
+  // must not leave its files there with no row to find them by.
+  if (status === 'SUCCESS' && appEnv().app_env === 'STAGING') await reportProgress(platform, token);
+
   const range = commitRange(await lastReportedSha(token, platform));
   const commits = getCommits(range);
   const stats = getStats(range);
@@ -494,6 +526,10 @@ try {
     process.exit(1);
   }
 } catch (err) {
+  if (err instanceof StagingNotRecordable) {
+    console.log(`::warning title=Staging build not recorded::${err.message}`);
+    process.exit(0);
+  }
   console.error(`✗ report-app-build: ${describeError(err)}`);
   process.exit(1);
 }

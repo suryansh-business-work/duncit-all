@@ -54,6 +54,9 @@ export const BRAND_INTEGRATION_FIELDS = `
   live_mode
   has_webhook_secret
   sandbox
+  sandbox_identifier
+  has_sandbox_secret
+  sandbox_api_url
   connection_id
 `;
 
@@ -205,6 +208,12 @@ export interface BrandIntegrationStatus {
   has_webhook_secret: boolean;
   /** ShipRocket: the account is in sandbox mode — test orders only. */
   sandbox: boolean;
+  /** ShipRocket: the sandbox API user's email, saved beside the production one (`identifier`). */
+  sandbox_identifier?: string;
+  /** ShipRocket: a sandbox API user password is on file. */
+  has_sandbox_secret?: boolean;
+  /** ShipRocket: the connection's own sandbox API address; blank uses the standard sandbox. */
+  sandbox_api_url?: string;
   /** The saved Integrations connection the brand's credential was copied from (brand reads only). */
   connection_id?: string | null;
 }

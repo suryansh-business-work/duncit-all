@@ -42,6 +42,7 @@ export const makePlayStoreColumn = (t: Translate, onPush: PushToPlay): DuncitCol
       released: (k, r, when) =>
         t('tech.appBuilds.playReleasedTip', { vars: { track: track[k], code: r.version_code, by: r.by, when } }),
       failed: (k, error) => t('tech.appBuilds.playFailedTip', { vars: { track: track[k], error } }),
+      logs: (k) => t('tech.appBuilds.releaseLogOpen', { vars: { track: track[k] } }),
       unavailable: t('tech.appBuilds.playUnavailable'),
     },
     onPush,

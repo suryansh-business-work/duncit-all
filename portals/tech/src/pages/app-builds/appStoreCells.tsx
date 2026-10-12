@@ -47,6 +47,7 @@ export const makeAppStoreColumn = (t: Translate, onPush: PushToAppStore): Duncit
         t('tech.appBuilds.appStorePushingTip', { vars: { track: track[k], stage: r.stage, when } }),
       released: (k, r, when) => released[k](r, when),
       failed: (k, error) => t('tech.appBuilds.appStoreFailedTip', { vars: { track: track[k], error } }),
+      logs: (k) => t('tech.appBuilds.releaseLogOpen', { vars: { track: track[k] } }),
       unavailable: t('tech.appBuilds.appStoreUnavailable'),
     },
     onPush,

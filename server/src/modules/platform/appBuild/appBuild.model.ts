@@ -56,6 +56,8 @@ export interface IAppBuildPlayRelease {
   error: string;
   /** Who pressed the button. */
   by: string;
+  /** What each step of the push did, in order, each line stamped with its time. Never a credential. */
+  log: string[];
   started_at: Date;
   finished_at: Date | null;
 }
@@ -258,6 +260,7 @@ const appBuildPlayReleaseSchema = new Schema<IAppBuildPlayRelease>(
     version_code: { type: String, default: '' },
     error: { type: String, default: '' },
     by: { type: String, default: '' },
+    log: { type: [String], default: [] },
     started_at: { type: Date, required: true },
     finished_at: { type: Date, default: null },
   },

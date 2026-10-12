@@ -1,5 +1,6 @@
 import { envEntryService, type EnvEntryConfig } from './envEntry.service';
 import { envEntryTests, type Msg91TestInput } from './envEntry.tests';
+import { envAttemptService, type EnvAttemptLimitInput } from './envAttempt.service';
 import { CATEGORY_API_DOCS, CATEGORY_FIELDS, CATEGORY_DOCS, CATEGORY_LABELS } from './envEntry.fields';
 import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import type { GraphQLContext } from '@context';
@@ -93,6 +94,14 @@ export const envEntryResolvers = {
       requireRole(ctx, TECH_MANAGE);
       return envEntryService.listForPortal(args.portalKey);
     },
+    envTestAttempts: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      await manageable(ctx, args.id);
+      return envAttemptService.forEntry(args.id);
+    },
+    envAttemptSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envAttemptService.settings();
+    },
   },
 
   Mutation: {
@@ -117,6 +126,14 @@ export const envEntryResolvers = {
     setDefaultEnvEntry: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       await manageable(ctx, args.id);
       return envEntryService.setDefault(args.id);
+    },
+    updateEnvAttemptSettings: (
+      _p: unknown,
+      args: { input: { window_hours: number; limits: EnvAttemptLimitInput[] } },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envAttemptService.updateSettings(args.input);
     },
     testEnvEntry: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       await manageable(ctx, args.id);

@@ -174,6 +174,7 @@ describe('shiprocketConnection', () => {
       ok: true,
       message: 'ShipRocket accepted the credentials and issued a token',
       details: [
+        'PRODUCTION mode — real shipments, billed to this ShipRocket wallet.',
         `Token valid until ${new Date(exp * 1000).toUTCString()}`,
         'ShipRocket company id 9876',
         'Default pickup location "Main Warehouse" — it must match a pickup address in ShipRocket.',
@@ -195,10 +196,39 @@ describe('shiprocketConnection', () => {
       message: 'ShipRocket sandbox accepted the credentials and issued a token',
       details: [
         'SANDBOX mode — orders booked with this account are test orders; no courier collects them.',
+        'No sandbox API user is saved, so the production email and password were sent to the sandbox.',
         `Token valid until ${new Date(exp * 1000).toUTCString()}`,
         'Default pickup location "Main Warehouse" — it must match a pickup address in ShipRocket.',
       ],
     });
+    expect(JSON.parse(String(lastInit().body))).toEqual(creds);
+  });
+
+  it('signs in to the sandbox with the sandbox user when one is saved, and never sends the production password there', async () => {
+    const sandboxUser = { email: 'sandbox@example.com', password: 'not-a-real-sandbox-password' };
+    respond(200, { token: jwtWith({ exp: Date.UTC(2030, 0, 2) / 1000 }) });
+    const res = await shiprocketConnection(
+      entry({ ...creds, sandbox: 'true', sandbox_email: sandboxUser.email, sandbox_password: sandboxUser.password }),
+    );
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api-sandbox.shiprocket.in/v1/external/auth/login');
+    expect(JSON.parse(String(lastInit().body))).toEqual(sandboxUser);
+    expect(res.details[1]).toBe('Signed in with the sandbox API user; the production email and password are kept and not used.');
+  });
+
+  it('keeps the sandbox user out of a production sign-in, and falls back to the production user for a half-saved sandbox one', async () => {
+    respond(200, { token: jwtWith({ exp: Date.UTC(2030, 0, 2) / 1000 }) });
+    await shiprocketConnection(entry({ ...creds, sandbox_email: 'sandbox@example.com', sandbox_password: 'not-a-real-sandbox-password' }));
+    expect(fetchMock.mock.calls[0][0]).toBe('https://apiv2.shiprocket.in/v1/external/auth/login');
+    expect(JSON.parse(String(lastInit().body))).toEqual(creds);
+    respond(200, { token: jwtWith({ exp: Date.UTC(2030, 0, 2) / 1000 }) });
+    await shiprocketConnection(entry({ ...creds, sandbox: 'true', sandbox_email: 'sandbox@example.com' }));
+    expect(JSON.parse(String(lastInit().body))).toEqual(creds);
+  });
+
+  it('asks for the sandbox user when sandbox mode is on and no user at all is saved', async () => {
+    const res = await shiprocketConnection(entry({ sandbox: 'true', sandbox_email: 'sandbox@example.com' }));
+    expect(res).toEqual({ ok: false, message: 'Sandbox mode is on: the sandbox email and password are required', details: [] });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('checks sandbox mode against the standard ShipRocket sandbox when no address is saved', async () => {
@@ -247,6 +277,7 @@ describe('shiprocketConnection', () => {
     respond(200, { token });
     const res = await shiprocketConnection(entry(creds));
     expect(res.details).toEqual([
+      'PRODUCTION mode — real shipments, billed to this ShipRocket wallet.',
       lifetime,
       'No default pickup location set — shipments cannot be booked without one.',
     ]);

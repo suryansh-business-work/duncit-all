@@ -15,6 +15,9 @@ const blank: ConnectionFormValues = {
   key_id: '',
   key_secret: '',
   sandbox: false,
+  sandbox_email: '',
+  sandbox_password: '',
+  sandbox_api_url: '',
 };
 
 const razorpay = { ...blank, label: 'Main Razorpay', key_id: 'rzp_test_abc', key_secret: 'secret' };
@@ -74,7 +77,16 @@ describe('toSaveConnectionVariables', () => {
       provider: 'SHIPROCKET',
       input: {
         label: 'Warehouse SR',
-        shiprocket: { email: 'api@brand.example.com', password: undefined, pickup_location: 'Delhi', webhook_secret: undefined, sandbox: false },
+        shiprocket: {
+          email: 'api@brand.example.com',
+          password: undefined,
+          pickup_location: 'Delhi',
+          webhook_secret: undefined,
+          sandbox: false,
+          sandbox_email: '',
+          sandbox_password: undefined,
+          sandbox_api_url: '',
+        },
       },
     });
   });

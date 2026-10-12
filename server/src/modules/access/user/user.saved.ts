@@ -10,6 +10,7 @@ import { podSeatsAvailable, podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { POD_VISIBLE_FILTER } from '@utils/hidden';
 
 const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map(String);
@@ -173,7 +174,7 @@ export const userSavedPodMethods = {
     // Rank each pod by how recently it was saved — the default sort order.
     const savedOrder = new Map(ids.map((id, index) => [id, index]));
 
-    let docs: any[] = await PodModel.find({ _id: { $in: ids }, is_active: true });
+    let docs: any[] = await PodModel.find({ _id: { $in: ids }, is_active: true, ...POD_VISIBLE_FILTER });
     const clubIds = Array.from(
       new Set(docs.map((d: any) => d.club_id && String(d.club_id)).filter(Boolean))
     );

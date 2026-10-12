@@ -4104,12 +4104,20 @@ export type Club = {
   faqs: Array<ClubFaq>;
   /** How many users follow this club. */
   followers_count: Scalars['Int']['output'];
+  hidden_at?: Maybe<Scalars['String']['output']>;
+  /** Why the club was hidden. Consoles only — every other audience reads null. */
+  hidden_reason?: Maybe<Scalars['String']['output']>;
   /** Hosts explicitly linked by an admin (Bug 5). */
   host_ids: Array<Scalars['ID']['output']>;
   /** Resolved host profiles — linked hosts, or the hosts of the club's pods as a fallback. */
   hosts: Array<ClubActor>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
+  /**
+   * An admin took this club — and every pod in it — off every member-facing
+   * surface. Distinct from is_active, the Draft flag.
+   */
+  is_hidden: Scalars['Boolean']['output'];
   /** Verified badge for official clubs (explore item 15). */
   is_verified: Scalars['Boolean']['output'];
   /** Optional locality/zone within the club's city. */
@@ -13672,6 +13680,12 @@ export type Mutation = {
   /** Set the pay commission. Null or 0 inherits the platform default. */
   setClubAdminCommission: ClubAdminProfile;
   setClubAdminProfileActive: ClubAdminProfile;
+  /**
+   * Hide a club from every member-facing surface, or show it again. A reason is
+   * required to hide. Every pod of the club is hidden and shown with it; a pod an
+   * admin hid on its own stays hidden when the club comes back.
+   */
+  setClubHidden: Club;
   /** Adds or repoints an A record for one of the website's own hostnames (Tech managers). */
   setCmsSiteARecord: Scalars['Boolean']['output'];
   /**
@@ -13742,6 +13756,13 @@ export type Mutation = {
   setPodChallengeRoster: PodChallenge;
   setPodChallengeRound: PodChallenge;
   setPodChallengeVoting: PodChallenge;
+  /**
+   * Hide a pod from every member-facing surface, or show it again. A reason is
+   * required to hide. Existing bookings are untouched either way. Showing a pod
+   * whose club is hidden lifts only the pod's own flag — it stays hidden with
+   * the club.
+   */
+  setPodHidden: Pod;
   setPodIdeaStatus: PodIdea;
   /**
    * Turn one console's header features on or off. Each flag is optional so a
@@ -17725,6 +17746,13 @@ export type MutationSetClubAdminProfileActiveArgs = {
 };
 
 
+export type MutationSetClubHiddenArgs = {
+  club_doc_id: Scalars['ID']['input'];
+  hidden: Scalars['Boolean']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationSetCmsSiteARecordArgs = {
   input: CmsSiteARecordInput;
   site_id: Scalars['ID']['input'];
@@ -17914,6 +17942,13 @@ export type MutationSetPodChallengeVotingArgs = {
   id: Scalars['ID']['input'];
   open: Scalars['Boolean']['input'];
   tool_instance_id: Scalars['String']['input'];
+};
+
+
+export type MutationSetPodHiddenArgs = {
+  hidden: Scalars['Boolean']['input'];
+  pod_doc_id: Scalars['ID']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -21319,6 +21354,8 @@ export type Pod = {
    */
   cancellation_risk?: Maybe<PodCancellationRiskFlag>;
   club?: Maybe<Club>;
+  /** Why the pod's club was hidden, when that is what hides it. Consoles only. */
+  club_hidden_reason?: Maybe<Scalars['String']['output']>;
   club_id: Scalars['ID']['output'];
   club_slug: Scalars['String']['output'];
   /** Invited co-hosts (view-only). Empty unless the pod's sub-category allows co-hosting. */
@@ -21327,10 +21364,20 @@ export type Pod = {
   completed_at?: Maybe<Scalars['String']['output']>;
   created_at: Scalars['String']['output'];
   deleted_at?: Maybe<Scalars['String']['output']>;
+  hidden_at?: Maybe<Scalars['String']['output']>;
+  /** The pod's club is hidden, which hides the pod with it until the club is shown again. */
+  hidden_by_club: Scalars['Boolean']['output'];
+  /** Why this pod was hidden. Consoles only — every other audience reads null. */
+  hidden_reason?: Maybe<Scalars['String']['output']>;
   host_names: Array<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
   is_deleted: Scalars['Boolean']['output'];
+  /**
+   * An admin took this pod off every member-facing surface. Not a cancellation:
+   * bookings already made stand, the pod is simply no longer offered.
+   */
+  is_hidden: Scalars['Boolean']['output'];
   like_count: Scalars['Int']['output'];
   liked_by_me: Scalars['Boolean']['output'];
   /** Users who liked this pod — powers the 'who liked' list (explore item 8). */

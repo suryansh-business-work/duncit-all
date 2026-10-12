@@ -2,6 +2,7 @@ import { podListingMethods } from './pod.listing';
 import { podWriteMethods } from './pod.write';
 import { podCancellationMethods } from './pod.cancellation';
 import { podEngagementMethods } from './pod.engagement';
+import { podVisibilityMethods } from './pod.visibility';
 
 export { podNotificationLink, mapPodToPublic, loadPodClubSlugMap } from './pod.shared';
 export {
@@ -27,4 +28,5 @@ export const podService = {
   ...podWriteMethods,
   ...podCancellationMethods,
   ...podEngagementMethods,
+  ...podVisibilityMethods,
 };

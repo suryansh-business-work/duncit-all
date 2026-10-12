@@ -46,6 +46,13 @@ export interface IClub extends Document {
   /** Admin-set verified badge for official clubs (explore item 15). */
   is_verified: boolean;
   is_active: boolean;
+  /** An admin took the club off every member-facing surface (distinct from
+   *  is_active, the Draft flag). Its pods follow through `hidden_by_club`. */
+  is_hidden: boolean;
+  /** Why it was hidden — mandatory on a hide, cleared on a show. */
+  hidden_reason: string;
+  hidden_at: Date | null;
+  hidden_by: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -90,6 +97,10 @@ const clubSchema = new Schema<IClub>(
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     is_verified: { type: Boolean, default: false },
     is_active: { type: Boolean, default: true },
+    is_hidden: { type: Boolean, default: false },
+    hidden_reason: { type: String, default: '', trim: true, maxlength: 500 },
+    hidden_at: { type: Date, default: null },
+    hidden_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

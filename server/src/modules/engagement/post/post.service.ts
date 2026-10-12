@@ -144,7 +144,15 @@ export const postService = {
     let q: Record<string, unknown>;
     if (source === 'CLUBS') {
       const follows = await ClubFollowerModel.find({ user_id: oid }).select('club_id').lean();
-      const clubIds = follows.map((f: any) => f.club_id);
+      const followed = follows.map((f: any) => f.club_id);
+      if (followed.length === 0) return [];
+      // A hidden club's posts leave the feed with it; the follow itself stays,
+      // so they are back the moment the club is shown again.
+      const hidden = await ClubModel.find({ _id: { $in: followed }, is_hidden: true })
+        .select('_id')
+        .lean();
+      const hiddenIds = new Set(hidden.map((c) => String(c._id)));
+      const clubIds = followed.filter((id: unknown) => !hiddenIds.has(String(id)));
       if (clubIds.length === 0) return [];
       q = { club_id: { $in: clubIds }, ...postsOnly };
     } else {

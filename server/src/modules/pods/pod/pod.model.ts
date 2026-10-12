@@ -1,4 +1,5 @@
 import { Schema, model, Types, type Document } from 'mongoose';
+import { ClubModel } from '@modules/clubs/club/club.model';
 
 /** FREE is virtual-only — physical pods must be PAID. Legacy values are
  * collapsed to these two by the boot-time migration (pod-type.migration.ts). */
@@ -185,6 +186,17 @@ export interface IPod extends Document {
    */
   cancellation_risk?: IPodCancellationRisk | null;
   is_active: boolean;
+  /** An admin took THIS pod off every member-facing surface. Bookings already
+   * made are untouched — hiding is not cancelling. Rules: pod.visibility.ts. */
+  is_hidden: boolean;
+  /** Why it was hidden — mandatory on a hide, cleared on a show. */
+  hidden_reason: string;
+  hidden_at?: Date | null;
+  hidden_by?: Types.ObjectId | null;
+  /** The pod's CLUB is hidden. Kept apart from `is_hidden` so showing the club
+   * again brings back only the pods the club took down, never one an admin hid
+   * on its own. Written by the club's hide/show and by the save hook below. */
+  hidden_by_club: boolean;
   venue_approval_status: PodVenueApproval;
   /** The Auto Pod offer this pod materialized from (null for ordinary pods). */
   source_auto_pod_id?: Types.ObjectId | null;
@@ -339,6 +351,11 @@ const podSchema = new Schema<IPod>(
     completed_at: { type: Date, default: null, index: true },
     cancellation_risk: { type: cancellationRiskSchema, default: null },
     is_active: { type: Boolean, default: true },
+    is_hidden: { type: Boolean, default: false },
+    hidden_reason: { type: String, default: '', trim: true, maxlength: 500 },
+    hidden_at: { type: Date, default: null },
+    hidden_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    hidden_by_club: { type: Boolean, default: false },
     deleted_at: { type: Date, default: null, index: true },
     venue_approval_status: {
       type: String,
@@ -388,6 +405,14 @@ podSchema.pre('aggregate', function (next) {
   if ((this.options as { includeDeleted?: boolean } | undefined)?.includeDeleted) return next();
   this.pipeline().unshift({ $match: { deleted_at: null } });
   next();
+});
+
+// A pod takes on its club's hidden state the moment it is created in, or moved
+// to, that club. The club's own hide only reaches the pods it had at the time,
+// so without this a pod published into a hidden club would be live.
+podSchema.pre('save', async function () {
+  if (!this.isNew && !this.isModified('club_id')) return;
+  this.hidden_by_club = !!(await ClubModel.exists({ _id: this.club_id, is_hidden: true }));
 });
 
 export const PodModel = model<IPod>('Pod', podSchema);

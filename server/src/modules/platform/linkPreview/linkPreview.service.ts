@@ -5,6 +5,7 @@ import { venueService } from '@modules/venues/venue/venue.service';
 import { inventoryService } from '@modules/venues/inventory/inventory.service';
 import { postService } from '@modules/engagement/post/post.service';
 import { locationService } from '@modules/platform/location/location.service';
+import { isPodHidden } from '@utils/hidden';
 
 export type LinkPreviewKind = 'POD' | 'CLUB' | 'USER' | 'POST' | 'VENUE' | 'PRODUCT' | 'LOCATION';
 
@@ -70,13 +71,14 @@ async function podPreview(id: string, secondaryId: string | null): Promise<LinkP
   const pod = secondaryId
     ? await podService.getBySlugs(id, secondaryId)
     : await podService.getById(id);
-  if (!pod) return null;
+  // A hidden pod unfurls like a link to nothing — the card is a public surface.
+  if (!pod || isPodHidden(pod)) return null;
   return preview(pod.pod_title, pod.pod_description, firstImage(pod.pod_images_and_videos));
 }
 
 async function clubPreview(id: string): Promise<LinkPreview | null> {
   const club = await clubService.getBySlug(id);
-  if (!club) return null;
+  if (!club || club.is_hidden) return null;
   return preview(
     club.club_name,
     club.club_description,

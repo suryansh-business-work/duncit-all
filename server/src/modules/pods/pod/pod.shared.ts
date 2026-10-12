@@ -105,6 +105,12 @@ export const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       discount_pct: tier.discount_pct,
     })),
     is_active: !!d.is_active,
+    is_hidden: !!d.is_hidden,
+    hidden_by_club: !!d.hidden_by_club,
+    // The reason is carried raw for the console-gated `Pod.hidden_reason` field
+    // resolver — it is staff's note to staff, never a member's to read.
+    hidden_reason: d.hidden_reason ?? '',
+    hidden_at: d.hidden_at?.toISOString?.() ?? null,
     is_deleted: !!d.deleted_at,
     deleted_at: d.deleted_at?.toISOString?.() ?? null,
     venue_approval_status: d.venue_approval_status ?? 'NONE',

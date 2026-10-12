@@ -241,6 +241,18 @@ export const podTypeDefs = /* GraphQL */ `
     "The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price."
     ticket_discount_tiers: [PodTicketDiscountTier!]!
     is_active: Boolean!
+    """
+    An admin took this pod off every member-facing surface. Not a cancellation:
+    bookings already made stand, the pod is simply no longer offered.
+    """
+    is_hidden: Boolean!
+    "The pod's club is hidden, which hides the pod with it until the club is shown again."
+    hidden_by_club: Boolean!
+    "Why this pod was hidden. Consoles only — every other audience reads null."
+    hidden_reason: String
+    "Why the pod's club was hidden, when that is what hides it. Consoles only."
+    club_hidden_reason: String
+    hidden_at: String
     is_deleted: Boolean!
     deleted_at: String
     venue_approval_status: PodVenueApproval!
@@ -658,6 +670,13 @@ export const podTypeDefs = /* GraphQL */ `
     NOT reversed.
     """
     revokePodCancellation(pod_doc_id: ID!): Pod!
+    """
+    Hide a pod from every member-facing surface, or show it again. A reason is
+    required to hide. Existing bookings are untouched either way. Showing a pod
+    whose club is hidden lifts only the pod's own flag — it stays hidden with
+    the club.
+    """
+    setPodHidden(pod_doc_id: ID!, hidden: Boolean!, reason: String): Pod!
     incrementPodHits(pod_doc_id: ID!): Pod!
     togglePodLike(pod_doc_id: ID!): Pod!
     addPodComment(pod_doc_id: ID!, text: String!): PodComment!

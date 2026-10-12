@@ -104,7 +104,11 @@ create/delete) and reaches into the admin coupons page. Admin injects it:
 ## Header actions are the portal's, not this package's
 
 `actions` is a **required** render prop, called with `{ id, pod_title, is_deleted }`
-and drawn beside **Edit pod**. A console with nothing to add passes the exported
+plus the pod's visibility — `is_hidden` (an admin hid this pod), `hidden_by_club` (its
+club is hidden) and the two reasons, `hidden_reason` / `club_hidden_reason`, which the
+server returns only to a staff console and as `null` to everyone else. It is drawn beside
+**Edit pod**. Admin uses those fields for its Hide / Show button and the "hidden" banner;
+this package draws neither. A console with nothing to add passes the exported
 constant:
 
 ```tsx

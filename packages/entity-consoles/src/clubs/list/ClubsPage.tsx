@@ -10,6 +10,8 @@ import { CLUBS_TABLE, CATEGORIES, DELETE, type ClubRow } from './queries';
 import ClubsTable from './ClubsTable';
 import ClubsToolbar from './ClubsToolbar';
 import { useTranslation } from '@duncit/shell';
+import { useConsoleAccess } from '../../shared/useConsoleAccess';
+import { useVisibility } from '../../shared/visibility/useVisibility';
 
 export default function ClubsPage() {
   const { t } = useTranslation();
@@ -22,6 +24,14 @@ export default function ClubsPage() {
   const { data: catData } = useQuery<any>(CATEGORIES);
   const [deleteMut] = useMutation<any>(DELETE);
   const confirm = useConfirm();
+  const { canGovern } = useConsoleAccess();
+  const visibility = useVisibility('CLUB', () => refetchRef.current?.());
+  const toggleHidden = useCallback(
+    (c: ClubRow) => visibility.request({ id: c.id, name: c.club_name, hidden: !!c.is_hidden }),
+    // `request` is rebuilt each render but closes over nothing that goes stale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const [toast, setToast] = useState<string | null>(null);
   // Page-level filter: pinned outside the table so it survives the table's own
@@ -79,7 +89,10 @@ export default function ClubsPage() {
         onEdit={(c) => navigate(`/clubs/${c.id}/edit`)}
         onRemove={remove}
         onView={(c) => navigate(`/clubs/${c.id}`)}
+        onToggleHidden={canGovern ? toggleHidden : undefined}
       />
+
+      {visibility.dialog}
 
       <Snackbar
         open={!!toast}

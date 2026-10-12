@@ -103,6 +103,7 @@ describe('EntityPodsTab', () => {
       'admin.venueDetails.colHosts',
       'admin.venueDetails.colSpots',
       'admin.venueDetails.colApproval',
+      'directory.visibility.colVisibility',
     ]);
   });
 });

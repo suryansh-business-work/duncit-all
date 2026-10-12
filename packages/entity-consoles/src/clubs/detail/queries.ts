@@ -20,6 +20,8 @@ export const CLUB_DETAIL = gql`
       super_category_id
       is_verified
       is_active
+      is_hidden
+      hidden_reason
       locality
       followers_count
       matched_venues_count

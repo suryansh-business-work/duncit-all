@@ -81,6 +81,7 @@ describe('buildPodsColumns / column set', () => {
       'attendance',
       'pod_hits',
       'is_active',
+      'is_hidden',
       'completed_at',
       'created_at',
       'ai_monitor',
@@ -112,7 +113,7 @@ describe('buildPodsColumns / column set', () => {
     expect(fields[7]).toBe('pod_amount');
     expect(fields[8]).toBe('products');
     expect(fields[9]).toBe('no_of_spots');
-    expect(fields).toHaveLength(17);
+    expect(fields).toHaveLength(18);
   });
 
   it('hides the audit-only columns by default', () => {

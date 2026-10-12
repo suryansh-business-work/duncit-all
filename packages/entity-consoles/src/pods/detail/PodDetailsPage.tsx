@@ -7,6 +7,8 @@ import {
 import PodCouponsSection from './PodCouponsSection';
 import PodCancellationRiskSection from './PodCancellationRiskSection';
 import RevokeCancellationAction from '../list/revoke-cancellation';
+import PodVisibilityAction from './PodVisibilityAction';
+import { PodHiddenBanner } from '../../shared/visibility/VisibilityViews';
 
 /** Where Back goes. Omitted, it is the pods list; the clubs console sends it to
  * the pod's own club instead. */
@@ -16,7 +18,10 @@ type AdminPodDetailsProps = Pick<PodDetailsViewProps, 'backTo' | 'backLabel'>;
  * renders nothing for a pod that is not at risk. Admin is the one console the
  * `podCancellationRisk` query answers, so the section lives here. */
 const renderRiskBanner: PodDetailsBanner = (pod) => (
-  <PodCancellationRiskSection podId={pod.id} cancelled={pod.is_deleted} />
+  <>
+    <PodHiddenBanner pod={pod} />
+    <PodCancellationRiskSection podId={pod.id} cancelled={pod.is_deleted} />
+  </>
 );
 
 /** The footer the shared view calls with the pod it loaded — hoisted to module
@@ -28,8 +33,12 @@ const renderCouponsFooter: NonNullable<PodDetailsViewProps['footer']> = (pod) =>
 /** A cancelled pod is the only one with anything to revoke, and admin is the
  * only console the mutation accepts — so the action is passed in here rather
  * than living in the shared view. */
-const renderPodActions: PodDetailsActions = (pod) =>
-  pod.is_deleted ? <RevokeCancellationAction podId={pod.id} podTitle={pod.pod_title} /> : null;
+const renderPodActions: PodDetailsActions = (pod) => (
+  <>
+    <PodVisibilityAction podId={pod.id} podTitle={pod.pod_title} hidden={!!pod.is_hidden} />
+    {pod.is_deleted && <RevokeCancellationAction podId={pod.id} podTitle={pod.pod_title} />}
+  </>
+);
 
 /** Admin is the one portal with user pages, so it is the one that links a club
  * admin's name through to theirs. */

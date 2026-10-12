@@ -23,12 +23,13 @@ import {
   renderType,
 } from './renderers';
 import type { PodsColumnDeps } from './types';
+import { PodHiddenChip, podVisibilityValue } from '../../../shared/visibility/VisibilityViews';
 
 export type { PodsColumnDeps } from './types';
 
 export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<PodRow>[] {
   const { showProducts, clubName, clubLocation, venueName, locName, minPax } = deps;
-  const { onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t } = deps;
+  const { onEdit, onQuickEdit, onDelete, onComplete, onMonitor, onToggleHidden, t } = deps;
   const clubValue = (p: PodRow) => {
     const location = clubLocation(p.club_id);
     return location ? `${clubName(p.club_id)} | ${location}` : clubName(p.club_id);
@@ -39,7 +40,14 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     return locName(p.location_id ?? '');
   };
   const renderActions = (p: PodRow) => (
-    <PodActionButtons pod={p} onEdit={onEdit} onQuickEdit={onQuickEdit} onDelete={onDelete} onComplete={onComplete} />
+    <PodActionButtons
+      pod={p}
+      onEdit={onEdit}
+      onQuickEdit={onQuickEdit}
+      onDelete={onDelete}
+      onComplete={onComplete}
+      onToggleHidden={onToggleHidden && (() => onToggleHidden(p))}
+    />
   );
   const columns: DuncitColumn<PodRow>[] = [
     { field: 'cover', headerName: t('admin.pods.colCover'), type: 'text', width: 76, cellRenderer: renderCover },
@@ -139,6 +147,15 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       valueGetter: statusValue,
     },
     {
+      // Its own column: a pod is hidden AND upcoming, not one instead of the other.
+      field: 'is_hidden',
+      headerName: t('directory.visibility.colVisibility'),
+      type: 'boolean',
+      width: 160,
+      cellRenderer: (p: PodRow) => <PodHiddenChip pod={p} />,
+      valueGetter: (p) => podVisibilityValue(p, t),
+    },
+    {
       field: 'completed_at',
       headerName: t('admin.podsDashboard.completed'),
       type: 'date',
@@ -164,7 +181,7 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       // so the cell repaints when an edit renames the pod.
       valueGetter: (p) => p.pod_title,
     },
-    { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 170, cellRenderer: renderActions },
+    { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 204, cellRenderer: renderActions },
   ];
   if (showProducts) {
     columns.splice(8, 0, {

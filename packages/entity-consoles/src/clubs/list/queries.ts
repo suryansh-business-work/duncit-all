@@ -66,6 +66,9 @@ export interface ClubRow {
   admin_user_ids?: string[] | null;
   is_verified: boolean;
   is_active: boolean;
+  /** Taken off the app by an admin, with every pod in it. */
+  is_hidden?: boolean | null;
+  hidden_reason?: string | null;
   created_at: string;
 }
 
@@ -110,6 +113,8 @@ const CLUB_ROW_FIELDS = gql`
     }
     is_verified
     is_active
+    is_hidden
+    hidden_reason
     created_at
     updated_at
   }

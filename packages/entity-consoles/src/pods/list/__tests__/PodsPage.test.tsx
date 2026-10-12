@@ -23,6 +23,12 @@ const harness = vi.hoisted(() => ({
   settlePicker: vi.fn(),
 }));
 
+// The Hide / Show action is offered to a governor only — the page reads who is
+// signed in to decide, and the harness mounts no UserProvider.
+vi.mock('@duncit/user-context', () => ({
+  useUserData: () => ({ user: { roles: ['SUPER_ADMIN'] } }),
+}));
+
 vi.mock('@duncit/table', () => ({
   useApolloTableFetch: (_client: unknown, _document: unknown, rootField: string, options: unknown) => {
     harness.fetchCalls.push({ rootField, options });

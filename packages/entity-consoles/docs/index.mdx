@@ -321,3 +321,35 @@ would list every host), so a club with nobody to list never asks.
 The tables are `EntityRecordsTab`, the frame `EntityPodsTab` is now a thin layer
 over; a club's pods and a venue's pods share one query and one column set
 (`shared/recordPods`).
+
+## Hiding a pod or a club
+
+Pods and clubs both carry a **Hide / Show** action — on each list row and in the
+record's header — and it is one implementation, `shared/visibility`, mounted by
+both consoles:
+
+```tsx
+const visibility = useVisibility('CLUB', () => refetchRef.current?.());
+
+<VisibilityIconButton hidden={!!club.is_hidden} onClick={() => visibility.request({ id, name, hidden })} />
+{visibility.dialog}
+```
+
+- **Hiding asks for a reason, always.** `request` opens `HideReasonDialog` (React
+  Hook Form + Zod, at most 500 characters) and the server refuses a hide without
+  one. Showing again is a plain confirm.
+- **Hidden is not cancelled.** Nothing is refunded and no booking is touched; the
+  record just stops being offered in the app — feeds, search, its page, new
+  bookings. People already in a hidden pod keep their ticket.
+- **A club takes its pods with it.** Hiding a club marks every pod in it
+  `hidden_by_club`, which is stored apart from the pod's own `is_hidden`. So
+  showing the club brings back only the pods it took down — a pod an admin hid on
+  its own stays hidden — and the Pods console says which it is: **Hidden**, or
+  **Hidden with club** (with the club's reason on hover).
+- **The two consoles cannot disagree**, because neither holds the state: both
+  read `is_hidden` / `hidden_by_club` off the same pod. After a change the hook
+  refetches every active query and calls `onChanged` for the caller's table,
+  which reads through the table engine rather than a watched query.
+
+The action is offered to `useConsoleAccess().canGovern` only; the server gate is
+the same one `updatePod` / `updateClub` sit behind.

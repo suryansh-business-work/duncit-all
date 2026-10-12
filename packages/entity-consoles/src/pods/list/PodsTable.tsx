@@ -32,6 +32,7 @@ export default function PodsTable({
   onDelete,
   onComplete,
   onMonitor,
+  onToggleHidden,
   onView,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -61,6 +62,7 @@ export default function PodsTable({
         onDelete,
         onComplete,
         onMonitor,
+        onToggleHidden,
         t,
       }),
     [
@@ -75,6 +77,7 @@ export default function PodsTable({
       onDelete,
       onComplete,
       onMonitor,
+      onToggleHidden,
       t,
     ],
   );

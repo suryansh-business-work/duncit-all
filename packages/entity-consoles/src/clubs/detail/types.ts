@@ -25,6 +25,8 @@ export interface ClubDetail {
   club_description?: string | null;
   is_verified: boolean;
   is_active: boolean;
+  is_hidden?: boolean | null;
+  hidden_reason?: string | null;
   locality?: string | null;
   followers_count: number;
   matched_venues_count: number;

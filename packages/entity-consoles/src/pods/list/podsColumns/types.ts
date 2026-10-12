@@ -18,4 +18,6 @@ export interface PodsColumnDeps {
   onDelete: (p: PodRow) => void;
   onComplete: (p: PodRow) => void;
   onMonitor: (p: PodRow) => void;
+  /** Hide or show the pod. Omitted for a viewer who may not — no button then. */
+  onToggleHidden?: (p: PodRow) => void;
 }

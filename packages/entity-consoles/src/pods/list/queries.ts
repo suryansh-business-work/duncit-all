@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
+import type { PodVisibilityFields } from '../../shared/visibility/queries';
 
 export const PODS = gql`
   query Pods($filter: PodFilterInput) {
@@ -57,7 +58,7 @@ export const PODS = gql`
   }
 `;
 /** Row shape used by the pods table and the deep-link edit fetch. */
-export interface PodRow {
+export interface PodRow extends PodVisibilityFields {
   id: string;
   pod_id: string;
   pod_title: string;
@@ -106,6 +107,10 @@ const POD_ROW_FIELDS = gql`
     venue_slot_id
     venue_approval_status
     is_deleted
+    is_hidden
+    hidden_by_club
+    hidden_reason
+    club_hidden_reason
     cancellation_risk { at_risk shortfall spots_needed }
     club_id
     pod_mode

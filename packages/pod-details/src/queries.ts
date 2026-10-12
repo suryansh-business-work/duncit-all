@@ -165,6 +165,10 @@ export const POD_DETAIL = gql`
       like_count
       comment_count
       is_active
+      is_hidden
+      hidden_by_club
+      hidden_reason
+      club_hidden_reason
       is_deleted
       deleted_at
       venue_approval_status

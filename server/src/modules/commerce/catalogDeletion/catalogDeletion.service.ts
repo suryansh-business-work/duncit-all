@@ -147,7 +147,7 @@ export const catalogDeletionService = {
     const target: DeletionTarget = { kind, brandId: brand._id as Types.ObjectId, productId: product?._id as Types.ObjectId };
     return {
       kind,
-      brand_name: brand.brand_name ?? '',
+      brand_name: brand.brand_name,
       product_name: product?.product_name ?? '',
       window: await deletionWindow(),
       impact: await deletionImpact(target),
@@ -163,12 +163,12 @@ export const catalogDeletionService = {
     const { orders } = await countOpenWork(target);
     const base = {
       brand_id: brandId,
-      brand_name: brand.brand_name ?? '',
+      brand_name: brand.brand_name,
       mode: input.mode,
       reason: String(input.reason ?? '').trim().slice(0, 1000),
       scheduled_for: scheduledFor,
       requested_by_id: userId,
-      requested_by_name: brand.contact_person ?? '',
+      requested_by_name: brand.contact_person,
     };
     const by = brand.contact_person || 'Partner';
     let req: ICatalogDeletionRequest;
@@ -272,7 +272,7 @@ export const catalogDeletionService = {
     if (!req) return notFound('Request');
     if (req.status !== 'PENDING') bad('Only a pending request can be reviewed');
     if (req.parent_id) bad('This product is part of a brand request — review the brand request');
-    const text = String(note ?? '').trim().slice(0, 2000);
+    const text = note.trim().slice(0, 2000);
     if (!approve) {
       if (!text) bad('Tell the partner why the request is rejected');
       await closeRequest(req, 'REJECTED', text, by);

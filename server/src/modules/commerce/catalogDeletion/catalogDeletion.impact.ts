@@ -66,12 +66,12 @@ export async function deletionImpact(target: DeletionTarget) {
       order_no: o.order_no,
       fulfilment_status: o.fulfilment_status,
       fulfilment_method: o.fulfilment_method,
-      created_at: o.created_at?.toISOString?.() ?? '',
-      buyer_name: o.buyer_name ?? '',
+      created_at: o.created_at.toISOString(),
+      buyer_name: o.buyer_name,
       total: o.total,
       currency_symbol: o.currency_symbol,
       // Units of the item being deleted — what the partner owes or will refund.
-      units: (o.line_items ?? []).filter(ours).reduce((s, l) => s + (l.qty ?? 0), 0),
+      units: o.line_items.filter(ours).reduce((s, l) => s + l.qty, 0),
     })),
     products: products.map((p) => ({ id: String(p._id), product_name: p.product_name, is_active: p.is_active !== false })),
   };

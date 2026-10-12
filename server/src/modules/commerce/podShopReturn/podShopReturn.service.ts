@@ -58,40 +58,40 @@ export const toReturnPub = (r: IPodShopReturn) => ({
   buyer_id: r.buyer_id ? String(r.buyer_id) : null,
   buyer_name: r.buyer_name,
   buyer_email: r.buyer_email,
-  brand_ids: (r.brand_ids ?? []).map(String),
+  brand_ids: r.brand_ids.map(String),
   items: r.items.map((i) => ({
     product_id: String(i.product_id),
-    variant_id: i.variant_id ?? '',
+    variant_id: i.variant_id,
     name: i.name,
-    variant_label: i.variant_label ?? '',
-    image_url: i.image_url ?? '',
+    variant_label: i.variant_label,
+    image_url: i.image_url,
     qty: i.qty,
     unit_cost: i.unit_cost,
   })),
   reason: r.reason,
-  comments: r.comments ?? '',
+  comments: r.comments,
   status: r.status,
   gross: r.gross,
-  decision_note: r.decision_note ?? '',
-  events: (r.events ?? []).map((e) => ({ status: e.status, note: e.note, by: e.by, at: e.at?.toISOString?.() ?? '' })),
+  decision_note: r.decision_note,
+  events: r.events.map((e) => ({ status: e.status, note: e.note, by: e.by, at: e.at.toISOString() })),
   pickup: {
-    awb: r.pickup?.awb ?? '',
-    courier_name: r.pickup?.courier_name ?? '',
-    status: r.pickup?.status || 'NONE',
-    tracking_status: r.pickup?.tracking_status ?? '',
-    last_error: r.pickup?.last_error ?? '',
+    awb: r.pickup.awb,
+    courier_name: r.pickup.courier_name,
+    status: r.pickup.status || 'NONE',
+    tracking_status: r.pickup.tracking_status,
+    last_error: r.pickup.last_error,
   },
   refund: {
-    status: r.refund?.status || 'NONE',
-    amount: r.refund?.amount ?? 0,
-    coins: r.refund?.coins ?? 0,
-    razorpay_refund_id: r.refund?.razorpay_refund_id ?? '',
-    refunded_at: r.refund?.refunded_at?.toISOString?.() ?? null,
-    error: r.refund?.error ?? '',
-    initiated_by: r.refund?.initiated_by ?? '',
+    status: r.refund.status || 'NONE',
+    amount: r.refund.amount,
+    coins: r.refund.coins,
+    razorpay_refund_id: r.refund.razorpay_refund_id,
+    refunded_at: r.refund.refunded_at ? r.refund.refunded_at.toISOString() : null,
+    error: r.refund.error,
+    initiated_by: r.refund.initiated_by,
   },
-  created_at: r.created_at?.toISOString?.() ?? '',
-  updated_at: r.updated_at?.toISOString?.() ?? '',
+  created_at: r.created_at.toISOString(),
+  updated_at: r.updated_at.toISOString(),
 });
 
 const RETURN_TABLE: TableEntityConfig = {
@@ -139,26 +139,20 @@ async function tellBuyer(ret: IPodShopReturn, note = '') {
 const bookPickup = (ret: IPodShopReturn, order: IProductOrder) => bookPodShopReturnPickup(ret, order);
 
 /** Group the requested units by brand — one return per brand, since each brand decides its own. */
-function splitByBrand(order: IProductOrder, input: ReturnRequestInput) {
-  const allowed = new Map(
-    returnableLines(order, []).map((l): [string, ReturnableLine] => [`${l.product_id}|${l.variant_id}`, l])
-  );
+function splitByBrand(order: IProductOrder, asked: Map<string, number>) {
   const groups = new Map<string, IPodShopReturnItem[]>();
-  for (const want of input.items) {
-    const qty = Math.floor(Number(want.qty) || 0);
+  for (const line of order.line_items) {
+    const qty = asked.get(`${String(line.product_id)}|${line.variant_id}`) ?? 0;
     if (qty <= 0) continue;
-    const key = `${want.product_id}|${want.variant_id ?? ''}`;
-    const line = order.line_items.find((l) => `${String(l.product_id)}|${l.variant_id ?? ''}` === key);
-    if (!line || !allowed.has(key)) bad('One of these items is not on this order');
     const brand = line.brand_id ? String(line.brand_id) : '';
     const items = groups.get(brand) ?? [];
     items.push({
       product_id: line.product_id,
-      variant_id: line.variant_id ?? '',
-      brand_id: line.brand_id ?? null,
+      variant_id: line.variant_id,
+      brand_id: line.brand_id,
       name: line.name,
-      variant_label: line.variant_label ?? '',
-      image_url: line.image_url ?? '',
+      variant_label: line.variant_label,
+      image_url: line.image_url,
       qty,
       unit_cost: line.unit_cost,
     });
@@ -171,7 +165,7 @@ export const podShopReturnService = {
   toPub: toReturnPub,
 
   async request(userId: string, input: ReturnRequestInput) {
-    const reason = String(input.reason ?? '').trim();
+    const reason = input.reason.trim();
     if (!reason) bad('Tell us why you are returning it');
     const order = Types.ObjectId.isValid(input.order_id) ? await ProductOrderModel.findById(input.order_id) : null;
     if (!order || String(order.buyer_id) !== userId || order.channel !== 'POD_SHOP') {
@@ -181,14 +175,19 @@ export const podShopReturnService = {
     const lines = new Map(
       returnableLines(order, existing).map((l): [string, ReturnableLine] => [`${l.product_id}|${l.variant_id}`, l])
     );
+    // Units asked per line, summed: two entries for one line cannot slip past the limit together.
+    const asked = new Map<string, number>();
     for (const want of input.items) {
-      const line = lines.get(`${want.product_id}|${want.variant_id ?? ''}`);
-      const qty = Math.floor(Number(want.qty) || 0);
+      const key = `${want.product_id}|${want.variant_id ?? ''}`;
+      asked.set(key, (asked.get(key) ?? 0) + Math.floor(Number(want.qty) || 0));
+    }
+    for (const [key, qty] of asked) {
+      const line = lines.get(key);
       if (!line || qty > line.returnable_qty) {
         bad(line?.returnable_until ? 'The return window for this item has closed, or it is already being returned' : 'This item cannot be returned');
       }
     }
-    const groups = splitByBrand(order, input);
+    const groups = splitByBrand(order, asked);
     if (groups.size === 0) bad('Pick at least one item to return');
     const created: IPodShopReturn[] = [];
     for (const [brand, items] of groups) {
@@ -248,7 +247,7 @@ export const podShopReturnService = {
     const order = await ProductOrderModel.findById(ret.order_id);
     if (!order) return bad('The order behind this return is gone');
     move(ret, 'APPROVED', note || 'Approved', actor.label);
-    ret.decision_note = String(note ?? '').slice(0, 2000);
+    ret.decision_note = note.slice(0, 2000);
     await ret.save();
     // A shipped order is collected by courier; a pickup order is handed back at the venue.
     if (order.fulfilment_method === 'SHIP') await bookPickup(ret, order);
@@ -257,7 +256,7 @@ export const podShopReturnService = {
   },
 
   async reject(actor: ReturnActor, id: string, note: string) {
-    const reason = String(note ?? '').trim();
+    const reason = note.trim();
     if (!reason) bad('Tell the buyer why the return is not accepted');
     const ret = await loadFor(actor, id);
     if (ret.status !== 'REQUESTED') bad('Only a requested return can be rejected');

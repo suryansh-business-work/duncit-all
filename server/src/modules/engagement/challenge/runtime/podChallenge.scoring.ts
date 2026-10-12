@@ -133,7 +133,7 @@ export const podChallengeScoring = {
         ),
       status === 'LIVE'
         ? { signal: 'SCORE' }
-        : { actorId: user.id, action: 'SCORE_CORRECTION', newValue: { ...input }, reason: input.reason ?? '' }
+        : { actorId: user.id, action: 'SCORE_CORRECTION', newValue: { ...input }, reason: input.reason?.trim() }
       );
     } catch (error) {
       // Two copies of the same tap raced past the exists() check: the unique
@@ -186,8 +186,8 @@ export const podChallengeScoring = {
       value: e.value,
       round: e.round,
       voided: e.voided,
-      void_reason: e.void_reason ?? '',
-      created_at: (e as { created_at?: Date }).created_at?.toISOString() ?? '',
+      void_reason: e.void_reason,
+      created_at: (e as typeof e & { created_at: Date }).created_at.toISOString(),
     }));
   },
 };

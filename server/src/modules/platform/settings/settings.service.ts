@@ -104,7 +104,7 @@ const cleanMinSignupAge = (value: unknown) =>
 // 0 is a legal value here (it disables the penalty), so the `|| DEFAULT` idiom
 // the cleaners above use would silently turn a saved 0 back into 5.
 const cleanVenueCancelHealthPenalty = (value: unknown) => {
-  const n = Math.floor(Number(value));
+  const n = Math.floor(Number(value ?? Number.NaN));
   return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : DEFAULT_VENUE_CANCEL_HEALTH_PENALTY;
 };
 
@@ -141,7 +141,7 @@ const cleanVenueSlotReminderLeadHours = (value: unknown) =>
  * the moment the pod ends), so this cannot use the `|| DEFAULT` idiom above —
  * that would silently turn a saved 0 back into 1. */
 const cleanPodFeedbackDelayHours = (value: unknown) => {
-  const n = Math.floor(Number(value));
+  const n = Math.floor(Number(value ?? Number.NaN));
   return Number.isFinite(n) ? Math.min(8760, Math.max(0, n)) : DEFAULT_POD_FEEDBACK_DELAY_HOURS;
 };
 
@@ -167,7 +167,7 @@ const cleanAutoPodAssignmentExpiryHours = (value: unknown) =>
 // 0 is a legal value here (it disables the penalty), so the `|| DEFAULT` idiom
 // would silently turn a saved 0 back into 5.
 const cleanAutoPodCancelHealthPenalty = (value: unknown) => {
-  const n = Math.floor(Number(value));
+  const n = Math.floor(Number(value ?? Number.NaN));
   return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : DEFAULT_AUTO_POD_CANCEL_HEALTH_PENALTY;
 };
 
@@ -180,7 +180,7 @@ const DEFAULT_CHANGE_REQUEST_HEALTH_PENALTY = 5;
  * Number.isFinite form rather than `|| DEFAULT`. Capped at 10, which is what
  * the three cards and the mongoose schema also cap at. */
 const cleanChangeRequestHealthPenalty = (value: unknown) => {
-  const n = Math.floor(Number(value));
+  const n = Math.floor(Number(value ?? Number.NaN));
   return Number.isFinite(n)
     ? Math.min(10, Math.max(0, n))
     : DEFAULT_CHANGE_REQUEST_HEALTH_PENALTY;

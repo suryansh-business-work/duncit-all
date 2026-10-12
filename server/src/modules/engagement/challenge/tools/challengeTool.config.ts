@@ -115,7 +115,7 @@ function coerce(field: ConfigField, value: unknown): unknown {
       if (typeof value !== 'boolean') bad(`${field.key} must be on or off`);
       return value;
     case 'text':
-      return String(value ?? '').trim().slice(0, MAX_TEXT);
+      return String(value).trim().slice(0, MAX_TEXT);
     case 'select':
       if (!field.options?.includes(String(value))) bad(`${field.key} has an unsupported value`);
       return String(value);

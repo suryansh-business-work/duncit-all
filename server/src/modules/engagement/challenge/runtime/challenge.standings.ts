@@ -73,7 +73,7 @@ function aggregate(values: number[], how: unknown): number | null {
     case 'SUM':
       return values.reduce((a, b) => a + b, 0);
     case 'LAST':
-      return values.at(-1) ?? null;
+      return values[values.length - 1];
     default:
       return Math.max(...values);
   }
@@ -144,7 +144,7 @@ function quizPoints(tool: StandingsTool, competitorId: string, votes: StandingsV
 /** Buzz rounds this competitor pressed first in. */
 function buzzWins(tool: StandingsTool, competitorId: string, votes: StandingsVote[]): number {
   const rounds = new Set(
-    votes.filter((v) => v.tool_instance_id === tool.instance_id && v.kind === 'BUZZ').map((v) => v.scope_key ?? '')
+    votes.filter((v) => v.tool_instance_id === tool.instance_id && v.kind === 'BUZZ').map((v) => v.scope_key)
   );
   let wins = 0;
   for (const scope of rounds) {

@@ -148,8 +148,8 @@ export const podChallengeService = {
       tools,
       winner_rules: tpl.winner_rules,
       tool_state: tools.filter((t) => isStateful(t.tool_type)).map((t) => ({ instance_id: t.instance_id })),
-      show_on_pod_details: eligibility.mapping?.show_on_pod_details_default ?? true,
-      audience_interaction_enabled: eligibility.mapping?.allow_audience_voting ?? false,
+      show_on_pod_details: eligibility.mapping?.show_on_pod_details_default,
+      audience_interaction_enabled: eligibility.mapping?.allow_audience_voting,
       created_by: user.id,
     });
     const created = doc.toObject() as PodChallengeDoc;

@@ -114,6 +114,6 @@ const PDF_GLYPHS: Readonly<Record<string, string>> = {
 
 export const pdfText = (value: unknown): string =>
   String(value)
-    .replaceAll(/[−–—‘’“”…•₹]/g, (glyph) => PDF_GLYPHS[glyph] ?? glyph)
+    .replaceAll(/[−–—‘’“”…•₹]/g, (glyph) => PDF_GLYPHS[glyph])
     // Anything still beyond Latin-1 would trigger that same fallback.
     .replaceAll(/[^ -ÿ]/g, ' ');

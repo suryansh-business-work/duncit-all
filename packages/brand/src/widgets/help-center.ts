@@ -29,12 +29,17 @@ const TOPIC_ICONS = ['fa-heart', 'fa-comments', 'fa-shield-heart', 'fa-user', 'f
 
 const FAQ_TOPICS = 'query { publicFaqGroups { super_category { id name slug } faqs { id question } } }';
 
-const topicCard = (group: TopicGroup, index: number, copy: HelpCopy): string => {
+/** A topic that has at least one question (the only kind that is rendered). */
+type FilledTopic = TopicGroup & { faqs: unknown[] };
+
+const hasFaqs = (group: TopicGroup): group is FilledTopic => Boolean(group.faqs?.length);
+
+const topicCard = (group: FilledTopic, index: number, copy: HelpCopy): string => {
   const name = group.super_category?.name ?? copy.general;
   const slug = group.super_category?.slug ?? '';
   const href = slug ? `/faq#${encodeURIComponent(slug)}` : '/faq';
   const icon = TOPIC_ICONS[index % TOPIC_ICONS.length];
-  const count = group.faqs?.length ?? 0;
+  const count = group.faqs.length;
   const noun = count === 1 ? copy.one : copy.many;
   return `
             <a href="${href}" data-topic-card data-topic-name="${escapeHtml(name.toLowerCase())}" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
@@ -53,7 +58,7 @@ const topicCard = (group: TopicGroup, index: number, copy: HelpCopy): string => 
 async function loadTopics(root: HTMLElement, copy: HelpCopy): Promise<void> {
   try {
     const json = await postGraphql<{ publicFaqGroups?: TopicGroup[] }>(root.dataset.graphqlUrl ?? '', FAQ_TOPICS);
-    const groups = (json?.data?.publicFaqGroups ?? []).filter((group) => group.faqs?.length);
+    const groups = (json?.data?.publicFaqGroups ?? []).filter(hasFaqs);
     if (!groups.length) {
       root.innerHTML = `<p class="text-ink-soft sm:col-span-2">${copy.empty}</p>`;
       return;

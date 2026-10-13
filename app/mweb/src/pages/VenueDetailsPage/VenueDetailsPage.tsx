@@ -27,6 +27,7 @@ import VenuePodsSection from '../venues-page/VenuePodsSection';
 import { VENUE_CHIP_SX, VenueChipsSection, VenueLocationCard } from '../venues-page/VenueInfoSections';
 import LocationMismatchDialog from '../../components/LocationMismatchDialog';
 import { useLocationMismatch } from '../../hooks/useLocationMismatch';
+import VenueFoodTabs from './food/VenueFoodTabs';
 import { PUBLIC_VENUE, type PublicVenue } from './queries';
 import { HERO_SX, ROUND_BTN_SX, addressParts } from './venueDetailsHelpers';
 
@@ -108,6 +109,11 @@ export default function VenueDetailsPage() {
     </DuncitIconButton>
   );
 
+  const events = [
+    <VenuePodsSection key="pods" venueId={venue.id} />,
+    <PublicReelsSection key="reels" venueId={venue.id} />,
+  ];
+
   return (
     <Stack spacing={2.5} sx={{ pb: 4 }} data-testid="venue-details-screen">
       <PageHeader testId="venue-details-header" title={venue.venue_name} onBack={() => navigate(-1)} right={copyButton} />
@@ -148,6 +154,10 @@ export default function VenueDetailsPage() {
         }}>{venue.description}</Typography>}
       </Stack>
 
+      {/* A venue that serves food opens on its menu, with its pods under Events;
+          every other venue keeps the page it always had. */}
+      {venue.offers_food && <VenueFoodTabs venue={venue} events={events} onRefresh={refetch} />}
+
       <VenueLocationCard
         title={t('mweb.common.location')}
         venueName={venue.venue_name}
@@ -156,8 +166,7 @@ export default function VenueDetailsPage() {
         lng={venue.lng}
       />
 
-      <VenuePodsSection venueId={venue.id} />
-      <PublicReelsSection venueId={venue.id} />
+      {!venue.offers_food && events}
 
       <VenueChipsSection title={t('mweb.common.amenities')} items={venue.amenities} />
       <VenueChipsSection title={t('mweb.common.facilities')} items={venue.facilities} />

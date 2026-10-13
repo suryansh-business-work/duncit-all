@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { VenueFoodItem, VenueFoodOrdering } from '@duncit/utils';
 
 /** One public venue — null unless it is APPROVED and active (the not-found state). */
 export const PUBLIC_VENUE = gql`
@@ -25,6 +26,22 @@ export const PUBLIC_VENUE = gql`
       lat
       lng
       tags
+      offers_food
+      food_menu {
+        id
+        name
+        description
+        category
+        price
+        images
+        diet
+        spice_level
+        is_available
+      }
+      food_ordering {
+        enabled
+        discount_pct
+      }
     }
   }
 `;
@@ -51,4 +68,9 @@ export interface PublicVenue {
   lat: number | null;
   lng: number | null;
   tags: string[];
+  /** The venue serves food — the page then opens on its Menu tab. */
+  offers_food: boolean;
+  /** Empty unless `offers_food`. */
+  food_menu: VenueFoodItem[];
+  food_ordering: VenueFoodOrdering;
 }

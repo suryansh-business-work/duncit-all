@@ -30,6 +30,14 @@ export interface RazorpayOrderData {
   prefill_contact: string;
 }
 
+/**
+ * What the sheet itself reads. An order with no Duncit payment document and no
+ * email on hand — a guest's food order at a venue — opens with just this.
+ */
+export type RazorpaySheetData = Omit<RazorpayOrderData, 'payment_doc_id' | 'prefill_email'> & {
+  prefill_email?: string;
+};
+
 export interface RazorpaySignature {
   razorpay_payment_id: string;
   razorpay_order_id: string;
@@ -68,7 +76,7 @@ export function loadRazorpay(): Promise<RazorpayConstructor> {
  * came to be shown as the buyer's own doing.
  */
 export async function openRazorpayCheckout(
-  order: RazorpayOrderData,
+  order: RazorpaySheetData,
   handlers: {
     onSuccess: (sig: RazorpaySignature) => void;
     onFailure: (error: RazorpayErrorLike | null) => void;

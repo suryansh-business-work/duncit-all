@@ -22,6 +22,13 @@ export interface VenueSectionDef {
 export const VENUE_SECTIONS: VenueSectionDef[] = [
   { key: 'details', label: 'Venue Details', hint: 'Name, images, category & location' },
   { key: 'type-capacity', label: 'Type & Capacity', hint: 'Venue type + capacity list' },
+  {
+    key: 'food',
+    label: 'Food Menu',
+    labelKey: 'partners.registerVenuePage.foodSection',
+    hint: 'Menu, photos & online ordering',
+    hintKey: 'partners.registerVenuePage.foodSectionHint',
+  },
   { key: 'amenities', label: 'Amenities & Security', hint: 'Facilities, amenities & safety' },
   { key: 'documents', label: 'Venue Documents', hint: 'Uploads with document type' },
   { key: 'owner', label: 'Owner Details', hint: 'Contact for slot requests' },

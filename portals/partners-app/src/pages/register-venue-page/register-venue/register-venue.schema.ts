@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { BANK_PAYOUT_METHODS, POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
 import { BANK_ACCOUNT_NUMBER, IFSC, UPI_ID } from '@duncit/regex';
+import { duplicateCategoryRows, isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
 import { fallbackT, type Translate } from '@duncit/shell';
 import { foodMenuShape, foodOrderingShape, makeFoodRefinement } from './register-venue.food-schema';
 import {
+  NO_CATEGORY_LIMIT,
   NO_FOOD_LIMITS,
   type FoodLimits,
   type RegisterVenueValues,
@@ -57,6 +59,36 @@ const noDuplicateDocuments = (documents: z.infer<typeof documentSchema>[], ctx: 
   });
 };
 
+const venueCategorySchema = z.object({
+  super_id: z.string(),
+  super_name: z.string(),
+  category_id: z.string(),
+  category_name: z.string(),
+  sub_id: z.string(),
+  sub_name: z.string(),
+});
+
+/** Each row is one whole Super → Category → Sub, and no sub category twice —
+ * the server drops a repeat silently, so it is refused here where the owner
+ * can see which row it is. Issues sit on the row, which is where the picker
+ * shows them. */
+const checkVenueCategories = (t: Translate) => (rows: AdminCategoryValue[], ctx: z.RefinementCtx) => {
+  const duplicates = duplicateCategoryRows(rows);
+  rows.forEach((row, index) => {
+    if (!isCompleteCategory(row)) {
+      ctx.addIssue({ code: 'custom', path: [index], message: t('partners.registerVenuePage.categoryIncomplete') });
+    } else if (duplicates.has(index)) {
+      ctx.addIssue({ code: 'custom', path: [index], message: t('partners.registerVenuePage.categoryDuplicate') });
+    }
+  });
+};
+
+/** "At most N categories" — the list's own error past the cap, and the note under a full list. */
+export const categoryLimitMessage = (t: Translate, limit: number) =>
+  limit === 1
+    ? t('partners.registerVenuePage.categoryLimitOne')
+    : t('partners.registerVenuePage.categoryLimitMany', { vars: { max: limit } });
+
 /** An optional tax id: required, and checked against its format, only while
  * its switch says the venue has one. Returns the message to show, or null. */
 const taxIdIssue = (
@@ -84,11 +116,13 @@ const missingTaxDocuments = (
  * language (`t` from the form that renders it); every other field here is
  * pre-existing, unlocalized debt this change does not touch. `taxDocTypes`
  * names the document each GSTIN / PAN switch requires while it is on;
- * `foodLimits` are the config's caps for the food menu and its ordering. */
+ * `foodLimits` are the config's caps for the food menu and its ordering;
+ * `categoryLimit` is the config's cap on the venue's categories. */
 export const registerVenueSchema = (
   t: Translate = fallbackT,
   taxDocTypes: TaxDocTypes = NO_TAX_DOCS,
   foodLimits: FoodLimits = NO_FOOD_LIMITS,
+  categoryLimit: number = NO_CATEGORY_LIMIT,
 ) => z.object({
   venue_name: zodRules.requiredText('Venue name', 2, 120),
   description: z
@@ -98,9 +132,11 @@ export const registerVenueSchema = (
     .max(2000, 'Description must be 2000 characters or fewer'),
   cover_image_url: z.string().trim().min(1, 'Upload a cover image').max(1000),
   gallery: z.array(z.string().trim().max(1000)),
-  super_category_id: z.string().trim().min(1, 'Select a super category'),
-  category_id: z.string().trim().min(1, 'Select a category'),
-  sub_category_id: z.string().trim().min(1, 'Select a sub category'),
+  venue_categories: z
+    .array(venueCategorySchema)
+    .min(1, t('partners.registerVenuePage.categoryRequired'))
+    .max(categoryLimit, categoryLimitMessage(t, categoryLimit))
+    .superRefine(checkVenueCategories(t)),
   address_line1: zodRules.requiredText('Address line 1', 3, 200),
   address_line2: z.string().trim().max(200),
   location_id: z.string().trim().min(1, 'Select a city from available locations'),
@@ -230,9 +266,7 @@ export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review' | 'leaves'
     'description',
     'cover_image_url',
     'gallery',
-    'super_category_id',
-    'category_id',
-    'sub_category_id',
+    'venue_categories',
     'address_line1',
     'address_line2',
     'location_id',
@@ -244,7 +278,8 @@ export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review' | 'leaves'
     'locality',
     'postal_code',
   ],
-  'type-capacity': ['venue_type', 'capacity_items', 'offers_food', 'food_menu', 'food_ordering'],
+  'type-capacity': ['venue_type', 'capacity_items'],
+  food: ['offers_food', 'food_menu', 'food_ordering'],
   amenities: ['amenities', 'facilities', 'security'],
   documents: ['documents', 'has_gstin', 'gstin', 'has_pan', 'pan'],
   owner: ['owner_name', 'owner_email', 'owner_phone', 'owner_dob', 'owner_address'],

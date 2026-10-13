@@ -12,7 +12,9 @@ export type { EditableSectionKey, SectionState } from './useRegisterVenueForm';
 export {
   blankFoodOrdering,
   blankRegisterVenueValues,
+  categoryLimitOf,
   foodLimitsOf,
+  NO_CATEGORY_LIMIT,
   NO_FOOD_LIMITS,
   taxDocTypesOf,
 } from './register-venue.types';

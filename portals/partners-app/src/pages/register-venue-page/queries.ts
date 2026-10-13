@@ -49,6 +49,16 @@ export const MY_VENUE = gql`
         category_name
         sub_category_name
       }
+      # Every category, primary first — what the form's category rows hydrate
+      # from; venue_category above is the legacy single, read only as a fallback.
+      venue_categories {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
       description
       amenities
       facilities
@@ -134,6 +144,7 @@ export const REGISTRATION_CONFIG = gql`
       gstin_doc_type
       pan_doc_type
       capacity_item_limit
+      category_limit
       amenities
       facilities
       security

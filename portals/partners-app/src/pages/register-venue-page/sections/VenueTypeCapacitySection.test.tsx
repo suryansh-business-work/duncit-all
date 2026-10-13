@@ -28,6 +28,17 @@ describe('VenueTypeCapacitySection — venue type', () => {
     expect(screen.getByText('Locked after approval')).toBeTruthy();
     expect(screen.getByLabelText(/What is this capacity for\?/)).toHaveProperty('disabled', false);
   });
+
+  it('carries no food block — food is its own registration section', () => {
+    mountSection(
+      (form) => <VenueTypeCapacitySection form={form} config={sectionConfig} mode="register" />,
+      { offers_food: true }
+    );
+
+    expect(screen.queryByTestId('register-venue-food')).toBeNull();
+    expect(screen.queryByLabelText(/Does this venue offer food\?/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add menu item' })).toBeNull();
+  });
 });
 
 describe('VenueTypeCapacitySection — capacity list', () => {

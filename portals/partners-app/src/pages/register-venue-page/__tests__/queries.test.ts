@@ -97,6 +97,14 @@ describe('MY_VENUE', () => {
     ]);
   });
 
+  // The form's category rows hydrate from the list; the single triple above is
+  // only the fallback for a venue stored before the list existed. Both carry
+  // ids (what is sent back) and names (what the review shows).
+  it('selects every category of the venue, with the same six fields as the primary', () => {
+    expect(fieldsAt(MY_VENUE, 'myVenue', 'venue_categories')).toEqual(fieldsAt(MY_VENUE, 'myVenue', 'venue_category'));
+    expect(fieldsAt(MY_VENUE, 'myVenue', 'venue_categories')).toHaveLength(6);
+  });
+
   it('pulls only holidays out of settings — the rest belongs to the availability page', () => {
     expect(fieldsAt(MY_VENUE, 'myVenue', 'settings')).toEqual(['holidays']);
   });
@@ -166,6 +174,8 @@ describe('REGISTRATION_CONFIG', () => {
       'gstin_doc_type',
       'pan_doc_type',
       'capacity_item_limit',
+      // How many categories a venue may have — never a number written in the client.
+      'category_limit',
       'amenities',
       'facilities',
       'security',

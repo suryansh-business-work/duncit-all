@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { useForm, type UseFormReturn, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ADMIN_CATEGORIES } from '@duncit/category';
+import { ADMIN_CATEGORIES, EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import { ADMIN_LOCATIONS } from '@duncit/location';
 import VenueDetailsSection from './VenueDetailsSection';
 import { registerVenueSchema } from '../register-venue/register-venue.schema';
@@ -39,6 +39,7 @@ const mocks: MockedResponse[] = [
           { __typename: 'Category', id: 'sup-1', name: 'Food', slug: 'food', level: 'SUPER', parent_id: null, min_pax: null },
           { __typename: 'Category', id: 'cat-1', name: 'Cafe', slug: 'cafe', level: 'CATEGORY', parent_id: 'sup-1', min_pax: null },
           { __typename: 'Category', id: 'sub-1', name: 'Coffee', slug: 'coffee', level: 'SUB', parent_id: 'cat-1', min_pax: 4 },
+          { __typename: 'Category', id: 'sub-2', name: 'Tea', slug: 'tea', level: 'SUB', parent_id: 'cat-1', min_pax: null },
         ],
       },
     },
@@ -82,20 +83,33 @@ const mocks: MockedResponse[] = [
   },
 ];
 
+const COFFEE: AdminCategoryValue = {
+  super_id: 'sup-1',
+  super_name: 'Food',
+  category_id: 'cat-1',
+  category_name: 'Cafe',
+  sub_id: 'sub-1',
+  sub_name: 'Coffee',
+};
+const TEA: AdminCategoryValue = { ...COFFEE, sub_id: 'sub-2', sub_name: 'Tea' };
+/** Super and Category picked, Sub still to choose. */
+const HALF_PICKED: AdminCategoryValue = { ...COFFEE, sub_id: '', sub_name: '' };
+
 interface HarnessProps {
   mode: RegisterVenueMode;
+  categoryLimit?: number;
   defaults?: Partial<RegisterVenueValues>;
   formRef: { current: UseFormReturn<RegisterVenueValues> | null };
 }
 
-function Harness({ mode, defaults, formRef }: Readonly<HarnessProps>) {
+function Harness({ mode, categoryLimit, defaults, formRef }: Readonly<HarnessProps>) {
   const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
     resolver: zodResolver(registerVenueSchema()) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: { ...blankRegisterVenueValues, ...defaults },
     mode: 'onBlur',
   });
   formRef.current = form;
-  return <VenueDetailsSection form={form} mode={mode} />;
+  return <VenueDetailsSection form={form} mode={mode} categoryLimit={categoryLimit} />;
 }
 
 const mount = (props: Omit<HarnessProps, 'formRef'>) => {
@@ -143,6 +157,20 @@ describe('VenueDetailsSection — edit-approved mode', () => {
     expect(screen.getAllByText('Locked after approval')).toHaveLength(3);
     expect(screen.queryByText('Public name shown to hosts and guests')).toBeNull();
   });
+
+  it('shows every category read-only: no adding, no removing, every dropdown locked', async () => {
+    mount({ mode: 'edit-approved', defaults: { venue_categories: [COFFEE, TEA] } });
+
+    const rows = within(screen.getByTestId('venue-categories'));
+    await waitFor(() =>
+      expect(
+        rows.getAllByRole('combobox', { name: /Sub Category/ }).map((input) => (input as HTMLInputElement).value)
+      ).toEqual(['Coffee', 'Tea'])
+    );
+    expect(rows.getAllByRole('combobox').every((input) => (input as HTMLInputElement).disabled)).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Add category' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Remove category/ })).toBeNull();
+  });
 });
 
 describe('VenueDetailsSection — validation surfaced to the shared pickers', () => {
@@ -151,7 +179,7 @@ describe('VenueDetailsSection — validation surfaced to the shared pickers', ()
     expect(screen.queryByText('Select the super category, category and sub category.')).toBeNull();
 
     await act(async () => {
-      await formRef.current?.trigger(['super_category_id', 'category_id', 'sub_category_id']);
+      await formRef.current?.trigger(['venue_categories']);
     });
 
     expect(
@@ -177,28 +205,76 @@ describe('VenueDetailsSection — category cascade', () => {
   it('writes the picked super category and clears the levels below it', async () => {
     const formRef = mount({
       mode: 'register',
-      defaults: { super_category_id: 'old-super', category_id: 'cat-1', sub_category_id: 'sub-1' },
+      defaults: { venue_categories: [{ ...COFFEE, super_id: 'old-super', super_name: 'Old' }] },
     });
 
     const superSelect = screen.getByRole('combobox', { name: /Super Category/ });
     fireEvent.keyDown(superSelect, { key: 'ArrowDown' });
     fireEvent.click(await screen.findByText('Food'));
 
-    await waitFor(() => expect(formRef.current?.getValues('super_category_id')).toBe('sup-1'));
-    expect(formRef.current?.getValues('category_id')).toBe('');
-    expect(formRef.current?.getValues('sub_category_id')).toBe('');
+    await waitFor(() => expect(formRef.current?.getValues('venue_categories.0.super_id')).toBe('sup-1'));
+    expect(formRef.current?.getValues('venue_categories.0')).toEqual({ ...EMPTY_CATEGORY, super_id: 'sup-1', super_name: 'Food' });
   });
 
   it('keeps the super category when a sub category is picked', async () => {
-    const formRef = mount({ mode: 'register', defaults: { super_category_id: 'sup-1', category_id: 'cat-1' } });
+    const formRef = mount({ mode: 'register', defaults: { venue_categories: [HALF_PICKED] } });
 
     const subSelect = screen.getByRole('combobox', { name: /Sub Category/ });
     fireEvent.keyDown(subSelect, { key: 'ArrowDown' });
     fireEvent.click(await screen.findByText('Coffee'));
 
-    await waitFor(() => expect(formRef.current?.getValues('sub_category_id')).toBe('sub-1'));
-    expect(formRef.current?.getValues('super_category_id')).toBe('sup-1');
-    expect(formRef.current?.getValues('category_id')).toBe('cat-1');
+    await waitFor(() => expect(formRef.current?.getValues('venue_categories.0.sub_id')).toBe('sub-1'));
+    expect(formRef.current?.getValues('venue_categories')).toEqual([COFFEE]);
+  });
+});
+
+describe('VenueDetailsSection — several categories', () => {
+  it('titles the group for several categories and marks the first row as the primary', () => {
+    mount({ mode: 'register', defaults: { venue_categories: [COFFEE, TEA] } });
+
+    expect(screen.getByRole('group', { name: 'Venue categories' })).toBeTruthy();
+    expect(within(screen.getByRole('group', { name: 'Category 1' })).getByText('Primary')).toBeTruthy();
+    expect(within(screen.getByRole('group', { name: 'Category 2' })).queryByText('Primary')).toBeNull();
+  });
+
+  it('adds a blank row and removes the row it is asked to, never the last one', async () => {
+    const formRef = mount({ mode: 'register', defaults: { venue_categories: [COFFEE] } });
+    expect(screen.getByRole('button', { name: 'Remove category 1' })).toHaveProperty('disabled', true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add category' }));
+    await waitFor(() => expect(formRef.current?.getValues('venue_categories')).toEqual([COFFEE, EMPTY_CATEGORY]));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove category 1' }));
+    await waitFor(() => expect(formRef.current?.getValues('venue_categories')).toEqual([EMPTY_CATEGORY]));
+    expect(screen.getByRole('button', { name: 'Remove category 1' })).toHaveProperty('disabled', true);
+  });
+
+  it('stops adding at the category limit from the config and says what the limit is', () => {
+    mount({ mode: 'register', categoryLimit: 2, defaults: { venue_categories: [COFFEE, TEA] } });
+
+    expect(screen.getByRole('button', { name: 'Add category' })).toHaveProperty('disabled', true);
+    expect(screen.getByText('A venue can have at most 2 categories.')).toBeTruthy();
+  });
+
+  it('keeps adding open, with no limit note, until the config gives a limit', () => {
+    mount({ mode: 'register', defaults: { venue_categories: [COFFEE, TEA] } });
+
+    expect(screen.getByRole('button', { name: 'Add category' })).toHaveProperty('disabled', false);
+    expect(screen.queryByText(/A venue can have/)).toBeNull();
+  });
+
+  it('flags a repeated sub category on the later row as soon as it is picked', async () => {
+    mount({ mode: 'register', defaults: { venue_categories: [COFFEE, HALF_PICKED] } });
+    expect(screen.queryByText('This sub category is already added above')).toBeNull();
+
+    const second = within(screen.getByRole('group', { name: 'Category 2' }));
+    fireEvent.keyDown(second.getByRole('combobox', { name: /Sub Category/ }), { key: 'ArrowDown' });
+    fireEvent.click(await screen.findByRole('option', { name: 'Coffee' }));
+
+    expect(await second.findByText('This sub category is already added above')).toBeTruthy();
+    expect(
+      within(screen.getByRole('group', { name: 'Category 1' })).queryByText('This sub category is already added above')
+    ).toBeNull();
   });
 });
 
@@ -272,10 +348,10 @@ describe('VenueDetailsSection — field messages replace the hints', () => {
   });
 
   it('re-validates the category triple as it is picked once it has failed', async () => {
-    const formRef = mount({ mode: 'register', defaults: { super_category_id: 'sup-1', category_id: 'cat-1' } });
+    const formRef = mount({ mode: 'register', defaults: { venue_categories: [HALF_PICKED] } });
 
     await act(async () => {
-      await formRef.current?.trigger(['super_category_id', 'category_id', 'sub_category_id']);
+      await formRef.current?.trigger(['venue_categories']);
     });
     expect(await screen.findByText('Select the super category, category and sub category.')).toBeTruthy();
 

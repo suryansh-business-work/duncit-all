@@ -1,3 +1,4 @@
+import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import {
   blankFoodOrdering,
   type FoodLimits,
@@ -42,9 +43,10 @@ export interface RegisterVenueValues extends VenueLocationValues {
   description: string;
   cover_image_url: string;
   gallery: string[];
-  super_category_id: string;
-  category_id: string;
-  sub_category_id: string;
+  /** Every category the venue hosts pods in, primary first — one row of the
+   * shared picker each (`RhfAdminCategoryRows`). Never empty: a venue with no
+   * category yet holds one blank row. */
+  venue_categories: AdminCategoryValue[];
   address_line1: string;
   address_line2: string;
   venue_type: string;
@@ -76,6 +78,7 @@ export interface RegisterVenueValues extends VenueLocationValues {
 export type VenueSectionKey =
   | 'details'
   | 'type-capacity'
+  | 'food'
   | 'amenities'
   | 'documents'
   | 'owner'
@@ -98,6 +101,8 @@ export interface VenueRegistrationConfig extends FoodLimits {
   gstin_doc_type: string;
   pan_doc_type: string;
   capacity_item_limit: number;
+  /** The most categories one venue may belong to. Absent until the config has answered. */
+  category_limit?: number;
   amenities: string[];
   facilities: string[];
   security: string[];
@@ -116,14 +121,19 @@ export const taxDocTypesOf = (config: VenueRegistrationConfig): TaxDocTypes => (
   has_pan: config.pan_doc_type,
 });
 
+/** No client-side cap: stands in until the config has answered, so the server's
+ * own limit decides rather than a number guessed here (same as NO_FOOD_LIMITS). */
+export const NO_CATEGORY_LIMIT = Number.MAX_SAFE_INTEGER;
+
+export const categoryLimitOf = (config: Pick<VenueRegistrationConfig, 'category_limit'>): number =>
+  config.category_limit ?? NO_CATEGORY_LIMIT;
+
 export const blankRegisterVenueValues: RegisterVenueValues = {
   venue_name: '',
   description: '',
   cover_image_url: '',
   gallery: [],
-  super_category_id: '',
-  category_id: '',
-  sub_category_id: '',
+  venue_categories: [{ ...EMPTY_CATEGORY }],
   address_line1: '',
   address_line2: '',
   location_id: '',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toStep1Input, toStep2Input, toStep3Input, venueToValues } from './register-venue.mappers';
+import { toApprovedUpdateInput, toStep1Input, toStep2Input, toStep3Input, venueToValues } from './register-venue.mappers';
 import { blankRegisterVenueValues, type RegisterVenueValues } from './register-venue.types';
 
 const account = { name: 'Asha Rao', email: 'asha@duncit.com' };
@@ -238,6 +238,18 @@ const filled: RegisterVenueValues = {
   upi_id: 'asha@okaxis',
 };
 
+const dish: RegisterVenueValues['food_menu'][number] = {
+  item_id: 'dish-1',
+  name: 'Masala dosa',
+  description: '',
+  category: '',
+  price: '120',
+  images: [],
+  diet: 'VEG',
+  spice_level: 'MILD',
+  is_available: true,
+};
+
 describe('toStep1Input', () => {
   it('drops blank capacity rows and counts a non-numeric capacity as zero', () => {
     const input = toStep1Input({
@@ -255,6 +267,35 @@ describe('toStep1Input', () => {
     ]);
     expect(input.capacity).toBe(40);
     expect(input.location_id).toBeNull();
+  });
+});
+
+describe('toStep1Input — food, which step 1 still stores now it has a section of its own', () => {
+  it('sends only the switch while the venue does not offer food', () => {
+    const input = toStep1Input({ ...filled, offers_food: false, food_menu: [{ ...dish }] });
+
+    expect(input.offers_food).toBe(false);
+    expect('food_menu' in input).toBe(false);
+    expect('food_ordering' in input).toBe(false);
+  });
+
+  it('sends the menu and ordering once food is on, a saved dish keeping its id', () => {
+    const input = toStep1Input({
+      ...filled,
+      offers_food: true,
+      food_menu: [{ ...dish }, { ...dish, item_id: '', name: 'Filter coffee', price: 'free' }],
+      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: '5' },
+    });
+
+    expect(input).toMatchObject({
+      offers_food: true,
+      food_menu: [
+        { id: 'dish-1', name: 'Masala dosa', price: 120 },
+        { name: 'Filter coffee', price: 0 },
+      ],
+      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: 5 },
+    });
+    expect('id' in (input.food_menu?.[1] ?? {})).toBe(false);
   });
 });
 
@@ -314,5 +355,118 @@ describe('toStep3Input', () => {
     expect(input.owner_email).toBe('owner@duncit.com');
     expect(input.owner_dob).toBeNull();
     expect(input.bank_account.payout_method).toBeNull();
+  });
+});
+
+const BADMINTON = {
+  super_category_id: 'sup-sports',
+  category_id: 'cat-racket',
+  sub_category_id: 'sub-badminton',
+  super_category_name: 'Sports',
+  category_name: 'Racket',
+  sub_category_name: 'Badminton',
+};
+const HATHA = {
+  super_category_id: 'sup-fitness',
+  category_id: 'cat-yoga',
+  sub_category_id: 'sub-hatha',
+  super_category_name: 'Fitness',
+  category_name: 'Yoga',
+  sub_category_name: 'Hatha',
+};
+const BADMINTON_ROW = {
+  super_id: 'sup-sports',
+  super_name: 'Sports',
+  category_id: 'cat-racket',
+  category_name: 'Racket',
+  sub_id: 'sub-badminton',
+  sub_name: 'Badminton',
+};
+const HATHA_ROW = {
+  super_id: 'sup-fitness',
+  super_name: 'Fitness',
+  category_id: 'cat-yoga',
+  category_name: 'Yoga',
+  sub_id: 'sub-hatha',
+  sub_name: 'Hatha',
+};
+const BLANK_ROW = { super_id: '', super_name: '', category_id: '', category_name: '', sub_id: '', sub_name: '' };
+
+describe('venueToValues — the venue’s categories', () => {
+  it('hydrates one picker row per category, primary first', () => {
+    const values = venueToValues({ id: 'v1', venue_categories: [HATHA, BADMINTON], venue_category: HATHA }, [], account);
+    expect(values.venue_categories).toEqual([HATHA_ROW, BADMINTON_ROW]);
+  });
+
+  // A venue stored before the list existed, or answered by a server that only knows the single field.
+  it('hydrates a legacy-only venue as one row', () => {
+    expect(venueToValues({ id: 'v1', venue_category: BADMINTON }, [], account).venue_categories).toEqual([BADMINTON_ROW]);
+    expect(
+      venueToValues({ id: 'v1', venue_categories: [], venue_category: BADMINTON }, [], account).venue_categories
+    ).toEqual([BADMINTON_ROW]);
+  });
+
+  it('starts a venue with no category on one blank row, never an empty list', () => {
+    const blankTriple = {
+      super_category_id: null,
+      category_id: null,
+      sub_category_id: null,
+      super_category_name: '',
+      category_name: '',
+      sub_category_name: '',
+    };
+    expect(venueToValues({ id: 'v1', venue_category: blankTriple, venue_categories: [] }, [], account).venue_categories).toEqual([
+      BLANK_ROW,
+    ]);
+    expect(venueToValues({ id: 'v1' }, [], account).venue_categories).toEqual([BLANK_ROW]);
+  });
+
+  it('gives every new form its own blank row, not the shared default object', () => {
+    const first = venueToValues({ id: 'v1' }, [], account).venue_categories;
+    const second = venueToValues({ id: 'v2' }, [], account).venue_categories;
+    expect(first[0]).not.toBe(second[0]);
+  });
+});
+
+describe('toStep1Input — the venue’s categories', () => {
+  const values = (venue_categories: RegisterVenueValues['venue_categories']): RegisterVenueValues => ({
+    ...blankRegisterVenueValues,
+    venue_categories,
+  });
+
+  it('sends every category as an id triple, primary first, and no single venue_category', () => {
+    const input = toStep1Input(values([HATHA_ROW, BADMINTON_ROW]));
+    expect(input.venue_categories).toEqual([
+      { super_category_id: 'sup-fitness', category_id: 'cat-yoga', sub_category_id: 'sub-hatha' },
+      { super_category_id: 'sup-sports', category_id: 'cat-racket', sub_category_id: 'sub-badminton' },
+    ]);
+    expect(input).not.toHaveProperty('venue_category');
+  });
+
+  it('round-trips two categories: what the server answers is what goes back', () => {
+    const hydrated = venueToValues({ id: 'v1', venue_categories: [BADMINTON, HATHA] }, [], account);
+    expect(toStep1Input(hydrated).venue_categories).toEqual([
+      { super_category_id: 'sup-sports', category_id: 'cat-racket', sub_category_id: 'sub-badminton' },
+      { super_category_id: 'sup-fitness', category_id: 'cat-yoga', sub_category_id: 'sub-hatha' },
+    ]);
+  });
+
+  it('leaves out a row that is not a whole triple yet', () => {
+    const halfPicked = { ...HATHA_ROW, sub_id: '', sub_name: '' };
+    expect(toStep1Input(values([BADMINTON_ROW, halfPicked, BLANK_ROW])).venue_categories).toEqual([
+      { super_category_id: 'sup-sports', category_id: 'cat-racket', sub_category_id: 'sub-badminton' },
+    ]);
+    expect(toStep1Input(values([BLANK_ROW])).venue_categories).toEqual([]);
+  });
+});
+
+describe('toApprovedUpdateInput — categories stay locked after approval', () => {
+  it('never carries a category in any section an approved venue can save', () => {
+    const edited = { ...blankRegisterVenueValues, venue_categories: [HATHA_ROW, BADMINTON_ROW] };
+    for (const section of ['details', 'type-capacity', 'food', 'documents', 'owner'] as const) {
+      const input = toApprovedUpdateInput(section, edited, 0);
+      expect(input).not.toHaveProperty('venue_categories');
+      expect(input).not.toHaveProperty('venue_category');
+    }
   });
 });

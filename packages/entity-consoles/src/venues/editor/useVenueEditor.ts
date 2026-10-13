@@ -25,7 +25,7 @@ import {
   valuesToStep3,
   venueToValues,
 } from './mappers';
-import { makeVenueFormSchema } from './schema';
+import { makeVenueFormSchema, UNCAPPED_FOOD_LIMITS } from './schema';
 import { blankVenueValues, type VenueFormValues } from './types';
 
 /**
@@ -45,6 +45,10 @@ const EMPTY_CONFIG: VenueRegistrationConfig = {
   amenities: [],
   facilities: [],
   security: [],
+  food_diets: [],
+  food_spice_levels: [],
+  // Uncapped until the catalogue answers — the menu's bounds are the server's.
+  ...UNCAPPED_FOOD_LIMITS,
 };
 
 export function useVenueEditor(venueId: string) {
@@ -72,8 +76,13 @@ export function useVenueEditor(venueId: string) {
     [venue],
   );
 
-  // Rebuilt when the language changes, because its messages are copy.
-  const schema = useMemo(() => makeVenueFormSchema(t), [t]);
+  // Rebuilt when the language changes, because its messages are copy — and when
+  // the catalogue lands, because the menu's bounds are the server's to state.
+  const { food_menu_limit, food_image_limit, food_price_max } = config;
+  const schema = useMemo(
+    () => makeVenueFormSchema(t, { food_menu_limit, food_image_limit, food_price_max }),
+    [t, food_menu_limit, food_image_limit, food_price_max],
+  );
 
   // The third generic pins the SUBMITTED shape to the form's own: the schema's
   // `.default()`s make Zod's INPUT type wider than its output, and without this
@@ -169,7 +178,8 @@ export function useVenueEditor(venueId: string) {
         );
         navigate(`/venues/${id}`);
       } catch (err) {
-        setSaveError(err instanceof Error ? err.message : String(err));
+        // Every throw site in the try block (Apollo, the id guard) is an Error.
+        setSaveError((err as Error).message);
       } finally {
         setBusy(false);
       }

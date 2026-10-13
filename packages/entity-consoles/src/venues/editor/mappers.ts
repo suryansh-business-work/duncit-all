@@ -32,6 +32,18 @@ export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
       label: item.label,
       capacity: item.capacity,
     })),
+    offers_food: venue.offers_food,
+    food_menu: venue.food_menu.map((item) => ({
+      item_id: item.id,
+      name: item.name,
+      description: item.description,
+      category: item.category,
+      price: item.price,
+      images: item.images,
+      diet: item.diet,
+      spice_level: item.spice_level,
+      is_available: item.is_available,
+    })),
     category: {
       super_id: venue.venue_category.super_category_id ?? '',
       super_name: venue.venue_category.super_category_name,
@@ -120,6 +132,23 @@ export const valuesToStep1 = (values: VenueFormValues) => ({
   capacity_items: values.capacity_items.map((item) => ({
     label: item.label,
     capacity: item.capacity,
+  })),
+  offers_food: values.offers_food,
+  // Each stored dish goes back under its own id so it keeps its identity; a new
+  // one carries none. `food_ordering` is DELIBERATELY never sent: the Razorpay
+  // account belongs to the venue's owner and is linked from the Partners portal,
+  // and leaving the key out is what leaves the owner's ordering settings alone.
+  food_menu: values.food_menu.map((item) => ({
+    id: item.item_id || undefined,
+    name: item.name,
+    description: item.description,
+    category: item.category,
+    price: item.price,
+    images: item.images,
+    // Enums: an unchosen one is omitted, never sent as the select's empty value.
+    diet: item.diet || undefined,
+    spice_level: item.spice_level || undefined,
+    is_available: item.is_available,
   })),
   // The server validates the triple when set, and rejects a partial one — so an
   // unchosen category is omitted rather than sent as three empty ids.

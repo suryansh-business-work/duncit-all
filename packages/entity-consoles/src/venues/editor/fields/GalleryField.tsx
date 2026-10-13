@@ -10,30 +10,48 @@ import type { VenueFormValues } from '../types';
 const withoutIndex = (urls: readonly string[], index: number): string[] =>
   urls.filter((_, i) => i !== index);
 
+/** The lists of bare image URLs a venue holds: its gallery, and each dish's photos. */
+export type GalleryFieldName = 'gallery' | `food_menu.${number}.images`;
+
 /**
  * The venue's gallery: a plain list of URLs, shown as what it is.
  *
  * `useFieldArray` is deliberately not used — it keys on an object id per row,
  * and these rows are bare strings. Reading and writing the whole array through
  * one Controller keeps the order the admin sees the order that is saved.
+ *
+ * A dish's photos are the same list under another name, so the menu reuses this
+ * with its own `name`, wording and the server's per-dish `limit`.
  */
 export default function GalleryField({
   control,
   onPick,
-}: Readonly<{ control: Control<VenueFormValues>; onPick: () => Promise<string | null> }>) {
+  name = 'gallery',
+  limit,
+  emptyText,
+  itemAlt,
+}: Readonly<{
+  control: Control<VenueFormValues>;
+  onPick: () => Promise<string | null>;
+  name?: GalleryFieldName;
+  /** The most images this list may hold; adding stops there. Unset = no cap. */
+  limit?: number;
+  emptyText?: string;
+  itemAlt?: string;
+}>) {
   const { t } = useTranslation();
 
   return (
     <Controller
       control={control}
-      name="gallery"
+      name={name}
       render={({ field }) => {
         const urls = field.value ?? [];
         return (
           <Stack spacing={1}>
             {urls.length === 0 && (
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {t('directory.venueEditor.galleryEmpty')}
+                {emptyText ?? t('directory.venueEditor.galleryEmpty')}
               </Typography>
             )}
             {urls.length > 0 && (
@@ -43,7 +61,7 @@ export default function GalleryField({
                     <Box
                       component="img"
                       src={url}
-                      alt={t('directory.venueEditor.galleryItemAlt')}
+                      alt={itemAlt ?? t('directory.venueEditor.galleryItemAlt')}
                       sx={{ borderRadius: 1, height: 110, objectFit: 'cover' }}
                     />
                     <DuncitIconButton
@@ -61,6 +79,7 @@ export default function GalleryField({
             <DuncitButton
               startIcon={<AddPhotoAlternateIcon />}
               sx={{ alignSelf: 'flex-start' }}
+              disabled={limit !== undefined && urls.length >= limit}
               onClick={async () => {
                 const url = await onPick();
                 if (url) field.onChange([...urls, url]);

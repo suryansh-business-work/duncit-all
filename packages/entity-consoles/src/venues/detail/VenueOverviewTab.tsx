@@ -4,6 +4,7 @@ import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { useTranslation } from '@duncit/shell';
 import MediaGallery from '../../shared/MediaGallery';
 import VenueAboutCard from './VenueAboutCard';
+import VenueFoodCard from './VenueFoodCard';
 import VenueLocationCard from './VenueLocationCard';
 import VenueOwnerCard from './VenueOwnerCard';
 import VenueRecordCard from './VenueRecordCard';
@@ -27,6 +28,7 @@ export default function VenueOverviewTab({ venue }: Readonly<{ venue: AdminVenue
     >
       <Stack spacing={2.5} sx={{ minWidth: 0 }}>
         <VenueAboutCard venue={venue} />
+        <VenueFoodCard venue={venue} />
         <MediaGallery
           title={t('admin.venueDetails.gallery')}
           icon={<PhotoLibraryIcon color="primary" />}

@@ -58,7 +58,7 @@ export default function VenueEditorPage() {
           onSubmit={form.handleSubmit(submit)}
           picker={picker}
         >
-          <BasicsSection control={form.control} config={config} />
+          <BasicsSection control={form.control} config={config} onPick={picker.pickImage} />
           <LocationSection control={form.control} />
           <MediaSection control={form.control} onPick={picker.pickImage} />
           <DocumentsSection control={form.control} config={config} onPick={picker.pickImage} />

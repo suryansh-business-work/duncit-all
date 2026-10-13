@@ -61,6 +61,7 @@ export const CLUB_FORM_BUNDLE: NestedCatalogue = {
     },
     faqListField: {
       answer: 'Answer',
+      hint: 'Optional — questions members often ask. Each one needs a question and an answer.',
     },
     linksSection: {
       autoMatchedVenues: 'Auto-matched venues',

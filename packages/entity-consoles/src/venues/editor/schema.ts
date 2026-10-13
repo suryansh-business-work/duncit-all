@@ -145,7 +145,69 @@ const settingsSchema = (t: Translate, m: Messages) =>
       path: ['refund_tiers'],
     });
 
-export function makeVenueFormSchema(t: Translate) {
+/** The menu's bounds, as `venueRegistrationConfig` serves them. */
+export interface VenueFoodLimits {
+  food_menu_limit: number;
+  food_image_limit: number;
+  food_price_max: number;
+}
+
+/**
+ * No client-side ceiling — what the form runs on until the catalogue answers.
+ * The bounds are the server's to state, so nothing is guessed here; the server
+ * still refuses a menu that breaks them.
+ */
+export const UNCAPPED_FOOD_LIMITS: VenueFoodLimits = {
+  food_menu_limit: Number.POSITIVE_INFINITY,
+  food_image_limit: Number.POSITIVE_INFINITY,
+  food_price_max: Number.POSITIVE_INFINITY,
+};
+
+/** One dish. The text bounds are the server's own (`venue.food.ts`). */
+const foodItemSchema = (t: Translate, m: Messages, limits: VenueFoodLimits) =>
+  z.object({
+    item_id: z.string().default(''),
+    name: z
+      .string()
+      .trim()
+      .min(1, m.required(t('directory.venueEditor.dishName')))
+      .max(80, m.maxLen(t('directory.venueEditor.dishName'), 80)),
+    description: z
+      .string()
+      .trim()
+      .max(500, m.maxLen(t('directory.venueEditor.dishDescription'), 500))
+      .default(''),
+    category: z
+      .string()
+      .trim()
+      .max(40, m.maxLen(t('directory.venueEditor.dishSection'), 40))
+      .default(''),
+    // Rupees, and paise are allowed — so coerced but not held to a whole number.
+    price: z.coerce
+      .number({ error: m.number(t('directory.venueEditor.dishPrice')) })
+      .min(1, m.min(t('directory.venueEditor.dishPrice'), 1))
+      .max(
+        limits.food_price_max,
+        m.max(t('directory.venueEditor.dishPrice'), limits.food_price_max),
+      ),
+    images: z
+      .array(z.string().trim().max(1000))
+      .max(
+        limits.food_image_limit,
+        t('directory.venueEditor.errDishPhotos', { vars: { max: limits.food_image_limit } }),
+      )
+      .default([]),
+    // Free strings on purpose: the selects only offer what the server's
+    // catalogue lists, so restating the two enums here would be a second copy.
+    diet: z.string().default(''),
+    spice_level: z.string().default(''),
+    is_available: z.boolean().default(true),
+  });
+
+export function makeVenueFormSchema(
+  t: Translate,
+  foodLimits: VenueFoodLimits = UNCAPPED_FOOD_LIMITS,
+) {
   const m = messages(t);
   return z.object({
     id: z.string().default(''),
@@ -166,6 +228,14 @@ export function makeVenueFormSchema(t: Translate) {
         }),
       )
       .max(50)
+      .default([]),
+    offers_food: z.boolean().default(false),
+    food_menu: z
+      .array(foodItemSchema(t, m, foodLimits))
+      .max(
+        foodLimits.food_menu_limit,
+        t('directory.venueEditor.errMenuSize', { vars: { max: foodLimits.food_menu_limit } }),
+      )
       .default([]),
     category: z.object({
       super_id: z.string().default(''),

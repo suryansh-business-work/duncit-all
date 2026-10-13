@@ -17,7 +17,7 @@ export default function FaqListField() {
   return (
     <Stack spacing={1}>
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        Optional — questions members often ask. Each one needs a question and an answer.
+        {t('clubForm.faqListField.hint')}
       </Typography>
       {errors.faqs?.message && (
         <Typography role="alert" variant="caption" sx={{ color: 'error.main' }}>

@@ -751,6 +751,23 @@ It also refuses more units than `max`, an empty reason, and comments over `RETUR
 (2000, the server's limit). Defaults and the mutation input come from `returnFormDefaults` /
 `toReturnInput` in `@duncit/utils`.
 
+### A venue food order
+
+`makeFoodCheckoutSchema(t)` is who a food order is for — the "Your details" block of the cart
+sheet on a venue's menu, in mWeb and the app. The limits are the server's own
+(`FOOD_ORDER_LIMITS` in `@duncit/utils`) and the mobile is `PHONE_NUMBER` from `@duncit/regex`:
+
+```ts
+import { foodCheckoutDefaults, makeFoodCheckoutSchema } from '@duncit/forms/schemas';
+
+makeFoodCheckoutSchema(t).safeParse({ ...foodCheckoutDefaults, name: 'Asha', phone: '98765' });
+// mweb.venueFood.checkout.phoneInvalid — not a 10-digit mobile
+```
+
+`name` is trimmed and must be 2–80 characters; `table` (20) and `note` (300) are optional and
+only capped. The too-long messages receive `{max}`. `FoodCheckoutValues` is the inferred shape
+and `foodCheckoutDefaults` the blank form.
+
 ### Venue cancellation policy
 
 `makeCancellationPolicySchema(t)` is what a venue owner's cancellation policy is checked

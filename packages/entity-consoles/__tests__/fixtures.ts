@@ -25,6 +25,21 @@ export const venueRecord: AdminVenueDetail = {
     { label: 'Ground floor', capacity: 40 },
     { label: 'Terrace', capacity: 20 },
   ],
+  offers_food: true,
+  food_menu: [
+    {
+      id: '66e0000000000000000000f1',
+      name: 'Filter Coffee',
+      description: 'South Indian decoction, steamed milk.',
+      category: 'Beverages',
+      price: 180,
+      images: ['https://ik.imagekit.io/duncit/venues/menu/filter-coffee.jpg'],
+      diet: 'VEG',
+      spice_level: 'NONE',
+      is_available: true,
+    },
+  ],
+  food_ordering: { enabled: true, discount_pct: 10 },
   venue_category: {
     super_category_id: '66a0000000000000000000a1',
     category_id: '66a0000000000000000000b2',

@@ -27,6 +27,32 @@ const VENUE: VenueRecordMock = {
     { label: 'Ground floor', capacity: 40 },
     { label: 'Terrace', capacity: 20 },
   ],
+  offers_food: true,
+  food_menu: [
+    {
+      id: '66e0000000000000000000f1',
+      name: 'Filter Coffee',
+      description: 'South Indian decoction with steamed milk.',
+      category: 'Beverages',
+      price: 180,
+      images: ['https://ik.imagekit.io/duncit/venues/menu/filter-coffee.jpg'],
+      diet: 'VEG',
+      spice_level: 'NONE',
+      is_available: true,
+    },
+    {
+      id: '66e0000000000000000000f2',
+      name: 'Chilli Cheese Toast',
+      description: '',
+      category: 'Small plates',
+      price: 240,
+      images: [],
+      diet: 'VEG',
+      spice_level: 'MEDIUM',
+      is_available: false,
+    },
+  ],
+  food_ordering: { enabled: true, discount_pct: 10 },
   venue_category: {
     super_category_id: '66a0000000000000000000a1',
     category_id: '66a0000000000000000000b2',
@@ -113,7 +139,9 @@ const NOTE =
   'operating hour and watch which mutation the value belongs to: adminUpdateVenue ' +
   'takes the record, updateVenueSettings takes the hours and both cancellation ' +
   'ladders, setVenueDeductions takes the two percentages. Blank location_id to see ' +
-  'the one field the schema refuses to save without.';
+  'the one field the schema refuses to save without. Empty a dish id in food_menu ' +
+  'to see it go back as a new dish; food_ordering is read but never sent, because ' +
+  'the Razorpay account it charges is the owner’s.';
 
 export const venueEditorMappingDemo = defineDemo<VenueRecordMock>({
   id: 'venue-editor-mapping',
@@ -133,6 +161,12 @@ export const venueEditorMappingDemo = defineDemo<VenueRecordMock>({
       'adminUpdateVenue category': step1.venue_category
         ? 'the Super/Category/Sub triple'
         : 'omitted — the server rejects a partial triple',
+      'adminUpdateVenue food': [
+        step1.offers_food ? 'offers food' : 'does not offer food',
+        `${step1.food_menu.filter((dish) => dish.id).length} dish(es) kept under their ids`,
+        `${step1.food_menu.filter((dish) => !dish.id).length} new`,
+        'food_ordering' in step1 ? 'food_ordering sent' : 'food_ordering never sent',
+      ].join(', '),
       'updateVenueSettings sends': [
         window,
         `${settings.weekly_off_days.length} weekly off`,

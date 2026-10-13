@@ -3372,3 +3372,61 @@ const lines = buildVenueBillLines(
 The slot-price line is left out when there is none to state (a legacy pod with no slot link).
 `firstMediaUrl` reads the single bill URL out of a media picker newline-separated value. Web
 renderer: `VenueBillSummary` in `@duncit/ui`.
+
+## A venue's food menu and its QR order — `venue-food`
+
+A guest scans the QR on the table, opens the venue's public page on its menu, fills a cart, pays the
+venue's own Razorpay account and follows the order to the table — with no sign-in. This module is
+the framework-free half of that: the menu and order types, the three documents (as plain strings,
+like `public-page`), the cart math, and the keys every status is worded with.
+
+```ts
+import {
+  PLACE_VENUE_FOOD_ORDER_MUTATION,
+  VERIFY_VENUE_FOOD_ORDER_MUTATION,
+  VENUE_FOOD_ORDER_QUERY,
+  buildFoodOrderTimeline,
+  foodOrderErrorCode,
+  foodOrderErrorKey,
+  foodOrderPollMs,
+  formatFoodMoney,
+  groupFoodMenu,
+  priceFoodCart,
+  reconcileFoodCart,
+} from '@duncit/utils';
+
+const groups = groupFoodMenu(venue.food_menu); // category headings, first-appearance order; uncategorised last
+const { cart, dropped } = reconcileFoodCart(storedCart, venue.food_menu); // drops dishes that left the menu
+const price = priceFoodCart(
+  lines.map((line) => ({ unit_price: line.item.price, quantity: line.quantity })),
+  venue.food_ordering.discount_pct,
+);
+formatFoodMoney(price.total, currencySymbol); // whole rupees stay whole
+
+// A refused order → the sentence to show
+t(foodOrderErrorKey(foodOrderErrorCode(error)));
+
+// The order page
+const everyMs = foodOrderPollMs(order); // 8000 unpaid, 20000 in the kitchen, 0 once served or cancelled
+const steps = buildFoodOrderTimeline(order, t); // DetailedTimelineStep[], the product-order timeline's shape
+```
+
+`priceFoodCart` is the server's own arithmetic, in integer paise: each line is
+`round(price × 100) × quantity`, the discount is `floor(subtotal × pct / 100)` — rounded down, so a
+venue never gives away more than the percent it set — and the total is what is left. It is display
+only; the server prices the order again from its own menu. `belowMinimum` is true under one rupee,
+which the server refuses to send to the gateway.
+
+`FOOD_ORDER_LIMITS` carries the server's limits (30 different dishes, 20 of one dish, the name,
+table and note lengths) so a form refuses exactly what the server would. `FOOD_ORDER_ERROR` names
+the two codes that change the page rather than just the message: `FOOD_ORDERING_CLOSED` (keep the
+menu, drop the cart) and `FOOD_ITEM_UNAVAILABLE` (re-read the venue; `reconcileFoodCart` then drops
+the dish), plus `CONFLICT` (repeat the same `client_key` a moment later).
+
+The `client_key` is minted once per checkout attempt and repeated on every retry of it — the server
+answers a repeated key with the order it already made, which is what makes a double tap harmless.
+
+Copy lives under `mweb.venueFood.*`; `FOOD_ORDER_STATUS_KEYS`, `FOOD_PAYMENT_STATUS_KEYS`,
+`FOOD_DIET_KEYS` and `FOOD_SPICE_KEYS` map each enum to its key, `FOOD_SPICE_HEAT` to the number of
+flames it is drawn with, and `isVegFood` answers the veg-only filter. Web renderer: mWeb's
+`pages/VenueDetailsPage/food` and `pages/venue-food-order-page`.

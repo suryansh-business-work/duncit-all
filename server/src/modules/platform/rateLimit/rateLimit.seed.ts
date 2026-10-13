@@ -176,6 +176,25 @@ const SEED_RULES = [
     message: 'Too many attempts. Please wait a few minutes before trying again.',
   },
   {
+    // Its own rule, not one more operation on the rule above: shipped rules are created once by
+    // name and never rewritten, so a database that already holds that rule would never learn of it.
+    name: 'Venue food coupon check',
+    description:
+      'Checking a coupon code at a venue needs no sign-in, which makes it the place a script would guess codes. The ceiling is wider than the ordering one because a whole table often shares the Wi-Fi of the venue, and a guest re-checks as their cart changes.',
+    priority: 6,
+    mode: 'ENFORCE',
+    surface: 'ALL',
+    app: '*',
+    channel: 'GRAPHQL',
+    operations: ['previewVenueFoodCoupon'],
+    key_by: 'IP',
+    algorithm: 'SLIDING_WINDOW',
+    limit: 60,
+    window_seconds: 300,
+    block_seconds: 300,
+    message: 'Too many attempts. Please wait a few minutes before trying again.',
+  },
+  {
     name: 'Mutation ceiling per account',
     description: 'How fast one signed-in account may write. Reads are untouched.',
     priority: 30,

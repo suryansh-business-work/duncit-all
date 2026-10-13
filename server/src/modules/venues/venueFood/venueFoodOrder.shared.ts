@@ -1,9 +1,10 @@
 import { GraphQLError } from 'graphql';
-import type { Types } from 'mongoose';
+import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import type { RazorpayKeys } from '@modules/finance/payment/razorpay.gateway';
 import { sameSecret } from '@modules/commerce/store/store.shared';
 import { PartnerIntegrationModel } from '@modules/venues/ecommBrand/partnerIntegration.model';
+import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import type { IVenueFoodOrder } from './venueFoodOrder.model';
 
 /** Small pieces every part of venue food ordering shares: its error shapes, the venue's keys, and what an order looks like outside. */
@@ -19,6 +20,21 @@ export const badInput = (message: string): never => fail('BAD_USER_INPUT', messa
 /** The venue cannot take an order right now — the menu page reads this code and shows the menu without a cart. */
 export const orderingClosed = (message = 'This venue is not taking food orders right now'): never =>
   fail('FOOD_ORDERING_CLOSED', message);
+
+export const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
+
+export const objectId = (id: unknown, message: string) => {
+  const value = text(id);
+  return Types.ObjectId.isValid(value) ? new Types.ObjectId(value) : badInput(message);
+};
+
+/** The venue an operator may run the board — and the coupons — for: its owner, or a venues-console editor. */
+export async function managedVenue(userId: string, isAdmin: boolean, venueId: string) {
+  const venue = await VenueModel.findById(objectId(venueId, 'Invalid venue id')).select('owner_user_id');
+  if (!venue) return fail('NOT_FOUND', 'Venue not found');
+  if (!isAdmin && venue.owner_user_id?.toHexString() !== userId) fail('FORBIDDEN', 'Not your venue');
+  return venue as Pick<IVenue, '_id' | 'owner_user_id'>;
+}
 
 /**
  * The keys of the owner's saved Razorpay connection an order is charged on.
@@ -42,9 +58,9 @@ export function assertOrderAccess(ctx: GraphQLContext, order: IVenueFoodOrder, a
   fail('FORBIDDEN', 'This order link is not valid');
 }
 
-const rupees = (paise: number) => paise / 100;
+export const rupees = (paise: number) => paise / 100;
 
-const iso = (date: Date | null | undefined) => (date ? date.toISOString() : null);
+export const iso = (date: Date | null | undefined) => (date ? date.toISOString() : null);
 
 export const toFoodOrderPub = (order: IVenueFoodOrder) => ({
   id: order._id.toHexString(),
@@ -66,6 +82,10 @@ export const toFoodOrderPub = (order: IVenueFoodOrder) => ({
   subtotal: rupees(order.subtotal_paise),
   discount_pct: order.discount_pct ?? 0,
   discount_amount: rupees(order.discount_paise ?? 0),
+  // An order placed before coupons existed carries none of the three.
+  coupon_code: order.coupon_code || null,
+  coupon_pct: order.coupon_pct ?? 0,
+  coupon_discount_amount: rupees(order.coupon_discount_paise ?? 0),
   total: rupees(order.total_paise),
   currency_symbol: order.currency_symbol ?? '',
   status: order.status,

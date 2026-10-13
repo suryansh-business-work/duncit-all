@@ -6,6 +6,7 @@ import {
 } from '@modules/finance/payment/razorpay.gateway';
 import { logs } from '@observability/log';
 import { startClusterJob } from '@utils/clusterJob';
+import { countFoodCouponUse } from './venueFoodCoupon.redemption';
 import { VenueFoodOrderModel, type IVenueFoodOrder } from './venueFoodOrder.model';
 import { FOOD_LOG, razorpayKeysFor } from './venueFoodOrder.shared';
 
@@ -31,6 +32,12 @@ const BATCH_LIMIT = 25;
  * Mark an order paid. The guard is the write itself: of a verify, a status
  * poll and the sweep all landing together, exactly one matches PENDING — the
  * rest read the order it already became.
+ *
+ * The same guard is what counts the order's coupon: only the caller whose
+ * write matched gets `paid` back, so the use is counted once however many of
+ * them raced. Nothing about the coupon is re-checked here — the money is
+ * already captured at the price the guest was quoted (see
+ * `venueFoodCoupon.redemption.ts`).
  */
 export async function markFoodOrderPaid(orderId: Types.ObjectId, razorpayPaymentId: string) {
   const paid = await VenueFoodOrderModel.findOneAndUpdate(
@@ -39,11 +46,14 @@ export async function markFoodOrderPaid(orderId: Types.ObjectId, razorpayPayment
     { new: true }
   );
   if (paid) {
+    await countFoodCouponUse(paid);
     logs.server.info(FOOD_LOG, 'paid', {
       orderId: orderId.toHexString(),
       orderNo: paid.order_no,
       venueId: paid.venue_id.toHexString(),
       totalPaise: paid.total_paise,
+      couponCode: paid.coupon_code || undefined,
+      couponDiscountPaise: paid.coupon_discount_paise || undefined,
     });
     return paid;
   }

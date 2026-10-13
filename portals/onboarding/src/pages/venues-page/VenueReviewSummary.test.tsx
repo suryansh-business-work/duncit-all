@@ -46,6 +46,23 @@ describe('VenueReviewSummary', () => {
     );
   });
 
+  it('names every category the venue hosts in, primary first', () => {
+    const cricket = fullVenue.venue_category;
+    const yoga = { super_category_name: 'Fitness', category_name: 'Yoga', sub_category_name: 'Hatha' };
+    render(<VenueReviewSummary active={{ ...fullVenue, venue_categories: [cricket, yoga] }} />);
+
+    expect(screen.getByTestId('venue-review-categories')).toHaveTextContent(
+      'Hosts in: Sports › Cricket › Box Cricket, Fitness › Yoga › Hatha',
+    );
+    expect(screen.getByText('Fitness › Yoga › Hatha').tagName).toBe('STRONG');
+  });
+
+  // A venue fetched without the list (stored before it existed) still shows its one category.
+  it('shows the lone category of a venue that has no list', () => {
+    render(<VenueReviewSummary active={{ ...fullVenue, venue_categories: [] }} />);
+    expect(screen.getByTestId('venue-review-categories')).toHaveTextContent('Hosts in: Sports › Cricket › Box Cricket');
+  });
+
   // A half-filled application: nothing optional is invented.
   it('dashes what a half-filled application has not given yet', () => {
     render(<VenueReviewSummary active={{ id: 'v2', venue_name: 'New place', city: 'Pune' }} />);

@@ -9,6 +9,7 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
+import { venueCategoryList } from '@duncit/utils';
 import { STATUS_OPTIONS, type VenueRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -51,14 +52,14 @@ const renderVenue = (v: VenueRow) => (
 
 const locationValue = (v: VenueRow) => [v.locality, v.city].filter(Boolean).join(', ') || '—';
 
+/** Every category the venue hosts in, primary first — not the primary alone. */
 const categoryValue = (v: VenueRow) =>
-  [
-    v.venue_category?.super_category_name,
-    v.venue_category?.category_name,
-    v.venue_category?.sub_category_name,
-  ]
+  venueCategoryList(v)
+    .map((category) =>
+      [category.super_category_name, category.category_name, category.sub_category_name].filter(Boolean).join(' > ')
+    )
     .filter(Boolean)
-    .join(' > ') || '—';
+    .join('; ') || '—';
 
 const renderCategory = (v: VenueRow) => <Typography variant="body2">{categoryValue(v)}</Typography>;
 

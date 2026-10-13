@@ -35,6 +35,14 @@ export const VENUES = gql`
         category_name
         sub_category_name
       }
+      venue_categories {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
       status
       is_active
       pod_count
@@ -66,6 +74,13 @@ export const VENUES = gql`
   }
 `;
 
+/** One Super → Category → Sub a venue hosts in, as the table names it. */
+export interface VenueRowCategory {
+  super_category_name?: string | null;
+  category_name?: string | null;
+  sub_category_name?: string | null;
+}
+
 /** Row shape used by the venues table columns; rows also carry the full
  * VenueRowFields selection so the Edit/Review dialogs can reuse the row object. */
 export interface VenueRow {
@@ -85,11 +100,10 @@ export interface VenueRow {
   owner_email?: string | null;
   owner_phone?: string | null;
   venue_commission_pct?: number | null;
-  venue_category?: {
-    super_category_name?: string | null;
-    category_name?: string | null;
-    sub_category_name?: string | null;
-  } | null;
+  /** The primary category — `venue_categories[0]`. */
+  venue_category?: VenueRowCategory | null;
+  /** Every category the venue hosts in, primary first. */
+  venue_categories?: VenueRowCategory[] | null;
 }
 
 /** Same selection as VENUES rows (+ created_at for the hidden Created filter
@@ -122,6 +136,14 @@ const VENUE_ROW_FIELDS = gql`
       capacity
     }
     venue_category {
+      super_category_id
+      category_id
+      sub_category_id
+      super_category_name
+      category_name
+      sub_category_name
+    }
+    venue_categories {
       super_category_id
       category_id
       sub_category_id

@@ -5,7 +5,7 @@ import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import { useTranslation } from '@duncit/shell';
-import { POD_REQUEST_DEFAULT_RADIUS_KM, parseApiError } from '@duncit/utils';
+import { POD_REQUEST_DEFAULT_RADIUS_KM, parseApiError, venueCategoryLevelIds } from '@duncit/utils';
 import { NEARBY_HOSTS, NEARBY_SEARCH_VENUES, type NearbyHostResult, type SearchVenue } from '../queries';
 import { podRequestsPath } from '../side';
 import type { NearbyCardData } from './NearbyResultCard';
@@ -14,8 +14,6 @@ import NearbySearchLayout from './NearbySearchLayout';
 import { usePodRequestQuota } from './QuotaLine';
 import { useRequestPod } from './useRequestPod';
 
-const defaultCategories = (venue: SearchVenue | null) =>
-  venue?.venue_category.category_id ? [venue.venue_category.category_id] : [];
 
 const toCard = (host: NearbyHostResult): NearbyCardData => ({
   id: host.user_id,
@@ -29,7 +27,8 @@ const toCard = (host: NearbyHostResult): NearbyCardData => ({
 
 /**
  * Venue Owner → Search Nearby Hosts. Centred on the chosen venue's own city and
- * area; the venue's category is the starting filter.
+ * area; the venue's categories — every one it has, not the primary alone —
+ * are the starting filter.
  */
 export default function NearbyHostsPage() {
   const { t } = useTranslation();
@@ -42,11 +41,11 @@ export default function NearbyHostsPage() {
   const venue = venues.find((v) => v.id === picked) ?? venues[0] ?? null;
   const [radiusKm, setRadiusKm] = useState(POD_REQUEST_DEFAULT_RADIUS_KM);
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
-  // The filter starts from each venue's own category whenever the venue changes.
+  // The filter starts from each venue's own categories whenever the venue changes.
   const [seededFor, setSeededFor] = useState<string | null>(null);
   if (venue && seededFor !== venue.id) {
     setSeededFor(venue.id);
-    setCategoryIds(defaultCategories(venue));
+    setCategoryIds(venueCategoryLevelIds(venue, 'category_id'));
   }
 
   const locationId = venue?.location_id ?? '';

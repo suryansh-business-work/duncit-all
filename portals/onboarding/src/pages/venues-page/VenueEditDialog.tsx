@@ -28,6 +28,7 @@ import {
 } from '../../components/admin-venue-create-dialog/venue.form';
 import { normalizeBankAccountValues } from '../../forms/validation/bankAccount';
 import { STATUSES, UPDATE_VENUE } from './queries';
+import VenueOtherCategoriesNote from './VenueOtherCategoriesNote';
 import VenueSettingsPanels from './VenueSettingsPanels';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -148,6 +149,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {submitError && <Alert severity="error">{submitError}</Alert>}
+          <VenueOtherCategoriesNote venue={venue} />
           <VenueAccordionForm
             mode="edit"
             s1={s1}

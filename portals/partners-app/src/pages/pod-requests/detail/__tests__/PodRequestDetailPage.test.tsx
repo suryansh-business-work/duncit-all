@@ -107,10 +107,29 @@ describe('PodRequestDetailPage — who it is with', () => {
     expect(card.queryByRole('heading', { name: 'Note' })).toBeNull();
   });
 
+  it('names every category of a venue in several, before its type', async () => {
+    mount({
+      PartnersPodRequest: detail({
+        venue: { ...requestDetail().venue, category: 'Badminton', categories: ['Badminton', 'Yoga'] },
+      }),
+    });
+
+    const card = within(await screen.findByTestId('pod-request-detail'));
+    expect(card.getByText('Badminton, Yoga · Indoor')).toBeTruthy();
+  });
+
   it('leaves out a zero capacity and a missing category rather than printing blanks', async () => {
     mount({
       PartnersPodRequest: detail({
-        venue: { ...requestDetail().venue, capacity: 0, category: '', venue_type: 'Outdoor', locality: '', city: 'Pune' },
+        venue: {
+          ...requestDetail().venue,
+          capacity: 0,
+          category: '',
+          categories: [],
+          venue_type: 'Outdoor',
+          locality: '',
+          city: 'Pune',
+        },
       }),
     });
 

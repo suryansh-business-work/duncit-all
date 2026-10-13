@@ -25,6 +25,9 @@ export type FoodOrderRow = Pick<
   | 'subtotal'
   | 'discount_pct'
   | 'discount_amount'
+  | 'coupon_code'
+  | 'coupon_pct'
+  | 'coupon_discount_amount'
   | 'total'
   | 'currency_symbol'
   | 'status'
@@ -44,6 +47,9 @@ const FOOD_ORDER_FIELDS = `
   subtotal
   discount_pct
   discount_amount
+  coupon_code
+  coupon_pct
+  coupon_discount_amount
   total
   currency_symbol
   status

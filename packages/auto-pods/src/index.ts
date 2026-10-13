@@ -11,7 +11,11 @@ export type { AutoPodCategoryFilterProps } from './AutoPodCategoryFilter';
 export { VenueAcceptDialog } from './venue/VenueAcceptDialog';
 export type { VenueAcceptDialogProps } from './venue/VenueAcceptDialog';
 export { AutoPodVenuePicker, venueCategoryPath } from './venue/AutoPodVenuePicker';
-export type { AutoPodVenueOption, AutoPodVenuePickerProps } from './venue/AutoPodVenuePicker';
+export type {
+  AutoPodVenueCategory,
+  AutoPodVenueOption,
+  AutoPodVenuePickerProps,
+} from './venue/AutoPodVenuePicker';
 export { AutoPodExpiryNote } from './AutoPodExpiryNote';
 export type { AutoPodExpiryNoteProps } from './AutoPodExpiryNote';
 export { AutoPodDependencyTimeline } from './AutoPodDependencyTimeline';

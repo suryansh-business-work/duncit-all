@@ -246,10 +246,16 @@ accept succeeds and stays booked until the pod exists, so no ordinary pod can
 take it in between.
 
 The venue itself is chosen **above the queue**, with `AutoPodVenuePicker`: an
-owner may run several venues, and the queue is what THAT venue could take (its
-category and its city — `VENUE_AUTO_PODS` takes `venue_id`), so the picker
-writes the venue's category under itself (`venueCategoryPath`) to say why the
-list is what it is. `VenueAcceptDialog` takes that `venue` and asks only for
+owner may run several venues, and the queue is what THAT venue could take (ANY
+of its categories, and its city — `VENUE_AUTO_PODS` takes `venue_id`), so the
+picker writes every category the venue declares under itself to say why the
+list is what it is. A venue can belong to several categories:
+`MY_VENUES_FOR_AUTO_POD` selects `venue_categories` (primary first) beside the
+legacy `venue_category`, `AutoPodVenueOption` carries both, and the line is
+`labels.venueCategories(venueCategoryPaths(venue))` — `venueCategoryPaths` and
+`venueHostsSubCategory` live in `@duncit/utils` so the native twin reads the
+same list. `venueCategoryPath(venue)` still answers the PRIMARY's path alone.
+Only a venue with no category at all gets the `noVenueCategory` warning. `VenueAcceptDialog` takes that `venue` and asks only for
 the slot, read from `AUTO_POD_VENUE_SLOTS`: the next few days (Pod Settings'
 *Auto Pods — slot window*), nearest first, each carrying `venue_receives` —
 what the venue is paid after Finance's deductions — and `viable`, false when

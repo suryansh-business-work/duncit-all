@@ -5,9 +5,17 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import type { AutoPodLabels, AutoPodVenueSpace } from '@duncit/utils';
+import { venueCategoryPaths, type AutoPodLabels, type AutoPodVenueSpace } from '@duncit/utils';
 import { MY_VENUES_FOR_AUTO_POD } from '../queries';
 import { SelectSpinner } from '../SelectSpinner';
+
+/** One Super → Category → Sub the venue declares, as the picker's query selects it. */
+export interface AutoPodVenueCategory {
+  sub_category_id: string | null;
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
 
 /** One of the owner's venues, as the queue and the accept dialog need it. */
 export interface AutoPodVenueOption {
@@ -21,25 +29,21 @@ export interface AutoPodVenueOption {
   capacity: number;
   /** The venue's named spaces, which its potential-earnings calculator prices. */
   capacity_items: AutoPodVenueSpace[];
-  venue_category: {
-    sub_category_id: string | null;
-    super_category_name: string;
-    category_name: string;
-    sub_category_name: string;
-  } | null;
+  /** The primary category — `venue_categories[0]`. Read the list, not this. */
+  venue_category: AutoPodVenueCategory | null;
+  /** Every category the venue declares, primary first. Absent only on a row an
+   * older query fetched, where the primary stands in as a one-entry list. */
+  venue_categories?: AutoPodVenueCategory[] | null;
 }
 
 interface MyVenues {
   myVenues: AutoPodVenueOption[];
 }
 
-/** "Sports › Racket › Badminton" — the venue's declared category. */
+/** "Sports › Racket › Badminton" — the venue's PRIMARY category. A venue may
+ * declare several: `venueCategoryPaths` (`@duncit/utils`) lists every one. */
 export function venueCategoryPath(venue: AutoPodVenueOption | null): string {
-  const category = venue?.venue_category;
-  if (!category) return '';
-  return [category.super_category_name, category.category_name, category.sub_category_name]
-    .filter(Boolean)
-    .join(' › ');
+  return venueCategoryPaths(venue)[0] ?? '';
 }
 
 export interface AutoPodVenuePickerProps {
@@ -53,9 +57,10 @@ export interface AutoPodVenuePickerProps {
 /**
  * The venue queue's own picker: which of the owner's approved venues is
  * looking. An owner may run several, and the offers shown are the ones THAT
- * venue could take — its category and its city — so the category is written
- * under the picker to say why the list is what it is. The first venue is
- * chosen on arrival; a venue with no category is offered nothing, and says so.
+ * venue could take — ANY of its categories, and its city — so every category
+ * is written under the picker to say why the list is what it is. The first
+ * venue is chosen on arrival; a venue with no category is offered nothing,
+ * and says so.
  * Native twin: `AutoPodVenueRow` (rule 27).
  */
 export function AutoPodVenuePicker({ value, onChange, labels, size = 'small' }: Readonly<AutoPodVenuePickerProps>) {
@@ -72,7 +77,7 @@ export function AutoPodVenuePicker({ value, onChange, labels, size = 'small' }: 
     return <Alert severity="info">{labels.noVenues}</Alert>;
   }
 
-  const path = venueCategoryPath(value);
+  const paths = venueCategoryPaths(value);
   return (
     <Stack spacing={0.75} data-testid="auto-pod-venue-picker">
       <TextField
@@ -93,12 +98,12 @@ export function AutoPodVenuePicker({ value, onChange, labels, size = 'small' }: 
           </MenuItem>
         ))}
       </TextField>
-      {value && path && (
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {labels.venueCategory(path)}
+      {value && paths.length > 0 && (
+        <Typography variant="caption" sx={{ color: 'text.secondary' }} data-testid="auto-pod-venue-categories">
+          {labels.venueCategories(paths)}
         </Typography>
       )}
-      {value && !path && <Alert severity="warning">{labels.noVenueCategory}</Alert>}
+      {value && paths.length === 0 && <Alert severity="warning">{labels.noVenueCategory}</Alert>}
     </Stack>
   );
 }

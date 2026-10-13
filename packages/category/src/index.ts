@@ -4,11 +4,18 @@
  * `AdminCategorySelect` renders a strict cascading Super → Category → Sub
  * dropdown sourced from the admin category tree, optionally wrapped in a titled
  * <fieldset> (legend + hint) so it reads as a distinct section. `RhfAdminCategory`
- * is the react-hook-form wrapper; `useCategoryValue` hydrates edit forms that
- * persist super + sub ids.
+ * is the react-hook-form wrapper and `RhfAdminCategoryRows` the repeatable-rows
+ * field for a record in several categories; `useCategoryValue` hydrates edit
+ * forms that persist super + sub ids.
  */
 export { AdminCategorySelect, type AdminCategorySelectProps } from './AdminCategorySelect';
 export { RhfAdminCategory } from './RhfAdminCategory';
+export {
+  RhfAdminCategoryRows,
+  type AdminCategoryRowsLabels,
+  type RhfAdminCategoryRowsProps,
+} from './RhfAdminCategoryRows';
+export { categoryRowsMessage, duplicateCategoryRows, isCompleteCategory } from './categoryRows';
 export { Fieldset, type FieldsetProps } from './Fieldset';
 export { useAdminCategories, ADMIN_CATEGORIES } from './queries';
 export { buildCategoryValue, useCategoryValue } from './resolve';

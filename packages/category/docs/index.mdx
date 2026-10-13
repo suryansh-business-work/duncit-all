@@ -1,6 +1,6 @@
 ---
 name: '@duncit/category'
-summary: 'The one Super → Category → Sub cascade picker, sourced strictly from the admin category tree, plus the RHF wrapper and the helpers that rehydrate a saved value.'
+summary: 'The one Super → Category → Sub cascade picker, sourced strictly from the admin category tree, plus the RHF wrapper, the repeatable rows field for a record in several categories, and the helpers that rehydrate a saved value.'
 category: 'forms'
 zeroDeps: true
 frameworkFree: false
@@ -13,6 +13,10 @@ consumers:
 exports:
   - 'AdminCategorySelect'
   - 'RhfAdminCategory'
+  - 'RhfAdminCategoryRows'
+  - 'duplicateCategoryRows'
+  - 'isCompleteCategory'
+  - 'categoryRowsMessage'
   - 'Fieldset'
   - 'useAdminCategories'
   - 'ADMIN_CATEGORIES'
@@ -55,26 +59,78 @@ import { AdminCategorySelect, EMPTY_CATEGORY, type AdminCategoryValue } from '@d
 />
 ```
 
-Inside a react-hook-form, from
-`portals/partners-app/src/pages/list-products-page/list-products/CategoryRows.tsx`:
+Inside a react-hook-form, one category:
 
 ```tsx
-import { EMPTY_CATEGORY, Fieldset, RhfAdminCategory } from '@duncit/category';
+import { RhfAdminCategory } from '@duncit/category';
 
-const { fields, append, remove } = useFieldArray({ control, name: 'categories' });
-
-<RhfAdminCategory
-  control={control}
-  name={`categories.${index}` as Path<ProductListingValues>}
-  required
-  size="medium"
-/>
-<Button onClick={() => append({ ...EMPTY_CATEGORY })}>Add category</Button>
+<RhfAdminCategory control={control} name="category" required size="medium" />
 ```
 
 `RhfAdminCategory` stores the entire `AdminCategoryValue` object at `name` — not an id. Your Zod
-schema must model the object, and `append` must be given `{ ...EMPTY_CATEGORY }` (a spread copy,
-so field-array rows do not share one object).
+schema must model the object.
+
+### Several categories in one field — `RhfAdminCategoryRows`
+
+A venue hosts pods in several categories, a product sells in several: the field is then an ARRAY of
+`AdminCategoryValue`, primary first, and the control is a repeatable row of the same picker. Do not
+hand-roll `useFieldArray` around `RhfAdminCategory` again — two screens had, and a third and fourth
+were about to. From `portals/partners-app/src/pages/register-venue-page/sections/VenueDetailsSection.tsx`:
+
+```tsx
+import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { RhfAdminCategoryRows } from '@duncit/category';
+
+<RhfAdminCategoryRows
+  control={control}
+  name="venue_categories"                 // AdminCategoryValue[] — never empty in the form's defaults
+  testId="venue-categories"
+  direction={{ xs: 'column', md: 'row' }}
+  required
+  disabled={locked}                       // read-only rows: no add, no remove
+  max={config.category_limit}             // from the server — never a number written here
+  legend={t('partners.registerVenuePage.categoriesLegend')}
+  hint={t('partners.registerVenuePage.categoriesHint')}
+  labels={{
+    add: t('partners.registerVenuePage.categoryAdd'),
+    remove: (n) => t('partners.registerVenuePage.categoryRemove', { vars: { n } }),
+    row: (n) => t('partners.registerVenuePage.categoryRow', { vars: { n } }),
+    primary: t('partners.registerVenuePage.categoryPrimary'),
+    duplicate: t('partners.registerVenuePage.categoryDuplicate'),
+    maxReached: categoryLimitMessage(t, config.category_limit),
+  }}
+  icons={{ add: <AddIcon />, remove: <DeleteOutlineIcon /> }}
+  components={{ Button: DuncitButton, IconButton: DuncitIconButton }}
+/>
+```
+
+The package has no copy and no icon set of its own, so every word is a `labels` entry the calling
+surface translates and both icons are passed in. `primary`, `duplicate`, `row` and `maxReached` are
+optional: `list-products/CategoryRows.tsx` passes only `add` and `remove`, because a product has no
+primary category. The Zod half of the same rules uses the same pure helpers, so the schema and the
+field cannot disagree about which row is the repeat:
+
+```ts
+import { duplicateCategoryRows, isCompleteCategory } from '@duncit/category';
+
+z.array(categoryRowSchema)
+  .min(1, t('…categoryRequired'))
+  .max(categoryLimit, categoryLimitMessage(t, categoryLimit))
+  .superRefine((rows, ctx) => {
+    const duplicates = duplicateCategoryRows(rows);
+    rows.forEach((row, index) => {
+      if (!isCompleteCategory(row)) ctx.addIssue({ code: 'custom', path: [index], message: t('…categoryIncomplete') });
+      else if (duplicates.has(index)) ctx.addIssue({ code: 'custom', path: [index], message: t('…categoryDuplicate') });
+    });
+  });
+```
+
+Put a row's issue at `path: [index]` (the row, not `sub_id` inside it): the row's picker shows
+`fieldState.error.message` on its Sub level, and an issue filed one level deeper has no message there,
+so the picker falls back to the bare word "Required". A list-level issue (`min` / `max`) is announced
+under the rows in a `role="alert"`.
 
 ## Sample data
 
@@ -208,9 +264,40 @@ Takes every `AdminCategorySelect` prop except `value`, `onChange` and `errors`, 
 | --- | --- | --- | --- |
 | `control` | `Control<T>` | yes | The RHF control. |
 | `name` | `Path<T>` | yes | Field holding the **whole** `AdminCategoryValue` object. |
+| `subError` | `string` | no | Sub-level error text the form's own state does not carry (a rows field's "already added"). Wins over the field's error. |
+| `onValueChange` | `(value: AdminCategoryValue) => void` | no | Called after a pick is written to the form — for a caller that re-validates as the value changes. |
 
 It renders `fieldState.error.message` on the **sub** level only, and falls back to `EMPTY_CATEGORY`
 when the field value is nullish.
+
+### `<RhfAdminCategoryRows>` — `RhfAdminCategoryRowsProps<T>`
+
+Takes every `AdminCategorySelect` prop except `value`, `onChange`, `errors`, `labels`, `legend` and
+`hint` (so `required`, `disabled`, `size`, `direction`, `fields`, `strict` reach every row), plus:
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `control` | `Control<T>` | yes | — | The RHF control. |
+| `name` | `ArrayPath<T>` | yes | — | Field holding `AdminCategoryValue[]`, primary first. A `useFieldArray`. |
+| `labels` | `AdminCategoryRowsLabels` | yes | — | `add: string`, `remove: (position) => string` — and, optional, `row: (position) => string` (names each row's group), `primary` (marks row 1), `duplicate` (flags a repeated sub category), `maxReached` (note under a full list). `position` counts from 1. |
+| `icons` | `{ add: ReactNode; remove: ReactNode }` | yes | — | The two icons, from the surface's own set. |
+| `min` | `number` | no | `1` | A row's remove button is disabled at or below this many rows. |
+| `max` | `number` | no | no cap | The add button is disabled at this many rows. |
+| `disabled` | `boolean` | no | `false` | Read-only rows: every dropdown disabled, no add button, no remove buttons. |
+| `levelLabels` | `Partial<Record<CategoryLevel, string>>` | no | the picker's | Per-level label overrides for every row (the picker's own `labels`). |
+| `legend` / `hint` | `string` | no | `undefined` | A legend wraps the rows in a `<Fieldset>`. |
+| `components` | `{ Button?: typeof Button; IconButton?: typeof IconButton }` | no | MUI's | The surface's own buttons — `DuncitButton` / `DuncitIconButton`. |
+| `testId` | `string` | no | `'category-rows'` | Prefix of every test id below. |
+| `onRowChange` | `(index: number, value: AdminCategoryValue) => void` | no | `undefined` | Called after a row's pick is written to the form — e.g. `trigger(name)` once the list has failed validation. |
+
+Test ids, with the default prefix: `category-rows` (the rows' container), `category-rows-row-N` (row
+`N`, from 0), `category-rows-primary` (the primary mark), `category-rows-remove-N`,
+`category-rows-add`, `category-rows-error` (the list-level error) and `category-rows-max` (the limit
+note).
+
+What it does not do: it never seeds a row. An empty field renders no rows, so give the form's
+defaults one `{ ...EMPTY_CATEGORY }` (a spread copy — rows must not share an object). Removing a row
+moves focus to the add button, because the button that had focus is gone.
 
 ### `<Fieldset>`
 
@@ -232,6 +319,9 @@ when the field value is nullish.
 | `categoryOptions` | `(categories, superId) => Option[]` | CATEGORY docs under a super (all when `superId` is `''`). |
 | `subOptions` | `(categories, categoryId, superId) => Option[]` | SUB docs, with the skip-the-middle fallback. |
 | `EMPTY_CATEGORY` | `AdminCategoryValue` | The all-empty value. Spread it. |
+| `isCompleteCategory` | `(row?) => boolean` | Super, Category and Sub all chosen — the only row a server accepts. |
+| `duplicateCategoryRows` | `(rows) => Set<number>` | Indexes of the rows whose `sub_id` an EARLIER row already has. The first to name a sub category keeps it; a row with no sub yet is never a duplicate. |
+| `categoryRowsMessage` | `(error: unknown) => string` | The list-level message of an RHF error for the whole array (`root.message`, else `message`); `''` for per-row errors. |
 
 ### Value types
 
@@ -296,8 +386,8 @@ still keys off `super_id`, so `super` must be in the list or the rest stay locke
 ## `Fieldset` lives here, and is shared with `@duncit/location`
 
 `Fieldset` is a semantic `<fieldset>` with a legend and a hint. It is exported from this package
-but is generic chrome used by both the category and location pickers, and directly by
-`CategoryRows`. Pass `legend` to `AdminCategorySelect` and it wraps itself; import `Fieldset`
+but is generic chrome used by both the category and location pickers, and by
+`RhfAdminCategoryRows` when it is given a `legend`. Pass `legend` to `AdminCategorySelect` and it wraps itself; import `Fieldset`
 directly when you need to group the picker with other fields.
 
 Write the `hint` to say **why** the category matters ("venues auto-match to this club by

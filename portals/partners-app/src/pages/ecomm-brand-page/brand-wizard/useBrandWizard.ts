@@ -29,6 +29,12 @@ export function useBrandWizard(brand: EcommBrand | null, accountEmail: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandId]);
 
+  // The account arrives after the form is built: a new brand's contact email still starts as the account's address.
+  const { getValues, setValue } = form;
+  useEffect(() => {
+    if (!brandId && accountEmail && !getValues('contact_email')) setValue('contact_email', accountEmail);
+  }, [brandId, accountEmail, getValues, setValue]);
+
   const values = watch();
   const facts = toFacts(values, {
     shipping_mode: brand?.shipping_mode,

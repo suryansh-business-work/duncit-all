@@ -35,6 +35,11 @@ export default function OrdersPage() {
     { extraVariables: { brand_id: brandId || null } },
     [brandId],
   );
+  // The table reads fetchRows through a ref and only reloads on a query change, so a new brand needs an explicit reload.
+  const pickBrand = (id: string) => {
+    setBrandId(id);
+    refetchRef.current?.();
+  };
   const columns = useMemo(() => buildOrderColumns(t), [t]);
 
   const openOrder = useCallback((row: OrderRow) => navigate(`/ecomm-brand/orders/${row.id}`), [navigate]);
@@ -57,7 +62,7 @@ export default function OrdersPage() {
             refetchRef={refetchRef}
             toolbarActions={
               <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-                <BrandPicker brands={brands} value={brandId} onChange={setBrandId} allowAll />
+                <BrandPicker brands={brands} value={brandId} onChange={pickBrand} allowAll />
                 {brand && (
                   <BrandDeleteButton
                     key={brand.id}

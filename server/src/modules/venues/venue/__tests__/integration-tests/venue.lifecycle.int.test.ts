@@ -125,6 +125,29 @@ describe('approve', () => {
     expect(String(messages[0].user._id)).toBe(String(owner._id));
   });
 
+  it('names every sub category of a venue in several, primary first, in the welcome message', async () => {
+    const owner = await makeOwner();
+    const v = await VenueModel.create({
+      owner_user_id: owner._id,
+      status: 'SUBMITTED',
+      venue_name: 'Rooftop Hall',
+      owner_name: 'Olu',
+      venue_categories: [
+        { sub_category_name: 'Box Cricket' },
+        { category_name: 'Wellness' },
+        { sub_category_name: 'Yoga' },
+      ],
+    });
+
+    await venueService.approve(String(v._id));
+
+    const [messages] = notifyMany.mock.calls[0];
+    expect(messages[1]).toMatchObject({
+      event: 'VENUE_NEW_REQUESTED',
+      params: ['Olu', 'Rooftop Hall', 'Box Cricket, Yoga'],
+    });
+  });
+
   it('re-approving keeps notes and tags it was not given, and sends no second welcome', async () => {
     const owner = await makeOwner();
     const v = await VenueModel.create({

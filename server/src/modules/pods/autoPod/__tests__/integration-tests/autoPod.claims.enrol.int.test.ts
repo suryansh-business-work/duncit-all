@@ -195,11 +195,42 @@ describe('venueAcceptAutoPod', () => {
     expect(book).not.toHaveBeenCalled();
   });
 
+  it('accepts on the strength of the venue’s SECOND category', async () => {
+    const offerSub = oid();
+    const s = await setup({
+      offer: { sub_category_id: offerSub },
+      venue: {
+        venue_category: { sub_category_id: oid() },
+        venue_categories: [{ sub_category_id: oid() }, { sub_category_id: offerSub }],
+      },
+    });
+    await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot));
+    const doc: any = await loadRaw(s.offer);
+    expect(String(doc.venue_claim.venue_id)).toBe(String(s.venueId));
+    expect(book).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses a venue whose list does not carry the category, whatever its stale legacy triple says', async () => {
+    const offerSub = oid();
+    const s = await setup({
+      offer: { sub_category_id: offerSub },
+      venue: {
+        venue_category: { sub_category_id: offerSub },
+        venue_categories: [{ sub_category_id: oid() }, { sub_category_id: oid() }],
+      },
+    });
+    await expect(
+      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot))
+    ).rejects.toEqual(fails('BAD_USER_INPUT', "This Auto Pod's category does not match that venue"));
+    expect(book).not.toHaveBeenCalled();
+  });
+
   it('refuses a venue that is not approved, in another category, cityless or in another city', async () => {
     const cases: [Parameters<typeof setup>[0], string, string][] = [
       [{ venue: { status: 'SUBMITTED' } }, 'FORBIDDEN', 'Only an approved, active venue can accept an Auto Pod'],
       [{ venue: { is_active: false } }, 'FORBIDDEN', 'Only an approved, active venue can accept an Auto Pod'],
       [{ venue: { venue_category: { sub_category_id: oid() } } }, 'BAD_USER_INPUT', "This Auto Pod's category does not match that venue"],
+      [{ venue: { venue_category: {}, venue_categories: [] } }, 'BAD_USER_INPUT', "This Auto Pod's category does not match that venue"],
       [{ venue: { location_id: null } }, 'BAD_USER_INPUT', 'Set a location on this venue before accepting an Auto Pod'],
       [{ offer: { location: pinnedTo(oid(), 'HOST') } }, 'BAD_USER_INPUT', MISMATCH('the venue')],
     ];

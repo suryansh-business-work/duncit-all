@@ -40,6 +40,7 @@ interface VenuePubLike {
   lng: number | null;
   capacity: number;
   venue_category: Record<string, string | null>;
+  venue_categories: Record<string, string | null>[];
   cover_image_url: string;
   gallery: string[];
 }
@@ -57,6 +58,8 @@ const toApiVenue = (v: VenuePubLike) => ({
   lng: v.lng,
   capacity: v.capacity,
   venue_category: v.venue_category,
+  // Additive: every category, primary first. `venue_category` stays its first entry.
+  venue_categories: v.venue_categories,
   images: [v.cover_image_url, ...(v.gallery ?? [])].filter(Boolean),
 });
 

@@ -138,6 +138,70 @@ describe('buildTableFilter — allowlist + coercion drops', () => {
   });
 });
 
+describe('a field that lives at several db paths', () => {
+  // A list and the legacy single it replaced: the filter must find either.
+  const multi: TableEntityConfig = {
+    ...config,
+    filterFields: {
+      ...config.filterFields,
+      tag: { type: 'string', paths: ['tags.name', 'tag.name'] },
+      owner: { type: 'string', paths: ['owners.id', 'owner.id'], path: 'ignored' },
+    },
+  };
+
+  it('matches when ANY path satisfies a positive op, kept under $and', () => {
+    expect(buildTableFilter({ filters: [f('tag', 'eq', { value: 'red' })] }, multi)).toEqual({
+      $and: [{ $or: [{ 'tags.name': 'red' }, { 'tag.name': 'red' }] }],
+    });
+    const contains = buildTableFilter({ filters: [f('tag', 'contains', { value: 're' })] }, multi);
+    const [{ $or: branches }] = contains.$and as Array<{ $or: Array<Record<string, RegExp>> }>;
+    expect(branches.map((branch) => Object.keys(branch)[0])).toEqual(['tags.name', 'tag.name']);
+    expect(branches[0]['tags.name'].test('RED')).toBe(true);
+  });
+
+  it('needs EVERY path to differ for ne', () => {
+    expect(buildTableFilter({ filters: [f('tag', 'ne', { value: 'red' })] }, multi)).toEqual({
+      $and: [{ $and: [{ 'tags.name': { $ne: 'red' } }, { 'tag.name': { $ne: 'red' } }] }],
+    });
+  });
+
+  it('ANDs several multi-path filters with single-path ones and the search', () => {
+    const out = buildTableFilter(
+      {
+        search: 'x',
+        filters: [
+          f('tag', 'in', { values: ['red', 'blue'] }),
+          f('owner', 'eq', { value: 'u1' }),
+          f('status', 'eq', { value: 'NEW' }),
+        ],
+      },
+      multi
+    );
+    expect(out.status).toBe('NEW');
+    expect(out.$and).toEqual([
+      { $or: [{ 'tags.name': { $in: ['red', 'blue'] } }, { 'tag.name': { $in: ['red', 'blue'] } }] },
+      { $or: [{ 'owners.id': 'u1' }, { 'owner.id': 'u1' }] },
+    ]);
+    expect(out.$or).toHaveLength(2); // the search, untouched by the path fan-out
+  });
+
+  it('still drops an invalid filter instead of emitting an empty $and', () => {
+    expect(buildTableFilter({ filters: [f('tag', 'contains')] }, multi)).toEqual({});
+  });
+
+  it('applies the same any / every rule to rows held in memory', () => {
+    const rows = [
+      { id: 'list', 'tags.name': 'red', 'tag.name': 'blue', created_at: new Date('2026-01-01') },
+      { id: 'legacy', 'tag.name': 'red', created_at: new Date('2026-01-02') },
+      { id: 'neither', 'tags.name': 'green', 'tag.name': 'green', created_at: new Date('2026-01-03') },
+    ];
+    const run = (filters: TableFilterInput[]) =>
+      applyTableQueryInMemory(rows, { filters }, multi).rows.map((r) => r.id).sort();
+    expect(run([f('tag', 'eq', { value: 'red' })])).toEqual(['legacy', 'list']);
+    expect(run([f('tag', 'ne', { value: 'red' })])).toEqual(['neither']);
+  });
+});
+
 describe('runTableQuery', () => {
   const captured: { filter?: Record<string, unknown>; sort?: Record<string, number>; skip?: number; limit?: number } = {};
   const fakeModel = {

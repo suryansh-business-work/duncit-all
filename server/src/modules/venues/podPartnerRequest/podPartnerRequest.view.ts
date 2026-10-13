@@ -3,6 +3,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { destinationFor } from '@modules/crm/marketing/waCampaign.recipients';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { venueCategoriesOf } from '@modules/venues/venue/venue.categories';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import type { IPodPartnerRequest } from './podPartnerRequest.model';
 
@@ -33,7 +34,10 @@ export interface HostSummary {
 export interface VenueSummary {
   id: string;
   venue_name: string;
+  /** The primary category's label. */
   category: string;
+  /** Every category's label, primary first. */
+  categories: string[];
   venue_type: string;
   capacity: number;
   locality: string;
@@ -42,7 +46,7 @@ export interface VenueSummary {
 }
 
 const HOST_USER_FIELDS = 'profile.first_name profile.last_name profile.profile_photo';
-const VENUE_FIELDS = 'venue_name venue_category venue_type capacity locality city cover_image_url';
+const VENUE_FIELDS = 'venue_name venue_category venue_categories venue_type capacity locality city cover_image_url';
 
 export async function loadHostSummaries(userIds: Types.ObjectId[]): Promise<Map<string, HostSummary>> {
   const [users, hosts] = await Promise.all([
@@ -67,19 +71,21 @@ export async function loadHostSummaries(userIds: Types.ObjectId[]): Promise<Map<
 export async function loadVenueSummaries(venueIds: Types.ObjectId[]): Promise<Map<string, VenueSummary>> {
   const venues = await VenueModel.find({ _id: { $in: venueIds } }).select(VENUE_FIELDS).lean();
   return new Map(
-    venues.map((v) => [
-      String(v._id),
-      {
+    venues.map((v) => {
+      const categories = [...new Set(venueCategoriesOf(v).map(categoryLabel).filter(Boolean))];
+      const summary: VenueSummary = {
         id: String(v._id),
         venue_name: v.venue_name ?? '',
-        category: categoryLabel(v.venue_category),
+        category: categories[0] ?? '',
+        categories,
         venue_type: v.venue_type ?? '',
         capacity: v.capacity ?? 0,
         locality: v.locality ?? '',
         city: v.city ?? '',
         cover_image_url: v.cover_image_url ?? '',
-      },
-    ])
+      };
+      return [summary.id, summary];
+    })
   );
 }
 

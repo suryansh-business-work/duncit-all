@@ -220,6 +220,7 @@ describe('nearbyVenues', () => {
         id: pinned,
         venue_name: 'Pinned Hall',
         category: 'Games · Chess',
+        categories: ['Games · Chess'],
         venue_type: 'Cafe',
         capacity: 40,
         locality: 'Near',
@@ -228,7 +229,7 @@ describe('nearbyVenues', () => {
         distance_km: 2.2,
         open_request_status: null,
       },
-      expect.objectContaining({ id: byArea, venue_name: 'Area Hall', category: '', capacity: 0, distance_km: 4.4 }),
+      expect.objectContaining({ id: byArea, venue_name: 'Area Hall', category: '', categories: [], capacity: 0, distance_km: 4.4 }),
     ]);
     expect((await search({ radius_km: 10 })).map((v) => v?.venue_name)).toEqual(['Pinned Hall', 'Area Hall', 'Far Hall']);
   });
@@ -248,6 +249,56 @@ describe('nearbyVenues', () => {
     const found = await search({ category_ids: [String(catB)] });
     expect(found).toHaveLength(1);
     expect(found[0]).toMatchObject({ id: games, open_request_status: 'SLOT_REQUESTED' });
+  });
+});
+
+describe('nearbyVenues — a venue in several categories', () => {
+  let hostId: string;
+  beforeEach(async () => {
+    hostId = await seedUser('Host');
+    await UserRoleModel.create({ user_id: hostId, role: 'HOST' });
+  });
+
+  it('is found by its SECOND category and lists every category it has, primary first', async () => {
+    const owner = await seedUser('Owner');
+    const both = await seedVenue(owner, {
+      lat: 19.01,
+      lng: 72.8,
+      venue_categories: [
+        { category_id: catA, category_name: 'Games', sub_category_name: 'Chess' },
+        { sub_category_id: catB, category_name: 'Sports', sub_category_name: 'Padel' },
+      ],
+    });
+
+    const found = await podPartnerSearch.nearbyVenues(hostId, { location_id: cityId, category_ids: [String(catB)] });
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({
+      id: both,
+      category: 'Games · Chess',
+      categories: ['Games · Chess', 'Sports · Padel'],
+    });
+    await expect(
+      podPartnerSearch.nearbyVenues(hostId, { location_id: cityId, category_ids: [String(catC)] })
+    ).resolves.toEqual([]);
+  });
+
+  it('still finds a venue stored before the list existed, by its one legacy category', async () => {
+    const owner = await seedUser('Owner');
+    const legacyId = new Types.ObjectId();
+    await VenueModel.collection.insertOne({
+      _id: legacyId,
+      owner_user_id: new Types.ObjectId(owner),
+      status: 'APPROVED',
+      is_active: true,
+      venue_name: 'Old Hall',
+      lat: 19.01,
+      lng: 72.8,
+      venue_category: { sub_category_id: catB, category_name: 'Sports', sub_category_name: 'Padel' },
+    });
+
+    const found = await podPartnerSearch.nearbyVenues(hostId, { location_id: cityId, category_ids: [String(catB)] });
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({ id: String(legacyId), category: 'Sports · Padel', categories: ['Sports · Padel'] });
   });
 });
 

@@ -38,7 +38,10 @@ export const podPartnerRequestTypeDefs = gql`
   type PartnerVenueSummary {
     id: ID!
     venue_name: String!
+    "The primary category's label."
     category: String!
+    "Every category the venue belongs to, primary first."
+    categories: [String!]!
     venue_type: String!
     capacity: Int!
     locality: String!
@@ -93,7 +96,10 @@ export const podPartnerRequestTypeDefs = gql`
   type NearbyVenue {
     id: ID!
     venue_name: String!
+    "The primary category's label."
     category: String!
+    "Every category the venue belongs to, primary first."
+    categories: [String!]!
     venue_type: String!
     capacity: Int!
     locality: String!

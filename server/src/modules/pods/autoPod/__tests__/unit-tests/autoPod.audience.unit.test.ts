@@ -55,7 +55,7 @@ beforeEach(() => {
 });
 
 describe('audienceVenues', () => {
-  it('matches approved, active venues that host the sub-category', async () => {
+  it('matches approved, active venues with the sub-category among theirs — the list, or the legacy single', async () => {
     venues.find.mockReturnValue(
       chain([{ _id: 'v1', venue_name: 'Play Arena', city: 'Bengaluru', locality: 'HSR', owner_user_id: OWNER }])
     );
@@ -63,7 +63,10 @@ describe('audienceVenues', () => {
     expect(venues.find).toHaveBeenCalledWith({
       status: 'APPROVED',
       is_active: true,
-      'venue_category.sub_category_id': SUB,
+      $or: [
+        { venue_categories: { $elemMatch: { sub_category_id: SUB } } },
+        { 'venue_category.sub_category_id': SUB },
+      ],
     });
     expect(rows).toEqual([
       { id: 'v1', venue_name: 'Play Arena', city: 'Bengaluru', locality: 'HSR', owner_user_id: OWNER },

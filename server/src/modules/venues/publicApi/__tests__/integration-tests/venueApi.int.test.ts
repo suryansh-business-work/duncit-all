@@ -111,6 +111,50 @@ describe('public venue API router', () => {
     await request(app).get(`/api/v1/venues/${deactivatedId}`).set('x-api-key', key).expect(404);
   });
 
+  it('keeps venue_category exactly as it was and adds venue_categories beside it', async () => {
+    const superId = new Types.ObjectId();
+    const row = (sub: Types.ObjectId, name: string) => ({
+      super_category_id: superId,
+      category_id: null,
+      sub_category_id: sub,
+      super_category_name: 'Sports',
+      category_name: '',
+      sub_category_name: name,
+    });
+    const padel = new Types.ObjectId();
+    const squash = new Types.ObjectId();
+    const multiId = await seedVenue({ venue_name: 'Two Courts', venue_categories: [row(padel, 'Padel'), row(squash, 'Squash')] });
+    const plainId = await seedVenue({ venue_name: 'No Category' });
+    const key = await seedKey();
+    const pub = (sub: Types.ObjectId, name: string) => ({
+      super_category_id: String(superId),
+      category_id: null,
+      sub_category_id: String(sub),
+      super_category_name: 'Sports',
+      category_name: '',
+      sub_category_name: name,
+    });
+
+    const multi = await request(app).get(`/api/v1/venues/${multiId}`).set('x-api-key', key).expect(200);
+    expect(multi.body.venue.venue_category).toEqual(pub(padel, 'Padel'));
+    expect(multi.body.venue.venue_categories).toEqual([pub(padel, 'Padel'), pub(squash, 'Squash')]);
+
+    const plain = await request(app).get(`/api/v1/venues/${plainId}`).set('x-api-key', key).expect(200);
+    expect(plain.body.venue.venue_category).toEqual({
+      super_category_id: null,
+      category_id: null,
+      sub_category_id: null,
+      super_category_name: '',
+      category_name: '',
+      sub_category_name: '',
+    });
+    expect(plain.body.venue.venue_categories).toEqual([]);
+
+    const list = await request(app).get('/api/v1/venues').set('x-api-key', key).expect(200);
+    const listed = list.body.venues.find((venue: { id: string }) => venue.id === multiId);
+    expect(listed.venue_categories).toHaveLength(2);
+  });
+
   it('gets one venue by id and 404s on drafts and unknown ids', async () => {
     const approvedId = await seedVenue();
     const draftId = await seedVenue({ status: 'DRAFT' });

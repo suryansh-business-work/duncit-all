@@ -22,6 +22,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService, ensureOwnedVenue } from '@modules/venues/venueSlot/venueSlot.service';
+import { venueHostsSubCategory } from '@modules/venues/venue/venue.categories';
 import {
   assertActiveHost,
   podService,
@@ -126,9 +127,9 @@ export async function venueAcceptAutoPod(
   if (venue.status !== 'APPROVED' || venue.is_active === false) {
     autoPodFail('FORBIDDEN', 'Only an approved, active venue can accept an Auto Pod');
   }
-  // A venue declares the sub-category it hosts, and only a venue in the
-  // offer's category is ever shown it — the same rule the queue applies.
-  if (String(venue.venue_category?.sub_category_id ?? '') !== String(doc.sub_category_id)) {
+  // A venue declares the sub-categories it hosts, and only a venue with the
+  // offer's category among them is ever shown it — the same rule the queue applies.
+  if (!venueHostsSubCategory(venue, doc.sub_category_id)) {
     autoPodFail('BAD_USER_INPUT', "This Auto Pod's category does not match that venue");
   }
   // The venue's own city is what it brings — never a city picked on a screen.

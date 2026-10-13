@@ -37,8 +37,9 @@ import { breakdownService, venueSlotProjections } from '@modules/finance/finance
 import { ensureOwnedVenue, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { AutoPodModel } from '../../autoPod.model';
+import { AutoPodModel, type IAutoPodLocation } from '../../autoPod.model';
 import { autoPodService, autoPodToPub } from '../../autoPod.service';
+import { audienceVenues } from '../../autoPod.audience';
 import {
   clubClaim,
   HOUR_MS,
@@ -373,9 +374,28 @@ describe('who the caller is, per role', () => {
     const venues = await autoPodService.ownerVenues(String(owner));
     expect(venues).toHaveLength(1);
     expect(String(venues[0].id)).toBe(String(good));
-    expect(String(venues[0].subCategoryId)).toBe(String(sub));
+    // `good` was stored before the list existed: its one legacy category is its list.
+    expect(venues[0].subCategoryIds.map(String)).toEqual([String(sub)]);
     expect(String(venues[0].locationId)).toBe(String(city));
     await expect(autoPodService.ownerVenues('nope')).resolves.toEqual([]);
+  });
+
+  it('ownerVenues: every sub-category of a venue in several, primary first and each once', async () => {
+    const owner = oid();
+    const primary = oid();
+    const second = oid();
+    await seedVenue({
+      owner_user_id: owner,
+      sub_category_id: primary,
+      venue_categories: [{ sub_category_id: primary }, { sub_category_id: second }, { sub_category_id: primary }],
+    });
+    await seedVenue({ owner_user_id: owner });
+
+    const venues = await autoPodService.ownerVenues(String(owner));
+    expect(venues.map((venue) => venue.subCategoryIds.map(String))).toEqual(
+      expect.arrayContaining([[String(primary), String(second)], []])
+    );
+    expect(venues).toHaveLength(2);
   });
 
   it('hostSubCategoryIds: each approved sub-category once', async () => {
@@ -410,10 +430,61 @@ describe('who the caller is, per role', () => {
 
   it('the open filters are null when nothing could match', () => {
     const cutoff = new Date();
-    expect(autoPodService.venueOpenFilter([{ id: oid(), subCategoryId: null, locationId: null }], cutoff)).toBeNull();
+    expect(autoPodService.venueOpenFilter([{ id: oid(), subCategoryIds: [], locationId: null }], cutoff)).toBeNull();
     expect(autoPodService.hostOpenFilter([])).toBeNull();
     expect(autoPodService.hostOpenFilter([oid()], { sub_category_id: String(oid()) })).toBeNull();
     expect(autoPodService.clubOpenFilter([{ id: oid(), categoryId: null, locationId: null }])).toBeNull();
+  });
+});
+
+describe('a venue in several categories', () => {
+  it('is offered — and counted, and may read — an Auto Pod in its SECOND category, in its own city only', async () => {
+    const owner = oid();
+    const primary = oid();
+    const second = oid();
+    const city = oid();
+    const venueId = await seedVenue({
+      owner_user_id: owner,
+      sub_category_id: primary,
+      location_id: city,
+      venue_categories: [{ sub_category_id: primary }, { sub_category_id: second }],
+    });
+
+    const inPrimary = await insertAutoPod({ sub_category_id: primary });
+    const inSecond = await insertAutoPod({ sub_category_id: second });
+    const secondHere = await insertAutoPod({ sub_category_id: second, location: pinnedTo(city, 'HOST') });
+    const secondElsewhere = await insertAutoPod({ sub_category_id: second, location: pinnedTo(oid(), 'HOST') });
+    const unrelated = await insertAutoPod();
+
+    const rows: any[] = await autoPodService.listForVenue(String(owner), { venue_id: String(venueId) });
+    expect(ids(rows)).toEqual(asIds(inPrimary, inSecond, secondHere));
+    await expect(autoPodService.actionCounts(String(owner))).resolves.toMatchObject({ venue: 3 });
+    await expect(autoPodService.canRead(String(owner), String(inSecond))).resolves.toBe(true);
+    await expect(autoPodService.canRead(String(owner), String(secondElsewhere))).resolves.toBe(false);
+    await expect(autoPodService.canRead(String(owner), String(unrelated))).resolves.toBe(false);
+  });
+
+  it('is in the audience of each of its sub-categories; a venue not yet migrated stays in its one', async () => {
+    const primary = oid();
+    const second = oid();
+    const city = oid();
+    const multi = await seedVenue({
+      owner_user_id: oid(),
+      sub_category_id: primary,
+      location_id: city,
+      venue_categories: [{ sub_category_id: primary }, { sub_category_id: second }],
+    });
+    // No `venue_categories` at all: the document shape from before the list.
+    const legacy = await seedVenue({ owner_user_id: oid(), sub_category_id: second });
+    await seedVenue({ owner_user_id: oid(), sub_category_id: oid() });
+    await seedVenue({ owner_user_id: oid(), sub_category_id: second, status: 'SUBMITTED' });
+
+    const inSecond = await audienceVenues(second, null);
+    expect(inSecond.map((venue) => venue.id).sort()).toEqual(asIds(multi, legacy));
+    expect((await audienceVenues(primary, null)).map((venue) => venue.id)).toEqual([String(multi)]);
+    // Once the offer is pinned, only the venue in that city is told.
+    const pinned = await audienceVenues(second, { location_id: city } as IAutoPodLocation);
+    expect(pinned.map((venue) => venue.id)).toEqual([String(multi)]);
   });
 });
 

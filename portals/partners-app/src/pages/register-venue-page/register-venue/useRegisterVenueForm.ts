@@ -62,6 +62,9 @@ interface Options {
   locations: any[];
   account: { name: string; email: string };
   mode: RegisterVenueMode;
+  /** The ONE section a single-section page (Food Menu) shows; absent on the
+   * venue form, where the section follows `?selectedtab=`. */
+  pinnedSection?: VenueSectionKey;
   /** From the registration config — the document each tax-id switch requires. */
   taxDocTypes?: TaxDocTypes;
   /** From the registration config — the caps on the food menu and its ordering. */
@@ -76,6 +79,7 @@ export function useRegisterVenueForm({
   locations,
   account,
   mode,
+  pinnedSection,
   taxDocTypes,
   foodLimits = NO_FOOD_LIMITS,
   categoryLimit = NO_CATEGORY_LIMIT,
@@ -104,7 +108,8 @@ export function useRegisterVenueForm({
     items: sectionsForMode(mode).map((section) => ({ value: section.key, label: section.label })),
     fallback: 'details',
   });
-  const active = sectionTabs.value;
+  // A pinned form shows its one section whatever the URL says.
+  const active = pinnedSection ?? sectionTabs.value;
   const setActive = sectionTabs.onChange;
   const [venueId, setVenueId] = useState<string | null>(venue?.id ?? null);
   const [error, setError] = useState<string | null>(null);

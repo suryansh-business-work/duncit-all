@@ -7,8 +7,18 @@ import { scriptedLink } from '../__tests__/groupC-link';
 import { getToken, setToken } from '../lib/session';
 import type { DuncitUser } from '@duncit/user-context';
 
+interface NavStub {
+  to?: string;
+  label: string;
+  children?: NavStub[];
+}
+
+/** Every route in the menu, groups opened — the Venue Studio nests its options. */
+const navRoutes = (items: readonly NavStub[]): string[] =>
+  items.flatMap((item) => [...(item.to ? [item.to] : []), ...navRoutes(item.children ?? [])]);
+
 interface ShellStubProps {
-  nav: { to: string; label: string }[];
+  nav: NavStub[];
   sidebarHeader: ReactNode;
   user?: DuncitUser;
   loading: boolean;
@@ -24,8 +34,8 @@ function ShellStub({ nav, sidebarHeader, user, loading, profileTo, onLogout, chi
       <p data-testid="shell-user">{user?.full_name ?? 'nobody'}</p>
       <div data-testid="sidebar-header">{sidebarHeader}</div>
       <ul>
-        {nav.map((item) => (
-          <li key={item.to}>{item.to}</li>
+        {navRoutes(nav).map((to) => (
+          <li key={to}>{to}</li>
         ))}
       </ul>
       <button type="button" onClick={onLogout}>
@@ -73,6 +83,9 @@ describe('AppShell', () => {
     expect(await screen.findByTestId('studio-switcher')).toBeTruthy();
     const menu = screen.getAllByRole('listitem').map((item) => item.textContent);
     expect(menu).toContain('/venues/options');
+    // The Venue Studio lists its options and its food desk in the sidebar.
+    expect(menu).toContain('/venues/dashboard');
+    expect(menu).toContain('/venues/food-menu');
     expect(menu).not.toContain('/host/options');
   });
 

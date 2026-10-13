@@ -1,7 +1,4 @@
 import { Alert, Box, Card, CardContent, Stack } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
-import SaveIcon from '@mui/icons-material/Save';
-import { DuncitButton } from '@duncit/buttons';
 import SectionRail from '../sections/SectionRail';
 import VenueDetailsSection from '../sections/VenueDetailsSection';
 import VenueTypeCapacitySection from '../sections/VenueTypeCapacitySection';
@@ -13,7 +10,15 @@ import PayoutMethodSection from '../sections/PayoutMethodSection';
 import LeavesSection from '../sections/LeavesSection';
 import ReviewSection from '../sections/ReviewSection';
 import { APPROVED_EDIT_SECTIONS, useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
-import { categoryLimitOf, foodLimitsOf, taxDocTypesOf, type RegisterVenueMode, type VenueRegistrationConfig } from './register-venue.types';
+import SaveBar from './register-venue.save-bar';
+import {
+  categoryLimitOf,
+  foodLimitsOf,
+  taxDocTypesOf,
+  type RegisterVenueMode,
+  type VenueRegistrationConfig,
+  type VenueSectionKey,
+} from './register-venue.types';
 import { fireAndForget, logs } from '@duncit/logs';
 
 interface Props {
@@ -22,6 +27,9 @@ interface Props {
   account: { name: string; email: string };
   config: VenueRegistrationConfig;
   mode: RegisterVenueMode;
+  /** Shows this ONE section and no section rail — the Food Menu page edits an
+   * approved venue's menu through the same form, schema and save. */
+  pinnedSection?: VenueSectionKey;
   onPersisted: () => Promise<unknown>;
   onSubmitted: (venueId: string) => void;
 }
@@ -32,6 +40,7 @@ export default function RegisterVenueForm({
   account,
   config,
   mode,
+  pinnedSection,
   onPersisted,
   onSubmitted,
 }: Readonly<Props>) {
@@ -41,6 +50,7 @@ export default function RegisterVenueForm({
       locations,
       account,
       mode,
+      pinnedSection,
       taxDocTypes: taxDocTypesOf(config),
       foodLimits: foodLimitsOf(config),
       categoryLimit: categoryLimitOf(config),
@@ -54,7 +64,7 @@ export default function RegisterVenueForm({
 
   return (
     <Box sx={{ display: { md: 'flex' }, alignItems: 'flex-start', gap: 3 }}>
-      <SectionRail active={active} sectionState={sectionState} onSelect={setActive} mode={mode} />
+      {!pinnedSection && <SectionRail active={active} sectionState={sectionState} onSelect={setActive} mode={mode} />}
       <Card variant="outlined" sx={{ borderRadius: 2, flex: 1, minWidth: 0 }}>
         <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           <fieldset
@@ -142,57 +152,5 @@ export default function RegisterVenueForm({
         </CardContent>
       </Card>
     </Box>
-  );
-}
-
-interface SaveBarProps {
-  mode: RegisterVenueMode;
-  active: EditableSectionKey | 'review';
-  busy: boolean;
-  onSave: () => void;
-  onSaveApproved: () => void;
-  onSubmit: () => void;
-}
-
-function SaveBar({ mode, active, busy, onSave, onSaveApproved, onSubmit }: Readonly<SaveBarProps>) {
-  if (mode === 'edit-approved') {
-    return (
-      <DuncitButton
-        variant="contained"
-        size="large"
-        startIcon={<SaveIcon />}
-        disabled={busy}
-        onClick={onSaveApproved}
-        sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
-      >
-        Save changes
-      </DuncitButton>
-    );
-  }
-  if (active === 'review') {
-    return (
-      <DuncitButton
-        variant="contained"
-        size="large"
-        endIcon={<SendIcon />}
-        disabled={busy}
-        onClick={onSubmit}
-        sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
-      >
-        Submit for review
-      </DuncitButton>
-    );
-  }
-  return (
-    <DuncitButton
-      variant="contained"
-      size="large"
-      startIcon={<SaveIcon />}
-      disabled={busy}
-      onClick={onSave}
-      sx={{ flex: 1, borderRadius: 1, fontWeight: 800 }}
-    >
-      Save & continue
-    </DuncitButton>
   );
 }

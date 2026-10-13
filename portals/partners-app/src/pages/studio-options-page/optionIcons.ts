@@ -16,6 +16,7 @@ import LocalMallOutlined from '@mui/icons-material/LocalMallOutlined';
 import PaymentsOutlined from '@mui/icons-material/PaymentsOutlined';
 import ReceiptLongOutlined from '@mui/icons-material/ReceiptLongOutlined';
 import PublicOutlined from '@mui/icons-material/PublicOutlined';
+import RestaurantMenuOutlined from '@mui/icons-material/RestaurantMenuOutlined';
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
 import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
 import SwapHorizOutlined from '@mui/icons-material/SwapHorizOutlined';
@@ -47,6 +48,7 @@ export const STUDIO_OPTION_ICONS: Readonly<Record<StudioOptionIcon, SvgIconCompo
   integrations: HubOutlined,
   returns: AssignmentReturnOutlined,
   orders: ReceiptLongOutlined,
+  menu: RestaurantMenuOutlined,
   warehouses: WarehouseOutlined,
   refunds: CurrencyExchangeOutlined,
 };

@@ -76,7 +76,7 @@ export default function CalendarView({ onAdd, onOpen }: Readonly<Props>) {
       ) : (
         <Box role="table" aria-label={title} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
           <Box role="row" sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', bgcolor: 'action.hover' }}>
-            {weekdayNames(weeks[0] ?? []).map((name) => (
+            {weekdayNames(weeks.slice(0, 1).flat()).map((name) => (
               <Typography key={name} component="div" role="columnheader" variant="caption" sx={{ p: 0.75, fontWeight: 600, textAlign: 'center' }}>
                 {name}
               </Typography>

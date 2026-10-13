@@ -13,7 +13,10 @@ interface Props {
 /** The month on a phone: seven columns do not fit, so it reads as a list of the days that have posts. */
 export default function CalendarAgenda({ days, byDay, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
-  const busy = days.filter((day) => (byDay.get(day) ?? []).length > 0);
+  const busy = days.flatMap((day) => {
+    const items = byDay.get(day) ?? [];
+    return items.length > 0 ? [{ day, items }] : [];
+  });
   if (busy.length === 0) {
     return (
       <Alert severity="info" variant="outlined">
@@ -23,12 +26,12 @@ export default function CalendarAgenda({ days, byDay, onOpen }: Readonly<Props>)
   }
   return (
     <Stack spacing={2} data-testid="social-calendar-agenda">
-      {busy.map((day) => (
+      {busy.map(({ day, items }) => (
         <Stack key={day} spacing={0.75}>
           <Typography variant="subtitle2" component="h3">
             {dayTitle(day)}
           </Typography>
-          {(byDay.get(day) ?? []).map((item) => (
+          {items.map((item) => (
             <CalendarItemButton key={`${item.kind}-${item.id}`} item={item} onOpen={onOpen} />
           ))}
         </Stack>

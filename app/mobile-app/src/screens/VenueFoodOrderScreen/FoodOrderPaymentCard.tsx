@@ -22,7 +22,8 @@ function useCancelledBody(order: VenueFoodOrder): string | undefined {
   if (order.cancel_reason) {
     lines.push(t('mweb.venueFood.order.cancelReason', { vars: { reason: order.cancel_reason } }));
   }
-  if (order.payment_status === 'REFUND_PENDING') lines.push(t('mweb.venueFood.order.refundPending'));
+  if (order.payment_status === 'REFUND_PENDING')
+    lines.push(t('mweb.venueFood.order.refundPending'));
   if (order.payment_status === 'REFUNDED') lines.push(t('mweb.venueFood.order.refunded'));
   return lines.length ? lines.join('\n') : undefined;
 }

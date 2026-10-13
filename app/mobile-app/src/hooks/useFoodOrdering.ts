@@ -3,7 +3,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { FoodCheckoutValues } from '@duncit/forms/schemas';
 import { logs } from '@duncit/logs';
-import { FOOD_ORDER_ERROR, type VenueFoodOrderPlacement } from '@duncit/utils';
+import {
+  FOOD_ORDER_ERROR,
+  buildFoodOrderInput,
+  foodAttemptSignature,
+  type VenueFoodOrderPlacement,
+} from '@duncit/utils';
 
 import { useFoodCart } from '@/hooks/useFoodCart';
 import { useFoodCheckout, useFoodClientKey } from '@/hooks/useFoodCheckout';
@@ -78,16 +83,15 @@ export function useFoodOrdering(venue: PublicVenueDetails, onRefresh: () => Prom
   const pay = (values: FoodCheckoutValues) => {
     setTyped(values);
     fireAndForget(writeFoodGuest({ name: values.name, phone: values.phone }));
-    return checkout.start({
-      venue_id: venue.id,
-      items: cart.lines.map((line) => ({ item_id: line.item.id, quantity: line.quantity })),
-      customer_name: values.name,
-      customer_phone: values.phone,
-      table_label: values.table || null,
-      note: values.note || null,
-      // Same cart and details → same key → the same order, however often Pay is pressed.
-      client_key: clientKey.keyFor(`${cart.signature}#${JSON.stringify(values)}`),
-    });
+    return checkout.start(
+      buildFoodOrderInput({
+        venueId: venue.id,
+        lines: cart.lines,
+        details: values,
+        // Same cart and details → same key → the same order, however often Pay is pressed.
+        clientKey: clientKey.keyFor(foodAttemptSignature(cart.signature, values)),
+      }),
+    );
   };
 
   const canOrder = venue.food_ordering.enabled && !closed;

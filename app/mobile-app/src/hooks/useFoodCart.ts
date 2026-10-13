@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FOOD_ORDER_LIMITS,
-  priceFoodCart,
+  foodCartLines,
+  foodCartSignature,
+  priceFoodCartLines,
   reconcileFoodCart,
+  type FoodCartLine,
   type FoodCartPrice,
   type FoodCartQuantities,
   type VenueFoodItem,
@@ -10,11 +13,6 @@ import {
 
 import { readFoodCart, writeFoodCart } from '@/services/food-storage';
 import { fireAndForget } from '@/utils/fire-and-forget';
-
-export interface FoodCartLine {
-  item: VenueFoodItem;
-  quantity: number;
-}
 
 export interface FoodCart {
   lines: FoodCartLine[];
@@ -42,7 +40,7 @@ export interface FoodCart {
  */
 export function useFoodCart(
   venueId: string,
-  menu: ReadonlyArray<VenueFoodItem>,
+  menu: readonly VenueFoodItem[],
   discountPct: number,
 ): FoodCart {
   const [stored, setStored] = useState<FoodCartQuantities>({});
@@ -84,26 +82,9 @@ export function useFoodCart(
     if (hydrated) fireAndForget(writeFoodCart(venueId, reconciled.cart));
   }, [venueId, hydrated, reconciled.cart]);
 
-  const lines = useMemo(
-    () =>
-      menu.flatMap((item) => {
-        const quantity = reconciled.cart[item.id];
-        return quantity ? [{ item, quantity }] : [];
-      }),
-    [menu, reconciled.cart],
-  );
-  const price = useMemo(
-    () =>
-      priceFoodCart(
-        lines.map((line) => ({ unit_price: line.item.price, quantity: line.quantity })),
-        discountPct,
-      ),
-    [lines, discountPct],
-  );
-  const signature = useMemo(
-    () => lines.map((line) => `${line.item.id}:${line.quantity}`).join('|'),
-    [lines],
-  );
+  const lines = useMemo(() => foodCartLines(menu, reconciled.cart), [menu, reconciled.cart]);
+  const price = useMemo(() => priceFoodCartLines(lines, discountPct), [lines, discountPct]);
+  const signature = useMemo(() => foodCartSignature(lines), [lines]);
 
   const quantityOf = useCallback(
     (itemId: string) => reconciled.cart[itemId] ?? 0,

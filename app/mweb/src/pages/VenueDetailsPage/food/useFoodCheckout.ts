@@ -2,13 +2,17 @@ import { useCallback, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { logs } from '@duncit/logs';
 import {
+  FOOD_ORDER_CONFLICT_RETRY_MS,
   FOOD_ORDER_ERROR,
   FOOD_ORDER_GENERIC_ERROR_KEY,
   PAYMENT_FAILURE_KEYS,
   classifyPaymentFailure,
+  createFoodClientKey,
   foodOrderErrorCode,
   foodOrderErrorKey,
   parseApiError,
+  tryPlaceFoodOrder,
+  wait,
   type PlaceVenueFoodOrderInput,
   type RazorpayErrorLike,
   type VenueFoodOrderPlacement,
@@ -30,31 +34,14 @@ interface Options {
   onRefused?: (code: string) => void;
 }
 
-/** How long to wait before repeating a placement the server said is still being set up. */
-const CONFLICT_RETRY_MS = 1500;
-
-const wait = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
 /**
  * One key per checkout attempt. The same cart and details get the same key, so
  * a second tap or a retry after a closed sheet reaches the SAME order on the
  * server; a changed cart, or a finished order, gets a new one.
  */
 export function useFoodClientKey() {
-  const attempt = useRef<{ signature: string; key: string } | null>(null);
-  const keyFor = useCallback((signature: string) => {
-    if (attempt.current?.signature !== signature) {
-      attempt.current = { signature, key: globalThis.crypto.randomUUID() };
-    }
-    return attempt.current.key;
-  }, []);
-  const reset = useCallback(() => {
-    attempt.current = null;
-  }, []);
-  return { keyFor, reset };
+  const [clientKey] = useState(() => createFoodClientKey(() => globalThis.crypto.randomUUID()));
+  return clientKey;
 }
 
 /**
@@ -104,7 +91,7 @@ export function useFoodCheckout({ onDone, onRefused }: Readonly<Options>) {
     } catch (err) {
       if (foodOrderErrorCode(err) !== FOOD_ORDER_ERROR.conflict) throw err;
       // The first tap's order is still opening its payment — the same key reads it a moment later.
-      await wait(CONFLICT_RETRY_MS);
+      await wait(FOOD_ORDER_CONFLICT_RETRY_MS);
       const res = await placeOrder({ variables: { input } });
       return res.data?.placeVenueFoodOrder ?? null;
     }
@@ -176,18 +163,9 @@ export function useFoodCheckout({ onDone, onRefused }: Readonly<Options>) {
     busy.current = true;
     setSubmitting(true);
     setError(null);
-    let placement: VenueFoodOrderPlacement | null;
-    try {
-      placement = await place(input);
-    } catch (err) {
-      refuse(err, input.venue_id);
-      return;
-    }
-    if (!placement) {
-      refuse(null, input.venue_id);
-      return;
-    }
-    await openSheet(placement, input.client_key);
+    const { placement, error: refusal } = await tryPlaceFoodOrder(() => place(input));
+    if (placement) await openSheet(placement, input.client_key);
+    else refuse(refusal, input.venue_id);
   };
 
   const clearError = useCallback(() => setError(null), []);

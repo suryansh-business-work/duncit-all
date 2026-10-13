@@ -3426,6 +3426,43 @@ the dish), plus `CONFLICT` (repeat the same `client_key` a moment later).
 The `client_key` is minted once per checkout attempt and repeated on every retry of it — the server
 answers a repeated key with the order it already made, which is what makes a double tap harmless.
 
+The checkout steps both apps share are here too, so mWeb and the native app cannot drift:
+
+```ts
+import {
+  FOOD_ORDER_CONFLICT_RETRY_MS,
+  buildFoodOrderInput,
+  createFoodClientKey,
+  foodAttemptSignature,
+  foodCartLines,
+  foodCartSignature,
+  priceFoodCartLines,
+  tryPlaceFoodOrder,
+  wait,
+} from '@duncit/utils';
+
+const lines = foodCartLines(venue.food_menu, cart); // FoodCartLine[] — { item, quantity }, in menu order
+const price = priceFoodCartLines(lines, venue.food_ordering.discount_pct); // priceFoodCart at menu prices
+const signature = foodCartSignature(lines); // changes whenever the cart's contents do
+
+// One per screen. The app passes its own UUID source — this package has none.
+const clientKey = createFoodClientKey(() => globalThis.crypto.randomUUID());
+const input = buildFoodOrderInput({
+  venueId: venue.id,
+  lines,
+  details: values, // { name, phone, table, note } — an empty table or note is sent as null
+  clientKey: clientKey.keyFor(foodAttemptSignature(signature, values)), // same cart + details → same key
+});
+
+const { placement, error } = await tryPlaceFoodOrder(() => place(input)); // never throws
+if (!placement) refuse(error); // `error` is null when the server answered with no order
+else clientKey.reset(); // once the order is done with: the next one gets a new key
+```
+
+`createFoodClientKey` is built on the pure `foodAttemptKey(current, signature, mint)`, which answers
+the `FoodAttempt` to keep: the current one for an unchanged signature, a newly minted key otherwise.
+On a `CONFLICT`, `await wait(FOOD_ORDER_CONFLICT_RETRY_MS)` before placing again with the same key.
+
 Copy lives under `mweb.venueFood.*`; `FOOD_ORDER_STATUS_KEYS`, `FOOD_PAYMENT_STATUS_KEYS`,
 `FOOD_DIET_KEYS` and `FOOD_SPICE_KEYS` map each enum to its key, `FOOD_SPICE_HEAT` to the number of
 flames it is drawn with, and `isVegFood` answers the veg-only filter. Web renderer: mWeb's

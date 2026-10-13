@@ -102,7 +102,8 @@ const DEFAULT_READ_TIMEOUT_MS = 8000;
  * final word and end the poll immediately. */
 const SETTLED_STATUSES = new Set(['SUCCESS', 'FAILED', 'REFUNDED']);
 
-const wait = (ms: number): Promise<void> =>
+/** Resolves after `ms` — the package's one promise delay. */
+export const wait = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     globalThis.setTimeout(resolve, ms);
   });

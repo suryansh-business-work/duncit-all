@@ -32,6 +32,27 @@ describe('FaqListField', () => {
     expect(screen.getByLabelText('Answer')).toHaveValue('');
   });
 
+  it('announces the list-level error a half-filled FAQ raises, and nothing while the list is valid', () => {
+    let methods: UseFormReturn<ClubFormValues> | undefined;
+    render(
+      <FormHarness defaultValues={{ faqs: [{ question: 'When?', answer: '' }] }} onMethods={(m) => { methods = m; }}>
+        <FaqListField />
+      </FormHarness>,
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    // The schema reports a half-filled pair on the list itself, not on a row.
+    act(() => {
+      methods?.setError('faqs', { type: 'custom', message: 'Each FAQ needs both a question and an answer' });
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('Each FAQ needs both a question and an answer');
+
+    act(() => {
+      methods?.clearErrors('faqs');
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('adds, edits and removes a FAQ pair', async () => {
     const user = userEvent.setup();
     let methods: UseFormReturn<ClubFormValues> | undefined;

@@ -326,6 +326,114 @@ export function reconcileFoodCart(
   return { cart: next, dropped, changed };
 }
 
+/** One dish in the cart, with how many of it. */
+export interface FoodCartLine {
+  item: VenueFoodItem;
+  quantity: number;
+}
+
+/** The cart as lines, in the menu's own order — a dish the cart does not hold is left out. */
+export function foodCartLines(menu: ReadonlyArray<VenueFoodItem>, cart: FoodCartQuantities): FoodCartLine[] {
+  return menu.flatMap((item) => {
+    const quantity = cart[item.id];
+    return quantity ? [{ item, quantity }] : [];
+  });
+}
+
+/** `priceFoodCart` for cart lines, each priced at its dish's menu price. */
+export function priceFoodCartLines(lines: ReadonlyArray<FoodCartLine>, discountPct: number): FoodCartPrice {
+  return priceFoodCart(
+    lines.map((line) => ({ unit_price: line.item.price, quantity: line.quantity })),
+    discountPct
+  );
+}
+
+/** Changes whenever the cart's contents do — a checkout attempt is keyed on it. */
+export const foodCartSignature = (lines: ReadonlyArray<FoodCartLine>): string =>
+  lines.map((line) => `${line.item.id}:${line.quantity}`).join('|');
+
+/** What the guest typed at checkout. An empty table or note is sent as none. */
+export interface FoodOrderDetails {
+  name: string;
+  phone: string;
+  table?: string | null;
+  note?: string | null;
+}
+
+/** The cart and the guest's details as the place-order mutation takes them. */
+export function buildFoodOrderInput({
+  venueId,
+  lines,
+  details,
+  clientKey,
+}: {
+  venueId: string;
+  lines: ReadonlyArray<FoodCartLine>;
+  details: FoodOrderDetails;
+  clientKey: string;
+}): PlaceVenueFoodOrderInput {
+  return {
+    venue_id: venueId,
+    items: lines.map((line) => ({ item_id: line.item.id, quantity: line.quantity })),
+    customer_name: details.name,
+    customer_phone: details.phone,
+    table_label: details.table || null,
+    note: details.note || null,
+    client_key: clientKey,
+  };
+}
+
+/** What one checkout attempt is keyed on: the cart and everything typed for it. */
+export const foodAttemptSignature = (cartSignature: string, details: FoodOrderDetails): string =>
+  `${cartSignature}#${JSON.stringify(details)}`;
+
+/** A checkout attempt and the `client_key` minted for it. */
+export interface FoodAttempt {
+  signature: string;
+  key: string;
+}
+
+/**
+ * The attempt to keep for a signature: the current one while the signature is
+ * unchanged — so a second tap or a retry after a closed sheet reaches the SAME
+ * order on the server — and a newly minted key for a changed cart or details.
+ * `mint` is the caller's own UUID source; this package has none.
+ */
+export function foodAttemptKey(current: FoodAttempt | null, signature: string, mint: () => string): FoodAttempt {
+  return current?.signature === signature ? current : { signature, key: mint() };
+}
+
+/** One key per checkout attempt: `keyFor` answers `foodAttemptKey`'s, `reset` forgets a finished order's. */
+export function createFoodClientKey(mint: () => string): { keyFor: (signature: string) => string; reset: () => void } {
+  let attempt: FoodAttempt | null = null;
+  return {
+    keyFor: (signature) => {
+      attempt = foodAttemptKey(attempt, signature, mint);
+      return attempt.key;
+    },
+    reset: () => {
+      attempt = null;
+    },
+  };
+}
+
+/** How long to wait before repeating a placement the server said is still being set up. */
+export const FOOD_ORDER_CONFLICT_RETRY_MS = 1500;
+
+/**
+ * One placement, never throwing: the order placed, or — with `placement` null —
+ * the error that refused it (null when the server simply answered with none).
+ */
+export async function tryPlaceFoodOrder(
+  place: () => Promise<VenueFoodOrderPlacement | null>
+): Promise<{ placement: VenueFoodOrderPlacement | null; error: unknown }> {
+  try {
+    return { placement: await place(), error: null };
+  } catch (error) {
+    return { placement: null, error };
+  }
+}
+
 /** The kitchen's steps in order — the order page's timeline. CANCELLED sits outside it. */
 export const FOOD_ORDER_FLOW: readonly VenueFoodOrderStatus[] = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'SERVED'];
 

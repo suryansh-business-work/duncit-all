@@ -18,7 +18,14 @@ function Detail({
       <Text fontSize={14} color="$muted">
         {label}
       </Text>
-      <Text testID={testID} flex={1} fontSize={14} fontWeight="600" color="$color" textAlign="right">
+      <Text
+        testID={testID}
+        flex={1}
+        fontSize={14}
+        fontWeight="600"
+        color="$color"
+        textAlign="right"
+      >
         {value}
       </Text>
     </XStack>
@@ -87,7 +94,11 @@ export function FoodOrderSummary({ order }: Readonly<{ order: VenueFoodOrder }>)
           />
         ) : null}
         {order.note ? (
-          <Detail label={t('mweb.venueFood.order.note')} value={order.note} testID="food-order-note" />
+          <Detail
+            label={t('mweb.venueFood.order.note')}
+            value={order.note}
+            testID="food-order-note"
+          />
         ) : null}
         <Detail
           label={t('mweb.venueFood.order.placedAt')}

@@ -4,6 +4,7 @@ import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/mate
 import { BackButton } from '@duncit/ui';
 import { PublishPageCard } from '@duncit/public-page';
 import {
+  NO_FOOD_LIMITS,
   RegisterVenueForm,
   type RegisterVenueMode,
   type VenueRegistrationConfig,
@@ -59,6 +60,9 @@ export default function RegisterVenuePage() {
     amenities: [],
     facilities: [],
     security: [],
+    food_diets: [],
+    food_spice_levels: [],
+    ...NO_FOOD_LIMITS,
   };
 
   const account = data?.me;

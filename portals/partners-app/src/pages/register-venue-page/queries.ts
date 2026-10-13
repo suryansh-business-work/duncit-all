@@ -24,6 +24,23 @@ export const MY_VENUE = gql`
         label
         capacity
       }
+      offers_food
+      food_menu {
+        id
+        name
+        description
+        category
+        price
+        images
+        diet
+        spice_level
+        is_available
+      }
+      food_ordering {
+        enabled
+        razorpay_integration_id
+        discount_pct
+      }
       venue_category {
         super_category_id
         category_id
@@ -120,6 +137,12 @@ export const REGISTRATION_CONFIG = gql`
       amenities
       facilities
       security
+      food_diets
+      food_spice_levels
+      food_menu_limit
+      food_image_limit
+      food_price_max
+      food_discount_max_pct
     }
   }
 `;

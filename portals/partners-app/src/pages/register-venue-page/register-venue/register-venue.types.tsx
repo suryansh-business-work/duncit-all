@@ -1,3 +1,13 @@
+import {
+  blankFoodOrdering,
+  type FoodLimits,
+  type FoodMenuRow,
+  type FoodOrderingValues,
+} from './register-venue.food-types';
+
+export { blankFoodOrdering, foodLimitsOf, NO_FOOD_LIMITS } from './register-venue.food-types';
+export type { FoodLimits, FoodMenuRow, FoodOrderingValues } from './register-venue.food-types';
+
 /** Location fields shared by the cascading pickers, geocoder finder and the
  * registration form values. */
 export interface VenueLocationValues {
@@ -39,6 +49,9 @@ export interface RegisterVenueValues extends VenueLocationValues {
   address_line2: string;
   venue_type: string;
   capacity_items: CapacityRow[];
+  offers_food: boolean;
+  food_menu: FoodMenuRow[];
+  food_ordering: FoodOrderingValues;
   amenities: string[];
   facilities: string[];
   security: string[];
@@ -78,7 +91,7 @@ export type VenueSectionKey =
 export type RegisterVenueMode = 'register' | 'edit-approved' | 'view';
 
 /** Served by the `venueRegistrationConfig` query — never hardcode these lists. */
-export interface VenueRegistrationConfig {
+export interface VenueRegistrationConfig extends FoodLimits {
   venue_types: string[];
   doc_types: string[];
   /** The doc_types entries uploaded beside the GSTIN / PAN toggles, never from the general list. */
@@ -88,6 +101,8 @@ export interface VenueRegistrationConfig {
   amenities: string[];
   facilities: string[];
   security: string[];
+  food_diets: string[];
+  food_spice_levels: string[];
 }
 
 /** The optional tax-id switches. */
@@ -121,6 +136,9 @@ export const blankRegisterVenueValues: RegisterVenueValues = {
   postal_code: '',
   venue_type: '',
   capacity_items: [],
+  offers_food: false,
+  food_menu: [],
+  food_ordering: blankFoodOrdering,
   amenities: [],
   facilities: [],
   security: [],

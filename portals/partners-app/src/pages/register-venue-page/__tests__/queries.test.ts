@@ -169,6 +169,13 @@ describe('REGISTRATION_CONFIG', () => {
       'amenities',
       'facilities',
       'security',
+      // The food menu's option lists and caps.
+      'food_diets',
+      'food_spice_levels',
+      'food_menu_limit',
+      'food_image_limit',
+      'food_price_max',
+      'food_discount_max_pct',
     ]);
   });
 });

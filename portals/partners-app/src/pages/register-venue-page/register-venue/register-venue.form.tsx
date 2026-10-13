@@ -12,7 +12,7 @@ import PayoutMethodSection from '../sections/PayoutMethodSection';
 import LeavesSection from '../sections/LeavesSection';
 import ReviewSection from '../sections/ReviewSection';
 import { useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
-import { taxDocTypesOf, type RegisterVenueMode, type VenueRegistrationConfig } from './register-venue.types';
+import { foodLimitsOf, taxDocTypesOf, type RegisterVenueMode, type VenueRegistrationConfig } from './register-venue.types';
 import { fireAndForget, logs } from '@duncit/logs';
 
 interface Props {
@@ -39,7 +39,15 @@ export default function RegisterVenueForm({
   onSubmitted,
 }: Readonly<Props>) {
   const { form, active, setActive, error, saved, busy, venueId, sectionState, saveSection, saveApprovedSection, submitAll } =
-    useRegisterVenueForm({ venue, locations, account, mode, taxDocTypes: taxDocTypesOf(config), onPersisted });
+    useRegisterVenueForm({
+      venue,
+      locations,
+      account,
+      mode,
+      taxDocTypes: taxDocTypesOf(config),
+      foodLimits: foodLimitsOf(config),
+      onPersisted,
+    });
 
   const viewOnly = mode === 'view';
   const showRegisterBar = mode === 'register' && active !== 'leaves';

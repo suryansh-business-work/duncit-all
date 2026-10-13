@@ -9,10 +9,19 @@ export {
 } from './register-venue.mappers';
 export { useRegisterVenueForm } from './useRegisterVenueForm';
 export type { EditableSectionKey, SectionState } from './useRegisterVenueForm';
-export { blankRegisterVenueValues, taxDocTypesOf } from './register-venue.types';
+export {
+  blankFoodOrdering,
+  blankRegisterVenueValues,
+  foodLimitsOf,
+  NO_FOOD_LIMITS,
+  taxDocTypesOf,
+} from './register-venue.types';
 export type {
   CapacityRow,
   DocRow,
+  FoodLimits,
+  FoodMenuRow,
+  FoodOrderingValues,
   RegisterVenueMode,
   RegisterVenueValues,
   TaxDocTypes,

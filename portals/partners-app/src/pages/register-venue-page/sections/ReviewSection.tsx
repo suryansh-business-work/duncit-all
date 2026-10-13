@@ -69,6 +69,16 @@ export default function ReviewSection({ form }: Readonly<Props>) {
     .filter((doc) => doc.url)
     .map((doc) => doc.type)
     .join(', ');
+  const foodLine = values.offers_food
+    ? t('partners.registerVenuePage.foodReviewYes', {
+        vars: {
+          items: values.food_menu.length,
+          ordering: values.food_ordering.enabled
+            ? t('partners.registerVenuePage.foodReviewOrderingOn')
+            : t('partners.registerVenuePage.foodReviewOrderingOff'),
+        },
+      })
+    : t('partners.registerVenuePage.foodReviewNo');
   const payoutDetailLine =
     values.payout_method === 'UPI'
       ? values.upi_id
@@ -95,6 +105,7 @@ export default function ReviewSection({ form }: Readonly<Props>) {
               <Chip key={item.label} size="small" label={`${item.label}: ${item.capacity}`} />
             ))}
         </Box>
+        <Row label={t('partners.registerVenuePage.food')} value={foodLine} />
         <Divider flexItem sx={{ my: 0.5 }} />
         <Row label={t('shell.nav.documents')} value={documentsLine} />
         <Row label="GSTIN" value={values.has_gstin ? values.gstin : ''} />

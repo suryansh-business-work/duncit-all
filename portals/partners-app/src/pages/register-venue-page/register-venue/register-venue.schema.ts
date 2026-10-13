@@ -2,7 +2,14 @@ import { z } from 'zod';
 import { BANK_PAYOUT_METHODS, POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
 import { BANK_ACCOUNT_NUMBER, IFSC, UPI_ID } from '@duncit/regex';
 import { fallbackT, type Translate } from '@duncit/shell';
-import type { RegisterVenueValues, TaxDocTypes, VenueSectionKey } from './register-venue.types';
+import { foodMenuShape, foodOrderingShape, makeFoodRefinement } from './register-venue.food-schema';
+import {
+  NO_FOOD_LIMITS,
+  type FoodLimits,
+  type RegisterVenueValues,
+  type TaxDocTypes,
+  type VenueSectionKey,
+} from './register-venue.types';
 
 const NO_TAX_DOCS: TaxDocTypes = { has_gstin: '', has_pan: '' };
 
@@ -76,8 +83,13 @@ const missingTaxDocuments = (
 /** Payout Method's and the tax documents' messages depend on the reader's
  * language (`t` from the form that renders it); every other field here is
  * pre-existing, unlocalized debt this change does not touch. `taxDocTypes`
- * names the document each GSTIN / PAN switch requires while it is on. */
-export const registerVenueSchema = (t: Translate = fallbackT, taxDocTypes: TaxDocTypes = NO_TAX_DOCS) => z.object({
+ * names the document each GSTIN / PAN switch requires while it is on;
+ * `foodLimits` are the config's caps for the food menu and its ordering. */
+export const registerVenueSchema = (
+  t: Translate = fallbackT,
+  taxDocTypes: TaxDocTypes = NO_TAX_DOCS,
+  foodLimits: FoodLimits = NO_FOOD_LIMITS,
+) => z.object({
   venue_name: zodRules.requiredText('Venue name', 2, 120),
   description: z
     .string()
@@ -106,6 +118,9 @@ export const registerVenueSchema = (t: Translate = fallbackT, taxDocTypes: TaxDo
   capacity_items: z
     .array(capacityItemSchema)
     .min(1, 'Add at least one capacity entry for your venue'),
+  offers_food: z.boolean(),
+  food_menu: foodMenuShape,
+  food_ordering: foodOrderingShape,
   amenities: z.array(z.string().trim()),
   facilities: z.array(z.string().trim()),
   security: z.array(z.string().trim()),
@@ -151,6 +166,7 @@ export const registerVenueSchema = (t: Translate = fallbackT, taxDocTypes: TaxDo
   ifsc_code: z.string().trim(),
   upi_id: z.string().trim(),
 })
+  .superRefine(makeFoodRefinement(t, foodLimits))
   // Which payout fields are required depends on the selected method, so this
   // is a superRefine rather than per-field .min() — RHF keeps every payout
   // field registered while the reader switches the Payout Method dropdown.
@@ -228,7 +244,7 @@ export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review' | 'leaves'
     'locality',
     'postal_code',
   ],
-  'type-capacity': ['venue_type', 'capacity_items'],
+  'type-capacity': ['venue_type', 'capacity_items', 'offers_food', 'food_menu', 'food_ordering'],
   amenities: ['amenities', 'facilities', 'security'],
   documents: ['documents', 'has_gstin', 'gstin', 'has_pan', 'pan'],
   owner: ['owner_name', 'owner_email', 'owner_phone', 'owner_dob', 'owner_address'],

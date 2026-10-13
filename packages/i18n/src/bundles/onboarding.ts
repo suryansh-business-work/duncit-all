@@ -343,6 +343,8 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       hoursBeforeStart: 'Hours before start',
       location: 'Location',
       noRefundBands: 'No bands — everyone enrolled is refunded in full.',
+      otherCategoriesNote:
+        'This venue also hosts in: {categories}. The Category below is its primary one. Changing the primary to a different sub category removes these other categories.',
       refundBandSummary:
         '{pct}% refund if the pod is cancelled more than {hours} hours before the start time.',
       refundBands: 'Refund on cancellation',

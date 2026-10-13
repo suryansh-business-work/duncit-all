@@ -4,7 +4,7 @@ import VenueSummaryCard from '../VenueSummaryCard';
 import { makeVenue } from './fixtures';
 
 describe('VenueSummaryCard', () => {
-  it('shows the cover, the status and identity chips, the place, the category and a Maps link', () => {
+  it('shows the cover, the status and identity chips, the place, every category and a Maps link', () => {
     render(<VenueSummaryCard venue={makeVenue()} />);
 
     expect(screen.getByRole('img', { name: 'The Board Room Cafe' })).toHaveAttribute(
@@ -16,7 +16,10 @@ describe('VenueSummaryCard', () => {
     expect(screen.getByText('Cafe')).toBeInTheDocument();
     expect(screen.getByText('DUN-VEN-2210')).toBeInTheDocument();
     expect(screen.getByText('Indiranagar, Bengaluru, Karnataka, India')).toBeInTheDocument();
-    expect(screen.getByText('For You > Games > Board Games')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'For You › Games › Board Games',
+      'For You › Quizzes › Pub Quiz',
+    ]);
 
     const maps = screen.getByRole('link', { name: 'Open in Maps' });
     expect(maps).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=12.9716,77.6412');

@@ -162,6 +162,15 @@ describe('makeVenueFormSchema', () => {
     expect(errorAt(values, 'documents.0.url')).toContain('errRequired');
   });
 
+  it('takes an owner phone with or without a leading +, as the owner form does', () => {
+    expect(schema.safeParse({ ...valid(), owner_phone: '+919845012345' }).success).toBe(true);
+    expect(schema.safeParse({ ...valid(), owner_phone: '9845012345' }).success).toBe(true);
+    expect(errorAt({ ...valid(), owner_phone: '98450-12345' }, 'owner_phone')).toBe(
+      'directory.venueEditor.errPhone:{"field":"directory.venueEditor.ownerPhone"}',
+    );
+    expect(errorAt({ ...valid(), owner_phone: '12345' }, 'owner_phone')).toContain('errPhone');
+  });
+
   it('validates the owner contact through the shared rules', () => {
     expect(errorAt({ ...valid(), owner_email: 'not-an-email' }, 'owner_email')).toBeTruthy();
     expect(errorAt({ ...valid(), owner_phone: '123' }, 'owner_phone')).toBeTruthy();

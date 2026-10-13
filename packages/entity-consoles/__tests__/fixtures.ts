@@ -48,6 +48,25 @@ export const venueRecord: AdminVenueDetail = {
     category_name: 'Board Games',
     sub_category_name: 'Catan Night',
   },
+  // Primary first — entry 0 is the same triple `venue_category` mirrors.
+  venue_categories: [
+    {
+      super_category_id: '66a0000000000000000000a1',
+      category_id: '66a0000000000000000000b2',
+      sub_category_id: '66a0000000000000000000c3',
+      super_category_name: 'Social',
+      category_name: 'Board Games',
+      sub_category_name: 'Catan Night',
+    },
+    {
+      super_category_id: '66a0000000000000000000a1',
+      category_id: '66a0000000000000000000b5',
+      sub_category_id: '66a0000000000000000000c6',
+      super_category_name: 'Social',
+      category_name: 'Quizzes',
+      sub_category_name: 'Pub Quiz',
+    },
+  ],
   description: 'Two-floor cafe with a covered terrace.',
   amenities: ['Wi-Fi', 'AC'],
   facilities: ['Parking'],

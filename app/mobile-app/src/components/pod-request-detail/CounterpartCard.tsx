@@ -3,7 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { PartnerAvatar } from '@/components/pod-requests/PartnerAvatar';
 import { PodRequestStatusChip } from '@/components/pod-requests/PodRequestStatusChip';
-import { formatPodRequestKm } from '@duncit/utils';
+import { formatPodRequestKm, venueCategoryLabels } from '@duncit/utils';
 import type { PodRequestDetail } from '@/hooks/usePodRequestDetail';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -20,7 +20,7 @@ export function CounterpartCard({ request }: Readonly<Props>) {
   const image = (isVenue ? venue?.cover_image_url : host?.photo_url) ?? '';
   const capacity = venue?.capacity ?? 0;
   const venueLines = [
-    [venue?.category, venue?.venue_type].filter(Boolean).join(' · '),
+    [...venueCategoryLabels(venue), venue?.venue_type].filter(Boolean).join(' · '),
     capacity > 0 ? t('podRequests.capacity', { vars: { count: capacity } }) : '',
     [venue?.locality, venue?.city].filter(Boolean).join(', '),
   ];

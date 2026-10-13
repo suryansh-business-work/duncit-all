@@ -3,11 +3,10 @@ import type { ReactNode } from 'react';
 import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PodDetail } from '@/hooks/useDetails';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export type Product = PodDetail['product_requests'][number];
 
@@ -31,43 +30,6 @@ export function ProductRowShell({
       backgroundColor={selected ? '$primarySoft' : '$soft'}
     >
       {children}
-    </XStack>
-  );
-}
-
-/** The add-to-cart CTA shown while the product has no line in the cart yet. */
-export function AddToCartButton({
-  productId,
-  productName,
-  onAdd,
-}: Readonly<{
-  productId: string;
-  productName: Product['product_name'];
-  onAdd: () => void;
-}>) {
-  const { onPrimary } = useThemeColors();
-  return (
-    <XStack
-      testID={`pod-shop-add-${productId}`}
-      role="button"
-      tabIndex={0}
-      aria-label={`Add ${productName} to cart`}
-      hitSlop={6}
-      onPress={onAdd}
-      gap={6}
-      alignItems="center"
-      alignSelf="flex-start"
-      marginTop={6}
-      paddingHorizontal={12}
-      height={32}
-      borderRadius={999}
-      backgroundColor="$primary"
-      pressStyle={PRESS_STYLE.control}
-    >
-      <MaterialIcons name="add-shopping-cart" size={15} color={onPrimary} />
-      <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
-        Add to cart
-      </Text>
     </XStack>
   );
 }

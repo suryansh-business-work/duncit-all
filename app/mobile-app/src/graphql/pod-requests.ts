@@ -46,6 +46,7 @@ export const PodPartnerRequestDocument = gql(`
         id
         venue_name
         category
+        categories
         venue_type
         capacity
         locality
@@ -143,6 +144,7 @@ export const NearbyVenuesForHostDocument = gql(`
       id
       venue_name
       category
+      categories
       locality
       city
       cover_image_url
@@ -171,7 +173,8 @@ export const SendPodPartnerRequestDocument = gql(`
   }
 `);
 
-/** The owner's venues for the host search's picker; the category seeds the filter. */
+/** The owner's venues for the host search's picker; the categories seed the filter
+ * (every one the venue has; `venue_category` is only the primary). */
 export const PodRequestSearchVenuesDocument = gql(`
   query MobilePodRequestSearchVenues {
     myVenues {
@@ -180,6 +183,9 @@ export const PodRequestSearchVenuesDocument = gql(`
       city
       status
       venue_category {
+        category_id
+      }
+      venue_categories {
         category_id
       }
     }

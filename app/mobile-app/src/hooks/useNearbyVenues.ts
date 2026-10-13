@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
+import { venueCategoryLabels } from '@duncit/utils';
+
 import { PartnerRequestDirection, PartnerSide } from '@/generated/graphql/graphql';
 import {
   NearbyVenuesForHostDocument,
@@ -20,7 +22,7 @@ const toItem = (venue: VenueRow): NearbyItem => ({
   kind: 'VENUE',
   name: venue.venue_name,
   imageUrl: venue.cover_image_url,
-  category: venue.category,
+  category: venueCategoryLabels(venue).join(' · '),
   place: [venue.locality, venue.city].filter(Boolean).join(', '),
   distanceKm: venue.distance_km,
   openStatus: venue.open_request_status ?? null,

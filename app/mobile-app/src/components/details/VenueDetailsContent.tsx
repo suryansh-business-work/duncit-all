@@ -12,6 +12,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { TwoToneHeading } from '@/components/TwoToneHeading';
 import { VenueImagesGrid } from '@/components/details/VenueImagesGrid';
 import { VenuePodsSection } from '@/components/details/VenuePodsSection';
+import { FOOD_CART_BUTTON_SPACE } from '@/components/details/venue-food/FoodCartBar';
 import { VenueFoodMenuSection } from '@/components/details/venue-food/VenueFoodMenuSection';
 import { VenueFoodOrderingScope } from '@/components/details/venue-food/VenueFoodOrderingScope';
 import type { PublicVenueDetails as PublicVenue } from '@/hooks/useHostsVenues';
@@ -73,18 +74,17 @@ interface Props {
 }
 
 /** The scrollable venue body — cover, chips, description, menu, location,
- * amenities and gallery — with the food cart pinned under it when the venue
- * serves food. Split out of the screen so its loading/error chain stays simple. */
+ * amenities and gallery — with the food cart button floating over it when the
+ * venue serves food. Split out of the screen so its loading/error chain stays simple. */
 export function VenueDetailsContent({ venue, gallery, onRefresh }: Readonly<Props>) {
   const { accent, brand } = useThemeColors();
   const { t } = useTranslation();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  // Room under the last row for the floating cart button, wherever a venue can show one.
+  const paddingBottom = 32 + (venue.offers_food ? FOOD_CART_BUTTON_SPACE : 0);
   return (
     <VenueFoodOrderingScope venue={venue} onRefresh={onRefresh}>
-      <RefreshScrollView
-        flex={1}
-        contentContainerStyle={{ padding: 16, gap: 20, paddingBottom: 32 }}
-      >
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20, paddingBottom }}>
         <YStack
           height={240}
           borderRadius={24}

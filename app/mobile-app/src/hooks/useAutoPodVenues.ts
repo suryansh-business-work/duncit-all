@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import type { AutoPodVenueSpace } from '@duncit/utils';
+import { venueCategoryList, type AutoPodVenueSpace } from '@duncit/utils';
 
 import { MyVenuesForAutoPodDocument } from '@/graphql/auto-pods';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
+
+/** One Super → Category → Sub the venue declares. */
+export interface AutoPodVenueCategory {
+  sub_category_id: string | null;
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
 
 /** One of the owner's venues, as the queue and the accept sheet need it. */
 export interface AutoPodVenueOption {
@@ -17,21 +25,9 @@ export interface AutoPodVenueOption {
   capacity: number;
   /** The venue's named spaces, which its potential-earnings sheet prices. */
   capacity_items: AutoPodVenueSpace[];
-  venue_category: {
-    sub_category_id: string | null;
-    super_category_name: string;
-    category_name: string;
-    sub_category_name: string;
-  } | null;
-}
-
-/** "Sports › Racket › Badminton" — the venue's declared category. */
-export function venueCategoryPath(venue: AutoPodVenueOption | null): string {
-  const category = venue?.venue_category;
-  if (!category) return '';
-  return [category.super_category_name, category.category_name, category.sub_category_name]
-    .filter(Boolean)
-    .join(' › ');
+  /** Every category the venue declares, primary first; empty when it has none.
+   * ANY of them makes it eligible for an offer (`venueHostsSubCategory`). */
+  venue_categories: AutoPodVenueCategory[];
 }
 
 type MyVenue = ResultOf<typeof MyVenuesForAutoPodDocument>['myVenues'][number];
@@ -48,14 +44,13 @@ function toVenueOption(venue: MyVenue): AutoPodVenueOption {
       label: item.label,
       capacity: item.capacity,
     })),
-    venue_category: venue.venue_category
-      ? {
-          sub_category_id: venue.venue_category.sub_category_id ?? null,
-          super_category_name: venue.venue_category.super_category_name,
-          category_name: venue.venue_category.category_name,
-          sub_category_name: venue.venue_category.sub_category_name,
-        }
-      : null,
+    // The list, or the legacy single category as a one-entry list.
+    venue_categories: venueCategoryList(venue).map((category) => ({
+      sub_category_id: category.sub_category_id ?? null,
+      super_category_name: category.super_category_name,
+      category_name: category.category_name,
+      sub_category_name: category.sub_category_name,
+    })),
   };
 }
 

@@ -4,8 +4,9 @@ import { logs } from '@duncit/logs';
 import { PodsForProductDocument } from '@/graphql/details';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useCartStore } from '@/stores/cart.store';
+import { useCartStore, type CartLine } from '@/stores/cart.store';
 import type { ShopProduct } from '@/screens/ShopScreen';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** What the buyer is told after a quick-add that did not add anything. */
 export interface QuickAddNotice {
@@ -16,16 +17,29 @@ export interface QuickAddNotice {
 /** How long a notice stays up — the same as mWeb's snackbar. */
 const NOTICE_MS = 4000;
 
+/** The cart line a shop card shows and steps: the base product's line — the
+ * most recently added one when more than one pod's shop put it in the cart. */
+export function shopCartLine(lines: readonly CartLine[], productId: string): CartLine | undefined {
+  return [...lines]
+    .reverse()
+    .find((line) => line.product_id === productId && line.variant_id === '');
+}
+
 /** Quick-add a shop product to the cart from the browse grid without opening the
  * detail: resolve the cheapest live pod that stocks it (podsForProduct), then add
  * the base product (qty +1, never past the pod's stock) through that pod. Sets a
  * `notice` when no live pod stocks it, when the cart already holds all the
  * stock, or when the lookup fails (there is no app-wide toast on native, so the
- * screen renders it). `addingId` lets the pressed card show a spinner. Twin of
- * mWeb's useQuickAddToCart. */
+ * screen renders it). `addingId` lets the pressed card show a spinner.
+ *
+ * Once the product has a line the card steps THAT line (`setQuantity`) — up to
+ * the stock it was added with, down to nothing — with no second lookup; only
+ * the first add resolves a pod. Twin of mWeb's useQuickAddToCart. */
 export function useQuickAddToCart() {
   const { t } = useTranslation();
   const setLine = useCartStore((s) => s.setLine);
+  const lines = useCartStore((s) => s.lines);
+  const cartReady = useCartStore((s) => s.hydrated);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<QuickAddNotice | null>(null);
 
@@ -84,5 +98,17 @@ export function useQuickAddToCart() {
     }
   };
 
-  return { addingId, add, notice };
+  const lineOf = (productId: string) => shopCartLine(lines, productId);
+
+  /** The card's control: step the product's line, or quick-add when it has none yet. */
+  const setQuantity = (product: ShopProduct, next: number) => {
+    const line = shopCartLine(useCartStore.getState().lines, product.id);
+    if (line) {
+      setLine(line, next);
+      return;
+    }
+    if (next > 0) fireAndForget(add(product));
+  };
+
+  return { addingId, add, notice, cartReady, lineOf, setQuantity };
 }

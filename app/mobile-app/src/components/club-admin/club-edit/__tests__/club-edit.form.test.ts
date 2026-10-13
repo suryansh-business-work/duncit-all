@@ -1,7 +1,8 @@
 import { makeClubEditSchema, type ClubEditFormValues } from '../club-edit.form';
 
 const FAQ_MESSAGE = 'faq-incomplete';
-const t = ((key: string) => (key === 'mweb.clubEdit.validation.faqIncomplete' ? FAQ_MESSAGE : key)) as never;
+const t = ((key: string) =>
+  key === 'mweb.clubEdit.validation.faqIncomplete' ? FAQ_MESSAGE : key) as never;
 
 const validValues = (): ClubEditFormValues => ({
   club_name: 'Bakers',

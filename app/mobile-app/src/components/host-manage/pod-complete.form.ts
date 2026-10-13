@@ -8,7 +8,10 @@ import { type CompletePodInput } from '@/generated/graphql/graphql';
  * `pod-complete`, shared with mWeb (rule 27); this file only names the pod and
  * ties the input to the generated GraphQL type.
  */
-export { blankPodCompleteValues, makePodCompleteSchema as buildPodCompleteSchema } from '@duncit/forms/schemas';
+export {
+  blankPodCompleteValues,
+  makePodCompleteSchema as buildPodCompleteSchema,
+} from '@duncit/forms/schemas';
 export type { PodCompleteValues };
 
 export interface HostPodForComplete {

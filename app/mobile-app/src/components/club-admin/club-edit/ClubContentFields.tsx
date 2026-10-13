@@ -45,7 +45,11 @@ export function ClubContentFields({ control }: Readonly<Props>) {
         control={control}
         name="faqs"
         render={({ field, fieldState }) => (
-          <FaqListField value={field.value} onChange={field.onChange} error={fieldState.error?.message} />
+          <FaqListField
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+          />
         )}
       />
     </YStack>

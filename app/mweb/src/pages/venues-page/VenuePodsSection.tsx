@@ -31,7 +31,7 @@ export const VENUE_PODS = gql`
 /** "Pods at this venue" — every live pod hosted at the venue, in the same
  * Happening soon / Upcoming / Previous rails as the club page. Native twin:
  * details/VenuePodsSection. */
-export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
+export default function VenuePodsSection({ venueId, title = 'Pods at this venue' }: Readonly<{ venueId: string; title?: string }>) {
   const { data, loading } = useQuery<{ pods: SchedulePod[] }>(VENUE_PODS, {
     variables: { venueId },
     fetchPolicy: 'cache-and-network',
@@ -40,7 +40,7 @@ export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string
   return (
     <PodsScheduleBlock
       testId="venue-pods-section"
-      title="Pods at this venue"
+      title={title}
       pods={data?.pods ?? []}
       loading={loading && !data}
     />

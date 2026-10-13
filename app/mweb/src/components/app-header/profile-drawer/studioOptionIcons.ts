@@ -30,6 +30,7 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, ProfileIconKe
   // The brand desk: its Pod Shop orders wear the shipping truck the buyer's
   // own orders do, its pickup addresses a warehouse.
   orders: 'orders',
+  menu: 'menu',
   warehouses: 'warehouses',
   // Money going back to buyers after a deletion — the returns glyph, the nearest the drawer has.
   refunds: 'returns',

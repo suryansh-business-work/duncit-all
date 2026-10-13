@@ -7,6 +7,8 @@ export { foodCheckoutDefaults, makeFoodCheckoutSchema, type FoodCheckoutValues }
 export interface FoodCheckoutFormProps {
   /** The sheet's Pay button lives outside the form and targets it by id. */
   formId: string;
+  /** Named in the "tell me about events here" tick box. */
+  venueName: string;
   /** Who is ordering, as far as it is already known — the account, or the last order from this device. */
   initial: FoodCheckoutValues;
   /** A payment is in flight: the fields lock with the button. */

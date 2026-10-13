@@ -62,6 +62,8 @@ export function useFoodOrder(orderId: string) {
     errorCode: order ? '' : foodOrderErrorCode(error),
     /** The key the order was placed with, when this device placed it — what "Retry payment" repeats. */
     clientKey: stored?.client_key ?? '',
+    /** What proves the order is this guest's — the invoice and the rating send it too. */
+    accessKey,
     refetch,
   };
 }

@@ -43,6 +43,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import ExtensionIcon from '@mui/icons-material/Extension';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -106,6 +107,8 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   returns: <AssignmentReturnIcon />,
   // A brand's ShipRocket pickup addresses.
   warehouses: <WarehouseIcon />,
+  // A venue's food menu — the dishes guests order from the venue QR.
+  menu: <RestaurantMenuIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

@@ -26,8 +26,12 @@ interface UploadTicket {
   urlEndpoint: string;
 }
 
-/** The raw file goes to our server, which passes it on. */
-async function postToServer(file: File, ticket: UploadTicket): Promise<string> {
+/**
+ * The raw file goes to our server, which passes it on. Exported for the one
+ * upload that cannot ask for its pass here: a signed-out guest's food-feedback
+ * photo, whose pass is issued against the order instead of an account.
+ */
+export async function postToServer(file: File, ticket: Pick<UploadTicket, 'uploadUrl' | 'ticket'>): Promise<string> {
   const name = file.name || `upload-${Date.now()}`;
   const url =
     `${ticket.uploadUrl}?ticket=${encodeURIComponent(ticket.ticket)}` +

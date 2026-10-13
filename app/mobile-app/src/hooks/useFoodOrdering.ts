@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { FoodCheckoutValues } from '@duncit/forms/schemas';
@@ -12,6 +12,7 @@ import {
 
 import { useFoodCart } from '@/hooks/useFoodCart';
 import { useFoodCheckout, useFoodClientKey } from '@/hooks/useFoodCheckout';
+import { useFoodCouponConfirm } from '@/hooks/useFoodCoupon';
 import { useFoodGuest } from '@/hooks/useFoodGuest';
 import type { PublicVenueDetails } from '@/hooks/useHostsVenues';
 import type { RootStackParamList } from '@/navigation/types';
@@ -80,18 +81,40 @@ export function useFoodOrdering(venue: PublicVenueDetails, onRefresh: () => Prom
 
   const checkout = useFoodCheckout({ onDone, onRefused });
 
-  const pay = (values: FoodCheckoutValues) => {
-    setTyped(values);
-    fireAndForget(writeFoodGuest({ name: values.name, phone: values.phone }));
-    return checkout.start(
+  const coupon = useFoodCouponConfirm({ venueId: venue.id, cart, onStopped: checkout.fail });
+  // A ref, not the state: a second tap while the coupon is being checked must not place a second time.
+  const paying = useRef(false);
+
+  const place = async (values: FoodCheckoutValues) => {
+    checkout.clearError();
+    // The server is asked about the code once more — now with the mobile typed — before anything is placed.
+    if (!(await coupon.confirm(values.phone))) return;
+    // The code goes with the order only while the total on the Pay button counts it: under
+    // its minimum the cart is shown — and so ordered — without it.
+    const code = cart.price.couponUnmet ? null : (cart.coupon?.code ?? null);
+    // One object for the order and for its key: applying or removing a code is a new attempt.
+    const details = { ...values, coupon: code };
+    await checkout.start(
       buildFoodOrderInput({
         venueId: venue.id,
         lines: cart.lines,
-        details: values,
+        details,
         // Same cart and details → same key → the same order, however often Pay is pressed.
-        clientKey: clientKey.keyFor(foodAttemptSignature(cart.signature, values)),
+        clientKey: clientKey.keyFor(foodAttemptSignature(cart.signature, details)),
       }),
     );
+  };
+
+  const pay = async (values: FoodCheckoutValues) => {
+    if (paying.current) return;
+    paying.current = true;
+    setTyped(values);
+    fireAndForget(writeFoodGuest({ name: values.name, phone: values.phone }));
+    try {
+      await place(values);
+    } finally {
+      paying.current = false;
+    }
   };
 
   const canOrder = venue.food_ordering.enabled && !closed;
@@ -103,10 +126,13 @@ export function useFoodOrdering(venue: PublicVenueDetails, onRefresh: () => Prom
   }, [empty]);
 
   return {
+    venueId: venue.id,
     cart,
     canOrder,
     closed,
     checkout,
+    // The coupon's check at Pay locks the sheet exactly as the payment does.
+    submitting: checkout.submitting || coupon.confirming,
     pay,
     tracked,
     openTracked: () => {

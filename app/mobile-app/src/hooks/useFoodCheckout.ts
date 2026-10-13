@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { logs } from '@duncit/logs';
 import {
+  FOOD_COUPON_REJECTION_KEYS,
   FOOD_ORDER_CONFLICT_RETRY_MS,
   FOOD_ORDER_ERROR,
   FOOD_ORDER_GENERIC_ERROR_KEY,
@@ -14,12 +15,14 @@ import {
   wait,
   type PlaceVenueFoodOrderInput,
   type RazorpayErrorLike,
+  type VenueFoodCouponRejection,
   type VenueFoodOrderPlacement,
 } from '@duncit/utils';
 
 import type { RazorpaySignature } from '@/hooks/useCheckout';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
+  foodCouponNativeRejection,
   foodOrderNativeErrorCode,
   placeFoodOrder,
   verifyFoodOrderPayment,
@@ -31,6 +34,15 @@ export interface FoodCheckoutError {
   title: string | null;
   message: string;
 }
+
+/** A coupon the server will not take: why, then what the member can do about it. Nothing was placed. */
+export const foodCouponRefusal = (
+  reason: VenueFoodCouponRejection,
+  t: (key: string) => string,
+): FoodCheckoutError => ({
+  title: t(FOOD_COUPON_REJECTION_KEYS[reason]),
+  message: t('mweb.venueFood.errors.couponRejected'),
+});
 
 interface Options {
   /** The order is paid, or its payment is still being confirmed — either way the order screen takes over from here. */
@@ -110,10 +122,16 @@ export function useFoodCheckout({ onDone, onRefused }: Readonly<Options>) {
     const code = foodOrderNativeErrorCode(err);
     logs.mobileApp.warn('venueFood', 'place', { error: err, code, venueId });
     const generic = t(FOOD_ORDER_GENERIC_ERROR_KEY);
-    setError({
-      title: null,
-      message: code ? t(foodOrderErrorKey(code)) : parseApiError(err, generic),
-    });
+    if (code === FOOD_ORDER_ERROR.couponRejected) {
+      // Nothing was placed. The code stays on the cart for the member to remove:
+      // dropping it here would change the total under a Pay button already pressed.
+      setError(foodCouponRefusal(foodCouponNativeRejection(err) ?? 'INVALID', t));
+    } else {
+      setError({
+        title: null,
+        message: code ? t(foodOrderErrorKey(code)) : parseApiError(err, generic),
+      });
+    }
     release();
     if (code) onRefused?.(code);
   };
@@ -184,6 +202,8 @@ export function useFoodCheckout({ onDone, onRefused }: Readonly<Options>) {
     gatewayOpen: !!attempt,
     error,
     start,
+    /** Say why an order was not placed, when that was decided before the placement — the coupon's check at Pay. */
+    fail: setError,
     clearError,
     /** Spread onto <RazorpayWebView>: the venue's payment sheet, open while an attempt waits on it. */
     gateway: {

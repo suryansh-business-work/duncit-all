@@ -19,10 +19,10 @@ import { useVenueFoodOrdering } from './VenueFoodOrderingScope';
 type Props = Readonly<{ venue: PublicVenueDetails }>;
 
 /**
- * The venue's menu, and — when it takes QR orders — the Add buttons that fill
- * the cart pinned under the screen (VenueFoodOrderingScope). The menu is always
- * readable: ordering switched off, or closed just now, only takes the Add
- * buttons and the cart away. Tamagui twin of mWeb's food/VenueFoodMenu.
+ * The venue's menu, and — when it takes QR orders — the cart controls that fill
+ * the cart floating over the screen (VenueFoodOrderingScope). The menu is always
+ * readable: ordering switched off, or closed just now, only takes the cart
+ * controls and the cart away. Tamagui twin of mWeb's food/VenueFoodMenu.
  */
 function Section({ venue }: Props) {
   const { t } = useTranslation();
@@ -93,6 +93,7 @@ function Section({ venue }: Props) {
           onOpenImage={openImage}
           canOrder={canOrder}
           quantityOf={cart.quantityOf}
+          cartReady={cart.hydrated}
           onQuantity={cart.setQuantity}
         />
       )}

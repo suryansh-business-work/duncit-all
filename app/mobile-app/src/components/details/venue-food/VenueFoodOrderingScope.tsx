@@ -25,9 +25,10 @@ export function useVenueFoodOrdering(): FoodOrdering {
 }
 
 /**
- * The menu sits inside the venue's scroll and the cart bar is pinned under it,
- * so the ordering state they share lives one level above both: the scroll is
- * `children`, and the bar and the cart sheet are drawn here, beneath it.
+ * The menu sits inside the venue's scroll and the cart button floats over its
+ * bottom-right corner, so the ordering state they share lives one level above
+ * both: the scroll is `children`, and the button and the cart sheet are drawn
+ * here, over it.
  */
 function OrderingScope({ venue, onRefresh, children }: Readonly<Props>) {
   const ordering = useFoodOrdering(venue, onRefresh);
@@ -37,7 +38,7 @@ function OrderingScope({ venue, onRefresh, children }: Readonly<Props>) {
     <OrderingContext.Provider value={ordering}>
       <YStack flex={1}>
         <YStack flex={1}>{children}</YStack>
-        {canOrder && cart.lines.length > 0 ? (
+        {canOrder ? (
           <FoodCartBar price={cart.price} currency={currency} onOpen={ordering.openSheet} />
         ) : null}
         <FoodCartSheet

@@ -7,9 +7,11 @@ interface Props {
   groups: FoodMenuGroup[];
   currency: string;
   onOpenImage: (item: VenueFoodItem) => void;
-  /** The venue takes orders right now — dishes get their Add button / stepper. */
+  /** The venue takes orders right now — dishes get their cart control. */
   canOrder: boolean;
   quantityOf: (itemId: string) => number;
+  /** The stored cart was read back (see FoodItemCard). */
+  cartReady: boolean;
   onQuantity: (itemId: string, quantity: number) => void;
 }
 
@@ -21,6 +23,7 @@ export function FoodMenuList({
   onOpenImage,
   canOrder,
   quantityOf,
+  cartReady,
   onQuantity,
 }: Readonly<Props>) {
   return (
@@ -40,6 +43,7 @@ export function FoodMenuList({
               onOpenImage={onOpenImage}
               canOrder={canOrder}
               quantity={quantityOf(item.id)}
+              cartReady={cartReady}
               onQuantity={onQuantity}
             />
           ))}

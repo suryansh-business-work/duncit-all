@@ -1,14 +1,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { DISABLED_OPACITY, PRESS_STYLE, TOUCH_TARGET } from '@duncit/buttons-native';
-import { formatFoodMoney } from '@duncit/utils';
+import { FOOD_ORDER_LIMITS, formatFoodMoney } from '@duncit/utils';
 
+import { CartQuantityControl } from '@/components/cart/CartQuantityControl';
+import { cartControlLabels } from '@/components/cart/cartControlLabels';
 import type { FoodCart } from '@/hooks/useFoodCart';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import { DietMark } from './DietMark';
-import { QuantityStepper } from './QuantityStepper';
 
 interface Props {
   cart: FoodCart;
@@ -17,7 +18,7 @@ interface Props {
   disabled: boolean;
 }
 
-/** The cart's dishes: each with its diet mark, quantity × price, a stepper and a remove. */
+/** The cart's dishes: each with its diet mark, quantity × price, the cart control and a remove. */
 export function FoodCartLines({ cart, currency, disabled }: Readonly<Props>) {
   const { t } = useTranslation();
   const { muted } = useThemeColors();
@@ -42,12 +43,14 @@ export function FoodCartLines({ cart, currency, disabled }: Readonly<Props>) {
               })}
             </Text>
           </YStack>
-          <QuantityStepper
-            name={item.name}
+          <CartQuantityControl
             quantity={quantity}
+            max={FOOD_ORDER_LIMITS.maxQuantity}
+            labels={cartControlLabels(t, item.name)}
             onChange={(next) => cart.setQuantity(item.id, next)}
             disabled={disabled}
-            testID={`food-cart-stepper-${item.id}`}
+            testIdPrefix={`food-cart-stepper-${item.id}`}
+            testIds={{ count: `food-cart-stepper-${item.id}-value` }}
           />
           <XStack
             testID={`food-cart-remove-${item.id}`}

@@ -5,7 +5,8 @@ import { getItem, setItem } from '@/services/secure-storage';
 
 /**
  * What the device remembers about ordering food at a venue: the cart per venue
- * (leaving the screen must not empty it), the details last ordered with, and
+ * (leaving the screen must not empty it) with the coupon applied to it, the
+ * details last ordered with, and
  * the orders placed — each with the key that proves it is the member's, and the
  * key its payment can be reopened with. RN twin of mWeb's food/foodStorage,
  * on the app's own key/value store (so every read is async).
@@ -15,6 +16,7 @@ import { getItem, setItem } from '@/services/secure-storage';
  */
 
 const CART_KEY = 'duncit.food_cart.';
+const COUPON_KEY = 'duncit.food_coupon.';
 const GUEST_KEY = 'duncit.food_guest';
 const ORDERS_KEY = 'duncit.food_orders';
 /** Orders kept on the device; the oldest fall off. */
@@ -73,6 +75,34 @@ export async function readFoodCart(venueId: string): Promise<FoodCartQuantities>
 
 export const writeFoodCart = (venueId: string, cart: FoodCartQuantities): Promise<void> =>
   write(`${CART_KEY}${venueId}`, cart);
+
+/**
+ * The venue's coupon applied to a cart, as the server's preview accepted it —
+ * `priceFoodCart` takes it as it is. Kept beside the cart, under the venue id.
+ */
+export interface AppliedFoodCoupon {
+  /** The code as the venue wrote it. */
+  code: string;
+  coupon_pct: number;
+  /** Rupees of subtotal the code needs; 0 when it needs none. */
+  min_order_amount: number;
+}
+
+export async function readFoodCoupon(venueId: string): Promise<AppliedFoodCoupon | null> {
+  const stored = await read(`${COUPON_KEY}${venueId}`);
+  if (!isRecord(stored)) return null;
+  const { code, coupon_pct: pct, min_order_amount: minOrder } = stored;
+  if (typeof code !== 'string' || !code || typeof pct !== 'number') return null;
+  return {
+    code,
+    coupon_pct: pct,
+    min_order_amount: typeof minOrder === 'number' ? minOrder : 0,
+  };
+}
+
+/** `null` forgets the venue's coupon — it was removed, or its cart was emptied or ordered. */
+export const writeFoodCoupon = (venueId: string, coupon: AppliedFoodCoupon | null): Promise<void> =>
+  write(`${COUPON_KEY}${venueId}`, coupon);
 
 export async function readFoodGuest(): Promise<FoodGuestDetails | null> {
   const stored = await read(GUEST_KEY);

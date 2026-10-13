@@ -57,6 +57,8 @@ export function VenueFoodOrderScreen() {
         customer_phone: target.customer_phone,
         table_label: target.table_label || null,
         note: target.note || null,
+        // Repeated exactly as it was placed — the coupon included.
+        ...(target.coupon_code ? { coupon_code: target.coupon_code } : {}),
         // The key the order was placed with: the server answers with this same order and its payment.
         client_key: clientKey,
       }),

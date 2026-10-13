@@ -43,12 +43,16 @@ export default function DataClonePage() {
   const [start, startState] = useMutation<{ startDataClone: CloneJob }>(START_DATA_CLONE);
   const guard = useCloneNavigationGuard(running);
 
+  // Resolved per render so the blank fallback is exercised while targets load.
+  const sourceDatabase = targets?.sourceDatabase ?? '';
+  const targetDatabase = targets?.targetDatabase ?? '';
+
   const handleStart = async () => {
     setStartError(null);
     const ok = await confirm({
       title: t('tech.dataClone.confirmTitle'),
       message: t('tech.dataClone.confirmMessage', {
-        vars: { source: targets?.sourceDatabase ?? '', target: targets?.targetDatabase ?? '' },
+        vars: { source: sourceDatabase, target: targetDatabase },
       }),
       confirmLabel: t('tech.dataClone.confirmAction'),
       cancelLabel: t('tech.dataClone.cancel'),

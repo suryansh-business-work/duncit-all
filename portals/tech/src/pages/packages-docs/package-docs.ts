@@ -98,7 +98,8 @@ function stripTitle(body: string, name: string): string {
   return trimmed.slice(heading.length).trimStart();
 }
 
-function toDoc(path: string, raw: string): PackageDoc {
+/** One compiled `docs/index.mdx` as a doc. Exported so the parsing rules can be exercised on their own. */
+export function toDoc(path: string, raw: string): PackageDoc {
   const slug = /packages\/([^/]+)\/docs/.exec(path.replaceAll('\\', '/'))?.[1] ?? path;
   const { data, body } = parseFrontmatter(raw);
   const name = str(data, 'name', `@duncit/${slug}`);

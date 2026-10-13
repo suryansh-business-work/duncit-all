@@ -17,6 +17,7 @@ export const MY_PUBLIC_PAGE_QUERY = /* GraphQL */ `
   query MyPublicPage($kind: PublicPageKind!, $refId: ID, $days: Int) {
     myPublicPage(kind: $kind, ref_id: $refId, days: $days) {
       published
+      offers_food
       link {
         url
         code
@@ -61,6 +62,13 @@ export const PUBLIC_PAGE_POSTER_QUERY = /* GraphQL */ `
   }
 `;
 
+/** A venue's printable table label: the scan panel with the venue's name under it. */
+export const VENUE_TABLE_LABEL_QUERY = /* GraphQL */ `
+  query MyVenueTableLabel($venueId: ID!, $headline: String!) {
+    myVenueTableLabelPdfBase64(venue_id: $venueId, headline: $headline)
+  }
+`;
+
 export interface PublicPageLink {
   url: string;
   code: string | null;
@@ -74,6 +82,8 @@ export interface PublicPageBreakdown {
 
 export interface PublicPageInsights {
   published: boolean;
+  /** The page also shows a food menu. Optional only so an older answer still types. */
+  offers_food?: boolean;
   link: PublicPageLink | null;
   stats: {
     total_clicks: number;
@@ -144,6 +154,18 @@ function fileSlug(title: string): string {
 
 /** A file name for the printable poster. */
 export const publicPagePosterFileName = (title: string): string => `${fileSlug(title)}-poster.pdf`;
+
+/** A file name for the printable table label, named like the poster. */
+export const publicPageTableLabelFileName = (title: string): string => `${fileSlug(title)}-table-label.pdf`;
+
+/**
+ * What the scan panel says. A venue that serves food invites guests to its menu
+ * as well as its pods; the poster and the table label print the same line.
+ */
+export function publicPageHeadlineKey(kind: PublicPageKind, offersFood: boolean): string {
+  if (kind === 'HOST') return 'publicPage.poster.hostHeadline';
+  return offersFood ? 'publicPage.poster.venueFoodHeadline' : 'publicPage.poster.venueHeadline';
+}
 
 /** A file name for the saved QR image, named like the poster. */
 export const publicPageQrFileName = (title: string): string => `${fileSlug(title)}-qr.png`;

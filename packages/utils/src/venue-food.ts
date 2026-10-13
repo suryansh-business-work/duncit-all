@@ -56,11 +56,32 @@ export interface VenueFoodOrderLine {
   line_total: number;
 }
 
+/** What a guest said about a served order. Written once. */
+export interface VenueFoodFeedback {
+  /** 1 to 5. */
+  rating: number;
+  comment: string;
+  images: string[];
+  submitted_at: string;
+}
+
 export interface VenueFoodOrder {
   id: string;
   order_no: string;
   venue_id: string;
   venue_name: string;
+  /**
+   * What the invoice and the rating need: the venue's GST number and address as
+   * they were when the order was placed, whether the invoice can be downloaded
+   * yet, and what the guest said once it was served. Optional only so an order
+   * read by an older document still types — the server always answers them.
+   */
+  venue_gstin?: string;
+  venue_address?: string;
+  invoice_available?: boolean;
+  served_at?: string | null;
+  subscribe_events?: boolean;
+  feedback?: VenueFoodFeedback | null;
   customer_name: string;
   customer_phone: string;
   table_label: string;
@@ -124,6 +145,8 @@ export interface PlaceVenueFoodOrderInput {
   note?: string | null;
   /** A coupon of this venue. A different code is a different attempt — see `foodAttemptSignature`. */
   coupon_code?: string | null;
+  /** The guest ticked "tell me about events here"; they are subscribed once the order is paid. */
+  subscribe_events?: boolean;
   /** Minted once per checkout attempt; repeating it returns the same order. */
   client_key: string;
 }
@@ -190,6 +213,17 @@ export const PLACE_VENUE_FOOD_ORDER_MUTATION = /* GraphQL */ `
         order_no
         venue_id
         venue_name
+        venue_gstin
+        venue_address
+        invoice_available
+        served_at
+        subscribe_events
+        feedback {
+          rating
+          comment
+          images
+          submitted_at
+        }
         customer_name
         customer_phone
         table_label
@@ -248,6 +282,17 @@ export const VENUE_FOOD_ORDER_QUERY = /* GraphQL */ `
       order_no
       venue_id
       venue_name
+      venue_gstin
+      venue_address
+      invoice_available
+      served_at
+      subscribe_events
+      feedback {
+        rating
+        comment
+        images
+        submitted_at
+      }
       customer_name
       customer_phone
       table_label
@@ -277,6 +322,63 @@ export const VENUE_FOOD_ORDER_QUERY = /* GraphQL */ `
     }
   }
 `;
+
+/** Public: the invoice of a paid order as a base64 PDF, for whoever holds its access key. */
+export const VENUE_FOOD_ORDER_INVOICE_QUERY = /* GraphQL */ `
+  query VenueFoodOrderInvoice($orderId: ID!, $accessKey: String) {
+    venueFoodOrderInvoicePdfBase64(order_id: $orderId, access_key: $accessKey)
+  }
+`;
+
+/** Public: a one-shot pass to upload ONE feedback photo for a served, not yet rated order. */
+export const VENUE_FOOD_FEEDBACK_UPLOAD_PASS_MUTATION = /* GraphQL */ `
+  mutation VenueFoodFeedbackUploadPass($orderId: ID!, $accessKey: String) {
+    venueFoodFeedbackUploadPass(order_id: $orderId, access_key: $accessKey) {
+      uploadUrl
+      ticket
+    }
+  }
+`;
+
+/** Public: rate a served order — once. Answers with the order, now carrying its feedback. */
+export const SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION = /* GraphQL */ `
+  mutation SubmitVenueFoodFeedback($input: SubmitVenueFoodFeedbackInput!) {
+    submitVenueFoodFeedback(input: $input) {
+      id
+      status
+      feedback {
+        rating
+        comment
+        images
+        submitted_at
+      }
+    }
+  }
+`;
+
+export interface SubmitVenueFoodFeedbackInput {
+  order_id: string;
+  access_key?: string | null;
+  rating: number;
+  comment?: string | null;
+  images?: string[];
+}
+
+/** Where one feedback photo is POSTed, and the pass that lets it. */
+export interface VenueFoodUploadPass {
+  uploadUrl: string;
+  ticket: string;
+}
+
+/** The server's own limits on a rating, so the form refuses what the server would. */
+export const FOOD_FEEDBACK_LIMITS = { ratingMin: 1, ratingMax: 5, commentMax: 500, imagesMax: 3 } as const;
+
+/** A served order nobody has rated yet — the only one the rating form is shown for. */
+export const canRateFoodOrder = (order: Pick<VenueFoodOrder, 'status' | 'feedback'>): boolean =>
+  order.status === 'SERVED' && !order.feedback;
+
+/** A file name for the downloaded invoice. */
+export const foodInvoiceFileName = (orderNo: string): string => `invoice-${orderNo}.pdf`;
 
 /** Public and side-effect free: what a code would do to a cart. Ask again whenever the cart or the phone changes. */
 export const PREVIEW_VENUE_FOOD_COUPON_QUERY = /* GraphQL */ `
@@ -482,6 +584,8 @@ export interface FoodOrderDetails {
   note?: string | null;
   /** The coupon code applied to this attempt, if any. */
   coupon?: string | null;
+  /** The guest asked to hear about this venue's events. */
+  subscribe?: boolean;
 }
 
 /** The cart and the guest's details as the place-order mutation takes them. */
@@ -506,6 +610,8 @@ export function buildFoodOrderInput({
     note: details.note || null,
     // Left out entirely without a coupon, so such an order is sent exactly as it always was.
     ...(coupon ? { coupon_code: coupon } : {}),
+    // Left out unless ticked, for the same reason.
+    ...(details.subscribe ? { subscribe_events: true } : {}),
     client_key: clientKey,
   };
 }

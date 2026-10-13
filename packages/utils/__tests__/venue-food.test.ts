@@ -3,6 +3,7 @@ import pricing from './fixtures/venue-food-pricing.json';
 import {
   FOOD_COUPON_REJECTION_KEYS,
   FOOD_DIET_KEYS,
+  FOOD_FEEDBACK_LIMITS,
   FOOD_ORDER_CONFLICT_RETRY_MS,
   FOOD_ORDER_ERROR,
   FOOD_ORDER_FLOW,
@@ -15,16 +16,21 @@ import {
   FOOD_SPICE_KEYS,
   PLACE_VENUE_FOOD_ORDER_MUTATION,
   PREVIEW_VENUE_FOOD_COUPON_QUERY,
+  SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION,
+  VENUE_FOOD_FEEDBACK_UPLOAD_PASS_MUTATION,
+  VENUE_FOOD_ORDER_INVOICE_QUERY,
   VENUE_FOOD_ORDER_QUERY,
   VERIFY_VENUE_FOOD_ORDER_MUTATION,
   buildFoodOrderInput,
   buildFoodOrderTimeline,
+  canRateFoodOrder,
   createFoodClientKey,
   foodAttemptKey,
   foodAttemptSignature,
   foodCartLines,
   foodCartSignature,
   foodCouponRejectionOf,
+  foodInvoiceFileName,
   foodOrderErrorCode,
   foodOrderErrorKey,
   foodOrderLineInputs,
@@ -115,6 +121,12 @@ const ORDER_FIELDS = [
   'order_no',
   'venue_id',
   'venue_name',
+  'venue_gstin',
+  'venue_address',
+  'invoice_available',
+  'served_at',
+  'subscribe_events',
+  'feedback',
   'customer_name',
   'customer_phone',
   'table_label',
@@ -1294,5 +1306,81 @@ describe('buildFoodOrderTimeline', () => {
       'mweb.venueFood.status.ready',
       'mweb.venueFood.status.served',
     ]);
+  });
+});
+
+const FEEDBACK_FIELDS = ['rating', 'comment', 'images', 'submitted_at'];
+
+describe('the invoice and feedback documents', () => {
+  it('reads the same feedback fields when polling as when placing', () => {
+    expect(selectionOf(VENUE_FOOD_ORDER_QUERY, 'feedback')).toEqual(FEEDBACK_FIELDS);
+    expect(selectionOf(PLACE_VENUE_FOOD_ORDER_MUTATION, 'feedback')).toEqual(FEEDBACK_FIELDS);
+  });
+
+  it('downloads an invoice by the order id and its access key', () => {
+    expect(operationOf(VENUE_FOOD_ORDER_INVOICE_QUERY)).toBe('query VenueFoodOrderInvoice($orderId: ID!, $accessKey: String) {');
+    expect(VENUE_FOOD_ORDER_INVOICE_QUERY).toContain('venueFoodOrderInvoicePdfBase64(order_id: $orderId, access_key: $accessKey)');
+  });
+
+  it('asks for an upload pass with only where to send the photo and the ticket', () => {
+    expect(operationOf(VENUE_FOOD_FEEDBACK_UPLOAD_PASS_MUTATION)).toBe(
+      'mutation VenueFoodFeedbackUploadPass($orderId: ID!, $accessKey: String) {'
+    );
+    expect(selectionOf(VENUE_FOOD_FEEDBACK_UPLOAD_PASS_MUTATION, 'venueFoodFeedbackUploadPass')).toEqual(['uploadUrl', 'ticket']);
+  });
+
+  // The answer carries the order id, so the page's cached order picks the feedback up without a re-read.
+  it('submits feedback and reads back the id with the feedback it saved', () => {
+    expect(operationOf(SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION)).toBe(
+      'mutation SubmitVenueFoodFeedback($input: SubmitVenueFoodFeedbackInput!) {'
+    );
+    expect(selectionOf(SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION, 'submitVenueFoodFeedback')).toEqual(['id', 'status', 'feedback']);
+    expect(selectionOf(SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION, 'feedback')).toEqual(FEEDBACK_FIELDS);
+  });
+
+  it('keeps the rating limits the server enforces', () => {
+    expect(FOOD_FEEDBACK_LIMITS).toEqual({ ratingMin: 1, ratingMax: 5, commentMax: 500, imagesMax: 3 });
+  });
+
+  it('names the invoice file after the order number', () => {
+    expect(foodInvoiceFileName('FOOD-000005')).toBe('invoice-FOOD-000005.pdf');
+  });
+});
+
+describe('canRateFoodOrder', () => {
+  const feedback = { rating: 4, comment: '', images: [], submitted_at: '2026-10-13T16:00:00.000Z' };
+
+  it('offers the rating form for a served order nobody has rated', () => {
+    expect(canRateFoodOrder(order({ status: 'SERVED', feedback: null }))).toBe(true);
+    // An order read by a document that predates feedback carries no field at all.
+    expect(canRateFoodOrder(order({ status: 'SERVED' }))).toBe(true);
+  });
+
+  it('never offers it twice', () => {
+    expect(canRateFoodOrder(order({ status: 'SERVED', feedback }))).toBe(false);
+  });
+
+  it.each(['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'CANCELLED'] as const)('does not offer it while the order is %s', (status) => {
+    expect(canRateFoodOrder(order({ status }))).toBe(false);
+  });
+});
+
+describe('the events subscription at checkout', () => {
+  const details = { name: 'Asha', phone: '9876543210' };
+
+  it('sends subscribe_events only when the guest ticked the box', () => {
+    const ticked = buildFoodOrderInput({ venueId: 'venue_1', lines: [], details: { ...details, subscribe: true }, clientKey: 'k' });
+    expect(ticked.subscribe_events).toBe(true);
+    const unticked = buildFoodOrderInput({ venueId: 'venue_1', lines: [], details: { ...details, subscribe: false }, clientKey: 'k' });
+    expect(unticked).not.toHaveProperty('subscribe_events');
+    expect(buildFoodOrderInput({ venueId: 'venue_1', lines: [], details, clientKey: 'k' })).not.toHaveProperty('subscribe_events');
+  });
+
+  // The server answers a repeated key with the order it already wrote, so a changed tick must be a new attempt.
+  it('treats ticking or unticking the box as a new checkout attempt', () => {
+    const before = foodAttemptSignature('a:1', { ...details, subscribe: false });
+    const after = foodAttemptSignature('a:1', { ...details, subscribe: true });
+    expect(after).not.toBe(before);
+    expect(foodAttemptSignature('a:1', { ...details, subscribe: true })).toBe(after);
   });
 });

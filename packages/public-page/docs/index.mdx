@@ -40,7 +40,13 @@ in `@duncit/utils` (`public-page.ts`).
   `myPublicPagePosterPdfBase64` answer only for the caller's own venue (or their own host page).
   A venue can be published once it is approved and active; a host page once the account is a host.
 - **The poster is drawn by the server** (pdfkit, A4) with the words the surface passes in, already
-  translated — the server holds no localization of its own.
+  translated — the server holds no localization of its own. A venue that serves food (the answer's
+  `offers_food`) prints "Scan to see the Menu & pods happening here"; `publicPageHeadlineKey` in
+  `@duncit/utils` picks the line, so the poster and the table label always say the same thing.
+- **A venue also gets a table label** ("Download table label", venues only): the poster's red scan
+  panel alone with the venue's name under it, from `myVenueTableLabelPdfBase64`. For a venue with a
+  menu its QR is the venue's own table link (share target `VENUE_MENU`), which opens the Menu tab
+  and whose scans are counted apart from the poster's.
 
 ## Use
 

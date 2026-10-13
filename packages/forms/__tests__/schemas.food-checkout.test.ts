@@ -14,7 +14,7 @@ const t = (key: string, options?: { vars?: Record<string, string> }) =>
   options?.vars ? `${key}:${JSON.stringify(options.vars)}` : key;
 const schema = makeFoodCheckoutSchema(t);
 
-const VALID = { name: 'Asha Rao', phone: '9876543210', table: 'T4', note: 'Less spicy' };
+const VALID = { name: 'Asha Rao', phone: '9876543210', table: 'T4', note: 'Less spicy', subscribe: false };
 
 const issuesFor = (values: Partial<typeof VALID>) => {
   const result = schema.safeParse({ ...VALID, ...values });
@@ -23,7 +23,9 @@ const issuesFor = (values: Partial<typeof VALID>) => {
 
 describe('makeFoodCheckoutSchema', () => {
   it('accepts a full set of details and trims every field', () => {
-    expect(schema.parse({ name: '  Asha Rao ', phone: ' 9876543210 ', table: ' T4 ', note: '  Less spicy ' })).toEqual(VALID);
+    expect(
+      schema.parse({ name: '  Asha Rao ', phone: ' 9876543210 ', table: ' T4 ', note: '  Less spicy ', subscribe: false }),
+    ).toEqual(VALID);
   });
 
   it('lets the table and the note stay empty', () => {
@@ -69,7 +71,17 @@ describe('makeFoodCheckoutSchema', () => {
   });
 
   it('starts empty, which is not yet a valid order', () => {
-    expect(foodCheckoutDefaults).toEqual({ name: '', phone: '', table: '', note: '' });
+    expect(foodCheckoutDefaults).toEqual({ name: '', phone: '', table: '', note: '', subscribe: false });
     expect(schema.safeParse(foodCheckoutDefaults).success).toBe(false);
+  });
+
+  // The events subscription is a consent: carried as ticked or not, never demanded.
+  it('carries the events subscription exactly as it was ticked', () => {
+    expect(schema.parse({ ...VALID, subscribe: true }).subscribe).toBe(true);
+    expect(schema.parse({ ...VALID, subscribe: false }).subscribe).toBe(false);
+  });
+
+  it('refuses a subscription that is not a yes or a no', () => {
+    expect(schema.safeParse({ ...VALID, subscribe: 'yes' }).success).toBe(false);
   });
 });

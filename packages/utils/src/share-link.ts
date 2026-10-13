@@ -25,6 +25,7 @@ export type ShareLinkTarget =
   | 'GIFT_CARD'
   | 'REFERRAL'
   | 'VENUE_PAGE'
+  | 'VENUE_MENU'
   | 'HOST_PAGE';
 
 export const SHARE_LINK_MUTATION = /* GraphQL */ `

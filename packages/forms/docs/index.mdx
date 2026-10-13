@@ -765,8 +765,23 @@ makeFoodCheckoutSchema(t).safeParse({ ...foodCheckoutDefaults, name: 'Asha', pho
 ```
 
 `name` is trimmed and must be 2–80 characters; `table` (20) and `note` (300) are optional and
-only capped. The too-long messages receive `{max}`. `FoodCheckoutValues` is the inferred shape
-and `foodCheckoutDefaults` the blank form.
+only capped. The too-long messages receive `{max}`. `subscribe` is the "tell me about events
+here" tick box — a consent, so it is a plain boolean that starts `false` and is never required.
+`FoodCheckoutValues` is the inferred shape and `foodCheckoutDefaults` the blank form.
+
+`makeFoodFeedbackSchema(t)` is what a guest says about a served order — the rating form on the
+order page, in mWeb and the app. Its limits are `FOOD_FEEDBACK_LIMITS` in `@duncit/utils`:
+
+```ts
+import { foodFeedbackDefaults, makeFoodFeedbackSchema } from '@duncit/forms/schemas';
+
+makeFoodFeedbackSchema(t).safeParse(foodFeedbackDefaults);
+// mweb.venueFood.feedback.ratingRequired — no stars chosen yet
+```
+
+`rating` is a whole number from 1 to 5 and the only thing required; `comment` is trimmed and
+capped at 500 characters, `images` at 3 uploaded photo addresses. The limit messages receive
+`{max}`. `FoodFeedbackValues` is the inferred shape and `foodFeedbackDefaults` the blank form.
 
 ### Venue cancellation policy
 

@@ -3,6 +3,7 @@ import {
   MY_PUBLIC_PAGE_QUERY,
   PUBLIC_PAGE_POSTER_QUERY,
   PUBLISH_PUBLIC_PAGE_MUTATION,
+  VENUE_TABLE_LABEL_QUERY,
   type PublicPageKind,
 } from '@duncit/utils';
 
@@ -19,3 +20,7 @@ export const PUBLIC_PAGE_POSTER: TypedDocumentNode<
   { myPublicPagePosterPdfBase64: string },
   PosterVariables
 > = gql(PUBLIC_PAGE_POSTER_QUERY);
+export const VENUE_TABLE_LABEL: TypedDocumentNode<
+  { myVenueTableLabelPdfBase64: string },
+  { venueId: string; headline: string }
+> = gql(VENUE_TABLE_LABEL_QUERY);

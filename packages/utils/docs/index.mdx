@@ -190,6 +190,8 @@ exports:
   - 'STUDIO_OPTION_LIST'
   - 'studioOptionsEntryFor'
   - 'studioOptionsFor'
+  - 'studioOptionGroups'
+  - 'StudioOptionGroups'
   - 'StudioOptionItem'
   - 'StudioOptionIcon'
   - 'StudioOptionsEntry'
@@ -613,10 +615,14 @@ row would count the cut twice.
 
 The partner studio OPTIONS — one catalogue mWeb, the native app and the Partner console all render. Switching into a studio puts ONE highlighted entry in the sidebar (`studioOptionsEntryFor`); it opens the studio's Options page, which lists `studioOptionsFor(mode, roles, { autoPods })` — each option with a title, a hint, an icon, and its mWeb `path`, native `route` and Partner console `portal` path (an app with no screen for an option opens the console).
 
+The catalogue is ONE flat list, so every Options page lists it in order. An option may name the sub-menu it belongs to with the optional `group` field (today only `'food'`: the venue's food Dashboard, Menu, Food Orders and Food Coupons). `studioOptionGroups(options)` splits any list of options into `{ main, food }`, each in catalogue order — the Partner console sidebar draws the venue studio as a "Venue Options" group and a "Food" group from it. An option without `group` is in `main`.
+
 ```ts
 import { studioOptionsFor, venuePodPhase } from '@duncit/utils';
 
 studioOptionsFor('VENUE', roles, { autoPods }); // [] in User mode or once the role is revoked
+studioOptionGroups(studioOptionsFor('VENUE', roles, { autoPods }));
+// { main: [dashboard, venues, …], food: [food-dashboard, food-menu, food-orders, food-coupons] }
 venuePodPhase('ONGOING'); // 'CURRENT' — the Upcoming / Current / Past tabs of Pods at your venue
 ```
 
@@ -3580,6 +3586,31 @@ Copy lives under `mweb.venueFood.*`; `FOOD_ORDER_STATUS_KEYS`, `FOOD_PAYMENT_STA
 `FOOD_DIET_KEYS` and `FOOD_SPICE_KEYS` map each enum to its key, `FOOD_SPICE_HEAT` to the number of
 flames it is drawn with, and `isVegFood` answers the veg-only filter. Web renderer: mWeb's
 `pages/VenueDetailsPage/food` and `pages/venue-food-order-page`.
+
+**After the payment.** A paid order (`invoice_available`) has an invoice — the venue's own bill,
+carrying the `venue_gstin` and `venue_address` the order snapshotted when it was placed:
+`VENUE_FOOD_ORDER_INVOICE_QUERY` answers a base64 PDF and `foodInvoiceFileName(orderNo)` names the
+file. A served order can be rated once: `canRateFoodOrder(order)` says when to show the form,
+`FOOD_FEEDBACK_LIMITS` (1–5 stars, 500 characters, 3 photos) are the server's limits, each photo is
+POSTed with its own single-use pass from `VENUE_FOOD_FEEDBACK_UPLOAD_PASS_MUTATION` (a guest has no
+account to ask for one), and `SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION` answers the order id with the
+`feedback` it saved, so a cached order updates by itself.
+
+**The events tick.** `FoodOrderDetails.subscribe` is the checkout's "tell me about events here" box;
+`buildFoodOrderInput` sends `subscribe_events: true` only when it is ticked, and — like the coupon —
+it is part of `foodAttemptSignature`, so ticking or unticking it is a new attempt. The server
+subscribes the number once the order is paid; `order.subscribe_events` reads it back.
+
+```ts
+import { canRateFoodOrder, foodInvoiceFileName, downloadBase64File } from '@duncit/utils';
+
+if (order.invoice_available) downloadBase64File(pdfBase64, foodInvoiceFileName(order.order_no), 'application/pdf');
+const showRatingForm = canRateFoodOrder(order); // SERVED and not rated yet
+```
+
+**The table label.** Beside the A4 poster a venue can print a table label (`VENUE_TABLE_LABEL_QUERY`,
+`publicPageTableLabelFileName`). `publicPageHeadlineKey(kind, offersFood)` picks what both print: a
+venue with a menu (`PublicPageInsights.offers_food`) says "Scan to see the Menu & pods happening here".
 
 ## The product cart control — `cart-control`
 

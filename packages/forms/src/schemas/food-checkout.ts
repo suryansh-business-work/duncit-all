@@ -27,9 +27,11 @@ export function makeFoodCheckoutSchema(t: Translate) {
       .string()
       .trim()
       .max(FOOD_ORDER_LIMITS.noteMax, t('mweb.venueFood.checkout.noteTooLong', max(FOOD_ORDER_LIMITS.noteMax))),
+    // "Tell me about events here" — a consent, so it starts unticked and is never required.
+    subscribe: z.boolean(),
   });
 }
 
 export type FoodCheckoutValues = z.infer<ReturnType<typeof makeFoodCheckoutSchema>>;
 
-export const foodCheckoutDefaults: FoodCheckoutValues = { name: '', phone: '', table: '', note: '' };
+export const foodCheckoutDefaults: FoodCheckoutValues = { name: '', phone: '', table: '', note: '', subscribe: false };

@@ -873,6 +873,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       clubAdminStudioCaption: 'Clubs you manage',
       brandStudio: 'Brand Studio',
       brandStudioCaption: 'Brands and products',
+      // The Venue Studio's sidebar groups: its options, opening with the
+      // Options page itself, and the venue's food desk.
+      allOptions: 'All options',
+      food: 'Food',
+      foodMenu: 'Menu',
       // The studio menu's groups and the options under them.
       requests: 'Requests',
       yourPods: 'Your Pods',

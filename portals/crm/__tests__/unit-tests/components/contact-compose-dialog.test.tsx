@@ -307,7 +307,9 @@ describe('ContactComposeDialog call', () => {
         {
           request: { query: CALL_VENUE_LEAD, variables: { id: 'lead-1', provider_id: null, contact_number: '9812345678' } },
           result: outcome('callVenueLeadContact'),
-          delay: 50,
+          // Long enough that the call is still in flight when the button is read, even on a
+          // loaded CI box (findByRole polls; a 50 ms answer could land between two polls).
+          delay: 5000,
         },
       ],
     });

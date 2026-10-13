@@ -196,6 +196,9 @@ export type RootStackParamList = {
   PostDetail: { postId: string };
   Follow: { userId: string; tab: 'followers' | 'following' };
   VenueDetails: { venueId: string };
+  /** /venue/:venueId/food-order/:orderId — a food order placed from the venue's menu;
+   * `key` is the order's access key, riding in the link as `?key=`. */
+  VenueFoodOrder: { venueId: string; orderId: string; key?: string };
   /** /city-launch/:locationId — a not-yet-launched city's waitlist (its slug, or Location.id). */
   CityLaunch: { locationId: string };
   NotFound: undefined;
@@ -238,6 +241,7 @@ export type MenuStackRoute = Exclude<
   | 'PostDetail'
   | 'Follow'
   | 'VenueDetails'
+  | 'VenueFoodOrder'
   | 'CityLaunch'
   | 'Checkout'
   | 'ProductCheckout'

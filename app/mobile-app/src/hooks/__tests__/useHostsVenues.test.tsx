@@ -4,6 +4,7 @@ import {
   MobileCancelFollowRequestDocument,
   MobileFollowUserDocument,
   MobilePublicHostsDocument,
+  MobilePublicVenueDocument,
   MobilePublicVenuesDocument,
   MobileUnfollowUserDocument,
 } from '@/graphql/hosts-venues';
@@ -27,9 +28,14 @@ const venuesData = {
   ],
 };
 
-function route(doc: unknown) {
+function route(doc: unknown, vars?: { venueId?: string }) {
   if (doc === MobilePublicHostsDocument) return Promise.resolve(hostsData);
   if (doc === MobilePublicVenuesDocument) return Promise.resolve(venuesData);
+  // The detail screen reads one venue; the server answers null for an unknown id.
+  if (doc === MobilePublicVenueDocument) {
+    const publicVenue = venuesData.publicVenues.find((v) => v.id === vars?.venueId) ?? null;
+    return Promise.resolve({ publicVenue });
+  }
   // Each follow mutation answers under its own field with the viewer's lists.
   const lists = { user_id: 'me', following_user_ids: [], requested_user_ids: [] };
   if (doc === MobileUnfollowUserDocument) return Promise.resolve({ unfollowUser: lists });

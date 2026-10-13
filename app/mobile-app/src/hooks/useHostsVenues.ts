@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { followActionFor, followStatusFrom } from '@duncit/utils';
+import { followActionFor, followStatusFrom, type VenueFoodItem } from '@duncit/utils';
 
-import { MobilePublicHostsDocument, MobilePublicVenuesDocument } from '@/graphql/hosts-venues';
+import {
+  MobilePublicHostsDocument,
+  MobilePublicVenueDocument,
+  MobilePublicVenuesDocument,
+} from '@/graphql/hosts-venues';
 import { runUserFollowAction } from '@/services/follow-user';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
@@ -11,6 +15,12 @@ type HostsData = ResultOf<typeof MobilePublicHostsDocument>;
 type VenuesData = ResultOf<typeof MobilePublicVenuesDocument>;
 export type PublicHost = HostsData['publicHosts'][number];
 export type PublicVenue = VenuesData['publicVenues'][number];
+type VenueDetailsData = NonNullable<ResultOf<typeof MobilePublicVenueDocument>['publicVenue']>;
+/** The venue-detail screen's venue: the list fields plus the food menu, typed
+ * with the shared `@duncit/utils` contract the menu helpers take. */
+export type PublicVenueDetails = Omit<VenueDetailsData, 'food_menu'> & {
+  food_menu: VenueFoodItem[];
+};
 
 /** Hosts & Venues discovery — RN port of mWeb's HostsVenuesPage data layer.
  * Loads both lists + the viewer's following ids and toggles follow on a host. */
@@ -86,16 +96,17 @@ export function useHostsVenues() {
   };
 }
 
-/** A single approved venue by id (filtered from the public list) — mWeb's VenueDetailsPage. */
+/** A single approved venue by id, with its food menu — mWeb's VenueDetailsPage. */
 export function useVenueDetails(venueId: string) {
-  const [venue, setVenue] = useState<PublicVenue | null>(null);
+  const [venue, setVenue] = useState<PublicVenueDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
   useEffect(() => {
     let active = true;
-    graphqlRequest(MobilePublicVenuesDocument, undefined, { auth: true })
-      .then((d) => active && setVenue(d.publicVenues.find((v) => v.id === venueId) ?? null))
+    graphqlRequest(MobilePublicVenueDocument, { venueId }, { auth: true })
+      // The generated diet/spice enums carry the same strings as the shared unions.
+      .then((d) => active && setVenue((d.publicVenue as PublicVenueDetails | null) ?? null))
       .catch((err) => active && setError(err))
       .finally(() => active && setIsLoading(false));
     return () => {
@@ -103,5 +114,11 @@ export function useVenueDetails(venueId: string) {
     };
   }, [venueId]);
 
-  return { venue, isLoading, error };
+  /** Re-read the venue — a dish left its menu between the screen loading and an order. */
+  const refetch = useCallback(async () => {
+    const d = await graphqlRequest(MobilePublicVenueDocument, { venueId }, { auth: true });
+    setVenue((d.publicVenue as PublicVenueDetails | null) ?? null);
+  }, [venueId]);
+
+  return { venue, isLoading, error, refetch };
 }

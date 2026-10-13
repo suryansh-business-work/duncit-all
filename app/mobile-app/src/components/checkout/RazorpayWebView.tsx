@@ -9,8 +9,19 @@ import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import type { RazorpayOrder, RazorpaySignature } from '@/hooks/useCheckout';
 
+/**
+ * What the hosted checkout is opened with — the part of a `RazorpayOrder` this
+ * view reads. A venue's food order arrives as exactly this, with no payment row
+ * of ours and no email to prefill (mWeb twin: checkout-page `RazorpaySheetData`).
+ */
+export type RazorpaySheet = Pick<
+  RazorpayOrder,
+  'key_id' | 'order_id' | 'amount' | 'currency' | 'name' | 'description' | 'prefill_contact'
+> &
+  Partial<Pick<RazorpayOrder, 'prefill_email'>>;
+
 interface Props {
-  order: RazorpayOrder | null;
+  order: RazorpaySheet | null;
   open: boolean;
   onSuccess: (sig: RazorpaySignature) => void;
   /** What Razorpay said went wrong, or null when the buyer closed the sheet. */
@@ -19,7 +30,7 @@ interface Props {
 
 /** Inline HTML that loads Razorpay's hosted checkout and posts the result back
  * to the app. Keeps the integration SDK-free (works in Expo Go + production). */
-export function buildRazorpayHtml(order: RazorpayOrder): string {
+export function buildRazorpayHtml(order: RazorpaySheet): string {
   const options = {
     key: order.key_id,
     amount: order.amount,

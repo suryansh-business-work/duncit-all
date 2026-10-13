@@ -23,8 +23,12 @@ export interface RazorpayKeys {
   keySecret: string;
 }
 
-/** A Tech-portal RAZORPAY entry id; empty means the category's default entry. */
-export type RazorpayAccount = string | null | undefined;
+/**
+ * A Tech-portal RAZORPAY entry id; empty means the category's default entry.
+ * A partner's OWN account (a venue's food orders) passes its keys directly —
+ * that money never touches a Tech-portal entry.
+ */
+export type RazorpayAccount = string | RazorpayKeys | null | undefined;
 
 /** One chosen account's keys, or null when the entry is gone, switched off or half-filled. */
 async function findAccountKeys(account: string): Promise<RazorpayKeys | null> {
@@ -55,12 +59,14 @@ async function accountKeys(account: string): Promise<RazorpayKeys> {
  * falls back to Finance's dummy mode, so a live gateway is never skipped.
  */
 export async function isRazorpayConfigured(account?: RazorpayAccount): Promise<boolean> {
+  if (account && typeof account === 'object') return !!(account.keyId && account.keySecret);
   if (account) return !!(await findAccountKeys(account));
   return !!(await getRuntimeEnvValue('RAZORPAY_KEY_ID'));
 }
 
 /** Active Razorpay credentials, or a clear error when the gateway is not set up. */
 export async function getRazorpayKeys(account?: RazorpayAccount): Promise<RazorpayKeys> {
+  if (account && typeof account === 'object') return account;
   if (account) return accountKeys(account);
   const [keyId, keySecret] = await Promise.all([
     getRuntimeEnvValue('RAZORPAY_KEY_ID'),
@@ -187,7 +193,7 @@ export async function createRazorpayRefund(args: {
   amountPaise: number;
   receipt: string;
   notes?: Record<string, string>;
-  account?: string | null;
+  account?: string | RazorpayKeys | null;
 }): Promise<RazorpayRefund> {
   const { keyId, keySecret } = await getRazorpayKeys(args.account);
   const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
@@ -210,7 +216,7 @@ export async function createRazorpayRefund(args: {
 }
 
 /** Every refund already made on a payment — how a retry finds one it sent but never heard back about. */
-export async function listRazorpayRefunds(paymentId: string, account: string | null = null): Promise<RazorpayRefund[]> {
+export async function listRazorpayRefunds(paymentId: string, account: RazorpayAccount = null): Promise<RazorpayRefund[]> {
   const { keyId, keySecret } = await getRazorpayKeys(account);
   const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
   const res = await outboundFetch('Razorpay', `${RAZORPAY_API}/payments/${encodeURIComponent(paymentId)}/refunds`, {

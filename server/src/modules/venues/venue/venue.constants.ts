@@ -28,6 +28,16 @@ export const VENUE_DOC_TYPES = [
 /** Bounds for the dynamic capacity list on registration. */
 export const VENUE_CAPACITY_ITEM_LIMIT = 50;
 
+/** Food menu: what a dish is, how hot it is, and how much one venue may list. */
+export const VENUE_FOOD_DIETS = ['VEG', 'NON_VEG', 'EGG', 'VEGAN'] as const;
+export const VENUE_FOOD_SPICE_LEVELS = ['NONE', 'MILD', 'MEDIUM', 'HOT', 'EXTRA_HOT'] as const;
+export const VENUE_FOOD_MENU_LIMIT = 200;
+export const VENUE_FOOD_IMAGE_LIMIT = 5;
+/** A menu price in rupees — the ceiling keeps one order inside Razorpay's per-payment limit. */
+export const VENUE_FOOD_PRICE_MAX = 100_000;
+/** The most a venue may take off a QR order; the rest is always paid online. */
+export const VENUE_FOOD_DISCOUNT_MAX_PCT = 90;
+
 /** Comfort features guests get inside the venue. */
 export const VENUE_AMENITIES = [
   'AC',

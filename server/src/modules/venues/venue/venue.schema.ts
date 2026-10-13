@@ -44,6 +44,66 @@ export const venueTypeDefs = /* GraphQL */ `
     capacity: Int!
   }
 
+  enum VenueFoodDiet {
+    VEG
+    NON_VEG
+    EGG
+    VEGAN
+  }
+
+  enum VenueFoodSpiceLevel {
+    NONE
+    MILD
+    MEDIUM
+    HOT
+    EXTRA_HOT
+  }
+
+  "One dish on a venue's food menu."
+  type VenueFoodItem {
+    id: ID!
+    name: String!
+    description: String!
+    "The owner's own menu heading, e.g. 'Starters'. Blank lists under no heading."
+    category: String!
+    "Rupees for one, taxes included."
+    price: Float!
+    images: [String!]!
+    diet: VenueFoodDiet!
+    spice_level: VenueFoodSpiceLevel!
+    "Off = shown as unavailable and refused at checkout."
+    is_available: Boolean!
+  }
+
+  input VenueFoodItemInput {
+    "The id of a dish the venue already lists; leave out for a new dish."
+    id: ID
+    name: String!
+    description: String
+    category: String
+    price: Float!
+    images: [String!]
+    diet: VenueFoodDiet
+    spice_level: VenueFoodSpiceLevel
+    is_available: Boolean
+  }
+
+  "Scan-and-order. Guests pay the venue's OWN Razorpay account."
+  type VenueFoodOrdering {
+    enabled: Boolean!
+    "The owner's saved Razorpay connection. Always null on the public venue."
+    razorpay_integration_id: ID
+    "Percent the venue takes off every QR order."
+    discount_pct: Int!
+  }
+
+  input VenueFoodOrderingInput {
+    enabled: Boolean
+    "One of the venue owner's own myPartnerIntegrations(provider: RAZORPAY) that passed its check; null unlinks."
+    razorpay_integration_id: ID
+    discount_pct: Int
+  }
+
   "Registration option catalogs — clients render these instead of hardcoding."
   type VenueRegistrationConfig {
     venue_types: [String!]!
@@ -56,6 +116,12 @@ export const venueTypeDefs = /* GraphQL */ `
     amenities: [String!]!
     facilities: [String!]!
     security: [String!]!
+    food_diets: [VenueFoodDiet!]!
+    food_spice_levels: [VenueFoodSpiceLevel!]!
+    food_menu_limit: Int!
+    food_image_limit: Int!
+    food_price_max: Int!
+    food_discount_max_pct: Int!
   }
 
   type VenueOperatingHours {
@@ -181,6 +247,10 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_type: String!
     capacity: Int!
     capacity_items: [VenueCapacityItem!]!
+    "The venue serves food. On publicVenue the menu is empty unless this is on."
+    offers_food: Boolean!
+    food_menu: [VenueFoodItem!]!
+    food_ordering: VenueFoodOrdering!
     venue_category: VenueCategory!
     "Super/Category/Sub the owner picked in the venue onboarding survey (from their OnboardingMeeting). Pre-fills Edit Venue when the venue has none; null when there is no survey scope."
     survey_category: VenueCategory
@@ -245,6 +315,9 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_type: String!
     capacity: Int!
     capacity_items: [VenueCapacityItemInput!]
+    offers_food: Boolean
+    food_menu: [VenueFoodItemInput!]
+    food_ordering: VenueFoodOrderingInput
     venue_category: VenueCategoryInput
     description: String
     amenities: [String!]
@@ -284,7 +357,7 @@ export const venueTypeDefs = /* GraphQL */ `
 
   """
   The only fields an owner may change on an APPROVED venue: description,
-  images, capacity list, owner contact details, and appended (never replaced)
+  images, capacity list, food menu and ordering, owner contact details, and appended (never replaced)
   documents. Everything else is locked after approval.
   """
   input UpdateApprovedVenueInput {
@@ -292,6 +365,9 @@ export const venueTypeDefs = /* GraphQL */ `
     cover_image_url: String
     gallery: [String!]
     capacity_items: [VenueCapacityItemInput!]
+    offers_food: Boolean
+    food_menu: [VenueFoodItemInput!]
+    food_ordering: VenueFoodOrderingInput
     add_documents: [VenueDocumentInput!]
     owner_name: String
     owner_phone: String

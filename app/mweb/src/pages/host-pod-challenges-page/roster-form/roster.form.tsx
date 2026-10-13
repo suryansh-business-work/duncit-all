@@ -22,11 +22,13 @@ export function RosterForm({ values, teamMode, attendees, saving, onSubmit, onCa
   const schema = useMemo(() => buildRosterSchema(t), [t]);
   const { control, handleSubmit, formState } = useForm<RosterValues>({ resolver: zodResolver(schema), values });
   const competitors = useWatch({ control, name: 'competitors' });
+  // An array-level rule (at least one competitor) lands on `.root`, not `.message`.
+  const competitorsError = formState.errors.competitors?.root?.message ?? formState.errors.competitors?.message;
   const teams = competitors.map((c) => ({ id: c.competitor_id, name: c.name }));
 
   return (
     <Stack component="form" spacing={2} noValidate onSubmit={handleSubmit(onSubmit)}>
-      {formState.errors.competitors?.message && <Alert severity="error">{formState.errors.competitors.message}</Alert>}
+      {competitorsError && <Alert severity="error">{competitorsError}</Alert>}
       <PersonRows
         control={control}
         kind="competitors"

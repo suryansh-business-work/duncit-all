@@ -33,10 +33,20 @@ export function useCommPreference() {
       setBusyChannel(channel);
       setSaveFailed(false);
       try {
-        // The mutation returns the whole sheet, so the cache lands on the same
-        // shape the query wrote and nothing needs refetching — including the
-        // other channels' `otp_can_disable`, which this write can move.
-        await setChannel({ variables: { channel, enabled } });
+        // The mutation returns the whole sheet, so it is written straight over
+        // the query's field and nothing needs refetching — including the other
+        // channels' `otp_can_disable`, which this write can move. The sheet has
+        // no id, so Apollo cannot merge it into the query on its own.
+        await setChannel({
+          variables: { channel, enabled },
+          update: (cache, { data: written }) => {
+            if (!written?.setMyOtpChannel) return;
+            cache.writeQuery({
+              query: MY_COMM_PREFERENCE,
+              data: { myCommunicationPreference: written.setMyOtpChannel },
+            });
+          },
+        });
         setSaved(true);
       } catch (err) {
         setSaveFailed(true);

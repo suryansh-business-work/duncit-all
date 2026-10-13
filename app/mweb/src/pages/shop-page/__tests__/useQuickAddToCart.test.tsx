@@ -119,4 +119,86 @@ describe('useQuickAddToCart', () => {
       { message: 'Could not add this to your cart. Please try again.', severity: 'error' },
     ]);
   });
+
+  describe('the line a card speaks for', () => {
+    const cartLine = (over: Record<string, unknown> = {}) => ({
+      pod_id: 'pod-1',
+      pod_title: 'Pod One',
+      club_slug: 'club',
+      product_id: 'p1',
+      variant_id: '',
+      variant_label: '',
+      product_name: 'Item',
+      image_url: '',
+      unit_cost: 100,
+      quantity: 2,
+      max_quantity: 5,
+      ...over,
+    });
+    const seed = (lines: ReturnType<typeof cartLine>[]) =>
+      localStorage.setItem('mweb_cart_lines', JSON.stringify(lines));
+
+    it('is the base product’s line — never a variant’s, and the cheapest of several pods', () => {
+      seed([
+        cartLine({ pod_id: 'variant-pod', variant_id: 'v1', unit_cost: 10, quantity: 9 }),
+        cartLine({ pod_id: 'dear', unit_cost: 200, quantity: 4 }),
+        cartLine({ pod_id: 'cheap', unit_cost: 80, quantity: 1 }),
+        cartLine({ pod_id: 'other', product_id: 'p2', unit_cost: 5, quantity: 7 }),
+      ]);
+      const { result } = renderCombined([]);
+      expect(result.current.quick.lineOf('p1')).toMatchObject({ pod_id: 'cheap', quantity: 1 });
+      expect(result.current.quick.lineOf('p2')).toMatchObject({ pod_id: 'other', quantity: 7 });
+      expect(result.current.quick.lineOf('absent')).toBeUndefined();
+    });
+
+    it('steps a line up in the pod it is already in, even when another pod is cheaper now', async () => {
+      seed([cartLine({ pod_id: 'mine', unit_cost: 100, quantity: 2 })]);
+      const { result } = renderCombined([
+        podsMock([pod({ pod_id: 'cheaper', unit_cost: 60 }), pod({ pod_id: 'mine', unit_cost: 100 })]),
+      ]);
+      await act(async () => {
+        await result.current.quick.setQuantity(product, 3);
+      });
+      expect(result.current.cart.lines).toHaveLength(1);
+      expect(result.current.cart.lines[0]).toMatchObject({ pod_id: 'mine', quantity: 3 });
+      expect(notices).toEqual([]);
+    });
+
+    it('does not start a second line when the line’s own pod stopped stocking the product', async () => {
+      seed([cartLine({ pod_id: 'gone', quantity: 2 })]);
+      const { result } = renderCombined([podsMock([pod({ pod_id: 'elsewhere' })])]);
+      await act(async () => {
+        await result.current.quick.setQuantity(product, 3);
+      });
+      expect(result.current.cart.lines).toHaveLength(1);
+      expect(result.current.cart.lines[0]).toMatchObject({ pod_id: 'gone', quantity: 2 });
+      expect(notices).toEqual([{ message: 'No pod stocks this product right now.', severity: 'info' }]);
+    });
+
+    it('steps down and removes without asking the server anything', async () => {
+      seed([cartLine({ quantity: 2 })]);
+      // No mocks: a lookup here would fail the step with an error notice.
+      const { result } = renderCombined([]);
+      await act(async () => {
+        await result.current.quick.setQuantity(product, 1);
+      });
+      expect(result.current.cart.lines[0].quantity).toBe(1);
+
+      await act(async () => {
+        await result.current.quick.setQuantity(product, 0);
+      });
+      expect(result.current.cart.lines).toHaveLength(0);
+      expect(result.current.quick.lineOf('p1')).toBeUndefined();
+      expect(notices).toEqual([]);
+    });
+
+    it('does nothing when asked to remove a product the cart does not hold', async () => {
+      const { result } = renderCombined([]);
+      await act(async () => {
+        await result.current.quick.setQuantity(product, 0);
+      });
+      expect(result.current.cart.lines).toHaveLength(0);
+      expect(notices).toEqual([]);
+    });
+  });
 });

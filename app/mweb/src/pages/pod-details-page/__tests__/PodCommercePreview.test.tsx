@@ -108,53 +108,72 @@ describe('PodCommercePreview', () => {
     expect(onSelectionChange).not.toHaveBeenCalled();
   });
 
-  it('adds a product via the Add to cart button when quantity is 0', () => {
+  it('adds a product via its "+" when quantity is 0', () => {
     const { onSelectionChange } = renderPreview();
-    // One button per (named) unselected product.
-    expect(screen.getAllByRole('button', { name: /add to cart/i })).toHaveLength(2);
-    fireEvent.click(screen.getAllByRole('button', { name: /add to cart/i })[0]);
+    // One "+" per (named) unselected product, each naming its product.
+    expect(screen.getByTestId('pod-shop-p1-add')).toHaveAccessibleName('Add Mug');
+    expect(screen.getByTestId('pod-shop-p2-add')).toHaveAccessibleName('Add Cap');
+    fireEvent.click(screen.getByRole('button', { name: 'Add Mug' }));
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
   });
 
-  it('hides the Add to cart button when the product is sold out', () => {
+  it('hides the "+" when the product is sold out', () => {
     const soldOut = { product_id: 'p4', product_name: 'Poster', unit_cost: 20, available_count: 0 };
     const { onSelectionChange } = renderPreview({
       pod: makePod({ product_requests: [requestA, soldOut] }),
     });
     expect(screen.getByText('Poster')).toBeInTheDocument();
     expect(screen.getByText('Available 0')).toBeInTheDocument();
-    // Only the in-stock product keeps its Add to cart button.
-    const buttons = screen.getAllByRole('button', { name: /add to cart/i });
-    expect(buttons).toHaveLength(1);
-    fireEvent.click(buttons[0]);
+    // Only the in-stock product keeps its "+".
+    expect(screen.queryByRole('button', { name: 'Add Poster' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add Mug' }));
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
   });
 
-  it('replaces the Add to cart button with the stepper once quantity > 0', () => {
+  it('opens the "+" into the quantity pill once quantity > 0', () => {
     const { onSelectionChange } = renderPreview({ selectedProducts: { p1: 2 } });
-    expect(screen.getByText('2')).toBeInTheDocument();
-    // p1 shows the stepper; only p2 keeps its Add to cart button.
-    expect(screen.getAllByRole('button', { name: /add to cart/i })).toHaveLength(1);
-    fireEvent.click(screen.getByRole('button', { name: 'Decrease Mug' })); // 2 -> 1
+    expect(screen.getByTestId('pod-shop-p1-qty')).toHaveTextContent('2');
+    // p1 shows the pill; p2 keeps its lone "+".
+    expect(screen.queryByRole('button', { name: 'Add Mug' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Cap' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove one Mug' })); // 2 -> 1
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
-    fireEvent.click(screen.getByRole('button', { name: 'Increase Mug' })); // 2 -> 3 (< max 5)
+    fireEvent.click(screen.getByRole('button', { name: 'Add one more Mug' })); // 2 -> 3 (< max 5)
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 3 });
   });
 
-  it('removes the line when the stepper decrements to zero', () => {
+  it('shows a bin at one, which removes the line', () => {
     const { onSelectionChange } = renderPreview({ selectedProducts: { p1: 1 } });
-    fireEvent.click(screen.getByRole('button', { name: 'Decrease Mug' }));
+    expect(screen.queryByRole('button', { name: 'Remove one Mug' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Mug' }));
     expect(onSelectionChange).toHaveBeenCalledWith({});
   });
 
   it('caps increment at the available maximum', () => {
     const { onSelectionChange } = renderPreview({ selectedProducts: { p1: 5 } });
-    // At max (5), the increment button is disabled — the + click is a no-op.
+    // At max (5), the "+" is disabled — a click on it is a no-op.
     // Decrement still works.
-    expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Increase Mug' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Decrease Mug' }));
+    expect(screen.getByTestId('pod-shop-p1-qty')).toHaveTextContent('5');
+    const plus = screen.getByRole('button', { name: 'Add one more Mug' });
+    expect(plus).toBeDisabled();
+    fireEvent.click(plus);
+    expect(onSelectionChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove one Mug' }));
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 4 });
+  });
+
+  it('says nothing for a product already in the cart, then "Item removed" when its last unit goes', () => {
+    const props = { pod: makePod(), priceFormat, onSelectionChange: vi.fn() };
+    const { rerender } = render(<PodCommercePreview {...props} selectedProducts={{ p1: 1 }} />);
+    expect(screen.getByTestId('pod-shop-p1-notice')).toHaveTextContent('');
+
+    rerender(<PodCommercePreview {...props} selectedProducts={{}} />);
+    expect(screen.getByTestId('pod-shop-p1-notice')).toHaveTextContent('Item removed');
+    // The other row's notice is its own.
+    expect(screen.getByTestId('pod-shop-p2-notice')).toHaveTextContent('');
+
+    rerender(<PodCommercePreview {...props} selectedProducts={{ p2: 1 }} />);
+    expect(screen.getByTestId('pod-shop-p2-notice')).toHaveTextContent('Item added');
   });
 
   it('falls back to a broken-image placeholder on image error', () => {
@@ -218,9 +237,11 @@ describe('PodCommercePreview', () => {
 
   it('goes read-only with a shop-closed notice when products are disabled', () => {
     renderPreview({ pod: makePod({ products_enabled: false }), selectedProducts: { p1: 2 } });
-    // No Add to cart buttons and no steppers while the shop is closed.
-    expect(screen.queryByRole('button', { name: /add to cart/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Increase Mug' })).not.toBeInTheDocument();
+    // No cart control at all while the shop is closed — neither the "+" nor the pill.
+    expect(screen.queryByRole('button', { name: 'Add Cap' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add one more Mug' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove one Mug' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pod-shop-p1-qty')).not.toBeInTheDocument();
     expect(screen.getByText(/shop is currently closed/i)).toBeInTheDocument();
     // Footer selection caption is hidden while the shop is closed.
     expect(screen.queryByText('Selected product total')).not.toBeInTheDocument();
@@ -230,7 +251,7 @@ describe('PodCommercePreview', () => {
   it('stays interactive for a booked/expired viewer (add-to-cart works in any pod state)', () => {
     // products_enabled defaults to true → the shop is open regardless of membership.
     const { onSelectionChange } = renderPreview({ selectedProducts: {} });
-    fireEvent.click(screen.getAllByRole('button', { name: /add to cart/i })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Add Mug' }));
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
     expect(screen.getByTestId('detail-viewonly')).toHaveTextContent('false');
   });

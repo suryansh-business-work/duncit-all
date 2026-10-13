@@ -178,7 +178,7 @@ describe('ProductDetailDialog', () => {
   it('adds the active variant to the selection via the quantity bar', async () => {
     const { onUpdateLine } = renderDialog([viewMock(), clickMock(), productMock()]);
     await screen.findByText('Cool Mug');
-    fireEvent.click(screen.getByRole('button', { name: /add to selection/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Cool Mug' }));
     expect(onUpdateLine).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ id: 'var1', label: 'Red', unit_cost: 120, max: 5 }),
@@ -190,15 +190,45 @@ describe('ProductDetailDialog', () => {
       selection: { 'prod1::var1': 2 },
     });
     await screen.findByText('Cool Mug');
-    expect(screen.getByText('2')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /increase quantity/i }));
+    expect(screen.getByTestId('product-detail-qty')).toHaveTextContent('2');
+    fireEvent.click(screen.getByRole('button', { name: 'Add one more Cool Mug' }));
     expect(onUpdateLine).toHaveBeenCalledWith(3, expect.objectContaining({ id: 'var1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove one Cool Mug' }));
+    expect(onUpdateLine).toHaveBeenCalledWith(1, expect.objectContaining({ id: 'var1' }));
+  });
+
+  it('removes the line from the bin when one unit is selected', async () => {
+    const { onUpdateLine } = renderDialog([viewMock(), clickMock(), productMock()], {
+      selection: { 'prod1::var1': 1 },
+    });
+    await screen.findByText('Cool Mug');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Cool Mug' }));
+    expect(onUpdateLine).toHaveBeenCalledWith(0, expect.objectContaining({ id: 'var1' }));
+  });
+
+  it('treats another variant as another line: out of stock, and no "Item removed" for the one left behind', async () => {
+    const { onUpdateLine } = renderDialog(
+      [viewMock(), clickMock(), productMock(), variantClickMock('var2')],
+      { selection: { 'prod1::var1': 2 } },
+    );
+    await screen.findByText('Cool Mug');
+    expect(screen.queryByTestId('product-detail-out-of-stock')).not.toBeInTheDocument();
+
+    // var2 has no inventory and is not in the selection.
+    fireEvent.click(screen.getByRole('button', { name: 'Green' }));
+    expect(await screen.findByTestId('product-detail-out-of-stock')).toHaveTextContent('Out of stock');
+    expect(screen.getByTestId('product-detail-notice')).toHaveTextContent('');
+    const plus = screen.getByRole('button', { name: 'Add Cool Mug' });
+    expect(plus).toBeDisabled();
+    fireEvent.click(plus);
+    expect(onUpdateLine).not.toHaveBeenCalled();
   });
 
   it('hides the quantity bar in viewOnly mode', async () => {
     renderDialog([viewMock(), clickMock(), productMock()], { viewOnly: true });
     await screen.findByText('Cool Mug');
-    expect(screen.queryByRole('button', { name: /add to selection/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('product-quantity-bar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Cool Mug' })).not.toBeInTheDocument();
   });
 
   it('renders a plain brand label (no link) and no-description fallback', async () => {

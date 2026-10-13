@@ -241,7 +241,7 @@ describe('ProductDetailPage', () => {
       ],
     );
     await screen.findByText('Yoga Mat');
-    fireEvent.click(await screen.findByRole('button', { name: /add to selection/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Add Yoga Mat' }));
 
     // Persists to the cart via the cheapest pod (podB, ₹1499).
     await waitFor(() => {
@@ -254,8 +254,11 @@ describe('ProductDetailPage', () => {
         quantity: 1,
       });
     });
-    // The stepper replaces the add button once the product is in the cart.
-    expect(await screen.findByLabelText('Increase quantity')).toBeInTheDocument();
+    // The "+" opens into the quantity pill once the product is in the cart, and the bar says so.
+    expect(await screen.findByRole('button', { name: 'Add one more Yoga Mat' })).toBeInTheDocument();
+    expect(screen.getByTestId('product-detail-qty')).toHaveTextContent('1');
+    expect(screen.getByRole('button', { name: 'Remove Yoga Mat' })).toBeInTheDocument();
+    expect(screen.getByTestId('product-detail-notice')).toHaveTextContent('Item added');
   });
 
   it('says the pod lookup failed (not "no pod") and retries it into a buyable product', async () => {
@@ -280,7 +283,7 @@ describe('ProductDetailPage', () => {
     expect(screen.queryByTestId('product-detail-no-pod')).toBeNull();
 
     fireEvent.click(screen.getByTestId('product-detail-pods-error-retry'));
-    expect(await screen.findByRole('button', { name: /add to selection/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Add Yoga Mat' })).toBeEnabled();
     expect(screen.queryByTestId('product-detail-pods-error')).toBeNull();
   });
 });

@@ -19,6 +19,8 @@ import { FoodTotals } from './FoodTotals';
 
 interface Props {
   ordering: FoodOrdering;
+  /** Named in the checkout's "tell me about events here" switch. */
+  venueName: string;
   currency: string;
   discountPct: number;
 }
@@ -29,7 +31,7 @@ interface Props {
  * A closed or declined payment lands back here with the cart intact. Tamagui
  * twin of mWeb's food/FoodCartSheet.
  */
-export function FoodCartSheet({ ordering, currency, discountPct }: Readonly<Props>) {
+export function FoodCartSheet({ ordering, venueName, currency, discountPct }: Readonly<Props>) {
   const { t } = useTranslation();
   const { cart, checkout } = ordering;
   const { price } = cart;
@@ -103,7 +105,7 @@ export function FoodCartSheet({ ordering, currency, discountPct }: Readonly<Prop
           />
         ) : null}
         <YStack height={1} backgroundColor="$borderColor" />
-        <FoodCheckoutForm control={form.control} disabled={submitting} />
+        <FoodCheckoutForm control={form.control} venueName={venueName} disabled={submitting} />
         {error ? (
           <FoodNotice
             testID="food-cart-error"

@@ -119,7 +119,13 @@ function CardBody({
   }
   return (
     <YStack gap={20}>
-      <PublicPageLinkPanel kind={kind} refId={refId} title={title} link={insights.link} />
+      <PublicPageLinkPanel
+        kind={kind}
+        refId={refId}
+        title={title}
+        link={insights.link}
+        offersFood={insights.offers_food === true}
+      />
       <PublicPageStatsPanel
         insights={insights}
         days={page.days}

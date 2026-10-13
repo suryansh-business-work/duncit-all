@@ -5,6 +5,7 @@ import {
   MY_PUBLIC_PAGE_QUERY,
   PUBLIC_PAGE_POSTER_QUERY,
   PUBLISH_PUBLIC_PAGE_MUTATION,
+  VENUE_TABLE_LABEL_QUERY,
   publicPageErrorKey,
   type PublicPageInsights,
   type PublicPageKind,
@@ -22,6 +23,7 @@ import { ApiError } from '@/utils/errors';
 const MY_PUBLIC_PAGE = parse(MY_PUBLIC_PAGE_QUERY);
 const PUBLISH_PUBLIC_PAGE = parse(PUBLISH_PUBLIC_PAGE_MUTATION);
 const PUBLIC_PAGE_POSTER = parse(PUBLIC_PAGE_POSTER_QUERY);
+const VENUE_TABLE_LABEL = parse(VENUE_TABLE_LABEL_QUERY);
 
 const QR_DATA_PREFIX = /^data:image\/png;base64,/;
 
@@ -64,6 +66,15 @@ export async function fetchPosterBase64(
     PageVars & { copy: { headline: string; footer: string } }
   >(PUBLIC_PAGE_POSTER, { kind, refId, copy }, { auth: true });
   return data.myPublicPagePosterPdfBase64;
+}
+
+/** The venue's small table label — its QR under the poster's own headline — as a base64 PDF. */
+export async function fetchTableLabelBase64(venueId: string, headline: string): Promise<string> {
+  const data = await graphqlRequest<
+    { myVenueTableLabelPdfBase64: string },
+    { venueId: string; headline: string }
+  >(VENUE_TABLE_LABEL, { venueId, headline }, { auth: true });
+  return data.myVenueTableLabelPdfBase64;
 }
 
 /**

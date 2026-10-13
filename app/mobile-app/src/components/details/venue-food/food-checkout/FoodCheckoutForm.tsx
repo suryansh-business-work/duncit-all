@@ -1,23 +1,27 @@
-import type { Control } from 'react-hook-form';
+import { Controller, type Control } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 import type { FoodCheckoutValues } from '@duncit/forms/schemas';
 import { FOOD_ORDER_LIMITS } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
+import { ToggleRow } from '@/components/ToggleRow/ToggleRow';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   control: Control<FoodCheckoutValues>;
+  /** The venue whose events the member can ask to hear about. */
+  venueName: string;
   /** A payment is in flight: the fields lock with the button. */
   disabled: boolean;
 }
 
 /**
  * Who the order is for and where it goes: name, mobile, and optionally the
- * table and a note for the kitchen. Tamagui twin of mWeb's
+ * table and a note for the kitchen — then, before Pay, whether to hear about
+ * the venue's events. Tamagui twin of mWeb's
  * food-checkout/food-checkout.form — same schema, same limits, same copy.
  */
-export function FoodCheckoutForm({ control, disabled }: Readonly<Props>) {
+export function FoodCheckoutForm({ control, venueName, disabled }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <YStack gap={12} testID="food-checkout-form">
@@ -65,6 +69,20 @@ export function FoodCheckoutForm({ control, disabled }: Readonly<Props>) {
         numberOfLines={3}
         maxLength={FOOD_ORDER_LIMITS.noteMax}
         editable={!disabled}
+      />
+      <Controller
+        control={control}
+        name="subscribe"
+        render={({ field }) => (
+          <ToggleRow
+            testID="food-checkout-subscribe"
+            label={t('mweb.venueFood.checkout.subscribe', { vars: { venue: venueName } })}
+            hint={t('mweb.venueFood.checkout.subscribeHint')}
+            value={field.value}
+            onChange={field.onChange}
+            disabled={disabled}
+          />
+        )}
       />
     </YStack>
   );

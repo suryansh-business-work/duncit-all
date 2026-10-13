@@ -107,6 +107,8 @@ export function useFoodOrder(orderId: string, linkKey: string | null) {
     /** Only an error with nothing to show — a failed re-read keeps the order on screen. */
     error: order ? null : error,
     errorCode: order || !error ? '' : foodOrderNativeErrorCode(error),
+    /** The key the order is read with — what its invoice and its rating are asked for with too. */
+    accessKey,
     /** The key the order was placed with, when this device placed it — what "Retry payment" repeats. */
     clientKey: stored?.client_key ?? '',
     refetch: load,

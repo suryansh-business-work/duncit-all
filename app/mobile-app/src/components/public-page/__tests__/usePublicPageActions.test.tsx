@@ -3,17 +3,23 @@ import { Linking, Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 
 import { usePublicPageActions } from '@/components/public-page/usePublicPageActions';
-import { fetchPosterBase64, shareBase64File } from '@/components/public-page/publicPageRequests';
+import {
+  fetchPosterBase64,
+  fetchTableLabelBase64,
+  shareBase64File,
+} from '@/components/public-page/publicPageRequests';
 
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn() }));
 jest.mock('@/components/public-page/publicPageRequests', () => ({
   fetchPosterBase64: jest.fn(),
+  fetchTableLabelBase64: jest.fn(),
   shareBase64File: jest.fn(),
   qrBase64: (url: string) => url.replace('data:image/png;base64,', ''),
 }));
 
 const mockCopy = Clipboard.setStringAsync as jest.Mock;
 const mockPoster = fetchPosterBase64 as jest.Mock;
+const mockLabel = fetchTableLabelBase64 as jest.Mock;
 const mockShareFile = shareBase64File as jest.Mock;
 
 const link = {
@@ -21,14 +27,19 @@ const link = {
   qr_data_url: 'data:image/png;base64,QUJD',
 } as never;
 
-function setup(withLink = true, kind: 'VENUE' | 'HOST' = 'VENUE') {
-  return renderHook(() => usePublicPageActions(kind, 'ref-1', 'Jam Night', withLink ? link : null));
+const FOOD_HEADLINE = 'Scan to see the Menu & pods happening here';
+
+function setup(withLink = true, kind: 'VENUE' | 'HOST' = 'VENUE', offersFood = false) {
+  return renderHook(() =>
+    usePublicPageActions(kind, 'ref-1', 'Jam Night', withLink ? link : null, offersFood),
+  );
 }
 
 beforeEach(() => {
   jest.useFakeTimers();
   mockCopy.mockReset().mockResolvedValue(undefined);
   mockPoster.mockReset();
+  mockLabel.mockReset();
   mockShareFile.mockReset();
   jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' } as never);
   jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
@@ -159,6 +170,79 @@ describe('usePublicPageActions', () => {
       await host.result.current.downloadPoster();
     });
     expect(mockPoster.mock.calls[0][2].headline).not.toBe(venueCopy.headline);
+  });
+
+  it('invites guests to the menu on the poster only for a venue that serves food', async () => {
+    mockPoster.mockResolvedValue('UERG');
+    mockShareFile.mockResolvedValue(true);
+    const headlineOf = async (kind: 'VENUE' | 'HOST', offersFood: boolean) => {
+      mockPoster.mockClear();
+      const { result } = setup(true, kind, offersFood);
+      await act(async () => {
+        await result.current.downloadPoster();
+      });
+      return mockPoster.mock.calls[0][2].headline as string;
+    };
+
+    const plainVenue = await headlineOf('VENUE', false);
+    expect(await headlineOf('VENUE', true)).toBe(FOOD_HEADLINE);
+    expect(plainVenue).not.toBe(FOOD_HEADLINE);
+    // A host has no menu, whatever the flag says.
+    const host = await headlineOf('HOST', true);
+    expect(host).not.toBe(FOOD_HEADLINE);
+    expect(host).not.toBe(plainVenue);
+  });
+
+  it('downloads the table label with the poster headline and shares it as a PDF', async () => {
+    mockLabel.mockResolvedValue('TEFC');
+    mockShareFile.mockResolvedValue(true);
+    const { result } = setup(true, 'VENUE', true);
+    await act(async () => {
+      await result.current.downloadTableLabel();
+    });
+    expect(mockLabel).toHaveBeenCalledWith('ref-1', FOOD_HEADLINE);
+    expect(mockShareFile).toHaveBeenCalledWith(
+      'TEFC',
+      'jam-night-table-label.pdf',
+      'application/pdf',
+    );
+    expect(result.current.busy).toBeNull();
+    expect(result.current.notice).toBeNull();
+  });
+
+  it('has no table label for a host page', async () => {
+    const { result } = setup(true, 'HOST');
+    await act(async () => {
+      await result.current.downloadTableLabel();
+    });
+    expect(mockLabel).not.toHaveBeenCalled();
+    expect(mockShareFile).not.toHaveBeenCalled();
+    expect(result.current.notice).toBeNull();
+  });
+
+  it('reports a table label that failed to render and one nobody could save', async () => {
+    mockLabel.mockRejectedValue(new Error('render failed'));
+    const { result } = setup();
+    await act(async () => {
+      await result.current.downloadTableLabel();
+    });
+    expect(result.current.notice).toEqual({
+      text: "We couldn't make the table label. Please try again.",
+      tone: 'danger',
+    });
+    expect(result.current.busy).toBeNull();
+
+    act(() => {
+      jest.advanceTimersByTime(4000);
+    });
+    expect(result.current.notice).toBeNull();
+    mockLabel.mockResolvedValue('TEFC');
+    mockShareFile.mockResolvedValue(false);
+    await act(async () => {
+      await result.current.downloadTableLabel();
+    });
+    expect(result.current.notice?.tone).toBe('danger');
+    expect(result.current.busy).toBeNull();
   });
 
   it('reports a poster failure and a poster nobody could save', async () => {

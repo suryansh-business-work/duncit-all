@@ -3,14 +3,21 @@ import { Linking, Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { logs } from '@duncit/logs';
 import {
+  publicPageHeadlineKey,
   publicPagePosterFileName,
   publicPageQrFileName,
+  publicPageTableLabelFileName,
   type PublicPageKind,
   type PublicPageLink,
 } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
-import { fetchPosterBase64, qrBase64, shareBase64File } from './publicPageRequests';
+import {
+  fetchPosterBase64,
+  fetchTableLabelBase64,
+  qrBase64,
+  shareBase64File,
+} from './publicPageRequests';
 
 /** How long a "copied" / failure line stays up. */
 const NOTICE_MS = 4000;
@@ -20,11 +27,12 @@ export interface PublicPageNotice {
   tone: 'success' | 'danger';
 }
 
-export type PublicPageBusy = 'qr' | 'poster' | null;
+export type PublicPageBusy = 'qr' | 'poster' | 'label' | null;
 
 /**
  * What the owner does with a published page: copy, share or open the link,
- * save the QR and download the A4 poster. The app has no toast, so the outcome
+ * save the QR and download the A4 poster — and, for a venue, the small label
+ * for its tables. The app has no toast, so the outcome
  * of each press is said in place through `notice` (as ContactsInviteBar does).
  */
 export function usePublicPageActions(
@@ -32,10 +40,14 @@ export function usePublicPageActions(
   refId: string | null,
   title: string,
   link: PublicPageLink | null,
+  /** The venue serves food: the poster and the table label invite guests to its menu too. */
+  offersFood = false,
 ) {
   const { t } = useTranslation();
   const [notice, setNotice] = useState<PublicPageNotice | null>(null);
   const [busy, setBusy] = useState<PublicPageBusy>(null);
+  // One line for the poster and the table label, so the two always print the same.
+  const headline = t(publicPageHeadlineKey(kind, offersFood));
 
   const say = useCallback((next: PublicPageNotice) => {
     setNotice(next);
@@ -101,10 +113,6 @@ export function usePublicPageActions(
   const downloadPoster = useCallback(async () => {
     setBusy('poster');
     try {
-      const headline =
-        kind === 'VENUE'
-          ? t('publicPage.poster.venueHeadline')
-          : t('publicPage.poster.hostHeadline');
       const base64 = await fetchPosterBase64(kind, refId, {
         headline,
         footer: t('publicPage.poster.footer'),
@@ -120,7 +128,26 @@ export function usePublicPageActions(
     } finally {
       setBusy(null);
     }
-  }, [fail, kind, refId, t, title]);
+  }, [fail, headline, kind, refId, t, title]);
 
-  return { copy, share, open, downloadQr, downloadPoster, notice, busy };
+  const downloadTableLabel = useCallback(async () => {
+    // Only a venue has tables to put a label on.
+    if (kind !== 'VENUE' || !refId) return;
+    setBusy('label');
+    try {
+      const base64 = await fetchTableLabelBase64(refId, headline);
+      const saved = await shareBase64File(
+        base64,
+        publicPageTableLabelFileName(title),
+        'application/pdf',
+      );
+      if (!saved) fail('downloadTableLabel', null, t('publicPage.link.tableLabelFailed'));
+    } catch (error) {
+      fail('downloadTableLabel', error, t('publicPage.link.tableLabelFailed'));
+    } finally {
+      setBusy(null);
+    }
+  }, [fail, headline, kind, refId, t, title]);
+
+  return { copy, share, open, downloadQr, downloadPoster, downloadTableLabel, notice, busy };
 }

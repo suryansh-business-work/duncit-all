@@ -34,7 +34,8 @@ function Detail({
 
 /**
  * What was ordered and what it came to — as the server priced it — then who
- * it is for: payment, name, table, note and when it was placed. Tamagui twin
+ * it is for: payment, name, table, note and when it was placed — and who
+ * served it: the venue's GSTIN and address, when it has them. Tamagui twin
  * of mWeb's venue-food-order-page/FoodOrderSummary.
  */
 export function FoodOrderSummary({ order }: Readonly<{ order: VenueFoodOrder }>) {
@@ -114,6 +115,20 @@ export function FoodOrderSummary({ order }: Readonly<{ order: VenueFoodOrder }>)
           value={formatDateTime(order.created_at)}
           testID="food-order-placed-at"
         />
+        {order.venue_gstin ? (
+          <Detail
+            label={t('mweb.venueFood.order.gstin')}
+            value={order.venue_gstin}
+            testID="food-order-gstin"
+          />
+        ) : null}
+        {order.venue_address ? (
+          <Detail
+            label={t('mweb.venueFood.order.venueAddress')}
+            value={order.venue_address}
+            testID="food-order-venue-address"
+          />
+        ) : null}
       </YStack>
     </SurfaceCard>
   );

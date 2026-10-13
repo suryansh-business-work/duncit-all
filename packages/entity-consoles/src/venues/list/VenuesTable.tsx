@@ -10,6 +10,7 @@ import {
 import { STATUS_OPTIONS, type VenueRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { venueCategoryPaths } from '@duncit/utils';
 
 const getVenueRowId = (v: VenueRow) => v.id;
 
@@ -33,14 +34,8 @@ const renderVenue = (v: VenueRow) => (
 
 const locationValue = (v: VenueRow) => [v.locality, v.city].filter(Boolean).join(', ') || '—';
 
-const categoryValue = (v: VenueRow) =>
-  [
-    v.venue_category?.super_category_name,
-    v.venue_category?.category_name,
-    v.venue_category?.sub_category_name,
-  ]
-    .filter(Boolean)
-    .join(' > ') || '—';
+/** Every category the venue is filed under, primary first — one cell, one line. */
+const categoryValue = (v: VenueRow) => venueCategoryPaths(v).join(', ') || '—';
 
 const renderOwner = (v: VenueRow) => (
   <>

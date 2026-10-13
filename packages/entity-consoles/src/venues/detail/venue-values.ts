@@ -5,8 +5,8 @@ export const EMPTY = '—';
 
 /** Joins the parts that are set, or '' when none are — the caller decides what
  * an empty line says, because only it has the translator. */
-const join = (parts: Array<string | null | undefined>, sep = ', ') =>
-  parts.map((p) => p?.trim()).filter(Boolean).join(sep);
+const join = (parts: Array<string | null | undefined>) =>
+  parts.map((p) => p?.trim()).filter(Boolean).join(', ');
 
 /** Locality → city → state → country, skipping whatever the owner left blank. */
 export const locationLine = (v: AdminVenueDetail) =>
@@ -14,9 +14,6 @@ export const locationLine = (v: AdminVenueDetail) =>
 
 /** The street address as its own line — the postal code rides in its own row. */
 export const streetAddress = (v: AdminVenueDetail) => join([v.address_line1, v.address_line2]);
-
-export const categoryPath = (c: AdminVenueDetail['venue_category']) =>
-  join([c?.super_category_name, c?.category_name, c?.sub_category_name], ' > ') || EMPTY;
 
 /** A value that may be blank, rendered as the dash rather than as nothing. */
 export const orDash = (value: string | number | null | undefined) => {

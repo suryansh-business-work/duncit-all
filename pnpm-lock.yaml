@@ -1949,6 +1949,9 @@ importers:
       '@duncit/portal-pod-form':
         specifier: workspace:*
         version: link:../portal-pod-form
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../regex
       '@duncit/shell':
         specifier: workspace:*
         version: link:../shell

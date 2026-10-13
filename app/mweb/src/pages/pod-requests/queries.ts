@@ -6,6 +6,8 @@ export interface PodRequestVenue {
   id: string;
   venue_name: string;
   category: string;
+  /** Every category the venue belongs to, primary first — the detail query asks for it, the list does not. */
+  categories?: string[];
   venue_type?: string;
   capacity?: number;
   locality: string;
@@ -97,6 +99,7 @@ export const POD_PARTNER_REQUEST: TypedDocumentNode<{ podPartnerRequest: PodRequ
         id
         venue_name
         category
+        categories
         venue_type
         capacity
         locality

@@ -44,6 +44,14 @@ export const VENUE_DETAIL = gql`
         category_name
         sub_category_name
       }
+      venue_categories {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
       description
       amenities
       facilities
@@ -134,6 +142,17 @@ export const VENUE_DETAIL = gql`
 
 export type VenueStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
+/** One Super → Category → Sub the venue is filed under. The ids are null on a
+ * record whose category was since deleted; the names it was approved under stay. */
+export interface VenueCategoryRecord {
+  super_category_id?: string | null;
+  category_id?: string | null;
+  sub_category_id?: string | null;
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
+
 export interface VenueCapacityItem {
   label: string;
   capacity: number;
@@ -223,14 +242,11 @@ export interface AdminVenueDetail {
   offers_food: boolean;
   food_menu: VenueFoodItem[];
   food_ordering: VenueFoodOrdering;
-  venue_category: {
-    super_category_id?: string | null;
-    category_id?: string | null;
-    sub_category_id?: string | null;
-    super_category_name: string;
-    category_name: string;
-    sub_category_name: string;
-  };
+  /** The primary category — always `venue_categories[0]`. Read the list instead
+   * (`venueCategoryList` from `@duncit/utils`); this stays for a legacy record. */
+  venue_category: VenueCategoryRecord;
+  /** Every category the venue belongs to, primary first. */
+  venue_categories: VenueCategoryRecord[];
   description: string;
   amenities: string[];
   facilities: string[];

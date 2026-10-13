@@ -25,7 +25,7 @@ import {
   valuesToStep3,
   venueToValues,
 } from './mappers';
-import { makeVenueFormSchema, UNCAPPED_FOOD_LIMITS } from './schema';
+import { makeVenueFormSchema, NO_CATEGORY_LIMIT, UNCAPPED_FOOD_LIMITS } from './schema';
 import { blankVenueValues, type VenueFormValues } from './types';
 
 /**
@@ -42,6 +42,8 @@ const EMPTY_CONFIG: VenueRegistrationConfig = {
   venue_types: [],
   doc_types: [],
   capacity_item_limit: 50,
+  // Uncapped until the catalogue answers — the cap is the server's to state.
+  category_limit: NO_CATEGORY_LIMIT,
   amenities: [],
   facilities: [],
   security: [],
@@ -77,11 +79,13 @@ export function useVenueEditor(venueId: string) {
   );
 
   // Rebuilt when the language changes, because its messages are copy — and when
-  // the catalogue lands, because the menu's bounds are the server's to state.
-  const { food_menu_limit, food_image_limit, food_price_max } = config;
+  // the catalogue lands, because the menu's bounds and the category cap are the
+  // server's to state.
+  const { food_menu_limit, food_image_limit, food_price_max, category_limit } = config;
   const schema = useMemo(
-    () => makeVenueFormSchema(t, { food_menu_limit, food_image_limit, food_price_max }),
-    [t, food_menu_limit, food_image_limit, food_price_max],
+    () =>
+      makeVenueFormSchema(t, { food_menu_limit, food_image_limit, food_price_max }, category_limit),
+    [t, food_menu_limit, food_image_limit, food_price_max, category_limit],
   );
 
   // The third generic pins the SUBMITTED shape to the form's own: the schema's

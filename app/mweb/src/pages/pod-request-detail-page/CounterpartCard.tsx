@@ -3,7 +3,7 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import type { PodRequestDetail } from '../pod-requests/queries';
 import PodRequestStatusChip from '../pod-requests/components/PodRequestStatusChip';
-import { formatPodRequestKm } from '@duncit/utils';
+import { formatPodRequestKm, venueCategoryLabels } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -20,7 +20,7 @@ export default function CounterpartCard({ request }: Readonly<Props>) {
   const image = isVenue ? venue?.cover_image_url : host?.photo_url;
   const capacity = venue?.capacity ?? 0;
   const venueLines = [
-    [venue?.category, venue?.venue_type].filter(Boolean).join(' · '),
+    [venueCategoryLabels(venue).join(', '), venue?.venue_type].filter(Boolean).join(' · '),
     capacity > 0 ? t('podRequests.capacity', { vars: { count: capacity } }) : '',
     [venue?.locality, venue?.city].filter(Boolean).join(', '),
   ];

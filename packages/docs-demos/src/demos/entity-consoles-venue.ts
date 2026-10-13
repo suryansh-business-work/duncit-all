@@ -61,6 +61,26 @@ const VENUE: VenueRecordMock = {
     category_name: 'Board Games',
     sub_category_name: 'Catan Night',
   },
+  // Every category the venue hosts pods in, primary first — entry 0 is the
+  // triple `venue_category` mirrors.
+  venue_categories: [
+    {
+      super_category_id: '66a0000000000000000000a1',
+      category_id: '66a0000000000000000000b2',
+      sub_category_id: '66a0000000000000000000c3',
+      super_category_name: 'Social',
+      category_name: 'Board Games',
+      sub_category_name: 'Catan Night',
+    },
+    {
+      super_category_id: '66a0000000000000000000a1',
+      category_id: '66a0000000000000000000b5',
+      sub_category_id: '66a0000000000000000000c6',
+      super_category_name: 'Social',
+      category_name: 'Quizzes',
+      sub_category_name: 'Pub Quiz',
+    },
+  ],
   description: 'Two-floor cafe with a covered terrace, quiet before 6pm.',
   amenities: ['Wi-Fi', 'AC', 'Seating'],
   facilities: ['Parking', 'Washroom'],
@@ -139,7 +159,11 @@ const NOTE =
   'operating hour and watch which mutation the value belongs to: adminUpdateVenue ' +
   'takes the record, updateVenueSettings takes the hours and both cancellation ' +
   'ladders, setVenueDeductions takes the two percentages. Blank location_id to see ' +
-  'the one field the schema refuses to save without. Empty a dish id in food_menu ' +
+  'the one field the schema refuses to save without. Add or remove an entry of ' +
+  'venue_categories to see every category go to the server, primary first; blank one ' +
+  'of its three ids and that row is left out. Change a capacity_items seat count ' +
+  'and the total follows it — the scalar capacity only counts for a venue with no ' +
+  'named spaces. Empty a dish id in food_menu ' +
   'to see it go back as a new dish; food_ordering is read but never sent, because ' +
   'the Razorpay account it charges is the owner’s.';
 
@@ -155,12 +179,19 @@ export const venueEditorMappingDemo = defineDemo<VenueRecordMock>({
     const locality = values.location.locality || 'no locality';
     const window = `${settings.operating_hours.open}-${settings.operating_hours.close}`;
     return {
-      'Form shows (the space)': `${values.venue_name} · ${values.venue_type} · seats ${values.capacity}`,
+      'Form shows (the space)': `${values.venue_name} · ${values.venue_type} · seats ${step1.capacity}`,
+      'Form shows (categories)':
+        values.categories.map((row) => row.sub_name).join(', ') || 'no category row',
       'Form shows (city)': `${values.location.city}, ${values.location.state} — ${locality}`,
       'adminUpdateVenue step1 sends': Object.keys(step1).join(', '),
-      'adminUpdateVenue category': step1.venue_category
-        ? 'the Super/Category/Sub triple'
-        : 'omitted — the server rejects a partial triple',
+      'adminUpdateVenue categories':
+        step1.venue_categories.length > 0
+          ? `${step1.venue_categories.length} whole Super/Category/Sub triple(s), primary first`
+          : 'an empty list — the server then leaves the stored categories alone',
+      'adminUpdateVenue capacity':
+        step1.capacity_items.length > 0
+          ? `${step1.capacity} — the sum of ${step1.capacity_items.length} named space(s)`
+          : `${step1.capacity} — typed, because the venue has no named spaces`,
       'adminUpdateVenue food': [
         step1.offers_food ? 'offers food' : 'does not offer food',
         `${step1.food_menu.filter((dish) => dish.id).length} dish(es) kept under their ids`,

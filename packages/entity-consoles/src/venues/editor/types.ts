@@ -1,4 +1,4 @@
-import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
+import type { AdminCategoryValue } from '@duncit/category';
 import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
 import type { VenueFoodDiet, VenueFoodSpiceLevel, VenueStatus } from '../detail/queries';
 
@@ -100,7 +100,13 @@ export interface VenueFormValues {
   capacity_items: VenueCapacityRow[];
   offers_food: boolean;
   food_menu: VenueFoodRow[];
-  category: AdminCategoryValue;
+  /**
+   * Every category the venue hosts pods in, primary first — one row of the
+   * shared picker each (`RhfAdminCategoryRows`). Empty is allowed here: staff
+   * register a venue from partial information and the owner's form is where a
+   * category becomes mandatory.
+   */
+  categories: AdminCategoryValue[];
   description: string;
   amenities: string[];
   facilities: string[];
@@ -160,7 +166,7 @@ export const blankVenueValues: VenueFormValues = {
   capacity_items: [],
   offers_food: false,
   food_menu: [],
-  category: EMPTY_CATEGORY,
+  categories: [],
   description: '',
   amenities: [],
   facilities: [],

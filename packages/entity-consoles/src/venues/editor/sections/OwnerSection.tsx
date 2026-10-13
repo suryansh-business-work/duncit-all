@@ -1,16 +1,17 @@
-import { Divider, Grid, Stack, Typography } from '@mui/material';
+import { Grid, Stack, Typography } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
 import type { Control, UseFormSetValue } from 'react-hook-form';
 import SectionCard from '../../detail/SectionCard';
 import AccountPicker from '../../../shared/AccountPicker';
-import PayoutFields from '../../../shared/PayoutFields';
 import RhfDateField from '../fields/RhfDateField';
 import type { VenueFormValues } from '../types';
+import { sectionAnchor } from './venue-editor-sections';
 
 /**
- * Who runs the venue, and where its payout goes.
+ * Owner Details — who runs the venue. Where its payout goes is the next section
+ * (`PayoutSection`), as on the owner's form.
  *
  * The owning ACCOUNT can only be chosen while creating: moving a live venue to
  * a different login would move its pods, its slots and its wallet with it, and
@@ -29,7 +30,11 @@ export default function OwnerSection({
   const { t } = useTranslation();
 
   return (
-    <SectionCard icon={<PersonIcon color="primary" />} title={t('directory.venueEditor.owner')}>
+    <SectionCard
+      id={sectionAnchor('owner')}
+      icon={<PersonIcon color="primary" />}
+      title={t('directory.venueEditor.sectionOwner')}
+    >
       <Stack spacing={1.5}>
         {isEdit ? (
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -94,12 +99,6 @@ export default function OwnerSection({
             />
           </Grid>
         </Grid>
-
-        <Divider />
-        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-          {t('directory.venueEditor.payout')}
-        </Typography>
-        <PayoutFields control={control} prefix="bank_account" />
       </Stack>
     </SectionCard>
   );

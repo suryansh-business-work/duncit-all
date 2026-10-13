@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { GSTIN_PATTERN, PAN_PATTERN, POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
+import { BANK_ACCOUNT_NUMBER, IFSC, PHONE_INTL_PLUS, UPI_ID } from '@duncit/regex';
+import { duplicateCategoryRows, isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
 import { podRequestOverrideField } from '../../shared/podRequestLimit';
 
 /**
@@ -64,13 +66,84 @@ const clockTime = (t: Translate, field: string) =>
     .string()
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, t('directory.venueEditor.errClock', { vars: { field } }));
 
-const bankSchema = z.object({
-  payout_method: optional(30),
-  account_holder_name: optional(120),
-  account_number: optional(40),
-  ifsc_code: optional(20),
-  upi_id: optional(120),
+/**
+ * Where the payout goes. Every field stays optional — staff register a venue
+ * before its bank details are known — but one that IS filled in is held to the
+ * same `@duncit/regex` format the owner's own form checks it against, so staff
+ * cannot store an account the owner's form would then refuse to re-save.
+ */
+const bankSchema = (t: Translate) =>
+  z.object({
+    payout_method: optional(30),
+    account_holder_name: optional(120),
+    account_number: optional(40).refine(
+      (value) => !value || BANK_ACCOUNT_NUMBER.test(value),
+      t('directory.venueEditor.errAccountNumber'),
+    ),
+    ifsc_code: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .max(20)
+      .default('')
+      .refine((value) => !value || IFSC.test(value), t('directory.venueEditor.errIfsc')),
+    upi_id: optional(120).refine(
+      (value) => !value || UPI_ID.test(value),
+      t('directory.venueEditor.errUpi'),
+    ),
+  });
+
+/**
+ * No client-side cap on categories — what the form runs on until the catalogue
+ * answers, so the server's own limit decides rather than a number guessed here.
+ */
+export const NO_CATEGORY_LIMIT = Number.MAX_SAFE_INTEGER;
+
+/** "At most N categories" — the list's own error past the cap, and the note under a full list. */
+export const categoryLimitMessage = (t: Translate, limit: number) =>
+  limit === 1
+    ? t('directory.venueEditor.categoryLimitOne')
+    : t('directory.venueEditor.categoryLimitMany', { vars: { max: limit } });
+
+const categoryRowSchema = z.object({
+  super_id: z.string().default(''),
+  super_name: z.string().default(''),
+  category_id: z.string().default(''),
+  category_name: z.string().default(''),
+  sub_id: z.string().default(''),
+  sub_name: z.string().default(''),
 });
+
+/** A row somebody began picking: any of its three levels is chosen. */
+const isStartedCategory = (row: AdminCategoryValue) =>
+  !!(row.super_id || row.category_id || row.sub_id);
+
+/**
+ * Every STARTED row is one whole Super → Category → Sub, and no sub category
+ * twice — the server drops a repeat silently, so it is refused here where the
+ * row can be seen. A row nobody picked anything in is not an error (it is simply
+ * not sent), which is what keeps a category optional for staff. Issues sit on
+ * the row, which is where the picker shows them.
+ */
+const checkCategories = (t: Translate) => (rows: AdminCategoryValue[], ctx: z.RefinementCtx) => {
+  const duplicates = duplicateCategoryRows(rows);
+  rows.forEach((row, index) => {
+    if (!isStartedCategory(row)) return;
+    if (!isCompleteCategory(row)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [index],
+        message: t('directory.venueEditor.categoryIncomplete'),
+      });
+    } else if (duplicates.has(index)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [index],
+        message: t('directory.venueEditor.categoryDuplicate'),
+      });
+    }
+  });
+};
 
 const rulesSchema = (t: Translate, m: Messages) =>
   z.object({
@@ -207,6 +280,7 @@ const foodItemSchema = (t: Translate, m: Messages, limits: VenueFoodLimits) =>
 export function makeVenueFormSchema(
   t: Translate,
   foodLimits: VenueFoodLimits = UNCAPPED_FOOD_LIMITS,
+  categoryLimit: number = NO_CATEGORY_LIMIT,
 ) {
   const m = messages(t);
   return z.object({
@@ -237,14 +311,11 @@ export function makeVenueFormSchema(
         t('directory.venueEditor.errMenuSize', { vars: { max: foodLimits.food_menu_limit } }),
       )
       .default([]),
-    category: z.object({
-      super_id: z.string().default(''),
-      super_name: z.string().default(''),
-      category_id: z.string().default(''),
-      category_name: z.string().default(''),
-      sub_id: z.string().default(''),
-      sub_name: z.string().default(''),
-    }),
+    categories: z
+      .array(categoryRowSchema)
+      .max(categoryLimit, categoryLimitMessage(t, categoryLimit))
+      .superRefine(checkCategories(t))
+      .default([]),
     description: optional(2000),
     amenities: z.array(z.string().trim()).default([]),
     facilities: z.array(z.string().trim()).default([]),
@@ -303,10 +374,20 @@ export function makeVenueFormSchema(
 
     owner_name: zodRules.personName(t('directory.venueEditor.ownerName')),
     owner_email: zodRules.email(t('directory.venueEditor.ownerEmail')),
-    owner_phone: zodRules.phoneNumber(t('directory.venueEditor.ownerPhone')),
+    // The owner's form takes a pasted full number with its leading "+", so this
+    // one does too — otherwise staff could not re-save a venue its owner filed.
+    owner_phone: z
+      .string()
+      .trim()
+      .regex(
+        PHONE_INTL_PLUS,
+        t('directory.venueEditor.errPhone', {
+          vars: { field: t('directory.venueEditor.ownerPhone') },
+        }),
+      ),
     owner_dob: optional(30),
     owner_address: optional(500),
-    bank_account: bankSchema,
+    bank_account: bankSchema(t),
 
     venue_share_pct: percent(m, t('directory.venueEditor.sharePct')),
     venue_commission_pct: percent(m, t('directory.venueEditor.commissionPct')),

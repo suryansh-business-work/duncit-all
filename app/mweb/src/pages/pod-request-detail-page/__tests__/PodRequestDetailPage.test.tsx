@@ -63,6 +63,7 @@ const VENUE: NonNullable<PodRequestDetail['venue']> = {
   id: 'venue-1',
   venue_name: 'Gomti Arena',
   category: 'Sports',
+  categories: ['Sports'],
   venue_type: 'Turf',
   capacity: 40,
   locality: 'Gomti Nagar',
@@ -174,6 +175,18 @@ describe('PodRequestDetailPage — who it is with', () => {
     expect(within(card).getByText(interpolatedCopy('', '2.3', 'km away'))).toBeInTheDocument();
     expect(within(card).getByText('Morning run, 20 people')).toBeInTheDocument();
     expect(screen.getByTestId('pod-request-status')).toHaveTextContent('Requested');
+  });
+
+  it('lists every category of the venue, primary first, ahead of its type', async () => {
+    const card = await showPage(request({ venue: { ...VENUE, categories: ['Sports', 'Fitness'] } }));
+
+    expect(within(card).getByText('Sports, Fitness · Turf')).toBeInTheDocument();
+  });
+
+  it('falls back to the primary category when the answer lists none', async () => {
+    const card = await showPage(request({ venue: { ...VENUE, categories: [] } }));
+
+    expect(within(card).getByText('Sports · Turf')).toBeInTheDocument();
   });
 
   it('shows a venue owner the host, and leaves out an unknown distance, a zero capacity and an empty note', async () => {

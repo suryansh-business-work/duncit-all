@@ -133,10 +133,10 @@ the real coverage reds the build for everyone.
 ## Every record is editable, and every edit is recorded
 
 A console is not a report. `VenueEditorPage` is mounted at both `/venues/new`
-and `/venues/:venueId/edit` and edits the WHOLE record — the space, its
-location, its photos, its paperwork, its owner and payout, its operating hours
-and booking rules, both cancellation ladders, its review status and its money
-split:
+and `/venues/:venueId/edit` and edits the WHOLE record — the venue's details,
+its type and capacity, its food menu, its amenities, its documents, its owner,
+its payout, its closed dates, its operating hours and booking rules, both
+cancellation ladders, its review status and its money split:
 
 ```tsx
 import { VenueDetailsPage, VenueEditorPage, VenuesPage } from '@duncit/entity-consoles';
@@ -154,9 +154,75 @@ the switch actually moved, because it emails the owner — `setVenueActive`). Th
 split exists on the server because four different people write those fields in
 production; an admin is not one of the four, so the editor is one form.
 
+### The same form the owner fills in
+
+The venue editor and the Partners portal's "Register Venue" form are two
+windows onto one record, so they are laid out as ONE form: the first eight
+sections are the owner's, under the same names and in the same order, and the
+staff-only ones follow.
+
+| # | Section | Holds | Owner's form has it |
+| - | ------- | ----- | ------------------- |
+| 1 | Venue Details | name, description, cover + gallery, **categories**, address, city and area | yes |
+| 2 | Type & Capacity | venue type, total capacity, named spaces | yes |
+| 3 | Food Menu | offers food, the dishes | yes (plus QR ordering) |
+| 4 | Amenities & Security | amenities, facilities, security | yes |
+| 5 | Venue Documents | GSTIN, PAN, uploads | yes |
+| 6 | Owner Details | owner account (create only), name, email, phone, DOB, address | yes |
+| 7 | Payout Method | method, holder, account number, IFSC, UPI | yes |
+| 8 | Leaves & Holidays | closed dates | yes |
+| 9 | How it operates | hours, weekly off, booking rules, auto-extend, internal tags | no — staff only |
+| 10 | Cancellations | reschedule-only, charge bands, auto-cancel trigger, refund bands | no — staff only |
+| 11 | Status and money | status, live switch, share %, commission %, Pod Request limit | no — staff only |
+
+The list lives in `venues/editor/sections/venue-editor-sections.ts`, and
+`VenueEditorNav` draws it as a `DuncitTabs` strip above the form. It is the
+owner form's section rail with one difference that is deliberate: the editor
+stays ONE page with ONE Save (staff correct several sections in a sitting), so
+picking a section scrolls to its card instead of swapping a panel. The pick is
+held in `?selectedtab=`, so `/venues/:id/edit?selectedtab=payout` opens on the
+payout card.
+
+**Several categories.** A venue may be filed under several Super → Category →
+Sub triples; the first is the primary. The form holds them as `categories`
+(an array of `AdminCategoryValue`) in the shared `RhfAdminCategoryRows` from
+`@duncit/category` — the same field the owner's form uses — hydrates them
+through `venueCategoryList` (`@duncit/utils`, which also reads the lone
+`venue_category` of a record stored before the list existed) and sends them as
+`step1.venue_categories`. Three rules, and where they differ from the owner's
+form:
+
+- Every STARTED row must be a whole triple and no sub category may repeat
+  (both flagged on the row). Same as the owner's form.
+- At most `venueRegistrationConfig.category_limit` rows — handed to
+  `makeVenueFormSchema(t, foodLimits, categoryLimit)`; `NO_CATEGORY_LIMIT` until
+  the config answers. Same as the owner's form.
+- **No row is required**, and a row nobody picked anything in is simply not
+  sent. That is staff leniency: a venue is registered here from partial
+  information. An EMPTY list makes the server leave the stored categories
+  alone, so a venue that already has categories keeps at least one row (the
+  last row's remove button is disabled) rather than offering an edit that
+  would not save.
+
+The record page and the list show every category too — `VenueCategoryLines`
+(one path per line, in the summary and About cards) and the table's Category
+column, both through `venueCategoryPaths`. The server still sorts that column
+on the primary and filters on any.
+
+**One capacity.** The server derives the scalar `capacity` from
+`capacity_items` whenever a save carries any. So once a venue has named spaces
+the Total capacity field is read-only and shows their sum (`capacityTotal`), and
+`valuesToStep1` sends that sum; only a venue with NO named spaces has a total
+that is typed in.
+
+**One set of formats.** Fields both forms validate use one source: GSTIN, PAN
+and the postal code from `@duncit/forms`; the owner's phone (`PHONE_INTL_PLUS`),
+the account number, the IFSC and the UPI id from `@duncit/regex`. What differs
+is only what may be left EMPTY — nearly everything, for staff.
+
 ### The food menu
 
-"The space" section carries an **Offers food** switch (`offers_food`) and, while
+The **Food Menu** section carries an **Offers food** switch (`offers_food`) and, while
 it is on, the venue's menu (`food_menu`): each dish's name, description, menu
 section, price, food type, spice level, availability and photos (uploaded to
 `/venues/menu`). Both ride on `adminUpdateVenue`'s `step1`, and the rules are the
@@ -241,7 +307,7 @@ four-state lifecycle plus the live switch (whose warning exists because both
 "which account is this", and `EntityPodsTab` for a record's pods (`venue_id` and
 `host_user_id` are both allowlisted `podsTable` filters).
 
-What is NOT shared is the sections. A venue has eight and a host has four, and
+What is NOT shared is the sections. A venue has eleven and a host has four, and
 they are about different things — pushing them behind one configurable component
 would be the abstraction rule 40 warns about rather than the reuse it asks for.
 

@@ -3,7 +3,8 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { ChipList, InfoRow } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import SectionCard from './SectionCard';
-import { categoryPath, EMPTY } from './venue-values';
+import { EMPTY } from './venue-values';
+import VenueCategoryLines from './VenueCategoryLines';
 import type { AdminVenueDetail } from './queries';
 
 /** What the venue offers: the owner's own words, the taxonomy it was filed
@@ -22,7 +23,10 @@ export default function VenueAboutCard({ venue }: Readonly<{ venue: AdminVenueDe
       </Typography>
 
       <Stack spacing={1.5}>
-        <InfoRow label={t('admin.venueDetails.category')} value={categoryPath(venue.venue_category)} />
+        <InfoRow
+          label={t('admin.venueDetails.category')}
+          value={<VenueCategoryLines venue={venue} />}
+        />
 
         <Box>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block' }}>

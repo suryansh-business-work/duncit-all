@@ -7,6 +7,7 @@ import SectionCard from '../../detail/SectionCard';
 import StatusFields from '../../../shared/StatusFields';
 import { lifecycleOptions } from '../../../shared/lifecycleOptions';
 import type { VenueFormValues } from '../types';
+import { sectionAnchor } from './venue-editor-sections';
 
 /**
  * The venue's review state, its live switch and its money split.
@@ -25,6 +26,7 @@ export default function StatusSection({
 
   return (
     <SectionCard
+      id={sectionAnchor('status')}
       icon={<VerifiedIcon color="primary" />}
       title={t('directory.venueEditor.statusAndMoney')}
     >

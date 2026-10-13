@@ -1,7 +1,11 @@
 import '@duncit/table/test-setup';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
+
+// `findBy*` / `waitFor` give up after 1 s by default, which a coverage-instrumented
+// run on CI does not always make.
+configure({ asyncUtilTimeout: 5000 });
 
 // React Testing Library: unmount and clean the DOM between tests.
 afterEach(() => {

@@ -180,7 +180,10 @@ Cypress.Commands.add('readOtp', (purpose: E2eCodePurpose, target: CodeTarget, af
 
 Cypress.Commands.add('purgeRunAccount', () => {
   cy.staffGql(E2E_PURGE_MUTATION, {
-    input: { stamp: String(Cypress.env('E2E_STAMP')), signup_email: Cypress.env('E2E_SIGNUP_EMAIL') },
+    input: {
+      stamp: String(Cypress.env('E2E_STAMP')),
+      signup_email: Cypress.env('E2E_SIGNUP_EMAIL'),
+    },
   });
 });
 

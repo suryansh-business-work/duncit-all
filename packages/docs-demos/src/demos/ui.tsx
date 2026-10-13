@@ -19,6 +19,7 @@ import { defineDemo, defineDemos } from '../types';
 import { StatCardsDemo, type TilesMock } from './ui/StatCardsDemo';
 import { RowsAndChipsDemo, type RowsMock } from './ui/RowsAndChipsDemo';
 import { SpotsDemo, type SpotsMock } from './ui/SpotsDemo';
+import { cartControlDemo } from './ui/CartControlDemo';
 import { TicketDiscountDemo, type TicketDiscountMock } from './ui/TicketDiscountDemo';
 import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
 
@@ -81,6 +82,8 @@ export default defineDemos('ui', [
     mock: { no_of_spots: 12, min_pax: 4, venue_capacity: 30, seats_taken: 9 },
     render: (mock) => <SpotsDemo mock={mock} />,
   }),
+
+  cartControlDemo,
 
   defineDemo<TicketDiscountMock>({
     id: 'ticket-discount-field',

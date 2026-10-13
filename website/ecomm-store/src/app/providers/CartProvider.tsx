@@ -7,11 +7,17 @@ import { ADD_TO_CART, APPLY_COUPON, SET_CART_QTY, STORE_CART, type StoreCart } f
 import { getCartToken } from '../../lib/cartToken';
 import { useStoreT } from '../../i18n';
 
+interface AddToCartOptions {
+  /** `false` when the caller shows the result itself — a product card's notice. */
+  openDrawer?: boolean;
+}
+
 interface CartValue {
   cart: StoreCart | null;
   loading: boolean;
   cartToken: string;
-  addToCart: (productId: string, variantId: string, qty: number) => Promise<boolean>;
+  /** Adds `qty` more and, unless told otherwise, opens the cart drawer on success. */
+  addToCart: (productId: string, variantId: string, qty: number, options?: AddToCartOptions) => Promise<boolean>;
   setQty: (productId: string, variantId: string, qty: number) => Promise<boolean>;
   /** Apply (or, with '', remove) a coupon. Resolves to the server's refusal, if any. */
   applyCoupon: (code: string) => Promise<string | null>;
@@ -41,13 +47,17 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   );
 
   const addToCart = useCallback(
-    async (productId: string, variantId: string, qty: number) => {
+    async (productId: string, variantId: string, qty: number, options?: AddToCartOptions) => {
       try {
         const variables = { cart_token: cartToken, product_id: productId, variant_id: variantId, qty };
         const result = await client.mutate({ mutation: ADD_TO_CART, variables });
         if (result.data) replaceCart(result.data.storeAddToCart);
-        setAnnouncement(t('ecommStore.cart.added'));
-        setDrawerOpen(true);
+        // A card add stays in place and its own notice is a live region: saying
+        // it here too would read the same add out twice.
+        if (options?.openDrawer !== false) {
+          setAnnouncement(t('ecommStore.cart.added'));
+          setDrawerOpen(true);
+        }
         return true;
       } catch (error) {
         notifyError(parseApiError(error, t('ecommStore.cart.updateFailed')));

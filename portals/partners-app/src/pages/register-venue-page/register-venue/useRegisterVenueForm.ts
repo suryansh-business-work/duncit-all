@@ -9,6 +9,7 @@ import { FINAL, STEP1, STEP2, STEP3, UPDATE_APPROVED_VENUE } from '../queries';
 import { SECTION_FIELDS, registerVenueSchema } from './register-venue.schema';
 import {
   toApprovedUpdateInput,
+  type ApprovedSectionKey,
   toStep1Input,
   toStep2Input,
   toStep3Input,
@@ -17,6 +18,7 @@ import {
 import { useAdoptSavedFoodIds } from './useAdoptSavedFoodIds';
 import {
   blankRegisterVenueValues,
+  NO_CATEGORY_LIMIT,
   NO_FOOD_LIMITS,
   type FoodLimits,
   type RegisterVenueMode,
@@ -31,20 +33,29 @@ export type SectionState = 'complete' | 'incomplete';
 /** Full order — what "the section after this one" means, review included. */
 const SECTION_ORDER: VenueSectionKey[] = VENUE_SECTIONS.map((section) => section.key);
 
-/** Sections updateApprovedVenue can persist (amenities are locked post-approval). */
-const APPROVED_EDIT_SECTIONS = new Set<EditableSectionKey>([
+/** Sections updateApprovedVenue can persist (amenities are locked post-approval)
+ * — the ones the approved form shows its save bar on. */
+export const APPROVED_EDIT_SECTIONS: ReadonlySet<VenueSectionKey> = new Set<EditableSectionKey>([
   'details',
   'type-capacity',
+  'food',
   'documents',
   'owner',
 ]);
 
 /** Fields the approved-edit form locks and never persists — a venue approved
- * before they became mandatory must still be able to save its section. */
-const APPROVED_LOCKED_FIELDS = new Set<keyof RegisterVenueValues>(['gstin', 'pan', 'has_gstin', 'has_pan']);
+ * before they became mandatory (or, for its categories, before today's cap)
+ * must still be able to save its section. */
+const APPROVED_LOCKED_FIELDS = new Set<keyof RegisterVenueValues>([
+  'gstin',
+  'pan',
+  'has_gstin',
+  'has_pan',
+  'venue_categories',
+]);
 
 /** Sections the server stores in step 1 (`submitVenueStep1`). */
-const STEP1_SECTIONS = new Set<EditableSectionKey>(['details', 'type-capacity', 'amenities']);
+const STEP1_SECTIONS = new Set<EditableSectionKey>(['details', 'type-capacity', 'food', 'amenities']);
 
 interface Options {
   venue: any;
@@ -55,6 +66,8 @@ interface Options {
   taxDocTypes?: TaxDocTypes;
   /** From the registration config — the caps on the food menu and its ordering. */
   foodLimits?: FoodLimits;
+  /** From the registration config — the most categories one venue may have. */
+  categoryLimit?: number;
   onPersisted: () => Promise<unknown>;
 }
 
@@ -65,6 +78,7 @@ export function useRegisterVenueForm({
   mode,
   taxDocTypes,
   foodLimits = NO_FOOD_LIMITS,
+  categoryLimit = NO_CATEGORY_LIMIT,
   onPersisted,
 }: Readonly<Options>) {
   const { t } = useTranslation();
@@ -78,9 +92,10 @@ export function useRegisterVenueForm({
       registerVenueSchema(
         t,
         { has_gstin: gstinDocType, has_pan: panDocType },
-        { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct }
+        { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct },
+        categoryLimit
       ),
-    [t, gstinDocType, panDocType, food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct]
+    [t, gstinDocType, panDocType, food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, categoryLimit]
   );
   // Scoped to the MODE's sections, so an approved venue cannot be deep-linked
   // to ?selectedtab=review — a section its rail does not offer and its form
@@ -133,6 +148,7 @@ export function useRegisterVenueForm({
   const sectionState: Record<EditableSectionKey, SectionState> = {
     details: 'complete',
     'type-capacity': 'complete',
+    food: 'complete',
     amenities: 'complete',
     documents: 'complete',
     owner: 'complete',
@@ -228,7 +244,7 @@ export function useRegisterVenueForm({
         variables: {
           venue_id: venueId,
           input: toApprovedUpdateInput(
-            section as 'details' | 'type-capacity' | 'documents' | 'owner',
+            section as ApprovedSectionKey,
             form.getValues(),
             originalDocCount
           ),

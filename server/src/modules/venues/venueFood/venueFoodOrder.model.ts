@@ -41,8 +41,20 @@ export interface IVenueFoodOrder extends Document<Types.ObjectId> {
   note: string;
   lines: IFoodOrderLine[];
   subtotal_paise: number;
+  /** The venue's automatic discount. A coupon never changes what these two mean. */
   discount_pct: number;
   discount_paise: number;
+  /**
+   * The venue's coupon this order was priced with, as it was at that moment —
+   * editing or deleting the coupon later never rewrites a placed order.
+   * `coupon_id` is absent (not null) on an order without one, which is what
+   * keeps such orders out of the redemption index.
+   */
+  coupon_id?: Types.ObjectId;
+  coupon_code: string;
+  coupon_pct: number;
+  coupon_discount_paise: number;
+  /** What is charged, reconciled against and refunded: subtotal less both discounts. */
   total_paise: number;
   currency_symbol: string;
   status: FoodOrderStatus;
@@ -90,6 +102,10 @@ const venueFoodOrderSchema = new Schema<IVenueFoodOrder>(
     subtotal_paise: { type: Number, required: true, min: 0 },
     discount_pct: { type: Number, default: 0, min: 0, max: 100 },
     discount_paise: { type: Number, default: 0, min: 0 },
+    coupon_id: { type: Schema.Types.ObjectId, ref: 'VenueFoodCoupon' },
+    coupon_code: { type: String, default: '' },
+    coupon_pct: { type: Number, default: 0, min: 0, max: 100 },
+    coupon_discount_paise: { type: Number, default: 0, min: 0 },
     total_paise: { type: Number, required: true, min: 0 },
     currency_symbol: { type: String, default: '' },
     status: { type: String, enum: FOOD_ORDER_STATUSES, default: 'PLACED' },
@@ -114,5 +130,10 @@ venueFoodOrderSchema.index({ venue_id: 1, created_at: -1 });
 venueFoodOrderSchema.index({ venue_id: 1, client_key: 1 }, { unique: true });
 // The reconciler's two reads: unclaimed captures and refunds still owed.
 venueFoodOrderSchema.index({ payment_status: 1, created_at: 1 });
+// A coupon's per-number limit: the PAID orders one mobile number placed with it. Only orders that carry a coupon are indexed.
+venueFoodOrderSchema.index(
+  { coupon_id: 1, customer_phone: 1, payment_status: 1 },
+  { partialFilterExpression: { coupon_id: { $exists: true } } }
+);
 
 export const VenueFoodOrderModel = model<IVenueFoodOrder>('VenueFoodOrder', venueFoodOrderSchema);

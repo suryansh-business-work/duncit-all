@@ -15,7 +15,6 @@ import {
 } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { logs } from '@duncit/logs';
 import { selectionKey } from '@/utils/product-selection';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -54,7 +53,6 @@ export function ProductDetailSheet({
 }: Readonly<Props>) {
   const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -154,7 +152,6 @@ export function ProductDetailSheet({
       selectedVariant={selectedVariant}
       quantity={lineQuantity}
       maxQuantity={stock}
-      primary={primary}
       readOnly={readOnly}
       notice={notice}
       onUpdateQuantity={onUpdateLine ? (next) => onUpdateLine(next, activePick) : undefined}

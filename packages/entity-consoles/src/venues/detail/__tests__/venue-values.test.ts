@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   EMPTY,
-  categoryPath,
   hasPayout,
   locationLine,
   orDash,
@@ -28,16 +27,6 @@ describe('venue-values / lines', () => {
     expect(streetAddress(makeVenue({ address_line1: ' 12 100 Feet Road ', address_line2: '' }))).toBe(
       '12 100 Feet Road',
     );
-  });
-});
-
-describe('venue-values / categoryPath', () => {
-  it('walks super category > category > sub category', () => {
-    expect(categoryPath(makeVenue().venue_category)).toBe('For You > Games > Board Games');
-  });
-
-  it('reads the dash for a record filed under no category at all', () => {
-    expect(categoryPath(missing<ReturnType<typeof makeVenue>['venue_category']>())).toBe(EMPTY);
   });
 });
 

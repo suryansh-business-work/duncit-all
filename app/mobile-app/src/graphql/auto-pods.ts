@@ -345,8 +345,9 @@ export const MyHostCategoriesForAutoPodDocument = gql(`
   }
 `);
 
-/** The owner's venues — the queue's picker, with the category each declares
- * (which is what decides the offers it is shown). */
+/** The owner's venues — the queue's picker, with every category each one
+ * declares (ANY of them decides the offers it is shown; `venue_category` is the
+ * primary, kept for an answer that carries no list). */
 export const MyVenuesForAutoPodDocument = gql(`
   query MobileMyVenuesForAutoPod {
     myVenues {
@@ -362,6 +363,12 @@ export const MyVenuesForAutoPodDocument = gql(`
         capacity
       }
       venue_category {
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
+      venue_categories {
         sub_category_id
         super_category_name
         category_name

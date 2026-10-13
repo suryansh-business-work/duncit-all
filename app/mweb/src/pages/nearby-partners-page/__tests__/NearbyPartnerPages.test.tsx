@@ -61,13 +61,15 @@ function renderPage(page: ReactNode, mocks: MockedResponse[], locationId = 'loc-
   );
 }
 
-const ownerVenue = (id: string, status: string, category: string | null) => ({
+/** An owner's venue: `categories` is every category it has, primary first (none = no category). */
+const ownerVenue = (id: string, status: string, ...categories: (string | null)[]) => ({
   __typename: 'Venue',
   id,
   venue_name: `Venue ${id}`,
   city: 'Lucknow',
   status,
-  venue_category: { __typename: 'VenueCategory', category_id: category },
+  venue_category: { __typename: 'VenueCategory', category_id: categories[0] ?? null },
+  venue_categories: categories.map((category_id) => ({ __typename: 'VenueCategory', category_id })),
 });
 
 const nearbyHost = (user_id: string, name: string) => ({
@@ -118,6 +120,37 @@ describe('NearbyHostsPage (Venue Studio)', () => {
 
     await waitFor(() => expect(screen.queryByTestId('request-pod-form')).not.toBeInTheDocument());
     expect(screen.queryByTestId('request-pod-error')).not.toBeInTheDocument();
+  });
+
+  // Searching on the primary alone would hide every host in the venue's other categories.
+  it('starts from every category the venue has, each once, primary first', async () => {
+    renderPage(<NearbyHostsPage />, [
+      {
+        request: { query: SEARCH_OWNER_VENUES },
+        result: { data: { myVenues: [ownerVenue('v1', 'APPROVED', 'cat-music', 'cat-sports', 'cat-music', null)] } },
+        ...always,
+      },
+      // Only the search carrying BOTH categories is answered: the primary alone finds nobody.
+      hostsMock('v1', ['cat-music'], []),
+      hostsMock('v1', ['cat-music', 'cat-sports'], [nearbyHost('host-7', 'Meera')]),
+      quotaMock({ side: 'VENUE', venue_id: 'v1' }),
+    ]);
+
+    expect(await screen.findByTestId('nearby-card-host-7')).toBeInTheDocument();
+  });
+
+  it('starts unfiltered for a venue with no category', async () => {
+    renderPage(<NearbyHostsPage />, [
+      {
+        request: { query: SEARCH_OWNER_VENUES },
+        result: { data: { myVenues: [ownerVenue('v1', 'APPROVED')] } },
+        ...always,
+      },
+      hostsMock('v1', [], [nearbyHost('host-8', 'Zoya')]),
+      quotaMock({ side: 'VENUE', venue_id: 'v1' }),
+    ]);
+
+    expect(await screen.findByTestId('nearby-card-host-8')).toBeInTheDocument();
   });
 
   it("switching venue searches for that venue with its own category, and only approved venues are offered", async () => {
@@ -176,7 +209,7 @@ describe('NearbyVenuesPage (Host Studio)', () => {
     ...always,
   });
 
-  const venuesMock = (categories: string[]): MockedResponse => ({
+  const venuesMock = (categories: string[], venueCategories: string[] = ['Sports']): MockedResponse => ({
     request: { query: NEARBY_VENUES_FOR_HOST, variables: { search: searchAt(categories) } },
     result: {
       data: {
@@ -185,7 +218,8 @@ describe('NearbyVenuesPage (Host Studio)', () => {
             __typename: 'NearbyVenue',
             id: 'venue-1',
             venue_name: 'Gomti Arena',
-            category: 'Sports',
+            category: venueCategories[0] ?? '',
+            categories: venueCategories,
             locality: 'Gomti Nagar',
             city: 'Lucknow',
             cover_image_url: '',
@@ -207,6 +241,7 @@ describe('NearbyVenuesPage (Host Studio)', () => {
     ]);
 
     const card = await screen.findByTestId('nearby-card-venue-1');
+    expect(within(card).getByText('Sports')).toBeInTheDocument();
     expect(within(card).getByText('Gomti Nagar, Lucknow')).toBeInTheDocument();
     expect(screen.getByTestId('nearby-venues-page')).toHaveTextContent('Search Nearby Venues');
 
@@ -215,6 +250,17 @@ describe('NearbyVenuesPage (Host Studio)', () => {
     fireEvent.click(screen.getByTestId('request-pod-send'));
 
     await waitFor(() => expect(screen.queryByTestId('request-pod-form')).not.toBeInTheDocument());
+  });
+
+  it('names every category of a venue in several on its card, primary first', async () => {
+    renderPage(<NearbyVenuesPage />, [
+      hostCategoriesMock(['cat-run']),
+      venuesMock(['cat-run'], ['Sports', 'Music']),
+      quotaMock({ side: 'HOST' }),
+    ]);
+
+    const card = await screen.findByTestId('nearby-card-venue-1');
+    expect(within(card).getByText('Sports · Music')).toBeInTheDocument();
   });
 
   it("shows the host lookup's failure", async () => {

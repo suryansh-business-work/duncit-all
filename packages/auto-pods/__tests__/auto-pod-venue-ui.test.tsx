@@ -16,7 +16,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AutoPodDependencyTimeline } from '../src/AutoPodDependencyTimeline';
 import { AutoPodExpiryNote } from '../src/AutoPodExpiryNote';
 import { MY_VENUES_FOR_AUTO_POD } from '../src/queries';
-import { AutoPodVenuePicker, venueCategoryPath, type AutoPodVenueOption } from '../src/venue/AutoPodVenuePicker';
+import {
+  AutoPodVenuePicker,
+  venueCategoryPath,
+  type AutoPodVenueCategory,
+  type AutoPodVenueOption,
+} from '../src/venue/AutoPodVenuePicker';
 
 const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
   options?.vars ? `${key}:${JSON.stringify(options.vars)}` : key;
@@ -30,6 +35,22 @@ const settle = async () => {
   });
 };
 
+const BADMINTON = {
+  __typename: 'VenueCategory',
+  sub_category_id: 'sub-1',
+  super_category_name: 'Sports',
+  category_name: 'Racket',
+  sub_category_name: 'Badminton',
+} as AutoPodVenueCategory;
+const HATHA = {
+  __typename: 'VenueCategory',
+  sub_category_id: 'sub-2',
+  super_category_name: 'Fitness',
+  category_name: 'Yoga',
+  sub_category_name: 'Hatha',
+} as AutoPodVenueCategory;
+
+/** A venue as the picker's query answers it: the list, and its first entry mirrored as the primary. */
 const venue = (over: Partial<AutoPodVenueOption> & Record<string, unknown> = {}): AutoPodVenueOption =>
   ({
     __typename: 'Venue',
@@ -39,13 +60,8 @@ const venue = (over: Partial<AutoPodVenueOption> & Record<string, unknown> = {})
     is_active: true,
     location_id: 'loc-blr',
     city: 'Bengaluru',
-    venue_category: {
-      __typename: 'VenueCategory',
-      sub_category_id: 'sub-1',
-      super_category_name: 'Sports',
-      category_name: 'Racket',
-      sub_category_name: 'Badminton',
-    },
+    venue_category: BADMINTON,
+    venue_categories: [BADMINTON],
     ...over,
   }) as AutoPodVenueOption;
 
@@ -64,13 +80,17 @@ const wrap = (ui: React.ReactNode, mocks: MockedResponse[] = []) =>
 describe('venueCategoryPath', () => {
   it('joins the three names, skipping blanks, and is empty with no category', () => {
     expect(venueCategoryPath(venue())).toBe('Sports › Racket › Badminton');
-    expect(
-      venueCategoryPath(
-        venue({ venue_category: { sub_category_id: 's', super_category_name: 'Sports', category_name: '', sub_category_name: 'Badminton' } }),
-      ),
-    ).toBe('Sports › Badminton');
-    expect(venueCategoryPath(venue({ venue_category: null }))).toBe('');
+    const noMiddle = { sub_category_id: 's', super_category_name: 'Sports', category_name: '', sub_category_name: 'Badminton' };
+    expect(venueCategoryPath(venue({ venue_category: noMiddle, venue_categories: [noMiddle] }))).toBe('Sports › Badminton');
+    expect(venueCategoryPath(venue({ venue_category: null, venue_categories: [] }))).toBe('');
     expect(venueCategoryPath(null)).toBe('');
+  });
+
+  it('names the primary of a venue in several categories, and the lone triple of a row fetched without the list', () => {
+    expect(venueCategoryPath(venue({ venue_category: HATHA, venue_categories: [HATHA, BADMINTON] }))).toBe(
+      'Fitness › Yoga › Hatha',
+    );
+    expect(venueCategoryPath(venue({ venue_categories: undefined }))).toBe('Sports › Racket › Badminton');
   });
 });
 
@@ -104,8 +124,29 @@ describe('AutoPodVenuePicker', () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ id: 'v-2' }));
   });
 
+  it('writes every category of a venue in several under the picker, primary first', async () => {
+    const chosen = venue({ venue_categories: [BADMINTON, HATHA] });
+    wrap(<AutoPodVenuePicker value={chosen} onChange={vi.fn()} labels={labels} />, [venuesMock([chosen])]);
+    await settle();
+    await settle();
+    const line = screen.getByTestId('auto-pod-venue-categories');
+    expect(line).toHaveTextContent(labels.venueCategories(['Sports › Racket › Badminton', 'Fitness › Yoga › Hatha']));
+    expect(line.textContent).toContain('Fitness › Yoga › Hatha');
+    expect(screen.queryByText(labels.noVenueCategory)).not.toBeInTheDocument();
+  });
+
+  // A venue whose primary is blank but which has a second category is still offered pods.
+  it('does not warn a venue that has a category, whichever row it sits on', async () => {
+    const chosen = venue({ venue_category: null, venue_categories: [HATHA] });
+    wrap(<AutoPodVenuePicker value={chosen} onChange={vi.fn()} labels={labels} />, [venuesMock([chosen])]);
+    await settle();
+    await settle();
+    expect(screen.getByText(labels.venueCategory('Fitness › Yoga › Hatha'))).toBeInTheDocument();
+    expect(screen.queryByText(labels.noVenueCategory)).not.toBeInTheDocument();
+  });
+
   it('warns when the chosen venue declares no category — it will be offered nothing', async () => {
-    const chosen = venue({ venue_category: null });
+    const chosen = venue({ venue_category: null, venue_categories: [] });
     wrap(<AutoPodVenuePicker value={chosen} onChange={vi.fn()} labels={labels} />, [venuesMock([chosen])]);
     await settle();
     await settle();

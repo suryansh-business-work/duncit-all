@@ -1,133 +1,67 @@
-import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { StepButton } from './PodShopProductRow';
+import { CartNoticeChip } from '@/components/cart/CartNoticeChip';
+import { CartQuantityControl } from '@/components/cart/CartQuantityControl';
+import { cartControlLabels } from '@/components/cart/cartControlLabels';
+import { useCartControlNotice } from '@/hooks/useCartControlNotice';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
+  /** The product, for the control's spoken names. */
+  name: string;
   quantity: number;
   maxQuantity: number;
-  primary: string;
   readOnly?: boolean;
   onUpdate?: (quantity: number) => void;
 }
 
-/** Nothing selected yet: a single "Add to selection" call to action, greyed out
- * and inert once the product is out of stock. */
-function AddToSelection({
-  outOfStock,
-  onAdd,
-}: Readonly<{ outOfStock: boolean; onAdd: () => void }>) {
-  const { t } = useTranslation();
-  const { muted, onPrimary } = useThemeColors();
-  const iconColor = outOfStock ? muted : onPrimary;
-  const textColor = outOfStock ? '$muted' : '$onPrimary';
-  const label = outOfStock ? 'Out of stock' : 'Add to selection';
-  return (
-    <XStack
-      testID="product-detail-add"
-      role="button"
-      tabIndex={0}
-      aria-disabled={outOfStock}
-      aria-label={t('mweb.details.addToSelection')}
-      onPress={outOfStock ? undefined : onAdd}
-      marginTop={4}
-      height={52}
-      borderRadius={999}
-      backgroundColor={outOfStock ? '$soft' : '$primary'}
-      alignItems="center"
-      justifyContent="center"
-      gap={8}
-      opacity={outOfStock ? 0.6 : 1}
-      pressStyle={PRESS_STYLE.control}
-    >
-      <MaterialIcons name="add-shopping-cart" size={18} color={iconColor} />
-      <Text fontSize={14} fontWeight="700" color={textColor}>
-        {label}
-      </Text>
-    </XStack>
-  );
-}
+const TEST_IDS = {
+  root: 'product-detail-stepper',
+  add: 'product-detail-add',
+  decrease: 'product-detail-dec',
+  increase: 'product-detail-inc',
+  count: 'product-detail-qty',
+} as const;
 
-/** Already in the selection: step the quantity up to available stock, or remove. */
-function QuantityStepper({
-  quantity,
-  maxQuantity,
-  primary,
-  onUpdate,
-}: Readonly<{
-  quantity: number;
-  maxQuantity: number;
-  primary: string;
-  onUpdate: (quantity: number) => void;
-}>) {
-  const { t } = useTranslation();
-  const { muted, danger } = useThemeColors();
-  const atMax = quantity >= maxQuantity;
-  return (
-    <XStack marginTop={4} alignItems="center" justifyContent="space-between">
-      <XStack gap={14} alignItems="center">
-        <StepButton
-          testID="product-detail-dec"
-          icon="remove"
-          color={primary}
-          onPress={() => onUpdate(quantity - 1)}
-        />
-        <Text testID="product-detail-qty" fontSize={16} fontWeight="700" color="$color">
-          {quantity}
-        </Text>
-        <StepButton
-          testID="product-detail-inc"
-          icon="add"
-          color={atMax ? muted : primary}
-          disabled={atMax}
-          onPress={() => onUpdate(Math.min(maxQuantity, quantity + 1))}
-        />
-      </XStack>
-      <XStack
-        testID="product-detail-remove"
-        role="button"
-        tabIndex={0}
-        aria-label={t('mweb.details.removeFromSelection')}
-        onPress={() => onUpdate(0)}
-        gap={5}
-        alignItems="center"
-        paddingVertical={6}
-        paddingHorizontal={10}
-        borderRadius={999}
-        pressStyle={PRESS_STYLE.inline}
-      >
-        <MaterialIcons name="delete-outline" size={18} color={danger} />
-        <Text fontSize={13} fontWeight="600" color="$danger">
-          Remove
-        </Text>
-      </XStack>
-    </XStack>
-  );
-}
+/** How far above the buy bar the notice floats, clear of the bar's own edge. */
+const NOTICE_TOP = -44;
 
-/** Product-sheet cart control: add the product to the selection, or adjust its
- * quantity (+/-) and remove it. Quantity is clamped to available stock. Renders
+/** Product-sheet cart control: the same "+" / remove · count · plus pill as
+ * every card, at the end of the buy bar. Quantity is clamped to available
+ * stock; a sold-out product says so beside a "+" that does nothing. Renders
  * nothing when the pod is view-only (already booked) or no handler is wired. */
 export function ProductQuantityBar({
+  name,
   quantity,
   maxQuantity,
-  primary,
   readOnly,
   onUpdate,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const labels = cartControlLabels(t, name);
+  const notice = useCartControlNotice(quantity);
   if (readOnly || !onUpdate) return null;
-  if (quantity <= 0) {
-    return <AddToSelection outOfStock={maxQuantity <= 0} onAdd={() => onUpdate(1)} />;
-  }
+  const outOfStock = maxQuantity <= 0 && quantity <= 0;
   return (
-    <QuantityStepper
-      quantity={quantity}
-      maxQuantity={maxQuantity}
-      primary={primary}
-      onUpdate={onUpdate}
-    />
+    <XStack alignItems="center" justifyContent="flex-end" gap={12}>
+      <CartNoticeChip
+        notice={notice}
+        labels={labels}
+        testID="product-detail-notice"
+        top={NOTICE_TOP}
+      />
+      {outOfStock ? (
+        <Text testID="product-detail-out-of-stock" fontSize={13} fontWeight="600" color="$muted">
+          {t('mweb.shop.outOfStock')}
+        </Text>
+      ) : null}
+      <CartQuantityControl
+        quantity={quantity}
+        max={maxQuantity}
+        labels={labels}
+        onChange={onUpdate}
+        testIds={TEST_IDS}
+      />
+    </XStack>
   );
 }

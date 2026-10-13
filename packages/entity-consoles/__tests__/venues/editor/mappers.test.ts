@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  capacityTotal,
   valuesToSettingsInput,
   valuesToStep1,
   valuesToStep2,
@@ -50,12 +51,49 @@ describe('venueToValues', () => {
     });
   });
 
-  it('maps the category triple onto the picker ids', () => {
-    const { category } = venueToValues(venueRecord);
-    expect(category.super_id).toBe('66a0000000000000000000a1');
-    expect(category.category_id).toBe('66a0000000000000000000b2');
-    expect(category.sub_id).toBe('66a0000000000000000000c3');
-    expect(category.sub_name).toBe('Catan Night');
+  it('opens one picker row per category, primary first', () => {
+    const { categories } = venueToValues(venueRecord);
+    expect(categories).toEqual([
+      {
+        super_id: '66a0000000000000000000a1',
+        super_name: 'Social',
+        category_id: '66a0000000000000000000b2',
+        category_name: 'Board Games',
+        sub_id: '66a0000000000000000000c3',
+        sub_name: 'Catan Night',
+      },
+      {
+        super_id: '66a0000000000000000000a1',
+        super_name: 'Social',
+        category_id: '66a0000000000000000000b5',
+        category_name: 'Quizzes',
+        sub_id: '66a0000000000000000000c6',
+        sub_name: 'Pub Quiz',
+      },
+    ]);
+  });
+
+  it('falls back to the lone legacy triple of a venue stored before the list existed', () => {
+    const { categories } = venueToValues({ ...venueRecord, venue_categories: [] });
+    expect(categories).toHaveLength(1);
+    expect(categories[0].sub_id).toBe('66a0000000000000000000c3');
+    expect(categories[0].sub_name).toBe('Catan Night');
+  });
+
+  it('opens on no row at all for a venue filed under no category', () => {
+    const { categories } = venueToValues({
+      ...venueRecord,
+      venue_categories: [],
+      venue_category: {
+        super_category_id: null,
+        category_id: null,
+        sub_category_id: null,
+        super_category_name: '',
+        category_name: '',
+        sub_category_name: '',
+      },
+    });
+    expect(categories).toEqual([]);
   });
 
   it('flattens both cancellation ladders and the auto-extend block', () => {
@@ -87,12 +125,14 @@ describe('venueToValues', () => {
       submitted_at: null,
       approved_at: null,
       rejected_at: null,
-      venue_category: {
-        ...venueRecord.venue_category,
-        super_category_id: null,
-        category_id: null,
-        sub_category_id: null,
-      },
+      venue_categories: [
+        {
+          ...venueRecord.venue_category,
+          super_category_id: null,
+          category_id: null,
+          sub_category_id: null,
+        },
+      ],
       bank_account: { ...venueRecord.bank_account, payout_method: null },
       settings: {
         ...venueRecord.settings,
@@ -105,12 +145,13 @@ describe('venueToValues', () => {
     expect(values.location.location_id).toBe('');
     expect(values.owner_dob).toBe('');
     expect(values.bank_account.payout_method).toBe('');
-    expect(values.category.super_id).toBe('');
-    expect(values.category.category_id).toBe('');
-    expect(values.category.sub_id).toBe('');
+    expect(values.categories).toHaveLength(1);
+    expect(values.categories[0].super_id).toBe('');
+    expect(values.categories[0].category_id).toBe('');
+    expect(values.categories[0].sub_id).toBe('');
     // The names survive even when the ids are gone — the picker shows what the
     // venue was approved under while asking for it to be re-picked.
-    expect(values.category.sub_name).toBe('Catan Night');
+    expect(values.categories[0].sub_name).toBe('Catan Night');
     // An empty stored window opens on the default a new venue would get.
     expect(values.settings.open).toBe(blankVenueValues.settings.open);
     expect(values.settings.close).toBe(blankVenueValues.settings.close);
@@ -161,22 +202,68 @@ describe('venueToValues', () => {
   });
 });
 
+describe('capacityTotal', () => {
+  it('adds up the spaces, reading a typed number from its string and a blank as nothing', () => {
+    // A number input hands its value back as a string, and '' while it is empty.
+    expect(capacityTotal([{ capacity: '12' }, { capacity: '' }, { capacity: 8 }])).toBe(20);
+    expect(capacityTotal([])).toBe(0);
+  });
+});
+
 describe('valuesToStep1', () => {
-  it('sends the category triple only when a sub is chosen', () => {
-    const values = venueToValues(venueRecord);
-    expect(valuesToStep1(values).venue_category).toEqual({
-      super_category_id: '66a0000000000000000000a1',
-      category_id: '66a0000000000000000000b2',
-      sub_category_id: '66a0000000000000000000c3',
-    });
+  it('sends every category as its id triple, primary first', () => {
+    const step1 = valuesToStep1(venueToValues(venueRecord));
+    expect(step1.venue_categories).toEqual([
+      {
+        super_category_id: '66a0000000000000000000a1',
+        category_id: '66a0000000000000000000b2',
+        sub_category_id: '66a0000000000000000000c3',
+      },
+      {
+        super_category_id: '66a0000000000000000000a1',
+        category_id: '66a0000000000000000000b5',
+        sub_category_id: '66a0000000000000000000c6',
+      },
+    ]);
+    // The single-category field is never sent: the server ignores it beside the list.
+    expect(step1).not.toHaveProperty('venue_category');
   });
 
-  it('omits the category entirely when the triple is incomplete', () => {
-    // The server rejects a partial triple, so a half-picked category must be
-    // left out rather than sent as three empty ids.
+  it('leaves out a row that is not a whole triple', () => {
+    // The server rejects a partial triple, so a half-picked row must be left
+    // out rather than sent with an empty id.
     const values = venueToValues(venueRecord);
-    values.category = { ...values.category, sub_id: '', sub_name: '' };
-    expect(valuesToStep1(values).venue_category).toBeUndefined();
+    values.categories[1] = { ...values.categories[1], sub_id: '', sub_name: '' };
+    expect(valuesToStep1(values).venue_categories).toEqual([
+      {
+        super_category_id: '66a0000000000000000000a1',
+        category_id: '66a0000000000000000000b2',
+        sub_category_id: '66a0000000000000000000c3',
+      },
+    ]);
+  });
+
+  it('sends an empty list for a venue with no category chosen', () => {
+    const values = venueToValues(venueRecord);
+    values.categories = [];
+    expect(valuesToStep1(values).venue_categories).toEqual([]);
+  });
+
+  it('sends the sum of the named spaces as the total, whatever the scalar holds', () => {
+    // The server derives the same sum whenever spaces are sent, so a stale
+    // scalar must never be what the request claims.
+    const values = venueToValues(venueRecord);
+    values.capacity = 999;
+    expect(valuesToStep1(values).capacity).toBe(60);
+  });
+
+  it('keeps the typed total for a venue with no named spaces', () => {
+    const values = venueToValues(venueRecord);
+    values.capacity_items = [];
+    values.capacity = 75;
+    const step1 = valuesToStep1(values);
+    expect(step1.capacity).toBe(75);
+    expect(step1.capacity_items).toEqual([]);
   });
 
   it('unwraps the location back into the flat address fields', () => {
@@ -191,6 +278,29 @@ describe('valuesToStep1', () => {
     const values = venueToValues(venueRecord);
     values.location = { ...values.location, location_id: '' };
     expect(valuesToStep1(values).location_id).toBeUndefined();
+  });
+
+  it('keeps a stored dish under its id, and sends a new one with no id and no unchosen enum', () => {
+    const values = venueToValues(venueRecord);
+    values.food_menu.push({
+      item_id: '',
+      name: 'Masala Dosa',
+      description: '',
+      category: 'Mains',
+      price: 220,
+      images: [],
+      // Neither select was touched: '' is the select's empty value, not an enum.
+      diet: '',
+      spice_level: '',
+      is_available: true,
+    });
+    const [stored, added] = valuesToStep1(values).food_menu;
+
+    expect(stored).toMatchObject({ id: '66e0000000000000000000f1', diet: 'VEG', spice_level: 'NONE' });
+    expect(added.id).toBeUndefined();
+    expect(added.diet).toBeUndefined();
+    expect(added.spice_level).toBeUndefined();
+    expect(added.name).toBe('Masala Dosa');
   });
 });
 

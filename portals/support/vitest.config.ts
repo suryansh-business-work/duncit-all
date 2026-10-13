@@ -11,6 +11,11 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./__tests__/unit-tests/setup.ts'],
+    // The coverage run instruments every file with v8 and runs on a shared CI box:
+    // a dialog that walks its steps in about a second locally takes several there,
+    // and 5 s (the default) is where the mail automation suite started to time out.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     // Vitest specs live under __tests__/unit-tests; Cypress e2e specs under
     // __tests__/e2e are discovered separately by Cypress.
     include: ['__tests__/unit-tests/**/*.{cy,test,spec}.{ts,tsx}'],

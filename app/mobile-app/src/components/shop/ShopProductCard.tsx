@@ -1,37 +1,59 @@
 import { Vibration } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { CartNoticeChip } from '@/components/cart/CartNoticeChip';
+import { CartQuantityControl } from '@/components/cart/CartQuantityControl';
+import { cartControlLabels } from '@/components/cart/cartControlLabels';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import type { ShopProduct } from '@/screens/ShopScreen';
+import { useCartControlNotice } from '@/hooks/useCartControlNotice';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   product: ShopProduct;
+  /** How many of it the cart holds on the line this card steps (0 when none). */
+  quantity: number;
+  /** The most that line may hold. */
+  max: number;
+  /** The first add is still resolving its pod. */
   adding: boolean;
+  /** The saved cart has been read back — until then a quantity arriving is not an add. */
+  cartReady: boolean;
   onOpen: (productId: string) => void;
-  onQuickAdd: (product: ShopProduct) => void;
+  onQuantity: (product: ShopProduct, next: number) => void;
 }
 
 const IMAGE_STYLE = { width: '100%', height: '100%' } as const;
 
 /** One product tile in the Pod Shop browse grid — image, name, price and (when
  * reviewed) an average rating. Tapping opens the product detail screen; the
- * round green "+" quick-adds to cart via the cheapest pod (with a light haptic).
+ * cart control on the image's corner quick-adds via the cheapest pod (with a
+ * light haptic), then steps or removes that line, and the image says so.
  * RN twin of mWeb's ShopProductCard. */
-export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonly<Props>) {
+export function ShopProductCard({
+  product,
+  quantity,
+  max,
+  adding,
+  cartReady,
+  onOpen,
+  onQuantity,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary, warning } = useThemeColors();
+  const { warning } = useThemeColors();
+  const labels = cartControlLabels(t, product.product_name);
+  const notice = useCartControlNotice(quantity, cartReady);
   const imageUrl = product.image_url || product.images[0] || '';
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
   const outOfStock = product.pod_available_count <= 0;
-  const quickAdd = () => {
-    Vibration.vibrate(8);
-    onQuickAdd(product);
+  const change = (next: number) => {
+    if (next > quantity) Vibration.vibrate(8);
+    onQuantity(product, next);
   };
   return (
     <SurfaceCard
@@ -63,6 +85,25 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
             </Text>
           </XStack>
         ) : null}
+        <CartNoticeChip
+          notice={notice}
+          labels={labels}
+          testID={`shop-product-notice-${product.id}`}
+        />
+        {/* Still there for a product that sold out while in the cart, so it can come out. */}
+        {outOfStock && quantity <= 0 ? null : (
+          <YStack position="absolute" right={8} bottom={8}>
+            <CartQuantityControl
+              quantity={quantity}
+              max={max}
+              labels={labels}
+              busy={adding}
+              onChange={change}
+              testIdPrefix={`shop-product-cart-${product.id}`}
+              testIds={{ add: `shop-product-add-${product.id}` }}
+            />
+          </YStack>
+        )}
       </YStack>
       <YStack paddingTop={8} paddingHorizontal={4} gap={2}>
         <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={2} lineHeight={18}>
@@ -84,34 +125,9 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
             </Text>
           </XStack>
         ) : null}
-        <XStack alignItems="center" justifyContent="space-between" minHeight={36} marginTop={4}>
-          <Text fontSize={16} fontWeight="700" color="$color">
-            ₹{product.unit_cost}
-          </Text>
-          {outOfStock ? null : (
-            <YStack
-              testID={`shop-product-add-${product.id}`}
-              role="button"
-              tabIndex={0}
-              aria-label={`Add ${product.product_name} to cart`}
-              hitSlop={4}
-              onPress={quickAdd}
-              width={36}
-              height={36}
-              borderRadius={999}
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor="$primary"
-              pressStyle={PRESS_STYLE.control}
-            >
-              {adding ? (
-                <Spinner size="small" color="$onPrimary" />
-              ) : (
-                <MaterialIcons name="add" size={22} color={onPrimary} />
-              )}
-            </YStack>
-          )}
-        </XStack>
+        <Text fontSize={16} fontWeight="700" color="$color" marginTop={4}>
+          ₹{product.unit_cost}
+        </Text>
       </YStack>
     </SurfaceCard>
   );

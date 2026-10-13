@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';
 import { WishlistProvider } from '../../../components/cart/WishlistContext';
 import CartPage from '../../CartPage';
@@ -75,13 +75,20 @@ describe('CartPage + CartContext', () => {
     expect(screen.getByText('₹420')).toBeInTheDocument();
 
     // + on the base line (first Alpha row) hits its max at 3.
-    fireEvent.click(screen.getAllByRole('button', { name: 'Increase Alpha Tee' })[0]!);
-    expect(screen.getAllByRole('button', { name: 'Increase Alpha Tee' })[0]).toBeDisabled();
+    fireEvent.click(screen.getByTestId('cart-line-a-inc'));
+    expect(screen.getByTestId('cart-line-a-qty')).toHaveTextContent('3');
+    expect(screen.getByTestId('cart-line-a-inc')).toBeDisabled();
 
-    // − to zero removes the variant line (second Alpha row).
-    fireEvent.click(screen.getAllByRole('button', { name: 'Decrease Alpha Tee' })[1]!);
-    // Remove the p2 line entirely.
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Beta Mug' }));
+    // The variant line (second Alpha row) holds one unit: its pill shows the bin, which removes it.
+    const variantBin = screen.getByTestId('cart-line-a::v1-dec');
+    expect(variantBin).toHaveAccessibleName('Remove Alpha Tee');
+    fireEvent.click(variantBin);
+    expect(screen.queryByText('Alpha Tee — L / Blue')).not.toBeInTheDocument();
+    expect(screen.getByTestId('cart-line-a-qty')).toHaveTextContent('3');
+    // Remove the p2 line entirely, from the line's own remove button (the bin in its pill does the same).
+    const removes = within(screen.getByTestId('cart-pod-p2')).getAllByRole('button', { name: 'Remove Beta Mug' });
+    expect(removes).toHaveLength(2);
+    fireEvent.click(removes[1]!);
     expect(screen.queryByTestId('cart-pod-p2')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /clear cart/i }));

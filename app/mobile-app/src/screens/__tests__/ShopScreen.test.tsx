@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ShopScreen, sortShopProducts, type ShopProduct } from '@/screens/ShopScreen';
+import { PodsForProductDocument } from '@/graphql/details';
 import { ShopProductsDocument } from '@/graphql/shop';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useCartStore } from '@/stores/cart.store';
@@ -183,6 +184,54 @@ describe('ShopScreen', () => {
       ),
     );
     expect(useCartStore.getState().lines).toHaveLength(0);
+  });
+
+  it('turns the card into the quantity pill once added, and steps the cart line from it', async () => {
+    mockRequest.mockImplementation((doc: unknown) =>
+      Promise.resolve(
+        doc === ShopProductsDocument
+          ? { availablePodProducts: [product()] }
+          : {
+              podsForProduct: [
+                {
+                  pod_id: 'pod-1',
+                  pod_title: 'Pod One',
+                  club_slug: 'club',
+                  product_name: 'Alpha Tee',
+                  unit_cost: 100,
+                  available_count: 2,
+                  free_delivery_above: null,
+                  image_url: '',
+                },
+              ],
+            },
+      ),
+    );
+    renderWithProviders(<ShopScreen />);
+    await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('shop-product-add-p1'));
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('shop-product-cart-p1-count')).toHaveTextContent('1'),
+    );
+    expect(screen.getByTestId('shop-product-notice-p1')).toHaveTextContent('Item added');
+    expect(screen.queryByTestId('shop-product-add-p1')).toBeNull();
+
+    // + steps the same line, and stops at the pod's stock (2).
+    fireEvent.press(screen.getByTestId('shop-product-cart-p1-increase'));
+    expect(useCartStore.getState().lines[0]?.quantity).toBe(2);
+    expect(screen.getByTestId('shop-product-cart-p1-increase').props['aria-disabled']).toBe(true);
+
+    // Down to one, then the bin takes the line out and the "+" is back.
+    fireEvent.press(screen.getByTestId('shop-product-cart-p1-decrease'));
+    fireEvent.press(screen.getByTestId('shop-product-cart-p1-decrease'));
+    expect(useCartStore.getState().lines).toHaveLength(0);
+    expect(screen.getByTestId('shop-product-add-p1')).toBeOnTheScreen();
+    expect(screen.getByTestId('shop-product-notice-p1')).toHaveTextContent('Item removed');
+    // Only the first add looked a pod up.
+    const lookups = mockRequest.mock.calls.filter(([doc]) => doc === PodsForProductDocument);
+    expect(lookups).toHaveLength(1);
   });
 
   it('hides the super-category rail when no categories exist and covers image fallbacks', async () => {

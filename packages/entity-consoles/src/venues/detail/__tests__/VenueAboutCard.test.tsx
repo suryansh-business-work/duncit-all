@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import VenueAboutCard from '../VenueAboutCard';
 import { makeVenue, missing } from './fixtures';
 
@@ -7,12 +7,17 @@ import { makeVenue, missing } from './fixtures';
 const row = (label: string) => screen.getByText(label).parentElement as HTMLElement;
 
 describe('VenueAboutCard', () => {
-  it("shows the owner's description, the category path, each named space and every amenity list", () => {
+  it("shows the owner's description, every category path, each named space and every amenity list", () => {
     render(<VenueAboutCard venue={makeVenue()} />);
 
     expect(screen.getByText('About')).toBeInTheDocument();
     expect(screen.getByText('Two floors of board games in Indiranagar.')).toBeInTheDocument();
-    expect(row('Category')).toHaveTextContent('For You > Games > Board Games');
+    // Every category the venue is filed under, primary first — not the primary alone.
+    const categories = within(row('Category')).getAllByRole('listitem');
+    expect(categories.map((item) => item.textContent)).toEqual([
+      'For You › Games › Board Games',
+      'For You › Quizzes › Pub Quiz',
+    ]);
     expect(row('Terrace')).toHaveTextContent('24');
     expect(row('Loft')).toHaveTextContent('16');
     expect(row('Amenities')).toHaveTextContent('Wi-Fi');

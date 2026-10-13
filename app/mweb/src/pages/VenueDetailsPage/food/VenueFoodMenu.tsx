@@ -108,7 +108,8 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
         currency={currency}
         discountPct={discountPct}
         guest={ordering.guest}
-        submitting={ordering.checkout.submitting}
+        coupon={ordering.coupon}
+        submitting={ordering.submitting}
         error={ordering.checkout.error}
         onDismissError={ordering.checkout.clearError}
         onPay={ordering.pay}

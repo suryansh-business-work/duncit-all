@@ -10,9 +10,10 @@ import type { VenueFormValues } from '../types';
 /**
  * The venue's named spaces and what each one seats.
  *
- * The scalar `capacity` stays the total, so the breakdown is what an operator
- * actually books against ("Rooftop 40, Basement 120") rather than a second
- * number to keep in step by hand.
+ * The breakdown is what an operator actually books against ("Rooftop 40,
+ * Basement 120"), and the total is its sum — `TypeCapacitySection` shows that
+ * sum read-only beside these rows, so there is no second number to keep in step
+ * by hand.
  */
 export default function CapacityItemsField({
   control,
@@ -24,7 +25,7 @@ export default function CapacityItemsField({
   return (
     <Stack spacing={1}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        {t('directory.venueEditor.capacityItemsHint')}
+        {t('directory.venueEditor.capacitySpacesHint')}
       </Typography>
       {fields.map((row, index) => (
         <Stack key={row.id} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>

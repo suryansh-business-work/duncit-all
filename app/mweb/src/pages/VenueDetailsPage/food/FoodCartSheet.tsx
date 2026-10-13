@@ -1,15 +1,18 @@
 import { Alert, AlertTitle, Divider, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { formatFoodMoney } from '@duncit/utils';
+import { CartQuantityControl } from '@duncit/ui';
+import { FOOD_ORDER_LIMITS, formatFoodMoney } from '@duncit/utils';
+import { useCartControlLabels } from '../../../components/cart/useCartControlLabels';
 import ResponsiveDialog from '../../../components/ResponsiveDialog';
 import { useTranslation } from '../../../i18n/useTranslation';
 import DietMark from './DietMark';
 import { FoodCheckoutForm, type FoodCheckoutValues } from './food-checkout';
+import { FoodCouponForm } from './food-coupon';
 import FoodTotals from './FoodTotals';
-import QuantityStepper from './QuantityStepper';
 import type { FoodCart } from './useFoodCart';
 import type { FoodCheckoutError } from './useFoodCheckout';
+import type { FoodCouponControl } from './useFoodCoupon';
 
 interface Props {
   open: boolean;
@@ -18,6 +21,7 @@ interface Props {
   currency: string;
   discountPct: number;
   guest: FoodCheckoutValues;
+  coupon: FoodCouponControl;
   submitting: boolean;
   error: FoodCheckoutError | null;
   onDismissError: () => void;
@@ -27,9 +31,9 @@ interface Props {
 const FORM_ID = 'food-checkout-form';
 
 /**
- * The cart: each dish with its stepper and a remove, the bill, then who the
- * order is for — and Pay, which opens the venue's payment sheet. A closed or
- * declined payment lands back here with the cart intact.
+ * The cart: each dish with its stepper and a remove, the venue's coupon, the
+ * bill, then who the order is for — and Pay, which opens the venue's payment
+ * sheet. A closed or declined payment lands back here with the cart intact.
  */
 export default function FoodCartSheet({
   open,
@@ -38,12 +42,14 @@ export default function FoodCartSheet({
   currency,
   discountPct,
   guest,
+  coupon,
   submitting,
   error,
   onDismissError,
   onPay,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const cartLabels = useCartControlLabels();
   const money = (amount: number) => formatFoodMoney(amount, currency);
   const { price } = cart;
 
@@ -84,12 +90,14 @@ export default function FoodCartSheet({
                   {t('mweb.venueFood.cart.qtyPrice', { vars: { qty: String(quantity), price: money(item.price) } })}
                 </Typography>
               </Stack>
-              <QuantityStepper
-                name={item.name}
+              <CartQuantityControl
+                size="small"
                 quantity={quantity}
+                max={FOOD_ORDER_LIMITS.maxQuantity}
+                labels={cartLabels(item.name)}
                 onChange={(next) => cart.setQuantity(item.id, next)}
                 disabled={submitting}
-                testId={`food-cart-stepper-${item.id}`}
+                testIdPrefix={`food-cart-line-${item.id}`}
               />
               <DuncitIconButton
                 aria-label={t('mweb.venueFood.removeItem', { vars: { name: item.name } })}
@@ -102,10 +110,16 @@ export default function FoodCartSheet({
             </Stack>
           ))}
         </Stack>
+        <FoodCouponForm coupon={coupon} price={price} currency={currency} disabled={submitting} />
         <FoodTotals
           subtotal={price.subtotal}
           discount={price.discount}
           discountPct={discountPct}
+          coupon={
+            cart.coupon && price.coupon > 0
+              ? { code: cart.coupon.coupon_code, pct: cart.coupon.coupon_pct, amount: price.coupon }
+              : null
+          }
           total={price.total}
           currency={currency}
           testId="food-cart-totals"

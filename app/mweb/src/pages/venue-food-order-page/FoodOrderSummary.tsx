@@ -54,6 +54,11 @@ export default function FoodOrderSummary({ order }: Readonly<{ order: VenueFoodO
         subtotal={order.subtotal}
         discount={order.discount_amount}
         discountPct={order.discount_pct}
+        coupon={
+          order.coupon_code
+            ? { code: order.coupon_code, pct: order.coupon_pct ?? 0, amount: order.coupon_discount_amount ?? 0 }
+            : null
+        }
         total={order.total}
         currency={order.currency_symbol}
         testId="food-order-totals"

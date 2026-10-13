@@ -1,0 +1,124 @@
+{
+  "about": "One pricing matrix for venue food orders, asserted by BOTH sides: priceFoodCart in @duncit/utils (what the guest is shown) and foodTotals / placeVenueFoodOrder on the server (what is charged). A case that passes on one side and fails on the other is a guest being quoted a price they are not charged.",
+  "cases": [
+    {
+      "name": "no discount and no coupon charges the subtotal",
+      "lines": [{ "unit_price": 240, "quantity": 2 }],
+      "discount_pct": 0,
+      "coupon_pct": 0,
+      "subtotal_paise": 48000,
+      "discount_paise": 0,
+      "coupon_discount_paise": 0,
+      "total_paise": 48000,
+      "below_minimum": false
+    },
+    {
+      "name": "the venue discount alone is rounded down to a paisa",
+      "lines": [
+        { "unit_price": 149.5, "quantity": 3 },
+        { "unit_price": 80.25, "quantity": 1 }
+      ],
+      "discount_pct": 15,
+      "coupon_pct": 0,
+      "subtotal_paise": 52875,
+      "discount_paise": 7931,
+      "coupon_discount_paise": 0,
+      "total_paise": 44944,
+      "below_minimum": false
+    },
+    {
+      "name": "a coupon alone takes its percent off the subtotal, rounded down",
+      "lines": [
+        { "unit_price": 149.5, "quantity": 3 },
+        { "unit_price": 80.25, "quantity": 1 }
+      ],
+      "discount_pct": 0,
+      "coupon_pct": 15,
+      "subtotal_paise": 52875,
+      "discount_paise": 0,
+      "coupon_discount_paise": 7931,
+      "total_paise": 44944,
+      "below_minimum": false
+    },
+    {
+      "name": "with both, the coupon takes its percent off what the venue discount left",
+      "lines": [
+        { "unit_price": 149.5, "quantity": 3 },
+        { "unit_price": 80.25, "quantity": 1 }
+      ],
+      "discount_pct": 10,
+      "coupon_pct": 20,
+      "subtotal_paise": 52875,
+      "discount_paise": 5287,
+      "coupon_discount_paise": 9517,
+      "total_paise": 38071,
+      "below_minimum": false
+    },
+    {
+      "name": "both discounts are floored separately on an awkward amount",
+      "lines": [{ "unit_price": 3.33, "quantity": 1 }],
+      "discount_pct": 7,
+      "coupon_pct": 33,
+      "subtotal_paise": 333,
+      "discount_paise": 23,
+      "coupon_discount_paise": 102,
+      "total_paise": 208,
+      "below_minimum": false
+    },
+    {
+      "name": "the coupon is trimmed so the two together never pass the 90 percent ceiling",
+      "lines": [{ "unit_price": 1000, "quantity": 1 }],
+      "discount_pct": 50,
+      "coupon_pct": 90,
+      "subtotal_paise": 100000,
+      "discount_paise": 50000,
+      "coupon_discount_paise": 40000,
+      "total_paise": 10000,
+      "below_minimum": false
+    },
+    {
+      "name": "a venue already at the ceiling leaves the coupon nothing to take",
+      "lines": [{ "unit_price": 1000, "quantity": 1 }],
+      "discount_pct": 90,
+      "coupon_pct": 50,
+      "subtotal_paise": 100000,
+      "discount_paise": 90000,
+      "coupon_discount_paise": 0,
+      "total_paise": 10000,
+      "below_minimum": false
+    },
+    {
+      "name": "a coupon at the ceiling on its own leaves a tenth, rounded up to a whole paisa",
+      "lines": [{ "unit_price": 19.99, "quantity": 3 }],
+      "discount_pct": 0,
+      "coupon_pct": 90,
+      "subtotal_paise": 5997,
+      "discount_paise": 0,
+      "coupon_discount_paise": 5397,
+      "total_paise": 600,
+      "below_minimum": false
+    },
+    {
+      "name": "the coupon is trimmed so a small order still costs the one rupee the gateway can charge",
+      "lines": [{ "unit_price": 2, "quantity": 1 }],
+      "discount_pct": 0,
+      "coupon_pct": 90,
+      "subtotal_paise": 200,
+      "discount_paise": 0,
+      "coupon_discount_paise": 100,
+      "total_paise": 100,
+      "below_minimum": false
+    },
+    {
+      "name": "an order already under one rupee is not rescued or worsened by a coupon",
+      "lines": [{ "unit_price": 1, "quantity": 1 }],
+      "discount_pct": 1,
+      "coupon_pct": 50,
+      "subtotal_paise": 100,
+      "discount_paise": 1,
+      "coupon_discount_paise": 0,
+      "total_paise": 99,
+      "below_minimum": true
+    }
+  ]
+}

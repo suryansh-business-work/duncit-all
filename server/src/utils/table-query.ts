@@ -47,6 +47,12 @@ export interface TableQueryInput {
 export interface TableFieldConfig {
   /** db path when it differs from the API field */
   path?: string;
+  /**
+   * Several db paths that hold the same value (a list and its legacy single).
+   * The filter matches when ANY of them does; `ne` needs every one to differ.
+   * Wins over `path`.
+   */
+  paths?: string[];
   type: TableFieldType;
 }
 
@@ -144,6 +150,12 @@ function mergeCondition(target: Record<string, unknown>, path: string, cond: unk
   }
 }
 
+/** One condition spread over a field's `paths`: any of them for a positive op,
+ * every one of them for `ne`. */
+const acrossPaths = (paths: string[], cond: unknown, op: TableFilterOp): Record<string, unknown> => ({
+  [op === 'ne' ? '$and' : '$or']: paths.map((path) => ({ [path]: cond })),
+});
+
 /** Mongo filter fragment from the client input — allowlisted fields only. */
 export function buildTableFilter(
   input: TableQueryInput | null | undefined,
@@ -151,6 +163,7 @@ export function buildTableFilter(
 ): Record<string, unknown> {
   const q = input ?? {};
   const out: Record<string, unknown> = {};
+  const multiPath: Record<string, unknown>[] = [];
   for (const f of q.filters ?? []) {
     // Object.hasOwn guards both the allowlist AND prototype-key injection
     // ('__proto__', 'constructor') from client-supplied field names.
@@ -158,8 +171,11 @@ export function buildTableFilter(
     const fc = config.filterFields[f.field];
     const cond = filterCondition(f, fc.type);
     if (cond === undefined) continue;
-    mergeCondition(out, fc.path ?? f.field, cond);
+    if (fc.paths) multiPath.push(acrossPaths(fc.paths, cond, f.op));
+    else mergeCondition(out, fc.path ?? f.field, cond);
   }
+  // Under `$and` so they can never collide with the search `$or` below.
+  if (multiPath.length > 0) out.$and = multiPath;
   const search = q.search?.trim();
   if (search && config.searchFields.length > 0) {
     const rx = escapedSearchRegex(search);
@@ -358,7 +374,9 @@ function rowMatchesFilters(
     const fc = config.filterFields[f.field];
     const cond = filterCondition(f, fc.type);
     if (cond === undefined) return true; // invalid filter: dropped
-    return matchesCondition(row[fc.path ?? f.field], cond, fc.type);
+    const hit = (path: string) => matchesCondition(row[path], cond, fc.type);
+    const paths = fc.paths ?? [fc.path ?? f.field];
+    return f.op === 'ne' ? paths.every(hit) : paths.some(hit);
   });
 }
 

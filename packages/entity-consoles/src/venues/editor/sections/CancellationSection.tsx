@@ -6,6 +6,7 @@ import { Controller, type Control } from 'react-hook-form';
 import SectionCard from '../../detail/SectionCard';
 import { ChargeTiersField, RefundTiersField } from '../fields/TierFields';
 import type { VenueFormValues } from '../types';
+import { sectionAnchor } from './venue-editor-sections';
 
 /**
  * The venue's cancellation policy — both halves of it.
@@ -23,6 +24,7 @@ export default function CancellationSection({
 
   return (
     <SectionCard
+      id={sectionAnchor('cancellation')}
       icon={<EventBusyIcon color="primary" />}
       title={t('directory.venueEditor.cancellation')}
     >

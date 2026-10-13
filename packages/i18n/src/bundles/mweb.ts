@@ -1621,8 +1621,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         commentMax: 'Max 1000 chars',
       },
       couldNotUploadTheImage: 'Could not upload the image.',
-      decreaseQuantity: 'Decrease quantity',
-      increaseQuantity: 'Increase quantity',
+      // A pod-shop row: how many of the product can still be bought.
+      shopAvailable: 'Available {count}',
       review: 'Review',
     },
     // Pod History — the pods the viewer has joined, and everything one booking
@@ -1944,8 +1944,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // around it is copy.
       unitEach: '{price} each',
       freeDelivery: 'Free delivery',
-      decrease: 'Decrease {name}',
-      increase: 'Increase {name}',
       removeItem: 'Remove {name}',
       // The Cart | Wishlist tabs on the cart screen (mWeb + native).
       tabsLabel: 'Cart and wishlist',
@@ -1967,14 +1965,28 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       nudgeLater: 'Remind me next time',
       nudgeMute: "Don't remind me again",
       nudgeDismiss: 'Dismiss cart reminder',
-      // The toast after a product reaches the cart from anywhere outside the
-      // cart itself, and the button on it (mWeb + native).
-      addedToast: 'Added to your cart. Go to your cart to place the order.',
-      addedToastAction: 'Go to cart',
       // The Cart tab's accessible name while it carries a count — it starts
       // with the visible "Cart" label. Explicit One/Many pair for the key gate.
       navCountOne: 'Cart, 1 item',
       navCountMany: 'Cart, {count} items',
+    },
+    // The one cart control every product card carries — pod shop, product
+    // page, cart line and venue menu (mWeb + native): a round "+" that becomes
+    // a "remove / count / add" pill, and the short notice it leaves on the card.
+    cartControl: {
+      add: 'Add {name}',
+      increase: 'Add one more {name}',
+      decrease: 'Remove one {name}',
+      remove: 'Remove {name}',
+      quantity: '{name} quantity',
+      added: 'Item added',
+      removed: 'Item removed',
+      // The floating button over the venue menu, and its accessible name.
+      // Explicit One/Many pairs for the key gate.
+      foodCartOne: '1 item',
+      foodCartMany: '{count} items',
+      foodCartOpenOne: 'View cart, 1 item, {total}',
+      foodCartOpenMany: 'View cart, {count} items, {total}',
     },
     // The money path: the pod-membership checkout, the standalone product
     // checkout, and the confirmation both of them end on. mWeb and the native
@@ -3558,6 +3570,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueLabel: 'Venue',
       noVenues: 'Add an approved venue to be offered Auto Pods.',
       venueCategory: 'Category: {path}',
+      venueCategoriesMany: 'Categories: {paths}',
       noVenueCategory: 'This venue has no category yet — set one under Manage venue to be offered Auto Pods.',
       pickVenueFirst: 'Pick a venue at the top first.',
       // Every card's live countdown to the offer being released — Pod Settings decides the windows.
@@ -3917,12 +3930,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       otherAreas: 'Other areas',
     },
     details: {
-      addToSelection: 'Add to selection',
       closeBrand: 'Close brand',
       nextImage: 'Next image',
       openVenueDetails: 'Open venue details',
       previousImage: 'Previous image',
-      removeFromSelection: 'Remove from selection',
       showDistance: 'Show distance',
       clubHosts: 'Club Hosts',
     },
@@ -4875,27 +4886,41 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       vegOnly: 'Veg only',
       discountBanner: '{pct}% off on QR orders',
       unavailable: 'Unavailable',
-      add: 'Add',
-      addItem: 'Add {name}',
-      increase: 'Add one more {name}',
-      decrease: 'Remove one {name}',
-      quantityOf: '{quantity} of {name} in your cart',
       removeItem: 'Remove {name} from your cart',
       viewImage: 'View the photo of {name}',
       maxLines: 'One order can hold at most {max} different dishes.',
       trackOrder: 'Track your order {orderNo}',
       cart: {
         title: 'Your order',
-        itemsOne: '1 item',
-        itemsMany: '{count} items',
-        barSummary: '{items} · {total}',
-        viewCart: 'View cart',
         qtyPrice: '{qty} × {price}',
         subtotal: 'Subtotal',
         discount: 'QR order discount ({pct}%)',
         total: 'Total',
         dropped: 'No longer available and removed from your cart: {names}.',
         belowMinimum: 'This order is too small to pay online.',
+        couponLine: 'Coupon {code} ({pct}%)',
+      },
+      // The venue's own coupon on a food order (mWeb + native). The venue
+      // creates the code and funds the discount; the server prices it.
+      coupon: {
+        label: 'Coupon code',
+        placeholder: 'Enter a coupon code',
+        apply: 'Apply',
+        applying: 'Checking',
+        remove: 'Remove coupon {code}',
+        applied: 'Coupon {code} applied — you save {amount}',
+        removed: 'Coupon removed',
+        unmet: 'Add {amount} more to use this coupon.',
+        failed: 'We could not check this coupon. Please try again.',
+        rejected: {
+          invalid: 'This coupon code is not valid here.',
+          notStarted: 'This coupon is not active yet.',
+          expired: 'This coupon has expired.',
+          minOrder: 'Your order is below the minimum for this coupon.',
+          usageLimit: 'This coupon has been fully used.',
+          perPerson: 'You have already used this coupon as many times as it allows.',
+          noDiscount: 'This coupon adds nothing to the discount you already have.',
+        },
       },
       checkout: {
         title: 'Your details',
@@ -4923,6 +4948,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         badRequest: 'We could not confirm this payment. If money was deducted, it will show here shortly.',
         notFound: 'We could not find this order.',
         generic: 'Something went wrong with your order. Please try again.',
+        couponRejected: 'This coupon can no longer be used. Remove it or try another code.',
       },
       status: {
         placed: 'Placed',
@@ -5030,6 +5056,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       publishVenueHint: 'A public page, link and QR code for your venue',
       foodOrders: 'Food Orders',
       foodOrdersHint: 'Orders guests placed from your venue QR',
+      foodCoupons: 'Food Coupons',
+      foodCouponsHint: 'Coupon codes for food orders at your venue',
       venuePods: 'Pods at Your Venue',
       venuePodsHint: 'Upcoming, live now and past pods',
       changeRequests: 'Change Requests',

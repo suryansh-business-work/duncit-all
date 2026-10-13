@@ -8,8 +8,9 @@
  * for the same reason the public-page ones do: this package has no GraphQL
  * client of its own and must stay framework-free for the native bundle.
  *
- * The server recomputes every price, the availability and the discount; what
- * this module prices is only what the guest is shown before they pay.
+ * The server recomputes every price, the availability, the discount and the
+ * coupon; what this module prices is only what the guest is shown before they
+ * pay.
  */
 
 import { formatMoney } from './format-money';
@@ -66,8 +67,19 @@ export interface VenueFoodOrder {
   note: string;
   items: VenueFoodOrderLine[];
   subtotal: number;
+  /** The venue's automatic discount on QR orders. */
   discount_pct: number;
   discount_amount: number;
+  /**
+   * The venue's coupon the order was placed with: its code (null without one),
+   * its own percent and what it took off after the automatic discount. Optional
+   * only so an order read by an older document still types — the server always
+   * answers all three.
+   */
+  coupon_code?: string | null;
+  coupon_pct?: number;
+  coupon_discount_amount?: number;
+  /** What was charged: subtotal less discount_amount less coupon_discount_amount. */
   total: number;
   currency_symbol: string;
   status: VenueFoodOrderStatus;
@@ -110,8 +122,47 @@ export interface PlaceVenueFoodOrderInput {
   customer_phone: string;
   table_label?: string | null;
   note?: string | null;
+  /** A coupon of this venue. A different code is a different attempt — see `foodAttemptSignature`. */
+  coupon_code?: string | null;
   /** Minted once per checkout attempt; repeating it returns the same order. */
   client_key: string;
+}
+
+/** Why a coupon code cannot be used. Mirrors the server enum VenueFoodCouponRejection. */
+export type VenueFoodCouponRejection =
+  | 'INVALID'
+  | 'NOT_STARTED'
+  | 'EXPIRED'
+  | 'MIN_ORDER_NOT_MET'
+  | 'USAGE_LIMIT_REACHED'
+  | 'PER_PERSON_LIMIT_REACHED'
+  | 'NO_DISCOUNT';
+
+export interface PreviewVenueFoodCouponInput {
+  venue_id: string;
+  coupon_code: string;
+  items: VenueFoodOrderLineInput[];
+  /** Lets the per-person limit be checked before the order is placed. */
+  customer_phone?: string | null;
+}
+
+/** What a coupon code does to a cart. When `ok` is false the amounts are the cart's without the code. */
+export interface VenueFoodCouponPreview {
+  ok: boolean;
+  reason: VenueFoodCouponRejection | null;
+  /** The server's own sentence; null when ok. */
+  message: string | null;
+  /** The code as the venue wrote it; null unless ok. */
+  coupon_code: string | null;
+  coupon_pct: number;
+  /** Rupees of subtotal the code needs; 0 when it needs none. */
+  min_order_amount: number;
+  subtotal: number;
+  discount_pct: number;
+  discount_amount: number;
+  coupon_discount_amount: number;
+  total: number;
+  currency_symbol: string;
 }
 
 /** The server's own limits, so the cart refuses what the server would. */
@@ -124,6 +175,10 @@ export const FOOD_ORDER_LIMITS = {
   tableMax: 20,
   noteMax: 300,
   minTotalPaise: 100,
+  /** The most a venue may take off an order, automatic discount and coupon together. */
+  maxDiscountPct: 90,
+  couponCodeMin: 3,
+  couponCodeMax: 30,
 } as const;
 
 export const PLACE_VENUE_FOOD_ORDER_MUTATION = /* GraphQL */ `
@@ -150,6 +205,9 @@ export const PLACE_VENUE_FOOD_ORDER_MUTATION = /* GraphQL */ `
         subtotal
         discount_pct
         discount_amount
+        coupon_code
+        coupon_pct
+        coupon_discount_amount
         total
         currency_symbol
         status
@@ -205,6 +263,9 @@ export const VENUE_FOOD_ORDER_QUERY = /* GraphQL */ `
       subtotal
       discount_pct
       discount_amount
+      coupon_code
+      coupon_pct
+      coupon_discount_amount
       total
       currency_symbol
       status
@@ -217,6 +278,26 @@ export const VENUE_FOOD_ORDER_QUERY = /* GraphQL */ `
   }
 `;
 
+/** Public and side-effect free: what a code would do to a cart. Ask again whenever the cart or the phone changes. */
+export const PREVIEW_VENUE_FOOD_COUPON_QUERY = /* GraphQL */ `
+  query PreviewVenueFoodCoupon($input: PreviewVenueFoodCouponInput!) {
+    previewVenueFoodCoupon(input: $input) {
+      ok
+      reason
+      message
+      coupon_code
+      coupon_pct
+      min_order_amount
+      subtotal
+      discount_pct
+      discount_amount
+      coupon_discount_amount
+      total
+      currency_symbol
+    }
+  }
+`;
+
 const toPaise = (rupees: number): number => Math.round((Number(rupees) || 0) * 100);
 
 /** What a cart costs, in rupees for display and in paise for comparing. */
@@ -224,23 +305,40 @@ export interface FoodCartPrice {
   /** Dishes in the cart, counting each quantity. */
   count: number;
   subtotalPaise: number;
+  /** The venue's automatic discount only — the coupon is counted apart. */
   discountPaise: number;
+  /** What the coupon takes off; 0 without one. */
+  couponPaise: number;
   totalPaise: number;
   subtotal: number;
   discount: number;
+  coupon: number;
   total: number;
   /** Too small for the gateway to charge — the server refuses it too. */
   belowMinimum: boolean;
+  /** A coupon was given but the cart is under its minimum order, so it took nothing off. */
+  couponUnmet: boolean;
+}
+
+/** The coupon a cart is priced with — an accepted `VenueFoodCouponPreview` fits as it is. */
+export interface FoodCartCoupon {
+  coupon_pct: number;
+  /** Rupees of subtotal the code needs. */
+  min_order_amount?: number | null;
 }
 
 /**
  * Price a cart exactly as the server will: every line in integer paise, the
  * discount rounded DOWN to a paisa (so the venue never gives away more than
- * the percent it set), the total what is left.
+ * the percent it set), then the coupon's percent off WHAT IS LEFT, rounded
+ * down too. The coupon is trimmed — never refused — so the guest still pays
+ * what the largest discount a venue may set would leave, and at least what the
+ * gateway can charge.
  */
 export function priceFoodCart(
   lines: ReadonlyArray<{ unit_price: number; quantity: number }>,
-  discountPct: number
+  discountPct: number,
+  coupon?: FoodCartCoupon | null
 ): FoodCartPrice {
   let count = 0;
   let subtotalPaise = 0;
@@ -250,16 +348,28 @@ export function priceFoodCart(
   }
   const pct = Math.max(0, Number(discountPct) || 0);
   const discountPaise = Math.floor((subtotalPaise * pct) / 100);
-  const totalPaise = subtotalPaise - discountPaise;
+  const afterDiscount = subtotalPaise - discountPaise;
+  const minOrderPaise = toPaise(coupon?.min_order_amount ?? 0);
+  const couponUnmet = Boolean(coupon) && subtotalPaise < minOrderPaise;
+  const couponPct = couponUnmet ? 0 : Math.max(0, Number(coupon?.coupon_pct) || 0);
+  const leastPayable = Math.max(
+    FOOD_ORDER_LIMITS.minTotalPaise,
+    subtotalPaise - Math.floor((subtotalPaise * FOOD_ORDER_LIMITS.maxDiscountPct) / 100)
+  );
+  const couponPaise = Math.max(0, Math.min(Math.floor((afterDiscount * couponPct) / 100), afterDiscount - leastPayable));
+  const totalPaise = afterDiscount - couponPaise;
   return {
     count,
     subtotalPaise,
     discountPaise,
+    couponPaise,
     totalPaise,
     subtotal: subtotalPaise / 100,
     discount: discountPaise / 100,
+    coupon: couponPaise / 100,
     total: totalPaise / 100,
     belowMinimum: totalPaise < FOOD_ORDER_LIMITS.minTotalPaise,
+    couponUnmet,
   };
 }
 
@@ -341,23 +451,37 @@ export function foodCartLines(menu: ReadonlyArray<VenueFoodItem>, cart: FoodCart
 }
 
 /** `priceFoodCart` for cart lines, each priced at its dish's menu price. */
-export function priceFoodCartLines(lines: ReadonlyArray<FoodCartLine>, discountPct: number): FoodCartPrice {
+export function priceFoodCartLines(
+  lines: ReadonlyArray<FoodCartLine>,
+  discountPct: number,
+  coupon?: FoodCartCoupon | null
+): FoodCartPrice {
   return priceFoodCart(
     lines.map((line) => ({ unit_price: line.item.price, quantity: line.quantity })),
-    discountPct
+    discountPct,
+    coupon
   );
 }
+
+/** The cart as the place-order mutation and the coupon preview take it. */
+export const foodOrderLineInputs = (lines: ReadonlyArray<FoodCartLine>): VenueFoodOrderLineInput[] =>
+  lines.map((line) => ({ item_id: line.item.id, quantity: line.quantity }));
+
+/** A coupon code as the server stores and compares it: trimmed and upper-cased; '' for none. */
+export const normalizeFoodCouponCode = (code: string | null | undefined): string => (code ?? '').trim().toUpperCase();
 
 /** Changes whenever the cart's contents do — a checkout attempt is keyed on it. */
 export const foodCartSignature = (lines: ReadonlyArray<FoodCartLine>): string =>
   lines.map((line) => `${line.item.id}:${line.quantity}`).join('|');
 
-/** What the guest typed at checkout. An empty table or note is sent as none. */
+/** What the guest typed at checkout. An empty table, note or coupon is sent as none. */
 export interface FoodOrderDetails {
   name: string;
   phone: string;
   table?: string | null;
   note?: string | null;
+  /** The coupon code applied to this attempt, if any. */
+  coupon?: string | null;
 }
 
 /** The cart and the guest's details as the place-order mutation takes them. */
@@ -372,20 +496,32 @@ export function buildFoodOrderInput({
   details: FoodOrderDetails;
   clientKey: string;
 }): PlaceVenueFoodOrderInput {
+  const coupon = normalizeFoodCouponCode(details.coupon);
   return {
     venue_id: venueId,
-    items: lines.map((line) => ({ item_id: line.item.id, quantity: line.quantity })),
+    items: foodOrderLineInputs(lines),
     customer_name: details.name,
     customer_phone: details.phone,
     table_label: details.table || null,
     note: details.note || null,
+    // Left out entirely without a coupon, so such an order is sent exactly as it always was.
+    ...(coupon ? { coupon_code: coupon } : {}),
     client_key: clientKey,
   };
 }
 
-/** What one checkout attempt is keyed on: the cart and everything typed for it. */
-export const foodAttemptSignature = (cartSignature: string, details: FoodOrderDetails): string =>
-  `${cartSignature}#${JSON.stringify(details)}`;
+/**
+ * What one checkout attempt is keyed on: the cart and everything typed for it,
+ * the coupon included — applying, changing or removing a code is a new attempt
+ * with a new `client_key`, because the server answers a repeated key with the
+ * order it already priced. The code is compared as the server compares it, so
+ * retyping it in another case is not a new attempt.
+ */
+export const foodAttemptSignature = (cartSignature: string, details: FoodOrderDetails): string => {
+  const { coupon, ...typed } = details;
+  const code = normalizeFoodCouponCode(coupon);
+  return `${cartSignature}#${JSON.stringify(code ? { ...typed, coupon: code } : typed)}`;
+};
 
 /** A checkout attempt and the `client_key` minted for it. */
 export interface FoodAttempt {
@@ -486,11 +622,14 @@ export const FOOD_ORDER_ERROR = {
   closed: 'FOOD_ORDERING_CLOSED',
   itemUnavailable: 'FOOD_ITEM_UNAVAILABLE',
   conflict: 'CONFLICT',
+  /** The order's coupon can no longer be used; `foodCouponRejectionOf` says why. Nothing was placed. */
+  couponRejected: 'FOOD_COUPON_REJECTED',
 } as const;
 
 const FOOD_ORDER_ERROR_KEYS: Record<string, string> = {
   FOOD_ORDERING_CLOSED: 'mweb.venueFood.errors.closed',
   FOOD_ITEM_UNAVAILABLE: 'mweb.venueFood.errors.itemUnavailable',
+  FOOD_COUPON_REJECTED: 'mweb.venueFood.errors.couponRejected',
   BAD_USER_INPUT: 'mweb.venueFood.errors.badInput',
   CONFLICT: 'mweb.venueFood.errors.conflict',
   RATE_LIMITED: 'mweb.venueFood.errors.rateLimited',
@@ -510,6 +649,29 @@ export function foodOrderErrorCode(err: unknown): string {
 /** The sentence for a food-order error code; the generic one for a code this page does not know. */
 export function foodOrderErrorKey(code: string | null | undefined, fallbackKey: string = FOOD_ORDER_GENERIC_ERROR_KEY): string {
   return FOOD_ORDER_ERROR_KEYS[code ?? ''] ?? fallbackKey;
+}
+
+/** The sentence for each reason a coupon code is refused — by the preview, or by placing the order. */
+export const FOOD_COUPON_REJECTION_KEYS: Record<VenueFoodCouponRejection, string> = {
+  INVALID: 'mweb.venueFood.coupon.rejected.invalid',
+  NOT_STARTED: 'mweb.venueFood.coupon.rejected.notStarted',
+  EXPIRED: 'mweb.venueFood.coupon.rejected.expired',
+  MIN_ORDER_NOT_MET: 'mweb.venueFood.coupon.rejected.minOrder',
+  USAGE_LIMIT_REACHED: 'mweb.venueFood.coupon.rejected.usageLimit',
+  PER_PERSON_LIMIT_REACHED: 'mweb.venueFood.coupon.rejected.perPerson',
+  NO_DISCOUNT: 'mweb.venueFood.coupon.rejected.noDiscount',
+};
+
+const isFoodCouponRejection = (reason: unknown): reason is VenueFoodCouponRejection =>
+  typeof reason === 'string' && Object.keys(FOOD_COUPON_REJECTION_KEYS).includes(reason);
+
+/**
+ * Why a placement was refused over its coupon: the `extensions.reason` of a
+ * FOOD_COUPON_REJECTED error, or null for any other failure.
+ */
+export function foodCouponRejectionOf(err: unknown): VenueFoodCouponRejection | null {
+  const reason = firstGraphQLError(err)?.extensions?.reason;
+  return isFoodCouponRejection(reason) ? reason : null;
 }
 
 /** Nothing more will happen to this order. */

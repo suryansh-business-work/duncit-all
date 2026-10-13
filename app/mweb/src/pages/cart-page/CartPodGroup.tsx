@@ -1,15 +1,15 @@
 import { Box, Card, Stack, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
+import { CartQuantityControl } from '@duncit/ui';
 import {
   cartLineKey,
   lineQualifiesFreeDelivery,
   type CartLine,
 } from '../../components/cart/CartContext';
 import FreeDeliveryChip from '../../components/cart/FreeDeliveryChip';
+import { useCartControlLabels } from '../../components/cart/useCartControlLabels';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -34,39 +34,9 @@ const NAME_SX = {
   overflow: 'hidden',
 } as const;
 
-const STEP_SX = { width: 32, height: 32, minWidth: 32, minHeight: 32, bgcolor: 'background.paper', color: 'text.primary' } as const;
-
-/** The per-line − qty + stepper: a soft pill holding two round buttons. */
-function QtyStepper({ line, onSetQuantity }: Readonly<Pick<LineProps, 'line' | 'onSetQuantity'>>) {
-  const { t } = useTranslation();
-  return (
-    <Stack
-      direction="row"
-      spacing={1}
-      sx={{ alignItems: 'center', alignSelf: 'flex-start', p: 0.5, mt: 0.5, borderRadius: 999, bgcolor: 'action.hover' }}
-    >
-      <DuncitRoundButton
-        sx={STEP_SX}
-        aria-label={t('mweb.cart.decrease', { vars: { name: line.product_name } })}
-        onClick={() => onSetQuantity(line, line.quantity - 1)}
-      >
-        <RemoveIcon />
-      </DuncitRoundButton>
-      <Typography sx={{ fontWeight: 600, minWidth: 20, textAlign: 'center' }}>{line.quantity}</Typography>
-      <DuncitRoundButton
-        sx={STEP_SX}
-        aria-label={t('mweb.cart.increase', { vars: { name: line.product_name } })}
-        disabled={line.quantity >= line.max_quantity}
-        onClick={() => onSetQuantity(line, Math.min(line.max_quantity, line.quantity + 1))}
-      >
-        <AddIcon />
-      </DuncitRoundButton>
-    </Stack>
-  );
-}
-
 /** One cart line: 64px thumb, name, unit price (+ free-delivery pill), the
- * stepper with "Move to wishlist" beside it, and a round remove button. */
+ * cart control with "Move to wishlist" beside it, and a round remove button
+ * (the whole line in one tap, whatever its quantity). */
 function CartLineRow({
   line,
   priceFormat,
@@ -75,6 +45,7 @@ function CartLineRow({
   onMoveToWishlist,
 }: Readonly<LineProps>) {
   const { t } = useTranslation();
+  const cartLabels = useCartControlLabels();
   return (
     <Stack direction="row" spacing={1.5} sx={{ py: 1.5, alignItems: 'flex-start', '& + &': { borderTop: 1, borderColor: 'divider' } }}>
       <Box sx={{ width: 64, height: 64, borderRadius: '12px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'action.hover' }}>
@@ -99,7 +70,15 @@ function CartLineRow({
           {lineQualifiesFreeDelivery(line) && <FreeDeliveryChip />}
         </Stack>
         <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-          <QtyStepper line={line} onSetQuantity={onSetQuantity} />
+          <CartQuantityControl
+            size="small"
+            quantity={line.quantity}
+            max={line.max_quantity}
+            labels={cartLabels(line.product_name)}
+            onChange={(next) => onSetQuantity(line, next)}
+            testIdPrefix={`cart-line-${cartLineKey(line)}`}
+            sx={{ mt: 0.5 }}
+          />
           <DuncitButton
             variant="text"
             size="small"

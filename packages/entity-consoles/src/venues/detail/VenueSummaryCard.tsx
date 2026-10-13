@@ -7,7 +7,8 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import { StatCard, StatusChip, type StatusColorMap } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import type { AdminVenueDetail } from './queries';
-import { categoryPath, locationLine } from './venue-values';
+import { locationLine } from './venue-values';
+import VenueCategoryLines from './VenueCategoryLines';
 
 const STATUS_COLOR: StatusColorMap = {
   DRAFT: 'warning',
@@ -26,7 +27,6 @@ const mapsHref = (lat: number, lng: number) =>
 export default function VenueSummaryCard({ venue }: Readonly<{ venue: AdminVenueDetail }>) {
   const { t } = useTranslation();
   const place = locationLine(venue);
-  const category = categoryPath(venue.venue_category);
   const { lat, lng } = venue;
   const pin = typeof lat === 'number' && typeof lng === 'number' ? mapsHref(lat, lng) : null;
 
@@ -65,9 +65,7 @@ export default function VenueSummaryCard({ venue }: Readonly<{ venue: AdminVenue
               <Typography variant="body2">{place || t('admin.venueDetails.locationUnset')}</Typography>
             </Stack>
 
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {category}
-            </Typography>
+            <VenueCategoryLines venue={venue} variant="caption" color="text.secondary" />
 
             {pin && (
               <Link

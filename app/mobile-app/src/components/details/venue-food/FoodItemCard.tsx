@@ -1,16 +1,18 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { DISABLED_OPACITY, PRESS_STYLE } from '@duncit/buttons-native';
-import { formatFoodMoney, type VenueFoodItem } from '@duncit/utils';
+import { FOOD_ORDER_LIMITS, formatFoodMoney, type VenueFoodItem } from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
-import { DuncitButton } from '@/components/DuncitButton';
+import { CartNoticeChip } from '@/components/cart/CartNoticeChip';
+import { CartQuantityControl } from '@/components/cart/CartQuantityControl';
+import { cartControlLabels } from '@/components/cart/cartControlLabels';
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { useCartControlNotice } from '@/hooks/useCartControlNotice';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import { DietMark } from './DietMark';
-import { QuantityStepper } from './QuantityStepper';
 import { SpiceMark } from './SpiceMark';
 
 interface Props {
@@ -18,43 +20,16 @@ interface Props {
   /** The configured currency symbol (Finance settings). */
   currency: string;
   onOpenImage: (item: VenueFoodItem) => void;
-  /** The venue takes orders right now — the dish gets its Add button / stepper. */
+  /** The venue takes orders right now — the dish gets its cart control. */
   canOrder: boolean;
   /** How many of this dish the cart holds. */
   quantity: number;
+  /** The stored cart was read back — until then a quantity arriving is not an add. */
+  cartReady: boolean;
   onQuantity: (itemId: string, quantity: number) => void;
 }
 
 const THUMB_SIZE = 96;
-
-/** Add, which becomes − quantity + once the dish is in the cart. */
-function OrderControl({
-  item,
-  quantity,
-  onQuantity,
-}: Readonly<Pick<Props, 'item' | 'quantity' | 'onQuantity'>>) {
-  const { t } = useTranslation();
-  if (quantity > 0) {
-    return (
-      <QuantityStepper
-        name={item.name}
-        quantity={quantity}
-        onChange={(next) => onQuantity(item.id, next)}
-        testID={`food-item-stepper-${item.id}`}
-      />
-    );
-  }
-  return (
-    <DuncitButton
-      testID={`food-item-add-${item.id}`}
-      label={t('mweb.venueFood.add')}
-      accessibilityLabel={t('mweb.venueFood.addItem', { vars: { name: item.name } })}
-      variant="outline"
-      size="sm"
-      onPress={() => onQuantity(item.id, 1)}
-    />
-  );
-}
 
 /** The dish's first photo — a button into the image viewer — or a plain mark when it has none. */
 function Thumb({ item, onOpenImage }: Readonly<Pick<Props, 'item' | 'onOpenImage'>>) {
@@ -100,8 +75,10 @@ function Thumb({ item, onOpenImage }: Readonly<Pick<Props, 'item' | 'onOpenImage
 
 /**
  * One dish: its diet and heat marks, name, price and description on the left,
- * its photo on the right. A dish that is off for now stays on the menu, dimmed
- * and labelled, and cannot be added. Tamagui twin of mWeb's food/FoodItemCard.
+ * its photo on the right with the cart control under it — the photo says when
+ * the dish goes in or comes out. A dish that is off for now stays on the menu,
+ * dimmed and labelled, and cannot be added. Tamagui twin of mWeb's
+ * food/FoodItemCard.
  */
 export function FoodItemCard({
   item,
@@ -109,9 +86,12 @@ export function FoodItemCard({
   onOpenImage,
   canOrder,
   quantity,
+  cartReady,
   onQuantity,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const labels = cartControlLabels(t, item.name);
+  const notice = useCartControlNotice(quantity, cartReady);
   const dim = item.is_available ? 1 : DISABLED_OPACITY;
 
   return (
@@ -150,9 +130,20 @@ export function FoodItemCard({
       <YStack alignItems="center" gap={8}>
         <YStack opacity={dim}>
           <Thumb item={item} onOpenImage={onOpenImage} />
+          <CartNoticeChip notice={notice} labels={labels} testID={`food-item-notice-${item.id}`} />
         </YStack>
         {canOrder && item.is_available ? (
-          <OrderControl item={item} quantity={quantity} onQuantity={onQuantity} />
+          <CartQuantityControl
+            quantity={quantity}
+            max={FOOD_ORDER_LIMITS.maxQuantity}
+            labels={labels}
+            onChange={(next) => onQuantity(item.id, next)}
+            testIdPrefix={`food-item-stepper-${item.id}`}
+            testIds={{
+              add: `food-item-add-${item.id}`,
+              count: `food-item-stepper-${item.id}-value`,
+            }}
+          />
         ) : null}
       </YStack>
     </SurfaceCard>

@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react';
 import { CartProvider } from './CartContext';
 import { WishlistProvider } from './WishlistContext';
-import CartAddedToast from './CartAddedToast';
 import CartReminderHost from './cart-reminder';
 
 /**
  * Everything the Pod Shop cart needs at the app root: the cart, the wishlist
  * that borrows from it, and — for a signed-in member — the reminder host (the
  * server mirror plus the "your cart is calling" nudge, which is fixed to the
- * viewport, so where it renders in the tree does not matter).
+ * viewport, so where it renders in the tree does not matter). An add is
+ * acknowledged on the card that made it (`CartControlNoticeChip`), so there
+ * is no app-wide "added to cart" toast to say it a second time.
  */
 export default function CartProviders({
   signedIn,
@@ -18,7 +19,6 @@ export default function CartProviders({
     <CartProvider>
       <WishlistProvider>
         {children}
-        <CartAddedToast />
         {signedIn && <CartReminderHost />}
       </WishlistProvider>
     </CartProvider>

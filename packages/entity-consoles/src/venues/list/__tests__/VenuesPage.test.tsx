@@ -52,6 +52,14 @@ const venueRow = (id: string, venue_name: string) => ({
     category_name: 'Games',
     sub_category_name: 'Board Games',
   },
+  venue_categories: [
+    {
+      __typename: 'VenueCategory',
+      super_category_name: 'For You',
+      category_name: 'Games',
+      sub_category_name: 'Board Games',
+    },
+  ],
 });
 
 /** A venues page answered only when the pinned super category is `superId`. */

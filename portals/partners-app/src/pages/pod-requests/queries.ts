@@ -11,6 +11,7 @@ import type {
   PodPartnerRequest,
   VenueSlot,
 } from '@duncit/gql-types';
+import type { VenueCategoryLabels } from '@duncit/utils';
 
 /**
  * Pod Requests between venues and hosts — the Partners console's documents.
@@ -58,6 +59,7 @@ export const POD_REQUEST_DETAIL = gql`
         id
         venue_name
         category
+        categories
         venue_type
         capacity
         locality
@@ -128,6 +130,7 @@ export const NEARBY_VENUES = gql`
       id
       venue_name
       category
+      categories
       locality
       city
       cover_image_url
@@ -137,7 +140,8 @@ export const NEARBY_VENUES = gql`
   }
 `;
 
-/** The owner's venues the host search runs from: place + default category. */
+/** The owner's venues the host search runs from: place + default categories
+ * (every one the venue has; `venue_category` is only the primary). */
 export const NEARBY_SEARCH_VENUES = gql`
   query PartnersNearbySearchVenues {
     myVenues {
@@ -148,6 +152,9 @@ export const NEARBY_SEARCH_VENUES = gql`
       location_id
       locality
       venue_category {
+        category_id
+      }
+      venue_categories {
         category_id
       }
     }
@@ -220,7 +227,7 @@ export type PodRequestRow = RequestCore & {
 
 export type PodRequestDetail = RequestCore &
   Pick<PodPartnerRequest, 'note' | 'distance_km' | 'pod_id'> & {
-    venue?: Omit<PartnerVenueSummary, '__typename'> | null;
+    venue?: (Omit<PartnerVenueSummary, '__typename'> & VenueCategoryLabels) | null;
     host?: Omit<PartnerHostSummary, '__typename'> | null;
     slot?: Pick<PartnerRequestSlot, 'id' | 'start_at' | 'end_at' | 'whole_day' | 'space_label'> | null;
     contact?: Omit<PartnerContact, '__typename'> | null;
@@ -229,7 +236,7 @@ export type PodRequestDetail = RequestCore &
 export type PodRequestSlot = Pick<VenueSlot, 'id' | 'start_at' | 'end_at' | 'whole_day' | 'price' | 'space_label'>;
 export type PodRequestQuota = Pick<PartnerRequestQuota, 'limit' | 'remaining'>;
 export type NearbyHostResult = Omit<NearbyHost, '__typename'>;
-export type NearbyVenueResult = Omit<NearbyVenue, '__typename' | 'capacity' | 'venue_type'>;
+export type NearbyVenueResult = Omit<NearbyVenue, '__typename' | 'capacity' | 'venue_type'> & VenueCategoryLabels;
 export type PodRequestSide = PartnerSide;
 
 export interface SearchVenue {
@@ -239,5 +246,7 @@ export interface SearchVenue {
   is_active: boolean;
   location_id?: string | null;
   locality: string;
-  venue_category: { category_id?: string | null };
+  /** The primary — `venue_categories[0]`. Read the list through `venueCategoryLevelIds`. */
+  venue_category: { category_id?: string | null } | null;
+  venue_categories?: { category_id?: string | null }[] | null;
 }

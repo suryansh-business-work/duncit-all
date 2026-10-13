@@ -387,5 +387,7 @@ describe('every route mounts with no data behind it', () => {
 
     expect(container.innerHTML).not.toBe('');
     unmount();
-  });
+    // A whole form filled and pressed with data behind it: the venue form takes
+    // about 2.5 s here and ran past the suite's 30 s on the coverage runner.
+  }, 120_000);
 });

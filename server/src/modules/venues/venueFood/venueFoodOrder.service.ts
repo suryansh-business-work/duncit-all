@@ -8,7 +8,7 @@ import {
   type RazorpayKeys,
 } from '@modules/finance/payment/razorpay.gateway';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
-import { VenueModel, type IVenue, type IVenueFoodItem } from '@modules/venues/venue/venue.model';
+import { VenueModel, type IVenueFoodItem } from '@modules/venues/venue/venue.model';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -18,14 +18,28 @@ import {
   type IFoodOrderLine,
   type IVenueFoodOrder,
 } from './venueFoodOrder.model';
+import type { IVenueFoodCoupon } from './venueFoodCoupon.model';
+import {
+  couponRefused,
+  evaluateFoodCoupon,
+  normalizeFoodCouponCode,
+  rejected,
+  releaseFoodCouponUse,
+  type FoodCouponRejection,
+} from './venueFoodCoupon.redemption';
 import { markFoodOrderPaid, recheckOnRead, settleFoodRefund } from './venueFoodOrder.payment';
+import { MIN_TOTAL_PAISE, foodTotals, type FoodTotals } from './venueFoodOrder.pricing';
 import {
   FOOD_LOG,
   assertOrderAccess,
   badInput,
   fail,
+  managedVenue,
+  objectId,
   orderingClosed,
   razorpayKeysFor,
+  rupees,
+  text,
   toFoodOrderPub,
 } from './venueFoodOrder.shared';
 
@@ -34,8 +48,9 @@ import {
  * venue's public page and pays the venue's own Razorpay account; the venue
  * then works the order through its board.
  *
- * Nothing the browser sends is trusted for money: prices, availability and the
- * discount are all read from the venue at the moment the order is placed.
+ * Nothing the browser sends is trusted for money: prices, availability, the
+ * discount and the coupon are all read from the venue at the moment the order
+ * is placed.
  */
 
 /** A key the page minted with crypto.randomUUID (or longer) for one checkout attempt. */
@@ -43,8 +58,6 @@ const CLIENT_KEY = /^[\w-]{24,80}$/;
 const PHONE = /^\d{10}$/;
 const MAX_LINES = 30;
 const MAX_QUANTITY = 20;
-/** Razorpay will not open a sheet for less than one rupee. */
-const MIN_TOTAL_PAISE = 100;
 const DUPLICATE_KEY = 11000;
 
 /** The kitchen's path. An order only ever moves forward along it. */
@@ -70,7 +83,16 @@ export interface PlaceFoodOrderInput {
   customer_phone: string;
   table_label?: string | null;
   note?: string | null;
+  /** A coupon of this venue. A different code is a different checkout attempt, so it needs its own `client_key`. */
+  coupon_code?: string | null;
   client_key: string;
+}
+
+export interface PreviewFoodCouponInput {
+  venue_id: string;
+  coupon_code: string;
+  items: PlaceFoodOrderInput['items'];
+  customer_phone?: string | null;
 }
 
 export interface VerifyFoodOrderInput {
@@ -80,13 +102,6 @@ export interface VerifyFoodOrderInput {
   razorpay_payment_id: string;
   razorpay_signature: string;
 }
-
-const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
-
-const objectId = (id: unknown, message: string) => {
-  const value = text(id);
-  return Types.ObjectId.isValid(value) ? new Types.ObjectId(value) : badInput(message);
-};
 
 /** A venue that can be ordered from right now: live, serving food, ordering on, an account to be paid on. */
 async function orderableVenue(venueId: Types.ObjectId) {
@@ -138,13 +153,43 @@ function priceLines(menu: IVenueFoodItem[], items: PlaceFoodOrderInput['items'])
   });
 }
 
-/** The discount is rounded DOWN to a paisa, so the venue never gives away more than the percent it set. */
+/**
+ * The cart's totals with the venue's own discount and no coupon. A coupon can
+ * only ever be trimmed to keep an order chargeable (see `foodTotals`), so an
+ * order too small to pay online is too small with or without one.
+ */
 function totalsFor(lines: IFoodOrderLine[], discountPct: number) {
-  const subtotal = lines.reduce((sum, line) => sum + line.line_paise, 0);
-  const discount = Math.floor((subtotal * discountPct) / 100);
-  const total = subtotal - discount;
-  if (total < MIN_TOTAL_PAISE) badInput('This order is too small to pay online');
-  return { subtotal_paise: subtotal, discount_pct: discountPct, discount_paise: discount, total_paise: total };
+  const totals = foodTotals(
+    lines.reduce((sum, line) => sum + line.line_paise, 0),
+    discountPct
+  );
+  if (totals.total_paise < MIN_TOTAL_PAISE) badInput('This order is too small to pay online');
+  return totals;
+}
+
+interface CouponPricing {
+  totals: FoodTotals;
+  coupon: IVenueFoodCoupon | null;
+  rejection: FoodCouponRejection | null;
+}
+
+/**
+ * The same cart priced with a coupon of this venue. A code that cannot be used
+ * comes back as the reason beside the totals WITHOUT it, so a preview can still
+ * show the guest what they will pay.
+ */
+async function totalsWithCoupon(
+  plain: FoodTotals,
+  check: { venueId: Types.ObjectId; code: string; phone: string; currencySymbol: string }
+): Promise<CouponPricing> {
+  const verdict = await evaluateFoodCoupon({ ...check, subtotalPaise: plain.subtotal_paise });
+  if ('rejection' in verdict) return { totals: plain, coupon: null, rejection: verdict.rejection };
+  const totals = foodTotals(plain.subtotal_paise, plain.discount_pct, verdict.coupon.discount_pct);
+  // Nothing left for the code to take off: using it would spend one of its uses on no discount at all.
+  if (totals.coupon_discount_paise === 0) {
+    return { totals: plain, coupon: null, ...rejected('NO_DISCOUNT', 'This order already has the largest discount it can take') };
+  }
+  return { totals, coupon: verdict.coupon, rejection: null };
 }
 
 const attemptOf = (venueId: Types.ObjectId, clientKey: string) =>
@@ -191,14 +236,6 @@ async function openGatewayOrder(order: IVenueFoodOrder, keys: RazorpayKeys) {
   }
 }
 
-/** The venue an operator may run the board for: its owner, or a venues-console editor. */
-async function managedVenue(userId: string, isAdmin: boolean, venueId: string) {
-  const venue = await VenueModel.findById(objectId(venueId, 'Invalid venue id')).select('owner_user_id');
-  if (!venue) return fail('NOT_FOUND', 'Venue not found');
-  if (!isAdmin && String(venue.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your venue');
-  return venue as Pick<IVenue, '_id' | 'owner_user_id'>;
-}
-
 async function managedOrder(userId: string, isAdmin: boolean, orderId: string) {
   const order = await VenueFoodOrderModel.findById(objectId(orderId, 'Invalid order id'));
   if (!order) return fail('NOT_FOUND', 'Order not found');
@@ -209,7 +246,9 @@ async function managedOrder(userId: string, isAdmin: boolean, orderId: string) {
 export const venueFoodOrderService = {
   /**
    * Place an order and open its payment. Safe to repeat: the same
-   * `client_key` returns the order it already made instead of a second one.
+   * `client_key` returns the order it already made instead of a second one —
+   * priced as it was, even if its coupon has since expired or run out, because
+   * the repeat is answered before any coupon is looked at.
    */
   async place(ctx: GraphQLContext, input: PlaceFoodOrderInput) {
     const clientKey = text(input.client_key);
@@ -221,9 +260,20 @@ export const venueFoodOrderService = {
     const { venue, integrationId, discountPct } = await orderableVenue(venueId);
     const customer = cleanCustomer(input);
     const lines = priceLines(venue.food_menu ?? [], input.items);
-    const totals = totalsFor(lines, discountPct);
+    const plain = totalsFor(lines, discountPct);
     const keys = await razorpayKeysFor(integrationId);
     const finance = await getFinanceSettings();
+    const code = normalizeFoodCouponCode(input.coupon_code);
+    const priced: CouponPricing = code
+      ? await totalsWithCoupon(plain, {
+          venueId,
+          code,
+          phone: customer.customer_phone,
+          currencySymbol: finance.currency_symbol,
+        })
+      : { totals: plain, coupon: null, rejection: null };
+    // Never fall back to the full price: the guest was quoted the discounted one.
+    if (priced.rejection) couponRefused(priced.rejection);
     const userId = ctx.user?.id && Types.ObjectId.isValid(ctx.user.id) ? new Types.ObjectId(ctx.user.id) : null;
 
     let order: IVenueFoodOrder;
@@ -235,7 +285,8 @@ export const venueFoodOrderService = {
         user_id: userId,
         ...customer,
         lines,
-        ...totals,
+        ...priced.totals,
+        ...(priced.coupon ? { coupon_id: priced.coupon._id, coupon_code: priced.coupon.code } : {}),
         currency_symbol: finance.currency_symbol,
         razorpay_integration_id: integrationId,
         client_key: clientKey,
@@ -249,6 +300,39 @@ export const venueFoodOrderService = {
     }
     await openGatewayOrder(order, keys);
     return placementOf(order, keys);
+  },
+
+  /**
+   * What a coupon code would do to this cart, for the guest to see before they
+   * pay. Reads only — it places nothing and counts nothing. A code that cannot
+   * be used is answered with its reason and the totals without it; the venue,
+   * the cart and the menu are refused exactly as placing would refuse them.
+   */
+  async previewCoupon(input: PreviewFoodCouponInput) {
+    const venueId = objectId(input.venue_id, 'Invalid venue id');
+    const { venue, discountPct } = await orderableVenue(venueId);
+    const plain = totalsFor(priceLines(venue.food_menu ?? [], input.items), discountPct);
+    const finance = await getFinanceSettings();
+    const { totals, coupon, rejection } = await totalsWithCoupon(plain, {
+      venueId,
+      code: normalizeFoodCouponCode(input.coupon_code),
+      phone: text(input.customer_phone),
+      currencySymbol: finance.currency_symbol,
+    });
+    return {
+      ok: !rejection,
+      reason: rejection?.reason ?? null,
+      message: rejection?.message ?? null,
+      coupon_code: coupon?.code ?? null,
+      coupon_pct: totals.coupon_pct,
+      min_order_amount: rupees(coupon?.min_order_paise ?? 0),
+      subtotal: rupees(totals.subtotal_paise),
+      discount_pct: totals.discount_pct,
+      discount_amount: rupees(totals.discount_paise),
+      coupon_discount_amount: rupees(totals.coupon_discount_paise),
+      total: rupees(totals.total_paise),
+      currency_symbol: finance.currency_symbol,
+    };
   },
 
   /** The Razorpay sheet came back with a signature: check it against the venue's own secret and mark the order paid. */
@@ -324,6 +408,8 @@ export const venueFoodOrderService = {
     );
     if (!cancelled) return fail('BAD_REQUEST', 'This order can no longer be cancelled');
     logs.server.info(FOOD_LOG, 'cancel', { orderNo: cancelled.order_no, by: userId, isAdmin, totalPaise: cancelled.total_paise });
+    // That write matched once, so the coupon's use is given back once.
+    await releaseFoodCouponUse(cancelled);
     try {
       await settleFoodRefund(cancelled);
     } catch (error) {

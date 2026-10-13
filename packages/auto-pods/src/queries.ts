@@ -198,8 +198,9 @@ export const CLUB_CLAIM_AUTO_POD = gql`
   }
 `;
 
-/** The venue owner's own venues — the queue's picker, with the category each
- * one declares (which is what decides the offers it is shown). */
+/** The venue owner's own venues — the queue's picker, with every category each
+ * one declares (ANY of them decides the offers it is shown; `venue_category`
+ * is the primary, kept for a build that reads one). */
 export const MY_VENUES_FOR_AUTO_POD = gql`
   query MyVenuesForAutoPod {
     myVenues {
@@ -215,6 +216,12 @@ export const MY_VENUES_FOR_AUTO_POD = gql`
         capacity
       }
       venue_category {
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
+      venue_categories {
         sub_category_id
         super_category_name
         category_name

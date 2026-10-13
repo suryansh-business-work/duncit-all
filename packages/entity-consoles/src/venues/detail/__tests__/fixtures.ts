@@ -55,6 +55,25 @@ export const makeVenue = (over: Partial<AdminVenueDetail> = {}): AdminVenueDetai
     category_name: 'Games',
     sub_category_name: 'Board Games',
   },
+  // Primary first — entry 0 is the same triple `venue_category` mirrors.
+  venue_categories: [
+    {
+      super_category_id: 'sc-1',
+      category_id: 'c-1',
+      sub_category_id: 's-1',
+      super_category_name: 'For You',
+      category_name: 'Games',
+      sub_category_name: 'Board Games',
+    },
+    {
+      super_category_id: 'sc-1',
+      category_id: 'c-2',
+      sub_category_id: 's-2',
+      super_category_name: 'For You',
+      category_name: 'Quizzes',
+      sub_category_name: 'Pub Quiz',
+    },
+  ],
   description: 'Two floors of board games in Indiranagar.',
   amenities: ['Wi-Fi'],
   facilities: ['Parking'],
@@ -103,6 +122,36 @@ export const makeVenue = (over: Partial<AdminVenueDetail> = {}): AdminVenueDetai
   updated_at: '2026-03-06T12:00:00.000Z',
   ...over,
 });
+
+/** A venue as the server sends it — every object carries its typename, which is
+ * what `MockedProvider` (default `addTypename`) needs to write it to the cache. */
+export const venuePayload = (venue: AdminVenueDetail) => {
+  const { settings } = venue;
+  return {
+    ...venue,
+    __typename: 'Venue',
+    capacity_items: venue.capacity_items.map((item) => ({ ...item, __typename: 'VenueCapacityItem' })),
+    food_menu: venue.food_menu.map((item) => ({ ...item, __typename: 'VenueFoodItem' })),
+    food_ordering: { ...venue.food_ordering, __typename: 'VenueFoodOrdering' },
+    venue_category: { ...venue.venue_category, __typename: 'VenueCategory' },
+    venue_categories: venue.venue_categories.map((entry) => ({ ...entry, __typename: 'VenueCategory' })),
+    bank_account: { ...venue.bank_account, __typename: 'VenueBankAccount' },
+    settings: {
+      ...settings,
+      __typename: 'VenueSettings',
+      operating_hours: { ...settings.operating_hours, __typename: 'VenueOperatingHours' },
+      rules: { ...settings.rules, __typename: 'VenueRules' },
+      auto_extend: { ...settings.auto_extend, __typename: 'VenueAutoExtend' },
+      cancellation: {
+        ...settings.cancellation,
+        __typename: 'VenueCancellation',
+        tiers: settings.cancellation.tiers.map((tier) => ({ ...tier, __typename: 'VenueCancellationTier' })),
+        refund_tiers: settings.cancellation.refund_tiers.map((tier) => ({ ...tier, __typename: 'VenueRefundTier' })),
+      },
+    },
+    documents: venue.documents?.map((doc) => ({ ...doc, __typename: 'VenueDocument' })) ?? null,
+  };
+};
 
 /** A GraphQL-shaped nullable read of a field the TS type marks as present —
  * what the cards defend against when an older record lacks it. */

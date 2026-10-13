@@ -2,12 +2,14 @@ import { useCallback, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { logs } from '@duncit/logs';
 import {
+  FOOD_COUPON_REJECTION_KEYS,
   FOOD_ORDER_CONFLICT_RETRY_MS,
   FOOD_ORDER_ERROR,
   FOOD_ORDER_GENERIC_ERROR_KEY,
   PAYMENT_FAILURE_KEYS,
   classifyPaymentFailure,
   createFoodClientKey,
+  foodCouponRejectionOf,
   foodOrderErrorCode,
   foodOrderErrorKey,
   parseApiError,
@@ -15,6 +17,7 @@ import {
   wait,
   type PlaceVenueFoodOrderInput,
   type RazorpayErrorLike,
+  type VenueFoodCouponRejection,
   type VenueFoodOrderPlacement,
 } from '@duncit/utils';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -27,11 +30,17 @@ export interface FoodCheckoutError {
   message: string;
 }
 
+/** A coupon the server will not take: why, then what the guest can do about it. Nothing was placed. */
+export const foodCouponRefusal = (reason: VenueFoodCouponRejection, t: (key: string) => string): FoodCheckoutError => ({
+  title: t(FOOD_COUPON_REJECTION_KEYS[reason]),
+  message: t('mweb.venueFood.errors.couponRejected'),
+});
+
 interface Options {
   /** The order is paid, or its payment is still being confirmed — either way the order page takes over from here. */
   onDone: (placement: VenueFoodOrderPlacement) => void;
   /** The server refused the order, by its code — the menu refetches or closes its cart on it. */
-  onRefused?: (code: string) => void;
+  onRefused?: (code: string, error: unknown) => void;
 }
 
 /**
@@ -101,9 +110,10 @@ export function useFoodCheckout({ onDone, onRefused }: Readonly<Options>) {
     const code = foodOrderErrorCode(err);
     logs.mWeb.warn('venueFood', 'place', { error: err, code, venueId });
     const generic = t(FOOD_ORDER_GENERIC_ERROR_KEY);
-    setError({ title: null, message: code ? t(foodOrderErrorKey(code)) : parseApiError(err, generic) });
+    if (code === FOOD_ORDER_ERROR.couponRejected) setError(foodCouponRefusal(foodCouponRejectionOf(err) ?? 'INVALID', t));
+    else setError({ title: null, message: code ? t(foodOrderErrorKey(code)) : parseApiError(err, generic) });
     release();
-    if (code) onRefused?.(code);
+    if (code) onRefused?.(code, err);
   };
 
   const confirm = async (placement: VenueFoodOrderPlacement, clientKey: string, sig: RazorpaySignature) => {
@@ -170,5 +180,6 @@ export function useFoodCheckout({ onDone, onRefused }: Readonly<Options>) {
 
   const clearError = useCallback(() => setError(null), []);
 
-  return { submitting, gatewayOpen, error, start, clearError };
+  // `fail` shows a refusal reached before the order was sent — the coupon's check at Pay.
+  return { submitting, gatewayOpen, error, start, fail: setError, clearError };
 }

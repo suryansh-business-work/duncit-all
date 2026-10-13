@@ -1074,6 +1074,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/pod-form", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/pod-product-picker", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/portal-pod-form", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/regex", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/shell", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/slots", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/table", range: "workspace:*", kind: "dependencies" },

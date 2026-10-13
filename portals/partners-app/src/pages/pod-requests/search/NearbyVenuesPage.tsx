@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import { useTranslation } from '@duncit/shell';
 import { useUserData } from '@duncit/user-context';
-import { POD_REQUEST_DEFAULT_RADIUS_KM, parseApiError } from '@duncit/utils';
+import { POD_REQUEST_DEFAULT_RADIUS_KM, parseApiError, venueCategoryLabels } from '@duncit/utils';
 import { NEARBY_SEARCH_HOST, NEARBY_VENUES, type NearbyVenueResult } from '../queries';
 import { podRequestsPath } from '../side';
 import type { NearbyCardData } from './NearbyResultCard';
@@ -21,7 +21,7 @@ const toCard = (venue: NearbyVenueResult): NearbyCardData => ({
   id: venue.id,
   name: venue.venue_name,
   image: venue.cover_image_url,
-  lines: [venue.category, [venue.locality, venue.city].filter(Boolean).join(', ')],
+  lines: [venueCategoryLabels(venue).join(', '), [venue.locality, venue.city].filter(Boolean).join(', ')],
   distanceKm: venue.distance_km,
   openStatus: venue.open_request_status,
   round: false,

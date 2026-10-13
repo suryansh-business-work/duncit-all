@@ -1,43 +1,30 @@
-import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
+import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
+import { useAdminCategories, type AdminCategoryValue } from '@duncit/category';
 import { InfoRow } from '@duncit/ui';
 import type { RegisterVenueValues } from '../register-venue';
 import { useTranslation } from '@duncit/shell';
 
-const CATEGORY_NAMES = gql`
-  query VenueCategoryNames($ids: CategoryFilterInput) {
-    categories(filter: $ids) {
-      id
-      name
-    }
-  }
-`;
-
-function useCategoryPath(values: RegisterVenueValues) {
-  // The cascade already fetched these lists, so these resolve from cache.
-  const supers = useQuery<any>(CATEGORY_NAMES, { variables: { ids: { level: 'SUPER' } } });
-  const cats = useQuery<any>(CATEGORY_NAMES, {
-    variables: { ids: { level: 'CATEGORY', parent_id: values.super_category_id } },
-    skip: !values.super_category_id,
-  });
-  const subs = useQuery<any>(CATEGORY_NAMES, {
-    variables: { ids: { level: 'SUB', parent_id: values.category_id } },
-    skip: !values.category_id,
-  });
-  const nameOf = (data: any, id: string) =>
-    data?.categories?.find((item: any) => item.id === id)?.name ?? '';
-  return [
-    nameOf(supers.data, values.super_category_id),
-    nameOf(cats.data, values.category_id),
-    nameOf(subs.data, values.sub_category_id),
-  ]
-    .filter(Boolean)
-    .join(' › ');
+/** "Sports › Racket › Badminton" for every category row that names anything,
+ * primary first. Names come from the admin tree the picker already fetched
+ * (so this resolves from cache); a row's own stored name stands in for a
+ * category the tree no longer has. */
+function useCategoryPaths(rows: AdminCategoryValue[]): string[] {
+  const { categories } = useAdminCategories();
+  const nameOf = (id: string, stored: string) => categories.find((item) => item.id === id)?.name ?? stored;
+  const paths = rows
+    .map((row) =>
+      [nameOf(row.super_id, row.super_name), nameOf(row.category_id, row.category_name), nameOf(row.sub_id, row.sub_name)]
+        .filter(Boolean)
+        .join(' › ')
+    )
+    .filter(Boolean);
+  // A repeated row is refused at save; until then it is still one category.
+  return [...new Set(paths)];
 }
 
-function Row({ label, value }: Readonly<{ label: string; value: string }>) {
+function Row({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
   return (
     <InfoRow
       variant="inline"
@@ -57,7 +44,7 @@ interface Props {
 export default function ReviewSection({ form }: Readonly<Props>) {
   const { t } = useTranslation();
   const values = form.watch();
-  const categoryPath = useCategoryPath(values);
+  const categoryPaths = useCategoryPaths(values.venue_categories);
   const totalCapacity = values.capacity_items.reduce(
     (sum, item) => sum + (Number(item.capacity) || 0),
     0
@@ -94,7 +81,20 @@ export default function ReviewSection({ form }: Readonly<Props>) {
       <Stack spacing={1}>
         <Row label={t('partners.registerVenuePage.venueName')} value={values.venue_name} />
         <Row label={t('partners.registerVenuePage.venueType')} value={values.venue_type} />
-        <Row label={t('partners.common.category')} value={categoryPath} />
+        <Row
+          label={categoryPaths.length > 1 ? t('partners.registerVenuePage.categories') : t('partners.common.category')}
+          value={
+            categoryPaths.length > 0 && (
+              <Stack component="ul" spacing={0.25} sx={{ m: 0, p: 0, listStyle: 'none' }} data-testid="review-venue-categories">
+                {categoryPaths.map((path) => (
+                  <Box component="li" key={path}>
+                    {path}
+                  </Box>
+                ))}
+              </Stack>
+            )
+          }
+        />
         <Row label={t('partners.common.address')} value={addressLine} />
         <Divider flexItem sx={{ my: 0.5 }} />
         <Row label={t('partners.registerVenuePage.totalCapacity')} value={totalCapacity ? String(totalCapacity) : ''} />
@@ -105,6 +105,7 @@ export default function ReviewSection({ form }: Readonly<Props>) {
               <Chip key={item.label} size="small" label={`${item.label}: ${item.capacity}`} />
             ))}
         </Box>
+        <Divider flexItem sx={{ my: 0.5 }} />
         <Row label={t('partners.registerVenuePage.food')} value={foodLine} />
         <Divider flexItem sx={{ my: 0.5 }} />
         <Row label={t('shell.nav.documents')} value={documentsLine} />

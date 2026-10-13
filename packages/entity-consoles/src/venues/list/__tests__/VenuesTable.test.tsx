@@ -25,6 +25,10 @@ const makeRow = (over: Partial<VenueRow> = {}): VenueRow => ({
     category_name: 'Games',
     sub_category_name: 'Board Games',
   },
+  venue_categories: [
+    { super_category_name: 'For You', category_name: 'Games', sub_category_name: 'Board Games' },
+    { super_category_name: 'For You', category_name: 'Quizzes', sub_category_name: 'Pub Quiz' },
+  ],
   ...over,
 });
 
@@ -44,6 +48,7 @@ const bareRow = makeRow({
   owner_phone: null,
   created_at: null,
   venue_category: null,
+  venue_categories: null,
 });
 
 const fetchFor = (rows: VenueRow[]) =>
@@ -97,7 +102,10 @@ describe('VenuesTable', () => {
       expect(screen.getByRole('columnheader', { name: header })).toBeInTheDocument();
     }
     expect(cell('venue-1', 'venue_name')).toHaveTextContent('The Board Room CafeCafe');
-    expect(cell('venue-1', 'venue_category')).toHaveTextContent('For You > Games > Board Games');
+    // Every category the venue is filed under, primary first.
+    expect(cell('venue-1', 'venue_category')).toHaveTextContent(
+      'For You › Games › Board Games, For You › Quizzes › Pub Quiz',
+    );
     expect(cell('venue-1', 'locality')).toHaveTextContent('Indiranagar, Bengaluru');
     expect(cell('venue-1', 'owner_name')).toHaveTextContent('Asha Rao+919876543210');
     expect(cell('venue-1', 'capacity')).toHaveTextContent('40');
@@ -120,14 +128,16 @@ describe('VenuesTable', () => {
     expect(cell('venue-2', 'created_at')).toHaveTextContent('—');
   });
 
-  it("falls back to the owner's email when no phone is on file, and to what category is set", async () => {
+  it("falls back to the owner's email when no phone is on file, and to the lone legacy category", async () => {
     renderTable(
       fetchFor([
         makeRow({
           id: 'venue-3',
           owner_phone: '',
           locality: '',
+          // A venue stored before the list existed answers with the single triple only.
           venue_category: { super_category_name: 'For Your Pet', category_name: null, sub_category_name: null },
+          venue_categories: [],
         }),
       ]),
     );

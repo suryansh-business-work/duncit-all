@@ -7,8 +7,9 @@ import SectionCard from '../../detail/SectionCard';
 import DocumentsField from '../fields/DocumentsField';
 import type { VenueRegistrationConfig } from '../queries';
 import type { VenueFormValues } from '../types';
+import { sectionAnchor } from './venue-editor-sections';
 
-/** The venue's paperwork: uploaded documents, GSTIN and PAN. */
+/** Venue Documents — GSTIN, PAN and the uploaded paperwork, as on the owner's form. */
 export default function DocumentsSection({
   control,
   config,
@@ -22,8 +23,9 @@ export default function DocumentsSection({
 
   return (
     <SectionCard
+      id={sectionAnchor('documents')}
       icon={<DescriptionIcon color="primary" />}
-      title={t('directory.venueEditor.documents')}
+      title={t('directory.venueEditor.sectionDocuments')}
     >
       <Stack spacing={1.5}>
         <Grid container spacing={1.5}>

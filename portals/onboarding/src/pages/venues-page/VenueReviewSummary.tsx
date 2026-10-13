@@ -1,12 +1,14 @@
+import { Fragment } from 'react';
 import { Box, Chip, Link, Paper, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
+import { venueCategoryPaths } from '@duncit/utils';
 
 export interface VenueReviewSummaryProps {
   active: any;
 }
 
 /**
- * What the reviewer is looking at: the venue's type, capacity, tax ids, the
+ * What the reviewer is looking at: the venue's type, capacity, tax ids, every
  * category it hosts in, where it is, and its uploaded documents. Read-only —
  * hoisted out of the dialog so that file stays a list of panels (rule 9).
  */
@@ -16,13 +18,7 @@ export default function VenueReviewSummary({ active }: Readonly<VenueReviewSumma
   const capacityItems = active?.capacity_items ?? [];
   const locationLine =
     [active?.locality, active?.city, active?.state, active?.country].filter(Boolean).join(', ') || '—';
-  const categoryPath = [
-    active?.venue_category?.super_category_name,
-    active?.venue_category?.category_name,
-    active?.venue_category?.sub_category_name,
-  ]
-    .filter(Boolean)
-    .join(' › ');
+  const categoryPaths = venueCategoryPaths(active);
 
   return (
     <>
@@ -35,9 +31,15 @@ export default function VenueReviewSummary({ active }: Readonly<VenueReviewSumma
           <Chip size="small" variant="outlined" label={`GSTIN ${active?.gstin || '—'}`} />
           <Chip size="small" variant="outlined" label={`PAN ${active?.pan || '—'}`} />
         </Stack>
-        {categoryPath && (
-          <Typography variant="body2" sx={{ mb: 0.5 }}>
-            {t('onboarding.venues.hostsIn')} <strong>{categoryPath}</strong>
+        {categoryPaths.length > 0 && (
+          <Typography variant="body2" sx={{ mb: 0.5 }} data-testid="venue-review-categories">
+            {t('onboarding.venues.hostsIn')}{' '}
+            {categoryPaths.map((path, index) => (
+              <Fragment key={path}>
+                {index > 0 && ', '}
+                <strong>{path}</strong>
+              </Fragment>
+            ))}
           </Typography>
         )}
         {capacityItems.length > 0 && (

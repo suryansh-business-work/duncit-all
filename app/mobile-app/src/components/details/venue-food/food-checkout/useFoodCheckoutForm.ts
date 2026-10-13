@@ -14,7 +14,7 @@ import { formResolver } from '@/utils/form-resolver';
 export function useFoodCheckoutForm(initial: FoodCheckoutValues) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeFoodCheckoutSchema(t), [t]);
-  const { control, handleSubmit, reset, formState } = useForm<FoodCheckoutValues>({
+  const { control, handleSubmit, getValues, reset, formState } = useForm<FoodCheckoutValues>({
     defaultValues: initial,
     resolver: formResolver<FoodCheckoutValues>(schema),
     mode: 'onTouched',
@@ -27,5 +27,5 @@ export function useFoodCheckoutForm(initial: FoodCheckoutValues) {
     if (!isDirty) reset(initial);
   }, [initial, isDirty, reset]);
 
-  return { control, handleSubmit };
+  return { control, handleSubmit, getValues };
 }

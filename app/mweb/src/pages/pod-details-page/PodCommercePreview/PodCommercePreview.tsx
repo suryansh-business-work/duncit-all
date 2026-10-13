@@ -1,16 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import ShoppingBagIcon from '@mui/icons-material/ShoppingBagOutlined';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import ProductDetailDialog, { type VariantPick } from '../ProductDetailDialog';
 import SectionHeader from '../../../components/SectionHeader';
 import { SURFACE_SX } from '../../../theme';
 import { useTranslation } from '../../../i18n/useTranslation';
-import { rowSx } from './podShopStyles';
+import PodShopRow from './PodShopRow';
 
 interface Props {
   pod: any;
@@ -36,7 +30,6 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
   // Add-to-cart works in ANY pod state — the ONLY gate is the owner closing the shop.
   const readOnly = pod.products_enabled === false;
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
 
   const baseTotal = useMemo(
@@ -89,73 +82,17 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
         </Stack>
       ) : (
         <Stack spacing={0.9} sx={{ mt: 2 }}>
-          {requests.map((item: any) => {
-          const maxQuantity = Number(item.available_count ?? item.quantity ?? 0);
-          const quantity = selectedProducts[item.product_id] || 0;
-          // A closed shop is read-only — no re-selecting. Selected styling stays
-          // as the in-cart indicator.
-          const selected = !readOnly && quantity > 0;
-          const imageUrl = item.image_url || item.images?.[0] || '';
-          return (
-            <Stack
+          {requests.map((item: any) => (
+            <PodShopRow
               key={`${item.product_id}-${item.product_name}`}
-              direction="row"
-              spacing={1}
-              data-testid={`pod-shop-row-${item.product_id}`}
-              sx={rowSx(selected)}>
-              <Box sx={{ width: 54, height: 54, borderRadius: '12px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'background.paper', color: 'secondary.main', display: 'grid', placeItems: 'center' }}>
-                {imageUrl && !imageErrors[item.product_id] ? (
-                  <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <ShoppingBagIcon fontSize="small" />
-                )}
-              </Box>
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>{item.product_name}</Typography>
-                <Typography variant="caption" sx={{ color: mutedColor }} noWrap>Available {maxQuantity}</Typography>
-                {!readOnly && quantity === 0 && maxQuantity > 0 && (
-                  <Box sx={{ mt: 0.75 }}>
-                    <DuncitButton
-                      size="small"
-                      variant="contained"
-                      startIcon={<AddShoppingCartIcon />}
-                      onClick={() => updateQuantity(item.product_id, 1)}
-                      data-testid={`pod-shop-add-${item.product_id}`}
-                      sx={{ minHeight: 32 }}
-                    >
-                      Add to cart
-                    </DuncitButton>
-                  </Box>
-                )}
-                {selected && <Stack
-                  direction="row"
-                  spacing={0.75}
-                  sx={{
-                    alignItems: "center",
-                    mt: 0.75
-                  }}>
-                  <DuncitIconButton size="small" aria-label={`Decrease ${item.product_name}`} data-testid={`pod-shop-dec-${item.product_id}`} onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></DuncitIconButton>
-                  <Typography variant="body2" data-testid={`pod-shop-qty-${item.product_id}`} sx={{
-                    fontWeight: 700
-                  }}>{quantity}</Typography>
-                  <DuncitIconButton size="small" aria-label={`Increase ${item.product_name}`} data-testid={`pod-shop-inc-${item.product_id}`} disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></DuncitIconButton>
-                </Stack>}
-              </Box>
-              <DuncitIconButton
-                size="small"
-                aria-label={`View ${item.product_name} details`}
-                onClick={() => setInfoProductId(item.product_id)}
-                data-testid={`pod-shop-info-${item.product_id}`}
-                sx={{ color: mutedColor }}
-              >
-                <InfoOutlinedIcon fontSize="small" />
-              </DuncitIconButton>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                +{priceFormat(Number(item.unit_cost ?? 0) * Math.max(quantity, 1))}
-              </Typography>
-            </Stack>
-          );
-        })}
+              item={item}
+              quantity={selectedProducts[item.product_id] || 0}
+              readOnly={readOnly}
+              priceFormat={priceFormat}
+              onQuantity={updateQuantity}
+              onInfo={setInfoProductId}
+            />
+          ))}
         </Stack>
       )}
 

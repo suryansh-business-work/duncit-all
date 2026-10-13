@@ -23,6 +23,7 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import {
   VENUE_AMENITIES,
   VENUE_CAPACITY_ITEM_LIMIT,
+  VENUE_CATEGORY_LIMIT,
   VENUE_DOC_TYPES,
   VENUE_FACILITIES,
   VENUE_GSTIN_DOC_TYPE,
@@ -30,6 +31,13 @@ import {
   VENUE_SECURITY,
   VENUE_TYPES,
 } from './venue.constants';
+import {
+  dedupeVenueCategories,
+  pickVenueCategory,
+  venueCategoriesOf,
+  venueCategoryMatch,
+  type VenueCategoryRef,
+} from './venue.categories';
 import { notifyEach } from '@services/notify/notify.service';
 import { getUrlConfigs } from '@config/url-configs';
 import {
@@ -274,7 +282,7 @@ function normalizeSettingsInput(current: IVenueSettings | undefined, input: any)
   return next;
 }
 
-const toVenueCategoryPub = (c?: IVenue['venue_category'] | null) => ({
+const toVenueCategoryPub = (c?: VenueCategoryRef | null) => ({
   super_category_id: c?.super_category_id ? String(c.super_category_id) : null,
   category_id: c?.category_id ? String(c.category_id) : null,
   sub_category_id: c?.sub_category_id ? String(c.sub_category_id) : null,
@@ -295,6 +303,9 @@ const toPub = (v: IVenue) => ({
     capacity: item.capacity,
   })),
   ...toVenueFoodPub(v),
+  // Primary first. A venue saved before the list existed answers with its one
+  // legacy category, so no client ever has to look in two places.
+  venue_categories: venueCategoriesOf(v).map(toVenueCategoryPub),
   venue_category: toVenueCategoryPub(v.venue_category),
   description: v.description ?? '',
   amenities: v.amenities ?? [],
@@ -402,15 +413,23 @@ const VENUE_TABLE_FIELDS: Omit<TableEntityConfig, 'defaultSort'> = {
   filterFields: {
     venue_no: { type: 'string' },
     venue_name: { type: 'string' },
-    venue_category: { path: 'venue_category.category_name', type: 'string' },
+    // Any of the venue's categories — the list, or the legacy single of a venue
+    // not yet migrated. Sorting stays on the primary (`venue_category`).
+    venue_category: {
+      paths: ['venue_categories.category_name', 'venue_category.category_name'],
+      type: 'string',
+    },
     owner_name: { type: 'string' },
     venue_commission_pct: { type: 'number' },
     status: { type: 'enum' },
     is_active: { type: 'boolean' },
     venue_type: { type: 'string' },
     // The venue's own Super Category ("For You" / "For Your Pet"), which lives
-    // on the embedded classification rather than at the root — hence the path.
-    super_category_id: { path: 'venue_category.super_category_id', type: 'string' },
+    // on the embedded classification rather than at the root — hence the paths.
+    super_category_id: {
+      paths: ['venue_categories.super_category_id', 'venue_category.super_category_id'],
+      type: 'string',
+    },
     city: { type: 'string' },
     locality: { type: 'string' },
     location_id: { type: 'string' },
@@ -432,6 +451,9 @@ const MY_VENUE_TABLE_CONFIG: TableEntityConfig = {
   ...VENUE_TABLE_FIELDS,
   defaultSort: { updated_at: -1 },
 };
+
+const toObjectId = (id?: string | null) =>
+  id && Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : null;
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
@@ -499,6 +521,32 @@ async function normalizeVenueCategoryInput(input: any) {
   };
 }
 
+/**
+ * The category list a step-1 payload asks for, or null when it names none (the
+ * venue's categories are then left alone).
+ *
+ * `venue_categories` wins when sent: each entry is validated, duplicates of a
+ * sub category are dropped (first kept) and the result is capped. A client that
+ * still sends only the single `venue_category` is naming the PRIMARY: if that
+ * is the primary the venue already has, its other categories are kept — an
+ * older app re-saving step 1 must not silently strip what a newer one added —
+ * and if it differs, the venue becomes that one category.
+ */
+async function resolveVenueCategories(
+  input: { venue_categories?: VenueCategoryRef[] | null; venue_category?: VenueCategoryRef | null },
+  current: readonly VenueCategoryRef[]
+) {
+  const sent = dedupeVenueCategories(Array.isArray(input.venue_categories) ? input.venue_categories : []);
+  if (sent.length > VENUE_CATEGORY_LIMIT) {
+    fail('BAD_USER_INPUT', `A venue can belong to at most ${VENUE_CATEGORY_LIMIT} categories`);
+  }
+  if (sent.length > 0) return Promise.all(sent.map((entry) => normalizeVenueCategoryInput(entry)));
+  if (input.venue_category === undefined || input.venue_category === null) return null;
+  const primary = await normalizeVenueCategoryInput(input.venue_category);
+  const samePrimary = String(current[0]?.sub_category_id ?? '') === String(primary.sub_category_id);
+  return [primary, ...(samePrimary ? current.slice(1).map(pickVenueCategory) : [])];
+}
+
 /** Cleans the dynamic capacity list: labels required, capacities whole
  * numbers ≥ 1. Returns null when the input did not include the field. */
 function normalizeCapacityItems(items: unknown) {
@@ -522,9 +570,10 @@ function normalizeCapacityItems(items: unknown) {
   return list;
 }
 
-/** Normalizes a full step-1 payload (location + capacity list + category) into
- * a patch shared by owner submit and admin create/update. */
-async function buildStep1Patch(input: any) {
+/** Normalizes a full step-1 payload (location + capacity list + categories) into
+ * a patch shared by owner submit and admin create/update. `current` is the
+ * category list of the venue being edited (none on create). */
+async function buildStep1Patch(input: any, current: readonly VenueCategoryRef[] = []) {
   const patch: any = await normalizeStep1Location(input);
   // Food is validated against the venue it lands on (buildVenueFoodPatch), never spread on raw.
   for (const key of VENUE_FOOD_INPUT_KEYS) delete patch[key];
@@ -539,10 +588,13 @@ async function buildStep1Patch(input: any) {
       patch.capacity = capacityItems.reduce((sum, item) => sum + item.capacity, 0);
     }
   }
-  if (input.venue_category === undefined || input.venue_category === null) {
-    delete patch.venue_category;
-  } else {
-    patch.venue_category = await normalizeVenueCategoryInput(input.venue_category);
+  // Never spread on raw: the list and its mirror are written together or not at all.
+  delete patch.venue_category;
+  delete patch.venue_categories;
+  const categories = await resolveVenueCategories(input, current);
+  if (categories) {
+    patch.venue_categories = categories;
+    patch.venue_category = categories[0];
   }
   return patch;
 }
@@ -624,9 +676,9 @@ async function removeUserRole(userId: Types.ObjectId, role: string) {
 
 /** Mongo query for the venues that auto-match a club, or null when the club has
  * no location (nothing can match yet). A venue matches when it is APPROVED +
- * active, sits in the club's location, and — when the club has them — shares the
- * club's Super category and Sub category (the club's `category_id` holds the
- * sub level, mirrored against the venue's `venue_category.sub_category_id`). */
+ * active, sits in the club's location, and — when the club has them — ANY ONE of
+ * its categories carries the club's Super category and Sub category (the club's
+ * `category_id` holds the sub level). */
 function buildClubMatchQuery(criteria: {
   location_id?: string | null;
   locality?: string | null;
@@ -645,13 +697,13 @@ function buildClubMatchQuery(criteria: {
   // no locality fall back to city-level matching.
   const trimmedLocality = (locality ?? '').trim();
   if (trimmedLocality) q.locality = trimmedLocality;
-  if (super_category_id && Types.ObjectId.isValid(super_category_id)) {
-    q['venue_category.super_category_id'] = new Types.ObjectId(super_category_id);
-  }
-  if (category_id && Types.ObjectId.isValid(category_id)) {
-    q['venue_category.sub_category_id'] = new Types.ObjectId(category_id);
-  }
-  return q;
+  return {
+    ...q,
+    ...venueCategoryMatch({
+      super_category_id: toObjectId(super_category_id),
+      sub_category_id: toObjectId(category_id),
+    }),
+  };
 }
 
 /** Applies the whitelisted owner-editable fields of an APPROVED venue in place.
@@ -696,6 +748,7 @@ export const venueService = {
       gstin_doc_type: VENUE_GSTIN_DOC_TYPE,
       pan_doc_type: VENUE_PAN_DOC_TYPE,
       capacity_item_limit: VENUE_CAPACITY_ITEM_LIMIT,
+      category_limit: VENUE_CATEGORY_LIMIT,
       amenities: VENUE_AMENITIES,
       facilities: VENUE_FACILITIES,
       security: VENUE_SECURITY,
@@ -740,18 +793,20 @@ export const venueService = {
     if (criteria?.location_id && Types.ObjectId.isValid(criteria.location_id)) {
       q.location_id = new Types.ObjectId(criteria.location_id);
     }
-    const levels = [
-      ['venue_category.super_category_id', criteria?.super_category_id],
-      ['venue_category.category_id', criteria?.category_id],
-      ['venue_category.sub_category_id', criteria?.sub_category_id],
-    ] as const;
-    for (const [path, id] of levels) {
-      if (id && Types.ObjectId.isValid(id)) q[path] = new Types.ObjectId(id);
-    }
+    // The levels are matched on ONE of the venue's categories, whichever it is.
+    Object.assign(
+      q,
+      venueCategoryMatch({
+        super_category_id: toObjectId(criteria?.super_category_id),
+        category_id: toObjectId(criteria?.category_id),
+        sub_category_id: toObjectId(criteria?.sub_category_id),
+      })
+    );
     const search = (criteria?.search ?? '').trim();
     if (search) {
       const rx = new RegExp(escapeRegex(search), 'i');
-      q.$or = [{ venue_name: rx }, { venue_type: rx }, { city: rx }, { locality: rx }];
+      // `$and`, not `$or`: the category match above may already hold the `$or`.
+      q.$and = [{ $or: [{ venue_name: rx }, { venue_type: rx }, { city: rx }, { locality: rx }] }];
     }
     const docs = await VenueModel.find(q).sort({ created_at: -1 }).limit(200);
     return docs.map((d) => redactForPublic(toPub(d)));
@@ -831,7 +886,11 @@ export const venueService = {
   },
   async submitStep1(userId: string, input: any, venueId?: string | null) {
     const v = await resolveEditableVenue(userId, venueId);
-    Object.assign(v, await buildStep1Patch(input), await buildVenueFoodPatch(input, v));
+    Object.assign(
+      v,
+      await buildStep1Patch(input, venueCategoriesOf(v)),
+      await buildVenueFoodPatch(input, v)
+    );
     if (v.step_completed < 1) v.step_completed = 1;
     if (v.status === 'REJECTED') v.status = 'DRAFT';
     await v.save();
@@ -934,7 +993,15 @@ export const venueService = {
           event: 'VENUE_NEW_REQUESTED',
           user: recipient,
           name: v.owner_name,
-          params: [v.owner_name, v.venue_name, v.venue_category?.sub_category_name],
+          // Every sub category the venue was approved for, primary first.
+          params: [
+            v.owner_name,
+            v.venue_name,
+            venueCategoriesOf(v)
+              .map((category) => category.sub_category_name)
+              .filter(Boolean)
+              .join(', '),
+          ],
           email,
         },
       ]);
@@ -1000,7 +1067,11 @@ export const venueService = {
   async adminUpdate(id: string, opts: { step1: any; step2: any; step3: any; status?: string }) {
     const v = await VenueModel.findById(id);
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
-    Object.assign(v, await buildStep1Patch(opts.step1), await buildVenueFoodPatch(opts.step1, v));
+    Object.assign(
+      v,
+      await buildStep1Patch(opts.step1, venueCategoriesOf(v)),
+      await buildVenueFoodPatch(opts.step1, v)
+    );
     v.documents = (opts.step2.documents || [])
       .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
@@ -1215,7 +1286,10 @@ export const venueService = {
     // and never let a partial/invalid meeting category block the draft.
     if (prefill.category && !v.venue_category?.super_category_id) {
       try {
-        v.venue_category = await normalizeVenueCategoryInput(prefill.category);
+        // The meeting carries one triple, so the draft starts as a one-entry list.
+        const category = await normalizeVenueCategoryInput(prefill.category);
+        v.venue_categories = [category];
+        v.venue_category = category;
       } catch {
         // Meeting had no valid Super→Cat→Sub triple — leave the category empty.
       }

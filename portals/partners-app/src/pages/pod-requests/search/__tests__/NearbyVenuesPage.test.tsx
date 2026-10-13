@@ -21,6 +21,7 @@ const nearbyVenue = (over: Record<string, unknown> = {}) => ({
   id: 'venue-1',
   venue_name: 'Courtside Arena',
   category: 'Badminton',
+  categories: ['Badminton'],
   locality: 'Indiranagar',
   city: 'Bengaluru',
   cover_image_url: '',
@@ -83,6 +84,14 @@ describe('NearbyVenuesPage', () => {
     expect(result.getByText('Badminton')).toBeTruthy();
     expect(result.getByText('Indiranagar, Bengaluru')).toBeTruthy();
     expect(result.getByText('3.4 km away')).toBeTruthy();
+  });
+
+  it('names every category of a venue in several, primary first', async () => {
+    mount(base({ PartnersNearbyVenues: { nearbyVenuesForHost: [nearbyVenue({ categories: ['Badminton', 'Yoga'] })] } }));
+
+    const result = within(await screen.findByTestId('nearby-result'));
+    expect(result.getByText('Badminton, Yoga')).toBeTruthy();
+    expect(result.queryByText('Badminton')).toBeNull();
   });
 
   it('shows the radar until both the host and the venues are in', async () => {

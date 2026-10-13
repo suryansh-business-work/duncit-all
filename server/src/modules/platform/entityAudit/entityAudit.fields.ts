@@ -65,6 +65,8 @@ const VENUE_FIELDS: readonly DiffField[] = [
   { path: 'food_ordering.enabled', label: 'Food Ordering' },
   { path: 'food_ordering.razorpay_integration_id', label: 'Food Ordering Razorpay Account' },
   { path: 'food_ordering.discount_pct', label: 'Food Order Discount %' },
+  { path: 'venue_categories', label: 'Categories', ordered: true },
+  // The primary category — the mirror of the first entry above.
   { path: 'venue_category.super_category_name', label: 'Super Category' },
   { path: 'venue_category.category_name', label: 'Category' },
   { path: 'venue_category.sub_category_name', label: 'Sub Category' },

@@ -19,6 +19,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { venueSubCategoryIds } from '@modules/venues/venue/venue.categories';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { buildProductRequests, validateHasImage } from '@modules/pods/pod/pod.service';
 import { breakdownService, venueSlotProjections } from '@modules/finance/finance/breakdown.service';
@@ -224,10 +225,11 @@ export interface AdminClub {
   locationId: Types.ObjectId | null;
 }
 
-/** A venue the caller owns, with what it can accept: its sub-category and its city. */
+/** A venue the caller owns, with what it can accept: its sub-categories and its city. */
 export interface OwnerVenue {
   id: Types.ObjectId;
-  subCategoryId: Types.ObjectId | null;
+  /** Every sub-category the venue hosts, primary first; empty when it declares none. */
+  subCategoryIds: Types.ObjectId[];
   locationId: Types.ObjectId | null;
 }
 
@@ -1005,10 +1007,10 @@ export const autoPodService = {
   },
 
   /**
-   * The approved, active venues this user owns, with the sub-category each one
-   * hosts and the city it sits in. An offer is only ever offered to a venue in
-   * its category and — once pinned — its city, so those pairs are what the
-   * queue and the count are scoped by.
+   * The approved, active venues this user owns, with the sub-categories each one
+   * hosts and the city it sits in. An offer is only ever offered to a venue with
+   * its category among them and — once pinned — in its city, so those pairs are
+   * what the queue and the count are scoped by.
    */
   async ownerVenues(userId: string): Promise<OwnerVenue[]> {
     if (!Types.ObjectId.isValid(userId)) return [];
@@ -1017,11 +1019,11 @@ export const autoPodService = {
       status: 'APPROVED',
       is_active: true,
     })
-      .select('location_id venue_category.sub_category_id')
+      .select('location_id venue_category.sub_category_id venue_categories.sub_category_id')
       .lean();
     return (venues as any[]).map((v) => ({
       id: v._id,
-      subCategoryId: v.venue_category?.sub_category_id ?? null,
+      subCategoryIds: venueSubCategoryIds<Types.ObjectId>(v),
       locationId: v.location_id ?? null,
     }));
   },
@@ -1063,21 +1065,21 @@ export const autoPodService = {
 
   /**
    * Pre-live PHYSICAL offers with no venue yet that one of these venues could
-   * take: the offer's category must be THAT venue's, and its city (once pinned)
-   * that venue's too — a pair per venue, exactly as clubs are matched. A venue
-   * that declares no category matches nothing. Offers older than the venue
+   * take: the offer's category must be one of THAT venue's, and its city (once
+   * pinned) that venue's too — a pair per venue and category, exactly as clubs
+   * are matched. A venue that declares no category matches nothing. Offers older than the venue
    * window (`venueCutoff`) are off the list — the sweep expires them. Null
    * when no venue could match.
    */
   venueOpenFilter(venues: OwnerVenue[], venueCutoff: Date, scope?: AutoPodQueueScope) {
-    const perVenue = venues
-      .filter((venue) => venue.subCategoryId)
-      .map((venue) => ({
-        sub_category_id: venue.subCategoryId,
+    const perVenue = venues.flatMap((venue) =>
+      venue.subCategoryIds.map((subCategoryId) => ({
+        sub_category_id: subCategoryId,
         $or: venue.locationId
           ? [{ location: null }, { 'location.location_id': venue.locationId }]
           : [{ location: null }],
-      }));
+      }))
+    );
     if (perVenue.length === 0) return null;
     return {
       ...PRE_LIVE_FILTER,

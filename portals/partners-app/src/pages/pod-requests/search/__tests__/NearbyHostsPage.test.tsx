@@ -25,7 +25,14 @@ const myVenue = (over: Record<string, unknown> = {}) => ({
   location_id: 'loc-blr',
   locality: 'Indiranagar',
   venue_category: { __typename: 'VenueCategory', category_id: 'cat-badminton' },
+  venue_categories: [{ __typename: 'VenueCategory', category_id: 'cat-badminton' }],
   ...over,
+});
+
+/** The category fields of a venue, as the server answers them: the list, and its first entry as the primary. */
+const categoriesOf = (...ids: (string | null)[]) => ({
+  venue_category: { __typename: 'VenueCategory', category_id: ids[0] ?? null },
+  venue_categories: ids.map((category_id) => ({ __typename: 'VenueCategory', category_id })),
 });
 
 const nearbyHost = (over: Record<string, unknown> = {}) => ({
@@ -168,7 +175,7 @@ describe('NearbyHostsPage — searching', () => {
               id: 'venue-2',
               venue_name: 'Lotus Studio',
               locality: 'Koramangala',
-              venue_category: { __typename: 'VenueCategory', category_id: 'cat-yoga' },
+              ...categoriesOf('cat-yoga'),
             }),
           ],
         },
@@ -190,12 +197,31 @@ describe('NearbyHostsPage — searching', () => {
     expect(lastSent(sent, 'PartnersPodRequestQuota')).toEqual({ side: 'VENUE', venue_id: 'venue-2' });
   });
 
+  // A venue in several categories must not be searched on its primary alone:
+  // hosts in its second category are just as much a match.
+  it('starts from every category the venue has, each once, primary first', async () => {
+    const sent: SentOperation[] = [];
+    mount(
+      base({
+        PartnersNearbySearchVenues: {
+          myVenues: [myVenue(categoriesOf('cat-yoga', 'cat-badminton', 'cat-yoga', null))],
+        },
+      }),
+      sent,
+    );
+
+    await screen.findByRole('heading', { name: 'Kiran Shah' });
+    expect(lastSent(sent, 'PartnersNearbyHosts')).toMatchObject({
+      search: { category_ids: ['cat-yoga', 'cat-badminton'] },
+    });
+  });
+
   it('starts unfiltered for a venue with no category', async () => {
     const sent: SentOperation[] = [];
     mount(
       base({
         PartnersNearbySearchVenues: {
-          myVenues: [myVenue({ venue_category: { __typename: 'VenueCategory', category_id: null } })],
+          myVenues: [myVenue({ venue_category: { __typename: 'VenueCategory', category_id: null }, venue_categories: [] })],
         },
       }),
       sent,

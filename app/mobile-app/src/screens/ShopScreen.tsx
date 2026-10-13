@@ -46,7 +46,7 @@ export function ShopScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
   const { categories } = useHomeData();
-  const { addingId, add, notice } = useQuickAddToCart();
+  const { addingId, notice, cartReady, lineOf, setQuantity } = useQuickAddToCart();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -112,15 +112,21 @@ export function ShopScreen() {
           <NoticeCard testID="shop-quick-add-notice" tone={notice.tone} title={notice.message} />
         ) : null}
         <XStack flexWrap="wrap" gap={12} justifyContent="space-between">
-          {visible.map((product) => (
-            <ShopProductCard
-              key={product.id}
-              product={product}
-              adding={addingId === product.id}
-              onOpen={(productId) => navigation.navigate('ProductDetail', { productId })}
-              onQuickAdd={add}
-            />
-          ))}
+          {visible.map((product) => {
+            const line = lineOf(product.id);
+            return (
+              <ShopProductCard
+                key={product.id}
+                product={product}
+                quantity={line?.quantity ?? 0}
+                max={line?.max_quantity ?? product.pod_available_count}
+                adding={addingId === product.id}
+                cartReady={cartReady}
+                onOpen={(productId) => navigation.navigate('ProductDetail', { productId })}
+                onQuantity={setQuantity}
+              />
+            );
+          })}
         </XStack>
       </YStack>
     );

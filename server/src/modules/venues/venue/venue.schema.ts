@@ -113,6 +113,8 @@ export const venueTypeDefs = /* GraphQL */ `
     "The doc_types entry uploaded beside a PAN, not from the general list."
     pan_doc_type: String!
     capacity_item_limit: Int!
+    "The most categories one venue may belong to (venue_categories)."
+    category_limit: Int!
     amenities: [String!]!
     facilities: [String!]!
     security: [String!]!
@@ -251,6 +253,9 @@ export const venueTypeDefs = /* GraphQL */ `
     offers_food: Boolean!
     food_menu: [VenueFoodItem!]!
     food_ordering: VenueFoodOrdering!
+    "Every category the venue belongs to, primary first. Empty only while the venue has none."
+    venue_categories: [VenueCategory!]!
+    "The primary category — always venue_categories[0]. Kept for clients that read one."
     venue_category: VenueCategory!
     "Super/Category/Sub the owner picked in the venue onboarding survey (from their OnboardingMeeting). Pre-fills Edit Venue when the venue has none; null when there is no survey scope."
     survey_category: VenueCategory
@@ -318,6 +323,14 @@ export const venueTypeDefs = /* GraphQL */ `
     offers_food: Boolean
     food_menu: [VenueFoodItemInput!]
     food_ordering: VenueFoodOrderingInput
+    """
+    Every category the venue belongs to, primary first (at most
+    venueRegistrationConfig.category_limit; a repeated sub category is dropped).
+    Wins over venue_category when both are sent. Omitted or empty leaves the
+    venue's categories to venue_category.
+    """
+    venue_categories: [VenueCategoryInput!]
+    "Single-category clients: the primary. Ignored when venue_categories is sent."
     venue_category: VenueCategoryInput
     description: String
     amenities: [String!]
@@ -455,11 +468,11 @@ export const venueTypeDefs = /* GraphQL */ `
     "Admin/onboarding table page over all venues (shared table engine)."
     venuesTable(query: TableQueryInput): VenueTablePage!
     venue(venue_doc_id: ID!): Venue
-    "APPROVED, active venues for the consumer Venues page — optionally scoped to a location, with server-side search + Super→Cat→Sub category filter. No args = every public venue (legacy callers)."
+    "APPROVED, active venues for the consumer Venues page — optionally scoped to a location, with server-side search + Super→Cat→Sub category filter (a venue matches when ANY one of its categories carries every level given). No args = every public venue (legacy callers)."
     publicVenues(location_id: ID, search: String, super_category_id: ID, category_id: ID, sub_category_id: ID): [Venue!]!
     "Public single-venue detail (APPROVED + active only)."
     publicVenue(venue_id: ID!): Venue
-    "APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category (admin Club form). Empty when no location is given."
+    "APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category on ANY of the venue's categories (admin Club form). Empty when no location is given."
     matchingVenues(location_id: ID!, locality: String, super_category_id: ID, category_id: ID): [Venue!]!
     venueRegistrationConfig: VenueRegistrationConfig!
   }

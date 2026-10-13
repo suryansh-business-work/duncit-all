@@ -12,6 +12,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import CategoryIcon from '@mui/icons-material/Category';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import DescriptionIcon from '@mui/icons-material/Description';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
@@ -28,6 +29,7 @@ export const RAIL_WIDTH = 250;
 const SECTION_ICONS: Record<VenueSectionKey, JSX.Element> = {
   details: <StorefrontIcon fontSize="small" />,
   'type-capacity': <CategoryIcon fontSize="small" />,
+  food: <RestaurantMenuIcon fontSize="small" />,
   amenities: <ChecklistIcon fontSize="small" />,
   documents: <DescriptionIcon fontSize="small" />,
   owner: <PersonIcon fontSize="small" />,
@@ -105,19 +107,23 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
           ))}
         </List>
       </Box>
-      <DuncitTabs
-        items={sections.map((section) => ({
-          value: section.key,
-          label: sectionLabel(section, t),
-          sx: { fontWeight: 800 },
-        }))}
-        value={active}
-        onChange={onSelect}
-        variant="scrollable"
-        allowScrollButtonsMobile
-        aria-label={t('partners.registerVenuePage.registrationSections')}
-        sx={{ display: { xs: 'flex', md: 'none' }, borderBottom: 1, borderColor: 'divider', mb: 2 }}
-      />
+      {/* The wrapper carries the breakpoint: a searchable strip puts its sx on
+          the tabs only, so its search box would otherwise stay on screen at md+. */}
+      <Box sx={{ display: { xs: 'block', md: 'none' } }} data-testid="register-venue-section-tabs">
+        <DuncitTabs
+          items={sections.map((section) => ({
+            value: section.key,
+            label: sectionLabel(section, t),
+            sx: { fontWeight: 800 },
+          }))}
+          value={active}
+          onChange={onSelect}
+          variant="scrollable"
+          allowScrollButtonsMobile
+          aria-label={t('partners.registerVenuePage.registrationSections')}
+          sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+        />
+      </Box>
     </>
   );
 }

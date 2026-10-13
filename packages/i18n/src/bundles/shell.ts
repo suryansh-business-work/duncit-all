@@ -1043,6 +1043,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       venueLabel: 'Venue',
       noVenues: 'Add an approved venue to be offered Auto Pods.',
       venueCategory: 'Category: {path}',
+      venueCategoriesMany: 'Categories: {paths}',
       noVenueCategory: 'This venue has no category yet — set one under Manage venue to be offered Auto Pods.',
       pickVenueFirst: 'Pick a venue at the top first.',
       // Every card's live countdown to the offer being released — Pod Settings decides the windows.

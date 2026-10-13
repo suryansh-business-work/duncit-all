@@ -5,14 +5,15 @@ import { DuncitButton } from '@duncit/buttons';
 import SectionRail from '../sections/SectionRail';
 import VenueDetailsSection from '../sections/VenueDetailsSection';
 import VenueTypeCapacitySection from '../sections/VenueTypeCapacitySection';
+import FoodSection from '../sections/food/FoodSection';
 import AmenitiesSection from '../sections/AmenitiesSection';
 import DocumentsSection from '../sections/DocumentsSection';
 import OwnerSection from '../sections/OwnerSection';
 import PayoutMethodSection from '../sections/PayoutMethodSection';
 import LeavesSection from '../sections/LeavesSection';
 import ReviewSection from '../sections/ReviewSection';
-import { useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
-import { foodLimitsOf, taxDocTypesOf, type RegisterVenueMode, type VenueRegistrationConfig } from './register-venue.types';
+import { APPROVED_EDIT_SECTIONS, useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
+import { categoryLimitOf, foodLimitsOf, taxDocTypesOf, type RegisterVenueMode, type VenueRegistrationConfig } from './register-venue.types';
 import { fireAndForget, logs } from '@duncit/logs';
 
 interface Props {
@@ -24,10 +25,6 @@ interface Props {
   onPersisted: () => Promise<unknown>;
   onSubmitted: (venueId: string) => void;
 }
-
-/** Sections with a save action in the sticky bar ('leaves' saves itself,
- * 'review' submits, amenities are locked post-approval). */
-const APPROVED_SAVABLE = new Set(['details', 'type-capacity', 'documents', 'owner']);
 
 export default function RegisterVenueForm({
   venue,
@@ -46,12 +43,14 @@ export default function RegisterVenueForm({
       mode,
       taxDocTypes: taxDocTypesOf(config),
       foodLimits: foodLimitsOf(config),
+      categoryLimit: categoryLimitOf(config),
       onPersisted,
     });
 
   const viewOnly = mode === 'view';
   const showRegisterBar = mode === 'register' && active !== 'leaves';
-  const showApprovedBar = mode === 'edit-approved' && APPROVED_SAVABLE.has(active);
+  // 'leaves' saves itself; amenities and payout are locked post-approval.
+  const showApprovedBar = mode === 'edit-approved' && APPROVED_EDIT_SECTIONS.has(active);
 
   return (
     <Box sx={{ display: { md: 'flex' }, alignItems: 'flex-start', gap: 3 }}>
@@ -71,8 +70,9 @@ export default function RegisterVenueForm({
               pointerEvents: viewOnly ? 'none' : undefined,
             }}
           >
-            {active === 'details' && <VenueDetailsSection form={form} mode={mode} />}
+            {active === 'details' && <VenueDetailsSection form={form} mode={mode} categoryLimit={categoryLimitOf(config)} />}
             {active === 'type-capacity' && <VenueTypeCapacitySection form={form} config={config} mode={mode} />}
+            {active === 'food' && <FoodSection form={form} config={config} />}
             {active === 'amenities' && (
               <AmenitiesSection form={form} config={config} disabled={mode === 'edit-approved'} />
             )}

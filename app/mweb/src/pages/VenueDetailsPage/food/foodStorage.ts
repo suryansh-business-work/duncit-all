@@ -1,9 +1,10 @@
 import { logs } from '@duncit/logs';
-import type { FoodCartQuantities } from '@duncit/utils';
+import type { FoodCartCoupon, FoodCartQuantities } from '@duncit/utils';
 
 /**
  * What a guest's browser remembers about ordering food at a venue: the cart
- * per venue (a refresh at the table must not empty it), the details they last
+ * per venue (a refresh at the table must not empty it) and the coupon applied
+ * to it, the details they last
  * ordered with, and the orders they placed — each with the key that proves it
  * is theirs, so the order page reopens without the link.
  *
@@ -12,6 +13,7 @@ import type { FoodCartQuantities } from '@duncit/utils';
  */
 
 const CART_KEY = 'mweb_food_cart_';
+const COUPON_KEY = 'mweb_food_coupon_';
 const GUEST_KEY = 'mweb_food_guest';
 const ORDERS_KEY = 'mweb_food_orders';
 /** Orders kept on the device; the oldest fall off. */
@@ -22,6 +24,12 @@ const TRACK_WINDOW_MS = 12 * 60 * 60 * 1000;
 export interface FoodGuestDetails {
   name: string;
   phone: string;
+}
+
+/** A coupon the server accepted for a venue's cart: its code and the terms the cart is priced with. */
+export interface AppliedFoodCoupon extends FoodCartCoupon {
+  coupon_code: string;
+  min_order_amount: number;
 }
 
 export interface StoredFoodOrder {
@@ -69,6 +77,31 @@ export function readFoodCart(venueId: string): FoodCartQuantities {
 }
 
 export const writeFoodCart = (venueId: string, cart: FoodCartQuantities): void => write(`${CART_KEY}${venueId}`, cart);
+
+/** The coupon kept with one venue's cart. Its terms are only what was last previewed — checkout asks the server again. */
+export function readFoodCoupon(venueId: string): AppliedFoodCoupon | null {
+  const stored = read(`${COUPON_KEY}${venueId}`);
+  if (!isRecord(stored) || typeof stored.coupon_code !== 'string' || !stored.coupon_code) return null;
+  if (typeof stored.coupon_pct !== 'number') return null;
+  return {
+    coupon_code: stored.coupon_code,
+    coupon_pct: stored.coupon_pct,
+    min_order_amount: typeof stored.min_order_amount === 'number' ? stored.min_order_amount : 0,
+  };
+}
+
+export function writeFoodCoupon(venueId: string, coupon: AppliedFoodCoupon | null): void {
+  const key = `${COUPON_KEY}${venueId}`;
+  if (coupon) {
+    write(key, coupon);
+    return;
+  }
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    logs.mWeb.warn('venueFood', 'storageRemove', { error, key });
+  }
+}
 
 export function readFoodGuest(): FoodGuestDetails | null {
   const stored = read(GUEST_KEY);

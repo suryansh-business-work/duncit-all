@@ -77,6 +77,8 @@ export interface AutoPodLabels {
   venueLabel: string;
   noVenues: string;
   venueCategory: (path: string) => string;
+  /** The same line for a venue in several categories — every path, primary first. */
+  venueCategories: (paths: readonly string[]) => string;
   noVenueCategory: string;
   pickVenueFirst: string;
   /** Every card's live countdown to the offer being released unless everyone enrols. */
@@ -147,6 +149,118 @@ export interface AutoPodLabels {
 /** "a venue, a host, a club admin" — the missing roles as one list. */
 const joinRoles = (roles: AutoPodRole[], name: Record<AutoPodRole, string>) =>
   roles.map((role) => name[role]).join(', ');
+
+/** Between the levels of one category ("Sports › Racket › Badminton"). */
+const VENUE_CATEGORY_LEVEL_SEPARATOR = ' › ';
+/** Between two categories on the one line a venue's categories are written on. */
+const VENUE_CATEGORY_LIST_SEPARATOR = ' · ';
+
+/** One category path reads as the singular line it always was; several share the plural one. */
+const venueCategoriesLine = (
+  paths: readonly string[],
+  one: (path: string) => string,
+  many: (joined: string) => string,
+): string => {
+  const joined = paths.join(VENUE_CATEGORY_LIST_SEPARATOR);
+  return paths.length === 1 ? one(joined) : many(joined);
+};
+
+/** One Super → Category → Sub entry as a venue carries it — ids, names, or both. */
+export interface VenueCategoryEntry {
+  super_category_id?: string | null;
+  category_id?: string | null;
+  sub_category_id?: string | null;
+  super_category_name?: string | null;
+  category_name?: string | null;
+  sub_category_name?: string | null;
+}
+
+/** A venue as any query answers it: the list, the legacy single triple, or both. */
+export interface VenueCategoryCarrier<T extends VenueCategoryEntry = VenueCategoryEntry> {
+  venue_categories?: readonly T[] | null;
+  venue_category?: T | null;
+}
+
+const VENUE_CATEGORY_FIELDS = [
+  'super_category_id',
+  'category_id',
+  'sub_category_id',
+  'super_category_name',
+  'category_name',
+  'sub_category_name',
+] as const;
+
+/** False for the all-blank triple a venue with no category answers with. */
+const hasVenueCategory = (entry: VenueCategoryEntry): boolean =>
+  VENUE_CATEGORY_FIELDS.some((field) => !!entry[field]);
+
+/**
+ * Every category a venue belongs to, primary first: `venue_categories` when it
+ * has entries, else the legacy `venue_category` as a one-entry list, else `[]`.
+ * The client twin of the server's `venueCategoriesOf` — read a venue's
+ * categories through this, never through `venue_category` alone.
+ */
+export function venueCategoryList<T extends VenueCategoryEntry>(venue?: VenueCategoryCarrier<T> | null): T[] {
+  const list = (venue?.venue_categories ?? []).filter(hasVenueCategory);
+  if (list.length > 0) return list;
+  const legacy = venue?.venue_category;
+  return legacy && hasVenueCategory(legacy) ? [legacy] : [];
+}
+
+/** "Sports › Racket › Badminton" for each of the venue's categories, primary first; nameless entries dropped. */
+export function venueCategoryPaths(venue?: VenueCategoryCarrier | null): string[] {
+  return venueCategoryList(venue)
+    .map((entry) =>
+      [entry.super_category_name, entry.category_name, entry.sub_category_name]
+        .filter(Boolean)
+        .join(VENUE_CATEGORY_LEVEL_SEPARATOR),
+    )
+    .filter(Boolean);
+}
+
+/** The distinct ids the venue carries at one level, primary first — e.g. every middle Category a search starts from. */
+export function venueCategoryLevelIds(
+  venue: VenueCategoryCarrier | null | undefined,
+  level: 'super_category_id' | 'category_id' | 'sub_category_id',
+): string[] {
+  const ids = venueCategoryList(venue).flatMap((entry) => {
+    const id = entry[level];
+    return id ? [id] : [];
+  });
+  return [...new Set(ids)];
+}
+
+/** A venue summary as the partner searches answer it: labels only. */
+export interface VenueCategoryLabels {
+  /** The primary category's label — all an older answer carries. */
+  category?: string | null;
+  /** Every category's label, primary first. */
+  categories?: readonly string[] | null;
+}
+
+/**
+ * Every category label a venue summary carries, primary first: `categories`
+ * when it has any, else the lone `category`, else `[]`. The caller joins them
+ * with its own separator.
+ */
+export function venueCategoryLabels(venue?: VenueCategoryLabels | null): string[] {
+  const labels = (venue?.categories ?? []).filter(Boolean);
+  if (labels.length > 0) return labels;
+  return venue?.category ? [venue.category] : [];
+}
+
+/**
+ * Does ANY of the venue's categories carry this sub category? What makes a
+ * venue eligible for an Auto Pod (`row.sub_category_id`) or a match for a
+ * club — comparing the primary alone hides a venue that hosts it second.
+ * False when either side has no sub category.
+ */
+export function venueHostsSubCategory(
+  venue: VenueCategoryCarrier | null | undefined,
+  subCategoryId?: string | null,
+): boolean {
+  return !!subCategoryId && venueCategoryLevelIds(venue, 'sub_category_id').includes(subCategoryId);
+}
 
 /** mWeb + native (`mweb.autoPods.*`). */
 export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
@@ -225,6 +339,12 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     venueLabel: t('mweb.autoPods.venueLabel'),
     noVenues: t('mweb.autoPods.noVenues'),
     venueCategory: (path) => t('mweb.autoPods.venueCategory', { vars: { path } }),
+    venueCategories: (paths) =>
+      venueCategoriesLine(
+        paths,
+        (path) => t('mweb.autoPods.venueCategory', { vars: { path } }),
+        (joined) => t('mweb.autoPods.venueCategoriesMany', { vars: { paths: joined } }),
+      ),
     noVenueCategory: t('mweb.autoPods.noVenueCategory'),
     pickVenueFirst: t('mweb.autoPods.pickVenueFirst'),
     expiresIn: (hours, minutes, seconds) =>
@@ -358,6 +478,12 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     venueLabel: t('shell.autoPods.venueLabel'),
     noVenues: t('shell.autoPods.noVenues'),
     venueCategory: (path) => t('shell.autoPods.venueCategory', { vars: { path } }),
+    venueCategories: (paths) =>
+      venueCategoriesLine(
+        paths,
+        (path) => t('shell.autoPods.venueCategory', { vars: { path } }),
+        (joined) => t('shell.autoPods.venueCategoriesMany', { vars: { paths: joined } }),
+      ),
     noVenueCategory: t('shell.autoPods.noVenueCategory'),
     pickVenueFirst: t('shell.autoPods.pickVenueFirst'),
     expiresIn: (hours, minutes, seconds) =>

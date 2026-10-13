@@ -12,7 +12,7 @@ import {
 } from '@duncit/utils';
 import { notify } from '../../../components/notify';
 import { useTranslation } from '../../../i18n/useTranslation';
-import { readFoodCart, writeFoodCart } from './foodStorage';
+import { readFoodCart, readFoodCoupon, writeFoodCart, writeFoodCoupon, type AppliedFoodCoupon } from './foodStorage';
 
 export interface FoodCart {
   lines: FoodCartLine[];
@@ -21,6 +21,10 @@ export interface FoodCart {
   signature: string;
   /** Dishes that left the menu while they were in the cart, until dismissed. */
   dropped: string[];
+  /** The coupon the cart is priced with — kept with the cart, gone when the cart is. */
+  coupon: AppliedFoodCoupon | null;
+  applyCoupon: (coupon: AppliedFoodCoupon) => void;
+  removeCoupon: () => void;
   quantityOf: (itemId: string) => number;
   setQuantity: (itemId: string, quantity: number) => void;
   clear: () => void;
@@ -30,13 +34,16 @@ export interface FoodCart {
 /**
  * One venue's cart: kept in localStorage under the venue id, and held against
  * the menu as it is NOW — a dish that left the menu or went unavailable drops
- * out, and its name is kept so the guest can be told. The total is display
- * only; the server prices the order again from its own menu.
+ * out, and its name is kept so the guest can be told. An applied coupon is
+ * kept the same way and re-priced here on every change, without asking the
+ * server. The total is display only; the server prices the order again from
+ * its own menu and its own coupon.
  */
 export function useFoodCart(venueId: string, menu: ReadonlyArray<VenueFoodItem>, discountPct: number): FoodCart {
   const { t } = useTranslation();
   const [stored, setStored] = useState<FoodCartQuantities>(() => readFoodCart(venueId));
   const [dropped, setDropped] = useState<string[]>([]);
+  const [coupon, setCoupon] = useState<AppliedFoodCoupon | null>(() => readFoodCoupon(venueId));
 
   // What is shown is always the reconciled cart, so a stale entry never
   // reaches the screen even on the render before the effect below tidies it.
@@ -53,8 +60,18 @@ export function useFoodCart(venueId: string, menu: ReadonlyArray<VenueFoodItem>,
   }, [venueId, reconciled.cart]);
 
   const lines = useMemo(() => foodCartLines(menu, reconciled.cart), [menu, reconciled.cart]);
-  const price = useMemo(() => priceFoodCartLines(lines, discountPct), [lines, discountPct]);
+  const price = useMemo(() => priceFoodCartLines(lines, discountPct, coupon), [lines, discountPct, coupon]);
   const signature = useMemo(() => foodCartSignature(lines), [lines]);
+
+  useEffect(() => {
+    writeFoodCoupon(venueId, coupon);
+  }, [venueId, coupon]);
+
+  // A coupon belongs to the cart it was checked against: an emptied cart starts over without one.
+  const empty = lines.length === 0;
+  useEffect(() => {
+    if (empty) setCoupon(null);
+  }, [empty]);
 
   const quantityOf = useCallback((itemId: string) => reconciled.cart[itemId] ?? 0, [reconciled.cart]);
 
@@ -75,8 +92,24 @@ export function useFoodCart(venueId: string, menu: ReadonlyArray<VenueFoodItem>,
     [reconciled.cart, t],
   );
 
-  const clear = useCallback(() => setStored({}), []);
+  const clear = useCallback(() => {
+    setStored({});
+    setCoupon(null);
+  }, []);
+  const removeCoupon = useCallback(() => setCoupon(null), []);
   const dismissDropped = useCallback(() => setDropped([]), []);
 
-  return { lines, price, signature, dropped, quantityOf, setQuantity, clear, dismissDropped };
+  return {
+    lines,
+    price,
+    signature,
+    dropped,
+    coupon,
+    applyCoupon: setCoupon,
+    removeCoupon,
+    quantityOf,
+    setQuantity,
+    clear,
+    dismissDropped,
+  };
 }

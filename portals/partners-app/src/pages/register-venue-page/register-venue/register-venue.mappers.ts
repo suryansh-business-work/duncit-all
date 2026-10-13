@@ -1,4 +1,5 @@
-import type { VenueFoodItem } from '@duncit/utils';
+import { EMPTY_CATEGORY, isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
+import { venueCategoryList, type VenueCategoryEntry, type VenueFoodItem } from '@duncit/utils';
 import {
   blankFoodOrdering,
   blankRegisterVenueValues,
@@ -54,6 +55,23 @@ const toFoodRow = (item: Partial<VenueFoodItem>): FoodMenuRow => ({
   is_available: item.is_available !== false,
 });
 
+const toCategoryRow = (category: VenueCategoryEntry): AdminCategoryValue => ({
+  super_id: category.super_category_id || '',
+  super_name: category.super_category_name || '',
+  category_id: category.category_id || '',
+  category_name: category.category_name || '',
+  sub_id: category.sub_category_id || '',
+  sub_name: category.sub_category_name || '',
+});
+
+/** One picker row per category the venue has, primary first — read from
+ * `venue_categories`, or from the lone `venue_category` of a venue stored
+ * before the list existed. A venue with none starts on one blank row. */
+const toCategoryRows = (venue: Parameters<typeof venueCategoryList>[0]): AdminCategoryValue[] => {
+  const rows = venueCategoryList(venue).map(toCategoryRow);
+  return rows.length > 0 ? rows : [{ ...EMPTY_CATEGORY }];
+};
+
 export function venueToValues(
   venue: any,
   locations: any[],
@@ -62,6 +80,7 @@ export function venueToValues(
   if (!venue) {
     return {
       ...blankRegisterVenueValues,
+      venue_categories: toCategoryRows(null),
       owner_name: account.name,
       owner_email: account.email,
     };
@@ -71,9 +90,7 @@ export function venueToValues(
     description: venue.description || '',
     cover_image_url: venue.cover_image_url || '',
     gallery: venue.gallery || [],
-    super_category_id: venue.venue_category?.super_category_id || '',
-    category_id: venue.venue_category?.category_id || '',
-    sub_category_id: venue.venue_category?.sub_category_id || '',
+    venue_categories: toCategoryRows(venue),
     address_line1: venue.address_line1 || '',
     address_line2: venue.address_line2 || '',
     location_id: venue.location_id || '',
@@ -123,7 +140,7 @@ const toCapacityItems = (values: RegisterVenueValues) =>
     .filter((item) => item.label.trim() || item.capacity !== '')
     .map((item) => ({ label: item.label.trim(), capacity: Number(item.capacity) || 0 }));
 
-/** The food fields of a step-1 or approved-venue save. Switched off, only the
+/** The food fields of a step-1 save or an approved venue's Food Menu save. Switched off, only the
  * switch is sent: the server keeps the menu for later and turns ordering off
  * itself. A saved dish goes back with its id so it keeps its identity. */
 export function toFoodInput(values: RegisterVenueValues) {
@@ -152,20 +169,19 @@ export function toFoodInput(values: RegisterVenueValues) {
 
 export function toStep1Input(values: RegisterVenueValues) {
   const capacityItems = toCapacityItems(values);
-  const hasCategory = values.super_category_id && values.category_id && values.sub_category_id;
   return {
     venue_name: values.venue_name,
     venue_type: values.venue_type,
     capacity: capacityItems.reduce((sum, item) => sum + item.capacity, 0),
     capacity_items: capacityItems,
     ...toFoodInput(values),
-    venue_category: hasCategory
-      ? {
-          super_category_id: values.super_category_id,
-          category_id: values.category_id,
-          sub_category_id: values.sub_category_id,
-        }
-      : null,
+    // Primary first. Only whole triples go: a row still being picked is not a
+    // category yet (the section's validation is what refuses to save one).
+    venue_categories: values.venue_categories.filter(isCompleteCategory).map((category) => ({
+      super_category_id: category.super_id,
+      category_id: category.category_id,
+      sub_category_id: category.sub_id,
+    })),
     description: values.description,
     amenities: values.amenities,
     facilities: values.facilities,
@@ -195,11 +211,16 @@ export function toStep2Input(values: RegisterVenueValues) {
   };
 }
 
+/** The sections an approved venue can save through updateApprovedVenue. */
+export type ApprovedSectionKey = 'details' | 'type-capacity' | 'food' | 'documents' | 'owner';
+
 /** Payload for updateApprovedVenue — only the active section's editable
  * fields. Documents are append-only: rows past `originalDocCount` are the new
- * uploads (existing rows render locked, so indices below it never change). */
+ * uploads (existing rows render locked, so indices below it never change).
+ * The server leaves alone whatever a payload does not name, so a capacity save
+ * carries no food keys and cannot touch the menu, and the other way round. */
 export function toApprovedUpdateInput(
-  section: 'details' | 'type-capacity' | 'documents' | 'owner',
+  section: ApprovedSectionKey,
   values: RegisterVenueValues,
   originalDocCount: number
 ) {
@@ -211,8 +232,9 @@ export function toApprovedUpdateInput(
     };
   }
   if (section === 'type-capacity') {
-    return { capacity_items: toCapacityItems(values), ...toFoodInput(values) };
+    return { capacity_items: toCapacityItems(values) };
   }
+  if (section === 'food') return toFoodInput(values);
   if (section === 'documents') {
     return {
       add_documents: values.documents

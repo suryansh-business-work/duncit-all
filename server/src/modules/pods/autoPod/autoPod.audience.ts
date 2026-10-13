@@ -4,6 +4,7 @@ import { autoPodFail } from './autoPod.common';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { venueCategoryMatch } from '@modules/venues/venue/venue.categories';
 import { UserModel } from '@modules/access/user/user.model';
 
 /**
@@ -14,8 +15,9 @@ import { UserModel } from '@modules/access/user/user.model';
  *
  * All three roles are matched on the SUB-category: a host is approved into
  * sub-categories, a club carries its sub in `category_id`, and a venue
- * declares the sub it wants to host pods in (`venue_category`). A partner with
- * no category cannot be matched and is never offered anything.
+ * declares the subs it wants to host pods in (`venue_categories`) — any one of
+ * them is enough. A partner with no category cannot be matched and is never
+ * offered anything.
  */
 
 /** Only partners in the pinned city are offered a pinned Auto Pod. */
@@ -43,7 +45,7 @@ export interface AudienceClub {
   admin_user_ids: string[];
 }
 
-/** Approved, active venues that host this sub-category (in the city, once pinned). */
+/** Approved, active venues with this sub-category among theirs (in the city, once pinned). */
 export async function audienceVenues(
   subCategoryId: Types.ObjectId,
   location: IAutoPodLocation | null
@@ -51,7 +53,7 @@ export async function audienceVenues(
   const venues = await VenueModel.find({
     status: 'APPROVED',
     is_active: true,
-    'venue_category.sub_category_id': subCategoryId,
+    ...venueCategoryMatch({ sub_category_id: subCategoryId }),
     ...inCity(location),
   })
     .select('venue_name city locality owner_user_id')

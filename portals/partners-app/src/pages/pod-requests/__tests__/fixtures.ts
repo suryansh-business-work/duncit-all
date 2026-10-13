@@ -8,6 +8,7 @@ export const venueSummary = (over: Record<string, unknown> = {}) => ({
   id: 'venue-1',
   venue_name: 'Courtside Arena',
   category: 'Badminton',
+  categories: ['Badminton'],
   venue_type: 'Indoor',
   capacity: 40,
   locality: 'Indiranagar',

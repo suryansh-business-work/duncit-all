@@ -1,4 +1,6 @@
-import type { AdminVenueDetail } from '../detail/queries';
+import { isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
+import { venueCategoryList } from '@duncit/utils';
+import type { AdminVenueDetail, VenueCategoryRecord } from '../detail/queries';
 import { podRequestOverrideText } from '../../shared/podRequestLimit';
 import { blankVenueValues, type VenueFormValues } from './types';
 
@@ -13,12 +15,31 @@ import { blankVenueValues, type VenueFormValues } from './types';
  * `String!` / `[X!]!` / `Float!` except the eleven listed below, so a fallback on
  * any of the others is a branch nothing can reach — dead code that reads as
  * caution. The nullable ones, which DO get a fallback:
- *   venue_no · location_id · lat · lng · owner_dob · the three category ids ·
+ *   venue_no · location_id · lat · lng · owner_dob · each category's three ids ·
  *   bank_account.payout_method · settings.auto_extend.template_id · the review
  *   timestamps.
  * The `||` on the operating hours is different and stays: an empty stored string
  * is a real value there, and it should open on the same default a new venue gets.
  */
+const toCategoryRow = (entry: VenueCategoryRecord): AdminCategoryValue => ({
+  super_id: entry.super_category_id ?? '',
+  super_name: entry.super_category_name,
+  category_id: entry.category_id ?? '',
+  category_name: entry.category_name,
+  sub_id: entry.sub_category_id ?? '',
+  sub_name: entry.sub_category_name,
+});
+
+/**
+ * What the venue seats, from its named spaces.
+ *
+ * The server derives the scalar `capacity` from `capacity_items` whenever a
+ * save carries any (`buildStep1Patch`), so the form shows and sends the same
+ * sum instead of a second number that could disagree with it.
+ */
+export const capacityTotal = (items: readonly { capacity: number | string }[]): number =>
+  items.reduce((sum, item) => sum + (Number(item.capacity) || 0), 0);
+
 export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
   const { settings } = venue;
   return {
@@ -44,14 +65,9 @@ export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
       spice_level: item.spice_level,
       is_available: item.is_available,
     })),
-    category: {
-      super_id: venue.venue_category.super_category_id ?? '',
-      super_name: venue.venue_category.super_category_name,
-      category_id: venue.venue_category.category_id ?? '',
-      category_name: venue.venue_category.category_name,
-      sub_id: venue.venue_category.sub_category_id ?? '',
-      sub_name: venue.venue_category.sub_category_name,
-    },
+    // Primary first: the list, or the lone legacy triple of a venue stored
+    // before the list existed. A venue with none opens on no row at all.
+    categories: venueCategoryList(venue).map(toCategoryRow),
     description: venue.description,
     amenities: venue.amenities,
     facilities: venue.facilities,
@@ -128,7 +144,9 @@ export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
 export const valuesToStep1 = (values: VenueFormValues) => ({
   venue_name: values.venue_name,
   venue_type: values.venue_type,
-  capacity: values.capacity,
+  // With named spaces the total IS their sum (the server derives the same); the
+  // typed scalar is only what a venue without any is saved with.
+  capacity: values.capacity_items.length > 0 ? capacityTotal(values.capacity_items) : values.capacity,
   capacity_items: values.capacity_items.map((item) => ({
     label: item.label,
     capacity: item.capacity,
@@ -150,15 +168,15 @@ export const valuesToStep1 = (values: VenueFormValues) => ({
     spice_level: item.spice_level || undefined,
     is_available: item.is_available,
   })),
-  // The server validates the triple when set, and rejects a partial one — so an
-  // unchosen category is omitted rather than sent as three empty ids.
-  venue_category: values.category.sub_id
-    ? {
-        super_category_id: values.category.super_id,
-        category_id: values.category.category_id,
-        sub_category_id: values.category.sub_id,
-      }
-    : undefined,
+  // Primary first. Only whole triples go — the server rejects a partial one, and
+  // a row left blank (or a legacy row whose ids are gone) is not a category. An
+  // EMPTY list names none, which the server reads as "leave the venue's
+  // categories alone": a venue's last category cannot be removed from here.
+  venue_categories: values.categories.filter(isCompleteCategory).map((category) => ({
+    super_category_id: category.super_id,
+    category_id: category.category_id,
+    sub_category_id: category.sub_id,
+  })),
   description: values.description,
   amenities: values.amenities,
   facilities: values.facilities,

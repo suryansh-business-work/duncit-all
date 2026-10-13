@@ -50,6 +50,11 @@ export const GSTIN: RegExp;
 export const PERSON_NAME: RegExp;
 /** A Duncit referral code — `DUN-` and six uppercase hex characters. */
 export const REFERRAL_CODE: RegExp;
+/**
+ * A coupon code as it is stored: 3–30 characters of `A-Z`, `0-9`, `-` and `_`,
+ * starting on a letter or digit. Case-sensitive — upper-case the input first.
+ */
+export const COUPON_CODE: RegExp;
 /** A GA4 measurement id — `G-` and the stream's alphanumeric suffix (G-XXXXXXXXXX). */
 export const GA_MEASUREMENT_ID: RegExp;
 /** One DNS label: letters, digits and inner hyphens, 1–63 characters, no leading or trailing hyphen. */
@@ -70,6 +75,8 @@ export function isGstin(value: string): boolean;
 export function isPersonName(value: string): boolean;
 /** Referral-code shape check. Case-sensitive: upper-case before calling it. */
 export function isReferralCode(value: string): boolean;
+/** Coupon-code shape check. Case-sensitive: upper-case before calling it. */
+export function isCouponCode(value: string): boolean;
 /**
  * A Duncit @handle: lowercase letters, digits and single hyphens, 3–30
  * characters, starting and ending on an alphanumeric. It goes into

@@ -132,6 +132,10 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
       less: 'Decrease quantity',
       more: 'Increase quantity',
     },
+    cartControl: {
+      added: 'Item added',
+      removed: 'Item removed',
+    },
     wishlist: {
       toggle: 'Save {name} to wishlist',
       added: 'Saved to your wishlist',

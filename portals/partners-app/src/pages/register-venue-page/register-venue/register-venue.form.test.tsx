@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client';
 import { Observable } from '@apollo/client/utilities';
 import { ApolloProvider } from '@apollo/client/react';
@@ -75,7 +75,6 @@ const theme = createTheme();
 const RESULTS: Record<string, Record<string, unknown>> = {
   AdminCategories: { categories: [] },
   AdminLocations: { locations: [] },
-  VenueCategoryNames: { categories: [] },
   V1: { submitVenueStep1: { __typename: 'Venue', id: 'venue-1', step_completed: 1, status: 'DRAFT' } },
   V2: { submitVenueStep2: { __typename: 'Venue', id: 'venue-1', step_completed: 2 } },
   V3: { submitVenueStep3: { __typename: 'Venue', id: 'venue-1', step_completed: 3 } },
@@ -118,9 +117,30 @@ interface MountOptions {
   venue?: any;
   mode?: RegisterVenueMode;
   failOn?: string;
+  /** `venueRegistrationConfig.category_limit`; left out, the config has not said yet. */
+  categoryLimit?: number;
 }
 
-const mount = ({ venue = null, mode = 'register', failOn }: MountOptions = {}) => {
+const COFFEE = {
+  super_category_id: 'super-1',
+  category_id: 'cat-1',
+  sub_category_id: 'sub-1',
+  super_category_name: 'Food & Drink',
+  category_name: 'Cafe',
+  sub_category_name: 'Coffee',
+};
+const BADMINTON = {
+  super_category_id: 'super-2',
+  category_id: 'cat-2',
+  sub_category_id: 'sub-2',
+  super_category_name: 'Sports',
+  category_name: 'Racket',
+  sub_category_name: 'Badminton',
+};
+/** The stored venue once the server answers its whole category list. */
+const twoCategoryVenue = { ...savedVenue, venue_category: COFFEE, venue_categories: [COFFEE, BADMINTON] };
+
+const mount = ({ venue = null, mode = 'register', failOn, categoryLimit }: MountOptions = {}) => {
   const sent: Sent[] = [];
   const onSubmitted = vi.fn();
   const onPersisted = vi.fn().mockResolvedValue(undefined);
@@ -134,7 +154,7 @@ const mount = ({ venue = null, mode = 'register', failOn }: MountOptions = {}) =
               venue={venue}
               locations={[]}
               account={account}
-              config={config}
+              config={{ ...config, category_limit: categoryLimit }}
               mode={mode}
               onPersisted={onPersisted}
               onSubmitted={onSubmitted}
@@ -160,6 +180,20 @@ describe('RegisterVenueForm — navigation', () => {
     // A fresh draft opens with the tax-id switches off — GSTIN is optional.
     expect(await screen.findByLabelText(/This venue has a GSTIN/)).toBeTruthy();
     expect(screen.queryByLabelText(/Venue name/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Save & continue' })).toBeTruthy();
+  });
+
+  it('gives food a section of its own, out of Type & Capacity', async () => {
+    mount();
+
+    openSection('Type & Capacity');
+    expect(await screen.findByRole('combobox', { name: /Venue type/ })).toBeTruthy();
+    expect(screen.queryByTestId('register-venue-offers-food')).toBeNull();
+
+    openSection('Food Menu');
+    expect(await screen.findByRole('heading', { name: 'Food Menu' })).toBeTruthy();
+    expect(screen.getByLabelText(/Does this venue offer food?/)).toBeTruthy();
+    expect(screen.queryByRole('combobox', { name: /Venue type/ })).toBeNull();
     expect(screen.getByRole('button', { name: 'Save & continue' })).toBeTruthy();
   });
 
@@ -244,6 +278,57 @@ describe('RegisterVenueForm — register mode', () => {
   });
 });
 
+describe('RegisterVenueForm — several categories', () => {
+  it('shows a row per stored category and saves them all through step 1, primary first', async () => {
+    const { sent, onPersisted } = mount({ venue: { ...twoCategoryVenue, id: undefined } });
+
+    expect(screen.getByRole('group', { name: 'Category 1' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Category 2' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Save & continue' }));
+
+    await waitFor(() => expect(onPersisted).toHaveBeenCalledTimes(1));
+    const step1 = sent.find((call) => call.name === 'V1');
+    expect(step1?.variables.input.venue_categories).toEqual([
+      { super_category_id: 'super-1', category_id: 'cat-1', sub_category_id: 'sub-1' },
+      { super_category_id: 'super-2', category_id: 'cat-2', sub_category_id: 'sub-2' },
+    ]);
+  });
+
+  it('refuses to save a blank extra row, naming the problem on that row', async () => {
+    const { sent } = mount({ venue: { ...twoCategoryVenue, id: undefined } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add category' }));
+    const third = await screen.findByRole('group', { name: 'Category 3' });
+    fireEvent.click(screen.getByRole('button', { name: 'Save & continue' }));
+
+    expect(await within(third).findByText('Select the super category, category and sub category.')).toBeTruthy();
+    expect(sent.some((call) => call.name === 'V1')).toBe(false);
+  });
+
+  it('stops adding at the limit the registration config gives', () => {
+    mount({ venue: twoCategoryVenue, categoryLimit: 2 });
+
+    expect(screen.getByRole('button', { name: 'Add category' })).toHaveProperty('disabled', true);
+    expect(screen.getByText('A venue can have at most 2 categories.')).toBeTruthy();
+  });
+
+  it('lets a venue below the limit add another', () => {
+    mount({ venue: twoCategoryVenue, categoryLimit: 3 });
+
+    expect(screen.getByRole('button', { name: 'Add category' })).toHaveProperty('disabled', false);
+  });
+
+  it('shows an approved venue its categories read-only', () => {
+    mount({ venue: twoCategoryVenue, mode: 'edit-approved' });
+
+    const rows = within(screen.getByTestId('venue-categories'));
+    expect(rows.getAllByRole('combobox')).toHaveLength(6);
+    expect(rows.getAllByRole('combobox').every((input) => (input as HTMLInputElement).disabled)).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Add category' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Remove category/ })).toBeNull();
+  });
+});
+
 describe('RegisterVenueForm — view mode', () => {
   it('wraps the sections in a disabled fieldset and offers no save or submit action', () => {
     mount({ venue: savedVenue, mode: 'view' });
@@ -293,6 +378,25 @@ describe('RegisterVenueForm — edit-approved mode', () => {
     expect(onPersisted).toHaveBeenCalledTimes(1);
     // A spot edit never walks the wizard forward.
     expect(screen.getByLabelText(/Venue description/)).toBeTruthy();
+  });
+
+  it('saves the Food Menu section of an approved venue with the food input only', async () => {
+    const { sent } = mount({ venue: savedVenue, mode: 'edit-approved' });
+
+    openSection('Food Menu');
+    fireEvent.click(await screen.findByLabelText(/Does this venue offer food?/));
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(await screen.findByText('Changes saved.')).toBeTruthy();
+    const update = sent.find((call) => call.name === 'UpdateApprovedVenue');
+    expect(update?.variables).toEqual({
+      venue_id: 'venue-1',
+      input: {
+        offers_food: true,
+        food_menu: [],
+        food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0 },
+      },
+    });
   });
 
   it('hides the save bar on the amenities section, which approval locks', async () => {

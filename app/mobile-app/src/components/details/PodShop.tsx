@@ -41,7 +41,7 @@ export function PodShop({
   onVariantQuantity,
   readOnly = false,
 }: Readonly<PodShopProps>) {
-  const { primary, muted } = useThemeColors();
+  const { muted } = useThemeColors();
   const { t } = useTranslation();
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
   const products = pod.product_requests ?? [];
@@ -104,7 +104,6 @@ export function PodShop({
               key={product.product_id}
               product={product}
               quantity={selectedProducts[product.product_id] ?? 0}
-              primary={primary}
               onUpdate={updateQuantity}
               onInfo={setInfoProductId}
               readOnly={readOnly}

@@ -160,6 +160,9 @@ export default function ProductDetailDialog({
         {product && !viewOnly && onUpdateLine ? (
           <DialogActions sx={{ px: 3, pb: 2 }}>
             <ProductQuantityBar
+              // One bar per cart line: another variant is another line, not this one emptied.
+              key={`${productId}:${activePick?.id ?? ''}`}
+              name={product.product_name}
               quantity={lineQuantity}
               maxQuantity={stock}
               onUpdate={(next) => onUpdateLine(next, activePick)}

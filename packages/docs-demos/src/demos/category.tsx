@@ -2,8 +2,12 @@ import {
   EMPTY_CATEGORY,
   buildCategoryValue,
   categoryOptions,
+  categoryRowsMessage,
+  duplicateCategoryRows,
+  isCompleteCategory,
   subOptions,
   superOptions,
+  type AdminCategoryValue,
   type CategoryDoc,
 } from '@duncit/category';
 import { defineDemo, defineDemos } from '../types';
@@ -14,6 +18,14 @@ interface CategoryMock {
   super_id: string;
   category_id: string;
   sub_id: string;
+}
+
+/** What a form holding `RhfAdminCategoryRows` has in its field, and the cap it was given. */
+interface CategoryRowsMock {
+  /** The field's value: one whole picker value per row, primary first. */
+  rows: AdminCategoryValue[];
+  /** The `max` prop — for a venue, `venueRegistrationConfig.category_limit`. */
+  max: number;
 }
 
 export default defineDemos('category', [
@@ -51,5 +63,36 @@ export default defineDemos('category', [
       'What the form stores': buildCategoryValue(mock.categories, mock.super_id, mock.sub_id),
       'Nothing chosen yet': EMPTY_CATEGORY,
     }),
+  }),
+
+  defineDemo<CategoryRowsMock>({
+    id: 'rows',
+    title: 'Several categories in one field — what RhfAdminCategoryRows decides per row',
+    note:
+      'Row 3 repeats row 1\'s sub category, so it is the one flagged (the first to name a sub category keeps it); row 4 is still being picked, so it is not a category yet. Lower max to 4 and the add button shuts. The rows field itself needs a form and the admin tree, so this shows the pure rules it and a Zod schema share.',
+    mock: {
+      rows: [
+        { super_id: 'sup-1', super_name: 'Human', category_id: 'cat-1', category_name: 'Sports', sub_id: 'sub-1', sub_name: 'Badminton' },
+        { super_id: 'sup-1', super_name: 'Human', category_id: 'cat-2', category_name: 'Music', sub_id: 'sub-3', sub_name: 'Open mic' },
+        { super_id: 'sup-1', super_name: 'Human', category_id: 'cat-1', category_name: 'Sports', sub_id: 'sub-1', sub_name: 'Badminton' },
+        { super_id: 'sup-2', super_name: 'Pet', category_id: '', category_name: '', sub_id: '', sub_name: '' },
+      ],
+      max: 10,
+    },
+    compute: (mock) => {
+      const duplicates = duplicateCategoryRows(mock.rows);
+      return {
+        'Primary (row 1)': mock.rows[0]?.sub_name || '(not chosen yet)',
+        'isCompleteCategory(row), per row': mock.rows.map(isCompleteCategory),
+        'duplicateCategoryRows(rows) — row indexes flagged with labels.duplicate': [...duplicates],
+        'Add button': mock.rows.length >= mock.max ? 'disabled — the list is at max' : 'enabled',
+        'What a venue form sends: whole rows only, primary first': mock.rows
+          .filter(isCompleteCategory)
+          .map((row) => ({ super_category_id: row.super_id, category_id: row.category_id, sub_category_id: row.sub_id })),
+        'categoryRowsMessage(a list-level form error)': categoryRowsMessage({
+          root: { message: `A venue can have at most ${mock.max} categories.` },
+        }),
+      };
+    },
   }),
 ]);

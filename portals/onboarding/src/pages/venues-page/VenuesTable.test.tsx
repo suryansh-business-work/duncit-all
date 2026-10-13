@@ -85,6 +85,16 @@ describe('VenuesTable', () => {
     expect(onDelete).toHaveBeenCalledWith(sparse);
   });
 
+  // A venue may host in several categories: the column names them all, so a
+  // reviewer filtering or scanning for the second one still finds the venue.
+  it('names every category of a venue in several, primary first', async () => {
+    const cricket = { super_category_name: 'Sports', category_name: 'Cricket', sub_category_name: 'Box Cricket' };
+    const yoga = { super_category_name: 'Fitness', category_name: 'Yoga', sub_category_name: 'Hatha' };
+    renderTable([{ ...full, venue_category: cricket, venue_categories: [cricket, yoga] }]);
+
+    expect(await screen.findByText('Sports > Cricket > Box Cricket; Fitness > Yoga > Hatha')).toBeInTheDocument();
+  });
+
   it('shows an empty state', async () => {
     renderTable([]);
     expect(await screen.findByText('No venues found.')).toBeInTheDocument();

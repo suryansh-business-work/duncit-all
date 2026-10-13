@@ -5,6 +5,8 @@ import { STICKY_BAR_SX } from '../../components/cart/stickyBarSx';
 import ProductQuantityBar from '../pod-details-page/ProductQuantityBar';
 
 interface Props {
+  /** The product, for the cart control's accessible names. */
+  name: string;
   price: string;
   quantity: number;
   maxQuantity: number;
@@ -13,7 +15,7 @@ interface Props {
 
 /** The sticky bottom bar of the product page: the price on the left and the
  * add / quantity control on the right, pinned above the bottom nav. */
-export default function ProductBuyBar({ price, quantity, maxQuantity, onUpdate }: Readonly<Props>) {
+export default function ProductBuyBar({ name, price, quantity, maxQuantity, onUpdate }: Readonly<Props>) {
   return (
     <Box
       data-testid="product-buy-bar"
@@ -30,7 +32,7 @@ export default function ProductBuyBar({ price, quantity, maxQuantity, onUpdate }
           {price}
         </Typography>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <ProductQuantityBar quantity={quantity} maxQuantity={maxQuantity} onUpdate={onUpdate} />
+          <ProductQuantityBar name={name} quantity={quantity} maxQuantity={maxQuantity} onUpdate={onUpdate} />
         </Box>
       </Stack>
     </Box>

@@ -291,4 +291,8 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "finance.paymentRelease.approveVenueBillingAndHostPayment": [
     "Approve venue billing and host payment release requests.",
   ],
+  // Food left Type & Capacity for a section of its own in the venue form.
+  "partners.foodOrders.noFood": [
+    "This venue does not offer food. Turn food on in its Type & Capacity section to take orders.",
+  ],
 };

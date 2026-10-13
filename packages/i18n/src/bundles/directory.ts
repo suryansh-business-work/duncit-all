@@ -185,6 +185,35 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       pickMedia: 'Choose a file',
       upload: 'Upload',
 
+      // The form's sections — the same names, in the same order, as the owner's
+      // own registration form in the Partners portal, so staff and an owner are
+      // looking at one form. The staff-only sections follow them.
+      sectionsNav: 'Venue form sections',
+      sectionDetails: 'Venue Details',
+      sectionTypeCapacity: 'Type & Capacity',
+      sectionFood: 'Food Menu',
+      sectionAmenities: 'Amenities & Security',
+      sectionDocuments: 'Venue Documents',
+      sectionOwner: 'Owner Details',
+      sectionPayout: 'Payout Method',
+      sectionLeaves: 'Leaves & Holidays',
+      leavesHint: 'The dates the venue stays closed. No slot can be created or booked on them.',
+      // A venue may be filed under several categories; the first is the primary.
+      categories: 'Venue categories',
+      categoriesHint:
+        'Pick every category this venue hosts pods in. The first one is the primary category. Clubs auto-match venues on these plus the city.',
+      categoryAdd: 'Add category',
+      categoryRemove: 'Remove category {n}',
+      categoryRow: 'Category {n}',
+      categoryPrimary: 'Primary',
+      categoryDuplicate: 'This sub category is already added above',
+      categoryIncomplete: 'Select the super category, category and sub category.',
+      categoryLimitOne: 'A venue can have only 1 category.',
+      categoryLimitMany: 'A venue can have at most {max} categories.',
+      capacityDerivedHint: 'The sum of the spaces below.',
+      capacitySpacesHint:
+        'Name each bookable space and what it seats. The total capacity is their sum.',
+
       basics: 'The space',
       venueName: 'Venue name',
       venueType: 'Venue type',
@@ -347,6 +376,10 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       errPincode: 'Enter a valid postal/ZIP code',
       errGstin: 'GSTIN looks like 22ABCDE1234F1Z5',
       errPan: 'PAN looks like ABCDE1234F',
+      errPhone: '{field} must be 6 to 15 digits, with an optional + in front',
+      errAccountNumber: 'Account number must be 6 to 18 digits',
+      errIfsc: 'IFSC looks like ABCD0123456',
+      errUpi: 'UPI ID looks like name@bank',
       errDishPhotos: 'A dish can have at most {max} photos',
       errMenuSize: 'A menu can list at most {max} dishes',
       errHiddenMenu:

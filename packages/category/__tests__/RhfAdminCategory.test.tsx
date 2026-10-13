@@ -39,10 +39,12 @@ interface TestFormProps {
   onSubmitSpy?: (value: AdminCategoryValue) => void;
   /** null => setError with no message (tests the "Required" fallback); a string => explicit message. */
   errorMessage?: string | null;
+  /** The caller's own sub-level error (a rows field's "already added"). */
+  subError?: string;
 }
 
 /** Hoisted so RhfAdminCategory is exercised through a real react-hook-form context (S6478). */
-function TestForm({ defaultValue, onSubmitSpy, errorMessage }: Readonly<TestFormProps>) {
+function TestForm({ defaultValue, onSubmitSpy, errorMessage, subError }: Readonly<TestFormProps>) {
   const { control, setError, handleSubmit } = useForm<FormValues, any, FormValues>({
     defaultValues: { category: defaultValue },
   });
@@ -59,7 +61,7 @@ function TestForm({ defaultValue, onSubmitSpy, errorMessage }: Readonly<TestForm
 
   return (
     <form onSubmit={onSubmit}>
-      <RhfAdminCategory control={control} name="category" />
+      <RhfAdminCategory control={control} name="category" subError={subError} />
       <button type="submit">Submit</button>
     </form>
   );
@@ -117,6 +119,20 @@ describe('RhfAdminCategory', () => {
     setCategories(CATEGORIES);
     render(<TestForm errorMessage={null} />);
     expect(await screen.findByText('Required')).toBeInTheDocument();
+  });
+
+  it('shows the caller-supplied sub-level error on a field the form finds valid', () => {
+    setCategories(CATEGORIES);
+    render(<TestForm subError="Already added above" />);
+    expect(screen.getByText('Already added above')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /Sub Category/i })).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('lets the caller-supplied error win over the form error', async () => {
+    setCategories(CATEGORIES);
+    render(<TestForm subError="Already added above" errorMessage="Please choose a sub category" />);
+    expect(await screen.findByText('Already added above')).toBeInTheDocument();
+    expect(screen.queryByText('Please choose a sub category')).not.toBeInTheDocument();
   });
 
   it('shows no error text when the field is valid', () => {

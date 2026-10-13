@@ -24,6 +24,7 @@ import {
   pendingRequests,
   upcomingSlots,
   venueFigures,
+  venuesByCategory,
   type Decision,
   type RequestOutcome,
   type VenuePeriod,
@@ -113,7 +114,7 @@ function venueTrends(venues: readonly VenueRow[], current: VenuePeriod, window: 
 
 async function venueBreakdowns(venues: readonly VenueRow[], decisions: readonly Decision[], now: Date) {
   const cities = tally(venues.map((venue) => refKey(venue.location_id)));
-  const categories = tally(venues.map((venue) => refKey(venue.venue_category?.category_id)));
+  const categories = venuesByCategory(venues);
   const [cityNames, categoryNameMap, slots] = await Promise.all([
     locationNames(cities.keys()),
     categoryNames(categories.keys()),

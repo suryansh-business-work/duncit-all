@@ -24,7 +24,6 @@ export interface BodyProps {
   selectedVariant: Variant | null;
   quantity: number;
   maxQuantity: number;
-  primary: string;
   readOnly?: boolean;
   onUpdateQuantity?: (quantity: number) => void;
   onZoom: (index: number) => void;
@@ -52,7 +51,6 @@ export function ProductBody({
   selectedVariant,
   quantity,
   maxQuantity,
-  primary,
   readOnly,
   onUpdateQuantity,
   onZoom,
@@ -130,10 +128,12 @@ export function ProductBody({
             {formatRupees(price)}
           </Text>
           <YStack flex={1}>
+            {/* Keyed by the variant: switching to another one's count is not an add or a remove. */}
             <ProductQuantityBar
+              key={selectedVariantId ?? 'base'}
+              name={product.product_name}
               quantity={quantity}
               maxQuantity={maxQuantity}
-              primary={primary}
               readOnly={readOnly}
               onUpdate={onUpdateQuantity}
             />

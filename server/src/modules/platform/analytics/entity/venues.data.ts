@@ -4,7 +4,9 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodAuditLogModel } from '@modules/pods/podAudit/podAudit.model';
 import { dayKeyExpr, inRange } from './window';
-import { average, pct, tally, total } from './shapes';
+import { average, distinctTally, pct, tally, total } from './shapes';
+import { refKey } from './lookups';
+import { venueCategoriesOf } from '@modules/venues/venue/venue.categories';
 import { loadHeldPods, type HeldPod } from './held-pods';
 import type { DayRow } from './pods.data';
 
@@ -20,13 +22,30 @@ export interface VenueRow {
   status: VenueStatus;
   created_at: Date;
   location_id?: Types.ObjectId | null;
+  venue_categories?: Array<{ category_id?: Types.ObjectId | null }>;
   venue_category?: { category_id?: Types.ObjectId | null };
 }
 
 export const loadVenues = () =>
   VenueModel.find({})
-    .select('venue_name status created_at location_id venue_category.category_id')
+    .select('venue_name status created_at location_id venue_category.category_id venue_categories.category_id')
     .lean<VenueRow[]>();
+
+/**
+ * Venues per category — a venue in two categories counts in both, and once in
+ * a category it holds two sub categories of (the Hosts page counts the same
+ * way). So the slices add up to MORE than the venue total whenever a venue has
+ * several categories; a venue with none counts under "no category" once.
+ */
+export function venuesByCategory(venues: readonly VenueRow[]): Map<string, number> {
+  return distinctTally(
+    venues.flatMap((venue) => {
+      const categories = venueCategoriesOf(venue);
+      const keys = categories.length > 0 ? categories.map((category) => refKey(category.category_id)) : [refKey()];
+      return keys.map((key) => ({ id: venue._id.toHexString(), key }));
+    })
+  );
+}
 
 /** A held pod (see held-pods.ts) that ran at a partner venue. */
 export interface VenuePod extends HeldPod {

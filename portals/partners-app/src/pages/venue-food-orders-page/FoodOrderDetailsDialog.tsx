@@ -93,6 +93,14 @@ export default function FoodOrderDetailsDialog({ order, onClose }: Readonly<Prop
                     value={t('partners.foodOrders.discountValue', { vars: { amount: foodMoney(order, order.discount_amount) } })}
                   />
                 )}
+                {order.coupon_code && (
+                  <Line
+                    label={t('partners.foodOrders.coupon', { vars: { code: order.coupon_code, pct: order.coupon_pct } })}
+                    value={t('partners.foodOrders.discountValue', {
+                      vars: { amount: foodMoney(order, order.coupon_discount_amount) },
+                    })}
+                  />
+                )}
                 <Line label={t('partners.foodOrders.colTotal')} value={foodMoney(order, order.total)} />
               </Stack>
             </Stack>

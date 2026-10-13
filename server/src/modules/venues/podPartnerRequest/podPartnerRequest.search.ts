@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { VENUE_CATEGORY_PATHS } from '@modules/venues/venue/venue.categories';
 import { assertActiveHost } from '@modules/pods/pod/pod.validation';
 import { distanceKm, locationPoint, pointResolver, type GeoPoint } from '@modules/platform/location/location.geo';
 import { OPEN_PARTNER_STATUSES, PodPartnerRequestModel } from './podPartnerRequest.model';
@@ -23,11 +24,14 @@ const radiusOf = (r?: number | null) =>
 const validIds = (ids?: string[] | null) =>
   (ids ?? []).filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id));
 
-/** A category id matches at any level of the Super → Category → Sub triple. */
-function categoryMatch(path: string, ids: Types.ObjectId[]) {
+/** A category id matches at any level of the Super → Category → Sub triple, on
+ * any of the paths a triple lives at. */
+function categoryMatch(paths: readonly string[], ids: Types.ObjectId[]) {
   if (!ids.length) return {};
   return {
-    $or: ['super_category_id', 'category_id', 'sub_category_id'].map((level) => ({ [`${path}.${level}`]: { $in: ids } })),
+    $or: paths.flatMap((path) =>
+      ['super_category_id', 'category_id', 'sub_category_id'].map((level) => ({ [`${path}.${level}`]: { $in: ids } }))
+    ),
   };
 }
 
@@ -100,7 +104,7 @@ export const podPartnerSearch = {
       status: 'APPROVED',
       is_active: true,
       user_id: { $ne: new Types.ObjectId(callerId) },
-      ...categoryMatch('host_categories', validIds(args.category_ids)),
+      ...categoryMatch(['host_categories'], validIds(args.category_ids)),
     })
       .select('user_id')
       .limit(CANDIDATE_LIMIT)
@@ -143,7 +147,8 @@ export const podPartnerSearch = {
       status: 'APPROVED',
       is_active: true,
       owner_user_id: { $ne: new Types.ObjectId(callerId) },
-      ...categoryMatch('venue_category', validIds(args.category_ids)),
+      // Any of the venue's categories — or the legacy single of one not yet migrated.
+      ...categoryMatch(VENUE_CATEGORY_PATHS, validIds(args.category_ids)),
     })
       .select('lat lng location_id locality')
       .limit(CANDIDATE_LIMIT)

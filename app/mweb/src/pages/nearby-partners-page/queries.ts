@@ -21,7 +21,10 @@ export interface NearbyHostRow {
 export interface NearbyVenueRow {
   id: string;
   venue_name: string;
+  /** The primary category's label. */
   category: string;
+  /** Every category the venue belongs to, primary first. */
+  categories: string[];
   locality: string;
   city: string;
   cover_image_url: string;
@@ -40,13 +43,16 @@ export interface SearchCategory {
   is_active: boolean;
 }
 
-/** An owner's venue in the search's picker; its category seeds the filter. */
+/** An owner's venue in the search's picker; its categories seed the filter. */
 export interface SearchVenue {
   id: string;
   venue_name: string;
   city: string;
   status: string;
-  venue_category: { category_id: string | null };
+  /** The primary — `venue_categories[0]`. Read the list through `venueCategoryLevelIds`. */
+  venue_category: { category_id: string | null } | null;
+  /** Every category the venue belongs to, primary first. */
+  venue_categories: { category_id: string | null }[];
 }
 
 export interface SendPodRequestInput {
@@ -78,6 +84,7 @@ export const NEARBY_VENUES_FOR_HOST: TypedDocumentNode<{ nearbyVenuesForHost: Ne
       id
       venue_name
       category
+      categories
       locality
       city
       cover_image_url
@@ -131,6 +138,9 @@ export const SEARCH_OWNER_VENUES: TypedDocumentNode<{ myVenues: SearchVenue[] }>
       city
       status
       venue_category {
+        category_id
+      }
+      venue_categories {
         category_id
       }
     }

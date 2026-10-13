@@ -12,6 +12,7 @@ import {
   VENUE_FOOD_PRICE_MAX,
   VENUE_FOOD_SPICE_LEVELS,
 } from './venue.constants';
+import { hasVenueCategory, pickVenueCategory, venueCategoryKey } from './venue.categories';
 
 export type VenueStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -168,6 +169,10 @@ export interface IVenue extends Document {
   offers_food: boolean;
   food_menu: IVenueFoodItem[];
   food_ordering: IVenueFoodOrdering;
+  /** Every category the venue belongs to, primary first. Read it through
+   * `venueCategoriesOf` — a document older than the list has only the mirror. */
+  venue_categories: IVenueCategory[];
+  /** Always the mirror of `venue_categories[0]` (kept for released apps). */
   venue_category: IVenueCategory;
   description: string;
   amenities: string[];
@@ -355,6 +360,7 @@ const venueSchema = new Schema<IVenue>(
     offers_food: { type: Boolean, default: false },
     food_menu: { type: [venueFoodItemSchema], default: [] },
     food_ordering: { type: venueFoodOrderingSchema, default: () => ({}) },
+    venue_categories: { type: [venueCategorySchema], default: [] },
     venue_category: { type: venueCategorySchema, default: () => ({}) },
     description: { type: String, default: '' },
     amenities: { type: [String], default: [] },
@@ -398,6 +404,34 @@ const venueSchema = new Schema<IVenue>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// Venue matching by any of the venue's category rows (club auto-match, public
+// filters) and by sub category alone (the Auto Pod audience).
+venueSchema.index({
+  'venue_categories.super_category_id': 1,
+  'venue_categories.category_id': 1,
+  'venue_categories.sub_category_id': 1,
+});
+venueSchema.index({ 'venue_categories.sub_category_id': 1 });
+
+// The list and its legacy mirror may never disagree in a stored document, so
+// the rule lives here rather than in each writer. A write that set only the
+// legacy triple (an older code path, or a document saved before the list
+// existed) becomes a one-entry list; otherwise the list is the truth and its
+// first entry is mirrored — only when it actually differs, so an unrelated
+// save does not mark the category as changed.
+venueSchema.pre('validate', function mirrorVenueCategories(this: IVenue) {
+  // A document loaded with a projection cannot tell "no list" from "list not
+  // loaded", so categories are never rewritten from half the picture.
+  if (!this.isDirectSelected('venue_categories') || !this.isDirectSelected('venue_category')) return;
+  const list = this.venue_categories;
+  const legacyOnly = this.isModified('venue_category') && !this.isModified('venue_categories');
+  if (hasVenueCategory(this.venue_category) && (list.length === 0 || legacyOnly)) {
+    this.venue_categories = [pickVenueCategory(this.venue_category)];
+  } else if (list.length > 0 && venueCategoryKey(list[0]) !== venueCategoryKey(this.venue_category)) {
+    this.venue_category = pickVenueCategory(list[0]);
+  }
+});
 
 // Assign a permanent human id on creation (unique, sequential) — surfaced in the
 // Onboarded Venues table for tracking / search / reporting.

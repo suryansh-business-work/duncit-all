@@ -1,22 +1,28 @@
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
-import { AdminCategorySelect, type AdminCategoryValue } from '@duncit/category';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { RhfAdminCategoryRows } from '@duncit/category';
+import { fireAndForget, logs } from '@duncit/logs';
 import { AdminLocationSelect, Fieldset, MapEmbedCard, type AdminLocationValue } from '@duncit/location';
 import VenueImagesField from './VenueImagesField';
-import type { RegisterVenueMode, RegisterVenueValues } from '../register-venue';
+import { NO_CATEGORY_LIMIT, type RegisterVenueMode, type RegisterVenueValues } from '../register-venue/register-venue.types';
+import { categoryLimitMessage } from '../register-venue/register-venue.schema';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
   mode: RegisterVenueMode;
+  /** From the registration config — the most categories one venue may have. */
+  categoryLimit?: number;
 }
 
-const CATEGORY_HINT = 'Pick the category you want to host pods in at this venue.';
 const LOCATION_HINT = 'Where the venue is — used to match it to clubs in this locality.';
 
-export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
+export default function VenueDetailsSection({ form, mode, categoryLimit = NO_CATEGORY_LIMIT }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, watch, setValue, formState } = form;
+  const { control, watch, setValue, trigger, formState } = form;
   const values = watch();
   // Post-approval, only the description and images stay editable here —
   // identity fields (name, category, address) are locked with disabled styling.
@@ -24,17 +30,7 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
   const write = (key: keyof RegisterVenueValues, value: string, validate: boolean) =>
     setValue(key, value, { shouldDirty: true, shouldValidate: validate });
 
-  const catValue: AdminCategoryValue = {
-    super_id: values.super_category_id,
-    super_name: '',
-    category_id: values.category_id,
-    category_name: '',
-    sub_id: values.sub_category_id,
-    sub_name: '',
-  };
-  const categoryError = Boolean(
-    formState.errors.super_category_id || formState.errors.category_id || formState.errors.sub_category_id
-  );
+  const categoryError = Boolean(formState.errors.venue_categories);
 
   const locValue: AdminLocationValue = {
     location_id: values.location_id,
@@ -87,19 +83,31 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
         onGalleryChange={(urls) => setValue('gallery', urls, { shouldDirty: true })}
       />
 
-      <AdminCategorySelect
-        value={catValue}
-        onChange={(next) => {
-          write('super_category_id', next.super_id, categoryError);
-          write('category_id', next.category_id, categoryError);
-          write('sub_category_id', next.sub_id, categoryError);
-        }}
-        direction="row"
+      <RhfAdminCategoryRows
+        control={control}
+        name="venue_categories"
+        testId="venue-categories"
+        direction={{ xs: 'column', md: 'row' }}
         required
         disabled={locked}
-        legend="Venue category"
-        hint={CATEGORY_HINT}
-        errors={categoryError ? { sub: 'Select the super category, category and sub category.' } : undefined}
+        max={categoryLimit}
+        legend={t('partners.registerVenuePage.categoriesLegend')}
+        hint={t('partners.registerVenuePage.categoriesHint')}
+        labels={{
+          add: t('partners.registerVenuePage.categoryAdd'),
+          remove: (n) => t('partners.registerVenuePage.categoryRemove', { vars: { n } }),
+          row: (n) => t('partners.registerVenuePage.categoryRow', { vars: { n } }),
+          primary: t('partners.registerVenuePage.categoryPrimary'),
+          duplicate: t('partners.registerVenuePage.categoryDuplicate'),
+          maxReached: categoryLimitMessage(t, categoryLimit),
+        }}
+        icons={{ add: <AddIcon />, remove: <DeleteOutlineIcon /> }}
+        components={{ Button: DuncitButton, IconButton: DuncitIconButton }}
+        // Once the rows have failed validation, each pick re-checks them so a
+        // fixed row loses its message without waiting for the next save.
+        onRowChange={() => {
+          if (categoryError) fireAndForget(trigger('venue_categories'), logs.portal['partners-app'], 'register-venue', 'revalidateCategories');
+        }}
       />
 
       <Fieldset legend="Location" hint={LOCATION_HINT}>

@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
+import { venueCategoryLevelIds } from '@duncit/utils';
+
 import { PartnerRequestDirection, PartnerSide } from '@/generated/graphql/graphql';
 import {
   NearbyHostsForVenueDocument,
@@ -31,7 +33,7 @@ const toItem = (host: HostRow): NearbyItem => ({
 /**
  * Venue Studio → Search Nearby Hosts: approved hosts around the picked
  * location, for one of the owner's approved venues, filtered to the venue's
- * category to start. "Request Pod" sends a VENUE_TO_HOST request.
+ * categories — every one it has, not the primary alone — to start. "Request Pod" sends a VENUE_TO_HOST request.
  */
 export function useNearbyHosts() {
   const { t } = useTranslation();
@@ -49,8 +51,12 @@ export function useNearbyHosts() {
   // Opens on the venue picked on any Venue Studio screen.
   const { venue, selectVenue } = useSelectedVenue(venues);
   const venueId = venue?.id ?? '';
-  const venueCategory = venue?.venue_category.category_id ?? '';
-  const defaults = useMemo(() => (venueCategory ? [venueCategory] : []), [venueCategory]);
+  // Joined to a string so the default filter only changes when the ids do, not on every refetch.
+  const venueCategories = venueCategoryLevelIds(venue, 'category_id').join(',');
+  const defaults = useMemo(
+    () => (venueCategories ? venueCategories.split(',') : []),
+    [venueCategories],
+  );
   const state = useNearbySearch(defaults);
   const { search } = state;
 

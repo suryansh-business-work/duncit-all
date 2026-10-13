@@ -1,14 +1,10 @@
 import { useEffect } from 'react';
 import { Text, YStack } from 'tamagui';
-import type { AutoPodLabels } from '@duncit/utils';
+import { venueCategoryPaths, type AutoPodLabels } from '@duncit/utils';
 
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
-import {
-  useAutoPodVenues,
-  venueCategoryPath,
-  type AutoPodVenueOption,
-} from '@/hooks/useAutoPodVenues';
+import { useAutoPodVenues, type AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
 import { useSelectedVenue } from '@/hooks/useSelectedVenue';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -21,9 +17,9 @@ interface Props {
 
 /**
  * The venue queue's own picker: which of the owner's approved venues is
- * looking. The offers shown are the ones THAT venue could take — its category
- * and its city — so the category is written under the chips to say why the
- * list is what it is. It opens on the venue picked on any Venue Studio screen
+ * looking. The offers shown are the ones THAT venue could take — ANY of its
+ * categories, and its city — so every category is written under the chips to
+ * say why the list is what it is. It opens on the venue picked on any Venue Studio screen
  * (the first one when that pick is not an approved venue); a venue with no
  * category is offered nothing, and says so.
  *
@@ -55,7 +51,7 @@ export function AutoPodVenueRow({ value, onChange, labels }: Readonly<Props>) {
     );
   }
 
-  const path = venueCategoryPath(value);
+  const paths = venueCategoryPaths(value);
   const options = venues.map((venue) => [venue.id, venue.venue_name] as readonly [string, string]);
 
   return (
@@ -70,12 +66,12 @@ export function AutoPodVenueRow({ value, onChange, labels }: Readonly<Props>) {
         value={value?.id ?? ''}
         onSelect={selectVenue}
       />
-      {value && path ? (
+      {value && paths.length > 0 ? (
         <Text testID="auto-pods-venue-category" fontSize={12} color="$muted">
-          {labels.venueCategory(path)}
+          {labels.venueCategories(paths)}
         </Text>
       ) : null}
-      {value && !path ? (
+      {value && paths.length === 0 ? (
         <Text testID="auto-pods-venue-no-category" fontSize={12} color={warning}>
           {labels.noVenueCategory}
         </Text>

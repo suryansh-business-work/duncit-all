@@ -17,6 +17,7 @@ export const VENUE_REGISTRATION_CONFIG = gql`
       venue_types
       doc_types
       capacity_item_limit
+      category_limit
       amenities
       facilities
       security
@@ -119,6 +120,8 @@ export interface VenueRegistrationConfig {
   venue_types: string[];
   doc_types: string[];
   capacity_item_limit: number;
+  /** The most categories one venue may belong to. */
+  category_limit: number;
   amenities: string[];
   facilities: string[];
   security: string[];

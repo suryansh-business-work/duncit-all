@@ -5,8 +5,14 @@ import {
   shellAutoPodLabels,
   mwebPodKindLabels,
   shellPodKindLabels,
+  venueCategoryLabels,
+  venueCategoryLevelIds,
+  venueCategoryList,
+  venueCategoryPaths,
+  venueHostsSubCategory,
   type AutoPodLabels,
   type AutoPodTranslate,
+  type VenueCategoryEntry,
 } from '../src/auto-pod-copy';
 
 /** Every partner an enrolment can belong to — the three ticks on a card. */
@@ -31,7 +37,7 @@ const BUNDLE_KEYS = [
   'pinnedTo', 'unpinned', 'virtualPod', 'pickLocationFirst', 'willPinTo', 'noVenueInCity', 'noClubInCity',
   'modePhysical', 'modeVirtual', 'pricedByHost',
   'meetingHint', 'meetingPlatform', 'meetingPlatformOther', 'meetingLink', 'meetingStart', 'meetingEnd',
-  'venueLabel', 'noVenues', 'venueCategory', 'noVenueCategory', 'pickVenueFirst',
+  'venueLabel', 'noVenues', 'venueCategory', 'venueCategoriesMany', 'noVenueCategory', 'pickVenueFirst',
   'expiresIn', 'slotWindow', 'potentialEarning', 'slotNotViable', 'acceptingWith',
   'assignedVenue', 'assignedHost', 'assignedClub',
   'withdrawCta', 'withdrawTitle', 'withdrawWarning', 'withdrawPenalty', 'withdrawConfirm', 'withdrawn',
@@ -109,6 +115,7 @@ const exercise = (labels: AutoPodLabels): Record<string, string> => {
   out.noVenueInCity = labels.noVenueInCity(CITY);
   out.noClubInCity = labels.noClubInCity(CITY);
   out.venueCategory = labels.venueCategory('Sports › Racket › Badminton');
+  out.venueCategories = labels.venueCategories(['Sports › Racket › Badminton', 'Fitness › Yoga › Hatha']);
   out.expiresIn = labels.expiresIn(5, 12, 30);
   out.slotWindow = labels.slotWindow(7);
   out.potentialEarning = labels.potentialEarning('₹1,080');
@@ -207,11 +214,25 @@ describe.each([
       { key: `${ns}.projectionVenue`, vars: { amount: '₹1,200' } },
       { key: `${ns}.slotWindow`, vars: { days: 7 } },
       { key: `${ns}.spotsRange`, vars: { min: 4, max: 12 } },
+      { key: `${ns}.venueCategoriesMany`, vars: { paths: 'Sports › Racket › Badminton · Fitness › Yoga › Hatha' } },
       { key: `${ns}.venueCategory`, vars: { path: 'Sports › Racket › Badminton' } },
       { key: `${ns}.waitingFor`, vars: { roles: `t:${ns}.roleVenue, t:${ns}.roleHost, t:${ns}.roleClub` } },
       { key: `${ns}.willPinTo`, vars: { city: CITY } },
       { key: `${ns}.withdrawPenalty`, vars: { points: 5 } },
     ]);
+  });
+
+  // A venue in one category reads exactly as it always did — the singular row,
+  // not a plural row holding one path — so no translator has to cover both.
+  it('writes one category on the singular line and several on the plural one', () => {
+    const t = interpolating({
+      [`${ns}.venueCategory`]: 'Category: {path}',
+      [`${ns}.venueCategoriesMany`]: 'Categories: {paths}',
+    });
+    expect(build(t).venueCategories(['Sports › Racket › Badminton'])).toBe('Category: Sports › Racket › Badminton');
+    expect(build(t).venueCategories(['Sports › Racket › Badminton', 'Fitness › Yoga › Hatha'])).toBe(
+      'Categories: Sports › Racket › Badminton · Fitness › Yoga › Hatha',
+    );
   });
 
   // The server stores one row per key path and "Import app keys" seeds exactly
@@ -310,5 +331,163 @@ describe('mwebPodKindLabels', () => {
       FIELDS.map((f) => `mweb.podKind.${f}`),
     );
     expect(calls.every((c) => c.vars === undefined)).toBe(true);
+  });
+});
+
+const BADMINTON: VenueCategoryEntry = {
+  super_category_id: 'sup-sports',
+  category_id: 'cat-racket',
+  sub_category_id: 'sub-badminton',
+  super_category_name: 'Sports',
+  category_name: 'Racket',
+  sub_category_name: 'Badminton',
+};
+const HATHA: VenueCategoryEntry = {
+  super_category_id: 'sup-fitness',
+  category_id: 'cat-yoga',
+  sub_category_id: 'sub-hatha',
+  super_category_name: 'Fitness',
+  category_name: 'Yoga',
+  sub_category_name: 'Hatha',
+};
+const TENNIS: VenueCategoryEntry = {
+  super_category_id: 'sup-sports',
+  category_id: 'cat-racket',
+  sub_category_id: 'sub-tennis',
+  super_category_name: 'Sports',
+  category_name: 'Racket',
+  sub_category_name: 'Tennis',
+};
+/** What a venue with no category answers `venue_category` with: every field blank. */
+const BLANK: VenueCategoryEntry = {
+  super_category_id: null,
+  category_id: null,
+  sub_category_id: null,
+  super_category_name: '',
+  category_name: '',
+  sub_category_name: '',
+};
+
+describe('venueCategoryList', () => {
+  it('answers the list, primary first, when the venue carries one', () => {
+    expect(venueCategoryList({ venue_categories: [BADMINTON, HATHA], venue_category: BADMINTON })).toEqual([
+      BADMINTON,
+      HATHA,
+    ]);
+  });
+
+  // A venue fetched by a build that only selects the old field, or stored before the list existed.
+  it('reads the legacy single triple as a one-entry list', () => {
+    expect(venueCategoryList({ venue_category: BADMINTON })).toEqual([BADMINTON]);
+    expect(venueCategoryList({ venue_categories: [], venue_category: BADMINTON })).toEqual([BADMINTON]);
+    expect(venueCategoryList({ venue_categories: null, venue_category: BADMINTON })).toEqual([BADMINTON]);
+  });
+
+  it('drops blank entries, so a venue with no category has an empty list', () => {
+    expect(venueCategoryList({ venue_categories: [BLANK], venue_category: BLANK })).toEqual([]);
+    expect(venueCategoryList({ venue_categories: [BLANK, HATHA] })).toEqual([HATHA]);
+    expect(venueCategoryList({ venue_category: null })).toEqual([]);
+    expect(venueCategoryList({})).toEqual([]);
+  });
+
+  it('is empty for no venue at all', () => {
+    expect(venueCategoryList(null)).toEqual([]);
+    expect(venueCategoryList(undefined)).toEqual([]);
+  });
+
+  it('keeps an entry that only has names — the shape a names-only query answers', () => {
+    const namesOnly = { super_category_name: 'Sports', category_name: 'Racket', sub_category_name: 'Badminton' };
+    expect(venueCategoryList({ venue_categories: [namesOnly] })).toEqual([namesOnly]);
+  });
+});
+
+describe('venueCategoryPaths', () => {
+  it('writes every category as Super › Category › Sub, primary first', () => {
+    expect(venueCategoryPaths({ venue_categories: [BADMINTON, HATHA] })).toEqual([
+      'Sports › Racket › Badminton',
+      'Fitness › Yoga › Hatha',
+    ]);
+  });
+
+  it('skips a missing level instead of leaving a dangling separator', () => {
+    expect(venueCategoryPaths({ venue_category: { ...BADMINTON, category_name: '' } })).toEqual(['Sports › Badminton']);
+  });
+
+  it('drops an entry that has ids but no names, and is empty for a venue with no category', () => {
+    expect(venueCategoryPaths({ venue_categories: [{ sub_category_id: 'sub-x' }, HATHA] })).toEqual([
+      'Fitness › Yoga › Hatha',
+    ]);
+    expect(venueCategoryPaths({ venue_category: BLANK })).toEqual([]);
+    expect(venueCategoryPaths(null)).toEqual([]);
+  });
+});
+
+describe('venueCategoryLevelIds', () => {
+  const venue = { venue_categories: [BADMINTON, HATHA, TENNIS] };
+
+  it('lists the distinct ids at a level, primary first', () => {
+    expect(venueCategoryLevelIds(venue, 'sub_category_id')).toEqual(['sub-badminton', 'sub-hatha', 'sub-tennis']);
+    // Badminton and Tennis share a middle Category and a Super: each is listed once.
+    expect(venueCategoryLevelIds(venue, 'category_id')).toEqual(['cat-racket', 'cat-yoga']);
+    expect(venueCategoryLevelIds(venue, 'super_category_id')).toEqual(['sup-sports', 'sup-fitness']);
+  });
+
+  it('skips entries with no id at that level', () => {
+    expect(
+      venueCategoryLevelIds({ venue_categories: [{ ...BADMINTON, category_id: null }, HATHA] }, 'category_id'),
+    ).toEqual(['cat-yoga']);
+  });
+
+  it('falls back to the legacy triple, and is empty with no venue', () => {
+    expect(venueCategoryLevelIds({ venue_category: HATHA }, 'category_id')).toEqual(['cat-yoga']);
+    expect(venueCategoryLevelIds(null, 'category_id')).toEqual([]);
+  });
+});
+
+describe('venueCategoryLabels', () => {
+  it('answers every label, primary first', () => {
+    expect(venueCategoryLabels({ category: 'Badminton', categories: ['Badminton', 'Yoga'] })).toEqual(['Badminton', 'Yoga']);
+  });
+
+  // An answer cached from before the list existed, or a venue the server gave no list for.
+  it('falls back to the lone primary label', () => {
+    expect(venueCategoryLabels({ category: 'Badminton' })).toEqual(['Badminton']);
+    expect(venueCategoryLabels({ category: 'Badminton', categories: [] })).toEqual(['Badminton']);
+    expect(venueCategoryLabels({ category: 'Badminton', categories: null })).toEqual(['Badminton']);
+  });
+
+  it('drops blank labels and is empty for a venue with no category', () => {
+    expect(venueCategoryLabels({ category: 'Badminton', categories: ['', 'Yoga'] })).toEqual(['Yoga']);
+    expect(venueCategoryLabels({ category: '', categories: [''] })).toEqual([]);
+    expect(venueCategoryLabels({})).toEqual([]);
+    expect(venueCategoryLabels(null)).toEqual([]);
+    expect(venueCategoryLabels(undefined)).toEqual([]);
+  });
+});
+
+describe('venueHostsSubCategory', () => {
+  // The case the single-category comparison got wrong: the Auto Pod's sub
+  // category is the venue's SECOND category, so the venue is eligible.
+  it('matches an Auto Pod on the venue’s second category', () => {
+    const venue = { venue_categories: [BADMINTON, HATHA], venue_category: BADMINTON };
+    expect(venueHostsSubCategory(venue, 'sub-hatha')).toBe(true);
+    expect(venueHostsSubCategory(venue, 'sub-badminton')).toBe(true);
+  });
+
+  it('does not match a sub category none of the venue’s categories carries', () => {
+    expect(venueHostsSubCategory({ venue_categories: [BADMINTON, HATHA] }, 'sub-tennis')).toBe(false);
+  });
+
+  it('matches a legacy single-category venue on that category only', () => {
+    expect(venueHostsSubCategory({ venue_category: BADMINTON }, 'sub-badminton')).toBe(true);
+    expect(venueHostsSubCategory({ venue_category: BADMINTON }, 'sub-hatha')).toBe(false);
+  });
+
+  it('is false when either side has no sub category', () => {
+    expect(venueHostsSubCategory({ venue_categories: [BADMINTON] }, '')).toBe(false);
+    expect(venueHostsSubCategory({ venue_categories: [BADMINTON] }, null)).toBe(false);
+    expect(venueHostsSubCategory({ venue_categories: [BADMINTON] })).toBe(false);
+    expect(venueHostsSubCategory({ venue_category: BLANK }, 'sub-badminton')).toBe(false);
+    expect(venueHostsSubCategory(null, 'sub-badminton')).toBe(false);
   });
 });

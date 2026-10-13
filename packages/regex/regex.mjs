@@ -105,6 +105,17 @@ export const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 export const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
 
 /**
+ * A coupon code as it is stored: 3–30 characters of `A-Z`, `0-9`, `-` and `_`,
+ * starting on a letter or digit. The server keeps the same shape for a finance
+ * coupon (finance/coupon `coupon.validator`) and for a venue's food coupon
+ * (venues/venueFood), so whoever types one learns a single rule.
+ *
+ * Case-sensitive on purpose — a code is upper-cased before it is stored or
+ * looked up, so upper-case the input before testing it.
+ */
+export const COUPON_CODE = /^[A-Z0-9][A-Z0-9_-]{2,29}$/;
+
+/**
  * A GA4 measurement id — `G-` and the data stream's alphanumeric suffix
  * (G-XXXXXXXXXX), as Google Analytics → Admin → Data streams shows it. The
  * server checks the same shape before Tech → Google Analytics saves a tag.
@@ -147,6 +158,8 @@ export const isGstin = (v) => GSTIN.test(v);
 export const isPersonName = (v) => PERSON_NAME.test(v);
 /** Referral-code shape check. Case-sensitive: upper-case before calling it. */
 export const isReferralCode = (v) => REFERRAL_CODE.test(v);
+/** Coupon-code shape check. Case-sensitive: upper-case before calling it. */
+export const isCouponCode = (v) => COUPON_CODE.test(v);
 
 /**
  * A Duncit @handle — the thing that stands in for a Mongo id in a profile URL.

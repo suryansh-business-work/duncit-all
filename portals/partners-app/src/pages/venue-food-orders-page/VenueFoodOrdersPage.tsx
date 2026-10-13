@@ -1,10 +1,9 @@
 import { useQuery } from '@apollo/client/react';
-import { Link as RouterLink } from 'react-router';
 import { Alert, Stack } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import StudioPageHeader from '../../components/studio/StudioPageHeader';
+import VenueFoodOffAlert from '../../components/venue/VenueFoodOffAlert';
 import VenueStudioBody from '../../components/venue/VenueStudioBody';
 import VenueFoodOrdersTable from './VenueFoodOrdersTable';
 import { FOOD_ORDER_VENUES } from './queries';
@@ -32,22 +31,11 @@ export default function VenueFoodOrdersPage() {
           venue.offers_food ? (
             <VenueFoodOrdersTable key={venue.id} venueId={venue.id} />
           ) : (
-            <Alert
-              severity="info"
+            <VenueFoodOffAlert
+              venueId={venue.id}
+              message={t('partners.foodOrders.noFood')}
               data-testid="venue-food-orders-no-food"
-              action={
-                <DuncitButton
-                  size="small"
-                  color="inherit"
-                  component={RouterLink}
-                  to={`/register-venue/${venue.id}?selectedtab=type-capacity`}
-                >
-                  {t('partners.foodOrders.editVenue')}
-                </DuncitButton>
-              }
-            >
-              {t('partners.foodOrders.noFood')}
-            </Alert>
+            />
           )
         }
       </VenueStudioBody>

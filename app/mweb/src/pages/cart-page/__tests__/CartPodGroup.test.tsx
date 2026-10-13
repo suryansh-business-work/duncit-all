@@ -66,19 +66,31 @@ describe('CartPodGroup', () => {
   });
 
   it('steps the quantity down and up for the named line', () => {
-    const target = line({ quantity: 1 });
+    const target = line({ quantity: 2 });
     const { onSetQuantity } = renderGroup([target]);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Decrease Alpha Tee' }));
-    expect(onSetQuantity).toHaveBeenLastCalledWith(target, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove one Alpha Tee' }));
+    expect(onSetQuantity).toHaveBeenLastCalledWith(target, 1);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Increase Alpha Tee' }));
-    expect(onSetQuantity).toHaveBeenLastCalledWith(target, 2);
+    fireEvent.click(screen.getByRole('button', { name: 'Add one more Alpha Tee' }));
+    expect(onSetQuantity).toHaveBeenLastCalledWith(target, 3);
+  });
+
+  it('shows a bin instead of the minus on a line of one, which sets it to zero', () => {
+    const target = line({ quantity: 1 });
+    const { onSetQuantity, onRemove } = renderGroup([target]);
+
+    expect(screen.queryByRole('button', { name: 'Remove one Alpha Tee' })).not.toBeInTheDocument();
+    const bin = screen.getByTestId('cart-line-a-dec');
+    expect(bin).toHaveAccessibleName('Remove Alpha Tee');
+    fireEvent.click(bin);
+    expect(onSetQuantity).toHaveBeenLastCalledWith(target, 0);
+    expect(onRemove).not.toHaveBeenCalled();
   });
 
   it('stops increasing at the line’s maximum quantity', () => {
     const { onSetQuantity } = renderGroup([line({ quantity: 3, max_quantity: 3 })]);
-    const increase = screen.getByRole('button', { name: 'Increase Alpha Tee' });
+    const increase = screen.getByRole('button', { name: 'Add one more Alpha Tee' });
     expect(increase).toBeDisabled();
     fireEvent.click(increase);
     expect(onSetQuantity).not.toHaveBeenCalled();

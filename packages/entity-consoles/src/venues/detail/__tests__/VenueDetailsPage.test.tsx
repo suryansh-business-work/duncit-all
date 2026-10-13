@@ -8,35 +8,7 @@ import { RECORD_PODS_TABLE } from '../../../shared/recordPods';
 import { ENTITY_CHANGE_LOGS_TABLE } from '../../../shared/change-logs/queries';
 import { VENUE_DETAIL, type AdminVenueDetail } from '../queries';
 import VenueDetailsPage from '../VenueDetailsPage';
-import { makeVenue, missing } from './fixtures';
-
-/** The fixture venue as the server sends it — every object carries its typename. */
-const venuePayload = (venue: AdminVenueDetail) => {
-  const { settings } = venue;
-  return {
-    ...venue,
-    __typename: 'Venue',
-    capacity_items: venue.capacity_items.map((item) => ({ ...item, __typename: 'VenueCapacityItem' })),
-    food_menu: venue.food_menu.map((item) => ({ ...item, __typename: 'VenueFoodItem' })),
-    food_ordering: { ...venue.food_ordering, __typename: 'VenueFoodOrdering' },
-    venue_category: { ...venue.venue_category, __typename: 'VenueCategory' },
-    bank_account: { ...venue.bank_account, __typename: 'VenueBankAccount' },
-    settings: {
-      ...settings,
-      __typename: 'VenueSettings',
-      operating_hours: { ...settings.operating_hours, __typename: 'VenueOperatingHours' },
-      rules: { ...settings.rules, __typename: 'VenueRules' },
-      auto_extend: { ...settings.auto_extend, __typename: 'VenueAutoExtend' },
-      cancellation: {
-        ...settings.cancellation,
-        __typename: 'VenueCancellation',
-        tiers: settings.cancellation.tiers.map((tier) => ({ ...tier, __typename: 'VenueCancellationTier' })),
-        refund_tiers: settings.cancellation.refund_tiers.map((tier) => ({ ...tier, __typename: 'VenueRefundTier' })),
-      },
-    },
-    documents: venue.documents?.map((doc) => ({ ...doc, __typename: 'VenueDocument' })) ?? null,
-  };
-};
+import { makeVenue, missing, venuePayload } from './fixtures';
 
 const detailMock = (venue: AdminVenueDetail | null): MockedResponse => ({
   request: { query: VENUE_DETAIL, variables: { venue_doc_id: 'venue-1' } },

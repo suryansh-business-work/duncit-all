@@ -4,13 +4,18 @@ import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
 import { Controller, type Control } from 'react-hook-form';
 import SectionCard from '../../detail/SectionCard';
-import HolidaysField from '../fields/HolidaysField';
+import ChipMultiSelect from '../fields/ChipMultiSelect';
 import RhfDateField from '../fields/RhfDateField';
 import WeeklyOffField from '../fields/WeeklyOffField';
 import type { VenueFormValues } from '../types';
+import { sectionAnchor } from './venue-editor-sections';
 
 /**
- * How the venue operates: its window, its closures and its booking rules.
+ * How the venue operates: its window, its weekly closures and its booking
+ * rules — the first of the staff-only sections, after the eight the owner's
+ * registration form has. (The closed DATES are `LeavesSection`, where the
+ * owner's form keeps them.) The internal search tags sit at the foot: they are
+ * staff's own, and an owner never sees them.
  *
  * The same values the owner edits in the Partners console, written through the
  * same `updateVenueSettings` mutation — so an admin sees exactly what the owner
@@ -54,6 +59,7 @@ export default function OperationsSection({
 
   return (
     <SectionCard
+      id={sectionAnchor('operations')}
       icon={<ScheduleIcon color="primary" />}
       title={t('directory.venueEditor.operations')}
     >
@@ -81,8 +87,6 @@ export default function OperationsSection({
             <WeeklyOffField control={control} />
           </Grid>
         </Grid>
-
-        <HolidaysField control={control} />
 
         <Divider />
         <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
@@ -154,6 +158,16 @@ export default function OperationsSection({
             />
           </Grid>
         </Grid>
+
+        <Divider />
+        <ChipMultiSelect
+          control={control}
+          name="tags"
+          label={t('directory.venueEditor.tags')}
+          options={[]}
+          freeSolo
+          hint={t('directory.venueEditor.tagsHint')}
+        />
       </Stack>
     </SectionCard>
   );

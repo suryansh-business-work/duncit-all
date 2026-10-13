@@ -3,6 +3,7 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from '@duncit/shell';
+import { venueCategoryLabels } from '@duncit/utils';
 import PodRequestStatusChip from '../PodRequestStatusChip';
 import type { PodRequestDetail } from '../queries';
 
@@ -35,7 +36,7 @@ function useSummary(request: PodRequestDetail): Summary {
     image: venue?.cover_image_url ?? '',
     name: venue?.venue_name ?? '',
     lines: [
-      [venue?.category, venue?.venue_type].filter(Boolean).join(' · '),
+      [venueCategoryLabels(venue).join(', '), venue?.venue_type].filter(Boolean).join(' · '),
       venue?.capacity ? t('podRequests.capacity', { vars: { count: venue.capacity } }) : '',
       [venue?.locality, venue?.city].filter(Boolean).join(', '),
       distance,

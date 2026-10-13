@@ -167,6 +167,9 @@ export default function ProductDetailPage() {
       <ProductReviews productId={product.id} />
       {pod ? (
         <ProductBuyBar
+          // One bar per cart line: another variant is another line, not this one emptied.
+          key={`${pod.pod_id}:${lineKey}`}
+          name={product.product_name}
           price={formatRupees(price)}
           quantity={lineQuantity}
           maxQuantity={pod.available_count}

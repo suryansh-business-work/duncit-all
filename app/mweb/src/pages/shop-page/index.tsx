@@ -31,7 +31,7 @@ export default function ShopPage() {
     { fetchPolicy: 'cache-and-network' },
   );
   const { all, matchesCategory } = useSearchCategories();
-  const { addingId, add } = useQuickAddToCart();
+  const { addingId, lineOf, setQuantity } = useQuickAddToCart();
   const products = useMemo<ShopProduct[]>(() => data?.availablePodProducts ?? [], [data]);
   const filters = useShopFilters(all, products, matchesCategory);
   useEffect(() => {
@@ -83,16 +83,21 @@ export default function ShopPage() {
               gap: 1.5,
             }}
           >
-            {filters.visible.map((product) => (
-              <ShopProductCard
-                key={product.id}
-                product={product}
-                priceFormat={priceFormat}
-                adding={addingId === product.id}
-                onOpen={(id) => navigate(`/product/${id}`)}
-                onQuickAdd={add}
-              />
-            ))}
+            {filters.visible.map((product) => {
+              const line = lineOf(product.id);
+              return (
+                <ShopProductCard
+                  key={product.id}
+                  product={product}
+                  priceFormat={priceFormat}
+                  quantity={line?.quantity ?? 0}
+                  max={line?.max_quantity ?? product.pod_available_count}
+                  busy={addingId === product.id}
+                  onOpen={(id) => navigate(`/product/${id}`)}
+                  onQuantity={setQuantity}
+                />
+              );
+            })}
           </Box>
         </Stack>
       )}

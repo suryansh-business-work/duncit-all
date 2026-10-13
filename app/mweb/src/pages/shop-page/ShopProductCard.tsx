@@ -1,24 +1,23 @@
-import {
-  Box,
-  Card,
-  CardActionArea,
-  Chip,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardActionArea, Chip, Stack, Typography } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import { DuncitIconButton } from '@duncit/buttons';
+import { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from '@duncit/ui';
 import type { ShopProduct } from './queries';
+import { useCartControlLabels } from '../../components/cart/useCartControlLabels';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   product: ShopProduct;
   priceFormat: (amount: number) => string;
-  adding: boolean;
+  /** How many of this product the cart's quick-add line holds; 0 when it has none. */
+  quantity: number;
+  /** The most that line may hold — its pod's stock. */
+  max: number;
+  /** The quick-add is looking the pod up: taps wait. */
+  busy: boolean;
   onOpen: (id: string) => void;
-  onQuickAdd: (product: ShopProduct) => void;
+  /** The quantity one step away; 0 takes the product out of the cart. */
+  onQuantity: (product: ShopProduct, next: number) => void;
 }
 
 const NAME_SX = {
@@ -31,40 +30,46 @@ const NAME_SX = {
   overflow: 'hidden',
 } as const;
 
-/** The round green "+" that quick-adds — pinned to the card's bottom-right,
- * outside the tappable area so a button never sits inside a button. */
-const ADD_SX = {
+/** The card's padding, which is also how far the photo sits from its edges. */
+const inset = (theme: Theme) => theme.spacing(1);
+
+/** Lies exactly over the photo without being inside the tappable area, so the
+ * cart control never sits inside a button. Only the control takes taps. */
+const PHOTO_OVERLAY_SX = {
   position: 'absolute',
-  right: 8,
-  bottom: 8,
-  width: 36,
-  height: 36,
-  minHeight: 36,
-  bgcolor: 'primary.main',
-  color: 'primary.contrastText',
-  '&:hover': { bgcolor: 'primary.dark' },
-  '&.Mui-disabled': { bgcolor: 'primary.main', color: 'primary.contrastText' },
+  top: inset,
+  left: inset,
+  right: inset,
+  aspectRatio: '1 / 1',
+  pointerEvents: 'none',
 } as const;
+
+/** The photo's bottom-right corner: the pill opens leftwards from the "+". */
+const CONTROL_SX = { position: 'absolute', right: inset, bottom: inset, pointerEvents: 'auto' } as const;
 
 /** One product tile in the Pod Shop browse grid — image, name, price and (when
  * reviewed) an average-rating chip. Tapping opens the full product detail page;
- * the corner button quick-adds to cart via the cheapest pod (with a light
- * haptic where supported). */
+ * the control on the photo quick-adds via the cheapest pod (with a light
+ * haptic where supported), then steps or removes that same cart line. */
 export default function ShopProductCard({
   product,
   priceFormat,
-  adding,
+  quantity,
+  max,
+  busy,
   onOpen,
-  onQuickAdd,
+  onQuantity,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const labels = useCartControlLabels()(product.product_name);
+  const notice = useCartControlNotice(quantity);
   const imageUrl = product.image_url || product.images?.[0] || '';
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
   const outOfStock = product.pod_available_count <= 0;
-  const quickAdd = () => {
-    globalThis.navigator?.vibrate?.(8);
-    onQuickAdd(product);
+  const change = (next: number) => {
+    if (next > quantity) globalThis.navigator?.vibrate?.(8);
+    onQuantity(product, next);
   };
   return (
     <Card data-testid={`shop-product-${product.id}`} sx={{ position: 'relative', overflow: 'hidden' }}>
@@ -97,15 +102,12 @@ export default function ShopProductCard({
               </Typography>
             </Stack>
           )}
-          <Typography
-            data-testid={`shop-product-price-${product.id}`}
-            sx={{ fontSize: '1rem', fontWeight: 700, pt: 0.5, pr: 5, minHeight: 36, display: 'flex', alignItems: 'center' }}
-          >
+          <Typography data-testid={`shop-product-price-${product.id}`} sx={{ fontSize: '1rem', fontWeight: 700, pt: 0.5 }}>
             {priceFormat(product.unit_cost)}
           </Typography>
         </Stack>
       </CardActionArea>
-      {outOfStock ? (
+      {outOfStock && (
         <Chip
           data-testid={`shop-product-oos-${product.id}`}
           label={t('mweb.shop.outOfStock')}
@@ -121,22 +123,22 @@ export default function ShopProductCard({
             color: 'common.white',
           }}
         />
-      ) : (
-        <DuncitIconButton
-          data-testid={`shop-product-add-${product.id}`}
-          aria-label={`Add ${product.product_name} to cart`}
-          disabled={adding}
-          onClick={quickAdd}
-          size="small"
-          sx={ADD_SX}
-        >
-          {adding ? (
-            <CircularProgress size={16} sx={{ color: 'primary.contrastText' }} />
-          ) : (
-            <AddRoundedIcon sx={{ fontSize: 22 }} />
-          )}
-        </DuncitIconButton>
       )}
+      <Box sx={PHOTO_OVERLAY_SX}>
+        <CartControlNoticeChip notice={notice} labels={labels} testId={`shop-product-${product.id}-notice`} />
+        {/* Sold out takes the "+" away, but what is already in the cart can still be taken out. */}
+        {(!outOfStock || quantity > 0) && (
+          <CartQuantityControl
+            quantity={quantity}
+            max={max}
+            labels={labels}
+            onChange={change}
+            busy={busy}
+            testIdPrefix={`shop-product-${product.id}`}
+            sx={CONTROL_SX}
+          />
+        )}
+      </Box>
     </Card>
   );
 }

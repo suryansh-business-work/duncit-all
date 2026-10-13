@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import TravelExploreRoundedIcon from '@mui/icons-material/TravelExploreRounded';
+import { venueCategoryLabels } from '@duncit/utils';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import { MY_POD_PARTNER_REQUESTS } from '../pod-requests/queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -21,7 +22,7 @@ const toItem = (venue: NearbyVenueRow): NearbyItem => ({
   kind: 'VENUE',
   name: venue.venue_name,
   imageUrl: venue.cover_image_url,
-  category: venue.category,
+  category: venueCategoryLabels(venue).join(' · '),
   place: [venue.locality, venue.city].filter(Boolean).join(', '),
   distanceKm: venue.distance_km,
   openStatus: venue.open_request_status,

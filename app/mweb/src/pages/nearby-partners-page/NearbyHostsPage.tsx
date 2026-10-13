@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import PersonSearchRoundedIcon from '@mui/icons-material/PersonSearchRounded';
+import { venueCategoryLevelIds } from '@duncit/utils';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
 import { MY_POD_PARTNER_REQUESTS } from '../pod-requests/queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -30,7 +31,7 @@ const toItem = (host: NearbyHostRow): NearbyItem => ({
 /**
  * Venue Studio → Search Nearby Hosts: approved hosts around the header's
  * location, for one of the owner's approved venues, filtered to the venue's
- * category to start. "Request Pod" sends a VENUE_TO_HOST request.
+ * categories — every one it has, not the primary alone — to start. "Request Pod" sends a VENUE_TO_HOST request.
  */
 export default function NearbyHostsPage() {
   const { t } = useTranslation();
@@ -41,8 +42,9 @@ export default function NearbyHostsPage() {
   );
   const { venue, selectVenue } = useSelectedVenue(venues);
   const venueId = venue?.id ?? '';
-  const venueCategory = venue?.venue_category.category_id ?? '';
-  const defaults = useMemo(() => (venueCategory ? [venueCategory] : []), [venueCategory]);
+  // Joined to a string so the default filter only changes when the ids do, not on every refetch.
+  const venueCategories = venueCategoryLevelIds(venue, 'category_id').join(',');
+  const defaults = useMemo(() => (venueCategories ? venueCategories.split(',') : []), [venueCategories]);
   const state = useNearbySearch(defaults);
 
   const hostsQuery = useQuery(NEARBY_HOSTS_FOR_VENUE, {

@@ -1,73 +1,48 @@
 import { Stack, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from '@duncit/ui';
+import { useCartControlLabels } from '../../components/cart/useCartControlLabels';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
+  /** The product, for the control's accessible names. */
+  name: string;
   quantity: number;
   maxQuantity: number;
   onUpdate: (quantity: number) => void;
 }
 
-/** In-dialog cart control for the product sheet: add the product, adjust its
- * quantity (clamped to available stock), or remove it from the selection. */
-export default function ProductQuantityBar({ quantity, maxQuantity, onUpdate }: Readonly<Props>) {
+/** The notice sits just above the control instead of over a photo: this bar has none. */
+const NOTICE_SX = { top: 'auto', bottom: '100%', left: 'auto', right: 0, transform: 'none', mb: 1 } as const;
+
+/** The product sheet's and the product page's cart control: the same "+" that
+ * becomes the remove / count / add pill on every product card, held at the
+ * bar's end, with a plain "Out of stock" beside it when there is none to sell.
+ * Mount it per cart line (`key`) — a different variant is a different line,
+ * not this one's quantity changing. */
+export default function ProductQuantityBar({ name, quantity, maxQuantity, onUpdate }: Readonly<Props>) {
   const { t } = useTranslation();
-  if (quantity <= 0) {
-    const outOfStock = maxQuantity <= 0;
-    return (
-      <DuncitButton
-        variant="contained"
-        fullWidth
-        startIcon={<AddShoppingCartIcon />}
-        disabled={outOfStock}
-        onClick={() => onUpdate(1)}
-        data-testid="product-detail-add"
-      >
-        {outOfStock ? 'Out of stock' : 'Add to selection'}
-      </DuncitButton>
-    );
-  }
+  const labels = useCartControlLabels()(name);
+  const notice = useCartControlNotice(quantity);
   return (
     <Stack
       direction="row"
+      spacing={1.5}
       data-testid="product-quantity-bar"
-      sx={{
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: '100%'
-      }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <DuncitIconButton
-          aria-label={t('mweb.podDetails.decreaseQuantity')}
-          onClick={() => onUpdate(quantity - 1)}
-          data-testid="product-detail-dec"
-        >
-          <RemoveIcon />
-        </DuncitIconButton>
-        <Typography data-testid="product-detail-qty" sx={{ fontWeight: 700, minWidth: 24, textAlign: 'center' }}>{quantity}</Typography>
-        <DuncitIconButton
-          aria-label={t('mweb.podDetails.increaseQuantity')}
-          disabled={quantity >= maxQuantity}
-          onClick={() => onUpdate(Math.min(maxQuantity, quantity + 1))}
-          data-testid="product-detail-inc"
-        >
-          <AddIcon />
-        </DuncitIconButton>
-      </Stack>
-      <DuncitButton
-        color="error"
-        startIcon={<DeleteOutlineIcon />}
-        onClick={() => onUpdate(0)}
-        data-testid="product-detail-remove"
-      >
-        Remove
-      </DuncitButton>
+      sx={{ position: 'relative', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}
+    >
+      <CartControlNoticeChip notice={notice} labels={labels} testId="product-detail-notice" sx={NOTICE_SX} />
+      {maxQuantity <= 0 && quantity <= 0 && (
+        <Typography variant="body2" sx={{ color: 'text.secondary' }} data-testid="product-detail-out-of-stock">
+          {t('mweb.shop.outOfStock')}
+        </Typography>
+      )}
+      <CartQuantityControl
+        quantity={quantity}
+        max={maxQuantity}
+        labels={labels}
+        onChange={onUpdate}
+        testIdPrefix="product-detail"
+      />
     </Stack>
   );
 }

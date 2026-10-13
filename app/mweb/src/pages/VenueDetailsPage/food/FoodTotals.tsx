@@ -6,6 +6,8 @@ interface Props {
   subtotal: number;
   discount: number;
   discountPct: number;
+  /** The venue's coupon and what it took off — after the discount above it. */
+  coupon?: { code: string; pct: number; amount: number } | null;
   total: number;
   currency: string;
   testId: string;
@@ -25,11 +27,11 @@ function Row({ label, value, strong, testId }: Readonly<{ label: string; value: 
 }
 
 /**
- * Subtotal, the QR-order discount when there is one, and the total — the same
- * three lines on the cart (where they follow the steppers, so the block is a
+ * Subtotal, the QR-order discount and the coupon when there is one, and the
+ * total — the same lines on the cart (where they follow the steppers, so the block is a
  * live region) and on the placed order.
  */
-export default function FoodTotals({ subtotal, discount, discountPct, total, currency, testId }: Readonly<Props>) {
+export default function FoodTotals({ subtotal, discount, discountPct, coupon, total, currency, testId }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = (amount: number) => formatFoodMoney(amount, currency);
   return (
@@ -40,6 +42,13 @@ export default function FoodTotals({ subtotal, discount, discountPct, total, cur
           label={t('mweb.venueFood.cart.discount', { vars: { pct: String(discountPct) } })}
           value={`− ${money(discount)}`}
           testId={`${testId}-discount`}
+        />
+      )}
+      {coupon && (
+        <Row
+          label={t('mweb.venueFood.cart.couponLine', { vars: { code: coupon.code, pct: String(coupon.pct) } })}
+          value={`− ${money(coupon.amount)}`}
+          testId={`${testId}-coupon`}
         />
       )}
       <Divider />

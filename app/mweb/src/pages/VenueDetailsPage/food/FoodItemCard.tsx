@@ -1,11 +1,11 @@
 import { Box, ButtonBase, Chip, Stack, Typography } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/RestaurantRounded';
-import { DuncitButton } from '@duncit/buttons';
-import { formatFoodMoney, type VenueFoodItem } from '@duncit/utils';
+import { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from '@duncit/ui';
+import { FOOD_ORDER_LIMITS, formatFoodMoney, type VenueFoodItem } from '@duncit/utils';
+import { useCartControlLabels } from '../../../components/cart/useCartControlLabels';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { RADIUS, SURFACE_SX } from '../../../theme';
 import DietMark from './DietMark';
-import QuantityStepper from './QuantityStepper';
 import SpiceMark from './SpiceMark';
 
 interface Props {
@@ -59,46 +59,30 @@ function Thumb({ item, onOpenImage }: Readonly<Pick<Props, 'item' | 'onOpenImage
 
 /**
  * One dish: its diet and heat marks, name, price and description on the left,
- * its photo on the right, and — when the venue takes QR orders — Add, which
- * becomes the − quantity + stepper. A dish that is off for now stays on the
- * menu, greyed and labelled, and cannot be added.
+ * its photo on the right, and — when the venue takes QR orders — the cart
+ * control under the photo: a "+" that becomes the remove / count / add pill.
+ * The "Item added" / "Item removed" notice lies on the card, the photo being
+ * too small to hold it. A dish that is off for now stays on the menu, greyed
+ * and labelled, and cannot be added.
  */
 export default function FoodItemCard({ item, currency, canOrder, quantity, onQuantity, onOpenImage }: Readonly<Props>) {
   const { t } = useTranslation();
+  const labels = useCartControlLabels()(item.name);
+  // The cart is read from storage before the first render, so a dish already
+  // in it mounts with its quantity and raises no notice.
+  const notice = useCartControlNotice(quantity);
   const available = item.is_available;
   const dim = available ? undefined : { opacity: 0.55 };
-
-  let action = null;
-  if (canOrder && available) {
-    action =
-      quantity > 0 ? (
-        <QuantityStepper
-          name={item.name}
-          quantity={quantity}
-          onChange={(next) => onQuantity(item.id, next)}
-          testId={`food-item-stepper-${item.id}`}
-        />
-      ) : (
-        <DuncitButton
-          variant="outlined"
-          size="small"
-          aria-label={t('mweb.venueFood.addItem', { vars: { name: item.name } })}
-          onClick={() => onQuantity(item.id, 1)}
-          data-testid={`food-item-add-${item.id}`}
-        >
-          {t('mweb.venueFood.add')}
-        </DuncitButton>
-      );
-  }
 
   return (
     <Stack
       component="li"
       direction="row"
       spacing={1.5}
-      sx={{ ...SURFACE_SX, p: 1.5, alignItems: 'flex-start' }}
+      sx={{ ...SURFACE_SX, position: 'relative', p: 1.5, alignItems: 'flex-start' }}
       data-testid={`food-item-${item.id}`}
     >
+      <CartControlNoticeChip notice={notice} labels={labels} testId={`food-item-${item.id}-notice`} />
       <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', ...dim }}>
           <DietMark diet={item.diet} />
@@ -128,7 +112,16 @@ export default function FoodItemCard({ item, currency, canOrder, quantity, onQua
         <Box sx={dim}>
           <Thumb item={item} onOpenImage={onOpenImage} />
         </Box>
-        {action}
+        {canOrder && available && (
+          <CartQuantityControl
+            size="small"
+            quantity={quantity}
+            max={FOOD_ORDER_LIMITS.maxQuantity}
+            labels={labels}
+            onChange={(next) => onQuantity(item.id, next)}
+            testIdPrefix={`food-item-${item.id}`}
+          />
+        )}
       </Stack>
     </Stack>
   );

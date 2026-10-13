@@ -8,7 +8,7 @@ import {
   type RazorpayKeys,
 } from '@modules/finance/payment/razorpay.gateway';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
-import { VenueModel, type IVenueFoodItem } from '@modules/venues/venue/venue.model';
+import { VenueModel, type IVenue, type IVenueFoodItem } from '@modules/venues/venue/venue.model';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -42,6 +42,7 @@ import {
   text,
   toFoodOrderPub,
 } from './venueFoodOrder.shared';
+import { whatsappFoodOrderCancelled, whatsappFoodOrderStatus } from './venueFoodOrder.whatsapp';
 
 /**
  * Scan-and-order at a venue. A guest — signed in or not — picks dishes on the
@@ -85,6 +86,8 @@ export interface PlaceFoodOrderInput {
   note?: string | null;
   /** A coupon of this venue. A different code is a different checkout attempt, so it needs its own `client_key`. */
   coupon_code?: string | null;
+  /** The guest asked to hear about this venue's events. Acted on once the order is paid. */
+  subscribe_events?: boolean | null;
   client_key: string;
 }
 
@@ -106,13 +109,20 @@ export interface VerifyFoodOrderInput {
 /** A venue that can be ordered from right now: live, serving food, ordering on, an account to be paid on. */
 async function orderableVenue(venueId: Types.ObjectId) {
   const venue = await VenueModel.findById(venueId).select(
-    'venue_name status is_active offers_food food_menu food_ordering'
+    'venue_name status is_active offers_food food_menu food_ordering gstin address_line1 address_line2 locality city state postal_code'
   );
   if (!venue || venue.status !== 'APPROVED' || venue.is_active === false) return fail('NOT_FOUND', 'Venue not found');
   const ordering = venue.food_ordering;
   if (!venue.offers_food || !ordering?.enabled || !ordering.razorpay_integration_id) return orderingClosed();
   return { venue, integrationId: ordering.razorpay_integration_id, discountPct: ordering.discount_pct ?? 0 };
 }
+
+/** The venue's address on one line, as its invoice prints it. */
+const invoiceAddress = (venue: Pick<IVenue, 'address_line1' | 'address_line2' | 'locality' | 'city' | 'state' | 'postal_code'>) =>
+  [venue.address_line1, venue.address_line2, venue.locality, venue.city, venue.state, venue.postal_code]
+    .map((part) => text(part))
+    .filter(Boolean)
+    .join(', ');
 
 function cleanCustomer(input: PlaceFoodOrderInput) {
   const name = text(input.customer_name);
@@ -282,6 +292,9 @@ export const venueFoodOrderService = {
         order_no: await nextEntityNo('FOOD', 'venue_food_order'),
         venue_id: venueId,
         venue_name: venue.venue_name,
+        venue_gstin: text(venue.gstin),
+        venue_address: invoiceAddress(venue),
+        subscribe_events: input.subscribe_events === true,
         user_id: userId,
         ...customer,
         lines,
@@ -385,10 +398,12 @@ export const venueFoodOrderService = {
     if (next <= FLOW.indexOf(order.status)) fail('BAD_REQUEST', 'An order can only move forward');
     const moved = await VenueFoodOrderModel.findOneAndUpdate(
       { _id: order._id, status: order.status, payment_status: 'PAID' },
-      { $set: { status } },
+      { $set: { status, ...(status === 'SERVED' ? { served_at: new Date() } : {}) } },
       { new: true }
     );
     if (!moved) return fail('CONFLICT', 'This order was just updated — refresh and try again');
+    // That write matched once, so the guest is told once. Best effort — it never fails the move.
+    await whatsappFoodOrderStatus(moved);
     return toFoodOrderPub(moved);
   },
 
@@ -415,6 +430,7 @@ export const venueFoodOrderService = {
     } catch (error) {
       logs.server.warn(FOOD_LOG, 'refund', { error, orderNo: cancelled.order_no, msg: 'refund deferred to the sweep' });
     }
+    await whatsappFoodOrderCancelled(cancelled);
     const fresh = await VenueFoodOrderModel.findById(cancelled._id);
     return toFoodOrderPub(fresh ?? cancelled);
   },

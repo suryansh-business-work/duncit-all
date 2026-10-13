@@ -27,12 +27,32 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     line_total: Float!
   }
 
+  "What a guest said about a served order. Written once."
+  type VenueFoodFeedback {
+    "1 to 5."
+    rating: Int!
+    comment: String!
+    images: [String!]!
+    submitted_at: String!
+  }
+
   "A food order placed by scanning a venue's QR. Paid to the venue's own Razorpay account."
   type VenueFoodOrder {
     id: ID!
     order_no: String!
     venue_id: ID!
     venue_name: String!
+    "The venue's GST number as it was when the order was placed; empty when the venue has none."
+    venue_gstin: String!
+    "The venue's address as its invoice prints it."
+    venue_address: String!
+    "True once the money has arrived — the invoice can be downloaded."
+    invoice_available: Boolean!
+    served_at: String
+    "The guest asked, at checkout, to hear about this venue's events."
+    subscribe_events: Boolean!
+    "Null until the guest rates the order."
+    feedback: VenueFoodFeedback
     customer_name: String!
     customer_phone: String!
     table_label: String!
@@ -203,8 +223,81 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     note: String
     "A coupon of this venue. Applying, changing or removing it is a new checkout attempt and needs a new client_key."
     coupon_code: String
+    "The guest ticked 'tell me about events here'. They are subscribed once the order is paid."
+    subscribe_events: Boolean
     "Minted once per checkout attempt (crypto.randomUUID). Repeating it returns the same order."
     client_key: String!
+  }
+
+  input SubmitVenueFoodFeedbackInput {
+    order_id: ID!
+    access_key: String
+    "A whole number from 1 to 5."
+    rating: Int!
+    "Up to 500 characters."
+    comment: String
+    "Up to 3 photos, each uploaded with a pass from venueFoodFeedbackUploadPass."
+    images: [String!]
+  }
+
+  type VenueFoodStatusCount {
+    status: VenueFoodOrderStatus!
+    count: Int!
+  }
+
+  type VenueFoodTopItem {
+    name: String!
+    quantity: Int!
+    revenue: Float!
+  }
+
+  type VenueFoodDailyPoint {
+    "yyyy-mm-dd in the configured time zone."
+    date: String!
+    orders: Int!
+    revenue: Float!
+  }
+
+  type VenueFoodFeedbackRow {
+    order_no: String!
+    customer_name: String!
+    rating: Int!
+    comment: String!
+    images: [String!]!
+    submitted_at: String!
+  }
+
+  "A venue's food numbers over a window. Money is in rupees; revenue leaves out cancelled orders."
+  type VenueFoodStats {
+    "The window in days; 0 is all time."
+    days: Int!
+    currency_symbol: String!
+    "Paid orders placed in the window, cancelled ones included."
+    orders: Int!
+    revenue: Float!
+    average_order: Float!
+    "What the automatic discount and the coupons took off, together."
+    discount_given: Float!
+    coupon_orders: Int!
+    served: Int!
+    cancelled: Int!
+    refunded: Float!
+    invoice_downloads: Int!
+    "Orders whose guest asked to hear about events."
+    subscribe_opt_ins: Int!
+    "People currently subscribed to this venue's events."
+    subscribers: Int!
+    "Scans of the venue page link (the A4 poster) in the window."
+    page_scans: Int!
+    "Scans of the table label link in the window."
+    table_scans: Int!
+    feedback_count: Int!
+    "0 when nobody has rated yet; otherwise 1.0 to 5.0."
+    average_rating: Float!
+    status_counts: [VenueFoodStatusCount!]!
+    top_items: [VenueFoodTopItem!]!
+    daily: [VenueFoodDailyPoint!]!
+    recent_feedback: [VenueFoodFeedbackRow!]!
   }
 
   input VerifyVenueFoodOrderInput {
@@ -224,6 +317,10 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     previewVenueFoodCoupon(input: PreviewVenueFoodCouponInput!): VenueFoodCouponPreview!
     "Venue owner / venues console: the food coupons of one venue."
     venueFoodCouponsTable(venue_id: ID!, query: TableQueryInput): VenueFoodCouponTablePage!
+    "Public: the invoice of a paid order as a base64 PDF, for whoever holds its access key (or the account that placed it)."
+    venueFoodOrderInvoicePdfBase64(order_id: ID!, access_key: String): String!
+    "Venue owner / venues console: the food dashboard of one venue. days 0 = all time."
+    venueFoodStats(venue_id: ID!, days: Int): VenueFoodStats!
   }
 
   extend type Mutation {
@@ -231,6 +328,10 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     placeVenueFoodOrder(input: PlaceVenueFoodOrderInput!): VenueFoodOrderPlacement!
     "Public: confirm the Razorpay payment of an order."
     verifyVenueFoodOrderPayment(input: VerifyVenueFoodOrderInput!): VenueFoodOrder!
+    "Public: a one-shot pass to upload one feedback photo for a served, not yet rated order."
+    venueFoodFeedbackUploadPass(order_id: ID!, access_key: String): ImagekitAuth!
+    "Public: rate a served order. Once per order."
+    submitVenueFoodFeedback(input: SubmitVenueFoodFeedbackInput!): VenueFoodOrder!
     "Venue owner / venues console: move a paid order forward."
     setVenueFoodOrderStatus(order_id: ID!, status: VenueFoodOrderStatus!): VenueFoodOrder!
     "Venue owner / venues console: cancel a paid order and refund it in full."

@@ -17,6 +17,11 @@ export const publicPageResolvers = {
       args: PageArgs & { copy: PosterCopy },
       ctx: GraphQLContext,
     ) => publicPageService.posterPdfBase64(requireAuth(ctx), args.kind, args.ref_id, args.copy),
+    myVenueTableLabelPdfBase64: (
+      _p: unknown,
+      args: { venue_id: string; headline: string },
+      ctx: GraphQLContext,
+    ) => publicPageService.tableLabelPdfBase64(requireAuth(ctx), args.venue_id, args.headline),
   },
   Mutation: {
     publishPublicPage: (_p: unknown, args: PageArgs, ctx: GraphQLContext) =>

@@ -17,6 +17,8 @@ export const publicPageTypeDefs = /* GraphQL */ `
   "A page's link and how it is doing — only ever the caller's own page."
   type PublicPageInsights {
     published: Boolean!
+    "The page also shows a food menu: the poster says 'Menu & pods', and a table label opens the menu."
+    offers_food: Boolean!
     link: PublicPageLink
     stats: ShortLinkStats
     funnel: ShortLinkFunnel
@@ -37,6 +39,8 @@ export const publicPageTypeDefs = /* GraphQL */ `
       ref_id: ID
       copy: PublicPagePosterCopy!
     ): String!
+    "A venue's printable table label — the scan panel with the venue's name under it — base64-encoded. headline is printed as given, in the owner's language."
+    myVenueTableLabelPdfBase64(venue_id: ID!, headline: String!): String!
   }
 
   extend type Mutation {

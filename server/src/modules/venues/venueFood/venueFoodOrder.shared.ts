@@ -62,11 +62,34 @@ export const rupees = (paise: number) => paise / 100;
 
 export const iso = (date: Date | null | undefined) => (date ? date.toISOString() : null);
 
+/** The order's money arrived at some point — it is on the board and it has an invoice. */
+export const FOOD_PAID_STATUSES = ['PAID', 'REFUND_PENDING', 'REFUNDED'] as const;
+
+export const hasFoodInvoice = (order: Pick<IVenueFoodOrder, 'payment_status'>) =>
+  (FOOD_PAID_STATUSES as readonly string[]).includes(order.payment_status);
+
+const toFoodFeedbackPub = (feedback: IVenueFoodOrder['feedback']) =>
+  feedback?.submitted_at
+    ? {
+        rating: feedback.rating,
+        comment: feedback.comment ?? '',
+        images: feedback.images ?? [],
+        submitted_at: feedback.submitted_at.toISOString(),
+      }
+    : null;
+
 export const toFoodOrderPub = (order: IVenueFoodOrder) => ({
   id: order._id.toHexString(),
   order_no: order.order_no,
   venue_id: order.venue_id.toHexString(),
   venue_name: order.venue_name ?? '',
+  // An order placed before invoices existed carries neither.
+  venue_gstin: order.venue_gstin ?? '',
+  venue_address: order.venue_address ?? '',
+  invoice_available: hasFoodInvoice(order),
+  served_at: iso(order.served_at),
+  subscribe_events: order.subscribe_events === true,
+  feedback: toFoodFeedbackPub(order.feedback),
   customer_name: order.customer_name,
   customer_phone: order.customer_phone,
   table_label: order.table_label ?? '',

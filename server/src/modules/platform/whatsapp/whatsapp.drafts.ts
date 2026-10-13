@@ -339,6 +339,94 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Aarav, you blocked Rohan Mehta on Duncit. They can no longer follow you or see your posts, and they have not been told. ' +
       'You can unblock them from their profile at any time. — Team Duncit',
   },
+  /*
+   * Venue food orders — a guest scans the venue QR, orders and pays the venue.
+   * The guest's links open their own order page (status, invoice, rating); the
+   * owner's open the order board in the Partner console.
+   */
+  VENUE_FOOD_ORDER_PLACED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your food order {{2}} at {{3}} is confirmed and paid ({{4}}). ' +
+      'Track it and download your invoice here: {{5}} — Team Duncit',
+    sample:
+      'Hi Aarav, your food order FOOD-000005 at Dek Cafe is confirmed and paid (Rs 430.20). ' +
+      'Track it and download your invoice here: https://mweb.duncit.com/venue/66f0a1/food-order/66f0b2 — Team Duncit',
+  },
+  VENUE_FOOD_ORDER_READY: {
+    category: 'UTILITY',
+    language: 'English',
+    body: 'Hi {{1}}, your food order {{2}} at {{3}} is ready. See your order: {{4}} — Team Duncit',
+    sample:
+      'Hi Aarav, your food order FOOD-000005 at Dek Cafe is ready. ' +
+      'See your order: https://mweb.duncit.com/venue/66f0a1/food-order/66f0b2 — Team Duncit',
+  },
+  VENUE_FOOD_ORDER_SERVED: {
+    // UTILITY: it reaches only the guest of an order that was just served, about that order.
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your food order {{2}} at {{3}} has been served. We hope you enjoyed it! ' +
+      'Tell the venue how it was, with a photo if you like: {{4}} — Team Duncit',
+    sample:
+      'Hi Aarav, your food order FOOD-000005 at Dek Cafe has been served. We hope you enjoyed it! ' +
+      'Tell the venue how it was, with a photo if you like: https://mweb.duncit.com/venue/66f0a1/food-order/66f0b2 — Team Duncit',
+  },
+  VENUE_FOOD_ORDER_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, we are sorry — your food order {{2}} at {{3}} was cancelled by the venue. ' +
+      'A full refund of {{4}} is on its way to your original payment (banks take 5-7 working days). ' +
+      'See your order: {{5}} — Team Duncit',
+    sample:
+      'Hi Aarav, we are sorry — your food order FOOD-000005 at Dek Cafe was cancelled by the venue. ' +
+      'A full refund of Rs 430.20 is on its way to your original payment (banks take 5-7 working days). ' +
+      'See your order: https://mweb.duncit.com/venue/66f0a1/food-order/66f0b2 — Team Duncit',
+  },
+  VENUE_FOOD_ORDER_RECEIVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, new paid food order {{2}} at {{3}} for {{4}}. Table: {{5}}. ' +
+      'Open your order board to accept it: {{6}} — Team Duncit',
+    sample:
+      'Hi Rohan, new paid food order FOOD-000005 at Dek Cafe for Rs 430.20. Table: T4. ' +
+      'Open your order board to accept it: https://partners-app.duncit.com/venues/food-orders — Team Duncit',
+  },
+  VENUE_FOOD_FEEDBACK_RECEIVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a guest rated food order {{2}} at {{3}}: {{4}}. ' +
+      'Read the feedback on your order board: {{5}} — Team Duncit',
+    sample:
+      'Hi Rohan, a guest rated food order FOOD-000005 at Dek Cafe: 4/5. ' +
+      'Read the feedback on your order board: https://partners-app.duncit.com/venues/food-orders — Team Duncit',
+  },
+  VENUE_EVENTS_SUBSCRIBED: {
+    // UTILITY: a confirmation of something the person just asked for at checkout.
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, you are subscribed to events at {{2}}. We will message you when a new pod is announced there. ' +
+      'See what is on now: {{3}} — Team Duncit',
+    sample:
+      'Hi Aarav, you are subscribed to events at Dek Cafe. We will message you when a new pod is announced there. ' +
+      'See what is on now: https://duncit.com/77llaprJ — Team Duncit',
+  },
+  VENUE_NEW_EVENT: {
+    // MARKETING: an announcement of something new, to people who opted in.
+    category: 'MARKETING',
+    language: 'English',
+    body:
+      'Hi {{1}}, a new pod is happening at {{2}}: {{3}} on {{4}} at {{5}}. ' +
+      'See the details and grab your spot: {{6}} — Team Duncit',
+    sample:
+      'Hi Aarav, a new pod is happening at Dek Cafe: Board Games Night on 18 Oct 2026 at 07:00 PM. ' +
+      'See the details and grab your spot: https://duncit.com/4hT9xQa — Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

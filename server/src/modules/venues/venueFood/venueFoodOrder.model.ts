@@ -29,10 +29,27 @@ export interface IFoodOrderLine {
   line_paise: number;
 }
 
+/** What the guest said about the food once it was served. Written once. */
+export interface IFoodOrderFeedback {
+  rating: number;
+  comment: string;
+  images: string[];
+  submitted_at: Date;
+}
+
+export const FOOD_FEEDBACK_LIMITS = { ratingMin: 1, ratingMax: 5, commentMax: 500, imagesMax: 3 } as const;
+
 export interface IVenueFoodOrder extends Document<Types.ObjectId> {
   order_no: string;
   venue_id: Types.ObjectId;
   venue_name: string;
+  /**
+   * The venue's GST number and address as they were when the order was placed —
+   * what its invoice prints, so a later edit of the venue never rewrites a bill
+   * already issued. Empty on an order placed before invoices existed.
+   */
+  venue_gstin: string;
+  venue_address: string;
   /** The signed-in account that ordered; null for a guest. */
   user_id: Types.ObjectId | null;
   customer_name: string;
@@ -72,9 +89,28 @@ export interface IVenueFoodOrder extends Document<Types.ObjectId> {
   cancelled_at: Date | null;
   cancel_reason: string;
   reconcile_checked_at: Date | null;
+  /** When the kitchen marked it served — what the feedback request and the dashboard count from. */
+  served_at: Date | null;
+  /** The guest asked, at checkout, to hear about this venue's events. Acted on once the order is paid. */
+  subscribe_events: boolean;
+  /** Absent (not null) until the guest rates the order, so the write that saves it can require it to be missing. */
+  feedback?: IFoodOrderFeedback;
+  /** How often the invoice was downloaded, and when last. */
+  invoice_downloads: number;
+  invoice_downloaded_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
+
+const foodOrderFeedbackSchema = new Schema<IFoodOrderFeedback>(
+  {
+    rating: { type: Number, required: true, min: FOOD_FEEDBACK_LIMITS.ratingMin, max: FOOD_FEEDBACK_LIMITS.ratingMax },
+    comment: { type: String, default: '', trim: true, maxlength: FOOD_FEEDBACK_LIMITS.commentMax },
+    images: { type: [String], default: [] },
+    submitted_at: { type: Date, required: true },
+  },
+  { _id: false }
+);
 
 const foodOrderLineSchema = new Schema<IFoodOrderLine>(
   {
@@ -93,6 +129,8 @@ const venueFoodOrderSchema = new Schema<IVenueFoodOrder>(
     order_no: { type: String, required: true, unique: true },
     venue_id: { type: Schema.Types.ObjectId, ref: 'Venue', required: true },
     venue_name: { type: String, default: '' },
+    venue_gstin: { type: String, default: '' },
+    venue_address: { type: String, default: '' },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     customer_name: { type: String, required: true, trim: true, maxlength: 80 },
     customer_phone: { type: String, required: true, trim: true },
@@ -120,6 +158,11 @@ const venueFoodOrderSchema = new Schema<IVenueFoodOrder>(
     cancelled_at: { type: Date, default: null },
     cancel_reason: { type: String, default: '', trim: true, maxlength: 300 },
     reconcile_checked_at: { type: Date, default: null },
+    served_at: { type: Date, default: null },
+    subscribe_events: { type: Boolean, default: false },
+    feedback: { type: foodOrderFeedbackSchema },
+    invoice_downloads: { type: Number, default: 0, min: 0 },
+    invoice_downloaded_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

@@ -9,6 +9,8 @@ import { startClusterJob } from '@utils/clusterJob';
 import { countFoodCouponUse } from './venueFoodCoupon.redemption';
 import { VenueFoodOrderModel, type IVenueFoodOrder } from './venueFoodOrder.model';
 import { FOOD_LOG, razorpayKeysFor } from './venueFoodOrder.shared';
+import { whatsappFoodOrderPaid } from './venueFoodOrder.whatsapp';
+import { subscribeFromFoodOrder } from './venueSubscriber.service';
 
 /**
  * The money half of a venue food order: marking it paid exactly once, adopting
@@ -27,6 +29,12 @@ const CAPTURE_WINDOW_MS = 24 * 60 * MINUTE_MS;
 /** A guest polling their order page asks Razorpay at most this often. */
 const READ_RECHECK_MS = 20_000;
 const BATCH_LIMIT = 25;
+
+/** What follows a payment: the order messages, then the events subscription the guest asked for. */
+async function afterPaid(order: IVenueFoodOrder) {
+  await whatsappFoodOrderPaid(order);
+  await subscribeFromFoodOrder(order);
+}
 
 /**
  * Mark an order paid. The guard is the write itself: of a verify, a status
@@ -55,6 +63,12 @@ export async function markFoodOrderPaid(orderId: Types.ObjectId, razorpayPayment
       couponCode: paid.coupon_code || undefined,
       couponDiscountPaise: paid.coupon_discount_paise || undefined,
     });
+    // Only the caller whose write matched reaches here, so the guest and the
+    // owner are messaged once. Not awaited: the guest's "paid" screen must not
+    // wait on WhatsApp, and neither step may fail the payment.
+    afterPaid(paid).catch((error: unknown) =>
+      logs.server.warn(FOOD_LOG, 'afterPaid', { error, orderNo: paid.order_no, msg: 'post-payment messages failed' })
+    );
     return paid;
   }
   return VenueFoodOrderModel.findById(orderId);

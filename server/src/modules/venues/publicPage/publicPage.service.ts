@@ -9,6 +9,7 @@ import { shortLinkClickService } from '@modules/crm/marketing/shortLinkClick.ser
 import { shortLinkJourneyService } from '@modules/crm/marketing/shortLinkJourney.service';
 import type { HostPageAccount, ShareLinkTarget } from '@modules/crm/marketing/shortLink.share';
 import { renderPublicPagePoster, type PosterCopy } from './publicPage.poster';
+import { renderVenueTableLabel } from './publicPage.tableLabel';
 
 /**
  * Public pages — a venue owner (or a host) publishes a page anyone can open
@@ -34,6 +35,8 @@ interface Subject {
   title: string;
   subtitle: string | null;
   image_url: string | null;
+  /** The page also shows a food menu — the poster then says so, and a table label can be made. */
+  offers_food: boolean;
 }
 
 const fail = (message: string, code: string) =>
@@ -62,6 +65,7 @@ async function venueSubject(user: AuthUser, venueId?: string | null): Promise<Su
     title: venue.venue_name,
     subtitle: joined(venue.locality, venue.city),
     image_url: venue.cover_image_url || venue.gallery?.[0] || null,
+    offers_food: venue.offers_food === true,
   };
 }
 
@@ -82,6 +86,7 @@ async function hostSubject(user: AuthUser): Promise<Subject> {
     title: `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim(),
     subtitle: joined(profile.username ? `@${profile.username}` : null, profile.city),
     image_url: profile.profile_photo || null,
+    offers_food: false,
   };
 }
 
@@ -112,7 +117,7 @@ export const publicPageService = {
   async insights(user: AuthUser, kind: PublicPageKind, refId?: string | null, days = 0) {
     const subject = await subjectFor(kind, user, refId);
     const link = await shortLinkService.existingShare(subject.target, subject.ref);
-    if (!link) return { published: false, link: null, stats: null, funnel: null };
+    if (!link) return { published: false, offers_food: subject.offers_food, link: null, stats: null, funnel: null };
     const [qr, stats, funnel] = await Promise.all([
       qrDataUrl(link.url),
       shortLinkClickService.stats(link.id, Math.max(0, days)),
@@ -120,6 +125,7 @@ export const publicPageService = {
     ]);
     return {
       published: true,
+      offers_food: subject.offers_food,
       link: { url: link.url, code: link.code, qr_data_url: qr },
       stats,
       funnel,
@@ -143,6 +149,22 @@ export const publicPageService = {
       url: link.url,
       copy: words,
     });
+    return pdf.toString('base64');
+  },
+
+  /**
+   * A venue's table label as base64: the scan panel alone, the venue's name
+   * under it. A venue that serves food gets its own table link — it opens the
+   * menu and its scans are counted apart from the poster's; any other venue's
+   * label carries the page link the poster does.
+   */
+  async tableLabelPdfBase64(user: AuthUser, venueId: string | null | undefined, headline: string) {
+    const words = headline.trim().slice(0, POSTER_COPY_MAX);
+    if (!words) throw fail('Label text is required', 'BAD_USER_INPUT');
+    const subject = await venueSubject(user, venueId);
+    const target: ShareLinkTarget = subject.offers_food ? 'VENUE_MENU' : subject.target;
+    const link = await shortLinkService.share(target, subject.ref, user.id);
+    const pdf = await renderVenueTableLabel({ title: subject.title, url: link.url, headline: words });
     return pdf.toString('base64');
   },
 };

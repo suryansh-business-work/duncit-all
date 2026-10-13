@@ -195,6 +195,24 @@ const SEED_RULES = [
     message: 'Too many attempts. Please wait a few minutes before trying again.',
   },
   {
+    // Its own rule for the same reason as the one above.
+    name: 'Venue food invoice and feedback',
+    description:
+      'What a guest does after a food order needs no sign-in either: the invoice is a PDF drawn on every call, a feedback photo pass lets one file be uploaded, and feedback is written once. A real guest downloads an invoice a couple of times and rates once; a whole table may share the Wi-Fi of the venue.',
+    priority: 6,
+    mode: 'ENFORCE',
+    surface: 'ALL',
+    app: '*',
+    channel: 'GRAPHQL',
+    operations: ['venueFoodOrderInvoicePdfBase64', 'venueFoodFeedbackUploadPass', 'submitVenueFoodFeedback'],
+    key_by: 'IP',
+    algorithm: 'SLIDING_WINDOW',
+    limit: 30,
+    window_seconds: 300,
+    block_seconds: 300,
+    message: 'Too many attempts. Please wait a few minutes before trying again.',
+  },
+  {
     name: 'Mutation ceiling per account',
     description: 'How fast one signed-in account may write. Reads are untouched.',
     priority: 30,

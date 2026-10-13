@@ -72,6 +72,29 @@ export const POSTER = {
   footer: { top: 784, height: 18, size: 12.5, markHeight: 17 },
 } as const;
 
+/**
+ * The table label: the poster's scan panel on a sheet of its own, with the
+ * venue's name under it. The panel keeps the poster's width, so the two are the
+ * same artwork at the same proportions — only the paper around it is gone.
+ */
+export const TABLE_LABEL = {
+  margin: 24,
+  panelWidth: 515.28,
+  nameGap: 16,
+  /** One line, whatever the name: it shrinks to fit and clips only at the smallest size. */
+  nameHeight: 34,
+  nameMax: 26,
+  nameMin: 13,
+} as const;
+
+/** The label's sheet: the panel, the name line, and a margin a guillotine can cut to. */
+export function tableLabelPage(): { width: number; height: number } {
+  return {
+    width: TABLE_LABEL.panelWidth + TABLE_LABEL.margin * 2,
+    height: TABLE_LABEL.margin * 2 + POSTER.panel.height + TABLE_LABEL.nameGap + TABLE_LABEL.nameHeight,
+  };
+}
+
 /** The ISO 18004 quiet zone: four modules of white on every side. */
 export const QR_QUIET_MODULES = 4;
 

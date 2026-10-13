@@ -90,32 +90,41 @@ function drawUrlPill(doc: Doc, fonts: PosterFonts, url: string, x: number, y: nu
   });
 }
 
+/** Where the panel sits. The poster's own place unless a caller — the table label — gives another. */
+export interface ScanPanelPlace {
+  x: number;
+  top: number;
+  width: number;
+}
+
 export function drawScanPanel(
   doc: Doc,
   fonts: PosterFonts,
   qr: QRCode.QRCode,
   copy: { headline: string; url: string },
+  place?: ScanPanelPlace,
 ): void {
   const spec = POSTER.panel;
-  const x = POSTER.margin;
-  const width = doc.page.width - POSTER.margin * 2;
-  const bottom = spec.top + spec.height;
+  const x = place?.x ?? POSTER.margin;
+  const top = place?.top ?? spec.top;
+  const width = place?.width ?? doc.page.width - POSTER.margin * 2;
+  const bottom = top + spec.height;
 
   doc.save();
-  doc.roundedRect(x, spec.top, width, spec.height, spec.radius).clip();
-  doc.rect(x, spec.top, width, spec.height).fill(POSTER_COLORS.brand);
+  doc.roundedRect(x, top, width, spec.height, spec.radius).clip();
+  doc.rect(x, top, width, spec.height).fill(POSTER_COLORS.brand);
   drawRings(doc, x, bottom);
   doc.restore();
 
   const cardX = x + width - spec.cardInset - spec.card;
-  drawQrCard(doc, qr, cardX, spec.top + spec.cardInset);
+  drawQrCard(doc, qr, cardX, top + spec.cardInset);
 
   const textX = x + spec.padX;
   const textWidth = cardX - spec.columnGap - textX;
   const pillY = bottom - spec.padY - spec.pillHeight;
-  drawViewfinder(doc, textX + 1.5, spec.top + spec.padY + 1.5, spec.icon);
+  drawViewfinder(doc, textX + 1.5, top + spec.padY + 1.5, spec.icon);
 
-  const headlineY = spec.top + spec.padY + spec.icon + spec.iconGap;
+  const headlineY = top + spec.padY + spec.icon + spec.iconGap;
   const room = pillY - spec.pillGap - headlineY;
   const headline = fitText(doc, fonts.bold, copy.headline, textWidth, {
     max: spec.headlineMax,

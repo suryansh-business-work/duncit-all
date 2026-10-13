@@ -2,6 +2,8 @@ import type { GraphQLContext } from '@context';
 import { hasRole, requireAuth } from '@middleware/rbac';
 import { consoleEditors } from '@modules/portals/console-access';
 import type { TableQueryInput } from '@utils/table-query';
+import { venueFoodStatsService } from './venueFood.stats';
+import { venueFoodGuestService, type FoodFeedbackInput } from './venueFoodOrder.guest';
 import {
   venueFoodCouponService,
   type CreateFoodCouponInput,
@@ -51,12 +53,28 @@ export const venueFoodResolvers = {
       const { userId, isAdmin } = operator(ctx);
       return venueFoodCouponService.table(userId, isAdmin, args.venue_id, args.query);
     },
+    venueFoodOrderInvoicePdfBase64: (
+      _p: unknown,
+      args: { order_id: string; access_key?: string | null },
+      ctx: GraphQLContext
+    ) => venueFoodGuestService.invoicePdfBase64(ctx, args.order_id, args.access_key),
+    venueFoodStats: (_p: unknown, args: { venue_id: string; days?: number | null }, ctx: GraphQLContext) => {
+      const { userId, isAdmin } = operator(ctx);
+      return venueFoodStatsService.stats(userId, isAdmin, args.venue_id, args.days);
+    },
   },
   Mutation: {
     placeVenueFoodOrder: (_p: unknown, args: { input: PlaceFoodOrderInput }, ctx: GraphQLContext) =>
       venueFoodOrderService.place(ctx, args.input),
     verifyVenueFoodOrderPayment: (_p: unknown, args: { input: VerifyFoodOrderInput }, ctx: GraphQLContext) =>
       venueFoodOrderService.verify(ctx, args.input),
+    venueFoodFeedbackUploadPass: (
+      _p: unknown,
+      args: { order_id: string; access_key?: string | null },
+      ctx: GraphQLContext
+    ) => venueFoodGuestService.feedbackUploadPass(ctx, args.order_id, args.access_key),
+    submitVenueFoodFeedback: (_p: unknown, args: { input: FoodFeedbackInput }, ctx: GraphQLContext) =>
+      venueFoodGuestService.submitFeedback(ctx, args.input),
     setVenueFoodOrderStatus: (_p: unknown, args: { order_id: string; status: string }, ctx: GraphQLContext) => {
       const { userId, isAdmin } = operator(ctx);
       return venueFoodOrderService.setStatus(userId, isAdmin, args.order_id, args.status);

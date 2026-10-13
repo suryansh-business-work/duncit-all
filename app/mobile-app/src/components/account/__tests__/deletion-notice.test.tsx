@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { configure, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { DeletionNoticeDialog, DeletionSubmittedDialog } from '@/components/account';
 import {
@@ -8,6 +8,11 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { useAuthStore } from '@/stores/auth.store';
 import { renderWithProviders } from '@/utils/test-utils';
+
+// A debounce or a dismissal takes longer than testing-library's 1 s default under
+// the coverage run on CI; the waits stay bounded, they are just not 1 s.
+configure({ asyncUtilTimeout: 5000 });
+jest.setTimeout(20000);
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 

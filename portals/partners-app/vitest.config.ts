@@ -19,6 +19,11 @@ export default defineConfig({
       exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts', 'src/**/__tests__/**'],
     },
     environment: 'jsdom',
+    // The coverage run instruments every file with v8 and runs on a shared CI box:
+    // a form that walks four steps in about a second locally takes several there,
+    // and 5 s (the default) is where it started to time out.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],
     setupFiles: ['./vitest.setup.ts'],
   },

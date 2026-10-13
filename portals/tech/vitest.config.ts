@@ -10,6 +10,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,
+    // The coverage run instruments every file with v8 and runs on a shared CI box:
+    // a page that renders its grids and charts in about a second locally takes
+    // several there, and 5 s (the default) is where it started to time out.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     setupFiles: ['./__tests__/unit-tests/setup.ts'],
     // Vitest specs live under __tests__/unit-tests; form/entity mocks live under
     // __tests__/mocks and the shared render helper is __tests__/testkit.

@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, configure, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import {
   ClearMyContactsDocument,
@@ -11,6 +11,11 @@ import { MobileFollowUserDocument } from '@/graphql/hosts-venues';
 import { ContactsScreen } from '@/screens/ContactsScreen';
 import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
+
+// A debounce or a dismissal takes longer than testing-library's 1 s default under
+// the coverage run on CI; the waits stay bounded, they are just not 1 s.
+configure({ asyncUtilTimeout: 5000 });
+jest.setTimeout(20000);
 
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({

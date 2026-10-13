@@ -1,7 +1,11 @@
 import '@duncit/table/test-setup';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
+
+// findBy* and waitFor give up after 1 s by default; under the coverage run on CI a
+// dialog closing or a table settling takes longer. Still bounded, just not 1 s.
+configure({ asyncUtilTimeout: 5000 });
 
 // React Testing Library leaks DOM between tests in vitest's worker — clean up
 // after every test so queries can't match a previous render's nodes.

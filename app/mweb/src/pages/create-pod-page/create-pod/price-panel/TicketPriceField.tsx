@@ -78,7 +78,8 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
         helperText={errors.pod_amount?.message ?? helper}
         {...register('pod_amount', { setValueAs: asTicketPrice })}
         slotProps={{
-          input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> }
+          input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> },
+          htmlInput: { 'data-testid': 'create-pod-ticket-price-input' },
         }} />
       {preview.zeroEarnings && <ZeroEarningsNotice />}
       <SuggestedPricesDialog

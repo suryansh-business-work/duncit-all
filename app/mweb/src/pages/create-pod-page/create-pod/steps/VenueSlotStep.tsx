@@ -138,7 +138,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
                 helperText={errors.venue_space_label?.message || t('mweb.createPod.spaceHint')}
               >
                 {spaces.map((space) => (
-                  <MenuItem key={space.label} value={space.label}>
+                  <MenuItem key={space.label} value={space.label} data-testid={`venue-space-option-${space.label}`}>
                     {t('mweb.createPod.spaceOption', { vars: { label: spaceName(space), capacity: space.capacity } })}
                   </MenuItem>
                 ))}

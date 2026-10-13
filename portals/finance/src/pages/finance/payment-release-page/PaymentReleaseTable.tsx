@@ -80,7 +80,7 @@ export default function PaymentReleaseTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PodPaymentReleaseRow>[]>(() => {
     const renderActions = (row: PodPaymentReleaseRow) => (
-      <DuncitButton size="small" startIcon={<RateReviewIcon />} onClick={() => onOpen(row)}>
+      <DuncitButton size="small" startIcon={<RateReviewIcon />} onClick={() => onOpen(row)} data-testid={`payment-release-review-${row.id}`}>
         {t('finance.paymentRelease.review')}
       </DuncitButton>
     );

@@ -7,14 +7,20 @@ import SectionCard from '../../detail/SectionCard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ChipMultiSelect from '../fields/ChipMultiSelect';
 import CapacityItemsField from '../fields/CapacityItemsField';
+import OffersFoodField from '../fields/OffersFoodField';
 import type { VenueRegistrationConfig } from '../queries';
 import type { VenueFormValues } from '../types';
 
-/** What the space is: its name, kind, category, size and what it offers. */
+/** What the space is: its name, kind, category, size, its food and what it offers. */
 export default function BasicsSection({
   control,
   config,
-}: Readonly<{ control: Control<VenueFormValues>; config: VenueRegistrationConfig }>) {
+  onPick,
+}: Readonly<{
+  control: Control<VenueFormValues>;
+  config: VenueRegistrationConfig;
+  onPick: (folder?: string) => Promise<string | null>;
+}>) {
   const { t } = useTranslation();
 
   return (
@@ -75,6 +81,12 @@ export default function BasicsSection({
         />
 
         <CapacityItemsField control={control} limit={config.capacity_item_limit} />
+
+        <OffersFoodField
+          control={control}
+          config={config}
+          onPick={() => onPick('/venues/menu')}
+        />
 
         <Grid container spacing={1.5}>
           <Grid size={{ xs: 12, md: 4 }}>

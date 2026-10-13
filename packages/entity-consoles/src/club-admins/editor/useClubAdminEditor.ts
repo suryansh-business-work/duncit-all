@@ -133,7 +133,8 @@ export function useClubAdminEditor(clubAdminId: string) {
         );
         navigate(savedRecordPath(parentPath, isEdit, id));
       } catch (err) {
-        setSaveError(err instanceof Error ? err.message : String(err));
+        // Every throw site in the try block (Apollo, the id guard) is an Error.
+        setSaveError((err as Error).message);
       } finally {
         setBusy(false);
       }

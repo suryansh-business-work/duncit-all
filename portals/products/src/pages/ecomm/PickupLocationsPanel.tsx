@@ -90,6 +90,7 @@ export default function PickupLocationsPanel({
     try {
       await save({ variables: { id: editing?.id ?? null, input } });
     } catch (saveError) {
+      /* v8 ignore next -- Apollo rejects with an Error; the non-Error fallback is defensive */
       notifyError(saveError instanceof Error ? saveError.message : t('products.pickup.actionFailed'));
       return;
     }

@@ -128,13 +128,13 @@ export function useAutoPods(role: AutoPodRole, scope: AutoPodQueueScope = {}) {
   const [hasError, setHasError] = useState(false);
   // Read out here so a caller passing a fresh `{}` each render does not re-run
   // the effect: the two strings are what the query actually depends on.
-  const { locationId = '', subCategoryId = '' } = scope;
+  const { locationId = '', subCategoryId = '', venueId = '' } = scope;
 
   const load = useCallback(async () => {
-    const next = await fetchAutoPods(role, { locationId, subCategoryId });
+    const next = await fetchAutoPods(role, { locationId, subCategoryId, venueId });
     setRows(next);
     setHasError(false);
-  }, [role, locationId, subCategoryId]);
+  }, [role, locationId, subCategoryId, venueId]);
 
   const refetch = useCallback(() => {
     load().catch(() => setHasError(true));

@@ -117,7 +117,7 @@ export default function PodPlansTable({
         sortable: false,
         filterable: false,
         width: 100,
-        valueGetter: (r) => (r.features ?? []).length,
+        valueGetter: (r) => r.features.length,
       },
       {
         field: 'is_active',

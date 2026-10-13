@@ -1,11 +1,10 @@
 import { Divider, Stack } from '@mui/material';
 import { useFormContext, useFormState } from 'react-hook-form';
 import BulletListField from '../components/BulletListField';
-import FaqListField from '../components/FaqListField';
 import type { ClubFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
 
-/** Club Detail page content authored by admins (bullets + FAQs). */
+/** Club Detail page content authored by admins (the four bullet lists; FAQs have their own section). */
 export default function ContentSection() {
   const { t } = useTranslation();
   const { control } = useFormContext<ClubFormValues>();
@@ -44,8 +43,6 @@ export default function ContentSection() {
         helperText={t('clubForm.contentSection.whatTheClubStandsForAdd')}
         error={errors.values?.message}
       />
-      <Divider />
-      <FaqListField />
     </Stack>
   );
 }

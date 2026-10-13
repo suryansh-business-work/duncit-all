@@ -49,6 +49,7 @@ export function makeApolloTableFetch(): () => Promise<{ rows: unknown[]; total: 
 interface MockColumn {
   field: string;
   headerName: string;
+  options?: { value: string; label: string }[];
   valueGetter?: (row: unknown) => unknown;
   cellRenderer?: (row: unknown) => ReactNode;
 }
@@ -96,7 +97,11 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
       <div data-testid="table-toolbar">{toolbarActions}</div>
       <div data-testid="table-headers">
         {columns.map((c) => (
-          <span key={c.field} data-testid={`col-${c.field}`}>
+          <span
+            key={c.field}
+            data-testid={`col-${c.field}`}
+            data-options={c.options ? JSON.stringify(c.options) : undefined}
+          >
             {c.headerName}
           </span>
         ))}
@@ -106,7 +111,16 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
         <div
           key={getRowId(row)}
           data-testid="table-row"
-          onClick={onRowClick ? () => onRowClick(row) : undefined}
+          onClick={
+            onRowClick
+              ? (event) => {
+                  // The real grid ignores clicks that bubble from buttons and
+                  // links inside a cell, so a row action never also opens the row.
+                  if ((event.target as Element).closest('button, a')) return;
+                  onRowClick(row);
+                }
+              : undefined
+          }
         >
           {columns.map((c) => {
             const plain = !c.valueGetter && !c.cellRenderer;
@@ -129,6 +143,7 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
 export type DuncitColumn<T> = {
   field: string;
   headerName: string;
+  options?: { value: string; label: string }[];
   valueGetter?: (row: T) => unknown;
   cellRenderer?: (row: T) => ReactNode;
   [key: string]: unknown;

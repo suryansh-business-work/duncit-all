@@ -32,6 +32,13 @@ import {
 } from './venue.constants';
 import { notifyEach } from '@services/notify/notify.service';
 import { getUrlConfigs } from '@config/url-configs';
+import {
+  VENUE_FOOD_INPUT_KEYS,
+  buildVenueFoodPatch,
+  redactVenueFoodForPublic,
+  toVenueFoodPub,
+  venueFoodConfig,
+} from './venue.food';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -287,6 +294,7 @@ const toPub = (v: IVenue) => ({
     label: item.label,
     capacity: item.capacity,
   })),
+  ...toVenueFoodPub(v),
   venue_category: toVenueCategoryPub(v.venue_category),
   description: v.description ?? '',
   amenities: v.amenities ?? [],
@@ -351,6 +359,7 @@ const toPub = (v: IVenue) => ({
  */
 const redactForPublic = (v: ReturnType<typeof toPub>) => ({
   ...v,
+  ...redactVenueFoodForPublic(v),
   documents: [],
   gstin: '',
   pan: '',
@@ -517,6 +526,8 @@ function normalizeCapacityItems(items: unknown) {
  * a patch shared by owner submit and admin create/update. */
 async function buildStep1Patch(input: any) {
   const patch: any = await normalizeStep1Location(input);
+  // Food is validated against the venue it lands on (buildVenueFoodPatch), never spread on raw.
+  for (const key of VENUE_FOOD_INPUT_KEYS) delete patch[key];
   const capacityItems = normalizeCapacityItems(input.capacity_items);
   if (capacityItems === null) {
     delete patch.capacity_items;
@@ -688,6 +699,7 @@ export const venueService = {
       amenities: VENUE_AMENITIES,
       facilities: VENUE_FACILITIES,
       security: VENUE_SECURITY,
+      ...venueFoodConfig(),
     };
   },
   async getMine(userId: string, venueId?: string | null) {
@@ -819,7 +831,7 @@ export const venueService = {
   },
   async submitStep1(userId: string, input: any, venueId?: string | null) {
     const v = await resolveEditableVenue(userId, venueId);
-    Object.assign(v, await buildStep1Patch(input));
+    Object.assign(v, await buildStep1Patch(input), await buildVenueFoodPatch(input, v));
     if (v.step_completed < 1) v.step_completed = 1;
     if (v.status === 'REJECTED') v.status = 'DRAFT';
     await v.save();
@@ -880,6 +892,7 @@ export const venueService = {
       fail('BAD_REQUEST', 'Only approved venues can be edited here');
     }
     applyApprovedVenueInput(v, input);
+    Object.assign(v, await buildVenueFoodPatch(input, v));
     await v.save();
     return toPub(v);
   },
@@ -955,6 +968,8 @@ export const venueService = {
       });
     }
     const normalized = await buildStep1Patch(opts.step1);
+    const ownerUserId = new Types.ObjectId(opts.ownerUserId);
+    const food = await buildVenueFoodPatch(opts.step1, { owner_user_id: ownerUserId });
     const documents = (opts.step2.documents || [])
       .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({
@@ -963,8 +978,9 @@ export const venueService = {
         uploaded_at: new Date(),
       }));
     const v = await VenueModel.create({
-      owner_user_id: new Types.ObjectId(opts.ownerUserId),
+      owner_user_id: ownerUserId,
       ...normalized,
+      ...food,
       documents,
       gstin: opts.step2.gstin ?? '',
       pan: opts.step2.pan ?? '',
@@ -984,7 +1000,7 @@ export const venueService = {
   async adminUpdate(id: string, opts: { step1: any; step2: any; step3: any; status?: string }) {
     const v = await VenueModel.findById(id);
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
-    Object.assign(v, await buildStep1Patch(opts.step1));
+    Object.assign(v, await buildStep1Patch(opts.step1), await buildVenueFoodPatch(opts.step1, v));
     v.documents = (opts.step2.documents || [])
       .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));

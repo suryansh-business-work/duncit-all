@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { VenueFoodDiet, VenueFoodSpiceLevel } from '../detail/queries';
 
 /**
  * Everything the venue editor reads and writes.
@@ -19,6 +20,11 @@ export const VENUE_REGISTRATION_CONFIG = gql`
       amenities
       facilities
       security
+      food_diets
+      food_spice_levels
+      food_menu_limit
+      food_image_limit
+      food_price_max
     }
   }
 `;
@@ -116,5 +122,10 @@ export interface VenueRegistrationConfig {
   amenities: string[];
   facilities: string[];
   security: string[];
+  food_diets: VenueFoodDiet[];
+  food_spice_levels: VenueFoodSpiceLevel[];
+  food_menu_limit: number;
+  food_image_limit: number;
+  food_price_max: number;
 }
 

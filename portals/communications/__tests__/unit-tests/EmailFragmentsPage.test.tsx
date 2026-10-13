@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render as rtlRender, screen } from '@testing-library/react';
+import { fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import type { Fragment, FragmentTemplateRef } from '../../src/pages/email-fragments-page/queries';
 
@@ -20,7 +20,7 @@ vi.mock('../../src/pages/email-fragments-page/FragmentEditorPanel', () => ({
   ),
 }));
 
-import EmailFragmentsPage from '../../src/pages/email-fragments-page/EmailFragmentsPage';
+import EmailFragmentsPage from '../../src/pages/email-fragments-page';
 
 const fragment = (key: string, name: string, over: Partial<Fragment> = {}): Fragment => ({
   fragment_id: key,
@@ -124,6 +124,25 @@ describe('EmailFragmentsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(create).toHaveBeenCalledWith('Weekend banner');
+  });
+
+  it('closes the new-fragment dialog from Close without creating anything', async () => {
+    const create = vi.fn();
+    m.hook = baseHook({ create });
+    render();
+
+    fireEvent.click(screen.getByRole('button', { name: 'New fragment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('closes the new-fragment dialog on Escape', async () => {
+    render();
+    fireEvent.click(screen.getByRole('button', { name: 'New fragment' }));
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('renders the snack and closes it', () => {

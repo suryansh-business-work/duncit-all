@@ -23,8 +23,11 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
   const open = index !== null && index >= 0 && index < items.length;
   const canNavigate = items.length > 1;
 
-  const goPrev = () => onNavigate(((index ?? 0) - 1 + items.length) % items.length);
-  const goNext = () => onNavigate(((index ?? 0) + 1) % items.length);
+  // Only reachable while open (index is a real position); 0 is just the null
+  // placeholder so the two handlers read one number.
+  const position = index ?? 0;
+  const goPrev = () => onNavigate((position - 1 + items.length) % items.length);
+  const goNext = () => onNavigate((position + 1) % items.length);
 
   useEffect(() => {
     if (!open) return undefined;

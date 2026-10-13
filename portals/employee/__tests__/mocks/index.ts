@@ -6,3 +6,4 @@
  * production without the deprecated `addTypename={false}` escape hatch.
  */
 export * from './user.mock';
+export * from './expense.mock';

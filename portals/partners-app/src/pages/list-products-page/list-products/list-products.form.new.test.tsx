@@ -6,6 +6,14 @@ import { moderationMock, submitMock } from './__tests__/formMocks';
 import { categoriesMock, warehouseRow, warehousesMock } from '../../../__tests__/groupB-fixtures';
 import { renderWithProviders } from '../../../__tests__/render';
 
+/**
+ * These drive the multi-step new-listing form through a real grid / wizard under MUI, which takes about
+ * a second on a developer machine and several times that under the coverage
+ * job's instrumentation, where vitest's 5-second default cut them off. Bounded
+ * at 20 seconds, like the routes smoke in this workspace.
+ */
+vi.setConfig({ testTimeout: 20_000 });
+
 const picker = vi.hoisted(() => ({ url: 'https://cdn.test/cold-brew.jpg' }));
 
 /** The real picker uploads to ImageKit; this one hands back a fixed URL (or

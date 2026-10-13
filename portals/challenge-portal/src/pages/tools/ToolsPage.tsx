@@ -35,21 +35,20 @@ export default function ToolsPage() {
     [editing, fields]
   );
 
-  const save = async (v: ToolFormValues) => {
-    if (!editing) return;
+  const save = async (tool: ToolRow, v: ToolFormValues) => {
     await updateTool({
       variables: {
-        id: editing.id,
+        id: tool.id,
         input: {
           name: v.name.trim(),
           description: v.description,
           status: v.active ? 'ACTIVE' : 'INACTIVE',
-          default_config_json: editing.engine_ready ? JSON.stringify(v.config) : null,
+          default_config_json: tool.engine_ready ? JSON.stringify(v.config) : null,
         },
       },
     });
-    if (!sameSet(v.category_ids, editing.mapped_category_ids)) {
-      await setCategories({ variables: { toolId: editing.id, categoryIds: v.category_ids } });
+    if (!sameSet(v.category_ids, tool.mapped_category_ids)) {
+      await setCategories({ variables: { toolId: tool.id, categoryIds: v.category_ids } });
     }
     await refetch();
     setEditing(null);
@@ -86,7 +85,7 @@ export default function ToolsPage() {
               engineReady={editing.engine_ready}
               categories={categories}
               saving={updateState.loading || categoriesState.loading}
-              onSubmit={save}
+              onSubmit={(v) => save(editing, v)}
               onCancel={() => setEditing(null)}
             />
           )}

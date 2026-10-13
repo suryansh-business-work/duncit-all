@@ -227,12 +227,13 @@ describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
     });
   });
 
-  it('type-capacity → cleaned capacity list only', () => {
+  it('type-capacity → cleaned capacity list, and the food switch', () => {
     expect(toApprovedUpdateInput('type-capacity', validValues, 1)).toEqual({
       capacity_items: [
         { label: 'Main hall', capacity: 30 },
         { label: 'Rooftop tables', capacity: 12 },
       ],
+      offers_food: false,
     });
   });
 
@@ -256,7 +257,7 @@ describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
       owner_name: 'Owner Name',
       owner_phone: '+919876543210',
       owner_dob: null,
-      owner_address: '',
+      owner_address: '12 Main Street, Indiranagar',
     });
     expect('owner_email' in input).toBe(false);
   });

@@ -30,7 +30,7 @@ export function toPub(doc: IPaymentRelease) {
   return {
     id: String(doc._id),
     release_id: doc.release_id,
-    batch_id: doc.batch_id ?? null,
+    batch_id: doc.batch_id,
     kind: doc.kind,
     status: doc.status,
     pod_id: String(doc.pod_id),
@@ -40,47 +40,47 @@ export function toPub(doc: IPaymentRelease) {
     beneficiary_name: doc.beneficiary_name,
     beneficiary_email: doc.beneficiary_email,
     amount_requested: doc.amount_requested,
-    bill_url: doc.bill_url ?? '',
-    evidence_media: doc.evidence_media ?? [],
-    notes: doc.notes ?? '',
+    bill_url: doc.bill_url,
+    evidence_media: doc.evidence_media,
+    notes: doc.notes,
     requested_by: doc.requested_by ? String(doc.requested_by) : null,
-    requested_at: doc.requested_at?.toISOString?.() ?? '',
+    requested_at: doc.requested_at.toISOString(),
     reviewed_by: doc.reviewed_by ? String(doc.reviewed_by) : null,
-    reviewed_at: doc.reviewed_at?.toISOString?.() ?? null,
-    approval_type: doc.approval_type ?? null,
-    approved_amount: doc.approved_amount ?? null,
-    approval_reason: doc.approval_reason ?? '',
+    reviewed_at: doc.reviewed_at ? doc.reviewed_at.toISOString() : null,
+    approval_type: doc.approval_type,
+    approved_amount: doc.approved_amount,
+    approval_reason: doc.approval_reason,
     breakdown: doc.breakdown
       ? {
-          collected_total: doc.breakdown.collected_total ?? 0,
-          venue_bill: doc.breakdown.venue_bill ?? 0,
-          gst_pct: doc.breakdown.gst_pct ?? 0,
-          gst_amount: doc.breakdown.gst_amount ?? 0,
-          duncit_pct: doc.breakdown.duncit_pct ?? 0,
-          duncit_amount: doc.breakdown.duncit_amount ?? 0,
-          payout_pct: doc.breakdown.payout_pct ?? 0,
-          payout_amount: doc.breakdown.payout_amount ?? 0,
-          version: doc.breakdown.version || 1,
-          net_amount: doc.breakdown.net_amount ?? 0,
-          platform_fee_pct: doc.breakdown.platform_fee_pct ?? 0,
-          platform_fee_amount: doc.breakdown.platform_fee_amount ?? 0,
-          pool_amount: doc.breakdown.pool_amount ?? 0,
-          club_admin_pct: doc.breakdown.club_admin_pct ?? 0,
-          club_admin_amount: doc.breakdown.club_admin_amount ?? 0,
-          share_pct: doc.breakdown.share_pct ?? 0,
-          share_amount: doc.breakdown.share_amount ?? 0,
-          commission_pct: doc.breakdown.commission_pct ?? 0,
-          commission_amount: doc.breakdown.commission_amount ?? 0,
-          duncit_revenue: doc.breakdown.duncit_revenue ?? 0,
-          attended_seats: doc.breakdown.attended_seats ?? 0,
-          booked_seats: doc.breakdown.booked_seats ?? 0,
-          attended_total: doc.breakdown.attended_total ?? 0,
-          venue_slot_price: doc.breakdown.venue_slot_price ?? 0,
-          include_slot_price: doc.breakdown.include_slot_price ?? false,
+          collected_total: doc.breakdown.collected_total,
+          venue_bill: doc.breakdown.venue_bill,
+          gst_pct: doc.breakdown.gst_pct,
+          gst_amount: doc.breakdown.gst_amount,
+          duncit_pct: doc.breakdown.duncit_pct,
+          duncit_amount: doc.breakdown.duncit_amount,
+          payout_pct: doc.breakdown.payout_pct,
+          payout_amount: doc.breakdown.payout_amount,
+          version: doc.breakdown.version,
+          net_amount: doc.breakdown.net_amount,
+          platform_fee_pct: doc.breakdown.platform_fee_pct,
+          platform_fee_amount: doc.breakdown.platform_fee_amount,
+          pool_amount: doc.breakdown.pool_amount,
+          club_admin_pct: doc.breakdown.club_admin_pct,
+          club_admin_amount: doc.breakdown.club_admin_amount,
+          share_pct: doc.breakdown.share_pct,
+          share_amount: doc.breakdown.share_amount,
+          commission_pct: doc.breakdown.commission_pct,
+          commission_amount: doc.breakdown.commission_amount,
+          duncit_revenue: doc.breakdown.duncit_revenue,
+          attended_seats: doc.breakdown.attended_seats,
+          booked_seats: doc.breakdown.booked_seats,
+          attended_total: doc.breakdown.attended_total,
+          venue_slot_price: doc.breakdown.venue_slot_price,
+          include_slot_price: doc.breakdown.include_slot_price,
         }
       : null,
-    created_at: doc.created_at?.toISOString?.() ?? '',
-    updated_at: doc.updated_at?.toISOString?.() ?? '',
+    created_at: doc.created_at.toISOString(),
+    updated_at: doc.updated_at.toISOString(),
   };
 }
 
@@ -696,6 +696,107 @@ export function releaseGroupFilter(groupId: string): Record<string, unknown> {
     : { batch_id: groupId };
 }
 
+/** The slice of a pod and of the completion input the guards below read. */
+interface CompletingPod {
+  _id: unknown;
+  venue_id?: unknown;
+  pod_hosts_id?: unknown[] | null;
+  pod_party_media?: { url: string; type?: string | null }[] | null;
+}
+interface CompleteInput {
+  evidence_media?: unknown[] | null;
+  venue_bill_amount?: unknown;
+  venue_bill_url?: string | null;
+  include_slot_price?: boolean | null;
+}
+
+/** Only a host of the pod (or an admin) may complete it. */
+function assertMayComplete(pod: CompletingPod, actor: { id: string; isAdmin: boolean }) {
+  const isHost = (pod.pod_hosts_id ?? []).some((id) => String(id) === actor.id);
+  if (!isHost && !actor.isAdmin) {
+    throw new GraphQLError('Only a host of this pod can complete it', { extensions: { code: 'FORBIDDEN' } });
+  }
+}
+
+/** ANY live release on the pod blocks completion — not just the host leg. A
+ * manual VENUE_BILLING release (the legacy Finance flow) already paid the
+ * venue once; completing on top of it would mint a fresh release_id and pay
+ * the venue a second time, past the wallet's per-release idempotency. */
+async function assertNotSubmitted(pod: CompletingPod) {
+  const already = await PaymentReleaseModel.findOne({
+    pod_id: pod._id,
+    kind: { $in: ['HOST_PAYMENT', 'VENUE_BILLING', 'CLUB_ADMIN', 'ECOMM_PAYMENT'] },
+    status: { $in: ['PENDING', 'APPROVED'] },
+  });
+  if (already) {
+    throw new GraphQLError('This pod has already been submitted for completion', {
+      extensions: { code: 'CONFLICT' },
+    });
+  }
+}
+
+/** What a release carries as evidence is the pod's OWN media — what the host
+ * uploaded on the Upload Pod Media page and what the guests sent in from the
+ * link they were given. The Admin panel completes with a list of its own, and
+ * that is what it means there: a reviewer attaching what they were sent out of
+ * band. Neither is required — a pod with no photos still owes its host the
+ * money it took. */
+function podEvidence(input: CompleteInput, pod: CompletingPod) {
+  const passed = (input.evidence_media ?? [])
+    .map((media) => clean((media as { url?: string } | null)?.url || (media as string)))
+    .filter(Boolean)
+    .map((url) => ({ url, type: mediaType(url) }));
+  if (passed.length > 0) return passed;
+  return (pod.pod_party_media ?? []).map((media) => ({
+    url: media.url,
+    type: media.type ?? mediaType(media.url),
+  }));
+}
+
+/** The venue's final bill is optional — without one the booked slot price
+ * stands. With one, the bill itself has to come along: the amount changes what
+ * the venue is paid, and Finance approves it against the document. A build from
+ * before any of this sends an amount and no slot-price choice; its bill is
+ * evidence only (see venueChargeForPod), so it is not asked for a document it
+ * has no way to upload. */
+function venueBillFor(pod: CompletingPod, input: CompleteInput) {
+  const billAmount = pod.venue_id ? Math.max(0, Number(input.venue_bill_amount) || 0) : 0;
+  const billUrl = billAmount > 0 ? clean(input.venue_bill_url) : '';
+  if (input.include_slot_price != null && billAmount > 0 && !billUrl) {
+    throw new GraphQLError('Upload the venue bill for the amount you entered', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  return { billAmount, billUrl };
+}
+
+/** Refuse a settlement that would freeze a wrong payout while it is still
+ * fixable. A venue pod with no slot link has no booked price to fall back on,
+ * so without a bill its venue would silently be paid nothing. A pod settles on
+ * the seats a host scanned in, so completing with nothing scanned would pay
+ * everyone zero and freeze that as the answer — a one-way mistake, since the
+ * release is what Finance later reviews. Only pods that HAD bookings are gated:
+ * a pod nobody booked has nothing to scan. An EXPIRED pod is exempt: its host
+ * can no longer mark anybody, so demanding a scan they cannot perform would
+ * strand the pod uncompleted and leave the venue, the club admin and the
+ * product sellers unpaid for a deadline only the host missed. */
+function assertSettlementCompletable(
+  settlement: { has_venue: boolean; venue_slot_linked: boolean; complete_expired: boolean; booked_seats: number; attended_seats: number },
+  billAmount: number,
+) {
+  if (settlement.has_venue && !settlement.venue_slot_linked && billAmount <= 0) {
+    throw new GraphQLError('Enter the venue bill amount — this pod has no booked slot price', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (!settlement.complete_expired && settlement.booked_seats > 0 && settlement.attended_seats === 0) {
+    throw new GraphQLError(
+      'No attendance has been recorded for this pod. Scan each guest’s ticket before completing it — the payout is calculated from who attended.',
+      { extensions: { code: 'ATTENDANCE_REQUIRED' } }
+    );
+  }
+}
+
 export const paymentReleaseService = {
   async list(filter?: { status?: string | null; kind?: PaymentReleaseKind | null }) {
     const query: any = {};
@@ -788,57 +889,13 @@ export const paymentReleaseService = {
   async completePod(input: any, actor: { id: string; isAdmin: boolean }) {
     const pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
-    const isHost = (pod.pod_hosts_id ?? []).some((id: any) => String(id) === actor.id);
-    if (!isHost && !actor.isAdmin) {
-      throw new GraphQLError('Only a host of this pod can complete it', { extensions: { code: 'FORBIDDEN' } });
-    }
+    assertMayComplete(pod, actor);
 
-    // ANY live release on the pod blocks completion — not just the host leg. A
-    // manual VENUE_BILLING release (the legacy Finance flow) already paid the
-    // venue once; completing on top of it would mint a fresh release_id and pay
-    // the venue a second time, past the wallet's per-release idempotency.
-    const already = await PaymentReleaseModel.findOne({
-      pod_id: pod._id,
-      kind: { $in: ['HOST_PAYMENT', 'VENUE_BILLING', 'CLUB_ADMIN', 'ECOMM_PAYMENT'] },
-      status: { $in: ['PENDING', 'APPROVED'] },
-    });
-    if (already) {
-      throw new GraphQLError('This pod has already been submitted for completion', {
-        extensions: { code: 'CONFLICT' },
-      });
-    }
+    await assertNotSubmitted(pod);
 
-    // What a release carries as evidence is the pod's OWN media — what the
-    // host uploaded on the Upload Pod Media page and what the guests sent in
-    // from the link they were given. The Admin panel completes with a list of
-    // its own, and that is what it means there: a reviewer attaching what they
-    // were sent out of band. Neither is required — a pod with no photos still
-    // owes its host the money it took.
-    const passed = (input.evidence_media ?? [])
-      .map((media: any) => clean(media?.url || media))
-      .filter(Boolean)
-      .map((url: string) => ({ url, type: mediaType(url) }));
-    const evidence =
-      passed.length > 0
-        ? passed
-        : (pod.pod_party_media ?? []).map((media: any) => ({
-            url: media.url,
-            type: media.type ?? mediaType(media.url),
-          }));
+    const evidence = podEvidence(input, pod);
 
-    // The venue's final bill is optional — without one the booked slot price
-    // stands. With one, the bill itself has to come along: the amount changes
-    // what the venue is paid, and Finance approves it against the document.
-    // A build from before any of this sends an amount and no slot-price
-    // choice; its bill is evidence only (see venueChargeForPod), so it is not
-    // asked for a document it has no way to upload.
-    const billAmount = pod.venue_id ? Math.max(0, Number(input.venue_bill_amount) || 0) : 0;
-    const billUrl = billAmount > 0 ? clean(input.venue_bill_url) : '';
-    if (input.include_slot_price != null && billAmount > 0 && !billUrl) {
-      throw new GraphQLError('Upload the venue bill for the amount you entered', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
+    const { billAmount, billUrl } = venueBillFor(pod, input);
 
     // The chosen beneficiary's commission override prices the settlement — a
     // co-host with a negotiated rate must not settle at the primary host's %.
@@ -849,33 +906,7 @@ export const paymentReleaseService = {
       input.include_slot_price
     );
 
-    // A venue pod with no slot link has no booked price to fall back on, so
-    // without a bill its venue would silently be paid nothing.
-    if (settlement.has_venue && !settlement.venue_slot_linked && billAmount <= 0) {
-      throw new GraphQLError('Enter the venue bill amount — this pod has no booked slot price', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-
-    // A pod settles on the seats a host scanned in, so completing with nothing
-    // scanned would pay everyone zero and freeze that as the answer — a
-    // one-way mistake, since the release is what Finance later reviews. Refuse
-    // it while it is still fixable. Only pods that HAD bookings are gated: a
-    // pod nobody booked has nothing to scan and must still be completable.
-    // An EXPIRED pod is exempt: its host can no longer mark anybody, so
-    // demanding a scan they cannot perform would strand the pod uncompleted and
-    // leave the venue, the club admin and the product sellers unpaid for a
-    // deadline only the host missed.
-    if (
-      !settlement.complete_expired &&
-      settlement.booked_seats > 0 &&
-      settlement.attended_seats === 0
-    ) {
-      throw new GraphQLError(
-        'No attendance has been recorded for this pod. Scan each guest’s ticket before completing it — the payout is calculated from who attended.',
-        { extensions: { code: 'ATTENDANCE_REQUIRED' } }
-      );
-    }
+    assertSettlementCompletable(settlement, billAmount);
 
     // Floored (the venue keeps its full booked price, so a thin pod leaves the
     // host side negative and a negative release would credit a wallet

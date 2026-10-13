@@ -458,7 +458,7 @@ export interface WalletStatementFile {
 
 /** `duncit-withdrawal-statement-2026-04-01_to_2026-06-30.pdf`, the brand read from Finance settings. */
 function statementFilename(settings: IFinanceSettings, statement: WalletStatement, extension: string): string {
-  const brand = String(settings.business_name ?? '')
+  const brand = settings.business_name
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean)

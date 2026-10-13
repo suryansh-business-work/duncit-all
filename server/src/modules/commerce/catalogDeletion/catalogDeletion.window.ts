@@ -54,13 +54,13 @@ export async function deletionWindow(now = new Date()): Promise<DeletionWindow> 
     max_days: s.max_days,
     earliest: addDays(today, s.min_days),
     latest: addDays(today, s.max_days),
-    updated_at: s.updated_at?.toISOString?.() ?? '',
+    updated_at: s.updated_at.toISOString(),
   };
 }
 
 /** The instant a picked day starts in the app zone — when the deletion becomes due. Refuses a day outside the window. */
 export async function scheduledInstant(day: string, now = new Date()): Promise<Date> {
-  const key = String(day ?? '').slice(0, 10);
+  const key = day.slice(0, 10);
   const win = await deletionWindow(now);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || key < win.earliest || key > win.latest) {
     throw new GraphQLError(`Pick a deletion date between ${win.earliest} and ${win.latest}`, {

@@ -136,7 +136,7 @@ Cypress.Commands.add('useRunTraffic', () => {
     tag(known);
     return;
   }
-  cy.staffGql<{ e2eTrafficKey: string }>(E2E_TRAFFIC_KEY_QUERY, { stamp: Cypress.env('E2E_STAMP') }).then((data) => {
+  cy.staffGql<{ e2eTrafficKey: string }>(E2E_TRAFFIC_KEY_QUERY, { stamp: String(Cypress.env('E2E_STAMP')) }).then((data) => {
     Cypress.env(TRAFFIC_KEY, data.e2eTrafficKey);
     tag(data.e2eTrafficKey);
   });

@@ -51,6 +51,53 @@ export const MobilePublicVenuesDocument = gql(`
   }
 `);
 
+/** One approved venue with its food menu — the venue-detail screen. Null unless
+ * the venue is APPROVED and active. RN port of mWeb's PUBLIC_VENUE. */
+export const MobilePublicVenueDocument = gql(`
+  query MobilePublicVenue($venueId: ID!) {
+    publicVenue(venue_id: $venueId) {
+      id
+      owner_user_id
+      location_id
+      venue_name
+      venue_type
+      capacity
+      description
+      cover_image_url
+      gallery
+      address_line1
+      address_line2
+      country
+      city
+      state
+      locality
+      postal_code
+      lat
+      lng
+      amenities
+      facilities
+      security
+      tags
+      offers_food
+      food_menu {
+        id
+        name
+        description
+        category
+        price
+        images
+        diet
+        spice_level
+        is_available
+      }
+      food_ordering {
+        enabled
+        discount_pct
+      }
+    }
+  }
+`);
+
 /** Location-scoped venues for the Venues page — server-side search (client
  * debounces) + Super→Cat→Sub category filter. mWeb's VENUES_EXPLORE twin. */
 export const MobileVenuesDocument = gql(`

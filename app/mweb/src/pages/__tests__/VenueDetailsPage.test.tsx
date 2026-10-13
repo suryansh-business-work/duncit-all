@@ -54,6 +54,10 @@ const baseVenue = (over: Record<string, unknown> = {}) => ({
   lat: 18.5,
   lng: 73.8,
   tags: ['premium'],
+  // No menu: the page keeps the layout it had before venues could serve food.
+  offers_food: false,
+  food_menu: [],
+  food_ordering: { enabled: false, discount_pct: 0 },
   ...over,
 });
 

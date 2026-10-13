@@ -14,3 +14,5 @@ export * from './faq.mock';
 export * from './dashboard.mock';
 export * from './auth.mock';
 export * from './upload.mock';
+export * from './mailAutomation.mock';
+export * from './reportedProblems.mock';

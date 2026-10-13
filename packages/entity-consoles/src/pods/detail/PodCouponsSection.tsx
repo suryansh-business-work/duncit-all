@@ -49,7 +49,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
       notifySuccess('Coupon deleted');
       refetchRef.current?.();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not delete coupon');
+      notifyError(e.message);
     }
   };
 

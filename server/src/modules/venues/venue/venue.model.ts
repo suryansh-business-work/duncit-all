@@ -6,6 +6,12 @@ import {
 } from '@modules/finance/finance/bankAccount';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
+import {
+  VENUE_FOOD_DIETS,
+  VENUE_FOOD_DISCOUNT_MAX_PCT,
+  VENUE_FOOD_PRICE_MAX,
+  VENUE_FOOD_SPICE_LEVELS,
+} from './venue.constants';
 
 export type VenueStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -33,6 +39,36 @@ export interface IVenueCategory {
 export interface IVenueCapacityItem {
   label: string;
   capacity: number;
+}
+
+export type VenueFoodDiet = (typeof VENUE_FOOD_DIETS)[number];
+export type VenueFoodSpiceLevel = (typeof VENUE_FOOD_SPICE_LEVELS)[number];
+
+/** One dish on the venue's food menu. It keeps its `_id` across edits so an
+ * order placed against it still points at the same dish. */
+export interface IVenueFoodItem {
+  _id: Types.ObjectId;
+  name: string;
+  description: string;
+  /** The owner's own menu heading, e.g. "Starters". Blank lists under no heading. */
+  category: string;
+  /** Rupees, what the guest pays for one — taxes included. */
+  price: number;
+  images: string[];
+  diet: VenueFoodDiet;
+  spice_level: VenueFoodSpiceLevel;
+  /** Off = shown as unavailable and refused at checkout, without deleting it. */
+  is_available: boolean;
+}
+
+/** Scan-and-order: guests pay the venue's OWN Razorpay account, so this money
+ * never enters Duncit's payments, wallets or settlements. */
+export interface IVenueFoodOrdering {
+  enabled: boolean;
+  /** The owner's saved Razorpay connection (PartnerIntegration) orders are charged on. */
+  razorpay_integration_id: Types.ObjectId | null;
+  /** Percent the venue takes off every QR order (0 = none). */
+  discount_pct: number;
 }
 
 /** Daily operating window in venue-local "HH:mm" (24h). */
@@ -129,6 +165,9 @@ export interface IVenue extends Document {
   venue_type: string; // cafe, sports turf, banquet, etc.
   capacity: number;
   capacity_items: IVenueCapacityItem[];
+  offers_food: boolean;
+  food_menu: IVenueFoodItem[];
+  food_ordering: IVenueFoodOrdering;
   venue_category: IVenueCategory;
   description: string;
   amenities: string[];
@@ -208,6 +247,26 @@ const venueCapacityItemSchema = new Schema<IVenueCapacityItem>(
   {
     label: { type: String, required: true, trim: true, maxlength: 80 },
     capacity: { type: Number, required: true, min: 1, max: 100_000 },
+  },
+  { _id: false }
+);
+
+const venueFoodItemSchema = new Schema<IVenueFoodItem>({
+  name: { type: String, required: true, trim: true, maxlength: 80 },
+  description: { type: String, default: '', trim: true, maxlength: 500 },
+  category: { type: String, default: '', trim: true, maxlength: 40 },
+  price: { type: Number, required: true, min: 1, max: VENUE_FOOD_PRICE_MAX },
+  images: { type: [String], default: [] },
+  diet: { type: String, enum: VENUE_FOOD_DIETS, default: 'VEG' },
+  spice_level: { type: String, enum: VENUE_FOOD_SPICE_LEVELS, default: 'NONE' },
+  is_available: { type: Boolean, default: true },
+});
+
+const venueFoodOrderingSchema = new Schema<IVenueFoodOrdering>(
+  {
+    enabled: { type: Boolean, default: false },
+    razorpay_integration_id: { type: Schema.Types.ObjectId, ref: 'PartnerIntegration', default: null },
+    discount_pct: { type: Number, default: 0, min: 0, max: VENUE_FOOD_DISCOUNT_MAX_PCT },
   },
   { _id: false }
 );
@@ -293,6 +352,9 @@ const venueSchema = new Schema<IVenue>(
     venue_type: { type: String, default: '' },
     capacity: { type: Number, default: 0 },
     capacity_items: { type: [venueCapacityItemSchema], default: [] },
+    offers_food: { type: Boolean, default: false },
+    food_menu: { type: [venueFoodItemSchema], default: [] },
+    food_ordering: { type: venueFoodOrderingSchema, default: () => ({}) },
     venue_category: { type: venueCategorySchema, default: () => ({}) },
     description: { type: String, default: '' },
     amenities: { type: [String], default: [] },

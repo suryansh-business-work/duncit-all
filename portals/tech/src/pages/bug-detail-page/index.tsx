@@ -39,11 +39,11 @@ export default function BugDetailPage() {
   });
   const bug = data?.bug ?? null;
 
-  const changeStatus = async (status: BugStatus) => {
-    if (!bug) return;
+  // The id comes from the rendered bug's own buttons, so there is no "no bug" case to guard.
+  const changeStatus = async (bugIdToUpdate: string, status: BugStatus) => {
     setBusy(true);
     try {
-      await updateStatus({ variables: { bug_id: bug.id, status } });
+      await updateStatus({ variables: { bug_id: bugIdToUpdate, status } });
       await refetch();
     } catch (e) {
       notifyError(e instanceof Error ? e.message : t('tech.bugDetail.failedToUpdateBug'));
@@ -97,7 +97,7 @@ export default function BugDetailPage() {
                   aria-pressed={opt.value === bug.status}
                   data-testid="bug-detail-mark-status"
                   disabled={busy || opt.value === bug.status}
-                  onClick={() => changeStatus(opt.value)}
+                  onClick={() => changeStatus(bug.id, opt.value)}
                 >
                   Mark {opt.label}
                 </DuncitButton>

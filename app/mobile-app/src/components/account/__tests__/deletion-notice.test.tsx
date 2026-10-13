@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { configure, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { DeletionNoticeDialog, DeletionSubmittedDialog } from '@/components/account';
 import {
@@ -8,6 +8,11 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { useAuthStore } from '@/stores/auth.store';
 import { renderWithProviders } from '@/utils/test-utils';
+
+// A debounce or a dismissal takes longer than testing-library's 1 s default under
+// the coverage run on CI; the waits stay bounded, they are just not 1 s.
+configure({ asyncUtilTimeout: 5000 });
+jest.setTimeout(20000);
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 
@@ -20,8 +25,26 @@ const request = {
   days_remaining: 30,
 };
 
+/**
+ * Answers by operation, not by call order.
+ *
+ * The provider stack makes requests of its own (settings, localization) through
+ * the same mocked client, so a queue of one-shot answers is consumed by whichever
+ * caller asks first — the dialog then reads `undefined` and its withdraw never
+ * lands. Routing on the document makes each answer land where it was meant to.
+ */
+const answerWith = (cancel: () => Promise<unknown>) =>
+  mockRequest.mockImplementation((document: unknown) => {
+    if (document === MobileMyAccountDeletionRequestDocument) {
+      return Promise.resolve({ myAccountDeletionRequest: request });
+    }
+    if (document === MobileCancelAccountDeletionRequestDocument) return cancel();
+    return Promise.resolve({});
+  });
+
 beforeEach(() => {
-  jest.clearAllMocks();
+  // reset, not clear: a one-shot or default answer must not leak into the next test.
+  mockRequest.mockReset().mockResolvedValue({});
   useAuthStore.setState({ token: 'signed-in' });
 });
 
@@ -73,10 +96,9 @@ describe('DeletionNoticeDialog', () => {
   });
 
   it('withdraws the request and closes', async () => {
-    mockRequest.mockResolvedValueOnce({ myAccountDeletionRequest: request });
+    answerWith(() => Promise.resolve({ cancelMyAccountDeletionRequest: { id: 'r1' } }));
     renderWithProviders(<DeletionNoticeDialog />);
     await waitFor(() => expect(screen.getByTestId('deletion-notice-withdraw')).toBeOnTheScreen());
-    mockRequest.mockResolvedValueOnce({ cancelMyAccountDeletionRequest: { id: 'r1' } });
     fireEvent.press(screen.getByTestId('deletion-notice-withdraw'));
     await waitFor(() => expect(screen.queryByTestId('deletion-notice-withdraw')).toBeNull());
     expect(mockRequest).toHaveBeenCalledWith(
@@ -95,10 +117,9 @@ describe('DeletionNoticeDialog', () => {
   });
 
   it('surfaces a failed withdrawal instead of pretending it worked', async () => {
-    mockRequest.mockResolvedValueOnce({ myAccountDeletionRequest: request });
+    answerWith(() => Promise.reject(new Error('nope')));
     renderWithProviders(<DeletionNoticeDialog />);
     await waitFor(() => expect(screen.getByTestId('deletion-notice-withdraw')).toBeOnTheScreen());
-    mockRequest.mockRejectedValueOnce(new Error('nope'));
     fireEvent.press(screen.getByTestId('deletion-notice-withdraw'));
     await waitFor(() =>
       expect(screen.getByTestId('deletion-notice-error')).toHaveTextContent('nope'),

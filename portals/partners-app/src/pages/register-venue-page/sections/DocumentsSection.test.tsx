@@ -36,6 +36,12 @@ const config: VenueRegistrationConfig = {
   amenities: [],
   facilities: [],
   security: [],
+  food_diets: ['VEG', 'NON_VEG'],
+  food_spice_levels: ['NONE', 'MILD'],
+  food_menu_limit: 5,
+  food_image_limit: 2,
+  food_price_max: 10000,
+  food_discount_max_pct: 50,
 };
 
 interface HarnessProps {

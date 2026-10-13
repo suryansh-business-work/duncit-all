@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
 import { useTranslation } from '@duncit/shell';
+import FoodSection from './food/FoodSection';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
@@ -14,7 +15,8 @@ interface Props {
 
 /** Venue type + the dynamic capacity list under it: each row names one space
  * ("Banquet hall", "Rooftop tables") with its own capacity number. The
- * capacity list stays editable after approval; the venue type is locked. */
+ * capacity list stays editable after approval; the venue type is locked.
+ * The food block (menu + ordering) sits under it and is never locked. */
 export default function VenueTypeCapacitySection({ form, config, mode }: Readonly<Props>) {
   const { t } = useTranslation();
   const { control, watch, formState } = form;
@@ -132,6 +134,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
       >
         Add capacity entry
       </DuncitButton>
+      <FoodSection form={form} config={config} />
     </Stack>
   );
 }

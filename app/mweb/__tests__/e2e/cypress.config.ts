@@ -43,9 +43,23 @@ export default defineConfig({
     retries: 0,
     env: {
       GRAPHQL_URL: process.env.CYPRESS_GRAPHQL_URL || 'https://staging.server.duncit.com/graphql',
+      // The Finance portal, where specs/10-pod-payout.cy.ts approves the payment release.
+      FINANCE_URL: process.env.CYPRESS_FINANCE_URL || 'http://localhost:2008',
     },
     setupNodeEvents(on) {
       registerScenarioClips(on);
+      // Visiting another origin (the Finance portal in specs/10) reloads the spec and
+      // runs its `before` again; a journey keeps what it has made here, across that.
+      const kept = new Map<string, unknown>();
+      on('task', {
+        'journey:keep'({ key, value }: { key: string; value: unknown }) {
+          kept.set(key, value);
+          return null;
+        },
+        'journey:read'(key: string) {
+          return kept.get(key) ?? null;
+        },
+      });
     },
   },
 });

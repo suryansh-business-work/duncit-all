@@ -26,6 +26,7 @@ export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm 
                 slotProps={{
                   input: { 'aria-label': t('mweb.createPod.termsAria') }
                 }}
+                data-testid="create-pod-terms-checkbox"
               />
             }
             label={

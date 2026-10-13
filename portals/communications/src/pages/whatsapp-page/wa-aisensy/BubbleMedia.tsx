@@ -36,10 +36,10 @@ export const mediaFormatOf = (headerFormat: string): MediaFormat | null =>
   MEDIA_FORMATS.has(headerFormat) ? (headerFormat as MediaFormat) : null;
 
 /** A URL that ends in a picture, ignoring whatever query a CDN appends. */
-const IMAGE_EXTENSION = /\.(?:jpe?g|png|gif|webp|bmp|avif)$/i;
+const IMAGE_EXTENSION = /\.(?:jpe?g|png|gif|webp|bmp|avif)(?:\?.*)?$/i;
 
 const looksLikeImage = (url: string, format: MediaFormat) =>
-  format === 'IMAGE' || IMAGE_EXTENSION.test(url.split('?')[0] ?? '');
+  format === 'IMAGE' || IMAGE_EXTENSION.test(url);
 
 const PLACEHOLDER_SX = {
   height: 120,

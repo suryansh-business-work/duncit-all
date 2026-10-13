@@ -6,9 +6,10 @@ export function clubAdminToValues(admin: ClubAdminDetail): ClubAdminFormValues {
   return {
     id: admin.id,
     user_id: admin.user_id,
-    full_name: admin.full_name ?? '',
-    email: admin.email ?? '',
-    phone: admin.phone ?? '',
+    // full_name, email, phone and assigned_clubs are non-null in the schema.
+    full_name: admin.full_name,
+    email: admin.email,
+    phone: admin.phone,
     category: {
       super_id: admin.super_category_id ?? '',
       super_name: admin.super_category ?? '',
@@ -20,7 +21,7 @@ export function clubAdminToValues(admin: ClubAdminDetail): ClubAdminFormValues {
     status: admin.status,
     is_active: admin.is_active,
     commission_pct: admin.commission_pct ?? blankClubAdminValues.commission_pct,
-    club_ids: (admin.assigned_clubs ?? []).map((club) => club.id),
+    club_ids: admin.assigned_clubs.map((club) => club.id),
   };
 }
 

@@ -49,7 +49,7 @@ export function useMediaOrganizer() {
   const [startMutation, startState] = useMutation(START_MEDIA_ORGANIZER, options);
   const [applyMutation, applyState] = useMutation(APPLY_MEDIA_ORGANIZER_RUN, options);
   const [rollbackMutation, rollbackState] = useMutation(ROLLBACK_MEDIA_ORGANIZER_RUN, options);
-  const url = typeof window === 'undefined' ? '' : window.location.pathname;
+  const url = window.location.pathname;
 
   const start = useCallback(
     async (dryRun: boolean) => {

@@ -81,6 +81,20 @@ describe('EmailsDashboardPage', () => {
     expect(await screen.findByText('dashboard boom')).toBeInTheDocument();
   });
 
+  it('keeps the header and draws no board when the server answers with no dashboard', async () => {
+    renderPage([
+      {
+        request: { query: EMAIL_LOG_DASHBOARD, variables: { range_days: 7 } },
+        result: { data: { emailLogDashboard: null } },
+      },
+    ]);
+    await waitFor(() =>
+      expect(screen.queryByRole('status', { name: 'Loading…' })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText('Emails Dashboard')).toBeInTheDocument();
+    expect(screen.queryByText('RECIPIENTS ADDRESSED')).not.toBeInTheDocument();
+  });
+
   it('counts people in the recipients tile, not log rows', async () => {
     renderPage();
     await screen.findByText('RECIPIENTS ADDRESSED');

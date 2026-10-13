@@ -20,6 +20,22 @@ export const VENUE_DETAIL = gql`
         label
         capacity
       }
+      offers_food
+      food_menu {
+        id
+        name
+        description
+        category
+        price
+        images
+        diet
+        spice_level
+        is_available
+      }
+      food_ordering {
+        enabled
+        discount_pct
+      }
       venue_category {
         super_category_id
         category_id
@@ -123,6 +139,30 @@ export interface VenueCapacityItem {
   capacity: number;
 }
 
+export type VenueFoodDiet = 'VEG' | 'NON_VEG' | 'EGG' | 'VEGAN';
+
+export type VenueFoodSpiceLevel = 'NONE' | 'MILD' | 'MEDIUM' | 'HOT' | 'EXTRA_HOT';
+
+/** One dish on the venue's menu. `category` is the owner's own menu heading. */
+export interface VenueFoodItem {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  images: string[];
+  diet: VenueFoodDiet;
+  spice_level: VenueFoodSpiceLevel;
+  is_available: boolean;
+}
+
+/** Scan-and-order, as far as a console may see it — the linked Razorpay account
+ * is the owner's and is deliberately not selected here. */
+export interface VenueFoodOrdering {
+  enabled: boolean;
+  discount_pct: number;
+}
+
 export interface VenueCancellationTier {
   hours_before: number;
   charge_type: 'PERCENT' | 'AMOUNT';
@@ -180,6 +220,9 @@ export interface AdminVenueDetail {
   pod_count: number;
   capacity: number;
   capacity_items: VenueCapacityItem[];
+  offers_food: boolean;
+  food_menu: VenueFoodItem[];
+  food_ordering: VenueFoodOrdering;
   venue_category: {
     super_category_id?: string | null;
     category_id?: string | null;

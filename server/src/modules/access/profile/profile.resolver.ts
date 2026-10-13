@@ -44,15 +44,7 @@ interface ViewerRelation {
   blocked?: boolean;
 }
 
-const NO_RELATION: ViewerRelation = {
-  isFollowing: false,
-  hasRequested: false,
-  followsViewer: false,
-  inboundRequestId: null,
-};
-
-function toPublicProfile(u: any, viewerId: string | null = null, rel: ViewerRelation = NO_RELATION) {
-  if (!u) return null;
+function toPublicProfile(u: any, viewerId: string | null, rel: ViewerRelation) {
   const { isFollowing, hasRequested } = rel;
   const isPrivate = (u.profile_visibility ?? 'PUBLIC') === 'PRIVATE';
   const isOwner = !!viewerId && viewerId === u.user_id;
@@ -164,7 +156,7 @@ export async function publicProfilesFromDocs(
       hasRequested: rel.requested.has(u.user_id),
       followsViewer: rel.followers.has(u.user_id),
       inboundRequestId: rel.inbound.get(u.user_id) ?? null,
-    })!;
+    });
   });
 }
 
@@ -237,7 +229,7 @@ export const profileResolvers = {
         inboundRequestId,
         blocked: blockedByViewer,
       });
-      return profile && { ...profile, blocked_by_viewer: blockedByViewer };
+      return { ...profile, blocked_by_viewer: blockedByViewer };
     },
     usernameAvailability: async (
       _p: unknown,

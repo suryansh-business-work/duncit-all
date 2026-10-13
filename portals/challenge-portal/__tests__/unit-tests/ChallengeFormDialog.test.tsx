@@ -266,6 +266,46 @@ describe('ChallengeFormDialog', () => {
     expect(createFn).not.toHaveBeenCalled();
   });
 
+  it('sends no scope at all when none was chosen', async () => {
+    submitted.values = {
+      name: 'Anywhere',
+      description: '',
+      super_id: '',
+      category_id: '',
+      sub_id: '',
+      participant_mode: 'INDIVIDUAL',
+      tool_instances: [],
+      winner_rules: { rank_by: 'TOTAL', direction: 'DESC', tie_breakers: [], podium_size: 3 },
+    } satisfies TemplateFormValues;
+    renderWithProviders(<ChallengeFormDialog open editing={null} onClose={vi.fn()} />, { mocks: engineMocks() });
+    fireEvent.click(await screen.findByText('form-submit'));
+    await waitFor(() => expect(createFn).toHaveBeenCalledTimes(1));
+    expect(createFn.mock.calls[0][0].variables.input).toMatchObject({
+      super_category_id: null,
+      category_id: null,
+      sub_category_id: null,
+    });
+  });
+
+  it('shows a tool that was saved without a preset as no preset', async () => {
+    const noPreset = makeChallenge({
+      tool_instances: [
+        {
+          __typename: 'ChallengeToolInstance',
+          instance_id: 'inst-9',
+          tool_id: 'tool-1',
+          tool_type: 'SCORE_COUNTER',
+          tool_version: 1,
+          preset_id: null,
+          label: 'Plain',
+          config_json: '{}',
+        },
+      ],
+    });
+    renderWithProviders(<ChallengeFormDialog open editing={noPreset} onClose={vi.fn()} />, { mocks: engineMocks() });
+    expect((await formValues()).tool_instances[0].preset_id).toBe('');
+  });
+
   it('reads an unknown mode as individuals and an unknown order as highest-first', async () => {
     const odd = makeChallenge({
       participant_mode: 'SOLO',

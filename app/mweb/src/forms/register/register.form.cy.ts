@@ -10,6 +10,7 @@ const valid = {
   email: 'jane@example.com',
   phoneExtension: '+91',
   phoneNumber: '9845012345',
+  whatsappIsMobile: true,
   password: 'longenough',
   confirmPassword: 'longenough',
   dob: ELIGIBLE_DOB,

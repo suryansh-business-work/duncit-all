@@ -29,6 +29,7 @@ import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLi
 import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/analytics.retention';
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
+import { startVenueFoodReconciler } from '@modules/venues/venueFood/venueFoodOrder.payment';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startProductCartReminderScheduler } from '@modules/commerce/productCart/productCart.scheduler';
 import { startCatalogDeletionScheduler } from '@modules/commerce/catalogDeletion/catalogDeletion.scheduler';
@@ -607,6 +608,10 @@ async function bootstrap() {
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.
   startPaymentReconciler();
+
+  // Venue food orders are paid to the venue's own Razorpay account, outside the
+  // payment finalizer — they get their own capture and refund sweep.
+  startVenueFoodReconciler();
 
   // Pet store: email everyone waiting on a product that is back in stock.
   startStoreScheduler();

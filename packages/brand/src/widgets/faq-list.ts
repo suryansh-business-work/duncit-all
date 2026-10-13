@@ -39,8 +39,13 @@ const groupHeading = (group: FaqGroup): string => {
   return `<h2 id="${escapeHtml(category.slug)}" class="font-head font-extrabold text-2xl mt-8 mb-3 text-primary scroll-mt-24">${escapeHtml(category.name)}</h2>`;
 };
 
-const groupSection = (group: FaqGroup): string => {
-  const cards = (group.faqs ?? []).map((faq, index) => faqCard(faq, index === 0)).join('');
+/** A group that has at least one question (the only kind that is rendered). */
+type FilledGroup = FaqGroup & { faqs: Faq[] };
+
+const hasFaqs = (group: FaqGroup): group is FilledGroup => Boolean(group.faqs?.length);
+
+const groupSection = (group: FilledGroup): string => {
+  const cards = group.faqs.map((faq, index) => faqCard(faq, index === 0)).join('');
   return `<section class="my-6">${groupHeading(group)}<div class="space-y-3">${cards}</div></section>`;
 };
 
@@ -49,7 +54,7 @@ export async function loadFaqGroups(root: HTMLElement): Promise<void> {
   const copy = readJson<FaqCopy>(root.dataset.copy);
   try {
     const json = await postGraphql<{ publicFaqGroups?: FaqGroup[] }>(root.dataset.graphqlUrl ?? '', FAQ_GROUPS);
-    const groups = (json?.data?.publicFaqGroups ?? []).filter((group) => group.faqs?.length);
+    const groups = (json?.data?.publicFaqGroups ?? []).filter(hasFaqs);
     if (!groups.length) {
       root.innerHTML = `<p class="text-ink-soft">${copy.empty}</p>`;
       return;

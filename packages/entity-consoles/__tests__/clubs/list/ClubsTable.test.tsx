@@ -116,6 +116,7 @@ describe('ClubsTable', () => {
         'WhatsApp',
         'Locality',
         '', // activeChipColumn has no explicit headerName (resolved via headerKey)
+        'Visibility',
         'Verified',
         '', // dateColumn has no explicit headerName either
         '', // actionsColumn likewise
@@ -248,7 +249,63 @@ describe('ClubsTable', () => {
     });
   });
 
+  describe('visibility column', () => {
+    const visibilityColumn = () => {
+      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
+      const col = columns.find((c) => c.field === 'is_hidden');
+      if (!col?.cellRenderer || !col.valueGetter) throw new Error('visibility column missing renderer/getter');
+      return { cellRenderer: col.cellRenderer, valueGetter: col.valueGetter };
+    };
+
+    it('reads Visible for a shown club and Hidden plus the reason for a hidden one', () => {
+      const { valueGetter } = visibilityColumn();
+      expect(valueGetter(makeRow({ is_hidden: false }))).toBe('Visible');
+      expect(valueGetter(makeRow({ is_hidden: true, hidden_reason: 'Spam' }))).toBe('Hidden Spam');
+      expect(valueGetter(makeRow({ is_hidden: true, hidden_reason: null }))).toBe('Hidden');
+    });
+
+    it('shows a Hidden chip only for a hidden club', () => {
+      const { cellRenderer } = visibilityColumn();
+      const { container: hidden } = render(<>{cellRenderer(makeRow({ is_hidden: true }))}</>);
+      expect(hidden).toHaveTextContent('Hidden');
+      const { container: shown } = render(<>{cellRenderer(makeRow({ is_hidden: false }))}</>);
+      expect(shown).toBeEmptyDOMElement();
+    });
+  });
+
   describe('actions column', () => {
+    it('offers Hide for a shown club when onToggleHidden is supplied, and hands it the row', () => {
+      const onToggleHidden = vi.fn();
+      render(
+        <ClubsTable
+          {...baseProps}
+          onEdit={vi.fn()}
+          onRemove={vi.fn()}
+          onView={vi.fn()}
+          onToggleHidden={onToggleHidden}
+        />,
+      );
+      const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
+      const actionsCol = columns.find((c) => c.field === 'actions');
+      if (!actionsCol?.cellRenderer) throw new Error('actions column missing a cellRenderer');
+
+      const row = makeRow({ id: 'row-3', is_hidden: false });
+      render(<MemoryRouter>{actionsCol.cellRenderer(row)}</MemoryRouter>);
+      fireEvent.click(screen.getByRole('button', { name: 'Hide' }));
+      expect(onToggleHidden).toHaveBeenCalledWith(row);
+    });
+
+    it('offers no Hide / Show toggle without onToggleHidden', () => {
+      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
+      const actionsCol = columns.find((c) => c.field === 'actions');
+      if (!actionsCol?.cellRenderer) throw new Error('actions column missing a cellRenderer');
+      render(<MemoryRouter>{actionsCol.cellRenderer(makeRow({ is_hidden: true }))}</MemoryRouter>);
+      expect(screen.queryByRole('button', { name: 'Hide' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Show' })).not.toBeInTheDocument();
+    });
+
     it('wires the View Pods link plus edit/delete callbacks to the real row', () => {
       const onEdit = vi.fn();
       const onRemove = vi.fn();

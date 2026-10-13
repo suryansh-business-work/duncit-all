@@ -4,7 +4,7 @@ import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mu
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
-import { downloadBase64File } from '@duncit/utils';
+import { downloadBase64File, firstGraphQLError } from '@duncit/utils';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import EventTicketsTable from './EventTicketsTable';
 import CompanionsDialog, { type CompanionValue } from './CompanionsDialog';
@@ -35,7 +35,7 @@ export default function EventTicketsPage() {
       const res = await client.query<any>({ query: EVENT_TICKET_PDF, variables: { id: t.id }, fetchPolicy: 'no-cache' });
       downloadBase64File(res.data.eventTicketPdfBase64, `ticket-${t.ticket_code}.pdf`, 'application/pdf');
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not download ticket');
+      notifyError(e.message);
     }
   };
   /**
@@ -56,21 +56,22 @@ export default function EventTicketsPage() {
       setGroup(null);
       refetchRef.current?.();
     } catch (e: any) {
-      const detail = e?.graphQLErrors?.[0]?.extensions;
+      // Apollo 4 puts the GraphQL errors on `errors` (v3 used `graphQLErrors`).
+      const detail = firstGraphQLError(e)?.extensions;
       if (detail?.code === 'COMPANIONS_REQUIRED') {
         setGroup({ ticket: t, required: Number(detail.companions_required ?? 1) });
         return;
       }
-      notifyError(e.message ?? 'Could not check in');
+      notifyError(e.message);
     }
   };
+  // Verify is disabled until a token is pasted, so there is always one here.
   const onVerify = async () => {
-    if (!token.trim()) return;
     try {
       const res = await verifyQr({ variables: { token: token.trim() } });
       setVerifyResult(res.data?.verifyEventTicketQr ?? null);
     } catch (e: any) {
-      setVerifyResult({ ok: false, message: e.message ?? 'Verify failed' });
+      setVerifyResult({ ok: false, message: e.message });
     }
   };
   const onCheckInToken = async () => {
@@ -81,7 +82,7 @@ export default function EventTicketsPage() {
       setVerifyResult(null);
       refetchRef.current?.();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not check in');
+      notifyError(e.message);
     }
   };
 

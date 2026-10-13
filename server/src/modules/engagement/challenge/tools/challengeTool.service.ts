@@ -52,8 +52,8 @@ function toolPub(d: Stamped<ChallengeToolDoc>) {
     output_types: def?.output_types ?? [],
     config_schema_json: JSON.stringify(def?.fields ?? []),
     default_config_json: JSON.stringify(d.default_config ?? {}),
-    created_at: d.created_at?.toISOString?.() ?? '',
-    updated_at: d.updated_at?.toISOString?.() ?? '',
+    created_at: d.created_at?.toISOString() ?? '',
+    updated_at: d.updated_at?.toISOString() ?? '',
   };
 }
 
@@ -65,7 +65,7 @@ function presetPub(d: Stamped<ChallengeToolPresetDoc>) {
     config_json: JSON.stringify(d.config ?? {}),
     version: d.version ?? 1,
     is_active: !!d.is_active,
-    updated_at: d.updated_at?.toISOString?.() ?? '',
+    updated_at: d.updated_at?.toISOString() ?? '',
   };
 }
 
@@ -154,7 +154,7 @@ export const challengeToolService = {
     if (input.default_config) {
       doc.default_config = normalizeToolConfig(doc.tool_type, catalogueDefaults(doc.tool_type), input.default_config);
       doc.markModified('default_config');
-      doc.version = (doc.version ?? 1) + 1;
+      doc.version += 1;
     }
     if (input.status) {
       if (input.status === 'ACTIVE' && !toolDefinition(doc.tool_type)?.engine_ready) {
@@ -198,9 +198,9 @@ export const challengeToolService = {
     if (input.config) {
       const tool = await ChallengeToolModel.findById(doc.tool_id).lean();
       if (!tool) notFound('Tool');
-      doc.config = normalizeToolConfig(tool.tool_type, (doc.config ?? {}) as ToolConfig, input.config);
+      doc.config = normalizeToolConfig(tool.tool_type, doc.config as ToolConfig, input.config);
       doc.markModified('config');
-      doc.version = (doc.version ?? 1) + 1;
+      doc.version += 1;
     }
     if (input.is_active !== undefined && input.is_active !== null) doc.is_active = input.is_active;
     await doc.save();

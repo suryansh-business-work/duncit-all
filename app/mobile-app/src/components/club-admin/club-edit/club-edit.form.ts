@@ -132,7 +132,12 @@ export function makeClubEditSchema(t: Translate) {
       .refine(hasEntry, t('mweb.clubEdit.validation.whatWeDoRequired')),
     perks: z.array(z.string()).refine(hasEntry, t('mweb.clubEdit.validation.perksRequired')),
     values: z.array(z.string()).refine(hasEntry, t('mweb.clubEdit.validation.valuesRequired')),
-    faqs: z.array(z.object({ id: z.string(), question: z.string(), answer: z.string() })),
+    faqs: z
+      .array(z.object({ id: z.string(), question: z.string(), answer: z.string() }))
+      .refine(
+        (rows) => rows.every((row) => Boolean(row.question.trim()) === Boolean(row.answer.trim())),
+        t('mweb.clubEdit.validation.faqIncomplete'),
+      ),
   });
 }
 

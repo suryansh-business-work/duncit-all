@@ -16,7 +16,9 @@ export default defineConfig({
       reportOnFailure: true,
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
-      include: ['src/cms-design.ts', 'src/site-meta.ts'],
+      include: ['src/**/*.ts'],
+      // Interfaces only: nothing executes, so there is nothing to cover.
+      exclude: ['src/widgets/earnings-calculator-types.ts'],
       thresholds: { lines: 100, statements: 100, functions: 100, branches: 100 },
     },
   },

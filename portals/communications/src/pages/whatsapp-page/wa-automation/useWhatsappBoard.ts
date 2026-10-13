@@ -61,17 +61,18 @@ export function useWhatsappBoard() {
   const saveMedia = useCallback(
     async (eventKey: string, url: string, filename: string) => {
       setSavingMedia(true);
+      let saved = false;
       try {
         const result = await setMedia({ variables: { event_key: eventKey, url, filename } });
         setWritten(result.data?.setWhatsappScenarioMedia ?? null);
         notify(t('adminWhatsapp.mediaSaved'), 'success');
-        return true;
+        saved = true;
       } catch (err) {
         notify(parseApiError(err, t('adminWhatsapp.mediaSaveFailed')), 'error');
-        return false;
       } finally {
         setSavingMedia(false);
       }
+      return saved;
     },
     [setMedia, t]
   );

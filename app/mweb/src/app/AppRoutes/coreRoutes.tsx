@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, HostPodChallengesPage, PodAttendancePage, PodChallengeArenaPage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
+import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, HostPodChallengesPage, PodAttendancePage, PodChallengeArenaPage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenueFoodOrderPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
 import { PartnerRedirect, withAuth, type AppRoutesProps } from './routeGuards';
 
 /** Home, profile, pod and host routes. Rendered as a fragment so `<Routes>` still sees plain `<Route>` children. */
@@ -24,6 +24,10 @@ export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<App
         <Route path="/account" element={withAuth(<AccountPage />)} />
         <Route path="/club/:clubSlug" element={withAuth(<ClubDetailsPage />)} />
         <Route path="/venue/:venueId" element={<VenueDetailsPage />} />
+        {/* A guest's food order from the venue's menu. Public like the menu itself:
+            whoever scanned the table's QR has no account, and the order's access
+            key (in the link, or remembered on the device) is what opens it. */}
+        <Route path="/venue/:venueId/food-order/:orderId" element={<VenueFoodOrderPage />} />
         {/* A host's published page — public like the venue page; its pods ask
             a signed-out visitor to sign in, carrying the pod through it. */}
         <Route path="/hosts/:handle" element={<HostPage />} />

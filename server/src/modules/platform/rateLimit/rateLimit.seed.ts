@@ -159,6 +159,23 @@ const SEED_RULES = [
     message: 'Too many attempts. Please wait a few minutes before trying again.',
   },
   {
+    name: 'Venue food ordering',
+    description:
+      'A venue QR answers anonymous callers: placing a food order opens a Razorpay order on the Razorpay account of that venue, and paying or reading one takes an order id and its key. Enforcing from day one — a real guest does each of these a handful of times.',
+    priority: 6,
+    mode: 'ENFORCE',
+    surface: 'ALL',
+    app: '*',
+    channel: 'GRAPHQL',
+    operations: ['placeVenueFoodOrder', 'verifyVenueFoodOrderPayment'],
+    key_by: 'IP',
+    algorithm: 'SLIDING_WINDOW',
+    limit: 20,
+    window_seconds: 300,
+    block_seconds: 300,
+    message: 'Too many attempts. Please wait a few minutes before trying again.',
+  },
+  {
     name: 'Mutation ceiling per account',
     description: 'How fast one signed-in account may write. Reads are untouched.',
     priority: 30,

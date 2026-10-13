@@ -31,6 +31,11 @@ export default function DeletionRefundsPage() {
     { extraVariables: { brand_id: brandId || null } },
     [brandId],
   );
+  // The table reads fetchRows through a ref and only reloads on a query change, so a new brand needs an explicit reload.
+  const pickBrand = (id: string) => {
+    setBrandId(id);
+    refetchRef.current?.();
+  };
   const columns = useMemo(() => buildRefundColumns(t), [t]);
   const openOrder = useCallback((row: OrderRow) => navigate(`/ecomm-brand/orders/${row.id}`), [navigate]);
 
@@ -50,7 +55,7 @@ export default function DeletionRefundsPage() {
             defaultSort={{ field: 'cancelled_at', dir: 'desc' }}
             searchPlaceholder={t('partners.deletionRefunds.searchPlaceholder')}
             refetchRef={refetchRef}
-            toolbarActions={<BrandPicker brands={brandsData?.myEcommBrands ?? []} value={brandId} onChange={setBrandId} allowAll />}
+            toolbarActions={<BrandPicker brands={brandsData?.myEcommBrands ?? []} value={brandId} onChange={pickBrand} allowAll />}
           />
         </CardContent>
       </Card>

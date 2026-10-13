@@ -17,6 +17,8 @@ const venuePayload = (venue: AdminVenueDetail) => {
     ...venue,
     __typename: 'Venue',
     capacity_items: venue.capacity_items.map((item) => ({ ...item, __typename: 'VenueCapacityItem' })),
+    food_menu: venue.food_menu.map((item) => ({ ...item, __typename: 'VenueFoodItem' })),
+    food_ordering: { ...venue.food_ordering, __typename: 'VenueFoodOrdering' },
     venue_category: { ...venue.venue_category, __typename: 'VenueCategory' },
     bank_account: { ...venue.bank_account, __typename: 'VenueBankAccount' },
     settings: {

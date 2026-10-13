@@ -99,7 +99,7 @@ export function createEarnView(root: HTMLElement, form: HTMLFormElement, config:
     // Only the role's own sliders show (e.g. the pod count for a club admin).
     for (const field of form.querySelectorAll<HTMLElement>('[data-field]')) {
       const only = field.dataset.fieldRoles;
-      field.hidden = Boolean(only) && !(only ?? '').split(',').includes(role.key);
+      field.hidden = !!only && !only.split(',').includes(role.key);
     }
   };
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { makeTpl } from '../mocks/email-template.mock';
 
@@ -58,6 +58,63 @@ describe('MjmlEditorPane', () => {
 });
 
 const tpl = makeTpl({ mjml: '<mjml/>' });
+
+const panelProps = (over: Partial<React.ComponentProps<typeof TemplateEditorPanel>> = {}) => ({
+  draft: tpl,
+  setDraft: vi.fn(),
+  usage: null,
+  dirty: false,
+  busy: false,
+  tab: 'preview' as const,
+  setTab: vi.fn(),
+  previewHtml: '',
+  previewErrors: [],
+  previewLoading: false,
+  detected: [],
+  fragmentOptions: [{ key: 'transactional', name: 'Transactional', is_active: true }],
+  varsJson: '{}',
+  setVarsJson: vi.fn(),
+  autoSave: false,
+  onAutoSaveChange: vi.fn(),
+  savedAt: null,
+  onValidate: vi.fn(),
+  onImportDetected: vi.fn(),
+  onSave: vi.fn(),
+  onSendTest: vi.fn(),
+  onDelete: vi.fn(),
+  ...over,
+});
+
+describe('TemplateEditorPanel — header, switch and footer note', () => {
+  it('writes the footer note, the active switch and the chosen fragment into the draft', () => {
+    const setDraft = vi.fn();
+    render(
+      <MemoryRouter>
+        <TemplateEditorPanel {...panelProps({ setDraft })} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Footer note'), { target: { value: 'You joined a pod' } });
+    expect(setDraft).toHaveBeenLastCalledWith({ ...tpl, footer_note: 'You joined a pod' });
+
+    fireEvent.click(screen.getByRole('switch'));
+    expect(setDraft).toHaveBeenLastCalledWith({ ...tpl, is_active: false });
+
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Transactional'));
+    expect(setDraft).toHaveBeenLastCalledWith({ ...tpl, fragment_key: 'transactional' });
+  });
+
+  it('says plainly that a switched-off template sends nothing', () => {
+    render(
+      <MemoryRouter>
+        <TemplateEditorPanel {...panelProps({ draft: { ...tpl, is_active: false } })} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Disabled — nothing will send')).toBeInTheDocument();
+    expect(screen.getByRole('switch')).not.toBeChecked();
+  });
+});
 
 describe('TemplateEditorPanel', () => {
   it('wires the name/subject/mjml fields and the action bar', () => {

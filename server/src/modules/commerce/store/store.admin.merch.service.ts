@@ -112,8 +112,8 @@ export const pageOut = (p: Doc) => ({
 export const occasionOut = (o: IStoreOccasion) => ({
   slug: o.slug,
   label: o.label,
-  starts_at: iso(o.starts_at) ?? '',
-  ends_at: iso(o.ends_at) ?? '',
+  starts_at: o.starts_at.toISOString(),
+  ends_at: o.ends_at.toISOString(),
   logo_url: o.logo_url ?? '',
   favicon_url: o.favicon_url ?? '',
   background_url: o.background_url ?? '',

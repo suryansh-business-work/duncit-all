@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   accountEditDefaults,
   accountEditSchema,
+  makeAccountEditSchema,
   toDobInput,
   toUpdateProfileInput,
 } from './account-edit.types';
@@ -40,9 +41,12 @@ describe('accountEditSchema', () => {
     expect(accountEditSchema.safeParse({ ...valid, dob: '1990-01-02' }).success).toBe(true);
   });
 
-  it('rejects a malformed or future dob (bug 1)', () => {
-    expect(firstError(accountEditSchema.safeParse({ ...valid, dob: '02/01/1990' }))).toMatch(/YYYY-MM-DD/);
-    expect(firstError(accountEditSchema.safeParse({ ...valid, dob: '3000-01-01' }))).toMatch(/past date/i);
+  it('rejects a malformed or future dob (bug 1), naming the pattern the box asks for', () => {
+    // The hint is the admin's date pattern, so the test pins it rather than
+    // leaning on whichever fallback format ships.
+    const schema = makeAccountEditSchema(undefined, '', 'YYYY-MM-DD');
+    expect(firstError(schema.safeParse({ ...valid, dob: '02/01/1990' }))).toMatch(/YYYY-MM-DD/);
+    expect(firstError(accountEditSchema.safeParse({ ...valid, dob: '3000-01-01' }))).toMatch(/at least 18 years/i);
   });
 
   it('allows an empty main address (optional) and a valid pincode', () => {
@@ -71,7 +75,8 @@ describe('toUpdateProfileInput', () => {
   it('forwards the location fields including state (bug 2) and drops zone (bug 14)', () => {
     const out = toUpdateProfileInput(valid);
     expect(out.first_name).toBe('Jane');
-    expect(out.phone_number).toBe('9876543210');
+    // Phone, email and WhatsApp move only through the contact-change flow.
+    expect('phone_number' in out).toBe(false);
     expect(out.state).toBe('Karnataka');
     expect('zone' in out).toBe(false);
   });

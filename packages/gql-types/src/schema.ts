@@ -12398,6 +12398,8 @@ export type Mutation = {
   cancelPodForChange: PodChangeRequest;
   /** Sender: withdraw before it is answered. */
   cancelPodPartnerRequest: PodPartnerRequest;
+  /** Venue owner / venues console: cancel a paid order and refund it in full. */
+  cancelVenueFoodOrder: VenueFoodOrder;
   /** Call off a scheduled send before it runs. */
   cancelWaCampaign: WaCampaign;
   /** Attendee: pick one poll option (picking again moves the vote). */
@@ -13124,6 +13126,8 @@ export type Mutation = {
   pickPodChallengeRandom: PodChallenge;
   /** Pin, or take the pin off. Pins belong to the thread, so both people see them. */
   pinStaffMessage: StaffMessage;
+  /** Public: place a food order at a venue and open its payment. No sign-in needed. */
+  placeVenueFoodOrder: VenueFoodOrderPlacement;
   /**
    * Finance-only: process one part of the refund for a Spot Filled Backout
    * request. Without a part, every outstanding part is processed in order.
@@ -13802,6 +13806,8 @@ export type Mutation = {
   /** Onboarding review: how long before a pod starts a finance-negative pod at this venue is auto-cancelled, and what its attendees are refunded. */
   setVenueCancellationTrigger: Venue;
   setVenueDeductions: Venue;
+  /** Venue owner / venues console: move a paid order forward. */
+  setVenueFoodOrderStatus: VenueFoodOrder;
   /** Admin-only: the venue's monthly host Pod Request limit (null = the default of 10). */
   setVenueHostRequestLimit: Venue;
   /** Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it. */
@@ -14415,6 +14421,8 @@ export type Mutation = {
    * account. Nothing is written — there is no account to write to yet.
    */
   verifySignupWhatsAppOtp: SignupWhatsAppProof;
+  /** Public: confirm the Razorpay payment of an order. */
+  verifyVenueFoodOrderPayment: VenueFoodOrder;
   voidPodChallengeScore: PodChallenge;
   /** Thumbs up/down a review. vote: 1 up, -1 down, 0 clears. */
   voteProductReview: ProductReview;
@@ -14969,6 +14977,12 @@ export type MutationCancelPodForChangeArgs = {
 
 export type MutationCancelPodPartnerRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelVenueFoodOrderArgs = {
+  order_id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
 };
 
 
@@ -16703,6 +16717,11 @@ export type MutationPinStaffMessageArgs = {
 };
 
 
+export type MutationPlaceVenueFoodOrderArgs = {
+  input: PlaceVenueFoodOrderInput;
+};
+
+
 export type MutationProcessBackoutRefundArgs = {
   id: Scalars['ID']['input'];
   part?: InputMaybe<BackoutRefundPart>;
@@ -18048,6 +18067,12 @@ export type MutationSetVenueDeductionsArgs = {
   venue_commission_pct: Scalars['Float']['input'];
   venue_doc_id: Scalars['ID']['input'];
   venue_share_pct: Scalars['Float']['input'];
+};
+
+
+export type MutationSetVenueFoodOrderStatusArgs = {
+  order_id: Scalars['ID']['input'];
+  status: VenueFoodOrderStatus;
 };
 
 
@@ -19826,6 +19851,11 @@ export type MutationVerifySignupWhatsAppOtpArgs = {
 };
 
 
+export type MutationVerifyVenueFoodOrderPaymentArgs = {
+  input: VerifyVenueFoodOrderInput;
+};
+
+
 export type MutationVoidPodChallengeScoreArgs = {
   event_id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -21346,6 +21376,17 @@ export type PickupProductRef = {
   name: Scalars['String']['output'];
   /** The product's own status (ACTIVE, PAUSED, ARCHIVED…). */
   status: Scalars['String']['output'];
+};
+
+export type PlaceVenueFoodOrderInput = {
+  /** Minted once per checkout attempt (crypto.randomUUID). Repeating it returns the same order. */
+  client_key: Scalars['String']['input'];
+  customer_name: Scalars['String']['input'];
+  customer_phone: Scalars['String']['input'];
+  items: Array<VenueFoodOrderLineInput>;
+  note?: InputMaybe<Scalars['String']['input']>;
+  table_label?: InputMaybe<Scalars['String']['input']>;
+  venue_id: Scalars['ID']['input'];
 };
 
 /**
@@ -26253,6 +26294,10 @@ export type Query = {
   venueAutoPods: Array<AutoPod>;
   /** partner_request_id: also return the slot that Pod Request holds (its host only) — Create Pod step 3 shows it as picked. */
   venueAvailableSlots: Array<VenueSlot>;
+  /** Public: one order, for whoever holds its access key (or the account that placed it). */
+  venueFoodOrder?: Maybe<VenueFoodOrder>;
+  /** Venue owner / venues console: the paid orders of one venue. */
+  venueFoodOrdersTable: VenueFoodOrderTablePage;
   /**  Admin-only: health for a specific venue.  */
   venueHealth?: Maybe<HealthScore>;
   venueLead?: Maybe<VenueLead>;
@@ -29654,6 +29699,18 @@ export type QueryVenueAutoPodsArgs = {
 export type QueryVenueAvailableSlotsArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   partner_request_id?: InputMaybe<Scalars['ID']['input']>;
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueFoodOrderArgs = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  order_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueFoodOrdersTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
   venue_id: Scalars['ID']['input'];
 };
 
@@ -36935,7 +36992,7 @@ export type UpdateAppSettingsInput = {
 
 /**
  * The only fields an owner may change on an APPROVED venue: description,
- * images, capacity list, owner contact details, and appended (never replaced)
+ * images, capacity list, food menu and ordering, owner contact details, and appended (never replaced)
  * documents. Everything else is locked after approval.
  */
 export type UpdateApprovedVenueInput = {
@@ -36943,7 +37000,10 @@ export type UpdateApprovedVenueInput = {
   capacity_items?: InputMaybe<Array<VenueCapacityItemInput>>;
   cover_image_url?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  food_menu?: InputMaybe<Array<VenueFoodItemInput>>;
+  food_ordering?: InputMaybe<VenueFoodOrderingInput>;
   gallery?: InputMaybe<Array<Scalars['String']['input']>>;
+  offers_food?: InputMaybe<Scalars['Boolean']['input']>;
   owner_address?: InputMaybe<Scalars['String']['input']>;
   owner_dob?: InputMaybe<Scalars['String']['input']>;
   owner_name?: InputMaybe<Scalars['String']['input']>;
@@ -38149,6 +38209,8 @@ export type Venue = {
   description: Scalars['String']['output'];
   documents: Array<VenueDocument>;
   facilities: Array<Scalars['String']['output']>;
+  food_menu: Array<VenueFoodItem>;
+  food_ordering: VenueFoodOrdering;
   gallery: Array<Scalars['String']['output']>;
   gstin: Scalars['String']['output'];
   /** Admin-set cap on monthly host Pod Requests; null = the default of 10. */
@@ -38159,6 +38221,8 @@ export type Venue = {
   lng?: Maybe<Scalars['Float']['output']>;
   locality: Scalars['String']['output'];
   location_id?: Maybe<Scalars['ID']['output']>;
+  /** The venue serves food. On publicVenue the menu is empty unless this is on. */
+  offers_food: Scalars['Boolean']['output'];
   owner_address: Scalars['String']['output'];
   owner_dob?: Maybe<Scalars['String']['output']>;
   owner_email: Scalars['String']['output'];
@@ -38313,6 +38377,154 @@ export type VenueDocumentInput = {
   type: Scalars['String']['input'];
   url: Scalars['String']['input'];
 };
+
+export type VenueFoodDiet =
+  | 'EGG'
+  | 'NON_VEG'
+  | 'VEG'
+  | 'VEGAN';
+
+/** One dish on a venue's food menu. */
+export type VenueFoodItem = {
+  __typename?: 'VenueFoodItem';
+  /** The owner's own menu heading, e.g. 'Starters'. Blank lists under no heading. */
+  category: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  diet: VenueFoodDiet;
+  id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  /** Off = shown as unavailable and refused at checkout. */
+  is_available: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  /** Rupees for one, taxes included. */
+  price: Scalars['Float']['output'];
+  spice_level: VenueFoodSpiceLevel;
+};
+
+export type VenueFoodItemInput = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  diet?: InputMaybe<VenueFoodDiet>;
+  /** The id of a dish the venue already lists; leave out for a new dish. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  is_available?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  price: Scalars['Float']['input'];
+  spice_level?: InputMaybe<VenueFoodSpiceLevel>;
+};
+
+/** A food order placed by scanning a venue's QR. Paid to the venue's own Razorpay account. */
+export type VenueFoodOrder = {
+  __typename?: 'VenueFoodOrder';
+  cancel_reason: Scalars['String']['output'];
+  cancelled_at?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  customer_name: Scalars['String']['output'];
+  customer_phone: Scalars['String']['output'];
+  discount_amount: Scalars['Float']['output'];
+  discount_pct: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  items: Array<VenueFoodOrderLine>;
+  note: Scalars['String']['output'];
+  order_no: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_status: VenueFoodPaymentStatus;
+  status: VenueFoodOrderStatus;
+  subtotal: Scalars['Float']['output'];
+  table_label: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+/** A dish as it was when ordered. */
+export type VenueFoodOrderLine = {
+  __typename?: 'VenueFoodOrderLine';
+  diet: VenueFoodDiet;
+  item_id: Scalars['ID']['output'];
+  line_total: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  unit_price: Scalars['Float']['output'];
+};
+
+export type VenueFoodOrderLineInput = {
+  item_id: Scalars['ID']['input'];
+  quantity: Scalars['Int']['input'];
+};
+
+export type VenueFoodOrderPlacement = {
+  __typename?: 'VenueFoodOrderPlacement';
+  /** Proves the order is the caller's on every later read. Keep it with the order id. */
+  access_key: Scalars['String']['output'];
+  order: VenueFoodOrder;
+  /** Null once the order is no longer waiting for payment. */
+  razorpay?: Maybe<VenueFoodRazorpaySheet>;
+};
+
+/** Where the kitchen has got to with an order. */
+export type VenueFoodOrderStatus =
+  | 'ACCEPTED'
+  | 'CANCELLED'
+  | 'PLACED'
+  | 'PREPARING'
+  | 'READY'
+  | 'SERVED';
+
+/** Server-side table page for the shared table engine. */
+export type VenueFoodOrderTablePage = {
+  __typename?: 'VenueFoodOrderTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<VenueFoodOrder>;
+  total: Scalars['Int']['output'];
+};
+
+/** Scan-and-order. Guests pay the venue's OWN Razorpay account. */
+export type VenueFoodOrdering = {
+  __typename?: 'VenueFoodOrdering';
+  /** Percent the venue takes off every QR order. */
+  discount_pct: Scalars['Int']['output'];
+  enabled: Scalars['Boolean']['output'];
+  /** The owner's saved Razorpay connection. Always null on the public venue. */
+  razorpay_integration_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type VenueFoodOrderingInput = {
+  discount_pct?: InputMaybe<Scalars['Int']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** One of the venue owner's own myPartnerIntegrations(provider: RAZORPAY) that passed its check; null unlinks. */
+  razorpay_integration_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type VenueFoodPaymentStatus =
+  | 'FAILED'
+  | 'PAID'
+  | 'PENDING'
+  | 'REFUNDED'
+  | 'REFUND_PENDING';
+
+/** What the browser hands Razorpay's checkout to collect the payment. */
+export type VenueFoodRazorpaySheet = {
+  __typename?: 'VenueFoodRazorpaySheet';
+  /** Paise. */
+  amount: Scalars['Int']['output'];
+  currency: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  key_id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  order_id: Scalars['String']['output'];
+  prefill_contact: Scalars['String']['output'];
+};
+
+export type VenueFoodSpiceLevel =
+  | 'EXTRA_HOT'
+  | 'HOT'
+  | 'MEDIUM'
+  | 'MILD'
+  | 'NONE';
 
 export type VenueLead = {
   __typename?: 'VenueLead';
@@ -38505,6 +38717,12 @@ export type VenueRegistrationConfig = {
   capacity_item_limit: Scalars['Int']['output'];
   doc_types: Array<Scalars['String']['output']>;
   facilities: Array<Scalars['String']['output']>;
+  food_diets: Array<VenueFoodDiet>;
+  food_discount_max_pct: Scalars['Int']['output'];
+  food_image_limit: Scalars['Int']['output'];
+  food_menu_limit: Scalars['Int']['output'];
+  food_price_max: Scalars['Int']['output'];
+  food_spice_levels: Array<VenueFoodSpiceLevel>;
   /** The doc_types entry uploaded beside a GSTIN, not from the general list. */
   gstin_doc_type: Scalars['String']['output'];
   /** The doc_types entry uploaded beside a PAN, not from the general list. */
@@ -38678,11 +38896,14 @@ export type VenueStep1Input = {
   cover_image_url?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   facilities?: InputMaybe<Array<Scalars['String']['input']>>;
+  food_menu?: InputMaybe<Array<VenueFoodItemInput>>;
+  food_ordering?: InputMaybe<VenueFoodOrderingInput>;
   gallery?: InputMaybe<Array<Scalars['String']['input']>>;
   lat?: InputMaybe<Scalars['Float']['input']>;
   lng?: InputMaybe<Scalars['Float']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   location_id?: InputMaybe<Scalars['ID']['input']>;
+  offers_food?: InputMaybe<Scalars['Boolean']['input']>;
   postal_code: Scalars['String']['input'];
   security?: InputMaybe<Array<Scalars['String']['input']>>;
   state: Scalars['String']['input'];
@@ -38759,6 +38980,14 @@ export type VerifyPasswordResetCodeInput = {
 
 export type VerifyRazorpayInput = {
   payment_doc_id: Scalars['ID']['input'];
+  razorpay_order_id: Scalars['String']['input'];
+  razorpay_payment_id: Scalars['String']['input'];
+  razorpay_signature: Scalars['String']['input'];
+};
+
+export type VerifyVenueFoodOrderInput = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  order_id: Scalars['ID']['input'];
   razorpay_order_id: Scalars['String']['input'];
   razorpay_payment_id: Scalars['String']['input'];
   razorpay_signature: Scalars['String']['input'];

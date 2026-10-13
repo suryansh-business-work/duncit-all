@@ -50,6 +50,9 @@ export default function AssignDrawer({ request, onClose, onOffered }: Readonly<P
     skip: !request,
     fetchPolicy: 'cache-and-network',
   });
+  // The picked venue's id for the offer; absent only for a candidate with no
+  // venue behind it, which has no slots to pick from either.
+  const venueId = venue?.venue_id ?? undefined;
   const slots = useQuery<any>(POD_CHANGE_VENUE_SLOTS, {
     variables: { request_id: request?.id ?? '', venue_id: venue?.venue_id ?? '' },
     skip: !request || !venue?.venue_id,
@@ -138,7 +141,7 @@ export default function AssignDrawer({ request, onClose, onOffered }: Readonly<P
               onPick={(slot) =>
                 send({
                   user_id: venue.user_id,
-                  venue_id: venue.venue_id ?? undefined,
+                  venue_id: venueId,
                   venue_slot_id: slot.id,
                 })
               }

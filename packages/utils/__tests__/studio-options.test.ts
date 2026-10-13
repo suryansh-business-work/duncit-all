@@ -21,6 +21,7 @@ describe('STUDIO_OPTION_LIST', () => {
       'settings',
       'earnings',
       'publish',
+      'food-orders',
       'pods',
       'change-requests',
       'pod-requests',

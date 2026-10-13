@@ -126,7 +126,7 @@ const mapError = (e?: { name: string; message: string; stack?: string }) =>
 // Name, email and phone are not stored (telemetryUser.ts); the TelemetryUser
 // field resolvers look them up when the Tech portal reads the row.
 const mapUser = (u?: ITelemetryUser | null) =>
-  u?.id ? { id: u.id, roles: u.roles ?? [] } : null;
+  u?.id ? { id: u.id, roles: u.roles } : null;
 
 const mapClient = (c?: ITelemetryClient | null) =>
   c
@@ -199,12 +199,12 @@ const bugPub = (d: IBug) => ({
   last_session_id: d.last_session_id ?? null,
   last_ip: d.last_ip ?? null,
   last_client: mapClient(d.last_client),
-  affected_user_count: d.affected_user_count ?? 0,
-  affected_user_ids: d.affected_user_ids ?? [],
-  anonymous_count: d.anonymous_count ?? 0,
+  affected_user_count: d.affected_user_count,
+  affected_user_ids: d.affected_user_ids,
+  anonymous_count: d.anonymous_count,
   status: d.status,
   resolved_at: d.resolved_at ? d.resolved_at.toISOString() : null,
-  resolved_by: d.resolved_by ?? null,
+  resolved_by: d.resolved_by,
   created_at: d.created_at.toISOString(),
 });
 

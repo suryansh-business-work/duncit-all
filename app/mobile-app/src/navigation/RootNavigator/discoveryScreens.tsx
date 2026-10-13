@@ -31,6 +31,7 @@ import { ReferralScreen } from '@/screens/ReferralScreen';
 import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
 import { TourGuideScreen } from '@/screens/TourGuideScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
+import { VenueFoodOrderScreen } from '@/screens/VenueFoodOrderScreen';
 import { OrderDetailScreen } from '@/screens/OrderDetailScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
 import { ProductCheckoutScreen } from '@/screens/ProductCheckoutScreen';
@@ -74,6 +75,7 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="PostDetail" component={PostDetailScreen} />
       <Stack.Screen name="Follow" component={FollowListScreen} />
       <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
+      <Stack.Screen name="VenueFoodOrder" component={VenueFoodOrderScreen} />
       <Stack.Screen name="CityLaunch" component={CityLaunchScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="ProductCheckout" component={GatedProductCheckoutScreen} />

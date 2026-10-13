@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EM_DASH } from '@duncit/table';
-import type { AutoPodStage } from '@duncit/utils';
+import { shellAutoPodLabels, type AutoPodStage } from '@duncit/utils';
 import {
   clubNameOf,
   hostNameOf,
@@ -9,6 +9,7 @@ import {
   isAutoPodDeletable,
   isAutoPodEditable,
   isAutoPodPausable,
+  modeLabelOf,
   pendingFilterOptions,
   STAGE_COLOR,
   STAGE_LABEL_KEY,
@@ -167,6 +168,7 @@ describe('categoryPathOf', () => {
     expect(categoryPathOf(makeRow())).toBe('Outdoors › Hiking › Adventure');
     expect(categoryPathOf(makeRow({ category_path: ['Outdoors', '', 'Adventure'] }))).toBe('Outdoors › Adventure');
     expect(categoryPathOf(makeRow({ category_path: [] }))).toBe('');
+    expect(categoryPathOf(makeRow({ category_path: null as unknown as string[] }))).toBe('');
   });
 });
 
@@ -175,5 +177,15 @@ describe('isAutoPodPausable', () => {
     for (const stage of ALL_STAGES) {
       expect(isAutoPodPausable(makeRow({ stage }))).toBe(stage === 'OPEN' || stage === 'CLAIMING');
     }
+  });
+});
+
+describe('modeLabelOf', () => {
+  const labels = shellAutoPodLabels((key: string) => `<${key}>`);
+
+  it('names a virtual offer Virtual and everything else Physical', () => {
+    expect(modeLabelOf(makeRow({ pod_mode: 'VIRTUAL' }), labels)).toBe(labels.modeVirtual);
+    expect(modeLabelOf(makeRow({ pod_mode: 'PHYSICAL' }), labels)).toBe(labels.modePhysical);
+    expect(labels.modeVirtual).not.toBe(labels.modePhysical);
   });
 });

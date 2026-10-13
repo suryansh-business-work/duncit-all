@@ -20,6 +20,13 @@ interface TableApiAccessData {
   };
 }
 
+const NO_ACCESS: TableApiAccessData['myTableApiAccess'] = {
+  token: null,
+  base_url: '',
+  created_at: null,
+  last_used_at: null,
+};
+
 /**
  * Tech → Table API → Settings: the signed-in person's own token for every
  * portal table's "GET API" URL. The token acts as its owner, so it reads only
@@ -35,16 +42,16 @@ export default function TableApiSettingsPage() {
   const mutationOptions = { refetchQueries: [MY_TABLE_API_ACCESS] };
   const [rotate, rotation] = useMutation(ROTATE_MY_TABLE_API_TOKEN, mutationOptions);
   const [revoke, revocation] = useMutation(REVOKE_MY_TABLE_API_TOKEN, mutationOptions);
-  const access = data?.myTableApiAccess;
-  const token = access?.token ?? null;
+  const access = data?.myTableApiAccess ?? NO_ACCESS;
+  const token = access.token ?? '';
   const busy = rotation.loading || revocation.loading;
-  const lastUsed = access?.last_used_at
+  const lastUsed = access.last_used_at
     ? t('tech.tableApiSettings.lastUsedAt', { vars: { date: formatDateTime(access.last_used_at) } })
     : t('tech.tableApiSettings.neverUsed');
-  const sample = token ? `${access?.base_url}/myApiKeysTable?token=${token}&page=1&page_size=25` : '';
+  const sample = token ? `${access.base_url}/myApiKeysTable?token=${token}&page=1&page_size=25` : '';
 
   const copy = async () => {
-    const copied = await copyToClipboard(token ?? '');
+    const copied = await copyToClipboard(token);
     notify(copied ? t('tech.tableApiSettings.copied') : t('tech.tableApiSettings.copyFailed'), copied ? 'success' : 'error');
   };
 
@@ -97,9 +104,9 @@ export default function TableApiSettingsPage() {
               data-testid="table-api-token"
               sx={{ fontFamily: 'monospace', wordBreak: 'break-all', p: 1.5, borderRadius: 1, bgcolor: 'action.hover' }}
             >
-              {token ?? t('tech.tableApiSettings.noToken')}
+              {token || t('tech.tableApiSettings.noToken')}
             </Typography>
-            {access?.created_at ? (
+            {access.created_at ? (
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {t('tech.tableApiSettings.issuedAt', { vars: { date: formatDateTime(access.created_at) } })}
                 {' · '}

@@ -81,12 +81,11 @@ export default function WaCampaignDetailDialog({
   });
 
   /** The list as a spreadsheet — every row, built by the server. */
-  const exportCsv = async () => {
-    if (!campaign) return;
+  const exportCsv = async (target: WaCampaignRow) => {
     try {
-      const result = await fetchCsv({ variables: { campaign_id: campaign.campaign_id } });
+      const result = await fetchCsv({ variables: { campaign_id: target.campaign_id } });
       const csv = result.data?.waCampaignRecipientsCsv;
-      if (csv) downloadTextFile(csv, `${campaign.name}-recipients.csv`, 'text/csv');
+      if (csv) downloadTextFile(csv, `${target.name}-recipients.csv`, 'text/csv');
     } catch (e) {
       notifyError(parseApiError(e, 'Could not build the recipient list'));
     }

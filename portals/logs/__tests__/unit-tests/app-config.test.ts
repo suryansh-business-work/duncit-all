@@ -8,6 +8,16 @@ vi.mock('@duncit/shell', async () => {
   return { parseEnvRoles };
 });
 
+interface NavNode {
+  label: string;
+  to?: string;
+  children?: NavNode[];
+}
+
+/** Every routed path under a nav tree, depth first. */
+const flatten = (nodes: NavNode[]): string[] =>
+  nodes.flatMap((node) => (node.children ? flatten(node.children) : node.to ? [node.to] : []));
+
 const loadConfig = async () => {
   vi.resetModules();
   return (await import('../../src/config/app-config')).appConfig;
@@ -18,13 +28,47 @@ afterEach(() => {
 });
 
 describe('Logs console app config', () => {
-  it('declares its identity, storage keys and one dashboard entry', async () => {
+  it('declares its identity and storage keys', async () => {
     const appConfig = await loadConfig();
     expect(appConfig.key).toBe('logs');
     expect(appConfig.fullName).toBe('Duncit Logs');
     expect(appConfig.tokenKey).toBe('logs_token');
     expect(appConfig.colorModeKey).toBe('logs_color_mode');
-    expect(appConfig.nav.map((item) => item.to)).toEqual(['/']);
+  });
+
+  it('opens on the dashboard, then groups every borrowed log under its console', async () => {
+    const { nav } = (await loadConfig()) as unknown as { nav: NavNode[] };
+    expect(nav[0]).toMatchObject({ to: '/', label: 'Dashboard' });
+    expect(nav.slice(1).map((group) => group.label)).toEqual([
+      'Tech',
+      'AI',
+      'Communications',
+      'Finance',
+      'Legal',
+      'Pods',
+    ]);
+    // A group is a folder, not a page: only its leaves are routes.
+    for (const group of nav.slice(1)) {
+      expect(group.to).toBeUndefined();
+      expect(group.children?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('routes every leaf to a distinct path', async () => {
+    const { nav } = (await loadConfig()) as unknown as { nav: NavNode[] };
+    const leaves = flatten(nav);
+    expect(leaves).toEqual(
+      expect.arrayContaining([
+        '/',
+        '/telemetry/logs',
+        '/emails/logs',
+        '/msg91-otp/settings',
+        '/payment-logs',
+        '/policy-acceptance-logs',
+        '/pod-monitoring',
+      ]),
+    );
+    expect(new Set(leaves).size).toBe(leaves.length);
   });
 
   it('gates on its default roles and ships its own login image by default', async () => {

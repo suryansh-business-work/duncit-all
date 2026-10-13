@@ -4,6 +4,7 @@ import {
   CREATE_POLICY,
   DELETE_POLICY,
   NOTIFY_POLICY_ACCEPTED_USERS,
+  POLICY_BY_SLUG,
   POLICY_NOTIFY_RECIPIENT_COUNT,
   POLICY_VERSIONS,
   UPDATE_POLICY,
@@ -107,6 +108,54 @@ export const recipientCountMock = (people: number, id = 'p1'): MockedResponse =>
 export const notifyPolicyMock = (people: number, id = 'p1'): MockedResponse => ({
   request: { query: NOTIFY_POLICY_ACCEPTED_USERS, variables: { id, summary: '' } },
   result: { data: { notifyPolicyAcceptedUsers: people } },
+});
+
+/* ---- Brand Consent: the one policy found by its fixed slug ---- */
+
+export type PolicyBySlugMock = Pick<
+  Policy,
+  | 'id'
+  | 'slug'
+  | 'title'
+  | 'policy_type'
+  | 'content'
+  | 'is_active'
+  | 'requires_signup_acceptance'
+  | 'updated_at'
+  | 'content_hash'
+  | 'version_count'
+> & { __typename: 'Policy' };
+
+export const makePolicyBySlug = (over: Partial<PolicyBySlugMock> = {}): PolicyBySlugMock => ({
+  __typename: 'Policy',
+  id: 'consent-1',
+  slug: 'brand-partner-consent',
+  title: 'Brand Partner Consent',
+  policy_type: 'Brand & Seller Policy',
+  content: '<p>You agree to list only goods you are allowed to sell.</p>',
+  is_active: true,
+  requires_signup_acceptance: false,
+  updated_at: ISO,
+  content_hash: 'sha256-consent-v1',
+  version_count: 1,
+  ...over,
+});
+
+/** `policyBySlug` for the Brand Consent page; `null` is "never written". */
+export const policyBySlugMock = (
+  policy: PolicyBySlugMock | null,
+  slug = 'brand-partner-consent',
+): MockedResponse => ({
+  request: { query: POLICY_BY_SLUG, variables: { slug } },
+  result: { data: { policyBySlug: policy } },
+});
+
+/** A create that only answers when its variables pass `matches`. */
+export const createPolicyMatchingMock = (
+  matches: (variables: Record<string, unknown>) => boolean,
+): MockedResponse => ({
+  request: { query: CREATE_POLICY, variables: matches },
+  result: { data: { createPolicy: { __typename: 'Policy', id: 'consent-1' } } },
 });
 
 /** An update that only answers when its variables pass `matches` — so a spec

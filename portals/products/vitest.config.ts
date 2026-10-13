@@ -39,9 +39,6 @@ export default defineConfig({
         'src/**/*.cy.{ts,tsx}',
         // GraphQL document modules: gql tags + generated-shape interfaces only, no logic.
         'src/pages/inventory-page/queries.ts',
-        'src/pages/inventory-page/inventory-product-page/productQueries.ts',
-        'src/pages/orders/queries.ts',
-        'src/pages/ecomm/queries.ts',
         'src/pages/ecomm/ecomm-requests/queries.ts',
         'src/pages/warehouse-approval/queries.ts',
         // Type-only declarations.

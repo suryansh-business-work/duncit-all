@@ -24,51 +24,10 @@ export default defineConfig({
     // resolves and no relative depth had to be rewritten), while the package's
     // own suites live under __tests__/.
     include: ['__tests__/**/*.test.{ts,tsx}', 'src/**/__tests__/**/*.test.{ts,tsx}'],
-    /**
-     * Three suites arrived BROKEN with the clubs console.
-     *
-     * They came from the admin portal, where portal coverage is evidence
-     * rather than a gate, so nobody saw them fail. This package's coverage IS
-     * gated, and dragging inherited failures in would red the Shared packages
-     * check for everybody.
-     *
-     * Not a guess — ClubPodsCard was restored from the pre-move commit and run
-     * inside admin's own runner, where it fails identically ("Found multiple
-     * elements": its matcher is `textContent.endsWith`, which matches an
-     * element AND its parent). ClubsTable/ClubsPage fail on a missing Router
-     * context, the same harness gap.
-     *
-     * Excluded rather than "fixed" by loosening assertions: the tests are
-     * telling the truth about a fragile matcher and a missing provider. They
-     * come back the moment the repo-wide test pause lifts — the code they
-     * cover ships either way, it is only these assertions that are unsound.
-     */
-    /**
-     * Suites that arrived BROKEN with the consoles they came from.
-     *
-     * Every one is an ADMIN suite that fails identically in ADMIN's own runner
-     * on the pre-move commit — verified by restoring the subject and its test
-     * from git and running them there, not assumed. Portal coverage is evidence
-     * rather than a gate, so nobody saw them fail; this package's coverage IS
-     * gated, and dragging them in would red the Shared packages check for
-     * everybody.
-     *
-     * Excluded rather than "fixed" by loosening assertions: they are telling
-     * the truth about fragile queries (a `textContent.endsWith` matcher that
-     * also matches the parent; a `getByLabelText` that MUI no longer satisfies
-     * the same way). They come back when the repo-wide test pause lifts — the
-     * code they cover ships either way.
-     */
-    exclude: [
-      'node_modules/**',
-      '__tests__/clubs/list/ClubsPage.test.tsx',
-      '__tests__/clubs/list/ClubsTable.test.tsx',
-      'src/clubs/editor/__tests__/index.test.tsx',
-      'src/pods/auto/editor/__tests__/index.test.tsx',
-      'src/pods/event-tickets/__tests__/CompanionsDialog.test.tsx',
-      'src/pods/list/__tests__/PodsPage.test.tsx',
-      'src/pods/settings/__tests__/PodSettingsPage.test.tsx',
-    ],
+    // Every suite runs. Seven admin suites that once arrived broken (and sat here
+    // excluded) were re-run and pass against the current sources; ClubsTable only
+    // needed its column list brought up to date with the Visibility column.
+    exclude: ['node_modules/**'],
     setupFiles: ['./__tests__/setup.ts'],
     // Eighteen jsdom files on a many-core Windows box spawn a fork per core and
     // the pool dies (ERR_IPC_CHANNEL_CLOSED) before a single test reports. Four
@@ -139,7 +98,12 @@ export default defineConfig({
       // under it on purpose: CI counts a smaller denominator and reads higher, and
       // the slack is what stops the next console commit reding the build for
       // everyone before its own suites land.
-      thresholds: { statements: 20, branches: 78, functions: 57, lines: 20 },
+      //
+      // 2026-10-12 — RAISED again: the seven suites that sat excluded as "broken"
+      // were re-run and pass, and the pods, club-admins, venues and hosts editors
+      // and detail pages got real suites. Local reading is now 80.3 / 95.3 / 89.8 /
+      // 80.3; pinned a few points under it for the same Windows-vs-CI reason.
+      thresholds: { statements: 75, branches: 92, functions: 85, lines: 75 },
     },
   },
 });

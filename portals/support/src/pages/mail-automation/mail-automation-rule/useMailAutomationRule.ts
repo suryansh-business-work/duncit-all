@@ -85,7 +85,7 @@ export function useMailAutomationRule(account: MailAutomationAccount, onSaved: (
   });
   const [runPreview, previewState] = useLazyQuery<{ mailAutomationPreview: ReplyPreview }>(
     MAIL_AUTOMATION_PREVIEW,
-    { fetchPolicy: 'network-only' }
+    { fetchPolicy: 'network-only', errorPolicy: 'all' }
   );
 
   /**

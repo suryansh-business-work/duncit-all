@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
+import { VenueModel } from '@modules/venues/venue/venue.model';
 import { EcommBrandModel, type IEcommBrand } from './ecommBrand.model';
 import {
   applyRazorpayInput,
@@ -53,8 +54,8 @@ const toPub = (doc: IPartnerIntegration, brands: LinkedBrand[]) => ({
   label: doc.label,
   status: integrationStatus(doc, doc.provider),
   brands: brands.map((b) => ({ id: b._id.toHexString(), brand_name: b.brand_name ?? '' })),
-  created_at: doc.created_at ? doc.created_at.toISOString() : null,
-  updated_at: doc.updated_at ? doc.updated_at.toISOString() : null,
+  created_at: doc.created_at.toISOString(),
+  updated_at: doc.updated_at.toISOString(),
 });
 
 /** The brands that use a connection — one read for the whole list, never one per row. */
@@ -202,6 +203,9 @@ export const partnerIntegrationService = {
       const names = inUse.map((b) => b.brand_name || 'Untitled brand').join(', ');
       bad(`In use by ${names}. Choose another connection on ${inUse.length === 1 ? 'that brand' : 'those brands'} first.`);
     }
+    // A venue's food orders are verified and refunded on this account long after they are placed.
+    const venue = await VenueModel.findOne({ 'food_ordering.razorpay_integration_id': doc._id }).select('venue_name').lean();
+    if (venue) bad(`In use for food orders at ${venue.venue_name || 'a venue'}. Choose another Razorpay account there first.`);
     await doc.deleteOne();
     return true;
   },

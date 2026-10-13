@@ -1,7 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
+const m = vi.hoisted(() => ({ notify: vi.fn() }));
+vi.mock('@duncit/dialogs', async (io) => ({
+  ...(await io<typeof import('@duncit/dialogs')>()),
+  notify: m.notify,
+}));
+
 import EmailLogDrawer from '../../src/pages/email-logs-page/EmailLogDrawer';
 import { EMAIL_LOG_ONE } from '../../src/pages/email-logs-page/queries';
 
@@ -46,7 +52,12 @@ const renderDrawer = (data: Record<string, unknown> | null = row, onClose = vi.f
   return onClose;
 };
 
+const stubClipboard = (writeText: (v: string) => Promise<void>) =>
+  Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, value: { writeText } });
+
 describe('EmailLogDrawer', () => {
+  afterEach(() => m.notify.mockClear());
+
   it('shows the email that was sent, not a re-render of the template', async () => {
     renderDrawer();
     // The subject is the drawer's title, and the body arrives as stored HTML.
@@ -80,6 +91,31 @@ describe('EmailLogDrawer', () => {
     fireEvent.click(await screen.findByRole('tab', { name: 'HTML' }));
     expect(screen.getByText('<p>Hello Asha</p>')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
+  });
+
+  it('copies the stored HTML and confirms it', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    stubClipboard(writeText);
+    renderDrawer();
+    fireEvent.click(await screen.findByRole('tab', { name: 'HTML' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    await waitFor(() => expect(m.notify).toHaveBeenCalledWith('HTML copied', 'success'));
+    expect(writeText).toHaveBeenCalledWith('<p>Hello Asha</p>');
+  });
+
+  it('surfaces the clipboard failure instead of swallowing it', async () => {
+    stubClipboard(vi.fn().mockRejectedValue(new Error('Clipboard blocked')));
+    renderDrawer();
+    fireEvent.click(await screen.findByRole('tab', { name: 'HTML' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    await waitFor(() => expect(m.notify).toHaveBeenCalledWith('Clipboard blocked', 'error'));
+  });
+
+  it('shows the empty-body notice on the HTML tab too', async () => {
+    renderDrawer({ ...row, html: '', status: 'SKIPPED' });
+    fireEvent.click(await screen.findByRole('tab', { name: 'HTML' }));
+    expect(screen.getByText(/stopped before a body existed/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Copy' })).not.toBeInTheDocument();
   });
 
   it('says so when the attempt never produced a body', async () => {

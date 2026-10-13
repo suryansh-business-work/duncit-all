@@ -65,6 +65,10 @@ function addCoreIssues(values: ClubFormValues, add: AddIssue) {
     else if (!isLink(link)) add(field, 'Enter a valid link (https://…)');
   }
   if (mediaCount(values.feature_text) < 1) add('feature_text', 'Add at least one feature image');
+  // A half-filled FAQ is dropped on save (cleanFaqs); say so rather than lose it silently.
+  if (values.faqs.some((faq) => Boolean(faq.question.trim()) !== Boolean(faq.answer.trim()))) {
+    add('faqs', 'Each FAQ needs both a question and an answer');
+  }
 }
 
 /**

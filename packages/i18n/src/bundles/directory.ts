@@ -198,6 +198,25 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       seats: 'Seats',
       addSpace: 'Add a space',
       removeSpace: 'Remove this space',
+      // The food menu. QR ordering and its Razorpay account are the owner's, in
+      // the Partners portal — this console edits the menu and nothing else.
+      offersFood: 'Offers food',
+      foodMenu: 'Food menu',
+      foodMenuHint:
+        'List each dish the venue serves. QR ordering and its Razorpay account are set by the owner in the Partners portal.',
+      dishHeading: 'Dish {number}',
+      dishName: 'Dish name',
+      dishDescription: 'Dish description',
+      dishSection: 'Menu section',
+      dishSectionHint: 'The heading it sits under, like Starters.',
+      dishPrice: 'Price',
+      dishDiet: 'Food type',
+      dishSpice: 'Spice level',
+      dishAvailable: 'Available',
+      dishPhotosEmpty: 'No photos of this dish yet.',
+      dishPhotoAlt: 'Photo of dish {number}',
+      addDish: 'Add a dish',
+      removeDish: 'Remove dish {number}',
       amenities: 'Amenities',
       facilities: 'Facilities',
       security: 'Security',
@@ -328,12 +347,42 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       errPincode: 'Enter a valid postal/ZIP code',
       errGstin: 'GSTIN looks like 22ABCDE1234F1Z5',
       errPan: 'PAN looks like ABCDE1234F',
+      errDishPhotos: 'A dish can have at most {max} photos',
+      errMenuSize: 'A menu can list at most {max} dishes',
+      errHiddenMenu:
+        'A dish on the menu needs fixing before this venue can be saved. Switch this on to see it.',
       errNoId: 'The venue was not saved — no id came back.',
       // Shown to a viewer holding only the console's access role. The values are
       // still visible — knowing a venue's commission is part of reading the
       // record — but the controls are theirs to read, not to move.
       governedBy:
         'Approvals, the percentages and the live switch are set by platform admins and the onboarding desk. Everything else on this page is yours to edit.',
+    },
+    // A venue's food side — the detail page's Food card, and the food type and
+    // spice level wording the editor's selects share with it.
+    venueFood: {
+      title: 'Food',
+      notOffered: 'Does not offer food',
+      offersFood: 'Offers food',
+      yes: 'Yes',
+      qrOrdering: 'QR ordering',
+      orderingOn: 'On',
+      orderingOff: 'Off',
+      discount: 'Discount on QR orders',
+      discountValue: '{pct}%',
+      menu: 'Menu',
+      noMenu: 'No dishes listed yet.',
+      available: 'Available',
+      unavailable: 'Unavailable',
+      dietVeg: 'Vegetarian',
+      dietNonVeg: 'Non-vegetarian',
+      dietEgg: 'Contains egg',
+      dietVegan: 'Vegan',
+      spiceNone: 'Not spicy',
+      spiceMild: 'Mild',
+      spiceMedium: 'Medium',
+      spiceHot: 'Hot',
+      spiceExtraHot: 'Extra hot',
     },
     // The hosts console — its list, its record and `/hosts/new` + `/hosts/:id/edit`.
     // Generic messages and the payout block are borrowed from `venueEditor.*`

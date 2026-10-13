@@ -17,6 +17,7 @@ import BasicSection from './sections/BasicSection';
 import MediaSection from './sections/MediaSection';
 import LinksSection from './sections/LinksSection';
 import ContentSection from './sections/ContentSection';
+import FaqListField from './components/FaqListField';
 import AdminsSection from './sections/AdminsSection';
 import LinkedHostsField from './sections/LinkedHostsField';
 import { SECTION_OF, type ClubFormValues } from './types';
@@ -35,6 +36,9 @@ function buildSections(showAdmins: boolean, t: Translate): SectionDef[] {
     { id: 'media', label: t('clubForm.clubSections.mediaAndMoments'), render: () => <MediaSection /> },
     { id: 'links', label: t('clubForm.clubSections.venuesAndCommunityLinks'), render: () => <LinksSection /> },
     { id: 'content', label: t('clubForm.clubSections.pageContentWhoWeArePerks'), render: () => <ContentSection /> },
+    // Its own section, not the tail of "Page content": that accordion opens
+    // collapsed, and a FAQ at the bottom of it was easy to never find.
+    { id: 'faqs', label: t('clubForm.clubSections.faqs'), render: () => <FaqListField /> },
   ];
   if (showAdmins) {
     list.push(

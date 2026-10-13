@@ -154,6 +154,33 @@ the switch actually moved, because it emails the owner — `setVenueActive`). Th
 split exists on the server because four different people write those fields in
 production; an admin is not one of the four, so the editor is one form.
 
+### The food menu
+
+"The space" section carries an **Offers food** switch (`offers_food`) and, while
+it is on, the venue's menu (`food_menu`): each dish's name, description, menu
+section, price, food type, spice level, availability and photos (uploaded to
+`/venues/menu`). Both ride on `adminUpdateVenue`'s `step1`, and the rules are the
+server's:
+
+- The food types, spice levels and the three bounds (`food_menu_limit`,
+  `food_image_limit`, `food_price_max`) come from `venueRegistrationConfig` and
+  are handed to `makeVenueFormSchema(t, limits)` — nothing is restated in the
+  client. Until the catalogue answers the form runs on `UNCAPPED_FOOD_LIMITS`
+  and the server stays the judge.
+- A stored dish goes back under its own `id` (held in the form as `item_id`,
+  because `useFieldArray` owns `id`), so it stays the same dish; a row added in
+  the form carries none and is created.
+- `food_ordering` is **read, never written**. QR ordering charges the venue
+  OWNER's Razorpay account, which is linked only from the Partners portal;
+  leaving the key out of `step1` is what leaves the owner's settings untouched.
+  Switching `offers_food` off makes the server turn ordering off and keep the
+  menu.
+
+`VenueDetailsPage`'s Overview tab shows the same data read-only in its Food card
+(`VenueFoodCard`): offers food, QR ordering on/off, the discount, and the menu.
+The food type and spice level wording is one map, `venues/food-labels.ts`, shared
+by the editor's selects and the card.
+
 `ChangeLogsSection` is the other half, and the reason editing here is safe:
 
 ```tsx

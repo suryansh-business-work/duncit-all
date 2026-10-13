@@ -44,6 +44,9 @@ export const makeVenue = (over: Partial<AdminVenueDetail> = {}): AdminVenueDetai
     { label: 'Terrace', capacity: 24 },
     { label: 'Loft', capacity: 16 },
   ],
+  offers_food: false,
+  food_menu: [],
+  food_ordering: { enabled: false, discount_pct: 0 },
   venue_category: {
     super_category_id: 'sc-1',
     category_id: 'c-1',

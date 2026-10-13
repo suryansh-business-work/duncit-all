@@ -68,7 +68,7 @@ export function mount(root: HTMLElement): void {
   const paintPreview = (picked: Set<string>) => {
     const all = picked.has('AUTO');
     for (const zone of root.querySelectorAll<HTMLElement>('[data-zone]')) {
-      zone.classList.toggle('is-live', all || picked.has(zone.dataset.zone ?? ''));
+      zone.classList.toggle('is-live', all || picked.has(String(zone.dataset.zone)));
     }
   };
 

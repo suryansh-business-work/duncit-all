@@ -152,7 +152,7 @@ Cypress.Commands.add('useRunTraffic', () => {
     return;
   }
   cy.staffGql<{ e2eTrafficKey: string }>(E2E_TRAFFIC_KEY_QUERY, {
-    stamp: Cypress.env('E2E_STAMP'),
+    stamp: String(Cypress.env('E2E_STAMP')),
   }).then((data) => {
     Cypress.env(TRAFFIC_KEY, data.e2eTrafficKey);
     tag(data.e2eTrafficKey);
@@ -180,7 +180,10 @@ Cypress.Commands.add('readOtp', (purpose: E2eCodePurpose, target: CodeTarget, af
 
 Cypress.Commands.add('purgeRunAccount', () => {
   cy.staffGql(E2E_PURGE_MUTATION, {
-    input: { stamp: Cypress.env('E2E_STAMP'), signup_email: Cypress.env('E2E_SIGNUP_EMAIL') },
+    input: {
+      stamp: String(Cypress.env('E2E_STAMP')),
+      signup_email: Cypress.env('E2E_SIGNUP_EMAIL'),
+    },
   });
 });
 

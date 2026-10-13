@@ -1,4 +1,10 @@
-import { blankRegisterVenueValues, type RegisterVenueValues } from './register-venue.types';
+import type { VenueFoodItem } from '@duncit/utils';
+import {
+  blankFoodOrdering,
+  blankRegisterVenueValues,
+  type FoodMenuRow,
+  type RegisterVenueValues,
+} from './register-venue.types';
 
 const cityName = (location: any) => location.city || location.location_name || '';
 
@@ -36,6 +42,18 @@ const hydrateLocation = (values: RegisterVenueValues, locations: any[]): Registe
   };
 };
 
+const toFoodRow = (item: Partial<VenueFoodItem>): FoodMenuRow => ({
+  item_id: item.id || '',
+  name: item.name || '',
+  description: item.description || '',
+  category: item.category || '',
+  price: item.price ?? '',
+  images: item.images || [],
+  diet: item.diet || '',
+  spice_level: item.spice_level || '',
+  is_available: item.is_available !== false,
+});
+
 export function venueToValues(
   venue: any,
   locations: any[],
@@ -71,6 +89,13 @@ export function venueToValues(
       label: item.label,
       capacity: item.capacity,
     })),
+    offers_food: Boolean(venue.offers_food),
+    food_menu: (venue.food_menu ?? []).map(toFoodRow),
+    food_ordering: {
+      enabled: Boolean(venue.food_ordering?.enabled),
+      razorpay_integration_id: venue.food_ordering?.razorpay_integration_id || '',
+      discount_pct: venue.food_ordering?.discount_pct ?? blankFoodOrdering.discount_pct,
+    },
     amenities: venue.amenities || [],
     facilities: venue.facilities || [],
     security: venue.security || [],
@@ -98,6 +123,33 @@ const toCapacityItems = (values: RegisterVenueValues) =>
     .filter((item) => item.label.trim() || item.capacity !== '')
     .map((item) => ({ label: item.label.trim(), capacity: Number(item.capacity) || 0 }));
 
+/** The food fields of a step-1 or approved-venue save. Switched off, only the
+ * switch is sent: the server keeps the menu for later and turns ordering off
+ * itself. A saved dish goes back with its id so it keeps its identity. */
+export function toFoodInput(values: RegisterVenueValues) {
+  if (!values.offers_food) return { offers_food: false };
+  return {
+    offers_food: true,
+    food_menu: values.food_menu.map((row) => ({
+      ...(row.item_id ? { id: row.item_id } : {}),
+      name: row.name.trim(),
+      description: row.description.trim(),
+      category: row.category.trim(),
+      price: Number(row.price) || 0,
+      images: row.images,
+      // Blank = the config had no list to pick from; the server applies its default.
+      diet: row.diet || null,
+      spice_level: row.spice_level || null,
+      is_available: row.is_available,
+    })),
+    food_ordering: {
+      enabled: values.food_ordering.enabled,
+      razorpay_integration_id: values.food_ordering.razorpay_integration_id || null,
+      discount_pct: Number(values.food_ordering.discount_pct) || 0,
+    },
+  };
+}
+
 export function toStep1Input(values: RegisterVenueValues) {
   const capacityItems = toCapacityItems(values);
   const hasCategory = values.super_category_id && values.category_id && values.sub_category_id;
@@ -106,6 +158,7 @@ export function toStep1Input(values: RegisterVenueValues) {
     venue_type: values.venue_type,
     capacity: capacityItems.reduce((sum, item) => sum + item.capacity, 0),
     capacity_items: capacityItems,
+    ...toFoodInput(values),
     venue_category: hasCategory
       ? {
           super_category_id: values.super_category_id,
@@ -158,7 +211,7 @@ export function toApprovedUpdateInput(
     };
   }
   if (section === 'type-capacity') {
-    return { capacity_items: toCapacityItems(values) };
+    return { capacity_items: toCapacityItems(values), ...toFoodInput(values) };
   }
   if (section === 'documents') {
     return {

@@ -41,7 +41,7 @@ const NEXT: Record<StoreReturnStatus, StoreReturnStatus[]> = {
 
 const newReturnNo = () => `RET-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
-export const toReturnPub = (r: Record<string, any>) => ({
+export const toReturnPub = (r: IStoreReturn) => ({
   id: String(r._id),
   return_no: r.return_no,
   order_id: String(r.order_id),
@@ -49,43 +49,43 @@ export const toReturnPub = (r: Record<string, any>) => ({
   buyer_name: r.buyer_name,
   buyer_email: r.buyer_email,
   is_guest: !r.buyer_id,
-  items: (r.items ?? []).map((i: any) => ({
+  items: r.items.map((i) => ({
     product_id: String(i.product_id),
-    variant_id: i.variant_id ?? '',
+    variant_id: i.variant_id,
     name: i.name,
-    variant_label: i.variant_label ?? '',
-    image_url: i.image_url ?? '',
+    variant_label: i.variant_label,
+    image_url: i.image_url,
     qty: i.qty,
     unit_price: i.unit_cost,
   })),
   reason: r.reason,
-  comments: r.comments ?? '',
-  images: r.images ?? [],
+  comments: r.comments,
+  images: r.images,
   status: r.status,
-  next_statuses: NEXT[r.status as StoreReturnStatus] ?? [],
-  refund_amount: r.refund_amount ?? 0,
-  refund_mode: r.refund_mode ?? 'ORIGINAL',
+  next_statuses: NEXT[r.status],
+  refund_amount: r.refund_amount,
+  refund_mode: r.refund_mode,
   refunded_at: iso(r.refunded_at),
-  restocked: !!r.restocked,
-  admin_note: r.admin_note ?? '',
-  events: (r.events ?? []).map((e: any) => ({ status: e.status, note: e.note ?? '', by: e.by ?? '', at: iso(e.at) ?? '' })),
+  restocked: r.restocked,
+  admin_note: r.admin_note,
+  events: r.events.map((e) => ({ status: e.status, note: e.note, by: e.by, at: e.at.toISOString() })),
   pickup: {
-    sr_order_id: r.pickup?.sr_order_id ?? '',
-    awb: r.pickup?.awb ?? '',
-    courier_name: r.pickup?.courier_name ?? '',
-    status: r.pickup?.status ?? '',
-    tracking_status: r.pickup?.tracking_status ?? '',
-    last_error: r.pickup?.last_error ?? '',
-    last_synced_at: iso(r.pickup?.last_synced_at),
-    events: (r.pickup?.events ?? []).map((e: any) => ({
-      status: e.status ?? '',
-      location: e.location ?? '',
-      note: e.note ?? '',
-      at: iso(e.at) ?? '',
+    sr_order_id: r.pickup.sr_order_id,
+    awb: r.pickup.awb,
+    courier_name: r.pickup.courier_name,
+    status: r.pickup.status,
+    tracking_status: r.pickup.tracking_status,
+    last_error: r.pickup.last_error,
+    last_synced_at: iso(r.pickup.last_synced_at),
+    events: r.pickup.events.map((e) => ({
+      status: e.status,
+      location: e.location,
+      note: e.note,
+      at: e.at.toISOString(),
     })),
   },
-  created_at: iso(r.created_at) ?? '',
-  updated_at: iso(r.updated_at) ?? '',
+  created_at: r.created_at.toISOString(),
+  updated_at: r.updated_at.toISOString(),
 });
 
 const RETURN_TABLE: TableEntityConfig = {
@@ -119,7 +119,7 @@ export interface ReturnRequestInput {
 }
 
 async function eligibleOrder(ctx: GraphQLContext, orderNo: string, accessKey?: string | null) {
-  const order = await ProductOrderModel.findOne({ channel: 'PET_STORE', order_no: String(orderNo ?? '').trim() }).select(
+  const order = await ProductOrderModel.findOne({ channel: 'PET_STORE', order_no: orderNo.trim() }).select(
     '+access_key'
   );
   if (!order) notFound('Order not found');
@@ -136,13 +136,13 @@ async function claimable(orderId: Types.ObjectId, lines: any[]) {
   const taken = new Map<string, number>();
   for (const r of open) {
     for (const i of r.items) {
-      const key = `${String(i.product_id)}|${i.variant_id ?? ''}`;
+      const key = `${String(i.product_id)}|${i.variant_id}`;
       taken.set(key, (taken.get(key) ?? 0) + i.qty);
     }
   }
   return new Map(
     lines.map((l) => {
-      const key = `${String(l.product_id)}|${l.variant_id ?? ''}`;
+      const key = `${String(l.product_id)}|${l.variant_id}`;
       return [key, { line: l, left: l.qty - (taken.get(key) ?? 0) }];
     })
   );
@@ -156,13 +156,13 @@ export const storeReturnService = {
     const deadline = returnDeadline(order, settings.return_window_days);
     if (!deadline) badInput('A return can be requested once the order is delivered');
     if (deadline.getTime() < Date.now()) badInput('The return window for this order has closed');
-    const reason = String(input.reason ?? '').trim();
+    const reason = input.reason.trim();
     if (!reason) badInput('Choose why you are returning it');
     const left = await claimable(order._id as Types.ObjectId, order.line_items);
-    const productIds = (input.items ?? []).map((i) => toObjectId(i.product_id)).filter(Boolean);
+    const productIds = input.items.map((i) => toObjectId(i.product_id)).filter(Boolean);
     const products = await StoreProductModel.find({ _id: { $in: productIds } }).select('store').lean();
     const returnable = new Map(products.map((p) => [String(p._id), listingOf(p).returnable]));
-    const items = (input.items ?? [])
+    const items = input.items
       .filter((i) => Number(i.qty) > 0)
       .map((i) => {
         const key = `${i.product_id}|${i.variant_id ?? ''}`;
@@ -173,10 +173,10 @@ export const storeReturnService = {
         if (returnable.get(String(i.product_id)) === false) badInput(`${hit.line.name} cannot be returned`);
         return {
           product_id: hit.line.product_id,
-          variant_id: hit.line.variant_id ?? '',
+          variant_id: hit.line.variant_id,
           name: hit.line.name,
-          variant_label: hit.line.variant_label ?? '',
-          image_url: hit.line.image_url ?? '',
+          variant_label: hit.line.variant_label,
+          image_url: hit.line.image_url,
           qty,
           unit_cost: hit.line.unit_cost,
         };
@@ -184,7 +184,7 @@ export const storeReturnService = {
     if (items.length === 0) badInput('Choose at least one item to return');
     const goods = round2(items.reduce((s, i) => s + i.unit_cost * i.qty, 0));
     // The buyer's share of the order's discount comes off the estimate.
-    const discountShare = order.items_total > 0 ? ((order.discount_total ?? 0) * goods) / order.items_total : 0;
+    const discountShare = order.items_total > 0 ? (order.discount_total * goods) / order.items_total : 0;
     const doc = await StoreReturnModel.create({
       return_no: newReturnNo(),
       order_id: order._id,
@@ -237,7 +237,7 @@ export const storeReturnService = {
     const doc = await StoreReturnModel.findById(toObjectId(id));
     if (!doc) notFound('Return not found');
     if (!STORE_RETURN_STATUSES.includes(input.status)) badInput('Unknown return status');
-    if (!(NEXT[doc.status] ?? []).includes(input.status)) {
+    if (!NEXT[doc.status].includes(input.status)) {
       badInput(`A ${doc.status.toLowerCase()} return cannot move to ${input.status.toLowerCase()}`);
     }
     const note = String(input.note ?? '').trim().slice(0, 1000);

@@ -42,6 +42,7 @@ export const ChangeRequestsPage = lazy(() => import('../../pages/change-requests
 export const VenueAvailabilityPage = lazy(() => import('../../pages/venue-availability-page'));
 export const VenueSettingsPage = lazy(() => import('../../pages/venue-settings-page'));
 export const VenueDetailsPage = lazy(() => import('../../pages/VenueDetailsPage'));
+export const VenueFoodOrderPage = lazy(() => import('../../pages/venue-food-order-page'));
 export const VenuesPage = lazy(() => import('../../pages/venues-page'));
 export const FaqsPage = lazy(() => import('../../pages/FaqsPage'));
 export const BadgesPage = lazy(() => import('../../pages/badges-page'));

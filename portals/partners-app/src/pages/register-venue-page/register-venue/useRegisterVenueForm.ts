@@ -14,8 +14,11 @@ import {
   toStep3Input,
   venueToValues,
 } from './register-venue.mappers';
+import { useAdoptSavedFoodIds } from './useAdoptSavedFoodIds';
 import {
   blankRegisterVenueValues,
+  NO_FOOD_LIMITS,
+  type FoodLimits,
   type RegisterVenueMode,
   type RegisterVenueValues,
   type TaxDocTypes,
@@ -50,18 +53,34 @@ interface Options {
   mode: RegisterVenueMode;
   /** From the registration config — the document each tax-id switch requires. */
   taxDocTypes?: TaxDocTypes;
+  /** From the registration config — the caps on the food menu and its ordering. */
+  foodLimits?: FoodLimits;
   onPersisted: () => Promise<unknown>;
 }
 
-export function useRegisterVenueForm({ venue, locations, account, mode, taxDocTypes, onPersisted }: Readonly<Options>) {
+export function useRegisterVenueForm({
+  venue,
+  locations,
+  account,
+  mode,
+  taxDocTypes,
+  foodLimits = NO_FOOD_LIMITS,
+  onPersisted,
+}: Readonly<Options>) {
   const { t } = useTranslation();
   // Rebuilt only when the reader's language or the config changes, not on every
   // render — registerVenueSchema() constructs a fresh Zod object each call.
   const gstinDocType = taxDocTypes?.has_gstin ?? '';
   const panDocType = taxDocTypes?.has_pan ?? '';
+  const { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct } = foodLimits;
   const schema = useMemo(
-    () => registerVenueSchema(t, { has_gstin: gstinDocType, has_pan: panDocType }),
-    [t, gstinDocType, panDocType]
+    () =>
+      registerVenueSchema(
+        t,
+        { has_gstin: gstinDocType, has_pan: panDocType },
+        { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct }
+      ),
+    [t, gstinDocType, panDocType, food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct]
   );
   // Scoped to the MODE's sections, so an approved venue cannot be deep-linked
   // to ?selectedtab=review — a section its rail does not offer and its form
@@ -98,6 +117,7 @@ export function useRegisterVenueForm({ venue, locations, account, mode, taxDocTy
     setVenueId(venue?.id ?? null);
     if (!adoptingFreshSave) form.reset(venueToValues(venue, locations, account));
   }, [venue, locations, account, form]);
+  useAdoptSavedFoodIds(form, venue?.food_menu);
 
   const [saveStep1, s1] = useMutation<any>(STEP1);
   const [saveStep2, s2] = useMutation<any>(STEP2);

@@ -56,8 +56,7 @@ export default function AssignClubsField({
       control={control}
       name="club_ids"
       render={({ field }) => {
-        const picked = field.value ?? [];
-        const chosen = options.filter((club) => picked.includes(club.id));
+        const chosen = options.filter((club) => field.value.includes(club.id));
         return (
           <Stack spacing={0.5}>
             <Autocomplete

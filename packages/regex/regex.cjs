@@ -104,6 +104,12 @@ const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
 
 /**
+ * A coupon code as it is stored: 3–30 characters of `A-Z`, `0-9`, `-` and `_`,
+ * starting on a letter or digit. See regex.mjs for the full note.
+ */
+const COUPON_CODE = /^[A-Z0-9][A-Z0-9_-]{2,29}$/;
+
+/**
  * A GA4 measurement id — `G-` and the data stream's alphanumeric suffix
  * (G-XXXXXXXXXX), as Google Analytics → Admin → Data streams shows it. The
  * server checks the same shape before Tech → Google Analytics saves a tag.
@@ -155,6 +161,7 @@ module.exports = {
   GSTIN,
   PERSON_NAME,
   REFERRAL_CODE,
+  COUPON_CODE,
   GA_MEASUREMENT_ID,
   HOSTNAME_LABEL,
   USERNAME,
@@ -176,6 +183,7 @@ module.exports = {
   isGstin: (v) => GSTIN.test(v),
   isPersonName: (v) => PERSON_NAME.test(v),
   isReferralCode: (v) => REFERRAL_CODE.test(v),
+  isCouponCode: (v) => COUPON_CODE.test(v),
   isUsername: (v) => USERNAME.test(v),
   isUrlSlug: (v) => URL_SLUG.test(v),
   isSitePath: (v) => SITE_PATH.test(v),

@@ -56,6 +56,12 @@ export type { PodFinanceWaterfall, WaterfallLine, WaterfallTranslate } from './f
 export { fallbackT } from './i18n/useTranslation';
 export { SpotsStepper, buildSpotsLabels, mwebSpotsLabels, shellSpotsLabels } from './spots';
 export type { SpotsStepperLabels, SpotsStepperProps, SpotsTranslate } from './spots';
+export { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from './cart-control';
+export type {
+  CartControlNoticeChipProps,
+  CartControlSize,
+  CartQuantityControlProps,
+} from './cart-control';
 export { TicketDiscountField } from './ticket-discount';
 export type { TicketDiscountFieldErrors, TicketDiscountFieldProps } from './ticket-discount';
 export { SectionCard } from './SectionCard';

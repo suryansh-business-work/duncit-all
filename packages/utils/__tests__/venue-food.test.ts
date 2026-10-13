@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import pricing from './fixtures/venue-food-pricing.json';
 import {
+  FOOD_COUPON_REJECTION_KEYS,
   FOOD_DIET_KEYS,
   FOOD_ORDER_CONFLICT_RETRY_MS,
   FOOD_ORDER_ERROR,
@@ -12,6 +14,7 @@ import {
   FOOD_SPICE_HEAT,
   FOOD_SPICE_KEYS,
   PLACE_VENUE_FOOD_ORDER_MUTATION,
+  PREVIEW_VENUE_FOOD_COUPON_QUERY,
   VENUE_FOOD_ORDER_QUERY,
   VERIFY_VENUE_FOOD_ORDER_MUTATION,
   buildFoodOrderInput,
@@ -21,18 +24,22 @@ import {
   foodAttemptSignature,
   foodCartLines,
   foodCartSignature,
+  foodCouponRejectionOf,
   foodOrderErrorCode,
   foodOrderErrorKey,
+  foodOrderLineInputs,
   foodOrderPollMs,
   formatFoodMoney,
   groupFoodMenu,
   isFoodOrderFinished,
   isVegFood,
+  normalizeFoodCouponCode,
   priceFoodCart,
   priceFoodCartLines,
   reconcileFoodCart,
   tryPlaceFoodOrder,
   type FoodCartQuantities,
+  type VenueFoodCouponRejection,
   type VenueFoodDiet,
   type VenueFoodItem,
   type VenueFoodOrder,
@@ -116,6 +123,9 @@ const ORDER_FIELDS = [
   'subtotal',
   'discount_pct',
   'discount_amount',
+  'coupon_code',
+  'coupon_pct',
+  'coupon_discount_amount',
   'total',
   'currency_symbol',
   'status',
@@ -164,8 +174,32 @@ describe('the food-order documents', () => {
     expect(selectionOf(VENUE_FOOD_ORDER_QUERY, 'venueFoodOrder')).toEqual(selectionOf(PLACE_VENUE_FOOD_ORDER_MUTATION, 'order'));
   });
 
+  it('previews a coupon through previewVenueFoodCoupon and reads back the verdict and every amount it prices', () => {
+    expect(operationOf(PREVIEW_VENUE_FOOD_COUPON_QUERY)).toBe('query PreviewVenueFoodCoupon($input: PreviewVenueFoodCouponInput!) {');
+    expect(PREVIEW_VENUE_FOOD_COUPON_QUERY).toContain('previewVenueFoodCoupon(input: $input) {');
+    expect(selectionOf(PREVIEW_VENUE_FOOD_COUPON_QUERY, 'previewVenueFoodCoupon')).toEqual([
+      'ok',
+      'reason',
+      'message',
+      'coupon_code',
+      'coupon_pct',
+      'min_order_amount',
+      'subtotal',
+      'discount_pct',
+      'discount_amount',
+      'coupon_discount_amount',
+      'total',
+      'currency_symbol',
+    ]);
+  });
+
   it('closes every selection set it opens', () => {
-    for (const doc of [PLACE_VENUE_FOOD_ORDER_MUTATION, VERIFY_VENUE_FOOD_ORDER_MUTATION, VENUE_FOOD_ORDER_QUERY]) {
+    for (const doc of [
+      PLACE_VENUE_FOOD_ORDER_MUTATION,
+      VERIFY_VENUE_FOOD_ORDER_MUTATION,
+      VENUE_FOOD_ORDER_QUERY,
+      PREVIEW_VENUE_FOOD_COUPON_QUERY,
+    ]) {
       expect(doc.split('{').length).toBe(doc.split('}').length);
     }
   });
@@ -182,6 +216,9 @@ describe('FOOD_ORDER_LIMITS', () => {
       tableMax: 20,
       noteMax: 300,
       minTotalPaise: 100,
+      maxDiscountPct: 90,
+      couponCodeMin: 3,
+      couponCodeMax: 30,
     });
   });
 });
@@ -200,11 +237,14 @@ describe('priceFoodCart', () => {
       count: 4,
       subtotalPaise: 52875,
       discountPaise: 5287,
+      couponPaise: 0,
       totalPaise: 47588,
       subtotal: 528.75,
       discount: 52.87,
+      coupon: 0,
       total: 475.88,
       belowMinimum: false,
+      couponUnmet: false,
     });
   });
 
@@ -254,11 +294,14 @@ describe('priceFoodCart', () => {
       count: 0,
       subtotalPaise: 0,
       discountPaise: 0,
+      couponPaise: 0,
       totalPaise: 0,
       subtotal: 0,
       discount: 0,
+      coupon: 0,
       total: 0,
       belowMinimum: true,
+      couponUnmet: false,
     });
   });
 
@@ -267,6 +310,112 @@ describe('priceFoodCart', () => {
     expect(priceFoodCart([{ unit_price: 0.99, quantity: 1 }], 0)).toMatchObject({ totalPaise: 99, belowMinimum: true });
     // The discount alone can push a chargeable subtotal under the minimum.
     expect(priceFoodCart([{ unit_price: 1, quantity: 1 }], 1)).toMatchObject({ subtotalPaise: 100, discountPaise: 1, totalPaise: 99, belowMinimum: true });
+  });
+});
+
+describe('priceFoodCart with a coupon', () => {
+  const lines = [
+    { unit_price: 149.5, quantity: 3 },
+    { unit_price: 80.25, quantity: 1 },
+  ];
+
+  // The same matrix the server asserts for foodTotals and for a placed order:
+  // the guest must be shown, to the paisa, what they will be charged.
+  it.each(pricing.cases)('prices "$name" to the same paise as the server', (fixture) => {
+    const price = priceFoodCart(fixture.lines, fixture.discount_pct, fixture.coupon_pct ? { coupon_pct: fixture.coupon_pct } : null);
+    expect({
+      subtotal_paise: price.subtotalPaise,
+      discount_paise: price.discountPaise,
+      coupon_discount_paise: price.couponPaise,
+      total_paise: price.totalPaise,
+      below_minimum: price.belowMinimum,
+    }).toEqual({
+      subtotal_paise: fixture.subtotal_paise,
+      discount_paise: fixture.discount_paise,
+      coupon_discount_paise: fixture.coupon_discount_paise,
+      total_paise: fixture.total_paise,
+      below_minimum: fixture.below_minimum,
+    });
+  });
+
+  it('covers every pricing situation the matrix is meant to', () => {
+    const cases = pricing.cases;
+    expect(cases.some((one) => one.discount_pct === 0 && one.coupon_pct === 0)).toBe(true);
+    expect(cases.some((one) => one.discount_pct > 0 && one.coupon_pct === 0)).toBe(true);
+    expect(cases.some((one) => one.discount_pct === 0 && one.coupon_pct > 0)).toBe(true);
+    expect(cases.some((one) => one.discount_pct > 0 && one.coupon_pct > 0 && one.coupon_discount_paise > 0)).toBe(true);
+    // Trimmed by the ceiling, and trimmed by the one-rupee minimum.
+    expect(cases.some((one) => one.total_paise * 10 === one.subtotal_paise && one.coupon_pct > 0)).toBe(true);
+    expect(cases.some((one) => one.total_paise === FOOD_ORDER_LIMITS.minTotalPaise && one.coupon_pct > 0)).toBe(true);
+    expect(cases.some((one) => one.below_minimum)).toBe(true);
+  });
+
+  it('reports the coupon apart from the venue discount, in paise and in rupees', () => {
+    expect(priceFoodCart(lines, 10, { coupon_pct: 20 })).toEqual({
+      count: 4,
+      subtotalPaise: 52875,
+      discountPaise: 5287,
+      couponPaise: 9517,
+      totalPaise: 38071,
+      subtotal: 528.75,
+      discount: 52.87,
+      coupon: 95.17,
+      total: 380.71,
+      belowMinimum: false,
+      couponUnmet: false,
+    });
+  });
+
+  it('prices exactly as before when no coupon, or a null one, is given', () => {
+    expect(priceFoodCart(lines, 10, null)).toEqual(priceFoodCart(lines, 10));
+    expect(priceFoodCart(lines, 10, undefined)).toEqual(priceFoodCart(lines, 10));
+    expect(priceFoodCart(lines, 10).couponPaise).toBe(0);
+  });
+
+  it('takes nothing off, and says so, while the cart is under the minimum order of the coupon', () => {
+    const under = priceFoodCart(lines, 10, { coupon_pct: 20, min_order_amount: 528.76 });
+    expect(under).toMatchObject({ couponPaise: 0, coupon: 0, totalPaise: 47588, couponUnmet: true });
+    // The minimum is compared with the subtotal, before the venue discount — and met exactly is met.
+    const met = priceFoodCart(lines, 10, { coupon_pct: 20, min_order_amount: 528.75 });
+    expect(met).toMatchObject({ couponPaise: 9517, totalPaise: 38071, couponUnmet: false });
+  });
+
+  it('reads a missing, null or zero minimum order as none', () => {
+    for (const min_order_amount of [undefined, null, 0]) {
+      expect(priceFoodCart(lines, 0, { coupon_pct: 15, min_order_amount })).toMatchObject({ couponPaise: 7931, couponUnmet: false });
+    }
+  });
+
+  it('reads a negative or unreadable coupon percent as no coupon discount', () => {
+    expect(priceFoodCart(lines, 0, { coupon_pct: -20 })).toMatchObject({ couponPaise: 0, totalPaise: 52875, couponUnmet: false });
+    expect(priceFoodCart(lines, 0, { coupon_pct: Number.NaN })).toMatchObject({ couponPaise: 0, totalPaise: 52875 });
+  });
+
+  // A percent over the ceiling can only come from a stale or wrong preview; the cap still holds.
+  it('never shows a total under what the largest allowed discount would leave', () => {
+    const price = priceFoodCart([{ unit_price: 1000, quantity: 1 }], 0, { coupon_pct: 100 });
+    expect(price).toMatchObject({ couponPaise: 90000, totalPaise: 10000, belowMinimum: false });
+    expect(FOOD_ORDER_LIMITS.maxDiscountPct).toBe(90);
+  });
+
+  it('accepts an accepted preview as the coupon, as it came off the wire', () => {
+    const preview = {
+      ok: true,
+      reason: null,
+      message: null,
+      coupon_code: 'WELCOME20',
+      coupon_pct: 20,
+      min_order_amount: 100,
+      subtotal: 528.75,
+      discount_pct: 10,
+      discount_amount: 52.87,
+      coupon_discount_amount: 95.17,
+      total: 380.71,
+      currency_symbol: '₹',
+    };
+    const price = priceFoodCart(lines, preview.discount_pct, preview);
+    expect(price.coupon).toBe(preview.coupon_discount_amount);
+    expect(price.total).toBe(preview.total);
   });
 });
 
@@ -429,11 +578,14 @@ describe('priceFoodCartLines', () => {
       count: 3,
       subtotalPaise: 66050,
       discountPaise: 6605,
+      couponPaise: 0,
       totalPaise: 59445,
       subtotal: 660.5,
       discount: 66.05,
+      coupon: 0,
       total: 594.45,
       belowMinimum: false,
+      couponUnmet: false,
     });
     expect(priceFoodCartLines(lines, 10)).toEqual(
       priceFoodCart(
@@ -444,6 +596,43 @@ describe('priceFoodCartLines', () => {
         10
       )
     );
+  });
+
+  it('hands the coupon on to priceFoodCart', () => {
+    const lines = [{ item: dish({ id: 'tikka', price: 240 }), quantity: 2 }];
+    // 10% of 48000 leaves 43200; 25% of that is 10800.
+    expect(priceFoodCartLines(lines, 10, { coupon_pct: 25 })).toMatchObject({ discountPaise: 4800, couponPaise: 10800, totalPaise: 32400 });
+    expect(priceFoodCartLines(lines, 10, { coupon_pct: 25 })).toEqual(priceFoodCart([{ unit_price: 240, quantity: 2 }], 10, { coupon_pct: 25 }));
+    expect(priceFoodCartLines(lines, 10, { coupon_pct: 25, min_order_amount: 500 })).toMatchObject({ couponPaise: 0, couponUnmet: true });
+  });
+});
+
+describe('foodOrderLineInputs', () => {
+  it('lists each cart line as the id and quantity the server takes', () => {
+    expect(
+      foodOrderLineInputs([
+        { item: dish({ id: 'tikka' }), quantity: 2 },
+        { item: dish({ id: 'dal' }), quantity: 1 },
+      ])
+    ).toEqual([
+      { item_id: 'tikka', quantity: 2 },
+      { item_id: 'dal', quantity: 1 },
+    ]);
+    expect(foodOrderLineInputs([])).toEqual([]);
+  });
+});
+
+describe('normalizeFoodCouponCode', () => {
+  it('trims and upper-cases a code, as the server stores it', () => {
+    expect(normalizeFoodCouponCode('  welcome10 ')).toBe('WELCOME10');
+    expect(normalizeFoodCouponCode('Diwali_25-off')).toBe('DIWALI_25-OFF');
+  });
+
+  it('reads nothing typed as no code', () => {
+    expect(normalizeFoodCouponCode('')).toBe('');
+    expect(normalizeFoodCouponCode('   ')).toBe('');
+    expect(normalizeFoodCouponCode(null)).toBe('');
+    expect(normalizeFoodCouponCode(undefined)).toBe('');
   });
 });
 
@@ -515,6 +704,24 @@ describe('buildFoodOrderInput', () => {
     expect(missing.note).toBeNull();
   });
 
+  it('sends the coupon the guest applied, as the server stores it', () => {
+    const input = buildFoodOrderInput({
+      venueId: 'venue_1',
+      lines,
+      details: { name: 'Asha', phone: '9876543210', coupon: ' welcome10 ' },
+      clientKey: 'k',
+    });
+    expect(input.coupon_code).toBe('WELCOME10');
+  });
+
+  // An order without a coupon goes out byte for byte as it did before coupons existed.
+  it('leaves the coupon out entirely when none, or only spaces, was typed', () => {
+    for (const coupon of [undefined, null, '', '   ']) {
+      const input = buildFoodOrderInput({ venueId: 'venue_1', lines, details: { name: 'Asha', phone: '9876543210', coupon }, clientKey: 'k' });
+      expect(Object.keys(input)).toEqual(['venue_id', 'items', 'customer_name', 'customer_phone', 'table_label', 'note', 'client_key']);
+    }
+  });
+
   it('sends no lines for an empty cart', () => {
     expect(buildFoodOrderInput({ venueId: 'venue_1', lines: [], details: { name: 'Asha', phone: '9876543210' }, clientKey: 'k' }).items).toEqual([]);
   });
@@ -535,6 +742,30 @@ describe('foodAttemptSignature', () => {
     expect(foodAttemptSignature('tikka:2', { ...details, phone: '9876543211' })).not.toBe(base);
     expect(foodAttemptSignature('tikka:2', { ...details, table: 'T5' })).not.toBe(base);
     expect(foodAttemptSignature('tikka:2', { ...details, note: 'No onion' })).not.toBe(base);
+  });
+
+  // The server answers a repeated client_key with the order it ALREADY priced,
+  // so a coupon applied, changed or removed must be a new attempt.
+  it('changes when a coupon is applied, changed or removed', () => {
+    const base = foodAttemptSignature('tikka:2', details);
+    const applied = foodAttemptSignature('tikka:2', { ...details, coupon: 'WELCOME10' });
+    expect(applied).toBe('tikka:2#{"name":"Asha","phone":"9876543210","table":"T4","note":"","coupon":"WELCOME10"}');
+    expect(applied).not.toBe(base);
+    expect(foodAttemptSignature('tikka:2', { ...details, coupon: 'WELCOME20' })).not.toBe(applied);
+    expect(foodAttemptSignature('tikka:2', { ...details, coupon: null })).toBe(base);
+    expect(foodAttemptSignature('tikka:2', { ...details, coupon: '' })).toBe(base);
+    expect(foodAttemptSignature('tikka:2', { ...details, coupon: '  ' })).toBe(base);
+  });
+
+  it('reads the coupon as the server does, so retyping it in another case is the same attempt', () => {
+    const applied = foodAttemptSignature('tikka:2', { ...details, coupon: 'WELCOME10' });
+    expect(foodAttemptSignature('tikka:2', { ...details, coupon: ' welcome10 ' })).toBe(applied);
+  });
+
+  it('keys the placement and its signature on the same coupon', () => {
+    const typed = { ...details, coupon: 'welcome10' };
+    const input = buildFoodOrderInput({ venueId: 'venue_1', lines: [], details: typed, clientKey: 'k' });
+    expect(foodAttemptSignature('tikka:2', typed)).toContain(`"coupon":"${input.coupon_code}"`);
   });
 });
 
@@ -777,7 +1008,12 @@ describe('foodOrderErrorCode', () => {
 
 describe('foodOrderErrorKey', () => {
   it('names the codes the page branches on', () => {
-    expect(FOOD_ORDER_ERROR).toEqual({ closed: 'FOOD_ORDERING_CLOSED', itemUnavailable: 'FOOD_ITEM_UNAVAILABLE', conflict: 'CONFLICT' });
+    expect(FOOD_ORDER_ERROR).toEqual({
+      closed: 'FOOD_ORDERING_CLOSED',
+      itemUnavailable: 'FOOD_ITEM_UNAVAILABLE',
+      conflict: 'CONFLICT',
+      couponRejected: 'FOOD_COUPON_REJECTED',
+    });
     expect(FOOD_ORDER_GENERIC_ERROR_KEY).toBe('mweb.venueFood.errors.generic');
   });
 
@@ -785,6 +1021,7 @@ describe('foodOrderErrorKey', () => {
     expect(foodOrderErrorKey(FOOD_ORDER_ERROR.closed)).toBe('mweb.venueFood.errors.closed');
     expect(foodOrderErrorKey(FOOD_ORDER_ERROR.itemUnavailable)).toBe('mweb.venueFood.errors.itemUnavailable');
     expect(foodOrderErrorKey(FOOD_ORDER_ERROR.conflict)).toBe('mweb.venueFood.errors.conflict');
+    expect(foodOrderErrorKey(FOOD_ORDER_ERROR.couponRejected)).toBe('mweb.venueFood.errors.couponRejected');
     expect(foodOrderErrorKey('BAD_USER_INPUT')).toBe('mweb.venueFood.errors.badInput');
     expect(foodOrderErrorKey('RATE_LIMITED')).toBe('mweb.venueFood.errors.rateLimited');
     expect(foodOrderErrorKey('FORBIDDEN')).toBe('mweb.venueFood.errors.forbidden');
@@ -809,6 +1046,52 @@ describe('foodOrderErrorKey', () => {
 
   it('reads a network failure, which carries no code, as the generic sentence', () => {
     expect(foodOrderErrorKey(foodOrderErrorCode(new Error('Failed to fetch')))).toBe('mweb.venueFood.errors.generic');
+  });
+});
+
+describe('the coupon rejection reasons', () => {
+  const REASONS: VenueFoodCouponRejection[] = [
+    'INVALID',
+    'NOT_STARTED',
+    'EXPIRED',
+    'MIN_ORDER_NOT_MET',
+    'USAGE_LIMIT_REACHED',
+    'PER_PERSON_LIMIT_REACHED',
+    'NO_DISCOUNT',
+  ];
+
+  it('names one sentence per reason the server can answer with', () => {
+    expect(FOOD_COUPON_REJECTION_KEYS).toEqual({
+      INVALID: 'mweb.venueFood.coupon.rejected.invalid',
+      NOT_STARTED: 'mweb.venueFood.coupon.rejected.notStarted',
+      EXPIRED: 'mweb.venueFood.coupon.rejected.expired',
+      MIN_ORDER_NOT_MET: 'mweb.venueFood.coupon.rejected.minOrder',
+      USAGE_LIMIT_REACHED: 'mweb.venueFood.coupon.rejected.usageLimit',
+      PER_PERSON_LIMIT_REACHED: 'mweb.venueFood.coupon.rejected.perPerson',
+      NO_DISCOUNT: 'mweb.venueFood.coupon.rejected.noDiscount',
+    });
+    expect(Object.keys(FOOD_COUPON_REJECTION_KEYS)).toEqual(REASONS);
+    expect(new Set(Object.values(FOOD_COUPON_REJECTION_KEYS)).size).toBe(REASONS.length);
+  });
+
+  it('reads the reason off a placement refused over its coupon, from either Apollo shape', () => {
+    for (const reason of REASONS) {
+      const refused = { message: 'x', extensions: { code: 'FOOD_COUPON_REJECTED', reason } };
+      expect(foodCouponRejectionOf({ graphQLErrors: [refused] })).toBe(reason);
+      expect(foodCouponRejectionOf({ errors: [refused] })).toBe(reason);
+    }
+  });
+
+  it('is null for a reason it does not know, one that is not a string, or an error with none', () => {
+    const withReason = (reason: unknown) => ({ graphQLErrors: [{ message: 'x', extensions: { code: 'FOOD_COUPON_REJECTED', reason } }] });
+    expect(foodCouponRejectionOf(withReason('SOMETHING_NEW'))).toBeNull();
+    // A property every object inherits is not a reason.
+    expect(foodCouponRejectionOf(withReason('toString'))).toBeNull();
+    expect(foodCouponRejectionOf(withReason(7))).toBeNull();
+    expect(foodCouponRejectionOf(withReason(null))).toBeNull();
+    expect(foodCouponRejectionOf({ graphQLErrors: [{ message: 'x', extensions: { code: 'FOOD_ORDERING_CLOSED' } }] })).toBeNull();
+    expect(foodCouponRejectionOf(new Error('Failed to fetch'))).toBeNull();
+    expect(foodCouponRejectionOf(null)).toBeNull();
   });
 });
 

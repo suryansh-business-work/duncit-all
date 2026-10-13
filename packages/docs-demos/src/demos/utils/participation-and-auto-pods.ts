@@ -9,9 +9,26 @@ import {
   participationInputFrom,
   podParticipationActions,
   podRefundState,
+  shellAutoPodLabels,
+  venueCategoryLabels,
+  venueCategoryLevelIds,
+  venueCategoryList,
+  venueCategoryPaths,
+  venueHostsSubCategory,
+  type VenueCategoryEntry,
 } from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
 import type { BookingMock, AutoPodAnyOrderMock } from './mocks';
+
+/** A venue as a client query answers it, and the Auto Pod it is being offered. */
+interface VenueCategoriesMock {
+  /** Every category the venue belongs to, primary first. Empty it to see the legacy fallback. */
+  venue_categories: VenueCategoryEntry[];
+  /** The single triple an older build (or an un-migrated venue) carries. */
+  venue_category: VenueCategoryEntry | null;
+  /** The Auto Pod template's sub category. */
+  auto_pod_sub_category_id: string;
+}
 
 export const participationAndAutoPodsDemos: PackageDemo[] = [
   defineDemo<BookingMock>({
@@ -109,6 +126,65 @@ export const participationAndAutoPodsDemos: PackageDemo[] = [
       ),
       'autoPodCityLabel(row.location)': autoPodCityLabel(mock.row.location) || '(unpinned)',
     }),
+  }),
+
+  defineDemo<VenueCategoriesMock>({
+    id: 'venue-categories',
+    title: 'A venue in several categories matches on ANY of them',
+    note:
+      'The Auto Pod here is Hatha yoga — the venue\'s SECOND category, so comparing venue_category alone would hide the venue. Empty venue_categories and the helpers fall back to the single venue_category (a venue stored before the list existed): the venue then hosts badminton only, and no longer matches.',
+    mock: {
+      venue_categories: [
+        {
+          super_category_id: '66f1a2b3c4d5e6f708192a01',
+          category_id: '66f1a2b3c4d5e6f708192b04',
+          sub_category_id: '66f1a2b3c4d5e6f708192c11',
+          super_category_name: 'Sports',
+          category_name: 'Racket',
+          sub_category_name: 'Badminton',
+        },
+        {
+          super_category_id: '66f1a2b3c4d5e6f708192a02',
+          category_id: '66f1a2b3c4d5e6f708192b09',
+          sub_category_id: '66f1a2b3c4d5e6f708192c27',
+          super_category_name: 'Fitness',
+          category_name: 'Yoga',
+          sub_category_name: 'Hatha',
+        },
+      ],
+      venue_category: {
+        super_category_id: '66f1a2b3c4d5e6f708192a01',
+        category_id: '66f1a2b3c4d5e6f708192b04',
+        sub_category_id: '66f1a2b3c4d5e6f708192c11',
+        super_category_name: 'Sports',
+        category_name: 'Racket',
+        sub_category_name: 'Badminton',
+      },
+      auto_pod_sub_category_id: '66f1a2b3c4d5e6f708192c27',
+    },
+    compute: (mock) => {
+      const paths = venueCategoryPaths(mock);
+      return {
+        'venueCategoryList(venue).length': venueCategoryList(mock).length,
+        'venueCategoryPaths(venue)': paths,
+        'venueHostsSubCategory(venue, auto_pod_sub_category_id)': venueHostsSubCategory(
+          mock,
+          mock.auto_pod_sub_category_id
+        ),
+        'Primary-only comparison (the bug this replaces)':
+          mock.venue_category?.sub_category_id === mock.auto_pod_sub_category_id,
+        "venueCategoryLevelIds(venue, 'category_id') — a nearby search's starting filter": venueCategoryLevelIds(
+          mock,
+          'category_id'
+        ),
+        'labels.venueCategories(paths) — the line under the venue picker':
+          paths.length > 0 ? shellAutoPodLabels((key, options) => `${key} ${JSON.stringify(options?.vars ?? {})}`).venueCategories(paths) : '(no category — labels.noVenueCategory)',
+        'venueCategoryLabels({ category, categories }) — a search card': venueCategoryLabels({
+          category: mock.venue_category?.sub_category_name,
+          categories: venueCategoryList(mock).map((entry) => entry.sub_category_name ?? ''),
+        }),
+      };
+    },
   }),
 
 ];

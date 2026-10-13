@@ -6402,6 +6402,23 @@ export type CreateUserInput = {
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CreateVenueFoodCouponInput = {
+  /** 3-30 characters: A-Z, 0-9, - or _. Stored upper case. */
+  code: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** A whole number from 1 to the venue food discount ceiling (VenueRegistrationConfig.food_discount_max_pct). */
+  discount_pct: Scalars['Int']['input'];
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  max_uses?: InputMaybe<Scalars['Int']['input']>;
+  /** Rupees. */
+  min_order_amount?: InputMaybe<Scalars['Float']['input']>;
+  per_phone_limit?: InputMaybe<Scalars['Int']['input']>;
+  /** ISO date-time. */
+  valid_from?: InputMaybe<Scalars['String']['input']>;
+  valid_until?: InputMaybe<Scalars['String']['input']>;
+  venue_id: Scalars['ID']['input'];
+};
+
 export type CreateVenueSlotInput = {
   /** Guests this slot holds (defaults to 0). */
   capacity?: InputMaybe<Scalars['Int']['input']>;
@@ -12612,6 +12629,8 @@ export type Mutation = {
   createSurvey: Survey;
   createTicket: Ticket;
   createUser: User;
+  /** Venue owner / venues console: create a food coupon for a venue. */
+  createVenueFoodCoupon: VenueFoodCoupon;
   createVenueLead: VenueLead;
   createVenueSlots: Array<VenueSlot>;
   createWaCampaignName: WaCampaignNameOption;
@@ -12809,6 +12828,8 @@ export type Mutation = {
   deleteUserContactAction: Scalars['Boolean']['output'];
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the venue still has live pods/booked slots. */
   deleteVenue: Scalars['Boolean']['output'];
+  /** Venue owner / venues console: delete a food coupon. Orders that used it keep their record of it. */
+  deleteVenueFoodCoupon: Scalars['Boolean']['output'];
   deleteVenueLead: Scalars['Boolean']['output'];
   deleteVenueSlot: Scalars['Boolean']['output'];
   deleteWaCampaign: Scalars['Boolean']['output'];
@@ -13806,6 +13827,8 @@ export type Mutation = {
   /** Onboarding review: how long before a pod starts a finance-negative pod at this venue is auto-cancelled, and what its attendees are refunded. */
   setVenueCancellationTrigger: Venue;
   setVenueDeductions: Venue;
+  /** Venue owner / venues console: switch a food coupon on or off. */
+  setVenueFoodCouponActive: VenueFoodCoupon;
   /** Venue owner / venues console: move a paid order forward. */
   setVenueFoodOrderStatus: VenueFoodOrder;
   /** Admin-only: the venue's monthly host Pod Request limit (null = the default of 10). */
@@ -14368,6 +14391,8 @@ export type Mutation = {
   updateTicketStatus: Ticket;
   updateUploadSettings: UploadSetting;
   updateUser: User;
+  /** Venue owner / venues console: edit a food coupon. */
+  updateVenueFoodCoupon: VenueFoodCoupon;
   updateVenueLead: VenueLead;
   /** Owner (or admin) updates operating hours, weekly-off, holidays + booking rules. */
   updateVenueSettings: Venue;
@@ -15558,6 +15583,11 @@ export type MutationCreateUserArgs = {
 };
 
 
+export type MutationCreateVenueFoodCouponArgs = {
+  input: CreateVenueFoodCouponInput;
+};
+
+
 export type MutationCreateVenueLeadArgs = {
   input: VenueLeadInput;
 };
@@ -16175,6 +16205,11 @@ export type MutationDeleteVenueArgs = {
   email: Scalars['String']['input'];
   password: Scalars['String']['input'];
   venue_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteVenueFoodCouponArgs = {
+  coupon_id: Scalars['ID']['input'];
 };
 
 
@@ -18070,6 +18105,12 @@ export type MutationSetVenueDeductionsArgs = {
 };
 
 
+export type MutationSetVenueFoodCouponActiveArgs = {
+  coupon_id: Scalars['ID']['input'];
+  is_active: Scalars['Boolean']['input'];
+};
+
+
 export type MutationSetVenueFoodOrderStatusArgs = {
   order_id: Scalars['ID']['input'];
   status: VenueFoodOrderStatus;
@@ -19708,6 +19749,12 @@ export type MutationUpdateUserArgs = {
 };
 
 
+export type MutationUpdateVenueFoodCouponArgs = {
+  coupon_id: Scalars['ID']['input'];
+  input: UpdateVenueFoodCouponInput;
+};
+
+
 export type MutationUpdateVenueLeadArgs = {
   id: Scalars['ID']['input'];
   input: VenueLeadInput;
@@ -20004,6 +20051,9 @@ export type NearbyPartnerSearchInput = {
 export type NearbyVenue = {
   __typename?: 'NearbyVenue';
   capacity: Scalars['Int']['output'];
+  /** Every category the venue belongs to, primary first. */
+  categories: Array<Scalars['String']['output']>;
+  /** The primary category's label. */
   category: Scalars['String']['output'];
   city: Scalars['String']['output'];
   cover_image_url: Scalars['String']['output'];
@@ -20745,6 +20795,9 @@ export type PartnerSide =
 export type PartnerVenueSummary = {
   __typename?: 'PartnerVenueSummary';
   capacity: Scalars['Int']['output'];
+  /** Every category the venue belongs to, primary first. */
+  categories: Array<Scalars['String']['output']>;
+  /** The primary category's label. */
   category: Scalars['String']['output'];
   city: Scalars['String']['output'];
   cover_image_url: Scalars['String']['output'];
@@ -21381,6 +21434,8 @@ export type PickupProductRef = {
 export type PlaceVenueFoodOrderInput = {
   /** Minted once per checkout attempt (crypto.randomUUID). Repeating it returns the same order. */
   client_key: Scalars['String']['input'];
+  /** A coupon of this venue. Applying, changing or removing it is a new checkout attempt and needs a new client_key. */
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
   customer_name: Scalars['String']['input'];
   customer_phone: Scalars['String']['input'];
   items: Array<VenueFoodOrderLineInput>;
@@ -23967,6 +24022,14 @@ export type PostalAddressInput = {
   state?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type PreviewVenueFoodCouponInput = {
+  coupon_code: Scalars['String']['input'];
+  /** Lets the per-person limit be checked before the order is placed. */
+  customer_phone?: InputMaybe<Scalars['String']['input']>;
+  items: Array<VenueFoodOrderLineInput>;
+  venue_id: Scalars['ID']['input'];
+};
+
 /** Brand-admin analytics for one product: orders/units/earnings (from order data) + views/clicks (tracked forward). */
 export type ProductAnalytics = {
   __typename?: 'ProductAnalytics';
@@ -25356,7 +25419,7 @@ export type Query = {
   marketplaceBrands: Array<EcommBrand>;
   /** Server-side table sibling of marketplaceBrands (shared table engine; active brands only). */
   marketplaceBrandsTable: EcommBrandTablePage;
-  /** APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category (admin Club form). Empty when no location is given. */
+  /** APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category on ANY of the venue's categories (admin Club form). Empty when no location is given. */
   matchingVenues: Array<Venue>;
   me?: Maybe<User>;
   /** Everything ImageKit knows about one file — the details panel. */
@@ -25789,6 +25852,8 @@ export type Query = {
   posts: Array<Post>;
   potentialPodEarnings: PodEarningsProjection;
   previewCoupon: CouponPreview;
+  /** Public: what a coupon code would do to a cart. Places nothing and counts nothing. */
+  previewVenueFoodCoupon: VenueFoodCouponPreview;
   /** Public: the apps read it to time the cart nudge. */
   productCartSettings: ProductCartSettings;
   productListingRequests: Array<InventoryProduct>;
@@ -25848,7 +25913,7 @@ export type Query = {
   publicUsersByIds: Array<PublicProfile>;
   /** Public single-venue detail (APPROVED + active only). */
   publicVenue?: Maybe<Venue>;
-  /** APPROVED, active venues for the consumer Venues page — optionally scoped to a location, with server-side search + Super→Cat→Sub category filter. No args = every public venue (legacy callers). */
+  /** APPROVED, active venues for the consumer Venues page — optionally scoped to a location, with server-side search + Super→Cat→Sub category filter (a venue matches when ANY one of its categories carries every level given). No args = every public venue (legacy callers). */
   publicVenues: Array<Venue>;
   publicWebsiteContent: Array<WebsiteContentItem>;
   /** Public: a site's active navigation, ordered by group + sort order. */
@@ -26294,6 +26359,8 @@ export type Query = {
   venueAutoPods: Array<AutoPod>;
   /** partner_request_id: also return the slot that Pod Request holds (its host only) — Create Pod step 3 shows it as picked. */
   venueAvailableSlots: Array<VenueSlot>;
+  /** Venue owner / venues console: the food coupons of one venue. */
+  venueFoodCouponsTable: VenueFoodCouponTablePage;
   /** Public: one order, for whoever holds its access key (or the account that placed it). */
   venueFoodOrder?: Maybe<VenueFoodOrder>;
   /** Venue owner / venues console: the paid orders of one venue. */
@@ -28763,6 +28830,11 @@ export type QueryPreviewCouponArgs = {
 };
 
 
+export type QueryPreviewVenueFoodCouponArgs = {
+  input: PreviewVenueFoodCouponInput;
+};
+
+
 export type QueryProductListingRequestsArgs = {
   status?: InputMaybe<ProductListingReviewStatus>;
 };
@@ -29699,6 +29771,12 @@ export type QueryVenueAutoPodsArgs = {
 export type QueryVenueAvailableSlotsArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   partner_request_id?: InputMaybe<Scalars['ID']['input']>;
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueFoodCouponsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
   venue_id: Scalars['ID']['input'];
 };
 
@@ -37679,6 +37757,19 @@ export type UpdateUserInput = {
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** A field left out is left as it is. Null clears valid_from, valid_until, max_uses and per_phone_limit. */
+export type UpdateVenueFoodCouponInput = {
+  code?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  discount_pct?: InputMaybe<Scalars['Int']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  max_uses?: InputMaybe<Scalars['Int']['input']>;
+  min_order_amount?: InputMaybe<Scalars['Float']['input']>;
+  per_phone_limit?: InputMaybe<Scalars['Int']['input']>;
+  valid_from?: InputMaybe<Scalars['String']['input']>;
+  valid_until?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateVenueSlotInput = {
   block?: InputMaybe<Scalars['Boolean']['input']>;
   end_at?: InputMaybe<Scalars['String']['input']>;
@@ -38246,6 +38337,9 @@ export type Venue = {
   survey_category?: Maybe<VenueCategory>;
   tags: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
+  /** Every category the venue belongs to, primary first. Empty only while the venue has none. */
+  venue_categories: Array<VenueCategory>;
+  /** The primary category — always venue_categories[0]. Kept for clients that read one. */
   venue_category: VenueCategory;
   venue_commission_pct: Scalars['Float']['output'];
   venue_name: Scalars['String']['output'];
@@ -38378,6 +38472,72 @@ export type VenueDocumentInput = {
   url: Scalars['String']['input'];
 };
 
+/** A coupon a venue gives its own food guests. The venue funds it; it is valid for that venue's food orders only. */
+export type VenueFoodCoupon = {
+  __typename?: 'VenueFoodCoupon';
+  /** Unique within the venue. Upper case. */
+  code: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  discount_pct: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** Total paid orders the code may discount; null for no cap. */
+  max_uses?: Maybe<Scalars['Int']['output']>;
+  /** Rupees. Compared with the order subtotal, before any discount. */
+  min_order_amount: Scalars['Float']['output'];
+  /** Paid orders one mobile number may use it on; null for no cap. */
+  per_phone_limit?: Maybe<Scalars['Int']['output']>;
+  updated_at: Scalars['String']['output'];
+  /** Orders currently paid with this coupon. */
+  used_count: Scalars['Int']['output'];
+  valid_from?: Maybe<Scalars['String']['output']>;
+  valid_until?: Maybe<Scalars['String']['output']>;
+  venue_id: Scalars['ID']['output'];
+};
+
+/** What a coupon code does to a cart. When ok is false the amounts are the cart's without the code. */
+export type VenueFoodCouponPreview = {
+  __typename?: 'VenueFoodCouponPreview';
+  /** The code as the venue wrote it; null unless ok. */
+  coupon_code?: Maybe<Scalars['String']['output']>;
+  coupon_discount_amount: Scalars['Float']['output'];
+  coupon_pct: Scalars['Int']['output'];
+  currency_symbol: Scalars['String']['output'];
+  discount_amount: Scalars['Float']['output'];
+  discount_pct: Scalars['Int']['output'];
+  /** A sentence for the guest; null when ok. */
+  message?: Maybe<Scalars['String']['output']>;
+  /** The subtotal the code needs; 0 when it needs none or is not ok. */
+  min_order_amount: Scalars['Float']['output'];
+  ok: Scalars['Boolean']['output'];
+  /** Null when ok. */
+  reason?: Maybe<VenueFoodCouponRejection>;
+  subtotal: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+};
+
+/** Why a coupon code cannot be used on an order. */
+export type VenueFoodCouponRejection =
+  | 'EXPIRED'
+  /** No such code at this venue, or it is switched off. */
+  | 'INVALID'
+  | 'MIN_ORDER_NOT_MET'
+  | 'NOT_STARTED'
+  /** The order already carries the largest discount it can take, so the code would take nothing off. */
+  | 'NO_DISCOUNT'
+  | 'PER_PERSON_LIMIT_REACHED'
+  | 'USAGE_LIMIT_REACHED';
+
+/** Server-side table page for the shared table engine. */
+export type VenueFoodCouponTablePage = {
+  __typename?: 'VenueFoodCouponTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<VenueFoodCoupon>;
+  total: Scalars['Int']['output'];
+};
+
 export type VenueFoodDiet =
   | 'EGG'
   | 'NON_VEG'
@@ -38419,11 +38579,18 @@ export type VenueFoodOrder = {
   __typename?: 'VenueFoodOrder';
   cancel_reason: Scalars['String']['output'];
   cancelled_at?: Maybe<Scalars['String']['output']>;
+  /** The venue's coupon the order was placed with; null when it had none. */
+  coupon_code?: Maybe<Scalars['String']['output']>;
+  /** What the coupon took off, after the automatic discount and the caps; 0 without a coupon. */
+  coupon_discount_amount: Scalars['Float']['output'];
+  /** The coupon's own percent; 0 without a coupon. */
+  coupon_pct: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
   currency_symbol: Scalars['String']['output'];
   customer_name: Scalars['String']['output'];
   customer_phone: Scalars['String']['output'];
   discount_amount: Scalars['Float']['output'];
+  /** The venue's automatic discount on QR orders. */
   discount_pct: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   items: Array<VenueFoodOrderLine>;
@@ -38434,6 +38601,7 @@ export type VenueFoodOrder = {
   status: VenueFoodOrderStatus;
   subtotal: Scalars['Float']['output'];
   table_label: Scalars['String']['output'];
+  /** What was charged: subtotal less discount_amount less coupon_discount_amount. */
   total: Scalars['Float']['output'];
   venue_id: Scalars['ID']['output'];
   venue_name: Scalars['String']['output'];
@@ -38715,6 +38883,8 @@ export type VenueRegistrationConfig = {
   __typename?: 'VenueRegistrationConfig';
   amenities: Array<Scalars['String']['output']>;
   capacity_item_limit: Scalars['Int']['output'];
+  /** The most categories one venue may belong to (venue_categories). */
+  category_limit: Scalars['Int']['output'];
   doc_types: Array<Scalars['String']['output']>;
   facilities: Array<Scalars['String']['output']>;
   food_diets: Array<VenueFoodDiet>;
@@ -38909,6 +39079,14 @@ export type VenueStep1Input = {
   state: Scalars['String']['input'];
   state_code?: InputMaybe<Scalars['String']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  /**
+   * Every category the venue belongs to, primary first (at most
+   * venueRegistrationConfig.category_limit; a repeated sub category is dropped).
+   * Wins over venue_category when both are sent. Omitted or empty leaves the
+   * venue's categories to venue_category.
+   */
+  venue_categories?: InputMaybe<Array<VenueCategoryInput>>;
+  /** Single-category clients: the primary. Ignored when venue_categories is sent. */
   venue_category?: InputMaybe<VenueCategoryInput>;
   venue_name: Scalars['String']['input'];
   venue_type: Scalars['String']['input'];

@@ -379,6 +379,11 @@ exports:
   - 'mwebAutoPodLabels'
   - 'shellAutoPodLabels'
   - 'shellPodKindLabels'
+  - 'venueCategoryList'
+  - 'venueCategoryPaths'
+  - 'venueCategoryLevelIds'
+  - 'venueCategoryLabels'
+  - 'venueHostsSubCategory'
   - 'DRAFT_EXPIRY_WARNING_MS'
   - 'draftMsLeft'
   - 'draftHoursLeft'
@@ -1571,6 +1576,30 @@ venueLabel({ id: 'ven-77c1' }, 'Untitled venue')  // 'Untitled venue'
 ```
 | `mwebAutoPodLabels` / `shellAutoPodLabels` | `(t) => AutoPodLabels` | Every word the queue renders — `mweb.autoPods.*` for mWeb + native, `shell.autoPods.*` for the portals, word-for-word identical. |
 | `shellPodKindLabels` | `(t) => PodKindLabels` | The "Normal Pod or Auto Pod?" question a portal's New Pod button asks. |
+| `AutoPodLabels.venueCategories` | `(paths: readonly string[]) => string` | The line under the venue picker for a venue in several categories: one path reads as the singular `venueCategory` row, more as `venueCategoriesMany` ("Categories: A · B"). |
+| `venueCategoryList` | `(venue?) => T[]` | Every category a venue belongs to, primary first: `venue_categories` when it has entries, else the legacy single `venue_category` as a one-entry list, else `[]`. Blank entries are dropped. The client twin of the server's `venueCategoriesOf` — never read `venue_category` alone. |
+| `venueCategoryPaths` | `(venue?) => string[]` | `'Sports › Racket › Badminton'` per category, primary first; nameless entries dropped. |
+| `venueCategoryLevelIds` | `(venue, 'super_category_id' \| 'category_id' \| 'sub_category_id') => string[]` | The distinct ids the venue carries at one level, primary first — what a nearby-partner search seeds its category filter with. |
+| `venueHostsSubCategory` | `(venue, subCategoryId?) => boolean` | Whether ANY of the venue's categories carries that sub category — the test for "this venue may take this Auto Pod" (`row.sub_category_id`). False when either side has none. |
+| `venueCategoryLabels` | `(summary?) => string[]` | The labels of a search/request venue summary: `categories` when it has any, else the lone `category`. The caller joins them. |
+
+A venue can belong to several categories (`Venue.venue_categories`, primary first; `venue_category`
+stays as the mirror of the first entry). Every client reads them through these helpers, so the
+legacy single triple keeps working and no surface compares the primary alone:
+
+```ts
+const venue = {
+  venue_categories: [
+    { sub_category_id: 'sub-badminton', super_category_name: 'Sports', category_name: 'Racket', sub_category_name: 'Badminton' },
+    { sub_category_id: 'sub-hatha', super_category_name: 'Fitness', category_name: 'Yoga', sub_category_name: 'Hatha' },
+  ],
+};
+
+venueHostsSubCategory(venue, 'sub-hatha')        // true  — its SECOND category
+venueHostsSubCategory(venue, 'sub-tennis')       // false
+venueCategoryPaths(venue)                        // ['Sports › Racket › Badminton', 'Fitness › Yoga › Hatha']
+venueCategoryPaths({ venue_category: venue.venue_categories[0] })  // ['Sports › Racket › Badminton'] — legacy-only venue
+```
 
 ```ts
 // A club admin enrolled first: the offer is CLAIMING, pinned to their club's city.
@@ -3421,7 +3450,8 @@ which the server refuses to send to the gateway.
 table and note lengths) so a form refuses exactly what the server would. `FOOD_ORDER_ERROR` names
 the two codes that change the page rather than just the message: `FOOD_ORDERING_CLOSED` (keep the
 menu, drop the cart) and `FOOD_ITEM_UNAVAILABLE` (re-read the venue; `reconcileFoodCart` then drops
-the dish), plus `CONFLICT` (repeat the same `client_key` a moment later).
+the dish), plus `CONFLICT` (repeat the same `client_key` a moment later) and `FOOD_COUPON_REJECTED`
+(the order's coupon can no longer be used and nothing was placed — see the coupon section below).
 
 The `client_key` is minted once per checkout attempt and repeated on every retry of it — the server
 answers a repeated key with the order it already made, which is what makes a double tap harmless.
@@ -3463,7 +3493,131 @@ else clientKey.reset(); // once the order is done with: the next one gets a new 
 the `FoodAttempt` to keep: the current one for an unchanged signature, a newly minted key otherwise.
 On a `CONFLICT`, `await wait(FOOD_ORDER_CONFLICT_RETRY_MS)` before placing again with the same key.
 
+### A venue's coupon on a food order
+
+A venue's owner can give its food guests coupon codes. The coupon is the venue's own — valid for
+that venue's food orders only, funded by the venue — and has nothing to do with the Duncit coupons of
+the pod and store checkouts. A guest needs no account to use one.
+
+```ts
+import {
+  FOOD_COUPON_REJECTION_KEYS,
+  FOOD_ORDER_ERROR,
+  PREVIEW_VENUE_FOOD_COUPON_QUERY,
+  buildFoodOrderInput,
+  foodAttemptSignature,
+  foodCouponRejectionOf,
+  foodOrderErrorCode,
+  foodOrderLineInputs,
+  normalizeFoodCouponCode,
+  priceFoodCartLines,
+  type VenueFoodCouponPreview,
+} from '@duncit/utils';
+
+// 1. Ask the server what the code does to this cart. Public, and it changes nothing.
+const preview: VenueFoodCouponPreview = await query(PREVIEW_VENUE_FOOD_COUPON_QUERY, {
+  input: {
+    venue_id: venue.id,
+    coupon_code: normalizeFoodCouponCode(typed), // trimmed, upper case — as the server stores it
+    items: foodOrderLineInputs(lines),
+    customer_phone: values.phone || null, // lets the per-person limit be checked early
+  },
+});
+if (!preview.ok) show(t(FOOD_COUPON_REJECTION_KEYS[preview.reason ?? 'INVALID'])); // amounts are the cart's without the code
+
+// 2. Show the cart with it. An accepted preview is the coupon priceFoodCart takes.
+const price = priceFoodCartLines(lines, venue.food_ordering.discount_pct, preview.ok ? preview : null);
+price.discount; // the venue's automatic discount, as before
+price.coupon; // what the coupon takes off
+price.couponUnmet; // the cart fell under the coupon's minimum order: it takes nothing off
+
+// 3. Place the order with it. The coupon rides in `details`, so the SAME object keys the attempt.
+const details = { ...values, coupon: preview.ok ? preview.coupon_code : null };
+const input = buildFoodOrderInput({
+  venueId: venue.id,
+  lines,
+  details,
+  clientKey: clientKey.keyFor(foodAttemptSignature(signature, details)),
+});
+
+// 4. A code that stopped being usable between the preview and the tap refuses the order.
+if (foodOrderErrorCode(error) === FOOD_ORDER_ERROR.couponRejected) {
+  show(t(FOOD_COUPON_REJECTION_KEYS[foodCouponRejectionOf(error) ?? 'INVALID']));
+}
+```
+
+The arithmetic, which `priceFoodCart` mirrors and the server alone decides:
+
+- the venue's automatic discount comes off the subtotal first, rounded down to a paisa;
+- the coupon's percent comes off **what is left**, rounded down too;
+- the coupon is then trimmed — never refused — so the guest still pays what the largest discount a
+  venue may set (`FOOD_ORDER_LIMITS.maxDiscountPct`, 90%) would leave, and at least the one rupee the
+  gateway can charge (`minTotalPaise`);
+- a coupon's minimum order is compared with the subtotal, before any discount.
+
+`discountPaise` / `discount` keep meaning the venue's automatic discount alone; `couponPaise` /
+`coupon` are new beside them, and `totalPaise` is the subtotal less both. `priceFoodCart(lines, pct)`
+without the third argument prices exactly as it always did.
+
+An order carries `coupon_code` (null without one), `coupon_pct` and `coupon_discount_amount` beside
+`discount_pct` / `discount_amount`; both order documents ask for them. `total` stays what was charged.
+
+**The coupon is part of the attempt.** The server answers a repeated `client_key` with the order it
+already priced — even if the coupon has since expired — so applying, changing or removing a code
+must mint a new key. `foodAttemptSignature` reads `details.coupon` for exactly that (compared as the
+server compares it, so `welcome10` and `WELCOME10` are one attempt); pass the same `details` object
+to it and to `buildFoodOrderInput`, which sends `coupon_code` only when there is one.
+
+The reasons a code is refused are `VenueFoodCouponRejection`: `INVALID` (no such code at this venue,
+or switched off — the two are deliberately indistinguishable), `NOT_STARTED`, `EXPIRED`,
+`MIN_ORDER_NOT_MET`, `USAGE_LIMIT_REACHED`, `PER_PERSON_LIMIT_REACHED` and `NO_DISCOUNT` (the order
+already has the largest discount it can take). `FOOD_COUPON_REJECTION_KEYS` maps each to its sentence
+under `mweb.venueFood.coupon.rejected.*`; the preview also carries the server's own `message`, whose
+`MIN_ORDER_NOT_MET` wording includes the amount. `FOOD_ORDER_LIMITS.couponCodeMin` / `couponCodeMax`
+(3–30) bound the code field.
+
 Copy lives under `mweb.venueFood.*`; `FOOD_ORDER_STATUS_KEYS`, `FOOD_PAYMENT_STATUS_KEYS`,
 `FOOD_DIET_KEYS` and `FOOD_SPICE_KEYS` map each enum to its key, `FOOD_SPICE_HEAT` to the number of
 flames it is drawn with, and `isVegFood` answers the veg-only filter. Web renderer: mWeb's
 `pages/VenueDetailsPage/food` and `pages/venue-food-order-page`.
+
+## The product cart control — `cart-control`
+
+Every product card answers one question the same way: what does this product's cart button look
+like right now. A round "+" until it is in the cart; then a pill with a bin while one unit is
+there, a minus from two up, the count, and a "+" that stops at the stock. This module is that
+rule and nothing else — no icon, colour or copy — so the MUI control and the Tamagui one draw
+the same decision.
+
+```ts
+import {
+  CART_CONTROL_NOTICE_MS,
+  cartControlNotice,
+  cartControlState,
+  stepCartQuantity,
+  type CartControlLabels,
+} from '@duncit/utils';
+
+cartControlState(0, 5); // { mode: 'add', decrease: 'remove', canIncrease: true }
+cartControlState(1, 5); // { mode: 'stepper', decrease: 'remove', canIncrease: true } — the bin
+cartControlState(5, 5); // { mode: 'stepper', decrease: 'decrease', canIncrease: false } — "+" off
+cartControlState(0, 0); // { mode: 'add', decrease: 'remove', canIncrease: false } — nothing to sell
+
+stepCartQuantity(4, 1, 5); // 5
+stepCartQuantity(5, 1, 5); // 5 — held at the stock
+stepCartQuantity(1, -1, 5); // 0 — the caller removes the line
+
+cartControlNotice(0, 1); // 'added'
+cartControlNotice(1, 0); // 'removed'
+cartControlNotice(2, 3); // null — the number itself says so
+CART_CONTROL_NOTICE_MS; // 1600 — how long the notice stays on the card
+```
+
+A quantity or a stock that is not a whole positive number — `NaN`, a negative, a fraction read
+back from storage — is floored to a whole count, never below zero, before any of the three
+answers.
+
+`CartControlLabels` is the copy a surface hands its control, already translated: `add`,
+`increase`, `decrease`, `remove`, `quantity` (the count's accessible name), and the two notices
+`added` and `removed`. mWeb builds it from `mweb.cartControl.*`. Web renderer:
+`CartQuantityControl`, `CartControlNoticeChip` and `useCartControlNotice` in `@duncit/ui`.

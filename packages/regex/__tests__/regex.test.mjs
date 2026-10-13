@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   BANK_ACCOUNT_NUMBER,
+  COUPON_CODE,
+  isCouponCode,
   DIAL_CODE,
   DIGITS,
   EMAIL,
@@ -476,6 +478,32 @@ describe('META_NAME / isMetaName', () => {
   it('rejects anything that could break out of the attribute it is written into', () => {
     for (const name of ['', '1robots', ':og', 'og locale', 'og"', "og'", 'og>', 'og<x', 'og=1', `a${'b'.repeat(80)}`]) {
       expect(isMetaName(name)).toBe(false);
+    }
+  });
+});
+
+describe('COUPON_CODE / isCouponCode', () => {
+  it('accepts 3–30 upper-case letters, digits, hyphens and underscores', () => {
+    for (const code of ['ABC', 'WELCOME10', '10OFF', 'DIWALI_2026', 'SAVE-10', 'A--', `A${'B'.repeat(29)}`]) {
+      expect(isCouponCode(code)).toBe(true);
+      expect(COUPON_CODE.test(code)).toBe(true);
+    }
+  });
+
+  it('rejects a code that is too short or too long', () => {
+    for (const code of ['', 'A', 'AB', `A${'B'.repeat(30)}`]) {
+      expect(isCouponCode(code)).toBe(false);
+    }
+  });
+
+  it('rejects a code that starts on a hyphen or an underscore', () => {
+    expect(isCouponCode('-SAVE10')).toBe(false);
+    expect(isCouponCode('_SAVE10')).toBe(false);
+  });
+
+  it('rejects lower case, spaces and anything outside the set', () => {
+    for (const code of ['welcome10', 'Welcome10', 'SAVE 10', ' SAVE10', 'SAVE10 ', 'SAVE.10', 'SAVE10%', 'SAVE10\n']) {
+      expect(isCouponCode(code)).toBe(false);
     }
   });
 });

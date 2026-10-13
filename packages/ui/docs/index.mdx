@@ -60,6 +60,12 @@ exports:
   - 'buildSpotsLabels'
   - 'mwebSpotsLabels'
   - 'shellSpotsLabels'
+  - 'CartQuantityControl'
+  - 'CartQuantityControlProps'
+  - 'CartControlNoticeChip'
+  - 'CartControlNoticeChipProps'
+  - 'CartControlSize'
+  - 'useCartControlNotice'
   - 'ScrollRail'
   - 'ScrollRailProps'
   - 'TicketDiscountField'
@@ -636,6 +642,90 @@ BOOKED — `venueAvailableSlots` no longer returns it, and the seats already sol
 the client at all — so the range comes from the server's `podSpotLimits`, which also guards
 the write. A host may only ever raise it; a Club Admin or an admin may also lower it, never
 below `seats_taken`.
+
+## `CartQuantityControl` — one add-to-cart control on every product card
+
+The pod shop, the product page, the cart, a venue's food menu and the store each had their own
+"add" button and their own stepper. They are one control now: a round "+" until the product is
+in the cart, then — in the same spot — a pill holding a bin while one unit is there, a minus
+from two up, the count, and a "+" that stops at the stock.
+
+```tsx
+import { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from '@duncit/ui';
+import type { CartControlLabels } from '@duncit/utils';
+
+const labels: CartControlLabels = {
+  add: t('mweb.cartControl.add', { vars: { name } }),
+  increase: t('mweb.cartControl.increase', { vars: { name } }),
+  decrease: t('mweb.cartControl.decrease', { vars: { name } }),
+  remove: t('mweb.cartControl.remove', { vars: { name } }),
+  quantity: t('mweb.cartControl.quantity', { vars: { name } }),
+  added: t('mweb.cartControl.added'),
+  removed: t('mweb.cartControl.removed'),
+};
+const notice = useCartControlNotice(quantity);
+
+<Card sx={{ position: 'relative' }}>
+  <Box sx={{ position: 'relative' }}>
+    <img src={product.image_url} alt={product.product_name} />
+    <CartControlNoticeChip notice={notice} labels={labels} testId={`shop-product-notice-${product.id}`} />
+  </Box>
+  <CartQuantityControl
+    quantity={quantity}
+    max={product.pod_available_count}
+    labels={labels}
+    onChange={(next) => setCartQuantity(product, next)}
+    busy={saving}
+    testIdPrefix={`shop-product-${product.id}`}
+    sx={{ position: 'absolute', right: 8, bottom: 8 }}
+  />
+</Card>;
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `quantity` | `number` | yes | — | Units in the cart. `0` shows the lone "+". |
+| `max` | `number` | yes | — | The stock. The "+" is off at it; at `0` even the lone "+" is. |
+| `labels` | `CartControlLabels` | yes | — | The surface's translated copy — every accessible name comes from it. |
+| `onChange` | `(next: number) => void` | yes | — | The quantity one step away, held inside `0..max`. `0` means remove. |
+| `disabled` | `boolean` | no | `false` | Every button is `disabled`. |
+| `busy` | `boolean` | no | `false` | A change is in flight: taps are ignored, the buttons stay focusable and carry `aria-disabled="true"`. |
+| `size` | `'small' \| 'medium'` | no | `'medium'` | 32px for a dense row, 36px for a card. |
+| `testIdPrefix` | `string` | no | — | Yields `${prefix}-add`, `-dec`, `-qty`, `-inc`. No ids without it. |
+| `sx` | `SxProps<Theme>` | no | — | Where the card puts it. Merged over the control's own. |
+
+`CartControlNoticeChip` takes `notice` (what `useCartControlNotice(quantity)` returned),
+`labels` (only `added` and `removed` are read), and optional `testId` and `sx`. It sits
+top-centre of the nearest `position: relative` parent unless `sx` says otherwise.
+
+**It decides nothing.** Which mode, bin or minus, and whether the "+" is live all come from
+`cartControlState` in `@duncit/utils`; every step is `stepCartQuantity`; the notice is
+`cartControlNotice`. The native app's Tamagui twin reads the same three, so a card in mWeb and a
+card in the app cannot disagree (rules 29 + 56). It also ships **no copy**: mWeb, the store and
+the app each hand over `CartControlLabels` built from their own bundle.
+
+**`busy` is not `disabled`.** A disabled button drops the focus it holds, so disabling the "+"
+for the length of every request would throw a keyboard user out of the control on each step.
+While `busy`, the buttons stay focusable, say `aria-disabled="true"`, and ignore the tap. In a
+test, assert `aria-disabled` — `toBeDisabled()` is true only for `disabled`, no stock, or the
+"+" at the stock.
+
+**Inside a clickable card it is safe.** A click anywhere on the control — a button, the count,
+a button that is switched off — stops at the control and is `preventDefault`ed, so the
+`CardActionArea` or link around it does not open.
+
+**Focus survives both swaps.** The "+" is the same element in both modes, so it keeps focus when
+the pill opens. Removing the last unit removes the button that was pressed; focus is handed to
+the "+" rather than dropped to the page.
+
+**The notice follows the cart, not the tap.** `useCartControlNotice` watches the quantity, so a
+refused add raises nothing. It also means a quantity that arrives late — a cart that loads after
+the card has mounted with `0` — reads as "Item added". Mount the card with the cart's real
+quantity, or hold the hook's argument at the loaded value.
+
+Colours are the theme's — `primary` for the "+" and the pill's outline, `background.paper`
+inside it, `grey.900` under the notice — so the store gets its own brand colour for free. On a
+touch screen each button's hit area is 44px without the drawn circle growing.
 
 ## `PodSeatsCell` — seats and bookings are two numbers, not one
 

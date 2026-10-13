@@ -48,6 +48,7 @@ const venue = {
   id: 'v1',
   venue_name: 'Hall',
   category: 'Sports',
+  categories: ['Sports'],
   venue_type: 'Indoor',
   capacity: 40,
   locality: 'Bandra',
@@ -300,6 +301,21 @@ describe('CounterpartCard', () => {
     );
     expect(screen.queryByText(/Capacity/)).toBeNull();
     expect(screen.getByText('Sports')).toBeOnTheScreen();
+  });
+
+  it('shows every category of a venue in several, primary first', () => {
+    renderWithProviders(
+      <CounterpartCard
+        request={detail({ venue: { ...venue, categories: ['Sports', 'Wellness', 'Arts'] } })}
+      />,
+    );
+    expect(screen.getByText('Sports · Wellness · Arts · Indoor')).toBeOnTheScreen();
+  });
+
+  it('still shows the one category of an answer that carries no list', () => {
+    const { categories: _categories, ...legacy } = venue;
+    renderWithProviders(<CounterpartCard request={detail({ venue: legacy } as never)} />);
+    expect(screen.getByText('Sports · Indoor')).toBeOnTheScreen();
   });
 });
 

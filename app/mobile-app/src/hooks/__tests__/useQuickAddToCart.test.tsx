@@ -87,6 +87,84 @@ describe('useQuickAddToCart', () => {
     });
   });
 
+  it('quick-adds through setQuantity while the product has no line, and reports that line', async () => {
+    mockRequest.mockResolvedValue({ podsForProduct: [pod({ pod_id: 'cheap', unit_cost: 80 })] });
+    const { result } = renderHook(() => useQuickAddToCart());
+    expect(result.current.lineOf('p1')).toBeUndefined();
+
+    await act(async () => {
+      result.current.setQuantity(product, 1);
+    });
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+    expect(result.current.lineOf('p1')).toEqual(
+      expect.objectContaining({ pod_id: 'cheap', quantity: 1, max_quantity: 5 }),
+    );
+  });
+
+  it('steps and removes an existing line without another pod lookup', () => {
+    useCartStore.setState({
+      lines: [
+        {
+          pod_id: 'pod-1',
+          pod_title: 'Pod One',
+          club_slug: 'club',
+          product_id: 'p1',
+          variant_id: '',
+          variant_label: '',
+          product_name: 'Item',
+          image_url: '',
+          unit_cost: 100,
+          max_quantity: 5,
+          free_delivery_above: null,
+          quantity: 2,
+        },
+      ],
+    });
+    const { result } = renderHook(() => useQuickAddToCart());
+
+    act(() => result.current.setQuantity(product, 3));
+    expect(result.current.lineOf('p1')?.quantity).toBe(3);
+    expect(useCartStore.getState().lines[0]?.pod_id).toBe('pod-1');
+
+    act(() => result.current.setQuantity(product, 0));
+    expect(useCartStore.getState().lines).toHaveLength(0);
+    expect(result.current.lineOf('p1')).toBeUndefined();
+    expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it('does not look anything up when asked to remove a product that is not in the cart', () => {
+    const { result } = renderHook(() => useQuickAddToCart());
+    act(() => result.current.setQuantity(product, 0));
+    expect(mockRequest).not.toHaveBeenCalled();
+    expect(useCartStore.getState().lines).toHaveLength(0);
+  });
+
+  it('shows the base line on the card, never a variant line of the same product', () => {
+    const meta = {
+      pod_id: 'pod-1',
+      pod_title: 'Pod One',
+      club_slug: 'club',
+      product_id: 'p1',
+      variant_label: '',
+      product_name: 'Item',
+      image_url: '',
+      unit_cost: 100,
+      max_quantity: 5,
+      free_delivery_above: null,
+    };
+    useCartStore.setState({
+      lines: [
+        { ...meta, variant_id: '', quantity: 1 },
+        { ...meta, variant_id: 'v1', quantity: 4 },
+      ],
+    });
+    const { result } = renderHook(() => useQuickAddToCart());
+    expect(result.current.lineOf('p1')).toEqual(
+      expect.objectContaining({ variant_id: '', quantity: 1 }),
+    );
+    expect(result.current.lineOf('other')).toBeUndefined();
+  });
+
   it('surfaces a failed lookup as a danger notice that clears itself', async () => {
     jest.useFakeTimers();
     try {

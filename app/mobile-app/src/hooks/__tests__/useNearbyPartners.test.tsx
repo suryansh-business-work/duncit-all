@@ -198,6 +198,7 @@ const venues = {
       city: 'Mumbai',
       status: 'PENDING',
       venue_category: { category_id: 'cx' },
+      venue_categories: [{ category_id: 'cx' }],
     },
     {
       id: 'v1',
@@ -205,6 +206,7 @@ const venues = {
       city: 'Mumbai',
       status: 'APPROVED',
       venue_category: { category_id: 'c1' },
+      venue_categories: [{ category_id: 'c1' }],
     },
     {
       id: 'v2',
@@ -212,9 +214,15 @@ const venues = {
       city: 'Mumbai',
       status: 'APPROVED',
       venue_category: { category_id: null },
+      venue_categories: [],
     },
   ],
 };
+
+/** One approved venue carrying exactly these fields on top of its identity. */
+const onlyVenue = (over: Record<string, unknown>) => ({
+  myVenues: [{ id: 'v1', venue_name: 'Hall', city: 'Mumbai', status: 'APPROVED', ...over }],
+});
 
 describe('useNearbyHosts', () => {
   const hosts = {
@@ -287,6 +295,73 @@ describe('useNearbyHosts', () => {
         openStatus: null,
       },
     ]);
+  });
+
+  it('seeds the search from EVERY category the venue has, primary first and deduped', async () => {
+    respondByDocument(
+      new Map<unknown, (vars: never) => unknown>([
+        [
+          PodRequestSearchVenuesDocument,
+          () =>
+            onlyVenue({
+              venue_category: { category_id: 'c1' },
+              // Two sub categories under c2, and one entry with no middle category.
+              venue_categories: [
+                { category_id: 'c1' },
+                { category_id: 'c2' },
+                { category_id: 'c2' },
+                { category_id: null },
+              ],
+            }),
+        ],
+        [NearbyHostsForVenueDocument, () => hosts],
+        [PodRequestQuotaDocument, () => quota],
+      ]),
+    );
+    const { result } = renderHook(() => useNearbyHosts());
+    await waitFor(() => expect(result.current.partners.items).toHaveLength(2));
+
+    expect(result.current.state.categoryIds).toEqual(['c1', 'c2']);
+    expect(mockRequest).toHaveBeenCalledWith(
+      NearbyHostsForVenueDocument,
+      {
+        venue_id: 'v1',
+        search: {
+          location_id: 'l1',
+          zone_name: 'Andheri',
+          radius_km: 5,
+          category_ids: ['c1', 'c2'],
+        },
+      },
+      { auth: true },
+    );
+    // Never a search narrowed to the primary alone.
+    expect(mockRequest).not.toHaveBeenCalledWith(
+      NearbyHostsForVenueDocument,
+      expect.objectContaining({ search: expect.objectContaining({ category_ids: ['c1'] }) }),
+      { auth: true },
+    );
+  });
+
+  it('seeds a legacy venue, answered with no category list, from its one category', async () => {
+    respondByDocument(
+      new Map<unknown, (vars: never) => unknown>([
+        [
+          PodRequestSearchVenuesDocument,
+          () => onlyVenue({ venue_category: { category_id: 'c7' } }),
+        ],
+        [NearbyHostsForVenueDocument, () => hosts],
+        [PodRequestQuotaDocument, () => quota],
+      ]),
+    );
+    const { result } = renderHook(() => useNearbyHosts());
+    await waitFor(() => expect(result.current.partners.items).toHaveLength(2));
+    expect(result.current.state.categoryIds).toEqual(['c7']);
+    expect(mockRequest).toHaveBeenCalledWith(
+      NearbyHostsForVenueDocument,
+      expect.objectContaining({ search: expect.objectContaining({ category_ids: ['c7'] }) }),
+      { auth: true },
+    );
   });
 
   it('opens on the venue picked on another Venue Studio screen', async () => {
@@ -397,6 +472,7 @@ describe('useNearbyVenues', () => {
         id: 'v1',
         venue_name: 'Hall',
         category: 'Sports',
+        categories: ['Sports', 'Wellness'],
         locality: 'Bandra',
         city: 'Mumbai',
         cover_image_url: 'https://cdn/v.jpg',
@@ -466,11 +542,14 @@ describe('useNearbyVenues', () => {
       kind: 'VENUE',
       name: 'Hall',
       imageUrl: 'https://cdn/v.jpg',
-      category: 'Sports',
+      // Every category the venue has, not the primary alone.
+      category: 'Sports · Wellness',
       place: 'Bandra, Mumbai',
       distanceKm: 3.5,
       openStatus: null,
     });
+    // An answer with no list (an older API) still shows its one category.
+    expect(result.current.partners.items[1]?.category).toBe('Arts');
     expect(result.current.partners.items[1]?.place).toBe('Mumbai');
     expect(result.current.partners.items[1]?.openStatus).toBe('ACCEPTED');
   });

@@ -8,7 +8,7 @@ import { paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
 import { STORE_TOKENS as T, tintAt } from '../../theme/tokens';
 import { StoreImage } from '../StoreImage';
-import { AddButton } from './AddButton';
+import { CardCartControl, CardCartNotice } from './CardCartControl';
 import { WishlistButton } from './WishlistButton';
 
 const IMAGE_SIZE = 240;
@@ -74,20 +74,17 @@ export function ProductCard({ product, position }: Readonly<ProductCardProps>) {
   const badge = product.badge || (product.low_stock && product.in_stock ? t('ecommStore.card.lowStock') : '');
   return (
     <Stack className="product-card" spacing={1.25} sx={{ bgcolor: tintAt(position), borderRadius: `${T.radius.card}px`, p: 1.5, height: '100%' }}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
-        <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
-          <Link
-            component={RouterLink}
-            to={paths.product(product.slug)}
-            color="inherit"
-            underline="hover"
-            sx={{ fontWeight: 800, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '2.6em', lineHeight: 1.3 }}
-          >
-            {product.title}
-          </Link>
-          <CardStatus product={product} />
-        </Stack>
-        <AddButton product={product} />
+      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+        <Link
+          component={RouterLink}
+          to={paths.product(product.slug)}
+          color="inherit"
+          underline="hover"
+          sx={{ fontWeight: 800, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '2.6em', lineHeight: 1.3 }}
+        >
+          {product.title}
+        </Link>
+        <CardStatus product={product} />
       </Stack>
       <Box sx={{ position: 'relative', bgcolor: T.surface, borderRadius: `${T.radius.panel}px`, overflow: 'hidden', mt: 'auto' }}>
         <Link component={RouterLink} to={paths.product(product.slug)} tabIndex={-1} aria-hidden underline="none">
@@ -102,6 +99,8 @@ export function ProductCard({ product, position }: Readonly<ProductCardProps>) {
           <Chip size="small" label={badge} sx={{ position: 'absolute', top: 8, left: 8, bgcolor: T.navBar, color: T.onBrand }} />
         ) : null}
         <WishlistButton productId={product.id} productTitle={product.title} sx={{ position: 'absolute', top: 4, right: 4 }} />
+        <CardCartNotice product={product} />
+        <CardCartControl product={product} sx={{ position: 'absolute', right: 8, bottom: 8 }} />
       </Box>
     </Stack>
   );

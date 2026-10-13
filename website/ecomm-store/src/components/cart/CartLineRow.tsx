@@ -1,15 +1,17 @@
+import { useState } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { Alert, Box, Link, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { DuncitIconButton } from '@duncit/buttons';
+import { CartQuantityControl } from '@duncit/ui';
 
 import type { StoreCartLine, StoreLineIssue } from '../../graphql/cart';
 import { useCart } from '../../app/providers/CartProvider';
 import { useMoney } from '../../lib/money';
 import { paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
-import { QuantityStepper } from '../QuantityStepper';
 import { StoreImage } from '../StoreImage';
+import { useCartControlLabels } from './useCartControlLabels';
 
 const ISSUE_KEYS: Record<StoreLineIssue, string> = {
   UNAVAILABLE: 'ecommStore.cart.issue.unavailable',
@@ -24,6 +26,17 @@ export function CartLineRow({ line }: Readonly<{ line: StoreCartLine }>) {
   const money = useMoney();
   const { setQty } = useCart();
   const name = line.name || t('ecommStore.cart.unnamed');
+  const labels = useCartControlLabels(name);
+  const [busy, setBusy] = useState(false);
+  // setQty reports its own failure (toast) and resolves false.
+  const change = async (next: number) => {
+    setBusy(true);
+    try {
+      await setQty(line.product_id, line.variant_id, next);
+    } finally {
+      setBusy(false);
+    }
+  };
   const remove = () => setQty(line.product_id, line.variant_id, 0);
   const canStep = line.issue !== 'UNAVAILABLE' && line.issue !== 'VARIANT_GONE' && line.max_qty > 0;
   return (
@@ -50,11 +63,14 @@ export function CartLineRow({ line }: Readonly<{ line: StoreCartLine }>) {
           </Typography>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
             {canStep ? (
-              <QuantityStepper
-                value={line.quantity}
+              <CartQuantityControl
+                quantity={line.quantity}
                 max={line.max_qty}
-                itemName={name}
-                onChange={(next) => setQty(line.product_id, line.variant_id, next)}
+                labels={labels}
+                onChange={change}
+                busy={busy}
+                size="small"
+                testIdPrefix="cart-line"
               />
             ) : (
               <Box />

@@ -66,13 +66,26 @@ describe('FoodSection', () => {
     expect(onPick).toHaveBeenCalledWith('/venues/menu');
   });
 
-  it('offers one switch only — QR ordering is not set from this console', () => {
+  it("sets QR ordering and the venue's GST, but cannot switch ordering on without the owner's Razorpay account", () => {
     mount(vi.fn(), { offers_food: true });
-    // The owner's form carries a second switch here ("Enable online ordering");
-    // that connection is the owner's own, so this section has just the one.
-    const switches = within(sectionCard('food', 'Food Menu')).getAllByRole('switch');
-    expect(switches).toHaveLength(1);
-    expect(switches[0]).toHaveAccessibleName('Offers food');
+    const section = within(sectionCard('food', 'Food Menu'));
+    expect(section.getAllByRole('switch')).toHaveLength(3);
+    expect(section.getByRole('switch', { name: 'Offers food' })).toBeEnabled();
+    // The account is the owner's own, linked from the Partners portal — the console only says there is none.
+    expect(section.getByRole('switch', { name: 'Take food orders from the QR' })).toBeDisabled();
+    expect(section.getByText(/No Razorpay account is linked yet/)).toBeInTheDocument();
+    expect(section.getByRole('switch', { name: "Set this venue's own GST" })).toBeEnabled();
+  });
+
+  it('switches ordering on once the owner has linked an account', () => {
+    const { form } = mount(vi.fn(), {
+      offers_food: true,
+      food_ordering: { ...blankVenueValues.food_ordering, razorpay_linked: true },
+    });
+    const section = within(sectionCard('food', 'Food Menu'));
+    expect(section.getByText(/has linked a Razorpay account/)).toBeInTheDocument();
+    fireEvent.click(section.getByRole('switch', { name: 'Take food orders from the QR' }));
+    expect(form().getValues('food_ordering.enabled')).toBe(true);
   });
 });
 

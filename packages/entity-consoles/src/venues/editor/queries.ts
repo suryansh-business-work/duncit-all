@@ -26,6 +26,7 @@ export const VENUE_REGISTRATION_CONFIG = gql`
       food_menu_limit
       food_image_limit
       food_price_max
+      food_discount_max_pct
     }
   }
 `;
@@ -130,5 +131,7 @@ export interface VenueRegistrationConfig {
   food_menu_limit: number;
   food_image_limit: number;
   food_price_max: number;
+  /** The most a venue may take off a QR order. */
+  food_discount_max_pct: number;
 }
 

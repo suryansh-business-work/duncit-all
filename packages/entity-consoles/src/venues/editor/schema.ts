@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { GSTIN_PATTERN, PAN_PATTERN, POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
 import { BANK_ACCOUNT_NUMBER, IFSC, PHONE_INTL_PLUS, UPI_ID } from '@duncit/regex';
 import { duplicateCategoryRows, isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
+import { makeVenueFoodTaxRefinement, venueFoodTaxShape } from '@duncit/forms/schemas';
 import { podRequestOverrideField } from '../../shared/podRequestLimit';
 
 /**
@@ -223,6 +224,7 @@ export interface VenueFoodLimits {
   food_menu_limit: number;
   food_image_limit: number;
   food_price_max: number;
+  food_discount_max_pct: number;
 }
 
 /**
@@ -234,6 +236,20 @@ export const UNCAPPED_FOOD_LIMITS: VenueFoodLimits = {
   food_menu_limit: Number.POSITIVE_INFINITY,
   food_image_limit: Number.POSITIVE_INFINITY,
   food_price_max: Number.POSITIVE_INFINITY,
+  food_discount_max_pct: Number.POSITIVE_INFINITY,
+};
+
+/** QR ordering: the switch, the discount within the server's ceiling, and the venue's own GST (the shared rules). */
+const foodOrderingSchema = (t: Translate, m: Messages, limits: VenueFoodLimits) => {
+  const checkTax = makeVenueFoodTaxRefinement(t);
+  return z
+    .object({
+      enabled: z.boolean().default(false),
+      discount_pct: wholeNumber(m, t('directory.venueFood.discount'), 0, limits.food_discount_max_pct),
+      razorpay_linked: z.boolean().default(false),
+      ...venueFoodTaxShape,
+    })
+    .superRefine((ordering, ctx) => checkTax(ordering, ctx));
 };
 
 /** One dish. The text bounds are the server's own (`venue.food.ts`). */
@@ -311,6 +327,7 @@ export function makeVenueFormSchema(
         t('directory.venueEditor.errMenuSize', { vars: { max: foodLimits.food_menu_limit } }),
       )
       .default([]),
+    food_ordering: foodOrderingSchema(t, m, foodLimits),
     categories: z
       .array(categoryRowSchema)
       .max(categoryLimit, categoryLimitMessage(t, categoryLimit))

@@ -8,12 +8,11 @@ import type { VenueFormValues } from '../types';
 import { sectionAnchor } from './venue-editor-sections';
 
 /**
- * Food Menu — whether the venue serves food, and its dishes. Its own section,
- * as on the owner's form.
- *
- * What is NOT here is deliberate: QR ordering — the Razorpay account, the
- * on/off switch and the discount — is the owner's own connection and is set
- * from the Partners portal. Staff edit the menu and nothing else.
+ * Food Menu — whether the venue serves food, its dishes and QR ordering (the
+ * switch, the discount and the venue's GST). Its own section, as on the
+ * owner's form. What is NOT here is deliberate: the Razorpay account guests pay
+ * is the owner's own connection, linked from the Partners portal — staff see
+ * whether there is one and a save leaves it as it is.
  */
 export default function FoodSection({
   control,

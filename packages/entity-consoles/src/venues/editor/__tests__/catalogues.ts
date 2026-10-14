@@ -82,5 +82,6 @@ export const registrationConfig = (
   food_menu_limit: 20,
   food_image_limit: 3,
   food_price_max: 5000,
+  food_discount_max_pct: 90,
   ...over,
 });

@@ -46,7 +46,14 @@ export const makeVenue = (over: Partial<AdminVenueDetail> = {}): AdminVenueDetai
   ],
   offers_food: false,
   food_menu: [],
-  food_ordering: { enabled: false, discount_pct: 0 },
+  food_ordering: {
+    enabled: false,
+    discount_pct: 0,
+    razorpay_linked: false,
+    tax_override: false,
+    tax_mode: 'INCLUSIVE',
+    gst_pct: 5,
+  },
   venue_category: {
     super_category_id: 'sc-1',
     category_id: 'c-1',

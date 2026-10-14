@@ -1,4 +1,5 @@
 import type { AdminCategoryValue } from '@duncit/category';
+import type { VenueFoodTaxValues } from '@duncit/forms/schemas';
 import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
 import type { VenueFoodDiet, VenueFoodSpiceLevel, VenueStatus } from '../detail/queries';
 
@@ -89,6 +90,18 @@ export interface VenueSettingsValues {
   refund_tiers: VenueRefundTierRow[];
 }
 
+/**
+ * QR ordering as the console edits it: the switch, the discount and the
+ * venue's own GST. The Razorpay account is the owner's — the console only reads
+ * whether one is linked (`razorpay_linked`, never sent), and a save leaves the
+ * link exactly as it is.
+ */
+export interface VenueFoodOrderingValues extends VenueFoodTaxValues {
+  enabled: boolean;
+  discount_pct: number;
+  razorpay_linked: boolean;
+}
+
 export interface VenueFormValues {
   /** Empty while creating; the venue's doc id while editing. */
   id: string;
@@ -100,6 +113,7 @@ export interface VenueFormValues {
   capacity_items: VenueCapacityRow[];
   offers_food: boolean;
   food_menu: VenueFoodRow[];
+  food_ordering: VenueFoodOrderingValues;
   /**
    * Every category the venue hosts pods in, primary first — one row of the
    * shared picker each (`RhfAdminCategoryRows`). Empty is allowed here: staff
@@ -166,6 +180,14 @@ export const blankVenueValues: VenueFormValues = {
   capacity_items: [],
   offers_food: false,
   food_menu: [],
+  food_ordering: {
+    enabled: false,
+    discount_pct: 0,
+    razorpay_linked: false,
+    tax_override: false,
+    tax_mode: '',
+    gst_pct: '',
+  },
   categories: [],
   description: '',
   amenities: [],

@@ -2,7 +2,8 @@ import { Chip, Stack } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import HeaderLocationRow from './HeaderLocationRow';
-import { STUDIO_LABEL, type StudioMode } from '../../studio-mode';
+import { STUDIO_LABEL_KEY, type StudioMode } from '../../studio-mode';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   minimal: boolean;
@@ -29,13 +30,14 @@ export default function HeaderLeading({
   placeReady,
   onOpenLocation,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (minimal) return <Stack data-testid="header-leading" sx={{ flex: 1, minWidth: 0 }} />;
   return (
     <Stack data-testid="header-leading" direction="row" spacing={1} sx={{ flex: 1, minWidth: 0, alignItems: 'center' }}>
       {studio === 'USER' ? null : (
         <Chip
           data-testid="header-studio-badge"
-          label={STUDIO_LABEL[studio]}
+          label={t(STUDIO_LABEL_KEY[studio])}
           icon={<SwapHorizIcon />}
           onClick={onOpenStudioSwitch}
           sx={{

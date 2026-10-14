@@ -15,10 +15,10 @@ import { useWallet } from '@/hooks/useWallet';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
-const PAYOUT_LABEL: Record<string, string> = {
-  IMMEDIATE: 'Paid immediately after approval',
-  WEEKLY: 'Paid on the weekly payout cycle',
-  MONTH_END: 'Paid at month end',
+const PAYOUT_LABEL_KEY: Record<string, string> = {
+  IMMEDIATE: 'mweb.wallet.payoutImmediate',
+  WEEKLY: 'mweb.wallet.payoutWeekly',
+  MONTH_END: 'mweb.wallet.payoutMonthEnd',
 };
 
 /** Host Wallet — balance, payout cycle, withdrawals and transaction history. */
@@ -35,6 +35,7 @@ export function WalletScreen() {
   // and never re-derived here — the app only words the number it is sent.
   const eligible = wallet?.can_withdraw === true;
   const minAmount = wallet?.min_withdrawal_amount ?? 0;
+  const payoutKey = wallet ? PAYOUT_LABEL_KEY[wallet.payout_mode] : undefined;
   const noWithdrawals = isLoading ? null : (
     <Text testID="wallet-no-withdrawals" fontSize={14} color="$muted" paddingVertical={12}>
       {t('mweb.wallet.noWithdrawalsYet')}
@@ -66,8 +67,8 @@ export function WalletScreen() {
             </Text>
             {wallet ? (
               <Text fontSize={12} color="$muted">
-                {PAYOUT_LABEL[wallet.payout_mode] ?? ''} · Next cycle{' '}
-                {fmtDate(wallet.next_payout_at)}
+                {payoutKey ? t(payoutKey) : ''} ·{' '}
+                {t('mweb.wallet.nextCycle', { vars: { date: fmtDate(wallet.next_payout_at) } })}
               </Text>
             ) : null}
             <WithdrawCta

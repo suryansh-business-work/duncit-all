@@ -80,8 +80,8 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
   if (loading && !data) return <HomeSkeleton />;
   if (error) return <Alert data-testid="home-page-error" severity="error">{error.message}</Alert>;
 
-  // No clubs/pods in this city → nothing to filter or search.
-  const noContent = (data?.pods?.length ?? 0) === 0 && (data?.clubs?.length ?? 0) === 0;
+  // No clubs/pods in this city → nothing to filter or search (`clubs` = clubs with pods here).
+  const noContent = (data?.pods?.length ?? 0) === 0 && clubs.length === 0;
   // A chip/filter narrows the rails; the full-list pages are unfiltered, so
   // the See-all cards drop their count + jump-to-index while one is active.
   const railsFiltered = Boolean(categoryId) || priceFilter !== 'ALL' || dateFilter !== 'ALL';

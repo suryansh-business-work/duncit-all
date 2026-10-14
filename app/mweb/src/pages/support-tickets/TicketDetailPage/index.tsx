@@ -109,8 +109,7 @@ export default function TicketDetailPage() {
     return (
       <Typography data-testid="ticket-details-missing" variant="body2" sx={{
         color: "text.secondary"
-      }}>This ticket could not be found.
-              </Typography>
+      }}>{t('mweb.ticketDetails.notFound')}</Typography>
     );
   }
 

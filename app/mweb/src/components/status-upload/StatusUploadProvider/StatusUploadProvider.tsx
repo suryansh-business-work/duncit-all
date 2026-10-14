@@ -79,7 +79,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
           },
         });
       }
-      await apolloClient.refetchQueries({ include: ['HomeFeed', 'MeAndMyPosts', 'PodDetails', 'ClubStories'] });
+      await apolloClient.refetchQueries({ include: ['HomeFeedLive', 'MeAndMyPosts', 'PodDetails', 'ClubStories'] });
       setUpload({ active: false, kind: null, progress: 100, message: t('mweb.statusUpload.statusUploaded'), profileUrl: pending.kind === 'profile' ? url : upload.profileUrl });
       setNotice('Status uploaded.');
     } catch (error: any) {

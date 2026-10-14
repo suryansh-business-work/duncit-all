@@ -95,6 +95,8 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       default: 'Default',
       duncitPartners: 'Duncit Partners',
       followers: 'Followers',
+      // A pod or slot that costs nothing.
+      free: 'Free',
       host: 'Host',
       ifscCode: 'IFSC code',
       locality: 'Locality',
@@ -336,6 +338,8 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       weightRange: 'Packed weight must be between {min} and {max} kg',
       weightRequired: 'Enter the packed weight (kg) — ShipRocket delivery needs it',
       yourListedProducts: 'Your listed products',
+      // Shown in place of the listing tools to anyone without the ECOMM_MANAGER role.
+      ecommManagerRequired: 'You must be an Ecomm Manager to add products.',
     },
 
     page: {
@@ -484,6 +488,14 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       slotPrice: 'Slot price',
       slotRequests: 'Slot Requests',
       viewRequest: 'View request',
+      noDescription: 'No description provided.',
+      viewEarnings: 'View earnings',
+      decline: 'Decline',
+      approve: 'Approve',
+      approveBody: '“{title}” will be confirmed for {window} and the pod goes live immediately.',
+      approveBooking: 'Approve booking',
+      declineBody: 'The slot opens up again and the host is notified that the request was declined.',
+      declineBooking: 'Decline booking',
     },
 
     supportPage: {
@@ -1091,6 +1103,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       requestWithdrawal: 'Request withdrawal',
       withdrawFromWallet: 'Withdraw from wallet',
       yourPayoutsWillShowUpHere: 'Your payouts will show up here.',
+      title: 'Wallet',
     },
   },
 };

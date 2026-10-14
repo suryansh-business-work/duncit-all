@@ -9,7 +9,7 @@ import { useAutoPodCounts } from '../../../hooks/useAutoPodCounts';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 import { PRODUCT_VISIBILITY_FLAG } from '@duncit/app-settings';
 import { useTranslation } from '../../../i18n/useTranslation';
-import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../../../studio-mode';
+import { STUDIO_LABEL_KEY, availableModes, resolveMode, studioSwitchPath } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
 import StudioSwitchDialog from './StudioSwitchDialog';
 import MenuRefreshBar from './MenuRefreshBar';
@@ -112,7 +112,7 @@ export default function MenuPanel({
 
         <MenuSettingsGroup
           canSwitch={canSwitch}
-          modeLabel={STUDIO_LABEL[effectiveMode]}
+          modeLabel={t(STUDIO_LABEL_KEY[effectiveMode])}
           onSwitch={() => {
             autoPods.reload();
             setSwitchOpen(true);

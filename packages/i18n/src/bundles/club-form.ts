@@ -50,6 +50,9 @@ export const CLUB_FORM_BUNDLE: NestedCatalogue = {
       clubMoments: 'Club moments',
       description: 'Description',
       perks: 'Perks',
+      save: 'Save',
+      saving: 'Saving…',
+      saveAsDraft: 'Save as Draft',
     },
     contentSection: {
       benefitsMembersGetAddAtLeast: 'Benefits members get — add at least one.',
@@ -61,6 +64,9 @@ export const CLUB_FORM_BUNDLE: NestedCatalogue = {
     },
     faqListField: {
       answer: 'Answer',
+      addFaq: 'Add FAQ',
+      question: 'Question {number}',
+      removeFaq: 'Remove FAQ {number}',
       hint: 'Optional — questions members often ask. Each one needs a question and an answer.',
     },
     linksSection: {

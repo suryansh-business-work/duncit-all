@@ -54,7 +54,7 @@ export default function HomeStatusRail({
 
   const [recordView] = useMutation<any>(RECORD_STORY_VIEW);
   const [toggleLike] = useMutation<any>(TOGGLE_STORY_LIKE);
-  const [deleteStory] = useMutation<any>(DELETE_STORY_POST, { refetchQueries: ['HomeFeed'] });
+  const [deleteStory] = useMutation<any>(DELETE_STORY_POST, { refetchQueries: ['HomeFeedLive'] });
 
   const buildEntries = useCallback(
     () => buildHomeStatusEntries({ followedClubs, hostPods, followedUsers, followedPosts, clubStories }),

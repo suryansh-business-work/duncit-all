@@ -29,7 +29,7 @@ interface Props {
 const nameOf = (list: CategoryOption[], id: string) => list.find((c) => c.id === id)?.name ?? '';
 
 /** Each option carries its level's id and the category id: `category-cascade-super-option-<id>`. */
-const optionWithTestId =
+export const optionWithTestId =
   (testId: string, list: CategoryOption[]) =>
   ({ key, ...props }: HTMLAttributes<HTMLLIElement> & { key?: Key }, id: string) => (
     <Box component="li" key={key} {...props} data-testid={`${testId}-option-${id}`}>

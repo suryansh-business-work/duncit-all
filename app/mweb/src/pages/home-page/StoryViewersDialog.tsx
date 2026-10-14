@@ -40,7 +40,7 @@ export default function StoryViewersDialog({
   const viewersBody =
     viewers.length === 0 ? (
       <Box sx={{ py: 3, textAlign: 'center' }}>
-        <Typography variant="body2" sx={{
+        <Typography data-testid="story-viewers-empty" variant="body2" sx={{
           color: "text.secondary"
         }}>
           No one has viewed this story yet.

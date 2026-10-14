@@ -70,7 +70,7 @@ function LevelSelect({ label, value, options, disabled, helper, onChange, testId
     >
       <MenuItem value="">All</MenuItem>
       {options.map((option) => (
-        <MenuItem key={option.id} value={option.id}>
+        <MenuItem key={option.id} value={option.id} data-testid={`${testId}-option-${option.id}`}>
           {option.name}
         </MenuItem>
       ))}

@@ -95,7 +95,7 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
         placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
         value={searchInput}
         onChange={setSearchInput}
-        ariaLabel="Search venues"
+        ariaLabel={t('mweb.venues.searchVenues')}
         testId="venues-search"
       />
       {loading && !data && (
@@ -105,14 +105,14 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
       )}
       {!loading && error && (
         <Typography role="alert" variant="body2" color="error" data-testid="venues-page-error">
-          Could not load venues — please try again.
+          {t('mweb.venues.loadFailed')}
         </Typography>
       )}
       {!loading && !error && venues.length === 0 && (
         <EmptyState
           testId="venues-empty"
           icon={<StorefrontOutlinedIcon />}
-          title="No venues found here yet — try another search or category."
+          title={t('mweb.venues.empty')}
         />
       )}
       {interleaveAds(venues, ads, 4).map((entry) =>

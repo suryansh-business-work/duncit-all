@@ -112,7 +112,12 @@ export function venueToValues(
       enabled: Boolean(venue.food_ordering?.enabled),
       razorpay_integration_id: venue.food_ordering?.razorpay_integration_id || '',
       discount_pct: venue.food_ordering?.discount_pct ?? blankFoodOrdering.discount_pct,
+      // What the server resolved — the venue's own, or Finance's default while it follows it.
+      tax_override: Boolean(venue.food_ordering?.tax_override),
+      tax_mode: venue.food_ordering?.tax_mode ?? blankFoodOrdering.tax_mode,
+      gst_pct: venue.food_ordering?.gst_pct ?? blankFoodOrdering.gst_pct,
     },
+    food_gstin: '',
     amenities: venue.amenities || [],
     facilities: venue.facilities || [],
     security: venue.security || [],
@@ -140,6 +145,13 @@ const toCapacityItems = (values: RegisterVenueValues) =>
     .filter((item) => item.label.trim() || item.capacity !== '')
     .map((item) => ({ label: item.label.trim(), capacity: Number(item.capacity) || 0 }));
 
+/** The venue's own GST goes only while it overrides; switched off, the stored
+ * values are left as they are and Finance's default prices its orders. */
+const toFoodTaxInput = (ordering: RegisterVenueValues['food_ordering']) =>
+  ordering.tax_override
+    ? { tax_override: true, tax_mode: ordering.tax_mode, gst_pct: Number(ordering.gst_pct) }
+    : { tax_override: false };
+
 /** The food fields of a step-1 save or an approved venue's Food Menu save. Switched off, only the
  * switch is sent: the server keeps the menu for later and turns ordering off
  * itself. A saved dish goes back with its id so it keeps its identity. */
@@ -163,6 +175,7 @@ export function toFoodInput(values: RegisterVenueValues) {
       enabled: values.food_ordering.enabled,
       razorpay_integration_id: values.food_ordering.razorpay_integration_id || null,
       discount_pct: Number(values.food_ordering.discount_pct) || 0,
+      ...toFoodTaxInput(values.food_ordering),
     },
   };
 }
@@ -234,7 +247,11 @@ export function toApprovedUpdateInput(
   if (section === 'type-capacity') {
     return { capacity_items: toCapacityItems(values) };
   }
-  if (section === 'food') return toFoodInput(values);
+  if (section === 'food') {
+    // A GST number goes only when the owner typed one; the server takes it only while the venue has none.
+    const gstin = values.food_gstin.trim().toUpperCase();
+    return { ...toFoodInput(values), ...(gstin ? { gstin } : {}) };
+  }
   if (section === 'documents') {
     return {
       add_documents: values.documents

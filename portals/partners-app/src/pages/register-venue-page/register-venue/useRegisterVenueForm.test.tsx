@@ -535,7 +535,7 @@ describe('useRegisterVenueForm — approved-venue spot edits', () => {
       input: {
         offers_food: true,
         food_menu: [{ ...dosaInput, price: 150 }],
-        food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0 },
+        food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0, tax_override: false },
       },
     });
     expect(apiRef.current?.saved).toBe('Changes saved.');

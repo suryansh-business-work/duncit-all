@@ -82,7 +82,9 @@ export default function RegisterVenueForm({
           >
             {active === 'details' && <VenueDetailsSection form={form} mode={mode} categoryLimit={categoryLimitOf(config)} />}
             {active === 'type-capacity' && <VenueTypeCapacitySection form={form} config={config} mode={mode} />}
-            {active === 'food' && <FoodSection form={form} config={config} />}
+            {active === 'food' && (
+              <FoodSection form={form} config={config} mode={mode} savedGstin={venue?.gstin ?? ''} />
+            )}
             {active === 'amenities' && (
               <AmenitiesSection form={form} config={config} disabled={mode === 'edit-approved'} />
             )}

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { makeFoodGstinRule, makeVenueFoodTaxRefinement, venueFoodTaxShape } from '@duncit/forms/schemas';
 import type { Translate } from '@duncit/shell';
 import type { FoodLimits, RegisterVenueValues } from './register-venue.types';
 
@@ -28,6 +29,7 @@ export const foodOrderingShape = z.object({
   enabled: z.boolean(),
   razorpay_integration_id: z.string(),
   discount_pct: z.union([z.number(), z.string()]),
+  ...venueFoodTaxShape,
 });
 
 const foodItemRules = (t: Translate, limits: FoodLimits) =>
@@ -68,7 +70,7 @@ const discountRule = (t: Translate, limits: FoodLimits) => {
   return z.coerce.number({ error: message }).int(message).min(0, message).max(limits.food_discount_max_pct, message);
 };
 
-type FoodValues = Pick<RegisterVenueValues, 'offers_food' | 'food_menu' | 'food_ordering'>;
+type FoodValues = Pick<RegisterVenueValues, 'offers_food' | 'food_menu' | 'food_ordering' | 'food_gstin'>;
 
 /** Re-raises a nested check's issues on the form, under `prefix`. */
 const relay = (
@@ -106,8 +108,12 @@ const addOrderingIssues = (values: FoodValues, ctx: z.RefinementCtx, t: Translat
 export const makeFoodRefinement = (t: Translate, limits: FoodLimits) => {
   const itemRules = foodItemRules(t, limits);
   const discount = discountRule(t, limits);
+  const checkTax = makeVenueFoodTaxRefinement(t);
+  const gstin = makeFoodGstinRule(t);
   return (values: FoodValues, ctx: z.RefinementCtx) => {
     if (!values.offers_food) return;
+    checkTax(values.food_ordering, ctx, ['food_ordering']);
+    relay(gstin.safeParse(values.food_gstin), ['food_gstin'], ctx);
     if (values.food_menu.length > limits.food_menu_limit) {
       ctx.addIssue({
         code: 'custom',

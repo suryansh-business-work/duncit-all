@@ -171,7 +171,7 @@ describe('ReviewSection', () => {
         { item_id: '', name: 'Masala dosa', description: '', category: '', price: 120, images: [], diet: 'VEG', spice_level: 'MILD', is_available: true },
         { item_id: '', name: 'Filter coffee', description: '', category: '', price: 40, images: [], diet: 'VEG', spice_level: 'NONE', is_available: true },
       ],
-      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: 0 },
+      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: 0, tax_override: false, tax_mode: '', gst_pct: '' },
     });
 
     const food = screen.getByText('Offers food · 2 menu items · QR ordering on');

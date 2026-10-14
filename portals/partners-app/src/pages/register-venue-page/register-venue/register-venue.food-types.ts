@@ -1,3 +1,5 @@
+import type { VenueFoodTaxValues } from '@duncit/forms/schemas';
+
 /** One dish on the venue's food menu. `item_id` is the server's id for a dish
  * already listed ('' = new) — sent back so a saved dish keeps its identity.
  * (Not `id`: useFieldArray keeps that name for its own row key.) */
@@ -14,8 +16,10 @@ export interface FoodMenuRow {
   is_available: boolean;
 }
 
-/** Scan-and-order: guests pay the venue's own saved Razorpay connection. */
-export interface FoodOrderingValues {
+/** Scan-and-order: guests pay the venue's own saved Razorpay connection.
+ * The GST fields are the venue's own override of Finance's default; while it
+ * is off they hold what the server resolved, so switching it on starts there. */
+export interface FoodOrderingValues extends VenueFoodTaxValues {
   enabled: boolean;
   razorpay_integration_id: string;
   discount_pct: number | string;
@@ -49,4 +53,7 @@ export const blankFoodOrdering: FoodOrderingValues = {
   enabled: false,
   razorpay_integration_id: '',
   discount_pct: 0,
+  tax_override: false,
+  tax_mode: '',
+  gst_pct: '',
 };

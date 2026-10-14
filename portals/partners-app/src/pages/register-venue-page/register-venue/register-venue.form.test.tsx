@@ -394,7 +394,7 @@ describe('RegisterVenueForm — edit-approved mode', () => {
       input: {
         offers_food: true,
         food_menu: [],
-        food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0 },
+        food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0, tax_override: false },
       },
     });
   });

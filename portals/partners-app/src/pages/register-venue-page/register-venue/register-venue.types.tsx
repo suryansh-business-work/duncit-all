@@ -54,6 +54,9 @@ export interface RegisterVenueValues extends VenueLocationValues {
   offers_food: boolean;
   food_menu: FoodMenuRow[];
   food_ordering: FoodOrderingValues;
+  /** A GST number the owner gives an approved venue from the Food section —
+   * only while the venue has none (the server locks a saved one). */
+  food_gstin: string;
   amenities: string[];
   facilities: string[];
   security: string[];
@@ -149,6 +152,7 @@ export const blankRegisterVenueValues: RegisterVenueValues = {
   offers_food: false,
   food_menu: [],
   food_ordering: blankFoodOrdering,
+  food_gstin: '',
   amenities: [],
   facilities: [],
   security: [],

@@ -2,13 +2,18 @@ import { Controller, type UseFormReturn } from 'react-hook-form';
 import { Alert, AlertTitle, Divider, FormControlLabel, FormHelperText, Stack, Switch } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { useTranslation } from '@duncit/shell';
-import type { RegisterVenueValues, VenueRegistrationConfig } from '../../register-venue';
+import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../../register-venue';
+import FoodGstinField from './FoodGstinField';
 import FoodMenuField from './FoodMenuField';
 import FoodOrderingField from './FoodOrderingField';
+import FoodTaxField from './FoodTaxField';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
   config: VenueRegistrationConfig;
+  mode: RegisterVenueMode;
+  /** The venue's saved GST number; '' when it has none. */
+  savedGstin: string;
 }
 
 const OFFERS_FOOD_HINT_ID = 'register-venue-offers-food-hint';
@@ -18,7 +23,7 @@ const OFFERS_FOOD_HINT_ID = 'register-venue-offers-food-hint';
  * menu and, under it, online ordering. Stays editable after approval. Switching it off keeps
  * the menu for later; the server stops taking orders.
  */
-export default function FoodSection({ form, config }: Readonly<Props>) {
+export default function FoodSection({ form, config, mode, savedGstin }: Readonly<Props>) {
   const { t } = useTranslation();
   const offersFood = form.watch('offers_food');
 
@@ -58,6 +63,9 @@ export default function FoodSection({ form, config }: Readonly<Props>) {
           <FoodMenuField form={form} config={config} />
           <Divider flexItem />
           <FoodOrderingField form={form} config={config} />
+          <Divider flexItem />
+          <FoodTaxField form={form} />
+          <FoodGstinField form={form} mode={mode} savedGstin={savedGstin} />
         </>
       )}
     </Stack>

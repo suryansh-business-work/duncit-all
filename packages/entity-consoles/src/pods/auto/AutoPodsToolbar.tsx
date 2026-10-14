@@ -32,15 +32,16 @@ export default function AutoPodsToolbar({ t, status, onStatusChange, onNew }: Re
         onChange={(event) => onStatusChange(event.target.value)}
         sx={{ minWidth: 200 }}
         slotProps={{ htmlInput: { 'data-testid': 'auto-pods-status-filter' } }}
+        data-testid="auto-pods-status-select"
       >
         <MenuItem value="">{t('admin.autoPods.filterStatusAll')}</MenuItem>
         {stageFilterOptions(t).map((option) => (
-          <MenuItem key={option.value} value={option.value}>
+          <MenuItem key={option.value} value={option.value} data-testid={`auto-pods-status-option-${option.value}`}>
             {option.label}
           </MenuItem>
         ))}
       </TextField>
-      <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={onNew}>
+      <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={onNew} data-testid="auto-pods-new">
         {t('admin.autoPods.newCta')}
       </DuncitButton>
     </Stack>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Box, Divider, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, Divider, Snackbar, Stack, Typography } from '@mui/material';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import PodLifecycleSettings from './PodLifecycleSettings';
@@ -25,7 +25,7 @@ import { POD_SETTINGS, UPDATE_POD_SETTINGS } from './queries';
  */
 export default function PodSettingsPage() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery<any>(POD_SETTINGS, {
+  const { data, loading, error, refetch } = useQuery<any>(POD_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
   const [save] = useMutation<any>(UPDATE_POD_SETTINGS, {
@@ -46,11 +46,20 @@ export default function PodSettingsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" component="h1">{t('admin.podSettings.title')}</Typography>
+        <Typography variant="h5" component="h1" data-testid="pod-settings-title">{t('admin.podSettings.title')}</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('admin.podSettings.subtitle')}
         </Typography>
       </Box>
+
+      {/* The server's own reason (e.g. a role that may not read platform
+          settings) — without it every card below reads as merely out of range. */}
+      {error && (
+        <Alert severity="error" data-testid="pod-settings-error">
+          <AlertTitle>{t('shell.table.loadFailed')}</AlertTitle>
+          {error.message}
+        </Alert>
+      )}
 
       <PodLifecycleSettings {...section} />
       <Divider />

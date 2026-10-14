@@ -98,6 +98,7 @@ export default function PodDashboardTiles({ totals, seats, money, ratings, loadi
             iconBox={{ color: tile.color, alpha: 0.1, size: 40, radius: 1.5 }}
             to={tile.to}
             cardVariant="elevation"
+            testId={`pods-dashboard-tile-${tile.key}`}
             sx={{ height: '100%' }}
           />
         </Grid>

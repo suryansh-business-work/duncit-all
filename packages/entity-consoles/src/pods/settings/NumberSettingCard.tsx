@@ -16,6 +16,8 @@ interface Props {
   /** Saved value from the server (null until the query resolves). */
   value: number | null;
   onSave: (next: number) => Promise<void>;
+  /** e2e handle: the card, and `-input` / `-warning` / `-save` inside it. */
+  testId?: string;
 }
 
 /** One numeric platform setting: title/description, whole-number input and its
@@ -31,6 +33,7 @@ export default function NumberSettingCard({
   loading,
   value,
   onSave,
+  testId,
 }: Readonly<Props>) {
   const [raw, setRaw] = useState('');
   const [busy, setBusy] = useState(false);
@@ -63,7 +66,7 @@ export default function NumberSettingCard({
   };
 
   return (
-    <Card>
+    <Card data-testid={testId}>
       <CardContent>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -86,6 +89,7 @@ export default function NumberSettingCard({
             startIcon={<SaveIcon />}
             onClick={submit}
             disabled={busy || !dirty || loading || invalid}
+            data-testid={testId && `${testId}-save`}
           >
             {busy ? 'Saving…' : 'Save'}
           </DuncitButton>
@@ -98,11 +102,11 @@ export default function NumberSettingCard({
           fullWidth
           helperText={helperText}
           slotProps={{
-            htmlInput: { min, max }
+            htmlInput: { min, max, 'data-testid': testId && `${testId}-input` }
           }}
         />
         {invalid && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
+          <Alert severity="warning" sx={{ mt: 2 }} data-testid={testId && `${testId}-warning`}>
             {invalidText}
           </Alert>
         )}

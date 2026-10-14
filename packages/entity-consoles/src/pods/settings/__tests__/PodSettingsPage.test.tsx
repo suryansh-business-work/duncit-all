@@ -327,4 +327,19 @@ describe('PodSettingsPage — page wiring', () => {
     expect(await cardOf(penaltyInput()).findByText('Only super admins can change penalties')).toBeInTheDocument();
     expect(screen.queryByText('Pod settings saved')).not.toBeInTheDocument();
   });
+
+  it('says why the settings did not load when the server refuses the read', async () => {
+    renderPage([{ request: { query: POD_SETTINGS }, result: { errors: [new GraphQLError('Access Denied')] } }]);
+
+    const alert = await screen.findByTestId('pod-settings-error');
+    expect(alert).toHaveTextContent('Failed to load data');
+    expect(alert).toHaveTextContent('Access Denied');
+  });
+
+  it('shows no refusal once the settings have loaded', async () => {
+    renderPage([settingsMock(), publicMock()]);
+
+    await waitForPenalty(5);
+    expect(screen.queryByTestId('pod-settings-error')).not.toBeInTheDocument();
+  });
 });

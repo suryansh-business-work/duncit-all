@@ -376,6 +376,42 @@ describe('PodsPage / club filter', () => {
     ).toBe('CANCELLED');
   });
 
+  it('opens already filtered when the link carries ?lifecycle= (the brief tiles)', () => {
+    renderPage('/pods?lifecycle=UPCOMING');
+    expect(harness.fetchCalls[0].options).toEqual({
+      extraVariables: { include_deleted: false, lifecycle: 'UPCOMING' },
+    });
+    expect(screen.getByRole('combobox', { name: 'Status' })).toHaveTextContent('Upcoming');
+  });
+
+  it('ignores a ?lifecycle= value the status select does not offer', () => {
+    renderPage('/pods?lifecycle=SOMEDAY');
+    expect(
+      (harness.fetchCalls[0].options as { extraVariables?: { lifecycle?: string | null } })
+        .extraVariables?.lifecycle,
+    ).toBeNull();
+  });
+
+  it('switches "Include cancelled" on when the link asks for the cancelled bucket', () => {
+    renderPage('/pods?lifecycle=CANCELLED');
+    expect(screen.getByRole('switch', { name: /include cancelled/i })).toBeChecked();
+    expect(harness.fetchCalls[0].options).toEqual({
+      extraVariables: { include_deleted: true, lifecycle: 'CANCELLED' },
+    });
+  });
+
+  it('writes the chosen stage into the URL without dropping the club', async () => {
+    renderPage('/pods?club_id=club1');
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Completed'));
+    await waitFor(() =>
+      expect(screen.getByTestId('search')).toHaveTextContent('?club_id=club1&lifecycle=COMPLETED'),
+    );
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('All Pods'));
+    await waitFor(() => expect(screen.getByTestId('search').textContent).toBe('?club_id=club1'));
+  });
+
   it('answers a category with no clubs with an empty page instead of asking the server', async () => {
     renderPage('/pods');
     const before = harness.fetchCalls.length;

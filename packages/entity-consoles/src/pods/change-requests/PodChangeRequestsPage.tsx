@@ -34,9 +34,9 @@ export default function PodChangeRequestsPage() {
 
   const items = useMemo(
     () => [
-      { value: 'venue' as const, label: t('admin.changeRequests.tabVenue') },
-      { value: 'host' as const, label: t('admin.changeRequests.tabHost') },
-      { value: 'club-admin' as const, label: t('admin.changeRequests.tabClubAdmin') },
+      { value: 'venue' as const, label: t('admin.changeRequests.tabVenue'), testId: 'change-requests-tab-venue' },
+      { value: 'host' as const, label: t('admin.changeRequests.tabHost'), testId: 'change-requests-tab-host' },
+      { value: 'club-admin' as const, label: t('admin.changeRequests.tabClubAdmin'), testId: 'change-requests-tab-club-admin' },
     ],
     [t]
   );

@@ -176,7 +176,7 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       headerName: t('admin.pods.colAiMonitoring'),
       type: 'actions',
       width: 150,
-      cellRenderer: (p: PodRow) => <AiMonitorPill onClick={() => onMonitor(p)} />,
+      cellRenderer: (p: PodRow) => <AiMonitorPill onClick={() => onMonitor(p)} testId={`pod-ai-pill-${p.id}`} />,
       // Renderer-only column: keyed on the title the activity dialog shows,
       // so the cell repaints when an edit renames the pod.
       valueGetter: (p) => p.pod_title,

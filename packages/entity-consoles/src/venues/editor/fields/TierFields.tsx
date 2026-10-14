@@ -23,22 +23,27 @@ function TierList({
   hint,
   addLabel,
   onAdd,
+  disabled = false,
   children,
-}: Readonly<{ hint: string; addLabel: string; onAdd: () => void; children: ReactNode }>) {
+}: Readonly<{ hint: string; addLabel: string; onAdd: () => void; disabled?: boolean; children: ReactNode }>) {
   return (
     <Stack spacing={1}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {hint}
       </Typography>
       {children}
-      <DuncitButton startIcon={<AddIcon />} sx={{ alignSelf: 'flex-start' }} onClick={onAdd}>
+      <DuncitButton startIcon={<AddIcon />} sx={{ alignSelf: 'flex-start' }} onClick={onAdd} disabled={disabled}>
         {addLabel}
       </DuncitButton>
     </Stack>
   );
 }
 
-function TierRow({ onRemove, children }: Readonly<{ onRemove: () => void; children: ReactNode }>) {
+function TierRow({
+  onRemove,
+  disabled = false,
+  children,
+}: Readonly<{ onRemove: () => void; disabled?: boolean; children: ReactNode }>) {
   const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
@@ -46,6 +51,7 @@ function TierRow({ onRemove, children }: Readonly<{ onRemove: () => void; childr
       <DuncitIconButton
         aria-label={t('directory.venueEditor.removeBand')}
         onClick={onRemove}
+        disabled={disabled}
         sx={{ mt: 0.5 }}
       >
         <DeleteOutlineIcon fontSize="small" />
@@ -97,7 +103,12 @@ export function ChargeTiersField({ control }: Readonly<{ control: Control<VenueF
   );
 }
 
-export function RefundTiersField({ control }: Readonly<{ control: Control<VenueFormValues> }>) {
+/** `disabled` for a console editor without the finance role: the ladder is
+ * Onboarding's / Finance's, and the server refuses anyone else moving it. */
+export function RefundTiersField({
+  control,
+  disabled = false,
+}: Readonly<{ control: Control<VenueFormValues>; disabled?: boolean }>) {
   const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({ control, name: 'settings.refund_tiers' });
 
@@ -106,15 +117,17 @@ export function RefundTiersField({ control }: Readonly<{ control: Control<VenueF
       hint={t('directory.venueEditor.refundTiersHint')}
       addLabel={t('directory.venueEditor.addRefundBand')}
       onAdd={() => append({ hours_before: 24, refund_pct: 100 })}
+      disabled={disabled}
     >
       {fields.map((row, index) => (
-        <TierRow key={row.id} onRemove={() => remove(index)}>
+        <TierRow key={row.id} onRemove={() => remove(index)} disabled={disabled}>
           <RhfTextField
             control={control}
             name={`settings.refund_tiers.${index}.hours_before`}
             label={t('directory.venueEditor.moreThanHours')}
             size="small"
             type="number"
+            disabled={disabled}
           />
           <RhfTextField
             control={control}
@@ -122,6 +135,7 @@ export function RefundTiersField({ control }: Readonly<{ control: Control<VenueF
             label={t('directory.venueEditor.refundPct')}
             size="small"
             type="number"
+            disabled={disabled}
           />
         </TierRow>
       ))}

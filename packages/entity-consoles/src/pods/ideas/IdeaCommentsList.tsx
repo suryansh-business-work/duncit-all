@@ -24,11 +24,11 @@ export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            {t('admin.podIdeas.noComments')}
+            <span data-testid="idea-comments-empty">{t('admin.podIdeas.noComments')}</span>
           </Typography>
         )}
         {comments.map((c) => (
-          <Stack key={c.id} direction="row" spacing={1.5} sx={{
+          <Stack key={c.id} direction="row" spacing={1.5} data-testid={`idea-comment-${c.id}`} sx={{
             alignItems: "flex-start"
           }}>
             <Avatar sx={{ width: 32, height: 32 }} aria-hidden>

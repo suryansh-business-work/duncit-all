@@ -18,6 +18,10 @@ export interface MemberBookedBarProps {
   restoringSpot: boolean;
   onBackout: () => void;
   onKeepSpot: () => void;
+  /** A FREE pod: no Backout — "Cancel Spot" is the only way out. */
+  isFree?: boolean;
+  canCancelSpot?: boolean;
+  onCancelSpot?: () => void;
 }
 
 /**
@@ -38,12 +42,21 @@ export function MemberBookedBar({
   restoringSpot,
   onBackout,
   onKeepSpot,
+  isFree = false,
+  canCancelSpot = false,
+  onCancelSpot,
 }: Readonly<MemberBookedBarProps>) {
   const { success } = useThemeColors();
   const { t } = useTranslation();
+  // A free pod has no attempts to run out of: once its spot cannot be
+  // cancelled before the date, the only reason is a check-in at the door.
+  const canLeave = isFree ? canCancelSpot : canBackout;
+  const blockedNote = isFree
+    ? t('mweb.podDetails.cancelSpotCheckedIn')
+    : t('mweb.podDetails.backoutMaxed');
   let note: string | null = null;
-  if (!canBackout) {
-    note = isExpired ? t('mweb.podDetails.alreadyTakenPlace') : t('mweb.podDetails.backoutMaxed');
+  if (!canLeave) {
+    note = isExpired ? t('mweb.podDetails.alreadyTakenPlace') : blockedNote;
   }
   const overline = isExpired ? t('mweb.podDetails.youWent') : t('mweb.podDetails.youreGoing');
   const badge = isExpired ? t('mweb.podDetails.podVisited') : t('mweb.podDetails.podBooked');
@@ -66,7 +79,15 @@ export function MemberBookedBar({
           note={note}
           noteTestID="pod-backout-maxed"
         />
-        {canBackout ? (
+        {isFree && canCancelSpot && onCancelSpot ? (
+          <BarCta
+            testID="pod-cancel-spot"
+            tone="danger"
+            label={t('mweb.podDetails.cancelSpot')}
+            onPress={onCancelSpot}
+          />
+        ) : null}
+        {!isFree && canBackout ? (
           <BarCta
             testID="pod-backout"
             tone="danger"

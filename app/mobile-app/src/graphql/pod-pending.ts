@@ -18,6 +18,7 @@ export const HostPodPendingViewDocument = gql(`
         place_label
         place_detail
         venue_approval_status
+        pod_type
       }
       category_name
       expected_earnings

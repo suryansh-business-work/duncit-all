@@ -114,6 +114,7 @@ export const PodDetailsDocument = gql(`
       status
       can_join
       can_backout
+      can_cancel_spot
       spots_taken
       spots_total
       seats_available

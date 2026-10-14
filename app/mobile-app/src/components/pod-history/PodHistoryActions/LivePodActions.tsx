@@ -8,6 +8,10 @@ interface LiveActionsProps {
   item: PodMembership;
   /** From the shared participation rules — computed once by the parent. */
   canBackout: boolean;
+  /** A FREE pod's only way out — shown instead of Backout. */
+  canCancelSpot?: boolean;
+  cancellingSpot?: boolean;
+  onCancelSpot?: () => void;
   /** True once the server says this pod has no Backout attempts left. */
   backoutMaxed: boolean;
   showRefundState: boolean;
@@ -29,6 +33,9 @@ interface LiveActionsProps {
 export function LivePodActions({
   item,
   canBackout,
+  canCancelSpot = false,
+  cancellingSpot = false,
+  onCancelSpot,
   backoutMaxed,
   showRefundState,
   refundText,
@@ -69,6 +76,18 @@ export function LivePodActions({
             onDisabledPress={onBackoutDisabled}
           />
         </TourAnchor>
+      ) : null}
+      {canCancelSpot && onCancelSpot ? (
+        <ActionButton
+          testID="ph-cancel-spot"
+          icon="event-busy"
+          label={
+            cancellingSpot ? t('mweb.podHistory.cancellingSpot') : t('mweb.podHistory.cancelSpot')
+          }
+          variant="danger"
+          disabled={item.status !== 'JOINED' || cancellingSpot}
+          onPress={onCancelSpot}
+        />
       ) : null}
       {showRejoin ? (
         <ActionButton

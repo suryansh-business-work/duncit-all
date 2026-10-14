@@ -173,6 +173,6 @@ export function dedupeByPod(items: PodMembership[]): PodMembership[] {
  */
 export function podHistoryGate(item: PodMembership) {
   return podParticipationActions(
-    participationInputFrom(item.participation, item.pod?.pod_date_time),
+    participationInputFrom(item.participation, item.pod?.pod_date_time, item.pod?.pod_type),
   );
 }

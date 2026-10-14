@@ -67,7 +67,7 @@ export function podToCreatePodForm(
     pod_info: pod.pod_info ?? '',
     pod_date_time_text: toText(pod.pod_date_time),
     pod_end_date_time_text: toText(pod.pod_end_date_time),
-    pod_type: normalizePodType(pod.pod_type, mode),
+    pod_type: normalizePodType(pod.pod_type),
     pod_amount_text: String(pod.pod_amount ?? 0),
     no_of_spots_text: String(pod.no_of_spots ?? 0),
     pod_hashtag_text: pod.pod_hashtag.join(' '),

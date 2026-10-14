@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Share } from 'react-native';
+import { cancelSpotErrorKey } from '@duncit/utils';
 
 import type { PodDetail } from '@/hooks/useDetails';
 import { useTranslation } from '@/hooks/useTranslation';
-import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
-import { toErrorMessage } from '@/utils/errors';
+import { usePodBackout, usePodCancelBackout, usePodCancelSpot } from '@/hooks/usePodHistory';
+import { errorCode, toErrorMessage } from '@/utils/errors';
 import { JoinFreePodDocument, JoinPodMeetingDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { podShareLinks } from '@/services/share-link';
@@ -16,12 +17,14 @@ export function usePodDetailActions(pod: PodDetail | null, refetch: () => Promis
   const { t } = useTranslation();
   const { backout, busy: backingOut } = usePodBackout();
   const { cancelBackout, busy: restoringSpot } = usePodCancelBackout();
+  const { cancelSpot, busy: cancellingSpot } = usePodCancelSpot();
   // Seats the booking will take — set by the picker in the bottom bar and
   // carried into Checkout, which re-prices the ticket by it.
   const [seats, setSeats] = useState(1);
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [keepSpotOpen, setKeepSpotOpen] = useState(false);
   const [keepSpotError, setKeepSpotError] = useState<string | null>(null);
+  const [cancelSpotOpen, setCancelSpotOpen] = useState(false);
   const [joiningFree, setJoiningFree] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
 
@@ -96,6 +99,24 @@ export function usePodDetailActions(pod: PodDetail | null, refetch: () => Promis
     }
   };
 
+  /**
+   * "Cancel the spot" — a FREE pod's only way out. A refusal (checked in,
+   * pod started) is named by its code on the bar's alert line, the same one a
+   * failed join uses, and the screen re-reads either way. mWeb twin.
+   */
+  const onConfirmCancelSpot = async () => {
+    /* istanbul ignore next -- the dialog only mounts when `pod` exists */
+    if (!pod) return;
+    setJoinError(null);
+    try {
+      await cancelSpot(pod.id);
+    } catch (err) {
+      setJoinError(t(cancelSpotErrorKey(errorCode(err))));
+    }
+    setCancelSpotOpen(false);
+    await refetch();
+  };
+
   const openKeepSpot = () => {
     setKeepSpotError(null);
     setKeepSpotOpen(true);
@@ -133,6 +154,10 @@ export function usePodDetailActions(pod: PodDetail | null, refetch: () => Promis
     openKeepSpot,
     onConfirmKeepSpot,
     restoringSpot,
+    cancelSpotOpen,
+    setCancelSpotOpen,
+    cancellingSpot,
+    onConfirmCancelSpot,
     onShare,
   };
 }

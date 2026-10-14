@@ -66,20 +66,22 @@ export function isVenueShortfall(input: PodPricingInput): boolean {
 export function usePodPricing(input: PodPricingInput): PodPricingState {
   const { podAmount, noOfSpots, venueId, slotPrice, isPhysical, isFree } = input;
   const venuePicked = isPhysical && slotPrice !== null;
+  // A free pod has no calculation at all: a ₹0 amount is what makes the
+  // earnings hook send nothing, whatever the field still holds.
   const { projection, waterfall, isLoading } = usePotentialEarnings(
-    podAmount,
+    isFree ? 0 : podAmount,
     noOfSpots,
     venuePicked ? venueId : null,
     venuePicked ? slotPrice : null,
   );
 
-  const ready = podAmount > 0 && noOfSpots > 0;
+  const ready = !isFree && podAmount > 0 && noOfSpots > 0;
   // The field starts blank, so a paid pod has nothing to publish until the host
   // types a price — ₹0 is never assumed on their behalf.
   const priceMissing = !isFree && podAmount <= 0;
   // Never claim ₹0 earnings from a waterfall that a newer price has superseded.
   const zeroEarnings = ready && !isLoading && waterfall !== null && waterfall.host_receives <= 0;
-  const venueShortfall = isVenueShortfall(input);
+  const venueShortfall = !isFree && isVenueShortfall(input);
 
   return {
     ...input,

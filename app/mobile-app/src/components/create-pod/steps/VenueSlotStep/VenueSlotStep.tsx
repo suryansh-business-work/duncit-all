@@ -13,6 +13,8 @@ import { VenuePicker } from '../../VenuePicker';
 import { VenueContactCard } from '../../VenueContactCard';
 import { parseDateTimeText } from '../../create-pod.form';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../../create-pod.types';
+import { FreeVenueNote } from '../../FreeVenueNote';
+import type { FreePodVenueNotice } from '@duncit/utils';
 
 import { SlotApprovalNote, VenueSpaceCard } from './VenueSpaceCard';
 import { spaceSlots, venueMapQuery, venueSpaces, type VenueSpace } from './venueSpaces';
@@ -25,6 +27,10 @@ interface Props {
   viewerUserId: string;
   /** A Pod Request's venue — always offered, whatever club or city is picked. */
   pinnedVenueId?: string;
+  /** A free pod on a priced slot: the host settles with the venue directly. */
+  venueNotice: FreePodVenueNotice;
+  /** A club admin is creating the pod for a host — the note speaks of the host. */
+  forClubAdmin?: boolean;
 }
 
 /** Step 3 — pick a venue partner in the pod's city and book one of its
@@ -36,6 +42,8 @@ export function VenueSlotStep({
   clubVenueIds,
   viewerUserId,
   pinnedVenueId,
+  venueNotice,
+  forClubAdmin = false,
 }: Readonly<Props>) {
   const {
     control,
@@ -154,6 +162,7 @@ export function VenueSlotStep({
         />
       ) : null}
       {selectedVenue && slotId ? <SlotApprovalNote ownVenue={ownVenue} /> : null}
+      <FreeVenueNote notice={venueNotice} forClubAdmin={forClubAdmin} />
       {selectedVenue ? <VenueContactCard venue={selectedVenue} /> : null}
       {mapQuery ? <MapEmbed query={mapQuery} height={200} /> : null}
       {duration ? (

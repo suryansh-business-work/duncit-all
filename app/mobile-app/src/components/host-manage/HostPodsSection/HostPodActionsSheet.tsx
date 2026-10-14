@@ -50,6 +50,7 @@ export function HostPodActionsSheet({ s }: Readonly<{ s: HostPodSheetState }>) {
             id: actionsPod.id,
             pod_title: actionsPod.pod_title,
             venue_id: actionsPod.venue_id,
+            pod_type: actionsPod.pod_type,
           });
         }
         setActionsPod(null);

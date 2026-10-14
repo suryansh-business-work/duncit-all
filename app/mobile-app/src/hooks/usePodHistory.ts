@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { PodBackoutAttempts } from '@duncit/utils';
+import { cancelSpotErrorKey, type PodBackoutAttempts } from '@duncit/utils';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
@@ -7,6 +7,7 @@ import {
   BackoutDeductionDocument,
   BackoutPodDocument,
   CancelBackoutPodDocument,
+  CancelFreeSpotDocument,
   EventTicketPdfDocument,
   MyEventTicketForPodDocument,
   MyPodMembershipsDocument,
@@ -16,6 +17,8 @@ import {
   RejoinPodDocument,
 } from '@/graphql/pod-history';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useTranslation } from '@/hooks/useTranslation';
+import { errorCode } from '@/utils/errors';
 import { dedupeByPod, type PodHistoryCategory, type PodMembership } from '@/utils/pod-history';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
@@ -163,6 +166,52 @@ export function usePodCancelBackout() {
   }, []);
 
   return { cancelBackout, busy };
+}
+
+/** Cancel the spot on a FREE pod, with a busy flag — mWeb's CANCEL_FREE_SPOT. */
+export function usePodCancelSpot() {
+  const [busy, setBusy] = useState(false);
+
+  const cancelSpot = useCallback(async (podDocId: string) => {
+    setBusy(true);
+    try {
+      await graphqlRequest(CancelFreeSpotDocument, { pod_doc_id: podDocId }, { auth: true });
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  return { cancelSpot, busy };
+}
+
+/**
+ * A free pod's "Cancel Spot" on Pod History: the confirm's open state, the
+ * mutation and the sentence that follows it. A refusal (checked in, pod
+ * started) is named by its code, and the screen re-reads either way — mWeb's
+ * PodHistoryDetailsPage does the same.
+ */
+export function usePodHistoryCancelSpot(
+  podDocId: string | null | undefined,
+  onNotice: (text: string) => void,
+  refresh: () => Promise<void>,
+) {
+  const { t } = useTranslation();
+  const { cancelSpot, busy } = usePodCancelSpot();
+  const [open, setOpen] = useState(false);
+
+  const confirm = async () => {
+    if (!podDocId) return;
+    try {
+      await cancelSpot(podDocId);
+      onNotice(t('mweb.podDetails.spotCancelledSnack'));
+    } catch (err) {
+      onNotice(t(cancelSpotErrorKey(errorCode(err))));
+    }
+    setOpen(false);
+    await refresh();
+  };
+
+  return { open, setOpen, busy, confirm };
 }
 
 /** Free rejoin mutation with a busy flag — mWeb's REJOIN_POD. */

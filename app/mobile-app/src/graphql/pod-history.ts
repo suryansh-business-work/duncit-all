@@ -26,6 +26,7 @@ export const MyPodMembershipsDocument = gql(`
         pod_cancelled_by
         pod_cancelled_at
         cancel_refund_status
+        spot_cancelled_at
         backouts {
           backout_no
           status
@@ -124,6 +125,17 @@ export const RejoinPodDocument = gql(`
       refund_status
       refund_payment_id
       referral_token
+    }
+  }
+`);
+
+/** Cancel the spot — a FREE pod's only way out (no backout, no refund). mWeb's CANCEL_FREE_SPOT. */
+export const CancelFreeSpotDocument = gql(`
+  mutation MobileCancelFreeSpot($pod_doc_id: ID!) {
+    cancelFreeSpot(pod_doc_id: $pod_doc_id) {
+      id
+      status
+      seats
     }
   }
 `);

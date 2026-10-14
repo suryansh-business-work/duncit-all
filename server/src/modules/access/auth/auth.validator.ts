@@ -75,6 +75,35 @@ export const registerSchema = obj(
   })
 );
 
+/** Either half of the phone was typed, so the pair must be a real number. */
+const phoneTyped = (parent: Record<string, unknown>) => !!(parent.phone_number || parent.phone_extension);
+
+/**
+ * Support › Chat with Us › Create user account: an agent opens a member account
+ * on a caller's behalf with exactly what that dialog collects — the signup
+ * form's name and email rules, its password policy for the temporary password
+ * the agent passes on, and an OPTIONAL phone. Nobody answered a WhatsApp code
+ * and no birthday was asked, so neither is demanded here and the account
+ * records neither as verified; the uniqueness rules are the service's.
+ */
+export const supportCreateUserSchema = obj(
+  shape(
+    {
+      ...registerNames,
+      email: requiredEmail(),
+      phone_extension: optionalText(),
+      phone_number: optionalText(),
+      password: password(),
+    },
+    {
+      when: {
+        phone_extension: (p) => (phoneTyped(p) ? phoneExtension() : undefined),
+        phone_number: (p) => (phoneTyped(p) ? phoneNumber() : undefined),
+      },
+    }
+  )
+);
+
 /*
   Forgotten-password recovery, in three steps.
 
@@ -217,6 +246,7 @@ export const twoFactorLoginSchema = obj(
 );
 
 export type RegisterDTO = z.infer<typeof registerSchema>;
+export type SupportCreateUserDTO = z.infer<typeof supportCreateUserSchema>;
 export type LoginDTO = z.infer<typeof loginSchema>;
 export type RequestPasswordResetDTO = z.infer<typeof requestPasswordResetSchema>;
 export type PasswordResetLookupDTO = z.infer<typeof passwordResetLookupSchema>;

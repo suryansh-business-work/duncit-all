@@ -14,6 +14,7 @@ import {
 } from '@services/email/email.service';
 import { logs } from '@observability/log';
 import { toPublic } from './user.public';
+import { forgetCurrentRoles } from '@modules/access/auth/current-roles';
 
 // Privileged role keys that require phone-verified + 2FA for elevated session.
 const PRIVILEGED_ROLE_KEYS = [
@@ -237,6 +238,10 @@ export async function replaceUserRoles(
   } finally {
     await session.endSession();
   }
+  // Every role write funnels through here (assign/add/remove, grant/revoke
+  // admin, the admin user form), so this is the one place a session's cached
+  // roles are dropped: a revoked role is refused on the member's next request.
+  await forgetCurrentRoles(userId);
 
   // After the role write commits, sync any revoked onboarding roles back to
   // the Host/Venue/Brand status (e.g. revoking HOST un-approves the host).

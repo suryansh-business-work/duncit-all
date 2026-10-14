@@ -16,6 +16,7 @@ jest.mock("@services/email/email.service", () => {
   );
 });
 
+import { sendPasswordResetOtpEmail } from "@services/email/email.service";
 import { userService } from "../../user.service";
 import { accountDeletionService } from "@modules/access/accountDeletion/accountDeletion.service";
 import { UserModel } from "../../user.model";
@@ -230,11 +231,13 @@ describe("userService integration", () => {
       const req = await userService.requestPasswordResetOtp({ email: "reset-ok@duncit.com" } as any);
       expect(req.ok).toBe(true);
       expect(req.registered).toBe(true);
-      expect(req.dev_otp).toMatch(/^\d{6}$/);
+      // The code is read off the mail it went out in; the API never echoes a real one.
+      const [[mailed]] = (sendPasswordResetOtpEmail as jest.Mock).mock.calls.slice(-1);
+      expect(mailed.otp).toMatch(/^\d{6}$/);
 
       const done = await userService.resetPasswordWithOtp({
         email: "reset-ok@duncit.com",
-        otp: req.dev_otp as string,
+        otp: mailed.otp,
         new_password: "BrandNew123",
       } as any);
       expect(done).toBe(true);
@@ -269,7 +272,7 @@ describe("userService integration", () => {
           otp: "000000",
           new_password: "BrandNew123",
         } as any),
-      ).rejects.toThrow(/invalid otp/i);
+      ).rejects.toThrow(/incorrect code/i);
     });
 
     it("rejects a reset when no OTP was requested", async () => {
@@ -286,7 +289,7 @@ describe("userService integration", () => {
           otp: "123456",
           new_password: "BrandNew123",
         } as any),
-      ).rejects.toThrow(/otp expired/i);
+      ).rejects.toThrow(/code request has expired/i);
     });
 
     it("rejects a reset for an unknown email", async () => {
@@ -296,7 +299,7 @@ describe("userService integration", () => {
           otp: "123456",
           new_password: "BrandNew123",
         } as any),
-      ).rejects.toThrow(/invalid otp/i);
+      ).rejects.toThrow(/code request has expired/i);
     });
   });
 

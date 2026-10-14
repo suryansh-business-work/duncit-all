@@ -18,10 +18,10 @@ import type {
 } from '@modules/access/auth/auth.validator';
 import { assertPortalLogin } from '@modules/portals';
 import { twoFactorService } from '@modules/access/auth/two-factor/two-factor.service';
+import { passwordResetService } from '@modules/access/auth/password-reset.service';
 import { noteSignIn, type SignInContext } from './user.signin';
 import {
   sendEmailVerificationOtpEmail,
-  sendPasswordResetOtpEmail,
   sendPasswordChangedEmail,
   sendPortalLoginOtpEmail,
   sendPasswordChangeOtpEmail,
@@ -247,78 +247,36 @@ export const userCredentialMethods = {
     return payload;
   },
 
-  // Public: email a password-reset OTP. Always returns ok to avoid leaking which
-  // emails are registered; the OTP is only generated/sent for a real account
-  // that has a password (Google-only accounts have none).
+  /*
+    Deprecated, and kept only for app builds already on people's phones: the
+    email-only step one of password recovery.
+
+    It issues through `passwordResetService` — the same challenge
+    requestPasswordResetCode opens — so the code it sends is held to that flow's
+    expiry, resend cooldown and wrong-code limit. The older per-user hash this
+    used to write had no attempt limit at all. An unregistered, password-less or
+    sealed account is still reported as unregistered and sent nothing.
+  */
   async requestPasswordResetOtp(input: RequestPasswordResetDTO) {
-    const email = String(input.email || '').trim().toLowerCase();
-    const user = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
-    // Only a registered account with a password can receive a reset OTP. An
-    // unregistered email gets no OTP and is reported back so the UI can prompt
-    // the visitor to create an account instead.
-    // A sealed account reads as unregistered here. Resetting the password of an
-    // account that is being deleted opens nothing — every door already refuses
-    // it — so the only thing a code would do is arrive in the mailbox of
-    // somebody who has just been told their account is closing.
-    if (!user?.auth?.password || isAccountLocked(String(user._id))) {
-      return { ok: false, registered: false, dev_otp: null };
-    }
-    const otp = String(crypto.randomInt(100000, 1000000));
-    await UserModel.updateOne(
-      { _id: user._id },
-      {
-        $set: {
-          'auth.password_reset_otp_hash': hashOtp(otp),
-          'auth.password_reset_otp_expires_at': new Date(Date.now() + EMAIL_OTP_MINUTES * 60_000),
-        },
-      }
-    );
-    await sendPasswordResetOtpEmail({
-      to: email,
-      name: user.profile?.first_name || 'there',
-      otp,
-      expiresMinutes: String(EMAIL_OTP_MINUTES),
-    });
-    return { ok: true, registered: true, dev_otp: isDev ? otp : null };
+    const result = await passwordResetService.request({ channel: 'EMAIL', email: input.email });
+    return { ok: result.ok, registered: result.registered, dev_otp: result.test_code };
   },
 
-  // Public: verify the OTP and set a new password. Generic errors prevent email
-  // enumeration. On success the reset OTP is cleared and password_changed_at set.
+  /*
+    Deprecated: the code and the new password in one call. Still served for
+    older app builds, but as nothing more than steps two and three of the
+    current flow run back to back — so a wrong code costs an attempt, a used or
+    burnt code is refused, and success ends every session the old password
+    opened (`security.sessions_invalidated_at` + the session seal), with the
+    same messages the current screens show.
+  */
   async resetPasswordWithOtp(input: ResetPasswordDTO) {
-    const email = String(input.email || '').trim().toLowerCase();
-    const code = String(input.otp || '').trim();
-    const user = await UserModel.findOne({ 'auth.email': email }).select(
-      '+auth.password_reset_otp_hash +auth.password_reset_otp_expires_at'
-    );
-    // A sealed account was never sent a code, but one issued before it was
-    // sealed could still be in a mailbox — so the redeem side refuses too, with
-    // the same words a wrong code gets.
-    if (!user || isAccountLocked(String(user._id))) {
-      throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    const expiresAt = (user as any).auth?.password_reset_otp_expires_at as Date | undefined;
-    const storedHash = (user as any).auth?.password_reset_otp_hash as string | undefined;
-    if (!storedHash || !expiresAt || expiresAt.getTime() < Date.now()) {
-      throw new GraphQLError('OTP expired. Request a new OTP.', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-    if (hashOtp(code) !== storedHash) {
-      throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    const hashed = await bcrypt.hash(input.new_password, 10);
-    await UserModel.updateOne(
-      { _id: user._id },
-      {
-        $set: { 'auth.password': hashed, 'auth.password_changed_at': new Date() },
-        $unset: {
-          'auth.password_reset_otp_hash': '',
-          'auth.password_reset_otp_expires_at': '',
-        },
-      }
-    );
-    await sendPasswordChangedEmail(email, (user as any).profile?.first_name ?? '');
-    return true;
+    const { reset_token } = await passwordResetService.verify({
+      channel: 'EMAIL',
+      email: input.email,
+      otp: input.otp,
+    });
+    return passwordResetService.complete({ reset_token, new_password: input.new_password });
   },
 
   // Auth-required: step one of setting the account password. An account that

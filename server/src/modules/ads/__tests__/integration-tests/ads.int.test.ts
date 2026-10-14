@@ -249,6 +249,24 @@ describe('ads integration', () => {
       expect(rejected.reviewed_at).not.toBeNull();
     });
 
+    it('refuses the submitter reviewing their own request, and lets another reviewer decide it', async () => {
+      const admin = String(new Types.ObjectId());
+      const ad = await adsService.submit(admin, makeSubmission());
+
+      for (const approve of [true, false]) {
+        await expect(adsService.review(admin, ad.id, approve)).rejects.toMatchObject({
+          message: 'You cannot review your own ad request. Another Marketing reviewer has to decide it',
+          extensions: { code: 'FORBIDDEN' },
+        });
+      }
+      // Nothing was written by the refused attempts.
+      const untouched = await AdRequestModel.findById(ad.id).lean();
+      expect(untouched).toMatchObject({ status: 'PENDING', reviewed_by: null, approved_cost: null });
+
+      const approved = await adsService.review(String(new Types.ObjectId()), ad.id, true);
+      expect(approved.status).toBe('APPROVED');
+    });
+
     it('only PENDING requests can be reviewed', async () => {
       const reviewer = String(new Types.ObjectId());
       const ad = await adsService.submit(String(new Types.ObjectId()), makeSubmission());

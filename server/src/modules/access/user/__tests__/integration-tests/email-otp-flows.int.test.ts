@@ -39,7 +39,12 @@ jest.mock('@services/email/email.service', () => {
 });
 
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
+
+import { decodeAuthUser } from '@context';
+import { OTP_MAX_ATTEMPTS } from '@modules/platform/otp/otp.constants';
+import { OtpChallengeModel } from '@modules/platform/otp/otp.model';
 
 import {
   sendAccountDeletionOtpEmail,
@@ -196,15 +201,33 @@ describe('verifying an email address', () => {
   });
 });
 
-describe('resetting a forgotten password', () => {
-  it('sends a code to a registered address', async () => {
+/*
+  The deprecated pair (requestPasswordResetOtp + resetPasswordWithOtp) that app
+  builds already on phones still call. It now runs on the same challenge as
+  requestPasswordResetCode / completePasswordReset, so it has to hold to that
+  flow's rules: a wrong-code limit, single use, and ending every session the old
+  password opened.
+*/
+describe('resetting a forgotten password (legacy one-call flow)', () => {
+  /** A token minted `offsetSec` seconds from now, as signToken would mint it. */
+  const tokenFor = (id: string, offsetSec: number) =>
+    jwt.sign(
+      { id, roles: ['USER'], iat: Math.floor(Date.now() / 1000) + offsetSec },
+      process.env.JWT_SECRET || 'dev-secret'
+    );
+
+  beforeEach(() => {
+    // The mail goes out, so the code is random and never echoed back.
+    (sendPasswordResetOtpEmail as jest.Mock).mockResolvedValue({});
+  });
+
+  it('mails a code to a registered address and never echoes a real one back', async () => {
     const { email } = await makeUser();
 
     const result = await userService.requestPasswordResetOtp({ email } as never);
 
-    expect(result).toMatchObject({ ok: true, registered: true });
-    expect(result.dev_otp).toBe(codeFrom(sendPasswordResetOtpEmail as jest.Mock));
-    expect(sendPasswordResetOtpEmail).toHaveBeenCalled();
+    expect(result).toEqual({ ok: true, registered: true, dev_otp: null });
+    expect(codeFrom(sendPasswordResetOtpEmail as jest.Mock)).toMatch(/^\d{6}$/);
   });
 
   it('reports an unregistered address as unregistered, so the UI can offer signing up', async () => {
@@ -212,7 +235,7 @@ describe('resetting a forgotten password', () => {
       email: 'nobody@duncit.com',
     } as never);
 
-    expect(result).toMatchObject({ ok: false, registered: false });
+    expect(result).toEqual({ ok: false, registered: false, dev_otp: null });
     expect(sendPasswordResetOtpEmail).not.toHaveBeenCalled();
   });
 
@@ -231,41 +254,97 @@ describe('resetting a forgotten password', () => {
     await userService.requestPasswordResetOtp({ email } as never);
     const code = codeFrom(sendPasswordResetOtpEmail as jest.Mock);
 
-    await userService.resetPasswordWithOtp({ email, otp: code, new_password: 'BrandNew123' } as never);
+    await expect(
+      userService.resetPasswordWithOtp({ email, otp: code, new_password: 'BrandNew123' } as never)
+    ).resolves.toBe(true);
 
     const doc = await UserModel.findById(id).select('+auth.password').lean<any>();
     expect(await bcrypt.compare('BrandNew123', doc.auth.password)).toBe(true);
     expect(await bcrypt.compare(PASSWORD, doc.auth.password)).toBe(false);
   });
 
-  it('refuses a wrong code, an expired one and an unknown address alike', async () => {
+  it('ends every session opened before the reset, and only those', async () => {
     const { id, email } = await makeUser();
+    const before = tokenFor(id, -60);
+    expect(decodeAuthUser(`Bearer ${before}`)?.id).toBe(id);
+    await userService.requestPasswordResetOtp({ email } as never);
+    const code = codeFrom(sendPasswordResetOtpEmail as jest.Mock);
+
+    await userService.resetPasswordWithOtp({ email, otp: code, new_password: 'BrandNew123' } as never);
+
+    const doc = await UserModel.findById(id).lean<any>();
+    expect(doc.security.sessions_invalidated_at).toBeInstanceOf(Date);
+    expect(decodeAuthUser(`Bearer ${before}`)).toBeNull();
+    expect(decodeAuthUser(`Bearer ${tokenFor(id, 2)}`)?.id).toBe(id);
+  });
+
+  it('counts wrong codes and burns the code once the limit is reached', async () => {
+    const { id, email } = await makeUser();
+    await userService.requestPasswordResetOtp({ email } as never);
+    const code = codeFrom(sendPasswordResetOtpEmail as jest.Mock);
+    const wrong = code === '000000' ? '111111' : '000000';
+
+    await expect(
+      userService.resetPasswordWithOtp({ email, otp: wrong, new_password: 'BrandNew123' } as never)
+    ).rejects.toThrow(`Incorrect code — ${OTP_MAX_ATTEMPTS - 1} attempts left`);
+    for (let i = 1; i < OTP_MAX_ATTEMPTS; i += 1) {
+      await expect(
+        userService.resetPasswordWithOtp({ email, otp: wrong, new_password: 'BrandNew123' } as never)
+      ).rejects.toThrow('Incorrect code');
+    }
+
+    // The right code no longer helps: the challenge is burnt.
+    await expect(
+      userService.resetPasswordWithOtp({ email, otp: code, new_password: 'BrandNew123' } as never)
+    ).rejects.toThrow('Too many wrong codes — send a new one');
+    const doc = await UserModel.findById(id).select('+auth.password').lean<any>();
+    expect(await bcrypt.compare(PASSWORD, doc.auth.password)).toBe(true);
+    expect(doc.security?.sessions_invalidated_at ?? null).toBeNull();
+  });
+
+  it('refuses an expired code and an address that was never sent one alike', async () => {
+    const { email } = await makeUser();
+    await userService.requestPasswordResetOtp({ email } as never);
+    const code = codeFrom(sendPasswordResetOtpEmail as jest.Mock);
+    await OtpChallengeModel.updateMany(
+      { email, purpose: 'PASSWORD_RESET' },
+      { $set: { expires_at: new Date(Date.now() - 60_000) } }
+    );
+
+    await expect(
+      userService.resetPasswordWithOtp({ email, otp: code, new_password: 'BrandNew123' } as never)
+    ).rejects.toThrow('That code request has expired — send a new one');
+    await expect(
+      userService.resetPasswordWithOtp({
+        email: 'nobody@duncit.com',
+        otp: code,
+        new_password: 'BrandNew123',
+      } as never)
+    ).rejects.toThrow('That code request has expired — send a new one');
+  });
+
+  it('refuses the password the account already holds, and keeps the code for a retry', async () => {
+    const { email } = await makeUser();
     await userService.requestPasswordResetOtp({ email } as never);
     const code = codeFrom(sendPasswordResetOtpEmail as jest.Mock);
 
     await expect(
-      userService.resetPasswordWithOtp({ email, otp: '000000', new_password: 'X' } as never)
-    ).rejects.toThrow('Invalid OTP');
-
-    await expireOtp(id, 'password_reset_otp');
+      userService.resetPasswordWithOtp({ email, otp: code, new_password: PASSWORD } as never)
+    ).rejects.toThrow('Choose a password you have not used on this account before');
     await expect(
-      userService.resetPasswordWithOtp({ email, otp: code, new_password: 'X' } as never)
-    ).rejects.toThrow('expired');
-
-    await expect(
-      userService.resetPasswordWithOtp({ email: 'nobody@duncit.com', otp: code, new_password: 'X' } as never)
-    ).rejects.toThrow('Invalid OTP');
+      userService.resetPasswordWithOtp({ email, otp: code, new_password: 'BrandNew123' } as never)
+    ).resolves.toBe(true);
   });
 
-  it('clears the code on success, so it cannot be used twice', async () => {
-    const { id, email } = await makeUser();
+  it('spends the code on success, so it cannot be used twice', async () => {
+    const { email } = await makeUser();
     await userService.requestPasswordResetOtp({ email } as never);
     const code = codeFrom(sendPasswordResetOtpEmail as jest.Mock);
     await userService.resetPasswordWithOtp({ email, otp: code, new_password: 'BrandNew123' } as never);
 
     await expect(
       userService.resetPasswordWithOtp({ email, otp: code, new_password: 'Another123' } as never)
-    ).rejects.toThrow();
+    ).rejects.toThrow('That code request has expired — send a new one');
   });
 });
 

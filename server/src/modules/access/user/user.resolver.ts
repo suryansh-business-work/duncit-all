@@ -7,7 +7,7 @@ import {
 } from './user.validator';
 import { validate } from '@utils/validate';
 import type { GraphQLContext } from '@context';
-import { requireRole, assertScope } from '@middleware/rbac';
+import { requireRole, assertScope, readScope } from '@middleware/rbac';
 import { loadUserDataIssues, type ContactRow } from './user.data-issues';
 import { loadLastActiveOn } from './user.last-active';
 
@@ -37,19 +37,24 @@ export const userResolvers = {
   Query: {
     users: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, DIRECTORY_ROLES);
-      return userService.list(args.filter);
+      // A city or zonal admin reads their own city's / zones' members only.
+      return userService.list(args.filter, readScope(ctx));
     },
     usersTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, DIRECTORY_ROLES);
-      return userService.table(args.query);
+      // A city or zonal admin reads their own city's / zones' members only.
+      return userService.table(args.query, readScope(ctx));
     },
     partnersTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, PARTNERS_TABLE_ROLES);
-      return userService.partnersTable(args.query);
+      return userService.partnersTable(args.query, readScope(ctx));
     },
     user: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
-      return userService.getById(args.user_id);
+      const target = await userService.getById(args.user_id);
+      // The same place check updateUser makes: a read never sees what a write would refuse.
+      if (target) assertScope(ctx, { city: target.city, zone: target.zone });
+      return target;
     },
     userContactActions: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);

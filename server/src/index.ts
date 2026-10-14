@@ -89,8 +89,7 @@ import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
 import { buildTableApiRouter } from '@modules/platform/tableApi/tableApi.router';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
-import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';
-import jwt from 'jsonwebtoken';
+import { notificationStreamHandler } from '@modules/engagement/notification/notification.stream';
 import { policyService } from '@modules/content/policy/policy.service';
 import { initSocketServer } from './realtime/io';
 import { attachChatHandlers } from '@modules/engagement/chat/chat.socket';
@@ -930,75 +929,9 @@ async function bootstrap() {
     res.status(204).end();
   });
 
-  // Server-Sent Events stream for real-time notifications.
-  // EventSource cannot send custom headers, so we accept the JWT via
-  // ?token= query string. The connection emits an initial unread count and
-  // then a `notify` event whenever the user receives a new notification or
-  // marks one as read.
-  app.get(
-    '/notifications/stream',
-    async (req, res) => {
-    const token = String(req.query.token || '');
-    let userId: string | null = null;
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret') as {
-          id?: string;
-        };
-        userId = decoded?.id ?? null;
-      } catch {
-        userId = null;
-      }
-    }
-    if (!userId) {
-      res.status(401).end();
-      return;
-    }
-
-    res.set({
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    });
-    res.flushHeaders?.();
-
-    const send = (event: string, data: unknown) => {
-      res.write(`event: ${event}\n`);
-      res.write(`data: ${JSON.stringify(data)}\n\n`);
-    };
-
-    try {
-      const unread = await notificationService.unreadCountForUser(userId);
-      send('hello', { unread_count: unread });
-    } catch {
-      send('hello', { unread_count: 0 });
-    }
-
-    const channel = `notify:${userId}`;
-    const onEvent = async (payload: NotifyEvent) => {
-      let unread_count = payload.unread_count;
-      if (unread_count < 0) {
-        try {
-          unread_count = await notificationService.unreadCountForUser(userId);
-        } catch {
-          unread_count = 0;
-        }
-      }
-      send('notify', { ...payload, unread_count });
-    };
-    notificationEvents.on(channel, onEvent);
-
-    const ping = setInterval(() => {
-      res.write(': ping\n\n');
-    }, 25000);
-
-    req.on('close', () => {
-      clearInterval(ping);
-      notificationEvents.off(channel, onEvent);
-    });
-  }
-  );
+  // Server-Sent Events stream for real-time notifications (?token= auth, the
+  // same decode as the GraphQL context). See notification.stream.ts.
+  app.get('/notifications/stream', notificationStreamHandler);
 
   // Real-time: socket.io shares the http server with Apollo. One io instance,
   // each feature attaches its own handlers + rooms.

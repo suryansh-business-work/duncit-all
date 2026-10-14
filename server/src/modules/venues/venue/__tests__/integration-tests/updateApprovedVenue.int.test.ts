@@ -116,6 +116,48 @@ describe("the venue's GST number on its food invoices", () => {
     });
     expect(updated.gstin).toBe(OTHER_GSTIN);
   });
+
+  it("lets a console editor change a saved number from the Food Menu tab, on a venue that is not theirs", async () => {
+    const venueId = await seedApprovedVenue({ gstin: GSTIN });
+    const editorId = new Types.ObjectId().toString();
+    const updated = await venueService.updateApproved(editorId, venueId, { gstin: OTHER_GSTIN.toLowerCase() }, true);
+    expect(updated.gstin).toBe(OTHER_GSTIN);
+    // A blank from the console still leaves the number alone.
+    await venueService.updateApproved(editorId, venueId, { gstin: '' }, true);
+    expect(await gstinOf(venueId)).toBe(OTHER_GSTIN);
+  });
+});
+
+describe("the Venues console's Food Menu tab", () => {
+  it("saves a console editor's menu on any approved venue, and leaves the owner's Razorpay link alone", async () => {
+    const linked = new Types.ObjectId();
+    const venueId = await seedApprovedVenue({
+      offers_food: true,
+      food_ordering: { enabled: false, razorpay_integration_id: linked, discount_pct: 0 },
+    });
+    const editorId = new Types.ObjectId().toString();
+    await venueService.updateApproved(
+      editorId,
+      venueId,
+      {
+        offers_food: true,
+        food_menu: [{ name: 'Masala dosa', price: 120 }],
+        food_ordering: { enabled: false, discount_pct: 15, tax_override: false },
+      },
+      true
+    );
+    const saved = await VenueModel.findById(venueId).lean();
+    expect(saved?.food_menu?.map((dish) => dish.name)).toEqual(['Masala dosa']);
+    expect(saved?.food_ordering).toMatchObject({ discount_pct: 15 });
+    expect(String(saved?.food_ordering?.razorpay_integration_id)).toBe(String(linked));
+  });
+
+  it('still refuses a console editor a venue that is not approved yet', async () => {
+    const draftId = await seedApprovedVenue({ status: 'DRAFT' });
+    await expect(
+      venueService.updateApproved(new Types.ObjectId().toString(), draftId, { description: 'x' }, true)
+    ).rejects.toThrow(/only approved venues/i);
+  });
 });
 
 describe("a venue's own GST on its food orders", () => {

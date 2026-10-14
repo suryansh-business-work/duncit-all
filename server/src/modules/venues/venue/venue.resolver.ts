@@ -151,8 +151,10 @@ export const venueResolvers = {
       venueService.submitStep3(uid(ctx), args.input, args.venue_id),
     submitVenueFinal: async (_p: unknown, args: { venue_id?: string }, ctx: GraphQLContext) =>
       venueService.submitFinal(uid(ctx), args.venue_id),
+    // The owner, or a Venues console editor (the record's Food Menu tab) — who
+    // may also change a saved GST number. Ownership is checked in the service.
     updateApprovedVenue: async (_p: unknown, args: { venue_id: string; input: any }, ctx: GraphQLContext) =>
-      venueService.updateApproved(uid(ctx), args.venue_id, args.input),
+      venueService.updateApproved(uid(ctx), args.venue_id, args.input, !!ctx.user && hasRole(ctx.user, VENUE_EDIT)),
     approveVenue: async (
       _p: unknown,
       args: { venue_doc_id: string; notes?: string; tags?: string[] },

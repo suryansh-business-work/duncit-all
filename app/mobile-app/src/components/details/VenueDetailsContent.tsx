@@ -1,15 +1,15 @@
 import { useState } from 'react';
+import { useWindowDimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
-import { AppImage } from '@/components/AppImage';
 import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { MapEmbed } from '@/components/MapEmbed';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { TwoToneHeading } from '@/components/TwoToneHeading';
+import { HeroCarousel } from '@/components/details/DetailHero';
 import { VenueImagesGrid } from '@/components/details/VenueImagesGrid';
 import { VenuePodsSection } from '@/components/details/VenuePodsSection';
 import { FOOD_CART_BUTTON_SPACE } from '@/components/details/venue-food/FoodCartBar';
@@ -18,6 +18,9 @@ import { VenueFoodOrderingScope } from '@/components/details/venue-food/VenueFoo
 import type { PublicVenueDetails as PublicVenue } from '@/hooks/useHostsVenues';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+
+/** The scroll body's side padding — the hero spans the width inside it. */
+const PAGE_PADDING = 16;
 
 function addressLine(venue: PublicVenue): string {
   return [
@@ -80,40 +83,19 @@ export function VenueDetailsContent({ venue, gallery, onRefresh }: Readonly<Prop
   const { accent, brand } = useThemeColors();
   const { t } = useTranslation();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const { width: windowWidth } = useWindowDimensions();
   // Room under the last row for the floating cart button, wherever a venue can show one.
   const paddingBottom = 32 + (venue.offers_food ? FOOD_CART_BUTTON_SPACE : 0);
   return (
     <VenueFoodOrderingScope venue={venue} onRefresh={onRefresh}>
-      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20, paddingBottom }}>
-        <YStack
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: PAGE_PADDING, gap: 20, paddingBottom }}>
+        <HeroCarousel
+          media={gallery.map((url) => ({ url, type: 'IMAGE' }))}
+          width={windowWidth - PAGE_PADDING * 2}
           height={240}
-          borderRadius={24}
-          overflow="hidden"
-          backgroundColor="$soft"
-          alignItems="center"
-          justifyContent="center"
-        >
-          {gallery[0] ? (
-            <XStack
-              pressStyle={PRESS_STYLE.surface}
-              testID="venue-cover-image"
-              role="button"
-              tabIndex={0}
-              aria-label={t('mweb.podDetails.viewImage')}
-              onPress={() => setViewerIndex(0)}
-              width="100%"
-              height="100%"
-            >
-              <AppImage
-                source={{ uri: gallery[0] }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-              />
-            </XStack>
-          ) : (
-            <MaterialIcons name="storefront" size={44} color={brand} />
-          )}
-        </YStack>
+          placeholder={<MaterialIcons name="storefront" size={44} color={brand} />}
+          onOpen={setViewerIndex}
+        />
 
         <YStack gap={10}>
           <TwoToneHeading lead={venue.venue_name} />

@@ -130,7 +130,10 @@ beforeAll(async () => {
   await Promise.all([VenueFoodCouponModel.init(), VenueFoodOrderModel.init()]);
 });
 
-beforeEach(() => {
+// The coupon and pricing cases were written against prices that include GST at 5%; pin that, rather than
+// inherit whatever Finance's shipped default is, so they keep testing coupons. The default has its own suite.
+beforeEach(async () => {
+  await updateFoodTaxDefaults({ tax_mode: 'INCLUSIVE', gst_pct: 5 }, null);
   let opened = 0;
   rzp.createRazorpayOrder.mockImplementation(async () => {
     opened += 1;

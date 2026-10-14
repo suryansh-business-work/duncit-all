@@ -54,8 +54,8 @@ export const VENUE_FOOD_DISCOUNT_MAX_PCT = 90;
 export const VENUE_FOOD_TAX_MODES = ['INCLUSIVE', 'EXCLUSIVE'] as const;
 /** Whole-number GST percent on food; 28 is the highest GST slab. */
 export const VENUE_FOOD_GST_PCT_MAX = 28;
-/** What Finance starts with: today's behaviour — prices include the tax. */
-export const VENUE_FOOD_TAX_DEFAULTS = { tax_mode: 'INCLUSIVE', gst_pct: 5 } as const;
+/** What Finance starts with: GST added on top of the menu price, at 5%. */
+export const VENUE_FOOD_TAX_DEFAULTS = { tax_mode: 'EXCLUSIVE', gst_pct: 5 } as const;
 
 /** Comfort features guests get inside the venue. */
 export const VENUE_AMENITIES = [

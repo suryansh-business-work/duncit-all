@@ -19,28 +19,28 @@ const update = (ctx: GraphQLContext, input: { tax_mode: unknown; gst_pct: unknow
   financeResolvers.Mutation.updateFoodTaxDefaults(undefined, { input }, ctx);
 
 describe('the food GST default', () => {
-  it('starts as today: prices include GST at 5%', async () => {
-    expect(await read(finance)).toMatchObject({ tax_mode: 'INCLUSIVE', gst_pct: 5 });
+  it('starts with GST added on top of the menu price at 5%', async () => {
+    expect(await read(finance)).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 5 });
   });
 
   it('reads the shipped default for a settings document written before it existed', async () => {
     await FinanceSettingsModel.collection.insertOne({ singleton_key: 'finance', updated_at: new Date() });
-    expect(await read(finance)).toMatchObject({ tax_mode: 'INCLUSIVE', gst_pct: 5 });
+    expect(await read(finance)).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 5 });
   });
 
   it('is set by Finance, touching nothing else in the settings, and logged with who changed it from what', async () => {
     const info = jest.spyOn(logs.server, 'info');
     await FinanceSettingsModel.create({ singleton_key: 'finance', gst_pct: 18, currency_symbol: '₹' });
-    expect(await update(finance, { tax_mode: 'EXCLUSIVE', gst_pct: 12 })).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 12 });
+    expect(await update(finance, { tax_mode: 'INCLUSIVE', gst_pct: 12 })).toMatchObject({ tax_mode: 'INCLUSIVE', gst_pct: 12 });
     expect(await FinanceSettingsModel.findOne({ singleton_key: 'finance' }).lean()).toMatchObject({
-      food_tax_mode: 'EXCLUSIVE',
+      food_tax_mode: 'INCLUSIVE',
       food_gst_pct: 12,
       gst_pct: 18,
     });
     expect(info).toHaveBeenCalledWith(
       'finance-settings',
       'foodTaxDefaults',
-      expect.objectContaining({ before: { tax_mode: 'INCLUSIVE', gst_pct: 5 }, after: { tax_mode: 'EXCLUSIVE', gst_pct: 12 } })
+      expect.objectContaining({ before: { tax_mode: 'EXCLUSIVE', gst_pct: 5 }, after: { tax_mode: 'INCLUSIVE', gst_pct: 12 } })
     );
     info.mockRestore();
   });
@@ -50,7 +50,7 @@ describe('the food GST default', () => {
       await expect(update(finance, { tax_mode: 'INCLUSIVE', gst_pct })).rejects.toMatchObject({ extensions: { code: 'BAD_USER_INPUT' } });
     }
     await expect(update(finance, { tax_mode: 'SOMETIMES', gst_pct: 5 })).rejects.toMatchObject({ extensions: { code: 'BAD_USER_INPUT' } });
-    expect(await read(finance)).toMatchObject({ tax_mode: 'INCLUSIVE', gst_pct: 5 });
+    expect(await read(finance)).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 5 });
   });
 
   it('takes both ends of the range', async () => {
@@ -61,9 +61,9 @@ describe('the food GST default', () => {
   it('is read and set by finance roles only', async () => {
     for (const ctx of [as(['USER']), as(['VENUE_OWNER']), { user: null } as unknown as GraphQLContext]) {
       await expect(read(ctx)).rejects.toThrow();
-      await expect(update(ctx, { tax_mode: 'EXCLUSIVE', gst_pct: 12 })).rejects.toThrow();
+      await expect(update(ctx, { tax_mode: 'INCLUSIVE', gst_pct: 12 })).rejects.toThrow();
     }
-    expect(await read(finance)).toMatchObject({ tax_mode: 'INCLUSIVE', gst_pct: 5 });
+    expect(await read(finance)).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 5 });
   });
 });
 

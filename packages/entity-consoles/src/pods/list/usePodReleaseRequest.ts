@@ -27,13 +27,16 @@ export default function usePodReleaseRequest({ refetch, setToast }: Args) {
         variables: { input: buildCompleteInput(values, completePod.id) },
       });
       const result = data?.completePodSettlement;
-      if (result) {
+      // A free pod asks Finance for nothing: unless product sellers are owed
+      // their own sales there is no release to list, and nothing to approve.
+      const free = !!result?.settlement.is_free;
+      if (result && !(free && result.releases.length === 0)) {
         setReleaseSummary({
           currency_symbol: result.settlement.currency_symbol,
           releases: result.releases,
         });
       }
-      setToast(t('admin.completePod.submitted'));
+      setToast(free ? t('shell.hostShare.freeCompleted') : t('admin.completePod.submitted'));
       setCompletePod(null);
       await refetch();
     } catch (e: any) {

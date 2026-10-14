@@ -180,6 +180,13 @@ export interface HostPodActionLabels {
    * this package has no admin-formatted clock, and the attendance page — which
    * does — is where the exact deadline is quoted. */
   shareExpired: string;
+  /** A FREE pod settles nothing: this label replaces every figure. */
+  shareFree: string;
+  shareFreeNote: string;
+  /** The toast after completing a free pod — nothing goes to Finance. */
+  shareFreeCompleted: string;
+  /** `completeHint` without the payout sentence, for a free pod. */
+  completeHintFree: string;
   podMedia: string;
   completing: string;
   cancelNoOthers: string;
@@ -336,6 +343,10 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     shareYouReceive: t('mweb.hostShare.youReceive'),
     shareDuncitRevenue: t('mweb.hostShare.duncitRevenue'),
     shareExpired: t('mweb.hostShare.expired'),
+    shareFree: t('mweb.hostShare.freePod'),
+    shareFreeNote: t('mweb.hostShare.freeNote'),
+    shareFreeCompleted: t('mweb.hostShare.freeCompleted'),
+    completeHintFree: t('mweb.hostShare.freeCompleteHint'),
     podMedia: t('mweb.hostPodActions.podMedia'),
     completing: t('mweb.hostPodActions.completing'),
     cancelNoOthers: t('mweb.hostPodActions.cancelNoOthers'),
@@ -467,6 +478,10 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     shareYouReceive: t('shell.hostShare.youReceive'),
     shareDuncitRevenue: t('shell.hostShare.duncitRevenue'),
     shareExpired: t('shell.hostShare.expired'),
+    shareFree: t('shell.hostShare.freePod'),
+    shareFreeNote: t('shell.hostShare.freeNote'),
+    shareFreeCompleted: t('shell.hostShare.freeCompleted'),
+    completeHintFree: t('shell.hostShare.freeCompleteHint'),
     podMedia: t('shell.hostPodActions.podMedia'),
     completing: t('shell.hostPodActions.completing'),
     cancelNoOthers: t('shell.hostPodActions.cancelNoOthers'),

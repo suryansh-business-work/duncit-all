@@ -67,6 +67,8 @@ export interface EarningsProjectionInput {
   hostUserId: string | null;
   venueId: string | null;
   venueSlotId: string | null;
+  /** A free pod has no earnings to project — the query is never sent. */
+  skip?: boolean;
 }
 
 export interface EarningsProjectionState {
@@ -98,7 +100,7 @@ export function useEarningsProjection(input: Readonly<EarningsProjectionInput>):
         venue_id: input.venueId,
         venue_slot_id: input.venueSlotId,
       },
-      skip: idle,
+      skip: idle || !!input.skip,
       fetchPolicy: 'cache-and-network',
     },
   );

@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
-import { firstMediaUrl } from '@duncit/utils';
+import { firstMediaUrl, isFreePod } from '@duncit/utils';
 import { MediaListField } from '@duncit/media-picker';
 import SettlementPreview from './SettlementPreview';
 import VenueBillFields from './VenueBillFields';
@@ -80,7 +80,9 @@ export default function CompletePodDialog({
   onSubmit,
 }: Readonly<CompletePodDialogProps>) {
   const { t } = useTranslation();
-  const hasVenue = !!pod?.venue_id;
+  // A free pod's host settles the venue directly — no bill is asked for here.
+  const free = isFreePod(pod?.pod_type);
+  const hasVenue = !!pod?.venue_id && !free;
   const hostIds = (pod?.pod_hosts_id ?? []) as string[];
   const hostOptions = hostIds.map((id) => users.find((user) => user.user_id === id) ?? { user_id: id, full_name: id });
   const initialValues: CompletePodValues = {
@@ -145,6 +147,7 @@ export default function CompletePodDialog({
                   venueBillAmount={venueBillAmount}
                   includeSlotPrice={includeSlotPrice}
                   hostUserId={selectedHostId}
+                  free={free}
                 />
               )}
               <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={2} />

@@ -133,6 +133,7 @@ export function buildPodPreview(values: PodFormValues, data: PodFormData): PodPr
     hashtags: hashtagsOf(values.pod_hashtag_text),
     charges: values.place_charges.filter((charge) => charge.label.trim()),
     ticketDiscountTiers: ticketDiscountOffer(values),
-    paymentTerms: values.payment_terms.trim(),
+    // Never shown for a free pod — it has no money terms to state.
+    paymentTerms: isFree ? '' : values.payment_terms.trim(),
   };
 }

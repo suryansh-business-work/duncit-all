@@ -12393,6 +12393,16 @@ export type Mutation = {
   cancelBackoutPod: PodMember;
   /** The requester withdraws their own pending ask (tapping Requested). */
   cancelFollowRequest: User;
+  /**
+   * Cancel the spot on a FREE pod — the only way out of one. Releases every
+   * seat of the caller's booking, voids its ticket and returns the booking as
+   * BACKED_OUT with spot_cancelled_at set. No backout request, no attempt, no
+   * refund; joinFreePod brings the same booking back any number of times.
+   * Idempotent. Errors: NOT_FREE_POD (paid pod — use backoutPod), BAD_REQUEST
+   * (pod started), NOT_FOUND (not a member), ALREADY_CHECKED_IN (ticket scanned).
+   * On a free pod backoutPod does the same thing, for installed app builds.
+   */
+  cancelFreeSpot: PodMember;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
   /**
@@ -14978,6 +14988,11 @@ export type MutationCancelBackoutPodArgs = {
 
 export type MutationCancelFollowRequestArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelFreeSpotArgs = {
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -22576,6 +22591,12 @@ export type PodDraftInput = {
 
 export type PodEarningsProjection = {
   __typename?: 'PodEarningsProjection';
+  /**
+   * True when the projection was asked for a FREE pod (pod_type: FREE): every
+   * figure is 0 and there is no calculation to show — hide it rather than print
+   * zeros. False for every paid projection.
+   */
+  is_free: Scalars['Boolean']['output'];
   /** Spots that can actually be sold: total_spots - 1 (0 when unset/unlimited). */
   payable_spots: Scalars['Int']['output'];
   /** Spots the host entered (physical capacity, including the host's own seat). */
@@ -22753,6 +22774,11 @@ export type PodFinanceBreakdown = {
   currency_symbol: Scalars['String']['output'];
   frozen: Scalars['Boolean']['output'];
   has_venue: Scalars['Boolean']['output'];
+  /**
+   * True for a free pod. Nothing is collected and the host pays the venue off
+   * the platform, so the waterfall is all zeros — hide the breakdown.
+   */
+  is_free: Scalars['Boolean']['output'];
   pod_id: Scalars['ID']['output'];
   pod_title: Scalars['String']['output'];
   /** How many of this pod's bookings got money back. */
@@ -22990,6 +23016,12 @@ export type PodMember = {
   /** Seats this booking holds — one ticket admits this many. 1 for every legacy booking. */
   seats: Scalars['Int']['output'];
   source: JoinSource;
+  /**
+   * When the member cancelled their spot on a FREE pod. Set only while the
+   * booking is BACKED_OUT because of a cancelled spot (cleared when they join
+   * again) — a free pod has no backout, so this, not backout_count, is its exit.
+   */
+  spot_cancelled_at?: Maybe<Scalars['String']['output']>;
   status: MembershipStatus;
   updated_at: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
@@ -23071,9 +23103,16 @@ export type PodMembershipState = {
    * any number the buyer picks without another round trip. Null for a free join.
    */
   backout_refund_per_seat?: Maybe<Scalars['Float']['output']>;
+  /** Always false on a FREE pod — a free pod has no backout; see can_cancel_spot. */
   can_backout: Scalars['Boolean']['output'];
   /** True when the in-process backout can still be cancelled (seat not rebooked). */
   can_cancel_backout: Scalars['Boolean']['output'];
+  /**
+   * True when the caller may cancel their spot (cancelFreeSpot): a FREE pod
+   * they hold a JOINED booking on, that has not started and whose ticket has
+   * not been checked in. Always false on a paid pod.
+   */
+  can_cancel_spot: Scalars['Boolean']['output'];
   can_join: Scalars['Boolean']['output'];
   is_member: Scalars['Boolean']['output'];
   /** Most seats one booking may take — caps the Pod Details seat picker. */
@@ -23165,6 +23204,12 @@ export type PodParticipation = {
   pod_cancelled_at?: Maybe<Scalars['String']['output']>;
   /** Set only when the pod itself was cancelled — then nothing else applies. */
   pod_cancelled_by?: Maybe<PodMemberCancelActor>;
+  /**
+   * Set when this booking's latest exit was a cancelled spot on a FREE pod —
+   * draw it as "Spot cancelled", not as a backout or a refund. Null otherwise,
+   * including once the member has joined again.
+   */
+  spot_cancelled_at?: Maybe<Scalars['String']['output']>;
 };
 
 export type PodPartnerRequest = {
@@ -23412,6 +23457,11 @@ export type PodSettlement = {
   host_payout_amount: Scalars['Float']['output'];
   /** True when the bill is being paid on top of the slot price rather than instead of it. */
   include_slot_price: Scalars['Boolean']['output'];
+  /**
+   * True for a free pod: completion creates no payout release, asks for no
+   * venue bill (has_venue is false, venue is null) and every money figure is 0.
+   */
+  is_free: Scalars['Boolean']['output'];
   /**
    * SEATS the settlement was computed on — the ones a host scanned in. Kept
    * under its original name for older consumers; attended_seats is the same
@@ -26552,6 +26602,7 @@ export type QueryAdminPotentialPodEarningsArgs = {
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
   no_of_spots: Scalars['Int']['input'];
   pod_amount: Scalars['Float']['input'];
+  pod_type?: InputMaybe<PodType>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -28851,6 +28902,7 @@ export type QueryPostsArgs = {
 export type QueryPotentialPodEarningsArgs = {
   no_of_spots: Scalars['Int']['input'];
   pod_amount: Scalars['Float']['input'];
+  pod_type?: InputMaybe<PodType>;
   venue_amount?: InputMaybe<Scalars['Float']['input']>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -39139,8 +39191,14 @@ export type VenueSlotDecision = {
   host_phone: Scalars['String']['output'];
   pod_description: Scalars['String']['output'];
   pod_id: Scalars['ID']['output'];
+  /**
+   * True when the requesting pod is FREE: the host settles the venue's charges
+   * directly, off the platform, so price, venue_commission_amount and
+   * venue_receives are all 0. Show the free-pod notice instead of the earnings.
+   */
+  pod_is_free: Scalars['Boolean']['output'];
   pod_title: Scalars['String']['output'];
-  /** The slot's gross price, before Duncit's venue commission. */
+  /** The slot's gross price, before Duncit's venue commission. 0 when pod_is_free. */
   price: Scalars['Int']['output'];
   requested_at: Scalars['String']['output'];
   slot_id: Scalars['ID']['output'];
@@ -39173,7 +39231,13 @@ export type VenueSlotRequest = {
   host_phone: Scalars['String']['output'];
   pod_description: Scalars['String']['output'];
   pod_id: Scalars['ID']['output'];
+  /**
+   * True when the requesting pod is FREE: the host settles the venue's charges
+   * directly, off the platform. Show the free-pod notice instead of any amount.
+   */
+  pod_is_free: Scalars['Boolean']['output'];
   pod_title: Scalars['String']['output'];
+  /** The slot's price. 0 when pod_is_free — the platform quotes the venue nothing. */
   price: Scalars['Int']['output'];
   requested_at: Scalars['String']['output'];
   slot_id: Scalars['ID']['output'];

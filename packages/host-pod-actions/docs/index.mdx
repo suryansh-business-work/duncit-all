@@ -283,6 +283,15 @@ the words and the lines are `@duncit/utils`' `venue-bill`, drawn by `@duncit/ui`
 Submitting creates the payout releases PENDING: nothing reaches a wallet until Finance approves
 the request on its Payment Release page, and the dialog says so through `notifySuccess`.
 
+### A free pod
+
+A FREE pod (`pod_type: 'FREE'` on the `HostPodForComplete` the menu hands over, or
+`is_free` on the settlement) moves no money on the platform — its host settles the venue
+directly. The dialog then asks for no venue bill, the preview is headed "Free pod" and shows
+only the attendance roster (rows without amounts — scanning still gates completion) and one
+note, never a split of zeros, and the success toast says the pod is completed rather than
+"sent to Finance".
+
 ## Copy lives in two namespaces
 
 `mweb.podFeedback.*` / `mweb.hostScan.*` / `mweb.podMedia.*` for mWeb and native,

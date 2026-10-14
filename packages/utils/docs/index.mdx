@@ -147,6 +147,12 @@ exports:
   - 'payingSeats'
   - 'HOST_FREE_SPOT_NOTE'
   - 'PodSpotLimits'
+  - 'isFreePod'
+  - 'freePodVenueNotice'
+  - 'cancelSpotErrorKey'
+  - 'CANCEL_SPOT_GENERIC_ERROR_KEY'
+  - 'FreePodVenueInput'
+  - 'FreePodVenueNotice'
   - 'resolveTicketDiscountTier'
   - 'ticketDiscountFor'
   - 'ticketDiscountMaxTickets'
@@ -1131,6 +1137,48 @@ coinLedgerLabelKey({ type: 'DEBIT', source: 'COIN_EXPIRY' })     // 'mweb.coin.e
 | `attendeeSeatCount` | `(people: { seats?: number }[]) => number` | Seats a rendered attendee list holds — a booking for three is one row, so counting rows under-reports it. `seats` absent or `0` counts as one. |
 | `HOST_FREE_SPOT_NOTE` | `string` | Copy to render beside any spots-driven figure. |
 | `PodSpotLimits` | `type` | The range a pod that already EXISTS may be resized within, as the server's `podSpotLimits` answers it: `current`, `min`, `max`, `seats_taken`, `venue_capacity`, `min_pax`, `slidable`, `can_decrease`. |
+
+#### Free pods — `pod-free`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `isFreePod` | `(podType?: string \| null) => boolean` | `true` only for `'FREE'` — the one free pod type, physical or virtual. |
+| `freePodVenueNotice` | `({ podType, slotPrice, ownVenue, slotConfirmed }) => FreePodVenueNotice` | What Create Pod tells the host of a free pod about the venue's charges: `'NONE'`, `'SETTLE'` or `'SETTLE_BEFORE_APPROVAL'`. |
+
+A free pod collects nothing, so Duncit pays the venue nothing: the host settles the venue's
+charges with the venue directly. The note appears only for a FREE pod on a slot priced above 0
+at a venue the host does not own — a slot priced 0 and the host's own venue book instantly and
+say nothing. A slot a Pod Request already confirmed (`slotConfirmed`) is `'SETTLE'`: the venue
+is still owed, but there is no approval left to hold back. mWeb and the native app both read
+this one rule and only word and draw the note themselves.
+
+```ts
+freePodVenueNotice({ podType: 'FREE', slotPrice: 1500 })                      // 'SETTLE_BEFORE_APPROVAL'
+freePodVenueNotice({ podType: 'FREE', slotPrice: 1500, slotConfirmed: true }) // 'SETTLE'
+freePodVenueNotice({ podType: 'FREE', slotPrice: 1500, ownVenue: true })      // 'NONE'
+freePodVenueNotice({ podType: 'FREE', slotPrice: 0 })                         // 'NONE'
+freePodVenueNotice({ podType: 'PAID', slotPrice: 1500 })                      // 'NONE'
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `cancelSpotErrorKey` | `(code?: string \| null) => string` | The `mweb.*` key for a refused `cancelFreeSpot`: `ALREADY_CHECKED_IN` → `mweb.podDetails.cancelSpotCheckedIn`, `BAD_REQUEST` (pod started) → `…cancelSpotStarted`, `NOT_FOUND` → `…cancelSpotNotMember`, anything else → `CANCEL_SPOT_GENERIC_ERROR_KEY`. |
+| `CANCEL_SPOT_GENERIC_ERROR_KEY` | `string` | `'mweb.podDetails.cancelSpotFailed'` — a network failure or an unknown code. |
+
+A free pod has no backout and no refund: "Cancel the spot" is its only way out, any number of
+times. The participation rules read that from the pod's type — pass it as the third argument of
+`participationInputFrom(fields, podDateTime, podType)`. For a FREE pod `podParticipationActions`
+answers `canBackout: false`, `canCancelSpot` true while the booking is still in an upcoming,
+uncancelled pod and was not checked in, and never a refund or coins; `buildPodParticipationTimeline`
+draws only `JOINED`, then `SPOT_CANCELLED` (from `spot_cancelled_at`), the pod's cancellation
+(no refund child) or the attendance nodes — never a backout, replacement or refund node. A paid
+pod (or no type) is unchanged.
+
+```ts
+const input = participationInputFrom(item.participation, item.pod.pod_date_time, item.pod.pod_type);
+podParticipationActions(input) // { canBackout: false, canCancelSpot: true, showRefundState: false, … }
+cancelSpotErrorKey('ALREADY_CHECKED_IN') // 'mweb.podDetails.cancelSpotCheckedIn'
+```
 
 `spotsBounds` is the CREATE-time answer, derived on the client from the slot being picked.
 `PodSpotLimits` is the EDIT-time one, and only the server can produce it: a live pod's slot is

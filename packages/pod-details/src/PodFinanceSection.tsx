@@ -39,6 +39,27 @@ function SummaryRow({ label, value }: Readonly<{ label: string; value: string | 
   );
 }
 
+/** A FREE pod moves no platform money (its host settles the venue directly),
+ * so the card says so instead of printing a split of zeros. */
+function FreeFinanceBody({ bookings }: Readonly<{ bookings: number }>) {
+  const { t } = useTranslation();
+  return (
+    <Stack spacing={1.25} data-testid="pod-finance-free">
+      <SummaryRow label={t('podDetailsPanel.podFinanceSection.bookings')} value={bookings} />
+      <Chip
+        size="small"
+        color="success"
+        variant="outlined"
+        label={t('podDetailsPanel.podFinanceSection.freePod')}
+        sx={{ alignSelf: 'flex-start' }}
+      />
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {t('podDetailsPanel.podFinanceSection.freeNote')}
+      </Typography>
+    </Stack>
+  );
+}
+
 /** "Finance" card on the pod detail page: settlement status + the pod's money
  * split four ways (host first), the same view every surface shows. */
 export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>) {
@@ -72,7 +93,8 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
         )
       }
     >
-      {breakdown && (
+      {breakdown?.is_free && <FreeFinanceBody bookings={breakdown.bookings_count} />}
+      {breakdown && !breakdown.is_free && (
         <Stack spacing={1.25}>
           <SummaryRow label={t('podDetailsPanel.podFinanceSection.bookings')} value={breakdown.bookings_count} />
           <SummaryRow

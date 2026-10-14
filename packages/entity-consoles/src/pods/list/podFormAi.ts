@@ -1,7 +1,10 @@
 import {
+  LEGACY_POD_TYPES,
   OCCURRENCES,
   POD_MODES,
   POD_TYPES,
+  isFreePodType,
+  normalizePodType,
   type PodFormValues,
   type PodMode,
   type PodPlaceCharge,
@@ -9,7 +12,9 @@ import {
 import { MEETING_PLATFORM_VALUES } from '@duncit/utils';
 import { aiChips, aiOneOf, aiText } from '../../shared/aiFillSanitize';
 
-const POD_TYPE_VALUES = POD_TYPES.map((option) => option.value);
+// The fill is still prompted with the legacy type names; each is taken as the
+// FREE / PAID option that replaced it.
+const POD_TYPE_VALUES = [...POD_TYPES.map((option) => option.value), ...LEGACY_POD_TYPES];
 const OCCURRENCE_VALUES = OCCURRENCES.map((option) => option.value);
 const POD_MODE_VALUES = POD_MODES.map((option) => option.value as PodMode);
 
@@ -205,7 +210,7 @@ export async function buildAiFilledPod(
     pod_amount: Number(d?.pod_amount) || prev.pod_amount,
     // Anything outside POD_TYPES/OCCURRENCES has no MenuItem to match, so the
     // Select would render blank — keep what the admin already had instead.
-    pod_type: aiOneOf(d?.pod_type, POD_TYPE_VALUES) ?? prev.pod_type,
+    pod_type: normalizePodType(aiOneOf(d?.pod_type, POD_TYPE_VALUES) ?? prev.pod_type),
     pod_occurrence: aiOneOf(d?.pod_occurrence, OCCURRENCE_VALUES) ?? prev.pod_occurrence,
     pod_mode: podMode,
     ...meetingFieldsFor(d, podMode, prev),
@@ -217,6 +222,6 @@ export async function buildAiFilledPod(
     place_charges: charges ?? prev.place_charges,
   };
 
-  if (next.pod_type?.includes('FREE')) next.pod_amount = 0;
+  if (isFreePodType(next.pod_type)) next.pod_amount = 0;
   return next;
 }

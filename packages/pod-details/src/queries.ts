@@ -323,6 +323,7 @@ export const POD_FINANCE_BREAKDOWN = gql`
     podFinanceBreakdown(pod_id: $pod_id) {
       pod_id
       pod_title
+      is_free
       settlement_status
       frozen
       bookings_count

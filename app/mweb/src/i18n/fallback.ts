@@ -19,6 +19,7 @@ import {
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
   VENUE_FOOD_OWNER_BUNDLE,
+  SHELL_FOOD_TAX_SLICE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -73,6 +74,8 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...VENUE_SETTINGS_BUNDLE,
   // The venue's food desk (@duncit/venue-food) — the same one the Partners console mounts.
   ...VENUE_FOOD_OWNER_BUNDLE,
+  // shell.foodTax.*: the GST words and rules the food menu editor shares with the consoles.
+  ...SHELL_FOOD_TAX_SLICE,
   // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
   ...POD_REQUESTS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,

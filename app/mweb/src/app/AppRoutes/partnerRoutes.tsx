@@ -23,6 +23,7 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
         <Route path="/venues/publish" element={withAuth(<VenuePublishPage />)} />
         {/* The venue's food desk — the same tools the Partners and Venues consoles mount. */}
         <Route path="/venues/food-dashboard" element={withAuth(<VenueFoodPage tool="food-dashboard" />)} />
+        <Route path="/venues/food-menu" element={withAuth(<VenueFoodPage tool="food-menu" />)} />
         <Route path="/venues/food-orders" element={withAuth(<VenueFoodPage tool="food-orders" />)} />
         <Route path="/venues/food-coupons" element={withAuth(<VenueFoodPage tool="food-coupons" />)} />
         <Route path="/venues/pods" element={withAuth(<VenuePodsPage />)} />

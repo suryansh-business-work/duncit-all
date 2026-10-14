@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { CrmEmailVerification } from '@/api/emailVerification.gql';
-import { createEmailStatusStore, emailKey } from '@/components/email-status/emailStatusStore';
+import {
+  createEmailStatusStore,
+  emailKey,
+  type FetchStatuses,
+  type VerifyOne,
+} from '@/components/email-status/emailStatusStore';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -20,7 +25,10 @@ const checked = (email: string, status: CrmEmailVerification['status']): CrmEmai
   created_at: '2026-10-14T10:00:00.000Z',
 });
 
-const setup = (fetchImpl = vi.fn(async () => [] as never[]), verifyImpl = vi.fn(async () => null)) => {
+const setup = (
+  fetchImpl = vi.fn<FetchStatuses>(async () => []),
+  verifyImpl = vi.fn<VerifyOne>(async () => null)
+) => {
   const onError = vi.fn();
   const store = createEmailStatusStore(fetchImpl, verifyImpl, onError);
   const listener = vi.fn();
@@ -73,7 +81,7 @@ describe('createEmailStatusStore', () => {
     const { store, fetchImpl } = setup();
     for (let i = 0; i < 450; i++) store.request(`u${i}@example.com`);
     await tick();
-    expect(fetchImpl.mock.calls.map(([emails]) => (emails as string[]).length)).toEqual([200, 200, 50]);
+    expect(fetchImpl.mock.calls.map(([emails]) => emails.length)).toEqual([200, 200, 50]);
   });
 
   it('reports a failed lookup and shows no status rather than a wrong one', async () => {
@@ -89,7 +97,7 @@ describe('createEmailStatusStore', () => {
 
   it('shows the spinner while a check runs, then the fresh verdict', async () => {
     let finish: (value: CrmEmailVerification) => void = () => undefined;
-    const verifyImpl = vi.fn(() => new Promise<CrmEmailVerification>((resolve) => { finish = resolve; }));
+    const verifyImpl = vi.fn<VerifyOne>(() => new Promise<CrmEmailVerification>((resolve) => { finish = resolve; }));
     const { store } = setup(undefined, verifyImpl);
 
     const pending = store.verify('Asha@example.com');

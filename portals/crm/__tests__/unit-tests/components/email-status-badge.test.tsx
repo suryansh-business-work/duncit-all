@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing/react';
+import type { MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { CRM_EMAIL_STATUSES, CRM_VERIFY_EMAIL } from '@/api/emailVerification.gql';
 import { EmailStatusBadge, EmailStatusChip, EmailStatusProvider } from '@/components/email-status';
 

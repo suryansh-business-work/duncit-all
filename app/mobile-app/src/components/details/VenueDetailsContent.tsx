@@ -88,7 +88,10 @@ export function VenueDetailsContent({ venue, gallery, onRefresh }: Readonly<Prop
   const paddingBottom = 32 + (venue.offers_food ? FOOD_CART_BUTTON_SPACE : 0);
   return (
     <VenueFoodOrderingScope venue={venue} onRefresh={onRefresh}>
-      <RefreshScrollView flex={1} contentContainerStyle={{ padding: PAGE_PADDING, gap: 20, paddingBottom }}>
+      <RefreshScrollView
+        flex={1}
+        contentContainerStyle={{ padding: PAGE_PADDING, gap: 20, paddingBottom }}
+      >
         <HeroCarousel
           media={gallery.map((url) => ({ url, type: 'IMAGE' }))}
           width={windowWidth - PAGE_PADDING * 2}

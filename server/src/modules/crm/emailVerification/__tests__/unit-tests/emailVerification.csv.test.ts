@@ -1,6 +1,13 @@
 import * as XLSX from 'xlsx';
 import { MAX_BULK_EMAILS, extractEmails } from '../../emailVerification.csv';
 
+// The module namespace is read-only, so spyOn cannot swap `read`; a factory
+// mock keeps the real reader and lets single calls be overridden.
+jest.mock('xlsx', () => {
+  const actual = jest.requireActual<typeof import('xlsx')>('xlsx');
+  return { ...actual, read: jest.fn(actual.read) };
+});
+
 const csv = (text: string) => Buffer.from(text, 'utf8').toString('base64');
 
 describe('extractEmails', () => {
@@ -42,16 +49,14 @@ describe('extractEmails', () => {
   });
 
   it('reports a file the spreadsheet reader cannot open', () => {
-    const read = jest.spyOn(XLSX, 'read').mockImplementationOnce(() => {
+    jest.mocked(XLSX.read).mockImplementationOnce(() => {
       throw new Error('corrupt zip');
     });
     expect(() => extractEmails(csv('anything'))).toThrow('Could not read the uploaded file');
-    read.mockRestore();
   });
 
   it('reports a workbook without a sheet', () => {
-    const read = jest.spyOn(XLSX, 'read').mockReturnValueOnce({ SheetNames: [], Sheets: {} } as unknown as XLSX.WorkBook);
+    jest.mocked(XLSX.read).mockReturnValueOnce({ SheetNames: [], Sheets: {} });
     expect(() => extractEmails(csv('anything'))).toThrow('The uploaded file has no sheet');
-    read.mockRestore();
   });
 });

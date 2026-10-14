@@ -45,7 +45,8 @@ describe('the venue coupon on the food cart — applying a code', () => {
     expect(screen.getByTestId('food-cart-bar-total')).toHaveTextContent('₹180');
     expect(message()).toHaveTextContent('Coupon SAVE10 applied — you save ₹20');
     expect(message()).toHaveAttribute('aria-live', 'polite');
-    expect(storedCoupon()).toEqual(SAVE10);
+    // Kept with the cart by an effect, so it lands after the render that shows the code.
+    await waitFor(() => expect(storedCoupon()).toEqual(SAVE10));
     // The field gave way to the code; focus went to the control that replaced it.
     expect(screen.getByRole('button', { name: 'Remove coupon SAVE10' })).toHaveFocus();
   });

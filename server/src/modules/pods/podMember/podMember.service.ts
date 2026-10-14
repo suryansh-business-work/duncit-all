@@ -1090,12 +1090,15 @@ export const podMemberService = {
     }
 
     const uid = new Types.ObjectId(userId);
-    const existing = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
-    if (existing) return toPub(existing);
     // A free pod has no backout to wait on: a cancelled spot — or a backout
     // raised before free pods lost them — is simply joined again, on the same
     // row (see reactivateFreeMembership), so join/cancel churn adds no rows.
+    // Read the reusable row BEFORE the JOINED one: a concurrent join flips it
+    // to JOINED, and read the other way round both reads can miss it, which
+    // would create a second booking.
     const reusable = await findReusableFreeMembership(pod._id as Types.ObjectId, userId);
+    const existing = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
+    if (existing) return toPub(existing);
 
     const seats = Math.min(normalizeSeats(wantSeats), maxSeatsForBooking(pod));
     await ensureSeatsAvailable(pod, seats);

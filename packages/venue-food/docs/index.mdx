@@ -1,18 +1,24 @@
 ---
 name: '@duncit/venue-food'
-summary: 'A venue''s food desk as its owner works it — the Food Dashboard, the order board and the food coupons — as one MUI set the Partners console, the Venues console and mWeb all mount.'
+summary: 'A venue''s food tools as its owner works them — the Food Dashboard, the food menu editor, the order board and the food coupons — as one MUI set the Partners console, the Venues console and mWeb all mount.'
 category: 'domain'
 zeroDeps: false
 frameworkFree: false
 coverageGate: false
 consumers:
   - 'app/mweb'
+  - 'packages/entity-consoles'
   - 'portals/partners-app'
   - 'portals/venues'
 exports:
   - 'VenueFoodDashboard'
+  - 'VenueFoodMenu'
   - 'VenueFoodOrders'
   - 'VenueFoodCoupons'
+  - 'VenueFoodFields'
+  - 'FoodGstinField'
+  - 'sendsFoodAccount'
+  - 'FOOD_PHOTO_FOLDER'
   - 'FoodStatTiles'
   - 'FoodBreakdowns'
   - 'FoodDailyChart'
@@ -23,35 +29,88 @@ exports:
 
 ## Why this exists
 
-A venue that serves food takes QR orders, gives its own coupons and wants to know how its food is
-doing. Those three tools used to live only in the Partners console. The owner also works from mWeb
-and the app, and the Venues console's editors look after the same venues — so the tools are one
-package, mounted by every web surface, instead of three copies drifting apart.
+A venue that serves food lists a menu, takes QR orders, gives its own coupons and wants to know
+how its food is doing. Those four tools used to live only in the Partners console — and the menu
+had a second copy in the Venues console's venue editor. The owner also works from mWeb and the
+app, and the Venues console's editors look after the same venues — so the tools are one package,
+mounted by every web surface, instead of copies drifting apart.
 
-The native app draws the same tools with Tamagui (`app/mobile-app/src/components/venue-food-desk/`).
-It cannot import this package (MUI), so everything that is not drawing lives below it:
+The native app draws the same tools with Tamagui (`app/mobile-app/src/components/venue-food-desk/`,
+the menu under `menu/`). It cannot import this package (MUI), so everything that is not drawing
+lives below it:
 
-- **`@duncit/utils` → `venue-food-owner.ts`** — the GraphQL documents as plain strings, the row
-  types, the status flow (`nextFoodOrderStatus`, `foodOrderNextStep`, `canCancelFoodOrder`), the
-  chip colours, every label builder, the dashboard tiles (`foodStatTiles`), the bars
-  (`foodStatusBars`, `foodDishBars`) and the trend line (`foodTrendLine`).
-- **`@duncit/forms/schemas`** — `makeFoodOrderCancelSchema` and `makeFoodCouponSchema` with
-  `foodCouponToValues` / `toFoodCouponInput`, so a reason or a coupon is refused the same way
-  everywhere.
+- **`@duncit/utils` → `venue-food-owner.ts`** — the desk's GraphQL documents as plain strings, the
+  row types, the status flow, the chip colours, every label builder (`foodDietLabel`,
+  `foodSpiceLabel`, …), the dashboard tiles, bars and trend line.
+- **`@duncit/utils` → `venue-food-menu.ts`** — the menu's documents (`OWNER_FOOD_MENU_QUERY`,
+  `ADMIN_FOOD_MENU_QUERY`, `FOOD_MENU_CONFIG_QUERY`, `UPDATE_VENUE_FOOD_MENU_MUTATION`,
+  `FOOD_RAZORPAY_CONNECTIONS_QUERY`), its form values (`FoodMenuFormValues`) and both mappings
+  (`foodMenuToValues`, `toFoodMenuSaveInput` / `toVenueFoodInput`), `canTakeFoodOrders`.
+- **`@duncit/forms/schemas`** — `makeFoodMenuSchema` / `makeVenueFoodRefinement` (the menu),
+  `makeFoodOrderCancelSchema`, `makeFoodCouponSchema` with `foodCouponToValues` /
+  `toFoodCouponInput`, so a dish, a reason or a coupon is refused the same way everywhere.
 
 ## What each tool does
 
 - **`VenueFoodDashboard`** — the venue's food numbers for a period (7 / 30 / 90 days or all time):
   the tiles, orders by status, top dishes, the daily trend (inline SVG with a numbers table for
   screen readers) and recent feedback.
+- **`VenueFoodMenu`** — the menu editor: "serves food", the dishes (name, section, description,
+  price, food type, spice level, available today, photos), QR ordering (the switch, the discount,
+  the venue's own GST) and the GST number on the food invoices. RHF + `makeFoodMenuSchema`, saved
+  through `updateApprovedVenue`; a save re-opens the form on the server's copy, so a new dish keeps
+  the id it was given. Only an approved venue's menu is edited here — before that it lives in the
+  venue form (`notApprovedAction` says where).
 - **`VenueFoodOrders`** — the paid-order board on `@duncit/table`: move an order along the kitchen's
   path, read it in full (with the guest's rating and photos), or cancel it with a full refund. It
   asks again every 20 seconds, paused while a dialog is open.
 - **`VenueFoodCoupons`** — the venue's coupons on `@duncit/table`: create and edit (RHF + Zod),
   switch on and off (optimistic, put back on a refusal), delete after a confirm.
 
-The server allows the venue's owner and Venues console editors on every operation; nothing here
-decides who may act.
+### The food fields, for a bigger venue form
+
+`VenueFoodFields` is the menu editor's body on its own — the switch, the dish list, the ordering
+fields — generic over any react-hook-form form that holds the food block under the standard names
+(`offers_food`, `food_menu`, `food_ordering`). The Partners venue form's Food section and the
+Venues console editor's Food Menu section mount it, so there is ONE dish list and ONE set of
+ordering fields; their schemas use the shared `makeVenueFoodRefinement` and their saves the
+shared `toVenueFoodInput`. `FoodGstinField` is the invoice GST number, passed in as `gstin`
+because each form names and locks it its own way.
+
+```tsx
+<VenueFoodFields
+  control={form.control}
+  config={config}
+  account={{ kind: 'status' }}
+  upload={{ venueId, surface: 'PORTALS' }}
+  idPrefix="venue-editor"
+/>
+```
+
+### The Razorpay account, per surface
+
+The account guests pay is the owner's own saved connection (`PartnerIntegration`). `account`
+says how a surface handles it, and `sendsFoodAccount(account)` decides whether a save names it:
+
+| `account` | Draws | A save |
+| --- | --- | --- |
+| `{ kind: 'picker', addAccount? }` | the owner's connections (`myPartnerIntegrations`), plus the surface's own way to add one | names the picked account (`null` unlinks) |
+| `{ kind: 'status', manageHref? }` | whether one is linked (`razorpay_linked`), read-only, and where to change it | never names it — the link is left alone |
+
+Ordering can be switched ON only with an account (picked and connected, or linked) and an
+available dish — the gate the server applies; it can always be switched off.
+
+### The GST number
+
+An owner gives a venue its GST number once; a saved one is shown locked (the server refuses an
+owner's change). In `mode="admin"` a Venues console editor may change it — the server lets a
+console editor (`consoleEditors('VENUE')`) use `updateApprovedVenue` on any approved venue.
+
+### Dish photos
+
+Picked with `@duncit/media-picker` (images only), filed in the venues media folder
+(`FOOD_PHOTO_FOLDER`, `/venues`) with the venue as the upload's entity — the server files them
+under `/{env}/venues/{venue id}/media`.
 
 ## Use
 
@@ -59,35 +118,38 @@ Each tool takes the venue it is about. Picking the venue — and what to show fo
 food — stays with the page that mounts it.
 
 ```tsx
-import { VenueFoodCoupons, VenueFoodDashboard, VenueFoodOrders } from '@duncit/venue-food';
+import { VenueFoodCoupons, VenueFoodDashboard, VenueFoodMenu, VenueFoodOrders } from '@duncit/venue-food';
 import { logs } from '@duncit/logs';
 
 <VenueFoodDashboard venueId={venue.id} logger={logs.mWeb} />
+<VenueFoodMenu venueId={venue.id} surface="mweb" mode="owner" account={{ kind: 'picker' }} uploadSurface="MWEB" logger={logs.mWeb} />
 <VenueFoodOrders venueId={venue.id} surface="mweb" />
 <VenueFoodCoupons venueId={venue.id} surface="mweb" />
 ```
 
-- `surface` prefixes the tables' ids (`<surface>-venue-food-orders`), so each surface remembers its
-  own column choices.
-- `logger` is the mounting surface's logger; a failed dashboard retry is filed against it.
+- `surface` prefixes the tables' ids (`<surface>-venue-food-orders`) and the menu's test ids, so
+  each surface remembers its own column choices.
+- `logger` is the mounting surface's logger; a failed retry is filed against it.
 - `FOOD_OWNER_VENUES` is the owner's venues with `offers_food`, for the host page's venue picker.
 
 ## Where it is mounted
 
 | Surface | Where | Venue selection |
 | --- | --- | --- |
-| Partners console | `/venues/food-dashboard`, `/venues/food-orders`, `/venues/food-coupons` | `VenueStudioBody` (remembered pick) |
-| Venues console | the venue record's Food dashboard / Food orders / Food coupons tabs (URL `selectedtab`), only when the venue serves food | the record being viewed |
-| mWeb | `/venues/food-dashboard`, `/venues/food-orders`, `/venues/food-coupons` | `VenuePageFrame` + `useSelectedVenue` |
+| Partners console | `/venues/food-dashboard`, `/venues/food-menu`, `/venues/food-orders`, `/venues/food-coupons`; the venue form's Food section (`VenueFoodFields`) | `VenueStudioBody` (remembered pick) |
+| Venues console | the venue record's Food Menu tab (every venue, `mode="admin"`) and Food dashboard / Food orders / Food coupons tabs (URL `selectedtab`, only when the venue serves food); the venue editor's Food Menu section (`VenueFoodFields`) | the record being viewed |
+| mWeb | `/venues/food-dashboard`, `/venues/food-menu`, `/venues/food-orders`, `/venues/food-coupons` | `VenuePageFrame` + `useSelectedVenue` |
 
 ## Copy
 
 Every sentence is a `venueFoodOwner.*` key (`packages/i18n/src/bundles/venue-food-owner.ts`),
-spread into the shell, mWeb and native fallbacks.
+spread into the shell, mWeb and native fallbacks. The GST field labels are `shell.foodTax.*`
+(mWeb and native ship that branch alone: `SHELL_FOOD_TAX_SLICE`).
 
 ## Tests
 
 The package has no suite of its own (like `@duncit/public-page`): its logic is tested where it
-lives — `packages/utils/__tests__/venue-food-owner.test.ts` and
-`packages/forms/__tests__/schemas.food-*.test.ts` (both 100% gated) — and the components are
-exercised end to end by the Partners console's coupon page suites.
+lives — `packages/utils/__tests__/venue-food-owner.test.ts`, `venue-food-menu.test.ts` and
+`packages/forms/__tests__/schemas.food-*.test.ts` (all 100% gated) — and the components are
+exercised by the Partners console's venue form and coupon page suites and the Venues console
+editor's section suite (`packages/entity-consoles/.../sections.food-to-leaves.test.tsx`).

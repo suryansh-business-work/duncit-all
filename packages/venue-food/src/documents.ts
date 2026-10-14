@@ -1,5 +1,14 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
 import {
+  ADMIN_FOOD_MENU_QUERY,
+  FOOD_MENU_CONFIG_QUERY,
+  FOOD_RAZORPAY_CONNECTIONS_QUERY,
+  OWNER_FOOD_MENU_QUERY,
+  UPDATE_VENUE_FOOD_MENU_MUTATION,
+  type FoodMenuConfig,
+  type FoodMenuVenue,
+  type FoodRazorpayConnection,
+  type FoodMenuSaveInput,
   CANCEL_VENUE_FOOD_ORDER_MUTATION,
   CREATE_VENUE_FOOD_COUPON_MUTATION,
   DELETE_VENUE_FOOD_COUPON_MUTATION,
@@ -63,3 +72,22 @@ export const SET_VENUE_FOOD_COUPON_ACTIVE: TypedDocumentNode<
 
 export const DELETE_VENUE_FOOD_COUPON: TypedDocumentNode<{ deleteVenueFoodCoupon: boolean }, { coupon_id: string }> =
   gql(DELETE_VENUE_FOOD_COUPON_MUTATION);
+
+export const OWNER_FOOD_MENU: TypedDocumentNode<{ myVenue: FoodMenuVenue | null }, { venue_id: string }> =
+  gql(OWNER_FOOD_MENU_QUERY);
+
+export const ADMIN_FOOD_MENU: TypedDocumentNode<{ venue: FoodMenuVenue | null }, { venue_id: string }> =
+  gql(ADMIN_FOOD_MENU_QUERY);
+
+export const FOOD_MENU_CONFIG: TypedDocumentNode<{ venueRegistrationConfig: FoodMenuConfig }, Record<string, never>> =
+  gql(FOOD_MENU_CONFIG_QUERY);
+
+export const UPDATE_VENUE_FOOD_MENU: TypedDocumentNode<
+  { updateApprovedVenue: FoodMenuVenue },
+  { venue_id: string; input: FoodMenuSaveInput }
+> = gql(UPDATE_VENUE_FOOD_MENU_MUTATION);
+
+export const FOOD_RAZORPAY_CONNECTIONS: TypedDocumentNode<
+  { myPartnerIntegrations: FoodRazorpayConnection[] },
+  Record<string, never>
+> = gql(FOOD_RAZORPAY_CONNECTIONS_QUERY);

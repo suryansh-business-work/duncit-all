@@ -48,13 +48,18 @@ export const previewOf = (over: Partial<VenueFoodCouponPreview> = {}): VenueFood
   discount_pct: 0,
   discount_amount: 0,
   coupon_discount_amount: 20,
+  // The venue's GST as the server applies it — none on this venue.
+  tax_mode: 'INCLUSIVE',
+  gst_pct: 0,
+  taxable_amount: 180,
+  tax_amount: 0,
   total: 180,
   currency_symbol: '₹',
   ...over,
 });
 
 export const refusedPreview = (reason: VenueFoodCouponPreview['reason']) =>
-  previewOf({ ok: false, reason, message: 'refused', coupon_code: null, coupon_discount_amount: 0, total: 200 });
+  previewOf({ ok: false, reason, message: 'refused', coupon_code: null, coupon_discount_amount: 0, taxable_amount: 200, total: 200 });
 
 /** One preview call: records what was asked, and answers with `answer` (or fails like a dropped connection). */
 export function previewMock(asked: PreviewVenueFoodCouponInput[], answer: VenueFoodCouponPreview | Error): MockedResponse {

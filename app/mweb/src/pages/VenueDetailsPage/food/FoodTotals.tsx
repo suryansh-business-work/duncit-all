@@ -1,5 +1,5 @@
 import { Divider, Stack, Typography } from '@mui/material';
-import { formatFoodMoney } from '@duncit/utils';
+import { formatFoodMoney, type FoodTaxLine } from '@duncit/utils';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
@@ -8,6 +8,8 @@ interface Props {
   discountPct: number;
   /** The venue's coupon and what it took off — after the discount above it. */
   coupon?: { code: string; pct: number; amount: number } | null;
+  /** The GST (`foodTaxLine`): a line added before the total, or a note under it when it is inside the prices. */
+  tax?: FoodTaxLine | null;
   total: number;
   currency: string;
   testId: string;
@@ -27,11 +29,11 @@ function Row({ label, value, strong, testId }: Readonly<{ label: string; value: 
 }
 
 /**
- * Subtotal, the QR-order discount and the coupon when there is one, and the
- * total — the same lines on the cart (where they follow the steppers, so the block is a
+ * Subtotal, the QR-order discount and the coupon when there is one, GST added
+ * on top (or a note that the prices include it), and the total — the same lines on the cart (where they follow the steppers, so the block is a
  * live region) and on the placed order.
  */
-export default function FoodTotals({ subtotal, discount, discountPct, coupon, total, currency, testId }: Readonly<Props>) {
+export default function FoodTotals({ subtotal, discount, discountPct, coupon, tax, total, currency, testId }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = (amount: number) => formatFoodMoney(amount, currency);
   return (
@@ -51,8 +53,20 @@ export default function FoodTotals({ subtotal, discount, discountPct, coupon, to
           testId={`${testId}-coupon`}
         />
       )}
+      {tax?.mode === 'EXCLUSIVE' && (
+        <Row
+          label={t('mweb.venueFood.cart.gstAdded', { vars: { pct: String(tax.pct) } })}
+          value={`+ ${money(tax.amount)}`}
+          testId={`${testId}-gst`}
+        />
+      )}
       <Divider />
       <Row label={t('mweb.venueFood.cart.total')} value={money(total)} strong testId={`${testId}-total`} />
+      {tax?.mode === 'INCLUSIVE' && (
+        <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'right' }} data-testid={`${testId}-gst-included`}>
+          {t('mweb.venueFood.cart.gstIncluded', { vars: { amount: money(tax.amount), pct: String(tax.pct) } })}
+        </Typography>
+      )}
     </Stack>
   );
 }

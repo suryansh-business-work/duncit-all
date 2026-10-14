@@ -2,13 +2,14 @@ import { Alert, AlertTitle, Divider, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { CartQuantityControl } from '@duncit/ui';
-import { FOOD_ORDER_LIMITS, formatFoodMoney } from '@duncit/utils';
+import { FOOD_ORDER_LIMITS, foodTaxLine, formatFoodMoney } from '@duncit/utils';
 import { useCartControlLabels } from '../../../components/cart/useCartControlLabels';
 import ResponsiveDialog from '../../../components/ResponsiveDialog';
 import { useTranslation } from '../../../i18n/useTranslation';
 import DietMark from './DietMark';
 import { FoodCheckoutForm, type FoodCheckoutValues } from './food-checkout';
 import { FoodCouponForm } from './food-coupon';
+import FoodCouponOffers from './FoodCouponOffers';
 import FoodTotals from './FoodTotals';
 import type { FoodCart } from './useFoodCart';
 import type { FoodCheckoutError } from './useFoodCheckout';
@@ -20,6 +21,7 @@ interface Props {
   cart: FoodCart;
   currency: string;
   discountPct: number;
+  venueId: string;
   venueName: string;
   guest: FoodCheckoutValues;
   coupon: FoodCouponControl;
@@ -42,6 +44,7 @@ export default function FoodCartSheet({
   cart,
   currency,
   discountPct,
+  venueId,
   venueName,
   guest,
   coupon,
@@ -112,6 +115,7 @@ export default function FoodCartSheet({
             </Stack>
           ))}
         </Stack>
+        <FoodCouponOffers venueId={venueId} coupon={coupon} currency={currency} disabled={submitting} />
         <FoodCouponForm coupon={coupon} price={price} currency={currency} disabled={submitting} />
         <FoodTotals
           subtotal={price.subtotal}
@@ -122,6 +126,7 @@ export default function FoodCartSheet({
               ? { code: cart.coupon.coupon_code, pct: cart.coupon.coupon_pct, amount: price.coupon }
               : null
           }
+          tax={foodTaxLine(price.taxMode, price.gstPct, price.tax)}
           total={price.total}
           currency={currency}
           testId="food-cart-totals"

@@ -41,6 +41,8 @@ export const PUBLIC_VENUE = gql`
       food_ordering {
         enabled
         discount_pct
+        tax_mode
+        gst_pct
       }
     }
   }

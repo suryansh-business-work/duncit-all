@@ -176,6 +176,26 @@ describe('VenueFoodMenu — the floating cart button', () => {
     expect(screen.getByTestId('food-cart-bar-total')).toHaveTextContent('₹180');
   });
 
+  it('adds the GST the venue charges on top, and says when its prices already include it', () => {
+    localStorage.setItem(CART_KEY, JSON.stringify({ chai: 5 }));
+    // 200 less 10% is 180; 5% added on top is 9.
+    const { unmount } = renderMenu({ food_ordering: { enabled: true, discount_pct: 10, tax_mode: 'EXCLUSIVE', gst_pct: 5 } });
+    expect(screen.getByTestId('food-cart-bar-total')).toHaveTextContent('₹189');
+    fireEvent.click(screen.getByTestId('food-cart-bar-open'));
+    expect(within(screen.getByTestId('food-cart-totals')).getByText('GST (5%)')).toBeInTheDocument();
+    expect(screen.getByTestId('food-cart-totals-gst')).toHaveTextContent('+ ₹9');
+    expect(screen.getByTestId('food-cart-totals-total')).toHaveTextContent('₹189');
+    expect(screen.queryByTestId('food-cart-totals-gst-included')).not.toBeInTheDocument();
+    unmount();
+
+    // Inside the price: the bill does not move, and the GST in it is named — 180 holds 8.57 at 5%.
+    renderMenu({ food_ordering: { enabled: true, discount_pct: 10, tax_mode: 'INCLUSIVE', gst_pct: 5 } });
+    expect(screen.getByTestId('food-cart-bar-total')).toHaveTextContent('₹180');
+    fireEvent.click(screen.getByTestId('food-cart-bar-open'));
+    expect(screen.getByTestId('food-cart-totals-gst-included')).toHaveTextContent('Includes ₹8.57 GST (5%)');
+    expect(screen.queryByTestId('food-cart-totals-gst')).not.toBeInTheDocument();
+  });
+
   it('goes away again when the last dish is taken out', () => {
     localStorage.setItem(CART_KEY, JSON.stringify({ samosa: 1 }));
     renderMenu();

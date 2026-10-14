@@ -93,8 +93,16 @@ export const venueTypeDefs = /* GraphQL */ `
     enabled: Boolean!
     "The owner's saved Razorpay connection. Always null on the public venue."
     razorpay_integration_id: ID
+    "Whether the owner has linked a Razorpay account — what the venues console reads instead of the id."
+    razorpay_linked: Boolean!
     "Percent the venue takes off every QR order."
     discount_pct: Int!
+    "True while the venue sets its own GST; false follows Finance's food default (foodTaxDefaults)."
+    tax_override: Boolean!
+    "What the venue's orders are priced with right now — its own while tax_override, otherwise Finance's default."
+    tax_mode: FoodTaxMode!
+    "The GST percent the venue's orders are priced with right now, resolved the same way as tax_mode."
+    gst_pct: Int!
   }
 
   input VenueFoodOrderingInput {
@@ -102,6 +110,11 @@ export const venueTypeDefs = /* GraphQL */ `
     "One of the venue owner's own myPartnerIntegrations(provider: RAZORPAY) that passed its check; null unlinks."
     razorpay_integration_id: ID
     discount_pct: Int
+    "On: tax_mode and gst_pct below price the venue's orders. Off: Finance's default does."
+    tax_override: Boolean
+    tax_mode: FoodTaxMode
+    "A whole percent from 0 to 28."
+    gst_pct: Int
   }
 
   "Registration option catalogs — clients render these instead of hardcoding."
@@ -381,6 +394,12 @@ export const venueTypeDefs = /* GraphQL */ `
     offers_food: Boolean
     food_menu: [VenueFoodItemInput!]
     food_ordering: VenueFoodOrderingInput
+    """
+    The venue's GST number, printed on its food invoices. Accepted only while the
+    venue has none: once one is saved, only the venues console (adminUpdateVenue)
+    may change it. Sending the saved number again is a no-op; empty is ignored.
+    """
+    gstin: String
     add_documents: [VenueDocumentInput!]
     owner_name: String
     owner_phone: String

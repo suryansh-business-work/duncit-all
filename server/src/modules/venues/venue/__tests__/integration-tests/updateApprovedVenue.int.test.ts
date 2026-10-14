@@ -3,6 +3,7 @@ import { venueService } from '../../venue.service';
 import { VenueModel } from '../../venue.model';
 import { partnerDashboardService } from '@modules/venues/partnerDashboard/partnerDashboard.service';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { LocationModel } from '@modules/platform/location/location.model';
 
 const ownerId = new Types.ObjectId().toString();
 const inDays = (d: number) => new Date(Date.now() + d * 86_400_000);
@@ -63,6 +64,84 @@ describe('updateApprovedVenue (owner edit of an approved venue)', () => {
     await expect(
       venueService.updateApproved(ownerId, venueId, { capacity_items: [] })
     ).rejects.toThrow(/at least one capacity/i);
+  });
+});
+
+describe("the venue's GST number on its food invoices", () => {
+  const GSTIN = '22ABCDE1234F1Z5';
+  const OTHER_GSTIN = '27ABCDE1234F1Z5';
+  const gstinOf = async (venueId: string) => (await VenueModel.findById(venueId).lean())?.gstin;
+
+  it('lets the owner give a venue without one its GST number, stored upper-cased', async () => {
+    const venueId = await seedApprovedVenue();
+    const updated = await venueService.updateApproved(ownerId, venueId, { gstin: ` ${GSTIN.toLowerCase()} ` });
+    expect(updated.gstin).toBe(GSTIN);
+  });
+
+  it('refuses a number that is not a GSTIN and keeps the venue without one', async () => {
+    const venueId = await seedApprovedVenue();
+    await expect(venueService.updateApproved(ownerId, venueId, { gstin: '22ABCDE1234F1A5' })).rejects.toThrow(/valid 15-character GSTIN/);
+    expect(await gstinOf(venueId)).toBe('');
+  });
+
+  it('refuses the owner a change once one is saved, but takes the same number again and ignores a blank', async () => {
+    const venueId = await seedApprovedVenue({ gstin: GSTIN });
+    await expect(venueService.updateApproved(ownerId, venueId, { gstin: OTHER_GSTIN })).rejects.toMatchObject({
+      extensions: { code: 'FORBIDDEN' },
+    });
+    expect(await gstinOf(venueId)).toBe(GSTIN);
+    await venueService.updateApproved(ownerId, venueId, { gstin: GSTIN.toLowerCase(), description: 'Same number' });
+    await venueService.updateApproved(ownerId, venueId, { gstin: '' });
+    expect(await gstinOf(venueId)).toBe(GSTIN);
+  });
+
+  it('lets the venues console change a saved number', async () => {
+    const venueId = await seedApprovedVenue({ gstin: GSTIN, owner_name: 'Asha', owner_email: 'a@x.in', owner_phone: '9999999999' });
+    await LocationModel.create({
+      location_id: 'pune',
+      location_name: 'Pune',
+      country: 'India',
+      country_code: 'IN',
+      state: 'Maharashtra',
+      state_code: 'MH',
+      city: 'Pune',
+      location_image: 'https://img.example.test/pune.jpg',
+      location_pincode: '411001',
+      location_zones: [],
+    });
+    const updated = await venueService.adminUpdate(venueId, {
+      step1: { city: 'Pune', venue_name: 'Hall' },
+      step2: { documents: [], gstin: OTHER_GSTIN },
+      step3: { owner_name: 'Asha', owner_email: 'a@x.in', owner_phone: '9999999999' },
+    });
+    expect(updated.gstin).toBe(OTHER_GSTIN);
+  });
+});
+
+describe("a venue's own GST on its food orders", () => {
+  const foodOf = async (venueId: string) => (await VenueModel.findById(venueId).lean())?.food_ordering;
+
+  it('stores an override the owner sends, and keeps it when a later save leaves it out', async () => {
+    const venueId = await seedApprovedVenue({ offers_food: true });
+    await venueService.updateApproved(ownerId, venueId, {
+      food_ordering: { tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 18 },
+    });
+    expect(await foodOf(venueId)).toMatchObject({ tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 18 });
+    await venueService.updateApproved(ownerId, venueId, { food_ordering: { discount_pct: 10 } });
+    expect(await foodOf(venueId)).toMatchObject({ discount_pct: 10, tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 18 });
+  });
+
+  it('refuses a GST percent outside 0 to 28 or not whole, and a mode it does not know', async () => {
+    const venueId = await seedApprovedVenue({ offers_food: true });
+    for (const gst_pct of [-1, 29, 2.5]) {
+      await expect(
+        venueService.updateApproved(ownerId, venueId, { food_ordering: { tax_override: true, gst_pct } })
+      ).rejects.toThrow(/whole number from 0 to 28/);
+    }
+    await expect(
+      venueService.updateApproved(ownerId, venueId, { food_ordering: { tax_override: true, tax_mode: 'HALF' } })
+    ).rejects.toThrow(/include GST or have it added/);
+    expect(await foodOf(venueId)).toMatchObject({ tax_override: false });
   });
 });
 

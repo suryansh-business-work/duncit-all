@@ -7,6 +7,7 @@ import {
   partyTemplateOf,
   type IFinanceSettings,
 } from './finance.model';
+import { getFoodTaxDefaults, updateFoodTaxDefaults } from './foodTaxDefaults';
 import { paymentReleaseService } from './paymentRelease.service';
 import { paymentReleaseGroupService } from './paymentReleaseGroup.service';
 import { computePodSettlement } from './settlement.service';
@@ -140,6 +141,10 @@ export const financeResolvers = {
       requireRole(ctx, COMMISSION_DEFAULT_READ);
       const doc = await getFinanceSettings();
       return doc.default_product_commission_pct;
+    },
+    foodTaxDefaults: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return getFoodTaxDefaults();
     },
     publicFinanceSettings: async () => {
       const doc = await getFinanceSettings();
@@ -328,6 +333,14 @@ export const financeResolvers = {
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
       return toPub(doc);
+    },
+    updateFoodTaxDefaults: async (
+      _p: unknown,
+      args: { input: { tax_mode: unknown; gst_pct: unknown } },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, ADMIN_RW);
+      return updateFoodTaxDefaults(args.input, user.id);
     },
     createPaymentReleaseRequest: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_POD);

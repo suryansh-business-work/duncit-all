@@ -1,4 +1,10 @@
 import { Schema, model, type ClientSession, type Document } from 'mongoose';
+import {
+  VENUE_FOOD_GST_PCT_MAX,
+  VENUE_FOOD_TAX_DEFAULTS,
+  VENUE_FOOD_TAX_MODES,
+} from '@modules/venues/venue/venue.constants';
+import type { VenueFoodTaxMode } from '@modules/venues/venue/venue.model';
 
 export interface IFinanceSettings extends Document {
   singleton_key: string;
@@ -57,6 +63,12 @@ export interface IFinanceSettings extends Document {
   // Role-wise minimum withdrawal amounts (Finance → Withdrawals → Withdrawal
   // Settings). One independently editable floor per withdrawer role.
   min_withdrawal: IMinWithdrawal;
+  // Venue food orders (Finance → Food Menu Defaults): whether menu prices hold
+  // GST or have it added, and at what percent — for every venue that does not
+  // set its own. The money is the venue's, not Duncit's; this only decides how
+  // its bill is split and printed.
+  food_tax_mode: VenueFoodTaxMode;
+  food_gst_pct: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -205,6 +217,8 @@ const financeSettingsSchema = new Schema<IFinanceSettings>(
     invoice_logo_url: { type: String, default: '' },
     invoice_templates: { type: invoiceTemplatesSchema, default: () => ({}) },
     min_withdrawal: { type: minWithdrawalSchema, default: () => ({}) },
+    food_tax_mode: { type: String, enum: VENUE_FOOD_TAX_MODES, default: VENUE_FOOD_TAX_DEFAULTS.tax_mode },
+    food_gst_pct: { type: Number, default: VENUE_FOOD_TAX_DEFAULTS.gst_pct, min: 0, max: VENUE_FOOD_GST_PCT_MAX },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

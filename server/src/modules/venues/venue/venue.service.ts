@@ -27,6 +27,7 @@ import {
   VENUE_DOC_TYPES,
   VENUE_FACILITIES,
   VENUE_GSTIN_DOC_TYPE,
+  VENUE_GSTIN_PATTERN,
   VENUE_PAN_DOC_TYPE,
   VENUE_SECURITY,
   VENUE_TYPES,
@@ -730,6 +731,24 @@ function applyApprovedVenueInput(v: any, input: any) {
   if (input.owner_phone !== undefined) v.owner_phone = String(input.owner_phone ?? '').trim();
   if (input.owner_dob !== undefined) v.owner_dob = input.owner_dob ? new Date(input.owner_dob) : null;
   if (input.owner_address !== undefined) v.owner_address = String(input.owner_address ?? '');
+  applyOwnerGstin(v, input.gstin);
+}
+
+/**
+ * The owner may give an approved venue its GST number ONCE — it prints on every
+ * food invoice, so after that only the venues console (`adminUpdate`) changes
+ * it. Re-sending the saved number is a no-op and an empty one is ignored, so a
+ * form that always sends the field never trips the lock.
+ */
+function applyOwnerGstin(v: { gstin?: string | null }, raw: unknown) {
+  const gstin = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+  if (!gstin) return;
+  if (!VENUE_GSTIN_PATTERN.test(gstin)) fail('BAD_USER_INPUT', 'Enter a valid 15-character GSTIN');
+  const saved = String(v.gstin ?? '').trim().toUpperCase();
+  if (saved && saved !== gstin) {
+    fail('FORBIDDEN', 'The GST number cannot be changed once saved — ask Duncit support to change it');
+  }
+  v.gstin = gstin;
 }
 
 /** Applies an admin status transition and its timestamp side-effects. */

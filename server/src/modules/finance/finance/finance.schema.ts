@@ -85,6 +85,26 @@ export const financeTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "How GST meets a venue food price: already inside it, or added on top."
+  enum FoodTaxMode {
+    INCLUSIVE
+    EXCLUSIVE
+  }
+
+  "Finance's default GST on venue food orders, for every venue that does not set its own."
+  type FoodTaxDefaults {
+    tax_mode: FoodTaxMode!
+    "A whole percent from 0 to 28."
+    gst_pct: Int!
+    updated_at: String!
+  }
+
+  input FoodTaxDefaultsInput {
+    tax_mode: FoodTaxMode!
+    "A whole percent from 0 to 28."
+    gst_pct: Int!
+  }
+
   type PublicFinanceSettings {
     platform_fee_pct: Float!
     gst_pct: Float!
@@ -590,6 +610,8 @@ export const financeTypeDefs = /* GraphQL */ `
   extend type Query {
     financeSettings: FinanceSettings!
     publicFinanceSettings: PublicFinanceSettings!
+    "Finance roles: the default GST on venue food orders (Finance → Food Menu Defaults)."
+    foodTaxDefaults: FoodTaxDefaults!
     """
     Just the global default host commission % (Finance → Default Deductions).
     Split out of financeSettings because the Onboarding console's Review Host
@@ -703,6 +725,8 @@ export const financeTypeDefs = /* GraphQL */ `
 
   extend type Mutation {
     updateFinanceSettings(input: UpdateFinanceSettingsInput!): FinanceSettings!
+    "Finance roles: set the default GST on venue food orders. Venues that override it keep their own."
+    updateFoodTaxDefaults(input: FoodTaxDefaultsInput!): FoodTaxDefaults!
     createPaymentReleaseRequest(input: CreatePaymentReleaseInput!): PaymentReleaseRequest!
     reviewPaymentReleaseRequest(request_id: ID!, input: ReviewPaymentReleaseInput!): PaymentReleaseRequest!
     """

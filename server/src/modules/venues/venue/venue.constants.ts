@@ -16,6 +16,12 @@ export const VENUE_TYPES = [
  * them beside the matching number, not from the general document list. */
 export const VENUE_GSTIN_DOC_TYPE = 'GST Certificate';
 export const VENUE_PAN_DOC_TYPE = 'PAN Card';
+/**
+ * A GSTIN: 15 characters with the literal `Z` at position 14. The mirror of
+ * GSTIN in @duncit/regex, restated because server/src imports no @duncit/*
+ * package — the client rule shapes the form, this one is what is enforced.
+ */
+export const VENUE_GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
 export const VENUE_DOC_TYPES = [
   VENUE_GSTIN_DOC_TYPE,
@@ -40,6 +46,16 @@ export const VENUE_FOOD_IMAGE_LIMIT = 5;
 export const VENUE_FOOD_PRICE_MAX = 100_000;
 /** The most a venue may take off a QR order; the rest is always paid online. */
 export const VENUE_FOOD_DISCOUNT_MAX_PCT = 90;
+/**
+ * How GST meets a food price. INCLUSIVE: the menu price already holds the tax,
+ * so the bill is unchanged and the tax is carved out of it. EXCLUSIVE: the tax
+ * is added on top of the discounted price.
+ */
+export const VENUE_FOOD_TAX_MODES = ['INCLUSIVE', 'EXCLUSIVE'] as const;
+/** Whole-number GST percent on food; 28 is the highest GST slab. */
+export const VENUE_FOOD_GST_PCT_MAX = 28;
+/** What Finance starts with: today's behaviour — prices include the tax. */
+export const VENUE_FOOD_TAX_DEFAULTS = { tax_mode: 'INCLUSIVE', gst_pct: 5 } as const;
 
 /** Comfort features guests get inside the venue. */
 export const VENUE_AMENITIES = [

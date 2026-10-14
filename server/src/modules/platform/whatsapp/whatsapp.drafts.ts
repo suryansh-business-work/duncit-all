@@ -30,6 +30,17 @@ export interface WaTemplateDraft {
   readonly body: string;
   /** The same body with sample values in place — what Meta reviews. */
   readonly sample: string;
+  /**
+   * An IMAGE header, submitted as the template's `type` exactly as the
+   * Templates tab submits one. Absent means a plain TEXT template.
+   *
+   * No sample picture travels with it: the code that creates templates has no
+   * field for one (`createTemplate` in aisensy.project) and the asset is
+   * supplied per send. Each send offers its own picture through `assets`, and
+   * the platform default image under Marketing > WhatsApp > Settings covers a
+   * send that has none.
+   */
+  readonly header?: 'IMAGE';
 }
 
 export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
@@ -343,8 +354,24 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
    * Venue food orders — a guest scans the venue QR, orders and pays the venue.
    * The guest's links open their own order page (status, invoice, rating); the
    * owner's open the order board in the Partner console.
+   *
+   * All eight carry an IMAGE header. The order messages send the first ordered
+   * dish's photo (else the venue's cover, else its first gallery picture); the
+   * two event messages send the pod's own picture (else the venue's), and the
+   * subscription confirmation the venue's. With none, the platform default.
+   *
+   * The link stays in the body on purpose. Template creation here cannot add a
+   * button, so a CTA button is the operator's to add when building the template
+   * by hand at AiSensy: a URL button whose link is the link's fixed start plus
+   * ONE variable at the end — e.g. "Track order" →
+   * `https://mweb.duncit.com/{{1}}`, "Open order board" →
+   * `https://partners-app.duncit.com/{{1}}`, "View event" →
+   * `https://duncit.com/{{1}}`. After Reconcile the send fills it with the rest
+   * of the body's link (see whatsapp.button); a link that does not fit it, or a
+   * template without one, sends with no button value at all.
    */
   VENUE_FOOD_ORDER_PLACED: {
+    header: 'IMAGE',
     category: 'UTILITY',
     language: 'English',
     body:
@@ -355,6 +382,7 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Track it and download your invoice here: https://mweb.duncit.com/venue/66f0a1/food-order/66f0b2 — Team Duncit',
   },
   VENUE_FOOD_ORDER_READY: {
+    header: 'IMAGE',
     category: 'UTILITY',
     language: 'English',
     body: 'Hi {{1}}, your food order {{2}} at {{3}} is ready. See your order: {{4}} — Team Duncit',
@@ -363,6 +391,7 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'See your order: https://mweb.duncit.com/venue/66f0a1/food-order/66f0b2 — Team Duncit',
   },
   VENUE_FOOD_ORDER_SERVED: {
+    header: 'IMAGE',
     // UTILITY: it reaches only the guest of an order that was just served, about that order.
     category: 'UTILITY',
     language: 'English',
@@ -374,6 +403,7 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Tell the venue how it was, with a photo if you like: https://mweb.duncit.com/venue/66f0a1/food-order/66f0b2 — Team Duncit',
   },
   VENUE_FOOD_ORDER_CANCELLED: {
+    header: 'IMAGE',
     category: 'UTILITY',
     language: 'English',
     body:
@@ -386,6 +416,7 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'See your order: https://mweb.duncit.com/venue/66f0a1/food-order/66f0b2 — Team Duncit',
   },
   VENUE_FOOD_ORDER_RECEIVED: {
+    header: 'IMAGE',
     category: 'UTILITY',
     language: 'English',
     body:
@@ -396,6 +427,7 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Open your order board to accept it: https://partners-app.duncit.com/venues/food-orders — Team Duncit',
   },
   VENUE_FOOD_FEEDBACK_RECEIVED: {
+    header: 'IMAGE',
     category: 'UTILITY',
     language: 'English',
     body:
@@ -406,6 +438,7 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Read the feedback on your order board: https://partners-app.duncit.com/venues/food-orders — Team Duncit',
   },
   VENUE_EVENTS_SUBSCRIBED: {
+    header: 'IMAGE',
     // UTILITY: a confirmation of something the person just asked for at checkout.
     category: 'UTILITY',
     language: 'English',
@@ -417,6 +450,7 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'See what is on now: https://duncit.com/77llaprJ — Team Duncit',
   },
   VENUE_NEW_EVENT: {
+    header: 'IMAGE',
     // MARKETING: an announcement of something new, to people who opted in.
     category: 'MARKETING',
     language: 'English',

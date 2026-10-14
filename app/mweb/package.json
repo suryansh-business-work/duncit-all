@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.83.131",
+  "version": "1.83.132",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",
@@ -57,6 +57,7 @@
     "@duncit/user-context": "workspace:*",
     "@duncit/user-core": "workspace:*",
     "@duncit/utils": "workspace:*",
+    "@duncit/venue-food": "workspace:*",
     "@duncit/verification": "workspace:*",
     "@duncit/virtual-scroll": "workspace:*",
     "@emotion/react": "^11.14.0",

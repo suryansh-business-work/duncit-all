@@ -27,6 +27,7 @@ interface Totals {
   orders: number;
   revenue_paise: number;
   discount_paise: number;
+  tax_paise: number;
   coupon_orders: number;
   served: number;
   cancelled: number;
@@ -71,6 +72,8 @@ function pipeline(venueId: Types.ObjectId, since: Date | null): PipelineStage[] 
               orders: { $sum: 1 },
               revenue_paise: sumIf(KEPT, '$total_paise'),
               discount_paise: sumIf(KEPT, { $add: ['$discount_paise', '$coupon_discount_paise'] }),
+              // An order from before GST has no tax_paise; it counts as none.
+              tax_paise: sumIf(KEPT, { $ifNull: ['$tax_paise', 0] }),
               coupon_orders: sumIf({ $gt: ['$coupon_discount_paise', 0] }),
               served: sumIf({ $eq: ['$status', 'SERVED'] }),
               cancelled: sumIf({ $eq: ['$status', 'CANCELLED'] }),
@@ -155,6 +158,7 @@ export const venueFoodStatsService = {
       revenue: rupees(totals?.revenue_paise ?? 0),
       average_order: kept > 0 ? Math.round((totals?.revenue_paise ?? 0) / kept) / 100 : 0,
       discount_given: rupees(totals?.discount_paise ?? 0),
+      tax_collected: rupees(totals?.tax_paise ?? 0),
       coupon_orders: totals?.coupon_orders ?? 0,
       served: totals?.served ?? 0,
       cancelled: totals?.cancelled ?? 0,

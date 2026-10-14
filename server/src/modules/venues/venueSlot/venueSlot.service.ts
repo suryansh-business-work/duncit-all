@@ -641,6 +641,7 @@ async function whatsappSlotDecision(
         podTitle: facts.podTitle,
         date,
         time,
+        podImageUrl: facts.assets.IMAGE?.url,
       });
     }
   } catch (err) {

@@ -1,6 +1,6 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
-import { VENUE_FOOD_DIETS } from '@modules/venues/venue/venue.constants';
-import type { VenueFoodDiet } from '@modules/venues/venue/venue.model';
+import { VENUE_FOOD_DIETS, VENUE_FOOD_GST_PCT_MAX, VENUE_FOOD_TAX_MODES } from '@modules/venues/venue/venue.constants';
+import type { VenueFoodDiet, VenueFoodTaxMode } from '@modules/venues/venue/venue.model';
 
 /**
  * A food order a guest placed by scanning a venue's QR.
@@ -71,7 +71,18 @@ export interface IVenueFoodOrder extends Document<Types.ObjectId> {
   coupon_code: string;
   coupon_pct: number;
   coupon_discount_paise: number;
-  /** What is charged, reconciled against and refunded: subtotal less both discounts. */
+  /**
+   * The GST the order was priced with, as it was at that moment (see
+   * `foodTotals`): the venue's own or Finance's default. An order placed before
+   * GST existed has none of these and reads as INCLUSIVE at 0% — its total
+   * unchanged, its taxable value the whole total.
+   */
+  tax_mode: VenueFoodTaxMode;
+  gst_pct: number;
+  /** The value the GST is charged on — the bill without its GST. Absent on an order from before GST. */
+  taxable_paise?: number;
+  tax_paise: number;
+  /** What is charged, reconciled against and refunded: subtotal less both discounts, plus GST when it is added on top. */
   total_paise: number;
   currency_symbol: string;
   status: FoodOrderStatus;
@@ -144,6 +155,10 @@ const venueFoodOrderSchema = new Schema<IVenueFoodOrder>(
     coupon_code: { type: String, default: '' },
     coupon_pct: { type: Number, default: 0, min: 0, max: 100 },
     coupon_discount_paise: { type: Number, default: 0, min: 0 },
+    tax_mode: { type: String, enum: VENUE_FOOD_TAX_MODES, default: 'INCLUSIVE' },
+    gst_pct: { type: Number, default: 0, min: 0, max: VENUE_FOOD_GST_PCT_MAX },
+    taxable_paise: { type: Number, min: 0 },
+    tax_paise: { type: Number, default: 0, min: 0 },
     total_paise: { type: Number, required: true, min: 0 },
     currency_symbol: { type: String, default: '' },
     status: { type: String, enum: FOOD_ORDER_STATUSES, default: 'PLACED' },

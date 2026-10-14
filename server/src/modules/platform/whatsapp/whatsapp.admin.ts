@@ -13,6 +13,7 @@ import {
 } from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENTS, isRequiredWaCategory } from './whatsapp.events';
 import { WA_TEMPLATE_DRAFTS } from './whatsapp.drafts';
+import { linkButtonFields } from './whatsapp.button';
 import {
   defaultFor,
   defaultKindFor,
@@ -350,7 +351,7 @@ export const whatsappAdminService = {
         name: event.campaign,
         category: draft.category,
         language: draft.language,
-        type: 'TEXT',
+        type: draft.header ?? 'TEXT',
         body: draft.body,
         sample: draft.sample,
       });
@@ -487,6 +488,9 @@ export const whatsappAdminService = {
               // The header KIND, because the platform default is one image and
               // the send path cannot ask AiSensy per message.
               template_header_format: template?.header_format ?? '',
+              // Its dynamic link button, for the same reason: a send fills it
+              // only when the template is known to carry one.
+              ...linkButtonFields(template?.cta_buttons),
               // Stamped so the send path knows a blank asset means "this
               // campaign has none" rather than "nobody has looked yet".
               media_synced_at: new Date(),

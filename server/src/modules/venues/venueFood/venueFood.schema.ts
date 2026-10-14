@@ -68,7 +68,15 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     coupon_pct: Int!
     "What the coupon took off, after the automatic discount and the caps; 0 without a coupon."
     coupon_discount_amount: Float!
-    "What was charged: subtotal less discount_amount less coupon_discount_amount."
+    "How GST met the price when the order was placed. An order from before GST reads INCLUSIVE."
+    tax_mode: FoodTaxMode!
+    "The GST percent the order was priced with; 0 on an order from before GST."
+    gst_pct: Int!
+    "The value the GST is charged on — the bill without its GST. taxable_amount + tax_amount = total."
+    taxable_amount: Float!
+    "The GST inside (INCLUSIVE) or added to (EXCLUSIVE) the total."
+    tax_amount: Float!
+    "What was charged: subtotal less discount_amount less coupon_discount_amount, plus tax_amount when EXCLUSIVE."
     total: Float!
     currency_symbol: String!
     status: VenueFoodOrderStatus!
@@ -136,6 +144,11 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     discount_pct: Int!
     discount_amount: Float!
     coupon_discount_amount: Float!
+    "The venue's GST, exactly as placing the order would apply it."
+    tax_mode: FoodTaxMode!
+    gst_pct: Int!
+    taxable_amount: Float!
+    tax_amount: Float!
     total: Float!
     currency_symbol: String!
   }
@@ -161,6 +174,16 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     is_active: Boolean!
     created_at: String!
     updated_at: String!
+  }
+
+  "A coupon a guest can pick at a venue's food checkout. Only what choosing needs — never its usage."
+  type AvailableVenueFoodCoupon {
+    code: String!
+    description: String!
+    discount_pct: Int!
+    "Rupees of subtotal the code needs; 0 when it needs none."
+    min_order_amount: Float!
+    valid_until: String
   }
 
   "Server-side table page for the shared table engine."
@@ -278,6 +301,8 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     average_order: Float!
     "What the automatic discount and the coupons took off, together."
     discount_given: Float!
+    "GST inside the revenue — collected on the venue's behalf, cancelled orders left out."
+    tax_collected: Float!
     coupon_orders: Int!
     served: Int!
     cancelled: Int!
@@ -315,6 +340,8 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     venueFoodOrdersTable(venue_id: ID!, query: TableQueryInput): VenueFoodOrderTablePage!
     "Public: what a coupon code would do to a cart. Places nothing and counts nothing."
     previewVenueFoodCoupon(input: PreviewVenueFoodCouponInput!): VenueFoodCouponPreview!
+    "Public: the coupons a guest can pick from at this venue's checkout right now, best first. Empty when the venue is not taking orders."
+    availableVenueFoodCoupons(venue_id: ID!): [AvailableVenueFoodCoupon!]!
     "Venue owner / venues console: the food coupons of one venue."
     venueFoodCouponsTable(venue_id: ID!, query: TableQueryInput): VenueFoodCouponTablePage!
     "Public: the invoice of a paid order as a base64 PDF, for whoever holds its access key (or the account that placed it)."

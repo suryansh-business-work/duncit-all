@@ -4,11 +4,13 @@ import { resolveUploadFolder } from '@modules/platform/upload/uploadFolder';
 import { logs } from '@observability/log';
 import { renderVenueFoodInvoice } from './venueFoodInvoice.pdf';
 import { FOOD_FEEDBACK_LIMITS, VenueFoodOrderModel, type IVenueFoodOrder } from './venueFoodOrder.model';
+import { splitFoodGst } from './venueFoodOrder.pricing';
 import {
   FOOD_LOG,
   assertOrderAccess,
   badInput,
   fail,
+  foodOrderTax,
   hasFoodInvoice,
   objectId,
   rupees,
@@ -83,6 +85,8 @@ export const venueFoodGuestService = {
   async invoicePdfBase64(ctx: GraphQLContext, orderId: string, accessKey?: string | null) {
     const order = await guestOrder(ctx, orderId, accessKey);
     if (!hasFoodInvoice(order)) return fail('BAD_REQUEST', 'An invoice is ready once the order is paid');
+    const tax = foodOrderTax(order);
+    const { cgst_paise, sgst_paise } = splitFoodGst(tax.tax_paise);
     const pdf = await renderVenueFoodInvoice({
       invoice_no: order.order_no,
       issued_at: order.paid_at ?? order.created_at,
@@ -104,6 +108,11 @@ export const venueFoodGuestService = {
       discount: rupees(order.discount_paise ?? 0),
       coupon_code: order.coupon_code ?? '',
       coupon_discount: rupees(order.coupon_discount_paise ?? 0),
+      tax_mode: tax.tax_mode,
+      gst_pct: tax.gst_pct,
+      taxable: rupees(tax.taxable_paise),
+      cgst: rupees(cgst_paise),
+      sgst: rupees(sgst_paise),
       total: rupees(order.total_paise),
       payment_reference: order.razorpay_payment_id ?? '',
       refund_note: refundNote(order),

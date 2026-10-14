@@ -244,7 +244,8 @@ export const storeAdminCatalogService = {
 
   async deleteReview(id: string) {
     const res = await ProductReviewModel.deleteOne({ _id: toObjectId(id) });
-    return res.deletedCount > 0;
+    if (res.deletedCount === 0) notFound('Review not found');
+    return true;
   },
 
   async replyReview(id: string, reply: string) {

@@ -7,6 +7,7 @@ import { audioCache } from './audioCache';
 import { emitCallStatus } from './call.socket';
 import { getWebhookBaseUrl } from './webhookBase';
 import { buildPortalDialTwiml, buildSayHangupTwiml } from './call.twiml';
+import { requireTwilioSignature } from './twilioWebhookGuard';
 
 const xml = (res: Response, body: string) => res.type('text/xml').send(body);
 const EMPTY_TWIML = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
@@ -14,14 +15,19 @@ const EMPTY_TWIML = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>
 /**
  * Twilio Voice webhooks for CRM calls (Servam-voiced). Mounted under `/twilio`.
  * Twilio posts application/x-www-form-urlencoded, so the router parses that.
+ * Every POST must carry Twilio's signature over the URL built from
+ * `getWebhookBaseUrl` (the base every callback handed to Twilio uses): an
+ * unsigned call-status could rewrite any call log, and an unsigned voice hit
+ * would dial an agent or run paid AI turns for anyone.
  */
 export function buildCallWebhookRouter(): Router {
   const router = Router();
   router.use(express.urlencoded({ extended: false }));
+  const signed = (route: string) => requireTwilioSignature(route, getWebhookBaseUrl);
 
   // Portal call: the customer answered → bridge in the agent (plain Twilio
   // <Say>, no Servam dependency, so a normal call can't fail on TTS).
-  router.post('/voice/portal', async (req: Request, res: Response) => {
+  router.post('/voice/portal', signed('voice-portal'), async (req: Request, res: Response) => {
     const logId = String(req.query.logId || '').trim();
     const userId = String(req.query.userId || '').trim();
     const agent = String(req.query.agent || '').trim();
@@ -40,7 +46,7 @@ export function buildCallWebhookRouter(): Router {
   });
 
   // AI call conversation turns (Servam brain + Servam voice).
-  router.post('/voice/ai', async (req: Request, res: Response) => {
+  router.post('/voice/ai', signed('voice-ai'), async (req: Request, res: Response) => {
     const logId = String(req.query.logId || req.body.logId || '').trim();
     if (!logId) return xml(res, buildSayHangupTwiml('Call setup failed. Goodbye.'));
     try {
@@ -64,7 +70,7 @@ export function buildCallWebhookRouter(): Router {
   });
 
   // Call/dial/recording status callbacks → update log + push to agent live.
-  router.post('/call-status', async (req: Request, res: Response) => {
+  router.post('/call-status', signed('call-status'), async (req: Request, res: Response) => {
     const logId = String(req.query.logId || '').trim();
     const userId = String(req.query.userId || '').trim();
     const mode = String(req.query.mode || 'PORTAL') as 'PORTAL' | 'AI';

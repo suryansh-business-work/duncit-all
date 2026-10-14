@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
 import { creditCoinsBack, recordPaymentRefund } from '@modules/finance/payment/payment.refundRecord';
@@ -156,9 +157,53 @@ export async function issueRefund(target: Refundable, req: RefundRequest): Promi
   return target.refund;
 }
 
-/** An operator's retry of a refund Razorpay refused, or one left PENDING by a crash mid-call. */
-export async function retryRefund(target: Refundable, req: RefundRequest): Promise<IOrderRefund> {
+/**
+ * How long a refund sent to Razorpay can still be on the wire. `outboundFetch`
+ * sets no timeout of its own, so undici's defaults bound one call: two 10s
+ * connect attempts, then up to 300s for the headers and 300s for the body. A
+ * PENDING refund whose last attempt is older than this is not in flight — it
+ * was left behind by a crash mid-call.
+ */
+const IN_FLIGHT_MS = 15 * 60_000;
+
+/** The collection a refund record lives on, which a retry claims it through. */
+export interface RefundStore {
+  updateOne(filter: object, update: object): PromiseLike<{ modifiedCount: number }>;
+}
+
+/**
+ * An operator's retry of a refund Razorpay refused, or of one a crash left
+ * PENDING. A PENDING refund still inside {@link IN_FLIGHT_MS} may be on its way
+ * to Razorpay right now, and resending it would refund the buyer twice, so it
+ * is refused. The claim is one conditional write that also restamps
+ * `attempted_at`: of two retries at once only one can win, and the winner's
+ * fresh stamp keeps a third from treating it as abandoned. `attempted_at` being
+ * set also makes the send look the refund up by receipt before creating one.
+ */
+export async function retryRefund(
+  target: Refundable & { _id: unknown },
+  req: RefundRequest,
+  store: RefundStore
+): Promise<IOrderRefund> {
   if (target.refund.status !== 'FAILED' && target.refund.status !== 'PENDING') return target.refund;
+  const now = new Date();
+  const claimed = await store.updateOne(
+    {
+      _id: target._id,
+      $or: [
+        { 'refund.status': 'FAILED' },
+        { 'refund.status': 'PENDING', 'refund.attempted_at': { $lt: new Date(now.getTime() - IN_FLIGHT_MS) } },
+      ],
+    },
+    { $set: { 'refund.status': 'PENDING', 'refund.attempted_at': now } }
+  );
+  if (claimed.modifiedCount === 0) {
+    logs.server.warn('productOrder', 'retryRefund', { receipt: req.receipt, status: target.refund.status });
+    throw new GraphQLError('This refund may still be on its way to Razorpay. Reload and try again in a few minutes.', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
   target.refund.status = 'PENDING';
+  target.refund.attempted_at = now;
   return issueRefund(target, req);
 }

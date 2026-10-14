@@ -135,8 +135,40 @@ async function tellBuyer(ret: IPodShopReturn, note = '') {
   });
 }
 
-/** Book the reverse pickup on the brand's ShipRocket account (SHIP orders only). */
-const bookPickup = (ret: IPodShopReturn, order: IProductOrder) => bookPodShopReturnPickup(ret, order);
+/**
+ * Book the reverse pickup on the brand's ShipRocket account (SHIP orders only).
+ * A courier refusal already lands on `pickup.last_error`; anything else that
+ * throws (the account lookup) is recorded the same way, so the return stays
+ * APPROVED with the reason on it and Retry pickup picks it up from there.
+ */
+async function bookPickup(ret: IPodShopReturn, order: IProductOrder) {
+  try {
+    await bookPodShopReturnPickup(ret, order);
+  } catch (error) {
+    const lastError = error instanceof Error ? error.message : String(error);
+    const failed = ret.pickup.sr_order_id ? {} : { 'pickup.status': 'FAILED' };
+    logs.server.warn('podShopReturn', 'pickup', { return_no: ret.return_no, msg: lastError });
+    await PodShopReturnModel.updateOne({ _id: ret._id }, { $set: { 'pickup.last_error': lastError, ...failed } });
+    ret.pickup.last_error = lastError;
+    if (!ret.pickup.sr_order_id) ret.pickup.status = 'FAILED';
+  }
+}
+
+/**
+ * Decide a requested return in one atomic write: of two concurrent decisions
+ * only the first finds it REQUESTED, so a return is never approved twice (two
+ * courier pickups) nor approved and rejected at once. Null when it was not.
+ */
+function claimDecision(ret: IPodShopReturn, status: 'APPROVED' | 'REJECTED', note: string, decisionNote: string, by: string) {
+  return PodShopReturnModel.findOneAndUpdate(
+    { _id: ret._id, status: 'REQUESTED' },
+    {
+      $set: { status, decision_note: decisionNote.slice(0, 2000) },
+      $push: { events: { status, note, by, at: new Date() } },
+    },
+    { new: true }
+  );
+}
 
 /** Group the requested units by brand — one return per brand, since each brand decides its own. */
 function splitByBrand(order: IProductOrder, asked: Map<string, number>) {
@@ -246,13 +278,13 @@ export const podShopReturnService = {
     if (ret.status !== 'REQUESTED') bad('Only a requested return can be approved');
     const order = await ProductOrderModel.findById(ret.order_id);
     if (!order) return bad('The order behind this return is gone');
-    move(ret, 'APPROVED', note || 'Approved', actor.label);
-    ret.decision_note = note.slice(0, 2000);
-    await ret.save();
+    // Claimed before the courier is called: a second approval finds it decided.
+    const approved = await claimDecision(ret, 'APPROVED', note || 'Approved', note, actor.label);
+    if (!approved) return bad('Only a requested return can be approved');
     // A shipped order is collected by courier; a pickup order is handed back at the venue.
-    if (order.fulfilment_method === 'SHIP') await bookPickup(ret, order);
-    await tellBuyer(ret, note);
-    return toReturnPub(ret);
+    if (order.fulfilment_method === 'SHIP') await bookPickup(approved, order);
+    await tellBuyer(approved, note);
+    return toReturnPub(approved);
   },
 
   async reject(actor: ReturnActor, id: string, note: string) {
@@ -260,11 +292,10 @@ export const podShopReturnService = {
     if (!reason) bad('Tell the buyer why the return is not accepted');
     const ret = await loadFor(actor, id);
     if (ret.status !== 'REQUESTED') bad('Only a requested return can be rejected');
-    move(ret, 'REJECTED', reason, actor.label);
-    ret.decision_note = reason.slice(0, 2000);
-    await ret.save();
-    await tellBuyer(ret, reason);
-    return toReturnPub(ret);
+    const rejected = await claimDecision(ret, 'REJECTED', reason, reason, actor.label);
+    if (!rejected) return bad('Only a requested return can be rejected');
+    await tellBuyer(rejected, reason);
+    return toReturnPub(rejected);
   },
 
   /** Retry a reverse pickup ShipRocket refused (wallet, address, packaging…). */
@@ -315,13 +346,17 @@ export const podShopReturnService = {
 
   async retryRefund(actor: ReturnActor, id: string) {
     const ret = await loadFor(actor, id);
-    await retryRefund(ret, {
-      paymentId: ret.payment_id,
-      gross: ret.gross,
-      receipt: ret.return_no,
-      reason: `Return ${ret.return_no} on order ${ret.order_no}`,
-      initiatedBy: 'POD_SHOP_RETURN',
-    });
+    await retryRefund(
+      ret,
+      {
+        paymentId: ret.payment_id,
+        gross: ret.gross,
+        receipt: ret.return_no,
+        reason: `Return ${ret.return_no} on order ${ret.order_no}`,
+        initiatedBy: 'POD_SHOP_RETURN',
+      },
+      PodShopReturnModel
+    );
     return toReturnPub(ret);
   },
 

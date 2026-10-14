@@ -1103,7 +1103,10 @@ export const venueSlotService = {
     const slot = await loadSlot(slotId);
     if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
     const podId = slot.booked_by_pod_id ?? slot.decided_pod_id;
-    if (!podId) fail('NOT_FOUND', 'This slot has no booking request');
+    // A slot booked outright (the owner's own pod, a free pod on a ₹0 slot) was
+    // never a request: only a PENDING hold, or one already decided, has a decision.
+    const wasRequested = slot.status === 'PENDING' || (slot.decision != null && slot.decision !== 'NONE');
+    if (!podId || !wasRequested) fail('NOT_FOUND', 'This slot has no booking request');
 
     const [pod, venue, rates] = await Promise.all([
       PodModel.findById(podId).select('pod_title pod_description pod_hosts_id pod_type'),

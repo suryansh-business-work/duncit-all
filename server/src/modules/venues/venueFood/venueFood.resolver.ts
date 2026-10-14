@@ -1,7 +1,10 @@
 import type { GraphQLContext } from '@context';
 import { hasRole, requireAuth } from '@middleware/rbac';
-import { consoleEditors } from '@modules/portals/console-access';
+import { consoleEditors, consoleGovernors } from '@modules/portals/console-access';
+import { assertVenueFinanceScope } from '@modules/finance/financeScope';
 import type { TableQueryInput } from '@utils/table-query';
+import { objectId } from './venueFoodOrder.shared';
+import { VenueFoodOrderModel } from './venueFoodOrder.model';
 import { venueFoodStatsService } from './venueFood.stats';
 import { availableFoodCoupons } from './venueFoodCoupon.available';
 import { venueFoodGuestService, type FoodFeedbackInput } from './venueFoodOrder.guest';
@@ -25,11 +28,24 @@ import {
  * venue (or holds the venues console).
  */
 const VENUE_EDIT = consoleEditors('VENUE');
+/**
+ * Cancelling sends the guest's money back, and money is a GOVERN power
+ * (portals/console-access.ts): the venues console role runs the board and the
+ * coupons of any venue but refunds nobody's order — only the venue's owner and
+ * the platform governors do.
+ */
+const VENUE_GOVERN = consoleGovernors('VENUE');
 
-/** The signed-in operator, and whether the venues console lets them act on any venue. */
-function operator(ctx: GraphQLContext) {
+/** The signed-in operator, and whether `roles` let them act on any venue. */
+function operator(ctx: GraphQLContext, roles: readonly string[] = VENUE_EDIT) {
   const user = requireAuth(ctx);
-  return { userId: user.id, isAdmin: hasRole(user, VENUE_EDIT) };
+  return { userId: user.id, isAdmin: hasRole(user, roles) };
+}
+
+/** The venue an order belongs to — null for an unknown order, which the scope check refuses. */
+async function venueOfOrder(orderId: string) {
+  const order = await VenueFoodOrderModel.findById(objectId(orderId, 'Invalid order id')).select('venue_id').lean();
+  return order?.venue_id ?? null;
 }
 
 export const venueFoodResolvers = {
@@ -81,8 +97,10 @@ export const venueFoodResolvers = {
       const { userId, isAdmin } = operator(ctx);
       return venueFoodOrderService.setStatus(userId, isAdmin, args.order_id, args.status);
     },
-    cancelVenueFoodOrder: (_p: unknown, args: { order_id: string; reason: string }, ctx: GraphQLContext) => {
-      const { userId, isAdmin } = operator(ctx);
+    cancelVenueFoodOrder: async (_p: unknown, args: { order_id: string; reason: string }, ctx: GraphQLContext) => {
+      const { userId, isAdmin } = operator(ctx, VENUE_GOVERN);
+      // A city or zonal governor refunds only inside their own city / zones.
+      if (isAdmin) await assertVenueFinanceScope(ctx, VENUE_GOVERN, () => venueOfOrder(args.order_id));
       return venueFoodOrderService.cancel(userId, isAdmin, args.order_id, args.reason);
     },
     createVenueFoodCoupon: (_p: unknown, args: { input: CreateFoodCouponInput }, ctx: GraphQLContext) => {

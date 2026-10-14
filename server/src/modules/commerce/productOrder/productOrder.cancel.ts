@@ -169,6 +169,10 @@ export async function retryOrderRefund(orderId: string) {
   if (!order) throw new GraphQLError('Order not found', { extensions: { code: 'NOT_FOUND' } });
   if (!order.cancelled_at) bad('Only a cancelled order has a refund to retry');
   const by = order.refund.initiated_by || INITIATED_BY.ADMIN;
-  await retryRefund(order, refundRequestFor(order, `Order ${order.order_no} cancelled: ${order.cancel_reason}`, by));
+  await retryRefund(
+    order,
+    refundRequestFor(order, `Order ${order.order_no} cancelled: ${order.cancel_reason}`, by),
+    ProductOrderModel
+  );
   return order;
 }

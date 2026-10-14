@@ -2,7 +2,8 @@ import express, { Router, type Request, type Response } from 'express';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { userService } from '@modules/access/user/user.service';
 import { logs } from '@observability/log';
-import { isValidTwilioSignature, type FormBody } from './twilioSignature';
+import type { FormBody } from './twilioSignature';
+import { requireTwilioSignature } from './twilioWebhookGuard';
 
 /**
  * `POST /twilio/recordings` — the recording callback of an admin's recorded
@@ -14,32 +15,19 @@ import { isValidTwilioSignature, type FormBody } from './twilioSignature';
  * only a request signed with the account's auth token.
  *
  * The signed URL is rebuilt from `TWILIO_WEBHOOK_BASE_URL` — the very value
- * the callback URL handed to Twilio was built from — rather than from the
- * request's own host, which behind the proxy is not what Twilio called.
+ * the callback URL handed to Twilio was built from (user.contact.ts) — rather
+ * than from the request's own host, which behind the proxy is not what Twilio
+ * called.
  */
 export function buildRecordingWebhookRouter(): Router {
   const router = Router();
-  router.post('/recordings', express.urlencoded({ extended: false }), async (req: Request, res: Response) => {
-    const [authToken, baseUrl] = await Promise.all([
-      getRuntimeEnvValue('TWILIO_AUTH_TOKEN'),
-      getRuntimeEnvValue('TWILIO_WEBHOOK_BASE_URL'),
-    ]);
-    const signature = req.get('X-Twilio-Signature');
-    const url = `${baseUrl.trim().replace(/\/$/, '')}${req.originalUrl}`;
+  const signed = requireTwilioSignature('recordings', () => getRuntimeEnvValue('TWILIO_WEBHOOK_BASE_URL'));
+  router.post('/recordings', express.urlencoded({ extended: false }), signed, async (req: Request, res: Response) => {
     const body: FormBody = req.body ?? {};
     const field = (name: string) => {
       const value = body[name];
       return Array.isArray(value) ? (value[0] ?? '') : (value ?? '');
     };
-    if (!baseUrl.trim() || !isValidTwilioSignature(authToken.trim(), url, body, signature)) {
-      // No body, query or numbers in the log — just why it was refused.
-      logs.server.warn('twilio', 'recordings', {
-        msg: 'Refused an unsigned or wrongly signed Twilio recording callback',
-        has_signature: !!signature,
-        configured: !!authToken.trim() && !!baseUrl.trim(),
-      });
-      return res.status(403).end();
-    }
 
     try {
       const rawUrl = field('RecordingUrl');

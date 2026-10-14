@@ -126,6 +126,7 @@ export type RootStackParamList = {
   VenuePods: undefined;
   /** Venue Options → the food desk: Food Dashboard, Food Orders, Food Coupons. */
   VenueFoodDashboard: undefined;
+  VenueFoodMenu: undefined;
   VenueFoodOrders: undefined;
   VenueFoodCoupons: undefined;
   /** Host Options → Publish Your Host Page. */

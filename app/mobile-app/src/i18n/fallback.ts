@@ -21,6 +21,7 @@ import {
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
   VENUE_FOOD_OWNER_BUNDLE,
+  SHELL_FOOD_TAX_SLICE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   CLUB_FORM_BUNDLE,
@@ -80,6 +81,8 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   ...VENUE_SETTINGS_BUNDLE,
   // The venue's food desk — Tamagui twins of the screens @duncit/venue-food draws on the web.
   ...VENUE_FOOD_OWNER_BUNDLE,
+  // shell.foodTax.*: the GST words and rules the food menu editor shares with the consoles.
+  ...SHELL_FOOD_TAX_SLICE,
   // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
   ...POD_REQUESTS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,

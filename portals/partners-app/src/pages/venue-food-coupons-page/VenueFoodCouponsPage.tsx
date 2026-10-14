@@ -1,44 +1,23 @@
-import { useQuery } from '@apollo/client/react';
-import { Alert, Stack } from '@mui/material';
-import { parseApiError } from '@duncit/utils';
+import { VenueFoodCoupons } from '@duncit/venue-food';
 import { useTranslation } from '@duncit/shell';
-import StudioPageHeader from '../../components/studio/StudioPageHeader';
-import VenueFoodOffAlert from '../../components/venue/VenueFoodOffAlert';
-import VenueStudioBody from '../../components/venue/VenueStudioBody';
-import { FOOD_ORDER_VENUES } from '../venue-food-orders-page/queries';
-import VenueFoodCouponsTable from './VenueFoodCouponsTable';
+import VenueFoodToolPage from '../../components/venue/VenueFoodToolPage';
 
 /**
  * Food Coupons — the codes the selected venue gives its own food guests. The
- * venue funds them and they work on that venue's food orders only. A venue
- * that does not offer food has no orders to discount; it gets the way to
- * switch food on instead.
+ * venue funds them and they work on that venue's food orders only. The list
+ * and its form are @duncit/venue-food's, the same ones mWeb and the Venues
+ * console mount.
  */
 export default function VenueFoodCouponsPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(FOOD_ORDER_VENUES, { fetchPolicy: 'cache-and-network' });
-  const errorAlert = error ? (
-    <Alert severity="error" data-testid="venue-food-coupons-error">
-      {parseApiError(error)}
-    </Alert>
-  ) : null;
-
   return (
-    <Stack spacing={2.5} sx={{ width: '100%' }} data-testid="venue-food-coupons-page">
-      <StudioPageHeader title={t('mweb.studioOptions.foodCoupons')} hint={t('mweb.studioOptions.foodCouponsHint')} />
-      <VenueStudioBody venues={data?.myVenues} loading={loading} errorAlert={errorAlert}>
-        {(venue) =>
-          venue.offers_food ? (
-            <VenueFoodCouponsTable key={venue.id} venueId={venue.id} />
-          ) : (
-            <VenueFoodOffAlert
-              venueId={venue.id}
-              message={t('partners.foodCoupons.noFood')}
-              data-testid="venue-food-coupons-no-food"
-            />
-          )
-        }
-      </VenueStudioBody>
-    </Stack>
+    <VenueFoodToolPage
+      title={t('mweb.studioOptions.foodCoupons')}
+      hint={t('mweb.studioOptions.foodCouponsHint')}
+      noFoodMessage={t('venueFoodOwner.coupons.noFood')}
+      testId="venue-food-coupons"
+    >
+      {(venueId) => <VenueFoodCoupons venueId={venueId} surface="partners-app" />}
+    </VenueFoodToolPage>
   );
 }

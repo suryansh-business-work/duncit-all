@@ -22,7 +22,7 @@ export default function VenueFoodOffAlert({ venueId, message, 'data-testid': tes
       data-testid={testId}
       action={
         <DuncitButton size="small" color="inherit" component={RouterLink} to={`/register-venue/${venueId}?selectedtab=food`}>
-          {t('partners.foodOrders.editVenue')}
+          {t('venueFoodOwner.common.editVenue')}
         </DuncitButton>
       }
     >

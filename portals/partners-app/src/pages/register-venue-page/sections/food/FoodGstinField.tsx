@@ -1,62 +1,40 @@
-import type { UseFormReturn } from 'react-hook-form';
-import { Stack, TextField, Typography } from '@mui/material';
-import { RhfTextField } from '@duncit/forms';
+import type { Control } from 'react-hook-form';
+import { Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
+import { FoodGstinField as SharedFoodGstinField } from '@duncit/venue-food';
 import type { RegisterVenueMode, RegisterVenueValues } from '../../register-venue';
 
 interface Props {
-  form: UseFormReturn<RegisterVenueValues>;
+  control: Control<RegisterVenueValues, unknown, RegisterVenueValues>;
   mode: RegisterVenueMode;
   /** The GST number the venue already has; '' when none. */
   savedGstin: string;
 }
 
 /**
- * The GST number printed on the venue's food invoices.
- *
- * A saved one is shown read-only: only Duncit changes it (the server refuses
- * the owner). An approved venue without one may enter it here, once. While the
- * venue is still being registered the number belongs to the Documents section,
+ * The GST number printed on the venue's food invoices — the shared field
+ * (locked once saved, the server refuses an owner's change). While the venue
+ * is still being registered the number belongs to the Documents section,
  * beside its certificate, so this only points there.
  */
-export default function FoodGstinField({ form, mode, savedGstin }: Readonly<Props>) {
+export default function FoodGstinField({ control, mode, savedGstin }: Readonly<Props>) {
   const { t } = useTranslation();
 
-  if (savedGstin) {
+  if (!savedGstin && mode !== 'edit-approved') {
     return (
-      <TextField
-        label={t('shell.foodTax.gstin')}
-        value={savedGstin}
-        size="small"
-        helperText={t('shell.foodTax.gstinLocked')}
-        slotProps={{ htmlInput: { readOnly: true, 'aria-readonly': true } }}
-        sx={{ maxWidth: 320 }}
-        data-testid="register-venue-food-gstin-locked"
-      />
-    );
-  }
-
-  if (mode !== 'edit-approved') {
-    return (
-      <Stack data-testid="register-venue-food-gstin-documents">
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {t('partners.registerVenuePage.foodGstinInDocuments')}
-        </Typography>
-      </Stack>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }} data-testid="register-venue-food-gstin-documents">
+        {t('partners.registerVenuePage.foodGstinInDocuments')}
+      </Typography>
     );
   }
 
   return (
-    <RhfTextField
-      control={form.control}
+    <SharedFoodGstinField
+      control={control}
       name="food_gstin"
-      label={t('shell.foodTax.gstin')}
-      hint={t('shell.foodTax.gstinHint')}
-      size="small"
-      fullWidth={false}
-      sx={{ maxWidth: 320 }}
-      slotProps={{ htmlInput: { maxLength: 15, autoCapitalize: 'characters' } }}
-      data-testid="register-venue-food-gstin"
+      savedGstin={savedGstin}
+      mode="owner"
+      idPrefix="register-venue"
     />
   );
 }

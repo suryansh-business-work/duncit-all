@@ -287,6 +287,7 @@ describe('toStep1Input — food, which step 1 still stores now it has a section 
       food_ordering: {
         enabled: true,
         razorpay_integration_id: 'rzp-1',
+        razorpay_linked: true,
         discount_pct: '5',
         tax_override: false,
         tax_mode: 'INCLUSIVE',

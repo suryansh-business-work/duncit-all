@@ -1,11 +1,12 @@
 import { EMPTY_CATEGORY, isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
-import { venueCategoryList, type VenueCategoryEntry, type VenueFoodItem } from '@duncit/utils';
 import {
-  blankFoodOrdering,
-  blankRegisterVenueValues,
-  type FoodMenuRow,
-  type RegisterVenueValues,
-} from './register-venue.types';
+  foodDishToValues,
+  foodOrderingToValues,
+  toVenueFoodInput,
+  venueCategoryList,
+  type VenueCategoryEntry,
+} from '@duncit/utils';
+import { blankRegisterVenueValues, type RegisterVenueValues } from './register-venue.types';
 
 const cityName = (location: any) => location.city || location.location_name || '';
 
@@ -42,18 +43,6 @@ const hydrateLocation = (values: RegisterVenueValues, locations: any[]): Registe
     postal_code: zone?.pincode || location?.location_pincode || values.postal_code,
   };
 };
-
-const toFoodRow = (item: Partial<VenueFoodItem>): FoodMenuRow => ({
-  item_id: item.id || '',
-  name: item.name || '',
-  description: item.description || '',
-  category: item.category || '',
-  price: item.price ?? '',
-  images: item.images || [],
-  diet: item.diet || '',
-  spice_level: item.spice_level || '',
-  is_available: item.is_available !== false,
-});
 
 const toCategoryRow = (category: VenueCategoryEntry): AdminCategoryValue => ({
   super_id: category.super_category_id || '',
@@ -107,16 +96,9 @@ export function venueToValues(
       capacity: item.capacity,
     })),
     offers_food: Boolean(venue.offers_food),
-    food_menu: (venue.food_menu ?? []).map(toFoodRow),
-    food_ordering: {
-      enabled: Boolean(venue.food_ordering?.enabled),
-      razorpay_integration_id: venue.food_ordering?.razorpay_integration_id || '',
-      discount_pct: venue.food_ordering?.discount_pct ?? blankFoodOrdering.discount_pct,
-      // What the server resolved — the venue's own, or Finance's default while it follows it.
-      tax_override: Boolean(venue.food_ordering?.tax_override),
-      tax_mode: venue.food_ordering?.tax_mode ?? blankFoodOrdering.tax_mode,
-      gst_pct: venue.food_ordering?.gst_pct ?? blankFoodOrdering.gst_pct,
-    },
+    food_menu: (venue.food_menu ?? []).map(foodDishToValues),
+    // What the server resolved — the venue's own GST, or Finance's default while it follows it.
+    food_ordering: foodOrderingToValues(venue.food_ordering),
     food_gstin: '',
     amenities: venue.amenities || [],
     facilities: venue.facilities || [],
@@ -145,40 +127,9 @@ const toCapacityItems = (values: RegisterVenueValues) =>
     .filter((item) => item.label.trim() || item.capacity !== '')
     .map((item) => ({ label: item.label.trim(), capacity: Number(item.capacity) || 0 }));
 
-/** The venue's own GST goes only while it overrides; switched off, the stored
- * values are left as they are and Finance's default prices its orders. */
-const toFoodTaxInput = (ordering: RegisterVenueValues['food_ordering']) =>
-  ordering.tax_override
-    ? { tax_override: true, tax_mode: ordering.tax_mode, gst_pct: Number(ordering.gst_pct) }
-    : { tax_override: false };
-
-/** The food fields of a step-1 save or an approved venue's Food Menu save. Switched off, only the
- * switch is sent: the server keeps the menu for later and turns ordering off
- * itself. A saved dish goes back with its id so it keeps its identity. */
-export function toFoodInput(values: RegisterVenueValues) {
-  if (!values.offers_food) return { offers_food: false };
-  return {
-    offers_food: true,
-    food_menu: values.food_menu.map((row) => ({
-      ...(row.item_id ? { id: row.item_id } : {}),
-      name: row.name.trim(),
-      description: row.description.trim(),
-      category: row.category.trim(),
-      price: Number(row.price) || 0,
-      images: row.images,
-      // Blank = the config had no list to pick from; the server applies its default.
-      diet: row.diet || null,
-      spice_level: row.spice_level || null,
-      is_available: row.is_available,
-    })),
-    food_ordering: {
-      enabled: values.food_ordering.enabled,
-      razorpay_integration_id: values.food_ordering.razorpay_integration_id || null,
-      discount_pct: Number(values.food_ordering.discount_pct) || 0,
-      ...toFoodTaxInput(values.food_ordering),
-    },
-  };
-}
+/** The food fields of a step-1 save or an approved venue's Food Menu save — the shared mapping
+ * every venue form sends (the owner picks the Razorpay account here, so it is named). */
+export const toFoodInput = (values: RegisterVenueValues) => toVenueFoodInput(values, { sendAccount: true });
 
 export function toStep1Input(values: RegisterVenueValues) {
   const capacityItems = toCapacityItems(values);

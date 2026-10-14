@@ -43,21 +43,11 @@ export function AttendanceSummary({
   );
 }
 
-/** Why marking matters: unmarked attendee, unpaid seat. The body is the
- * sentence for the pod's kind — a door scan or a meeting link — so the caller
- * picks it with `earningsBodyFor(board, labels)`. */
-export function EarningsNotice({
-  labels,
-  body,
-}: Readonly<{ labels: PodAttendanceLabels; body: string }>) {
-  return (
-    <NoticeCard
-      testID="attendance-earnings-note"
-      tone="info"
-      title={labels.earningsTitle}
-      body={body}
-    />
-  );
+/** Why marking matters: unmarked attendee, unpaid seat. The words are the ones
+ * for the pod's kind — a door scan, a meeting link, or a free pod with no
+ * payout — so the caller picks them with `earningsNoticeFor(board, labels)`. */
+export function EarningsNotice({ title, body }: Readonly<{ title: string; body: string }>) {
+  return <NoticeCard testID="attendance-earnings-note" tone="info" title={title} body={body} />;
 }
 
 /**

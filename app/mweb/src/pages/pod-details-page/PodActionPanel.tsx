@@ -20,12 +20,16 @@ interface Props {
   joining: boolean;
   backingOut: boolean;
   restoringSpot: boolean;
+  /** True while a free pod's "Cancel Spot" is in flight. */
+  cancellingSpot?: boolean;
   /** Seats this booking will take (1 by default). */
   seats: number;
   onSeatsChange: (seats: number) => void;
   onJoinFree: () => void;
   onBackout: () => void;
   onKeepSpot: () => void;
+  /** Opens the free pod's "Cancel Spot" confirm. */
+  onCancelSpot?: () => void;
   onPaidCheckout: () => void;
   onCopyReferral: (token: string) => void;
   onGoToDashboard: () => void;
@@ -45,11 +49,13 @@ export default function PodActionPanel({
   joining,
   backingOut,
   restoringSpot,
+  cancellingSpot = false,
   seats,
   onSeatsChange,
   onJoinFree,
   onBackout,
   onKeepSpot,
+  onCancelSpot,
   onPaidCheckout,
   onCopyReferral,
   onGoToDashboard,
@@ -119,11 +125,17 @@ export default function PodActionPanel({
         restoringSpot={restoringSpot}
         onBackout={onBackout}
         onKeepSpot={onKeepSpot}
+        isFree={isFree}
+        canCancelSpot={!!ms?.can_cancel_spot}
+        cancellingSpot={cancellingSpot}
+        onCancelSpot={onCancelSpot}
       />
     );
   }
 
-  if (m?.status === 'BACKED_OUT' && referralToken) {
+  // A free pod has no refund and no replacement to refer: a cancelled spot
+  // is simply joined again.
+  if (!isFree && m?.status === 'BACKED_OUT' && referralToken) {
     return (
       <ReferralRefillPanel
         pod={pod}

@@ -52,6 +52,8 @@ export {
   getProductRequestTotal,
 } from './build-input';
 export type { BuildPodInputOptions, AutoPodTemplateRow } from './build-input';
+export { LEGACY_POD_TYPES, isFreePodType, normalizePodType } from './pod-type';
+export type { PodTypeValue } from './pod-type';
 export { clubCategoryKey, productMatchesClub, filterProductsForClub } from './product-category';
 export type { ClubCategoryKey } from './product-category';
 export {

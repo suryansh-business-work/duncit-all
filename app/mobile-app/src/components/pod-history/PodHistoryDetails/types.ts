@@ -8,6 +8,8 @@ export interface PodHistoryDetailsProps {
   backoutMaxed?: boolean;
   backingOut: boolean;
   rejoining: boolean;
+  /** True while a free pod's "Cancel Spot" is in flight. */
+  cancellingSpot?: boolean;
   invoiceBusy: boolean;
   ticketBusy: boolean;
   notice: string | null;
@@ -19,6 +21,8 @@ export interface PodHistoryDetailsProps {
   /** Pressed instead of onBackout once the attempts are spent — says why. */
   onBackoutBlocked?: () => void;
   onRejoin: () => void;
+  /** A FREE pod's only way out — shown instead of Backout. */
+  onCancelSpot?: () => void;
   onRefundStatus: () => void;
   onInvoice: () => void;
   onTicket: () => void;

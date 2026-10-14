@@ -9,6 +9,7 @@ import { PlaceChargesField } from '../PlaceChargesField';
 import { PodTicketDiscountCard } from '../PodTicketDiscountCard';
 import { PodTypeCards } from '../PodTypeCards';
 import {
+  FreePodNote,
   PricePanel,
   SuggestedPriceLink,
   SuggestedPricesModal,
@@ -18,7 +19,7 @@ import {
 import { PodProductsField } from '../product-picker';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';
-import type { SpotsBounds } from '@duncit/utils';
+import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
 import type { CreatePodFinance, CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
 interface Props {
@@ -30,13 +31,19 @@ interface Props {
   pricing: PodPricingState;
   /** The range the host may size this pod within (sub-category min → venue capacity). */
   spots: SpotsBounds;
+  /** What a free pod's host is told about the picked slot's venue charges. */
+  venueNotice: FreePodVenueNotice;
   /** Off in Club Admin mode — the Organizer Terms are the host's undertaking. */
   showTerms?: boolean;
+  /** A club admin is creating the pod for a host — the venue note speaks of the host. */
+  forClubAdmin?: boolean;
 }
 
-/** Step 4 — Free/Paid cards, ticket price (with its suggested-price helper and
- * zero-earnings guard), spots stepper, the slot-cost / GST / earnings panel,
- * optional products and the Organizer Terms gate. mWeb twin. */
+/** Step 4 — Free/Paid cards, spots stepper, optional products and the Organizer
+ * Terms gate. A PAID pod adds the ticket price (with its suggested-price helper
+ * and zero-earnings guard), its multi-ticket discount and the slot-cost / GST /
+ * earnings panel; a FREE pod has none of them — no amount and no calculation —
+ * and reads a short note instead. mWeb twin. */
 export function PricingStep({
   form,
   products,
@@ -44,7 +51,9 @@ export function PricingStep({
   finance,
   pricing,
   spots,
+  venueNotice,
   showTerms = true,
+  forClubAdmin = false,
 }: Readonly<Props>) {
   const { control, watch, setValue } = form;
   const { t } = useTranslation();
@@ -59,19 +68,18 @@ export function PricingStep({
     <YStack testID="pricing-step" gap={16}>
       <SurfaceCard testID="pricing-step-price-card" gap={16}>
         <PodTypeCards form={form} />
-        <FormTextField
-          control={control}
-          name="pod_amount_text"
-          label={t('mweb.createPod.ticketPriceLabel')}
-          keyboardType="numeric"
-          placeholder={t('mweb.createPod.ticketPricePlaceholder')}
-          editable={!isFree}
-          hint={
-            isFree ? t('mweb.createPod.ticketPriceFreeHint') : t('mweb.createPod.ticketPriceHint')
-          }
-          labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}
-        />
-        {pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
+        {isFree ? null : (
+          <FormTextField
+            control={control}
+            name="pod_amount_text"
+            label={t('mweb.createPod.ticketPriceLabel')}
+            keyboardType="numeric"
+            placeholder={t('mweb.createPod.ticketPricePlaceholder')}
+            hint={t('mweb.createPod.ticketPriceHint')}
+            labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}
+          />
+        )}
+        {!isFree && pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
         <Controller
           control={control}
           name="no_of_spots_text"
@@ -90,16 +98,23 @@ export function PricingStep({
           )}
         />
       </SurfaceCard>
-      <PricePanel finance={finance} pricing={pricing} />
+      {isFree ? (
+        <FreePodNote venueNotice={venueNotice} forClubAdmin={forClubAdmin} />
+      ) : (
+        <PricePanel finance={finance} pricing={pricing} />
+      )}
       {isFree ? null : <PodTicketDiscountCard form={form} currency={finance.currency_symbol} />}
-      <SurfaceCard testID="pricing-step-payment-terms-card">
-        <FormTextField
-          control={control}
-          name="payment_terms"
-          label={t('mweb.createPod.paymentTerms')}
-          multiline
-        />
-      </SurfaceCard>
+      {/* Payment terms describe refunds and charges a free pod does not have. */}
+      {isFree ? null : (
+        <SurfaceCard testID="pricing-step-payment-terms-card">
+          <FormTextField
+            control={control}
+            name="payment_terms"
+            label={t('mweb.createPod.paymentTerms')}
+            multiline
+          />
+        </SurfaceCard>
+      )}
       {isPhysical ? (
         <SurfaceCard testID="pricing-step-place-charges-card">
           <Controller
@@ -136,14 +151,16 @@ export function PricingStep({
         </SurfaceCard>
       ) : null}
       {showTerms ? <TermsAgreement form={form} /> : null}
-      <SuggestedPricesModal
-        open={suggestionsOpen}
-        onClose={() => setSuggestionsOpen(false)}
-        noOfSpots={pricing.noOfSpots}
-        venueId={pricing.venuePicked ? pricing.venueId : null}
-        venueAmount={pricing.venuePicked ? pricing.slotPrice : null}
-        symbol={finance.currency_symbol}
-      />
+      {isFree ? null : (
+        <SuggestedPricesModal
+          open={suggestionsOpen}
+          onClose={() => setSuggestionsOpen(false)}
+          noOfSpots={pricing.noOfSpots}
+          venueId={pricing.venuePicked ? pricing.venueId : null}
+          venueAmount={pricing.venuePicked ? pricing.slotPrice : null}
+          symbol={finance.currency_symbol}
+        />
+      )}
     </YStack>
   );
 }

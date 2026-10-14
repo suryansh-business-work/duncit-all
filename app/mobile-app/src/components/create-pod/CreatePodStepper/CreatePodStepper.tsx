@@ -67,7 +67,17 @@ export function CreatePodStepper({
     podMode,
     spots,
     pricing,
-  } = useCreatePodScope({ form, clubs, products, subCategories, hostCategories, clubAdmin });
+    venueNotice,
+  } = useCreatePodScope({
+    form,
+    clubs,
+    products,
+    subCategories,
+    hostCategories,
+    clubAdmin,
+    venues,
+    viewerUserId,
+  });
 
   const steps = [
     <LocationClubStep
@@ -87,6 +97,8 @@ export function CreatePodStepper({
       clubVenueIds={clubVenueIds}
       viewerUserId={viewerUserId}
       pinnedVenueId={pinnedVenueId}
+      venueNotice={venueNotice}
+      forClubAdmin={!!clubAdmin}
     />,
     <PricingStep
       key="pricing"
@@ -96,7 +108,9 @@ export function CreatePodStepper({
       finance={finance}
       pricing={pricing}
       spots={spots}
+      venueNotice={venueNotice}
       showTerms={!clubAdmin}
+      forClubAdmin={!!clubAdmin}
     />,
   ];
 

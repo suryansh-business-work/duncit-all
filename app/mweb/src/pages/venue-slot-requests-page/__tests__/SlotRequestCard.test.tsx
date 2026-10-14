@@ -41,6 +41,7 @@ const request = (over: Partial<SlotRequestRow> = {}): SlotRequestRow => ({
   host_name: 'Meera N',
   host_email: 'meera@duncit.com',
   host_phone: '9000000001',
+  pod_is_free: false,
   ...over,
 });
 
@@ -106,9 +107,23 @@ describe('SlotRequestCard', () => {
   });
 
   it('says what the slot is worth to the venue', () => {
-    const { container } = card();
+    const { container, queryByTestId } = card();
 
     expect(container.textContent).toContain('1,200');
+    expect(queryByTestId('slot-request-free-pod-notice')).toBeNull();
+  });
+
+  it('tells the owner to settle a free pod with the host, and quotes no price', () => {
+    const { container, getByTestId } = card({ request: request({ pod_is_free: true, price: 0 }) });
+
+    const notice = getByTestId('slot-request-free-pod-notice');
+    expect(notice.getAttribute('role')).toBe('status');
+    expect(notice.textContent).toContain('This pod is free');
+    expect(notice.textContent).toContain('Please do not confirm the slot until the host has called you');
+    expect(container.textContent).not.toContain('Slot price');
+    expect(container.textContent).not.toContain('₹');
+    // The host's contact stays on the card, so the owner can reach them.
+    expect(container.textContent).toContain('9000000001');
   });
 
   it('describes a whole-day booking as one', () => {

@@ -13,6 +13,7 @@ export default function SettlementPreview({
   venueBillAmount,
   includeSlotPrice,
   hostUserId,
+  free = false,
 }: Readonly<SettlementPreviewProps>) {
   const { t } = useTranslation();
   const [amount, setAmount] = useState(venueBillAmount);
@@ -31,6 +32,8 @@ export default function SettlementPreview({
     fetchPolicy: 'cache-and-network',
   });
   const s = data?.podSettlementPreview;
+  // A free pod moves no platform money — its host settles the venue directly.
+  const isFree = free || !!s?.is_free;
 
   const body = () => {
     if (!s) {
@@ -42,6 +45,13 @@ export default function SettlementPreview({
           {/* Apollo 4 hands back ONE error whose message already carries the
               server's reason. */}
           {error?.message ?? 'Preview unavailable.'}
+        </Typography>
+      );
+    }
+    if (isFree) {
+      return (
+        <Typography variant="caption" data-testid="settlement-free-note" sx={{ color: 'text.secondary' }}>
+          {t('shell.hostShare.freeNote')}
         </Typography>
       );
     }
@@ -76,8 +86,12 @@ export default function SettlementPreview({
 
   return (
     <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,79,115,0.08)' }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 0.5 }}>
-        {t('admin.completePod.previewTitle')}
+      <Typography
+        variant="subtitle2"
+        data-testid={isFree ? 'settlement-free' : undefined}
+        sx={{ fontWeight: 900, mb: 0.5 }}
+      >
+        {isFree ? t('shell.hostShare.freePod') : t('admin.completePod.previewTitle')}
       </Typography>
       <Divider sx={{ mb: 1 }} />
       {body()}

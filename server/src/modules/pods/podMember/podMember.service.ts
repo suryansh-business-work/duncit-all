@@ -8,7 +8,13 @@ import {
   type BackoutStatus,
   type IBackoutRequest,
 } from './backoutRequest.model';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { isFreePod, PodModel, type IPod } from '@modules/pods/pod/pod.model';
+import {
+  cancelFreeSpot,
+  findReusableFreeMembership,
+  podHasStarted,
+  reactivateFreeMembership,
+} from './podMember.freeSpot';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
 import {
   coinService,
@@ -58,8 +64,7 @@ const newToken = () => `ref_${crypto.randomBytes(8).toString('hex')}`;
 const iso = (v?: Date | null) => (v instanceof Date ? v.toISOString() : null);
 
 /** The pod's own start time has passed — nothing about the seat can change now. */
-const podHasHappened = (pod: { pod_date_time?: Date | null }) =>
-  !!pod.pod_date_time && pod.pod_date_time.getTime() < Date.now();
+const podHasHappened = podHasStarted;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -198,6 +203,7 @@ const toPub = (m: IPodMember) => ({
   refund_status: m.refund_status,
   refund_payment_id: m.refund_payment_id ? String(m.refund_payment_id) : null,
   backout_count: m.backout_count ?? 0,
+  spot_cancelled_at: iso(m.spot_cancelled_at),
   created_at: m.created_at?.toISOString?.() ?? '',
   updated_at: m.updated_at?.toISOString?.() ?? '',
 });
@@ -258,6 +264,30 @@ async function assertNoBackoutInProcess(podId: Types.ObjectId, uid: Types.Object
 
 const fullName = (user: any) =>
   `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
+
+/**
+ * What follows every free join, first or repeated: badges, points and the
+ * ticket. The points are idempotent per (user, pod) and the ticket per
+ * membership, so a join after a cancel neither farms points nor mails a second
+ * ticket — the one already issued simply scans again.
+ */
+async function afterFreeJoin(doc: IPodMember, userId: string, podId: string) {
+  evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
+  awardJoinPoints(userId, podId);
+  try {
+    const { ticketService } = await import('@modules/pods/ticket/ticket.service');
+    await ticketService.ensureForMembership(String(doc._id));
+  } catch (e) {
+    logs.server.warn('podMember', 'join', { error: e, msg: 'Ticket issue (free join) failed' });
+  }
+  logs.server.info('podMember', 'joinFree', {
+    pod_id: podId,
+    membership_id: String(doc._id),
+    seats: normalizeSeats(doc.seats ?? 1),
+    msg: 'free pod joined',
+  });
+  return doc;
+}
 
 /** Leaderboard points for a successful join — fire-and-forget like the badge
  * hook. Idempotent per (user, pod) inside the service, so a rejoin after a
@@ -827,7 +857,79 @@ function backoutRefundShare(payment: IPayment | null, held: number, release: num
   return { paymentAmount, refundAmount, coinsPaidShare, coinsRefund, earn };
 }
 
+/**
+ * Membership state on a FREE pod. There is no backout and no refund, so every
+ * backout flag reads off and no attempt is ever counted; the way out is
+ * `can_cancel_spot`. A member left in BACKOUT_IN_PROCESS by a backout raised
+ * before free pods lost backouts is treated as out of the pod — they may simply
+ * join again (`can_join`), which re-activates their row.
+ */
+async function freePodState(pod: IPod, membership: IPodMember | null, userId: string | null, full: boolean) {
+  const joined = membership?.status === 'JOINED' ? membership : null;
+  const isMember = !!joined;
+  const legacyBackout = membership?.status === 'BACKOUT_IN_PROCESS';
+  const { TicketModel } = await import('@modules/pods/ticket/ticket.model');
+  const ticket = joined ? await TicketModel.findOne({ membership_id: joined._id }).select('status') : null;
+  const [maxAttempts, deductionPct] = await Promise.all([
+    settingsService.getMaxBackoutAttempts(),
+    backoutDeductionPct(),
+  ]);
+  return {
+    pod_id: String(pod._id),
+    is_member: isMember,
+    status: membership?.status ?? null,
+    membership: membership ? toPub(membership) : null,
+    spots_taken: podSeatsTaken(pod),
+    spots_total: pod.no_of_spots ?? 0,
+    seats_available: podSeatsAvailable(pod),
+    max_seats_per_booking: maxSeatsForBooking(pod),
+    my_seats: joined?.seats ?? 0,
+    can_backout: false,
+    can_cancel_spot: isMember && !podHasHappened(pod) && ticket?.status !== 'CHECKED_IN',
+    can_join: !!userId && (!membership || legacyBackout) && !full,
+    refund_threshold_pct: REFUND_THRESHOLD_PCT,
+    backout_in_process: false,
+    can_cancel_backout: false,
+    backout_attempts_used: 0,
+    backout_attempts_max: maxAttempts,
+    backout_deduction_pct: deductionPct,
+    backout_refund_amount: null,
+    backout_refund_per_seat: null,
+    backout_refund_coins: 0,
+    released_seats_pending: 0,
+  };
+}
+
+/** The free pod a spot is cancelled on: it must exist, be FREE and not have
+ * started — the same clock rule `backout` uses. */
+async function loadFreePodForCancel(podDocId: string) {
+  const pod = Types.ObjectId.isValid(podDocId) ? await PodModel.findById(podDocId) : null;
+  if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+  if (!isFreePod(pod)) {
+    throw new GraphQLError('Only a free pod’s spot can be cancelled. Use Backout to leave a paid pod.', {
+      extensions: { code: 'NOT_FREE_POD' },
+    });
+  }
+  if (podHasHappened(pod)) {
+    throw new GraphQLError('This pod has already started — your spot can no longer be cancelled.', {
+      extensions: { code: 'BAD_REQUEST' },
+    });
+  }
+  return pod;
+}
+
 export const podMemberService = {
+  /**
+   * Cancel the spot on a FREE pod — the only way out of one. The caller's own
+   * JOINED booking only. Releases every seat it holds, voids its ticket, and
+   * raises no BackoutRequest, counts no attempt and sets no refund. Idempotent:
+   * a repeated call answers the already-cancelled booking.
+   */
+  async cancelFreeSpot(podDocId: string, userId: string) {
+    const pod = await loadFreePodForCancel(podDocId);
+    return toPub(await cancelFreeSpot(pod._id as Types.ObjectId, userId));
+  },
+
   async getState(podDocId: string, userId: string | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
@@ -844,6 +946,7 @@ export const podMemberService = {
     const isMember = membership?.status === 'JOINED';
     const inProcess = membership?.status === 'BACKOUT_IN_PROCESS';
     const full = spotsTotal > 0 && spotsTaken >= spotsTotal;
+    if (isFreePod(pod)) return freePodState(pod, membership, userId, full);
     const [maxAttempts, deductionPct, attemptsUsed] = await Promise.all([
       settingsService.getMaxBackoutAttempts(),
       backoutDeductionPct(),
@@ -879,6 +982,8 @@ export const podMemberService = {
       // and Pod History cannot disagree about whether a booking can still be
       // given up — and the mutation refuses it either way.
       can_backout: isMember && attemptsUsed < maxAttempts && !podHasHappened(pod),
+      // Cancel-the-spot is the FREE pod's way out; a paid pod never offers it.
+      can_cancel_spot: false,
       can_join: !!userId && !membership && !full,
       refund_threshold_pct: REFUND_THRESHOLD_PCT,
       backout_in_process: inProcess,
@@ -987,7 +1092,10 @@ export const podMemberService = {
     const uid = new Types.ObjectId(userId);
     const existing = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
     if (existing) return toPub(existing);
-    await assertNoBackoutInProcess(pod._id as Types.ObjectId, uid);
+    // A free pod has no backout to wait on: a cancelled spot — or a backout
+    // raised before free pods lost them — is simply joined again, on the same
+    // row (see reactivateFreeMembership), so join/cancel churn adds no rows.
+    const reusable = await findReusableFreeMembership(pod._id as Types.ObjectId, userId);
 
     const seats = Math.min(normalizeSeats(wantSeats), maxSeatsForBooking(pod));
     await ensureSeatsAvailable(pod, seats);
@@ -1000,6 +1108,23 @@ export const podMemberService = {
         referredBy = refDoc.user_id;
         source = 'REFERRAL';
       }
+    }
+
+    if (reusable) {
+      const rejoined = await reactivateFreeMembership(reusable, pod._id as Types.ObjectId, userId, {
+        seats,
+        source,
+        referredBy,
+      });
+      // A concurrent join won the row: answer with the booking it made.
+      const doc =
+        rejoined ?? (await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' }));
+      if (!doc) {
+        throw new GraphQLError('Your booking changed while joining — please try again.', {
+          extensions: { code: 'CONFLICT' },
+        });
+      }
+      return toPub(await afterFreeJoin(doc, userId, String(pod._id)));
     }
 
     // Claim the seats BEFORE the membership row exists. The claim is the gate
@@ -1024,16 +1149,9 @@ export const podMemberService = {
       throw e;
     }
 
-    await fillBackoutsAfterJoin(pod, userId);
-    evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
-    awardJoinPoints(userId, String(pod._id));
-    try {
-      const { ticketService } = await import('@modules/pods/ticket/ticket.service');
-      await ticketService.ensureForMembership(String(doc._id));
-    } catch (e) {
-      logs.server.warn('podMember', 'join', { error: e, msg: 'Ticket issue (free join) failed' });
-    }
-    return toPub(doc);
+    // No backout fill: a free pod has no backouts, and filling a legacy one
+    // would send a "your spot was filled" message a free pod never sends.
+    return toPub(await afterFreeJoin(doc, userId, String(pod._id)));
   },
 
   /**
@@ -1052,6 +1170,10 @@ export const podMemberService = {
   async backout(podDocId: string, userId: string, requestedSeats?: number | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    // A free pod has no backout. Installed app builds still call this, so it
+    // is answered as "cancel the spot": the whole booking, no request, no
+    // attempt, no refund. `requestedSeats` is ignored — there is no partial.
+    if (isFreePod(pod)) return this.cancelFreeSpot(podDocId, userId);
     // Joining and rejoining both refuse a pod that has happened; backing out did
     // not, so a seat could be released from an evening that was already over —
     // and the request then rewrote that member's own history as "spot not
@@ -1139,6 +1261,9 @@ export const podMemberService = {
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 
     const uid = new Types.ObjectId(userId);
+    // A free pod has no backout to keep: "Keep My Spot" from an installed build
+    // means "I want my spot", which on a free pod is simply joining again.
+    if (isFreePod(pod)) return this.rejoinFree(pod, userId);
     // The REQUEST is what gets kept, not the membership: after a partial release
     // the member is still JOINED, so there is no BACKOUT_IN_PROCESS row to find.
     const request = await findCancellableRequest(pod._id, uid, backoutId);
@@ -1207,6 +1332,10 @@ export const podMemberService = {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
+
+    // A free pod is joined through the free join, which already credits the
+    // referral and re-uses a cancelled spot's row.
+    if (isFreePod(pod)) return this.joinFree(String(pod._id), userId, token);
 
     const uid = new Types.ObjectId(userId);
     const existing = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
@@ -1353,6 +1482,8 @@ export const podMemberService = {
       });
     }
 
+    if (isFreePod(pod)) return this.rejoinFree(pod, userId);
+
     const uid = new Types.ObjectId(userId);
     const alreadyJoined = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
     if (alreadyJoined) return toPub(alreadyJoined);
@@ -1413,6 +1544,24 @@ export const podMemberService = {
       logs.server.warn('podMember', 'rejoin', { error: e, msg: 'Ticket issue (rejoin) failed' });
     }
     return toPub(membership);
+  },
+
+  /**
+   * `rejoinPod` / `cancelBackoutPod` on a FREE pod: join again with the seats
+   * the earlier booking held. A member who is already in gets their booking
+   * back unchanged; one who never booked is told so, as rejoin always did.
+   */
+  async rejoinFree(pod: IPod, userId: string) {
+    const uid = new Types.ObjectId(userId);
+    const joined = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
+    if (joined) return toPub(joined);
+    const previous = await findReusableFreeMembership(pod._id as Types.ObjectId, userId);
+    if (!previous) {
+      throw new GraphQLError('You have no earlier booking for this pod — join it instead.', {
+        extensions: { code: 'NOT_FOUND' },
+      });
+    }
+    return this.joinFree(String(pod._id), userId, null, normalizeSeats(previous.seats ?? 1));
   },
 
   /**

@@ -28,4 +28,6 @@ export interface SettlementPreviewProps {
   /** The co-host picked as the payout beneficiary — their commission override
    * prices the settlement, so the preview must quote the same host. */
   hostUserId: string;
+  /** The pod is FREE: no payout to preview. The settlement's `is_free` agrees once loaded. */
+  free?: boolean;
 }

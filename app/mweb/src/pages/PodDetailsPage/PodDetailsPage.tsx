@@ -157,11 +157,13 @@ export default function PodDetailsPage() {
         joining={actions.joinState.loading}
         backingOut={actions.backoutState.loading}
         restoringSpot={actions.cancelBackoutState.loading}
+        cancellingSpot={actions.cancelSpotState.loading}
         seats={actions.seats}
         onSeatsChange={actions.setSeats}
         onJoinFree={actions.onJoinFree}
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}
+        onCancelSpot={() => actions.setCancelSpotOpen(true)}
         onPaidCheckout={actions.onPaidCheckout}
         onCopyReferral={actions.onCopyReferral}
         onGoToDashboard={() => {

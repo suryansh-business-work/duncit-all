@@ -45,7 +45,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
       type: mediaTypeForUrl(url),
     })),
     reel_url: values.reel_url || null,
-    payment_terms: values.payment_terms || null,
+    // A free pod has no money terms: a value typed while it was paid is dropped.
+    payment_terms: isFreePodType(values.pod_type) ? null : values.payment_terms || null,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: values.place_charges,

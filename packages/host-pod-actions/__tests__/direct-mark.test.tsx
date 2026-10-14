@@ -85,6 +85,8 @@ const board = (over: Record<string, unknown> = {}) => ({
   pod_title: 'Sunday Badminton',
   pod_date_time: '2026-08-30T12:30:00.000Z',
   pod_end_date_time: '2026-08-30T14:00:00.000Z',
+  pod_mode: 'PHYSICAL',
+  pod_type: 'PAID',
   viewer: 'CLUB_ADMIN',
   lock: null,
   can_mark: true,

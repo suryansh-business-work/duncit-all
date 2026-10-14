@@ -79,14 +79,18 @@ export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): Earni
       venue_id: hasVenue ? venueId : null,
       venue_amount: hasVenue ? slotPrice : null,
     },
-    skip: sent.podAmount <= 0 || sent.noOfSpots <= 1,
+    // A free pod has no calculation at all — its ₹0 would skip the query
+    // anyway, but the debounced copy still holds the old price for 400ms after
+    // the host switches Paid → Free, so the type is checked on its own.
+    skip: isFree || sent.podAmount <= 0 || sent.noOfSpots <= 1,
     fetchPolicy: 'cache-and-network',
   });
-  const projection: EarningsProjection | undefined = data?.potentialPodEarnings;
+  // Whatever an earlier paid price left behind, a free pod has no projection.
+  const projection: EarningsProjection | undefined = isFree ? undefined : data?.potentialPodEarnings;
   const stale = sent.podAmount !== podAmount || sent.noOfSpots !== noOfSpots;
 
   // Free pods never trip any rule — the ticket price is the switch.
-  const ready = podAmount > 0 && noOfSpots > 0;
+  const ready = !isFree && podAmount > 0 && noOfSpots > 0;
   // The field starts blank, so a paid pod has nothing to publish until the host
   // types a price — ₹0 is never assumed on their behalf.
   const priceMissing = !isFree && podAmount <= 0;
@@ -94,7 +98,7 @@ export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): Earni
   // Never claim ₹0 earnings from a waterfall that a newer price has superseded.
   const zeroEarnings =
     ready && !loading && !stale && hostReceives !== undefined && hostReceives <= 0;
-  const venueShortfall = isVenueShortfall(input);
+  const venueShortfall = !isFree && isVenueShortfall(input);
 
   return {
     ...input,

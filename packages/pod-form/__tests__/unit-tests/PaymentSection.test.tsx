@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { UseFormReturn } from 'react-hook-form';
 import PaymentSection from '../../src/sections/PaymentSection';
@@ -80,27 +80,69 @@ function renderProjection(defaults: Partial<PodFormValues> = {}) {
 describe('EarningsProjection on its own', () => {
   it('asks for a price rather than projecting one when the amount is not a number', () => {
     apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
-    renderProjection({ pod_type: 'NATIVE_PAID', pod_amount: '' as unknown as number, no_of_spots: 10 });
+    renderProjection({ pod_type: 'PAID', pod_amount: '' as unknown as number, no_of_spots: 10 });
 
     expect(screen.getByText(/Enter a ticket price and at least 2 spots/)).toBeInTheDocument();
   });
 
   it('asks for a price when the spots box is empty too', () => {
     apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
-    renderProjection({ pod_type: 'NATIVE_PAID', pod_amount: 500, no_of_spots: '' as unknown as number });
+    renderProjection({ pod_type: 'PAID', pod_amount: 500, no_of_spots: '' as unknown as number });
 
     expect(screen.getByText(/Enter a ticket price and at least 2 spots/)).toBeInTheDocument();
   });
 });
 
 describe('PaymentSection', () => {
-  it('changes the pod type and zeroes the amount for a free type', async () => {
+  it('offers exactly Free and Paid — the two types the server writes', async () => {
     const user = userEvent.setup();
-    const ref = renderPayment(makeData(), { pod_type: 'NATIVE_PAID', pod_amount: 500 });
+    renderPayment(makeData(), { pod_type: 'PAID', pod_amount: 500 });
     await user.click(screen.getByLabelText(/Pod type/));
-    await user.click(await screen.findByRole('option', { name: 'Native · Free' }));
-    expect(ref.current?.getValues('pod_type')).toBe('NATIVE_FREE');
+    const options = await screen.findAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual(['Free', 'Paid']);
+  });
+
+  it('makes a physical pod free: zeroes the amount and removes the amount field', async () => {
+    const user = userEvent.setup();
+    const ref = renderPayment(makeData(), { pod_mode: 'PHYSICAL', pod_type: 'PAID', pod_amount: 500 });
+    await user.click(screen.getByLabelText(/Pod type/));
+    await user.click(await screen.findByRole('option', { name: 'Free' }));
+    expect(ref.current?.getValues('pod_type')).toBe('FREE');
     expect(ref.current?.getValues('pod_amount')).toBe(0);
+    expect(screen.queryByLabelText(/Amount/)).not.toBeInTheDocument();
+  });
+
+  it('brings the amount field back empty when a free pod turns paid', async () => {
+    const user = userEvent.setup();
+    const ref = renderPayment(makeData(), { pod_type: 'FREE', pod_amount: 0 });
+    await user.click(screen.getByLabelText(/Pod type/));
+    await user.click(await screen.findByRole('option', { name: 'Paid' }));
+    expect(ref.current?.getValues('pod_type')).toBe('PAID');
+    const amount = screen.getByLabelText(/Amount/);
+    expect(amount).toHaveValue(null);
+    expect(amount).toBeEnabled();
+    expect(screen.getByText('GROSS price (incl. fee + GST). 0 – 1999.')).toBeInTheDocument();
+  });
+
+  // Payment terms describe refunds and charges a free pod does not have.
+  it('shows the payment terms field for a paid pod and hides it for a free one', () => {
+    renderPayment(makeData(), { pod_type: 'PAID', pod_amount: 300 });
+    expect(screen.getByLabelText(/Payment terms/i)).toBeInTheDocument();
+    cleanup();
+    renderPayment(makeData(), { pod_type: 'FREE', pod_amount: 0 });
+    expect(screen.queryByLabelText(/Payment terms/i)).not.toBeInTheDocument();
+  });
+
+  it('opens a pod holding a legacy free type on the Free option, with no amount field', () => {
+    renderPayment(makeData(), { pod_type: 'NON_NATIVE_FREE', pod_amount: 0 });
+    expect(screen.getByLabelText(/Pod type/)).toHaveTextContent('Free');
+    expect(screen.queryByLabelText(/Amount/)).not.toBeInTheDocument();
+  });
+
+  it('opens a pod holding a legacy paid type on the Paid option, priced', () => {
+    renderPayment(makeData(), { pod_type: 'NATIVE_PAID_PREMIUM', pod_amount: 750 });
+    expect(screen.getByLabelText(/Pod type/)).toHaveTextContent('Paid');
+    expect(screen.getByLabelText(/Amount/)).toHaveValue(750);
   });
 
   it('changes the occurrence', async () => {
@@ -113,7 +155,7 @@ describe('PaymentSection', () => {
 
   it('edits the amount and spots for a paid pod', async () => {
     const user = userEvent.setup();
-    const ref = renderPayment(makeData(), { pod_type: 'NATIVE_PAID' });
+    const ref = renderPayment(makeData(), { pod_type: 'PAID' });
     const amount = screen.getByLabelText(/Amount/);
     await user.clear(amount);
     await user.type(amount, '750');
@@ -124,14 +166,16 @@ describe('PaymentSection', () => {
     expect(ref.current?.getValues('no_of_spots')).toBe(30);
   });
 
-  it('disables the amount for a free pod', () => {
-    renderPayment(makeData(), { pod_type: 'NATIVE_FREE' });
-    expect(screen.getByLabelText(/Amount/)).toBeDisabled();
+  it('renders no amount field and no money hint for a free pod', () => {
+    renderPayment(makeData(), { pod_type: 'FREE' });
+    expect(screen.queryByLabelText(/Amount/)).not.toBeInTheDocument();
+    expect(screen.getByText('Total spots, including the host’s own seat.')).toBeInTheDocument();
+    expect(screen.queryByText(/calculation is based on/)).not.toBeInTheDocument();
   });
 
   it('coerces non-numeric amount and spots to zero', async () => {
     const user = userEvent.setup();
-    const ref = renderPayment(makeData(), { pod_type: 'NATIVE_PAID', pod_amount: 5, no_of_spots: 5 });
+    const ref = renderPayment(makeData(), { pod_type: 'PAID', pod_amount: 5, no_of_spots: 5 });
     await user.clear(screen.getByLabelText(/Amount/));
     await user.clear(screen.getByLabelText(/No. of spots/));
     expect(ref.current?.getValues('pod_amount')).toBe(0);
@@ -140,7 +184,7 @@ describe('PaymentSection', () => {
 
   it('shows the finance breakdown for a paid pod when finance is enabled', () => {
     const data = makeData({ config: makeConfig({ showFinance: true, showInventory: true }), finance: FINANCE });
-    renderPayment(data, { pod_type: 'NATIVE_PAID', pod_amount: 500, products_enabled: false });
+    renderPayment(data, { pod_type: 'PAID', pod_amount: 500, products_enabled: false });
     expect(screen.getByText('Earnings projection')).toBeInTheDocument();
   });
 
@@ -154,7 +198,7 @@ describe('PaymentSection', () => {
       products: [{ id: 'p1', unit_cost: 100 }],
     });
     renderPayment(data, {
-      pod_type: 'NATIVE_PAID',
+      pod_type: 'PAID',
       pod_amount: 500,
       no_of_spots: 10,
       products_enabled: false,
@@ -173,14 +217,14 @@ describe('PaymentSection', () => {
       finance: FINANCE,
       products: [{ id: 'p1', unit_cost: 100 }],
     });
-    renderPayment(data, { pod_type: 'NATIVE_PAID', pod_amount: 500, no_of_spots: 10 });
+    renderPayment(data, { pod_type: 'PAID', pod_amount: 500, no_of_spots: 10 });
     expect(screen.queryByText('Duncit product cost')).not.toBeInTheDocument();
     expect(screen.getByText('₹3,260.59')).toBeInTheDocument();
   });
 
   it('hides the breakdown for a free pod even with finance enabled', () => {
     const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
-    renderPayment(data, { pod_type: 'NATIVE_FREE', pod_amount: 0 });
+    renderPayment(data, { pod_type: 'FREE', pod_amount: 0 });
     expect(screen.queryByText('Earnings projection')).not.toBeInTheDocument();
   });
 
@@ -215,14 +259,14 @@ describe('PaymentSection', () => {
   it('projects while the server waterfall has not answered yet', () => {
     apollo.data = { categories: [], venueAvailableSlots: [] };
     const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
-    renderPayment(data, { pod_type: 'NATIVE_PAID', pod_amount: 500, no_of_spots: 10 });
+    renderPayment(data, { pod_type: 'PAID', pod_amount: 500, no_of_spots: 10 });
     expect(screen.getByText('Projecting…')).toBeInTheDocument();
   });
 
   it('treats a projection behind the typed inputs as loading, never a mismatched answer', () => {
     apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
     const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
-    const ref = renderPayment(data, { pod_type: 'NATIVE_PAID', pod_amount: 500, no_of_spots: 10 });
+    const ref = renderPayment(data, { pod_type: 'PAID', pod_amount: 500, no_of_spots: 10 });
     expect(screen.getByText('Total collection')).toBeInTheDocument();
     // The typed price moves on; the debounced query value has not yet.
     act(() => {
@@ -240,7 +284,7 @@ describe('PaymentSection', () => {
       products: [{ id: 'p1', unit_cost: 2000 }],
     });
     renderPayment(data, {
-      pod_type: 'NATIVE_PAID',
+      pod_type: 'PAID',
       pod_amount: 500,
       no_of_spots: 10,
       product_requests: [{ product_id: 'p1', quantity: 2 }],
@@ -252,7 +296,7 @@ describe('PaymentSection', () => {
     apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
     const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
     renderPayment(data, {
-      pod_type: 'NATIVE_PAID',
+      pod_type: 'PAID',
       pod_amount: 500,
       no_of_spots: 10,
       pod_mode: 'PHYSICAL',
@@ -270,7 +314,7 @@ describe('PaymentSection', () => {
     apollo.data = { categories: [], venueAvailableSlots: [], ...PROJECTION };
     const data = makeData({ config: makeConfig({ showFinance: true }), finance: FINANCE });
     renderPayment(data, {
-      pod_type: 'NATIVE_PAID',
+      pod_type: 'PAID',
       pod_amount: 500,
       no_of_spots: 10,
       pod_mode: 'VIRTUAL',
@@ -280,7 +324,7 @@ describe('PaymentSection', () => {
   });
 
   it('shows amount and spot validation errors', () => {
-    const ref = renderPayment(makeData(), { pod_type: 'NATIVE_PAID' });
+    const ref = renderPayment(makeData(), { pod_type: 'PAID' });
     act(() => {
       ref.current?.setError('pod_amount', { type: 'custom', message: 'Amount cannot exceed 1999' });
       ref.current?.setError('no_of_spots', { type: 'custom', message: 'Spots must be a number' });

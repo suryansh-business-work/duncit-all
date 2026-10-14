@@ -4,6 +4,7 @@ import { PodAuditLogModel } from '@modules/pods/podAudit/podAudit.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { TicketModel } from '@modules/pods/ticket/ticket.model';
 import { BackoutRequestModel } from './backoutRequest.model';
+import { PodMemberModel } from './podMember.model';
 
 /**
  * The things the participation timeline needs and the membership does not
@@ -97,10 +98,11 @@ export async function participationForMembership(input: {
 }) {
   const { memberId, podId, joinedAt } = input;
   if (!memberId) return null;
-  const [backouts, attendance, cancellation] = await Promise.all([
+  const [backouts, attendance, cancellation, spotCancelledAt] = await Promise.all([
     backoutsForMembership(memberId),
     attendanceForMembership(memberId, podId),
     cancellationForPod(podId),
+    spotCancelledAtFor(memberId),
   ]);
   const cancelRefund = cancellation.cancelled_by
     ? await cancellationRefundForPayment(input.paymentId)
@@ -114,7 +116,20 @@ export async function participationForMembership(input: {
     pod_cancelled_at: cancellation.cancelled_at,
     cancel_refund_status: cancelRefund,
     backouts,
+    spot_cancelled_at: spotCancelledAt,
   };
+}
+
+/**
+ * When this booking's spot was cancelled on a free pod, if that is how it
+ * currently stands. The membership carries the stamp only while it is out of
+ * the pod because of a cancelled spot, so a re-joined booking answers null.
+ */
+export async function spotCancelledAtFor(memberId: string): Promise<string | null> {
+  if (!Types.ObjectId.isValid(memberId)) return null;
+  const member = await PodMemberModel.findById(memberId).select('status spot_cancelled_at').lean();
+  if (member?.status !== 'BACKED_OUT' || !member.spot_cancelled_at) return null;
+  return member.spot_cancelled_at.toISOString();
 }
 
 /**

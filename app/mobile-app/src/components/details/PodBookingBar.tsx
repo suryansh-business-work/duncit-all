@@ -26,6 +26,8 @@ interface Props {
   onCheckout: () => void;
   onBackout: () => void;
   onKeepSpot: () => void;
+  /** Opens a free pod's "Cancel Spot" confirm. */
+  onCancelSpot?: () => void;
   onGoToDashboard: () => void;
   /** True while "Keep My Spot" / "Take Seats Back" is in flight. */
   restoringSpot?: boolean;
@@ -55,6 +57,7 @@ export function PodBookingBar({
   onCheckout,
   onBackout,
   onKeepSpot,
+  onCancelSpot,
   onGoToDashboard,
   restoringSpot = false,
   onLayout,
@@ -120,6 +123,9 @@ export function PodBookingBar({
                 restoringSpot={restoringSpot}
                 onBackout={onBackout}
                 onKeepSpot={onKeepSpot}
+                isFree={isFree}
+                canCancelSpot={!!membershipState?.can_cancel_spot}
+                onCancelSpot={onCancelSpot}
               />
             ) : null}
             {showBookBar ? (

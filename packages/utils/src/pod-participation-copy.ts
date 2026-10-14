@@ -112,6 +112,12 @@ const BASE: Record<PodTimelineKind, { titleKey: string; detailKey: string; tone:
     detailKey: 'podTimeline.cancelledByDetail',
     tone: 'bad',
   },
+  // A free pod's own exit: no backout and no refund, and the way back in stays open.
+  SPOT_CANCELLED: {
+    titleKey: 'podTimeline.spotCancelledTitle',
+    detailKey: 'podTimeline.spotCancelledDetail',
+    tone: 'warn',
+  },
 };
 
 /**

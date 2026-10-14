@@ -7,7 +7,7 @@ import {
   PodPendingSummaryCard,
   VenuePendingCard,
 } from '@/components/pod-pending';
-import { CategoryMediaType, PodVenueApproval } from '@/generated/graphql/graphql';
+import { CategoryMediaType, PodType, PodVenueApproval } from '@/generated/graphql/graphql';
 import type { PodPendingView } from '@/hooks/usePodPendingView';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -25,6 +25,7 @@ const fullView: PodPendingView = {
     place_label: 'The Loft',
     place_detail: 'Indiranagar',
     venue_approval_status: PodVenueApproval.Pending,
+    pod_type: PodType.Paid,
   },
   category_name: 'Music',
   expected_earnings: 1234.5,
@@ -76,6 +77,22 @@ describe('PodPendingSummaryCard', () => {
     expect(screen.getByTestId('pod-pending-location')).toHaveTextContent('The Loft · Indiranagar');
     expect(screen.getByTestId('pod-pending-category')).toHaveTextContent('Music');
     expect(screen.getByTestId('pod-pending-status')).toHaveTextContent('Awaiting venue approval');
+  });
+
+  // A free pod earns its host nothing: it reads "Free pod", never ₹0 or a loss.
+  it('says "Free pod" instead of an earnings figure for a free pod', () => {
+    renderWithProviders(
+      <PodPendingSummaryCard
+        view={{
+          ...fullView,
+          expected_earnings: -300,
+          pod: { ...fullView.pod, pod_type: PodType.Free },
+        }}
+      />,
+    );
+    const earnings = screen.getByTestId('pod-pending-earnings');
+    expect(earnings).toHaveTextContent(/Free pod/);
+    expect(earnings).not.toHaveTextContent(/₹/);
   });
 
   it('hides the image, location and category rows when absent', () => {

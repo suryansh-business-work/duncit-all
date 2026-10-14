@@ -220,19 +220,26 @@ export interface PodFormData {
    * booked slot is no longer in any list this form reads.
    */
   editingPodDocId?: string;
+  /**
+   * The venues the pod's host owns. A slot there books without a request, so a
+   * free pod on one owes the venue nothing and shows no settle-directly note.
+   * Omitted, no venue is treated as the host's own.
+   */
+  ownVenueIds?: readonly string[];
 }
 
 /**
  * The picker options. The VALUE is the stored enum; the name a person reads is
  * a catalogue key resolved where the menu is drawn (rule 38), written out in
  * full because `verify-translation-keys.mjs` greps for the literal.
+ *
+ * `POD_TYPES` is the server's `PodType` — FREE or PAID, for a physical pod and
+ * a virtual one alike. A legacy value on a row is collapsed by
+ * `normalizePodType` before it reaches the picker.
  */
 export const POD_TYPES: PodKeyedOption[] = [
-  { value: 'NATIVE_FREE', labelKey: 'podForm.podType.nativeFree' },
-  { value: 'NATIVE_PAID', labelKey: 'podForm.podType.nativePaid' },
-  { value: 'NATIVE_PAID_PREMIUM', labelKey: 'podForm.podType.nativePaidPremium' },
-  { value: 'NON_NATIVE_FREE', labelKey: 'podForm.podType.nonNativeFree' },
-  { value: 'NON_NATIVE_PAID', labelKey: 'podForm.podType.nonNativePaid' },
+  { value: 'FREE', labelKey: 'podForm.podType.free' },
+  { value: 'PAID', labelKey: 'podForm.podType.paid' },
 ];
 
 export const OCCURRENCES: PodKeyedOption[] = [
@@ -270,7 +277,7 @@ export const blankPodFormValues: PodFormValues = {
   pod_description: '',
   pod_date_time: null,
   pod_end_date_time: null,
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_amount: 0,
   pod_occurrence: 'ONE_TIME',
   no_of_spots: 0,

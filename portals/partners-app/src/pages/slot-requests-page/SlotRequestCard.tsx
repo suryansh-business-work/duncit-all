@@ -21,6 +21,7 @@ import { useDateFormat, useTranslation, formatDateTime } from '@duncit/app-setti
 import { slotSpanLabel } from '@duncit/slots';
 import { InfoRow } from '@duncit/ui';
 import type { SlotRequestRow } from './queries';
+import FreePodNotice from './FreePodNotice';
 
 interface Props {
   request: SlotRequestRow;
@@ -65,10 +66,11 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           <Chip size="small" color="warning" label={t('partners.slotRequestsPage.awaitingDecision')} />
         </Stack>
         <Divider />
+        {request.pod_is_free && <FreePodNotice />}
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1, md: 3 }}>
           <Detail label={t('partners.common.venue')} value={request.venue_name} />
           <Detail label={t('partners.slotRequestsPage.slot')} value={slotWindow(request)} />
-          <Detail label={t('partners.slotRequestsPage.slotPrice')} value={request.price > 0 ? `₹${request.price.toLocaleString('en-IN')}` : 'Free'} />
+          {!request.pod_is_free && <Detail label={t('partners.slotRequestsPage.slotPrice')} value={request.price > 0 ? `₹${request.price.toLocaleString('en-IN')}` : 'Free'} />}
           <Detail label={t('partners.slotRequestsPage.requested')} value={formatDateTime(request.requested_at)} />
         </Stack>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1, md: 3 }}>
@@ -86,9 +88,10 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           justifyContent: "flex-end"
         }}>
           {/* Same page the request email's buttons open — it shows what this
-           * booking actually earns after Duncit's commission. */}
+           * booking actually earns after Duncit's commission (a free pod earns
+           * nothing through Duncit, so it is just the request there). */}
           <DuncitButton size="small" component={RouterLink} to={`/venues/requests/${request.slot_id}`}>
-            View earnings
+            {request.pod_is_free ? t('partners.slotRequestsPage.viewRequest') : 'View earnings'}
           </DuncitButton>
           <DuncitButton
             size="small"

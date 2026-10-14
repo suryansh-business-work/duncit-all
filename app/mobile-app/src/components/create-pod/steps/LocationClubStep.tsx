@@ -40,7 +40,7 @@ export function LocationClubStep({
   locations,
   pinnedClub = null,
 }: Readonly<Props>) {
-  const { control, getValues, setValue, watch } = form;
+  const { control, setValue, watch } = form;
   const { t } = useTranslation();
   const modes = [
     { value: 'PHYSICAL', label: t('mweb.createPod.modePhysical') },
@@ -79,13 +79,8 @@ export function LocationClubStep({
                 field.onChange(next);
                 // The club list depends on the mode, so the old pick may not be in it.
                 if (!pinnedClub) setValue('club_id', '', { shouldDirty: true });
-                // FREE is virtual-only — a VIRTUAL+FREE pick must not survive
-                // the switch to PHYSICAL.
-                if (next === 'PHYSICAL' && getValues('pod_type') !== 'PAID') {
-                  setValue('pod_type', 'PAID', { shouldDirty: true });
-                  // FREE forced the price to ₹0 — the now-paid pod starts blank.
-                  setValue('pod_amount_text', '', { shouldDirty: true });
-                }
+                // The Free/Paid pick survives the switch: a physical pod may be
+                // free too, so the mode no longer forces the type.
               }}
               testID="create-pod-mode"
             />

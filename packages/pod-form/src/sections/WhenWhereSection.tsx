@@ -2,6 +2,7 @@ import { Alert, MenuItem, Stack, TextField } from '@mui/material';
 import { useFormContext, useWatch } from 'react-hook-form';
 import DateTimeField from '../components/DateTimeField';
 import GoogleMapPreview from '../components/GoogleMapPreview';
+import FreePodVenueNote from '../slots/FreePodVenueNote';
 import VenueSlotField from '../slots/VenueSlotField';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
@@ -90,6 +91,7 @@ export default function WhenWhereSection() {
         <>
           <VenueSlotField venueId={venueId} selectedSlotId={slotId} currentSlot={currentSlot} onSelect={handleSlotPick} />
           {errors.venue_slot_id && <Alert severity="error">{String(errors.venue_slot_id.message)}</Alert>}
+          <FreePodVenueNote />
         </>
       ) : (
         <>

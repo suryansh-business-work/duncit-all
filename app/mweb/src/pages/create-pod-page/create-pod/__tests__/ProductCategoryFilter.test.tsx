@@ -52,6 +52,7 @@ function Harness({ products }: Readonly<{ products: CreatePodProduct[] }>) {
       showProducts
       preview={preview}
       spots={{ min: 0, max: 10000, slidable: false }}
+      venueNotice="NONE"
     />
   );
 }

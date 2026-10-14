@@ -17,6 +17,7 @@ export const VENUE_SLOT_REQUESTS = gql`
       host_name
       host_email
       host_phone
+      pod_is_free
     }
   }
 `;
@@ -55,4 +56,7 @@ export interface SlotRequestRow {
   host_name: string;
   host_email: string;
   host_phone: string;
+  /** A FREE pod: the host settles the venue directly, so price is 0 and the
+   * card shows the free-pod notice instead of it. */
+  pod_is_free: boolean;
 }

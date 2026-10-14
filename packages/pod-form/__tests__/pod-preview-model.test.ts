@@ -18,7 +18,7 @@ const values = (over: Partial<PodFormValues> = {}): PodFormValues => ({
   pod_description: 'Doubles at Court 2.',
   no_of_spots: 8,
   pod_amount: 250,
-  pod_type: 'NATIVE_PAID',
+  pod_type: 'PAID',
   ...over,
 });
 
@@ -85,11 +85,31 @@ describe('buildPodPreview', () => {
     expect(buildPodPreview(values({ pod_amount: 250 }), data()).priceText).toContain('250');
   });
 
+  it('states payment terms for a paid pod only — a free pod has none', () => {
+    expect(buildPodPreview(values({ payment_terms: ' Pay at the door. ', pod_amount: 250 }), data()).paymentTerms).toBe('Pay at the door.');
+    expect(
+      buildPodPreview(values({ pod_type: 'FREE', pod_amount: 0, payment_terms: 'Pay at the door.' }), data()).paymentTerms,
+    ).toBe('');
+  });
+
   it('says free rather than a zero price when the pod type is free', () => {
-    const model = buildPodPreview(values({ pod_type: 'NATIVE_FREE', pod_amount: 0 }), data());
+    const model = buildPodPreview(values({ pod_type: 'FREE', pod_amount: 0 }), data());
 
     expect(model.isFree).toBe(true);
     expect(model.priceText.toLowerCase()).toContain('free');
+  });
+
+  it('shows a free PHYSICAL pod as Free at its venue, never a price', () => {
+    const model = buildPodPreview(
+      values({ pod_mode: 'PHYSICAL', venue_id: 'venue-1', pod_type: 'FREE', pod_amount: 0, ticket_discount_enabled: true }),
+      data(),
+    );
+
+    expect(model.isVirtual).toBe(false);
+    expect(model.isFree).toBe(true);
+    expect(model.priceText).toBe('Free');
+    expect(model.placeText).toContain('Indiranagar Courts');
+    expect(model.ticketDiscountTiers).toEqual([]);
   });
 
   it('counts the spots, and survives a field that is still empty text', () => {
@@ -239,7 +259,7 @@ describe('buildPodPreview - the multi-ticket offer', () => {
   });
 
   it('offers nothing on a free pod, whatever tiers the hidden section still holds', () => {
-    const model = buildPodPreview(discounted({ pod_type: 'NATIVE_FREE', pod_amount: 0 }), data());
+    const model = buildPodPreview(discounted({ pod_type: 'FREE', pod_amount: 0 }), data());
 
     expect(model.ticketDiscountTiers).toEqual([]);
   });

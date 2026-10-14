@@ -13,7 +13,7 @@ import { LocationModel } from '@modules/platform/location/location.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { venueService } from '@modules/venues/venue/venue.service';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
-import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { notifyFreeSlotBooked, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { transferPartnerRequestHold } from '@modules/venues/venueSlot/venueSlot.partnerHold';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
@@ -21,6 +21,25 @@ import { sendVenueSlotRequestEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import { appDate, appDateTime, appTime } from '@utils/app-time';
+import { emailTranslationVars, recipientLocale } from '@services/email/email-i18n';
+import { isFreePod } from './pod.model';
+
+/** The localized key of the notice a venue gets with a FREE pod's request. */
+const FREE_POD_NOTICE_KEY = 't:email.venueSlotRequest.freePodNotice';
+
+/**
+ * What a venue is told when a FREE pod requests its slot: the platform pays it
+ * nothing, so the host will call about the charges — and the slot should not be
+ * confirmed before they have. '' for a paid pod, so no paid request changes.
+ * Server-first localization: the stored translation wins over the bundle.
+ */
+export async function freePodVenueNotice(
+  pod: { pod_type?: string | null },
+  locale?: string | null
+): Promise<string> {
+  if (!isFreePod(pod)) return '';
+  return (await emailTranslationVars(locale))[FREE_POD_NOTICE_KEY] ?? '';
+}
 
 /**
  * Loads the venue the caller owns for this pod. The pod must actually sit at an
@@ -49,9 +68,10 @@ export async function notifyVenueSlotRequested(pod: any, slot: any) {
       '@modules/engagement/notification/notification.service'
     );
     const when = appDateTime(slot.start_at);
+    const notice = await freePodVenueNotice(pod);
     await notificationService.create({
       title: 'New slot booking request',
-      body: `"${pod.pod_title}" requested your venue slot on ${when}. Review it in the Partners portal.`,
+      body: `"${pod.pod_title}" requested your venue slot on ${when}. Review it in the Partners portal.${notice ? ` ${notice}` : ''}`,
       scope: 'USER',
       target_user_ids: [String(slot.owner_user_id)],
       silent: false,
@@ -99,6 +119,15 @@ export async function emailVenueSlotRequested(pod: any, slot: any) {
     // decide anything — and the venue owner lands back on it after logging in.
     const decisionUrl = `${trimTrailingSlash(partnersUrl)}/venues/requests/${String(slot._id)}`;
     const reviewUrl = `${trimTrailingSlash(partnersUrl)}/venues/requests`;
+    // A free pod promises the venue no earnings. The stored template's closing
+    // line says the portal shows "what this booking earns you", so for a free
+    // pod that line is replaced — through the caller-vars-win rule of sendEmail,
+    // no template edit — by the notice. `free_pod_notice` is passed too, so a
+    // Communications Portal edit can place it more prominently.
+    const notice = isFreePod(pod) ? await freePodVenueNotice(pod, await recipientLocale(to)) : '';
+    const freeVars = notice
+      ? { extra_vars: { free_pod_notice: notice, 't:email.venueSlotRequest.earningsNote': notice } }
+      : {};
     await sendVenueSlotRequestEmail({
       to,
       owner_name: ownerName,
@@ -109,6 +138,7 @@ export async function emailVenueSlotRequested(pod: any, slot: any) {
       review_url: reviewUrl,
       approve_url: `${decisionUrl}?action=approve`,
       decline_url: `${decisionUrl}?action=decline`,
+      ...freeVars,
     });
     await whatsappService.send({
       event: 'VENUE_SLOT_REQUESTED',
@@ -357,14 +387,43 @@ export async function resolveSlotForCreate(
     });
   }
   // Booking another partner's venue holds the slot until that venue
-  // approves; booking your own venue confirms instantly.
-  const needsVenueApproval = !(input.pod_hosts_id ?? [])
-    .map(String)
-    .includes(String(slotDoc.owner_user_id));
+  // approves; booking your own venue confirms instantly — and so does a FREE
+  // pod on a ₹0 slot: the venue asked nothing for it and the pod pays nothing.
+  const needsVenueApproval =
+    !isOwnSlot(input.pod_hosts_id, slotDoc) && !isFreeSlotForFreePod(input, slotDoc);
   input.venue_id = String(slotDoc.venue_id);
   input.pod_date_time = slotDoc.start_at.toISOString();
   input.pod_end_date_time = slotDoc.end_at.toISOString();
   return { slotDoc, needsVenueApproval };
+}
+
+/** The host books a slot at a venue they own. */
+const isOwnSlot = (hostIds: unknown[] | null | undefined, slot: { owner_user_id?: unknown }) =>
+  (hostIds ?? []).map(String).includes(String(slot.owner_user_id));
+
+/**
+ * A FREE pod on a slot priced ₹0 books instantly, at any partner's venue. Gated
+ * on both halves: a paid pod on a ₹0 slot, and a free pod on a priced slot,
+ * still go to the venue as a request exactly as before.
+ */
+export const isFreeSlotForFreePod = (
+  pod: { pod_type?: string | null },
+  slot: { price?: number | null }
+): boolean => isFreePod(pod) && (Number(slot.price) || 0) === 0;
+
+/**
+ * After a slot was BOOKED for a pod without a request: a free pod on a
+ * partner's ₹0 slot tells that venue (see notifyFreeSlotBooked). An own-venue
+ * booking tells nobody — the owner is the host — so nothing changes there.
+ */
+export function announceFreeSlotBooking(
+  doc: Parameters<typeof notifyFreeSlotBooked>[0] & { pod_type?: string | null },
+  slotDoc: Parameters<typeof notifyFreeSlotBooked>[1]
+) {
+  if (!isFreeSlotForFreePod(doc, slotDoc) || isOwnSlot(doc.pod_hosts_id, slotDoc)) return;
+  notifyFreeSlotBooked(doc, slotDoc).catch((error) =>
+    logs.server.error('pods', 'notifyFreeSlotBooked', { error, pod_id: String(doc._id) })
+  );
 }
 
 /** An Auto Pod's venue approved when it accepted the offer; every other pod
@@ -439,7 +498,10 @@ export async function bookOrHoldSlotForPod(
     throw e;
   }
 
-  if (!needsVenueApproval) return;
+  if (!needsVenueApproval) {
+    announceFreeSlotBooking(doc, slotDoc);
+    return;
+  }
   // Fire-and-forget: never block the publish response, never fail the pod.
   notifyVenueSlotRequested(doc, slotDoc).catch((error) =>
     logs.server.error('pods', 'notifyVenueSlotRequested', { error, pod_id: String(doc._id) })

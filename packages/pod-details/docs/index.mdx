@@ -81,6 +81,10 @@ it in two places, and each reads a different source:
 | Payments → **Multi-ticket discount** (hidden column) | `payment.ticket_discount_amount` + `ticket_discount_pct` (frozen) | What that booking **actually got** at checkout. Changing the tiers later never changes it. Shows `₹99.80 · 20%`, or `—` when no tier applied. |
 | Finance → **Multi-ticket discounts given** | `podFinanceBreakdown.ticket_discount_total` | The total of those frozen amounts across the pod's successful payments. Shown only when above 0, because it explains why **Collected total** is below face value. |
 
+A FREE pod (`podFinanceBreakdown.is_free`) moves no platform money — its host settles the
+venue directly — so the Finance card shows the booking count, a **Free pod** chip and one note,
+and no collected total, waterfall or payout note.
+
 ```graphql
 pod(pod_doc_id: $id, include_deleted: true) {
   pod_amount

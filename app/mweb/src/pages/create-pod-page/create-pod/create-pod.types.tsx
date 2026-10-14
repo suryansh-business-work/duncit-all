@@ -96,7 +96,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   pod_info: '',
   pod_date_time: null,
   pod_end_date_time: null,
-  // Default mode is PHYSICAL, and physical pods can only be PAID.
+  // PAID by default — a host chooses Free on Step 4, for either mode.
   pod_type: 'PAID',
   pod_amount: null,
   no_of_spots: 0,

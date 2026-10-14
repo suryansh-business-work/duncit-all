@@ -1,4 +1,7 @@
+import type { usePodHistoryCancelSpot } from '@/hooks/usePodHistory';
+
 import { BackoutConfirmDialog } from './BackoutConfirmDialog';
+import { CancelSpotDialog } from './CancelSpotDialog';
 import { RejoinConfirmDialog } from './RejoinConfirmDialog';
 
 export interface PodHistoryDialogsProps {
@@ -13,6 +16,11 @@ export interface PodHistoryDialogsProps {
   onConfirmBackout: (seats?: number) => void;
   onConfirmRejoin: () => void;
   onViewBackoutTerms: () => void;
+  /** A free pod's "Cancel Spot" confirm — absent where the screen offers none. */
+  cancelSpot?: Pick<
+    ReturnType<typeof usePodHistoryCancelSpot>,
+    'open' | 'busy' | 'setOpen' | 'confirm'
+  >;
 }
 
 /** The Backout and Rejoin confirmations a Pod History booking can raise, kept
@@ -28,6 +36,7 @@ export function PodHistoryDialogs({
   onConfirmBackout,
   onConfirmRejoin,
   onViewBackoutTerms,
+  cancelSpot,
 }: Readonly<PodHistoryDialogsProps>) {
   return (
     <>
@@ -39,6 +48,14 @@ export function PodHistoryDialogs({
         mySeats={mySeats}
         onViewTerms={onViewBackoutTerms}
       />
+      {cancelSpot ? (
+        <CancelSpotDialog
+          open={cancelSpot.open}
+          busy={cancelSpot.busy}
+          onClose={() => cancelSpot.setOpen(false)}
+          onConfirm={cancelSpot.confirm}
+        />
+      ) : null}
       <RejoinConfirmDialog
         open={rejoinOpen}
         busy={rejoining}

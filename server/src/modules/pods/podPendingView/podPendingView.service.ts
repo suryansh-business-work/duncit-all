@@ -102,7 +102,10 @@ async function expectedEarnings(doc: IPod): Promise<number> {
     doc.pod_amount ?? 0,
     doc.no_of_spots ?? 0,
     doc.venue_id ? String(doc.venue_id) : null,
-    slot?.price ?? null
+    slot?.price ?? null,
+    // A free pod earns its host nothing on the platform — never a negative
+    // figure off a slot price the host settles with the venue directly.
+    doc.pod_type
   );
   return projection.waterfall.host_receives;
 }

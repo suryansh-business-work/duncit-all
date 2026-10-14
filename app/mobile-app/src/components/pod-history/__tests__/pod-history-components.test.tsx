@@ -10,6 +10,7 @@ import {
   RejoinConfirmDialog,
   ReplacementNotice,
 } from '@/components/pod-history';
+import { CancelSpotDialog } from '@/components/pod-history/CancelSpotDialog';
 import { usePolicy } from '@/hooks/usePolicies';
 import { renderWithProviders } from '@/utils/test-utils';
 import type { PodMembership } from '@/utils/pod-history';
@@ -334,6 +335,58 @@ describe('PodHistoryActions', () => {
 });
 
 describe('PodHistoryDetails', () => {
+  describe('free pod', () => {
+    const freePod = { ...futurePod, pod_type: 'FREE', pod_amount: 0 };
+
+    it('offers Cancel Spot instead of Backout and fires it', () => {
+      const h = handlers();
+      const onCancelSpot = jest.fn();
+      renderWithProviders(
+        <PodHistoryDetails
+          item={membership({ pod: freePod, payment_id: null })}
+          backingOut={false}
+          rejoining={false}
+          invoiceBusy={false}
+          ticketBusy={false}
+          notice={null}
+          deductionPct={10}
+          onCancelSpot={onCancelSpot}
+          {...h}
+        />,
+      );
+      expect(screen.queryByTestId('ph-backout')).toBeNull();
+      fireEvent.press(screen.getByTestId('ph-cancel-spot'));
+      expect(onCancelSpot).toHaveBeenCalledTimes(1);
+      expect(h.onBackout).not.toHaveBeenCalled();
+    });
+
+    it('calls a cancelled spot what it is, offers Rejoin and promises no replacement', () => {
+      renderWithProviders(
+        <PodHistoryDetails
+          item={membership({
+            status: 'BACKED_OUT',
+            pod: freePod,
+            participation: baseParticipation({ spot_cancelled_at: '2026-06-02T10:00:00Z' }),
+          })}
+          backingOut={false}
+          rejoining={false}
+          invoiceBusy={false}
+          ticketBusy={false}
+          notice={null}
+          deductionPct={10}
+          onCancelSpot={jest.fn()}
+          {...handlers()}
+        />,
+      );
+      expect(screen.getByText('Spot cancelled')).toBeOnTheScreen();
+      expect(screen.getByText('Spot Cancelled')).toBeOnTheScreen();
+      expect(screen.getByTestId('ph-rejoin')).toBeOnTheScreen();
+      expect(screen.queryByTestId('ph-cancel-spot')).toBeNull();
+      expect(screen.queryByTestId('ph-refund')).toBeNull();
+      expect(screen.queryByText(/finding your replacement/i)).toBeNull();
+    });
+  });
+
   it('renders joined chips, price and fires terms links', () => {
     const h = handlers();
     renderWithProviders(
@@ -397,7 +450,6 @@ describe('PodHistoryDetails', () => {
           pod: {
             ...futurePod,
             pod_images_and_videos: [{ url: 'http://i', type: 'IMAGE' }],
-            pod_type: 'FREE',
           },
         })}
         backingOut={false}
@@ -410,7 +462,8 @@ describe('PodHistoryDetails', () => {
       />,
     );
     expect(screen.getByText('Backed out')).toBeOnTheScreen();
-    expect(screen.getByText('Free pod')).toBeOnTheScreen();
+    // A refund is a paid pod's story — a free pod never has one.
+    expect(screen.getByText('Paid pod ₹500')).toBeOnTheScreen();
     expect(screen.getByTestId('ph-refund-pending')).toBeOnTheScreen();
     expect(screen.getByTestId('ph-notice')).toHaveTextContent('Refund status: Criteria pending');
   });
@@ -631,5 +684,36 @@ describe('RejoinConfirmDialog', () => {
     fireEvent.press(screen.getByTestId('rejoin-close'));
     expect(h.onConfirm).not.toHaveBeenCalled();
     expect(h.onClose).not.toHaveBeenCalled();
+  });
+});
+
+describe('CancelSpotDialog', () => {
+  it('says the spot is released and can be joined again, and confirms or keeps it', () => {
+    const onClose = jest.fn();
+    const onConfirm = jest.fn();
+    renderWithProviders(
+      <CancelSpotDialog open busy={false} onClose={onClose} onConfirm={onConfirm} />,
+    );
+    expect(screen.getByText('Cancel your spot?')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Your spot will be released for someone else. This pod is free, so you can join again any time while it is open.',
+      ),
+    ).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('cancel-spot-keep'));
+    fireEvent.press(screen.getByTestId('cancel-spot-confirm'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks both actions and says it is cancelling while busy', () => {
+    const onClose = jest.fn();
+    const onConfirm = jest.fn();
+    renderWithProviders(<CancelSpotDialog open busy onClose={onClose} onConfirm={onConfirm} />);
+    expect(screen.getByText('Cancelling…')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('cancel-spot-keep'));
+    fireEvent.press(screen.getByTestId('cancel-spot-confirm'));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onConfirm).not.toHaveBeenCalled();
   });
 });

@@ -138,7 +138,8 @@ function refineSchedule(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tr
   }
 }
 
-/** Creation only accepts the new FREE/PAID pair, and FREE is virtual-only. */
+/** Creation only accepts the new FREE/PAID pair — either one for a physical or
+ * a virtual pod. */
 function refinePodType(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.pod_type !== 'FREE' && values.pod_type !== 'PAID') {
     ctx.addIssue({
@@ -146,18 +147,12 @@ function refinePodType(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
       path: ['pod_type'],
       message: t('mweb.createPod.validation.podTypeInvalid'),
     });
-  } else if (values.pod_mode === 'PHYSICAL' && values.pod_type === 'FREE') {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['pod_type'],
-      message: t('mweb.createPod.validation.physicalMustBePaid'),
-    });
   }
 }
 
 /** The ticket price is blank until the host types one, so a PAID pod can never
- * be published at ₹0 by default — only a FREE pod (whose field is locked to 0)
- * may carry no price. mWeb twin (rule 27). */
+ * be published at ₹0 by default — only a FREE pod (which shows no price field
+ * and always carries 0) may have no price. mWeb twin (rule 27). */
 function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   const amount = values.pod_amount_text.trim();
   if (values.pod_type === 'FREE') {
@@ -439,7 +434,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
       type: isVideoUrl(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
     reel_url: values.reel_url || null,
-    payment_terms: values.payment_terms || null,
+    // A free pod has no money terms: a value typed while it was paid is dropped.
+    payment_terms: values.pod_type === 'FREE' ? null : values.payment_terms || null,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: values.place_charges,
@@ -550,10 +546,9 @@ export function serializeDraft(values: CreatePodFormValues, step: number) {
   };
 }
 
-/** Coerces any stored pod type onto the FREE/PAID pair (physical pods are
- * always PAID — FREE is virtual-only). */
-export function normalizePodType(type: string, mode: string): string {
-  if (mode === 'PHYSICAL') return 'PAID';
+/** Coerces any stored pod type onto the FREE/PAID pair — a physical pod may be
+ * free too, so the mode no longer decides it. */
+export function normalizePodType(type: string): string {
   return type === 'FREE' ? 'FREE' : 'PAID';
 }
 
@@ -565,7 +560,7 @@ export function hydrateDraft(payload: string): CreatePodFormValues {
       ...(JSON.parse(payload) as Partial<CreatePodFormValues>),
     };
     // Old drafts may carry retired pod types — coerce onto FREE/PAID.
-    values.pod_type = normalizePodType(values.pod_type, values.pod_mode);
+    values.pod_type = normalizePodType(values.pod_type);
     // …and the discount tiers may be missing or half-typed.
     return { ...values, ...hydrateTicketDiscount(values) };
   } catch {

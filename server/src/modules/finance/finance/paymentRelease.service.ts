@@ -3,7 +3,7 @@ import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import { PaymentReleaseModel, type IPaymentRelease, type PaymentReleaseKind } from './paymentRelease.model';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
@@ -543,6 +543,38 @@ async function sendProductInvoices(doc: IPaymentRelease) {
   }
 }
 
+/**
+ * The seller invoices of a FREE pod.
+ *
+ * On a paid pod they ride the host payment's approval (sendProductInvoices). A
+ * free pod completes with no host payment, so the first approved ECOMM_PAYMENT
+ * on it carries them instead — otherwise its sellers would be paid with no
+ * invoice. A legacy free pod that still has a host release keeps the old path,
+ * and a second approved seller release finds the first and sends nothing.
+ * Best-effort, like the paid path.
+ */
+async function sendFreePodProductInvoices(doc: IPaymentRelease) {
+  try {
+    const pod = await PodModel.findById(doc.pod_id)
+      .select('pod_type pod_title product_requests')
+      .setOptions({ includeDeleted: true });
+    if (!pod || !isFreePod(pod) || !(pod as any).product_requests?.length) return;
+    const carried = await PaymentReleaseModel.exists({
+      pod_id: doc.pod_id,
+      _id: { $ne: doc._id },
+      $or: [
+        { kind: 'HOST_PAYMENT', status: { $in: ['PENDING', 'APPROVED'] } },
+        { kind: 'ECOMM_PAYMENT', status: 'APPROVED' },
+      ],
+    });
+    if (carried) return;
+    const { sendProductInvoicesForPod } = await import('./productInvoice.service');
+    await sendProductInvoicesForPod(pod, await getFinanceSettings());
+  } catch (e) {
+    logs.server.warn('paymentRelease', 'sendFreePodProductInvoices', { error: e, msg: 'product invoices failed' });
+  }
+}
+
 // Approval is the moment the pod is officially completed (first release wins).
 // When this approval is the one that stamps it, the unsold stock is released
 // and the monitored trail gets its COMPLETE entry.
@@ -625,6 +657,7 @@ async function applyApproval(doc: IPaymentRelease) {
         reason: `Product sales payout for ${doc.pod_title}`,
       });
     }
+    await sendFreePodProductInvoices(doc);
     return;
   }
 
@@ -781,9 +814,32 @@ function venueBillFor(pod: CompletingPod, input: CompleteInput) {
  * strand the pod uncompleted and leave the venue, the club admin and the
  * product sellers unpaid for a deadline only the host missed. */
 function assertSettlementCompletable(
-  settlement: { has_venue: boolean; venue_slot_linked: boolean; complete_expired: boolean; booked_seats: number; attended_seats: number },
+  settlement: {
+    has_venue: boolean;
+    venue_slot_linked: boolean;
+    complete_expired: boolean;
+    booked_seats: number;
+    attended_seats: number;
+    is_free?: boolean;
+  },
   billAmount: number,
 ) {
+  // A free pod settles nothing (has_venue is false), so the bill rule never
+  // reaches it. The attendance rule below DOES still apply to it, on purpose:
+  // completing a pod locks its roster for everybody, so completing a free pod
+  // with nobody scanned would permanently cost every guest their attendance —
+  // the "Visited" status, the rating link, the feedback reward. That is not a
+  // money rule, so it stays. It can never strand the pod: a pod nobody booked
+  // has nothing to scan, and an EXPIRED pod is exempt, exactly as a paid one.
+  if (settlement.is_free) {
+    if (!settlement.complete_expired && settlement.booked_seats > 0 && settlement.attended_seats === 0) {
+      throw new GraphQLError(
+        'No attendance has been recorded for this pod. Scan each guest’s ticket before completing it.',
+        { extensions: { code: 'ATTENDANCE_REQUIRED' } }
+      );
+    }
+    return;
+  }
   if (settlement.has_venue && !settlement.venue_slot_linked && billAmount <= 0) {
     throw new GraphQLError('Enter the venue bill amount — this pod has no booked slot price', {
       extensions: { code: 'BAD_USER_INPUT' },
@@ -795,6 +851,45 @@ function assertSettlementCompletable(
       { extensions: { code: 'ATTENDANCE_REQUIRED' } }
     );
   }
+}
+
+/** A free pod pays nobody through the platform: its host settles the venue
+ * directly. Used by the manual-release path, the one way a request could still
+ * be raised against one by hand. */
+const freePodNoPayout = () =>
+  new GraphQLError(
+    'This is a free pod — the host settles the venue directly, so there is no platform payout to release.',
+    { extensions: { code: 'FREE_POD_NO_PAYOUT' } }
+  );
+
+/**
+ * Completing a FREE pod: the pod is completed — `completed_at`, the unsold
+ * stock back to its brand, the COMPLETE audit entry, the leaderboard points —
+ * and NOTHING is asked of Finance for it: no host, venue or club-admin release
+ * (no ₹0 rows either), no venue bill, no wallet credit. Product sellers who
+ * sold on the pod are still owed their own sales and get their ECOMM releases.
+ *
+ * Idempotent: a free pod already completed answers CONFLICT, the same as a
+ * paid pod already submitted.
+ */
+async function completeFreePod(pod: any, input: any, actor: { id: string; isAdmin: boolean }) {
+  if (pod.completed_at) {
+    throw new GraphQLError('This pod has already been submitted for completion', {
+      extensions: { code: 'CONFLICT' },
+    });
+  }
+  const settlement = await computePodSettlement(String(pod._id), 0, input.host_user_id ?? null, null);
+  assertSettlementCompletable(settlement, 0);
+  const releases = await ecommReleases(pod, actor.id, clean(input.notes), batchId());
+  await markPodSubmitted(pod, actor.id);
+  const { leaderboardService } = await import('@modules/engagement/leaderboard/leaderboard.service');
+  await leaderboardService.awardForCompletedPod(pod, input.host_user_id ?? null);
+  logs.server.info('paymentRelease', 'completeFreePod', {
+    pod_id: String(pod._id),
+    seller_releases: releases.length,
+    msg: 'free pod completed — no platform payout',
+  });
+  return { settlement, releases: releases.map(toPub) };
 }
 
 export const paymentReleaseService = {
@@ -828,6 +923,7 @@ export const paymentReleaseService = {
     }
     const pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    if (isFreePod(pod)) throw freePodNoPayout();
     const beneficiary = await beneficiaryFor(kind, pod, input.host_user_id);
     const evidence = (input.evidence_media ?? [])
       .map((media: any) => clean(media?.url || media))
@@ -892,6 +988,8 @@ export const paymentReleaseService = {
     assertMayComplete(pod, actor);
 
     await assertNotSubmitted(pod);
+
+    if (isFreePod(pod)) return completeFreePod(pod, input, actor);
 
     const evidence = podEvidence(input, pod);
 

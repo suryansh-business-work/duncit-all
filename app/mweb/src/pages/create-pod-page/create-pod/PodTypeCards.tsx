@@ -11,13 +11,12 @@ interface CardProps {
   caption: string;
   icon: ReactNode;
   selected: boolean;
-  disabled?: boolean;
   onClick: () => void;
 }
 
 /** A selection tile: green with white ink when picked, the soft fill when not
  * (native twin: TypeCard in PodTypeCards). */
-function TypeCard({ testId, label, caption, icon, selected, disabled, onClick }: Readonly<CardProps>) {
+function TypeCard({ testId, label, caption, icon, selected, onClick }: Readonly<CardProps>) {
   const ink = selected ? 'primary.contrastText' : 'text.primary';
   return (
     <Card
@@ -28,10 +27,9 @@ function TypeCard({ testId, label, caption, icon, selected, disabled, onClick }:
         border: 0,
         bgcolor: selected ? 'primary.main' : 'action.hover',
         color: ink,
-        opacity: disabled ? 0.5 : 1,
       }}
     >
-      <CardActionArea onClick={onClick} disabled={disabled} aria-label={label} aria-pressed={selected} sx={{ p: 2, display: 'grid', placeItems: 'center', gap: 0.5, textAlign: 'center', borderRadius: '16px' }}>
+      <CardActionArea onClick={onClick} aria-label={label} aria-pressed={selected} sx={{ p: 2, display: 'grid', placeItems: 'center', gap: 0.5, textAlign: 'center', borderRadius: '16px' }}>
         <Box sx={{ display: 'grid', placeItems: 'center' }}>{icon}</Box>
         <Typography sx={{ fontSize: '1rem', fontWeight: 600, color: ink }}>{label}</Typography>
         <Typography variant="caption" sx={{ color: selected ? 'primary.contrastText' : 'text.secondary' }}>
@@ -42,16 +40,12 @@ function TypeCard({ testId, label, caption, icon, selected, disabled, onClick }:
   );
 }
 
-/** Free / Paid selector cards for Step 4 — the only two pod types. Physical
- * pods can only be Paid, so the Free card is disabled for them. */
+/** Free / Paid selector cards for Step 4 — the only two pod types, both open
+ * to a physical and a virtual pod. Native twin (rule 27). */
 export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
   const { watch, setValue } = form;
   const { t } = useTranslation();
   const isFree = isFreePodType(watch('pod_type'));
-  const isPhysical = watch('pod_mode') === 'PHYSICAL';
-  const freeCaption = isPhysical
-    ? t('mweb.createPod.physicalPaidCaption')
-    : t('mweb.createPod.freeCaption');
 
   const choose = (free: boolean) => {
     if (free === isFree) return;
@@ -71,7 +65,7 @@ export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>
 
   return (
     <Box data-testid="create-pod-pod-type-cards" sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-      <TypeCard testId="create-pod-free" label={t('mweb.createPod.podTypeFree')} caption={freeCaption} icon={<VolunteerActivismIcon />} selected={isFree} disabled={isPhysical} onClick={() => choose(true)} />
+      <TypeCard testId="create-pod-free" label={t('mweb.createPod.podTypeFree')} caption={t('mweb.createPod.freeCaption')} icon={<VolunteerActivismIcon />} selected={isFree} onClick={() => choose(true)} />
       <TypeCard testId="create-pod-paid" label={t('mweb.createPod.podTypePaid')} caption={t('mweb.createPod.paidCaption')} icon={<PaymentsIcon />} selected={!isFree} onClick={() => choose(false)} />
     </Box>
   );

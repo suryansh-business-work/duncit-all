@@ -32,6 +32,8 @@ export interface PodFormProps {
   slotLabels: PodFormData['slotLabels'];
   /** Document id of the pod being edited — drives the live-pod spot range. */
   editingPodDocId?: string;
+  /** Venues the pod's host owns (see PodFormData.ownVenueIds). */
+  ownVenueIds?: PodFormData['ownVenueIds'];
   busy?: boolean;
   error?: string | null;
   onCancel: () => void;

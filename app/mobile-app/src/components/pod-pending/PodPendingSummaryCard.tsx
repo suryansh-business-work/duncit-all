@@ -1,4 +1,5 @@
 import { Text } from 'tamagui';
+import { isFreePod } from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
 import { SurfaceCard } from '@/components/SurfaceCard';
@@ -28,7 +29,10 @@ export function PodPendingSummaryCard({ view }: Readonly<{ view: PodPendingView 
     {
       icon: 'payments',
       label: t('mweb.podPending.expectedEarnings'),
-      value: formatMoney(view.currency_symbol, view.expected_earnings),
+      // A free pod earns nothing — it reads as free, never as a zero or a loss.
+      value: isFreePod(pod.pod_type)
+        ? t('mweb.hostShare.freePod')
+        : formatMoney(view.currency_symbol, view.expected_earnings),
       testID: 'pod-pending-earnings',
     },
   ];

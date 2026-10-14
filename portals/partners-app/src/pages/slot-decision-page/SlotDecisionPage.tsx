@@ -6,6 +6,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { DuncitButton } from '@duncit/buttons';
 import { APPROVE_SLOT_REQUEST, DECLINE_SLOT_REQUEST } from '../slot-requests-page/queries';
+import FreePodNotice from '../slot-requests-page/FreePodNotice';
 import { VENUE_SLOT_DECISION, type SlotDecisionRow } from './queries';
 import DecisionHeader from './DecisionHeader';
 import DeclineForm from './DeclineForm';
@@ -97,7 +98,9 @@ export default function SlotDecisionPage() {
       <Card variant="outlined" sx={{ p: { xs: 2, sm: 2.5 } }}>
         <SlotSummary request={request} />
         <Divider sx={{ my: 2 }} />
-        <EarningsBreakdown request={request} lost={declined} />
+        {/* A free pod's charges are settled with the host off the platform —
+         * every figure would be 0, so the owner reads the notice instead. */}
+        {request.pod_is_free ? <FreePodNotice /> : <EarningsBreakdown request={request} lost={declined} />}
 
         {declined && request.decline_reason && (
           <Alert severity="info" sx={{ mt: 2 }}>

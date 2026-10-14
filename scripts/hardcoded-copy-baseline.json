@@ -662,7 +662,7 @@
   "portals/partners-app/src/pages/slot-decision-page/DecisionHeader.tsx": 2,
   "portals/partners-app/src/pages/slot-decision-page/DeclineForm.tsx": 2,
   "portals/partners-app/src/pages/slot-decision-page/EarningsBreakdown.tsx": 1,
-  "portals/partners-app/src/pages/slot-requests-page/SlotRequestCard.tsx": 2,
+  "portals/partners-app/src/pages/slot-requests-page/SlotRequestCard.tsx": 1,
   "portals/partners-app/src/pages/slot-requests-page/SlotRequestsPage.tsx": 3,
   "portals/partners-app/src/pages/venue-dashboard-page/VenueDashboardPage.tsx": 3,
   "portals/partners-app/src/pages/venue-dashboard-page/VenueStatCards.tsx": 6,

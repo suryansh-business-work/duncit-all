@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -106,6 +106,9 @@ export interface PodSettlement {
    * computed split — this is the amount the release carries, so a preview and a
    * completion can never quote different money. */
   host_payout_amount: number;
+  /** True for a free pod: nothing is settled on the platform, every money
+   * figure above is 0, and clients hide the statement instead of printing it. */
+  is_free: boolean;
 }
 
 /** Engine version stamped on new settlement snapshots — v2 = venue slot price
@@ -364,12 +367,18 @@ export interface VenueCharge {
  * can never change a venue's payout with a number nobody can check.
  */
 export async function venueChargeForPod(
-  pod: { venue_id?: Types.ObjectId | null; venue_slot_id?: Types.ObjectId | null },
+  pod: {
+    venue_id?: Types.ObjectId | null;
+    venue_slot_id?: Types.ObjectId | null;
+    pod_type?: string | null;
+  },
   venueBill: number,
   includeSlotPrice?: boolean | null
 ): Promise<VenueCharge> {
   const none = { slot_price: 0, slot_linked: false, bill: 0, slot_included: false, amount: 0 };
-  if (!pod.venue_id) return none;
+  // A free pod's venue is paid by the host directly, off the platform — the
+  // platform owes it nothing, whatever the slot is priced at or a bill says.
+  if (!pod.venue_id || isFreePod(pod)) return none;
   const slot = pod.venue_slot_id
     ? await VenueSlotModel.findById(pod.venue_slot_id).select('price')
     : null;
@@ -387,10 +396,28 @@ export async function venueChargeForPod(
  * slot price (a bill passed here is evidence only, so a slot's price wins).
  * One rule, {@link venueChargeForPod}'s. */
 export async function venueAmountForPod(
-  pod: { venue_id?: Types.ObjectId | null; venue_slot_id?: Types.ObjectId | null },
+  pod: {
+    venue_id?: Types.ObjectId | null;
+    venue_slot_id?: Types.ObjectId | null;
+    pod_type?: string | null;
+  },
   venueBill: number
 ): Promise<number> {
   return (await venueChargeForPod(pod, venueBill)).amount;
+}
+
+const NO_RATES: BreakdownRates = {
+  gst_percent: 0,
+  platform_fee_percent: 0,
+  host_commission_percent: 0,
+  venue_commission_percent: 0,
+  club_admin_percent: 0,
+};
+
+/** The waterfall a free pod reports: every line 0, no venue amount and no
+ * negative host figure — there is no platform money to split. */
+export function freePodWaterfall(): SettlementWaterfall {
+  return waterfallForAmount(0, 0, NO_RATES);
 }
 
 /** Paise engine output → rupee waterfall for GraphQL/persistence. */
@@ -488,7 +515,10 @@ export async function computePodSettlement(
   const basis = roster.attended_total;
   // The bill may legitimately exceed a small pod's collection (offline venue
   // costs) — it is never capped to what the pod took.
-  const hasVenue = !!pod.venue_id;
+  // A free pod settles nothing on the platform: no venue party (so no venue
+  // bill is asked for), an all-zero waterfall and a zero host payout.
+  const free = isFreePod(pod);
+  const hasVenue = !free && !!pod.venue_id;
   const rates = await resolveEffectiveRates({
     hostUserId: hostUserId ?? pod.pod_hosts_id?.[0] ?? null,
     venueId: hasVenue ? pod.venue_id : null,
@@ -496,17 +526,19 @@ export async function computePodSettlement(
   const charge = await venueChargeForPod(pod, venueBillAmount, includeSlotPrice);
   const venueBill = charge.bill;
   const venueAmount = charge.amount;
-  const waterfall = toWaterfall(
-    computePodFinanceBreakdown(toPaise(basis), Math.max(0, toPaise(venueAmount)), rates, {
-      // The venue is owed its BOOKED slot price whatever the pod took at the
-      // door — it held the room. Clamping it to the pool is what silently paid a
-      // venue less than the price it agreed, and settling on attendance only
-      // makes that pool smaller. Unclamped, a shortfall lands where it belongs:
-      // on the host's side, shown as a negative host amount rather than quietly
-      // taken off the venue.
-      clampVenueToPool: false,
-    })
-  );
+  const waterfall = free
+    ? freePodWaterfall()
+    : toWaterfall(
+        computePodFinanceBreakdown(toPaise(basis), Math.max(0, toPaise(venueAmount)), rates, {
+          // The venue is owed its BOOKED slot price whatever the pod took at the
+          // door — it held the room. Clamping it to the pool is what silently paid
+          // a venue less than the price it agreed, and settling on attendance only
+          // makes that pool smaller. Unclamped, a shortfall lands where it
+          // belongs: on the host's side, shown as a negative host amount rather
+          // than quietly taken off the venue.
+          clampVenueToPool: false,
+        })
+      );
 
   // Legacy party lines, derived from the waterfall so older consumers keep a
   // coherent statement: the host line carries the pod-level GST; the venue line
@@ -568,5 +600,6 @@ export async function computePodSettlement(
     // hours to settle it, and the seats they never marked are the reason the
     // number could not be trusted afterwards.
     host_payout_amount: expired ? 0 : Math.max(0, host.payout_amount),
+    is_free: free,
   };
 }

@@ -3,11 +3,18 @@ import { useEffect, useState } from 'react';
 const round2 = (n: number) => Math.round(n * 100) / 100;
 import { useMutation } from '@apollo/client/react';
 import { formatDateTime } from '../../utils/dateFormat';
-import { buildPodShareMessage, podMapLink, trackedPodShareLinks } from '@duncit/utils';
+import {
+  buildPodShareMessage,
+  cancelSpotErrorKey,
+  firstGraphQLError,
+  podMapLink,
+  trackedPodShareLinks,
+} from '@duncit/utils';
 import type { NavigateFunction } from 'react-router';
 import {
   BACKOUT,
   CANCEL_BACKOUT,
+  CANCEL_FREE_SPOT,
   INC_HITS,
   JOIN_FREE,
   REDEEM,
@@ -69,6 +76,7 @@ export function usePodDetailActions({
   const [joinFree, joinState] = useMutation<any>(JOIN_FREE);
   const [backout, backoutState] = useMutation<any>(BACKOUT);
   const [cancelBackout, cancelBackoutState] = useMutation<any>(CANCEL_BACKOUT);
+  const [cancelFreeSpot, cancelSpotState] = useMutation(CANCEL_FREE_SPOT);
   const [redeem] = useMutation<any>(REDEEM);
   const [toggleSavedPod] = useMutation<any>(TOGGLE_SAVED_POD_DETAIL);
   // Seats the booking will take. Owned here because BOTH the free join and the
@@ -77,6 +85,7 @@ export function usePodDetailActions({
   const [snack, setSnack] = useState<string | null>(null);
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [keepSpotOpen, setKeepSpotOpen] = useState(false);
+  const [cancelSpotOpen, setCancelSpotOpen] = useState(false);
   const [keepSpotError, setKeepSpotError] = useState<string | null>(null);
   const [confettiOpen, setConfettiOpen] = useState(false);
   const [savePending, setSavePending] = useState(false);
@@ -219,6 +228,22 @@ export function usePodDetailActions({
     }
   };
 
+  // "Cancel the spot" — a FREE pod's only way out. A refusal (checked in,
+  // pod started) is named by its code, and the page re-reads either way: the
+  // server decides against state this copy may no longer match.
+  const onConfirmCancelSpot = async () => {
+    if (!pod) return;
+    try {
+      await cancelFreeSpot({ variables: { id: pod.id } });
+      setSnack(t('mweb.podDetails.spotCancelledSnack'));
+    } catch (e: unknown) {
+      const code = firstGraphQLError(e)?.extensions?.code;
+      setSnack(t(cancelSpotErrorKey(typeof code === 'string' ? code : null)));
+    }
+    setCancelSpotOpen(false);
+    await refetch();
+  };
+
   const openKeepSpot = () => {
     setKeepSpotError(null);
     setKeepSpotOpen(true);
@@ -232,6 +257,10 @@ export function usePodDetailActions({
     cancelBackoutState,
     setKeepSpotOpen,
     openKeepSpot,
+    cancelSpotOpen,
+    setCancelSpotOpen,
+    cancelSpotState,
+    onConfirmCancelSpot,
     onConfirmKeepSpot,
     displaySaved: localSaved ?? saved,
     joinState,

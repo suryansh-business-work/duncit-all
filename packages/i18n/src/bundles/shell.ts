@@ -1589,6 +1589,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         'Your earnings are calculated only from the attendees you mark. If someone came but is never marked, their seat is left out of your payout.',
       earningsBodyVirtual:
         'This pod is online, so there is no door to scan at. A member is marked present the moment they open the meeting link from the pod page during the pod — anyone who never opens it is left out of your payout unless you mark them by hand.',
+      earningsTitleFree: 'Mark who came',
+      earningsBodyFree:
+        'This pod is free, so there is no payout. Marking attendance still records who came — it unlocks their Visited status, rating and feedback, and the pod can only be completed once at least one guest is marked present.',
       lockedCompletedTitle: 'Attendance is closed for this pod',
       lockedCompletedBody:
         'This pod is completed and its payout is already split, so attendance can no longer be changed. If somebody is missing, contact your Club Admin below.',
@@ -1740,6 +1743,14 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       title: 'Your share (credited to your wallet once Finance approves)',
       shortfall:
         "The venue's booked price is more than this pod took at the door. The venue is paid in full and your share is nil — it is never taken back from you.",
+      // A FREE pod moves no money on the platform: every money surface shows
+      // this label instead of figures (host projection, settlement, earnings).
+      freePod: 'Free pod',
+      freeNote:
+        'Nobody pays to join a free pod, so there is no payout. The host settles any venue charges directly with the venue.',
+      freeCompleted: 'Pod completed.',
+      freeCompleteHint:
+        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. It is a free pod, so completing it pays nothing out.',
     },
     // The venue's final bill at Complete Pod — @duncit/utils' venue-bill.ts.
     // `mweb.venueBill` must stay word-for-word identical: the same builder

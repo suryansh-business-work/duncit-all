@@ -105,6 +105,7 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
 
 export { isVenueShortfall, totalPodValue, usePodPricing } from './usePodPricing';
 export type { PodPricingInput, PodPricingState } from './usePodPricing';
+export { FreePodNote } from './FreePodNote';
 export { SuggestedPriceLink } from './SuggestedPriceLink';
 export { SuggestedPricesModal } from './SuggestedPricesModal';
 export { ZeroEarningsNotice } from './ZeroEarningsNotice';

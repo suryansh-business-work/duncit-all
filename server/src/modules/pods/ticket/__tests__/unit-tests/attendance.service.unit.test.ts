@@ -71,6 +71,7 @@ const pod = (over: Record<string, unknown> = {}) => ({
   _id: POD_ID,
   pod_title: 'Sunday Badminton',
   pod_hosts_id: [HOST_ID],
+  pod_type: 'PAID',
   // A pod that ended an hour ago, RELATIVE to now: attendance is measured
   // against the host's completion window, so a fixture pinned to a fixed date
   // silently ages into EXPIRED and every roster test with it.
@@ -271,6 +272,16 @@ describe('attendanceService.board', () => {
 
     expect(board.lock).toBe('COMPLETED');
     expect(board.can_mark).toBe(false);
+  });
+
+  it('carries the pod type, so a free pod is not told it is paid on who is marked', async () => {
+    arrangeBoard();
+    expect((await attendanceService.board(POD_ID, host)).pod_type).toBe('PAID');
+
+    arrangeBoard({ pod: pod({ pod_type: 'FREE', pod_mode: 'VIRTUAL' }) });
+    const free = await attendanceService.board(POD_ID, host);
+    expect(free.pod_type).toBe('FREE');
+    expect(free.pod_mode).toBe('VIRTUAL');
   });
 
   it('reads the phone off the NESTED path, because a virtual does not survive .lean()', async () => {

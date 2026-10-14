@@ -108,6 +108,8 @@ export default function PartnerPodsPage() {
             config={PARTNER_POD_CONFIG}
             clubs={clubs}
             venues={venues}
+            // `myVenues` is what this host owns, so every slot here books instantly.
+            ownVenueIds={venues.map((venue: { id: string }) => venue.id)}
             products={products}
             getClubVenueIds={getClubVenueIds}
             busy={createState.loading}

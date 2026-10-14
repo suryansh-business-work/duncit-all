@@ -5,7 +5,7 @@ import { DuncitButton } from '@duncit/buttons';
 import {
   canDirectMark,
   canScanTickets,
-  earningsBodyFor,
+  earningsNoticeFor,
   showsCompleteDeadline,
   splitAttendance,
   type PodAttendanceLabels,
@@ -89,8 +89,9 @@ export default function PodAttendanceView({
   const { marked, unmarked } = splitAttendance(board.rows);
   // Hoisted out of the JSX so the conditional sits at nesting 0 (Sonar S3358).
   const onMark = board.can_mark ? api.startMark : undefined;
-  // A virtual pod's door is the meeting link: the payout sentence and the scanner follow the kind.
-  const earningsBody = earningsBodyFor(board, labels);
+  // A virtual pod's door is the meeting link and a free pod has no payout: the
+  // note above the roster and the scanner follow the kind.
+  const earnings = earningsNoticeFor(board, labels);
   const showScan = canScanTickets(board);
   // The host's clock, while there is still one to beat. Hoisted for the same
   // reason as `onMark` — the conditional sits at nesting 0 (Sonar S3358). It
@@ -105,7 +106,7 @@ export default function PodAttendanceView({
   return (
     <Stack spacing={2} data-testid="pod-attendance-view">
       <AttendanceSummary board={board} labels={labels} />
-      {board.can_mark ? <EarningsNotice labels={labels} body={earningsBody} /> : <LockedNotice lock={board.lock} labels={labels} />}
+      {board.can_mark ? <EarningsNotice title={earnings.title} body={earnings.body} /> : <LockedNotice lock={board.lock} labels={labels} />}
       {showDirect && <DirectMarkCta label={labels.directCta} onOpen={api.openDirect} />}
       {deadlineAt && (
         <DeadlineNotice

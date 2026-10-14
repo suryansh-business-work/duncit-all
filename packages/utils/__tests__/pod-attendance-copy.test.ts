@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AttendanceMarkMethod, PodAttendanceLock } from '../src/pod-attendance';
 import {
   buildAttendanceLabels,
-  earningsBodyFor,
+  earningsNoticeFor,
   mwebAttendanceLabels,
   shellAttendanceLabels,
   type AttendanceTranslate,
@@ -51,7 +51,7 @@ const LOCKS: readonly PodAttendanceLock[] = ['OPEN', 'COMPLETED', 'CANCELLED', '
 const STATIC_PROPS = [
   'pageTitle', 'menuItem', 'markedHeading', 'unmarkedHeading', 'emptyRoster', 'allMarked',
   'markButton', 'marking', 'markedChip', 'notMarkedChip', 'scanCta', 'earningsTitle', 'earningsBody', 'earningsBodyVirtual',
-  'clubAdminTitle', 'clubAdminBody', 'clubAdminNone', 'contactEmail', 'contactPhone', 'contactWhatsapp',
+  'earningsTitleFree', 'earningsBodyFree', 'clubAdminTitle', 'clubAdminBody', 'clubAdminNone', 'contactEmail', 'contactPhone', 'contactWhatsapp',
   'retry', 'back', 'otpTitle', 'otpName', 'otpExtension', 'otpPhone', 'otpMediumLabel',
   'otpMediumWhatsapp', 'otpMediumSms', 'otpMediumRequired', 'otpNameRequired', 'otpExtensionInvalid',
   'otpPhoneInvalid', 'otpSend', 'otpSending', 'otpResend', 'otpCode', 'otpCodeInvalid', 'otpVerify',
@@ -259,18 +259,51 @@ describe('mweb and shell namespaces', () => {
   });
 });
 
-describe('earningsBodyFor', () => {
-  const labels = { earningsBody: 'Unmarked seats are seats you are not paid for.', earningsBodyVirtual: 'A member who never opens the link is a seat you are not paid for.' };
+describe('earningsNoticeFor', () => {
+  const labels = {
+    earningsTitle: 'Marking attendance is how you get paid',
+    earningsBody: 'Unmarked seats are seats you are not paid for.',
+    earningsBodyVirtual: 'A member who never opens the link is a seat you are not paid for.',
+    earningsTitleFree: 'Mark who came',
+    earningsBodyFree: 'This pod is free, so there is no payout.',
+  };
+  const paid = { title: labels.earningsTitle };
 
-  it('words the payout rule for the kind of pod this is', () => {
-    expect(earningsBodyFor({ pod_mode: 'VIRTUAL' }, labels)).toBe(labels.earningsBodyVirtual);
-    expect(earningsBodyFor({ pod_mode: 'PHYSICAL' }, labels)).toBe(labels.earningsBody);
+  it('words the payout rule for the kind of paid pod this is', () => {
+    expect(earningsNoticeFor({ pod_mode: 'VIRTUAL', pod_type: 'PAID' }, labels)).toEqual({
+      ...paid,
+      body: labels.earningsBodyVirtual,
+    });
+    expect(earningsNoticeFor({ pod_mode: 'PHYSICAL', pod_type: 'PAID' }, labels)).toEqual({
+      ...paid,
+      body: labels.earningsBody,
+    });
   });
 
-  it('reads both wordings out of a built bundle rather than a literal', () => {
-    const built = mwebAttendanceLabels((key) => 't:' + key);
+  // A free pod has no payout, so the paid sentence would be false there —
+  // whichever kind of pod it is.
+  it.each(['PHYSICAL', 'VIRTUAL'] as const)('never quotes the payout rule on a free %s pod', (mode) => {
+    expect(earningsNoticeFor({ pod_mode: mode, pod_type: 'FREE' }, labels)).toEqual({
+      title: labels.earningsTitleFree,
+      body: labels.earningsBodyFree,
+    });
+  });
 
-    expect(earningsBodyFor({ pod_mode: 'PHYSICAL' }, built)).toBe('t:mweb.attendance.earningsBody');
-    expect(earningsBodyFor({ pod_mode: 'VIRTUAL' }, built)).toBe('t:mweb.attendance.earningsBodyVirtual');
+  it.each(NAMESPACES)('reads every wording out of a built %s bundle rather than a literal', (namespace, build) => {
+    const built = build((key) => 't:' + key);
+    const key = (suffix: string) => `t:${namespace}.attendance.${suffix}`;
+
+    expect(earningsNoticeFor({ pod_mode: 'PHYSICAL', pod_type: 'PAID' }, built)).toEqual({
+      title: key('earningsTitle'),
+      body: key('earningsBody'),
+    });
+    expect(earningsNoticeFor({ pod_mode: 'VIRTUAL', pod_type: 'PAID' }, built)).toEqual({
+      title: key('earningsTitle'),
+      body: key('earningsBodyVirtual'),
+    });
+    expect(earningsNoticeFor({ pod_mode: 'PHYSICAL', pod_type: 'FREE' }, built)).toEqual({
+      title: key('earningsTitleFree'),
+      body: key('earningsBodyFree'),
+    });
   });
 });

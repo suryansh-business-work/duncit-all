@@ -416,6 +416,9 @@ export const attendanceService = {
       pod_date_time: pod.pod_date_time?.toISOString?.() ?? null,
       pod_end_date_time: pod.pod_end_date_time?.toISOString?.() ?? null,
       pod_mode: pod.pod_mode ?? 'PHYSICAL',
+      // A free pod has no payout, so the page drops the "you are paid on who
+      // you mark" notice for it. Anything not FREE reads as the paid pod it is.
+      pod_type: pod.pod_type === 'FREE' ? 'FREE' : 'PAID',
       viewer,
       lock,
       // Per VIEWER, not per lock: an expired roster is shut to the host and

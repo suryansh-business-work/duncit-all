@@ -3,7 +3,7 @@ import { Text, YStack } from 'tamagui';
 import {
   canDirectMark,
   canScanTickets,
-  earningsBodyFor,
+  earningsNoticeFor,
   showsCompleteDeadline,
   type splitAttendance,
   type mwebAttendanceLabels,
@@ -54,7 +54,7 @@ export function AttendanceBoardBody({
     <YStack gap={16}>
       <AttendanceSummary board={data} labels={labels} />
       {data.can_mark ? (
-        <EarningsNotice labels={labels} body={earningsBodyFor(data, labels)} />
+        <EarningsNotice {...earningsNoticeFor(data, labels)} />
       ) : (
         <LockedNotice lock={data.lock} labels={labels} />
       )}

@@ -24,6 +24,9 @@ export type AttendanceMarkMethod =
 /** The two kinds of pod. Mirrors the server's `PodMode`. */
 export type PodAttendanceMode = 'PHYSICAL' | 'VIRTUAL';
 
+/** Whether the pod has a payout at all. Mirrors the server's `PodType`. */
+export type PodAttendanceType = 'FREE' | 'PAID';
+
 /**
  * Why the roster is read-only, or OPEN when it is not.
  *
@@ -87,6 +90,9 @@ export interface PodAttendanceBoard {
   /** A virtual pod has no door to scan at — the scanner is hidden and the
    * earnings note says how attendance is recorded instead. */
   pod_mode: PodAttendanceMode;
+  /** A free pod has no payout, so the earnings note says why marking still
+   * matters instead of what it pays. */
+  pod_type: PodAttendanceType;
   viewer: PodAttendanceViewer;
   lock: PodAttendanceLock;
   /** Whether THIS viewer may still write to the roster — the server decides it,

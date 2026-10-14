@@ -58,6 +58,16 @@ export interface IPodMember extends Document {
   backout_count: number;
   /** The IN_PROCESS BackoutRequest while status is BACKOUT_IN_PROCESS. */
   active_backout_id: Types.ObjectId | null;
+  /**
+   * Set when the member CANCELLED THEIR SPOT on a free pod (status BACKED_OUT)
+   * and cleared when they join again. A free pod has no backout: no request, no
+   * attempt, no refund — this stamp is what tells the timeline the exit was a
+   * cancelled spot rather than a backout.
+   */
+  spot_cancelled_at: Date | null;
+  /** How many times this booking's spot was cancelled — the audit trail of a
+   * row that is re-activated on every re-join instead of copied. */
+  spot_cancel_count: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -119,6 +129,8 @@ const podMemberSchema = new Schema<IPodMember>(
     refund_payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },
     backout_count: { type: Number, default: 0 },
     active_backout_id: { type: Schema.Types.ObjectId, ref: 'BackoutRequest', default: null },
+    spot_cancelled_at: { type: Date, default: null },
+    spot_cancel_count: { type: Number, default: 0 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
+import { filterProductsForClub, freePodVenueNotice, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import { filterClubs } from '../create-pod.form';
 import { VENUE_AVAILABLE_SLOTS } from '../steps/VenueSlotStep';
 import { useEarningsPreview } from '../price-panel';
@@ -10,6 +10,7 @@ import type {
   CreatePodHostCategory,
   CreatePodProduct,
   CreatePodSubCategory,
+  CreatePodVenue,
 } from '../create-pod.types';
 
 interface SelectionSources {
@@ -17,15 +18,18 @@ interface SelectionSources {
   hostCategories: CreatePodHostCategory[];
   products: CreatePodProduct[];
   subCategories: CreatePodSubCategory[];
+  venues: CreatePodVenue[];
+  viewerUserId: string;
   /** The venue of a confirmed Pod Request — on offer whatever the club matches. */
   pinnedVenueId?: string;
 }
 
 /** Everything the steps derive from the live selections: the scoped clubs,
- * venues and products, the spot bounds and the Step-4 earnings preview. */
+ * venues and products, the spot bounds, the Step-4 earnings preview and what a
+ * free pod's host is told about the venue's charges. */
 export function useStepperSelections(
   form: CreatePodForm,
-  { clubs, hostCategories, products, subCategories, pinnedVenueId }: SelectionSources
+  { clubs, hostCategories, products, subCategories, venues, viewerUserId, pinnedVenueId }: SelectionSources
 ) {
   // Clubs are scoped by the selected host category (Super + Sub), then the picked
   // city and locality (helper shared with mobile + covered by unit tests). The
@@ -81,14 +85,25 @@ export function useStepperSelections(
 
   // Step-4 money lives here so the footer can block Create Pod on the same two
   // rules the panel renders (zero earnings / venue price not covered).
+  const podType = form.watch('pod_type');
   const preview = useEarningsPreview({
     slotPrice: selectedSlot ? selectedSlot.price : null,
     podAmount: Number(form.watch('pod_amount')) || 0,
     noOfSpots: Number(form.watch('no_of_spots')) || 0,
     venueId: venueId || null,
     isPhysical: podMode === 'PHYSICAL',
-    isFree: form.watch('pod_type') === 'FREE',
+    isFree: podType === 'FREE',
   });
 
-  return { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, preview };
+  // A free pod pays the venue nothing through Duncit, so a slot that costs
+  // something is settled between the host and the venue — said on step 3 and
+  // again before publishing. The rule itself is shared with native (rule 27).
+  const venueNotice = freePodVenueNotice({
+    podType,
+    slotPrice: podMode === 'PHYSICAL' ? selectedSlot?.price : null,
+    ownVenue: venues.find((venue) => venue.id === venueId)?.owner_user_id === viewerUserId,
+    slotConfirmed: Boolean(form.watch('partner_request_id')),
+  });
+
+  return { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, preview, venueNotice };
 }

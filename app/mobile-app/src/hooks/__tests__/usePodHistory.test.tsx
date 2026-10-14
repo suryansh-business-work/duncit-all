@@ -2,12 +2,16 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
+import { CancelFreeSpotDocument } from '@/graphql/pod-history';
 import { graphqlRequest } from '@/services/graphql.client';
+import { ApiError } from '@/utils/errors';
 import {
   usePodBackout,
   usePodBackoutDeduction,
   usePodCancelBackout,
+  usePodCancelSpot,
   usePodHistory,
+  usePodHistoryCancelSpot,
   usePodHistoryCategories,
   usePodInvoice,
   usePodRejoin,
@@ -104,6 +108,80 @@ describe('usePodBackout', () => {
       await expect(result.current.backout('pod1')).rejects.toThrow('fail');
     });
     expect(result.current.busy).toBe(false);
+  });
+});
+
+describe('usePodCancelSpot', () => {
+  it('calls cancelFreeSpot with the pod doc id and clears busy', async () => {
+    mockRequest.mockResolvedValueOnce({
+      cancelFreeSpot: { id: 'm1', status: 'BACKED_OUT', seats: 1 },
+    });
+    const { result } = renderHook(() => usePodCancelSpot());
+    await act(async () => {
+      await result.current.cancelSpot('pod1');
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      CancelFreeSpotDocument,
+      { pod_doc_id: 'pod1' },
+      { auth: true },
+    );
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('clears busy and rethrows when the mutation fails', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('checked in'));
+    const { result } = renderHook(() => usePodCancelSpot());
+    await act(async () => {
+      await expect(result.current.cancelSpot('pod1')).rejects.toThrow('checked in');
+    });
+    expect(result.current.busy).toBe(false);
+  });
+});
+
+describe('usePodHistoryCancelSpot', () => {
+  it('cancels, says so, closes the confirm and re-reads', async () => {
+    mockRequest.mockResolvedValueOnce({
+      cancelFreeSpot: { id: 'm1', status: 'BACKED_OUT', seats: 1 },
+    });
+    const onNotice = jest.fn();
+    const refresh = jest.fn().mockResolvedValue(undefined);
+    const { result } = renderHook(() => usePodHistoryCancelSpot('pod1', onNotice, refresh));
+    act(() => result.current.setOpen(true));
+    expect(result.current.open).toBe(true);
+    await act(async () => {
+      await result.current.confirm();
+    });
+    expect(onNotice).toHaveBeenCalledWith(
+      'Your spot is cancelled. You can join again any time while the pod is open.',
+    );
+    expect(result.current.open).toBe(false);
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('names a started pod by its code and still re-reads', async () => {
+    mockRequest.mockRejectedValueOnce(new ApiError('server words', 400, { code: 'BAD_REQUEST' }));
+    const onNotice = jest.fn();
+    const refresh = jest.fn().mockResolvedValue(undefined);
+    const { result } = renderHook(() => usePodHistoryCancelSpot('pod1', onNotice, refresh));
+    await act(async () => {
+      await result.current.confirm();
+    });
+    expect(onNotice).toHaveBeenCalledWith(
+      'This pod has already started, so your spot can no longer be cancelled.',
+    );
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing without a pod', async () => {
+    const onNotice = jest.fn();
+    const refresh = jest.fn();
+    const { result } = renderHook(() => usePodHistoryCancelSpot(null, onNotice, refresh));
+    await act(async () => {
+      await result.current.confirm();
+    });
+    expect(mockRequest).not.toHaveBeenCalled();
+    expect(onNotice).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
   });
 });
 

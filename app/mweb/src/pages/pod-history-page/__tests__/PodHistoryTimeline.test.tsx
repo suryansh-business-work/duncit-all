@@ -62,7 +62,7 @@ const baseItem = (podDateTime: string, over: Record<string, unknown> = {}): PodH
     referral_token: null,
     source: 'WEB',
     participation: participation(over),
-    pod: { pod_date_time: podDateTime },
+    pod: { pod_date_time: podDateTime, pod_type: over.pod_type },
   }) as unknown as PodHistoryItem;
 
 const renderIt = (item: PodHistoryItem) =>
@@ -158,5 +158,19 @@ describe('PodHistoryTimeline', () => {
     expect(screen.getByText('The pod was cancelled by the club admin.')).toBeInTheDocument();
     expect(screen.getByText('Refund Not Eligible')).toBeInTheDocument();
     expect(screen.queryByText('Refund Initiated')).not.toBeInTheDocument();
+  });
+  // A free pod: joined and spot cancelled, said plainly — no backout branch.
+  it('tells a free pod booking it cancelled its spot, with no replacement or refund', () => {
+    renderIt(
+      baseItem(FUTURE, {
+        pod_type: 'FREE',
+        spot_cancelled_at: '2026-02-01T10:00:00.000Z',
+        backouts: [backout()],
+      }),
+    );
+    expect(screen.getByText('Pod Joined')).toBeInTheDocument();
+    expect(screen.getByText('Spot Cancelled')).toBeInTheDocument();
+    expect(screen.queryByText('Finding Your Replacement')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pod Backout Requested')).not.toBeInTheDocument();
   });
 });

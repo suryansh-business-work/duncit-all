@@ -94,6 +94,8 @@ export const podAttendanceTypeDefs = /* GraphQL */ `
     pod_end_date_time: String
     "PHYSICAL or VIRTUAL. A virtual pod has no door to scan at: a member is marked when they open the meeting link."
     pod_mode: PodMode!
+    "FREE or PAID. A free pod has no payout, so the page does not tell the host their earnings depend on who they mark."
+    pod_type: PodType!
     viewer: PodAttendanceViewer!
     lock: PodAttendanceLock!
     "Whether THIS viewer can still mark. False once the pod is completed or cancelled; false for the host once the completion window has expired, and still true for a Club Admin — the override exists for exactly that roster."

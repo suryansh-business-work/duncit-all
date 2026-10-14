@@ -114,6 +114,7 @@ describe('podHistoryGate', () => {
   it('offers a backout and calls it Joined while the pod is still ahead', () => {
     expect(podHistoryGate(onPod(future))).toEqual({
       canBackout: true,
+      canCancelSpot: false,
       coinsRefunded: 0,
       showRefundState: false,
       refundStatus: 'NONE',
@@ -124,11 +125,25 @@ describe('podHistoryGate', () => {
   it('offers nothing once the pod has happened, and still says Joined when never checked in', () => {
     expect(podHistoryGate(onPod(past))).toEqual({
       canBackout: false,
+      canCancelSpot: false,
       coinsRefunded: 0,
       showRefundState: false,
       refundStatus: 'NONE',
       joinedLabelKind: 'JOINED',
     });
+  });
+
+  // A free pod reads its pod_type: Cancel Spot replaces Backout while it is ahead.
+  it('offers Cancel Spot instead of Backout on an upcoming free pod', () => {
+    const free = (date: string, participation: Record<string, unknown> = {}) => {
+      const item = onPod(date, participation);
+      return { ...item, pod: { ...item.pod!, pod_type: 'FREE' } } as PodMembership;
+    };
+    expect(podHistoryGate(free(future))).toMatchObject({ canBackout: false, canCancelSpot: true });
+    expect(podHistoryGate(free(past)).canCancelSpot).toBe(false);
+    expect(
+      podHistoryGate(free(future, { spot_cancelled_at: '2026-06-02T10:00:00Z' })).canCancelSpot,
+    ).toBe(false);
   });
 
   it('calls it Visited only once the member was checked in at a pod that happened', () => {

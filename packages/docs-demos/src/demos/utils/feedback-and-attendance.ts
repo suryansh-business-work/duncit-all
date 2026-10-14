@@ -5,7 +5,7 @@ import {
   canDirectMark,
   canScanTickets,
   canSubmitPodFeedback,
-  earningsBodyFor,
+  earningsNoticeFor,
   matchAttendanceRows,
   mwebAttendanceLabels,
   namedCompanionEntries,
@@ -57,6 +57,8 @@ export const feedbackAndAttendanceDemos: PackageDemo[] = [
     title: 'What the attendance board offers its host',
     note:
       'Flip pod_mode to VIRTUAL: the scanner disappears and the earnings sentence changes. ' +
+      'Set pod_type to FREE: there is no payout, so the note above the roster swaps its title ' +
+      'and body for the free-pod copy, whichever pod_mode it is. ' +
       'canScanTickets decides whether the scan dialog is MOUNTED, not merely hidden — it reads ' +
       'the host-actions config, which a console with no host area never supplies. ' +
       'Now set viewer to CLUB_ADMIN with companions_required above 0: the row state flips from ' +
@@ -75,6 +77,7 @@ export const feedbackAndAttendanceDemos: PackageDemo[] = [
       can_mark: true,
       otp_required: true,
       pod_mode: 'PHYSICAL',
+      pod_type: 'PAID',
       lock: 'OPEN',
       complete_deadline: '2026-08-31T14:00:00.000Z',
       companions_required: 7,
@@ -83,6 +86,7 @@ export const feedbackAndAttendanceDemos: PackageDemo[] = [
     compute: (mock) => {
       // Keys rather than copy, so the demo names WHICH sentence each surface renders.
       const labels = mwebAttendanceLabels((key) => key);
+      const earnings = earningsNoticeFor(mock, labels);
       const door = mock.pod_mode === 'VIRTUAL' ? 'VIRTUAL_JOIN' : 'HOST_SCAN';
       const scanCta = canScanTickets(mock) ? labels.scanCta : '(hidden)';
       const row = { attended: false, companions_required: mock.companions_required };
@@ -119,7 +123,8 @@ export const feedbackAndAttendanceDemos: PackageDemo[] = [
         'canScanTickets(board)': canScanTickets(mock),
         'showsCompleteDeadline(board)': showsCompleteDeadline(mock),
         'Locked notice': labels.lockedTitle(mock.lock),
-        'earningsBodyFor(board, labels)': earningsBodyFor(mock, labels),
+        'earningsNoticeFor(board, labels).title': earnings.title,
+        'earningsNoticeFor(board, labels).body': earnings.body,
         'Scan CTA': scanCta,
         'How a member gets marked': labels.methodLabel(door),
         'attendanceRowState(row, can_mark, viewer)': attendanceRowState(

@@ -56,7 +56,7 @@ function Harness({ onValue }: Readonly<{ onValue: (value: number | null) => void
     mode: 'onTouched',
   });
   onValue(form.watch('pod_amount'));
-  return <TicketPriceField form={form} preview={preview} isFree={false} />;
+  return <TicketPriceField form={form} preview={preview} />;
 }
 
 function renderField() {

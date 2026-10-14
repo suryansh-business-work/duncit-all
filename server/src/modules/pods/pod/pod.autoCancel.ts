@@ -26,7 +26,7 @@
  * race with a human cancel, is inherently a no-op. SINGLE REPLICA ONLY, like
  * every scheduler here (see whatsapp.scheduler.ts). No-ops under NODE_ENV=test.
  */
-import { PodModel } from './pod.model';
+import { isFreePod, PodModel } from './pod.model';
 import { podService } from './pod.service';
 import { podLifecycleFilter } from './pod.lifecycle';
 import { podFinanceNow, runPodCancellationRiskSweep } from './pod.cancellationRisk';
@@ -89,6 +89,9 @@ export function venueTriggerHours(policy: IVenueCancellationPolicy | null | unde
  * Finance breakdown all read, so the sweep can never cancel a pod the admin
  * page called healthy. */
 async function cancelIfNegative(pod: any, now: number, platformLeadHours: number): Promise<boolean> {
+  // A free pod is never loss-making for the platform: the host settles the
+  // venue directly, so there is nothing here for the sweep to protect.
+  if (isFreePod(pod)) return false;
   const venue: any = pod.venue_id
     ? await VenueModel.findById(pod.venue_id).select('settings.cancellation').lean()
     : null;
@@ -167,6 +170,7 @@ export async function runPodAutoCancelSweep(): Promise<number> {
   const cursor = PodModel.find({
     ...podLifecycleFilter('UPCOMING', new Date(now)),
     is_active: true,
+    pod_type: { $ne: 'FREE' },
     pod_date_time: {
       $gt: new Date(now),
       $lte: new Date(now + windowHours * HOUR_MS),

@@ -47,16 +47,12 @@ function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<
   );
 }
 
-/** Free / Paid selector cards for Step 4 — the pod-type selector. FREE is
- * virtual-only, so physical pods only see the Paid card. mWeb twin. */
+/** Free / Paid selector cards for Step 4 — the pod-type selector, both cards
+ * offered to a physical and a virtual pod. mWeb twin. */
 export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
   const { t } = useTranslation();
   const isFree = form.watch('pod_type') === 'FREE';
-  const isPhysical = form.watch('pod_mode') === 'PHYSICAL';
   const typeError = form.formState.errors.pod_type?.message;
-  const paidCaption = isPhysical
-    ? t('mweb.createPod.physicalPaidCaption')
-    : t('mweb.createPod.paidCaption');
 
   const choose = (free: boolean) => {
     if (free === isFree) return;
@@ -77,20 +73,18 @@ export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
   return (
     <YStack gap={6}>
       <XStack gap={12} role="radiogroup">
-        {isPhysical ? null : (
-          <TypeCard
-            testID="create-pod-free"
-            label={t('mweb.createPod.podTypeFree')}
-            caption={t('mweb.createPod.freeCaption')}
-            icon="volunteer-activism"
-            selected={isFree}
-            onPress={() => choose(true)}
-          />
-        )}
+        <TypeCard
+          testID="create-pod-free"
+          label={t('mweb.createPod.podTypeFree')}
+          caption={t('mweb.createPod.freeCaption')}
+          icon="volunteer-activism"
+          selected={isFree}
+          onPress={() => choose(true)}
+        />
         <TypeCard
           testID="create-pod-paid"
           label={t('mweb.createPod.podTypePaid')}
-          caption={paidCaption}
+          caption={t('mweb.createPod.paidCaption')}
           icon="payments"
           selected={!isFree}
           onPress={() => choose(false)}

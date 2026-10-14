@@ -304,6 +304,7 @@ export const COMPLETE_POD_SETTLEMENT = gql`
   mutation AdminCompletePodSettlement($input: CompletePodInput!) {
     completePodSettlement(input: $input) {
       settlement {
+        is_free
         currency_symbol
       }
       releases {
@@ -330,6 +331,7 @@ export const POD_SETTLEMENT_PREVIEW = gql`
       host_user_id: $host_user_id
       include_slot_price: $include_slot_price
     ) {
+      is_free
       currency_symbol
       collected_total
       has_venue

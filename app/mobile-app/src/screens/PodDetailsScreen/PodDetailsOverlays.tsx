@@ -66,6 +66,7 @@ export function PodDetailsOverlays({
         }
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}
+        onCancelSpot={() => actions.setCancelSpotOpen(true)}
         restoringSpot={actions.restoringSpot}
         onGoToDashboard={() => {
           useStudioModeStore.getState().setMode('HOST');

@@ -56,6 +56,13 @@ export function maxSeatsForBooking(pod: SeatCountable): number {
   return podSeatsAvailable(pod);
 }
 
+/**
+ * Seats one booking takes on a FREE pod: always one. Nobody pays for a free
+ * seat, so a multi-seat booking only let one person hold places nobody else
+ * could take; each guest joins for themselves.
+ */
+export const FREE_POD_SEATS_PER_BOOKING = 1;
+
 /** Normalise a client-supplied seat count to a whole number ≥ 1. */
 export function normalizeSeats(value: unknown): number {
   const seats = Math.floor(Number(value) || 1);

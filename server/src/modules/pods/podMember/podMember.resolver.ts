@@ -151,7 +151,8 @@ export const podMemberResolvers = {
       ctx: GraphQLContext
     ) => {
       const uid = requireUser(ctx);
-      return podMemberService.joinFree(args.pod_doc_id, uid, args.referral_token, args.seats ?? 1);
+      // `seats` is still accepted from installed builds, but a free pod books one.
+      return podMemberService.joinFree(args.pod_doc_id, uid, args.referral_token);
     },
     backoutPod: async (
       _p: unknown,

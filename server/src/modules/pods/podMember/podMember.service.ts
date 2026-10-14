@@ -31,6 +31,7 @@ import { sendBackoutSpotFilledEmail, sendPodRefundEmail } from '@services/email/
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import {
   maxSeatsForBooking,
+  FREE_POD_SEATS_PER_BOOKING,
   normalizeSeats,
   podSeatsAvailable,
   podSeatsTaken,
@@ -882,7 +883,7 @@ async function freePodState(pod: IPod, membership: IPodMember | null, userId: st
     spots_taken: podSeatsTaken(pod),
     spots_total: pod.no_of_spots ?? 0,
     seats_available: podSeatsAvailable(pod),
-    max_seats_per_booking: maxSeatsForBooking(pod),
+    max_seats_per_booking: Math.min(FREE_POD_SEATS_PER_BOOKING, maxSeatsForBooking(pod)),
     my_seats: joined?.seats ?? 0,
     can_backout: false,
     can_cancel_spot: isMember && !podHasHappened(pod) && ticket?.status !== 'CHECKED_IN',
@@ -1074,7 +1075,7 @@ export const podMemberService = {
     return m ? toPub(m) : null;
   },
 
-  async joinFree(podDocId: string, userId: string, referralToken?: string | null, wantSeats = 1) {
+  async joinFree(podDocId: string, userId: string, referralToken?: string | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     assertPodOpenForBooking(pod);
@@ -1100,7 +1101,8 @@ export const podMemberService = {
     const existing = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
     if (existing) return toPub(existing);
 
-    const seats = Math.min(normalizeSeats(wantSeats), maxSeatsForBooking(pod));
+    // One seat, whatever the client asks: a free pod has no multi-seat booking.
+    const seats = FREE_POD_SEATS_PER_BOOKING;
     await ensureSeatsAvailable(pod, seats);
 
     let referredBy: Types.ObjectId | null = null;
@@ -1550,8 +1552,8 @@ export const podMemberService = {
   },
 
   /**
-   * `rejoinPod` / `cancelBackoutPod` on a FREE pod: join again with the seats
-   * the earlier booking held. A member who is already in gets their booking
+   * `rejoinPod` / `cancelBackoutPod` on a FREE pod: join again, on one seat
+   * even when the earlier booking held more. A member who is already in gets their booking
    * back unchanged; one who never booked is told so, as rejoin always did.
    */
   async rejoinFree(pod: IPod, userId: string) {
@@ -1564,7 +1566,7 @@ export const podMemberService = {
         extensions: { code: 'NOT_FOUND' },
       });
     }
-    return this.joinFree(String(pod._id), userId, null, normalizeSeats(previous.seats ?? 1));
+    return this.joinFree(String(pod._id), userId, null);
   },
 
   /**

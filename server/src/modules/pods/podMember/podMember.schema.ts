@@ -418,7 +418,7 @@ export const podMemberTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    "Book a free pod. Seats books several at once (default 1, capped by what is left)."
+    "Book a free pod — always one seat. The seats argument is ignored; it stays for installed app builds."
     joinFreePod(pod_doc_id: ID!, referral_token: String, seats: Int): PodMember!
     """
     Confirm Backout — the released seats go back on sale immediately and the

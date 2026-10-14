@@ -13076,7 +13076,7 @@ export type Mutation = {
    * knowing the origin of. Tech/Super admin only.
    */
   issueAppBuildCiToken: AppBuildCiToken;
-  /** Book a free pod. Seats books several at once (default 1, capped by what is left). */
+  /** Book a free pod — always one seat. The seats argument is ignored; it stays for installed app builds. */
   joinFreePod: PodMember;
   /**
    * Open a virtual pod's meeting as a joined member.

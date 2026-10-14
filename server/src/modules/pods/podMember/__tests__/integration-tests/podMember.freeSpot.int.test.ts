@@ -1,5 +1,7 @@
 import { Types } from 'mongoose';
 import { podMemberService } from '../../podMember.service';
+import { podMemberResolvers } from '../../podMember.resolver';
+import { makeContext } from '@test/harness';
 import { PodMemberModel } from '../../podMember.model';
 import { BackoutRequestModel } from '../../backoutRequest.model';
 import { participationForMembership } from '../../membershipTimeline.service';
@@ -64,6 +66,55 @@ const makeUser = () =>
 const seatsOf = async (pod: { _id: unknown }) => podSeatsTaken((await PodModel.findById(pod._id).lean())!);
 const ticketOf = (membershipId: string) => TicketModel.findOne({ membership_id: membershipId });
 
+/** A booking made while free pods still sold several seats: joined, then
+ * widened to `seats` on both the row and the pod's extra-seat counter. */
+const joinLegacyMultiSeat = async (pod: { _id: unknown }, userId: string, seats: number) => {
+  const joined = await podMemberService.joinFree(String(pod._id), userId);
+  await PodMemberModel.updateOne({ _id: joined.id }, { $set: { seats } });
+  await PodModel.updateOne({ _id: pod._id }, { $inc: { extra_seats: seats - 1 } });
+  return joined;
+};
+
+describe('joinFree books one seat', () => {
+  it('ignores a larger seat count from an installed build', async () => {
+    const pod = await makePod({ no_of_spots: 10 });
+    const user = await makeUser();
+
+    const joined = await podMemberResolvers.Mutation.joinFreePod(
+      null,
+      { pod_doc_id: String(pod._id), seats: 4 },
+      makeContext({ id: String(user._id) })
+    );
+
+    expect(joined.seats).toBe(1);
+    expect(await seatsOf(pod)).toBe(2);
+    expect((await PodModel.findById(pod._id).lean())!.extra_seats ?? 0).toBe(0);
+  });
+
+  it('offers a seat picker of one, and none once the pod is full', async () => {
+    const pod = await makePod({ no_of_spots: 10 });
+    const user = await makeUser();
+    expect((await podMemberService.getState(String(pod._id), String(user._id))).max_seats_per_booking).toBe(1);
+
+    const full = await makePod({ no_of_spots: 1 });
+    expect((await podMemberService.getState(String(full._id), String(user._id))).max_seats_per_booking).toBe(0);
+  });
+
+  it('brings an older multi-seat booking back on one seat after a cancel', async () => {
+    const pod = await makePod({ no_of_spots: 10 });
+    const user = await makeUser();
+    const legacy = await joinLegacyMultiSeat(pod, String(user._id), 3);
+    expect(await seatsOf(pod)).toBe(4);
+    await podMemberService.cancelFreeSpot(String(pod._id), String(user._id));
+
+    const back = await podMemberService.joinFree(String(pod._id), String(user._id));
+
+    expect(back).toMatchObject({ id: legacy.id, status: 'JOINED', seats: 1 });
+    expect(await seatsOf(pod)).toBe(2);
+    expect((await TicketModel.findOne({ membership_id: legacy.id }))!.seats).toBe(1);
+  });
+});
+
 describe('cancelFreeSpot', () => {
   it('join → cancel → join → cancel, many times: exact seats, one row, no backout, ticket off then on', async () => {
     const pod = await makePod();
@@ -73,10 +124,10 @@ describe('cancelFreeSpot', () => {
 
     let firstId: string | null = null;
     for (let round = 1; round <= 5; round += 1) {
-      const joined = await podMemberService.joinFree(String(pod._id), uid, null, 2);
+      const joined = await podMemberService.joinFree(String(pod._id), uid, null);
       firstId ??= joined.id;
-      expect(joined).toMatchObject({ id: firstId, status: 'JOINED', seats: 2, spot_cancelled_at: null });
-      expect(await seatsOf(pod)).toBe(3);
+      expect(joined).toMatchObject({ id: firstId, status: 'JOINED', seats: 1, spot_cancelled_at: null });
+      expect(await seatsOf(pod)).toBe(2);
       expect((await ticketOf(firstId))!.status).toBe('VALID');
 
       const cancelled = await podMemberService.cancelFreeSpot(String(pod._id), uid);
@@ -110,10 +161,10 @@ describe('cancelFreeSpot', () => {
     expect(await ticketService.verify(token)).toMatchObject({ ok: true, message: 'Valid ticket' });
   });
 
-  it('releases every seat of a multi-seat booking — there is no partial cancel', async () => {
+  it('releases every seat of an older multi-seat booking — there is no partial cancel', async () => {
     const pod = await makePod({ no_of_spots: 10 });
     const user = await makeUser();
-    await podMemberService.joinFree(String(pod._id), String(user._id), null, 4);
+    await joinLegacyMultiSeat(pod, String(user._id), 4);
     expect(await seatsOf(pod)).toBe(5);
 
     await podMemberService.cancelFreeSpot(String(pod._id), String(user._id));
@@ -126,9 +177,9 @@ describe('cancelFreeSpot', () => {
   it('is safe under a double submit: the seats are released once and both calls answer the cancelled booking', async () => {
     const pod = await makePod({ no_of_spots: 10 });
     const other = await makeUser();
-    await podMemberService.joinFree(String(pod._id), String(other._id), null, 3);
+    await joinLegacyMultiSeat(pod, String(other._id), 3);
     const user = await makeUser();
-    await podMemberService.joinFree(String(pod._id), String(user._id), null, 2);
+    await joinLegacyMultiSeat(pod, String(user._id), 2);
     expect(await seatsOf(pod)).toBe(6);
 
     const [a, b] = await Promise.all([
@@ -148,17 +199,17 @@ describe('cancelFreeSpot', () => {
   it('is safe under a double join after a cancel: one booking, seats claimed once', async () => {
     const pod = await makePod({ no_of_spots: 10 });
     const user = await makeUser();
-    await podMemberService.joinFree(String(pod._id), String(user._id), null, 2);
+    await podMemberService.joinFree(String(pod._id), String(user._id));
     await podMemberService.cancelFreeSpot(String(pod._id), String(user._id));
 
     const [a, b] = await Promise.all([
-      podMemberService.joinFree(String(pod._id), String(user._id), null, 2),
-      podMemberService.joinFree(String(pod._id), String(user._id), null, 2),
+      podMemberService.joinFree(String(pod._id), String(user._id)),
+      podMemberService.joinFree(String(pod._id), String(user._id)),
     ]);
 
     expect(a.id).toBe(b.id);
     expect(await PodMemberModel.countDocuments({ user_id: user._id, status: 'JOINED' })).toBe(1);
-    expect(await seatsOf(pod)).toBe(3);
+    expect(await seatsOf(pod)).toBe(2);
   });
 
   it('refuses a member whose ticket was checked in — a cancel must not erase a scan', async () => {
@@ -203,7 +254,7 @@ describe('the old backout calls on a free pod (installed app builds)', () => {
   it('backoutPod cancels the spot: whole booking, no request, no attempt, seats ignored', async () => {
     const pod = await makePod();
     const user = await makeUser();
-    await podMemberService.joinFree(String(pod._id), String(user._id), null, 3);
+    await joinLegacyMultiSeat(pod, String(user._id), 3);
 
     const out = await podMemberService.backout(String(pod._id), String(user._id), 1);
 
@@ -213,21 +264,21 @@ describe('the old backout calls on a free pod (installed app builds)', () => {
     expect(await BackoutRequestModel.countDocuments()).toBe(0);
   });
 
-  it('rejoinPod and cancelBackoutPod join the free pod again with the earlier seats', async () => {
+  it('rejoinPod and cancelBackoutPod join the free pod again, on one seat', async () => {
     const pod = await makePod();
     const user = await makeUser();
-    await podMemberService.joinFree(String(pod._id), String(user._id), null, 2);
+    await podMemberService.joinFree(String(pod._id), String(user._id));
     await podMemberService.cancelFreeSpot(String(pod._id), String(user._id));
 
     const back = await podMemberService.rejoin(String(pod._id), String(user._id));
-    expect(back).toMatchObject({ status: 'JOINED', seats: 2 });
+    expect(back).toMatchObject({ status: 'JOINED', seats: 1 });
     await podMemberService.cancelFreeSpot(String(pod._id), String(user._id));
 
     const kept = await podMemberService.cancelBackout(String(pod._id), String(user._id));
-    expect(kept).toMatchObject({ status: 'JOINED', seats: 2 });
+    expect(kept).toMatchObject({ status: 'JOINED', seats: 1 });
     // Already in: both answer the booking rather than erroring.
     expect((await podMemberService.cancelBackout(String(pod._id), String(user._id))).status).toBe('JOINED');
-    expect(await seatsOf(pod)).toBe(3);
+    expect(await seatsOf(pod)).toBe(2);
 
     const stranger = await makeUser();
     await expect(podMemberService.rejoin(String(pod._id), String(stranger._id))).rejects.toMatchObject({

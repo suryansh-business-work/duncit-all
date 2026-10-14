@@ -52,6 +52,9 @@ export const POD_TIMELINE_BUNDLE: NestedCatalogue = {
     refundNotEligibleTitle: 'Refund Not Eligible',
     refundPendingDetail: 'Your refund is with our finance team and has not left yet.',
     refundPendingTitle: 'Refund Being Processed',
+    spotCancelledDetail:
+      'You cancelled your spot. You can join again any time while the pod is open.',
+    spotCancelledTitle: 'Spot Cancelled',
     spotFilledDetail: 'Your spot was filled by someone else.',
     spotFilledTitle: 'Spot Filled',
     spotNotFilledDetail: 'Your spot could not be filled by anyone.',

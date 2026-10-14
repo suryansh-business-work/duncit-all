@@ -164,12 +164,10 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       physical: 'Physical',
       virtual: 'Virtual',
     },
+    // The server's PodType — a physical pod and a virtual one can each be either.
     podType: {
-      nativeFree: 'Native · Free',
-      nativePaid: 'Native · Paid',
-      nativePaidPremium: 'Native · Paid Premium',
-      nonNativeFree: 'Non-native · Free',
-      nonNativePaid: 'Non-native · Paid',
+      free: 'Free',
+      paid: 'Paid',
     },
     // Every message the form's Zod schema can raise. A validation error is the
     // sentence a person is stopped by, so it translates like any other.
@@ -319,6 +317,10 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
     whenWhereSection: {
+      // Under the slot picker, for a FREE pod on a slot the venue charges for.
+      // The venue is shown the same thing with the slot request.
+      freePodVenueNote:
+        'This pod is free, so Duncit will not pay the venue for this slot. The host settles the venue’s charges with the venue directly, and the venue is asked not to confirm the slot until the host has spoken to them or transferred the amount.',
       venue: 'Venue',
     },
   },

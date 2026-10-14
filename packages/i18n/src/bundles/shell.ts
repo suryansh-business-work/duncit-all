@@ -1718,6 +1718,14 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       title: 'Your share (credited to your wallet once Finance approves)',
       shortfall:
         "The venue's booked price is more than this pod took at the door. The venue is paid in full and your share is nil — it is never taken back from you.",
+      // A FREE pod moves no money on the platform: every money surface shows
+      // this label instead of figures (host projection, settlement, earnings).
+      freePod: 'Free pod',
+      freeNote:
+        'Nobody pays to join a free pod, so there is no payout. The host settles any venue charges directly with the venue.',
+      freeCompleted: 'Pod completed.',
+      freeCompleteHint:
+        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. It is a free pod, so completing it pays nothing out.',
     },
     // The venue's final bill at Complete Pod — @duncit/utils' venue-bill.ts.
     // `mweb.venueBill` must stay word-for-word identical: the same builder

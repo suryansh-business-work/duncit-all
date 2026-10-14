@@ -1529,6 +1529,21 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'Backing out releases your seat — you will get the refund only if someone fills your spot ({pct}% deduction applies on paid pods).',
       alreadyTakenPlace: 'This pod has already taken place.',
       backoutMaxed: 'You have reached the maximum number of Backout attempts allowed for this Pod.',
+      // A FREE pod has no backout and no refund — "Cancel Spot" is its only way
+      // out, and the member may join again any number of times.
+      cancelSpot: 'Cancel Spot',
+      cancelSpotTitle: 'Cancel your spot?',
+      cancelSpotBody:
+        'Your spot will be released for someone else. This pod is free, so you can join again any time while it is open.',
+      cancelSpotConfirm: 'Cancel My Spot',
+      cancellingSpot: 'Cancelling…',
+      keepSpot: 'Keep Spot',
+      spotCancelledSnack: 'Your spot is cancelled. You can join again any time while the pod is open.',
+      cancelSpotCheckedIn:
+        'You have already been checked in at this pod, so your spot can no longer be cancelled.',
+      cancelSpotStarted: 'This pod has already started, so your spot can no longer be cancelled.',
+      cancelSpotNotMember: 'You do not have a spot in this pod to cancel.',
+      cancelSpotFailed: 'We could not cancel your spot. Please try again.',
       // mWeb only — refilling your own released seat by referral is a web flow;
       // the native bar has no backed-out state.
       backedOutRefundLead: 'You have backed out. Refund status:',
@@ -1676,6 +1691,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       statusVisited: 'Visited',
       statusBackoutInProcess: 'Backout in process',
       statusBackedOut: 'Backed out',
+      // A free pod's exit is not a backout.
+      statusSpotCancelled: 'Spot cancelled',
       // The refund words come from the request rather than the booking.
       refundNotStarted: 'Not started',
       refundPending: 'Criteria pending',
@@ -1700,6 +1717,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       goToPodDetails: 'Go to Pod Details',
       backoutPod: 'Backout Pod',
       backingOut: 'Backing out…',
+      cancelSpot: 'Cancel Spot',
+      cancellingSpot: 'Cancelling…',
       rejoinPod: 'Rejoin Pod',
       rejoining: 'Rejoining…',
       invoice: 'Invoice',
@@ -2540,11 +2559,26 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       podTypePaid: 'Paid',
       freeCaption: 'No ticket charge',
       paidCaption: 'Charge per person',
-      physicalPaidCaption: 'Physical pods are always paid',
+      // A free pod — physical or virtual — has no price field and no earnings
+      // panel: this card stands where they would be.
+      freePodTitle: 'This pod is free',
+      freePodBody:
+        'People join without paying, and Duncit collects and pays nothing for this pod.',
+      // Only for a free pod on a slot the venue charges for (never the host's
+      // own venue): the venue's money is settled off the platform. The second
+      // line is dropped when a Pod Request has already confirmed the slot.
+      freeVenueSettle:
+        "Because this pod is free, Duncit will not pay the venue. You will need to settle the venue's charges with the venue directly.",
+      freeVenueHold:
+        'The venue has been asked not to confirm the slot until you have spoken to them or transferred the amount.',
+      // The same two lines when a club admin creates the pod for a host.
+      freeVenueSettleClubAdmin:
+        "Because this pod is free, Duncit will not pay the venue. The host will need to settle the venue's charges with the venue directly.",
+      freeVenueHoldClubAdmin:
+        'The venue has been asked not to confirm the slot until the host has spoken to them or transferred the amount.',
       ticketPriceLabel: 'Ticket price (₹ per person)',
       ticketPricePlaceholder: 'Enter ticket price',
       ticketPriceHint: 'Gross ticket price, max 1999.',
-      ticketPriceFreeHint: 'Free pods are ₹0.',
       // The suggested-price ladder: the link beside the label, the modal it
       // opens, and one description per rung (cheapest first).
       suggestedPrice: 'Suggested Price',
@@ -2675,7 +2709,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         // mWeb only — its pod type can be cleared, native's is always one of two.
         podTypeRequired: 'Select a pod type',
         podTypeInvalid: 'Select Free or Paid',
-        physicalMustBePaid: 'Physical pods must be paid',
         freeAmountZero: 'Free pods must have amount 0',
         ticketPriceRequired: 'Enter a ticket price to continue',
         ticketPriceMin: 'Ticket price must be more than ₹0',
@@ -2966,6 +2999,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       title: 'Your share (credited to your wallet once Finance approves)',
       shortfall:
         "The venue's booked price is more than this pod took at the door. The venue is paid in full and your share is nil — it is never taken back from you.",
+      // A FREE pod moves no money on the platform: every money surface shows
+      // this label instead of figures (host projection, settlement, earnings).
+      freePod: 'Free pod',
+      freeNote:
+        'Nobody pays to join a free pod, so there is no payout. The host settles any venue charges directly with the venue.',
+      freeCompleted: 'Pod completed.',
+      freeCompleteHint:
+        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. It is a free pod, so completing it pays nothing out.',
     },
     // The venue's final bill at Complete Pod — @duncit/utils' venue-bill.ts.
     // `shell.venueBill` must stay word-for-word identical: the same builder
@@ -5407,6 +5448,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       declineThisBooking: 'Decline this booking?',
       empty:
         'No pending slot requests right now. New ones appear here the moment a host books one of your slots.',
+      // A free pod's venue charges are settled with the host directly, off the
+      // platform — shown instead of the slot price.
+      freePodNotice:
+        'Please coordinate with the host. The host will contact you about your charges. Please do not confirm the slot until the host has called you to discuss or has transferred the amount.',
+      freePodTitle: 'This pod is free',
       host: 'Host',
       intro:
         'Hosts who want to run their pod at your venue. A pod only goes live after you approve its slot.',

@@ -500,8 +500,10 @@ export const e2eRunTypeDefs = gql`
     stamp: String!
     "The run account; must carry the stamp."
     email: String!
-    "Portal roles to add: SUPPORT_MANAGER, LEGAL_MANAGER, ALL_PODS_ACCESS."
+    "Roles from the run-account list (never SUPER_ADMIN, TECH_MANAGER or FINANCE_MANAGER)."
     roles: [String!]!
+    "For CITY_ADMIN: the city the run account administers; cleared when CITY_ADMIN is revoked."
+    assigned_city: String
   }
 
   type E2ePurgeReport {

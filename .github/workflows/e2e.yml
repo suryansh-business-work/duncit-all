@@ -532,7 +532,7 @@ jobs:
     needs: setup
     if: contains(format(',{0},', needs.setup.outputs.selected), ',accounts,')
     runs-on: ubuntu-latest
-    timeout-minutes: 160
+    timeout-minutes: 240
     env:
       DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
       DUNCIT_RELEASE_TOKEN: >-
@@ -629,6 +629,18 @@ jobs:
         env:
           VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
         run: pnpm build:e2e
+      # The other staff consoles the staff-portal specs drive (each signed in
+      # as the run account with a limited role granted for the spec). Their
+      # `build` is the same tsc + vite build the three above call build:e2e.
+      - name: Build the other staff consoles
+        env:
+          VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+        run: |
+          for portal in admin finance onboarding venues hosts clubs club-admins crm communications logs products ecomm-portal; do
+            echo "::group::$portal"
+            (cd "portals/$portal" && pnpm build)
+            echo "::endgroup::"
+          done
       # The same target native.duncit.com ships; the slow step of the job.
       - name: Export the native app for web
         working-directory: app/mobile-app
@@ -647,8 +659,15 @@ jobs:
           (cd portals/legal && nohup pnpm preview > "$RUNNER_TEMP/legal.log" 2>&1 &)
           (cd portals/pods && nohup pnpm preview > "$RUNNER_TEMP/pods.log" 2>&1 &)
           (cd app/mobile-app && nohup npx --yes serve dist --single -l 2022 > "$RUNNER_TEMP/native.log" 2>&1 &)
+          for portal in admin finance onboarding venues hosts clubs club-admins crm communications logs products ecomm-portal; do
+            (cd "portals/$portal" && nohup pnpm preview > "$RUNNER_TEMP/$portal.log" 2>&1 &)
+          done
           npx --yes wait-on http://localhost:2003 http://localhost:2005 http://localhost:2010 \
-            http://localhost:2012 http://localhost:2034 http://localhost:2022 --timeout 180000
+            http://localhost:2012 http://localhost:2034 http://localhost:2022 \
+            http://localhost:2002 http://localhost:2008 http://localhost:2016 http://localhost:2030 \
+            http://localhost:2033 http://localhost:2031 http://localhost:2032 http://localhost:2007 \
+            http://localhost:2035 http://localhost:2036 http://localhost:2014 http://localhost:2038 \
+            --timeout 180000
 
       - run: echo "E2E_STAGE=Running the account lifecycle" >> "$GITHUB_ENV"
       - name: mWeb · signup, sign in, forgot password, profile, change password, support, pod ideas

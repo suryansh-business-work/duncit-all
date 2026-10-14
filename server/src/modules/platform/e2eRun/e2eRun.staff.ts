@@ -52,6 +52,8 @@ export interface GrantE2eRunAccountRolesInput {
   stamp: string;
   email: string;
   roles: string[];
+  /** For CITY_ADMIN: the city the run account administers while it holds the role. */
+  assigned_city?: string | null;
 }
 
 type RoleChange = 'grant-roles' | 'revoke-roles';
@@ -88,6 +90,9 @@ async function changeRunAccountRoles(input: GrantE2eRunAccountRolesInput, change
   const user = await UserModel.findOne({ 'auth.email': email }, { _id: 1 }).lean();
   if (!user) throw new GraphQLError('The run account does not exist.', { extensions: { code: 'NOT_FOUND' } });
   const userId = String(user._id);
+  const city = String(input?.assigned_city ?? '').trim();
+  // Before the role write on a grant: replaceUserRoles scopes CITY_ADMIN to profile.assigned_city.
+  if (change === 'grant-roles') await assignCity(userId, city);
   const apply = (role: string) =>
     change === 'grant-roles' ? userService.addRole(userId, role) : userService.removeRole(userId, role);
   // One role at a time: each write reads the account's roles first, so writes in
@@ -96,6 +101,14 @@ async function changeRunAccountRoles(input: GrantE2eRunAccountRolesInput, change
     (previous, role) => previous.then(() => apply(role)),
     Promise.resolve(null)
   );
-  logs.server.info('e2eRun', change, { stamp, roles });
+  if (change === 'revoke-roles' && roles.includes('CITY_ADMIN')) await assignCity(userId, null);
+  logs.server.info('e2eRun', change, { stamp, roles, assigned_city: city || null });
   return changed?.roles ?? [];
+}
+
+/** Give the run account a city to administer, or (null) take it away. A blank city on a grant changes nothing. */
+async function assignCity(userId: string, city: string | null): Promise<void> {
+  if (city === '') return;
+  const update = city ? { $set: { 'profile.assigned_city': city } } : { $unset: { 'profile.assigned_city': '' } };
+  await UserModel.updateOne({ _id: userId }, update);
 }

@@ -53,6 +53,15 @@ describe('grantRunAccountRoles / revokeRunAccountRoles', () => {
     expect(await roleKeys(RUN_EMAIL)).toEqual(['CITY_ADMIN', 'USER']);
   });
 
+  it('gives CITY_ADMIN the city asked for, and takes it away with the role', async () => {
+    await grantRunAccountRoles({ stamp: STAMP, email: RUN_EMAIL, roles: ['CITY_ADMIN'], assigned_city: 'Pune' });
+    expect((await UserModel.findOne({ 'auth.email': RUN_EMAIL }).lean())?.profile?.assigned_city).toBe('Pune');
+
+    await revokeRunAccountRoles({ stamp: STAMP, email: RUN_EMAIL, roles: ['CITY_ADMIN'] });
+    expect((await UserModel.findOne({ 'auth.email': RUN_EMAIL }).lean())?.profile?.assigned_city).toBeUndefined();
+    expect(await roleKeys(RUN_EMAIL)).toEqual(['USER']);
+  });
+
   it.each(['SUPER_ADMIN', 'TECH_MANAGER', 'FINANCE_MANAGER'])('never grants %s, and changes nothing', async (role) => {
     const code = await codeOf(grantRunAccountRoles({ stamp: STAMP, email: RUN_EMAIL, roles: ['CITY_ADMIN', role] }));
     expect(code).toBe('BAD_USER_INPUT');

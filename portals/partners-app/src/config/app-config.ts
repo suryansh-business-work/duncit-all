@@ -1,5 +1,11 @@
 import type { AppNavItem } from '@duncit/shell';
-import { STUDIO_OPTIONS_ENTRY } from '@duncit/utils';
+import {
+  STUDIO_OPTIONS_ENTRY,
+  studioOptionGroups,
+  studioOptionsFor,
+  type StudioOptionIcon,
+  type StudioOptionItem,
+} from '@duncit/utils';
 import {
   activeSection,
   hasPartnerRole,
@@ -92,6 +98,9 @@ export interface BuildNavOptions {
   /** The studio the user is in (see useActiveStudio). Ignored when they do
    * not hold it; the first studio they hold is used instead. */
   activeRole?: PartnerRole | null;
+  /** The `auto_pods` feature flag. Off by default, so a studio that lists its
+   * options in the sidebar leaves Auto Pods out, as its Options page does. */
+  autoPods?: boolean;
 }
 
 /** Withdrawal for a partner with no studio to show it (see buildNav). */
@@ -116,10 +125,99 @@ export function studioOptionsNavItem(section: PartnerSection): AppNavItem {
   };
 }
 
+/** The shell's glyph (an AppIcon name) for each option the catalogue names by meaning. */
+const OPTION_NAV_ICON: Readonly<Record<StudioOptionIcon, string>> = {
+  dashboard: 'dashboard',
+  venue: 'storefront',
+  pods: 'community',
+  create: 'widgets',
+  autopods: 'ai',
+  calendar: 'calendar',
+  availability: 'tune',
+  settings: 'settings',
+  earnings: 'payments',
+  publish: 'language',
+  change: 'compare',
+  requests: 'host-request',
+  nearby: 'location',
+  verification: 'verified-user',
+  wallet: 'wallet',
+  clubs: 'groups',
+  monitoring: 'insights',
+  brands: 'marketplace',
+  integrations: 'hub',
+  returns: 'inventory',
+  orders: 'orders',
+  menu: 'menuBook',
+  warehouses: 'warehouse',
+  refunds: 'revenue',
+};
+
+const optionNavItem = (option: StudioOptionItem): AppNavItem => ({
+  label: option.labelKey,
+  labelKey: option.labelKey,
+  to: option.portal,
+  icon: OPTION_NAV_ICON[option.icon],
+});
+
+/**
+ * Under the Food group the word "Food" is already said, so its dashboard and
+ * its menu read plainly there; everywhere else (the Options pages, where they
+ * sit among the venue's other options) they keep their full names.
+ */
+const FOOD_NAV_LABEL_KEY: Readonly<Record<string, string>> = {
+  'food-dashboard': 'shell.nav.dashboard',
+  'food-menu': 'shell.nav.foodMenu',
+};
+
+function foodNavItem(option: StudioOptionItem): AppNavItem {
+  const labelKey = FOOD_NAV_LABEL_KEY[option.key] ?? option.labelKey;
+  return { ...optionNavItem(option), label: labelKey, labelKey };
+}
+
+/** A group's rows are keyed by label and selected by route, so a sibling that
+ * repeats either is dropped — the first one listed stays. */
+function uniqueSiblings(items: readonly AppNavItem[]): AppNavItem[] {
+  return items.filter(
+    (item, index) => items.findIndex((other) => other.label === item.label || other.to === item.to) === index,
+  );
+}
+
+/**
+ * A `nestedNav` studio's sidebar: its options one by one, under two collapsible
+ * groups — the studio's own ("Venue Options", opening with a link to the
+ * Options page itself) and its food desk. Auto Pods follows its flag exactly as
+ * the Options page does, and a studio with no food desk gets no Food group.
+ */
+export function studioNestedNavItems(section: PartnerSection, autoPods: boolean): AppNavItem[] {
+  const entry = STUDIO_OPTIONS_ENTRY[section.mode];
+  const { main, food } = studioOptionGroups(studioOptionsFor(section.mode, [section.role], { autoPods }));
+  const allOptions: AppNavItem = { label: 'All options', labelKey: 'shell.nav.allOptions', to: entry.portal, icon: 'widgets' };
+  const groups: AppNavItem[] = [
+    {
+      label: entry.labelKey,
+      labelKey: entry.labelKey,
+      icon: section.icon,
+      children: uniqueSiblings([allOptions, ...main.map(optionNavItem)]),
+    },
+  ];
+  if (food.length > 0) {
+    groups.push({ label: 'Food', labelKey: 'shell.nav.food', icon: 'menuBook', children: uniqueSiblings(food.map(foodNavItem)) });
+  }
+  return groups;
+}
+
+/** What the studio the user is in puts in the sidebar: its ONE Options entry,
+ * or — for a `nestedNav` studio — its options under their groups. */
+function studioNav(section: PartnerSection, autoPods: boolean): AppNavItem[] {
+  return section.nestedNav ? studioNestedNavItems(section, autoPods) : [studioOptionsNavItem(section)];
+}
+
 /**
  * Sidebar nav for the signed-in user: ONE studio at a time — its Options entry,
- * which opens the page listing every option the studio has — then the
- * role-independent tail. The studio switcher above it moves between studios.
+ * which opens the page listing every option the studio has (the Venue Studio
+ * lists its options under two groups instead, see studioNestedNavItems) — then
+ * the role-independent tail. The studio switcher above it moves between studios.
  *
  * Somebody who holds no studio yet sees the ways in instead (Be a Host, become
  * a Brand partner), so the sidebar still says what this console is for.
@@ -131,7 +229,7 @@ export function buildNav(
   const products = options?.products === true;
   const active = activeSection(roles, products, options?.activeRole);
   const studio = active
-    ? [studioOptionsNavItem(active)]
+    ? studioNav(active, options?.autoPods === true)
     : PARTNER_SECTIONS.filter((section) => products || !section.products)
         .map((section) => section.onboarding)
         .filter((item): item is AppNavItem => item !== undefined);

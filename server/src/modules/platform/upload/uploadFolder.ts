@@ -55,6 +55,7 @@ const ROUTES: Record<string, Route> = {
   'venues/gallery': r('venues', 'entity', 'media'),
   'venues/docs': r('venues', 'entity', 'documents'),
   'venue-documents': r('venues', 'entity', 'documents'),
+  'venue-food-feedback': r('venues', 'entity', 'food_feedback'),
   inventory: r('products', 'entity', 'media'),
   'partner-products': r('products', 'entity', 'media'),
   'product-reviews': r('product_reviews', 'entity', 'media'),

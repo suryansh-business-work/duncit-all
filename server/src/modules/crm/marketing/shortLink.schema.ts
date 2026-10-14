@@ -71,6 +71,8 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     REFERRAL
     "A venue's public page, published by its owner."
     VENUE_PAGE
+    "A venue's food menu — what the QR on a table label opens."
+    VENUE_MENU
     "A host's public page, published by the host."
     HOST_PAGE
   }

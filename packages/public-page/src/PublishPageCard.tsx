@@ -40,12 +40,13 @@ function CardHeading({ kind, published }: Readonly<{ kind: PublicPageKind; publi
 
 /**
  * Venue Studio's and Host Studio's "Publish your page" card: publish once, then
- * the tracked link, its QR, the A4 poster and the page's numbers live here.
+ * the tracked link, its QR, the A4 poster, a venue's table label and the
+ * page's numbers live here.
  */
 export function PublishPageCard({ kind, refId, title }: Readonly<PublishPageCardProps>) {
   const { t } = useTranslation();
   const page = usePublicPage(kind, refId);
-  const actions = usePublicPageActions({ kind, refId, title });
+  const actions = usePublicPageActions({ kind, refId, title, offersFood: page.insights?.offers_food === true });
   const link = page.insights?.link ?? null;
 
   const body = () => {
@@ -94,6 +95,8 @@ export function PublishPageCard({ kind, refId, title }: Readonly<PublishPageCard
           onCopy={() => actions.copyLink(link)}
           onDownloadQr={() => actions.downloadQr(link)}
           onDownloadPoster={actions.downloadPoster}
+          tableLabelLoading={actions.tableLabelLoading}
+          onDownloadTableLabel={kind === 'VENUE' ? actions.downloadTableLabel : undefined}
         />
         <PublicPageStatsPanel insights={page.insights} days={page.days} onDaysChange={page.setDays} />
       </Stack>

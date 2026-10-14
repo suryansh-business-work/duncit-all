@@ -43,6 +43,7 @@ function OrderingScope({ venue, onRefresh, children }: Readonly<Props>) {
         ) : null}
         <FoodCartSheet
           ordering={ordering}
+          venueName={venue.venue_name}
           currency={currency}
           discountPct={venue.food_ordering.discount_pct}
         />

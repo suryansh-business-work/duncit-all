@@ -17,17 +17,26 @@ interface Props {
   refId: string | null;
   title: string;
   link: PublicPageLink;
+  /** The venue serves food — what the poster and the table label invite guests to. */
+  offersFood?: boolean;
 }
 
 /**
  * The published page's link: the URL, Copy / Share / Open, the QR and the two
- * downloads (QR as PNG, printable A4 poster as PDF). mWeb twin:
+ * downloads (QR as PNG, printable A4 poster as PDF) — plus, for a venue, the
+ * label for its tables. mWeb twin:
  * public-page/PublicPageLinkPanel (rule 27) — the testIDs are shared.
  */
-export function PublicPageLinkPanel({ kind, refId, title, link }: Readonly<Props>) {
+export function PublicPageLinkPanel({
+  kind,
+  refId,
+  title,
+  link,
+  offersFood = false,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { color: ink, accent } = useThemeColors();
-  const actions = usePublicPageActions(kind, refId, title, link);
+  const actions = usePublicPageActions(kind, refId, title, link, offersFood);
   // Soft buttons paint their label in the accent; outline ones in ink.
   const icon = (name: keyof typeof MaterialIcons.glyphMap, tint = ink) => (
     <MaterialIcons name={name} size={ICON_SIZE} color={tint} />
@@ -113,6 +122,22 @@ export function PublicPageLinkPanel({ kind, refId, title, link }: Readonly<Props
           icon={icon('picture-as-pdf', accent)}
           onPress={() => fireAndForget(actions.downloadPoster())}
         />
+        {kind === 'VENUE' ? (
+          <DuncitButton
+            testID="public-page-download-table-label"
+            label={
+              actions.busy === 'label'
+                ? t('publicPage.link.preparingTableLabel')
+                : t('publicPage.link.downloadTableLabel')
+            }
+            variant="soft"
+            fullWidth
+            loading={actions.busy === 'label'}
+            disabled={actions.busy !== null}
+            icon={icon('table-restaurant', accent)}
+            onPress={() => fireAndForget(actions.downloadTableLabel())}
+          />
+        ) : null}
       </YStack>
       {actions.notice ? (
         <Text

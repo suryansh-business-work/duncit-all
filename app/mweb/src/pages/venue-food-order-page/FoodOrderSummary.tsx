@@ -75,6 +75,10 @@ export default function FoodOrderSummary({ order }: Readonly<{ order: VenueFoodO
         {order.table_label && <Detail label={t('mweb.venueFood.order.table')} value={order.table_label} testId="food-order-table" />}
         {order.note && <Detail label={t('mweb.venueFood.order.note')} value={order.note} testId="food-order-note" />}
         <Detail label={t('mweb.venueFood.order.placedAt')} value={formatDateTime(order.created_at)} testId="food-order-placed-at" />
+        {order.venue_gstin && <Detail label={t('mweb.venueFood.order.gstin')} value={order.venue_gstin} testId="food-order-gstin" />}
+        {order.venue_address && (
+          <Detail label={t('mweb.venueFood.order.venueAddress')} value={order.venue_address} testId="food-order-venue-address" />
+        )}
       </Stack>
     </Stack>
   );

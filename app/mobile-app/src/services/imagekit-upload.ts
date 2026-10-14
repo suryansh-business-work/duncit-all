@@ -59,6 +59,31 @@ function postForm(
   });
 }
 
+/** Where one file is POSTed, and the single-use pass that lets it. */
+export interface UploadPass {
+  uploadUrl: string;
+  ticket: string;
+}
+
+/**
+ * POST one picked file to the server's upload route with a pass already in
+ * hand — the half of an upload that does not care who issued the pass. A food
+ * order's guest, who may be signed out, gets theirs from the order's own
+ * mutation rather than from `getImagekitAuth`.
+ */
+export async function postFileWithPass(
+  file: DirectUploadFile,
+  pass: UploadPass,
+  onProgress?: (pct: number) => void,
+): Promise<string> {
+  const form = new FormData();
+  form.append('file', await toFilePart(file));
+  const url =
+    `${pass.uploadUrl}?ticket=${encodeURIComponent(pass.ticket)}` +
+    `&fileName=${encodeURIComponent(file.name)}`;
+  return postForm(url, form, onProgress);
+}
+
 /**
  * Upload a picked file to ImageKit THROUGH our server.
  *
@@ -85,10 +110,5 @@ export async function uploadToImagekitDirect(
     { folder, surface: UploadSurface.Mobile },
     { auth: true },
   );
-  const form = new FormData();
-  form.append('file', await toFilePart(file));
-  const url =
-    `${ticket.uploadUrl}?ticket=${encodeURIComponent(ticket.ticket)}` +
-    `&fileName=${encodeURIComponent(file.name)}`;
-  return postForm(url, form, onProgress);
+  return postFileWithPass(file, ticket, onProgress);
 }

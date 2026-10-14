@@ -2,6 +2,7 @@ import { gql, type TypedDocumentNode } from '@apollo/client';
 import type {
   MutationCancelVenueFoodOrderArgs,
   MutationSetVenueFoodOrderStatusArgs,
+  VenueFoodFeedback,
   VenueFoodOrder,
   VenueFoodOrderLine,
   VenueFoodOrderStatus,
@@ -12,6 +13,8 @@ import type { SwitchableVenue } from '@duncit/utils';
 export type FoodOrderStatus = VenueFoodOrderStatus;
 export type FoodPaymentStatus = VenueFoodPaymentStatus;
 export type FoodOrderLine = Pick<VenueFoodOrderLine, 'item_id' | 'name' | 'diet' | 'unit_price' | 'quantity' | 'line_total'>;
+/** What the guest said about a served order — absent until they rate it. */
+export type FoodOrderFeedback = Pick<VenueFoodFeedback, 'rating' | 'comment' | 'images' | 'submitted_at'>;
 
 /** One paid food order as the board, its details dialog and every action read it. */
 export type FoodOrderRow = Pick<
@@ -34,7 +37,10 @@ export type FoodOrderRow = Pick<
   | 'payment_status'
   | 'cancel_reason'
   | 'created_at'
-> & { items: FoodOrderLine[] };
+  | 'venue_gstin'
+  | 'invoice_available'
+  | 'subscribe_events'
+> & { items: FoodOrderLine[]; feedback?: FoodOrderFeedback | null };
 
 const FOOD_ORDER_FIELDS = `
   id
@@ -56,6 +62,10 @@ const FOOD_ORDER_FIELDS = `
   payment_status
   cancel_reason
   created_at
+  venue_gstin
+  invoice_available
+  subscribe_events
+  feedback { rating comment images submitted_at }
 `;
 
 export interface FoodOrderVenue extends SwitchableVenue {

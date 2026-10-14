@@ -26,6 +26,9 @@ export interface PartnerSection {
   mode: PartnerStudioMode;
   /** The icon of the studio's ONE sidebar entry, its Options page. */
   icon: string;
+  /** True for a studio whose options are listed in the sidebar one by one,
+   * under collapsible groups, instead of behind the ONE Options entry. */
+  nestedNav?: boolean;
   /** True for an area the `is_product_visible` system flag owns — with the flag
    * off it is not in the sidebar, its routes do not render, and `/` never lands
    * on it. E-Commerce Brand is the whole of it: listings, warehouses (ShipRocket
@@ -55,7 +58,9 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
   // studio-options) that mWeb and the native app list too; the sidebar shows
   // ONE entry per studio, its Options page, and every option keeps its route.
   { role: 'CLUB_ADMIN', mode: 'CLUB', icon: 'groups', paths: ['/club-admin'] },
-  { role: 'VENUE_OWNER', mode: 'VENUE', icon: 'storefront', paths: ['/venues', '/register-venue'] },
+  // The Venue Studio is the exception: its options sit in the sidebar under
+  // two groups, Venue Options and Food (app-config studioNestedNavItems).
+  { role: 'VENUE_OWNER', mode: 'VENUE', icon: 'storefront', nestedNav: true, paths: ['/venues', '/register-venue'] },
   {
     role: 'HOST',
     mode: 'HOST',

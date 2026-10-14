@@ -3,6 +3,7 @@ import ContentCopyRounded from '@mui/icons-material/ContentCopyRounded';
 import OpenInNewRounded from '@mui/icons-material/OpenInNewRounded';
 import PictureAsPdfRounded from '@mui/icons-material/PictureAsPdfRounded';
 import QrCode2Rounded from '@mui/icons-material/QrCode2Rounded';
+import TableRestaurantRounded from '@mui/icons-material/TableRestaurantRounded';
 import { useTranslation } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
 import type { PublicPageLink } from '@duncit/utils';
@@ -14,14 +15,17 @@ interface Props {
   onCopy: () => void;
   onDownloadQr: () => void;
   onDownloadPoster: () => void;
+  /** Venues only: the table label. Absent for a host page, which has no tables. */
+  tableLabelLoading?: boolean;
+  onDownloadTableLabel?: () => void;
 }
 
 /** The QR is a print target first; this size keeps it scannable off a phone screen too. */
 const QR_SIZE = 168;
 
-/** The published link, its QR, and the three things an owner does with them. */
+/** The published link, its QR, and what an owner does with them. */
 export function PublishedLinkPanel(props: Readonly<Props>) {
-  const { link, title, posterLoading, onCopy, onDownloadQr, onDownloadPoster } = props;
+  const { link, title, posterLoading, onCopy, onDownloadQr, onDownloadPoster, tableLabelLoading, onDownloadTableLabel } = props;
   const { t } = useTranslation();
 
   return (
@@ -86,6 +90,17 @@ export function PublishedLinkPanel(props: Readonly<Props>) {
           >
             {posterLoading ? t('publicPage.link.preparingPoster') : t('publicPage.link.downloadPoster')}
           </DuncitButton>
+          {onDownloadTableLabel && (
+            <DuncitButton
+              variant="outlined"
+              startIcon={<TableRestaurantRounded />}
+              onClick={onDownloadTableLabel}
+              loading={tableLabelLoading}
+              data-testid="public-page-download-table-label"
+            >
+              {tableLabelLoading ? t('publicPage.link.preparingTableLabel') : t('publicPage.link.downloadTableLabel')}
+            </DuncitButton>
+          )}
         </Stack>
       </Stack>
     </Stack>

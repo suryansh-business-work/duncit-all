@@ -3,6 +3,7 @@ import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import { VenueSlotModel, type IVenueSlot, type VenueSlotStatus } from './venueSlot.model';
 import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
+import { notifyVenueSubscribers } from '@modules/venues/venueFood/venueSubscriber.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -630,6 +631,18 @@ async function whatsappSlotDecision(
     // their declined twins, filled from the very same `params` array. The
     // address comes off each account's own `auth.email`, already projected.
     await notifyEach(sends);
+    // The pod is live: whoever asked to hear about this venue's events is told.
+    // It queues and returns — the fan-out never holds the approval open.
+    if (approved) {
+      await notifyVenueSubscribers({
+        venueId: venue._id,
+        venueName: facts.venueName,
+        podId: facts.entityId,
+        podTitle: facts.podTitle,
+        date,
+        time,
+      });
+    }
   } catch (err) {
     logs.server.error('venueSlot', 'whatsappSlotDecision', {
       error: err,

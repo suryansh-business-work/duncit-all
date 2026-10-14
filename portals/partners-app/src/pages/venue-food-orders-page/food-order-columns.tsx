@@ -1,4 +1,4 @@
-import { Stack } from '@mui/material';
+import { Rating, Stack } from '@mui/material';
 import { formatDateTime } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
 import type { DuncitColumn } from '@duncit/table';
@@ -139,6 +139,26 @@ export const buildFoodOrderColumns = (t: Translate, handlers: FoodOrderRowHandle
       <StatusChip status={row.status} colorMap={FOOD_ORDER_STATUS_COLORS} label={foodOrderStatusLabel(t, row.status)} />
     ),
     valueGetter: (row) => foodOrderStatusLabel(t, row.status),
+  },
+  {
+    field: 'feedback',
+    headerName: t('partners.foodOrders.colRating'),
+    type: 'text',
+    width: 140,
+    sortable: false,
+    filterable: false,
+    // Blank until the guest rates the order.
+    cellRenderer: (row) =>
+      row.feedback ? (
+        <Rating
+          readOnly
+          size="small"
+          value={row.feedback.rating}
+          aria-label={t('partners.foodOrders.ratingOutOf', { vars: { rating: row.feedback.rating } })}
+        />
+      ) : null,
+    valueGetter: (row) =>
+      row.feedback ? t('partners.foodOrders.ratingOutOf', { vars: { rating: row.feedback.rating } }) : '',
   },
   {
     field: 'actions',

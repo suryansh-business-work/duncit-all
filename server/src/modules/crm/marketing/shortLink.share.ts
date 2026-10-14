@@ -39,6 +39,7 @@ export const SHARE_LINK_TARGETS = [
   'GIFT_CARD',
   'REFERRAL',
   'VENUE_PAGE',
+  'VENUE_MENU',
   'HOST_PAGE',
 ] as const;
 
@@ -62,6 +63,7 @@ const CAMPAIGN_NAMES: Record<ShareLinkTarget, string> = {
   GIFT_CARD: 'Gift Card Shares',
   REFERRAL: 'Referral Shares',
   VENUE_PAGE: 'Venue Page Shares',
+  VENUE_MENU: 'Venue Table Label Scans',
   HOST_PAGE: 'Host Page Shares',
 };
 
@@ -241,6 +243,22 @@ const venuePageResolver: TargetResolver = async (ref, base) => {
   return { url: `${base}/venue/${String(venue._id)}`, label: label('Venue page', venue.venue_name) };
 };
 
+/**
+ * A venue's food menu — the link a table label's QR opens. Its own target, so a
+ * scan at the table is counted apart from a scan of the venue's poster, and it
+ * lands on the Menu tab. Only for a live venue that serves food.
+ */
+const venueMenuResolver: TargetResolver = async (ref, base) => {
+  const venue = Types.ObjectId.isValid(ref)
+    ? await VenueModel.findById(ref).select('venue_name status is_active offers_food').lean().exec()
+    : null;
+  if (venue?.status !== 'APPROVED' || venue.is_active === false || !venue.offers_food) return null;
+  return {
+    url: `${base}/venue/${String(venue._id)}?selectedtab=menu`,
+    label: label('Venue menu', venue.venue_name),
+  };
+};
+
 /** A host's public page, addressed like a profile: the @handle when there is one. */
 /** The fields a host page link is built from. */
 export interface HostPageAccount {
@@ -271,6 +289,7 @@ const RESOLVERS: Record<ShareLinkTarget, TargetResolver> = {
   GIFT_CARD: giftCardResolver,
   REFERRAL: referralResolver,
   VENUE_PAGE: venuePageResolver,
+  VENUE_MENU: venueMenuResolver,
   HOST_PAGE: hostPageResolver,
 };
 

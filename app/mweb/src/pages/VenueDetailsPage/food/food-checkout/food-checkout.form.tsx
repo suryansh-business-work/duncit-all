@@ -3,6 +3,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, Typography } from '@mui/material';
 import { FOOD_ORDER_LIMITS } from '@duncit/utils';
+import RhfCheckbox from '../../../../forms/components/RhfCheckbox';
 import RhfTextField from '../../../../forms/components/RhfTextField';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { makeFoodCheckoutSchema, type FoodCheckoutFormProps, type FoodCheckoutValues } from './food-checkout.types';
@@ -12,7 +13,7 @@ import { makeFoodCheckoutSchema, type FoodCheckoutFormProps, type FoodCheckoutVa
  * table and a note for the kitchen (React Hook Form + Zod). No sign-in — the
  * guest is standing at the table.
  */
-export default function FoodCheckoutForm({ formId, initial, disabled, onSubmit }: Readonly<FoodCheckoutFormProps>) {
+export default function FoodCheckoutForm({ formId, venueName, initial, disabled, onSubmit }: Readonly<FoodCheckoutFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeFoodCheckoutSchema(t), [t]);
   const {
@@ -79,6 +80,14 @@ export default function FoodCheckoutForm({ formId, initial, disabled, onSubmit }
         size="small"
         disabled={disabled}
         slotProps={{ htmlInput: { maxLength: FOOD_ORDER_LIMITS.noteMax } }}
+      />
+      {/* A consent, asked before the payment and never pre-ticked. */}
+      <RhfCheckbox
+        control={control}
+        name="subscribe"
+        label={t('mweb.venueFood.checkout.subscribe', { vars: { venue: venueName } })}
+        hint={t('mweb.venueFood.checkout.subscribeHint')}
+        data-testid="food-checkout-subscribe"
       />
     </Stack>
   );

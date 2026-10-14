@@ -13,7 +13,10 @@ import { useLoadingRegion } from '@/components/Skeleton';
 /** "Pods at this venue" — every live pod hosted at the venue, in the same
  * Happening soon / Upcoming / Previous rails as the club page. mWeb twin:
  * venues-page/VenuePodsSection. */
-export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
+export function VenuePodsSection({
+  venueId,
+  title = 'Pods at this venue',
+}: Readonly<{ venueId: string; title?: string }>) {
   const loadingRegion = useLoadingRegion();
   const { openPod } = useDetailNav();
   const [pods, setPods] = useState<ClubPod[]>([]);
@@ -32,7 +35,7 @@ export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
 
   return (
     <YStack gap={10} testID="venue-pods-section">
-      <SectionHeader title="Pods at this venue" />
+      <SectionHeader title={title} />
       {isLoading ? (
         <Spinner {...loadingRegion} testID="venue-pods-loading" color="$primary" />
       ) : null}

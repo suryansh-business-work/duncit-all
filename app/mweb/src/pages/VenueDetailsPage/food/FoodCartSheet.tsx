@@ -20,6 +20,7 @@ interface Props {
   cart: FoodCart;
   currency: string;
   discountPct: number;
+  venueName: string;
   guest: FoodCheckoutValues;
   coupon: FoodCouponControl;
   submitting: boolean;
@@ -41,6 +42,7 @@ export default function FoodCartSheet({
   cart,
   currency,
   discountPct,
+  venueName,
   guest,
   coupon,
   submitting,
@@ -130,7 +132,7 @@ export default function FoodCartSheet({
           </Alert>
         )}
         <Divider />
-        <FoodCheckoutForm formId={FORM_ID} initial={guest} disabled={submitting} onSubmit={onPay} />
+        <FoodCheckoutForm formId={FORM_ID} venueName={venueName} initial={guest} disabled={submitting} onSubmit={onPay} />
         {error && (
           <Alert severity="error" onClose={onDismissError} data-testid="food-cart-error">
             {error.title && <AlertTitle>{error.title}</AlertTitle>}

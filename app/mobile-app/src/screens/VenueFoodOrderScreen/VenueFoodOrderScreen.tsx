@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
+import type { ScrollView } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
@@ -19,6 +20,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
+import { FoodOrderFollowUp } from './FoodOrderFollowUp';
 import { FoodOrderPaymentCard } from './FoodOrderPaymentCard';
 import { FoodOrderSummary } from './FoodOrderSummary';
 
@@ -38,7 +40,7 @@ export function VenueFoodOrderScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'VenueFoodOrder'>>();
   const venueId = route.params?.venueId ?? '';
   const orderId = route.params?.orderId ?? '';
-  const { order, loading, error, errorCode, clientKey, refetch } = useFoodOrder(
+  const { order, loading, error, errorCode, clientKey, accessKey, refetch } = useFoodOrder(
     orderId,
     route.params?.key ?? null,
   );
@@ -57,12 +59,22 @@ export function VenueFoodOrderScreen() {
         customer_phone: target.customer_phone,
         table_label: target.table_label || null,
         note: target.note || null,
-        // Repeated exactly as it was placed — the coupon included.
+        // Repeated exactly as it was placed — the coupon and the events opt-in included.
         ...(target.coupon_code ? { coupon_code: target.coupon_code } : {}),
+        ...(target.subscribe_events ? { subscribe_events: true } : {}),
         // The key the order was placed with: the server answers with this same order and its payment.
         client_key: clientKey,
       }),
     );
+
+  // The "rate your order" link (`?feedback=1`) lands on the rating form, once, when it is drawn.
+  const scroll = useRef<ScrollView>(null);
+  const landOnFeedback = useRef(!!route.params?.feedback);
+  const onFeedbackLayout = (y: number) => {
+    if (!landOnFeedback.current) return;
+    landOnFeedback.current = false;
+    scroll.current?.scrollTo({ y, animated: true });
+  };
 
   const menuVenueId = order?.venue_id ?? venueId;
   const backToMenu = menuVenueId ? (
@@ -86,6 +98,7 @@ export function VenueFoodOrderScreen() {
     const paid = order.payment_status !== 'PENDING' && order.payment_status !== 'FAILED';
     body = (
       <RefreshScrollView
+        ref={scroll}
         flex={1}
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}
       >
@@ -128,6 +141,13 @@ export function VenueFoodOrderScreen() {
           </SurfaceCard>
         ) : null}
         <FoodOrderSummary order={order} />
+        <FoodOrderFollowUp
+          order={order}
+          accessKey={accessKey}
+          paid={paid}
+          onChanged={reload}
+          onFeedbackLayout={onFeedbackLayout}
+        />
         {backToMenu}
       </RefreshScrollView>
     );

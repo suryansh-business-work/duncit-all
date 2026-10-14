@@ -30,6 +30,7 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, IconName>> = 
   integrations: 'extension',
   returns: 'assignment-return',
   orders: 'local-shipping',
+  menu: 'restaurant-menu',
   warehouses: 'warehouse',
   refunds: 'currency-exchange',
 };

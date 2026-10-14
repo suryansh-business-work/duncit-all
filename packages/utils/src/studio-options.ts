@@ -37,6 +37,7 @@ export type StudioOptionIcon =
   | 'integrations'
   | 'returns'
   | 'orders'
+  | 'menu'
   | 'warehouses'
   | 'refunds';
 
@@ -54,6 +55,19 @@ export interface StudioOptionItem {
   portal: string;
   /** Shown only while the `auto_pods` feature flag is on. */
   autoPods?: boolean;
+  /** The sub-menu an option belongs to. The catalogue stays ONE flat list (the
+   * Options pages list every option in order); a surface that nests its menu —
+   * the Partner console sidebar — splits on this with `studioOptionGroups`.
+   * Absent → the studio's main options. */
+  group?: 'food';
+}
+
+/** A studio's options split into the sub-menus a nested menu draws. */
+export interface StudioOptionGroups {
+  /** Every option outside a named group, in catalogue order. */
+  main: StudioOptionItem[];
+  /** The venue's food desk: Dashboard, Menu, Food Orders, Food Coupons. */
+  food: StudioOptionItem[];
 }
 
 /** Every studio's Options page entry — the ONE highlighted sidebar row. */
@@ -127,9 +141,13 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'settings', labelKey: 'mweb.studioOptions.venueSettings', hintKey: 'mweb.studioOptions.venueSettingsHint', icon: 'settings', path: '/venues/settings', route: 'VenueSettings', portal: '/venues/settings' },
     { key: 'earnings', labelKey: 'mweb.studioOptions.venueEarnings', hintKey: 'mweb.studioOptions.venueEarningsHint', icon: 'earnings', path: '/venues/earnings', route: 'VenueEarnings', portal: '/venues/earnings' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishVenue', hintKey: 'mweb.studioOptions.publishVenueHint', icon: 'publish', path: '/venues/publish', route: 'VenuePublish', portal: '/venues/publish' },
-    // The food order board and the venue's food coupons are Partner console screens — the apps open them there.
-    { key: 'food-orders', labelKey: 'mweb.studioOptions.foodOrders', hintKey: 'mweb.studioOptions.foodOrdersHint', icon: 'orders', portal: '/venues/food-orders' },
-    { key: 'food-coupons', labelKey: 'mweb.studioOptions.foodCoupons', hintKey: 'mweb.studioOptions.foodCouponsHint', icon: 'orders', portal: '/venues/food-coupons' },
+    // The venue's food desk — its dashboard, menu, order board and coupons — is
+    // Partner console screens; the apps open them there. `group` nests the four
+    // under one Food heading in the console sidebar.
+    { key: 'food-dashboard', labelKey: 'mweb.studioOptions.foodDashboard', hintKey: 'mweb.studioOptions.foodDashboardHint', icon: 'dashboard', portal: '/venues/food-dashboard', group: 'food' },
+    { key: 'food-menu', labelKey: 'mweb.studioOptions.foodMenu', hintKey: 'mweb.studioOptions.foodMenuHint', icon: 'menu', portal: '/venues/food-menu', group: 'food' },
+    { key: 'food-orders', labelKey: 'mweb.studioOptions.foodOrders', hintKey: 'mweb.studioOptions.foodOrdersHint', icon: 'orders', portal: '/venues/food-orders', group: 'food' },
+    { key: 'food-coupons', labelKey: 'mweb.studioOptions.foodCoupons', hintKey: 'mweb.studioOptions.foodCouponsHint', icon: 'orders', portal: '/venues/food-coupons', group: 'food' },
     { key: 'pods', labelKey: 'mweb.studioOptions.venuePods', hintKey: 'mweb.studioOptions.venuePodsHint', icon: 'pods', path: '/venues/pods', route: 'VenuePods', portal: '/venues/pods' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/venues/change-requests' },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromHosts', hintKey: 'mweb.studioOptions.podRequestsFromHostsHint', icon: 'requests', path: '/venues/pod-requests', route: 'VenuePodRequests', portal: '/venues/pod-requests' },
@@ -199,5 +217,14 @@ export function studioOptionsFor(
 ): StudioOptionItem[] {
   if (!holdsStudio(mode, roles)) return [];
   return STUDIO_OPTION_LIST[mode].filter((option) => options.autoPods || !option.autoPods);
+}
+
+/** Splits a studio's options into its sub-menus, each in catalogue order — the
+ * one rule a nested menu and anything else that groups the list read. */
+export function studioOptionGroups(options: readonly StudioOptionItem[]): StudioOptionGroups {
+  return {
+    main: options.filter((option) => option.group === undefined),
+    food: options.filter((option) => option.group === 'food'),
+  };
 }
 

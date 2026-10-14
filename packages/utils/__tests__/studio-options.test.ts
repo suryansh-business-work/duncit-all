@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   STUDIO_OPTIONS_ENTRY,
   STUDIO_OPTION_LIST,
+  studioOptionGroups,
   studioOptionsEntryFor,
   studioOptionsFor,
 } from '../src/studio-options';
@@ -21,6 +22,8 @@ describe('STUDIO_OPTION_LIST', () => {
       'settings',
       'earnings',
       'publish',
+      'food-dashboard',
+      'food-menu',
       'food-orders',
       'food-coupons',
       'pods',
@@ -99,6 +102,61 @@ describe('studioOptionsFor', () => {
   it('is empty in User mode and for a studio the user does not hold', () => {
     expect(studioOptionsFor('USER', EVERY_ROLE, { autoPods: true })).toEqual([]);
     expect(studioOptionsFor('ECOMM', ['HOST'], { autoPods: true })).toEqual([]);
+  });
+});
+
+describe('the food group', () => {
+  const FOOD_KEYS = ['food-dashboard', 'food-menu', 'food-orders', 'food-coupons'];
+
+  it('marks the venue’s four food options, and no other option in any studio', () => {
+    const grouped = Object.entries(STUDIO_OPTION_LIST).flatMap(([mode, list]) =>
+      list.filter((option) => option.group !== undefined).map((option) => `${mode}:${option.key}:${option.group}`),
+    );
+    expect(grouped).toEqual(FOOD_KEYS.map((key) => `VENUE:${key}:food`));
+  });
+
+  it('opens every food option in the Partner console, each on its own page', () => {
+    const food = STUDIO_OPTION_LIST.VENUE.filter((option) => option.group === 'food');
+    expect(food.map(({ path, route, portal }) => ({ path, route, portal }))).toEqual([
+      { path: undefined, route: undefined, portal: '/venues/food-dashboard' },
+      { path: undefined, route: undefined, portal: '/venues/food-menu' },
+      { path: undefined, route: undefined, portal: '/venues/food-orders' },
+      { path: undefined, route: undefined, portal: '/venues/food-coupons' },
+    ]);
+  });
+});
+
+describe('studioOptionGroups', () => {
+  it('splits the venue options into the main menu and the food menu, each in catalogue order', () => {
+    const { main, food } = studioOptionGroups(STUDIO_OPTION_LIST.VENUE);
+    expect(food.map((option) => option.key)).toEqual(['food-dashboard', 'food-menu', 'food-orders', 'food-coupons']);
+    expect(main.map((option) => option.key)).toEqual([
+      'dashboard',
+      'venues',
+      'slot-requests',
+      'auto-pods',
+      'availability',
+      'settings',
+      'earnings',
+      'publish',
+      'pods',
+      'change-requests',
+      'pod-requests',
+      'nearby',
+      'verification',
+      'withdrawal',
+    ]);
+    // Nothing is dropped and nothing is listed twice.
+    expect(main.length + food.length).toBe(STUDIO_OPTION_LIST.VENUE.length);
+  });
+
+  it('keeps a studio with no food desk whole, and splits only what it is given', () => {
+    expect(studioOptionGroups(STUDIO_OPTION_LIST.HOST)).toEqual({ main: [...STUDIO_OPTION_LIST.HOST], food: [] });
+    expect(studioOptionGroups([])).toEqual({ main: [], food: [] });
+    // The flag-filtered list splits the same way: Auto Pods off stays off.
+    const off = studioOptionGroups(studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: false }));
+    expect(off.main.map((option) => option.key)).not.toContain('auto-pods');
+    expect(off.food).toHaveLength(4);
   });
 });
 

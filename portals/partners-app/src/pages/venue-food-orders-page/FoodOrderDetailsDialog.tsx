@@ -3,6 +3,7 @@ import { formatDateTime } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
 import { InfoRow, StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
+import FoodFeedbackBody from '../../components/venue/FoodFeedbackBody';
 import { foodDietLabel } from '../register-venue-page/sections/food/food-labels';
 import {
   FOOD_ORDER_STATUS_COLORS,
@@ -55,6 +56,9 @@ export default function FoodOrderDetailsDialog({ order, onClose }: Readonly<Prop
                 <Line label={t('partners.foodOrders.colTable')} value={order.table_label} />
                 <Line label={t('partners.foodOrders.note')} value={order.note} />
                 {order.cancel_reason && <Line label={t('partners.foodOrders.cancelReason')} value={order.cancel_reason} />}
+                {order.subscribe_events && (
+                  <Line label={t('partners.foodOrders.eventUpdates')} value={t('partners.foodOrders.subscribedToEvents')} />
+                )}
               </Stack>
               <Divider flexItem />
               <Typography variant="subtitle2" component="h3" sx={{ fontWeight: 800 }}>
@@ -103,6 +107,20 @@ export default function FoodOrderDetailsDialog({ order, onClose }: Readonly<Prop
                 )}
                 <Line label={t('partners.foodOrders.colTotal')} value={foodMoney(order, order.total)} />
               </Stack>
+              {order.feedback && (
+                <>
+                  <Divider flexItem />
+                  <Stack spacing={0.75}>
+                    <Typography variant="subtitle2" component="h3" sx={{ fontWeight: 800 }}>
+                      {t('partners.foodOrders.feedback')}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {t('partners.foodOrders.feedbackAt', { vars: { when: formatDateTime(order.feedback.submitted_at) } })}
+                    </Typography>
+                    <FoodFeedbackBody feedback={order.feedback} data-testid="food-order-feedback" />
+                  </Stack>
+                </>
+              )}
             </Stack>
           </DialogContent>
           <DialogActions>

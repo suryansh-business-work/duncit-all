@@ -197,8 +197,9 @@ export type RootStackParamList = {
   Follow: { userId: string; tab: 'followers' | 'following' };
   VenueDetails: { venueId: string };
   /** /venue/:venueId/food-order/:orderId — a food order placed from the venue's menu;
-   * `key` is the order's access key, riding in the link as `?key=`. */
-  VenueFoodOrder: { venueId: string; orderId: string; key?: string };
+   * `key` is the order's access key, riding in the link as `?key=`; `feedback`
+   * (`?feedback=1`, the "rate your order" link) opens the screen on its rating card. */
+  VenueFoodOrder: { venueId: string; orderId: string; key?: string; feedback?: string };
   /** /city-launch/:locationId — a not-yet-launched city's waitlist (its slug, or Location.id). */
   CityLaunch: { locationId: string };
   NotFound: undefined;

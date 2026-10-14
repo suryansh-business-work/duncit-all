@@ -38,6 +38,8 @@ import EarnPage from './pages/earn-page/EarnPage';
 import StudioOptionsPage from './pages/studio-options-page/StudioOptionsPage';
 import VenueEarningsPage from './pages/venue-earnings-page/VenueEarningsPage';
 import VenuePublishPage from './pages/publish-page/VenuePublishPage';
+import VenueFoodDashboardPage from './pages/venue-food-dashboard-page/VenueFoodDashboardPage';
+import VenueFoodMenuPage from './pages/venue-food-menu-page/VenueFoodMenuPage';
 import VenueFoodOrdersPage from './pages/venue-food-orders-page/VenueFoodOrdersPage';
 import VenueFoodCouponsPage from './pages/venue-food-coupons-page/VenueFoodCouponsPage';
 import HostPublishPage from './pages/publish-page/HostPublishPage';
@@ -102,6 +104,8 @@ export default function App() {
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/venues/earnings" element={authed(<VenueEarningsPage />)} />
       <Route path="/venues/publish" element={authed(<VenuePublishPage />)} />
+      <Route path="/venues/food-dashboard" element={authed(<VenueFoodDashboardPage />)} />
+      <Route path="/venues/food-menu" element={authed(<VenueFoodMenuPage />)} />
       <Route path="/venues/food-orders" element={authed(<VenueFoodOrdersPage />)} />
       <Route path="/venues/food-coupons" element={authed(<VenueFoodCouponsPage />)} />
       <Route path="/host" element={authed(<Navigate to="/host/dashboard" replace />)} />

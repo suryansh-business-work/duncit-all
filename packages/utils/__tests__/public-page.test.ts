@@ -4,10 +4,13 @@ import {
   PUBLIC_PAGE_POSTER_QUERY,
   PUBLIC_PAGE_RANGES,
   PUBLISH_PUBLIC_PAGE_MUTATION,
+  VENUE_TABLE_LABEL_QUERY,
   podSlugsFromPath,
   publicPageErrorKey,
+  publicPageHeadlineKey,
   publicPagePosterFileName,
   publicPageQrFileName,
+  publicPageTableLabelFileName,
   publicPageTiles,
   type PublicPageInsights,
 } from '../src/public-page';
@@ -87,6 +90,36 @@ describe('file names', () => {
   it('names a title with nothing usable after Duncit', () => {
     expect(publicPagePosterFileName('!!!')).toBe('duncit-poster.pdf');
     expect(publicPageQrFileName('')).toBe('duncit-qr.png');
+  });
+
+  it('names the table label like the poster', () => {
+    expect(publicPageTableLabelFileName('Dek Cafe')).toBe('dek-cafe-table-label.pdf');
+    expect(publicPageTableLabelFileName('')).toBe('duncit-table-label.pdf');
+  });
+});
+
+describe('publicPageHeadlineKey', () => {
+  it('invites guests to the menu as well as the pods at a venue that serves food', () => {
+    expect(publicPageHeadlineKey('VENUE', true)).toBe('publicPage.poster.venueFoodHeadline');
+  });
+
+  it('keeps the pods-only line for a venue without a menu', () => {
+    expect(publicPageHeadlineKey('VENUE', false)).toBe('publicPage.poster.venueHeadline');
+  });
+
+  it('never mentions a menu on a host page, whatever it is told', () => {
+    expect(publicPageHeadlineKey('HOST', false)).toBe('publicPage.poster.hostHeadline');
+    expect(publicPageHeadlineKey('HOST', true)).toBe('publicPage.poster.hostHeadline');
+  });
+});
+
+describe('the table label document', () => {
+  it('asks for one venue label with its headline', () => {
+    expect(VENUE_TABLE_LABEL_QUERY).toContain('myVenueTableLabelPdfBase64(venue_id: $venueId, headline: $headline)');
+  });
+
+  it('reads whether the page shows a food menu with its link', () => {
+    expect(MY_PUBLIC_PAGE_QUERY).toContain('offers_food');
   });
 });
 

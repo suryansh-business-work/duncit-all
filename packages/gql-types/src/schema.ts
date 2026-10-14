@@ -14114,6 +14114,8 @@ export type Mutation = {
   /** Leave a 1-5 satisfaction rating + optional comment on a resolved/closed ticket (owner-only, one-time). */
   submitTicketFeedback: Ticket;
   submitVenueFinal: Venue;
+  /** Public: rate a served order. Once per order. */
+  submitVenueFoodFeedback: VenueFoodOrder;
   /** venue_id targets a specific editable (DRAFT/REJECTED) venue of the owner; omitted = current draft (created if needed). */
   submitVenueStep1: Venue;
   submitVenueStep2: Venue;
@@ -14420,6 +14422,8 @@ export type Mutation = {
   venueAcceptAutoPod: AutoPod;
   /** Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings. */
   venueCancelPod: VenueCancelPodResult;
+  /** Public: a one-shot pass to upload one feedback photo for a served, not yet rated order. */
+  venueFoodFeedbackUploadPass: ImagekitAuth;
   /** The venue takes its slot back while the offer is still enrolling; the offer returns to venues' lists and the venue pays the Pod Settings penalty. */
   venueWithdrawAutoPod: AutoPod;
   verifyEmailVerificationOtp: User;
@@ -18847,6 +18851,11 @@ export type MutationSubmitVenueFinalArgs = {
 };
 
 
+export type MutationSubmitVenueFoodFeedbackArgs = {
+  input: SubmitVenueFoodFeedbackInput;
+};
+
+
 export type MutationSubmitVenueStep1Args = {
   input: VenueStep1Input;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
@@ -19857,6 +19866,12 @@ export type MutationVenueAcceptAutoPodArgs = {
 export type MutationVenueCancelPodArgs = {
   pod_id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
+};
+
+
+export type MutationVenueFoodFeedbackUploadPassArgs = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  order_id: Scalars['ID']['input'];
 };
 
 
@@ -21440,6 +21455,8 @@ export type PlaceVenueFoodOrderInput = {
   customer_phone: Scalars['String']['input'];
   items: Array<VenueFoodOrderLineInput>;
   note?: InputMaybe<Scalars['String']['input']>;
+  /** The guest ticked 'tell me about events here'. They are subscribed once the order is paid. */
+  subscribe_events?: InputMaybe<Scalars['Boolean']['input']>;
   table_label?: InputMaybe<Scalars['String']['input']>;
   venue_id: Scalars['ID']['input'];
 };
@@ -24510,6 +24527,8 @@ export type PublicPageInsights = {
   __typename?: 'PublicPageInsights';
   funnel?: Maybe<ShortLinkFunnel>;
   link?: Maybe<PublicPageLink>;
+  /** The page also shows a food menu: the poster says 'Menu & pods', and a table label opens the menu. */
+  offers_food: Scalars['Boolean']['output'];
   published: Scalars['Boolean']['output'];
   stats?: Maybe<ShortLinkStats>;
 };
@@ -25645,6 +25664,8 @@ export type Query = {
   /**  Venue health for a venue owned by the signed-in user.  */
   myVenueHealth?: Maybe<HealthScore>;
   myVenuePayouts: Array<PaymentReleaseRequest>;
+  /** A venue's printable table label — the scan panel with the venue's name under it — base64-encoded. headline is printed as given, in the owner's language. */
+  myVenueTableLabelPdfBase64: Scalars['String']['output'];
   myVenues: Array<Venue>;
   /** Owner-scoped table page over the caller's venues (shared table engine). */
   myVenuesTable: VenueTablePage;
@@ -26363,8 +26384,12 @@ export type Query = {
   venueFoodCouponsTable: VenueFoodCouponTablePage;
   /** Public: one order, for whoever holds its access key (or the account that placed it). */
   venueFoodOrder?: Maybe<VenueFoodOrder>;
+  /** Public: the invoice of a paid order as a base64 PDF, for whoever holds its access key (or the account that placed it). */
+  venueFoodOrderInvoicePdfBase64: Scalars['String']['output'];
   /** Venue owner / venues console: the paid orders of one venue. */
   venueFoodOrdersTable: VenueFoodOrderTablePage;
+  /** Venue owner / venues console: the food dashboard of one venue. days 0 = all time. */
+  venueFoodStats: VenueFoodStats;
   /**  Admin-only: health for a specific venue.  */
   venueHealth?: Maybe<HealthScore>;
   venueLead?: Maybe<VenueLead>;
@@ -28301,6 +28326,12 @@ export type QueryMyVenueHealthArgs = {
 };
 
 
+export type QueryMyVenueTableLabelPdfBase64Args = {
+  headline: Scalars['String']['input'];
+  venue_id: Scalars['ID']['input'];
+};
+
+
 export type QueryMyVenuesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -29787,8 +29818,20 @@ export type QueryVenueFoodOrderArgs = {
 };
 
 
+export type QueryVenueFoodOrderInvoicePdfBase64Args = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  order_id: Scalars['ID']['input'];
+};
+
+
 export type QueryVenueFoodOrdersTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueFoodStatsArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
   venue_id: Scalars['ID']['input'];
 };
 
@@ -31412,6 +31455,8 @@ export type ShareLinkTarget =
   | 'POST'
   | 'PROFILE'
   | 'REFERRAL'
+  /** A venue's food menu — what the QR on a table label opens. */
+  | 'VENUE_MENU'
   /** A venue's public page, published by its owner. */
   | 'VENUE_PAGE';
 
@@ -35559,6 +35604,17 @@ export type SubmitStatusReportInput = {
   service_key?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type SubmitVenueFoodFeedbackInput = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  /** Up to 500 characters. */
+  comment?: InputMaybe<Scalars['String']['input']>;
+  /** Up to 3 photos, each uploaded with a pass from venueFoodFeedbackUploadPass. */
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  order_id: Scalars['ID']['input'];
+  /** A whole number from 1 to 5. */
+  rating: Scalars['Int']['input'];
+};
+
 export type SubscribeNewsletterInput = {
   captcha_answer?: InputMaybe<Scalars['String']['input']>;
   /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
@@ -38538,11 +38594,39 @@ export type VenueFoodCouponTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type VenueFoodDailyPoint = {
+  __typename?: 'VenueFoodDailyPoint';
+  /** yyyy-mm-dd in the configured time zone. */
+  date: Scalars['String']['output'];
+  orders: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+};
+
 export type VenueFoodDiet =
   | 'EGG'
   | 'NON_VEG'
   | 'VEG'
   | 'VEGAN';
+
+/** What a guest said about a served order. Written once. */
+export type VenueFoodFeedback = {
+  __typename?: 'VenueFoodFeedback';
+  comment: Scalars['String']['output'];
+  images: Array<Scalars['String']['output']>;
+  /** 1 to 5. */
+  rating: Scalars['Int']['output'];
+  submitted_at: Scalars['String']['output'];
+};
+
+export type VenueFoodFeedbackRow = {
+  __typename?: 'VenueFoodFeedbackRow';
+  comment: Scalars['String']['output'];
+  customer_name: Scalars['String']['output'];
+  images: Array<Scalars['String']['output']>;
+  order_no: Scalars['String']['output'];
+  rating: Scalars['Int']['output'];
+  submitted_at: Scalars['String']['output'];
+};
 
 /** One dish on a venue's food menu. */
 export type VenueFoodItem = {
@@ -38592,17 +38676,28 @@ export type VenueFoodOrder = {
   discount_amount: Scalars['Float']['output'];
   /** The venue's automatic discount on QR orders. */
   discount_pct: Scalars['Int']['output'];
+  /** Null until the guest rates the order. */
+  feedback?: Maybe<VenueFoodFeedback>;
   id: Scalars['ID']['output'];
+  /** True once the money has arrived — the invoice can be downloaded. */
+  invoice_available: Scalars['Boolean']['output'];
   items: Array<VenueFoodOrderLine>;
   note: Scalars['String']['output'];
   order_no: Scalars['String']['output'];
   paid_at?: Maybe<Scalars['String']['output']>;
   payment_status: VenueFoodPaymentStatus;
+  served_at?: Maybe<Scalars['String']['output']>;
   status: VenueFoodOrderStatus;
+  /** The guest asked, at checkout, to hear about this venue's events. */
+  subscribe_events: Scalars['Boolean']['output'];
   subtotal: Scalars['Float']['output'];
   table_label: Scalars['String']['output'];
   /** What was charged: subtotal less discount_amount less coupon_discount_amount. */
   total: Scalars['Float']['output'];
+  /** The venue's address as its invoice prints it. */
+  venue_address: Scalars['String']['output'];
+  /** The venue's GST number as it was when the order was placed; empty when the venue has none. */
+  venue_gstin: Scalars['String']['output'];
   venue_id: Scalars['ID']['output'];
   venue_name: Scalars['String']['output'];
 };
@@ -38693,6 +38788,53 @@ export type VenueFoodSpiceLevel =
   | 'MEDIUM'
   | 'MILD'
   | 'NONE';
+
+/** A venue's food numbers over a window. Money is in rupees; revenue leaves out cancelled orders. */
+export type VenueFoodStats = {
+  __typename?: 'VenueFoodStats';
+  average_order: Scalars['Float']['output'];
+  /** 0 when nobody has rated yet; otherwise 1.0 to 5.0. */
+  average_rating: Scalars['Float']['output'];
+  cancelled: Scalars['Int']['output'];
+  coupon_orders: Scalars['Int']['output'];
+  currency_symbol: Scalars['String']['output'];
+  daily: Array<VenueFoodDailyPoint>;
+  /** The window in days; 0 is all time. */
+  days: Scalars['Int']['output'];
+  /** What the automatic discount and the coupons took off, together. */
+  discount_given: Scalars['Float']['output'];
+  feedback_count: Scalars['Int']['output'];
+  invoice_downloads: Scalars['Int']['output'];
+  /** Paid orders placed in the window, cancelled ones included. */
+  orders: Scalars['Int']['output'];
+  /** Scans of the venue page link (the A4 poster) in the window. */
+  page_scans: Scalars['Int']['output'];
+  recent_feedback: Array<VenueFoodFeedbackRow>;
+  refunded: Scalars['Float']['output'];
+  revenue: Scalars['Float']['output'];
+  served: Scalars['Int']['output'];
+  status_counts: Array<VenueFoodStatusCount>;
+  /** Orders whose guest asked to hear about events. */
+  subscribe_opt_ins: Scalars['Int']['output'];
+  /** People currently subscribed to this venue's events. */
+  subscribers: Scalars['Int']['output'];
+  /** Scans of the table label link in the window. */
+  table_scans: Scalars['Int']['output'];
+  top_items: Array<VenueFoodTopItem>;
+};
+
+export type VenueFoodStatusCount = {
+  __typename?: 'VenueFoodStatusCount';
+  count: Scalars['Int']['output'];
+  status: VenueFoodOrderStatus;
+};
+
+export type VenueFoodTopItem = {
+  __typename?: 'VenueFoodTopItem';
+  name: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+};
 
 export type VenueLead = {
   __typename?: 'VenueLead';

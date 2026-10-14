@@ -174,7 +174,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
       PostDetail: 'post/:postId',
       VenueDetails: 'venue/:venueId',
       // A food order placed from the venue's menu, on mWeb's exact path. The
-      // access key rides as `?key=`, which lands in the route params as `key`.
+      // access key rides as `?key=`, which lands in the route params as `key` —
+      // as `?feedback=1` lands as `feedback`.
       VenueFoodOrder: 'venue/:venueId/food-order/:orderId',
       // The link a member shares from a city's waitlist, on mWeb's exact path.
       CityLaunch: 'city-launch/:locationId',

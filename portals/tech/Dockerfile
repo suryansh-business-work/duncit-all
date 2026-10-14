@@ -76,6 +76,7 @@ COPY packages/geo/package.json ./packages/geo/
 COPY packages/gql-types/package.json ./packages/gql-types/
 COPY packages/host-pod-actions/package.json ./packages/host-pod-actions/
 COPY packages/public-page/package.json ./packages/public-page/
+COPY packages/venue-food/package.json ./packages/venue-food/
 COPY packages/pod-change-requests/package.json ./packages/pod-change-requests/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/location/package.json ./packages/location/

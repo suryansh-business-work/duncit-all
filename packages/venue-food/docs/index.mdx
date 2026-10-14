@@ -1,0 +1,93 @@
+---
+name: '@duncit/venue-food'
+summary: 'A venue''s food desk as its owner works it — the Food Dashboard, the order board and the food coupons — as one MUI set the Partners console, the Venues console and mWeb all mount.'
+category: 'domain'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'app/mweb'
+  - 'portals/partners-app'
+  - 'portals/venues'
+exports:
+  - 'VenueFoodDashboard'
+  - 'VenueFoodOrders'
+  - 'VenueFoodCoupons'
+  - 'FoodStatTiles'
+  - 'FoodBreakdowns'
+  - 'FoodDailyChart'
+  - 'FoodRecentFeedback'
+  - 'FoodFeedbackBody'
+  - 'FOOD_OWNER_VENUES'
+---
+
+## Why this exists
+
+A venue that serves food takes QR orders, gives its own coupons and wants to know how its food is
+doing. Those three tools used to live only in the Partners console. The owner also works from mWeb
+and the app, and the Venues console's editors look after the same venues — so the tools are one
+package, mounted by every web surface, instead of three copies drifting apart.
+
+The native app draws the same tools with Tamagui (`app/mobile-app/src/components/venue-food-desk/`).
+It cannot import this package (MUI), so everything that is not drawing lives below it:
+
+- **`@duncit/utils` → `venue-food-owner.ts`** — the GraphQL documents as plain strings, the row
+  types, the status flow (`nextFoodOrderStatus`, `foodOrderNextStep`, `canCancelFoodOrder`), the
+  chip colours, every label builder, the dashboard tiles (`foodStatTiles`), the bars
+  (`foodStatusBars`, `foodDishBars`) and the trend line (`foodTrendLine`).
+- **`@duncit/forms/schemas`** — `makeFoodOrderCancelSchema` and `makeFoodCouponSchema` with
+  `foodCouponToValues` / `toFoodCouponInput`, so a reason or a coupon is refused the same way
+  everywhere.
+
+## What each tool does
+
+- **`VenueFoodDashboard`** — the venue's food numbers for a period (7 / 30 / 90 days or all time):
+  the tiles, orders by status, top dishes, the daily trend (inline SVG with a numbers table for
+  screen readers) and recent feedback.
+- **`VenueFoodOrders`** — the paid-order board on `@duncit/table`: move an order along the kitchen's
+  path, read it in full (with the guest's rating and photos), or cancel it with a full refund. It
+  asks again every 20 seconds, paused while a dialog is open.
+- **`VenueFoodCoupons`** — the venue's coupons on `@duncit/table`: create and edit (RHF + Zod),
+  switch on and off (optimistic, put back on a refusal), delete after a confirm.
+
+The server allows the venue's owner and Venues console editors on every operation; nothing here
+decides who may act.
+
+## Use
+
+Each tool takes the venue it is about. Picking the venue — and what to show for one that serves no
+food — stays with the page that mounts it.
+
+```tsx
+import { VenueFoodCoupons, VenueFoodDashboard, VenueFoodOrders } from '@duncit/venue-food';
+import { logs } from '@duncit/logs';
+
+<VenueFoodDashboard venueId={venue.id} logger={logs.mWeb} />
+<VenueFoodOrders venueId={venue.id} surface="mweb" />
+<VenueFoodCoupons venueId={venue.id} surface="mweb" />
+```
+
+- `surface` prefixes the tables' ids (`<surface>-venue-food-orders`), so each surface remembers its
+  own column choices.
+- `logger` is the mounting surface's logger; a failed dashboard retry is filed against it.
+- `FOOD_OWNER_VENUES` is the owner's venues with `offers_food`, for the host page's venue picker.
+
+## Where it is mounted
+
+| Surface | Where | Venue selection |
+| --- | --- | --- |
+| Partners console | `/venues/food-dashboard`, `/venues/food-orders`, `/venues/food-coupons` | `VenueStudioBody` (remembered pick) |
+| Venues console | the venue record's Food dashboard / Food orders / Food coupons tabs (URL `selectedtab`), only when the venue serves food | the record being viewed |
+| mWeb | `/venues/food-dashboard`, `/venues/food-orders`, `/venues/food-coupons` | `VenuePageFrame` + `useSelectedVenue` |
+
+## Copy
+
+Every sentence is a `venueFoodOwner.*` key (`packages/i18n/src/bundles/venue-food-owner.ts`),
+spread into the shell, mWeb and native fallbacks.
+
+## Tests
+
+The package has no suite of its own (like `@duncit/public-page`): its logic is tested where it
+lives — `packages/utils/__tests__/venue-food-owner.test.ts` and
+`packages/forms/__tests__/schemas.food-*.test.ts` (both 100% gated) — and the components are
+exercised end to end by the Partners console's coupon page suites.

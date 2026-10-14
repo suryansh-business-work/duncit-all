@@ -1,7 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Slider, XStack } from 'tamagui';
+import { XStack } from 'tamagui';
 
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+import { AppSlider } from '@/components/AppSlider';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -18,7 +20,7 @@ interface SpotsSliderProps {
  * defined inside another remounts on every render (S6478). */
 export function SpotsSlider({ min, max, value, label, onChange }: Readonly<SpotsSliderProps>) {
   return (
-    <Slider
+    <AppSlider
       testID="create-pod-spots-slider"
       min={min}
       max={max}
@@ -26,12 +28,7 @@ export function SpotsSlider({ min, max, value, label, onChange }: Readonly<Spots
       value={[value]}
       onValueChange={([next]) => onChange(next ?? min)}
       aria-label={label}
-    >
-      <Slider.Track>
-        <Slider.TrackActive />
-      </Slider.Track>
-      <Slider.Thumb index={0} circular size="$2" />
-    </Slider>
+    />
   );
 }
 

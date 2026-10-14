@@ -1,6 +1,7 @@
-import { Input, Slider, Text, XStack, YStack } from 'tamagui';
+import { Input, Text, XStack, YStack } from 'tamagui';
 import type { AutoPodLabels } from '@duncit/utils';
 
+import { AppSlider } from '@/components/AppSlider';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { HostProjectionLines } from '@/components/auto-pods/HostProjectionLines';
 import type { AutoPodHostProjection } from '@/hooks/useAutoPodHostProjection';
@@ -26,7 +27,7 @@ interface SpotsSliderProps {
  * defined inside another remounts on every render (S6478). */
 function SpotsSlider({ min, max, value, label, onChange }: Readonly<SpotsSliderProps>) {
   return (
-    <Slider
+    <AppSlider
       testID="auto-pod-spots-slider"
       min={min}
       max={max}
@@ -34,12 +35,7 @@ function SpotsSlider({ min, max, value, label, onChange }: Readonly<SpotsSliderP
       value={[value]}
       onValueChange={([next]) => onChange(next ?? min)}
       aria-label={label}
-    >
-      <Slider.Track backgroundColor="$soft">
-        <Slider.TrackActive backgroundColor="$primary" />
-      </Slider.Track>
-      <Slider.Thumb index={0} circular size="$2" backgroundColor="$primary" borderWidth={0} />
-    </Slider>
+    />
   );
 }
 

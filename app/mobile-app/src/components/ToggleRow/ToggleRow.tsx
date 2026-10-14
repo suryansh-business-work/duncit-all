@@ -1,7 +1,6 @@
-import { Switch } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { AppSwitch } from '@/components/AppSwitch';
 
 export interface ToggleRowProps {
   label: string;
@@ -27,7 +26,6 @@ export function ToggleRow({
   disabled = false,
   testID,
 }: Readonly<ToggleRowProps>) {
-  const { primary } = useThemeColors();
   return (
     <XStack
       testID={testID}
@@ -46,7 +44,7 @@ export function ToggleRow({
           </Text>
         ) : null}
       </YStack>
-      <Switch
+      <AppSwitch
         testID={`${testID}-switch`}
         aria-label={label}
         // The caption under the label is what the switch changes — read it
@@ -55,7 +53,6 @@ export function ToggleRow({
         value={value}
         disabled={disabled}
         onValueChange={onChange}
-        trackColor={{ true: primary }}
       />
     </XStack>
   );

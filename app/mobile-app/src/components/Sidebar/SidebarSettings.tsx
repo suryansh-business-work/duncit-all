@@ -1,6 +1,4 @@
-import { Switch } from 'react-native';
-
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { AppSwitch } from '@/components/AppSwitch';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SidebarGroup } from './SidebarGroup';
 import { SidebarPolicies } from './SidebarPolicies';
@@ -38,7 +36,6 @@ export function SidebarSettings({
   onSelectPolicy,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
   const showPolicies = policiesLoading || policies.length > 0;
   return (
     <SidebarGroup>
@@ -58,12 +55,11 @@ export function SidebarSettings({
         label={t('mweb.sidebar.darkMode')}
         chevron={false}
         trailing={
-          <Switch
+          <AppSwitch
             testID="sidebar-theme-switch"
             aria-label={t('mweb.sidebar.toggleDarkMode')}
             value={dark}
             onValueChange={onToggleTheme}
-            trackColor={{ true: primary }}
           />
         }
       />

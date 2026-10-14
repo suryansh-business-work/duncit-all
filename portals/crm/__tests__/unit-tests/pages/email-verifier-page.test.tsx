@@ -76,6 +76,7 @@ const withStore = (ui: ReactElement) => <EmailStatusProvider>{ui}</EmailStatusPr
 beforeEach(() => {
   window.localStorage.clear();
   jobsState.jobs = [];
+  notifySuccess.mockClear();
 });
 
 describe('VerificationResult', () => {

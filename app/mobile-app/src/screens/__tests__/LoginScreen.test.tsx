@@ -65,10 +65,7 @@ jest.mock('@/forms/login', () => ({
         >
           <Text>l</Text>
         </Pressable>
-        <Pressable
-          testID="go-forgot-password"
-          onPress={() => onForgotPassword(mockHandoff)}
-        >
+        <Pressable testID="go-forgot-password" onPress={() => onForgotPassword(mockHandoff)}>
           <Text>f</Text>
         </Pressable>
       </View>
@@ -146,7 +143,9 @@ describe('LoginScreen', () => {
 
   it('spends a credential carried from signup on the provider login, once', async () => {
     mockedGoogle.mockResolvedValue({ token: 'g', surveyCompleted: true });
-    mockRouteParams = { socialLogin: { idToken: 'carried-tok', email: 'a@b.com', provider: 'GOOGLE' } };
+    mockRouteParams = {
+      socialLogin: { idToken: 'carried-tok', email: 'a@b.com', provider: 'GOOGLE' },
+    };
     const { rerender } = renderWithProviders(<LoginScreen />);
     await waitFor(() => expect(mockAuthenticate).toHaveBeenCalledWith('g', true));
     expect(mockedGoogle).toHaveBeenCalledWith('carried-tok');

@@ -330,7 +330,7 @@ describe('adminUpdate', () => {
     const rejected = await venueService.adminUpdate(id, {
       ...base,
       step1: { city: 'Pune', tags: ['new'] },
-      step2: { gstin: 'G2', pan: 'P2' },
+      step2: { gstin: '27abcde1234f1z5', pan: 'P2' },
       step3: { ...step3, owner_dob: '1985-01-01', owner_address: 'Addr' },
       status: 'REJECTED',
     });
@@ -338,7 +338,7 @@ describe('adminUpdate', () => {
       status: 'REJECTED',
       rejected_at: rejectedAt.toISOString(),
       tags: ['new'],
-      gstin: 'G2',
+      gstin: '27ABCDE1234F1Z5',
       pan: 'P2',
       owner_address: 'Addr',
       owner_dob: new Date('1985-01-01').toISOString(),

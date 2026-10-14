@@ -89,7 +89,7 @@ describe('POST /twilio/recordings', () => {
     expect(res.status).toBe(403);
     expect(mockAttach).not.toHaveBeenCalled();
     expect(mockWarn).toHaveBeenCalledWith('twilio', 'recordings', {
-      msg: 'Refused an unsigned or wrongly signed Twilio recording callback',
+      msg: 'Refused an unsigned or wrongly signed Twilio callback',
       has_signature: false,
       configured: true,
     });

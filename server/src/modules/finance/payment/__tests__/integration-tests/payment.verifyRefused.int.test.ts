@@ -164,3 +164,112 @@ describe('a refused signature on a payment Razorpay captured', () => {
     expect(await PodMemberModel.countDocuments({ pod_id: pod._id })).toBe(0);
   });
 });
+
+describe('a repeat verify of a payment that already settled', () => {
+  /** A payment exactly as a successful verify leaves it: the payment id in
+   * gateway_ref, the order id kept in metadata, booked and finished. */
+  async function settledPayment() {
+    const user = await UserModel.create({
+      auth: { email: `repeat-${new Types.ObjectId().toString()}@x.com` },
+      profile: { first_name: 'Asha', last_name: 'Rao' },
+      metadata: { status: 'ACTIVE' },
+    });
+    const payment = await PaymentModel.create({
+      payment_id: `repeat-${new Types.ObjectId().toString()}`,
+      user_id: user._id,
+      user_name: 'Asha Rao',
+      user_email: 'asha@x.com',
+      subtotal: 500,
+      total: 500,
+      status: 'SUCCESS',
+      gateway: 'RAZORPAY',
+      gateway_ref: 'pay_DONE1',
+      paid_at: new Date('2026-10-01T10:00:00Z'),
+      invoice_no: 'INV-REPEAT-1',
+      finalize_state: 'COMPLETE',
+      finalize_attempts: 1,
+      metadata: { razorpay_order_id: 'order_DONE1', razorpay_payment_id: 'pay_DONE1' },
+    });
+    return { user, payment };
+  }
+
+  const verifyInput = (paymentDocId: unknown, over: Record<string, string> = {}) => ({
+    payment_doc_id: String(paymentDocId),
+    razorpay_order_id: 'order_DONE1',
+    razorpay_payment_id: 'pay_DONE1',
+    razorpay_signature: 'sig',
+    ...over,
+  });
+
+  it('returns the same SUCCESS payment and writes nothing', async () => {
+    const { user, payment } = await settledPayment();
+    const before = await PaymentModel.findById(payment._id).lean();
+    mockVerify.mockClear();
+    mockVerify.mockResolvedValue(true);
+
+    const out = await paymentService.verifyRazorpayCheckout(verifyInput(payment._id), String(user._id));
+
+    expect(out).toMatchObject({
+      id: String(payment._id),
+      status: 'SUCCESS',
+      gateway_ref: 'pay_DONE1',
+      invoice_no: 'INV-REPEAT-1',
+      finalize_state: 'COMPLETE',
+    });
+    // The signature is still checked against the stored order and payment.
+    expect(mockVerify).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: 'order_DONE1', paymentId: 'pay_DONE1', signature: 'sig' })
+    );
+    expect(await PaymentModel.findById(payment._id).lean()).toEqual(before);
+  });
+
+  it('still refuses a different Razorpay payment id on the same order', async () => {
+    const { user, payment } = await settledPayment();
+    const before = await PaymentModel.findById(payment._id).lean();
+    mockVerify.mockResolvedValue(true);
+
+    await expect(
+      paymentService.verifyRazorpayCheckout(
+        verifyInput(payment._id, { razorpay_payment_id: 'pay_OTHER' }),
+        String(user._id)
+      )
+    ).rejects.toThrow('Payment/order mismatch');
+    await expect(
+      paymentService.verifyRazorpayCheckout(
+        verifyInput(payment._id, { razorpay_order_id: 'order_OTHER' }),
+        String(user._id)
+      )
+    ).rejects.toThrow('Payment/order mismatch');
+    expect(await PaymentModel.findById(payment._id).lean()).toEqual(before);
+  });
+
+  it('still refuses a bad signature for the settled order and payment, without recording a failure', async () => {
+    const { user, payment } = await settledPayment();
+    const before = await PaymentModel.findById(payment._id).lean();
+    mockVerify.mockResolvedValue(false);
+
+    await expect(
+      paymentService.verifyRazorpayCheckout(verifyInput(payment._id, { razorpay_signature: 'forged' }), String(user._id))
+    ).rejects.toThrow('Payment signature verification failed');
+    expect(await PaymentModel.findById(payment._id).lean()).toEqual(before);
+  });
+
+  it('is answered after a real verify, booking the seat once', async () => {
+    const { user, pod, sheet } = await openPodCheckout();
+    const verify = {
+      payment_doc_id: sheet.payment_doc_id,
+      razorpay_order_id: 'order_FORGED1',
+      razorpay_payment_id: 'pay_TAPPED1',
+      razorpay_signature: 'sig',
+    };
+    mockVerify.mockResolvedValue(true);
+
+    const first = await paymentService.verifyRazorpayCheckout(verify, String(user._id));
+    const again = await paymentService.verifyRazorpayCheckout(verify, String(user._id));
+
+    expect(first).toMatchObject({ status: 'SUCCESS', gateway_ref: 'pay_TAPPED1' });
+    expect(again).toMatchObject({ id: first.id, status: 'SUCCESS', gateway_ref: 'pay_TAPPED1', invoice_no: first.invoice_no });
+    expect(await PodMemberModel.countDocuments({ pod_id: pod._id })).toBe(1);
+    expect((await PaymentModel.findById(sheet.payment_doc_id).lean())?.finalize_attempts).toBe(1);
+  });
+});

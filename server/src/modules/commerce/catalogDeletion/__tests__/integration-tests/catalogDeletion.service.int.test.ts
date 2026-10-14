@@ -328,6 +328,43 @@ describe('review', () => {
     expect(logs.server.error).toHaveBeenCalledWith('catalogDeletion', 'cancelRunningOrders', expect.objectContaining({ request_no: pub.request_no }));
   });
 
+  it('applies only one of two simultaneous approvals: one event, one partner message', async () => {
+    const brand = await seedBrand();
+    const product = await seedProduct(brand._id);
+    const pub = await ask('PRODUCT', product._id);
+
+    const results = await Promise.allSettled([
+      svc.review(pub.id, true, 'first', 'a@x.com'),
+      svc.review(pub.id, true, 'second', 'b@x.com'),
+    ]);
+
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const lost = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    expect(lost?.reason).toMatchObject({ message: 'Only a pending request can be reviewed', extensions: { code: 'BAD_REQUEST' } });
+    const saved = await CatalogDeletionRequestModel.findById(pub.id);
+    expect(saved?.status).toBe('APPROVED');
+    expect(saved?.events.filter((e) => e.action === 'APPROVED')).toHaveLength(1);
+    expect(notifyDeletionUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it('never lets an approval and a rejection both land on the same request', async () => {
+    const brand = await seedBrand();
+    const product = await seedProduct(brand._id);
+    const pub = await ask('PRODUCT', product._id);
+
+    const results = await Promise.allSettled([
+      svc.review(pub.id, true, 'ok', 'a@x.com'),
+      svc.review(pub.id, false, 'Still selling', 'b@x.com'),
+    ]);
+
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const saved = await CatalogDeletionRequestModel.findById(pub.id);
+    const decisions = saved?.events.filter((e) => e.action === 'APPROVED' || e.action === 'REJECTED') ?? [];
+    expect(decisions).toHaveLength(1);
+    expect(saved?.status).toBe(decisions[0].action);
+    expect(saved?.open).toBe(saved?.status === 'APPROVED');
+  });
+
   it('refuses an unknown request and a product that is part of a brand request', async () => {
     await expect(svc.review(missing(), true, '', 'staff')).rejects.toThrow('Request not found');
     const brand = await seedBrand();

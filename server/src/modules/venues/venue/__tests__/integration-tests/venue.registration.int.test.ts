@@ -325,7 +325,8 @@ describe('updateSettings — cancellation and auto-extend', () => {
 
   it('stores charge bands widest-first, clamps the trigger and keeps the refund ladder valid', async () => {
     const id = await makeVenue();
-    const out = await venueService.updateSettings(owner, false, id, {
+    // Onboarding / Finance moving Duncit's half of the policy (canSetAutoCancel).
+    const out = await venueService.updateSettings(owner, true, id, {
       cancellation: {
         reschedule_only: 1,
         trigger_hours: 99999,
@@ -338,7 +339,7 @@ describe('updateSettings — cancellation and auto-extend', () => {
           { hours_before: 72, refund_pct: 100 },
         ],
       },
-    });
+    }, true);
     expect(out.settings.cancellation).toEqual({
       reschedule_only: true,
       trigger_hours: 8760,
@@ -352,11 +353,101 @@ describe('updateSettings — cancellation and auto-extend', () => {
       ],
     });
 
-    // A later partial save keeps what it was not given.
+    // A later partial save by the owner keeps what it was not given.
     const partial = await venueService.updateSettings(owner, false, id, { cancellation: { reschedule_only: false } });
     expect(partial.settings.cancellation.tiers).toHaveLength(2);
     expect(partial.settings.cancellation.trigger_hours).toBe(8760);
     expect(partial.settings.cancellation.reschedule_only).toBe(false);
+  });
+
+  describe('the auto-cancel trigger and refund ladder', () => {
+    const LADDER = [
+      { hours_before: 48, refund_pct: 100 },
+      { hours_before: 12, refund_pct: 50 },
+    ];
+    const makeGoverned = async () =>
+      String(
+        (
+          await VenueModel.create({
+            owner_user_id: owner,
+            settings: { cancellation: { reschedule_only: false, trigger_hours: 12, refund_tiers: LADDER } },
+          })
+        )._id
+      );
+    const FORBIDDEN = { extensions: { code: 'FORBIDDEN' } };
+
+    it.each([
+      ['a new trigger', { trigger_hours: 24 }],
+      ['a different refund percent', { refund_tiers: [LADDER[0], { hours_before: 12, refund_pct: 80 }] }],
+      ['an extra refund band', { refund_tiers: [...LADDER, { hours_before: 2, refund_pct: 10 }] }],
+      ['an emptied refund ladder', { refund_tiers: [] }],
+    ])('refuses an owner sending %s and changes nothing', async (_label, change) => {
+      const id = await makeGoverned();
+      await expect(
+        venueService.updateSettings(owner, false, id, {
+          weekly_off_days: [0],
+          cancellation: { reschedule_only: true, ...change },
+        })
+      ).rejects.toMatchObject({
+        ...FORBIDDEN,
+        message: 'Only Onboarding or Finance can change the auto-cancel window and refund ladder',
+      });
+      await expect(venueService.getById(id)).resolves.toMatchObject({
+        settings: {
+          weekly_off_days: [],
+          cancellation: { reschedule_only: false, trigger_hours: 12, refund_tiers: LADDER },
+        },
+      });
+    });
+
+    it('refuses a venues-console editor without the finance role the same way', async () => {
+      const id = await makeGoverned();
+      await expect(
+        venueService.updateSettings(newOwner(), true, id, { cancellation: { trigger_hours: 0 } })
+      ).rejects.toMatchObject(FORBIDDEN);
+      await expect(venueService.getById(id)).resolves.toMatchObject({
+        settings: { cancellation: { trigger_hours: 12, refund_tiers: LADDER } },
+      });
+    });
+
+    it('lets an owner save the rest of the form with the terms sent back unchanged or left out', async () => {
+      const id = await makeGoverned();
+      // Sent back as they were read, in the other order — still the same terms.
+      const echoed = await venueService.updateSettings(owner, false, id, {
+        operating_hours: { open: '10:00', close: '22:00' },
+        cancellation: { reschedule_only: true, trigger_hours: 12, refund_tiers: [...LADDER].reverse() },
+      });
+      expect(echoed.settings.operating_hours).toEqual({ open: '10:00', close: '22:00' });
+      expect(echoed.settings.cancellation).toMatchObject({ reschedule_only: true, trigger_hours: 12, refund_tiers: LADDER });
+
+      const without = await venueService.updateSettings(owner, false, id, {
+        cancellation: { tiers: [{ hours_before: 6, charge_type: 'PERCENT', value: 25 }] },
+      });
+      expect(without.settings.cancellation).toMatchObject({
+        tiers: [{ hours_before: 6, charge_type: 'PERCENT', value: 25 }],
+        trigger_hours: 12,
+        refund_tiers: LADDER,
+      });
+    });
+
+    it("accepts a fresh venue's defaults echoed back by a console editor", async () => {
+      const id = await makeVenue();
+      const out = await venueService.updateSettings(newOwner(), true, id, {
+        cancellation: { reschedule_only: false, trigger_hours: 6, refund_tiers: [] },
+      });
+      expect(out.settings.cancellation).toMatchObject({ trigger_hours: 6, refund_tiers: [] });
+    });
+
+    it('lets Onboarding / Finance move them through the same save', async () => {
+      const id = await makeGoverned();
+      const out = await venueService.updateSettings(newOwner(), true, id, {
+        cancellation: { trigger_hours: 2, refund_tiers: [{ hours_before: 4, refund_pct: 75 }] },
+      }, true);
+      expect(out.settings.cancellation).toMatchObject({
+        trigger_hours: 2,
+        refund_tiers: [{ hours_before: 4, refund_pct: 75 }],
+      });
+    });
   });
 
   it('refuses an unknown charge kind, a percent over 100, a negative amount and duplicate windows', async () => {

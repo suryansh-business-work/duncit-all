@@ -1,4 +1,4 @@
-import type { AttendanceMarkMethod, PodAttendanceLock } from './pod-attendance';
+import type { AttendanceMarkMethod, PodAttendanceBoard, PodAttendanceLock } from './pod-attendance';
 
 /**
  * Every word the attendance surfaces render, assembled from the calling
@@ -19,11 +19,28 @@ export type AttendanceTranslate = (
   options?: { vars?: Record<string, string | number> },
 ) => string;
 
-/** The rule the host is paid by, worded for the kind of pod this is. */
-export const earningsBodyFor = (
-  board: Readonly<{ pod_mode: 'PHYSICAL' | 'VIRTUAL' }>,
-  labels: Readonly<Pick<PodAttendanceLabels, 'earningsBody' | 'earningsBodyVirtual'>>
-): string => (board.pod_mode === 'VIRTUAL' ? labels.earningsBodyVirtual : labels.earningsBody);
+/**
+ * The note above the roster: the rule the host is paid by, worded for the kind
+ * of pod this is. A FREE pod — physical or virtual — has no payout, so it gets
+ * its own title and body saying why marking still matters; the paid copy would
+ * be false there. Decided once here so the MUI page and the Tamagui screen
+ * cannot disagree about it (rule 27).
+ */
+export function earningsNoticeFor(
+  board: Readonly<Pick<PodAttendanceBoard, 'pod_mode' | 'pod_type'>>,
+  labels: Readonly<
+    Pick<
+      PodAttendanceLabels,
+      'earningsTitle' | 'earningsBody' | 'earningsBodyVirtual' | 'earningsTitleFree' | 'earningsBodyFree'
+    >
+  >
+): { title: string; body: string } {
+  if (board.pod_type === 'FREE') {
+    return { title: labels.earningsTitleFree, body: labels.earningsBodyFree };
+  }
+  const body = board.pod_mode === 'VIRTUAL' ? labels.earningsBodyVirtual : labels.earningsBody;
+  return { title: labels.earningsTitle, body };
+}
 
 export interface PodAttendanceLabels {
   pageTitle: string;
@@ -54,6 +71,9 @@ export interface PodAttendanceLabels {
   earningsBody: string;
   /** The same rule for a virtual pod, where the link-open is the door. */
   earningsBodyVirtual: string;
+  /** A free pod has no payout: why marking still matters there. */
+  earningsTitleFree: string;
+  earningsBodyFree: string;
   /** The roster is closed. */
   lockedTitle: (lock: PodAttendanceLock) => string;
   lockedBody: (lock: PodAttendanceLock) => string;
@@ -145,6 +165,8 @@ export function mwebAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabel
     earningsTitle: t('mweb.attendance.earningsTitle'),
     earningsBody: t('mweb.attendance.earningsBody'),
     earningsBodyVirtual: t('mweb.attendance.earningsBodyVirtual'),
+    earningsTitleFree: t('mweb.attendance.earningsTitleFree'),
+    earningsBodyFree: t('mweb.attendance.earningsBodyFree'),
     lockedTitle: (lock) => mwebLockedTitle(t, lock),
     lockedBody: (lock) => mwebLockedBody(t, lock),
     deadlineTitle: (when) => t('mweb.attendance.deadlineTitle', { vars: { when } }),
@@ -252,6 +274,8 @@ export function shellAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabe
     earningsTitle: t('shell.attendance.earningsTitle'),
     earningsBody: t('shell.attendance.earningsBody'),
     earningsBodyVirtual: t('shell.attendance.earningsBodyVirtual'),
+    earningsTitleFree: t('shell.attendance.earningsTitleFree'),
+    earningsBodyFree: t('shell.attendance.earningsBodyFree'),
     lockedTitle: (lock) => shellLockedTitle(t, lock),
     lockedBody: (lock) => shellLockedBody(t, lock),
     deadlineTitle: (when) => t('shell.attendance.deadlineTitle', { vars: { when } }),

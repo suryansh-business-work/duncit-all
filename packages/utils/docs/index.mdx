@@ -480,7 +480,7 @@ exports:
   - 'matchAttendanceRows'
   - 'canScanTickets'
   - 'showsCompleteDeadline'
-  - 'earningsBodyFor'
+  - 'earningsNoticeFor'
   - 'mwebAttendanceLabels'
   - 'shellAttendanceLabels'
   - 'buildAttendanceLabels'
@@ -1405,11 +1405,14 @@ the MUI page (`@duncit/host-pod-actions`) and the native Tamagui screen both rea
 (rule 27). The board is `podAttendanceBoard(pod_doc_id)` — the ONLY read of a roster — and
 it carries `pod_mode`, because a virtual pod has no door: nobody scans a ticket there. A
 joined member is marked present the moment they open the meeting link from the pod page
-inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
+inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`). It also carries
+`pod_type`, because a FREE pod has no payout: the note above its roster says why marking
+still matters (Visited status, rating, feedback, and completing the pod) instead of what it pays.
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `PodAttendanceMode` | `'PHYSICAL' \| 'VIRTUAL'` | Mirrors the server's `PodMode`; the board's `pod_mode`. |
+| `PodAttendanceType` | `'FREE' \| 'PAID'` | Mirrors the server's `PodType`; the board's `pod_type`. |
 | `attendanceRowState` | `(row, canMark, viewer?) => AttendanceRowState` | `MARKED`, `READY`, `NEEDS_COMPANIONS` or `LOCKED` — one value, never three booleans. `NEEDS_COMPANIONS` is the HOST's wait only (viewer defaults to `'HOST'`). |
 | `splitAttendance` | `(rows) => { marked, unmarked }` | The two lists, in the order the page shows them. |
 | `namedCompanionEntries` | `(entries) => NamedCompanionInput[]` | The names a Club Admin was read, blanks dropped, numbers optional — `PodForcedCompanionInput` for `clubAdminForceAttendance`. |
@@ -1434,7 +1437,7 @@ inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
 | `matchAttendanceRows` | `(rows, query) => PodAttendanceRow[]` | The bookings a typed name could mean, unmarked first. Matches name, email, ticket code and **companion names** (a multi-seat booking is bought by one person and admits several); three digits or more also match the phone. Already-marked rows stay in the results — "cannot find them" and "already marked" are different answers. |
 | `canScanTickets` | `(board) => boolean` | HOST viewer AND `can_mark` AND not `VIRTUAL`. False hides the scan CTA. |
 | `showsCompleteDeadline` | `(board) => boolean` | HOST viewer AND `lock === 'OPEN'` AND a `complete_deadline`. The banner naming the hours the host has left to complete the pod; past it the `EXPIRED` locked notice says it in past tense instead. |
-| `earningsBodyFor` | `(board, labels) => string` | `labels.earningsBodyVirtual` for a virtual pod, `labels.earningsBody` otherwise — the sentence above the roster. |
+| `earningsNoticeFor` | `(board, labels) => { title, body }` | The note above the roster. A FREE pod (physical or virtual) gets `earningsTitleFree` + `earningsBodyFree` — there is no payout to describe. A paid pod gets `earningsTitle` with `earningsBodyVirtual` for a virtual pod and `earningsBody` otherwise. |
 | `mwebAttendanceLabels` / `shellAttendanceLabels` / `buildAttendanceLabels` | `(t) => PodAttendanceLabels` | Every word the surfaces render — `mweb.attendance.*` for mWeb + native, `shell.attendance.*` for the portals, word-for-word identical. |
 
 ```ts
@@ -1447,6 +1450,7 @@ const board = {
   can_mark: true,
   otp_required: true,
   pod_mode: 'PHYSICAL',
+  pod_type: 'PAID',
   lock: 'OPEN',
   complete_deadline: '2026-08-31T14:00:00.000Z',
   complete_timeout_hours: 24,
@@ -1455,11 +1459,14 @@ const board = {
 needsOtp(board)                   // true  — prove the number before a by-hand mark
 canScanTickets(board)             // true  — there is a door to scan at
 showsCompleteDeadline(board)      // true  — 24 hours from the pod's end, and it has not passed
-earningsBodyFor(board, labels)    // 'Your earnings are calculated only from the attendees you mark. …'
+earningsNoticeFor(board, labels)  // { title: 'Marking attendance is how you get paid', body: 'Your earnings are calculated only from the attendees you mark. …' }
 
 const online = { ...board, pod_id: 'DUN-POD-5502', pod_mode: 'VIRTUAL' } as const;
 canScanTickets(online)            // false — the scan CTA is hidden
-earningsBodyFor(online, labels)   // 'This pod is online, so there is no door to scan at. …'
+earningsNoticeFor(online, labels).body  // 'This pod is online, so there is no door to scan at. …'
+
+const free = { ...board, pod_id: 'DUN-POD-6610', pod_type: 'FREE' } as const;
+earningsNoticeFor(free, labels)   // { title: 'Mark who came', body: 'This pod is free, so there is no payout. …' }
 labels.methodLabel('VIRTUAL_JOIN')  // 'Joined the meeting' — what the row reads after joinPodMeeting
 
 needsOtp({ viewer: 'CLUB_ADMIN', otp_required: true })  // false — never REQUIRED of them

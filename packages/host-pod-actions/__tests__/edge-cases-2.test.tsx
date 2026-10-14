@@ -756,6 +756,7 @@ describe('a by-hand mark, all the way through its code', () => {
     pod_date_time: '2026-08-30T12:30:00.000Z',
     pod_end_date_time: null,
     pod_mode: 'PHYSICAL',
+    pod_type: 'PAID',
     viewer: 'HOST',
     lock: null,
     can_mark: true,

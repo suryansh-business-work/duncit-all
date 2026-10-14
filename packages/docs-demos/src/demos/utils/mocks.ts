@@ -16,6 +16,7 @@ import type {
   PasswordRecoveryStep,
   PodAttendanceLock,
   PodAttendanceMode,
+  PodAttendanceType,
   PodAttendanceViewer,
   PodFeedbackReminderChoice,
   PodFeedbackScores,
@@ -132,6 +133,8 @@ export interface AttendanceBoardMock {
   can_mark: boolean;
   otp_required: boolean;
   pod_mode: PodAttendanceMode;
+  /** FREE has no payout, so the earnings note says why marking still matters. */
+  pod_type: PodAttendanceType;
   /** Why the roster is read-only, or OPEN. EXPIRED is the host's completion
    * window running out — it shuts their side and leaves the admin's open. */
   lock: PodAttendanceLock;

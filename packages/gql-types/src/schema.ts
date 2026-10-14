@@ -21630,6 +21630,8 @@ export type PodAttendanceBoard = {
   /** PHYSICAL or VIRTUAL. A virtual pod has no door to scan at: a member is marked when they open the meeting link. */
   pod_mode: PodMode;
   pod_title: Scalars['String']['output'];
+  /** FREE or PAID. A free pod has no payout, so the page does not tell the host their earnings depend on who they mark. */
+  pod_type: PodType;
   rows: Array<PodAttendanceRow>;
   total_count: Scalars['Int']['output'];
   total_seats: Scalars['Int']['output'];

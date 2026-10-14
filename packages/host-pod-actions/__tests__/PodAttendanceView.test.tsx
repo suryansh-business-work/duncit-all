@@ -78,6 +78,8 @@ const board = (over: Record<string, unknown> = {}) => ({
   pod_title: 'Sunday Badminton',
   pod_date_time: '2026-08-30T12:30:00.000Z',
   pod_end_date_time: '2026-08-30T14:00:00.000Z',
+  pod_mode: 'PHYSICAL',
+  pod_type: 'PAID',
   viewer: 'HOST',
   lock: null,
   can_mark: true,
@@ -151,10 +153,32 @@ describe('PodAttendanceView', () => {
   });
 
   it('states, above the roster, that an unmarked attendee is a seat out of the payout', async () => {
-    const { container } = mount();
+    mount();
     await settle();
 
-    expect(container.textContent).toContain(labels.earningsTitle);
+    // Exact text: the echoed keys of the free copy contain the paid ones.
+    const note = await screen.findByTestId('attendance-earnings-note');
+    expect(note.textContent).toBe(`${labels.earningsTitle}${labels.earningsBody}`);
+  });
+
+  it('words the payout rule for a paid virtual pod by its meeting link', async () => {
+    mount([boardMock({ pod_mode: 'VIRTUAL' })]);
+    await settle();
+
+    const note = await screen.findByTestId('attendance-earnings-note');
+    expect(note.textContent).toBe(`${labels.earningsTitle}${labels.earningsBodyVirtual}`);
+  });
+
+  // A free pod has no payout, so telling the host their earnings depend on
+  // who they mark would be false — physical or virtual.
+  it.each(['PHYSICAL', 'VIRTUAL'])('never quotes the payout rule on a free %s pod', async (mode) => {
+    mount([boardMock({ pod_mode: mode, pod_type: 'FREE' })]);
+    await settle();
+
+    const note = await screen.findByTestId('attendance-earnings-note');
+    expect(note.textContent).toBe(`${labels.earningsTitleFree}${labels.earningsBodyFree}`);
+    // Attendance still matters on a free pod: the roster is all still there.
+    expect(screen.getByText('Asha Rao')).toBeInTheDocument();
   });
 
   // The one thing on this page that costs the host money by being ignored, so

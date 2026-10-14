@@ -699,11 +699,12 @@ export {
   type PodAttendanceLock,
   type PodAttendanceMode,
   type PodAttendanceRow,
+  type PodAttendanceType,
   type PodAttendanceViewer,
 } from './pod-attendance';
 export {
   buildAttendanceLabels,
-  earningsBodyFor,
+  earningsNoticeFor,
   mwebAttendanceLabels,
   shellAttendanceLabels,
   type AttendanceTranslate,

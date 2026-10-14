@@ -14,15 +14,16 @@ import type {
  *
  * Deliberately an `info` alert pinned at the top rather than a footnote: the
  * host is not being warned about a risk, they are being told the rule they are
- * paid by, and it has to be read before the roster rather than after it.
+ * paid by, and it has to be read before the roster rather than after it. The
+ * caller picks the words with `earningsNoticeFor` — a free pod has no payout.
  */
 export function EarningsNotice({
-  labels,
+  title,
   body,
-}: Readonly<{ labels: PodAttendanceLabels; body: string }>) {
+}: Readonly<{ title: string; body: string }>) {
   return (
     <Alert severity="info" data-testid="attendance-earnings-note">
-      <AlertTitle sx={{ fontWeight: 800 }}>{labels.earningsTitle}</AlertTitle>
+      <AlertTitle sx={{ fontWeight: 800 }}>{title}</AlertTitle>
       {body}
     </Alert>
   );

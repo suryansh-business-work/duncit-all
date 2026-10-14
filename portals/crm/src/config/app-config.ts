@@ -44,6 +44,7 @@ export const appConfig = {
       icon: 'tools',
       children: [
         { label: 'WhatsApp Lead Generator', labelKey: 'shell.nav.whatsappLeadGenerator', to: '/tools/whatsapp', icon: 'whatsapp' },
+        { label: 'Email Verifier', labelKey: 'shell.nav.emailVerifier', to: '/tools/email-verifier', icon: 'markEmailRead' },
       ],
     },
     { label: 'Reminders', labelKey: 'shell.nav.reminders', to: '/reminders', icon: 'calendar' },

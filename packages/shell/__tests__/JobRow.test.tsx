@@ -46,6 +46,17 @@ describe('JobRow', () => {
     expect(onCancel).not.toHaveBeenCalled();
   });
 
+  it('names an email check by the emails it covers, running and done', () => {
+    renderRow(makeJob({ kind: 'EMAIL_VERIFY', table: '', label: 'leads.csv', succeeded: 3, failed: 1, total: 12 }));
+    expect(screen.getByText('Verifying 12 emails')).toBeInTheDocument();
+    expect(screen.getByText('1 email could not be checked — the verifier did not answer')).toBeInTheDocument();
+  });
+
+  it('says how many emails a finished check verified', () => {
+    renderRow(makeJob({ kind: 'EMAIL_VERIFY', table: '', status: 'COMPLETED', succeeded: 12, total: 12 }));
+    expect(screen.getByText('Verified 12 emails')).toBeInTheDocument();
+  });
+
   it('gives the reason a job stopped', () => {
     renderRow(makeJob({ status: 'FAILED', error_message: 'The server restarted twice' }));
     expect(screen.getByText('Delete stopped')).toBeInTheDocument();

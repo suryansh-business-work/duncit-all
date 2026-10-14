@@ -287,6 +287,27 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       },
       translatePartialNotice: '{label}: {translated} translated, {failed} came back unusable — the next sync retries them.',
       translateStoppedNotice: '{label}: the translation stopped — {reason}',
+      // Email verifier (CRM console): a bulk CSV check, one email per row.
+      verifying: {
+        one: 'Verifying {count} email',
+        other: 'Verifying {count} emails',
+      },
+      verified: {
+        one: 'Verified {count} email',
+        other: 'Verified {count} emails',
+      },
+      verifyStopped: 'Email verification stopped',
+      verifyCancelled: 'Email verification cancelled',
+      uncheckedEmails: {
+        one: '{count} email could not be checked — the verifier did not answer',
+        other: '{count} emails could not be checked — the verifier did not answer',
+      },
+      verifyDoneNotice: {
+        one: '{label}: 1 email checked.',
+        other: '{label}: {count} emails checked.',
+      },
+      verifyPartialNotice: '{label}: {checked} checked, {failed} could not be checked.',
+      verifyStoppedNotice: '{label}: the email check stopped — {reason}',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,
@@ -879,6 +900,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       welcome: 'Welcome',
       whatsapp: 'WhatsApp',
       whatsappLeadGenerator: 'WhatsApp Lead Generator',
+      emailVerifier: 'Email Verifier',
       whatsappLeads: 'WhatsApp Leads',
       whatsappLogs: 'WhatsApp Logs',
       withdrawal: 'Withdrawal',

@@ -190,6 +190,7 @@ function leadTableConfig(
     sortFields: {
       [nameField]: nameField,
       city: 'city',
+      email: 'contacts.email',
       lead_status: 'lead_status',
       priority: 'priority',
       next_follow_up_date: 'next_follow_up_date',
@@ -201,6 +202,7 @@ function leadTableConfig(
     filterFields: {
       [nameField]: { type: 'string' },
       city: { type: 'string' },
+      email: { path: 'contacts.email', type: 'string' },
       lead_status: { type: 'enum' },
       priority: { type: 'enum' },
       super_category_id: { type: 'enum' },

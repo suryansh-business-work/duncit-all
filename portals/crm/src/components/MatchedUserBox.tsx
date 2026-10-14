@@ -1,6 +1,7 @@
 import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import type { CrmMatchedUser } from '../api/crm.types';
+import { EmailStatusBadge } from './email-status';
 
 const matchLabel = (m: CrmMatchedUser) => `Also a Duncit user · ${m.matched_on === 'EMAIL' ? 'Email' : 'Phone'} match`;
 
@@ -42,11 +43,14 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
               }}>{matched.full_name || 'Duncit user'}</Typography>
               <MatchedUserChip matched={matched} />
             </Stack>
-            <Typography variant="caption" sx={{
-              color: "text.secondary"
-            }}>
-              {[matched.email, matched.phone].filter(Boolean).join(' · ') || '—'}
-            </Typography>
+            <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
+                {[matched.email, matched.phone].filter(Boolean).join(' · ') || '—'}
+              </Typography>
+              <EmailStatusBadge email={matched.email} />
+            </Stack>
           </Box>
         </Stack>
       </CardContent>

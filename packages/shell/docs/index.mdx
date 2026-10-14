@@ -727,8 +727,11 @@ of the available travel, not a pixel offset, so a tab placed on a 4K monitor is 
 laptop.
 ## Background tasks in the header
 
-Work that outlives a page — a bulk delete today — runs on the server as a **background job**, and
-the header shows it. `AppShell` mounts `BackgroundJobsProvider` beside `WorkspaceProvider`; the
+Work that outlives a page runs on the server as a **background job**, and the header shows it. Each
+`kind` has its own wording in the drawer and the finished snackbar: `BULK_DELETE` (rows),
+`AI_TRANSLATE` (keys), `MEDIA_ORGANIZE` (files) and `EMAIL_VERIFY` (the CRM Email Verifier's bulk
+CSV check — emails). A new kind needs an entry in `JobRow`'s `TITLE_COPY` / `FAILED_COPY` and
+`useJobSettlement`'s `NOTICE_COPY`. `AppShell` mounts `BackgroundJobsProvider` beside `WorkspaceProvider`; the
 header's `BackgroundJobsIndicator` renders nothing until the signed-in person has a job, then a
 ring with the percentage across every running job (rows done over rows in scope, so a 10-row job
 finishing does not claim half of a 10,000-row one). Once they are done it becomes a tick, or a

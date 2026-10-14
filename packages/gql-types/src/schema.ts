@@ -2659,6 +2659,7 @@ export type BackgroundJobFailure = {
 export type BackgroundJobKind =
   | 'AI_TRANSLATE'
   | 'BULK_DELETE'
+  | 'EMAIL_VERIFY'
   | 'MEDIA_ORGANIZE';
 
 export type BackgroundJobStatus =
@@ -6599,6 +6600,30 @@ export type CrmEmailAssetInput = {
   url: Scalars['String']['input'];
 };
 
+export type CrmEmailCheckSource =
+  | 'BULK'
+  | 'SINGLE';
+
+/** Reacher's verdict on a mailbox. An address never checked has no status. */
+export type CrmEmailStatus =
+  /** Malformed, no mail server, or the mailbox does not exist. */
+  | 'INVALID'
+  /** Deliverable but doubtful — catch-all domain, disposable, role account or full inbox. */
+  | 'RISKY'
+  /** The mail server would not say (greylisting, timeout, port 25 blocked). */
+  | 'UNKNOWN'
+  /** The mail server confirmed the mailbox exists. */
+  | 'VERIFIED';
+
+/** The newest verdict for one address, shown beside it across the CRM. */
+export type CrmEmailStatusEntry = {
+  __typename?: 'CrmEmailStatusEntry';
+  checked_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  status: CrmEmailStatus;
+  suggestion: Scalars['String']['output'];
+};
+
 /** A CRM-owned email template (separate store from core/admin templates). */
 export type CrmEmailTemplate = {
   __typename?: 'CrmEmailTemplate';
@@ -6656,6 +6681,39 @@ export type CrmEmailTestResult = {
   __typename?: 'CrmEmailTestResult';
   message?: Maybe<Scalars['String']['output']>;
   ok: Scalars['Boolean']['output'];
+};
+
+/** One check of one address — the CRM keeps every one. */
+export type CrmEmailVerification = {
+  __typename?: 'CrmEmailVerification';
+  accepts_mail: Scalars['Boolean']['output'];
+  can_connect_smtp: Scalars['Boolean']['output'];
+  /** Email of the CRM user who ran the check. */
+  checked_by: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  has_full_inbox: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  is_catch_all: Scalars['Boolean']['output'];
+  is_deliverable: Scalars['Boolean']['output'];
+  is_disabled: Scalars['Boolean']['output'];
+  is_disposable: Scalars['Boolean']['output'];
+  is_role_account: Scalars['Boolean']['output'];
+  is_valid_syntax: Scalars['Boolean']['output'];
+  /** BULK only: the background job that checked it. */
+  job_id?: Maybe<Scalars['String']['output']>;
+  source: CrmEmailCheckSource;
+  status: CrmEmailStatus;
+  /** A likely intended address when this one looks like a typo. */
+  suggestion: Scalars['String']['output'];
+};
+
+export type CrmEmailVerificationTablePage = {
+  __typename?: 'CrmEmailVerificationTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CrmEmailVerification>;
+  total: Scalars['Int']['output'];
 };
 
 export type CrmEntityType =
@@ -12686,6 +12744,10 @@ export type Mutation = {
   crmLeadAiChat: Scalars['String']['output'];
   /** Discover up to `limit` pages from the lead's website and save them. */
   crmScrapeWebsitePages: CrmWebsiteScrapeResult;
+  /** Check one address now. */
+  crmVerifyEmail: CrmEmailVerification;
+  /** Check every address in an uploaded CSV/XLSX as a background job. */
+  crmVerifyEmailsBulk: BackgroundJob;
   /**
    * Claim a name for an archive being sent in, and hand back a one-shot pass for
    * the upload route. Creates the backup row up front so an abandoned upload
@@ -15698,6 +15760,18 @@ export type MutationCrmScrapeWebsitePagesArgs = {
   entity_type: CrmEntityType;
   lead_id: Scalars['ID']['input'];
   limit: Scalars['Int']['input'];
+};
+
+
+export type MutationCrmVerifyEmailArgs = {
+  email: Scalars['String']['input'];
+};
+
+
+export type MutationCrmVerifyEmailsBulkArgs = {
+  content_base64: Scalars['String']['input'];
+  filename?: InputMaybe<Scalars['String']['input']>;
+  url?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -25169,9 +25243,12 @@ export type Query = {
   crmCallPrompts: Array<CrmCallPrompt>;
   crmCallPromptsTable: CrmCallPromptTablePage;
   crmDynamicFields: Array<CrmDynamicField>;
+  /** Latest status per address (max 200). Addresses never checked are left out. */
+  crmEmailStatuses: Array<CrmEmailStatusEntry>;
   crmEmailTemplate?: Maybe<CrmEmailTemplate>;
   crmEmailTemplates: Array<CrmEmailTemplate>;
   crmEmailTemplatesTable: CrmEmailTemplateTablePage;
+  crmEmailVerificationsTable: CrmEmailVerificationTablePage;
   crmExcelExport: CrmExcelFile;
   /** Read an uploaded spreadsheet's headers + sample rows for column mapping. */
   crmExcelInspect: CrmExcelInspectResult;
@@ -27414,12 +27491,22 @@ export type QueryCrmDynamicFieldsArgs = {
 };
 
 
+export type QueryCrmEmailStatusesArgs = {
+  emails: Array<Scalars['String']['input']>;
+};
+
+
 export type QueryCrmEmailTemplateArgs = {
   template_id: Scalars['ID']['input'];
 };
 
 
 export type QueryCrmEmailTemplatesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCrmEmailVerificationsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 

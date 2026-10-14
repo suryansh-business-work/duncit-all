@@ -84,6 +84,7 @@ const ROUTES = [
   '/user-leads',
   '/user-leads/smoke-id',
   '/tools/whatsapp',
+  '/tools/email-verifier',
   '/call-prompts',
   '/email-templates',
   '/email-templates/smoke-id',

@@ -32,7 +32,25 @@ describe('buildLeadColumns', () => {
   it('adds the entity-specific column only for hosts and ecomm', () => {
     expect(build('host').map((c) => c.field)).toContain('host_type');
     expect(build('ecomm').map((c) => c.field)).toContain('brand_name');
-    expect(build('venue').map((c) => c.field).slice(0, 2)).toEqual(['venue_name', 'city']);
+    expect(build('venue').map((c) => c.field).slice(0, 3)).toEqual(['venue_name', 'email', 'city']);
+  });
+
+  it('shows the primary contact email, filtering on the raw address and dashing a missing one', () => {
+    const email = column('host', 'email');
+    const renderEmail = email.cellRenderer as (r: Row) => ReactNode;
+
+    expect(email.valueGetter?.(row({ contacts: [{ email: 'asha@example.com' }, { email: 'second@example.com' }] }))).toBe(
+      'asha@example.com',
+    );
+    expect(email.valueGetter?.(row({ contacts: [] }))).toBe('');
+
+    // Outside the CRM's EmailStatusProvider the badge renders nothing — the address still shows.
+    const { unmount } = render(<>{renderEmail(row({ contacts: [{ email: 'asha@example.com' }] }))}</>);
+    expect(screen.getByText('asha@example.com')).toBeInTheDocument();
+    unmount();
+
+    render(<>{renderEmail(row({ contacts: [{ mobile_number: '9876543210' }] }))}</>);
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 
   it('renders the name cell text for strings, numbers, booleans, objects and blanks', () => {

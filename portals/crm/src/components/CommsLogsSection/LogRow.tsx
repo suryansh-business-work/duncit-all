@@ -5,6 +5,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import StatusVisual, { TranscriptWave } from './statusVisuals';
 import type { CommunicationLogItem } from '../../api/comms.gql';
+import { EmailStatusBadge } from '../email-status';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
@@ -78,11 +79,14 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
           <Chip size="small" label={log.status} color={STATUS_COLOUR[log.status] ?? 'default'} />
           {log.provider_name && <Chip size="small" variant="outlined" label={log.provider_name} />}
         </Stack>
-        <Typography variant="caption" noWrap sx={{
-          color: "text.secondary"
-        }}>
-          {log.contact_name ? `${log.contact_name} · ` : ''}{log.contact_value} · {fmt(log.created_at)}
-        </Typography>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
+          <Typography variant="caption" noWrap sx={{
+            color: "text.secondary"
+          }}>
+            {log.contact_name ? `${log.contact_name} · ` : ''}{log.contact_value} · {fmt(log.created_at)}
+          </Typography>
+          {log.type === 'EMAIL' && <EmailStatusBadge email={log.contact_value} />}
+        </Stack>
         {log.error_message && (
           <Typography variant="caption" sx={{
             color: "error.main"

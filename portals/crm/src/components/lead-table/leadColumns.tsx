@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Stack, Typography } from '@mui/material';
 import { actionsColumn, dateColumn, type DuncitColumn } from '@duncit/table';
 import { PriorityChip, StatusChip } from '../StatusChips';
+import { EmailStatusBadge } from '../email-status';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
@@ -14,7 +15,7 @@ export interface CrmLeadRowBase {
   next_follow_up_date?: string | null;
   created_at?: string | null;
   super_category?: { name: string } | null;
-  contacts?: { mobile_number?: string | null }[];
+  contacts?: { mobile_number?: string | null; email?: string | null }[];
 }
 
 export type CrmLeadEntity = 'host' | 'venue' | 'ecomm';
@@ -71,6 +72,20 @@ const fmtDate = (value?: string | null): string => {
 const renderStatus = (row: CrmLeadRowBase) => <StatusChip value={row.lead_status} />;
 const renderPriority = (row: CrmLeadRowBase) => <PriorityChip value={row.priority} />;
 const superCategoryName = (row: CrmLeadRowBase) => row.super_category?.name ?? '—';
+const primaryEmail = (row: CrmLeadRowBase) => row.contacts?.[0]?.email ?? '';
+/** The primary contact's email with its verification status — the green tick when verified. */
+const renderEmail = (row: CrmLeadRowBase) => {
+  const email = primaryEmail(row);
+  if (!email) return '—';
+  return (
+    <Stack direction="row" spacing={1} component="span" sx={{ alignItems: 'center', minWidth: 0 }}>
+      <Typography variant="body2" noWrap component="span">
+        {email}
+      </Typography>
+      <EmailStatusBadge email={email} />
+    </Stack>
+  );
+};
 const followUpValue = (row: CrmLeadRowBase) => fmtDate(row.next_follow_up_date);
 /** NaN-guarded `dd MMM yyyy` formatter for the shared date column. */
 const fmtDateObj = (date: Date): string =>
@@ -129,6 +144,14 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
     });
   }
   columns.push(
+    {
+      field: 'email',
+      headerName: t('shell.common.email'),
+      minWidth: 260,
+      type: 'text',
+      cellRenderer: renderEmail,
+      valueGetter: primaryEmail,
+    },
     { field: 'city', headerName: t('crm.common.city'), minWidth: 120, type: 'text', valueGetter: (row) => row.city ?? '—' },
     {
       field: 'lead_status',

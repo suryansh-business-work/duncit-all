@@ -42,6 +42,12 @@ const TITLE_COPY: Readonly<Record<BackgroundJobKind, Readonly<Record<BackgroundJ
     FAILED: 'shell.jobs.organizeStopped',
     CANCELLED: 'shell.jobs.organizeCancelled',
   },
+  EMAIL_VERIFY: {
+    RUNNING: 'shell.jobs.verifying',
+    COMPLETED: 'shell.jobs.verified',
+    FAILED: 'shell.jobs.verifyStopped',
+    CANCELLED: 'shell.jobs.verifyCancelled',
+  },
 };
 
 /** The line under the bar when some of the work did not land. */
@@ -49,6 +55,7 @@ const FAILED_COPY: Readonly<Record<BackgroundJobKind, string>> = {
   BULK_DELETE: 'shell.jobs.failedRows',
   AI_TRANSLATE: 'shell.jobs.unusableKeys',
   MEDIA_ORGANIZE: 'shell.jobs.unmovedFiles',
+  EMAIL_VERIFY: 'shell.jobs.uncheckedEmails',
 };
 
 const BAR_COLOR: Readonly<Record<BackgroundJobStatus, 'info' | 'success' | 'error' | 'inherit'>> = {

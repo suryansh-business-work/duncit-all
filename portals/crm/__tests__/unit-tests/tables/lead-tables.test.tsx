@@ -115,6 +115,11 @@ describe('CrmLeadsTable (host)', () => {
     await screen.findByText('Bob Co');
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2);
   });
+
+  it('shows the primary contact email in its own column', async () => {
+    renderLeadTable('host', makeFetch([hostLead]));
+    expect(await screen.findByText('b@b.test')).toBeTruthy();
+  });
 });
 
 describe('CrmLeadsTable (ecomm)', () => {

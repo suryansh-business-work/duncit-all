@@ -30,7 +30,13 @@ export function VenueHealthTile({ venueId }: Readonly<{ venueId: string }>) {
       onPress={() => navigation.navigate('VenueHealth', { venueId })}
       pressStyle={PRESS_STYLE.surface}
     >
-      <HealthMeter score={health.total_score} band={health.band} size={140} label={label} caption={t('mweb.common.tapForDetails')} />
+      <HealthMeter
+        score={health.total_score}
+        band={health.band}
+        size={140}
+        label={label}
+        caption={t('mweb.common.tapForDetails')}
+      />
     </SurfaceCard>
   );
 }

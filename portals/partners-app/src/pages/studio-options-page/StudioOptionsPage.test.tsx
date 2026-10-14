@@ -29,7 +29,8 @@ describe('StudioOptionsPage', () => {
     });
 
     expect(await screen.findByRole('heading', { name: 'Host Options' })).toBeTruthy();
-    const expected = STUDIO_OPTION_LIST.HOST.filter((option) => !option.autoPods);
+    // The console lists neither Auto Pods (flag off) nor the app-only screens.
+    const expected = STUDIO_OPTION_LIST.HOST.filter((option) => !option.autoPods && !option.appOnly);
     await screen.findByText('Start a new pod in a few steps');
     expect(optionLinks().map((link) => link.getAttribute('href'))).toEqual(expected.map((o) => o.portal));
     expect(screen.getByTestId('studio-option-item-publish').textContent).toContain('Publish Your Host Page');

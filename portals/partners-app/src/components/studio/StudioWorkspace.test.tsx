@@ -38,7 +38,8 @@ describe('StudioWorkspace', () => {
     open('/host/nearby-venues', ['HOST']);
 
     const menu = await screen.findByRole('navigation', { name: 'Host Options' });
-    const expected = STUDIO_OPTION_LIST.HOST.filter((option) => !option.autoPods);
+    // Neither Auto Pods (flag off) nor the app-only screens are console pages.
+    const expected = STUDIO_OPTION_LIST.HOST.filter((option) => !option.autoPods && !option.appOnly);
     expect(menuLinks(menu).map((link) => link.getAttribute('href'))).toEqual(expected.map((option) => option.portal));
     expect(within(menu).getByRole('link', { current: 'page' }).getAttribute('href')).toBe('/host/nearby-venues');
     // The page is still there, untouched, next to the menu.

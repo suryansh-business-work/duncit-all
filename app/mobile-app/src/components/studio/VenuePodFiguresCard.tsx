@@ -12,7 +12,10 @@ const SCOPE_KEY = 'mweb.studioPods.venues';
  * the next pod, computed server-side over every booking. The pod rows and their
  * actions live on Pods at Your Venue. mWeb twin: VenuePodsFigures (rule 27).
  */
-export function VenuePodFiguresCard({ state, testID }: Readonly<{ state: StudioPodsState; testID: string }>) {
+export function VenuePodFiguresCard({
+  state,
+  testID,
+}: Readonly<{ state: StudioPodsState; testID: string }>) {
   const { t } = useTranslation();
   // Withheld while loading: a strip reading "Total 0" under a load states something false.
   if (state.isLoading) return null;
@@ -22,9 +25,18 @@ export function VenuePodFiguresCard({ state, testID }: Readonly<{ state: StudioP
       <SectionHeader title={t('mweb.studioPods.venueTitle')} />
       {state.hasError ? (
         // The section's own error line and Retry.
-        <StudioPodsBody state={state} emptyKey="mweb.studioPods.venueEmpty" scopeKey={SCOPE_KEY} testID={testID} />
+        <StudioPodsBody
+          state={state}
+          emptyKey="mweb.studioPods.venueEmpty"
+          scopeKey={SCOPE_KEY}
+          testID={testID}
+        />
       ) : (
-        <StudioPodFigures figures={state.figures} scopeLabelKey={SCOPE_KEY} testID={`${testID}-figures`} />
+        <StudioPodFigures
+          figures={state.figures}
+          scopeLabelKey={SCOPE_KEY}
+          testID={`${testID}-figures`}
+        />
       )}
     </SurfaceCard>
   );

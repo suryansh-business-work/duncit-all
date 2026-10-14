@@ -58,7 +58,9 @@ export function VenueManageScreen() {
           {venues.length > 0 ? <VenueEarningsCard /> : null}
           {/* Hidden when there is no venue at all: it would fire a needless
               authenticated round trip. mWeb gates it the same way (rule 27). */}
-          {venues.length > 0 ? <VenuePodFiguresCard state={podsState} testID="venue-studio-pods" /> : null}
+          {venues.length > 0 ? (
+            <VenuePodFiguresCard state={podsState} testID="venue-studio-pods" />
+          ) : null}
           <YStack gap={12}>
             <SectionHeader title="Pods at your venue" />
             <SurfaceCard>

@@ -12,7 +12,12 @@ jest.mock('@/components/AppHeader', () => {
 });
 jest.mock('@react-navigation/native', () => ({
   // addListener: the health tile refetches on focus.
-  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: jest.fn(), addListener: () => jest.fn() }),
+  useNavigation: () => ({
+    canGoBack: () => true,
+    goBack: jest.fn(),
+    navigate: jest.fn(),
+    addListener: () => jest.fn(),
+  }),
 }));
 jest.mock('@/hooks/useStudioDashboards', () => ({ useVenueDashboard: jest.fn() }));
 // The per-venue stats, pods and change-request panels fetch on their own; their

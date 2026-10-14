@@ -137,11 +137,12 @@ describe('HostManagePage', () => {
       [meMock(['HOST']), hostPodsMock([{ id: 'p1' }, { id: 'p2' }])],
       <HostManagePage />,
     );
-    expect(await screen.findByTestId('pods-count')).toHaveTextContent('2');
+    await waitFor(() => expect(screen.getByTestId('pods-count')).toHaveTextContent('2'));
     expect(screen.getByTestId('pods-loading')).toHaveTextContent('false');
     // Each of these is its own Host Options page now.
     expect(screen.queryByTestId('host-apply-banner')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('host-share-section')).not.toBeInTheDocument();  });
+    expect(screen.queryByTestId('host-share-section')).not.toBeInTheDocument();
+  });
 
   it('passes the pods query error message down to HostPodSections', async () => {
     setup(

@@ -590,12 +590,6 @@ async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[
   return sends;
 }
 
-/** Best-effort WhatsApp beside the in-app note: the decision to the hosts and
- * to the venue owner, plus the pod-is-live pair once it is approved. The sends
- * themselves never throw; the lookups feeding them can. */
-/** Everything the decision templates fill for one pod on one slot, or null
- * when the venue has gone. Shared by a venue's decision and by a free pod's
- * instant booking, so both fill the same templates from the same lookups. */
 /** The pod fields the decision templates read. */
 interface SlotDecisionPod {
   _id: unknown;
@@ -605,6 +599,9 @@ interface SlotDecisionPod {
   pod_images_and_videos?: Parameters<typeof podImageAssets>[0];
 }
 
+/** Everything the decision templates fill for one pod on one slot, or null
+ * when the venue has gone. Shared by a venue's decision and by a free pod's
+ * instant booking, so both fill the same templates from the same lookups. */
 async function loadSlotDecisionFacts(pod: SlotDecisionPod, slot: IVenueSlot): Promise<SlotDecisionFacts | null> {
   const venue = await VenueModel.findById(slot.venue_id).select('venue_name owner_user_id').lean();
   if (!venue) return null;
@@ -629,6 +626,9 @@ async function loadSlotDecisionFacts(pod: SlotDecisionPod, slot: IVenueSlot): Pr
   };
 }
 
+/** Best-effort WhatsApp beside the in-app note: the decision to the hosts and
+ * to the venue owner, plus the pod-is-live pair once it is approved. The sends
+ * themselves never throw; the lookups feeding them can. */
 async function whatsappSlotDecision(
   pod: any,
   slot: IVenueSlot,
@@ -652,12 +652,12 @@ async function whatsappSlotDecision(
     // It queues and returns — the fan-out never holds the approval open.
     if (approved) {
       await notifyVenueSubscribers({
-        venueId: venue._id,
+        venueId: slot.venue_id,
         venueName: facts.venueName,
         podId: facts.entityId,
         podTitle: facts.podTitle,
-        date,
-        time,
+        date: facts.date,
+        time: facts.time,
       });
     }
   } catch (err) {

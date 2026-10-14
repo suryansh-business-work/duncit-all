@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage';
 import PodProfitCalculatorPage from './pages/calculators/pod-profit';
 import {
   DefaultDeductionsPage,
+  FoodMenuDefaultsPage,
   PodFinancePage,
   PodFinanceDetailPage,
   BackoutRefundPage,
@@ -52,6 +53,7 @@ export default function App() {
       <Route path="/" element={authed(<DashboardPage />)} />
       <Route path="/startup-dashboard" element={authed(<StartupDashboardPage />)} />
       <Route path="/default-deductions" element={authed(<DefaultDeductionsPage />)} />
+      <Route path="/food-menu-defaults" element={authed(<FoodMenuDefaultsPage />)} />
       <Route path="/pod-finance" element={authed(<PodFinancePage />)} />
       <Route path="/pod-finance/:podId" element={authed(<PodFinanceDetailPage />)} />
       <Route path="/backout-refunds" element={authed(<BackoutRefundPage />)} />

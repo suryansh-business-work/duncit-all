@@ -31,6 +31,8 @@ export const appConfig = {
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     { label: 'Startup Dashboard', labelKey: 'shell.nav.startupDashboard', to: '/startup-dashboard', icon: 'insights' },
     { label: 'Default Deductions', labelKey: 'shell.nav.defaultDeductions', to: '/default-deductions', icon: 'percent' },
+    // GST on venue food orders — what every venue without its own follows.
+    { label: 'Food Menu Defaults', labelKey: 'shell.nav.foodMenuDefaults', to: '/food-menu-defaults', icon: 'menuBook' },
     { label: 'Pod Finance', labelKey: 'shell.nav.podFinance', to: '/pod-finance', icon: 'analytics' },
     {
       label: 'Cancel & Refunds', labelKey: 'shell.nav.cancelAndRefunds',

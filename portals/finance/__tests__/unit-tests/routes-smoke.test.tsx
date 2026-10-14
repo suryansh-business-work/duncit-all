@@ -88,6 +88,7 @@ const ROUTES = [
   '/',
   '/startup-dashboard',
   '/default-deductions',
+  '/food-menu-defaults',
   '/pod-finance',
   '/pod-finance/smoke-id',
   '/backout-refunds',

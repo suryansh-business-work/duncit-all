@@ -31,7 +31,7 @@ export default function PodFormActions({
           {t('podForm.common.saveAsDraft')}
         </DuncitButton>
       )}
-      <DuncitButton variant="contained" type="submit" disabled={disabled} onClick={onPublish}>
+      <DuncitButton variant="contained" type="submit" disabled={disabled} onClick={onPublish} data-testid="pod-form-save">
         {busy ? 'Saving…' : 'Save'}
       </DuncitButton>
     </DialogActions>

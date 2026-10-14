@@ -84,10 +84,11 @@ export function ConfirmDialog({
       fullWidth
       maxWidth="xs"
       aria-describedby={describedBy}
+      data-testid="confirm-dialog"
     >
-      <DialogTitle sx={titleSx}>{title}</DialogTitle>
+      <DialogTitle sx={titleSx} data-testid="confirm-dialog-title">{title}</DialogTitle>
       {message != null && (
-        <DialogContent id={messageId}>
+        <DialogContent id={messageId} data-testid="confirm-dialog-message">
           {typeof message === 'string' ? (
             <DialogContentText>{message}</DialogContentText>
           ) : (

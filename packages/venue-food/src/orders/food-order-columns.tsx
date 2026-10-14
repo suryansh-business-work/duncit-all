@@ -27,12 +27,14 @@ export interface FoodOrderRowHandlers {
   /** Resolves when the move has been answered — the button shows its own spinner until then. */
   onAdvance: (row: FoodOwnerOrder, next: VenueFoodOrderStatus) => Promise<void>;
   onView: (row: FoodOwnerOrder) => void;
-  onCancel: (row: FoodOwnerOrder) => void;
+  /** Absent when the viewer may not refund — the Cancel button is then not drawn. */
+  onCancel?: (row: FoodOwnerOrder) => void;
 }
 
 const renderActions = (t: Translate, handlers: FoodOrderRowHandlers) => (row: FoodOwnerOrder) => {
   const next = foodOrderNextStep(row);
   const order = { vars: { no: row.order_no } };
+  const { onCancel } = handlers;
   return (
     <Stack direction="row" spacing={0.5} component="span" sx={{ alignItems: 'center', justifyContent: 'flex-end' }}>
       {next && (
@@ -48,12 +50,12 @@ const renderActions = (t: Translate, handlers: FoodOrderRowHandlers) => (row: Fo
       <DuncitButton size="small" aria-label={t('venueFoodOwner.orders.viewOrder', order)} onClick={() => handlers.onView(row)}>
         {t('venueFoodOwner.orders.view')}
       </DuncitButton>
-      {canCancelFoodOrder(row) && (
+      {onCancel && canCancelFoodOrder(row) && (
         <DuncitButton
           size="small"
           color="error"
           aria-label={t('venueFoodOwner.orders.cancelOrder', order)}
-          onClick={() => handlers.onCancel(row)}
+          onClick={() => onCancel(row)}
         >
           {t('venueFoodOwner.orders.cancelRefund')}
         </DuncitButton>

@@ -53,10 +53,16 @@ export default function EarnJourneyList({ showProducts, kinds }: Readonly<Props>
   const boxes = showProducts ? scoped : scoped.filter((box) => box.kind !== 'ECOMM');
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="earn-journey-list" spacing={1.5}>
       {showSkeleton
         ? boxes.map((box) => (
-            <Skeleton key={box.role} variant="rounded" height={104} sx={{ borderRadius: '16px' }} />
+            <Skeleton
+              key={box.role}
+              data-testid={`earn-box-${box.role}-skeleton`}
+              variant="rounded"
+              height={104}
+              sx={{ borderRadius: '16px' }}
+            />
           ))
         : null}
       {showSkeleton ? null : boxes.map((box) => {
@@ -68,6 +74,7 @@ export default function EarnJourneyList({ showProducts, kinds }: Readonly<Props>
         return (
           <Stack key={box.role} spacing={0}>
             <EarnBox
+              testId={`earn-box-${box.role}`}
               icon={ICONS[box.iconKey]}
               title={box.title}
               description={state.description}

@@ -63,7 +63,9 @@ lives below it:
   venue form (`notApprovedAction` says where).
 - **`VenueFoodOrders`** — the paid-order board on `@duncit/table`: move an order along the kitchen's
   path, read it in full (with the guest's rating and photos), or cancel it with a full refund. It
-  asks again every 20 seconds, paused while a dialog is open.
+  asks again every 20 seconds, paused while a dialog is open. `canRefund` (default `true`) hides the
+  Cancel & refund button for a viewer the server would refuse — the venues console passes
+  `useConsoleAccess().canGovern`, because refunding is a governor or owner power, not an editor one.
 - **`VenueFoodCoupons`** — the venue's coupons on `@duncit/table`: create and edit (RHF + Zod),
   switch on and off (optimistic, put back on a refusal), delete after a confirm.
 

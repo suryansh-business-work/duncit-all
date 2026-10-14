@@ -1,6 +1,7 @@
 import { formatMoney, ticketDiscountRows, type TicketDiscountRow } from '@duncit/utils';
 import { linesToMedia } from '../build-input';
 import { podHasTicketPrice } from '../ticket-discount';
+import { fallbackT, type Translate } from '../i18n/useTranslation';
 import type { PodFormData, PodFormValues } from '../types';
 
 export interface PodPreviewMedia {
@@ -69,8 +70,8 @@ function whenLine(formatter: PodFormData['dateFormatter'], start: Date | null, e
   return `${day} – ${formatter.formatTime(end)}`;
 }
 
-function priceLine(isFree: boolean, amount: number, symbol: string | undefined): string {
-  if (isFree) return 'Free';
+function priceLine(t: Translate, isFree: boolean, amount: number, symbol: string | undefined): string {
+  if (isFree) return t('podForm.preview.free');
   return formatMoney(Number(amount) || 0, { symbol: symbol || '₹' });
 }
 
@@ -105,9 +106,14 @@ const hashtagsOf = (text: string): string[] =>
 /**
  * The one derivation both preview surfaces read. Pure so the portals can render
  * it without a network round-trip: everything comes from the form values plus
- * the lookup lists the form already holds.
+ * the lookup lists the form already holds. `t` is the caller's translator; the
+ * bundled copy answers when none is given.
  */
-export function buildPodPreview(values: PodFormValues, data: PodFormData): PodPreviewModel {
+export function buildPodPreview(
+  values: PodFormValues,
+  data: PodFormData,
+  t: Translate = fallbackT,
+): PodPreviewModel {
   const isVirtual = values.pod_mode === 'VIRTUAL';
   const isFree = values.pod_type.includes('FREE');
   const spotsTotal = Number(values.no_of_spots) || 0;
@@ -119,7 +125,7 @@ export function buildPodPreview(values: PodFormValues, data: PodFormData): PodPr
     isVirtual,
     modeText: isVirtual ? 'Virtual' : 'Physical',
     isFree,
-    priceText: priceLine(isFree, values.pod_amount, data.finance?.currency_symbol),
+    priceText: priceLine(t, isFree, values.pod_amount, data.finance?.currency_symbol),
     whenText: whenLine(data.dateFormatter, values.pod_date_time, values.pod_end_date_time),
     spotsTotal,
     spotsText: spotsLine(spotsTotal),

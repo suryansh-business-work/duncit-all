@@ -99,3 +99,26 @@ host CTA live on mWeb and open externally via `urlConfigs.mwebUrl`.
 `CANCEL_MY_MEETING`, `PUBLIC_FEATURE_FLAGS`. The package calls
 `@apollo/client` hooks directly — both consumers already mount an
 `ApolloProvider`, so nothing is injected.
+
+## Test ids
+
+Every card, action and dialog carries a `data-testid`, named after the native
+twin's `testID` (`app/mobile-app/src/components/earn`) so the mWeb, Partners
+and native E2E specs select the same strings:
+
+| Element | `data-testid` |
+| --- | --- |
+| The card stack | `earn-journey-list` |
+| A card's loading placeholder | `earn-box-<role>-skeleton` |
+| A card (`EarnBox` takes a `testId` prop, default `earn-box`; the list passes `earn-box-<role>`, e.g. `earn-box-HOST`) | `<testId>` |
+| Its clickable area (disabled while locked) | `<testId>-open` |
+| Its title / description | `<testId>-title`, `<testId>-description` |
+| The locked chip ("Already enabled", "Meeting scheduled", "Onboarding in process.") | `<testId>-enabled` |
+| An approved role's next-step button | `<testId>-cta` |
+| A pending meeting's actions (by `kind`) | `earn-meeting-actions-<kind>`, `reschedule-<kind>`, `cancel-<kind>`, `reschedule-used-<kind>` |
+| Reschedule dialog | `reschedule-dialog`, `reschedule-title`, `reschedule-loading`, `reschedule-current`, `reschedule-empty`, `reschedule-moving`, `reschedule-error`, `reschedule-close`, `reschedule-confirm` |
+| Cancel dialog | `cancel-dialog`, `cancel-title`, `cancel-body`, `cancel-error`, `cancel-keep`, `cancel-confirm` |
+| The reason field (`MeetingReasonForm` takes a `testId` prop, default `meeting-reason`; the dialogs pass `reschedule-reason` / `cancel-reason`) | `<testId>`, `<testId>-input`, `<testId>-ai-monitoring` |
+
+The slot calendar inside the reschedule dialog is `@duncit/slots`' own
+`SlotCalendar` and keeps its ids (`slot-calendar`, `slot-tile-<start_at>`).

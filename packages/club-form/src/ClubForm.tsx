@@ -78,7 +78,7 @@ export default function ClubForm({
   const fields = (
     <>
       <ClubSections />
-      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mt: 2 }} data-testid="club-form-error">{error}</Alert>}
       <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
         <DuncitButton onClick={onCancel}>{t('clubForm.common.cancel')}</DuncitButton>
         {!isEdit && (
@@ -90,11 +90,11 @@ export default function ClubForm({
               saveDraft().catch(console.error);
             }}
           >
-            Save as Draft
+            {t('clubForm.common.saveAsDraft')}
           </DuncitButton>
         )}
-        <DuncitButton variant="contained" type="submit" disabled={busyOrSubmitting || !nameFilled}>
-          {busy ? 'Saving…' : 'Save'}
+        <DuncitButton variant="contained" type="submit" disabled={busyOrSubmitting || !nameFilled} data-testid="club-form-save">
+          {busy ? t('clubForm.common.saving') : t('clubForm.common.save')}
         </DuncitButton>
       </DialogActions>
     </>
@@ -103,7 +103,7 @@ export default function ClubForm({
   return (
     <FormProvider {...methods}>
       <ClubFormDataProvider value={data}>
-        <form noValidate onSubmit={submitFinal}>
+        <form noValidate onSubmit={submitFinal} data-testid="club-form">
           <Grid container spacing={3} sx={{
             alignItems: "flex-start"
           }}>

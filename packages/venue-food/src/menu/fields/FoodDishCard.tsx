@@ -44,6 +44,7 @@ export default function FoodDishCard<T extends FieldValues, TOut = T>({
             size="small"
             aria-label={t('venueFoodOwner.menu.removeDish', { vars: { name: heading } })}
             onClick={onRemove}
+            data-testid={`${idPrefix}-food-item-${index}-remove`}
           >
             <DeleteIcon />
           </DuncitIconButton>
@@ -52,6 +53,7 @@ export default function FoodDishCard<T extends FieldValues, TOut = T>({
           <RhfTextField
             control={control}
             name={dishPath<T>(index, 'name')}
+            data-testid={`${idPrefix}-food-item-${index}-name`}
             label={t('venueFoodOwner.menu.name')}
             required
             size="small"
@@ -76,6 +78,7 @@ export default function FoodDishCard<T extends FieldValues, TOut = T>({
           <RhfTextField
             control={control}
             name={dishPath<T>(index, 'price')}
+            data-testid={`${idPrefix}-food-item-${index}-price`}
             label={t('venueFoodOwner.menu.price')}
             type="number"
             required

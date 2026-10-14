@@ -11,7 +11,10 @@ import { Types } from 'mongoose';
 jest.mock('@observability/log', () => ({
   logs: { server: { error: jest.fn(), warn: jest.fn(), info: jest.fn() } },
 }));
-jest.mock('../../pod.model', () => ({ PodModel: { find: jest.fn() } }));
+jest.mock('../../pod.model', () => ({
+  PodModel: { find: jest.fn() },
+  isFreePod: (pod: { pod_type?: string } | null) => pod?.pod_type === 'FREE',
+}));
 jest.mock('../../pod.service', () => ({ podService: { systemCancelPod: jest.fn() } }));
 jest.mock('../../pod.lifecycle', () => ({ podLifecycleFilter: jest.fn(() => ({ lifecycle: 'UPCOMING' })) }));
 jest.mock('../../pod.cancellationRisk', () => ({
@@ -176,6 +179,8 @@ describe('runPodAutoCancelSweep', () => {
     expect(podFind).toHaveBeenCalledWith({
       lifecycle: 'UPCOMING',
       is_active: true,
+      // A free pod moves no platform money, so the sweep never even reads one.
+      pod_type: { $ne: 'FREE' },
       pod_date_time: { $gt: NOW, $lte: at(10) },
     });
     expect(sort).toHaveBeenCalledWith({ pod_date_time: 1 });
@@ -225,6 +230,21 @@ describe('runPodAutoCancelSweep', () => {
       refund_pct: 33.333,
       msg: 'finance-negative pod auto-cancelled',
     });
+  });
+
+  it('never cancels a FREE pod on a priced slot, while still cancelling the paid one beside it', async () => {
+    const free = { _id: oid(8), id: String(oid(8)), venue_id: oid(2), pod_type: 'FREE', pod_date_time: at(5) };
+    const paid = { _id: oid(9), id: String(oid(9)), venue_id: oid(2), pod_type: 'PAID', pod_date_time: at(5) };
+    cursorPods = [free, paid];
+    venueFindById.mockReturnValue(venueWith(policy({ trigger_hours: 8 })));
+
+    await expect(runPodAutoCancelSweep()).resolves.toBe(1);
+
+    // The free pod is not even priced — its venue is the host's to settle.
+    expect(financeNow).toHaveBeenCalledTimes(1);
+    expect(financeNow).toHaveBeenCalledWith(paid);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(cancel.mock.calls[0][0]).toBe(String(oid(9)));
   });
 
   it('leaves a pod alone until its own venue window opens, without pricing it', async () => {

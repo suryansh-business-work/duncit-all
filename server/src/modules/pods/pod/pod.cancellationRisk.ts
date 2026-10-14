@@ -24,7 +24,7 @@
  */
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { PodModel, type IPodCancellationRisk } from './pod.model';
+import { isFreePod, PodModel, type IPodCancellationRisk } from './pod.model';
 import { podLifecycleFilter } from './pod.lifecycle';
 import { podSeatsAvailable, podSeatsTaken } from './pod.seats';
 import { loadPodClubSlugMap, podNotificationLink } from './pod.service';
@@ -75,6 +75,12 @@ export interface PodFinanceNow {
  * skips the two reads the waterfall needs.
  */
 export async function podFinanceNow(pod: any): Promise<PodFinanceNow> {
+  // A free pod collects nothing and its venue is paid by the host off the
+  // platform, so there is no shortfall to measure: never negative, never at
+  // risk, never cancelled for money.
+  if (isFreePod(pod)) {
+    return { collected: 0, venueAmount: 0, rates: null, waterfall: null, negative: false };
+  }
   const venueAmount = await venueAmountForPod(pod, 0);
   if (venueAmount <= 0) {
     return { collected: 0, venueAmount, rates: null, waterfall: null, negative: false };
@@ -215,7 +221,7 @@ export const podCancelAt = (pod: any, leadHours: number): Date =>
 
 const RISK_POD_FIELDS =
   'pod_id pod_title pod_hosts_id venue_id venue_slot_id club_id pod_date_time completed_at deleted_at ' +
-  'is_active pod_attendees extra_seats no_of_spots pod_amount pod_images_and_videos cancellation_risk';
+  'is_active pod_attendees extra_seats no_of_spots pod_type pod_amount pod_images_and_videos cancellation_risk';
 
 /** An empty waterfall for the states that never ran one, so the GraphQL type
  * can stay non-null and the client never branches on a missing object. */
@@ -521,6 +527,8 @@ export async function runPodCancellationRiskSweep(): Promise<{ flagged: number; 
       ...podLifecycleFilter('UPCOMING', new Date(now)),
       is_active: true,
       venue_id: { $ne: null },
+      // Free pods carry no platform money, so they can never be at risk.
+      pod_type: { $ne: 'FREE' },
       pod_date_time: {
         $gt: new Date(now),
         $lte: new Date(now + settings.risk_window_hours * HOUR_MS),

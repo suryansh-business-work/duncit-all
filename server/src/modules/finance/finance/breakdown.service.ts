@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { POD_LIVE_TAIL_MS } from '@modules/pods/pod/pod.lifecycle';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
@@ -8,6 +8,7 @@ import { PaymentReleaseModel, type IPaymentRelease } from './paymentRelease.mode
 import { getFinanceSettings } from './finance.model';
 import {
   collectedForPod,
+  freePodWaterfall,
   resolveEffectiveRates,
   venueAmountForPod,
   waterfallForAmount,
@@ -29,6 +30,9 @@ export interface PodEarningsProjection {
   /** The highest venue slot price the pod can still carry — see venueBudgetOf. */
   venue_budget: number;
   waterfall: SettlementWaterfall;
+  /** True when the projection is for a FREE pod: nothing to earn, every figure
+   * 0, and clients hide the calculation rather than print it. */
+  is_free: boolean;
 }
 
 /**
@@ -61,6 +65,19 @@ function projectionFor(
     payable_spots: billable,
     venue_budget: venueBudgetOf(waterfall),
     waterfall,
+    is_free: false,
+  };
+}
+
+/** A free pod's projection: no ticket money, no venue amount, no negative host
+ * figure — the host pays the venue off the platform. */
+function freeProjection(noOfSpots: number): PodEarningsProjection {
+  return {
+    total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
+    payable_spots: 0,
+    venue_budget: 0,
+    waterfall: freePodWaterfall(),
+    is_free: true,
   };
 }
 
@@ -127,6 +144,8 @@ export interface PodFinanceBreakdownView {
   has_venue: boolean;
   completed_at: string | null;
   waterfall: SettlementWaterfall;
+  /** True for a free pod — the waterfall is all zeros and is not to be drawn. */
+  is_free: boolean;
 }
 
 export interface EarningsSummary {
@@ -264,7 +283,7 @@ export const breakdownService = {
     // needs explaining — seats were sold and then refunded. Opt in, like the
     // admin pod page itself does with include_deleted.
     const pod = await PodModel.findById(podDocId)
-      .select('pod_title pod_hosts_id venue_id venue_slot_id completed_at')
+      .select('pod_title pod_hosts_id venue_id venue_slot_id completed_at pod_type')
       .setOptions({ includeDeleted: true });
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 
@@ -315,9 +334,17 @@ export const breakdownService = {
     let settlementStatus: SettlementStatus = 'LIVE';
     if (hostRelease) settlementStatus = hostRelease.status === 'APPROVED' ? 'SETTLED' : 'PENDING_APPROVAL';
 
-    const frozen = !!hostRelease?.breakdown && hostRelease.breakdown.version >= SETTLEMENT_ENGINE_VERSION;
+    // A free pod has no money to break down. It completes without a payout
+    // release, so its completion stamp is what says it is settled.
+    const free = isFreePod(pod);
+    if (free && !hostRelease && pod.completed_at) settlementStatus = 'SETTLED';
+
+    const frozen =
+      !free && !!hostRelease?.breakdown && hostRelease.breakdown.version >= SETTLEMENT_ENGINE_VERSION;
     let waterfall: SettlementWaterfall;
-    if (frozen) {
+    if (free) {
+      waterfall = freePodWaterfall();
+    } else if (frozen) {
       const venueRelease = await PaymentReleaseModel.findOne({
         pod_id: pod._id,
         kind: 'VENUE_BILLING',
@@ -354,6 +381,7 @@ export const breakdownService = {
       has_venue: !!pod.venue_id,
       completed_at: (pod as any).completed_at?.toISOString?.() ?? null,
       waterfall,
+      is_free: free,
     };
   },
 
@@ -381,12 +409,16 @@ export const breakdownService = {
     podAmount: number,
     noOfSpots: number,
     venueId?: string | null,
-    venueAmount?: number | null
+    venueAmount?: number | null,
+    podType?: string | null
   ): Promise<PodEarningsProjection> {
     if (!Number.isFinite(podAmount) || podAmount < 0) {
       throw new GraphQLError('Amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const venuePrice = assertPreviewInputs(noOfSpots, venueId, venueAmount);
+    // Only an explicit FREE answers free — a caller that names no type gets the
+    // paid projection exactly as before.
+    if (isFreePod({ pod_type: podType })) return freeProjection(noOfSpots);
     const rates = await resolveEffectiveRates({ hostUserId, venueId: venueId ?? null });
     // PREVIEW: the venue's fixed price is NEVER auto-reduced to fit the pool
     // — a shortfall renders as negative host earnings so the clients can show
@@ -412,6 +444,7 @@ export const breakdownService = {
     noOfSpots: number;
     venueId?: string | null;
     venueSlotId?: string | null;
+    podType?: string | null;
   }): Promise<PodEarningsProjection> {
     const { hostUserId, podAmount, noOfSpots } = input;
     if (!Number.isFinite(podAmount) || podAmount < 0) {
@@ -424,6 +457,7 @@ export const breakdownService = {
     if (input.venueSlotId && !Types.ObjectId.isValid(input.venueSlotId)) {
       throw new GraphQLError('Invalid slot', { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    if (isFreePod({ pod_type: input.podType })) return freeProjection(noOfSpots);
     const venueId = input.venueId ?? null;
     const venuePrice = venueId
       ? await venueAmountForPod(

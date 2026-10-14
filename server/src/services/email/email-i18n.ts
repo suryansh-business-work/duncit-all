@@ -52,6 +52,8 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.venueSlotRequest.decline": "Decline",
   "email.venueSlotRequest.earningsNote":
     "Either button opens the request in the Partners portal, where you can see exactly what this booking earns you before you confirm.",
+  "email.venueSlotRequest.freePodNotice":
+    "This pod is free, so please coordinate with the host directly. The host will contact you about your charges. Please do not confirm the slot until the host has called you to discuss them or has transferred the amount.",
   "email.venueSlotRequest.reviewAll": "See all pending requests",
   "email.venueSlotRequest.footer":
     "You're receiving this because a host requested one of your venue's availability slots.",

@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { VenueSlotModel, type IVenueSlot, type VenueSlotStatus } from './venueSlot.model';
 import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import { notifyVenueSubscribers } from '@modules/venues/venueFood/venueSubscriber.service';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
@@ -593,6 +593,42 @@ async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[
 /** Best-effort WhatsApp beside the in-app note: the decision to the hosts and
  * to the venue owner, plus the pod-is-live pair once it is approved. The sends
  * themselves never throw; the lookups feeding them can. */
+/** Everything the decision templates fill for one pod on one slot, or null
+ * when the venue has gone. Shared by a venue's decision and by a free pod's
+ * instant booking, so both fill the same templates from the same lookups. */
+/** The pod fields the decision templates read. */
+interface SlotDecisionPod {
+  _id: unknown;
+  pod_title?: string | null;
+  club_id?: unknown;
+  pod_hosts_id?: unknown[] | null;
+  pod_images_and_videos?: Parameters<typeof podImageAssets>[0];
+}
+
+async function loadSlotDecisionFacts(pod: SlotDecisionPod, slot: IVenueSlot): Promise<SlotDecisionFacts | null> {
+  const venue = await VenueModel.findById(slot.venue_id).select('venue_name owner_user_id').lean();
+  if (!venue) return null;
+  const [hosts, owner] = await Promise.all([
+    UserModel.find({ _id: { $in: pod.pod_hosts_id ?? [] } })
+      .select(WA_CONTACT_FIELDS)
+      .lean(),
+    UserModel.findById(venue.owner_user_id).select(WA_CONTACT_FIELDS).lean(),
+  ]);
+  const { date, time } = waWhen(slot.start_at);
+  return {
+    entityId: String(pod._id),
+    podTitle: pod.pod_title ?? '',
+    venueName: venue.venue_name ?? '',
+    clubId: pod.club_id,
+    hostName: contactName(hosts[0]),
+    date,
+    time,
+    hosts,
+    owner,
+    assets: podImageAssets(pod.pod_images_and_videos),
+  };
+}
+
 async function whatsappSlotDecision(
   pod: any,
   slot: IVenueSlot,
@@ -600,27 +636,8 @@ async function whatsappSlotDecision(
   tellOwner = true
 ) {
   try {
-    const venue = await VenueModel.findById(slot.venue_id).select('venue_name owner_user_id').lean();
-    if (!venue) return;
-    const [hosts, owner] = await Promise.all([
-      UserModel.find({ _id: { $in: pod.pod_hosts_id ?? [] } })
-        .select(WA_CONTACT_FIELDS)
-        .lean(),
-      UserModel.findById(venue.owner_user_id).select(WA_CONTACT_FIELDS).lean(),
-    ]);
-    const { date, time } = waWhen(slot.start_at);
-    const facts: SlotDecisionFacts = {
-      entityId: String(pod._id),
-      podTitle: pod.pod_title ?? '',
-      venueName: venue.venue_name ?? '',
-      clubId: pod.club_id,
-      hostName: contactName(hosts[0]),
-      date,
-      time,
-      hosts,
-      owner,
-      assets: podImageAssets(pod.pod_images_and_videos),
-    };
+    const facts = await loadSlotDecisionFacts(pod, slot);
+    if (!facts) return;
     const sends = [
       ...hostDecisionSends(facts, approved),
       ...(tellOwner ? await venueDecisionSends(facts, approved) : []),
@@ -697,6 +714,37 @@ async function notifySlotDecision(
   await whatsappSlotDecision(pod, slot, approved, tellOwner);
 }
 
+/**
+ * A FREE pod just booked a partner's ₹0 slot outright — no request, because a
+ * free slot costs the free pod nothing and the venue asked nothing for it.
+ *
+ * The venue is told the way a live booking at its venue is always told: an
+ * in-app note, and the existing "pod is live" pair (VENUE_POD_PUBLISHED to the
+ * owner, HOST_POD_PUBLISHED to the host). Deliberately NOT the "you approved"
+ * message — the owner approved nothing, and that copy would say they did.
+ * Best-effort: a failed message never undoes the booking.
+ */
+export async function notifyFreeSlotBooked(pod: SlotDecisionPod, slot: IVenueSlot) {
+  try {
+    const { notificationService } = await import('@modules/engagement/notification/notification.service');
+    await notificationService.create({
+      title: 'Slot booked',
+      body: `"${pod.pod_title}" is a free pod and booked your free slot on ${appDateTime(slot.start_at)}. It is live now.`,
+      scope: 'USER',
+      target_user_ids: [String(slot.owner_user_id)],
+      silent: false,
+    });
+  } catch (err) {
+    logs.server.error('venueSlot', 'notifyFreeSlotBooked', { error: err, msg: 'free slot note failed', slot_id: String(slot._id) });
+  }
+  try {
+    const facts = await loadSlotDecisionFacts(pod, slot);
+    if (facts) await notifyEach(await podPublishedSends(facts));
+  } catch (err) {
+    logs.server.error('venueSlot', 'notifyFreeSlotBooked', { error: err, msg: 'free slot whatsapp failed', slot_id: String(slot._id) });
+  }
+}
+
 /** One pending booking request row: the slot joined with its requesting pod,
  * that pod's first host's contact details and the venue name. */
 /** Who is turning the request down, and what the audit row says when the
@@ -753,6 +801,9 @@ function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
   const hostName = host
     ? `${host.profile?.first_name ?? ''} ${host.profile?.last_name ?? ''}`.trim()
     : '';
+  // A free pod's host pays the venue directly, off the platform — the request
+  // quotes the venue no money, so no client can print "you receive ₹X" for it.
+  const free = isFreePod(pod);
   return {
     slot_id: String(s._id),
     venue_id: String(s.venue_id),
@@ -760,7 +811,8 @@ function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
     start_at: s.start_at.toISOString(),
     end_at: s.end_at.toISOString(),
     whole_day: s.whole_day ?? false,
-    price: s.price ?? 0,
+    price: free ? 0 : s.price ?? 0,
+    pod_is_free: free,
     requested_at: s.updated_at?.toISOString() ?? '',
     pod_id: String(pod._id),
     pod_title: pod.pod_title ?? '',
@@ -1020,7 +1072,7 @@ export const venueSlotService = {
     if (!slots.length) return [];
     const podIds = slots.map((s) => s.booked_by_pod_id).filter(Boolean);
     const pods = await PodModel.find({ _id: { $in: podIds } }).select(
-      'pod_title pod_description pod_hosts_id'
+      'pod_title pod_description pod_hosts_id pod_type'
     );
     const podMap = new Map(pods.map((p) => [String(p._id), p]));
     const hostIds = pods.flatMap((p) => (p.pod_hosts_id ?? []).slice(0, 1));
@@ -1053,7 +1105,7 @@ export const venueSlotService = {
     if (!podId) fail('NOT_FOUND', 'This slot has no booking request');
 
     const [pod, venue, rates] = await Promise.all([
-      PodModel.findById(podId).select('pod_title pod_description pod_hosts_id'),
+      PodModel.findById(podId).select('pod_title pod_description pod_hosts_id pod_type'),
       VenueModel.findById(slot.venue_id).select('venue_name'),
       resolveEffectiveRates({ venueId: String(slot.venue_id) }),
     ]);
@@ -1063,8 +1115,9 @@ export const venueSlotService = {
       .select('profile.first_name profile.last_name auth.email auth.phone.number auth.phone.extension')
       .lean();
 
-    // Same rounding rule settlement uses, in paise, then back to rupees.
-    const pricePaise = Math.round((slot.price ?? 0) * 100);
+    // Same rounding rule settlement uses, in paise, then back to rupees. A
+    // free pod quotes nothing: the host settles the venue directly.
+    const pricePaise = isFreePod(pod) ? 0 : Math.round((slot.price ?? 0) * 100);
     const side = venueSideOf(pricePaise, rates.venue_commission_percent);
 
     return {

@@ -107,7 +107,7 @@ export const podWriteMethods = {
     // entry on, so this one only throws.
     moderationService.assertCleanOrThrow(podContentOf(input));
     const podMode = normalizePodMode(input.pod_mode);
-    assertWritablePodType(input.pod_type, podMode);
+    assertWritablePodType(input.pod_type);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
     const ticketDiscount = await ticketDiscountForCreate(input);
 
@@ -340,6 +340,7 @@ export const podWriteMethods = {
       venue_slot_id: nextMode === 'PHYSICAL' ? input.venue_slot_id : undefined,
       venue_id: input.venue_id,
       pod_hosts_id: (doc.pod_hosts_id ?? []).map(String),
+      pod_type: input.pod_type ?? doc.pod_type,
     };
     const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(slotInput, nextMode);
     if (slotDoc) {

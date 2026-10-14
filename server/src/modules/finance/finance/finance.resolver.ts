@@ -215,6 +215,7 @@ export const financeResolvers = {
         no_of_spots: number;
         venue_id?: string | null;
         venue_amount?: number | null;
+        pod_type?: string | null;
       },
       ctx: GraphQLContext
     ) => {
@@ -224,7 +225,8 @@ export const financeResolvers = {
         args.pod_amount,
         args.no_of_spots,
         args.venue_id ?? null,
-        args.venue_amount ?? null
+        args.venue_amount ?? null,
+        args.pod_type ?? null
       );
     },
     adminPotentialPodEarnings: async (
@@ -235,6 +237,7 @@ export const financeResolvers = {
         host_user_id?: string | null;
         venue_id?: string | null;
         venue_slot_id?: string | null;
+        pod_type?: string | null;
       },
       ctx: GraphQLContext
     ) => {
@@ -245,6 +248,7 @@ export const financeResolvers = {
         noOfSpots: args.no_of_spots,
         venueId: args.venue_id ?? null,
         venueSlotId: args.venue_slot_id ?? null,
+        podType: args.pod_type ?? null,
       });
     },
     // No requireAuth: this is the marketing site's estimator. It reads the

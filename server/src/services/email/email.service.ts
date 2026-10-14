@@ -1077,13 +1077,18 @@ export function sendVenueSlotRequestEmail(opts: {
   /** One-tap CTAs into the decision page with the intent pre-selected. */
   approve_url: string;
   decline_url: string;
+  /** Extra template values that win over the localized copy (sendEmail puts
+   * caller vars last) — how a free pod's request swaps the earnings line for
+   * the free-pod notice without a template edit. */
+  extra_vars?: Record<string, string>;
 }) {
+  const { extra_vars, ...vars } = opts;
   return sendEmail({
     to: opts.to,
     subject: `New slot booking request — ${opts.pod_title}`,
     template: 'venue-slot-request',
     category: 'notification',
-    vars: opts,
+    vars: { ...vars, ...extra_vars },
   });
 }
 

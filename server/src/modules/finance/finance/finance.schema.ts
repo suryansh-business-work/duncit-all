@@ -248,6 +248,12 @@ export const financeTypeDefs = /* GraphQL */ `
     """
     venue_budget: Float!
     waterfall: PodFinanceWaterfall!
+    """
+    True when the projection was asked for a FREE pod (pod_type: FREE): every
+    figure is 0 and there is no calculation to show — hide it rather than print
+    zeros. False for every paid projection.
+    """
+    is_free: Boolean!
   }
 
   """
@@ -301,6 +307,11 @@ export const financeTypeDefs = /* GraphQL */ `
     has_venue: Boolean!
     completed_at: String
     waterfall: PodFinanceWaterfall!
+    """
+    True for a free pod. Nothing is collected and the host pays the venue off
+    the platform, so the waterfall is all zeros — hide the breakdown.
+    """
+    is_free: Boolean!
   }
 
   type EarningsSummary {
@@ -470,6 +481,11 @@ export const financeTypeDefs = /* GraphQL */ `
     complete_expired: Boolean!
     "What the host is actually paid on completion: the floored host remainder, or 0 once the completion window has expired."
     host_payout_amount: Float!
+    """
+    True for a free pod: completion creates no payout release, asks for no
+    venue bill (has_venue is false, venue is null) and every money figure is 0.
+    """
+    is_free: Boolean!
   }
 
   """
@@ -650,6 +666,8 @@ export const financeTypeDefs = /* GraphQL */ `
       no_of_spots: Int!
       venue_id: ID
       venue_amount: Float
+      "FREE returns an all-zero projection with is_free: true. Omitted = the paid projection."
+      pod_type: PodType
     ): PodEarningsProjection!
     """
     The admin consoles' projection for a pod they are writing. Prices at the
@@ -665,6 +683,8 @@ export const financeTypeDefs = /* GraphQL */ `
       host_user_id: ID
       venue_id: ID
       venue_slot_id: ID
+      "FREE returns an all-zero projection with is_free: true. Omitted = the paid projection."
+      pod_type: PodType
     ): PodEarningsProjection!
     """
     The same projection for a signed-OUT visitor — the marketing site's earnings

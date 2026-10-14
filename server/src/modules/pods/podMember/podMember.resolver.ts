@@ -161,6 +161,11 @@ export const podMemberResolvers = {
       const uid = requireUser(ctx);
       return podMemberService.backout(args.pod_doc_id, uid, args.seats);
     },
+    // The caller's own booking only — the user id comes from the session.
+    cancelFreeSpot: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      const uid = requireUser(ctx);
+      return podMemberService.cancelFreeSpot(args.pod_doc_id, uid);
+    },
     cancelBackoutPod: async (
       _p: unknown,
       args: { pod_doc_id: string; backout_id?: string | null },

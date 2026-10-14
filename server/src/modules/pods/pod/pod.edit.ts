@@ -4,7 +4,8 @@
  */
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { type PodMode, type PodType } from './pod.model';
+import { isFreePod, type PodMode, type PodType } from './pod.model';
+import { PaymentModel } from '@modules/finance/payment/payment.model';
 import {
   assertTicketDiscountTiers,
   sameTicketDiscountTiers,
@@ -25,6 +26,7 @@ import {
 } from './pod.validation';
 import {
   assertPartnerVenue,
+  announceFreeSlotBooking,
   emailVenueSlotRequested,
   notifyVenueSlotRequested,
   resolveSlotForCreate,
@@ -198,20 +200,39 @@ function applyDatesForUpdate(doc: any, input: any) {
   }
 }
 
+/**
+ * A pod people have PAID to join cannot be turned free.
+ *
+ * Every finance path stands down for a free pod (`isFreePod`): no settlement,
+ * no payout release, no venue payment. Flipping the type on a pod that already
+ * collected ticket money would therefore strand that money — taken from the
+ * buyers and never settled to the host or the venue. Only the PAID → FREE move
+ * is checked; a pod that is already free, or stays paid, costs no read.
+ */
+async function assertCanBecomeFree(doc: { _id: unknown; pod_type?: string | null }, nextType: PodType) {
+  if (nextType !== 'FREE' || isFreePod(doc)) return;
+  const paidBooking = await PaymentModel.exists({ pod_id: doc._id, status: 'SUCCESS' });
+  if (paidBooking) {
+    throw new GraphQLError(
+      'This pod already has paid bookings, so it cannot be made free. Refund the bookings first.',
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
+}
+
 /** Shared full-edit core (admin/club-admin update + host resubmit): validates
  * and writes the incoming fields onto the loaded doc. The caller saves. */
 export async function applyPodEditCore(doc: any, input: any) {
   const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
-  // A supplied pod_type must follow the FREE/PAID rules; when untouched, a
-  // stored FREE pod still cannot be flipped to physical without becoming PAID.
-  if (input.pod_type === undefined) {
-    if (nextMode === 'PHYSICAL' && doc.pod_type === 'FREE') {
-      throw new GraphQLError('Physical pods must be paid — free pods are only available for virtual pods', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-  } else {
-    assertWritablePodType(input.pod_type, nextMode);
+  // A supplied pod_type must be FREE or PAID. Either goes with either mode, so
+  // an untouched type has nothing to re-check when the mode moves.
+  //
+  // A pod made FREE while its request still waits on a venue's ₹0 slot stays
+  // PENDING: the venue already holds that request and answers it as usual. Only
+  // booking a slot (create, re-route, resubmit) decides instant vs request.
+  if (input.pod_type !== undefined) {
+    assertWritablePodType(input.pod_type);
+    await assertCanBecomeFree(doc, input.pod_type);
   }
   if (input.pod_type !== undefined || input.pod_amount !== undefined) {
     validateAmount(input.pod_type ?? doc.pod_type, input.pod_amount ?? doc.pod_amount);
@@ -321,6 +342,9 @@ export async function prepareSlotReroute(doc: any, input: any): Promise<SlotRero
     venue_slot_id: nextMode === 'PHYSICAL' ? input.venue_slot_id : undefined,
     venue_id: input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : undefined),
     pod_hosts_id: (doc.pod_hosts_id ?? []).map(String),
+    // The type the pod will HAVE after this edit decides whether a ₹0 slot
+    // books instantly (a free pod) or waits for the venue (a paid one).
+    pod_type: input.pod_type ?? doc.pod_type,
   };
   const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(slotInput, nextMode);
   if (slotDoc) {
@@ -366,6 +390,7 @@ export async function claimRerouteSlot(
       await emailVenueSlotRequested(doc, slotDoc);
     } else if (slotDoc) {
       await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+      announceFreeSlotBooking(doc, slotDoc);
     }
   } catch (e) {
     Object.assign(doc, previous);
@@ -393,6 +418,7 @@ export async function holdOrBookForResubmit(doc: any, slotDoc: any, needsVenueAp
       await emailVenueSlotRequested(doc, slotDoc);
     } else {
       await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+      announceFreeSlotBooking(doc, slotDoc);
     }
   } catch (e) {
     doc.venue_slot_id = null;

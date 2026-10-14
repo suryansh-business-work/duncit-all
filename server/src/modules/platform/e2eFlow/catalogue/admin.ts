@@ -108,7 +108,7 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
   },
   {
     name: 'Admin: Dashboard',
-    description: 'Live platform totals and per-super-category counts on /dashboard (dashboardTotals is readable by SUPER_ADMIN and CITY_ADMIN).',
+    description: 'Live platform totals and per-super-category counts on /dashboard (dashboardTotals is readable by SUPER_ADMIN and CITY_ADMIN; a CITY_ADMIN\'s totals count only their assigned city, with support tickets at 0).',
     sub_flows: [
       {
         name: 'Review platform totals',

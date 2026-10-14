@@ -1379,8 +1379,8 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Click create user in the inbox', 'Dialog "Create user account" with First name, Last name, Email, Ext, Phone (optional), Temporary password'],
           ['Enter a 7-character password', '"Create account" stays disabled (min 8 characters)'],
-          ['Fill first name, email and an 8+ character password, click "Create account"', 'supportCreateUser runs the registration schema; today it returns "Validation failed" because phone, WhatsApp verification and date of birth are not sent (known gap)'],
-          ['Once those fields are supplied, create the account', 'Alert "Account created for <email>." and the form clears'],
+          ['Fill first name, email and an 8+ character password, click "Create account"', 'Alert "Account created for <email>." and the form clears — a member (USER) account, created with the agent recorded'],
+          ['Create a second account with the same email', 'The dialog shows "Email already in use" and nothing is created'],
           ['Close the dialog', 'The dialog closes and the success alert resets'],
         ],
       },

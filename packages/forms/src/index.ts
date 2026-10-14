@@ -5,6 +5,11 @@ export {
   type PackagingTranslate,
 } from './PackagingFields';
 export {
+  default as FoodTaxFields,
+  type FoodTaxFieldsProps,
+  type FoodTaxTranslate,
+} from './FoodTaxFields';
+export {
   default as WalletStatementFields,
   type WalletStatementClock,
   type WalletStatementDateFieldProps,

@@ -52,7 +52,8 @@ const VENUE: VenueRecordMock = {
       is_available: false,
     },
   ],
-  food_ordering: { enabled: true, discount_pct: 10 },
+  // The GST is what the server resolved — Finance's default while the venue follows it.
+  food_ordering: { enabled: true, discount_pct: 10, razorpay_linked: true, tax_override: false, tax_mode: 'INCLUSIVE', gst_pct: 5 },
   venue_category: {
     super_category_id: '66a0000000000000000000a1',
     category_id: '66a0000000000000000000b2',

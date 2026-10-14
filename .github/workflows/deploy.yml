@@ -219,9 +219,23 @@ jobs:
       cms_site: ${{ steps.filter.outputs.cms_site }}
     steps:
       - uses: actions/checkout@v5
+      # Without a base, paths-filter diffs staging against main — every app
+      # changed since the last release, so each push rebuilt all of them. Diff
+      # against the last fully green push deploy of this branch instead: a
+      # failed build or a superseded queued run is not green, so its changes
+      # carry into the next diff. No green run yet keeps the old main diff.
+      - name: Last deployed commit
+        id: base
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api "repos/${{ github.repository }}/actions/workflows/deploy.yml/runs?branch=${{ github.ref_name }}&event=push&status=success&per_page=1" --jq '.workflow_runs[0].head_sha // empty' || true)
+          echo "Diff base: ${sha:-default branch}"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          base: ${{ steps.base.outputs.sha }}
           filters: |
             server:
               - 'server/**'

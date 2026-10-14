@@ -61,9 +61,26 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   },
   { key: 'ads', name: 'Ads', url: url('ads'), roles: [{ key: 'ADS_MANAGER', name: 'Ads Manager' }] },
   { key: 'crm', name: 'CRM', url: url('crm'), roles: [{ key: 'CRM_MANAGER', name: 'CRM Manager' }] },
-  { key: 'finance', name: 'Finance', url: url('finance'), roles: [{ key: 'FINANCE_MANAGER', name: 'Finance Manager' }] },
+  {
+    key: 'finance',
+    name: 'Finance',
+    url: url('finance'),
+    // The analyst seat reads the whole console and writes nothing.
+    roles: [
+      { key: 'FINANCE_MANAGER', name: 'Finance Manager' },
+      { key: 'FINANCE_USER', name: 'Finance Analyst' },
+    ],
+  },
   { key: 'tech', name: 'Tech', url: url('tech'), roles: [{ key: 'TECH_MANAGER', name: 'Tech Manager' }] },
-  { key: 'support', name: 'Support', url: url('support'), roles: [{ key: 'SUPPORT_MANAGER', name: 'Support Manager' }] },
+  {
+    key: 'support',
+    name: 'Support',
+    url: url('support'),
+    roles: [
+      { key: 'SUPPORT_MANAGER', name: 'Support Manager' },
+      { key: 'SUPPORT_USER', name: 'Support Agent' },
+    ],
+  },
   { key: 'website', name: 'Website', url: url('website'), roles: [{ key: 'WEBSITE_MANAGER', name: 'Website Manager' }] },
   { key: 'legal', name: 'Legal', url: url('legal'), roles: [{ key: 'LEGAL_MANAGER', name: 'Legal Manager' }] },
   { key: 'ai', name: 'AI', url: url('ai'), roles: [{ key: 'AI_MANAGER', name: 'AI Manager' }] },
@@ -83,7 +100,9 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   { key: 'communications', name: 'Communications', url: url('communications'), roles: [{ key: 'COMMUNICATIONS_MANAGER', name: 'Communications Manager' }] },
   { key: 'logs', name: 'Logs', url: url('logs'), roles: [{ key: 'LOGS_MANAGER', name: 'Logs Manager' }] },
   { key: 'analytics', name: 'Analytics', url: url('analytics'), roles: [{ key: 'ANALYTICS_MANAGER', name: 'Analytics Manager' }] },
-  { key: 'ecomm-portal', name: 'E-commerce', url: url('ecomm-portal'), roles: [{ key: 'ECOMM_MANAGER', name: 'E-commerce Manager' }] },
+  // Its own staff role: ECOMM_MANAGER (under Duncit App above) is the Partner
+  // Brand role and does not open the pet store console.
+  { key: 'ecomm-portal', name: 'E-commerce', url: url('ecomm-portal'), roles: [{ key: 'ECOMM_STORE_MANAGER', name: 'Pet Store Manager' }] },
   { key: 'localization', name: 'Localization', url: url('localization'), roles: [{ key: 'LOCALIZATION_MANAGER', name: 'Localization Manager' }] },
   { key: 'targets', name: 'Targets', url: url('targets'), roles: [{ key: 'TARGETS_MANAGER', name: 'Targets Manager' }] },
 ];

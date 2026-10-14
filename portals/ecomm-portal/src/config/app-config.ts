@@ -20,7 +20,9 @@ export const appConfig = {
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
     'https://images.pexels.com/photos/1350593/pexels-photo-1350593.jpeg',
-  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['ECOMM_MANAGER']),
+  // The pet store's own staff role — never ECOMM_MANAGER, which every approved
+  // Partner Brand holds (partners-app /ecomm-brand).
+  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['ECOMM_STORE_MANAGER']),
   tokenKey: 'ecomm_portal_token',
   colorModeKey: 'ecomm_portal_color_mode',
   accent: { light: '#fdba74', main: '#ea580c', hover: '#c2410c', active: '#9a3412' },

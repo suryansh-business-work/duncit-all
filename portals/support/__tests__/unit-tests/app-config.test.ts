@@ -15,8 +15,8 @@ describe('Duncit Support app config', () => {
     expect(appConfig.colorModeKey).toBe('support_color_mode');
   });
 
-  it('gates on the SUPPORT_MANAGER role by default', () => {
-    expect(appConfig.requiredRoles).toEqual(['SUPPORT_MANAGER']);
+  it('gates on the manager and the agent seat by default', () => {
+    expect(appConfig.requiredRoles).toEqual(['SUPPORT_MANAGER', 'SUPPORT_USER']);
   });
 
   it('exposes the support sections in order, groups last-but-one', () => {

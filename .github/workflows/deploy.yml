@@ -1107,7 +1107,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_REQUIRED_ROLES=FINANCE_MANAGER \
+              --build-arg VITE_REQUIRED_ROLES=FINANCE_MANAGER,FINANCE_USER \
               --cache-from type=gha,scope=duncit-finance${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-finance${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1179,7 +1179,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_REQUIRED_ROLES=SUPPORT_MANAGER \
+              --build-arg VITE_REQUIRED_ROLES=SUPPORT_MANAGER,SUPPORT_USER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }},mode=max \
@@ -1996,7 +1996,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-portal:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-portal:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_REQUIRED_ROLES=ECOMM_MANAGER \
+              --build-arg VITE_REQUIRED_ROLES=ECOMM_STORE_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --build-arg VITE_STORE_URL=${{ env.ECOMM_URL }} \
               --cache-from type=gha,scope=duncit-ecomm-portal${{ env.SCOPE_SUFFIX }} \

@@ -12,8 +12,10 @@ import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
 import type { IdLike } from '@utils/request-cache';
 import type { TableQueryInput } from '@utils/table-query';
 import type { GraphQLContext } from '@context';
-import { hasRole, LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
+import { FINANCE_READER, hasRole, LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
+import { assertPodFinanceScope } from '../financeScope';
+import { financeTargets } from '../financeScope.targets';
 import {
   dummyCheckoutSchema,
   dummyGiftCardCheckoutSchema,
@@ -29,7 +31,10 @@ const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 // Read-only payment views. ZONAL_ADMIN opens the Admin pod-details page, whose
 // Payments section lists a pod's transactions — same read scope it already has
 // on podFinanceBreakdown and adminPodAttendees. Mutations stay on ADMIN_RW.
-const ADMIN_READ = [...ADMIN_RW, 'ZONAL_ADMIN'];
+// The Finance analyst seat reads them too, and writes none.
+const ADMIN_READ = [...ADMIN_RW, 'ZONAL_ADMIN', FINANCE_READER];
+// Any payment's invoice — Finance reads them all; the buyer only their own.
+const INVOICE_READ = [...ADMIN_RW, FINANCE_READER];
 // Payment Logs, one payment's detail and User Refund Logs are also mounted in
 // the Logs console. Refunds, retries and invoices stay with Finance.
 const LOG_READ = [...ADMIN_READ, LOGS_READER];
@@ -109,7 +114,7 @@ export const paymentResolvers = {
     paymentInvoicePdfBase64: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
       // The buyer can download their own invoice; admins (support/finance) any.
       const u = requireAuth(ctx);
-      return paymentService.invoicePdfBase64(args.payment_doc_id, u.id, hasRole(u, ADMIN_RW));
+      return paymentService.invoicePdfBase64(args.payment_doc_id, u.id, hasRole(u, INVOICE_READ));
     },
     productShippingQuote: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireAuth(ctx);
@@ -147,9 +152,11 @@ export const paymentResolvers = {
       const input = await validate(verifyRazorpaySchema, args.input);
       return paymentService.verifyRazorpayCheckout(input, u.id);
     },
-    refundPayment: (_p: unknown, args: { payment_doc_id: string; reason?: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
-      return paymentService.refund(args.payment_doc_id, args.reason);
+    refundPayment: async (_p: unknown, args: { payment_doc_id: string; reason?: string }, ctx: GraphQLContext) => {
+      const admin = requireRole(ctx, ADMIN_RW);
+      // A city admin refunds bookings of their own city's pods only.
+      await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.payment(args.payment_doc_id));
+      return paymentService.refund(args.payment_doc_id, args.reason, admin.id);
     },
     retryPaymentSteps: async (
       _p: unknown,
@@ -157,6 +164,7 @@ export const paymentResolvers = {
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_RW);
+      await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.payment(args.payment_doc_id));
       const { paymentFinalizer } = await import('./payment.finalize');
       // Awaited, unlike checkout's own fire-and-forget: whoever pressed Retry is
       // waiting to see whether it worked, and the answer is the fresh audit.

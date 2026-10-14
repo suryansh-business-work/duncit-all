@@ -6,10 +6,12 @@ import {
   type ExpenseRelatedEntity,
 } from './expenseOption.sources';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { FINANCE_READER, requireRole } from '@middleware/rbac';
 
 /** The company ledger's roles — this is the configuration behind that ledger. */
 const FINANCE_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// The Finance console's reads — the analyst seat reads them, never writes.
+const FINANCE_READ = [...FINANCE_RW, FINANCE_READER];
 
 /**
  * How many entities one picker keystroke may pull back.
@@ -24,15 +26,15 @@ const MAX_ENTITY_LIMIT = 50;
 export const expenseOptionResolvers = {
   Query: {
     expenseOptions: async (_p: unknown, args: { kind: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return expenseOptionService.active(args.kind);
     },
     expenseOptionsTable: async (_p: unknown, args: { kind: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return expenseOptionService.all(args.kind);
     },
     expenseEntitySources: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return EXPENSE_ENTITY_SOURCES;
     },
     expenseRelatedEntities: async (
@@ -40,7 +42,7 @@ export const expenseOptionResolvers = {
       args: { type_key: string; search?: string | null; limit?: number | null },
       ctx: GraphQLContext
     ): Promise<ExpenseRelatedEntity[]> => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       const source = await expenseOptionService.entitySource(args.type_key);
       if (!source) return [];
       const limit = Math.min(MAX_ENTITY_LIMIT, Math.max(1, args.limit ?? DEFAULT_ENTITY_LIMIT));
@@ -51,7 +53,7 @@ export const expenseOptionResolvers = {
       args: { type_key: string; entity_id: string },
       ctx: GraphQLContext
     ): Promise<ExpenseRelatedEntity | null> => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       const source = await expenseOptionService.entitySource(args.type_key);
       if (!source) return null;
       return findEntity(source, args.entity_id);

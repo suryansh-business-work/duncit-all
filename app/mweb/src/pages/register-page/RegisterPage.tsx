@@ -6,7 +6,7 @@ import {
   readGoogleSignupHandoff,
   readReferralCode,
 } from '@duncit/utils';
-import { Alert, Divider, Link, Stack, Typography } from '@mui/material';
+import { Divider, Link, Stack, Typography } from '@mui/material';
 import AuthBackground from '../../components/AuthBackground';
 import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
@@ -14,12 +14,11 @@ import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useWithRedirect } from '../../utils/redirect';
 import { useGoogleSignup } from '../../hooks/useGoogleSignup';
-import GoogleSignInButton from '../../components/GoogleSignInButton';
-import { AppleSignInButton } from '../../components/apple-sign-in';
-import { GoogleSignupPolicyGate, useSignupPolicies } from '../../components/policy-acceptance';
+import { useSignupPolicies } from '../../components/policy-acceptance';
 import { RegisterForm, registerDefaults } from '../../forms/register';
 import SignupStepperRail from './SignupStepperRail';
 import GoogleDetailsStep from './GoogleDetailsStep';
+import SocialSignupDoor from './SocialSignupDoor';
 import VerifyWhatsappStep from './VerifyWhatsappStep';
 import { useSignupFlow } from './useSignupFlow';
 

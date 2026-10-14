@@ -18,6 +18,14 @@ export function requireAuth(ctx: GraphQLContext): AuthUser {
  */
 export const LOGS_READER = 'LOGS_MANAGER';
 
+/**
+ * The Finance Analyst seat ("Finance console access (analyst level)"). It signs
+ * in to the Finance console and every query that console READS adds this role
+ * to its gate. Writes never take it: approving, refunding, paying out and
+ * changing finance settings stay with FINANCE_MANAGER and the platform admins.
+ */
+export const FINANCE_READER = 'FINANCE_USER';
+
 export function hasRole(user: AuthUser, allowed: readonly string[]): boolean {
   return user.roles.some((r) => allowed.includes(r));
 }

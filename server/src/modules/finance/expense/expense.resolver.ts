@@ -1,26 +1,28 @@
 import { expenseService } from './expense.service';
 import { expenseDashboard } from './expense.dashboard';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { FINANCE_READER, requireRole } from '@middleware/rbac';
 
 const FINANCE_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// The Finance console's reads — the analyst seat reads them, never writes.
+const FINANCE_READ = [...FINANCE_RW, FINANCE_READER];
 
 export const expenseResolvers = {
   Query: {
     expenses: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return expenseService.list(args.filter);
     },
     expensesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return expenseService.table(args.query);
     },
     expenseSummary: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return expenseService.summary(args.filter);
     },
     expenseDashboard: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return expenseDashboard(args.filter);
     },
   },

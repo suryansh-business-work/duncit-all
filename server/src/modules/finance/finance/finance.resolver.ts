@@ -18,11 +18,20 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import type { GraphQLContext } from '@context';
-import { requireRole, requireAuth } from '@middleware/rbac';
+import { FINANCE_READER, requireRole, requireAuth } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
+import {
+  assertPlatformFinanceWrite,
+  assertPodFinanceScope,
+  assertUserFinanceScope,
+} from '../financeScope';
+import { financeTargets } from '../financeScope.targets';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 const ADMIN_POD = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
+// The Finance console's reads — the analyst seat reads them, never writes.
+const FINANCE_READ = [...ADMIN_RW, FINANCE_READER];
+const POD_BREAKDOWN_READ = [...ADMIN_POD, FINANCE_READER];
 // Everyone who can open Review Host or Review Venue in the Onboarding console
 // reads the global default those commission fields seed from — the same role
 // set host.resolver guards the review mutations with, plus finance itself.
@@ -37,7 +46,7 @@ async function assertPodActor(ctx: GraphQLContext, podId: string) {
   if (!isHost && !isAdmin) {
     throw new GraphQLError('Only a host of this pod can do that', { extensions: { code: 'FORBIDDEN' } });
   }
-  return { user, isAdmin };
+  return { user, isAdmin, isHost };
 }
 
 const toPub = (d: IFinanceSettings) => ({
@@ -118,7 +127,7 @@ function validatePayoutInputs(input: any) {
 export const financeResolvers = {
   Query: {
     financeSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       const doc = await getFinanceSettings();
       return toPub(doc);
     },
@@ -143,7 +152,7 @@ export const financeResolvers = {
       return doc.default_product_commission_pct;
     },
     foodTaxDefaults: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       return getFoodTaxDefaults();
     },
     publicFinanceSettings: async () => {
@@ -158,11 +167,11 @@ export const financeResolvers = {
       };
     },
     paymentReleaseRequests: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       return paymentReleaseService.list(args.filter);
     },
     paymentReleaseRequestsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       return paymentReleaseService.table(args.query);
     },
     podPaymentReleasesTable: async (
@@ -170,11 +179,11 @@ export const financeResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       return paymentReleaseGroupService.table(args.query);
     },
     podPaymentRelease: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       return paymentReleaseGroupService.detail(args.id);
     },
     podSettlementPreview: async (
@@ -205,7 +214,7 @@ export const financeResolvers = {
     },
     podFinanceBreakdown: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      const isAdmin = (user.roles ?? []).some((r) => ADMIN_POD.includes(r));
+      const isAdmin = (user.roles ?? []).some((r) => POD_BREAKDOWN_READ.includes(r));
       if (!isAdmin && !(await breakdownService.canViewPodBreakdown(args.pod_id, user.id))) {
         throw new GraphQLError('Only this pod’s host, venue owner, or an admin can view its breakdown', {
           extensions: { code: 'FORBIDDEN' },
@@ -293,7 +302,7 @@ export const financeResolvers = {
       return breakdownService.venueEarningsSummary(user.id);
     },
     financeDashboardStats: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       return breakdownService.dashboardStats();
     },
     podCancellations: async (
@@ -301,17 +310,19 @@ export const financeResolvers = {
       args: { kind?: PodCancelKind | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       return podCancellationService.list(args.kind);
     },
     podCancellationStats: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, FINANCE_READ);
       return podCancellationService.stats();
     },
   },
   Mutation: {
     updateFinanceSettings: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
+      // Fees, shares and payout rules apply to every city at once.
+      assertPlatformFinanceWrite(ctx, ADMIN_RW);
       const input = args.input;
       validatePctInputs(input);
       validatePayoutInputs(input);
@@ -344,23 +355,31 @@ export const financeResolvers = {
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, ADMIN_RW);
+      assertPlatformFinanceWrite(ctx, ADMIN_RW);
       return updateFoodTaxDefaults(args.input, user.id);
     },
     createPaymentReleaseRequest: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_POD);
+      await assertPodFinanceScope(ctx, ADMIN_POD, () => [args.input?.pod_id]);
       return paymentReleaseService.create(args.input, ctx.user?.id ?? null);
     },
     reviewPaymentReleaseRequest: async (_p: unknown, args: { request_id: string; input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
+      await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.releaseRequest(args.request_id));
       return paymentReleaseService.review(args.request_id, args.input, ctx.user?.id ?? null);
     },
     approvePodPaymentRelease: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, ADMIN_RW);
+      // A batch can span pods in several cities — every one must be the admin's.
+      await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.releaseGroup(args.id));
       await paymentReleaseService.approveGroup(args.id, user.id);
       return paymentReleaseGroupService.detail(args.id);
     },
     completePodSettlement: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      const { user, isAdmin } = await assertPodActor(ctx, args.input.pod_id);
+      const { user, isAdmin, isHost } = await assertPodActor(ctx, args.input.pod_id);
+      // The pod's own host settles their pod wherever it is; an admin settling
+      // (venue bill, payouts) someone else's pod must administer its city.
+      if (!isHost) await assertPodFinanceScope(ctx, ADMIN_POD, () => [args.input.pod_id]);
       return paymentReleaseService.completePod(args.input, { id: user.id, isAdmin });
     },
     setHostDeductions: async (
@@ -369,10 +388,13 @@ export const financeResolvers = {
       ctx: GraphQLContext
     ) => {
       // Finance + the Onboarding console (Onboarded Hosts) manage host commission.
-      requireRole(ctx, [...ADMIN_RW, 'ONBOARDING_MANAGER']);
+      const allowed = [...ADMIN_RW, 'ONBOARDING_MANAGER'];
+      requireRole(ctx, allowed);
       if (!Types.ObjectId.isValid(args.user_id)) {
         throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
       }
+      // A city admin sets the commission of their own city's hosts only.
+      await assertUserFinanceScope(ctx, allowed, args.user_id);
       if (
         !Number.isFinite(args.host_commission_pct) ||
         args.host_commission_pct < 0 ||

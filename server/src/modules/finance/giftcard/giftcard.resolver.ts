@@ -2,12 +2,13 @@ import { giftcardService } from './giftcard.service';
 import { giftCardAdminService } from './giftcard.admin.service';
 import { giftCardSettingsService } from './giftcard.settings.service';
 import type { GraphQLContext } from '@context';
-import { LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
+import { FINANCE_READER, LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 
 // Gift card liability is a platform-wide money figure — same read triple as the
 // coin console. Writing policy (amounts, validity) is the narrower door.
-const GIFT_CARD_ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// FINANCE_READER is the Finance analyst seat: it reads the console, never writes.
+const GIFT_CARD_ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER', FINANCE_READER];
 const GIFT_CARD_ADMIN_WRITE = ['SUPER_ADMIN', 'FINANCE_MANAGER'];
 // The ledger (Gift Cards > Logs) is mounted in the Logs console too.
 const GIFT_CARD_LOG_READ = [...GIFT_CARD_ADMIN_READ, LOGS_READER];

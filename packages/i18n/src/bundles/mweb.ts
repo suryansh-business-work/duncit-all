@@ -722,6 +722,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       submitting: 'Creating…',
       haveAccount: 'Already have an account?',
       logIn: 'Log in',
+      // Signing UP with Google or Apple as somebody already on Duncit: asked the
+      // moment the provider returns, before any number or code is asked for.
+      existingAccountTitle: 'You’re already on Duncit',
+      existingAccountBody: '{email} already has a Duncit account. Shall we log you in instead?',
+      existingAccountLogin: 'Log me in',
+      existingAccountCancel: 'Cancel',
       // The two surfaces enforce slightly different name-length and date rules,
       // so a few of these are rendered by one surface only. The character rule
       // (namePattern) is shared: both run PERSON_NAME from @duncit/regex.
@@ -5172,6 +5178,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       createPodHint: 'Start a new pod in a few steps',
       publishHost: 'Publish Your Host Page',
       publishHostHint: 'A public page, link and QR code for you as a host',
+      hostShare: 'Host Share',
+      hostShareHint: 'Your payout from every completed pod',
+      hostCategories: 'Your Categories',
+      hostCategoriesHint: 'Categories you host, and applying for more',
       yourClubs: 'Your Clubs',
       yourClubsHint: 'The clubs you run, their pods and pages',
       podMonitoring: 'Pod Monitoring (AI)',

@@ -1,6 +1,6 @@
 import { employeeExpenseService } from './employeeExpense.service';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { FINANCE_READER, requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 
 /**
@@ -13,6 +13,8 @@ import type { TableQueryInput } from '@utils/table-query';
 const EMPLOYEE_RW = ['EMPLOYEE', 'SUPER_ADMIN'];
 /** The company ledger's roles — deciding a claim is a Finance decision. */
 const FINANCE_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// The Finance console's reads — the analyst seat reads them, never writes.
+const FINANCE_READ = [...FINANCE_RW, FINANCE_READER];
 
 interface TableArgs {
   query?: TableQueryInput | null;
@@ -41,11 +43,11 @@ export const employeeExpenseResolvers = {
       return employeeExpenseService.mySummary(user.id);
     },
     employeeExpensesTable: async (_p: unknown, args: TableArgs, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return employeeExpenseService.financeTable(args.query);
     },
     employeeExpenseSummary: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return employeeExpenseService.financeSummary();
     },
   },

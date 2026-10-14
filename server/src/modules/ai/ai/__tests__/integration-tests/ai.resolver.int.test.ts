@@ -223,16 +223,20 @@ describe('aiDescribeInventoryProduct', () => {
 describe('aiFillLocationAreas', () => {
   const input = { country: ' India ', state: ' Karnataka ', city: ' Bengaluru ' };
 
-  it('rejects anonymous and plain-user callers, and lets an ecomm manager through', async () => {
+  it('rejects anonymous, plain-user and brand-partner callers, and lets a pet store manager through', async () => {
     await expect(M.aiFillLocationAreas({}, { input }, makeContext(null))).rejects.toMatchObject({
       extensions: { code: 'UNAUTHENTICATED' },
     });
     await expect(M.aiFillLocationAreas({}, { input }, plainUser())).rejects.toMatchObject({
       extensions: { code: 'FORBIDDEN' },
     });
+    // ECOMM_MANAGER is the Partner Brand role — the ecomm console is not theirs.
+    await expect(
+      M.aiFillLocationAreas({}, { input }, makeContext({ roles: ['ECOMM_MANAGER'] }))
+    ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
     expect(mockChat).not.toHaveBeenCalled();
     ok(JSON.stringify({ zones: [{ zone_name: 'Indiranagar', pincode: '560038' }] }));
-    const out = await M.aiFillLocationAreas({}, { input }, makeContext({ roles: ['ECOMM_MANAGER'] }));
+    const out = await M.aiFillLocationAreas({}, { input }, makeContext({ roles: ['ECOMM_STORE_MANAGER'] }));
     expect(JSON.parse(out)).toEqual({ zones: [{ zone_name: 'Indiranagar', pincode: '560038' }] });
   });
 

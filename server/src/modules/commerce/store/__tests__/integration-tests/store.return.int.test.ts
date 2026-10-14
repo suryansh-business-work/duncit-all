@@ -27,7 +27,7 @@ const DAY = 86_400_000;
 let seq = 0;
 const buyerId = new Types.ObjectId();
 const buyer = { user: { id: String(buyerId), email: 'buyer@x.com', roles: [] } } as unknown as GraphQLContext;
-const staff = { user: { id: 'staff-1', email: 'staff@x.com', roles: ['ECOMM_MANAGER'] } } as unknown as GraphQLContext;
+const staff = { user: { id: 'staff-1', email: 'staff@x.com', roles: ['ECOMM_STORE_MANAGER'] } } as unknown as GraphQLContext;
 const guest = { user: null } as unknown as GraphQLContext;
 const KEY = 'guest-access-key-1234567890';
 
@@ -212,7 +212,7 @@ describe('update', () => {
   it('signs by id when the operator has no email, and still moves on when the order has been deleted', async () => {
     const { order, ret } = await requested();
     await ProductOrderModel.deleteOne({ _id: order._id });
-    const noEmail = { user: { id: 'staff-2', roles: ['ECOMM_MANAGER'] } } as unknown as GraphQLContext;
+    const noEmail = { user: { id: 'staff-2', roles: ['ECOMM_STORE_MANAGER'] } } as unknown as GraphQLContext;
     const out = await svc.update(noEmail, ret.id, { status: 'APPROVED' });
     expect(out.events.at(-1)?.by).toBe('staff-2');
     expect(mailReturnUpdate).toHaveBeenCalledWith(expect.anything(), null, '₹180.00');

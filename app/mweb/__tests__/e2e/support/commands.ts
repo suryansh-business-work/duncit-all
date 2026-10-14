@@ -17,6 +17,12 @@ import {
 
 type GqlVariables = Record<string, unknown>;
 
+/** The server's whole answer, errors included — what a refusal scenario asserts on. */
+export interface GqlBody {
+  data?: Record<string, unknown> | null;
+  errors?: Array<{ message: string; extensions?: { code?: string } }>;
+}
+
 /** A held code's destination: a mailbox, or a WhatsApp number. */
 export interface CodeTarget {
   email?: string;
@@ -29,6 +35,8 @@ declare global {
     interface Chainable {
       /** POST one operation to the real API and yield its `data`. A GraphQL error fails the test. */
       gql<T = any>(query: string, variables?: GqlVariables, options?: { token?: string | null }): Chainable<T>;
+      /** POST one operation and yield the raw answer, errors included, without failing on them. */
+      gqlRaw(query: string, variables?: GqlVariables, options?: { token?: string | null }): Chainable<GqlBody>;
       /** The same, signed with the staging release token (the OTP testing API and the purge). */
       staffGql<T = any>(query: string, variables?: GqlVariables): Chainable<T>;
       /** Tag every app request with the run's traffic key, so its sign-ins skip the rate limit. */
@@ -66,7 +74,9 @@ const OTP_POLL_TRIES = 30;
 
 const graphqlUrl = (): string => String(Cypress.env('GRAPHQL_URL'));
 
-function post<T>(query: string, variables: GqlVariables, token: string | null): Cypress.Chainable<T> {
+const operationName = (query: string): string => /(?:query|mutation)\s+(\w+)/.exec(query)?.[1] ?? 'operation';
+
+function send(query: string, variables: GqlVariables, token: string | null): Cypress.Chainable<Cypress.Response<GqlBody>> {
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     'x-duncit-surface': 'MWEB',
@@ -76,23 +86,38 @@ function post<T>(query: string, variables: GqlVariables, token: string | null): 
   if (token) headers.authorization = `Bearer ${token}`;
   const traffic = Cypress.env(TRAFFIC_KEY) as string | undefined;
   if (traffic) headers[E2E_TRAFFIC_HEADER] = traffic;
-  const operation = /(?:query|mutation)\s+(\w+)/.exec(query)?.[1] ?? 'operation';
   // log: false — the staff token must never appear in the command log or the video.
-  return cy
-    .request({ method: 'POST', url: graphqlUrl(), headers, body: { query, variables }, failOnStatusCode: false, log: false })
-    .then((res) => {
-      const errors = res.body?.errors;
-      if (Array.isArray(errors) && errors.length > 0) throw new Error(`${operation} failed: ${errors[0].message}`);
-      if (res.status !== 200) throw new Error(`${operation} answered HTTP ${res.status}`);
-      // Wrapped, so `then` yields the generic `T` rather than Cypress's ThenReturn union.
-      return cy.wrap(res.body.data as T, { log: false });
-    });
+  return cy.request<GqlBody>({
+    method: 'POST',
+    url: graphqlUrl(),
+    headers,
+    body: { query, variables },
+    failOnStatusCode: false,
+    log: false,
+  });
 }
 
-Cypress.Commands.add('gql', (query: string, variables: GqlVariables = {}, options = {}) => {
-  const token = options.token === undefined ? (Cypress.env(TOKEN_KEY) as string | null) : options.token;
-  return post(query, variables, token);
-});
+function post<T>(query: string, variables: GqlVariables, token: string | null): Cypress.Chainable<T> {
+  const operation = operationName(query);
+  return send(query, variables, token).then((res) => {
+    const errors = res.body?.errors;
+    if (Array.isArray(errors) && errors.length > 0) throw new Error(`${operation} failed: ${errors[0].message}`);
+    if (res.status !== 200) throw new Error(`${operation} answered HTTP ${res.status}`);
+    // Wrapped, so `then` yields the generic `T` rather than Cypress's ThenReturn union.
+    return cy.wrap(res.body.data as T, { log: false });
+  });
+}
+
+const callerToken = (options: { token?: string | null }): string | null =>
+  options.token === undefined ? (Cypress.env(TOKEN_KEY) as string | null) : options.token;
+
+Cypress.Commands.add('gql', (query: string, variables: GqlVariables = {}, options = {}) =>
+  post(query, variables, callerToken(options)),
+);
+
+Cypress.Commands.add('gqlRaw', (query: string, variables: GqlVariables = {}, options = {}) =>
+  send(query, variables, callerToken(options)).then((res) => cy.wrap(res.body ?? {}, { log: false })),
+);
 
 Cypress.Commands.add('staffGql', (query: string, variables: GqlVariables = {}) => {
   const token = String(Cypress.env('E2E_RELEASE_TOKEN') ?? '');

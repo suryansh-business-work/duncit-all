@@ -106,7 +106,7 @@ import { buildCampaignTrackingRouter } from '@modules/crm/marketing/tracking.rou
 import { buildShortLinkRouter } from '@modules/crm/marketing/shortLink.router';
 import { startNgrokTunnel } from '@config/ngrok';
 import { websiteContentService } from '@modules/content/websiteContent/websiteContent.service';
-import { userService } from '@modules/access/user/user.service';
+import { buildRecordingWebhookRouter } from '@modules/crm/call/recordingWebhook';
 import { marketingService } from '@modules/crm/marketing/marketing.service';
 import { crmService } from '@modules/crm/crm/crm.service';
 import { surveyService } from '@modules/survey/survey.service';
@@ -836,22 +836,8 @@ async function bootstrap() {
     expressMiddleware(apollo, { context: buildContext })
   );
 
-  app.post('/twilio/recordings', express.urlencoded({ extended: false }), async (req, res) => {
-    try {
-      const rawUrl = String(req.body.RecordingUrl || '');
-      const recordingUrl = rawUrl && !/\.(mp3|wav)$/i.test(rawUrl) ? `${rawUrl}.mp3` : rawUrl;
-      await userService.attachCallRecording({
-        actionId: String(req.query.contactActionId || ''),
-        callSid: String(req.body.CallSid || ''),
-        recordingSid: String(req.body.RecordingSid || ''),
-        recordingUrl,
-        durationSeconds: Number(req.body.RecordingDuration || 0),
-      });
-      res.status(204).end();
-    } catch {
-      res.status(204).end();
-    }
-  });
+  // Recorded-call recording callback — refuses anything not signed by Twilio.
+  app.use('/twilio', buildRecordingWebhookRouter());
 
   // CRM softphone + AI call Twilio webhooks (parses its own urlencoded bodies).
   app.use('/twilio', buildCallWebhookRouter());

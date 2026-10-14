@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
 import crypto from 'node:crypto';
-import { PodMemberModel, type IPodMember, type JoinSource } from './podMember.model';
+import { PodMemberModel, isDuplicateKeyError, type IPodMember, type JoinSource } from './podMember.model';
 import {
   BackoutRequestModel,
   nextBackoutNo,
@@ -11,6 +11,7 @@ import {
 import { isFreePod, PodModel, type IPod } from '@modules/pods/pod/pod.model';
 import {
   cancelFreeSpot,
+  createFreeMembership,
   findReusableFreeMembership,
   podHasStarted,
   reactivateFreeMembership,
@@ -1115,43 +1116,20 @@ export const podMemberService = {
       }
     }
 
-    if (reusable) {
-      const rejoined = await reactivateFreeMembership(reusable, pod._id as Types.ObjectId, userId, {
-        seats,
-        source,
-        referredBy,
+    // Both paths claim the seat and write the row together, and both answer null
+    // when a concurrent join already booked this person — the one-unpaid-booking
+    // index on PodMember is what guarantees there is only ever one.
+    const join = { seats, source, referredBy };
+    const podId = pod._id as Types.ObjectId;
+    const booked = reusable
+      ? await reactivateFreeMembership(reusable, podId, userId, join)
+      : await createFreeMembership(podId, userId, join);
+    // A concurrent join won: answer with the booking it made.
+    const doc = booked ?? (await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' }));
+    if (!doc) {
+      throw new GraphQLError('Your booking changed while joining — please try again.', {
+        extensions: { code: 'CONFLICT' },
       });
-      // A concurrent join won the row: answer with the booking it made.
-      const doc =
-        rejoined ?? (await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' }));
-      if (!doc) {
-        throw new GraphQLError('Your booking changed while joining — please try again.', {
-          extensions: { code: 'CONFLICT' },
-        });
-      }
-      return toPub(await afterFreeJoin(doc, userId, String(pod._id)));
-    }
-
-    // Claim the seats BEFORE the membership row exists. The claim is the gate
-    // that can still fail (someone else took the last seat while we got here),
-    // and a membership written for seats we never held is the harder mess to
-    // unwind — so if the row cannot be created, the seats go back.
-    await addAttendee(pod, userId, seats);
-    let doc;
-    try {
-      doc = await PodMemberModel.create({
-        pod_id: pod._id,
-        user_id: uid,
-        status: 'JOINED',
-        seats,
-        joined_at: new Date(),
-        source,
-        referred_by: referredBy,
-        refund_status: 'NONE',
-      });
-    } catch (e) {
-      await removeAttendee(pod, userId, seats);
-      throw e;
     }
 
     // No backout fill: a free pod has no backouts, and filling a legacy one
@@ -1366,6 +1344,13 @@ export const podMemberService = {
         refund_status: 'NONE',
       });
     } catch (e) {
+      // A concurrent redeem booked this person first (one unpaid JOINED booking
+      // per pod — see PodMember's index). Its booking holds the id the claim
+      // above found already listed, so nothing is given back: answer with it.
+      if (isDuplicateKeyError(e)) {
+        const winner = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
+        if (winner) return toPub(winner);
+      }
       await removeAttendee(pod, userId);
       throw e;
     }

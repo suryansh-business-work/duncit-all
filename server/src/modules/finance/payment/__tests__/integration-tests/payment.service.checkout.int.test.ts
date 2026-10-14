@@ -155,20 +155,24 @@ describe('verifyRazorpayCheckout', () => {
     razorpay_signature: 'sig',
   });
 
-  it('a bad signature marks the payment FAILED and books nothing', async () => {
+  it('a bad signature books nothing but leaves the payment PENDING for the reconciler, recording the attempt', async () => {
     const { user, sheet } = await opened();
-    mockVerify.mockResolvedValueOnce(false);
+    mockVerify.mockResolvedValue(false);
 
-    await expect(paymentService.verifyRazorpayCheckout(verifyArgs(sheet.payment_doc_id), String(user._id))).rejects.toThrow(
-      'Payment signature verification failed'
-    );
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await expect(paymentService.verifyRazorpayCheckout(verifyArgs(sheet.payment_doc_id), String(user._id))).rejects.toThrow(
+        'Payment signature verification failed'
+      );
+    }
 
-    expect(await PaymentModel.findById(sheet.payment_doc_id).lean()).toMatchObject({
-      status: 'FAILED',
+    const row = await PaymentModel.findById(sheet.payment_doc_id).lean();
+    expect(row).toMatchObject({
+      status: 'PENDING',
       invoice_no: null,
       finalize_state: 'NOT_STARTED',
       gateway_ref: 'order_TEST1',
     });
+    expect(row?.metadata).toMatchObject({ verify_failures: 2, verify_failed_at: expect.any(String) });
   });
 
   it('a good signature swaps in the payment id, settles once, and a replayed verify pays nothing twice', async () => {

@@ -25,6 +25,11 @@ import * as emailService from '@services/email/email.service';
 let spotFilledEmail: jest.SpyInstance;
 let refundEmail: jest.SpyInstance;
 
+beforeAll(async () => {
+  // The one-booking guarantee lives in an index — build it before racing it.
+  await PodMemberModel.init();
+}, 60_000);
+
 beforeEach(() => {
   spotFilledEmail = jest.spyOn(emailService, 'sendBackoutSpotFilledEmail').mockResolvedValue(undefined as never);
   refundEmail = jest.spyOn(emailService, 'sendPodRefundEmail').mockResolvedValue(undefined as never);
@@ -212,6 +217,21 @@ describe('cancelFreeSpot', () => {
     expect(await seatsOf(pod)).toBe(2);
   });
 
+  it('is safe under a double first join: one booking, one seat, one ticket', async () => {
+    const pod = await makePod({ no_of_spots: 10 });
+    const user = await makeUser();
+
+    const [a, b] = await Promise.all([
+      podMemberService.joinFree(String(pod._id), String(user._id)),
+      podMemberService.joinFree(String(pod._id), String(user._id)),
+    ]);
+
+    expect(a.id).toBe(b.id);
+    expect(await PodMemberModel.countDocuments({ user_id: user._id, status: 'JOINED' })).toBe(1);
+    expect(await seatsOf(pod)).toBe(2);
+    expect(await TicketModel.countDocuments({ user_id: user._id })).toBe(1);
+  });
+
   it('refuses a member whose ticket was checked in — a cancel must not erase a scan', async () => {
     const pod = await makePod();
     const user = await makeUser();
@@ -328,6 +348,83 @@ describe('the old backout calls on a free pod (installed app builds)', () => {
 
     expect(out).toMatchObject({ status: 'JOINED', source: 'REFERRAL', referred_by: String(referrer._id) });
     expect(await seatsOf(pod)).toBe(3);
+  });
+});
+
+describe('one JOINED unpaid booking per person per pod (database-enforced)', () => {
+  const rivalBooking = async (pod: { _id: unknown }, userId: unknown) => {
+    // What a concurrent join that won would have left behind: its row and its seat.
+    await PodModel.updateOne({ _id: pod._id }, { $addToSet: { pod_attendees: userId } });
+    const [rival] = await PodMemberModel.create([
+      { pod_id: pod._id, user_id: userId, status: 'JOINED', source: 'FREE', refund_status: 'NONE' },
+    ]);
+    return rival;
+  };
+
+  it('the database refuses a second JOINED unpaid row, but not a cancelled or a paid one', async () => {
+    const pod = await makePod();
+    const user = await makeUser();
+    const base = { pod_id: pod._id, user_id: user._id, source: 'FREE', refund_status: 'NONE' };
+    await PodMemberModel.create({ ...base, status: 'JOINED' });
+
+    await expect(PodMemberModel.create({ ...base, status: 'JOINED' })).rejects.toMatchObject({ code: 11000 });
+    await expect(PodMemberModel.create({ ...base, status: 'BACKED_OUT' })).resolves.toBeTruthy();
+    await expect(
+      PodMemberModel.create({ ...base, status: 'JOINED', source: 'PAID', payment_id: new Types.ObjectId() })
+    ).resolves.toBeTruthy();
+  });
+
+  it('a first join that loses the insert answers with the winning booking and gives no seat back', async () => {
+    const pod = await makePod();
+    const user = await makeUser();
+    const realCreate = PodMemberModel.create.bind(PodMemberModel) as (...args: unknown[]) => Promise<unknown>;
+    let rivalId = '';
+    jest.spyOn(PodMemberModel, 'create').mockImplementationOnce((async (...args: unknown[]) => {
+      rivalId = String((await rivalBooking(pod, user._id))._id);
+      return realCreate(...args);
+    }) as never);
+
+    const joined = await podMemberService.joinFree(String(pod._id), String(user._id));
+
+    expect(joined.id).toBe(rivalId);
+    expect(await PodMemberModel.countDocuments({ user_id: user._id })).toBe(1);
+    // The winner's seat stays: releasing it would leave that booking seatless.
+    expect(await seatsOf(pod)).toBe(2);
+    expect((await PodModel.findById(pod._id).lean())!.pod_attendees.map(String)).toContain(String(user._id));
+  });
+
+  it('a re-join that loses to a concurrent booking leaves the cancelled row as it was', async () => {
+    const pod = await makePod();
+    const user = await makeUser();
+    const first = await podMemberService.joinFree(String(pod._id), String(user._id));
+    await podMemberService.cancelFreeSpot(String(pod._id), String(user._id));
+    const realFlip = PodMemberModel.findOneAndUpdate.bind(PodMemberModel) as (...args: unknown[]) => unknown;
+    let rivalId = '';
+    jest.spyOn(PodMemberModel, 'findOneAndUpdate').mockImplementationOnce((async (...args: unknown[]) => {
+      rivalId = String((await rivalBooking(pod, user._id))._id);
+      return realFlip(...args);
+    }) as never);
+
+    const joined = await podMemberService.joinFree(String(pod._id), String(user._id));
+
+    expect(joined.id).toBe(rivalId);
+    const old = (await PodMemberModel.findById(first.id))!;
+    expect(old.status).toBe('BACKED_OUT');
+    expect(old.spot_cancelled_at).not.toBeNull();
+    expect((await ticketOf(first.id))!.status).toBe('CANCELLED');
+    expect(await PodMemberModel.countDocuments({ user_id: user._id, status: 'JOINED' })).toBe(1);
+    expect(await seatsOf(pod)).toBe(2);
+  });
+
+  it('a non-duplicate failure of the new row still gives the seat back', async () => {
+    const pod = await makePod();
+    const user = await makeUser();
+    jest.spyOn(PodMemberModel, 'create').mockRejectedValueOnce(new Error('disk full') as never);
+
+    await expect(podMemberService.joinFree(String(pod._id), String(user._id))).rejects.toThrow('disk full');
+
+    expect(await seatsOf(pod)).toBe(1);
+    expect(await PodMemberModel.countDocuments({ user_id: user._id })).toBe(0);
   });
 });
 

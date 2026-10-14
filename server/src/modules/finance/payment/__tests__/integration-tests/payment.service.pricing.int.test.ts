@@ -351,8 +351,33 @@ describe('refund', () => {
     expect(row?.metadata).toMatchObject({ keep: 1, refund_reason: 'Venue closed' });
     expect(typeof row?.metadata.refunded_at).toBe('string');
 
-    await expect(paymentService.refund(String(paid._id))).rejects.toThrow('Only SUCCESS payments can be refunded');
+    await expect(paymentService.refund(String(paid._id))).rejects.toMatchObject({
+      message: 'This payment has already been refunded',
+      extensions: { code: 'CONFLICT' },
+    });
     expect(mockMail).toHaveBeenCalledTimes(1);
+  });
+
+  it('two concurrent refunds of one payment: exactly one wins, one email, the loser gets CONFLICT', async () => {
+    const paid = await seedPayment({ status: 'SUCCESS', invoice_no: 'DUN/2627/000010', metadata: { keep: 1 } });
+    const actor = new Types.ObjectId().toHexString();
+
+    const results = await Promise.allSettled([
+      paymentService.refund(String(paid._id), 'First click', actor),
+      paymentService.refund(String(paid._id), 'Second click', actor),
+    ]);
+
+    const won = results.filter((r) => r.status === 'fulfilled');
+    const lost = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    expect(won).toHaveLength(1);
+    expect(lost).toHaveLength(1);
+    expect(lost[0].reason).toMatchObject({ extensions: { code: 'CONFLICT' } });
+    expect(mockMail).toHaveBeenCalledTimes(1);
+    const row = await PaymentModel.findById(paid._id).lean();
+    expect(row?.status).toBe('REFUNDED');
+    // The winner's stamp, untouched by the loser; the rest of the row survives.
+    expect(row?.metadata).toMatchObject({ keep: 1, refunded_by: actor });
+    expect(mockMail.mock.calls[0][0].vars.reason).toBe(row?.metadata.refund_reason);
   });
 
   it('tells the payer with the invoice number, amount and processing days', async () => {

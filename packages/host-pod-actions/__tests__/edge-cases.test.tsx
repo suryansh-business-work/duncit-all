@@ -366,6 +366,7 @@ describe('SettlementPreview thin answers', () => {
           result: {
             data: {
               podSettlementPreview: {
+                is_free: false,
                 currency_symbol: '₹',
                 collected_total: 0,
                 venue_bill: 0,

@@ -30,7 +30,7 @@ const validValues = (over: Partial<PodFormValues> = {}): PodFormValues => {
     pod_description: 'A long enough description here.',
     pod_date_time: start,
     pod_end_date_time: laterThan(start),
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
     pod_amount: 0,
     pod_occurrence: 'ONE_TIME',
     no_of_spots: 12,
@@ -53,10 +53,17 @@ describe('makePodSchema', () => {
     expect(res.success).toBe(true);
   });
 
+  it('accepts a free physical pod booking a venue slot', () => {
+    const res = makePodSchema(makeConfig({ showVenueSlot: true }), fallbackT).safeParse(
+      validValues({ pod_type: 'FREE', pod_amount: 0, venue_slot_id: 'slot-1' }),
+    );
+    expect(res.success).toBe(true);
+  });
+
   it('accepts a valid physical pod with place charges and paid type', () => {
     const res = makePodSchema(makeConfig({ showPlaceCharges: true }), fallbackT).safeParse(
       validValues({
-        pod_type: 'NATIVE_PAID',
+        pod_type: 'PAID',
         pod_amount: 500,
         place_charges: [{ label: 'Entry', amount: 100, note: 'at door' }],
       }),
@@ -174,7 +181,7 @@ describe('makePodSchema', () => {
   it('forces free pods to have amount 0', () => {
     const paths = errorPaths(
       makeConfig(),
-      validValues({ pod_type: 'NATIVE_FREE', pod_amount: 200 }),
+      validValues({ pod_type: 'FREE', pod_amount: 200 }),
     );
     expect(paths).toContain('pod_amount');
   });
@@ -182,7 +189,7 @@ describe('makePodSchema', () => {
   it('rejects a non-numeric amount', () => {
     const paths = errorPaths(
       makeConfig(),
-      validValues({ pod_type: 'NATIVE_PAID', pod_amount: '' as unknown as number }),
+      validValues({ pod_type: 'PAID', pod_amount: '' as unknown as number }),
     );
     expect(paths).toContain('pod_amount');
   });
@@ -263,7 +270,7 @@ describe('makePodSchema', () => {
 describe('makePodSchema - multi-ticket discount', () => {
   const paid = (over: Partial<PodFormValues> = {}) =>
     validValues({
-      pod_type: 'NATIVE_PAID',
+      pod_type: 'PAID',
       pod_amount: 499,
       ticket_discount_enabled: true,
       ticket_discount_tiers: [
@@ -320,7 +327,7 @@ describe('makePodSchema - multi-ticket discount', () => {
 
   it('ignores the tiers of a free pod, which never carries a discount', () => {
     const res = makePodSchema(makeConfig(), fallbackT).safeParse(
-      paid({ pod_type: 'NATIVE_FREE', pod_amount: 0, ticket_discount_tiers: [] }),
+      paid({ pod_type: 'FREE', pod_amount: 0, ticket_discount_tiers: [] }),
     );
     expect(res.success).toBe(true);
   });

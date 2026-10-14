@@ -37,6 +37,7 @@ const previewMock = (over: Record<string, unknown> = {}): MockedResponse => ({
     data: {
       podSettlementPreview: {
         __typename: 'PodSettlementPreview',
+        is_free: false,
         currency_symbol: '₹',
         collected_total: 1000,
         has_venue: true,
@@ -108,6 +109,34 @@ describe('SettlementPreview', () => {
     await screen.findByRole('button', { name: 'Host Earning' });
     expect(billLine('final-bill')).toBe('Final bill uploaded₹1500.00');
     expect(billLine('venue-total')).toBe('Venue total (slot price + bill)₹1800.00');
+  });
+
+  // A free pod moves no platform money, so not a single figure is drawn.
+  it('heads a free pod "Free pod" and draws no split or bill', async () => {
+    const zeros = Object.fromEntries(
+      Object.entries(waterfall).map(([key, value]) => [key, typeof value === 'number' ? 0 : value]),
+    );
+    const { container } = renderWithProviders(
+      <SettlementPreview podId="pod-1" venueBillAmount={0} includeSlotPrice={false} hostUserId="u1" />,
+      {
+        mocks: [
+          previewMock({ is_free: true, collected_total: 0, has_venue: false, venue_slot_price: 0, waterfall: zeros }),
+        ],
+      },
+    );
+    expect(await screen.findByTestId('settlement-free-note')).toHaveTextContent(/Nobody pays to join a free pod/);
+    expect(screen.getByTestId('settlement-free')).toHaveTextContent('Free pod');
+    expect(screen.queryByRole('button', { name: 'Host Earning' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('venue-bill-summary')).not.toBeInTheDocument();
+    expect(container.textContent).not.toContain('₹');
+  });
+
+  it('reads as free before the preview loads when the caller says the pod is free', () => {
+    renderWithProviders(
+      <SettlementPreview podId="pod-1" venueBillAmount={0} includeSlotPrice={false} hostUserId="u1" free />,
+      { mocks: [previewMock()] },
+    );
+    expect(screen.getByTestId('settlement-free')).toHaveTextContent('Free pod');
   });
 
   it('has no venue bill to summarise on a pod with no venue behind it', async () => {

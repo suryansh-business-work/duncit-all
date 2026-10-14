@@ -117,6 +117,9 @@ describe('buildPodInput', () => {
     );
 
     expect(input.pod_title).toBe('Chess Meetup');
+    // A legacy paid value still in the form goes out as the enum the server takes.
+    expect(input.pod_type).toBe('PAID');
+    expect(input.pod_amount).toBe(500);
     expect(input.venue_id).toBe('venue-1');
     expect(input.location_id).toBe('loc-1');
     expect(input.venue_slot_id).toBe('slot-1');
@@ -238,13 +241,60 @@ describe('buildPodInput', () => {
     expect(input.ticket_discount_enabled).toBe(false);
     expect(input.ticket_discount_tiers).toEqual([]);
   });
+
+  it('builds a free PHYSICAL pod as FREE at 0, keeping its venue and slot', () => {
+    const input = buildPodInput(
+      baseValues({
+        pod_mode: 'PHYSICAL',
+        venue_id: 'venue-1',
+        venue_slot_id: 'slot-1',
+        pod_type: 'FREE',
+        pod_amount: 0,
+      }),
+      { config: makeConfig({ showVenueSlot: true }) },
+    );
+    expect(input.pod_type).toBe('FREE');
+    expect(input.pod_amount).toBe(0);
+    expect(input.venue_id).toBe('venue-1');
+    expect(input.venue_slot_id).toBe('slot-1');
+  });
+
+  // A free pod has no money terms: one typed while it was paid is not sent.
+  it('drops payment terms for a free pod and keeps them for a paid one', () => {
+    const config = { config: makeConfig() };
+    expect(
+      buildPodInput(baseValues({ pod_type: 'FREE', pod_amount: 0, payment_terms: 'no refunds' }), config).payment_terms,
+    ).toBeNull();
+    expect(
+      buildPodInput(baseValues({ pod_type: 'PAID', pod_amount: 300, payment_terms: 'no refunds' }), config).payment_terms,
+    ).toBe('no refunds');
+  });
+
+  it('never prices a free pod, whatever amount the form still holds', () => {
+    const input = buildPodInput(baseValues({ pod_type: 'NATIVE_FREE', pod_amount: 350 }), { config: makeConfig() });
+    expect(input.pod_type).toBe('FREE');
+    expect(input.pod_amount).toBe(0);
+  });
+
+  it('sends a paid pod at the price it was given', () => {
+    const input = buildPodInput(baseValues({ pod_type: 'PAID', pod_amount: 499 }), { config: makeConfig() });
+    expect(input.pod_type).toBe('PAID');
+    expect(input.pod_amount).toBe(499);
+  });
+
+  it('sends 0 rather than NaN for a paid pod whose amount box was left empty', () => {
+    const input = buildPodInput(baseValues({ pod_type: 'PAID', pod_amount: '' as unknown as number }), {
+      config: makeConfig(),
+    });
+    expect(input.pod_amount).toBe(0);
+  });
 });
 
 describe('podToFormValues', () => {
   it('fills defaults for a minimal pod', () => {
     const values = podToFormValues({});
     expect(values.pod_mode).toBe('PHYSICAL');
-    expect(values.pod_type).toBe('NATIVE_FREE');
+    expect(values.pod_type).toBe('FREE');
     expect(values.pod_occurrence).toBe('ONE_TIME');
     expect(values.pod_date_time).toBeNull();
     expect(values.pod_end_date_time).toBeNull();
@@ -253,6 +303,13 @@ describe('podToFormValues', () => {
     expect(values.products_enabled).toBe(false);
     expect(values.ticket_discount_enabled).toBe(false);
     expect(values.ticket_discount_tiers).toEqual([]);
+  });
+
+  it('opens a row still carrying a legacy type on the FREE / PAID option that replaced it', () => {
+    expect(podToFormValues({ pod_type: 'NON_NATIVE_FREE' }).pod_type).toBe('FREE');
+    expect(podToFormValues({ pod_type: 'NATIVE_PAID_PREMIUM', pod_amount: 900 }).pod_type).toBe('PAID');
+    expect(podToFormValues({ pod_type: 'PAID' }).pod_type).toBe('PAID');
+    expect(podToFormValues({ pod_type: 'FREE', pod_mode: 'PHYSICAL' }).pod_type).toBe('FREE');
   });
 
   it('hydrates the stored multi-ticket tiers as plain numbers, without Apollo typenames', () => {
@@ -339,7 +396,11 @@ describe('constants', () => {
   // The VALUE is the stored enum and is a contract with the server; the name
   // beside it is a catalogue key, resolved where the menu is drawn (rule 38).
   it('exposes option lists keyed to their copy', () => {
-    expect(POD_TYPES.length).toBeGreaterThan(0);
+    expect(POD_TYPES).toEqual([
+      { value: 'FREE', labelKey: 'podForm.podType.free' },
+      { value: 'PAID', labelKey: 'podForm.podType.paid' },
+    ]);
+    expect(blankPodFormValues.pod_type).toBe('FREE');
     expect(OCCURRENCES.length).toBeGreaterThan(0);
     for (const option of [...POD_TYPES, ...OCCURRENCES, ...POD_MODES]) {
       expect(option.labelKey.startsWith('podForm.')).toBe(true);

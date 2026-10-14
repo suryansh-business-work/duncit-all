@@ -274,6 +274,7 @@ describe('PodCompleteDialog scanner', () => {
     result: {
       data: {
         podSettlementPreview: {
+          is_free: false,
           currency_symbol: '₹',
           collected_total: 1000,
           venue_bill: 0,

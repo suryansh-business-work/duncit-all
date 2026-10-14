@@ -44,7 +44,7 @@ const prev = (over: Partial<PodFormValues> = {}): PodFormValues => ({
   pod_description: '',
   pod_date_time: null,
   pod_end_date_time: null,
-  pod_type: 'NATIVE_PAID',
+  pod_type: 'PAID',
   pod_amount: 0,
   pod_occurrence: 'ONE_TIME',
   no_of_spots: 8,
@@ -121,7 +121,7 @@ describe('buildAiFilledPod', () => {
       oneSlot
     );
 
-    expect(next.pod_type).toBe('NATIVE_PAID');
+    expect(next.pod_type).toBe('PAID');
     expect(next.pod_occurrence).toBe('ONE_TIME');
   });
 
@@ -133,7 +133,20 @@ describe('buildAiFilledPod', () => {
       oneSlot
     );
 
+    expect(next.pod_type).toBe('FREE');
     expect(next.pod_amount).toBe(0);
+  });
+
+  // The fill is still prompted with the legacy names; the GraphQL PodType enum
+  // only takes FREE or PAID, so each is taken as the option that replaced it.
+  it('takes a legacy paid name as PAID, and the two current names as they are', async () => {
+    const legacy = await buildAiFilledPod({ pod_type: 'NATIVE_PAID_PREMIUM', pod_amount: 650 }, prev({ pod_type: 'FREE' }), lookups(), oneSlot);
+    expect(legacy.pod_type).toBe('PAID');
+    expect(legacy.pod_amount).toBe(650);
+
+    const free = await buildAiFilledPod({ pod_type: 'FREE', pod_amount: 650 }, prev(), lookups(), oneSlot);
+    expect(free.pod_type).toBe('FREE');
+    expect(free.pod_amount).toBe(0);
   });
 
   it('prefers a club that has a venue, since one without cannot save a physical pod', async () => {

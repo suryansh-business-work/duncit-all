@@ -81,7 +81,7 @@ export default function VenueSettingsPage() {
   return (
     <Stack spacing={2.25} sx={{ width: '100%', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h5" component="h1" sx={{
+        <Typography variant="h5" component="h1" data-testid="venue-settings-title" sx={{
           fontWeight: 700
         }}>
           {t('venueSettings.title')}
@@ -101,6 +101,7 @@ export default function VenueSettingsPage() {
             select
             fullWidth
             label={t('venueSettings.venue')}
+            data-testid="venue-settings-venue"
             value={selected?.id ?? ''}
             onChange={(event) => selectVenue(event.target.value)}
           >
@@ -137,6 +138,7 @@ export default function VenueSettingsPage() {
         autoHideDuration={4000}
         onClose={() => setMessage(null)}
         message={message ?? ''}
+        data-testid="venue-settings-snackbar"
       />
     </Stack>
   );

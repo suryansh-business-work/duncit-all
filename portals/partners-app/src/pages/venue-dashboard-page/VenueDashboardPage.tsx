@@ -60,7 +60,7 @@ export default function VenueDashboardPage() {
       defaultLayout: { x: 0, y: 2, w: 12, h: 2 },
       minH: 2,
       content: (
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} data-testid="venue-dashboard-quick-actions" sx={{
           alignItems: { sm: 'center' }
         }}>
           <DuncitButton component={RouterLink} to="/register-venue" size="small" variant="outlined" startIcon={<StorefrontIcon />}>
@@ -99,7 +99,7 @@ export default function VenueDashboardPage() {
             }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('partners.common.partnerToolsVenues')}</Typography>
-                <Typography variant="h5" component="h1" sx={{
+                <Typography variant="h5" component="h1" data-testid="venue-dashboard-title" sx={{
                   fontWeight: 950
                 }}>{t('partners.venueDashboardPage.venueDashboard')}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.75 }}>
@@ -113,6 +113,7 @@ export default function VenueDashboardPage() {
                 value={filter.value}
                 onChange={(e) => filter.change(e.target.value)}
                 helperText={t('partners.venueDashboardPage.pickOneVenueOrViewAll')}
+                data-testid="venue-dashboard-venue-filter"
                 sx={PICKER_SX}
               >
                 <MenuItem value={ALL_VENUES}>{t('partners.common.allVenues')}</MenuItem>

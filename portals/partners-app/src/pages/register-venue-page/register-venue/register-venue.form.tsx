@@ -109,12 +109,12 @@ export default function RegisterVenueForm({
             {active === 'review' && <ReviewSection form={form} />}
           </fieldset>
           {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
+            <Alert severity="error" sx={{ mt: 2 }} data-testid="register-venue-error">
               {error}
             </Alert>
           )}
           {saved && !error && (
-            <Alert severity="success" sx={{ mt: 2 }}>
+            <Alert severity="success" sx={{ mt: 2 }} data-testid="register-venue-saved">
               {saved}
             </Alert>
           )}

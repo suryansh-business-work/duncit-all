@@ -16,7 +16,7 @@ export default function AvailabilityHeader({ venueName, onBack }: Readonly<Props
     <Stack direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
-      <DuncitIconButton size="small" onClick={onBack} aria-label={t('partners.venueAvailabilityPage.back')}>
+      <DuncitIconButton size="small" onClick={onBack} aria-label={t('partners.venueAvailabilityPage.back')} data-testid="availability-header-back">
         <ArrowBackIcon />
       </DuncitIconButton>
       <Box>

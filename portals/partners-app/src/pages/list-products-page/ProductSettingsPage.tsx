@@ -22,7 +22,7 @@ import { parseApiError } from '@duncit/utils';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import { UPDATE_PRODUCT_SETTINGS } from './queries';
 import {
-  PRODUCT_ACCESS_MESSAGE,
+  PRODUCT_ACCESS_MESSAGE_KEY,
   PRODUCT_LISTING_ACCESS,
   canManageProductListings,
 } from './productAccess';
@@ -136,12 +136,12 @@ export default function ProductSettingsPage() {
           {product?.product_name || 'Product'} settings
         </Typography>
       </Box>
-      {!canManageProducts && <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>}
-      {canManageProducts && !product && <Alert severity="warning">{t('partners.listProductsPage.productListingWasNotFound')}</Alert>}
+      {!canManageProducts && <Alert severity="warning">{t(PRODUCT_ACCESS_MESSAGE_KEY)}</Alert>}
+      {canManageProducts && !product && <Alert severity="warning" data-testid="product-settings-not-found">{t('partners.listProductsPage.productListingWasNotFound')}</Alert>}
       {canManageProducts && product && (
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
-            <Stack spacing={2.25} component="form" onSubmit={onSubmit}>
+            <Stack spacing={2.25} component="form" onSubmit={onSubmit} data-testid="product-settings-form">
               {saved && <Alert severity="success">{t('partners.listProductsPage.settingsSaved')}</Alert>}
               {apiError && <Alert severity="error">{apiError}</Alert>}
               <Typography variant="body2" sx={{

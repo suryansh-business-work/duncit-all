@@ -17,11 +17,11 @@ export default function TransactionsCard({ transactions, currency }: Readonly<Pr
         </Typography>
         <Divider sx={{ mb: 1.5 }} />
         {transactions.length === 0 ? (
-          <Alert severity="info">{t('partners.walletPage.yourPayoutsWillShowUpHere')}</Alert>
+          <Alert severity="info" data-testid="wallet-transactions-empty">{t('partners.walletPage.yourPayoutsWillShowUpHere')}</Alert>
         ) : (
           <Stack spacing={1}>
             {transactions.map((t) => (
-              <Stack key={t.id} direction="row" spacing={1} sx={{
+              <Stack key={t.id} data-testid={`wallet-transaction-${t.id}`} direction="row" spacing={1} sx={{
                 alignItems: "center"
               }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>

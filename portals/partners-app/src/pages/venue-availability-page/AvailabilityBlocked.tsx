@@ -18,8 +18,8 @@ export default function AvailabilityBlocked({ severity, message, picker }: Reado
   return (
     <Stack spacing={2} sx={{ width: '100%' }}>
       {picker}
-      <Alert severity={severity}>{message}</Alert>
-      <DuncitButton component={RouterLink} to="/register-venue" variant="outlined">
+      <Alert severity={severity} data-testid="availability-blocked">{message}</Alert>
+      <DuncitButton component={RouterLink} to="/register-venue" variant="outlined" data-testid="availability-back-to-venues">
         {t('partners.venueAvailabilityPage.backToVenues')}
       </DuncitButton>
     </Stack>

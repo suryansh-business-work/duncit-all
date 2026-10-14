@@ -60,7 +60,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden'
               }}>
-              {request.pod_description || 'No description provided.'}
+              {request.pod_description || t('partners.slotRequestsPage.noDescription')}
             </Typography>
           </Box>
           <Chip size="small" color="warning" label={t('partners.slotRequestsPage.awaitingDecision')} />
@@ -70,7 +70,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1, md: 3 }}>
           <Detail label={t('partners.common.venue')} value={request.venue_name} />
           <Detail label={t('partners.slotRequestsPage.slot')} value={slotWindow(request)} />
-          {!request.pod_is_free && <Detail label={t('partners.slotRequestsPage.slotPrice')} value={request.price > 0 ? `₹${request.price.toLocaleString('en-IN')}` : 'Free'} />}
+          {!request.pod_is_free && <Detail label={t('partners.slotRequestsPage.slotPrice')} value={request.price > 0 ? `₹${request.price.toLocaleString('en-IN')}` : t('partners.common.free')} />}
           <Detail label={t('partners.slotRequestsPage.requested')} value={formatDateTime(request.requested_at)} />
         </Stack>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1, md: 3 }}>
@@ -91,7 +91,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
            * booking actually earns after Duncit's commission (a free pod earns
            * nothing through Duncit, so it is just the request there). */}
           <DuncitButton size="small" component={RouterLink} to={`/venues/requests/${request.slot_id}`}>
-            {request.pod_is_free ? t('partners.slotRequestsPage.viewRequest') : 'View earnings'}
+            {request.pod_is_free ? t('partners.slotRequestsPage.viewRequest') : t('partners.slotRequestsPage.viewEarnings')}
           </DuncitButton>
           <DuncitButton
             size="small"
@@ -101,7 +101,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             disabled={busy}
             onClick={() => setDeclineOpen(true)}
           >
-            Decline
+            {t('partners.slotRequestsPage.decline')}
           </DuncitButton>
           <DuncitButton
             size="small"
@@ -111,7 +111,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             disabled={busy}
             onClick={() => setConfirmApprove(true)}
           >
-            Approve
+            {t('partners.slotRequestsPage.approve')}
           </DuncitButton>
         </Stack>
       </Stack>
@@ -122,7 +122,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            "{request.pod_title}" will be confirmed for {slotWindow(request)} and the pod goes live immediately.
+            {t('partners.slotRequestsPage.approveBody', { vars: { title: request.pod_title, window: slotWindow(request) } })}
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -136,7 +136,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
               setConfirmApprove(false);
             }}
           >
-            Approve booking
+            {t('partners.slotRequestsPage.approveBooking')}
           </DuncitButton>
         </DialogActions>
       </Dialog>
@@ -148,7 +148,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              The slot opens up again and the host is notified that the request was declined.
+              {t('partners.slotRequestsPage.declineBody')}
             </Typography>
             <TextField
               label={t('partners.slotRequestsPage.reasonOptional')}
@@ -174,7 +174,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
               setDeclineOpen(false);
             }}
           >
-            Decline booking
+            {t('partners.slotRequestsPage.declineBooking')}
           </DuncitButton>
         </DialogActions>
       </Dialog>

@@ -83,14 +83,14 @@ export default function SlotDecisionPage() {
       </Box>
     );
   }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert severity="error" data-testid="slot-decision-error">{error.message}</Alert>;
   if (!request) return <Alert severity="warning">{t('partners.slotDecisionPage.thisBookingRequestCouldNotBe')}</Alert>;
 
   const busy = approveState.loading || declineState.loading;
   const declined = request.decision === 'DECLINED';
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 720, mx: 'auto' }}>
+    <Stack spacing={2.5} sx={{ maxWidth: 720, mx: 'auto' }} data-testid="slot-decision-page">
       <DecisionHeader decision={request.decision} startAt={request.start_at} />
 
       {actionError && <Alert severity="error">{actionError}</Alert>}
@@ -122,6 +122,7 @@ export default function SlotDecisionPage() {
               startIcon={<CancelIcon />}
               disabled={busy}
               onClick={() => setShowDeclineForm(true)}
+              data-testid="slot-decision-decline"
             >
               Decline
             </DuncitButton>
@@ -131,6 +132,7 @@ export default function SlotDecisionPage() {
               startIcon={<CheckCircleIcon />}
               disabled={busy}
               onClick={runApprove}
+              data-testid="slot-decision-approve"
             >
               {approveState.loading ? 'Approving…' : 'Approve booking'}
             </DuncitButton>

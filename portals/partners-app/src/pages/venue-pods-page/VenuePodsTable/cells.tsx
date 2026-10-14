@@ -46,6 +46,7 @@ function CancelPodCell({
           variant="outlined"
           color="error"
           disabled={!!disabledReason}
+          data-testid={`venue-pod-cancel-${row.id}`}
           startIcon={<EventBusyIcon fontSize="small" />}
           onClick={(event) => {
             event.stopPropagation();
@@ -86,6 +87,7 @@ function RequestChangeCell({
       size="small"
       variant="text"
       color="warning"
+      data-testid={`venue-pod-request-change-${row.id}`}
       startIcon={<SwapHorizIcon fontSize="small" />}
       onClick={(event) => {
         event.stopPropagation();

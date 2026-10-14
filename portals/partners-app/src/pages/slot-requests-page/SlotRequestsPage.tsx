@@ -74,6 +74,7 @@ export default function SlotRequestsPage() {
             value={filter.value}
             onChange={(e) => filter.change(e.target.value)}
             helperText={t('partners.slotRequestsPage.filterRequestsByVenue')}
+            data-testid="slot-requests-venue-filter"
             sx={{ minWidth: 220 }}
           >
             <MenuItem value={ALL_VENUES}>{t('partners.common.allVenues')}</MenuItem>
@@ -99,7 +100,7 @@ export default function SlotRequestsPage() {
       )}
 
       {!requestsQuery.loading && requests.length === 0 && (
-        <Alert severity="info">{t('partners.slotRequestsPage.noPendingSlotRequestsRightNow')}</Alert>
+        <Alert severity="info" data-testid="slot-requests-empty">{t('partners.slotRequestsPage.noPendingSlotRequestsRightNow')}</Alert>
       )}
 
       {requests.map((request) => (

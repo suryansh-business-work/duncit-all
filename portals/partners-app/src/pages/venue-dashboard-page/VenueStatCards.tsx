@@ -51,6 +51,7 @@ export default function VenueStatCards({ stats, loading }: Readonly<Props>) {
             lg: 2
           }}>
           <StatCard
+            testId={`venue-stat-${tile.key}`}
             label={copy[tile.key].label}
             labelWeight={800}
             labelSx={{ lineHeight: 1.4 }}

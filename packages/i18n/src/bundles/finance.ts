@@ -664,6 +664,18 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       products: 'Products',
       taxExtractedFromTheGstInclusive: 'Tax extracted from the GST-inclusive customer payment.',
     },
+    // Finance → Food Menu Defaults: the GST on venue food orders for every venue without its own.
+    // The field labels are shell.foodTax.* — the venue forms say them too.
+    foodMenuDefaults: {
+      title: 'Food Menu Defaults',
+      subtitle: 'How GST meets the food prices of venues that take QR orders.',
+      howItApplies:
+        'Every venue follows these unless it sets its own GST. A change prices the next order; orders already placed keep the GST they were placed with. The money is the venue’s — this only decides how its bill is split and printed.',
+      modeHint: 'Included: the menu price already holds the GST and the bill does not change. Added: GST is charged on top of the discounted price.',
+      gstHint: 'A whole number from {min} to {max}. Invoices show it as CGST and SGST, half each.',
+      saved: 'Food menu defaults saved',
+      loading: 'Loading the food menu defaults',
+    },
     duncitCoin: {
       action: 'Action',
       adminDeduction: 'Admin deduction',

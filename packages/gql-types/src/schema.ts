@@ -2605,6 +2605,17 @@ export type AutomationTestReplyInput = {
   timed_out?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+/** A coupon a guest can pick at a venue's food checkout. Only what choosing needs — never its usage. */
+export type AvailableVenueFoodCoupon = {
+  __typename?: 'AvailableVenueFoodCoupon';
+  code: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  discount_pct: Scalars['Int']['output'];
+  /** Rupees of subtotal the code needs; 0 when it needs none. */
+  min_order_amount: Scalars['Float']['output'];
+  valid_until?: Maybe<Scalars['String']['output']>;
+};
+
 /**
  * A long-running piece of work a person started from a console — a bulk
  * delete, or an AI translation of one language. Kept on the server, so the
@@ -9310,6 +9321,26 @@ export type FollowingFeedSource =
   | 'CLUBS'
   | 'PEOPLE';
 
+/** Finance's default GST on venue food orders, for every venue that does not set its own. */
+export type FoodTaxDefaults = {
+  __typename?: 'FoodTaxDefaults';
+  /** A whole percent from 0 to 28. */
+  gst_pct: Scalars['Int']['output'];
+  tax_mode: FoodTaxMode;
+  updated_at: Scalars['String']['output'];
+};
+
+export type FoodTaxDefaultsInput = {
+  /** A whole percent from 0 to 28. */
+  gst_pct: Scalars['Int']['input'];
+  tax_mode: FoodTaxMode;
+};
+
+/** How GST meets a venue food price: already inside it, or added on top. */
+export type FoodTaxMode =
+  | 'EXCLUSIVE'
+  | 'INCLUSIVE';
+
 export type FounderCategory = {
   __typename?: 'FounderCategory';
   icon: Scalars['String']['output'];
@@ -14317,6 +14348,8 @@ export type Mutation = {
   updateFaqSubmissionStatus: FaqSubmission;
   updateFeatureFlag: FeatureFlag;
   updateFinanceSettings: FinanceSettings;
+  /** Finance roles: set the default GST on venue food orders. Venues that override it keep their own. */
+  updateFoodTaxDefaults: FoodTaxDefaults;
   /** Finance: set the amounts offered and how long a card lives. */
   updateGiftCardSettings: GiftCardSettings;
   updateGraphqlMonitorSettings: GraphqlMonitorSettings;
@@ -19430,6 +19463,11 @@ export type MutationUpdateFeatureFlagArgs = {
 
 export type MutationUpdateFinanceSettingsArgs = {
   input: UpdateFinanceSettingsInput;
+};
+
+
+export type MutationUpdateFoodTaxDefaultsArgs = {
+  input: FoodTaxDefaultsInput;
 };
 
 
@@ -24802,6 +24840,8 @@ export type Query = {
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
+  /** Public: the coupons a guest can pick from at this venue's checkout right now, best first. Empty when the venue is not taking orders. */
+  availableVenueFoodCoupons: Array<AvailableVenueFoodCoupon>;
   backoutRefundRequest?: Maybe<BackoutRefundRequest>;
   /** Finance-only: every Backout request ever raised (all statuses, for audit). */
   backoutRefundRequests: Array<BackoutRefundRequest>;
@@ -25268,6 +25308,8 @@ export type Query = {
   followingFeed: Array<Post>;
   /** People the given user follows (their public profiles). */
   followingOf: Array<PublicProfile>;
+  /** Finance roles: the default GST on venue food orders (Finance → Food Menu Defaults). */
+  foodTaxDefaults: FoodTaxDefaults;
   /** Founder/Startup dashboard: every KPI for the date range, computed + manual. */
   founderDashboard: FounderDashboard;
   /** Finance > Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
@@ -26693,6 +26735,11 @@ export type QueryAvailablePodProductsArgs = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryAvailableVenueFoodCouponsArgs = {
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -37137,6 +37184,12 @@ export type UpdateApprovedVenueInput = {
   food_menu?: InputMaybe<Array<VenueFoodItemInput>>;
   food_ordering?: InputMaybe<VenueFoodOrderingInput>;
   gallery?: InputMaybe<Array<Scalars['String']['input']>>;
+  /**
+   * The venue's GST number, printed on its food invoices. Accepted only while the
+   * venue has none: once one is saved, only the venues console (adminUpdateVenue)
+   * may change it. Sending the saved number again is a no-op; empty is ignored.
+   */
+  gstin?: InputMaybe<Scalars['String']['input']>;
   offers_food?: InputMaybe<Scalars['Boolean']['input']>;
   owner_address?: InputMaybe<Scalars['String']['input']>;
   owner_dob?: InputMaybe<Scalars['String']['input']>;
@@ -38562,6 +38615,7 @@ export type VenueFoodCouponPreview = {
   currency_symbol: Scalars['String']['output'];
   discount_amount: Scalars['Float']['output'];
   discount_pct: Scalars['Int']['output'];
+  gst_pct: Scalars['Int']['output'];
   /** A sentence for the guest; null when ok. */
   message?: Maybe<Scalars['String']['output']>;
   /** The subtotal the code needs; 0 when it needs none or is not ok. */
@@ -38570,6 +38624,10 @@ export type VenueFoodCouponPreview = {
   /** Null when ok. */
   reason?: Maybe<VenueFoodCouponRejection>;
   subtotal: Scalars['Float']['output'];
+  tax_amount: Scalars['Float']['output'];
+  /** The venue's GST, exactly as placing the order would apply it. */
+  tax_mode: FoodTaxMode;
+  taxable_amount: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
 };
 
@@ -38678,6 +38736,8 @@ export type VenueFoodOrder = {
   discount_pct: Scalars['Int']['output'];
   /** Null until the guest rates the order. */
   feedback?: Maybe<VenueFoodFeedback>;
+  /** The GST percent the order was priced with; 0 on an order from before GST. */
+  gst_pct: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   /** True once the money has arrived — the invoice can be downloaded. */
   invoice_available: Scalars['Boolean']['output'];
@@ -38692,7 +38752,13 @@ export type VenueFoodOrder = {
   subscribe_events: Scalars['Boolean']['output'];
   subtotal: Scalars['Float']['output'];
   table_label: Scalars['String']['output'];
-  /** What was charged: subtotal less discount_amount less coupon_discount_amount. */
+  /** The GST inside (INCLUSIVE) or added to (EXCLUSIVE) the total. */
+  tax_amount: Scalars['Float']['output'];
+  /** How GST met the price when the order was placed. An order from before GST reads INCLUSIVE. */
+  tax_mode: FoodTaxMode;
+  /** The value the GST is charged on — the bill without its GST. taxable_amount + tax_amount = total. */
+  taxable_amount: Scalars['Float']['output'];
+  /** What was charged: subtotal less discount_amount less coupon_discount_amount, plus tax_amount when EXCLUSIVE. */
   total: Scalars['Float']['output'];
   /** The venue's address as its invoice prints it. */
   venue_address: Scalars['String']['output'];
@@ -38751,15 +38817,28 @@ export type VenueFoodOrdering = {
   /** Percent the venue takes off every QR order. */
   discount_pct: Scalars['Int']['output'];
   enabled: Scalars['Boolean']['output'];
+  /** The GST percent the venue's orders are priced with right now, resolved the same way as tax_mode. */
+  gst_pct: Scalars['Int']['output'];
   /** The owner's saved Razorpay connection. Always null on the public venue. */
   razorpay_integration_id?: Maybe<Scalars['ID']['output']>;
+  /** Whether the owner has linked a Razorpay account — what the venues console reads instead of the id. */
+  razorpay_linked: Scalars['Boolean']['output'];
+  /** What the venue's orders are priced with right now — its own while tax_override, otherwise Finance's default. */
+  tax_mode: FoodTaxMode;
+  /** True while the venue sets its own GST; false follows Finance's food default (foodTaxDefaults). */
+  tax_override: Scalars['Boolean']['output'];
 };
 
 export type VenueFoodOrderingInput = {
   discount_pct?: InputMaybe<Scalars['Int']['input']>;
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** A whole percent from 0 to 28. */
+  gst_pct?: InputMaybe<Scalars['Int']['input']>;
   /** One of the venue owner's own myPartnerIntegrations(provider: RAZORPAY) that passed its check; null unlinks. */
   razorpay_integration_id?: InputMaybe<Scalars['ID']['input']>;
+  tax_mode?: InputMaybe<FoodTaxMode>;
+  /** On: tax_mode and gst_pct below price the venue's orders. Off: Finance's default does. */
+  tax_override?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type VenueFoodPaymentStatus =
@@ -38820,6 +38899,8 @@ export type VenueFoodStats = {
   subscribers: Scalars['Int']['output'];
   /** Scans of the table label link in the window. */
   table_scans: Scalars['Int']['output'];
+  /** GST inside the revenue — collected on the venue's behalf, cancelled orders left out. */
+  tax_collected: Scalars['Float']['output'];
   top_items: Array<VenueFoodTopItem>;
 };
 

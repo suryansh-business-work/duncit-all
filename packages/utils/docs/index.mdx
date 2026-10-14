@@ -3568,6 +3568,34 @@ without the third argument prices exactly as it always did.
 An order carries `coupon_code` (null without one), `coupon_pct` and `coupon_discount_amount` beside
 `discount_pct` / `discount_amount`; both order documents ask for them. `total` stays what was charged.
 
+**GST.** The fourth argument is the GST the venue's orders are priced with — `foodCartTaxOf(venue.food_ordering)`
+reads the `tax_mode` / `gst_pct` the server RESOLVED (the venue's own override, or Finance's food
+default), so a client never decides which applies. GST meets what is left after both discounts (the
+"net"), rounded **half up** to a whole paisa in integer arithmetic:
+
+- `INCLUSIVE` — the net already holds the tax: `taxablePaise = round(net × 100 / (100 + pct))`,
+  `taxPaise = net − taxablePaise`, and the total does not move;
+- `EXCLUSIVE` — the tax is added on top: `taxablePaise = net`, `taxPaise = round(net × pct / 100)`.
+
+Either way `totalPaise = taxablePaise + taxPaise`. `belowMinimum` is still judged on the net — GST added
+on top never makes a cart payable. A percent that is not a whole positive number is no tax, and
+`priceFoodCart(lines, pct, coupon)` without the fourth argument prices exactly as before.
+
+```ts
+import { foodCartTaxOf, foodTaxLine, priceFoodCartLines } from '@duncit/utils';
+
+const price = priceFoodCartLines(lines, venue.food_ordering.discount_pct, coupon, foodCartTaxOf(venue.food_ordering));
+// EXCLUSIVE 5% on a 180 net → { taxablePaise: 18000, taxPaise: 900, totalPaise: 18900 }
+foodTaxLine(price.taxMode, price.gstPct, price.tax); // { mode: 'EXCLUSIVE', pct: 5, amount: 9 } — null at 0%
+```
+
+An order (and a coupon preview) carries `tax_mode`, `gst_pct`, `taxable_amount` and `tax_amount` —
+all optional on an order read by an older document; an order from before GST reads as INCLUSIVE at 0%.
+`foodTaxLine(order.tax_mode, order.gst_pct, order.tax_amount)` is the line the totals block draws.
+`FOOD_GST_LIMITS` (`{ min: 0, max: 28 }`) and `VENUE_FOOD_TAX_MODES` mirror the server's bounds. The
+shared fixture `__tests__/fixtures/venue-food-pricing.json` pins this and the server's `foodTotals`
+to the same paise, GST cases included.
+
 **The coupon is part of the attempt.** The server answers a repeated `client_key` with the order it
 already priced — even if the coupon has since expired — so applying, changing or removing a code
 must mint a new key. `foodAttemptSignature` reads `details.coupon` for exactly that (compared as the
@@ -3611,6 +3639,39 @@ const showRatingForm = canRateFoodOrder(order); // SERVED and not rated yet
 **The table label.** Beside the A4 poster a venue can print a table label (`VENUE_TABLE_LABEL_QUERY`,
 `publicPageTableLabelFileName`). `publicPageHeadlineKey(kind, offersFood)` picks what both print: a
 venue with a menu (`PublicPageInsights.offers_food`) says "Scan to see the Menu & pods happening here".
+
+## A venue's food desk, as its owner works it — `venue-food-owner`
+
+The owner's side of `venue-food`: the Food Dashboard, the order board and the venue's food
+coupons. `@duncit/venue-food` draws them in MUI for the Partners console, the Venues console and
+mWeb; the native app's Tamagui twins (`components/venue-food-desk/`) read the same module.
+
+- **Documents** (plain strings): `FOOD_OWNER_VENUES_QUERY` (the owner's venues with
+  `offers_food`), `VENUE_FOOD_STATS_QUERY`, `VENUE_FOOD_ORDERS_TABLE_QUERY`,
+  `SET_VENUE_FOOD_ORDER_STATUS_MUTATION`, `CANCEL_VENUE_FOOD_ORDER_MUTATION`,
+  `VENUE_FOOD_COUPONS_TABLE_QUERY` and the four coupon mutations. Rows: `FoodOwnerOrder`,
+  `FoodOwnerCoupon`, `FoodOwnerStats`, `FoodTablePage`.
+- **Status flow**: `nextFoodOrderStatus` walks the kitchen's path; `foodOrderNextStep(order)`
+  offers a step only on a PAID order; `canCancelFoodOrder` mirrors the server's refusal once served
+  or cancelled. `FOOD_ORDER_STATUS_COLORS` / `FOOD_PAYMENT_STATUS_COLORS` are MUI chip colours
+  (native maps each to a theme token). `FOOD_ORDERS_POLL_MS` is the board's 20-second refresh.
+- **Labels** — every one a `venueFoodOwner.*` key written out once: `foodOrderStatusLabel`,
+  `foodPaymentStatusLabel`, `foodOrderAdvanceLabel`, `foodDietLabel`, `foodItemsSummary`,
+  `foodOrderMoneyLines` (subtotal, QR discount, coupon, total), `foodOrderCancelledMessage`,
+  `foodCouponUsesText`, `foodCouponMinOrderText`, `foodCouponPerPersonText`, `foodCouponWindow`
+  (each end through the surface's own date formatter), `foodCouponToggledMessage`.
+- **Dashboard**: `foodStatTiles(stats, t)` (sales, then service, then reach),
+  `foodStatusBars` (a row per status, its share of every order), `foodDishBars` (against the best
+  seller), `foodDishLine`, `foodFeedbackByLine`, `foodTrendLine` (each series against its own peak)
+  and `FOOD_DASHBOARD_DEFAULT_DAYS` (30).
+
+```ts
+import { foodOrderNextStep, foodOrderAdvanceLabel, foodStatTiles } from '@duncit/utils';
+
+const next = foodOrderNextStep(order); // null unless paid and not yet served
+const button = next && foodOrderAdvanceLabel(t, next); // "Start preparing"
+const tiles = foodStatTiles(stats, t);
+```
 
 ## The product cart control — `cart-control`
 

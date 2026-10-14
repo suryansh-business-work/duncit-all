@@ -4,6 +4,7 @@ import {
   FOOD_COUPON_REJECTION_KEYS,
   FOOD_DIET_KEYS,
   FOOD_FEEDBACK_LIMITS,
+  FOOD_GST_LIMITS,
   FOOD_ORDER_CONFLICT_RETRY_MS,
   FOOD_ORDER_ERROR,
   FOOD_ORDER_FLOW,
@@ -15,11 +16,13 @@ import {
   FOOD_SPICE_HEAT,
   FOOD_SPICE_KEYS,
   PLACE_VENUE_FOOD_ORDER_MUTATION,
+  AVAILABLE_VENUE_FOOD_COUPONS_QUERY,
   PREVIEW_VENUE_FOOD_COUPON_QUERY,
   SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION,
   VENUE_FOOD_FEEDBACK_UPLOAD_PASS_MUTATION,
   VENUE_FOOD_ORDER_INVOICE_QUERY,
   VENUE_FOOD_ORDER_QUERY,
+  VENUE_FOOD_TAX_MODES,
   VERIFY_VENUE_FOOD_ORDER_MUTATION,
   buildFoodOrderInput,
   buildFoodOrderTimeline,
@@ -29,6 +32,8 @@ import {
   foodAttemptSignature,
   foodCartLines,
   foodCartSignature,
+  foodCartTaxOf,
+  foodTaxLine,
   foodCouponRejectionOf,
   foodInvoiceFileName,
   foodOrderErrorCode,
@@ -53,6 +58,7 @@ import {
   type VenueFoodOrderStatus,
   type VenueFoodPaymentStatus,
   type VenueFoodSpiceLevel,
+  type VenueFoodTaxMode,
 } from '../src/venue-food';
 
 const dish = (over: Partial<VenueFoodItem> = {}): VenueFoodItem => ({
@@ -138,6 +144,10 @@ const ORDER_FIELDS = [
   'coupon_code',
   'coupon_pct',
   'coupon_discount_amount',
+  'tax_mode',
+  'gst_pct',
+  'taxable_amount',
+  'tax_amount',
   'total',
   'currency_symbol',
   'status',
@@ -200,6 +210,10 @@ describe('the food-order documents', () => {
       'discount_pct',
       'discount_amount',
       'coupon_discount_amount',
+      'tax_mode',
+      'gst_pct',
+      'taxable_amount',
+      'tax_amount',
       'total',
       'currency_symbol',
     ]);
@@ -250,10 +264,16 @@ describe('priceFoodCart', () => {
       subtotalPaise: 52875,
       discountPaise: 5287,
       couponPaise: 0,
+      taxMode: 'INCLUSIVE',
+      gstPct: 0,
+      taxablePaise: 47588,
+      taxPaise: 0,
       totalPaise: 47588,
       subtotal: 528.75,
       discount: 52.87,
       coupon: 0,
+      taxable: 475.88,
+      tax: 0,
       total: 475.88,
       belowMinimum: false,
       couponUnmet: false,
@@ -307,10 +327,16 @@ describe('priceFoodCart', () => {
       subtotalPaise: 0,
       discountPaise: 0,
       couponPaise: 0,
+      taxMode: 'INCLUSIVE',
+      gstPct: 0,
+      taxablePaise: 0,
+      taxPaise: 0,
       totalPaise: 0,
       subtotal: 0,
       discount: 0,
       coupon: 0,
+      taxable: 0,
+      tax: 0,
       total: 0,
       belowMinimum: true,
       couponUnmet: false,
@@ -334,17 +360,30 @@ describe('priceFoodCart with a coupon', () => {
   // The same matrix the server asserts for foodTotals and for a placed order:
   // the guest must be shown, to the paisa, what they will be charged.
   it.each(pricing.cases)('prices "$name" to the same paise as the server', (fixture) => {
-    const price = priceFoodCart(fixture.lines, fixture.discount_pct, fixture.coupon_pct ? { coupon_pct: fixture.coupon_pct } : null);
+    const price = priceFoodCart(
+      fixture.lines,
+      fixture.discount_pct,
+      fixture.coupon_pct ? { coupon_pct: fixture.coupon_pct } : null,
+      { tax_mode: fixture.tax_mode as VenueFoodTaxMode, gst_pct: fixture.gst_pct }
+    );
     expect({
       subtotal_paise: price.subtotalPaise,
       discount_paise: price.discountPaise,
       coupon_discount_paise: price.couponPaise,
+      tax_mode: price.taxMode,
+      gst_pct: price.gstPct,
+      taxable_paise: price.taxablePaise,
+      tax_paise: price.taxPaise,
       total_paise: price.totalPaise,
       below_minimum: price.belowMinimum,
     }).toEqual({
       subtotal_paise: fixture.subtotal_paise,
       discount_paise: fixture.discount_paise,
       coupon_discount_paise: fixture.coupon_discount_paise,
+      tax_mode: fixture.tax_mode,
+      gst_pct: fixture.gst_pct,
+      taxable_paise: fixture.taxable_paise,
+      tax_paise: fixture.tax_paise,
       total_paise: fixture.total_paise,
       below_minimum: fixture.below_minimum,
     });
@@ -360,6 +399,13 @@ describe('priceFoodCart with a coupon', () => {
     expect(cases.some((one) => one.total_paise * 10 === one.subtotal_paise && one.coupon_pct > 0)).toBe(true);
     expect(cases.some((one) => one.total_paise === FOOD_ORDER_LIMITS.minTotalPaise && one.coupon_pct > 0)).toBe(true);
     expect(cases.some((one) => one.below_minimum)).toBe(true);
+    // Both GST modes, with both discounts, at a rounding edge, and over the minimum only because of the tax.
+    for (const mode of ['INCLUSIVE', 'EXCLUSIVE']) {
+      expect(cases.some((one) => one.tax_mode === mode && one.gst_pct > 0 && one.discount_pct > 0 && one.coupon_pct > 0)).toBe(true);
+    }
+    expect(cases.some((one) => one.tax_mode === 'EXCLUSIVE' && one.below_minimum && one.total_paise >= FOOD_ORDER_LIMITS.minTotalPaise)).toBe(true);
+    // Every row keeps the one invariant: the taxable value and the tax are the whole bill.
+    for (const one of cases) expect(one.taxable_paise + one.tax_paise).toBe(one.total_paise);
   });
 
   it('reports the coupon apart from the venue discount, in paise and in rupees', () => {
@@ -368,10 +414,16 @@ describe('priceFoodCart with a coupon', () => {
       subtotalPaise: 52875,
       discountPaise: 5287,
       couponPaise: 9517,
+      taxMode: 'INCLUSIVE',
+      gstPct: 0,
+      taxablePaise: 38071,
+      taxPaise: 0,
       totalPaise: 38071,
       subtotal: 528.75,
       discount: 52.87,
       coupon: 95.17,
+      taxable: 380.71,
+      tax: 0,
       total: 380.71,
       belowMinimum: false,
       couponUnmet: false,
@@ -422,12 +474,94 @@ describe('priceFoodCart with a coupon', () => {
       discount_pct: 10,
       discount_amount: 52.87,
       coupon_discount_amount: 95.17,
+      tax_mode: 'INCLUSIVE' as const,
+      gst_pct: 0,
+      taxable_amount: 380.71,
+      tax_amount: 0,
       total: 380.71,
       currency_symbol: '₹',
     };
     const price = priceFoodCart(lines, preview.discount_pct, preview);
     expect(price.coupon).toBe(preview.coupon_discount_amount);
     expect(price.total).toBe(preview.total);
+  });
+});
+
+describe('priceFoodCart with GST', () => {
+  const lines = [{ unit_price: 240, quantity: 2 }];
+
+  it('prices exactly as before when no GST, or a null one, is given', () => {
+    const plain = priceFoodCart(lines, 10);
+    expect(priceFoodCart(lines, 10, null, null)).toEqual(plain);
+    expect(priceFoodCart(lines, 10, null, undefined)).toEqual(plain);
+    expect(plain).toMatchObject({ taxMode: 'INCLUSIVE', gstPct: 0, taxPaise: 0, taxablePaise: plain.totalPaise });
+  });
+
+  it('keeps the bill when GST is inside the price and adds to it when it is not', () => {
+    const inside = priceFoodCart(lines, 0, null, { tax_mode: 'INCLUSIVE', gst_pct: 5 });
+    const added = priceFoodCart(lines, 0, null, { tax_mode: 'EXCLUSIVE', gst_pct: 5 });
+    expect(inside).toMatchObject({ taxablePaise: 45714, taxPaise: 2286, totalPaise: 48000, taxable: 457.14, tax: 22.86, total: 480 });
+    expect(added).toMatchObject({ taxablePaise: 48000, taxPaise: 2400, totalPaise: 50400, taxable: 480, tax: 24, total: 504 });
+  });
+
+  it('applies the GST to what is left after the coupon, so a coupon lowers the tax too', () => {
+    const price = priceFoodCart(lines, 10, { coupon_pct: 20 }, { tax_mode: 'EXCLUSIVE', gst_pct: 18 });
+    // 48000 less 4800 less 8640 leaves 34560; 18% of that is 6220.8, so 6221.
+    expect(price).toMatchObject({ couponPaise: 8640, taxablePaise: 34560, taxPaise: 6221, totalPaise: 40781 });
+  });
+
+  it('reads a percent that is not a whole positive number as no GST', () => {
+    for (const gst_pct of [0, -5, 2.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(priceFoodCart(lines, 0, null, { tax_mode: 'EXCLUSIVE', gst_pct })).toMatchObject({ gstPct: 0, taxPaise: 0, totalPaise: 48000 });
+    }
+  });
+
+  it('reads a mode it does not know as GST inside the price, which never changes the bill', () => {
+    const unknown = { tax_mode: 'SOMETHING' as VenueFoodTaxMode, gst_pct: 5 };
+    expect(priceFoodCart(lines, 0, null, unknown)).toMatchObject({ taxMode: 'INCLUSIVE', taxPaise: 2286, totalPaise: 48000 });
+  });
+
+  it('judges the one-rupee minimum before GST, so tax added on top never makes a cart payable', () => {
+    const price = priceFoodCart([{ unit_price: 0.99, quantity: 1 }], 0, null, { tax_mode: 'EXCLUSIVE', gst_pct: 28 });
+    expect(price).toMatchObject({ taxablePaise: 99, taxPaise: 28, totalPaise: 127, belowMinimum: true });
+  });
+
+  it('never rounds the taxable value and the tax apart: together they are the bill at every amount', () => {
+    for (let paise = 100; paise <= 2000; paise += 7) {
+      for (const tax_mode of VENUE_FOOD_TAX_MODES) {
+        for (const gst_pct of [5, 12, 18, 28]) {
+          const price = priceFoodCart([{ unit_price: paise / 100, quantity: 1 }], 0, null, { tax_mode, gst_pct });
+          expect(price.taxablePaise + price.taxPaise).toBe(price.totalPaise);
+          expect(Number.isInteger(price.taxPaise)).toBe(true);
+          if (tax_mode === 'INCLUSIVE') expect(price.totalPaise).toBe(paise);
+        }
+      }
+    }
+  });
+});
+
+describe('the GST contract', () => {
+  it('mirrors the server enum and bounds', () => {
+    expect(VENUE_FOOD_TAX_MODES).toEqual(['INCLUSIVE', 'EXCLUSIVE']);
+    expect(FOOD_GST_LIMITS).toEqual({ min: 0, max: 28 });
+  });
+
+  it('reads the GST a venue resolved, and none when the server did not say', () => {
+    expect(foodCartTaxOf({ tax_mode: 'EXCLUSIVE', gst_pct: 12 })).toEqual({ tax_mode: 'EXCLUSIVE', gst_pct: 12 });
+    expect(foodCartTaxOf({ tax_mode: 'INCLUSIVE' })).toEqual({ tax_mode: 'INCLUSIVE', gst_pct: 0 });
+    expect(foodCartTaxOf({ gst_pct: 5 })).toBeNull();
+    expect(foodCartTaxOf(null)).toBeNull();
+    expect(foodCartTaxOf(undefined)).toBeNull();
+  });
+
+  it('makes a GST line for a cart or an order that carries GST, and none at 0% or from before GST', () => {
+    expect(foodTaxLine('EXCLUSIVE', 18, 62.21)).toEqual({ mode: 'EXCLUSIVE', pct: 18, amount: 62.21 });
+    expect(foodTaxLine('INCLUSIVE', 5, 22.86)).toEqual({ mode: 'INCLUSIVE', pct: 5, amount: 22.86 });
+    // An order read by an older document has a percent but no mode or amount.
+    expect(foodTaxLine(undefined, 5, undefined)).toEqual({ mode: 'INCLUSIVE', pct: 5, amount: 0 });
+    expect(foodTaxLine('EXCLUSIVE', 0, 0)).toBeNull();
+    expect(foodTaxLine(undefined, undefined, undefined)).toBeNull();
+    expect(foodTaxLine(null, null, null)).toBeNull();
   });
 });
 
@@ -591,10 +725,16 @@ describe('priceFoodCartLines', () => {
       subtotalPaise: 66050,
       discountPaise: 6605,
       couponPaise: 0,
+      taxMode: 'INCLUSIVE',
+      gstPct: 0,
+      taxablePaise: 59445,
+      taxPaise: 0,
       totalPaise: 59445,
       subtotal: 660.5,
       discount: 66.05,
       coupon: 0,
+      taxable: 594.45,
+      tax: 0,
       total: 594.45,
       belowMinimum: false,
       couponUnmet: false,
@@ -616,6 +756,14 @@ describe('priceFoodCartLines', () => {
     expect(priceFoodCartLines(lines, 10, { coupon_pct: 25 })).toMatchObject({ discountPaise: 4800, couponPaise: 10800, totalPaise: 32400 });
     expect(priceFoodCartLines(lines, 10, { coupon_pct: 25 })).toEqual(priceFoodCart([{ unit_price: 240, quantity: 2 }], 10, { coupon_pct: 25 }));
     expect(priceFoodCartLines(lines, 10, { coupon_pct: 25, min_order_amount: 500 })).toMatchObject({ couponPaise: 0, couponUnmet: true });
+  });
+
+  it('hands the GST on to priceFoodCart', () => {
+    const lines = [{ item: dish({ id: 'tikka', price: 240 }), quantity: 2 }];
+    const tax = { tax_mode: 'EXCLUSIVE' as const, gst_pct: 5 };
+    // 10% off 48000 leaves 43200; 5% of that, added on top, is 2160.
+    expect(priceFoodCartLines(lines, 10, null, tax)).toMatchObject({ taxablePaise: 43200, taxPaise: 2160, totalPaise: 45360 });
+    expect(priceFoodCartLines(lines, 10, null, tax)).toEqual(priceFoodCart([{ unit_price: 240, quantity: 2 }], 10, null, tax));
   });
 });
 
@@ -1344,6 +1492,20 @@ describe('the invoice and feedback documents', () => {
 
   it('names the invoice file after the order number', () => {
     expect(foodInvoiceFileName('FOOD-000005')).toBe('invoice-FOOD-000005.pdf');
+  });
+});
+
+describe('the available coupons document', () => {
+  // Public: it must never ask for a coupon's usage or its per-person limit.
+  it('asks one venue for only what choosing a code needs', () => {
+    expect(operationOf(AVAILABLE_VENUE_FOOD_COUPONS_QUERY)).toBe('query AvailableVenueFoodCoupons($venueId: ID!) {');
+    expect(selectionOf(AVAILABLE_VENUE_FOOD_COUPONS_QUERY, 'availableVenueFoodCoupons')).toEqual([
+      'code',
+      'description',
+      'discount_pct',
+      'min_order_amount',
+      'valid_until',
+    ]);
   });
 });
 

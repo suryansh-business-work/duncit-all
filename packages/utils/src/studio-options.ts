@@ -141,13 +141,14 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'settings', labelKey: 'mweb.studioOptions.venueSettings', hintKey: 'mweb.studioOptions.venueSettingsHint', icon: 'settings', path: '/venues/settings', route: 'VenueSettings', portal: '/venues/settings' },
     { key: 'earnings', labelKey: 'mweb.studioOptions.venueEarnings', hintKey: 'mweb.studioOptions.venueEarningsHint', icon: 'earnings', path: '/venues/earnings', route: 'VenueEarnings', portal: '/venues/earnings' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishVenue', hintKey: 'mweb.studioOptions.publishVenueHint', icon: 'publish', path: '/venues/publish', route: 'VenuePublish', portal: '/venues/publish' },
-    // The venue's food desk — its dashboard, menu, order board and coupons — is
-    // Partner console screens; the apps open them there. `group` nests the four
-    // under one Food heading in the console sidebar.
-    { key: 'food-dashboard', labelKey: 'mweb.studioOptions.foodDashboard', hintKey: 'mweb.studioOptions.foodDashboardHint', icon: 'dashboard', portal: '/venues/food-dashboard', group: 'food' },
+    // The venue's food desk — its dashboard, menu, order board and coupons.
+    // Dashboard, orders and coupons are one shared set (@duncit/venue-food on
+    // the web, Tamagui twins in the app); the menu is still a Partner console
+    // screen. `group` nests the four under one Food heading in the console sidebar.
+    { key: 'food-dashboard', labelKey: 'mweb.studioOptions.foodDashboard', hintKey: 'mweb.studioOptions.foodDashboardHint', icon: 'dashboard', path: '/venues/food-dashboard', route: 'VenueFoodDashboard', portal: '/venues/food-dashboard', group: 'food' },
     { key: 'food-menu', labelKey: 'mweb.studioOptions.foodMenu', hintKey: 'mweb.studioOptions.foodMenuHint', icon: 'menu', portal: '/venues/food-menu', group: 'food' },
-    { key: 'food-orders', labelKey: 'mweb.studioOptions.foodOrders', hintKey: 'mweb.studioOptions.foodOrdersHint', icon: 'orders', portal: '/venues/food-orders', group: 'food' },
-    { key: 'food-coupons', labelKey: 'mweb.studioOptions.foodCoupons', hintKey: 'mweb.studioOptions.foodCouponsHint', icon: 'orders', portal: '/venues/food-coupons', group: 'food' },
+    { key: 'food-orders', labelKey: 'mweb.studioOptions.foodOrders', hintKey: 'mweb.studioOptions.foodOrdersHint', icon: 'orders', path: '/venues/food-orders', route: 'VenueFoodOrders', portal: '/venues/food-orders', group: 'food' },
+    { key: 'food-coupons', labelKey: 'mweb.studioOptions.foodCoupons', hintKey: 'mweb.studioOptions.foodCouponsHint', icon: 'orders', path: '/venues/food-coupons', route: 'VenueFoodCoupons', portal: '/venues/food-coupons', group: 'food' },
     { key: 'pods', labelKey: 'mweb.studioOptions.venuePods', hintKey: 'mweb.studioOptions.venuePodsHint', icon: 'pods', path: '/venues/pods', route: 'VenuePods', portal: '/venues/pods' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/venues/change-requests' },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromHosts', hintKey: 'mweb.studioOptions.podRequestsFromHostsHint', icon: 'requests', path: '/venues/pod-requests', route: 'VenuePodRequests', portal: '/venues/pod-requests' },

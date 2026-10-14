@@ -71,6 +71,27 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
 
     /**
+     * GST on venue food — the words Finance's Food Menu Defaults, the owner's
+     * venue form (Partners) and the Venues console editor all say the same
+     * way, and the messages of the one shared schema (@duncit/forms
+     * `food-tax`). One translator decision instead of three (rule 40).
+     */
+    foodTax: {
+      taxMode: 'GST on menu prices',
+      inclusive: 'Prices include GST',
+      exclusive: 'GST added to prices',
+      gstPct: 'GST %',
+      gstPctInvalid: 'GST must be a whole number from {min} to {max}.',
+      taxModeRequired: 'Choose whether prices include GST or have it added.',
+      override: "Set this venue's own GST",
+      overrideHint: "Off: QR orders follow Duncit Finance's default GST. On: the GST below is used instead.",
+      gstin: 'GST number (GSTIN)',
+      gstinHint: 'Printed on every food invoice. Once saved, only Duncit can change it.',
+      gstinLocked: 'Printed on every food invoice. It is locked once saved — ask Duncit support to change it.',
+      gstinInvalid: 'Enter a valid 15-character GSTIN, like 22ABCDE1234F1Z5.',
+    },
+
+    /**
      * @duncit/table's own chrome — the toolbar, the column menu, the filter
      * popover and the two default column headers its factories produce.
      *
@@ -639,6 +660,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       deletionSettings: 'Deletion Settings',
       dataClone: 'Data Clone',
       defaultDeductions: 'Default Deductions',
+      foodMenuDefaults: 'Food Menu Defaults',
       domain: 'Domain',
       dnsRecords: 'DNS Records',
       dnsStagingSync: 'Staging Sync',

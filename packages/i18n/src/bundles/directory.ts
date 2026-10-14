@@ -384,6 +384,12 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       errMenuSize: 'A menu can list at most {max} dishes',
       errHiddenMenu:
         'A dish on the menu needs fixing before this venue can be saved. Switch this on to see it.',
+      // QR ordering in the editor. The GST words are shell.foodTax.* — the owner's form says them too.
+      orderingEnabled: 'Take food orders from the QR',
+      orderingAccountLinked: 'The owner has linked a Razorpay account for these orders.',
+      orderingAccountMissing:
+        'No Razorpay account is linked yet — the owner connects one from the Partners portal before ordering can be switched on.',
+      orderingDiscountHint: 'Taken off every QR order. 0 to {max}.',
       errNoId: 'The venue was not saved — no id came back.',
       // Shown to a viewer holding only the console's access role. The values are
       // still visible — knowing a venue's commission is part of reading the

@@ -40,10 +40,32 @@ export interface VenueFoodItem {
   is_available: boolean;
 }
 
-/** Whether the venue takes QR orders, and what it takes off them. */
+/** How GST meets a food price. Mirrors the server enum FoodTaxMode. */
+export type VenueFoodTaxMode = 'INCLUSIVE' | 'EXCLUSIVE';
+
+export const VENUE_FOOD_TAX_MODES = ['INCLUSIVE', 'EXCLUSIVE'] as const satisfies readonly VenueFoodTaxMode[];
+
+/** The server's bounds on a food GST percent: whole numbers, 0 to the top GST slab. */
+export const FOOD_GST_LIMITS = { min: 0, max: 28 } as const;
+
+/** The GST a cart is priced with — `publicVenue.food_ordering` and `VenueFoodOrder` both fit as they are. */
+export interface FoodCartTax {
+  tax_mode: VenueFoodTaxMode;
+  gst_pct: number;
+}
+
+/**
+ * Whether the venue takes QR orders, what it takes off them, and the GST they
+ * are priced with. `tax_mode` / `gst_pct` are what the server RESOLVED (the
+ * venue's own while `tax_override`, otherwise Finance's default) — optional
+ * only so a venue read by an older document still types.
+ */
 export interface VenueFoodOrdering {
   enabled: boolean;
   discount_pct: number;
+  tax_override?: boolean;
+  tax_mode?: VenueFoodTaxMode;
+  gst_pct?: number;
 }
 
 /** A dish as it was when ordered. */
@@ -100,7 +122,16 @@ export interface VenueFoodOrder {
   coupon_code?: string | null;
   coupon_pct?: number;
   coupon_discount_amount?: number;
-  /** What was charged: subtotal less discount_amount less coupon_discount_amount. */
+  /**
+   * The GST the order was priced with: how it met the price, its percent, the
+   * value it was charged on and the tax itself (taxable_amount + tax_amount =
+   * total). Optional only so an order read by an older document still types.
+   */
+  tax_mode?: VenueFoodTaxMode;
+  gst_pct?: number;
+  taxable_amount?: number;
+  tax_amount?: number;
+  /** What was charged: subtotal less both discounts, plus tax_amount when EXCLUSIVE. */
   total: number;
   currency_symbol: string;
   status: VenueFoodOrderStatus;
@@ -184,6 +215,11 @@ export interface VenueFoodCouponPreview {
   discount_pct: number;
   discount_amount: number;
   coupon_discount_amount: number;
+  /** The venue's GST, exactly as placing the order would apply it. */
+  tax_mode: VenueFoodTaxMode;
+  gst_pct: number;
+  taxable_amount: number;
+  tax_amount: number;
   total: number;
   currency_symbol: string;
 }
@@ -242,6 +278,10 @@ export const PLACE_VENUE_FOOD_ORDER_MUTATION = /* GraphQL */ `
         coupon_code
         coupon_pct
         coupon_discount_amount
+        tax_mode
+        gst_pct
+        taxable_amount
+        tax_amount
         total
         currency_symbol
         status
@@ -311,6 +351,10 @@ export const VENUE_FOOD_ORDER_QUERY = /* GraphQL */ `
       coupon_code
       coupon_pct
       coupon_discount_amount
+      tax_mode
+      gst_pct
+      taxable_amount
+      tax_amount
       total
       currency_symbol
       status
@@ -381,6 +425,29 @@ export const canRateFoodOrder = (order: Pick<VenueFoodOrder, 'status' | 'feedbac
 export const foodInvoiceFileName = (orderNo: string): string => `invoice-${orderNo}.pdf`;
 
 /** Public and side-effect free: what a code would do to a cart. Ask again whenever the cart or the phone changes. */
+/** Public: the coupons a guest can pick from at a venue's checkout right now, best first. */
+export const AVAILABLE_VENUE_FOOD_COUPONS_QUERY = /* GraphQL */ `
+  query AvailableVenueFoodCoupons($venueId: ID!) {
+    availableVenueFoodCoupons(venue_id: $venueId) {
+      code
+      description
+      discount_pct
+      min_order_amount
+      valid_until
+    }
+  }
+`;
+
+/** A coupon offered at checkout — only what choosing it needs. */
+export interface AvailableVenueFoodCoupon {
+  code: string;
+  description: string;
+  discount_pct: number;
+  /** Rupees of subtotal the code needs; 0 when it needs none. */
+  min_order_amount: number;
+  valid_until: string | null;
+}
+
 export const PREVIEW_VENUE_FOOD_COUPON_QUERY = /* GraphQL */ `
   query PreviewVenueFoodCoupon($input: PreviewVenueFoodCouponInput!) {
     previewVenueFoodCoupon(input: $input) {
@@ -394,6 +461,10 @@ export const PREVIEW_VENUE_FOOD_COUPON_QUERY = /* GraphQL */ `
       discount_pct
       discount_amount
       coupon_discount_amount
+      tax_mode
+      gst_pct
+      taxable_amount
+      tax_amount
       total
       currency_symbol
     }
@@ -401,6 +472,12 @@ export const PREVIEW_VENUE_FOOD_COUPON_QUERY = /* GraphQL */ `
 `;
 
 const toPaise = (rupees: number): number => Math.round((Number(rupees) || 0) * 100);
+
+/** a ÷ b rounded half up, for a ≥ 0 and b > 0 — exact, never a float. The server rounds GST the same way. */
+const roundHalfUp = (a: number, b: number): number => Math.floor((2 * a + b) / (2 * b));
+
+/** A GST percent only a whole positive number may be; anything else is no tax. */
+const wholePct = (pct: number): number => (Number.isInteger(pct) && pct > 0 ? pct : 0);
 
 /** What a cart costs, in rupees for display and in paise for comparing. */
 export interface FoodCartPrice {
@@ -411,12 +488,20 @@ export interface FoodCartPrice {
   discountPaise: number;
   /** What the coupon takes off; 0 without one. */
   couponPaise: number;
+  /** How the GST met the price, and the whole percent it was priced at (0 = none). */
+  taxMode: VenueFoodTaxMode;
+  gstPct: number;
+  /** The value the GST is charged on, and the GST — together they are the total. */
+  taxablePaise: number;
+  taxPaise: number;
   totalPaise: number;
   subtotal: number;
   discount: number;
   coupon: number;
+  taxable: number;
+  tax: number;
   total: number;
-  /** Too small for the gateway to charge — the server refuses it too. */
+  /** Too small for the gateway to charge, before GST — the server refuses it too. */
   belowMinimum: boolean;
   /** A coupon was given but the cart is under its minimum order, so it took nothing off. */
   couponUnmet: boolean;
@@ -436,11 +521,18 @@ export interface FoodCartCoupon {
  * down too. The coupon is trimmed — never refused — so the guest still pays
  * what the largest discount a venue may set would leave, and at least what the
  * gateway can charge.
+ *
+ * GST then meets what is left (the "net"), rounded HALF UP to a whole paisa in
+ * integer arithmetic — INCLUSIVE carves it out of the net (taxable =
+ * round(net × 100 / (100 + pct)), tax = net − taxable, total = net); EXCLUSIVE
+ * adds it on top (tax = round(net × pct / 100), total = net + tax). No tax, or
+ * a percent that is not a whole positive number, prices exactly as before.
  */
 export function priceFoodCart(
   lines: ReadonlyArray<{ unit_price: number; quantity: number }>,
   discountPct: number,
-  coupon?: FoodCartCoupon | null
+  coupon?: FoodCartCoupon | null,
+  tax?: FoodCartTax | null
 ): FoodCartPrice {
   let count = 0;
   let subtotalPaise = 0;
@@ -459,21 +551,56 @@ export function priceFoodCart(
     subtotalPaise - Math.floor((subtotalPaise * FOOD_ORDER_LIMITS.maxDiscountPct) / 100)
   );
   const couponPaise = Math.max(0, Math.min(Math.floor((afterDiscount * couponPct) / 100), afterDiscount - leastPayable));
-  const totalPaise = afterDiscount - couponPaise;
+  const netPaise = afterDiscount - couponPaise;
+  const gstPct = wholePct(Number(tax?.gst_pct));
+  const taxMode: VenueFoodTaxMode = tax?.tax_mode === 'EXCLUSIVE' ? 'EXCLUSIVE' : 'INCLUSIVE';
+  const taxablePaise = taxMode === 'EXCLUSIVE' ? netPaise : roundHalfUp(netPaise * 100, 100 + gstPct);
+  const taxPaise = taxMode === 'EXCLUSIVE' ? roundHalfUp(netPaise * gstPct, 100) : netPaise - taxablePaise;
+  const totalPaise = taxablePaise + taxPaise;
   return {
     count,
     subtotalPaise,
     discountPaise,
     couponPaise,
+    taxMode,
+    gstPct,
+    taxablePaise,
+    taxPaise,
     totalPaise,
     subtotal: subtotalPaise / 100,
     discount: discountPaise / 100,
     coupon: couponPaise / 100,
+    taxable: taxablePaise / 100,
+    tax: taxPaise / 100,
     total: totalPaise / 100,
-    belowMinimum: totalPaise < FOOD_ORDER_LIMITS.minTotalPaise,
+    belowMinimum: netPaise < FOOD_ORDER_LIMITS.minTotalPaise,
     couponUnmet,
   };
 }
+
+/** The GST line a cart or an order shows under its discounts. */
+export interface FoodTaxLine {
+  mode: VenueFoodTaxMode;
+  pct: number;
+  /** Rupees: added on top (EXCLUSIVE) or already inside the total (INCLUSIVE). */
+  amount: number;
+}
+
+/**
+ * The GST line for a cart (`taxMode`, `gstPct`, `tax` of a `FoodCartPrice`) or
+ * an order (`tax_mode`, `gst_pct`, `tax_amount`); none at 0% — an order from
+ * before GST shows no line at all.
+ */
+export const foodTaxLine = (
+  mode: VenueFoodTaxMode | null | undefined,
+  pct: number | null | undefined,
+  amount: number | null | undefined
+): FoodTaxLine | null =>
+  pct && pct > 0 ? { mode: mode === 'EXCLUSIVE' ? 'EXCLUSIVE' : 'INCLUSIVE', pct, amount: amount ?? 0 } : null;
+
+/** The GST a venue's cart is priced with, from its `food_ordering`; none when the server did not say. */
+export const foodCartTaxOf = (ordering: Partial<FoodCartTax> | null | undefined): FoodCartTax | null =>
+  ordering?.tax_mode ? { tax_mode: ordering.tax_mode, gst_pct: Number(ordering.gst_pct) || 0 } : null;
 
 /** A food amount as text: whole rupees stay whole, anything else shows its paise. */
 export const formatFoodMoney = (amount: number, symbol: string): string =>
@@ -556,12 +683,14 @@ export function foodCartLines(menu: ReadonlyArray<VenueFoodItem>, cart: FoodCart
 export function priceFoodCartLines(
   lines: ReadonlyArray<FoodCartLine>,
   discountPct: number,
-  coupon?: FoodCartCoupon | null
+  coupon?: FoodCartCoupon | null,
+  tax?: FoodCartTax | null
 ): FoodCartPrice {
   return priceFoodCart(
     lines.map((line) => ({ unit_price: line.item.price, quantity: line.quantity })),
     discountPct,
-    coupon
+    coupon,
+    tax
   );
 }
 

@@ -4899,6 +4899,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         dropped: 'No longer available and removed from your cart: {names}.',
         belowMinimum: 'This order is too small to pay online.',
         couponLine: 'Coupon {code} ({pct}%)',
+        // GST: a line added before the total, or a note under it when the menu prices already include it.
+        gstAdded: 'GST ({pct}%)',
+        gstIncluded: 'Includes {amount} GST ({pct}%)',
       },
       // The venue's own coupon on a food order (mWeb + native). The venue
       // creates the code and funds the discount; the server prices it.
@@ -4911,6 +4914,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         applied: 'Coupon {code} applied — you save {amount}',
         removed: 'Coupon removed',
         unmet: 'Add {amount} more to use this coupon.',
+        offersTitle: 'Available coupons',
+        offerPct: '{pct}% off',
+        offerMin: 'On orders above {amount}',
+        offerUntil: 'Valid till {date}',
+        offerApply: 'Apply {code}',
         failed: 'We could not check this coupon. Please try again.',
         rejected: {
           invalid: 'This coupon code is not valid here.',
@@ -5027,6 +5035,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         photos: 'Photos',
         photosHint: 'Optional — up to {max} photos of your order',
         addPhoto: 'Add photo',
+        takePhoto: 'Take photo',
+        chooseFromLibrary: 'Choose from library',
+        cameraPermissionNeeded: 'Camera access is needed to take a photo. Allow it in your phone settings, or choose one from your library.',
         removePhoto: 'Remove photo {number}',
         photoAlt: 'Feedback photo {number}',
         uploading: 'Uploading photo…',

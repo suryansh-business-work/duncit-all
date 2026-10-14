@@ -8,6 +8,7 @@ import {
   AVAILABILITY_BUNDLE,
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  VENUE_FOOD_OWNER_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -79,6 +80,9 @@ export const SHELL_FALLBACK: NestedCatalogue = {
   // publicPage.* is the publish card the Partners console, mWeb and native all render.
   ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
+  // venueFoodOwner.*: the food desk @duncit/venue-food renders in the Partners
+  // and Venues consoles, mWeb and (as Tamagui twins) native.
+  ...VENUE_FOOD_OWNER_BUNDLE,
   // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
   ...POD_REQUESTS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,

@@ -9,7 +9,8 @@ import { useFoodFeedback } from './useFoodFeedback';
 
 interface Props {
   order: VenueFoodOrder;
-  accessKey: string | null;
+  /** The order's access key — what proves it is this guest's. */
+  orderKey: string | null;
   /** The page was opened from the "rate your order" message: bring the form into view. */
   focus: boolean;
   /** The rating was saved — or turned out to be saved already: re-read the order. */
@@ -57,9 +58,9 @@ function GivenFeedback({ feedback }: Readonly<{ feedback: VenueFoodFeedback }>) 
  * The food rating on a served order: the form until the guest has rated it,
  * then what they said. Nothing is shown for an order that was never served.
  */
-export default function FoodOrderFeedbackCard({ order, accessKey, focus, onRated }: Readonly<Props>) {
+export default function FoodOrderFeedbackCard({ order, orderKey, focus, onRated }: Readonly<Props>) {
   const { t } = useTranslation();
-  const feedback = useFoodFeedback(order.id, accessKey, onRated);
+  const feedback = useFoodFeedback(order.id, orderKey, onRated);
   const card = useRef<HTMLDivElement>(null);
   const rateable = canRateFoodOrder(order);
 

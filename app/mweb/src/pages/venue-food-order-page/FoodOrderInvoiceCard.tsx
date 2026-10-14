@@ -9,16 +9,17 @@ import { useFoodInvoice } from './useFoodInvoice';
 
 interface Props {
   order: VenueFoodOrder;
-  accessKey: string | null;
+  /** The order's access key — what proves it is this guest's. */
+  orderKey: string | null;
 }
 
 /**
  * The invoice for a paid order: who issued it — the venue, with its GST number
  * when it has one — and the button that saves it as a PDF.
  */
-export default function FoodOrderInvoiceCard({ order, accessKey }: Readonly<Props>) {
+export default function FoodOrderInvoiceCard({ order, orderKey }: Readonly<Props>) {
   const { t } = useTranslation();
-  const invoice = useFoodInvoice(order, accessKey);
+  const invoice = useFoodInvoice(order, orderKey);
 
   return (
     <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }} data-testid="food-order-invoice">

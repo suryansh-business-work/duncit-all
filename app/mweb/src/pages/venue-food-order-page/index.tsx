@@ -101,10 +101,10 @@ export default function VenueFoodOrderPage() {
         )}
         {order.status === 'SERVED' && (
           // The message that asks for a rating links here with `feedback=1`.
-          <FoodOrderFeedbackCard order={order} accessKey={accessKey} focus={params.get('feedback') === '1'} onRated={reload} />
+          <FoodOrderFeedbackCard order={order} orderKey={accessKey} focus={params.get('feedback') === '1'} onRated={reload} />
         )}
         <FoodOrderSummary order={order} />
-        {order.invoice_available && <FoodOrderInvoiceCard order={order} accessKey={accessKey} />}
+        {order.invoice_available && <FoodOrderInvoiceCard order={order} orderKey={accessKey} />}
         {paid && order.subscribe_events && (
           <Alert severity="success" data-testid="food-order-subscribed">
             {t('mweb.venueFood.order.subscribed')}

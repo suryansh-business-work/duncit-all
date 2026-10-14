@@ -7,6 +7,8 @@ interface Props {
   onCredential: (idToken: string) => void;
   loading?: boolean;
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+  /** Google's labelled pill (default), or its round G-only button for a row of providers. */
+  variant?: 'pill' | 'icon';
 }
 
 /**
@@ -21,7 +23,12 @@ interface Props {
  * No width is passed to `GoogleLogin`: the button sizes to its own label so
  * it can sit beside other controls in a row and wrap instead of overflowing.
  */
-export default function GoogleSignInButton({ onCredential, loading, text = 'signin_with' }: Readonly<Props>) {
+export default function GoogleSignInButton({
+  onCredential,
+  loading,
+  text = 'signin_with',
+  variant = 'pill',
+}: Readonly<Props>) {
   // From the provider, not the module config: the server's id can land after
   // this renders (first paint no longer waits for it), and reading it here is
   // what re-renders the button when it does.
@@ -72,7 +79,8 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
         useOneTap={false}
         theme={isDark ? 'filled_black' : 'outline'}
         text={text}
-        shape="pill"
+        type={variant === 'icon' ? 'icon' : 'standard'}
+        shape={variant === 'icon' ? 'circle' : 'pill'}
         size="large"
         logo_alignment="left"
       />

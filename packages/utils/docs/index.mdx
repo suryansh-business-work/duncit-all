@@ -291,6 +291,10 @@ exports:
   - 'passwordRecoveryStepIndex'
   - 'previousRecoveryStep'
   - 'initialRecoveryState'
+  - 'recoveryHandoffFrom'
+  - 'readRecoveryHandoff'
+  - 'recoveryHandoffSendable'
+  - 'recoveryStateFrom'
   - 'recoveryResendSeconds'
   - 'recoveryDestination'
   - 'buildPasswordRecoveryLabels'
@@ -2486,6 +2490,18 @@ previousRecoveryStep('DONE');     // null — the password already changed; Back
 
 passwordRecoveryStepIndex('CODE'); // 2
 PASSWORD_RECOVERY_STEP_COUNT;      // 3 — DONE is an outcome, not a step to fill in
+```
+
+"Forgot password?" sits beside the password box, so it already knows where the code should go:
+the tab the person is on and what they typed. `recoveryHandoffFrom` packs that up, recovery
+reads it back with the strict `readRecoveryHandoff`, opens on that channel with
+`recoveryStateFrom`, and sends at once when `recoveryHandoffSendable` says the destination is
+complete (the regexes are passed in — this package has none):
+
+```ts
+const handoff = recoveryHandoffFrom('PHONE', { email: '', phoneExtension: '+91', phoneNumber: '9876543210' });
+recoveryHandoffSendable(handoff, { email: EMAIL, extension: DIAL_CODE, number: PHONE_INTL }); // true
+recoveryStateFrom(handoff).channel; // 'PHONE' — the code goes to the number, not an email
 ```
 
 `recoveryResendSeconds` counts from when the last code was SENT rather than from a server

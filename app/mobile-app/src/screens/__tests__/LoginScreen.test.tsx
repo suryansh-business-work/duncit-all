@@ -6,8 +6,10 @@ import { login, loginWithGoogle } from '@/services/auth.service';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
+let mockRouteParams: Record<string, unknown> | undefined;
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
+  useRoute: () => ({ params: mockRouteParams }),
 }));
 
 const mockAuthenticate = jest.fn();
@@ -46,16 +48,30 @@ jest.mock('@/components/GoogleAuthButton', () => ({
   },
 }));
 jest.mock('@/forms/login', () => ({
-  LoginForm: ({ onSubmit }: { onSubmit: (v: { email: string; password: string }) => void }) => {
+  LoginForm: ({
+    onSubmit,
+    onForgotPassword,
+  }: {
+    onSubmit: (v: { email: string; password: string }) => void;
+    onForgotPassword: (h: unknown) => void;
+  }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Pressable, Text } = require('react-native');
+    const { Pressable, Text, View } = require('react-native');
     return (
-      <Pressable
-        testID="submit-login"
-        onPress={() => onSubmit({ email: 'a@b.com', password: 'pw' })}
-      >
-        <Text>l</Text>
-      </Pressable>
+      <View>
+        <Pressable
+          testID="submit-login"
+          onPress={() => onSubmit({ email: 'a@b.com', password: 'pw' })}
+        >
+          <Text>l</Text>
+        </Pressable>
+        <Pressable
+          testID="go-forgot-password"
+          onPress={() => onForgotPassword(mockHandoff)}
+        >
+          <Text>f</Text>
+        </Pressable>
+      </View>
     );
   },
 }));
@@ -63,7 +79,15 @@ jest.mock('@/forms/login', () => ({
 const mockedLogin = jest.mocked(login);
 const mockedGoogle = jest.mocked(loginWithGoogle);
 
-beforeEach(() => jest.clearAllMocks());
+const mockHandoff = {
+  channel: 'PHONE',
+  draft: { email: '', extension: '+91', number: '9876543210' },
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockRouteParams = undefined;
+});
 
 /**
  * Sign-in is a choice of method now, so the email/password form lives one step
@@ -113,11 +137,27 @@ describe('LoginScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Signup');
   });
 
-  it('navigates to forgot password', () => {
+  it('carries the typed channel and value into forgot password', () => {
     renderWithProviders(<LoginScreen />);
     openPasswordStep();
     fireEvent.press(screen.getByTestId('go-forgot-password'));
-    expect(mockNavigate).toHaveBeenCalledWith('ForgotPassword');
+    expect(mockNavigate).toHaveBeenCalledWith('ForgotPassword', { recovery: mockHandoff });
+  });
+
+  it('spends a credential carried from signup on the provider login, once', async () => {
+    mockedGoogle.mockResolvedValue({ token: 'g', surveyCompleted: true });
+    mockRouteParams = { socialLogin: { idToken: 'carried-tok', email: 'a@b.com', provider: 'GOOGLE' } };
+    const { rerender } = renderWithProviders(<LoginScreen />);
+    await waitFor(() => expect(mockAuthenticate).toHaveBeenCalledWith('g', true));
+    expect(mockedGoogle).toHaveBeenCalledWith('carried-tok');
+    rerender(<LoginScreen />);
+    expect(mockedGoogle).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a malformed carried credential', () => {
+    mockRouteParams = { socialLogin: { idToken: '  ', email: 'a@b.com' } };
+    renderWithProviders(<LoginScreen />);
+    expect(mockedGoogle).not.toHaveBeenCalled();
   });
 
   it('opens on the method chooser, and goes back to it from the password step', () => {

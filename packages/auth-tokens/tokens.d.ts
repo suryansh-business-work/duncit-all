@@ -80,24 +80,30 @@ export interface GradientPair {
 }
 
 /**
- * One mode's haze over the admin-chosen login backdrop. `veil` covers the whole
- * frame, `edge` deepens the top and bottom, and `clear` is the SAME colour at
- * zero alpha — a gradient stop written as `transparent` fades through black on
- * iOS, which is why the clear end is spelled out rather than assumed.
+ * One mode's fade from the admin-chosen login hero into the page. `clear` is
+ * the ground colour at zero alpha and `ground` the same colour solid — a
+ * gradient stop written as `transparent` fades through black on iOS, which is
+ * why the clear end is spelled out rather than assumed.
  */
-export interface FogLayer {
-  veil: string;
-  edge: string;
+export interface HeroFade {
   clear: string;
+  ground: string;
 }
 
-export interface AuthFog {
-  light: FogLayer;
-  dark: FogLayer;
-  /** How much of the photo/video survives under the haze. */
-  mediaOpacity: number;
-  /** Where the edge fade reaches the clear middle, as a 0–1 fraction of height. */
-  edgeStop: number;
+/** The Branding image/video drawn as a hero at the top of every auth screen. */
+export interface AuthHero {
+  light: HeroFade;
+  dark: HeroFade;
+  /** mWeb: the hero's height in px. */
+  height: number;
+  /** Native: the hero's height as a 0–1 fraction of the window height. */
+  heightRatio: number;
+  /** Where the fade into the ground begins, as a 0–1 fraction of the hero. */
+  fadeStart: number;
+  /** Where the logo and heading start over the hero, as a 0–1 fraction of it. */
+  contentStart: number;
+  /** The radius of the landing step's feature chips. */
+  chipRadius: number;
 }
 
 export interface AuthVisuals {
@@ -106,7 +112,7 @@ export interface AuthVisuals {
   avatarRing: string;
   bgGradient: GradientPair;
   cardGradient: GradientPair;
-  fog: AuthFog;
+  hero: AuthHero;
   legal: {
     termsUrl: string;
     privacyUrl: string;

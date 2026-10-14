@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AccessibilityInfo, Image, StyleSheet } from 'react-native';
+import { AccessibilityInfo, Image, StyleSheet, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { YStack } from 'tamagui';
@@ -55,19 +55,21 @@ function BackdropVideo({ url }: Readonly<{ url: string }>) {
   );
 }
 
+/** The hero's height on this window — the content below starts over its lower half. */
+export function useAuthHeroHeight(): number {
+  const { height } = useWindowDimensions();
+  return Math.round(height * auth.hero.heightRatio);
+}
+
 /**
- * The admin-configured backdrop behind the auth screens, plus its fog.
+ * The admin-configured login image or video (Branding > Login background),
+ * drawn as a hero across the top that fades into the screen's ground.
  *
- * The fog FOLLOWS THE THEME, and that is the whole point of it: the old scrim
- * was always dark, so in light mode the screen darkened a photo and then drew
- * near-black heading text on top of it — the copy was unreadable over anything
- * an admin actually picked. Light mode now hazes the frame white and dark mode
- * hazes it near-black, so the text keeps the contrast its own theme gives it.
- *
- * Three layers, all read from `auth.fog` so mWeb draws the same picture from
- * the same numbers (rule 27): the media dimmed to `mediaOpacity`, a flat
- * `veil` over the whole frame, and an `edge` gradient that thickens toward the
- * top and bottom where the logo, the legal line and the version sit.
+ * It replaced a full-screen fogged backdrop that left the photo barely
+ * visible. The fade FOLLOWS THE THEME — clear at the top, the ground colour at
+ * the bottom — so the heading over its lower half keeps the contrast its own
+ * theme gives it. Read from `auth.hero`, so mWeb draws the same picture from
+ * the same numbers (rule 27).
  *
  * Video wins over image — the same precedence the server documents and mWeb
  * applies, decided by the caller passing an empty string for the one that lost.
@@ -79,45 +81,37 @@ export function BrandBackdrop({
   imageUrl,
   isDark,
 }: Readonly<{ videoUrl: string; imageUrl: string; isDark: boolean }>) {
-  const fog = isDark ? auth.fog.dark : auth.fog.light;
-  const fogColors = [fog.edge, fog.clear, fog.clear, fog.edge] as const;
-  const fogStops = [0, auth.fog.edgeStop, 1 - auth.fog.edgeStop, 1] as const;
+  const heroHeight = useAuthHeroHeight();
+  const fade = isDark ? auth.hero.dark : auth.hero.light;
+  const fadeColors = [fade.clear, fade.clear, fade.ground] as const;
+  const fadeStops = [0, auth.hero.fadeStart, 1] as const;
 
   return (
-    <YStack position="absolute" top={0} left={0} right={0} bottom={0} pointerEvents="none">
-      <YStack
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        opacity={auth.fog.mediaOpacity}
-      >
-        {videoUrl ? (
-          <BackdropVideo url={videoUrl} />
-        ) : (
-          <Image
-            testID="auth-backdrop-image"
-            source={{ uri: imageUrl }}
-            style={StyleSheet.absoluteFill}
-            resizeMode="cover"
-            accessibilityIgnoresInvertColors
-          />
-        )}
-      </YStack>
-      <YStack
-        testID="auth-backdrop-veil"
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        backgroundColor={fog.veil}
-      />
+    <YStack
+      testID="auth-hero"
+      position="absolute"
+      top={0}
+      left={0}
+      right={0}
+      height={heroHeight}
+      overflow="hidden"
+      pointerEvents="none"
+    >
+      {videoUrl ? (
+        <BackdropVideo url={videoUrl} />
+      ) : (
+        <Image
+          testID="auth-backdrop-image"
+          source={{ uri: imageUrl }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+        />
+      )}
       <LinearGradient
-        testID="auth-backdrop-fog"
-        colors={fogColors}
-        locations={fogStops}
+        testID="auth-hero-fade"
+        colors={fadeColors}
+        locations={fadeStops}
         style={StyleSheet.absoluteFill}
       />
     </YStack>

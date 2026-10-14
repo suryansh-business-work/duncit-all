@@ -9,12 +9,12 @@ import {
   type SocialCredential,
 } from '@duncit/utils';
 
-import { AppleAuthButton } from '@/components/AppleAuthButton';
 import { AuthDivider } from '@/components/AuthDivider';
 import { AuthScaffold } from '@/components/AuthScaffold';
-import { GoogleAuthButton } from '@/components/GoogleAuthButton';
+import { GoogleSignupInviteModal } from '@/components/GoogleSignupInviteModal';
 import { LegalLinks } from '@/components/LegalLinks';
 import { PolicyAcceptanceSheet } from '@/components/policy-acceptance';
+import { SocialRoundButtons } from '@/components/SocialRoundButtons';
 import { SignupForm } from '@/forms/signup';
 import { useSignupPolicies } from '@/hooks/usePolicies';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,6 +23,7 @@ import { GoogleDetailsStep } from './GoogleDetailsStep';
 import { SignupStepperRail } from './SignupStepperRail';
 import { VerifyWhatsappStep } from './VerifyWhatsappStep';
 import { useSignupFlow } from './useSignupFlow';
+import { useExistingAccountCheck } from './useExistingAccountCheck';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -54,15 +55,19 @@ export function SignupScreen() {
     only moment a refusal can still leave nothing behind. Nothing gating signup
     means no dialog worth showing.
   */
+  const existingAccount = useExistingAccountCheck(flow.setError);
   const handleCredential = (credential: SocialCredential) => {
     flow.setError(null);
     setGoogleAccepted([]);
-    if (loaded && policies.length === 0) {
-      flow.googleAccepted(credential, []);
-      return;
-    }
-    setPending(credential);
+    // Somebody already on Duncit is asked "log in instead?" and goes no further.
+    existingAccount
+      .check(credential, () => {
+        if (loaded && policies.length === 0) flow.googleAccepted(credential, []);
+        else setPending(credential);
+      })
+      .catch(() => undefined);
   };
+  const socialBusy = flow.creating || existingAccount.checking;
 
   /*
     Arrived from the login screen's "no Duncit account yet" invite, holding the
@@ -137,14 +142,9 @@ export function SignupScreen() {
       ) : null}
       {showForm ? (
         <>
-          <GoogleAuthButton
-            loading={flow.creating}
-            onIdToken={(idToken) => handleCredential({ provider: 'GOOGLE', idToken })}
-            onError={flow.setError}
-          />
-          <AppleAuthButton
-            label={t('mweb.auth.appleSignUp')}
-            loading={flow.creating}
+          <SocialRoundButtons
+            intent="SIGN_UP"
+            loading={socialBusy}
             onCredential={handleCredential}
             onError={flow.setError}
           />
@@ -179,6 +179,14 @@ export function SignupScreen() {
         acceptedIds={googleAccepted}
         onChange={handleGooglePolicies}
         onClose={() => setPending(null)}
+      />
+      <GoogleSignupInviteModal
+        open={!!existingAccount.existing}
+        prompt="EXISTS"
+        provider={existingAccount.existing?.credential.provider ?? 'GOOGLE'}
+        email={existingAccount.existing?.email ?? ''}
+        onAccept={existingAccount.logIn}
+        onDismiss={existingAccount.dismiss}
       />
       <LegalLinks prefix={t('mweb.auth.legalSignUp')} />
     </AuthScaffold>

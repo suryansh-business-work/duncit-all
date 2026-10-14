@@ -68,7 +68,7 @@ export default function RegisterPage() {
     once here and shared: the form reads it to build its validation rule, and
     the Google gate reads it to know when the credential can be spent.
   */
-  const { policies, loading: policiesLoading, failed: policiesFailed } = useSignupPolicies();
+  const signupPolicies = useSignupPolicies();
   const flow = useSignupFlow(linkedCode);
   const google = useGoogleSignup(flow.googleAccepted);
 
@@ -97,7 +97,7 @@ export default function RegisterPage() {
         provider: claimed.provider ?? 'GOOGLE',
         idToken: claimed.idToken,
         name: claimed.name,
-      });
+      }).catch(() => undefined);
     }
     // Keyed by the credential itself; the claim guards the rest.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,32 +139,7 @@ export default function RegisterPage() {
 
             {showForm && (
               <>
-                <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
-                  <GoogleSignInButton
-                    onCredential={(idToken) => google.start({ provider: 'GOOGLE', idToken })}
-                    loading={flow.creating}
-                    text="signup_with"
-                  />
-                  <AppleSignInButton
-                    label={t('mweb.auth.appleSignUp')}
-                    loading={flow.creating}
-                    onCredential={google.start}
-                    onError={google.setError}
-                  />
-                </Stack>
-                <GoogleSignupPolicyGate
-                  credential={google.credential}
-                  policies={policies}
-                  loading={policiesLoading}
-                  failed={policiesFailed}
-                  onAccepted={google.accept}
-                  onCancelled={google.cancel}
-                />
-                {google.error && (
-                  <Alert data-testid="google-signup-error" severity="error" sx={{ width: '100%' }}>
-                    {google.error}
-                  </Alert>
-                )}
+                <SocialSignupDoor google={google} signup={signupPolicies} creating={flow.creating} />
                 <Divider>{t('mweb.auth.orEmail')}</Divider>
 
                 <RegisterForm

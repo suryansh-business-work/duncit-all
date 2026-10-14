@@ -1,12 +1,16 @@
-import { useNavigation } from '@react-navigation/native';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { DIAL_CODE, EMAIL, PHONE_INTL } from '@duncit/regex';
 import {
   buildPasswordRecoveryLabels,
   previousRecoveryStep,
+  readRecoveryHandoff,
   recoveryDestination,
+  recoveryHandoffSendable,
   recoveryHeading,
 } from '@duncit/utils';
 
@@ -20,17 +24,37 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { usePasswordRecovery } from './usePasswordRecovery';
 
+const SHAPES = { email: EMAIL, extension: DIAL_CODE, number: PHONE_INTL };
+
 /**
  * Forgotten-password recovery: choose a channel, prove the code, set the
  * password. Tamagui twin of mWeb's ForgotPasswordPage (rule 27) — the step
  * machine and every label come from @duncit/utils (rule 40).
+ *
+ * Opened from "Forgot password?" beside the password box, it arrives holding
+ * that step's tab and what was typed: an email gets its code by email, a number
+ * by phone, sent at once. A blank or malformed box opens that tab prefilled.
  */
 export function ForgotPasswordScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const labels = buildPasswordRecoveryLabels(t);
   const { success } = useThemeColors();
-  const recovery = usePasswordRecovery(t('mweb.auth.somethingWentWrong'));
+  const route = useRoute<RouteProp<RootStackParamList, 'ForgotPassword'>>();
+  // Read once; the param is cleared below so a remount cannot send again.
+  const [handoff] = useState(() => readRecoveryHandoff(route.params?.recovery));
+  const recovery = usePasswordRecovery(t('mweb.auth.somethingWentWrong'), handoff);
+  const spent = useRef(false);
+  useEffect(() => {
+    if (!handoff || spent.current) return;
+    spent.current = true;
+    navigation.setParams({ recovery: undefined });
+    if (recoveryHandoffSendable(handoff, SHAPES)) {
+      recovery.sendCode(handoff.draft).catch(() => undefined);
+    }
+    // Once per arrival; the handoff is fixed for this mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { state, error, notFound, notSent, expiresInMinutes, testCode, resendIn, busy } = recovery;
 
   if (state.step === 'DONE') {

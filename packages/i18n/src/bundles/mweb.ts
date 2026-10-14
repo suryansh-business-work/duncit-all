@@ -596,6 +596,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // Sign in with Apple. Both surfaces render their own Apple button, so
       // its label is ours on both — one wording to sign in, one to sign up.
       appleSignIn: 'Sign in with Apple',
+      // The round provider buttons' captions on the redesigned auth screens.
+      googleShort: 'Google',
+      appleShort: 'Apple',
       appleSignUp: 'Sign up with Apple',
       appleConnecting: 'Connecting to Apple…',
       appleFailed: 'Apple sign-in failed. Please try again.',
@@ -630,8 +633,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     login: {
       title: 'Welcome',
-      titleAccent: 'back.',
-      subtitle: 'Pick up where you left off and find pods around you.',
+      titleAccent: 'back!',
+      subtitle: 'Discover local events, meet new people, and be part of your community.',
+      // The three feature chips under the landing step's heading.
+      chipLocalEvents: 'Local Events',
+      chipMeetPeople: 'Meet People',
+      chipNearbyPods: 'Nearby Pods',
       avatarsCaption: 'New pods are waiting for your crew today',
       passwordPlaceholder: 'Enter password',
       // The redesigned landing step. Sign-in is a CHOICE of method now, so the
@@ -652,7 +659,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // Native only — mWeb's Google button is rendered by Google.
       googleSignIn: 'Sign in with Google',
       newHere: 'New here?',
-      createOne: 'Create one',
+      createOne: 'Create an account',
       // Google knows them, Duncit does not. An invitation rather than a
       // refusal: the credential they just signed in with is carried straight
       // into signup, so "yes" continues instead of starting over. Both

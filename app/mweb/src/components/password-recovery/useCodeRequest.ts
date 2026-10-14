@@ -5,10 +5,12 @@ import {
   initialRecoveryState,
   recoveryAfterSend,
   recoveryResendSeconds,
+  recoveryStateFrom,
   recoveryWithChannel,
   type ContactDraft,
   type PasswordRecoveryChannel,
   type PasswordRecoveryState,
+  type RecoveryHandoff,
 } from '@duncit/utils';
 import { parseApiError } from '../../utils/parseApiError';
 
@@ -37,12 +39,16 @@ export interface CodeRequestOutcome {
  * mechanics living once is what keeps the two flows' cooldowns, refusals and
  * error handling from drifting (rule 40). Native twin:
  * app/mobile-app/src/hooks/useCodeRequest.ts.
+ *
+ * `initial` opens the flow on a channel and draft the sign-in step already
+ * holds ("Forgot password?" beside the password box) instead of a blank one.
  */
 export function useCodeRequest(
   send: (channel: PasswordRecoveryChannel, draft: Readonly<ContactDraft>) => Promise<CodeRequestOutcome>,
+  initial: Readonly<RecoveryHandoff> | null = null,
 ) {
   const [state, setState] = useState<PasswordRecoveryState>(() =>
-    initialRecoveryState(emptyContactDraft()),
+    initial ? recoveryStateFrom(initial) : initialRecoveryState(emptyContactDraft()),
   );
   const [error, setError] = useState<string | null>(null);
   /** True once a destination came back with no account behind it. */

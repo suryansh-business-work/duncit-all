@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router';
+import { Link as RouterLink, useNavigate } from 'react-router';
 import { Link, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { LoginForm, type LoginSubmitValues } from '../../forms/login';
@@ -18,8 +18,8 @@ interface Props {
  * make sense beside them.
  *
  * "Forgot password?" lives here rather than on the landing step because it is
- * only ever about a password — offering it to somebody about to press Continue
- * with Google was offering to recover something they may not have.
+ * only ever about a password. The form renders it beside the password box and
+ * hands over its tab and boxes, so the code goes straight to that email or number.
  */
 export default function LoginPasswordStep({
   loading,
@@ -29,22 +29,18 @@ export default function LoginPasswordStep({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const authLink = useWithRedirect();
+  const navigate = useNavigate();
 
   return (
     <Stack spacing={2}>
-      <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
-
-      <Stack sx={{ alignItems: 'flex-end' }}>
-        <Link
-          component={RouterLink}
-          to={authLink('/forgot-password')}
-          underline="hover"
-          variant="body2"
-          data-testid="go-forgot-password"
-        >
-          {t('mweb.login.forgotPassword')}
-        </Link>
-      </Stack>
+      <LoginForm
+        loading={loading}
+        errorMessage={errorMessage}
+        onSubmit={onSubmit}
+        onForgotPassword={(recovery) => {
+          navigate(authLink('/forgot-password'), { state: { recovery } });
+        }}
+      />
 
       <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
         <Link

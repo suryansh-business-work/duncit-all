@@ -1,7 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 import type { TabParamList } from '@/navigation/tabs';
-import type { GoogleSignupHandoff } from '@duncit/utils';
+import type { GoogleSignupHandoff, RecoveryHandoff } from '@duncit/utils';
 
 import type { GiftCardSelection } from '@/utils/gift-cards';
 
@@ -21,7 +21,8 @@ export type RootStackParamList = {
    * credential behind it must be spent exactly once.
    */
   Signup: { googleSignup?: GoogleSignupHandoff } | undefined;
-  ForgotPassword: undefined;
+  /** Optionally carrying the sign-in step's tab and boxes, so the code goes straight there. */
+  ForgotPassword: { recovery?: RecoveryHandoff } | undefined;
   Survey: undefined;
   /** Google signup only: the skippable "got a referral code?" step. */
   ReferralPrompt: undefined;

@@ -1,7 +1,12 @@
-import { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text } from 'tamagui';
+import {
+  claimGoogleSignupHandoff,
+  createGoogleSignupClaims,
+  readGoogleSignupHandoff,
+} from '@duncit/utils';
 
 import { AuthScaffold } from '@/components/AuthScaffold';
 import { GoogleLinkConsentModal } from '@/components/GoogleLinkConsentModal';
@@ -23,6 +28,10 @@ import { useSocialLogin } from './useSocialLogin';
 /** Which part of the sign-in screen is showing. */
 type LoginStep = 'CHOOSE' | 'PASSWORD' | 'OTP';
 
+/** Which carried credential this app run has already logged in with — module
+ * scope so it outlives the remount it guards against (see SignupScreen's twin). */
+const CLAIMS = createGoogleSignupClaims();
+
 export function LoginScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -36,6 +45,25 @@ export function LoginScreen() {
   const otp = useOtpLogin(authenticate, t('mweb.auth.somethingWentWrong'));
   // Google and Apple: one door, the same consent step and signup invite.
   const social = useSocialLogin(setError);
+
+  /*
+    Arrived from signup's "you're already on Duncit — log in?", holding the
+    credential the provider had already returned: spend it on the login here,
+    where every answer it can get is handled. Claimed once per credential.
+  */
+  const route = useRoute<RouteProp<RootStackParamList, 'Login'>>();
+  const carried = readGoogleSignupHandoff(route.params?.socialLogin);
+  const carriedToken = carried?.idToken ?? '';
+  useEffect(() => {
+    const claimed = claimGoogleSignupHandoff(CLAIMS, carried);
+    if (claimed) {
+      social
+        .start({ provider: claimed.provider ?? 'GOOGLE', idToken: claimed.idToken })
+        .catch(() => undefined);
+    }
+    // Keyed by the credential itself; the claim guards the rest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carriedToken]);
 
   // Setting the token + survey flag flips the navigation gate to the survey or
   // app group automatically — no imperative navigation needed.
@@ -66,7 +94,12 @@ export function LoginScreen() {
   }
 
   return (
-    <AuthScaffold testID="login-screen" title={headingTitle} accentWord={headingAccent}>
+    <AuthScaffold
+      testID="login-screen"
+      title={headingTitle}
+      accentWord={headingAccent}
+      subtitle={choosing ? t('mweb.login.subtitle') : undefined}
+    >
       {choosing ? (
         <LoginMethodStep
           socialLoading={social.busy}
@@ -84,7 +117,7 @@ export function LoginScreen() {
           loading={loading}
           errorMessage={error}
           onSubmit={handleSubmit}
-          onForgotPassword={() => navigation.navigate('ForgotPassword')}
+          onForgotPassword={(recovery) => navigation.navigate('ForgotPassword', { recovery })}
           onBack={() => setStep('CHOOSE')}
         />
       ) : null}
@@ -121,7 +154,7 @@ export function LoginScreen() {
         onAccept={social.acceptInvite}
         onDismiss={social.dismissInvite}
       />
-      <LegalLinks prefix={t('mweb.auth.legalSignIn')} />
+      {choosing ? null : <LegalLinks prefix={t('mweb.auth.legalSignIn')} />}
       <Text testID="login-app-version" textAlign="center" fontSize={12} color="$muted">
         {t('mweb.auth.appVersion', { vars: { version: appVersion() } })}
       </Text>

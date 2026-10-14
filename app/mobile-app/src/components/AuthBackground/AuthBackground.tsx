@@ -6,32 +6,37 @@ import { useThemeStore } from '@/stores/theme.store';
 import { BrandBackdrop } from './BrandBackdrop';
 
 /**
- * Full-screen backdrop for the auth screens.
- *
- * The flat `$background` ground is the design, not a fallback: with both admin
- * switches off it is what the screens draw, and it stays underneath either way
- * so a slow or broken remote asset never leaves a blank screen. A backdrop is
+ * The admin's login image and video (Branding > Login background). A hero is
  * its switch AND its asset — an admin who turns one off keeps the URL they
- * picked, so the URL alone must not draw anything. Video wins when both are on,
- * the same precedence mWeb applies (rule 27).
+ * picked, so the URL alone must not draw anything. Video wins when both are
+ * on, the same precedence mWeb applies (rule 27).
  */
-export function AuthBackground({ children }: Readonly<{ children: ReactNode }>) {
-  const isDark = useThemeStore((s) => s.scheme) === 'dark';
+export function useAuthHeroMedia(): { videoUrl: string; imageUrl: string; hasHero: boolean } {
   const { data } = useBranding();
   const branding = data?.branding;
-
   const videoUrl = branding?.login_background_video_enabled
     ? (branding?.login_background_video_url ?? '')
     : '';
   const imageUrl = branding?.login_background_image_enabled
     ? (branding?.login_background_image_url ?? '')
     : '';
+  return { videoUrl, imageUrl, hasHero: Boolean(videoUrl || imageUrl) };
+}
+
+/**
+ * The auth screens' ground, with the admin's hero across the top.
+ *
+ * The flat `$background` ground is the design, not a fallback: with both admin
+ * switches off it is what the screens draw, and it stays underneath either way
+ * so a slow or broken remote asset never leaves a blank screen.
+ */
+export function AuthBackground({ children }: Readonly<{ children: ReactNode }>) {
+  const isDark = useThemeStore((s) => s.scheme) === 'dark';
+  const { videoUrl, imageUrl, hasHero } = useAuthHeroMedia();
 
   return (
     <YStack flex={1} backgroundColor="$background" testID="auth-background">
-      {videoUrl || imageUrl ? (
-        <BrandBackdrop videoUrl={videoUrl} imageUrl={imageUrl} isDark={isDark} />
-      ) : null}
+      {hasHero ? <BrandBackdrop videoUrl={videoUrl} imageUrl={imageUrl} isDark={isDark} /> : null}
       {children}
     </YStack>
   );

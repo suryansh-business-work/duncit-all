@@ -13,6 +13,10 @@
  * An applied entry matches nothing on the next boot, so entries never need pruning.
  */
 export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
+  // The login landing redesign (hero, chips, round provider buttons).
+  "mweb.login.titleAccent": ["back."],
+  "mweb.login.subtitle": ["Pick up where you left off and find pods around you."],
+  "mweb.login.createOne": ["Create one"],
   "admin.locations.launchTargetHint": [
     "Shown in the app as “We’ll launch once X people have added their names”. Default 2000.",
   ],

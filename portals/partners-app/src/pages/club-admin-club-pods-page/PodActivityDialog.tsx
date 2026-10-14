@@ -42,10 +42,10 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
   const entries: PodAuditLog[] = data?.clubAdminPodAuditLogs ?? [];
 
   return (
-    <Dialog open={!!pod} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={!!pod} onClose={onClose} maxWidth="sm" fullWidth data-testid="pod-activity-dialog">
       {pod && (
         <>
-          <DialogTitle sx={{ fontWeight: 800 }}>
+          <DialogTitle sx={{ fontWeight: 800 }} data-testid="pod-activity-title">
             {t('clubAdmin.pods.activity', { vars: { title: pod.pod_title } })}
           </DialogTitle>
           <DialogContent dividers>
@@ -128,7 +128,7 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+            <DuncitButton onClick={onClose} data-testid="pod-activity-close">{t('shell.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

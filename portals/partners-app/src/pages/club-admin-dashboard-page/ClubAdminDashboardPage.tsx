@@ -131,9 +131,12 @@ export default function ClubAdminDashboardPage() {
                 value={range}
                 onChange={(event) => setRange(event.target.value as ClubAdminRange)}
                 sx={RANGE_SX}
+                data-testid="club-admin-range"
               >
                 {clubAdminRanges.map((item) => (
-                  <MenuItem key={item.value} value={item.value}>{rangeLabels[item.value]}</MenuItem>
+                  <MenuItem key={item.value} value={item.value} data-testid={`club-admin-range-${item.value}`}>
+                    {rangeLabels[item.value]}
+                  </MenuItem>
                 ))}
               </TextField>
             </Stack>

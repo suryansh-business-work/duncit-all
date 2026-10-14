@@ -26,7 +26,7 @@ export function ClubPodRowActions({ pod, podsPath, openChange, onDelete }: Reado
       justifyContent: "flex-end"
     }}>
       <Tooltip title={t('clubAdmin.pods.podDetails')}>
-        <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}`}>
+        <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}`} data-testid={`club-pod-view-${pod.id}`}>
           <VisibilityIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
@@ -37,13 +37,14 @@ export function ClubPodRowActions({ pod, podsPath, openChange, onDelete }: Reado
             color="success"
             component={RouterLink}
             to={`${podsPath}/${pod.id}/attendance`}
+            data-testid={`club-pod-attendance-${pod.id}`}
           >
             <CheckCircleOutlinedIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
       )}
       <Tooltip title={t('clubAdmin.pods.editPod')}>
-        <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}/edit`}>
+        <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}/edit`} data-testid={`club-pod-edit-${pod.id}`}>
           <EditIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
@@ -52,6 +53,7 @@ export function ClubPodRowActions({ pod, podsPath, openChange, onDelete }: Reado
           <DuncitIconButton
             size="small"
             color="warning"
+            data-testid={`club-pod-request-change-${pod.id}`}
             onClick={() =>
               openChange({
                 podDocId: pod.id,
@@ -68,7 +70,7 @@ export function ClubPodRowActions({ pod, podsPath, openChange, onDelete }: Reado
           to delete. */}
       {!pod.is_deleted && (
         <Tooltip title={t('clubAdmin.pods.deletePod')}>
-          <DuncitIconButton size="small" color="error" onClick={() => onDelete(pod)}>
+          <DuncitIconButton size="small" color="error" onClick={() => onDelete(pod)} data-testid={`club-pod-delete-${pod.id}`}>
             <DeleteOutlineIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

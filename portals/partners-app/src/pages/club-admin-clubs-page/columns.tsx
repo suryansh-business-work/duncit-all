@@ -52,6 +52,7 @@ const renderActions = (club: ClubAdminClubInfoRow, t: Translate) => (
       component={RouterLink}
       to={`/club-admin/clubs/${club.id}`}
       startIcon={<EventNoteIcon />}
+      data-testid={`club-admin-club-pods-${club.id}`}
     >
       {t('shell.nav.pods')}
     </DuncitButton>

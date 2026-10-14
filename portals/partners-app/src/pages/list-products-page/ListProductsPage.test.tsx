@@ -4,9 +4,12 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import ListProductsPage from './ListProductsPage';
 import type { ProductListingRow } from './queries';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS } from './productAccess';
+import { PRODUCT_LISTING_ACCESS } from './productAccess';
 import { ECOMM_MANAGER, accessMock } from '../../__tests__/groupB-fixtures';
 import { renderWithProviders } from '../../__tests__/render';
+
+// The shipped English for partners.listProductsPage.ecommManagerRequired.
+const PRODUCT_ACCESS_MESSAGE = 'You must be an Ecomm Manager to add products.';
 
 const { stubRow } = vi.hoisted(() => {
   const row: ProductListingRow = { id: 'p1', product_name: 'Alpha Tee', listing_review_status: 'APPROVED' };

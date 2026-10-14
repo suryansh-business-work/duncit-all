@@ -49,7 +49,7 @@ export default function NewPodDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" data-testid="host-new-pod-dialog">
       <DialogTitle>{t('partners.common.newPod')}</DialogTitle>
       <DialogContent dividers>
         <Alert severity="info" sx={{ mb: 1.5 }}>

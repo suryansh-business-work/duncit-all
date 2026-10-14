@@ -85,6 +85,7 @@ export default function EarnPage({ focus }: Readonly<{ focus?: EarnFocus }>) {
           <Typography
             variant="h5"
             component="h1"
+            data-testid="earn-page-title"
             sx={{
               fontWeight: 700,
               lineHeight: 1
@@ -105,7 +106,7 @@ export default function EarnPage({ focus }: Readonly<{ focus?: EarnFocus }>) {
         <EarnJourneyList showProducts={showProducts} kinds={kinds} />
       </EarnSurfaceProvider>
       {focus && (
-        <Link component={RouterLink} to="/earn" variant="body2" sx={{ fontWeight: 700 }}>
+        <Link component={RouterLink} to="/earn" data-testid="earn-see-all" variant="body2" sx={{ fontWeight: 700 }}>
           {t('partners.earn.seeAllWays')}
         </Link>
       )}

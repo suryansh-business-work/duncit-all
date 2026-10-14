@@ -78,6 +78,7 @@ export default function HostStatCards({ earnings, counts, loading }: Readonly<Pr
             lg: 2
           }}>
           <StatCard
+            testId={`host-stat-${card.key}`}
             label={card.label}
             labelWeight={800}
             labelSx={{ lineHeight: 1.4 }}

@@ -14,9 +14,13 @@ interface Props {
 const getClubRowId = (club: ClubAdminClubRow) => club.club_id;
 
 const renderClub = (club: ClubAdminClubRow) => (
-  <Link component={RouterLink} to={`/club-admin/clubs/${club.club_id}`} underline="hover" sx={{
-    fontWeight: 800
-  }}>
+  <Link
+    component={RouterLink}
+    to={`/club-admin/clubs/${club.club_id}`}
+    underline="hover"
+    data-testid={`club-admin-dashboard-club-${club.club_id}`}
+    sx={{ fontWeight: 800 }}
+  >
     {club.club_name}
   </Link>
 );

@@ -4,9 +4,12 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import ProductDetailPage from './ProductDetailPage';
 import { MY_PRODUCT_LISTINGS } from './queries';
-import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS } from './productAccess';
+import { PRODUCT_LISTING_ACCESS } from './productAccess';
 import { ECOMM_MANAGER, accessMock, listingRow, listingsMock } from '../../__tests__/groupB-fixtures';
 import { renderWithProviders } from '../../__tests__/render';
+
+// The shipped English for partners.listProductsPage.ecommManagerRequired.
+const PRODUCT_ACCESS_MESSAGE = 'You must be an Ecomm Manager to add products.';
 
 // The analytics and reviews panels run their own queries and have their own
 // suites; here they only need to show which product they were handed.

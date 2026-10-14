@@ -132,6 +132,7 @@ function HostPodsContent() {
             variant="contained"
             startIcon={<AddIcon />}
             disabled={!approvedHost}
+            data-testid="host-pods-new"
             onClick={() => setOpen(true)}
             sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
           >
@@ -141,7 +142,7 @@ function HostPodsContent() {
       </Box>
 
       {!approvedHost && (
-        <Alert severity="info">
+        <Alert severity="info" data-testid="host-pods-not-approved">
           {t('partners.podsPage.yourHostApplicationMustBeApproved')}
         </Alert>
       )}

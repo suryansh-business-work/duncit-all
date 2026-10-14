@@ -123,7 +123,7 @@ export default function ClubAdminCategoryCard({ categories, loading }: Readonly<
   }
 
   return (
-    <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }} data-testid="club-admin-categories">
       <Stack spacing={1.5}>
         <Stack spacing={0.25}>
           <Typography variant="subtitle2" component="h2" sx={{ fontWeight: 900 }}>

@@ -30,9 +30,10 @@ export default function PodStatusFilter({ value, onChange }: Readonly<Props>) {
       value={value}
       onChange={(event) => onChange(event.target.value as PodRowStatusFilter)}
       sx={{ minWidth: 170 }}
+      data-testid="club-pods-status-filter"
     >
       {options.map((option) => (
-        <MenuItem key={option.label} value={option.value}>
+        <MenuItem key={option.label} value={option.value} data-testid={`club-pods-status-option-${option.value || 'ALL'}`}>
           {option.label}
         </MenuItem>
       ))}

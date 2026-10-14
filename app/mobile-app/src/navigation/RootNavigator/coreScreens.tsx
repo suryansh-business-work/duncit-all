@@ -65,6 +65,7 @@ import { BrandWarehousesScreen } from '@/screens/BrandWarehousesScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { HostPublishScreen, VenuePublishScreen } from '@/screens/PublishPageScreens';
+import { HostCategoriesScreen, HostShareScreen } from '@/screens/HostOptionScreens';
 import {
   BrandOptionsScreen,
   ClubOptionsScreen,
@@ -157,6 +158,8 @@ export function renderCoreScreens() {
       <Stack.Screen name="VenueList" component={VenueListScreen} />
       <Stack.Screen name="VenuePublish" component={VenuePublishScreen} />
       <Stack.Screen name="HostPublish" component={HostPublishScreen} />
+      <Stack.Screen name="HostShare" component={HostShareScreen} />
+      <Stack.Screen name="HostCategories" component={HostCategoriesScreen} />
       <Stack.Screen name="VenuePods" component={VenuePodsScreen} />
       <Stack.Screen name="VenueFoodDashboard" component={VenueFoodDashboardScreen} />
       <Stack.Screen name="VenueFoodMenu" component={VenueFoodMenuScreen} />

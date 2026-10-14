@@ -20,15 +20,6 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
-type QuickRoute = 'CreatePod' | 'HostManage' | 'Verification' | 'Wallet';
-
-const quick = (t: Translate): { label: string; icon: IconName; route: QuickRoute }[] => [
-  { label: t('mweb.common.createPod'), icon: 'add', route: 'CreatePod' },
-  { label: t('mweb.common.yourPods'), icon: 'dashboard', route: 'HostManage' },
-  { label: t('mweb.common.verification'), icon: 'verified-user', route: 'Verification' },
-  { label: t('mweb.common.wallet'), icon: 'account-balance-wallet', route: 'Wallet' },
-];
-
 const BAND_COLOR: Record<string, string> = {
   GREEN: semantic.success,
   YELLOW: semantic.warning,
@@ -52,45 +43,13 @@ function IconDisc({ icon }: Readonly<{ icon: IconName }>) {
   );
 }
 
-/** One quick-action tile — two to a row. */
-function QuickAction({
-  label,
-  icon,
-  onPress,
-}: Readonly<{ label: string; icon: IconName; onPress: () => void }>) {
-  return (
-    <XStack
-      testID={`host-action-${label.replace(/\s+/g, '-').toLowerCase()}`}
-      tabIndex={0}
-      role="button"
-      aria-label={label}
-      onPress={onPress}
-      flex={1}
-      minWidth={140}
-      alignItems="center"
-      gap={12}
-      padding={14}
-      borderRadius={24}
-      borderWidth={1}
-      borderColor="$cardBorder"
-      backgroundColor="$surface"
-      pressStyle={PRESS_STYLE.surface}
-    >
-      <IconDisc icon={icon} />
-      <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
-        {label}
-      </Text>
-    </XStack>
-  );
-}
-
 const statTiles = (stats: HostDashboardStats, t: Translate) => [
   { label: t('mweb.hostDashboard.pods'), value: stats.total },
   { label: t('mweb.common.upcoming'), value: stats.upcoming },
   { label: t('mweb.common.paid'), value: stats.paid },
 ];
 
-/** Host Dashboard — earnings, pod stats, quick actions and profile/verification
+/** Host Dashboard — figures only: earnings, pod stats, insights and profile
  * health. RN twin of mWeb's HostDashboardPage (B2-#5). */
 export function HostDashboardScreen() {
   const { t } = useTranslation();
@@ -131,17 +90,6 @@ export function HostDashboardScreen() {
         <XStack gap={12}>
           {statTiles(stats, t).map((tile) => (
             <StatTile key={tile.label} value={tile.value} label={tile.label} size="lg" />
-          ))}
-        </XStack>
-
-        <XStack flexWrap="wrap" gap={12}>
-          {quick(t).map((action) => (
-            <QuickAction
-              key={action.label}
-              label={action.label}
-              icon={action.icon}
-              onPress={() => navigation.navigate(action.route)}
-            />
           ))}
         </XStack>
 

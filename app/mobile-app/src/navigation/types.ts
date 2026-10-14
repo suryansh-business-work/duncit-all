@@ -134,8 +134,10 @@ export type RootStackParamList = {
   VenueFoodMenu: undefined;
   VenueFoodOrders: undefined;
   VenueFoodCoupons: undefined;
-  /** Host Options → Publish Your Host Page. */
+  /** Host Options → Publish Your Host Page, Host Share, Your Categories. */
   HostPublish: undefined;
+  HostShare: undefined;
+  HostCategories: undefined;
   /** Brand Options → Brand Orders, one order, and ShipRocket Warehouses. */
   BrandOrders: undefined;
   BrandOrderDetail: { id: string };

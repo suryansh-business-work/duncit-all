@@ -1,43 +1,27 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { PublishPageCard } from '@/components/public-page';
 import { StackScreen } from '@/components/StackScreen';
 import { DraftDeleteConfirm } from '@/components/host-manage/DraftDeleteConfirm';
-import { HostApplyBanner } from '@/components/host-manage/HostApplyBanner';
-import { HostCategoriesCard } from '@/components/host-manage/HostCategoriesCard';
 import { HostDraftsSection } from '@/components/host-manage/HostDraftsSection';
-import { StudioChangeRequests } from '@/components/change-requests/StudioChangeRequests';
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
-import { HostShareSection } from '@/components/host-manage/HostShareSection';
-import { PodRequestsSection } from '@/components/pod-requests/PodRequestsSection';
-import { PartnerSide } from '@/generated/graphql/graphql';
-import { useHostPayouts } from '@/hooks/useHostPayouts';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useHostDrafts } from '@/hooks/useHostDrafts';
-import { useMe } from '@/hooks/useMe';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
-/** Hosts Management — start a new pod and resume/delete in-progress drafts. */
+/** Hosts Management — start a new pod, the host's pods, and their in-progress
+ * drafts; nothing else. The figures live on the Host dashboard; publishing, pod
+ * and change requests, Host Share and categories each have their own Host
+ * Options screen. */
 export function HostManageScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { color: ink } = useThemeColors();
   const { drafts, isLoading, remove } = useHostDrafts();
-  const me = useMe().data?.me;
-  // Only an approved host has a host page to publish (HostApplyBanner gates the same way).
-  const isHost = me?.roles?.includes('HOST') ?? false;
-  // Owned here (not inside HostShareSection) so completing a pod in the pods
-  // section can refetch the share list it just changed.
-  const payoutsApi = useHostPayouts();
   const [target, setTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -57,53 +41,13 @@ export function HostManageScreen() {
     <StackScreen header title={t('mweb.hostManage.hostsManagement')} testID="host-manage-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={24} padding={16} paddingBottom={48}>
-          <YStack gap={12}>
-            <PrimaryButton
-              testID="host-manage-create"
-              label={t('mweb.hostManage.createAPod')}
-              onPress={() => navigation.navigate('CreatePod')}
-            />
+          <PrimaryButton
+            testID="host-manage-create"
+            label={t('mweb.hostManage.createAPod')}
+            onPress={() => navigation.navigate('CreatePod')}
+          />
 
-            <XStack
-              testID="host-manage-insights"
-              tabIndex={0}
-              role="button"
-              aria-label={t('mweb.hostManage.hostDashboardAndInsights')}
-              onPress={() => navigation.navigate('HostDashboard')}
-              alignItems="center"
-              justifyContent="center"
-              gap={8}
-              height={48}
-              borderRadius={999}
-              borderWidth={1}
-              borderColor="$borderColor"
-              backgroundColor="$surface"
-              pressStyle={PRESS_STYLE.control}
-            >
-              <MaterialIcons name="insights" size={18} color={ink} />
-              <Text fontSize={14} fontWeight="600" color="$color">
-                Dashboard & Insights
-              </Text>
-            </XStack>
-          </YStack>
-
-          <HostCategoriesCard />
-
-          <HostApplyBanner />
-
-          {me && isHost ? (
-            <PublishPageCard kind="HOST" title={me.full_name || me.username || ''} />
-          ) : null}
-
-          {/* Completing a pod creates the payout the share section lists, so
-              the screen owns the hook and threads the refetch across. */}
-          <HostPodsSection onPodCompleted={() => fireAndForget(payoutsApi.refetch())} />
-
-          <StudioChangeRequests role="HOST" />
-
-          {isHost ? <PodRequestsSection side={PartnerSide.Host} /> : null}
-
-          <HostShareSection {...payoutsApi} />
+          <HostPodsSection />
 
           <HostDraftsSection
             drafts={drafts}

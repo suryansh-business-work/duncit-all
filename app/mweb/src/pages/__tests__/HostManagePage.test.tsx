@@ -11,15 +11,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../HostDraftsCard', () => ({
   default: () => <div data-testid="drafts-card" />,
 }));
-vi.mock('../host-manage-page/HostShareCard', () => ({
-  default: () => <div data-testid="share-card" />,
-}));
-vi.mock('../host-apply-page/HostApplyBanner', () => ({
-  default: () => <div data-testid="apply-banner" />,
-}));
-vi.mock('../host-apply-page/HostCategoriesCard', () => ({
-  default: () => <div data-testid="categories-card" />,
-}));
 vi.mock('../host-manage-page/HostPodSections', () => ({
   default: (props: {
     pods: unknown[];
@@ -44,9 +35,6 @@ vi.mock('../host-manage-page/HostPodActionsBridge', () => ({
   default: ({ children }: { children: ReactNode }) => (
     <div data-testid="pod-actions-bridge">{children}</div>
   ),
-}));
-vi.mock('../../components/studio-pods/StudioChangeRequests', () => ({
-  default: ({ role }: { role: string }) => <div data-testid="change-requests">{role}</div>,
 }));
 
 import HostManagePage from '../HostManagePage';
@@ -121,21 +109,16 @@ afterEach(() => {
 });
 
 describe('HostManagePage', () => {
-  it('renders the header and static action links', () => {
+  it('renders the header with Create as its one action', () => {
     setup([meMock()], <HostManagePage />);
     expect(screen.getByText('Your Pods')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Insights/i })).toHaveAttribute(
-      'href',
-      '/host/dashboard',
-    );
     expect(screen.getByRole('link', { name: /Create/i })).toHaveAttribute(
       'href',
       '/create-pod',
     );
-    // Drafts, share and the host's change requests always render.
+    // The dashboard is a Host Options entry now, not a header link.
+    expect(screen.queryByRole('link', { name: /Insights/i })).not.toBeInTheDocument();
     expect(screen.getByTestId('drafts-card')).toBeInTheDocument();
-    expect(screen.getByTestId('share-card')).toBeInTheDocument();
-    expect(screen.getByTestId('change-requests')).toHaveTextContent('HOST');
     // The pod sections sit inside the pod-actions provider.
     expect(screen.getByTestId('pod-actions-bridge')).toContainElement(
       screen.getByTestId('pods-card'),
@@ -149,24 +132,16 @@ describe('HostManagePage', () => {
     expect(screen.getByTestId('pods-loading')).toHaveTextContent('true');
   });
 
-  it('renders host-only cards and the hosted pods once queries resolve', async () => {
+  it('lists the hosted pods once queries resolve, and nothing besides pods', async () => {
     setup(
       [meMock(['HOST']), hostPodsMock([{ id: 'p1' }, { id: 'p2' }])],
       <HostManagePage />,
     );
-    expect(await screen.findByTestId('categories-card')).toBeInTheDocument();
-    expect(screen.getByTestId('apply-banner')).toBeInTheDocument();
     expect(await screen.findByTestId('pods-count')).toHaveTextContent('2');
     expect(screen.getByTestId('pods-loading')).toHaveTextContent('false');
-  });
-
-  it('hides host-only cards for a non-host user', async () => {
-    setup([meMock([]), hostPodsMock([])], <HostManagePage />);
-    // Wait for me to resolve so pods query runs.
-    expect(await screen.findByTestId('pods-count')).toHaveTextContent('0');
-    expect(screen.queryByTestId('categories-card')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('apply-banner')).not.toBeInTheDocument();
-  });
+    // Each of these is its own Host Options page now.
+    expect(screen.queryByTestId('host-apply-banner')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('host-share-section')).not.toBeInTheDocument();  });
 
   it('passes the pods query error message down to HostPodSections', async () => {
     setup(

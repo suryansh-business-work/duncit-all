@@ -11,7 +11,8 @@ jest.mock('@/components/AppHeader', () => {
   return { AppHeader: () => <V testID="app-header-stub" /> };
 });
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn() }),
+  // addListener: the health tile refetches on focus.
+  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: jest.fn(), addListener: () => jest.fn() }),
 }));
 jest.mock('@/hooks/useStudioDashboards', () => ({ useVenueDashboard: jest.fn() }));
 // The per-venue stats, pods and change-request panels fetch on their own; their
@@ -23,7 +24,7 @@ jest.mock('@/services/graphql.client', () => ({
 const mockedUse = useVenueDashboard as jest.Mock;
 
 describe('VenueManageScreen (venue dashboard)', () => {
-  it('shows the selected venue stats, the bookings chart and its row', () => {
+  it('shows the selected venue stats and the bookings chart — figures only', () => {
     const hall = {
       id: 'v1',
       venue_name: 'Hall',
@@ -57,10 +58,10 @@ describe('VenueManageScreen (venue dashboard)', () => {
     // Two venues, so the switcher is offered.
     expect(screen.getByTestId('venue-switcher')).toBeOnTheScreen();
     expect(screen.getByTestId('venue-pods-chart')).toBeOnTheScreen();
-    expect(screen.getByTestId('venue-studio-pods')).toBeOnTheScreen();
-    expect(screen.getByTestId('venue-row-v1')).toHaveTextContent(/Hall/);
-    expect(screen.getByText('Pune · APPROVED')).toBeOnTheScreen();
-    expect(screen.queryByTestId('venue-row-v2')).toBeNull();
+    // The pod figures are withheld while their (pending) query loads.
+    expect(screen.queryByTestId('venue-studio-pods')).toBeNull();
+    // The venue list is its own Venue Options screen now.
+    expect(screen.queryByTestId('venue-row-v1')).toBeNull();
     expect(screen.queryByTestId('venue-dashboard-empty')).toBeNull();
   });
 

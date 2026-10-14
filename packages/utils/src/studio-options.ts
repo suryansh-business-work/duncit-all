@@ -39,7 +39,8 @@ export type StudioOptionIcon =
   | 'orders'
   | 'menu'
   | 'warehouses'
-  | 'refunds';
+  | 'refunds'
+  | 'categories';
 
 export interface StudioOptionItem {
   key: string;
@@ -55,6 +56,9 @@ export interface StudioOptionItem {
   portal: string;
   /** Shown only while the `auto_pods` feature flag is on. */
   autoPods?: boolean;
+  /** An app screen the Partner console has no page for — its menu leaves it
+   * out (`studioOptionsFor` with `console: true`). */
+  appOnly?: boolean;
   /** The sub-menu an option belongs to. The catalogue stays ONE flat list (the
    * Options pages list every option in order); a surface that nests its menu —
    * the Partner console sidebar — splits on this with `studioOptionGroups`.
@@ -164,6 +168,10 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'nearby', labelKey: 'mweb.studioOptions.nearbyVenues', hintKey: 'mweb.studioOptions.nearbyVenuesHint', icon: 'nearby', path: '/host/nearby-venues', route: 'NearbyVenues', portal: '/host/nearby-venues' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/host/change-requests' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishHost', hintKey: 'mweb.studioOptions.publishHostHint', icon: 'publish', path: '/host/publish', route: 'HostPublish', portal: '/host/publish' },
+    // Kept off Your Pods so that page lists pods only. App screens; the console
+    // shows the same payouts on its host dashboard.
+    { key: 'share', labelKey: 'mweb.studioOptions.hostShare', hintKey: 'mweb.studioOptions.hostShareHint', icon: 'earnings', path: '/host/share', route: 'HostShare', portal: '/host/dashboard', appOnly: true },
+    { key: 'categories', labelKey: 'mweb.studioOptions.hostCategories', hintKey: 'mweb.studioOptions.hostCategoriesHint', icon: 'categories', path: '/host/categories', route: 'HostCategories', portal: '/host/dashboard', appOnly: true },
     VERIFICATION,
     WITHDRAWAL,
   ],
@@ -208,15 +216,18 @@ export function studioOptionsEntryFor(
   return holdsStudio(mode, roles) ? STUDIO_OPTIONS_ENTRY[mode] : null;
 }
 
-/** The studio's options, minus Auto Pods while its flag is off; `[]` when the
+/** The studio's options, minus Auto Pods while its flag is off and, for the
+ * Partner console (`console: true`), minus the app-only screens; `[]` when the
  * user is not in a studio they hold. */
 export function studioOptionsFor(
   mode: StudioMode,
   roles: readonly string[],
-  options: { autoPods: boolean },
+  options: { autoPods: boolean; console?: boolean },
 ): StudioOptionItem[] {
   if (!holdsStudio(mode, roles)) return [];
-  return STUDIO_OPTION_LIST[mode].filter((option) => options.autoPods || !option.autoPods);
+  return STUDIO_OPTION_LIST[mode].filter(
+    (option) => (options.autoPods || !option.autoPods) && !(options.console && option.appOnly),
+  );
 }
 
 /** Splits a studio's options into its sub-menus, each in catalogue order — the

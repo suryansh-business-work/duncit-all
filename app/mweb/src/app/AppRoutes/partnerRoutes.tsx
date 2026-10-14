@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, HostPublishPage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueFoodPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
+import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, HostCategoriesPage, HostPublishPage, HostSharePage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueFoodPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
 import { withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
 /** Earn, venue, club and Auto Pod routes. */
@@ -28,6 +28,8 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
         <Route path="/venues/food-coupons" element={withAuth(<VenueFoodPage tool="food-coupons" />)} />
         <Route path="/venues/pods" element={withAuth(<VenuePodsPage />)} />
         <Route path="/host/publish" element={withAuth(<HostPublishPage />)} />
+        <Route path="/host/share" element={withAuth(<HostSharePage />)} />
+        <Route path="/host/categories" element={withAuth(<HostCategoriesPage />)} />
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
         <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />

@@ -33,6 +33,7 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, IconName>> = 
   menu: 'restaurant-menu',
   warehouses: 'warehouse',
   refunds: 'currency-exchange',
+  categories: 'category',
 };
 
 /**

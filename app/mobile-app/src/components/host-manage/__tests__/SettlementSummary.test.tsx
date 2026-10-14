@@ -28,6 +28,7 @@ const waterfall = {
 };
 
 const settlement = {
+  is_free: false,
   currency_symbol: '₹',
   collected_total: 1000,
   has_venue: true,
@@ -170,6 +171,39 @@ describe('SettlementSummary', () => {
     expect(screen.getByTestId('settlement-attendees')).toHaveTextContent(
       /Based on 1 paying attendee —/,
     );
+  });
+
+  // A free pod moves no platform money: "Free pod" and why, never a figure.
+  it('heads a free pod "Free pod" and shows no money at all', () => {
+    const zeros = Object.fromEntries(
+      Object.keys(waterfall).map((key) => [key, 0]),
+    ) as typeof waterfall;
+    const free = {
+      ...settlement,
+      is_free: true,
+      collected_total: 0,
+      has_venue: false,
+      paying_attendees: 0,
+      venue_slot_price: 0,
+      host_payout_amount: 0,
+      waterfall: zeros,
+    };
+    renderWithProviders(<SettlementSummary settlement={free} isLoading={false} />);
+    expect(screen.getByTestId('settlement-free')).toHaveTextContent('Free pod');
+    expect(screen.getByTestId('settlement-free-note')).toHaveTextContent(
+      /Nobody pays to join a free pod/,
+    );
+    expect(
+      screen.queryByText('Your share (credited to your wallet once Finance approves)'),
+    ).toBeNull();
+    expect(screen.queryByTestId('settlement-attendees')).toBeNull();
+    expect(screen.queryByText(/₹/)).toBeNull();
+  });
+
+  it('reads as free before the settlement loads when the dialog says the pod is free', () => {
+    renderWithProviders(<SettlementSummary settlement={null} isLoading free />);
+    expect(screen.getByTestId('settlement-free')).toHaveTextContent('Free pod');
+    expect(screen.getByTestId('settlement-loading')).toBeOnTheScreen();
   });
 
   it('shows a nil venue take for a pod with no venue', () => {

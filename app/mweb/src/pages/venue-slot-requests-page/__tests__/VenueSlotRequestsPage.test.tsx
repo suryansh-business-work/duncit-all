@@ -34,6 +34,7 @@ const row = (slot_id: string, venue_id: string, pod_title: string) => ({
   host_name: 'Asha',
   host_email: 'asha@example.com',
   host_phone: '9999999999',
+  pod_is_free: false,
 });
 
 const requestsFor = (venue_id: string | null, rows: object[]) => ({

@@ -118,6 +118,40 @@ describe('PodCompleteDialog', () => {
     );
   });
 
+  // A free pod's host settles the venue directly — even at a venue, no bill,
+  // and the hint promises no payout.
+  it('asks a free venue pod for no bill and promises no payout', async () => {
+    const onCompleted = jest.fn();
+    renderWithProviders(
+      <PodCompleteDialog
+        pod={{ ...venuePod, pod_type: 'FREE' }}
+        onClose={jest.fn()}
+        onCompleted={onCompleted}
+      />,
+    );
+    expect(screen.queryByTestId('pod-complete-venue-bill-fields')).toBeNull();
+    expect(
+      screen.getByText(/It is a free pod, so completing it pays nothing out\./),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId('settlement-free')).toHaveTextContent('Free pod');
+    fireEvent.press(screen.getByTestId('pod-complete-submit'));
+    await waitFor(() => expect(onCompleted).toHaveBeenCalled());
+    expect(completionInputs()).toEqual([{ pod_id: 'p1', venue_bill_amount: 0 }]);
+  });
+
+  it('keeps the payout hint and the bill on a paid venue pod', () => {
+    renderWithProviders(
+      <PodCompleteDialog
+        pod={{ ...venuePod, pod_type: 'PAID' }}
+        onClose={jest.fn()}
+        onCompleted={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId('pod-complete-venue-bill-fields')).toBeOnTheScreen();
+    expect(screen.getByText(/Your payout is credited to your wallet/)).toBeOnTheScreen();
+    expect(screen.queryByTestId('settlement-free')).toBeNull();
+  });
+
   it('asks a venue pod for its bill, and for the upload and the slot choice only with an amount', () => {
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={jest.fn()} />,

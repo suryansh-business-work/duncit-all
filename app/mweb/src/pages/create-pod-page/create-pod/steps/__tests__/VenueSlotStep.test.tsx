@@ -28,6 +28,8 @@ import { useForm } from 'react-hook-form';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import type { FreePodVenueNotice } from '@duncit/utils';
+import { fallbackT } from '../../../../../i18n/fallback';
 import VenueSlotStep from '../VenueSlotStep';
 import {
   blankCreatePodForm,
@@ -88,10 +90,12 @@ function Harness({
   values,
   errors,
   clubVenueIds = new Set(['venue-1', 'venue-2']),
+  venueNotice = 'NONE',
 }: Readonly<{
   values?: Partial<CreatePodFormValues>;
   errors?: Record<string, string>;
   clubVenueIds?: Set<string>;
+  venueNotice?: FreePodVenueNotice;
 }>) {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, location_id: 'loc-1', ...values },
@@ -105,7 +109,13 @@ function Harness({
   }, []);
 
   return (
-    <VenueSlotStep form={form} venues={VENUES} clubVenueIds={clubVenueIds} viewerUserId="u-me" />
+    <VenueSlotStep
+      form={form}
+      venues={VENUES}
+      clubVenueIds={clubVenueIds}
+      viewerUserId="u-me"
+      venueNotice={venueNotice}
+    />
   );
 }
 
@@ -196,6 +206,47 @@ describe('VenueSlotStep — a physical pod', () => {
     await settle();
 
     expect(container.innerHTML).not.toBe('');
+  });
+});
+
+// The note's rule (free + priced slot + not the host's own venue) is
+// `freePodVenueNotice` in @duncit/utils, tested there and wired in
+// FreePod.test.tsx; this step only has to draw what it is handed.
+describe('VenueSlotStep — a free pod on a priced slot', () => {
+  const settleLine = fallbackT('mweb.createPod.freeVenueSettle');
+  const holdLine = fallbackT('mweb.createPod.freeVenueHold');
+  const physical = { pod_mode: 'PHYSICAL', venue_id: 'venue-2', venue_slot_id: 'slot-1' } as const;
+
+  it('tells the host to settle with the venue, which holds its approval until then', async () => {
+    const { getByTestId } = step({ values: physical, venueNotice: 'SETTLE_BEFORE_APPROVAL' });
+    await settle();
+
+    const note = getByTestId('create-pod-free-venue-note');
+    expect(note).toHaveAttribute('role', 'status');
+    expect(note).toHaveTextContent(settleLine);
+    expect(note).toHaveTextContent(holdLine);
+  });
+
+  it('drops the approval line when a Pod Request already confirmed the slot', async () => {
+    const { getByTestId } = step({ values: physical, venueNotice: 'SETTLE' });
+    await settle();
+
+    expect(getByTestId('create-pod-free-venue-note')).toHaveTextContent(settleLine);
+    expect(getByTestId('create-pod-free-venue-note')).not.toHaveTextContent(holdLine);
+  });
+
+  it('says nothing when there is nothing to settle', async () => {
+    const { queryByTestId } = step({ values: physical, venueNotice: 'NONE' });
+    await settle();
+
+    expect(queryByTestId('create-pod-free-venue-note')).toBeNull();
+  });
+
+  it('never shows the note on a virtual pod, which books no venue', async () => {
+    const { queryByTestId } = step({ values: { pod_mode: 'VIRTUAL' }, venueNotice: 'SETTLE' });
+    await settle();
+
+    expect(queryByTestId('create-pod-free-venue-note')).toBeNull();
   });
 });
 

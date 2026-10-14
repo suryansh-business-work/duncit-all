@@ -8,9 +8,9 @@ import { scriptedLink, type ScriptedAnswer, type SentOperation } from '../../__t
 import { partnerLookups, partnerPodRow, podTablePage } from '../../__tests__/groupC-fixtures';
 
 /** The pod form has its own suite; this page decides what happens with what it hands back. */
-function PodFormStub({ initialValues, error, onSubmit, onCancel }: Readonly<PodFormProps>) {
+function PodFormStub({ initialValues, error, onSubmit, onCancel, ownVenueIds }: Readonly<PodFormProps>) {
   return (
-    <div data-testid="pod-form">
+    <div data-testid="pod-form" data-own-venues={(ownVenueIds ?? []).join(',')}>
       {error && <p>{error}</p>}
       <button type="button" onClick={() => onSubmit(initialValues, { draft: false })}>
         Publish pod
@@ -79,12 +79,16 @@ describe('HostPodsPage', () => {
     mount({ CreatePartnerPod: created }, '/host/pods', sent);
     fireEvent.click(await newPodButton());
     const dialog = within(await screen.findByRole('dialog'));
+    // Every bookable venue here is the host's own, so its slots book instantly.
+    expect(dialog.getByTestId('pod-form').dataset.ownVenues).toBe('venue-1');
     const loads = sent.filter((op) => op.name === 'PartnerMyHostPodsTable').length;
     fireEvent.click(dialog.getByRole('button', { name: 'Publish pod' }));
 
     expect(await screen.findByText('Pod created.')).toBeTruthy();
     const input = sent.find((op) => op.name === 'CreatePartnerPod')?.variables.input as Record<string, unknown>;
     expect(input.is_active).toBe(true);
+    expect(input.pod_type).toBe('FREE');
+    expect(input.pod_amount).toBe(0);
     await waitFor(() => expect(sent.filter((op) => op.name === 'PartnerMyHostPodsTable').length).toBeGreaterThan(loads));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });

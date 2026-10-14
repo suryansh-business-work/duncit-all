@@ -37,7 +37,8 @@ function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
 function PodTypeErrorHarness() {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     resolver: formResolver<CreatePodFormValues>(createPodSchema),
-    defaultValues: { ...blankCreatePodForm, pod_mode: 'PHYSICAL', pod_type: 'FREE' },
+    // A retired type left in an old draft — the one pod-type error left.
+    defaultValues: { ...blankCreatePodForm, pod_mode: 'PHYSICAL', pod_type: 'NATIVE_FREE' },
   });
   return (
     <>
@@ -51,7 +52,6 @@ function PodTypeErrorHarness() {
 
 describe('PodTypeCards', () => {
   it('switches between the free and paid families and no-ops on the same family', () => {
-    // FREE is virtual-only, so the harness must be VIRTUAL for both cards to exist.
     renderWithProviders(<PodTypeHarness initial={{ pod_mode: 'VIRTUAL', pod_type: 'FREE' }} />);
     fireEvent.press(screen.getByTestId('create-pod-paid'));
     expect(screen.getByTestId('pt-readout')).toHaveTextContent('PAID');
@@ -62,19 +62,25 @@ describe('PodTypeCards', () => {
     expect(screen.getByTestId('pt-readout')).toHaveTextContent('FREE');
   });
 
-  it('hides the Free card for a physical pod — physical pods are always paid', () => {
+  it('offers both cards to a physical pod, as radios, and lets it be free', () => {
     renderWithProviders(<PodTypeHarness initial={{ pod_mode: 'PHYSICAL', pod_type: 'PAID' }} />);
-    expect(screen.queryByTestId('create-pod-free')).toBeNull();
-    expect(screen.getByTestId('create-pod-paid')).toBeTruthy();
+    const free = screen.getByTestId('create-pod-free');
+    expect(free).toHaveProp('role', 'radio');
+    expect(free).toHaveProp('aria-label', 'Free');
+    expect(free).toHaveProp('aria-checked', false);
+    expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-checked', true);
+    // The Free caption now reads for either mode.
+    expect(free).toHaveTextContent(/No ticket charge/);
+    fireEvent.press(free);
+    expect(screen.getByTestId('pt-readout')).toHaveTextContent('FREE');
+    expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true);
   });
 
   it('surfaces the pod-type validation error under the cards', async () => {
     renderWithProviders(<PodTypeErrorHarness />);
     expect(screen.queryByTestId('pod_type-error')).toBeNull();
     fireEvent.press(screen.getByTestId('pt-validate'));
-    expect(await screen.findByTestId('pod_type-error')).toHaveTextContent(
-      'Physical pods must be paid',
-    );
+    expect(await screen.findByTestId('pod_type-error')).toHaveTextContent('Select Free or Paid');
   });
 });
 

@@ -126,6 +126,7 @@ function VenueSlotHarness({
       clubVenueIds={clubVenueIds}
       viewerUserId={viewerUserId}
       pinnedVenueId={pinnedVenueId}
+      venueNotice="NONE"
     />
   );
 }
@@ -147,6 +148,7 @@ function SpaceErrorHarness() {
         venues={[venue]}
         clubVenueIds={new Set(['v1'])}
         viewerUserId="me-1"
+        venueNotice="NONE"
       />
       <Text
         testID="force-space-error"
@@ -180,6 +182,7 @@ function SpaceHarness({ venues }: Readonly<{ venues: CreatePodVenue[] }>) {
         venues={venues}
         clubVenueIds={new Set(venues.map((item) => item.id))}
         viewerUserId="other-user"
+        venueNotice="NONE"
       />
       <Text testID="spots-readout">{form.watch('no_of_spots_text')}</Text>
     </>
@@ -404,6 +407,7 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
       finance={finance}
       pricing={pricing}
       spots={{ min: 0, max: 10000, slidable: false }}
+      venueNotice="NONE"
     />
   );
 }

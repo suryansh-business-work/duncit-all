@@ -188,4 +188,59 @@ describe('PodBookingBar', () => {
     expect(screen.queryByTestId('pod-backout-in-process')).toBeNull();
     expect(screen.queryByTestId('pod-booked-label')).toBeNull();
   });
+  describe('free pod', () => {
+    const member = ms({
+      is_member: true,
+      can_join: false,
+      can_backout: false,
+      can_cancel_spot: true,
+    });
+
+    it('offers Cancel Spot instead of Backout, with no attempts note', () => {
+      const onCancelSpot = jest.fn();
+      const onBackout = jest.fn();
+      renderBar({ isFree: true, membershipState: member, onCancelSpot, onBackout });
+      expect(screen.getByTestId('pod-booked-label')).toBeOnTheScreen();
+      expect(screen.queryByTestId('pod-backout')).toBeNull();
+      expect(screen.queryByTestId('pod-backout-maxed')).toBeNull();
+      fireEvent.press(screen.getByTestId('pod-cancel-spot'));
+      expect(onCancelSpot).toHaveBeenCalledTimes(1);
+      expect(onBackout).not.toHaveBeenCalled();
+    });
+
+    it('says a checked-in spot can no longer be cancelled, never that attempts ran out', () => {
+      renderBar({
+        isFree: true,
+        membershipState: ms({ ...member, can_cancel_spot: false }),
+        onCancelSpot: jest.fn(),
+      });
+      expect(screen.queryByTestId('pod-cancel-spot')).toBeNull();
+      expect(
+        screen.getByText(
+          'You have already been checked in at this pod, so your spot can no longer be cancelled.',
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    it('is back to the Join CTA once the spot was cancelled', () => {
+      const onCheckout = jest.fn();
+      renderBar({
+        isFree: true,
+        onCheckout,
+        membershipState: ms({ is_member: false, can_join: true }),
+      });
+      expect(screen.queryByTestId('pod-cancel-spot')).toBeNull();
+      fireEvent.press(screen.getByTestId('pod-book'));
+      expect(onCheckout).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps Backout and no Cancel Spot for a paid member', () => {
+      renderBar({
+        membershipState: ms({ is_member: true, can_backout: true, can_cancel_spot: false }),
+        onCancelSpot: jest.fn(),
+      });
+      expect(screen.getByTestId('pod-backout')).toBeOnTheScreen();
+      expect(screen.queryByTestId('pod-cancel-spot')).toBeNull();
+    });
+  });
 });

@@ -29,6 +29,7 @@ const slot = (over: Record<string, unknown> = {}) => ({
   venue_commission_pct: 10,
   venue_commission_amount: 100,
   venue_receives: 900,
+  pod_is_free: false,
   ...over,
 });
 
@@ -53,6 +54,25 @@ describe('SlotDecisionPage states', () => {
     expect(screen.getByText('Hosted by Asha Rao')).toBeTruthy();
     // The hero figure and the take-home row both carry it.
     expect(screen.getAllByText('₹900.00')).toHaveLength(2);
+    expect(screen.getByText('Your earning from this booking')).toBeTruthy();
+    expect(screen.queryByTestId('slot-request-free-pod-notice')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Approve booking' })).toBeTruthy();
+  });
+
+  it('shows a free pod’s request with the coordinate-with-the-host notice instead of any earning', async () => {
+    mount({
+      VenueSlotDecision: decision(
+        slot({ pod_is_free: true, price: 0, venue_commission_amount: 0, venue_receives: 0 }),
+      ),
+    });
+    const notice = await screen.findByTestId('slot-request-free-pod-notice');
+    expect(notice.getAttribute('role')).toBe('status');
+    expect(screen.getByText('This pod is free')).toBeTruthy();
+    expect(screen.getByText(/The host will contact you about your charges/)).toBeTruthy();
+    expect(screen.queryByText('Your earning from this booking')).toBeNull();
+    expect(screen.queryByText(/₹/)).toBeNull();
+    // The host's contact sits beside the notice, and the decision stays open.
+    expect(screen.getByRole('link', { name: '9000000001' }).getAttribute('href')).toBe('tel:9000000001');
     expect(screen.getByRole('button', { name: 'Approve booking' })).toBeTruthy();
   });
 

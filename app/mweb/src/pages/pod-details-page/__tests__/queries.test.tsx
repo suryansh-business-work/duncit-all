@@ -32,6 +32,7 @@ describe('pod-details-page queries module', () => {
     ['JOIN_FREE', 'JoinFreePod', 'mutation'],
     ['BACKOUT', 'BackoutPod', 'mutation'],
     ['CANCEL_BACKOUT', 'CancelBackoutPod', 'mutation'],
+    ['CANCEL_FREE_SPOT', 'CancelFreeSpot', 'mutation'],
     ['REDEEM', 'RedeemReferral', 'mutation'],
     ['TOGGLE_POD_LIKE', 'TogglePodLike', 'mutation'],
     ['POD_COMMENTS', 'PodComments', 'query'],

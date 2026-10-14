@@ -27,6 +27,7 @@ const request = (over: Record<string, unknown> = {}) => ({
   host_name: 'Asha Rao',
   host_email: 'asha@host.example.com',
   host_phone: '9000000001',
+  pod_is_free: false,
   ...over,
 });
 
@@ -52,6 +53,24 @@ describe('SlotRequestsPage list', () => {
 
     const free = within(screen.getByText('Free Play').closest('.MuiCard-root') as HTMLElement);
     expect(free.getByText('Free')).toBeTruthy();
+    // A paid pod carries a price, not the free-pod notice.
+    expect(screen.queryByTestId('slot-request-free-pod-notice')).toBeNull();
+  });
+
+  it('shows a free pod’s request with the coordinate-with-the-host notice and no price', async () => {
+    mount({ VenueSlotRequests: list([request({ pod_is_free: true, price: 0 })]) });
+    const card = within((await screen.findByText('Sunday Badminton')).closest('.MuiCard-root') as HTMLElement);
+    const notice = card.getByTestId('slot-request-free-pod-notice');
+    expect(notice.getAttribute('role')).toBe('status');
+    expect(within(notice).getByText('This pod is free')).toBeTruthy();
+    expect(within(notice).getByText(/Please do not confirm the slot until the host has called you/)).toBeTruthy();
+    expect(card.queryByText('Slot price')).toBeNull();
+    expect(card.queryByText('Free')).toBeNull();
+    expect(card.queryByText(/₹/)).toBeNull();
+    // The host's contact stays on the card, so the owner can reach them.
+    expect(card.getByRole('link', { name: '9000000001' }).getAttribute('href')).toBe('tel:9000000001');
+    expect(card.queryByRole('link', { name: 'View earnings' })).toBeNull();
+    expect(card.getByRole('link', { name: 'View request' }).getAttribute('href')).toBe('/venues/requests/s1');
   });
 
   it('says when nothing is waiting', async () => {

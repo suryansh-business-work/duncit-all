@@ -20,8 +20,13 @@ jest.mock('@/services/graphql.client', () => ({
 
 // The price panel's server-driven earnings preview has its own tests — keep
 // the stepper flows deterministic (no debounce timers).
+// It is a spy so a free pod can be shown to send it nothing to price.
+const mockPotentialEarnings = jest.fn((..._args: unknown[]) => ({
+  waterfall: null,
+  isLoading: false,
+}));
 jest.mock('@/hooks/usePotentialEarnings', () => ({
-  usePotentialEarnings: () => ({ waterfall: null, isLoading: false }),
+  usePotentialEarnings: (...args: unknown[]) => mockPotentialEarnings(...args),
 }));
 
 // Cover media is upload-only now — stub the device pick so it delivers a hosted
@@ -233,8 +238,7 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
     fireEvent.changeText(screen.getByTestId('field-pod_end_date_time_text'), typedAt(26));
   }
   press('create-pod-submit');
-  // The Paid card is the one constant on the pricing step — FREE is virtual-only,
-  // so a physical pod never renders a Free card.
+  // Both cards are offered for either mode; a new pod starts on Paid.
   await screen.findByTestId('create-pod-paid');
   // The Ticket Price field ships blank and gates Create Pod, so a paid pod is
   // only publishable once the host types a price.
@@ -279,6 +283,8 @@ describe('CreatePodStepper', () => {
     await bookSlot();
     // Partner venue → approval note + contact card + window from slot.
     expect(screen.getByTestId('create-pod-approval-note')).toHaveTextContent(/venue approves/);
+    // A paid pod pays the venue through Duncit — no settle-it-yourself note.
+    expect(screen.queryByTestId('create-pod-free-venue-note')).toBeNull();
     expect(screen.getByTestId('create-pod-venue-contact')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-duration')).toBeOnTheScreen();
     // Back returns to the basics step, then forward again keeps the slot.
@@ -289,13 +295,14 @@ describe('CreatePodStepper', () => {
     expect(screen.getByTestId('create-pod-approval-note')).toBeOnTheScreen();
     press('create-pod-submit');
 
-    // Step 4: pricing + products + price panel. This pod is PHYSICAL, so it is
-    // always PAID — the Free card is not offered and Paid is preselected.
+    // Step 4: pricing + products + price panel. Both cards are offered to a
+    // physical pod and Paid is preselected, with its full calculation.
     await screen.findByTestId('create-pod-paid');
     expectStep(4);
-    expect(screen.queryByTestId('create-pod-free')).toBeNull();
+    expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', false);
     expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-checked', true);
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-free-note')).toBeNull();
     // The catalogue's product carries no category, so the club's category has
     // nothing to attach and the add button stays shut.
     expect(screen.getByTestId('products-empty-category')).toBeOnTheScreen();
@@ -351,17 +358,32 @@ describe('CreatePodStepper', () => {
     expect(screen.queryByTestId('create-pod-paid')).toBeNull();
   });
 
-  it('publishes a free virtual pod and drops FREE when the mode flips back to physical', async () => {
+  it('publishes a free virtual pod with no amount and no calculation', async () => {
     const { onPublish } = setup();
     await fillToPricing('VIRTUAL');
-    // A virtual pod may be Free; picking it locks the ticket price at zero.
     press('create-pod-free');
     expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true);
-    expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('editable', false);
-    expect(screen.getByTestId('pod_amount_text-hint')).toHaveTextContent('Free pods are ₹0.');
+    // Free: the amount field, the suggested prices and the earnings panel go;
+    // a short note stands where they were.
+    expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
+    expect(screen.queryByTestId('create-pod-price-panel')).toBeNull();
+    expect(screen.getByTestId('create-pod-free-note-body')).toHaveTextContent(
+      /Duncit collects and pays nothing/,
+    );
+    // A virtual pod books no venue, so there is nothing to settle.
+    expect(screen.queryByTestId('create-pod-free-note-venue')).toBeNull();
+    press('create-pod-submit');
+    await waitFor(() => expect(onPublish).toHaveBeenCalled());
+    expect(onPublish.mock.calls[0]?.[1]).toMatchObject({ pod_type: 'FREE', pod_amount: 0 });
+  });
 
-    // Back to step 1 and flip to Physical — FREE is virtual-only, so the pick
-    // must not survive the switch (and the club pick is cleared with the mode).
+  it('keeps a free pod free when it becomes physical, and tells the host to settle the priced slot', async () => {
+    const { onPublish } = setup();
+    await fillToPricing('VIRTUAL');
+    press('create-pod-free');
+
+    // Back to step 1 and flip to Physical — a physical pod may be free, so the
+    // pick survives the switch (the club pick is cleared with the mode).
     press('create-pod-back');
     await screen.findByTestId('field-meeting_url');
     press('create-pod-back');
@@ -374,19 +396,56 @@ describe('CreatePodStepper', () => {
     press('create-pod-submit');
     await screen.findByTestId('field-pod_title');
     press('create-pod-submit');
-    // Finish the physical path and confirm the pod is back on Paid.
+
+    // Step 3: a ₹400 slot at a partner's venue (owner-1, not the viewer).
     await bookSlot();
+    const venueNote = screen.getByTestId('create-pod-free-venue-note');
+    expect(venueNote).toHaveTextContent(/settle the venue's charges with the venue directly/);
+    expect(venueNote).toHaveTextContent(/asked not to confirm the slot/);
+    expect(venueNote).toHaveProp('role', 'status');
     press('create-pod-submit');
-    await screen.findByTestId('create-pod-paid');
-    expect(screen.queryByTestId('create-pod-free')).toBeNull();
-    expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-checked', true);
-    // The ₹0 the Free pick forced does not survive either — the paid pod is
-    // blank again and must be priced by the host before it can publish.
+
+    // Step 4: still free — no amount, no panel, and the note repeats the venue part.
+    await screen.findByTestId('create-pod-free');
+    expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true);
+    expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
+    expect(screen.queryByTestId('create-pod-price-panel')).toBeNull();
+    expect(screen.getByTestId('create-pod-free-note-venue')).toHaveTextContent(
+      /settle the venue's charges/,
+    );
+    // Nothing billable is handed to the earnings query while the pod is free.
+    expect(mockPotentialEarnings.mock.calls.at(-1)?.[0]).toBe(0);
+
+    // Free → Paid: a blank amount the host must fill and the full calculation.
+    press('create-pod-paid');
     expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('value', '');
+    expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-free-note')).toBeNull();
+    expect(screen.getByTestId('create-pod-submit')).toBeDisabled();
     fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
+    expect(mockPotentialEarnings.mock.calls.at(-1)?.[0]).toBe(500);
+
+    // …and back to Free: the typed price is dropped again.
+    press('create-pod-free');
+    expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
+    expect(mockPotentialEarnings.mock.calls.at(-1)?.[0]).toBe(0);
     press('create-pod-submit');
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
-    expect(onPublish.mock.calls[0]?.[1].pod_type).toBe('PAID');
+    expect(onPublish.mock.calls[0]?.[1]).toMatchObject({
+      pod_mode: 'PHYSICAL',
+      pod_type: 'FREE',
+      pod_amount: 0,
+      venue_slot_id: 's1',
+      ticket_discount_enabled: false,
+    });
+  });
+
+  it('says nothing about settling when the free pod books the host own venue', async () => {
+    setup({ viewerUserId: 'owner-1' });
+    await fillToPricing('PHYSICAL');
+    press('create-pod-free');
+    expect(screen.getByTestId('create-pod-free-note')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-free-note-venue')).toBeNull();
   });
 
   // Step 4 only offers products in the pod's category, so a row carried in from

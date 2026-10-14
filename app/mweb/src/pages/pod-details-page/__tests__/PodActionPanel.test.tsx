@@ -18,6 +18,8 @@ const baseProps = {
   joining: false,
   backingOut: false,
   restoringSpot: false,
+  cancellingSpot: false,
+  onCancelSpot: vi.fn(),
   onJoinFree: vi.fn(),
   onBackout: vi.fn(),
   onKeepSpot: vi.fn(),
@@ -191,5 +193,56 @@ describe('PodActionPanel', () => {
   it('shows "Pod is full" for a free pod that cannot be joined', () => {
     renderPanel({ isFree: true, membershipState: { can_join: false } });
     expect(screen.getByRole('button', { name: /pod is full/i })).toBeDisabled();
+  });
+  describe('free pod', () => {
+    const member = { is_member: true, can_backout: false, can_cancel_spot: true, backout_attempts_max: 3 };
+
+    it('offers Cancel Spot instead of Backout, with no attempts note', () => {
+      const onCancelSpot = vi.fn();
+      const onBackout = vi.fn();
+      renderPanel({ isFree: true, membershipState: member, onCancelSpot, onBackout });
+      expect(screen.getByTestId('pod-booked-label')).toHaveTextContent('Pod Booked');
+      expect(screen.queryByTestId('pod-backout')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('pod-backout-maxed')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Backout attempts/i)).not.toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('pod-cancel-spot'));
+      expect(onCancelSpot).toHaveBeenCalledTimes(1);
+      expect(onBackout).not.toHaveBeenCalled();
+    });
+
+    it('disables Cancel Spot while the cancel is in flight', () => {
+      renderPanel({ isFree: true, membershipState: member, cancellingSpot: true, onCancelSpot: vi.fn() });
+      expect(screen.getByTestId('pod-cancel-spot')).toBeDisabled();
+    });
+
+    it('says a checked-in spot can no longer be cancelled, never that attempts ran out', () => {
+      renderPanel({ isFree: true, membershipState: { ...member, can_cancel_spot: false } });
+      expect(screen.queryByTestId('pod-cancel-spot')).not.toBeInTheDocument();
+      expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent(
+        'You have already been checked in at this pod, so your spot can no longer be cancelled.',
+      );
+    });
+
+    it('is back to an instant Join once the spot was cancelled — no referral refill', () => {
+      const onJoinFree = vi.fn();
+      renderPanel({
+        isFree: true,
+        onJoinFree,
+        membershipState: {
+          is_member: false,
+          can_join: true,
+          membership: { status: 'BACKED_OUT', referral_token: 'tok-9', refund_status: 'NONE' },
+        },
+      });
+      expect(screen.queryByRole('button', { name: /copy referral link/i })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Join' }));
+      expect(onJoinFree).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves a paid member with Backout and no Cancel Spot', () => {
+      renderPanel({ membershipState: { ...member, can_backout: true } });
+      expect(screen.getByTestId('pod-backout')).toBeInTheDocument();
+      expect(screen.queryByTestId('pod-cancel-spot')).not.toBeInTheDocument();
+    });
   });
 });

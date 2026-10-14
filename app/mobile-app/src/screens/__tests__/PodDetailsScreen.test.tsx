@@ -8,6 +8,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useCartStore } from '@/stores/cart.store';
 import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
+import { ApiError } from '@/utils/errors';
 import { renderWithProviders } from '@/utils/test-utils';
 
 // The network is offline by default (a share falls back to the plain pod
@@ -101,9 +102,11 @@ jest.mock('@/hooks/useDetails', () => ({
 
 const mockBackout = jest.fn().mockResolvedValue(undefined);
 const mockCancelBackout = jest.fn().mockResolvedValue(undefined);
+const mockCancelSpot = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodBackout: () => ({ backout: mockBackout, busy: false }),
   usePodCancelBackout: () => ({ cancelBackout: mockCancelBackout, busy: false }),
+  usePodCancelSpot: () => ({ cancelSpot: mockCancelSpot, busy: false }),
 }));
 
 // Products gated on by default so the Pod Shop renders; the off path has its
@@ -192,6 +195,8 @@ beforeEach(() => {
   mockBackout.mockClear();
   mockCancelBackout.mockClear();
   mockCancelBackout.mockResolvedValue(undefined);
+  mockCancelSpot.mockReset();
+  mockCancelSpot.mockResolvedValue(undefined);
   mockAds = [];
   mockedResolvedPodId.mockImplementation(resolvedPodIdImpl);
   mockGraphql.mockReset();
@@ -296,6 +301,7 @@ describe('PodDetailsScreen', () => {
   it('cancels and views terms from the backout dialog', () => {
     mockedPod.mockReturnValue({
       ...podData,
+      pod: { ...pod, pod_type: 'PAID', pod_amount: 500 },
       membershipState: { is_member: true, can_join: false, can_backout: true },
       savedInitially: false,
       isLoading: false,
@@ -313,6 +319,7 @@ describe('PodDetailsScreen', () => {
     mockBackout.mockRejectedValueOnce(new Error('cannot backout'));
     mockedPod.mockReturnValue({
       ...podData,
+      pod: { ...pod, pod_type: 'PAID', pod_amount: 500 },
       membershipState: { is_member: true, can_join: false, can_backout: true },
       savedInitially: false,
       isLoading: false,
@@ -538,6 +545,7 @@ describe('PodDetailsScreen', () => {
   it('shows "Pod Booked" for an existing member and backs out instead of paying again', async () => {
     mockedPod.mockReturnValue({
       ...podData,
+      pod: { ...pod, pod_type: 'PAID', pod_amount: 500 },
       membershipState: { is_member: true, can_join: false, can_backout: true },
       savedInitially: false,
       isLoading: false,
@@ -554,6 +562,7 @@ describe('PodDetailsScreen', () => {
   it('shows the refund estimate inside the backout dialog for a paid member', () => {
     mockedPod.mockReturnValue({
       ...podData,
+      pod: { ...pod, pod_type: 'PAID', pod_amount: 500 },
       membershipState: {
         is_member: true,
         can_join: false,
@@ -611,6 +620,87 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByText('A replacement has been confirmed')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('keep-spot-cancel'));
     expect(screen.getByTestId('pod-details-screen')).toBeOnTheScreen();
+  });
+
+  // A free pod: Cancel Spot, never Backout — and back to an instant Join after.
+  it('cancels a free spot, joins again and cancels again', async () => {
+    mockGraphql.mockImplementation((doc: unknown) =>
+      doc === JoinFreePodDocument
+        ? Promise.resolve({ joinFreePod: { id: 'p1' } })
+        : Promise.reject(new Error('offline')),
+    );
+    const refetch = jest.fn().mockResolvedValue(undefined);
+    const joined = { is_member: true, can_join: false, can_backout: false, can_cancel_spot: true };
+    mockedPod.mockReturnValue({
+      ...podData,
+      refetch,
+      membershipState: joined,
+      savedInitially: false,
+      isLoading: false,
+    });
+    const view = renderWithProviders(<PodDetailsScreen />);
+    expect(screen.queryByTestId('pod-backout')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-cancel-spot'));
+    expect(screen.getByTestId('cancel-spot-dialog')).toBeOnTheScreen();
+    refetch.mockClear();
+    fireEvent.press(screen.getByTestId('cancel-spot-confirm'));
+    await waitFor(() => expect(mockCancelSpot).toHaveBeenCalledWith('p1'));
+    await waitFor(() => expect(refetch).toHaveBeenCalled());
+    expect(mockBackout).not.toHaveBeenCalled();
+
+    // The refetch answers "not a member, can join" — the Join CTA is back.
+    mockedPod.mockReturnValue({
+      ...podData,
+      refetch,
+      membershipState: { is_member: false, can_join: true },
+      savedInitially: false,
+      isLoading: false,
+    });
+    view.rerender(<PodDetailsScreen />);
+    refetch.mockClear();
+    fireEvent.press(screen.getByTestId('pod-book'));
+    await waitFor(() => expect(refetch).toHaveBeenCalled());
+    expect(mockGraphql).toHaveBeenCalledWith(
+      JoinFreePodDocument,
+      { podId: 'p1', referral: null, seats: 1 },
+      { auth: true },
+    );
+
+    mockedPod.mockReturnValue({
+      ...podData,
+      refetch,
+      membershipState: joined,
+      savedInitially: false,
+      isLoading: false,
+    });
+    view.rerender(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-cancel-spot'));
+    fireEvent.press(screen.getByTestId('cancel-spot-confirm'));
+    await waitFor(() => expect(mockCancelSpot).toHaveBeenCalledTimes(2));
+  });
+
+  it('names a checked-in refusal on the bar instead of the raw server text', async () => {
+    mockCancelSpot.mockRejectedValueOnce(
+      new ApiError('server words', 400, { code: 'ALREADY_CHECKED_IN' }),
+    );
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: {
+        is_member: true,
+        can_join: false,
+        can_backout: false,
+        can_cancel_spot: true,
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-cancel-spot'));
+    fireEvent.press(screen.getByTestId('cancel-spot-confirm'));
+    expect(await screen.findByTestId('pod-join-error')).toHaveTextContent(
+      'You have already been checked in at this pod, so your spot can no longer be cancelled.',
+    );
+    expect(screen.queryByTestId('cancel-spot-dialog')).toBeNull();
   });
 
   it('shares the pod with the plain pod link when a tracked one cannot be minted', async () => {

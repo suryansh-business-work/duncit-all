@@ -118,8 +118,13 @@ describe('createPodSchema', () => {
     ).toBe(true);
   });
 
-  it('keeps a physical pod paid — a free pod is only valid when it is virtual', () => {
-    expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 0 }))).toContain('pod_type');
+  it('lets a physical pod be free, at ₹0 and nothing else', () => {
+    // `valid()` is a physical pod with a venue, a space and a slot.
+    expect(valid({}).pod_mode).toBe('PHYSICAL');
+    expect(createPodSchema.safeParse(valid({ pod_type: 'FREE', pod_amount: 0 })).success).toBe(true);
+    expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 0 }))).not.toContain('pod_type');
+    // Free still means ₹0 — a physical free pod carrying a price is refused.
+    expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 250 }))).toContain('pod_amount');
   });
 
   it('treats products as optional — a pod with none, or with rows, both validate', () => {

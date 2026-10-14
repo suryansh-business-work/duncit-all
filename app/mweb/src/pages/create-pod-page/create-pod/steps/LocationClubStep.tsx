@@ -59,13 +59,8 @@ export default function LocationClubStep({ form, hostCategories, clubs, cityClub
                 field.onChange(next);
                 // The club list depends on the mode, so the old pick may not be in it.
                 setValue('club_id', '', { shouldDirty: true });
-                // Physical pods can only be Paid — a Free virtual pod switching
-                // to Physical must not carry FREE to submit.
-                if (next === 'PHYSICAL' && watch('pod_type') === 'FREE') {
-                  setValue('pod_type', 'PAID', { shouldDirty: true, shouldValidate: true });
-                  // FREE forced the price to ₹0 — the now-paid pod starts blank.
-                  setValue('pod_amount', null, { shouldDirty: true });
-                }
+                // The Free/Paid pick survives the switch: a physical pod may be
+                // free too, so the mode no longer forces the type.
               }}
             >
               <ToggleButton value="PHYSICAL" sx={{ py: 1.25, fontWeight: 600 }}><DirectionsRunIcon fontSize="small" sx={{ mr: 1 }} /> {t('mweb.createPod.modePhysical')}</ToggleButton>

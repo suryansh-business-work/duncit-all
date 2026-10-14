@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { isBackoutMaxed } from '@duncit/utils';
+import { cancelSpotErrorKey, firstGraphQLError, isBackoutMaxed } from '@duncit/utils';
 import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitIconButton } from '@duncit/buttons';
 import BackoutConfirmDialog from '../pod-details-page/BackoutConfirmDialog';
+import CancelSpotDialog from '../pod-details-page/CancelSpotDialog';
 import RejoinConfirmDialog from './RejoinConfirmDialog';
 import { notify } from '../../components/notify';
 import { parseApiError } from '../../utils/parseApiError';
@@ -13,6 +14,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import PodHistoryDetails from './PodHistoryDetails';
 import {
   BACKOUT_POD_HISTORY,
+  CANCEL_FREE_SPOT_HISTORY,
   MY_POD_MEMBERSHIPS,
   POD_HISTORY_BACKOUT_STATE,
   REJOIN_POD,
@@ -25,11 +27,13 @@ export default function PodHistoryDetailsPage() {
   const { t } = useTranslation();
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [rejoinOpen, setRejoinOpen] = useState(false);
+  const [cancelSpotOpen, setCancelSpotOpen] = useState(false);
   const { data, loading, error, refetch } = useQuery<{ myPodMemberships: PodHistoryItem[] }>(MY_POD_MEMBERSHIPS, {
     fetchPolicy: 'cache-and-network',
   });
   const [backoutPod, backoutState] = useMutation<any>(BACKOUT_POD_HISTORY);
   const [rejoinPod, rejoinState] = useMutation<any>(REJOIN_POD);
+  const [cancelFreeSpot, cancelSpotState] = useMutation(CANCEL_FREE_SPOT_HISTORY);
   const items = useMemo(() => data?.myPodMemberships ?? [], [data]);
   const selected = items.find((item) => item.id === membershipId) ?? null;
   // Attempts left, from the state the backout mutation itself guards on — the
@@ -63,6 +67,21 @@ export default function PodHistoryDetailsPage() {
     }
     // Either way: a refusal is decided against server-side state (the attempt
     // limit), so the page re-reads rather than keeping the copy it guessed on.
+    await refresh();
+  };
+
+  // A free pod's "Cancel Spot": a refusal (checked in, pod started) is named
+  // by its code, and the page re-reads either way.
+  const confirmCancelSpot = async () => {
+    if (!selected?.pod?.id) return;
+    try {
+      await cancelFreeSpot({ variables: { pod_doc_id: selected.pod.id } });
+      notify(t('mweb.podDetails.spotCancelledSnack'), 'success');
+    } catch (cancelError) {
+      const code = firstGraphQLError(cancelError)?.extensions?.code;
+      notify(t(cancelSpotErrorKey(typeof code === 'string' ? code : null)), 'error');
+    }
+    setCancelSpotOpen(false);
     await refresh();
   };
 
@@ -130,10 +149,13 @@ export default function PodHistoryDetailsPage() {
         backoutMaxed={backoutMaxed}
         backingOut={backoutState.loading}
         rejoining={rejoinState.loading}
+        cancellingSpot={cancelSpotState.loading}
         onBackout={() => setBackoutOpen(true)}
         onRejoin={() => setRejoinOpen(true)}
+        onCancelSpot={() => setCancelSpotOpen(true)}
       />
       <BackoutConfirmDialog open={backoutOpen} onClose={() => setBackoutOpen(false)} busy={backoutState.loading} mySeats={selected?.seats ?? 1} onConfirm={confirmBackout} />
+      <CancelSpotDialog open={cancelSpotOpen} onClose={() => setCancelSpotOpen(false)} busy={cancelSpotState.loading} onConfirm={confirmCancelSpot} />
       <RejoinConfirmDialog open={rejoinOpen} onClose={() => setRejoinOpen(false)} busy={rejoinState.loading} onConfirm={confirmRejoin} />
     </Stack>
   );

@@ -4,12 +4,12 @@ import { PodProductsField } from '@duncit/pod-product-picker';
 import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
 import PlaceChargesField from '../fields/PlaceChargesField';
 import TicketDiscountStepField from '../fields/TicketDiscountStepField';
-import PricePanel, { TicketPriceField, type EarningsPreview } from '../price-panel';
+import PricePanel, { FreePodNote, TicketPriceField, type EarningsPreview } from '../price-panel';
 import PodTypeCards from '../PodTypeCards';
 import TermsAgreement from '../TermsAgreement';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
-import type { SpotsBounds } from '@duncit/utils';
+import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
 import type { CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
 interface Props {
@@ -19,12 +19,15 @@ interface Props {
   preview: EarningsPreview;
   /** The range the host may size this pod within (sub-category min → venue capacity). */
   spots: SpotsBounds;
+  /** What a free pod's host is told about the picked slot's venue charges. */
+  venueNotice: FreePodVenueNotice;
 }
 
-/** Step 4 — Free/Paid cards, ticket price, spots stepper, the paid pod's
- * multi-ticket discount, the slot-cost / GST /
- * earnings panel, optional products and the Organizer Terms publish gate. */
-export default function PricingStep({ form, products, showProducts, preview, spots }: Readonly<Props>) {
+/** Step 4 — Free/Paid cards, spots stepper, optional products and the Organizer
+ * Terms publish gate. A PAID pod adds the ticket price, its multi-ticket
+ * discount and the slot-cost / GST / earnings panel; a FREE pod has none of the
+ * three — no amount and no calculation — and reads a short note instead. */
+export default function PricingStep({ form, products, showProducts, preview, spots, venueNotice }: Readonly<Props>) {
   const { control, register, watch, setValue } = form;
   const { t } = useTranslation();
   const spotsLabels = mwebSpotsLabels(t);
@@ -38,7 +41,7 @@ export default function PricingStep({ form, products, showProducts, preview, spo
     <Stack data-testid="create-pod-pricing-step" spacing={2}>
       <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
         <PodTypeCards form={form} />
-        <TicketPriceField form={form} preview={preview} isFree={isFree} />
+        {!isFree && <TicketPriceField form={form} preview={preview} />}
         <Controller
           control={control}
           name="no_of_spots"
@@ -59,19 +62,22 @@ export default function PricingStep({ form, products, showProducts, preview, spo
         />
       </Stack>
       {!isFree && <TicketDiscountStepField form={form} />}
-      <PricePanel preview={preview} />
-      <Box sx={{ ...SURFACE_SX, p: 2 }}>
-        <TextField
-          data-testid="payment_terms"
-          label={t('mweb.createPod.paymentTerms')}
-          fullWidth
-          multiline
-          minRows={3}
-          helperText={t('mweb.createPod.paymentTermsHint')}
-          {...register('payment_terms')}
-          slotProps={{ htmlInput: { 'data-testid': 'payment_terms-input' } }}
-        />
-      </Box>
+      {isFree ? <FreePodNote venueNotice={venueNotice} /> : <PricePanel preview={preview} />}
+      {/* Payment terms describe refunds and charges a free pod does not have. */}
+      {!isFree && (
+        <Box sx={{ ...SURFACE_SX, p: 2 }}>
+          <TextField
+            data-testid="payment_terms"
+            label={t('mweb.createPod.paymentTerms')}
+            fullWidth
+            multiline
+            minRows={3}
+            helperText={t('mweb.createPod.paymentTermsHint')}
+            {...register('payment_terms')}
+            slotProps={{ htmlInput: { 'data-testid': 'payment_terms-input' } }}
+          />
+        </Box>
+      )}
       {isPhysical && (
         <Box sx={{ ...SURFACE_SX, p: 2 }}>
           <Controller

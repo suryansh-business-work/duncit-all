@@ -37,8 +37,8 @@ export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.Refinem
 }
 
 /** The ticket price is blank until the host types one, so a PAID pod can never
- * be published at ₹0 by default — only a FREE pod (whose field is locked to 0)
- * may carry no price. Native twin (rule 27). */
+ * be published at ₹0 by default — only a FREE pod (which shows no price field
+ * and always carries 0) may have no price. Native twin (rule 27). */
 function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.pod_type === 'FREE') {
     if (values.pod_amount !== 0) {
@@ -59,9 +59,8 @@ export function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx,
   if (!POD_TYPE_VALUES.has(values.pod_type)) {
     ctx.addIssue({ code: 'custom', path: ['pod_type'], message: t('mweb.createPod.validation.podTypeInvalid') });
   }
-  if (values.pod_mode === 'PHYSICAL' && values.pod_type === 'FREE') {
-    ctx.addIssue({ code: 'custom', path: ['pod_type'], message: t('mweb.createPod.validation.physicalMustBePaid') });
-  }
+  // FREE is open to physical and virtual pods alike — the mode no longer
+  // narrows the type.
   refineTicketPrice(values, ctx, t);
   // Products are optional and `products_enabled` is derived from the rows, so
   // there is no longer a "switch on but nothing chosen" state to catch here.

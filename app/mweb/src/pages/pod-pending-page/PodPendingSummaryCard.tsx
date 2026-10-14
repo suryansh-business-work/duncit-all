@@ -4,7 +4,7 @@ import EventIcon from '@mui/icons-material/Event';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import PlaceIcon from '@mui/icons-material/Place';
-import { formatMoney } from '@duncit/utils';
+import { formatMoney, isFreePod } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useDateFormat } from '../../utils/dateFormat';
 import { InfoRowList, type InfoRowProps } from './InfoRow';
@@ -39,11 +39,14 @@ export default function PodPendingSummaryCard({ view }: Readonly<{ view: PodPend
     {
       icon: <PaymentsIcon sx={ICON} />,
       label: t('mweb.podPending.expectedEarnings'),
-      value: formatMoney(view.expected_earnings, {
-        symbol: view.currency_symbol,
-        decimals: 2,
-        grouping: false,
-      }),
+      // A free pod earns nothing — it reads as free, never as a zero or a loss.
+      value: isFreePod(pod.pod_type)
+        ? t('mweb.hostShare.freePod')
+        : formatMoney(view.expected_earnings, {
+            symbol: view.currency_symbol,
+            decimals: 2,
+            grouping: false,
+          }),
       testId: 'pod-pending-earnings',
     },
   ];

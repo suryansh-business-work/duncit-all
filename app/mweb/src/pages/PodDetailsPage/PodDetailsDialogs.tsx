@@ -3,6 +3,7 @@ import type { backoutAttemptsLeft as backoutAttemptsLeftFor } from '@duncit/util
 import type { usePricing } from '../../hooks/usePricing';
 import BackoutConfirmDialog from '../pod-details-page/BackoutConfirmDialog';
 import KeepSpotDialog from '../pod-details-page/KeepSpotDialog';
+import CancelSpotDialog from '../pod-details-page/CancelSpotDialog';
 import type StickyPodActionPanel from '../pod-details-page/StickyPodActionPanel';
 import type { usePodDetailActions } from '../pod-details-page/usePodDetailActions';
 import ConfettiOverlay from '../../components/ConfettiOverlay';
@@ -14,7 +15,7 @@ interface PodDetailsDialogsProps {
   backoutAttemptsLeft: ReturnType<typeof backoutAttemptsLeftFor>;
 }
 
-/** Back-out confirm, keep-my-spot and the join confetti. */
+/** Back-out confirm, keep-my-spot, a free pod's cancel-spot confirm and the join confetti. */
 export default function PodDetailsDialogs({
   actions,
   membershipState,
@@ -42,6 +43,12 @@ export default function PodDetailsDialogs({
         attemptsLeft={backoutAttemptsLeft}
         error={actions.keepSpotError}
         onConfirm={actions.onConfirmKeepSpot}
+      />
+      <CancelSpotDialog
+        open={actions.cancelSpotOpen}
+        onClose={() => actions.setCancelSpotOpen(false)}
+        busy={actions.cancelSpotState.loading}
+        onConfirm={actions.onConfirmCancelSpot}
       />
       <ConfettiOverlay
         open={actions.confettiOpen}

@@ -11,7 +11,6 @@ import ZeroEarningsNotice from './ZeroEarningsNotice';
 interface Props {
   form: CreatePodForm;
   preview: EarningsPreview;
-  isFree: boolean;
 }
 
 const FIELD_ID = 'create-pod-ticket-price';
@@ -22,8 +21,9 @@ const asTicketPrice = (value: unknown) => (value === '' || value === null ? null
 
 /** The Step-4 ticket price: its label with the "Suggested Price ⓘ" link to the
  * RIGHT, the amount input, and the zero-earnings notice that blocks publishing
- * when the projected payout is ₹0. Native twin (rule 27). */
-export default function TicketPriceField({ form, preview, isFree }: Readonly<Props>) {
+ * when the projected payout is ₹0. A PAID pod's field only — a free pod has no
+ * price to type, so PricingStep does not mount it. Native twin (rule 27). */
+export default function TicketPriceField({ form, preview }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const { currency } = usePricing();
   const { t } = useTranslation();
@@ -31,9 +31,7 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
     register,
     formState: { errors },
   } = form;
-  const helper = isFree
-    ? t('mweb.createPod.ticketPriceFreeHint')
-    : t('mweb.createPod.ticketPriceHint');
+  const helper = t('mweb.createPod.ticketPriceHint');
   const suggestedLink = t('mweb.createPod.suggestedPrice');
 
   return (
@@ -72,7 +70,6 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
         id={FIELD_ID}
         type="number"
         fullWidth
-        disabled={isFree}
         placeholder={t('mweb.createPod.ticketPricePlaceholder')}
         error={!!errors.pod_amount}
         helperText={errors.pod_amount?.message ?? helper}

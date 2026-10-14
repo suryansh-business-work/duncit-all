@@ -17,6 +17,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { DuncitButton } from '@duncit/buttons';
 import type { SlotRequestRow } from './queries';
+import FreePodNotice from './FreePodNotice';
 import { podSummary, requestedAt, slotPrice, slotWindow } from './slot-request';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -79,10 +80,12 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
 
         <Divider />
 
+        {request.pod_is_free && <FreePodNotice />}
+
         <Stack spacing={1}>
           <Detail label={t('mweb.common.venue')} value={request.venue_name} />
           <Detail label={t('mweb.venueSlotRequests.slot')} value={slotWindow(request)} />
-          <Detail label={t('mweb.venueSlotRequests.slotPrice')} value={slotPrice(request.price)} />
+          {!request.pod_is_free && <Detail label={t('mweb.venueSlotRequests.slotPrice')} value={slotPrice(request.price)} />}
           <Detail label={t('mweb.venueSlotRequests.requested')} value={requestedAt(request.requested_at)} />
           <Detail label={t('mweb.venueSlotRequests.host')} value={request.host_name || '—'} />
           <Detail

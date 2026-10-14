@@ -12,11 +12,13 @@ interface Props {
   joining: boolean;
   backingOut: boolean;
   restoringSpot: boolean;
+  cancellingSpot?: boolean;
   seats: number;
   onSeatsChange: (seats: number) => void;
   onJoinFree: () => void;
   onBackout: () => void;
   onKeepSpot: () => void;
+  onCancelSpot?: () => void;
   onPaidCheckout: () => void;
   onCopyReferral: (token: string) => void;
   onGoToDashboard: () => void;

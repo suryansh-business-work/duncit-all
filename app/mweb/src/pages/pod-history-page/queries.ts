@@ -22,6 +22,7 @@ export const MY_POD_MEMBERSHIPS = gql`
         pod_cancelled_by
         pod_cancelled_at
         cancel_refund_status
+        spot_cancelled_at
         backouts {
           backout_no
           status
@@ -105,6 +106,17 @@ export const BACKOUT_POD_HISTORY = gql`
       refund_status
       refund_payment_id
       referral_token
+    }
+  }
+`;
+
+/** Cancel the spot — a FREE pod's only way out (no backout, no refund). */
+export const CANCEL_FREE_SPOT_HISTORY = gql`
+  mutation CancelFreeSpotFromHistory($pod_doc_id: ID!) {
+    cancelFreeSpot(pod_doc_id: $pod_doc_id) {
+      id
+      status
+      seats
     }
   }
 `;

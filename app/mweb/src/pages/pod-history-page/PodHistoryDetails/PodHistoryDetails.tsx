@@ -1,5 +1,6 @@
 import {
   coverImageUrl,
+  isFreePod,
   isPodPast,
   participationInputFrom,
   podParticipationActions,
@@ -31,11 +32,23 @@ interface Props {
   backoutMaxed?: boolean;
   backingOut: boolean;
   rejoining: boolean;
+  /** True while a free pod's "Cancel Spot" is in flight. */
+  cancellingSpot?: boolean;
   onBackout: () => void;
   onRejoin: () => void;
+  onCancelSpot?: () => void;
 }
 
-export default function PodHistoryDetails({ item, backoutMaxed = false, backingOut, rejoining, onBackout, onRejoin }: Readonly<Props>) {
+export default function PodHistoryDetails({
+  item,
+  backoutMaxed = false,
+  backingOut,
+  rejoining,
+  cancellingSpot = false,
+  onBackout,
+  onRejoin,
+  onCancelSpot,
+}: Readonly<Props>) {
   /*
     What this booking may still be offered, and what it may claim.
 
@@ -45,7 +58,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
     Visited rather than Joined.
   */
   const gate = podParticipationActions(
-    participationInputFrom(item.participation, item.pod?.pod_date_time)
+    participationInputFrom(item.participation, item.pod?.pod_date_time, item.pod?.pod_type)
   );
   const { formatDateTime } = useDateFormat();
   const { t } = useTranslation();
@@ -65,9 +78,11 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
   // "Visited" once they were checked in at a pod that has happened — never on
   // the clock alone. Resolved once here so the chip stays branch-free.
   const visited = gate.joinedLabelKind === 'VISITED' && item.status === 'JOINED';
-  const statusLabel = visited
-    ? t('mweb.podHistory.statusVisited')
-    : t(STATUS_CHIP[item.status].label);
+  // A free pod is left by cancelling the spot — never a backout.
+  const free = isFreePod(pod?.pod_type);
+  let statusLabel = t(STATUS_CHIP[item.status].label);
+  if (visited) statusLabel = t('mweb.podHistory.statusVisited');
+  else if (free && item.status === 'BACKED_OUT') statusLabel = t('mweb.podHistory.statusSpotCancelled');
   const refundText = refundLabel(gate.refundStatus, t);
   const priceCaption =
     pod?.pod_type === 'FREE'
@@ -105,6 +120,9 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
             showRefundState={gate.showRefundState}
             refundLabel={refundText}
             canRejoin={canRejoin}
+            canCancelSpot={gate.canCancelSpot}
+            cancellingSpot={cancellingSpot}
+            onCancelSpot={onCancelSpot}
             backingOut={backingOut}
             rejoining={rejoining}
             ticketLoading={!pod?.id || ticketState.loading}
@@ -120,7 +138,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
           {/* Both of these promise something that is still to come, so neither
               belongs on a pod that has already happened: nobody can fill that
               seat now, and the refund question is already settled. */}
-          {!podPast && (canRejoin || item.status === 'BACKOUT_IN_PROCESS') && (
+          {!podPast && !free && (canRejoin || item.status === 'BACKOUT_IN_PROCESS') && (
             <ReplacementNotice deductionPct={backoutDeductionPct} />
           )}
           {!podPast && gate.refundStatus === 'PENDING' && (

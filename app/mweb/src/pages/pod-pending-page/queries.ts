@@ -19,6 +19,7 @@ export const HOST_POD_PENDING_VIEW = gql`
         place_label
         place_detail
         venue_approval_status
+        pod_type
       }
       category_name
       expected_earnings
@@ -80,6 +81,8 @@ export interface PodPendingView {
     place_label: string | null;
     place_detail: string | null;
     venue_approval_status: string;
+    /** FREE / PAID — a free pod earns nothing, so the card says "Free pod". */
+    pod_type: string;
   };
   category_name: string;
   expected_earnings: number;

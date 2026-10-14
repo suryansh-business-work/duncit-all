@@ -26,6 +26,7 @@ export const VENUE_SLOT_DECISION = gql`
       venue_commission_pct
       venue_commission_amount
       venue_receives
+      pod_is_free
     }
   }
 `;
@@ -53,4 +54,7 @@ export interface SlotDecisionRow {
   venue_commission_pct: number;
   venue_commission_amount: number;
   venue_receives: number;
+  /** A FREE pod: the host settles the venue directly, so every figure above is
+   * 0 and the page shows the free-pod notice instead of the earnings. */
+  pod_is_free: boolean;
 }

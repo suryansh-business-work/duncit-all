@@ -83,8 +83,8 @@ export default function FaqForm({
   const submit = handleSubmit((values) => onSubmit(values));
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{title}</DialogTitle>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" data-testid="faq-form-dialog">
+      <DialogTitle data-testid="faq-form-title">{title}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <RhfTextField
@@ -93,10 +93,11 @@ export default function FaqForm({
             select
             label={categoryLabel}
             hint={categoryHint}
+            data-testid="faq-form-category"
           >
-            {categoryEmptyLabel ? <MenuItem value="">{categoryEmptyLabel}</MenuItem> : null}
+            {categoryEmptyLabel ? <MenuItem value="" data-testid="faq-category-option-none">{categoryEmptyLabel}</MenuItem> : null}
             {categoryOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
+              <MenuItem key={option.value} value={option.value} data-testid={`faq-category-option-${option.value}`}>
                 {option.label}
               </MenuItem>
             ))}
@@ -105,12 +106,14 @@ export default function FaqForm({
             control={control}
             name="question"
             label={t('support.faqs.question')}
+            slotProps={{ htmlInput: { 'data-testid': 'faq-form-question' } }}
             required
           />
           <RhfTextField
             control={control}
             name="answer"
             label={t('support.faqs.answer')}
+            slotProps={{ htmlInput: { 'data-testid': 'faq-form-answer' } }}
             multiline
             minRows={4}
             required
@@ -135,6 +138,7 @@ export default function FaqForm({
                     <Switch
                       checked={!!field.value}
                       onChange={(event) => field.onChange(event.target.checked)}
+                      data-testid="faq-form-active"
                     />
                   }
                   label={t('support.faqs.active')}
@@ -142,12 +146,12 @@ export default function FaqForm({
               )}
             />
           </Stack>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" data-testid="faq-form-error">{error}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={submit} disabled={saving}>
+        <DuncitButton variant="contained" onClick={submit} disabled={saving} data-testid="faq-form-save">
           {saving ? t('shell.common.saving') : t('shell.common.save')}
         </DuncitButton>
       </DialogActions>

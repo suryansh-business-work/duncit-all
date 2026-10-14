@@ -58,27 +58,28 @@ export default function CreateUserDialog({ open, onClose }: Readonly<Props>) {
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={close} fullWidth maxWidth="xs" data-testid="create-user-dialog">
       <DialogTitle sx={{ fontWeight: 800 }}>{t('support.createUser.title')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-          {done && <Alert severity="success">Account created for {done}.</Alert>}
-          {error && <Alert severity="error">{error.message}</Alert>}
-          <TextField label={t('shell.profile.firstName')} size="small" value={form.first_name} onChange={set('first_name')} required />
+          {done && <Alert severity="success" data-testid="create-user-done">Account created for {done}.</Alert>}
+          {error && <Alert severity="error" data-testid="create-user-error">{error.message}</Alert>}
+          <TextField label={t('shell.profile.firstName')} size="small" value={form.first_name} onChange={set('first_name')} required slotProps={{ htmlInput: { 'data-testid': 'create-user-first-name' } }} />
           <TextField label={t('shell.profile.lastName')} size="small" value={form.last_name} onChange={set('last_name')} />
-          <TextField label={t('shell.common.email')} size="small" type="email" value={form.email} onChange={set('email')} required />
+          <TextField label={t('shell.common.email')} size="small" type="email" value={form.email} onChange={set('email')} required slotProps={{ htmlInput: { 'data-testid': 'create-user-email' } }} />
           <Stack direction="row" spacing={1}>
             <TextField label={t('support.createUser.ext')} size="small" sx={{ width: 90 }} value={form.phone_extension} onChange={set('phone_extension')} />
             <TextField label={t('support.createUser.phoneOptional')} size="small" fullWidth value={form.phone_number} onChange={set('phone_number')} />
           </Stack>
-          <TextField label={t('support.createUser.tempPassword')} size="small" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} required helperText={t('support.createUser.tempPasswordHint')} />
+          <TextField label={t('support.createUser.tempPassword')} size="small" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} required helperText={t('support.createUser.tempPasswordHint')} slotProps={{ htmlInput: { 'data-testid': 'create-user-password' } }} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={close}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton onClick={close} data-testid="create-user-close">{t('shell.common.close')}</DuncitButton>
         <DuncitButton
           variant="contained"
           onClick={submit}
+          data-testid="create-user-submit"
           disabled={loading || !form.first_name.trim() || !form.email.trim() || form.password.length < 8}
         >
           Create account

@@ -183,6 +183,7 @@ export default function LiveChatPage() {
         autoHideDuration={4000}
         onClose={actions.clearNotice}
         message={actions.notice}
+        data-testid="live-chat-notice"
       />
     </Box>
   );

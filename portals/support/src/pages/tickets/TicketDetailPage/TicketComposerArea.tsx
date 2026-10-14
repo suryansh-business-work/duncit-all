@@ -41,7 +41,7 @@ export default function TicketComposerArea({
 
   if (status === 'CLOSED') {
     return (
-      <Alert severity="info" icon={<LockOutlinedIcon fontSize="inherit" />} sx={{ flexShrink: 0 }}>
+      <Alert severity="info" icon={<LockOutlinedIcon fontSize="inherit" />} sx={{ flexShrink: 0 }} data-testid="ticket-closed-notice">
         This ticket is closed and read-only. The user can reopen it within the allowed window.
       </Alert>
     );
@@ -50,11 +50,11 @@ export default function TicketComposerArea({
   if (status === 'RESOLVED') {
     return (
       <Box sx={{ flexShrink: 0 }}>
-        <Alert severity="success" sx={{ mb: 1.5 }}>
+        <Alert severity="success" sx={{ mb: 1.5 }} data-testid="ticket-resolved-notice">
           This ticket is resolved. Close it once the user has confirmed, or it will reopen
           automatically if they reply within the allowed window.
         </Alert>
-        <DuncitButton variant="contained" color="error" fullWidth size="large" onClick={() => setConfirmClose(true)}>
+        <DuncitButton variant="contained" color="error" fullWidth size="large" onClick={() => setConfirmClose(true)} data-testid="ticket-close">
           Close
         </DuncitButton>
         <ConfirmDialog
@@ -97,7 +97,7 @@ export default function TicketComposerArea({
           accept={ATTACHMENT_ACCEPT_ALL}
           allowDocuments
         />
-        <DuncitButton variant="contained" endIcon={<SendIcon />} disabled={replying || !htmlToText(bodyHtml)} onClick={onSend}>
+        <DuncitButton variant="contained" endIcon={<SendIcon />} disabled={replying || !htmlToText(bodyHtml)} onClick={onSend} data-testid="ticket-send">
           Send
         </DuncitButton>
       </Stack>

@@ -1,6 +1,11 @@
 import { useCallback } from 'react';
 import { Link as RouterLink } from 'react-router';
-import { VenueDetailsPage, type AdminVenueDetail, type VenueDetailsExtraTab } from '@duncit/entity-consoles';
+import {
+  VenueDetailsPage,
+  useConsoleAccess,
+  type AdminVenueDetail,
+  type VenueDetailsExtraTab,
+} from '@duncit/entity-consoles';
 import { DuncitButton } from '@duncit/buttons';
 import { logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
@@ -25,9 +30,12 @@ const OWNER_ACCOUNT: FoodAccountMode = { kind: 'status' };
  * They are tabs of the record, selected through the URL like the record's own.
  * The menu tab is there for every venue, because it is where food is switched
  * on; an editor may also change the GST number on the food invoices there.
+ * Cancelling an order refunds the guest, which the server keeps to the platform
+ * governors (and the owner), so a console editor is not offered the button.
  */
 export default function VenueRecordPage() {
   const { t } = useTranslation();
+  const { canGovern } = useConsoleAccess();
   const foodTabs = useCallback(
     (venue: AdminVenueDetail): VenueDetailsExtraTab[] => [
       {
@@ -59,7 +67,9 @@ export default function VenueRecordPage() {
             {
               value: 'foodOrders',
               label: t('venueFoodOwner.orders.title'),
-              render: () => <VenueFoodOrders key={venue.id} venueId={venue.id} surface={SURFACE} />,
+              render: () => (
+                <VenueFoodOrders key={venue.id} venueId={venue.id} surface={SURFACE} canRefund={canGovern} />
+              ),
             },
             {
               value: 'foodCoupons',
@@ -69,7 +79,7 @@ export default function VenueRecordPage() {
           ]
         : []),
     ],
-    [t],
+    [t, canGovern],
   );
   return <VenueDetailsPage extraTabs={foodTabs} />;
 }

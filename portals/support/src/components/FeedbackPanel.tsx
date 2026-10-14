@@ -12,7 +12,7 @@ export default function FeedbackPanel({ rating, comment }: Readonly<Props>) {
   const option = feedbackOption(rating);
   if (!option) return null;
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover' }}>
+    <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover' }} data-testid="feedback-panel">
       <Typography variant="overline" sx={{ fontWeight: 800, display: 'block', mb: 0.5 }}>
         User feedback
       </Typography>

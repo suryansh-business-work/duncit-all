@@ -93,6 +93,8 @@ export const MobilePublicVenueDocument = gql(`
       food_ordering {
         enabled
         discount_pct
+        tax_mode
+        gst_pct
       }
     }
   }

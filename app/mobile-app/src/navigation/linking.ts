@@ -123,6 +123,10 @@ export const linking: LinkingOptions<RootStackParamList> = {
       VenuePublish: 'venues/publish',
       HostPublish: 'host/publish',
       VenuePods: 'venues/pods',
+      // The venue's food desk, on mWeb's paths.
+      VenueFoodDashboard: 'venues/food-dashboard',
+      VenueFoodOrders: 'venues/food-orders',
+      VenueFoodCoupons: 'venues/food-coupons',
       // The brand desk, on mWeb's paths.
       BrandOrders: 'products/orders',
       BrandOrderDetail: 'products/orders/:id',

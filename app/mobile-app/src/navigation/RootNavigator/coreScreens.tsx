@@ -73,6 +73,11 @@ import {
 } from '@/screens/StudioOptionsScreen';
 import { VenueListScreen } from '@/screens/VenueListScreen';
 import { VenuePodsScreen } from '@/screens/VenuePodsScreen';
+import {
+  VenueFoodCouponsScreen,
+  VenueFoodDashboardScreen,
+  VenueFoodOrdersScreen,
+} from '@/screens/VenueFoodDeskScreens';
 import { withProductGate } from '@/navigation/withProductGate';
 import { Stack } from './stack';
 
@@ -152,6 +157,9 @@ export function renderCoreScreens() {
       <Stack.Screen name="VenuePublish" component={VenuePublishScreen} />
       <Stack.Screen name="HostPublish" component={HostPublishScreen} />
       <Stack.Screen name="VenuePods" component={VenuePodsScreen} />
+      <Stack.Screen name="VenueFoodDashboard" component={VenueFoodDashboardScreen} />
+      <Stack.Screen name="VenueFoodOrders" component={VenueFoodOrdersScreen} />
+      <Stack.Screen name="VenueFoodCoupons" component={VenueFoodCouponsScreen} />
       <Stack.Screen name="BrandOrders" component={GatedBrandOrdersScreen} />
       <Stack.Screen name="BrandOrderDetail" component={GatedBrandOrderDetailScreen} />
       <Stack.Screen name="BrandWarehouses" component={GatedBrandWarehousesScreen} />

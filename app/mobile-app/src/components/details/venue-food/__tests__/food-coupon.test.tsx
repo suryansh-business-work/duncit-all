@@ -91,6 +91,11 @@ const accepted = (over: Partial<VenueFoodCouponPreview> = {}): VenueFoodCouponPr
   discount_pct: 10,
   discount_amount: 24,
   coupon_discount_amount: 43.2,
+  // The venue's GST as the server applies it — none on this venue.
+  tax_mode: 'INCLUSIVE',
+  gst_pct: 0,
+  taxable_amount: 172.8,
+  tax_amount: 0,
   total: 172.8,
   currency_symbol: '₹',
   ...over,
@@ -104,6 +109,7 @@ const refused = (reason: VenueFoodCouponRejection): VenueFoodCouponPreview =>
     coupon_code: null,
     coupon_pct: 0,
     coupon_discount_amount: 0,
+    taxable_amount: 216,
     total: 216,
   });
 

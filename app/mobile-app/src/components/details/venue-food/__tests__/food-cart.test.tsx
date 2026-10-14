@@ -8,6 +8,7 @@ import {
 } from '@duncit/utils';
 
 import { FoodCartBar } from '@/components/details/venue-food/FoodCartBar';
+import { FoodTotals } from '@/components/details/venue-food/FoodTotals';
 import { VenueFoodOrderingScope } from '@/components/details/venue-food/VenueFoodOrderingScope';
 import type { FoodOrdering } from '@/hooks/useFoodOrdering';
 import type { PublicVenueDetails } from '@/hooks/useHostsVenues';
@@ -126,5 +127,33 @@ describe('VenueFoodOrderingScope', () => {
     mockOrdering = ordering([{ item: dish(), quantity: 1 }], false);
     renderScope();
     expect(screen.queryByTestId('food-cart-bar')).toBeNull();
+  });
+});
+
+describe('FoodTotals — the GST line', () => {
+  const totals = (tax: Parameters<typeof FoodTotals>[0]['tax'], total: number) =>
+    renderWithProviders(
+      <FoodTotals subtotal={200} discount={20} discountPct={10} tax={tax} total={total} currency="₹" testID="totals" />,
+    );
+
+  it('adds GST charged on top as its own line before the total', () => {
+    totals({ mode: 'EXCLUSIVE', pct: 5, amount: 9 }, 189);
+    expect(screen.getByText('GST (5%)')).toBeOnTheScreen();
+    expect(screen.getByTestId('totals-gst')).toHaveTextContent('+ ₹9');
+    expect(screen.getByTestId('totals-total')).toHaveTextContent('₹189');
+    expect(screen.queryByTestId('totals-gst-included')).toBeNull();
+  });
+
+  it('names the GST already inside the prices under the total, without a line of its own', () => {
+    totals({ mode: 'INCLUSIVE', pct: 5, amount: 8.57 }, 180);
+    expect(screen.getByTestId('totals-gst-included')).toHaveTextContent('Includes ₹8.57 GST (5%)');
+    expect(screen.getByTestId('totals-total')).toHaveTextContent('₹180');
+    expect(screen.queryByTestId('totals-gst')).toBeNull();
+  });
+
+  it('shows nothing about GST for an order without any', () => {
+    totals(null, 180);
+    expect(screen.queryByTestId('totals-gst')).toBeNull();
+    expect(screen.queryByTestId('totals-gst-included')).toBeNull();
   });
 });

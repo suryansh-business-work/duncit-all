@@ -5,6 +5,7 @@ import { FOOD_FEEDBACK_LIMITS } from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
 import { DuncitButton } from '@/components/DuncitButton';
+import type { FoodPhotoSource } from '@/hooks/useFoodFeedback';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -16,7 +17,7 @@ const REMOVE_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 } as const;
 interface Props {
   images: string[];
   /** Without these the photos are only shown — the rating already given. */
-  onAdd?: () => void;
+  onAdd?: (from: FoodPhotoSource) => void;
   onRemove?: (url: string) => void;
   uploading?: boolean;
   /** Why the last photo did not go up, or null. */
@@ -26,7 +27,8 @@ interface Props {
 
 /**
  * A rating's photos: the thumbnails — each with a remove while the rating is
- * still being written — and "Add photo" until the limit is reached. The same
+ * still being written — and "Take photo" / "Choose from library" until the
+ * limit is reached. The same
  * row, without its controls, shows the photos of a rating already sent.
  */
 export function FoodFeedbackPhotos({
@@ -85,19 +87,29 @@ export function FoodFeedbackPhotos({
         </XStack>
       ) : null}
       {onAdd && !full ? (
-        <XStack>
+        <XStack gap={8} flexWrap="wrap">
           <DuncitButton
-            testID="food-feedback-add-photo"
+            testID="food-feedback-take-photo"
             label={t(
-              uploading ? 'mweb.venueFood.feedback.uploading' : 'mweb.venueFood.feedback.addPhoto',
+              uploading ? 'mweb.venueFood.feedback.uploading' : 'mweb.venueFood.feedback.takePhoto',
             )}
             variant="outline"
             tone="neutral"
             size="sm"
             loading={uploading}
             disabled={uploading || disabled}
-            icon={<MaterialIcons name="add-a-photo" size={18} color={ink} />}
-            onPress={onAdd}
+            icon={<MaterialIcons name="photo-camera" size={18} color={ink} />}
+            onPress={() => onAdd('camera')}
+          />
+          <DuncitButton
+            testID="food-feedback-choose-photo"
+            label={t('mweb.venueFood.feedback.chooseFromLibrary')}
+            variant="outline"
+            tone="neutral"
+            size="sm"
+            disabled={uploading || disabled}
+            icon={<MaterialIcons name="photo-library" size={18} color={ink} />}
+            onPress={() => onAdd('library')}
           />
         </XStack>
       ) : null}

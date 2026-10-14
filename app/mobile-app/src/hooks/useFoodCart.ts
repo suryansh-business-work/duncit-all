@@ -3,11 +3,13 @@ import {
   FOOD_ORDER_LIMITS,
   foodCartLines,
   foodCartSignature,
+  foodCartTaxOf,
   priceFoodCartLines,
   reconcileFoodCart,
   type FoodCartLine,
   type FoodCartPrice,
   type FoodCartQuantities,
+  type FoodCartTax,
   type VenueFoodItem,
 } from '@duncit/utils';
 
@@ -57,7 +59,13 @@ export function useFoodCart(
   venueId: string,
   menu: readonly VenueFoodItem[],
   discountPct: number,
+  /** The venue's `food_ordering` — the GST the server resolved for it. */
+  ordering?: Partial<FoodCartTax> | null,
 ): FoodCart {
+  // Primitives, so a re-read venue with the same GST does not re-price the cart.
+  const taxMode = ordering?.tax_mode;
+  const gstPct = ordering?.gst_pct;
+  const tax = useMemo(() => foodCartTaxOf({ tax_mode: taxMode, gst_pct: gstPct }), [taxMode, gstPct]);
   const [stored, setStored] = useState<FoodCartQuantities>({});
   const [coupon, setCoupon] = useState<AppliedFoodCoupon | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -102,8 +110,8 @@ export function useFoodCart(
 
   const lines = useMemo(() => foodCartLines(menu, reconciled.cart), [menu, reconciled.cart]);
   const price = useMemo(
-    () => priceFoodCartLines(lines, discountPct, coupon),
-    [lines, discountPct, coupon],
+    () => priceFoodCartLines(lines, discountPct, coupon, tax),
+    [lines, discountPct, coupon, tax],
   );
   const signature = useMemo(() => foodCartSignature(lines), [lines]);
 

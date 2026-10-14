@@ -1,5 +1,5 @@
 import { Text, XStack, YStack } from 'tamagui';
-import { formatFoodMoney } from '@duncit/utils';
+import { formatFoodMoney, type FoodTaxLine } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -9,6 +9,8 @@ interface Props {
   discountPct: number;
   /** The venue's coupon and what it took off — its own line, after the discount. */
   coupon?: { code: string; pct: number; amount: number } | null;
+  /** The GST (`foodTaxLine`): a line added before the total, or a note under it when it is inside the prices. */
+  tax?: FoodTaxLine | null;
   total: number;
   currency: string;
   testID: string;
@@ -40,7 +42,8 @@ function Row({
 
 /**
  * Subtotal, the QR-order discount when there is one, the venue's coupon when
- * one is applied, and the total — the same lines on the cart (where they follow the steppers, so the block is a
+ * one is applied, GST added on top (or a note that the prices include it), and
+ * the total — the same lines on the cart (where they follow the steppers, so the block is a
  * live region) and on the placed order. Tamagui twin of mWeb's food/FoodTotals.
  */
 export function FoodTotals({
@@ -48,6 +51,7 @@ export function FoodTotals({
   discount,
   discountPct,
   coupon,
+  tax,
   total,
   currency,
   testID,
@@ -77,6 +81,13 @@ export function FoodTotals({
           testID={`${testID}-coupon`}
         />
       ) : null}
+      {tax?.mode === 'EXCLUSIVE' ? (
+        <Row
+          label={t('mweb.venueFood.cart.gstAdded', { vars: { pct: String(tax.pct) } })}
+          value={`+ ${money(tax.amount)}`}
+          testID={`${testID}-gst`}
+        />
+      ) : null}
       <YStack height={1} backgroundColor="$borderColor" />
       <Row
         label={t('mweb.venueFood.cart.total')}
@@ -84,6 +95,13 @@ export function FoodTotals({
         strong
         testID={`${testID}-total`}
       />
+      {tax?.mode === 'INCLUSIVE' ? (
+        <Text testID={`${testID}-gst-included`} fontSize={12} color="$muted" textAlign="right">
+          {t('mweb.venueFood.cart.gstIncluded', {
+            vars: { amount: money(tax.amount), pct: String(tax.pct) },
+          })}
+        </Text>
+      ) : null}
     </YStack>
   );
 }

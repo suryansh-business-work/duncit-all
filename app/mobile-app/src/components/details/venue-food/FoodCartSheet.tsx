@@ -1,5 +1,5 @@
 import { YStack } from 'tamagui';
-import { formatFoodMoney } from '@duncit/utils';
+import { foodTaxLine, formatFoodMoney } from '@duncit/utils';
 
 import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { RazorpayWebView } from '@/components/checkout/RazorpayWebView';
@@ -14,6 +14,7 @@ import { FoodCheckoutForm } from './food-checkout/FoodCheckoutForm';
 import { useFoodCheckoutForm } from './food-checkout/useFoodCheckoutForm';
 import { FoodCartLines } from './FoodCartLines';
 import { FoodCouponField } from './FoodCouponField';
+import { FoodCouponOffers } from './FoodCouponOffers';
 import { FoodNotice } from './FoodNotice';
 import { FoodTotals } from './FoodTotals';
 
@@ -81,6 +82,13 @@ export function FoodCartSheet({ ordering, venueName, currency, discountPct }: Re
     >
       <YStack gap={16}>
         <FoodCartLines cart={cart} currency={currency} disabled={submitting} />
+        <FoodCouponOffers
+          venueId={ordering.venueId}
+          box={couponBox}
+          cart={cart}
+          currency={currency}
+          disabled={submitting}
+        />
         <FoodCouponField
           box={couponBox}
           cart={cart}
@@ -93,6 +101,7 @@ export function FoodCartSheet({ ordering, venueName, currency, discountPct }: Re
           discount={price.discount}
           discountPct={discountPct}
           coupon={couponLine}
+          tax={foodTaxLine(price.taxMode, price.gstPct, price.tax)}
           total={price.total}
           currency={currency}
           testID="food-cart-totals"

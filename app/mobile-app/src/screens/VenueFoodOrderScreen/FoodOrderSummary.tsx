@@ -1,5 +1,10 @@
 import { Text, XStack, YStack } from 'tamagui';
-import { FOOD_PAYMENT_STATUS_KEYS, formatFoodMoney, type VenueFoodOrder } from '@duncit/utils';
+import {
+  FOOD_PAYMENT_STATUS_KEYS,
+  foodTaxLine,
+  formatFoodMoney,
+  type VenueFoodOrder,
+} from '@duncit/utils';
 
 import { DietMark } from '@/components/details/venue-food/DietMark';
 import { FoodTotals } from '@/components/details/venue-food/FoodTotals';
@@ -79,6 +84,7 @@ export function FoodOrderSummary({ order }: Readonly<{ order: VenueFoodOrder }>)
               }
             : null
         }
+        tax={foodTaxLine(order.tax_mode, order.gst_pct, order.tax_amount)}
         total={order.total}
         currency={order.currency_symbol}
         testID="food-order-totals"

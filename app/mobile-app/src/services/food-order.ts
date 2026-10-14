@@ -1,5 +1,6 @@
 import { parse } from 'graphql';
 import {
+  AVAILABLE_VENUE_FOOD_COUPONS_QUERY,
   PLACE_VENUE_FOOD_ORDER_MUTATION,
   PREVIEW_VENUE_FOOD_COUPON_QUERY,
   SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION,
@@ -9,6 +10,7 @@ import {
   VERIFY_VENUE_FOOD_ORDER_MUTATION,
   foodCouponRejectionOf,
   foodOrderErrorCode,
+  type AvailableVenueFoodCoupon,
   type PlaceVenueFoodOrderInput,
   type PreviewVenueFoodCouponInput,
   type SubmitVenueFoodFeedbackInput,
@@ -73,6 +75,19 @@ export async function fetchFoodOrder(
 }
 
 /** What a venue's coupon code does to a cart. Changes nothing; a refused code comes back in the answer. */
+const AVAILABLE_VENUE_FOOD_COUPONS = parse(AVAILABLE_VENUE_FOOD_COUPONS_QUERY);
+
+/** The coupons a guest can pick from at this venue's checkout, best first. */
+export async function fetchAvailableFoodCoupons(
+  venueId: string,
+): Promise<AvailableVenueFoodCoupon[]> {
+  const data = await graphqlRequest<
+    { availableVenueFoodCoupons: AvailableVenueFoodCoupon[] },
+    { venueId: string }
+  >(AVAILABLE_VENUE_FOOD_COUPONS, { venueId }, { auth: true });
+  return data.availableVenueFoodCoupons ?? [];
+}
+
 export async function previewFoodCoupon(
   input: PreviewVenueFoodCouponInput,
 ): Promise<VenueFoodCouponPreview> {

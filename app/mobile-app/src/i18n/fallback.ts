@@ -20,6 +20,7 @@ import {
   AVAILABILITY_BUNDLE,
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  VENUE_FOOD_OWNER_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   CLUB_FORM_BUNDLE,
@@ -77,6 +78,8 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   // The publish card in Venue Studio and Host Studio.
   ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
+  // The venue's food desk — Tamagui twins of the screens @duncit/venue-food draws on the web.
+  ...VENUE_FOOD_OWNER_BUNDLE,
   // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
   ...POD_REQUESTS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,

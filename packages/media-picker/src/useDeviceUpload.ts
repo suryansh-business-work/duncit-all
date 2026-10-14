@@ -18,6 +18,8 @@ export type UploadStage = 'uploading' | 'compressing' | 'processing';
 interface Args extends FilePolicy {
   open: boolean;
   folder: string;
+  /** The record the files are for — the server files them in its folder. */
+  entityId?: string;
   surface: UploadSurface;
   onPicked: (url: string, meta?: PickedFileMeta) => void;
   onClose: () => void;
@@ -35,6 +37,7 @@ interface Args extends FilePolicy {
 export function useDeviceUpload({
   open,
   folder,
+  entityId,
   surface,
   allowImage,
   allowVideo,
@@ -125,10 +128,10 @@ export function useDeviceUpload({
       if (isVideo) {
         // Videos stream DIRECTLY to ImageKit with real byte progress, then a
         // server-side FFmpeg pass compresses them (no-op when disabled).
-        url = await directUploadToImagekit(client, picked, folder, setUploadPct);
+        url = await directUploadToImagekit(client, picked, folder, setUploadPct, surface, entityId);
         setStage('compressing');
         setUploadPct(0);
-        url = await compressUploadedVideo(client, url, folder, surface, setUploadPct);
+        url = await compressUploadedVideo(client, url, folder, surface, setUploadPct, null, entityId);
         setUploadPct(100);
       } else {
         // Crop rect + preset go to the server, which crops → compresses (sharp)
@@ -138,6 +141,7 @@ export function useDeviceUpload({
         );
         const uploaded = await uploadImageToImagekit(client, picked, {
           folder,
+          entityId,
           allowDocuments,
           surface,
           crop: croppable ? cropRect : null,

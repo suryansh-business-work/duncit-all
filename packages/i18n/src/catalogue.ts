@@ -52,6 +52,17 @@ export function flattenCatalogue(input: NestedCatalogue | null | undefined): Fla
   return out;
 }
 
+/**
+ * One branch of a nested catalogue, or an empty one when it is a leaf or
+ * missing — how a surface ships a single namespace of a bigger bundle (mWeb
+ * and the app take `shell.foodTax` without the rest of the portal shell).
+ */
+export function catalogueBranch(catalogue: NestedCatalogue | string | undefined, key: string): NestedCatalogue {
+  if (!catalogue || typeof catalogue === 'string') return {};
+  const value = catalogue[key];
+  return value && typeof value !== 'string' ? value : {};
+}
+
 /** Expand dot-paths back to nested form — how the admin panel and the local
  * fallback files present a catalogue for editing/authoring. */
 export function nestCatalogue(flat: FlatCatalogue | null | undefined): NestedCatalogue {

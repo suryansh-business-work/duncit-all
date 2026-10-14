@@ -18,6 +18,8 @@ exports:
   - 'nestCatalogue'
   - 'mergeCatalogues'
   - 'missingKeys'
+  - 'catalogueBranch'
+  - 'SHELL_FOOD_TAX_SLICE'
   - 'MWEB_BUNDLE'
   - 'SHELL_BUNDLE'
   - 'WEBSITE_BUNDLE'
@@ -132,7 +134,14 @@ flattenCatalogue(authored)
 // }
 
 nestCatalogue(flattenCatalogue(authored))   // round-trips back to `authored`
+
+catalogueBranch(authored, 'mweb')           // one branch, {} for a leaf or a missing key
 ```
+
+A surface that renders ONE namespace of a bigger bundle ships a slice of it rather than the
+whole bundle: `SHELL_FOOD_TAX_SLICE` is `shell.foodTax.*` alone, which mWeb and the native app
+spread into their fallbacks because the venue food menu (and its shared GST rules) render there
+without the portal shell.
 
 ```ts
 mergeCatalogues(flattenCatalogue(authored), server)

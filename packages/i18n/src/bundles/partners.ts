@@ -400,54 +400,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
         'This file is already uploaded as "{{type}}". The same document cannot be used more than once.',
       facilities: 'Facilities',
       food: 'Food',
-      foodAddMenuItem: 'Add menu item',
-      foodAddPhoto: 'Add photo',
-      foodAddPhotoFor: 'Add photo of {name}',
-      foodAvailable: 'Available to order',
-      foodCategory: 'Menu section',
-      foodCategoryHint: 'The heading it sits under, e.g. Starters',
-      foodCategoryTooLong: 'Keep the menu section under {max} characters',
-      foodDescription: 'Description',
-      foodDescriptionTooLong: 'Keep the description under {max} characters',
-      foodDiet: {
-        EGG: 'Contains egg',
-        NON_VEG: 'Non-vegetarian',
-        VEG: 'Vegetarian',
-        VEGAN: 'Vegan',
-      },
-      foodDiscountInvalid: 'Enter a whole number from 0 to {max}',
-      foodDishNumber: 'Menu item {n}',
-      foodMenu: 'Menu',
-      foodMenuHint: 'List each dish with its price. Guests see the menu on your public venue page.',
-      foodMenuLimit: 'A menu can list at most {max} items.',
-      foodName: 'Item name',
-      foodNameRequired: 'Give this menu item a name',
-      foodNameTooLong: 'Item name must be {max} characters or fewer',
-      foodOrderingAccount: 'Razorpay account',
-      foodOrderingAccountHint: 'Only an account that passed its connection check can be picked.',
-      foodOrderingAccountRequired: 'Pick a Razorpay account before taking food orders',
-      foodOrderingAddAccount: 'Add Razorpay account',
-      foodOrderingDiscount: 'QR order discount %',
-      foodOrderingDiscountHint: 'Taken off every order placed from the QR. 0 to {max}.',
-      // GST on QR orders. The field labels are shell.foodTax.* — Finance and the Venues console say them too.
-      foodTaxTitle: 'GST on food',
-      foodTaxIntro: 'How GST meets your menu prices. Your bills and invoices show it; the money stays yours.',
       foodGstinInDocuments: 'Add your GST number in the Documents section — it is printed on every food invoice.',
-      foodOrderingEnabled: 'Accept food orders from the venue QR',
-      foodOrderingEnabledHint: 'Guests scan your venue QR, order from the menu and pay online.',
-      foodOrderingIntro:
-        'Guests pay this Razorpay account directly. Duncit does not hold or settle this money.',
-      foodOrderingLockedHint: 'Pick a connected Razorpay account and keep at least one menu item available first.',
-      foodOrderingNeedsDish: 'Keep at least one menu item available before taking food orders',
-      foodOrderingNoAccount: 'No account',
-      foodOrderingTitle: 'Online ordering & payments',
-      foodPhotoAlt: 'Photo {n} of {name}',
-      foodPhotos: 'Photos ({used} of {max})',
-      foodPhotosLimit: 'A menu item can have at most {max} photos',
-      foodPriceInvalid: 'Enter a price of at least 1',
-      foodPriceTooHigh: 'The price cannot be more than {max}',
-      foodRemoveDish: 'Remove {name}',
-      foodRemovePhoto: 'Remove photo {n} of {name}',
       foodReviewNo: 'Does not offer food',
       foodReviewOrderingOff: 'QR ordering off',
       foodReviewOrderingOn: 'QR ordering on',
@@ -456,16 +409,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       foodSectionHint: 'Menu, photos & online ordering',
       foodSectionIntro:
         'Say whether this venue serves food, list its menu and, if you want, take orders from the venue QR.',
-      foodSpice: {
-        EXTRA_HOT: 'Extra hot',
-        HOT: 'Hot',
-        MEDIUM: 'Medium',
-        MILD: 'Mild',
-        NONE: 'Not spicy',
-      },
-      foodSpiceLevel: 'Spice level',
-      foodType: 'Food type',
-      foodUntitledDish: 'this menu item',
       hasGstin: 'This venue has a GSTIN',
       hasGstinHint: 'Turn this off if the venue is not GST-registered.',
       hasPan: 'This venue has a PAN',
@@ -475,8 +418,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       ifscCodeRequired: 'IFSC code is required',
       leavesAndHolidays: 'Leaves & Holidays',
       noLeaveDatesYet: 'No leave dates yet.',
-      offersFood: 'Does this venue offer food?',
-      offersFoodHint: 'Turn this on to list a menu. Turning it off keeps the menu for later and stops food orders.',
       owner: 'Owner',
       ownerAddress: 'Owner address',
       ownerDob: 'Owner DOB',
@@ -1134,13 +1075,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
     // The Food Dashboard, Food Orders and Food Coupons copy moved to the shared
     // `venueFoodOwner.*` namespace with @duncit/venue-food, which mWeb and the
     // Venues console render too.
-    // The Food Menu page: the venue form's Food Menu section on a page of its own.
-    foodMenu: {
-      loadFailed: 'Could not load the food menu settings.',
-      notApproved:
-        'This venue is not approved yet. Until it is, its food menu is edited in the venue form with the rest of the application.',
-      openVenueForm: 'Open venue form',
-    },
+    // The Food Menu page's copy is the shared `venueFoodOwner.menu.*` too.
 
     walletPage: {
       // The three validation sentences moved to the shared `withdraw.*`

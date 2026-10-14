@@ -364,6 +364,14 @@ const DIET_KEYS: Readonly<Record<string, string>> = {
   VEGAN: 'venueFoodOwner.diet.VEGAN',
 };
 
+const SPICE_KEYS: Readonly<Record<string, string>> = {
+  NONE: 'venueFoodOwner.spice.NONE',
+  MILD: 'venueFoodOwner.spice.MILD',
+  MEDIUM: 'venueFoodOwner.spice.MEDIUM',
+  HOT: 'venueFoodOwner.spice.HOT',
+  EXTRA_HOT: 'venueFoodOwner.spice.EXTRA_HOT',
+};
+
 /** `value`'s words from `keys`; a value this build does not know reads as itself. */
 const labelOf = (t: FoodOwnerTranslate, keys: Readonly<Record<string, string>>, value: string): string => {
   const key: string | undefined = keys[value];
@@ -385,6 +393,10 @@ export const foodOrderAdvanceLabel = (t: FoodOwnerTranslate, next: VenueFoodOrde
 
 export const foodDietLabel = (t: FoodOwnerTranslate, diet: VenueFoodDiet | string): string =>
   labelOf(t, DIET_KEYS, diet);
+
+/** A dish's spice level in words — what the menu editor's select offers on every surface. */
+export const foodSpiceLabel = (t: FoodOwnerTranslate, level: string): string =>
+  labelOf(t, SPICE_KEYS, level);
 
 /** An amount in the order's own currency, as the server stamped it. */
 export const foodOrderMoney = (order: Pick<FoodOwnerOrder, 'currency_symbol'>, amount: number): string =>

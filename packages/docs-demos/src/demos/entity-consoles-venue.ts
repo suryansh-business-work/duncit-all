@@ -195,8 +195,9 @@ export const venueEditorMappingDemo = defineDemo<VenueRecordMock>({
           : `${step1.capacity} — typed, because the venue has no named spaces`,
       'adminUpdateVenue food': [
         step1.offers_food ? 'offers food' : 'does not offer food',
-        `${step1.food_menu.filter((dish) => dish.id).length} dish(es) kept under their ids`,
-        `${step1.food_menu.filter((dish) => !dish.id).length} new`,
+        // Switched off, only the switch goes — the server keeps the menu for later.
+        `${(step1.food_menu ?? []).filter((dish) => 'id' in dish).length} dish(es) kept under their ids`,
+        `${(step1.food_menu ?? []).filter((dish) => !('id' in dish)).length} new`,
         'food_ordering' in step1 ? 'food_ordering sent' : 'food_ordering never sent',
       ].join(', '),
       'updateVenueSettings sends': [

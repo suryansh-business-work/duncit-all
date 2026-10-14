@@ -253,6 +253,7 @@ pickBestVideoFile({
 | `onClose` | `() => void` | yes | — | Close handler. |
 | `onPicked` | `(url: string, meta?: PickedFileMeta) => void` | yes | — | Fires with the final stored URL. `meta.hash` is only present when `detectDuplicates` is on. |
 | `folder` | `string` | no | — | ImageKit folder, e.g. `'/pods'`, `'/branding'`. |
+| `entityId` | `string` | no | — | The record the files are for (a venue, a pod…). Sent as `entity_id` with every device upload, video compression and Pexels import, so the server files them in that record's own folder (`/{env}/venues/{id}/media` for `folder='/venues'`). Without it an owned folder parks the file under the uploader. |
 | `title` | `string` | no | — | Dialog heading. |
 | `accept` | `string` | no | images + videos | Comma-separated MIME list. A Pexels tab it rules out is not offered at all — a `video/*` reel picker shows no photos tab. |
 | `allowDocuments` | `boolean` | no | derived from `accept` | Pass `false` to force-disable documents even for a pdf accept list. |

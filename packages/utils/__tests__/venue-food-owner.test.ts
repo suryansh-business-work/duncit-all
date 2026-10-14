@@ -27,6 +27,7 @@ import {
   foodOrderNextStep,
   foodOrderStatusLabel,
   foodPaymentStatusLabel,
+  foodSpiceLabel,
   foodStatTiles,
   foodStatusBars,
   foodTrendLine,
@@ -186,6 +187,8 @@ describe('order labels', () => {
     expect(foodPaymentStatusLabel(t, 'CHARGEBACK')).toBe('CHARGEBACK');
     expect(foodDietLabel(t, 'NON_VEG')).toBe('venueFoodOwner.diet.NON_VEG');
     expect(foodDietLabel(t, 'JAIN')).toBe('JAIN');
+    expect(foodSpiceLabel(t, 'EXTRA_HOT')).toBe('venueFoodOwner.spice.EXTRA_HOT');
+    expect(foodSpiceLabel(t, 'GHOST_PEPPER')).toBe('GHOST_PEPPER');
   });
 
   it('words the next-step button by where it moves the order', () => {

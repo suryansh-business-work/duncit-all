@@ -22,6 +22,7 @@ export default function MediaPickerDialog({
   onClose,
   onPicked,
   folder = '/uploads',
+  entityId,
   title,
   accept = 'image/*,video/*',
   allowDocuments,
@@ -77,6 +78,7 @@ export default function MediaPickerDialog({
   const device = useDeviceUpload({
     open,
     folder,
+    entityId,
     surface,
     allowImage,
     allowVideo,
@@ -171,6 +173,7 @@ export default function MediaPickerDialog({
           allowVideo={allowVideo}
           open={open}
           folder={folder}
+          entityId={entityId}
           surface={surface}
           seedQuery={seedQuery}
           orientation={orientation}

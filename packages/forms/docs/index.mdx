@@ -841,6 +841,27 @@ import { FoodTaxFields } from '@duncit/forms';
 <FoodTaxFields control={control} t={t} prefix="food_ordering" idPrefix="register-venue-food" />
 ```
 
+### A venue's food menu — `food-menu`
+
+The dishes, QR ordering and the invoice GST number, checked ONE way by the menu editor
+(@duncit/venue-food, native), the Partners venue form's Food section and the Venues console
+editor's. Shapes are loose (`venueFoodShape`, `foodDishShape`, `foodOrderingShape`) and the rules
+run as a refinement that checks nothing while "serves food" is off — a menu kept behind the switch
+is not sent, so it never blocks a save. The caps are `venueRegistrationConfig`'s
+(`foodMenuLimitsOf`, `NO_FOOD_MENU_LIMITS` until it answers); the text bounds are the server's
+(`FOOD_DISH_NAME_MAX` and friends). `editsAccount` says whether the form picks the Razorpay
+account (ordering then needs one) or reads the owner's link (`razorpay_linked`).
+
+```ts
+import { makeFoodMenuSchema, makeVenueFoodRefinement, venueFoodShape } from '@duncit/forms/schemas';
+
+// The menu editor's whole form, GST number included.
+makeFoodMenuSchema(t, { limits, editsAccount: true });
+
+// A bigger venue form holding the food block under the same names.
+z.object({ ...otherFields, ...venueFoodShape }).superRefine(makeVenueFoodRefinement(t, { limits, editsAccount: false }));
+```
+
 ### Venue cancellation policy
 
 `makeCancellationPolicySchema(t)` is what a venue owner's cancellation policy is checked

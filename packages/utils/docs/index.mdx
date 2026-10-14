@@ -3728,6 +3728,37 @@ const button = next && foodOrderAdvanceLabel(t, next); // "Start preparing"
 const tiles = foodStatTiles(stats, t);
 ```
 
+## A venue's food menu, as its owner or a console editor edits it — `venue-food-menu`
+
+The menu half of the owner's food tools: "serves food", the dishes, QR ordering with its
+discount and GST, and the GST number on the food invoices. ONE contract for every surface that
+edits it — `VenueFoodMenu` and `VenueFoodFields` in `@duncit/venue-food` (the Partners Food Menu
+page and venue form, the Venues console's Food Menu tab and venue editor, mWeb) and the native
+screen (`components/venue-food-desk/menu/`). The rules are `@duncit/forms/schemas`'
+`makeFoodMenuSchema` / `makeVenueFoodRefinement`.
+
+- **Documents**: `OWNER_FOOD_MENU_QUERY` (`myVenue`), `ADMIN_FOOD_MENU_QUERY` (`venue`, for a
+  console editor), `FOOD_MENU_CONFIG_QUERY` (the caps and the diet / spice catalogues),
+  `UPDATE_VENUE_FOOD_MENU_MUTATION` (`updateApprovedVenue`, which returns the same selection) and
+  `FOOD_RAZORPAY_CONNECTIONS_QUERY` with `razorpayConnectionsOf`.
+- **Values**: `FoodMenuFormValues` = `VenueFoodFormValues` (`offers_food`, `food_menu`,
+  `food_ordering`) + `gstin`. `foodMenuToValues`, `foodDishToValues`, `foodOrderingToValues`,
+  `blankFoodDish(config)`, `blankFoodOrdering`.
+- **Input**: `toVenueFoodInput(values, { sendAccount })` — switched off, only the switch goes;
+  `sendAccount` is true only where the owner picks the Razorpay account, so every other surface
+  leaves the link alone. `foodGstinInput(typed, saved, mode)` — an owner gives the number once, an
+  `admin` may change it. `toFoodMenuSaveInput` is both in one save.
+- **Gates**: `canTakeFoodOrders(menu, accountReady)`, `isFoodMenuEditable(venue)` (approved only).
+- `foodSpiceLabel` (in `venue-food-owner`) names a spice level, beside `foodDietLabel`.
+
+```ts
+import { foodMenuToValues, toFoodMenuSaveInput } from '@duncit/utils';
+
+const values = foodMenuToValues(venue);
+// The Venues console: never names the owner's account, may change a saved GST number.
+const input = toFoodMenuSaveInput(values, { sendAccount: false, mode: 'admin', savedGstin: venue.gstin ?? '' });
+```
+
 ## The product cart control — `cart-control`
 
 Every product card answers one question the same way: what does this product's cart button look

@@ -1,8 +1,13 @@
 import { Stack } from '@mui/material';
 import { FoodBreakdowns, FoodDailyChart, FoodRecentFeedback, FoodStatTiles } from '@duncit/venue-food';
 import {
+  blankFoodOrdering,
   canCancelFoodOrder,
+  canTakeFoodOrders,
   foodOrderNextStep,
+  toFoodMenuSaveInput,
+  type FoodMenuFormValues,
+  type FoodMenuMode,
   type FoodOwnerStats,
   type VenueFoodOrderStatus,
   type VenueFoodPaymentStatus,
@@ -57,6 +62,13 @@ const STATS: FoodOwnerStats = {
   ],
 };
 
+interface MenuMock {
+  mode: FoodMenuMode;
+  sendAccount: boolean;
+  savedGstin: string;
+  values: FoodMenuFormValues;
+}
+
 interface FlowMock {
   status: VenueFoodOrderStatus;
   payment_status: VenueFoodPaymentStatus;
@@ -77,6 +89,30 @@ export default defineDemos('venue-food', [
         <FoodRecentFeedback feedback={mock.stats.recent_feedback} />
       </Stack>
     ),
+  }),
+  defineDemo<MenuMock>({
+    id: 'menu-save',
+    title: 'What the menu editor sends for a café’s menu',
+    note:
+      'The Partners console names the Razorpay account it picked; the Venues console and the app never do, so the owner’s link stays. Switch offers_food off and only the switch is sent. Mode admin may change a saved GST number; an owner gives it once.',
+    mock: {
+      mode: 'owner',
+      sendAccount: true,
+      savedGstin: '',
+      values: {
+        offers_food: true,
+        food_menu: [
+          { item_id: 'dish-1', name: 'Masala dosa', description: 'Crisp, with sambar', category: 'Mains', price: '120', images: [], diet: 'VEG', spice_level: 'MILD', is_available: true },
+          { item_id: '', name: 'Filter coffee', description: '', category: 'Drinks', price: '40', images: [], diet: 'VEG', spice_level: 'NONE', is_available: true },
+        ],
+        food_ordering: { ...blankFoodOrdering, enabled: true, razorpay_integration_id: 'rzp-1', razorpay_linked: true, discount_pct: '10' },
+        gstin: '22ABCDE1234F1Z5',
+      },
+    },
+    compute: (mock) => ({
+      'Can take orders': canTakeFoodOrders(mock.values.food_menu, mock.values.food_ordering.razorpay_linked),
+      'updateApprovedVenue input': toFoodMenuSaveInput(mock.values, mock),
+    }),
   }),
   defineDemo<FlowMock>({
     id: 'order-flow',

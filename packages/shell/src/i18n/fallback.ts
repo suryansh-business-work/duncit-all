@@ -1,5 +1,6 @@
 import {
   allFallbackEntries,
+  catalogueBranch,
   createTranslator,
   flattenCatalogue,
   SESSION_BUNDLE,
@@ -21,12 +22,8 @@ import {
   type Translator,
 } from '@duncit/i18n';
 
-/** One branch of a nested bundle, or nothing when it is a leaf or missing. */
-function branch(catalogue: NestedCatalogue | string | undefined, key: string): NestedCatalogue {
-  if (!catalogue || typeof catalogue === 'string') return {};
-  const value = catalogue[key];
-  return value && typeof value !== 'string' ? value : {};
-}
+/** One branch of a nested bundle — the shared helper, under the short name this file reads with. */
+const branch = catalogueBranch;
 
 const MWEB = branch(MWEB_BUNDLE, 'mweb');
 

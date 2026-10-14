@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  catalogueBranch,
   flattenCatalogue,
   mergeCatalogues,
   missingKeys,
@@ -97,5 +98,20 @@ describe('missingKeys', () => {
     expect(missingKeys(null, null)).toEqual([]);
     expect(missingKeys({ a: 'A' }, null)).toEqual(['a']);
     expect(missingKeys(null, { a: 'A' })).toEqual([]);
+  });
+});
+
+describe('catalogueBranch', () => {
+  const bundle = { shell: { foodTax: { gstPct: 'GST %' }, title: 'Duncit' } };
+
+  it('returns the named branch of a bundle, nested as deep as it is asked', () => {
+    expect(catalogueBranch(catalogueBranch(bundle, 'shell'), 'foodTax')).toEqual({ gstPct: 'GST %' });
+  });
+
+  it('returns an empty branch for a leaf, a missing key or no catalogue at all', () => {
+    expect(catalogueBranch(catalogueBranch(bundle, 'shell'), 'title')).toEqual({});
+    expect(catalogueBranch(bundle, 'mweb')).toEqual({});
+    expect(catalogueBranch('Duncit', 'shell')).toEqual({});
+    expect(catalogueBranch(undefined, 'shell')).toEqual({});
   });
 });

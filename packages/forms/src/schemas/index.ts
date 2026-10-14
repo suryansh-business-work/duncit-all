@@ -179,6 +179,21 @@ export {
   type VenueFoodTaxValues,
 } from './food-tax';
 export {
+  FOOD_DISH_CATEGORY_MAX,
+  FOOD_DISH_DESCRIPTION_MAX,
+  FOOD_DISH_NAME_MAX,
+  foodDishShape,
+  foodMenuLimitsOf,
+  foodOrderingShape,
+  makeFoodMenuSchema,
+  makeVenueFoodRefinement,
+  NO_FOOD_MENU_LIMITS,
+  venueFoodShape,
+  type FoodMenuLimits,
+  type FoodMenuSchemaValues,
+  type VenueFoodRuleOptions,
+} from './food-menu';
+export {
   blankPodCompleteValues,
   buildPodCompleteInput,
   makePodCompleteSchema,

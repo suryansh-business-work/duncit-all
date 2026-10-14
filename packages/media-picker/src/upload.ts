@@ -14,6 +14,8 @@ export interface ImagekitUploadResult {
 export interface UploadImageOptions {
   /** ImageKit folder, e.g. "/support", "crm/media". */
   folder?: string;
+  /** The record the file is for (a venue, a pod…) — the server files it in that record's folder. */
+  entityId?: string;
   /** Pass true so the server also accepts PDF/office documents. */
   allowDocuments?: boolean;
   /** Overrides the uploaded file name (defaults to file.name). */
@@ -54,6 +56,7 @@ export async function uploadImageToImagekit(
       fileName: options.fileName ?? file.name,
       mimeType: file.type || options.fallbackMimeType,
       folder: options.folder,
+      entityId: options.entityId,
       allowDocuments: options.allowDocuments,
       surface: options.surface,
       crop: options.crop ?? undefined,

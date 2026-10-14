@@ -1,4 +1,4 @@
-import { flattenCatalogue, type NestedCatalogue } from './catalogue';
+import { catalogueBranch, flattenCatalogue, type NestedCatalogue } from './catalogue';
 import { ADMIN_BUNDLE } from './bundles/admin';
 import { ADS_BUNDLE } from './bundles/ads';
 import { ANALYTICS_BUNDLE } from './bundles/analytics';
@@ -136,6 +136,15 @@ export {
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
+};
+
+/**
+ * Just `shell.foodTax.*` — the GST words and rule messages of the venue food
+ * forms, for the surfaces that render them without the portal shell: mWeb and
+ * the native app's food menu.
+ */
+export const SHELL_FOOD_TAX_SLICE: NestedCatalogue = {
+  shell: { foodTax: catalogueBranch(catalogueBranch(SHELL_BUNDLE, 'shell'), 'foodTax') },
 };
 
 /** Every client bundle, by the surface that ships it. */

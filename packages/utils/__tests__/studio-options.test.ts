@@ -115,11 +115,11 @@ describe('the food group', () => {
     expect(grouped).toEqual(FOOD_KEYS.map((key) => `VENUE:${key}:food`));
   });
 
-  it('opens the dashboard, orders and coupons in the apps and the menu in the Partner console, each on its own page', () => {
+  it('opens all four in the apps and in the Partner console, each on its own page', () => {
     const food = STUDIO_OPTION_LIST.VENUE.filter((option) => option.group === 'food');
     expect(food.map(({ path, route, portal }) => ({ path, route, portal }))).toEqual([
       { path: '/venues/food-dashboard', route: 'VenueFoodDashboard', portal: '/venues/food-dashboard' },
-      { path: undefined, route: undefined, portal: '/venues/food-menu' },
+      { path: '/venues/food-menu', route: 'VenueFoodMenu', portal: '/venues/food-menu' },
       { path: '/venues/food-orders', route: 'VenueFoodOrders', portal: '/venues/food-orders' },
       { path: '/venues/food-coupons', route: 'VenueFoodCoupons', portal: '/venues/food-coupons' },
     ]);

@@ -1,4 +1,5 @@
 export {
+  catalogueBranch,
   flattenCatalogue,
   mergeCatalogues,
   missingKeys,
@@ -43,6 +44,7 @@ export {
   PRODUCTS_BUNDLE,
   SESSION_BUNDLE,
   SHELL_BUNDLE,
+  SHELL_FOOD_TAX_SLICE,
   STATUS_BUNDLE,
   MARKETING_BUNDLE,
   ONBOARDING_BUNDLE,

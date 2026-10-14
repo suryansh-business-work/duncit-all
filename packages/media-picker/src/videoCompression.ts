@@ -38,12 +38,15 @@ export async function compressUploadedVideo(
   surface: UploadSurface,
   onProgress?: (pct: number) => void,
   trim?: VideoTrim | null,
+  // The record the video is for — the compressed copy is filed in its folder.
+  entityId?: string,
 ): Promise<string> {
   const started = await client.mutate<{ startVideoCompression: CompressionJob }>({
     mutation: START_VIDEO_COMPRESSION,
     variables: {
       remoteUrl,
       folder,
+      entityId,
       surface,
       trimStart: trim?.start,
       trimDuration: trim?.duration,

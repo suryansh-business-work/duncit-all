@@ -83,3 +83,14 @@ describe('shipped fallback bundles', () => {
     expect(website.every((key) => key.startsWith('website.'))).toBe(true);
   });
 });
+
+describe('SHELL_FOOD_TAX_SLICE', () => {
+  it('is exactly the shell bundle’s food-tax words, under their own keys, and nothing else of the shell', () => {
+    const slice = flattenCatalogue(bundles.SHELL_FOOD_TAX_SLICE);
+    const shell = flattenCatalogue(SHELL_BUNDLE);
+    const foodTaxKeys = Object.keys(shell).filter((key) => key.startsWith('shell.foodTax.'));
+    expect(Object.keys(slice).sort()).toEqual(foodTaxKeys.sort());
+    expect(foodTaxKeys.length).toBeGreaterThan(0);
+    for (const key of foodTaxKeys) expect(slice[key]).toBe(shell[key]);
+  });
+});

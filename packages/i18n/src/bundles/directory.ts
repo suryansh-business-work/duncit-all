@@ -227,25 +227,7 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       seats: 'Seats',
       addSpace: 'Add a space',
       removeSpace: 'Remove this space',
-      // The food menu. QR ordering and its Razorpay account are the owner's, in
-      // the Partners portal — this console edits the menu and nothing else.
-      offersFood: 'Offers food',
-      foodMenu: 'Food menu',
-      foodMenuHint:
-        'List each dish the venue serves. QR ordering and its Razorpay account are set by the owner in the Partners portal.',
-      dishHeading: 'Dish {number}',
-      dishName: 'Dish name',
-      dishDescription: 'Dish description',
-      dishSection: 'Menu section',
-      dishSectionHint: 'The heading it sits under, like Starters.',
-      dishPrice: 'Price',
-      dishDiet: 'Food type',
-      dishSpice: 'Spice level',
-      dishAvailable: 'Available',
-      dishPhotosEmpty: 'No photos of this dish yet.',
-      dishPhotoAlt: 'Photo of dish {number}',
-      addDish: 'Add a dish',
-      removeDish: 'Remove dish {number}',
+      // The Food Menu section is the shared food fields (@duncit/venue-food): their words are venueFoodOwner.menu.*.
       amenities: 'Amenities',
       facilities: 'Facilities',
       security: 'Security',
@@ -380,16 +362,6 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       errAccountNumber: 'Account number must be 6 to 18 digits',
       errIfsc: 'IFSC looks like ABCD0123456',
       errUpi: 'UPI ID looks like name@bank',
-      errDishPhotos: 'A dish can have at most {max} photos',
-      errMenuSize: 'A menu can list at most {max} dishes',
-      errHiddenMenu:
-        'A dish on the menu needs fixing before this venue can be saved. Switch this on to see it.',
-      // QR ordering in the editor. The GST words are shell.foodTax.* — the owner's form says them too.
-      orderingEnabled: 'Take food orders from the QR',
-      orderingAccountLinked: 'The owner has linked a Razorpay account for these orders.',
-      orderingAccountMissing:
-        'No Razorpay account is linked yet — the owner connects one from the Partners portal before ordering can be switched on.',
-      orderingDiscountHint: 'Taken off every QR order. 0 to {max}.',
       errNoId: 'The venue was not saved — no id came back.',
       // Shown to a viewer holding only the console's access role. The values are
       // still visible — knowing a venue's commission is part of reading the

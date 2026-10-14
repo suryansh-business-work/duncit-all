@@ -11,7 +11,8 @@ import { ctaButtonSx } from './buttonSx';
 import SeatPicker from './SeatPicker';
 import { useTranslation } from '../../i18n/useTranslation';
 
-interface Props {
+/** The booking bar's inputs — the sticky bar passes them straight through. */
+export interface PodActionPanelProps {
   pod: any;
   isFree: boolean;
   isHost: boolean;
@@ -59,7 +60,7 @@ export default function PodActionPanel({
   onPaidCheckout,
   onCopyReferral,
   onGoToDashboard,
-}: Readonly<Props>) {
+}: Readonly<PodActionPanelProps>) {
   const { t } = useTranslation();
   const ms = membershipState;
   const isMember = ms?.is_member;

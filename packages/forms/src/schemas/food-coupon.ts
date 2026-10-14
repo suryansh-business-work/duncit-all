@@ -9,8 +9,6 @@ export const FOOD_COUPON_DESCRIPTION_MAX = 300;
 /** The largest whole number the API's `Int` carries — a use limit above it is refused before it is read. */
 const INT_MAX = 2_147_483_647;
 
-const { couponCodeMin, couponCodeMax, maxDiscountPct } = FOOD_ORDER_LIMITS;
-
 /** A whole number typed into a text box; NaN for anything else. */
 const wholeNumber = (raw: string) => (DIGITS.test(raw.trim()) ? Number(raw.trim()) : Number.NaN);
 
@@ -35,6 +33,9 @@ const limitRule = (message: string) =>
  * the MUI form (@duncit/venue-food) and the native one.
  */
 export function makeFoodCouponSchema(t: Translate) {
+  // Read when a schema is built, not when the module loads: a test that mocks
+  // @duncit/utils for something else must still be able to import @duncit/forms.
+  const { couponCodeMin, couponCodeMax, maxDiscountPct } = FOOD_ORDER_LIMITS;
   const dateRule = z.date({ error: t('venueFoodOwner.coupons.dateInvalid') }).nullable();
   const lengthMessage = t('venueFoodOwner.coupons.codeLength', { vars: { min: couponCodeMin, max: couponCodeMax } });
   return z

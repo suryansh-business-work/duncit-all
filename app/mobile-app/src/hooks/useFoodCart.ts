@@ -65,7 +65,10 @@ export function useFoodCart(
   // Primitives, so a re-read venue with the same GST does not re-price the cart.
   const taxMode = ordering?.tax_mode;
   const gstPct = ordering?.gst_pct;
-  const tax = useMemo(() => foodCartTaxOf({ tax_mode: taxMode, gst_pct: gstPct }), [taxMode, gstPct]);
+  const tax = useMemo(
+    () => foodCartTaxOf({ tax_mode: taxMode, gst_pct: gstPct }),
+    [taxMode, gstPct],
+  );
   const [stored, setStored] = useState<FoodCartQuantities>({});
   const [coupon, setCoupon] = useState<AppliedFoodCoupon | null>(null);
   const [hydrated, setHydrated] = useState(false);

@@ -1020,11 +1020,6 @@
       "count": 3
     }
   },
-  "app/mweb/src/pages/pod-details-page/StickyPodActionPanel.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
   "app/mweb/src/pages/pod-details-page/usePodDetailActions.ts": {
     "no-restricted-syntax": {
       "count": 14

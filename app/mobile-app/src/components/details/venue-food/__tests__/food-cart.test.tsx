@@ -133,7 +133,15 @@ describe('VenueFoodOrderingScope', () => {
 describe('FoodTotals — the GST line', () => {
   const totals = (tax: Parameters<typeof FoodTotals>[0]['tax'], total: number) =>
     renderWithProviders(
-      <FoodTotals subtotal={200} discount={20} discountPct={10} tax={tax} total={total} currency="₹" testID="totals" />,
+      <FoodTotals
+        subtotal={200}
+        discount={20}
+        discountPct={10}
+        tax={tax}
+        total={total}
+        currency="₹"
+        testID="totals"
+      />,
     );
 
   it('adds GST charged on top as its own line before the total', () => {

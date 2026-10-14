@@ -452,6 +452,29 @@ export const userAuthMethods = {
     return payload;
   },
 
+  /**
+   * The signup door's first question: is this provider identity already on
+   * Duncit — linked, or holding the address the provider verified?
+   *
+   * The same two lookups signupWithSocial refuses on, asked BEFORE the
+   * WhatsApp code instead of after it has been spent. Read-only: no session,
+   * no last-login stamp, no sign-in notice — the person has not agreed to log
+   * in yet. A sealed account reads as absent, as it does to loginWithSocial.
+   */
+  async socialSignupStatus(provider: SocialProvider, idToken: string) {
+    const spec = SOCIAL_PROVIDERS[provider];
+    const info = await spec.verify(idToken);
+    const existing = await UserModel.findOne({
+      $or: [{ [spec.idPath]: info.sub }, { 'auth.email': info.email }],
+    })
+      .select('_id')
+      .lean();
+    return {
+      exists: !!existing && !isAccountLocked(String(existing._id)),
+      email: info.email,
+    };
+  },
+
   async linkGoogleAccount(idToken: string, portalKey?: string | null) {
     return this.linkSocialAccount('GOOGLE', idToken, portalKey);
   },

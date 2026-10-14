@@ -1,6 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
+import {
+  claimGoogleSignupHandoff,
+  createGoogleSignupClaims,
+  readGoogleSignupHandoff,
+} from '@duncit/utils';
 import AuthBackground from '../../components/AuthBackground';
 import { type LoginSubmitValues } from '../../forms/login';
 import { parseApiError } from '../../utils/parseApiError';
@@ -17,6 +22,10 @@ import LoginCard, { type LoginStep } from './LoginCard';
 import { useOtpLogin } from './useOtpLogin';
 import { useSocialLogin } from './useSocialLogin';
 import { useStartSession } from '../../user-info/useStartSession';
+
+/** Which carried credential this tab has already logged in with — module scope
+ * so it outlives the remount it guards against (see RegisterPage's twin). */
+const CLAIMS = createGoogleSignupClaims();
 
 export default function LoginPage() {
   // Which half of the sign-in screen is showing. Kept in state rather than the
@@ -43,6 +52,25 @@ export default function LoginPage() {
   const otp = useOtpLogin(finishLogin);
   // Google and Apple: one door, the same consent step and signup invite.
   const social = useSocialLogin(finishLogin);
+
+  /*
+    Arrived from signup's "you're already on Duncit — log in?", holding the
+    credential the provider had already returned: spend it on the login here,
+    where every answer it can get (session, link consent, two-factor) is handled.
+    Claimed, so a reload or a back-and-forward cannot replay it.
+  */
+  const carried = readGoogleSignupHandoff(
+    (location.state as { socialLogin?: unknown } | null)?.socialLogin,
+  );
+  const carriedToken = carried?.idToken ?? '';
+  useEffect(() => {
+    const claimed = claimGoogleSignupHandoff(CLAIMS, carried);
+    if (claimed) {
+      social.start({ provider: claimed.provider ?? 'GOOGLE', idToken: claimed.idToken }).catch(() => undefined);
+    }
+    // Keyed by the credential itself; the claim guards the rest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carriedToken]);
 
   const handleSubmit = async (values: LoginSubmitValues) => {
     try {

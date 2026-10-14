@@ -28,9 +28,13 @@ export {
   isSocialProvider,
   SOCIAL_AUTH_COPY,
   SOCIAL_NOT_FOUND_CODE,
+  SOCIAL_PROMPT_COPY,
+  SOCIAL_PROMPT_TEST_IDS,
   socialSignupNeedsName,
+  type SocialAccountPrompt,
   type SocialAuthCopy,
   type SocialCredential,
+  type SocialPromptCopy,
   type SocialProvider,
 } from './social-auth';
 export {

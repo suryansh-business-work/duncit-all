@@ -63,7 +63,7 @@ export const SOCIAL_AUTH_COPY: Readonly<Record<SocialProvider, SocialAuthCopy>> 
     linkDetail: 'mweb.login.linkConsentDetail',
     linkDenied: 'mweb.login.linkConsentDenied',
     linkFailed: 'mweb.login.linkConsentFailed',
-    detailsSubtitle: 'mweb.signup.detailsSubtitle',
+    detailsSubtitle: 'mweb.signupSteps.detailsSubtitle',
     policyIntro: 'policyAcceptance.googleIntro',
   },
   APPLE: {
@@ -73,8 +73,57 @@ export const SOCIAL_AUTH_COPY: Readonly<Record<SocialProvider, SocialAuthCopy>> 
     linkDetail: 'mweb.login.appleLinkConsentDetail',
     linkDenied: 'mweb.login.appleLinkConsentDenied',
     linkFailed: 'mweb.login.appleLinkConsentFailed',
-    detailsSubtitle: 'mweb.signup.appleDetailsSubtitle',
+    detailsSubtitle: 'mweb.signupSteps.appleDetailsSubtitle',
     policyIntro: 'policyAcceptance.appleIntro',
+  },
+};
+
+/**
+ * The two questions a provider credential can raise before anything is made:
+ * the login door's "no Duncit account yet — make one?" (INVITE), and the
+ * signup door's "you're already on Duncit — log in?" (EXISTS). One dialog per
+ * app renders both, so the pair cannot drift apart.
+ */
+export type SocialAccountPrompt = 'INVITE' | 'EXISTS';
+
+export interface SocialPromptCopy {
+  title: string;
+  /** Takes `{email}` — the address the provider verified. */
+  body: string;
+  accept: string;
+  dismiss: string;
+}
+
+export const SOCIAL_PROMPT_COPY: Readonly<Record<SocialAccountPrompt, SocialPromptCopy>> = {
+  INVITE: {
+    title: 'mweb.login.googleNotFoundTitle',
+    body: 'mweb.login.googleNotFoundBody',
+    accept: 'mweb.login.googleNotFoundAction',
+    dismiss: 'mweb.login.googleNotFoundDismiss',
+  },
+  EXISTS: {
+    title: 'mweb.signup.existingAccountTitle',
+    body: 'mweb.signup.existingAccountBody',
+    accept: 'mweb.signup.existingAccountLogin',
+    dismiss: 'mweb.signup.existingAccountCancel',
+  },
+};
+
+/** The prompt dialog's test ids — one set, so mWeb and native tests find the same parts. */
+export const SOCIAL_PROMPT_TEST_IDS: Readonly<
+  Record<SocialAccountPrompt, Readonly<Record<'root' | 'title' | 'accept' | 'dismiss', string>>>
+> = {
+  INVITE: {
+    root: 'google-signup-invite',
+    title: 'google-signup-invite-title',
+    accept: 'google-signup-accept',
+    dismiss: 'google-signup-dismiss',
+  },
+  EXISTS: {
+    root: 'social-account-exists',
+    title: 'social-account-exists-title',
+    accept: 'social-account-exists-login',
+    dismiss: 'social-account-exists-cancel',
   },
 };
 

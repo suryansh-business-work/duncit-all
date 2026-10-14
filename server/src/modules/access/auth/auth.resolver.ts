@@ -34,6 +34,7 @@ import type {
 } from '@modules/content/policyAcceptance/policyAcceptance.model';
 import type { GraphQLContext } from '@context';
 import type { SignInContext } from '@modules/access/user/user.signin';
+import type { SocialProvider } from './auth.social';
 
 /** What a signup door carries besides the account itself. Never part of the
  * validated DTO — the validator schemas strip unknown keys on purpose, so acceptance
@@ -82,6 +83,14 @@ export const authResolvers = {
   Query: {
     myConnectedAccounts: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       return userService.myConnectedAccounts(await requireUserId(ctx));
+    },
+    // Public by design — see the schema note: the verified token IS the
+    // question, and the answer is only ever about the caller's own identity.
+    socialSignupStatus: async (
+      _p: unknown,
+      args: { input: { provider: SocialProvider; id_token: string } }
+    ) => {
+      return userService.socialSignupStatus(args.input?.provider, args.input?.id_token);
     },
   },
   Mutation: {

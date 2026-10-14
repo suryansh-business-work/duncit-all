@@ -232,6 +232,8 @@ exports:
   - 'isSocialProvider'
   - 'SOCIAL_AUTH_COPY'
   - 'SOCIAL_NOT_FOUND_CODE'
+  - 'SOCIAL_PROMPT_COPY'
+  - 'SOCIAL_PROMPT_TEST_IDS'
   - 'socialSignupNeedsName'
   - 'REFERRAL_PARAM'
   - 'referralLink'
@@ -1953,6 +1955,7 @@ The rest of what differs per provider lives in `social-auth`, once for both apps
 | --- | --- |
 | `SOCIAL_NOT_FOUND_CODE[provider]` | The refusal that opens the signup invite — `GOOGLE_ACCOUNT_NOT_FOUND` / `APPLE_ACCOUNT_NOT_FOUND` |
 | `SOCIAL_AUTH_COPY[provider]` | The copy keys that name the provider — invite detail, link consent, details subtitle, policy intro. Literal, so the translation gate sees them |
+| `SOCIAL_PROMPT_COPY[prompt]` | The copy keys of the two pre-account questions: `INVITE` (login door — "no Duncit account yet, make one?") and `EXISTS` (signup door — "you're already on Duncit, log in?", asked from the `socialSignupStatus` query before any code is sent). `SOCIAL_PROMPT_TEST_IDS[prompt]` holds the dialog's test ids for both apps |
 | `socialSignupNeedsName(credential)` | `true` for an Apple credential that carried no name — the details step then asks it |
 | `isSocialProvider(value)` | Whether a value read off navigation is `'GOOGLE'` or `'APPLE'` |
 
@@ -1960,6 +1963,7 @@ The rest of what differs per provider lives in `social-auth`, once for both apps
 socialSignupNeedsName({ provider: 'APPLE' }); // true — ask the name on the details step
 socialSignupNeedsName({ provider: 'APPLE', name: 'Riya Sharma' }); // false
 SOCIAL_AUTH_COPY.APPLE.linkTitle; // 'mweb.login.appleLinkConsentTitle'
+SOCIAL_PROMPT_COPY.EXISTS.accept; // 'mweb.signup.existingAccountLogin'
 ```
 
 `readGoogleSignupHandoff` is deliberately strict about shape: router state survives a reload

@@ -365,6 +365,25 @@ export const authTypeDefs = gql`
     portal_key: String
   }
 
+  "The federated sign-in doors."
+  enum SocialAuthProvider {
+    GOOGLE
+    APPLE
+  }
+
+  input SocialSignupStatusInput {
+    provider: SocialAuthProvider!
+    id_token: String!
+  }
+
+  "What the signup door learns about a provider credential before it asks anything."
+  type SocialSignupStatus {
+    "A Duncit account already answers to this identity, or to the address it verified."
+    exists: Boolean!
+    "The address the provider verified — the caller's own, echoed so the client can name it."
+    email: String!
+  }
+
   extend type Query {
     """
     Auth-required: what the signed-in account can sign in with.
@@ -374,6 +393,17 @@ export const authTypeDefs = gql`
     field on User.
     """
     myConnectedAccounts: ConnectedAccounts!
+    """
+    Public: is this Google/Apple person already on Duncit?
+
+    Asked by the signup door the moment the provider returns, so an existing
+    account is offered "log in" before a WhatsApp code is ever sent — instead
+    of signupWithGoogle/signupWithApple refusing it after the code is spent.
+    Writes nothing and opens no session. Discloses nothing either: it only
+    answers about the identity in a token the caller supplied and the provider
+    verified. A hint, not the gate — signup still refuses a taken identity.
+    """
+    socialSignupStatus(input: SocialSignupStatusInput!): SocialSignupStatus!
   }
 
   extend type Mutation {

@@ -26216,6 +26216,17 @@ export type Query = {
   socialProviders: Array<SocialProviderStatus>;
   socialScheduledPost: SocialScheduledPost;
   socialScheduledPosts: Array<SocialScheduledPost>;
+  /**
+   * Public: is this Google/Apple person already on Duncit?
+   *
+   * Asked by the signup door the moment the provider returns, so an existing
+   * account is offered "log in" before a WhatsApp code is ever sent — instead
+   * of signupWithGoogle/signupWithApple refusing it after the code is spent.
+   * Writes nothing and opens no session. Discloses nothing either: it only
+   * answers about the identity in a token the caller supplied and the provider
+   * verified. A hint, not the gate — signup still refuses a taken identity.
+   */
+  socialSignupStatus: SocialSignupStatus;
   /** Every card, including the switched-off ones. Admin only. */
   somethingForYouItems: Array<SomethingForYouItem>;
   /** Tech > SSL: every certificate certbot holds on this VPS (SUPER_ADMIN / TECH_MANAGER). */
@@ -29335,6 +29346,11 @@ export type QuerySocialScheduledPostsArgs = {
 };
 
 
+export type QuerySocialSignupStatusArgs = {
+  input: SocialSignupStatusInput;
+};
+
+
 export type QuerySslLiveCheckArgs = {
   name: Scalars['String']['input'];
 };
@@ -32311,6 +32327,11 @@ export type SocialAnalyticsInput = {
   days: Scalars['Int']['input'];
 };
 
+/** The federated sign-in doors. */
+export type SocialAuthProvider =
+  | 'APPLE'
+  | 'GOOGLE';
+
 export type SocialCalendarItem = {
   __typename?: 'SocialCalendarItem';
   account_names: Array<Scalars['String']['output']>;
@@ -32590,6 +32611,20 @@ export type SocialSeverity =
   | 'HIGH'
   | 'LOW'
   | 'MEDIUM';
+
+/** What the signup door learns about a provider credential before it asks anything. */
+export type SocialSignupStatus = {
+  __typename?: 'SocialSignupStatus';
+  /** The address the provider verified — the caller's own, echoed so the client can name it. */
+  email: Scalars['String']['output'];
+  /** A Duncit account already answers to this identity, or to the address it verified. */
+  exists: Scalars['Boolean']['output'];
+};
+
+export type SocialSignupStatusInput = {
+  id_token: Scalars['String']['input'];
+  provider: SocialAuthProvider;
+};
 
 export type SocialTargetStatus =
   | 'FAILED'

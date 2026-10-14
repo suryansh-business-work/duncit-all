@@ -8,7 +8,11 @@ import type { GiftCardSelection } from '@/utils/gift-cards';
 /** The single React Navigation stack. Auth/Survey/App screens are gated by the
  * auth store, but they share one param list for typed navigation everywhere. */
 export type RootStackParamList = {
-  Login: undefined;
+  /**
+   * Optionally carrying the credential signup's "you're already on Duncit —
+   * log in?" was answered with, spent on the provider login once (claimed).
+   */
+  Login: { socialLogin?: GoogleSignupHandoff } | undefined;
   /**
    * Optionally carrying the credential the login screen's "no Duncit account
    * yet" invite was answered with, so signup opens on the Google door already

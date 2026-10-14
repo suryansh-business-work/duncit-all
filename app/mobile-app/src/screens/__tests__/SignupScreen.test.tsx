@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { SignupScreen } from '@/screens/SignupScreen';
-import { register, signupWithGoogle } from '@/services/auth.service';
+import { register, signupWithGoogle, socialSignupStatus } from '@/services/auth.service';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
@@ -118,7 +118,13 @@ jest.mock('@/forms/signup', () => ({
 const mockedRegister = jest.mocked(register);
 const mockedGoogle = jest.mocked(signupWithGoogle);
 
-beforeEach(() => jest.clearAllMocks());
+const mockedStatus = jest.mocked(socialSignupStatus);
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  // By default the provider identity is new to Duncit, so signup runs on.
+  mockedStatus.mockResolvedValue({ exists: false, email: 'a@b.com' });
+});
 
 describe('SignupScreen', () => {
   it('moves to the WhatsApp step on the form number, creating nothing yet', async () => {
@@ -201,6 +207,34 @@ describe('SignupScreen', () => {
       expect(screen.getByTestId('verify-refusal')).toHaveTextContent('google down'),
     );
     expect(mockAuthenticate).not.toHaveBeenCalled();
+  });
+
+  it('offers log-in instead, and asks nothing more, when the Google person is already on Duncit', async () => {
+    mockedStatus.mockResolvedValue({ exists: true, email: 'riya@duncit.com' });
+    renderWithProviders(<SignupScreen />);
+    fireEvent.press(screen.getByTestId('google-btn'));
+
+    await waitFor(() => expect(screen.getByTestId('social-account-exists')).toBeOnTheScreen());
+    expect(screen.getByText(/riya@duncit.com/)).toBeOnTheScreen();
+    expect(mockedStatus).toHaveBeenCalledWith({ provider: 'GOOGLE', idToken: 'idtok' });
+    expect(screen.queryByTestId('submit-google-details')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('social-account-exists-login'));
+    expect(mockNavigate).toHaveBeenCalledWith('Login', {
+      socialLogin: { idToken: 'idtok', email: 'riya@duncit.com', provider: 'GOOGLE' },
+    });
+    expect(mockedGoogle).not.toHaveBeenCalled();
+  });
+
+  it('stays on signup with nothing opened when the existing-account check fails', async () => {
+    mockedStatus.mockRejectedValue(new Error('offline'));
+    renderWithProviders(<SignupScreen />);
+    fireEvent.press(screen.getByTestId('google-btn'));
+
+    await waitFor(() => expect(mockedStatus).toHaveBeenCalled());
+    expect(screen.queryByTestId('social-account-exists')).toBeNull();
+    expect(screen.queryByTestId('submit-google-details')).toBeNull();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('navigates to login', () => {

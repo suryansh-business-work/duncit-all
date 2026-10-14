@@ -631,14 +631,18 @@ export const e2eRunTypeDefs = gql`
     """
     purgeE2eRunData(input: PurgeE2eRunDataInput!): E2ePurgeReport!
     """
-    Add portal roles to this run's account, so the suite can follow what the
-    member filed into the Support, Legal and Pods portals without a stored
+    Add roles to this run's account, so the suite can follow what the member
+    filed into the Support, Legal and Pods portals, and sign in with a limited
+    staff or partner role to prove what that role is refused, without a stored
     staff password. Answers with the account's roles. Tech/Super admin only;
     refused unless "one-time codes for the run account" is on, for any address
-    without the run's stamp, and for any role but a portal's sign-in role. The
-    purge deletes the account, roles and all.
+    without the run's stamp, and for any role outside the run-account list
+    (never SUPER_ADMIN, TECH_MANAGER or FINANCE_MANAGER). The purge deletes the
+    account, roles and all.
     """
     grantE2eRunAccountRoles(input: GrantE2eRunAccountRolesInput!): [String!]!
+    "Take roles granted by grantE2eRunAccountRoles away again, under the same checks. Answers with the account's roles."
+    revokeE2eRunAccountRoles(input: GrantE2eRunAccountRolesInput!): [String!]!
     updateE2eRunSettings(input: UpdateE2eRunSettingsInput!): E2eRunSettings!
     "Delete a run. Tech/Super admin only."
     deleteE2eRun(id: ID!): Boolean!

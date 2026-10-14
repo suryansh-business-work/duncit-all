@@ -660,6 +660,31 @@ jobs:
           --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-[hash].xml"
           --config video=true,videoCompression=32
 
+      # The scenario map's API rows, one spec per module under specs/api/. They
+      # sign in as the run account while it is still a plain member (after 07,
+      # before the staff portals grant it roles) and assert what the server
+      # refuses or returns — no browser page is under test here. specs/api/fixtures/
+      # is left out: it makes the account a partner, so it runs on its own below.
+      - name: mWeb · API scenarios (access refusals and member data)
+        id: mweb_api
+        continue-on-error: true
+        working-directory: app/mweb
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/api/{apps,other,partners,staff}/**/*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-api-[hash].xml"
+
+      # The scenario map's mWeb UI rows, one spec per module under specs/ui/.
+      # Same moment in the run as the API step: the account is still a member,
+      # and each spec grants (and revokes) any role it needs.
+      - name: mWeb · UI scenarios
+        id: mweb_ui
+        continue-on-error: true
+        working-directory: app/mweb
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/ui/**/*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-ui-[hash].xml"
+          --config video=true,videoCompression=32
+
       - name: Partners · sign in and profile, with the mWeb account
         id: partners_life
         continue-on-error: true
@@ -680,6 +705,32 @@ jobs:
         run: >-
           pnpm e2e --browser chrome
           --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/staff-[hash].xml"
+          --config video=true,videoCompression=32
+
+      # The fixture world (support/fixture-world.ts): the account registers a
+      # venue, applies to host and gets a club, each approved with a role granted
+      # for that one call, then hosts a FREE pod at its own venue — and the specs
+      # test the owner's and host's own side. Last before the delete, because it
+      # leaves the account a VENUE_OWNER, HOST and CLUB_ADMIN that every member
+      # spec above would trip on; the purge below removes all of it.
+      - name: mWeb · API scenarios on the run's own venue, host and pod
+        id: mweb_fixtures
+        continue-on-error: true
+        working-directory: app/mweb
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/api/fixtures/**/*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-fixtures-[hash].xml"
+
+      # The Partners portal as the partner the fixture step just made: its own
+      # venue, host profile, club and free pod (found by the run marker; a spec
+      # fails loudly when the fixture step did not build them).
+      - name: Partners · UI scenarios on the run's own venue, host and club
+        id: partners_ui
+        continue-on-error: true
+        working-directory: portals/partners-app
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/ui/**/*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/partners-ui-[hash].xml"
           --config video=true,videoCompression=32
 
       - name: mWeb · delete the account
@@ -765,8 +816,12 @@ jobs:
           failed=""
           for step in \
             "mWeb lifecycle=${{ steps.mweb_life.outcome }}" \
+            "mWeb API scenarios=${{ steps.mweb_api.outcome }}" \
+            "mWeb UI scenarios=${{ steps.mweb_ui.outcome }}" \
             "Partners=${{ steps.partners_life.outcome }}" \
             "Staff portals=${{ steps.staff_portals.outcome }}" \
+            "mWeb fixture scenarios=${{ steps.mweb_fixtures.outcome }}" \
+            "Partners UI scenarios=${{ steps.partners_ui.outcome }}" \
             "mWeb delete=${{ steps.mweb_delete.outcome }}" \
             "Partners after delete=${{ steps.partners_deleted.outcome }}" \
             "mWeb Google=${{ steps.mweb_google.outcome }}" \

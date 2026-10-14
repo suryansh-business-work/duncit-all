@@ -163,6 +163,9 @@ export function isUserFacing(raw) {
   if (/^(https?:|\/|#|\.|\$|@|\{)/.test(value)) return false; // url, path, token
   if (/^\d/.test(value)) return false;
   if (/^[A-Za-z]+\([^)]*\)$/.test(value)) return false; // rgb(…), translate(…)
+  // A CSS function value with nested calls or interpolations — linear-gradient(…),
+  // calc(${…} + ${…}): a lowercase, hyphenated function name wrapping the whole value.
+  if (/^[a-z][a-z-]*\(.*\)$/.test(value)) return false;
   // Either a phrase, or a single Capitalised word like "Overview".
   return /\s/.test(value) || /^[A-Z][a-z]{2,}$/.test(value);
 }

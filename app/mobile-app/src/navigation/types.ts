@@ -1,14 +1,18 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 import type { TabParamList } from '@/navigation/tabs';
-import type { GoogleSignupHandoff } from '@duncit/utils';
+import type { GoogleSignupHandoff, RecoveryHandoff } from '@duncit/utils';
 
 import type { GiftCardSelection } from '@/utils/gift-cards';
 
 /** The single React Navigation stack. Auth/Survey/App screens are gated by the
  * auth store, but they share one param list for typed navigation everywhere. */
 export type RootStackParamList = {
-  Login: undefined;
+  /**
+   * Optionally carrying the credential signup's "you're already on Duncit —
+   * log in?" was answered with, spent on the provider login once (claimed).
+   */
+  Login: { socialLogin?: GoogleSignupHandoff } | undefined;
   /**
    * Optionally carrying the credential the login screen's "no Duncit account
    * yet" invite was answered with, so signup opens on the Google door already
@@ -17,7 +21,8 @@ export type RootStackParamList = {
    * credential behind it must be spent exactly once.
    */
   Signup: { googleSignup?: GoogleSignupHandoff } | undefined;
-  ForgotPassword: undefined;
+  /** Optionally carrying the sign-in step's tab and boxes, so the code goes straight there. */
+  ForgotPassword: { recovery?: RecoveryHandoff } | undefined;
   Survey: undefined;
   /** Google signup only: the skippable "got a referral code?" step. */
   ReferralPrompt: undefined;
@@ -124,8 +129,15 @@ export type RootStackParamList = {
   VenueList: undefined;
   VenuePublish: undefined;
   VenuePods: undefined;
-  /** Host Options → Publish Your Host Page. */
+  /** Venue Options → the food desk: Food Dashboard, Food Orders, Food Coupons. */
+  VenueFoodDashboard: undefined;
+  VenueFoodMenu: undefined;
+  VenueFoodOrders: undefined;
+  VenueFoodCoupons: undefined;
+  /** Host Options → Publish Your Host Page, Host Share, Your Categories. */
   HostPublish: undefined;
+  HostShare: undefined;
+  HostCategories: undefined;
   /** Brand Options → Brand Orders, one order, and ShipRocket Warehouses. */
   BrandOrders: undefined;
   BrandOrderDetail: { id: string };

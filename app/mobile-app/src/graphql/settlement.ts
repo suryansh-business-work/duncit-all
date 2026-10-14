@@ -12,6 +12,7 @@ export const PodSettlementPreviewDocument = gql(`
       venue_bill_amount: $venue_bill_amount
       include_slot_price: $include_slot_price
     ) {
+      is_free
       currency_symbol
       collected_total
       has_venue

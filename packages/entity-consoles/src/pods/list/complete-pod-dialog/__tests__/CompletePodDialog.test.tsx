@@ -37,8 +37,9 @@ vi.mock('../SettlementPreview', () => ({
     venueBillAmount: number;
     includeSlotPrice: boolean;
     hostUserId: string;
+    free?: boolean;
   }) => (
-    <div data-testid="preview">
+    <div data-testid="preview" data-free={String(props.free)}>
       {`${props.podId}|${props.venueBillAmount}|${props.includeSlotPrice}|${props.hostUserId}`}
     </div>
   ),
@@ -99,6 +100,19 @@ describe('CompletePodDialog / rendering', () => {
     expect(screen.queryByText(/venue bill/i)).not.toBeInTheDocument();
     // The preview still renders — it is keyed on the pod, not the venue.
     expect(screen.getByTestId('preview')).toBeInTheDocument();
+  });
+
+  // A free pod's host settles the venue directly: even at a venue, no bill.
+  it('asks for no venue bill on a free pod at a venue and tells the preview it is free', () => {
+    renderDialog({ pod: { ...VENUE_POD, pod_type: 'FREE' } });
+    expect(screen.queryByText(/venue bill/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('preview')).toHaveAttribute('data-free', 'true');
+  });
+
+  it('keeps the venue bill on a paid pod at a venue', () => {
+    renderDialog({ pod: { ...VENUE_POD, pod_type: 'PAID' } });
+    expect(screen.getAllByText(/venue bill/i).length).toBeGreaterThan(0);
+    expect(screen.getByTestId('preview')).toHaveAttribute('data-free', 'false');
   });
 
   it('renders no preview and no host before a pod is chosen', () => {

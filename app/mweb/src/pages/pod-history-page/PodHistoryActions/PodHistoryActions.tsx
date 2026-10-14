@@ -3,6 +3,7 @@ import { Alert, Stack } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { DuncitButton } from '@duncit/buttons';
@@ -23,12 +24,16 @@ interface Props {
   showRefundState: boolean;
   refundLabel: string;
   canRejoin: boolean;
+  /** A FREE pod's only way out — shown instead of Backout. */
+  canCancelSpot?: boolean;
+  cancellingSpot?: boolean;
   backingOut: boolean;
   rejoining: boolean;
   ticketLoading: boolean;
   invoiceLoading: boolean;
   onBackout: () => void;
   onRejoin: () => void;
+  onCancelSpot?: () => void;
   onDownloadTicket: () => void;
   onDownloadInvoice: () => void;
   onShowRefundStatus: () => void;
@@ -54,12 +59,15 @@ export default function PodHistoryActions({
   showRefundState,
   refundLabel,
   canRejoin,
+  canCancelSpot = false,
+  cancellingSpot = false,
   backingOut,
   rejoining,
   ticketLoading,
   invoiceLoading,
   onBackout,
   onRejoin,
+  onCancelSpot,
   onDownloadTicket,
   onDownloadInvoice,
   onShowRefundStatus,
@@ -102,6 +110,18 @@ export default function PodHistoryActions({
                 }
                 onBackout={onBackout}
               />
+            )}
+            {canCancelSpot && (
+              <DuncitButton
+                onClick={onCancelSpot}
+                disabled={item.status !== 'JOINED' || cancellingSpot}
+                color="error"
+                variant="outlined"
+                startIcon={<EventBusyIcon />}
+                data-testid="ph-cancel-spot"
+              >
+                {cancellingSpot ? t('mweb.podHistory.cancellingSpot') : t('mweb.podHistory.cancelSpot')}
+              </DuncitButton>
             )}
             {canRejoin && (
               <DuncitButton

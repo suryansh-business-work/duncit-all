@@ -19,7 +19,9 @@ export const appConfig = {
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
     'https://images.pexels.com/photos/5453823/pexels-photo-5453823.jpeg',
-  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['SUPPORT_MANAGER']),
+  // SUPPORT_USER (Support Agent) works the desk; manager-only actions (FAQs,
+  // Mail Automation rules) stay manager-only on the server.
+  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['SUPPORT_MANAGER', 'SUPPORT_USER']),
   tokenKey: 'support_token',
   colorModeKey: 'support_color_mode',
   accent: { light: '#6ee7b7', main: '#10b981', hover: '#059669', active: '#047857' },

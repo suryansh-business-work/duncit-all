@@ -57,8 +57,9 @@ describe('useVenueEditor / saving an existing venue', () => {
     expect(update.step1).not.toHaveProperty('venue_category');
     // 40 + 20 from the named spaces, never the stale scalar.
     expect(update.step1.capacity).toBe(60);
-    // The owner's QR ordering is never part of a staff save.
-    expect(update.step1).not.toHaveProperty('food_ordering');
+    // Staff set the switch, the discount and the GST — never the owner's Razorpay link, so it is left as it is.
+    expect(update.step1.food_ordering).toEqual({ enabled: true, discount_pct: 10, tax_override: false });
+    expect(update.step1.food_ordering).not.toHaveProperty('razorpay_integration_id');
     expect(sent('deductions')).toEqual({ venue_doc_id: VENUE_ID, venue_share_pct: 30, venue_commission_pct: 8 });
     expect(result.current.location.pathname).toBe(`/venues/${VENUE_ID}`);
     expect(result.current.editor.saveError).toBeNull();

@@ -110,7 +110,7 @@ function TimelineNode({ node, depth }: Readonly<{ node: PodTimelineNode; depth: 
  */
 export function PodHistoryTimeline({ item }: Readonly<{ item: PodMembership }>) {
   const nodes = buildPodParticipationTimeline(
-    participationInputFrom(item.participation, item.pod?.pod_date_time),
+    participationInputFrom(item.participation, item.pod?.pod_date_time, item.pod?.pod_type),
   );
 
   return (

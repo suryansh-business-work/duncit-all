@@ -2605,6 +2605,17 @@ export type AutomationTestReplyInput = {
   timed_out?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+/** A coupon a guest can pick at a venue's food checkout. Only what choosing needs — never its usage. */
+export type AvailableVenueFoodCoupon = {
+  __typename?: 'AvailableVenueFoodCoupon';
+  code: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  discount_pct: Scalars['Int']['output'];
+  /** Rupees of subtotal the code needs; 0 when it needs none. */
+  min_order_amount: Scalars['Float']['output'];
+  valid_until?: Maybe<Scalars['String']['output']>;
+};
+
 /**
  * A long-running piece of work a person started from a console — a bulk
  * delete, or an AI translation of one language. Kept on the server, so the
@@ -2648,6 +2659,7 @@ export type BackgroundJobFailure = {
 export type BackgroundJobKind =
   | 'AI_TRANSLATE'
   | 'BULK_DELETE'
+  | 'EMAIL_VERIFY'
   | 'MEDIA_ORGANIZE';
 
 export type BackgroundJobStatus =
@@ -6588,6 +6600,30 @@ export type CrmEmailAssetInput = {
   url: Scalars['String']['input'];
 };
 
+export type CrmEmailCheckSource =
+  | 'BULK'
+  | 'SINGLE';
+
+/** Reacher's verdict on a mailbox. An address never checked has no status. */
+export type CrmEmailStatus =
+  /** Malformed, no mail server, or the mailbox does not exist. */
+  | 'INVALID'
+  /** Deliverable but doubtful — catch-all domain, disposable, role account or full inbox. */
+  | 'RISKY'
+  /** The mail server would not say (greylisting, timeout, port 25 blocked). */
+  | 'UNKNOWN'
+  /** The mail server confirmed the mailbox exists. */
+  | 'VERIFIED';
+
+/** The newest verdict for one address, shown beside it across the CRM. */
+export type CrmEmailStatusEntry = {
+  __typename?: 'CrmEmailStatusEntry';
+  checked_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  status: CrmEmailStatus;
+  suggestion: Scalars['String']['output'];
+};
+
 /** A CRM-owned email template (separate store from core/admin templates). */
 export type CrmEmailTemplate = {
   __typename?: 'CrmEmailTemplate';
@@ -6645,6 +6681,39 @@ export type CrmEmailTestResult = {
   __typename?: 'CrmEmailTestResult';
   message?: Maybe<Scalars['String']['output']>;
   ok: Scalars['Boolean']['output'];
+};
+
+/** One check of one address — the CRM keeps every one. */
+export type CrmEmailVerification = {
+  __typename?: 'CrmEmailVerification';
+  accepts_mail: Scalars['Boolean']['output'];
+  can_connect_smtp: Scalars['Boolean']['output'];
+  /** Email of the CRM user who ran the check. */
+  checked_by: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  has_full_inbox: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  is_catch_all: Scalars['Boolean']['output'];
+  is_deliverable: Scalars['Boolean']['output'];
+  is_disabled: Scalars['Boolean']['output'];
+  is_disposable: Scalars['Boolean']['output'];
+  is_role_account: Scalars['Boolean']['output'];
+  is_valid_syntax: Scalars['Boolean']['output'];
+  /** BULK only: the background job that checked it. */
+  job_id?: Maybe<Scalars['String']['output']>;
+  source: CrmEmailCheckSource;
+  status: CrmEmailStatus;
+  /** A likely intended address when this one looks like a typo. */
+  suggestion: Scalars['String']['output'];
+};
+
+export type CrmEmailVerificationTablePage = {
+  __typename?: 'CrmEmailVerificationTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CrmEmailVerification>;
+  total: Scalars['Int']['output'];
 };
 
 export type CrmEntityType =
@@ -9309,6 +9378,26 @@ export type FollowStatus =
 export type FollowingFeedSource =
   | 'CLUBS'
   | 'PEOPLE';
+
+/** Finance's default GST on venue food orders, for every venue that does not set its own. */
+export type FoodTaxDefaults = {
+  __typename?: 'FoodTaxDefaults';
+  /** A whole percent from 0 to 28. */
+  gst_pct: Scalars['Int']['output'];
+  tax_mode: FoodTaxMode;
+  updated_at: Scalars['String']['output'];
+};
+
+export type FoodTaxDefaultsInput = {
+  /** A whole percent from 0 to 28. */
+  gst_pct: Scalars['Int']['input'];
+  tax_mode: FoodTaxMode;
+};
+
+/** How GST meets a venue food price: already inside it, or added on top. */
+export type FoodTaxMode =
+  | 'EXCLUSIVE'
+  | 'INCLUSIVE';
 
 export type FounderCategory = {
   __typename?: 'FounderCategory';
@@ -12393,6 +12482,16 @@ export type Mutation = {
   cancelBackoutPod: PodMember;
   /** The requester withdraws their own pending ask (tapping Requested). */
   cancelFollowRequest: User;
+  /**
+   * Cancel the spot on a FREE pod — the only way out of one. Releases every
+   * seat of the caller's booking, voids its ticket and returns the booking as
+   * BACKED_OUT with spot_cancelled_at set. No backout request, no attempt, no
+   * refund; joinFreePod brings the same booking back any number of times.
+   * Idempotent. Errors: NOT_FREE_POD (paid pod — use backoutPod), BAD_REQUEST
+   * (pod started), NOT_FOUND (not a member), ALREADY_CHECKED_IN (ticket scanned).
+   * On a free pod backoutPod does the same thing, for installed app builds.
+   */
+  cancelFreeSpot: PodMember;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
   /**
@@ -12645,6 +12744,10 @@ export type Mutation = {
   crmLeadAiChat: Scalars['String']['output'];
   /** Discover up to `limit` pages from the lead's website and save them. */
   crmScrapeWebsitePages: CrmWebsiteScrapeResult;
+  /** Check one address now. */
+  crmVerifyEmail: CrmEmailVerification;
+  /** Check every address in an uploaded CSV/XLSX as a background job. */
+  crmVerifyEmailsBulk: BackgroundJob;
   /**
    * Claim a name for an archive being sent in, and hand back a one-shot pass for
    * the upload route. Creates the backup row up front so an abandoned upload
@@ -13035,7 +13138,7 @@ export type Mutation = {
    * knowing the origin of. Tech/Super admin only.
    */
   issueAppBuildCiToken: AppBuildCiToken;
-  /** Book a free pod. Seats books several at once (default 1, capped by what is left). */
+  /** Book a free pod — always one seat. The seats argument is ignored; it stays for installed app builds. */
   joinFreePod: PodMember;
   /**
    * Open a virtual pod's meeting as a joined member.
@@ -14317,6 +14420,8 @@ export type Mutation = {
   updateFaqSubmissionStatus: FaqSubmission;
   updateFeatureFlag: FeatureFlag;
   updateFinanceSettings: FinanceSettings;
+  /** Finance roles: set the default GST on venue food orders. Venues that override it keep their own. */
+  updateFoodTaxDefaults: FoodTaxDefaults;
   /** Finance: set the amounts offered and how long a card lives. */
   updateGiftCardSettings: GiftCardSettings;
   updateGraphqlMonitorSettings: GraphqlMonitorSettings;
@@ -14978,6 +15083,11 @@ export type MutationCancelBackoutPodArgs = {
 
 export type MutationCancelFollowRequestArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelFreeSpotArgs = {
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -15650,6 +15760,18 @@ export type MutationCrmScrapeWebsitePagesArgs = {
   entity_type: CrmEntityType;
   lead_id: Scalars['ID']['input'];
   limit: Scalars['Int']['input'];
+};
+
+
+export type MutationCrmVerifyEmailArgs = {
+  email: Scalars['String']['input'];
+};
+
+
+export type MutationCrmVerifyEmailsBulkArgs = {
+  content_base64: Scalars['String']['input'];
+  filename?: InputMaybe<Scalars['String']['input']>;
+  url?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -19433,6 +19555,11 @@ export type MutationUpdateFinanceSettingsArgs = {
 };
 
 
+export type MutationUpdateFoodTaxDefaultsArgs = {
+  input: FoodTaxDefaultsInput;
+};
+
+
 export type MutationUpdateGiftCardSettingsArgs = {
   input: GiftCardSettingsInput;
 };
@@ -21615,6 +21742,8 @@ export type PodAttendanceBoard = {
   /** PHYSICAL or VIRTUAL. A virtual pod has no door to scan at: a member is marked when they open the meeting link. */
   pod_mode: PodMode;
   pod_title: Scalars['String']['output'];
+  /** FREE or PAID. A free pod has no payout, so the page does not tell the host their earnings depend on who they mark. */
+  pod_type: PodType;
   rows: Array<PodAttendanceRow>;
   total_count: Scalars['Int']['output'];
   total_seats: Scalars['Int']['output'];
@@ -22576,6 +22705,12 @@ export type PodDraftInput = {
 
 export type PodEarningsProjection = {
   __typename?: 'PodEarningsProjection';
+  /**
+   * True when the projection was asked for a FREE pod (pod_type: FREE): every
+   * figure is 0 and there is no calculation to show — hide it rather than print
+   * zeros. False for every paid projection.
+   */
+  is_free: Scalars['Boolean']['output'];
   /** Spots that can actually be sold: total_spots - 1 (0 when unset/unlimited). */
   payable_spots: Scalars['Int']['output'];
   /** Spots the host entered (physical capacity, including the host's own seat). */
@@ -22753,6 +22888,11 @@ export type PodFinanceBreakdown = {
   currency_symbol: Scalars['String']['output'];
   frozen: Scalars['Boolean']['output'];
   has_venue: Scalars['Boolean']['output'];
+  /**
+   * True for a free pod. Nothing is collected and the host pays the venue off
+   * the platform, so the waterfall is all zeros — hide the breakdown.
+   */
+  is_free: Scalars['Boolean']['output'];
   pod_id: Scalars['ID']['output'];
   pod_title: Scalars['String']['output'];
   /** How many of this pod's bookings got money back. */
@@ -22990,6 +23130,12 @@ export type PodMember = {
   /** Seats this booking holds — one ticket admits this many. 1 for every legacy booking. */
   seats: Scalars['Int']['output'];
   source: JoinSource;
+  /**
+   * When the member cancelled their spot on a FREE pod. Set only while the
+   * booking is BACKED_OUT because of a cancelled spot (cleared when they join
+   * again) — a free pod has no backout, so this, not backout_count, is its exit.
+   */
+  spot_cancelled_at?: Maybe<Scalars['String']['output']>;
   status: MembershipStatus;
   updated_at: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
@@ -23071,9 +23217,16 @@ export type PodMembershipState = {
    * any number the buyer picks without another round trip. Null for a free join.
    */
   backout_refund_per_seat?: Maybe<Scalars['Float']['output']>;
+  /** Always false on a FREE pod — a free pod has no backout; see can_cancel_spot. */
   can_backout: Scalars['Boolean']['output'];
   /** True when the in-process backout can still be cancelled (seat not rebooked). */
   can_cancel_backout: Scalars['Boolean']['output'];
+  /**
+   * True when the caller may cancel their spot (cancelFreeSpot): a FREE pod
+   * they hold a JOINED booking on, that has not started and whose ticket has
+   * not been checked in. Always false on a paid pod.
+   */
+  can_cancel_spot: Scalars['Boolean']['output'];
   can_join: Scalars['Boolean']['output'];
   is_member: Scalars['Boolean']['output'];
   /** Most seats one booking may take — caps the Pod Details seat picker. */
@@ -23165,6 +23318,12 @@ export type PodParticipation = {
   pod_cancelled_at?: Maybe<Scalars['String']['output']>;
   /** Set only when the pod itself was cancelled — then nothing else applies. */
   pod_cancelled_by?: Maybe<PodMemberCancelActor>;
+  /**
+   * Set when this booking's latest exit was a cancelled spot on a FREE pod —
+   * draw it as "Spot cancelled", not as a backout or a refund. Null otherwise,
+   * including once the member has joined again.
+   */
+  spot_cancelled_at?: Maybe<Scalars['String']['output']>;
 };
 
 export type PodPartnerRequest = {
@@ -23412,6 +23571,11 @@ export type PodSettlement = {
   host_payout_amount: Scalars['Float']['output'];
   /** True when the bill is being paid on top of the slot price rather than instead of it. */
   include_slot_price: Scalars['Boolean']['output'];
+  /**
+   * True for a free pod: completion creates no payout release, asks for no
+   * venue bill (has_venue is false, venue is null) and every money figure is 0.
+   */
+  is_free: Scalars['Boolean']['output'];
   /**
    * SEATS the settlement was computed on — the ones a host scanned in. Kept
    * under its original name for older consumers; attended_seats is the same
@@ -24802,6 +24966,8 @@ export type Query = {
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
+  /** Public: the coupons a guest can pick from at this venue's checkout right now, best first. Empty when the venue is not taking orders. */
+  availableVenueFoodCoupons: Array<AvailableVenueFoodCoupon>;
   backoutRefundRequest?: Maybe<BackoutRefundRequest>;
   /** Finance-only: every Backout request ever raised (all statuses, for audit). */
   backoutRefundRequests: Array<BackoutRefundRequest>;
@@ -25077,9 +25243,12 @@ export type Query = {
   crmCallPrompts: Array<CrmCallPrompt>;
   crmCallPromptsTable: CrmCallPromptTablePage;
   crmDynamicFields: Array<CrmDynamicField>;
+  /** Latest status per address (max 200). Addresses never checked are left out. */
+  crmEmailStatuses: Array<CrmEmailStatusEntry>;
   crmEmailTemplate?: Maybe<CrmEmailTemplate>;
   crmEmailTemplates: Array<CrmEmailTemplate>;
   crmEmailTemplatesTable: CrmEmailTemplateTablePage;
+  crmEmailVerificationsTable: CrmEmailVerificationTablePage;
   crmExcelExport: CrmExcelFile;
   /** Read an uploaded spreadsheet's headers + sample rows for column mapping. */
   crmExcelInspect: CrmExcelInspectResult;
@@ -25268,6 +25437,8 @@ export type Query = {
   followingFeed: Array<Post>;
   /** People the given user follows (their public profiles). */
   followingOf: Array<PublicProfile>;
+  /** Finance roles: the default GST on venue food orders (Finance → Food Menu Defaults). */
+  foodTaxDefaults: FoodTaxDefaults;
   /** Founder/Startup dashboard: every KPI for the date range, computed + manual. */
   founderDashboard: FounderDashboard;
   /** Finance > Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
@@ -26122,6 +26293,17 @@ export type Query = {
   socialProviders: Array<SocialProviderStatus>;
   socialScheduledPost: SocialScheduledPost;
   socialScheduledPosts: Array<SocialScheduledPost>;
+  /**
+   * Public: is this Google/Apple person already on Duncit?
+   *
+   * Asked by the signup door the moment the provider returns, so an existing
+   * account is offered "log in" before a WhatsApp code is ever sent — instead
+   * of signupWithGoogle/signupWithApple refusing it after the code is spent.
+   * Writes nothing and opens no session. Discloses nothing either: it only
+   * answers about the identity in a token the caller supplied and the provider
+   * verified. A hint, not the gate — signup still refuses a taken identity.
+   */
+  socialSignupStatus: SocialSignupStatus;
   /** Every card, including the switched-off ones. Admin only. */
   somethingForYouItems: Array<SomethingForYouItem>;
   /** Tech > SSL: every certificate certbot holds on this VPS (SUPER_ADMIN / TECH_MANAGER). */
@@ -26552,6 +26734,7 @@ export type QueryAdminPotentialPodEarningsArgs = {
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
   no_of_spots: Scalars['Int']['input'];
   pod_amount: Scalars['Float']['input'];
+  pod_type?: InputMaybe<PodType>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -26693,6 +26876,11 @@ export type QueryAvailablePodProductsArgs = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryAvailableVenueFoodCouponsArgs = {
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -27303,12 +27491,22 @@ export type QueryCrmDynamicFieldsArgs = {
 };
 
 
+export type QueryCrmEmailStatusesArgs = {
+  emails: Array<Scalars['String']['input']>;
+};
+
+
 export type QueryCrmEmailTemplateArgs = {
   template_id: Scalars['ID']['input'];
 };
 
 
 export type QueryCrmEmailTemplatesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCrmEmailVerificationsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -28851,6 +29049,7 @@ export type QueryPostsArgs = {
 export type QueryPotentialPodEarningsArgs = {
   no_of_spots: Scalars['Int']['input'];
   pod_amount: Scalars['Float']['input'];
+  pod_type?: InputMaybe<PodType>;
   venue_amount?: InputMaybe<Scalars['Float']['input']>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -29231,6 +29430,11 @@ export type QuerySocialScheduledPostArgs = {
 
 export type QuerySocialScheduledPostsArgs = {
   view: SocialQueueView;
+};
+
+
+export type QuerySocialSignupStatusArgs = {
+  input: SocialSignupStatusInput;
 };
 
 
@@ -32210,6 +32414,11 @@ export type SocialAnalyticsInput = {
   days: Scalars['Int']['input'];
 };
 
+/** The federated sign-in doors. */
+export type SocialAuthProvider =
+  | 'APPLE'
+  | 'GOOGLE';
+
 export type SocialCalendarItem = {
   __typename?: 'SocialCalendarItem';
   account_names: Array<Scalars['String']['output']>;
@@ -32489,6 +32698,20 @@ export type SocialSeverity =
   | 'HIGH'
   | 'LOW'
   | 'MEDIUM';
+
+/** What the signup door learns about a provider credential before it asks anything. */
+export type SocialSignupStatus = {
+  __typename?: 'SocialSignupStatus';
+  /** The address the provider verified — the caller's own, echoed so the client can name it. */
+  email: Scalars['String']['output'];
+  /** A Duncit account already answers to this identity, or to the address it verified. */
+  exists: Scalars['Boolean']['output'];
+};
+
+export type SocialSignupStatusInput = {
+  id_token: Scalars['String']['input'];
+  provider: SocialAuthProvider;
+};
 
 export type SocialTargetStatus =
   | 'FAILED'
@@ -37137,6 +37360,12 @@ export type UpdateApprovedVenueInput = {
   food_menu?: InputMaybe<Array<VenueFoodItemInput>>;
   food_ordering?: InputMaybe<VenueFoodOrderingInput>;
   gallery?: InputMaybe<Array<Scalars['String']['input']>>;
+  /**
+   * The venue's GST number, printed on its food invoices. Accepted only while the
+   * venue has none: once one is saved, only the venues console (adminUpdateVenue)
+   * may change it. Sending the saved number again is a no-op; empty is ignored.
+   */
+  gstin?: InputMaybe<Scalars['String']['input']>;
   offers_food?: InputMaybe<Scalars['Boolean']['input']>;
   owner_address?: InputMaybe<Scalars['String']['input']>;
   owner_dob?: InputMaybe<Scalars['String']['input']>;
@@ -38562,6 +38791,7 @@ export type VenueFoodCouponPreview = {
   currency_symbol: Scalars['String']['output'];
   discount_amount: Scalars['Float']['output'];
   discount_pct: Scalars['Int']['output'];
+  gst_pct: Scalars['Int']['output'];
   /** A sentence for the guest; null when ok. */
   message?: Maybe<Scalars['String']['output']>;
   /** The subtotal the code needs; 0 when it needs none or is not ok. */
@@ -38570,6 +38800,10 @@ export type VenueFoodCouponPreview = {
   /** Null when ok. */
   reason?: Maybe<VenueFoodCouponRejection>;
   subtotal: Scalars['Float']['output'];
+  tax_amount: Scalars['Float']['output'];
+  /** The venue's GST, exactly as placing the order would apply it. */
+  tax_mode: FoodTaxMode;
+  taxable_amount: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
 };
 
@@ -38678,6 +38912,8 @@ export type VenueFoodOrder = {
   discount_pct: Scalars['Int']['output'];
   /** Null until the guest rates the order. */
   feedback?: Maybe<VenueFoodFeedback>;
+  /** The GST percent the order was priced with; 0 on an order from before GST. */
+  gst_pct: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   /** True once the money has arrived — the invoice can be downloaded. */
   invoice_available: Scalars['Boolean']['output'];
@@ -38692,7 +38928,13 @@ export type VenueFoodOrder = {
   subscribe_events: Scalars['Boolean']['output'];
   subtotal: Scalars['Float']['output'];
   table_label: Scalars['String']['output'];
-  /** What was charged: subtotal less discount_amount less coupon_discount_amount. */
+  /** The GST inside (INCLUSIVE) or added to (EXCLUSIVE) the total. */
+  tax_amount: Scalars['Float']['output'];
+  /** How GST met the price when the order was placed. An order from before GST reads INCLUSIVE. */
+  tax_mode: FoodTaxMode;
+  /** The value the GST is charged on — the bill without its GST. taxable_amount + tax_amount = total. */
+  taxable_amount: Scalars['Float']['output'];
+  /** What was charged: subtotal less discount_amount less coupon_discount_amount, plus tax_amount when EXCLUSIVE. */
   total: Scalars['Float']['output'];
   /** The venue's address as its invoice prints it. */
   venue_address: Scalars['String']['output'];
@@ -38751,15 +38993,28 @@ export type VenueFoodOrdering = {
   /** Percent the venue takes off every QR order. */
   discount_pct: Scalars['Int']['output'];
   enabled: Scalars['Boolean']['output'];
+  /** The GST percent the venue's orders are priced with right now, resolved the same way as tax_mode. */
+  gst_pct: Scalars['Int']['output'];
   /** The owner's saved Razorpay connection. Always null on the public venue. */
   razorpay_integration_id?: Maybe<Scalars['ID']['output']>;
+  /** Whether the owner has linked a Razorpay account — what the venues console reads instead of the id. */
+  razorpay_linked: Scalars['Boolean']['output'];
+  /** What the venue's orders are priced with right now — its own while tax_override, otherwise Finance's default. */
+  tax_mode: FoodTaxMode;
+  /** True while the venue sets its own GST; false follows Finance's food default (foodTaxDefaults). */
+  tax_override: Scalars['Boolean']['output'];
 };
 
 export type VenueFoodOrderingInput = {
   discount_pct?: InputMaybe<Scalars['Int']['input']>;
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** A whole percent from 0 to 28. */
+  gst_pct?: InputMaybe<Scalars['Int']['input']>;
   /** One of the venue owner's own myPartnerIntegrations(provider: RAZORPAY) that passed its check; null unlinks. */
   razorpay_integration_id?: InputMaybe<Scalars['ID']['input']>;
+  tax_mode?: InputMaybe<FoodTaxMode>;
+  /** On: tax_mode and gst_pct below price the venue's orders. Off: Finance's default does. */
+  tax_override?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type VenueFoodPaymentStatus =
@@ -38820,6 +39075,8 @@ export type VenueFoodStats = {
   subscribers: Scalars['Int']['output'];
   /** Scans of the table label link in the window. */
   table_scans: Scalars['Int']['output'];
+  /** GST inside the revenue — collected on the venue's behalf, cancelled orders left out. */
+  tax_collected: Scalars['Float']['output'];
   top_items: Array<VenueFoodTopItem>;
 };
 
@@ -39139,8 +39396,14 @@ export type VenueSlotDecision = {
   host_phone: Scalars['String']['output'];
   pod_description: Scalars['String']['output'];
   pod_id: Scalars['ID']['output'];
+  /**
+   * True when the requesting pod is FREE: the host settles the venue's charges
+   * directly, off the platform, so price, venue_commission_amount and
+   * venue_receives are all 0. Show the free-pod notice instead of the earnings.
+   */
+  pod_is_free: Scalars['Boolean']['output'];
   pod_title: Scalars['String']['output'];
-  /** The slot's gross price, before Duncit's venue commission. */
+  /** The slot's gross price, before Duncit's venue commission. 0 when pod_is_free. */
   price: Scalars['Int']['output'];
   requested_at: Scalars['String']['output'];
   slot_id: Scalars['ID']['output'];
@@ -39173,7 +39436,13 @@ export type VenueSlotRequest = {
   host_phone: Scalars['String']['output'];
   pod_description: Scalars['String']['output'];
   pod_id: Scalars['ID']['output'];
+  /**
+   * True when the requesting pod is FREE: the host settles the venue's charges
+   * directly, off the platform. Show the free-pod notice instead of any amount.
+   */
+  pod_is_free: Scalars['Boolean']['output'];
   pod_title: Scalars['String']['output'];
+  /** The slot's price. 0 when pod_is_free — the platform quotes the venue nothing. */
   price: Scalars['Int']['output'];
   requested_at: Scalars['String']['output'];
   slot_id: Scalars['ID']['output'];

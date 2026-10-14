@@ -1,4 +1,5 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
+import type { QuerySocialSignupStatusArgs, SocialSignupStatus } from '@duncit/gql-types';
 
 /**
  * Signup step four, in two halves, and then the door that spends them.
@@ -63,6 +64,23 @@ export const SIGNUP_GOOGLE = gql`
         email
         onboarding_survey_completed
       }
+    }
+  }
+`;
+
+/**
+ * Asked the moment Google or Apple returns, before the policy gate: is this
+ * person already on Duncit? Read-only on the server — no session, no sign-in
+ * notice — so an existing account is offered "log in" and nothing else happens.
+ */
+export const SOCIAL_SIGNUP_STATUS: TypedDocumentNode<
+  { socialSignupStatus: SocialSignupStatus },
+  QuerySocialSignupStatusArgs
+> = gql`
+  query SocialSignupStatus($input: SocialSignupStatusInput!) {
+    socialSignupStatus(input: $input) {
+      exists
+      email
     }
   }
 `;

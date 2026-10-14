@@ -33,6 +33,7 @@ export default function PodForm({
   dateFormatter,
   slotLabels,
   editingPodDocId,
+  ownVenueIds,
   busy = false,
   error,
   onCancel,
@@ -86,8 +87,9 @@ export default function PodForm({
       dateFormatter,
       slotLabels,
       editingPodDocId,
+      ownVenueIds,
     }),
-    [config, clubsInCategory, locations, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels, editingPodDocId],
+    [config, clubsInCategory, locations, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels, editingPodDocId, ownVenueIds],
   );
 
   const submit = methods.handleSubmit(async (values) => {

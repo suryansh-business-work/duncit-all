@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, YStack } from 'tamagui';
+import { auth } from '@duncit/auth-tokens';
 
-import { AuthBackground } from '@/components/AuthBackground';
+import { AuthBackground, useAuthHeroHeight, useAuthHeroMedia } from '@/components/AuthBackground';
 import { AuthLogo } from '@/components/AuthLogo';
 import { AuthModeToggle } from '@/components/AuthModeToggle';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
@@ -11,7 +12,7 @@ import { TwoToneHeading } from '@/components/TwoToneHeading';
 
 export interface AuthScaffoldProps {
   title: string;
-  /** Optional softer second beat (e.g. "back." in "Welcome back."), drawn muted. */
+  /** The second beat ("back!" in "Welcome back!"), on its own line in the red text accent. */
   accentWord?: string;
   /**
    * Only a line that carries something the person needs ("you've been signed
@@ -23,9 +24,9 @@ export interface AuthScaffoldProps {
 }
 
 /**
- * Shared auth screen layout — the flat auth ground with the form sitting
- * directly on it (no card) → the admin logo → one calm two-tone headline →
- * screen content, in a ~420px centred column. mWeb twin: AuthBackground +
+ * Shared auth screen layout — the admin's hero across the top, then the logo
+ * and a large left-aligned two-line headline over its lower half, then the
+ * screen content, in a ~420px column on the flat auth ground. mWeb twin: AuthBackground +
  * AuthScreenFrame + AuthHeading.
  */
 export function AuthScaffold({
@@ -35,6 +36,11 @@ export function AuthScaffold({
   children,
   testID,
 }: Readonly<AuthScaffoldProps>) {
+  const { hasHero } = useAuthHeroMedia();
+  const heroHeight = useAuthHeroHeight();
+  // With a hero the column starts over its lower half; without one the flat
+  // ground keeps the form centred.
+  const top = hasHero ? Math.round(heroHeight * auth.hero.contentStart) : 40;
   return (
     <AuthBackground>
       <SafeAreaView style={{ flex: 1 }} testID={testID}>
@@ -45,20 +51,28 @@ export function AuthScaffold({
           <ScrollView
             contentContainerStyle={{
               flexGrow: 1,
-              justifyContent: 'center',
+              justifyContent: hasHero ? 'flex-start' : 'center',
               paddingHorizontal: 24,
-              paddingVertical: 40,
+              paddingTop: top,
+              paddingBottom: 40,
             }}
             keyboardShouldPersistTaps="handled"
           >
             <YStack width="100%" maxWidth={420} alignSelf="center">
-              <YStack alignItems="center" gap={8}>
+              <YStack alignItems="flex-start" gap={10}>
                 <YStack marginBottom={8}>
                   <AuthLogo size={64} />
                 </YStack>
-                <TwoToneHeading lead={title} trail={accentWord} fontSize={28} align="center" />
+                <TwoToneHeading
+                  lead={title}
+                  trail={accentWord}
+                  trailTone="accent"
+                  stacked
+                  fontSize={40}
+                  align="left"
+                />
                 {subtitle ? (
-                  <Text maxWidth={320} textAlign="center" fontSize={14} color="$muted">
+                  <Text maxWidth={360} fontSize={16} color="$muted">
                     {subtitle}
                   </Text>
                 ) : null}

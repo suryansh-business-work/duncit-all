@@ -67,10 +67,14 @@ describe('participationInputFrom', () => {
           cancel_refund_status: 'PENDING',
           refund_status: 'PROCESSED',
           backouts,
+          spot_cancelled_at: CANCELLED_AT,
         },
         PAST,
+        'FREE',
       ),
     ).toEqual({
+      free: true,
+      spotCancelledAt: CANCELLED_AT,
       joinedAt: JOINED_AT,
       podDateTime: PAST,
       attended: true,
@@ -88,6 +92,8 @@ describe('participationInputFrom', () => {
   // than crash the screen, so every field gets its "nothing happened" default.
   it('defaults every field when the API sent no participation at all', () => {
     const expected = {
+      free: false,
+      spotCancelledAt: null,
       joinedAt: '',
       podDateTime: undefined,
       attended: false,
@@ -128,6 +134,14 @@ describe('participationInputFrom', () => {
     });
     expect(out.attendedAt).toBeNull();
     expect(out.cancelledAt).toBeNull();
+  });
+
+  // Only the FREE type makes a booking free; a paid or unknown type never does.
+  it('marks the booking free only for a FREE pod', () => {
+    expect(participationInputFrom({}, FUTURE, 'FREE').free).toBe(true);
+    expect(participationInputFrom({}, FUTURE, 'PAID').free).toBe(false);
+    expect(participationInputFrom({}, FUTURE, null).free).toBe(false);
+    expect(participationInputFrom({}, FUTURE).free).toBe(false);
   });
 
   it('carries the pod date through untouched, including a pod with no date yet', () => {
@@ -725,6 +739,7 @@ describe('podParticipationActions', () => {
   it('a pristine booking may back out, reports no refund and no coins, and reads Joined', () => {
     const pristine = {
       canBackout: true,
+      canCancelSpot: false,
       showRefundState: false,
       coinsRefunded: 0,
       refundStatus: 'NONE',
@@ -742,6 +757,66 @@ describe('podParticipationActions', () => {
     const actions = podParticipationActions(noClock);
     expect(actions.canBackout).toBe(false);
     expect(actions.joinedLabelKind).toBe('VISITED');
+  });
+});
+
+describe('free pods', () => {
+  const free = (over: Partial<PodParticipationInput> = {}) => input({ free: true, ...over });
+
+  it('offers Cancel the spot instead of Backout on an upcoming free pod', () => {
+    const actions = podParticipationActions(free());
+    expect(actions.canBackout).toBe(false);
+    expect(actions.canCancelSpot).toBe(true);
+    // The same booking on a paid pod is the other way round.
+    expect(podParticipationActions(input()).canCancelSpot).toBe(false);
+  });
+
+  it('has nothing to cancel once the spot is gone, the pod is over or cancelled, or they were checked in', () => {
+    expect(podParticipationActions(free({ spotCancelledAt: CANCELLED_AT })).canCancelSpot).toBe(false);
+    expect(podParticipationActions(free({ podDateTime: PAST })).canCancelSpot).toBe(false);
+    expect(podParticipationActions(free({ cancelledBy: 'HOST' })).canCancelSpot).toBe(false);
+    expect(podParticipationActions(free({ attended: true })).canCancelSpot).toBe(false);
+  });
+
+  it('never reports a refund or coins, whatever an old backout row says', () => {
+    const actions = podParticipationActions(
+      free({
+        refundStatus: 'PENDING',
+        backouts: [backout({ status: 'SPOT_FILLED', refund_status: 'PROCESSED', coins_refunded: 40 })],
+      }),
+    );
+    expect(actions.showRefundState).toBe(false);
+    expect(actions.refundStatus).toBe('NONE');
+    expect(actions.coinsRefunded).toBe(0);
+  });
+
+  it('says joined, then spot cancelled — and nothing about a replacement or a refund', () => {
+    const nodes = buildPodParticipationTimeline(
+      free({ spotCancelledAt: CANCELLED_AT, backouts: [backout()] }),
+    );
+    expect(kinds(nodes)).toEqual(['JOINED', 'SPOT_CANCELLED']);
+    expect(nodes[1]).toEqual({ kind: 'SPOT_CANCELLED', at: CANCELLED_AT, state: 'done' });
+  });
+
+  it('shows only the join for a booking still in an upcoming free pod, even with a legacy backout', () => {
+    expect(kinds(buildPodParticipationTimeline(free({ backouts: [backout()] })))).toEqual(['JOINED']);
+  });
+
+  it('runs the attendance flow once a free pod has happened', () => {
+    expect(
+      kinds(buildPodParticipationTimeline(free({ podDateTime: PAST, attended: true }))),
+    ).toEqual(['JOINED', 'DATE_ARRIVES', 'ATTENDED']);
+    expect(kinds(buildPodParticipationTimeline(free({ podDateTime: FUTURE })))).toEqual(['JOINED']);
+  });
+
+  it('ends with the cancellation and no refund node when the free pod itself was cancelled', () => {
+    const nodes = buildPodParticipationTimeline(
+      free({ cancelledBy: 'VENUE', cancelledAt: CANCELLED_AT, cancelRefundStatus: 'NOT_ELIGIBLE' }),
+    );
+    expect(kinds(nodes)).toEqual(['JOINED', 'POD_CANCELLED']);
+    expect(nodes[1].children).toEqual([
+      { kind: 'CANCELLED_BY', at: CANCELLED_AT, state: 'done', cancelledBy: 'VENUE' },
+    ]);
   });
 });
 

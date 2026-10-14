@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react-native';
 
 import { PodPendingScreen } from '@/screens/PodPendingScreen';
-import { CategoryMediaType, PodVenueApproval } from '@/generated/graphql/graphql';
+import { CategoryMediaType, PodType, PodVenueApproval } from '@/generated/graphql/graphql';
 import { usePodPendingView, type PodPendingView } from '@/hooks/usePodPendingView';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -23,6 +23,7 @@ const view: PodPendingView = {
     place_label: 'The Loft',
     place_detail: null,
     venue_approval_status: PodVenueApproval.Pending,
+    pod_type: PodType.Paid,
   },
   category_name: 'Music',
   expected_earnings: 900,

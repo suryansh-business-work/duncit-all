@@ -193,7 +193,9 @@ export const STAFF_ROLES = [
   'COMMUNICATIONS_MANAGER',
   'LOGS_MANAGER',
   'ANALYTICS_MANAGER',
-  'ECOMM_MANAGER',
+  // The pet store's staff — not ECOMM_MANAGER, which every approved brand
+  // partner holds and which is not a staff seat.
+  'ECOMM_STORE_MANAGER',
   'LOCALIZATION_MANAGER',
   'TARGETS_MANAGER',
 ] as const;

@@ -1,6 +1,7 @@
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
+import { EmailStatusBadge } from '../email-status';
 
 export interface AiRow {
   _id: number;
@@ -33,7 +34,19 @@ export default function AiRecordsTable({ entity, rows, onChange }: Readonly<Prop
       ? [{ field: 'full_address', headerName: t('crm.common.address'), flex: 1.2, minWidth: 160, editable: true } as GridColDef<AiRow>]
       : []),
     { field: 'mobile', headerName: t('crm.components.mobile'), flex: 0.8, minWidth: 120, editable: true },
-    { field: 'email', headerName: t('shell.common.email'), flex: 1, minWidth: 150, editable: true },
+    {
+      field: 'email',
+      headerName: t('shell.common.email'),
+      flex: 1,
+      minWidth: 200,
+      editable: true,
+      renderCell: ({ value }) => (
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', height: '100%', minWidth: 0 }}>
+          <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</Box>
+          <EmailStatusBadge email={typeof value === 'string' ? value : ''} />
+        </Stack>
+      ),
+    },
     { field: 'lead_status', headerName: t('shell.common.status'), flex: 0.7, minWidth: 110, editable: true },
     { field: 'priority', headerName: t('crm.common.priority'), flex: 0.6, minWidth: 100, editable: true },
     { field: '_error', headerName: t('crm.components.issue'), flex: 1, minWidth: 140 },

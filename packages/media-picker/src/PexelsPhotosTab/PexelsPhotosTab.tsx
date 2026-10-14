@@ -13,6 +13,8 @@ interface Props {
   active: boolean;
   open: boolean;
   folder: string;
+  /** The record the imports are for — the server files them in its folder. */
+  entityId?: string;
   /** Upload Settings surface — an import is capped and compressed like any upload. */
   surface: UploadSurface;
   /** What to search before the user types — the pod's sub-category, say. */
@@ -32,6 +34,7 @@ export default function PexelsPhotosTab({
   active,
   open,
   folder,
+  entityId,
   surface,
   seedQuery,
   defaultOrientation,
@@ -126,7 +129,7 @@ export default function PexelsPhotosTab({
     try {
       const remote = photo.src_large || photo.src_medium;
       const res = await importMut({
-        variables: { remoteUrl: remote, folder, surface },
+        variables: { remoteUrl: remote, folder, entityId, surface },
       });
       const url = res.data?.importRemoteImageToImagekit?.url;
       if (!url) throw new Error('No URL returned from server');

@@ -11,11 +11,12 @@ const money = (symbol: string, amount: number) => `${symbol}${Number(amount || 0
 interface RowProps {
   row: PodSettlementAttendee;
   symbol: string;
+  showAmount: boolean;
 }
 
 /** One booking: who, how many seats and what it paid. Read-only — marking
  * lives on the attendance page now, and this list is the payout's evidence. */
-function RosterRow({ row, symbol }: Readonly<RowProps>) {
+function RosterRow({ row, symbol, showAmount }: Readonly<RowProps>) {
   const seatsText = row.seats === 1 ? '1 seat' : `${row.seats} seats`;
   return (
     <Stack
@@ -43,7 +44,8 @@ function RosterRow({ row, symbol }: Readonly<RowProps>) {
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>
-          {seatsText} · {money(symbol, row.amount)}
+          {seatsText}
+          {showAmount && ` · ${money(symbol, row.amount)}`}
         </Typography>
       </Box>
     </Stack>
@@ -55,6 +57,8 @@ interface Props {
   attendedSeats: number;
   bookedSeats: number;
   symbol: string;
+  /** False on a free pod — nobody paid, so a row never reads "₹0.00". */
+  showAmounts?: boolean;
   /** Opens the ticket scanner. Marking is a SCAN, never a free toggle. */
   onScan: () => void;
 }
@@ -74,6 +78,7 @@ export default function AttendanceRoster({
   attendedSeats,
   bookedSeats,
   symbol,
+  showAmounts = true,
   onScan,
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
@@ -109,7 +114,7 @@ export default function AttendanceRoster({
       {attended.length > 0 && (
         <Stack spacing={0.75}>
           {attended.map((row) => (
-            <RosterRow key={row.membership_id} row={row} symbol={symbol} />
+            <RosterRow key={row.membership_id} row={row} symbol={symbol} showAmount={showAmounts} />
           ))}
         </Stack>
       )}
@@ -124,7 +129,7 @@ export default function AttendanceRoster({
           </Typography>
           <Stack spacing={0.75}>
             {pending.map((row) => (
-              <RosterRow key={row.membership_id} row={row} symbol={symbol} />
+              <RosterRow key={row.membership_id} row={row} symbol={symbol} showAmount={showAmounts} />
             ))}
           </Stack>
           {/* ONE button, not one per row. Twelve unmarked bookings used to

@@ -47,6 +47,10 @@ describe('hasAppAccess', () => {
     expect(hasAppAccess(['SUPPORT_MANAGER'])).toBe(true);
   });
 
+  it('grants access to the SUPPORT_USER agent seat', () => {
+    expect(hasAppAccess(['USER', 'SUPPORT_USER'])).toBe(true);
+  });
+
   it('always grants access to ' + SUPER_ROLE, () => {
     expect(hasAppAccess([SUPER_ROLE])).toBe(true);
   });

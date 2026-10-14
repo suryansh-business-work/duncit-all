@@ -1,9 +1,21 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 import { ClubModel } from '@modules/clubs/club/club.model';
 
-/** FREE is virtual-only — physical pods must be PAID. Legacy values are
+/** A pod of either mode can be FREE (amount 0) or PAID. Legacy values are
  * collapsed to these two by the boot-time migration (pod-type.migration.ts). */
 export type PodType = 'FREE' | 'PAID';
+
+/**
+ * The one test for "this pod moves no platform money".
+ *
+ * A free pod sells no ticket, so nothing is collected, and whatever its venue
+ * charges is settled between the host and the venue OFF the platform. Every
+ * finance path — cancellation risk, auto-cancel, the earnings previews, the
+ * settlement and the payout releases — asks this and stands down. Keyed on the
+ * type alone, never on the amount, so a paid pod can never be read as free.
+ */
+export const isFreePod = (pod: { pod_type?: string | null } | null | undefined): boolean =>
+  pod?.pod_type === 'FREE';
 export type PodOccurrence = 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'ALTERNATE_DAY' | 'WEEKENDS_ONLY';
 export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 /** Venue's decision on the pod's slot request. NONE = no approval needed

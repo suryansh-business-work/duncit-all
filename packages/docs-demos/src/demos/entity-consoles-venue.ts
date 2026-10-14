@@ -52,7 +52,8 @@ const VENUE: VenueRecordMock = {
       is_available: false,
     },
   ],
-  food_ordering: { enabled: true, discount_pct: 10 },
+  // The GST is what the server resolved — Finance's default while the venue follows it.
+  food_ordering: { enabled: true, discount_pct: 10, razorpay_linked: true, tax_override: false, tax_mode: 'INCLUSIVE', gst_pct: 5 },
   venue_category: {
     super_category_id: '66a0000000000000000000a1',
     category_id: '66a0000000000000000000b2',
@@ -194,8 +195,9 @@ export const venueEditorMappingDemo = defineDemo<VenueRecordMock>({
           : `${step1.capacity} — typed, because the venue has no named spaces`,
       'adminUpdateVenue food': [
         step1.offers_food ? 'offers food' : 'does not offer food',
-        `${step1.food_menu.filter((dish) => dish.id).length} dish(es) kept under their ids`,
-        `${step1.food_menu.filter((dish) => !dish.id).length} new`,
+        // Switched off, only the switch goes — the server keeps the menu for later.
+        `${(step1.food_menu ?? []).filter((dish) => 'id' in dish).length} dish(es) kept under their ids`,
+        `${(step1.food_menu ?? []).filter((dish) => !('id' in dish)).length} new`,
         'food_ordering' in step1 ? 'food_ordering sent' : 'food_ordering never sent',
       ].join(', '),
       'updateVenueSettings sends': [

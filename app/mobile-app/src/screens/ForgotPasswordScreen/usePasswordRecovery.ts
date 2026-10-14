@@ -6,6 +6,7 @@ import {
   recoveryLookup,
   type ContactDraft,
   type PasswordRecoveryChannel,
+  type RecoveryHandoff,
 } from '@duncit/utils';
 
 import { useCodeRequest, type CodeRequestOutcome } from '@/hooks/useCodeRequest';
@@ -21,7 +22,10 @@ import {
  * for a grant, and spending that grant on a new password. Twin of mWeb's
  * src/pages/forgot-password-page/usePasswordRecovery.ts (rule 27).
  */
-export function usePasswordRecovery(fallbackMessage: string) {
+export function usePasswordRecovery(
+  fallbackMessage: string,
+  initial: Readonly<RecoveryHandoff> | null = null,
+) {
   const [busy, setBusy] = useState({ verifying: false, saving: false });
 
   const send = useCallback(
@@ -32,7 +36,7 @@ export function usePasswordRecovery(fallbackMessage: string) {
     [],
   );
 
-  const flow = useCodeRequest(send, fallbackMessage);
+  const flow = useCodeRequest(send, fallbackMessage, initial);
   const { state, advance, fail } = flow;
 
   const submitCode = useCallback(

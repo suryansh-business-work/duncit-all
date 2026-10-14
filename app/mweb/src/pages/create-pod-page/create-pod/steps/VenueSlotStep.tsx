@@ -3,6 +3,8 @@ import { Controller } from 'react-hook-form';
 import { Alert, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { formatDurationBetween } from '../../../../utils/dateFormat';
+import type { FreePodVenueNotice } from '@duncit/utils';
+import FreeVenueNote from '../FreeVenueNote';
 import SlotPicker from '../SlotPicker';
 import { VENUE_AVAILABLE_SLOTS } from '../venueSlots';
 import VenuePicker from '../VenuePicker';
@@ -40,12 +42,14 @@ interface Props {
   /** Ids of the venues that match the selected club — the venue picker is scoped to these. */
   clubVenueIds: Set<string>;
   viewerUserId: string;
+  /** A free pod on a priced slot: the host settles with the venue directly. */
+  venueNotice: FreePodVenueNotice;
 }
 
 /** Step 3 — pick a venue partner in the pod's city (card rail) and book one of
  * its published availability slots (physical), or meeting details + schedule
  * (virtual). The slot sets the pod's date/time. */
-export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Readonly<Props>) {
+export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId, venueNotice }: Readonly<Props>) {
   const {
     control,
     watch,
@@ -162,6 +166,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
           {ownVenue ? t('mweb.createPod.ownVenueNote') : t('mweb.createPod.venueApprovalNote')}
         </Alert>
       )}
+      <FreeVenueNote notice={venueNotice} />
       {selectedVenue && <VenueContactCard venue={selectedVenue} />}
       {selectedVenue && (
         <VenueMapPreview

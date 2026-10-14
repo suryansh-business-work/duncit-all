@@ -32,6 +32,24 @@ describe('assertPortalLogin — server-side portal login gate', () => {
     expect(() => assertPortalLogin('admin', ['CITY_ADMIN'])).not.toThrow();
   });
 
+  it('opens the pet store console to its own staff role, never to a Partner Brand partner', () => {
+    expect(PORTAL_ROLE_REQUIREMENTS['ecomm-portal']).toEqual(['ECOMM_STORE_MANAGER']);
+    expect(() => assertPortalLogin('ecomm-portal', ['ECOMM_STORE_MANAGER'])).not.toThrow();
+    // ECOMM_MANAGER is granted to every approved E-Commerce Brand partner.
+    expect(() => assertPortalLogin('ecomm-portal', ['USER', 'ECOMM_MANAGER'])).toThrow(
+      'You do not have access to this portal'
+    );
+  });
+
+  it('admits the analyst and agent seats to Finance and Support, manager role first', () => {
+    // [0] is what approving a portal-access request grants — still the manager.
+    expect(PORTAL_ROLE_REQUIREMENTS.finance).toEqual(['FINANCE_MANAGER', 'FINANCE_USER']);
+    expect(PORTAL_ROLE_REQUIREMENTS.support).toEqual(['SUPPORT_MANAGER', 'SUPPORT_USER']);
+    expect(() => assertPortalLogin('finance', ['FINANCE_USER'])).not.toThrow();
+    expect(() => assertPortalLogin('support', ['SUPPORT_USER'])).not.toThrow();
+    expect(() => assertPortalLogin('finance', ['SUPPORT_USER'])).toThrow('You do not have access to this portal');
+  });
+
   it('denies a user without any granted role for the portal (FORBIDDEN)', () => {
     expect(() => assertPortalLogin('tech', ['USER'])).toThrow(
       'You do not have access to this portal'

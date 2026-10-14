@@ -1,6 +1,7 @@
 /**
  * The pet store's OPERATOR API — what ecomm-portal.duncit.com reads and writes.
- * Every field here needs ECOMM_MANAGER (or SUPER_ADMIN).
+ * Every field here needs ECOMM_STORE_MANAGER (or SUPER_ADMIN) — never the
+ * Partner Brand role ECOMM_MANAGER.
  */
 export const storeAdminTypeDefs = /* GraphQL */ `
   type StoreSettings {

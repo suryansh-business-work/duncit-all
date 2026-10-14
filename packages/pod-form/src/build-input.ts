@@ -1,5 +1,6 @@
 import { mediaTypeForUrl, ticketDiscountInput } from '@duncit/utils';
 
+import { isFreePodType, normalizePodType } from './pod-type';
 import { podHasTicketPrice } from './ticket-discount';
 import {
   AUTO_POD_TYPE,
@@ -67,15 +68,18 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     pod_description: values.pod_description,
     pod_date_time: values.pod_date_time ? values.pod_date_time.toISOString() : undefined,
     pod_end_date_time: values.pod_end_date_time ? values.pod_end_date_time.toISOString() : null,
-    pod_type: values.pod_type,
-    pod_amount: Number(values.pod_amount) || 0,
+    // Only FREE or PAID is writable, and a free pod is never priced — whatever
+    // a (hidden) amount field still holds.
+    pod_type: normalizePodType(values.pod_type),
+    pod_amount: isFreePodType(values.pod_type) ? 0 : Number(values.pod_amount) || 0,
     pod_occurrence: values.pod_occurrence,
     no_of_spots: Number(values.no_of_spots) || 0,
     pod_info: values.pod_info,
     pod_hashtag: tags,
     pod_images_and_videos: linesToMedia(values.media_text),
     reel_url: values.reel_url.trim() || null,
-    payment_terms: values.payment_terms || null,
+    // A free pod has no money terms: a value typed while it was paid is dropped.
+    payment_terms: isFreePodType(values.pod_type) ? null : values.payment_terms || null,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: isPhysical && config.showPlaceCharges ? placeChargesOf(values) : [],
@@ -229,7 +233,8 @@ export function podToFormValues(pod: any): PodFormValues {
     pod_description: pod.pod_description ?? '',
     pod_date_time: pod.pod_date_time ? new Date(pod.pod_date_time) : null,
     pod_end_date_time: pod.pod_end_date_time ? new Date(pod.pod_end_date_time) : null,
-    pod_type: pod.pod_type ?? 'NATIVE_FREE',
+    // A row still carrying a legacy type opens on the option that replaced it.
+    pod_type: normalizePodType(pod.pod_type ?? 'FREE'),
     pod_amount: Number(pod.pod_amount ?? 0),
     pod_occurrence: pod.pod_occurrence ?? 'ONE_TIME',
     no_of_spots: Number(pod.no_of_spots ?? 0),

@@ -14,14 +14,25 @@ import { VenueBillSummary } from './VenueBillSummary';
 interface Props {
   settlement: PodSettlement | null;
   isLoading: boolean;
+  /** The pod is FREE: there is no payout to preview. The settlement's own
+   * `is_free` says the same once it has loaded. */
+  free?: boolean;
 }
 
 /** "Host Share" preview: the pod's money split four ways for the entered venue
- * bill, the host's earning first. */
-export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
+ * bill, the host's earning first. A free pod shows no figure at all — just
+ * "Free pod" and why (mWeb twin: @duncit/host-pod-actions' SettlementPreview). */
+export function SettlementSummary({ settlement, isLoading, free = false }: Readonly<Props>) {
   const { t } = useTranslation();
+  const isFree = free || !!settlement?.is_free;
   let body;
-  if (settlement) {
+  if (settlement && isFree) {
+    body = (
+      <Text testID="settlement-free-note" fontSize={12} color="$muted">
+        {t('mweb.hostShare.freeNote')}
+      </Text>
+    );
+  } else if (settlement) {
     const symbol = settlement.currency_symbol;
     // The same four-way split as Create Pod and every portal, the host's own
     // earning first. Where the release pays less than the engine's host figure
@@ -95,8 +106,13 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
       backgroundColor="$primarySoft"
       testID="settlement-summary"
     >
-      <Text fontSize={14} fontWeight="600" color="$color">
-        {t('mweb.hostShare.title')}
+      <Text
+        testID={isFree ? 'settlement-free' : undefined}
+        fontSize={14}
+        fontWeight="600"
+        color="$color"
+      >
+        {isFree ? t('mweb.hostShare.freePod') : t('mweb.hostShare.title')}
       </Text>
       {body}
     </YStack>

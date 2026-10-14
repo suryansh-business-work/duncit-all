@@ -5,6 +5,8 @@ import type { IdLike } from '@utils/request-cache';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
+import { assertPodFinanceScope } from '../financeScope';
+import { financeTargets } from '../financeScope.targets';
 
 /** MARKETING_MANAGER is here because the coupons console lives in the Marketing
  * portal — a discount code is a promotion. The admin roles stay because Admin
@@ -64,18 +66,24 @@ export const couponResolvers = {
     },
   },
   Mutation: {
+    // A coupon is money off. A city/zone admin manages the offer codes of their
+    // own city's pods; a GLOBAL or STORE code reaches every city, so it stays
+    // with the unscoped roles.
     createCoupon: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       const input = await validate(createCouponSchema, args.input);
+      await assertPodFinanceScope(ctx, ADMIN_RW, () => (input.scope === 'POD' ? [input.pod_id] : []));
       return couponService.create(input);
     },
     updateCoupon: async (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       const input = await validate(updateCouponSchema, args.input);
+      await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.couponUpdate(args.id, input));
       return couponService.update(args.id, input);
     },
-    deleteCoupon: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+    deleteCoupon: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
+      await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.coupon(args.id));
       return couponService.remove(args.id);
     },
   },

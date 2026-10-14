@@ -12,9 +12,9 @@ import { partnerLookups, partnerPodRow, podTablePage } from '../../__tests__/gro
  * what happens with what the form hands back, so the form is a thin stand-in
  * that submits its initial values.
  */
-function PodFormStub({ initialValues, error, onSubmit, onCancel }: Readonly<PodFormProps>) {
+function PodFormStub({ initialValues, error, onSubmit, onCancel, ownVenueIds }: Readonly<PodFormProps>) {
   return (
-    <div data-testid="pod-form">
+    <div data-testid="pod-form" data-own-venues={(ownVenueIds ?? []).join(',')}>
       {error && <p>{error}</p>}
       <button type="button" onClick={() => onSubmit(initialValues, { draft: false })}>
         Publish pod
@@ -101,6 +101,8 @@ describe('PartnerPodsPage', () => {
     const dialog = await openNewPod();
     expect(within(dialog).getByText('New Pod')).toBeTruthy();
     expect(within(dialog).getByText('Your approved host profile is added as the pod host automatically.')).toBeTruthy();
+    // Every bookable venue here is the host's own, so its slots book instantly.
+    expect(within(dialog).getByTestId('pod-form').dataset.ownVenues).toBe('venue-1');
     const tableLoads = sent.filter((op) => op.name === 'PartnerMyHostPodsTable').length;
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Publish pod' }));
@@ -109,6 +111,9 @@ describe('PartnerPodsPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     const input = sent.find((op) => op.name === 'CreatePartnerPod')?.variables.input as Record<string, unknown>;
     expect(input.is_active).toBe(true);
+    // A new pod opens free: the server's enum value, at no price.
+    expect(input.pod_type).toBe('FREE');
+    expect(input.pod_amount).toBe(0);
     await waitFor(() =>
       expect(sent.filter((op) => op.name === 'PartnerMyHostPodsTable').length).toBeGreaterThan(tableLoads),
     );

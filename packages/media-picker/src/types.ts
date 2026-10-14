@@ -69,6 +69,11 @@ export interface MediaPickerDialogProps {
   orientation?: Orientation;
   /** ImageKit folder e.g. "/users", "/posts", "/branding" */
   folder?: string;
+  /**
+   * The record the files are for (a venue, a pod…) when the caller knows it.
+   * The server files every upload and import in that record's own folder.
+   */
+  entityId?: string;
   title?: string;
   /** Comma-separated mime list. Defaults to images and videos. */
   accept?: string;

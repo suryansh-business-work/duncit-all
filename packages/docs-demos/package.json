@@ -73,6 +73,7 @@
     "@duncit/user-context": "workspace:*",
     "@duncit/user-core": "workspace:*",
     "@duncit/utils": "workspace:*",
+    "@duncit/venue-food": "workspace:*",
     "@duncit/verification": "workspace:*",
     "@duncit/virtual-scroll": "workspace:*"
   },

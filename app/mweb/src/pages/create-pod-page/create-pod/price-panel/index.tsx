@@ -10,6 +10,7 @@ import type { EarningsPreview } from './useEarningsPreview';
 export { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES } from './queries';
 export { useEarningsPreview, type EarningsPreview } from './useEarningsPreview';
 export { default as TicketPriceField } from './TicketPriceField';
+export { default as FreePodNote } from './FreePodNote';
 
 interface Props {
   preview: EarningsPreview;

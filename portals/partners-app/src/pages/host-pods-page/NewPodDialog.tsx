@@ -60,6 +60,8 @@ export default function NewPodDialog({
           config={PARTNER_POD_CONFIG}
           clubs={clubs}
           venues={venues}
+          // `myVenues` is what this host owns, so every slot here books instantly.
+          ownVenueIds={venues.map((venue) => venue.id)}
           products={products}
           getClubVenueIds={getClubVenueIds}
           busy={busy}

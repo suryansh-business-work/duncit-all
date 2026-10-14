@@ -54,6 +54,7 @@ const TONE_BY_KIND: Record<PodTimelineKind, TimelineCopy['tone']> = {
   REFUND_NOT_ELIGIBLE: 'bad',
   POD_CANCELLED: 'bad',
   CANCELLED_BY: 'bad',
+  SPOT_CANCELLED: 'warn',
 };
 
 const KINDS = Object.keys(TONE_BY_KIND) as PodTimelineKind[];
@@ -140,6 +141,8 @@ describe('timelineCopy', () => {
       expect(detailOf('SPOT_FILLED')).toBe('t:podTimeline.spotFilledDetail');
       expect(detailOf('SPOT_NOT_FILLED')).toBe('t:podTimeline.spotNotFilledDetail');
       expect(detailOf('KEPT_SPOT')).toBe('t:podTimeline.keptSpotDetail');
+      // A free pod's exit is not a backout: it says the way back in is open.
+      expect(detailOf('SPOT_CANCELLED')).toBe('t:podTimeline.spotCancelledDetail');
       expect(detailOf('REFUND_NOT_ELIGIBLE')).toBe('t:podTimeline.refundNotEligibleDetail');
       expect(detailOf('REFUND_INITIATED')).toBe('t:podTimeline.refundInitiatedDetail');
       expect(detailOf('REFUND_PENDING')).toBe('t:podTimeline.refundPendingDetail');

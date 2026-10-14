@@ -99,6 +99,26 @@ describe('studioOptionsFor', () => {
     expect(off).toContain('create');
   });
 
+  it('lists Host Share and Your Categories in the apps but leaves them out of the Partner console', () => {
+    const inApp = studioOptionsFor('HOST', ['HOST'], { autoPods: true }).map((o) => o.key);
+    expect(inApp).toEqual(expect.arrayContaining(['share', 'categories']));
+    const consoleKeys = studioOptionsFor('HOST', ['HOST'], { autoPods: true, console: true }).map((o) => o.key);
+    expect(consoleKeys).not.toContain('share');
+    expect(consoleKeys).not.toContain('categories');
+    // Only the app-only screens go — every other host option stays in the console.
+    expect(consoleKeys).toEqual(inApp.filter((key) => key !== 'share' && key !== 'categories'));
+    // The flag still applies on top of the console filter.
+    expect(studioOptionsFor('HOST', ['HOST'], { autoPods: false, console: true }).map((o) => o.key)).not.toContain('auto-pods');
+  });
+
+  it('gives each app-only option the same mWeb path and native route the apps open', () => {
+    const appOnly = STUDIO_OPTION_LIST.HOST.filter((option) => option.appOnly);
+    expect(appOnly.map(({ key, path, route }) => ({ key, path, route }))).toEqual([
+      { key: 'share', path: '/host/share', route: 'HostShare' },
+      { key: 'categories', path: '/host/categories', route: 'HostCategories' },
+    ]);
+  });
+
   it('is empty in User mode and for a studio the user does not hold', () => {
     expect(studioOptionsFor('USER', EVERY_ROLE, { autoPods: true })).toEqual([]);
     expect(studioOptionsFor('ECOMM', ['HOST'], { autoPods: true })).toEqual([]);
@@ -115,13 +135,13 @@ describe('the food group', () => {
     expect(grouped).toEqual(FOOD_KEYS.map((key) => `VENUE:${key}:food`));
   });
 
-  it('opens every food option in the Partner console, each on its own page', () => {
+  it('opens all four in the apps and in the Partner console, each on its own page', () => {
     const food = STUDIO_OPTION_LIST.VENUE.filter((option) => option.group === 'food');
     expect(food.map(({ path, route, portal }) => ({ path, route, portal }))).toEqual([
-      { path: undefined, route: undefined, portal: '/venues/food-dashboard' },
-      { path: undefined, route: undefined, portal: '/venues/food-menu' },
-      { path: undefined, route: undefined, portal: '/venues/food-orders' },
-      { path: undefined, route: undefined, portal: '/venues/food-coupons' },
+      { path: '/venues/food-dashboard', route: 'VenueFoodDashboard', portal: '/venues/food-dashboard' },
+      { path: '/venues/food-menu', route: 'VenueFoodMenu', portal: '/venues/food-menu' },
+      { path: '/venues/food-orders', route: 'VenueFoodOrders', portal: '/venues/food-orders' },
+      { path: '/venues/food-coupons', route: 'VenueFoodCoupons', portal: '/venues/food-coupons' },
     ]);
   });
 });

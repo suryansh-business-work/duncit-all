@@ -9,6 +9,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { AppSettingsModel } from '@modules/platform/settings/settings.model';
 import { FinanceSettingsModel } from '@modules/finance/finance/finance.model';
 import { notificationService } from '@modules/engagement/notification/notification.service';
+import { claimSeats } from '@modules/pods/pod/pod.seats.service';
 import * as emailService from '@services/email/email.service';
 
 const userId = new Types.ObjectId().toString();
@@ -45,6 +46,14 @@ const makePodDoc = (over: Record<string, unknown> = {}) =>
     ...over,
   });
 
+/**
+ * Backouts, Keep My Spot, spot fills and refunds belong to PAID pods only — a
+ * free pod has no backout (it cancels the spot instead, see
+ * podMember.freeSpot.int.test.ts). Every suite below that drives the backout
+ * machinery therefore runs on a paid pod.
+ */
+const makePaidPod = (over: Record<string, unknown> = {}) => makePodDoc({ pod_type: 'PAID', ...over });
+
 const makeUser = (over: Record<string, unknown> = {}) =>
   UserModel.create({
     auth: { email: 'buyer@x.com' },
@@ -64,6 +73,14 @@ const makePayment = (buyerId: unknown, over: Record<string, unknown> = {}) =>
     status: 'SUCCESS',
     ...over,
   } as never);
+
+/** A paid booking end to end, as the payment finalizer makes one: the seat is
+ * claimed, then the membership + ticket + backout fill follow. */
+async function paidJoin(pod: any, buyerId: unknown) {
+  await claimSeats(pod._id, String(buyerId), 1);
+  const payment = await makePayment(buyerId, { pod_id: pod._id });
+  return podMemberService.recordPaidJoin(String(pod._id), String(buyerId), String(payment._id));
+}
 
 /** Create a JOINED membership and take the seat on the pod. */
 async function joinMember(pod: any, memberUserId: unknown, over: Record<string, unknown> = {}) {
@@ -188,7 +205,7 @@ describe('expired pod booking guard', () => {
 describe('backout → Backout in process (Item 1)', () => {
   it('moves a paid booking to BACKOUT_IN_PROCESS, releases the seat and records a request', async () => {
     await setDeductionPct(10);
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const buyer = await makeUser();
     const payment = await makePayment(buyer._id);
     await joinMember(pod, buyer._id, { source: 'PAID', payment_id: payment._id });
@@ -219,7 +236,7 @@ describe('backout → Backout in process (Item 1)', () => {
   });
 
   it('keeps an existing referral token and marks free bookings NOT_ELIGIBLE', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user, { referral_token: 'ref-keep' });
 
@@ -233,7 +250,7 @@ describe('backout → Backout in process (Item 1)', () => {
   });
 
   it('snapshots a null amount when the linked payment doc is missing', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user, { source: 'PAID', payment_id: new Types.ObjectId() });
 
@@ -245,7 +262,7 @@ describe('backout → Backout in process (Item 1)', () => {
   });
 
   it('rejects a second backout while one is already in process', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
@@ -255,7 +272,7 @@ describe('backout → Backout in process (Item 1)', () => {
   });
 
   it('rejects non-members and missing pods', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     await expect(podMemberService.backout(String(pod._id), userId)).rejects.toThrow(/not a member/i);
     await expect(podMemberService.backout(new Types.ObjectId().toString(), userId)).rejects.toThrow(
       /pod not found/i
@@ -264,7 +281,7 @@ describe('backout → Backout in process (Item 1)', () => {
 
   it('enforces the per-pod attempt limit with unique sequential Backout IDs (Item 6)', async () => {
     await setMaxAttempts(2);
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user);
 
@@ -286,7 +303,7 @@ describe('backout → Backout in process (Item 1)', () => {
 
 describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
   it('restores the booking and closes the request as CANCELLED', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
@@ -306,7 +323,7 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
   });
 
   it('throws NOT_FOUND with no in-process backout and for a missing pod', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     await expect(podMemberService.cancelBackout(String(pod._id), userId)).rejects.toThrow(
       /no backout in process/i
     );
@@ -316,12 +333,12 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
   });
 
   it('refuses once the replacement is confirmed (request already SPOT_FILLED)', async () => {
-    const pod = await makePodDoc({ no_of_spots: 1 });
+    const pod = await makePaidPod({ no_of_spots: 1 });
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
     // A replacement books the released (only) seat → spot filled.
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    await paidJoin(pod, new Types.ObjectId());
 
     await expect(podMemberService.cancelBackout(String(pod._id), String(user))).rejects.toThrow(
       /replacement has been confirmed/i
@@ -329,7 +346,7 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
   });
 
   it('refuses when the pod is already full again (seat race)', async () => {
-    const pod = await makePodDoc({ no_of_spots: 1 });
+    const pod = await makePaidPod({ no_of_spots: 1 });
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
@@ -350,7 +367,7 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
     released.
   */
   it('refuses an in-process membership that has no request behind it', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await PodMemberModel.create({
       pod_id: pod._id,
@@ -369,7 +386,7 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
   /* Only an IN_PROCESS request can be cancelled — an already-closed one is
      left exactly as it was, events and all. */
   it('leaves a non-in-process active request untouched (defensive branch)', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     const member = await PodMemberModel.create({
       pod_id: pod._id,
@@ -402,7 +419,7 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
 describe('spot fill — replacement books the released seat (Item 1)', () => {
   it('fills the oldest in-process backout when a join consumes the released seat', async () => {
     await setDeductionPct(10);
-    const pod = await makePodDoc({ no_of_spots: 2 });
+    const pod = await makePaidPod({ no_of_spots: 2 });
     const buyer = await makeUser();
     const payment = await makePayment(buyer._id);
     await joinMember(pod, buyer._id, { source: 'PAID', payment_id: payment._id });
@@ -411,7 +428,7 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     await podMemberService.backout(String(pod._id), String(buyer._id));
     // Pod now 1/2 with one backout in process — a new join takes the released seat.
     const replacement = new Types.ObjectId().toString();
-    await podMemberService.joinFree(String(pod._id), replacement);
+    await paidJoin(pod, replacement);
 
     const member = await PodMemberModel.findOne({ user_id: buyer._id });
     expect(member!.status).toBe('BACKED_OUT');
@@ -434,23 +451,23 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
   });
 
   it('does not fill when free seats absorbed the join, and never fills unlimited pods', async () => {
-    const roomy = await makePodDoc({ no_of_spots: 5 });
+    const roomy = await makePaidPod({ no_of_spots: 5 });
     const user = new Types.ObjectId();
     await joinMember(roomy, user);
     await podMemberService.backout(String(roomy._id), String(user));
-    await podMemberService.joinFree(String(roomy._id), new Types.ObjectId().toString());
+    await paidJoin(roomy, new Types.ObjectId());
     expect((await PodMemberModel.findOne({ user_id: user }))!.status).toBe('BACKOUT_IN_PROCESS');
 
-    const unlimited = await makePodDoc({ no_of_spots: 0 });
+    const unlimited = await makePaidPod({ no_of_spots: 0 });
     const u2 = new Types.ObjectId();
     await joinMember(unlimited, u2);
     await podMemberService.backout(String(unlimited._id), String(u2));
-    await podMemberService.joinFree(String(unlimited._id), new Types.ObjectId().toString());
+    await paidJoin(unlimited, new Types.ObjectId());
     expect((await PodMemberModel.findOne({ user_id: u2 }))!.status).toBe('BACKOUT_IN_PROCESS');
   });
 
   it('fills FIFO by backout time across multiple in-process backouts', async () => {
-    const pod = await makePodDoc({ no_of_spots: 2 });
+    const pod = await makePaidPod({ no_of_spots: 2 });
     const first = new Types.ObjectId();
     const second = new Types.ObjectId();
     await joinMember(pod, first);
@@ -459,11 +476,11 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     await podMemberService.backout(String(pod._id), String(second));
     await PodMemberModel.updateOne({ user_id: first }, { $set: { backed_out_at: new Date(Date.now() - 60_000) } });
 
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    await paidJoin(pod, new Types.ObjectId());
     expect((await PodMemberModel.findOne({ user_id: first }))!.status).toBe('BACKED_OUT');
     expect((await PodMemberModel.findOne({ user_id: second }))!.status).toBe('BACKOUT_IN_PROCESS');
 
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    await paidJoin(pod, new Types.ObjectId());
     expect((await PodMemberModel.findOne({ user_id: second }))!.status).toBe('BACKED_OUT');
   });
 
@@ -474,20 +491,20 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     made a silently-undelivered notice look like a decision not to send one.
   */
   it('still raises the notice for a user with no address, and survives notify failures', async () => {
-    const pod = await makePodDoc({ no_of_spots: 1 });
+    const pod = await makePaidPod({ no_of_spots: 1 });
     const noEmail = await makeUser({ auth: {}, profile: { first_name: 'Mail-less' } });
     await joinMember(pod, noEmail._id);
     await podMemberService.backout(String(pod._id), String(noEmail._id));
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    await paidJoin(pod, new Types.ObjectId());
     expect(spotFilledEmail).toHaveBeenCalledWith(expect.objectContaining({ to: '' }));
 
     // Notification failure must never fail the join (best-effort).
-    const pod2 = await makePodDoc({ no_of_spots: 1 });
+    const pod2 = await makePaidPod({ no_of_spots: 1 });
     const u = new Types.ObjectId();
     await joinMember(pod2, u);
     await podMemberService.backout(String(pod2._id), String(u));
     notifyCreate.mockRejectedValueOnce(new Error('push down'));
-    await podMemberService.joinFree(String(pod2._id), new Types.ObjectId().toString());
+    await paidJoin(pod2, new Types.ObjectId());
     expect((await PodMemberModel.findOne({ user_id: u }))!.status).toBe('BACKED_OUT');
   });
 
@@ -499,14 +516,14 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     and so is the member attached to it.
   */
   it('leaves a closed request and its member alone (defensive branch)', async () => {
-    const pod = await makePodDoc({ no_of_spots: 1 });
+    const pod = await makePaidPod({ no_of_spots: 1 });
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
     // Close the request out-of-band; the member is still IN_PROCESS.
     await BackoutRequestModel.updateOne({ user_id: user }, { $set: { status: 'CANCELLED' } });
 
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    await paidJoin(pod, new Types.ObjectId());
     const member = await PodMemberModel.findOne({ user_id: user });
     expect(member!.status).toBe('BACKOUT_IN_PROCESS');
     const request = await BackoutRequestModel.findOne({ user_id: user });
@@ -515,7 +532,7 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
   });
 
   it('fills backouts on paid joins recorded by the payment flow', async () => {
-    const pod = await makePodDoc({ no_of_spots: 1 });
+    const pod = await makePaidPod({ no_of_spots: 1 });
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
@@ -532,7 +549,7 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
   });
 
   it('recordPaidJoin is idempotent and survives a missing pod or fill failure', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     const payment = await makePayment(user);
@@ -571,14 +588,10 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
   });
 
   it('blocks joining/redeeming while the caller’s own backout is in process', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user, { referral_token: 'ref-owner' });
     await podMemberService.backout(String(pod._id), String(user));
-
-    await expect(podMemberService.joinFree(String(pod._id), String(user))).rejects.toThrow(
-      /keep my spot/i
-    );
 
     const other = await joinMember(pod, new Types.ObjectId(), { referral_token: 'ref-other' });
     expect(other).toBeTruthy();
@@ -603,7 +616,7 @@ describe('redeemReferral', () => {
     });
     await expect(podMemberService.redeemReferral('ref-dangling', userId)).rejects.toThrow(/pod not found/i);
 
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const owner = new Types.ObjectId();
     await joinMember(pod, owner, { referral_token: 'ref-own' });
     await expect(podMemberService.redeemReferral('ref-own', String(owner))).rejects.toThrow(
@@ -617,7 +630,7 @@ describe('redeemReferral', () => {
   });
 
   it('joins via referral and fills the referrer’s in-process backout', async () => {
-    const pod = await makePodDoc({ no_of_spots: 1 });
+    const pod = await makePaidPod({ no_of_spots: 1 });
     const owner = await makeUser();
     await joinMember(pod, owner._id, { referral_token: 'ref-fill' });
     await podMemberService.backout(String(pod._id), String(owner._id));
@@ -640,7 +653,7 @@ describe('redeemReferral', () => {
 describe('getState — backout-aware membership state', () => {
   it('exposes attempts, deduction and the refund preview for a paid member', async () => {
     await setDeductionPct(20);
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const buyer = await makeUser();
     const payment = await makePayment(buyer._id, { total: 1000 });
     await joinMember(pod, buyer._id, { source: 'PAID', payment_id: payment._id });
@@ -661,7 +674,7 @@ describe('getState — backout-aware membership state', () => {
 
   it('reflects an in-process backout and a maxed-out attempt budget', async () => {
     await setMaxAttempts(1);
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
@@ -685,7 +698,7 @@ describe('getState — backout-aware membership state', () => {
   });
 
   it('handles anonymous viewers, full pods and a missing payment doc', async () => {
-    const pod = await makePodDoc({ no_of_spots: 1, pod_attendees: [new Types.ObjectId()] });
+    const pod = await makePaidPod({ no_of_spots: 1, pod_attendees: [new Types.ObjectId()] });
     const anon = await podMemberService.getState(String(pod._id), null);
     expect(anon).toMatchObject({
       is_member: false,
@@ -715,7 +728,7 @@ describe('rejoin (no-payment)', () => {
   const uid = () => new Types.ObjectId().toString();
 
   it('flips a backed-out membership back to JOINED and re-adds the attendee', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = uid();
     await backedOut(pod._id, user, { payment_id: new Types.ObjectId(), refund_status: 'PROCESSED' });
 
@@ -729,7 +742,7 @@ describe('rejoin (no-payment)', () => {
   });
 
   it('is idempotent when the caller is already joined', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = uid();
     await PodMemberModel.create({ pod_id: pod._id, user_id: user, status: 'JOINED', source: 'FREE', refund_status: 'NONE' });
     const res = await podMemberService.rejoin(String(pod._id), user);
@@ -737,7 +750,7 @@ describe('rejoin (no-payment)', () => {
   });
 
   it('throws NOT_FOUND when there is no backed-out booking', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     await expect(podMemberService.rejoin(String(pod._id), uid())).rejects.toThrow(/no backed-out booking/i);
   });
 
@@ -746,14 +759,14 @@ describe('rejoin (no-payment)', () => {
   });
 
   it('blocks rejoin once the pod is complete', async () => {
-    const pod = await makePodDoc({ completed_at: new Date() });
+    const pod = await makePaidPod({ completed_at: new Date() });
     const user = uid();
     await backedOut(pod._id, user);
     await expect(podMemberService.rejoin(String(pod._id), user)).rejects.toThrow(/already complete/i);
   });
 
   it('blocks rejoin once the pod date has passed', async () => {
-    const pod = await makePodDoc({ pod_date_time: new Date(Date.now() - 3_600_000) });
+    const pod = await makePaidPod({ pod_date_time: new Date(Date.now() - 3_600_000) });
     const user = uid();
     await backedOut(pod._id, user);
     await expect(podMemberService.rejoin(String(pod._id), user)).rejects.toThrow(/already taken place/i);
@@ -761,18 +774,18 @@ describe('rejoin (no-payment)', () => {
 
   it('blocks rejoin when the pod is full', async () => {
     const taken = new Types.ObjectId();
-    const pod = await makePodDoc({ no_of_spots: 1, pod_attendees: [taken] });
+    const pod = await makePaidPod({ no_of_spots: 1, pod_attendees: [taken] });
     const user = uid();
     await backedOut(pod._id, user);
     await expect(podMemberService.rejoin(String(pod._id), user)).rejects.toThrow(/full/i);
   });
 
   it('blocks rejoin after a replacement was confirmed (book again instead)', async () => {
-    const pod = await makePodDoc({ no_of_spots: 1 });
+    const pod = await makePaidPod({ no_of_spots: 1 });
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    await paidJoin(pod, new Types.ObjectId());
 
     await expect(podMemberService.rejoin(String(pod._id), String(user))).rejects.toThrow(
       /replacement took your spot/i
@@ -787,7 +800,7 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
 
   it('lists every request with Backout ID, status, timeline and per-request refund state', async () => {
     await setDeductionPct(10);
-    const pod = await makePodDoc({ no_of_spots: 2 });
+    const pod = await makePaidPod({ no_of_spots: 2 });
     // Extension stored bare (extRegex allows it) — Finance must still get a
     // dialable "+91 …", not "91 …".
     const buyer = await makeUser({
@@ -805,7 +818,7 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
     await podMemberService.backout(String(pod._id), String(buyer._id));
     await podMemberService.cancelBackout(String(pod._id), String(buyer._id));
     await podMemberService.backout(String(pod._id), String(buyer._id));
-    await podMemberService.joinFree(String(pod._id), String(replacement._id));
+    await paidJoin(pod, String(replacement._id));
 
     const rows = await podMemberService.listBackoutRefunds();
     expect(rows).toHaveLength(2);
@@ -848,7 +861,7 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
   });
 
   it('derives fallback fields for free bookings and deleted member docs', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     const member = await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
@@ -868,7 +881,7 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
   });
 
   it('hydrates the live payment total when the request snapshot is missing', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const buyer = await makeUser();
     const payment = await makePayment(buyer._id, { total: 750 });
     const member = await joinMember(pod, buyer._id, { source: 'PAID', payment_id: payment._id });
@@ -890,7 +903,7 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
   });
 
   it('gets a single request by id and returns null otherwise', async () => {
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
@@ -903,7 +916,7 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
   });
 
   it('serves the table with Backout-ID search, status filter, sort and paging', async () => {
-    const pod = await makePodDoc({ no_of_spots: 4 });
+    const pod = await makePaidPod({ no_of_spots: 4 });
     const a = new Types.ObjectId();
     const b = new Types.ObjectId();
     await joinMember(pod, a);
@@ -944,12 +957,12 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
 describe('processBackoutRefund (finance — one refund per request)', () => {
   const filledPaidRequest = async () => {
     await setDeductionPct(10);
-    const pod = await makePodDoc({ no_of_spots: 1 });
+    const pod = await makePaidPod({ no_of_spots: 1 });
     const buyer = await makeUser();
     const payment = await makePayment(buyer._id);
     await joinMember(pod, buyer._id, { source: 'PAID', payment_id: payment._id });
     await podMemberService.backout(String(pod._id), String(buyer._id));
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    await paidJoin(pod, new Types.ObjectId());
     const request = await BackoutRequestModel.findOne({ user_id: buyer._id });
     return { pod, buyer, payment, request: request! };
   };
@@ -989,7 +1002,7 @@ describe('processBackoutRefund (finance — one refund per request)', () => {
     ).rejects.toThrow(/not found/i);
 
     // Still in process → not eligible.
-    const pod = await makePodDoc();
+    const pod = await makePaidPod();
     const user = new Types.ObjectId();
     await joinMember(pod, user);
     await podMemberService.backout(String(pod._id), String(user));
@@ -999,11 +1012,11 @@ describe('processBackoutRefund (finance — one refund per request)', () => {
     );
 
     // Spot filled but free (no payment) → nothing to refund.
-    const freePod = await makePodDoc({ no_of_spots: 1 });
+    const freePod = await makePaidPod({ no_of_spots: 1 });
     const freeUser = new Types.ObjectId();
     await joinMember(freePod, freeUser);
     await podMemberService.backout(String(freePod._id), String(freeUser));
-    await podMemberService.joinFree(String(freePod._id), new Types.ObjectId().toString());
+    await paidJoin(freePod, new Types.ObjectId());
     const freeReq = await BackoutRequestModel.findOne({ user_id: freeUser });
     await expect(podMemberService.processBackoutRefund(String(freeReq!._id))).rejects.toThrow(
       /no payment to refund/i
@@ -1042,7 +1055,7 @@ describe('getBookingForUser — booking deep link (receipt email CTA)', () => {
       super_category_id: new Types.ObjectId(),
       category_id: new Types.ObjectId(),
     });
-    const pod = await makePodDoc({ club_id: club._id, pod_title: 'Sunset Rooftop Jam' });
+    const pod = await makePaidPod({ club_id: club._id, pod_title: 'Sunset Rooftop Jam' });
     const owner = new Types.ObjectId();
     const member = await joinMember(pod, owner);
     return { club, pod, owner, member };

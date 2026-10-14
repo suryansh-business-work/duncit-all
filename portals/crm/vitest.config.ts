@@ -18,7 +18,8 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     // All vitest tests live under `__tests__/unit-tests/`. Cypress specs are
     // discovered by Cypress separately (see __tests__/e2e/cypress.config.ts).
-    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
+    // Plus the colocated `*.form.cy.tsx` specs the form structure (rule 17) asks for.
+    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}', 'src/**/*.cy.{ts,tsx}'],
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     // The lead-form and editor-page suites fill a full React Hook Form through
     // MockedProvider; under v8 instrumentation on a two-core CI runner that
@@ -41,6 +42,8 @@ export default defineConfig({
         'src/App.tsx',
         'src/apollo.ts',
         'src/theme.ts',
+        // Colocated form specs are tests, not source.
+        'src/**/*.cy.{ts,tsx}',
         // Type-only files.
         'src/**/*.d.ts',
         'src/types/**',

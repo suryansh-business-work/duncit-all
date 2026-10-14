@@ -34,4 +34,6 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, ProfileIconKe
   warehouses: 'warehouses',
   // Money going back to buyers after a deletion — the returns glyph, the nearest the drawer has.
   refunds: 'returns',
+  // The host's categories — the badge each approved category is.
+  categories: 'badges',
 };

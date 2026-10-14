@@ -1,4 +1,4 @@
-import type { PasswordRecoveryChannel } from '@duncit/utils';
+import type { PasswordRecoveryChannel, SocialCredential } from '@duncit/utils';
 import {
   RegisterDocument,
   LoginDocument,
@@ -15,11 +15,16 @@ import {
   SignupWithAppleDocument,
   LinkAppleAccountDocument,
   LoginWithAppleDocument,
+  SocialSignupStatusDocument,
 } from '@/graphql/auth';
 // The enum is not re-exported through the generated index, so it is imported
 // from the module codegen writes it into — the surface is a server value, and
 // spelling it as a bare string would not survive a rename of the enum.
-import { PasswordResetChannel, PolicyAcceptanceSurface } from '@/generated/graphql/graphql';
+import {
+  PasswordResetChannel,
+  PolicyAcceptanceSurface,
+  SocialAuthProvider,
+} from '@/generated/graphql/graphql';
 import { graphqlRequest } from './graphql.client';
 import { setAuthToken, clearAuthToken } from './auth-token';
 
@@ -298,6 +303,23 @@ export async function signupWithGoogle(
     token: data.signupWithGoogle.token,
     surveyCompleted: data.signupWithGoogle.user.onboarding_survey_completed,
   };
+}
+
+/**
+ * Is the person behind this provider credential already on Duncit? Asked by
+ * the signup screen before the policy sheet; writes nothing and signs nobody in.
+ */
+export async function socialSignupStatus(
+  credential: SocialCredential,
+): Promise<{ exists: boolean; email: string }> {
+  const data = await graphqlRequest(SocialSignupStatusDocument, {
+    input: {
+      provider:
+        credential.provider === 'APPLE' ? SocialAuthProvider.Apple : SocialAuthProvider.Google,
+      id_token: credential.idToken,
+    },
+  });
+  return data.socialSignupStatus;
 }
 
 /** Token-only Google login for existing accounts (mirrors mWeb LOGIN_GOOGLE). */

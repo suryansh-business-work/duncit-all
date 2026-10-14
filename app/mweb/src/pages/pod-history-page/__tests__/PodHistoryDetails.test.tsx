@@ -127,10 +127,18 @@ const baseItem = (over: Partial<PodHistoryItem> = {}): PodHistoryItem =>
 const renderIt = (
   item: PodHistoryItem,
   extraMocks: unknown[] = [],
-  handlers: { onBackout?: () => void; onRejoin?: () => void; backingOut?: boolean; rejoining?: boolean } = {},
+  handlers: {
+    onBackout?: () => void;
+    onRejoin?: () => void;
+    onCancelSpot?: () => void;
+    backingOut?: boolean;
+    rejoining?: boolean;
+    cancellingSpot?: boolean;
+  } = {},
 ) => {
   const onBackout = handlers.onBackout ?? vi.fn();
   const onRejoin = handlers.onRejoin ?? vi.fn();
+  const onCancelSpot = handlers.onCancelSpot ?? vi.fn();
   const mocks = [appSettingsMock, financeMock, ...(item.pod?.id ? [ordersMock(item.pod.id)] : []), ...extraMocks];
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
@@ -141,11 +149,13 @@ const renderIt = (
           rejoining={handlers.rejoining ?? false}
           onBackout={onBackout}
           onRejoin={onRejoin}
+          cancellingSpot={handlers.cancellingSpot ?? false}
+          onCancelSpot={onCancelSpot}
         />
       </MemoryRouter>
     </MockedProvider>,
   );
-  return { onBackout, onRejoin };
+  return { onBackout, onRejoin, onCancelSpot };
 };
 
 beforeEach(() => {
@@ -348,5 +358,44 @@ describe('PodHistoryDetails', () => {
     // Go to Pod Details is disabled (no slug/id)
     const podBtn = screen.getByText('Go to Pod Details').closest('a') ?? screen.getByText('Go to Pod Details').closest('button');
     expect(podBtn).toBeTruthy();
+  });
+  describe('free pod', () => {
+    const freePod = () => basePod({ pod_type: 'FREE', pod_amount: 0 });
+
+    it('offers Cancel Spot instead of Backout on a joined booking and fires it', () => {
+      const { onCancelSpot, onBackout } = renderIt(baseItem({ pod: freePod(), payment_id: null }));
+      expect(screen.queryByTestId('ph-backout')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('ph-cancel-spot'));
+      expect(onCancelSpot).toHaveBeenCalledOnce();
+      expect(onBackout).not.toHaveBeenCalled();
+    });
+
+    it('shows the cancelling label and disables Cancel Spot while it runs', () => {
+      renderIt(baseItem({ pod: freePod() }), [], { cancellingSpot: true });
+      expect(screen.getByTestId('ph-cancel-spot')).toBeDisabled();
+      expect(screen.getByTestId('ph-cancel-spot')).toHaveTextContent('Cancelling…');
+    });
+
+    it('calls a cancelled spot what it is, offers Rejoin and promises no replacement or refund', () => {
+      renderIt(
+        baseItem({
+          status: 'BACKED_OUT',
+          pod: freePod(),
+          participation: { joined_at: '2026-01-01T10:00:00.000Z', spot_cancelled_at: '2026-01-03T10:00:00.000Z' },
+        }),
+      );
+      expect(screen.getByTestId('ph-status-chip')).toHaveTextContent('Spot cancelled');
+      expect(screen.getByTestId('ph-rejoin')).toBeInTheDocument();
+      expect(screen.queryByTestId('ph-cancel-spot')).not.toBeInTheDocument();
+      expect(screen.queryByText('We are finding your replacement')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('ph-refund')).not.toBeInTheDocument();
+      expect(screen.getByText('Spot Cancelled')).toBeInTheDocument();
+    });
+
+    it('keeps Backout and no Cancel Spot on the same booking of a paid pod', () => {
+      renderIt(baseItem());
+      expect(screen.getByTestId('ph-backout')).toBeInTheDocument();
+      expect(screen.queryByTestId('ph-cancel-spot')).not.toBeInTheDocument();
+    });
   });
 });

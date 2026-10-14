@@ -12,7 +12,7 @@ export const APP_ACCOUNT_FLOWS: readonly CatalogueFlow[] = [
         description:
           'A new visitor completes all four steps and lands on the interest survey with a live session.',
         steps: [
-          ['Open /register while signed out (native: tap "Create one" on the sign-in screen)', 'The "Join Duncit." screen shows a Google button, an "OR EMAIL" divider, a 4-segment step bar titled "About you" and a "Continue" button'],
+          ['Open /register while signed out (native: tap "Create an account" on the sign-in screen)', 'The "Join Duncit." screen shows a Google button, an "OR EMAIL" divider, a 4-segment step bar titled "About you" and a "Continue" button'],
           ['Enter a valid Name, pick a Date of birth at least the admin minimum age ago, leave Referral code empty, tap "Continue"', 'Step 2 "How we reach you" shows Code (+91), WhatsApp number, a ticked "This is also my mobile number" box and Email'],
           ['Enter a WhatsApp number and an email that are not on any account and wait for the check', '"Checking availability…" shows briefly and then clears; "Continue" is enabled'],
           ['Tap "Continue"', 'Step 3 "Your password" shows Password, Confirm Password and the "I have read and accept the Duncit policies" checkbox; the main button reads "Create account"'],
@@ -192,7 +192,7 @@ export const APP_ACCOUNT_FLOWS: readonly CatalogueFlow[] = [
         name: 'Sign in with email and password',
         description: 'An existing member signs in from /login.',
         steps: [
-          ['Open /login while signed out', '"Welcome back." shows a Google button, an "OR" divider, "Continue with Password", "Continue with OTP", "New here? Create one", the Terms/Privacy line and "App version {version}"'],
+          ['Open /login while signed out', '"Welcome back!" shows the Branding login image or video as a hero, the subtitle and three chips (Local Events, Meet People, Nearby Pods), "Continue with Password", "Continue with OTP", "New here? Create an account", the Terms/Privacy line, an "OR" divider, round Google and Apple buttons and "App version {version}"'],
           ['Tap "Continue with Password"', 'The heading becomes "Sign in with password" with Email/Phone tabs (Email selected), Email and Password boxes, "Log me in", "Forgot password?" and "Back to sign-in options"'],
           ['Enter the E2E test account email and password and tap "Log me in"', 'The button reads "Signing in…" and the app opens Home'],
           ['Check the server user record', 'auth.last_login_provider is EMAIL and auth.last_login_at is updated'],

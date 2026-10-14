@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Switch } from 'react-native';
 import { Text, YStack } from 'tamagui';
 
 import { SurfaceCard } from '@/components/SurfaceCard';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { AppSwitch } from '@/components/AppSwitch';
 import { useTranslation } from '@/hooks/useTranslation';
 import { IconDisc } from './IconDisc';
 
@@ -16,7 +15,6 @@ export function PrivacyToggleCard({
   onChange,
 }: Readonly<{ isPrivate: boolean; onChange: (next: boolean) => Promise<void> }>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
   const [busy, setBusy] = useState(false);
 
   const onValueChange = async (next: boolean) => {
@@ -40,13 +38,12 @@ export function PrivacyToggleCard({
           When private, only followers see your posts and status.
         </Text>
       </YStack>
-      <Switch
+      <AppSwitch
         testID="privacy-switch"
         aria-label={t('mweb.account.togglePrivateAccount')}
         value={isPrivate}
         disabled={busy}
         onValueChange={(next) => fireAndForget(onValueChange(next))}
-        trackColor={{ true: primary }}
       />
     </SurfaceCard>
   );

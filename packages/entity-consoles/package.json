@@ -53,6 +53,7 @@
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
+    "@duncit/venue-food": "workspace:*",
     "@hookform/resolvers": "^5.9.1",
     "@mui/x-date-pickers": "^9.14.0",
     "chart.js": "^4.5.1",

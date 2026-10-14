@@ -39,6 +39,7 @@ function board(over: Partial<PodAttendanceBoard> = {}): PodAttendanceBoard {
     pod_date_time: null,
     pod_end_date_time: null,
     pod_mode: 'PHYSICAL',
+    pod_type: 'PAID',
     viewer: 'HOST',
     lock: 'OPEN',
     can_mark: true,

@@ -1,8 +1,9 @@
-import { ActivityIndicator, Switch } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { whatsappCategoryCopy } from '@duncit/i18n';
 
+import { AppSwitch } from '@/components/AppSwitch';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { WhatsAppPreferenceCategory } from '@/hooks/useWhatsAppPreferences';
@@ -63,13 +64,12 @@ export function WhatsAppPreferenceRow({ item, busy, onChange }: Readonly<Props>)
           aria-label={t('mweb.a11y.loading')}
         />
       ) : (
-        <Switch
+        <AppSwitch
           testID={`whatsapp-preference-switch-${item.category}`}
           aria-label={copy.label}
           value={item.enabled}
           disabled={item.required}
           onValueChange={(next) => onChange(item.category, next)}
-          trackColor={{ true: primary }}
         />
       )}
     </XStack>

@@ -8,6 +8,7 @@ import {
   usePodBackoutAttempts,
   usePodBackoutDeduction,
   usePodHistory,
+  usePodHistoryCancelSpot,
   usePodInvoice,
   usePodRejoin,
   usePodTicket,
@@ -21,6 +22,7 @@ jest.mock('@/hooks/usePodHistory', () => ({
   usePodBackout: jest.fn(),
   usePodBackoutAttempts: jest.fn(),
   usePodRejoin: jest.fn(),
+  usePodHistoryCancelSpot: jest.fn(),
   usePodBackoutDeduction: jest.fn(),
   usePodInvoice: jest.fn(),
   usePodTicket: jest.fn(),
@@ -40,6 +42,8 @@ const mockedHistory = usePodHistory as jest.Mock;
 const mockedBackout = usePodBackout as jest.Mock;
 const mockedAttempts = usePodBackoutAttempts as jest.Mock;
 const mockedRejoin = usePodRejoin as jest.Mock;
+const mockedCancelSpot = usePodHistoryCancelSpot as jest.Mock;
+const cancelSpot = { open: false, busy: false, setOpen: jest.fn(), confirm: jest.fn() };
 const mockedDeduction = usePodBackoutDeduction as jest.Mock;
 const mockedInvoice = usePodInvoice as jest.Mock;
 const mockedTicket = usePodTicket as jest.Mock;
@@ -124,6 +128,7 @@ beforeEach(() => {
   mockedDeduction.mockReturnValue(0);
   mockedBackout.mockReturnValue({ backout, busy: false });
   mockedRejoin.mockReturnValue({ rejoin, busy: false });
+  mockedCancelSpot.mockReturnValue(cancelSpot);
   mockedInvoice.mockReturnValue({ download, busy: false });
   mockedTicket.mockReturnValue({ download: jest.fn().mockResolvedValue(undefined), busy: false });
   mockedPolicy.mockReturnValue({
@@ -250,6 +255,33 @@ describe('PodHistoryDetailsScreen actions', () => {
     fireEvent.press(screen.getByTestId('ph-rejoin'));
     fireEvent.press(screen.getByTestId('rejoin-confirm'));
     await waitFor(() => expect(screen.getByTestId('ph-notice')).toHaveTextContent('cannot rejoin'));
+  });
+
+  // A free pod: Cancel Spot opens the confirm, and the confirm runs the cancel.
+  it('wires a free pod booking to Cancel Spot for the selected pod', () => {
+    setHistory({
+      items: [
+        membership({
+          pod: { ...pod, pod_type: 'FREE', pod_amount: 0, pod_date_time: '2999-01-01T10:00:00Z' },
+        }),
+      ],
+    });
+    const view = renderWithProviders(<PodHistoryDetailsScreen />);
+    expect(mockedCancelSpot).toHaveBeenCalledWith(
+      'pod1',
+      expect.any(Function),
+      expect.any(Function),
+    );
+    expect(screen.queryByTestId('ph-backout')).toBeNull();
+    fireEvent.press(screen.getByTestId('ph-cancel-spot'));
+    expect(cancelSpot.setOpen).toHaveBeenCalledWith(true);
+
+    mockedCancelSpot.mockReturnValue({ ...cancelSpot, open: true });
+    view.rerender(<PodHistoryDetailsScreen />);
+    fireEvent.press(screen.getByTestId('cancel-spot-confirm'));
+    expect(cancelSpot.confirm).toHaveBeenCalledTimes(1);
+    fireEvent.press(screen.getByTestId('cancel-spot-keep'));
+    expect(cancelSpot.setOpen).toHaveBeenCalledWith(false);
   });
 
   it('closes the rejoin dialog via cancel', () => {

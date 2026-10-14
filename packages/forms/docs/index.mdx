@@ -783,6 +783,85 @@ makeFoodFeedbackSchema(t).safeParse(foodFeedbackDefaults);
 capped at 500 characters, `images` at 3 uploaded photo addresses. The limit messages receive
 `{max}`. `FoodFeedbackValues` is the inferred shape and `foodFeedbackDefaults` the blank form.
 
+`makeFoodOrderCancelSchema(t)` is the owner's reason for cancelling a paid food order with a full
+refund — the guest is told it. It is trimmed and must be `FOOD_CANCEL_REASON_MIN` (3) to
+`FOOD_CANCEL_REASON_MAX` (300) characters; `foodOrderCancelDefaults` is the blank form.
+
+`makeFoodCouponSchema(t)` is a venue's food coupon, checked the way the server checks it: the
+shared `COUPON_CODE` shape at 3–30 characters, a whole percent up to
+`FOOD_ORDER_LIMITS.maxDiscountPct`, an optional minimum in rupees (two decimals), optional use
+limits of 1 or more, and an end after the start. Numbers stay the text the owner typed, so a blank
+limit means "no limit". `foodCouponToValues(coupon)` opens the form (a new coupon blank and on) and
+`toFoodCouponInput(values)` is what the create and update mutations take — every field, nulls for
+an emptied window or limit. The web form (`@duncit/venue-food`) and the native sheet bind the same
+rules, under `venueFoodOwner.*` copy.
+
+```ts
+import { makeFoodCouponSchema, toFoodCouponInput } from '@duncit/forms/schemas';
+
+const parsed = makeFoodCouponSchema(t).parse(values);
+await createCoupon({ input: { ...toFoodCouponInput(parsed), venue_id } });
+```
+
+### GST on venue food
+
+ONE set of rules for the three forms that set it — Finance → Food Menu Defaults, the owner's
+venue form (Partners) and the Venues console editor. The bounds are the server's
+(`FOOD_GST_LIMITS` from `@duncit/utils`: a whole percent from 0 to 28), and every message is a
+`shell.foodTax.*` key, which every portal ships.
+
+```ts
+import {
+  makeFoodGstinRule,
+  makeFoodTaxDefaultsSchema,
+  makeVenueFoodTaxRefinement,
+  venueFoodTaxShape,
+} from '@duncit/forms/schemas';
+
+// Finance's default — the percent is coerced from its text field.
+makeFoodTaxDefaultsSchema(t).parse({ tax_mode: 'EXCLUSIVE', gst_pct: '18' }); // { tax_mode: 'EXCLUSIVE', gst_pct: 18 }
+
+// A venue form: loose shape beside its food_ordering, checked only while the venue overrides.
+const checkTax = makeVenueFoodTaxRefinement(t);
+z.object({ food_ordering: z.object({ ...venueFoodTaxShape }) })
+  .superRefine((v, ctx) => checkTax(v.food_ordering, ctx, ['food_ordering']));
+
+// The venue's GST number: optional, compared upper-cased (GSTIN from @duncit/regex).
+makeFoodGstinRule(t).safeParse('22ABCDE1234F1A5'); // shell.foodTax.gstinInvalid
+```
+
+`FoodTaxFields` (package root, MUI) draws the three controls — the override switch, the mode
+radios and the GST % field — for any form whose `prefix` holds `tax_override`, `tax_mode` and
+`gst_pct`. While the switch is off the mode and percent stay visible, read-only, as the server
+resolved them (Finance's default):
+
+```tsx
+import { FoodTaxFields } from '@duncit/forms';
+
+<FoodTaxFields control={control} t={t} prefix="food_ordering" idPrefix="register-venue-food" />
+```
+
+### A venue's food menu — `food-menu`
+
+The dishes, QR ordering and the invoice GST number, checked ONE way by the menu editor
+(@duncit/venue-food, native), the Partners venue form's Food section and the Venues console
+editor's. Shapes are loose (`venueFoodShape`, `foodDishShape`, `foodOrderingShape`) and the rules
+run as a refinement that checks nothing while "serves food" is off — a menu kept behind the switch
+is not sent, so it never blocks a save. The caps are `venueRegistrationConfig`'s
+(`foodMenuLimitsOf`, `NO_FOOD_MENU_LIMITS` until it answers); the text bounds are the server's
+(`FOOD_DISH_NAME_MAX` and friends). `editsAccount` says whether the form picks the Razorpay
+account (ordering then needs one) or reads the owner's link (`razorpay_linked`).
+
+```ts
+import { makeFoodMenuSchema, makeVenueFoodRefinement, venueFoodShape } from '@duncit/forms/schemas';
+
+// The menu editor's whole form, GST number included.
+makeFoodMenuSchema(t, { limits, editsAccount: true });
+
+// A bigger venue form holding the food block under the same names.
+z.object({ ...otherFields, ...venueFoodShape }).superRefine(makeVenueFoodRefinement(t, { limits, editsAccount: false }));
+```
+
 ### Venue cancellation policy
 
 `makeCancellationPolicySchema(t)` is what a venue owner's cancellation policy is checked

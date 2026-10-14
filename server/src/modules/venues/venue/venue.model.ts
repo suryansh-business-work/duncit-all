@@ -9,10 +9,15 @@ import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.att
 import {
   VENUE_FOOD_DIETS,
   VENUE_FOOD_DISCOUNT_MAX_PCT,
+  VENUE_FOOD_GST_PCT_MAX,
   VENUE_FOOD_PRICE_MAX,
   VENUE_FOOD_SPICE_LEVELS,
+  VENUE_FOOD_TAX_DEFAULTS,
+  VENUE_FOOD_TAX_MODES,
 } from './venue.constants';
 import { hasVenueCategory, pickVenueCategory, venueCategoryKey } from './venue.categories';
+
+export type VenueFoodTaxMode = (typeof VENUE_FOOD_TAX_MODES)[number];
 
 export type VenueStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -70,6 +75,14 @@ export interface IVenueFoodOrdering {
   razorpay_integration_id: Types.ObjectId | null;
   /** Percent the venue takes off every QR order (0 = none). */
   discount_pct: number;
+  /**
+   * Off = the venue's orders follow Finance's food GST default. On = its own
+   * tax_mode and gst_pct below. Absent on a venue saved before food GST existed,
+   * which reads as off.
+   */
+  tax_override?: boolean;
+  tax_mode?: VenueFoodTaxMode;
+  gst_pct?: number;
 }
 
 /** Daily operating window in venue-local "HH:mm" (24h). */
@@ -272,6 +285,9 @@ const venueFoodOrderingSchema = new Schema<IVenueFoodOrdering>(
     enabled: { type: Boolean, default: false },
     razorpay_integration_id: { type: Schema.Types.ObjectId, ref: 'PartnerIntegration', default: null },
     discount_pct: { type: Number, default: 0, min: 0, max: VENUE_FOOD_DISCOUNT_MAX_PCT },
+    tax_override: { type: Boolean, default: false },
+    tax_mode: { type: String, enum: VENUE_FOOD_TAX_MODES, default: VENUE_FOOD_TAX_DEFAULTS.tax_mode },
+    gst_pct: { type: Number, default: VENUE_FOOD_TAX_DEFAULTS.gst_pct, min: 0, max: VENUE_FOOD_GST_PCT_MAX },
   },
   { _id: false }
 );

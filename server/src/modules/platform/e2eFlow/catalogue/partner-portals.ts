@@ -4592,7 +4592,8 @@ export const PARTNER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         name: 'Server-side pod guards',
         description: 'Rules the server enforces beyond the form.',
         steps: [
-          ['Save a FREE physical pod', '"Physical pods must be paid — free pods are only available for virtual pods"'],
+          ['Save a FREE physical pod with amount 0', 'Saved — no earnings projection, no venue money; a priced partner slot waits for the venue with the free-pod notice'],
+          ['Turn a pod that has paid bookings FREE', '"This pod already has paid bookings, so it cannot be made free. Refund the bookings first."'],
           ['Save a pod on a slot another pod just booked', '"Selected slot is no longer available"'],
           ['Save on a date the venue marked as leave', '"The venue is on leave on this date. Pick another slot."'],
           ['Add more of a product than stock allows', '"Not enough inventory for <product>"'],

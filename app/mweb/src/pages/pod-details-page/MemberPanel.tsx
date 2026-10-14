@@ -21,6 +21,11 @@ interface Props {
   restoringSpot: boolean;
   onBackout: () => void;
   onKeepSpot: () => void;
+  /** A FREE pod: no Backout — "Cancel Spot" is the only way out. */
+  isFree?: boolean;
+  canCancelSpot?: boolean;
+  cancellingSpot?: boolean;
+  onCancelSpot?: () => void;
 }
 
 /**
@@ -42,11 +47,21 @@ export default function MemberPanel({
   restoringSpot,
   onBackout,
   onKeepSpot,
+  isFree = false,
+  canCancelSpot = false,
+  cancellingSpot = false,
+  onCancelSpot,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  // A free pod has no attempts to run out of: once its spot cannot be
+  // cancelled before the date, the only reason is a check-in at the door.
+  const canLeave = isFree ? canCancelSpot : canBackout;
+  const blockedNote = isFree
+    ? t('mweb.podDetails.cancelSpotCheckedIn')
+    : t('mweb.podDetails.backoutMaxed');
   let note: string | null = null;
-  if (!canBackout) {
-    note = isExpired ? t('mweb.podDetails.alreadyTakenPlace') : t('mweb.podDetails.backoutMaxed');
+  if (!canLeave) {
+    note = isExpired ? t('mweb.podDetails.alreadyTakenPlace') : blockedNote;
   }
   const overline = isExpired ? t('mweb.podDetails.youWent') : t('mweb.podDetails.youreGoing');
   const badge = isExpired ? t('mweb.podDetails.podVisited') : t('mweb.podDetails.podBooked');
@@ -68,7 +83,19 @@ export default function MemberPanel({
           note={note}
           noteTestId="pod-backout-maxed"
         />
-        {canBackout && (
+        {isFree && canCancelSpot && (
+          <DuncitButton
+            variant="outlined"
+            color="error"
+            onClick={onCancelSpot}
+            disabled={cancellingSpot}
+            data-testid="pod-cancel-spot"
+            sx={{ ...ctaButtonSx, fontSize: 14 }}
+          >
+            {t('mweb.podDetails.cancelSpot')}
+          </DuncitButton>
+        )}
+        {!isFree && canBackout && (
           <DuncitButton
             variant="outlined"
             color="error"

@@ -49,6 +49,10 @@ const actions = {
   joinState: { loading: false },
   backoutState: { loading: false },
   cancelBackoutState: { loading: false },
+  cancelSpotState: { loading: false },
+  cancelSpotOpen: false,
+  setCancelSpotOpen: vi.fn(),
+  onConfirmCancelSpot: vi.fn(),
   onJoinFree: vi.fn(),
   setBackoutOpen: vi.fn(),
   openKeepSpot: vi.fn(),
@@ -111,8 +115,11 @@ vi.mock('../pod-details-page/PodCommercePreview', () => ({
   ),
 }));
 vi.mock('../pod-details-page/StickyPodActionPanel', () => ({
-  default: ({ onGoToDashboard }: any) => (
-    <button onClick={onGoToDashboard}>go-dashboard</button>
+  default: ({ onGoToDashboard, onCancelSpot }: any) => (
+    <>
+      <button onClick={onGoToDashboard}>go-dashboard</button>
+      <button onClick={onCancelSpot}>cancel-spot</button>
+    </>
   ),
 }));
 vi.mock('../pod-details-page/PodDetailAccordions', () => ({
@@ -126,6 +133,9 @@ vi.mock('../pod-details-page/BackoutConfirmDialog', () => ({
 }));
 vi.mock('../pod-details-page/KeepSpotDialog', () => ({
   default: ({ open }: any) => (open ? <div>keep-dialog</div> : null),
+}));
+vi.mock('../pod-details-page/CancelSpotDialog', () => ({
+  default: ({ open }: any) => (open ? <div>cancel-spot-dialog</div> : null),
 }));
 vi.mock('../../components/pod-details/PodMapSection', () => ({
   default: () => <div data-testid="map" />,
@@ -214,6 +224,7 @@ beforeEach(() => {
   actions.snack = null;
   actions.backoutOpen = false;
   actions.keepSpotOpen = false;
+  actions.cancelSpotOpen = false;
   actions.confettiOpen = false;
 });
 afterEach(() => {
@@ -263,6 +274,9 @@ describe('PodDetailsPage', () => {
     expect(setMode).toHaveBeenCalledWith('HOST');
     expect(navigate).toHaveBeenCalledWith('/host/manage');
 
+    fireEvent.click(screen.getByText('cancel-spot'));
+    expect(actions.setCancelSpotOpen).toHaveBeenCalledWith(true);
+
     fireEvent.click(screen.getByText('Contact support about this pod'));
     expect(navigate).toHaveBeenCalledWith(
       expect.stringContaining('/support/tickets?category=BOOKING&podId=pod1'),
@@ -273,11 +287,13 @@ describe('PodDetailsPage', () => {
     actions.snack = 'Joined!';
     actions.backoutOpen = true;
     actions.keepSpotOpen = true;
+    actions.cancelSpotOpen = true;
     actions.confettiOpen = true;
     setup([slugMock('pod1'), detailsMock, peopleMock]);
     expect(await screen.findByText('Joined!')).toBeInTheDocument();
     expect(screen.getByText('backout-dialog')).toBeInTheDocument();
     expect(screen.getByText('keep-dialog')).toBeInTheDocument();
+    expect(screen.getByText('cancel-spot-dialog')).toBeInTheDocument();
     expect(screen.getByText('confetti')).toBeInTheDocument();
   });
 

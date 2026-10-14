@@ -16,7 +16,9 @@ export {
 } from './studio-pods';
 export { VenueCancelPodSheet } from './VenueCancelPodSheet';
 export { VenuePodDetailSheet } from './VenuePodDetailSheet';
-export { VenueQuickActions } from './VenueQuickActions';
+export { VenueEarningsCard } from './VenueEarningsCard';
+export { VenueHealthTile } from './VenueHealthTile';
+export { VenuePodFiguresCard } from './VenuePodFiguresCard';
 export { VenueSlotEarningsTiles } from './VenueSlotEarningsTiles';
 export { VenueStudioPods } from './VenueStudioPods';
 export { VenueSwitcher } from './VenueSwitcher';

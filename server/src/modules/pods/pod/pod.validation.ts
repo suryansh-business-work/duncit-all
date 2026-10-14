@@ -15,16 +15,12 @@ import { notFound } from './pod.shared';
 
 const WRITABLE_POD_TYPES = new Set<PodType>(['FREE', 'PAID']);
 
-/** Creation and price-changing edits accept only FREE or PAID, and FREE is
- * virtual-only — a physical pod must be PAID. */
-export function assertWritablePodType(type: PodType, mode: PodMode) {
+/** Creation and price-changing edits accept only FREE or PAID. Either is valid
+ * for a physical pod and for a virtual one: a free physical pod sells no ticket
+ * and settles its venue off the platform (see `isFreePod`). */
+export function assertWritablePodType(type: PodType) {
   if (!WRITABLE_POD_TYPES.has(type)) {
     throw new GraphQLError('pod_type must be FREE or PAID', {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
-  }
-  if (mode === 'PHYSICAL' && type === 'FREE') {
-    throw new GraphQLError('Physical pods must be paid — free pods are only available for virtual pods', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }

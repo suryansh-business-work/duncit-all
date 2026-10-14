@@ -78,6 +78,28 @@ const toFoodFeedbackPub = (feedback: IVenueFoodOrder['feedback']) =>
       }
     : null;
 
+/**
+ * The order's GST in paise. An order placed before GST existed carries none of
+ * it and a lean read applies no defaults, so it reads as INCLUSIVE at 0%: no
+ * tax, and the whole total its taxable value.
+ */
+export const foodOrderTax = (order: Pick<IVenueFoodOrder, 'tax_mode' | 'gst_pct' | 'taxable_paise' | 'tax_paise' | 'total_paise'>) => ({
+  tax_mode: order.tax_mode === 'EXCLUSIVE' ? ('EXCLUSIVE' as const) : ('INCLUSIVE' as const),
+  gst_pct: order.gst_pct ?? 0,
+  taxable_paise: order.taxable_paise ?? order.total_paise,
+  tax_paise: order.tax_paise ?? 0,
+});
+
+const foodOrderTaxPub = (order: IVenueFoodOrder) => {
+  const tax = foodOrderTax(order);
+  return {
+    tax_mode: tax.tax_mode,
+    gst_pct: tax.gst_pct,
+    taxable_amount: rupees(tax.taxable_paise),
+    tax_amount: rupees(tax.tax_paise),
+  };
+};
+
 export const toFoodOrderPub = (order: IVenueFoodOrder) => ({
   id: order._id.toHexString(),
   order_no: order.order_no,
@@ -109,6 +131,7 @@ export const toFoodOrderPub = (order: IVenueFoodOrder) => ({
   coupon_code: order.coupon_code || null,
   coupon_pct: order.coupon_pct ?? 0,
   coupon_discount_amount: rupees(order.coupon_discount_paise ?? 0),
+  ...foodOrderTaxPub(order),
   total: rupees(order.total_paise),
   currency_symbol: order.currency_symbol ?? '',
   status: order.status,

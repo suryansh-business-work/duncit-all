@@ -2,20 +2,32 @@ import { useEffect } from 'react';
 import type { CreatePodFormState } from './useCreatePodForm';
 
 import { useVenueSlots } from '@/hooks/useVenueSlots';
-import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
+import {
+  filterProductsForClub,
+  freePodVenueNotice,
+  pruneProductRequests,
+  spotsBounds,
+} from '@duncit/utils';
 import { filterClubs } from '../create-pod.form';
 import { usePodPricing } from '../price-panel';
 import type { CreatePodStepperProps } from './types';
 
 type CreatePodScopeArgs = Pick<
   CreatePodStepperProps,
-  'clubs' | 'products' | 'subCategories' | 'hostCategories' | 'clubAdmin'
+  | 'clubs'
+  | 'products'
+  | 'subCategories'
+  | 'hostCategories'
+  | 'clubAdmin'
+  | 'venues'
+  | 'viewerUserId'
 > & {
   form: CreatePodFormState['form'];
 };
 
 /** What the picked category/area/club/slot lets each step offer: the club
- * lists, the club's venues and products, the spot bounds and the pricing. */
+ * lists, the club's venues and products, the spot bounds, the pricing and what
+ * a free pod's host is told about the venue's charges. */
 export function useCreatePodScope({
   form,
   clubs,
@@ -23,6 +35,8 @@ export function useCreatePodScope({
   subCategories,
   hostCategories,
   clubAdmin,
+  venues,
+  viewerUserId,
 }: CreatePodScopeArgs) {
   // Clubs are scoped by the selected host category (Super + Sub), then the picked
   // city and locality (helper shared with mWeb + covered by unit tests). The
@@ -77,16 +91,29 @@ export function useCreatePodScope({
   // Step 4's money state lives HERE because it gates the Create Pod button: a
   // ₹0 projected payout, or a pod worth less than the venue slot, blocks
   // publishing. The panel renders from the same object, so both always agree.
+  const podType = form.watch('pod_type');
+  const venueId = form.watch('venue_id');
   const pricing = usePodPricing({
     podAmount: Number(form.watch('pod_amount_text')) || 0,
     noOfSpots: Number(form.watch('no_of_spots_text')) || 0,
-    venueId: form.watch('venue_id') || null,
+    venueId: venueId || null,
     slotPrice: selectedSlot ? selectedSlot.price : null,
     isPhysical: podMode === 'PHYSICAL',
-    isFree: form.watch('pod_type') === 'FREE',
+    isFree: podType === 'FREE',
+  });
+
+  // A free pod pays the venue nothing through Duncit, so a slot that costs
+  // something is settled between the host and the venue — said on step 3 and
+  // again before publishing. The rule itself is shared with mWeb (rule 27).
+  const venueNotice = freePodVenueNotice({
+    podType,
+    slotPrice: podMode === 'PHYSICAL' ? selectedSlot?.price : null,
+    ownVenue: venues.find((venue) => venue.id === venueId)?.owner_user_id === viewerUserId,
+    slotConfirmed: Boolean(form.watch('partner_request_id')),
   });
 
   return {
+    venueNotice,
     clubsInCity,
     clubsForLocation,
     clubVenueIds,

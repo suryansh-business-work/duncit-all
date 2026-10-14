@@ -1,5 +1,6 @@
 import {
   allFallbackEntries,
+  catalogueBranch,
   createTranslator,
   flattenCatalogue,
   SESSION_BUNDLE,
@@ -8,6 +9,7 @@ import {
   AVAILABILITY_BUNDLE,
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  VENUE_FOOD_OWNER_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -20,12 +22,8 @@ import {
   type Translator,
 } from '@duncit/i18n';
 
-/** One branch of a nested bundle, or nothing when it is a leaf or missing. */
-function branch(catalogue: NestedCatalogue | string | undefined, key: string): NestedCatalogue {
-  if (!catalogue || typeof catalogue === 'string') return {};
-  const value = catalogue[key];
-  return value && typeof value !== 'string' ? value : {};
-}
+/** One branch of a nested bundle — the shared helper, under the short name this file reads with. */
+const branch = catalogueBranch;
 
 const MWEB = branch(MWEB_BUNDLE, 'mweb');
 
@@ -79,6 +77,9 @@ export const SHELL_FALLBACK: NestedCatalogue = {
   // publicPage.* is the publish card the Partners console, mWeb and native all render.
   ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
+  // venueFoodOwner.*: the food desk @duncit/venue-food renders in the Partners
+  // and Venues consoles, mWeb and (as Tamagui twins) native.
+  ...VENUE_FOOD_OWNER_BUNDLE,
   // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
   ...POD_REQUESTS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,

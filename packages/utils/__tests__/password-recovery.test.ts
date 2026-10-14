@@ -19,6 +19,10 @@ import {
   recoveryHeading,
   recoveryLookup,
   recoveryResendSeconds,
+  readRecoveryHandoff,
+  recoveryHandoffFrom,
+  recoveryHandoffSendable,
+  recoveryStateFrom,
   recoveryWithChannel,
   type PasswordRecoveryStep,
 } from '../src/password-recovery';
@@ -327,5 +331,55 @@ describe('codeSendVerdict', () => {
   /* A stubbed medium hands the code back on purpose, so the flow continues. */
   it('counts a test code as sent, because that flow is meant to continue', () => {
     expect(codeSendVerdict(answer({ sent: false, testCode: '123456' }))).toBe('SENT');
+  });
+});
+
+describe('the forgot-password handoff from the sign-in step', () => {
+  const boxes = { email: '  Riya@Duncit.com ', phoneExtension: ' +91 ', phoneNumber: ' 9876543210 ' };
+  // The same three shapes the apps pass in from @duncit/regex, reduced to what
+  // these cases need.
+  const shapes = { email: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, extension: /^\+\d{1,4}$/, number: /^\d{6,15}$/ };
+
+  it('carries the tab and the boxes, trimmed, with the address lower-cased', () => {
+    expect(recoveryHandoffFrom('EMAIL', boxes)).toEqual({
+      channel: 'EMAIL',
+      draft: { email: 'riya@duncit.com', extension: '+91', number: '9876543210' },
+    });
+  });
+
+  it('sends at once to a complete address on the email tab, and not to a half-typed one', () => {
+    expect(recoveryHandoffSendable(recoveryHandoffFrom('EMAIL', boxes), shapes)).toBe(true);
+    const partial = recoveryHandoffFrom('EMAIL', { ...boxes, email: 'riya@' });
+    expect(recoveryHandoffSendable(partial, shapes)).toBe(false);
+  });
+
+  it('judges the phone tab on the number, never on an address typed on the other tab', () => {
+    expect(recoveryHandoffSendable(recoveryHandoffFrom('PHONE', boxes), shapes)).toBe(true);
+    const noNumber = recoveryHandoffFrom('PHONE', { ...boxes, phoneNumber: '' });
+    expect(recoveryHandoffSendable(noNumber, shapes)).toBe(false);
+    const badCode = recoveryHandoffFrom('PHONE', { ...boxes, phoneExtension: '91' });
+    expect(recoveryHandoffSendable(badCode, shapes)).toBe(false);
+  });
+
+  it('opens recovery on the handed-over channel holding the draft, on the first step', () => {
+    const state = recoveryStateFrom(recoveryHandoffFrom('PHONE', boxes));
+    expect(state).toMatchObject({ step: 'CHANNEL', channel: 'PHONE', lastSentAt: null, resetToken: '' });
+    expect(state.draft.number).toBe('9876543210');
+  });
+
+  it('reads a well-formed handoff back off navigation state', () => {
+    const handoff = recoveryHandoffFrom('PHONE', boxes);
+    expect(readRecoveryHandoff(JSON.parse(JSON.stringify(handoff)))).toEqual(handoff);
+  });
+
+  it.each([
+    ['nothing', undefined],
+    ['a string', 'EMAIL'],
+    ['an unknown channel', { channel: 'WHATSAPP', draft: { email: '', extension: '', number: '' } }],
+    ['no draft', { channel: 'EMAIL' }],
+    ['a draft that is not an object', { channel: 'EMAIL', draft: 'riya@duncit.com' }],
+    ['a draft missing a box', { channel: 'PHONE', draft: { email: '', extension: '+91' } }],
+  ])('reads %s as no handoff, so recovery opens normally', (_label, carried) => {
+    expect(readRecoveryHandoff(carried)).toBeNull();
   });
 });

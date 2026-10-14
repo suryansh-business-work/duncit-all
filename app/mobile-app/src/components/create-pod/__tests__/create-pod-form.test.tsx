@@ -145,7 +145,7 @@ describe('createPodSchema', () => {
     expect(issuesOf(valid({ no_of_spots_text: '-2' }))).toContain('no_of_spots_text');
   });
 
-  it('accepts only the FREE/PAID pair and keeps FREE virtual-only', () => {
+  it('accepts only the FREE/PAID pair, FREE for a physical pod too', () => {
     const messagesFor = (over: Partial<CreatePodFormValues>) => {
       const result = createPodSchema.safeParse(valid(over));
       return result.success
@@ -156,11 +156,17 @@ describe('createPodSchema', () => {
     expect(messagesFor({ pod_type: 'NATIVE_FREE' })).toEqual(['Select Free or Paid']);
     // An unset type also trips the base `min(1)` rule, so assert on the family choice.
     expect(messagesFor({ pod_type: '' })).toContain('Select Free or Paid');
-    // FREE is virtual-only, so a physical pod may not be free.
-    expect(messagesFor({ pod_type: 'FREE', pod_amount_text: '0' })).toEqual([
-      'Physical pods must be paid',
-    ]);
-    // The two legal combinations raise nothing.
+    // A physical pod may be free: `valid()` is physical, and nothing is raised.
+    expect(valid({}).pod_mode).toBe('PHYSICAL');
+    expect(messagesFor({ pod_type: 'FREE', pod_amount_text: '0' })).toEqual([]);
+    expect(
+      createPodSchema.safeParse(valid({ pod_type: 'FREE', pod_amount_text: '0' })).success,
+    ).toBe(true);
+    // …but free still means ₹0.
+    expect(issuesOf(valid({ pod_type: 'FREE', pod_amount_text: '250' }))).toContain(
+      'pod_amount_text',
+    );
+    // Every legal combination raises nothing.
     expect(messagesFor({ pod_type: 'PAID' })).toEqual([]);
     expect(
       messagesFor({
@@ -169,6 +175,26 @@ describe('createPodSchema', () => {
         ...virtualPod,
       }),
     ).toEqual([]);
+  });
+
+  it('submits a free physical pod as FREE at ₹0 with its slot and no discount', () => {
+    const input = buildCreatePodInput(
+      valid({
+        pod_type: 'FREE',
+        pod_amount_text: '0',
+        // A stale draft's offer must not travel with a free pod.
+        ticket_discount_enabled: true,
+        ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }],
+      }),
+    );
+    expect(input).toMatchObject({
+      pod_mode: 'PHYSICAL',
+      pod_type: 'FREE',
+      pod_amount: 0,
+      ticket_discount_enabled: false,
+      ticket_discount_tiers: [],
+    });
+    expect(input.venue_slot_id).toBeTruthy();
   });
 
   it('blocks a paid pod until the host enters a ticket price above ₹0', () => {
@@ -299,6 +325,20 @@ describe('buildCreatePodInput fallbacks', () => {
     expect(input.pod_amount).toBe(0);
   });
 
+  // A free pod has no money terms: one typed while the pod was paid is not sent.
+  it('drops payment terms for a free pod and keeps them for a paid one', () => {
+    expect(
+      buildCreatePodInput(
+        valid({ pod_type: 'FREE', pod_amount_text: '0', payment_terms: 'No refunds' }),
+      ).payment_terms,
+    ).toBeNull();
+    expect(
+      buildCreatePodInput(
+        valid({ pod_type: 'PAID', pod_amount_text: '300', payment_terms: 'No refunds' }),
+      ).payment_terms,
+    ).toBe('No refunds');
+  });
+
   it('nulls an unset slot, location and reel (legacy drafts)', () => {
     const input = buildCreatePodInput(valid({ venue_slot_id: '', location_id: '' }));
     expect(input.venue_slot_id).toBeNull();
@@ -320,9 +360,10 @@ describe('draft serialize/hydrate', () => {
   it('coerces a retired pod type from an old draft onto the FREE/PAID pair', () => {
     const asDraft = (over: Record<string, unknown>) =>
       hydrateDraft(JSON.stringify({ ...blankCreatePodForm, ...over })).pod_type;
-    // A physical pod is always PAID, whatever the old draft stored.
+    // A physical pod may be free now, so its FREE survives the round trip; a
+    // retired type still maps onto PAID.
     expect(asDraft({ pod_mode: 'PHYSICAL', pod_type: 'NATIVE_FREE' })).toBe('PAID');
-    expect(asDraft({ pod_mode: 'PHYSICAL', pod_type: 'FREE' })).toBe('PAID');
+    expect(asDraft({ pod_mode: 'PHYSICAL', pod_type: 'FREE' })).toBe('FREE');
     // A virtual pod keeps FREE and maps every retired paid type onto PAID.
     expect(asDraft({ pod_mode: 'VIRTUAL', pod_type: 'FREE' })).toBe('FREE');
     expect(asDraft({ pod_mode: 'VIRTUAL', pod_type: 'NATIVE_PAID' })).toBe('PAID');

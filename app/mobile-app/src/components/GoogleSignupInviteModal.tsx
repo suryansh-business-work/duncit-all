@@ -6,10 +6,18 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
-import { SOCIAL_AUTH_COPY, type SocialProvider } from '@duncit/utils';
+import {
+  SOCIAL_AUTH_COPY,
+  SOCIAL_PROMPT_COPY,
+  SOCIAL_PROMPT_TEST_IDS,
+  type SocialAccountPrompt,
+  type SocialProvider,
+} from '@duncit/utils';
 
 interface Props {
   open: boolean;
+  /** Which question: the login door's INVITE (default) or the signup door's EXISTS. */
+  prompt?: SocialAccountPrompt;
   /** Which door refused — the detail line names it. */
   provider: SocialProvider;
   /** The address Google verified — named so the invite is about THEIR account
@@ -32,12 +40,17 @@ interface Props {
  * carries no number and no birthday, so signup still has two questions and a
  * code to ask — and nothing exists until they are answered.
  *
+ * The mirror question (EXISTS) is the signup screen's: "you're already on
+ * Duncit — log in instead?", asked before any number or code. It has no detail
+ * line — logging in asks nothing more.
+ *
  * Hardware back maps to DISMISS, which is honest here: nothing is pending on
  * this answer, so closing it really is "not now". mWeb twin
  * (GoogleSignupInviteDialog).
  */
 export function GoogleSignupInviteModal({
   open,
+  prompt = 'INVITE',
   provider,
   email,
   onAccept,
@@ -45,6 +58,8 @@ export function GoogleSignupInviteModal({
 }: Readonly<Props>) {
   const { accent } = useThemeColors();
   const { t } = useTranslation();
+  const copy = SOCIAL_PROMPT_COPY[prompt];
+  const ids = SOCIAL_PROMPT_TEST_IDS[prompt];
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onDismiss}>
@@ -60,7 +75,7 @@ export function GoogleSignupInviteModal({
             importantForAccessibility="no"
           />
           <YStack
-            testID="google-signup-invite"
+            testID={ids.root}
             onAccessibilityEscape={onDismiss}
             width="88%"
             maxWidth={420}
@@ -70,31 +85,37 @@ export function GoogleSignupInviteModal({
             gap={12}
           >
             <XStack alignItems="center" gap={8}>
-              <MaterialIcons name="person-add" size={20} color={accent} />
+              <MaterialIcons
+                name={prompt === 'EXISTS' ? 'login' : 'person-add'}
+                size={20}
+                color={accent}
+              />
               <Text
-                testID="google-signup-invite-title"
+                testID={ids.title}
                 role="heading"
                 fontSize={17}
                 fontWeight="600"
                 color="$color"
                 flexShrink={1}
               >
-                {t('mweb.login.googleNotFoundTitle')}
+                {t(copy.title)}
               </Text>
             </XStack>
 
             <Text fontSize={14} color="$color">
-              {t('mweb.login.googleNotFoundBody', { vars: { email } })}
+              {t(copy.body, { vars: { email } })}
             </Text>
-            <Text fontSize={12} color="$muted">
-              {t(SOCIAL_AUTH_COPY[provider].notFoundDetail)}
-            </Text>
+            {prompt === 'INVITE' ? (
+              <Text fontSize={12} color="$muted">
+                {t(SOCIAL_AUTH_COPY[provider].notFoundDetail)}
+              </Text>
+            ) : null}
 
             <XStack gap={10} marginTop={4}>
               <XStack
-                testID="google-signup-dismiss"
+                testID={ids.dismiss}
                 role="button"
-                aria-label={t('mweb.login.googleNotFoundDismiss')}
+                aria-label={t(copy.dismiss)}
                 tabIndex={0}
                 onPress={onDismiss}
                 flex={1}
@@ -107,13 +128,13 @@ export function GoogleSignupInviteModal({
                 pressStyle={PRESS_STYLE.control}
               >
                 <Text fontSize={15} fontWeight="600" color="$color">
-                  {t('mweb.login.googleNotFoundDismiss')}
+                  {t(copy.dismiss)}
                 </Text>
               </XStack>
               <XStack
-                testID="google-signup-accept"
+                testID={ids.accept}
                 role="button"
-                aria-label={t('mweb.login.googleNotFoundAction')}
+                aria-label={t(copy.accept)}
                 tabIndex={0}
                 onPress={onAccept}
                 flex={1.4}
@@ -125,7 +146,7 @@ export function GoogleSignupInviteModal({
                 pressStyle={PRESS_STYLE.solid}
               >
                 <Text fontSize={15} fontWeight="600" color="$onPrimary">
-                  {t('mweb.login.googleNotFoundAction')}
+                  {t(copy.accept)}
                 </Text>
               </XStack>
             </XStack>

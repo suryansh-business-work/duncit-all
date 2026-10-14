@@ -4,14 +4,13 @@ import { Alert, CircularProgress, Stack } from '@mui/material';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import EarningsCard from './EarningsCard';
-import QuickActions from './QuickActions';
 import HostInsights from './HostInsights';
 import HealthRow from './HealthRow';
 import StatCard from './StatCard';
 import { HOST_DASHBOARD_ME, HOST_DASHBOARD_PODS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
-/** Host Dashboard — earnings, pod stats, quick actions and profile/verification
+/** Host Dashboard — figures only: earnings, pod stats, insights and profile
  * health. Split out from "Your Pods" (which is now just the pods list). B2-#5. */
 export default function HostDashboardPage() {
   const { t } = useTranslation();
@@ -77,8 +76,6 @@ export default function HostDashboardPage() {
           <StatCard key={item.label} label={item.label} value={String(item.value)} size="lg" />
         ))}
       </Stack>
-
-      <QuickActions />
 
       <HostInsights pods={pods} currency={wallet?.currency_symbol ?? '₹'} />
 

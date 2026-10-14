@@ -30,6 +30,10 @@ jest.mock('@modules/platform/whatsapp/whatsapp.assets', () => ({
   podImageAssets: jest.fn(() => ({ IMAGE: { url: 'https://img.example.test/pod.jpg' } })),
 }));
 jest.mock('@services/email/email.service', () => ({ sendVenueSlotRequestEmail: jest.fn() }));
+jest.mock('@services/email/email-i18n', () => ({
+  emailTranslationVars: jest.fn(),
+  recipientLocale: jest.fn(),
+}));
 jest.mock('@config/url-configs', () => ({ getUrlConfigs: jest.fn() }));
 jest.mock('@modules/engagement/notification/notification.service', () => ({
   notificationService: { create: jest.fn() },
@@ -60,6 +64,7 @@ import { getUrlConfigs } from '@config/url-configs';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { logs } from '@observability/log';
 import { appDate, appDateTime, appTime } from '@utils/app-time';
+import { emailTranslationVars, recipientLocale } from '@services/email/email-i18n';
 
 const users = UserModel as unknown as Record<string, jest.Mock>;
 const clubs = ClubModel as unknown as Record<string, jest.Mock>;
@@ -148,6 +153,65 @@ describe('notifyVenueSlotRequested', () => {
       error: err,
       msg: 'slot request notification failed',
     });
+  });
+});
+
+describe('the free-pod notice on a slot request', () => {
+  const start = new Date('2026-11-01T12:30:00.000Z');
+  const NOTICE = 'This pod is free, so please coordinate with the host directly.';
+  const translations = emailTranslationVars as jest.Mock;
+  const localeOf = recipientLocale as jest.Mock;
+
+  beforeEach(() => {
+    translations.mockResolvedValue({ 't:email.venueSlotRequest.freePodNotice': NOTICE });
+    localeOf.mockResolvedValue('hi');
+    urlConfigs.mockResolvedValue({ partnersUrl: 'https://partners.example.test' });
+    sendEmail.mockResolvedValue(undefined);
+    waSend.mockResolvedValue(undefined);
+    notifCreate.mockResolvedValue({});
+  });
+
+  it('adds the notice to the in-app note of a FREE pod, and only of a free pod', async () => {
+    await notifyVenueSlotRequested(
+      { pod_title: 'Free Jam', pod_type: 'FREE' },
+      { start_at: start, owner_user_id: OTHER }
+    );
+    expect(notifCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: `"Free Jam" requested your venue slot on ${appDateTime(start)}. Review it in the Partners portal. ${NOTICE}`,
+      })
+    );
+
+    notifCreate.mockClear();
+    translations.mockClear();
+    await notifyVenueSlotRequested(
+      { pod_title: 'Paid Jam', pod_type: 'PAID' },
+      { start_at: start, owner_user_id: OTHER }
+    );
+    expect(notifCreate.mock.calls[0][0].body).not.toContain(NOTICE);
+    expect(translations).not.toHaveBeenCalled();
+  });
+
+  it("replaces the email's earnings line with the notice in the owner's language for a FREE pod", async () => {
+    venues.findById.mockReturnValue(
+      q({ venue_name: 'Hall', owner_email: 'venue@example.com', owner_name: 'Olu', owner_user_id: OTHER })
+    );
+    users.findById.mockReturnValueOnce(q({ auth: {} })).mockReturnValueOnce(q(null));
+
+    await emailVenueSlotRequested(
+      { pod_title: 'Free Jam', pod_type: 'FREE', pod_hosts_id: [USER], pod_images_and_videos: [] },
+      { _id: SLOT, venue_id: VENUE, start_at: start }
+    );
+
+    expect(localeOf).toHaveBeenCalledWith('venue@example.com');
+    expect(translations).toHaveBeenCalledWith('hi');
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        extra_vars: { free_pod_notice: NOTICE, 't:email.venueSlotRequest.earningsNote': NOTICE },
+      })
+    );
+    // The WhatsApp template carries no amount, so its params are unchanged.
+    expect(waSend.mock.calls[0][0].params).toHaveLength(6);
   });
 });
 

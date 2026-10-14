@@ -40,6 +40,9 @@ export const MY_VENUE = gql`
         enabled
         razorpay_integration_id
         discount_pct
+        tax_override
+        tax_mode
+        gst_pct
       }
       venue_category {
         super_category_id

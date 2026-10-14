@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, HostPublishPage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
+import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, HostCategoriesPage, HostPublishPage, HostSharePage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueFoodPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
 import { withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
 /** Earn, venue, club and Auto Pod routes. */
@@ -21,8 +21,15 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
         <Route path="/products/warehouses" element={withProducts(<BrandWarehousesPage />)} />
         <Route path="/venues/list" element={withAuth(<VenueListPage />)} />
         <Route path="/venues/publish" element={withAuth(<VenuePublishPage />)} />
+        {/* The venue's food desk — the same tools the Partners and Venues consoles mount. */}
+        <Route path="/venues/food-dashboard" element={withAuth(<VenueFoodPage tool="food-dashboard" />)} />
+        <Route path="/venues/food-menu" element={withAuth(<VenueFoodPage tool="food-menu" />)} />
+        <Route path="/venues/food-orders" element={withAuth(<VenueFoodPage tool="food-orders" />)} />
+        <Route path="/venues/food-coupons" element={withAuth(<VenueFoodPage tool="food-coupons" />)} />
         <Route path="/venues/pods" element={withAuth(<VenuePodsPage />)} />
         <Route path="/host/publish" element={withAuth(<HostPublishPage />)} />
+        <Route path="/host/share" element={withAuth(<HostSharePage />)} />
+        <Route path="/host/categories" element={withAuth(<HostCategoriesPage />)} />
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
         <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />

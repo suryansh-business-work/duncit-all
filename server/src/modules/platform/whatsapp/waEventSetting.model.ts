@@ -79,6 +79,14 @@ export interface IWaEventSetting {
    */
   template_header_format: string;
   /**
+   * The template's dynamic link button — its link with the `{{n}}` intact, and
+   * its position among the CTA buttons — cached under the same stamp. Blank /
+   * -1 when the template has none, which is most of them. A send fills it only
+   * from a URL that fits it; see whatsapp.button.
+   */
+  template_link_url: string;
+  template_link_index: number;
+  /**
    * The header asset an ADMIN set for this scenario in the console.
    *
    * ADMIN-OWNED: written only by `setMedia`, NEVER touched by reconcile — the
@@ -135,6 +143,8 @@ const waEventSettingSchema = new Schema<IWaEventSetting>(
     media_filename: { type: String, default: '' },
     media_synced_at: { type: Date, default: null },
     template_header_format: { type: String, default: '' },
+    template_link_url: { type: String, default: '' },
+    template_link_index: { type: Number, default: -1 },
     override_media_url: { type: String, default: '' },
     override_media_filename: { type: String, default: '' },
     default_document_url: { type: String, default: '' },

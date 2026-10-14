@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { ScrollView } from 'react-native';
-import { Slider, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { POD_REQUEST_MAX_RADIUS_KM } from '@duncit/utils';
 
+import { AppSlider } from '@/components/AppSlider';
 import { SelectChip } from '@/components/venue-availability/SelectChip';
 import { useCategoryTree } from '@/hooks/useCategoryTree';
 import type { NearbySearchState } from '@/hooks/useNearbySearch';
@@ -46,7 +47,7 @@ export function SearchFilters({ state }: Readonly<Props>) {
             {kmLabel}
           </Text>
         </XStack>
-        <Slider
+        <AppSlider
           testID="nearby-radius"
           min={0}
           max={POD_REQUEST_MAX_RADIUS_KM}
@@ -55,12 +56,7 @@ export function SearchFilters({ state }: Readonly<Props>) {
           onValueChange={([next]) => state.setRadiusKm(next ?? state.radiusKm)}
           aria-label={t('podRequests.radiusLabel')}
           aria-valuetext={kmLabel}
-        >
-          <Slider.Track>
-            <Slider.TrackActive />
-          </Slider.Track>
-          <Slider.Thumb index={0} circular size="$2" />
-        </Slider>
+        />
       </YStack>
       <YStack gap={8}>
         <Text fontSize={14} fontWeight="600" color="$color">

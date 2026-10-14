@@ -99,7 +99,7 @@ describe('HostDashboardPage', () => {
     expect(await screen.findByText('me boom')).toBeInTheDocument();
   });
 
-  it('renders the populated dashboard with header, stats, earnings and quick actions', async () => {
+  it('renders the populated dashboard with header, stats and earnings only', async () => {
     setup([meMock(), podsMock]);
     expect(await screen.findByText('AVAILABLE BALANCE')).toBeInTheDocument();
     expect(screen.getByTestId('host-dashboard-screen')).toBeInTheDocument();
@@ -111,8 +111,8 @@ describe('HostDashboardPage', () => {
     // Earnings card: wallet balance + settled-earnings summary.
     expect(screen.getByText('₹1000.00')).toBeInTheDocument();
     expect(screen.getByTestId('earnings-summary-tiles')).toBeInTheDocument();
-    // Quick actions.
-    expect(screen.getByText('Create pod')).toBeInTheDocument();
+    // Figures only — the old quick actions are Host Options entries.
+    expect(screen.queryByText('Create pod')).not.toBeInTheDocument();
     // The welcome greeting was dropped in the calm redesign.
     expect(screen.queryByText(/Welcome back/)).not.toBeInTheDocument();
     await flush();

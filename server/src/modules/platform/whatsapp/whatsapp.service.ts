@@ -6,6 +6,7 @@ import {
   isCampaignMissing,
   isMediaMissing,
   sendCampaign,
+  type CampaignButton,
 } from '@modules/platform/aisensy/aisensy.gateway';
 import { isWhatsappDestination } from '@utils/phone';
 import {
@@ -17,6 +18,7 @@ import {
 import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
 import { WA_EVENT_BY_KEY, isRequiredWaCategory, type WaEvent } from './whatsapp.events';
 import { WA_TEMPLATE_DRAFTS } from './whatsapp.drafts';
+import { buttonsFor, cachedLinkButton, linkButtonFields, type LinkButton } from './whatsapp.button';
 import {
   assetFor,
   defaultFor,
@@ -75,6 +77,14 @@ export interface WaSendInput {
    * Anything not covered here still falls back to the platform default.
    */
   assets?: SendAssets | null;
+  /**
+   * The link this message is about — the same URL its body already carries.
+   *
+   * When the live template has a dynamic link button whose fixed part this URL
+   * fits, the rest of it fills that button; otherwise nothing extra travels, so
+   * a template without a button sends exactly as before. See whatsapp.button.
+   */
+  buttonUrl?: string | null;
 }
 
 export interface WaSendOutcome {
@@ -106,6 +116,8 @@ interface Switches {
   /** The template's header kind, cached with the pair above. The platform
    * default is one image, so it is attached to IMAGE and nothing else. */
   header_format: string;
+  /** The template's dynamic link button, cached with the pair above, or null. */
+  link_button: LinkButton | null;
   /** The platform-wide default header asset PER header kind, off the global
    * row. The last resort in the media order, and — with no campaign at AiSensy
    * carrying an asset of its own — the one that actually sends today. */
@@ -116,7 +128,7 @@ interface Switches {
 async function switchesFor(eventKey: string): Promise<Switches> {
   const rows = await WaEventSettingModel.find({ event_key: { $in: [WA_GLOBAL_KEY, eventKey] } })
     .select(
-      'event_key enabled template_category media_url media_filename media_synced_at template_header_format override_media_url override_media_filename default_document_url default_document_filename'
+      'event_key enabled template_category media_url media_filename media_synced_at template_header_format template_link_url template_link_index override_media_url override_media_filename default_document_url default_document_filename'
     )
     .lean();
   const global = rows.find((row) => row.event_key === WA_GLOBAL_KEY);
@@ -128,6 +140,7 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     media: null,
     media_synced: true,
     header_format: '',
+    link_button: null,
     defaults: { IMAGE: null, DOCUMENT: null },
   });
   // An absent global row means nobody has turned automatic WhatsApp on yet.
@@ -153,6 +166,7 @@ async function switchesFor(eventKey: string): Promise<Switches> {
     // `undefined` here rather than ''.
     media_synced: Boolean(own?.media_synced_at) && own?.template_header_format !== undefined,
     header_format: own?.template_header_format ?? '',
+    link_button: cachedLinkButton(own?.template_link_url, own?.template_link_index),
     // The global row's override pair IS the default image — the field it has
     // always been stored in, so nothing an operator already uploaded moves.
     defaults: {
@@ -167,6 +181,8 @@ interface BoundMedia {
   media: SendMedia;
   /** Its template's header kind — TEXT, IMAGE, VIDEO, FILE, or '' for none. */
   header_format: string;
+  /** Its template's dynamic link button, read by the same catalogue call. */
+  link_button: LinkButton | null;
 }
 
 /**
@@ -198,6 +214,7 @@ async function bindCampaignMedia(event: WaEvent): Promise<BoundMedia | null> {
     const campaign = campaigns.find((row) => row.name === event.campaign);
     const template = templates.find((row) => row.name === campaign?.template_name);
     const header_format = template?.header_format ?? '';
+    const link = linkButtonFields(template?.cta_buttons);
     await WaEventSettingModel.updateOne(
       { event_key: event.key },
       {
@@ -205,12 +222,17 @@ async function bindCampaignMedia(event: WaEvent): Promise<BoundMedia | null> {
           media_url: campaign?.media_url ?? '',
           media_filename: campaign?.media_filename ?? '',
           template_header_format: header_format,
+          ...link,
           media_synced_at: new Date(),
         },
       },
       { upsert: true }
     );
-    return { media: mediaPair(campaign?.media_url ?? '', campaign?.media_filename), header_format };
+    return {
+      media: mediaPair(campaign?.media_url ?? '', campaign?.media_filename),
+      header_format,
+      link_button: cachedLinkButton(link.template_link_url, link.template_link_index),
+    };
   } catch (error) {
     // An unconfigured or unreachable Project API is not a send failure. No
     // stamp is written, so the next send on this scenario tries again.
@@ -350,6 +372,12 @@ interface ResolvedMedia {
    * offer an image to a template it has just learned wants a document.
    */
   header_format: string;
+  /**
+   * The value for the template's dynamic link button, or nothing. Resolved here
+   * because the same catalogue read that learns the header kind learns the
+   * button, and the media retry below re-posts with the same buttons.
+   */
+  buttons: CampaignButton[];
 }
 
 async function resolveMedia(
@@ -358,7 +386,13 @@ async function resolveMedia(
   switches: Switches
 ): Promise<ResolvedMedia> {
   // An explicit asset is unconditional — the caller has already decided.
-  if (input.media) return { media: input.media, header_format: switches.header_format };
+  if (input.media) {
+    return {
+      media: input.media,
+      header_format: switches.header_format,
+      buttons: buttonsFor(input.buttonUrl, switches.link_button),
+    };
+  }
 
   // Binding is what LEARNS the header kind, and the header kind is what decides
   // which of this send's assets fits — so it happens before the choice rather
@@ -366,18 +400,19 @@ async function resolveMedia(
   // written whatever the answer was.
   const bound = switches.media_synced ? null : await bindCampaignMedia(event);
   const header_format = bound?.header_format ?? switches.header_format;
+  const buttons = buttonsFor(input.buttonUrl, bound ? bound.link_button : switches.link_button);
 
   // This send's own asset outranks every stand-in below it. A picture of THIS
   // pod, or THIS booking's ticket, is what the message is about; the scenario
   // override and the platform default are what a send falls back on when it has
   // nothing of its own, which until now was every send there was.
   const own = assetFor(header_format, input.assets);
-  if (own) return { media: own, header_format };
+  if (own) return { media: own, header_format, buttons };
 
   const stored = switches.media ?? bound?.media;
-  if (stored) return { media: stored, header_format };
+  if (stored) return { media: stored, header_format, buttons };
 
-  return { media: defaultFor(header_format, switches.defaults), header_format };
+  return { media: defaultFor(header_format, switches.defaults), header_format, buttons };
 }
 
 /**
@@ -483,7 +518,8 @@ async function postOnce(
   input: WaSendInput,
   destination: string,
   params: string[],
-  media: SendMedia
+  media: SendMedia,
+  buttons: CampaignButton[]
 ): Promise<PostAttempt> {
   try {
     const message_id = await sendCampaign({
@@ -492,6 +528,8 @@ async function postOnce(
       user_name: contactName(input),
       template_params: params,
       media: media ?? undefined,
+      // Omitted rather than sent empty, as `campaignPayload` does with media.
+      ...(buttons.length > 0 ? { buttons } : {}),
     });
     return { message_id, error: null, media };
   } catch (error) {
@@ -529,7 +567,7 @@ async function postWithMediaRecovery(
   resolved: ResolvedMedia
 ): Promise<SendAttempt> {
   const header = resolved.header_format;
-  const first = await postOnce(event, input, destination, params, resolved.media);
+  const first = await postOnce(event, input, destination, params, resolved.media, resolved.buttons);
   if (!first.error) return { ...first, reason: '' };
 
   const recovery = recoveryFor(first.error, resolved, input.assets, defaults);
@@ -537,7 +575,7 @@ async function postWithMediaRecovery(
     return { ...first, reason: failureReason(first.error, resolved.media, header, event.campaign) };
   }
 
-  const second = await postOnce(event, input, destination, params, recovery.media);
+  const second = await postOnce(event, input, destination, params, recovery.media, resolved.buttons);
   if (second.error) {
     return { ...second, reason: failureReason(second.error, recovery.media, header, event.campaign) };
   }

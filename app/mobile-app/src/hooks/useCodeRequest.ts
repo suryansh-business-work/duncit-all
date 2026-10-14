@@ -5,10 +5,12 @@ import {
   initialRecoveryState,
   recoveryAfterSend,
   recoveryResendSeconds,
+  recoveryStateFrom,
   recoveryWithChannel,
   type ContactDraft,
   type PasswordRecoveryChannel,
   type PasswordRecoveryState,
+  type RecoveryHandoff,
 } from '@duncit/utils';
 
 import { toErrorMessage } from '@/utils/errors';
@@ -45,9 +47,11 @@ export function useCodeRequest(
     draft: Readonly<ContactDraft>,
   ) => Promise<CodeRequestOutcome>,
   fallbackMessage: string,
+  /** Opens on a channel and draft the sign-in step already holds. */
+  initial: Readonly<RecoveryHandoff> | null = null,
 ) {
   const [state, setState] = useState<PasswordRecoveryState>(() =>
-    initialRecoveryState(emptyContactDraft()),
+    initial ? recoveryStateFrom(initial) : initialRecoveryState(emptyContactDraft()),
   );
   const [error, setError] = useState<string | null>(null);
   /** True once a destination came back with no account behind it. */

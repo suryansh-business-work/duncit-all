@@ -129,8 +129,12 @@ export const ClubAutoPodsPage = lazy(() => import('../../pages/club-auto-pods-pa
 export const StudioOptionsPage = lazy(() => import('../../pages/studio-options'));
 export const VenueListPage = lazy(() => import('../../pages/venue-list-page'));
 export const VenuePublishPage = lazy(() => import('../../pages/venue-publish-page'));
+// Venue Options → the food desk: Dashboard, Food Orders, Food Coupons (@duncit/venue-food).
+export const VenueFoodPage = lazy(() => import('../../pages/venue-food-page'));
 export const VenuePodsPage = lazy(() => import('../../pages/venue-pods-page'));
 export const HostPublishPage = lazy(() => import('../../pages/host-publish-page'));
+export const HostSharePage = lazy(() => import('../../pages/host-share-page'));
+export const HostCategoriesPage = lazy(() => import('../../pages/host-categories-page'));
 export const BrandOrdersPage = lazy(() => import('../../pages/brand-orders-page'));
 export const BrandOrderDetailPage = lazy(() => import('../../pages/brand-order-detail-page'));
 export const BrandWarehousesPage = lazy(() => import('../../pages/brand-warehouses-page'));

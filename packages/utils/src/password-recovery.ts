@@ -156,6 +156,76 @@ export const recoveryWithChannel = (
   channel: PasswordRecoveryChannel,
 ): PasswordRecoveryState => ({ ...state, channel });
 
+/**
+ * What "Forgot password?" on the sign-in step carries into recovery: the tab
+ * the person was on (Email or Phone) and what they had typed there, so the
+ * code goes to that address or that number without asking again.
+ */
+export interface RecoveryHandoff {
+  channel: PasswordRecoveryChannel;
+  draft: ContactDraft;
+}
+
+/** The sign-in boxes, as both apps' login forms hold them. */
+export interface SignInBoxes {
+  email: string;
+  phoneExtension: string;
+  phoneNumber: string;
+}
+
+/** Build the handoff from the sign-in step's current tab and boxes. */
+export const recoveryHandoffFrom = (
+  channel: PasswordRecoveryChannel,
+  boxes: Readonly<SignInBoxes>,
+): RecoveryHandoff => ({
+  channel,
+  draft: {
+    email: boxes.email.trim().toLowerCase(),
+    extension: boxes.phoneExtension.trim(),
+    number: boxes.phoneNumber.trim(),
+  },
+});
+
+/**
+ * Read a handoff back off navigation state. Strict, because router state
+ * survives a reload and a navigation param a remount: anything malformed reads
+ * as null — recovery opened normally.
+ */
+export function readRecoveryHandoff(carried: unknown): RecoveryHandoff | null {
+  if (!carried || typeof carried !== 'object') return null;
+  const { channel, draft } = carried as Partial<RecoveryHandoff>;
+  if (channel !== 'EMAIL' && channel !== 'PHONE') return null;
+  if (!draft || typeof draft !== 'object') return null;
+  const { email, extension, number } = draft;
+  if (typeof email !== 'string' || typeof extension !== 'string' || typeof number !== 'string') {
+    return null;
+  }
+  return { channel, draft: { email, extension, number } };
+}
+
+/** The patterns a draft is checked against — passed in, this package has no regex dependency. */
+export interface RecoveryDraftShapes {
+  email: RegExp;
+  extension: RegExp;
+  number: RegExp;
+}
+
+/** Whether the handoff names a destination a code can go to right away. */
+export function recoveryHandoffSendable(
+  handoff: Readonly<RecoveryHandoff>,
+  shapes: Readonly<RecoveryDraftShapes>,
+): boolean {
+  const { email, extension, number } = handoff.draft;
+  if (handoff.channel === 'EMAIL') return shapes.email.test(email);
+  return shapes.extension.test(extension) && shapes.number.test(number);
+}
+
+/** A fresh attempt opened from a handoff: on its channel, holding its draft. */
+export const recoveryStateFrom = (handoff: Readonly<RecoveryHandoff>): PasswordRecoveryState => ({
+  ...initialRecoveryState({ ...handoff.draft }),
+  channel: handoff.channel,
+});
+
 /** A code just went out: move to the code step and start the cooldown. */
 export const recoveryAfterSend = (
   state: Readonly<PasswordRecoveryState>,

@@ -13,6 +13,8 @@ export interface PodHistoryActionsProps {
   backoutMaxed?: boolean;
   backingOut: boolean;
   rejoining: boolean;
+  /** True while a free pod's "Cancel Spot" is in flight. */
+  cancellingSpot?: boolean;
   invoiceBusy: boolean;
   ticketBusy: boolean;
   onPodDetails: () => void;
@@ -20,6 +22,8 @@ export interface PodHistoryActionsProps {
   /** Pressed instead of onBackout once the attempts are spent — says why. */
   onBackoutBlocked?: () => void;
   onRejoin: () => void;
+  /** A FREE pod's only way out — shown instead of Backout. */
+  onCancelSpot?: () => void;
   onRefundStatus: () => void;
   onInvoice: () => void;
   onTicket: () => void;
@@ -42,12 +46,14 @@ export function PodHistoryActions({
   backoutMaxed = false,
   backingOut,
   rejoining,
+  cancellingSpot = false,
   invoiceBusy,
   ticketBusy,
   onPodDetails,
   onBackout,
   onBackoutBlocked,
   onRejoin,
+  onCancelSpot,
   onRefundStatus,
   onInvoice,
   onTicket,
@@ -64,6 +70,9 @@ export function PodHistoryActions({
         <LivePodActions
           item={item}
           canBackout={gate.canBackout}
+          canCancelSpot={gate.canCancelSpot}
+          cancellingSpot={cancellingSpot}
+          onCancelSpot={onCancelSpot}
           backoutMaxed={backoutMaxed}
           showRefundState={gate.showRefundState}
           refundText={refundLabel(gate.refundStatus, t)}

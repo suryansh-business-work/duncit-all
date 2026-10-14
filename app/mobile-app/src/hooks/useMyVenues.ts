@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import type { SwitchableVenue } from '@duncit/utils';
 
 import { VenueDashboardDocument } from '@/graphql/studio-dashboard';
 import { useReloadableQuery } from '@/hooks/useReloadableQuery';
@@ -17,15 +18,28 @@ import type { DashboardVenue } from '@/hooks/useStudioDashboards';
  * did not arrive.
  */
 export function useMyVenues() {
+  return useVenueList(fetchDashboardVenues);
+}
+
+async function fetchDashboardVenues(): Promise<DashboardVenue[]> {
+  const data = await graphqlRequest(VenueDashboardDocument, undefined, { auth: true });
+  return data.myVenues;
+}
+
+/**
+ * The same list and pick for a screen that reads its venues through its own
+ * query — the food desk needs each venue's `offers_food`. `fetchVenues` must be
+ * stable (a module function), or the list reloads on every render.
+ */
+export function useVenueList<T extends SwitchableVenue>(fetchVenues: () => Promise<T[]>) {
   const { t } = useTranslation();
-  const [venues, setVenues] = useState<DashboardVenue[]>([]);
+  const [venues, setVenues] = useState<T[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const data = await graphqlRequest(VenueDashboardDocument, undefined, { auth: true });
-    setVenues(data.myVenues);
+    setVenues(await fetchVenues());
     setError(null);
-  }, []);
+  }, [fetchVenues]);
   const query = useReloadableQuery(load, {
     onError: (err) => setError(toErrorMessage(err, t('mweb.account.somethingWentWrong'))),
   });

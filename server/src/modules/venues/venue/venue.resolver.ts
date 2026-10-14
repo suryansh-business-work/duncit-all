@@ -3,6 +3,11 @@ import { Types } from 'mongoose';
 import { venueService } from './venue.service';
 import { venuePodsService } from './venuePods.service';
 import { userService } from '@modules/access/user/user.service';
+import {
+  effectiveFoodTax,
+  getFoodTaxDefaults,
+  type FoodTaxOverride,
+} from '@modules/finance/finance/foodTaxDefaults';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { podService } from '@modules/pods/pod/pod.service';
 import { MeetingModel } from '@modules/survey/meeting.model';
@@ -31,7 +36,27 @@ function uid(ctx: GraphQLContext) {
   return ctx.user.id;
 }
 
+/**
+ * Finance's food GST default, read once per request however many venues the
+ * request resolves — keyed on the request's own context object.
+ */
+const foodTaxDefaultsByRequest = new WeakMap<object, ReturnType<typeof getFoodTaxDefaults>>();
+const foodTaxFor = async (parent: FoodTaxOverride, ctx: GraphQLContext) => {
+  let defaults = foodTaxDefaultsByRequest.get(ctx);
+  if (!defaults) {
+    defaults = getFoodTaxDefaults();
+    foodTaxDefaultsByRequest.set(ctx, defaults);
+  }
+  return effectiveFoodTax(parent, await defaults);
+};
+
 export const venueResolvers = {
+  // What the venue's orders are priced with: its own GST while it overrides,
+  // otherwise Finance's default — resolved here so no client ever decides it.
+  VenueFoodOrdering: {
+    tax_mode: async (parent: FoodTaxOverride, _a: unknown, ctx: GraphQLContext) => (await foodTaxFor(parent, ctx)).tax_mode,
+    gst_pct: async (parent: FoodTaxOverride, _a: unknown, ctx: GraphQLContext) => (await foodTaxFor(parent, ctx)).gst_pct,
+  },
   Venue: {
     // Live pods hosted at this venue. `.exec()` returns a real Promise so the
     // GraphQL executor never adopts a bare Mongoose Query twice.
@@ -126,8 +151,10 @@ export const venueResolvers = {
       venueService.submitStep3(uid(ctx), args.input, args.venue_id),
     submitVenueFinal: async (_p: unknown, args: { venue_id?: string }, ctx: GraphQLContext) =>
       venueService.submitFinal(uid(ctx), args.venue_id),
+    // The owner, or a Venues console editor (the record's Food Menu tab) — who
+    // may also change a saved GST number. Ownership is checked in the service.
     updateApprovedVenue: async (_p: unknown, args: { venue_id: string; input: any }, ctx: GraphQLContext) =>
-      venueService.updateApproved(uid(ctx), args.venue_id, args.input),
+      venueService.updateApproved(uid(ctx), args.venue_id, args.input, !!ctx.user && hasRole(ctx.user, VENUE_EDIT)),
     approveVenue: async (
       _p: unknown,
       args: { venue_doc_id: string; notes?: string; tags?: string[] },

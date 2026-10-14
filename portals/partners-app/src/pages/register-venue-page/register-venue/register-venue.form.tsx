@@ -17,7 +17,6 @@ import {
   taxDocTypesOf,
   type RegisterVenueMode,
   type VenueRegistrationConfig,
-  type VenueSectionKey,
 } from './register-venue.types';
 import { fireAndForget, logs } from '@duncit/logs';
 
@@ -27,9 +26,6 @@ interface Props {
   account: { name: string; email: string };
   config: VenueRegistrationConfig;
   mode: RegisterVenueMode;
-  /** Shows this ONE section and no section rail — the Food Menu page edits an
-   * approved venue's menu through the same form, schema and save. */
-  pinnedSection?: VenueSectionKey;
   onPersisted: () => Promise<unknown>;
   onSubmitted: (venueId: string) => void;
 }
@@ -40,7 +36,6 @@ export default function RegisterVenueForm({
   account,
   config,
   mode,
-  pinnedSection,
   onPersisted,
   onSubmitted,
 }: Readonly<Props>) {
@@ -50,7 +45,6 @@ export default function RegisterVenueForm({
       locations,
       account,
       mode,
-      pinnedSection,
       taxDocTypes: taxDocTypesOf(config),
       foodLimits: foodLimitsOf(config),
       categoryLimit: categoryLimitOf(config),
@@ -64,7 +58,7 @@ export default function RegisterVenueForm({
 
   return (
     <Box sx={{ display: { md: 'flex' }, alignItems: 'flex-start', gap: 3 }}>
-      {!pinnedSection && <SectionRail active={active} sectionState={sectionState} onSelect={setActive} mode={mode} />}
+      <SectionRail active={active} sectionState={sectionState} onSelect={setActive} mode={mode} />
       <Card variant="outlined" sx={{ borderRadius: 2, flex: 1, minWidth: 0 }}>
         <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           <fieldset
@@ -82,7 +76,15 @@ export default function RegisterVenueForm({
           >
             {active === 'details' && <VenueDetailsSection form={form} mode={mode} categoryLimit={categoryLimitOf(config)} />}
             {active === 'type-capacity' && <VenueTypeCapacitySection form={form} config={config} mode={mode} />}
-            {active === 'food' && <FoodSection form={form} config={config} />}
+            {active === 'food' && (
+              <FoodSection
+                form={form}
+                config={config}
+                mode={mode}
+                venueId={venueId ?? undefined}
+                savedGstin={venue?.gstin ?? ''}
+              />
+            )}
             {active === 'amenities' && (
               <AmenitiesSection form={form} config={config} disabled={mode === 'edit-approved'} />
             )}

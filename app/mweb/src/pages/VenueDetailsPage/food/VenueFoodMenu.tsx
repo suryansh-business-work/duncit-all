@@ -107,6 +107,7 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
         cart={cart}
         currency={currency}
         discountPct={discountPct}
+        venueId={venue.id}
         venueName={venue.venue_name}
         guest={ordering.guest}
         coupon={ordering.coupon}

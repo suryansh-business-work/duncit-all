@@ -4,6 +4,7 @@ import { logs } from '@observability/log';
 import { translateNextWave } from '@modules/platform/localization/aiTranslate.step';
 import { deleteBatch } from './bulkDelete.runner';
 import { organizeMediaStep } from '@modules/platform/upload/mediaOrganizer.step';
+import { verifyEmailWave } from '@modules/crm/emailVerification/emailVerification.step';
 import {
   BackgroundJobModel,
   type BackgroundJobKind,
@@ -36,6 +37,7 @@ const STEPS: Readonly<Record<BackgroundJobKind, JobStep>> = {
   BULK_DELETE: deleteBatch,
   AI_TRANSLATE: translateNextWave,
   MEDIA_ORGANIZE: organizeMediaStep,
+  EMAIL_VERIFY: verifyEmailWave,
 };
 
 const scheduled = new Set<string>();

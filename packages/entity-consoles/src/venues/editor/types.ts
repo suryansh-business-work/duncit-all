@@ -1,6 +1,7 @@
 import type { AdminCategoryValue } from '@duncit/category';
+import { blankFoodOrdering, type FoodDishValues, type FoodOrderingFormValues } from '@duncit/utils';
 import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
-import type { VenueFoodDiet, VenueFoodSpiceLevel, VenueStatus } from '../detail/queries';
+import type { VenueStatus } from '../detail/queries';
 
 /**
  * Everything a venue record holds, as one form.
@@ -20,28 +21,6 @@ export interface VenueDocEntry {
 export interface VenueCapacityRow {
   label: string;
   capacity: number;
-}
-
-/**
- * One dish on the menu.
- *
- * The stored dish id rides as `item_id`, not `id`: `useFieldArray` keys its rows
- * on a generated `id` of its own, and a dish must go back to the server under
- * the id it came with or it is saved as a brand-new one.
- */
-export interface VenueFoodRow {
-  /** Empty for a dish added in this form. */
-  item_id: string;
-  name: string;
-  description: string;
-  /** The menu section heading, e.g. "Starters". */
-  category: string;
-  price: number;
-  images: string[];
-  /** '' = not chosen; the server then files it under its own default. */
-  diet: VenueFoodDiet | '';
-  spice_level: VenueFoodSpiceLevel | '';
-  is_available: boolean;
 }
 
 export interface VenueChargeTierRow {
@@ -99,7 +78,10 @@ export interface VenueFormValues {
   capacity: number;
   capacity_items: VenueCapacityRow[];
   offers_food: boolean;
-  food_menu: VenueFoodRow[];
+  // The food block every venue form shares (@duncit/utils). The Razorpay account is the
+  // owner's: the console reads `razorpay_linked` and a save never names the account.
+  food_menu: FoodDishValues[];
+  food_ordering: FoodOrderingFormValues;
   /**
    * Every category the venue hosts pods in, primary first — one row of the
    * shared picker each (`RhfAdminCategoryRows`). Empty is allowed here: staff
@@ -166,6 +148,7 @@ export const blankVenueValues: VenueFormValues = {
   capacity_items: [],
   offers_food: false,
   food_menu: [],
+  food_ordering: blankFoodOrdering,
   categories: [],
   description: '',
   amenities: [],

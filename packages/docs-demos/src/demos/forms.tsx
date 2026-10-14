@@ -14,8 +14,14 @@ import {
   buildWithdrawInput,
   blankWithdrawValues,
   makeCancellationPolicySchema,
+  makeFoodGstinRule,
+  makeFoodTaxDefaultsSchema,
+  makeVenueFoodTaxRefinement,
+  venueFoodTaxShape,
   toPolicyInput,
   type CancellationPolicyValues,
+  type FoodTaxDefaultsValues,
+  type VenueFoodTaxValues,
   type WithdrawValues,
 } from '@duncit/forms/schemas';
 import { defineDemo, defineDemos } from '../types';
@@ -23,6 +29,14 @@ import { defineDemo, defineDemos } from '../types';
 import { PackagingDemo, type PackagingMock } from './forms/PackagingDemo';
 import { schemasDemo } from './forms/schemas-demo';
 import { WalletStatementDemo, type WalletStatementMock } from './forms/WalletStatementDemo';
+
+interface FoodTaxMock {
+  /** Finance's default, as its form holds it. */
+  defaults: FoodTaxDefaultsValues;
+  /** One venue's own GST beside its food ordering. */
+  venue: VenueFoodTaxValues;
+  gstin: string;
+}
 
 interface WithdrawMock {
   /** The wallet balance — nobody may withdraw more than they hold. */
@@ -100,6 +114,34 @@ export default defineDemos('forms', [
     },
   }),
   schemasDemo,
+
+  defineDemo<FoodTaxMock>({
+    id: 'food-tax',
+    title: 'GST on venue food — the rules Finance, the owner and the Venues console share',
+    note:
+      'Set gst_pct to 29 or 2.5 and the default is refused. Turn the venue override off and its stored mode stops being checked — what sits behind a switched-off override never blocks a save.',
+    mock: {
+      defaults: { tax_mode: 'INCLUSIVE', gst_pct: '5' },
+      venue: { tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: '18' },
+      gstin: '22ABCDE1234F1Z5',
+    },
+    compute: (mock) => {
+      const t = (key: string) => key;
+      const defaults = makeFoodTaxDefaultsSchema(t).safeParse(mock.defaults);
+      const checkTax = makeVenueFoodTaxRefinement(t);
+      const venue = z
+        .object({ food_ordering: z.object(venueFoodTaxShape) })
+        .superRefine((values, ctx) => checkTax(values.food_ordering, ctx, ['food_ordering']))
+        .safeParse({ food_ordering: mock.venue });
+      const issues = (result: { success: boolean; error?: z.ZodError }) =>
+        result.success ? 'accepted' : (result.error?.issues ?? []).map((i) => `${i.path.join('.')} — ${i.message}`);
+      return {
+        'Finance default': defaults.success ? defaults.data : issues(defaults),
+        'Venue override': issues(venue),
+        GSTIN: issues(makeFoodGstinRule(t).safeParse(mock.gstin)),
+      };
+    },
+  }),
 
   defineDemo<WithdrawMock>({
     id: 'withdraw',

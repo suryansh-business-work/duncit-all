@@ -79,3 +79,13 @@ export const CLUB_STUDIO_PODS = gql`
     }
   }
 `;
+
+/** Only the figures of the caller's venue — the Venue Studio dashboard draws the
+ * strip without the 500-row list, which lives on "Pods at Your Venue". */
+export const VENUE_STUDIO_SUMMARY = gql`
+  query VenueStudioSummary($venue_id: ID) {
+    studioSummary: venuePodsSummary(venue_id: $venue_id) {
+      ${STUDIO_SUMMARY_FIELDS}
+    }
+  }
+`;

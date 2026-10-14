@@ -1,14 +1,16 @@
+import type { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { Alert, Divider, Link, Stack, Typography } from '@mui/material';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
-import { DuncitButton } from '@duncit/buttons';
+import { BUTTON_SIZES, DuncitButton } from '@duncit/buttons';
 import type { SocialCredential } from '@duncit/utils';
-import { AppleSignInButton } from '../../components/apple-sign-in';
-import GoogleSignInButton from '../../components/GoogleSignInButton';
 import LegalLinks from '../../components/LegalLinks';
+import SocialRoundButtons from '../../components/SocialRoundButtons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useWithRedirect } from '../../utils/redirect';
+import LoginFeatureChips from './LoginFeatureChips';
 
 interface Props {
   /** True while a Google or Apple credential is being spent. */
@@ -20,27 +22,51 @@ interface Props {
   onChooseOtp: () => void;
 }
 
+interface MethodRowProps {
+  testId: string;
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+}
+
 /**
- * The two "continue with…" choices: surface pills with a hairline, ink label
- * and icon — the same weight as the Google and Apple pills above them, because all four
- * are a choice of door, not the action itself. The green pill waits one step
- * in, on the button that actually signs you in. Native twin: MethodButton in
- * screens/LoginScreen/LoginMethodStep.tsx.
+ * One "continue with…" door: a large surface pill — icon, label, chevron —
+ * because it opens a step rather than signing anyone in. Hoisted (S6478).
+ * Native twin: MethodButton in screens/LoginScreen/LoginMethodStep.tsx.
  */
-const METHOD_SX = {
-  bgcolor: 'background.paper',
-  borderColor: 'divider',
-  color: 'text.primary',
-} as const;
+function MethodRow({ testId, icon, label, onClick }: Readonly<MethodRowProps>) {
+  return (
+    <DuncitButton
+      type="button"
+      variant="outlined"
+      color="inherit"
+      size="large"
+      fullWidth
+      startIcon={icon}
+      endIcon={<ChevronRightRoundedIcon />}
+      onClick={onClick}
+      data-testid={testId}
+      sx={{
+        minHeight: BUTTON_SIZES.lg.height,
+        justifyContent: 'flex-start',
+        bgcolor: 'background.paper',
+        borderColor: 'divider',
+        color: 'text.primary',
+        '& .MuiButton-endIcon': { ml: 'auto', color: 'text.secondary' },
+      }}
+    >
+      {label}
+    </DuncitButton>
+  );
+}
 
 /**
  * The landing step: how would you like to sign in?
  *
- * Signing in is a choice of method now rather than a password form with a
- * Google button under it, so the two are offered side by side and the email and
- * password boxes live one step in. That is also where "Forgot password?"
- * belongs — it is only ever about the password, and on this screen it was
- * offering to recover something half the visitors never use.
+ * Feature chips, then the two doors that open a step (password, OTP), the way
+ * to signup and the legal line — and, under an OR, Google and Apple as round
+ * buttons. "Forgot password?" lives one step in, beside the password box: it
+ * is only ever about a password.
  */
 export default function LoginMethodStep({
   socialLoading,
@@ -54,68 +80,51 @@ export default function LoginMethodStep({
   const authLink = useWithRedirect();
 
   return (
-    <Stack spacing={2}>
-      <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
-        <GoogleSignInButton
-          onCredential={(idToken) => onSocialCredential({ provider: 'GOOGLE', idToken })}
-          loading={socialLoading}
-          text="signin_with"
+    <Stack spacing={2.5}>
+      <LoginFeatureChips />
+
+      <Stack spacing={1.5}>
+        <MethodRow
+          testId="continue-with-password"
+          icon={<LockOutlinedIcon />}
+          label={t('mweb.login.continueWithPassword')}
+          onClick={onChoosePassword}
         />
-        <AppleSignInButton
-          label={t('mweb.auth.appleSignIn')}
-          loading={socialLoading}
-          onCredential={onSocialCredential}
-          onError={onSocialError}
+        <MethodRow
+          testId="continue-with-otp"
+          icon={<PinOutlinedIcon />}
+          label={t('mweb.login.continueWithOtp')}
+          onClick={onChooseOtp}
         />
-        {socialError && (
-          <Alert severity="error" sx={{ width: '100%' }}>
-            {socialError}
-          </Alert>
-        )}
       </Stack>
 
-      <Divider>{t('mweb.auth.or')}</Divider>
-
-      <DuncitButton
-        type="button"
-        variant="outlined"
-        color="inherit"
-        size="large"
-        fullWidth
-        startIcon={<LockOutlinedIcon />}
-        onClick={onChoosePassword}
-        data-testid="continue-with-password"
-        sx={METHOD_SX}
-      >
-        {t('mweb.login.continueWithPassword')}
-      </DuncitButton>
-
-      <DuncitButton
-        type="button"
-        variant="outlined"
-        color="inherit"
-        size="large"
-        fullWidth
-        startIcon={<PinOutlinedIcon />}
-        onClick={onChooseOtp}
-        data-testid="continue-with-otp"
-        sx={METHOD_SX}
-      >
-        {t('mweb.login.continueWithOtp')}
-      </DuncitButton>
-
-      <Stack spacing={1.5} sx={{ alignItems: 'center', pt: 1 }}>
+      <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.login.newHere')}{' '}
-          <Link component={RouterLink} to={authLink('/register')} underline="hover" data-testid="go-signup">
+          <Link component={RouterLink} to={authLink('/register')} underline="always" data-testid="go-signup">
             {t('mweb.login.createOne')}
           </Link>
         </Typography>
         <LegalLinks prefix={t('mweb.auth.legalSignIn')} />
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {t('mweb.auth.appVersion', { vars: { version: __APP_VERSION__ } })}
-        </Typography>
       </Stack>
+
+      <Divider>{t('mweb.auth.or')}</Divider>
+
+      <SocialRoundButtons
+        intent="SIGN_IN"
+        loading={socialLoading}
+        onCredential={onSocialCredential}
+        onError={onSocialError}
+      />
+      {socialError && (
+        <Alert severity="error" sx={{ width: '100%' }}>
+          {socialError}
+        </Alert>
+      )}
+
+      <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+        {t('mweb.auth.appVersion', { vars: { version: __APP_VERSION__ } })}
+      </Typography>
     </Stack>
   );
 }

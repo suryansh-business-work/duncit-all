@@ -260,3 +260,55 @@ describe('WhenWhereSection (venue-slot mode)', () => {
     );
   });
 });
+
+// A free pod collects nothing, so Duncit pays the venue nothing: on a slot the
+// venue charges for, the author is told the host settles with the venue.
+describe('WhenWhereSection (free pod on a priced slot)', () => {
+  const noteData = (ownVenueIds?: string[]) =>
+    makeData({
+      clubs: CLUBS,
+      venues: VENUES,
+      getClubVenueIds: () => ['v1', 'v2'],
+      config: makeConfig({ showVenueSlot: true }),
+      ownVenueIds,
+    });
+  const NOTE = /Duncit will not pay the venue/;
+
+  it('tells the author of a free pod to settle a priced slot with the venue directly', async () => {
+    const user = userEvent.setup();
+    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
+    renderWW(noteData(), { club_id: 'c1', venue_id: 'v1', pod_type: 'FREE' });
+    expect(screen.queryByTestId('free-pod-venue-note')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Hall' }));
+
+    const note = screen.getByTestId('free-pod-venue-note');
+    expect(note).toHaveAttribute('role', 'status');
+    expect(note).toHaveTextContent(NOTE);
+    expect(note).toHaveTextContent(/not to confirm the slot until the host has spoken to them/);
+  });
+
+  it('says nothing for a free pod on a slot priced 0 — it books instantly', () => {
+    useQueryMock.mockReturnValue(slotsQuery([{ ...HALL_SLOT, price: 0 }]));
+    renderWW(noteData(), { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1', pod_type: 'FREE' });
+    expect(screen.queryByText(NOTE)).not.toBeInTheDocument();
+  });
+
+  it('says nothing at the host’s own venue, whatever the slot costs', () => {
+    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
+    renderWW(noteData(['v1']), { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1', pod_type: 'FREE' });
+    expect(screen.queryByText(NOTE)).not.toBeInTheDocument();
+  });
+
+  it('says nothing for a paid pod, which pays the venue on the platform', () => {
+    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
+    renderWW(noteData(), { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1', pod_type: 'PAID', pod_amount: 500 });
+    expect(screen.queryByText(NOTE)).not.toBeInTheDocument();
+  });
+
+  it('reads a legacy free type as free', () => {
+    useQueryMock.mockReturnValue(slotsQuery([HALL_SLOT]));
+    renderWW(noteData(), { club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1', pod_type: 'NATIVE_FREE' });
+    expect(screen.getByText(NOTE)).toBeInTheDocument();
+  });
+});

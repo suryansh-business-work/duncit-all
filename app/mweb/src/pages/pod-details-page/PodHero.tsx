@@ -4,14 +4,11 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { Box, Stack, useMediaQuery } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { DuncitIconButton } from '@duncit/buttons';
 import { isVideoMedia } from '@duncit/utils';
 import HeroOverlayActions from './HeroOverlayActions';
+import { NextArrow, PrevArrow, SlideCounter } from './HeroCarouselControls';
 import SlideshowToggle from './SlideshowToggle';
 import VideoMedia from '../../components/media/VideoMedia';
-import { useTranslation } from '../../i18n/useTranslation';
 
 /** One height for the photo, the video and the empty placeholder. */
 const HERO_HEIGHT = { xs: 280, md: 420 };
@@ -23,74 +20,6 @@ const heroFrame = {
   overflow: 'hidden',
   bgcolor: 'action.hover',
 };
-
-const arrowBtn = {
-  position: 'absolute' as const,
-  top: '50%',
-  transform: 'translateY(-50%)',
-  zIndex: 2,
-  bgcolor: 'background.paper',
-  color: 'text.primary',
-  width: 36,
-  height: 36,
-  minHeight: 36,
-  '&:hover': { bgcolor: 'background.paper' },
-};
-
-function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
-  const { t } = useTranslation();
-  return (
-    <DuncitIconButton
-      size="small"
-      onClick={onClick}
-      aria-label={t('mweb.podDetails.previousImage')}
-      data-testid="pod-hero-prev"
-      sx={{ ...arrowBtn, left: 12 }}
-    >
-      <ChevronLeftIcon />
-    </DuncitIconButton>
-  );
-}
-
-function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
-  const { t } = useTranslation();
-  return (
-    <DuncitIconButton
-      size="small"
-      onClick={onClick}
-      aria-label={t('mweb.podDetails.nextImage')}
-      data-testid="pod-hero-next"
-      sx={{ ...arrowBtn, right: 12 }}
-    >
-      <ChevronRightIcon />
-    </DuncitIconButton>
-  );
-}
-
-/** "2/5" — a surface pill over the photo's bottom-right corner. */
-function SlideCounter({ index, total }: Readonly<{ index: number; total: number }>) {
-  return (
-    <Box
-      data-testid="slide-counter"
-      sx={{
-        position: 'absolute',
-        right: 12,
-        bottom: 12,
-        zIndex: 2,
-        px: 1.25,
-        py: 0.5,
-        borderRadius: 999,
-        bgcolor: 'background.paper',
-        color: 'text.primary',
-        fontSize: 12,
-        fontWeight: 600,
-        lineHeight: 1.2,
-      }}
-    >
-      {index + 1}/{total}
-    </Box>
-  );
-}
 
 interface Props {
   media: { url: string; type: string }[];
@@ -152,8 +81,8 @@ export default function PodHero({
         <Slider
           dots={false}
           arrows={media.length > 1}
-          prevArrow={<PrevArrow />}
-          nextArrow={<NextArrow />}
+          prevArrow={<PrevArrow testId="pod-hero-prev" />}
+          nextArrow={<NextArrow testId="pod-hero-next" />}
           infinite={media.length > 1}
           autoplay={playing}
           autoplaySpeed={4500}

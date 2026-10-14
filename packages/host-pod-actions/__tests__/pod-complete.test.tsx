@@ -71,6 +71,7 @@ const attendee = (over: Record<string, unknown> = {}) => ({
 
 const settlement = (over: Record<string, unknown> = {}) => ({
   __typename: 'PodSettlement',
+  is_free: false,
   currency_symbol: '₹',
   collected_total: 1200,
   // No bill entered: the venue's side is the ₹300 the slot was booked at.
@@ -91,6 +92,23 @@ const settlement = (over: Record<string, unknown> = {}) => ({
   waterfall,
   ...over,
 });
+
+/** A FREE pod's settlement as the server answers it: nothing collected, no
+ * venue side, every figure 0 — the client must show none of them. */
+const zeroWaterfall = Object.fromEntries(
+  Object.entries(waterfall).map(([key, value]) => [key, typeof value === 'number' ? 0 : value]),
+);
+const FREE_SETTLEMENT = {
+  is_free: true,
+  collected_total: 0,
+  venue_slot_price: 0,
+  has_venue: false,
+  paying_attendees: 0,
+  attended_total: 0,
+  host_payout_amount: 0,
+  attendees: [attendee({ amount: 0 })],
+  waterfall: { ...zeroWaterfall, version: 1 },
+};
 
 const previewMock = (
   over: Record<string, unknown> = {},
@@ -369,6 +387,39 @@ describe('SettlementPreview', () => {
 
     expect(onScan).toHaveBeenCalled();
   });
+
+  // A free pod moves no money: the roster still shows (attendance gates the
+  // completion) but no row, line or split carries a figure.
+  it('heads a free pod "Free pod" and shows the roster with no money in it', async () => {
+    const { container } = preview([previewMock(FREE_SETTLEMENT)]);
+    await settle();
+
+    expect(screen.getByTestId('settlement-free')).toHaveTextContent(labels.shareFree);
+    expect(screen.queryByText(labels.shareTitle)).not.toBeInTheDocument();
+    expect(screen.getByTestId('settlement-free-note')).toHaveTextContent(labels.shareFreeNote);
+    expect(screen.getByText('Asha Rao')).toBeInTheDocument();
+    expect(screen.getByTestId('pod-complete-attendance-row-m-1')).toHaveTextContent(/^Asha Rao2 seats$/);
+    expect(screen.queryByTestId('earnings-split')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('settlement-attendees')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('venue-bill-summary')).not.toBeInTheDocument();
+    expect(container.textContent).not.toContain('₹');
+  });
+
+  it('keeps the amount on each roster row of a paid pod', async () => {
+    preview([previewMock()]);
+    await settle();
+
+    expect(screen.getByTestId('pod-complete-attendance-row-m-1')).toHaveTextContent('2 seats · ₹500.00');
+    expect(screen.queryByTestId('settlement-free')).not.toBeInTheDocument();
+  });
+
+  // The caller already knows the pod is free, so the heading never flashes
+  // "Your share" while the settlement loads.
+  it('reads as free before the settlement arrives when the caller says the pod is free', () => {
+    preview([previewMock(FREE_SETTLEMENT)], { free: true });
+
+    expect(screen.getByTestId('settlement-free')).toHaveTextContent(labels.shareFree);
+  });
 });
 
 describe('PodMediaSummary', () => {
@@ -566,6 +617,37 @@ describe('PodCompleteDialog settlement', () => {
     expect(sent).toEqual([{ pod_id: 'pod-1', venue_bill_amount: 0 }]);
     expect(notifySuccess).toHaveBeenCalledWith(labels.venueBill.sentToFinance);
     expect(props.onCompleted).toHaveBeenCalledTimes(1);
+  });
+
+  // The host of a free pod settles the venue directly, so even on a venue pod
+  // no bill is asked for, nothing is said about payouts and Finance gets nothing.
+  it('completes a free venue pod with no bill to ask for and no payout promised', async () => {
+    const { mock, sent } = completeMock();
+    const { props, notifySuccess } = dialog({ ...VENUE_POD, pod_type: 'FREE' }, [
+      previewMock(FREE_SETTLEMENT),
+      mediaBoardMock(),
+      mock,
+    ]);
+    await settle();
+
+    expect(screen.queryByTestId('pod-complete-venue-bill-fields')).not.toBeInTheDocument();
+    expect(screen.getByText(labels.completeHintFree)).toBeInTheDocument();
+    expect(screen.queryByText(labels.completeHint)).not.toBeInTheDocument();
+    expect(screen.getByTestId('settlement-free')).toHaveTextContent(labels.shareFree);
+    await submitForm();
+
+    expect(sent).toEqual([{ pod_id: 'pod-1', venue_bill_amount: 0 }]);
+    expect(notifySuccess).toHaveBeenCalledWith(labels.shareFreeCompleted);
+    expect(notifySuccess).not.toHaveBeenCalledWith(labels.venueBill.sentToFinance);
+    expect(props.onCompleted).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the payout hint on a paid pod', async () => {
+    dialog({ ...VENUE_POD, pod_type: 'PAID' }, [previewMock(), mediaBoardMock()]);
+    await settle();
+
+    expect(screen.getByText(labels.completeHint)).toBeInTheDocument();
+    expect(screen.getByTestId('pod-complete-venue-bill-fields')).toBeInTheDocument();
   });
 
   it('states the server reason rather than reporting a completion it never got', async () => {

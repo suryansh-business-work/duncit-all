@@ -118,6 +118,12 @@ export const podMemberTypeDefs = /* GraphQL */ `
     cancel_refund_status: RefundStatus!
     "Every backout this booking raised, oldest first."
     backouts: [PodMemberBackout!]!
+    """
+    Set when this booking's latest exit was a cancelled spot on a FREE pod —
+    draw it as "Spot cancelled", not as a backout or a refund. Null otherwise,
+    including once the member has joined again.
+    """
+    spot_cancelled_at: String
   }
 
   type PodMember {
@@ -144,6 +150,12 @@ export const podMemberTypeDefs = /* GraphQL */ `
     "Backout attempts used for this pod (each Confirm Backout counts one)."
     backout_count: Int!
     """
+    When the member cancelled their spot on a FREE pod. Set only while the
+    booking is BACKED_OUT because of a cancelled spot (cleared when they join
+    again) — a free pod has no backout, so this, not backout_count, is its exit.
+    """
+    spot_cancelled_at: String
+    """
     This booking's whole story — backouts, attendance and cancellation in one
     object, so a timeline costs one resolution rather than five. Null to anyone
     but the member themselves and Admin/Finance: it carries DUN-BKO ids and
@@ -167,7 +179,14 @@ export const podMemberTypeDefs = /* GraphQL */ `
     max_seats_per_booking: Int!
     "Seats the caller already holds on this pod (0 when not a member)."
     my_seats: Int!
+    "Always false on a FREE pod — a free pod has no backout; see can_cancel_spot."
     can_backout: Boolean!
+    """
+    True when the caller may cancel their spot (cancelFreeSpot): a FREE pod
+    they hold a JOINED booking on, that has not started and whose ticket has
+    not been checked in. Always false on a paid pod.
+    """
+    can_cancel_spot: Boolean!
     can_join: Boolean!
     refund_threshold_pct: Int!
     "True while the caller's booking is in 'Backout in process'."
@@ -399,7 +418,7 @@ export const podMemberTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    "Book a free pod. Seats books several at once (default 1, capped by what is left)."
+    "Book a free pod — always one seat. The seats argument is ignored; it stays for installed app builds."
     joinFreePod(pod_doc_id: ID!, referral_token: String, seats: Int): PodMember!
     """
     Confirm Backout — the released seats go back on sale immediately and the
@@ -411,6 +430,16 @@ export const podMemberTypeDefs = /* GraphQL */ `
     released ones are refunded, at the same deduction.
     """
     backoutPod(pod_doc_id: ID!, seats: Int): PodMember!
+    """
+    Cancel the spot on a FREE pod — the only way out of one. Releases every
+    seat of the caller's booking, voids its ticket and returns the booking as
+    BACKED_OUT with spot_cancelled_at set. No backout request, no attempt, no
+    refund; joinFreePod brings the same booking back any number of times.
+    Idempotent. Errors: NOT_FREE_POD (paid pod — use backoutPod), BAD_REQUEST
+    (pod started), NOT_FOUND (not a member), ALREADY_CHECKED_IN (ticket scanned).
+    On a free pod backoutPod does the same thing, for installed app builds.
+    """
+    cancelFreeSpot(pod_doc_id: ID!): PodMember!
     "Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free)."
     cancelBackoutPod(pod_doc_id: ID!, backout_id: ID): PodMember!
     redeemPodReferral(token: String!): PodMember!

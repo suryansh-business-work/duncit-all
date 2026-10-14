@@ -24,6 +24,25 @@ interface Options {
 /** The server's answer to a second rating of the same order. */
 const ALREADY_RATED = 'CONFLICT';
 
+/** Where a rating's photo comes from: taken now, or picked from the library. */
+export type FoodPhotoSource = 'camera' | 'library';
+
+const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.8 };
+
+/** Each source asks for its own permission, and says so in its own words when refused. */
+const SOURCES = {
+  camera: {
+    permission: ImagePicker.requestCameraPermissionsAsync,
+    launch: ImagePicker.launchCameraAsync,
+    refused: 'mweb.venueFood.feedback.cameraPermissionNeeded',
+  },
+  library: {
+    permission: ImagePicker.requestMediaLibraryPermissionsAsync,
+    launch: ImagePicker.launchImageLibraryAsync,
+    refused: 'mweb.chatRoom.photoAccessIsNeededToSend',
+  },
+} as const;
+
 /**
  * Rating a served food order: the form, its photos and the send. A photo is
  * uploaded as soon as it is picked, each with its own single-use pass from the
@@ -42,18 +61,24 @@ export function useFoodFeedback({ orderId, accessKey, onDone }: Options) {
   const setImages = (images: string[]) =>
     form.setValue('images', images, { shouldDirty: true, shouldValidate: true });
 
-  const addPhoto = async () => {
+  const addPhoto = async (from: FoodPhotoSource) => {
     if (uploading || form.getValues('images').length >= FOOD_FEEDBACK_LIMITS.imagesMax) return;
     setPhotoError(null);
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setPhotoError(t('mweb.chatRoom.photoAccessIsNeededToSend'));
+    const source = SOURCES[from];
+    let result: ImagePicker.ImagePickerResult;
+    try {
+      const permission = await source.permission();
+      if (!permission.granted) {
+        setPhotoError(t(source.refused));
+        return;
+      }
+      result = await source.launch(PICKER_OPTIONS);
+    } catch (err) {
+      // A device without a camera (or a simulator) throws here rather than refusing.
+      logs.mobileApp.error('venueFood', 'pickFeedbackPhoto', { error: err, orderId, from });
+      setPhotoError(t('mweb.venueFood.feedback.uploadFailed'));
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-    });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
     const file = {

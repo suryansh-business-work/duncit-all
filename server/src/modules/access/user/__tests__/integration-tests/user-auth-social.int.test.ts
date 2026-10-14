@@ -173,6 +173,62 @@ describe('loginWithGoogle / loginWithApple', () => {
   });
 });
 
+describe('socialSignupStatus — the signup door asking before any code is sent', () => {
+  it('finds an account the provider identity is linked to, and writes nothing to it', async () => {
+    const { id, email } = await makeUser({ auth: { apple_id: 'a-status', is_email_verified: false } });
+    appleVerify.mockResolvedValue({ sub: 'a-status', email });
+    const before = await UserModel.findById(id).lean<any>();
+
+    await expect(userService.socialSignupStatus('APPLE', 'apple-token')).resolves.toEqual({
+      exists: true,
+      email,
+    });
+
+    expect(appleVerify).toHaveBeenCalledWith('apple-token');
+    // Read-only: no last-login stamp, no email verification, no session side effects.
+    const after = await UserModel.findById(id).lean<any>();
+    expect(after.auth.last_login_at).toEqual(before.auth.last_login_at);
+    expect(after.auth.last_login_provider).toEqual(before.auth.last_login_provider);
+    expect(after.auth.is_email_verified).toBe(false);
+  });
+
+  it('finds a password account holding the address the provider verified', async () => {
+    const { email } = await makeUser();
+    googleVerify.mockResolvedValue({ sub: 'g-unlinked', email: email.toUpperCase() });
+    await expect(userService.socialSignupStatus('GOOGLE', 't')).resolves.toEqual({
+      exists: true,
+      email,
+    });
+  });
+
+  it('answers an identity nobody holds as new, echoing the verified address', async () => {
+    googleVerify.mockResolvedValue({ sub: 'g-fresh', email: 'fresh@example.com' });
+    await expect(userService.socialSignupStatus('GOOGLE', 't')).resolves.toEqual({
+      exists: false,
+      email: 'fresh@example.com',
+    });
+  });
+
+  it('answers a sealed account as absent, as the login door does', async () => {
+    const { id, email } = await makeUser({ auth: { google_id: 'g-sealed-status' } });
+    googleVerify.mockResolvedValue({ sub: 'g-sealed-status', email });
+    lockAccount(id);
+    try {
+      await expect(userService.socialSignupStatus('GOOGLE', 't')).resolves.toEqual({
+        exists: false,
+        email,
+      });
+    } finally {
+      unlockAccount(id);
+    }
+  });
+
+  it('propagates a rejected provider token', async () => {
+    appleVerify.mockRejectedValue(new Error('bad token'));
+    await expect(userService.socialSignupStatus('APPLE', 'forged')).rejects.toThrow('bad token');
+  });
+});
+
 describe('linkGoogleAccount / linkAppleAccount', () => {
   it('links the provider to the password account and keeps the password', async () => {
     const { id, email } = await makeUser();

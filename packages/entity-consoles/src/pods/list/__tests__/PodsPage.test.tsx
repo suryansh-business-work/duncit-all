@@ -616,7 +616,7 @@ describe('PodsPage / complete a pod', () => {
           data: {
             completePodSettlement: {
               __typename: 'CompletePodResult',
-              settlement: { __typename: 'PodSettlement', currency_symbol: '₹' },
+              settlement: { __typename: 'PodSettlement', is_free: false, currency_symbol: '₹' },
               releases: [
                 {
                   __typename: 'Release',
@@ -644,6 +644,53 @@ describe('PodsPage / complete a pod', () => {
 
     fireEvent.click(screen.getByText('summary-close'));
     expect(screen.getByTestId('release-summary')).toHaveAttribute('data-open', 'false');
+  });
+
+  // A free pod asks Finance for nothing: no payout summary, no "for approval".
+  const freeResult = (releases: unknown[]): MockedResponse[] => [
+    {
+      request: { query: COMPLETE_POD_SETTLEMENT, variables: () => true },
+      result: {
+        data: {
+          completePodSettlement: {
+            __typename: 'CompletePodResult',
+            settlement: { __typename: 'PodSettlement', is_free: true, currency_symbol: '₹' },
+            releases,
+          },
+        },
+      },
+    },
+  ];
+
+  it('completes a free pod with no release summary and no approval wording', async () => {
+    renderPageWithMocks(freeResult([]));
+    fireEvent.click(screen.getByText('row-complete'));
+    fireEvent.click(screen.getByText('complete-submit'));
+
+    expect(await screen.findByText('Pod completed.')).toBeInTheDocument();
+    expect(screen.queryByText('Pod completion submitted for approval')).not.toBeInTheDocument();
+    expect(screen.getByTestId('release-summary')).toHaveAttribute('data-open', 'false');
+  });
+
+  // Product sellers on a free pod are still owed their own sales.
+  it('still lists the seller releases a free pod raised', async () => {
+    renderPageWithMocks(
+      freeResult([
+        {
+          __typename: 'Release',
+          id: 'r9',
+          release_id: 'DUN-REL-9',
+          kind: 'ECOMM_PAYMENT',
+          status: 'PENDING',
+          amount_requested: 250,
+        },
+      ]),
+    );
+    fireEvent.click(screen.getByText('row-complete'));
+    fireEvent.click(screen.getByText('complete-submit'));
+
+    expect(await screen.findByText('Pod completed.')).toBeInTheDocument();
+    expect(screen.getByTestId('release-summary')).toHaveAttribute('data-open', 'true');
   });
 
   it('ignores a submit when no pod was opened for completion', async () => {

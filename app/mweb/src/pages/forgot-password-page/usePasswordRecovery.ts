@@ -7,6 +7,7 @@ import {
   recoveryLookup,
   type PasswordRecoveryChannel,
   type ContactDraft,
+  type RecoveryHandoff,
 } from '@duncit/utils';
 import {
   useCodeRequest,
@@ -28,7 +29,7 @@ import {
  * else, so a reload between them has to start over anyway. The native twin
  * holds the same shape in its own screen (rule 27).
  */
-export function usePasswordRecovery() {
+export function usePasswordRecovery(initial: Readonly<RecoveryHandoff> | null = null) {
   const [requestCode] = useMutation<any>(REQUEST_PASSWORD_RESET_CODE);
   const [verifyCode, { loading: verifying }] = useMutation<any>(VERIFY_PASSWORD_RESET_CODE);
   const [completeReset, { loading: saving }] = useMutation<any>(COMPLETE_PASSWORD_RESET);
@@ -53,7 +54,7 @@ export function usePasswordRecovery() {
     [requestCode],
   );
 
-  const flow = useCodeRequest(send);
+  const flow = useCodeRequest(send, initial);
   const { state, advance, fail } = flow;
 
   const submitCode = useCallback(

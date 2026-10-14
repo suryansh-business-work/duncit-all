@@ -3,9 +3,10 @@ import { TextField, type TextFieldProps } from '@mui/material';
 
 type Omitted = 'name' | 'value' | 'onChange' | 'onBlur' | 'error' | 'helperText';
 
-export interface RhfTextFieldProps<T extends FieldValues> extends Omit<TextFieldProps, Omitted> {
+/** `TOut` is what the form's resolver transforms the values into; the field only reads and writes `T`. */
+export interface RhfTextFieldProps<T extends FieldValues, TOut = T> extends Omit<TextFieldProps, Omitted> {
   /** react-hook-form control from the parent `useForm`. */
-  control: Control<T>;
+  control: Control<T, unknown, TOut>;
   /** Typed field name. */
   name: Path<T>;
   /** Helper text shown when the field has no validation error. */
@@ -17,12 +18,12 @@ export interface RhfTextFieldProps<T extends FieldValues> extends Omit<TextField
  * once a field has an error, otherwise renders the `hint` so every input keeps
  * guidance underneath it (parity with the old Formik `FormField`).
  */
-export default function RhfTextField<T extends FieldValues>({
+export default function RhfTextField<T extends FieldValues, TOut = T>({
   control,
   name,
   hint,
   ...rest
-}: Readonly<RhfTextFieldProps<T>>) {
+}: Readonly<RhfTextFieldProps<T, TOut>>) {
   return (
     <Controller
       control={control}

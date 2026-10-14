@@ -7,6 +7,8 @@ interface Props {
   lead: string;
   /** The muted half — the softer second beat, same size. */
   trail?: string | null;
+  /** The second half's ink: muted (the calm default) or the red text accent (auth heroes). */
+  trailTone?: 'muted' | 'accent';
   /** Put the muted half on its own line (greetings, heroes); inline otherwise. */
   stacked?: boolean;
   fontSize?: number;
@@ -22,6 +24,7 @@ interface Props {
 export function TwoToneHeading({
   lead,
   trail,
+  trailTone = 'muted',
   stacked = false,
   fontSize = 24,
   align = 'left',
@@ -43,7 +46,7 @@ export function TwoToneHeading({
     >
       {lead}
       {trail ? (
-        <Text color="$muted">
+        <Text color={trailTone === 'accent' ? '$accent' : '$muted'}>
           {separator}
           {trail}
         </Text>

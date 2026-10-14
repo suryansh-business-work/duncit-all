@@ -79,7 +79,7 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
 }`,
     example: '',
     notes:
-      'club_name must be copied verbatim from the club list in the request — the pod is attached to that club, and a name that is not on the list attaches it to none. pod_type and pod_occurrence must be one of the listed values EXACTLY — any other string is dropped by the form. A pod_type containing FREE means pod_amount 0 and place_charges []; FREE is only valid when pod_mode is VIRTUAL, so a PHYSICAL pod must use a PAID type with a sensible price. Default pod_mode to PHYSICAL unless the prompt clearly describes an online/remote pod; when it is VIRTUAL fill meeting_platform/meeting_url/meeting_notes and leave place_charges empty, and when it is PHYSICAL return "" for all three meeting fields. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag. Keep amenity & perk chips short (1-3 words each). place_charges amounts are integer rupees, 0-100000.',
+      'club_name must be copied verbatim from the club list in the request — the pod is attached to that club, and a name that is not on the list attaches it to none. pod_type and pod_occurrence must be one of the listed values EXACTLY — any other string is dropped by the form. A pod_type containing FREE means pod_amount 0 and place_charges []; FREE is valid for both PHYSICAL and VIRTUAL pods, but choose it only when the prompt clearly says the pod is free — otherwise use a PAID type with a sensible price. Default pod_mode to PHYSICAL unless the prompt clearly describes an online/remote pod; when it is VIRTUAL fill meeting_platform/meeting_url/meeting_notes and leave place_charges empty, and when it is PHYSICAL return "" for all three meeting fields. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag. Keep amenity & perk chips short (1-3 words each). place_charges amounts are integer rupees, 0-100000.',
   },
   INVENTORY_PRODUCT: {
     fields: `{
@@ -557,7 +557,7 @@ export const aiResolvers = {
     aiFillLocationAreas: async (_: unknown, args: { input: LocationAreasInput }, ctx: GraphQLContext) => {
       // Admin › Locations fills a city's areas, and the ecomm console's
       // Serviceable pincodes form fills one pincode from the same answer.
-      requireRole(ctx, [...ADMIN_ROLES, 'ECOMM_MANAGER']);
+      requireRole(ctx, [...ADMIN_ROLES, 'ECOMM_STORE_MANAGER']);
       return generateLocationAreas(args.input);
     },
     adminAiChat: async (_: unknown, args: { prompt: string }, ctx: GraphQLContext) => {

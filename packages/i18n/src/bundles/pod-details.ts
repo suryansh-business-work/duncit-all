@@ -71,6 +71,10 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       // Why the collected total sits below face value: tiers already taken off.
       ticketDiscounts: 'Multi-ticket discounts given',
       payoutNote: 'Payouts are released after Finance approval.',
+      // A FREE pod moves no platform money — the card shows this, not figures.
+      freePod: 'Free pod',
+      freeNote:
+        'Nobody pays to join a free pod, so there is no payout. The host settles any venue charges directly with the venue.',
     },
     podHostsCard: {
       hosts: 'Hosts',

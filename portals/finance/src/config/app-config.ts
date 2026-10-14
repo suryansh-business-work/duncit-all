@@ -23,7 +23,9 @@ export const appConfig = {
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
     'https://images.pexels.com/photos/7869097/pexels-photo-7869097.jpeg',
-  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['FINANCE_MANAGER']),
+  // FINANCE_USER (Finance Analyst) signs in read-only: the server gives it
+  // every Finance read and refuses every write.
+  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['FINANCE_MANAGER', 'FINANCE_USER']),
   tokenKey: 'finance_token',
   colorModeKey: 'finance_color_mode',
   accent: { light: '#5eead4', main: '#0d9488', hover: '#0f766e', active: '#115e59' },
@@ -31,6 +33,8 @@ export const appConfig = {
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     { label: 'Startup Dashboard', labelKey: 'shell.nav.startupDashboard', to: '/startup-dashboard', icon: 'insights' },
     { label: 'Default Deductions', labelKey: 'shell.nav.defaultDeductions', to: '/default-deductions', icon: 'percent' },
+    // GST on venue food orders — what every venue without its own follows.
+    { label: 'Food Menu Defaults', labelKey: 'shell.nav.foodMenuDefaults', to: '/food-menu-defaults', icon: 'menuBook' },
     { label: 'Pod Finance', labelKey: 'shell.nav.podFinance', to: '/pod-finance', icon: 'analytics' },
     {
       label: 'Cancel & Refunds', labelKey: 'shell.nav.cancelAndRefunds',

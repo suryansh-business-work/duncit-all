@@ -342,7 +342,7 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         name: 'Join a free pod',
         description: 'A free pod is joined directly from the booking bar; no payment is taken.',
         steps: [
-          ['Open an upcoming free pod with spots left', 'Bar shows "Entry · Free", a seat stepper at 1 and a "Join" button'],
+          ['Open an upcoming free pod with spots left', 'Bar shows "Entry · Free" and a "Join" button, with no seat stepper'],
           ['Tap "Join"', 'Button disables while joining, confetti plays and a "Joined!" notice shows'],
           ['Look at the bar after refetch', 'Bar shows "You\'re going · Pod Booked" with a "Backout" button'],
           ['Check the database', 'A PodMember row with status JOINED, source FREE and seats 1 exists and a ticket is issued'],
@@ -350,11 +350,11 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         ],
       },
       {
-        name: 'Join a free pod with several seats',
-        description: 'The seat stepper books multiple seats in one free booking.',
+        name: 'A free pod books one seat',
+        description: 'A free booking is always one seat; there is no seat stepper on a free pod.',
         steps: [
-          ['On a free pod tap "One seat more" twice', 'Stepper shows 3; "One seat more" disables at the pod\'s remaining seats'],
-          ['Tap "Join"', 'Joined notice shows; the attendee list shows your avatar with "+2 other members"'],
+          ['Open a free pod with several spots left', 'No seat stepper shows beside "Join"'],
+          ['Call joinFreePod via API with seats: 3', 'The membership comes back with seats 1 and the pod\'s taken seats rise by one'],
           ['Try to join again via API while already JOINED', 'Server returns the existing membership, no duplicate row'],
         ],
       },
@@ -1032,7 +1032,8 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
           ['Pick a slot, let another host book it, then publish', 'Error alert "Selected slot is no longer available"; stepper stays on step 4'],
           ['Pick a slot on a date the venue marked as leave', 'Error "The venue is on leave on this date. Pick another slot."'],
           ['Publish fewer spots than the sub-category minimum via API', 'Error "This activity needs at least <n> people — increase the number of spots"'],
-          ['Publish a physical FREE pod via API', 'Error "Physical pods must be paid — free pods are only available for virtual pods"'],
+          ['Publish a physical FREE pod via API (pod_amount 0)', 'Pod is created FREE; a priced slot at another venue goes PENDING and the venue sees the free-pod notice, an own-venue slot books instantly'],
+          ['Publish a physical FREE pod with pod_amount above 0 via API', 'Error "Free pods must have amount 0"'],
         ],
       },
       {

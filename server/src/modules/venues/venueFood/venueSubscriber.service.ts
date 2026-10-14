@@ -2,7 +2,10 @@ import type { Types } from 'mongoose';
 import { getUrlConfigs } from '@config/url-configs';
 import { UserModel } from '@modules/access/user/user.model';
 import { shortLinkService } from '@modules/crm/marketing/shortLink.service';
+import { VENUE_IMAGE_FIELDS, venueImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
+import type { SendAssets } from '@modules/platform/whatsapp/whatsapp.media';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { VenueModel } from '@modules/venues/venue/venue.model';
 import { logs } from '@observability/log';
 import type { IVenueFoodOrder } from './venueFoodOrder.model';
 import { foodGuestNumber } from './venueFoodOrder.whatsapp';
@@ -39,6 +42,21 @@ const venueLink = async (venueId: Types.ObjectId) => {
 };
 
 /**
+ * The header photo for a message about this venue — `preferred` first (the
+ * pod's own picture), else the venue's cover or gallery. A failed read costs
+ * the photo, never the message: the platform default stands in.
+ */
+async function venuePhoto(venueId: Types.ObjectId, preferred?: string | null): Promise<SendAssets> {
+  try {
+    const venue = await VenueModel.findById(venueId).select(VENUE_IMAGE_FIELDS).lean();
+    return venueImageAssets(venue, preferred);
+  } catch (error) {
+    logs.server.warn(LOG, 'venuePhoto', { error, venueId: venueId.toHexString() });
+    return venueImageAssets(null, preferred);
+  }
+}
+
+/**
  * Record the subscription a paid order asked for. Safe to repeat: the unique
  * (venue, number) index keeps one row, and only the write that created it sends
  * the confirmation.
@@ -71,12 +89,15 @@ export async function subscribeFromFoodOrder(order: IVenueFoodOrder): Promise<vo
     return;
   }
   logs.server.info(LOG, 'subscribed', { venueId: order.venue_id.toHexString(), orderNo: order.order_no });
+  const [link, assets] = await Promise.all([venueLink(order.venue_id), venuePhoto(order.venue_id)]);
   const outcome = await whatsappService.send({
     event: 'VENUE_EVENTS_SUBSCRIBED',
     entityId: order.venue_id.toHexString(),
     destination: foodGuestNumber(order.customer_phone),
     name: order.customer_name,
-    params: [firstName(order.customer_name), order.venue_name, await venueLink(order.venue_id)],
+    params: [firstName(order.customer_name), order.venue_name, link],
+    buttonUrl: link,
+    assets,
   });
   if (outcome.status === 'FAILED') logs.server.warn(LOG, 'confirm', { orderNo: order.order_no, reason: outcome.reason });
 }
@@ -88,6 +109,8 @@ export interface VenueEventFacts {
   podTitle: string;
   date: string;
   time: string;
+  /** The pod's own picture — the announcement's header photo when it has one. */
+  podImageUrl?: string | null;
 }
 
 interface SubscriberRow {
@@ -125,7 +148,7 @@ async function tellInApp(rows: readonly SubscriberRow[], facts: VenueEventFacts,
 }
 
 async function run(rows: readonly SubscriberRow[], facts: VenueEventFacts) {
-  const link = await podLink(facts.podId);
+  const [link, assets] = await Promise.all([podLink(facts.podId), venuePhoto(facts.venueId, facts.podImageUrl)]);
   const tally = { SENT: 0, SKIPPED: 0, FAILED: 0, SENDING: 0 };
   for (let start = 0; start < rows.length; start += BATCH_SIZE) {
     const batch = rows.slice(start, start + BATCH_SIZE);
@@ -138,6 +161,8 @@ async function run(rows: readonly SubscriberRow[], facts: VenueEventFacts) {
         destination: foodGuestNumber(row.phone),
         name: row.name || FALLBACK_NAME,
         params: [firstName(row.name), facts.venueName, facts.podTitle, facts.date, facts.time, link],
+        buttonUrl: link,
+        assets,
       }))
     );
     const sent = batch.filter((_row, index) => outcomes[index]?.status === 'SENT').map((row) => row._id);

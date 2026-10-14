@@ -17,6 +17,7 @@ import {
   blankCreatePodForm,
   type CreatePodFormValues,
 } from '@/components/create-pod/create-pod.types';
+import type { FreePodVenueNotice } from '@duncit/utils';
 import { usePotentialEarnings } from '@/hooks/usePotentialEarnings';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -192,6 +193,21 @@ describe('usePodPricing', () => {
     expect(result.current.blocked).toBe(true);
   });
 
+  it('sends nothing to price for a free pod, even with a stale amount in the form', () => {
+    mockedEarnings.mockReturnValue({
+      projection: brokeProjection,
+      waterfall: brokeWaterfall,
+      isLoading: false,
+    });
+    const { result } = renderHook(() => usePodPricing({ ...input, podAmount: 100, isFree: true }));
+    expect(mockedEarnings).toHaveBeenLastCalledWith(0, 30, 'v1', 300);
+    // No guard can fire on a pod that has no calculation.
+    expect(result.current.ready).toBe(false);
+    expect(result.current.zeroEarnings).toBe(false);
+    expect(result.current.venueShortfall).toBe(false);
+    expect(result.current.blocked).toBe(false);
+  });
+
   it('exempts a free pod, whose price is legitimately ₹0', () => {
     const { result } = renderHook(() =>
       usePodPricing({ ...input, podAmount: 0, isFree: true, slotPrice: null }),
@@ -201,7 +217,15 @@ describe('usePodPricing', () => {
   });
 });
 
-function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
+function PricingHarness({
+  initial,
+  venueNotice = 'NONE',
+  forClubAdmin = false,
+}: Readonly<{
+  initial: Partial<CreatePodFormValues>;
+  venueNotice?: FreePodVenueNotice;
+  forClubAdmin?: boolean;
+}>) {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
@@ -221,6 +245,8 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
       finance={finance}
       pricing={pricing}
       spots={{ min: 0, max: 10000, slidable: false }}
+      venueNotice={venueNotice}
+      forClubAdmin={forClubAdmin}
     />
   );
 }
@@ -278,6 +304,67 @@ describe('Step 4 venue-price guard', () => {
     });
     renderWithProviders(<PricingHarness initial={{ ...paidPod, pod_amount_text: '900' }} />);
     expect(screen.queryByTestId('price-panel-venue-group-invalid')).toBeNull();
+  });
+});
+
+describe('Step 4 for a free physical pod', () => {
+  const freePod = { ...paidPod, pod_type: 'FREE' as const, pod_amount_text: '0' };
+
+  it('shows no amount, no suggested prices and no earnings — only the free note', () => {
+    mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
+    renderWithProviders(<PricingHarness initial={freePod} />);
+    expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
+    expect(screen.queryByTestId('suggested-price-link')).toBeNull();
+    expect(screen.queryByTestId('create-pod-price-panel')).toBeNull();
+    expect(screen.queryByTestId('create-pod-zero-earnings')).toBeNull();
+    expect(screen.getByTestId('create-pod-free-note-header-title')).toHaveTextContent(
+      'This pod is free',
+    );
+    expect(screen.getByTestId('create-pod-free-note-header-title')).toHaveProp('role', 'heading');
+    expect(screen.queryByTestId('create-pod-free-note-venue')).toBeNull();
+    // Payment terms describe refunds and charges a free pod does not have.
+    expect(screen.queryByTestId('pricing-step-payment-terms-card')).toBeNull();
+  });
+
+  it('words the venue note for the host when a club admin creates the pod', () => {
+    mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
+    renderWithProviders(
+      <PricingHarness initial={freePod} venueNotice="SETTLE_BEFORE_APPROVAL" forClubAdmin />,
+    );
+    const note = screen.getByTestId('create-pod-free-note-venue');
+    expect(note).toHaveTextContent(/The host will need to settle the venue's charges/);
+    expect(note).toHaveTextContent(/until the host has spoken to them/);
+    expect(note).not.toHaveTextContent(/You will need/);
+  });
+
+  it('adds the venue line when the slot has a price to settle', () => {
+    mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
+    renderWithProviders(<PricingHarness initial={freePod} venueNotice="SETTLE_BEFORE_APPROVAL" />);
+    const note = screen.getByTestId('create-pod-free-note-venue');
+    expect(note).toHaveTextContent(/Duncit will not pay the venue/);
+    expect(note).toHaveTextContent(/asked not to confirm the slot/);
+  });
+
+  it('drops the approval line when the slot is already confirmed', () => {
+    mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
+    renderWithProviders(<PricingHarness initial={freePod} venueNotice="SETTLE" />);
+    const note = screen.getByTestId('create-pod-free-note-venue');
+    expect(note).toHaveTextContent(/Duncit will not pay the venue/);
+    expect(note).not.toHaveTextContent(/asked not to confirm the slot/);
+  });
+
+  it('keeps the paid pod as it was: amount, suggested prices and the earnings panel', () => {
+    mockedEarnings.mockReturnValue({
+      projection: brokeProjection,
+      waterfall: healthy,
+      isLoading: false,
+    });
+    renderWithProviders(<PricingHarness initial={paidPod} venueNotice="SETTLE" />);
+    expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('value', '100');
+    expect(screen.getByTestId('suggested-price-link')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-free-note')).toBeNull();
+    expect(screen.getByTestId('pricing-step-payment-terms-card')).toBeOnTheScreen();
   });
 });
 
@@ -398,6 +485,7 @@ describe('Step 4 products — category empty state', () => {
           } as never
         }
         spots={{ min: 0, max: 10000, slidable: false }}
+        venueNotice="NONE"
       />,
     );
   };

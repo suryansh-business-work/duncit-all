@@ -27,6 +27,7 @@ import {
   VENUE_DOC_TYPES,
   VENUE_FACILITIES,
   VENUE_GSTIN_DOC_TYPE,
+  VENUE_GSTIN_PATTERN,
   VENUE_PAN_DOC_TYPE,
   VENUE_SECURITY,
   VENUE_TYPES,
@@ -708,7 +709,7 @@ function buildClubMatchQuery(criteria: {
 
 /** Applies the whitelisted owner-editable fields of an APPROVED venue in place.
  * Documents are append-only: existing entries are never replaced or removed. */
-function applyApprovedVenueInput(v: any, input: any) {
+function applyApprovedVenueInput(v: any, input: any, isAdmin: boolean) {
   if (input.description !== undefined) v.description = String(input.description ?? '').slice(0, 2000);
   if (input.cover_image_url !== undefined) v.cover_image_url = String(input.cover_image_url ?? '');
   if (input.gallery !== undefined) {
@@ -730,6 +731,24 @@ function applyApprovedVenueInput(v: any, input: any) {
   if (input.owner_phone !== undefined) v.owner_phone = String(input.owner_phone ?? '').trim();
   if (input.owner_dob !== undefined) v.owner_dob = input.owner_dob ? new Date(input.owner_dob) : null;
   if (input.owner_address !== undefined) v.owner_address = String(input.owner_address ?? '');
+  applyGstin(v, input.gstin, isAdmin);
+}
+
+/**
+ * The owner may give an approved venue its GST number ONCE — it prints on every
+ * food invoice, so after that only a Venues console editor changes it (here, or
+ * through `adminUpdate`). Re-sending the saved number is a no-op and an empty
+ * one is ignored, so a form that always sends the field never trips the lock.
+ */
+function applyGstin(v: { gstin?: string | null }, raw: unknown, isAdmin: boolean) {
+  const gstin = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+  if (!gstin) return;
+  if (!VENUE_GSTIN_PATTERN.test(gstin)) fail('BAD_USER_INPUT', 'Enter a valid 15-character GSTIN');
+  const saved = String(v.gstin ?? '').trim().toUpperCase();
+  if (!isAdmin && saved && saved !== gstin) {
+    fail('FORBIDDEN', 'The GST number cannot be changed once saved — ask Duncit support to change it');
+  }
+  v.gstin = gstin;
 }
 
 /** Applies an admin status transition and its timestamp side-effects. */
@@ -941,16 +960,19 @@ export const venueService = {
     return toPub(v);
   },
   /** Owner edit of an APPROVED venue — only the whitelisted fields change.
-   * Documents are append-only: existing entries are never replaced or removed. */
-  async updateApproved(userId: string, venueId: string, input: any) {
+   * Documents are append-only: existing entries are never replaced or removed.
+   * A Venues console editor (`isAdmin`) may make the same edit on any venue,
+   * and change a saved GST number; the food rules still check the owner's
+   * Razorpay account, which only the owner ever links. */
+  async updateApproved(userId: string, venueId: string, input: any, isAdmin = false) {
     if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
     const v = await VenueModel.findById(venueId);
     if (!v) return fail('NOT_FOUND', 'Venue not found');
-    if (String(v.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
+    if (!isAdmin && String(v.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
     if (v.status !== 'APPROVED') {
       fail('BAD_REQUEST', 'Only approved venues can be edited here');
     }
-    applyApprovedVenueInput(v, input);
+    applyApprovedVenueInput(v, input, isAdmin);
     Object.assign(v, await buildVenueFoodPatch(input, v));
     await v.save();
     return toPub(v);

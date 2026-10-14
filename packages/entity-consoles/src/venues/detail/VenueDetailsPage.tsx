@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Link as RouterLink, useParams } from 'react-router';
 import { Stack } from '@mui/material';
@@ -14,10 +15,25 @@ import VenueOperationsTab from './VenueOperationsTab';
 import VenueDocumentsCard from './VenueDocumentsCard';
 import VenuePodsTab from './VenuePodsTab';
 
-type VenueTab = 'overview' | 'pods' | 'operations' | 'documents' | 'changeLogs';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const venueTabs = (t: Translate): DuncitTabItem<VenueTab>[] => [
+/**
+ * A tab the mounting console adds after the record's own — the Venues console's
+ * food desk, say. It is drawn only for the venue it is built for, so a console
+ * can leave it out for a venue it does not apply to.
+ */
+export interface VenueDetailsExtraTab {
+  value: string;
+  label: string;
+  render: () => ReactNode;
+}
+
+export interface VenueDetailsPageProps {
+  /** The console's own tabs for this venue, after the record's. */
+  extraTabs?: (venue: AdminVenueDetail) => VenueDetailsExtraTab[];
+}
+
+const venueTabs = (t: Translate): DuncitTabItem<string>[] => [
   { value: 'overview', label: t('admin.venueDetails.tabOverview') },
   { value: 'pods', label: t('admin.venueDetails.tabPods') },
   { value: 'operations', label: t('admin.venueDetails.tabOperations') },
@@ -34,16 +50,22 @@ const venueTabs = (t: Translate): DuncitTabItem<VenueTab>[] => [
  * read, and the Change Logs tab is what makes that safe: every field that moves
  * is recorded with who moved it and from where.
  */
-export default function VenueDetailsPage() {
+export default function VenueDetailsPage({ extraTabs }: Readonly<VenueDetailsPageProps>) {
   const { t } = useTranslation();
   const { venueId = '' } = useParams<{ venueId: string }>();
-  const tabs = useTabParam<VenueTab>({ items: venueTabs(t), fallback: 'overview' });
   const { data, loading, error } = useQuery<{ venue: AdminVenueDetail | null }>(VENUE_DETAIL, {
     variables: { venue_doc_id: venueId },
     fetchPolicy: 'cache-and-network',
     skip: !venueId,
   });
   const venue = data?.venue;
+  const extra = venue && extraTabs ? extraTabs(venue) : [];
+  // The URL may name an extra tab before the venue is in; it resolves once the tab exists.
+  const tabs = useTabParam<string>({
+    items: [...venueTabs(t), ...extra.map(({ value, label }) => ({ value, label }))],
+    fallback: 'overview',
+  });
+  const openExtra = extra.find((tab) => tab.value === tabs.value);
 
   return (
     <QueryGuard
@@ -93,6 +115,7 @@ export default function VenueDetailsPage() {
                 tableId="venues-console-change-logs"
               />
             )}
+            {openExtra?.render()}
           </Stack>
         )
       }

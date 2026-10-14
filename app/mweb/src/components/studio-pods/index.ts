@@ -9,7 +9,7 @@ export { default as StudioPodsSection, StudioPodsBody } from './StudioPodsSectio
 export { default as StudioPodsFigures } from './StudioPodsFigures';
 export { default as StudioPodRow } from './StudioPodRow';
 export { default as FigureTile } from './FigureTile';
-export { CLUB_STUDIO_PODS, VENUE_STUDIO_PODS } from './queries';
+export { CLUB_STUDIO_PODS, VENUE_STUDIO_PODS, VENUE_STUDIO_SUMMARY } from './queries';
 export {
   BUCKET_LABEL_KEY,
   BUCKET_TONE,

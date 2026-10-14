@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { slotSpanLabel } from '@duncit/slots';
 
+import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { DuncitButton } from '@/components/DuncitButton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { slotPriceLabel } from '@/components/venue-availability/slot-labels';
@@ -72,13 +73,27 @@ export function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonl
 
       <YStack height={1} backgroundColor="$borderColor" />
 
+      {/* A free pod's venue charges are settled with the host off the platform,
+       * so the owner reads this instead of a price (the server sends 0). */}
+      {request.pod_is_free ? (
+        <YStack role="status" testID="slot-request-free-pod-notice">
+          <NoticeCard
+            tone="warning"
+            title={t('mweb.venueSlotRequests.freePodTitle')}
+            body={t('mweb.venueSlotRequests.freePodNotice')}
+          />
+        </YStack>
+      ) : null}
+
       <YStack gap={10}>
         <Detail label={t('mweb.common.venue')} value={request.venue_name} />
         <Detail label={t('mweb.venueSlotRequests.slot')} value={slotWindow} />
-        <Detail
-          label={t('mweb.venueSlotRequests.slotPrice')}
-          value={slotPriceLabel(request.price, t)}
-        />
+        {request.pod_is_free ? null : (
+          <Detail
+            label={t('mweb.venueSlotRequests.slotPrice')}
+            value={slotPriceLabel(request.price, t)}
+          />
+        )}
         <Detail
           label={t('mweb.venueSlotRequests.requested')}
           value={fmt.formatDateTime(request.requested_at) || '—'}

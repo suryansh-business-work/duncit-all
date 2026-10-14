@@ -209,6 +209,20 @@ export const SignupContactAvailabilityDocument = gql(`
   }
 `);
 
+/**
+ * Asked the moment Google or Apple returns on the signup screen: is this
+ * person already on Duncit? Read-only on the server — no session, no sign-in
+ * notice. mWeb twin: SOCIAL_SIGNUP_STATUS.
+ */
+export const SocialSignupStatusDocument = gql(`
+  query MobileSocialSignupStatus($input: SocialSignupStatusInput!) {
+    socialSignupStatus(input: $input) {
+      exists
+      email
+    }
+  }
+`);
+
 export const VerifySignupWhatsAppOtpDocument = gql(`
   mutation MobileVerifySignupWhatsAppOtp($ext: String!, $num: String!, $otp: String!) {
     verifySignupWhatsAppOtp(phone_extension: $ext, phone_number: $num, otp: $otp) {

@@ -4,18 +4,11 @@ import { useQuery } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
-import InsightsIcon from '@mui/icons-material/Insights';
 import { DuncitButton } from '@duncit/buttons';
-import { PublishPageCard } from '@duncit/public-page';
 import StudioPageHeader from '../components/StudioPageHeader';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
 import HostPodSections from './host-manage-page/HostPodSections';
-import HostShareCard from './host-manage-page/HostShareCard';
-import PodRequestsSection from './pod-requests/PodRequestsSection';
-import StudioChangeRequests from '../components/studio-pods/StudioChangeRequests';
-import HostApplyBanner from './host-apply-page/HostApplyBanner';
-import HostCategoriesCard from './host-apply-page/HostCategoriesCard';
 
 // Host-scoped list: unlike the public \`pods\` query this ALSO returns pods that
 // are offline while awaiting/refused venue approval, which is what lets the
@@ -70,13 +63,13 @@ const ME_QUERY = gql`
   }
 `;
 
-/** Your Pods — the host's hosted-pods list + drafts (the dashboard overview now
- * lives on its own page). B2-#5. */
+/** Your Pods — the host's hosted-pods list + drafts, nothing else. The figures
+ * live on the Host dashboard; publishing, pod and change requests, Host Share
+ * and categories each have their own Host Options page. B2-#5. */
 export default function HostManagePage() {
   // USER_INFO already holds these fields, so this answers from the cache.
   const meQ = useQuery<any>(ME_QUERY, { fetchPolicy: 'cache-first' });
   const userId = meQ.data?.me?.user_id;
-  const isHost = (meQ.data?.me?.roles ?? []).includes('HOST');
   const { data, loading, error, refetch } = useQuery<any>(HOST_PODS, {
     skip: !userId,
     fetchPolicy: 'cache-and-network',
@@ -90,37 +83,18 @@ export default function HostManagePage() {
         icon={<DashboardIcon fontSize="small" />}
         title="Your Pods"
         action={
-          <Stack direction="row" spacing={1}>
-            <DuncitButton
-              component={RouterLink}
-              to="/host/dashboard"
-              variant="outlined"
-              size="small"
-              startIcon={<InsightsIcon />}
-              data-testid="host-manage-insights"
-            >
-              Insights
-            </DuncitButton>
-            <DuncitButton
-              component={RouterLink}
-              to="/create-pod"
-              variant="contained"
-              size="small"
-              startIcon={<AddIcon />}
-              data-testid="host-manage-create"
-            >
-              Create
-            </DuncitButton>
-          </Stack>
+          <DuncitButton
+            component={RouterLink}
+            to="/create-pod"
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            data-testid="host-manage-create"
+          >
+            Create
+          </DuncitButton>
         }
       />
-
-      {isHost && <HostCategoriesCard />}
-      {isHost && <HostApplyBanner />}
-
-      {isHost && <PublishPageCard kind="HOST" title={meQ.data?.me?.full_name ?? ''} />}
-
-      {isHost && <PodRequestsSection side="HOST" />}
 
       <HostDraftsCard />
 
@@ -134,10 +108,6 @@ export default function HostManagePage() {
           }}
         />
       </HostPodActionsBridge>
-
-      <StudioChangeRequests role="HOST" />
-
-      <HostShareCard />
     </Stack>
   );
 }

@@ -27,7 +27,7 @@ import { useFoodGuest } from './useFoodGuest';
 export function useFoodOrdering(venue: PublicVenue, onRefresh: () => Promise<unknown>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const cart = useFoodCart(venue.id, venue.food_menu, venue.food_ordering.discount_pct);
+  const cart = useFoodCart(venue.id, venue.food_menu, venue.food_ordering.discount_pct, venue.food_ordering);
   const clientKey = useFoodClientKey();
   const knownGuest = useFoodGuest();
   // What was typed for the attempt in flight, so a declined payment reopens the sheet as it was left.

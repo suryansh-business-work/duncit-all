@@ -99,6 +99,7 @@ export const POD_DETAILS = gql`
       is_member
       status
       can_backout
+      can_cancel_spot
       can_join
       spots_taken
       spots_total
@@ -329,6 +330,13 @@ export const JOIN_POD_MEETING = gql`
 export const BACKOUT = gql`
   mutation BackoutPod($id: ID!, $seats: Int) {
     backoutPod(pod_doc_id: $id, seats: $seats) { id status seats referral_token refund_status }
+  }
+`;
+
+/** Cancel the spot — a FREE pod's only way out (no backout, no refund). */
+export const CANCEL_FREE_SPOT = gql`
+  mutation CancelFreeSpot($id: ID!) {
+    cancelFreeSpot(pod_doc_id: $id) { id status seats }
   }
 `;
 

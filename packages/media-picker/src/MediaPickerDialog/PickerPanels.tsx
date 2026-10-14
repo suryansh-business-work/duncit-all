@@ -17,6 +17,7 @@ interface PickerPanelsProps {
   allowVideo: boolean;
   open: boolean;
   folder: string;
+  entityId?: string;
   surface: UploadSurface;
   seedQuery?: string;
   orientation?: Orientation;
@@ -36,6 +37,7 @@ export default function PickerPanels({
   allowVideo,
   open,
   folder,
+  entityId,
   surface,
   seedQuery,
   orientation,
@@ -69,6 +71,7 @@ export default function PickerPanels({
           active={tab === 'photos' && allowImage}
           open={open}
           folder={folder}
+          entityId={entityId}
           surface={surface}
           seedQuery={seedQuery}
           defaultOrientation={orientation}
@@ -85,6 +88,7 @@ export default function PickerPanels({
           active={tab === 'videos' && allowVideo}
           open={open}
           folder={folder}
+          entityId={entityId}
           surface={surface}
           seedQuery={seedQuery}
           onPicked={onPicked}

@@ -21,6 +21,8 @@ services:
       OTEL_SERVICE_NAME: duncit-server-staging
       # Reach the staging WhatsApp gateway over the staging compose network.
       OPENWA_INTERNAL_URL: http://open-wa:2024
+      # The staging CRM email verifier, over the staging compose network.
+      REACHER_INTERNAL_URL: http://reacher:8080
       # Explicit for the same reason as prod: the image's final WORKDIR is
       # /app/server, so the cwd-relative default would miss the bind mount.
       APP_BUILDS_DIR: /app/app-builds
@@ -401,6 +403,20 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+
+  # Staging CRM email verifier — same shape as production's `reacher` (see
+  # docker-compose.yml): no host port, outbound port 25 required.
+  reacher:
+    image: reacherhq/backend:v0.11.7
+    container_name: duncit-staging-reacher
+    restart: unless-stopped
+    environment:
+      RCH__HTTP_HOST: 0.0.0.0
+      RCH__HTTP_PORT: "8080"
+      RCH__BACKEND_NAME: duncit-crm-staging
+      RCH__HELLO_NAME: ${REACHER_HELLO_NAME:-srv912221.hstgr.cloud}
+      RCH__FROM_EMAIL: ${REACHER_FROM_EMAIL:-verify@duncit.com}
+      RCH__SMTP_TIMEOUT: "45"
 
   # staging.redis.duncit.com — staging Redis Commander UI (same nginx basic
   # auth file as production's: /etc/nginx/.htpasswd-redis).

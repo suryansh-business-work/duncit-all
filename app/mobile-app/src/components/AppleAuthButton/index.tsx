@@ -1,1 +1,1 @@
-export { AppleAuthButton, type AppleAuthButtonProps } from './AppleAuthButton';
+export { AppleAuthButton, useAppleConfigured, type AppleAuthButtonProps } from './AppleAuthButton';

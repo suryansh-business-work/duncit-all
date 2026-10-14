@@ -28,7 +28,12 @@ export type {
 
 // ---- the venues console (from the ADMIN portal) --------------------------
 export { default as VenuesPage } from './venues/list/VenuesPage';
-export { default as VenueDetailsPage } from './venues/detail/VenueDetailsPage';
+export {
+  default as VenueDetailsPage,
+  type VenueDetailsExtraTab,
+  type VenueDetailsPageProps,
+} from './venues/detail/VenueDetailsPage';
+export type { AdminVenueDetail } from './venues/detail/queries';
 export { default as VenueEditorPage } from './venues/editor';
 // The record <-> form mapping, so a caller (and the docs demo) can see exactly
 // what one Save sends to each of the four venue mutations.

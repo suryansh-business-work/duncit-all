@@ -3,6 +3,7 @@ import type { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import * as gateway from '@modules/finance/payment/razorpay.gateway';
+import { updateFoodTaxDefaults } from '@modules/finance/finance/foodTaxDefaults';
 import { PartnerIntegrationModel } from '@modules/venues/ecommBrand/partnerIntegration.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { logs } from '@observability/log';
@@ -36,7 +37,13 @@ interface Dish {
   price: number;
 }
 
-async function makeVenue(options: { dishes?: Dish[]; discountPct?: number; owner?: Types.ObjectId } = {}) {
+/** The venue's own GST; left out, the venue follows Finance's default. */
+interface VenueTax {
+  tax_mode: 'INCLUSIVE' | 'EXCLUSIVE';
+  gst_pct: number;
+}
+
+async function makeVenue(options: { dishes?: Dish[]; discountPct?: number; owner?: Types.ObjectId; tax?: VenueTax } = {}) {
   const owner = options.owner ?? new Types.ObjectId();
   const account = await PartnerIntegrationModel.create({
     owner_user_id: owner,
@@ -50,7 +57,12 @@ async function makeVenue(options: { dishes?: Dish[]; discountPct?: number; owner
     is_active: true,
     offers_food: true,
     food_menu: (options.dishes ?? [{ name: 'Paneer Tikka', price: 240 }]).map((dish) => ({ ...dish, diet: 'VEG' })),
-    food_ordering: { enabled: true, razorpay_integration_id: account._id, discount_pct: options.discountPct ?? 0 },
+    food_ordering: {
+      enabled: true,
+      razorpay_integration_id: account._id,
+      discount_pct: options.discountPct ?? 0,
+      ...(options.tax ? { tax_override: true, ...options.tax } : {}),
+    },
   });
   return {
     venueId: venue._id.toHexString(),
@@ -118,7 +130,10 @@ beforeAll(async () => {
   await Promise.all([VenueFoodCouponModel.init(), VenueFoodOrderModel.init()]);
 });
 
-beforeEach(() => {
+// The coupon and pricing cases were written against prices that include GST at 5%; pin that, rather than
+// inherit whatever Finance's shipped default is, so they keep testing coupons. The default has its own suite.
+beforeEach(async () => {
+  await updateFoodTaxDefaults({ tax_mode: 'INCLUSIVE', gst_pct: 5 }, null);
   let opened = 0;
   rzp.createRazorpayOrder.mockImplementation(async () => {
     opened += 1;
@@ -143,6 +158,7 @@ describe('pricing an order with a venue coupon', () => {
       const venue = await makeVenue({
         dishes: fixture.lines.map((line, index) => ({ name: `Dish ${index + 1}`, price: line.unit_price })),
         discountPct: fixture.discount_pct,
+        tax: { tax_mode: fixture.tax_mode, gst_pct: fixture.gst_pct },
       });
       if (fixture.coupon_pct) await makeCoupon(venue, { code: 'MATRIX', discount_pct: fixture.coupon_pct });
       const placement = await venueFoodOrderService.place(guest, {
@@ -161,6 +177,10 @@ describe('pricing an order with a venue coupon', () => {
         discount_paise: fixture.discount_paise,
         coupon_pct: fixture.coupon_pct,
         coupon_discount_paise: fixture.coupon_discount_paise,
+        tax_mode: fixture.tax_mode,
+        gst_pct: fixture.gst_pct,
+        taxable_paise: fixture.taxable_paise,
+        tax_paise: fixture.tax_paise,
         total_paise: fixture.total_paise,
         coupon_code: fixture.coupon_pct ? 'MATRIX' : '',
       });
@@ -171,6 +191,8 @@ describe('pricing an order with a venue coupon', () => {
         total: fixture.total_paise / 100,
         discount_amount: fixture.discount_paise / 100,
         coupon_discount_amount: fixture.coupon_discount_paise / 100,
+        tax_amount: fixture.tax_paise / 100,
+        taxable_amount: fixture.taxable_paise / 100,
         coupon_code: fixture.coupon_pct ? 'MATRIX' : null,
       });
     }
@@ -193,6 +215,53 @@ describe('pricing an order with a venue coupon', () => {
       const stored = await VenueFoodOrderModel.findById(order.id).lean();
       expect(stored).not.toHaveProperty('coupon_id');
     }
+  });
+});
+
+describe('GST on a placed order', () => {
+  it("prices a venue without its own GST at Finance's default, and follows the default when it changes", async () => {
+    const venue = await makeVenue();
+    const before = await place(venue);
+    expect(before.order).toMatchObject({ tax_mode: 'INCLUSIVE', gst_pct: 5, tax_amount: 22.86, total: 480 });
+
+    await updateFoodTaxDefaults({ tax_mode: 'EXCLUSIVE', gst_pct: 12 }, null);
+    const after = await place(venue);
+    expect(after.order).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 12, taxable_amount: 480, tax_amount: 57.6, total: 537.6 });
+    // The order placed before the change keeps the GST it was placed with.
+    expect(await VenueFoodOrderModel.findById(before.order.id)).toMatchObject({ tax_mode: 'INCLUSIVE', gst_pct: 5, total_paise: 48000 });
+  });
+
+  it("keeps a venue's own GST whatever Finance's default says", async () => {
+    await updateFoodTaxDefaults({ tax_mode: 'INCLUSIVE', gst_pct: 28 }, null);
+    const venue = await makeVenue({ tax: { tax_mode: 'EXCLUSIVE', gst_pct: 5 } });
+    const { order, razorpay } = await place(venue);
+    expect(order).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 5, tax_amount: 24, total: 504 });
+    // Razorpay is opened for the total WITH the GST added.
+    expect(razorpay?.amount).toBe(50400);
+    expect(rzp.createRazorpayOrder).toHaveBeenCalledWith(expect.objectContaining({ amountPaise: 50400 }));
+  });
+
+  it('quotes a coupon with the same GST that placing then charges', async () => {
+    const venue = await makeVenue({ discountPct: 10, tax: { tax_mode: 'EXCLUSIVE', gst_pct: 18 } });
+    await makeCoupon(venue);
+    const quoted = await preview(venue, 'WELCOME20');
+    const { order, razorpay } = await place(venue, { coupon: 'WELCOME20' });
+    // 480 less 48 less 86.40 leaves 345.60; 18% of that is 62.208, so 62.21.
+    expect(quoted).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 18, taxable_amount: 345.6, tax_amount: 62.21, total: 407.81 });
+    expect(order).toMatchObject({
+      taxable_amount: quoted.taxable_amount,
+      tax_amount: quoted.tax_amount,
+      total: quoted.total,
+    });
+    expect(razorpay?.amount).toBe(40781);
+  });
+
+  it('refunds the total the guest paid, GST included', async () => {
+    const venue = await makeVenue({ tax: { tax_mode: 'EXCLUSIVE', gst_pct: 5 } });
+    const { order } = await place(venue);
+    await pay(order.id);
+    await venueFoodOrderService.cancel(venue.ownerId, false, order.id, 'Kitchen closed');
+    expect(rzp.createRazorpayRefund).toHaveBeenCalledWith(expect.objectContaining({ amountPaise: 50400 }));
   });
 });
 
@@ -310,6 +379,11 @@ describe('previewing a coupon', () => {
       discount_pct: 10,
       discount_amount: 48,
       coupon_discount_amount: 86.4,
+      // The venue sets no GST of its own, so Finance's shipped default prices it: 5%, inside the price.
+      tax_mode: 'INCLUSIVE',
+      gst_pct: 5,
+      taxable_amount: 329.14,
+      tax_amount: 16.46,
       total: 345.6,
       currency_symbol: '₹',
     });

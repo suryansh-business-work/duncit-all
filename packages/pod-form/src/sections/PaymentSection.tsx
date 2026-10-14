@@ -6,6 +6,7 @@ import EarningsProjection from '../components/EarningsProjection';
 import PlaceChargesField from '../components/PlaceChargesField';
 import { getProductRequestTotal } from '../build-input';
 import { usePodFormData } from '../context';
+import { isFreePodType, normalizePodType } from '../pod-type';
 import { OCCURRENCES, POD_TYPES, type PodFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -21,7 +22,7 @@ export default function PaymentSection() {
   const productRequests = useWatch({ control, name: 'product_requests' });
   const isActive = useWatch({ control, name: 'is_active' });
   const isEdit = !!getValues('pod_id');
-  const isFree = podType.includes('FREE');
+  const isFree = isFreePodType(podType);
   // Priced off the ROWS, not `products_enabled` — the switch that used to drive
   // that flag is gone and buildPodInput now derives it, so watching it here
   // would leave the breakdown at ₹0 no matter what the admin attached.
@@ -44,10 +45,9 @@ export default function PaymentSection() {
   useSpotsFloor(spots.min);
   // An Auto Pod is never free, so its floor is 1 rather than 0.
   const amountFloor = config.autoPod ? 1 : 0;
-  const paidHint = config.autoPod
+  const amountHint = config.autoPod
     ? t('podForm.autoPod.priceHint')
     : 'GROSS price (incl. fee + GST). 0 – 1999.';
-  const amountHint = isFree ? 'Free pod — amount must be 0' : paidHint;
   // The host takes one spot for free, so only (total - 1) spots are ever billed.
   const billableSpots = payableSpots(Number(noOfSpots) || 0);
   const spotsHint = isFree
@@ -62,10 +62,10 @@ export default function PaymentSection() {
           <TextField
             select
             label={t('podForm.paymentSection.podType')}
-            value={podType}
+            value={normalizePodType(podType)}
             onChange={(event) => {
               setValue('pod_type', event.target.value, { shouldValidate: true });
-              if (event.target.value.includes('FREE')) setValue('pod_amount', 0);
+              if (isFreePodType(event.target.value)) setValue('pod_amount', 0);
             }}
             fullWidth
           >
@@ -93,19 +93,22 @@ export default function PaymentSection() {
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
         alignItems: "flex-start"
       }}>
-        <TextField
-          label={t('podForm.common.amount')}
-          type="number"
-          value={podAmount}
-          onChange={(event) => setValue('pod_amount', Number(event.target.value) || 0, { shouldValidate: true })}
-          disabled={isFree}
-          helperText={errors.pod_amount?.message || amountHint}
-          error={!!errors.pod_amount}
-          fullWidth
-          slotProps={{
-            htmlInput: { min: amountFloor, max: 1999 }
-          }}
-        />
+        {/* A free pod has no price to enter: the field is gone, not disabled, and
+            comes back empty when the pod turns paid. */}
+        {!isFree && (
+          <TextField
+            label={t('podForm.common.amount')}
+            type="number"
+            value={podAmount || ''}
+            onChange={(event) => setValue('pod_amount', Number(event.target.value) || 0, { shouldValidate: true })}
+            helperText={errors.pod_amount?.message || amountHint}
+            error={!!errors.pod_amount}
+            fullWidth
+            slotProps={{
+              htmlInput: { min: amountFloor, max: 1999 }
+            }}
+          />
+        )}
         {spots.slidable ? (
           <Box sx={{ flex: 1, minWidth: 200 }} data-testid="pod-spots-slider">
             <Typography variant="caption" sx={{
@@ -163,14 +166,17 @@ export default function PaymentSection() {
       {config.showFinance && !isFree && Number(podAmount) > 0 && finance && (
         <EarningsProjection productCost={productCost} />
       )}
-      <TextField
-        label={t('podForm.common.paymentTerms')}
-        fullWidth
-        multiline
-        minRows={3}
-        helperText={t('podForm.paymentSection.refundPolicyCancellationTaxInfo')}
-        {...register('payment_terms')}
-      />
+      {/* Payment terms describe refunds and charges a free pod does not have. */}
+      {!isFree && (
+        <TextField
+          label={t('podForm.common.paymentTerms')}
+          fullWidth
+          multiline
+          minRows={3}
+          helperText={t('podForm.paymentSection.refundPolicyCancellationTaxInfo')}
+          {...register('payment_terms')}
+        />
+      )}
       {config.showPlaceCharges && podMode === 'PHYSICAL' && (
         <Controller
           control={control}

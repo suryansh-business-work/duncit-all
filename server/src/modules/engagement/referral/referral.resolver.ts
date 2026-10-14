@@ -1,10 +1,12 @@
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { FINANCE_READER, requireAuth, requireRole } from '@middleware/rbac';
 import { referralService } from './referral.service';
 
 /* Referrals are run from the Finance console (the reward is money-shaped), so
    FINANCE_MANAGER reads and writes them alongside the platform admins. */
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
+// The Finance console's reads — the analyst seat reads them, never writes.
+const FINANCE_READ = [...ADMIN_WRITE, FINANCE_READER];
 
 export const referralResolvers = {
   Query: {
@@ -13,11 +15,11 @@ export const referralResolvers = {
       return referralService.myReferral(user.id);
     },
     referrals: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, FINANCE_READ);
       return referralService.listAll();
     },
     referralsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, FINANCE_READ);
       return referralService.table(args.query);
     },
     referralSettings: async () => referralService.settings(),

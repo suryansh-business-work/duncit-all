@@ -10,8 +10,12 @@ import { escapeRegExp } from '@utils/regex';
  * shopper is identified, and the error shapes the storefront reads.
  */
 
-/** The ecomm portal's operators. SUPER_ADMIN always passes requireRole. */
-export const STORE_ADMIN_ROLES = ['SUPER_ADMIN', 'ECOMM_MANAGER'] as const;
+/**
+ * The ecomm portal's operators. NOT ECOMM_MANAGER: that is the Partner Brand
+ * role, granted to every approved brand partner, and the pet store's orders,
+ * customers, coupons and settings are not theirs to read.
+ */
+export const STORE_ADMIN_ROLES = ['SUPER_ADMIN', 'ECOMM_STORE_MANAGER'] as const;
 
 export const requireStoreAdmin = (ctx: GraphQLContext) => requireRole(ctx, STORE_ADMIN_ROLES);
 

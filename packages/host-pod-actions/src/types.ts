@@ -48,6 +48,8 @@ export interface HostPodForComplete {
   id: string;
   pod_title: string;
   venue_id?: string | null;
+  /** FREE / PAID — a free pod asks for no venue bill: its host settles the venue directly. */
+  pod_type?: string | null;
 }
 
 /**
@@ -114,6 +116,8 @@ export interface PodSettlementAttendee {
 
 /** The settlement preview for one pod, at a given venue bill amount. */
 export interface PodSettlement {
+  /** A FREE pod: nothing was collected and nothing is paid out, so no figure is shown. */
+  is_free: boolean;
   currency_symbol: string;
   collected_total: number;
   /** The venue’s final bill as entered. 0 when none was. */

@@ -21,11 +21,13 @@ import ServicesOfferedPage from './pages/data/services-offered';
 import UserLeadsPage from './pages/user-leads/UserLeadsPage';
 import UserLeadDetailPage from './pages/user-leads/UserLeadDetailPage';
 import WhatsAppLeadGeneratorPage from './pages/tools/whatsapp/WhatsAppLeadGeneratorPage';
+import EmailVerifierPage from './pages/tools/email-verifier';
 import PublicSurveyPage from './pages/public-survey';
 import AmenitiesPage from './pages/data/venues/AmenitiesPage';
 import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
 import AppShell from './components/AppShell';
 import { ExtractionProvider, ExtractionWidget } from './pages/tools/whatsapp/extraction';
+import { EmailStatusProvider } from './components/email-status';
 import { getToken } from './lib/session';
 
 const authed = createAuthed({
@@ -35,6 +37,7 @@ const authed = createAuthed({
 
 export default function App() {
   return (
+    <EmailStatusProvider>
     <ExtractionProvider>
       <Routes>
         <Route path="/profile" element={authed(<ProfilePage />)} />
@@ -60,6 +63,7 @@ export default function App() {
       <Route path="/user-leads" element={authed(<UserLeadsPage />)} />
       <Route path="/user-leads/:id" element={authed(<UserLeadDetailPage />)} />
       <Route path="/tools/whatsapp" element={authed(<WhatsAppLeadGeneratorPage />)} />
+      <Route path="/tools/email-verifier" element={authed(<EmailVerifierPage />)} />
       <Route path="/call-prompts" element={authed(<CallPromptsPage />)} />
       <Route path="/email-templates" element={authed(<EmailTemplatesPage />)} />
       <Route path="/email-templates/:id" element={authed(<EmailTemplateEditorPage />)} />
@@ -72,5 +76,6 @@ export default function App() {
       </Routes>
       <ExtractionWidget />
     </ExtractionProvider>
+    </EmailStatusProvider>
   );
 }

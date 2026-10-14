@@ -147,6 +147,12 @@ exports:
   - 'payingSeats'
   - 'HOST_FREE_SPOT_NOTE'
   - 'PodSpotLimits'
+  - 'isFreePod'
+  - 'freePodVenueNotice'
+  - 'cancelSpotErrorKey'
+  - 'CANCEL_SPOT_GENERIC_ERROR_KEY'
+  - 'FreePodVenueInput'
+  - 'FreePodVenueNotice'
   - 'resolveTicketDiscountTier'
   - 'ticketDiscountFor'
   - 'ticketDiscountMaxTickets'
@@ -226,6 +232,8 @@ exports:
   - 'isSocialProvider'
   - 'SOCIAL_AUTH_COPY'
   - 'SOCIAL_NOT_FOUND_CODE'
+  - 'SOCIAL_PROMPT_COPY'
+  - 'SOCIAL_PROMPT_TEST_IDS'
   - 'socialSignupNeedsName'
   - 'REFERRAL_PARAM'
   - 'referralLink'
@@ -283,6 +291,10 @@ exports:
   - 'passwordRecoveryStepIndex'
   - 'previousRecoveryStep'
   - 'initialRecoveryState'
+  - 'recoveryHandoffFrom'
+  - 'readRecoveryHandoff'
+  - 'recoveryHandoffSendable'
+  - 'recoveryStateFrom'
   - 'recoveryResendSeconds'
   - 'recoveryDestination'
   - 'buildPasswordRecoveryLabels'
@@ -474,7 +486,7 @@ exports:
   - 'matchAttendanceRows'
   - 'canScanTickets'
   - 'showsCompleteDeadline'
-  - 'earningsBodyFor'
+  - 'earningsNoticeFor'
   - 'mwebAttendanceLabels'
   - 'shellAttendanceLabels'
   - 'buildAttendanceLabels'
@@ -1132,6 +1144,48 @@ coinLedgerLabelKey({ type: 'DEBIT', source: 'COIN_EXPIRY' })     // 'mweb.coin.e
 | `HOST_FREE_SPOT_NOTE` | `string` | Copy to render beside any spots-driven figure. |
 | `PodSpotLimits` | `type` | The range a pod that already EXISTS may be resized within, as the server's `podSpotLimits` answers it: `current`, `min`, `max`, `seats_taken`, `venue_capacity`, `min_pax`, `slidable`, `can_decrease`. |
 
+#### Free pods — `pod-free`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `isFreePod` | `(podType?: string \| null) => boolean` | `true` only for `'FREE'` — the one free pod type, physical or virtual. |
+| `freePodVenueNotice` | `({ podType, slotPrice, ownVenue, slotConfirmed }) => FreePodVenueNotice` | What Create Pod tells the host of a free pod about the venue's charges: `'NONE'`, `'SETTLE'` or `'SETTLE_BEFORE_APPROVAL'`. |
+
+A free pod collects nothing, so Duncit pays the venue nothing: the host settles the venue's
+charges with the venue directly. The note appears only for a FREE pod on a slot priced above 0
+at a venue the host does not own — a slot priced 0 and the host's own venue book instantly and
+say nothing. A slot a Pod Request already confirmed (`slotConfirmed`) is `'SETTLE'`: the venue
+is still owed, but there is no approval left to hold back. mWeb and the native app both read
+this one rule and only word and draw the note themselves.
+
+```ts
+freePodVenueNotice({ podType: 'FREE', slotPrice: 1500 })                      // 'SETTLE_BEFORE_APPROVAL'
+freePodVenueNotice({ podType: 'FREE', slotPrice: 1500, slotConfirmed: true }) // 'SETTLE'
+freePodVenueNotice({ podType: 'FREE', slotPrice: 1500, ownVenue: true })      // 'NONE'
+freePodVenueNotice({ podType: 'FREE', slotPrice: 0 })                         // 'NONE'
+freePodVenueNotice({ podType: 'PAID', slotPrice: 1500 })                      // 'NONE'
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `cancelSpotErrorKey` | `(code?: string \| null) => string` | The `mweb.*` key for a refused `cancelFreeSpot`: `ALREADY_CHECKED_IN` → `mweb.podDetails.cancelSpotCheckedIn`, `BAD_REQUEST` (pod started) → `…cancelSpotStarted`, `NOT_FOUND` → `…cancelSpotNotMember`, anything else → `CANCEL_SPOT_GENERIC_ERROR_KEY`. |
+| `CANCEL_SPOT_GENERIC_ERROR_KEY` | `string` | `'mweb.podDetails.cancelSpotFailed'` — a network failure or an unknown code. |
+
+A free pod has no backout and no refund: "Cancel the spot" is its only way out, any number of
+times. The participation rules read that from the pod's type — pass it as the third argument of
+`participationInputFrom(fields, podDateTime, podType)`. For a FREE pod `podParticipationActions`
+answers `canBackout: false`, `canCancelSpot` true while the booking is still in an upcoming,
+uncancelled pod and was not checked in, and never a refund or coins; `buildPodParticipationTimeline`
+draws only `JOINED`, then `SPOT_CANCELLED` (from `spot_cancelled_at`), the pod's cancellation
+(no refund child) or the attendance nodes — never a backout, replacement or refund node. A paid
+pod (or no type) is unchanged.
+
+```ts
+const input = participationInputFrom(item.participation, item.pod.pod_date_time, item.pod.pod_type);
+podParticipationActions(input) // { canBackout: false, canCancelSpot: true, showRefundState: false, … }
+cancelSpotErrorKey('ALREADY_CHECKED_IN') // 'mweb.podDetails.cancelSpotCheckedIn'
+```
+
 `spotsBounds` is the CREATE-time answer, derived on the client from the slot being picked.
 `PodSpotLimits` is the EDIT-time one, and only the server can produce it: a live pod's slot is
 BOOKED, so `venueAvailableSlots` no longer returns it, and the seats already sold — which set
@@ -1357,11 +1411,14 @@ the MUI page (`@duncit/host-pod-actions`) and the native Tamagui screen both rea
 (rule 27). The board is `podAttendanceBoard(pod_doc_id)` — the ONLY read of a roster — and
 it carries `pod_mode`, because a virtual pod has no door: nobody scans a ticket there. A
 joined member is marked present the moment they open the meeting link from the pod page
-inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
+inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`). It also carries
+`pod_type`, because a FREE pod has no payout: the note above its roster says why marking
+still matters (Visited status, rating, feedback, and completing the pod) instead of what it pays.
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `PodAttendanceMode` | `'PHYSICAL' \| 'VIRTUAL'` | Mirrors the server's `PodMode`; the board's `pod_mode`. |
+| `PodAttendanceType` | `'FREE' \| 'PAID'` | Mirrors the server's `PodType`; the board's `pod_type`. |
 | `attendanceRowState` | `(row, canMark, viewer?) => AttendanceRowState` | `MARKED`, `READY`, `NEEDS_COMPANIONS` or `LOCKED` — one value, never three booleans. `NEEDS_COMPANIONS` is the HOST's wait only (viewer defaults to `'HOST'`). |
 | `splitAttendance` | `(rows) => { marked, unmarked }` | The two lists, in the order the page shows them. |
 | `namedCompanionEntries` | `(entries) => NamedCompanionInput[]` | The names a Club Admin was read, blanks dropped, numbers optional — `PodForcedCompanionInput` for `clubAdminForceAttendance`. |
@@ -1386,7 +1443,7 @@ inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
 | `matchAttendanceRows` | `(rows, query) => PodAttendanceRow[]` | The bookings a typed name could mean, unmarked first. Matches name, email, ticket code and **companion names** (a multi-seat booking is bought by one person and admits several); three digits or more also match the phone. Already-marked rows stay in the results — "cannot find them" and "already marked" are different answers. |
 | `canScanTickets` | `(board) => boolean` | HOST viewer AND `can_mark` AND not `VIRTUAL`. False hides the scan CTA. |
 | `showsCompleteDeadline` | `(board) => boolean` | HOST viewer AND `lock === 'OPEN'` AND a `complete_deadline`. The banner naming the hours the host has left to complete the pod; past it the `EXPIRED` locked notice says it in past tense instead. |
-| `earningsBodyFor` | `(board, labels) => string` | `labels.earningsBodyVirtual` for a virtual pod, `labels.earningsBody` otherwise — the sentence above the roster. |
+| `earningsNoticeFor` | `(board, labels) => { title, body }` | The note above the roster. A FREE pod (physical or virtual) gets `earningsTitleFree` + `earningsBodyFree` — there is no payout to describe. A paid pod gets `earningsTitle` with `earningsBodyVirtual` for a virtual pod and `earningsBody` otherwise. |
 | `mwebAttendanceLabels` / `shellAttendanceLabels` / `buildAttendanceLabels` | `(t) => PodAttendanceLabels` | Every word the surfaces render — `mweb.attendance.*` for mWeb + native, `shell.attendance.*` for the portals, word-for-word identical. |
 
 ```ts
@@ -1399,6 +1456,7 @@ const board = {
   can_mark: true,
   otp_required: true,
   pod_mode: 'PHYSICAL',
+  pod_type: 'PAID',
   lock: 'OPEN',
   complete_deadline: '2026-08-31T14:00:00.000Z',
   complete_timeout_hours: 24,
@@ -1407,11 +1465,14 @@ const board = {
 needsOtp(board)                   // true  — prove the number before a by-hand mark
 canScanTickets(board)             // true  — there is a door to scan at
 showsCompleteDeadline(board)      // true  — 24 hours from the pod's end, and it has not passed
-earningsBodyFor(board, labels)    // 'Your earnings are calculated only from the attendees you mark. …'
+earningsNoticeFor(board, labels)  // { title: 'Marking attendance is how you get paid', body: 'Your earnings are calculated only from the attendees you mark. …' }
 
 const online = { ...board, pod_id: 'DUN-POD-5502', pod_mode: 'VIRTUAL' } as const;
 canScanTickets(online)            // false — the scan CTA is hidden
-earningsBodyFor(online, labels)   // 'This pod is online, so there is no door to scan at. …'
+earningsNoticeFor(online, labels).body  // 'This pod is online, so there is no door to scan at. …'
+
+const free = { ...board, pod_id: 'DUN-POD-6610', pod_type: 'FREE' } as const;
+earningsNoticeFor(free, labels)   // { title: 'Mark who came', body: 'This pod is free, so there is no payout. …' }
 labels.methodLabel('VIRTUAL_JOIN')  // 'Joined the meeting' — what the row reads after joinPodMeeting
 
 needsOtp({ viewer: 'CLUB_ADMIN', otp_required: true })  // false — never REQUIRED of them
@@ -1898,6 +1959,7 @@ The rest of what differs per provider lives in `social-auth`, once for both apps
 | --- | --- |
 | `SOCIAL_NOT_FOUND_CODE[provider]` | The refusal that opens the signup invite — `GOOGLE_ACCOUNT_NOT_FOUND` / `APPLE_ACCOUNT_NOT_FOUND` |
 | `SOCIAL_AUTH_COPY[provider]` | The copy keys that name the provider — invite detail, link consent, details subtitle, policy intro. Literal, so the translation gate sees them |
+| `SOCIAL_PROMPT_COPY[prompt]` | The copy keys of the two pre-account questions: `INVITE` (login door — "no Duncit account yet, make one?") and `EXISTS` (signup door — "you're already on Duncit, log in?", asked from the `socialSignupStatus` query before any code is sent). `SOCIAL_PROMPT_TEST_IDS[prompt]` holds the dialog's test ids for both apps |
 | `socialSignupNeedsName(credential)` | `true` for an Apple credential that carried no name — the details step then asks it |
 | `isSocialProvider(value)` | Whether a value read off navigation is `'GOOGLE'` or `'APPLE'` |
 
@@ -1905,6 +1967,7 @@ The rest of what differs per provider lives in `social-auth`, once for both apps
 socialSignupNeedsName({ provider: 'APPLE' }); // true — ask the name on the details step
 socialSignupNeedsName({ provider: 'APPLE', name: 'Riya Sharma' }); // false
 SOCIAL_AUTH_COPY.APPLE.linkTitle; // 'mweb.login.appleLinkConsentTitle'
+SOCIAL_PROMPT_COPY.EXISTS.accept; // 'mweb.signup.existingAccountLogin'
 ```
 
 `readGoogleSignupHandoff` is deliberately strict about shape: router state survives a reload
@@ -2427,6 +2490,18 @@ previousRecoveryStep('DONE');     // null — the password already changed; Back
 
 passwordRecoveryStepIndex('CODE'); // 2
 PASSWORD_RECOVERY_STEP_COUNT;      // 3 — DONE is an outcome, not a step to fill in
+```
+
+"Forgot password?" sits beside the password box, so it already knows where the code should go:
+the tab the person is on and what they typed. `recoveryHandoffFrom` packs that up, recovery
+reads it back with the strict `readRecoveryHandoff`, opens on that channel with
+`recoveryStateFrom`, and sends at once when `recoveryHandoffSendable` says the destination is
+complete (the regexes are passed in — this package has none):
+
+```ts
+const handoff = recoveryHandoffFrom('PHONE', { email: '', phoneExtension: '+91', phoneNumber: '9876543210' });
+recoveryHandoffSendable(handoff, { email: EMAIL, extension: DIAL_CODE, number: PHONE_INTL }); // true
+recoveryStateFrom(handoff).channel; // 'PHONE' — the code goes to the number, not an email
 ```
 
 `recoveryResendSeconds` counts from when the last code was SENT rather than from a server
@@ -3568,6 +3643,34 @@ without the third argument prices exactly as it always did.
 An order carries `coupon_code` (null without one), `coupon_pct` and `coupon_discount_amount` beside
 `discount_pct` / `discount_amount`; both order documents ask for them. `total` stays what was charged.
 
+**GST.** The fourth argument is the GST the venue's orders are priced with — `foodCartTaxOf(venue.food_ordering)`
+reads the `tax_mode` / `gst_pct` the server RESOLVED (the venue's own override, or Finance's food
+default), so a client never decides which applies. GST meets what is left after both discounts (the
+"net"), rounded **half up** to a whole paisa in integer arithmetic:
+
+- `INCLUSIVE` — the net already holds the tax: `taxablePaise = round(net × 100 / (100 + pct))`,
+  `taxPaise = net − taxablePaise`, and the total does not move;
+- `EXCLUSIVE` — the tax is added on top: `taxablePaise = net`, `taxPaise = round(net × pct / 100)`.
+
+Either way `totalPaise = taxablePaise + taxPaise`. `belowMinimum` is still judged on the net — GST added
+on top never makes a cart payable. A percent that is not a whole positive number is no tax, and
+`priceFoodCart(lines, pct, coupon)` without the fourth argument prices exactly as before.
+
+```ts
+import { foodCartTaxOf, foodTaxLine, priceFoodCartLines } from '@duncit/utils';
+
+const price = priceFoodCartLines(lines, venue.food_ordering.discount_pct, coupon, foodCartTaxOf(venue.food_ordering));
+// EXCLUSIVE 5% on a 180 net → { taxablePaise: 18000, taxPaise: 900, totalPaise: 18900 }
+foodTaxLine(price.taxMode, price.gstPct, price.tax); // { mode: 'EXCLUSIVE', pct: 5, amount: 9 } — null at 0%
+```
+
+An order (and a coupon preview) carries `tax_mode`, `gst_pct`, `taxable_amount` and `tax_amount` —
+all optional on an order read by an older document; an order from before GST reads as INCLUSIVE at 0%.
+`foodTaxLine(order.tax_mode, order.gst_pct, order.tax_amount)` is the line the totals block draws.
+`FOOD_GST_LIMITS` (`{ min: 0, max: 28 }`) and `VENUE_FOOD_TAX_MODES` mirror the server's bounds. The
+shared fixture `__tests__/fixtures/venue-food-pricing.json` pins this and the server's `foodTotals`
+to the same paise, GST cases included.
+
 **The coupon is part of the attempt.** The server answers a repeated `client_key` with the order it
 already priced — even if the coupon has since expired — so applying, changing or removing a code
 must mint a new key. `foodAttemptSignature` reads `details.coupon` for exactly that (compared as the
@@ -3611,6 +3714,70 @@ const showRatingForm = canRateFoodOrder(order); // SERVED and not rated yet
 **The table label.** Beside the A4 poster a venue can print a table label (`VENUE_TABLE_LABEL_QUERY`,
 `publicPageTableLabelFileName`). `publicPageHeadlineKey(kind, offersFood)` picks what both print: a
 venue with a menu (`PublicPageInsights.offers_food`) says "Scan to see the Menu & pods happening here".
+
+## A venue's food desk, as its owner works it — `venue-food-owner`
+
+The owner's side of `venue-food`: the Food Dashboard, the order board and the venue's food
+coupons. `@duncit/venue-food` draws them in MUI for the Partners console, the Venues console and
+mWeb; the native app's Tamagui twins (`components/venue-food-desk/`) read the same module.
+
+- **Documents** (plain strings): `FOOD_OWNER_VENUES_QUERY` (the owner's venues with
+  `offers_food`), `VENUE_FOOD_STATS_QUERY`, `VENUE_FOOD_ORDERS_TABLE_QUERY`,
+  `SET_VENUE_FOOD_ORDER_STATUS_MUTATION`, `CANCEL_VENUE_FOOD_ORDER_MUTATION`,
+  `VENUE_FOOD_COUPONS_TABLE_QUERY` and the four coupon mutations. Rows: `FoodOwnerOrder`,
+  `FoodOwnerCoupon`, `FoodOwnerStats`, `FoodTablePage`.
+- **Status flow**: `nextFoodOrderStatus` walks the kitchen's path; `foodOrderNextStep(order)`
+  offers a step only on a PAID order; `canCancelFoodOrder` mirrors the server's refusal once served
+  or cancelled. `FOOD_ORDER_STATUS_COLORS` / `FOOD_PAYMENT_STATUS_COLORS` are MUI chip colours
+  (native maps each to a theme token). `FOOD_ORDERS_POLL_MS` is the board's 20-second refresh.
+- **Labels** — every one a `venueFoodOwner.*` key written out once: `foodOrderStatusLabel`,
+  `foodPaymentStatusLabel`, `foodOrderAdvanceLabel`, `foodDietLabel`, `foodItemsSummary`,
+  `foodOrderMoneyLines` (subtotal, QR discount, coupon, total), `foodOrderCancelledMessage`,
+  `foodCouponUsesText`, `foodCouponMinOrderText`, `foodCouponPerPersonText`, `foodCouponWindow`
+  (each end through the surface's own date formatter), `foodCouponToggledMessage`.
+- **Dashboard**: `foodStatTiles(stats, t)` (sales, then service, then reach),
+  `foodStatusBars` (a row per status, its share of every order), `foodDishBars` (against the best
+  seller), `foodDishLine`, `foodFeedbackByLine`, `foodTrendLine` (each series against its own peak)
+  and `FOOD_DASHBOARD_DEFAULT_DAYS` (30).
+
+```ts
+import { foodOrderNextStep, foodOrderAdvanceLabel, foodStatTiles } from '@duncit/utils';
+
+const next = foodOrderNextStep(order); // null unless paid and not yet served
+const button = next && foodOrderAdvanceLabel(t, next); // "Start preparing"
+const tiles = foodStatTiles(stats, t);
+```
+
+## A venue's food menu, as its owner or a console editor edits it — `venue-food-menu`
+
+The menu half of the owner's food tools: "serves food", the dishes, QR ordering with its
+discount and GST, and the GST number on the food invoices. ONE contract for every surface that
+edits it — `VenueFoodMenu` and `VenueFoodFields` in `@duncit/venue-food` (the Partners Food Menu
+page and venue form, the Venues console's Food Menu tab and venue editor, mWeb) and the native
+screen (`components/venue-food-desk/menu/`). The rules are `@duncit/forms/schemas`'
+`makeFoodMenuSchema` / `makeVenueFoodRefinement`.
+
+- **Documents**: `OWNER_FOOD_MENU_QUERY` (`myVenue`), `ADMIN_FOOD_MENU_QUERY` (`venue`, for a
+  console editor), `FOOD_MENU_CONFIG_QUERY` (the caps and the diet / spice catalogues),
+  `UPDATE_VENUE_FOOD_MENU_MUTATION` (`updateApprovedVenue`, which returns the same selection) and
+  `FOOD_RAZORPAY_CONNECTIONS_QUERY` with `razorpayConnectionsOf`.
+- **Values**: `FoodMenuFormValues` = `VenueFoodFormValues` (`offers_food`, `food_menu`,
+  `food_ordering`) + `gstin`. `foodMenuToValues`, `foodDishToValues`, `foodOrderingToValues`,
+  `blankFoodDish(config)`, `blankFoodOrdering`.
+- **Input**: `toVenueFoodInput(values, { sendAccount })` — switched off, only the switch goes;
+  `sendAccount` is true only where the owner picks the Razorpay account, so every other surface
+  leaves the link alone. `foodGstinInput(typed, saved, mode)` — an owner gives the number once, an
+  `admin` may change it. `toFoodMenuSaveInput` is both in one save.
+- **Gates**: `canTakeFoodOrders(menu, accountReady)`, `isFoodMenuEditable(venue)` (approved only).
+- `foodSpiceLabel` (in `venue-food-owner`) names a spice level, beside `foodDietLabel`.
+
+```ts
+import { foodMenuToValues, toFoodMenuSaveInput } from '@duncit/utils';
+
+const values = foodMenuToValues(venue);
+// The Venues console: never names the owner's account, may change a saved GST number.
+const input = toFoodMenuSaveInput(values, { sendAccount: false, mode: 'admin', savedGstin: venue.gstin ?? '' });
+```
 
 ## The product cart control — `cart-control`
 

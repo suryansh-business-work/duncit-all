@@ -26,6 +26,8 @@ echo ">>> Ensuring infra services (redis, redis-ui) are up..."
 docker compose up -d --no-deps redis redis-ui || true
 # Its own line: a compose file without it must not stop redis coming up.
 docker compose up -d --no-deps redis-queue || true
+# The CRM email verifier (Reacher). Its own line for the same reason.
+docker compose up -d --no-deps reacher || true
 
 ALL_SERVICES=(server admin mweb website partners-website partners-app ads-portal ads-website native crm open-wa finance tech support website-app legal ai products marketing onboarding hr employee status earnwith challenge developers regional-club-admin venues clubs club-admins hosts pods communications logs analytics ecomm-portal ecomm-store lite localization cms-site targets)
 declare -A PORT_OF=(

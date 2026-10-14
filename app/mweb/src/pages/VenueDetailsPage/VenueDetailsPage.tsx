@@ -5,8 +5,6 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
 import StorefrontIcon from '@mui/icons-material/StorefrontOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineRounded';
 import {
-  Box,
-  ButtonBase,
   Chip,
   CircularProgress,
   Snackbar,
@@ -29,7 +27,8 @@ import LocationMismatchDialog from '../../components/LocationMismatchDialog';
 import { useLocationMismatch } from '../../hooks/useLocationMismatch';
 import VenueFoodTabs from './food/VenueFoodTabs';
 import { PUBLIC_VENUE, type PublicVenue } from './queries';
-import { HERO_SX, ROUND_BTN_SX, addressParts } from './venueDetailsHelpers';
+import { ROUND_BTN_SX, addressParts } from './venueDetailsHelpers';
+import VenueHero from './VenueHero';
 
 export default function VenueDetailsPage() {
   const { venueId = '' } = useParams();
@@ -118,26 +117,7 @@ export default function VenueDetailsPage() {
     <Stack spacing={2.5} sx={{ pb: 4 }} data-testid="venue-details-screen">
       <PageHeader testId="venue-details-header" title={venue.venue_name} onBack={() => navigate(-1)} right={copyButton} />
 
-      {images[0] ? (
-        <ButtonBase
-          onClick={() => setZoomIndex(0)}
-          focusRipple
-          aria-label={t('mweb.podDetails.viewImage')}
-          sx={{ ...HERO_SX, display: 'block' }}
-        >
-          <Box
-            component="img"
-            src={images[0]}
-            alt={venue.venue_name}
-            data-testid="venue-cover-image"
-            sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-        </ButtonBase>
-      ) : (
-        <Box sx={{ ...HERO_SX, display: 'grid', placeItems: 'center', bgcolor: 'action.hover', color: 'brand.main' }}>
-          <StorefrontIcon sx={{ fontSize: 44 }} />
-        </Box>
-      )}
+      <VenueHero images={images} venueName={venue.venue_name} onOpen={setZoomIndex} />
 
       <Stack spacing={1.25}>
         {/* eslint-disable-next-line jsx-a11y/heading-has-content -- false positive: TwoToneHeading renders its lead prop as the heading text */}

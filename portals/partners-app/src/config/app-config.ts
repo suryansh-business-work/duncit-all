@@ -151,6 +151,7 @@ const OPTION_NAV_ICON: Readonly<Record<StudioOptionIcon, string>> = {
   menu: 'menuBook',
   warehouses: 'warehouse',
   refunds: 'revenue',
+  categories: 'widgets',
 };
 
 const optionNavItem = (option: StudioOptionItem): AppNavItem => ({
@@ -191,7 +192,7 @@ function uniqueSiblings(items: readonly AppNavItem[]): AppNavItem[] {
  */
 export function studioNestedNavItems(section: PartnerSection, autoPods: boolean): AppNavItem[] {
   const entry = STUDIO_OPTIONS_ENTRY[section.mode];
-  const { main, food } = studioOptionGroups(studioOptionsFor(section.mode, [section.role], { autoPods }));
+  const { main, food } = studioOptionGroups(studioOptionsFor(section.mode, [section.role], { autoPods, console: true }));
   const allOptions: AppNavItem = { label: 'All options', labelKey: 'shell.nav.allOptions', to: entry.portal, icon: 'widgets' };
   const groups: AppNavItem[] = [
     {

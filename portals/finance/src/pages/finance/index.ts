@@ -1,4 +1,5 @@
 export { default as DefaultDeductionsPage } from './default-deductions-page';
+export { default as FoodMenuDefaultsPage } from './food-menu-defaults-page';
 export { PodFinancePage, PodFinanceDetailPage } from './pod-finance-page';
 export { default as BackoutRefundPage, BackoutRefundDetailPage } from './backout-refund-page';
 export { CancellationsDashboardPage, HostCancelPage, VenueCancelPage } from './cancellations-page';

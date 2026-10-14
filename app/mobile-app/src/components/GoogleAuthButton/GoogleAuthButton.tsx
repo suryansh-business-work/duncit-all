@@ -7,7 +7,7 @@ import { Spinner, Text, XStack } from 'tamagui';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { BUTTON_SIZES, PRESS_STYLE } from '@duncit/buttons-native';
 
 import { readGoogleIdToken } from './googleIdToken';
 
@@ -32,6 +32,8 @@ export interface GoogleAuthButtonProps {
   loading?: boolean;
   onIdToken: (idToken: string) => void;
   onError?: (message: string) => void;
+  /** The labelled pill (default), or a round G-only button for a row of providers. */
+  variant?: 'pill' | 'icon';
 }
 
 /**
@@ -45,6 +47,7 @@ export function GoogleAuthButton({
   loading,
   onIdToken,
   onError,
+  variant = 'pill',
 }: Readonly<GoogleAuthButtonProps>) {
   const { t } = useTranslation();
   const scheme = useThemeStore((s) => s.scheme);
@@ -113,6 +116,7 @@ export function GoogleAuthButton({
   const busyLabel = busy
     ? t('mweb.auth.googleConnecting')
     : (label ?? t('mweb.auth.googleContinue'));
+  const round = variant === 'icon';
 
   return (
     <XStack
@@ -120,6 +124,8 @@ export function GoogleAuthButton({
       role="button"
       aria-disabled={isDisabled}
       aria-busy={busy}
+      // The round button has no visible words, so it is named for a reader.
+      aria-label={round ? busyLabel : undefined}
       // One screen-reader element named by its visible words (native), and a
       // tab stop (web).
       tabIndex={0}
@@ -149,9 +155,9 @@ export function GoogleAuthButton({
       alignItems="center"
       justifyContent="center"
       gap={12}
-      width="100%"
-      height={52}
-      borderRadius={999}
+      width={round ? BUTTON_SIZES.lg.height : '100%'}
+      height={BUTTON_SIZES.lg.height}
+      borderRadius={BUTTON_SIZES.lg.borderRadius}
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
@@ -169,9 +175,11 @@ export function GoogleAuthButton({
           accessibilityIgnoresInvertColors
         />
       )}
-      <Text fontSize={16} fontWeight="600" color="$color">
-        {busyLabel}
-      </Text>
+      {round ? null : (
+        <Text fontSize={16} fontWeight="600" color="$color">
+          {busyLabel}
+        </Text>
+      )}
     </XStack>
   );
 }

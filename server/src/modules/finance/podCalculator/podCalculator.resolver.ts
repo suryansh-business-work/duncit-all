@@ -1,14 +1,16 @@
 import { podCalculatorService, type SavePodCalculatorInput } from './podCalculator.service';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { FINANCE_READER, requireRole } from '@middleware/rbac';
 
 /** Same finance roles the rest of the portal's write surfaces use. */
 const FINANCE_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// The Finance console's reads — the analyst seat reads them, never writes.
+const FINANCE_READ = [...FINANCE_RW, FINANCE_READER];
 
 export const podCalculatorResolvers = {
   Query: {
     podCalculators: async (_p: unknown, args: { kind: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return podCalculatorService.list(args.kind);
     },
     podCalculator: async (
@@ -16,7 +18,7 @@ export const podCalculatorResolvers = {
       args: { calculator_doc_id: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return podCalculatorService.get(args.calculator_doc_id);
     },
     podCalculatorPdfBase64: async (
@@ -24,7 +26,7 @@ export const podCalculatorResolvers = {
       args: { calculator_doc_id: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return podCalculatorService.pdfBase64(args.calculator_doc_id);
     },
   },

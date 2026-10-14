@@ -4,12 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BACKOUT,
   CANCEL_BACKOUT,
+  CANCEL_FREE_SPOT,
   INC_HITS,
   JOIN_FREE,
   REDEEM,
   TOGGLE_SAVED_POD_DETAIL,
 } from '../queries';
 import { buildPodShareText, usePodDetailActions } from '../usePodDetailActions';
+import { GraphQLError } from 'graphql';
 
 const POD = {
   id: 'pod-doc-1',
@@ -378,6 +380,82 @@ describe('usePodDetailActions', () => {
       await result.current.onConfirmKeepSpot();
     });
     expect(result.current.keepSpotError).toBeNull();
+  });
+
+  // A free pod: cancel the spot, join again instantly, cancel again — no limit.
+  it('cancels a free spot, joins again and cancels again, calling the right mutation each time', async () => {
+    const cancelled = { data: { cancelFreeSpot: { id: 'm1', status: 'BACKED_OUT', seats: 1 } } };
+    const mocks = [
+      ...baseMocks(),
+      makeMock({ id: 'pod-doc-1' }, CANCEL_FREE_SPOT, cancelled),
+      makeMock({ id: 'pod-doc-1', referral: null, seats: 1 }, JOIN_FREE, {
+        data: { joinFreePod: { id: 'm1', status: 'JOINED', seats: 1 } },
+      }),
+      makeMock({ id: 'pod-doc-1' }, CANCEL_FREE_SPOT, cancelled),
+    ];
+    const { result, refetch } = renderActions({}, mocks);
+    act(() => result.current.setCancelSpotOpen(true));
+    expect(result.current.cancelSpotOpen).toBe(true);
+    await act(async () => {
+      await result.current.onConfirmCancelSpot();
+    });
+    expect(result.current.cancelSpotOpen).toBe(false);
+    expect(result.current.snack).toBe(
+      'Your spot is cancelled. You can join again any time while the pod is open.',
+    );
+    await act(async () => {
+      await result.current.onJoinFree();
+    });
+    expect(result.current.snack).toBe('Joined!');
+    await act(async () => {
+      await result.current.onConfirmCancelSpot();
+    });
+    expect(result.current.snack).toBe(
+      'Your spot is cancelled. You can join again any time while the pod is open.',
+    );
+    expect(refetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('names a checked-in refusal and a started pod instead of the raw server text', async () => {
+    const refusal = (code: string) => ({
+      errors: [new GraphQLError('server words', { extensions: { code } })],
+    });
+    const mocks = [
+      ...baseMocks(),
+      makeMock({ id: 'pod-doc-1' }, CANCEL_FREE_SPOT, refusal('ALREADY_CHECKED_IN')),
+      makeMock({ id: 'pod-doc-1' }, CANCEL_FREE_SPOT, refusal('BAD_REQUEST')),
+      makeMock({ id: 'pod-doc-1' }, CANCEL_FREE_SPOT, null, new Error('Failed to fetch')),
+    ];
+    const { result, refetch } = renderActions({}, mocks);
+    act(() => result.current.setCancelSpotOpen(true));
+    await act(async () => {
+      await result.current.onConfirmCancelSpot();
+    });
+    expect(result.current.snack).toBe(
+      'You have already been checked in at this pod, so your spot can no longer be cancelled.',
+    );
+    expect(result.current.cancelSpotOpen).toBe(false);
+    await act(async () => {
+      await result.current.onConfirmCancelSpot();
+    });
+    expect(result.current.snack).toBe(
+      'This pod has already started, so your spot can no longer be cancelled.',
+    );
+    await act(async () => {
+      await result.current.onConfirmCancelSpot();
+    });
+    expect(result.current.snack).toBe('We could not cancel your spot. Please try again.');
+    // The page re-reads after a refusal too: the server decided on fresher state.
+    expect(refetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('onConfirmCancelSpot no-ops with no pod', async () => {
+    const { result, refetch } = renderActions({ pod: null });
+    await act(async () => {
+      await result.current.onConfirmCancelSpot();
+    });
+    expect(result.current.snack).toBeNull();
+    expect(refetch).not.toHaveBeenCalled();
   });
 
   it('setSnack / setConfettiOpen / setKeepSpotOpen setters are exposed', () => {

@@ -1,4 +1,4 @@
-import { ActivityIndicator, Switch } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { Text, YStack } from 'tamagui';
 import {
   authMessageCardState,
@@ -10,6 +10,7 @@ import {
 import { IconDisc } from '@/components/account/IconDisc';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useCommPreference } from '@/hooks/useCommPreference';
+import { AppSwitch } from '@/components/AppSwitch';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -79,7 +80,7 @@ export function AuthMessagesCard({ channel }: Readonly<Props>) {
           />
         ) : null}
         {!busy && card.showSwitch ? (
-          <Switch
+          <AppSwitch
             testID={`auth-messages-switch-${channel}`}
             aria-label={card.title}
             value={card.checked}
@@ -89,7 +90,6 @@ export function AuthMessagesCard({ channel }: Readonly<Props>) {
                 /* reported through state.saveFailed */
               });
             }}
-            trackColor={{ true: primary }}
           />
         ) : null}
       </SurfaceCard>

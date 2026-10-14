@@ -1,8 +1,8 @@
-import { Switch } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text } from 'tamagui';
 
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { AppSwitch } from '@/components/AppSwitch';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -15,7 +15,7 @@ interface Props {
  * notifications-screen/NotificationsHero. */
 export function NotificationsHero({ enabled, onToggle }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { muted, primary } = useThemeColors();
+  const { muted } = useThemeColors();
   return (
     <SurfaceCard
       flexDirection="row"
@@ -29,12 +29,11 @@ export function NotificationsHero({ enabled, onToggle }: Readonly<Props>) {
       <Text flex={1} fontSize={14} fontWeight="600" color="$color">
         Allow notifications
       </Text>
-      <Switch
+      <AppSwitch
         testID="notifications-allow-switch"
         aria-label={t('mweb.notifications.allowNotifications')}
         value={enabled}
         onValueChange={onToggle}
-        trackColor={{ true: primary }}
       />
     </SurfaceCard>
   );

@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { isFreePod } from '@duncit/utils';
 import SettlementPreview from './SettlementPreview';
 import PodMediaSummary from './PodMediaSummary';
 import VenueBillFields from './VenueBillFields';
@@ -40,7 +41,9 @@ interface Props {
  * approve — nothing is credited until then. */
 export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { labels, notifySuccess } = useHostPodActionsConfig();
-  const hasVenue = !!pod?.venue_id;
+  // A free pod's host settles the venue directly — no bill is asked for here.
+  const free = isFreePod(pod?.pod_type);
+  const hasVenue = !!pod?.venue_id && !free;
   const { control, handleSubmit, reset, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
     resolver: zodResolver(buildPodCompleteSchema(hasVenue, labels)) as unknown as Resolver<PodCompleteValues, any, PodCompleteValues>,
     defaultValues: blankPodCompleteValues,
@@ -64,7 +67,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
   const submit = handleSubmit(async (values) => {
     try {
       await complete({ variables: { input: buildCompleteInput(values, podId) } });
-      notifySuccess(labels.venueBill.sentToFinance);
+      notifySuccess(free ? labels.shareFreeCompleted : labels.venueBill.sentToFinance);
       onCompleted();
     } catch {
       // completeState.error, read below, is what renders the failure.
@@ -91,7 +94,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            {labels.completeHint}
+            {free ? labels.completeHintFree : labels.completeHint}
           </Typography>
           {hasVenue && <VenueBillFields control={control} billAmount={billAmount} />}
           {pod && <PodMediaSummary podId={pod.id} />}
@@ -101,6 +104,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
               venueBillAmount={billAmount}
               includeSlotPrice={billAmount > 0 && includeSlotPrice}
               refreshToken={scansDone}
+              free={free}
               onScan={() => setScanOpen(true)}
             />
           )}

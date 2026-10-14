@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { PodAuditLogModel, type IPodAuditLog } from '@modules/pods/podAudit/podAudit.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { REFUNDED_MONEY_EXPR } from '@modules/finance/payment/payment.refund.service';
@@ -169,7 +169,8 @@ async function buildRows(): Promise<PodCancellationRow[]> {
   // The venue's money for a cancelled pod = its booked slot price (mirrors
   // venueAmountForPod with no venue bill, batched over the whole page).
   const venueAmount = (pod: any): number => {
-    if (!pod.venue_id) return 0;
+    // A free pod's venue was never owed anything by the platform.
+    if (!pod.venue_id || isFreePod(pod)) return 0;
     return priceBySlotId.get(String(pod.venue_slot_id)) ?? 0;
   };
   const rows: PodCancellationRow[] = [];

@@ -64,6 +64,10 @@ const NO_E2E_SURFACE = new Map([
     '@duncit/public-page',
     'library — the publish card is rendered end-to-end by mWeb Venue/Host Studio and the partners-app dashboards',
   ],
+  [
+    '@duncit/venue-food',
+    'library — the food desk is rendered end-to-end by mWeb /venues/food-*, the partners-app food pages and the venues console record tabs',
+  ],
   ['@duncit/i18n', 'string bundles; verified by scripts/verify-translation-keys.mjs'],
   [
     '@duncit/pod-change-requests',

@@ -1,26 +1,35 @@
-import { Controller, type UseFormReturn } from 'react-hook-form';
-import { Alert, AlertTitle, Divider, FormControlLabel, FormHelperText, Stack, Switch } from '@mui/material';
+import { useMemo } from 'react';
+import type { UseFormReturn } from 'react-hook-form';
+import { Alert, AlertTitle, Stack } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { useTranslation } from '@duncit/shell';
-import type { RegisterVenueValues, VenueRegistrationConfig } from '../../register-venue';
-import FoodMenuField from './FoodMenuField';
-import FoodOrderingField from './FoodOrderingField';
+import { VenueFoodFields } from '@duncit/venue-food';
+import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../../register-venue';
+import { partnersFoodAccount } from './AddRazorpayAccount';
+import FoodGstinField from './FoodGstinField';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
   config: VenueRegistrationConfig;
+  mode: RegisterVenueMode;
+  /** The venue being registered — its photos are filed in its folder; none before the first save. */
+  venueId?: string;
+  /** The venue's saved GST number; '' when it has none. */
+  savedGstin: string;
 }
 
-const OFFERS_FOOD_HINT_ID = 'register-venue-offers-food-hint';
+const ID_PREFIX = 'register-venue';
 
 /**
- * The Food Menu registration section: the switch, then — while it is on — the
- * menu and, under it, online ordering. Stays editable after approval. Switching it off keeps
- * the menu for later; the server stops taking orders.
+ * The Food Menu registration section: the shared food fields (@duncit/venue-food
+ * — the same dishes, ordering and GST the Food Menu page, the Venues console and
+ * mWeb edit), with the owner picking the Razorpay account guests pay. Stays
+ * editable after approval. Switching food off keeps the menu for later; the
+ * server stops taking orders.
  */
-export default function FoodSection({ form, config }: Readonly<Props>) {
+export default function FoodSection({ form, config, mode, venueId, savedGstin }: Readonly<Props>) {
   const { t } = useTranslation();
-  const offersFood = form.watch('offers_food');
+  const account = useMemo(() => partnersFoodAccount(ID_PREFIX), []);
 
   return (
     <Stack spacing={2.5} data-testid="register-venue-food">
@@ -30,36 +39,14 @@ export default function FoodSection({ form, config }: Readonly<Props>) {
         </AlertTitle>
         {t('partners.registerVenuePage.foodSectionIntro')}
       </Alert>
-      <Stack spacing={0}>
-        <Controller
-          name="offers_food"
-          control={form.control}
-          render={({ field }) => (
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={field.value}
-                  onChange={(_, checked) => field.onChange(checked)}
-                  onBlur={field.onBlur}
-                  slotProps={{ input: { 'aria-describedby': OFFERS_FOOD_HINT_ID } }}
-                  data-testid="register-venue-offers-food"
-                />
-              }
-              label={t('partners.registerVenuePage.offersFood')}
-            />
-          )}
-        />
-        <FormHelperText id={OFFERS_FOOD_HINT_ID} sx={{ mt: 0 }}>
-          {t('partners.registerVenuePage.offersFoodHint')}
-        </FormHelperText>
-      </Stack>
-      {offersFood && (
-        <>
-          <FoodMenuField form={form} config={config} />
-          <Divider flexItem />
-          <FoodOrderingField form={form} config={config} />
-        </>
-      )}
+      <VenueFoodFields
+        control={form.control}
+        config={config}
+        account={account}
+        upload={{ venueId, surface: 'PORTALS' }}
+        idPrefix={ID_PREFIX}
+        gstin={<FoodGstinField control={form.control} mode={mode} savedGstin={savedGstin} />}
+      />
     </Stack>
   );
 }

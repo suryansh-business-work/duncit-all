@@ -66,6 +66,22 @@ describe('useJobSettlement', () => {
     expect(notifySuccess).not.toHaveBeenCalled();
   });
 
+  it('announces a bulk email check in emails, whole or partial', () => {
+    const emailJob = (overrides: Partial<BackgroundJob>) =>
+      makeJob({ kind: 'EMAIL_VERIFY', table: '', label: 'leads.csv', ...overrides });
+
+    const { rerender } = renderSettlement([emailJob({ id: 'e1' }), emailJob({ id: 'e2' })]);
+    rerender({
+      jobs: [
+        emailJob({ id: 'e1', status: 'COMPLETED', succeeded: 12, total: 12 }),
+        emailJob({ id: 'e2', status: 'COMPLETED', succeeded: 9, failed: 3, total: 12 }),
+      ],
+    });
+
+    expect(notifySuccess).toHaveBeenCalledWith('leads.csv: 12 emails checked.');
+    expect(notify).toHaveBeenCalledWith('leads.csv: 9 checked, 3 could not be checked.', 'warning');
+  });
+
   it('reports why a job stopped', () => {
     const { rerender } = renderSettlement([makeJob()]);
     rerender({ jobs: [makeJob({ status: 'FAILED', error_message: 'Access to Coupons was revoked' })] });

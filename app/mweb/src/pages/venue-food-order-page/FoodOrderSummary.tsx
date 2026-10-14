@@ -1,5 +1,5 @@
 import { Divider, Stack, Typography } from '@mui/material';
-import { FOOD_PAYMENT_STATUS_KEYS, formatFoodMoney, type VenueFoodOrder } from '@duncit/utils';
+import { FOOD_PAYMENT_STATUS_KEYS, foodTaxLine, formatFoodMoney, type VenueFoodOrder } from '@duncit/utils';
 import SectionHeader from '../../components/SectionHeader';
 import { useTranslation } from '../../i18n/useTranslation';
 import { SURFACE_SX } from '../../theme';
@@ -59,6 +59,7 @@ export default function FoodOrderSummary({ order }: Readonly<{ order: VenueFoodO
             ? { code: order.coupon_code, pct: order.coupon_pct ?? 0, amount: order.coupon_discount_amount ?? 0 }
             : null
         }
+        tax={foodTaxLine(order.tax_mode, order.gst_pct, order.tax_amount)}
         total={order.total}
         currency={order.currency_symbol}
         testId="food-order-totals"

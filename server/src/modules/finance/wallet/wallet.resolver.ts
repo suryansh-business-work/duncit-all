@@ -6,11 +6,15 @@ import {
 } from './walletStatement.service';
 import type { IMinWithdrawal } from '@modules/finance/finance/finance.model';
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { FINANCE_READER, requireAuth, requireRole } from '@middleware/rbac';
+import { assertPlatformFinanceWrite, assertPodFinanceScope } from '../financeScope';
+import { financeTargets } from '../financeScope.targets';
 
 // Same set updateFinanceSettings guards the finance singleton with — the
 // withdrawal minimums live on that singleton, so they answer to the same roles.
 const FINANCE_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// The Finance console's reads — the analyst seat reads them, never writes.
+const FINANCE_READ = [...FINANCE_RW, FINANCE_READER];
 
 export const walletResolvers = {
   Query: {
@@ -41,19 +45,19 @@ export const walletResolvers = {
       return walletStatementService.file(user.id, args.input, args.format);
     },
     withdrawalRequests: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return walletService.listAllWithdrawals(args.status);
     },
     withdrawalRequestsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return walletService.withdrawalsTable(args.query);
     },
     podWithdrawalGroupsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return walletService.podWithdrawalGroupsTable(args.query);
     },
     podWithdrawalSummary: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return walletService.podWithdrawalSummary(args.pod_id);
     },
     podWithdrawalsTable: async (
@@ -61,11 +65,11 @@ export const walletResolvers = {
       args: { pod_id: string; query?: any },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return walletService.podWithdrawalsTable(args.pod_id, args.query);
     },
     withdrawalMinimums: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
+      requireRole(ctx, FINANCE_READ);
       return walletService.getWithdrawalMinimums();
     },
   },
@@ -80,6 +84,9 @@ export const walletResolvers = {
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, FINANCE_RW);
+      // Paying out a withdrawal pays for every pod it draws on — a city admin
+      // may only when each of those pods is in their city.
+      await assertPodFinanceScope(ctx, FINANCE_RW, () => financeTargets.withdrawal(args.withdrawal_id));
       return walletService.reviewWithdrawal(args.withdrawal_id, args.input.status, args.input.reason, user.id);
     },
     updateWithdrawalMinimums: async (
@@ -88,6 +95,7 @@ export const walletResolvers = {
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, FINANCE_RW);
+      assertPlatformFinanceWrite(ctx, FINANCE_RW);
       return walletService.updateWithdrawalMinimums(args.input);
     },
   },

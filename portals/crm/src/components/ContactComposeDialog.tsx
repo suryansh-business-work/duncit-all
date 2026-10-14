@@ -13,6 +13,8 @@ import {
   EMAIL_VENUE_LEAD,
 } from '../api/crm.gql';
 import { parseApiError } from '@duncit/utils';
+import { isEmail } from '@duncit/regex';
+import { EmailStatusBadge } from './email-status';
 import CommsProviderSelect from './CommsProviderSelect';
 import ComposeWindow from './compose/ComposeWindow';
 import EmailComposeFields, { type EmailPayload } from './compose/EmailComposeFields';
@@ -123,6 +125,12 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
           value={target}
           onChange={(event) => setTarget(event.target.value)}
           fullWidth
+          slotProps={{
+            input: {
+              endAdornment:
+                mode === 'email' && isEmail(target.trim()) ? <EmailStatusBadge email={target} /> : undefined,
+            },
+          }}
         />
         {mode === 'email' && (
           <EmailComposeFields

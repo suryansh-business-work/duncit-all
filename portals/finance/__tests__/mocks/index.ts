@@ -7,6 +7,7 @@
  */
 export * from './dashboard.mock';
 export * from './deductions.mock';
+export * from './food-menu-defaults.mock';
 export * from './invoice.mock';
 export * from './invoice-template.mock';
 export * from './payout-cycles.mock';

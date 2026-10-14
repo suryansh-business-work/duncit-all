@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Switch } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 import { CHALLENGE_ACTION_KEYS, CHALLENGE_CONFIRM_KEYS, CHALLENGE_TOGGLES } from '@duncit/utils';
 
@@ -7,7 +6,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DuncitButton } from '@/components/DuncitButton';
 import type { HostChallengeActions } from '@/hooks/useHostChallengeActions';
 import type { PodChallengeView } from '@/hooks/usePodChallengeLive';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { AppSwitch } from '@/components/AppSwitch';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
@@ -24,7 +23,6 @@ interface Props {
  */
 export function HostChallengeControls({ challenge, actions }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
   const [confirming, setConfirming] = useState('');
   const label = (action: string) => t(CHALLENGE_ACTION_KEYS[action] ?? action);
   const ask = CHALLENGE_CONFIRM_KEYS[confirming];
@@ -57,13 +55,12 @@ export function HostChallengeControls({ challenge, actions }: Readonly<Props>) {
           <Text flex={1} fontSize={14} color="$color">
             {t(labelKey)}
           </Text>
-          <Switch
+          <AppSwitch
             testID={`challenge-toggle-${key}`}
             aria-label={t(labelKey)}
             value={challenge[key]}
             disabled={actions.busy || (key === 'enabled' && lockedOn)}
             onValueChange={(next) => fireAndForget(actions.toggle(key, next))}
-            trackColor={{ true: primary }}
           />
         </XStack>
       ))}

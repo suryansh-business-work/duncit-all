@@ -4,6 +4,7 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import EmailIcon from '@mui/icons-material/Email';
 import { DuncitIconButton } from '@duncit/buttons';
 import type { CrmContact } from '../../api/crm.types';
+import { EmailStatusBadge } from '../email-status';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -95,6 +96,7 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
                 {contact.email}
               </Typography>
             </Tooltip>
+            <EmailStatusBadge email={contact.email} />
           </Row>
         )}
       </Stack>

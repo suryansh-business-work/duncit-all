@@ -71,6 +71,27 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
 
     /**
+     * GST on venue food — the words Finance's Food Menu Defaults, the owner's
+     * venue form (Partners) and the Venues console editor all say the same
+     * way, and the messages of the one shared schema (@duncit/forms
+     * `food-tax`). One translator decision instead of three (rule 40).
+     */
+    foodTax: {
+      taxMode: 'GST on menu prices',
+      inclusive: 'Prices include GST',
+      exclusive: 'GST added to prices',
+      gstPct: 'GST %',
+      gstPctInvalid: 'GST must be a whole number from {min} to {max}.',
+      taxModeRequired: 'Choose whether prices include GST or have it added.',
+      override: "Set this venue's own GST",
+      overrideHint: "Off: QR orders follow Duncit Finance's default GST. On: the GST below is used instead.",
+      gstin: 'GST number (GSTIN)',
+      gstinHint: 'Printed on every food invoice. Once saved, only Duncit can change it.',
+      gstinLocked: 'Printed on every food invoice. It is locked once saved — ask Duncit support to change it.',
+      gstinInvalid: 'Enter a valid 15-character GSTIN, like 22ABCDE1234F1Z5.',
+    },
+
+    /**
      * @duncit/table's own chrome — the toolbar, the column menu, the filter
      * popover and the two default column headers its factories produce.
      *
@@ -266,6 +287,27 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       },
       translatePartialNotice: '{label}: {translated} translated, {failed} came back unusable — the next sync retries them.',
       translateStoppedNotice: '{label}: the translation stopped — {reason}',
+      // Email verifier (CRM console): a bulk CSV check, one email per row.
+      verifying: {
+        one: 'Verifying {count} email',
+        other: 'Verifying {count} emails',
+      },
+      verified: {
+        one: 'Verified {count} email',
+        other: 'Verified {count} emails',
+      },
+      verifyStopped: 'Email verification stopped',
+      verifyCancelled: 'Email verification cancelled',
+      uncheckedEmails: {
+        one: '{count} email could not be checked — the verifier did not answer',
+        other: '{count} emails could not be checked — the verifier did not answer',
+      },
+      verifyDoneNotice: {
+        one: '{label}: 1 email checked.',
+        other: '{label}: {count} emails checked.',
+      },
+      verifyPartialNotice: '{label}: {checked} checked, {failed} could not be checked.',
+      verifyStoppedNotice: '{label}: the email check stopped — {reason}',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,
@@ -639,6 +681,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       deletionSettings: 'Deletion Settings',
       dataClone: 'Data Clone',
       defaultDeductions: 'Default Deductions',
+      foodMenuDefaults: 'Food Menu Defaults',
       domain: 'Domain',
       dnsRecords: 'DNS Records',
       dnsStagingSync: 'Staging Sync',
@@ -857,6 +900,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       welcome: 'Welcome',
       whatsapp: 'WhatsApp',
       whatsappLeadGenerator: 'WhatsApp Lead Generator',
+      emailVerifier: 'Email Verifier',
       whatsappLeads: 'WhatsApp Leads',
       whatsappLogs: 'WhatsApp Logs',
       withdrawal: 'Withdrawal',
@@ -1567,6 +1611,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         'Your earnings are calculated only from the attendees you mark. If someone came but is never marked, their seat is left out of your payout.',
       earningsBodyVirtual:
         'This pod is online, so there is no door to scan at. A member is marked present the moment they open the meeting link from the pod page during the pod — anyone who never opens it is left out of your payout unless you mark them by hand.',
+      earningsTitleFree: 'Mark who came',
+      earningsBodyFree:
+        'This pod is free, so there is no payout. Marking attendance still records who came — it unlocks their Visited status, rating and feedback, and the pod can only be completed once at least one guest is marked present.',
       lockedCompletedTitle: 'Attendance is closed for this pod',
       lockedCompletedBody:
         'This pod is completed and its payout is already split, so attendance can no longer be changed. If somebody is missing, contact your Club Admin below.',
@@ -1718,6 +1765,14 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       title: 'Your share (credited to your wallet once Finance approves)',
       shortfall:
         "The venue's booked price is more than this pod took at the door. The venue is paid in full and your share is nil — it is never taken back from you.",
+      // A FREE pod moves no money on the platform: every money surface shows
+      // this label instead of figures (host projection, settlement, earnings).
+      freePod: 'Free pod',
+      freeNote:
+        'Nobody pays to join a free pod, so there is no payout. The host settles any venue charges directly with the venue.',
+      freeCompleted: 'Pod completed.',
+      freeCompleteHint:
+        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. It is a free pod, so completing it pays nothing out.',
     },
     // The venue's final bill at Complete Pod — @duncit/utils' venue-bill.ts.
     // `mweb.venueBill` must stay word-for-word identical: the same builder

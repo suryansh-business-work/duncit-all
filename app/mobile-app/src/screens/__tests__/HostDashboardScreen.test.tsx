@@ -47,7 +47,7 @@ describe('HostDashboardScreen', () => {
     expect(screen.getByTestId('host-dashboard-loading')).toBeOnTheScreen();
   });
 
-  it('renders earnings, stats, quick actions and opens health + a quick action', () => {
+  it('renders earnings and stats only, and opens health', () => {
     renderWithProviders(<HostDashboardScreen />);
     expect(screen.getByTestId('host-earnings')).toBeOnTheScreen();
     // The balance card shows the wallet balance (the greeting went with the redesign).
@@ -63,8 +63,8 @@ describe('HostDashboardScreen', () => {
     expect(screen.getByText('₹900.00')).toBeOnTheScreen();
     expect(screen.getByText('Pods completed')).toBeOnTheScreen();
     expect(screen.getByText('7')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('host-action-create-pod'));
-    expect(mockNavigate).toHaveBeenCalledWith('CreatePod');
+    // Figures only — the old quick actions are Host Options entries.
+    expect(screen.queryByTestId('host-action-create-pod')).toBeNull();
     fireEvent.press(screen.getByTestId('host-health'));
     expect(mockNavigate).toHaveBeenCalledWith('AccountHealth');
   });

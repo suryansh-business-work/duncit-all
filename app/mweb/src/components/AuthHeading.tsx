@@ -4,18 +4,16 @@ import TwoToneHeading from './TwoToneHeading';
 
 interface Props {
   title: string;
-  /** The softer second beat — "back." in "Welcome back." — drawn muted. */
+  /** The second beat — "back!" in "Welcome back!" — on its own line, in the red text accent. */
   accent?: string;
-  /**
-   * Only for a line that carries something the person needs ("we sent a code
-   * to…", "you've been signed out everywhere"); decorative taglines are gone.
-   */
+  /** The line under the heading: what the screen is for, or what the person needs to know. */
   subtitle?: string;
 }
 
 /**
  * The logo-plus-heading block every auth screen opens with: the admin logo,
- * then one calm two-tone headline at 28px.
+ * then a large left-aligned two-line headline whose second beat is red, sitting
+ * over the lower half of the Branding hero.
  *
  * Sign-in, signup, recovery and the referral step all render it, because a
  * heading that drifts is two auth screens that no longer look like the same
@@ -23,17 +21,17 @@ interface Props {
  */
 export default function AuthHeading({ title, accent, subtitle }: Readonly<Props>) {
   return (
-    <Stack data-testid="auth-heading" spacing={1} sx={{ alignItems: 'center' }}>
+    <Stack data-testid="auth-heading" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
       <AuthLogo />
       {/* TwoToneHeading has no size prop; the hero size is set here, once. */}
-      <Box sx={{ width: '100%', '& .MuiTypography-root': { fontSize: '1.75rem' } }}>
-        <TwoToneHeading lead={title} trail={accent} align="center" />
+      <Box sx={{ width: '100%', '& .MuiTypography-root': { fontSize: '2.5rem', fontWeight: 800 } }}>
+        <TwoToneHeading lead={title} trail={accent} trailTone="accent" stacked align="left" />
       </Box>
       {subtitle && (
         <Typography
           data-testid="auth-heading-subtitle"
-          variant="body2"
-          sx={{ textAlign: 'center', color: 'text.secondary', maxWidth: 320 }}
+          variant="body1"
+          sx={{ color: 'text.secondary', maxWidth: 360 }}
         >
           {subtitle}
         </Typography>

@@ -137,17 +137,19 @@ export function useFoodCoupon({ venueId, cart, phone }: Readonly<Options>) {
     setRemoved(false);
   };
 
-  const apply = async () => {
-    if (busy.current || !complete) return;
+  /** Apply what was typed — or `picked`, a code chosen from the venue's offered coupons. */
+  const apply = async (picked?: string) => {
+    const asked = picked ? normalizeFoodCouponCode(picked) : normalized;
+    if (busy.current || asked.length < FOOD_ORDER_LIMITS.couponCodeMin) return;
     busy.current = true;
     setApplying(true);
     setError(null);
     setRemoved(false);
     try {
-      const preview = await askFoodCoupon(venueId, cart.lines, normalized, phone());
+      const preview = await askFoodCoupon(venueId, cart.lines, asked, phone());
       if (preview.ok) {
         cart.applyCoupon({
-          code: preview.coupon_code ?? normalized,
+          code: preview.coupon_code ?? asked,
           coupon_pct: preview.coupon_pct,
           min_order_amount: preview.min_order_amount,
         });

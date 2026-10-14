@@ -15,6 +15,8 @@ services:
       # Reach the WhatsApp gateway over the internal Docker network — calling the
       # public domain from inside the container fails on hairpin NAT.
       OPENWA_INTERNAL_URL: http://open-wa:2024
+      # The CRM email verifier (the `reacher` service below), internal network only.
+      REACHER_INTERNAL_URL: http://reacher:8080
       # Set explicitly, not left to the cwd-relative default: the image's final
       # WORKDIR is /app/server, so the default would resolve inside the app
       # rather than onto the bind mount below.
@@ -417,6 +419,28 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+
+  # CRM email verifier — Reacher (github.com/reacherhq/check-if-email-exists,
+  # MIT). The server calls POST /v0/check_email over this network
+  # (REACHER_INTERNAL_URL). NO host port: only containers here can reach it.
+  # It speaks SMTP to the mailbox's own server, so outbound port 25 must be open
+  # on the VPS; where it is blocked every check comes back UNKNOWN. HELO name
+  # must be the VPS's reverse-DNS name (PTR of the server IP = srv912221.hstgr.cloud)
+  # or Gmail/Outlook answer less; override per stack with REACHER_HELLO_NAME.
+  # Infra service, not a build target — redeploy.sh `up -d`s it like redis.
+  reacher:
+    image: reacherhq/backend:v0.11.7
+    container_name: duncit-reacher
+    restart: unless-stopped
+    environment:
+      RCH__HTTP_HOST: 0.0.0.0
+      RCH__HTTP_PORT: "8080"
+      RCH__BACKEND_NAME: duncit-crm
+      RCH__HELLO_NAME: ${REACHER_HELLO_NAME:-srv912221.hstgr.cloud}
+      RCH__FROM_EMAIL: ${REACHER_FROM_EMAIL:-verify@duncit.com}
+      # Below the server's 60s request timeout, so a slow mail server comes back
+      # as UNKNOWN instead of the request being cut off.
+      RCH__SMTP_TIMEOUT: "45"
 
   # redis.duncit.com — Redis Commander UI. Loopback-only; nginx fronts it WITH
   # basic auth (/etc/nginx/.htpasswd-redis, created once on the VPS — see

@@ -28,6 +28,7 @@ export const VenueSlotRequestsDocument = gql(`
       host_name
       host_email
       host_phone
+      pod_is_free
     }
   }
 `);

@@ -39,7 +39,8 @@ export type StudioOptionIcon =
   | 'orders'
   | 'menu'
   | 'warehouses'
-  | 'refunds';
+  | 'refunds'
+  | 'categories';
 
 export interface StudioOptionItem {
   key: string;
@@ -55,6 +56,9 @@ export interface StudioOptionItem {
   portal: string;
   /** Shown only while the `auto_pods` feature flag is on. */
   autoPods?: boolean;
+  /** An app screen the Partner console has no page for — its menu leaves it
+   * out (`studioOptionsFor` with `console: true`). */
+  appOnly?: boolean;
   /** The sub-menu an option belongs to. The catalogue stays ONE flat list (the
    * Options pages list every option in order); a surface that nests its menu —
    * the Partner console sidebar — splits on this with `studioOptionGroups`.
@@ -141,13 +145,13 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'settings', labelKey: 'mweb.studioOptions.venueSettings', hintKey: 'mweb.studioOptions.venueSettingsHint', icon: 'settings', path: '/venues/settings', route: 'VenueSettings', portal: '/venues/settings' },
     { key: 'earnings', labelKey: 'mweb.studioOptions.venueEarnings', hintKey: 'mweb.studioOptions.venueEarningsHint', icon: 'earnings', path: '/venues/earnings', route: 'VenueEarnings', portal: '/venues/earnings' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishVenue', hintKey: 'mweb.studioOptions.publishVenueHint', icon: 'publish', path: '/venues/publish', route: 'VenuePublish', portal: '/venues/publish' },
-    // The venue's food desk — its dashboard, menu, order board and coupons — is
-    // Partner console screens; the apps open them there. `group` nests the four
-    // under one Food heading in the console sidebar.
-    { key: 'food-dashboard', labelKey: 'mweb.studioOptions.foodDashboard', hintKey: 'mweb.studioOptions.foodDashboardHint', icon: 'dashboard', portal: '/venues/food-dashboard', group: 'food' },
-    { key: 'food-menu', labelKey: 'mweb.studioOptions.foodMenu', hintKey: 'mweb.studioOptions.foodMenuHint', icon: 'menu', portal: '/venues/food-menu', group: 'food' },
-    { key: 'food-orders', labelKey: 'mweb.studioOptions.foodOrders', hintKey: 'mweb.studioOptions.foodOrdersHint', icon: 'orders', portal: '/venues/food-orders', group: 'food' },
-    { key: 'food-coupons', labelKey: 'mweb.studioOptions.foodCoupons', hintKey: 'mweb.studioOptions.foodCouponsHint', icon: 'orders', portal: '/venues/food-coupons', group: 'food' },
+    // The venue's food desk — its dashboard, menu, order board and coupons.
+    // All four are one shared set (@duncit/venue-food on the web, Tamagui twins
+    // in the app). `group` nests them under one Food heading in the console sidebar.
+    { key: 'food-dashboard', labelKey: 'mweb.studioOptions.foodDashboard', hintKey: 'mweb.studioOptions.foodDashboardHint', icon: 'dashboard', path: '/venues/food-dashboard', route: 'VenueFoodDashboard', portal: '/venues/food-dashboard', group: 'food' },
+    { key: 'food-menu', labelKey: 'mweb.studioOptions.foodMenu', hintKey: 'mweb.studioOptions.foodMenuHint', icon: 'menu', path: '/venues/food-menu', route: 'VenueFoodMenu', portal: '/venues/food-menu', group: 'food' },
+    { key: 'food-orders', labelKey: 'mweb.studioOptions.foodOrders', hintKey: 'mweb.studioOptions.foodOrdersHint', icon: 'orders', path: '/venues/food-orders', route: 'VenueFoodOrders', portal: '/venues/food-orders', group: 'food' },
+    { key: 'food-coupons', labelKey: 'mweb.studioOptions.foodCoupons', hintKey: 'mweb.studioOptions.foodCouponsHint', icon: 'orders', path: '/venues/food-coupons', route: 'VenueFoodCoupons', portal: '/venues/food-coupons', group: 'food' },
     { key: 'pods', labelKey: 'mweb.studioOptions.venuePods', hintKey: 'mweb.studioOptions.venuePodsHint', icon: 'pods', path: '/venues/pods', route: 'VenuePods', portal: '/venues/pods' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/venues/change-requests' },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromHosts', hintKey: 'mweb.studioOptions.podRequestsFromHostsHint', icon: 'requests', path: '/venues/pod-requests', route: 'VenuePodRequests', portal: '/venues/pod-requests' },
@@ -164,6 +168,10 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'nearby', labelKey: 'mweb.studioOptions.nearbyVenues', hintKey: 'mweb.studioOptions.nearbyVenuesHint', icon: 'nearby', path: '/host/nearby-venues', route: 'NearbyVenues', portal: '/host/nearby-venues' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/host/change-requests' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishHost', hintKey: 'mweb.studioOptions.publishHostHint', icon: 'publish', path: '/host/publish', route: 'HostPublish', portal: '/host/publish' },
+    // Kept off Your Pods so that page lists pods only. App screens; the console
+    // shows the same payouts on its host dashboard.
+    { key: 'share', labelKey: 'mweb.studioOptions.hostShare', hintKey: 'mweb.studioOptions.hostShareHint', icon: 'earnings', path: '/host/share', route: 'HostShare', portal: '/host/dashboard', appOnly: true },
+    { key: 'categories', labelKey: 'mweb.studioOptions.hostCategories', hintKey: 'mweb.studioOptions.hostCategoriesHint', icon: 'categories', path: '/host/categories', route: 'HostCategories', portal: '/host/dashboard', appOnly: true },
     VERIFICATION,
     WITHDRAWAL,
   ],
@@ -208,15 +216,18 @@ export function studioOptionsEntryFor(
   return holdsStudio(mode, roles) ? STUDIO_OPTIONS_ENTRY[mode] : null;
 }
 
-/** The studio's options, minus Auto Pods while its flag is off; `[]` when the
+/** The studio's options, minus Auto Pods while its flag is off and, for the
+ * Partner console (`console: true`), minus the app-only screens; `[]` when the
  * user is not in a studio they hold. */
 export function studioOptionsFor(
   mode: StudioMode,
   roles: readonly string[],
-  options: { autoPods: boolean },
+  options: { autoPods: boolean; console?: boolean },
 ): StudioOptionItem[] {
   if (!holdsStudio(mode, roles)) return [];
-  return STUDIO_OPTION_LIST[mode].filter((option) => options.autoPods || !option.autoPods);
+  return STUDIO_OPTION_LIST[mode].filter(
+    (option) => (options.autoPods || !option.autoPods) && !(options.console && option.appOnly),
+  );
 }
 
 /** Splits a studio's options into its sub-menus, each in catalogue order — the

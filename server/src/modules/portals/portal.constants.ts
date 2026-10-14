@@ -8,7 +8,9 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   ads: ['ADS_MANAGER'],
   ai: ['AI_MANAGER'],
   analytics: ['ANALYTICS_MANAGER'],
-  'ecomm-portal': ['ECOMM_MANAGER'],
+  // Its own staff role — ECOMM_MANAGER is the Partner Brand role, granted to
+  // every approved brand partner, and must not open the pet store.
+  'ecomm-portal': ['ECOMM_STORE_MANAGER'],
   localization: ['LOCALIZATION_MANAGER'],
   targets: ['TARGETS_MANAGER'],
   challenge: ['CHALLENGE_MANAGER'],
@@ -25,7 +27,8 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   crm: ['CRM_MANAGER'],
   developers: ['DEVELOPERS_MANAGER'],
   employee: ['EMPLOYEE'],
-  finance: ['FINANCE_MANAGER'],
+  // FINANCE_USER is the read-only analyst seat (FINANCE_READER in rbac.ts).
+  finance: ['FINANCE_MANAGER', 'FINANCE_USER'],
   hr: ['HR_MANAGER'],
   legal: ['LEGAL_MANAGER'],
   logs: ['LOGS_MANAGER'],
@@ -33,7 +36,7 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   onboarding: ['ONBOARDING_MANAGER'],
   products: ['PRODUCTS_MANAGER'],
   'regional-club-admin': ['REGIONAL_CLUB_ADMIN'],
-  support: ['SUPPORT_MANAGER'],
+  support: ['SUPPORT_MANAGER', 'SUPPORT_USER'],
   tech: ['TECH_MANAGER'],
   'website-app': ['WEBSITE_MANAGER'],
 };

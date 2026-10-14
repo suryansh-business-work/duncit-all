@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import { foodGstPct, foodTaxMode } from '@modules/finance/finance/foodTaxDefaults';
 import { PartnerIntegrationModel } from '@modules/venues/ecommBrand/partnerIntegration.model';
 import {
   VENUE_FOOD_DIETS,
@@ -8,6 +9,7 @@ import {
   VENUE_FOOD_MENU_LIMIT,
   VENUE_FOOD_PRICE_MAX,
   VENUE_FOOD_SPICE_LEVELS,
+  VENUE_FOOD_TAX_DEFAULTS,
 } from './venue.constants';
 import type { IVenueFoodItem, IVenueFoodOrdering, VenueFoodDiet, VenueFoodSpiceLevel } from './venue.model';
 
@@ -26,11 +28,20 @@ const bad = (message: string): never => {
 
 const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 
+const given = <T>(value: T | null | undefined): value is T => value !== undefined && value !== null;
+
 /** The three food inputs as they arrive on a step-1 or approved-venue write. */
 export interface VenueFoodInput {
   offers_food?: boolean | null;
   food_menu?: unknown[] | null;
-  food_ordering?: { enabled?: boolean | null; razorpay_integration_id?: string | null; discount_pct?: number | null } | null;
+  food_ordering?: {
+    enabled?: boolean | null;
+    razorpay_integration_id?: string | null;
+    discount_pct?: number | null;
+    tax_override?: boolean | null;
+    tax_mode?: string | null;
+    gst_pct?: number | null;
+  } | null;
 }
 
 /** What the venue holds today — the base every partial write is laid over. */
@@ -121,6 +132,26 @@ async function ownedRazorpayConnection(id: string, ownerId: Types.ObjectId): Pro
   return new Types.ObjectId(id);
 }
 
+/**
+ * The venue's own GST, kept as stored until a write names it. A field left out
+ * (or sent as null) keeps what the venue has; a sent one is checked even while
+ * the override is off, so nothing invalid is ever stored for later.
+ */
+function foodTaxFields(input: NonNullable<VenueFoodInput['food_ordering']>, current: Partial<IVenueFoodOrdering>) {
+  return {
+    tax_override: input.tax_override ?? current.tax_override === true,
+    tax_mode: given(input.tax_mode) ? foodTaxMode(input.tax_mode) : (current.tax_mode ?? VENUE_FOOD_TAX_DEFAULTS.tax_mode),
+    gst_pct: given(input.gst_pct) ? foodGstPct(input.gst_pct) : (current.gst_pct ?? VENUE_FOOD_TAX_DEFAULTS.gst_pct),
+  };
+}
+
+const storedFoodOrdering = (current: Partial<IVenueFoodOrdering>): IVenueFoodOrdering => ({
+  enabled: current.enabled === true,
+  razorpay_integration_id: current.razorpay_integration_id ?? null,
+  discount_pct: current.discount_pct ?? 0,
+  ...foodTaxFields({}, current),
+});
+
 async function normalizeFoodOrdering(
   input: NonNullable<VenueFoodInput['food_ordering']>,
   current: Partial<IVenueFoodOrdering>,
@@ -134,6 +165,7 @@ async function normalizeFoodOrdering(
     enabled: input.enabled ?? current.enabled === true,
     razorpay_integration_id: linked || null,
     discount_pct: discountPct(input.discount_pct, current.discount_pct ?? 0),
+    ...foodTaxFields(input, current),
   };
 }
 
@@ -157,11 +189,7 @@ export async function buildVenueFoodPatch(input: VenueFoodInput, state: VenueFoo
   const currentOrdering = state.food_ordering ?? {};
   const ordering = input.food_ordering
     ? await normalizeFoodOrdering(input.food_ordering, currentOrdering, state.owner_user_id)
-    : {
-        enabled: currentOrdering.enabled === true,
-        razorpay_integration_id: currentOrdering.razorpay_integration_id ?? null,
-        discount_pct: currentOrdering.discount_pct ?? 0,
-      };
+    : storedFoodOrdering(currentOrdering);
   // A venue that stops serving food stops taking orders; its menu is kept for when it starts again.
   if (!offersFood) ordering.enabled = false;
   assertOrderable(offersFood, menu, ordering);
@@ -188,7 +216,14 @@ export const toVenueFoodPub = (venue: Omit<VenueFoodState, 'owner_user_id'>) => 
     razorpay_integration_id: venue.food_ordering?.razorpay_integration_id
       ? venue.food_ordering.razorpay_integration_id.toHexString()
       : null,
+    razorpay_linked: Boolean(venue.food_ordering?.razorpay_integration_id),
     discount_pct: venue.food_ordering?.discount_pct ?? 0,
+    // As stored. The GraphQL type resolves tax_mode and gst_pct to what the
+    // venue's orders are ACTUALLY priced with (see venue.resolver), so a client
+    // never has to know Finance's default.
+    tax_override: venue.food_ordering?.tax_override === true,
+    tax_mode: venue.food_ordering?.tax_mode ?? null,
+    gst_pct: venue.food_ordering?.gst_pct ?? null,
   },
 });
 

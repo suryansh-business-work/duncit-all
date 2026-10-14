@@ -1,4 +1,4 @@
-import { flattenCatalogue, type NestedCatalogue } from './catalogue';
+import { catalogueBranch, flattenCatalogue, type NestedCatalogue } from './catalogue';
 import { ADMIN_BUNDLE } from './bundles/admin';
 import { ADS_BUNDLE } from './bundles/ads';
 import { ANALYTICS_BUNDLE } from './bundles/analytics';
@@ -28,6 +28,7 @@ import { WITHDRAW_BUNDLE } from './bundles/withdraw';
 import { AVAILABILITY_BUNDLE } from './bundles/availability';
 import { PUBLIC_PAGE_BUNDLE } from './bundles/public-page';
 import { VENUE_SETTINGS_BUNDLE } from './bundles/venue-settings';
+import { VENUE_FOOD_OWNER_BUNDLE } from './bundles/venue-food-owner';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -127,6 +128,7 @@ export {
   AVAILABILITY_BUNDLE,
   PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  VENUE_FOOD_OWNER_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -134,6 +136,15 @@ export {
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
+};
+
+/**
+ * Just `shell.foodTax.*` — the GST words and rule messages of the venue food
+ * forms, for the surfaces that render them without the portal shell: mWeb and
+ * the native app's food menu.
+ */
+export const SHELL_FOOD_TAX_SLICE: NestedCatalogue = {
+  shell: { foodTax: catalogueBranch(catalogueBranch(SHELL_BUNDLE, 'shell'), 'foodTax') },
 };
 
 /** Every client bundle, by the surface that ships it. */
@@ -167,6 +178,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   availability: AVAILABILITY_BUNDLE,
   publicPage: PUBLIC_PAGE_BUNDLE,
   venueSettings: VENUE_SETTINGS_BUNDLE,
+  venueFoodOwner: VENUE_FOOD_OWNER_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

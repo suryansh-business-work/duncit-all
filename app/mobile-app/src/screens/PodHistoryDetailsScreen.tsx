@@ -13,6 +13,7 @@ import {
   usePodBackoutAttempts,
   usePodBackoutDeduction,
   usePodHistory,
+  usePodHistoryCancelSpot,
   usePodInvoice,
   usePodRejoin,
   usePodTicket,
@@ -56,16 +57,12 @@ export function PodHistoryDetailsScreen() {
   );
   const backoutMaxed = isBackoutMaxed(backoutAttempts);
 
-  /*
-    Both reads, every time — a backout changes the booking AND the attempts.
-
-    Refetching only the memberships left the seat count and the timeline fresh
-    beside an attempt counter frozen at what it was before the request, so the
-    screen had to be reopened before it agreed with itself.
-  */
+  // Both reads, every time — a backout changes the booking AND the attempts;
+  // refetching only the memberships froze the attempt counter beside them.
   const refresh = async () => {
     await Promise.all([refetch(), refetchAttempts()]).catch(() => undefined);
   };
+  const cancelSpot = usePodHistoryCancelSpot(selected?.pod?.id, setNotice, refresh);
 
   const confirmBackout = async (seats?: number) => {
     if (!selected?.pod?.id) return;
@@ -135,6 +132,7 @@ export function PodHistoryDetailsScreen() {
           backoutMaxed={backoutMaxed}
           backingOut={backingOut}
           rejoining={rejoining}
+          cancellingSpot={cancelSpot.busy}
           invoiceBusy={invoiceBusy}
           ticketBusy={ticketBusy}
           notice={notice}
@@ -145,6 +143,7 @@ export function PodHistoryDetailsScreen() {
           onBackout={() => setBackoutOpen(true)}
           onBackoutBlocked={() => setNotice(t('mweb.podDetails.backoutMaxed'))}
           onRejoin={() => setRejoinOpen(true)}
+          onCancelSpot={() => cancelSpot.setOpen(true)}
           onRefundStatus={() =>
             setNotice(
               t('mweb.podHistory.refundStatusToast', {
@@ -193,6 +192,7 @@ export function PodHistoryDetailsScreen() {
           setBackoutOpen(false);
           navigation.navigate('Policy', { slug: 'backout-terms' });
         }}
+        cancelSpot={cancelSpot}
       />
     </StackScreen>
   );

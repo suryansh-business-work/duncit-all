@@ -235,9 +235,14 @@ export async function claimExtraSeats(podId: PodRef, userId: PodRef, count: numb
  * the counter had already drifted from the memberships — that is a real defect,
  * so it is logged rather than silently absorbed the way the old helper did.
  */
-export async function releaseSeats(podId: PodRef, userId: PodRef, seats = 1) {
+export async function releaseSeats(
+  podId: PodRef,
+  userId: PodRef,
+  seats = 1,
+  session?: ClientSession
+) {
   const uid = new Types.ObjectId(userId.toString());
-  return giveBack(podId, Math.max(normalizeSeats(seats) - 1, 0), uid, userId.toString());
+  return giveBack(podId, Math.max(normalizeSeats(seats) - 1, 0), uid, userId.toString(), session);
 }
 
 /**
@@ -258,7 +263,8 @@ async function giveBack(
   podId: PodRef,
   extra: number,
   removeUid: Types.ObjectId | null,
-  userId: string
+  userId: string,
+  session?: ClientSession
 ) {
   const nextAttendees = removeUid
     ? {
@@ -280,7 +286,7 @@ async function giveBack(
         },
       },
     ],
-    { new: false }
+    { new: false, session }
   );
   if (before && (before.extra_seats ?? 0) - extra < 0) {
     logs.server.error('pods', 'releaseSeats', {

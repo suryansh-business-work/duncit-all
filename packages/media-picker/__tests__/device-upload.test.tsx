@@ -457,18 +457,21 @@ describe('useDeviceUpload uploading', () => {
       .spyOn(compressionModule, 'compressUploadedVideo')
       .mockResolvedValue(COMPRESSED_VIDEO);
     const onPicked = vi.fn();
-    const { result } = hook({ onPicked });
+    // The record the video is for rides along both legs, so the server files it in that record's folder.
+    const { result } = hook({ onPicked, entityId: 'venue-1' });
     await settle();
 
     await pickAnd(result, mp4File());
 
-    expect(direct).toHaveBeenCalled();
+    expect(direct).toHaveBeenCalledWith(expect.anything(), expect.any(File), 'pods', expect.any(Function), 'POD', 'venue-1');
     expect(compress).toHaveBeenCalledWith(
       expect.anything(),
       RAW_VIDEO,
       'pods',
       'POD',
       expect.any(Function),
+      null,
+      'venue-1',
     );
     expect(onPicked).toHaveBeenCalledWith(COMPRESSED_VIDEO);
   });

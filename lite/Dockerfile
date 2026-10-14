@@ -74,6 +74,7 @@ COPY packages/dialogs-native/package.json ./packages/dialogs-native/
 COPY packages/docs-demos/package.json ./packages/docs-demos/
 COPY packages/earn/package.json ./packages/earn/
 COPY packages/entity-consoles/package.json ./packages/entity-consoles/
+COPY packages/venue-food/package.json ./packages/venue-food/
 COPY packages/errors/package.json ./packages/errors/
 COPY packages/fallback-icons/package.json ./packages/fallback-icons/
 COPY packages/forms/package.json ./packages/forms/

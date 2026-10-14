@@ -1,31 +1,12 @@
 import { Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
-import PodActionPanel from './PodActionPanel';
-
-interface Props {
-  pod: any;
-  isFree: boolean;
-  isHost: boolean;
-  priceFormat: (amount: number) => string;
-  membershipState: any;
-  joining: boolean;
-  backingOut: boolean;
-  restoringSpot: boolean;
-  seats: number;
-  onSeatsChange: (seats: number) => void;
-  onJoinFree: () => void;
-  onBackout: () => void;
-  onKeepSpot: () => void;
-  onPaidCheckout: () => void;
-  onCopyReferral: (token: string) => void;
-  onGoToDashboard: () => void;
-}
+import PodActionPanel, { type PodActionPanelProps } from './PodActionPanel';
 
 /** The booking bar: a floating 24px surface card above the bottom nav, price
  * or state on the left and the one green action on the right.
  * Native twin: details/PodBookingBar. */
-export default function StickyPodActionPanel(props: Readonly<Props>) {
+export default function StickyPodActionPanel(props: Readonly<PodActionPanelProps>) {
   return (
     <Box
       data-testid="sticky-pod-action-panel"

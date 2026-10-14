@@ -6,7 +6,7 @@ import { buildVenueBillLines } from '@duncit/utils';
 import AttendanceRoster from './AttendanceRoster';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
-import type { PodSettlement } from '../types';
+import type { PodSettlement, PodSettlementAttendee } from '../types';
 
 interface Props {
   podId: string;
@@ -19,6 +19,9 @@ interface Props {
   /** Changes after each scanner session — re-reads the settlement so a newly
    * scanned guest is reflected in both the roster and the payout. */
   refreshToken: number;
+  /** The pod is FREE: there is no payout to preview, only the roster. The
+   * settlement's own `is_free` says the same once it has loaded. */
+  free?: boolean;
 }
 
 /** The head-count note under the roster — the seats these figures come from. */
@@ -49,6 +52,32 @@ function AttendanceNote({ settlement }: Readonly<{ settlement: PodSettlement }>)
   );
 }
 
+/** A free pod's preview: who was scanned in (attendance still gates completion)
+ * and why there is no money in it — never a row of zeros. */
+function FreeSettlement({
+  attendees,
+  settlement,
+  onScan,
+}: Readonly<{ attendees: PodSettlementAttendee[]; settlement: PodSettlement; onScan: () => void }>) {
+  const { labels } = useHostPodActionsConfig();
+  return (
+    <Stack spacing={1}>
+      <AttendanceRoster
+        attendees={attendees}
+        attendedSeats={settlement.attended_seats}
+        bookedSeats={settlement.booked_seats}
+        symbol={settlement.currency_symbol}
+        showAmounts={false}
+        onScan={onScan}
+      />
+      <Divider />
+      <Typography variant="caption" data-testid="settlement-free-note" sx={{ color: 'text.secondary' }}>
+        {labels.shareFreeNote}
+      </Typography>
+    </Stack>
+  );
+}
+
 /** Live "Host Share" preview — the finance-engine split for this pod. */
 export default function SettlementPreview({
   podId,
@@ -56,6 +85,7 @@ export default function SettlementPreview({
   includeSlotPrice,
   onScan,
   refreshToken,
+  free = false,
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
   const [amount, setAmount] = useState(venueBillAmount);
@@ -76,6 +106,7 @@ export default function SettlementPreview({
   }, [refreshToken, refetch]);
 
   const settlement: PodSettlement | undefined = data?.podSettlementPreview;
+  const isFree = free || !!settlement?.is_free;
 
   const body = () => {
     if (!settlement) {
@@ -94,10 +125,12 @@ export default function SettlementPreview({
         </Typography>
       );
     }
+    const attendees = settlement.attendees ?? [];
+    if (isFree) return <FreeSettlement attendees={attendees} settlement={settlement} onScan={onScan} />;
     return (
       <Stack spacing={1}>
         <AttendanceRoster
-          attendees={settlement.attendees ?? []}
+          attendees={attendees}
           attendedSeats={settlement.attended_seats}
           bookedSeats={settlement.booked_seats}
           symbol={settlement.currency_symbol}
@@ -151,8 +184,12 @@ export default function SettlementPreview({
       data-testid="settlement-summary"
       sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}
     >
-      <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
-        {labels.shareTitle}
+      <Typography
+        variant="subtitle2"
+        data-testid={isFree ? 'settlement-free' : undefined}
+        sx={{ fontWeight: 700, mb: 0.5 }}
+      >
+        {isFree ? labels.shareFree : labels.shareTitle}
       </Typography>
       <Divider sx={{ mb: 1 }} />
       {body()}

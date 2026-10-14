@@ -84,7 +84,7 @@ const withFood: Pick<RegisterVenueValues, 'offers_food' | 'food_menu' | 'food_or
       is_available: false,
     },
   ],
-  food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: '10' },
+  food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', razorpay_linked: true, discount_pct: '10', tax_override: false, tax_mode: '', gst_pct: '' },
 };
 
 const messagesOf = (values: RegisterVenueValues) => {
@@ -245,14 +245,14 @@ describe('registerVenueSchema', () => {
   });
 
   it('validates the food fields under Food Menu, not Type & Capacity', () => {
-    expect(SECTION_FIELDS.food).toEqual(['offers_food', 'food_menu', 'food_ordering']);
+    expect(SECTION_FIELDS.food).toEqual(['offers_food', 'food_menu', 'food_ordering', 'food_gstin']);
     expect(SECTION_FIELDS['type-capacity']).toEqual(['venue_type', 'capacity_items']);
 
     const parsed = registerVenueSchema().safeParse({
       ...validValues,
       ...withFood,
       food_menu: [{ ...withFood.food_menu[0], name: '' }],
-      food_ordering: { enabled: true, razorpay_integration_id: '', discount_pct: 0 },
+      food_ordering: { enabled: true, razorpay_integration_id: '', razorpay_linked: false, discount_pct: 0, tax_override: false, tax_mode: '', gst_pct: '' },
     });
     const roots = parsed.success ? [] : parsed.error.issues.map((issue) => String(issue.path[0]));
     expect(roots.length).toBeGreaterThan(0);
@@ -260,7 +260,7 @@ describe('registerVenueSchema', () => {
       expect(SECTION_FIELDS.food).toContain(root);
       expect(SECTION_FIELDS['type-capacity']).not.toContain(root);
     }
-    expect(messagesOf({ ...validValues, ...withFood, food_ordering: { enabled: true, razorpay_integration_id: '', discount_pct: 0 } })).toEqual([
+    expect(messagesOf({ ...validValues, ...withFood, food_ordering: { enabled: true, razorpay_integration_id: '', razorpay_linked: false, discount_pct: 0, tax_override: false, tax_mode: '', gst_pct: '' } })).toEqual([
       'Pick a Razorpay account before taking food orders',
     ]);
   });
@@ -383,7 +383,7 @@ describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
           is_available: false,
         },
       ],
-      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: 10 },
+      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', razorpay_linked: true, discount_pct: 10, tax_override: false },
     });
     expect('capacity_items' in input).toBe(false);
   });

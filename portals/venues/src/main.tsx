@@ -1,13 +1,13 @@
 import { Route } from 'react-router';
 import {
   mountDirectoryPortal,
-  VenueDetailsPage,
   VenueEditorPage,
   VenuesPage,
   VENUES_SPEC,
 } from '@duncit/entity-consoles';
 import { logs } from '@duncit/logs';
 import { appConfig } from './config/app-config';
+import VenueRecordPage from './VenueRecordPage';
 
 /**
  * The venues console — admin's Venues section, on its own subdomain.
@@ -30,7 +30,7 @@ mountDirectoryPortal({
         {/* Static before dynamic so /venues/new is never read as a venue id. */}
         <Route path="/venues/new" element={authed(<VenueEditorPage />)} />
         <Route path="/venues" element={authed(<VenuesPage />)} />
-        <Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />
+        <Route path="/venues/:venueId" element={authed(<VenueRecordPage />)} />
         <Route path="/venues/:venueId/edit" element={authed(<VenueEditorPage />)} />
       </>
     ),

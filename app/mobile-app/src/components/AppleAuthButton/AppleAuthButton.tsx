@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { Spinner, Text, XStack } from 'tamagui';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { BUTTON_SIZES, PRESS_STYLE } from '@duncit/buttons-native';
 import type { SocialCredential } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -21,6 +21,16 @@ export interface AppleAuthButtonProps {
   loading?: boolean;
   onCredential: (credential: SocialCredential) => void;
   onError: (message: string) => void;
+  /** Apple's labelled pill (default), or a round logo-only button for a row of providers. */
+  variant?: 'pill' | 'icon';
+}
+
+/** Whether Tech holds what this platform needs to offer Apple at all. */
+export function useAppleConfigured(): boolean {
+  const bundleId = useConfigStore((s) => s.appleBundleId);
+  const servicesId = useConfigStore((s) => s.appleServicesId);
+  const relayUrl = useConfigStore((s) => s.appleRelayUrl);
+  return appleRouteForPlatform() === 'NATIVE' ? !!bundleId : !!servicesId && !!relayUrl;
 }
 
 /**
@@ -38,18 +48,20 @@ export function AppleAuthButton({
   loading,
   onCredential,
   onError,
+  variant = 'pill',
 }: Readonly<AppleAuthButtonProps>) {
   const { t } = useTranslation();
   const colors = useThemeColors();
-  const bundleId = useConfigStore((s) => s.appleBundleId);
+  const configured = useAppleConfigured();
   const servicesId = useConfigStore((s) => s.appleServicesId);
   const relayUrl = useConfigStore((s) => s.appleRelayUrl);
   const [prompting, setPrompting] = useState(false);
 
-  const configured = appleRouteForPlatform() === 'NATIVE' ? !!bundleId : !!servicesId && !!relayUrl;
   if (!configured) return null;
 
   const busy = prompting || loading === true;
+  const round = variant === 'icon';
+  const text = busy ? t('mweb.auth.appleConnecting') : label;
 
   const press = () => {
     if (busy) return;
@@ -68,15 +80,17 @@ export function AppleAuthButton({
       role="button"
       aria-disabled={busy}
       aria-busy={busy}
+      // The round button has no visible words, so it is named for a reader.
+      aria-label={round ? text : undefined}
       tabIndex={0}
       disabled={busy}
       onPress={press}
       alignItems="center"
       justifyContent="center"
       gap={12}
-      width="100%"
-      height={52}
-      borderRadius={999}
+      width={round ? BUTTON_SIZES.lg.height : '100%'}
+      height={BUTTON_SIZES.lg.height}
+      borderRadius={BUTTON_SIZES.lg.borderRadius}
       // Apple's own contrast: the theme's ink as the fill, its ground as the
       // label — black on a light theme, white on a dark one.
       backgroundColor="$color"
@@ -88,9 +102,11 @@ export function AppleAuthButton({
       ) : (
         <Ionicons name="logo-apple" size={20} color={colors.background} />
       )}
-      <Text fontSize={16} fontWeight="600" color="$background">
-        {busy ? t('mweb.auth.appleConnecting') : label}
-      </Text>
+      {round ? null : (
+        <Text fontSize={16} fontWeight="600" color="$background">
+          {text}
+        </Text>
+      )}
     </XStack>
   );
 }

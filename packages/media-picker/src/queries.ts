@@ -6,6 +6,7 @@ export const UPLOAD_IMAGE = gql`
     $fileName: String!
     $mimeType: String
     $folder: String
+    $entityId: ID
     $allowDocuments: Boolean
     $surface: String
     $crop: UploadCropRectInput
@@ -16,6 +17,7 @@ export const UPLOAD_IMAGE = gql`
       fileName: $fileName
       mimeType: $mimeType
       folder: $folder
+      entity_id: $entityId
       allow_documents: $allowDocuments
       surface: $surface
       crop: $crop
@@ -61,6 +63,7 @@ export const START_VIDEO_COMPRESSION = gql`
   mutation StartVideoCompression(
     $remoteUrl: String!
     $folder: String
+    $entityId: ID
     $surface: String
     $trimStart: Float
     $trimDuration: Float
@@ -68,6 +71,7 @@ export const START_VIDEO_COMPRESSION = gql`
     startVideoCompression(
       remote_url: $remoteUrl
       folder: $folder
+      entity_id: $entityId
       surface: $surface
       trim_start_seconds: $trimStart
       trim_duration_seconds: $trimDuration
@@ -99,8 +103,8 @@ export const VIDEO_COMPRESSION_JOB = gql`
  * leaves the server. Used by useImagekitDirectUpload (large support videos).
  */
 export const GET_IMAGEKIT_AUTH = gql`
-  mutation GetImagekitAuth($folder: String, $surface: UploadSurface) {
-    getImagekitAuth(folder: $folder, surface: $surface) {
+  mutation GetImagekitAuth($folder: String, $entityId: ID, $surface: UploadSurface) {
+    getImagekitAuth(folder: $folder, entity_id: $entityId, surface: $surface) {
       uploadUrl
       ticket
       urlEndpoint
@@ -128,8 +132,8 @@ export const PEXELS_SEARCH = gql`
 `;
 
 export const IMPORT_REMOTE = gql`
-  mutation ImportRemoteImage($remoteUrl: String!, $folder: String, $surface: String) {
-    importRemoteImageToImagekit(remoteUrl: $remoteUrl, folder: $folder, surface: $surface) {
+  mutation ImportRemoteImage($remoteUrl: String!, $folder: String, $entityId: ID, $surface: String) {
+    importRemoteImageToImagekit(remoteUrl: $remoteUrl, folder: $folder, entity_id: $entityId, surface: $surface) {
       url
       fileId
     }
@@ -162,8 +166,8 @@ export const PEXELS_VIDEO_SEARCH = gql`
 `;
 
 export const IMPORT_REMOTE_MEDIA = gql`
-  mutation ImportRemoteMedia($remoteUrl: String!, $folder: String, $surface: String) {
-    importRemoteMediaToImagekit(remoteUrl: $remoteUrl, folder: $folder, surface: $surface) {
+  mutation ImportRemoteMedia($remoteUrl: String!, $folder: String, $entityId: ID, $surface: String) {
+    importRemoteMediaToImagekit(remoteUrl: $remoteUrl, folder: $folder, entity_id: $entityId, surface: $surface) {
       url
       fileId
     }

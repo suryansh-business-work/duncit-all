@@ -1,7 +1,9 @@
 import { VENUE_FOOD_DISCOUNT_MAX_PCT } from '@modules/venues/venue/venue.constants';
 import type { IVenueFoodOrder } from '../../venueFoodOrder.model';
-import { MIN_TOTAL_PAISE, foodTotals } from '../../venueFoodOrder.pricing';
-import { toFoodOrderPub } from '../../venueFoodOrder.shared';
+import { MIN_TOTAL_PAISE, NO_FOOD_TAX, foodTotals, preTaxPaise, splitFoodGst } from '../../venueFoodOrder.pricing';
+import { foodOrderTax, toFoodOrderPub } from '../../venueFoodOrder.shared';
+import { invoiceTitle, taxNote } from '../../venueFoodInvoice.pdf';
+import { effectiveFoodTax } from '@modules/finance/finance/foodTaxDefaults';
 import { FOOD_COUPON_CODE, normalizeFoodCouponCode } from '../../venueFoodCoupon.redemption';
 import { PRICING_CASES } from '../foodTestKit';
 
@@ -13,14 +15,21 @@ describe('foodTotals', () => {
 
   // The same rows `priceFoodCart` is asserted against in packages/utils.
   it.each(PRICING_CASES)('prices "$name" to the paise the guest was shown', (fixture) => {
-    expect(foodTotals(fixture.subtotal_paise, fixture.discount_pct, fixture.coupon_pct)).toEqual({
+    const tax = { tax_mode: fixture.tax_mode, gst_pct: fixture.gst_pct };
+    const totals = foodTotals(fixture.subtotal_paise, fixture.discount_pct, fixture.coupon_pct, tax);
+    expect(totals).toEqual({
       subtotal_paise: fixture.subtotal_paise,
       discount_pct: fixture.discount_pct,
       discount_paise: fixture.discount_paise,
       coupon_pct: fixture.coupon_pct,
       coupon_discount_paise: fixture.coupon_discount_paise,
+      tax_mode: fixture.tax_mode,
+      gst_pct: fixture.gst_pct,
+      taxable_paise: fixture.taxable_paise,
+      tax_paise: fixture.tax_paise,
       total_paise: fixture.total_paise,
     });
+    expect(preTaxPaise(totals) < MIN_TOTAL_PAISE).toBe(fixture.below_minimum);
   });
 
   it('prices an order without a coupon exactly as it was priced before coupons existed', () => {
@@ -31,6 +40,10 @@ describe('foodTotals', () => {
       discount_paise: 7931,
       coupon_pct: 0,
       coupon_discount_paise: 0,
+      tax_mode: 'INCLUSIVE',
+      gst_pct: 0,
+      taxable_paise: 44944,
+      tax_paise: 0,
       total_paise: 44944,
     });
     expect(foodTotals(48000, 0).total_paise).toBe(48000);
@@ -70,6 +83,75 @@ describe('foodTotals', () => {
     expect(MIN_TOTAL_PAISE).toBe(100);
     expect(foodTotals(200, 0, 90)).toMatchObject({ coupon_discount_paise: 100, total_paise: 100 });
     expect(foodTotals(150, 0, 90)).toMatchObject({ coupon_discount_paise: 50, total_paise: 100 });
+  });
+});
+
+describe('GST on a food order', () => {
+  it('prices with no tax unless one is given', () => {
+    expect(NO_FOOD_TAX).toEqual({ tax_mode: 'INCLUSIVE', gst_pct: 0 });
+    expect(foodTotals(48000, 10, 20)).toEqual(foodTotals(48000, 10, 20, NO_FOOD_TAX));
+  });
+
+  it('carves inclusive GST out of the net and adds exclusive GST on top of it', () => {
+    expect(foodTotals(48000, 0, 0, { tax_mode: 'INCLUSIVE', gst_pct: 5 })).toMatchObject({ taxable_paise: 45714, tax_paise: 2286, total_paise: 48000 });
+    expect(foodTotals(48000, 0, 0, { tax_mode: 'EXCLUSIVE', gst_pct: 5 })).toMatchObject({ taxable_paise: 48000, tax_paise: 2400, total_paise: 50400 });
+  });
+
+  it('reads a percent that is not a whole positive number as no tax', () => {
+    for (const gst_pct of [0, -5, 2.5, Number.NaN]) {
+      expect(foodTotals(48000, 0, 0, { tax_mode: 'EXCLUSIVE', gst_pct })).toMatchObject({ gst_pct: 0, tax_paise: 0, total_paise: 48000 });
+    }
+  });
+
+  it('never moves the discounts: a coupon and the venue discount come off before any tax, in either mode', () => {
+    for (const tax_mode of ['INCLUSIVE', 'EXCLUSIVE'] as const) {
+      const taxed = foodTotals(52875, 10, 20, { tax_mode, gst_pct: 18 });
+      const plain = foodTotals(52875, 10, 20);
+      expect(taxed).toMatchObject({ discount_paise: plain.discount_paise, coupon_discount_paise: plain.coupon_discount_paise });
+      expect(preTaxPaise(taxed)).toBe(plain.total_paise);
+      expect(taxed.taxable_paise + taxed.tax_paise).toBe(taxed.total_paise);
+    }
+  });
+
+  it('holds the one-rupee minimum to the amount before GST', () => {
+    const totals = foodTotals(100, 1, 0, { tax_mode: 'EXCLUSIVE', gst_pct: 18 });
+    expect(totals.total_paise).toBe(117);
+    expect(preTaxPaise(totals)).toBe(99);
+  });
+
+  it('splits the tax into CGST and SGST halves that add up to it exactly', () => {
+    expect(splitFoodGst(2286)).toEqual({ cgst_paise: 1143, sgst_paise: 1143 });
+    expect(splitFoodGst(6853)).toEqual({ cgst_paise: 3426, sgst_paise: 3427 });
+    expect(splitFoodGst(0)).toEqual({ cgst_paise: 0, sgst_paise: 0 });
+  });
+});
+
+describe('which GST a venue is priced with', () => {
+  const defaults = { tax_mode: 'INCLUSIVE' as const, gst_pct: 5 };
+
+  it("follows Finance's default unless the venue overrides it", () => {
+    expect(effectiveFoodTax(null, defaults)).toEqual(defaults);
+    expect(effectiveFoodTax({ tax_override: false, tax_mode: 'EXCLUSIVE', gst_pct: 18 }, defaults)).toEqual(defaults);
+    expect(effectiveFoodTax({ tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 18 }, defaults)).toEqual({ tax_mode: 'EXCLUSIVE', gst_pct: 18 });
+  });
+
+  it('fills a part the override is missing from the default', () => {
+    expect(effectiveFoodTax({ tax_override: true, tax_mode: null, gst_pct: 0 }, defaults)).toEqual({ tax_mode: 'INCLUSIVE', gst_pct: 0 });
+    expect(effectiveFoodTax({ tax_override: true, tax_mode: 'EXCLUSIVE' }, defaults)).toEqual({ tax_mode: 'EXCLUSIVE', gst_pct: 5 });
+  });
+});
+
+describe('the food invoice', () => {
+  it('is a TAX INVOICE only with both a GST number and a GST charged', () => {
+    expect(invoiceTitle({ venue_gstin: '22ABCDE1234F1Z5', gst_pct: 5 })).toBe('TAX INVOICE');
+    expect(invoiceTitle({ venue_gstin: '', gst_pct: 5 })).toBe('INVOICE');
+    expect(invoiceTitle({ venue_gstin: '22ABCDE1234F1Z5', gst_pct: 0 })).toBe('INVOICE');
+  });
+
+  it('says how the prices meet the GST, and what it always said for an order without one', () => {
+    expect(taxNote({ tax_mode: 'INCLUSIVE', gst_pct: 5 })).toBe('Prices include GST.');
+    expect(taxNote({ tax_mode: 'EXCLUSIVE', gst_pct: 5 })).toBe('GST added to prices.');
+    expect(taxNote({ tax_mode: 'EXCLUSIVE', gst_pct: 0 })).toBe('Prices are inclusive of all applicable taxes.');
   });
 });
 
@@ -123,6 +205,16 @@ describe('toFoodOrderPub', () => {
       coupon_discount_amount: 0,
       total: 432,
     });
+  });
+
+  it('reads an order from before GST as inclusive at 0%, its whole total the taxable value', () => {
+    expect(toFoodOrderPub(legacyOrder)).toMatchObject({ tax_mode: 'INCLUSIVE', gst_pct: 0, taxable_amount: 432, tax_amount: 0, total: 432 });
+    expect(foodOrderTax(legacyOrder)).toEqual({ tax_mode: 'INCLUSIVE', gst_pct: 0, taxable_paise: 43200, tax_paise: 0 });
+  });
+
+  it('shows the GST an order was placed with', () => {
+    const order = { ...legacyOrder, tax_mode: 'EXCLUSIVE', gst_pct: 5, taxable_paise: 43200, tax_paise: 2160, total_paise: 45360 } as IVenueFoodOrder;
+    expect(toFoodOrderPub(order)).toMatchObject({ tax_mode: 'EXCLUSIVE', gst_pct: 5, taxable_amount: 432, tax_amount: 21.6, total: 453.6 });
   });
 
   it('shows the coupon of an order placed with one, beside the venue discount', () => {

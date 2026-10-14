@@ -1,11 +1,8 @@
-import { Link as RouterLink } from 'react-router';
-import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
-import { DuncitButton } from '@duncit/buttons';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import { useTranslation } from '../../i18n/useTranslation';
 
-/** Venue Studio page header — mark, title, and the "New venue" action. */
+/** Venue Studio page header — mark and title. Adding a venue lives on Your Venues. */
 export default function VenueStudioHeader() {
   const { t } = useTranslation();
 
@@ -13,19 +10,6 @@ export default function VenueStudioHeader() {
     <StudioPageHeader
       icon={<StorefrontRoundedIcon fontSize="small" />}
       title={t('mweb.venueManage.venueStudio')}
-      action={
-        <DuncitButton
-          component={RouterLink}
-          to="/register-venue"
-          variant="contained"
-          size="small"
-          startIcon={<AddRoundedIcon />}
-          sx={{ flexShrink: 0 }}
-          data-testid="venue-studio-header-new-venue"
-        >
-          {t('mweb.venueManagePage.newVenue')}
-        </DuncitButton>
-      }
     />
   );
 }

@@ -1,6 +1,7 @@
 import { backoutAttemptsLeft as attemptsLeftFor } from '@duncit/utils';
 
 import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDialog';
+import { CancelSpotDialog } from '@/components/pod-history/CancelSpotDialog';
 import { KeepSpotDialog } from '@/components/pod-history/KeepSpotDialog';
 import type { PodMembershipState } from '@/hooks/useDetails';
 
@@ -13,7 +14,7 @@ interface PodBackoutDialogsProps {
 }
 
 /** The Backout and Keep-My-Spot dialogs, with their refund and attempt figures
- * read off the viewer's membership state. */
+ * read off the viewer's membership state — and a free pod's Cancel Spot confirm. */
 export function PodBackoutDialogs({
   actions,
   membershipState,
@@ -41,6 +42,12 @@ export function PodBackoutDialogs({
         error={actions.keepSpotError}
         onClose={() => actions.setKeepSpotOpen(false)}
         onConfirm={actions.onConfirmKeepSpot}
+      />
+      <CancelSpotDialog
+        open={actions.cancelSpotOpen}
+        busy={actions.cancellingSpot}
+        onClose={() => actions.setCancelSpotOpen(false)}
+        onConfirm={actions.onConfirmCancelSpot}
       />
     </>
   );

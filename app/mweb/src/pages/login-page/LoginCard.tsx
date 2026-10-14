@@ -54,7 +54,11 @@ export default function LoginCard({
   return (
     <AuthScreenFrame center>
       <Stack data-testid="login-screen" spacing={3}>
-        <AuthHeading title={headingTitle} accent={headingAccent} />
+        <AuthHeading
+          title={headingTitle}
+          accent={headingAccent}
+          subtitle={step === 'CHOOSE' ? t('mweb.login.subtitle') : undefined}
+        />
 
         {step === 'CHOOSE' && (
           <LoginMethodStep

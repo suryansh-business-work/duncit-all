@@ -853,8 +853,24 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
     account: doc.metadata?.razorpay_account,
   });
   if (!ok) {
-    doc.status = 'FAILED';
-    await doc.save();
+    // A bad signature proves only that THIS request is not proof of payment —
+    // not that Razorpay took no money. It used to mark the payment FAILED, and
+    // the reconciler adopts only PENDING captures, so one garbled or forged
+    // verify stranded a real capture: the buyer charged, no booking, nobody
+    // told. The payment stays PENDING (the reconciler asks Razorpay itself) and
+    // the refused attempt is recorded for Finance. Conditional on PENDING so a
+    // late bad verify can never touch a payment that has since settled.
+    await PaymentModel.updateOne(
+      { _id: doc._id, status: 'PENDING' },
+      {
+        $set: { 'metadata.verify_failed_at': new Date().toISOString() },
+        $inc: { 'metadata.verify_failures': 1 },
+      }
+    );
+    logs.server.warn('payment', component, {
+      payment_id: doc.payment_id,
+      msg: 'Razorpay signature refused — payment left PENDING for the reconciler',
+    });
     throw new GraphQLError('Payment signature verification failed', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
@@ -1579,21 +1595,47 @@ export const paymentService = {
     });
   },
 
-  async refund(paymentDocId: string, reason?: string) {
-    const doc = await PaymentModel.findById(paymentDocId);
-    if (!doc) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
-    if (doc.status !== 'SUCCESS') {
+  /**
+   * Finance marks a payment refunded (the money itself is returned outside this
+   * call — no gateway refund is issued here).
+   *
+   * The SUCCESS → REFUNDED move is ONE conditional write: it used to read the
+   * status, decide, and save, so two submits of the same refund both passed
+   * the check and the payer got two refund emails. Now only the request whose
+   * write matches `status: 'SUCCESS'` proceeds; the other is told it lost. The
+   * metadata stamps are dotted `$set`s so nothing else on the row is rewritten.
+   */
+  async refund(paymentDocId: string, reason?: string, actorId?: string) {
+    const doc = await PaymentModel.findOneAndUpdate(
+      { _id: paymentDocId, status: 'SUCCESS' },
+      {
+        $set: {
+          status: 'REFUNDED',
+          'metadata.refund_reason': reason || null,
+          'metadata.refunded_at': new Date().toISOString(),
+          'metadata.refunded_by': actorId ?? null,
+        },
+      },
+      { new: true }
+    );
+    if (!doc) {
+      const current = await PaymentModel.findById(paymentDocId).select('status').lean();
+      if (!current) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+      if (current.status === 'REFUNDED') {
+        throw new GraphQLError('This payment has already been refunded', {
+          extensions: { code: 'CONFLICT' },
+        });
+      }
       throw new GraphQLError('Only SUCCESS payments can be refunded', {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
-    doc.status = 'REFUNDED';
-    (doc as any).metadata = {
-      ...(doc as any).metadata,
-      refund_reason: reason || null,
-      refunded_at: new Date().toISOString(),
-    };
-    await doc.save();
+    logs.server.info('payment', 'refund', {
+      payment_id: doc.payment_id,
+      actor_id: actorId ?? null,
+      total: doc.total,
+      msg: 'payment marked refunded by Finance',
+    });
     await mailRefund(doc, reason);
     return toPub(doc);
   },

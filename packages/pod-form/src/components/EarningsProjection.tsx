@@ -6,6 +6,7 @@ import { usePodFormData } from '../context';
 import { useEarningsProjection } from '../finance/useEarningsProjection';
 import { projectionRows, type ProjectionRow, type VenueStanding } from '../finance/projectionRows';
 import { useTranslation } from '../i18n/useTranslation';
+import { isFreePodType } from '../pod-type';
 import type { PodFormValues } from '../types';
 
 interface Props {
@@ -64,6 +65,9 @@ function venueStanding(autoPod: boolean, podMode: string, slotId: string): Venue
  * which priced the platform fee off a different base than settlement does
  * and knew nothing of the club admin's cut, the host's commission or the
  * venue's slot price: a "final payout" nobody would ever be paid.
+ *
+ * A free pod collects nothing, so there is nothing to project: the panel is
+ * not drawn and the server is not asked.
  */
 export default function EarningsProjection({ productCost }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -75,6 +79,7 @@ export default function EarningsProjection({ productCost }: Readonly<Props>) {
   const venueId = useWatch({ control, name: 'venue_id' });
   const slotId = useWatch({ control, name: 'venue_slot_id' });
   const hosts = useWatch({ control, name: 'pod_hosts_id' });
+  const isFree = isFreePodType(useWatch({ control, name: 'pod_type' }));
   const venue = venueStanding(!!config.autoPod, podMode, slotId);
   const symbol = finance?.currency_symbol || '₹';
   const money = (value: number) => formatStatementMoney(value, symbol);
@@ -85,7 +90,9 @@ export default function EarningsProjection({ productCost }: Readonly<Props>) {
     hostUserId: hosts[0] ?? null,
     venueId: venue === 'slot' ? venueId : null,
     venueSlotId: venue === 'slot' ? slotId : null,
+    skip: isFree,
   });
+  if (isFree) return null;
 
   const body = () => {
     if (idle) {

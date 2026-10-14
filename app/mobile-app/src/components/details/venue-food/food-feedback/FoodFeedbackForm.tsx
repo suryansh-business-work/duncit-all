@@ -76,7 +76,7 @@ export function FoodFeedbackForm({ feedback, disabled }: Readonly<Props>) {
         </Text>
         <FoodFeedbackPhotos
           images={images}
-          onAdd={() => fireAndForget(feedback.addPhoto())}
+          onAdd={(from) => fireAndForget(feedback.addPhoto(from))}
           onRemove={feedback.removePhoto}
           uploading={feedback.uploading}
           error={feedback.photoError}

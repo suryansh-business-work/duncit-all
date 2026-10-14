@@ -26,6 +26,7 @@ const view: PodPendingView = {
     place_label: 'The Loft',
     place_detail: 'Indiranagar',
     venue_approval_status: 'PENDING',
+    pod_type: 'PAID',
   },
   category_name: 'Music',
   expected_earnings: 4200,
@@ -109,6 +110,15 @@ describe('PodPendingPage (native PodPendingScreen twin, rule 27)', () => {
       'href',
       'mailto:admin@duncit.test',
     );
+  });
+
+  // A free pod earns its host nothing: it reads "Free pod", never ₹0 or a loss.
+  it('says "Free pod" instead of an earnings figure for a free pod', async () => {
+    renderPage([viewMock({ ...view, pod: { ...view.pod, pod_type: 'FREE' }, expected_earnings: -300 })]);
+    const earnings = await screen.findByTestId('pod-pending-earnings');
+    expect(earnings).toHaveTextContent('Free pod');
+    expect(earnings).not.toHaveTextContent('₹');
+    expect(earnings).not.toHaveTextContent('300');
   });
 
   it('omits the venue and club-admin cards when the pod has neither', async () => {

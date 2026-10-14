@@ -162,7 +162,11 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
         </DuncitButton>
       </Stack>
       <DuncitTabs {...envTabs} aria-label={t('tech.appBuilds.envFilterLabel')} />
+      {/* The table reads fetchRows through a ref and never refetches on its own
+          when it changes — keying on the env remounts it, so a tab click loads
+          that environment's builds from page one. */}
       <AppBuildsTable
+        key={envTabs.value}
         platform={platform}
         fetchRows={fetchRows}
         refetchRef={refetchRef}

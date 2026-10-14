@@ -49,10 +49,9 @@ export default defineDemos('auth-tokens', [
       'Neutral scale': neutral,
       'Semantic colours': semantic,
       'Mode read': mock.mode,
-      // The haze mWeb and native draw over an admin's login backdrop. It flips
-      // with the mode on purpose: the old scrim was always dark, so light mode
-      // put near-black headings over a darkened photo.
-      'Login fog': mock.mode === 'dark' ? auth.fog.dark : auth.fog.light,
+      // The fade from the admin's login hero into the page. It flips with the
+      // mode so the heading over it keeps its own theme's contrast.
+      'Login hero': { ...auth.hero, fade: mock.mode === 'dark' ? auth.hero.dark : auth.hero.light },
       'Radii': radii,
       'Typography': typography,
     }),

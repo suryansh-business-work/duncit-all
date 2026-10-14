@@ -219,9 +219,23 @@ jobs:
       cms_site: ${{ steps.filter.outputs.cms_site }}
     steps:
       - uses: actions/checkout@v5
+      # Without a base, paths-filter diffs staging against main — every app
+      # changed since the last release, so each push rebuilt all of them. Diff
+      # against the last fully green push deploy of this branch instead: a
+      # failed build or a superseded queued run is not green, so its changes
+      # carry into the next diff. No green run yet keeps the old main diff.
+      - name: Last deployed commit
+        id: base
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api "repos/${{ github.repository }}/actions/workflows/deploy.yml/runs?branch=${{ github.ref_name }}&event=push&status=success&per_page=1" --jq '.workflow_runs[0].head_sha // empty' || true)
+          echo "Diff base: ${sha:-default branch}"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          base: ${{ steps.base.outputs.sha }}
           filters: |
             server:
               - 'server/**'
@@ -1107,7 +1121,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_REQUIRED_ROLES=FINANCE_MANAGER \
+              --build-arg VITE_REQUIRED_ROLES=FINANCE_MANAGER,FINANCE_USER \
               --cache-from type=gha,scope=duncit-finance${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-finance${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1179,7 +1193,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_REQUIRED_ROLES=SUPPORT_MANAGER \
+              --build-arg VITE_REQUIRED_ROLES=SUPPORT_MANAGER,SUPPORT_USER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }},mode=max \
@@ -1996,7 +2010,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-portal:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-portal:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_REQUIRED_ROLES=ECOMM_MANAGER \
+              --build-arg VITE_REQUIRED_ROLES=ECOMM_STORE_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --build-arg VITE_STORE_URL=${{ env.ECOMM_URL }} \
               --cache-from type=gha,scope=duncit-ecomm-portal${{ env.SCOPE_SUFFIX }} \

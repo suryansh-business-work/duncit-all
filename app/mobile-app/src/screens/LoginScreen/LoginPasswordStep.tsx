@@ -1,5 +1,6 @@
 import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import type { RecoveryHandoff } from '@duncit/utils';
 
 import { LoginForm, type LoginSubmitValues } from '@/forms/login';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -8,7 +9,7 @@ interface Props {
   loading: boolean;
   errorMessage: string | null;
   onSubmit: (values: LoginSubmitValues) => void | Promise<void>;
-  onForgotPassword: () => void;
+  onForgotPassword: (handoff: RecoveryHandoff) => void;
   onBack: () => void;
 }
 
@@ -16,8 +17,8 @@ interface Props {
  * The password step. Tamagui twin of mWeb's <LoginPasswordStep/>.
  *
  * "Forgot password?" lives here rather than on the landing step because it is
- * only ever about a password — offering it to somebody about to press Continue
- * with Google was offering to recover something they may not have.
+ * only ever about a password. The form renders it beside the password box and
+ * hands over its tab and boxes, so the code goes straight to that email or number.
  */
 export function LoginPasswordStep({
   loading,
@@ -30,20 +31,12 @@ export function LoginPasswordStep({
 
   return (
     <YStack gap={16}>
-      <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
-      <XStack justifyContent="flex-end">
-        <Text
-          pressStyle={PRESS_STYLE.inline}
-          testID="go-forgot-password"
-          role="link"
-          fontSize={14}
-          fontWeight="600"
-          color="$accent"
-          onPress={onForgotPassword}
-        >
-          {t('mweb.login.forgotPassword')}
-        </Text>
-      </XStack>
+      <LoginForm
+        loading={loading}
+        errorMessage={errorMessage}
+        onSubmit={onSubmit}
+        onForgotPassword={onForgotPassword}
+      />
       <XStack justifyContent="center">
         <Text
           pressStyle={PRESS_STYLE.inline}

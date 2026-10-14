@@ -97,11 +97,14 @@ describe('podExpense mutations', () => {
     expect(service.create).toHaveBeenCalledWith(POD_ID, INPUT, 'u1');
   });
 
+  // A CITY_ADMIN's write is also held to the pod's city — that needs the pod
+  // and its Location, so it is covered against a database in
+  // finance/__tests__/integration-tests/financeScope.int.test.ts.
   it('updates and deletes one entry by its document id', async () => {
     await podExpenseResolvers.Mutation.updatePodExpense(
       {},
       { expense_doc_id: EXPENSE_ID, input: INPUT },
-      ctx(['CITY_ADMIN'])
+      ctx(['FINANCE_MANAGER'])
     );
     await podExpenseResolvers.Mutation.deletePodExpense(
       {},

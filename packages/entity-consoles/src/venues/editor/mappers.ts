@@ -1,5 +1,5 @@
 import { isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
-import { venueCategoryList } from '@duncit/utils';
+import { foodDishToValues, foodOrderingToValues, toVenueFoodInput, venueCategoryList } from '@duncit/utils';
 import type { AdminVenueDetail, VenueCategoryRecord } from '../detail/queries';
 import { podRequestOverrideText } from '../../shared/podRequestLimit';
 import { blankVenueValues, type VenueFormValues } from './types';
@@ -54,17 +54,9 @@ export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
       capacity: item.capacity,
     })),
     offers_food: venue.offers_food,
-    food_menu: venue.food_menu.map((item) => ({
-      item_id: item.id,
-      name: item.name,
-      description: item.description,
-      category: item.category,
-      price: item.price,
-      images: item.images,
-      diet: item.diet,
-      spice_level: item.spice_level,
-      is_available: item.is_available,
-    })),
+    food_menu: venue.food_menu.map(foodDishToValues),
+    // What the server resolved: the venue's own GST, or Finance's default while it follows it.
+    food_ordering: foodOrderingToValues(venue.food_ordering),
     // Primary first: the list, or the lone legacy triple of a venue stored
     // before the list existed. A venue with none opens on no row at all.
     categories: venueCategoryList(venue).map(toCategoryRow),
@@ -151,23 +143,11 @@ export const valuesToStep1 = (values: VenueFormValues) => ({
     label: item.label,
     capacity: item.capacity,
   })),
-  offers_food: values.offers_food,
-  // Each stored dish goes back under its own id so it keeps its identity; a new
-  // one carries none. `food_ordering` is DELIBERATELY never sent: the Razorpay
-  // account belongs to the venue's owner and is linked from the Partners portal,
-  // and leaving the key out is what leaves the owner's ordering settings alone.
-  food_menu: values.food_menu.map((item) => ({
-    id: item.item_id || undefined,
-    name: item.name,
-    description: item.description,
-    category: item.category,
-    price: item.price,
-    images: item.images,
-    // Enums: an unchosen one is omitted, never sent as the select's empty value.
-    diet: item.diet || undefined,
-    spice_level: item.spice_level || undefined,
-    is_available: item.is_available,
-  })),
+  // The shared food mapping. The Razorpay account is DELIBERATELY never named:
+  // it is the owner's, linked from the Partners portal, and leaving the key out
+  // is what leaves the link alone. Switched off, only the switch goes — the
+  // server keeps the menu for when the kitchen reopens.
+  ...toVenueFoodInput(values, { sendAccount: false }),
   // Primary first. Only whole triples go — the server rejects a partial one, and
   // a row left blank (or a legacy row whose ids are gone) is not a category. An
   // EMPTY list names none, which the server reads as "leave the venue's

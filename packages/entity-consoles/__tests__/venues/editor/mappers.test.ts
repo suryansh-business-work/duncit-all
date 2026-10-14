@@ -294,13 +294,27 @@ describe('valuesToStep1', () => {
       spice_level: '',
       is_available: true,
     });
-    const [stored, added] = valuesToStep1(values).food_menu;
+    const [stored, added] = valuesToStep1(values).food_menu ?? [];
 
     expect(stored).toMatchObject({ id: '66e0000000000000000000f1', diet: 'VEG', spice_level: 'NONE' });
-    expect(added.id).toBeUndefined();
-    expect(added.diet).toBeUndefined();
-    expect(added.spice_level).toBeUndefined();
+    expect(added).not.toHaveProperty('id');
+    // An unchosen enum goes as null, which the server reads as its own default.
+    expect(added.diet).toBeNull();
+    expect(added.spice_level).toBeNull();
     expect(added.name).toBe('Masala Dosa');
+  });
+
+  it("never names the owner's Razorpay account, and sends only the switch while food is off", () => {
+    const values = venueToValues(venueRecord);
+    values.offers_food = true;
+    values.food_ordering = { ...values.food_ordering, razorpay_integration_id: 'rzp-1', razorpay_linked: true };
+    expect(valuesToStep1(values).food_ordering).not.toHaveProperty('razorpay_integration_id');
+
+    values.offers_food = false;
+    const step1 = valuesToStep1(values);
+    expect(step1.offers_food).toBe(false);
+    expect(step1).not.toHaveProperty('food_menu');
+    expect(step1).not.toHaveProperty('food_ordering');
   });
 });
 

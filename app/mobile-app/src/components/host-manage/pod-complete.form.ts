@@ -18,6 +18,8 @@ export interface HostPodForComplete {
   id: string;
   pod_title: string;
   venue_id?: string | null;
+  /** FREE / PAID — a free pod asks for no venue bill: its host settles the venue directly. */
+  pod_type?: string | null;
 }
 
 /** Typed against the server's input, so a field the schema drops fails here. */

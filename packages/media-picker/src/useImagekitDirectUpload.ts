@@ -106,10 +106,12 @@ export async function directUploadToImagekit(
   // pass — it is what the AI Monitoring row is attributed to, and what decides
   // whether this surface's uploads are screened at all.
   surface: UploadSurface = 'PORTALS',
+  // The record the file is for — the server files it in that record's folder.
+  entityId?: string,
 ): Promise<string> {
   const { data } = await client.mutate<any>({
     mutation: GET_IMAGEKIT_AUTH,
-    variables: { folder, surface },
+    variables: { folder, entityId, surface },
   });
   const ticket = (data as { getImagekitAuth?: UploadTicket } | null)?.getImagekitAuth;
   if (!ticket) throw new Error('Upload is not available right now');

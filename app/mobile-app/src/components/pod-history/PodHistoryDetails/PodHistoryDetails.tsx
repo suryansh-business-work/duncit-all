@@ -1,5 +1,5 @@
 import { Text, XStack, YStack } from 'tamagui';
-import { coverImageUrl, isPodPast } from '@duncit/utils';
+import { coverImageUrl, isFreePod, isPodPast } from '@duncit/utils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TourAnchor } from '@/tours/TourAnchor';
@@ -33,15 +33,18 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
   const image = coverImageUrl(pod?.pod_images_and_videos);
   const gate = podHistoryGate(item);
   // "Visited" once they were checked in at a pod that has happened — never on
-  // the clock alone.
+  // the clock alone. A free pod is left by cancelling the spot, never a backout.
   const visited = gate.joinedLabelKind === 'VISITED' && item.status === 'JOINED';
-  const statusLabel = visited
-    ? t('mweb.podHistory.statusVisited')
-    : t(STATUS_CHIP[item.status].label);
+  const free = isFreePod(pod?.pod_type);
+  let statusLabel = t(STATUS_CHIP[item.status].label);
+  if (visited) statusLabel = t('mweb.podHistory.statusVisited');
+  else if (free && item.status === 'BACKED_OUT')
+    statusLabel = t('mweb.podHistory.statusSpotCancelled');
   // Neither notice belongs on a pod that has already happened: nobody can fill
   // that seat now, and the refund question is already settled.
   const podPast = isPodPast(pod?.pod_date_time);
-  const showReplacement = !podPast && (canRejoin(item) || item.status === 'BACKOUT_IN_PROCESS');
+  const showReplacement =
+    !podPast && !free && (canRejoin(item) || item.status === 'BACKOUT_IN_PROCESS');
 
   return (
     <YStack gap={12}>

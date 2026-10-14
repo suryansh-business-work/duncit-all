@@ -26,7 +26,7 @@ export default function StudioOptionsPage({ mode }: Readonly<Props>) {
   const autoPods = useFeatureFlag('auto_pods');
   const entry = STUDIO_OPTIONS_ENTRY[mode];
   const roles = user?.roles;
-  const options = useMemo(() => studioOptionsFor(mode, roles ?? [], { autoPods }), [mode, roles, autoPods]);
+  const options = useMemo(() => studioOptionsFor(mode, roles ?? [], { autoPods, console: true }), [mode, roles, autoPods]);
   const title = t(entry.labelKey);
 
   return (

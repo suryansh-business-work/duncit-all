@@ -166,6 +166,9 @@ importers:
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@duncit/venue-food':
+        specifier: workspace:*
+        version: link:../../packages/venue-food
       '@duncit/verification':
         specifier: workspace:*
         version: link:../../packages/verification
@@ -1764,6 +1767,9 @@ importers:
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils
+      '@duncit/venue-food':
+        specifier: workspace:*
+        version: link:../venue-food
       '@duncit/verification':
         specifier: workspace:*
         version: link:../verification
@@ -1973,6 +1979,9 @@ importers:
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils
+      '@duncit/venue-food':
+        specifier: workspace:*
+        version: link:../venue-food
       '@hookform/resolvers':
         specifier: ^5.9.1
         version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(react-hook-form@7.89.0(@types/react@19.3.0)(react@19.2.8))(yup@1.7.1)(zod@4.6.5)
@@ -3437,6 +3446,76 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@26.6.3)(jiti@2.7.0)(jsdom@30.1.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(sass@1.105.1)(supports-color@8.1.1)(terser@5.49.0)(yaml@2.9.1)
 
+  packages/venue-food:
+    dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
+      '@duncit/buttons':
+        specifier: workspace:*
+        version: link:../buttons
+      '@duncit/dialogs':
+        specifier: workspace:*
+        version: link:../dialogs
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../forms
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../media-picker
+      '@duncit/table':
+        specifier: workspace:*
+        version: link:../table
+      '@duncit/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
+    devDependencies:
+      '@apollo/client':
+        specifier: 4.2.12
+        version: 4.2.12(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.2)(ws@8.20.1))(graphql@16.14.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)
+      '@hookform/resolvers':
+        specifier: ^5.9.1
+        version: 5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(react-hook-form@7.89.0(@types/react@19.3.0)(react@19.2.8))(yup@1.7.1)(zod@4.6.5)
+      '@mui/icons-material':
+        specifier: ^9.4.0
+        version: 9.4.0(@mui/material@9.4.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@types/react@19.3.0)(react@19.2.8)
+      '@mui/material':
+        specifier: ^9.4.0
+        version: 9.4.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@mui/x-date-pickers':
+        specifier: ^9.14.0
+        version: 9.14.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@mui/material@9.4.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@mui/system@9.4.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8))(@types/react@19.3.0)(date-fns@4.4.0)(dayjs@1.11.21)(luxon@3.7.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      graphql:
+        specifier: 16.14.2
+        version: 16.14.2
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
+      react-hook-form:
+        specifier: ^7.89.0
+        version: 7.89.0(@types/react@19.3.0)(react@19.2.8)
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+
   packages/verification:
     devDependencies:
       '@apollo/client':
@@ -4770,6 +4849,9 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../../packages/media-picker
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../../packages/regex
       '@duncit/rich-text':
         specifier: workspace:*
         version: link:../../packages/rich-text
@@ -6474,6 +6556,9 @@ importers:
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@duncit/venue-food':
+        specifier: workspace:*
+        version: link:../../packages/venue-food
       '@duncit/verification':
         specifier: workspace:*
         version: link:../../packages/verification
@@ -7441,6 +7526,9 @@ importers:
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@duncit/venue-food':
+        specifier: workspace:*
+        version: link:../../packages/venue-food
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1)
@@ -7459,6 +7547,9 @@ importers:
       '@mui/system':
         specifier: ^9.4.0
         version: 9.4.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)
+      '@mui/x-date-pickers':
+        specifier: ^9.14.0
+        version: 9.14.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@mui/material@9.4.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@mui/system@9.4.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.8))(@types/react@19.3.0)(date-fns@4.4.0)(dayjs@1.11.21)(luxon@3.7.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@react-oauth/google':
         specifier: ^0.13.5
         version: 0.13.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

@@ -1,44 +1,25 @@
-import { useQuery } from '@apollo/client/react';
-import { Alert, Stack } from '@mui/material';
-import { parseApiError } from '@duncit/utils';
+import { logs } from '@duncit/logs';
+import { VenueFoodDashboard } from '@duncit/venue-food';
 import { useTranslation } from '@duncit/shell';
-import StudioPageHeader from '../../components/studio/StudioPageHeader';
-import VenueFoodOffAlert from '../../components/venue/VenueFoodOffAlert';
-import VenueStudioBody from '../../components/venue/VenueStudioBody';
-import { FOOD_ORDER_VENUES } from '../venue-food-orders-page/queries';
-import VenueFoodDashboard from './VenueFoodDashboard';
+import VenueFoodToolPage from '../../components/venue/VenueFoodToolPage';
 
 /**
  * Food Dashboard — the selected venue's food numbers for a period the owner
  * picks: what was ordered and earned, how the orders ended, which dishes sold,
- * how guests rated them and how often the venue's QRs were scanned. A venue
- * that does not offer food has no numbers; it gets the way to switch food on.
+ * how guests rated them and how often the venue's QRs were scanned. The
+ * dashboard itself is @duncit/venue-food's, the same one mWeb and the Venues
+ * console mount.
  */
 export default function VenueFoodDashboardPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(FOOD_ORDER_VENUES, { fetchPolicy: 'cache-and-network' });
-  const errorAlert = error ? (
-    <Alert severity="error" data-testid="venue-food-dashboard-error">
-      {parseApiError(error)}
-    </Alert>
-  ) : null;
-
   return (
-    <Stack spacing={2.5} sx={{ width: '100%' }} data-testid="venue-food-dashboard-page">
-      <StudioPageHeader title={t('mweb.studioOptions.foodDashboard')} hint={t('mweb.studioOptions.foodDashboardHint')} />
-      <VenueStudioBody venues={data?.myVenues} loading={loading} errorAlert={errorAlert}>
-        {(venue) =>
-          venue.offers_food ? (
-            <VenueFoodDashboard key={venue.id} venueId={venue.id} />
-          ) : (
-            <VenueFoodOffAlert
-              venueId={venue.id}
-              message={t('partners.foodDashboard.noFood')}
-              data-testid="venue-food-dashboard-no-food"
-            />
-          )
-        }
-      </VenueStudioBody>
-    </Stack>
+    <VenueFoodToolPage
+      title={t('mweb.studioOptions.foodDashboard')}
+      hint={t('mweb.studioOptions.foodDashboardHint')}
+      noFoodMessage={t('venueFoodOwner.dashboard.noFood')}
+      testId="venue-food-dashboard"
+    >
+      {(venueId) => <VenueFoodDashboard venueId={venueId} logger={logs.portal['partners-app']} />}
+    </VenueFoodToolPage>
   );
 }

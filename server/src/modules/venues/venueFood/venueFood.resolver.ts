@@ -3,6 +3,7 @@ import { hasRole, requireAuth } from '@middleware/rbac';
 import { consoleEditors } from '@modules/portals/console-access';
 import type { TableQueryInput } from '@utils/table-query';
 import { venueFoodStatsService } from './venueFood.stats';
+import { availableFoodCoupons } from './venueFoodCoupon.available';
 import { venueFoodGuestService, type FoodFeedbackInput } from './venueFoodOrder.guest';
 import {
   venueFoodCouponService,
@@ -45,6 +46,7 @@ export const venueFoodResolvers = {
     },
     previewVenueFoodCoupon: (_p: unknown, args: { input: PreviewFoodCouponInput }) =>
       venueFoodOrderService.previewCoupon(args.input),
+    availableVenueFoodCoupons: (_p: unknown, args: { venue_id: string }) => availableFoodCoupons(args.venue_id),
     venueFoodCouponsTable: (
       _p: unknown,
       args: { venue_id: string; query?: TableQueryInput | null },

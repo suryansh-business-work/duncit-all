@@ -2,7 +2,7 @@ import { formResolver } from '../../utils/form-resolver';
 import { useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
-import { mwebVenueBillLabels } from '@duncit/utils';
+import { isFreePod, mwebVenueBillLabels } from '@duncit/utils';
 
 import { PodMediaSummary } from '@/components/pod-media/PodMediaSummary';
 import { DuncitDialog } from '@/components/DuncitDialog';
@@ -34,7 +34,9 @@ interface Props {
 export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
-  const hasVenue = !!pod?.venue_id;
+  // A free pod's host settles the venue directly — no bill is asked for here.
+  const free = isFreePod(pod?.pod_type);
+  const hasVenue = !!pod?.venue_id && !free;
   const billLabels = useMemo(() => mwebVenueBillLabels(t), [t]);
   const { control, handleSubmit, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
     resolver: formResolver<PodCompleteValues>(buildPodCompleteSchema(hasVenue, billLabels)),
@@ -121,11 +123,11 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
     >
       <YStack gap={12} paddingBottom={6}>
         <Text fontSize={12.5} color="$muted">
-          {t('mweb.hostPodActions.completeHint')}
+          {free ? t('mweb.hostShare.freeCompleteHint') : t('mweb.hostPodActions.completeHint')}
         </Text>
         {billField}
         {mediaSummary}
-        <SettlementSummary settlement={settlement} isLoading={isLoading} />
+        <SettlementSummary settlement={settlement} isLoading={isLoading} free={free} />
         {previewErrorText}
         {errorText}
       </YStack>

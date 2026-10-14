@@ -269,8 +269,10 @@ describe('ShopPage', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Add Apple' }));
         expect(await screen.findByTestId('shop-product-p2-qty')).toHaveTextContent('1');
-        expect(screen.getByTestId('shop-product-p2-notice')).toHaveTextContent('Item added');
-        expect(storedCart()).toEqual([expect.objectContaining({ pod_id: 'pod-9', product_id: 'p2', quantity: 1 })]);
+        await waitFor(() => expect(screen.getByTestId('shop-product-p2-notice')).toHaveTextContent('Item added'));
+        await waitFor(() =>
+          expect(storedCart()).toEqual([expect.objectContaining({ pod_id: 'pod-9', product_id: 'p2', quantity: 1 })])
+        );
         // The card's own notice is the only one: no app-wide toast repeats it.
         expect(notices).toEqual([]);
         expect(navigateMock).not.toHaveBeenCalled();

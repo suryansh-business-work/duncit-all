@@ -82,7 +82,7 @@ export default function VenueEditorPage() {
             minCategories={minCategories}
           />
           <TypeCapacitySection control={control} setValue={setValue} config={config} />
-          <FoodSection control={control} config={config} onPick={picker.pickImage} />
+          <FoodSection control={control} config={config} venueId={venueId} />
           <AmenitiesSection control={control} config={config} />
           <DocumentsSection control={control} config={config} onPick={picker.pickImage} />
           <OwnerSection control={control} setValue={setValue} isEdit={isEdit} />

@@ -5,7 +5,7 @@ import type { ClubOpenSlots, PodPickerProduct, TicketDiscountTier } from '@dunci
 import type { CreatePodInput } from '@/generated/graphql/graphql';
 import { fallbackT } from '@/i18n/fallback';
 
-/** The only pod types — FREE is virtual-only, physical pods are always PAID. */
+/** The only pod types — either one for a physical or a virtual pod. */
 export const POD_TYPES = [
   { value: 'FREE', label: fallbackT('mweb.createPod.free') },
   { value: 'PAID', label: fallbackT('mweb.common.paid') },
@@ -88,7 +88,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   pod_info: '',
   pod_date_time_text: '',
   pod_end_date_time_text: '',
-  // Default mode is PHYSICAL, which only allows PAID (FREE is virtual-only).
+  // PAID by default — a host chooses Free on Step 4, for either mode.
   pod_type: 'PAID',
   pod_amount_text: '',
   no_of_spots_text: '0',

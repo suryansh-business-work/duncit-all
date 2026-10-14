@@ -284,7 +284,15 @@ describe('toStep1Input — food, which step 1 still stores now it has a section 
       ...filled,
       offers_food: true,
       food_menu: [{ ...dish }, { ...dish, item_id: '', name: 'Filter coffee', price: 'free' }],
-      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: '5' },
+      food_ordering: {
+        enabled: true,
+        razorpay_integration_id: 'rzp-1',
+        razorpay_linked: true,
+        discount_pct: '5',
+        tax_override: false,
+        tax_mode: 'INCLUSIVE',
+        gst_pct: 5,
+      },
     });
 
     expect(input).toMatchObject({
@@ -296,6 +304,45 @@ describe('toStep1Input — food, which step 1 still stores now it has a section 
       food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: 5 },
     });
     expect('id' in (input.food_menu?.[1] ?? {})).toBe(false);
+  });
+
+  it("sends the venue's own GST only while it overrides Finance's default", () => {
+    const ordering = { ...filled.food_ordering, tax_mode: 'EXCLUSIVE', gst_pct: '18' };
+    const following = toStep1Input({ ...filled, offers_food: true, food_ordering: { ...ordering, tax_override: false } });
+    // Switched off, the stored GST is left alone — only the switch goes.
+    expect(following.food_ordering).toMatchObject({ tax_override: false });
+    expect('tax_mode' in (following.food_ordering ?? {})).toBe(false);
+    expect('gst_pct' in (following.food_ordering ?? {})).toBe(false);
+
+    const overriding = toStep1Input({ ...filled, offers_food: true, food_ordering: { ...ordering, tax_override: true } });
+    expect(overriding.food_ordering).toMatchObject({ tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 18 });
+  });
+});
+
+describe('venueToValues — GST on food', () => {
+  it('reads the GST the server resolved and starts the GST number field empty', () => {
+    const values = venueToValues(
+      { id: 'v1', gstin: '29ABCDE1234F1Z5', food_ordering: { enabled: false, tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 12 } },
+      [],
+      account
+    );
+    expect(values.food_ordering).toMatchObject({ tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 12 });
+    expect(values.food_gstin).toBe('');
+  });
+});
+
+describe('toApprovedUpdateInput — the GST number from the Food section', () => {
+  const food = { ...filled, offers_food: true };
+
+  it('sends a typed GST number, upper-cased, with the food fields', () => {
+    expect(toApprovedUpdateInput('food', { ...food, food_gstin: ' 29abcde1234f1z5 ' }, 0)).toMatchObject({
+      offers_food: true,
+      gstin: '29ABCDE1234F1Z5',
+    });
+  });
+
+  it('sends no GST number when none was typed, so a saved one is never touched', () => {
+    expect('gstin' in toApprovedUpdateInput('food', { ...food, food_gstin: '  ' }, 0)).toBe(false);
   });
 });
 

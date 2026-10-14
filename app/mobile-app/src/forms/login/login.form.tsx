@@ -4,11 +4,13 @@ import { useForm, type Control } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { LOGIN_CHANNELS, type LoginChannel } from '@duncit/forms/schemas';
+import type { RecoveryHandoff } from '@duncit/utils';
 
 import { CountryCodeField } from '@/forms/components/CountryCodeField';
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useTranslation } from '@/hooks/useTranslation';
+import { LoginForgotLink } from './LoginForgotLink';
 import {
   loginDefaults,
   makeLoginSchema,
@@ -20,6 +22,8 @@ export interface LoginFormProps {
   loading?: boolean;
   errorMessage?: string | null;
   onSubmit: (values: LoginSubmitValues) => void | Promise<void>;
+  /** "Forgot password?" with the tab and the boxes as they stand. */
+  onForgotPassword?: (handoff: RecoveryHandoff) => void;
 }
 
 interface ToggleProps {
@@ -133,10 +137,11 @@ function LoginFields({
   loading,
   errorMessage,
   onSubmit,
+  onForgotPassword,
 }: Readonly<LoginFormProps & { channel: LoginChannel }>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeLoginSchema(t, channel), [t, channel]);
-  const { control, handleSubmit } = useForm<LoginFormValues, any, LoginFormValues>({
+  const { control, handleSubmit, getValues } = useForm<LoginFormValues, any, LoginFormValues>({
     defaultValues: loginDefaults,
     resolver: formResolver<LoginFormValues>(schema),
     mode: 'onBlur',
@@ -156,6 +161,8 @@ function LoginFields({
         required
         hint={t('mweb.auth.passwordHint')}
       />
+
+      <LoginForgotLink channel={channel} read={getValues} onPick={onForgotPassword} />
 
       {errorMessage ? (
         <Text fontSize={14} color="$danger" testID="login-error" role="alert" aria-live="polite">

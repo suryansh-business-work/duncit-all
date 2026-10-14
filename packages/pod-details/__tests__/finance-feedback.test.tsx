@@ -43,6 +43,7 @@ const breakdown = (over: Record<string, unknown> = {}) => ({
   __typename: 'PodFinanceBreakdown',
   pod_id: 'DUN-POD-4821',
   pod_title: 'Sunday Badminton',
+  is_free: false,
   settlement_status: 'LIVE',
   frozen: false,
   bookings_count: 4,
@@ -155,6 +156,36 @@ describe('PodFinanceSection', () => {
     expect(screen.getByText('₹594.00')).toBeInTheDocument();
     expect(screen.getByText('Bookings refunded')).toBeInTheDocument();
     expect(screen.getByText('6')).toBeInTheDocument();
+  });
+
+  // A free pod moves no platform money — the host settles the venue directly —
+  // so the card names it free and prints no figure, not a split of zeros.
+  it('names a free pod free and prints no money for it', async () => {
+    const zeros = Object.fromEntries(
+      Object.entries(waterfall).map(([key, value]) => [key, typeof value === 'number' ? 0 : value]),
+    );
+    const { container } = mountSection(<PodFinanceSection podId={POD_ID} />, [
+      financeMock(breakdown({ is_free: true, collected_total: 0, has_venue: false, waterfall: zeros })),
+    ]);
+    await settle();
+
+    expect(screen.getByTestId('pod-finance-free')).toBeInTheDocument();
+    expect(screen.getByText('Free pod')).toBeInTheDocument();
+    expect(screen.getByText(/Nobody pays to join a free pod/)).toBeInTheDocument();
+    expect(screen.getByText('4')).toBeInTheDocument();
+    expect(screen.getByText('Live')).toBeInTheDocument();
+    expect(screen.queryByText('Collected total')).not.toBeInTheDocument();
+    expect(screen.queryByText('Venue Take')).not.toBeInTheDocument();
+    expect(screen.queryByText('Payouts are released after Finance approval.')).not.toBeInTheDocument();
+    expect(container.textContent).not.toContain('₹');
+  });
+
+  it('keeps the money on a paid pod', async () => {
+    mountSection(<PodFinanceSection podId={POD_ID} />, [financeMock(breakdown())]);
+    await settle();
+
+    expect(screen.queryByTestId('pod-finance-free')).not.toBeInTheDocument();
+    expect(screen.getByText('Collected total')).toBeInTheDocument();
   });
 
   // Nothing went back, so the pod says nothing about refunds.

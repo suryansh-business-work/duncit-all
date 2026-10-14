@@ -15,7 +15,13 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     end_at: String!
     "True for a whole-day / whole-date-range booking."
     whole_day: Boolean!
+    "The slot's price. 0 when pod_is_free — the platform quotes the venue nothing."
     price: Int!
+    """
+    True when the requesting pod is FREE: the host settles the venue's charges
+    directly, off the platform. Show the free-pod notice instead of any amount.
+    """
+    pod_is_free: Boolean!
     requested_at: String!
     pod_id: ID!
     pod_title: String!
@@ -45,8 +51,14 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     end_at: String!
     "True for a whole-day / whole-date-range booking."
     whole_day: Boolean!
-    "The slot's gross price, before Duncit's venue commission."
+    "The slot's gross price, before Duncit's venue commission. 0 when pod_is_free."
     price: Int!
+    """
+    True when the requesting pod is FREE: the host settles the venue's charges
+    directly, off the platform, so price, venue_commission_amount and
+    venue_receives are all 0. Show the free-pod notice instead of the earnings.
+    """
+    pod_is_free: Boolean!
     "The venue space this slot is for ('' = whole venue)."
     space_label: String!
     requested_at: String!

@@ -6,6 +6,8 @@ interface Props {
   lead: string;
   /** The muted half — the softer second beat, same size. */
   trail?: string | null;
+  /** The second half's ink: muted (the calm default) or the red text accent (auth heroes). */
+  trailTone?: 'muted' | 'accent';
   /** Put the muted half on its own line (greetings, heroes); inline otherwise. */
   stacked?: boolean;
   variant?: TypographyProps['variant'];
@@ -22,6 +24,7 @@ interface Props {
 export default function TwoToneHeading({
   lead,
   trail,
+  trailTone = 'muted',
   stacked = false,
   variant = 'h5',
   align,
@@ -33,7 +36,7 @@ export default function TwoToneHeading({
     <Typography data-testid={testId} variant={variant} align={align} component={component} sx={{ lineHeight: 1.2 }}>
       {lead}
       {trail ? (
-        <Box component="span" sx={{ color: 'text.secondary', display: stacked ? 'block' : 'inline' }}>
+        <Box component="span" sx={{ color: trailTone === 'accent' ? 'accent.main' : 'text.secondary', display: stacked ? 'block' : 'inline' }}>
           {separator}
           {trail}
         </Box>

@@ -6,6 +6,10 @@ export const ROLES = [
   'HOST',
   'VENUE_OWNER',
   'ECOMM_MANAGER',
+  // The pet store's staff (ecomm.duncit.com). Apart from ECOMM_MANAGER on
+  // purpose: that one is granted to every approved E-Commerce Brand partner, and
+  // a brand partner must never open the store's orders, customers or coupons.
+  'ECOMM_STORE_MANAGER',
   'CLUB_ADMIN',
   'REGIONAL_CLUB_ADMIN',
   'SUPPORT_USER',
@@ -67,7 +71,8 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'USER', name: 'User', description: 'Standard Duncit app member.' },
   { key: 'HOST', name: 'Host', description: 'Hosts pods on the Duncit app.' },
   { key: 'VENUE_OWNER', name: 'Venue Owner', description: 'Owns and manages venues.' },
-  { key: 'ECOMM_MANAGER', name: 'E-commerce Manager', description: 'E-commerce console — ecomm-portal.duncit.com (runs the Duncit Pet Store).' },
+  { key: 'ECOMM_MANAGER', name: 'E-commerce Manager', description: 'E-Commerce Brand partner — sells their own products from the Partners portal (/ecomm-brand). Does not open the pet store console.' },
+  { key: 'ECOMM_STORE_MANAGER', name: 'Pet Store Manager', description: 'E-commerce console — ecomm-portal.duncit.com (runs the Duncit Pet Store at ecomm.duncit.com).' },
   { key: 'CLUB_ADMIN', name: 'Club Admin', description: 'Manages assigned clubs and their pods from the Partners portal.' },
   { key: 'REGIONAL_CLUB_ADMIN', name: 'Regional Club Admin', description: 'Oversees a region of Club Admins from the Partners portal. Granted directly — there is no onboarding application for it.' },
   { key: 'SUPPORT_USER', name: 'Support Agent', description: 'Support console access (agent level).' },

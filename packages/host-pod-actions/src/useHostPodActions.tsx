@@ -89,7 +89,12 @@ export function useHostPodActions(onChanged: () => void): HostPodActions {
     canAmend: canAmendPod(pod),
     onScan: () => setScanPod({ id: pod.id, pod_title: pod.pod_title }),
     onComplete: () =>
-      setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id }),
+      setCompletePod({
+        id: pod.id,
+        pod_title: pod.pod_title,
+        venue_id: pod.venue_id,
+        pod_type: pod.pod_type,
+      }),
     // A venue-rejected pod opens the FULL edit + resubmission flow; every other
     // pod keeps the limited title/description/media edit.
     onEdit: () => (isVenueRejected(pod.venue_approval_status) ? setResubmitPod : setEditPod)(pod),

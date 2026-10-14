@@ -81,11 +81,15 @@ export function useVenueEditor(venueId: string) {
   // Rebuilt when the language changes, because its messages are copy — and when
   // the catalogue lands, because the menu's bounds and the category cap are the
   // server's to state.
-  const { food_menu_limit, food_image_limit, food_price_max, category_limit } = config;
+  const { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, category_limit } = config;
   const schema = useMemo(
     () =>
-      makeVenueFormSchema(t, { food_menu_limit, food_image_limit, food_price_max }, category_limit),
-    [t, food_menu_limit, food_image_limit, food_price_max, category_limit],
+      makeVenueFormSchema(
+        t,
+        { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct },
+        category_limit,
+      ),
+    [t, food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, category_limit],
   );
 
   // The third generic pins the SUBMITTED shape to the form's own: the schema's

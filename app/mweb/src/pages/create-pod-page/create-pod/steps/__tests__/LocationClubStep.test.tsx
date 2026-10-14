@@ -209,6 +209,16 @@ describe('LocationClubStep', () => {
     expect(container.querySelectorAll('input, [role="radio"], [role="combobox"]').length).toBeGreaterThan(0);
   });
 
+  it('keeps a free pod free when it switches to physical', () => {
+    step({ values: { location_id: 'loc-1', pod_mode: 'VIRTUAL', pod_type: 'FREE', pod_amount: 0 } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Physical/ }));
+
+    expect(formRef?.getValues('pod_mode')).toBe('PHYSICAL');
+    expect(formRef?.getValues('pod_type')).toBe('FREE');
+    expect(formRef?.getValues('pod_amount')).toBe(0);
+  });
+
   it('opens on the club the host already picked', () => {
     step({ values: { location_id: 'loc-1', locality: 'Indiranagar', club_id: 'club-1' } });
 

@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { VenueFoodTaxMode } from '@duncit/utils';
 
 /** The whole venue record, read-only. The admin console never writes a venue —
  * approvals and edits live in the Onboarding portal — so this is one query with
@@ -35,6 +36,10 @@ export const VENUE_DETAIL = gql`
       food_ordering {
         enabled
         discount_pct
+        razorpay_linked
+        tax_override
+        tax_mode
+        gst_pct
       }
       venue_category {
         super_category_id
@@ -176,10 +181,16 @@ export interface VenueFoodItem {
 }
 
 /** Scan-and-order, as far as a console may see it — the linked Razorpay account
- * is the owner's and is deliberately not selected here. */
+ * is the owner's, so only WHETHER one is linked is selected, never which. The
+ * GST is what the venue's orders are priced with: its own while `tax_override`,
+ * otherwise Finance's default (the server resolves it). */
 export interface VenueFoodOrdering {
   enabled: boolean;
   discount_pct: number;
+  razorpay_linked: boolean;
+  tax_override: boolean;
+  tax_mode: VenueFoodTaxMode;
+  gst_pct: number;
 }
 
 export interface VenueCancellationTier {

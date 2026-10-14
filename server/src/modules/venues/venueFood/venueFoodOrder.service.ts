@@ -1,7 +1,8 @@
 import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import { secretKey } from '@modules/commerce/store/store.shared';
-import { getFinanceSettings } from '@modules/finance/finance/finance.model';
+import { getFinanceSettings, type IFinanceSettings } from '@modules/finance/finance/finance.model';
+import { effectiveFoodTax, foodTaxDefaultsOf, type FoodTax } from '@modules/finance/finance/foodTaxDefaults';
 import {
   createRazorpayOrder,
   verifyRazorpaySignature,
@@ -28,7 +29,7 @@ import {
   type FoodCouponRejection,
 } from './venueFoodCoupon.redemption';
 import { markFoodOrderPaid, recheckOnRead, settleFoodRefund } from './venueFoodOrder.payment';
-import { MIN_TOTAL_PAISE, foodTotals, type FoodTotals } from './venueFoodOrder.pricing';
+import { MIN_TOTAL_PAISE, foodTotals, preTaxPaise, type FoodTotals } from './venueFoodOrder.pricing';
 import {
   FOOD_LOG,
   assertOrderAccess,
@@ -107,14 +108,20 @@ export interface VerifyFoodOrderInput {
 }
 
 /** A venue that can be ordered from right now: live, serving food, ordering on, an account to be paid on. */
-async function orderableVenue(venueId: Types.ObjectId) {
+async function orderableVenue(venueId: Types.ObjectId, finance: IFinanceSettings) {
   const venue = await VenueModel.findById(venueId).select(
     'venue_name status is_active offers_food food_menu food_ordering gstin address_line1 address_line2 locality city state postal_code'
   );
   if (!venue || venue.status !== 'APPROVED' || venue.is_active === false) return fail('NOT_FOUND', 'Venue not found');
   const ordering = venue.food_ordering;
   if (!venue.offers_food || !ordering?.enabled || !ordering.razorpay_integration_id) return orderingClosed();
-  return { venue, integrationId: ordering.razorpay_integration_id, discountPct: ordering.discount_pct ?? 0 };
+  return {
+    venue,
+    integrationId: ordering.razorpay_integration_id,
+    discountPct: ordering.discount_pct ?? 0,
+    // The venue's own GST while it overrides, otherwise Finance's default — read now, snapshotted on the order.
+    tax: effectiveFoodTax(ordering, foodTaxDefaultsOf(finance)),
+  };
 }
 
 /** The venue's address on one line, as its invoice prints it. */
@@ -166,14 +173,17 @@ function priceLines(menu: IVenueFoodItem[], items: PlaceFoodOrderInput['items'])
 /**
  * The cart's totals with the venue's own discount and no coupon. A coupon can
  * only ever be trimmed to keep an order chargeable (see `foodTotals`), so an
- * order too small to pay online is too small with or without one.
+ * order too small to pay online is too small with or without one. The minimum
+ * is held to the amount before GST, exactly as before tax existed.
  */
-function totalsFor(lines: IFoodOrderLine[], discountPct: number) {
+function totalsFor(lines: IFoodOrderLine[], discountPct: number, tax: FoodTax) {
   const totals = foodTotals(
     lines.reduce((sum, line) => sum + line.line_paise, 0),
-    discountPct
+    discountPct,
+    0,
+    tax
   );
-  if (totals.total_paise < MIN_TOTAL_PAISE) badInput('This order is too small to pay online');
+  if (preTaxPaise(totals) < MIN_TOTAL_PAISE) badInput('This order is too small to pay online');
   return totals;
 }
 
@@ -194,7 +204,11 @@ async function totalsWithCoupon(
 ): Promise<CouponPricing> {
   const verdict = await evaluateFoodCoupon({ ...check, subtotalPaise: plain.subtotal_paise });
   if ('rejection' in verdict) return { totals: plain, coupon: null, rejection: verdict.rejection };
-  const totals = foodTotals(plain.subtotal_paise, plain.discount_pct, verdict.coupon.discount_pct);
+  // The same GST rule as the cart without it: a coupon changes the net, never the tax.
+  const totals = foodTotals(plain.subtotal_paise, plain.discount_pct, verdict.coupon.discount_pct, {
+    tax_mode: plain.tax_mode,
+    gst_pct: plain.gst_pct,
+  });
   // Nothing left for the code to take off: using it would spend one of its uses on no discount at all.
   if (totals.coupon_discount_paise === 0) {
     return { totals: plain, coupon: null, ...rejected('NO_DISCOUNT', 'This order already has the largest discount it can take') };
@@ -267,12 +281,12 @@ export const venueFoodOrderService = {
     const repeat = await attemptOf(venueId, clientKey);
     if (repeat) return placementOf(repeat);
 
-    const { venue, integrationId, discountPct } = await orderableVenue(venueId);
+    const finance = await getFinanceSettings();
+    const { venue, integrationId, discountPct, tax } = await orderableVenue(venueId, finance);
     const customer = cleanCustomer(input);
     const lines = priceLines(venue.food_menu ?? [], input.items);
-    const plain = totalsFor(lines, discountPct);
+    const plain = totalsFor(lines, discountPct, tax);
     const keys = await razorpayKeysFor(integrationId);
-    const finance = await getFinanceSettings();
     const code = normalizeFoodCouponCode(input.coupon_code);
     const priced: CouponPricing = code
       ? await totalsWithCoupon(plain, {
@@ -323,9 +337,9 @@ export const venueFoodOrderService = {
    */
   async previewCoupon(input: PreviewFoodCouponInput) {
     const venueId = objectId(input.venue_id, 'Invalid venue id');
-    const { venue, discountPct } = await orderableVenue(venueId);
-    const plain = totalsFor(priceLines(venue.food_menu ?? [], input.items), discountPct);
     const finance = await getFinanceSettings();
+    const { venue, discountPct, tax } = await orderableVenue(venueId, finance);
+    const plain = totalsFor(priceLines(venue.food_menu ?? [], input.items), discountPct, tax);
     const { totals, coupon, rejection } = await totalsWithCoupon(plain, {
       venueId,
       code: normalizeFoodCouponCode(input.coupon_code),
@@ -343,6 +357,10 @@ export const venueFoodOrderService = {
       discount_pct: totals.discount_pct,
       discount_amount: rupees(totals.discount_paise),
       coupon_discount_amount: rupees(totals.coupon_discount_paise),
+      tax_mode: totals.tax_mode,
+      gst_pct: totals.gst_pct,
+      taxable_amount: rupees(totals.taxable_paise),
+      tax_amount: rupees(totals.tax_paise),
       total: rupees(totals.total_paise),
       currency_symbol: finance.currency_symbol,
     };

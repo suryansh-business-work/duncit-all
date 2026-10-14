@@ -8,9 +8,11 @@ import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTabs } from '@duncit/tabs';
 import { LOGIN_CHANNELS, type LoginChannel } from '@duncit/forms/schemas';
+import type { RecoveryHandoff } from '@duncit/utils';
 import RhfTextField from '../components/RhfTextField';
 import { CHANNEL_TABS_SX } from '../../components/password-recovery/channelTabs';
 import { useTranslation } from '../../i18n/useTranslation';
+import LoginForgotLink from './LoginForgotLink';
 import LoginIdentityFields from './LoginIdentityFields';
 import {
   loginDefaults,
@@ -25,6 +27,8 @@ interface Props {
   errorMessage?: string | null;
   onSubmit: (values: LoginSubmitValues) => Promise<void> | void;
   submitLabel?: string;
+  /** "Forgot password?" with the tab and the boxes as they stand. */
+  onForgotPassword?: (handoff: RecoveryHandoff) => void;
 }
 
 /** One channel's form. Remounted by the parent when the channel changes. */
@@ -35,12 +39,13 @@ function LoginFields({
   errorMessage,
   onSubmit,
   submitLabel,
+  onForgotPassword,
 }: Readonly<Props & { channel: LoginChannel }>) {
   const { t } = useTranslation();
   const [showPwd, setShowPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const schema = useMemo(() => makeLoginSchema(t, channel), [t, channel]);
-  const { control, handleSubmit } = useForm<LoginFormValues, any, LoginFormValues>({
+  const { control, handleSubmit, getValues } = useForm<LoginFormValues, any, LoginFormValues>({
     defaultValues: initialValues ?? loginDefaults,
     resolver: zodResolver(schema) as unknown as Resolver<LoginFormValues, any, LoginFormValues>,
     mode: 'onTouched',
@@ -94,6 +99,7 @@ function LoginFields({
             ),
           } }}
         />
+        <LoginForgotLink channel={channel} read={getValues} onPick={onForgotPassword} />
         {(submitError || errorMessage) && (
           <Alert data-testid="login-error" severity="error">{submitError || errorMessage}</Alert>
         )}

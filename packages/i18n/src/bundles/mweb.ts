@@ -596,6 +596,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // Sign in with Apple. Both surfaces render their own Apple button, so
       // its label is ours on both — one wording to sign in, one to sign up.
       appleSignIn: 'Sign in with Apple',
+      // The round provider buttons' captions on the redesigned auth screens.
+      googleShort: 'Google',
+      appleShort: 'Apple',
       appleSignUp: 'Sign up with Apple',
       appleConnecting: 'Connecting to Apple…',
       appleFailed: 'Apple sign-in failed. Please try again.',
@@ -630,8 +633,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     login: {
       title: 'Welcome',
-      titleAccent: 'back.',
-      subtitle: 'Pick up where you left off and find pods around you.',
+      titleAccent: 'back!',
+      subtitle: 'Discover local events, meet new people, and be part of your community.',
+      // The three feature chips under the landing step's heading.
+      chipLocalEvents: 'Local Events',
+      chipMeetPeople: 'Meet People',
+      chipNearbyPods: 'Nearby Pods',
       avatarsCaption: 'New pods are waiting for your crew today',
       passwordPlaceholder: 'Enter password',
       // The redesigned landing step. Sign-in is a CHOICE of method now, so the
@@ -652,7 +659,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // Native only — mWeb's Google button is rendered by Google.
       googleSignIn: 'Sign in with Google',
       newHere: 'New here?',
-      createOne: 'Create one',
+      createOne: 'Create an account',
       // Google knows them, Duncit does not. An invitation rather than a
       // refusal: the credential they just signed in with is carried straight
       // into signup, so "yes" continues instead of starting over. Both
@@ -722,6 +729,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       submitting: 'Creating…',
       haveAccount: 'Already have an account?',
       logIn: 'Log in',
+      // Signing UP with Google or Apple as somebody already on Duncit: asked the
+      // moment the provider returns, before any number or code is asked for.
+      existingAccountTitle: 'You’re already on Duncit',
+      existingAccountBody: '{email} already has a Duncit account. Shall we log you in instead?',
+      existingAccountLogin: 'Log me in',
+      existingAccountCancel: 'Cancel',
       // The two surfaces enforce slightly different name-length and date rules,
       // so a few of these are rendered by one surface only. The character rule
       // (namePattern) is shared: both run PERSON_NAME from @duncit/regex.
@@ -1529,6 +1542,21 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'Backing out releases your seat — you will get the refund only if someone fills your spot ({pct}% deduction applies on paid pods).',
       alreadyTakenPlace: 'This pod has already taken place.',
       backoutMaxed: 'You have reached the maximum number of Backout attempts allowed for this Pod.',
+      // A FREE pod has no backout and no refund — "Cancel Spot" is its only way
+      // out, and the member may join again any number of times.
+      cancelSpot: 'Cancel Spot',
+      cancelSpotTitle: 'Cancel your spot?',
+      cancelSpotBody:
+        'Your spot will be released for someone else. This pod is free, so you can join again any time while it is open.',
+      cancelSpotConfirm: 'Cancel My Spot',
+      cancellingSpot: 'Cancelling…',
+      keepSpot: 'Keep Spot',
+      spotCancelledSnack: 'Your spot is cancelled. You can join again any time while the pod is open.',
+      cancelSpotCheckedIn:
+        'You have already been checked in at this pod, so your spot can no longer be cancelled.',
+      cancelSpotStarted: 'This pod has already started, so your spot can no longer be cancelled.',
+      cancelSpotNotMember: 'You do not have a spot in this pod to cancel.',
+      cancelSpotFailed: 'We could not cancel your spot. Please try again.',
       // mWeb only — refilling your own released seat by referral is a web flow;
       // the native bar has no backed-out state.
       backedOutRefundLead: 'You have backed out. Refund status:',
@@ -1676,6 +1704,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       statusVisited: 'Visited',
       statusBackoutInProcess: 'Backout in process',
       statusBackedOut: 'Backed out',
+      // A free pod's exit is not a backout.
+      statusSpotCancelled: 'Spot cancelled',
       // The refund words come from the request rather than the booking.
       refundNotStarted: 'Not started',
       refundPending: 'Criteria pending',
@@ -1700,6 +1730,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       goToPodDetails: 'Go to Pod Details',
       backoutPod: 'Backout Pod',
       backingOut: 'Backing out…',
+      cancelSpot: 'Cancel Spot',
+      cancellingSpot: 'Cancelling…',
       rejoinPod: 'Rejoin Pod',
       rejoining: 'Rejoining…',
       invoice: 'Invoice',
@@ -2540,11 +2572,26 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       podTypePaid: 'Paid',
       freeCaption: 'No ticket charge',
       paidCaption: 'Charge per person',
-      physicalPaidCaption: 'Physical pods are always paid',
+      // A free pod — physical or virtual — has no price field and no earnings
+      // panel: this card stands where they would be.
+      freePodTitle: 'This pod is free',
+      freePodBody:
+        'People join without paying, and Duncit collects and pays nothing for this pod.',
+      // Only for a free pod on a slot the venue charges for (never the host's
+      // own venue): the venue's money is settled off the platform. The second
+      // line is dropped when a Pod Request has already confirmed the slot.
+      freeVenueSettle:
+        "Because this pod is free, Duncit will not pay the venue. You will need to settle the venue's charges with the venue directly.",
+      freeVenueHold:
+        'The venue has been asked not to confirm the slot until you have spoken to them or transferred the amount.',
+      // The same two lines when a club admin creates the pod for a host.
+      freeVenueSettleClubAdmin:
+        "Because this pod is free, Duncit will not pay the venue. The host will need to settle the venue's charges with the venue directly.",
+      freeVenueHoldClubAdmin:
+        'The venue has been asked not to confirm the slot until the host has spoken to them or transferred the amount.',
       ticketPriceLabel: 'Ticket price (₹ per person)',
       ticketPricePlaceholder: 'Enter ticket price',
       ticketPriceHint: 'Gross ticket price, max 1999.',
-      ticketPriceFreeHint: 'Free pods are ₹0.',
       // The suggested-price ladder: the link beside the label, the modal it
       // opens, and one description per rung (cheapest first).
       suggestedPrice: 'Suggested Price',
@@ -2675,7 +2722,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         // mWeb only — its pod type can be cleared, native's is always one of two.
         podTypeRequired: 'Select a pod type',
         podTypeInvalid: 'Select Free or Paid',
-        physicalMustBePaid: 'Physical pods must be paid',
         freeAmountZero: 'Free pods must have amount 0',
         ticketPriceRequired: 'Enter a ticket price to continue',
         ticketPriceMin: 'Ticket price must be more than ₹0',
@@ -2800,6 +2846,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'Your earnings are calculated only from the attendees you mark. If someone came but is never marked, their seat is left out of your payout.',
       earningsBodyVirtual:
         'This pod is online, so there is no door to scan at. A member is marked present the moment they open the meeting link from the pod page during the pod — anyone who never opens it is left out of your payout unless you mark them by hand.',
+      earningsTitleFree: 'Mark who came',
+      earningsBodyFree:
+        'This pod is free, so there is no payout. Marking attendance still records who came — it unlocks their Visited status, rating and feedback, and the pod can only be completed once at least one guest is marked present.',
       lockedCompletedTitle: 'Attendance is closed for this pod',
       lockedCompletedBody:
         'This pod is completed and its payout is already split, so attendance can no longer be changed. If somebody is missing, contact your Club Admin below.',
@@ -2966,6 +3015,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       title: 'Your share (credited to your wallet once Finance approves)',
       shortfall:
         "The venue's booked price is more than this pod took at the door. The venue is paid in full and your share is nil — it is never taken back from you.",
+      // A FREE pod moves no money on the platform: every money surface shows
+      // this label instead of figures (host projection, settlement, earnings).
+      freePod: 'Free pod',
+      freeNote:
+        'Nobody pays to join a free pod, so there is no payout. The host settles any venue charges directly with the venue.',
+      freeCompleted: 'Pod completed.',
+      freeCompleteHint:
+        'This pod’s photos and videos are the ones added on the Upload Pod Media page — yours and your guests’. It is a free pod, so completing it pays nothing out.',
     },
     // The venue's final bill at Complete Pod — @duncit/utils' venue-bill.ts.
     // `shell.venueBill` must stay word-for-word identical: the same builder
@@ -4899,6 +4956,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         dropped: 'No longer available and removed from your cart: {names}.',
         belowMinimum: 'This order is too small to pay online.',
         couponLine: 'Coupon {code} ({pct}%)',
+        // GST: a line added before the total, or a note under it when the menu prices already include it.
+        gstAdded: 'GST ({pct}%)',
+        gstIncluded: 'Includes {amount} GST ({pct}%)',
       },
       // The venue's own coupon on a food order (mWeb + native). The venue
       // creates the code and funds the discount; the server prices it.
@@ -4911,6 +4971,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         applied: 'Coupon {code} applied — you save {amount}',
         removed: 'Coupon removed',
         unmet: 'Add {amount} more to use this coupon.',
+        offersTitle: 'Available coupons',
+        offerPct: '{pct}% off',
+        offerMin: 'On orders above {amount}',
+        offerUntil: 'Valid till {date}',
+        offerApply: 'Apply {code}',
         failed: 'We could not check this coupon. Please try again.',
         rejected: {
           invalid: 'This coupon code is not valid here.',
@@ -5027,6 +5092,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         photos: 'Photos',
         photosHint: 'Optional — up to {max} photos of your order',
         addPhoto: 'Add photo',
+        takePhoto: 'Take photo',
+        chooseFromLibrary: 'Choose from library',
+        cameraPermissionNeeded: 'Camera access is needed to take a photo. Allow it in your phone settings, or choose one from your library.',
         removePhoto: 'Remove photo {number}',
         photoAlt: 'Feedback photo {number}',
         uploading: 'Uploading photo…',
@@ -5117,6 +5185,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       createPodHint: 'Start a new pod in a few steps',
       publishHost: 'Publish Your Host Page',
       publishHostHint: 'A public page, link and QR code for you as a host',
+      hostShare: 'Host Share',
+      hostShareHint: 'Your payout from every completed pod',
+      hostCategories: 'Your Categories',
+      hostCategoriesHint: 'Categories you host, and applying for more',
       yourClubs: 'Your Clubs',
       yourClubsHint: 'The clubs you run, their pods and pages',
       podMonitoring: 'Pod Monitoring (AI)',
@@ -5407,6 +5479,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       declineThisBooking: 'Decline this booking?',
       empty:
         'No pending slot requests right now. New ones appear here the moment a host books one of your slots.',
+      // A free pod's venue charges are settled with the host directly, off the
+      // platform — shown instead of the slot price.
+      freePodNotice:
+        'Please coordinate with the host. The host will contact you about your charges. Please do not confirm the slot until the host has called you to discuss or has transferred the amount.',
+      freePodTitle: 'This pod is free',
       host: 'Host',
       intro:
         'Hosts who want to run their pod at your venue. A pod only goes live after you approve its slot.',

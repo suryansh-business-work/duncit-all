@@ -1,19 +1,14 @@
 import { useQuery } from '@apollo/client/react';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
-import { Card, CardContent, Chip, Stack } from '@mui/material';
+import { Alert, Card, CardContent, CircularProgress, Stack } from '@mui/material';
 import SectionHeader from '../components/SectionHeader';
 import { emptyVenueOwnerStats, type VenueOwnerStats } from '@duncit/utils';
-import { PublishPageCard } from '@duncit/public-page';
-import UserVenuePanel from './profile-page/UserVenuePanel';
 import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
 import VenueHealthCard from './venue-manage-page/VenueHealthCard';
-import VenueListBody from './venue-manage-page/VenueListBody';
+import NoVenuesAlert from './venue-manage-page/NoVenuesAlert';
 import VenueOwnerStatsStrip from './venue-manage-page/VenueOwnerStatsStrip';
-import VenuePodsSection from './venue-manage-page/VenuePodsSection';
-import StudioChangeRequests from '../components/studio-pods/StudioChangeRequests';
-import VenueQuickActions from './venue-manage-page/VenueQuickActions';
-import PodRequestsSection from './pod-requests/PodRequestsSection';
+import VenuePodsFigures from './venue-manage-page/VenuePodsFigures';
 import VenueStatTiles from './venue-manage-page/VenueStatTiles';
 import VenueStudioHeader from './venue-manage-page/VenueStudioHeader';
 import VenueSwitcher from './venue-manage-page/VenueSwitcher';
@@ -22,7 +17,9 @@ import { useTranslation } from '../i18n/useTranslation';
 import { useSelectedVenue } from '../hooks/useSelectedVenue';
 
 /**
- * Venue Studio.
+ * Venue Studio dashboard — figures and charts only. Every action (slot
+ * requests, publishing, pod and change requests, the venue list) has its own
+ * page under Venue Options.
  *
  * The page reads every venue the partner owns and shows ONE of them — the one
  * the switcher at the top has selected. It used to read `myVenue`, so a partner
@@ -48,8 +45,7 @@ export default function VenueManagePage() {
     fetchPolicy: 'cache-and-network',
   });
   const venuePods: any[] = podsQ.data?.pods ?? [];
-  // The slot KPIs of the selected venue — the "Slot earnings" strip and the
-  // pending count on the Slot requests action.
+  // The slot KPIs of the selected venue — the "Slot earnings" strip.
   const statsQ = useQuery<{ venueOwnerStats: VenueOwnerStats }>(VENUE_OWNER_STATS, {
     variables: { venue_id: venue?.id ?? '' },
     skip: !venue?.id,
@@ -57,11 +53,24 @@ export default function VenueManagePage() {
   });
   const stats = statsQ.data?.venueOwnerStats ?? emptyVenueOwnerStats;
   const capacity = typeof venue?.capacity === 'number' ? venue.capacity : 0;
-  const isApproved = venue?.status === 'APPROVED';
+
+  if (loading && !data) {
+    return (
+      <Stack data-testid="venue-manage-loading" sx={{ alignItems: 'center', py: 4 }}>
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
+      </Stack>
+    );
+  }
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }} data-testid="venue-manage-screen">
       <VenueStudioHeader />
+
+      {error && !data && (
+        <Alert severity="error" data-testid="venue-manage-error">{error.message}</Alert>
+      )}
+
+      {data && !venue && <NoVenuesAlert message={t('mweb.studioOptions.noVenuesYet')} />}
 
       <VenueSwitcher venues={venues} venueId={venue?.id ?? null} onChange={selectVenue} />
 
@@ -69,19 +78,9 @@ export default function VenueManagePage() {
 
       {venue?.id && <VenueOwnerStatsStrip stats={stats} />}
 
-      {venue?.id && <VenueQuickActions approved={isApproved} pendingRequests={stats.pending_requests} />}
-
-      {venue?.id && isApproved && (
-        <PublishPageCard kind="VENUE" refId={venue.id} title={venue.venue_name ?? ''} />
-      )}
-
-      {venue?.id && <PodRequestsSection side="VENUE" venueId={venue.id} />}
-
       <VenueEarningsLinkCard />
 
-      {venue?.id && <VenuePodsSection venueId={venue.id} onPodsChanged={() => statsQ.refetch()} />}
-
-      <StudioChangeRequests role="VENUE" />
+      {venue?.id && <VenuePodsFigures venueId={venue.id} />}
 
       <Stack spacing={1.5}>
         <SectionHeader testId="venue-manage-pods-header" title="Pods at your venue" />
@@ -96,34 +95,6 @@ export default function VenueManagePage() {
       </Stack>
 
       {health && venue?.id && <VenueHealthCard health={health} venueId={venue.id} />}
-
-      <Stack spacing={1.5}>
-        <SectionHeader testId="venue-manage-application-header" title="Your application" />
-        <Card>
-          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-            <UserVenuePanel venueId={venue?.id ?? null} />
-          </CardContent>
-        </Card>
-      </Stack>
-
-      <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <SectionHeader testId="venue-manage-venues-header" title={t('mweb.venueManagePage.yourVenues')} />
-          </Stack>
-          <Chip
-            size="small"
-            data-testid="venue-manage-status"
-            label={isApproved ? 'Live' : 'Draft'}
-            color={isApproved ? 'success' : 'warning'}
-          />
-        </Stack>
-        <Card>
-          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-            <VenueListBody showSpinner={loading && !data} error={error} venue={venue} />
-          </CardContent>
-        </Card>
-      </Stack>
     </Stack>
   );
 }

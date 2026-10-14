@@ -6,9 +6,10 @@ import { appDateTime } from '@utils/app-time';
  *
  * It is the VENUE's bill, not Duncit's: the guest paid the venue's own account,
  * so the venue's name, address and GST number head the page and Duncit appears
- * only as the place the order was made. Menu prices are what the venue charges
- * at the table, so the invoice states them as tax-inclusive rather than
- * inventing a tax split nobody configured.
+ * only as the place the order was made. With a GST percent on the order it
+ * shows the taxable value and the CGST / SGST halves, and is titled a TAX
+ * INVOICE when the venue also gave its GSTIN. An order placed before GST
+ * existed (0%) prints as it always did: prices inclusive of all taxes.
  */
 export interface FoodInvoiceLine {
   name: string;
@@ -33,6 +34,13 @@ export interface FoodInvoiceData {
   discount: number;
   coupon_code: string;
   coupon_discount: number;
+  /** How the GST met the price, and at what percent; 0 prints no GST lines. */
+  tax_mode: 'INCLUSIVE' | 'EXCLUSIVE';
+  gst_pct: number;
+  /** The value the GST is charged on, and its two halves (they add up to the tax exactly). */
+  taxable: number;
+  cgst: number;
+  sgst: number;
   total: number;
   payment_reference: string;
   /** Printed under the total when the money has gone, or is going, back. */
@@ -47,8 +55,20 @@ const HEADER_HEIGHT = 96;
 const PAGE_BOTTOM = 770;
 /** The table's cells sit this far inside its edges, so the last column never touches the band's end. */
 const CELL_INSET = 6;
+/** Room the totals, the GST lines and the notes need below the last item. */
+const TOTALS_HEIGHT = 210;
 const COLUMNS = { name: LEFT + CELL_INSET, quantity: 324, unit: 374, total: 464 } as const;
 const { accent, accentSoft, ink, muted, line, paper } = PDF_PALETTE;
+
+/** A TAX INVOICE needs both a GST number and a GST charged; anything less is a plain invoice. */
+export const invoiceTitle = (data: Pick<FoodInvoiceData, 'venue_gstin' | 'gst_pct'>) =>
+  data.venue_gstin && data.gst_pct > 0 ? 'TAX INVOICE' : 'INVOICE';
+
+/** The line under the totals that says how the prices meet the GST. */
+export const taxNote = (data: Pick<FoodInvoiceData, 'tax_mode' | 'gst_pct'>) => {
+  if (data.gst_pct <= 0) return 'Prices are inclusive of all applicable taxes.';
+  return data.tax_mode === 'EXCLUSIVE' ? 'GST added to prices.' : 'Prices include GST.';
+};
 
 function drawHeader(doc: Doc, data: FoodInvoiceData, right: number): number {
   doc.rect(0, 0, doc.page.width, HEADER_HEIGHT).fill(accent);
@@ -57,7 +77,7 @@ function drawHeader(doc: Doc, data: FoodInvoiceData, right: number): number {
     height: 30,
     ellipsis: true,
   });
-  doc.fillColor(paper).fontSize(18).font('Helvetica-Bold').text('INVOICE', LEFT, 38, { width: right - LEFT, align: 'right' });
+  doc.fillColor(paper).fontSize(18).font('Helvetica-Bold').text(invoiceTitle(data), LEFT, 38, { width: right - LEFT, align: 'right' });
 
   const top = HEADER_HEIGHT + 20;
   doc.fillColor(ink).fontSize(11).font('Helvetica-Bold').text(data.venue_name, LEFT, top, { width: 280 });
@@ -125,7 +145,7 @@ export function renderVenueFoodInvoice(data: FoodInvoiceData): Promise<Buffer> {
     }
 
     // The totals, the payment line and the notes stay together on one page.
-    if (y > PAGE_BOTTOM - 150) {
+    if (y > PAGE_BOTTOM - TOTALS_HEIGHT) {
       doc.addPage();
       y = LEFT;
     }
@@ -143,13 +163,21 @@ export function renderVenueFoodInvoice(data: FoodInvoiceData): Promise<Buffer> {
     row('Subtotal', money(data.subtotal));
     if (data.discount > 0) row(`QR order discount (${data.discount_pct}%)`, `- ${money(data.discount)}`);
     if (data.coupon_discount > 0) row(`Coupon ${data.coupon_code}`, `- ${money(data.coupon_discount)}`);
+    if (data.gst_pct > 0) {
+      const half = `${data.gst_pct / 2}%`;
+      doc.moveTo(300, y).lineTo(right, y).strokeColor(line).stroke();
+      y += 8;
+      row('Taxable value', money(data.taxable));
+      row(`CGST (${half})`, money(data.cgst));
+      row(`SGST (${half})`, money(data.sgst));
+    }
     doc.moveTo(300, y).lineTo(right, y).strokeColor(line).stroke();
     y += 8;
     row('Total paid', money(data.total), true);
 
     y += 10;
     doc.fillColor(muted).fontSize(9).font('Helvetica');
-    doc.text('Prices are inclusive of all applicable taxes.', LEFT, y, { width: right - LEFT });
+    doc.text(taxNote(data), LEFT, y, { width: right - LEFT });
     if (data.payment_reference) doc.text(`Paid online · Payment reference: ${data.payment_reference}`, LEFT, doc.y + 3);
     if (data.refund_note) doc.fillColor(ink).font('Helvetica-Bold').text(data.refund_note, LEFT, doc.y + 6);
     doc

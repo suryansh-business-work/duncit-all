@@ -1,3 +1,5 @@
+import { isFreePod } from './pod-free';
+
 /**
  * What happened to one person's place in one pod, as a timeline.
  *
@@ -32,7 +34,8 @@ export type PodTimelineKind =
   | 'REFUND_NOT_ELIGIBLE'
   | 'REFUND_PENDING'
   | 'POD_CANCELLED'
-  | 'CANCELLED_BY';
+  | 'CANCELLED_BY'
+  | 'SPOT_CANCELLED';
 
 /** How far along a node is — the renderers colour from this, not from the kind. */
 export type PodTimelineState = 'done' | 'current' | 'pending';
@@ -110,6 +113,13 @@ export interface PodParticipationInput {
   refundStatus?: PodRefundStatus | null;
   /** Every backout this person raised on this pod, oldest first. */
   backouts?: PodBackoutRequestInput[];
+  /**
+   * A FREE pod: no backout and no refund of any kind. The only way out is
+   * "Cancel the spot", and the member may join again any number of times.
+   */
+  free?: boolean;
+  /** When the spot on a free pod was cancelled — null once they joined again. */
+  spotCancelledAt?: string | null;
   /** Now, injected so the result is deterministic to test. */
   now?: Date;
 }
@@ -132,13 +142,18 @@ export interface PodParticipationFields {
   cancel_refund_status?: PodRefundStatus | null;
   refund_status?: PodRefundStatus | null;
   backouts?: PodBackoutRequestInput[] | null;
+  spot_cancelled_at?: string | null;
 }
 
+/** `podType` is the pod's own `pod_type` — only `'FREE'` makes the booking free. */
 export function participationInputFrom(
   fields: PodParticipationFields | null | undefined,
   podDateTime?: string | null,
+  podType?: string | null,
 ): PodParticipationInput {
   return {
+    free: isFreePod(podType),
+    spotCancelledAt: fields?.spot_cancelled_at ?? null,
     joinedAt: fields?.joined_at ?? '',
     podDateTime,
     attended: fields?.attended ?? false,
@@ -303,6 +318,37 @@ function attendanceNodes(input: PodParticipationInput): PodTimelineNode[] {
 }
 
 /**
+ * A free pod's story, said plainly: joined, and either the spot was cancelled,
+ * the pod was cancelled, or the date came. There is no backout, no
+ * replacement and no refund on a free pod, so none of those nodes can appear —
+ * not even for a request raised before free pods lost backouts. A re-join
+ * re-activates the same booking, so its JOINED node carries the latest join.
+ */
+function freePodTimeline(
+  input: PodParticipationInput,
+  nodes: PodTimelineNode[],
+  podPast: boolean,
+): PodTimelineNode[] {
+  if (input.spotCancelledAt) {
+    nodes.push({ kind: 'SPOT_CANCELLED', at: input.spotCancelledAt, state: 'done' });
+    return nodes;
+  }
+  if (input.cancelledBy) {
+    nodes.push({
+      kind: 'POD_CANCELLED',
+      at: input.cancelledAt,
+      state: 'done',
+      children: [
+        { kind: 'CANCELLED_BY', at: input.cancelledAt, state: 'done', cancelledBy: input.cancelledBy },
+      ],
+    });
+    return nodes;
+  }
+  if (podPast) nodes.push(...attendanceNodes(input));
+  return nodes;
+}
+
+/**
  * The whole timeline for one booking.
  *
  * Every backout they raised is its own branch — a pod allows several attempts,
@@ -321,6 +367,8 @@ export function buildPodParticipationTimeline(
   const nodes: PodTimelineNode[] = [
     { kind: 'JOINED', at: input.joinedAt, state: 'done' },
   ];
+
+  if (input.free) return freePodTimeline(input, nodes, podPast);
 
   for (const request of backouts) {
     nodes.push({
@@ -416,6 +464,8 @@ export function podRefundState(input: PodParticipationInput): PodRefundStatus {
  */
 export function podParticipationActions(input: PodParticipationInput): {
   canBackout: boolean;
+  /** A FREE pod's only way out — never true on a paid pod. */
+  canCancelSpot: boolean;
   showRefundState: boolean;
   /** Coins coming back across EVERY release on this booking. A booking can be
    * given up in parts, so one number per request would under-report it. */
@@ -428,14 +478,18 @@ export function podParticipationActions(input: PodParticipationInput): {
   const now = input.now ?? new Date();
   const podPast = isPodPast(input.podDateTime, now);
   const cancelled = Boolean(input.cancelledBy);
-  const refundStatus = podRefundState(input);
+  const free = Boolean(input.free);
+  // A free pod has no refund of any kind, whatever an old row still says.
+  const refundStatus: PodRefundStatus = free ? 'NONE' : podRefundState(input);
   const coinsRefunded = (input.backouts ?? []).reduce(
     (sum, request) => sum + Math.max(0, Math.floor(Number(request.coins_refunded) || 0)),
     0,
   );
   return {
-    canBackout: !podPast && !cancelled,
-    coinsRefunded,
+    canBackout: !free && !podPast && !cancelled,
+    // Out already, or checked in at the door: nothing left to cancel.
+    canCancelSpot: free && !podPast && !cancelled && !input.spotCancelledAt && !input.attended,
+    coinsRefunded: free ? 0 : coinsRefunded,
     // "Not started" is not a refund state worth a control: it is what a booking
     // says when nobody ever asked for one, which is most of them.
     showRefundState: refundStatus !== 'NONE',

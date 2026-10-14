@@ -58,6 +58,16 @@ export interface IPodMember extends Document {
   backout_count: number;
   /** The IN_PROCESS BackoutRequest while status is BACKOUT_IN_PROCESS. */
   active_backout_id: Types.ObjectId | null;
+  /**
+   * Set when the member CANCELLED THEIR SPOT on a free pod (status BACKED_OUT)
+   * and cleared when they join again. A free pod has no backout: no request, no
+   * attempt, no refund — this stamp is what tells the timeline the exit was a
+   * cancelled spot rather than a backout.
+   */
+  spot_cancelled_at: Date | null;
+  /** How many times this booking's spot was cancelled — the audit trail of a
+   * row that is re-activated on every re-join instead of copied. */
+  spot_cancel_count: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -119,6 +129,8 @@ const podMemberSchema = new Schema<IPodMember>(
     refund_payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },
     backout_count: { type: Number, default: 0 },
     active_backout_id: { type: Schema.Types.ObjectId, ref: 'BackoutRequest', default: null },
+    spot_cancelled_at: { type: Date, default: null },
+    spot_cancel_count: { type: Number, default: 0 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -138,5 +150,29 @@ podMemberSchema.index(
   { payment_id: 1 },
   { unique: true, partialFilterExpression: { payment_id: { $type: 'objectId' } } }
 );
+// One JOINED unpaid booking per person per pod. A free join reads "no booking
+// yet" and then writes one, so two concurrent joins (or a join racing a cancel)
+// could each write a JOINED row — two tickets, and a later cancel of one would
+// pull the person out of `pod_attendees` while the other still holds the seat.
+// The index makes the database decide: the loser's write fails with E11000 and
+// the join answers with the winner's booking (see podMember.freeSpot.ts).
+//
+// Scoped to unpaid rows: paid rows are already unique per payment above and are
+// written inside the payment finalizer, whose failure modes this must not
+// change. `$type: 'null'` matches the null every unpaid join writes (see the
+// note above); `payment_id: null` would also match a missing field. Run `npm run check:free-booking-duplicates` before deploying: the
+// build fails on a database that already holds a duplicate.
+podMemberSchema.index(
+  { pod_id: 1, user_id: 1 },
+  {
+    unique: true,
+    name: 'one_unpaid_joined_booking_per_pod_user',
+    partialFilterExpression: { status: 'JOINED', payment_id: { $type: 'null' } },
+  }
+);
+
+/** E11000 — the write lost to a unique index. */
+export const isDuplicateKeyError = (error: unknown) =>
+  (error as { code?: unknown } | null)?.code === 11000;
 
 export const PodMemberModel = model<IPodMember>('PodMember', podMemberSchema);

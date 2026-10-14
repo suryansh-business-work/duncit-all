@@ -7,6 +7,7 @@ import DocumentsSection from '../sections/DocumentsSection';
 import OwnerSection from '../sections/OwnerSection';
 import PayoutSection from '../sections/PayoutSection';
 import LeavesSection from '../sections/LeavesSection';
+import { blankFoodDish } from '@duncit/utils';
 import { blankVenueValues, type VenueFormValues } from '../types';
 import { registrationConfig } from './catalogues';
 import { renderForm } from './harness';
@@ -38,53 +39,74 @@ vi.mock('../../../shared/AccountPicker', () => ({
   ),
 }));
 
+// The shared media picker as a stub: it records where it was told to file the
+// upload, and picks one photo. The picker itself has its own suites.
+const picked = vi.hoisted((): { folder?: string; entityId?: string }[] => []);
+vi.mock('@duncit/media-picker', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/media-picker')>()),
+  MediaPickerDialog: ({ open, folder, entityId, onPicked }: { open: boolean; folder?: string; entityId?: string; onPicked: (url: string) => void }) =>
+    open ? (
+      <button
+        type="button"
+        onClick={() => {
+          picked.push({ folder, entityId });
+          onPicked('https://cdn.example.test/dosa.jpg');
+        }}
+      >
+        Pick a stub photo
+      </button>
+    ) : null,
+}));
+
 describe('FoodSection', () => {
-  const mount = (onPick: PickMedia, over: Partial<VenueFormValues> = {}) =>
+  const mount = (over: Partial<VenueFormValues> = {}) =>
     renderForm<VenueFormValues>(venueValues(over), ({ control }) => (
-      <FoodSection control={control} config={registrationConfig()} onPick={onPick} />
+      <FoodSection control={control} config={registrationConfig()} venueId="venue-1" />
     ));
 
   it('is its own section, and shows the menu only once the venue offers food', () => {
-    const { form } = mount(vi.fn());
+    const { form } = mount();
     const section = within(sectionCard('food', 'Food Menu'));
-    expect(section.queryByRole('button', { name: 'Add a dish' })).not.toBeInTheDocument();
+    expect(section.queryByRole('button', { name: 'Add menu item' })).not.toBeInTheDocument();
 
-    fireEvent.click(section.getByRole('switch', { name: 'Offers food' }));
+    fireEvent.click(section.getByRole('switch', { name: 'Does this venue offer food?' }));
 
     expect(form().getValues('offers_food')).toBe(true);
-    expect(section.getByRole('button', { name: 'Add a dish' })).toBeInTheDocument();
+    expect(section.getByRole('button', { name: 'Add menu item' })).toBeInTheDocument();
   });
 
-  it("uploads a dish photo into the venue's menu folder", async () => {
-    const onPick = vi.fn<PickMedia>().mockResolvedValue('https://cdn.example.test/dosa.jpg');
-    const { form } = mount(onPick, { offers_food: true });
+  it("adds a dish on the catalogue's first entries, and files its photo in the venue's own folder", async () => {
+    const { form } = mount({ offers_food: true });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add a dish' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Add a photo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add menu item' }));
+    expect(form().getValues('food_menu.0')).toMatchObject({ item_id: '', diet: 'VEG', spice_level: 'NONE', is_available: true });
+    fireEvent.click(await screen.findByRole('button', { name: 'Add photo of this menu item' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Pick a stub photo' }));
 
     await waitFor(() => expect(form().getValues('food_menu.0.images')).toEqual(['https://cdn.example.test/dosa.jpg']));
-    expect(onPick).toHaveBeenCalledWith('/venues/menu');
+    expect(picked).toEqual([{ folder: '/venues', entityId: 'venue-1' }]);
   });
 
   it("sets QR ordering and the venue's GST, but cannot switch ordering on without the owner's Razorpay account", () => {
-    mount(vi.fn(), { offers_food: true });
+    mount({ offers_food: true });
     const section = within(sectionCard('food', 'Food Menu'));
     expect(section.getAllByRole('switch')).toHaveLength(3);
-    expect(section.getByRole('switch', { name: 'Offers food' })).toBeEnabled();
+    expect(section.getByRole('switch', { name: 'Does this venue offer food?' })).toBeEnabled();
     // The account is the owner's own, linked from the Partners portal — the console only says there is none.
-    expect(section.getByRole('switch', { name: 'Take food orders from the QR' })).toBeDisabled();
+    expect(section.getByRole('switch', { name: 'Accept food orders from the venue QR' })).toBeDisabled();
     expect(section.getByText(/No Razorpay account is linked yet/)).toBeInTheDocument();
     expect(section.getByRole('switch', { name: "Set this venue's own GST" })).toBeEnabled();
   });
 
-  it('switches ordering on once the owner has linked an account', () => {
-    const { form } = mount(vi.fn(), {
+  it('switches ordering on once the owner has linked an account and a dish is available', () => {
+    const { form } = mount({
       offers_food: true,
+      food_menu: [{ ...blankFoodDish(registrationConfig()), name: 'Masala dosa', price: 120 }],
       food_ordering: { ...blankVenueValues.food_ordering, razorpay_linked: true },
     });
     const section = within(sectionCard('food', 'Food Menu'));
-    expect(section.getByText(/has linked a Razorpay account/)).toBeInTheDocument();
-    fireEvent.click(section.getByRole('switch', { name: 'Take food orders from the QR' }));
+    expect(section.getByText(/A Razorpay account is linked/)).toBeInTheDocument();
+    fireEvent.click(section.getByRole('switch', { name: 'Accept food orders from the venue QR' }));
     expect(form().getValues('food_ordering.enabled')).toBe(true);
   });
 });

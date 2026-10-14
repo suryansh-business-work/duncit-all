@@ -125,7 +125,8 @@ describe('VenueEditorPage', () => {
       minCategories: 0,
     });
     expect(state.sections['type-capacity']).toEqual({ control: 'ctl', setValue: 'setter', config: CONFIG });
-    expect(state.sections.food).toEqual({ control: 'ctl', config: CONFIG, onPick: 'pick-fn' });
+    // Dish photos go through the shared picker, filed under the venue — which a new venue does not have yet.
+    expect(state.sections.food).toEqual({ control: 'ctl', config: CONFIG, venueId: '' });
     expect(state.sections.amenities).toEqual({ control: 'ctl', config: CONFIG });
     expect(state.sections.documents).toEqual({ control: 'ctl', config: CONFIG, onPick: 'pick-fn' });
     expect(state.sections.owner).toEqual({ control: 'ctl', setValue: 'setter', isEdit: false });

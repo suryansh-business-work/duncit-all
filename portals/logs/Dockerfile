@@ -79,6 +79,7 @@ COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/
 COPY packages/verification/package.json ./packages/verification/
 COPY packages/entity-consoles/package.json ./packages/entity-consoles/
+COPY packages/venue-food/package.json ./packages/venue-food/
 # Read by the Tech and Communications pages this console mounts (below).
 COPY packages/errors/package.json ./packages/errors/
 COPY packages/gql-types/package.json ./packages/gql-types/

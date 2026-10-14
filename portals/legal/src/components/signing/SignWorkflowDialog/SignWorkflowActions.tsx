@@ -37,11 +37,11 @@ export function SignWorkflowActions({
         {downloadLabel}
       </DuncitButton>
       <Box sx={{ flex: 1 }} />
-      <DuncitButton onClick={onClose} disabled={signing}>
+      <DuncitButton onClick={onClose} disabled={signing} data-testid="sign-close">
         {t('shell.common.close')}
       </DuncitButton>
       {step === 0 && !alreadySigned && (
-        <DuncitButton variant="contained" onClick={() => setStep(1)}>
+        <DuncitButton variant="contained" onClick={() => setStep(1)} data-testid="sign-to-signature">
           {t('legal.sign.toSignature')}
         </DuncitButton>
       )}
@@ -54,6 +54,7 @@ export function SignWorkflowActions({
             variant="contained"
             disabled={!signatureReady(draft) || signing}
             onClick={submitSignature}
+            data-testid="sign-submit"
           >
             {signing ? t('legal.sign.signing') : t('legal.sign.signAction')}
           </DuncitButton>

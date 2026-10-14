@@ -53,6 +53,7 @@ export default function SignatureStep({ draft, methods, onChange }: Readonly<Pro
           label={t('legal.sign.fullName')}
           value={draft.fullName}
           onChange={(e) => onChange({ fullName: e.target.value })}
+          slotProps={{ htmlInput: { 'data-testid': 'sign-full-name' } }}
           autoComplete="name"
           required
           fullWidth
@@ -63,6 +64,7 @@ export default function SignatureStep({ draft, methods, onChange }: Readonly<Pro
           label={t('legal.sign.designation')}
           value={draft.designation}
           onChange={(e) => onChange({ designation: e.target.value })}
+          slotProps={{ htmlInput: { 'data-testid': 'sign-designation' } }}
           required
           fullWidth
         />
@@ -72,6 +74,7 @@ export default function SignatureStep({ draft, methods, onChange }: Readonly<Pro
           label={t('legal.sign.initials')}
           value={draft.initials}
           onChange={(e) => onChange({ initials: e.target.value.slice(0, 12) })}
+          slotProps={{ htmlInput: { 'data-testid': 'sign-initials' } }}
           required
           sx={{ width: { sm: 160 } }}
         />

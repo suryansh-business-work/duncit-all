@@ -44,7 +44,7 @@ function VersionRow({
   onToggle,
 }: Readonly<RowProps>) {
   return (
-    <Paper variant="outlined" sx={{ p: 1.5 }}>
+    <Paper variant="outlined" sx={{ p: 1.5 }} data-testid={`policy-version-${version.version_no}`}>
       <Stack
         direction="row"
         spacing={1}
@@ -58,9 +58,9 @@ function VersionRow({
         }}>
           {label}
         </Typography>
-        {version.is_current && <Chip size="small" color="success" label={currentLabel} />}
+        {version.is_current && <Chip size="small" color="success" label={currentLabel} data-testid={`policy-version-current-${version.version_no}`} />}
         <Box sx={{ flex: 1 }} />
-        <DuncitButton size="small" onClick={() => onToggle(version.id)}>
+        <DuncitButton size="small" onClick={() => onToggle(version.id)} data-testid={`policy-version-read-${version.version_no}`}>
           {readLabel}
         </DuncitButton>
       </Stack>
@@ -82,7 +82,7 @@ function VersionRow({
         {version.content_hash}
       </Typography>
       {expanded && (
-        <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
+        <Paper variant="outlined" sx={{ p: 2, mt: 1 }} data-testid={`policy-version-content-${version.version_no}`}>
           {version.content ? (
             <DuncitRichTextInput value={version.content} onChange={() => undefined} readOnly bare />
           ) : (
@@ -139,7 +139,7 @@ export default function PolicyVersionsDialog({ policy, onClose }: Readonly<Props
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          {t('legal.policies.versions.empty')}
+          <span data-testid="policy-versions-empty">{t('legal.policies.versions.empty')}</span>
         </Typography>
       );
     }
@@ -170,7 +170,7 @@ export default function PolicyVersionsDialog({ policy, onClose }: Readonly<Props
   };
 
   return (
-    <Dialog open={!!policy} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
+    <Dialog open={!!policy} onClose={onClose} fullWidth maxWidth="md" scroll="paper" data-testid="policy-versions-dialog">
       <DialogTitle>
         {t('legal.policies.versions.title', { vars: { title: policy?.title ?? '' } })}
         <Typography variant="caption" component="div" sx={{

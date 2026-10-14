@@ -43,13 +43,14 @@ type NavCardProps = Readonly<{
   heading: React.ReactNode;
   caption: string;
   to: string;
+  testId: string;
 }>;
 
 /** One way-in tile: an icon beside a heading, the whole card clickable. */
-function NavCard({ icon, heading, caption, to }: NavCardProps) {
+function NavCard({ icon, heading, caption, to, testId }: NavCardProps) {
   const navigate = useNavigate();
   return (
-    <Card variant="outlined" sx={{ height: '100%' }}>
+    <Card variant="outlined" sx={{ height: '100%' }} data-testid={testId}>
       <CardActionArea onClick={() => navigate(to)} sx={{ height: '100%' }}>
         <CardContent>
           <Stack direction="row" spacing={1.5} sx={{
@@ -102,6 +103,7 @@ export default function DashboardPage() {
       content: (
         <NavCard
           to="/documents"
+          testId="legal-dashboard-documents"
           icon={<DescriptionIcon fontSize="large" color="primary" />}
           caption={t('legal.dashboard.totalDocuments')}
           heading={
@@ -123,6 +125,7 @@ export default function DashboardPage() {
       content: (
         <NavCard
           to="/policies"
+          testId="legal-dashboard-policies"
           icon={<PolicyIcon fontSize="large" color="primary" />}
           caption={t('legal.dashboard.policiesHint')}
           heading={

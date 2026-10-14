@@ -38,6 +38,7 @@ export default function PolicyTypeSelect({
         if (reason === 'input') onChange(v);
       }}
       fullWidth
+      data-testid="policy-type-select"
       renderInput={(params) => (
         <TextField
           {...params}

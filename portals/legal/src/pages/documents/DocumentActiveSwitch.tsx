@@ -54,8 +54,9 @@ export default function DocumentActiveSwitch({
           slotProps={{
             input: { 'aria-label': t('legal.documents.colActive') }
           }}
+          data-testid={`document-active-${documentId}`}
         />
-        <Typography variant="body2" component="span">
+        <Typography variant="body2" component="span" data-testid={`document-active-label-${documentId}`}>
           {label}
         </Typography>
       </Stack>

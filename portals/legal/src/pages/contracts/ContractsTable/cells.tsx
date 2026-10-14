@@ -24,5 +24,6 @@ export const renderStatus = (c: Contract) => (
     variant={c.status === 'ACTIVE' ? 'filled' : 'outlined'}
     color={STATUS_COLOR[c.status]}
     label={contractStatusLabel(c.status)}
+    data-testid={`contract-status-${c.id}`}
   />
 );

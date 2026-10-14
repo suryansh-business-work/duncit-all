@@ -103,8 +103,8 @@ export default function AcceptanceDetailDialog({ acceptanceId, onClose }: Readon
 
   return (
     <>
-      <Dialog open={!!acceptanceId} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
-        <DialogTitle>
+      <Dialog open={!!acceptanceId} onClose={onClose} fullWidth maxWidth="md" scroll="paper" data-testid="acceptance-dialog">
+        <DialogTitle data-testid="acceptance-dialog-title">
           {t('legalAcceptanceLogs.detail.title')}
           <Typography variant="caption" component="div" sx={{
             color: "text.secondary"
@@ -112,10 +112,10 @@ export default function AcceptanceDetailDialog({ acceptanceId, onClose }: Readon
             {detail?.acceptance.policy_title ?? t('legalAcceptanceLogs.detail.subtitle')}
           </Typography>
         </DialogTitle>
-        <DialogContent dividers>{renderBody()}</DialogContent>
-        <DialogActions>
+        <DialogContent dividers data-testid="acceptance-dialog-body">{renderBody()}</DialogContent>
+        <DialogActions data-testid="acceptance-dialog-actions">
           {loading && !!detail && <CircularProgress size={16} sx={{ mr: 1 }} />}
-          <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+          <DuncitButton onClick={onClose} data-testid="acceptance-dialog-close">{t('shell.common.close')}</DuncitButton>
         </DialogActions>
       </Dialog>
 

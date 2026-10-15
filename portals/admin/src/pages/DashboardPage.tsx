@@ -8,9 +8,9 @@ import { SUPER_CATS, TOTALS } from './dashboard/queries';
 import { useTranslation } from '@duncit/shell';
 
 /** "Total 128" — the count that used to sit in each chart card's own header. */
-function TotalChip({ total }: Readonly<{ total: number }>) {
+function TotalChip({ total, testId }: Readonly<{ total: number; testId: string }>) {
   return (
-    <Typography variant="overline" sx={{
+    <Typography variant="overline" data-testid={testId} sx={{
       color: "text.secondary"
     }}>Total {total}
     </Typography>
@@ -44,7 +44,7 @@ export default function DashboardPage() {
       {
         id: 'pods-by-super-category',
         title: t('admin.dashboard.podsBySuper'),
-        headerActions: <TotalChip total={totals?.pods_total ?? 0} />,
+        headerActions: <TotalChip total={totals?.pods_total ?? 0} testId="admin-dashboard-pods-total" />,
         fitContent: true,
         defaultLayout: { x: 0, y: 2, w: 12, h: 4 },
         minW: 4,
@@ -54,7 +54,7 @@ export default function DashboardPage() {
       {
         id: 'clubs-by-super-category',
         title: t('admin.dashboard.clubsBySuper'),
-        headerActions: <TotalChip total={totals?.clubs_total ?? 0} />,
+        headerActions: <TotalChip total={totals?.clubs_total ?? 0} testId="admin-dashboard-clubs-total" />,
         fitContent: true,
         defaultLayout: { x: 0, y: 6, w: 12, h: 4 },
         minW: 4,
@@ -94,11 +94,12 @@ export default function DashboardPage() {
             label={t('admin.dashboard.superCategory')}
             value={superSlug}
             onChange={(e) => setSuperSlug(e.target.value)}
+            data-testid="admin-dashboard-super-category"
             sx={{ minWidth: 220 }}
           >
-            <MenuItem value="">{t('admin.dashboard.allSuperCategories')}</MenuItem>
+            <MenuItem value="" data-testid="admin-dashboard-super-all">{t('admin.dashboard.allSuperCategories')}</MenuItem>
             {(catsData?.categories ?? []).map((c: any) => (
-              <MenuItem key={c.slug} value={c.slug}>
+              <MenuItem key={c.slug} value={c.slug} data-testid={`admin-dashboard-super-${c.slug}`}>
                 {c.name}
               </MenuItem>
             ))}

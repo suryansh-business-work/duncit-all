@@ -59,7 +59,7 @@ export default function PlanFormDialog({
   });
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" data-testid="plan-form-dialog">
       <form onSubmit={submit}>
         <DialogTitle>{editing ? 'Edit tier' : 'New tier'}</DialogTitle>
         <DialogContent>
@@ -67,6 +67,7 @@ export default function PlanFormDialog({
             <RhfTextField
               control={control}
               name="key"
+              data-testid="plan-form-key"
               label={t('admin.podPlans.key')}
               hint={
                 editing
@@ -77,7 +78,7 @@ export default function PlanFormDialog({
               size="small"
               required
             />
-            <RhfTextField control={control} name="name" label={t('admin.membership.displayName')} size="small" required />
+            <RhfTextField control={control} name="name" label={t('admin.membership.displayName')} size="small" required data-testid="plan-form-name" />
             <RhfTextField
               control={control}
               name="tagline"
@@ -114,6 +115,7 @@ export default function PlanFormDialog({
               <RhfTextField
                 control={control}
                 name="accent_color"
+                data-testid="plan-form-accent"
                 label={t('admin.membership.accentColour')}
                 hint="Hex, e.g. #B4532A. Blank uses the app primary."
                 size="small"
@@ -152,8 +154,8 @@ export default function PlanFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" loading={loading}>
+          <DuncitButton onClick={onClose} data-testid="plan-form-cancel">{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" loading={loading} data-testid="plan-form-submit">
             {editing ? 'Save changes' : 'Create tier'}
           </DuncitButton>
         </DialogActions>

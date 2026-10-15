@@ -10,7 +10,6 @@ import {
   FormControlLabel,
   Stack,
   Switch,
-  TextField,
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -82,7 +81,7 @@ export default function BenefitFormDialog({
   });
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" data-testid="benefit-form-dialog">
       <form onSubmit={submit}>
         <DialogTitle>{editing ? 'Edit benefit row' : 'New benefit row'}</DialogTitle>
         <DialogContent>
@@ -90,6 +89,7 @@ export default function BenefitFormDialog({
             <RhfTextField
               control={control}
               name="group"
+              data-testid="benefit-form-group"
               label={t('admin.membership.section')}
               hint="Rows sharing a section are grouped under it, e.g. Getting a spot"
               size="small"
@@ -98,6 +98,7 @@ export default function BenefitFormDialog({
             <RhfTextField
               control={control}
               name="label"
+              data-testid="benefit-form-label"
               label={t('admin.membership.benefit')}
               hint="The row label, e.g. Early booking window"
               size="small"
@@ -120,21 +121,15 @@ export default function BenefitFormDialog({
               <Alert severity="warning">{t('admin.membership.needTier')}</Alert>
             )}
 
+            {/* RhfTextField so a cell's own error (over 60 characters) is named under it. */}
             {plans.map((plan, index) => (
-              <Controller
+              <RhfTextField
                 key={plan.key}
                 control={control}
                 name={`values.${index}.value`}
-                render={({ field }) => (
-                  <TextField
-                    label={plan.name}
-                    value={field.value ?? ''}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    size="small"
-                    fullWidth
-                  />
-                )}
+                label={plan.name}
+                data-testid={`benefit-form-cell-${plan.key}`}
+                size="small"
               />
             ))}
 
@@ -167,8 +162,8 @@ export default function BenefitFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" loading={loading} disabled={plans.length === 0}>
+          <DuncitButton onClick={onClose} data-testid="benefit-form-cancel">{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" loading={loading} disabled={plans.length === 0} data-testid="benefit-form-submit">
             {editing ? 'Save changes' : 'Create row'}
           </DuncitButton>
         </DialogActions>

@@ -56,6 +56,7 @@ export default function BadgeFormDialog({
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             required
             fullWidth
+            data-testid="badge-form-title"
           />
           <TextField
             label={t('shell.common.description')}
@@ -78,9 +79,10 @@ export default function BadgeFormDialog({
             value={form.condition_type}
             onChange={(e) => setForm({ ...form, condition_type: e.target.value })}
             fullWidth
+            data-testid="badge-form-condition"
           >
             {CONDITIONS.map((c) => (
-              <MenuItem key={c} value={c}>
+              <MenuItem key={c} value={c} data-testid={`badge-form-condition-${c}`}>
                 {t(CONDITION_LABEL_KEY[c])}
               </MenuItem>
             ))}
@@ -98,6 +100,7 @@ export default function BadgeFormDialog({
             onChange={(e) => setForm({ ...form, threshold: Math.max(1, +e.target.value || 1) })}
             disabled={!hasThreshold(form.condition_type)}
             fullWidth
+            data-testid="badge-form-threshold"
           />
           <TextField
             type="number"
@@ -119,7 +122,7 @@ export default function BadgeFormDialog({
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton onClick={onSave} variant="contained" disabled={!form.title || busy}>
+        <DuncitButton onClick={onSave} variant="contained" disabled={!form.title || busy} data-testid="badge-form-save">
           {confirmLabel}
         </DuncitButton>
       </DialogActions>

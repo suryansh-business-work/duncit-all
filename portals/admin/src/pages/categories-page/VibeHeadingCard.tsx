@@ -81,6 +81,7 @@ export default function VibeHeadingCard() {
           onChange={(e) => setHeading(e.target.value)}
           placeholder="What's your vibe today?"
           fullWidth
+          data-testid="vibe-heading-field"
         />
         <TextField
           label="Sub-heading"
@@ -92,7 +93,7 @@ export default function VibeHeadingCard() {
       </Stack>
 
       {opError && (
-        <Alert severity="error" sx={{ mt: 1.5 }}>
+        <Alert severity="error" sx={{ mt: 1.5 }} data-testid="vibe-heading-error">
           {opError}
         </Alert>
       )}
@@ -103,7 +104,7 @@ export default function VibeHeadingCard() {
           justifyContent: "flex-end",
           mt: 1.5
         }}>
-        <DuncitButton variant="contained" onClick={save} disabled={busy || !dirty}>
+        <DuncitButton variant="contained" onClick={save} disabled={busy || !dirty} data-testid="vibe-heading-save">
           {busy ? 'Saving…' : 'Save'}
         </DuncitButton>
       </Stack>

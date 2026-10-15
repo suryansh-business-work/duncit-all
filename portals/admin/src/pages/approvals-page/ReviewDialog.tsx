@@ -67,6 +67,7 @@ export default function ReviewDialog({
         startIcon={<CancelIcon />}
         onClick={handleDeny}
         disabled={saving || (denying && notes.trim().length === 0)}
+        data-testid="approval-review-deny"
       >
         {denying ? 'Confirm Deny' : 'Deny'}
       </DuncitButton>
@@ -76,12 +77,13 @@ export default function ReviewDialog({
         startIcon={<CheckCircleIcon />}
         onClick={() => onApprove(request.id)}
         disabled={saving || denying}
+        data-testid="approval-review-approve"
       >
         Approve
       </DuncitButton>
     </>
   ) : (
-    <DuncitButton onClick={onClose} variant="contained">
+    <DuncitButton onClick={onClose} variant="contained" data-testid="approval-review-close">
       {t('shell.common.close')}
     </DuncitButton>
   );
@@ -106,9 +108,10 @@ export default function ReviewDialog({
             fullWidth
             required
             placeholder={t('admin.approvals.denyReason')}
+            data-testid="approval-review-notes"
           />
         )}
-        {error && <Alert severity="error">{error}</Alert>}
+        {error && <Alert severity="error" data-testid="approval-review-error">{error}</Alert>}
       </Stack>
     </ResponsiveDialog>
   );

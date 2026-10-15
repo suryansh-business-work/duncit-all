@@ -81,10 +81,11 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('header-studio-badge')).toBeNull();
   });
 
-  it('greets with the branding tagline on Home, where its own search bar replaces the icon', () => {
+  it('greets with the branding tagline on Home and keeps the search icon beside the bell', () => {
     renderWithProviders(<AppHeader home />);
     expect(screen.getByTestId('header-greeting-title')).toHaveTextContent('It All Starts Here!');
-    expect(screen.queryByTestId('header-search')).toBeNull();
+    fireEvent.press(screen.getByTestId('header-search'));
+    expect(mockNavigate).toHaveBeenCalledWith('Search');
   });
 
   it('shows the tappable location in User mode and opens the picker on press', () => {

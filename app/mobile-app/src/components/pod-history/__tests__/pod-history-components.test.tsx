@@ -716,4 +716,48 @@ describe('CancelSpotDialog', () => {
     expect(onClose).not.toHaveBeenCalled();
     expect(onConfirm).not.toHaveBeenCalled();
   });
+
+  // Pod Settings caps cancellations per member per pod; the sheet says what is left.
+  it('names how many cancellations are left', () => {
+    renderWithProviders(
+      <CancelSpotDialog
+        open
+        busy={false}
+        onClose={jest.fn()}
+        onConfirm={jest.fn()}
+        cancels={{ spot_cancels_used: 0, spot_cancels_max: 3 }}
+      />,
+    );
+    expect(screen.getByTestId('cancel-spot-limit-hint')).toHaveTextContent(
+      'You can cancel your spot on this pod 3 more times.',
+    );
+  });
+
+  it('warns when this is the last cancellation', () => {
+    renderWithProviders(
+      <CancelSpotDialog
+        open
+        busy={false}
+        onClose={jest.fn()}
+        onConfirm={jest.fn()}
+        cancels={{ spot_cancels_used: 1, spot_cancels_max: 2 }}
+      />,
+    );
+    expect(screen.getByTestId('cancel-spot-limit-hint')).toHaveTextContent(
+      'You can cancel your spot on this pod one more time. If you join again after that, the spot cannot be cancelled.',
+    );
+  });
+
+  it('says nothing about a cap on a pod that has none', () => {
+    renderWithProviders(
+      <CancelSpotDialog
+        open
+        busy={false}
+        onClose={jest.fn()}
+        onConfirm={jest.fn()}
+        cancels={{ spot_cancels_used: 0, spot_cancels_max: 0 }}
+      />,
+    );
+    expect(screen.queryByTestId('cancel-spot-limit-hint')).toBeNull();
+  });
 });

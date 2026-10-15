@@ -46,6 +46,21 @@ export const VENUE_FOOD_IMAGE_LIMIT = 5;
 export const VENUE_FOOD_PRICE_MAX = 100_000;
 /** The most a venue may take off a QR order; the rest is always paid online. */
 export const VENUE_FOOD_DISCOUNT_MAX_PCT = 90;
+/** Videos (an uploaded clip or a YouTube link) one dish may carry. */
+export const VENUE_FOOD_VIDEO_LIMIT = 2;
+/** Videos (an uploaded clip or a YouTube link) on the venue's own page. */
+export const VENUE_VIDEO_LIMIT = 5;
+/**
+ * How a dish's saving against its struck-through MRP reads: "20% off" or
+ * "₹40 off". Display only — the dish's `price` is what is charged.
+ */
+export const VENUE_FOOD_SAVING_DISPLAYS = ['PERCENT', 'AMOUNT'] as const;
+/** The tables a cafe may print per-table QR stickers for. */
+export const VENUE_FOOD_TABLE_LIMIT = 200;
+/** A table's label — the same cap as the table a guest types at checkout. */
+export const VENUE_FOOD_TABLE_LABEL_MAX = 20;
+/** A licence number field (liquor licences have no national format). */
+export const VENUE_FOOD_LICENCE_NUMBER_MAX = 40;
 /**
  * How GST meets a food price. INCLUSIVE: the menu price already holds the tax,
  * so the bill is unchanged and the tax is carved out of it. EXCLUSIVE: the tax

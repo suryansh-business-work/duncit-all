@@ -30,6 +30,8 @@ export const settingsTypeDefs = gql`
     draft_retention_days: Int!
     "Max Backout attempts a user gets per pod (each 'Backout in process' counts one)."
     max_backout_attempts: Int!
+    "Times a member may cancel their spot on the same FREE pod; once used up the spot stays booked."
+    max_free_spot_cancellations: Int!
     "Account Health points deducted from a venue when its owner cancels a pod booked there (0 disables the penalty)."
     venue_cancel_health_penalty: Int!
     "Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this."
@@ -138,6 +140,8 @@ export const settingsTypeDefs = gql`
     draft_retention_days: Int
     "Max Backout attempts a user gets per pod (min 1)."
     max_backout_attempts: Int
+    "Times a member may cancel their spot on the same FREE pod (min 1)."
+    max_free_spot_cancellations: Int
     "Account Health points deducted from a venue when its owner cancels a pod booked there (0-100, 0 disables the penalty)."
     venue_cancel_health_penalty: Int
     "Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this."

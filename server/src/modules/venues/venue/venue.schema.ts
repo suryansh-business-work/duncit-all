@@ -59,6 +59,12 @@ export const venueTypeDefs = /* GraphQL */ `
     EXTRA_HOT
   }
 
+  "How a dish's saving against its struck-through original price reads: 20% off (PERCENT) or an amount off (AMOUNT)."
+  enum VenueFoodSavingDisplay {
+    PERCENT
+    AMOUNT
+  }
+
   "One dish on a venue's food menu."
   type VenueFoodItem {
     id: ID!
@@ -73,6 +79,30 @@ export const venueTypeDefs = /* GraphQL */ `
     spice_level: VenueFoodSpiceLevel!
     "Off = shown as unavailable and refused at checkout."
     is_available: Boolean!
+    "Uploaded video clips or YouTube video links."
+    videos: [String!]!
+    "The MRP shown struck through beside price. Display only: the guest is always charged price. Null = no strikethrough."
+    original_price: Float
+    "How the saving against original_price reads."
+    saving_display: VenueFoodSavingDisplay!
+  }
+
+  "The licences a venue that serves food shows. On publicVenue only the numbers are filled; the documents are always empty there."
+  type VenueFoodLicences {
+    "14 digits. Printed at the foot of the public menu and on food invoices."
+    fssai_number: String!
+    fssai_document_url: String!
+    liquor_licence_number: String!
+    liquor_document_url: String!
+  }
+
+  "A field left out (or null) keeps what is stored; an empty string clears it."
+  input VenueFoodLicencesInput {
+    "Exactly 14 digits, or empty."
+    fssai_number: String
+    fssai_document_url: String
+    liquor_licence_number: String
+    liquor_document_url: String
   }
 
   input VenueFoodItemInput {
@@ -86,6 +116,11 @@ export const venueTypeDefs = /* GraphQL */ `
     diet: VenueFoodDiet
     spice_level: VenueFoodSpiceLevel
     is_available: Boolean
+    "At most venueRegistrationConfig.food_video_limit links: YouTube video links or uploaded clips. Omitted = none."
+    videos: [String!]
+    "Display only, never charged. Must be above price; null or 0 = no strikethrough."
+    original_price: Float
+    saving_display: VenueFoodSavingDisplay
   }
 
   "Scan-and-order. Guests pay the venue's OWN Razorpay account."
@@ -137,6 +172,12 @@ export const venueTypeDefs = /* GraphQL */ `
     food_image_limit: Int!
     food_price_max: Int!
     food_discount_max_pct: Int!
+    "Videos one dish may carry."
+    food_video_limit: Int!
+    "Videos the venue page may carry."
+    venue_video_limit: Int!
+    "Tables a venue may print per-table QR stickers for."
+    food_table_limit: Int!
   }
 
   type VenueOperatingHours {
@@ -266,6 +307,9 @@ export const venueTypeDefs = /* GraphQL */ `
     offers_food: Boolean!
     food_menu: [VenueFoodItem!]!
     food_ordering: VenueFoodOrdering!
+    food_licences: VenueFoodLicences!
+    "The venue's table labels, one per-table QR sticker each. Always empty on publicVenue."
+    food_tables: [String!]!
     "Every category the venue belongs to, primary first. Empty only while the venue has none."
     venue_categories: [VenueCategory!]!
     "The primary category — always venue_categories[0]. Kept for clients that read one."
@@ -278,6 +322,8 @@ export const venueTypeDefs = /* GraphQL */ `
     security: [String!]!
     cover_image_url: String!
     gallery: [String!]!
+    "Venue videos: uploaded clips or YouTube video links."
+    videos: [String!]!
     location_id: ID
     country: String!
     country_code: String!
@@ -336,6 +382,9 @@ export const venueTypeDefs = /* GraphQL */ `
     offers_food: Boolean
     food_menu: [VenueFoodItemInput!]
     food_ordering: VenueFoodOrderingInput
+    food_licences: VenueFoodLicencesInput
+    "The venue's table labels (at most venueRegistrationConfig.food_table_limit). Omitted keeps the stored list."
+    food_tables: [String!]
     """
     Every category the venue belongs to, primary first (at most
     venueRegistrationConfig.category_limit; a repeated sub category is dropped).
@@ -351,6 +400,8 @@ export const venueTypeDefs = /* GraphQL */ `
     security: [String!]
     cover_image_url: String
     gallery: [String!]
+    "At most venueRegistrationConfig.venue_video_limit YouTube video links or uploaded clips. Omitted keeps the stored list."
+    videos: [String!]
     location_id: ID
     country: String
     country_code: String
@@ -390,10 +441,15 @@ export const venueTypeDefs = /* GraphQL */ `
     description: String
     cover_image_url: String
     gallery: [String!]
+    "Omitted keeps the stored list."
+    videos: [String!]
     capacity_items: [VenueCapacityItemInput!]
     offers_food: Boolean
     food_menu: [VenueFoodItemInput!]
     food_ordering: VenueFoodOrderingInput
+    food_licences: VenueFoodLicencesInput
+    "Omitted keeps the stored list."
+    food_tables: [String!]
     """
     The venue's GST number, printed on its food invoices. Accepted only while the
     venue has none: once one is saved, only the venues console (adminUpdateVenue)

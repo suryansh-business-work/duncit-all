@@ -120,8 +120,9 @@ interface SubscriberRow {
   user_id: Types.ObjectId | null;
 }
 
-/** The pod's tracked share link — the same one a member's "Share" mints — or its plain page. */
-async function podLink(podId: string): Promise<string> {
+/** The pod's tracked share link — the same one a member's "Share" mints — or its
+ * plain page. Also what an answered event request links to (eventRequest.fulfil). */
+export async function podLink(podId: string): Promise<string> {
   try {
     return (await shortLinkService.share('POD', podId)).url;
   } catch (error) {

@@ -50,6 +50,8 @@ export interface IVenueFoodOrder extends Document<Types.ObjectId> {
    */
   venue_gstin: string;
   venue_address: string;
+  /** The venue's FSSAI licence number at place time — printed on the invoice. Absent on older orders. */
+  venue_fssai?: string;
   /** The signed-in account that ordered; null for a guest. */
   user_id: Types.ObjectId | null;
   customer_name: string;
@@ -142,6 +144,7 @@ const venueFoodOrderSchema = new Schema<IVenueFoodOrder>(
     venue_name: { type: String, default: '' },
     venue_gstin: { type: String, default: '' },
     venue_address: { type: String, default: '' },
+    venue_fssai: { type: String, default: '' },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     customer_name: { type: String, required: true, trim: true, maxlength: 80 },
     customer_phone: { type: String, required: true, trim: true },
@@ -186,6 +189,13 @@ const venueFoodOrderSchema = new Schema<IVenueFoodOrder>(
 venueFoodOrderSchema.index({ venue_id: 1, created_at: -1 });
 // One order per checkout attempt — the database, not a read-then-write, is what refuses the duplicate.
 venueFoodOrderSchema.index({ venue_id: 1, client_key: 1 }, { unique: true });
+// "Your Food Orders": a signed-in member's own orders, newest first.
+venueFoodOrderSchema.index({ user_id: 1, created_at: -1 });
+// A venue's food rating (venueFood.rating.ts): only rated orders are indexed.
+venueFoodOrderSchema.index(
+  { venue_id: 1, 'feedback.rating': 1 },
+  { partialFilterExpression: { 'feedback.rating': { $exists: true } } }
+);
 // The reconciler's two reads: unclaimed captures and refunds still owed.
 venueFoodOrderSchema.index({ payment_status: 1, created_at: 1 });
 // A coupon's per-number limit: the PAID orders one mobile number placed with it. Only orders that carry a coupon are indexed.

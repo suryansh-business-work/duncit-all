@@ -872,9 +872,11 @@ async function freePodState(pod: IPod, membership: IPodMember | null, userId: st
   const legacyBackout = membership?.status === 'BACKOUT_IN_PROCESS';
   const { TicketModel } = await import('@modules/pods/ticket/ticket.model');
   const ticket = joined ? await TicketModel.findOne({ membership_id: joined._id }).select('status') : null;
-  const [maxAttempts, deductionPct] = await Promise.all([
+  const [maxAttempts, deductionPct, maxCancels, cancelsUsed] = await Promise.all([
     settingsService.getMaxBackoutAttempts(),
     backoutDeductionPct(),
+    settingsService.getMaxFreeSpotCancellations(),
+    spotCancelsUsed(pod, membership, userId),
   ]);
   return {
     pod_id: String(pod._id),
@@ -887,7 +889,10 @@ async function freePodState(pod: IPod, membership: IPodMember | null, userId: st
     max_seats_per_booking: Math.min(FREE_POD_SEATS_PER_BOOKING, maxSeatsForBooking(pod)),
     my_seats: joined?.seats ?? 0,
     can_backout: false,
-    can_cancel_spot: isMember && !podHasHappened(pod) && ticket?.status !== 'CHECKED_IN',
+    can_cancel_spot:
+      isMember && !podHasHappened(pod) && ticket?.status !== 'CHECKED_IN' && cancelsUsed < maxCancels,
+    spot_cancels_used: cancelsUsed,
+    spot_cancels_max: maxCancels,
     can_join: !!userId && (!membership || legacyBackout) && !full,
     refund_threshold_pct: REFUND_THRESHOLD_PCT,
     backout_in_process: false,
@@ -900,6 +905,19 @@ async function freePodState(pod: IPod, membership: IPodMember | null, userId: st
     backout_refund_coins: 0,
     released_seats_pending: 0,
   };
+}
+
+/**
+ * Spot cancellations this member has used on this free pod — the counter on
+ * their one booking row, which a re-join re-activates rather than copies. A
+ * member who is currently out (BACKED_OUT) is read through the same reusable
+ * row a re-join would bring back, so the hint before joining again is right.
+ */
+async function spotCancelsUsed(pod: IPod, membership: IPodMember | null, userId: string | null) {
+  if (membership) return membership.spot_cancel_count ?? 0;
+  if (!userId) return 0;
+  const previous = await findReusableFreeMembership(pod._id as Types.ObjectId, userId);
+  return previous?.spot_cancel_count ?? 0;
 }
 
 /** The free pod a spot is cancelled on: it must exist, be FREE and not have
@@ -924,12 +942,15 @@ export const podMemberService = {
   /**
    * Cancel the spot on a FREE pod — the only way out of one. The caller's own
    * JOINED booking only. Releases every seat it holds, voids its ticket, and
-   * raises no BackoutRequest, counts no attempt and sets no refund. Idempotent:
-   * a repeated call answers the already-cancelled booking.
+   * raises no BackoutRequest, counts no backout attempt and sets no refund.
+   * Capped per member per pod by Pod Settings' max_free_spot_cancellations
+   * (CANCEL_LIMIT_REACHED once used up). Idempotent: a repeated call answers
+   * the already-cancelled booking.
    */
   async cancelFreeSpot(podDocId: string, userId: string) {
     const pod = await loadFreePodForCancel(podDocId);
-    return toPub(await cancelFreeSpot(pod._id as Types.ObjectId, userId));
+    const maxCancels = await settingsService.getMaxFreeSpotCancellations();
+    return toPub(await cancelFreeSpot(pod._id as Types.ObjectId, userId, maxCancels));
   },
 
   async getState(podDocId: string, userId: string | null) {
@@ -986,6 +1007,8 @@ export const podMemberService = {
       can_backout: isMember && attemptsUsed < maxAttempts && !podHasHappened(pod),
       // Cancel-the-spot is the FREE pod's way out; a paid pod never offers it.
       can_cancel_spot: false,
+      spot_cancels_used: 0,
+      spot_cancels_max: 0,
       can_join: !!userId && !membership && !full,
       refund_threshold_pct: REFUND_THRESHOLD_PCT,
       backout_in_process: inProcess,

@@ -325,6 +325,41 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     recent_feedback: [VenueFoodFeedbackRow!]!
   }
 
+  "What guests rated a venue's food: one rating per served order, so this is the venue's, not a dish's."
+  type VenueFoodRating {
+    venue_id: ID!
+    "0 when nobody has rated yet; otherwise 1.0 to 5.0, to one decimal."
+    average: Float!
+    "Rated orders."
+    count: Int!
+  }
+
+  "Which of the caller's own food orders to list."
+  enum MyVenueFoodOrderScope {
+    "Paid and still with the kitchen, or placed within the last hour and still waiting for payment."
+    CURRENT
+    "Paid, and served or cancelled."
+    PAST
+  }
+
+  "An order this device placed, with the key that proves it."
+  input VenueFoodOrderKeyInput {
+    order_id: ID!
+    access_key: String!
+  }
+
+  input MyVenueFoodOrdersInput {
+    scope: MyVenueFoodOrderScope!
+    "Only this venue's orders."
+    venue_id: ID
+    "Up to 20 orders this device placed. A key that does not open its order is ignored."
+    keys: [VenueFoodOrderKeyInput!]
+    "1-based; default 1."
+    page: Int
+    "Default 10, at most 20."
+    page_size: Int
+  }
+
   input VerifyVenueFoodOrderInput {
     order_id: ID!
     access_key: String
@@ -346,6 +381,10 @@ export const venueFoodTypeDefs = /* GraphQL */ `
     venueFoodCouponsTable(venue_id: ID!, query: TableQueryInput): VenueFoodCouponTablePage!
     "Public: the invoice of a paid order as a base64 PDF, for whoever holds its access key (or the account that placed it)."
     venueFoodOrderInvoicePdfBase64(order_id: ID!, access_key: String): String!
+    "Public: the caller's own food orders — placed by the signed-in account, or proven by a key from this device. Newest first."
+    myVenueFoodOrders(input: MyVenueFoodOrdersInput!): VenueFoodOrderTablePage!
+    "Public: a venue's food rating — the average of its rated orders, and how many."
+    venueFoodRating(venue_id: ID!): VenueFoodRating!
     "Venue owner / venues console: the food dashboard of one venue. days 0 = all time."
     venueFoodStats(venue_id: ID!, days: Int): VenueFoodStats!
   }

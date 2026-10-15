@@ -93,6 +93,7 @@ export const venueFoodGuestService = {
       venue_name: order.venue_name,
       venue_address: order.venue_address ?? '',
       venue_gstin: order.venue_gstin ?? '',
+      venue_fssai: order.venue_fssai ?? '',
       customer_name: order.customer_name,
       customer_phone: order.customer_phone,
       table_label: order.table_label ?? '',

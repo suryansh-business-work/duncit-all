@@ -11,6 +11,7 @@ import {
   VENUE_FOOD_DISCOUNT_MAX_PCT,
   VENUE_FOOD_GST_PCT_MAX,
   VENUE_FOOD_PRICE_MAX,
+  VENUE_FOOD_SAVING_DISPLAYS,
   VENUE_FOOD_SPICE_LEVELS,
   VENUE_FOOD_TAX_DEFAULTS,
   VENUE_FOOD_TAX_MODES,
@@ -49,6 +50,7 @@ export interface IVenueCapacityItem {
 
 export type VenueFoodDiet = (typeof VENUE_FOOD_DIETS)[number];
 export type VenueFoodSpiceLevel = (typeof VENUE_FOOD_SPICE_LEVELS)[number];
+export type VenueFoodSavingDisplay = (typeof VENUE_FOOD_SAVING_DISPLAYS)[number];
 
 /** One dish on the venue's food menu. It keeps its `_id` across edits so an
  * order placed against it still points at the same dish. */
@@ -65,6 +67,23 @@ export interface IVenueFoodItem {
   spice_level: VenueFoodSpiceLevel;
   /** Off = shown as unavailable and refused at checkout, without deleting it. */
   is_available: boolean;
+  /** Uploaded clips or YouTube links. Absent on a dish saved before videos existed. */
+  videos?: string[];
+  /**
+   * The MRP shown struck through beside `price` — display only, never charged.
+   * Null (or absent) = no strikethrough; when set it is always above `price`.
+   */
+  original_price?: number | null;
+  /** How the saving against `original_price` reads: a percent or an amount. */
+  saving_display?: VenueFoodSavingDisplay;
+}
+
+/** The licences a venue that serves food shows. The FSSAI number is printed on its public menu and invoices. */
+export interface IVenueFoodLicences {
+  fssai_number: string;
+  fssai_document_url: string;
+  liquor_licence_number: string;
+  liquor_document_url: string;
 }
 
 /** Scan-and-order: guests pay the venue's OWN Razorpay account, so this money
@@ -182,6 +201,10 @@ export interface IVenue extends Document {
   offers_food: boolean;
   food_menu: IVenueFoodItem[];
   food_ordering: IVenueFoodOrdering;
+  /** Absent on a venue saved before food licences existed. */
+  food_licences?: IVenueFoodLicences;
+  /** The cafe's table labels, one per-table QR sticker each ("1", "Patio 2"). */
+  food_tables?: string[];
   /** Every category the venue belongs to, primary first. Read it through
    * `venueCategoriesOf` — a document older than the list has only the mirror. */
   venue_categories: IVenueCategory[];
@@ -193,6 +216,8 @@ export interface IVenue extends Document {
   security: string[];
   cover_image_url: string;
   gallery: string[];
+  /** Venue videos: uploaded clips or YouTube links. Absent on a venue saved before videos existed. */
+  videos?: string[];
   location_id?: Types.ObjectId | null;
   country: string;
   country_code: string;
@@ -278,7 +303,20 @@ const venueFoodItemSchema = new Schema<IVenueFoodItem>({
   diet: { type: String, enum: VENUE_FOOD_DIETS, default: 'VEG' },
   spice_level: { type: String, enum: VENUE_FOOD_SPICE_LEVELS, default: 'NONE' },
   is_available: { type: Boolean, default: true },
+  videos: { type: [String], default: [] },
+  original_price: { type: Number, default: null, min: 1, max: VENUE_FOOD_PRICE_MAX },
+  saving_display: { type: String, enum: VENUE_FOOD_SAVING_DISPLAYS, default: 'PERCENT' },
 });
+
+const venueFoodLicencesSchema = new Schema<IVenueFoodLicences>(
+  {
+    fssai_number: { type: String, default: '', trim: true },
+    fssai_document_url: { type: String, default: '', trim: true },
+    liquor_licence_number: { type: String, default: '', trim: true },
+    liquor_document_url: { type: String, default: '', trim: true },
+  },
+  { _id: false }
+);
 
 const venueFoodOrderingSchema = new Schema<IVenueFoodOrdering>(
   {
@@ -376,6 +414,8 @@ const venueSchema = new Schema<IVenue>(
     offers_food: { type: Boolean, default: false },
     food_menu: { type: [venueFoodItemSchema], default: [] },
     food_ordering: { type: venueFoodOrderingSchema, default: () => ({}) },
+    food_licences: { type: venueFoodLicencesSchema, default: () => ({}) },
+    food_tables: { type: [String], default: [] },
     venue_categories: { type: [venueCategorySchema], default: [] },
     venue_category: { type: venueCategorySchema, default: () => ({}) },
     description: { type: String, default: '' },
@@ -384,6 +424,7 @@ const venueSchema = new Schema<IVenue>(
     security: { type: [String], default: [] },
     cover_image_url: { type: String, default: '' },
     gallery: { type: [String], default: [] },
+    videos: { type: [String], default: [] },
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null, index: true },
     country: { type: String, default: 'India', trim: true },
     country_code: { type: String, default: 'IN', uppercase: true, trim: true },

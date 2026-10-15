@@ -213,6 +213,26 @@ const SEED_RULES = [
     message: 'Too many attempts. Please wait a few minutes before trying again.',
   },
   {
+    // Its own rule for the same reason as the venue food ones above.
+    name: 'Event requests',
+    description:
+      'Asking a host or venue for an event messages its owner in the app. One open request per member per host or venue is already enforced by the database; this caps how many different hosts and venues one account can ask in an hour. Enforcing from day one — a real member asks a handful.',
+    priority: 6,
+    mode: 'ENFORCE',
+    surface: 'ALL',
+    app: '*',
+    channel: 'GRAPHQL',
+    operation_type: 'MUTATION',
+    audience: 'AUTHENTICATED',
+    operations: ['requestEvent'],
+    key_by: 'USER',
+    algorithm: 'SLIDING_WINDOW',
+    limit: 20,
+    window_seconds: 3600,
+    block_seconds: 0,
+    message: 'You have sent a lot of requests. Please try again later.',
+  },
+  {
     name: 'Mutation ceiling per account',
     description: 'How fast one signed-in account may write. Reads are untouched.',
     priority: 30,

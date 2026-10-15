@@ -184,9 +184,20 @@ export const podMemberTypeDefs = /* GraphQL */ `
     """
     True when the caller may cancel their spot (cancelFreeSpot): a FREE pod
     they hold a JOINED booking on, that has not started and whose ticket has
-    not been checked in. Always false on a paid pod.
+    not been checked in, and whose cancellations are not used up
+    (spot_cancels_used < spot_cancels_max). Always false on a paid pod.
     """
     can_cancel_spot: Boolean!
+    """
+    Times the caller has cancelled their spot on this FREE pod (counted on
+    their booking, kept across re-joins). 0 on a paid pod.
+    """
+    spot_cancels_used: Int!
+    """
+    Most spot cancellations allowed per member per FREE pod (Admin > Pods >
+    Pod Settings). 0 on a paid pod, which has no Cancel Spot.
+    """
+    spot_cancels_max: Int!
     can_join: Boolean!
     refund_threshold_pct: Int!
     "True while the caller's booking is in 'Backout in process'."
@@ -436,7 +447,9 @@ export const podMemberTypeDefs = /* GraphQL */ `
     BACKED_OUT with spot_cancelled_at set. No backout request, no attempt, no
     refund; joinFreePod brings the same booking back any number of times.
     Idempotent. Errors: NOT_FREE_POD (paid pod — use backoutPod), BAD_REQUEST
-    (pod started), NOT_FOUND (not a member), ALREADY_CHECKED_IN (ticket scanned).
+    (pod started), NOT_FOUND (not a member), ALREADY_CHECKED_IN (ticket scanned),
+    CANCEL_LIMIT_REACHED (Pod Settings' max_free_spot_cancellations used up —
+    the member keeps their spot).
     On a free pod backoutPod does the same thing, for installed app builds.
     """
     cancelFreeSpot(pod_doc_id: ID!): PodMember!

@@ -110,7 +110,7 @@ export interface VerifyFoodOrderInput {
 /** A venue that can be ordered from right now: live, serving food, ordering on, an account to be paid on. */
 async function orderableVenue(venueId: Types.ObjectId, finance: IFinanceSettings) {
   const venue = await VenueModel.findById(venueId).select(
-    'venue_name status is_active offers_food food_menu food_ordering gstin address_line1 address_line2 locality city state postal_code'
+    'venue_name status is_active offers_food food_menu food_ordering food_licences gstin address_line1 address_line2 locality city state postal_code'
   );
   if (!venue || venue.status !== 'APPROVED' || venue.is_active === false) return fail('NOT_FOUND', 'Venue not found');
   const ordering = venue.food_ordering;
@@ -308,6 +308,7 @@ export const venueFoodOrderService = {
         venue_name: venue.venue_name,
         venue_gstin: text(venue.gstin),
         venue_address: invoiceAddress(venue),
+        venue_fssai: text(venue.food_licences?.fssai_number),
         subscribe_events: input.subscribe_events === true,
         user_id: userId,
         ...customer,

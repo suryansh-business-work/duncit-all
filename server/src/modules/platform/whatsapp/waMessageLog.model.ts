@@ -106,6 +106,8 @@ waMessageLogSchema.index(
 // The console reads newest-first, filtered by status.
 waMessageLogSchema.index({ created_at: -1 });
 waMessageLogSchema.index({ status: 1, created_at: -1 });
+// One scenario's sends over a period — Marketing > Contacts reads the invites.
+waMessageLogSchema.index({ event_key: 1, created_at: -1 });
 
 export const WaMessageLogModel =
   (mongoose.models.WaMessageLog as mongoose.Model<IWaMessageLog>) ||

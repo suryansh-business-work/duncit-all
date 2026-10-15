@@ -7,11 +7,25 @@ import {
   VENUE_FOOD_DISCOUNT_MAX_PCT,
   VENUE_FOOD_IMAGE_LIMIT,
   VENUE_FOOD_MENU_LIMIT,
+  VENUE_FOOD_LICENCE_NUMBER_MAX,
   VENUE_FOOD_PRICE_MAX,
+  VENUE_FOOD_SAVING_DISPLAYS,
   VENUE_FOOD_SPICE_LEVELS,
+  VENUE_FOOD_TABLE_LABEL_MAX,
+  VENUE_FOOD_TABLE_LIMIT,
   VENUE_FOOD_TAX_DEFAULTS,
+  VENUE_FOOD_VIDEO_LIMIT,
+  VENUE_VIDEO_LIMIT,
 } from './venue.constants';
-import type { IVenueFoodItem, IVenueFoodOrdering, VenueFoodDiet, VenueFoodSpiceLevel } from './venue.model';
+import { documentUrl, FSSAI_NUMBER_REGEX, normalizeVideoList } from './venue.media';
+import type {
+  IVenueFoodItem,
+  IVenueFoodLicences,
+  IVenueFoodOrdering,
+  VenueFoodDiet,
+  VenueFoodSavingDisplay,
+  VenueFoodSpiceLevel,
+} from './venue.model';
 
 /**
  * The venue's food side: "does this venue serve food", its menu, and whether
@@ -42,6 +56,8 @@ export interface VenueFoodInput {
     tax_mode?: string | null;
     gst_pct?: number | null;
   } | null;
+  food_licences?: Partial<Record<keyof IVenueFoodLicences, string | null>> | null;
+  food_tables?: unknown[] | null;
 }
 
 /** What the venue holds today — the base every partial write is laid over. */
@@ -50,9 +66,11 @@ export interface VenueFoodState {
   offers_food?: boolean;
   food_menu?: IVenueFoodItem[];
   food_ordering?: Partial<IVenueFoodOrdering> | null;
+  food_licences?: Partial<IVenueFoodLicences> | null;
+  food_tables?: string[] | null;
 }
 
-export const VENUE_FOOD_INPUT_KEYS = ['offers_food', 'food_menu', 'food_ordering'] as const;
+export const VENUE_FOOD_INPUT_KEYS = ['offers_food', 'food_menu', 'food_ordering', 'food_licences', 'food_tables'] as const;
 
 type FoodItemDraft = Omit<IVenueFoodItem, '_id'> & { _id: Types.ObjectId };
 
@@ -68,6 +86,21 @@ function itemPrice(raw: unknown, name: string): number {
     bad(`Enter a price between 1 and ${VENUE_FOOD_PRICE_MAX} for "${name}"`);
   }
   return price;
+}
+
+/**
+ * The MRP shown struck through beside the price. Display only — the guest is
+ * always charged `price`. Blank (or 0) = no strikethrough; a set one must be
+ * above the price, or the "saving" would be a mark-up.
+ */
+function itemOriginalPrice(raw: unknown, price: number, name: string): number | null {
+  if (raw === undefined || raw === null || raw === '' || Number(raw) === 0) return null;
+  const original = Math.round(Number(raw) * 100) / 100;
+  if (!Number.isFinite(original) || original > VENUE_FOOD_PRICE_MAX) {
+    bad(`Enter an original price up to ${VENUE_FOOD_PRICE_MAX} for "${name}"`);
+  }
+  if (original <= price) bad(`The original price of "${name}" must be more than its price`);
+  return original;
 }
 
 function oneOf<T extends string>(raw: unknown, allowed: readonly T[], fallback: T, label: string): T {
@@ -86,17 +119,21 @@ function normalizeFoodItem(input: unknown, known: Map<string, Types.ObjectId>): 
   if (description.length > 500) bad(`Keep the description of "${name}" under 500 characters`);
   const category = text(raw.category);
   if (category.length > 40) bad(`Keep the menu section of "${name}" under 40 characters`);
+  const price = itemPrice(raw.price, name);
   return {
     // A dish the venue already lists keeps its id; anything else is a new dish.
     _id: known.get(text(raw.id)) ?? new Types.ObjectId(),
     name,
     description,
     category,
-    price: itemPrice(raw.price, name),
+    price,
     images: itemImages(raw.images, name),
     diet: oneOf<VenueFoodDiet>(raw.diet, VENUE_FOOD_DIETS, 'VEG', 'food type'),
     spice_level: oneOf<VenueFoodSpiceLevel>(raw.spice_level, VENUE_FOOD_SPICE_LEVELS, 'NONE', 'spice level'),
     is_available: raw.is_available !== false,
+    videos: normalizeVideoList(raw.videos, VENUE_FOOD_VIDEO_LIMIT, `"${name}"`),
+    original_price: itemOriginalPrice(raw.original_price, price, name),
+    saving_display: oneOf<VenueFoodSavingDisplay>(raw.saving_display, VENUE_FOOD_SAVING_DISPLAYS, 'PERCENT', 'saving display'),
   };
 }
 
@@ -169,6 +206,62 @@ async function normalizeFoodOrdering(
   };
 }
 
+const LICENCE_KEYS = ['fssai_number', 'fssai_document_url', 'liquor_licence_number', 'liquor_document_url'] as const;
+
+const storedFoodLicences = (current: Partial<IVenueFoodLicences> | null | undefined): IVenueFoodLicences => ({
+  fssai_number: current?.fssai_number ?? '',
+  fssai_document_url: current?.fssai_document_url ?? '',
+  liquor_licence_number: current?.liquor_licence_number ?? '',
+  liquor_document_url: current?.liquor_document_url ?? '',
+});
+
+/**
+ * The venue's FSSAI and liquor licences. A key left out (or null) keeps what
+ * is stored; a sent blank clears it. The FSSAI number is 14 digits (it is
+ * printed on the public menu and the invoices); a liquor licence has no
+ * national format, so only its length is held.
+ */
+function normalizeFoodLicences(
+  input: NonNullable<VenueFoodInput['food_licences']>,
+  current: Partial<IVenueFoodLicences> | null | undefined
+): IVenueFoodLicences {
+  const next = storedFoodLicences(current);
+  for (const key of LICENCE_KEYS) {
+    if (given(input[key])) next[key] = text(input[key]);
+  }
+  if (next.fssai_number && !FSSAI_NUMBER_REGEX.test(next.fssai_number)) bad('The FSSAI number must be 14 digits');
+  if (next.liquor_licence_number.length > VENUE_FOOD_LICENCE_NUMBER_MAX) {
+    bad(`Keep the liquor licence number under ${VENUE_FOOD_LICENCE_NUMBER_MAX} characters`);
+  }
+  next.fssai_document_url = documentUrl(next.fssai_document_url, 'FSSAI licence');
+  next.liquor_document_url = documentUrl(next.liquor_document_url, 'liquor licence');
+  return next;
+}
+
+/**
+ * The cafe's table labels, trimmed and de-duplicated (case-insensitively, the
+ * first spelling kept) — one per-table QR sticker each.
+ */
+function normalizeFoodTables(raw: unknown[]): string[] {
+  const seen = new Set<string>();
+  const tables: string[] = [];
+  for (const label of raw.map(text).filter(Boolean)) {
+    if (label.length > VENUE_FOOD_TABLE_LABEL_MAX) {
+      bad(`Keep each table name under ${VENUE_FOOD_TABLE_LABEL_MAX} characters`);
+    }
+    const key = label.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      tables.push(label);
+    }
+  }
+  if (tables.length > VENUE_FOOD_TABLE_LIMIT) bad(`A venue can list at most ${VENUE_FOOD_TABLE_LIMIT} tables`);
+  return tables;
+}
+
+/** The venue's own videos (not a dish's), checked wherever a venue write carries them. */
+export const normalizeVenueVideos = (raw: unknown): string[] => normalizeVideoList(raw, VENUE_VIDEO_LIMIT, 'The venue');
+
 /** Ordering can only be on for a venue that serves food, lists a dish and has an account to be paid on. */
 function assertOrderable(offersFood: boolean, menu: IVenueFoodItem[], ordering: IVenueFoodOrdering) {
   if (!ordering.enabled) return;
@@ -193,7 +286,11 @@ export async function buildVenueFoodPatch(input: VenueFoodInput, state: VenueFoo
   // A venue that stops serving food stops taking orders; its menu is kept for when it starts again.
   if (!offersFood) ordering.enabled = false;
   assertOrderable(offersFood, menu, ordering);
-  return { offers_food: offersFood, food_menu: menu, food_ordering: ordering };
+  const licences = input.food_licences
+    ? normalizeFoodLicences(input.food_licences, state.food_licences)
+    : storedFoodLicences(state.food_licences);
+  const tables = Array.isArray(input.food_tables) ? normalizeFoodTables(input.food_tables) : (state.food_tables ?? []);
+  return { offers_food: offersFood, food_menu: menu, food_ordering: ordering, food_licences: licences, food_tables: tables };
 }
 
 export const toFoodItemPub = (item: IVenueFoodItem) => ({
@@ -206,6 +303,9 @@ export const toFoodItemPub = (item: IVenueFoodItem) => ({
   diet: item.diet ?? 'VEG',
   spice_level: item.spice_level ?? 'NONE',
   is_available: item.is_available !== false,
+  videos: item.videos ?? [],
+  original_price: item.original_price ?? null,
+  saving_display: item.saving_display ?? 'PERCENT',
 });
 
 export const toVenueFoodPub = (venue: Omit<VenueFoodState, 'owner_user_id'>) => ({
@@ -225,15 +325,28 @@ export const toVenueFoodPub = (venue: Omit<VenueFoodState, 'owner_user_id'>) => 
     tax_mode: venue.food_ordering?.tax_mode ?? null,
     gst_pct: venue.food_ordering?.gst_pct ?? null,
   },
+  food_licences: storedFoodLicences(venue.food_licences),
+  food_tables: venue.food_tables ?? [],
 });
 
 type VenueFoodPub = ReturnType<typeof toVenueFoodPub>;
 
-/** What a signed-out visitor sees: no menu unless the venue serves food, and never which account is linked. */
+/**
+ * What a signed-out visitor sees: no menu unless the venue serves food, never
+ * which account is linked, and of the licences only the numbers a menu prints
+ * — the uploaded documents and the table list stay with the owner.
+ */
 export const redactVenueFoodForPublic = (food: VenueFoodPub): VenueFoodPub => ({
   offers_food: food.offers_food,
   food_menu: food.offers_food ? food.food_menu : [],
   food_ordering: { ...food.food_ordering, enabled: food.offers_food && food.food_ordering.enabled, razorpay_integration_id: null },
+  food_licences: {
+    fssai_number: food.offers_food ? food.food_licences.fssai_number : '',
+    fssai_document_url: '',
+    liquor_licence_number: food.offers_food ? food.food_licences.liquor_licence_number : '',
+    liquor_document_url: '',
+  },
+  food_tables: [],
 });
 
 export const venueFoodConfig = () => ({
@@ -243,4 +356,7 @@ export const venueFoodConfig = () => ({
   food_image_limit: VENUE_FOOD_IMAGE_LIMIT,
   food_price_max: VENUE_FOOD_PRICE_MAX,
   food_discount_max_pct: VENUE_FOOD_DISCOUNT_MAX_PCT,
+  food_video_limit: VENUE_FOOD_VIDEO_LIMIT,
+  venue_video_limit: VENUE_VIDEO_LIMIT,
+  food_table_limit: VENUE_FOOD_TABLE_LIMIT,
 });

@@ -236,6 +236,31 @@ export async function markedPodIdsFor(userId: string): Promise<Types.ObjectId[]>
   return tickets.map((t) => t.pod_id as Types.ObjectId);
 }
 
+/**
+ * The same rule for many pods in one read: who was marked present at each,
+ * keyed by pod id. What a sweep over several pods asks instead of calling
+ * `hasMarkedAttendance` once per guest — the pod's rating ask goes only to
+ * the people in these sets.
+ */
+export async function markedUserIdsByPod(podIds: readonly unknown[]): Promise<Map<string, Set<string>>> {
+  const ids = [...new Set(podIds.map(String))].filter((id) => Types.ObjectId.isValid(id));
+  const byPod = new Map<string, Set<string>>();
+  if (ids.length === 0) return byPod;
+  const tickets = await TicketModel.find({
+    pod_id: { $in: ids.map((id) => new Types.ObjectId(id)) },
+    status: 'CHECKED_IN',
+  })
+    .select('pod_id user_id')
+    .lean();
+  for (const ticket of tickets) {
+    const key = String(ticket.pod_id);
+    const marked = byPod.get(key) ?? new Set<string>();
+    marked.add(String(ticket.user_id));
+    byPod.set(key, marked);
+  }
+  return byPod;
+}
+
 /** The club's admins, as the "who can help me" card renders them. */
 async function clubAdminsFor(pod: any) {
   if (!pod?.club_id) return [];

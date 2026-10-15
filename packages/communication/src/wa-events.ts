@@ -1067,6 +1067,38 @@ export const WA_EVENTS: readonly WaEvent[] = [
     fires: 'A scheduled club-admin onboarding call starts within the reminder window (Onboarding > Meetings > Availability)',
     params: ['Recipient name', 'Date', 'Time', 'Meeting link'],
   },
+  {
+    key: 'HOST_POD_REMINDER',
+    campaign: 'host_pod_reminder',
+    audience: 'HOST',
+    category: 'reminder',
+    fires: 'A hosted pod starts within the reminder window (Admin > Pods > Pod Settings)',
+    params: ['Recipient name', 'Pod title', 'Date', 'Time', 'Guests booked', 'Pod link'],
+  },
+  {
+    key: 'USER_CHECKOUT_PENDING',
+    campaign: 'pod_checkout_pending_user',
+    audience: 'USER',
+    category: 'marketing',
+    fires: 'A pod checkout is left unpaid for the nudge delay while the pod still has spots (Admin > Pods > Pod Settings)',
+    params: ['Recipient name', 'Pod title', 'When', 'Pod link'],
+  },
+  {
+    key: 'USER_GIFT_CARD_RECEIVED',
+    campaign: 'gift_card_received_user',
+    audience: 'USER',
+    category: 'transactional',
+    fires: 'A gift card is bought for an address that belongs to a Duncit account',
+    params: ['Recipient name', 'From', 'Amount', 'Redeem link'],
+  },
+  {
+    key: 'ECOMM_PRODUCT_DECLINED',
+    campaign: 'ecomm_product_declined',
+    audience: 'ECOMM',
+    category: 'notification',
+    fires: 'A product listing is declined at review, with the reviewer reason',
+    params: ['Recipient name', 'Product', 'Brand', 'Reason'],
+  },
 ];
 
 /** Lookup by event key. */

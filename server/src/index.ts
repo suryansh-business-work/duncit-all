@@ -37,6 +37,8 @@ import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocke
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startMeetingReminderScheduler } from '@modules/survey/meeting.reminder';
+import { startCheckoutNudgeScheduler } from '@modules/finance/payment/payment.checkoutNudge';
+import { startCoinExpiryReminderScheduler } from '@modules/finance/coin/coin.expiryReminder';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
@@ -684,6 +686,11 @@ async function bootstrap() {
   // Onboarding calls: a reminder to the applicant ahead of a scheduled meeting
   // (Onboarding > Meetings > Availability sets how far ahead).
   startMeetingReminderScheduler();
+  // One nudge to a member who left a pod checkout unpaid (Admin > Pods > Pod
+  // Settings > Unfinished Booking Nudge).
+  startCheckoutNudgeScheduler();
+  // A reminder a few days before a member's coins lapse (Finance > Duncit Coin).
+  startCoinExpiryReminderScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);

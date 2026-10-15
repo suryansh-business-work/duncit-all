@@ -35,6 +35,8 @@ export interface CoinSettings {
   pod_feedback_coins: number;
   /** Days a granted coin stays spendable. 0 means granted coins never expire. */
   coin_expiry_days: number;
+  /** Days before expiry a holder is reminded. 0 means no reminder. */
+  coin_expiry_reminder_days: number;
   updated_at: string;
 }
 
@@ -182,6 +184,7 @@ export const COIN_SETTINGS = gql`
       coins_per_referral
       pod_feedback_coins
       coin_expiry_days
+      coin_expiry_reminder_days
       updated_at
     }
   }
@@ -195,6 +198,7 @@ export const UPDATE_COIN_SETTINGS = gql`
       coins_per_referral
       pod_feedback_coins
       coin_expiry_days
+      coin_expiry_reminder_days
       updated_at
     }
   }

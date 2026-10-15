@@ -3,6 +3,7 @@ import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
+import { sendEmail } from '@services/email/email.service';
 import { loadNotifyRecipients, recipientName } from '@services/notify/notify.recipients';
 import { trimTrailingSlash } from '@utils/url';
 import { ProductOrderModel, type IProductOrder } from './productOrder.model';
@@ -13,6 +14,72 @@ function linesFor(order: IProductOrder, productIds: ReadonlySet<string>): string
     .filter((line) => productIds.has(String(line.product_id)))
     .map((line) => `${line.qty} x ${line.name}`)
     .join(', ');
+}
+
+/** Each brand owner behind these orders, with the product ids that are theirs. */
+async function productsByOwnerOf(orders: readonly IProductOrder[]): Promise<Map<string, Set<string>>> {
+  const productIds = orders.flatMap((order) => order.line_items.map((line) => line.product_id));
+  const products = await InventoryProductModel.find({ _id: { $in: productIds } })
+    .select('listing_submitted_by_id')
+    .lean();
+  const productsByOwner = new Map<string, Set<string>>();
+  for (const product of products) {
+    const ownerId = String(product.listing_submitted_by_id ?? '');
+    if (!Types.ObjectId.isValid(ownerId)) continue;
+    const set = productsByOwner.get(ownerId) ?? new Set<string>();
+    set.add(String(product._id));
+    productsByOwner.set(ownerId, set);
+  }
+  return productsByOwner;
+}
+
+/** What a brand is told about a delivery that went wrong. */
+const ISSUE_LABEL: Partial<Record<string, string>> = {
+  NDR: 'The courier could not deliver it and is waiting for an answer',
+  RTO: 'It is being returned to you by the courier',
+  RTO_DELIVERED: 'It has come back to your pickup address',
+  LOST: 'The courier reported it lost',
+};
+
+/**
+ * Tell the brand when one of its pod-shop deliveries goes wrong: a failed
+ * attempt (NDR) needs an answer in the brand's own ShipRocket account, and a
+ * return to origin means stock coming back. Email only — this is the seller's
+ * desk work, not something to buzz a phone for. Keyed per order and status.
+ */
+export async function notifyBrandsOfDeliveryIssue(order: IProductOrder): Promise<void> {
+  const issue = ISSUE_LABEL[order.fulfilment_status];
+  if (!issue) return;
+  try {
+    const productsByOwner = await productsByOwnerOf([order]);
+    if (productsByOwner.size === 0) return;
+    const [users, { partnersUrl }] = await Promise.all([
+      loadNotifyRecipients([...productsByOwner.keys()]),
+      getUrlConfigs(),
+    ]);
+    for (const [ownerId, owned] of productsByOwner) {
+      const user = users.get(ownerId);
+      const to = user?.auth?.email ?? '';
+      const items = linesFor(order, owned);
+      if (!to || !items) continue;
+      // eslint-disable-next-line no-await-in-loop -- one brand at a time
+      await sendEmail({
+        to,
+        subject: `Delivery issue on order ${order.order_no}`,
+        template: 'ecomm-order-delivery-issue',
+        category: 'transactional',
+        vars: {
+          name: recipientName(user),
+          order_no: order.order_no,
+          items,
+          issue,
+          order_url: `${trimTrailingSlash(partnersUrl)}/ecomm-brand/orders/${String(order._id)}`,
+        },
+      });
+    }
+  } catch (error) {
+    logs.server.error('productOrder', 'notifyBrandsOfDeliveryIssue', { error, order_no: order.order_no });
+  }
 }
 
 /**
@@ -32,18 +99,7 @@ export async function notifyBrandsOfNewOrders(payment: { _id: unknown; metadata?
   try {
     const orders = await ProductOrderModel.find({ payment_id: payment._id, channel: { $ne: 'PET_STORE' } });
     if (orders.length === 0) return;
-    const productIds = orders.flatMap((order) => order.line_items.map((line) => line.product_id));
-    const products = await InventoryProductModel.find({ _id: { $in: productIds } })
-      .select('listing_submitted_by_id')
-      .lean();
-    const productsByOwner = new Map<string, Set<string>>();
-    for (const product of products) {
-      const ownerId = String(product.listing_submitted_by_id ?? '');
-      if (!Types.ObjectId.isValid(ownerId)) continue;
-      const set = productsByOwner.get(ownerId) ?? new Set<string>();
-      set.add(String(product._id));
-      productsByOwner.set(ownerId, set);
-    }
+    const productsByOwner = await productsByOwnerOf(orders);
     if (productsByOwner.size === 0) return;
     const [users, { partnersUrl }] = await Promise.all([
       loadNotifyRecipients([...productsByOwner.keys()]),

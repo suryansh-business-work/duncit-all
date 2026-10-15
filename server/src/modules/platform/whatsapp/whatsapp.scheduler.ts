@@ -198,7 +198,28 @@ function podReminders(
   const hostName = nameOf(users.get(firstHostId(pod)));
   const link = podUrl(mwebUrl, pod, slugById);
   const hours = hoursUntil(pod.pod_date_time);
-  return (pod.pod_attendees ?? []).map((attendeeId) => {
+  const hostIds = new Set((pod.pod_hosts_id ?? []).map(String));
+  const guests = (pod.pod_attendees ?? []).filter((attendeeId) => !hostIds.has(String(attendeeId)));
+  const hostReminders = [...hostIds].map((hostId) => {
+    const user = users.get(hostId);
+    const name = nameOf(user);
+    return {
+      event: 'HOST_POD_REMINDER',
+      entityId: String(pod._id),
+      user,
+      name,
+      assets: podImageAssets(pod.pod_images_and_videos),
+      params: [
+        name,
+        pod.pod_title,
+        appDate(pod.pod_date_time),
+        appTime(pod.pod_date_time),
+        String(podSeatsTaken(pod)),
+        link || trimTrailingSlash(mwebUrl),
+      ],
+    };
+  });
+  const guestReminders = guests.map((attendeeId) => {
     const user = users.get(String(attendeeId));
     const name = nameOf(user);
     return {
@@ -218,12 +239,13 @@ function podReminders(
       ],
     };
   });
+  return [...hostReminders, ...guestReminders];
 }
 
 /**
- * The host is deliberately left in: they sit in `pod_attendees` like everybody
- * else and there is no host-side reminder template, so excluding them would
- * mean the one person who has to turn up gets no reminder at all.
+ * Guests get the attendee reminder; every host gets their own, with how many
+ * are booked — the host used to be sent the guest wording ("your host will
+ * check you in") because no host template existed.
  */
 async function remindAttendees(
   now: number,
@@ -235,7 +257,7 @@ async function remindAttendees(
     is_active: true,
     pod_date_time: crossing(now + clocks.pod_reminder_lead_hours * HOUR_MS, cutoff),
   })
-    .select('pod_id pod_title pod_date_time pod_attendees pod_hosts_id club_id pod_images_and_videos')
+    .select('pod_id pod_title pod_date_time pod_attendees extra_seats pod_hosts_id club_id pod_images_and_videos')
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const slugById = await loadPodClubSlugMap(pods);

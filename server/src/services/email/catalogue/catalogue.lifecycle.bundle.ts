@@ -74,6 +74,33 @@ export const LIFECYCLE_FALLBACK: Record<string, string> = {
   'email.meetingReminder.body':
     'This is a reminder of your onboarding call with the Duncit team. Please join a couple of minutes early.',
 
+  // --- Follow-up batch ------------------------------------------------------
+  'email.field.friend': 'Joined',
+  'email.field.expiresOn': 'Expires on',
+  'email.label.coins': 'Duncit Coins',
+  'email.cta.viewCoins': 'See your coins',
+  'email.hostPodReminder.title': 'You are hosting soon',
+  'email.hostPodReminder.body':
+    'Here is a reminder of the pod you are hosting, with the number of guests booked so far. Check guests in from the pod page as they arrive.',
+  'email.userCheckoutPending.title': 'Your booking is not finished',
+  'email.userCheckoutPending.body':
+    'You started booking the pod below but the payment did not go through, so no spot is held for you yet. Spots are still open if you would like to join.',
+  'email.ecommProductDeclined.title': 'Your product was not approved',
+  'email.ecommProductDeclined.body':
+    'Our team reviewed the listing below and could not approve it yet, for the reason given. Update the listing in the Partners console and submit it again.',
+  'email.referralReward.title': 'Your referral worked',
+  'email.referralReward.body':
+    'Someone you invited has joined Duncit with your code, and the coins below are now in your account. Thank you for bringing a friend along.',
+  'email.coinExpiryReminder.title': 'Your coins expire soon',
+  'email.coinExpiryReminder.body':
+    'Some of your Duncit Coins expire on the date below. Use them on a pod or in the shop before then so they are not lost.',
+  'email.payoutSubmitted.title': 'Your payout is with Finance',
+  'email.payoutSubmitted.body':
+    'The pod below is complete and your payout has been sent to our Finance team for review. You will hear from us as soon as it is decided.',
+  'email.ecommOrderDeliveryIssue.title': 'A delivery needs your attention',
+  'email.ecommOrderDeliveryIssue.body':
+    'Something went wrong with the delivery of the order below. Please check it in your shipping account and the Partners console.',
+
   // --- Staff ---------------------------------------------------------------
   'email.staffAlert.title': 'Something needs your attention',
   'email.staffAlert.body': 'The item below has just come in for your desk.',

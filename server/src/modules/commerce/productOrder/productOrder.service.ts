@@ -25,6 +25,7 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { logs } from '@observability/log';
 import { notifyEach } from '@services/notify/notify.service';
 import { notifyOrderStatus } from './productOrder.notify';
+import { notifyBrandsOfDeliveryIssue } from './productOrder.brandNotify';
 import type { ShipmentDocument } from '@modules/commerce/shiprocket/shiprocket.shipment';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -490,7 +491,10 @@ const DELIVERED_STATUSES = new Set<FulfilmentStatus>(['DELIVERED', 'PICKED_UP'])
  * delivered never asked its brand anything.
  */
 async function afterPodShopStatusChange(order: IProductOrder, previous: FulfilmentStatus) {
-  if (order.fulfilment_status !== previous) await notifyOrderStatus(order);
+  if (order.fulfilment_status !== previous) {
+    await notifyOrderStatus(order);
+    await notifyBrandsOfDeliveryIssue(order);
+  }
   if (DELIVERED_STATUSES.has(order.fulfilment_status) && !DELIVERED_STATUSES.has(previous)) {
     await requestBrandFeedback(order);
   }

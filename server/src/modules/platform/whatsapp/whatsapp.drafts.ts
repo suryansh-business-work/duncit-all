@@ -626,6 +626,49 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Meera, a reminder of your Duncit onboarding call on 24 Aug 2026 at 11:30 AM. ' +
       'Meeting link: https://meet.google.com/abc-defg-hij Please join a couple of minutes early. Team Duncit',
   },
+  HOST_POD_REMINDER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a reminder that you are hosting {{2}} on {{3}} at {{4}}. ' +
+      'Guests booked so far: {{5}}. Open the pod to check guests in at the door: {{6}} Team Duncit',
+    sample:
+      'Hi Meera, a reminder that you are hosting Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM. ' +
+      'Guests booked so far: 12. Open the pod to check guests in at the door: https://mweb.duncit.com/club/sunset-club/pod/sunday-badminton Team Duncit',
+  },
+  USER_CHECKOUT_PENDING: {
+    // MARKETING: a nudge to finish something the person chose not to finish.
+    // Meta treats an abandoned checkout as marketing, and so do we: it only
+    // reaches people who have not switched marketing off.
+    category: 'MARKETING',
+    language: 'English',
+    body:
+      'Hi {{1}}, you started booking {{2}} on {{3}} but did not finish. ' +
+      'Spots are still open if you would like to join: {{4}} Reply STOP to stop these messages. Team Duncit',
+    sample:
+      'Hi Aarav, you started booking Sunday Badminton Doubles on 24 Aug 2026, 07:00 AM but did not finish. ' +
+      'Spots are still open if you would like to join: https://mweb.duncit.com/club/sunset-club/pod/sunday-badminton Reply STOP to stop these messages. Team Duncit',
+  },
+  USER_GIFT_CARD_RECEIVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, {{2}} has sent you a Duncit gift card worth {{3}}. ' +
+      'Open it here to add it to your account: {{4}} Team Duncit',
+    sample:
+      'Hi Aarav, Priya has sent you a Duncit gift card worth Rs 500.00. ' +
+      'Open it here to add it to your account: https://mweb.duncit.com/gift-card/GC-7H2K-9QXA Team Duncit',
+  },
+  ECOMM_PRODUCT_DECLINED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your product {{2}} for {{3}} was not approved at review. ' +
+      'Reason: {{4}}. You can update the listing and submit it again from the Partners console. Team Duncit',
+    sample:
+      'Hi Kavya, your product Tug Rope Large for Pawsome was not approved at review. ' +
+      'Reason: The product photos are blurred. You can update the listing and submit it again from the Partners console. Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

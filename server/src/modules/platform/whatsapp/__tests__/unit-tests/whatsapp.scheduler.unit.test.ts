@@ -143,6 +143,10 @@ const nothingAnywhere = () => {
   backouts.find.mockReturnValue(chain([]));
 };
 
+/** The guest-side pod reminders the sweep handed to the notifier. */
+const guestReminders = () =>
+  sentEvents().filter((entry) => entry.event === 'USER_POD_REMINDER') as unknown as { params: string[] }[];
+
 /** Every message the sweep handed to the notifier, across all its calls. */
 const sentEvents = () =>
   notify.mock.calls.flatMap((call) => (call[0] as { event: string }[]) ?? []);
@@ -225,23 +229,29 @@ describe('USER_POD_REMINDER', () => {
     users.find.mockReturnValue(chain([user('u-1'), user('u-2', 'Vikram')]));
   };
 
-  it('reminds every attendee of a pod that starts soon', async () => {
-    remindable();
-
-    await runWhatsappSweeps();
-
-    const reminders = sentEvents().filter((entry) => entry.event === 'USER_POD_REMINDER');
-    expect(reminders).toHaveLength(2);
-  });
-
-  it('reminds the HOST too — they are an attendee and have no template of their own', async () => {
+  it('reminds every guest of a pod that starts soon with the guest wording', async () => {
     remindable();
 
     await runWhatsappSweeps();
 
     const reminders = sentEvents().filter((entry) => entry.event === 'USER_POD_REMINDER');
     const names = reminders.map((entry) => (entry as unknown as { name: string }).name);
-    expect(names).toContain('Meera N');
+    expect(names).toEqual(['Vikram N']);
+  });
+
+  it('reminds the HOST with their own template, quoting how many are booked', async () => {
+    remindable();
+
+    await runWhatsappSweeps();
+
+    const hostReminders = sentEvents().filter((entry) => entry.event === 'HOST_POD_REMINDER') as unknown as {
+      name: string;
+      params: string[];
+    }[];
+    expect(hostReminders).toHaveLength(1);
+    expect(hostReminders[0]?.name).toBe('Meera N');
+    // Two attendees on the pod, no extra seats.
+    expect(hostReminders[0]?.params[4]).toBe('2');
   });
 
   it('carries a link built from the club slug', async () => {
@@ -249,7 +259,7 @@ describe('USER_POD_REMINDER', () => {
 
     await runWhatsappSweeps();
 
-    const [reminder] = sentEvents() as unknown as { params: string[] }[];
+    const [reminder] = guestReminders();
     expect(reminder?.params).toContain('https://mweb.duncit.com/club/sunset-club/pod/sunday-badminton');
   });
 
@@ -259,7 +269,7 @@ describe('USER_POD_REMINDER', () => {
 
     await runWhatsappSweeps();
 
-    const [reminder] = sentEvents() as unknown as { params: string[] }[];
+    const [reminder] = guestReminders();
     expect(reminder?.params).toContain('');
     expect(reminder?.params.some((value) => value.includes('/club//pod/'))).toBe(false);
   });
@@ -270,7 +280,7 @@ describe('USER_POD_REMINDER', () => {
 
     await runWhatsappSweeps();
 
-    const [reminder] = sentEvents() as unknown as { params: string[] }[];
+    const [reminder] = guestReminders();
     expect(reminder?.params.some((value) => value.includes('/club/'))).toBe(false);
   });
 
@@ -292,7 +302,7 @@ describe('USER_POD_REMINDER', () => {
 
     await runWhatsappSweeps();
 
-    const [reminder] = sentEvents() as unknown as { params: string[] }[];
+    const [reminder] = guestReminders();
     // "starts in {{2}} hours" reading 0 is worse than reading 1.
     expect(reminder?.params[1]).toBe('1');
   });

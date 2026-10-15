@@ -237,6 +237,9 @@ export interface ICoinSettings extends Document {
   /** Days a granted coin stays spendable, counted to the end of the last day
    * in the app time zone. 0 means granted coins never expire. */
   coin_expiry_days: number;
+  /** Days before a member's coins expire that they are reminded, once per
+   * expiry date. 0 switches the reminder off. */
+  coin_expiry_reminder_days: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -249,6 +252,7 @@ const coinSettingsSchema = new Schema<ICoinSettings>(
     coins_per_referral: { type: Number, default: 50, min: 0 },
     pod_feedback_coins: { type: Number, default: 10, min: 0 },
     coin_expiry_days: { type: Number, default: 30, min: 0 },
+    coin_expiry_reminder_days: { type: Number, default: 3, min: 0, max: 60 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

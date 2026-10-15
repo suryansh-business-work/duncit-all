@@ -1740,6 +1740,8 @@ export type AppSettings = {
   pod_reminder_lead_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
   pod_sameday_reminder_hours: Scalars['Int']['output'];
+  /** Minutes after a pod checkout is left unpaid when the member is nudged once to finish it. 0 switches it off. */
+  checkout_nudge_minutes: Scalars['Int']['output'];
   /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -5273,6 +5275,8 @@ export type CoinSettings = {
    * Read at the moment of each grant, so a change never moves coins already given.
    */
   coin_expiry_days: Scalars['Int']['output'];
+  /** Days before a member's coins expire that they are reminded by email and in-app (0 turns it off). */
+  coin_expiry_reminder_days: Scalars['Int']['output'];
   /** Flat coins paid to EACH side of a referral — the referrer and the new member. */
   coins_per_referral: Scalars['Int']['output'];
   /** Flat coins paid for feedback on an attended pod (0 turns it off). */
@@ -5287,6 +5291,7 @@ export type CoinSettings = {
 /** Every field is optional; an omitted one is left alone. */
 export type CoinSettingsInput = {
   coin_expiry_days?: InputMaybe<Scalars['Int']['input']>;
+  coin_expiry_reminder_days?: InputMaybe<Scalars['Int']['input']>;
   coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
   pod_feedback_coins?: InputMaybe<Scalars['Int']['input']>;
   pod_join_earn_pct?: InputMaybe<Scalars['Int']['input']>;
@@ -37593,6 +37598,8 @@ export type UpdateAppSettingsInput = {
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */
   pod_sameday_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** Minutes after an unpaid pod checkout the member is nudged (0-1440, 0 is off). */
+  checkout_nudge_minutes?: InputMaybe<Scalars['Int']['input']>;
   /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;

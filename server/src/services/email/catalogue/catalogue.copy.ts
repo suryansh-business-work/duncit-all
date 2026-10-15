@@ -61,6 +61,8 @@ export const FIELD = {
   guests: 'email.field.guests',
   deleteOn: 'email.field.deleteOn',
   details: 'email.field.details',
+  friend: 'email.field.friend',
+  expiresOn: 'email.field.expiresOn',
 } as const;
 
 /** The tinted callout's caption — what the strip beneath the heading names. */
@@ -84,6 +86,7 @@ export const LABEL = {
   report: 'email.label.report',
   club: 'email.label.club',
   alert: 'email.label.alert',
+  coins: 'email.label.coins',
 } as const;
 
 /** Button captions. One per action, never one per template. */
@@ -112,6 +115,7 @@ export const CTA = {
   orderNow: 'email.cta.orderNow',
   contactUs: 'email.cta.contactUs',
   openBrandOrder: 'email.cta.openBrandOrder',
+  viewCoins: 'email.cta.viewCoins',
 } as const;
 
 /**

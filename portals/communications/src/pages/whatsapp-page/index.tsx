@@ -30,12 +30,12 @@ type WaTab = 'dashboard' | 'campaigns' | 'templates' | 'automation' | 'logs' | '
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const waTabs = (t: Translate): DuncitTabItem<WaTab>[] => [
-  { value: 'dashboard', label: t('shell.nav.dashboard') },
-  { value: 'campaigns', label: t('shell.nav.campaigns') },
-  { value: 'templates', label: t('shell.nav.templates') },
-  { value: 'automation', label: t('shell.nav.automation') },
-  { value: 'logs', label: t('shell.nav.logs') },
-  { value: 'settings', label: t('shell.nav.settings') },
+  { value: 'dashboard', label: t('shell.nav.dashboard'), testId: 'whatsapp-tab-dashboard' },
+  { value: 'campaigns', label: t('shell.nav.campaigns'), testId: 'whatsapp-tab-campaigns' },
+  { value: 'templates', label: t('shell.nav.templates'), testId: 'whatsapp-tab-templates' },
+  { value: 'automation', label: t('shell.nav.automation'), testId: 'whatsapp-tab-automation' },
+  { value: 'logs', label: t('shell.nav.logs'), testId: 'whatsapp-tab-logs' },
+  { value: 'settings', label: t('shell.nav.settings'), testId: 'whatsapp-tab-settings' },
 ];
 
 interface SetupData {
@@ -123,7 +123,7 @@ export default function WhatsappCampaignsPage() {
       <Box {...tabPanelProps('whatsapp', tabs.value)}>
 
       {!configured && tab !== 'settings' && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+        <Alert severity="warning" sx={{ mb: 2 }} data-testid="whatsapp-not-configured">
           No AiSensy API key yet — add one in the Tech portal under Environment Variables → AiSensy
           before sending.
         </Alert>

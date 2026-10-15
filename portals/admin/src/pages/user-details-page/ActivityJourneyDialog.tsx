@@ -65,7 +65,7 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: R
   );
 
   const emptyOrJourney = events.length === 0 ? (
-    <Alert severity="info">{t('admin.activity.noClickstream')}</Alert>
+    <Alert severity="info" data-testid="admin-user-journey-empty">{t('admin.activity.noClickstream')}</Alert>
   ) : (
     <Stack spacing={1.5}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
@@ -126,8 +126,8 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: R
   const errorOrJourney = error ? <Alert severity="error">{error.message}</Alert> : emptyOrJourney;
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>User Journey · {date}</DialogTitle>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" data-testid="admin-user-journey-dialog">
+      <DialogTitle data-testid="admin-user-journey-title">User Journey · {date}</DialogTitle>
       <DialogContent dividers>
         {loading ? (
           <Stack

@@ -25,7 +25,7 @@ export default function UserBadgesSection({ userId }: Readonly<{ userId: string 
   if (loading) return null;
   const badges = data?.userBadges ?? [];
   return (
-    <Card>
+    <Card data-testid="admin-user-badges">
       <CardContent>
         <Stack
           direction="row"

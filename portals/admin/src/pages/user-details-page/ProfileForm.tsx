@@ -64,7 +64,7 @@ export default function ProfileForm({ form, gender, isPetOwner, busy, opError, o
             variant="contained"
             size="small"
             startIcon={<SaveIcon />}
-            loading={busy} disabled={!canSave}
+            loading={busy} disabled={!canSave} data-testid="admin-user-profile-save"
           >
             {busy ? 'Saving…' : 'Save Changes'}
           </DuncitButton>
@@ -82,7 +82,7 @@ export default function ProfileForm({ form, gender, isPetOwner, busy, opError, o
               xs: 12,
               sm: 6
             }}>
-            <RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required />
+            <RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} data-testid="admin-user-profile-last-name" />
           </Grid>
           <ContactFields control={control} />
           <AddressFields
@@ -99,7 +99,7 @@ export default function ProfileForm({ form, gender, isPetOwner, busy, opError, o
               xs: 12,
               sm: 6
             }}>
-            <RhfTextField control={control} name="zone" label={t('admin.profile.zone')} />
+            <RhfTextField control={control} name="zone" label={t('admin.profile.zone')} data-testid="admin-user-profile-zone" />
           </Grid>
           <Grid
             size={{
@@ -132,7 +132,7 @@ export default function ProfileForm({ form, gender, isPetOwner, busy, opError, o
             />
           </Grid>
           <Grid size={12}>
-            <RhfTextField control={control} name="bio" label={t('admin.profile.bio')} multiline minRows={3} />
+            <RhfTextField control={control} name="bio" label={t('admin.profile.bio')} multiline minRows={3} data-testid="admin-user-profile-bio" />
           </Grid>
           <ProfileDemographicsReadout gender={gender} isPetOwner={isPetOwner} />
           <Grid
@@ -148,7 +148,7 @@ export default function ProfileForm({ form, gender, isPetOwner, busy, opError, o
           </Grid>
           {opError && (
             <Grid size={12}>
-              <Alert severity="error">{opError}</Alert>
+              <Alert severity="error" data-testid="admin-user-profile-error">{opError}</Alert>
             </Grid>
           )}
         </Grid>

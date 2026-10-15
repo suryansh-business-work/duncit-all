@@ -82,7 +82,7 @@ export default function ContactActionDialog({ open, type, user, onClose, onSaved
   });
 
   return (
-    <Dialog open={open} onClose={busy ? undefined : onClose} PaperComponent={DraggableDialogPaper} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={busy ? undefined : onClose} PaperComponent={DraggableDialogPaper} fullWidth maxWidth="sm" data-testid="contact-action-dialog">
       <ContactActionFormContent
         type={type}
         user={user}

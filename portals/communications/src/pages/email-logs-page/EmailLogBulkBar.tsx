@@ -110,7 +110,7 @@ export function EmailLogDeleteAllButton({ total, onDeleted }: Readonly<DeleteAll
   };
 
   return (
-    <DuncitButton
+    <DuncitButton data-testid="email-logs-delete-all"
       size="small"
       color="error"
       startIcon={<DeleteSweepIcon />}

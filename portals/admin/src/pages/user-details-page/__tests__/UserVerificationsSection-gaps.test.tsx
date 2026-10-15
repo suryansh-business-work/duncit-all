@@ -90,4 +90,21 @@ describe('ReviewCell — a row that was rejected rather than approved', () => {
     expect(within(row('Identity')).queryByRole('button', { name: 'Approve' })).toBeNull();
     expect(within(row('Identity')).queryByRole('button', { name: 'Reject' })).toBeNull();
   });
+
+  it('offers no verdict on an address that was never submitted', async () => {
+    const neverSubmitted: VerificationItem = {
+      type: 'ADDRESS',
+      status: 'NOT_SUBMITTED',
+      document_url: null,
+      address: null,
+      reject_reason: null,
+    };
+    __setTableRows([neverSubmitted]);
+    renderWithProviders(<UserVerificationsSection userId={USER_ID} />);
+
+    await waitFor(() => expect(row('Address')).toBeInTheDocument());
+    expect(within(row('Address')).getByText('No review needed')).toBeInTheDocument();
+    expect(within(row('Address')).queryByRole('button', { name: 'Approve' })).toBeNull();
+    expect(within(row('Address')).queryByPlaceholderText('Reject reason')).toBeNull();
+  });
 });

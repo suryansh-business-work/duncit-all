@@ -1,12 +1,21 @@
 import { z } from 'zod';
-import { zodRules } from '@duncit/forms';
+import { PERSON_NAME_PATTERN, zodRules } from '@duncit/forms';
 import type { EditForm } from '../queries';
 
 const PINCODE_PATTERN = /^[0-9A-Za-z -]{3,12}$/;
 
 export const userProfileSchema = z.object({
   first_name: zodRules.personName('First name'),
-  last_name: zodRules.personName('Last name'),
+  // Optional, as on the server's updateUserSchema: members may clear their
+  // surname, and requiring it here left Save disabled for every one of them.
+  last_name: z
+    .string()
+    .trim()
+    .default('')
+    .refine(
+      (value) => value === '' || PERSON_NAME_PATTERN.test(value),
+      'Last name can use letters, spaces, apostrophes, periods and hyphens only',
+    ),
   email: zodRules.optionalEmail('Email').default(''),
   // Optional, not required. Phone has never been collected at signup, so an
   // account without one is ordinary — and a required rule here left Save
@@ -46,7 +55,8 @@ export function toUpdateUserInput(values: EditForm) {
   const cast = userProfileSchema.parse(values);
   const input: any = {
     first_name: cast.first_name,
-    last_name: cast.last_name,
+    // Blank is omitted: the server's rule refuses an empty surname.
+    last_name: cast.last_name || undefined,
     email: cast.email,
     phone_extension: cast.phone_extension,
     phone_number: cast.phone_number,

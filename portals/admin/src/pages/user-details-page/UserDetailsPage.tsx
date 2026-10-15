@@ -47,8 +47,8 @@ export default function UserDetailsPage() {
       </Stack>
     );
   }
-  if (s.error) return <Alert severity="error">{s.error.message}</Alert>;
-  if (!s.user || !s.form) return <Alert severity="warning">{t('admin.users.notFound')}</Alert>;
+  if (s.error) return <Alert severity="error" data-testid="admin-user-error">{s.error.message}</Alert>;
+  if (!s.user || !s.form) return <Alert severity="warning" data-testid="admin-user-not-found">{t('admin.users.notFound')}</Alert>;
 
   const userId = s.user.user_id || user_id || '';
 
@@ -167,6 +167,7 @@ export default function UserDetailsPage() {
         autoHideDuration={3000}
         onClose={() => setToast(null)}
         message={toast ?? ''}
+        data-testid="admin-user-toast"
       />
     </Stack>
   );

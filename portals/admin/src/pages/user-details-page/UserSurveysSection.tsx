@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
@@ -20,24 +20,32 @@ interface UserSurvey { kind: 'VENUE' | 'HOST'; submitted_at?: string | null; ite
 /** Read-only view of a user's venue/host onboarding survey answers. */
 export default function UserSurveysSection({ userId }: Readonly<{ userId: string }>) {
   const { t } = useTranslation();
-  const { data, loading } = useQuery<{ userSurveyResponses: UserSurvey[] }>(USER_SURVEYS, {
+  const { data, loading, error } = useQuery<{ userSurveyResponses: UserSurvey[] }>(USER_SURVEYS, {
     variables: { user_id: userId }, skip: !userId, fetchPolicy: 'cache-and-network',
   });
   const responses = data?.userSurveyResponses ?? [];
 
   if (loading && responses.length === 0) return null;
+  // A refused or failed read is not "no surveys" — saying so would be untrue.
+  if (error && responses.length === 0) {
+    return (
+      <Alert severity="error" data-testid="admin-user-surveys-error">
+        {t('admin.surveys.loadFailed')}
+      </Alert>
+    );
+  }
   if (responses.length === 0) {
     return (
-      <Typography variant="body2" sx={{
+      <Typography variant="body2" data-testid="admin-user-surveys" sx={{
         color: "text.secondary"
       }}>{t('admin.surveys.none')}</Typography>
     );
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} data-testid="admin-user-surveys">
       {responses.map((r) => (
-        <Card key={r.kind} variant="outlined">
+        <Card key={r.kind} variant="outlined" data-testid={`admin-user-survey-${r.kind}`}>
           <CardContent>
             <Stack
               direction="row"

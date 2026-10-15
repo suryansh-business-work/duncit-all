@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Avatar, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
@@ -10,6 +10,7 @@ import {
 } from '../inventory-page/inventory-product-page/constants';
 import { REQUEST_STATUS_COLOR } from '../ecomm/requestsQueries';
 import CatalogBrandProductActions from './CatalogBrandProductActions';
+import ShopVisibilitySwitch from './ShopVisibilitySwitch';
 import type { CatalogBrandProductRow } from './queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -19,7 +20,7 @@ interface Props {
   onEdit: (p: CatalogBrandProductRow) => void;
   /** Archive an active product, restore an archived one. */
   onLifecycle: (p: CatalogBrandProductRow) => void;
-  /** Temporarily deactivate an active product, reactivate a paused one. */
+  /** Hide a shown product from the shop, show a hidden one. */
   onToggleActive: (p: CatalogBrandProductRow) => void;
   onDuplicate: (p: CatalogBrandProductRow) => void;
 }
@@ -56,17 +57,6 @@ const renderListingStatus = (p: CatalogBrandProductRow) => (
   <StatusChip status={p.listing_review_status} colorMap={REQUEST_STATUS_COLOR} />
 );
 
-const activeValue = (p: CatalogBrandProductRow) => (p.is_active ? 'Active' : 'Inactive');
-
-const renderActive = (p: CatalogBrandProductRow) => (
-  <Chip
-    size="small"
-    variant="outlined"
-    label={activeValue(p)}
-    color={p.is_active ? 'success' : 'default'}
-  />
-);
-
 const renderStatus = (p: CatalogBrandProductRow) => (
   <StatusChip status={p.status} colorMap={STATUS_CHIP_COLOR} />
 );
@@ -93,7 +83,6 @@ export default function CatalogBrandProductsTable({
         product={p}
         onEdit={onEdit}
         onLifecycle={onLifecycle}
-        onToggleActive={onToggleActive}
         onDuplicate={onDuplicate}
       />
     );
@@ -146,11 +135,11 @@ export default function CatalogBrandProductsTable({
       },
       {
         field: 'is_active',
-        headerName: t('products.brands.colActive'),
+        headerName: t('products.brandProducts.colShop'),
         type: 'boolean',
-        width: 110,
-        cellRenderer: renderActive,
-        valueGetter: activeValue,
+        width: 140,
+        cellRenderer: (p) => <ShopVisibilitySwitch product={p} onToggle={onToggleActive} />,
+        valueGetter: (p) => (p.is_active ? t('products.brandProducts.shown') : t('products.brandProducts.hidden')),
       },
       {
         field: 'status',
@@ -178,7 +167,7 @@ export default function CatalogBrandProductsTable({
         cellRenderer: renderActions,
       },
     ];
-  }, [onEdit, onLifecycle, onToggleActive, onDuplicate, formatDate]);
+  }, [onEdit, onLifecycle, onToggleActive, onDuplicate, formatDate, t]);
 
   return (
     <DuncitTable<CatalogBrandProductRow>

@@ -10,6 +10,8 @@ import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.m
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
+import { BRAND_PINCODE } from '@modules/venues/ecommBrand/brandDeliveryPincode.model';
+import { brandDeliveryPincodeService } from '@modules/venues/ecommBrand/brandDeliveryPincode.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { moderationService } from '@modules/moderation/moderation.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
@@ -471,6 +473,19 @@ async function assertBrandActive(brandId: unknown) {
       extensions: { code: 'BAD_REQUEST' },
     });
   }
+}
+
+/** The brand a Products admin is adding a product to, or null for a Duncit
+ * product. The brand must exist and be able to list (approved, active). */
+async function adminCreateBrand(brandId: unknown) {
+  if (brandId === null || brandId === undefined || brandId === '') return null;
+  const id = String(brandId);
+  const brand = Types.ObjectId.isValid(id)
+    ? await EcommBrandModel.findById(id).select('brand_name owner_user_id').lean()
+    : null;
+  if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+  await assertBrandActive(id);
+  return brand;
 }
 
 async function ownedListing(id: string, user: AuthUser | null) {
@@ -1170,6 +1185,7 @@ export const inventoryService = {
     super_category_id?: string | null;
     category_id?: string | null;
     sub_category_id?: string | null;
+    delivery_pincode?: string | null;
   }) {
     const q: any = {
       is_active: true,
@@ -1192,8 +1208,15 @@ export const inventoryService = {
     const hiddenBrands = await EcommBrandModel.find({ live: { $ne: true } })
       .select('_id')
       .lean();
-    if (hiddenBrands.length > 0) {
-      q.brand_id = { $nin: hiddenBrands.map((b) => b._id) };
+    const hiddenIds: Types.ObjectId[] = hiddenBrands.map((b) => b._id);
+    // The Pod Shop passes the buyer's "Deliver to" pincode: a brand whose
+    // delivery area leaves it out hides its products for that buyer.
+    const pincode = String(filter?.delivery_pincode ?? '').trim();
+    if (BRAND_PINCODE.test(pincode)) {
+      hiddenIds.push(...(await brandDeliveryPincodeService.brandsNotDeliveringTo(pincode)));
+    }
+    if (hiddenIds.length > 0) {
+      q.brand_id = { $nin: hiddenIds };
     }
     const docs = await InventoryProductModel.find(q).sort({ product_name: 1 }).limit(300);
     const podAvailability = await this.podAvailabilityByProduct(docs.map((d) => String(d._id)));
@@ -1573,8 +1596,19 @@ export const inventoryService = {
 
   async create(input: any, user: AuthUser | null) {
     validateInput(input);
-    // The Add form only creates Duncit-owned products, which must have a warehouse.
-    await assertDuncitWarehouse(input.pickup_location_id);
+    const brand = await adminCreateBrand(input.brand_id);
+    // A brand product ships from one of the brand's own approved warehouses; a
+    // Duncit product from a Duncit one.
+    if (brand) {
+      if (!input.pickup_location_id) {
+        throw new GraphQLError('Select the brand pickup address this product ships from', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+      await assertBrandWarehouse(input.pickup_location_id, brand._id);
+    } else {
+      await assertDuncitWarehouse(input.pickup_location_id);
+    }
     const sku = input.sku?.trim() ? String(input.sku).trim().toUpperCase() : await generateUniqueSku();
     const existing = await InventoryProductModel.findOne({ sku });
     if (existing) throw new GraphQLError('Product SKU already exists', { extensions: { code: 'CONFLICT' } });
@@ -1587,13 +1621,23 @@ export const inventoryService = {
       last_updated_by_id: info.id,
     });
     applyInput(doc, { ...input, sku });
-    // The Products-portal Add form only ever creates Duncit-owned catalogue
-    // products; external brand products come exclusively via submitProductListing.
-    doc.ownership = 'DUNCIT';
-    doc.brand_id = null;
+    if (brand) {
+      // A Products admin adding to a brand's catalogue: the product is the
+      // brand's (its partner manages it like their own listing) and is live
+      // straight away — staff created it, so there is nothing to review.
+      doc.ownership = 'BRAND';
+      doc.brand_id = brand._id;
+      doc.brand_name = brand.brand_name ?? '';
+      doc.listing_review_status = 'APPROVED';
+      doc.listing_submitted_by_id = brand.owner_user_id.toHexString();
+      doc.listing_submitted_by_name = brand.brand_name ?? '';
+    } else {
+      doc.ownership = 'DUNCIT';
+      doc.brand_id = null;
+    }
     await assertProductSaveable(doc, true);
     await doc.save();
-    await logActivity(doc._id, user, 'CREATE', ['*']);
+    await logActivity(doc._id, user, 'CREATE', ['*'], brand ? 'Added to the brand catalogue by a Products admin' : '');
     if (doc.inventory_count > 0) {
       await InventoryStockMovementModel.create({
         product_id: doc._id,

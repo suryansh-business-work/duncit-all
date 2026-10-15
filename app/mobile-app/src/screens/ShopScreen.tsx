@@ -67,11 +67,18 @@ export function ShopScreen() {
     [t],
   );
 
+  // The "Deliver to" pincode, once the bar knows it (null until then) — the
+  // list leaves out brands that do not deliver there.
+  const [pincode, setPincode] = useState<string | null>(null);
+
   useEffect(() => {
+    if (pincode === null) return;
     let active = true;
     setIsLoading(true);
     setFailed(false);
-    graphqlRequest(ShopProductsDocument, undefined, { auth: true })
+    graphqlRequest(ShopProductsDocument, pincode ? { deliveryPincode: pincode } : {}, {
+      auth: true,
+    })
       .then((data) => active && setProducts(data.availablePodProducts))
       .catch((error: unknown) => {
         logs.mobileApp.error('ShopScreen', 'loadProducts', { error });
@@ -81,7 +88,7 @@ export function ShopScreen() {
     return () => {
       active = false;
     };
-  }, [attempt]);
+  }, [attempt, pincode]);
 
   // Pull-to-refresh reloads the catalogue.
   useRefreshRegistration(reload);
@@ -139,7 +146,7 @@ export function ShopScreen() {
   return (
     <StackScreen title={t('mweb.shop.title')} testID="shop-screen">
       {/* Where the shop's orders ship to — the shop's stand-in for the city pill. */}
-      <DeliveryAddressBar />
+      <DeliveryAddressBar onPincodeChange={setPincode} />
       <RefreshScrollView
         flex={1}
         contentContainerStyle={{ gap: 20, paddingTop: 4, paddingBottom: 32 }}

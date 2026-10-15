@@ -383,9 +383,11 @@ export const inventoryTypeDefs = /* GraphQL */ `
     mrp: Float
     "How this product reaches the buyer. SHIPROCKET is what makes the checkout rate the parcel live from the pickup_location_id warehouse pincode; HOST/VENUE are hand-carried and never quoted."
     delivery_target: ProductListingDeliveryTarget
-    "Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side)."
+    "Duncit warehouse (owner_kind DUNCIT) origin — or, with brand_id, one of that brand's approved warehouses. Required (enforced server-side)."
     pickup_location_id: ID
     is_active: Boolean
+    "Products portal: add the product to this brand's catalogue (ownership BRAND, approved and live) instead of Duncit's."
+    brand_id: ID
   }
 
   input UpdateInventoryProductInput {
@@ -523,7 +525,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     myProductListingsTable(brand_id: ID, query: TableQueryInput): InventoryProductTablePage!
     "Brand-admin analytics for one of the caller's own products."
     myProductAnalytics(product_doc_id: ID!): ProductAnalytics!
-    availablePodProducts(super_category_id: ID, category_id: ID, sub_category_id: ID): [InventoryProduct!]!
+    "Approved, live products for pods and the Pod Shop. delivery_pincode (the buyer's Deliver-to PIN) hides brands whose delivery area leaves it out."
+    availablePodProducts(super_category_id: ID, category_id: ID, sub_category_id: ID, delivery_pincode: String): [InventoryProduct!]!
     inventoryProduct(product_doc_id: ID!): InventoryProduct
     "Public read of a single product (any signed-in user) — powers the product-detail view on a pod's shop."
     publicInventoryProduct(product_doc_id: ID!): InventoryProduct

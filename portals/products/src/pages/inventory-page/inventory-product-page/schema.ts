@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { PACKAGE_TYPES } from '@duncit/utils';
 import { catalogueRules, type Translate } from './packagingRules';
+import { managesWarehouse } from './types';
 
 const SKU_PATTERN = /^[A-Z0-9-]*$/;
 
@@ -32,6 +33,7 @@ export const productSchema = z
   .object({
     id: z.string().optional(),
     ownership: z.enum(['DUNCIT', 'BRAND']),
+    new_brand_id: z.string(),
 
     product_name: z
       .string()
@@ -97,7 +99,7 @@ export const productSchema = z
     delivery_available: z.boolean(),
     delivery_charge: z.number({ error: 'Number required' }).min(0).max(100000),
     delivery_target: z.enum(['HOST', 'VENUE', 'SHIPROCKET']),
-    // Required for Duncit products only — see the ownership refine below.
+    // Required whenever this form manages the warehouse — see the refine below.
     pickup_location_id: z.string(),
 
     height_cm: parcelNumber,
@@ -120,10 +122,11 @@ export const productSchema = z
         message: 'Max order qty must be ≥ min order qty',
       });
     }
-    // Every Duncit product must ship from a Duncit warehouse (its rate/shipment
-    // origin). A brand product keeps the brand's own warehouse, which this form
+    // Every Duncit product ships from a Duncit warehouse, and a product added to
+    // a brand from one of the brand's (its rate/shipment origin). An existing
+    // brand product keeps the warehouse it was listed with, which this form
     // does not list, so the field stays optional there.
-    if (values.ownership === 'DUNCIT' && values.pickup_location_id.length === 0) {
+    if (managesWarehouse(values) && values.pickup_location_id.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['pickup_location_id'],

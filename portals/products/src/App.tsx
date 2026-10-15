@@ -61,6 +61,10 @@ export default function App() {
         element={products(<CatalogBrandProductsPage />)}
       />
       <Route
+        path="/catalog/brands/:brandId/products/new"
+        element={products(<InventoryProductPage />)}
+      />
+      <Route
         path="/catalog/brands/:brandId/products/:id/edit"
         element={products(<InventoryProductPage />)}
       />

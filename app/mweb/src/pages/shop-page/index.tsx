@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useQuery } from '@apollo/client/react';
+import { skipToken, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import SearchOffRoundedIcon from '@mui/icons-material/SearchOffRounded';
@@ -16,6 +16,7 @@ import ShopProductCard from './ShopProductCard';
 import ShopFilterBar from './ShopFilterBar';
 import FilterChipRow, { withAll } from './ShopFilterBar/FilterChipRow';
 import { useQuickAddToCart } from './useQuickAddToCart';
+import { useDeliveryAddress } from '../../hooks/useDeliveryAddress';
 import { useShopFilters } from './useShopFilters';
 import { SHOP_PRODUCTS, type ShopProduct } from './queries';
 
@@ -28,10 +29,19 @@ export default function ShopPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
-  const { data, loading, error, refetch } = useQuery<{ availablePodProducts: ShopProduct[] }>(
+  // The "Deliver to" pincode hides brands that do not deliver there; wait for
+  // it so the list is not fetched twice on open.
+  const delivery = useDeliveryAddress();
+  const { data, loading: productsLoading, error, refetch } = useQuery<{ availablePodProducts: ShopProduct[] }>(
     SHOP_PRODUCTS,
-    { fetchPolicy: 'cache-and-network' },
+    delivery.loading
+      ? skipToken
+      : {
+          variables: delivery.selected?.pincode ? { deliveryPincode: delivery.selected.pincode } : {},
+          fetchPolicy: 'cache-and-network',
+        },
   );
+  const loading = productsLoading || delivery.loading;
   const { all, matchesCategory } = useSearchCategories();
   const { addingId, lineOf, setQuantity } = useQuickAddToCart();
   const products = useMemo<ShopProduct[]>(() => data?.availablePodProducts ?? [], [data]);

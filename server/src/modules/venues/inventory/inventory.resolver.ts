@@ -97,7 +97,12 @@ export const inventoryResolvers = {
     },
     availablePodProducts: async (
       _p: unknown,
-      args: { super_category_id?: string | null; category_id?: string | null; sub_category_id?: string | null },
+      args: {
+        super_category_id?: string | null;
+        category_id?: string | null;
+        sub_category_id?: string | null;
+        delivery_pincode?: string | null;
+      },
       ctx: GraphQLContext
     ) => {
       requireAuth(ctx);

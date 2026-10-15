@@ -3146,6 +3146,46 @@ export type BrandConsent = {
   signed_name: Scalars['String']['output'];
 };
 
+/** One pincode a brand delivers to. serviceable is null until a ShipRocket sync has checked it. */
+export type BrandDeliveryPincode = {
+  __typename?: 'BrandDeliveryPincode';
+  checked_at?: Maybe<Scalars['String']['output']>;
+  courier_name: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  etd: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  pincode: Scalars['String']['output'];
+  serviceable?: Maybe<Scalars['Boolean']['output']>;
+  sync_error: Scalars['String']['output'];
+};
+
+export type BrandDeliveryPincodeAddResult = {
+  __typename?: 'BrandDeliveryPincodeAddResult';
+  added: Scalars['Int']['output'];
+  duplicates: Scalars['Int']['output'];
+  /** Entries that are not a 6-digit Indian PIN, as typed. */
+  invalid: Array<Scalars['String']['output']>;
+};
+
+export type BrandDeliveryPincodePage = {
+  __typename?: 'BrandDeliveryPincodePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<BrandDeliveryPincode>;
+  total: Scalars['Int']['output'];
+};
+
+export type BrandDeliveryPincodeSyncResult = {
+  __typename?: 'BrandDeliveryPincodeSyncResult';
+  checked: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  serviceable: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  /** Pincodes never checked yet — press Sync again to continue. */
+  unchecked: Scalars['Int']['output'];
+  unserviceable: Scalars['Int']['output'];
+};
+
 /** The two accounts a brand ships and gets paid through. Each brand holds its own — never the Tech portal's. */
 export type BrandIntegrationProvider =
   | 'RAZORPAY'
@@ -10821,6 +10861,8 @@ export type InventoryProduct = {
 export type InventoryProductInput = {
   barcode?: InputMaybe<Scalars['String']['input']>;
   batch_number?: InputMaybe<Scalars['String']['input']>;
+  /** Products portal: add the product to this brand's catalogue (ownership BRAND, approved and live) instead of Duncit's. */
+  brand_id?: InputMaybe<Scalars['ID']['input']>;
   brand_name?: InputMaybe<Scalars['String']['input']>;
   breadth_cm?: InputMaybe<Scalars['Float']['input']>;
   category_id?: InputMaybe<Scalars['ID']['input']>;
@@ -10852,7 +10894,7 @@ export type InventoryProductInput = {
   mrp?: InputMaybe<Scalars['Float']['input']>;
   /** How a unit is packed for the courier (default BOX). */
   package_type?: InputMaybe<PackageType>;
-  /** Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side). */
+  /** Duncit warehouse (owner_kind DUNCIT) origin — or, with brand_id, one of that brand's approved warehouses. Required (enforced server-side). */
   pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   pod_available?: InputMaybe<Scalars['Boolean']['input']>;
   product_name: Scalars['String']['input'];
@@ -12364,6 +12406,8 @@ export type Mutation = {
    * dropped rather than stored.
    */
   addAudienceListMembers: AudienceList;
+  /** Products portal: add pincodes to a brand's delivery area (duplicates skipped, invalid ones reported). */
+  addBrandDeliveryPincodes: BrandDeliveryPincodeAddResult;
   /** Submit or update a star rating (1-5) on a club. Requires authentication. */
   addClubRating: Club;
   /** Append an uploaded image to the template's library (persists immediately). */
@@ -13484,6 +13528,8 @@ export type Mutation = {
    * return. Removing somebody the list never held succeeds quietly.
    */
   removeAudienceListMember: AudienceList;
+  /** Products portal: remove pincodes from a brand's delivery area. */
+  removeBrandDeliveryPincodes: Scalars['Int']['output'];
   /** Primary host withdraws an invite / removes a co-host. */
   removeCoHost: Pod;
   removeCrmEmailTemplateImage: CrmEmailTemplate;
@@ -14331,6 +14377,8 @@ export type Mutation = {
   subscribeNewsletter: NewsletterSubscribeResult;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
+  /** Products portal: check the next batch of a brand's pincodes against ShipRocket from its own warehouse. */
+  syncBrandDeliveryPincodes: BrandDeliveryPincodeSyncResult;
   /**
    * Match a phone book against Duncit accounts and remember the hits.
    *
@@ -14716,6 +14764,12 @@ export type MutationAcknowledgeHostRequestArgs = {
 export type MutationAddAudienceListMembersArgs = {
   id: Scalars['ID']['input'];
   user_ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationAddBrandDeliveryPincodesArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  pincodes: Array<Scalars['String']['input']>;
 };
 
 
@@ -17264,6 +17318,12 @@ export type MutationRemoveAudienceListMemberArgs = {
 };
 
 
+export type MutationRemoveBrandDeliveryPincodesArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
 export type MutationRemoveCoHostArgs = {
   pod_doc_id: Scalars['ID']['input'];
   user_id: Scalars['ID']['input'];
@@ -19124,6 +19184,11 @@ export type MutationSubscribeNewsletterArgs = {
 
 export type MutationSupportCreateUserArgs = {
   input: SupportCreateUserInput;
+};
+
+
+export type MutationSyncBrandDeliveryPincodesArgs = {
+  brand_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -25123,6 +25188,7 @@ export type Query = {
   automationRuns: Array<AutomationRun>;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
+  /** Approved, live products for pods and the Pod Shop. delivery_pincode (the buyer's Deliver-to PIN) hides brands whose delivery area leaves it out. */
   availablePodProducts: Array<InventoryProduct>;
   /** Public: the coupons a guest can pick from at this venue's checkout right now, best first. Empty when the venue is not taking orders. */
   availableVenueFoodCoupons: Array<AvailableVenueFoodCoupon>;
@@ -25146,6 +25212,8 @@ export type Query = {
   brandAnalytics: BrandAnalytics;
   /** The Brand Consent Legal publishes for brand partners to sign (slug brand-partner-consent). Null until Legal writes one. */
   brandConsentPolicy?: Maybe<Policy>;
+  /** Products portal: the pincodes a brand delivers to. An empty list means the brand delivers everywhere. */
+  brandDeliveryPincodesTable: BrandDeliveryPincodePage;
   /** Products portal: the products that ship from a pickup address. */
   brandPickupLocationUsage: BrandPickupUsage;
   /** Pickup addresses of a Duncit or brand owner (Products portal). */
@@ -27065,6 +27133,7 @@ export type QueryAvailableCouponsForPodArgs = {
 
 export type QueryAvailablePodProductsArgs = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
+  delivery_pincode?: InputMaybe<Scalars['String']['input']>;
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -27140,6 +27209,12 @@ export type QueryBouncerSosAlertsArgs = {
 export type QueryBrandAnalyticsArgs = {
   brand_doc_id: Scalars['ID']['input'];
   days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryBrandDeliveryPincodesTableArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
 };
 
 

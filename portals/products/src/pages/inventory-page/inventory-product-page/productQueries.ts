@@ -191,3 +191,13 @@ export const AI_DESCRIBE_PRODUCT = gql`
     aiDescribeInventoryProduct(input: $input)
   }
 `;
+
+/** The brand a new product is being added to — prefills the form's brand name. */
+export const NEW_PRODUCT_BRAND = gql`
+  query NewProductBrand($id: ID!) {
+    ecommBrand(brand_doc_id: $id) {
+      id
+      brand_name
+    }
+  }
+`;

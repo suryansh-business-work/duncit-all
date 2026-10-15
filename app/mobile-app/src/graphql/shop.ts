@@ -1,11 +1,12 @@
 import { gql } from '@/generated/graphql';
 
 /** Every approved, pod-available product platform-wide — the Pod Shop browse
- * catalogue (sidebar). Category filter/search/sort run client-side. RN twin of
+ * catalogue (sidebar). Category filter/search/sort run client-side; the
+ * "Deliver to" pincode leaves out brands that do not deliver there. RN twin of
  * mWeb's SHOP_PRODUCTS. */
 export const ShopProductsDocument = gql(`
-  query MobileShopProducts {
-    availablePodProducts {
+  query MobileShopProducts($deliveryPincode: String) {
+    availablePodProducts(delivery_pincode: $deliveryPincode) {
       id
       product_name
       brand_name

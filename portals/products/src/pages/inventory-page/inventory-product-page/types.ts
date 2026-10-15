@@ -27,6 +27,9 @@ export interface InventoryProductFormValues {
   /** Read-only context: who owns the product. Drives the Duncit-only fields;
    * never submitted (it is not part of UpdateInventoryProductInput). */
   ownership: ProductOwnership;
+  /** Read-only context: the brand a NEW product is being added to from that
+   * brand's catalogue, '' otherwise. Submitted as the create input's brand_id. */
+  new_brand_id: string;
 
   product_name: string;
   sku: string;
@@ -95,6 +98,7 @@ export interface InventoryProductFormValues {
 
 export const blankProductForm: InventoryProductFormValues = {
   ownership: 'DUNCIT',
+  new_brand_id: '',
   product_name: '',
   sku: '',
   barcode: '',
@@ -145,6 +149,11 @@ export const blankProductForm: InventoryProductFormValues = {
   mrp: 0,
 };
 
+/** Whether this form picks the product's warehouse and delivery method: every
+ * Duncit product, and a new product being added to a brand's catalogue. */
+export const managesWarehouse = (values: Pick<InventoryProductFormValues, 'ownership' | 'new_brand_id'>) =>
+  values.ownership === 'DUNCIT' || values.new_brand_id !== '';
+
 export function toFormValues(product: any): InventoryProductFormValues {
   if (!product) return blankProductForm;
   const dateOnly = (iso: string | null | undefined) =>
@@ -152,6 +161,7 @@ export function toFormValues(product: any): InventoryProductFormValues {
   return {
     id: product.id,
     ownership: (product.ownership as ProductOwnership) ?? 'DUNCIT',
+    new_brand_id: '',
     product_name: product.product_name ?? '',
     sku: product.sku ?? '',
     barcode: product.barcode ?? '',
@@ -205,7 +215,7 @@ export function toFormValues(product: any): InventoryProductFormValues {
 
 export function toSubmitInput(values: InventoryProductFormValues) {
   // `ownership` is read-only context, not a field of UpdateInventoryProductInput.
-  const { id: _id, ownership, pickup_location_id, delivery_target, ...rest } = values;
+  const { id: _id, ownership, new_brand_id, pickup_location_id, delivery_target, ...rest } = values;
   const input = {
     ...rest,
     sku: rest.sku.trim().toUpperCase(),
@@ -214,9 +224,11 @@ export function toSubmitInput(values: InventoryProductFormValues) {
     manufacturing_date: rest.manufacturing_date || null,
     images: rest.images.filter(Boolean),
   };
-  // A brand-owned product ships from the brand's own warehouse, which this form
-  // never lists — so it must not write that field, or the delivery method that
-  // depends on it, back either.
+  // Adding to a brand's catalogue: the warehouse is one of that brand's own.
+  if (new_brand_id) return { ...input, delivery_target, pickup_location_id, brand_id: new_brand_id };
+  // An existing brand product keeps the warehouse it was listed with, which
+  // this form does not manage — so it must not write that field, or the
+  // delivery method that depends on it, back either.
   if (ownership === 'BRAND') return input;
   return { ...input, delivery_target, pickup_location_id };
 }

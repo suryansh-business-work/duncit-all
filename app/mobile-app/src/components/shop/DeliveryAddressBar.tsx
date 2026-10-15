@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -18,8 +18,12 @@ import type { RootStackParamList } from '@/navigation/types';
 /** The Pod Shop's "Deliver to" bar under the back bar — the address the shop's
  * orders ship to, from the buyer's address book, in place of a city. Tapping
  * lists every saved address to switch between, with a way into the address
- * book. RN twin of mWeb's HeaderDeliveryAddress. */
-export function DeliveryAddressBar() {
+ * book. Reports the chosen pincode ('' for none) once the address book has
+ * loaded, so the shop can leave out brands that do not deliver there. RN twin
+ * of mWeb's HeaderDeliveryAddress. */
+export function DeliveryAddressBar({
+  onPincodeChange,
+}: Readonly<{ onPincodeChange?: (pincode: string) => void }>) {
   const { t } = useTranslation();
   const { accent, muted } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -27,6 +31,10 @@ export function DeliveryAddressBar() {
   const { addresses, selected, select, loading, failed, reload } =
     useDeliveryAddress(isAuthenticated);
   const [open, setOpen] = useState(false);
+  const pincode = selected?.pincode ?? '';
+  useEffect(() => {
+    if (!loading) onPincodeChange?.(pincode);
+  }, [loading, pincode, onPincodeChange]);
   const manage = () => {
     setOpen(false);
     navigation.navigate('AddressBook');

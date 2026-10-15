@@ -4,8 +4,10 @@ import { partnerIntegrationService, type PartnerIntegrationInput } from './partn
 import type { BrandShippingMode } from './ecommBrand.model';
 import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
+import type { TableQueryInput } from '@utils/table-query';
 import { hasRole, requireRole } from '@middleware/rbac';
 import { brandAnalytics } from './ecommBrand.analytics';
+import { brandDeliveryPincodeService } from './brandDeliveryPincode.service';
 import { ADMIN_RW } from '@modules/venues/inventory/inventory.resolver';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 
@@ -95,8 +97,25 @@ export const ecommBrandResolvers = {
     },
     myPartnerIntegrations: (_p: unknown, args: { provider?: Provider | null }, ctx: GraphQLContext) =>
       partnerIntegrationService.listMine(uid(ctx), args.provider),
+    // A brand's delivery area is managed by the products team, like its catalogue.
+    brandDeliveryPincodesTable: (_p: unknown, args: { brand_doc_id: string; query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return brandDeliveryPincodeService.table(args.brand_doc_id, args.query);
+    },
   },
   Mutation: {
+    addBrandDeliveryPincodes: (_p: unknown, args: { brand_doc_id: string; pincodes: string[] }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return brandDeliveryPincodeService.add(args.brand_doc_id, args.pincodes, ctx.user);
+    },
+    removeBrandDeliveryPincodes: (_p: unknown, args: { brand_doc_id: string; ids: string[] }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return brandDeliveryPincodeService.remove(args.brand_doc_id, args.ids, ctx.user);
+    },
+    syncBrandDeliveryPincodes: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return brandDeliveryPincodeService.sync(args.brand_doc_id, ctx.user);
+    },
     saveEcommBrand: (_p: unknown, args: { brand_doc_id?: string | null; input: any }, ctx: GraphQLContext) =>
       ecommBrandService.save(uid(ctx), args.brand_doc_id ?? null, args.input),
     submitEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) =>

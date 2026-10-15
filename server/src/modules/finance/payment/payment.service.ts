@@ -690,6 +690,15 @@ async function resolveProductPayable(input: any): Promise<ProductPayableResoluti
     });
   }
   const deliveryPincode = String(input.delivery_pincode || input.shipping_address?.pincode || '');
+  if (needsShipping) {
+    // A brand with a delivery area does not ship outside it — refuse before any
+    // payment is created rather than book a parcel no courier will carry.
+    const { brandDeliveryPincodeService } = await import('@modules/venues/ecommBrand/brandDeliveryPincode.service');
+    await brandDeliveryPincodeService.assertShippedProductsDeliverTo(
+      lines.map((l) => l.product_id),
+      deliveryPincode
+    );
+  }
   const { shiprocketService } = await import('@modules/commerce/shiprocket/shiprocket.service');
   const shipping = await shiprocketService.quoteShipping(items, deliveryPincode);
   return { lines, productsTotal, needs_shipping: needsShipping, shipping, deliveryPincode };

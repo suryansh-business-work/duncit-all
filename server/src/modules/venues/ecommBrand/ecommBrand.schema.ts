@@ -256,6 +256,42 @@ export const ecommBrandTypeDefs = gql`
     page_size: Int!
   }
 
+  "One pincode a brand delivers to. serviceable is null until a ShipRocket sync has checked it."
+  type BrandDeliveryPincode {
+    id: ID!
+    pincode: String!
+    serviceable: Boolean
+    courier_name: String!
+    etd: String!
+    checked_at: String
+    sync_error: String!
+    created_at: String
+  }
+
+  type BrandDeliveryPincodePage {
+    rows: [BrandDeliveryPincode!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  type BrandDeliveryPincodeAddResult {
+    added: Int!
+    duplicates: Int!
+    "Entries that are not a 6-digit Indian PIN, as typed."
+    invalid: [String!]!
+  }
+
+  type BrandDeliveryPincodeSyncResult {
+    checked: Int!
+    serviceable: Int!
+    unserviceable: Int!
+    failed: Int!
+    total: Int!
+    "Pincodes never checked yet — press Sync again to continue."
+    unchecked: Int!
+  }
+
   "One day of a brand's sales (UTC date)."
   type BrandAnalyticsPoint {
     date: String!
@@ -310,9 +346,17 @@ export const ecommBrandTypeDefs = gql`
     brandConsentPolicy: Policy
     "Partner: the Razorpay / ShipRocket connections they saved on the Integrations page, newest first."
     myPartnerIntegrations(provider: BrandIntegrationProvider): [PartnerIntegration!]!
+    "Products portal: the pincodes a brand delivers to. An empty list means the brand delivers everywhere."
+    brandDeliveryPincodesTable(brand_doc_id: ID!, query: TableQueryInput): BrandDeliveryPincodePage!
   }
 
   extend type Mutation {
+    "Products portal: add pincodes to a brand's delivery area (duplicates skipped, invalid ones reported)."
+    addBrandDeliveryPincodes(brand_doc_id: ID!, pincodes: [String!]!): BrandDeliveryPincodeAddResult!
+    "Products portal: remove pincodes from a brand's delivery area."
+    removeBrandDeliveryPincodes(brand_doc_id: ID!, ids: [ID!]!): Int!
+    "Products portal: check the next batch of a brand's pincodes against ShipRocket from its own warehouse."
+    syncBrandDeliveryPincodes(brand_doc_id: ID!): BrandDeliveryPincodeSyncResult!
     "Partner: create a new brand (omit brand_doc_id) or update an owned draft."
     saveEcommBrand(brand_doc_id: ID, input: EcommBrandInput!): EcommBrand!
     "Partner: submit an owned brand for onboarding review."

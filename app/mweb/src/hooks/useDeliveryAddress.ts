@@ -5,6 +5,9 @@ import { DELIVERY_ADDRESS_STORAGE_KEY, pickDeliveryAddress } from '@duncit/utils
 import { MY_ADDRESSES } from '../pages/account-page/AddressBookSection';
 import type { UserAddress } from '../pages/account-page/address-book-form';
 
+/** Fired on every pick so each mounted reader follows it. */
+const PICK_EVENT = 'duncit:delivery-address-picked';
+
 function readPickedId(): string {
   try {
     return localStorage.getItem(DELIVERY_ADDRESS_STORAGE_KEY) ?? '';
@@ -41,9 +44,18 @@ export function useDeliveryAddress(enabled = true) {
     if (error) logs.mWeb.error('useDeliveryAddress', 'loadAddresses', { error });
   }, [error]);
 
+  // A pick in one reader (the header pill) moves every other mounted one — the
+  // Pod Shop list re-filters by the new pincode without a reload.
+  useEffect(() => {
+    const onPick = (event: Event) => setPickedId((event as CustomEvent<string>).detail);
+    globalThis.addEventListener(PICK_EVENT, onPick);
+    return () => globalThis.removeEventListener(PICK_EVENT, onPick);
+  }, []);
+
   const select = useCallback((id: string) => {
     setPickedId(id);
     writePickedId(id);
+    globalThis.dispatchEvent(new CustomEvent(PICK_EVENT, { detail: id }));
   }, []);
 
   return { addresses, selected, select, loading: loading && !data, error, refetch };

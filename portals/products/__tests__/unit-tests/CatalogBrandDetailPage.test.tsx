@@ -30,6 +30,10 @@ vi.mock('../../src/pages/catalog-brands/BrandCommercePanel', () => ({
   default: () => <div data-testid="commerce" />,
 }));
 
+vi.mock('../../src/pages/catalog-brands/delivery-pincodes/BrandDeliveryPincodesPanel', () => ({
+  default: ({ brandId }: { brandId: string }) => <div data-testid="delivery-pincodes">{brandId}</div>,
+}));
+
 const form = vi.hoisted(() => ({ props: null as null | Record<string, any> }));
 vi.mock('../../src/pages/catalog-brands/brand-form', async (io) => ({
   ...(await io<typeof import('../../src/pages/catalog-brands/brand-form')>()),

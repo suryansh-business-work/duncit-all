@@ -18,6 +18,7 @@ const POD_SETTINGS = gql`
     appSettings {
       draft_retention_days
       max_backout_attempts
+      max_free_spot_cancellations
       venue_cancel_health_penalty
       attendance_otp_required
       pod_complete_timeout_hours
@@ -49,6 +50,7 @@ const UPDATE_POD_SETTINGS = gql`
     updateAppSettings(input: $input) {
       draft_retention_days
       max_backout_attempts
+      max_free_spot_cancellations
       venue_cancel_health_penalty
       attendance_otp_required
       pod_complete_timeout_hours
@@ -80,6 +82,7 @@ type SavedPodSettings = Record<string, number | boolean>;
 const SAVED: SavedPodSettings = {
   draft_retention_days: 3,
   max_backout_attempts: 3,
+  max_free_spot_cancellations: 5,
   venue_cancel_health_penalty: 5,
   attendance_otp_required: true,
   pod_complete_timeout_hours: 24,
@@ -280,6 +283,32 @@ describe('PodSettingsPage — Happening nearby window', () => {
     fireEvent.change(days, { target: { value: '14' } });
     fireEvent.click(saveIn(days));
 
+    await waitForToast();
+  });
+});
+
+describe('PodSettingsPage — free pod spot cancellations', () => {
+  const FREE_CANCEL_LABEL = 'Maximum Spot Cancellations per User Per Free Pod';
+
+  it('shows the saved cap with its hint, refuses 0 and saves only its own field', async () => {
+    renderPage([settingsMock(), publicMock(), updateOk({ max_free_spot_cancellations: 2 })]);
+
+    const cap = screen.getByLabelText(FREE_CANCEL_LABEL);
+    await waitFor(() => expect(cap).toHaveValue(5));
+    expect(cardOf(cap).getByText('Minimum 1 cancellation. Default 5.')).toBeInTheDocument();
+    expect(saveIn(cap)).toBeDisabled();
+
+    fireEvent.change(cap, { target: { value: '0' } });
+    expect(saveIn(cap)).toBeDisabled();
+    expect(cardOf(cap).getByText('Enter a whole number of 1 or more.')).toBeInTheDocument();
+
+    fireEvent.change(cap, { target: { value: '1.5' } });
+    expect(saveIn(cap)).toBeDisabled();
+
+    fireEvent.change(cap, { target: { value: '2' } });
+    fireEvent.click(saveIn(cap));
+
+    // A mismatch in the mutation variables would leave the snackbar unrendered.
     await waitForToast();
   });
 });

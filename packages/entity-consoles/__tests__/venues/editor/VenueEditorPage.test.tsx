@@ -49,7 +49,7 @@ vi.mock('../../../src/venues/editor/sections/CancellationSection', () => stub('c
 vi.mock('../../../src/venues/editor/sections/StatusSection', () => stub('status'));
 
 const submit = () => undefined;
-const CONFIG = { category_limit: 4, capacity_item_limit: 50 };
+const CONFIG = { category_limit: 4, capacity_item_limit: 50, venue_video_limit: 2 };
 
 const editorState = (over: Record<string, unknown> = {}) => ({
   form: { control: 'ctl', setValue: 'setter', handleSubmit: (fn: unknown) => `submit(${String(fn === submit)})` },
@@ -123,10 +123,14 @@ describe('VenueEditorPage', () => {
       onPick: 'pick-fn',
       categoryLimit: 4,
       minCategories: 0,
+      // Videos are filed under the venue, which a new venue does not have yet.
+      venueId: '',
+      videoLimit: 2,
     });
     expect(state.sections['type-capacity']).toEqual({ control: 'ctl', setValue: 'setter', config: CONFIG });
     // Dish photos go through the shared picker, filed under the venue — which a new venue does not have yet.
-    expect(state.sections.food).toEqual({ control: 'ctl', config: CONFIG, venueId: '' });
+    // No saved tables yet, so no stickers to print.
+    expect(state.sections.food).toEqual({ control: 'ctl', config: CONFIG, venueId: '', hasSavedTables: false });
     expect(state.sections.amenities).toEqual({ control: 'ctl', config: CONFIG });
     expect(state.sections.documents).toEqual({ control: 'ctl', config: CONFIG, onPick: 'pick-fn' });
     expect(state.sections.owner).toEqual({ control: 'ctl', setValue: 'setter', isEdit: false });
@@ -154,7 +158,13 @@ describe('VenueEditorPage', () => {
       busy: true,
       error: 'Server said no',
     });
-    expect(state.sections.details).toMatchObject({ minCategories: 1 });
+    expect(state.sections.details).toMatchObject({ minCategories: 1, venueId: 'v-1', videoLimit: 2 });
+    // The stickers are named after the venue and print its saved tables.
+    expect(state.sections.food).toMatchObject({
+      venueId: 'v-1',
+      venueName: 'Third Wave Coffee, Indiranagar',
+      hasSavedTables: true,
+    });
     expect(state.sections.owner).toMatchObject({ isEdit: true });
     expect(state.sections.status).toMatchObject({ canGovern: false });
   });
@@ -169,6 +179,14 @@ describe('VenueEditorPage', () => {
     renderPage('/venues/v-1/edit');
 
     expect(state.sections.details).toMatchObject({ minCategories: 0 });
+  });
+
+  it('offers no stickers for a stored venue with no tables saved', () => {
+    for (const food_tables of [[], null, undefined]) {
+      state.editor = editorState({ isEdit: true, venue: { ...venueRecord, food_tables } });
+      renderPage('/venues/v-1/edit');
+      expect(state.sections.food).toMatchObject({ hasSavedTables: false });
+    }
   });
 
   it('falls back to the generic edit title for a venue with no name', () => {

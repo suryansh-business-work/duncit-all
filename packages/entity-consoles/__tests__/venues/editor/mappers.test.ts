@@ -293,6 +293,9 @@ describe('valuesToStep1', () => {
       diet: '',
       spice_level: '',
       is_available: true,
+      videos: [],
+      original_price: '',
+      saving_display: 'PERCENT',
     });
     const [stored, added] = valuesToStep1(values).food_menu ?? [];
 
@@ -378,5 +381,64 @@ describe('valuesToSettingsInput', () => {
     expect(input.weekly_off_days).toEqual(venueRecord.settings.weekly_off_days);
     expect(input.holidays).toEqual(venueRecord.settings.holidays);
     expect(input.rules).toEqual(venueRecord.settings.rules);
+  });
+});
+
+describe('the venue videos, food licences and tables', () => {
+  it('opens the stored videos, licences and tables on the form', () => {
+    const values = venueToValues(venueRecord);
+    expect(values.videos).toEqual(['https://ik.imagekit.io/duncit/venues/tw-tour.mp4']);
+    expect(values.food_licences).toEqual({
+      fssai_number: '10020011000123',
+      fssai_document_url: 'https://ik.imagekit.io/duncit/venues/fssai.pdf',
+      liquor_licence_number: '',
+      liquor_document_url: '',
+    });
+    expect(values.food_tables).toBe('1, 2, Terrace');
+    expect(values.food_menu[0]).toMatchObject({
+      videos: ['https://youtu.be/dQw4w9WgXcQ'],
+      original_price: 200,
+      saving_display: 'PERCENT',
+    });
+  });
+
+  it('opens a record read before these fields existed on blanks, not on undefined', () => {
+    const values = venueToValues({ ...venueRecord, videos: undefined, food_licences: null, food_tables: null });
+    expect(values.videos).toEqual([]);
+    expect(values.food_licences).toEqual(blankVenueValues.food_licences);
+    expect(values.food_tables).toBe('');
+  });
+
+  it('sends the videos with the record, and the licences and parsed tables with the food block', () => {
+    const values = venueToValues(venueRecord);
+    values.videos = [...values.videos, 'https://youtu.be/dQw4w9WgXcQ'];
+    values.food_licences = { ...values.food_licences, liquor_licence_number: '  KA-BAR-77 ' };
+    values.food_tables = '1, 2, terrace, Patio\nRoof';
+    const step1 = valuesToStep1(values);
+
+    expect(step1.videos).toEqual(['https://ik.imagekit.io/duncit/venues/tw-tour.mp4', 'https://youtu.be/dQw4w9WgXcQ']);
+    expect(step1.food_licences).toMatchObject({ fssai_number: '10020011000123', liquor_licence_number: 'KA-BAR-77' });
+    expect(step1.food_tables).toEqual(['1', '2', 'terrace', 'Patio', 'Roof']);
+    expect(step1.food_menu?.[0]).toMatchObject({ videos: ['https://youtu.be/dQw4w9WgXcQ'], original_price: 200 });
+  });
+
+  it('still sends the videos while the venue serves no food, but no licences or tables', () => {
+    const values = venueToValues(venueRecord);
+    values.offers_food = false;
+    const step1 = valuesToStep1(values);
+    expect(step1.videos).toEqual(['https://ik.imagekit.io/duncit/venues/tw-tour.mp4']);
+    expect(step1).not.toHaveProperty('food_licences');
+    expect(step1).not.toHaveProperty('food_tables');
+  });
+
+  it('starts a new venue with no videos, blank licences and no tables', () => {
+    expect(blankVenueValues.videos).toEqual([]);
+    expect(blankVenueValues.food_tables).toBe('');
+    expect(blankVenueValues.food_licences).toEqual({
+      fssai_number: '',
+      fssai_document_url: '',
+      liquor_licence_number: '',
+      liquor_document_url: '',
+    });
   });
 });

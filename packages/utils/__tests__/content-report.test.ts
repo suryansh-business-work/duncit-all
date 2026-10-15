@@ -3,6 +3,10 @@ import {
   canMarkReportOk,
   canTakeDownReport,
   isClubAdminOf,
+  MY_OPEN_REPORT_SDL,
+  REPORT_ALREADY_PENDING_CODE,
+  reportErrorKey,
+  reportPendingCopyKey,
   reportReasonNeedsDetails,
   reportSubmitError,
   type ReportDecisionState,
@@ -106,5 +110,40 @@ describe('isClubAdminOf', () => {
     expect(isClubAdminOf(null, 'admin-1')).toBe(false);
     expect(isClubAdminOf(undefined, 'admin-1')).toBe(false);
     expect(isClubAdminOf([], 'admin-1')).toBe(false);
+  });
+});
+
+describe('reportErrorKey', () => {
+  it('names the refusal for a report the same person already has open', () => {
+    expect(REPORT_ALREADY_PENDING_CODE).toBe('REPORT_ALREADY_PENDING');
+    expect(reportErrorKey('REPORT_ALREADY_PENDING')).toBe('contentReport.alreadyPending');
+  });
+
+  it('leaves every other code, and none, to the caller generic failure copy', () => {
+    expect(reportErrorKey('BAD_USER_INPUT')).toBeNull();
+    expect(reportErrorKey('report_already_pending')).toBeNull();
+    expect(reportErrorKey('')).toBeNull();
+    expect(reportErrorKey(null)).toBeNull();
+    expect(reportErrorKey(undefined)).toBeNull();
+  });
+});
+
+describe('reportPendingCopyKey', () => {
+  it('quotes the earlier report reference when the server gave one', () => {
+    expect(reportPendingCopyKey('RPT-0042')).toBe('contentReport.alreadyPendingRef');
+  });
+
+  it('falls back to the plain line without a reference', () => {
+    expect(reportPendingCopyKey('')).toBe('contentReport.alreadyPending');
+    expect(reportPendingCopyKey(null)).toBe('contentReport.alreadyPending');
+    expect(reportPendingCopyKey(undefined)).toBe('contentReport.alreadyPending');
+  });
+});
+
+describe('MY_OPEN_REPORT_SDL', () => {
+  it('asks for the viewer open report on one target, with only the id and reference', () => {
+    expect(MY_OPEN_REPORT_SDL).toContain('query MyOpenReport($id: ID!)');
+    expect(MY_OPEN_REPORT_SDL).toContain('myOpenReport(target_id: $id)');
+    expect(MY_OPEN_REPORT_SDL.replace(/\s+/g, ' ')).toContain('{ id report_no }');
   });
 });

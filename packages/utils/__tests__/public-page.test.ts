@@ -11,6 +11,7 @@ import {
   publicPagePosterFileName,
   publicPageQrFileName,
   publicPageTableLabelFileName,
+  publicPageTableStickersFileName,
   publicPageTiles,
   type PublicPageInsights,
 } from '../src/public-page';
@@ -95,6 +96,12 @@ describe('file names', () => {
   it('names the table label like the poster', () => {
     expect(publicPageTableLabelFileName('Dek Cafe')).toBe('dek-cafe-table-label.pdf');
     expect(publicPageTableLabelFileName('')).toBe('duncit-table-label.pdf');
+  });
+
+  it('names the per-table stickers like the table label', () => {
+    expect(publicPageTableStickersFileName('Dek Cafe')).toBe('dek-cafe-table-stickers.pdf');
+    expect(publicPageTableStickersFileName('  The Turf @ Koramangala! ')).toBe('the-turf-koramangala-table-stickers.pdf');
+    expect(publicPageTableStickersFileName('')).toBe('duncit-table-stickers.pdf');
   });
 });
 

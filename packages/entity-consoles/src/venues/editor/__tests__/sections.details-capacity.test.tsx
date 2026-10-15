@@ -21,7 +21,14 @@ describe('VenueDetailsSection', () => {
     renderForm<VenueFormValues>(
       venueValues(over),
       ({ control }) => (
-        <VenueDetailsSection control={control} onPick={onPick} categoryLimit={5} minCategories={minCategories} />
+        <VenueDetailsSection
+          control={control}
+          onPick={onPick}
+          categoryLimit={5}
+          minCategories={minCategories}
+          venueId="venue-1"
+          videoLimit={3}
+        />
       ),
       catalogueMocks,
     );

@@ -81,6 +81,10 @@ RUN pnpm install --frozen-lockfile
 
 COPY packages ./packages
 COPY portals/marketing ./portals/marketing
+# Contacts is the Analytics console's own page (src/pages/contacts-page mounts
+# it from that console's source), so that src folder is part of this build. Its
+# package.json is copied above, so its dependencies are installed.
+COPY portals/analytics/src ./portals/analytics/src
 RUN pnpm --filter marketing build
 
 # --- runner ---

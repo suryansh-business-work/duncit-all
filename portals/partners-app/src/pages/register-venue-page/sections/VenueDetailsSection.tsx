@@ -6,6 +6,7 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { RhfAdminCategoryRows } from '@duncit/category';
 import { fireAndForget, logs } from '@duncit/logs';
 import { AdminLocationSelect, Fieldset, MapEmbedCard, type AdminLocationValue } from '@duncit/location';
+import { VideoLinksField } from '@duncit/venue-food';
 import VenueImagesField from './VenueImagesField';
 import { NO_CATEGORY_LIMIT, type RegisterVenueMode, type RegisterVenueValues } from '../register-venue/register-venue.types';
 import { categoryLimitMessage } from '../register-venue/register-venue.schema';
@@ -16,11 +17,21 @@ interface Props {
   mode: RegisterVenueMode;
   /** From the registration config — the most categories one venue may have. */
   categoryLimit?: number;
+  /** The venue being edited — its videos are filed in its folder; none before the first save. */
+  venueId?: string;
+  /** From the registration config — the most videos the venue page may carry. */
+  videoLimit?: number;
 }
 
 const LOCATION_HINT = 'Where the venue is — used to match it to clubs in this locality.';
 
-export default function VenueDetailsSection({ form, mode, categoryLimit = NO_CATEGORY_LIMIT }: Readonly<Props>) {
+export default function VenueDetailsSection({
+  form,
+  mode,
+  categoryLimit = NO_CATEGORY_LIMIT,
+  venueId,
+  videoLimit = NO_CATEGORY_LIMIT,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { control, watch, setValue, trigger, formState } = form;
   const values = watch();
@@ -81,6 +92,16 @@ export default function VenueDetailsSection({ form, mode, categoryLimit = NO_CAT
         gallery={values.gallery}
         onCoverChange={(url) => setValue('cover_image_url', url, { shouldDirty: true, shouldValidate: true })}
         onGalleryChange={(urls) => setValue('gallery', urls, { shouldDirty: true })}
+      />
+      <VideoLinksField
+        videos={values.videos}
+        onChange={(urls) => setValue('videos', urls, { shouldDirty: true })}
+        limit={videoLimit}
+        name={values.venue_name}
+        venueId={venueId}
+        surface="PORTALS"
+        testId="register-venue-videos"
+        error={err('videos')}
       />
 
       <RhfAdminCategoryRows

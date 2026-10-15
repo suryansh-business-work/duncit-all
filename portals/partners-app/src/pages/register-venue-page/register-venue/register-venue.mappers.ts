@@ -1,7 +1,9 @@
 import { EMPTY_CATEGORY, isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
 import {
   foodDishToValues,
+  foodLicencesToValues,
   foodOrderingToValues,
+  foodTablesToValues,
   toVenueFoodInput,
   venueCategoryList,
   type VenueCategoryEntry,
@@ -79,6 +81,7 @@ export function venueToValues(
     description: venue.description || '',
     cover_image_url: venue.cover_image_url || '',
     gallery: venue.gallery || [],
+    videos: venue.videos || [],
     venue_categories: toCategoryRows(venue),
     address_line1: venue.address_line1 || '',
     address_line2: venue.address_line2 || '',
@@ -99,6 +102,8 @@ export function venueToValues(
     food_menu: (venue.food_menu ?? []).map(foodDishToValues),
     // What the server resolved — the venue's own GST, or Finance's default while it follows it.
     food_ordering: foodOrderingToValues(venue.food_ordering),
+    food_licences: foodLicencesToValues(venue.food_licences),
+    food_tables: foodTablesToValues(venue.food_tables),
     food_gstin: '',
     amenities: venue.amenities || [],
     facilities: venue.facilities || [],
@@ -152,6 +157,7 @@ export function toStep1Input(values: RegisterVenueValues) {
     security: values.security,
     cover_image_url: values.cover_image_url,
     gallery: values.gallery,
+    videos: values.videos,
     location_id: values.location_id || null,
     country: values.country,
     country_code: values.country_code,
@@ -193,6 +199,7 @@ export function toApprovedUpdateInput(
       description: values.description,
       cover_image_url: values.cover_image_url,
       gallery: values.gallery,
+      videos: values.videos,
     };
   }
   if (section === 'type-capacity') {

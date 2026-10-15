@@ -45,6 +45,7 @@ export default function EntityAnalyticsPage({ page }: Readonly<{ page: Analytics
     <Stack spacing={2}>
       <TopProgressBar busy={loading && Boolean(board)} />
       <PageHeader title={t(page.title)} subtitle={t(page.subtitle)} actions={controls} />
+      {page.note && <Alert severity="info">{t(page.note)}</Alert>}
       {error && (
         <Alert
           severity="error"

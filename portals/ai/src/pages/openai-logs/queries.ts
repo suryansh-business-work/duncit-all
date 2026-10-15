@@ -20,8 +20,8 @@ export interface OpenAiLogRow {
 }
 
 export const OPENAI_LOGS_TABLE = gql`
-  query OpenAiUsageLogsTable($query: TableQueryInput) {
-    openAiUsageLogsTable(query: $query) {
+  query OpenAiUsageLogsTable($query: TableQueryInput, $task: String) {
+    openAiUsageLogsTable(query: $query, task: $task) {
       total
       rows {
         id

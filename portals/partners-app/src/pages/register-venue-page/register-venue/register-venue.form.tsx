@@ -74,7 +74,15 @@ export default function RegisterVenueForm({
               pointerEvents: viewOnly ? 'none' : undefined,
             }}
           >
-            {active === 'details' && <VenueDetailsSection form={form} mode={mode} categoryLimit={categoryLimitOf(config)} />}
+            {active === 'details' && (
+              <VenueDetailsSection
+                form={form}
+                mode={mode}
+                categoryLimit={categoryLimitOf(config)}
+                venueId={venueId ?? undefined}
+                videoLimit={config.venue_video_limit}
+              />
+            )}
             {active === 'type-capacity' && <VenueTypeCapacitySection form={form} config={config} mode={mode} />}
             {active === 'food' && (
               <FoodSection
@@ -83,6 +91,8 @@ export default function RegisterVenueForm({
                 mode={mode}
                 venueId={venueId ?? undefined}
                 savedGstin={venue?.gstin ?? ''}
+                venueName={venue?.venue_name}
+                hasSavedTables={(venue?.food_tables?.length ?? 0) > 0}
               />
             )}
             {active === 'amenities' && (

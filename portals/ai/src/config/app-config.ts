@@ -26,6 +26,7 @@ export const appConfig = {
   nav: [
     { label: 'Welcome', labelKey: 'shell.nav.welcome', to: '/', icon: 'dashboard' },
     { label: 'AI Library', labelKey: 'shell.nav.aiLibrary', to: '/library', icon: 'library' },
+    { label: 'AI Features', labelKey: 'shell.nav.aiFeatures', to: '/ai-features', icon: 'tune' },
     {
       label: 'OpenAI', labelKey: 'shell.nav.openai',
       icon: 'ai',

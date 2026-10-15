@@ -35,7 +35,17 @@ export const MY_VENUE = gql`
         diet
         spice_level
         is_available
+        videos
+        original_price
+        saving_display
       }
+      food_licences {
+        fssai_number
+        fssai_document_url
+        liquor_licence_number
+        liquor_document_url
+      }
+      food_tables
       food_ordering {
         enabled
         razorpay_integration_id
@@ -78,6 +88,7 @@ export const MY_VENUE = gql`
       address_line2
       cover_image_url
       gallery
+      videos
       gstin
       pan
       documents { type url }
@@ -157,6 +168,9 @@ export const REGISTRATION_CONFIG = gql`
       food_image_limit
       food_price_max
       food_discount_max_pct
+      food_video_limit
+      food_table_limit
+      venue_video_limit
     }
   }
 `;

@@ -87,15 +87,27 @@ export function useRegisterVenueForm({
   const gstinDocType = taxDocTypes?.has_gstin ?? '';
   const panDocType = taxDocTypes?.has_pan ?? '';
   const { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct } = foodLimits;
+  const { food_video_limit, food_table_limit } = foodLimits;
   const schema = useMemo(
     () =>
       registerVenueSchema(
         t,
         { has_gstin: gstinDocType, has_pan: panDocType },
-        { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct },
+        { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, food_video_limit, food_table_limit },
         categoryLimit
       ),
-    [t, gstinDocType, panDocType, food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, categoryLimit]
+    [
+      t,
+      gstinDocType,
+      panDocType,
+      food_menu_limit,
+      food_image_limit,
+      food_price_max,
+      food_discount_max_pct,
+      food_video_limit,
+      food_table_limit,
+      categoryLimit,
+    ]
   );
   // Scoped to the MODE's sections, so an approved venue cannot be deep-linked
   // to ?selectedtab=review — a section its rail does not offer and its form

@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router';
-import { createAuthed, ProfilePage } from '@duncit/shell';
+import { createAuthed, EventRequestsPage, ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import PartnerLanding from './components/PartnerLanding';
 import RegisterVenuePage from './pages/RegisterVenuePage';
@@ -93,6 +93,8 @@ export default function App() {
       <Route path="/venues/nearby-hosts" element={authed(<NearbyHostsPage />)} />
       <Route path="/venues/pod-requests" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/pod-requests/:id" element={authed(<PodRequestDetailPage side="VENUE" />)} />
+      {/* What members asked for when nothing was coming up — the shared page, scoped to the partner. */}
+      <Route path="/venues/event-requests" element={authed(<EventRequestsPage targetType="VENUE" scope="owner" />)} />
       <Route path="/venues/pods" element={authed(<VenuePodsHub />)} />
       {/* Change Requests stays scoped per studio, so a venue owner who also
           hosts is never shown the wrong queue. */}
@@ -118,6 +120,7 @@ export default function App() {
       <Route path="/host/nearby-venues" element={authed(<NearbyVenuesPage />)} />
       <Route path="/host/pod-requests" element={authed(<HostRequestsHub />)} />
       <Route path="/host/pod-requests/:id" element={authed(<PodRequestDetailPage side="HOST" />)} />
+      <Route path="/host/event-requests" element={authed(<EventRequestsPage targetType="HOST" scope="owner" />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       {/* The two sidebar entries a not-yet-partner sees: each opens the Earn with
           Duncit page ON its own journey, so the click lands in the onboarding

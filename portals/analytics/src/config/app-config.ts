@@ -49,6 +49,7 @@ export const appConfig = {
       children: [
         { label: 'Funnel & Retention', labelKey: 'shell.nav.funnelRetention', to: '/growth/funnel', icon: 'northstar' },
         { label: 'Marketing', labelKey: 'shell.nav.marketing', to: '/growth/marketing', icon: 'marketing' },
+        { label: 'Contacts', labelKey: 'shell.nav.contacts', to: '/growth/contacts', icon: 'contacts' },
         { label: 'Communications', labelKey: 'shell.nav.communications', to: '/growth/communications', icon: 'campaign' },
       ],
     },

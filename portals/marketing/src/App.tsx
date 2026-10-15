@@ -4,6 +4,7 @@ import { NotifyHost } from '@duncit/dialogs';
 import { CouponDetailPage, CouponsPage } from '@duncit/coupons';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/dashboard-page/DashboardPage';
+import ContactsDashboardPage from './pages/contacts-page';
 import AudienceListsPage from './pages/target-audience-page/AudienceListsPage';
 import CreateAudienceListPage from './pages/target-audience-page/CreateAudienceListPage';
 import AudienceListDetailPage from './pages/target-audience-page/AudienceListDetailPage';
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/profile" element={authed(<ProfilePage />)} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={authed(<DashboardPage />)} />
+        <Route path="/contacts" element={authed(<ContactsDashboardPage />)} />
         <Route path="/audience" element={authed(<AudienceListsPage />)} />
         <Route path="/audience/new" element={authed(<CreateAudienceListPage />)} />
         <Route path="/audience/:listId" element={authed(<AudienceListDetailPage />)} />

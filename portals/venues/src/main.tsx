@@ -6,6 +6,7 @@ import {
   VENUES_SPEC,
 } from '@duncit/entity-consoles';
 import { logs } from '@duncit/logs';
+import { EventRequestsPage } from '@duncit/shell';
 import { appConfig } from './config/app-config';
 import VenueRecordPage from './VenueRecordPage';
 
@@ -24,12 +25,16 @@ mountDirectoryPortal({
   logsPortal: logs.portal.venues,
   console: {
     listPath: '/venues',
-    nav: [{ label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', icon: 'storefront' }],
+    nav: [
+      { label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', icon: 'storefront' },
+      { label: 'Event Requests', labelKey: 'shell.nav.eventRequests', to: '/event-requests', icon: 'calendar' },
+    ],
     routes: (authed) => (
       <>
         {/* Static before dynamic so /venues/new is never read as a venue id. */}
         <Route path="/venues/new" element={authed(<VenueEditorPage />)} />
         <Route path="/venues" element={authed(<VenuesPage />)} />
+        <Route path="/event-requests" element={authed(<EventRequestsPage targetType="VENUE" scope="console" />)} />
         <Route path="/venues/:venueId" element={authed(<VenueRecordPage />)} />
         <Route path="/venues/:venueId/edit" element={authed(<VenueEditorPage />)} />
       </>

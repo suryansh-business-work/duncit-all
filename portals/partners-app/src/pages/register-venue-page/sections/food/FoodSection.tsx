@@ -16,6 +16,9 @@ interface Props {
   venueId?: string;
   /** The venue's saved GST number; '' when it has none. */
   savedGstin: string;
+  venueName?: string;
+  /** The venue has tables saved — its QR stickers can be printed. */
+  hasSavedTables?: boolean;
 }
 
 const ID_PREFIX = 'register-venue';
@@ -27,7 +30,7 @@ const ID_PREFIX = 'register-venue';
  * editable after approval. Switching food off keeps the menu for later; the
  * server stops taking orders.
  */
-export default function FoodSection({ form, config, mode, venueId, savedGstin }: Readonly<Props>) {
+export default function FoodSection({ form, config, mode, venueId, savedGstin, venueName, hasSavedTables }: Readonly<Props>) {
   const { t } = useTranslation();
   const account = useMemo(() => partnersFoodAccount(ID_PREFIX), []);
 
@@ -45,6 +48,8 @@ export default function FoodSection({ form, config, mode, venueId, savedGstin }:
         account={account}
         upload={{ venueId, surface: 'PORTALS' }}
         idPrefix={ID_PREFIX}
+        venueName={venueName}
+        hasSavedTables={hasSavedTables}
         gstin={<FoodGstinField control={form.control} mode={mode} savedGstin={savedGstin} />}
       />
     </Stack>

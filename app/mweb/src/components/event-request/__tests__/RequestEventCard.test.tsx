@@ -69,6 +69,17 @@ describe('RequestEventCard — who sees what', () => {
     expect(asked).not.toHaveBeenCalled();
   });
 
+  it('treats a visitor whose storage is blocked as signed out, asking the server nothing', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('SecurityError');
+    });
+    const asked = vi.fn(() => true);
+    renderCard([{ request: { query: MY_EVENT_REQUEST_STATE, variables: asked }, result: { data: { myEventRequestState: state() } } }]);
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in to request an event' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=%2Fvenue%2Ft1%3Ftab%3Devents');
+    expect(asked).not.toHaveBeenCalled();
+  });
+
   it('shows a loading placeholder while it checks for an earlier request', () => {
     renderCard([stateMock(state())]);
     expect(screen.getByTestId('request-event-venue-loading')).toHaveAttribute('aria-label', 'Loading…');

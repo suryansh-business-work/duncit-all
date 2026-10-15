@@ -1,7 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { logs } from '@duncit/logs';
 import { MY_FOOD_ORDER_KEYS_MAX } from '@duncit/utils';
-import { foodOrderPath, saveFoodOrder, storedFoodOrderKeys } from '../foodStorage';
+import {
+  foodOrderPath,
+  readFoodCoupon,
+  readFoodGuest,
+  readFoodOrder,
+  saveFoodOrder,
+  storedFoodOrderKeys,
+  writeFoodCart,
+  writeFoodCoupon,
+} from '../foodStorage';
 
 const ORDERS_KEY = 'mweb_food_orders';
 
@@ -84,5 +93,103 @@ describe('foodOrderPath', () => {
 
   it('is the bare order page for an order opened by account', () => {
     expect(foodOrderPath('v1', 'o1', null)).toBe('/venue/v1/food-order/o1');
+  });
+});
+
+describe('readFoodOrder / saveFoodOrder', () => {
+  it('finds a remembered order by id, and nothing for one never placed here', () => {
+    save('o1', 'k1');
+    expect(readFoodOrder('o1')).toMatchObject({ order_id: 'o1', access_key: 'k1', venue_id: 'v1', finished: false });
+    expect(readFoodOrder('nope')).toBeNull();
+  });
+
+  it('keeps the first save’s client key, time and finished flag when the same order is saved again without them', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_000);
+    saveFoodOrder({ order_id: 'o1', venue_id: 'v1', order_no: '#1', access_key: 'k1', client_key: 'ck-1', finished: true });
+    vi.spyOn(Date, 'now').mockReturnValue(9_000);
+    saveFoodOrder({ order_id: 'o1', venue_id: 'v1', order_no: '#1', access_key: 'k1', client_key: '' });
+
+    expect(readFoodOrder('o1')).toEqual({
+      order_id: 'o1',
+      venue_id: 'v1',
+      order_no: '#1',
+      access_key: 'k1',
+      client_key: 'ck-1',
+      saved_at: 1_000,
+      finished: true,
+    });
+    expect(JSON.parse(localStorage.getItem(ORDERS_KEY) ?? '[]')).toHaveLength(1);
+  });
+
+  it('takes a new client key and finished flag when the later save carries them', () => {
+    saveFoodOrder({ order_id: 'o1', venue_id: 'v1', order_no: '#1', access_key: 'k1', client_key: 'ck-1' });
+    saveFoodOrder({ order_id: 'o1', venue_id: 'v1', order_no: '#1', access_key: 'k1', client_key: 'ck-2', finished: true });
+    expect(readFoodOrder('o1')).toMatchObject({ client_key: 'ck-2', finished: true });
+  });
+
+  it('keeps only the ten newest orders', () => {
+    for (let i = 0; i < 12; i += 1) save(`o${i}`, `k${i}`);
+    expect(readFoodOrder('o11')).not.toBeNull();
+    expect(readFoodOrder('o2')).not.toBeNull();
+    expect(readFoodOrder('o1')).toBeNull();
+    expect(readFoodOrder('o0')).toBeNull();
+  });
+});
+
+describe('the venue cart coupon in storage', () => {
+  const COUPON_KEY = 'mweb_food_coupon_v1';
+
+  it('round-trips an applied coupon and forgets it when cleared', () => {
+    writeFoodCoupon('v1', { coupon_code: 'SAVE10', coupon_pct: 10, min_order_amount: 150 });
+    expect(readFoodCoupon('v1')).toEqual({ coupon_code: 'SAVE10', coupon_pct: 10, min_order_amount: 150 });
+    writeFoodCoupon('v1', null);
+    expect(localStorage.getItem(COUPON_KEY)).toBeNull();
+    expect(readFoodCoupon('v1')).toBeNull();
+  });
+
+  it('reads a coupon stored without a minimum as one with no minimum', () => {
+    localStorage.setItem(COUPON_KEY, JSON.stringify({ coupon_code: 'FLAT', coupon_pct: 5 }));
+    expect(readFoodCoupon('v1')).toEqual({ coupon_code: 'FLAT', coupon_pct: 5, min_order_amount: 0 });
+  });
+
+  it('distrusts a stored coupon with no code or no percentage', () => {
+    localStorage.setItem(COUPON_KEY, JSON.stringify({ coupon_code: '', coupon_pct: 5 }));
+    expect(readFoodCoupon('v1')).toBeNull();
+    localStorage.setItem(COUPON_KEY, JSON.stringify({ coupon_code: 'SAVE10', coupon_pct: '10' }));
+    expect(readFoodCoupon('v1')).toBeNull();
+  });
+
+  it('logs, and does not throw, when storage refuses to remove the coupon', () => {
+    const warn = vi.spyOn(logs.mWeb, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    expect(() => writeFoodCoupon('v1', null)).not.toThrow();
+    expect(warn).toHaveBeenCalledWith('venueFood', 'storageRemove', expect.objectContaining({ key: COUPON_KEY }));
+  });
+});
+
+describe('storage that refuses writes', () => {
+  it('logs the failed write and carries on — the page just forgets', () => {
+    const warn = vi.spyOn(logs.mWeb, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    expect(() => writeFoodCart('v1', { chai: 2 })).not.toThrow();
+    expect(warn).toHaveBeenCalledWith('venueFood', 'storageWrite', expect.objectContaining({ key: 'mweb_food_cart_v1' }));
+    expect(localStorage.getItem('mweb_food_cart_v1')).toBeNull();
+  });
+});
+
+describe('readFoodGuest', () => {
+  it('is null on a device that never ordered', () => {
+    expect(readFoodGuest()).toBeNull();
+  });
+
+  it('blanks any field that was not stored as text', () => {
+    localStorage.setItem('mweb_food_guest', JSON.stringify({ name: 42, phone: '9876543210' }));
+    expect(readFoodGuest()).toEqual({ name: '', phone: '9876543210' });
+    localStorage.setItem('mweb_food_guest', JSON.stringify({ name: 'Asha', phone: null }));
+    expect(readFoodGuest()).toEqual({ name: 'Asha', phone: '' });
   });
 });

@@ -221,4 +221,41 @@ describe('UserModeContent', () => {
     fireEvent.click(screen.getByTestId('sidebar-item-Your Food Orders'));
     expect(onNavigate).toHaveBeenCalledWith('/food-orders');
   });
+
+  it('adds the Leaderboard, Membership and Gift Cards sections only when their server flags are on', () => {
+    const onNavigate = vi.fn();
+    const drawer = (on: boolean) => (
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
+        <UserModeContent
+          me={FULL_ME}
+          roles={[]}
+          mode="USER"
+          showPodPlans={false}
+          showLeaderboard={on}
+          showMembership={on}
+          showGiftCards={on}
+          onNavigate={onNavigate}
+        />
+      </MockedProvider>
+    );
+    const { rerender } = render(drawer(false));
+    expect(screen.queryByText('Leaderboard')).not.toBeInTheDocument();
+    expect(screen.queryByText('Membership')).not.toBeInTheDocument();
+    expect(screen.queryByText('Gift Cards')).not.toBeInTheDocument();
+
+    rerender(drawer(true));
+    expect(screen.getByText('Leaderboard')).toBeInTheDocument();
+    expect(screen.getByText('Membership')).toBeInTheDocument();
+    expect(screen.getByText('Gift Cards')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-item-See the plans')).toHaveTextContent('Coming soon');
+
+    fireEvent.click(screen.getByTestId('sidebar-item-View Rankings'));
+    expect(onNavigate).toHaveBeenLastCalledWith('/leaderboard');
+    fireEvent.click(screen.getByTestId('sidebar-item-See the plans'));
+    expect(onNavigate).toHaveBeenLastCalledWith('/membership');
+    fireEvent.click(screen.getByTestId('sidebar-item-Buy a gift card'));
+    expect(onNavigate).toHaveBeenLastCalledWith('/gift-cards');
+    fireEvent.click(screen.getByTestId('sidebar-item-Redeem a gift card'));
+    expect(onNavigate).toHaveBeenLastCalledWith('/gift-cards/redeem');
+  });
 });

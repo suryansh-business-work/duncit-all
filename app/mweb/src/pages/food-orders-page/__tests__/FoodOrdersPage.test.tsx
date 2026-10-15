@@ -233,6 +233,16 @@ describe('FoodOrdersPage — signed out', () => {
     expect(await screen.findByTestId('food-orders-current-empty')).toBeInTheDocument();
   });
 
+  it('treats a browser whose storage is blocked as signed out, still listing what it can', async () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('SecurityError');
+    });
+    vi.spyOn(logs.mWeb, 'warn').mockImplementation(() => undefined);
+    renderPage([pageMock('CURRENT', 1, { rows: [] }), pageMock('PAST', 1, { rows: [] })]);
+    expect(screen.getByTestId('food-orders-sign-in')).toBeInTheDocument();
+    expect(await screen.findByTestId('food-orders-current-empty')).toBeInTheDocument();
+  });
+
   it('shows no sign-in hint to a member', () => {
     renderPage([pageMock('CURRENT', 1, { rows: [] }), pageMock('PAST', 1, { rows: [] })]);
     expect(screen.queryByTestId('food-orders-sign-in')).not.toBeInTheDocument();

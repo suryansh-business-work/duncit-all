@@ -119,6 +119,24 @@ describe('VenueFoodItemPage', () => {
     expect(JSON.parse(localStorage.getItem('mweb_food_cart_v1') ?? '{}')).toEqual({ chai: 2 });
   });
 
+  it('shows a plain placeholder, with nothing to open, for a dish without photos', async () => {
+    renderPage([venueMock(venue())], '/venue/v1/food/lassi');
+    const details = await screen.findByTestId('food-item-details-lassi');
+    expect(screen.getByRole('heading', { level: 2, name: 'Lassi' })).toBeInTheDocument();
+    expect(details.querySelector('img')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'View the photo of Lassi' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('food-item-thumbs')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Lassi' })).toBeInTheDocument();
+  });
+
+  it('opens the viewer on the photo pressed in the strip', async () => {
+    renderPage([venueMock(venue())]);
+    await screen.findByTestId('food-item-details-chai');
+    const [, , second] = screen.getAllByRole('button', { name: 'View the photo of Masala Chai' });
+    fireEvent.click(second);
+    expect(await screen.findByTestId('moment-lightbox-media')).toHaveAttribute('src', 'https://img.test/chai-2.jpg');
+  });
+
   it('opens on the quantity already in the cart from the menu', async () => {
     localStorage.setItem('mweb_food_cart_v1', JSON.stringify({ chai: 3 }));
     renderPage([venueMock(venue())]);

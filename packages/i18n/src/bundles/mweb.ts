@@ -1557,6 +1557,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       cancelSpotStarted: 'This pod has already started, so your spot can no longer be cancelled.',
       cancelSpotNotMember: 'You do not have a spot in this pod to cancel.',
       cancelSpotFailed: 'We could not cancel your spot. Please try again.',
+      // The cap on cancelling a free pod's spot (Admin > Pod Settings), worded
+      // by freeSpotCancelHint in @duncit/utils for both apps.
+      cancelSpotRemaining: 'You can cancel your spot on this pod {left} more times.',
+      cancelSpotLastOne:
+        'You can cancel your spot on this pod one more time. If you join again after that, the spot cannot be cancelled.',
+      cancelSpotLimitReached:
+        'You have cancelled your spot on this pod the maximum number of times allowed, so it can no longer be cancelled.',
       // mWeb only — refilling your own released seat by referral is a web flow;
       // the native bar has no backed-out state.
       backedOutRefundLead: 'You have backed out. Refund status:',
@@ -1638,7 +1645,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // re-renders the bar instead.
       joinedViaReferral: 'Joined via referral',
       linkCopied: 'Link copied',
-      joinedSnack: 'Joined!',
       referralLinkCopied: 'Referral link copied',
       backoutStarted: 'Backout in process — your seat is now open for booking.',
       bookingRestored: 'Your booking is restored.',
@@ -1652,6 +1658,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // A pod-shop row: how many of the product can still be bought.
       shopAvailable: 'Available {count}',
       review: 'Review',
+    },
+    // The "Did you know?" loader a slow list shows instead of a bare spinner
+    // (Pod History first). Both apps render it; the order and the rotation
+    // live in @duncit/utils `loading-tips`.
+    loadingTips: {
+      title: 'Did you know?',
+      tipPodTimeline: 'Tap any pod you joined to see its refund status and full timeline.',
+      tipFollowClubs: 'Follow a club to catch its new pods and stories first.',
+      tipSearchInterests: 'Search lets you discover experiences by interest.',
+      tipRatePods: 'Rating a pod after it ends helps hosts make the next one even better.',
+      tipSharePods: 'Share a pod with friends so you can join it together.',
+      tipChangeCity: 'Tap the location in the header to explore pods in another area.',
     },
     // Pod History — the pods the viewer has joined, and everything one booking
     // can still be told or asked. mWeb and the native app render the SAME
@@ -2196,6 +2214,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // mWeb only — its confirmation is a full page with room to say more.
       successOverline: 'You are in',
       successSubtitle: 'Your slot is booked. A receipt with the tax invoice has been emailed to you.',
+      // A FREE pod's instant join lands on the same confirmation, with nothing paid.
+      freeJoinTitle: 'Spot confirmed',
+      freeJoinSubtitle:
+        'This pod is free, so there is nothing to pay. Your ticket is ready — download it below or find it any time in Pod History.',
       paymentId: 'Payment ID',
       amountPaid: 'Amount paid',
       paidOn: 'Paid on',
@@ -4037,6 +4059,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     forceUpdateGate: {
       updateNow: 'Update now',
     },
+    smallUpdateAppSection: {
+      title: 'Update available',
+      body: 'Version {version} is out with the latest fixes.',
+      update: 'Update',
+      updateHint: 'Opens the app store',
+      dismiss: 'Close update message',
+    },
     hostApply: {
       aFewQuickQuestionsBeforeYou: 'A few quick questions before you submit.',
       couldNotSubmitYourRequestPlease: 'Could not submit your request — please try again.',
@@ -4947,6 +4976,53 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewImage: 'View the photo of {name}',
       maxLines: 'One order can hold at most {max} different dishes.',
       trackOrder: 'Track your order {orderNo}',
+      // A dish's struck-through MRP (display only — the price shown first is what is paid).
+      savingPercent: '{pct}% off',
+      savingAmount: '{amount} off',
+      originalPrice: 'Original price {amount}',
+      // Venue and dish videos — an uploaded clip or a YouTube link.
+      watchVideo: 'Watch video',
+      videoTitle: 'Video {n} of {name}',
+      watchOnYoutube: 'Watch on YouTube',
+      videos: 'Videos',
+      // Printed at the foot of the menu — Indian food law asks every menu to show it.
+      fssai: 'FSSAI Lic. No. {number}',
+      // The menu's search box and its collapsible sections (mWeb + native).
+      menuSearch: {
+        label: 'Search the menu',
+        placeholder: 'Search dishes',
+        noResults: 'No dishes match "{query}".',
+        expandAll: 'Expand all',
+        collapseAll: 'Collapse all',
+        otherSection: 'More dishes',
+        sectionCount: '{count} items',
+      },
+      // The venue's food rating — one rating per served order, so it is the venue's, not a dish's.
+      rating: {
+        summary: '{average} ({count})',
+        label: 'Food rated {average} out of 5 by {count} guests',
+      },
+      // A dish's own page, opened from its name on the menu.
+      item: {
+        title: 'Dish details',
+        notFound: 'This dish is no longer on the menu.',
+        loadFailed: 'This dish could not be loaded.',
+      },
+      // "Your Food Orders" — the account menu's Food section, and the venue menu's running orders.
+      myOrders: {
+        sidebarTitle: 'Food',
+        sidebarLabel: 'Your Food Orders',
+        title: 'Your Food Orders',
+        current: 'Current Orders',
+        past: 'Past Food Orders',
+        currentEmpty: 'No food orders in progress right now.',
+        pastEmpty: 'Your finished food orders will show here.',
+        loadFailed: 'Your food orders could not be loaded.',
+        loadMore: 'Show more',
+        itemLine: '{qty} × {name}',
+        signInHint: 'Sign in to see your food orders on every device. Orders placed on this device show here either way.',
+        viewAll: 'Your Food Orders',
+      },
       cart: {
         title: 'Your order',
         qtyPrice: '{qty} × {price}',
@@ -5175,6 +5251,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       podRequestsFromHostsHint: 'Hosts asking to run a pod at your venue',
       podRequestsFromVenues: 'Pod Requests From Venues',
       podRequestsFromVenuesHint: 'Venues asking you to host a pod there',
+      eventRequests: 'Event Requests',
+      venueEventRequestsHint: 'Members asking for an event at your venue',
+      hostEventRequestsHint: 'Members asking you to host an event',
       nearbyHosts: 'Search Nearby Hosts',
       nearbyHostsHint: 'Find hosts near your venue and invite them',
       nearbyVenues: 'Search Nearby Venues',

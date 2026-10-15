@@ -1,5 +1,12 @@
 import { isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
-import { foodDishToValues, foodOrderingToValues, toVenueFoodInput, venueCategoryList } from '@duncit/utils';
+import {
+  foodDishToValues,
+  foodLicencesToValues,
+  foodOrderingToValues,
+  foodTablesToValues,
+  toVenueFoodInput,
+  venueCategoryList,
+} from '@duncit/utils';
 import type { AdminVenueDetail, VenueCategoryRecord } from '../detail/queries';
 import { podRequestOverrideText } from '../../shared/podRequestLimit';
 import { blankVenueValues, type VenueFormValues } from './types';
@@ -57,6 +64,8 @@ export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
     food_menu: venue.food_menu.map(foodDishToValues),
     // What the server resolved: the venue's own GST, or Finance's default while it follows it.
     food_ordering: foodOrderingToValues(venue.food_ordering),
+    food_licences: foodLicencesToValues(venue.food_licences),
+    food_tables: foodTablesToValues(venue.food_tables),
     // Primary first: the list, or the lone legacy triple of a venue stored
     // before the list existed. A venue with none opens on no row at all.
     categories: venueCategoryList(venue).map(toCategoryRow),
@@ -68,6 +77,7 @@ export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
 
     cover_image_url: venue.cover_image_url,
     gallery: venue.gallery,
+    videos: venue.videos ?? [],
 
     location: {
       location_id: venue.location_id ?? '',
@@ -163,6 +173,7 @@ export const valuesToStep1 = (values: VenueFormValues) => ({
   security: values.security,
   cover_image_url: values.cover_image_url,
   gallery: values.gallery,
+  videos: values.videos,
   location_id: values.location.location_id || undefined,
   country: values.location.country,
   country_code: values.location.country_code,

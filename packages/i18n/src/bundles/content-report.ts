@@ -57,6 +57,14 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     sending: 'Sending your report',
     done: 'Done',
     submitFailed: 'Could not send your report',
+    // A person whose earlier report on the same thing is still with Legal.
+    // The sheet opens straight to this, and the server refuses a repeat with
+    // REPORT_ALREADY_PENDING, which reads as the same sentence.
+    checkingEarlier: 'Checking your earlier reports',
+    alreadyPendingTitle: 'Already reported by you',
+    alreadyPending: 'You can’t report this again until our team resolves your earlier report.',
+    alreadyPendingRef:
+      'You can’t report this again until our team resolves your earlier report. Your reference is {ref}.',
     // The reasons themselves come from the server; these cover the moments
     // before they arrive and the case where they do not.
     categoriesLoading: 'Loading the report options',

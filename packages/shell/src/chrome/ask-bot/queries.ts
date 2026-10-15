@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-export type AskBotUnavailableReason = 'NOT_CONFIGURED';
+export type AskBotUnavailableReason = 'NOT_CONFIGURED' | 'DISABLED';
 
 export interface AskBotEntry {
   key: string;

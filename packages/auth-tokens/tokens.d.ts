@@ -104,6 +104,39 @@ export interface AuthHero {
   contentStart: number;
   /** The radius of the landing step's feature chips. */
   chipRadius: number;
+  /**
+   * The darkening under the logo and heading where they sit on the photo.
+   * `ground` is the dark ground at 90%, so the DARK palette's ink, muted and
+   * accent clear AA on it over any photo, light or dark — the heading on the
+   * hero is drawn in the dark theme in both modes.
+   */
+  scrim: HeroFade;
+}
+
+/**
+ * Fitting the login landing into the window without scrolling (see
+ * `fitScale` in @duncit/utils). Sizes are px at scale 1; the `*MinSize`
+ * floors keep a heading a heading on a short window.
+ */
+export interface AuthFit {
+  /** The landing's height at scale 1, safe-area insets excluded. */
+  designHeight: number;
+  /** The part of it that never scales — buttons, chips, the social row, the toggle. */
+  fixedHeight: number;
+  minScale: number;
+  maxScale: number;
+  /** How much of the photo shows above the logo. */
+  heroRoom: number;
+  /** The square logo tile's side. */
+  logoSize: number;
+  titleSize: number;
+  titleMinSize: number;
+  subtitleSize: number;
+  subtitleMinSize: number;
+  /** The vertical rhythm between the screen's blocks. */
+  gap: number;
+  /** A provider mark's share of its round button's diameter. */
+  socialIconRatio: number;
 }
 
 export interface AuthVisuals {
@@ -113,6 +146,7 @@ export interface AuthVisuals {
   bgGradient: GradientPair;
   cardGradient: GradientPair;
   hero: AuthHero;
+  fit: AuthFit;
   legal: {
     termsUrl: string;
     privacyUrl: string;

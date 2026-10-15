@@ -561,6 +561,11 @@ changeRequests: {
       backoutDesc:
         'The maximum number of Backout attempts a user can start for the same pod. Each successful "Backout in process" counts as one; once the limit is reached the action is blocked for that pod.',
       backoutInvalid: 'Enter a whole number of 1 or more.',
+      freeCancelLabel: 'Maximum Spot Cancellations per User Per Free Pod',
+      freeCancelDesc:
+        'How many times one member may cancel their spot on the same free pod. Each "Cancel Spot" counts as one, including after joining again; once the limit is reached the member keeps their spot and can no longer cancel it. Joining again is never limited.',
+      freeCancelMin: 'Minimum 1 cancellation. Default 5.',
+      freeCancelInvalid: 'Enter a whole number of 1 or more.',
       penaltyDesc:
         "Points deducted from a venue's Account Health each time its owner cancels a pod booked at that venue. Set 0 to disable the penalty.",
       penaltyInvalid: 'Enter a whole number of 0 or more.',

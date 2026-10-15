@@ -1,5 +1,11 @@
 import type { AdminCategoryValue } from '@duncit/category';
-import { blankFoodOrdering, type FoodDishValues, type FoodOrderingFormValues } from '@duncit/utils';
+import {
+  blankFoodLicences,
+  blankFoodOrdering,
+  type FoodDishValues,
+  type FoodOrderingFormValues,
+  type VenueFoodLicences,
+} from '@duncit/utils';
 import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
 import type { VenueStatus } from '../detail/queries';
 
@@ -82,6 +88,9 @@ export interface VenueFormValues {
   // owner's: the console reads `razorpay_linked` and a save never names the account.
   food_menu: FoodDishValues[];
   food_ordering: FoodOrderingFormValues;
+  food_licences: VenueFoodLicences;
+  /** The table labels as typed — one QR sticker each. */
+  food_tables: string;
   /**
    * Every category the venue hosts pods in, primary first — one row of the
    * shared picker each (`RhfAdminCategoryRows`). Empty is allowed here: staff
@@ -97,6 +106,8 @@ export interface VenueFormValues {
 
   cover_image_url: string;
   gallery: string[];
+  /** Uploaded clips or YouTube links. */
+  videos: string[];
 
   location: AdminLocationValue;
   address_line1: string;
@@ -149,6 +160,8 @@ export const blankVenueValues: VenueFormValues = {
   offers_food: false,
   food_menu: [],
   food_ordering: blankFoodOrdering,
+  food_licences: blankFoodLicences,
+  food_tables: '',
   categories: [],
   description: '',
   amenities: [],
@@ -157,6 +170,7 @@ export const blankVenueValues: VenueFormValues = {
   tags: [],
   cover_image_url: '',
   gallery: [],
+  videos: [],
   location: EMPTY_LOCATION,
   address_line1: '',
   address_line2: '',

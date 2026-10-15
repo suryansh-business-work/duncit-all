@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { FoodMenuConfig, VenueFoodFormValues } from '@duncit/utils';
+import { FSSAI_NUMBER, YOUTUBE_URL } from '@duncit/regex';
+import { FOOD_ORDER_LIMITS, isFoodTableTooLong, parseFoodTables, type FoodMenuConfig, type VenueFoodFormValues } from '@duncit/utils';
 
 import { makeFoodGstinRule, makeVenueFoodTaxRefinement, venueFoodTaxShape } from './food-tax';
 import type { Translate } from './translate';
@@ -19,11 +20,13 @@ import type { Translate } from './translate';
 export const FOOD_DISH_NAME_MAX = 80;
 export const FOOD_DISH_DESCRIPTION_MAX = 500;
 export const FOOD_DISH_CATEGORY_MAX = 40;
+/** A liquor licence has no national format — only its length is held (the server's own cap). */
+export const FOOD_LIQUOR_LICENCE_MAX = 40;
 
 /** The config's caps the rules check against. */
 export type FoodMenuLimits = Pick<
   FoodMenuConfig,
-  'food_menu_limit' | 'food_image_limit' | 'food_price_max' | 'food_discount_max_pct'
+  'food_menu_limit' | 'food_image_limit' | 'food_price_max' | 'food_discount_max_pct' | 'food_video_limit' | 'food_table_limit'
 >;
 
 /** No client-side ceiling — what a form runs on until the config answers; the server still refuses past its own. */
@@ -32,6 +35,8 @@ export const NO_FOOD_MENU_LIMITS: FoodMenuLimits = {
   food_image_limit: Number.POSITIVE_INFINITY,
   food_price_max: Number.POSITIVE_INFINITY,
   food_discount_max_pct: Number.POSITIVE_INFINITY,
+  food_video_limit: Number.POSITIVE_INFINITY,
+  food_table_limit: Number.POSITIVE_INFINITY,
 };
 
 /** Just the caps of a config, so a schema memoised on them is not rebuilt for an unrelated field. */
@@ -40,6 +45,8 @@ export const foodMenuLimitsOf = (config: FoodMenuLimits): FoodMenuLimits => ({
   food_image_limit: config.food_image_limit,
   food_price_max: config.food_price_max,
   food_discount_max_pct: config.food_discount_max_pct,
+  food_video_limit: config.food_video_limit,
+  food_table_limit: config.food_table_limit,
 });
 
 const textOrNumber = z.union([z.number(), z.string()]);
@@ -54,6 +61,16 @@ export const foodDishShape = z.object({
   diet: z.string(),
   spice_level: z.string(),
   is_available: z.boolean(),
+  videos: z.array(z.string()),
+  original_price: textOrNumber,
+  saving_display: z.string(),
+});
+
+export const foodLicencesShape = z.object({
+  fssai_number: z.string(),
+  fssai_document_url: z.string(),
+  liquor_licence_number: z.string(),
+  liquor_document_url: z.string(),
 });
 
 export const foodOrderingShape = z.object({
@@ -64,11 +81,13 @@ export const foodOrderingShape = z.object({
   ...venueFoodTaxShape,
 });
 
-/** The three food fields, under the names every venue form uses. */
+/** The food fields, under the names every venue form uses. */
 export const venueFoodShape = {
   offers_food: z.boolean(),
   food_menu: z.array(foodDishShape),
   food_ordering: foodOrderingShape,
+  food_licences: foodLicencesShape,
+  food_tables: z.string(),
 };
 
 export interface VenueFoodRuleOptions {
@@ -81,6 +100,10 @@ export interface VenueFoodRuleOptions {
    */
   editsAccount: boolean;
 }
+
+/** A stored video: a YouTube video link, or the http(s) address the upload pipeline handed back. */
+const isVideoLink = (value: string): boolean =>
+  YOUTUBE_URL.test(value) || value.startsWith('https://') || value.startsWith('http://');
 
 const dishRules = (t: Translate, limits: FoodMenuLimits) =>
   z.object({
@@ -108,7 +131,58 @@ const dishRules = (t: Translate, limits: FoodMenuLimits) =>
     images: z
       .array(z.string())
       .max(limits.food_image_limit, t('venueFoodOwner.menu.photosLimit', { vars: { max: limits.food_image_limit } })),
+    videos: z
+      .array(z.string().refine(isVideoLink, t('venueFoodOwner.videos.invalid')))
+      .max(limits.food_video_limit, t('venueFoodOwner.videos.limit', { vars: { max: limits.food_video_limit } })),
   });
+
+const isBlank = (value: number | string): boolean => String(value).trim() === '' || Number(value) === 0;
+
+/**
+ * The struck-through MRP: optional, but when given it must be a number above
+ * the price — the server's own rule. Display only; the price is what is charged.
+ */
+function addOriginalPriceIssues(dish: VenueFoodFormValues['food_menu'][number], path: PropertyKey[], ctx: z.RefinementCtx, t: Translate) {
+  if (isBlank(dish.original_price)) return;
+  const original = Number(dish.original_price);
+  if (!Number.isFinite(original) || original <= Number(dish.price)) {
+    ctx.addIssue({ code: 'custom', path: [...path, 'original_price'], message: t('venueFoodOwner.menu.originalPriceInvalid') });
+  }
+}
+
+/** The FSSAI number (14 digits, or none yet) and the liquor licence number's length. */
+function addLicenceIssues(licences: VenueFoodFormValues['food_licences'], ctx: z.RefinementCtx, t: Translate) {
+  const fssai = licences.fssai_number.trim();
+  if (fssai && !FSSAI_NUMBER.test(fssai)) {
+    ctx.addIssue({ code: 'custom', path: ['food_licences', 'fssai_number'], message: t('venueFoodOwner.licences.fssaiInvalid') });
+  }
+  if (licences.liquor_licence_number.trim().length > FOOD_LIQUOR_LICENCE_MAX) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['food_licences', 'liquor_licence_number'],
+      message: t('venueFoodOwner.licences.liquorTooLong', { vars: { max: FOOD_LIQUOR_LICENCE_MAX } }),
+    });
+  }
+}
+
+/** The tables as typed: within the venue's limit, each short enough for the checkout's table field. */
+function addTableIssues(text: string, limits: FoodMenuLimits, ctx: z.RefinementCtx, t: Translate) {
+  const tables = parseFoodTables(text);
+  if (tables.length > limits.food_table_limit) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['food_tables'],
+      message: t('venueFoodOwner.tables.limit', { vars: { max: limits.food_table_limit } }),
+    });
+  }
+  if (tables.some(isFoodTableTooLong)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['food_tables'],
+      message: t('venueFoodOwner.tables.tooLong', { vars: { max: FOOD_ORDER_LIMITS.tableMax } }),
+    });
+  }
+}
 
 const discountRule = (t: Translate, limits: FoodMenuLimits) => {
   const message = t('venueFoodOwner.menu.discountInvalid', { vars: { max: limits.food_discount_max_pct } });
@@ -158,7 +232,12 @@ export function makeVenueFoodRefinement(t: Translate, { limits, editsAccount }: 
         message: t('venueFoodOwner.menu.menuLimit', { vars: { max: limits.food_menu_limit } }),
       });
     }
-    values.food_menu.forEach((row, index) => relay(dish.safeParse(row), ['food_menu', index], ctx));
+    values.food_menu.forEach((row, index) => {
+      relay(dish.safeParse(row), ['food_menu', index], ctx);
+      addOriginalPriceIssues(row, ['food_menu', index], ctx, t);
+    });
+    addLicenceIssues(values.food_licences, ctx, t);
+    addTableIssues(values.food_tables, limits, ctx, t);
     relay(discount.safeParse(values.food_ordering.discount_pct), ['food_ordering', 'discount_pct'], ctx);
     checkTax(values.food_ordering, ctx, ['food_ordering']);
     addOrderingIssues(values, ctx, t, editsAccount);

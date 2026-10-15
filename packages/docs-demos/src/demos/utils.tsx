@@ -19,6 +19,7 @@ import { invitesAndClaimsDemos } from './utils/invites-and-claims';
 import { privacyDemos } from './utils/privacy';
 import { crashReportDemos } from './utils/crash-report';
 import { cartReminderDemos } from './utils/cart-reminder';
+import { fitScaleDemos } from './utils/fit-scale';
 import { defineDemos } from '../types';
 
 export default defineDemos('utils', [
@@ -38,4 +39,5 @@ export default defineDemos('utils', [
   ...privacyDemos,
   ...crashReportDemos,
   ...cartReminderDemos,
+  ...fitScaleDemos,
 ]);

@@ -19,6 +19,15 @@ interface Props {
   onOpen: (botKey: string) => void;
 }
 
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** The row's second line: its blurb, or why it cannot answer right now. */
+function unavailableText(bot: AskBotEntry, description: string, t: Translate): string {
+  if (bot.is_available) return description;
+  if (bot.unavailable_reason === 'DISABLED') return t('shell.askBot.disabled');
+  return t('shell.askBot.notConfigured');
+}
+
 /**
  * The bots on offer.
  *
@@ -77,7 +86,7 @@ export function BotList({ onOpen }: Readonly<Props>) {
             </ListItemIcon>
             <ListItemText
               primary={copy.name}
-              secondary={bot.is_available ? copy.description : t('shell.askBot.notConfigured')}
+              secondary={unavailableText(bot, copy.description, t)}
             />
             {!bot.is_available && (
               <Chip size="small" label={t('shell.askBot.unavailable')} sx={{ mt: 0.5, ml: 1 }} />

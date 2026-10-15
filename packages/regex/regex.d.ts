@@ -43,6 +43,13 @@ export const BANK_ACCOUNT_NUMBER: RegExp;
  * pattern; mWeb checkout's 14-character variant rejects every valid GSTIN.
  */
 export const GSTIN: RegExp;
+/** FSSAI licence / registration number — exactly 14 digits. */
+export const FSSAI_NUMBER: RegExp;
+/**
+ * A YouTube video link (watch, shorts, embed, live or youtu.be). Group 1 is
+ * the 11-character video id.
+ */
+export const YOUTUBE_URL: RegExp;
 /**
  * A human name: letters, spaces, apostrophes (straight or typographic) and
  * periods, starting with a letter. Rejects digits, underscores and emoji.
@@ -71,6 +78,10 @@ export function isUpiId(value: string): boolean;
 export function isBankAccountNumber(value: string): boolean;
 /** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
 export function isGstin(value: string): boolean;
+/** FSSAI number shape check — 14 digits. */
+export function isFssaiNumber(value: string): boolean;
+/** True for a YouTube video link the players can embed. */
+export function isYoutubeUrl(value: string): boolean;
 /** Person-name shape check — letters, spaces, apostrophes and periods only. */
 export function isPersonName(value: string): boolean;
 /** Referral-code shape check. Case-sensitive: upper-case before calling it. */

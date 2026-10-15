@@ -76,7 +76,7 @@ export function ClockTray({ full, zone: active }: Readonly<ClockTrayProps>) {
   };
 
   return (
-    <Stack spacing={1.5} sx={{ p: 2, width: 320 }}>
+    <Stack spacing={1.5} sx={{ p: 2, width: 320 }} data-testid="shell-clock-tray">
       <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
         {full}
       </Typography>
@@ -92,6 +92,7 @@ export function ClockTray({ full, zone: active }: Readonly<ClockTrayProps>) {
           <TextField
             {...params}
             label={t('shell.taskbar.timeZone')}
+            data-testid="shell-clock-zone"
             helperText={t('shell.taskbar.timeZoneHint')}
           />
         )}
@@ -106,6 +107,7 @@ export function ClockTray({ full, zone: active }: Readonly<ClockTrayProps>) {
           />
         }
         label={t('shell.taskbar.showSeconds')}
+        data-testid="shell-clock-seconds"
       />
 
       {/* The language row hides with the language_preference flag, divider and

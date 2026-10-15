@@ -56,7 +56,7 @@ export default function FileCard({ file, selected, onToggle, onOpen, onCopy }: R
         </DuncitIconButton>
       </Tooltip>
 
-      <CardActionArea onClick={() => onOpen(file)} sx={{ height: '100%' }}>
+      <CardActionArea data-testid={`file-manager-card-${file.fileId}`} onClick={() => onOpen(file)} sx={{ height: '100%' }}>
         <Box
           sx={{
             height: 120,

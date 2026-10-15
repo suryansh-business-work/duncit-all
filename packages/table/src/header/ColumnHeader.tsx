@@ -44,10 +44,12 @@ interface HeaderLabelProps {
   /** The direction the arrow previews before the column is sorted. */
   firstDir: TableSortDir;
   onSort: (() => void) | null;
+  /** `table-sort-<field>` — what an end-to-end suite clicks to sort. */
+  testId: string;
 }
 
 /** The header text — a sort toggle when the column sorts, plain text when it cannot. */
-function HeaderLabel({ label, sort, firstDir, onSort }: Readonly<HeaderLabelProps>) {
+function HeaderLabel({ label, sort, firstDir, onSort, testId }: Readonly<HeaderLabelProps>) {
   if (!onSort) {
     return (
       <Box component="span" sx={{ ...LABEL_SX, flex: 1, minWidth: 0 }}>
@@ -61,6 +63,7 @@ function HeaderLabel({ label, sort, firstDir, onSort }: Readonly<HeaderLabelProp
       direction={sort ?? firstDir}
       onClick={onSort}
       sx={SORT_LABEL_SX}
+      data-testid={testId}
     >
       <Box component="span" sx={LABEL_SX}>
         {label}
@@ -93,7 +96,7 @@ export function ColumnHeader<T>(props: Readonly<CustomHeaderProps<T> & ColumnHea
 
   return (
     <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center', width: '100%', minWidth: 0 }}>
-      <HeaderLabel label={label} sort={sort} firstDir={firstDir} onSort={onSort} />
+      <HeaderLabel label={label} sort={sort} firstDir={firstDir} onSort={onSort} testId={`table-sort-${column.field}`} />
       {filterable ? (
         <Tooltip title={filterTitle}>
           <DuncitIconButton

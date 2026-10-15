@@ -17,6 +17,7 @@ import {
   LOADING_DIM_OPACITY,
   MULTI_ROW_SELECTION,
   PAGE_SIZE_OPTIONS,
+  PAGER_SLOT_PROPS,
   TRUNCATE_STYLES,
   escapeHtml,
 } from './constants';
@@ -181,6 +182,8 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
         rowsPerPage={table.query.pageSize}
         rowsPerPageOptions={PAGE_SIZE_OPTIONS}
         onRowsPerPageChange={(event) => table.setPageSize(Number(event.target.value))}
+        slotProps={PAGER_SLOT_PROPS}
+        data-testid="table-pagination"
       />
       </Paper>
     </>

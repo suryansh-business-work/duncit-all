@@ -1,9 +1,15 @@
 import type { RowSelectionOptions } from 'ag-grid-community';
+import type { IconButtonProps } from '@mui/material/IconButton';
 import { TRUNCATE_CELL_CLASS } from '../columnDefs';
 import { SelectionCheckbox, SelectionHeaderCheckbox } from '../SelectionCheckbox';
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 export const HEADER_HEIGHT = { compact: 36, standard: 48 } as const;
+
+/** The pager's two buttons, named for end-to-end suites: `table-page-next` and `table-page-previous`. */
+const NEXT_PAGE: Partial<IconButtonProps> & { 'data-testid': string } = { 'data-testid': 'table-page-next' };
+const PREVIOUS_PAGE: Partial<IconButtonProps> & { 'data-testid': string } = { 'data-testid': 'table-page-previous' };
+export const PAGER_SLOT_PROPS = { actions: { nextButton: NEXT_PAGE, previousButton: PREVIOUS_PAGE } };
 
 /** The id of the checkbox column this table adds — never a data field. */
 export const SELECT_COL_ID = 'duncit-select';

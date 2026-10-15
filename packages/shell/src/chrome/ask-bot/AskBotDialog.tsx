@@ -45,7 +45,7 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
   return (
     // Named by the heading alone: the title bar also holds Back, Restart and
     // Close, and a dialog called "Back Ask Bot Restart Close" names nothing.
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm" aria-labelledby={titleId} slotProps={{
+    <Dialog data-testid="ask-bot-dialog" open={open} onClose={close} fullWidth maxWidth="sm" aria-labelledby={titleId} slotProps={{
       paper: { sx: PAPER_SX }
     }}>
       <DialogTitle component="div" id={barId} sx={{ pb: 1 }}>
@@ -54,7 +54,7 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
         }}>
           {inChat && (
             <Tooltip title={t('shell.askBot.back')}>
-              <DuncitIconButton size="small" edge="start" onClick={() => setBotKey(null)} aria-label={t('shell.askBot.back')}>
+              <DuncitIconButton size="small" edge="start" onClick={() => setBotKey(null)} aria-label={t('shell.askBot.back')} data-testid="ask-bot-back">
                 <ArrowBackIcon fontSize="small" />
               </DuncitIconButton>
             </Tooltip>
@@ -68,12 +68,13 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
                 size="small"
                 onClick={() => restartRef.current?.()}
                 aria-label={t('shell.askBot.restart')}
+                data-testid="ask-bot-restart"
               >
                 <RestartAltIcon fontSize="small" />
               </DuncitIconButton>
             </Tooltip>
           )}
-          <DuncitIconButton size="small" onClick={close} aria-label={t('shell.askBot.close')}>
+          <DuncitIconButton size="small" onClick={close} aria-label={t('shell.askBot.close')} data-testid="ask-bot-close">
             <CloseIcon fontSize="small" />
           </DuncitIconButton>
         </Stack>

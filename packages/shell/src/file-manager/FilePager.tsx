@@ -26,6 +26,7 @@ export default function FilePager({ page, count, loading, hasMore, onPage }: Rea
         size="small"
         disabled={page === 0 || loading}
         onClick={() => onPage(page - 1)}
+        data-testid="file-manager-prev"
       >
         Previous
       </DuncitButton>
@@ -42,6 +43,7 @@ export default function FilePager({ page, count, loading, hasMore, onPage }: Rea
         size="small"
         disabled={!hasMore || loading}
         onClick={() => onPage(page + 1)}
+        data-testid="file-manager-next"
       >
         Next
       </DuncitButton>

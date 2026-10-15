@@ -7,6 +7,7 @@ export function TableErrorAlert({ error, onRetry }: Readonly<{ error: string; on
     <Alert
       severity="error"
       sx={{ m: 1.5 }}
+      data-testid="duncit-table-error"
       action={
         <DuncitButton color="inherit" size="small" onClick={onRetry}>
           Retry

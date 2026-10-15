@@ -51,7 +51,7 @@ export function AccountSummaryCard({ user }: Readonly<{ user?: AccountSummaryUse
   const name = user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || '—';
   const phone = user?.phone_number ? `${user?.phone_extension ?? ''} ${user.phone_number}`.trim() : '—';
   return (
-    <Card>
+    <Card data-testid="account-summary-card">
       <CardContent>
         <Stack spacing={1.5}>
           <Typography variant="subtitle1" sx={{

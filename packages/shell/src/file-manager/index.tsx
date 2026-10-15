@@ -89,7 +89,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" scroll="paper">
+    <Dialog data-testid="file-manager-dialog" open={open} onClose={onClose} fullWidth maxWidth="xl" scroll="paper">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="h6">{t('shell.fileManager.title')}</Typography>

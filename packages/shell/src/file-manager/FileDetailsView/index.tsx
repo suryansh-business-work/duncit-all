@@ -45,9 +45,9 @@ export const describeSaveError = (err: unknown, fallback: string): string =>
 /** Tab labels are copy, so the strip is built from the active catalogue.
  *  @duncit/tabs is framework-free and takes resolved text, not keys. */
 const buildTabs = (t: Translate, canWrite: boolean): DuncitTabItem<TabKey>[] => {
-  const info = { value: 'info' as const, label: t('shell.fileManager.info'), sx: TAB_SX };
+  const info = { value: 'info' as const, label: t('shell.fileManager.info'), sx: TAB_SX, testId: 'file-manager-tab-info' };
   if (!canWrite) return [info];
-  return [info, { value: 'edit' as const, label: t('shell.fileManager.edit'), sx: TAB_SX }];
+  return [info, { value: 'edit' as const, label: t('shell.fileManager.edit'), sx: TAB_SX, testId: 'file-manager-tab-edit' }];
 };
 
 /**
@@ -145,7 +145,7 @@ export default function FileDetailsView({
       </Stack>
 
       <Stack direction="row" spacing={0.5} sx={{ mb: 1 }}>
-        <DuncitButton size="small" startIcon={<ContentCopyIcon />} onClick={() => onCopy(file.url)}>
+        <DuncitButton size="small" startIcon={<ContentCopyIcon />} onClick={() => onCopy(file.url)} data-testid="file-manager-details-copy">
           Copy
         </DuncitButton>
         {canWrite && (
@@ -154,6 +154,7 @@ export default function FileDetailsView({
             color="error"
             startIcon={<DeleteOutlineIcon />}
             onClick={() => onDelete(file)}
+            data-testid="file-manager-delete"
           >
             Delete
           </DuncitButton>

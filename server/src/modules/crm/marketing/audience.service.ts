@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
+import { BOOKING_FIELDS, bookingCondition } from './audience.booking';
 import { UserInterestModel } from '@modules/access/user/relations/userInterest.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import {
@@ -80,7 +81,7 @@ const AUDIENCE_TABLE_CONFIG: TableEntityConfig = {
 };
 
 /** Fields this service resolves itself; stripped before the engine sees them. */
-const TRANSLATED = new Set(['age', 'whatsapp', 'push_platform', 'interest_category']);
+const TRANSLATED = new Set(['age', 'whatsapp', 'push_platform', 'interest_category', ...BOOKING_FIELDS]);
 
 /** The birthdate of somebody turning exactly `years` old today. */
 function dobForAge(years: number): Date {
@@ -227,7 +228,13 @@ async function applyInterest(base: BaseFilter, f: TableFilterInput) {
   if (cond) mergeId(base, cond);
 }
 
+async function applyBooking(base: BaseFilter, f: TableFilterInput) {
+  const cond = await bookingCondition(f);
+  if (cond) mergeId(base, cond);
+}
+
 async function applyTranslated(base: BaseFilter, f: TableFilterInput): Promise<void> {
+  if (BOOKING_FIELDS.has(f.field)) return applyBooking(base, f);
   if (f.field === 'age') return applyAge(base, f);
   if (f.field === 'whatsapp') return applyWhatsapp(base, f);
   if (f.field === 'push_platform') return applyPush(base, f);

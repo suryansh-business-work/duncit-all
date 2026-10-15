@@ -470,6 +470,9 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       nAddedByHand: '{count} added by hand',
       nRemovedByHand: '{count} removed by hand',
       neverEngaged: 'Never engaged',
+      hasBooked: 'Has booked a pod',
+      lastBooked: 'Last booked',
+      podsAttended: 'Pods attended',
       noFiltersEveryone: 'No filters — everyone',
       noOptionsYet: 'No options yet',
       nSelected: '{count} selected',
@@ -501,6 +504,10 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       noOneMatchesThatSearch: 'No one matches that search.',
     },
     whatsappCampaigns: {
+      weeklyCap: 'Marketing messages per person per week',
+      weeklyCapInvalid: 'Use a whole number from 0 to 50.',
+      weeklyCapHint:
+        'The most promotional WhatsApp messages one number gets in 7 days, campaigns and automatic nudges together. Anyone over it is skipped. 0 means no limit.',
       addAtLeastOneContactTo: 'Add at least one contact to send to',
       aisensyDidNotAnswer: 'AiSensy did not answer',
       aisensyMessageId: 'AiSensy message id',
@@ -558,6 +565,10 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       noTemplateMatchesThatSearch: 'No template matches that search.',
       nothingSentYetStartASend: 'Nothing sent yet — start a send from the Campaigns tab.',
       scheduleForLater: 'Schedule for later',
+      repeatEveryDays: 'Repeat every (days)',
+      repeatEveryDaysHint:
+        'Leave empty or 0 to send once. Otherwise the campaign runs again every this many days to whoever is on the list at that time, and nobody gets it twice: a first-pod nudge, a win-back or a rebook journey.',
+      repeatEveryDaysInvalid: 'Use a whole number of days from 0 to 90.',
     },
     // Marketing → Social Accounts: connect the networks, read how posts do,
     // and watch the comments with an AI read of each one.

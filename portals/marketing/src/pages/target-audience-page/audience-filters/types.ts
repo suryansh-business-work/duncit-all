@@ -29,6 +29,11 @@ export interface AudienceFilterState {
   joinedTo: string;
   activeFrom: string;
   activeTo: string;
+  hasBooked: TriState;
+  bookedFrom: string;
+  bookedTo: string;
+  attendedMin: string;
+  attendedMax: string;
 }
 
 export const EMPTY_FILTERS: AudienceFilterState = {
@@ -55,6 +60,11 @@ export const EMPTY_FILTERS: AudienceFilterState = {
   joinedTo: '',
   activeFrom: '',
   activeTo: '',
+  hasBooked: '',
+  bookedFrom: '',
+  bookedTo: '',
+  attendedMin: '',
+  attendedMax: '',
 };
 
 /** Dropdown values the sidebar needs, fetched by the page. */

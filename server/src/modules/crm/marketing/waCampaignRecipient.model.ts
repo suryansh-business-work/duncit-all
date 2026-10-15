@@ -37,6 +37,8 @@ const waCampaignRecipientSchema = new Schema(
 
 waCampaignRecipientSchema.index({ campaign_id: 1, status: 1 });
 waCampaignRecipientSchema.index({ campaign_id: 1, created_at: 1 });
+// The weekly marketing cap counts a number's recent sends across campaigns.
+waCampaignRecipientSchema.index({ destination: 1, status: 1, created_at: -1 });
 
 export type WaCampaignRecipientDoc = InferSchemaType<typeof waCampaignRecipientSchema> & {
   _id: Types.ObjectId;

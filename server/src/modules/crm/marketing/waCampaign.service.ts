@@ -9,6 +9,8 @@ import {
 } from '@modules/platform/aisensy/aisensy.gateway';
 import { isWhatsappDestination } from '@utils/phone';
 import { waPreferenceAllows } from '@modules/platform/whatsapp/whatsapp.service';
+import { CAPPED_REASON, marketingWeeklyCap, overMarketingCap } from './waMarketingCap';
+import { scheduleNextInSeries, seriesSeen, SERIES_SEEN_REASON } from './waCampaign.series';
 
 const OPTED_OUT_REASON = 'Recipient opted out of marketing WhatsApp';
 import {
@@ -93,6 +95,8 @@ const toPub = (doc: any) => ({
   })),
   status: doc.status,
   scheduled_at: iso(doc.scheduled_at),
+  repeat_every_days: Number(doc.repeat_every_days ?? 0),
+  series_id: doc.series_id ?? '',
   recipient_count: doc.recipient_count,
   sent_count: doc.sent_count,
   failed_count: doc.failed_count,
@@ -115,6 +119,7 @@ const toPricing = (doc: IWaPricing) => ({
   authentication_per_msg: Number(doc.authentication_per_msg ?? 0),
   service_per_msg: Number(doc.service_per_msg ?? 0),
   currency_symbol: doc.currency_symbol ?? '₹',
+  marketing_weekly_cap: Number(doc.marketing_weekly_cap ?? 0),
 });
 
 /** A rate is money per message: a real number, never negative. A typo that
@@ -229,6 +234,21 @@ interface SendInput {
   buttons?: ({ index?: number | null; value?: string | null } | null)[] | null;
   /** ISO time to send at. Absent, or already past, means send now. */
   scheduled_at?: string | null;
+  /** Days between runs of a recurring campaign; 0 or absent sends once. */
+  repeat_every_days?: number | null;
+}
+
+/** A repeat is whole days, 0 (once) to 90, and only for an audience LIST —
+ * the one audience that changes between runs. */
+function repeatDays(input: SendInput, audience: string): number {
+  const every = Math.floor(Number(input.repeat_every_days ?? 0));
+  if (!Number.isFinite(every) || every < 0 || every > 90) {
+    throw badInput('Repeat every must be a whole number of days from 0 to 90');
+  }
+  if (every > 0 && audience !== 'AUDIENCE_LIST') {
+    throw badInput('Only a campaign sent to an audience list can repeat');
+  }
+  return every;
 }
 
 /** The send time, or null for "now". A time that has already passed is not an
@@ -316,6 +336,7 @@ async function validateSendInput(input: SendInput) {
       buttons: input.buttons,
     }),
     scheduled_at: parseSchedule(input.scheduled_at),
+    repeat_every_days: repeatDays(input, String(input.audience)),
   };
 }
 
@@ -343,7 +364,25 @@ interface RecipientRow {
  * an empty variable is a SKIP, not a failure: nothing was attempted, nothing was
  * billed, and the reason says which of the two it was.
  */
-async function deliver(doc: any, user: Record<string, any>): Promise<RecipientRow> {
+/** A cap is a whole number of messages, 0 (off) to 50. */
+function weeklyCap(value: unknown): number {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n) || n < 0 || n > 50) {
+    throw new GraphQLError('The weekly limit must be a whole number from 0 to 50', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  return n;
+}
+
+interface DeliverOptions {
+  /** The weekly marketing cap; 0 is none. */
+  cap?: number;
+  /** Numbers an earlier run of this recurring campaign already reached. */
+  seen?: ReadonlySet<string>;
+}
+
+async function deliver(doc: any, user: Record<string, any>, opts: DeliverOptions = {}): Promise<RecipientRow> {
   const base = {
     campaign_id: doc.campaign_id,
     user_id: user._id ?? null,
@@ -363,6 +402,14 @@ async function deliver(doc: any, user: Record<string, any>): Promise<RecipientRo
   // person's own opt-out is checked against the number it would reach.
   if (!(await waPreferenceAllows(base.destination, 'marketing'))) {
     return { ...base, status: 'SKIPPED', reason: OPTED_OUT_REASON };
+  }
+  // Too many promotions to one phone is how a number gets reported and a
+  // WhatsApp account rated down; past the cap the person is skipped this time.
+  if (opts.seen?.has(base.destination)) {
+    return { ...base, status: 'SKIPPED', reason: SERIES_SEEN_REASON };
+  }
+  if (await overMarketingCap(base.destination, opts.cap ?? 0)) {
+    return { ...base, status: 'SKIPPED', reason: CAPPED_REASON };
   }
   const { params, missingReason } = fillParams(doc.template_params ?? [], user);
   if (missingReason) return { ...base, status: 'SKIPPED', reason: missingReason };
@@ -422,6 +469,7 @@ async function runSend(campaignId: string) {
   doc.status = 'SENDING';
   try {
     const users = await recipientUsers(doc.audience as WaCampaignAudience, scopeOf(doc));
+    const [cap, seen] = await Promise.all([marketingWeeklyCap(), seriesSeen(doc)]);
     doc.recipient_count = users.length;
     await doc.save();
     let pending: RecipientRow[] = [];
@@ -434,7 +482,7 @@ async function runSend(campaignId: string) {
       await doc.save();
     };
     for (const [index, user] of users.entries()) {
-      const row = await deliver(doc, user);
+      const row = await deliver(doc, user, { cap, seen });
       doc[COUNTER_OF[row.status]] += 1;
       firstReason ||= row.reason;
       pending.push(row);
@@ -449,6 +497,13 @@ async function runSend(campaignId: string) {
     doc.error = str(e?.message) || 'WhatsApp campaign send failed';
   }
   await doc.save();
+  // A recurring campaign books its next run only once this one is done, so
+  // two runs of one series can never overlap.
+  const next = await scheduleNextInSeries(doc).catch((error) => {
+    logs.server.error('waCampaign', 'nextInSeries', { error, campaign_id: campaignId });
+    return null;
+  });
+  if (next) scheduleDoc(next);
   logs.server.info('waCampaign', 'runSend', {
     campaign_id: campaignId,
     status: doc.status,
@@ -514,12 +569,13 @@ async function runRetry(campaignId: string) {
       status: { $in: UNREACHED },
     }).exec();
     const byKey = await retryTargets(doc, rows);
+    const cap = await marketingWeeklyCap();
     for (const [index, row] of rows.entries()) {
       const user = byKey.get(retryKey(row));
       // The account is gone — there is nobody left to retry against, and the
       // row keeps saying why it was never reached.
       if (user) {
-        const outcome = await deliver(doc, user);
+        const outcome = await deliver(doc, user, { cap });
         row.name = outcome.name;
         row.destination = outcome.destination;
         row.status = outcome.status;
@@ -646,6 +702,7 @@ export const waCampaignService = {
       authentication_per_msg: rate(input.authentication_per_msg, 'Authentication'),
       service_per_msg: rate(input.service_per_msg, 'Service'),
       currency_symbol: str(input.currency_symbol) || '₹',
+      ...(input.marketing_weekly_cap == null ? {} : { marketing_weekly_cap: weeklyCap(input.marketing_weekly_cap) }),
     };
     const doc = await WaPricingModel.findOneAndUpdate(
       { singleton_key: 'whatsapp' },
@@ -720,9 +777,11 @@ export const waCampaignService = {
       throw badInput('Add the AiSensy API key in the Tech portal before sending');
     }
     const payload = await validateSendInput(input);
+    const campaignId = crypto.randomUUID();
     const doc = await WaCampaignModel.create({
       ...payload,
-      campaign_id: crypto.randomUUID(),
+      campaign_id: campaignId,
+      series_id: payload.repeat_every_days > 0 ? campaignId : '',
       status: payload.scheduled_at ? 'SCHEDULED' : 'SENDING',
       created_by: userId ?? null,
     });

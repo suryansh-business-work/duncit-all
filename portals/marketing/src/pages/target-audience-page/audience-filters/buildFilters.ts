@@ -31,12 +31,12 @@ const pushDateRange = (out: TableFilterValue[], field: string, from: string, to:
   else if (to) out.push({ field, op: 'lte', value: to });
 };
 
-/** Age is the one range the server translates rather than compares, so it is
- * emitted on the `age` field and turned into a birthdate range there. */
-const pushAge = (out: TableFilterValue[], min?: string, max?: string) => {
-  if (min && max) out.push({ field: 'age', op: 'between', values: [min, max] });
-  else if (min) out.push({ field: 'age', op: 'gte', value: min });
-  else if (max) out.push({ field: 'age', op: 'lte', value: max });
+/** A whole-number range the server translates rather than compares — age
+ * (into a birthdate range) and pods attended (into a set of members). */
+const pushCountRange = (out: TableFilterValue[], field: string, min?: string, max?: string) => {
+  if (min && max) out.push({ field, op: 'between', values: [min, max] });
+  else if (min) out.push({ field, op: 'gte', value: min });
+  else if (max) out.push({ field, op: 'lte', value: max });
 };
 
 /**
@@ -46,7 +46,7 @@ const pushAge = (out: TableFilterValue[], min?: string, max?: string) => {
 export function buildFilters(state: AudienceFilterState): TableFilterValue[] {
   const out: TableFilterValue[] = [];
 
-  pushAge(out, bound(state.ageMin), bound(state.ageMax));
+  pushCountRange(out, 'age', bound(state.ageMin), bound(state.ageMax));
 
   pushMulti(out, 'country', state.country);
   pushMulti(out, 'state', state.state);
@@ -70,6 +70,10 @@ export function buildFilters(state: AudienceFilterState): TableFilterValue[] {
 
   pushDateRange(out, 'created_at', state.joinedFrom, state.joinedTo);
   pushDateRange(out, 'last_login_at', state.activeFrom, state.activeTo);
+
+  pushTri(out, 'has_booked', state.hasBooked);
+  pushDateRange(out, 'last_booked_at', state.bookedFrom, state.bookedTo);
+  pushCountRange(out, 'pods_attended', bound(state.attendedMin), bound(state.attendedMax));
 
   return out;
 }

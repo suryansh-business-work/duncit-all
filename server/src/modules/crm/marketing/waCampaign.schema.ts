@@ -115,6 +115,10 @@ export const waCampaignTypeDefs = gql`
     status: WaCampaignStatus!
     "When a scheduled send is due. Null for one that went out immediately."
     scheduled_at: String
+    "Days between runs of a recurring campaign; 0 for a one-off."
+    repeat_every_days: Int!
+    "Shared by every run of one recurring campaign; empty for a one-off."
+    series_id: String!
     "How many people the audience resolved to at send time."
     recipient_count: Int!
     sent_count: Int!
@@ -247,6 +251,8 @@ export const waCampaignTypeDefs = gql`
     buttons: [AisensyButtonInput!]
     "ISO time to send at. Absent, or already past, sends immediately."
     scheduled_at: String
+    "Repeat every N days (1-90) against the audience list's members at that time; 0 or absent sends once."
+    repeat_every_days: Int
   }
 
   "What a WhatsApp message costs, by the category Meta bills on."
@@ -257,6 +263,8 @@ export const waCampaignTypeDefs = gql`
     "Service conversations are free today — a rate is kept so that can change without a deploy."
     service_per_msg: Float!
     currency_symbol: String!
+    "The most marketing WhatsApp messages one number may get in 7 days, campaigns and automatic marketing together. 0 is no cap."
+    marketing_weekly_cap: Int!
   }
 
   input UpdateWaPricingInput {
@@ -265,6 +273,8 @@ export const waCampaignTypeDefs = gql`
     authentication_per_msg: Float!
     service_per_msg: Float!
     currency_symbol: String!
+    "0-50; omitted keeps the saved cap."
+    marketing_weekly_cap: Int
   }
 
   "What one category cost over the window."

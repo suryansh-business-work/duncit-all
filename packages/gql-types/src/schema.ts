@@ -31832,6 +31832,8 @@ export type SendWaCampaignInput = {
   media?: InputMaybe<AisensyMediaInput>;
   /** Internal name for this send. */
   name: Scalars['String']['input'];
+  /** Repeat every N days (1-90) against the audience list's members at that time; 0 or absent sends once. */
+  repeat_every_days?: InputMaybe<Scalars['Int']['input']>;
   /** ISO time to send at. Absent, or already past, sends immediately. */
   scheduled_at?: InputMaybe<Scalars['String']['input']>;
   /** Ordered template variables — literal text, or {{first_name}} style tokens. */
@@ -38338,6 +38340,8 @@ export type UpdateWaPricingInput = {
   authentication_per_msg: Scalars['Float']['input'];
   currency_symbol: Scalars['String']['input'];
   marketing_per_msg: Scalars['Float']['input'];
+  /** 0-50; omitted keeps the saved cap. */
+  marketing_weekly_cap?: InputMaybe<Scalars['Int']['input']>;
   service_per_msg: Scalars['Float']['input'];
   utility_per_msg: Scalars['Float']['input'];
 };
@@ -39950,9 +39954,13 @@ export type WaCampaign = {
   name: Scalars['String']['output'];
   /** How many people the audience resolved to at send time. */
   recipient_count: Scalars['Int']['output'];
+  /** Days between runs of a recurring campaign; 0 for a one-off. */
+  repeat_every_days: Scalars['Int']['output'];
   /** When a scheduled send is due. Null for one that went out immediately. */
   scheduled_at?: Maybe<Scalars['String']['output']>;
   sent_at?: Maybe<Scalars['String']['output']>;
+  /** Shared by every run of one recurring campaign; empty for a one-off. */
+  series_id: Scalars['String']['output'];
   sent_count: Scalars['Int']['output'];
   /** Matched the audience but had no usable number or an empty variable. */
   skipped_count: Scalars['Int']['output'];
@@ -40356,6 +40364,8 @@ export type WaPricing = {
   authentication_per_msg: Scalars['Float']['output'];
   currency_symbol: Scalars['String']['output'];
   marketing_per_msg: Scalars['Float']['output'];
+  /** The most marketing WhatsApp messages one number may get in 7 days, campaigns and automatic marketing together. 0 is no cap. */
+  marketing_weekly_cap: Scalars['Int']['output'];
   /** Service conversations are free today — a rate is kept so that can change without a deploy. */
   service_per_msg: Scalars['Float']['output'];
   utility_per_msg: Scalars['Float']['output'];

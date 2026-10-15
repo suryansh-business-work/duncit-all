@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Share } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { cancelSpotErrorKey } from '@duncit/utils';
 
 import type { PodDetail } from '@/hooks/useDetails';
@@ -10,11 +12,13 @@ import { JoinFreePodDocument, JoinPodMeetingDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { podShareLinks } from '@/services/share-link';
 import { podShareMessage } from '@/utils/pod-format';
+import type { RootStackParamList } from '@/navigation/types';
 
 /** Booking, backout and share actions for the loaded pod — the state the
  * booking bar and its dialogs share. RN twin of mWeb's usePodDetailActions. */
 export function usePodDetailActions(pod: PodDetail | null, refetch: () => Promise<void>) {
   const { t } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { backout, busy: backingOut } = usePodBackout();
   const { cancelBackout, busy: restoringSpot } = usePodCancelBackout();
   const { cancelSpot, busy: cancellingSpot } = usePodCancelSpot();
@@ -40,6 +44,10 @@ export function usePodDetailActions(pod: PodDetail | null, refetch: () => Promis
    * native PodDetails route has no referral param yet, so a free join from a
    * shared link does not credit the sharer — that needs deep-link plumbing and
    * is its own change.
+   *
+   * A successful join lands on the same confirmation a paid booking does (the
+   * ticket download lives there) instead of leaving the member to find it in
+   * Pod History; the bar behind it is re-read for when they come back.
    */
   const onJoinFree = async () => {
     if (!pod || joiningFree) return;
@@ -51,6 +59,7 @@ export function usePodDetailActions(pod: PodDetail | null, refetch: () => Promis
         { podId: pod.id, referral: null, seats },
         { auth: true },
       );
+      navigation.navigate('FreeJoinSuccess', { podId: pod.id });
       await refetch();
     } catch (err) {
       setJoinError(toErrorMessage(err, t('mweb.podDetails.couldNotJoin')));

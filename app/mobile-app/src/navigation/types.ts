@@ -180,6 +180,9 @@ export type RootStackParamList = {
   HappeningNearby: { initialIndex?: number } | undefined;
   // Pod-membership checkout (pod_amount only — never carries products).
   Checkout: { podId: string; seats?: number };
+  /** Where a FREE pod's instant join lands — the checkout confirmation with the
+   * ticket and nothing paid (mWeb /pod/:podId/booked). */
+  FreeJoinSuccess: { podId: string };
   // Standalone product checkout — EVERY cart line pays in one product payment.
   ProductCheckout: undefined;
   Shop: undefined;
@@ -207,11 +210,16 @@ export type RootStackParamList = {
   PublicProfile: { userId: string };
   PostDetail: { postId: string };
   Follow: { userId: string; tab: 'followers' | 'following' };
-  VenueDetails: { venueId: string };
+  /** `table` is a table sticker's (`?table=5`): the food checkout starts with it filled in. */
+  VenueDetails: { venueId: string; table?: string };
   /** /venue/:venueId/food-order/:orderId — a food order placed from the venue's menu;
    * `key` is the order's access key, riding in the link as `?key=`; `feedback`
    * (`?feedback=1`, the "rate your order" link) opens the screen on its rating card. */
   VenueFoodOrder: { venueId: string; orderId: string; key?: string; feedback?: string };
+  /** /venue/:venueId/food/:itemId — a dish's own page, opened from its name on the menu. */
+  VenueFoodItem: { venueId: string; itemId: string };
+  /** /food-orders — Your Food Orders: the account's and this device's orders from venue menus. */
+  MyFoodOrders: undefined;
   /** /city-launch/:locationId — a not-yet-launched city's waitlist (its slug, or Location.id). */
   CityLaunch: { locationId: string };
   NotFound: undefined;
@@ -255,8 +263,10 @@ export type MenuStackRoute = Exclude<
   | 'Follow'
   | 'VenueDetails'
   | 'VenueFoodOrder'
+  | 'VenueFoodItem'
   | 'CityLaunch'
   | 'Checkout'
+  | 'FreeJoinSuccess'
   | 'ProductCheckout'
   | 'ProductDetail'
   | 'GiftCardCheckout'

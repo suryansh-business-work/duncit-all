@@ -48,6 +48,7 @@ export function PodBackoutDialogs({
         busy={actions.cancellingSpot}
         onClose={() => actions.setCancelSpotOpen(false)}
         onConfirm={actions.onConfirmCancelSpot}
+        cancels={membershipState}
       />
     </>
   );

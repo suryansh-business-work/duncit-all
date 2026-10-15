@@ -1,10 +1,12 @@
 import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { auth } from '@duncit/auth-tokens';
 import { BUTTON_SIZES, PRESS_STYLE } from '@duncit/buttons-native';
 import type { SocialCredential } from '@duncit/utils';
 
 import { AuthDivider } from '@/components/AuthDivider';
+import { useAuthFit } from '@/components/AuthScaffold/useAuthFit';
 import { LegalLinks } from '@/components/LegalLinks';
 import { SocialRoundButtons } from '@/components/SocialRoundButtons';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -84,9 +86,11 @@ export function LoginMethodStep({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color: ink } = useThemeColors();
+  // The gaps between blocks shrink with the window; the doors themselves don't.
+  const { size } = useAuthFit();
 
   return (
-    <YStack gap={20}>
+    <YStack gap={size(auth.fit.gap * (2 / 3))}>
       <LoginFeatureChips />
       <YStack gap={12}>
         <MethodButton

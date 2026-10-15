@@ -1,5 +1,6 @@
-import { Vibration } from 'react-native';
+import { StyleSheet, Vibration } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
@@ -11,7 +12,7 @@ import type { ShopProduct } from '@/screens/ShopScreen';
 import { useCartControlNotice } from '@/hooks/useCartControlNotice';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { PRESS_STYLE, withAlpha } from '@duncit/buttons-native';
 
 interface Props {
   product: ShopProduct;
@@ -28,6 +29,8 @@ interface Props {
 }
 
 const IMAGE_STYLE = { width: '100%', height: '100%' } as const;
+const GRADIENT_START = { x: 0, y: 0 } as const;
+const GRADIENT_END = { x: 1, y: 1 } as const;
 
 /** One product tile in the Pod Shop browse grid — image, name, price and (when
  * reviewed) an average rating. Tapping opens the product detail screen; the
@@ -44,7 +47,7 @@ export function ShopProductCard({
   onQuantity,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { warning } = useThemeColors();
+  const { warning, primary, brand } = useThemeColors();
   const labels = cartControlLabels(t, product.product_name);
   const notice = useCartControlNotice(quantity, cartReady);
   const imageUrl = product.image_url || product.images[0] || '';
@@ -66,6 +69,13 @@ export function ShopProductCard({
       pressStyle={PRESS_STYLE.surface}
     >
       <YStack aspectRatio={1} borderRadius={18} overflow="hidden" backgroundColor="$soft">
+        {/* A soft brand-tinted well, so a cut-out product shot still reads as a tile. */}
+        <LinearGradient
+          colors={[withAlpha(primary, 0.14), withAlpha(brand, 0.08)]}
+          start={GRADIENT_START}
+          end={GRADIENT_END}
+          style={StyleSheet.absoluteFill}
+        />
         {imageUrl ? (
           <AppImage source={{ uri: imageUrl }} style={IMAGE_STYLE} resizeMode="cover" />
         ) : null}
@@ -105,29 +115,48 @@ export function ShopProductCard({
           </YStack>
         )}
       </YStack>
-      <YStack paddingTop={8} paddingHorizontal={4} gap={2}>
+      <YStack paddingTop={10} paddingHorizontal={4} paddingBottom={4} gap={4}>
         <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={2} lineHeight={18}>
           {product.product_name}
         </Text>
-        {product.brand_name ? (
-          <Text fontSize={12} color="$muted" numberOfLines={1}>
-            {product.brand_name}
-          </Text>
-        ) : null}
-        {hasRating ? (
-          <XStack testID={`shop-product-rating-${product.id}`} alignItems="center" gap={2}>
-            <MaterialIcons name="star" size={14} color={warning} />
-            <Text fontSize={12} fontWeight="600" color="$color">
-              {summary.average_rating.toFixed(1)}
-            </Text>
-            <Text fontSize={12} color="$muted">
-              ({summary.total})
-            </Text>
+        {product.brand_name || hasRating ? (
+          <XStack alignItems="center" gap={6}>
+            {product.brand_name ? (
+              <Text flexShrink={1} fontSize={12} color="$muted" numberOfLines={1}>
+                {product.brand_name}
+              </Text>
+            ) : null}
+            {hasRating ? (
+              <XStack testID={`shop-product-rating-${product.id}`} alignItems="center" gap={2}>
+                <MaterialIcons name="star" size={14} color={warning} />
+                <Text fontSize={12} fontWeight="600" color="$color">
+                  {summary.average_rating.toFixed(1)}
+                </Text>
+                <Text fontSize={12} color="$muted">
+                  ({summary.total})
+                </Text>
+              </XStack>
+            ) : null}
           </XStack>
         ) : null}
-        <Text fontSize={16} fontWeight="700" color="$color" marginTop={4}>
-          ₹{product.unit_cost}
-        </Text>
+        {/* The price as a dark tag — the ink colour as the fill, so it inverts in dark mode. */}
+        <XStack
+          alignSelf="flex-start"
+          marginTop={2}
+          paddingHorizontal={10}
+          paddingVertical={3}
+          borderRadius={999}
+          backgroundColor="$color"
+        >
+          <Text
+            testID={`shop-product-price-${product.id}`}
+            fontSize={14}
+            fontWeight="700"
+            color="$surface"
+          >
+            ₹{product.unit_cost}
+          </Text>
+        </XStack>
       </YStack>
     </SurfaceCard>
   );

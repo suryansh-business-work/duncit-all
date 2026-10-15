@@ -59,6 +59,9 @@ export default function AppHeader({
   const onHome = pathname === '/';
   // The cart holds products from every super category — nothing to narrow.
   const onCart = pathname === '/cart';
+  // The Pod Shop is platform-wide too, and it ships to an address rather than
+  // a city: its header shows "Deliver to" in place of the city pill.
+  const onShop = pathname === '/shop';
   const isUserStudio = effectiveStudio === 'USER';
   // A "Coming soon" city has nothing for the switch to narrow until it
   // launches, and its waitlist hero speaks for Home — no greeting either.
@@ -98,7 +101,7 @@ export default function AppHeader({
 
   const handleNotifToast = useCallback(
     (t: { title?: string; body?: string } | null) => setToast(t),
-    []
+    [],
   );
 
   // The page ground, opaque: the content scrolls in its own container below
@@ -111,11 +114,7 @@ export default function AppHeader({
       elevation={0}
       sx={{ bgcolor: 'background.default', backgroundImage: 'none', border: 0 }}
     >
-      <Toolbar
-        variant="dense"
-        disableGutters
-        sx={toolbarSx(showGreeting)}
-      >
+      <Toolbar variant="dense" disableGutters sx={toolbarSx(showGreeting)}>
         <HeaderLeading
           minimal={minimal}
           studio={effectiveStudio}
@@ -127,6 +126,8 @@ export default function AppHeader({
           selectedZoneName={selectedZoneName}
           placeReady={placeReady}
           onOpenLocation={loc.openLocationPicker}
+          deliveryAddress={onShop}
+          signedIn={!!me}
         />
 
         {minimal ? (
@@ -181,7 +182,7 @@ export default function AppHeader({
         <HeaderVerifyEmail onOpen={() => navigate('/profile?verifyEmail=1')} />
       )}
 
-      {!minimal && !comingSoon && !onCart && (
+      {!minimal && !comingSoon && !onCart && !onShop && (
         <SuperCategoryTabs
           loading={staticLoading}
           superCats={superCats}

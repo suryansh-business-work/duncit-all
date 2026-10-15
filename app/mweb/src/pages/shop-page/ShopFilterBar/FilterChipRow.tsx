@@ -2,7 +2,11 @@ import { Box, Chip, Stack } from '@mui/material';
 
 export type Option = readonly [string, string];
 
-const railSx = { overflowX: 'auto', scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } } as const;
+const railSx = {
+  overflowX: 'auto',
+  scrollbarWidth: 'none',
+  '&::-webkit-scrollbar': { display: 'none' },
+} as const;
 
 /** The same filter pill as Home's FilterBar and the native FilterChip: 32 tall
  * on touch too (a clickable Chip is a role=button, which the coarse-pointer
@@ -15,7 +19,12 @@ export default function FilterChipRow({
   value,
   onSelect,
   idPrefix,
-}: Readonly<{ options: readonly Option[]; value: string; onSelect: (v: string) => void; idPrefix: string }>) {
+}: Readonly<{
+  options: readonly Option[];
+  value: string;
+  onSelect: (v: string) => void;
+  idPrefix: string;
+}>) {
   return (
     <Box sx={railSx}>
       <Stack direction="row" spacing={1} sx={{ width: 'max-content', pb: 0.25 }}>
@@ -40,4 +49,7 @@ export default function FilterChipRow({
   );
 }
 
-export const withAll = (options: Option[]): Option[] => [['', 'All'], ...options];
+export const withAll = (options: Option[], allLabel: string): Option[] => [
+  ['', allLabel],
+  ...options,
+];

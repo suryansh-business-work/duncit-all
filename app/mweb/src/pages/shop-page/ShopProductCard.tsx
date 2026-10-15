@@ -1,5 +1,5 @@
 import { Box, Card, CardActionArea, Chip, Stack, Typography } from '@mui/material';
-import type { Theme } from '@mui/material/styles';
+import { alpha, type Theme } from '@mui/material/styles';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from '@duncit/ui';
 import type { ShopProduct } from './queries';
@@ -30,6 +30,31 @@ const NAME_SX = {
   overflow: 'hidden',
 } as const;
 
+/** The photo sits on a soft brand-tinted well, so a cut-out product shot on a
+ * transparent or white ground still reads as a tile. */
+const PHOTO_WELL_SX = {
+  aspectRatio: '1 / 1',
+  borderRadius: '18px',
+  overflow: 'hidden',
+  background: (theme: Theme) =>
+    `linear-gradient(155deg, ${alpha(theme.palette.primary.main, 0.14)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
+} as const;
+
+/** The price as a dark tag — the ink colour as the fill, so it inverts in dark mode. */
+const PRICE_TAG_SX = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  mt: 0.25,
+  px: 1.25,
+  py: 0.375,
+  borderRadius: 999,
+  bgcolor: 'text.primary',
+  color: 'background.paper',
+  fontSize: '0.875rem',
+  fontWeight: 700,
+  lineHeight: 1.4,
+} as const;
+
 /** The card's padding, which is also how far the photo sits from its edges. */
 const inset = (theme: Theme) => theme.spacing(1);
 
@@ -45,7 +70,12 @@ const PHOTO_OVERLAY_SX = {
 } as const;
 
 /** The photo's bottom-right corner: the pill opens leftwards from the "+". */
-const CONTROL_SX = { position: 'absolute', right: inset, bottom: inset, pointerEvents: 'auto' } as const;
+const CONTROL_SX = {
+  position: 'absolute',
+  right: inset,
+  bottom: inset,
+  pointerEvents: 'auto',
+} as const;
 
 /** One product tile in the Pod Shop browse grid — image, name, price and (when
  * reviewed) an average-rating chip. Tapping opens the full product detail page;
@@ -72,39 +102,64 @@ export default function ShopProductCard({
     onQuantity(product, next);
   };
   return (
-    <Card data-testid={`shop-product-${product.id}`} sx={{ position: 'relative', overflow: 'hidden' }}>
-      <CardActionArea onClick={() => onOpen(product.id)} aria-label={`View ${product.product_name}`} sx={{ p: 1 }}>
-        <Box sx={{ aspectRatio: '1 / 1', bgcolor: 'action.hover', borderRadius: '18px', overflow: 'hidden' }}>
+    <Card
+      data-testid={`shop-product-${product.id}`}
+      sx={{ position: 'relative', overflow: 'hidden' }}
+    >
+      <CardActionArea
+        onClick={() => onOpen(product.id)}
+        aria-label={`View ${product.product_name}`}
+        sx={{ p: 1 }}
+      >
+        <Box sx={PHOTO_WELL_SX}>
           {imageUrl && (
             <Box
               component="img"
               src={imageUrl}
               alt={product.product_name}
+              loading="lazy"
               sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           )}
         </Box>
-        <Stack spacing={0.25} sx={{ pt: 1, px: 0.5, pb: 0.25 }}>
-          <Typography data-testid={`shop-product-name-${product.id}`} sx={NAME_SX}>{product.product_name}</Typography>
-          {product.brand_name && (
-            <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
-              {product.brand_name}
-            </Typography>
-          )}
-          {hasRating && (
-            <Stack data-testid={`shop-product-rating-${product.id}`} direction="row" spacing={0.25} sx={{ alignItems: 'center' }}>
-              <StarRoundedIcon sx={{ fontSize: 16, color: 'warning.main' }} />
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {summary.average_rating.toFixed(1)}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                ({summary.total})
-              </Typography>
+        <Stack spacing={0.5} sx={{ pt: 1.25, px: 0.5, pb: 0.5 }}>
+          <Typography data-testid={`shop-product-name-${product.id}`} sx={NAME_SX}>
+            {product.product_name}
+          </Typography>
+          {(product.brand_name || hasRating) && (
+            <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', minWidth: 0 }}>
+              {product.brand_name && (
+                <Typography variant="caption" noWrap sx={{ color: 'text.secondary', minWidth: 0 }}>
+                  {product.brand_name}
+                </Typography>
+              )}
+              {hasRating && (
+                <Stack
+                  data-testid={`shop-product-rating-${product.id}`}
+                  direction="row"
+                  spacing={0.25}
+                  sx={{ alignItems: 'center', flex: '0 0 auto' }}
+                >
+                  <StarRoundedIcon sx={{ fontSize: 14, color: 'warning.main' }} />
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    {summary.average_rating.toFixed(1)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    ({summary.total})
+                  </Typography>
+                </Stack>
+              )}
             </Stack>
           )}
-          <Typography data-testid={`shop-product-price-${product.id}`} sx={{ fontSize: '1rem', fontWeight: 700, pt: 0.5 }}>
-            {priceFormat(product.unit_cost)}
-          </Typography>
+          <Box>
+            <Typography
+              component="span"
+              data-testid={`shop-product-price-${product.id}`}
+              sx={PRICE_TAG_SX}
+            >
+              {priceFormat(product.unit_cost)}
+            </Typography>
+          </Box>
         </Stack>
       </CardActionArea>
       {outOfStock && (
@@ -125,7 +180,11 @@ export default function ShopProductCard({
         />
       )}
       <Box sx={PHOTO_OVERLAY_SX}>
-        <CartControlNoticeChip notice={notice} labels={labels} testId={`shop-product-${product.id}-notice`} />
+        <CartControlNoticeChip
+          notice={notice}
+          labels={labels}
+          testId={`shop-product-${product.id}-notice`}
+        />
         {/* Sold out takes the "+" away, but what is already in the cart can still be taken out. */}
         {(!outOfStock || quantity > 0) && (
           <CartQuantityControl

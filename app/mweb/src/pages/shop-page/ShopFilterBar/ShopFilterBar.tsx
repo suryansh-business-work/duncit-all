@@ -23,7 +23,12 @@ import FilterSection from './FilterSection';
 /** The pill search field — white on the page ground, borderless in light mode. */
 const SEARCH_SX = {
   flex: 1,
-  '& .MuiOutlinedInput-root': { height: 52, borderRadius: 999, bgcolor: 'background.paper', pl: '18px' },
+  '& .MuiOutlinedInput-root': {
+    height: 52,
+    borderRadius: 999,
+    bgcolor: 'background.paper',
+    pl: '18px',
+  },
   '& .MuiOutlinedInput-input::placeholder': { color: 'text.secondary', opacity: 1 },
   '& .MuiOutlinedInput-root fieldset': { borderColor: 'var(--duncit-card-border)' },
   '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: 'primary.main' },
@@ -38,9 +43,13 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
   const [open, setOpen] = useState(false);
   return (
     <Box data-testid="shop-filter-bar">
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: 'center',
+        }}
+      >
         <TextField
           size="small"
           data-testid="shop-search"
@@ -56,7 +65,10 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
                 </InputAdornment>
               ),
             },
-            htmlInput: { 'data-testid': 'shop-search-input', 'aria-label': t('mweb.shop.searchProducts') },
+            htmlInput: {
+              'data-testid': 'shop-search-input',
+              'aria-label': t('mweb.shop.searchProducts'),
+            },
           }}
         />
         {/* The round green filter button; a darker green while the panel is open. */}
@@ -85,20 +97,12 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
       </Stack>
       <Collapse in={open}>
         <Stack spacing={1.5} sx={{ pt: 1.5 }}>
-          {filters.superOptions.length > 0 && (
-            <FilterSection title={t('mweb.common.superCategory')}>
-              <FilterChipRow
-                options={withAll(filters.superOptions)}
-                value={filters.superId}
-                onSelect={filters.selectSuper}
-                idPrefix="shop-super"
-              />
-            </FilterSection>
-          )}
+          {/* The super-category pills sit on the page itself (ShopCategoryPills);
+           * the narrower levels they open stay in here. */}
           {filters.categoryOptions.length > 0 && (
             <FilterSection title={t('mweb.common.category')}>
               <FilterChipRow
-                options={withAll(filters.categoryOptions)}
+                options={withAll(filters.categoryOptions, t('mweb.common.all'))}
                 value={filters.categoryId}
                 onSelect={filters.selectCategory}
                 idPrefix="shop-cat"
@@ -108,7 +112,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
           {filters.subOptions.length > 0 && (
             <FilterSection title={t('mweb.shop.subCategory')}>
               <FilterChipRow
-                options={withAll(filters.subOptions)}
+                options={withAll(filters.subOptions, t('mweb.common.all'))}
                 value={filters.subId}
                 onSelect={filters.setSubId}
                 idPrefix="shop-sub"
@@ -143,7 +147,11 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
             sx={{ maxWidth: 220 }}
           >
             {SHOP_SORT_OPTIONS.map((option) => (
-              <MenuItem key={option.value} data-testid={`shop-sort-${option.value}`} value={option.value}>
+              <MenuItem
+                key={option.value}
+                data-testid={`shop-sort-${option.value}`}
+                value={option.value}
+              >
                 {t(option.labelKey)}
               </MenuItem>
             ))}

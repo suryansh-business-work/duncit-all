@@ -1315,6 +1315,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       quickAddFailed: 'Could not add this to your cart. Please try again.',
       quickAddUnavailable: 'No pod stocks this product right now.',
       quickAddMaxReached: 'You already have all the available stock of this product in your cart.',
+      // The "Deliver to" pill that replaces the city pill in the header on the
+      // Pod Shop, and the address-book list it opens (mWeb + native).
+      changeDeliveryAddress: 'Change delivery address',
+      deliveryTitle: 'Where should we deliver?',
+      addDeliveryAddress: 'Add a delivery address',
+      noSavedAddresses: 'No saved addresses yet. Add one and your orders will ship there.',
+      manageAddresses: 'Manage addresses',
+      addressesLoadError: 'Could not load your addresses.',
     },
     // The pod-type words, shared wherever a pod is labelled or filtered by
     // whether it charges: the Home and Explore price chips, the Create Pod

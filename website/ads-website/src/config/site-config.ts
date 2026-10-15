@@ -304,7 +304,7 @@ const build = (t: SiteTranslate) => ({
         label: t('website.ads.footer.duncitGroup'),
         links: [
           { label: t('website.ads.footer.duncit'), href: mainSiteUrl },
-          { label: t('website.ads.footer.earnWithDuncit'), href: `${mainSiteUrl}/earn` },
+          { label: t('website.ads.footer.earnWithDuncit'), href: earnwithUrl },
           { label: t('website.ads.footer.support'), href: `${mainSiteUrl}/help` },
         ],
       },

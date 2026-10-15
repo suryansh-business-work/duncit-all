@@ -547,6 +547,9 @@ jobs:
       E2E_LIVE_GRAPHQL_URL: https://staging.server.duncit.com/graphql
       CYPRESS_E2E_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
       CYPRESS_GRAPHQL_URL: https://staging.server.duncit.com/graphql
+      # A hostname from a staging CMS site's domains (Website portal > Sites), for the
+      # cms-site specs; set the repository variable E2E_CMS_SITE_HOST.
+      CYPRESS_CMS_SITE_HOST: ${{ vars.E2E_CMS_SITE_HOST }}
       JUNIT_ROOT: ${{ github.workspace }}/e2e-artifacts/junit
       E2E_STAGE: Preparing the runner
     steps:
@@ -641,6 +644,31 @@ jobs:
             (cd "portals/$portal" && pnpm build)
             echo "::endgroup::"
           done
+      # The public websites and the pet store, built against staging with the
+      # staging public hosts deploy.yml bakes in, for specs/ui/websites/**.
+      - name: Build the websites and the pet store
+        env:
+          PUBLIC_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+          PUBLIC_SERVER_URL: ${{ env.E2E_LIVE_API }}
+          PUBLIC_SITE_URL: https://staging.duncit.com
+          PUBLIC_MAIN_SITE_URL: https://staging.duncit.com
+          PUBLIC_MWEB_URL: https://staging.mweb.duncit.com
+          PUBLIC_ADS_SITE_URL: https://staging.ads.duncit.com
+          PUBLIC_ADS_PORTAL_URL: https://staging.ads-portal.duncit.com
+          PUBLIC_EARNWITH_URL: https://staging.earnwith.duncit.com
+          PUBLIC_PARTNERS_SITE_URL: https://staging.partners.duncit.com
+          PUBLIC_PARTNERS_APP_URL: https://staging.partners-app.duncit.com
+          VITE_SERVER_URL: ${{ env.E2E_LIVE_API }}
+          VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+          VITE_MAIN_SITE_URL: https://staging.duncit.com
+          VITE_MWEB_URL: https://staging.mweb.duncit.com
+          VITE_SITE_URL: https://staging.ecomm.duncit.com
+        run: |
+          for site in main-website ads-website earnwith-website partners-website status-website ecomm-store cms-site; do
+            echo "::group::$site"
+            (cd "website/$site" && pnpm build)
+            echo "::endgroup::"
+          done
       # The same target native.duncit.com ships; the slow step of the job.
       - name: Export the native app for web
         working-directory: app/mobile-app
@@ -662,11 +690,24 @@ jobs:
           for portal in admin finance onboarding venues hosts clubs club-admins crm communications logs products ecomm-portal; do
             (cd "portals/$portal" && nohup pnpm preview > "$RUNNER_TEMP/$portal.log" 2>&1 &)
           done
+          # duncit.com, the pet store and the CMS renderer run their own Node
+          # servers (real 404s, redirects and per-request meta); the rest preview.
+          (cd website/main-website && PORT=2000 GRAPHQL_URL="$E2E_LIVE_GRAPHQL_URL" SERVER_URL="$E2E_LIVE_API" \
+            SITE_URL=https://staging.duncit.com nohup node dist-server/main.mjs > "$RUNNER_TEMP/main-website.log" 2>&1 &)
+          (cd website/ecomm-store && PORT=2039 GRAPHQL_URL="$E2E_LIVE_GRAPHQL_URL" SITE_URL=http://localhost:2039 \
+            nohup node dist-server/main.mjs > "$RUNNER_TEMP/ecomm-store.log" 2>&1 &)
+          (cd website/cms-site && HOST=127.0.0.1 PORT=2043 GRAPHQL_URL="$E2E_LIVE_GRAPHQL_URL" \
+            nohup node dist/server/entry.mjs > "$RUNNER_TEMP/cms-site.log" 2>&1 &)
+          for site in ads-website earnwith-website partners-website status-website; do
+            (cd "website/$site" && nohup pnpm preview > "$RUNNER_TEMP/$site.log" 2>&1 &)
+          done
           npx --yes wait-on http://localhost:2003 http://localhost:2005 http://localhost:2010 \
             http://localhost:2012 http://localhost:2034 http://localhost:2022 \
             http://localhost:2002 http://localhost:2008 http://localhost:2016 http://localhost:2030 \
             http://localhost:2033 http://localhost:2031 http://localhost:2032 http://localhost:2007 \
             http://localhost:2035 http://localhost:2036 http://localhost:2014 http://localhost:2038 \
+            http://localhost:2000 http://localhost:2020 http://localhost:2025 http://localhost:2004 \
+            http://localhost:2019 http://localhost:2039/healthz http://localhost:2043/healthz \
             --timeout 180000
 
       - run: echo "E2E_STAGE=Running the account lifecycle" >> "$GITHUB_ENV"

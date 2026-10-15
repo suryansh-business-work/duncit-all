@@ -76,6 +76,15 @@ export function splitPodsByPhase<T extends PodPhaseFields>(
 }
 
 /**
+ * True when none of these pods is still to come or running — every one is over,
+ * or there are none. The cue a host's or venue's page reads to offer a member
+ * "Request an event" (mWeb + native), against ONE `now` for the whole list.
+ */
+export function nothingUpcoming(pods: readonly PodPhaseFields[], now: number = Date.now()): boolean {
+  return pods.every((pod) => podPhase(pod.pod_date_time, pod.pod_end_date_time, now) === 'PREVIOUS');
+}
+
+/**
  * Whether a host may complete this pod — TRUE only once it is over.
  *
  * Completing a pod is the settlement: it prices the payout off the seats

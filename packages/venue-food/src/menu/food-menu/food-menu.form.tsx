@@ -65,6 +65,8 @@ export default function FoodMenuForm({ venue, config, mode, account, upload, idP
         account={account}
         upload={upload}
         idPrefix={idPrefix}
+        venueName={venue.venue_name}
+        hasSavedTables={(venue.food_tables ?? []).length > 0}
         gstin={<FoodGstinField control={control} name="gstin" savedGstin={savedGstin} mode={mode} idPrefix={idPrefix} />}
       />
       <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>

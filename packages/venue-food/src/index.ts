@@ -22,6 +22,8 @@ export { default as FoodGstinField } from './menu/fields/FoodGstinField';
 export { sendsFoodAccount, type FoodAccountMode } from './menu/fields/FoodOrderingFields';
 export type { AddFoodAccount } from './menu/fields/FoodAccountPicker';
 export { FOOD_PHOTO_FOLDER, type FoodPhotoUpload } from './menu/fields/FoodDishPhotos';
+// A venue's own videos (the Partners venue form, the Venues console editor) — the same field a dish uses.
+export { default as VideoLinksField, type VideoLinksFieldProps } from './menu/fields/VideoLinksField';
 
 // The dashboard's read-only panels, for a surface (or a demo) that has the numbers already.
 export { default as FoodStatTiles } from './dashboard/FoodStatTiles';

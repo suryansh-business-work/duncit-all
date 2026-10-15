@@ -94,6 +94,13 @@ const BANK_ACCOUNT_NUMBER = /^\d{6,18}$/;
  */
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
+/** FSSAI licence / registration number — 14 digits. See regex.mjs. */
+const FSSAI_NUMBER = /^\d{14}$/;
+
+/** A YouTube video link; group 1 is the video id. See regex.mjs. */
+const YOUTUBE_URL =
+  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
+
 /**
  * A Duncit referral code — the `DUN-` prefix and six uppercase hex characters,
  * exactly what the server generates (referral.service `generateCode`).
@@ -159,6 +166,8 @@ module.exports = {
   UPI_ID,
   BANK_ACCOUNT_NUMBER,
   GSTIN,
+  FSSAI_NUMBER,
+  YOUTUBE_URL,
   PERSON_NAME,
   REFERRAL_CODE,
   COUPON_CODE,
@@ -181,6 +190,8 @@ module.exports = {
   isUpiId: (v) => UPI_ID.test(v),
   isBankAccountNumber: (v) => BANK_ACCOUNT_NUMBER.test(v),
   isGstin: (v) => GSTIN.test(v),
+  isFssaiNumber: (v) => FSSAI_NUMBER.test(v),
+  isYoutubeUrl: (v) => YOUTUBE_URL.test(v),
   isPersonName: (v) => PERSON_NAME.test(v),
   isReferralCode: (v) => REFERRAL_CODE.test(v),
   isCouponCode: (v) => COUPON_CODE.test(v),

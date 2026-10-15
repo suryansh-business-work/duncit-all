@@ -26,6 +26,8 @@ exports:
   - 'runPassword'
   - 'applyTokenOverrides'
   - 'resolveThemeTokens'
+  - 'fitScale'
+  - 'fitSize'
   - 'ThemePalettes'
   - 'ThemeTokenOverrides'
   - 'ThemeTokenSettings'
@@ -124,6 +126,7 @@ exports:
   - 'podScanWindow'
   - 'POD_SCAN_LEAD_MINUTES'
   - 'splitPodsByPhase'
+  - 'nothingUpcoming'
   - 'withinHappeningNearbyWindow'
   - 'DEFAULT_HAPPENING_NEARBY_DAYS'
   - 'hostPodSection'
@@ -151,6 +154,11 @@ exports:
   - 'freePodVenueNotice'
   - 'cancelSpotErrorKey'
   - 'CANCEL_SPOT_GENERIC_ERROR_KEY'
+  - 'freeSpotCancelsLeft'
+  - 'isFreeSpotCancelMaxed'
+  - 'freeSpotCancelHint'
+  - 'FreeSpotCancels'
+  - 'FreeSpotCancelHint'
   - 'FreePodVenueInput'
   - 'FreePodVenueNotice'
   - 'resolveTicketDiscountTier'
@@ -1168,11 +1176,16 @@ freePodVenueNotice({ podType: 'PAID', slotPrice: 1500 })                      //
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
-| `cancelSpotErrorKey` | `(code?: string \| null) => string` | The `mweb.*` key for a refused `cancelFreeSpot`: `ALREADY_CHECKED_IN` → `mweb.podDetails.cancelSpotCheckedIn`, `BAD_REQUEST` (pod started) → `…cancelSpotStarted`, `NOT_FOUND` → `…cancelSpotNotMember`, anything else → `CANCEL_SPOT_GENERIC_ERROR_KEY`. |
+| `cancelSpotErrorKey` | `(code?: string \| null) => string` | The `mweb.*` key for a refused `cancelFreeSpot`: `ALREADY_CHECKED_IN` → `mweb.podDetails.cancelSpotCheckedIn`, `BAD_REQUEST` (pod started) → `…cancelSpotStarted`, `NOT_FOUND` → `…cancelSpotNotMember`, `CANCEL_LIMIT_REACHED` → `…cancelSpotLimitReached`, anything else → `CANCEL_SPOT_GENERIC_ERROR_KEY`. |
 | `CANCEL_SPOT_GENERIC_ERROR_KEY` | `string` | `'mweb.podDetails.cancelSpotFailed'` — a network failure or an unknown code. |
+| `freeSpotCancelsLeft` | `(state?: FreeSpotCancels \| null) => number \| null` | `spot_cancels_max − spot_cancels_used` off `PodMembershipState`; `null` while unanswered or on a paid pod (max 0). |
+| `isFreeSpotCancelMaxed` | `(state?: FreeSpotCancels \| null) => boolean` | True only once the server says every cancellation is used up. |
+| `freeSpotCancelHint` | `(state?: FreeSpotCancels \| null) => FreeSpotCancelHint \| null` | The cap line for the Cancel Spot UI: `…cancelSpotRemaining` (`{left}`), `…cancelSpotLastOne`, or `…cancelSpotLimitReached`. |
 
-A free pod has no backout and no refund: "Cancel the spot" is its only way out, any number of
-times. The participation rules read that from the pod's type — pass it as the third argument of
+A free pod has no backout and no refund: "Cancel the spot" is its only way out — capped per
+member per pod by Admin > Pods > Pod Settings (`max_free_spot_cancellations`, default 5; the
+server refuses with `CANCEL_LIMIT_REACHED` and the member keeps the spot). Joining again is never
+capped. The participation rules read that from the pod's type — pass it as the third argument of
 `participationInputFrom(fields, podDateTime, podType)`. For a FREE pod `podParticipationActions`
 answers `canBackout: false`, `canCancelSpot` true while the booking is still in an upcoming,
 uncancelled pod and was not checked in, and never a refund or coins; `buildPodParticipationTimeline`
@@ -1184,6 +1197,8 @@ pod (or no type) is unchanged.
 const input = participationInputFrom(item.participation, item.pod.pod_date_time, item.pod.pod_type);
 podParticipationActions(input) // { canBackout: false, canCancelSpot: true, showRefundState: false, … }
 cancelSpotErrorKey('ALREADY_CHECKED_IN') // 'mweb.podDetails.cancelSpotCheckedIn'
+freeSpotCancelHint({ spot_cancels_used: 2, spot_cancels_max: 5 }) // { key: 'mweb.podDetails.cancelSpotRemaining', vars: { left: 3 } }
+freeSpotCancelHint({ spot_cancels_used: 5, spot_cancels_max: 5 }) // { key: 'mweb.podDetails.cancelSpotLimitReached' }
 ```
 
 `spotsBounds` is the CREATE-time answer, derived on the client from the slot being picked.
@@ -1286,6 +1301,7 @@ rails can never place the same pod differently.
 | `podPhase` | `(start?, end?, now = Date.now()) => PodPhase` | `UPCOMING` before the start, `ONGOING` through the end instant, `PREVIOUS` after. Unusable start *or* end ⇒ never "previous" on a guess. |
 | `splitPodsByPhase` | `(pods, now = Date.now()) => { upcoming, ongoing, previous }` | One pass, one clock read, so the three rails cannot disagree at a boundary. |
 | `withinHappeningNearbyWindow` | `(pods, days, now = Date.now()) => pods` | The Home "Happening nearby" rail and page: upcoming pods starting within the next `days` days (admin-set in Pods > Pod Settings, `DEFAULT_HAPPENING_NEARBY_DAYS` = 7 until it loads). A pod with no usable start is left out. |
+| `nothingUpcoming` | `(pods, now = Date.now()) => boolean` | True when every pod is PREVIOUS, or there are none — the cue a host's or venue's page reads to offer "Request an event" (mWeb + native). |
 | `canCompletePod` | `(pod, now = Date.now()) => boolean` | True only on a PREVIOUS pod. Completion settles the payout off the seats scanned in, so Host Studio offers it once the door has shut — never on an upcoming or ongoing pod. |
 | `POD_SCAN_LEAD_MINUTES` | `number` | 15 — how long before the start a pod's door opens to the host's scanner. |
 | `podScanWindow` | `(pod, now = Date.now()) => 'NOT_OPEN' \| 'OPEN' \| 'CLOSED'` | `NOT_OPEN` until `POD_SCAN_LEAD_MINUTES` before the start, `OPEN` through the end instant, `CLOSED` after. Host Studio keeps the scan row greyed either side of `OPEN`, saying "not yet" or "too late". No usable start ⇒ never opens. |
@@ -3373,7 +3389,11 @@ const problem = reportSubmitError(pickedCategory, details); // a translation key
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `REPORT_CATEGORIES_SDL` | query | The active report reasons, in Legal's order. |
-| `REPORT_POST_SDL` / `REPORT_PROFILE_SDL` | mutation `($id, $reason, $details)` | File a report on a post/story or a profile; answers `{ id, report_no }`. |
+| `REPORT_POST_SDL` / `REPORT_PROFILE_SDL` | mutation `($id, $reason, $details)` | File a report on a post/story or a profile; answers `{ id, report_no }`. Refused with `REPORT_ALREADY_PENDING` while the same person's earlier report on it is still open. |
+| `MY_OPEN_REPORT_SDL` | query `($id)` | The viewer's own still-open report on a post, story or profile (`{ id, report_no }`), or null — the report sheet opens to "Already reported by you" when it is set. |
+| `REPORT_ALREADY_PENDING_CODE` | `'REPORT_ALREADY_PENDING'` | The `extensions.code` of that refusal. |
+| `reportErrorKey` | `(code) => string \| null` | The translation key for a refusal the server names by code, or null for the caller's generic copy. Takes the code because Apollo and the native `ApiError` carry it in different places. |
+| `reportPendingCopyKey` | `(reportNo) => string` | The "already reported" body key — with the reference when there is one. |
 | `BLOCK_USER_SDL` / `UNBLOCK_USER_SDL` | mutation `($user_id)` | Block or unblock a member. Both are idempotent. |
 | `BLOCK_ACTION_COPY` | `Record<BlockAction, BlockActionCopy>` | Menu, confirm, busy, toast and failure keys for Block and Unblock. |
 | `REPORT_DIALOG_TITLE` | `Record<ReportDialogKind, string>` | The report dialog's heading key for a story, post or profile. |
@@ -3715,6 +3735,72 @@ const showRatingForm = canRateFoodOrder(order); // SERVED and not rated yet
 `publicPageTableLabelFileName`). `publicPageHeadlineKey(kind, offersFood)` picks what both print: a
 venue with a menu (`PublicPageInsights.offers_food`) says "Scan to see the Menu & pods happening here".
 
+**Per-table stickers — `venue-food-tables`.** A cafe lists its tables (`food_tables`): typed
+(`parseFoodTables("1, 2, Patio")` — trimmed, blanks dropped, repeats kept once ignoring case) or from
+a count (`foodTablesFromCount(12, limit)` → "1, 2, …, 12"). `VENUE_TABLE_STICKERS_QUERY` prints every
+saved table's QR sticker in one PDF (`publicPageTableStickersFileName`); each QR opens the menu with
+`?table=<label>` (`FOOD_TABLE_PARAM`), and `foodTableFromParam` turns it into the checkout's table
+field (first value, trimmed, cut to `FOOD_ORDER_LIMITS.tableMax`).
+
+**Struck-through MRP — `food-price-display`.** `foodPriceDisplay(dish)` answers `{ price,
+originalPrice, saving }`: struck through only when `original_price` is a number above `price`; a
+percent is rounded DOWN (never promises more than is saved) and one that rounds to 0% reads as the
+amount. `foodSavingLabel(t, saving, money, 'guest' | 'owner')` words it ("20% off" / "₹40 off").
+DISPLAY ONLY — the guest is always charged `price`. `FOOD_CURRENCY_QUERY` is Finance's symbol for
+an owner's preview.
+
+**Videos** live in `@duncit/forms/schemas` (`venue-videos`, because they read `@duncit/regex`).
+A venue's or a dish's `videos` are uploaded clips or YouTube links in one list. `venueVideoOf(url)` reads the kind from the address (`@duncit/regex` `YOUTUBE_URL`): a
+YouTube one carries its privacy-enhanced `embedUrl`, `watchUrl` and `thumbnailUrl`; a file its
+`sourceUrl` (`videoSourceUrl`, never a metered re-encode). `venueVideosOf(list)` drops blanks.
+
+## Around the menu, for the guest — `venue-food-customer`
+
+Finding a dish, a dish's own page, the venue's food rating and "Your Food Orders" — the same
+behaviour on mWeb and the native app.
+
+```ts
+import {
+  filterFoodMenuGroups,
+  foodMenuHasSections,
+  foodSectionsAfterSearch,
+  isFoodSectionOpen,
+  toggleAllFoodSections,
+  toggleFoodSection,
+  groupFoodMenu,
+} from '@duncit/utils';
+
+const groups = groupFoodMenu(venue.food_menu);
+const shown = filterFoodMenuGroups(groups, 'paneer tikka'); // every word in the name or description; empty sections go
+foodMenuHasSections(groups); // false for a menu with no categories — draw it as one plain list, no accordion
+isFoodSectionOpen('Drinks', collapsed); // open unless folded
+toggleFoodSection(collapsed, 'Drinks'); // fold / open one
+toggleAllFoodSections(shown, collapsed); // "Collapse all" when every section is open, else "Expand all"
+foodSectionsAfterSearch(collapsed, query); // typing a search opens every section, so no match is hidden
+```
+
+The uncategorised dishes get the heading `t(FOOD_OTHER_SECTION_KEY)` once the menu is folded into
+sections. `findFoodItem(menu, itemId)` and `venueFoodItemPath(venueId, itemId)`
+(`/venue/:venueId/food/:itemId`) serve the dish's own page.
+
+**Food rating.** `VENUE_FOOD_RATING_QUERY` answers `{ venue_id, average, count }` — the average
+of every rated order of the venue (a guest rates the ORDER, so it is the venue's number, not a
+dish's). `hasFoodRating(rating)` is false until somebody has rated; `formatFoodRating(4.25)` is
+`'4.3'`. Ask it in its own document: the server's Redis response cache holds it.
+
+**Your Food Orders.** `MY_VENUE_FOOD_ORDERS_QUERY` takes `{ scope: 'CURRENT' | 'PAST', venue_id?,
+keys?, page?, page_size? }` and answers a page of the CALLER's orders — the signed-in account's, and
+the ones whose `{ order_id, access_key }` the device sends (`foodOrderKeysOf(stored)`, at most
+`MY_FOOD_ORDER_KEYS_MAX`). CURRENT is paid and still with the kitchen, or placed in the last hour and
+still waiting for payment; PAST is paid and served or cancelled.
+
+```ts
+hasMoreFoodOrders(page); // page × page_size < total
+appendFoodOrders(shown, next.rows); // the next page, without showing an order twice
+foodOrderKeyFor(stored, order.id); // the key the order's link carries; null for one opened by account
+foodOrderLinesSummary(t, order.items); // "2 × Paneer Tikka, 1 × Lime Soda"
+```
+
 ## A venue's food desk, as its owner works it — `venue-food-owner`
 
 The owner's side of `venue-food`: the Food Dashboard, the order board and the venue's food
@@ -3819,3 +3905,62 @@ answers.
 `increase`, `decrease`, `remove`, `quantity` (the count's accessible name), and the two notices
 `added` and `removed`. mWeb builds it from `mweb.cartControl.*`. Web renderer:
 `CartQuantityControl`, `CartControlNoticeChip` and `useCartControlNotice` in `@duncit/ui`.
+
+## The "Did you know?" loader — `loading-tips`
+
+A slow list (Pod History first) shows a friendly loader instead of a bare spinner: an icon,
+"Did you know?" and a tip that changes every few seconds. This module is the tip list and the
+rotation rule — translation keys only, no icon, colour or copy — so the MUI loader and the
+Tamagui one show the same tips in the same order.
+
+```ts
+import {
+  LOADING_TIP_INTERVAL_MS,
+  LOADING_TIP_KEYS,
+  LOADING_TIP_TITLE_KEY,
+  loadingTipKeyAt,
+  nextLoadingTipIndex,
+} from '@duncit/utils';
+
+t(LOADING_TIP_TITLE_KEY); // 'Did you know?'
+LOADING_TIP_KEYS.length; // 6 — every key under mweb.loadingTips.*
+loadingTipKeyAt(0); // 'mweb.loadingTips.tipPodTimeline'
+nextLoadingTipIndex(0); // 1
+nextLoadingTipIndex(5); // 0 — wraps to the first tip
+nextLoadingTipIndex(-1); // 0 — a stale or broken index starts over
+nextLoadingTipIndex(3, 0); // 0 — an empty list
+LOADING_TIP_INTERVAL_MS; // 4000 — how long each tip stays up
+```
+
+The copy lives in `@duncit/i18n` under `mweb.loadingTips.*`, so mWeb and the native app (which
+both ship the `mweb` bundle) resolve it server-first. Renderers: `TipsLoader` in mWeb
+(`app/mweb/src/components/TipsLoader.tsx`) and the native app
+(`app/mobile-app/src/components/TipsLoader.tsx`).
+
+## Fit a screen to the window — `fit-scale`
+
+The login landing has to fit a phone without scrolling, on a 640px-tall window and a 900px one
+alike. `fitScale` says how much the screen's design must shrink (or may grow) to fit; `fitSize`
+spends that scale on one size. Only part of a screen can shrink — buttons keep their touch
+target, captions their size — so `fixed` is taken out before the ratio, and the result is
+clamped: under `min` text stops being readable, and a screen that still does not fit scrolls.
+
+```ts
+import { fitScale, fitSize } from '@duncit/utils';
+
+fitScale(720, 940, 0.55, 1, 380); // 0.607 — (720 − 380) / (940 − 380)
+fitScale(1000, 940, 0.55, 1, 380); // 1 — never past max
+fitScale(500, 940, 0.55, 1, 380); // 0.55 — never under min; the screen scrolls
+fitScale(Number.NaN, 940, 0.55, 1); // 1 — nothing to measure, the design as drawn
+fitSize(40, 0.607, 28); // 28 — a heading never drops under its floor
+fitSize(24, 0.607); // 15
+```
+
+The numbers a screen passes are design tokens, not literals — the auth screens read
+`auth.fit` from `@duncit/auth-tokens`. Renderers: native `AuthScaffold` (`useAuthFit`, window
+height minus the safe-area insets) and mWeb `AuthBackground` (the viewport height).
+
+| Export | Signature |
+| --- | --- |
+| `fitScale` | `(available: number, designHeight: number, min: number, max: number, fixed?: number) => number` |
+| `fitSize` | `(base: number, scale: number, floor?: number) => number` |

@@ -83,6 +83,14 @@ export {
 export { ShellRuntimeProvider, useShellRuntime, type ShellRuntime } from './lib/runtime';
 export { UserMenu, type UserMenuProps } from './chrome/UserMenu';
 export { ProfilePage } from './chrome/ProfilePage';
+// Event Requests — the partner's list (Partners portal) and staff's (Venues /
+// Hosts consoles) of what members asked for when nothing was coming up.
+export {
+  EventRequestsPage,
+  type EventRequestsPageProps,
+  type EventRequestScope,
+  type EventRequestTarget,
+} from './event-requests';
 export { AuthSplitLayout, type AuthSplitLayoutProps } from './chrome/AuthSplitLayout';
 export type { ShellUser } from './chrome/user-display';
 

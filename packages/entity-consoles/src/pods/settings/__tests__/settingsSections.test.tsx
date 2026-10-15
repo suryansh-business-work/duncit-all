@@ -31,7 +31,13 @@ const SECTIONS: Section[] = [
   {
     name: 'PodReminderSettings',
     Component: PodReminderSettings,
-    keys: ['pod_reminder_lead_hours', 'venue_slot_reminder_lead_hours', 'pod_feedback_delay_hours'],
+    keys: [
+      'pod_reminder_lead_hours',
+      'pod_sameday_reminder_hours',
+      'checkout_nudge_minutes',
+      'venue_slot_reminder_lead_hours',
+      'pod_feedback_delay_hours',
+    ],
   },
   {
     name: 'RequestChangeSettings',

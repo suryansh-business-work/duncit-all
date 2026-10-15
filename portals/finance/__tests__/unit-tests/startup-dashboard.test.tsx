@@ -203,7 +203,7 @@ describe('StartupDashboardPage', () => {
     });
     await screen.findByText('Founder Overview');
 
-    fireEvent.click(screen.getAllByRole('button', { name: /settings for mrr/i })[0]);
+    fireEvent.click((await screen.findAllByRole('button', { name: /settings for mrr/i }))[0]);
     const values = () => screen.getAllByRole('spinbutton').map((f) => (f as HTMLInputElement).value);
     // `a` is saved at 10; `b` was never set, so it starts at 0.
     await waitFor(() => expect(values()).toEqual(['10', '0']));
@@ -221,7 +221,7 @@ describe('StartupDashboardPage', () => {
     ]);
 
     // Reopening reads the refetched settings, not the ones the page loaded with.
-    fireEvent.click(screen.getAllByRole('button', { name: /settings for mrr/i })[0]);
+    fireEvent.click((await screen.findAllByRole('button', { name: /settings for mrr/i }))[0]);
     await waitFor(() => expect(values()).toEqual(['7', '3']));
   });
 

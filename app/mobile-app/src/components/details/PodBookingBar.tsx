@@ -125,6 +125,7 @@ export function PodBookingBar({
                 onKeepSpot={onKeepSpot}
                 isFree={isFree}
                 canCancelSpot={!!membershipState?.can_cancel_spot}
+                spotCancels={membershipState}
                 onCancelSpot={onCancelSpot}
               />
             ) : null}

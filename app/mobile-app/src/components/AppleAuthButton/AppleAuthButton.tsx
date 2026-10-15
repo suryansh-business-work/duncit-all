@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { Spinner, Text, XStack } from 'tamagui';
+import { auth } from '@duncit/auth-tokens';
 import { BUTTON_SIZES, PRESS_STYLE } from '@duncit/buttons-native';
 import type { SocialCredential } from '@duncit/utils';
 
@@ -13,6 +14,9 @@ import { appleRouteForPlatform, signInWithApple } from './appleSignIn';
 // The web build's auth session finishes in a popup that loads the app — this
 // hands its URL back to the page that opened it.
 WebBrowser.maybeCompleteAuthSession();
+
+/** The round button's logo: `socialIconRatio` of the circle, so it reads at a glance. */
+const ROUND_ICON = Math.round(BUTTON_SIZES.lg.height * auth.fit.socialIconRatio);
 
 export interface AppleAuthButtonProps {
   /** Sign in on the login screen, sign up on signup. */
@@ -100,7 +104,11 @@ export function AppleAuthButton({
       {busy ? (
         <Spinner testID="apple-auth-spinner" color="$background" />
       ) : (
-        <Ionicons name="logo-apple" size={20} color={colors.background} />
+        <Ionicons
+          name="logo-apple"
+          size={round ? ROUND_ICON : BUTTON_SIZES.lg.iconSize}
+          color={colors.background}
+        />
       )}
       {round ? null : (
         <Text fontSize={16} fontWeight="600" color="$background">

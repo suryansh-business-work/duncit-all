@@ -54,7 +54,14 @@ function ChipNote({
   testID,
 }: Readonly<{ note: string; color: NoteColor; testID: string }>) {
   return (
-    <Text testID={testID} fontSize={12} fontWeight="600" color={color} numberOfLines={1}>
+    <Text
+      testID={testID}
+      fontSize={12}
+      fontWeight="600"
+      color={color}
+      numberOfLines={1}
+      flexShrink={0}
+    >
       {note}
     </Text>
   );
@@ -121,6 +128,9 @@ export function ChipSelectField({
                 aria-checked={selected}
                 onPress={() => onChange(option.value)}
                 minHeight={36}
+                // A long "Club | (pin) Locality, City" chip stays inside the
+                // field: name and place truncate, the slot note keeps its width.
+                maxWidth="100%"
                 alignItems="center"
                 gap={6}
                 paddingHorizontal={14}
@@ -128,7 +138,13 @@ export function ChipSelectField({
                 backgroundColor={selected ? '$primary' : '$soft'}
                 pressStyle={PRESS_STYLE.control}
               >
-                <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
+                <Text
+                  fontSize={13}
+                  fontWeight="600"
+                  color={selected ? '$onPrimary' : '$color'}
+                  numberOfLines={1}
+                  flexShrink={1}
+                >
                   {option.label}
                 </Text>
                 {option.place ? (

@@ -26,15 +26,14 @@ import { HeaderRoundButton } from './HeaderRoundButton';
 interface Props {
   /** The pre-onboarding survey header: a logout button and the greeting. */
   minimal?: boolean;
-  /** The Home tab: its own search bar leads the page, so the header drops
-   * its search button and greets the user instead. */
+  /** The Home tab: the header greets the user (its search button stays). */
   home?: boolean;
 }
 
 /**
  * In-app header. Row one: the location pill on the left (led by the studio
  * pill in a Host/Venue/ecomm studio — the picker is never role-gated), and on
- * the right the round search (not on Home), bell and account avatar (which
+ * the right the round search, bell and account avatar (which
  * opens the account menu) — or, when `minimal`, i.e. the pre-onboarding
  * survey, a plain logout button. Row two, on Home and the survey only: the
  * two-tone greeting.
@@ -53,7 +52,7 @@ export function AppHeader({ minimal = false, home = false }: Readonly<Props>) {
   const [switchOpen, setSwitchOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const isUserStudio = effectiveStudio === 'USER';
-  const showSearch = !minimal && isUserStudio && !home;
+  const showSearch = !minimal && isUserStudio;
   // A "Coming soon" Home leads with its waitlist hero — no greeting.
   const comingSoon = useComingSoonCity();
   const showGreeting = minimal || (isUserStudio && home && !comingSoon);
@@ -61,6 +60,18 @@ export function AppHeader({ minimal = false, home = false }: Readonly<Props>) {
   // Read once for a partner and re-read when the dialog opens, so the switch
   // itself never waits on the network to decide where to land.
   const autoPods = useAutoPodCounts(roles);
+
+  // On Home the tour's "home-search" step points at the page's own search
+  // pill (HomeSearchRow), so the header button carries no anchor there.
+  const searchButton = (
+    <HeaderRoundButton
+      testID="header-search"
+      label={t('mweb.appHeader.searchPods')}
+      onPress={() => navigation.navigate('Search')}
+    >
+      <MaterialIcons name="search" size={22} color={ink} />
+    </HeaderRoundButton>
+  );
 
   const openSwitch = () => {
     autoPods.reload();
@@ -82,19 +93,13 @@ export function AppHeader({ minimal = false, home = false }: Readonly<Props>) {
           onOpenSwitch={openSwitch}
           onOpenLocation={openLocation}
         />
-        {/* Round actions: Search (not on Home) · Alerts · avatar with online
-         * dot. Studio modes keep their focused header (no search). The cart
+        {/* Round actions: Search · Alerts · avatar with online dot. Studio modes keep their focused header (no search). The cart
          * is a bottom-bar destination now, not a header action. */}
         <XStack alignItems="center" gap={8}>
-          {showSearch ? (
+          {showSearch && home ? searchButton : null}
+          {showSearch && !home ? (
             <TourAnchor tour="home" anchor="home-search">
-              <HeaderRoundButton
-                testID="header-search"
-                label={t('mweb.appHeader.searchPods')}
-                onPress={() => navigation.navigate('Search')}
-              >
-                <MaterialIcons name="search" size={22} color={ink} />
-              </HeaderRoundButton>
+              {searchButton}
             </TourAnchor>
           ) : null}
           {minimal ? null : (

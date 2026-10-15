@@ -5,6 +5,8 @@ export interface SidebarTiles {
   leaderboard: ProfileTile[];
   membership: ProfileTile[];
   giftCards: ProfileTile[];
+  /** "Your Food Orders" — the orders placed from venue menus. */
+  food: ProfileTile[];
   grid: ProfileTile[];
 }
 
@@ -51,6 +53,15 @@ export function buildSidebarTiles(t: Translate): SidebarTiles {
         caption: '',
         icon: 'redeem',
         route: 'GiftCardRedeem',
+      },
+    ],
+    food: [
+      {
+        key: 'food-orders',
+        label: t('mweb.venueFood.myOrders.sidebarLabel'),
+        caption: '',
+        icon: 'restaurant-menu',
+        route: 'MyFoodOrders',
       },
     ],
     /*

@@ -5,6 +5,7 @@ import { BarCta, BarLabel } from '@/components/details/BarLabel';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { memberBookedCopy, type FreeSpotCancels } from '@duncit/utils';
 
 export interface MemberBookedBarProps {
   canBackout: boolean;
@@ -21,6 +22,8 @@ export interface MemberBookedBarProps {
   /** A FREE pod: no Backout — "Cancel Spot" is the only way out. */
   isFree?: boolean;
   canCancelSpot?: boolean;
+  /** The membership state's cancel counters (free pods cap cancellations). */
+  spotCancels?: FreeSpotCancels | null;
   onCancelSpot?: () => void;
 }
 
@@ -44,22 +47,15 @@ export function MemberBookedBar({
   onKeepSpot,
   isFree = false,
   canCancelSpot = false,
+  spotCancels = null,
   onCancelSpot,
 }: Readonly<MemberBookedBarProps>) {
   const { success } = useThemeColors();
   const { t } = useTranslation();
-  // A free pod has no attempts to run out of: once its spot cannot be
-  // cancelled before the date, the only reason is a check-in at the door.
-  const canLeave = isFree ? canCancelSpot : canBackout;
-  const blockedNote = isFree
-    ? t('mweb.podDetails.cancelSpotCheckedIn')
-    : t('mweb.podDetails.backoutMaxed');
-  let note: string | null = null;
-  if (!canLeave) {
-    note = isExpired ? t('mweb.podDetails.alreadyTakenPlace') : blockedNote;
-  }
-  const overline = isExpired ? t('mweb.podDetails.youWent') : t('mweb.podDetails.youreGoing');
-  const badge = isExpired ? t('mweb.podDetails.podVisited') : t('mweb.podDetails.podBooked');
+  const copy = memberBookedCopy({ isFree, isExpired, canBackout, canCancelSpot, spotCancels });
+  const note = copy.note ? t(copy.note.key, { vars: copy.note.vars }) : null;
+  const overline = t(copy.overlineKey);
+  const badge = t(copy.badgeKey);
 
   return (
     <YStack flex={1} gap={8}>

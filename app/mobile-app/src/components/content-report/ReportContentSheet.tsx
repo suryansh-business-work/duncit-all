@@ -1,14 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Button, Spinner, Text, TextArea, YStack } from 'tamagui';
+import { Spinner, Text, TextArea, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { ReportCategoryList } from '@/components/content-report/ReportCategoryList';
+import { ReportPendingNotice } from '@/components/content-report/ReportPendingNotice';
 import { ReportReceivedNotice } from '@/components/content-report/ReportReceivedNotice';
-import { reportPost, reportProfile, useReportCategories } from '@/hooks/useReportContent';
+import {
+  reportPost,
+  reportProfile,
+  useMyOpenReport,
+  useReportCategories,
+} from '@/hooks/useReportContent';
 import { useTranslation } from '@/hooks/useTranslation';
+import { errorCode } from '@/utils/errors';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import {
   parseApiError,
+  reportErrorKey,
   reportSubmitError,
   REPORT_DIALOG_TITLE,
   type ReportDialogKind,
@@ -29,9 +38,10 @@ interface Props {
  *
  * Open to ANY signed-in viewer — that is the whole point of it. The reasons
  * are not compiled in: they are the categories Legal manages in the Legal
- * portal (UGC Monitoring > Settings), read when the sheet opens. A repeat
- * report from the same person edits their existing one rather than filing a
- * second, so tapping it twice cannot be used to manufacture a pile-on.
+ * portal (UGC Monitoring > Settings), read when the sheet opens. While the
+ * viewer's earlier report on the same thing is still open the sheet shows that
+ * instead of the form — the server refuses a repeat until Legal has resolved
+ * the first, so tapping twice cannot manufacture a pile-on.
  */
 export function ReportContentSheet({ targetId, kind, onClose, onReported }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -42,6 +52,7 @@ export function ReportContentSheet({ targetId, kind, onClose, onReported }: Read
   // The landed report's reference; set, the sheet turns into its confirmation.
   const [receipt, setReceipt] = useState<string | null>(null);
   const { categories, isLoading, failed, retry } = useReportCategories(!!targetId);
+  const { checking, pending } = useMyOpenReport(targetId);
 
   // Re-seed on every open: one sheet instance serves every post and story.
   useEffect(() => {
@@ -53,8 +64,10 @@ export function ReportContentSheet({ targetId, kind, onClose, onReported }: Read
   }, [targetId]);
 
   const picked = categories.find((option) => option.key === reason) ?? null;
+  const showForm = receipt === null && !pending && !checking;
 
   const submit = async () => {
+    /* istanbul ignore next -- TS narrowing guard: the submit button only mounts while targetId is set (the dialog is closed otherwise) */
     if (!targetId) return;
     const problem = reportSubmitError(picked, details);
     if (problem) {
@@ -67,11 +80,35 @@ export function ReportContentSheet({ targetId, kind, onClose, onReported }: Read
       setReceipt(await send(targetId, reason, details.trim()));
       onReported?.();
     } catch (e) {
-      setError(parseApiError(e) || t('contentReport.submitFailed'));
+      const key = reportErrorKey(errorCode(e));
+      setError(key ? t(key) : parseApiError(e) || t('contentReport.submitFailed'));
     } finally {
       setBusy(false);
     }
   };
+
+  // Filled primary buttons from the design system (DuncitButton solid), not
+  // Tamagui's `theme="red"` sub-theme, which painted a pale pink fill with
+  // dark ink and read as disabled while it was not.
+  const footer =
+    receipt !== null || pending ? (
+      <DuncitButton
+        testID="report-content-done"
+        label={t('contentReport.done')}
+        fullWidth
+        onPress={onClose}
+      />
+    ) : (
+      <DuncitButton
+        testID="report-content-submit"
+        label={t('contentReport.submit')}
+        accessibilityLabel={busy ? t('contentReport.sending') : undefined}
+        fullWidth
+        loading={busy}
+        disabled={checking}
+        onPress={() => fireAndForget(submit())}
+      />
+    );
 
   return (
     <DuncitDialog
@@ -79,32 +116,19 @@ export function ReportContentSheet({ targetId, kind, onClose, onReported }: Read
       onClose={onClose}
       testID="report-content-sheet"
       title={t(REPORT_DIALOG_TITLE[kind])}
-      subtitle={receipt === null ? t('contentReport.subtitle') : undefined}
+      subtitle={showForm ? t('contentReport.subtitle') : undefined}
       closeLabel={t('contentReport.cancel')}
       dismissOnBackdrop={!busy}
-      footer={
-        receipt !== null ? (
-          <Button testID="report-content-done" theme="red" onPress={onClose}>
-            {t('contentReport.done')}
-          </Button>
-        ) : (
-          <Button
-            testID="report-content-submit"
-            theme="red"
-            disabled={busy}
-            aria-busy={busy}
-            aria-label={busy ? t('contentReport.sending') : undefined}
-            icon={busy ? <Spinner testID="report-content-spinner" color="$color" /> : undefined}
-            onPress={() => fireAndForget(submit())}
-          >
-            {t('contentReport.submit')}
-          </Button>
-        )
-      }
+      footer={footer}
     >
-      {receipt !== null ? (
-        <ReportReceivedNotice reportNo={receipt} />
-      ) : (
+      {checking ? (
+        <YStack testID="report-content-checking" alignItems="center" paddingVertical={16}>
+          <Spinner aria-label={t('contentReport.checkingEarlier')} color="$primary" />
+        </YStack>
+      ) : null}
+      {receipt === null && pending ? <ReportPendingNotice reportNo={pending.report_no} /> : null}
+      {receipt === null ? null : <ReportReceivedNotice reportNo={receipt} />}
+      {showForm ? (
         <YStack gap={10}>
           <ReportCategoryList
             options={categories}
@@ -132,7 +156,7 @@ export function ReportContentSheet({ targetId, kind, onClose, onReported }: Read
             </Text>
           ) : null}
         </YStack>
-      )}
+      ) : null}
     </DuncitDialog>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Spinner, YStack } from 'tamagui';
+import { radii } from '@duncit/auth-tokens';
 import { resolveIconSource } from '@duncit/fallback-icons';
 
 import { AppImage } from '@/components/AppImage';
@@ -19,7 +20,18 @@ function isRasterUrl(url?: string | null): url is string {
  * renderable raster — or the remote image fails to load — the BUNDLED logo
  * renders from assets/fallback-icons (rule 39), matching mWeb exactly.
  */
-export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
+export function AuthLogo({
+  size = 58,
+  square = false,
+}: Readonly<{
+  size?: number;
+  /**
+   * A size × size brand tile with the mark contained in it, whatever the
+   * art's shape — a wide wordmark letterboxes on the brand red instead of
+   * stretching the header (the auth screens).
+   */
+  square?: boolean;
+}>) {
   const { data, isLoading } = useBranding();
   const { width: windowWidth } = useWindowDimensions();
   const branding = data?.branding;
@@ -48,8 +60,8 @@ export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
   // Cap width at 4× height (matches mWeb's maxWidth clamp) for very wide marks,
   // and never wider than the viewport (minus padding) so a very wide wordmark
   // can't overflow and clip on a narrow phone.
-  const width = Math.min(size * aspect, size * 4, windowWidth - 48);
-  return (
+  const width = square ? size : Math.min(size * aspect, size * 4, windowWidth - 48);
+  const image = (
     <AppImage
       testID={isFallback ? 'auth-logo-fallback' : 'auth-logo-image'}
       source={isFallback ? FALLBACK_ICONS.logo : { uri: source as string }}
@@ -61,5 +73,20 @@ export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
       }}
       style={{ height: size, width }}
     />
+  );
+  if (!square) return image;
+  return (
+    <YStack
+      testID="auth-logo-tile"
+      width={size}
+      height={size}
+      borderRadius={radii.md}
+      overflow="hidden"
+      backgroundColor="$brand"
+      alignItems="center"
+      justifyContent="center"
+    >
+      {image}
+    </YStack>
   );
 }

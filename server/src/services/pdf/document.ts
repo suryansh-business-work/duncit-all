@@ -42,6 +42,8 @@ export const PDF_PALETTE = {
   ink: '#111827',
   muted: '#6b7280',
   line: '#e5e7eb',
+  /** The tint on every other row of a table. */
+  stripe: '#f9fafb',
   paper: '#ffffff',
 } as const;
 

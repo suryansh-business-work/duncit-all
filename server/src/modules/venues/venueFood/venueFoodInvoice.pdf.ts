@@ -1,4 +1,5 @@
 import { PDF_PALETTE, pdfCurrency, pdfCurrencyNote, pdfRowHeight, renderPdf } from '@services/pdf/document';
+import { drawPdfThumb, loadPdfThumbs, PDF_THUMB_GAP, PDF_THUMB_SIZE } from '@services/pdf/thumbnail';
 import { appDateTime } from '@utils/app-time';
 
 /**
@@ -16,6 +17,8 @@ export interface FoodInvoiceLine {
   quantity: number;
   unit: number;
   total: number;
+  /** The dish's menu photo, drawn beside it. Optional: a bill with no photos keeps its plain table. */
+  image_url?: string;
 }
 
 export interface FoodInvoiceData {
@@ -60,7 +63,8 @@ const CELL_INSET = 6;
 /** Room the totals, the GST lines and the notes need below the last item. */
 const TOTALS_HEIGHT = 224;
 const COLUMNS = { name: LEFT + CELL_INSET, quantity: 324, unit: 374, total: 464 } as const;
-const { accent, accentSoft, ink, muted, line, paper } = PDF_PALETTE;
+const { accent, accentSoft, ink, muted, line, paper, stripe } = PDF_PALETTE;
+const NAME_WIDTH = 260;
 
 /** A TAX INVOICE needs both a GST number and a GST charged; anything less is a plain invoice. */
 export const invoiceTitle = (data: Pick<FoodInvoiceData, 'venue_gstin' | 'gst_pct'>) =>
@@ -114,46 +118,78 @@ function drawBilledTo(doc: Doc, data: FoodInvoiceData, right: number, top: numbe
 }
 
 function drawTableHead(doc: Doc, right: number, top: number): number {
-  doc.rect(LEFT, top - 6, right - LEFT, 24).fill(accent);
+  doc.roundedRect(LEFT, top - 6, right - LEFT, 24, 6).fill(accent);
   doc.fillColor(paper).fontSize(8.5).font('Helvetica-Bold');
   doc
-    .text('ITEM', COLUMNS.name, top, { width: 260 })
+    .text('ITEM', COLUMNS.name, top, { width: NAME_WIDTH })
     .text('QTY', COLUMNS.quantity, top, { width: 40, align: 'right' })
     .text('RATE', COLUMNS.unit, top, { width: 80, align: 'right' })
     .text('AMOUNT', COLUMNS.total, top, { width: right - CELL_INSET - COLUMNS.total, align: 'right' });
   return top + 26;
 }
 
+interface DishRow {
+  item: FoodInvoiceLine;
+  index: number;
+  photo: Buffer | undefined;
+  /** Whether the table has a photo column; every row then gets a thumbnail or an initial tile. */
+  withPhotos: boolean;
+  right: number;
+  money: (amount: number) => string;
+}
+
+/** One dish, from `y`. Returns where the next row starts. */
+function drawDishRow(doc: Doc, row: DishRow, y: number): number {
+  const { item, right, money } = row;
+  const shift = row.withPhotos ? PDF_THUMB_SIZE + PDF_THUMB_GAP : 0;
+  const nameWidth = NAME_WIDTH - shift;
+  const amountWidth = right - CELL_INSET - COLUMNS.total;
+  doc.fontSize(9.5).font('Helvetica');
+  // The tallest cell sets the row, so a name that wraps never runs into the divider.
+  const textHeight = Math.max(
+    pdfRowHeight(doc, [
+      { text: item.name, width: nameWidth },
+      { text: money(item.unit), width: 80 },
+      { text: money(item.total), width: amountWidth },
+    ]),
+    12
+  );
+  const rowHeight = row.withPhotos ? Math.max(textHeight, PDF_THUMB_SIZE) : textHeight;
+  if (row.index % 2 === 1) doc.rect(LEFT, y - 2, right - LEFT, rowHeight + 8).fill(stripe);
+  if (row.withPhotos) drawPdfThumb(doc, row.photo, item.name, COLUMNS.name, y + (rowHeight - PDF_THUMB_SIZE) / 2);
+  const textY = y + (rowHeight - textHeight) / 2;
+  doc
+    .fillColor(ink)
+    .fontSize(9.5)
+    .font('Helvetica')
+    .text(item.name, COLUMNS.name + shift, textY, { width: nameWidth })
+    .text(String(item.quantity), COLUMNS.quantity, textY, { width: 40, align: 'right' })
+    .text(money(item.unit), COLUMNS.unit, textY, { width: 80, align: 'right' })
+    .text(money(item.total), COLUMNS.total, textY, { width: amountWidth, align: 'right' });
+  const next = y + rowHeight + 8;
+  doc.moveTo(LEFT, next - 2).lineTo(right, next - 2).lineWidth(1).strokeColor(line).stroke();
+  return next;
+}
+
 /** The invoice as PDF bytes. */
-export function renderVenueFoodInvoice(data: FoodInvoiceData): Promise<Buffer> {
+export async function renderVenueFoodInvoice(data: FoodInvoiceData): Promise<Buffer> {
+  // Fetched before drawing starts: nothing can be awaited once pdfkit is writing.
+  const photos = await loadPdfThumbs(data.lines.map((item) => item.image_url));
+  const withPhotos = data.lines.some((item) => item.image_url);
   return renderPdf((doc) => {
     const right = doc.page.width - LEFT;
     const currency = pdfCurrency(data.currency_symbol);
     const money = (amount: number) => `${currency}${amount.toFixed(2)}`;
 
     let y = drawTableHead(doc, right, drawBilledTo(doc, data, right, drawHeader(doc, data, right)));
-    for (const item of data.lines) {
+    data.lines.forEach((item, index) => {
       if (y > PAGE_BOTTOM) {
         doc.addPage();
         y = drawTableHead(doc, right, LEFT + 6);
       }
-      doc.fillColor(ink).fontSize(9.5).font('Helvetica');
-      const amountWidth = right - CELL_INSET - COLUMNS.total;
-      doc
-        .text(item.name, COLUMNS.name, y, { width: 260 })
-        .text(String(item.quantity), COLUMNS.quantity, y, { width: 40, align: 'right' })
-        .text(money(item.unit), COLUMNS.unit, y, { width: 80, align: 'right' })
-        .text(money(item.total), COLUMNS.total, y, { width: amountWidth, align: 'right' });
-      // `doc.y` is where the LAST cell (the amount) ended, not the item name —
-      // a name that wrapped ran into the divider. The tallest cell sets the row.
-      const rowHeight = pdfRowHeight(doc, [
-        { text: item.name, width: 260 },
-        { text: money(item.unit), width: 80 },
-        { text: money(item.total), width: amountWidth },
-      ]);
-      y = Math.max(y + rowHeight, y + 12) + 8;
-      doc.moveTo(LEFT, y - 2).lineTo(right, y - 2).strokeColor(line).stroke();
-    }
+      const photo = item.image_url ? photos.get(item.image_url) : undefined;
+      y = drawDishRow(doc, { item, index, photo, withPhotos, right, money }, y);
+    });
 
     // The totals, the payment line and the notes stay together on one page.
     if (y > PAGE_BOTTOM - TOTALS_HEIGHT) {
@@ -184,9 +220,11 @@ export function renderVenueFoodInvoice(data: FoodInvoiceData): Promise<Buffer> {
     }
     doc.moveTo(300, y).lineTo(right, y).strokeColor(line).stroke();
     y += 8;
+    // The figure the guest is looking for sits on its own soft band.
+    doc.roundedRect(300, y - 6, right - 300, 28, 8).fill(accentSoft);
     row('Total paid', money(data.total), true);
 
-    y += 10;
+    y += 16;
     doc.fillColor(muted).fontSize(9).font('Helvetica');
     doc.text(taxNote(data), LEFT, y, { width: right - LEFT });
     const currencyNote = pdfCurrencyNote(data.currency_symbol);

@@ -3,6 +3,7 @@ import {
   drawInvoice,
   INVOICE_PAGE,
   invoiceLogo,
+  invoicePhotos,
   type InvoiceData,
 } from '@services/invoice/invoice.pdf';
 import { drawTicket, TICKET_PAGE, ticketQr, type TicketPdfData } from './ticket.pdf';
@@ -29,7 +30,9 @@ export async function generateTicketWithInvoicePdf(
   // Both of the asynchronous parts first: nothing can be awaited once drawing
   // starts, because pdfkit writes pages in the order the calls are made.
   const qrPng = await ticketQr(ticket.qr_token);
-  const logo = invoice ? await invoiceLogo(invoice.invoice_logo_url) : null;
+  const [logo, photos] = invoice
+    ? await Promise.all([invoiceLogo(invoice.invoice_logo_url), invoicePhotos(invoice.items)])
+    : [null, new Map<string, Buffer>()];
 
   return new Promise((resolve, reject) => {
     try {
@@ -42,7 +45,7 @@ export async function generateTicketWithInvoicePdf(
       drawTicket(doc, ticket, qrPng);
       if (invoice) {
         doc.addPage(INVOICE_PAGE);
-        drawInvoice(doc, invoice, logo);
+        drawInvoice(doc, invoice, logo, photos);
       }
 
       doc.end();

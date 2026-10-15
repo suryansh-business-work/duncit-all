@@ -60,6 +60,10 @@ export function assertOrderAccess(ctx: GraphQLContext, order: IVenueFoodOrder, a
 
 export const rupees = (paise: number) => paise / 100;
 
+/** Each dish's first menu photo, keyed by the dish id an order line points at. */
+export const menuDishPhotos = (menu: ReadonlyArray<{ _id: Types.ObjectId; images?: string[] }>) =>
+  new Map(menu.map((item) => [item._id.toHexString(), item.images?.[0]]));
+
 export const iso = (date: Date | null | undefined) => (date ? date.toISOString() : null);
 
 /** The order's money arrived at some point — it is on the board and it has an invoice. */

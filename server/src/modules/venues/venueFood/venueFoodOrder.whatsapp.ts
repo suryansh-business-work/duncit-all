@@ -7,7 +7,7 @@ import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { logs } from '@observability/log';
 import { VenueFoodOrderModel, type IVenueFoodOrder } from './venueFoodOrder.model';
-import { FOOD_LOG, rupees } from './venueFoodOrder.shared';
+import { FOOD_LOG, menuDishPhotos, rupees } from './venueFoodOrder.shared';
 
 /**
  * The WhatsApp side of a venue food order: the guest hears that the order is
@@ -90,7 +90,7 @@ async function orderAssets(order: IVenueFoodOrder): Promise<SendAssets> {
     const venue = await VenueModel.findById(order.venue_id)
       .select(`${VENUE_IMAGE_FIELDS} food_menu._id food_menu.images`)
       .lean();
-    const dishPhotos = new Map((venue?.food_menu ?? []).map((item) => [item._id.toHexString(), item.images?.[0]]));
+    const dishPhotos = menuDishPhotos(venue?.food_menu ?? []);
     const dish = order.lines.map((line) => dishPhotos.get(line.item_id.toHexString())).find(Boolean);
     return venueImageAssets(venue, dish);
   } catch (error) {

@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { getImagekitAuth, getImagekitConfig } from '@modules/platform/upload/upload.service';
 import { resolveUploadFolder } from '@modules/platform/upload/uploadFolder';
+import { VenueModel } from '@modules/venues/venue/venue.model';
 import { logs } from '@observability/log';
 import { renderVenueFoodInvoice } from './venueFoodInvoice.pdf';
 import { FOOD_FEEDBACK_LIMITS, VenueFoodOrderModel, type IVenueFoodOrder } from './venueFoodOrder.model';
@@ -12,6 +13,7 @@ import {
   fail,
   foodOrderTax,
   hasFoodInvoice,
+  menuDishPhotos,
   objectId,
   rupees,
   text,
@@ -80,6 +82,21 @@ async function ownMediaUrls(images: readonly string[]): Promise<string[]> {
   });
 }
 
+/**
+ * The menu photo of each dish on the order, for the invoice. Read from the
+ * menu as it is now (a dish removed since has none). A failed read costs the
+ * photos, never the invoice — the lines print with initial tiles.
+ */
+async function dishPhotos(order: IVenueFoodOrder): Promise<Map<string, string | undefined>> {
+  try {
+    const venue = await VenueModel.findById(order.venue_id).select('food_menu._id food_menu.images').lean();
+    return menuDishPhotos(venue?.food_menu ?? []);
+  } catch (error) {
+    logs.server.warn(FOOD_LOG, 'invoicePhotos', { error, orderNo: order.order_no });
+    return new Map();
+  }
+}
+
 export const venueFoodGuestService = {
   /** The order's invoice as base64 PDF. Counted, so the venue can see its invoices being used. */
   async invoicePdfBase64(ctx: GraphQLContext, orderId: string, accessKey?: string | null) {
@@ -87,6 +104,7 @@ export const venueFoodGuestService = {
     if (!hasFoodInvoice(order)) return fail('BAD_REQUEST', 'An invoice is ready once the order is paid');
     const tax = foodOrderTax(order);
     const { cgst_paise, sgst_paise } = splitFoodGst(tax.tax_paise);
+    const photos = await dishPhotos(order);
     const pdf = await renderVenueFoodInvoice({
       invoice_no: order.order_no,
       issued_at: order.paid_at ?? order.created_at,
@@ -103,6 +121,7 @@ export const venueFoodGuestService = {
         quantity: line.quantity,
         unit: rupees(line.unit_paise),
         total: rupees(line.line_paise),
+        image_url: photos.get(line.item_id.toHexString()),
       })),
       subtotal: rupees(order.subtotal_paise),
       discount_pct: order.discount_pct ?? 0,

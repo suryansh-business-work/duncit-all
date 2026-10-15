@@ -100,6 +100,8 @@ export const POD_DETAILS = gql`
       status
       can_backout
       can_cancel_spot
+      spot_cancels_used
+      spot_cancels_max
       can_join
       spots_taken
       spots_total

@@ -164,7 +164,9 @@ export default function PublicProfilePosts({
       <ProfileTabs tabs={tabs} />
       {tabs.value === 'posts' && grid}
       {tabs.value === 'joined' && <ProfilePodsPanel userId={userId} kind="joined" />}
-      {tabs.value === 'hosted' && isHost && <ProfilePodsPanel userId={userId} kind="hosted" />}
+      {tabs.value === 'hosted' && isHost && (
+        <ProfilePodsPanel userId={userId} kind="hosted" requestFromHost={isOwner ? undefined : name} />
+      )}
 
       <PostDialog
         postId={openPostId}

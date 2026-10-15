@@ -16,7 +16,9 @@ import { useDateFormat } from '../../../utils/dateFormat';
 import { INVOICE_PDF, MY_TICKET_FOR_POD, TICKET_PDF } from './queries';
 
 interface Props {
-  payment: any;
+  /** Null for a FREE pod's instant join: nothing was paid, so there is no
+   * receipt or invoice — only the pod and its ticket. */
+  payment: any | null;
   pod?: any;
   onHome: () => void;
   onProfile: () => void;
@@ -25,8 +27,9 @@ interface Props {
   profileLabel?: string;
 }
 
-/** The confirmation after a paid checkout: a calm success mark, the receipt,
- * the booked pod, and what to do next. Native twin: checkout/CheckoutSuccess. */
+/** The confirmation after a paid checkout — or a free pod's instant join: a
+ * calm success mark, the receipt (paid only), the booked pod, the ticket, and
+ * what to do next. Native twin: checkout/CheckoutSuccess. */
 export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profileLabel }: Readonly<Props>) {
   const [confetti, setConfetti] = useState(true);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
@@ -59,7 +62,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   };
 
   const downloadInvoice = async () => {
-    if (!payment.invoice_no) return;
+    if (!payment?.invoice_no) return;
     setInvoiceError(null);
     try {
       const { data } = await loadInvoice({ variables: { id: payment.id } });
@@ -91,7 +94,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
     notify(t('mweb.checkout.appleWalletUnavailable'), 'info');
   };
 
-  const venueNote = venueTotal > 0
+  const venueNote = payment && venueTotal > 0
     ? t('mweb.checkout.venueChargesPaid', { vars: { amount: formatMoney(payment.currency_symbol, venueTotal) } })
     : null;
 
@@ -116,15 +119,15 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           <PaymentLottie variant="success" size={64} />
         </Box>
         <TwoToneHeading
-          lead={t('mweb.checkout.successTitle')}
+          lead={payment ? t('mweb.checkout.successTitle') : t('mweb.checkout.freeJoinTitle')}
           trail={t('mweb.checkout.successOverline')}
           stacked
           align="center"
         />
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {t('mweb.checkout.successSubtitle')}
+          {payment ? t('mweb.checkout.successSubtitle') : t('mweb.checkout.freeJoinSubtitle')}
         </Typography>
-        <SuccessReceiptCard payment={payment} />
+        {payment && <SuccessReceiptCard payment={payment} />}
         {pod && (
           <SuccessPodCard
             title={pod.pod_title}
@@ -149,17 +152,19 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
               {t('mweb.ticket.download')}
             </DuncitButton>
           )}
-          <DuncitButton
-            fullWidth
-            size="large"
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={downloadInvoice}
-            disabled={!payment.invoice_no || invoiceLoading}
-            data-testid="download-invoice"
-          >
-            {t('mweb.checkout.downloadInvoice')}
-          </DuncitButton>
+          {payment && (
+            <DuncitButton
+              fullWidth
+              size="large"
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={downloadInvoice}
+              disabled={!payment.invoice_no || invoiceLoading}
+              data-testid="download-invoice"
+            >
+              {t('mweb.checkout.downloadInvoice')}
+            </DuncitButton>
+          )}
           <Stack direction="row" spacing={1.25}>
             <DuncitButton
               fullWidth

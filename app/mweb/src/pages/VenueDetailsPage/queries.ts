@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import type { VenueFoodItem, VenueFoodOrdering } from '@duncit/utils';
+import type { VenueFoodItem, VenueFoodLicences, VenueFoodOrdering } from '@duncit/utils';
 
 /** One public venue — null unless it is APPROVED and active (the not-found state). */
 export const PUBLIC_VENUE = gql`
@@ -16,6 +16,7 @@ export const PUBLIC_VENUE = gql`
       security
       cover_image_url
       gallery
+      videos
       address_line1
       address_line2
       city
@@ -37,6 +38,12 @@ export const PUBLIC_VENUE = gql`
         diet
         spice_level
         is_available
+        videos
+        original_price
+        saving_display
+      }
+      food_licences {
+        fssai_number
       }
       food_ordering {
         enabled
@@ -60,6 +67,8 @@ export interface PublicVenue {
   security: string[];
   cover_image_url: string | null;
   gallery: string[];
+  /** Uploaded clips and YouTube links — read through `venueVideosOf`. */
+  videos?: string[];
   address_line1: string | null;
   address_line2: string | null;
   city: string | null;
@@ -75,4 +84,6 @@ export interface PublicVenue {
   /** Empty unless `offers_food`. */
   food_menu: VenueFoodItem[];
   food_ordering: VenueFoodOrdering;
+  /** Only the FSSAI number is selected — the menu prints it at its foot. */
+  food_licences?: Pick<VenueFoodLicences, 'fssai_number'> | null;
 }

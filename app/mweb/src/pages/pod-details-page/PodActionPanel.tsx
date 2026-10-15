@@ -128,6 +128,7 @@ export default function PodActionPanel({
         onKeepSpot={onKeepSpot}
         isFree={isFree}
         canCancelSpot={!!ms?.can_cancel_spot}
+        spotCancels={ms}
         cancellingSpot={cancellingSpot}
         onCancelSpot={onCancelSpot}
       />

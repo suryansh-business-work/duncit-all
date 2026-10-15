@@ -1,12 +1,16 @@
 import { gql } from '@apollo/client';
 import {
+  MY_VENUE_FOOD_ORDERS_QUERY,
   PLACE_VENUE_FOOD_ORDER_MUTATION,
   PREVIEW_VENUE_FOOD_COUPON_QUERY,
   SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION,
   VENUE_FOOD_FEEDBACK_UPLOAD_PASS_MUTATION,
   VENUE_FOOD_ORDER_INVOICE_QUERY,
   VENUE_FOOD_ORDER_QUERY,
+  VENUE_FOOD_RATING_QUERY,
   VERIFY_VENUE_FOOD_ORDER_MUTATION,
+  type MyVenueFoodOrdersInput,
+  type MyVenueFoodOrdersPage,
   type PreviewVenueFoodCouponInput,
   type SubmitVenueFoodFeedbackInput,
   type VenueFoodCouponPreview,
@@ -14,6 +18,7 @@ import {
   type VenueFoodUploadPass,
   type VenueFoodOrder,
   type VenueFoodOrderPlacement,
+  type VenueFoodRating,
 } from '@duncit/utils';
 
 // The documents live in @duncit/utils so the native app sends the same ones.
@@ -24,6 +29,20 @@ export const PREVIEW_VENUE_FOOD_COUPON = gql(PREVIEW_VENUE_FOOD_COUPON_QUERY);
 export const VENUE_FOOD_ORDER_INVOICE = gql(VENUE_FOOD_ORDER_INVOICE_QUERY);
 export const VENUE_FOOD_FEEDBACK_UPLOAD_PASS = gql(VENUE_FOOD_FEEDBACK_UPLOAD_PASS_MUTATION);
 export const SUBMIT_VENUE_FOOD_FEEDBACK = gql(SUBMIT_VENUE_FOOD_FEEDBACK_MUTATION);
+export const MY_VENUE_FOOD_ORDERS = gql(MY_VENUE_FOOD_ORDERS_QUERY);
+export const VENUE_FOOD_RATING = gql(VENUE_FOOD_RATING_QUERY);
+
+export interface MyVenueFoodOrdersData {
+  myVenueFoodOrders: MyVenueFoodOrdersPage;
+}
+
+export interface MyVenueFoodOrdersVars {
+  input: MyVenueFoodOrdersInput;
+}
+
+export interface VenueFoodRatingData {
+  venueFoodRating: VenueFoodRating;
+}
 
 export interface PlaceVenueFoodOrderData {
   placeVenueFoodOrder: VenueFoodOrderPlacement;

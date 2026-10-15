@@ -3,13 +3,13 @@ import { Alert, Stack } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
-import EventBusyIcon from '@mui/icons-material/EventBusy';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { PodHistoryItem } from '../queries';
 import BackoutButton from './BackoutButton';
+import CancelSpotButton from './CancelSpotButton';
 
 interface Props {
   item: PodHistoryItem;
@@ -26,6 +26,8 @@ interface Props {
   canRejoin: boolean;
   /** A FREE pod's only way out — shown instead of Backout. */
   canCancelSpot?: boolean;
+  /** True once the server says this free pod's spot cancellations are used up. */
+  cancelSpotMaxed?: boolean;
   cancellingSpot?: boolean;
   backingOut: boolean;
   rejoining: boolean;
@@ -60,6 +62,7 @@ export default function PodHistoryActions({
   refundLabel,
   canRejoin,
   canCancelSpot = false,
+  cancelSpotMaxed = false,
   cancellingSpot = false,
   backingOut,
   rejoining,
@@ -112,16 +115,12 @@ export default function PodHistoryActions({
               />
             )}
             {canCancelSpot && (
-              <DuncitButton
-                onClick={onCancelSpot}
+              <CancelSpotButton
                 disabled={item.status !== 'JOINED' || cancellingSpot}
-                color="error"
-                variant="outlined"
-                startIcon={<EventBusyIcon />}
-                data-testid="ph-cancel-spot"
-              >
-                {cancellingSpot ? t('mweb.podHistory.cancellingSpot') : t('mweb.podHistory.cancelSpot')}
-              </DuncitButton>
+                maxed={cancelSpotMaxed}
+                label={cancellingSpot ? t('mweb.podHistory.cancellingSpot') : t('mweb.podHistory.cancelSpot')}
+                onCancelSpot={onCancelSpot}
+              />
             )}
             {canRejoin && (
               <DuncitButton

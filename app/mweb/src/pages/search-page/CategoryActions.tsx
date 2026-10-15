@@ -16,6 +16,11 @@ interface TileProps {
   onSelect: (categoryId: string) => void;
 }
 
+/** The tile's soft circle and the mark inside it: the mark fills most of the
+ * circle so an admin's category image reads at a glance (native twin: CategoryActions). */
+const TILE_CIRCLE = 64;
+const TILE_MARK = 44;
+
 /** One category tile: the admin's icon (image, MUI name or emoji) over its name. */
 function CategoryTile({ category, onSelect }: Readonly<TileProps>) {
   return (
@@ -27,17 +32,18 @@ function CategoryTile({ category, onSelect }: Readonly<TileProps>) {
       <Box
         aria-hidden
         sx={{
-          width: 44,
-          height: 44,
+          width: TILE_CIRCLE,
+          height: TILE_CIRCLE,
           borderRadius: '50%',
           bgcolor: 'action.hover',
           color: 'secondary.main',
           display: 'grid',
           placeItems: 'center',
-          fontSize: 22,
+          fontSize: TILE_MARK,
+          overflow: 'hidden',
         }}
       >
-        {renderSuperCategoryMark(category.icon, 22) ?? <CategoryIcon color="inherit" />}
+        {renderSuperCategoryMark(category.icon, TILE_MARK) ?? <CategoryIcon color="inherit" fontSize="inherit" />}
       </Box>
       <Typography noWrap sx={{ fontSize: '0.875rem', fontWeight: 600, textAlign: 'center', width: '100%' }}>
         {category.name}

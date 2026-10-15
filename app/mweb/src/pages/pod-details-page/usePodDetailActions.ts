@@ -155,13 +155,14 @@ export function usePodDetailActions({
     }
   };
 
+  // A free join lands on the same confirmation a paid booking does — the ticket
+  // download lives there — instead of leaving the member to find it in Pod
+  // History. Pod Details re-reads its state (cache-and-network) on the way back.
   const onJoinFree = async () => {
     if (!pod) return;
     try {
       await joinFree({ variables: { id: pod.id, referral: referralFromUrl, seats } });
-      setConfettiOpen(true);
-      setSnack(t('mweb.podDetails.joinedSnack'));
-      await refetch();
+      navigate(`/pod/${pod.id}/booked`);
     } catch (e: any) {
       setSnack(e.message);
     }

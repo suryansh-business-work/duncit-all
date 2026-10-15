@@ -135,13 +135,18 @@ export default function VenueCardMedia({ images, venueName, onOpen }: Readonly<P
             sx={{ display: 'block', width: '100%' }}
             data-testid={`venue-card-media-slide-${url}`}
           >
-            <Box
-              component="img"
-              src={url}
-              alt={venueName}
-              loading="lazy"
-              sx={{ ...FRAME, objectFit: 'cover', display: 'block' }}
-            />
+            {/* The frame is a plain box and the photo fills it: an <img> holding
+                the ratio itself meets the height cap by narrowing, which left
+                the card's right side empty on wide screens. */}
+            <Box sx={FRAME}>
+              <Box
+                component="img"
+                src={url}
+                alt={venueName}
+                loading="lazy"
+                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </Box>
           </ButtonBase>
         ))}
       </Slider>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { cancelSpotErrorKey, firstGraphQLError, isBackoutMaxed } from '@duncit/utils';
+import { cancelSpotErrorKey, firstGraphQLError, isBackoutMaxed, isFreeSpotCancelMaxed } from '@duncit/utils';
 import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -44,6 +44,7 @@ export default function PodHistoryDetailsPage() {
     fetchPolicy: 'cache-and-network',
   });
   const backoutMaxed = isBackoutMaxed(stateData?.podMembershipState);
+  const cancelSpotMaxed = isFreeSpotCancelMaxed(stateData?.podMembershipState);
 
   /*
     Both reads, every time — a backout changes the booking AND the attempts.
@@ -147,6 +148,7 @@ export default function PodHistoryDetailsPage() {
       <PodHistoryDetails
         item={selected}
         backoutMaxed={backoutMaxed}
+        cancelSpotMaxed={cancelSpotMaxed}
         backingOut={backoutState.loading}
         rejoining={rejoinState.loading}
         cancellingSpot={cancelSpotState.loading}
@@ -155,7 +157,7 @@ export default function PodHistoryDetailsPage() {
         onCancelSpot={() => setCancelSpotOpen(true)}
       />
       <BackoutConfirmDialog open={backoutOpen} onClose={() => setBackoutOpen(false)} busy={backoutState.loading} mySeats={selected?.seats ?? 1} onConfirm={confirmBackout} />
-      <CancelSpotDialog open={cancelSpotOpen} onClose={() => setCancelSpotOpen(false)} busy={cancelSpotState.loading} onConfirm={confirmCancelSpot} />
+      <CancelSpotDialog open={cancelSpotOpen} onClose={() => setCancelSpotOpen(false)} busy={cancelSpotState.loading} onConfirm={confirmCancelSpot} cancels={stateData?.podMembershipState} />
       <RejoinConfirmDialog open={rejoinOpen} onClose={() => setRejoinOpen(false)} busy={rejoinState.loading} onConfirm={confirmRejoin} />
     </Stack>
   );

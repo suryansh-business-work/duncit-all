@@ -1,5 +1,5 @@
 import { logs } from '@duncit/logs';
-import type { FoodCartCoupon, FoodCartQuantities } from '@duncit/utils';
+import { foodOrderKeysOf, type FoodCartCoupon, type FoodCartQuantities, type VenueFoodOrderKey } from '@duncit/utils';
 
 /**
  * What a guest's browser remembers about ordering food at a venue: the cart
@@ -18,8 +18,6 @@ const GUEST_KEY = 'mweb_food_guest';
 const ORDERS_KEY = 'mweb_food_orders';
 /** Orders kept on the device; the oldest fall off. */
 const MAX_ORDERS = 10;
-/** How long a placed order still earns the menu's "Track your order" link. */
-const TRACK_WINDOW_MS = 12 * 60 * 60 * 1000;
 
 export interface FoodGuestDetails {
   name: string;
@@ -142,13 +140,12 @@ export function saveFoodOrder(order: Omit<StoredFoodOrder, 'saved_at' | 'finishe
   write(ORDERS_KEY, [next, ...orders.filter((entry) => entry.order_id !== order.order_id)].slice(0, MAX_ORDERS));
 }
 
-/** The guest's latest order at this venue that is still in progress, if it is recent. */
-export function recentFoodOrder(venueId: string): StoredFoodOrder | null {
-  const since = Date.now() - TRACK_WINDOW_MS;
-  return (
-    readFoodOrders().find((order) => order.venue_id === venueId && !order.finished && order.saved_at >= since) ?? null
-  );
-}
+/**
+ * Every order this device remembers, with the key that proves it — what "Your Food
+ * Orders" and the menu's running orders send, so the server can answer for a
+ * guest with no account. The server decides which are still running.
+ */
+export const storedFoodOrderKeys = (): VenueFoodOrderKey[] => foodOrderKeysOf(readFoodOrders());
 
 /** The guest order page. The access key rides in the link so it opens on another device too. */
 export function foodOrderPath(venueId: string, orderId: string, accessKey?: string | null): string {

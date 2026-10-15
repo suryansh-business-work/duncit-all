@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
+import { useSearchParams } from 'react-router';
 import { PHONE_NUMBER } from '@duncit/regex';
+import { FOOD_TABLE_PARAM, foodTableFromParam } from '@duncit/utils';
 import { CHECKOUT_ME } from '../../checkout-page/queries';
 import { foodCheckoutDefaults, type FoodCheckoutValues } from './food-checkout';
 import { readFoodGuest } from './foodStorage';
@@ -15,6 +17,7 @@ interface Me {
  * Who is ordering, as far as it is already known: the signed-in account's name
  * and mobile, else what this device last ordered with. A signed-out guest is
  * never asked the server who they are — the query is skipped without a token.
+ * A guest who scanned a table sticker (`?table=5`) starts with that table filled in.
  */
 export function useFoodGuest(): FoodCheckoutValues {
   const signedIn = useMemo(() => {
@@ -28,6 +31,8 @@ export function useFoodGuest(): FoodCheckoutValues {
   // USER_INFO already holds these fields, so a signed-in read answers from the cache.
   const { data } = useQuery<{ me: Me | null }>(CHECKOUT_ME, { fetchPolicy: 'cache-first', skip: !signedIn });
   const me = data?.me;
+  const [searchParams] = useSearchParams();
+  const table = foodTableFromParam(searchParams.get(FOOD_TABLE_PARAM));
 
   return useMemo(() => {
     const saved = readFoodGuest();
@@ -38,6 +43,7 @@ export function useFoodGuest(): FoodCheckoutValues {
       name: accountName || saved?.name || '',
       // An account's number from another country is not one this form can take.
       phone: PHONE_NUMBER.test(accountPhone) ? accountPhone : (saved?.phone ?? ''),
+      table,
     };
-  }, [me]);
+  }, [me, table]);
 }

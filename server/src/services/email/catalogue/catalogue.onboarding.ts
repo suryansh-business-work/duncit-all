@@ -119,7 +119,7 @@ interface Step {
   key: string;
   /** Overrides the party's namespace — an account notice is not an onboarding one. */
   ns?: string;
-  category: 'notification';
+  category: 'notification' | 'transactional';
   subject: string;
   tone: Tone;
   vars: readonly EmailVar[];
@@ -228,7 +228,7 @@ const ACCOUNT_STEPS: readonly Step[] = [
     name: 'Account Suspended',
     key: 'Suspended',
     ns: 'email.clubAdminAccount',
-    category: 'notification',
+    category: 'transactional',
     subject: 'Your Duncit club admin access has been suspended',
     tone: STOPPED,
     vars: ACCOUNT_VARS,
@@ -243,7 +243,7 @@ const ACCOUNT_STEPS: readonly Step[] = [
     name: 'Account Reactivated',
     key: 'Reactivated',
     ns: 'email.clubAdminAccount',
-    category: 'notification',
+    category: 'transactional',
     subject: 'Your Duncit club admin access is active again',
     tone: LIVE,
     vars: ACCOUNT_VARS,

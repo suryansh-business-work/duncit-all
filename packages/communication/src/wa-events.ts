@@ -564,7 +564,7 @@ export const WA_EVENTS: readonly WaEvent[] = [
     campaign: 'feedback_ecommerce_brand',
     audience: 'ECOMM',
     category: 'feedback',
-    fires: 'A pod carrying the brand product has finished',
+    fires: 'A pod-shop order carrying the brand product is delivered',
     params: ['Recipient name', 'Product', 'Feedback Link'],
   },
   {

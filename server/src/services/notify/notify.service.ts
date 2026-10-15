@@ -4,6 +4,7 @@ import { whatsappService, type WaSendInput, type WaSendOutcome } from '@modules/
 import { applyVars } from '@modules/content/emailTemplate/emailTemplate.service';
 import { sendEmail, type SendResult } from '@services/email/email.service';
 import { EMAIL_BY_WA_EVENT } from '@services/email/catalogue';
+import { EmailClaimModel } from '@modules/content/emailLog/emailClaim.model';
 
 /**
  * ONE call for a domain event that reaches a person on both channels.
@@ -94,11 +95,42 @@ function varsFrom(
 const accountEmail = (user: Record<string, any> | null | undefined): string =>
   String(user?.auth?.email ?? '');
 
+/** MongoServerError 11000 — the unique index rejected a second claim. */
+const isDuplicate = (error: unknown) => (error as { code?: number })?.code === 11000;
+
+/**
+ * Claim this email's slot, keyed the same way as the WhatsApp leg's: the event,
+ * the entity and the recipient. False when it was already sent. A send with no
+ * entity is not deduplicated, exactly as before.
+ */
+async function claimMail(event: string, entityId: string, to: string): Promise<string | null | false> {
+  if (!entityId) return null;
+  const key = `${event}|${entityId}|${to.toLowerCase()}`;
+  try {
+    await EmailClaimModel.create({ key });
+    return key;
+  } catch (error) {
+    if (isDuplicate(error)) return false;
+    // A claim that cannot be written must not lose the email: send unguarded.
+    logs.server.warn('notify', 'claim', { error, event });
+    return null;
+  }
+}
+
+async function releaseMail(key: string | null): Promise<void> {
+  if (!key) return;
+  await EmailClaimModel.deleteOne({ key }).catch((error) =>
+    logs.server.warn('notify', 'release', { error, key })
+  );
+}
+
 async function mailLeg(input: NotifyInput): Promise<SendResult | null> {
   const to = (input.email ?? accountEmail(input.user)).trim();
   if (!to) return null;
   const def = EMAIL_BY_WA_EVENT.get(input.event);
   if (!def) return null;
+  const claim = await claimMail(input.event, String(input.entityId ?? '').trim(), to);
+  if (claim === false) return null;
 
   const vars = {
     ...varsFrom(
@@ -108,7 +140,7 @@ async function mailLeg(input: NotifyInput): Promise<SendResult | null> {
     ...input.vars,
   };
   try {
-    return await sendEmail({
+    const result = await sendEmail({
       to,
       // The STORED template's subject wins inside sendEmail; this is what a
       // disk-fallback render falls back to, and it carries `{{ }}` of its own,
@@ -118,7 +150,11 @@ async function mailLeg(input: NotifyInput): Promise<SendResult | null> {
       category: def.category,
       vars,
     });
+    // Nothing delivered: give the slot back so a later trigger can try again.
+    if (result.accepted.length === 0) await releaseMail(claim);
+    return result;
   } catch (error) {
+    await releaseMail(claim);
     logs.server.error('notify', 'mail', { error, event: input.event, template: def.slug });
     return null;
   }

@@ -8,6 +8,9 @@ import {
   isAisensyConfigured,
 } from '@modules/platform/aisensy/aisensy.gateway';
 import { isWhatsappDestination } from '@utils/phone';
+import { waPreferenceAllows } from '@modules/platform/whatsapp/whatsapp.service';
+
+const OPTED_OUT_REASON = 'Recipient opted out of marketing WhatsApp';
 import {
   recordManualSend,
   WA_MANUAL_EVENT_KEY,
@@ -356,6 +359,11 @@ async function deliver(doc: any, user: Record<string, any>): Promise<RecipientRo
     return { ...base, status: 'SKIPPED', reason: INVALID_NUMBER_REASON };
   }
   if (!base.name) return { ...base, status: 'SKIPPED', reason: 'No name on the account' };
+  // A broadcast is marketing whatever its template is called at Meta, and the
+  // person's own opt-out is checked against the number it would reach.
+  if (!(await waPreferenceAllows(base.destination, 'marketing'))) {
+    return { ...base, status: 'SKIPPED', reason: OPTED_OUT_REASON };
+  }
   const { params, missingReason } = fillParams(doc.template_params ?? [], user);
   if (missingReason) return { ...base, status: 'SKIPPED', reason: missingReason };
   try {

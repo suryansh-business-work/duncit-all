@@ -15,6 +15,7 @@ import { moderationService } from '@modules/moderation/moderation.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { notifyEvent } from '@services/notify/notify.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.service';
 import { sendEmail } from '@services/email/email.service';
 import {
   InventoryProductModel,
@@ -884,7 +885,10 @@ export interface ProductWaSubject {
 export async function notifyProductOwner(
   product: ProductWaSubject,
   event: string,
-  quantity: number
+  quantity: number,
+  /** The product by default — one "product added" per listing. A stock
+   * crossing passes its own, because a product can run low again next month. */
+  entityId: string = String(product._id)
 ) {
   const ownerId = product.listing_submitted_by_id;
   if (!ownerId || !Types.ObjectId.isValid(ownerId)) return;
@@ -903,7 +907,7 @@ export async function notifyProductOwner(
     : null;
   await notifyEvent({
     event,
-    entityId: String(product._id),
+    entityId,
     user: owner,
     name,
     params: [name, product.product_name, brand?.brand_name || (product.brand_name ?? ''), String(quantity)],
@@ -955,7 +959,7 @@ export async function notifyStockCrossings(doc: IInventoryProduct, beforeAvailab
   const afterAvailable = availableOf(doc);
   if (beforeAvailable > 0 && afterAvailable <= 0) {
     await pushStockAlert(doc, 'Out of stock', `${doc.product_name} is out of stock — it can no longer be sold.`);
-    await notifyProductOwner(doc, 'ECOMM_STOCK_OUT', afterAvailable);
+    await notifyProductOwner(doc, 'ECOMM_STOCK_OUT', afterAvailable, transitionEntityId(String(doc._id)));
     return;
   }
   if (!doc.notify_low_stock) return;
@@ -966,7 +970,7 @@ export async function notifyStockCrossings(doc: IInventoryProduct, beforeAvailab
     'Low stock alert',
     `${doc.product_name} is low on stock — ${afterAvailable} left (alert at ${threshold}).`
   );
-  await notifyProductOwner(doc, 'ECOMM_STOCK_LOW', afterAvailable);
+  await notifyProductOwner(doc, 'ECOMM_STOCK_LOW', afterAvailable, transitionEntityId(String(doc._id)));
 }
 
 /** Validate and apply the reviewer's commission override; a missing value

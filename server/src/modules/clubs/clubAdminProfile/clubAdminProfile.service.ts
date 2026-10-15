@@ -8,6 +8,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { ClubAdminProfileModel, type IClubAdminProfile } from './clubAdminProfile.model';
 import { notifyEvent } from '@services/notify/notify.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.service';
 import { getUrlConfigs } from '@config/url-configs';
 
 const notFound = () =>
@@ -265,6 +266,7 @@ export const clubAdminProfileService = {
       const email = doc.email ?? '';
       await notifyEvent({
         event: 'CLUB_ADMIN_ONBOARDING_APPROVED',
+        entityId: transitionEntityId(doc.id, doc.approved_at),
         user: await waRecipient(doc.user_id),
         name: doc.full_name,
         // The template's second value is the partner-portal login address,
@@ -286,10 +288,23 @@ export const clubAdminProfileService = {
     if (!notes.trim()) throw badInput('A reason is required to reject a Club Admin');
     const doc = await ClubAdminProfileModel.findById(id);
     if (!doc) throw notFound();
+    // Re-rejecting is how an admin edits the note, so the applicant is only
+    // told on the transition — as host and brand rejections already were.
+    const wasRejected = doc.status === 'REJECTED';
     doc.status = 'REJECTED';
     doc.is_active = false;
     doc.reviewer_notes = notes;
     await doc.save();
+    if (!wasRejected) {
+      await notifyEvent({
+        event: 'CLUB_ADMIN_ONBOARDING_REJECTED',
+        entityId: transitionEntityId(doc.id),
+        user: await waRecipient(doc.user_id),
+        name: doc.full_name,
+        params: [doc.full_name, notes.trim()],
+        email: doc.email ?? '',
+      });
+    }
     return one(doc);
   },
 
@@ -318,6 +333,7 @@ export const clubAdminProfileService = {
     // a club admin found out only if they had WhatsApp.
     await notifyEvent({
       event: is_active ? 'CLUB_ADMIN_ACCOUNT_REACTIVATED' : 'CLUB_ADMIN_ACCOUNT_SUSPENDED',
+      entityId: transitionEntityId(doc.id),
       user: await waRecipient(doc.user_id),
       name: doc.full_name,
       params: [doc.full_name],

@@ -127,7 +127,19 @@ async function buildActor(userId: Types.ObjectId | string | null | undefined) {
  * carries it; the WhatsApp leg records a skip for having no number, as it
  * should.
  */
-async function notifyTicketRaiser(event: string, doc: ITicket) {
+/**
+ * Whether the agent reply just pushed is the first one the raiser has not seen.
+ * A burst of three agent messages is one ping, not three: once the raiser has
+ * been told and not yet opened the thread, the next reply stays in the thread.
+ */
+function isFirstUnseenAgentReply(doc: ITicket): boolean {
+  const earlier = doc.messages.slice(0, -1).filter((m) => m.author_role === 'AGENT').at(-1);
+  if (!earlier) return true;
+  const seenAt = doc.user_last_read_at?.getTime() ?? 0;
+  return seenAt >= new Date(earlier.created_at).getTime();
+}
+
+async function notifyTicketRaiser(event: string, doc: ITicket, entityId = String(doc._id)) {
   const user = doc.user_id
     ? await UserModel.findById(doc.user_id)
         .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
@@ -139,7 +151,7 @@ async function notifyTicketRaiser(event: string, doc: ITicket) {
     'User';
   await notifyEvent({
     event,
-    entityId: String(doc._id),
+    entityId,
     user,
     name,
     params: [name, ticketNo('ST', doc._id as Types.ObjectId), doc.subject],
@@ -427,6 +439,12 @@ export const ticketService = {
     // The reply above is already saved; the mail send records its own outcome.
     if (asAgent && doc!.source === 'EMAIL') {
       await emailAgentReply(doc, actorId, bodyText);
+    } else if (asAgent && isFirstUnseenAgentReply(doc!)) {
+      // An app or website ticket has no mail thread to carry the reply, so the
+      // raiser is told on WhatsApp and email — keyed on the message, so every
+      // reply they have not yet seen can reach them, not just the first one.
+      const reply = doc!.messages.at(-1);
+      await notifyTicketRaiser('SUPPORT_TICKET_UPDATED', doc!, `${String(doc!._id)}:${String(reply?._id)}`);
     }
 
     const pub = await toPub(doc);
@@ -455,8 +473,6 @@ export const ticketService = {
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
-    // Only an agent opening the thread is news to the person who raised it.
-    if (asAgent) await notifyTicketRaiser('SUPPORT_TICKET_UPDATED', doc);
     return pub;
   },
 

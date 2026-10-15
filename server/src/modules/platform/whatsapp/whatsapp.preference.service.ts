@@ -82,7 +82,9 @@ async function apply(
     : { $addToSet: { opted_out: { $each: [...categories] } } };
   const doc = await WaPreferenceModel.findOneAndUpdate(
     { destination },
-    { ...update, $set: { user_id: userId } },
+    // A keyword reply knows the number but not the account: it must not
+    // unlink a row a signed-in toggle already tied to one.
+    { ...update, ...(userId ? { $set: { user_id: userId } } : {}) },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   ).lean();
 
@@ -93,7 +95,30 @@ async function apply(
   return sheetFrom(destination, doc?.opted_out ?? [], doc?.updated_at);
 }
 
+/**
+ * The words a person can reply with to stop or restart marketing messages —
+ * the opt-out WhatsApp's commerce policy expects every broadcast to honour.
+ * Matched on the whole message, so a sentence that merely contains "stop" is
+ * a conversation and not an opt-out.
+ */
+const STOP_WORDS = new Set(['STOP', 'UNSUBSCRIBE', 'STOP ALL']);
+const START_WORDS = new Set(['START', 'SUBSCRIBE', 'UNSTOP']);
+
 export const whatsappPreferenceService = {
+  /**
+   * Apply an inbound STOP / START reply to the number it came from. True when
+   * the message was one, so the caller treats it as handled rather than as the
+   * start of a conversation. Only `marketing` moves: a person who replies STOP
+   * to a promotion still gets their tickets and refunds.
+   */
+  async applyReplyKeyword(destination: string, text: string): Promise<boolean> {
+    const word = text.trim().toUpperCase();
+    const optingOut = STOP_WORDS.has(word);
+    if (!destination || (!optingOut && !START_WORDS.has(word))) return false;
+    await apply(destination, null, ['marketing'], !optingOut);
+    return true;
+  },
+
   async mine(userId: string): Promise<Sheet> {
     const destination = await destinationOf(userId);
     // No number yet: the switches still render, so somebody can set their

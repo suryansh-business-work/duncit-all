@@ -52,7 +52,9 @@ export interface WaSendInput {
   event: string;
   /** The pod / release / ticket this is about. Two messages for the same event
    * and the same recipient about the SAME entity are the duplicate the unique
-   * index exists to stop; leave it empty for account-level messages. */
+   * index exists to stop. Never leave it empty for a state change on an
+   * account (approved, suspended, reactivated): a blank entity holds the slot
+   * on the NUMBER forever — use `transitionEntityId`. */
   entityId?: string | null;
   /** The recipient account. Its WhatsApp number is preferred over its login phone. */
   user?: Record<string, any> | null;
@@ -93,7 +95,16 @@ export interface WaSendOutcome {
   message_id: string;
 }
 
-const sent = (message_id: string): WaSendOutcome => ({ status: 'SENT', reason: '', message_id });
+/**
+ * The entity for one state change on a record — approved, suspended,
+ * reactivated: the record plus the moment it changed. Each transition is its
+ * own message, so a person suspended twice is told twice; the caller's own
+ * "nothing changed" guard is what stops a repeated press.
+ */
+export const transitionEntityId = (id: string, at: Date = new Date()): string =>
+  `${id}:${at.getTime()}`;
+
+const sent =(message_id: string): WaSendOutcome => ({ status: 'SENT', reason: '', message_id });
 const skip = (reason: string): WaSendOutcome => ({ status: 'SKIPPED', reason, message_id: '' });
 const failed = (reason: string): WaSendOutcome => ({ status: 'FAILED', reason, message_id: '' });
 

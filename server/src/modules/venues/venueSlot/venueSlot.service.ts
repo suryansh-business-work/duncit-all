@@ -548,14 +548,17 @@ async function venueDecisionSends(facts: SlotDecisionFacts, approved: boolean): 
   ];
 }
 
+/** Who looks after a pod whose club has no club admin. */
+const NO_CLUB_ADMIN = 'the Duncit team';
+
 /** "Your pod is live" to both sides of the booking — one campaign, one key per
  * audience. Only the primary host is told; the co-hosts already have the
  * approval message above. */
 async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[]> {
-  const clubAdmin = await clubAdminName(facts.clubId);
-  // The template's whole point is naming the club admin the pod was handed to,
-  // and a blank value would be recorded FAILED rather than sent.
-  if (!clubAdmin) return [];
+  // The template names the club admin the pod was handed to. A club with none
+  // is run by Duncit itself, and saying so beats the old behaviour — telling
+  // neither the venue nor the host that their pod went live at all.
+  const clubAdmin = (await clubAdminName(facts.clubId)) || NO_CLUB_ADMIN;
   const details = [
     facts.podTitle,
     facts.podTitle,

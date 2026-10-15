@@ -803,7 +803,7 @@ export const ECOMM_EMAILS: readonly EmailDef[] = [
     name: 'Products team: Brand Awaiting Review',
     description: 'Every Products Manager, when a partner submits a brand — the inbox link, so nothing waits unnoticed.',
     audience: 'ADMIN',
-    category: 'notification',
+    category: 'internal',
     fires: 'A brand is submitted for review',
     subject: 'Brand awaiting review: {{brand}}',
     footerNote: FOOTER.brand,

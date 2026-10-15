@@ -510,7 +510,7 @@ export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
       to: ticket.snapshot?.user_email,
       subject: `Attendance marked — ${ticket.snapshot?.pod_title ?? 'your pod'}`,
       template: 'attendance-marked',
-      category: 'notification',
+      category: 'transactional',
       vars: {
         name: ticket.snapshot?.user_name ?? 'there',
         pod_title: ticket.snapshot?.pod_title ?? 'Your pod',

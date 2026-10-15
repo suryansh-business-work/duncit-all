@@ -47,6 +47,8 @@ export function FoodMenuTables({
   const canFill = Number.isInteger(countValue) && countValue > 0;
 
   const download = async () => {
+    // The stickers print the tables as saved; nothing to print until they are.
+    if (!hasSavedTables) return;
     setBusy(true);
     setError(null);
     try {

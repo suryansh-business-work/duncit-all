@@ -10,7 +10,13 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useBranding');
 const mockLogError = jest.fn();
 jest.mock('@duncit/logs', () => ({
-  logs: { mobileApp: { error: (...args: unknown[]) => mockLogError(...args) } },
+  logs: {
+    mobileApp: {
+      error: (...args: unknown[]) => mockLogError(...args),
+      info: jest.fn(),
+      warn: jest.fn(),
+    },
+  },
 }));
 
 const mockedUseBranding = jest.mocked(useBranding);

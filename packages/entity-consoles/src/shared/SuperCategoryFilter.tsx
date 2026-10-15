@@ -45,10 +45,11 @@ export default function SuperCategoryFilter({ value, onChange }: Readonly<Props>
       value={value}
       onChange={(event) => onChange(event.target.value)}
       sx={{ minWidth: 220 }}
+      data-testid="super-category-filter"
     >
-      <MenuItem value="">{t('admin.filters.allSuperCategories')}</MenuItem>
+      <MenuItem value="" data-testid="super-category-option-all">{t('admin.filters.allSuperCategories')}</MenuItem>
       {options.map((option) => (
-        <MenuItem key={option.id} value={option.id}>
+        <MenuItem key={option.id} value={option.id} data-testid={`super-category-option-${option.id}`}>
           {option.name}
         </MenuItem>
       ))}

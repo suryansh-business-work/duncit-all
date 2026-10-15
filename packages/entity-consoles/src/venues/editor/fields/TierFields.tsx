@@ -24,15 +24,16 @@ function TierList({
   addLabel,
   onAdd,
   disabled = false,
+  addTestId,
   children,
-}: Readonly<{ hint: string; addLabel: string; onAdd: () => void; disabled?: boolean; children: ReactNode }>) {
+}: Readonly<{ hint: string; addLabel: string; onAdd: () => void; disabled?: boolean; addTestId: string; children: ReactNode }>) {
   return (
     <Stack spacing={1}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {hint}
       </Typography>
       {children}
-      <DuncitButton startIcon={<AddIcon />} sx={{ alignSelf: 'flex-start' }} onClick={onAdd} disabled={disabled}>
+      <DuncitButton startIcon={<AddIcon />} sx={{ alignSelf: 'flex-start' }} onClick={onAdd} disabled={disabled} data-testid={addTestId}>
         {addLabel}
       </DuncitButton>
     </Stack>
@@ -69,6 +70,7 @@ export function ChargeTiersField({ control }: Readonly<{ control: Control<VenueF
       hint={t('directory.venueEditor.chargeTiersHint')}
       addLabel={t('directory.venueEditor.addChargeBand')}
       onAdd={() => append({ hours_before: 24, charge_type: 'PERCENT', value: 0 })}
+      addTestId="venue-editor-add-charge-band"
     >
       {fields.map((row, index) => (
         <TierRow key={row.id} onRemove={() => remove(index)}>
@@ -96,6 +98,7 @@ export function ChargeTiersField({ control }: Readonly<{ control: Control<VenueF
             label={t('directory.venueEditor.chargeValue')}
             size="small"
             type="number"
+            data-testid={`venue-editor-charge-${index}-value`}
           />
         </TierRow>
       ))}
@@ -117,6 +120,7 @@ export function RefundTiersField({
       hint={t('directory.venueEditor.refundTiersHint')}
       addLabel={t('directory.venueEditor.addRefundBand')}
       onAdd={() => append({ hours_before: 24, refund_pct: 100 })}
+      addTestId="venue-editor-add-refund-band"
       disabled={disabled}
     >
       {fields.map((row, index) => (
@@ -135,6 +139,7 @@ export function RefundTiersField({
             label={t('directory.venueEditor.refundPct')}
             size="small"
             type="number"
+            data-testid={`venue-editor-refund-${index}-pct`}
             disabled={disabled}
           />
         </TierRow>

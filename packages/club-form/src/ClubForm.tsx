@@ -80,12 +80,13 @@ export default function ClubForm({
       <ClubSections />
       {error && <Alert severity="error" sx={{ mt: 2 }} data-testid="club-form-error">{error}</Alert>}
       <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
-        <DuncitButton onClick={onCancel}>{t('clubForm.common.cancel')}</DuncitButton>
+        <DuncitButton onClick={onCancel} data-testid="club-form-cancel">{t('clubForm.common.cancel')}</DuncitButton>
         {!isEdit && (
           <DuncitButton
             variant="outlined"
             type="button"
             disabled={busyOrSubmitting || !nameFilled}
+            data-testid="club-form-draft"
             onClick={() => {
               saveDraft().catch(console.error);
             }}

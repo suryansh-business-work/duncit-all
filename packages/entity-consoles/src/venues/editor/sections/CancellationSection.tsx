@@ -68,6 +68,7 @@ export default function CancellationSection({
               type="number"
               disabled={!canGovern}
               hint={t('directory.venueEditor.triggerHoursHint')}
+              data-testid="venue-editor-trigger-hours"
             />
           </Grid>
         </Grid>

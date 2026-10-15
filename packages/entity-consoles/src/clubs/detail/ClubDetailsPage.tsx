@@ -29,10 +29,10 @@ export type ClubTab = 'overview' | 'hosts' | 'pods' | 'changeLogs';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const clubTabs = (t: Translate): DuncitTabItem<ClubTab>[] => [
-  { value: 'overview', label: t('directory.hostEditor.tabOverview') },
-  { value: 'hosts', label: t('directory.clubs.tabHosts') },
-  { value: 'pods', label: t('directory.hostEditor.tabPods') },
-  { value: 'changeLogs', label: t('directory.changeLogs.tab') },
+  { value: 'overview', label: t('directory.hostEditor.tabOverview'), testId: 'club-tab-overview' },
+  { value: 'hosts', label: t('directory.clubs.tabHosts'), testId: 'club-tab-hosts' },
+  { value: 'pods', label: t('directory.hostEditor.tabPods'), testId: 'club-tab-pods' },
+  { value: 'changeLogs', label: t('directory.changeLogs.tab'), testId: 'club-tab-changeLogs' },
 ];
 
 interface ClubDetailData {
@@ -89,7 +89,7 @@ export default function ClubDetailsPage() {
                 alignItems: "center",
                 flexWrap: 'wrap'
               }}>
-              <Typography variant="h5" component="h1" noWrap sx={{
+              <Typography variant="h5" component="h1" noWrap data-testid="club-details-title" sx={{
                 fontWeight: 900
               }}>
                 {club.club_name}
@@ -122,6 +122,7 @@ export default function ClubDetailsPage() {
             variant="contained"
             startIcon={<EditIcon />}
             onClick={() => navigate(`/clubs/${club.id}/edit`)}
+            data-testid="club-details-edit"
           >
             Edit club
           </DuncitButton>

@@ -34,6 +34,7 @@ export default function CapacityItemsField({
             name={`capacity_items.${index}.label`}
             label={t('directory.venueEditor.spaceName')}
             size="small"
+            data-testid={`venue-editor-space-${index}-label`}
           />
           <RhfTextField
             control={control}
@@ -46,6 +47,7 @@ export default function CapacityItemsField({
           <DuncitIconButton
             aria-label={t('directory.venueEditor.removeSpace')}
             onClick={() => remove(index)}
+            data-testid={`venue-editor-space-${index}-remove`}
             sx={{ mt: 0.5 }}
           >
             <DeleteOutlineIcon fontSize="small" />
@@ -56,6 +58,7 @@ export default function CapacityItemsField({
         startIcon={<AddIcon />}
         disabled={fields.length >= limit}
         onClick={() => append({ label: '', capacity: 1 })}
+        data-testid="venue-editor-add-space"
         sx={{ alignSelf: 'flex-start' }}
       >
         {t('directory.venueEditor.addSpace')}

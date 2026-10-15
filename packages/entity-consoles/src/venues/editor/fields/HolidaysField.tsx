@@ -55,7 +55,7 @@ export default function HolidaysField({
               </DuncitButton>
             </Stack>
             {days.length === 0 ? (
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }} data-testid="venue-editor-no-holidays">
                 {t('directory.venueEditor.noHolidays')}
               </Typography>
             ) : (

@@ -30,7 +30,7 @@ export const hasNoClubAdmin = (c: ClubRow): boolean => (c.admin_user_ids?.length
 export function ClubNameCell({ club, t }: Readonly<{ club: ClubRow; t: Translate }>) {
   const orphaned = hasNoClubAdmin(club);
   const body = (
-    <Box sx={{ lineHeight: 1.2 }}>
+    <Box sx={{ lineHeight: 1.2 }} data-testid={orphaned ? `club-no-admin-${club.id}` : undefined}>
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
         {orphaned && <ErrorOutlineIcon fontSize="small" color="error" />}
         <Typography

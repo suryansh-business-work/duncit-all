@@ -43,7 +43,7 @@ export function AppSidebar({
   const { t } = useTranslation();
   const toggleLabel = collapsed ? t('shell.chrome.expandNav') : t('shell.chrome.collapseNav');
   return (
-    <Stack sx={{ height: '100%' }}>
+    <Stack sx={{ height: '100%' }} data-testid="shell-sidebar">
       <SidebarBrand name={name} collapsed={collapsed} onNavigate={onNavigate} />
       {header && !collapsed && (
         <Box sx={{ px: 1.25, pb: 1 }} data-testid="shell-sidebar-header">

@@ -6,7 +6,12 @@
  * exactly. One test renders through the real pdfkit to prove the bytes are a
  * PDF and that a long report really breaks onto more pages.
  */
-jest.mock('@services/pdf/document', () => ({ loadPdfImage: jest.fn(), renderPdf: jest.fn() }));
+jest.mock('@services/pdf/document', () => ({
+  loadPdfImage: jest.fn(),
+  renderPdf: jest.fn(),
+  // The real swap: what the drawn text should read is exactly what it decides.
+  pdfSafeText: jest.requireActual<typeof import('@services/pdf/document')>('@services/pdf/document').pdfSafeText,
+}));
 
 import { loadPdfImage, renderPdf } from '@services/pdf/document';
 import { analyticsReportPdf, type ReportPdfInput } from '../../mail/analyticsMail.pdf';
@@ -288,6 +293,33 @@ describe('analyticsReportPdf — sections', () => {
     // A fresh page starts at the top margin (48), the row text 5pt below it.
     expect(firstOnPage2?.y).toBe(53);
     expect(doc.drawn.filter((d) => d.text.startsWith('Club ')).every((d) => d.y + 18 <= 841.89 - 56 + 5)).toBe(true);
+  });
+});
+
+describe('analyticsReportPdf — currency symbols the built-in fonts cannot draw', () => {
+  it('writes ₹ as INR in tile values, ranking values and the AI summary, and leaves drawable text alone', async () => {
+    await analyticsReportPdf(
+      input({
+        summary: { headline: 'Revenue hit ₹5,000', highlights: ['₹1,200 from Pune'], concerns: [], watch: [] },
+        report: {
+          ...input().report,
+          sections: [
+            section({
+              kpis: [
+                { title: 'Revenue', value: '₹12,500', change: '+4%', tone: 'good' },
+                { title: 'Spend', value: '$40', change: '0', tone: 'flat' },
+              ],
+              table: { title: 'Top clubs', columns: ['Revenue'], rows: [{ id: 'c1', name: 'Dog Walkers', values: ['₹900'] }] },
+            }),
+          ],
+        },
+      })
+    );
+    const texts = doc.drawn.map((d) => d.text);
+    expect(texts).toEqual(
+      expect.arrayContaining(['Revenue hit INR 5,000', '- INR 1,200 from Pune', 'INR 12,500', '$40', 'INR 900'])
+    );
+    expect(texts.some((t) => t.includes('₹'))).toBe(false);
   });
 });
 

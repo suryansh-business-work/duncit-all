@@ -399,6 +399,30 @@ describe('handleAiTurn', () => {
     expect(history.at(-1)?.content).toContain('repeat');
   });
 
+  it('hangs up politely when the call assistant is switched off in AI Features', async () => {
+    openai.chat.mockResolvedValue({ ok: false, message: 'switched off', disabled: true });
+
+    const twiml = await turn();
+
+    // One polite goodbye, not 24 turns of "please repeat" billed by the minute.
+    expect(twiml).toContain('<Hangup/>');
+    expect(twiml).toContain('unavailable right now');
+    expect(twiml).not.toContain('repeat');
+    expect(twiml).not.toContain('audio-token');
+    // Nothing was said by the assistant, so the history is not rewritten either.
+    expect(logs.update).not.toHaveBeenCalled();
+    expect(servam.tts).not.toHaveBeenCalled();
+  });
+
+  it('keeps asking to repeat on an ordinary failure, which is not a switched-off feature', async () => {
+    openai.chat.mockResolvedValue({ ok: false, message: 'timeout', disabled: false });
+
+    const twiml = await turn();
+
+    expect(twiml).not.toContain('unavailable right now');
+    expect(logs.update).toHaveBeenCalledTimes(1);
+  });
+
   it('falls back to Twilio own voice when the TTS is down, rather than dropping the call', async () => {
     servam.tts.mockResolvedValue({ ok: false });
 

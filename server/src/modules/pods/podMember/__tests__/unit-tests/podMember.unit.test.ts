@@ -1,5 +1,6 @@
 import { podMemberResolvers } from '../../podMember.resolver';
 import { makeContext } from '@test/harness';
+import { podMemberService } from '../../podMember.service';
 
 // joinFreePod/backoutPod resolve the user synchronously, so wrap the call in an
 // async IIFE to normalise both sync throws and rejected promises.
@@ -54,5 +55,35 @@ describe('podMember unit', () => {
       (async () =>
         (podMemberResolvers.Query as any).backoutRefundRequest({}, { id: 'x' }, makeContext({ roles: ['USER'] })))()
     ).rejects.toThrow(/access denied/i);
+  });
+
+  it('cancelFreeSpot requires authentication and never reaches the service without it', async () => {
+    const cancel = jest.spyOn(podMemberService, 'cancelFreeSpot');
+    try {
+      await expect(
+        (async () => podMemberResolvers.Mutation.cancelFreeSpot({}, { pod_doc_id: 'x' }, makeContext(null)))()
+      ).rejects.toThrow(/authentication required/i);
+      expect(cancel).not.toHaveBeenCalled();
+    } finally {
+      cancel.mockRestore();
+    }
+  });
+
+  it("cancelFreeSpot cancels the caller's own booking — the user id comes from the session", async () => {
+    const answer = { id: 'm-1', status: 'BACKED_OUT' } as unknown as Awaited<
+      ReturnType<typeof podMemberService.cancelFreeSpot>
+    >;
+    const cancel = jest.spyOn(podMemberService, 'cancelFreeSpot').mockResolvedValue(answer);
+    try {
+      const out = await podMemberResolvers.Mutation.cancelFreeSpot(
+        {},
+        { pod_doc_id: 'pod-1' },
+        makeContext({ id: '65b000000000000000000009', roles: ['USER'] })
+      );
+      expect(out).toBe(answer);
+      expect(cancel).toHaveBeenCalledWith('pod-1', '65b000000000000000000009');
+    } finally {
+      cancel.mockRestore();
+    }
   });
 });

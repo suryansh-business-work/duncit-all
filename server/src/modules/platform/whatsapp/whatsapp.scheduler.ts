@@ -34,6 +34,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { markedUserIdsByPod, podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
+import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
 // `notifyEach`, not `whatsappService.sendEach`: every scenario this file
 // sweeps for now goes out as an email too — the pod reminder, the complete-pod
@@ -89,6 +90,7 @@ interface SweptPod {
   pod_hosts_id?: any[];
   club_id?: any;
   venue_id?: any;
+  extra_seats?: number;
   /** The pod's own pictures. Every pod-shaped message headed by one instead of
    * the platform placeholder — so every projection that feeds a send selects it. */
   pod_images_and_videos?: StoredMedia[];
@@ -242,6 +244,117 @@ async function remindAttendees(
   );
   await sweepSend(
     pods.flatMap((pod) => podReminders(pod, users, slugById, mwebUrl))
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * 1b. USER_POD_REMINDER_SAMEDAY — the pod starts in a few hours.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The day-before reminder is too early to carry what somebody needs on the way
+ * out of the door: where it is and what time. A second, short one lands a few
+ * hours before (`pod_sameday_reminder_hours`, Admin > Pods > Pod Settings).
+ * Zero switches it off.
+ */
+async function remindAttendeesSameDay(now: number, cutoff: Date, mwebUrl: string, clocks: SweepClocks) {
+  if (clocks.pod_sameday_reminder_hours <= 0) return;
+  const pods = await PodModel.find({
+    is_active: true,
+    pod_date_time: crossing(now + clocks.pod_sameday_reminder_hours * HOUR_MS, cutoff),
+  })
+    .select('pod_id pod_title pod_date_time pod_attendees club_id venue_id pod_images_and_videos')
+    .lean<SweptPod[]>();
+  if (pods.length === 0) return;
+  const [slugById, users, venueNames] = await Promise.all([
+    loadPodClubSlugMap(pods),
+    waUsers(pods.flatMap((pod) => pod.pod_attendees ?? [])),
+    venueNamesOf(pods),
+  ]);
+  await sweepSend(
+    pods.flatMap((pod) =>
+      (pod.pod_attendees ?? []).map((attendeeId) => {
+        const user = users.get(String(attendeeId));
+        const name = nameOf(user);
+        return {
+          event: 'USER_POD_REMINDER_SAMEDAY',
+          entityId: String(pod._id),
+          user,
+          name,
+          assets: podImageAssets(pod.pod_images_and_videos),
+          params: [
+            name,
+            pod.pod_title,
+            appTime(pod.pod_date_time),
+            venueNames.get(String(pod.venue_id)) || ONLINE,
+            podUrl(mwebUrl, pod, slugById) || trimTrailingSlash(mwebUrl),
+          ],
+        };
+      })
+    )
+  );
+}
+
+/** Where a pod with no venue happens. */
+const ONLINE = 'Online';
+
+async function venueNamesOf(pods: SweptPod[]): Promise<Map<string, string>> {
+  const ids = pods.map((pod) => pod.venue_id).filter(Boolean);
+  if (ids.length === 0) return new Map();
+  const venues = await VenueModel.find({ _id: { $in: ids } })
+    .select('venue_name')
+    .lean<{ _id: unknown; venue_name?: string | null }[]>();
+  return new Map(venues.map((venue) => [String(venue._id), venue.venue_name ?? '']));
+}
+
+/* ------------------------------------------------------------------ *
+ * 1c. VENUE_POD_REMINDER — a pod is booked at the venue soon.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The venue blocked a room weeks ago and nobody reminded it. On the same clock
+ * as the attendees' reminder, with the headcount — the one number the venue
+ * plans the room around — and the host it should expect at the door.
+ */
+async function remindVenues(now: number, cutoff: Date, clocks: SweepClocks) {
+  const pods = await PodModel.find({
+    is_active: true,
+    venue_id: { $ne: null },
+    pod_date_time: crossing(now + clocks.pod_reminder_lead_hours * HOUR_MS, cutoff),
+  })
+    .select('pod_title pod_date_time pod_attendees extra_seats pod_hosts_id venue_id pod_images_and_videos')
+    .lean<SweptPod[]>();
+  if (pods.length === 0) return;
+  const venues = await VenueModel.find({ _id: { $in: pods.map((pod) => pod.venue_id) } })
+    .select('owner_user_id')
+    .lean<{ _id: unknown; owner_user_id?: unknown }[]>();
+  const ownerByVenue = new Map(
+    venues.map((venue) => [String(venue._id), String(venue.owner_user_id ?? '')])
+  );
+  const users = await waUsers([...ownerByVenue.values(), ...pods.map(firstHostId)]);
+  await sweepSend(
+    pods.flatMap((pod) => {
+      const owner = users.get(ownerByVenue.get(String(pod.venue_id)) ?? '');
+      if (!owner) return [];
+      const name = nameOf(owner);
+      return [
+        {
+          event: 'VENUE_POD_REMINDER',
+          entityId: String(pod._id),
+          user: owner,
+          name,
+          assets: podImageAssets(pod.pod_images_and_videos),
+          params: [
+            name,
+            pod.pod_title,
+            appDate(pod.pod_date_time),
+            appTime(pod.pod_date_time),
+            String(podSeatsTaken(pod)),
+            nameOf(users.get(firstHostId(pod))),
+          ],
+        },
+      ];
+    })
   );
 }
 
@@ -572,6 +685,8 @@ export async function runWhatsappSweeps(): Promise<void> {
     settingsService.getReminderSweepSettings(),
   ]);
   await remindAttendees(now, cutoff, mwebUrl, clocks);
+  await remindAttendeesSameDay(now, cutoff, mwebUrl, clocks);
+  await remindVenues(now, cutoff, clocks);
   await remindHostsToComplete(now, cutoff, clocks);
   await remindVenuesOfPendingSlots(now, cutoff, clocks);
   await noticeReplacementNotFound(now, cutoff, mwebUrl);

@@ -36,6 +36,7 @@ import { startCatalogDeletionScheduler } from '@modules/commerce/catalogDeletion
 import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
+import { startMeetingReminderScheduler } from '@modules/survey/meeting.reminder';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
@@ -680,6 +681,9 @@ async function bootstrap() {
   // seat nobody took, and the four feedback asks once a pod has ended. Runs on
   // the scheduler leader only, like every job above.
   startWhatsappScheduler();
+  // Onboarding calls: a reminder to the applicant ahead of a scheduled meeting
+  // (Onboarding > Meetings > Availability sets how far ahead).
+  startMeetingReminderScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);

@@ -57,6 +57,10 @@ export const FIELD = {
   returnNo: 'email.field.returnNo',
   autoshipEvery: 'email.field.autoshipEvery',
   eachDelivery: 'email.field.eachDelivery',
+  cancelledBy: 'email.field.cancelledBy',
+  guests: 'email.field.guests',
+  deleteOn: 'email.field.deleteOn',
+  details: 'email.field.details',
 } as const;
 
 /** The tinted callout's caption — what the strip beneath the heading names. */
@@ -79,6 +83,7 @@ export const LABEL = {
   grievance: 'email.label.grievance',
   report: 'email.label.report',
   club: 'email.label.club',
+  alert: 'email.label.alert',
 } as const;
 
 /** Button captions. One per action, never one per template. */
@@ -105,6 +110,8 @@ export const CTA = {
   shopNow: 'email.cta.shopNow',
   viewCart: 'email.cta.viewCart',
   orderNow: 'email.cta.orderNow',
+  contactUs: 'email.cta.contactUs',
+  openBrandOrder: 'email.cta.openBrandOrder',
 } as const;
 
 /**
@@ -132,6 +139,7 @@ export const FOOTER = {
   ads: '{{t:email.footer.ads}}',
   security: '{{t:email.footer.security}}',
   grievance: '{{t:email.footer.grievance}}',
+  staff: '{{t:email.footer.staff}}',
 } as const;
 
 /** Closing sentences reused across several templates. */
@@ -149,4 +157,8 @@ export const HELP = {
   slotDecision: 'email.help.slotDecision',
   stockWhy: 'email.help.stockWhy',
   changeRequestOffer: 'email.help.changeRequestOffer',
+  podMoved: 'email.help.podMoved',
+  notYou: 'email.help.notYou',
+  deletionChangeMind: 'email.help.deletionChangeMind',
+  payoutRejected: 'email.help.payoutRejected',
 } as const;

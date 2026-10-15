@@ -29,6 +29,8 @@ import {
   podTimeLabel,
 } from './pod.shared';
 import { applyProductDeltas } from './pod.products';
+import { notifyPartnersOfCancellation } from './pod.cancelPartners';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 
 /** Who cancelled a pod — doubles as the refund metadata tag and the audit source.
  * SYSTEM is the auto-cancel sweep: no human pressed anything. */
@@ -321,6 +323,7 @@ export async function refundAndNotifyCancellation(
   }
 
   await whatsappPodCancellation(doc, initiatedBy, audience, refundedByUser);
+  await notifyPartnersOfCancellation(doc, initiatedBy, actorUserId);
 
   return paymentRefunds.size;
 }
@@ -414,19 +417,28 @@ export async function whatsappHostCancellationRequested(doc: any, hostUserId: st
 
 /** Tell the host the platform cancelled their pod for them — the auto-cancel is
  * the one cancellation the host did not see coming, so silence here would read
- * as the pod simply vanishing. Email only: there is no WhatsApp scenario for it. */
+ * as the pod simply vanishing. Email AND WhatsApp: a host with no address on
+ * file used to hear nothing at all. */
 export async function emailHostAutoCancelled(doc: any) {
   try {
     const host: any = await UserModel.findById(podOwnerId(doc))
-      .select('profile.first_name profile.last_name auth.email')
+      .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
       .lean();
     const email = host?.auth?.email;
-    if (!email) return;
     const venue: any = doc.venue_id
       ? await VenueModel.findById(doc.venue_id).select('venue_name').lean()
       : null;
     const hostName =
       `${host?.profile?.first_name ?? ''} ${host?.profile?.last_name ?? ''}`.trim() || 'there';
+    await whatsappService.send({
+      event: 'HOST_POD_AUTO_CANCELLED',
+      entityId: String(doc._id),
+      user: host,
+      name: hostName,
+      assets: podImageAssets(doc.pod_images_and_videos),
+      params: [hostName, doc.pod_title, podDateLabel(doc), podTimeLabel(doc), String(podSeatsTaken(doc))],
+    });
+    if (!email) return;
     await sendHostPodAutoCancelledEmail({
       to: email,
       name: hostName,

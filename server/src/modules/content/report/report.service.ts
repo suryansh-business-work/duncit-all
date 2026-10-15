@@ -17,6 +17,7 @@ import {
 import { sendContentReportMessage, sendReportNotice, type ReportNotice } from './report.email';
 import { reportCategoryService } from './reportCategory.service';
 import { sendReportReceivedWhatsApp } from './report.whatsapp';
+import { alertStaff } from '@services/notify/staffAlert';
 import {
   failAlreadyPending,
   findOpenReport,
@@ -325,6 +326,15 @@ export const reportService = {
         reason: category.label,
       },
     ]);
+    // Fire-and-forget like the notices above: the report is saved, and Legal
+    // has a response deadline that starts now, not when someone next looks.
+    alertStaff({
+      desk: 'LEGAL',
+      title: `New content report: ${report.report_no ?? ''}`,
+      lines: [`Reason: ${category.label}`, `Target: ${report.target_type}`],
+    }).catch((error: unknown) => {
+      logs.server.error('report.service', 'staff-alert-failed', { report_no: report.report_no, error });
+    });
     sendReportReceivedWhatsApp(report.reporter_id, String(report.id), report.report_no ?? '').catch(
       (error: unknown) => {
         logs.server.error('report.service', 'whatsapp-failed', { report_no: report.report_no, error });

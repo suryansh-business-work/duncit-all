@@ -496,6 +496,55 @@ async function notifyApproval(doc: IPaymentRelease) {
   }
 }
 
+/** The WhatsApp scenario each kind of rejected payout announces — one shared
+ * campaign, one key per audience so the Automation board groups them. */
+const WA_PAYOUT_REJECTED_EVENT: Record<PaymentReleaseKind, string> = {
+  HOST_PAYMENT: 'HOST_PAYMENT_REJECTED',
+  VENUE_BILLING: 'VENUE_PAYMENT_REJECTED',
+  CLUB_ADMIN: 'CLUB_ADMIN_PAYMENT_REJECTED',
+  ECOMM_PAYMENT: 'ECOMM_PAYMENT_REJECTED',
+};
+
+/**
+ * Tell the beneficiary Finance turned their payout down, and why.
+ *
+ * An approval mailed a statement; a rejection said nothing at all, so a host
+ * waited on money that was never coming and found out by asking support. The
+ * reason Finance typed is the whole message — it is what they can act on.
+ * A release is reviewed once (only PENDING can be), so it is keyed on itself.
+ * Best-effort: the decision is saved before anybody is told.
+ */
+async function notifyRejection(doc: IPaymentRelease) {
+  if (doc.status !== 'REJECTED') return;
+  try {
+    const fs = await getFinanceSettings();
+    const amount = `${fs.currency_symbol}${(Number(doc.amount_requested) || 0).toFixed(2)}`;
+    const reason = (doc.approval_reason ?? '').trim() || '-';
+    await sendEmail({
+      to: doc.beneficiary_email,
+      subject: `Payout not approved · ${doc.pod_title}`,
+      template: 'payout-rejected',
+      category: 'billing',
+      vars: {
+        name: doc.beneficiary_name,
+        pod_title: doc.pod_title,
+        amount,
+        reason,
+        release_id: doc.release_id,
+      },
+    });
+    await whatsappService.send({
+      event: WA_PAYOUT_REJECTED_EVENT[doc.kind],
+      entityId: `${String(doc._id)}:REJECTED`,
+      user: await beneficiaryUser(doc),
+      name: doc.beneficiary_name,
+      params: [doc.beneficiary_name, doc.pod_title, amount, reason],
+    });
+  } catch (error) {
+    logs.server.warn('paymentRelease', 'notifyRejection', { error, release_id: doc.release_id });
+  }
+}
+
 // Validate a review payload against the pending request and return the decided
 // fields. Throws the same BAD_USER_INPUT errors as before, in the same order.
 function parseReviewInput(doc: IPaymentRelease, input: any) {
@@ -974,6 +1023,7 @@ export const paymentReleaseService = {
       await applyApproval(doc);
     }
     await notifyApproval(doc);
+    await notifyRejection(doc);
     return toPub(doc);
   },
 

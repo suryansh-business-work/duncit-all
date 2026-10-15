@@ -8,6 +8,7 @@ import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { assertActiveHost, resolveVenueLocation } from '@modules/pods/pod/pod.service';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import { changeRequestFail } from './podChangeRequest.common';
+import { notifyPodRescheduled } from '@modules/pods/pod/pod.rescheduleNotify';
 import { notifyAttendeesOfVenueChange } from './podChangeRequest.notify';
 import type { IPodChangeOffer, IPodChangeRequest } from './podChangeRequest.model';
 import { appDateTime } from '@utils/app-time';
@@ -105,6 +106,9 @@ async function replaceVenue(
     note: `Change request ${request.change_request_no}: venue moved to ${venue!.venue_name} (${when})`,
   });
   await notifyAttendeesOfVenueChange(pod, venue!.venue_name ?? '', when);
+  // The in-app row above reaches only someone with the app open; a guest who
+  // is not looking would still turn up at the old venue.
+  await notifyPodRescheduled(pod, { inApp: false });
 
   return {
     summary: `${venue!.venue_name} took the pod on ${when}.`,

@@ -14,6 +14,7 @@ import { POD_SHOP_ORDER_EMAILS } from './catalogue.podShopOrders';
 import { ANALYTICS_EMAILS } from './catalogue.analytics';
 import { AUTOMATION_EMAILS } from './catalogue.automation';
 import { APP_BUILD_EMAILS } from './catalogue.appBuilds';
+import { LIFECYCLE_EMAILS } from './catalogue.lifecycle';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -47,6 +48,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...ANALYTICS_EMAILS,
   ...AUTOMATION_EMAILS,
   ...APP_BUILD_EMAILS,
+  ...LIFECYCLE_EMAILS,
   ...EXISTING_EMAILS,
 ];
 

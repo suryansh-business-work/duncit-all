@@ -10,6 +10,7 @@ import { assertSpotsWithinLimits, resolveSpotLimits, type PodSpotLimits } from '
 import { PodModel } from './pod.model';
 import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import { sendPodUpdatedEmail } from '@services/email/email.service';
+import { notifyPodRescheduled, podWhenWhereChanged } from './pod.rescheduleNotify';
 import { moderationService } from '@modules/moderation/moderation.service';
 import { assertInvitable } from './coHost.service';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
@@ -293,10 +294,14 @@ export const podWriteMethods = {
     }
     const booking = reroute ? snapshotBooking(doc) : null;
     const before = snapshotPod(doc);
+    const was = { pod_date_time: doc.pod_date_time, venue_id: doc.venue_id };
     await applyPodEditCore(doc, input);
     if (reroute) applyRerouteState(doc, input, reroute);
     await doc.save();
     if (reroute && booking) await claimRerouteSlot(doc, reroute, booking, source);
+    // A portal moving a live pod's time or venue used to tell nobody, so guests
+    // turned up at the old place. A cancelled pod has nobody left to tell.
+    if (!doc.deleted_at && podWhenWhereChanged(was, doc)) await notifyPodRescheduled(doc);
     await podAuditService.record({
       pod: doc,
       action: 'UPDATE',

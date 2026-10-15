@@ -40,6 +40,7 @@ import {
   type VenueCategoryRef,
 } from './venue.categories';
 import { notifyEach } from '@services/notify/notify.service';
+import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/finance/bankAccount.notify';
 import { getUrlConfigs } from '@config/url-configs';
 import {
   VENUE_FOOD_INPUT_KEYS,
@@ -949,9 +950,21 @@ export const venueService = {
     v.owner_phone = input.owner_phone;
     if (input.owner_dob) v.owner_dob = new Date(input.owner_dob);
     if (input.owner_address !== undefined) v.owner_address = input.owner_address;
+    // A plain copy: the subdocument itself is replaced by the write below.
+    const previousBank = normalizeBankAccountInput(v.bank_account ?? {});
     if (input.bank_account !== undefined) v.bank_account = normalizeBankAccountInput(input.bank_account) as any;
     if (v.step_completed < 3) v.step_completed = 3;
     await v.save();
+    if (v.status === 'APPROVED' && bankAccountChanged(previousBank, v.bank_account)) {
+      await alertBankAccountChanged({
+        audience: 'VENUE',
+        recordId: v.id,
+        userId: v.owner_user_id,
+        name: v.owner_name ?? '',
+        email: v.owner_email ?? '',
+        account: v.bank_account,
+      });
+    }
     return toPub(v);
   },
   async submitFinal(userId: string, venueId?: string | null) {

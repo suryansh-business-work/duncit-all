@@ -11,6 +11,7 @@ import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/fi
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
+import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/finance/bankAccount.notify';
 import { getUrlConfigs } from '@config/url-configs';
 import { userContactNumber } from '@utils/contact';
 
@@ -362,10 +363,22 @@ export const hostService = {
     }
     h.police_verification_url = input.police_verification_url;
     h.full_address = input.full_address;
+    // A plain copy: the subdocument itself is replaced by the write below.
+    const previousBank = normalizeBankAccountInput(h.bank_account ?? {});
     if (input.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(input.bank_account) as any;
     if (input.tags !== undefined) h.tags = input.tags;
     if (h.step_completed < 3) h.step_completed = 3;
     await h.save();
+    if (h.status === 'APPROVED' && bankAccountChanged(previousBank, h.bank_account)) {
+      await alertBankAccountChanged({
+        audience: 'HOST',
+        recordId: h.id,
+        userId: h.user_id,
+        name: h.full_name ?? '',
+        email: h.email ?? '',
+        account: h.bank_account,
+      });
+    }
     return toPub(h);
   },
   async submitFinal(userId: string) {

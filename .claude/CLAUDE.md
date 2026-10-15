@@ -1,5 +1,3 @@
-<!-- Temporarily pause all test-case-related work. No action should fail because of test cases. Do not write any new test cases for now. If anything is failing, please ignore all the tests mentioned below. Keep the primary focus on feature development and related work. Do not run local tests during development: no E2E, integration, or unit tests. Skip E2E testing for now and focus primarily on feature development. -->
-
 ## Very Inportant Level Instruction
 1. Before writing or executing any code, continuously monitor the system’s CPU temperature, CPU utilization, RAM usage, and storage usage. If any of these resources reach a critically high level that could cause the system to hang, crash, shut down, or interrupt the workflow, temporarily pause all workflows and wait until the system resources return to safe and stable levels. Once everything is normalized, automatically resume the workflow from where it was paused. The primary goal is to prevent system overload, unexpected shutdowns, data loss, and workflow interruptions, There should be no manual typing continue continue after some time based on ram usages etc.
 
@@ -75,27 +73,26 @@
 60. **Edge Cases:** Consider relevant null/undefined, empty, duplicate, timeout, retry, pagination, timezone, permission, network-failure, and stale-data scenarios.
 61. **Commit Discipline:** Keep unrelated tasks in separate commits with clear, task-specific commit messages.
 62. **Staging Only:** Push changes only to `staging`; do not create or push to any other branch.
-63. **Do Not Push:** Do not push code for the current task.
-64. **Testing — Temporarily Paused:** Do not write new tests or run local unit, integration, or E2E tests unless explicitly requested.
-65. **E-commerce vs Partner Brand:** `https://ecomm.duncit.com` and `https://partners-app.duncit.com/ecomm-brand` are separate products; never mix their logic, data, UI, or business rules.
-66. **WhatsApp:** Always use the Communications Portal to create or manage WhatsApp templates and campaigns.
-67. **Finance:** Work on Finance functionality with extremely deep analysis and research. Understand financial flows, business rules, calculations, data integrity, edge cases, dependencies, security, auditability, and backward compatibility before making changes.
-68. **Attendance:** Use the existing attendance board, attendance service, OTP service, and established attendance rules; never create parallel attendance or OTP flows.
-69. **Versioning:** Maintain the enforced single app version across `app/mobile-app/app.json`, `app/mobile-app/package.json`, and `app/mweb/package.json`.
-70. **Fallback Assets:** Keep fallback icon manifests and local assets synchronized with the enforced fallback-icon system.
-71. **Localization Seed:** When adding or changing localization entries, follow the existing bundle, server seed, shipped-key generation, and copy-revision workflow.
-72. **Production Safety:** Never push directly to production branches or deploy production changes unless explicitly requested and permitted by the project's deployment workflow.
-73. GraphQL Optimization — Reuse existing queries, mutations, fragments, and generated types; request only required fields, avoid duplicate requests and N+1 queries, use proper pagination/filtering, and verify resolver/database performance.
-74. Staging Only — Changes must go through staging; never push directly to main/master, and do not create additional branches.
-75. App Versioning — Keep the app version synchronized across app.json, app/mobile-app/package.json, and app/mweb/package.json, following the enforced version-bump/deployment flow.
-76. No Local MJML — Never create or maintain local MJML email files; maintain email templates through the Communications/Tech Portal.
-77. No Duplicate Shared Logic — Before creating any helper, hook, schema, utility, constant map, or component, check existing @duncit/* packages and package documentation first.
-78. Sensitive Modules — Apply extra scrutiny to Finance, Payments, Orders, Attendance, Authentication, Localization, and Admin functionality, including authorization, concurrency, idempotency, auditability, and data integrity.
-79. API Contract Consistency — When changing frontend/backend behavior, verify the GraphQL schema, generated types, validation, and all affected consumers together.
-80. No Silent Failures — Never swallow errors silently; provide appropriate user-facing feedback and developer-facing diagnostics/logging.
-81. Environment Separation — Never mix local, staging, and production configuration, credentials, or data.
-82. Always follow the Design System—never hard-code colors, shadows, spacing, borders, typography, radius, or any other design value; always use the respective design tokens from the token files.
-83. Use the Duncit Regex package for all form validations. Never hardcode regex patterns directly in application code. If a new regex is required, add and test it to the Duncit Regex package first, then use it across mWeb, Portals, and Native applications.
+63. **Testing — Temporarily Paused:** Do not write new tests or run local unit, integration, or E2E tests unless explicitly requested.
+64. **E-commerce vs Partner Brand:** `https://ecomm.duncit.com` and `https://partners-app.duncit.com/ecomm-brand` are separate products; never mix their logic, data, UI, or business rules.
+65. **WhatsApp:** Always use the Communications Portal to create or manage WhatsApp templates and campaigns.
+66. **Finance:** Work on Finance functionality with extremely deep analysis and research. Understand financial flows, business rules, calculations, data integrity, edge cases, dependencies, security, auditability, and backward compatibility before making changes.
+67. **Attendance:** Use the existing attendance board, attendance service, OTP service, and established attendance rules; never create parallel attendance or OTP flows.
+68. **Versioning:** Maintain the enforced single app version across `app/mobile-app/app.json`, `app/mobile-app/package.json`, and `app/mweb/package.json`.
+69. **Fallback Assets:** Keep fallback icon manifests and local assets synchronized with the enforced fallback-icon system.
+70. **Localization Seed:** When adding or changing localization entries, follow the existing bundle, server seed, shipped-key generation, and copy-revision workflow.
+71. **Production Safety:** Never push directly to production branches or deploy production changes unless explicitly requested and permitted by the project's deployment workflow.
+72. GraphQL Optimization — Reuse existing queries, mutations, fragments, and generated types; request only required fields, avoid duplicate requests and N+1 queries, use proper pagination/filtering, and verify resolver/database performance.
+73. Staging Only — Changes must go through staging; never push directly to main/master, and do not create additional branches.
+74. App Versioning — Keep the app version synchronized across app.json, app/mobile-app/package.json, and app/mweb/package.json, following the enforced version-bump/deployment flow.
+75. No Local MJML — Never create or maintain local MJML email files; maintain email templates through the Communications/Tech Portal.
+76. No Duplicate Shared Logic — Before creating any helper, hook, schema, utility, constant map, or component, check existing @duncit/* packages and package documentation first.
+77. Sensitive Modules — Apply extra scrutiny to Finance, Payments, Orders, Attendance, Authentication, Localization, and Admin functionality, including authorization, concurrency, idempotency, auditability, and data integrity.
+78. API Contract Consistency — When changing frontend/backend behavior, verify the GraphQL schema, generated types, validation, and all affected consumers together.
+79. No Silent Failures — Never swallow errors silently; provide appropriate user-facing feedback and developer-facing diagnostics/logging.
+80. Environment Separation — Never mix local, staging, and production configuration, credentials, or data.
+81. Always follow the Design System—never hard-code colors, shadows, spacing, borders, typography, radius, or any other design value; always use the respective design tokens from the token files.
+82. Use the Duncit Regex package for all form validations. Never hardcode regex patterns directly in application code. If a new regex is required, add and test it to the Duncit Regex package first, then use it across mWeb, Portals, and Native applications.
 
 ## Project Specific
 1. E-commerce (https://ecomm.duncit.com) and Partner Brand (https://partners-app.duncit.com/ecomm-brand) are separate things. Please keep this in mind and do not mix them up.

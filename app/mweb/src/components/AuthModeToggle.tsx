@@ -1,9 +1,20 @@
 import { Stack } from '@mui/material';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import { DuncitButton, TOUCH_TARGET } from '@duncit/buttons';
+import { BUTTON_SIZES, DuncitButton, TOUCH_TARGET } from '@duncit/buttons';
 import { useColorMode } from '../ColorModeContext';
 import { useTranslation } from '../i18n/useTranslation';
+
+/*
+  Compact: a step under the small button — a preference at the foot of the
+  screen, not an action. The drawn pill is short; a transparent ::before
+  carries each half's press area back up to a full touch target (vertically
+  only — the halves are neighbours). Native twin uses hitSlop for the same.
+*/
+const SM = BUTTON_SIZES.sm;
+const TRACK_PADDING = 2;
+const SEGMENT_HEIGHT = SM.height - 8;
+const SEGMENT_SLOP = Math.ceil((TOUCH_TARGET - SEGMENT_HEIGHT) / 2);
 
 interface SegmentProps {
   label: string;
@@ -28,15 +39,27 @@ function ModeSegment({ label, hint, icon, active, onClick, testId }: Readonly<Se
       aria-pressed={active}
       data-testid={testId}
       sx={{
-        minHeight: TOUCH_TARGET - 8,
-        px: 2,
+        // Beats the coarse-pointer 44px floor on purpose; the ::before restores the target.
+        minHeight: SEGMENT_HEIGHT,
+        position: 'relative',
+        px: `${SM.paddingHorizontal - 4}px`,
+        py: 0,
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: -SEGMENT_SLOP,
+          bottom: -SEGMENT_SLOP,
+        },
+        '& .MuiButton-startIcon': { mr: `${SM.gap - 2}px` },
         borderRadius: '999px',
         textTransform: 'none',
         fontWeight: 600,
-        fontSize: 13,
+        fontSize: SM.fontSize - 1,
         color: active ? 'text.primary' : 'text.secondary',
         bgcolor: active ? 'background.paper' : 'transparent',
-        '& .MuiSvgIcon-root': { fontSize: 16, color: active ? 'primary.main' : 'text.secondary' },
+        '& .MuiSvgIcon-root': { fontSize: SM.iconSize - 2, color: active ? 'primary.main' : 'text.secondary' },
         '&:hover': { bgcolor: active ? 'background.paper' : 'action.hover' },
       }}
     >
@@ -68,12 +91,12 @@ export default function AuthModeToggle() {
   return (
     <Stack
       direction="row"
-      spacing={0.5}
+      spacing={`${TRACK_PADDING}px`}
       data-testid="auth-mode-toggle"
       sx={{
         alignItems: 'center',
         alignSelf: 'center',
-        p: 0.5,
+        p: `${TRACK_PADDING}px`,
         borderRadius: '999px',
         border: 1,
         borderColor: 'divider',

@@ -3,6 +3,7 @@ import { Box, CircularProgress, Stack } from '@mui/material';
 import ClubPodsScheduleSection from '../../pages/club-details-page/ClubPodsScheduleSection';
 import SectionHeader from '../SectionHeader';
 import { usePricing } from '../../hooks/usePricing';
+import { nothingUpcoming } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useOpenPod } from './useOpenPod';
 
@@ -21,6 +22,9 @@ interface Props {
   loading: boolean;
   /** Shown instead of the rails when there are no pods; the club copy otherwise. */
   empty?: ReactNode;
+  /** Shown under the rails (or the empty state) when nothing is coming up —
+   * the request-an-event card. */
+  whenNothingUpcoming?: ReactNode;
 }
 
 /**
@@ -28,7 +32,7 @@ interface Props {
  * page's look — for a venue or a host. A tap opens the pod (sign-in first when
  * signed out, carrying the pod through it).
  */
-export default function PodsScheduleBlock({ title, testId, pods, loading, empty }: Readonly<Props>) {
+export default function PodsScheduleBlock({ title, testId, pods, loading, empty, whenNothingUpcoming }: Readonly<Props>) {
   const { t } = useTranslation();
   const { format } = usePricing();
   const openPod = useOpenPod();
@@ -48,11 +52,14 @@ export default function PodsScheduleBlock({ title, testId, pods, loading, empty 
   } else if (pods.length === 0 && empty) {
     body = empty;
   }
+  // True with no pods at all too.
+  const showRequest = !loading && nothingUpcoming(pods);
 
   return (
     <Stack spacing={1.25} data-testid={testId}>
       <SectionHeader testId={`${testId}-header`} title={title} />
       {body}
+      {showRequest && whenNothingUpcoming}
     </Stack>
   );
 }

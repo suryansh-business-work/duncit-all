@@ -7,8 +7,7 @@ import { initials, normalizeMe } from '@duncit/user-core';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
-  /** Search hides on Home (its own search bar leads the page) and outside the
-   * USER studio (focused partner headers). */
+  /** Search hides outside the USER studio (focused partner headers). */
   showSearch: boolean;
   locationId: string;
   zoneName: string;

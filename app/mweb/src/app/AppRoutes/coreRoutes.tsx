@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, HostPodChallengesPage, PodAttendancePage, PodChallengeArenaPage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenueFoodOrderPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
+import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, FreeJoinSuccessPage, FoodOrdersPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, HostPodChallengesPage, PodAttendancePage, PodChallengeArenaPage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenueFoodItemPage, VenueFoodOrderPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
 import { PartnerRedirect, withAuth, type AppRoutesProps } from './routeGuards';
 
 /** Home, profile, pod and host routes. Rendered as a fragment so `<Routes>` still sees plain `<Route>` children. */
@@ -28,6 +28,11 @@ export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<App
             whoever scanned the table's QR has no account, and the order's access
             key (in the link, or remembered on the device) is what opens it. */}
         <Route path="/venue/:venueId/food-order/:orderId" element={<VenueFoodOrderPage />} />
+        {/* A dish's own page, opened from its name on the menu — public like the menu. */}
+        <Route path="/venue/:venueId/food/:itemId" element={<VenueFoodItemPage />} />
+        {/* Your Food Orders. Public: a guest sees the orders this browser placed (their
+            keys are remembered); a member also sees every order their account placed. */}
+        <Route path="/food-orders" element={<FoodOrdersPage />} />
         {/* A host's published page — public like the venue page; its pods ask
             a signed-out visitor to sign in, carrying the pod through it. */}
         <Route path="/hosts/:handle" element={<HostPage />} />
@@ -41,6 +46,9 @@ export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<App
           )}
         />
         <Route path="/club/:clubSlug/pod/:podSlug" element={withAuth(<PodDetailsPage />)} />
+        {/* Where a free pod's instant join lands: the paid booking's
+            confirmation, with the ticket download and nothing paid. */}
+        <Route path="/pod/:podId/booked" element={withAuth(<FreeJoinSuccessPage />)} />
         {/* The rating link a host shares with their guests. Auth-gated like
             every other page, so an unread link parks in `?redirect` and opens
             straight after sign-in. */}

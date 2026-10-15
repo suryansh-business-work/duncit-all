@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link as RouterLink } from 'react-router';
-import { Alert, FormControlLabel, Link, Stack, Switch } from '@mui/material';
+import { Alert, FormControlLabel, Stack, Switch } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenuRounded';
 import { groupFoodMenu, isVegFood, type VenueFoodItem } from '@duncit/utils';
 import EmptyState from '../../../components/EmptyState';
@@ -12,8 +11,10 @@ import { useTranslation } from '../../../i18n/useTranslation';
 import type { PublicVenue } from '../queries';
 import FoodCartBar from './FoodCartBar';
 import FoodCartSheet from './FoodCartSheet';
-import FoodMenuList from './FoodMenuList';
-import { foodOrderPath, recentFoodOrder } from './foodStorage';
+import FoodLicenceNote from './FoodLicenceNote';
+import FoodMenuBrowser from './FoodMenuBrowser';
+import FoodRatingBadge from './FoodRatingBadge';
+import FoodRunningOrders from './FoodRunningOrders';
 import { useFoodOrdering } from './useFoodOrdering';
 
 interface Props {
@@ -48,23 +49,16 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
     () => groupFoodMenu(vegOnly && mixed ? menu.filter((item) => isVegFood(item.diet)) : menu),
     [menu, vegOnly, mixed],
   );
-  const tracked = useMemo(() => recentFoodOrder(venue.id), [venue.id]);
 
   const openImage = (item: VenueFoodItem) => setZoom({ images: item.images, index: 0 });
 
   return (
     <Stack spacing={2} data-testid="venue-food-menu">
-      <SectionHeader testId="venue-food-menu-header" title={t('mweb.venueFood.menuTitle')} />
-      {tracked && (
-        <Link
-          component={RouterLink}
-          to={foodOrderPath(venue.id, tracked.order_id, tracked.access_key)}
-          sx={{ fontWeight: 600 }}
-          data-testid="venue-food-track-order"
-        >
-          {t('mweb.venueFood.trackOrder', { vars: { orderNo: tracked.order_no } })}
-        </Link>
-      )}
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <SectionHeader testId="venue-food-menu-header" title={t('mweb.venueFood.menuTitle')} />
+        <FoodRatingBadge venueId={venue.id} />
+      </Stack>
+      <FoodRunningOrders venueId={venue.id} />
       {ordering.closed && (
         <Alert severity="info" data-testid="venue-food-closed">
           {t('mweb.venueFood.errors.closed')}
@@ -91,7 +85,8 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
       {groups.length === 0 ? (
         <EmptyState testId="venue-food-menu-empty" icon={<RestaurantMenuIcon />} title={t('mweb.venueFood.menuEmpty')} />
       ) : (
-        <FoodMenuList
+        <FoodMenuBrowser
+          venueId={venue.id}
           groups={groups}
           currency={currency}
           canOrder={canOrder}
@@ -100,6 +95,7 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
           onOpenImage={openImage}
         />
       )}
+      <FoodLicenceNote fssai={venue.food_licences?.fssai_number} />
       {canOrder && cart.lines.length > 0 && <FoodCartBar price={cart.price} currency={currency} onOpen={ordering.openSheet} />}
       <FoodCartSheet
         open={ordering.sheetOpen}

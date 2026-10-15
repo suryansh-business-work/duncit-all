@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useProductVisibility } from '@duncit/app-settings';
-import { studioEntryFor } from '@duncit/utils';
+import { MY_FOOD_ORDERS_PATH, studioEntryFor } from '@duncit/utils';
 import ProfileIdentity from './ProfileIdentity';
 import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
@@ -84,6 +84,10 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       to: '/gift-cards/redeem',
     },
   ];
+  // The orders a member placed from venue menus — their own section, as on native.
+  const foodItems: ProfileTile[] = [
+    { key: 'food-orders', label: t('mweb.venueFood.myOrders.sidebarLabel'), caption: '', icon: 'menu', to: MY_FOOD_ORDERS_PATH },
+  ];
   /*
     Chats and Following open the grid, ahead of the config's own four. They came
     down from the bottom bar — where Venues and the cart now sit — and they are
@@ -128,6 +132,7 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       {showGiftCards && (
         <ManageAccountList title={t('mweb.giftCards.title')} items={giftCardItems} onNavigate={onNavigate} />
       )}
+      <ManageAccountList title={t('mweb.venueFood.myOrders.sidebarTitle')} items={foodItems} onNavigate={onNavigate} />
       <ManageAccountList title={t('mweb.common.manageAccount')} items={buildManageItems(showPodPlans, showTourGuide, t('mweb.badges.sidebarLabel'), t('mweb.contacts.sidebarLabel'))} onNavigate={onNavigate} />
       {productsVisible && (
         <ManageAccountList title={t('mweb.common.shop')} items={SHOP_ITEMS} onNavigate={onNavigate} />

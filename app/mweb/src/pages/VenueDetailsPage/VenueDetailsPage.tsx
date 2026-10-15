@@ -109,7 +109,7 @@ export default function VenueDetailsPage() {
   );
 
   const events = [
-    <VenuePodsSection key="pods" venueId={venue.id} />,
+    <VenuePodsSection key="pods" venueId={venue.id} venueName={venue.venue_name} />,
     <PublicReelsSection key="reels" venueId={venue.id} />,
   ];
 
@@ -152,7 +152,7 @@ export default function VenueDetailsPage() {
       <VenueChipsSection title={t('mweb.common.facilities')} items={venue.facilities} />
       <VenueChipsSection title={t('mweb.common.venueSecurity')} items={venue.security} />
 
-      <VenueImagesGrid images={images} venueName={venue.venue_name} onOpen={setZoomIndex} />
+      <VenueImagesGrid images={images} venueName={venue.venue_name} onOpen={setZoomIndex} videos={venue.videos} />
 
       <MomentLightbox
         moments={images.map((url) => ({ url }))}

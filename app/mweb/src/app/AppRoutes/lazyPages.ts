@@ -19,6 +19,7 @@ export const PublicProfilePage = lazy(() => import('../../pages/PublicProfilePag
 export const HostPage = lazy(() => import('../../pages/host-page'));
 export const PodDetailsPage = lazy(() => import('../../pages/PodDetailsPage'));
 export const PodFeedbackPage = lazy(() => import('../../pages/pod-feedback-page'));
+export const FreeJoinSuccessPage = lazy(() => import('../../pages/free-join-success-page'));
 export const PodMediaPage = lazy(() => import('../../pages/pod-media-page'));
 export const PodChallengeArenaPage = lazy(() => import('../../pages/pod-challenge-arena-page'));
 export const HostPodChallengesPage = lazy(() => import('../../pages/host-pod-challenges-page'));
@@ -43,6 +44,8 @@ export const VenueAvailabilityPage = lazy(() => import('../../pages/venue-availa
 export const VenueSettingsPage = lazy(() => import('../../pages/venue-settings-page'));
 export const VenueDetailsPage = lazy(() => import('../../pages/VenueDetailsPage'));
 export const VenueFoodOrderPage = lazy(() => import('../../pages/venue-food-order-page'));
+export const VenueFoodItemPage = lazy(() => import('../../pages/venue-food-item-page'));
+export const FoodOrdersPage = lazy(() => import('../../pages/food-orders-page'));
 export const VenuesPage = lazy(() => import('../../pages/venues-page'));
 export const FaqsPage = lazy(() => import('../../pages/FaqsPage'));
 export const BadgesPage = lazy(() => import('../../pages/badges-page'));

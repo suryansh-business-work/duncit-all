@@ -1,11 +1,14 @@
-import { Box, ButtonBase, Chip, Stack, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router';
+import { Box, ButtonBase, Chip, Link, Stack, Typography } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/RestaurantRounded';
 import { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from '@duncit/ui';
-import { FOOD_ORDER_LIMITS, formatFoodMoney, type VenueFoodItem } from '@duncit/utils';
+import { FOOD_ORDER_LIMITS, type VenueFoodItem } from '@duncit/utils';
 import { useCartControlLabels } from '../../../components/cart/useCartControlLabels';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { RADIUS, SURFACE_SX } from '../../../theme';
 import DietMark from './DietMark';
+import FoodItemPrice from './FoodItemPrice';
+import FoodItemVideos from './FoodItemVideos';
 import SpiceMark from './SpiceMark';
 
 interface Props {
@@ -16,6 +19,8 @@ interface Props {
   quantity: number;
   onQuantity: (itemId: string, quantity: number) => void;
   onOpenImage: (item: VenueFoodItem) => void;
+  /** The dish's own page — its name links there. */
+  detailsPath?: string;
 }
 
 const THUMB_SX = {
@@ -65,7 +70,7 @@ function Thumb({ item, onOpenImage }: Readonly<Pick<Props, 'item' | 'onOpenImage
  * too small to hold it. A dish that is off for now stays on the menu, greyed
  * and labelled, and cannot be added.
  */
-export default function FoodItemCard({ item, currency, canOrder, quantity, onQuantity, onOpenImage }: Readonly<Props>) {
+export default function FoodItemCard({ item, currency, canOrder, quantity, onQuantity, onOpenImage, detailsPath }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = useCartControlLabels()(item.name);
   // The cart is read from storage before the first render, so a dish already
@@ -89,16 +94,21 @@ export default function FoodItemCard({ item, currency, canOrder, quantity, onQua
           <SpiceMark level={item.spice_level} />
         </Stack>
         <Typography component="h4" sx={{ fontSize: '0.9375rem', fontWeight: 600, wordBreak: 'break-word', ...dim }}>
-          {item.name}
+          {detailsPath ? (
+            <Link component={RouterLink} to={detailsPath} color="inherit" underline="hover" data-testid={`food-item-open-${item.id}`}>
+              {item.name}
+            </Link>
+          ) : (
+            item.name
+          )}
         </Typography>
-        <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, ...dim }}>
-          {formatFoodMoney(item.price, currency)}
-        </Typography>
+        <FoodItemPrice item={item} currency={currency} dim={dim} />
         {item.description && (
           <Typography variant="body2" sx={{ color: 'text.secondary', wordBreak: 'break-word', ...dim }}>
             {item.description}
           </Typography>
         )}
+        <FoodItemVideos item={item} />
         {!available && (
           <Chip
             size="small"

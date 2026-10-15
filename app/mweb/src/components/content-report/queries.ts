@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client';
 import {
   BLOCK_USER_SDL,
+  MY_OPEN_REPORT_SDL,
   REPORT_CATEGORIES_SDL,
   REPORT_POST_SDL,
   REPORT_PROFILE_SDL,
@@ -15,6 +16,9 @@ import {
 
 /** The reasons the report dialog offers, as Legal has arranged them. */
 export const REPORT_CATEGORIES = gql(REPORT_CATEGORIES_SDL);
+
+/** The viewer's own still-open report on the thing, or null. */
+export const MY_OPEN_REPORT = gql(MY_OPEN_REPORT_SDL);
 
 /** Flag a post or a story for the Legal team. Open to any signed-in viewer. */
 export const REPORT_POST = gql(REPORT_POST_SDL);

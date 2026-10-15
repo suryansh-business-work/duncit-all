@@ -6,6 +6,8 @@
  * is. A product name that wraps makes its row taller, so it never runs across
  * the divider into the next product.
  */
+import fs from 'node:fs';
+import path from 'node:path';
 import { capturePdfText, drawnOnce, helveticaHeight } from '@test/pdf-text';
 import { generateProductInvoicePdf, type ProductInvoiceData } from '../../product-invoice.pdf';
 
@@ -53,7 +55,7 @@ describe('generateProductInvoicePdf', () => {
   it('says in words which currency the amounts are in', async () => {
     const text = await drawn(base);
 
-    drawnOnce(text, 'All amounts are in Indian Rupees (INR).');
+    expect(drawnOnce(text, 'All amounts are in Indian Rupees (INR).').text).toBe('All amounts are in Indian Rupees (INR).');
   });
 
   it('prints no currency line for a symbol it cannot word, and keeps that symbol', async () => {
@@ -104,7 +106,67 @@ describe('generateProductInvoicePdf', () => {
   it('prints the terms and a custom footer when they are set', async () => {
     const text = await drawn({ ...base, invoice_terms: 'Payable in 7 days.', invoice_footer_note: 'Thanks!' });
 
-    drawnOnce(text, 'Payable in 7 days.');
-    drawnOnce(text, 'Thanks!');
+    expect(drawnOnce(text, 'Payable in 7 days.').text).toBe('Payable in 7 days.');
+    expect(drawnOnce(text, 'Thanks!').text).toBe('Thanks!');
+  });
+
+  it('prints a missing amount as zero instead of failing the invoice', async () => {
+    const text = await drawn({
+      ...base,
+      items: [{ ...base.items[0], name: 'Unpriced mug', gross: undefined as unknown as number }],
+    });
+
+    const row = drawnOnce(text, 'Unpriced mug');
+    const cells = text.filter((entry) => entry.y === row.y).map((entry) => entry.text);
+    expect(cells).toEqual(['Unpriced mug', '2', 'INR 0.00', '10%', 'INR 900.00']);
+  });
+
+  it('skips the business address and GSTIN lines when they are blank', async () => {
+    const text = (await drawn({ ...base, business_address: '', business_gstin: '' })).map((entry) => entry.text);
+
+    expect(text).not.toContain('1 HQ Road, Pune');
+    expect(text.some((t) => t.startsWith('GSTIN:'))).toBe(false);
+  });
+});
+
+describe('generateProductInvoicePdf header logo', () => {
+  const realFetch = globalThis.fetch;
+  const LOGO_URL = 'https://cdn.example/seller-logo.png';
+  /** The business name as the header wordmark (the meta block prints it again lower down). */
+  const wordmark = (text: readonly { text: string; y: number }[]) =>
+    text.filter((entry) => entry.text === 'Duncit' && entry.y === 30);
+  const serve = (bytes: Buffer) =>
+    jest.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    });
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it('embeds a fetched logo instead of the wordmark', async () => {
+    const png = fs.readFileSync(path.resolve(__dirname, '../../../_assets/duncit-mark-white.png'));
+    const fetchMock = serve(png);
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const text = await drawn({ ...base, invoice_logo_url: LOGO_URL });
+
+    expect(fetchMock).toHaveBeenCalledWith(LOGO_URL);
+    expect(wordmark(text)).toHaveLength(0);
+  });
+
+  it('falls back to the wordmark when the fetched bytes are not an image', async () => {
+    globalThis.fetch = serve(Buffer.from('<html>not a logo</html>')) as unknown as typeof fetch;
+
+    const text = await drawn({ ...base, invoice_logo_url: LOGO_URL });
+
+    expect(wordmark(text)).toHaveLength(1);
+  });
+
+  it('draws the wordmark when no logo is configured', async () => {
+    const text = await drawn(base);
+
+    expect(wordmark(text)).toHaveLength(1);
   });
 });

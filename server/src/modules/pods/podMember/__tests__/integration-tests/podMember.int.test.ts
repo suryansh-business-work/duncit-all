@@ -11,6 +11,8 @@ import { FinanceSettingsModel } from '@modules/finance/finance/finance.model';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { claimSeats } from '@modules/pods/pod/pod.seats.service';
 import * as emailService from '@services/email/email.service';
+import { ticketService } from '@modules/pods/ticket/ticket.service';
+import { logs } from '@observability/log';
 
 const userId = new Types.ObjectId().toString();
 const podId = new Types.ObjectId().toString();
@@ -648,6 +650,56 @@ describe('redeemReferral', () => {
     // The replacement is the friend who redeemed, NOT the referrer who backed out.
     expect(String(request!.replacement_user_id)).toBe(friend);
   });
+
+  describe('when the booking row cannot be written', () => {
+    beforeAll(async () => {
+      // The one-unpaid-booking guarantee lives in an index — build it before racing it.
+      await PodMemberModel.init();
+    }, 60_000);
+
+    const referral = async (token: string) => {
+      const pod = await makePaidPod();
+      await joinMember(pod, new Types.ObjectId(), { referral_token: token });
+      return pod;
+    };
+    const attendeesOf = async (pod: { _id: unknown }) =>
+      ((await PodModel.findById(pod._id).lean())!.pod_attendees ?? []).map(String);
+
+    it('answers with the booking a concurrent redeem made first, and keeps its seat', async () => {
+      const pod = await referral('ref-race');
+      const friend = new Types.ObjectId();
+      const realCreate = PodMemberModel.create.bind(PodMemberModel) as (...args: unknown[]) => Promise<unknown>;
+      let winnerId = '';
+      jest.spyOn(PodMemberModel, 'create').mockImplementationOnce((async (...args: unknown[]) => {
+        const winner = (await realCreate({
+          pod_id: pod._id,
+          user_id: friend,
+          status: 'JOINED',
+          source: 'REFERRAL',
+          refund_status: 'NONE',
+        })) as { _id: unknown };
+        winnerId = String(winner._id);
+        return realCreate(...args);
+      }) as never);
+
+      const res = await podMemberService.redeemReferral('ref-race', String(friend));
+
+      expect(res.id).toBe(winnerId);
+      expect(await PodMemberModel.countDocuments({ pod_id: pod._id, user_id: friend })).toBe(1);
+      expect(await attendeesOf(pod)).toContain(String(friend));
+    });
+
+    it('gives the seat back and rethrows any other failure', async () => {
+      const pod = await referral('ref-broken');
+      const friend = new Types.ObjectId();
+      jest.spyOn(PodMemberModel, 'create').mockRejectedValueOnce(new Error('disk full') as never);
+
+      await expect(podMemberService.redeemReferral('ref-broken', String(friend))).rejects.toThrow('disk full');
+
+      expect(await PodMemberModel.countDocuments({ pod_id: pod._id, user_id: friend })).toBe(0);
+      expect(await attendeesOf(pod)).not.toContain(String(friend));
+    });
+  });
 });
 
 describe('getState — backout-aware membership state', () => {
@@ -790,6 +842,51 @@ describe('rejoin (no-payment)', () => {
     await expect(podMemberService.rejoin(String(pod._id), String(user))).rejects.toThrow(
       /replacement took your spot/i
     );
+  });
+
+  it('closes the release still open on the booking, so a later join cannot refund an attendee', async () => {
+    const pod = await makePaidPod();
+    const user = uid();
+    const member = await backedOut(pod._id, user);
+    const open = await BackoutRequestModel.create({
+      backout_no: `DUN-BKO-REJOIN-${new Types.ObjectId().toString()}`,
+      pod_id: pod._id,
+      user_id: user,
+      member_id: member._id,
+      attempt_no: 2,
+      status: 'IN_PROCESS',
+    });
+
+    const res = await podMemberService.rejoin(String(pod._id), user);
+
+    expect(res.status).toBe('JOINED');
+    const closed = (await BackoutRequestModel.findById(open._id))!;
+    expect(closed.status).toBe('CANCELLED');
+    expect(closed.events).toHaveLength(1);
+    expect(closed.events[0].status).toBe('CANCELLED');
+    expect(closed.events[0].backout_count).toBe(2);
+    expect(closed.events[0].at).toBeInstanceOf(Date);
+  });
+
+  it('still rejoins when the ticket cannot be issued, and logs why', async () => {
+    const pod = await makePaidPod();
+    const user = uid();
+    await backedOut(pod._id, user);
+    const warn = jest.spyOn(logs.server, 'warn').mockImplementation(() => undefined);
+    const ensure = jest
+      .spyOn(ticketService, 'ensureForMembership')
+      .mockRejectedValueOnce(new Error('ticket store down') as never);
+
+    const res = await podMemberService.rejoin(String(pod._id), user);
+
+    expect(res.status).toBe('JOINED');
+    expect(ensure).toHaveBeenCalledWith(res.id);
+    expect(warn).toHaveBeenCalledWith(
+      'podMember',
+      'rejoin',
+      expect.objectContaining({ msg: 'Ticket issue (rejoin) failed', error: expect.any(Error) })
+    );
+    expect((await PodModel.findById(pod._id))!.pod_attendees.map(String)).toContain(user);
   });
 });
 

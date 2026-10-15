@@ -7,6 +7,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { FinanceSettingsModel } from '@modules/finance/finance/finance.model';
 import { TicketModel } from '@modules/pods/ticket/ticket.model';
+import { logs } from '@observability/log';
 
 let seq = 0;
 
@@ -163,5 +164,33 @@ describe('partial backout', () => {
     await podMemberService.backout(b.podId, b.uid, 1);
     await BackoutRequestModel.updateMany({}, { status: 'SPOT_FILLED' });
     await expect(podMemberService.cancelBackout(b.podId, b.uid)).rejects.toMatchObject({ extensions: { code: 'CONFLICT' } });
+  });
+});
+
+describe('partial backout when the ticket cannot be resized', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('still releases the seats and logs the failed ticket sync instead of failing the backout', async () => {
+    const b = await bookingOf(3);
+    await TicketModel.collection.insertOne({ membership_id: b.member._id, seats: 3 } as never);
+    const warn = jest.spyOn(logs.server, 'warn').mockImplementation(() => undefined);
+    jest.spyOn(TicketModel, 'updateOne').mockRejectedValueOnce(new Error('ticket store down') as never);
+
+    const res = await podMemberService.backout(b.podId, b.uid, 1);
+
+    expect(res).toMatchObject({ status: 'JOINED', seats: 2 });
+    const { pod, member } = await reload(b.podId, b.uid);
+    expect(pod?.extra_seats).toBe(1);
+    expect(member?.seats).toBe(2);
+    expect(await BackoutRequestModel.countDocuments({ user_id: b.buyer._id, status: 'IN_PROCESS' })).toBe(1);
+    expect(warn).toHaveBeenCalledWith(
+      'podMember',
+      'syncTicketSeats',
+      expect.objectContaining({ msg: 'Ticket seat sync failed', error: expect.any(Error) })
+    );
+    // The row the QR prints from kept its old size: the sync is what failed.
+    expect((await TicketModel.collection.findOne({ membership_id: b.member._id }))?.seats).toBe(3);
   });
 });

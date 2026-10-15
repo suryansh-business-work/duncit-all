@@ -670,3 +670,56 @@ describe('the spot cancellation cap (Pod Settings: max_free_spot_cancellations)'
     expect((await PodMemberModel.findById(joined.id))!.spot_cancel_count).toBe(0);
   });
 });
+
+describe('re-joining a cancelled spot while the pod changes underneath', () => {
+  /** Joined, then cancelled: the reusable row a re-join brings back. */
+  const cancelledBooking = async (over: Record<string, unknown> = {}) => {
+    const pod = await makePod(over);
+    const user = await makeUser();
+    const uid = String(user._id);
+    const first = await podMemberService.joinFree(String(pod._id), uid);
+    await podMemberService.cancelFreeSpot(String(pod._id), uid);
+    const stored = (await PodMemberModel.findById(first.id))!;
+    return { pod, user, uid, id: first.id, cancelledAt: stored.spot_cancelled_at };
+  };
+
+  it('puts the row back exactly as it was when the last seat goes between the flip and the claim', async () => {
+    const { pod, user, uid, id, cancelledAt } = await cancelledBooking({ no_of_spots: 2 });
+    const realFlip = PodMemberModel.findOneAndUpdate.bind(PodMemberModel) as (...args: unknown[]) => Promise<unknown>;
+    jest.spyOn(PodMemberModel, 'findOneAndUpdate').mockImplementationOnce((async (...args: unknown[]) => {
+      const flipped = await realFlip(...args);
+      // Somebody else books the pod's last seat before this re-join claims it.
+      await PodModel.updateOne({ _id: pod._id }, { $set: { extra_seats: 1 } });
+      return flipped;
+    }) as never);
+
+    await expect(podMemberService.joinFree(String(pod._id), uid)).rejects.toMatchObject({
+      extensions: { code: 'POD_FULL' },
+    });
+
+    const row = (await PodMemberModel.findById(id))!;
+    expect(row.status).toBe('BACKED_OUT');
+    expect(row.spot_cancelled_at?.getTime()).toBe(cancelledAt?.getTime());
+    expect(row.backed_out_at).not.toBeNull();
+    expect(await PodMemberModel.countDocuments({ user_id: user._id, status: 'JOINED' })).toBe(0);
+    expect((await PodModel.findById(pod._id).lean())!.pod_attendees.map(String)).not.toContain(uid);
+    expect((await ticketOf(id))!.status).toBe('CANCELLED');
+  });
+
+  it('answers CONFLICT when the row moved before the flip and no booking was made by anyone', async () => {
+    const { pod, user, uid, id } = await cancelledBooking();
+    const realFlip = PodMemberModel.findOneAndUpdate.bind(PodMemberModel) as (...args: unknown[]) => Promise<unknown>;
+    jest.spyOn(PodMemberModel, 'findOneAndUpdate').mockImplementationOnce((async (...args: unknown[]) => {
+      // A concurrent request changes the row first, so the conditional flip misses it.
+      await PodMemberModel.collection.updateOne({ _id: new Types.ObjectId(id) }, { $set: { status: 'BACKOUT_IN_PROCESS' } });
+      return realFlip(...args);
+    }) as never);
+
+    await expect(podMemberService.joinFree(String(pod._id), uid)).rejects.toMatchObject({
+      message: 'Your booking changed while joining — please try again.',
+      extensions: { code: 'CONFLICT' },
+    });
+    expect(await PodMemberModel.countDocuments({ user_id: user._id, status: 'JOINED' })).toBe(0);
+    expect(await seatsOf(pod)).toBe(1);
+  });
+});

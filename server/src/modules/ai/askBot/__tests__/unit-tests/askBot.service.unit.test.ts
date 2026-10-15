@@ -18,6 +18,7 @@ import { isAiFeatureEnabled } from '@modules/ai/aiFeature/aiFeature.guard';
 import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat } from '@services/openai/openai.client';
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
+import { logs } from '@observability/log';
 import { chat, listBots } from '../../askBot.service';
 import { ASK_BOTS } from '../../askBot.bots';
 
@@ -158,5 +159,134 @@ describe('chat — the AI Features page is on the navigation map', () => {
     const result = await chat({ bot_key: 'navigation', message: 'AI switches' }, 'u-2', null);
 
     expect(result.links[0].has_access).toBe(false);
+  });
+});
+
+/** OpenAI answers with this JSON body. */
+const replies = (body: unknown) =>
+  openai.mockResolvedValue({ ok: true, model: 'gpt-4o-mini', content: JSON.stringify(body) });
+
+describe('chat — the conversation sent to OpenAI', () => {
+  it('maps BOT turns to assistant, drops blank turns, keeps the last 8 and appends the question', async () => {
+    replies({ answer: 'Sure.' });
+    const history = [
+      { role: 'USER' as const, content: 'oldest, should be cut' },
+      ...Array.from({ length: 8 }, (_, i) => ({
+        role: i % 2 === 0 ? ('USER' as const) : ('BOT' as const),
+        content: `  turn ${i}  `,
+      })),
+      { role: 'BOT' as const, content: '   ' },
+    ];
+
+    await chat({ bot_key: 'navigation', message: '  Where are payouts?  ', history }, 'u-1', null);
+
+    const { messages } = openai.mock.calls[0][0] as { messages: { role: string; content: string }[] };
+    expect(messages[0]).toEqual({ role: 'system', content: 'NAV SYSTEM' });
+    expect(messages.slice(1)).toEqual([
+      ...Array.from({ length: 8 }, (_, i) => ({ role: i % 2 === 0 ? 'user' : 'assistant', content: `turn ${i}` })),
+      { role: 'user', content: 'Where are payouts?' },
+    ]);
+  });
+
+  it('caps an overlong history turn at 1000 characters', async () => {
+    replies({ answer: 'Sure.' });
+
+    await chat(
+      { bot_key: 'navigation', message: 'next', history: [{ role: 'USER', content: 'y'.repeat(1500) }] },
+      'u-1',
+      null,
+    );
+
+    const { messages } = openai.mock.calls[0][0] as { messages: { content: string }[] };
+    expect(messages[1].content).toHaveLength(1000);
+  });
+
+  it('bills an anonymous question to no user and looks up no roles', async () => {
+    replies({ answer: 'Open the library.', links: [{ surface: 'ai', path: '/library' }] });
+
+    const result = await chat({ bot_key: 'navigation', message: 'Prompts?' }, null, null);
+
+    expect(openai.mock.calls[0][0]).toMatchObject({ task: 'askbot.navigation', user_id: undefined });
+    expect(roles).not.toHaveBeenCalled();
+    expect(result.links).toEqual([expect.objectContaining({ surface_key: 'ai', path: '/library' })]);
+  });
+});
+
+describe('chat — links and follow-ups from the reply', () => {
+  const ask = () => chat({ bot_key: 'navigation', message: 'Show me around' }, 'u-1', null);
+
+  it('drops invented pages, unknown surfaces, non-text fields and duplicates, and keeps at most 4', async () => {
+    replies({
+      answer: 'Here you go.',
+      links: [
+        { surface: 'ai', path: '/does-not-exist' },
+        { surface: 'nowhere', path: '/library' },
+        { surface: { key: 'ai' }, path: '/library' },
+        null,
+        { surface: 'ai', path: '/library', label: '  Prompt library  ' },
+        { surface: 'ai', path: 'library/' },
+        { surface: 'ai', path: '/ai-features', label: 42 },
+        { surface: 'ai', path: '/monitoring' },
+        { surface: 'ai', path: '/reels' },
+        { surface: 'ai', path: '/profile' },
+      ],
+      followups: ['  First?  ', 7, '', 'Second?', 'Third?', 'Fourth?'],
+    });
+
+    const result = await ask();
+
+    expect(result.answer).toBe('Here you go.');
+    expect(result.links.map((link) => [link.path, link.label])).toEqual([
+      ['/library', 'Prompt library'],
+      ['/ai-features', 'AI Features'],
+      ['/monitoring', 'Logs'],
+      ['/reels', 'Reel Studio'],
+    ]);
+    expect(result.followups).toEqual(['First?', 'Second?', 'Third?']);
+  });
+
+  it('drops a link with no path rather than pointing it at the surface home', async () => {
+    replies({
+      answer: 'See here.',
+      links: [{ surface: 'ai' }, { surface: 'ai', path: '' }, { surface: 'ai', path: 7 }, { surface: 'ai', path: '/library' }],
+    });
+
+    const result = await ask();
+
+    expect(result.links.map((link) => link.path)).toEqual(['/library']);
+  });
+
+  it('returns no links or follow-ups when the reply carries none as lists', async () => {
+    replies({ answer: 'Nothing to link.', links: 'ai /library', followups: 'more?' });
+
+    const result = await ask();
+
+    expect(result).toEqual({ answer: 'Nothing to link.', links: [], followups: [] });
+    expect(roles).not.toHaveBeenCalled();
+  });
+
+  it('raises AI_INVALID_JSON and logs the bot when the reply is not JSON', async () => {
+    const logError = jest.spyOn(logs.server, 'error').mockImplementation(() => undefined);
+    openai.mockResolvedValue({ ok: true, model: 'gpt-4o-mini', content: 'Go to the AI portal.' });
+    try {
+      const error = await thrown(ask());
+
+      expect(error.extensions?.code).toBe('AI_INVALID_JSON');
+      expect(logError).toHaveBeenCalledWith(
+        'askBot',
+        'chat',
+        expect.objectContaining({ msg: 'Ask Bot reply was not JSON', bot_key: 'navigation' }),
+      );
+    } finally {
+      logError.mockRestore();
+    }
+  });
+
+  it('raises AI_EMPTY_RESPONSE for a blank or non-text answer', async () => {
+    replies({ answer: '   ', links: [{ surface: 'ai', path: '/library' }] });
+    expect((await thrown(ask())).extensions?.code).toBe('AI_EMPTY_RESPONSE');
+
+    replies({ answer: { text: 'hidden in an object' } });
+    expect((await thrown(ask())).extensions?.code).toBe('AI_EMPTY_RESPONSE');
   });
 });

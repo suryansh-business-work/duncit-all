@@ -103,7 +103,10 @@ async function resolveLinks(raw: unknown, userId: string | null, req: RequestHea
   for (const entry of raw as ModelLink[]) {
     if (links.length >= MAX_LINKS) break;
     const surfaceKey = text(entry?.surface);
-    const page = findPage(surfaceKey, text(entry?.path));
+    const path = text(entry?.path);
+    // An absent path drops the link — findPage would otherwise read '' as the surface's "/".
+    if (!path) continue;
+    const page = findPage(surfaceKey, path);
     const surface = SURFACE_BY_KEY.get(surfaceKey);
     if (!page || !surface) continue;
     const dedupe = `${surfaceKey} ${page.path}`;

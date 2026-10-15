@@ -15,6 +15,8 @@ import * as partnerHold from '@modules/venues/venueSlot/venueSlot.partnerHold';
 import { PodPartnerRequestModel } from '@modules/venues/podPartnerRequest/podPartnerRequest.model';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import * as emailService from '@services/email/email.service';
+import * as partnerLifecycle from '@modules/venues/podPartnerRequest/podPartnerRequest.lifecycle';
+import { logs } from '@observability/log';
 
 const ownerId = new Types.ObjectId().toString();
 const hostId = new Types.ObjectId().toString();
@@ -129,6 +131,29 @@ describe('createForPartner from a Pod Request', () => {
     const request = await PodPartnerRequestModel.findById(requestId).lean();
     expect(request).toMatchObject({ is_open: false });
     expect(String(request?.pod_id)).toBe(created!.id);
+  });
+
+  it('keeps the pod and logs when closing the request afterwards fails', async () => {
+    const requestId = await seedConfirmed();
+    const error = jest.spyOn(logs.server, 'error').mockImplementation(() => undefined);
+    jest
+      .spyOn(partnerLifecycle, 'markPartnerRequestPodCreated')
+      .mockRejectedValueOnce(new Error('request store down') as never);
+
+    const created = await podService.createForPartner(hostId, podInput(requestId));
+
+    expect(await PodModel.findById(created!.id).lean()).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true });
+    for (let i = 0; i < 40 && error.mock.calls.length === 0; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    expect(error).toHaveBeenCalledWith(
+      'pods',
+      'markPartnerRequestPodCreated',
+      expect.objectContaining({ pod_id: created!.id, error: expect.any(Error) })
+    );
+    // Bookkeeping only: the request stays where it was, the slot stays with the pod.
+    expect(await PodPartnerRequestModel.findById(requestId).lean()).toMatchObject({ status: 'SLOT_CONFIRMED' });
+    expect(String((await VenueSlotModel.findById(slotId).lean())?.booked_by_pod_id)).toBe(created!.id);
   });
 
   it("refuses a form without the request's slot, even at a venue the host owns", async () => {

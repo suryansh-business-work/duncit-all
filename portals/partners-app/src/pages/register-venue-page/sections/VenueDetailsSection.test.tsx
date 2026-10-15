@@ -16,6 +16,13 @@ import {
 
 const PICKED_IMAGE = 'https://cdn.example.com/cover.jpg';
 
+// The venue's video field uploads through the shared picker, which needs a MUI theme this
+// harness does not mount; it is closed in every case here, so it renders nothing.
+vi.mock('@duncit/media-picker', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/media-picker')>()),
+  MediaPickerDialog: ({ open }: Readonly<{ open: boolean }>) => (open ? <div data-testid="shared-media-picker" /> : null),
+}));
+
 vi.mock('../../../components/MediaPickerDialog', () => ({
   default: ({ open, onPicked, title }: Readonly<{ open: boolean; onPicked: (url: string) => void; title: string }>) =>
     open ? (

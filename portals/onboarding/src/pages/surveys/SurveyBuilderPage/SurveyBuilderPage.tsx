@@ -125,17 +125,17 @@ export default function SurveyBuilderPage() {
           flexWrap: "wrap"
         }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" component="h1" sx={{
+          <Typography variant="h5" component="h1" data-testid="survey-builder-title" sx={{
             fontWeight: 800
           }}>{heading}</Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>{subtitle}</Typography>
         </Box>
-        <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save survey'}</DuncitButton>
+        <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={save} disabled={saving} data-testid="survey-builder-save">{saving ? 'Saving…' : 'Save survey'}</DuncitButton>
       </Stack>
 
-      {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+      {error && <Alert severity="error" onClose={() => setError(null)} data-testid="survey-builder-error">{error}</Alert>}
 
       {loading && !data ? (
         <Stack
@@ -171,18 +171,18 @@ export default function SurveyBuilderPage() {
           <Stack direction="row" spacing={1.5} sx={{
             alignItems: "center"
           }}>
-            <TextField select size="small" label={t('onboarding.surveys.add')} value={addType} onChange={(e) => setAddType(e.target.value as QuestionType)} sx={{ minWidth: 200 }}>
-              <MenuItem value="SECTION">{t('onboarding.surveys.sectionHeading')}</MenuItem>
-              <MenuItem value="MCQ">{t('onboarding.surveys.multipleChoice')}</MenuItem>
-              <MenuItem value="TEXT">{t('onboarding.surveys.shortText')}</MenuItem>
-              <MenuItem value="TEXTAREA">{t('onboarding.surveys.longText')}</MenuItem>
+            <TextField select size="small" label={t('onboarding.surveys.add')} value={addType} onChange={(e) => setAddType(e.target.value as QuestionType)} sx={{ minWidth: 200 }} data-testid="survey-builder-add-type">
+              <MenuItem value="SECTION" data-testid="survey-add-type-SECTION">{t('onboarding.surveys.sectionHeading')}</MenuItem>
+              <MenuItem value="MCQ" data-testid="survey-add-type-MCQ">{t('onboarding.surveys.multipleChoice')}</MenuItem>
+              <MenuItem value="TEXT" data-testid="survey-add-type-TEXT">{t('onboarding.surveys.shortText')}</MenuItem>
+              <MenuItem value="TEXTAREA" data-testid="survey-add-type-TEXTAREA">{t('onboarding.surveys.longText')}</MenuItem>
             </TextField>
-            <DuncitButton startIcon={<AddIcon />} onClick={() => setQuestions([...questions, blankByType(addType)])}>{t('onboarding.surveys.addQuestion')}</DuncitButton>
+            <DuncitButton startIcon={<AddIcon />} onClick={() => setQuestions([...questions, blankByType(addType)])} data-testid="survey-builder-add-question">{t('onboarding.surveys.addQuestion')}</DuncitButton>
           </Stack>
         </>
       )}
 
-      <Snackbar open={!!snack} autoHideDuration={3000} onClose={() => setSnack(null)} message={snack ?? ''} />
+      <Snackbar open={!!snack} autoHideDuration={3000} onClose={() => setSnack(null)} message={snack ?? ''} data-testid="survey-builder-snack" />
     </Stack>
   );
 }

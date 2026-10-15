@@ -99,6 +99,7 @@ export default function MeetingAvailabilityPage() {
                 {days(t).map((day) => (
                   <FormControlLabel
                     key={day.value}
+                    data-testid={`availability-day-${day.value}`}
                     control={<Checkbox checked={weekDays.includes(day.value)} onChange={() => toggleDay(day.value)} />}
                     label={day.label}
                   />
@@ -127,6 +128,7 @@ export default function MeetingAvailabilityPage() {
                 value={slotMinutes}
                 onChange={(e) => setSlotMinutes(e.target.value)}
                 fullWidth
+                data-testid="availability-slot-minutes"
                 slotProps={{
                   htmlInput: { min: 10, max: 240 }
                 }}
@@ -138,16 +140,17 @@ export default function MeetingAvailabilityPage() {
                 value={horizonDays}
                 onChange={(e) => setHorizonDays(e.target.value)}
                 fullWidth
+                data-testid="availability-horizon-days"
                 slotProps={{
                   htmlInput: { min: 1, max: 60 }
                 }}
               />
             </Stack>
-            {saveError && <Alert severity="error">{saveError}</Alert>}
+            {saveError && <Alert severity="error" data-testid="availability-error">{saveError}</Alert>}
             <Stack direction="row" sx={{
               justifyContent: "flex-end"
             }}>
-              <DuncitButton variant="contained" onClick={submit} disabled={saving}>
+              <DuncitButton variant="contained" onClick={submit} disabled={saving} data-testid="availability-save">
                 {saving ? 'Saving…' : 'Save availability'}
               </DuncitButton>
             </Stack>

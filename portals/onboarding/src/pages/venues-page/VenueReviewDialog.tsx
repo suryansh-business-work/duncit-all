@@ -49,7 +49,7 @@ export default function VenueReviewDialog({
   const { t } = useTranslation();
 
   return (
-    <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm" data-testid="venue-review-dialog">
       <DialogTitle sx={{ pb: 1 }}>
         <Typography
           variant="overline"
@@ -73,7 +73,7 @@ export default function VenueReviewDialog({
               flex: 1,
               minWidth: 0
             }}>
-            {active?.venue_name || 'Venue'}
+            <span data-testid="venue-review-name">{active?.venue_name || 'Venue'}</span>
           </Typography>
           {active?.status && (
             <StatusChip status={active.status} colorMap={STATUS_COLOR} sx={{ fontWeight: 800 }} />
@@ -84,7 +84,7 @@ export default function VenueReviewDialog({
         <Stack spacing={2}>
           <VenueReviewSummary active={active} />
 
-          <TextField label={t('onboarding.common.reviewerNotes')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={3} fullWidth />
+          <TextField label={t('onboarding.common.reviewerNotes')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={3} fullWidth data-testid="venue-review-notes" />
           <TextField
             label={t('onboarding.common.tags')}
             value={tagsText}
@@ -98,9 +98,9 @@ export default function VenueReviewDialog({
       </DialogContent>
       <Divider />
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+        <DuncitButton onClick={onClose} data-testid="venue-review-close">{t('shell.common.close')}</DuncitButton>
         <Box sx={{ flex: 1 }} />
-        <DuncitButton color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()}>
+        <DuncitButton color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()} data-testid="venue-review-reject">
           Reject
         </DuncitButton>
         <DuncitButton variant="contained" color="success" onClick={onApprove}>

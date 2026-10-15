@@ -37,6 +37,7 @@ export default function RefundTierRow({ control, index, onRemove, t }: Readonly<
             <TextField
               {...field}
               label={t('onboarding.venues.hoursBeforeStart')}
+              data-testid={`refund-tier-${index}-hours`}
               type="number"
               size="small"
               fullWidth
@@ -53,6 +54,7 @@ export default function RefundTierRow({ control, index, onRemove, t }: Readonly<
             <TextField
               {...field}
               label={t('onboarding.venues.refundPercent')}
+              data-testid={`refund-tier-${index}-pct`}
               type="number"
               size="small"
               fullWidth

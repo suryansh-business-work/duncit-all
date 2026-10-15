@@ -110,7 +110,7 @@ export default function MeetingCalendarPage() {
         anchorReference="anchorPosition"
         anchorPosition={menu ? { top: menu.mouseY, left: menu.mouseX } : undefined}
       >
-        <MenuItem onClick={removeFromCalendar} disabled={!isCancelled}>
+        <MenuItem onClick={removeFromCalendar} disabled={!isCancelled} data-testid="meeting-calendar-remove">
           <ListItemIcon><EventBusyIcon fontSize="small" /></ListItemIcon>
           {isCancelled ? 'Remove from my calendar' : 'Only cancelled meetings can be removed'}
         </MenuItem>

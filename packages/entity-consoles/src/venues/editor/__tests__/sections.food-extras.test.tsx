@@ -160,9 +160,12 @@ describe('FoodSection — tables and QR stickers', () => {
     fireEvent.change(count, { target: { value: '3' } });
     fireEvent.click(fill);
     expect(form().getValues('food_tables')).toBe('1, 2, 3');
+  });
 
-    fireEvent.change(count, { target: { value: '10' } });
-    fireEvent.click(fill);
+  it('caps a count above the venue limit at the limit', () => {
+    const { form } = mount();
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Number of tables' }), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Number them' }));
     expect(form().getValues('food_tables')).toBe('1, 2, 3, 4');
   });
 
@@ -247,7 +250,7 @@ describe('FoodSection — a dish’s price and videos', () => {
     mount({ original_price: 200 });
 
     expect(await screen.findByText('20% off')).toBeInTheDocument();
-    expect(screen.getByText(/Guests see/)).toBeInTheDocument();
+    expect(screen.getByText(/^Guests see:/)).toBeInTheDocument();
     expect(document.querySelector('s')).toHaveTextContent('200');
   });
 
@@ -259,7 +262,7 @@ describe('FoodSection — a dish’s price and videos', () => {
 
   it('previews nothing without an original price above the price', () => {
     mount({ original_price: '' });
-    expect(screen.queryByText(/Guests see/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Guests see:/)).not.toBeInTheDocument();
   });
 
   it('writes the original price as typed', () => {

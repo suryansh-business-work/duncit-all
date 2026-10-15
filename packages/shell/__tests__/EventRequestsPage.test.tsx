@@ -365,7 +365,9 @@ describe('EventRequestsPage — closing a request by hand', () => {
   });
 
   it('still refreshes the totals when the table has not handed over its refetch yet', async () => {
+    // The page mounted in beforeEach already wired it; take it back, and keep re-renders from re-wiring it.
     h.seen.wireRefetch = false;
+    (h.seen.table as CapturedTable).refetchRef.current = null;
     renderCell('actions', row({ id: 'req-5' }));
     fireEvent.click(screen.getByTestId('event-request-fulfil-req-5'));
     await flush();

@@ -8,6 +8,8 @@ import { useTranslation } from '@duncit/app-settings';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 interface Action {
+  /** The menu item's test id suffix: `host-request-action-<testId>`. */
+  testId: string;
   label: string;
   onClick: () => void;
   danger?: boolean;
@@ -30,14 +32,14 @@ interface Props extends Handlers {
 function buildActions(request: HostRequest, h: Handlers, t: Translate): Action[] {
   const actions: Action[] = [];
   if (request.status === 'REQUESTED') {
-    actions.push({ label: t('onboarding.hostRequests.acknowledge'), onClick: () => h.onAcknowledge(request) });
+    actions.push({ testId: 'acknowledge', label: t('onboarding.hostRequests.acknowledge'), onClick: () => h.onAcknowledge(request) });
   } else if (request.status === 'ACKNOWLEDGED') {
     actions.push(
-      { label: t('onboarding.hostRequests.approve'), onClick: () => h.onApprove(request) },
-      { label: t('onboarding.common.reject'), onClick: () => h.onReject(request), danger: true },
+      { testId: 'approve', label: t('onboarding.hostRequests.approve'), onClick: () => h.onApprove(request) },
+      { testId: 'reject', label: t('onboarding.common.reject'), onClick: () => h.onReject(request), danger: true },
     );
   }
-  actions.push({ label: t('shell.common.delete'), onClick: () => h.onDelete(request), danger: true });
+  actions.push({ testId: 'delete', label: t('shell.common.delete'), onClick: () => h.onDelete(request), danger: true });
   return actions;
 }
 
@@ -52,12 +54,12 @@ export default function HostRequestRowActions({ request, busy, onAcknowledge, on
   };
   return (
     <>
-      <DuncitIconButton size="small" disabled={busy} onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.hostRequests.hostRequestActions')} aria-haspopup="menu" aria-expanded={!!anchor}>
+      <DuncitIconButton size="small" disabled={busy} onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.hostRequests.hostRequestActions')} aria-haspopup="menu" aria-expanded={!!anchor} data-testid={`host-request-actions-${request.id}`}>
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
         {actions.map((action) => (
-          <MenuItem key={action.label} onClick={() => run(action)}>
+          <MenuItem key={action.label} onClick={() => run(action)} data-testid={`host-request-action-${action.testId}`}>
             <ListItemText
               primary={action.label}
               slotProps={{

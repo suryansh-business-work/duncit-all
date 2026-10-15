@@ -88,9 +88,9 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
     <FormProvider {...methods}>
       <form onSubmit={handle} noValidate>
         <Stack spacing={1.25}>
-          {status && <Alert severity="error">{status}</Alert>}
+          {status && <Alert severity="error" data-testid="lead-form-status">{status}</Alert>}
           {flat.length > 0 && (
-            <Alert severity="error">
+            <Alert severity="error" data-testid="lead-form-errors">
               <AlertTitle>
                 {flat.length} {flat.length === 1 ? 'field has' : 'fields have'} validation errors
               </AlertTitle>
@@ -113,11 +113,11 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
               pt: 1
             }}>
             {onCancel && (
-              <DuncitButton onClick={onCancel} disabled={submitting}>
+              <DuncitButton onClick={onCancel} disabled={submitting} data-testid="lead-form-cancel">
                 {t('shell.common.cancel')}
               </DuncitButton>
             )}
-            <DuncitButton type="submit" variant="contained" loading={submitting} disabled={(submitCount > 0 && !isValid)}>
+            <DuncitButton type="submit" data-testid="lead-form-submit" variant="contained" loading={submitting} disabled={(submitCount > 0 && !isValid)}>
               {submitting ? 'Saving…' : submitLabelText}
             </DuncitButton>
           </Stack>

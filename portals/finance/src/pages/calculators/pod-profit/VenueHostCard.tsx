@@ -41,6 +41,7 @@ export default function VenueHostCard({ inputs, onChange }: Readonly<Props>) {
               htmlInput: { min: 0, step: 50 }
             }} />
           <PercentSlider
+            testId="calc-venue_commission_percent"
             label={t('finance.calculators.venueCommissionDuncitIncome')}
             value={inputs.venue_commission_percent}
             onChange={(value) => onChange('venue_commission_percent', value)}
@@ -48,6 +49,7 @@ export default function VenueHostCard({ inputs, onChange }: Readonly<Props>) {
             hint="Default deduction Duncit takes from the venue's amount."
           />
           <PercentSlider
+            testId="calc-host_commission_percent"
             label={t('finance.calculators.hostCommissionDuncitIncome')}
             value={inputs.host_commission_percent}
             onChange={(value) => onChange('host_commission_percent', value)}

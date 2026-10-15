@@ -52,7 +52,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
   };
 
   return (
-    <Drawer anchor="right" open onClose={onClose} slotProps={{
+    <Drawer anchor="right" open onClose={onClose} data-testid="founder-metric-drawer" slotProps={{
       paper: { role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 420 } } }
     }}>
       <Stack
@@ -111,7 +111,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
               {metric.formula}
             </Typography>
             {keys.length === 0 ? (
-              <Typography variant="body2" sx={{
+              <Typography variant="body2" data-testid="founder-metric-auto" sx={{
                 color: "text.secondary"
               }}>
                 This metric is computed automatically — nothing to configure.

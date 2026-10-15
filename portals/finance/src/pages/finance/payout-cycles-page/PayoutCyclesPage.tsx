@@ -110,16 +110,16 @@ export default function PayoutCyclesPage() {
               Disbursement schedule
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 1 }}>
-              <TextField select label={t('finance.payoutCycles.venuePayout')} value={venueMode} onChange={(e) => setVenueMode(e.target.value)} fullWidth>
+              <TextField select data-testid="payout-venue-mode" label={t('finance.payoutCycles.venuePayout')} value={venueMode} onChange={(e) => setVenueMode(e.target.value)} fullWidth>
                 {PAYOUT_MODES.map((m) => (
-                  <MenuItem key={m.value} value={m.value}>
+                  <MenuItem key={m.value} value={m.value} data-testid={`payout-mode-${m.value}`}>
                     {m.label}
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField select label={t('finance.payoutCycles.hostPayout')} value={hostMode} onChange={(e) => setHostMode(e.target.value)} fullWidth>
+              <TextField select data-testid="payout-host-mode" label={t('finance.payoutCycles.hostPayout')} value={hostMode} onChange={(e) => setHostMode(e.target.value)} fullWidth>
                 {PAYOUT_MODES.map((m) => (
-                  <MenuItem key={m.value} value={m.value}>
+                  <MenuItem key={m.value} value={m.value} data-testid={`payout-mode-${m.value}`}>
                     {m.label}
                   </MenuItem>
                 ))}
@@ -127,9 +127,9 @@ export default function PayoutCyclesPage() {
             </Stack>
 
             {scheduled && (
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }} data-testid="payout-schedule-fields">
                 {weekly && (
-                  <TextField select label={t('finance.payoutCycles.payoutDayWeekly')} value={day} onChange={(e) => setDay(Number(e.target.value))} sx={{ minWidth: 200 }}>
+                  <TextField select data-testid="payout-day" label={t('finance.payoutCycles.payoutDayWeekly')} value={day} onChange={(e) => setDay(Number(e.target.value))} sx={{ minWidth: 200 }}>
                     {WEEKDAYS.map((w, i) => (
                       <MenuItem key={w} value={i}>
                         {w}

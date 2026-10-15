@@ -26,11 +26,11 @@ export default function EditorActionsBar({ dirty, busy, isActive, onToggleActive
         alignItems: "center",
         flexWrap: "wrap"
       }}>
-      <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={!dirty || busy}>
+      <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={!dirty || busy} data-testid="crm-template-save">
         {busy ? 'Saving…' : t('shell.common.save')}
       </DuncitButton>
       <DuncitButton startIcon={<SendIcon />} onClick={onSendTest}>{t('crm.emailTemplates.sendTest')}</DuncitButton>
-      <DuncitButton color="error" startIcon={<DeleteIcon />} onClick={onDelete}>{t('shell.common.delete')}</DuncitButton>
+      <DuncitButton color="error" startIcon={<DeleteIcon />} onClick={onDelete} data-testid="crm-template-delete">{t('shell.common.delete')}</DuncitButton>
       <FormControlLabel
         control={<Switch checked={isActive} onChange={(e) => onToggleActive(e.target.checked)} />}
         label={t('crm.common.active')}

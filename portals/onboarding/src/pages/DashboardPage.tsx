@@ -31,7 +31,7 @@ type StatusCardProps = Readonly<{
 function StatusCard({ to, title, chartTitle, counts }: StatusCardProps) {
   const navigate = useNavigate();
   return (
-    <Card variant="outlined" sx={{ height: '100%' }}>
+    <Card variant="outlined" sx={{ height: '100%' }} data-testid={`onboarding-status-card${to.replaceAll('/', '-')}`}>
       <CardActionArea onClick={() => navigate(to)} sx={{ height: '100%' }}>
         <CardContent>
           <Typography

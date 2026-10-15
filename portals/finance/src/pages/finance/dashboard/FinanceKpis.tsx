@@ -68,6 +68,7 @@ export default function FinanceKpis() {
         return (
           <StatCard
             key={card.key}
+            testId={`finance-kpi-${card.key}`}
             label={card.label}
             value={`${sym}${(stat?.total ?? 0).toFixed(2)}`}
             icon={<AppIcon name={card.icon} fontSize="small" color={card.color} />}

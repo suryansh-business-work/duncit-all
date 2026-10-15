@@ -58,10 +58,10 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
   };
 
   return (
-    <Dialog open={!!meeting} onClose={close} fullWidth maxWidth="sm">
+    <Dialog open={!!meeting} onClose={close} fullWidth maxWidth="sm" data-testid="meeting-decision-dialog">
       <DialogTitle>{t('onboarding.meetings.approveOrDenyOnboarding')}</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 1.5 }} data-testid="meeting-decision-error">{error}</Alert>}
         <Typography
           variant="body2"
           sx={{
@@ -83,14 +83,15 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
           minRows={3}
           fullWidth
           required
+          data-testid="meeting-decision-feedback"
         />
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={close}>{t('shell.common.cancel')}</DuncitButton>
-        <DuncitButton color="error" onClick={() => decide('DENIED')} disabled={loading}>
+        <DuncitButton onClick={close} data-testid="meeting-decision-cancel">{t('shell.common.cancel')}</DuncitButton>
+        <DuncitButton color="error" onClick={() => decide('DENIED')} disabled={loading} data-testid="meeting-decision-deny">
           {loading ? 'Saving…' : 'Deny'}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={() => decide('APPROVED')} disabled={loading}>
+        <DuncitButton variant="contained" onClick={() => decide('APPROVED')} disabled={loading} data-testid="meeting-decision-approve">
           {loading ? 'Saving…' : 'Approve'}
         </DuncitButton>
       </DialogActions>

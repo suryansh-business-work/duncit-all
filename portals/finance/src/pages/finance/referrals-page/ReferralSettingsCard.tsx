@@ -76,6 +76,7 @@ export default function ReferralSettingsCard({
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
+                data-testid="referral-share-message"
                 label={t('finance.referrals.shareMessage')}
                 size="small"
                 multiline
@@ -102,7 +103,7 @@ export default function ReferralSettingsCard({
               }}>
               PREVIEW
             </Typography>
-            <Typography variant="body2">{preview}</Typography>
+            <Typography variant="body2" data-testid="referral-preview">{preview}</Typography>
           </Stack>
 
           <Controller

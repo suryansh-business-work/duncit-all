@@ -43,7 +43,14 @@ const mockedBackout = usePodBackout as jest.Mock;
 const mockedAttempts = usePodBackoutAttempts as jest.Mock;
 const mockedRejoin = usePodRejoin as jest.Mock;
 const mockedCancelSpot = usePodHistoryCancelSpot as jest.Mock;
-const cancelSpot = { open: false, busy: false, setOpen: jest.fn(), confirm: jest.fn() };
+const cancelSpot = {
+  open: false,
+  busy: false,
+  setOpen: jest.fn(),
+  confirm: jest.fn(),
+  request: jest.fn(),
+  cancels: null,
+};
 const mockedDeduction = usePodBackoutDeduction as jest.Mock;
 const mockedInvoice = usePodInvoice as jest.Mock;
 const mockedTicket = usePodTicket as jest.Mock;
@@ -257,8 +264,12 @@ describe('PodHistoryDetailsScreen actions', () => {
     await waitFor(() => expect(screen.getByTestId('ph-notice')).toHaveTextContent('cannot rejoin'));
   });
 
-  // A free pod: Cancel Spot opens the confirm, and the confirm runs the cancel.
+  // A free pod: Cancel Spot asks the hook (which owns the cancel cap), and the
+  // confirm runs the cancel.
   it('wires a free pod booking to Cancel Spot for the selected pod', () => {
+    // The membership state carries the free pod's spot-cancel counters too.
+    const attempts = { spot_cancels_used: 1, spot_cancels_max: 2 };
+    mockedAttempts.mockReturnValue({ state: attempts, refetch: refetchAttempts });
     setHistory({
       items: [
         membership({
@@ -271,10 +282,14 @@ describe('PodHistoryDetailsScreen actions', () => {
       'pod1',
       expect.any(Function),
       expect.any(Function),
+      attempts,
     );
     expect(screen.queryByTestId('ph-backout')).toBeNull();
+    // The press goes through the hook's request (which refuses a maxed-out pod
+    // with a notice) instead of forcing the confirm open.
     fireEvent.press(screen.getByTestId('ph-cancel-spot'));
-    expect(cancelSpot.setOpen).toHaveBeenCalledWith(true);
+    expect(cancelSpot.request).toHaveBeenCalledTimes(1);
+    expect(cancelSpot.setOpen).not.toHaveBeenCalled();
 
     mockedCancelSpot.mockReturnValue({ ...cancelSpot, open: true });
     view.rerender(<PodHistoryDetailsScreen />);

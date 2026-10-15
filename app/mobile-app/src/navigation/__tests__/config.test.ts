@@ -53,6 +53,20 @@ describe('navigation + web-fonts config', () => {
     expect(consumePendingBooking()).toBe('bk-2');
   });
 
+  it('opens the venue food links on mWeb’s exact paths', () => {
+    const dish = stateFor('/venue/v1/food/dish-9')?.routes[0];
+    expect(dish).toMatchObject({
+      name: 'VenueFoodItem',
+      params: { venueId: 'v1', itemId: 'dish-9' },
+    });
+    expect(routeNames('/food-orders')).toEqual(['MyFoodOrders']);
+    // A table sticker's QR lands on the venue with its table.
+    expect(stateFor('/venue/v1?table=5')?.routes[0]).toMatchObject({
+      name: 'VenueDetails',
+      params: { venueId: 'v1', table: '5' },
+    });
+  });
+
   it('leaves non-booking paths alone while signed out', () => {
     expect(routeNames('/pod-history')).toEqual(['PodHistory']);
     expect(consumePendingBooking()).toBeNull();

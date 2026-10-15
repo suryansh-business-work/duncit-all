@@ -172,6 +172,42 @@ describe('usePodHistoryCancelSpot', () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
+  it('opens the confirm while cancellations are left, and hands back the counters', () => {
+    const onNotice = jest.fn();
+    const cancels = { spot_cancels_used: 1, spot_cancels_max: 3 };
+    const { result } = renderHook(() =>
+      usePodHistoryCancelSpot('pod1', onNotice, jest.fn(), cancels),
+    );
+    expect(result.current.cancels).toBe(cancels);
+    act(() => result.current.request());
+    expect(result.current.open).toBe(true);
+    expect(onNotice).not.toHaveBeenCalled();
+  });
+
+  // The server would refuse it anyway — say why instead of opening a doomed confirm.
+  it('explains the limit instead of opening the confirm once every cancel is used', () => {
+    const onNotice = jest.fn();
+    const { result } = renderHook(() =>
+      usePodHistoryCancelSpot('pod1', onNotice, jest.fn(), {
+        spot_cancels_used: 2,
+        spot_cancels_max: 2,
+      }),
+    );
+    act(() => result.current.request());
+    expect(result.current.open).toBe(false);
+    expect(onNotice).toHaveBeenCalledWith(
+      'You have cancelled your spot on this pod the maximum number of times allowed, so it can no longer be cancelled.',
+    );
+    expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it('opens the confirm and reports no counters before the state is answered', () => {
+    const { result } = renderHook(() => usePodHistoryCancelSpot('pod1', jest.fn(), jest.fn()));
+    expect(result.current.cancels).toBeNull();
+    act(() => result.current.request());
+    expect(result.current.open).toBe(true);
+  });
+
   it('does nothing without a pod', async () => {
     const onNotice = jest.fn();
     const refresh = jest.fn();

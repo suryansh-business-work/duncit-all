@@ -52,10 +52,13 @@ beforeEach(() => {
 });
 
 describe('PodHistoryScreen', () => {
-  it('shows a loader while fetching', () => {
+  it('shows the tips loader while fetching', () => {
     mockedUsePodHistory.mockReturnValue({ uniqueItems: [], isLoading: true });
     renderWithProviders(<PodHistoryScreen />);
     expect(screen.getByTestId('pod-history-loading')).toBeOnTheScreen();
+    expect(screen.getByTestId('pod-history-loading-tip')).toHaveTextContent(
+      'Tap any pod you joined to see its refund status and full timeline.',
+    );
   });
 
   it('surfaces a fetch error', () => {

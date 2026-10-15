@@ -1,4 +1,4 @@
-import { loadPdfImage, renderPdf } from '@services/pdf/document';
+import { loadPdfImage, pdfCurrency, pdfCurrencyNote, pdfRowHeight, renderPdf } from '@services/pdf/document';
 import { appDate } from '@utils/app-time';
 
 export interface ProductInvoiceLine {
@@ -36,6 +36,8 @@ const ACCENT_SOFT = '#fff1f4';
 const INK = '#111827';
 const MUTED = '#6b7280';
 const LINE = '#e5e7eb';
+/** Money sits this far inside the table's right edge, so it never touches the band's end. */
+const CELL_INSET = 6;
 
 
 
@@ -47,7 +49,8 @@ export async function generateProductInvoicePdf(d: ProductInvoiceData): Promise<
       const W = doc.page.width;
       const L = 48;
       const R = W - 48;
-      const cur = d.currency_symbol;
+      // Helvetica has no ₹ glyph; pdfCurrency prints the ISO code instead.
+      const cur = pdfCurrency(d.currency_symbol);
       const fmt = (n: number) => `${cur}${(Number(n) || 0).toFixed(2)}`;
 
       doc.rect(0, 0, W, 96).fill(ACCENT);
@@ -83,25 +86,30 @@ export async function generateProductInvoicePdf(d: ProductInvoiceData): Promise<
       doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(d.seller_email, L + 14, y + 40, { width: R - L - 28 });
 
       y += 60 + 22;
-      const colX = { name: L + 6, qty: 280, gross: 330, comm: 420, net: 500 };
+      // Widths leave room for the "INR " prefix, and NET stops CELL_INSET short
+      // of the band's right edge instead of running flush into it.
+      const colX = { name: L + 6, qty: 254, gross: 290, comm: 378, net: 456 };
+      const w = { name: 196, qty: 32, gross: 84, comm: 70, net: R - CELL_INSET - colX.net };
       doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
       doc.fillColor('#ffffff').fontSize(8.5).font('Helvetica-Bold');
       doc
-        .text('PRODUCT', colX.name, y, { width: 220 })
-        .text('QTY', colX.qty, y, { width: 40, align: 'right' })
-        .text('GROSS', colX.gross, y, { width: 80, align: 'right' })
-        .text('COMMISSION', colX.comm, y, { width: 70, align: 'right' })
-        .text('NET', colX.net, y, { width: R - colX.net, align: 'right' });
+        .text('PRODUCT', colX.name, y, { width: w.name })
+        .text('QTY', colX.qty, y, { width: w.qty, align: 'right' })
+        .text('GROSS', colX.gross, y, { width: w.gross, align: 'right' })
+        .text('COMMISSION', colX.comm, y, { width: w.comm, align: 'right' })
+        .text('NET', colX.net, y, { width: w.net, align: 'right' });
       y += 26;
       doc.fillColor(INK).fontSize(9.5).font('Helvetica');
       for (const it of d.items) {
         doc
-          .text(it.name, colX.name, y, { width: 220 })
-          .text(String(it.qty), colX.qty, y, { width: 40, align: 'right' })
-          .text(fmt(it.gross), colX.gross, y, { width: 80, align: 'right' })
-          .text(`${it.commission_pct}%`, colX.comm, y, { width: 70, align: 'right' })
-          .text(fmt(it.net), colX.net, y, { width: R - colX.net, align: 'right' });
-        y = doc.y + 8;
+          .text(it.name, colX.name, y, { width: w.name })
+          .text(String(it.qty), colX.qty, y, { width: w.qty, align: 'right' })
+          .text(fmt(it.gross), colX.gross, y, { width: w.gross, align: 'right' })
+          .text(`${it.commission_pct}%`, colX.comm, y, { width: w.comm, align: 'right' })
+          .text(fmt(it.net), colX.net, y, { width: w.net, align: 'right' });
+        // The tallest cell sets the row, so a product name that wraps pushes the
+        // divider down instead of running into it.
+        y += pdfRowHeight(doc, [{ text: it.name, width: w.name }, { text: fmt(it.net), width: w.net }]) + 8;
         doc.moveTo(L, y - 2).lineTo(R, y - 2).strokeColor(LINE).stroke();
       }
 
@@ -113,7 +121,7 @@ export async function generateProductInvoicePdf(d: ProductInvoiceData): Promise<
           .fillColor(bold ? INK : MUTED)
           .text(label, 300, y, { width: 150, align: 'right' })
           .fillColor(bold ? ACCENT : INK)
-          .text(value, 456, y, { width: R - 456, align: 'right' });
+          .text(value, 456, y, { width: R - CELL_INSET - 456, align: 'right' });
         y += bold ? 22 : 17;
       };
       row('Gross', fmt(d.gross_total));
@@ -123,6 +131,11 @@ export async function generateProductInvoicePdf(d: ProductInvoiceData): Promise<
       row('Net payable', fmt(d.net_total), true);
 
       y += 14;
+      const currencyNote = pdfCurrencyNote(d.currency_symbol);
+      if (currencyNote) {
+        doc.fillColor(INK).fontSize(9).font('Helvetica-Bold').text(currencyNote, L, y);
+        y = doc.y + 8;
+      }
       if (d.invoice_terms) {
         doc.fillColor(INK).fontSize(8.5).font('Helvetica-Bold').text('Terms', L, y);
         doc.fillColor(MUTED).fontSize(8).font('Helvetica').text(d.invoice_terms, L, doc.y + 2, { width: R - L });

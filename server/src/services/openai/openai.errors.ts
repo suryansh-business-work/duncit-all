@@ -13,6 +13,7 @@ type Failure = Extract<OpenAiChatResult, { ok: false }>;
 
 const CODES: Record<Failure['code'], string> = {
   NOT_CONFIGURED: 'AI_NOT_CONFIGURED',
+  DISABLED: 'AI_FEATURE_DISABLED',
   NETWORK: 'AI_NETWORK_ERROR',
   UPSTREAM: 'AI_UPSTREAM_ERROR',
   EMPTY: 'AI_EMPTY_RESPONSE',
@@ -20,6 +21,7 @@ const CODES: Record<Failure['code'], string> = {
 
 function messageFor(res: Failure): string {
   if (res.code === 'NOT_CONFIGURED') return 'OPENAI_API_KEY is not configured on the server';
+  if (res.code === 'DISABLED') return 'This AI feature is switched off in the AI portal';
   if (res.code === 'NETWORK') return `Failed to reach OpenAI: ${res.message}`;
   if (res.code === 'EMPTY') return 'OpenAI returned an empty response';
   return `OpenAI error (${res.status}): ${res.message}`;

@@ -1,5 +1,6 @@
 import PDFDocument from 'pdfkit';
 import { appDate } from '@utils/app-time';
+import { pdfCurrency, pdfCurrencyNote } from '@services/pdf/document';
 
 export type PayoutStatementType = 'HOST' | 'VENUE';
 
@@ -38,6 +39,8 @@ const ACCENT_SOFT = '#fff1f4';
 const INK = '#111827';
 const MUTED = '#6b7280';
 const LINE = '#e5e7eb';
+/** Money sits this far inside the table's right edge, so it never touches the band's end. */
+const CELL_INSET = 6;
 
 interface PayoutRow {
   label: string;
@@ -139,7 +142,7 @@ function drawRow(
     .fillColor(isTotal ? INK : MUTED)
     .text(row.label, L + 6, y, { width: 280 })
     .fillColor(isTotal ? ACCENT : INK)
-    .text(`${prefix}${fmt(row.value)}`, 360, y, { width: R - 360, align: 'right' });
+    .text(`${prefix}${fmt(row.value)}`, 360, y, { width: R - CELL_INSET - 360, align: 'right' });
   let next = doc.y + (isTotal ? 6 : 8);
   doc.moveTo(L, next - 2).lineTo(R, next - 2).strokeColor(isTotal ? '#cbd5e1' : LINE).stroke();
   next += isTotal ? 4 : 2;
@@ -158,7 +161,7 @@ function drawBreakdown(
   let y = startY;
   doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
   doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
-  doc.text('BREAKDOWN', L + 6, y, { width: 250 }).text('AMOUNT', 380, y, { width: R - 380, align: 'right' });
+  doc.text('BREAKDOWN', L + 6, y, { width: 250 }).text('AMOUNT', 380, y, { width: R - CELL_INSET - 380, align: 'right' });
   y += 26;
   for (const row of buildRows(d)) {
     y = drawRow(doc, row, L, R, y, fmt);
@@ -166,7 +169,13 @@ function drawBreakdown(
   return y;
 }
 
-function drawFooter(doc: PDFKit.PDFDocument, d: PayoutStatementData, L: number, R: number, y: number) {
+function drawFooter(doc: PDFKit.PDFDocument, d: PayoutStatementData, L: number, R: number, top: number) {
+  let y = top;
+  const currencyNote = pdfCurrencyNote(d.currency_symbol);
+  if (currencyNote) {
+    doc.fillColor(INK).fontSize(9).font('Helvetica-Bold').text(currencyNote, L, y);
+    y = doc.y + 4;
+  }
   const support = [
     d.invoice_support_email ? `Email: ${d.invoice_support_email}` : '',
     d.invoice_support_phone ? `Phone: ${d.invoice_support_phone}` : '',
@@ -206,7 +215,8 @@ export async function generatePayoutPdf(d: PayoutStatementData): Promise<Buffer>
       const W = doc.page.width;
       const L = 48;
       const R = W - 48;
-      const cur = d.currency_symbol;
+      // Helvetica has no ₹ glyph; pdfCurrency prints the ISO code instead.
+      const cur = pdfCurrency(d.currency_symbol);
       const fmt = (n: number) => `${cur}${n.toFixed(2)}`;
 
       drawHeader(doc, d, logo, title);

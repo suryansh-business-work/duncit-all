@@ -2,6 +2,7 @@ import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { describeFetchFailure } from '@utils/outboundFetch';
 import { OPENAI_TASKS, type OpenAiTaskKey } from '@modules/ai/openaiUsage/openaiUsage.tasks';
 import { openAiUsageService } from '@modules/ai/openaiUsage/openaiUsage.service';
+import { isAiFeatureEnabled } from '@modules/ai/aiFeature/aiFeature.guard';
 
 /**
  * The ONE place the product talks to OpenAI.
@@ -42,7 +43,8 @@ export interface OpenAiChatRequest {
   user_id?: string;
 }
 
-export type OpenAiFailureCode = 'NOT_CONFIGURED' | 'NETWORK' | 'UPSTREAM' | 'EMPTY';
+/** `DISABLED` — the feature (task) is switched off in AI portal > AI Features. */
+export type OpenAiFailureCode = 'NOT_CONFIGURED' | 'DISABLED' | 'NETWORK' | 'UPSTREAM' | 'EMPTY';
 
 export type OpenAiChatResult =
   | { ok: true; content: string; model: string }
@@ -172,6 +174,14 @@ async function readError(res: Response): Promise<string> {
 export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResult> {
   const startedAt = Date.now();
   const { apiKey, base, model } = await resolveConfig(req.model);
+
+  // The AI Features switch. Off takes the same refused-call path as a missing
+  // key, so every call site falls back exactly as it already does for that.
+  if (!(await isAiFeatureEnabled(req.task))) {
+    const message = 'This AI feature is switched off in the AI portal (AI Features).';
+    record({ req, model, status: 'SKIPPED', httpStatus: 0, error: message, startedAt });
+    return { ok: false, code: 'DISABLED', status: 0, message, model };
+  }
 
   if (!apiKey) {
     const message = 'OpenAI is not configured. Set the OPENAI API key in the Tech portal.';

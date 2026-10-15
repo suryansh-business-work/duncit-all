@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appDate } from '@utils/app-time';
+import { pdfCurrency, pdfCurrencyNote, pdfRowHeight } from '@services/pdf/document';
 
 export interface InvoiceLineItem {
   description: string;
@@ -67,6 +68,10 @@ const ACCENT_SOFT = '#fff1f1';
 const INK = '#111827';
 const MUTED = '#6b7280';
 const LINE = '#e5e7eb';
+// Inner padding of a table cell, and where the money column (and the totals
+// under it) starts.
+const CELL_PAD = 8;
+const VALUE_X = 456;
 
 // Bundled white brand mark embedded on the header band (loaded once).
 const BRAND_MARK_PATH = path.resolve(__dirname, '../_assets/duncit-mark-white.png');
@@ -182,7 +187,9 @@ export function drawInvoice(
   const W = doc.page.width;
   const L = 48; // left margin
   const R = W - 48; // right edge
-  const cur = data.currency_symbol;
+  // Helvetica has no ₹ glyph (it printed as a stray "¹"); pdfCurrency swaps
+  // it for the ISO code, and the note under the totals says so in words.
+  const cur = pdfCurrency(data.currency_symbol);
   const fmt = (n: number) => `${cur}${n.toFixed(2)}`;
 
   drawBrandHeader(doc, data, logo, L, R);
@@ -212,27 +219,7 @@ export function drawInvoice(
   const cardH = drawBillToCard(doc, data, L, R, y);
 
   // ---- Items table ----
-  y += cardH + 22;
-  const colX = { desc: L + 6, qty: 320, price: 386, amount: 476 };
-  doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
-  doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
-  doc
-    .text('DESCRIPTION', colX.desc, y, { width: 250 })
-    .text('QTY', colX.qty, y, { width: 50, align: 'right' })
-    .text('PRICE', colX.price, y, { width: 80, align: 'right' })
-    .text('AMOUNT', colX.amount, y, { width: R - colX.amount, align: 'right' });
-
-  y += 26;
-  doc.fillColor(INK).fontSize(10).font('Helvetica');
-  for (const it of data.items) {
-    doc
-      .text(it.description, colX.desc, y, { width: 250 })
-      .text(String(it.qty), colX.qty, y, { width: 50, align: 'right' })
-      .text(fmt(it.unit_price), colX.price, y, { width: 80, align: 'right' })
-      .text(fmt(it.amount), colX.amount, y, { width: R - colX.amount, align: 'right' });
-    y = doc.y + 8;
-    doc.moveTo(L, y - 2).lineTo(R, y - 2).strokeColor(LINE).stroke();
-  }
+  y = drawItemsTable(doc, data.items, fmt, L, R, y + cardH + 22);
 
   // ---- Totals ----
   y += 10;
@@ -246,7 +233,8 @@ export function drawInvoice(
       .fillColor(bold ? INK : MUTED)
       .text(label, L, y, { width: 450 - L, align: 'right' })
       .fillColor(bold ? ACCENT : INK)
-      .text(value, 456, y, { width: R - 456, align: 'right' });
+      // Same right edge as the AMOUNT column, so totals line up under it.
+      .text(value, VALUE_X, y, { width: R - CELL_PAD - VALUE_X, align: 'right' });
     y += bold ? 22 : 17;
   };
   // Above the tax lines on purpose: the discount came off the ticket price
@@ -274,8 +262,65 @@ export function drawInvoice(
     if (coinsEarned > 0) totalsRow('Duncit Coins earned', `+ ${coinsEarned}`);
   }
 
-  // ---- Footer ----
-  y += 18;
+  drawFooter(doc, data, L, R, y + 18);
+}
+
+/**
+ * The line items: a header band, then one row per item. Returns the cursor
+ * below the last row.
+ *
+ * Every column keeps CELL_PAD inside the header band on both sides — AMOUNT
+ * used to end flush on the band's right edge and read as clipped. Each row is
+ * as tall as its tallest cell, so a description that wraps pushes the divider
+ * and the next row down instead of running into them.
+ */
+function drawItemsTable(
+  doc: PDFKit.PDFDocument,
+  items: readonly InvoiceLineItem[],
+  fmt: (n: number) => string,
+  L: number,
+  R: number,
+  top: number
+): number {
+  let y = top;
+  const cols = {
+    desc: { x: L + CELL_PAD, w: 252 },
+    qty: { x: 312, w: 40 },
+    price: { x: 360, w: 88 },
+    amount: { x: VALUE_X, w: R - CELL_PAD - VALUE_X },
+  };
+  doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
+  doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
+  doc
+    .text('DESCRIPTION', cols.desc.x, y, { width: cols.desc.w })
+    .text('QTY', cols.qty.x, y, { width: cols.qty.w, align: 'right' })
+    .text('PRICE', cols.price.x, y, { width: cols.price.w, align: 'right' })
+    .text('AMOUNT', cols.amount.x, y, { width: cols.amount.w, align: 'right' });
+
+  y += 26;
+  doc.fillColor(INK).fontSize(10).font('Helvetica');
+  for (const it of items) {
+    const cells = [
+      { text: it.description, ...cols.desc, align: 'left' as const },
+      { text: String(it.qty), ...cols.qty, align: 'right' as const },
+      { text: fmt(it.unit_price), ...cols.price, align: 'right' as const },
+      { text: fmt(it.amount), ...cols.amount, align: 'right' as const },
+    ];
+    for (const cell of cells) doc.text(cell.text, cell.x, y, { width: cell.w, align: cell.align });
+    y += pdfRowHeight(doc, cells.map((cell) => ({ text: cell.text, width: cell.w }))) + 8;
+    doc.moveTo(L, y - 2).lineTo(R, y - 2).strokeColor(LINE).stroke();
+  }
+  return y;
+}
+
+/** Currency note, payment method, support contacts, terms and the closing line. */
+function drawFooter(doc: PDFKit.PDFDocument, data: InvoiceData, L: number, R: number, top: number): void {
+  let y = top;
+  const currencyNote = pdfCurrencyNote(data.currency_symbol);
+  if (currencyNote) {
+    doc.fillColor(INK).fontSize(9).font('Helvetica-Bold').text(currencyNote, L, y);
+    y = doc.y + 4;
+  }
   doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(`Payment method: ${data.payment_method}`, L, y);
   const support = [
     data.invoice_support_email ? `Email: ${data.invoice_support_email}` : '',
@@ -297,7 +342,6 @@ export function drawInvoice(
       doc.y + 14,
       { align: 'center', width: R - L }
     );
-
 }
 
 /** Renders a standalone invoice PDF. */

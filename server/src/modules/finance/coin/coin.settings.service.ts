@@ -31,12 +31,17 @@ const cleanWhole = (value: unknown, fallback: number): number => {
   return Math.max(0, Math.floor(n));
 };
 
+/** Days before coins expire that their holder is reminded, until Finance saves
+ * its own value. */
+export const DEFAULT_COIN_EXPIRY_REMINDER_DAYS = 3;
+
 const settingsPub = (doc: ICoinSettings) => ({
   pod_join_earn_pct: doc.pod_join_earn_pct,
   shop_earn_pct: doc.shop_earn_pct,
   coins_per_referral: doc.coins_per_referral,
   pod_feedback_coins: doc.pod_feedback_coins,
   coin_expiry_days: doc.coin_expiry_days,
+  coin_expiry_reminder_days: doc.coin_expiry_reminder_days ?? DEFAULT_COIN_EXPIRY_REMINDER_DAYS,
   updated_at: doc.updated_at?.toISOString?.() ?? '',
 });
 
@@ -94,12 +99,18 @@ export const coinSettingsService = {
     return (await this.get()).coin_expiry_days;
   },
 
+  /** Days before expiry a holder is reminded. 0 means no reminder. */
+  async expiryReminderDays(): Promise<number> {
+    return (await this.get()).coin_expiry_reminder_days ?? DEFAULT_COIN_EXPIRY_REMINDER_DAYS;
+  },
+
   async update(input: {
     pod_join_earn_pct?: number | null;
     shop_earn_pct?: number | null;
     coins_per_referral?: number | null;
     pod_feedback_coins?: number | null;
     coin_expiry_days?: number | null;
+    coin_expiry_reminder_days?: number | null;
   }) {
     const doc = await this.get();
     if (input.pod_join_earn_pct != null) {
@@ -116,6 +127,12 @@ export const coinSettingsService = {
     }
     if (input.coin_expiry_days != null) {
       doc.coin_expiry_days = cleanWhole(input.coin_expiry_days, doc.coin_expiry_days);
+    }
+    if (input.coin_expiry_reminder_days != null) {
+      doc.coin_expiry_reminder_days = Math.min(
+        60,
+        cleanWhole(input.coin_expiry_reminder_days, doc.coin_expiry_reminder_days ?? DEFAULT_COIN_EXPIRY_REMINDER_DAYS)
+      );
     }
     await doc.save();
     return settingsPub(doc);

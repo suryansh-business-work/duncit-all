@@ -375,9 +375,12 @@ async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutR
 /** Email + in-app + push after Finance processes the refund. */
 async function notifyRefundProcessed(request: IBackoutRequest, payment: any) {
   try {
-    const [user, pod] = await Promise.all([
-      UserModel.findById(request.user_id).select('profile.first_name profile.last_name auth.email'),
+    const [user, pod, finance] = await Promise.all([
+      UserModel.findById(request.user_id).select(
+        'profile.first_name profile.last_name auth.email auth.phone communication.whatsapp'
+      ),
       PodModel.findById(request.pod_id).select('pod_title'),
+      getFinanceSettings(),
     ]);
     const amount = `${payment.currency_symbol ?? '₹'}${request.refund_amount ?? payment.total}`;
     await notifyUserInApp(
@@ -393,6 +396,20 @@ async function notifyRefundProcessed(request: IBackoutRequest, payment: any) {
       pod_title: pod?.pod_title ?? 'your pod',
       amount,
       reason: `Backout ${request.backout_no} — spot filled`,
+    });
+    // Money is the one thing people check their phone for; the email alone
+    // left them refreshing a bank app with no word from us.
+    await whatsappService.send({
+      event: 'USER_REFUND_PROCESSED',
+      entityId: `backout:${String(request._id)}`,
+      user,
+      name: fullName(user) || 'there',
+      params: [
+        fullName(user) || 'there',
+        amount,
+        pod?.pod_title ?? 'your pod',
+        String(finance.refund_processing_days),
+      ],
     });
   } catch (err) {
     logs.server.error('podMember', 'notifyRefundProcessed', { error: err, msg: '[backout] refund-processed notify failed' });

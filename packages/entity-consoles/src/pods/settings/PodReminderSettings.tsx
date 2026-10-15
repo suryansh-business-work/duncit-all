@@ -39,6 +39,30 @@ export default function PodReminderSettings({
         onSave={(next) => onSave({ pod_reminder_lead_hours: next })}
       />
       <NumberSettingCard
+        title={t('admin.podSettings.samedayReminderTitle')}
+        description={t('admin.podSettings.samedayReminderDesc')}
+        label={t('admin.podSettings.samedayReminderLabel')}
+        helperText={t('admin.podSettings.samedayReminderMin')}
+        invalidText={t('admin.podSettings.samedayReminderInvalid')}
+        min={0}
+        max={23}
+        loading={loading}
+        value={settings?.pod_sameday_reminder_hours ?? null}
+        onSave={(next) => onSave({ pod_sameday_reminder_hours: next })}
+      />
+      <NumberSettingCard
+        title={t('admin.podSettings.checkoutNudgeTitle')}
+        description={t('admin.podSettings.checkoutNudgeDesc')}
+        label={t('admin.podSettings.checkoutNudgeLabel')}
+        helperText={t('admin.podSettings.checkoutNudgeMin')}
+        invalidText={t('admin.podSettings.checkoutNudgeInvalid')}
+        min={0}
+        max={1440}
+        loading={loading}
+        value={settings?.checkout_nudge_minutes ?? null}
+        onSave={(next) => onSave({ checkout_nudge_minutes: next })}
+      />
+      <NumberSettingCard
         title={t('admin.podSettings.slotReminderLeadTitle')}
         description={t('admin.podSettings.slotReminderLeadDesc')}
         label={t('admin.podSettings.slotReminderLeadLabel')}

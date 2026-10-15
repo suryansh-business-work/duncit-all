@@ -18,6 +18,9 @@ const EVENT_BY_STATUS: Partial<Record<FulfilmentStatus, string>> = {
   OUT_FOR_DELIVERY: 'STORE_ORDER_OUT_FOR_DELIVERY',
   DELIVERED: 'STORE_ORDER_DELIVERED',
   CANCELLED: 'STORE_ORDER_CANCELLED',
+  // The one move that needs the buyer to DO something — be home, or answer the
+  // courier — so it is worth more than the email it already gets.
+  NDR: 'STORE_ORDER_DELIVERY_FAILED',
 };
 
 /** A guest's checkout number as AiSensy dials it (country code first). */

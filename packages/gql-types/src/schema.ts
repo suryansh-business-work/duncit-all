@@ -1738,6 +1738,10 @@ export type AppSettings = {
   pod_feedback_delay_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its attendees are reminded over email and WhatsApp. */
   pod_reminder_lead_hours: Scalars['Int']['output'];
+  /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
+  pod_sameday_reminder_hours: Scalars['Int']['output'];
+  /** Minutes after a pod checkout is left unpaid when the member is nudged once to finish it. 0 switches it off. */
+  checkout_nudge_minutes: Scalars['Int']['output'];
   /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -5311,6 +5315,8 @@ export type CoinSettings = {
    * Read at the moment of each grant, so a change never moves coins already given.
    */
   coin_expiry_days: Scalars['Int']['output'];
+  /** Days before a member's coins expire that they are reminded by email and in-app (0 turns it off). */
+  coin_expiry_reminder_days: Scalars['Int']['output'];
   /** Flat coins paid to EACH side of a referral — the referrer and the new member. */
   coins_per_referral: Scalars['Int']['output'];
   /** Flat coins paid for feedback on an attended pod (0 turns it off). */
@@ -5325,6 +5331,7 @@ export type CoinSettings = {
 /** Every field is optional; an omitted one is left alone. */
 export type CoinSettingsInput = {
   coin_expiry_days?: InputMaybe<Scalars['Int']['input']>;
+  coin_expiry_reminder_days?: InputMaybe<Scalars['Int']['input']>;
   coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
   pod_feedback_coins?: InputMaybe<Scalars['Int']['input']>;
   pod_join_earn_pct?: InputMaybe<Scalars['Int']['input']>;
@@ -12076,6 +12083,8 @@ export type MeetingAvailability = {
   end_time: Scalars['String']['output'];
   horizon_days: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  /** Hours before a scheduled meeting the applicant is reminded of it. 0 is off. */
+  reminder_lead_hours: Scalars['Int']['output'];
   slot_minutes: Scalars['Int']['output'];
   start_time: Scalars['String']['output'];
   timezone_offset_minutes: Scalars['Int']['output'];
@@ -12086,6 +12095,8 @@ export type MeetingAvailability = {
 export type MeetingAvailabilityInput = {
   end_time?: InputMaybe<Scalars['String']['input']>;
   horizon_days?: InputMaybe<Scalars['Int']['input']>;
+  /** Hours before a scheduled meeting the applicant is reminded of it (0-72, 0 is off). */
+  reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   slot_minutes?: InputMaybe<Scalars['Int']['input']>;
   start_time?: InputMaybe<Scalars['String']['input']>;
   timezone_offset_minutes?: InputMaybe<Scalars['Int']['input']>;
@@ -31896,6 +31907,8 @@ export type SendWaCampaignInput = {
   media?: InputMaybe<AisensyMediaInput>;
   /** Internal name for this send. */
   name: Scalars['String']['input'];
+  /** Repeat every N days (1-90) against the audience list's members at that time; 0 or absent sends once. */
+  repeat_every_days?: InputMaybe<Scalars['Int']['input']>;
   /** ISO time to send at. Absent, or already past, sends immediately. */
   scheduled_at?: InputMaybe<Scalars['String']['input']>;
   /** Ordered template variables — literal text, or {{first_name}} style tokens. */
@@ -37660,6 +37673,10 @@ export type UpdateAppSettingsInput = {
   pod_feedback_delay_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its attendees are reminded (1-8760). */
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */
+  pod_sameday_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** Minutes after an unpaid pod checkout the member is nudged (0-1440, 0 is off). */
+  checkout_nudge_minutes?: InputMaybe<Scalars['Int']['input']>;
   /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
@@ -38398,6 +38415,8 @@ export type UpdateWaPricingInput = {
   authentication_per_msg: Scalars['Float']['input'];
   currency_symbol: Scalars['String']['input'];
   marketing_per_msg: Scalars['Float']['input'];
+  /** 0-50; omitted keeps the saved cap. */
+  marketing_weekly_cap?: InputMaybe<Scalars['Int']['input']>;
   service_per_msg: Scalars['Float']['input'];
   utility_per_msg: Scalars['Float']['input'];
 };
@@ -40010,9 +40029,13 @@ export type WaCampaign = {
   name: Scalars['String']['output'];
   /** How many people the audience resolved to at send time. */
   recipient_count: Scalars['Int']['output'];
+  /** Days between runs of a recurring campaign; 0 for a one-off. */
+  repeat_every_days: Scalars['Int']['output'];
   /** When a scheduled send is due. Null for one that went out immediately. */
   scheduled_at?: Maybe<Scalars['String']['output']>;
   sent_at?: Maybe<Scalars['String']['output']>;
+  /** Shared by every run of one recurring campaign; empty for a one-off. */
+  series_id: Scalars['String']['output'];
   sent_count: Scalars['Int']['output'];
   /** Matched the audience but had no usable number or an empty variable. */
   skipped_count: Scalars['Int']['output'];
@@ -40416,6 +40439,8 @@ export type WaPricing = {
   authentication_per_msg: Scalars['Float']['output'];
   currency_symbol: Scalars['String']['output'];
   marketing_per_msg: Scalars['Float']['output'];
+  /** The most marketing WhatsApp messages one number may get in 7 days, campaigns and automatic marketing together. 0 is no cap. */
+  marketing_weekly_cap: Scalars['Int']['output'];
   /** Service conversations are free today — a rate is kept so that can change without a deploy. */
   service_per_msg: Scalars['Float']['output'];
   utility_per_msg: Scalars['Float']['output'];

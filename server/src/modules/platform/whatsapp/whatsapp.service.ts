@@ -1,6 +1,7 @@
 import { logs } from '@observability/log';
 import { destinationFor } from '@modules/crm/marketing/waCampaign.recipients';
 import { getWaPricing, ratePerMessage } from '@modules/crm/marketing/waPricing.model';
+import { CAPPED_REASON, marketingWeeklyCap, overMarketingCap } from '@modules/crm/marketing/waMarketingCap';
 import {
   INVALID_NUMBER_REASON,
   isCampaignMissing,
@@ -355,6 +356,11 @@ async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
 
   if (!(await waPreferenceAllows(destination, event.category))) {
     return record(event, input, destination, skip('Recipient switched this off'));
+  }
+  // The same weekly cap a campaign respects: an automatic marketing message
+  // (a nudge, an invite) counts towards it and is held back past it.
+  if (event.category === 'marketing' && (await overMarketingCap(destination, await marketingWeeklyCap()))) {
+    return record(event, input, destination, skip(CAPPED_REASON));
   }
 
   const params = input.params.map(text);

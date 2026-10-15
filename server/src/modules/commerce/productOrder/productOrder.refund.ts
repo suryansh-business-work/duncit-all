@@ -4,6 +4,7 @@ import { creditCoinsBack, recordPaymentRefund } from '@modules/finance/payment/p
 import { roundOffOf } from '@modules/finance/payment/payment.roundoff';
 import { createRazorpayRefund, listRazorpayRefunds } from '@modules/finance/payment/razorpay.gateway';
 import type { IOrderRefund } from './productOrder.model';
+import { alertStaff } from '@services/notify/staffAlert';
 
 /**
  * Money going back to a pod-shop buyer — for a cancelled order or a returned
@@ -140,6 +141,17 @@ export async function issueRefund(target: Refundable, req: RefundRequest): Promi
       target.refund.status = 'FAILED';
       target.refund.error = (error as Error).message;
       logs.server.error('productOrder', 'issueRefund', { error, receipt: req.receipt, amount: target.refund.amount });
+      // A refused refund leaves a buyer short of money until somebody retries
+      // it, and the FAILED flag on the row was the only trace.
+      await alertStaff({
+        desk: 'FINANCE',
+        title: `Refund failed: ${req.receipt}`,
+        lines: [
+          `Amount: ${target.refund.amount}`,
+          `Gateway said: ${target.refund.error}`,
+          'Retry it from the order in the Finance console.',
+        ],
+      });
     }
   }
   if (target.refund.status !== 'FAILED') target.refund.refunded_at = new Date();

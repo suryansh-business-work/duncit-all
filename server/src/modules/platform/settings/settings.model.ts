@@ -74,6 +74,12 @@ export interface IAppSettings extends Document {
    * venue and club admins — is asked how it went (Admin > Pods > Pod
    * Settings). 0 asks the moment it ends. */
   pod_feedback_delay_hours: number;
+  /** Hours before a pod starts when its attendees get the short same-day
+   * reminder — where and what time (Admin > Pods > Pod Settings). 0 is off. */
+  pod_sameday_reminder_hours: number;
+  /** Minutes after a pod checkout was started and left unpaid when the member
+   * is nudged once to finish it (Admin > Pods > Pod Settings). 0 is off. */
+  checkout_nudge_minutes: number;
   /** Whether a cancellation HOLDS its refunds until the pod's own start time
    * instead of paying them out immediately (Admin > Pods > Pod Settings).
    *
@@ -168,6 +174,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     pod_reminder_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
     venue_slot_reminder_lead_hours: { type: Number, default: 48, min: 1, max: 8760 },
     pod_feedback_delay_hours: { type: Number, default: 1, min: 0, max: 8760 },
+    pod_sameday_reminder_hours: { type: Number, default: 3, min: 0, max: 23 },
+    checkout_nudge_minutes: { type: Number, default: 60, min: 0, max: 1440 },
     pod_cancel_refund_hold: { type: Boolean, default: false },
     pod_auto_cancel_enabled: { type: Boolean, default: false },
     pod_auto_cancel_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },

@@ -691,6 +691,11 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
         'A grant stays spendable until the end of its last day, and its date is fixed the moment it is granted — changing this never shortens coins somebody already holds. Gift-card coins never expire.',
       coinExpiryHelper: 'Days a granted coin stays spendable. 0 means coins never expire.',
       coinExpiryMax: 'Keep the expiry at or under {max} days.',
+      coinExpiryReminder: 'Remind before expiry',
+      coinExpiryReminderHelper:
+        'Days before their coins expire that a member is reminded by email and in-app. 0 turns the reminder off.',
+      coinExpiryReminderMax: 'Keep the reminder at or under {max} days.',
+      coinExpiryReminderRequired: 'Enter how many days before expiry to remind members.',
       coinExpiryRequired: 'Enter how many days a granted coin lasts.',
       coinExpiryTitle: 'When coins expire',
       coinExpiryWhole: 'Whole days only — digits, no decimals or symbols.',

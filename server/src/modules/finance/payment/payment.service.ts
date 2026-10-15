@@ -6,6 +6,8 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { loadNotifyRecipients, recipientName } from '@services/notify/notify.recipients';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { invoiceDataForPayment } from './payment.invoice';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
@@ -924,10 +926,31 @@ const buildListFilter = (filter?: PaymentListFilter) => {
  * Best-effort: the refund is already recorded, and a mailbox outage must not
  * make an operator think it was not.
  */
+/** The WhatsApp beside the refund email — the payer's account, when there is one. */
+async function whatsappRefund(doc: IPayment, refundDays: string): Promise<void> {
+  if (!doc.user_id) return;
+  const users = await loadNotifyRecipients([doc.user_id]);
+  const user = users.get(String(doc.user_id)) ?? null;
+  const name = doc.user_name || recipientName(user);
+  await whatsappService.send({
+    event: 'USER_REFUND_PROCESSED',
+    entityId: `payment:${doc.payment_id}`,
+    user,
+    name,
+    params: [
+      name,
+      `${doc.currency_symbol}${doc.total.toFixed(2)}`,
+      doc.description || doc.invoice_no || doc.payment_id,
+      refundDays,
+    ],
+  });
+}
+
 async function mailRefund(doc: IPayment, reason?: string): Promise<void> {
   try {
     if (!doc.user_email) return;
     const [fs, urls] = await Promise.all([getFinanceSettings(), getUrlConfigs()]);
+    await whatsappRefund(doc, String(fs.refund_processing_days));
     await sendEmail({
       to: doc.user_email,
       subject: `Refund initiated — ${doc.invoice_no || doc.payment_id}`,

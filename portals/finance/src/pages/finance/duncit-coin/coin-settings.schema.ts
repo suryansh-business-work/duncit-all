@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { fallbackT, type Translate } from '@duncit/shell';
+import { DIGITS } from '@duncit/regex';
 import type { CoinSettings } from './queries';
 
 /** Sanity ceiling: a payout above this is a typo, not a promotion. One ceiling
@@ -9,6 +10,9 @@ export const MAX_FLAT_COIN_REWARD = 100000;
 
 /** Ten years. Anything longer is a typo for "never", which is what 0 means. */
 export const MAX_COIN_EXPIRY_DAYS = 3650;
+
+/** Two months. A reminder further ahead than that is not a reminder. */
+export const MAX_COIN_EXPIRY_REMINDER_DAYS = 60;
 
 /**
  * Every number here is held as a STRING so an emptied field stays empty rather
@@ -46,6 +50,17 @@ const expiryDays = (t: Translate) =>
       t('finance.duncitCoin.coinExpiryMax', { vars: { max: MAX_COIN_EXPIRY_DAYS } }),
     );
 
+const reminderDays = (t: Translate) =>
+  z
+    .string()
+    .trim()
+    .min(1, t('finance.duncitCoin.coinExpiryReminderRequired'))
+    .regex(DIGITS, t('finance.duncitCoin.coinExpiryWhole'))
+    .refine(
+      (value) => Number.parseInt(value, 10) <= MAX_COIN_EXPIRY_REMINDER_DAYS,
+      t('finance.duncitCoin.coinExpiryReminderMax', { vars: { max: MAX_COIN_EXPIRY_REMINDER_DAYS } }),
+    );
+
 export const coinSettingsSchema = (t: Translate = fallbackT) =>
   z.object({
     pod_join_earn_pct: percent('pod join'),
@@ -53,6 +68,7 @@ export const coinSettingsSchema = (t: Translate = fallbackT) =>
     coins_per_referral: coins('a referral'),
     pod_feedback_coins: coins('pod feedback'),
     coin_expiry_days: expiryDays(t),
+    coin_expiry_reminder_days: reminderDays(t),
   });
 
 export type CoinSettingsForm = z.infer<ReturnType<typeof coinSettingsSchema>>;
@@ -63,6 +79,7 @@ export const BLANK_COIN_SETTINGS: CoinSettingsForm = {
   coins_per_referral: '',
   pod_feedback_coins: '',
   coin_expiry_days: '',
+  coin_expiry_reminder_days: '',
 };
 
 /** Server payload -> form strings. */
@@ -73,5 +90,6 @@ export function toCoinSettingsForm(settings: CoinSettings): CoinSettingsForm {
     coins_per_referral: String(settings.coins_per_referral),
     pod_feedback_coins: String(settings.pod_feedback_coins ?? 0),
     coin_expiry_days: String(settings.coin_expiry_days),
+    coin_expiry_reminder_days: String(settings.coin_expiry_reminder_days ?? 0),
   };
 }

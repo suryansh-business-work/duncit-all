@@ -16,6 +16,7 @@ const saved: CoinSettings = {
   coins_per_referral: 50,
   pod_feedback_coins: 10,
   coin_expiry_days: 365,
+  coin_expiry_reminder_days: 3,
   updated_at: '2026-08-25T00:00:00.000Z',
 };
 
@@ -25,6 +26,7 @@ const form = (over: Partial<CoinSettingsForm> = {}): CoinSettingsForm => ({
   coins_per_referral: '50',
   pod_feedback_coins: '10',
   coin_expiry_days: '365',
+  coin_expiry_reminder_days: '3',
   ...over,
 });
 

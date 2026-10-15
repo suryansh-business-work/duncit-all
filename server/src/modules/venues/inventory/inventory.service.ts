@@ -900,7 +900,8 @@ export interface ProductWaSubject {
 export async function notifyProductOwner(
   product: ProductWaSubject,
   event: string,
-  quantity: number,
+  /** The template's last value: units added or left, or a decline's reason. */
+  detail: number | string,
   /** The product by default — one "product added" per listing. A stock
    * crossing passes its own, because a product can run low again next month. */
   entityId: string = String(product._id)
@@ -925,7 +926,7 @@ export async function notifyProductOwner(
     entityId,
     user: owner,
     name,
-    params: [name, product.product_name, brand?.brand_name || (product.brand_name ?? ''), String(quantity)],
+    params: [name, product.product_name, brand?.brand_name || (product.brand_name ?? ''), String(detail)],
   });
 }
 
@@ -1002,7 +1003,7 @@ function applyReviewCommission(doc: IInventoryProduct, commissionPct: number | n
 /** Tell the partner the review outcome — they previously had to poll their
  * table. Best-effort: a notify hiccup never fails the review. */
 async function notifyListingReviewOutcome(doc: IInventoryProduct, approved: boolean) {
-  const reviewTitle = approved ? 'Product approved 🎉' : 'Product listing declined';
+  const reviewTitle = approved ? 'Product approved' : 'Product listing declined';
   const declineSuffix = doc.listing_review_notes ? ` — ${doc.listing_review_notes}` : '.';
   const reviewBody = approved
     ? `${doc.product_name} is approved and can now be stocked into pods.`
@@ -1589,8 +1590,18 @@ export const inventoryService = {
     await logActivity(doc._id, user, approved ? 'RESTORE' : 'ARCHIVE', ['listing_review_status'], doc.listing_review_notes);
     await notifyListingReviewOutcome(doc, approved);
     // Only an approval puts the product on the shelf; a decline is not a
-    // product added.
+    // product added. A decline used to reach the in-app bell alone, so a brand
+    // that was not watching never learned what to fix; it now carries the
+    // reviewer's reason on email and WhatsApp, keyed per review.
     if (approved) await notifyProductOwner(doc, 'ECOMM_PRODUCT_ADDED', doc.inventory_count);
+    else {
+      await notifyProductOwner(
+        doc,
+        'ECOMM_PRODUCT_DECLINED',
+        doc.listing_review_notes || '-',
+        transitionEntityId(String(doc._id))
+      );
+    }
     return inventoryProductToPub(doc);
   },
 

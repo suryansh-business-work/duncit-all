@@ -40,6 +40,8 @@ export const coinTypeDefs = /* GraphQL */ `
     Read at the moment of each grant, so a change never moves coins already given.
     """
     coin_expiry_days: Int!
+    "Days before a member's coins expire that they are reminded by email and in-app (0 turns it off)."
+    coin_expiry_reminder_days: Int!
     updated_at: String!
   }
 
@@ -50,6 +52,7 @@ export const coinTypeDefs = /* GraphQL */ `
     coins_per_referral: Int
     pod_feedback_coins: Int
     coin_expiry_days: Int
+    coin_expiry_reminder_days: Int
   }
 
   "What one manual adjustment left behind, so the console can confirm it landed."

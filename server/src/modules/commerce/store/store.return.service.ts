@@ -201,6 +201,9 @@ export const storeReturnService = {
       refund_amount: round2(Math.max(0, goods - discountShare)),
       events: [{ status: 'REQUESTED', note: reason, by: 'CUSTOMER', at: new Date() }],
     });
+    // The buyer's record that we have it, with its reference — every later step
+    // already mails, the request itself did not.
+    await mailReturnUpdate(doc, order, `${order.currency_symbol ?? ''}${doc.refund_amount.toFixed(2)}`);
     return toReturnPub(doc);
   },
 

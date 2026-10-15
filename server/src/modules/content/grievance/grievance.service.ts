@@ -4,6 +4,7 @@ import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { sendGrievanceAcknowledgement, sendGrievanceStatusUpdate } from './grievance.email';
+import { alertStaff } from '@services/notify/staffAlert';
 import {
   GRIEVANCE_SOURCES,
   GRIEVANCE_STATUSES,
@@ -190,6 +191,13 @@ export const grievanceService = {
         grievance_no: doc.grievance_no,
       });
     }
+    // A grievance has a statutory acknowledgement and resolution clock; the
+    // Grievance Officer hears now rather than on the next look at the queue.
+    await alertStaff({
+      desk: 'LEGAL',
+      title: `New grievance: ${doc.grievance_no}`,
+      lines: [`Subject: ${doc.subject}`, `Source: ${doc.source}`],
+    });
     return toPub(doc);
   },
 

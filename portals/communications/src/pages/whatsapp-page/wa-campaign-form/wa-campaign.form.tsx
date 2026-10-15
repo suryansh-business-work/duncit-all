@@ -19,6 +19,7 @@ import { campaignFor, templateFor, useCampaignOptions } from '../wa-aisensy/useA
 import type { WaAudienceList, WaCampaignNameOption, WaCampaignVariable } from '../queries';
 import RecipientFields from './RecipientFields';
 import ScheduleField from './ScheduleField';
+import RepeatField from './RepeatField';
 import TemplateInputs from './TemplateInputs';
 import { useTemplateFields } from './useTemplateFields';
 import { useWaReach } from './useWaReach';
@@ -168,6 +169,7 @@ export default function WaCampaignForm({
             )}
 
             <ScheduleField control={control} />
+            <RepeatField control={control} audience={values.audience} />
           </Stack>
         </DialogContent>
         <DialogActions>

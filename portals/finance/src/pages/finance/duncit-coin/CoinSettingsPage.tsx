@@ -57,6 +57,7 @@ export default function CoinSettingsPage() {
             coins_per_referral: Number.parseInt(values.coins_per_referral, 10),
             pod_feedback_coins: Number.parseInt(values.pod_feedback_coins, 10),
             coin_expiry_days: Number.parseInt(values.coin_expiry_days, 10),
+            coin_expiry_reminder_days: Number.parseInt(values.coin_expiry_reminder_days, 10),
           },
         },
       });

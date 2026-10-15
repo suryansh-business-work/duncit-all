@@ -62,6 +62,13 @@ export const waCampaignSchema = (t: Translator['t']) =>
       ...templateFieldsShape(t),
       /** ISO time to send at; empty sends as soon as it is submitted. */
       scheduled_at: z.string(),
+      /** Days between runs; 0 sends once. Only an audience list can repeat. */
+      repeat_every_days: z
+        .string()
+        .trim()
+        .refine((value) => value === '' || (Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 90), {
+          message: t('marketing.whatsappCampaigns.repeatEveryDaysInvalid'),
+        }),
     })
     .superRefine((values, ctx) => {
       refineTemplateFields(values, ctx, t);
@@ -112,6 +119,7 @@ export interface SendWaCampaignInput {
   media: AisensyMediaInput | null;
   buttons: AisensyButtonInput[];
   scheduled_at: string | null;
+  repeat_every_days: number;
 }
 
 /** No template-driven rows to start with: how many a send needs is decided by
@@ -126,6 +134,7 @@ export const emptyValues = (waCampaignName = ''): WaCampaignValues => ({
   contacts: [],
   ...emptyTemplateFields(),
   scheduled_at: '',
+  repeat_every_days: '',
 });
 
 const toAudience = (raw: string): WaAudience =>
@@ -148,6 +157,7 @@ export const valuesFromCampaign = (campaign: WaCampaignRow): WaCampaignValues =>
     number: contact.number,
   })),
   template_params: campaign.template_params.map((value) => ({ value })),
+  repeat_every_days: campaign.repeat_every_days ? String(campaign.repeat_every_days) : '',
 });
 
 export const toSendInput = (values: WaCampaignValues): SendWaCampaignInput => ({
@@ -161,4 +171,6 @@ export const toSendInput = (values: WaCampaignValues): SendWaCampaignInput => ({
   media: toMediaInput(values),
   buttons: toButtonInputs(values),
   scheduled_at: values.scheduled_at || null,
+  repeat_every_days:
+    values.audience === 'AUDIENCE_LIST' ? Math.max(0, Math.floor(Number(values.repeat_every_days) || 0)) : 0,
 });

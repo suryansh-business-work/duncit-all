@@ -814,6 +814,16 @@ async function emailReceipt(ctx: DeferredContext): Promise<void> {
 }
 
 /**
+ * A pod-shop order's brands, told they have something to pack. Best effort and
+ * outside the step ledger for the same reason as the store's WhatsApp above.
+ * Imported lazily — the product-order module imports this one.
+ */
+async function notifyBrandsOfOrders(payment: IPayment): Promise<void> {
+  const { notifyBrandsOfNewOrders } = await import('@modules/commerce/productOrder/productOrder.brandNotify');
+  await notifyBrandsOfNewOrders(payment);
+}
+
+/**
  * The pet store's "your order is placed" WhatsApp, beside the receipt email.
  * Best effort and outside the step ledger: a template not yet approved at
  * AiSensy must never mark a paid, booked order as a failed checkout. Imported
@@ -1093,6 +1103,9 @@ export const paymentFinalizer = {
     await guardStep(ctx, 'GIFT_CARD_EMAIL', () => emailGiftCard(ctx));
     await guardStep(ctx, 'SHIPMENT', () => createShipments(ctx));
     await emailReceipt(ctx);
+    // Outside the receipt step: a PDF that failed to render must not leave a
+    // brand unaware it has an order to pack. Deduplicated per order and brand.
+    if (!ctx.only) await notifyBrandsOfOrders(ctx.payment);
 
     // The run is over, so the lease goes back: a step that failed should be
     // retried on the reconciler's next sweep, not after the lease ages out.

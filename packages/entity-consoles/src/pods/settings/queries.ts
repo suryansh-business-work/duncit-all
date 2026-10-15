@@ -17,6 +17,8 @@ const FIELDS = `
   pod_complete_timeout_hours
   pod_complete_reminder_hours
   pod_reminder_lead_hours
+  pod_sameday_reminder_hours
+  checkout_nudge_minutes
   venue_slot_reminder_lead_hours
   pod_feedback_delay_hours
   pod_cancel_refund_hold

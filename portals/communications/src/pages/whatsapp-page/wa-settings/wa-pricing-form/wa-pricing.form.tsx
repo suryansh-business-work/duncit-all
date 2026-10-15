@@ -106,6 +106,12 @@ export default function WaPricingForm({
             label={t('marketing.common.currencySymbol')}
             hint="Printed in front of every cost on this page"
           />
+          <RhfTextField
+            control={control}
+            name="marketing_weekly_cap"
+            label={t('marketing.whatsappCampaigns.weeklyCap')}
+            hint={t('marketing.whatsappCampaigns.weeklyCapHint')}
+          />
         </Box>
 
         <RateExample values={values} />

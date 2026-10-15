@@ -897,7 +897,7 @@ export function sendSignedContractEmail(opts: {
     to: opts.to,
     subject: `Signed contract: ${opts.contract_name}`,
     template: 'signed-contract',
-    category: 'internal',
+    category: 'legal',
     vars: {
       contract_name: opts.contract_name,
       sender_name: opts.sender_name,
@@ -1125,7 +1125,7 @@ export function sendPodUpdatedEmail(opts: {
     to: opts.to,
     subject: `Pod updated — ${opts.pod_title}`,
     template: 'pod-updated',
-    category: 'notification',
+    category: 'transactional',
     vars: opts,
   });
 }

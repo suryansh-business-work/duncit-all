@@ -6,7 +6,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { MeetingModel } from '@modules/survey/meeting.model';
 import { sendEmail } from '@services/email/email.service';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { transitionEntityId, whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
@@ -413,6 +413,7 @@ export const hostService = {
       const { partnersUrl } = await getUrlConfigs();
       await notifyEvent({
         event: 'HOST_ONBOARDING_APPROVED',
+        entityId: transitionEntityId(h.id, h.approved_at),
         user: await waRecipient(h.user_id),
         name: h.full_name,
         params: [h.full_name, h.email],
@@ -561,7 +562,7 @@ export const hostService = {
         to: h.email ?? '',
         subject: active ? 'Your host account is now active' : 'Your host account has been deactivated',
         template: slug,
-        category: 'notification',
+        category: 'transactional',
         vars: {
           host_name: h.full_name ?? '',
           host_email: h.email ?? '',
@@ -580,6 +581,7 @@ export const hostService = {
 
     await whatsappService.send({
       event: active ? 'HOST_ACCOUNT_REACTIVATED' : 'HOST_ACCOUNT_SUSPENDED',
+      entityId: transitionEntityId(h.id),
       user: await waRecipient(h.user_id),
       name: h.full_name,
       params: [h.full_name],

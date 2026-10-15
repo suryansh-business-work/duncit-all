@@ -4,8 +4,9 @@
  * This file sends real messages to real numbers and costs real money, and none
  * of it had ever run in a test. Four rules keep it from doing that wrongly:
  *
- *  - the GLOBAL switch gates everything. Off means no query runs at all, rather
- *    than every send reaching the funnel and being recorded as a skip.
+ *  - the GLOBAL switch gates the WhatsApp leg only. Off still sweeps, but every
+ *    send goes out on email alone — a reminder must not stop because a
+ *    different channel was switched off.
  *  - the window is bounded at BOTH ends, and the lower bound is never earlier
  *    than the moment the feature was switched on. A cutoff later than the edge
  *    yields an impossible range, which is exactly right: the feature was not on
@@ -157,29 +158,39 @@ beforeEach(() => {
 });
 
 describe('the global switch', () => {
-  it('runs nothing at all while WhatsApp is off', async () => {
+  const remindOne = () => {
+    pods.find.mockReturnValueOnce(chain([pod()])).mockReturnValue(chain([]));
+    users.find.mockReturnValue(chain([user('u-1')]));
+  };
+  const reminderSkips = () =>
+    (sentEvents() as unknown as { event: string; skip?: { whatsapp?: boolean } }[])
+      .filter((entry) => entry.event === 'USER_POD_REMINDER')
+      .map((entry) => entry.skip?.whatsapp ?? false);
+
+  it('still sends the reminder while WhatsApp is off — on email alone', async () => {
     settings.findOne.mockReturnValue(chain({ enabled: false, updated_at: CUTOFF }));
+    remindOne();
 
     await runWhatsappSweeps();
 
-    // Not one query — sending into the funnel to have it record a skip per
-    // recipient is the expensive way to do nothing.
-    expect(pods.find).not.toHaveBeenCalled();
-    expect(notify).not.toHaveBeenCalled();
+    expect(reminderSkips()).toEqual([true]);
   });
 
-  it('runs nothing when nobody has ever turned it on', async () => {
+  it('sends on email alone when nobody has ever turned WhatsApp on', async () => {
     settings.findOne.mockReturnValue(chain(null));
+    remindOne();
 
     await runWhatsappSweeps();
 
-    expect(pods.find).not.toHaveBeenCalled();
+    expect(reminderSkips()).toEqual([true]);
   });
 
-  it('sweeps once it is on', async () => {
+  it('sends on both channels once WhatsApp is on', async () => {
+    remindOne();
+
     await runWhatsappSweeps();
 
-    expect(pods.find).toHaveBeenCalled();
+    expect(reminderSkips()).toEqual([false]);
   });
 });
 

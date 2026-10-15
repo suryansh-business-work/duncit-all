@@ -1,5 +1,6 @@
 import { logs } from '@observability/log';
 import { AutomationFlowModel, AutomationRunModel, type AutomationFlowFields } from './automation.model';
+import { whatsappPreferenceService } from '@modules/platform/whatsapp/whatsapp.preference.service';
 import { resumeWithReply, startRun } from './automation.engine';
 import { hasKeywords, matchesKeywords } from './automation.vars';
 import { scalarText, str } from './automation.graph';
@@ -89,6 +90,10 @@ function matchingFlows(flows: LeanFlow[], trigger: string, text: string, extra: 
 }
 
 export async function inboundWhatsapp(message: InboundWhatsapp): Promise<{ resumed: number; started: number }> {
+  // STOP / START is a preference change, never the opening of a flow.
+  if (await whatsappPreferenceService.applyReplyKeyword(message.from, message.text)) {
+    return { resumed: 0, started: 0 };
+  }
   const waiting = await AutomationRunModel.findOne({
     status: 'WAITING_REPLY',
     mode: 'LIVE',

@@ -481,6 +481,20 @@ interface CreateOrderInput {
 const DELIVERED_STATUSES = new Set<FulfilmentStatus>(['DELIVERED', 'PICKED_UP']);
 
 /**
+ * The pod shop's reaction to a status move — from the operator's button, the
+ * courier's webhook or a tracking pull alike. Only the crossing INTO delivery
+ * asks for feedback: the operator mutation writes the status unconditionally,
+ * so re-applying a delivered state would otherwise be a second billed message.
+ * It used to run from the operator's button alone, so an order ShipRocket
+ * delivered never asked its brand anything.
+ */
+async function afterPodShopStatusChange(order: IProductOrder, previous: FulfilmentStatus) {
+  if (DELIVERED_STATUSES.has(order.fulfilment_status) && !DELIVERED_STATUSES.has(previous)) {
+    await requestBrandFeedback(order);
+  }
+}
+
+/**
  * Ask every brand behind a delivered order for feedback, grouped by owner so a
  * brand with two products on the same order hears once rather than twice.
  */
@@ -624,7 +638,10 @@ function storeSharesFor(
  * reaction of its own yet. Imported lazily: the store module imports this one.
  */
 export async function afterStatusChange(order: IProductOrder, previous: FulfilmentStatus) {
-  if (order.channel !== 'PET_STORE') return;
+  if (order.channel !== 'PET_STORE') {
+    await afterPodShopStatusChange(order, previous);
+    return;
+  }
   const { afterStoreStatusChange } = await import('@modules/commerce/store/store.order.service');
   await afterStoreStatusChange(order, previous);
 }
@@ -901,12 +918,6 @@ export const productOrderService = {
     doc.fulfilment_status = status;
     doc.tracking_events.push({ status, code: 0, location: '', note, at: new Date() } as any);
     await doc.save();
-    // Only the crossing INTO delivery asks for feedback: this mutation writes
-    // the status unconditionally, so re-applying a delivered state would
-    // otherwise be a second billed message.
-    if (DELIVERED_STATUSES.has(status) && !DELIVERED_STATUSES.has(previous)) {
-      await requestBrandFeedback(doc);
-    }
     await afterStatusChange(doc, previous);
     return toPub(doc);
   },

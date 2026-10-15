@@ -240,7 +240,7 @@ async function remindAttendees(
   const users = await waUsers(
     pods.flatMap((pod) => [...(pod.pod_attendees ?? []), ...(pod.pod_hosts_id ?? [])])
   );
-  await notifyEach(
+  await sweepSend(
     pods.flatMap((pod) => podReminders(pod, users, slugById, mwebUrl))
   );
 }
@@ -278,7 +278,7 @@ async function remindHostsToComplete(now: number, cutoff: Date, clocks: SweepClo
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const users = await waUsers(pods.map(firstHostId));
-  await notifyEach(
+  await sweepSend(
     pods.map((pod) => {
       const host = users.get(firstHostId(pod));
       const name = nameOf(host);
@@ -323,7 +323,7 @@ async function remindVenuesOfPendingSlots(now: number, cutoff: Date, clocks: Swe
     .lean<SweptPod[]>();
   const podById = new Map(pods.map((pod) => [String(pod._id), pod]));
   const users = await waUsers([...slots.map((slot) => slot.owner_user_id), ...pods.map(firstHostId)]);
-  await notifyEach(
+  await sweepSend(
     slots.map((slot) => {
       const pod = podById.get(String(slot.booked_by_pod_id));
       const owner = users.get(String(slot.owner_user_id));
@@ -374,7 +374,7 @@ async function noticeReplacementNotFound(now: number, cutoff: Date, mwebUrl: str
     waUsers(requests.map((request) => request.user_id)),
   ]);
   const podById = new Map(pods.map((pod) => [String(pod._id), pod]));
-  await notifyEach(
+  await sweepSend(
     requests.flatMap((request) => {
       const pod = podById.get(String(request.pod_id));
       if (!pod) return [];
@@ -471,7 +471,7 @@ async function askAttendeesForFeedback(pods: SweptPod[], mwebUrl: string) {
   const attendedGuests = (pod: SweptPod) =>
     guestsOf(pod).filter((id) => marked.get(String(pod._id))?.has(id) ?? false);
   const users = await waUsers(pods.flatMap(attendedGuests));
-  await notifyEach(
+  await sweepSend(
     pods.flatMap((pod) =>
       attendedGuests(pod).map((id) => feedbackAsk('USER_POD_FEEDBACK', pod, users.get(id), mwebUrl))
     )
@@ -480,7 +480,7 @@ async function askAttendeesForFeedback(pods: SweptPod[], mwebUrl: string) {
 
 async function askHostsForFeedback(pods: SweptPod[], mwebUrl: string) {
   const users = await waUsers(pods.map(firstHostId));
-  await notifyEach(
+  await sweepSend(
     pods.map((pod) => feedbackAsk('HOST_POD_FEEDBACK', pod, users.get(firstHostId(pod)), mwebUrl))
   );
 }
@@ -495,7 +495,7 @@ async function askVenuesForFeedback(pods: SweptPod[], mwebUrl: string) {
     venues.map((venue: any) => [String(venue._id), String(venue.owner_user_id ?? '')])
   );
   const users = await waUsers([...ownerByVenue.values()]);
-  await notifyEach(
+  await sweepSend(
     pods.flatMap((pod) => {
       const owner = users.get(ownerByVenue.get(String(pod.venue_id)) ?? '');
       return owner ? [feedbackAsk('VENUE_POD_FEEDBACK', pod, owner, mwebUrl)] : [];
@@ -515,7 +515,7 @@ async function askClubAdminsForFeedback(pods: SweptPod[], mwebUrl: string) {
     clubs.map((club: any) => [String(club._id), (club.admin_user_ids ?? []).map(String)])
   );
   const users = await waUsers([...adminsByClub.values()].flat());
-  await notifyEach(
+  await sweepSend(
     pods.flatMap((pod) =>
       (adminsByClub.get(String(pod.club_id)) ?? []).map((adminId: string) =>
         feedbackAsk('CLUB_ADMIN_FEEDBACK', pod, users.get(adminId), mwebUrl)
@@ -540,10 +540,32 @@ async function requestPodFeedback(
 
 /* ------------------------------------------------------------------ */
 
+/**
+ * Whether this tick's sends go out on email alone. Automatic WhatsApp being
+ * switched off is no reason to stop the reminder EMAILS — they used to stop
+ * with it, because the whole sweep returned early. Set once per tick by
+ * {@link runWhatsappSweeps}; only the scheduler leader runs a tick.
+ */
+let emailOnly = false;
+
+/** Every sweep's fan-out: both channels, or email alone while WhatsApp is off. */
+function sweepSend(inputs: NotifyInput[]): Promise<void> {
+  if (!emailOnly) return notifyEach(inputs);
+  return notifyEach(inputs.map((input) => ({ ...input, skip: { ...input.skip, whatsapp: true } })));
+}
+
+/**
+ * The cutoff while WhatsApp is off. Each sweep's own window is already only
+ * three ticks wide, and the email leg is deduplicated per entity, so nothing
+ * older than that window can be reached — there is no backlog to hold back.
+ */
+const EMAIL_ONLY_CUTOFF = new Date(0);
+
 /** Run every sweep once. Safe to call twice — the second run is a no-op. */
 export async function runWhatsappSweeps(): Promise<void> {
-  const cutoff = await sweepCutoff();
-  if (!cutoff) return;
+  const whatsappCutoff = await sweepCutoff();
+  emailOnly = !whatsappCutoff;
+  const cutoff = whatsappCutoff ?? EMAIL_ONLY_CUTOFF;
   const now = Date.now();
   const [{ mwebUrl }, clocks] = await Promise.all([
     getUrlConfigs(),
@@ -556,7 +578,7 @@ export async function runWhatsappSweeps(): Promise<void> {
   await requestPodFeedback(now, cutoff, mwebUrl, clocks);
   // Last: while AiSensy is unreachable this costs a connect timeout, and the
   // sweeps above must not wait behind it.
-  await retryUnreachedMessages();
+  if (!emailOnly) await retryUnreachedMessages();
 }
 
 /**

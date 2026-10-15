@@ -248,6 +248,9 @@ const dish: RegisterVenueValues['food_menu'][number] = {
   diet: 'VEG',
   spice_level: 'MILD',
   is_available: true,
+  videos: [],
+  original_price: '',
+  saving_display: 'PERCENT',
 };
 
 describe('toStep1Input', () => {
@@ -316,6 +319,144 @@ describe('toStep1Input — food, which step 1 still stores now it has a section 
 
     const overriding = toStep1Input({ ...filled, offers_food: true, food_ordering: { ...ordering, tax_override: true } });
     expect(overriding.food_ordering).toMatchObject({ tax_override: true, tax_mode: 'EXCLUSIVE', gst_pct: 18 });
+  });
+});
+
+describe('venue videos', () => {
+  const clip = 'https://ik.imagekit.io/duncit/staging/venues/v1/videos/tour.mp4';
+  const link = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+
+  it('hydrates the stored videos, in order, and a venue with none on an empty list', () => {
+    expect(venueToValues({ id: 'v1', videos: [clip, link] }, [], account).videos).toEqual([clip, link]);
+    expect(venueToValues({ id: 'v1', videos: null }, [], account).videos).toEqual([]);
+  });
+
+  it('sends them with step 1 and with an approved venue’s details save', () => {
+    const values = { ...filled, videos: [link, clip] };
+    expect(toStep1Input(values).videos).toEqual([link, clip]);
+    expect(toApprovedUpdateInput('details', values, 0)).toMatchObject({ videos: [link, clip] });
+  });
+
+  it('round-trips: what the server answers is what goes back', () => {
+    const hydrated = venueToValues({ id: 'v1', videos: [clip] }, [], account);
+    expect(toStep1Input(hydrated).videos).toEqual([clip]);
+  });
+
+  it('never carries videos on the other approved sections, so they cannot be cleared by accident', () => {
+    const values = { ...filled, offers_food: true, videos: [clip] };
+    for (const section of ['type-capacity', 'food', 'documents', 'owner'] as const) {
+      expect(toApprovedUpdateInput(section, values, 0)).not.toHaveProperty('videos');
+    }
+  });
+});
+
+describe('food dishes — videos and display pricing', () => {
+  const stored = {
+    id: 'dish-1',
+    name: 'Masala dosa',
+    price: 120,
+    images: [],
+    diet: 'VEG',
+    spice_level: 'MILD',
+    is_available: true,
+    videos: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+    original_price: 150,
+    saving_display: 'AMOUNT',
+  };
+
+  it('hydrates a dish’s videos, struck-through price and saving display', () => {
+    const [row] = venueToValues({ id: 'v1', offers_food: true, food_menu: [stored] }, [], account).food_menu;
+    expect(row).toMatchObject({
+      item_id: 'dish-1',
+      videos: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+      original_price: 150,
+      saving_display: 'AMOUNT',
+    });
+  });
+
+  it('opens a dish stored before these existed with no videos, no MRP and a percent saving', () => {
+    const legacy = { id: 'dish-0', name: 'Idli', price: 60, images: [], diet: 'VEG', spice_level: 'NONE', is_available: true };
+    const [row] = venueToValues({ id: 'v1', offers_food: true, food_menu: [legacy] }, [], account).food_menu;
+    expect(row).toMatchObject({ videos: [], original_price: '', saving_display: 'PERCENT' });
+  });
+
+  it('round-trips the dish: what the server answers is what goes back', () => {
+    const hydrated = venueToValues({ id: 'v1', offers_food: true, food_menu: [stored] }, [], account);
+    expect(toStep1Input(hydrated).food_menu).toEqual([
+      {
+        id: 'dish-1',
+        name: 'Masala dosa',
+        description: '',
+        category: '',
+        price: 120,
+        images: [],
+        diet: 'VEG',
+        spice_level: 'MILD',
+        is_available: true,
+        videos: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+        original_price: 150,
+        saving_display: 'AMOUNT',
+      },
+    ]);
+  });
+
+  it('sends a blank or zero MRP as no strikethrough at all', () => {
+    const input = toStep1Input({
+      ...filled,
+      offers_food: true,
+      food_menu: [{ ...dish }, { ...dish, item_id: '', original_price: 0 }, { ...dish, item_id: '', original_price: '199' }],
+    });
+    expect(input.food_menu?.map((row) => row.original_price)).toEqual([null, null, 199]);
+  });
+});
+
+describe('food licences and QR tables', () => {
+  const licences = {
+    fssai_number: '12345678901234',
+    fssai_document_url: 'https://cdn.duncit.com/fssai.pdf',
+    liquor_licence_number: 'KA-BAR-0099',
+    liquor_document_url: '',
+  };
+
+  it('hydrates the stored licences and the tables as the field’s text', () => {
+    const values = venueToValues({ id: 'v1', food_licences: licences, food_tables: ['1', '2', 'Patio'] }, [], account);
+    expect(values.food_licences).toEqual(licences);
+    expect(values.food_tables).toBe('1, 2, Patio');
+  });
+
+  it('opens a venue that never gave any on blank licences and no tables', () => {
+    const values = venueToValues({ id: 'v1', food_licences: null, food_tables: null }, [], account);
+    expect(values.food_licences).toEqual(blankRegisterVenueValues.food_licences);
+    expect(values.food_tables).toBe('');
+  });
+
+  it('sends trimmed licence numbers and one label per table, a repeat kept once', () => {
+    const input = toStep1Input({
+      ...filled,
+      offers_food: true,
+      food_licences: { ...licences, fssai_number: ' 12345678901234 ', liquor_licence_number: ' KA-BAR-0099 ' },
+      food_tables: '1, 2\nPatio, , 2',
+    });
+    expect(input.food_licences).toEqual(licences);
+    expect(input.food_tables).toEqual(['1', '2', 'Patio']);
+  });
+
+  it('round-trips licences and tables through an approved Food save', () => {
+    const hydrated = venueToValues(
+      { id: 'v1', offers_food: true, food_licences: licences, food_tables: ['1', 'Patio'] },
+      [],
+      account
+    );
+    expect(toApprovedUpdateInput('food', hydrated, 0)).toMatchObject({
+      food_licences: licences,
+      food_tables: ['1', 'Patio'],
+    });
+  });
+
+  it('sends neither while the venue serves no food, so the server keeps them for later', () => {
+    const input = toStep1Input({ ...filled, offers_food: false, food_licences: licences, food_tables: '1, 2' });
+    expect(input).not.toHaveProperty('food_licences');
+    expect(input).not.toHaveProperty('food_tables');
   });
 });
 

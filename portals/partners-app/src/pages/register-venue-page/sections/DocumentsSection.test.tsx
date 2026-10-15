@@ -42,6 +42,8 @@ const config: VenueRegistrationConfig = {
   food_image_limit: 2,
   food_price_max: 10000,
   food_discount_max_pct: 50,
+  food_video_limit: 2,
+  food_table_limit: 10,
 };
 
 interface HarnessProps {

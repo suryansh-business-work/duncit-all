@@ -27,6 +27,9 @@ interface MockTableProps {
   refetchRef?: { current: (() => void) | null };
 }
 
+/** The subset of @duncit/table's ROW_CLICK_IGNORE the mocked rows can contain. */
+const ROW_CLICK_IGNORE = 'button, a, input, textarea, select, label, [role="button"], [data-row-click="ignore"]';
+
 export function DuncitTable(props: Readonly<MockTableProps>) {
   const { columns, fetchRows, getRowId, onRowClick, emptyText, defaultSort, refetchRef } = props;
   const [rows, setRows] = useState<unknown[]>([]);
@@ -75,7 +78,18 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
         <div
           key={getRowId(row as never)}
           data-testid="table-row"
-          onClick={onRowClick ? () => onRowClick(row as never) : undefined}
+          onClick={
+            onRowClick
+              ? (event) => {
+                  // As the real grid's ROW_CLICK_IGNORE: a click on a control
+                  // inside the row (a switch, a button) is that control's, not
+                  // the row's.
+                  const target = event.target as Element;
+                  if (target.closest(ROW_CLICK_IGNORE)) return;
+                  onRowClick(row as never);
+                }
+              : undefined
+          }
         >
           {columns.map((column) => {
             // AG Grid RUNS the valueGetter — it feeds sorting and the renderer —

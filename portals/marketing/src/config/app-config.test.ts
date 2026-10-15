@@ -18,6 +18,7 @@ describe('Duncit Marketing app config', () => {
     expect(targets).toEqual(
       expect.arrayContaining([
         '/',
+        '/contacts',
         '/audience',
         '/campaigns/email',
         '/notifications',
@@ -27,6 +28,11 @@ describe('Duncit Marketing app config', () => {
         '/ads-settings',
       ]),
     );
+  });
+
+  it('lists Contacts right after the Dashboard, as a top-level destination', () => {
+    expect(appConfig.nav.map((n) => n.to).slice(0, 3)).toEqual(['/', '/contacts', '/audience']);
+    expect(appConfig.nav[1]).toMatchObject({ label: 'Contacts', labelKey: 'shell.nav.contacts', icon: 'contacts' });
   });
 
   // A group header is not navigable — the sidebar ignores a parent `to`, and

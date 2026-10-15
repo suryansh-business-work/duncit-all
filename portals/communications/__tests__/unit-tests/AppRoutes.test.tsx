@@ -16,9 +16,10 @@ vi.mock('@duncit/shell', async (io) => ({
   // The real helper redirects without a token; this one proves what App hands it.
   createAuthed: ({ wrap }: { wrap: (el: React.ReactNode) => React.ReactNode }) => (el: React.ReactNode) =>
     wrap(el),
-  WelcomePage: stub('welcome'),
   ProfilePage: stub('profile'),
 }));
+// The Dashboard at / is the Analytics console's Communications page; its own suite is CommunicationsDashboardPage.test.
+vi.mock('../../src/pages/dashboard', () => ({ default: stub('dashboard') }));
 vi.mock('../../src/pages/emails-dashboard', () => ({ default: stub('emails-dashboard') }));
 vi.mock('../../src/pages/email-templates-page/EmailTemplatesPage', () => ({
   default: stub('email-templates'),
@@ -44,7 +45,7 @@ const at = (path: string) =>
 describe('App routes', () => {
   it.each([
     ['/login', 'page:login'],
-    ['/', 'page:welcome'],
+    ['/', 'page:dashboard'],
     ['/profile', 'page:profile'],
     ['/emails/dashboard', 'page:emails-dashboard'],
     ['/emails/templates', 'page:email-templates'],
@@ -77,8 +78,8 @@ describe('App routes', () => {
     expect(screen.getByText('page:msg91-logs')).toBeInTheDocument();
   });
 
-  it('sends an unknown URL to the welcome page', () => {
+  it('sends an unknown URL to the dashboard', () => {
     at('/nope/not-here');
-    expect(screen.getByText('page:welcome')).toBeInTheDocument();
+    expect(screen.getByText('page:dashboard')).toBeInTheDocument();
   });
 });

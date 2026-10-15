@@ -4,7 +4,7 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
 import EntityAnalyticsPage from '../../../src/pages/entity-analytics/EntityAnalyticsPage';
-import { ANALYTICS_PAGES } from '../../../src/pages/entity-analytics/pages';
+import { ANALYTICS_PAGES, CONTACTS_PAGE } from '../../../src/pages/entity-analytics/pages';
 import { ANALYTICS_CITIES, ENTITY_ANALYTICS, type EntityAnalytics } from '../../../src/pages/entity-analytics/queries';
 import { byTestId, click, mount, queryTestId, waitUntil } from '../../dom';
 import { COPY, board, kpi } from '../../mocks/analytics';
@@ -126,5 +126,38 @@ describe('EntityAnalyticsPage', () => {
       expect(byTestId('analytics-page-pods').textContent).toContain('Analytics is still warming up.'),
     );
     expect(queryTestId('dashboard')).toBeNull();
+  });
+
+  it('shows a page’s standing note above the grid, before and after the numbers arrive', async () => {
+    await mount(
+      <MockedProvider
+        mockLinkDefaultOptions={{ delay: 0 }}
+        mocks={[
+          {
+            request: {
+              query: ENTITY_ANALYTICS,
+              variables: { entity: 'CONTACTS', compare: 'PREVIOUS', city: null, days: 30 },
+            },
+            result: { data: { entityAnalytics: board() } },
+          },
+        ]}
+      >
+        <EntityAnalyticsPage page={CONTACTS_PAGE} />
+      </MockedProvider>,
+    );
+
+    const note = COPY['analytics.page.contacts.note'];
+    // Phone-book entries are never shown; the page says so before anything loads.
+    expect(byTestId('analytics-page-growth-contacts').textContent).toContain(note);
+    await waitUntil(() => expect(queryTestId('dashboard')).not.toBeNull());
+    expect(byTestId('dashboard').dataset.dashboardId).toBe('analytics.contacts');
+    expect(byTestId('dashboard').textContent).toContain(note);
+  });
+
+  it('shows no note on a page that has none', async () => {
+    await renderPage([answer(30, board())]);
+    await waitUntil(() => expect(queryTestId('dashboard')).not.toBeNull());
+
+    expect(document.querySelectorAll('[role="alert"]')).toHaveLength(0);
   });
 });

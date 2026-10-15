@@ -33,6 +33,8 @@ const config: VenueRegistrationConfig = {
   food_image_limit: 2,
   food_price_max: 10000,
   food_discount_max_pct: 50,
+  food_video_limit: 2,
+  food_table_limit: 10,
 };
 
 const savedVenue = {
@@ -373,6 +375,7 @@ describe('RegisterVenueForm — edit-approved mode', () => {
         description: 'Now with a rooftop',
         cover_image_url: 'https://cdn.example.com/cover.jpg',
         gallery: [],
+        videos: [],
       },
     });
     expect(onPersisted).toHaveBeenCalledTimes(1);
@@ -395,8 +398,62 @@ describe('RegisterVenueForm — edit-approved mode', () => {
         offers_food: true,
         food_menu: [],
         food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0, tax_override: false },
+        // A venue that never gave licences or tables sends them blank.
+        food_licences: { fssai_number: '', fssai_document_url: '', liquor_licence_number: '', liquor_document_url: '' },
+        food_tables: [],
       },
     });
+  });
+
+  it('lets an approved venue with saved tables print its QR stickers', async () => {
+    mount({ venue: { ...savedVenue, offers_food: true, food_tables: ['1', '2', 'Patio'] }, mode: 'edit-approved' });
+
+    openSection('Food Menu');
+
+    expect(((await screen.findByTestId('register-venue-food-tables-input')) as HTMLTextAreaElement).value).toBe(
+      '1, 2, Patio'
+    );
+    expect(screen.getByTestId('register-venue-food-table-stickers')).toHaveProperty('disabled', false);
+  });
+
+  it('keeps the stickers off until the venue has tables saved', async () => {
+    mount({ venue: { ...savedVenue, offers_food: true }, mode: 'edit-approved' });
+
+    openSection('Food Menu');
+
+    // Typed but unsaved tables are not on the server yet, so there is nothing to print.
+    fireEvent.change(await screen.findByTestId('register-venue-food-tables-input'), { target: { value: '1, 2' } });
+    expect(screen.getByTestId('register-venue-food-table-stickers')).toHaveProperty('disabled', true);
+  });
+
+  it('sends the typed tables and licences with an approved Food save', async () => {
+    const { sent } = mount({ venue: { ...savedVenue, offers_food: true }, mode: 'edit-approved' });
+
+    openSection('Food Menu');
+    fireEvent.change(await screen.findByTestId('register-venue-food-tables-input'), {
+      target: { value: '1, 2, Patio' },
+    });
+    fireEvent.change(screen.getByLabelText(/FSSAI licence number/), { target: { value: '12345678901234' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(await screen.findByText('Changes saved.')).toBeTruthy();
+    const update = sent.find((call) => call.name === 'UpdateApprovedVenue');
+    expect(update?.variables.input).toMatchObject({
+      offers_food: true,
+      food_tables: ['1', '2', 'Patio'],
+      food_licences: { fssai_number: '12345678901234', liquor_licence_number: '' },
+    });
+  });
+
+  it('holds an approved Food save back for a malformed FSSAI number and says why', async () => {
+    const { sent } = mount({ venue: { ...savedVenue, offers_food: true }, mode: 'edit-approved' });
+
+    openSection('Food Menu');
+    fireEvent.change(await screen.findByLabelText(/FSSAI licence number/), { target: { value: '1234' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(await screen.findByText('The FSSAI number must be 14 digits')).toBeTruthy();
+    expect(sent.some((call) => call.name === 'UpdateApprovedVenue')).toBe(false);
   });
 
   it('hides the save bar on the amenities section, which approval locks', async () => {

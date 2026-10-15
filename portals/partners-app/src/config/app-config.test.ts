@@ -34,6 +34,7 @@ const VENUE_OPTION_ROUTES = [
   '/venues/pods',
   '/venues/change-requests',
   '/venues/pod-requests',
+  '/venues/event-requests',
   '/venues/nearby-hosts',
   '/verification',
   '/wallet',

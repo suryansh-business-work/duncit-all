@@ -98,18 +98,28 @@ const HALF_PICKED: AdminCategoryValue = { ...COFFEE, sub_id: '', sub_name: '' };
 interface HarnessProps {
   mode: RegisterVenueMode;
   categoryLimit?: number;
+  videoLimit?: number;
+  venueId?: string;
   defaults?: Partial<RegisterVenueValues>;
   formRef: { current: UseFormReturn<RegisterVenueValues> | null };
 }
 
-function Harness({ mode, categoryLimit, defaults, formRef }: Readonly<HarnessProps>) {
+function Harness({ mode, categoryLimit, videoLimit, venueId, defaults, formRef }: Readonly<HarnessProps>) {
   const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
     resolver: zodResolver(registerVenueSchema()) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: { ...blankRegisterVenueValues, ...defaults },
     mode: 'onBlur',
   });
   formRef.current = form;
-  return <VenueDetailsSection form={form} mode={mode} categoryLimit={categoryLimit} />;
+  return (
+    <VenueDetailsSection
+      form={form}
+      mode={mode}
+      categoryLimit={categoryLimit}
+      videoLimit={videoLimit}
+      venueId={venueId}
+    />
+  );
 }
 
 const mount = (props: Omit<HarnessProps, 'formRef'>) => {
@@ -328,6 +338,56 @@ describe('VenueDetailsSection — images', () => {
     fireEvent.click(screen.getByRole('button', { name: 'pick from Add venue image' }));
 
     await waitFor(() => expect(formRef.current?.getValues('gallery')).toEqual([existing, PICKED_IMAGE]));
+  });
+});
+
+describe('VenueDetailsSection — videos', () => {
+  const LINK = 'https://youtu.be/dQw4w9WgXcQ';
+  const CLIP = 'https://ik.imagekit.io/duncit/staging/venues/venue-1/videos/tour.mp4';
+
+  it('adds a pasted YouTube link to the venue’s videos', async () => {
+    const formRef = mount({ mode: 'register', videoLimit: 3 });
+
+    expect(screen.getByText('Videos (0 of 3)')).toBeTruthy();
+    fireEvent.change(screen.getByTestId('register-venue-videos-youtube'), { target: { value: LINK } });
+    fireEvent.click(screen.getByTestId('register-venue-videos-youtube-add'));
+
+    await waitFor(() => expect(formRef.current?.getValues('videos')).toEqual([LINK]));
+    expect(screen.getByText('Videos (1 of 3)')).toBeTruthy();
+  });
+
+  it('refuses a link that is not a YouTube video, and keeps the list as it was', async () => {
+    const formRef = mount({ mode: 'register', videoLimit: 3 });
+
+    fireEvent.change(screen.getByTestId('register-venue-videos-youtube'), { target: { value: 'https://example.com/a' } });
+    fireEvent.click(screen.getByTestId('register-venue-videos-youtube-add'));
+
+    expect(await screen.findByText('Enter a YouTube video link (watch, shorts or youtu.be)')).toBeTruthy();
+    expect(formRef.current?.getValues('videos')).toEqual([]);
+  });
+
+  it('lists the stored videos and removes the one asked to', async () => {
+    const formRef = mount({ mode: 'register', videoLimit: 3, defaults: { videos: [LINK, CLIP] } });
+
+    expect(screen.getByText('YouTube video 1')).toBeTruthy();
+    expect(screen.getByText('Uploaded video 2')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove video 1' }));
+
+    await waitFor(() => expect(formRef.current?.getValues('videos')).toEqual([CLIP]));
+  });
+
+  it('stops adding at the video limit from the config', () => {
+    mount({ mode: 'register', videoLimit: 2, defaults: { venue_name: 'Cafe Mocha', videos: [LINK, CLIP] } });
+
+    expect(screen.getByRole('button', { name: 'Upload a video of Cafe Mocha' })).toHaveProperty('disabled', true);
+    expect(screen.queryByTestId('register-venue-videos-youtube')).toBeNull();
+  });
+
+  it('keeps videos editable on an approved venue, like its images', () => {
+    mount({ mode: 'edit-approved', videoLimit: 3, venueId: 'venue-1', defaults: { venue_name: 'Cafe Mocha' } });
+
+    expect(screen.getByRole('button', { name: 'Upload a video of Cafe Mocha' })).toHaveProperty('disabled', false);
+    expect(screen.getByTestId('register-venue-videos-youtube')).toHaveProperty('disabled', false);
   });
 });
 

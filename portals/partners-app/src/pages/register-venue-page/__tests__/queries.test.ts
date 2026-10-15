@@ -105,6 +105,23 @@ describe('MY_VENUE', () => {
     expect(fieldsAt(MY_VENUE, 'myVenue', 'venue_categories')).toHaveLength(6);
   });
 
+  it('selects the venue videos beside its images', () => {
+    expect(fieldsAt(MY_VENUE, 'myVenue')).toEqual(expect.arrayContaining(['cover_image_url', 'gallery', 'videos']));
+  });
+
+  it('selects each dish’s videos and display pricing, the licences and the QR tables', () => {
+    expect(fieldsAt(MY_VENUE, 'myVenue', 'food_menu')).toEqual(
+      expect.arrayContaining(['videos', 'original_price', 'saving_display'])
+    );
+    expect(fieldsAt(MY_VENUE, 'myVenue', 'food_licences')).toEqual([
+      'fssai_number',
+      'fssai_document_url',
+      'liquor_licence_number',
+      'liquor_document_url',
+    ]);
+    expect(fieldsAt(MY_VENUE, 'myVenue')).toContain('food_tables');
+  });
+
   it('pulls only holidays out of settings — the rest belongs to the availability page', () => {
     expect(fieldsAt(MY_VENUE, 'myVenue', 'settings')).toEqual(['holidays']);
   });
@@ -186,6 +203,10 @@ describe('REGISTRATION_CONFIG', () => {
       'food_image_limit',
       'food_price_max',
       'food_discount_max_pct',
+      // Videos per dish and QR tables per venue, then videos on the venue page.
+      'food_video_limit',
+      'food_table_limit',
+      'venue_video_limit',
     ]);
   });
 });

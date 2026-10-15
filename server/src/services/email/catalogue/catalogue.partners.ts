@@ -233,7 +233,7 @@ export const HOST_EMAILS: readonly EmailDef[] = [
     category: 'notification',
     fires: 'The pod’s last remaining spot is booked',
     waEvent: 'HOST_POD_FULL',
-    subject: '{{pod}} is full 🎉',
+    subject: '{{pod}} is full',
     footerNote: FOOTER.podHosted,
     vars: [
       v('name', 'The host’s first name.', 'Meera'),

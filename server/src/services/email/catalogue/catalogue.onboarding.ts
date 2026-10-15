@@ -186,7 +186,7 @@ const STEPS: readonly Step[] = [
     name: 'Onboarding Approved',
     key: 'Approved',
     category: 'notification',
-    subject: 'Your Duncit {party} application is approved 🎉',
+    subject: 'Your Duncit {party} application is approved',
     tone: LIVE,
     vars: APPROVED_VARS,
     rows: [{ labelKey: FIELD.email, valueVar: 'email' }],

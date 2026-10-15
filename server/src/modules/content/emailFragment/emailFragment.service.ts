@@ -4,6 +4,10 @@ import { logs } from '@observability/log';
 import { EMAIL_CATEGORIES } from '@services/email/email.provider';
 import { EmailFragmentModel } from './emailFragment.model';
 import { FRAGMENT_DEFAULTS } from './emailFragment.defaults';
+import {
+  LEGACY_FRAGMENT_FINGERPRINTS,
+  shippedFingerprint,
+} from '@modules/content/emailTemplate/emailTemplate.legacy';
 
 /**
  * Header/footer fragments.
@@ -119,6 +123,49 @@ async function backfillKeys(): Promise<void> {
     );
   }
   logs.server.info('emailFragment', 'backfillKeys', { updated: legacy.length });
+}
+
+/**
+ * Move the nine onto the current header and footer wherever they still hold an
+ * OLD shipped one — header and footer each on its own, so an admin who edited
+ * only the footer keeps it and still gets the new header.
+ *
+ * Same rule as the templates (`upgradeShippedDefaults`): a half that matches a
+ * fingerprint Duncit shipped is a default nobody changed; anything else is the
+ * admin's and is never touched. Conditional on the half still being the one
+ * read, so a save made in between wins.
+ */
+async function upgradeShippedFragments(): Promise<void> {
+  const keys = FRAGMENT_DEFAULTS.map((seed) => seed.category);
+  const stored = await EmailFragmentModel.find(
+    { key: { $in: keys } },
+    { key: 1, header_mjml: 1, footer_mjml: 1 }
+  ).lean();
+  const halves = stored.flatMap((row) => {
+    const seed = FRAGMENT_DEFAULTS.find((f) => f.category === row.key);
+    const legacy = LEGACY_FRAGMENT_FINGERPRINTS[row.key];
+    if (!seed || !legacy) return [];
+    const pairs = [
+      { field: 'header_mjml', from: row.header_mjml ?? '', to: seed.header_mjml, old: legacy.header },
+      { field: 'footer_mjml', from: row.footer_mjml ?? '', to: seed.footer_mjml, old: legacy.footer },
+    ] as const;
+    return pairs
+      .filter((half) => half.from !== half.to && half.old.includes(shippedFingerprint(half.from)))
+      .map((half) => ({ key: row.key, ...half }));
+  });
+  const results = await Promise.all(
+    halves.map((half) =>
+      EmailFragmentModel.updateOne(
+        { key: half.key, [half.field]: half.from },
+        { $set: { [half.field]: half.to } }
+      ).catch((error) => {
+        logs.server.error('emailFragment', 'upgradeShippedFragments', { error, key: half.key });
+        return null;
+      })
+    )
+  );
+  const upgraded = results.filter((result) => result?.modifiedCount).length;
+  if (upgraded > 0) logs.server.info('emailFragment', 'upgradeShippedFragments', { upgraded });
 }
 
 /** The nine first, in the code's category order, then the custom ones by name. */
@@ -241,6 +288,7 @@ export const emailFragmentService = {
         return null;
       });
     }
+    await upgradeShippedFragments();
   },
 
   /**

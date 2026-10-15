@@ -450,7 +450,7 @@ export const adsService = {
     await mailAdvertiser(
       doc,
       approve ? 'ad-live' : 'ad-rejected',
-      approve ? 'Your Duncit ad is live 🎉' : 'About your Duncit ad'
+      approve ? 'Your Duncit ad is live' : 'About your Duncit ad'
     );
     return toPub(doc, pricing.currency_symbol);
   },

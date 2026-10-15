@@ -1,23 +1,13 @@
 import crypto from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
 import mjml2html from 'mjml';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { EmailTemplateModel } from './emailTemplate.model';
 import { TEMPLATE_DEFAULTS, type TemplateDefault } from './emailTemplate.defaults';
+import { LEGACY_TEMPLATE_FINGERPRINTS, shippedFingerprint } from './emailTemplate.legacy';
 import { emailFragmentService } from '@modules/content/emailFragment/emailFragment.service';
 import { CATEGORY_NOTE_KEY } from '@modules/content/emailFragment/emailFragment.defaults';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from '@services/email/template-categories';
-
-const DEFAULT_TEMPLATE_SUBJECTS: Record<string, string> = {
-  'email-verification-otp': 'Verify your Duncit email',
-  'login-otp': 'Your Duncit sign-in code',
-  'payment-release-approved': 'Payment release approved',
-  'venue-slot-request': 'New slot booking request — {{pod_title}}',
-  'pod-backout-spot-filled': 'Your spot was filled — {{pod_title}}',
-  'gift-card-received': '{{sender_name}} sent you a Duncit gift card 🎁',
-};
 
 /** Walk the MJML source and extract every {{ var }} reference. */
 export function detectVariables(mjml: string): string[] {
@@ -52,18 +42,19 @@ const referencedVars = (text: string): Set<string> => {
  * first turns that into one pass plus a replace per key that is really there.
  *
  * Substitution repeats while a value introduces a placeholder of its own — a
- * footer note is itself written as `{{t:email.footer.account}}` — so the
- * result no longer depends on the order the map was assembled in.
+ * footer note is itself written as `{{t:email.footer.account}}`, and a
+ * sentence of copy can carry `{{app_name}}` — so the result depends neither on
+ * the order the map was assembled in nor on whether that same placeholder was
+ * already filled somewhere else in the document on an earlier pass. The pass
+ * cap is what stops a value that names itself from looping.
  */
 export function applyVars(source: string, vars: Record<string, string>): string {
   let out = source;
-  const done = new Set<string>();
   for (let pass = 0; pass < 4; pass += 1) {
-    const pending = [...referencedVars(out)].filter((k) => k in vars && !done.has(k));
+    const pending = [...referencedVars(out)].filter((k) => k in vars);
     if (pending.length === 0) break;
     for (const k of pending) {
       out = out.replace(new RegExp(String.raw`{{\s*${escapeVarName(k)}\s*}}`, 'g'), vars[k] ?? '');
-      done.add(k);
     }
   }
   return out;
@@ -140,45 +131,79 @@ export async function renderMjml(
 }
 
 /**
- * Find a template by slug in the database. If it doesn't exist yet we fall
- * back to the on-disk MJML file so first-run sends still work before an admin
- * has visited the editor. The disk version is auto-imported to the DB on
- * first read so it can be edited in the UI from then on.
- */
-/**
- * Directory holding the on-disk MJML templates. This file lives at
- * <root>/modules/content/emailTemplate, so three `..` reach <root> (src in dev,
- * dist in prod) before descending into services/email/templates. The previous
- * two-`..` path resolved to <root>/modules/services/... which never existed, so
- * every first-read disk import silently failed.
- */
-const TEMPLATES_DIR = path.join(__dirname, '..', '..', '..', 'services', 'email', 'templates');
-
-/**
- * The templates that ship as code rather than as a file on disk (rule 28).
- * Checked BEFORE the disk, so a slug that exists in both is the catalogue's —
- * nothing is in both today, and the code copy is the one under review.
+ * Every template Duncit ships, by slug — all of them code (rule 28: there are
+ * no `.mjml` files on disk). Seeded into the database on boot and on a slug's
+ * first use; from then on the stored row is what Communications > Emails >
+ * Templates edits and what every send renders.
  */
 const CODE_DEFAULTS = new Map(TEMPLATE_DEFAULTS.map((tpl) => [tpl.slug, tpl]));
 
-/** The on-disk MJML for a slug, in the same shape the code catalogue uses. */
-function diskDefault(slug: string): TemplateDefault | null {
-  const filePath = path.join(TEMPLATES_DIR, `${slug}.mjml`);
-  if (!fs.existsSync(filePath)) return null;
-  return {
-    slug,
-    name: slug.replaceAll('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-    description: '',
-    subject: DEFAULT_TEMPLATE_SUBJECTS[slug] ?? `Duncit · ${slug}`,
-    mjml: fs.readFileSync(filePath, 'utf8'),
-  };
+/** The shipped default for a slug — the body a database outage falls back to. */
+export const shippedDefault = (slug: string): TemplateDefault | undefined => CODE_DEFAULTS.get(slug);
+
+/**
+ * A subject with its icons taken out, for recognising an untouched one.
+ * The shipped subjects used to end in an emoji; rule 22 took them out.
+ */
+const withoutIcons = (subject: string): string =>
+  subject.replaceAll(/\p{Extended_Pictographic}|️/gu, '').replaceAll(/\s+/g, ' ').trim();
+
+/**
+ * Is a stored subject one Duncit wrote rather than an admin — the shipped one
+ * with its old emoji, or the `Duncit · <slug>` placeholder the on-disk import
+ * gave every template that had no subject of its own.
+ */
+function isShippedSubject(slug: string, stored: string, shipped: string): boolean {
+  if (stored === shipped) return false;
+  return stored === `Duncit · ${slug}` || withoutIcons(stored) === withoutIcons(shipped);
 }
 
+interface StoredBody {
+  slug: string;
+  mjml: string;
+  subject: string;
+  variables?: { key: string }[];
+}
+
+/**
+ * Bring one stored row onto its shipped default, if nobody has edited it.
+ *
+ * `current` — already the shipped body. `edited` — not any body Duncit ever
+ * shipped, so an admin's, and left alone. `upgraded` — an old default, now
+ * replaced. The subject moves only when it is a shipped one too.
+ */
+async function upgradeRow(row: StoredBody): Promise<'current' | 'edited' | 'upgraded' | 'raced'> {
+  const seed = CODE_DEFAULTS.get(row.slug);
+  const current = shippedFingerprint(row.mjml);
+  if (!seed || current === shippedFingerprint(seed.mjml)) return 'current';
+  if (!LEGACY_TEMPLATE_FINGERPRINTS[row.slug]?.includes(current)) return 'edited';
+
+  const known = new Set((row.variables ?? []).map((variable) => variable.key));
+  const added = detectVariables(seed.mjml)
+    .filter((key) => !known.has(key))
+    .map((key) => ({ key }));
+  const subject = isShippedSubject(row.slug, row.subject, seed.subject) ? { subject: seed.subject } : {};
+  const result = await EmailTemplateModel.updateOne(
+    { slug: row.slug, mjml: row.mjml },
+    {
+      $set: { mjml: seed.mjml, ...subject },
+      ...(added.length ? { $push: { variables: { $each: added } } } : {}),
+    }
+  ).catch((error) => {
+    logs.server.error('emailTemplate', 'upgradeShippedDefaults', { error, slug: row.slug });
+    return null;
+  });
+  // Nothing modified means the body changed between the read and the write —
+  // an admin saved in that moment, or another instance got there first.
+  return result?.modifiedCount ? 'upgraded' : 'raced';
+}
+
+/** Find a template by slug, creating it from its shipped default on first use. */
 async function loadTemplate(slug: string) {
   const existing = await EmailTemplateModel.findOne({ slug });
   if (existing) return existing;
 
-  const seed = CODE_DEFAULTS.get(slug) ?? diskDefault(slug);
+  const seed = CODE_DEFAULTS.get(slug);
   if (!seed) return null;
   const created = await EmailTemplateModel.create({
     template_id: crypto.randomUUID(),
@@ -276,34 +301,59 @@ export const emailTemplateService = {
   },
 
   /**
-   * Import every shipped template into the DB so the DB-first render path never
-   * has to touch the filesystem in production. Idempotent: existing slugs are
-   * left untouched (so admin edits in the editor are never overwritten).
-   * Best-effort per template — one bad body must not block the rest.
+   * Create every shipped template the database does not have yet, then bring
+   * the untouched ones up to the current design. Idempotent, and best-effort
+   * per template — one bad body must not block the rest.
    *
-   * The code catalogue is seeded alongside the disk files rather than instead
-   * of them: the slugs in it were being SENT with no template to render, so
-   * waiting for a first send to import them is what produced a FAILED row and
-   * an email nobody received.
+   * Seeded at boot rather than on a slug's first send: a slug that was SENT
+   * with no template to render produced a FAILED row and an email nobody
+   * received.
    */
   async seedDefaults(): Promise<void> {
-    const onDisk = fs.existsSync(TEMPLATES_DIR)
-      ? fs
-          .readdirSync(TEMPLATES_DIR)
-          .filter((f) => f.endsWith('.mjml'))
-          .map((f) => f.replace(/\.mjml$/, ''))
-      : [];
-    const slugs = new Set([...CODE_DEFAULTS.keys(), ...onDisk]);
-    for (const slug of slugs) {
-      await loadTemplate(slug).catch((err) => {
-        logs.server.error('emailTemplate', 'seedDefaults', {
-          error: err,
-          slug,
-          msg: `${slug} failed`,
-        });
-        return null;
+    await Promise.all(
+      [...CODE_DEFAULTS.keys()].map((slug) =>
+        loadTemplate(slug).catch((err) => {
+          logs.server.error('emailTemplate', 'seedDefaults', {
+            error: err,
+            slug,
+            msg: `${slug} failed`,
+          });
+          return null;
+        })
+      )
+    );
+    await emailTemplateService.upgradeShippedDefaults();
+  },
+
+  /**
+   * Move every stored template still holding an OLD shipped body onto the new
+   * one — and leave every template an admin has edited exactly as it is.
+   *
+   * "Untouched" is decided by fingerprint, never by date: a stored body that
+   * matches one of `LEGACY_TEMPLATE_FINGERPRINTS[slug]` is a default nobody
+   * changed, so replacing it loses nothing. Anything else was typed by
+   * somebody in the editor, and the seed's promise is that it survives every
+   * deploy. The write is conditional on the body still being the one that was
+   * read, so two instances booting together cannot race an admin's save.
+   */
+  async upgradeShippedDefaults(): Promise<{ upgraded: string[]; kept: string[] }> {
+    const stored = await EmailTemplateModel.find(
+      { slug: { $in: [...CODE_DEFAULTS.keys()] } },
+      { slug: 1, mjml: 1, subject: 1, variables: 1 }
+    ).lean();
+    const outcomes = await Promise.all(
+      stored.map(async (row) => ({ slug: row.slug, outcome: await upgradeRow(row) }))
+    );
+    const upgraded = outcomes.filter((o) => o.outcome === 'upgraded').map((o) => o.slug);
+    const kept = outcomes.filter((o) => o.outcome === 'edited').map((o) => o.slug);
+    if (upgraded.length || kept.length) {
+      logs.server.info('emailTemplate', 'upgradeShippedDefaults', {
+        upgraded: upgraded.length,
+        kept_edited: kept,
+        msg: `${upgraded.length} template(s) moved to the new design; ${kept.length} edited by an admin and left as they are`,
       });
     }
+    return { upgraded, kept };
   },
 
   /**

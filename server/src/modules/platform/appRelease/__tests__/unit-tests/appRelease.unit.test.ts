@@ -4,7 +4,7 @@ jest.mock('@config/runtimeEnv', () => ({
 
 import { makeContext } from '@test/harness';
 import { mechanicalChangelog, buildChangelog, type ReleaseCommit } from '../../appRelease.changelog';
-import { buildReleaseMjml } from '../../appRelease.mjml';
+import { buildReleaseVars } from '../../appRelease.email';
 import { appReleaseResolvers } from '../../appRelease.resolver';
 
 const meta = { appName: 'Duncit', version: '1.4.19', rangeLabel: 'since v1.4.18' };
@@ -21,11 +21,11 @@ describe('appRelease changelog', () => {
   it('groups commits by conventional type and skips merges', () => {
     const cl = mechanicalChangelog(COMMITS, meta);
     const titles = cl.sections.map((s) => s.title);
-    expect(titles).toContain('✨ New Features');
-    expect(titles).toContain('🐛 Fixes');
-    expect(titles).toContain('🔧 Improvements');
-    expect(titles).toContain('📦 Other changes');
-    const features = cl.sections.find((s) => s.title === '✨ New Features');
+    expect(titles).toContain('New Features');
+    expect(titles).toContain('Fixes');
+    expect(titles).toContain('Improvements');
+    expect(titles).toContain('Other changes');
+    const features = cl.sections.find((s) => s.title === 'New Features');
     expect(features?.items).toEqual(['auth: Add forgot-password flow']);
     // Merge commit is excluded from every bucket.
     expect(JSON.stringify(cl.sections)).not.toContain('Merge pull request');
@@ -44,10 +44,8 @@ describe('appRelease changelog', () => {
   });
 });
 
-describe('appRelease MJML', () => {
-  const mjml = buildReleaseMjml({
-    appName: 'Duncit',
-    logoUrl: 'https://cdn.example/logo.png',
+describe('appRelease template vars', () => {
+  const vars = buildReleaseVars({
     version: '1.4.19',
     buildName: 'duncit-18-july-2026-build-1 V1.4.19',
     apkUrl: 'https://ik.imagekit.io/x/app-builds/duncit.apk',
@@ -61,18 +59,35 @@ describe('appRelease MJML', () => {
     deletions: 88,
   });
 
-  it('embeds the version, download link and stats', () => {
-    expect(mjml).toContain('<mjml>');
-    expect(mjml).toContain('v1.4.19');
-    expect(mjml).toContain('https://ik.imagekit.io/x/app-builds/duncit.apk');
-    expect(mjml).toContain('Download APK');
-    expect(mjml).toContain('63.4 MB');
-    expect(mjml).toContain('12 files changed');
+  it('fills the version, download link, size and stats', () => {
+    expect(vars.version).toBe('1.4.19');
+    expect(vars.apk_url).toBe('https://ik.imagekit.io/x/app-builds/duncit.apk');
+    expect(vars.apk_size).toBe('63.4 MB');
+    expect(vars.files_changed).toBe('12');
+    expect(vars.insertions).toBe('+340');
+    expect(vars.deletions).toBe('-88');
+    expect(vars.commits_count).toBe('1');
   });
 
   it('escapes commit text so it cannot break the markup', () => {
-    expect(mjml).toContain('&lt;script&gt;');
-    expect(mjml).not.toContain('<script>alert(1)</script>');
+    expect(vars.commits_html).toContain('&lt;script&gt;');
+    expect(vars.commits_html).not.toContain('<script>alert(1)</script>');
+  });
+
+  it('shows a dash for stats the pipeline did not report', () => {
+    const bare = buildReleaseVars({
+      version: '1.4.19',
+      buildName: 'b',
+      apkUrl: 'u',
+      apkSizeMb: 0,
+      builtOn: 'now',
+      changelog: mechanicalChangelog([], meta),
+      commits: [],
+    });
+    expect(bare.apk_size).toBe('APK');
+    expect(bare.files_changed).toBe('—');
+    expect(bare.range_label).toBe('—');
+    expect(bare.commits_html).toBe('—');
   });
 });
 

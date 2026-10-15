@@ -28,20 +28,20 @@ describe('emailTemplateService integration', () => {
     expect(await EmailTemplateModel.countDocuments()).toBe(0);
   });
 
-  it('returns null for an unknown slug with no disk fallback', async () => {
+  it('returns null for an unknown slug with no shipped default', async () => {
     expect(await emailTemplateService.bySlug('totally-unknown-slug')).toBeNull();
   });
 
-  it('imports a real on-disk template by slug (disk-fallback path resolves)', async () => {
-    // Guards the loadTemplate path fix: the .mjml must resolve from disk and be
-    // auto-imported to the DB (this is what makes the prod reset-OTP email work).
+  it('seeds a shipped template by slug on first read', async () => {
+    // The shipped default must be created in the DB on its first read
+    // (this is what makes the reset-OTP email work on a fresh database).
     const tpl = await emailTemplateService.bySlug('password-reset-otp');
     expect(tpl).not.toBeNull();
     expect(tpl?.mjml).toContain('{{otp}}');
     expect(await EmailTemplateModel.countDocuments({ slug: 'password-reset-otp' })).toBe(1);
   });
 
-  it('seedDefaults imports every on-disk template idempotently', async () => {
+  it('seedDefaults seeds every shipped template idempotently', async () => {
     await emailTemplateService.seedDefaults();
     const first = await EmailTemplateModel.countDocuments();
     expect(first).toBeGreaterThan(0);

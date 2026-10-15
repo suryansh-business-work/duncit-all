@@ -1,4 +1,19 @@
-import { LIVE, PAUSED, STOPPED, callout, closing, cta, detailRows, intro, shell, type Tone } from './mjml';
+import {
+  LIVE,
+  PAUSED,
+  STOPPED,
+  callout,
+  closing,
+  cta,
+  detailRows,
+  htmlBlock,
+  intro,
+  introBlock,
+  paragraph,
+  shell,
+  text,
+  type Tone,
+} from './mjml';
 import { v, type EmailDef, type EmailVar } from './catalogue.types';
 
 /**
@@ -35,12 +50,10 @@ const REMINDER_VARS: readonly EmailVar[] = [
 ];
 
 /** The advice, drawn by the server as plain HTML — this row only places it. */
-const ADVICE_BLOCK = `    <mj-section background-color="#ffffff" padding="8px 20px">
-      <mj-column>
-        <mj-text color="#555555"><strong>{{t:email.storeRelease.adviceLabel}}</strong></mj-text>
-        <mj-text color="#555555">{{advice_html}}</mj-text>
-      </mj-column>
-    </mj-section>`;
+const ADVICE_BLOCK = [
+  paragraph('<strong>{{t:email.storeRelease.adviceLabel}}</strong>'),
+  htmlBlock('advice_html'),
+].join('\n');
 
 const DETAIL_ROWS = detailRows([
   { labelKey: 'email.storeRelease.storeLabel', valueVar: 'store_label' },
@@ -61,8 +74,42 @@ const body = (copyKey: string, tone: Tone) =>
       ADVICE_BLOCK,
       cta('email.storeRelease.openReleases', 'releases_url'),
       closing('email.storeRelease.help'),
-    ].join('\n')
+    ].join('\n'),
+    `${copyKey}.body`
   );
+
+/**
+ * A new Android build for the testers, from `sendAppReleaseEmail`.
+ *
+ * The changelog and the commit list are drawn by the server (`appRelease.email`)
+ * as escaped HTML, because their length is the build's; everything around them
+ * is this body, so the copy is translatable and the layout is editable in
+ * Communications > Emails > Templates like every other email.
+ */
+const RELEASE_BODY = shell(
+  'email.appRelease.title',
+  [
+    introBlock({
+      eyebrow: '{{t:email.appRelease.eyebrow}}',
+      title: '{{t:email.appRelease.title}}',
+      body: '{{t:email.appRelease.body}}',
+    }),
+    cta('email.appRelease.download', 'apk_url'),
+    text('email.appRelease.installNote'),
+    paragraph('<strong>{{t:email.appRelease.whatsNew}}</strong>'),
+    htmlBlock('changelog_html'),
+    paragraph('<strong>{{t:email.appRelease.commitsTitle}}</strong>'),
+    htmlBlock('commits_html'),
+    detailRows([
+      { labelKey: 'email.appRelease.filesChanged', valueVar: 'files_changed' },
+      { labelKey: 'email.appRelease.insertions', valueVar: 'insertions' },
+      { labelKey: 'email.appRelease.deletions', valueVar: 'deletions' },
+      { labelKey: 'email.appRelease.range', valueVar: 'range_label' },
+    ]),
+    closing('email.appRelease.builtOn'),
+  ].join('\n'),
+  'email.appRelease.body'
+);
 
 export const APP_BUILD_EMAILS: readonly EmailDef[] = [
   {
@@ -100,5 +147,30 @@ export const APP_BUILD_EMAILS: readonly EmailDef[] = [
     footerNote: FOOTER_NOTE,
     vars: REMINDER_VARS,
     mjml: body('email.storeReleaseReminder', PAUSED),
+  },
+  {
+    slug: 'app-release-build',
+    name: 'App Release Build',
+    description: 'Tells the release list a new Android build is ready to install, with its changelog, its commits and a download link.',
+    audience: 'ADMIN',
+    category: 'internal',
+    fires: 'A Tech admin sends a build’s release email from App Builds, or the build pipeline does',
+    subject: '{{app_name}} v{{version}} — new build ready to test',
+    footerNote: '{{t:email.appRelease.footer}}',
+    vars: [
+      v('version', 'The version being released.', '1.80.3'),
+      v('build_name', 'The build’s own name.', 'duncit-18-july-2026-build-1 V1.80.3'),
+      v('apk_size', 'The APK’s size, already formatted.', '63.4 MB'),
+      v('apk_url', 'The direct install link.', 'https://ik.imagekit.io/x/app-builds/duncit.apk'),
+      v('changelog_html', 'The grouped changelog, drawn by the server as HTML.', '<p>12 changes since v1.80.2</p>'),
+      v('commits_count', 'How many commits the build carries.', '12'),
+      v('commits_html', 'The commit list, drawn by the server as HTML.', '<table>…</table>'),
+      v('files_changed', 'Files changed in the range. A dash when unknown.', '42'),
+      v('insertions', 'Lines added. A dash when unknown.', '+340'),
+      v('deletions', 'Lines removed. A dash when unknown.', '-88'),
+      v('range_label', 'The commit range. A dash when unknown.', 'since v1.80.2'),
+      v('built_on', 'When the build was made.', 'Sat, 18 Jul 2026 10:00:00 GMT'),
+    ],
+    mjml: RELEASE_BODY,
   },
 ];

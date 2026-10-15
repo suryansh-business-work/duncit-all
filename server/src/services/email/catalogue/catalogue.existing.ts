@@ -1,12 +1,16 @@
 import { describeEmail, v, type EmailDef, type EmailVar } from './catalogue.types';
+import { ACCOUNT_BODIES } from './catalogue.bodies.account';
+import { BOOKING_BODIES } from './catalogue.bodies.bookings';
+import { ONBOARDING_BODIES } from './catalogue.bodies.onboarding';
 
 /**
- * The templates that already shipped — metadata only, no body.
+ * The templates that already shipped, and the bodies they ship with.
  *
- * Their MJML is an on-disk `.mjml` file (or, for the eight account-status ones,
- * `emailTemplate.defaults.ts`), and that stays the source of the body: seeding
- * a second copy from here would silently replace whatever an admin last saved
- * in the editor. What these rows add is the part that never existed anywhere —
+ * Their MJML used to be an on-disk `.mjml` file; it is now a `catalogue.bodies.*`
+ * entry (or, for the account-status ones, `emailTemplate.defaults.ts`), joined
+ * to its row at the bottom of this file. As with every seeded template, the
+ * body is what a fresh database starts with — once seeded, the row in
+ * Communications > Emails > Templates is the admin's. What these rows add is
  * WHO the email is for, WHAT makes it fire, and WHICH variables it fills.
  *
  * That last one is the reason this file exists at all. `EmailTemplate.variables`
@@ -53,7 +57,7 @@ const statusVars = (nameVar: string, nameDesc: string, valueVar: string, valueDe
   v('status', 'The new state, as a word — `active` or `deactivated`.', 'deactivated'),
 ];
 
-export const EXISTING_EMAILS: readonly EmailDef[] = [
+const EXISTING_ROWS: readonly EmailDef[] = [
   // --- Sign-up, account and one-time codes -------------------------------
   describeEmail({
     slug: 'welcome',
@@ -62,7 +66,7 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
     audience: 'USER',
     category: 'transactional',
     fires: 'An account is created — email signup, Google signup or the admin form',
-    subject: 'Welcome to Duncit 🎉',
+    subject: 'Welcome to Duncit',
     footerNote: '',
     vars: [v('name', 'The new member’s first name.', 'Aarav')],
   }),
@@ -310,7 +314,7 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
     audience: 'USER',
     category: 'transactional',
     fires: 'A gift card is bought for this address',
-    subject: '{{sender_name}} sent you a Duncit gift card 🎁',
+    subject: '{{sender_name}} sent you a Duncit gift card',
     footerNote: '',
     vars: [
       v('recipient_name', 'Who the card is for.', 'Aarav'),
@@ -367,6 +371,18 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
       v('approved_amount', 'What was approved.', '2400.00'),
       v('reason', 'The approver’s note.', ''),
     ],
+  }),
+  describeEmail({
+    slug: 'pod-calculator-report',
+    name: 'Pod Profit Report',
+    description:
+      'A Pod Profit Calculator report emailed from the Finance console, with the full calculation attached as a PDF.',
+    audience: 'ADMIN',
+    category: 'internal',
+    fires: 'Somebody on the Finance team emails a saved calculation',
+    subject: 'Pod profit report - {{calculation_name}}',
+    footerNote: '',
+    vars: [v('calculation_name', 'The saved calculation’s name.', 'Noida weekend badminton')],
   }),
 
   // --- Partner onboarding, the older meeting/interview flow -----------------
@@ -449,7 +465,7 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
     audience: 'HOST',
     category: 'notification',
     fires: 'Nothing sends this any more — the per-party template does',
-    subject: 'Your Duncit {{kind}} onboarding is approved 🎉',
+    subject: 'Your Duncit {{kind}} onboarding is approved',
     footerNote: '',
     vars: [
       v('name', 'The applicant’s first name.', 'Meera'),
@@ -669,7 +685,7 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
     audience: 'HOST',
     category: 'notification',
     fires: 'A partner role is granted to an account',
-    subject: 'Your Duncit {{partner_type}} access is live 🎉',
+    subject: 'Your Duncit {{partner_type}} access is live',
     footerNote: '',
     vars: [
       v('name', 'The partner’s first name.', 'Meera'),
@@ -722,7 +738,7 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
     audience: 'ADMIN',
     category: 'internal',
     fires: 'A Jump-to-Portal access request is approved',
-    subject: 'Your Duncit {{portal_name}} portal access is live 🎉',
+    subject: 'Your Duncit {{portal_name}} portal access is live',
     footerNote: '',
     vars: [
       v('name', 'The requester’s first name.', 'Suryansh'),
@@ -825,3 +841,25 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
     ],
   }),
 ];
+
+/** Every body moved out of a `.mjml` file, by slug. */
+const MOVED_BODIES: Readonly<Record<string, string>> = {
+  ...ACCOUNT_BODIES,
+  ...BOOKING_BODIES,
+  ...ONBOARDING_BODIES,
+};
+
+/**
+ * A body with no row to carry it would never be seeded — the email would send
+ * "Template does not exist" with nothing in the code to say why. Thrown at
+ * module load, like a duplicate slug, because there is no right fallback.
+ */
+const ROW_SLUGS = new Set(EXISTING_ROWS.map((row) => row.slug));
+for (const slug of Object.keys(MOVED_BODIES)) {
+  if (!ROW_SLUGS.has(slug)) throw new Error(`Email body "${slug}" has no catalogue row`);
+}
+
+export const EXISTING_EMAILS: readonly EmailDef[] = EXISTING_ROWS.map((row) => {
+  const mjml = MOVED_BODIES[row.slug];
+  return mjml ? { ...row, mjml } : row;
+});

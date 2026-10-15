@@ -1,9 +1,8 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { emailTranslationVars, recipientLocale } from './email-i18n';
 import {
   emailTemplateService,
   renderTemplateBody,
+  shippedDefault,
 } from '@modules/content/emailTemplate/emailTemplate.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { logs } from '@observability/log';
@@ -108,7 +107,7 @@ function swapLegacyLogo(html: string, brandLogoUrl: string): string {
  * than one extra variable.
  */
 async function chromeVars(to?: string): Promise<Record<string, string>> {
-  const [{ supportEmail, websiteUrl, appUrl }, brand] = await Promise.all([
+  const [{ supportEmail, websiteUrl, appUrl, adminUrl }, brand] = await Promise.all([
     getUrlConfigs(),
     getBrand(),
   ]);
@@ -120,6 +119,10 @@ async function chromeVars(to?: string): Promise<Record<string, string>> {
     // template that wanted one was otherwise forced to take it as a caller
     // variable that forty call sites would each have had to remember.
     app_url: appUrl,
+    // The admin console, for the access emails that send someone there. It
+    // was a literal `https://admin.duncit.com` in their MJML, which pointed a
+    // staging admin at production.
+    admin_url: adminUrl,
     app_name: brand.appName,
     year: String(new Date().getFullYear()),
     unsubscribe_url: mailPreferenceUrl(appUrl, to),
@@ -183,9 +186,9 @@ async function deliver(
 }
 
 /**
- * Render a template by name. Tries the DB first (which auto-imports the disk
- * file on first read), so admin edits in the email-template editor take
- * effect immediately. Falls back to direct disk read if Mongo is unreachable.
+ * Render a template by name. Tries the DB first (which seeds the shipped
+ * default on first read), so admin edits in the email-template editor take
+ * effect immediately. Falls back to the shipped default if Mongo is unreachable.
  */
 async function renderTemplate(
   name: string,
@@ -199,25 +202,22 @@ async function renderTemplate(
     // because the log row says the message went out and the reason is gone.
     return { subject: r.subject, html: r.html, errors: r.errors };
   } catch (error) {
-    // Fallback: the database could not answer, so read the file.
+    // Fallback: the database could not answer, so render the shipped default.
     //
-    // It goes through the SAME renderer as the normal path. It used to call
-    // mjml2html directly, which quietly dropped the header/footer wrap and the
-    // footer sentence — and since the on-disk templates became bodies with no
-    // chrome of their own, that fallback started producing emails with no logo
-    // and no footer at all. It also swallowed the reason, so nobody could see
-    // it was happening.
-    const filePath = path.join(__dirname, 'templates', `${name}.mjml`);
-    if (!fs.existsSync(filePath)) throw error;
+    // It goes through the SAME renderer as the normal path, so the header/
+    // footer wrap and the footer sentence are not quietly dropped — and the
+    // reason is logged, so nobody has to guess why an email looked different.
+    const seed = shippedDefault(name);
+    if (!seed) throw error;
 
-    logs.server.warn('email', 'template-disk-fallback', {
+    logs.server.warn('email', 'template-default-fallback', {
       template: name,
       error,
-      msg: `Rendering "${name}" from disk — the database copy could not be read`,
+      msg: `Rendering "${name}" from its shipped default — the database copy could not be read`,
     });
 
     const { html, errors } = await renderTemplateBody({
-      mjml: fs.readFileSync(filePath, 'utf8'),
+      mjml: seed.mjml,
       fragment_key: TEMPLATE_CATEGORIES[name] ?? null,
       footer_note: TEMPLATE_FOOTER_NOTES[name] ?? '',
       vars,
@@ -622,7 +622,7 @@ export function sendUnsubscribeConfirmationEmail(opts: { to: string }) {
 export function sendWelcomeEmail(to: string, name: string) {
   return sendEmail({
     to,
-    subject: 'Welcome to Duncit 🎉',
+    subject: 'Welcome to Duncit',
     template: 'welcome',
     category: 'transactional',
     vars: { name },
@@ -729,7 +729,7 @@ export function sendPartnerAccessGrantedEmail(opts: {
 }) {
   return sendEmail({
     to: opts.to,
-    subject: `Your Duncit ${opts.partner_type} access is live 🎉`,
+    subject: `Your Duncit ${opts.partner_type} access is live`,
     template: 'partner-access-granted',
     category: 'notification',
     vars: {
@@ -751,7 +751,7 @@ export function sendPortalAccessApprovedEmail(opts: {
 }) {
   return sendEmail({
     to: opts.to,
-    subject: `Your Duncit ${opts.portal_name} portal access is live 🎉`,
+    subject: `Your Duncit ${opts.portal_name} portal access is live`,
     template: 'portal-access-approved',
     category: 'internal',
     vars: {
@@ -1108,7 +1108,7 @@ export function sendGiftCardReceivedEmail(opts: {
 }) {
   return sendEmail({
     to: opts.to,
-    subject: `${opts.sender_name} sent you a Duncit gift card 🎁`,
+    subject: `${opts.sender_name} sent you a Duncit gift card`,
     template: 'gift-card-received',
     category: 'transactional',
     vars: opts,
@@ -1335,7 +1335,7 @@ export function sendMeetingUpdatedEmail(opts: {
 export function sendMeetingApprovedEmail(opts: { to: string; name: string; kind: string }) {
   return sendEmail({
     to: opts.to,
-    subject: `Your Duncit ${opts.kind} onboarding is approved 🎉`,
+    subject: `Your Duncit ${opts.kind} onboarding is approved`,
     template: 'meeting-approved',
     category: 'notification',
     vars: opts,

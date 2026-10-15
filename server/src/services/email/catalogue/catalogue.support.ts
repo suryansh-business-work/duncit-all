@@ -262,7 +262,7 @@ export const COMMERCE_EMAILS: readonly EmailDef[] = [
     audience: 'ECOMM',
     category: 'notification',
     fires: 'An ad request is approved and its run starts',
-    subject: 'Your ad is live 🎉',
+    subject: 'Your ad is live',
     footerNote: FOOTER.ads,
     vars: [
       v('name', 'The advertiser’s first name.', 'Ananya'),

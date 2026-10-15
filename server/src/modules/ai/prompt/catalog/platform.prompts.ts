@@ -105,7 +105,7 @@ export const PLATFORM_PROMPTS = [
       'Rewrite terse commit messages into clear plain-English lines; drop internal noise (chore/ci/build/test) unless it is user-visible.',
       'Return STRICT JSON only, no markdown, exactly this shape:',
       '{ "headline": string, "intro": string, "sections": [{ "title": string, "items": string[] }] }',
-      'Use at most 5 sections. Keep each bullet under 120 characters. Section titles may start with a relevant emoji.',
+      'Use at most 5 sections. Keep each bullet under 120 characters. Section titles are plain words — never an emoji or any other symbol.',
     ].join('\n'),
   },
   {

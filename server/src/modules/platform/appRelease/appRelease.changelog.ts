@@ -26,14 +26,14 @@ export interface ChangelogMeta {
   rangeLabel?: string | null;
 }
 
-/** Conventional-commit type → the section it belongs under (title includes an emoji). */
+/** Conventional-commit type → the section it belongs under. */
 const TYPE_SECTIONS: { title: string; types: string[] }[] = [
-  { title: '✨ New Features', types: ['feat'] },
-  { title: '🐛 Fixes', types: ['fix'] },
-  { title: '⚡ Performance', types: ['perf'] },
-  { title: '🔧 Improvements', types: ['refactor', 'chore', 'build', 'ci', 'docs', 'style', 'test'] },
+  { title: 'New Features', types: ['feat'] },
+  { title: 'Fixes', types: ['fix'] },
+  { title: 'Performance', types: ['perf'] },
+  { title: 'Improvements', types: ['refactor', 'chore', 'build', 'ci', 'docs', 'style', 'test'] },
 ];
-const OTHER_TITLE = '📦 Other changes';
+const OTHER_TITLE = 'Other changes';
 
 const CONVENTIONAL_RE = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/;
 

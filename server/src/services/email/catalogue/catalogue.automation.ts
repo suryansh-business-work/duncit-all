@@ -1,4 +1,4 @@
-import { shell } from './mjml';
+import { introBlock, shell } from './mjml';
 import { v, type EmailDef } from './catalogue.types';
 
 /**
@@ -11,13 +11,11 @@ import { v, type EmailDef } from './catalogue.types';
  * too; this one exists so the first flow does not need a Tech ticket first.
  */
 
-const BODY = `    <mj-section background-color="#ffffff" padding="24px 20px 8px 20px">
-      <mj-column>
-        <mj-text font-size="22px" font-weight="bold" color="#222222">{{heading}}</mj-text>
-        <mj-text color="#555555">{{t:email.common.greeting}} {{name}},</mj-text>
-        <mj-text color="#555555" line-height="1.6">{{body}}</mj-text>
-      </mj-column>
-    </mj-section>`;
+const BODY = introBlock({
+  title: '{{heading}}',
+  nameVar: 'name',
+  body: '<div style="white-space:pre-line">{{body}}</div>',
+});
 
 export const AUTOMATION_EMAILS: readonly EmailDef[] = [
   {

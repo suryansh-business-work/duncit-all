@@ -1738,6 +1738,8 @@ export type AppSettings = {
   pod_feedback_delay_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its attendees are reminded over email and WhatsApp. */
   pod_reminder_lead_hours: Scalars['Int']['output'];
+  /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
+  pod_sameday_reminder_hours: Scalars['Int']['output'];
   /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -12034,6 +12036,8 @@ export type MeetingAvailability = {
   end_time: Scalars['String']['output'];
   horizon_days: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  /** Hours before a scheduled meeting the applicant is reminded of it. 0 is off. */
+  reminder_lead_hours: Scalars['Int']['output'];
   slot_minutes: Scalars['Int']['output'];
   start_time: Scalars['String']['output'];
   timezone_offset_minutes: Scalars['Int']['output'];
@@ -12044,6 +12048,8 @@ export type MeetingAvailability = {
 export type MeetingAvailabilityInput = {
   end_time?: InputMaybe<Scalars['String']['input']>;
   horizon_days?: InputMaybe<Scalars['Int']['input']>;
+  /** Hours before a scheduled meeting the applicant is reminded of it (0-72, 0 is off). */
+  reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   slot_minutes?: InputMaybe<Scalars['Int']['input']>;
   start_time?: InputMaybe<Scalars['String']['input']>;
   timezone_offset_minutes?: InputMaybe<Scalars['Int']['input']>;
@@ -37585,6 +37591,8 @@ export type UpdateAppSettingsInput = {
   pod_feedback_delay_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its attendees are reminded (1-8760). */
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */
+  pod_sameday_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
   /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;

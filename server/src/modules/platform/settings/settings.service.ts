@@ -76,6 +76,10 @@ const DEFAULT_VENUE_SLOT_REMINDER_LEAD_HOURS = 48;
  * An hour, so the ask lands after people have left rather than while the last
  * game is still on. */
 const DEFAULT_POD_FEEDBACK_DELAY_HOURS = 1;
+/** Hours before a pod starts when its attendees get the short same-day
+ * reminder. Three: enough to leave on time, close enough that it is about
+ * today. The day-before reminder above is the one people plan around. */
+const DEFAULT_POD_SAMEDAY_REMINDER_HOURS = 3;
 /** Days of free slots a venue is offered when accepting an Auto Pod — short,
  * because the host and the club admin still need time to enrol before the date. */
 const DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS = 7;
@@ -150,6 +154,13 @@ const cleanPodFeedbackDelayHours = (value: unknown) => {
   return Number.isFinite(n) ? Math.min(8760, Math.max(0, n)) : DEFAULT_POD_FEEDBACK_DELAY_HOURS;
 };
 
+/** Same-day reminder, clamped to 0–23 hours. 0 is legal (off), so like the
+ * feedback delay it cannot use the `|| DEFAULT` idiom. */
+const cleanPodSamedayReminderHours = (value: unknown) => {
+  const n = Math.floor(Number(value ?? Number.NaN));
+  return Number.isFinite(n) ? Math.min(23, Math.max(0, n)) : DEFAULT_POD_SAMEDAY_REMINDER_HOURS;
+};
+
 /** Auto Pod slot window, clamped to 1 – 60 days. */
 const cleanAutoPodSlotWindowDays = (value: unknown) =>
   Math.min(60, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS));
@@ -218,6 +229,7 @@ const toAppPub = (d: any) => ({
     d?.venue_slot_reminder_lead_hours,
   ),
   pod_feedback_delay_hours: cleanPodFeedbackDelayHours(d?.pod_feedback_delay_hours),
+  pod_sameday_reminder_hours: cleanPodSamedayReminderHours(d?.pod_sameday_reminder_hours),
   pod_cancel_refund_hold: d?.pod_cancel_refund_hold ?? DEFAULT_POD_CANCEL_REFUND_HOLD,
   pod_auto_cancel_enabled: d?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
   pod_auto_cancel_lead_hours:
@@ -618,6 +630,7 @@ type AppSettingsUpdateInput = {
   pod_reminder_lead_hours?: number;
   venue_slot_reminder_lead_hours?: number;
   pod_feedback_delay_hours?: number;
+  pod_sameday_reminder_hours?: number;
   pod_auto_cancel_enabled?: boolean;
   pod_auto_cancel_lead_hours?: number;
   pod_cancel_risk_window_hours?: number;
@@ -668,6 +681,7 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["pod_reminder_lead_hours", cleanPodReminderLeadHours],
   ["venue_slot_reminder_lead_hours", cleanVenueSlotReminderLeadHours],
   ["pod_feedback_delay_hours", cleanPodFeedbackDelayHours],
+  ["pod_sameday_reminder_hours", cleanPodSamedayReminderHours],
   ["pod_auto_cancel_lead_hours", cleanPodAutoCancelLeadHours],
   ["pod_cancel_risk_window_hours", cleanPodCancelRiskWindowHours],
   ["pod_cancel_risk_alert_hours", cleanPodCancelRiskAlertHours],
@@ -757,6 +771,7 @@ export const settingsService = {
     pod_reminder_lead_hours: number;
     venue_slot_reminder_lead_hours: number;
     pod_feedback_delay_hours: number;
+    pod_sameday_reminder_hours: number;
     complete_reminder_hours: number;
     complete_timeout_hours: number;
   }> {
@@ -767,6 +782,7 @@ export const settingsService = {
         doc?.venue_slot_reminder_lead_hours,
       ),
       pod_feedback_delay_hours: cleanPodFeedbackDelayHours(doc?.pod_feedback_delay_hours),
+      pod_sameday_reminder_hours: cleanPodSamedayReminderHours(doc?.pod_sameday_reminder_hours),
       complete_reminder_hours: cleanPodCompleteReminderHours(doc?.pod_complete_reminder_hours),
       complete_timeout_hours: cleanPodCompleteTimeoutHours(doc?.pod_complete_timeout_hours),
     };

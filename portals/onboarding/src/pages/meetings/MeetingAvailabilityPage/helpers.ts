@@ -21,6 +21,7 @@ export const AVAILABILITY = gql`
       slot_minutes
       horizon_days
       timezone_offset_minutes
+      reminder_lead_hours
     }
   }
 `;
@@ -33,6 +34,7 @@ export const UPDATE = gql`
       end_time
       slot_minutes
       horizon_days
+      reminder_lead_hours
     }
   }
 `;

@@ -203,7 +203,7 @@ function slotLabelTz(value: string | null | undefined, offsetMin: number): strin
  * back blank — the funnel refuses a blank value, which beats billing for a
  * message reading "Invalid Date".
  */
-function slotPartsTz(value: string | null | undefined, offsetMin: number): { date: string; time: string } {
+export function slotPartsTz(value: string | null | undefined, offsetMin: number): { date: string; time: string } {
   if (!value) return { date: '', time: '' };
   const shifted = new Date(new Date(value).getTime() + offsetMin * 60_000);
   return {
@@ -452,7 +452,12 @@ const pubAvailability = (doc: MeetingAvailabilityDoc) => ({
   slot_minutes: doc.slot_minutes,
   horizon_days: doc.horizon_days,
   timezone_offset_minutes: doc.timezone_offset_minutes,
+  reminder_lead_hours: doc.reminder_lead_hours ?? DEFAULT_MEETING_REMINDER_LEAD_HOURS,
 });
+
+/** Hours before a scheduled meeting its applicant is reminded, until the
+ * Onboarding portal saves its own value. */
+export const DEFAULT_MEETING_REMINDER_LEAD_HOURS = 2;
 
 /**
  * Expand the availability config into concrete future slots. All math is done
@@ -726,6 +731,7 @@ export const meetingService = {
     slot_minutes?: number | null;
     horizon_days?: number | null;
     timezone_offset_minutes?: number | null;
+    reminder_lead_hours?: number | null;
   }) {
     const doc = (await MeetingAvailabilityModel.findOne()) ?? (await MeetingAvailabilityModel.create({}));
     if (input.week_days != null) {
@@ -755,6 +761,10 @@ export const meetingService = {
       doc.horizon_days = input.horizon_days;
     }
     if (input.timezone_offset_minutes != null) doc.timezone_offset_minutes = input.timezone_offset_minutes;
+    if (input.reminder_lead_hours != null) {
+      assertRange(input.reminder_lead_hours, 0, 72, 'Reminder must be between 0 and 72 hours before');
+      doc.reminder_lead_hours = input.reminder_lead_hours;
+    }
     await doc.save();
     return pubAvailability(doc);
   },

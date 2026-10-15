@@ -48,6 +48,8 @@ export const settingsTypeDefs = gql`
     venue_slot_reminder_lead_hours: Int!
     "How many hours after a pod ends its guests, host, venue and club admins are asked how it went. 0 asks the moment it ends."
     pod_feedback_delay_hours: Int!
+    "How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off."
+    pod_sameday_reminder_hours: Int!
     "Whether a cancellation holds its refunds until the pod's start time instead of paying them out at once. Revoking before the start cancels a held refund; the release sweep pays it once the start passes."
     pod_cancel_refund_hold: Boolean!
     "Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy."
@@ -158,6 +160,8 @@ export const settingsTypeDefs = gql`
     venue_slot_reminder_lead_hours: Int
     "How many hours after a pod ends everyone who was there is asked how it went (0-8760)."
     pod_feedback_delay_hours: Int
+    "How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off)."
+    pod_sameday_reminder_hours: Int
     "Whether a cancellation holds its refunds until the pod's start time instead of paying them out at once."
     pod_cancel_refund_hold: Boolean
     "Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy."

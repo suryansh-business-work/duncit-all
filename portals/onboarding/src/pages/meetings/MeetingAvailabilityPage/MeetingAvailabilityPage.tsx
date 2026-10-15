@@ -30,6 +30,7 @@ export default function MeetingAvailabilityPage() {
   const [endTime, setEndTime] = useState('19:00');
   const [slotMinutes, setSlotMinutes] = useState('30');
   const [horizonDays, setHorizonDays] = useState('7');
+  const [reminderHours, setReminderHours] = useState('2');
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const av = data?.meetingAvailability;
@@ -40,6 +41,7 @@ export default function MeetingAvailabilityPage() {
     setEndTime(av.end_time ?? '19:00');
     setSlotMinutes(String(av.slot_minutes ?? 30));
     setHorizonDays(String(av.horizon_days ?? 7));
+    setReminderHours(String(av.reminder_lead_hours ?? 2));
   }, [av]);
 
   const toggleDay = (day: number) =>
@@ -56,6 +58,7 @@ export default function MeetingAvailabilityPage() {
             end_time: endTime,
             slot_minutes: Number(slotMinutes) || 30,
             horizon_days: Number(horizonDays) || 7,
+            reminder_lead_hours: Math.max(0, Math.floor(Number(reminderHours) || 0)),
           },
         },
       });
@@ -143,6 +146,18 @@ export default function MeetingAvailabilityPage() {
                 }}
               />
             </Stack>
+            <TextField
+              size="small"
+              type="number"
+              label={t('onboarding.meetings.reminderLeadHours')}
+              helperText={t('onboarding.meetings.reminderLeadHoursHelp')}
+              value={reminderHours}
+              onChange={(e) => setReminderHours(e.target.value)}
+              fullWidth
+              slotProps={{
+                htmlInput: { min: 0, max: 72 }
+              }}
+            />
             {saveError && <Alert severity="error">{saveError}</Alert>}
             <Stack direction="row" sx={{
               justifyContent: "flex-end"

@@ -198,6 +198,9 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       approveDeny: 'Approve / Deny',
       approveOrDenyOnboarding: 'Approve or deny onboarding',
       bookingHorizonDays: 'Booking horizon (days)',
+      reminderLeadHours: 'Remind the applicant (hours before)',
+      reminderLeadHoursHelp:
+        'Applicants get an email and WhatsApp reminder with the meeting link this many hours before a scheduled meeting. 0 turns the reminder off.',
       cancelled: 'Cancelled',
       cancelMeeting: 'Cancel meeting',
       cancelReason: 'Cancel reason',

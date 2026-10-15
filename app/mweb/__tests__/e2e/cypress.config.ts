@@ -45,6 +45,27 @@ export default defineConfig({
       GRAPHQL_URL: process.env.CYPRESS_GRAPHQL_URL || 'https://staging.server.duncit.com/graphql',
       // The Finance portal, where specs/10-pod-payout.cy.ts approves the payment release.
       FINANCE_URL: process.env.CYPRESS_FINANCE_URL || 'http://localhost:2008',
+      // The public websites and the pet store (specs/ui/websites/), each served on
+      // its own port from a build pointed at staging (see the workflow notes).
+      MAIN_SITE_URL: process.env.CYPRESS_MAIN_SITE_URL || 'http://localhost:2000',
+      ADS_SITE_URL: process.env.CYPRESS_ADS_SITE_URL || 'http://localhost:2020',
+      EARNWITH_SITE_URL: process.env.CYPRESS_EARNWITH_SITE_URL || 'http://localhost:2025',
+      PARTNERS_SITE_URL: process.env.CYPRESS_PARTNERS_SITE_URL || 'http://localhost:2004',
+      STATUS_SITE_URL: process.env.CYPRESS_STATUS_SITE_URL || 'http://localhost:2019',
+      ECOMM_STORE_URL: process.env.CYPRESS_ECOMM_STORE_URL || 'http://localhost:2039',
+      CMS_SITE_URL: process.env.CYPRESS_CMS_SITE_URL || 'http://localhost:2043',
+      // A hostname a staging CMS site answers on (Website portal > Sites > domains).
+      // Left blank, the cms-site spec's published-site scenarios fail in before() and say so.
+      CMS_SITE_HOST: process.env.CYPRESS_CMS_SITE_HOST || '',
+      // The public addresses those builds bake into links and canonicals
+      // (PUBLIC_*_URL / VITE_*_URL) — staging's, as deploy.yml sets them.
+      LINK_MAIN_SITE_URL: process.env.CYPRESS_LINK_MAIN_SITE_URL || 'https://staging.duncit.com',
+      LINK_MWEB_URL: process.env.CYPRESS_LINK_MWEB_URL || 'https://staging.mweb.duncit.com',
+      LINK_ADS_SITE_URL: process.env.CYPRESS_LINK_ADS_SITE_URL || 'https://staging.ads.duncit.com',
+      LINK_ADS_PORTAL_URL: process.env.CYPRESS_LINK_ADS_PORTAL_URL || 'https://staging.ads-portal.duncit.com',
+      LINK_EARNWITH_URL: process.env.CYPRESS_LINK_EARNWITH_URL || 'https://staging.earnwith.duncit.com',
+      LINK_PARTNERS_SITE_URL: process.env.CYPRESS_LINK_PARTNERS_SITE_URL || 'https://staging.partners.duncit.com',
+      LINK_PARTNERS_APP_URL: process.env.CYPRESS_LINK_PARTNERS_APP_URL || 'https://staging.partners-app.duncit.com',
     },
     setupNodeEvents(on) {
       registerScenarioClips(on);

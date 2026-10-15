@@ -49,6 +49,11 @@ export const contentReportResolvers = {
       requireAuth(ctx);
       return reportCategoryService.listActive();
     },
+    // The viewer's own open report only — the id comes from the session.
+    myOpenReport: (_p: unknown, args: { target_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return reportService.myOpenReport(user.id, args.target_id);
+    },
     reportCategoriesTable: (
       _p: unknown,
       args: { query?: TableQueryInput | null },

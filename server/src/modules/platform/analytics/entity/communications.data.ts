@@ -17,7 +17,7 @@ import { dayKeyExpr, inRange } from './window';
  */
 
 /** Rows with `status`, summed inside a `$group` — 1 each, or `value` each. */
-const when = (status: string, value: unknown = 1) => ({
+export const when = (status: string, value: unknown = 1) => ({
   $sum: { $cond: [{ $eq: ['$status', status] }, value, 0] },
 });
 

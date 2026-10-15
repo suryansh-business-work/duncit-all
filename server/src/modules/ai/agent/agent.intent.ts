@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
+import { openAiGraphQLError } from '@services/openai/openai.errors';
 import { logs } from '@observability/log';
 import { AGENT_ACTIONS, MAX_BATCH, type AgentAction, type AgentTurn } from './agent.types';
 
@@ -83,6 +84,8 @@ export async function planFromMessage(
   });
 
   if (!result.ok) {
+    // Switched off in AI Features: say so, rather than blame the provider.
+    if (result.code === 'DISABLED') throw openAiGraphQLError(result);
     const code = result.code === 'NOT_CONFIGURED' ? 'AI_NOT_CONFIGURED' : 'AI_UPSTREAM_ERROR';
     throw new GraphQLError(result.message, { extensions: { code } });
   }

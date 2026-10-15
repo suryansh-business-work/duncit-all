@@ -497,6 +497,15 @@ async function bootstrap() {
     const created = await reportCategoryService.seedDefaults();
     if (created > 0) logs.server.info('bootstrap', 'reportCategories', { created });
   });
+  // "One OPEN report per person per thing" is a unique partial index — it IS
+  // the duplicate guard under two simultaneous submits, and it only lands on a
+  // deployed database (dropping the old all-status unique index) through
+  // syncIndexes. The backfill stamps `is_open` on rows older than the field.
+  await safeSeed('contentReportIndexes', async () => {
+    const { reportService } = await import('@modules/content/report/report.service');
+    const backfilled = await reportService.syncIndexes();
+    if (backfilled > 0) logs.server.info('bootstrap', 'contentReportIndexes', { backfilled });
+  });
   await safeSeed('podPlan', async () => {
     const { podPlanService } = await import('@modules/pods/pod-plan/pod-plan.service');
     await podPlanService.seedDefaults();

@@ -4,12 +4,12 @@ import { LOGS_READER, requireRole } from '@middleware/rbac';
 import { openAiUsageService } from './openaiUsage.service';
 
 // OpenAI usage and spend are read from the AI portal (AI_MANAGER) + platform admins.
-const AI_USAGE_READ = ['SUPER_ADMIN', 'AI_MANAGER'];
+export const AI_USAGE_READ = ['SUPER_ADMIN', 'AI_MANAGER'];
 // The request log (and the catalogue its filters read) is shown in the Logs
 // console too; the spend dashboard and the rate card are not.
 const AI_LOG_READ = [...AI_USAGE_READ, LOGS_READER];
 // The rate card decides what every future row costs, so editing it is admin-only.
-const AI_USAGE_WRITE = ['SUPER_ADMIN', 'AI_MANAGER'];
+export const AI_USAGE_WRITE = ['SUPER_ADMIN', 'AI_MANAGER'];
 
 export const openAiUsageResolvers = {
   Query: {
@@ -23,11 +23,11 @@ export const openAiUsageResolvers = {
     },
     openAiUsageLogsTable: (
       _p: unknown,
-      args: { query?: TableQueryInput | null },
+      args: { query?: TableQueryInput | null; task?: string | null },
       ctx: GraphQLContext,
     ) => {
       requireRole(ctx, AI_LOG_READ);
-      return openAiUsageService.logsTable(args.query);
+      return openAiUsageService.logsTable(args.query, args.task);
     },
     openAiUsageLog: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, AI_LOG_READ);

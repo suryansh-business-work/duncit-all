@@ -33,6 +33,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     WHATSAPP_COSTS
     "What OpenAI requests cost, in US dollars."
     OPENAI_COSTS
+    "Members' phone-book syncs and the invites sent from them — counts only (Marketing > Contacts)."
+    CONTACTS
   }
 
   "What kind of number a value is, so the console formats it."

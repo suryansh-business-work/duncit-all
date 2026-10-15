@@ -1,4 +1,4 @@
-import { loadPdfImage, renderPdf } from '@services/pdf/document';
+import { loadPdfImage, pdfSafeText, renderPdf } from '@services/pdf/document';
 import type { ReportCopy } from './analyticsMail.copy';
 import type { AnalyticsReport, ReportKpi, ReportSection, ReportTable } from './analyticsMail.report';
 import type { DeltaTone } from './analyticsMail.format';
@@ -89,7 +89,7 @@ function drawSummaryList(doc: PDFKit.PDFDocument, label: string, items: readonly
   doc.fillColor(MUTED).fontSize(9).font('Helvetica');
   for (const item of items) {
     top = room(doc, top, 14);
-    doc.text(`- ${item}`, L + PAD, top, { width: R - L - PAD * 2 });
+    doc.text(`- ${pdfSafeText(item)}`, L + PAD, top, { width: R - L - PAD * 2 });
     top = doc.y + 2;
   }
   return top + 4;
@@ -101,7 +101,7 @@ function drawSummary(doc: PDFKit.PDFDocument, input: ReportPdfInput, y: number):
   if (!summary) return y;
   let top = room(doc, y, 60);
   doc.fillColor(ACCENT).fontSize(11).font('Helvetica-Bold').text(copy.t('email.analyticsReport.aiHeading'), L, top);
-  doc.fillColor(INK).fontSize(10).font('Helvetica').text(summary.headline, L, doc.y + 4, { width: R - L });
+  doc.fillColor(INK).fontSize(10).font('Helvetica').text(pdfSafeText(summary.headline), L, doc.y + 4, { width: R - L });
   top = doc.y + 6;
   top = drawSummaryList(doc, copy.t('email.analyticsReport.aiHighlights'), summary.highlights, top);
   top = drawSummaryList(doc, copy.t('email.analyticsReport.aiConcerns'), summary.concerns, top);
@@ -124,7 +124,7 @@ function drawKpi(doc: PDFKit.PDFDocument, kpi: ReportKpi, x: number, y: number, 
     ellipsis: true,
     lineBreak: false,
   });
-  doc.fillColor(INK).fontSize(13).font('Helvetica-Bold').text(kpi.value, x + PAD, y + 16, { width: inner, lineBreak: false });
+  doc.fillColor(INK).fontSize(13).font('Helvetica-Bold').text(pdfSafeText(kpi.value), x + PAD, y + 16, { width: inner, lineBreak: false });
   doc.fillColor(kpi.tone ? TONE[kpi.tone] : MUTED).fontSize(7.5).font('Helvetica').text(kpi.change, x + PAD, y + 32, {
     width: inner,
     ellipsis: true,
@@ -151,7 +151,7 @@ function drawTableRow(doc: PDFKit.PDFDocument, cells: readonly string[], rank: s
   doc.text(name, L + PAD + RANK_W, y + 5, { width: nameW, ellipsis: true, lineBreak: false });
   values.forEach((value, index) => {
     const x = R - PAD - (values.length - index) * VALUE_W;
-    doc.text(value, x, y + 5, { width: VALUE_W, align: 'right', ellipsis: true, lineBreak: false });
+    doc.text(pdfSafeText(value), x, y + 5, { width: VALUE_W, align: 'right', ellipsis: true, lineBreak: false });
   });
 }
 

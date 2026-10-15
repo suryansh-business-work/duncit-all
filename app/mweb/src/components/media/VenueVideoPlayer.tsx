@@ -58,6 +58,7 @@ export default function VenueVideoPlayer({ video, title, testId }: Readonly<Prop
   }
 
   return (
+    // eslint-disable-next-line jsx-a11y/media-has-caption -- owner-uploaded media; no caption track exists in the data model
     <Box
       component="video"
       src={video.sourceUrl}

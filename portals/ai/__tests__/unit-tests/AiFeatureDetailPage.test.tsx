@@ -201,7 +201,7 @@ describe('AiFeatureDetailPage — summary', () => {
     answerQuery(AI_FEATURE_ONE, { loading: true });
     mount();
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByTestId('loader')).toHaveAttribute('role', 'status');
     // The calls table does not wait on the summary.
     expect(screen.getByTestId('duncit-table')).toBeInTheDocument();
   });

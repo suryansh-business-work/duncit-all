@@ -185,7 +185,7 @@ describe('AiFeaturesPage — the list', () => {
     answerQuery(AI_FEATURES, { loading: true });
     mount();
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByTestId('loader')).toHaveAttribute('role', 'status');
     expect(screen.queryByTestId('duncit-table')).not.toBeInTheDocument();
     // The range stays usable while it loads.
     expect(screen.getByLabelText('Range')).toBeInTheDocument();

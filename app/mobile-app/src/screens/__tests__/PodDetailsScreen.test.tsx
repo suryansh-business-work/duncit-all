@@ -713,6 +713,27 @@ describe('PodDetailsScreen', () => {
     );
   });
 
+  it('keeps the spot and asks nothing when the Cancel Spot confirm is backed out of', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: {
+        is_member: true,
+        can_join: false,
+        can_backout: false,
+        can_cancel_spot: true,
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-cancel-spot'));
+    fireEvent.press(screen.getByTestId('cancel-spot-keep'));
+
+    expect(screen.queryByTestId('cancel-spot-dialog')).toBeNull();
+    expect(mockCancelSpot).not.toHaveBeenCalled();
+    expect(screen.getByTestId('pod-cancel-spot')).toBeOnTheScreen();
+  });
+
   it('names a checked-in refusal on the bar instead of the raw server text', async () => {
     mockCancelSpot.mockRejectedValueOnce(
       new ApiError('server words', 400, { code: 'ALREADY_CHECKED_IN' }),

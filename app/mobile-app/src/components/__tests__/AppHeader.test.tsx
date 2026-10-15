@@ -24,7 +24,8 @@ jest.mock('@/components/LocationDialog', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View: V } = require('react-native');
   return {
-    LocationDialog: ({ open }: { open: boolean }) => (open ? <V testID="location-dialog" /> : null),
+    LocationDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+      open ? <V testID="location-dialog" onTouchEnd={onClose} /> : null,
   };
 });
 jest.mock('@/components/LogoutButton', () => {
@@ -94,6 +95,13 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('location-dialog')).toBeNull();
     fireEvent.press(screen.getByTestId('header-location'));
     expect(screen.getByTestId('location-dialog')).toBeOnTheScreen();
+  });
+
+  it('closes the location picker when it is dismissed', () => {
+    renderWithProviders(<AppHeader />);
+    fireEvent.press(screen.getByTestId('header-location'));
+    fireEvent(screen.getByTestId('location-dialog'), 'touchEnd');
+    expect(screen.queryByTestId('location-dialog')).toBeNull();
   });
 
   it('shows the studio badge, closes via backdrop, and switches mode back to User', () => {

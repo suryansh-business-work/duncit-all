@@ -324,6 +324,33 @@ describe('VenueDetailsSection — location cascade', () => {
       postal_code: '',
     });
   });
+
+  it('re-checks the address as it is picked once the city has failed validation', async () => {
+    const formRef = mount({ mode: 'register', defaults: { country: '', country_code: '' } });
+    await act(async () => {
+      await formRef.current?.trigger(['country', 'city']);
+    });
+    expect(await screen.findByText('Country is required')).toBeTruthy();
+
+    fireEvent.keyDown(screen.getByRole('combobox', { name: /Country/ }), { key: 'ArrowDown' });
+    fireEvent.click(await screen.findByText('India'));
+
+    // The pick re-validates: the country's message goes, the still-empty city keeps its own.
+    await waitFor(() => expect(screen.queryByText('Country is required')).toBeNull());
+    expect(formRef.current?.getValues('country_code')).toBe('IN');
+    expect(screen.getByText('City is required')).toBeTruthy();
+  });
+
+  it('leaves untouched messages alone on a pick before anything failed', async () => {
+    const formRef = mount({ mode: 'register', defaults: { country: '', country_code: '' } });
+
+    fireEvent.keyDown(screen.getByRole('combobox', { name: /Country/ }), { key: 'ArrowDown' });
+    fireEvent.click(await screen.findByText('India'));
+
+    await waitFor(() => expect(formRef.current?.getValues('country_code')).toBe('IN'));
+    expect(formRef.current?.formState.errors.city).toBeUndefined();
+    expect(screen.queryByText('City is required')).toBeNull();
+  });
 });
 
 describe('VenueDetailsSection — images', () => {

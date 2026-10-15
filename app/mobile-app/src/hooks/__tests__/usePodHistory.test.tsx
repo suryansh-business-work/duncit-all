@@ -2,11 +2,12 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
-import { CancelFreeSpotDocument } from '@/graphql/pod-history';
+import { CancelFreeSpotDocument, PodBackoutStateDocument } from '@/graphql/pod-history';
 import { graphqlRequest } from '@/services/graphql.client';
 import { ApiError } from '@/utils/errors';
 import {
   usePodBackout,
+  usePodBackoutAttempts,
   usePodBackoutDeduction,
   usePodCancelBackout,
   usePodCancelSpot,
@@ -420,5 +421,71 @@ describe('usePodBackoutDeduction', () => {
       resolveFn({ publicFinanceSettings: { default_backout_deduction_pct: 5 } });
     });
     expect(mockRequest).toHaveBeenCalled();
+  });
+});
+
+describe('usePodBackoutAttempts', () => {
+  const attempts = {
+    backout_attempts_used: 1,
+    backout_attempts_max: 2,
+    spot_cancels_used: 0,
+    spot_cancels_max: 3,
+  };
+
+  it('stays unanswered and asks nothing without a pod', async () => {
+    const { result } = renderHook(() => usePodBackoutAttempts(null));
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(result.current.state).toBeUndefined();
+    expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it("reads the pod's attempt counters", async () => {
+    mockRequest.mockResolvedValueOnce({ podMembershipState: attempts });
+    const { result } = renderHook(() => usePodBackoutAttempts('pod1'));
+    await waitFor(() => expect(result.current.state).toEqual(attempts));
+    expect(mockRequest).toHaveBeenCalledWith(
+      PodBackoutStateDocument,
+      { pod_doc_id: 'pod1' },
+      { auth: true },
+    );
+  });
+
+  it('re-reads the counters after a backout spends an attempt', async () => {
+    const spent = { ...attempts, backout_attempts_used: 2 };
+    mockRequest
+      .mockResolvedValueOnce({ podMembershipState: attempts })
+      .mockResolvedValueOnce({ podMembershipState: spent });
+    const { result } = renderHook(() => usePodBackoutAttempts('pod1'));
+    await waitFor(() => expect(result.current.state).toEqual(attempts));
+
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(result.current.state).toEqual(spent);
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the control live when the first read fails', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('boom'));
+    const { result } = renderHook(() => usePodBackoutAttempts('pod1'));
+    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
+    expect(result.current.state).toBeUndefined();
+  });
+
+  it('ignores counters that arrive after unmount', async () => {
+    let resolveFn: (value: unknown) => void = () => undefined;
+    mockRequest.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveFn = resolve;
+      }),
+    );
+    const { result, unmount } = renderHook(() => usePodBackoutAttempts('pod1'));
+    unmount();
+    await act(async () => {
+      resolveFn({ podMembershipState: attempts });
+    });
+    expect(result.current.state).toBeUndefined();
   });
 });

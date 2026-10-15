@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import {
   blankFoodLicences,
   type FoodMenuConfig,
@@ -8,6 +8,7 @@ import {
 
 import { FoodMenuForm } from '@/components/venue-food-desk/menu/FoodMenuForm';
 import { foodMenuTextValues } from '@/components/venue-food-desk/menu/foodMenuText';
+import { saveFoodMenu } from '@/services/venue-food-menu';
 import { renderWithProviders } from '@/utils/test-utils';
 
 // Finance's currency, the save request, the sticker request, the photo upload
@@ -106,6 +107,105 @@ describe('FoodMenuForm', () => {
     fireEvent.press(screen.getByTestId('food-dish-0-edit'));
     expect(screen.getByTestId('field-food_menu.0.original_price')).toHaveProp('value', '100');
     expect(screen.getByTestId('food-dish-saving-display-AMOUNT')).toHaveProp('aria-checked', true);
+  });
+
+  it('adds a blank dish in the sheet and drops it again when the new dish is cancelled', () => {
+    renderWithProviders(<FoodMenuForm venue={venue()} config={CONFIG} onSaved={jest.fn()} />);
+
+    fireEvent.press(screen.getByTestId('food-menu-add'));
+    expect(screen.getByTestId('food-dish-sheet-title')).toHaveTextContent('Menu item 2');
+    expect(screen.getByTestId('food-dish-1')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-food_menu.1.name')).toHaveProp('value', '');
+
+    fireEvent.press(screen.getByTestId('food-dish-cancel'));
+    expect(screen.queryByTestId('food-dish-sheet')).toBeNull();
+    expect(screen.queryByTestId('food-dish-1')).toBeNull();
+    expect(screen.getByTestId('food-dish-0')).toBeOnTheScreen();
+  });
+
+  it('keeps a listed dish when its sheet is cancelled', () => {
+    renderWithProviders(<FoodMenuForm venue={venue()} config={CONFIG} onSaved={jest.fn()} />);
+
+    fireEvent.press(screen.getByTestId('food-dish-0-edit'));
+    fireEvent.press(screen.getByTestId('food-dish-cancel'));
+
+    expect(screen.queryByTestId('food-dish-sheet')).toBeNull();
+    expect(screen.getByTestId('food-dish-0')).toBeOnTheScreen();
+  });
+
+  it('removes a dish and shows the empty menu note', () => {
+    renderWithProviders(<FoodMenuForm venue={venue()} config={CONFIG} onSaved={jest.fn()} />);
+    expect(screen.queryByTestId('food-menu-empty')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('food-dish-0-remove'));
+
+    expect(screen.queryByTestId('food-dish-0')).toBeNull();
+    expect(screen.getByTestId('food-menu-empty')).toHaveTextContent('No menu items yet.');
+  });
+
+  it('holds the add button and names the cap once the menu is full', () => {
+    renderWithProviders(
+      <FoodMenuForm
+        venue={venue()}
+        config={{ ...CONFIG, food_menu_limit: 1 }}
+        onSaved={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('A menu can list at most 1 items.')).toBeOnTheScreen();
+    expect(screen.getByTestId('food-menu-add').props['aria-disabled']).toBe(true);
+  });
+
+  it("saves the owner's menu without the account, then shows the server's copy", async () => {
+    const onSaved = jest.fn();
+    const saved = venue({ food_tables: ['1', '2', 'Patio'] });
+    jest.mocked(saveFoodMenu).mockResolvedValueOnce(saved);
+    renderWithProviders(<FoodMenuForm venue={venue()} config={CONFIG} onSaved={onSaved} />);
+
+    fireEvent.press(screen.getByTestId('food-menu-save'));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(saved));
+    expect(saveFoodMenu).toHaveBeenCalledWith('v1', {
+      offers_food: true,
+      food_menu: [
+        {
+          id: 'd1',
+          name: 'Paneer Tikka',
+          description: '',
+          category: 'Starters',
+          price: 80,
+          images: [],
+          diet: 'VEG',
+          spice_level: 'MILD',
+          is_available: true,
+          videos: [],
+          original_price: 100,
+          saving_display: 'AMOUNT',
+        },
+      ],
+      food_ordering: { enabled: false, discount_pct: 0, tax_override: false },
+      food_licences: { ...blankFoodLicences, fssai_number: '12345678901234' },
+      food_tables: ['1', '2'],
+    });
+    const notice = screen.getByTestId('food-menu-notice');
+    expect(notice).toHaveTextContent('Food menu saved');
+    expect(notice).toHaveProp('role', 'status');
+    expect(screen.getByTestId('field-food_tables')).toHaveProp('value', '1, 2, Patio');
+  });
+
+  it('keeps what was typed and shows the refusal when the save fails', async () => {
+    const onSaved = jest.fn();
+    jest.mocked(saveFoodMenu).mockRejectedValueOnce(new Error('Venue is not approved'));
+    renderWithProviders(<FoodMenuForm venue={venue()} config={CONFIG} onSaved={onSaved} />);
+
+    fireEvent.press(screen.getByTestId('food-menu-save'));
+
+    const notice = await screen.findByTestId('food-menu-notice');
+    expect(notice).toHaveTextContent('Venue is not approved');
+    expect(notice).toHaveProp('role', 'alert');
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(screen.getByTestId('food-dish-0')).toBeOnTheScreen();
+    expect(screen.getByTestId('food-menu-save').props['aria-disabled']).toBe(false);
   });
 });
 

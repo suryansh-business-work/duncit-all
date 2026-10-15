@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { exchangeCodeAsync } from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
@@ -86,5 +87,86 @@ describe('GoogleAuthButton', () => {
     renderWithProviders(<GoogleAuthButton disabled onIdToken={jest.fn()} />);
     fireEvent.press(screen.getByTestId('google-auth-button'));
     expect(promptAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe('GoogleAuthButton — the native code exchange', () => {
+  const REQUEST = {
+    clientId: 'android-client',
+    redirectUri: 'app:/oauthredirect',
+    codeVerifier: 'v1',
+  };
+  const exchange = jest.mocked(exchangeCodeAsync);
+  const codeAnswer = { type: 'success', params: { code: 'one-time-code' } };
+
+  function mockNative(request: unknown = REQUEST) {
+    mockedHook.mockReturnValue([request as never, codeAnswer as never, jest.fn() as never]);
+  }
+
+  afterEach(() => jest.clearAllMocks());
+
+  it('exchanges the one-time code for the id token with the PKCE verifier', async () => {
+    exchange.mockResolvedValue({ idToken: 'native-token' } as never);
+    mockNative();
+    const onIdToken = jest.fn();
+    renderWithProviders(<GoogleAuthButton onIdToken={onIdToken} />);
+
+    await waitFor(() => expect(onIdToken).toHaveBeenCalledWith('native-token'));
+    expect(exchange).toHaveBeenCalledWith(
+      {
+        clientId: 'android-client',
+        redirectUri: 'app:/oauthredirect',
+        code: 'one-time-code',
+        extraParams: { code_verifier: 'v1' },
+      },
+      expect.anything(),
+    );
+  });
+
+  it('reports a failed exchange instead of waiting forever', async () => {
+    exchange.mockRejectedValue(new Error('invalid_grant'));
+    mockNative();
+    const onError = jest.fn();
+    const onIdToken = jest.fn();
+    renderWithProviders(<GoogleAuthButton onIdToken={onIdToken} onError={onError} />);
+
+    await waitFor(() => expect(onError).toHaveBeenCalledWith('Google sign-in failed.'));
+    expect(onIdToken).not.toHaveBeenCalled();
+  });
+
+  it('reports a missing token when the exchange answers without one', async () => {
+    exchange.mockResolvedValue({} as never);
+    mockNative();
+    const onError = jest.fn();
+    renderWithProviders(<GoogleAuthButton onIdToken={jest.fn()} onError={onError} />);
+
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(expect.stringMatching(/id token/i)));
+  });
+
+  it('never exchanges a code the request holds no verifier for', async () => {
+    mockNative({ clientId: 'android-client', redirectUri: 'app:/oauthredirect' });
+    const onError = jest.fn();
+    renderWithProviders(<GoogleAuthButton onIdToken={jest.fn()} onError={onError} />);
+
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(expect.stringMatching(/id token/i)));
+    expect(exchange).not.toHaveBeenCalled();
+  });
+
+  it('says nothing about an exchange that settles after the screen has gone', async () => {
+    let fail: (error: Error) => void = () => undefined;
+    exchange.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        fail = reject;
+      }) as never,
+    );
+    mockNative();
+    const onError = jest.fn();
+    const view = renderWithProviders(<GoogleAuthButton onIdToken={jest.fn()} onError={onError} />);
+    await waitFor(() => expect(exchange).toHaveBeenCalled());
+    view.unmount();
+
+    fail(new Error('invalid_grant'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(onError).not.toHaveBeenCalled();
   });
 });

@@ -1,8 +1,12 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { logs } from '@duncit/logs';
+import { FOOD_ORDER_ERROR } from '@duncit/utils';
 
 import { useFoodOrdering } from '@/hooks/useFoodOrdering';
 import type { PublicVenueDetails } from '@/hooks/useHostsVenues';
+import { placeFoodOrder } from '@/services/food-order';
 import { readFoodCart, readFoodCoupon, readFoodGuest } from '@/services/food-storage';
+import { ApiError } from '@/utils/errors';
 
 type Listener = () => void;
 const mockListeners: Record<string, Listener[]> = {};
@@ -20,6 +24,13 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({ params: mockParams }),
 }));
 jest.mock('expo-crypto', () => ({ randomUUID: () => 'key-1' }));
+jest.mock('@duncit/logs', () => ({
+  logs: { mobileApp: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() } },
+}));
+jest.mock('@/services/food-order', () => ({
+  ...jest.requireActual('@/services/food-order'),
+  placeFoodOrder: jest.fn(),
+}));
 jest.mock('@/services/food-storage', () => ({
   readFoodCart: jest.fn(),
   writeFoodCart: jest.fn(() => Promise.resolve()),
@@ -124,5 +135,73 @@ describe('useFoodOrdering — the table sticker', () => {
     const { result } = renderHook(() => useFoodOrdering(venue, onRefresh));
     await waitFor(() => expect(result.current.cart.hydrated).toBe(true));
     expect(result.current.guest.table).toBe('');
+  });
+});
+
+describe('useFoodOrdering — the server refuses the order', () => {
+  const GUEST = { name: 'Asha', phone: '9876543210', table: '5', note: '', subscribe: false };
+  const refuseWith = (code: string) =>
+    jest.mocked(placeFoodOrder).mockRejectedValue(new ApiError('refused', 400, { code }));
+
+  const openAndPay = async () => {
+    const { result } = renderHook(() => useFoodOrdering(venue, onRefresh));
+    await waitFor(() => expect(result.current.cart.hydrated).toBe(true));
+    act(() => result.current.openSheet());
+    expect(result.current.sheetOpen).toBe(true);
+    await act(async () => {
+      await result.current.pay(GUEST);
+    });
+    return result;
+  };
+
+  it('re-reads the menu when a dish in the cart left it', async () => {
+    refuseWith(FOOD_ORDER_ERROR.itemUnavailable);
+    const result = await openAndPay();
+
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+    expect(result.current.closed).toBe(false);
+    expect(result.current.checkout.error).not.toBeNull();
+  });
+
+  it('logs a failed menu re-read instead of dropping it', async () => {
+    refuseWith(FOOD_ORDER_ERROR.itemUnavailable);
+    const failure = new Error('offline');
+    onRefresh.mockImplementationOnce(() => Promise.reject(failure));
+    await openAndPay();
+
+    await waitFor(() =>
+      expect(logs.mobileApp.warn).toHaveBeenCalledWith('venueFood', 'refreshMenu', {
+        error: failure,
+        venueId: 'v1',
+      }),
+    );
+  });
+
+  it('closes the cart for good once the venue stops taking orders', async () => {
+    refuseWith(FOOD_ORDER_ERROR.closed);
+    const result = await openAndPay();
+
+    expect(result.current.closed).toBe(true);
+    expect(result.current.canOrder).toBe(false);
+    expect(result.current.sheetOpen).toBe(false);
+    expect(onRefresh).not.toHaveBeenCalled();
+  });
+
+  it('keeps the sheet and the menu as they are for any other refusal', async () => {
+    refuseWith('FOOD_ORDER_TOO_SMALL');
+    const result = await openAndPay();
+
+    expect(onRefresh).not.toHaveBeenCalled();
+    expect(result.current.closed).toBe(false);
+    expect(result.current.sheetOpen).toBe(true);
+    expect(result.current.guest).toEqual(GUEST);
+  });
+
+  it('closes the sheet when asked', async () => {
+    const { result } = renderHook(() => useFoodOrdering(venue, onRefresh));
+    await waitFor(() => expect(result.current.cart.hydrated).toBe(true));
+    act(() => result.current.openSheet());
+    act(() => result.current.closeSheet());
+    expect(result.current.sheetOpen).toBe(false);
   });
 });

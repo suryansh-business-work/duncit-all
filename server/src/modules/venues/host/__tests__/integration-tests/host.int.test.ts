@@ -259,6 +259,35 @@ describe('hostService integration', () => {
   });
 });
 
+describe('adminCreate (Add Host in the hosts console)', () => {
+  it('creates a host for an account that has none', async () => {
+    const target = new Types.ObjectId().toString();
+    const created = await hostService.adminCreate({ targetUserId: target, ...baseStep, submit: true });
+    expect(created.full_name).toBe('Asha');
+    expect(created.status).toBe('SUBMITTED');
+    expect(await HostModel.countDocuments({ user_id: new Types.ObjectId(target) })).toBe(1);
+  });
+
+  it('refuses an account that already has a host profile and leaves that host untouched', async () => {
+    const existing = await HostModel.create({ user_id: new Types.ObjectId(), full_name: 'Original', status: 'APPROVED' });
+
+    await expect(
+      hostService.adminCreate({ targetUserId: String(existing.user_id), ...baseStep, submit: true })
+    ).rejects.toMatchObject({
+      message: 'This account already has a host profile',
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+
+    const after = await HostModel.findById(existing._id).lean();
+    expect(after?.full_name).toBe('Original');
+    expect(after?.status).toBe('APPROVED');
+  });
+
+  it('refuses a malformed account id before touching the collection', async () => {
+    await expect(hostService.adminCreate({ targetUserId: 'not-an-id', ...baseStep })).rejects.toThrow('Invalid user');
+  });
+});
+
 describe('host commission enrichment (Onboarded Hosts console)', () => {
   it('exposes the per-host commission override only on the gated queries', async () => {
     const user = await UserModel.create({

@@ -70,4 +70,16 @@ describe('verificationService.tableForUser (userVerificationsTable) integration'
     });
     expect(approved.rows.map((r) => r.type)).toEqual(['IDENTITY']);
   });
+
+  it('refuses a verdict on a verification that was never submitted, and stores nothing', async () => {
+    const userId = await seedVerifiedUser();
+    await expect(
+      verificationService.review('a'.repeat(24), userId, 'IDENTITY', 'APPROVED')
+    ).rejects.toMatchObject({
+      message: 'Nothing has been submitted for this verification yet',
+      extensions: { code: 'NOT_FOUND' },
+    });
+    const rows = await verificationService.listForUser(userId);
+    expect(rows.find((r) => r.type === 'IDENTITY')?.status).toBe('NOT_SUBMITTED');
+  });
 });

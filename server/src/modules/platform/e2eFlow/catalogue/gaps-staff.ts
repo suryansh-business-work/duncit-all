@@ -3400,7 +3400,11 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
           ],
           [
             'As CITY_ADMIN, query entityAnalytics(entity: USERS)',
-            'Returns data (Admin Users Dashboard readers)',
+            'Returns data (Admin Users Dashboard readers), counted only over the members of their assigned city (readScope)',
+          ],
+          [
+            'As CITY_ADMIN with no city assigned, query entityAnalytics(entity: USERS)',
+            'FORBIDDEN "Out of city scope"',
           ],
           [
             'As CITY_ADMIN, query analyticsCities',

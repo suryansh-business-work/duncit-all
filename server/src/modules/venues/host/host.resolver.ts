@@ -1,11 +1,13 @@
 import { GraphQLError } from 'graphql';
 import { hostService } from './host.service';
+import { redactHostIdentity } from './host.redact';
 import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
 import {
   consoleEditors,
   consoleGovernors,
+  embeddedConsoleReaders,
   consoleReaders,
 } from '@modules/portals/console-access';
 
@@ -15,6 +17,12 @@ import {
  * and pausing it do NOT — see `console-access.ts`.
  */
 const HOST_READ = consoleReaders('HOST');
+/**
+ * A club's Hosts tab and host record in the clubs console read these too —
+ * reads only, and with the identity documents and bank details stripped
+ * (redactHostIdentity) for anyone who is not a hosts-console reader.
+ */
+const HOST_IN_CLUB_READ = embeddedConsoleReaders('HOST', ['CLUB']);
 const HOST_EDIT = consoleEditors('HOST');
 const HOST_GOVERN = consoleGovernors('HOST');
 // Permanent hard-delete is a developer-only action.
@@ -42,16 +50,19 @@ export const hostResolvers = {
       return hostService.list({ status: args.status }, { withCommission: true });
     },
     hostsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, HOST_READ);
-      return hostService.table(args.query);
+      const user = requireRole(ctx, HOST_IN_CLUB_READ);
+      const page = await hostService.table(args.query);
+      if (hasRole(user, HOST_READ)) return page;
+      return { ...page, rows: page.rows.map(redactHostIdentity) };
     },
     hostByUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, HOST_READ);
       return hostService.getByUser(args.user_id);
     },
     host: async (_p: unknown, args: { host_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, HOST_READ);
-      return hostService.getById(args.host_doc_id);
+      const user = requireRole(ctx, HOST_IN_CLUB_READ);
+      const host = await hostService.getById(args.host_doc_id);
+      return host && !hasRole(user, HOST_READ) ? redactHostIdentity(host) : host;
     },
     // Unauthenticated discovery query — MUST stay redacted. See
     // hostService.redactForPublic: it strips aadhar/PAN/bank/police-doc/DOB/phone,

@@ -3,9 +3,11 @@ import type { SurveyKind } from './survey.model';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 
-// Surveys are authored by onboarding managers; responses are read in admin.
+// Surveys are authored by onboarding managers; responses are read in admin,
+// on the user-details page a Support Agent opens too (its other reads admit
+// SUPPORT_USER), so the read admits them — the writes stay with SURVEY_RW.
 const SURVEY_RW = ['SUPER_ADMIN', 'ONBOARDING_MANAGER'];
-const ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ONBOARDING_MANAGER'];
+const ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ONBOARDING_MANAGER', 'SUPPORT_USER'];
 
 interface ScopeArgs {
   kind: SurveyKind;

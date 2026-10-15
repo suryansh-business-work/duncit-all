@@ -1,3 +1,4 @@
+import type { ReadScope } from '@middleware/rbac';
 import { resolvePeriod, type AnalyticsWindow, type PeriodRequest } from './window';
 import { podAnalytics } from './pods.analytics';
 import { clubAnalytics } from './clubs.analytics';
@@ -32,7 +33,11 @@ import { analyticsTargetService } from '../goals/analyticsTarget.service';
 import { consoleLink, resolveLinks, serverEnvironment, type ConsoleLink } from './links';
 import { linkEverything, type AnalyticsEntity, type EntityAnalyticsSections } from './shapes';
 
-const LOADERS: Record<AnalyticsEntity, (window: AnalyticsWindow) => Promise<EntityAnalyticsSections>> = {
+/** `scope` is the reader's place (rbac `readScope`); only the Users page, which City and Zonal Admins read, applies it. */
+const LOADERS: Record<
+  AnalyticsEntity,
+  (window: AnalyticsWindow, scope: ReadScope) => Promise<EntityAnalyticsSections>
+> = {
   USERS: userAnalytics,
   PODS: podAnalytics,
   CLUBS: clubAnalytics,
@@ -87,11 +92,16 @@ export const CITY_ENTITIES: ReadonlySet<AnalyticsEntity> = new Set<AnalyticsEnti
 
 export const entityAnalyticsService = {
   /** One page, its links built for `environment` — the reader's, or this server's for a mail. */
-  async load(entity: AnalyticsEntity, request: PeriodRequest = {}, environment: Environment = serverEnvironment()) {
+  async load(
+    entity: AnalyticsEntity,
+    request: PeriodRequest = {},
+    environment: Environment = serverEnvironment(),
+    scope: ReadScope = null
+  ) {
     // A city asked of a page that cannot narrow to one is dropped, so the period never claims a filter it did not apply.
     const city = CITY_ENTITIES.has(entity) ? request.city : null;
     const window = resolvePeriod({ ...request, city });
-    const [loaded, goals] = await Promise.all([LOADERS[entity](window), analyticsTargetService.goalsFor(entity)]);
+    const [loaded, goals] = await Promise.all([LOADERS[entity](window, scope), analyticsTargetService.goalsFor(entity)]);
     const pageLink = PAGE_LINKS[entity];
     const sections = pageLink ? linkEverything(loaded, pageLink) : loaded;
     const linked = resolveLinks(sections, environment);

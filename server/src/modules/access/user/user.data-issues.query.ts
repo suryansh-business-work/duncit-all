@@ -114,12 +114,17 @@ export async function dataIssuesFilter(issues: readonly UserDataIssue[]): Promis
 }
 
 /** How many live accounts have each issue, and how many have at least one. */
-export async function countDataIssues(): Promise<{ byIssue: Map<UserDataIssue, number>; affected: number }> {
+export async function countDataIssues(
+  within: Filter = {}
+): Promise<{ byIssue: Map<UserDataIssue, number>; affected: number }> {
+  // `within` narrows whose issues are counted (a City Admin's members); a
+  // duplicate is still found against every live account.
   const shared = await sharedKeys();
   const filters = USER_DATA_ISSUES.map((issue) => issueFilter(issue, shared));
+  const counted = { ...LIVE_ACCOUNTS, ...within };
   const [affected, ...counts] = await Promise.all([
-    UserModel.countDocuments({ ...LIVE_ACCOUNTS, $or: filters }),
-    ...filters.map((filter) => UserModel.countDocuments({ ...LIVE_ACCOUNTS, ...filter })),
+    UserModel.countDocuments({ ...counted, $or: filters }),
+    ...filters.map((filter) => UserModel.countDocuments({ ...counted, ...filter })),
   ]);
   return { byIssue: new Map(USER_DATA_ISSUES.map((issue, i) => [issue, counts[i]])), affected };
 }

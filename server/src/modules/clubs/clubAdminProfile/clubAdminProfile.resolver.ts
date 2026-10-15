@@ -3,6 +3,7 @@ import { requireRole } from '@middleware/rbac';
 import {
   consoleEditors,
   consoleGovernors,
+  embeddedConsoleReaders,
   consoleReaders,
 } from '@modules/portals/console-access';
 import { clubAdminProfileService } from './clubAdminProfile.service';
@@ -24,6 +25,8 @@ function uid(ctx: GraphQLContext) {
  * particular, because it grants a role — see `console-access.ts`.
  */
 const CA_READ = consoleReaders('CLUB_ADMIN');
+/** A club's page in the clubs console links its admins and opens their record — reads only. */
+const CA_IN_CLUB_READ = embeddedConsoleReaders('CLUB_ADMIN', ['CLUB']);
 const CA_EDIT = consoleEditors('CLUB_ADMIN');
 const CA_GOVERN = consoleGovernors('CLUB_ADMIN');
 /** Permanent hard-delete is a developer-only action, as it is for the others. */
@@ -36,11 +39,11 @@ export const clubAdminProfileResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, CA_READ);
+      requireRole(ctx, CA_IN_CLUB_READ);
       return clubAdminProfileService.table(args.query);
     },
     clubAdminProfile: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, CA_READ);
+      requireRole(ctx, CA_IN_CLUB_READ);
       return clubAdminProfileService.byId(args.id);
     },
     clubAdminMatchingClubs: (

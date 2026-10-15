@@ -3,6 +3,8 @@ import { approvalService } from '../../approval.service';
 
 const PM = { id: 'pm-1', name: 'pm@example.com' };
 const ADMIN = { id: 'admin-1', name: 'admin@example.com' };
+// Nobody decides their own request: ADMIN raised Gadget, so another admin approves it.
+const REVIEWER = { id: 'admin-2', name: 'admin2@example.com' };
 
 const submitProduct = (name: string, requester = PM) =>
   approvalService.submitEcommChange(
@@ -21,7 +23,7 @@ describe('approvalService.table (approvalRequestsTable) integration', () => {
     const widget = await submitProduct('Widget', PM);
     const gadget = await submitProduct('Gadget', ADMIN);
     // Approve one so we can filter by status.
-    await approvalService.approve(gadget!.id, ADMIN);
+    await approvalService.approve(gadget!.id, REVIEWER);
 
     // Plain envelope: both change requests, default page size.
     const all = await approvalService.table();

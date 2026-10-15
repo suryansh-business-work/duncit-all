@@ -1058,6 +1058,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "admin.somethingForYou.sortHint": "Lowest first, left to right.",
   "admin.surveys.empty": "No answers.",
   "admin.surveys.interests": "Signup Survey Interests",
+  "admin.surveys.loadFailed": "This user's onboarding surveys could not be loaded.",
   "admin.surveys.none": "This user hasn't submitted any onboarding survey yet.",
   "admin.tabs.access": "Access",
   "admin.tabs.activity": "Activity",

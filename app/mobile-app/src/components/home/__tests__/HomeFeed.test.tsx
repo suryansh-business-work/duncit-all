@@ -143,6 +143,8 @@ describe('HomeFeed', () => {
     mockedFeed.mockReturnValue({ ...base, clubsWithPods: [], featuredPods: [], totalPods: 0 });
     renderWithProviders(<HomeFeed />);
     expect(screen.getByTestId('home-empty')).toBeOnTheScreen();
+    // No pod nearby: the whole section goes, not just its rail.
+    expect(screen.queryByTestId('happening-nearby-header')).toBeNull();
   });
 
   it('shows the create-pod FAB for hosts and opens the Create Pod screen', () => {

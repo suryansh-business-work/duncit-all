@@ -21,9 +21,8 @@ import { useMe } from '@/hooks/useMe';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { ClubRecommendationRow } from '@/components/home/ClubRecommendationRow';
 import { CreatePodFab } from '@/components/home/CreatePodFab';
-import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
+import { HappeningNearbySection } from '@/components/home/HappeningNearbySection';
 import { HomeClubRails } from '@/components/home/HomeClubRails';
-import { HomeFeaturedPods } from '@/components/home/HomeFeaturedPods';
 import { HostCtaBanner } from '@/components/home/HostCtaBanner';
 import { HomeFilterSheet } from '@/components/home/HomeFilterSheet';
 import { HomeSearchRow } from '@/components/home/HomeSearchRow';
@@ -122,26 +121,17 @@ export function HomeFeed() {
               />
             </TourAnchor>
           </Reveal>
-          <YStack gap={12}>
-            <Reveal index={2}>
-              <HappeningNearbyHeader totalPods={totalPods} onPress={openHappeningNearby} />
-            </Reveal>
-            <Reveal index={3}>
-              <TourAnchor tour="home" anchor="home-pods">
-                <HomeFeaturedPods
-                  pods={featuredPods}
-                  totalCount={totalPods}
-                  filtered={railsFiltered}
-                  onSeeAll={openHappeningNearby}
-                  onOpenPod={openFeedPod}
-                  categoryLabelOf={categoryLabelOf}
-                  savedOf={savedOf}
-                  savingOf={savingOf}
-                  onToggleSave={onToggleSave}
-                />
-              </TourAnchor>
-            </Reveal>
-          </YStack>
+          <HappeningNearbySection
+            pods={featuredPods}
+            totalCount={totalPods}
+            filtered={railsFiltered}
+            onSeeAll={openHappeningNearby}
+            onOpenPod={openFeedPod}
+            categoryLabelOf={categoryLabelOf}
+            savedOf={savedOf}
+            savingOf={savingOf}
+            onToggleSave={onToggleSave}
+          />
           <OngoingPodsRail pods={ongoingPods} onOpenPod={openFeedPod} />
           <HostCtaBanner
             isHost={isHost}

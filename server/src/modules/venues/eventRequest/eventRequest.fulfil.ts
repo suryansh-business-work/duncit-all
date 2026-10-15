@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
+import { appDate, appTime } from '@utils/app-time';
 import { podLink } from '@modules/venues/venueFood/venueSubscriber.service';
 import { EventRequestModel, type EventRequestTarget } from './eventRequest.model';
 
@@ -88,4 +89,41 @@ async function run(facts: PodLiveFacts) {
 export function fulfilEventRequests(facts: PodLiveFacts): void {
   if (!Types.ObjectId.isValid(facts.podId)) return;
   run(facts).catch((error: unknown) => logs.server.error(LOG, 'fulfil', { error, podId: facts.podId }));
+}
+
+/** The few pod fields a pod that went live without a venue slot hands over. */
+export interface LivePodRow {
+  _id: unknown;
+  pod_title: string;
+  venue_id?: Types.ObjectId | string | null;
+  pod_hosts_id: readonly unknown[];
+  pod_date_time: Date;
+}
+
+/**
+ * For a pod live from birth with no venue slot to approve — a virtual pod — the
+ * slot hooks never run, so the pod funnel answers its hosts' requests here.
+ * Looks the lead host's name up itself; queues and returns, never throws.
+ */
+export function fulfilEventRequestsForPod(pod: Readonly<LivePodRow>): void {
+  const podId = String(pod._id);
+  const name = async () => {
+    const { UserModel } = await import('@modules/access/user/user.model');
+    const lead = await UserModel.findById(pod.pod_hosts_id[0]).select('profile.first_name profile.last_name').lean();
+    const profile = (lead as { profile?: { first_name?: string; last_name?: string } } | null)?.profile;
+    return `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() || undefined;
+  };
+  name()
+    .then((hostName) =>
+      fulfilEventRequests({
+        podId,
+        podTitle: pod.pod_title,
+        venueId: pod.venue_id ?? null,
+        hostIds: pod.pod_hosts_id,
+        hostName,
+        date: appDate(pod.pod_date_time),
+        time: appTime(pod.pod_date_time),
+      })
+    )
+    .catch((error: unknown) => logs.server.error(LOG, 'fulfilForPod', { error, podId }));
 }

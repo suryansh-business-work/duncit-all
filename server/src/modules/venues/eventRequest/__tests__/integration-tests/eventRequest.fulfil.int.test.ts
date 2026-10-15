@@ -22,7 +22,8 @@ jest.mock('@modules/venues/venueFood/venueSubscriber.service', () => ({
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { EventRequestModel, type EventRequestStatus, type EventRequestTarget } from '../../eventRequest.model';
-import { fulfilEventRequests, type PodLiveFacts } from '../../eventRequest.fulfil';
+import { fulfilEventRequests, fulfilEventRequestsForPod, type PodLiveFacts } from '../../eventRequest.fulfil';
+import { UserModel } from '@modules/access/user/user.model';
 
 const venueId = new Types.ObjectId();
 const otherVenueId = new Types.ObjectId();
@@ -203,5 +204,45 @@ describe('fulfilEventRequests', () => {
       expect(error).toHaveBeenCalledWith('event-request', 'fulfil', expect.objectContaining({ podId: live.podId }))
     );
     expect(await statusOf(atVenue._id)).toBe('FULFILLED');
+  });
+});
+
+describe('fulfilEventRequestsForPod — a virtual pod live from birth', () => {
+  it("closes its hosts' open requests and names the lead host in the note", async () => {
+    jest.spyOn(UserModel, 'findById').mockReturnValue({
+      select: () => ({ lean: async () => ({ profile: { first_name: 'Meera', last_name: 'Rao' } }) }),
+    } as never);
+    const request = await seed('HOST', hostA, asha);
+    const podId = new Types.ObjectId();
+
+    fulfilEventRequestsForPod({
+      _id: podId,
+      pod_title: 'Online chess',
+      venue_id: null,
+      pod_hosts_id: [hostA],
+      pod_date_time: new Date('2026-10-20T13:30:00Z'),
+    });
+
+    await eventually(async () => expect(await statusOf(request._id)).toBe('FULFILLED'));
+    await eventually(() => expect(createNotification).toHaveBeenCalledTimes(1));
+    const [note] = createNotification.mock.calls[0] ?? [];
+    expect(note?.title).toBe("You asked Meera Rao for an event — it's live");
+    expect(note?.target_user_ids).toEqual([String(asha)]);
+    expect(note?.link_url).toBe(`https://duncit.test/s/${podId.toHexString()}`);
+  });
+
+  it('falls back to "a host" when the lead host has no name, and logs instead of throwing on a lookup failure', async () => {
+    const findById = jest.spyOn(UserModel, 'findById');
+    findById.mockReturnValueOnce({ select: () => ({ lean: async () => null }) } as never);
+    const request = await seed('HOST', hostB, kiran);
+    fulfilEventRequestsForPod({ _id: new Types.ObjectId(), pod_title: 'Online quiz', pod_hosts_id: [hostB], pod_date_time: new Date() });
+    await eventually(async () => expect(await statusOf(request._id)).toBe('FULFILLED'));
+    await eventually(() => expect(createNotification).toHaveBeenCalled());
+    expect(createNotification.mock.calls.at(-1)?.[0]?.title).toBe("You asked a host for an event — it's live");
+
+    const error = jest.spyOn(logs.server, 'error').mockImplementation(() => undefined);
+    findById.mockReturnValueOnce({ select: () => ({ lean: async () => { throw new Error('db down'); } }) } as never);
+    fulfilEventRequestsForPod({ _id: new Types.ObjectId(), pod_title: 'x', pod_hosts_id: [hostB], pod_date_time: new Date() });
+    await eventually(() => expect(error).toHaveBeenCalledWith('event-request', 'fulfilForPod', expect.objectContaining({ podId: expect.any(String) })));
   });
 });

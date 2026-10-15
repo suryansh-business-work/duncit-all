@@ -4,7 +4,7 @@ import { RhfTextField } from '@duncit/forms';
 import { RhfAdminLocation } from '@duncit/location';
 import { useTranslation } from '@duncit/shell';
 import { VideoLinksField } from '@duncit/venue-food';
-import { Controller, type Control } from 'react-hook-form';
+import { Controller, useWatch, type Control } from 'react-hook-form';
 import SectionCard from '../../detail/SectionCard';
 import GalleryField from '../fields/GalleryField';
 import MediaUrlField from '../fields/MediaUrlField';
@@ -41,6 +41,8 @@ export default function VenueDetailsSection({
   videoLimit: number;
 }>) {
   const { t } = useTranslation();
+  // The upload button names whose videos these are; a venue not yet named falls back to the section.
+  const venueName = useWatch({ control, name: 'venue_name' }) ?? '';
 
   return (
     <SectionCard
@@ -86,7 +88,7 @@ export default function VenueDetailsSection({
               videos={field.value ?? []}
               onChange={field.onChange}
               limit={videoLimit}
-              name={t('directory.venueEditor.media')}
+              name={venueName.trim() || t('directory.venueEditor.media')}
               venueId={venueId || undefined}
               surface="PORTALS"
               testId="venue-editor-videos"

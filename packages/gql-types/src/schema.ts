@@ -1699,6 +1699,8 @@ export type AppSettings = {
   auto_pod_slot_window_days: Scalars['Int']['output'];
   /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
   auto_pod_venue_expiry_hours: Scalars['Int']['output'];
+  /** Minutes after a pod checkout is left unpaid when the member is nudged once to finish it. 0 switches it off. */
+  checkout_nudge_minutes: Scalars['Int']['output'];
   /** Account Health points a CLUB ADMIN loses for filing a Request Change on a pod in their club (0-10, 0 disables it). */
   club_admin_change_request_health_penalty: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
@@ -1740,8 +1742,6 @@ export type AppSettings = {
   pod_reminder_lead_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
   pod_sameday_reminder_hours: Scalars['Int']['output'];
-  /** Minutes after a pod checkout is left unpaid when the member is nudged once to finish it. 0 switches it off. */
-  checkout_nudge_minutes: Scalars['Int']['output'];
   /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -37636,6 +37636,8 @@ export type UpdateAppSettingsInput = {
   auto_pod_slot_window_days?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720). */
   auto_pod_venue_expiry_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** Minutes after an unpaid pod checkout the member is nudged (0-1440, 0 is off). */
+  checkout_nudge_minutes?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a club admin loses for filing a Request Change (0-10, 0 disables it). */
   club_admin_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
@@ -37675,8 +37677,6 @@ export type UpdateAppSettingsInput = {
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */
   pod_sameday_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
-  /** Minutes after an unpaid pod checkout the member is nudged (0-1440, 0 is off). */
-  checkout_nudge_minutes?: InputMaybe<Scalars['Int']['input']>;
   /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
@@ -40034,9 +40034,9 @@ export type WaCampaign = {
   /** When a scheduled send is due. Null for one that went out immediately. */
   scheduled_at?: Maybe<Scalars['String']['output']>;
   sent_at?: Maybe<Scalars['String']['output']>;
+  sent_count: Scalars['Int']['output'];
   /** Shared by every run of one recurring campaign; empty for a one-off. */
   series_id: Scalars['String']['output'];
-  sent_count: Scalars['Int']['output'];
   /** Matched the audience but had no usable number or an empty variable. */
   skipped_count: Scalars['Int']['output'];
   status: WaCampaignStatus;

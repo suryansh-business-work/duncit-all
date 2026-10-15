@@ -4,26 +4,32 @@ import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { freeSpotCancelHint, type FreeSpotCancels } from '@duncit/utils';
 
 export interface CancelSpotDialogProps {
   open: boolean;
   busy: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  /** The membership state's cancel counters — names how many cancels are left. */
+  cancels?: FreeSpotCancels | null;
 }
 
-/** "Cancel your spot?" — the only way out of a FREE pod. No refund and no
- * attempts to count, so the sheet says two things: the spot goes back on the
- * pod, and the member can join again while it is open. Used by Pod Details
- * and Pod History. RN twin of mWeb's CancelSpotDialog. */
+/** "Cancel your spot?" — the only way out of a FREE pod. No refund, so the
+ * sheet says three things: the spot goes back on the pod, the member can join
+ * again while it is open, and how many cancellations they have left (Pod
+ * Settings caps them — freeSpotCancelHint). Used by Pod Details and Pod
+ * History. RN twin of mWeb's CancelSpotDialog. */
 export function CancelSpotDialog({
   open,
   busy,
   onClose,
   onConfirm,
+  cancels,
 }: Readonly<CancelSpotDialogProps>) {
   const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
+  const hint = freeSpotCancelHint(cancels);
 
   const footer = (
     <XStack gap={12}>
@@ -88,6 +94,17 @@ export function CancelSpotDialog({
       <Text fontSize={14} lineHeight={22} color="$color">
         {t('mweb.podDetails.cancelSpotBody')}
       </Text>
+      {hint ? (
+        <Text
+          testID="cancel-spot-limit-hint"
+          fontSize={14}
+          lineHeight={22}
+          fontWeight="600"
+          color="$color"
+        >
+          {t(hint.key, { vars: hint.vars })}
+        </Text>
+      ) : null}
     </DuncitDialog>
   );
 }

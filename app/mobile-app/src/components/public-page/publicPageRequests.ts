@@ -6,6 +6,7 @@ import {
   PUBLIC_PAGE_POSTER_QUERY,
   PUBLISH_PUBLIC_PAGE_MUTATION,
   VENUE_TABLE_LABEL_QUERY,
+  VENUE_TABLE_STICKERS_QUERY,
   publicPageErrorKey,
   type PublicPageInsights,
   type PublicPageKind,
@@ -24,6 +25,7 @@ const MY_PUBLIC_PAGE = parse(MY_PUBLIC_PAGE_QUERY);
 const PUBLISH_PUBLIC_PAGE = parse(PUBLISH_PUBLIC_PAGE_MUTATION);
 const PUBLIC_PAGE_POSTER = parse(PUBLIC_PAGE_POSTER_QUERY);
 const VENUE_TABLE_LABEL = parse(VENUE_TABLE_LABEL_QUERY);
+const VENUE_TABLE_STICKERS = parse(VENUE_TABLE_STICKERS_QUERY);
 
 const QR_DATA_PREFIX = /^data:image\/png;base64,/;
 
@@ -75,6 +77,19 @@ export async function fetchTableLabelBase64(venueId: string, headline: string): 
     { venueId: string; headline: string }
   >(VENUE_TABLE_LABEL, { venueId, headline }, { auth: true });
   return data.myVenueTableLabelPdfBase64;
+}
+
+/** Every table's QR sticker of the venue (its saved tables), a page each — the menu desk's download. */
+export async function fetchTableStickersBase64(
+  venueId: string,
+  headline: string,
+  tableHeading: string,
+): Promise<string> {
+  const data = await graphqlRequest<
+    { myVenueTableStickersPdfBase64: string },
+    { venueId: string; headline: string; tableHeading: string }
+  >(VENUE_TABLE_STICKERS, { venueId, headline, tableHeading }, { auth: true });
+  return data.myVenueTableStickersPdfBase64;
 }
 
 /**

@@ -12,6 +12,7 @@ import {
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { ToggleRow } from '@/components/ToggleRow';
+import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { useTranslation } from '@/hooks/useTranslation';
 import { saveFoodMenu } from '@/services/venue-food-menu';
 import { toErrorMessage } from '@/utils/errors';
@@ -19,7 +20,9 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import { formResolver } from '@/utils/form-resolver';
 import { FoodDishCard } from './FoodDishCard';
 import { FoodDishSheet } from './FoodDishSheet';
+import { FoodMenuLicences } from './FoodMenuLicences';
 import { FoodMenuOrdering } from './FoodMenuOrdering';
+import { FoodMenuTables } from './FoodMenuTables';
 import { foodMenuTextValues } from './foodMenuText';
 
 interface Props {
@@ -40,6 +43,7 @@ type Notice = { tone: 'ok' | 'error'; text: string } | null;
  */
 export function FoodMenuForm({ venue, config, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { currency } = usePublicFinance();
   const schema = useMemo(
     () => makeFoodMenuSchema(t, { limits: foodMenuLimitsOf(config), editsAccount: false }),
     [t, config],
@@ -100,6 +104,7 @@ export function FoodMenuForm({ venue, config, onSaved }: Readonly<Props>) {
       />
       {offersFood ? (
         <YStack gap={12}>
+          <FoodMenuLicences control={control} />
           <Text role="heading" fontSize={15} fontWeight="700" color="$color">
             {t('venueFoodOwner.menu.dishes')}
           </Text>
@@ -117,6 +122,7 @@ export function FoodMenuForm({ venue, config, onSaved }: Readonly<Props>) {
               control={control}
               index={index}
               config={config}
+              currency={currency}
               onEdit={() => setEditing({ index, isNew: false })}
               onRemove={() => remove(index)}
             />
@@ -134,6 +140,13 @@ export function FoodMenuForm({ venue, config, onSaved }: Readonly<Props>) {
             onPress={addDish}
           />
           <FoodMenuOrdering control={control} config={config} savedGstin={savedGstin} />
+          <FoodMenuTables
+            control={control}
+            limit={config.food_table_limit}
+            venueId={venue.id}
+            venueName={venue.venue_name}
+            hasSavedTables={(venue.food_tables ?? []).length > 0}
+          />
         </YStack>
       ) : null}
       {notice ? (

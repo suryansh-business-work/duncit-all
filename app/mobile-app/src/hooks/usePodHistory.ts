@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { cancelSpotErrorKey, type PodBackoutAttempts } from '@duncit/utils';
+import {
+  cancelSpotErrorKey,
+  isFreeSpotCancelMaxed,
+  type FreeSpotCancels,
+  type PodBackoutAttempts,
+} from '@duncit/utils';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
@@ -99,7 +104,8 @@ export function usePodBackoutDeduction() {
  * live on the first paint instead of greying it out while the query is open.
  */
 export function usePodBackoutAttempts(podDocId?: string | null) {
-  const [state, setState] = useState<PodBackoutAttempts>();
+  // The same state also carries a free pod's spot-cancel counters.
+  const [state, setState] = useState<PodBackoutAttempts & FreeSpotCancels>();
 
   // Exposed so the screen can re-read after a backout: the request the user
   // just made is one of the attempts this counts, and a counter frozen at its
@@ -194,10 +200,18 @@ export function usePodHistoryCancelSpot(
   podDocId: string | null | undefined,
   onNotice: (text: string) => void,
   refresh: () => Promise<void>,
+  /** The membership state's cancel counters — free pods cap cancellations. */
+  cancels?: FreeSpotCancels | null,
 ) {
   const { t } = useTranslation();
   const { cancelSpot, busy } = usePodCancelSpot();
   const [open, setOpen] = useState(false);
+  const maxed = isFreeSpotCancelMaxed(cancels);
+
+  // Once every cancellation is used up the button stays and explains itself
+  // (as Backout does) instead of opening a confirm the server will refuse.
+  const request = () =>
+    maxed ? onNotice(t('mweb.podDetails.cancelSpotLimitReached')) : setOpen(true);
 
   const confirm = async () => {
     if (!podDocId) return;
@@ -211,7 +225,7 @@ export function usePodHistoryCancelSpot(
     await refresh();
   };
 
-  return { open, setOpen, busy, confirm };
+  return { open, setOpen, busy, confirm, request, cancels: cancels ?? null };
 }
 
 /** Free rejoin mutation with a busy flag — mWeb's REJOIN_POD. */

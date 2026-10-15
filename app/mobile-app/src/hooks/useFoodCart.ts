@@ -41,6 +41,11 @@ export interface FoodCart {
   applyCoupon: (coupon: AppliedFoodCoupon) => void;
   removeCoupon: () => void;
   clear: () => void;
+  /**
+   * Read the stored cart again. A dish's own screen keeps the same cart, so the
+   * menu underneath re-reads it when the member comes back to it.
+   */
+  reload: () => void;
   dismissDropped: () => void;
   dismissMaxLines: () => void;
 }
@@ -157,6 +162,14 @@ export function useFoodCart(
     setStored({});
     setCoupon(null);
   }, []);
+  const reload = useCallback(() => {
+    fireAndForget(
+      Promise.all([readFoodCart(venueId), readFoodCoupon(venueId)]).then(([cart, kept]) => {
+        setStored(cart);
+        setCoupon(kept);
+      }),
+    );
+  }, [venueId]);
   const dismissDropped = useCallback(() => setDropped([]), []);
   const dismissMaxLines = useCallback(() => setAtMaxLines(false), []);
 
@@ -173,6 +186,7 @@ export function useFoodCart(
     applyCoupon: setCoupon,
     removeCoupon,
     clear,
+    reload,
     dismissDropped,
     dismissMaxLines,
   };

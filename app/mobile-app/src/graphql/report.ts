@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import {
   BLOCK_USER_SDL,
+  MY_OPEN_REPORT_SDL,
   REPORT_CATEGORIES_SDL,
   REPORT_POST_SDL,
   REPORT_PROFILE_SDL,
@@ -14,6 +15,9 @@ import {
 
 /** The reasons the report sheet offers, as Legal has arranged them. */
 export const ReportCategoriesDocument = gql(REPORT_CATEGORIES_SDL);
+
+/** The viewer's own still-open report on the thing, or null. */
+export const MyOpenReportDocument = gql(MY_OPEN_REPORT_SDL);
 
 /** Flag a post or a story for the Legal team. Open to any signed-in viewer. */
 export const ReportPostDocument = gql(REPORT_POST_SDL);

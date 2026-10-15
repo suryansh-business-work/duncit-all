@@ -65,6 +65,7 @@ export const MobilePublicVenueDocument = gql(`
       description
       cover_image_url
       gallery
+      videos
       address_line1
       address_line2
       country
@@ -89,6 +90,12 @@ export const MobilePublicVenueDocument = gql(`
         diet
         spice_level
         is_available
+        videos
+        original_price
+        saving_display
+      }
+      food_licences {
+        fssai_number
       }
       food_ordering {
         enabled

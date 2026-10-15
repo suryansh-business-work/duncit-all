@@ -1,6 +1,7 @@
 import { Controller, type Control, type UseFormTrigger } from 'react-hook-form';
 import { YStack } from 'tamagui';
 import {
+  FOOD_SAVING_DISPLAYS,
   foodDietLabel,
   foodSpiceLabel,
   type FoodMenuConfig,
@@ -13,6 +14,13 @@ import { ConfirmFooter } from '@/components/DuncitDialog/ConfirmFooter';
 import { FormTextField } from '@/components/FormTextField';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
+
+import { FoodDishVideos } from './FoodDishVideos';
+
+const SAVING_DISPLAY_KEYS: Record<(typeof FOOD_SAVING_DISPLAYS)[number], string> = {
+  PERCENT: 'venueFoodOwner.menu.savingDisplayPercent',
+  AMOUNT: 'venueFoodOwner.menu.savingDisplayAmount',
+};
 
 interface Props {
   control: Control<FoodMenuFormValues>;
@@ -27,8 +35,9 @@ interface Props {
 }
 
 /**
- * One dish's details — name, menu section, description, price, food type and
- * spice level — edited in a sheet over the menu. The fields write straight into
+ * One dish's details — name, menu section, description, price (and the
+ * optional struck-through MRP), food type, spice level and videos — edited in
+ * a sheet over the menu. The fields write straight into
  * the menu form; Done checks the dish against the shared rules
  * (`makeFoodMenuSchema`) before the sheet lets go. Photos and the "available"
  * switch sit on the dish's card, outside the sheet.
@@ -43,7 +52,7 @@ export function FoodDishSheet({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (index === null) return null;
-  const name = (field: 'name' | 'category' | 'description' | 'price') =>
+  const name = (field: 'name' | 'category' | 'description' | 'price' | 'original_price') =>
     `food_menu.${index}.${field}` as const;
 
   const done = async () => {
@@ -97,6 +106,30 @@ export function FoodDishSheet({
           keyboardType="decimal-pad"
           required
         />
+        <FormTextField
+          control={control}
+          name={name('original_price')}
+          label={t('venueFoodOwner.menu.originalPrice')}
+          hint={t('venueFoodOwner.menu.originalPriceHint')}
+          keyboardType="decimal-pad"
+        />
+        <Controller
+          control={control}
+          name={`food_menu.${index}.saving_display`}
+          render={({ field, fieldState }) => (
+            <ChipSelectField
+              testID="food-dish-saving-display"
+              label={t('venueFoodOwner.menu.savingDisplay')}
+              options={FOOD_SAVING_DISPLAYS.map((mode) => ({
+                value: mode,
+                label: t(SAVING_DISPLAY_KEYS[mode]),
+              }))}
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+            />
+          )}
+        />
         <Controller
           control={control}
           name={`food_menu.${index}.diet`}
@@ -127,6 +160,19 @@ export function FoodDishSheet({
               }))}
               value={field.value}
               onChange={field.onChange}
+              error={fieldState.error?.message}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name={`food_menu.${index}.videos`}
+          render={({ field, fieldState }) => (
+            <FoodDishVideos
+              videos={field.value}
+              onChange={field.onChange}
+              limit={config.food_video_limit}
+              testID="food-dish-videos"
               error={fieldState.error?.message}
             />
           )}

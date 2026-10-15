@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
+import { logs } from '@duncit/logs';
 import type { ReportCategoryOption } from '@duncit/utils';
 
 import {
+  MyOpenReportDocument,
   ReportCategoriesDocument,
   ReportPostDocument,
   ReportProfileDocument,
@@ -9,6 +11,55 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 
 type LoadState = 'loading' | 'ready' | 'failed';
+
+interface OpenReport {
+  id: string;
+  report_no: string;
+}
+
+/**
+ * Has the viewer already reported this, with Legal not done with it yet?
+ * mWeb twin: components/content-report/useMyOpenReport (rule 27).
+ *
+ * Asked on every open — Legal can close the earlier report at any moment, so a
+ * remembered answer would keep the form locked after it did. A failed check
+ * falls back to the form (the server refuses a repeat anyway with
+ * REPORT_ALREADY_PENDING) and is logged rather than dropped. Plain request,
+ * not `useReloadableQuery`, for the same reason as `useReportCategories`.
+ */
+export function useMyOpenReport(targetId: string | null) {
+  const [pending, setPending] = useState<OpenReport | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  useEffect(() => {
+    setPending(null);
+    if (!targetId) {
+      setChecking(false);
+      return undefined;
+    }
+    let alive = true;
+    setChecking(true);
+    graphqlRequest<{ myOpenReport: OpenReport | null }, { id: string }>(
+      MyOpenReportDocument,
+      { id: targetId },
+      { auth: true },
+    )
+      .then((data) => {
+        if (alive) setPending(data.myOpenReport);
+      })
+      .catch((error: unknown) => {
+        logs.mobileApp.warn('contentReport', 'myOpenReport', { error });
+      })
+      .finally(() => {
+        if (alive) setChecking(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [targetId]);
+
+  return { checking, pending };
+}
 
 /**
  * The reasons the report sheet offers.
@@ -57,8 +108,8 @@ export function useReportCategories(enabled: boolean) {
 /**
  * Report a post or a story to the Legal team.
  *
- * `reason` is a report category key. A repeat report from the same person
- * edits their existing one, so this is safe to call twice. Answers with the
+ * `reason` is a report category key. A repeat while the same person's earlier
+ * report is still open is refused with REPORT_ALREADY_PENDING. Answers with the
  * report's reference — the one its acknowledgement email carries.
  */
 export async function reportPost(id: string, reason: string, details: string): Promise<string> {

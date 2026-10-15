@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { foodDietLabel, type FoodMenuConfig, type FoodMenuFormValues } from '@duncit/utils';
 
 import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
+import { FoodItemPrice } from '@/components/details/venue-food/FoodItemPrice';
 import { splitLines } from '@/components/create-pod/MediaUploadField/mediaUploadHelpers';
 import { DuncitButton } from '@/components/DuncitButton';
 import { SurfaceCard } from '@/components/SurfaceCard';
@@ -16,16 +17,26 @@ interface Props {
   control: Control<FoodMenuFormValues>;
   index: number;
   config: FoodMenuConfig;
+  /** Finance's currency symbol — the price preview is shown in it. */
+  currency: string;
   onEdit: () => void;
   onRemove: () => void;
 }
 
 /**
- * One dish on the menu screen: its name, price and food type at a glance, the
+ * One dish on the menu screen: its name, price (with any struck-through MRP and
+ * its saving, as guests will see it) and food type at a glance, the
  * "available today" switch, its photos (the app's own picker and upload), and
  * the way into its details or off the menu.
  */
-export function FoodDishCard({ control, index, config, onEdit, onRemove }: Readonly<Props>) {
+export function FoodDishCard({
+  control,
+  index,
+  config,
+  currency,
+  onEdit,
+  onRemove,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const dish = useWatch({ control, name: `food_menu.${index}` });
   const heading =
@@ -46,10 +57,15 @@ export function FoodDishCard({ control, index, config, onEdit, onRemove }: Reado
             {heading}
           </Text>
           <Text fontSize={12} color="$muted">
-            {[String(dish.price), dish.diet ? foodDietLabel(t, dish.diet) : '', dish.category]
+            {[dish.diet ? foodDietLabel(t, dish.diet) : '', dish.category]
               .filter(Boolean)
               .join(' · ')}
           </Text>
+          <FoodItemPrice
+            item={{ ...dish, id: `dish-${index}` }}
+            currency={currency}
+            audience="owner"
+          />
         </YStack>
       </XStack>
       {problem ? (

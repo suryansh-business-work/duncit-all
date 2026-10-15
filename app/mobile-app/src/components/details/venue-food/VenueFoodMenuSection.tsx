@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { YStack } from 'tamagui';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { XStack, YStack } from 'tamagui';
 import { FOOD_ORDER_LIMITS, groupFoodMenu, type VenueFoodItem } from '@duncit/utils';
 
 import { NoticeCard } from '@/components/attendance/NoticeCard';
-import { DuncitButton } from '@/components/DuncitButton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ImageViewerModal } from '@/components/ImageViewerModal';
@@ -11,9 +12,13 @@ import { SectionHeader } from '@/components/SectionHeader';
 import type { PublicVenueDetails } from '@/hooks/useHostsVenues';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { RootStackParamList } from '@/navigation/types';
 
-import { FoodMenuList } from './FoodMenuList';
+import { FoodLicenceNote } from './FoodLicenceNote';
+import { FoodMenuBrowser } from './FoodMenuBrowser';
 import { FoodNotice } from './FoodNotice';
+import { FoodRatingBadge } from './FoodRatingBadge';
+import { FoodRunningOrders } from './FoodRunningOrders';
 import { useVenueFoodOrdering } from './VenueFoodOrderingScope';
 
 type Props = Readonly<{ venue: PublicVenueDetails }>;
@@ -28,25 +33,24 @@ function Section({ venue }: Props) {
   const { t } = useTranslation();
   const { currency } = usePublicFinance();
   const ordering = useVenueFoodOrdering();
-  const { cart, canOrder, tracked } = ordering;
+  const { cart, canOrder } = ordering;
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [zoom, setZoom] = useState<string[] | null>(null);
 
   const groups = useMemo(() => groupFoodMenu(venue.food_menu), [venue.food_menu]);
   const discountPct = venue.food_ordering.discount_pct;
 
   const openImage = (item: VenueFoodItem) => setZoom(item.images);
+  const openDetails = (item: VenueFoodItem) =>
+    navigation.navigate('VenueFoodItem', { venueId: venue.id, itemId: item.id });
 
   return (
     <YStack gap={12} testID="venue-food-menu">
-      <SectionHeader testID="venue-food-menu-header" title={t('mweb.venueFood.menuTitle')} />
-      {tracked ? (
-        <DuncitButton
-          testID="venue-food-track-order"
-          label={t('mweb.venueFood.trackOrder', { vars: { orderNo: tracked.order_no } })}
-          variant="soft"
-          onPress={ordering.openTracked}
-        />
-      ) : null}
+      <XStack alignItems="center" justifyContent="space-between" gap={8}>
+        <SectionHeader testID="venue-food-menu-header" title={t('mweb.venueFood.menuTitle')} />
+        <FoodRatingBadge venueId={venue.id} />
+      </XStack>
+      <FoodRunningOrders venueId={venue.id} />
       {ordering.closed ? (
         <NoticeCard
           testID="venue-food-closed"
@@ -87,16 +91,18 @@ function Section({ venue }: Props) {
           title={t('mweb.venueFood.menuEmpty')}
         />
       ) : (
-        <FoodMenuList
+        <FoodMenuBrowser
           groups={groups}
           currency={currency}
           onOpenImage={openImage}
+          onOpenDetails={openDetails}
           canOrder={canOrder}
           quantityOf={cart.quantityOf}
           cartReady={cart.hydrated}
           onQuantity={cart.setQuantity}
         />
       )}
+      <FoodLicenceNote fssai={venue.food_licences?.fssai_number} />
       <ImageViewerModal images={zoom ?? []} index={zoom ? 0 : null} onClose={() => setZoom(null)} />
     </YStack>
   );

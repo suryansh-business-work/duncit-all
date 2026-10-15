@@ -61,6 +61,7 @@ export default function LoginScreen({
       <Tooltip title={dark ? t('session.login.switchToLight') : t('session.login.switchToDark')}>
         <DuncitIconButton
           onClick={onToggleMode}
+          data-testid="login-color-mode"
           aria-label={t('session.login.toggleColorMode')}
           sx={{ position: 'fixed', top: 16, right: 16, zIndex: 3, color: 'text.primary' }}
         >

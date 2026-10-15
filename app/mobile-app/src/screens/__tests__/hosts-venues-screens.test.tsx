@@ -221,6 +221,28 @@ describe('VenueDetailsScreen', () => {
     expect(screen.getAllByTestId('venue-gallery-image').length).toBe(1);
   });
 
+  it('opens a gallery photo full screen and closes it again', () => {
+    mockedVenue.mockReturnValue({
+      venue: {
+        id: 'v1',
+        venue_name: 'Sunset Cafe',
+        cover_image_url: 'http://cover',
+        gallery: ['http://g1'],
+        amenities: [],
+        tags: [],
+      },
+      isLoading: false,
+    });
+    renderWithProviders(<VenueDetailsScreen />);
+    expect(screen.queryByTestId('image-viewer')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('venue-gallery-image'));
+    expect(screen.getByTestId('image-viewer')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('image-viewer-close'));
+    expect(screen.queryByTestId('image-viewer')).toBeNull();
+  });
+
   it('renders a minimal venue (no type/capacity/description/amenities/gallery/address)', () => {
     mockedVenue.mockReturnValue({
       venue: {

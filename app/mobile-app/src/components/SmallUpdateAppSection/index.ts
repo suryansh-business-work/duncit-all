@@ -1,0 +1,1 @@
+export { SmallUpdateAppSection } from './SmallUpdateAppSection';

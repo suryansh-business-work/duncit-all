@@ -3,6 +3,7 @@ import { BadgesScreen } from '@/screens/BadgesScreen';
 import { ChatRoomScreen } from '@/screens/ChatRoomScreen';
 import { ChatsScreen } from '@/screens/ChatsScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
+import { FreeJoinSuccessScreen } from '@/screens/FreeJoinSuccessScreen';
 import { CityLaunchScreen } from '@/screens/CityLaunchScreen';
 import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { DuncitCoinScreen } from '@/screens/DuncitCoinScreen';
@@ -32,6 +33,8 @@ import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
 import { TourGuideScreen } from '@/screens/TourGuideScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
 import { VenueFoodOrderScreen } from '@/screens/VenueFoodOrderScreen';
+import { VenueFoodItemScreen } from '@/screens/VenueFoodItemScreen';
+import { MyFoodOrdersScreen } from '@/screens/MyFoodOrdersScreen';
 import { OrderDetailScreen } from '@/screens/OrderDetailScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
 import { ProductCheckoutScreen } from '@/screens/ProductCheckoutScreen';
@@ -76,8 +79,11 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="Follow" component={FollowListScreen} />
       <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
       <Stack.Screen name="VenueFoodOrder" component={VenueFoodOrderScreen} />
+      <Stack.Screen name="VenueFoodItem" component={VenueFoodItemScreen} />
+      <Stack.Screen name="MyFoodOrders" component={MyFoodOrdersScreen} />
       <Stack.Screen name="CityLaunch" component={CityLaunchScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="FreeJoinSuccess" component={FreeJoinSuccessScreen} />
       <Stack.Screen name="ProductCheckout" component={GatedProductCheckoutScreen} />
       <Stack.Screen name="Shop" component={GatedShopScreen} />
       <Stack.Screen name="ProductDetail" component={GatedProductDetailScreen} />

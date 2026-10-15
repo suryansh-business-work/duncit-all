@@ -82,9 +82,12 @@ export default function PodCard({
           }
         }}
         sx={{
+          // Never wider than its column: a list narrower than the card (the
+          // profile's Joined Pods on a small phone) shrinks it instead of
+          // pushing it past the screen edge. A rail's wrapper never shrinks
+          // (flex 0 0 auto), so rail cards keep the full width.
           width: CARD_WIDTH,
-          minWidth: CARD_WIDTH,
-          maxWidth: CARD_WIDTH,
+          maxWidth: '100%',
           height: CARD_HEIGHT,
           p: 1,
           display: 'flex',

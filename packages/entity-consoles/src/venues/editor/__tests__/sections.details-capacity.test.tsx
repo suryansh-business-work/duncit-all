@@ -21,10 +21,27 @@ describe('VenueDetailsSection', () => {
     renderForm<VenueFormValues>(
       venueValues(over),
       ({ control }) => (
-        <VenueDetailsSection control={control} onPick={onPick} categoryLimit={5} minCategories={minCategories} />
+        <VenueDetailsSection
+          control={control}
+          onPick={onPick}
+          categoryLimit={5}
+          minCategories={minCategories}
+          venueId="venue-1"
+          videoLimit={3}
+        />
       ),
       catalogueMocks,
     );
+
+  it('names the venue on the video upload button, and the section while the venue has no name', () => {
+    mount(vi.fn(), { venue_name: 'Third Wave Coffee' });
+    expect(screen.getByRole('button', { name: 'Upload a video of Third Wave Coffee' })).toBeInTheDocument();
+  });
+
+  it('falls back to the section name on the video upload button for an unnamed venue', () => {
+    mount(vi.fn(), { venue_name: '   ' });
+    expect(screen.getByRole('button', { name: 'Upload a video of Photos' })).toBeInTheDocument();
+  });
 
   it('holds the name, description, photos, categories and address — in the owner form order', () => {
     mount(vi.fn());

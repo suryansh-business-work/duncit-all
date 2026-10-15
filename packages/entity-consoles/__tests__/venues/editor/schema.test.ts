@@ -205,3 +205,56 @@ describe('makeVenueFormSchema', () => {
     }
   });
 });
+
+describe('makeVenueFormSchema — venue videos and the food extras', () => {
+  it('keeps the venue videos trimmed, and reads a missing list as none', () => {
+    const parsed = schema.safeParse({ ...valid(), videos: ['  https://youtu.be/dQw4w9WgXcQ  '] });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.videos).toEqual(['https://youtu.be/dQw4w9WgXcQ']);
+
+    const defaulted = schema.safeParse({ ...valid(), videos: undefined });
+    expect(defaulted.success).toBe(true);
+    if (defaulted.success) expect(defaulted.data.videos).toEqual([]);
+  });
+
+  it('refuses a video address longer than the server stores', () => {
+    expect(errorAt({ ...valid(), videos: [`https://cdn.example.test/${'x'.repeat(2048)}`] }, 'videos.0')).not.toBe('');
+    expect(errorAt({ ...valid(), videos: [`https://cdn.example.test/${'x'.repeat(2000)}`] }, 'videos.0')).toBe('');
+  });
+
+  it('checks the FSSAI number, the original price and the tables while the venue serves food', () => {
+    const values = valid();
+    values.food_licences = { ...values.food_licences, fssai_number: '12345' };
+    // Below the dish's 180 price.
+    values.food_menu = values.food_menu.map((dish) => ({ ...dish, original_price: 100 }));
+    values.food_tables = `1, ${'x'.repeat(21)}`;
+
+    expect(errorAt(values, 'food_licences.fssai_number')).toBe('venueFoodOwner.licences.fssaiInvalid');
+    expect(errorAt(values, 'food_menu.0.original_price')).toBe('venueFoodOwner.menu.originalPriceInvalid');
+    expect(errorAt(values, 'food_tables')).toBe('venueFoodOwner.tables.tooLong:{"max":20}');
+  });
+
+  it('holds the dish videos and the tables to the config limits it is built with', () => {
+    const capped = makeVenueFormSchema(t, {
+      food_menu_limit: 10,
+      food_image_limit: 3,
+      food_price_max: 5000,
+      food_discount_max_pct: 90,
+      food_video_limit: 0,
+      food_table_limit: 2,
+    });
+    const result = capped.safeParse(valid());
+    expect(result.success).toBe(false);
+    const issues = result.success ? [] : result.error.issues.map((issue) => `${issue.path.join('.')}=${issue.message}`);
+    expect(issues).toContain('food_menu.0.videos=venueFoodOwner.videos.limit:{"max":0}');
+    expect(issues).toContain('food_tables=venueFoodOwner.tables.limit:{"max":2}');
+  });
+
+  it('checks none of the food extras while the venue serves no food', () => {
+    const values = valid();
+    values.offers_food = false;
+    values.food_licences = { ...values.food_licences, fssai_number: '12345' };
+    values.food_tables = `1, ${'x'.repeat(21)}`;
+    expect(schema.safeParse(values).success).toBe(true);
+  });
+});

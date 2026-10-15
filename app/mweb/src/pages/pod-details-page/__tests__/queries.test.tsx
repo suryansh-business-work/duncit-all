@@ -71,3 +71,13 @@ describe('pod-details-page queries module', () => {
     expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
   });
 });
+
+describe('POD_DETAILS membership state', () => {
+  // The Cancel Spot note ("2 more times", "limit reached") is worded from these.
+  it('reads the free-spot cancel counters', () => {
+    const source = (queries.POD_DETAILS.loc?.source.body ?? '') as string;
+    const state = source.slice(source.indexOf('podMembershipState('));
+    expect(state).toContain('spot_cancels_used');
+    expect(state).toContain('spot_cancels_max');
+  });
+});

@@ -526,6 +526,19 @@ describe('PodDetailsScreen', () => {
       { auth: true },
     );
     expect(mockNavigate).not.toHaveBeenCalledWith('Checkout', expect.anything());
+    // Lands on the same confirmation a paid booking ends on (ticket download).
+    expect(mockNavigate).toHaveBeenCalledWith('FreeJoinSuccess', { podId: 'p1' });
+  });
+
+  it('stays on the pod and never lands on the confirmation when the free join fails', async () => {
+    mockGraphql.mockImplementation((doc: unknown) =>
+      Promise.reject(new Error(doc === JoinFreePodDocument ? 'Pod is full' : 'offline')),
+    );
+    mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-book'));
+    expect(await screen.findByTestId('pod-join-error')).toHaveTextContent('Pod is full');
+    expect(mockNavigate).not.toHaveBeenCalledWith('FreeJoinSuccess', expect.anything());
   });
 
   it('sends the pod host to Host Studio instead of booking their own pod', () => {
@@ -677,6 +690,48 @@ describe('PodDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('pod-cancel-spot'));
     fireEvent.press(screen.getByTestId('cancel-spot-confirm'));
     await waitFor(() => expect(mockCancelSpot).toHaveBeenCalledTimes(2));
+  });
+
+  it('tells the member inside the Cancel Spot confirm how many cancellations are left', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: {
+        is_member: true,
+        can_join: false,
+        can_backout: false,
+        can_cancel_spot: true,
+        spot_cancels_used: 2,
+        spot_cancels_max: 3,
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-cancel-spot'));
+    expect(screen.getByTestId('cancel-spot-limit-hint')).toHaveTextContent(
+      /You can cancel your spot on this pod one more time\./,
+    );
+  });
+
+  it('keeps the spot and asks nothing when the Cancel Spot confirm is backed out of', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: {
+        is_member: true,
+        can_join: false,
+        can_backout: false,
+        can_cancel_spot: true,
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-cancel-spot'));
+    fireEvent.press(screen.getByTestId('cancel-spot-keep'));
+
+    expect(screen.queryByTestId('cancel-spot-dialog')).toBeNull();
+    expect(mockCancelSpot).not.toHaveBeenCalled();
+    expect(screen.getByTestId('pod-cancel-spot')).toBeOnTheScreen();
   });
 
   it('names a checked-in refusal on the bar instead of the raw server text', async () => {

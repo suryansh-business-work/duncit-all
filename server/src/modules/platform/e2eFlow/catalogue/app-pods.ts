@@ -343,8 +343,8 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         description: 'A free pod is joined directly from the booking bar; no payment is taken.',
         steps: [
           ['Open an upcoming free pod with spots left', 'Bar shows "Entry · Free" and a "Join" button, with no seat stepper'],
-          ['Tap "Join"', 'Button disables while joining, confetti plays and a "Joined!" notice shows'],
-          ['Look at the bar after refetch', 'Bar shows "You\'re going · Pod Booked" with a "Backout" button'],
+          ['Tap "Join"', 'Button disables while joining, then the booking confirmation (/pod/<podId>/booked; native FreeJoinSuccess) opens showing "Spot confirmed", a "Download ticket" button and no receipt or invoice'],
+          ['Go back to the pod', 'Bar shows "You\'re going · Pod Booked" with a "Cancel Spot" button and "You can cancel your spot on this pod <n> more times."'],
           ['Check the database', 'A PodMember row with status JOINED, source FREE and seats 1 exists and a ticket is issued'],
           ['Open Pod History (/pod-history)', 'The pod is listed with "Joined <date>"'],
         ],

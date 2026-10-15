@@ -178,8 +178,9 @@ describe('HealthScoreCard — deleting an adjustment through the real confirm di
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
     await settle();
 
-    expect(onDeleteVars).toHaveBeenCalledWith({ id: 'adj-1' });
-    expect(onUpdated).toHaveBeenCalledWith(expect.objectContaining({ total_score: 70 }));
+    // The mutation answers on its own tick; wait for it rather than for a fixed number of ticks.
+    await waitFor(() => expect(onDeleteVars).toHaveBeenCalledWith({ id: 'adj-1' }));
+    await waitFor(() => expect(onUpdated).toHaveBeenCalledWith(expect.objectContaining({ total_score: 70 })));
     // The confirm dialog fades out before it unmounts.
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });

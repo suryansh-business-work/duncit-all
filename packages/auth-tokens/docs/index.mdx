@@ -153,6 +153,12 @@ auth
 //     light: { clear: 'rgba(242,243,239,0)', ground: 'rgba(242,243,239,1)' },
 //     dark:  { clear: 'rgba(14,16,18,0)',    ground: 'rgba(14,16,18,1)' },
 //     height: 380, heightRatio: 0.46, fadeStart: 0.35, contentStart: 0.5, chipRadius: 999,
+//     scrim: { clear: 'rgba(14,16,18,0)', ground: 'rgba(14,16,18,0.9)' },   ← under the heading on the photo
+//   },
+//   fit: {                                            ← the login landing fitted to the window (fitScale)
+//     designHeight: 940, fixedHeight: 380, minScale: 0.55, maxScale: 1, heroRoom: 140,
+//     logoSize: 56, titleSize: 40, titleMinSize: 28, subtitleSize: 16, subtitleMinSize: 14,
+//     gap: 24, socialIconRatio: 0.55,
 //   },
 //   legal: { termsUrl: 'https://duncit.com/policy/terms-and-conditions', privacyUrl: 'https://duncit.com/policy/privacy-policy' },
 // }
@@ -242,7 +248,7 @@ functions, no options and no defaults to pass.
 | `surface` | `SurfaceColors` | `bg`, `paper`, `soft`, `border` (light-mode surfaces). |
 | `light` | `ModeColors` | Light palette — 19 keys. |
 | `dark` | `ModeColors` | Dark palette — the same 19 keys. |
-| `auth` | `AuthVisuals` | `accent`, `avatars`, `avatarRing`, `bgGradient`, `cardGradient`, `hero`, `legal`. |
+| `auth` | `AuthVisuals` | `accent`, `avatars`, `avatarRing`, `bgGradient`, `cardGradient`, `hero`, `fit`, `legal`. |
 | `radii` | `Radii` | `sm`, `md`, `lg`, `xl`, `pill` (numbers, px). |
 | `typography` | `Typography` | `fontFamily` plus six named `weight`s. |
 | default | the whole object | All nine under one import. |
@@ -252,7 +258,9 @@ functions, no options and no defaults to pass.
 | `ColorScale` | `Record<'50'\|'100'\|…\|'900', string>` |
 | `ModeColors` | `bg, surface, soft, ink, muted, border, inputBorder, primary, primaryHover, primaryActive, onPrimary, accent, onAccent, brand, success, warning, error, info, onSemantic` — all `string` |
 | `GradientPair` | `{ light: [string, string, string]; dark: [string, string, string] }` |
-| `AuthVisuals` | `accent: string`, `avatars: [string,string,string]`, `avatarRing: string`, `bgGradient: GradientPair`, `cardGradient: GradientPair`, `hero: AuthHero`, `legal: { termsUrl, privacyUrl }` |
+| `AuthVisuals` | `accent: string`, `avatars: [string,string,string]`, `avatarRing: string`, `bgGradient: GradientPair`, `cardGradient: GradientPair`, `hero: AuthHero`, `fit: AuthFit`, `legal: { termsUrl, privacyUrl }` |
+| `AuthFit` | `designHeight`, `fixedHeight`, `minScale`, `maxScale`, `heroRoom`, `logoSize`, `titleSize`, `titleMinSize`, `subtitleSize`, `subtitleMinSize`, `gap`, `socialIconRatio` — all `number`. The login landing at scale 1; `fitScale` (@duncit/utils) shrinks the flexible part to the window, the `*MinSize` floors hold, and what still does not fit scrolls. |
+| `AuthHero.scrim` | `HeroFade` — the dark ground at 90% under the logo and heading on the photo. The heading there is drawn in the DARK palette in both modes: dark `ink` 13.4:1, `muted` 5.6:1 and `accent` 4.5:1 on it even over a pure-white photo (assuming the server dark palette is the bundled one). |
 | `FogLayer` | `veil`, `edge`, `clear` — all `string` |
 | `AuthFog` | `light: FogLayer`, `dark: FogLayer`, `mediaOpacity: number`, `edgeStop: number` |
 

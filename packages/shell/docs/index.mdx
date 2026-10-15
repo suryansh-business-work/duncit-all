@@ -68,6 +68,7 @@ exports:
   - 'BackgroundJobsIndicator'
   - 'useBackgroundJobs'
   - 'BrandLogsPanel'
+  - 'EventRequestsPage'
   - 'renderChangeLogField'
   - 'renderChangeLogOld'
   - 'renderChangeLogNew'
@@ -198,6 +199,25 @@ The bar strip has no chart dependency. It is a row of `Box` bars, each scaled to
 the order total and `trendPeak(trend)`. Money goes through `formatINR` and counts through
 `formatCount` (both `@duncit/utils`). The window start uses the admin-configured `formatDate`. All
 copy lives under `shell.brandConsole.*`.
+
+### Event Requests
+
+What members asked for when a host or a venue had nothing coming up (the "Request an event" card
+on mWeb and native). ONE page for both audiences — the partner in the Partners portal and staff in
+the Venues / Hosts consoles; the server scopes the rows:
+
+```tsx
+import { EventRequestsPage } from '@duncit/shell';
+
+<Route path="/venues/event-requests" element={authed(<EventRequestsPage targetType="VENUE" scope="owner" />)} />
+<Route path="/event-requests" element={authed(<EventRequestsPage targetType="HOST" scope="console" />)} />
+```
+
+| Export | Props | What it renders | Server operations |
+|---|---|---|---|
+| `EventRequestsPage` | `{ targetType: 'HOST' \| 'VENUE'; scope: 'owner' \| 'console' }` | Open / Fulfilled / Dismissed / Total tiles (a warning line if they fail), then a `DuncitTable`, newest first: Venue or Host (hidden on a host's own list), Requested by, Note, Status (enum filter), Requested, Closed, and Mark fulfilled / Dismiss on an OPEN row. A pod going live closes open requests on its own. | `owner` → `myReceivedEventRequestsTable` + `myReceivedEventRequestCounts`; `console` → `eventRequestsTable` + `eventRequestCounts` (Venues / Hosts console readers); both close a row with `updateEventRequestStatus`. |
+
+Copy lives under `publicPage.eventRequests.*`, already in the shell fallback.
 
 The Field and Old / New value cells are exported as `renderChangeLogField`, `renderChangeLogOld` and
 `renderChangeLogNew` (typed on `ChangeLogValueRow`), and `@duncit/entity-consoles` draws its directory

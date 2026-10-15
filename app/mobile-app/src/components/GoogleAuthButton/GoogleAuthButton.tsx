@@ -7,6 +7,7 @@ import { Spinner, Text, XStack } from 'tamagui';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
+import { auth } from '@duncit/auth-tokens';
 import { BUTTON_SIZES, PRESS_STYLE } from '@duncit/buttons-native';
 
 import { readGoogleIdToken } from './googleIdToken';
@@ -16,6 +17,13 @@ import { readGoogleIdToken } from './googleIdToken';
 // our themed button surface — keeping the logo on-brand without altering it.
 const GOOGLE_G_LIGHT = require('../../assets/google-signin-assets/google-g-light.png');
 const GOOGLE_G_DARK = require('../../assets/google-signin-assets/google-g-dark.png');
+/** The coloured G spans half of its kit tile; the rest is the tile and its ring. */
+const G_SHARE_OF_TILE = 0.5;
+/** Round button: the tile drawn so the G itself is `socialIconRatio` of the circle; the
+ * circle clips the tile's own ring and keeps ours. */
+const ROUND_TILE = Math.round(
+  (BUTTON_SIZES.lg.height * auth.fit.socialIconRatio) / G_SHARE_OF_TILE,
+);
 
 // Finishes the auth session if the app was opened via the OAuth redirect.
 WebBrowser.maybeCompleteAuthSession();
@@ -162,6 +170,7 @@ export function GoogleAuthButton({
       borderColor="$borderColor"
       backgroundColor="$surface"
       opacity={isDisabled ? 0.6 : 1}
+      overflow={round ? 'hidden' : undefined}
       pressStyle={PRESS_STYLE.control}
     >
       {busy ? (
@@ -170,7 +179,7 @@ export function GoogleAuthButton({
         <Image
           testID="google-auth-icon"
           source={scheme === 'dark' ? GOOGLE_G_DARK : GOOGLE_G_LIGHT}
-          style={{ width: 20, height: 20 }}
+          style={round ? { width: ROUND_TILE, height: ROUND_TILE } : { width: 20, height: 20 }}
           resizeMode="contain"
           accessibilityIgnoresInvertColors
         />

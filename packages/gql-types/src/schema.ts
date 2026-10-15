@@ -529,6 +529,40 @@ export type AiDummyEntity =
   | 'INVENTORY_PRODUCT'
   | 'POD';
 
+/**
+ * One AI feature of the product — an entry in the OpenAI task catalogue — with
+ * its On/Off switch and what it used and cost over the requested range.
+ */
+export type AiFeature = {
+  __typename?: 'AiFeature';
+  avg_duration_ms: Scalars['Int']['output'];
+  calls: Scalars['Int']['output'];
+  completion_tokens: Scalars['Int']['output'];
+  /** USD, summed from each call's cost as priced when it was made. */
+  cost_usd: Scalars['Float']['output'];
+  description: Scalars['String']['output'];
+  /** False when an admin switched it off in the AI portal. A feature never switched is on. */
+  enabled: Scalars['Boolean']['output'];
+  failed_calls: Scalars['Int']['output'];
+  /** Stable catalogue key, e.g. moderation.pod. Also the task its calls are logged under. */
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  last_called_at?: Maybe<Scalars['String']['output']>;
+  /** Owning area — Moderation, CRM, Admin Tools … */
+  module: Scalars['String']['output'];
+  prompt_tokens: Scalars['Int']['output'];
+  range_days: Scalars['Int']['output'];
+  /** Calls that never left — no key configured, or the feature switched off. */
+  skipped_calls: Scalars['Int']['output'];
+  total_tokens: Scalars['Int']['output'];
+  /** Calls on a model with no rate card entry — cost_usd is a floor when this is above 0. */
+  unpriced_calls: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by_name?: Maybe<Scalars['String']['output']>;
+  /** What the product does instead while this feature is switched off. */
+  when_off: Scalars['String']['output'];
+};
+
 export type AiLocationAreasInput = {
   city: Scalars['String']['input'];
   country: Scalars['String']['input'];
@@ -961,6 +995,8 @@ export type AnalyticsEntity =
   | 'CLUBS'
   | 'CLUB_ADMINS'
   | 'COMMUNICATIONS'
+  /** Members' phone-book syncs and the invites sent from them — counts only (Marketing > Contacts). */
+  | 'CONTACTS'
   | 'DATABASE'
   | 'E2E_TESTS'
   | 'ENV_KEYS'
@@ -1680,6 +1716,8 @@ export type AppSettings = {
   jwt_no_expiry: Scalars['Boolean']['output'];
   /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
   max_backout_attempts: Scalars['Int']['output'];
+  /** Times a member may cancel their spot on the same FREE pod; once used up the spot stays booked. */
+  max_free_spot_cancellations: Scalars['Int']['output'];
   /** Minimum age (whole years) required to sign up or save a date of birth. */
   min_signup_age: Scalars['Int']['output'];
   /** Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy. */
@@ -1912,6 +1950,8 @@ export type AskBotTurnInput = {
  * renders the wording from its own localized copy (rule 38).
  */
 export type AskBotUnavailableReason =
+  /** Switched off in AI portal > AI Features. */
+  | 'DISABLED'
   | 'NOT_CONFIGURED';
 
 export type AttachE2eRunVideosInput = {
@@ -8900,6 +8940,50 @@ export type EnvTestRichResult = {
   url?: Maybe<Scalars['String']['output']>;
 };
 
+/** A member's ask that a host or venue with nothing upcoming runs an event. */
+export type EventRequest = {
+  __typename?: 'EventRequest';
+  closed_at?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  /** The pod whose going live answered this request. */
+  fulfilled_pod_id?: Maybe<Scalars['ID']['output']>;
+  id: Scalars['ID']['output'];
+  note: Scalars['String']['output'];
+  requester_id: Scalars['ID']['output'];
+  requester_name: Scalars['String']['output'];
+  status: EventRequestStatus;
+  target_id: Scalars['ID']['output'];
+  target_name: Scalars['String']['output'];
+  target_type: EventRequestTarget;
+};
+
+export type EventRequestCounts = {
+  __typename?: 'EventRequestCounts';
+  dismissed: Scalars['Int']['output'];
+  fulfilled: Scalars['Int']['output'];
+  open: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+/** OPEN until the target publishes a pod (FULFILLED) or its owner dismisses it. */
+export type EventRequestStatus =
+  | 'DISMISSED'
+  | 'FULFILLED'
+  | 'OPEN';
+
+export type EventRequestTablePage = {
+  __typename?: 'EventRequestTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<EventRequest>;
+  total: Scalars['Int']['output'];
+};
+
+/** Who an event request is addressed to: a host (by their user id) or a venue. */
+export type EventRequestTarget =
+  | 'HOST'
+  | 'VENUE';
+
 export type EventTicket = {
   __typename?: 'EventTicket';
   checked_in_at?: Maybe<Scalars['String']['output']>;
@@ -12488,7 +12572,9 @@ export type Mutation = {
    * BACKED_OUT with spot_cancelled_at set. No backout request, no attempt, no
    * refund; joinFreePod brings the same booking back any number of times.
    * Idempotent. Errors: NOT_FREE_POD (paid pod — use backoutPod), BAD_REQUEST
-   * (pod started), NOT_FOUND (not a member), ALREADY_CHECKED_IN (ticket scanned).
+   * (pod started), NOT_FOUND (not a member), ALREADY_CHECKED_IN (ticket scanned),
+   * CANCEL_LIMIT_REACHED (Pod Settings' max_free_spot_cancellations used up —
+   * the member keeps their spot).
    * On a free pod backoutPod does the same thing, for installed app builds.
    */
   cancelFreeSpot: PodMember;
@@ -13444,6 +13530,8 @@ export type Mutation = {
   reportE2eRun: E2eRun;
   /**
    * Report a post or a story. Open to any signed-in viewer — that is the point.
+   * Refused with REPORT_ALREADY_PENDING while the viewer's earlier report on the
+   * same thing is still open; allowed again once Legal has closed it.
    *
    * The reason is a report category key. The snapshot (media, caption, author,
    * club) is taken server-side from the post itself, so a reporter cannot file a
@@ -13452,7 +13540,8 @@ export type Mutation = {
   reportPost: ContentReportReceipt;
   /**
    * Report a member's profile. Files into the same Legal queue as posts, with
-   * the avatar, name, @handle and bio snapshotted server-side.
+   * the avatar, name, @handle and bio snapshotted server-side. Same
+   * REPORT_ALREADY_PENDING rule as reportPost.
    */
   reportProfile: ContentReportReceipt;
   /** CI: a runner's periodic report. The answer says whether to stop. */
@@ -13505,6 +13594,11 @@ export type Mutation = {
    */
   requestEmailChangeOtp: OtpRequestResult;
   requestEmailVerificationOtp: OtpRequestResult;
+  /**
+   * Ask a host or venue for an event. Idempotent: a member with an open request
+   * to this target gets that request back instead of a second one.
+   */
+  requestEvent: MyEventRequestState;
   /**
    * Continue with OTP, step one: send a sign-in code to the chosen channel.
    *
@@ -13796,6 +13890,8 @@ export type Mutation = {
   sendWaCampaign: WaCampaign;
   /** Send one test message to one number, through the same path a campaign uses. */
   sendWaTestMessage: WaTestSendResult;
+  /** Switch one AI feature on or off. Audited in the table change log. */
+  setAiFeatureEnabled: AiFeature;
   /** Switch off everything the signed-in person is allowed to switch off. */
   setAllMyMailPreferences: MailPreference;
   setAllMyWhatsappPreferences: WaPreference;
@@ -14414,6 +14510,8 @@ export type Mutation = {
   /** Set how many times an entry of each category may be tested per window. */
   updateEnvAttemptSettings: EnvAttemptSettings;
   updateEnvEntry: EnvEntry;
+  /** Close an OPEN request as FULFILLED or DISMISSED — its owner or the console's editors. */
+  updateEventRequestStatus: EventRequest;
   updateExpense: Expense;
   updateExpenseOption: ExpenseOption;
   updateFaq: Faq;
@@ -17326,6 +17424,11 @@ export type MutationRequestEmailChangeOtpArgs = {
 };
 
 
+export type MutationRequestEventArgs = {
+  input: RequestEventInput;
+};
+
+
 export type MutationRequestLoginOtpArgs = {
   input: RequestLoginOtpInput;
 };
@@ -17875,6 +17978,12 @@ export type MutationSendWaCampaignArgs = {
 
 export type MutationSendWaTestMessageArgs = {
   input: SendWaTestInput;
+};
+
+
+export type MutationSetAiFeatureEnabledArgs = {
+  enabled: Scalars['Boolean']['input'];
+  key: Scalars['String']['input'];
 };
 
 
@@ -19519,6 +19628,12 @@ export type MutationUpdateEnvEntryArgs = {
 };
 
 
+export type MutationUpdateEventRequestStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: EventRequestStatus;
+};
+
+
 export type MutationUpdateExpenseArgs = {
   expense_doc_id: Scalars['ID']['input'];
   input: CreateExpenseInput;
@@ -20120,6 +20235,16 @@ export type MyAdminClubsFilter = {
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** The signed-in member's own open request to one host or venue. */
+export type MyEventRequestState = {
+  __typename?: 'MyEventRequestState';
+  /** True on the caller's own venue or host page — there is nobody to ask. */
+  is_owner: Scalars['Boolean']['output'];
+  request_id?: Maybe<Scalars['ID']['output']>;
+  requested: Scalars['Boolean']['output'];
+  requested_at?: Maybe<Scalars['String']['output']>;
+};
+
 /** The caller's cards: held or redeemed by them, and the ones they gifted away. */
 export type MyGiftCards = {
   __typename?: 'MyGiftCards';
@@ -20157,6 +20282,25 @@ export type MyReferral = {
    * written one, which the apps answer with their shipped default.
    */
   share_message: Scalars['String']['output'];
+};
+
+/** Which of the caller's own food orders to list. */
+export type MyVenueFoodOrderScope =
+  /** Paid and still with the kitchen, or placed within the last hour and still waiting for payment. */
+  | 'CURRENT'
+  /** Paid, and served or cancelled. */
+  | 'PAST';
+
+export type MyVenueFoodOrdersInput = {
+  /** Up to 20 orders this device placed. A key that does not open its order is ignored. */
+  keys?: InputMaybe<Array<VenueFoodOrderKeyInput>>;
+  /** 1-based; default 1. */
+  page?: InputMaybe<Scalars['Int']['input']>;
+  /** Default 10, at most 20. */
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  scope: MyVenueFoodOrderScope;
+  /** Only this venue's orders. */
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 /** Where a nameserver switch points the domain. */
@@ -23224,7 +23368,8 @@ export type PodMembershipState = {
   /**
    * True when the caller may cancel their spot (cancelFreeSpot): a FREE pod
    * they hold a JOINED booking on, that has not started and whose ticket has
-   * not been checked in. Always false on a paid pod.
+   * not been checked in, and whose cancellations are not used up
+   * (spot_cancels_used < spot_cancels_max). Always false on a paid pod.
    */
   can_cancel_spot: Scalars['Boolean']['output'];
   can_join: Scalars['Boolean']['output'];
@@ -23244,6 +23389,16 @@ export type PodMembershipState = {
   released_seats_pending: Scalars['Int']['output'];
   /** Seats still bookable (0 when the pod has unlimited spots). */
   seats_available: Scalars['Int']['output'];
+  /**
+   * Most spot cancellations allowed per member per FREE pod (Admin > Pods >
+   * Pod Settings). 0 on a paid pod, which has no Cancel Spot.
+   */
+  spot_cancels_max: Scalars['Int']['output'];
+  /**
+   * Times the caller has cancelled their spot on this FREE pod (counted on
+   * their booking, kept across re-joins). 0 on a paid pod.
+   */
+  spot_cancels_used: Scalars['Int']['output'];
   spots_taken: Scalars['Int']['output'];
   spots_total: Scalars['Int']['output'];
   status?: Maybe<MembershipStatus>;
@@ -24869,6 +25024,9 @@ export type Query = {
   /** Onboarding/admin: all slots for any venue (role-gated, no owner check). */
   adminVenueSlots: Array<VenueSlot>;
   agentAvailability: AgentAvailability;
+  aiFeature: AiFeature;
+  /** Every AI feature with its switch and usage. range_days defaults to 30, max 90. */
+  aiFeatures: Array<AiFeature>;
   /** Chip/dialog copy for any upload surface. Public — it is copy, and an upload field must never wait on a session to render its own safety notice. */
   aiMonitoringConfig: AiMonitoringConfig;
   /** AI Portal: full monitoring history (server-side table). */
@@ -25400,6 +25558,9 @@ export type Query = {
   envEntry?: Maybe<EnvEntry>;
   /** Where one entry's test-attempt count stands. Spends nothing. */
   envTestAttempts: EnvTestAttempts;
+  eventRequestCounts: EventRequestCounts;
+  /** Every request of one kind — the Venues console (VENUE) or the Hosts console (HOST). */
+  eventRequestsTable: EventRequestTablePage;
   eventTicket?: Maybe<EventTicket>;
   eventTicketPdfBase64: Scalars['String']['output'];
   eventTickets: Array<EventTicket>;
@@ -25741,6 +25902,8 @@ export type Query = {
   myEmployeeExpenseSummary: EmployeeExpenseSummary;
   /** The signed-in employee's own claims. */
   myEmployeeExpensesTable: EmployeeExpenseTablePage;
+  /** Whether the signed-in member already has an open request to this host or venue. */
+  myEventRequestState: MyEventRequestState;
   myEventTicketForPod?: Maybe<EventTicket>;
   myEventTickets: Array<EventTicket>;
   /** Open follow requests waiting on the signed-in user, newest first. */
@@ -25764,6 +25927,13 @@ export type Query = {
   /** All of the current user's onboarding meetings (one per kind). */
   myMeetings: Array<OnboardingMeeting>;
   myNotifications: Array<UserNotification>;
+  /**
+   * The signed-in viewer's own report on this post, story or profile that Legal
+   * has not closed yet, or null. While it exists a new report on the same thing
+   * is refused with REPORT_ALREADY_PENDING, so the report sheet shows that
+   * instead of the form.
+   */
+  myOpenReport?: Maybe<ContentReportReceipt>;
   /** Partner: the Razorpay / ShipRocket connections they saved on the Integrations page, newest first. */
   myPartnerIntegrations: Array<PartnerIntegration>;
   /** One of the caller's own payments. Null when it does not exist or is not theirs — the checkout confirmation poll reads this instead of the whole history. */
@@ -25805,6 +25975,9 @@ export type Query = {
   myPublicPage: PublicPageInsights;
   /** The printable A4 poster, base64-encoded for the browser or the app to save. */
   myPublicPagePosterPdfBase64: Scalars['String']['output'];
+  myReceivedEventRequestCounts: EventRequestCounts;
+  /** Requests addressed to the caller: the venues they own (VENUE) or themself as host (HOST). */
+  myReceivedEventRequestsTable: EventRequestTablePage;
   /** My code + everyone I brought in (generates the code on first read). */
   myReferral: MyReferral;
   /** The signed-in Regional Club Admin's own region, created on first read. */
@@ -25832,11 +26005,15 @@ export type Query = {
   /** Without venue_id: the owner's current application. With venue_id: that venue (must be the owner's). */
   myVenue?: Maybe<Venue>;
   myVenueEarningsSummary: EarningsSummary;
+  /** Public: the caller's own food orders — placed by the signed-in account, or proven by a key from this device. Newest first. */
+  myVenueFoodOrders: VenueFoodOrderTablePage;
   /**  Venue health for a venue owned by the signed-in user.  */
   myVenueHealth?: Maybe<HealthScore>;
   myVenuePayouts: Array<PaymentReleaseRequest>;
   /** A venue's printable table label — the scan panel with the venue's name under it — base64-encoded. headline is printed as given, in the owner's language. */
   myVenueTableLabelPdfBase64: Scalars['String']['output'];
+  /** Every table's QR sticker (Venue.food_tables), a page each, base64-encoded. Each QR opens the menu with its table filled in. table_heading is the translated word printed before a numbered table. */
+  myVenueTableStickersPdfBase64: Scalars['String']['output'];
   myVenues: Array<Venue>;
   /** Owner-scoped table page over the caller's venues (shared table engine). */
   myVenuesTable: VenueTablePage;
@@ -25875,6 +26052,7 @@ export type Query = {
   openAiTaskCatalogue: OpenAiTaskCatalogue;
   openAiUsageDashboard: OpenAiUsageDashboard;
   openAiUsageLog?: Maybe<OpenAiUsageLog>;
+  /** Pass task to read one AI feature's calls only (the AI Features logs page). */
   openAiUsageLogsTable: OpenAiUsageLogTablePage;
   partnerDashboard: PartnerDashboard;
   partnerEcommStats: PartnerEcommStats;
@@ -26570,6 +26748,8 @@ export type Query = {
   venueFoodOrderInvoicePdfBase64: Scalars['String']['output'];
   /** Venue owner / venues console: the paid orders of one venue. */
   venueFoodOrdersTable: VenueFoodOrderTablePage;
+  /** Public: a venue's food rating — the average of its rated orders, and how many. */
+  venueFoodRating: VenueFoodRating;
   /** Venue owner / venues console: the food dashboard of one venue. days 0 = all time. */
   venueFoodStats: VenueFoodStats;
   /**  Admin-only: health for a specific venue.  */
@@ -26744,6 +26924,17 @@ export type QueryAdminVenueSlotsArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAiFeatureArgs = {
+  key: Scalars['String']['input'];
+  range_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryAiFeaturesArgs = {
+  range_days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -27750,6 +27941,17 @@ export type QueryEnvTestAttemptsArgs = {
 };
 
 
+export type QueryEventRequestCountsArgs = {
+  target_type: EventRequestTarget;
+};
+
+
+export type QueryEventRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  target_type: EventRequestTarget;
+};
+
+
 export type QueryEventTicketArgs = {
   id: Scalars['ID']['input'];
 };
@@ -28403,6 +28605,12 @@ export type QueryMyEmployeeExpensesTableArgs = {
 };
 
 
+export type QueryMyEventRequestStateArgs = {
+  target_id: Scalars['ID']['input'];
+  target_type: EventRequestTarget;
+};
+
+
 export type QueryMyEventTicketForPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -28427,6 +28635,11 @@ export type QueryMyMeetingArgs = {
 export type QueryMyNotificationsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryMyOpenReportArgs = {
+  target_id: Scalars['ID']['input'];
 };
 
 
@@ -28497,6 +28710,17 @@ export type QueryMyPublicPagePosterPdfBase64Args = {
 };
 
 
+export type QueryMyReceivedEventRequestCountsArgs = {
+  target_type: EventRequestTarget;
+};
+
+
+export type QueryMyReceivedEventRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  target_type: EventRequestTarget;
+};
+
+
 export type QueryMySavedPodsArgs = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -28519,6 +28743,11 @@ export type QueryMyVenueArgs = {
 };
 
 
+export type QueryMyVenueFoodOrdersArgs = {
+  input: MyVenueFoodOrdersInput;
+};
+
+
 export type QueryMyVenueHealthArgs = {
   venue_id: Scalars['ID']['input'];
 };
@@ -28526,6 +28755,13 @@ export type QueryMyVenueHealthArgs = {
 
 export type QueryMyVenueTableLabelPdfBase64Args = {
   headline: Scalars['String']['input'];
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyVenueTableStickersPdfBase64Args = {
+  headline: Scalars['String']['input'];
+  table_heading: Scalars['String']['input'];
   venue_id: Scalars['ID']['input'];
 };
 
@@ -28604,6 +28840,7 @@ export type QueryOpenAiUsageLogArgs = {
 
 export type QueryOpenAiUsageLogsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+  task?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -30034,6 +30271,11 @@ export type QueryVenueFoodOrdersTableArgs = {
 };
 
 
+export type QueryVenueFoodRatingArgs = {
+  venue_id: Scalars['ID']['input'];
+};
+
+
 export type QueryVenueFoodStatsArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
   venue_id: Scalars['ID']['input'];
@@ -31271,6 +31513,13 @@ export type RequestCatalogDeletionInput = {
   scheduled_for: Scalars['String']['input'];
   /** The product's id for PRODUCT, the brand's for BRAND. */
   target_id: Scalars['ID']['input'];
+};
+
+export type RequestEventInput = {
+  /** Optional, up to 280 characters. */
+  note?: InputMaybe<Scalars['String']['input']>;
+  target_id: Scalars['ID']['input'];
+  target_type: EventRequestTarget;
 };
 
 /**
@@ -37314,6 +37563,8 @@ export type UpdateAppSettingsInput = {
   jwt_no_expiry?: InputMaybe<Scalars['Boolean']['input']>;
   /** Max Backout attempts a user gets per pod (min 1). */
   max_backout_attempts?: InputMaybe<Scalars['Int']['input']>;
+  /** Times a member may cancel their spot on the same FREE pod (min 1). */
+  max_free_spot_cancellations?: InputMaybe<Scalars['Int']['input']>;
   /** Minimum age to use the app, in whole years (1-120). */
   min_signup_age?: InputMaybe<Scalars['Int']['input']>;
   /** Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy. */
@@ -37357,8 +37608,11 @@ export type UpdateApprovedVenueInput = {
   capacity_items?: InputMaybe<Array<VenueCapacityItemInput>>;
   cover_image_url?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  food_licences?: InputMaybe<VenueFoodLicencesInput>;
   food_menu?: InputMaybe<Array<VenueFoodItemInput>>;
   food_ordering?: InputMaybe<VenueFoodOrderingInput>;
+  /** Omitted keeps the stored list. */
+  food_tables?: InputMaybe<Array<Scalars['String']['input']>>;
   gallery?: InputMaybe<Array<Scalars['String']['input']>>;
   /**
    * The venue's GST number, printed on its food invoices. Accepted only while the
@@ -37371,6 +37625,8 @@ export type UpdateApprovedVenueInput = {
   owner_dob?: InputMaybe<Scalars['String']['input']>;
   owner_name?: InputMaybe<Scalars['String']['input']>;
   owner_phone?: InputMaybe<Scalars['String']['input']>;
+  /** Omitted keeps the stored list. */
+  videos?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type UpdateAutoPodInput = {
@@ -38585,8 +38841,11 @@ export type Venue = {
   description: Scalars['String']['output'];
   documents: Array<VenueDocument>;
   facilities: Array<Scalars['String']['output']>;
+  food_licences: VenueFoodLicences;
   food_menu: Array<VenueFoodItem>;
   food_ordering: VenueFoodOrdering;
+  /** The venue's table labels, one per-table QR sticker each. Always empty on publicVenue. */
+  food_tables: Array<Scalars['String']['output']>;
   gallery: Array<Scalars['String']['output']>;
   gstin: Scalars['String']['output'];
   /** Admin-set cap on monthly host Pod Requests; null = the default of 10. */
@@ -38632,6 +38891,8 @@ export type Venue = {
   venue_no?: Maybe<Scalars['String']['output']>;
   venue_share_pct: Scalars['Float']['output'];
   venue_type: Scalars['String']['output'];
+  /** Venue videos: uploaded clips or YouTube video links. */
+  videos: Array<Scalars['String']['output']>;
 };
 
 export type VenueAutoExtend = {
@@ -38874,9 +39135,15 @@ export type VenueFoodItem = {
   /** Off = shown as unavailable and refused at checkout. */
   is_available: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
+  /** The MRP shown struck through beside price. Display only: the guest is always charged price. Null = no strikethrough. */
+  original_price?: Maybe<Scalars['Float']['output']>;
   /** Rupees for one, taxes included. */
   price: Scalars['Float']['output'];
+  /** How the saving against original_price reads. */
+  saving_display: VenueFoodSavingDisplay;
   spice_level: VenueFoodSpiceLevel;
+  /** Uploaded video clips or YouTube video links. */
+  videos: Array<Scalars['String']['output']>;
 };
 
 export type VenueFoodItemInput = {
@@ -38888,8 +39155,32 @@ export type VenueFoodItemInput = {
   images?: InputMaybe<Array<Scalars['String']['input']>>;
   is_available?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
+  /** Display only, never charged. Must be above price; null or 0 = no strikethrough. */
+  original_price?: InputMaybe<Scalars['Float']['input']>;
   price: Scalars['Float']['input'];
+  saving_display?: InputMaybe<VenueFoodSavingDisplay>;
   spice_level?: InputMaybe<VenueFoodSpiceLevel>;
+  /** At most venueRegistrationConfig.food_video_limit links: YouTube video links or uploaded clips. Omitted = none. */
+  videos?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+/** The licences a venue that serves food shows. On publicVenue only the numbers are filled; the documents are always empty there. */
+export type VenueFoodLicences = {
+  __typename?: 'VenueFoodLicences';
+  fssai_document_url: Scalars['String']['output'];
+  /** 14 digits. Printed at the foot of the public menu and on food invoices. */
+  fssai_number: Scalars['String']['output'];
+  liquor_document_url: Scalars['String']['output'];
+  liquor_licence_number: Scalars['String']['output'];
+};
+
+/** A field left out (or null) keeps what is stored; an empty string clears it. */
+export type VenueFoodLicencesInput = {
+  fssai_document_url?: InputMaybe<Scalars['String']['input']>;
+  /** Exactly 14 digits, or empty. */
+  fssai_number?: InputMaybe<Scalars['String']['input']>;
+  liquor_document_url?: InputMaybe<Scalars['String']['input']>;
+  liquor_licence_number?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** A food order placed by scanning a venue's QR. Paid to the venue's own Razorpay account. */
@@ -38942,6 +39233,12 @@ export type VenueFoodOrder = {
   venue_gstin: Scalars['String']['output'];
   venue_id: Scalars['ID']['output'];
   venue_name: Scalars['String']['output'];
+};
+
+/** An order this device placed, with the key that proves it. */
+export type VenueFoodOrderKeyInput = {
+  access_key: Scalars['String']['input'];
+  order_id: Scalars['ID']['input'];
 };
 
 /** A dish as it was when ordered. */
@@ -39024,6 +39321,16 @@ export type VenueFoodPaymentStatus =
   | 'REFUNDED'
   | 'REFUND_PENDING';
 
+/** What guests rated a venue's food: one rating per served order, so this is the venue's, not a dish's. */
+export type VenueFoodRating = {
+  __typename?: 'VenueFoodRating';
+  /** 0 when nobody has rated yet; otherwise 1.0 to 5.0, to one decimal. */
+  average: Scalars['Float']['output'];
+  /** Rated orders. */
+  count: Scalars['Int']['output'];
+  venue_id: Scalars['ID']['output'];
+};
+
 /** What the browser hands Razorpay's checkout to collect the payment. */
 export type VenueFoodRazorpaySheet = {
   __typename?: 'VenueFoodRazorpaySheet';
@@ -39036,6 +39343,11 @@ export type VenueFoodRazorpaySheet = {
   order_id: Scalars['String']['output'];
   prefill_contact: Scalars['String']['output'];
 };
+
+/** How a dish's saving against its struck-through original price reads: 20% off (PERCENT) or an amount off (AMOUNT). */
+export type VenueFoodSavingDisplay =
+  | 'AMOUNT'
+  | 'PERCENT';
 
 export type VenueFoodSpiceLevel =
   | 'EXTRA_HOT'
@@ -39292,12 +39604,18 @@ export type VenueRegistrationConfig = {
   food_menu_limit: Scalars['Int']['output'];
   food_price_max: Scalars['Int']['output'];
   food_spice_levels: Array<VenueFoodSpiceLevel>;
+  /** Tables a venue may print per-table QR stickers for. */
+  food_table_limit: Scalars['Int']['output'];
+  /** Videos one dish may carry. */
+  food_video_limit: Scalars['Int']['output'];
   /** The doc_types entry uploaded beside a GSTIN, not from the general list. */
   gstin_doc_type: Scalars['String']['output'];
   /** The doc_types entry uploaded beside a PAN, not from the general list. */
   pan_doc_type: Scalars['String']['output'];
   security: Array<Scalars['String']['output']>;
   venue_types: Array<Scalars['String']['output']>;
+  /** Videos the venue page may carry. */
+  venue_video_limit: Scalars['Int']['output'];
 };
 
 export type VenueRules = {
@@ -39477,8 +39795,11 @@ export type VenueStep1Input = {
   cover_image_url?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   facilities?: InputMaybe<Array<Scalars['String']['input']>>;
+  food_licences?: InputMaybe<VenueFoodLicencesInput>;
   food_menu?: InputMaybe<Array<VenueFoodItemInput>>;
   food_ordering?: InputMaybe<VenueFoodOrderingInput>;
+  /** The venue's table labels (at most venueRegistrationConfig.food_table_limit). Omitted keeps the stored list. */
+  food_tables?: InputMaybe<Array<Scalars['String']['input']>>;
   gallery?: InputMaybe<Array<Scalars['String']['input']>>;
   lat?: InputMaybe<Scalars['Float']['input']>;
   lng?: InputMaybe<Scalars['Float']['input']>;
@@ -39501,6 +39822,8 @@ export type VenueStep1Input = {
   venue_category?: InputMaybe<VenueCategoryInput>;
   venue_name: Scalars['String']['input'];
   venue_type: Scalars['String']['input'];
+  /** At most venueRegistrationConfig.venue_video_limit YouTube video links or uploaded clips. Omitted keeps the stored list. */
+  videos?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type VenueStep2Input = {

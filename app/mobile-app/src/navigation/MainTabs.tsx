@@ -1,6 +1,7 @@
 import { createBottomTabNavigator, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 import { BottomNav } from '@/components/BottomNav';
+import { SmallUpdateAppSection } from '@/components/SmallUpdateAppSection';
 import { DeletionNoticeDialog } from '@/components/account/DeletionNoticeDialog';
 import { CartReminder } from '@/components/cart/CartReminder';
 import { PodFeedbackPrompt } from '@/components/support/PodFeedbackPrompt';
@@ -37,6 +38,8 @@ export function MainTabs() {
         <Tab.Screen name="Venues" component={VenuesScreen} />
         {productsVisible ? <Tab.Screen name="Cart" component={CartScreen} /> : null}
       </Tab.Navigator>
+      {/* Before the cart nudge, so a live nudge draws over this standing card. */}
+      <SmallUpdateAppSection />
       <CartReminder />
       <PodFeedbackPrompt />
       <DeletionNoticeDialog />

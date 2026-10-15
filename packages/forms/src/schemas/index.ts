@@ -153,6 +153,7 @@ export {
 } from './pod-attendance-force';
 export { makePodShopReturnSchema, type PodShopReturnFormValues } from './pod-shop-return';
 export { foodCheckoutDefaults, makeFoodCheckoutSchema, type FoodCheckoutValues } from './food-checkout';
+export { makeYoutubeLinkSchema, youtubeLinkDefaults, type YoutubeLinkValues } from './video-link';
 export { foodFeedbackDefaults, makeFoodFeedbackSchema, type FoodFeedbackValues } from './food-feedback';
 export {
   FOOD_CANCEL_REASON_MAX,
@@ -182,7 +183,9 @@ export {
   FOOD_DISH_CATEGORY_MAX,
   FOOD_DISH_DESCRIPTION_MAX,
   FOOD_DISH_NAME_MAX,
+  FOOD_LIQUOR_LICENCE_MAX,
   foodDishShape,
+  foodLicencesShape,
   foodMenuLimitsOf,
   foodOrderingShape,
   makeFoodMenuSchema,
@@ -211,3 +214,19 @@ export {
   type WalletStatementValues,
   type WalletStatementVariables,
 } from './wallet-statement';
+export {
+  EVENT_REQUEST_NOTE_MAX,
+  eventRequestDefaults,
+  makeEventRequestSchema,
+  type EventRequestValues,
+} from './event-request';
+// Venue and dish videos: an uploaded clip or a YouTube link (reads @duncit/regex YOUTUBE_URL).
+export {
+  VENUE_VIDEO_FOLDER,
+  venueVideoOf,
+  venueVideosOf,
+  youtubeVideoId,
+  type FileVideo,
+  type VenueVideo,
+  type YoutubeVideo,
+} from './venue-videos';

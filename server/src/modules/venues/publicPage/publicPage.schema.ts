@@ -41,6 +41,8 @@ export const publicPageTypeDefs = /* GraphQL */ `
     ): String!
     "A venue's printable table label — the scan panel with the venue's name under it — base64-encoded. headline is printed as given, in the owner's language."
     myVenueTableLabelPdfBase64(venue_id: ID!, headline: String!): String!
+    "Every table's QR sticker (Venue.food_tables), a page each, base64-encoded. Each QR opens the menu with its table filled in. table_heading is the translated word printed before a numbered table."
+    myVenueTableStickersPdfBase64(venue_id: ID!, headline: String!, table_heading: String!): String!
   }
 
   extend type Mutation {

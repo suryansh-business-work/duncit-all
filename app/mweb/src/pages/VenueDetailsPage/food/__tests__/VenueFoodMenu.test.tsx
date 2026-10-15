@@ -1,11 +1,14 @@
 import '@testing-library/jest-dom/vitest';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FOOD_ORDER_LIMITS, type VenueFoodItem } from '@duncit/utils';
+import { FOOD_ORDER_ERROR, FOOD_ORDER_LIMITS, type PlaceVenueFoodOrderInput, type VenueFoodItem } from '@duncit/utils';
 import type { PublicVenue } from '../../queries';
 import VenueFoodMenu from '../VenueFoodMenu';
+import { MY_VENUE_FOOD_ORDERS, VENUE_FOOD_RATING } from '../queries';
+import { placeMock, renderCart, seedCart, seedGuest } from './foodCouponHarness';
 
 const dish = (over: Partial<VenueFoodItem> = {}): VenueFoodItem => ({
   id: 'chai',
@@ -221,5 +224,155 @@ describe('VenueFoodMenu — the floating cart button', () => {
 
     fireEvent.click(line.getByRole('button', { name: 'Remove one Masala Chai' }));
     expect(storedCart()).toEqual({ chai: 2 });
+  });
+});
+
+describe('VenueFoodMenu — around the dishes', () => {
+  const renderWith = (mocks: MockedResponse[], over: Partial<PublicVenue> = {}) =>
+    render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
+        <MemoryRouter>
+          <VenueFoodMenu venue={venue(over)} onRefresh={vi.fn(() => Promise.resolve())} />
+        </MemoryRouter>
+      </MockedProvider>,
+    );
+
+  it('prints the venue’s FSSAI licence at the foot of the menu, and nothing without one', () => {
+    const { unmount } = renderMenu({ food_licences: { fssai_number: ' 12345678901234 ' } });
+    expect(screen.getByTestId('venue-food-fssai')).toHaveTextContent('FSSAI Lic. No. 12345678901234');
+    unmount();
+    renderMenu({ food_licences: { fssai_number: '   ' } });
+    expect(screen.queryByTestId('venue-food-fssai')).not.toBeInTheDocument();
+  });
+
+  it('shows the venue’s food rating beside the menu title once guests have rated', async () => {
+    renderWith([
+      {
+        request: { query: VENUE_FOOD_RATING, variables: { venueId: 'v1' } },
+        result: { data: { venueFoodRating: { venue_id: 'v1', average: 4.5, count: 8 } } },
+      },
+    ]);
+    expect(await screen.findByTestId('venue-food-rating')).toHaveAccessibleName('Food rated 4.5 out of 5 by 8 guests');
+  });
+
+  it('links each of the visitor’s running orders here instead of a single "latest" one', async () => {
+    renderWith([
+      {
+        request: { query: MY_VENUE_FOOD_ORDERS, variables: () => true },
+        result: {
+          data: {
+            myVenueFoodOrders: {
+              rows: ['o1', 'o2'].map((id) => ({
+                id,
+                order_no: `F-${id}`,
+                venue_id: 'v1',
+                venue_name: 'Grand Hall',
+                total: 40,
+                currency_symbol: '₹',
+                status: 'PLACED',
+                payment_status: 'PAID',
+                created_at: '2026-10-15T10:00:00.000Z',
+                items: [{ name: 'Masala Chai', quantity: 1 }],
+              })),
+              total: 2,
+              page: 1,
+              page_size: 20,
+            },
+          },
+        },
+      },
+    ]);
+    expect(await screen.findByTestId('venue-food-track-order-o1')).toHaveTextContent('Track your order F-o1');
+    expect(screen.getByTestId('venue-food-track-order-o2')).toHaveTextContent('Track your order F-o2');
+  });
+
+  it('finds a dish from the menu’s search box', () => {
+    renderMenu();
+    fireEvent.change(screen.getByTestId('venue-food-search-input'), { target: { value: 'samosa' } });
+    expect(screen.getByText('Samosa')).toBeInTheDocument();
+    expect(screen.queryByText('Masala Chai')).not.toBeInTheDocument();
+  });
+});
+
+describe('VenueFoodMenu — what the guest is told about the menu', () => {
+  it('names the dishes a stored cart lost since the last visit, until the guest dismisses it', () => {
+    // Lassi went unavailable after it was added; Masala Chai is still on.
+    localStorage.setItem(CART_KEY, JSON.stringify({ lassi: 2, chai: 1 }));
+    renderMenu();
+
+    const dropped = screen.getByTestId('venue-food-dropped');
+    expect(dropped).toHaveTextContent('No longer available and removed from your cart: Lassi.');
+    expect(storedCart()).toEqual({ chai: 1 });
+
+    fireEvent.click(within(dropped).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByTestId('venue-food-dropped')).not.toBeInTheDocument();
+  });
+
+  it('offers "Veg only" on a mixed menu, and hides the non-veg dishes while it is on', () => {
+    renderMenu({ food_menu: [dish(), dish({ id: 'kebab', name: 'Seekh Kebab', diet: 'NON_VEG' })] });
+    expect(screen.getByText('Seekh Kebab')).toBeInTheDocument();
+
+    expect(screen.getByTestId('venue-food-veg-only')).toHaveTextContent('Veg only');
+    const toggle = screen.getByLabelText('Veg only');
+    fireEvent.click(toggle);
+    expect(toggle).toBeChecked();
+    expect(screen.queryByText('Seekh Kebab')).not.toBeInTheDocument();
+    expect(screen.getByText('Masala Chai')).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(screen.getByText('Seekh Kebab')).toBeInTheDocument();
+  });
+
+  it('has no "Veg only" toggle on a menu that is all veg', () => {
+    renderMenu();
+    expect(screen.queryByTestId('venue-food-veg-only')).not.toBeInTheDocument();
+  });
+
+  it('says the venue has not added a menu yet when it has no dishes', () => {
+    renderMenu({ food_menu: [] });
+    expect(screen.getByTestId('venue-food-menu-empty')).toHaveTextContent('This venue has not added its menu yet.');
+  });
+
+  it('shows the venue discount only while orders can be placed', () => {
+    const { unmount } = renderMenu({ food_ordering: { enabled: true, discount_pct: 15 } });
+    expect(screen.getByTestId('venue-food-discount')).toHaveTextContent('15% off on QR orders');
+    unmount();
+    renderMenu({ food_ordering: { enabled: false, discount_pct: 15 } });
+    expect(screen.queryByTestId('venue-food-discount')).not.toBeInTheDocument();
+  });
+
+  it('opens a dish’s photos in the viewer, steps through them and closes it', async () => {
+    renderMenu({ food_menu: [dish({ images: ['https://img/chai-1.jpg', 'https://img/chai-2.jpg'] })] });
+    expect(screen.queryByTestId('moment-lightbox')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'View the photo of Masala Chai' }));
+    const viewer = await screen.findByTestId('moment-lightbox');
+    expect(within(viewer).getByTestId('moment-lightbox-media')).toHaveAttribute('src', 'https://img/chai-1.jpg');
+
+    fireEvent.click(within(viewer).getByTestId('moment-lightbox-next'));
+    expect(within(viewer).getByTestId('moment-lightbox-media')).toHaveAttribute('src', 'https://img/chai-2.jpg');
+
+    fireEvent.click(within(viewer).getByTestId('moment-lightbox-close'));
+    await waitFor(() => expect(screen.queryByTestId('moment-lightbox')).not.toBeInTheDocument());
+  });
+});
+
+describe('VenueFoodMenu — the venue stops taking orders mid-checkout', () => {
+  it('closes the cart, takes the Add buttons away and says the menu can still be browsed', async () => {
+    seedCart({ chai: 1 });
+    seedGuest();
+    const sent: PlaceVenueFoodOrderInput[] = [];
+    renderCart([
+      placeMock(sent, { errors: [{ message: 'Closed', extensions: { code: FOOD_ORDER_ERROR.closed } }] }),
+    ]);
+    fireEvent.submit(screen.getByTestId('food-checkout-form'));
+
+    expect(await screen.findByTestId('venue-food-closed')).toHaveTextContent(
+      'This venue is not taking food orders right now. You can still browse the menu.',
+    );
+    expect(sent).toHaveLength(1);
+    expect(screen.queryByTestId('food-cart-bar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Samosa' })).not.toBeInTheDocument();
+    expect(screen.getByText('Samosa')).toBeInTheDocument();
   });
 });

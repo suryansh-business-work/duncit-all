@@ -1,6 +1,6 @@
 /**
  * The Legal reported-content desk (report.service) against a real database:
- * filing and re-filing a report, the queue's derived columns, manual status
+ * filing a report (a repeat is refused while the first is open), the queue's derived columns, manual status
  * moves, the two verdicts that close every report on the same content, and
  * mailing the reporter or the owner.
  *
@@ -110,24 +110,41 @@ describe('submit', () => {
     });
   });
 
-  it('treats a repeat report as an edit of the same row, keeping its handle and acknowledging it again', async () => {
+  it('refuses a repeat while the first report is still open, leaving it untouched and mailing nobody', async () => {
     const reporter = oid();
     const snap = snapshot();
     const first = await reportService.submit(reporter, snap, { reason: 'SPAM' });
     notice.mockClear();
 
-    const again = await reportService.submit(reporter, snap, { reason: 'OTHER', details: 'actually worse' });
+    const err = await errorOf(reportService.submit(reporter, snap, { reason: 'OTHER', details: 'actually worse' }));
 
-    expect(again).toEqual(first);
+    expect(err.extensions.code).toBe('REPORT_ALREADY_PENDING');
     expect(await ContentReportModel.countDocuments()).toBe(1);
     const stored = await ContentReportModel.findById(first.id).lean<any>();
-    expect(stored.reason).toBe('OTHER');
-    expect(stored.details).toBe('actually worse');
+    expect(stored).toMatchObject({ reason: 'SPAM', details: '', is_open: true });
+    expect(notice).not.toHaveBeenCalled();
+  });
+
+  it('files a new report with its own handle once Legal has closed the first, and acknowledges it', async () => {
+    const reporter = oid();
+    const snap = snapshot();
+    const first = await reportService.submit(reporter, snap, { reason: 'SPAM' });
+    await reportService.updateStatus(oid(), first.id, { status: 'DISMISSED' });
+    notice.mockClear();
+
+    const again = await reportService.submit(reporter, snap, { reason: 'OTHER', details: 'actually worse' });
+
+    expect(again.id).not.toBe(first.id);
+    expect(again.report_no).not.toBe(first.report_no);
+    expect(await ContentReportModel.countDocuments()).toBe(2);
+    expect((await ContentReportModel.findById(first.id).lean<any>()).is_open).toBe(false);
+    const stored = await ContentReportModel.findById(again.id).lean<any>();
+    expect(stored).toMatchObject({ reason: 'OTHER', details: 'actually worse', status: 'RECEIVED', is_open: true });
     expect(notice).toHaveBeenCalledTimes(1);
     expect(notice).toHaveBeenCalledWith({
       template: 'content-report-received',
       userId: stored.reporter_id,
-      report_no: first.report_no,
+      report_no: again.report_no,
       reason: 'Something else',
     });
   });
@@ -195,7 +212,7 @@ describe('queue reads', () => {
   it('stats counts every status, zeros included', async () => {
     const a = await reportService.submit(oid(), snapshot(), { reason: 'SPAM' });
     await reportService.submit(oid(), snapshot(), { reason: 'SPAM' });
-    await ContentReportModel.updateOne({ _id: a.id }, { $set: { status: 'DISMISSED' } });
+    await reportService.updateStatus(oid(), a.id, { status: 'DISMISSED' });
     expect(await reportService.stats()).toEqual({
       total: 2,
       by_status: [
@@ -262,7 +279,8 @@ describe('verdicts', () => {
       ids.push(res.id);
     }
     // The third was already dismissed by hand and must keep its own outcome.
-    await ContentReportModel.updateOne({ _id: ids[2] }, { $set: { status: 'DISMISSED' } });
+    // Closed through the service so the save hook keeps `is_open` in step.
+    await reportService.updateStatus(handler, ids[2], { status: 'DISMISSED' });
     notice.mockClear();
     return { owner, reporters, ids };
   }
@@ -294,7 +312,9 @@ describe('verdicts', () => {
     expect(byId.get(ids[1]).status).toBe('ACTIONED');
     expect(byId.get(ids[1]).history[0]).toMatchObject({ action: 'TAKEN_DOWN', note: 'nudity confirmed' });
     expect(byId.get(ids[2]).status).toBe('DISMISSED');
-    expect(byId.get(ids[2]).history).toHaveLength(0);
+    // Only its own manual close — the take-down left it alone.
+    expect(byId.get(ids[2]).history.map((h: { action: string }) => h.action)).toEqual(['STATUS_CHANGED']);
+    expect(byId.get(ids[2]).is_open).toBe(false);
     for (const doc of stored) expect(doc.target_removed_at).toBeInstanceOf(Date);
 
     const sent = notice.mock.calls.map(([n]) => [n.template, String(n.userId)]);
@@ -315,7 +335,7 @@ describe('verdicts', () => {
   it('markOk dismisses the open reports and writes only to their reporters', async () => {
     const post = await insertPost();
     const { reporters, ids } = await threeReportsOn(post);
-    await ContentReportModel.updateOne({ _id: ids[2] }, { $set: { status: 'ACTIONED' } });
+    await reportService.updateStatus(handler, ids[2], { status: 'ACTIONED' });
 
     const res = await reportService.markOk(handler, ids[0], 'fine');
 

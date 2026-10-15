@@ -92,6 +92,8 @@ export const POD_HISTORY_BACKOUT_STATE = gql`
       pod_id
       backout_attempts_used
       backout_attempts_max
+      spot_cancels_used
+      spot_cancels_max
     }
   }
 `;

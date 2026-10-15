@@ -94,6 +94,18 @@ exports:
   - 'makePodRequestOverrideSchema'
   - 'POD_REQUEST_NOTE_MAX'
   - 'POD_REQUEST_OVERRIDE_MAX'
+  - 'makeEventRequestSchema'
+  - 'eventRequestDefaults'
+  - 'EVENT_REQUEST_NOTE_MAX'
+  - 'EventRequestValues'
+  - 'makeYoutubeLinkSchema'
+  - 'youtubeLinkDefaults'
+  - 'YoutubeLinkValues'
+  - 'venueVideoOf'
+  - 'venueVideosOf'
+  - 'youtubeVideoId'
+  - 'VENUE_VIDEO_FOLDER'
+  - 'VenueVideo'
   - 'makeForceMarkSchema'
   - 'forceMarkInitialValues'
   - 'ForceMarkValues'
@@ -861,6 +873,14 @@ makeFoodMenuSchema(t, { limits, editsAccount: true });
 // A bigger venue form holding the food block under the same names.
 z.object({ ...otherFields, ...venueFoodShape }).superRefine(makeVenueFoodRefinement(t, { limits, editsAccount: false }));
 ```
+
+### Venue and dish videos — `video-link`, `venue-videos`
+
+Owners add an uploaded clip or a YouTube link. `makeYoutubeLinkSchema(t)` validates a pasted link against
+`@duncit/regex` `YOUTUBE_URL` (channels and playlists are refused). `venueVideoOf(url)` reads the kind from the
+address — a YouTube one carries its privacy-enhanced `embedUrl`, `watchUrl` and `thumbnailUrl`, a file its
+`sourceUrl` — and `venueVideosOf(list)` drops blanks. They live here, not in `@duncit/utils`, because they
+read `@duncit/regex`, which utils does not depend on.
 
 ### Venue cancellation policy
 

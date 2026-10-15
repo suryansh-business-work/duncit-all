@@ -16,7 +16,7 @@ import { useFoodCouponConfirm } from '@/hooks/useFoodCoupon';
 import { useFoodGuest } from '@/hooks/useFoodGuest';
 import type { PublicVenueDetails } from '@/hooks/useHostsVenues';
 import type { RootStackParamList } from '@/navigation/types';
-import { recentFoodOrder, writeFoodGuest, type StoredFoodOrder } from '@/services/food-storage';
+import { writeFoodGuest } from '@/services/food-storage';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 /**
@@ -41,25 +41,22 @@ export function useFoodOrdering(venue: PublicVenueDetails, onRefresh: () => Prom
   const [typed, setTyped] = useState<FoodCheckoutValues | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [closed, setClosed] = useState(false);
-  // The member's order here that is still in progress — the menu's "Track your order" link.
-  const [tracked, setTracked] = useState<StoredFoodOrder | null>(null);
-
+  // Coming back from a dish's own screen (or an order's): the cart may have changed
+  // there. Only after the screen was left — the first focus is the cart's own first read.
+  const reloadCart = cart.reload;
   useEffect(() => {
-    let active = true;
-    const load = () =>
-      fireAndForget(
-        recentFoodOrder(venue.id).then((order) => {
-          if (active) setTracked(order);
-        }),
-      );
-    load();
-    // Coming back from the order screen: the order may have finished meanwhile.
-    const unsubscribe = navigation.addListener('focus', load);
+    let left = false;
+    const offBlur = navigation.addListener('blur', () => {
+      left = true;
+    });
+    const offFocus = navigation.addListener('focus', () => {
+      if (left) reloadCart();
+    });
     return () => {
-      active = false;
-      unsubscribe();
+      offBlur();
+      offFocus();
     };
-  }, [venue.id, navigation]);
+  }, [navigation, reloadCart]);
 
   const openOrder = (orderId: string, key: string) =>
     navigation.navigate('VenueFoodOrder', { venueId: venue.id, orderId, key });
@@ -139,10 +136,6 @@ export function useFoodOrdering(venue: PublicVenueDetails, onRefresh: () => Prom
     // The coupon's check at Pay locks the sheet exactly as the payment does.
     submitting: checkout.submitting || coupon.confirming,
     pay,
-    tracked,
-    openTracked: () => {
-      if (tracked) openOrder(tracked.order_id, tracked.access_key);
-    },
     guest: typed ?? knownGuest,
     // Stays up under Razorpay's sheet, which the cart sheet itself presents: iOS
     // will not open one modal while another is still closing.

@@ -78,8 +78,11 @@ const foodVenue = {
   food_menu: [dosa],
   food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0 },
 };
-/** What the form sends for that menu: the dish keeps its id. */
-const dosaInput = { ...dosa };
+/** What the form sends for that menu: the dish keeps its id; a dish stored before
+ * videos and display pricing existed goes with none, and the saving read as a percent. */
+const dosaInput = { ...dosa, videos: [], original_price: null, saving_display: 'PERCENT' };
+/** A venue that never gave licences or tables sends them blank. */
+const blankLicencesInput = { fssai_number: '', fssai_document_url: '', liquor_licence_number: '', liquor_document_url: '' };
 /** A dish with no name — the one thing the food section refuses. */
 const namelessDish = { ...dosa, id: undefined, name: '' };
 
@@ -490,6 +493,7 @@ describe('useRegisterVenueForm — approved-venue spot edits', () => {
       description: 'Now with a rooftop',
       cover_image_url: 'https://cdn.example.com/cover.jpg',
       gallery: [],
+      videos: [],
     });
   });
 
@@ -536,6 +540,8 @@ describe('useRegisterVenueForm — approved-venue spot edits', () => {
         offers_food: true,
         food_menu: [{ ...dosaInput, price: 150 }],
         food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0, tax_override: false },
+        food_licences: blankLicencesInput,
+        food_tables: [],
       },
     });
     expect(apiRef.current?.saved).toBe('Changes saved.');
@@ -740,6 +746,7 @@ describe('useRegisterVenueForm — several categories', () => {
       description: 'Now with a rooftop',
       cover_image_url: 'https://cdn.example.com/cover.jpg',
       gallery: [],
+      videos: [],
     });
   });
 });

@@ -36,6 +36,8 @@ const DEFAULT_MIN_SIGNUP_AGE = DEFAULT_MIN_ACCOUNT_AGE_YEARS;
 const DEFAULT_DRAFT_RETENTION_DAYS = 3;
 /** Default max Backout attempts a user gets per pod. */
 const DEFAULT_MAX_BACKOUT_ATTEMPTS = 3;
+/** Default times a member may cancel their spot on the same free pod. */
+const DEFAULT_MAX_FREE_SPOT_CANCELLATIONS = 5;
 /** Default Account Health penalty when a venue owner cancels a pod. */
 const DEFAULT_VENUE_CANCEL_HEALTH_PENALTY = 5;
 /** OTP verification before a by-hand attendance mark is on unless switched off. */
@@ -92,6 +94,9 @@ const cleanRetentionDays = (value: unknown) =>
 
 const cleanMaxBackoutAttempts = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_MAX_BACKOUT_ATTEMPTS);
+
+const cleanMaxFreeSpotCancellations = (value: unknown) =>
+  Math.max(1, Math.floor(Number(value)) || DEFAULT_MAX_FREE_SPOT_CANCELLATIONS);
 
 /** Minimum joining age, clamped to a sane 1..120 so a typo cannot lock every
  * new user out (or let every child in). */
@@ -198,6 +203,7 @@ const toAppPub = (d: any) => ({
   min_signup_age: d?.min_signup_age ?? DEFAULT_MIN_SIGNUP_AGE,
   draft_retention_days: d?.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
   max_backout_attempts: d?.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
+  max_free_spot_cancellations: cleanMaxFreeSpotCancellations(d?.max_free_spot_cancellations),
   venue_cancel_health_penalty:
     d?.venue_cancel_health_penalty ?? DEFAULT_VENUE_CANCEL_HEALTH_PENALTY,
   // Defaults ON: a host marking someone present by hand is the one attendance
@@ -562,6 +568,15 @@ const DEFAULT_FLAGS: {
     enabled: true,
   },
   {
+    // Seeded OFF: `app_latest_version` is auto-synced on every deploy, so the
+    // soft nudge is turned on by an operator once the stores carry the release.
+    key: "small_update_app_section",
+    name: "Small Update App Section",
+    description:
+      "Show a small, dismissible Update App card above the bottom navigation in the Android and iOS apps when a newer release (major or minor version) is out. Update opens the store listing; closing it hides the card until the next release. It never blocks the app.",
+    enabled: false,
+  },
+  {
     // Seeded OFF: the switcher stays hidden until an operator turns it on. A
     // saved locale still applies everywhere (emails, the catalogue swap) — the
     // flag hides the control, it does not undo the choice.
@@ -593,6 +608,7 @@ type AppSettingsUpdateInput = {
   min_signup_age?: number;
   draft_retention_days?: number;
   max_backout_attempts?: number;
+  max_free_spot_cancellations?: number;
   venue_cancel_health_penalty?: number;
   attendance_otp_required?: boolean;
   pod_cancel_refund_hold?: boolean;
@@ -644,6 +660,7 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["min_signup_age", cleanMinSignupAge],
   ["draft_retention_days", cleanRetentionDays],
   ["max_backout_attempts", cleanMaxBackoutAttempts],
+  ["max_free_spot_cancellations", cleanMaxFreeSpotCancellations],
   ["venue_cancel_health_penalty", cleanVenueCancelHealthPenalty],
   ["pod_complete_timeout_hours", cleanPodCompleteTimeoutHours],
   ["ticket_discount_max_pct", cleanTicketDiscountMaxPct],
@@ -773,6 +790,12 @@ export const settingsService = {
   async getMaxBackoutAttempts(): Promise<number> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
     return cleanMaxBackoutAttempts(doc?.max_backout_attempts);
+  },
+
+  /** Clamped max free-pod spot cancellations per member per pod (min 1, default 5). */
+  async getMaxFreeSpotCancellations(): Promise<number> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return cleanMaxFreeSpotCancellations(doc?.max_free_spot_cancellations);
   },
 
   /** Clamped Account Health penalty (0–100, default 5) charged to a venue when

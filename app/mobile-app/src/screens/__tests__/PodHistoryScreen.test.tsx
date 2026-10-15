@@ -52,10 +52,13 @@ beforeEach(() => {
 });
 
 describe('PodHistoryScreen', () => {
-  it('shows a loader while fetching', () => {
+  it('shows the tips loader while fetching', () => {
     mockedUsePodHistory.mockReturnValue({ uniqueItems: [], isLoading: true });
     renderWithProviders(<PodHistoryScreen />);
     expect(screen.getByTestId('pod-history-loading')).toBeOnTheScreen();
+    expect(screen.getByTestId('pod-history-loading-tip')).toHaveTextContent(
+      'Tap any pod you joined to see its refund status and full timeline.',
+    );
   });
 
   it('surfaces a fetch error', () => {
@@ -119,6 +122,20 @@ describe('PodHistoryScreen', () => {
 
     fireEvent.press(screen.getByTestId('pod-history-filter-reset'));
     expect(screen.getByText('Pod 2')).toBeOnTheScreen();
+  });
+
+  it('narrows the list to the pods matching the typed search', () => {
+    mockedUsePodHistory.mockReturnValue({
+      uniqueItems: [item('1', 's1', 'c1'), item('2', 's2', 'c2')],
+      isLoading: false,
+    });
+    renderWithProviders(<PodHistoryScreen />);
+
+    fireEvent.changeText(screen.getByTestId('pod-history-search'), 'Pod 2');
+
+    expect(screen.getByTestId('pod-history-search')).toHaveProp('value', 'Pod 2');
+    expect(screen.getByText('Pod 2')).toBeOnTheScreen();
+    expect(screen.queryByText('Pod 1')).toBeNull();
   });
 
   it('shows the no-match empty state when filters exclude everything', () => {

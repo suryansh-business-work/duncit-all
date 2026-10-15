@@ -1,4 +1,5 @@
 import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
+import { blankFoodLicences, type VenueFoodLicences } from '@duncit/utils';
 import {
   blankFoodOrdering,
   type FoodLimits,
@@ -43,6 +44,8 @@ export interface RegisterVenueValues extends VenueLocationValues {
   description: string;
   cover_image_url: string;
   gallery: string[];
+  /** Venue videos: uploaded clips or YouTube links. */
+  videos: string[];
   /** Every category the venue hosts pods in, primary first — one row of the
    * shared picker each (`RhfAdminCategoryRows`). Never empty: a venue with no
    * category yet holds one blank row. */
@@ -54,6 +57,9 @@ export interface RegisterVenueValues extends VenueLocationValues {
   offers_food: boolean;
   food_menu: FoodMenuRow[];
   food_ordering: FoodOrderingValues;
+  food_licences: VenueFoodLicences;
+  /** The table labels as typed — one QR sticker each. */
+  food_tables: string;
   /** A GST number the owner gives an approved venue from the Food section —
    * only while the venue has none (the server locks a saved one). */
   food_gstin: string;
@@ -111,6 +117,8 @@ export interface VenueRegistrationConfig extends FoodLimits {
   security: string[];
   food_diets: string[];
   food_spice_levels: string[];
+  /** Videos the venue page may carry. Absent until the config has answered. */
+  venue_video_limit?: number;
 }
 
 /** The optional tax-id switches. */
@@ -136,6 +144,7 @@ export const blankRegisterVenueValues: RegisterVenueValues = {
   description: '',
   cover_image_url: '',
   gallery: [],
+  videos: [],
   venue_categories: [{ ...EMPTY_CATEGORY }],
   address_line1: '',
   address_line2: '',
@@ -152,6 +161,8 @@ export const blankRegisterVenueValues: RegisterVenueValues = {
   offers_food: false,
   food_menu: [],
   food_ordering: blankFoodOrdering,
+  food_licences: blankFoodLicences,
+  food_tables: '',
   food_gstin: '',
   amenities: [],
   facilities: [],

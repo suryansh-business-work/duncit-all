@@ -172,6 +172,15 @@ interface ScanOutcome {
  * for a fault that is a setting.
  */
 function outcomeFromResponse(res: OpenAiChatResult): ScanOutcome {
+  // Switched off in AI Features: a setting, like a missing key — not a fault.
+  if (!res.ok && res.code === 'DISABLED') {
+    return {
+      risk: 'PENDING',
+      status: 'SKIPPED',
+      summary: 'AI review did not run — the image scan is switched off in the AI portal.',
+      error: res.message,
+    };
+  }
   if (!res.ok) {
     return {
       risk: 'PENDING',

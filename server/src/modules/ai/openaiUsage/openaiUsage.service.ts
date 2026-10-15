@@ -284,10 +284,14 @@ export const openAiUsageService = {
     });
   },
 
-  async logsTable(input?: TableQueryInput | null) {
+  /**
+   * `task` pins the page to one AI feature — the per-feature logs page. It is a
+   * base filter, not a column filter, so the grid's own filters narrow within it.
+   */
+  async logsTable(input?: TableQueryInput | null, task?: string | null) {
     const { docs, total, page, page_size } = await runTableQuery<IOpenAiUsageLog>(
       OpenAiUsageLogModel,
-      {},
+      task ? { task } : {},
       input,
       USAGE_TABLE_CONFIG,
     );

@@ -3,7 +3,13 @@ import { BANK_PAYOUT_METHODS, POSTAL_CODE_PATTERN, zodRules } from '@duncit/form
 import { BANK_ACCOUNT_NUMBER, IFSC, UPI_ID } from '@duncit/regex';
 import { duplicateCategoryRows, isCompleteCategory, type AdminCategoryValue } from '@duncit/category';
 import { fallbackT, type Translate } from '@duncit/shell';
-import { foodMenuShape, foodOrderingShape, makeFoodRefinement } from './register-venue.food-schema';
+import {
+  foodLicencesShape,
+  foodMenuShape,
+  foodOrderingShape,
+  foodTablesShape,
+  makeFoodRefinement,
+} from './register-venue.food-schema';
 import {
   NO_CATEGORY_LIMIT,
   NO_FOOD_LIMITS,
@@ -132,6 +138,8 @@ export const registerVenueSchema = (
     .max(2000, 'Description must be 2000 characters or fewer'),
   cover_image_url: z.string().trim().min(1, 'Upload a cover image').max(1000),
   gallery: z.array(z.string().trim().max(1000)),
+  // Each entry comes from the shared video field (an upload, or a link it checked); the server checks again.
+  videos: z.array(z.string().trim().max(2048)),
   venue_categories: z
     .array(venueCategorySchema)
     .min(1, t('partners.registerVenuePage.categoryRequired'))
@@ -157,6 +165,8 @@ export const registerVenueSchema = (
   offers_food: z.boolean(),
   food_menu: foodMenuShape,
   food_ordering: foodOrderingShape,
+  food_licences: foodLicencesShape,
+  food_tables: foodTablesShape,
   food_gstin: z.string(),
   amenities: z.array(z.string().trim()),
   facilities: z.array(z.string().trim()),
@@ -267,6 +277,7 @@ export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review' | 'leaves'
     'description',
     'cover_image_url',
     'gallery',
+    'videos',
     'venue_categories',
     'address_line1',
     'address_line2',
@@ -280,7 +291,7 @@ export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review' | 'leaves'
     'postal_code',
   ],
   'type-capacity': ['venue_type', 'capacity_items'],
-  food: ['offers_food', 'food_menu', 'food_ordering', 'food_gstin'],
+  food: ['offers_food', 'food_menu', 'food_ordering', 'food_licences', 'food_tables', 'food_gstin'],
   amenities: ['amenities', 'facilities', 'security'],
   documents: ['documents', 'has_gstin', 'gstin', 'has_pan', 'pan'],
   owner: ['owner_name', 'owner_email', 'owner_phone', 'owner_dob', 'owner_address'],

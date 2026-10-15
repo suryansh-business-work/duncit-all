@@ -22,6 +22,8 @@ export const REPORT_TARGET_TYPES: ReportTargetType[] = [
 /** Where the Legal team has taken it. */
 export type ReportStatus = 'RECEIVED' | 'IN_REVIEW' | 'ACTIONED' | 'DISMISSED';
 export const REPORT_STATUSES: ReportStatus[] = ['RECEIVED', 'IN_REVIEW', 'ACTIONED', 'DISMISSED'];
+/** The statuses a report is still waiting on Legal in. */
+export const OPEN_REPORT_STATUSES: readonly ReportStatus[] = ['RECEIVED', 'IN_REVIEW'];
 
 /**
  * Something a reviewer did to a report, in the order it happened.
@@ -83,6 +85,13 @@ export interface IContentReport extends Document {
   details: string;
   reporter_id: Types.ObjectId;
   status: ReportStatus;
+  /**
+   * True exactly while `status` is RECEIVED or IN_REVIEW. Derived on every
+   * save, never written by hand: it exists only so a unique partial index can
+   * say "one OPEN report per person per thing" — the same trick
+   * PodChangeRequest and PodPartnerRequest use.
+   */
+  is_open: boolean;
   /** What Legal did about it. Staff-only. */
   resolution: string;
   handled_by: Types.ObjectId | null;
@@ -108,6 +117,9 @@ const contentReportSchema = new Schema<IContentReport>(
     details: { type: String, default: '', trim: true, maxlength: 2000 },
     reporter_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     status: { type: String, enum: REPORT_STATUSES, default: 'RECEIVED', index: true },
+    // No default on purpose: a row written before this field existed must read
+    // as unset, so the save hook below marks it modified and persists it.
+    is_open: { type: Boolean },
     resolution: { type: String, default: '', trim: true, maxlength: 5000 },
     handled_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     resolved_at: { type: Date, default: null },
@@ -131,16 +143,26 @@ const contentReportSchema = new Schema<IContentReport>(
 contentReportSchema.index({ status: 1, created_at: 1 });
 
 /**
- * One report per person per thing.
+ * One OPEN report per person per thing.
  *
  * Without it the Report button is a mass-flagging tool: tapping it twenty times
  * files twenty rows and makes one annoyed user look like a pile-on. A repeat
- * report updates the reason instead of adding a row (see the service).
+ * while the first is still with Legal is refused (REPORT_ALREADY_PENDING); once
+ * Legal has closed it the same person may report the same thing again, which is
+ * why the index is partial rather than unique over every status. It is what
+ * makes two simultaneous submits safe — the second one collides here.
+ * `is_open` is part of the key so this never shares a key pattern with the old
+ * all-status unique index, which `reportService.syncIndexes` drops on boot.
  */
-contentReportSchema.index({ reporter_id: 1, target_type: 1, target_id: 1 }, { unique: true });
+contentReportSchema.index(
+  { reporter_id: 1, target_type: 1, target_id: 1, is_open: 1 },
+  { unique: true, partialFilterExpression: { is_open: true }, name: 'one_open_report_per_reporter' }
+);
 
-// Minted on insert only, so the handle never changes once anyone has quoted it.
+// `is_open` is re-derived on every save; the handle is minted on insert only,
+// so it never changes once anyone has quoted it.
 contentReportSchema.pre('save', async function (next) {
+  this.is_open = OPEN_REPORT_STATUSES.includes(this.status);
   if (this.isNew && !this.report_no) {
     this.report_no = await nextEntityNo('RPT', 'content_report');
   }

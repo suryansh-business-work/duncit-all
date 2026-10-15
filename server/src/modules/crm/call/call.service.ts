@@ -252,6 +252,8 @@ export const callService = {
     if (input.speech?.trim()) history.push({ role: 'user', content: input.speech.trim() });
     // Brain = OpenAI agent; voice = Servam TTS; carrier = Twilio.
     const chat = await openaiService.chat({ systemContext: prompt.context, history });
+    // Switched off mid-call: end politely instead of looping "please repeat" for 24 turns.
+    if (chat.disabled) return buildSayHangupTwiml('Sorry, our assistant is unavailable right now. We will call you back. Goodbye.');
     const reply = chat.ok && chat.reply ? chat.reply : 'I am sorry, could you please repeat that?';
     history.push({ role: 'assistant', content: reply });
     await communicationLogService.update(input.log_id, { metadata: { ai_history: history } });

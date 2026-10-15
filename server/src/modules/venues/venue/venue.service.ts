@@ -44,6 +44,7 @@ import { getUrlConfigs } from '@config/url-configs';
 import {
   VENUE_FOOD_INPUT_KEYS,
   buildVenueFoodPatch,
+  normalizeVenueVideos,
   redactVenueFoodForPublic,
   toVenueFoodPub,
   venueFoodConfig,
@@ -314,6 +315,7 @@ const toPub = (v: IVenue) => ({
   security: v.security ?? [],
   cover_image_url: v.cover_image_url ?? '',
   gallery: v.gallery ?? [],
+  videos: v.videos ?? [],
   location_id: v.location_id ? String(v.location_id) : null,
   country: v.country ?? 'India',
   country_code: v.country_code ?? 'IN',
@@ -578,6 +580,9 @@ async function buildStep1Patch(input: any, current: readonly VenueCategoryRef[] 
   const patch: any = await normalizeStep1Location(input);
   // Food is validated against the venue it lands on (buildVenueFoodPatch), never spread on raw.
   for (const key of VENUE_FOOD_INPUT_KEYS) delete patch[key];
+  // Videos are checked (YouTube or an uploaded clip) — never spread on raw. Left out = kept.
+  delete patch.videos;
+  if (Array.isArray(input.videos)) patch.videos = normalizeVenueVideos(input.videos);
   const capacityItems = normalizeCapacityItems(input.capacity_items);
   if (capacityItems === null) {
     delete patch.capacity_items;
@@ -715,6 +720,7 @@ function applyApprovedVenueInput(v: any, input: any, isAdmin: boolean) {
   if (input.gallery !== undefined) {
     v.gallery = (input.gallery as unknown[]).map(String).filter(Boolean);
   }
+  if (Array.isArray(input.videos)) v.videos = normalizeVenueVideos(input.videos);
   const capacityItems = normalizeCapacityItems(input.capacity_items);
   if (capacityItems !== null) {
     if (capacityItems.length === 0) fail('BAD_USER_INPUT', 'Keep at least one capacity entry');

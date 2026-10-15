@@ -16,6 +16,13 @@ import {
 
 const PICKED_IMAGE = 'https://cdn.example.com/cover.jpg';
 
+// The venue's video field uploads through the shared picker, which needs a MUI theme this
+// harness does not mount; it is closed in every case here, so it renders nothing.
+vi.mock('@duncit/media-picker', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/media-picker')>()),
+  MediaPickerDialog: ({ open }: Readonly<{ open: boolean }>) => (open ? <div data-testid="shared-media-picker" /> : null),
+}));
+
 vi.mock('../../../components/MediaPickerDialog', () => ({
   default: ({ open, onPicked, title }: Readonly<{ open: boolean; onPicked: (url: string) => void; title: string }>) =>
     open ? (
@@ -98,18 +105,28 @@ const HALF_PICKED: AdminCategoryValue = { ...COFFEE, sub_id: '', sub_name: '' };
 interface HarnessProps {
   mode: RegisterVenueMode;
   categoryLimit?: number;
+  videoLimit?: number;
+  venueId?: string;
   defaults?: Partial<RegisterVenueValues>;
   formRef: { current: UseFormReturn<RegisterVenueValues> | null };
 }
 
-function Harness({ mode, categoryLimit, defaults, formRef }: Readonly<HarnessProps>) {
+function Harness({ mode, categoryLimit, videoLimit, venueId, defaults, formRef }: Readonly<HarnessProps>) {
   const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
     resolver: zodResolver(registerVenueSchema()) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: { ...blankRegisterVenueValues, ...defaults },
     mode: 'onBlur',
   });
   formRef.current = form;
-  return <VenueDetailsSection form={form} mode={mode} categoryLimit={categoryLimit} />;
+  return (
+    <VenueDetailsSection
+      form={form}
+      mode={mode}
+      categoryLimit={categoryLimit}
+      videoLimit={videoLimit}
+      venueId={venueId}
+    />
+  );
 }
 
 const mount = (props: Omit<HarnessProps, 'formRef'>) => {
@@ -307,6 +324,33 @@ describe('VenueDetailsSection — location cascade', () => {
       postal_code: '',
     });
   });
+
+  it('re-checks the address as it is picked once the city has failed validation', async () => {
+    const formRef = mount({ mode: 'register', defaults: { country: '', country_code: '' } });
+    await act(async () => {
+      await formRef.current?.trigger(['country', 'city']);
+    });
+    expect(await screen.findByText('Country is required')).toBeTruthy();
+
+    fireEvent.keyDown(screen.getByRole('combobox', { name: /Country/ }), { key: 'ArrowDown' });
+    fireEvent.click(await screen.findByText('India'));
+
+    // The pick re-validates: the country's message goes, the still-empty city keeps its own.
+    await waitFor(() => expect(screen.queryByText('Country is required')).toBeNull());
+    expect(formRef.current?.getValues('country_code')).toBe('IN');
+    expect(screen.getByText('City is required')).toBeTruthy();
+  });
+
+  it('leaves untouched messages alone on a pick before anything failed', async () => {
+    const formRef = mount({ mode: 'register', defaults: { country: '', country_code: '' } });
+
+    fireEvent.keyDown(screen.getByRole('combobox', { name: /Country/ }), { key: 'ArrowDown' });
+    fireEvent.click(await screen.findByText('India'));
+
+    await waitFor(() => expect(formRef.current?.getValues('country_code')).toBe('IN'));
+    expect(formRef.current?.formState.errors.city).toBeUndefined();
+    expect(screen.queryByText('City is required')).toBeNull();
+  });
 });
 
 describe('VenueDetailsSection — images', () => {
@@ -328,6 +372,56 @@ describe('VenueDetailsSection — images', () => {
     fireEvent.click(screen.getByRole('button', { name: 'pick from Add venue image' }));
 
     await waitFor(() => expect(formRef.current?.getValues('gallery')).toEqual([existing, PICKED_IMAGE]));
+  });
+});
+
+describe('VenueDetailsSection — videos', () => {
+  const LINK = 'https://youtu.be/dQw4w9WgXcQ';
+  const CLIP = 'https://ik.imagekit.io/duncit/staging/venues/venue-1/videos/tour.mp4';
+
+  it('adds a pasted YouTube link to the venue’s videos', async () => {
+    const formRef = mount({ mode: 'register', videoLimit: 3 });
+
+    expect(screen.getByText('Videos (0 of 3)')).toBeTruthy();
+    fireEvent.change(screen.getByTestId('register-venue-videos-youtube'), { target: { value: LINK } });
+    fireEvent.click(screen.getByTestId('register-venue-videos-youtube-add'));
+
+    await waitFor(() => expect(formRef.current?.getValues('videos')).toEqual([LINK]));
+    expect(screen.getByText('Videos (1 of 3)')).toBeTruthy();
+  });
+
+  it('refuses a link that is not a YouTube video, and keeps the list as it was', async () => {
+    const formRef = mount({ mode: 'register', videoLimit: 3 });
+
+    fireEvent.change(screen.getByTestId('register-venue-videos-youtube'), { target: { value: 'https://example.com/a' } });
+    fireEvent.click(screen.getByTestId('register-venue-videos-youtube-add'));
+
+    expect(await screen.findByText('Enter a YouTube video link (watch, shorts or youtu.be)')).toBeTruthy();
+    expect(formRef.current?.getValues('videos')).toEqual([]);
+  });
+
+  it('lists the stored videos and removes the one asked to', async () => {
+    const formRef = mount({ mode: 'register', videoLimit: 3, defaults: { videos: [LINK, CLIP] } });
+
+    expect(screen.getByText('YouTube video 1')).toBeTruthy();
+    expect(screen.getByText('Uploaded video 2')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove video 1' }));
+
+    await waitFor(() => expect(formRef.current?.getValues('videos')).toEqual([CLIP]));
+  });
+
+  it('stops adding at the video limit from the config', () => {
+    mount({ mode: 'register', videoLimit: 2, defaults: { venue_name: 'Cafe Mocha', videos: [LINK, CLIP] } });
+
+    expect(screen.getByRole('button', { name: 'Upload a video of Cafe Mocha' })).toHaveProperty('disabled', true);
+    expect(screen.queryByTestId('register-venue-videos-youtube')).toBeNull();
+  });
+
+  it('keeps videos editable on an approved venue, like its images', () => {
+    mount({ mode: 'edit-approved', videoLimit: 3, venueId: 'venue-1', defaults: { venue_name: 'Cafe Mocha' } });
+
+    expect(screen.getByRole('button', { name: 'Upload a video of Cafe Mocha' })).toHaveProperty('disabled', false);
+    expect(screen.getByTestId('register-venue-videos-youtube')).toHaveProperty('disabled', false);
   });
 });
 

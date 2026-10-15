@@ -4,9 +4,17 @@ import type { Translate } from '@duncit/shell';
 import type { FoodLimits, RegisterVenueValues } from './register-venue.types';
 
 /** The food block's shapes — the shared ones every venue form uses. */
-export const { food_menu: foodMenuShape, food_ordering: foodOrderingShape } = venueFoodShape;
+export const {
+  food_menu: foodMenuShape,
+  food_ordering: foodOrderingShape,
+  food_licences: foodLicencesShape,
+  food_tables: foodTablesShape,
+} = venueFoodShape;
 
-type FoodValues = Pick<RegisterVenueValues, 'offers_food' | 'food_menu' | 'food_ordering' | 'food_gstin'>;
+type FoodValues = Pick<
+  RegisterVenueValues,
+  'offers_food' | 'food_menu' | 'food_ordering' | 'food_licences' | 'food_tables' | 'food_gstin'
+>;
 
 /**
  * The food block's rules, for the form schema's superRefine: the shared ones

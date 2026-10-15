@@ -24,10 +24,11 @@ describe('Duncit AI app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('lists three destinations and three groups, in that order', () => {
+  it('lists four destinations and three groups, in that order', () => {
     expect(appConfig.nav.map((n) => n.label)).toEqual([
       'Welcome',
       'AI Library',
+      'AI Features',
       'OpenAI',
       'AI Monitoring',
       'Automation',
@@ -41,7 +42,7 @@ describe('Duncit AI app config', () => {
     const leaves = appConfig.nav.filter((n) => !n.children);
     const groups = appConfig.nav.filter((n) => n.children);
 
-    expect(leaves.map((n) => n.to)).toEqual(['/', '/library', '/reels']);
+    expect(leaves.map((n) => n.to)).toEqual(['/', '/library', '/ai-features', '/reels']);
     expect(groups.every((n) => n.to === undefined)).toBe(true);
     expect(groups.flatMap((n) => n.children!.map((c) => c.to))).toEqual([
       '/openai',
@@ -51,6 +52,12 @@ describe('Duncit AI app config', () => {
       '/automation/whatsapp',
       '/automation/email',
     ]);
+  });
+
+  it('puts AI Features right after the library, as a top-level destination', () => {
+    const entry = appConfig.nav.find((n) => n.to === '/ai-features');
+    expect(entry).toMatchObject({ label: 'AI Features', labelKey: 'shell.nav.aiFeatures', icon: 'tune' });
+    expect(entry && 'children' in entry).toBe(false);
   });
 
   it('names a localization key beside every label', () => {

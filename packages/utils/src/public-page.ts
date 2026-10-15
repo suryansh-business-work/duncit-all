@@ -158,6 +158,9 @@ export const publicPagePosterFileName = (title: string): string => `${fileSlug(t
 /** A file name for the printable table label, named like the poster. */
 export const publicPageTableLabelFileName = (title: string): string => `${fileSlug(title)}-table-label.pdf`;
 
+/** A file name for the per-table QR stickers, named like the table label. */
+export const publicPageTableStickersFileName = (title: string): string => `${fileSlug(title)}-table-stickers.pdf`;
+
 /**
  * What the scan panel says. A venue that serves food invites guests to its menu
  * as well as its pods; the poster and the table label print the same line.

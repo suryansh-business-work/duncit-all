@@ -134,6 +134,7 @@ const renderIt = (
     backingOut?: boolean;
     rejoining?: boolean;
     cancellingSpot?: boolean;
+    cancelSpotMaxed?: boolean;
   } = {},
 ) => {
   const onBackout = handlers.onBackout ?? vi.fn();
@@ -150,6 +151,7 @@ const renderIt = (
           onBackout={onBackout}
           onRejoin={onRejoin}
           cancellingSpot={handlers.cancellingSpot ?? false}
+          cancelSpotMaxed={handlers.cancelSpotMaxed}
           onCancelSpot={onCancelSpot}
         />
       </MemoryRouter>
@@ -374,6 +376,15 @@ describe('PodHistoryDetails', () => {
       renderIt(baseItem({ pod: freePod() }), [], { cancellingSpot: true });
       expect(screen.getByTestId('ph-cancel-spot')).toBeDisabled();
       expect(screen.getByTestId('ph-cancel-spot')).toHaveTextContent('Cancelling…');
+    });
+
+    it('keeps Cancel Spot, disabled, once every cancellation is used up — and does not fire it', () => {
+      const { onCancelSpot } = renderIt(baseItem({ pod: freePod(), payment_id: null }), [], { cancelSpotMaxed: true });
+      const button = screen.getByTestId('ph-cancel-spot');
+      expect(button).toBeDisabled();
+      expect(button).toHaveTextContent('Cancel Spot');
+      fireEvent.click(button);
+      expect(onCancelSpot).not.toHaveBeenCalled();
     });
 
     it('calls a cancelled spot what it is, offers Rejoin and promises no replacement or refund', () => {

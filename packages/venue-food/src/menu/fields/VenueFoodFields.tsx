@@ -4,7 +4,9 @@ import { Divider, Stack } from '@mui/material';
 import type { FoodMenuConfig } from '@duncit/utils';
 import FoodDishList from './FoodDishList';
 import type { FoodPhotoUpload } from './FoodDishPhotos';
+import FoodLicenceFields from './FoodLicenceFields';
 import FoodOffersSwitch from './FoodOffersSwitch';
+import FoodTablesFields from './FoodTablesFields';
 import FoodOrderingFields, { type FoodAccountMode } from './FoodOrderingFields';
 import { offersFoodPath, type FoodControlProps } from './food-paths';
 
@@ -16,14 +18,18 @@ export interface VenueFoodFieldsProps<T extends FieldValues, TOut = T> extends F
   idPrefix: string;
   /** The GST-number field, which each form names and locks its own way — shown with the ordering fields. */
   gstin?: ReactNode;
+  /** The venue's name — the table stickers' file is named after it. */
+  venueName?: string;
+  /** The venue has tables saved — only then can its stickers be printed (the server prints the saved list). */
+  hasSavedTables?: boolean;
 }
 
 /**
  * A venue's food block — the ONE set of fields every venue form mounts: the
  * menu editor (Partners, Venues console, mWeb), the Partners venue form's Food
  * section and the Venues console editor's. The switch, then — while the venue
- * serves food — its dishes, QR ordering with its discount and GST, and the
- * invoice GST number. The rules are `makeVenueFoodRefinement` (@duncit/forms).
+ * serves food — its licences, its dishes, QR ordering with its discount and
+ * GST, the invoice GST number, and its tables with their QR stickers. The rules are `makeVenueFoodRefinement` (@duncit/forms).
  */
 export default function VenueFoodFields<T extends FieldValues, TOut = T>({
   control,
@@ -32,6 +38,8 @@ export default function VenueFoodFields<T extends FieldValues, TOut = T>({
   upload,
   idPrefix,
   gstin,
+  venueName,
+  hasSavedTables = false,
 }: Readonly<VenueFoodFieldsProps<T, TOut>>) {
   const offersFood = useWatch({ control, name: offersFoodPath<T>() }) === true;
 
@@ -40,10 +48,21 @@ export default function VenueFoodFields<T extends FieldValues, TOut = T>({
       <FoodOffersSwitch control={control} idPrefix={idPrefix} />
       {offersFood && (
         <>
+          <FoodLicenceFields control={control} upload={upload} idPrefix={idPrefix} />
+          <Divider flexItem />
           <FoodDishList control={control} config={config} upload={upload} idPrefix={idPrefix} />
           <Divider flexItem />
           <FoodOrderingFields control={control} config={config} account={account} idPrefix={idPrefix} />
           {gstin}
+          <Divider flexItem />
+          <FoodTablesFields
+            control={control}
+            limit={config.food_table_limit}
+            venueId={upload.venueId}
+            venueName={venueName}
+            hasSavedTables={hasSavedTables}
+            idPrefix={idPrefix}
+          />
         </>
       )}
     </Stack>

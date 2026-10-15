@@ -236,6 +236,73 @@ describe('startPortalCall', () => {
 
     await expect(callService.startPortalCall(startInput() as never)).resolves.toBeDefined();
   });
+
+  it('bridges the agent number typed for this call ahead of any configured one', async () => {
+    configured({ TWILIO_AGENT_PHONE_NUMBER: '+15550002222' });
+
+    const result = await callService.startPortalCall(startInput({ agent_number: ' 9876543210 ' }) as never);
+
+    expect(result.ok).toBe(true);
+    const [, init] = (globalThis.fetch as unknown as jest.Mock).mock.calls[0] as [string, RequestInit];
+    const body = new URLSearchParams(String(init.body));
+    expect(body.get('To')).toBe('+919000000001');
+    expect(body.get('Url')).toContain(`agent=${encodeURIComponent('+919876543210')}`);
+    expect(logs.create).toHaveBeenCalledWith(expect.objectContaining({ subject: 'Portal Call', provider_name: 'twilio' }));
+  });
+
+  it('refuses an agent number that is not one, names it, and dials nothing', async () => {
+    const result = await callService.startPortalCall(startInput({ agent_number: '12' }) as never);
+
+    expect(result).toEqual({
+      ok: false,
+      message: expect.stringContaining('agent number (+9112) is not valid'),
+      log: null,
+    });
+    expect(logs.create).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('refuses a customer number that is not one even with a valid agent', async () => {
+    configured({ TWILIO_AGENT_PHONE_NUMBER: '+15550002222' });
+
+    const result = await callService.startPortalCall(startInput({ to: '123' }) as never);
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('customer number (+91123) is not a valid phone number');
+    expect(logs.create).not.toHaveBeenCalled();
+  });
+
+  it('marks the log FAILED with Twilio own reason when Twilio refused the dial', async () => {
+    configured({ TWILIO_AGENT_PHONE_NUMBER: '+15550002222' });
+    globalThis.fetch = dialAnswers({ message: 'Account suspended' }, false, 403) as typeof globalThis.fetch;
+
+    const result = await callService.startPortalCall(startInput() as never);
+
+    expect(result).toEqual({ ok: false, message: 'Account suspended', log: null });
+    expect(logs.update).toHaveBeenCalledWith('log-1', { status: 'FAILED', error_message: 'Account suspended' });
+  });
+
+  it('reports the HTTP status when Twilio refused without a reason', async () => {
+    configured({ TWILIO_AGENT_PHONE_NUMBER: '+15550002222' });
+    globalThis.fetch = dialAnswers({}, false, 502) as typeof globalThis.fetch;
+
+    const result = await callService.startPortalCall(startInput() as never);
+
+    expect(result.message).toBe('Twilio call failed (HTTP 502)');
+    expect(logs.update).toHaveBeenCalledWith('log-1', { status: 'FAILED', error_message: 'Twilio call failed' });
+  });
+
+  it('marks the log FAILED when the dial request never completed', async () => {
+    configured({ TWILIO_AGENT_PHONE_NUMBER: '+15550002222' });
+    globalThis.fetch = jest.fn(async () => {
+      throw new Error('socket hang up');
+    }) as unknown as typeof globalThis.fetch;
+
+    const result = await callService.startPortalCall(startInput() as never);
+
+    expect(result).toEqual({ ok: false, message: 'socket hang up', log: null });
+    expect(logs.update).toHaveBeenCalledWith('log-1', { status: 'FAILED', error_message: 'socket hang up' });
+  });
 });
 
 describe('applyStatus', () => {
@@ -397,6 +464,30 @@ describe('handleAiTurn', () => {
     const [, patch] = logs.update.mock.calls.at(-1) as [string, { metadata: { ai_history: unknown[] } }];
     const history = patch.metadata.ai_history as { content: string }[];
     expect(history.at(-1)?.content).toContain('repeat');
+  });
+
+  it('hangs up politely when the call assistant is switched off in AI Features', async () => {
+    openai.chat.mockResolvedValue({ ok: false, message: 'switched off', disabled: true });
+
+    const twiml = await turn();
+
+    // One polite goodbye, not 24 turns of "please repeat" billed by the minute.
+    expect(twiml).toContain('<Hangup/>');
+    expect(twiml).toContain('unavailable right now');
+    expect(twiml).not.toContain('repeat');
+    expect(twiml).not.toContain('audio-token');
+    // Nothing was said by the assistant, so the history is not rewritten either.
+    expect(logs.update).not.toHaveBeenCalled();
+    expect(servam.tts).not.toHaveBeenCalled();
+  });
+
+  it('keeps asking to repeat on an ordinary failure, which is not a switched-off feature', async () => {
+    openai.chat.mockResolvedValue({ ok: false, message: 'timeout', disabled: false });
+
+    const twiml = await turn();
+
+    expect(twiml).not.toContain('unavailable right now');
+    expect(logs.update).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to Twilio own voice when the TTS is down, rather than dropping the call', async () => {

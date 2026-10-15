@@ -119,7 +119,8 @@ export const openAiUsageTypeDefs = gql`
 
   extend type Query {
     openAiUsageDashboard(range_days: Int): OpenAiUsageDashboard!
-    openAiUsageLogsTable(query: TableQueryInput): OpenAiUsageLogTablePage!
+    "Pass task to read one AI feature's calls only (the AI Features logs page)."
+    openAiUsageLogsTable(query: TableQueryInput, task: String): OpenAiUsageLogTablePage!
     openAiUsageLog(id: ID!): OpenAiUsageLog
     openAiTaskCatalogue: OpenAiTaskCatalogue!
   }

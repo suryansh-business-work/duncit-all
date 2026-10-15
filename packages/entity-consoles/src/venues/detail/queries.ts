@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import type { VenueFoodTaxMode } from '@duncit/utils';
+import type { VenueFoodLicences, VenueFoodTaxMode } from '@duncit/utils';
 
 /** The whole venue record, read-only. The admin console never writes a venue —
  * approvals and edits live in the Onboarding portal — so this is one query with
@@ -32,7 +32,17 @@ export const VENUE_DETAIL = gql`
         diet
         spice_level
         is_available
+        videos
+        original_price
+        saving_display
       }
+      food_licences {
+        fssai_number
+        fssai_document_url
+        liquor_licence_number
+        liquor_document_url
+      }
+      food_tables
       food_ordering {
         enabled
         discount_pct
@@ -64,6 +74,7 @@ export const VENUE_DETAIL = gql`
       tags
       cover_image_url
       gallery
+      videos
       country
       country_code
       state_code
@@ -178,6 +189,9 @@ export interface VenueFoodItem {
   diet: VenueFoodDiet;
   spice_level: VenueFoodSpiceLevel;
   is_available: boolean;
+  videos?: string[];
+  original_price?: number | null;
+  saving_display?: string | null;
 }
 
 /** Scan-and-order, as far as a console may see it — the linked Razorpay account
@@ -253,6 +267,8 @@ export interface AdminVenueDetail {
   offers_food: boolean;
   food_menu: VenueFoodItem[];
   food_ordering: VenueFoodOrdering;
+  food_licences?: VenueFoodLicences | null;
+  food_tables?: string[] | null;
   /** The primary category — always `venue_categories[0]`. Read the list instead
    * (`venueCategoryList` from `@duncit/utils`); this stays for a legacy record. */
   venue_category: VenueCategoryRecord;
@@ -265,6 +281,7 @@ export interface AdminVenueDetail {
   tags: string[];
   cover_image_url: string;
   gallery: string[];
+  videos?: string[];
   country: string;
   country_code: string;
   state_code: string;

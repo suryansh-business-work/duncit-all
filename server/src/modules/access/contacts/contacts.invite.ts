@@ -9,8 +9,9 @@ import { getUrlConfigs } from '@config/url-configs';
 import { phoneKey } from '@utils/phone';
 import { escapeRegExp } from '@utils/regex';
 
-/** The scenario an invite goes out on. Registered in `whatsapp.events.ts`. */
-const INVITE_EVENT = 'USER_CONTACT_INVITE';
+/** The scenario an invite goes out on. Registered in `whatsapp.events.ts`;
+ * Marketing > Contacts counts the log rows it leaves. */
+export const INVITE_EVENT = 'USER_CONTACT_INVITE';
 
 /** How many numbers the unpaged `contactsToInvite` lists — kept for app builds
  * that predate `contactsToInvitePage`, which reaches the whole phone book. */

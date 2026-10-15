@@ -94,6 +94,45 @@ export const REPORT_PROFILE_SDL = `
   }
 `;
 
+/**
+ * The viewer's own report on a post, story or profile that Legal has not
+ * closed yet — null when there is none. Read when the report sheet opens, so a
+ * person who already reported the thing sees that instead of a form the server
+ * would refuse.
+ */
+export const MY_OPEN_REPORT_SDL = `
+  query MyOpenReport($id: ID!) {
+    myOpenReport(target_id: $id) {
+      id
+      report_no
+    }
+  }
+`;
+
+/**
+ * The `extensions.code` the server refuses a report with while the same
+ * person's earlier report on the same thing is still open.
+ */
+export const REPORT_ALREADY_PENDING_CODE = 'REPORT_ALREADY_PENDING';
+
+/**
+ * The translation key for a report the server refused, by its error code — or
+ * null when the code has no sentence of its own and the caller's generic
+ * failure copy applies. Takes the code rather than the error because mWeb
+ * (Apollo) and native (ApiError) carry it in different places.
+ */
+export function reportErrorKey(code: string | null | undefined): string | null {
+  return code === REPORT_ALREADY_PENDING_CODE ? 'contentReport.alreadyPending' : null;
+}
+
+/**
+ * The line under "Already reported by you": with the earlier report's
+ * reference when the server gave one, so it can be matched to the email.
+ */
+export function reportPendingCopyKey(reportNo: string | null | undefined): string {
+  return reportNo ? 'contentReport.alreadyPendingRef' : 'contentReport.alreadyPending';
+}
+
 /** Block a member from their profile. Idempotent on the server. */
 export const BLOCK_USER_SDL = `
   mutation BlockUser($user_id: ID!) {

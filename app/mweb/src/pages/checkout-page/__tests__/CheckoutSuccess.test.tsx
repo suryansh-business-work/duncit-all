@@ -239,3 +239,64 @@ describe('CheckoutSuccess', () => {
     expect(window.open).not.toHaveBeenCalled();
   });
 });
+
+// A FREE pod's instant join lands here with nothing paid (payment = null).
+describe('CheckoutSuccess — free join (no payment)', () => {
+  function renderFree(podOver: Record<string, unknown> = {}, mocks: MockedResponse[] = []) {
+    const onHome = vi.fn();
+    const onProfile = vi.fn();
+    render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
+        <CheckoutSuccess
+          payment={null}
+          pod={pod(podOver)}
+          onHome={onHome}
+          onProfile={onProfile}
+          profileLabel="My Bookings"
+        />
+      </MockedProvider>,
+    );
+    return { onHome, onProfile };
+  }
+
+  it('confirms the spot with the free copy, the pod and the ticket — no receipt and no invoice', () => {
+    const { onHome, onProfile } = renderFree();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Spot confirmed');
+    expect(screen.queryByText('Payment successful')).not.toBeInTheDocument();
+    expect(screen.getByTestId('checkout-success')).toHaveTextContent(
+      'This pod is free, so there is nothing to pay.',
+    );
+    expect(screen.queryByText('Payment ID')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('download-invoice')).not.toBeInTheDocument();
+    expect(screen.getByTestId('confirmation-pod')).toHaveTextContent('Sunset Jam');
+    expect(screen.getByTestId('download-ticket')).toBeEnabled();
+
+    expect(screen.getByTestId('success-profile')).toHaveTextContent('My Bookings');
+    fireEvent.click(screen.getByTestId('success-profile'));
+    fireEvent.click(screen.getByTestId('success-home'));
+    expect(onProfile).toHaveBeenCalledTimes(1);
+    expect(onHome).toHaveBeenCalledTimes(1);
+  });
+
+  it('never claims venue charges were paid when nothing was', () => {
+    renderFree({ place_charges: [{ amount: 150 }] });
+    expect(screen.queryByTestId('success-venue-note')).not.toBeInTheDocument();
+  });
+
+  it('still downloads the ticket for the free pod', async () => {
+    const mocks: MockedResponse[] = [
+      {
+        request: { query: MY_TICKET_FOR_POD, variables: { podId: 'pod-doc-1' } },
+        result: { data: { myEventTicketForPod: { id: 'tkt-2', ticket_code: 'DUN-FREE' } } },
+      },
+      {
+        request: { query: TICKET_PDF, variables: { id: 'tkt-2' } },
+        result: { data: { eventTicketPdfBase64: 'RlJFRQ==' } },
+      },
+    ];
+    renderFree({}, mocks);
+    fireEvent.click(screen.getByTestId('download-ticket'));
+    await waitFor(() => expect(downloads).toHaveLength(1));
+    expect(downloads[0].href).toBe('data:application/pdf;base64,RlJFRQ==');
+  });
+});

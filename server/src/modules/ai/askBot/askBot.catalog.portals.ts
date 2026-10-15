@@ -348,6 +348,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Land on a greeting dashboard card naming the AI portal and confirming the console is set up, with features still to come.' },
   { surface: 'ai', path: '/library', label: 'AI Library',
     description: 'Search, add, edit and delete AI prompts — including the System prompts the shipped AI features (image scanning, dummy data, moderation, support chat) read live — and reset a System prompt to its shipped default.' },
+  { surface: 'ai', path: '/ai-features', label: 'AI Features',
+    description: 'See every AI feature in the product — moderation scans, support replies, CRM, admin tools, Ask Bot, automation, Reel Studio — with an On/Off switch for each and how many calls, input and output tokens and dollars each used over a chosen range; open a feature to read its own call log.' },
   { surface: 'ai', path: '/monitoring', label: 'Logs', group: 'AI Monitoring',
     description: 'Browse the full history of AI Monitoring checks on uploaded images from every surface — the image itself, who uploaded it, when, how far the check got, the AI risk result, the reason or comment behind it, the action taken and the source module — and open a row for the full trail including the model and any failure detail.' },
   { surface: 'ai', path: '/monitoring/settings', label: 'Settings', group: 'AI Monitoring',

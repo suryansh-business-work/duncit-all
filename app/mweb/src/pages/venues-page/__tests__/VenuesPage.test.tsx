@@ -95,6 +95,28 @@ describe('VenuesPage', () => {
     expect(screen.getAllByText(/40 capacity/).length).toBeGreaterThan(0);
   });
 
+  it('lays the cards out in a grid whose sponsored banner spans the whole row', async () => {
+    setup(
+      [
+        catMock([]),
+        adMock([{ id: 'ad-1', ad_type: 'IMAGE', media_url: 'x', redirect_url: null, ad_title: 'Buy', position: 'VENUE_LIST' }]),
+        venuesMock(baseVars, fiveVenues),
+      ],
+      <VenuesPage locationId="loc-1" />,
+    );
+    const ad = await screen.findByTestId('ad-card');
+    const grid = screen.getByTestId('venues-grid');
+    expect(getComputedStyle(grid).display).toBe('grid');
+    // Every card and the banner are cells of the one grid.
+    expect(grid).toContainElement(screen.getByTestId('venue-card-1'));
+    expect(grid).toContainElement(ad);
+    const adCell = ad.parentElement as HTMLElement;
+    expect(adCell.parentElement).toBe(grid);
+    expect(getComputedStyle(adCell).gridColumn.replaceAll(/\s/g, '')).toBe('1/-1');
+    // The page is no longer held to a phone-width column on a wide screen.
+    expect(getComputedStyle(screen.getByTestId('venues-page')).maxWidth).not.toBe('720px');
+  });
+
   it('navigates to the venue detail on card tap', async () => {
     setup(
       [catMock([]), adMock([]), venuesMock(baseVars, [venue('9')])],

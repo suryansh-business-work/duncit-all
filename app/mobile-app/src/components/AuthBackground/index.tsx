@@ -1,2 +1,3 @@
-export { AuthBackground, useAuthHeroMedia } from './AuthBackground';
-export { useAuthHeroHeight } from './BrandBackdrop';
+export { AuthBackground } from './AuthBackground';
+export { AuthHero } from './AuthHero';
+export { useAuthHeroMedia } from './useAuthHeroMedia';

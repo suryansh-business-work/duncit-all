@@ -11,6 +11,11 @@ vi.mock('../../src/components/AppShell', () => ({
 vi.mock('../../src/pages/LoginPage', () => ({ default: () => <div>LOGIN PAGE</div> }));
 vi.mock('../../src/pages/WelcomePage', () => ({ default: () => <div>WELCOME PAGE</div> }));
 vi.mock('../../src/pages/prompt-library', () => ({ default: () => <div>LIBRARY PAGE</div> }));
+vi.mock('../../src/pages/ai-features', () => ({ default: () => <div>AI FEATURES PAGE</div> }));
+vi.mock('../../src/pages/ai-features/detail', async () => {
+  const { useParams } = await import('react-router');
+  return { default: () => <div>AI FEATURE {useParams().key}</div> };
+});
 vi.mock('@duncit/shell', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/shell')>()),
   ProfilePage: () => <div>PROFILE PAGE</div>,
@@ -35,6 +40,23 @@ describe('App routing', () => {
     setToken('tok');
     renderWithProviders(<App />, { initialEntries: ['/library'] });
     expect(screen.getByText('LIBRARY PAGE')).toBeInTheDocument();
+  });
+
+  it('renders the AI Features list behind auth', () => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: ['/ai-features'] });
+    expect(screen.getByText('AI FEATURES PAGE')).toBeInTheDocument();
+  });
+
+  it('hands a feature page its key from the path', () => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: ['/ai-features/moderation.scan'] });
+    expect(screen.getByText('AI FEATURE moderation.scan')).toBeInTheDocument();
+  });
+
+  it('keeps the AI Features pages behind the login', () => {
+    renderWithProviders(<App />, { initialEntries: ['/ai-features/moderation.scan'] });
+    expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument();
   });
 
   it('renders the shared profile page behind auth', () => {

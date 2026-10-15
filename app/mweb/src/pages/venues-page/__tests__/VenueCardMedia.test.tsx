@@ -28,6 +28,19 @@ describe('VenueCardMedia', () => {
     expect(onOpen).toHaveBeenCalledOnce();
   });
 
+  // The frame holds the ratio and the height cap; the photo fills it. An <img>
+  // holding the ratio itself met the cap by narrowing, leaving the card's right
+  // side empty on wide screens.
+  it('fills the whole frame with the photo instead of letting the photo narrow itself', () => {
+    render(<VenueCardMedia images={[HALL]} venueName="Sunset Hall" onOpen={vi.fn()} />);
+    const [shot] = screen.getAllByAltText('Sunset Hall');
+    expect(shot).toHaveStyle({ width: '100%', height: '100%', objectFit: 'cover' });
+    expect(getComputedStyle(shot).maxHeight).not.toBe('300px');
+    const frame = shot.parentElement as HTMLElement;
+    expect(frame.tagName).toBe('DIV');
+    expect(frame).toHaveStyle({ width: '100%', maxHeight: '300px' });
+  });
+
   /*
     The placeholder is what an empty list means — a venue with no photos, and a
     venue whose photos have not arrived, look the same on purpose. Rendering an

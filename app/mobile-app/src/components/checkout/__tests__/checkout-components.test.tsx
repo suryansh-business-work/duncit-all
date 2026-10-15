@@ -255,4 +255,63 @@ describe('CheckoutSuccess', () => {
       screen.getByText(/Venue charges ₹150\.00 are payable directly at\s+the venue\./),
     ).toBeOnTheScreen();
   });
+
+  it('hides the invoice button for a paid receipt with no invoice handler', () => {
+    renderWithProviders(
+      <CheckoutSuccess payment={payment} onHome={jest.fn()} onProfile={jest.fn()} />,
+    );
+    expect(screen.getByText('Amount paid')).toBeOnTheScreen();
+    expect(screen.queryByTestId('download-invoice')).toBeNull();
+  });
+
+  // A FREE pod's instant join lands here with nothing paid.
+  describe('free join (no payment)', () => {
+    const freePod = {
+      id: 'p1',
+      pod_title: 'Free Jam',
+      place_charges: [{ label: 'Entry fee', amount: 100, note: null }],
+    } as never;
+
+    it('confirms the spot without a receipt, invoice or venue-charge note', () => {
+      const onDownloadInvoice = jest.fn();
+      renderWithProviders(
+        <CheckoutSuccess
+          payment={null}
+          pod={freePod}
+          onDownloadInvoice={onDownloadInvoice}
+          onHome={jest.fn()}
+          onProfile={jest.fn()}
+        />,
+      );
+      expect(screen.getByRole('heading', { name: /Spot confirmed/ })).toHaveTextContent(
+        'Spot confirmed\nYou are in',
+      );
+      expect(screen.getByText(/This pod is free, so there is nothing to pay\./)).toBeOnTheScreen();
+      expect(screen.queryByText('Payment successful')).toBeNull();
+      expect(screen.queryByText('Amount paid')).toBeNull();
+      expect(screen.queryByTestId('download-invoice')).toBeNull();
+      // The pod carries venue charges, but nothing was paid — no pay-at-venue note.
+      expect(screen.queryByTestId('success-venue-note')).toBeNull();
+      expect(screen.getByTestId('confirmation-pod')).toBeOnTheScreen();
+      expect(onDownloadInvoice).not.toHaveBeenCalled();
+    });
+
+    it('still offers the ticket download and the way home', async () => {
+      const onDownloadTicket = jest.fn().mockResolvedValue(undefined);
+      const onHome = jest.fn();
+      renderWithProviders(
+        <CheckoutSuccess
+          payment={null}
+          pod={freePod}
+          onDownloadTicket={onDownloadTicket}
+          onHome={onHome}
+          onProfile={jest.fn()}
+        />,
+      );
+      fireEvent.press(screen.getByTestId('download-ticket'));
+      await waitFor(() => expect(onDownloadTicket).toHaveBeenCalledTimes(1));
+      fireEvent.press(screen.getByTestId('success-home'));
+      expect(onHome).toHaveBeenCalledTimes(1);
+    });
+  });
 });

@@ -1,10 +1,14 @@
 import { Stack } from '@mui/material';
 import { FoodBreakdowns, FoodDailyChart, FoodRecentFeedback, FoodStatTiles } from '@duncit/venue-food';
 import {
+  blankFoodLicences,
   blankFoodOrdering,
   canCancelFoodOrder,
   canTakeFoodOrders,
   foodOrderNextStep,
+  foodPriceDisplay,
+  foodTableFromParam,
+  parseFoodTables,
   toFoodMenuSaveInput,
   type FoodMenuFormValues,
   type FoodMenuMode,
@@ -12,6 +16,7 @@ import {
   type VenueFoodOrderStatus,
   type VenueFoodPaymentStatus,
 } from '@duncit/utils';
+import { venueVideosOf } from '@duncit/forms/schemas';
 import { defineDemo, defineDemos } from '../types';
 
 const STATS: FoodOwnerStats = {
@@ -69,6 +74,18 @@ interface MenuMock {
   values: FoodMenuFormValues;
 }
 
+interface PriceMock {
+  price: string;
+  original_price: string;
+  saving_display: string;
+}
+
+interface TablesMock {
+  typed: string;
+  scanned: string;
+  videos: string[];
+}
+
 interface FlowMock {
   status: VenueFoodOrderStatus;
   payment_status: VenueFoodPaymentStatus;
@@ -102,16 +119,40 @@ export default defineDemos('venue-food', [
       values: {
         offers_food: true,
         food_menu: [
-          { item_id: 'dish-1', name: 'Masala dosa', description: 'Crisp, with sambar', category: 'Mains', price: '120', images: [], diet: 'VEG', spice_level: 'MILD', is_available: true },
-          { item_id: '', name: 'Filter coffee', description: '', category: 'Drinks', price: '40', images: [], diet: 'VEG', spice_level: 'NONE', is_available: true },
+          { item_id: 'dish-1', name: 'Masala dosa', description: 'Crisp, with sambar', category: 'Mains', price: '120', images: [], diet: 'VEG', spice_level: 'MILD', is_available: true, videos: ['https://youtu.be/dQw4w9WgXcQ'], original_price: '150', saving_display: 'PERCENT' },
+          { item_id: '', name: 'Filter coffee', description: '', category: 'Drinks', price: '40', images: [], diet: 'VEG', spice_level: 'NONE', is_available: true, videos: [], original_price: '', saving_display: 'PERCENT' },
         ],
         food_ordering: { ...blankFoodOrdering, enabled: true, razorpay_integration_id: 'rzp-1', razorpay_linked: true, discount_pct: '10' },
+        food_licences: { ...blankFoodLicences, fssai_number: '12345678901234' },
+        food_tables: '1, 2, 3, Patio',
         gstin: '22ABCDE1234F1Z5',
       },
     },
     compute: (mock) => ({
       'Can take orders': canTakeFoodOrders(mock.values.food_menu, mock.values.food_ordering.razorpay_linked),
       'updateApprovedVenue input': toFoodMenuSaveInput(mock.values, mock),
+    }),
+  }),
+  defineDemo<PriceMock>({
+    id: 'price-display',
+    title: 'How a dish with an MRP reads on the menu',
+    note: 'Display only — the guest pays price. Set saving_display to AMOUNT, or an MRP at or below the price, and watch the strikethrough change or go.',
+    mock: { price: '120', original_price: '150', saving_display: 'PERCENT' },
+    compute: (mock) => ({ 'foodPriceDisplay': foodPriceDisplay(mock) }),
+  }),
+  defineDemo<TablesMock>({
+    id: 'tables-and-videos',
+    title: 'Table stickers and videos',
+    note: 'The typed tables become one QR sticker each; a scanned ?table= fills the checkout. A video is a YouTube link or an uploaded clip.',
+    mock: {
+      typed: '1, 2, patio, Patio, 3',
+      scanned: '  T5  ',
+      videos: ['https://www.youtube.com/shorts/dQw4w9WgXcQ', 'https://ik.imagekit.io/duncit/venues/clip.mp4'],
+    },
+    compute: (mock) => ({
+      'Sticker tables': parseFoodTables(mock.typed),
+      'Checkout table': foodTableFromParam(mock.scanned),
+      Videos: venueVideosOf(mock.videos),
     }),
   }),
   defineDemo<FlowMock>({

@@ -10,6 +10,7 @@ import { SHOP_COPY } from './shop';
 import { VENUES_COPY } from './venues';
 import { FUNNEL_COPY } from './funnel';
 import { MARKETING_COPY } from './marketing';
+import { CONTACTS_COPY } from './contacts';
 import { COMMUNICATIONS_COPY } from './communications';
 import { SUPPORT_COPY } from './support';
 import { LEGAL_COPY } from './legal';
@@ -42,6 +43,7 @@ const PAGES: readonly PageCopy[] = [
   VENUES_COPY,
   FUNNEL_COPY,
   MARKETING_COPY,
+  CONTACTS_COPY,
   COMMUNICATIONS_COPY,
   SUPPORT_COPY,
   LEGAL_COPY,

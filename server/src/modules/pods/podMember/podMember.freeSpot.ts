@@ -3,11 +3,18 @@
  *
  * A free pod has no backout and no refund of any kind (rule 4 of the free-pod
  * brief). Leaving one is therefore not a BackoutRequest: no request row, no
- * attempt counted against Admin > Pod Settings' limit, no refund state, no
- * "your spot was filled" message. The member's seats go straight back on the
- * pod, their ticket stops scanning, and they may join again — any number of
- * times — on the SAME membership row, which is re-activated rather than copied
- * so a join/cancel loop cannot grow the collection without bound.
+ * backout attempt counted, no refund state, no "your spot was filled"
+ * message. The member's seats go straight back on the pod, their ticket stops
+ * scanning, and they may join again on the SAME membership row, which is
+ * re-activated rather than copied so a join/cancel loop cannot grow the
+ * collection without bound.
+ *
+ * Cancelling is capped (owner, 2026-10-15): a member may cancel their spot on
+ * one pod at most Admin > Pods > Pod Settings' `max_free_spot_cancellations`
+ * times, counted on the row's `spot_cancel_count` — which survives every
+ * re-join because the row is re-activated, never copied. Once it is used up
+ * the cancel is refused and the member keeps their spot. Joining again is
+ * never refused by it.
  *
  * The membership row is the single point every concurrent caller races on:
  * each transition is a conditional write on its status (JOINED ⇄ BACKED_OUT),
@@ -32,6 +39,13 @@ import { logs } from '@observability/log';
 export const CHECKED_IN_CANCEL_MESSAGE =
   'You have already been checked in at this pod, so your spot can no longer be cancelled.';
 
+/** Shown when the member has used every spot cancellation this pod allows. */
+export const CANCEL_LIMIT_MESSAGE =
+  'You have cancelled your spot on this pod the maximum number of times allowed, so it can no longer be cancelled.';
+
+const cancelLimitError = () =>
+  new GraphQLError(CANCEL_LIMIT_MESSAGE, { extensions: { code: 'CANCEL_LIMIT_REACHED' } });
+
 /** The pod's own start has passed — the same clock `backout` and `joinFree` use. */
 export const podHasStarted = (pod: { pod_date_time?: Date | null }) =>
   !!pod.pod_date_time && pod.pod_date_time.getTime() < Date.now();
@@ -41,21 +55,31 @@ export const podHasStarted = (pod: { pod_date_time?: Date | null }) =>
  * or — when another request already cancelled it — that same cancelled row,
  * so a double submit answers the same thing twice.
  *
- * The caller has already checked the pod is FREE and has not started.
+ * The caller has already checked the pod is FREE and has not started, and
+ * passes the cancellation cap (Pod Settings) — this function enforces it.
  *
  * Order (matters without a transaction): the ticket is voided first, guarded on
  * it not being CHECKED_IN, so a scanned member is refused before anything
  * moves; then the membership flips JOINED → BACKED_OUT in one conditional
  * write — only the request that wins it goes on to release the seats, which is
  * what keeps the seat counters from being released twice.
+ *
+ * The cap is checked on the read (refused before anything moves) AND in the
+ * flip's filter (`spot_cancel_count` not >= max), so no interleaving of
+ * cancels and re-joins can ever take the count past it.
  */
-export async function cancelFreeSpot(podId: Types.ObjectId, userId: string): Promise<IPodMember> {
+export async function cancelFreeSpot(
+  podId: Types.ObjectId,
+  userId: string,
+  maxCancels: number
+): Promise<IPodMember> {
   const uid = new Types.ObjectId(userId);
   const cancelled = await withTransaction(async (session) => {
     const membership = await PodMemberModel.findOne({ pod_id: podId, user_id: uid, status: 'JOINED' }).session(
       session ?? null
     );
     if (!membership) return null;
+    if ((membership.spot_cancel_count ?? 0) >= maxCancels) throw cancelLimitError();
 
     const ticket = await TicketModel.findOne({ membership_id: membership._id }).session(session ?? null);
     if (ticket) {
@@ -71,7 +95,7 @@ export async function cancelFreeSpot(podId: Types.ObjectId, userId: string): Pro
 
     const now = new Date();
     const flipped = await PodMemberModel.findOneAndUpdate(
-      { _id: membership._id, status: 'JOINED' },
+      { _id: membership._id, status: 'JOINED', spot_cancel_count: { $not: { $gte: maxCancels } } },
       {
         $set: {
           status: 'BACKED_OUT',
@@ -84,8 +108,21 @@ export async function cancelFreeSpot(podId: Types.ObjectId, userId: string): Pro
       },
       { new: true, session }
     );
-    // Lost the race to a concurrent cancel: that request releases the seats.
-    if (!flipped) return null;
+    if (!flipped) {
+      // Still JOINED means the cap filtered the flip out: refuse, and (without
+      // a transaction to abort) give the ticket voided above its QR back.
+      const still = await PodMemberModel.exists({ _id: membership._id, status: 'JOINED' }).session(
+        session ?? null
+      );
+      if (still) {
+        if (!session && ticket) {
+          await TicketModel.updateOne({ _id: ticket._id, status: 'CANCELLED' }, { $set: { status: ticket.status } });
+        }
+        throw cancelLimitError();
+      }
+      // Lost the race to a concurrent cancel: that request releases the seats.
+      return null;
+    }
     await releaseSeats(podId, userId, normalizeSeats(flipped.seats ?? 1), session);
     return flipped;
   });

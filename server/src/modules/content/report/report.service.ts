@@ -6,6 +6,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { postService } from '@modules/engagement/post/post.service';
 import {
   ContentReportModel,
+  OPEN_REPORT_STATUSES,
   REPORT_STATUSES,
   REPORT_TARGET_TYPES,
   type IContentReport,
@@ -16,6 +17,12 @@ import {
 import { sendContentReportMessage, sendReportNotice, type ReportNotice } from './report.email';
 import { reportCategoryService } from './reportCategory.service';
 import { sendReportReceivedWhatsApp } from './report.whatsapp';
+import {
+  failAlreadyPending,
+  findOpenReport,
+  isOpenReportCollision,
+  syncReportIndexes,
+} from './report.pending';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -27,7 +34,7 @@ const SUBJECT_MAX = 150;
 
 /** The targets that are `Post` documents — the ones Legal can take down today. */
 const POST_TARGETS = new Set<ReportTargetType>(['STORY', 'POST']);
-const OPEN_STATUSES = new Set<ReportStatus>(['RECEIVED', 'IN_REVIEW']);
+const OPEN_STATUSES = new Set<ReportStatus>(OPEN_REPORT_STATUSES);
 const CLOSED_STATUSES = new Set<ReportStatus>(['ACTIONED', 'DISMISSED']);
 
 export type ReportMailRecipient = 'REPORTER' | 'OWNER';
@@ -99,7 +106,10 @@ async function contextFor(docs: readonly IContentReport[]): Promise<ReportContex
     postService.liveIds(postIds),
     ContentReportModel.aggregate<{ _id: { type: ReportTargetType; id: Types.ObjectId }; count: number }>([
       { $match: { target_id: { $in: targetIds } } },
-      { $group: { _id: { type: '$target_type', id: '$target_id' }, count: { $sum: 1 } } },
+      // PEOPLE, not rows: a person may report the same thing again once Legal
+      // closed their first report, and that is still one person objecting.
+      { $group: { _id: { type: '$target_type', id: '$target_id' }, reporters: { $addToSet: '$reporter_id' } } },
+      { $project: { count: { $size: '$reporters' } } },
     ]),
     reportCategoryService.labelMap(),
   ]);
@@ -245,12 +255,15 @@ async function closeTarget(acted: IContentReport, handlerId: string, verdict: Ve
 
 export const reportService = {
   /**
-   * File a report, or update the one this reporter already filed.
+   * File a report.
    *
-   * A repeat report is an edit, never a second row — the unique index on
-   * (reporter, type, target) is what makes the queue a count of PEOPLE who
-   * objected rather than a count of taps. `report_no` is minted once, on the
-   * first filing, so the handle a reviewer already has stays valid.
+   * A repeat while this reporter's earlier report on the same thing is still
+   * open (RECEIVED / IN_REVIEW) is refused with REPORT_ALREADY_PENDING — the
+   * queue counts PEOPLE who objected, not taps. Once Legal has closed it, the
+   * same person may report the same thing again as a new report with its own
+   * reference. The read below is the friendly refusal; the unique partial index
+   * on (reporter, type, target, is_open) is what holds under two simultaneous
+   * submits.
    */
   async submit(
     reporterId: string,
@@ -267,6 +280,7 @@ export const reportService = {
     if (snapshot.target_owner_id === reporterId) {
       fail('BAD_USER_INPUT', 'You cannot report your own content');
     }
+    if (await findOpenReport(reporterId, targetId, snapshot.target_type)) failAlreadyPending();
 
     const category = await reportCategoryService.requireActive(input.reason);
     const details = (input.details ?? '').trim();
@@ -277,18 +291,8 @@ export const reportService = {
       fail('BAD_USER_INPUT', 'Tell us what is wrong with this content');
     }
 
-    const existing = await ContentReportModel.findOne({
-      reporter_id: new Types.ObjectId(reporterId),
-      target_type: snapshot.target_type,
-      target_id: targetId,
-    });
-
     let report: IContentReport;
-    if (existing) {
-      existing.reason = category.key;
-      existing.details = details;
-      report = await existing.save();
-    } else {
+    try {
       report = await ContentReportModel.create({
         target_type: snapshot.target_type,
         target_id: targetId,
@@ -300,17 +304,19 @@ export const reportService = {
         details,
         reporter_id: new Types.ObjectId(reporterId),
       });
+    } catch (error) {
+      // A second tap that raced past the read above.
+      if (isOpenReportCollision(error)) failAlreadyPending();
+      throw error;
     }
     logs.server.info('report.service', 'submit', {
       report_no: report.report_no,
       target_type: report.target_type,
       reason: report.reason,
-      repeat: !!existing,
     });
-    // Every filing is acknowledged, a repeat included: it carries the same
-    // reference, so it confirms the latest version rather than reading as a
-    // second report — and a person who reported again and heard nothing back
-    // could not tell whether it went through. Only the reporter is written to.
+    // Every filing is acknowledged with its own reference, so a person who
+    // reports again after Legal closed their first report can tell the two
+    // apart. Only the reporter is written to.
     sendNotices([
       {
         template: 'content-report-received',
@@ -326,6 +332,23 @@ export const reportService = {
     );
     return { id: String(report.id), report_no: report.report_no ?? '' };
   },
+
+  /**
+   * The viewer's still-open report on a post, story or profile, or null.
+   *
+   * What lets the report sheet open straight to "you already reported this"
+   * instead of a form the server would refuse. One indexed read, receipt
+   * fields only — never the staff-side record.
+   */
+  async myOpenReport(reporterId: string, targetId: string) {
+    const target = toOid(targetId);
+    if (!target) fail('BAD_USER_INPUT', 'Invalid target id');
+    const open = await findOpenReport(reporterId, target);
+    return open ? { id: open._id.toString(), report_no: open.report_no ?? '' } : null;
+  },
+
+  /** Boot-time: backfill `is_open` and land the one-open-report index. */
+  syncIndexes: syncReportIndexes,
 
   async table(input?: TableQueryInput) {
     const { docs, total, page, page_size } = await runTableQuery<IContentReport>(
@@ -381,7 +404,16 @@ export const reportService = {
       if (!closed) doc.resolved_at = null;
     }
     doc.handled_by = new Types.ObjectId(handlerId);
-    await doc.save();
+    try {
+      await doc.save();
+    } catch (error) {
+      // Reopening a closed report while the same person has since filed a new
+      // one on the same thing would make two open reports from one person.
+      if (isOpenReportCollision(error)) {
+        fail('CONFLICT', 'This person has a newer open report on the same content. Work on that one instead.');
+      }
+      throw error;
+    }
     return pubOne(doc);
   },
 

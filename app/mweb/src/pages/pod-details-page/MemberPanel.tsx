@@ -3,6 +3,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import LockClockIcon from '@mui/icons-material/LockClock';
 import { DuncitButton } from '@duncit/buttons';
+import { memberBookedCopy, type FreeSpotCancels } from '@duncit/utils';
 import { BarLabel, BarNotice } from './BarLabel';
 import { compactButtonSx, ctaButtonSx } from './buttonSx';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -24,6 +25,8 @@ interface Props {
   /** A FREE pod: no Backout — "Cancel Spot" is the only way out. */
   isFree?: boolean;
   canCancelSpot?: boolean;
+  /** The membership state's cancel counters (free pods cap cancellations). */
+  spotCancels?: FreeSpotCancels | null;
   cancellingSpot?: boolean;
   onCancelSpot?: () => void;
 }
@@ -49,22 +52,15 @@ export default function MemberPanel({
   onKeepSpot,
   isFree = false,
   canCancelSpot = false,
+  spotCancels = null,
   cancellingSpot = false,
   onCancelSpot,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  // A free pod has no attempts to run out of: once its spot cannot be
-  // cancelled before the date, the only reason is a check-in at the door.
-  const canLeave = isFree ? canCancelSpot : canBackout;
-  const blockedNote = isFree
-    ? t('mweb.podDetails.cancelSpotCheckedIn')
-    : t('mweb.podDetails.backoutMaxed');
-  let note: string | null = null;
-  if (!canLeave) {
-    note = isExpired ? t('mweb.podDetails.alreadyTakenPlace') : blockedNote;
-  }
-  const overline = isExpired ? t('mweb.podDetails.youWent') : t('mweb.podDetails.youreGoing');
-  const badge = isExpired ? t('mweb.podDetails.podVisited') : t('mweb.podDetails.podBooked');
+  const copy = memberBookedCopy({ isFree, isExpired, canBackout, canCancelSpot, spotCancels });
+  const note = copy.note ? t(copy.note.key, { vars: copy.note.vars }) : null;
+  const overline = t(copy.overlineKey);
+  const badge = t(copy.badgeKey);
 
   return (
     <Stack spacing={1} data-testid="member-panel" sx={{ pl: 1 }}>

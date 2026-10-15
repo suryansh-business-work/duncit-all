@@ -3,7 +3,7 @@ import { Dimensions, Linking } from 'react-native';
 import { Text } from 'tamagui';
 
 import { AuthAvatarsStrip } from '@/components/AuthAvatarsStrip';
-import { AuthBackground } from '@/components/AuthBackground';
+import { AuthBackground, AuthHero } from '@/components/AuthBackground';
 import { AuthCard } from '@/components/AuthCard';
 import { AuthDivider } from '@/components/AuthDivider';
 import { AuthLogo } from '@/components/AuthLogo';
@@ -52,10 +52,10 @@ describe('AuthBackground', () => {
   });
 
   /*
-    Both switches off is the state an untouched install is in, and the gradient
-    is what it draws — so nothing extra may be rendered over it.
+    Both switches off is the state an untouched install is in, and the flat
+    ground is what it draws — so the hero adds nothing around the heading.
   */
-  it('draws only the gradient when neither backdrop switch is on', () => {
+  it('draws no hero when neither backdrop switch is on', () => {
     mockedUseBranding.mockReturnValue(
       brandingResult({
         data: {
@@ -69,9 +69,9 @@ describe('AuthBackground', () => {
       }),
     );
     renderWithProviders(
-      <AuthBackground>
+      <AuthHero room={0}>
         <Text testID="bg-child">hi</Text>
-      </AuthBackground>,
+      </AuthHero>,
     );
     expect(screen.queryByTestId('auth-backdrop-image')).toBeNull();
     expect(screen.queryByTestId('auth-backdrop-video')).toBeNull();
@@ -91,9 +91,9 @@ describe('AuthBackground', () => {
       }),
     );
     renderWithProviders(
-      <AuthBackground>
+      <AuthHero room={0}>
         <Text testID="bg-child">hi</Text>
-      </AuthBackground>,
+      </AuthHero>,
     );
     expect(screen.getByTestId('auth-backdrop-image')).toBeTruthy();
     expect(screen.queryByTestId('auth-backdrop-video')).toBeNull();
@@ -114,9 +114,9 @@ describe('AuthBackground', () => {
       }),
     );
     renderWithProviders(
-      <AuthBackground>
+      <AuthHero room={0}>
         <Text testID="bg-child">hi</Text>
-      </AuthBackground>,
+      </AuthHero>,
     );
     expect(screen.getByTestId('auth-backdrop-video')).toBeTruthy();
     expect(screen.queryByTestId('auth-backdrop-image')).toBeNull();
@@ -137,9 +137,9 @@ describe('AuthBackground', () => {
       }),
     );
     renderWithProviders(
-      <AuthBackground>
+      <AuthHero room={0}>
         <Text testID="bg-child">hi</Text>
-      </AuthBackground>,
+      </AuthHero>,
     );
     expect(screen.queryByTestId('auth-backdrop-image')).toBeNull();
     expect(screen.queryByTestId('auth-backdrop-video')).toBeNull();

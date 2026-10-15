@@ -1,4 +1,4 @@
-import { PDF_PALETTE, pdfCurrency, renderPdf } from '@services/pdf/document';
+import { PDF_PALETTE, pdfCurrency, pdfCurrencyNote, pdfRowHeight, renderPdf } from '@services/pdf/document';
 import { appDateTime } from '@utils/app-time';
 
 /**
@@ -24,6 +24,8 @@ export interface FoodInvoiceData {
   venue_name: string;
   venue_address: string;
   venue_gstin: string;
+  /** The venue's FSSAI licence number as it was when the order was placed; blank prints nothing. */
+  venue_fssai?: string;
   customer_name: string;
   customer_phone: string;
   table_label: string;
@@ -56,7 +58,7 @@ const PAGE_BOTTOM = 770;
 /** The table's cells sit this far inside its edges, so the last column never touches the band's end. */
 const CELL_INSET = 6;
 /** Room the totals, the GST lines and the notes need below the last item. */
-const TOTALS_HEIGHT = 210;
+const TOTALS_HEIGHT = 224;
 const COLUMNS = { name: LEFT + CELL_INSET, quantity: 324, unit: 374, total: 464 } as const;
 const { accent, accentSoft, ink, muted, line, paper } = PDF_PALETTE;
 
@@ -84,6 +86,7 @@ function drawHeader(doc: Doc, data: FoodInvoiceData, right: number): number {
   doc.fillColor(muted).fontSize(9).font('Helvetica');
   if (data.venue_address) doc.text(data.venue_address, LEFT, doc.y + 2, { width: 280 });
   if (data.venue_gstin) doc.text(`GSTIN: ${data.venue_gstin}`, LEFT, doc.y + 2);
+  if (data.venue_fssai) doc.text(`FSSAI Lic. No: ${data.venue_fssai}`, LEFT, doc.y + 2);
   const leftBottom = doc.y;
 
   doc.fillColor(muted).fontSize(9).text('Invoice No', 360, top, { width: right - 360, align: 'right' });
@@ -135,12 +138,20 @@ export function renderVenueFoodInvoice(data: FoodInvoiceData): Promise<Buffer> {
         y = drawTableHead(doc, right, LEFT + 6);
       }
       doc.fillColor(ink).fontSize(9.5).font('Helvetica');
+      const amountWidth = right - CELL_INSET - COLUMNS.total;
       doc
         .text(item.name, COLUMNS.name, y, { width: 260 })
         .text(String(item.quantity), COLUMNS.quantity, y, { width: 40, align: 'right' })
         .text(money(item.unit), COLUMNS.unit, y, { width: 80, align: 'right' })
-        .text(money(item.total), COLUMNS.total, y, { width: right - CELL_INSET - COLUMNS.total, align: 'right' });
-      y = Math.max(doc.y, y + 12) + 8;
+        .text(money(item.total), COLUMNS.total, y, { width: amountWidth, align: 'right' });
+      // `doc.y` is where the LAST cell (the amount) ended, not the item name —
+      // a name that wrapped ran into the divider. The tallest cell sets the row.
+      const rowHeight = pdfRowHeight(doc, [
+        { text: item.name, width: 260 },
+        { text: money(item.unit), width: 80 },
+        { text: money(item.total), width: amountWidth },
+      ]);
+      y = Math.max(y + rowHeight, y + 12) + 8;
       doc.moveTo(LEFT, y - 2).lineTo(right, y - 2).strokeColor(line).stroke();
     }
 
@@ -178,6 +189,8 @@ export function renderVenueFoodInvoice(data: FoodInvoiceData): Promise<Buffer> {
     y += 10;
     doc.fillColor(muted).fontSize(9).font('Helvetica');
     doc.text(taxNote(data), LEFT, y, { width: right - LEFT });
+    const currencyNote = pdfCurrencyNote(data.currency_symbol);
+    if (currencyNote) doc.text(currencyNote, LEFT, doc.y + 3, { width: right - LEFT });
     if (data.payment_reference) doc.text(`Paid online · Payment reference: ${data.payment_reference}`, LEFT, doc.y + 3);
     if (data.refund_note) doc.fillColor(ink).font('Helvetica-Bold').text(data.refund_note, LEFT, doc.y + 6);
     doc

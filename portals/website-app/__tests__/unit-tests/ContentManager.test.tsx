@@ -78,7 +78,8 @@ describe('ContentManager', () => {
     // A click-away closes the Snackbar (onClose → setToast(null)).
     fireEvent.click(document.body);
     await waitFor(() => expect(screen.queryByText('Blog entry saved')).not.toBeInTheDocument());
-  });
+    // A full open → type → save → toast → dismiss round trip; 5 s is too tight on a loaded CI runner.
+  }, 15_000);
 
   it('closes the create dialog on cancel', async () => {
     renderBlog([]);

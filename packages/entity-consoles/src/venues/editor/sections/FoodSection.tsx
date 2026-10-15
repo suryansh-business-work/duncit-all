@@ -21,11 +21,16 @@ export default function FoodSection({
   control,
   config,
   venueId,
+  venueName,
+  hasSavedTables,
 }: Readonly<{
   control: Control<VenueFormValues, unknown, VenueFormValues>;
   config: VenueRegistrationConfig;
   /** The venue being edited — dish photos are filed in its folder; '' while it is being created. */
   venueId: string;
+  venueName?: string;
+  /** The venue has tables saved — its QR stickers can be printed. */
+  hasSavedTables?: boolean;
 }>) {
   const { t } = useTranslation();
 
@@ -41,6 +46,8 @@ export default function FoodSection({
         account={OWNER_ACCOUNT}
         upload={{ venueId: venueId || undefined, surface: 'PORTALS' }}
         idPrefix="venue-editor"
+        venueName={venueName}
+        hasSavedTables={hasSavedTables}
       />
     </SectionCard>
   );

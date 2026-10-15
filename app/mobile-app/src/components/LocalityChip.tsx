@@ -8,7 +8,8 @@ interface Props {
   testID: string;
 }
 
-/** The area a club operates in, as a small pin chip under its name. Renders
+/** The area a club operates in, as a small pin chip under its name; a long
+ * area truncates inside its card rather than running off it. Renders
  * nothing when the club names no area. mWeb twin: components/LocalityChip. */
 export function LocalityChip({ locality, testID }: Readonly<Props>) {
   const { muted } = useThemeColors();
@@ -18,6 +19,7 @@ export function LocalityChip({ locality, testID }: Readonly<Props>) {
     <XStack
       testID={testID}
       alignSelf="flex-start"
+      maxWidth="100%"
       alignItems="center"
       gap={4}
       height={24}
@@ -26,7 +28,7 @@ export function LocalityChip({ locality, testID }: Readonly<Props>) {
       backgroundColor="$soft"
     >
       <MaterialIcons name="place" size={16} color={muted} />
-      <Text fontSize={13} color="$color" numberOfLines={1}>
+      <Text fontSize={13} color="$color" numberOfLines={1} flexShrink={1}>
         {label}
       </Text>
     </XStack>

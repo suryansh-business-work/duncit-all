@@ -25,6 +25,8 @@ export const appConfig = {
   accent: { light: '#fda4af', main: '#e11d48', hover: '#be123c', active: '#9f1239' },
   nav: [
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    // Members' phone-book syncs and the invites sent from them — counts only.
+    { label: 'Contacts', labelKey: 'shell.nav.contacts', to: '/contacts', icon: 'contacts' },
     { label: 'Target Audience', labelKey: 'shell.nav.targetAudience', to: '/audience', icon: 'personSearch' },
     {
       // Everything you send lives here: email and push are two ways of

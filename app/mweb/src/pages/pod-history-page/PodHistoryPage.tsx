@@ -6,7 +6,6 @@ import {
   Alert,
   Avatar,
   Box,
-  CircularProgress,
   Divider,
   InputAdornment,
   ListItemButton,
@@ -25,6 +24,7 @@ import {
 } from './queries';
 import { applyPodHistory, DEFAULT_POD_HISTORY_FILTERS, type PodHistoryFilters } from './podHistoryFilter';
 import PodHistoryToolbar from './PodHistoryToolbar';
+import TipsLoader from '../../components/TipsLoader';
 import { SURFACE_SX } from '../../theme';
 import { parseApiError } from '../../utils/parseApiError';
 import { useDateFormat } from '../../utils/dateFormat';
@@ -76,16 +76,7 @@ export default function PodHistoryPage() {
   const visible = useMemo(() => applyPodHistory(items, filters, categories), [items, filters, categories]);
 
   if (loading && items.length === 0) {
-    return (
-      <Stack
-        data-testid="pod-history-loading"
-        sx={{
-          alignItems: "center",
-          p: 6
-        }}>
-        <CircularProgress aria-label={t('mweb.a11y.loading')} />
-      </Stack>
-    );
+    return <TipsLoader testId="pod-history-loading" />;
   }
   if (error) return (
     <Alert severity="error" data-testid="pod-history-error">

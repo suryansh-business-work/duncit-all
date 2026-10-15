@@ -41,6 +41,10 @@ import {
   isFontFamily,
   META_NAME,
   isMetaName,
+  FSSAI_NUMBER,
+  isFssaiNumber,
+  YOUTUBE_URL,
+  isYoutubeUrl,
 } from '../regex.mjs';
 
 describe('PHONE_NUMBER (bare 10 digits)', () => {
@@ -504,6 +508,53 @@ describe('COUPON_CODE / isCouponCode', () => {
   it('rejects lower case, spaces and anything outside the set', () => {
     for (const code of ['welcome10', 'Welcome10', 'SAVE 10', ' SAVE10', 'SAVE10 ', 'SAVE.10', 'SAVE10%', 'SAVE10\n']) {
       expect(isCouponCode(code)).toBe(false);
+    }
+  });
+});
+
+describe('FSSAI_NUMBER', () => {
+  it('accepts exactly 14 digits', () => {
+    expect(FSSAI_NUMBER.test('12345678901234')).toBe(true);
+    expect(isFssaiNumber('10020011000123')).toBe(true);
+  });
+
+  it('rejects a number one digit short or long, and anything not a digit', () => {
+    for (const value of ['1234567890123', '123456789012345', '1234567890123A', ' 12345678901234', '1234 5678901234', '']) {
+      expect(isFssaiNumber(value)).toBe(false);
+    }
+  });
+});
+
+describe('YOUTUBE_URL', () => {
+  const id = 'dQw4w9WgXcQ';
+
+  it('accepts every YouTube link shape and captures the video id', () => {
+    for (const url of [
+      `https://www.youtube.com/watch?v=${id}`,
+      `https://youtube.com/watch?v=${id}&t=42s`,
+      `https://m.youtube.com/watch?feature=share&v=${id}`,
+      `https://youtu.be/${id}?si=abc`,
+      `https://www.youtube.com/shorts/${id}`,
+      `https://www.youtube.com/embed/${id}`,
+      `http://www.youtube.com/live/${id}`,
+    ]) {
+      expect(YOUTUBE_URL.exec(url)?.[1]).toBe(id);
+      expect(isYoutubeUrl(url)).toBe(true);
+    }
+  });
+
+  it('rejects other hosts, look-alike domains and malformed ids', () => {
+    for (const url of [
+      'https://vimeo.com/123456',
+      `https://youtube.com.evil.example/watch?v=${id}`,
+      `https://notyoutube.com/watch?v=${id}`,
+      'https://youtu.be/short',
+      'https://www.youtube.com/channel/UC123',
+      `youtube.com/watch?v=${id}`,
+      `https://youtu.be/${id} extra`,
+      '',
+    ]) {
+      expect(isYoutubeUrl(url)).toBe(false);
     }
   });
 });

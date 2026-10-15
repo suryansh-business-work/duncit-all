@@ -18,6 +18,8 @@ export interface OpenAiChatResult {
   ok: boolean;
   message: string;
   reply?: string;
+  /** The AI portal switched `crm.call_assistant` off — the call should end, not retry. */
+  disabled?: boolean;
 }
 
 export const openaiService = {
@@ -41,7 +43,7 @@ export const openaiService = {
       temperature: 0.4,
       max_tokens: input.maxTokens ?? 220,
     });
-    if (!res.ok) return { ok: false, message: res.message };
+    if (!res.ok) return { ok: false, message: res.message, disabled: res.code === 'DISABLED' };
     return { ok: true, message: 'ok', reply: res.content.trim() };
   },
 };

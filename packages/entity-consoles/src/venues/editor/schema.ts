@@ -273,6 +273,8 @@ export function makeVenueFormSchema(
 
     cover_image_url: optional(1000),
     gallery: z.array(z.string().trim().max(1000)).default([]),
+    // Each entry comes from the shared video field (an upload, or a YouTube link it checked); the server checks again.
+    videos: z.array(z.string().trim().max(2048)).default([]),
 
     location: z.object({
       location_id: z.string().trim().min(1, t('directory.venueEditor.errPickCity')),

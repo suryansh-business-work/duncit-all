@@ -6,6 +6,8 @@ import { DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { foodDietLabel, foodSpiceLabel, type FoodMenuConfig } from '@duncit/utils';
 import FoodDishPhotos, { type FoodPhotoUpload } from './FoodDishPhotos';
+import FoodDishPricing from './FoodDishPricing';
+import VideoLinksField from './VideoLinksField';
 import { dishPath, type FoodControlProps } from './food-paths';
 
 interface Props<T extends FieldValues, TOut> extends FoodControlProps<T, TOut> {
@@ -16,10 +18,11 @@ interface Props<T extends FieldValues, TOut> extends FoodControlProps<T, TOut> {
   onRemove: () => void;
 }
 
+/** A list of addresses as the form holds it (photos and videos alike). */
 const imagesOf = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((url): url is string => typeof url === 'string') : [];
 
-/** One dish of the menu: what it is, what it costs, how it is cooked, whether it is served today, its photos. */
+/** One dish of the menu: what it is, what it costs, how it is cooked, whether it is served today, its photos and videos. */
 export default function FoodDishCard<T extends FieldValues, TOut = T>({
   control,
   index,
@@ -72,16 +75,8 @@ export default function FoodDishCard<T extends FieldValues, TOut = T>({
           minRows={2}
           size="small"
         />
+        <FoodDishPricing control={control} index={index} priceMax={config.food_price_max} />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <RhfTextField
-            control={control}
-            name={dishPath<T>(index, 'price')}
-            label={t('venueFoodOwner.menu.price')}
-            type="number"
-            required
-            size="small"
-            slotProps={{ htmlInput: { min: 1, max: config.food_price_max, step: 'any', inputMode: 'decimal' } }}
-          />
           <RhfTextField control={control} name={dishPath<T>(index, 'diet')} label={t('venueFoodOwner.menu.diet')} select size="small">
             {config.food_diets.map((diet) => (
               <MenuItem key={diet} value={diet}>
@@ -114,6 +109,22 @@ export default function FoodDishCard<T extends FieldValues, TOut = T>({
               error={fieldState.error?.message}
               onChange={(images) => field.onChange(images)}
               {...upload}
+            />
+          )}
+        />
+        <Controller
+          name={dishPath<T>(index, 'videos')}
+          control={control}
+          render={({ field, fieldState }) => (
+            <VideoLinksField
+              videos={imagesOf(field.value)}
+              onChange={(videos) => field.onChange(videos)}
+              limit={config.food_video_limit}
+              name={dishName.trim() || t('venueFoodOwner.menu.untitledDish')}
+              venueId={upload.venueId}
+              surface={upload.surface}
+              testId={`${idPrefix}-food-item-${index}-videos`}
+              error={fieldState.error?.message}
             />
           )}
         />

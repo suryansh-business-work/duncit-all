@@ -97,7 +97,13 @@ export function PublicProfilePosts({
       <ProfileTabs value={tab} onChange={setTab} isHost={isHost} isOwner={isOwner} />
 
       {tab === 'joined' ? <ProfilePodsPanel userId={authorId} kind="joined" /> : null}
-      {tab === 'hosted' && isHost ? <ProfilePodsPanel userId={authorId} kind="hosted" /> : null}
+      {tab === 'hosted' && isHost ? (
+        <ProfilePodsPanel
+          userId={authorId}
+          kind="hosted"
+          requestFromHost={isOwner ? undefined : authorName}
+        />
+      ) : null}
       {tab === 'posts' &&
         (posts.length === 0 ? (
           <Text

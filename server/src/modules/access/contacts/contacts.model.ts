@@ -36,6 +36,8 @@ const contactMatchSchema = new Schema<IContactMatch>(
 contactMatchSchema.index({ owner_id: 1, contact_id: 1 }, { unique: true });
 contactMatchSchema.index({ owner_id: 1, created_at: -1 });
 contactMatchSchema.index({ owner_id: 1, sync_id: 1 });
+// Marketing > Contacts counts the connections found per day of a period.
+contactMatchSchema.index({ created_at: -1 });
 
 export const ContactMatchModel = model<IContactMatch>('ContactMatch', contactMatchSchema);
 
@@ -63,6 +65,9 @@ const contactSyncSchema = new Schema<IContactSync>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// Marketing > Contacts reads the syncs that landed in a period.
+contactSyncSchema.index({ synced_at: -1 });
 
 export const ContactSyncModel = model<IContactSync>('ContactSync', contactSyncSchema);
 

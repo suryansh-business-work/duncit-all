@@ -15,7 +15,35 @@ export interface AnalyticsPageSpec {
   periodless?: boolean;
   /** True for a page whose every number has a place, so it can be narrowed to one city. */
   cityFilter?: boolean;
+  /** A translation key for a standing note above the grid — what the page deliberately does not show. */
+  note?: string;
 }
+
+/**
+ * What Duncit sends and whether it went out. Also the Communications console's
+ * Dashboard, which mounts this same spec — so a layout saved in one console is
+ * the layout in the other.
+ */
+export const COMMUNICATIONS_PAGE: AnalyticsPageSpec = {
+  path: '/growth/communications',
+  entity: 'COMMUNICATIONS',
+  title: 'analytics.page.communications.title',
+  subtitle: 'analytics.page.communications.subtitle',
+  dashboardId: 'analytics.communications',
+};
+
+/**
+ * Members' contact syncs and the invites they sent — counts only, never a
+ * phone-book entry. Also Marketing > Contacts, which mounts this same spec.
+ */
+export const CONTACTS_PAGE: AnalyticsPageSpec = {
+  path: '/growth/contacts',
+  entity: 'CONTACTS',
+  title: 'analytics.page.contacts.title',
+  subtitle: 'analytics.page.contacts.subtitle',
+  dashboardId: 'analytics.contacts',
+  note: 'analytics.page.contacts.note',
+};
 
 /**
  * Every log Duncit keeps. Also the Logs console's home, which mounts this same
@@ -136,13 +164,8 @@ export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
     subtitle: 'analytics.page.marketing.subtitle',
     dashboardId: 'analytics.marketing',
   },
-  {
-    path: '/growth/communications',
-    entity: 'COMMUNICATIONS',
-    title: 'analytics.page.communications.title',
-    subtitle: 'analytics.page.communications.subtitle',
-    dashboardId: 'analytics.communications',
-  },
+  CONTACTS_PAGE,
+  COMMUNICATIONS_PAGE,
   {
     path: '/support/desk',
     entity: 'SUPPORT',

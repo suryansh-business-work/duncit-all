@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router';
-import { createAuthed, ProfilePage, WelcomePage } from '@duncit/shell';
+import { createAuthed, ProfilePage } from '@duncit/shell';
+import CommunicationsDashboardPage from './pages/dashboard';
 import EmailsDashboardPage from './pages/emails-dashboard';
 import EmailTemplatesPage from './pages/email-templates-page/EmailTemplatesPage';
 import EmailFragmentsPage from './pages/email-fragments-page';
@@ -13,7 +14,6 @@ import Msg91AnalyticsPage from './pages/msg91-otp/analytics';
 // two doors (rules 34/40). The Dockerfile copies that console's src for the
 // build, and the deploy filter rebuilds this console when it changes.
 import Msg91SettingsPage from '../../tech/src/pages/msg91-settings';
-import { appConfig } from './config/app-config';
 import { runtime } from './runtime';
 
 const { AppShell, LoginPage, session } = runtime;
@@ -24,7 +24,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={authed(<WelcomePage config={appConfig} />)} />
+      <Route path="/" element={authed(<CommunicationsDashboardPage />)} />
       <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/emails" element={<Navigate to="/emails/dashboard" replace />} />
       <Route path="/emails/dashboard" element={authed(<EmailsDashboardPage />)} />

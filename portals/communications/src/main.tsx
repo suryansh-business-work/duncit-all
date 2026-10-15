@@ -1,5 +1,6 @@
 import { mountPortal } from '@duncit/shell';
 import {
+  ANALYTICS_BUNDLE,
   flattenCatalogue,
   MARKETING_BUNDLE,
   TECH_BUNDLE,
@@ -29,6 +30,8 @@ mountPortal({
     ...flattenCatalogue(TECH_BUNDLE),
     ...flattenCatalogue(MARKETING_BUNDLE),
     ...flattenCatalogue(WHATSAPP_BUNDLE),
+    // The Dashboard at / is the Analytics console's Communications page.
+    ...flattenCatalogue(ANALYTICS_BUNDLE),
   },
   loadUser: createSessionUserLoader(runtime.apolloClient),
   children: <App />,

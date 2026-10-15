@@ -29,6 +29,7 @@ describe('STUDIO_OPTION_LIST', () => {
       'pods',
       'change-requests',
       'pod-requests',
+      'event-requests',
       'nearby',
       'verification',
       'withdrawal',
@@ -64,6 +65,27 @@ describe('STUDIO_OPTION_LIST', () => {
   it('opens the brand catalogue, integrations, returns and deletion refunds in the Partner console', () => {
     const portalOnly = STUDIO_OPTION_LIST.ECOMM.filter((option) => !option.path).map((option) => option.portal);
     expect(portalOnly).toEqual(['/ecomm-brand', '/ecomm-brand/integrations', '/ecomm-brand/returns', '/ecomm-brand/deletion-refunds']);
+  });
+
+  it('opens Event Requests in the Partner console for both a venue and a host, each with its own hint', () => {
+    const eventRequests = (mode: 'VENUE' | 'HOST') => STUDIO_OPTION_LIST[mode].find((option) => option.key === 'event-requests');
+    expect(eventRequests('VENUE')).toMatchObject({
+      labelKey: 'mweb.studioOptions.eventRequests',
+      hintKey: 'mweb.studioOptions.venueEventRequestsHint',
+      portal: '/venues/event-requests',
+    });
+    expect(eventRequests('HOST')).toMatchObject({
+      labelKey: 'mweb.studioOptions.eventRequests',
+      hintKey: 'mweb.studioOptions.hostEventRequestsHint',
+      portal: '/host/event-requests',
+    });
+    for (const mode of ['VENUE', 'HOST'] as const) {
+      expect(eventRequests(mode)?.path).toBeUndefined();
+      expect(eventRequests(mode)?.route).toBeUndefined();
+    }
+    // Members never ask a club or a brand for an event.
+    expect(STUDIO_OPTION_LIST.CLUB.some((option) => option.key === 'event-requests')).toBe(false);
+    expect(STUDIO_OPTION_LIST.ECOMM.some((option) => option.key === 'event-requests')).toBe(false);
   });
 
   it('lets a brand work its orders and ShipRocket warehouses in the app as well as the console', () => {
@@ -162,6 +184,7 @@ describe('studioOptionGroups', () => {
       'pods',
       'change-requests',
       'pod-requests',
+      'event-requests',
       'nearby',
       'verification',
       'withdrawal',

@@ -135,6 +135,27 @@ describe('BotList', () => {
     expect(screen.getByRole('button')).toHaveClass('Mui-disabled');
   });
 
+  // Switched off in the AI portal is not the same as never configured — the
+  // row must not send an AI admin to the Tech portal for a key that exists.
+  it('says the bot was switched off when an AI admin disabled it', async () => {
+    wrap(<BotList onOpen={vi.fn()} />, [
+      botsMock([bot({ is_available: false, unavailable_reason: 'DISABLED' })]),
+    ]);
+    await settle();
+
+    expect(screen.getByText('Unavailable')).toBeInTheDocument();
+    expect(screen.getByText(/an AI admin has turned this bot off in the AI portal/)).toBeInTheDocument();
+    expect(screen.queryByText(/a tech admin needs to add the OpenAI key/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button')).toHaveClass('Mui-disabled');
+  });
+
+  it('falls back to the not-configured reason when the server gives none', async () => {
+    wrap(<BotList onOpen={vi.fn()} />, [botsMock([bot({ is_available: false, unavailable_reason: null })])]);
+    await settle();
+
+    expect(screen.getByText(/a tech admin needs to add the OpenAI key/)).toBeInTheDocument();
+  });
+
   it('states the reason when the list could not be read', async () => {
     wrap(<BotList onOpen={vi.fn()} />, [
       botsMock([], { result: undefined, error: new Error('offline') }),

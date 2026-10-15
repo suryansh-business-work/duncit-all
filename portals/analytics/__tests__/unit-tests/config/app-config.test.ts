@@ -57,11 +57,23 @@ describe('Analytics console app config', () => {
   it('lists every dashboard route exactly once', async () => {
     const appConfig = await loadConfig();
     const routes = appConfig.nav.flatMap((group) => group.children.map((item) => item.to));
-    expect(routes).toHaveLength(30);
+    expect(routes).toHaveLength(31);
     expect(new Set(routes).size).toBe(routes.length);
     expect(routes).toEqual(
       expect.arrayContaining(['/growth/funnel', '/support/legal', '/tech/logs', '/settings/alerts']),
     );
+  });
+
+  it('files Contacts under Growth, between Marketing and Communications', async () => {
+    const appConfig = await loadConfig();
+    const growth = appConfig.nav.find((group) => group.label === 'Growth');
+    expect(growth?.children.map((item) => item.to)).toEqual([
+      '/growth/funnel',
+      '/growth/marketing',
+      '/growth/contacts',
+      '/growth/communications',
+    ]);
+    expect(growth?.children[2]).toMatchObject({ label: 'Contacts', labelKey: 'shell.nav.contacts', icon: 'contacts' });
   });
 
   it('gates on ANALYTICS_MANAGER and ships its own login image by default', async () => {

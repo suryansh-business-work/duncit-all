@@ -40,7 +40,13 @@ import { otpService } from '@modules/platform/otp/otp.service';
 import { clubAdminService } from '@modules/clubs/clubAdmin/clubAdmin.service';
 import { notifyAttendanceMarked } from '../../ticket.service';
 import { TicketModel } from '../../ticket.model';
-import { attendanceLock, attendanceService, markTicketPresent } from '../../attendance.service';
+import { logs } from '@observability/log';
+import {
+  attendanceLock,
+  attendanceService,
+  markTicketPresent,
+  withinVirtualJoinWindow,
+} from '../../attendance.service';
 
 const POD_ID = '65b000000000000000000001';
 const HOST_ID = '65b000000000000000000002';
@@ -111,7 +117,15 @@ const ticket = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-const arrangeBoard = (over: { pod?: unknown; memberships?: unknown[]; tickets?: unknown[]; otpRequired?: boolean } = {}) => {
+const arrangeBoard = (
+  over: {
+    pod?: unknown;
+    memberships?: unknown[];
+    tickets?: unknown[];
+    otpRequired?: boolean;
+    completeTimeoutHours?: number;
+  } = {}
+) => {
   pods.findById.mockResolvedValue(over.pod ?? pod());
   members.find.mockReturnValue(chain(over.memberships ?? [membership()]));
   users.find.mockReturnValue(chain([attendee()]));
@@ -564,5 +578,222 @@ describe('attendanceService.hostMark', () => {
 
     expect(board.pod_id).toBe(String(new Types.ObjectId(POD_ID)));
     expect(board.rows).toHaveLength(1);
+  });
+});
+
+describe('withinVirtualJoinWindow', () => {
+  const start = new Date('2026-10-20T10:00:00.000Z');
+  const end = new Date('2026-10-20T12:00:00.000Z');
+  const at = (iso: string) => new Date(iso);
+
+  it('is never open for a pod with no usable start', () => {
+    expect(withinVirtualJoinWindow(null, at('2026-10-20T10:00:00.000Z'))).toBe(false);
+    expect(withinVirtualJoinWindow({ pod_date_time: 'not a date' }, at('2026-10-20T10:00:00.000Z'))).toBe(false);
+  });
+
+  it('opens an hour before the start and closes an hour after the end, inclusive', () => {
+    const virtualPod = { pod_date_time: start, pod_end_date_time: end };
+    expect(withinVirtualJoinWindow(virtualPod, at('2026-10-20T08:59:59.999Z'))).toBe(false);
+    expect(withinVirtualJoinWindow(virtualPod, at('2026-10-20T09:00:00.000Z'))).toBe(true);
+    expect(withinVirtualJoinWindow(virtualPod, at('2026-10-20T13:00:00.000Z'))).toBe(true);
+    expect(withinVirtualJoinWindow(virtualPod, at('2026-10-20T13:00:00.001Z'))).toBe(false);
+  });
+
+  it('assumes a four-hour session for a legacy pod saved without an end', () => {
+    const legacy = { pod_date_time: start.toISOString(), pod_end_date_time: null };
+    expect(withinVirtualJoinWindow(legacy, at('2026-10-20T15:00:00.000Z'))).toBe(true);
+    expect(withinVirtualJoinWindow(legacy, at('2026-10-20T15:00:00.001Z'))).toBe(false);
+  });
+});
+
+describe('attendanceService.board — who marked each row', () => {
+  it('names the marker of a checked-in row and shows the phone that answered the code', async () => {
+    const marked = ticket({
+      status: 'CHECKED_IN',
+      checked_in_at: new Date('2026-10-01T10:00:00.000Z'),
+      checked_in_by: new Types.ObjectId(HOST_ID),
+      checked_in_method: 'HOST_MANUAL',
+      attendance_verification: { phone_extension: '+91', phone_number: '9000000000' },
+    });
+    arrangeBoard({ tickets: [marked] });
+    users.find
+      .mockReturnValueOnce(chain([attendee()]))
+      .mockReturnValueOnce(chain([{ _id: HOST_ID, profile: { first_name: 'Ravi', last_name: 'Kumar' }, auth: {} }]));
+
+    const board = await attendanceService.board(POD_ID, host);
+
+    expect(board.rows[0]).toMatchObject({
+      attended: true,
+      attended_at: '2026-10-01T10:00:00.000Z',
+      marked_method: 'HOST_MANUAL',
+      marked_by_name: 'Ravi Kumar',
+      verified_phone: '+91 9000000000',
+    });
+    expect(users.find).toHaveBeenLastCalledWith({ _id: { $in: [HOST_ID] } });
+  });
+
+  it('looks up no markers when nobody has been marked', async () => {
+    arrangeBoard();
+
+    const board = await attendanceService.board(POD_ID, host);
+
+    expect(board.rows[0]).toMatchObject({ attended: false, marked_by_name: '', verified_phone: '' });
+    // Only the attendees' read: no marker lookup, and no club (the pod has none).
+    expect(users.find).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('attendanceService.joinMeeting', () => {
+  const live = (over: Record<string, unknown> = {}) =>
+    pod({
+      pod_mode: 'VIRTUAL',
+      meeting_url: '  https://meet.example.com/abc  ',
+      meeting_notes: 'Cameras on',
+      pod_date_time: new Date(Date.now() - 30 * 60_000),
+      pod_end_date_time: new Date(Date.now() + 30 * 60_000),
+      ...over,
+    });
+  const member = { id: USER_ID, roles: ['USER'] };
+  const unmarked = { meeting_url: 'https://meet.example.com/abc', meeting_notes: 'Cameras on', attendance_marked: false };
+
+  it('refuses an id that is not a pod id, and a pod that does not exist', async () => {
+    await expect(attendanceService.joinMeeting('nope', member)).rejects.toThrow('Invalid pod id');
+    pods.findById.mockResolvedValue(null);
+    await expect(attendanceService.joinMeeting(POD_ID, member)).rejects.toMatchObject({
+      message: 'Pod not found',
+      extensions: { code: 'NOT_FOUND' },
+    });
+  });
+
+  it('refuses a physical pod, including a legacy row with no mode at all', async () => {
+    arrangeBoard({ pod: pod({ pod_mode: 'PHYSICAL', meeting_url: 'https://meet.example.com/abc' }) });
+    await expect(attendanceService.joinMeeting(POD_ID, member)).rejects.toThrow('This pod is not virtual');
+
+    arrangeBoard({ pod: pod({ meeting_url: 'https://meet.example.com/abc' }) });
+    await expect(attendanceService.joinMeeting(POD_ID, member)).rejects.toThrow('This pod is not virtual');
+  });
+
+  it('refuses a virtual pod whose link is still blank', async () => {
+    arrangeBoard({ pod: live({ meeting_url: '   ' }) });
+    await expect(attendanceService.joinMeeting(POD_ID, member)).rejects.toMatchObject({
+      message: 'This pod has no meeting link yet',
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  });
+
+  it('hands the host the trimmed link and marks nothing', async () => {
+    arrangeBoard({ pod: live({ meeting_notes: undefined }) });
+
+    await expect(attendanceService.joinMeeting(POD_ID, host)).resolves.toEqual({
+      meeting_url: 'https://meet.example.com/abc',
+      meeting_notes: null,
+      attendance_marked: false,
+    });
+    expect(members.findOne).not.toHaveBeenCalled();
+    expect(tickets.findOne).not.toHaveBeenCalled();
+  });
+
+  it('refuses somebody who has not joined the pod', async () => {
+    arrangeBoard({ pod: live() });
+    members.findOne.mockResolvedValue(null);
+
+    await expect(attendanceService.joinMeeting(POD_ID, member)).rejects.toMatchObject({
+      message: 'Join this pod to get the meeting link',
+      extensions: { code: 'FORBIDDEN' },
+    });
+    const [filter] = members.findOne.mock.calls[0] as [{ pod_id: unknown; user_id: unknown; status: string }];
+    expect(filter).toMatchObject({ pod_id: POD_ID, status: 'JOINED' });
+    expect(String(filter.user_id)).toBe(USER_ID);
+  });
+
+  it('opens the link without recording anything for a booking with no live ticket', async () => {
+    arrangeBoard({ pod: live() });
+    members.findOne.mockResolvedValue(membership());
+
+    tickets.findOne.mockResolvedValue(null);
+    await expect(attendanceService.joinMeeting(POD_ID, member)).resolves.toEqual(unmarked);
+
+    const cancelled = ticket({ status: 'CANCELLED' });
+    tickets.findOne.mockResolvedValue(cancelled);
+    await expect(attendanceService.joinMeeting(POD_ID, member)).resolves.toEqual(unmarked);
+    expect(cancelled.save).not.toHaveBeenCalled();
+    expect(notifyAttendanceMarked).not.toHaveBeenCalled();
+  });
+
+  it('reports an already-marked ticket as marked without writing it again', async () => {
+    arrangeBoard({ pod: live() });
+    members.findOne.mockResolvedValue(membership());
+    const already = ticket({ status: 'CHECKED_IN' });
+    tickets.findOne.mockResolvedValue(already);
+
+    await expect(attendanceService.joinMeeting(POD_ID, member)).resolves.toEqual({ ...unmarked, attendance_marked: true });
+    expect(already.save).not.toHaveBeenCalled();
+    expect(settings.getPodCompletionSettings).not.toHaveBeenCalled();
+  });
+
+  it('records nothing for a link opened the day before the pod', async () => {
+    arrangeBoard({
+      pod: live({
+        pod_date_time: new Date(Date.now() + 24 * 60 * 60_000),
+        pod_end_date_time: new Date(Date.now() + 26 * 60 * 60_000),
+      }),
+    });
+    members.findOne.mockResolvedValue(membership());
+    const t = ticket();
+    tickets.findOne.mockResolvedValue(t);
+
+    await expect(attendanceService.joinMeeting(POD_ID, member)).resolves.toEqual(unmarked);
+    expect(t.status).toBe('ISSUED');
+    expect(t.save).not.toHaveBeenCalled();
+  });
+
+  it('records nothing once the pod is completed, even inside the window', async () => {
+    arrangeBoard({ pod: live({ completed_at: new Date() }) });
+    members.findOne.mockResolvedValue(membership());
+    const t = ticket();
+    tickets.findOne.mockResolvedValue(t);
+
+    await expect(attendanceService.joinMeeting(POD_ID, member)).resolves.toEqual(unmarked);
+    expect(t.save).not.toHaveBeenCalled();
+  });
+
+  it('marks the booking present as VIRTUAL_JOIN inside the window, tells the attendee and logs it', async () => {
+    arrangeBoard({ pod: live() });
+    members.findOne.mockResolvedValue(membership());
+    const t = ticket();
+    tickets.findOne.mockResolvedValue(t);
+
+    await expect(attendanceService.joinMeeting(POD_ID, member)).resolves.toEqual({ ...unmarked, attendance_marked: true });
+
+    expect(tickets.findOne).toHaveBeenCalledWith({ membership_id: MEMBER_ID });
+    expect(t.status).toBe('CHECKED_IN');
+    expect(t.checked_in_method).toBe('VIRTUAL_JOIN');
+    expect(String(t.checked_in_by)).toBe(USER_ID);
+    expect(t.attendance_verification).toBeNull();
+    expect(t.save).toHaveBeenCalledTimes(1);
+    expect(notifyAttendanceMarked).toHaveBeenCalledWith(t);
+    expect(logs.server.info).toHaveBeenCalledWith(
+      'attendance.service',
+      'virtualJoin',
+      expect.objectContaining({ pod_doc_id: POD_ID, membership_id: MEMBER_ID })
+    );
+  });
+});
+
+describe('attendanceService.hostMark — an expired completion window', () => {
+  it('shuts the host out once the window has passed, naming the window and the Club Admin', async () => {
+    arrangeBoard({
+      pod: pod({
+        pod_date_time: new Date(Date.now() - 32 * 60 * 60_000),
+        pod_end_date_time: new Date(Date.now() - 30 * 60 * 60_000),
+      }),
+      completeTimeoutHours: 24,
+    });
+
+    await expect(attendanceService.hostMark(POD_ID, MEMBER_ID, null, host)).rejects.toMatchObject({
+      message: expect.stringContaining('The 24-hour window to complete this pod has passed'),
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+    expect(members.findOne).not.toHaveBeenCalled();
   });
 });

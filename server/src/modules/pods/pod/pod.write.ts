@@ -15,6 +15,7 @@ import { assertInvitable } from './coHost.service';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { logs } from '@observability/log';
+import { fulfilEventRequestsForPod } from '@modules/venues/eventRequest/eventRequest.fulfil';
 import { loadClubSlugMap, notFound, podAudience, podWhenLabel, toPub } from './pod.shared';
 import {
   assertActiveHost,
@@ -224,6 +225,10 @@ export const podWriteMethods = {
       actorUserId: audit?.actorUserId,
       note: audit?.note,
     });
+
+    // A virtual pod is live from birth with no venue slot to approve, so the slot
+    // hooks that answer event requests never run for it — answer its hosts' here.
+    if (podMode === 'VIRTUAL' && doc.is_active) fulfilEventRequestsForPod(doc);
 
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);

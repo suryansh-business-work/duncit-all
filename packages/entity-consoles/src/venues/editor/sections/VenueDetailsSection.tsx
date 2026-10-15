@@ -3,7 +3,8 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import { RhfTextField } from '@duncit/forms';
 import { RhfAdminLocation } from '@duncit/location';
 import { useTranslation } from '@duncit/shell';
-import type { Control } from 'react-hook-form';
+import { VideoLinksField } from '@duncit/venue-food';
+import { Controller, useWatch, type Control } from 'react-hook-form';
 import SectionCard from '../../detail/SectionCard';
 import GalleryField from '../fields/GalleryField';
 import MediaUrlField from '../fields/MediaUrlField';
@@ -25,6 +26,8 @@ export default function VenueDetailsSection({
   onPick,
   categoryLimit,
   minCategories,
+  venueId,
+  videoLimit,
 }: Readonly<{
   control: Control<VenueFormValues>;
   onPick: (folder?: string) => Promise<string | null>;
@@ -32,8 +35,14 @@ export default function VenueDetailsSection({
   categoryLimit: number;
   /** How many category rows must stay — see `VenueCategoriesField`. */
   minCategories: number;
+  /** The venue being edited — its videos are filed in its folder; '' while it is being created. */
+  venueId: string;
+  /** The most videos the venue page may carry, from the registration config. */
+  videoLimit: number;
 }>) {
   const { t } = useTranslation();
+  // The upload button names whose videos these are; a venue not yet named falls back to the section.
+  const venueName = useWatch({ control, name: 'venue_name' }) ?? '';
 
   return (
     <SectionCard
@@ -71,6 +80,22 @@ export default function VenueDetailsSection({
           pickLabel={t('directory.venueEditor.upload')}
         />
         <GalleryField control={control} onPick={() => onPick('/venues')} />
+        <Controller
+          control={control}
+          name="videos"
+          render={({ field, fieldState }) => (
+            <VideoLinksField
+              videos={field.value ?? []}
+              onChange={field.onChange}
+              limit={videoLimit}
+              name={venueName.trim() || t('directory.venueEditor.media')}
+              venueId={venueId || undefined}
+              surface="PORTALS"
+              testId="venue-editor-videos"
+              error={fieldState.error?.message}
+            />
+          )}
+        />
 
         <Divider />
         <VenueCategoriesField control={control} limit={categoryLimit} min={minCategories} />

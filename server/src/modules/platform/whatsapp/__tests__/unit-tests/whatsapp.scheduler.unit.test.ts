@@ -66,6 +66,12 @@ jest.mock('@modules/platform/settings/settings.service', () => ({
 jest.mock('./../../whatsapp.retry', () => ({
   retryUnreachedMessages: jest.fn(async () => undefined),
 }));
+// Who was marked present is the ticket's answer; faked so the guest feedback
+// ask can be steered without a database. Everything else stays real.
+jest.mock('@modules/pods/ticket/attendance.service', () => ({
+  ...jest.requireActual('@modules/pods/ticket/attendance.service'),
+  markedUserIdsByPod: jest.fn(async () => new Map()),
+}));
 
 import { getUrlConfigs } from '@config/url-configs';
 import { UserModel } from '@modules/access/user/user.model';
@@ -82,6 +88,7 @@ import { notifyEach } from '@services/notify/notify.service';
 import { runWhatsappSweeps, startWhatsappScheduler } from '../../whatsapp.scheduler';
 import { retryUnreachedMessages } from '../../whatsapp.retry';
 import { appDate, appTime } from '@utils/app-time';
+import { markedUserIdsByPod } from '@modules/pods/ticket/attendance.service';
 
 const settings = WaEventSettingModel as unknown as Record<string, jest.Mock>;
 const pods = PodModel as unknown as Record<string, jest.Mock>;
@@ -95,6 +102,7 @@ const notify = notifyEach as unknown as jest.Mock;
 const slugMap = loadPodClubSlugMap as unknown as jest.Mock;
 const urls = getUrlConfigs as unknown as jest.Mock;
 const retry = retryUnreachedMessages as unknown as jest.Mock;
+const marked = markedUserIdsByPod as unknown as jest.Mock;
 
 /** `find().select().lean()` as one chain. */
 const chain = (value: unknown) => ({
@@ -502,6 +510,9 @@ describe('USER_REPLACEMENT_NOT_FOUND', () => {
 });
 
 describe('the feedback asks', () => {
+  // u-2 is the guest the host marked present; u-1 is the host.
+  beforeEach(() => marked.mockResolvedValue(new Map([['pod-doc-1', new Set(['u-2'])]])));
+
   const ended = (over: Record<string, unknown> = {}) =>
     pod({
       pod_date_time: new Date(Date.now() - 6 * HOUR),
@@ -528,6 +539,30 @@ describe('the feedback asks', () => {
     expect(eventsNamed('HOST_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Meera N']);
     expect(eventsNamed('VENUE_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Venue N']);
     expect(eventsNamed('CLUB_ADMIN_FEEDBACK').map((ask) => ask.name)).toEqual(['Asha N', 'Ravi N']);
+  });
+
+  it('asks only the guests the host marked present — a booked no-show gets no ask', async () => {
+    // u-6 booked but was never checked in.
+    podsBySweep({ ended: [ended({ pod_attendees: ['u-1', 'u-2', 'u-6'] })] });
+    users.find.mockReturnValue(chain([user('u-1'), user('u-2', 'Vikram'), user('u-6', 'Nisha')]));
+
+    await runWhatsappSweeps();
+
+    expect(marked).toHaveBeenCalledWith(['pod-doc-1']);
+    expect(eventsNamed('USER_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Vikram N']);
+    // The host is still asked as the host.
+    expect(eventsNamed('HOST_POD_FEEDBACK').map((ask) => ask.name)).toEqual(['Meera N']);
+  });
+
+  it('asks no guest at all when nobody was marked present, and never reads a mark from another pod', async () => {
+    marked.mockResolvedValue(new Map([['pod-doc-other', new Set(['u-2'])]]));
+    podsBySweep({ ended: [ended()] });
+    everybody();
+
+    await runWhatsappSweeps();
+
+    expect(eventsNamed('USER_POD_FEEDBACK')).toHaveLength(0);
+    expect(eventsNamed('HOST_POD_FEEDBACK')).toHaveLength(1);
   });
 
   it('links every ask to the pod’s rating form', async () => {

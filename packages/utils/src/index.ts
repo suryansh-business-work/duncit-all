@@ -96,9 +96,13 @@ export {
   canMarkReportOk,
   canTakeDownReport,
   isClubAdminOf,
+  reportErrorKey,
+  reportPendingCopyKey,
   reportReasonNeedsDetails,
   reportSubmitError,
+  MY_OPEN_REPORT_SDL,
   REPORT_ACTION_KEY,
+  REPORT_ALREADY_PENDING_CODE,
   BLOCK_ACTION_COPY,
   BLOCK_USER_SDL,
   REPORT_CATEGORIES_SDL,
@@ -471,6 +475,7 @@ export {
   type VenueFoodFeedback,
   type VenueFoodUploadPass,
   type VenueFoodItem,
+  type VenueFoodLicences,
   type VenueFoodOrder,
   type VenueFoodOrderLine,
   type VenueFoodOrderLineInput,
@@ -482,6 +487,41 @@ export {
   type VenueFoodSpiceLevel,
   type VenueFoodTaxMode,
 } from './venue-food';
+// Around the menu, for the guest: search, sections, a dish's page, the food rating, "Your Food Orders".
+export {
+  FOOD_OTHER_SECTION_KEY,
+  MY_FOOD_ORDER_KEYS_MAX,
+  MY_FOOD_ORDERS_PAGE_SIZE,
+  MY_FOOD_ORDERS_PATH,
+  MY_VENUE_FOOD_ORDERS_QUERY,
+  VENUE_FOOD_RATING_QUERY,
+  allFoodSectionsOpen,
+  appendFoodOrders,
+  filterFoodMenuGroups,
+  findFoodItem,
+  foodItemMatches,
+  foodMenuHasSections,
+  foodMenuView,
+  foodOrderKeyFor,
+  foodOrderKeysOf,
+  foodOrderLinesSummary,
+  foodSearchTerms,
+  foodSectionKey,
+  foodSectionsAfterSearch,
+  formatFoodRating,
+  hasFoodRating,
+  hasMoreFoodOrders,
+  isFoodSectionOpen,
+  toggleAllFoodSections,
+  toggleFoodSection,
+  venueFoodItemPath,
+  type MyVenueFoodOrder,
+  type MyVenueFoodOrderScope,
+  type MyVenueFoodOrdersInput,
+  type MyVenueFoodOrdersPage,
+  type VenueFoodOrderKey,
+  type VenueFoodRating,
+} from './venue-food-customer';
 // A venue's food desk as its owner works it — dashboard, order board, coupons.
 export {
   barPercent,
@@ -569,7 +609,32 @@ export {
   type FoodRazorpayConnection,
   type VenueFoodFormValues,
   type VenueFoodInputOptions,
+  blankFoodLicences,
+  foodLicencesToValues,
+  foodTablesToValues,
 } from './venue-food-menu';
+// A dish's struck-through MRP and its saving label — display only, never charged.
+export {
+  FOOD_CURRENCY_QUERY,
+  FOOD_SAVING_DISPLAYS,
+  foodPriceDisplay,
+  foodSavingLabel,
+  type FoodPriceDisplay,
+  type FoodPriceSource,
+  type FoodSaving,
+  type FoodSavingAudience,
+  type FoodSavingDisplay,
+} from './food-price-display';
+// A cafe's tables and their per-table QR stickers.
+export {
+  FOOD_TABLE_PARAM,
+  VENUE_TABLE_STICKERS_QUERY,
+  foodTableFromParam,
+  foodTablesFromCount,
+  foodTablesText,
+  isFoodTableTooLong,
+  parseFoodTables,
+} from './venue-food-tables';
 export type {
   TicketDiscountFieldErrors,
   TicketDiscountFieldProps,
@@ -593,9 +658,17 @@ export {
   CANCEL_SPOT_GENERIC_ERROR_KEY,
   cancelSpotErrorKey,
   freePodVenueNotice,
+  freeSpotCancelHint,
+  freeSpotCancelsLeft,
   isFreePod,
+  isFreeSpotCancelMaxed,
+  memberBookedCopy,
   type FreePodVenueInput,
   type FreePodVenueNotice,
+  type FreeSpotCancelHint,
+  type FreeSpotCancels,
+  type MemberBookedCopy,
+  type MemberBookedInput,
 } from './pod-free';
 export {
   DRAFT_EXPIRY_WARNING_MS,
@@ -611,6 +684,7 @@ export {
   canAmendPod,
   canCompletePod,
   canScanPodTickets,
+  nothingUpcoming,
   podPhase,
   podScanWindow,
   splitPodsByPhase,
@@ -686,6 +760,7 @@ export {
   publicPagePosterFileName,
   publicPageQrFileName,
   publicPageTableLabelFileName,
+  publicPageTableStickersFileName,
   publicPageTiles,
   type PublicPageBreakdown,
   type PublicPageInsights,
@@ -1575,3 +1650,12 @@ export {
   type CartControlNotice,
   type CartControlState,
 } from './cart-control';
+export {
+  LOADING_TIP_INTERVAL_MS,
+  LOADING_TIP_KEYS,
+  LOADING_TIP_TITLE_KEY,
+  loadingTipKeyAt,
+  nextLoadingTipIndex,
+  type LoadingTipKey,
+} from './loading-tips';
+export { fitScale, fitSize } from './fit-scale';

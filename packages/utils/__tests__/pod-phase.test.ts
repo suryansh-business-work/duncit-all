@@ -6,6 +6,7 @@ import {
   canAmendPod,
   canCompletePod,
   canScanPodTickets,
+  nothingUpcoming,
   podPhase,
   podScanWindow,
   splitPodsByPhase,
@@ -208,5 +209,47 @@ describe('withinHappeningNearbyWindow', () => {
 
   it('reads the clock when no `now` is passed', () => {
     expect(withinHappeningNearbyWindow([{ pod_date_time: new Date(Date.now() + HOUR).toISOString() }], 7)).toHaveLength(1);
+  });
+});
+
+describe('nothingUpcoming', () => {
+  it('is true when every pod is over', () => {
+    const over = [
+      { pod_date_time: at(-5 * HOUR), pod_end_date_time: at(-4 * HOUR) },
+      { pod_date_time: at(-10 * HOUR), pod_end_date_time: null },
+    ];
+    expect(nothingUpcoming(over, NOW)).toBe(true);
+  });
+
+  it('is true for an empty list — nothing is coming up', () => {
+    expect(nothingUpcoming([], NOW)).toBe(true);
+  });
+
+  it('is false while any pod is still to come', () => {
+    expect(
+      nothingUpcoming(
+        [
+          { pod_date_time: at(-5 * HOUR), pod_end_date_time: at(-4 * HOUR) },
+          { pod_date_time: at(HOUR), pod_end_date_time: at(2 * HOUR) },
+        ],
+        NOW,
+      ),
+    ).toBe(false);
+  });
+
+  it('is false while a pod is running, up to and including its end', () => {
+    expect(nothingUpcoming([{ pod_date_time: at(-HOUR), pod_end_date_time: at(HOUR) }], NOW)).toBe(false);
+    expect(nothingUpcoming([{ pod_date_time: at(-HOUR), pod_end_date_time: at(0) }], NOW)).toBe(false);
+  });
+
+  it('counts an undated pod as still to come', () => {
+    expect(nothingUpcoming([{ pod_date_time: null }], NOW)).toBe(false);
+  });
+
+  it('reads the clock when no `now` is passed', () => {
+    const past = new Date(Date.now() - 10 * HOUR).toISOString();
+    const future = new Date(Date.now() + HOUR).toISOString();
+    expect(nothingUpcoming([{ pod_date_time: past, pod_end_date_time: past }])).toBe(true);
+    expect(nothingUpcoming([{ pod_date_time: future }])).toBe(false);
   });
 });

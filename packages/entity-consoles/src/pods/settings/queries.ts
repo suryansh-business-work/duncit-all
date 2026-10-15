@@ -11,6 +11,7 @@ import { gql } from '@apollo/client';
 const FIELDS = `
   draft_retention_days
   max_backout_attempts
+  max_free_spot_cancellations
   venue_cancel_health_penalty
   attendance_otp_required
   pod_complete_timeout_hours

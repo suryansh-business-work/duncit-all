@@ -38,6 +38,20 @@ export interface VenueFoodItem {
   diet: VenueFoodDiet;
   spice_level: VenueFoodSpiceLevel;
   is_available: boolean;
+  /** Uploaded clips or YouTube links — read through `venueVideosOf`. Absent when a query did not select them. */
+  videos?: string[];
+  /** The MRP to strike through — display only, never charged. Read through `foodPriceDisplay`. */
+  original_price?: number | null;
+  /** How the saving reads: 'PERCENT' or 'AMOUNT'. */
+  saving_display?: string | null;
+}
+
+/** The licences a venue that serves food shows. On the public venue only the numbers are filled. */
+export interface VenueFoodLicences {
+  fssai_number: string;
+  fssai_document_url: string;
+  liquor_licence_number: string;
+  liquor_document_url: string;
 }
 
 /** How GST meets a food price. Mirrors the server enum FoodTaxMode. */

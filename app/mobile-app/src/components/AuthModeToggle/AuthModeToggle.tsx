@@ -1,10 +1,23 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
-import { PRESS_STYLE, TOUCH_TARGET } from '@duncit/buttons-native';
+import { BUTTON_SIZES, PRESS_STYLE, TOUCH_TARGET } from '@duncit/buttons-native';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/stores/theme.store';
+
+/*
+  Compact: a step under the small button — it is a preference at the foot of
+  the screen, not an action, and at full size it competed with the sign-in
+  doors. The drawn pill is short; `hitSlop` carries each half's press area
+  back up to a full touch target (vertically only — the halves are neighbours).
+*/
+const SM = BUTTON_SIZES.sm;
+const TRACK_PADDING = 2;
+const SEGMENT_HEIGHT = SM.height - 8;
+const SEGMENT_SLOP = Math.ceil((TOUCH_TARGET - SEGMENT_HEIGHT) / 2);
+const SEGMENT_FONT = SM.fontSize - 1;
+const SEGMENT_ICON = SM.iconSize - 2;
 
 interface SegmentProps {
   label: string;
@@ -48,14 +61,15 @@ function ModeSegment({
       aria-label={hint}
       alignItems="center"
       justifyContent="center"
-      gap={6}
-      minHeight={TOUCH_TARGET - 8}
-      paddingHorizontal={16}
+      gap={SM.gap - 2}
+      minHeight={SEGMENT_HEIGHT}
+      hitSlop={{ top: SEGMENT_SLOP, bottom: SEGMENT_SLOP }}
+      paddingHorizontal={SM.paddingHorizontal - 4}
       borderRadius={999}
       backgroundColor={active ? '$surface' : 'transparent'}
     >
-      <MaterialIcons name={icon} size={16} color={active ? accent : ink} />
-      <Text fontSize={13} fontWeight="600" color={active ? '$color' : '$muted'}>
+      <MaterialIcons name={icon} size={SEGMENT_ICON} color={active ? accent : ink} />
+      <Text fontSize={SEGMENT_FONT} fontWeight="600" color={active ? '$color' : '$muted'}>
         {label}
       </Text>
     </XStack>
@@ -87,8 +101,8 @@ export function AuthModeToggle() {
       testID="auth-mode-toggle"
       alignSelf="center"
       alignItems="center"
-      padding={4}
-      gap={4}
+      padding={TRACK_PADDING}
+      gap={TRACK_PADDING}
       borderRadius={999}
       borderWidth={1}
       borderColor="$borderColor"

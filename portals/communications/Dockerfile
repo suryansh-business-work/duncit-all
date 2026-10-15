@@ -91,6 +91,9 @@ COPY portals/communications ./portals/communications
 # its source), so that src folder is part of this build. Its package.json is
 # copied above, so its dependencies are installed.
 COPY portals/tech/src ./portals/tech/src
+# The Dashboard at / is the Analytics console's Communications page, mounted
+# from that console's source the same way.
+COPY portals/analytics/src ./portals/analytics/src
 RUN pnpm --filter communications build
 
 # --- runner ---

@@ -24,6 +24,8 @@ import {
   type FoodOwnerStats,
   type FoodOwnerVenue,
   type VenueFoodOrderStatus,
+  FOOD_CURRENCY_QUERY,
+  VENUE_TABLE_STICKERS_QUERY,
 } from '@duncit/utils';
 import type { FoodCouponInput } from '@duncit/forms/schemas';
 
@@ -91,3 +93,13 @@ export const FOOD_RAZORPAY_CONNECTIONS: TypedDocumentNode<
   { myPartnerIntegrations: FoodRazorpayConnection[] },
   Record<string, never>
 > = gql(FOOD_RAZORPAY_CONNECTIONS_QUERY);
+
+export const FOOD_CURRENCY: TypedDocumentNode<
+  { publicFinanceSettings: { currency_symbol: string } | null },
+  Record<string, never>
+> = gql(FOOD_CURRENCY_QUERY);
+
+export const VENUE_TABLE_STICKERS: TypedDocumentNode<
+  { myVenueTableStickersPdfBase64: string },
+  { venueId: string; headline: string; tableHeading: string }
+> = gql(VENUE_TABLE_STICKERS_QUERY);

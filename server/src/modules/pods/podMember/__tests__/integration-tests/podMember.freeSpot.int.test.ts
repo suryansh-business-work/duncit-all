@@ -1,8 +1,10 @@
 import { Types } from 'mongoose';
 import { podMemberService } from '../../podMember.service';
 import { podMemberResolvers } from '../../podMember.resolver';
+import { cancelFreeSpot, CANCEL_LIMIT_MESSAGE } from '../../podMember.freeSpot';
+import { settingsService } from '@modules/platform/settings/settings.service';
 import { makeContext } from '@test/harness';
-import { PodMemberModel } from '../../podMember.model';
+import { PodMemberModel, type IPodMember } from '../../podMember.model';
 import { BackoutRequestModel } from '../../backoutRequest.model';
 import { participationForMembership } from '../../membershipTimeline.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -18,8 +20,9 @@ import * as emailService from '@services/email/email.service';
 /**
  * "Cancel the spot" — a free pod's only way out. No BackoutRequest, no attempt,
  * no refund, no "spot filled" message; the seats go back, the ticket stops
- * scanning, and the member can join again as often as they like on the same
- * booking row.
+ * scanning, and the member can join again on the same booking row. Cancelling
+ * is capped per member per pod by Pod Settings' max_free_spot_cancellations
+ * (default 5); joining again never is.
  */
 
 let spotFilledEmail: jest.SpyInstance;
@@ -446,6 +449,9 @@ describe('membership state and timeline', () => {
       backout_refund_coins: 0,
       can_join: false,
       my_seats: 1,
+      spot_cancels_used: 0,
+      // Nothing saved in Pod Settings: the default allowance.
+      spot_cancels_max: 5,
     });
 
     await podMemberService.cancelFreeSpot(String(pod._id), String(user._id));
@@ -454,6 +460,9 @@ describe('membership state and timeline', () => {
       can_cancel_spot: false,
       can_join: true,
       my_seats: 0,
+      // Read off the cancelled booking a re-join would bring back.
+      spot_cancels_used: 1,
+      spot_cancels_max: 5,
     });
   });
 
@@ -482,6 +491,9 @@ describe('membership state and timeline', () => {
       is_member: true,
       can_backout: true,
       can_cancel_spot: false,
+      // A paid pod has no Cancel Spot, so it reports no allowance at all.
+      spot_cancels_used: 0,
+      spot_cancels_max: 0,
     });
   });
 
@@ -498,5 +510,216 @@ describe('membership state and timeline', () => {
     await podMemberService.joinFree(String(pod._id), String(user._id));
     const again = await participationForMembership({ memberId: joined.id, podId: String(pod._id), joinedAt: null });
     expect(again!.spot_cancelled_at).toBeNull();
+  });
+});
+
+describe('the spot cancellation cap (Pod Settings: max_free_spot_cancellations)', () => {
+  const limitReached = { message: CANCEL_LIMIT_MESSAGE, extensions: { code: 'CANCEL_LIMIT_REACHED' } };
+
+  it('allows exactly the configured number of cancels, then refuses and the member keeps their spot', async () => {
+    await settingsService.updateAppSettings({ max_free_spot_cancellations: 2 });
+    const pod = await makePod();
+    const user = await makeUser();
+    const uid = String(user._id);
+
+    for (let round = 1; round <= 2; round += 1) {
+      await podMemberService.joinFree(String(pod._id), uid);
+      await podMemberService.cancelFreeSpot(String(pod._id), uid);
+    }
+    // Re-joining is never refused by the cap.
+    const back = await podMemberService.joinFree(String(pod._id), uid);
+    expect(back.status).toBe('JOINED');
+
+    await expect(podMemberService.cancelFreeSpot(String(pod._id), uid)).rejects.toMatchObject(limitReached);
+
+    const row = (await PodMemberModel.findById(back.id))!;
+    expect(row.status).toBe('JOINED');
+    expect(row.spot_cancel_count).toBe(2);
+    expect(await seatsOf(pod)).toBe(2);
+    expect((await ticketOf(back.id))!.status).toBe('VALID');
+    expect(await podMemberService.getState(String(pod._id), uid)).toMatchObject({
+      is_member: true,
+      can_cancel_spot: false,
+      spot_cancels_used: 2,
+      spot_cancels_max: 2,
+    });
+  });
+
+  it('falls back to 5 cancels when Pod Settings saves none', async () => {
+    const pod = await makePod();
+    const user = await makeUser();
+    const uid = String(user._id);
+    for (let round = 1; round <= 5; round += 1) {
+      await podMemberService.joinFree(String(pod._id), uid);
+      await podMemberService.cancelFreeSpot(String(pod._id), uid);
+    }
+    await podMemberService.joinFree(String(pod._id), uid);
+
+    await expect(podMemberService.cancelFreeSpot(String(pod._id), uid)).rejects.toMatchObject(limitReached);
+  });
+
+  it('follows a raised cap: a member at the old limit may cancel again', async () => {
+    await settingsService.updateAppSettings({ max_free_spot_cancellations: 1 });
+    const pod = await makePod();
+    const user = await makeUser();
+    const uid = String(user._id);
+    await podMemberService.joinFree(String(pod._id), uid);
+    await podMemberService.cancelFreeSpot(String(pod._id), uid);
+    await podMemberService.joinFree(String(pod._id), uid);
+    await expect(podMemberService.cancelFreeSpot(String(pod._id), uid)).rejects.toMatchObject(limitReached);
+
+    await settingsService.updateAppSettings({ max_free_spot_cancellations: 2 });
+    expect((await podMemberService.getState(String(pod._id), uid)).can_cancel_spot).toBe(true);
+
+    const out = await podMemberService.cancelFreeSpot(String(pod._id), uid);
+    expect(out.status).toBe('BACKED_OUT');
+    expect((await PodMemberModel.findById(out.id))!.spot_cancel_count).toBe(2);
+  });
+
+  it('counts per pod: using the cancels up on one pod leaves another untouched', async () => {
+    await settingsService.updateAppSettings({ max_free_spot_cancellations: 1 });
+    const first = await makePod();
+    const second = await makePod();
+    const user = await makeUser();
+    const uid = String(user._id);
+    await podMemberService.joinFree(String(first._id), uid);
+    await podMemberService.cancelFreeSpot(String(first._id), uid);
+
+    await podMemberService.joinFree(String(second._id), uid);
+    expect(await podMemberService.getState(String(second._id), uid)).toMatchObject({
+      can_cancel_spot: true,
+      spot_cancels_used: 0,
+      spot_cancels_max: 1,
+    });
+    await expect(podMemberService.cancelFreeSpot(String(second._id), uid)).resolves.toMatchObject({
+      status: 'BACKED_OUT',
+    });
+  });
+
+  it('a double submit of the last allowed cancel answers the cancelled booking twice and counts once', async () => {
+    await settingsService.updateAppSettings({ max_free_spot_cancellations: 1 });
+    const pod = await makePod();
+    const user = await makeUser();
+    const uid = String(user._id);
+    await podMemberService.joinFree(String(pod._id), uid);
+
+    const [a, b] = await Promise.all([
+      podMemberService.cancelFreeSpot(String(pod._id), uid),
+      podMemberService.cancelFreeSpot(String(pod._id), uid),
+    ]);
+
+    expect(a).toMatchObject({ id: b.id, status: 'BACKED_OUT' });
+    expect(b.status).toBe('BACKED_OUT');
+    expect((await PodMemberModel.findById(a.id))!.spot_cancel_count).toBe(1);
+    expect(await seatsOf(pod)).toBe(1);
+  });
+
+  it('refuses at the conditional write when the count reached the cap after the read, and gives the ticket back', async () => {
+    const pod = await makePod();
+    const user = await makeUser();
+    const uid = String(user._id);
+    const joined = await podMemberService.joinFree(String(pod._id), uid);
+    const realFindOne = PodMemberModel.findOne.bind(PodMemberModel) as unknown as (...args: unknown[]) => {
+      session: (s: unknown) => Promise<IPodMember | null>;
+    };
+    // Another cancel+re-join lands between this request's read and its flip:
+    // the read still sees 0 used, the row already holds the whole allowance.
+    jest.spyOn(PodMemberModel, 'findOne').mockImplementationOnce(((...args: unknown[]) => ({
+      session: async (s: unknown) => {
+        const doc = await realFindOne(...args).session(s);
+        await PodMemberModel.collection.updateOne({ _id: new Types.ObjectId(joined.id) }, { $set: { spot_cancel_count: 3 } });
+        return doc;
+      },
+    })) as never);
+
+    await expect(cancelFreeSpot(pod._id as Types.ObjectId, uid, 3)).rejects.toMatchObject(limitReached);
+
+    const row = (await PodMemberModel.findById(joined.id))!;
+    expect(row.status).toBe('JOINED');
+    expect(row.spot_cancel_count).toBe(3);
+    expect(row.spot_cancelled_at).toBeNull();
+    expect(await seatsOf(pod)).toBe(2);
+    expect((await ticketOf(joined.id))!.status).toBe('VALID');
+  });
+
+  it('enforces the cap it is given: refused at it, allowed below it', async () => {
+    const pod = await makePod();
+    const user = await makeUser();
+    const uid = String(user._id);
+    const joined = await podMemberService.joinFree(String(pod._id), uid);
+    await PodMemberModel.updateOne({ _id: joined.id }, { $set: { spot_cancel_count: 1 } });
+
+    await expect(cancelFreeSpot(pod._id as Types.ObjectId, uid, 1)).rejects.toMatchObject(limitReached);
+    expect((await ticketOf(joined.id))!.status).toBe('VALID');
+
+    const out = await cancelFreeSpot(pod._id as Types.ObjectId, uid, 2);
+    expect(out.status).toBe('BACKED_OUT');
+    expect(out.spot_cancel_count).toBe(2);
+  });
+
+  it('still refuses a checked-in member first — the cap never masks ALREADY_CHECKED_IN below it', async () => {
+    await settingsService.updateAppSettings({ max_free_spot_cancellations: 3 });
+    const pod = await makePod();
+    const user = await makeUser();
+    const joined = await podMemberService.joinFree(String(pod._id), String(user._id));
+    await TicketModel.updateOne({ membership_id: joined.id }, { $set: { status: 'CHECKED_IN' } });
+
+    await expect(podMemberService.cancelFreeSpot(String(pod._id), String(user._id))).rejects.toMatchObject({
+      extensions: { code: 'ALREADY_CHECKED_IN' },
+    });
+    expect((await PodMemberModel.findById(joined.id))!.spot_cancel_count).toBe(0);
+  });
+});
+
+describe('re-joining a cancelled spot while the pod changes underneath', () => {
+  /** Joined, then cancelled: the reusable row a re-join brings back. */
+  const cancelledBooking = async (over: Record<string, unknown> = {}) => {
+    const pod = await makePod(over);
+    const user = await makeUser();
+    const uid = String(user._id);
+    const first = await podMemberService.joinFree(String(pod._id), uid);
+    await podMemberService.cancelFreeSpot(String(pod._id), uid);
+    const stored = (await PodMemberModel.findById(first.id))!;
+    return { pod, user, uid, id: first.id, cancelledAt: stored.spot_cancelled_at };
+  };
+
+  it('puts the row back exactly as it was when the last seat goes between the flip and the claim', async () => {
+    const { pod, user, uid, id, cancelledAt } = await cancelledBooking({ no_of_spots: 2 });
+    const realFlip = PodMemberModel.findOneAndUpdate.bind(PodMemberModel) as (...args: unknown[]) => Promise<unknown>;
+    jest.spyOn(PodMemberModel, 'findOneAndUpdate').mockImplementationOnce((async (...args: unknown[]) => {
+      const flipped = await realFlip(...args);
+      // Somebody else books the pod's last seat before this re-join claims it.
+      await PodModel.updateOne({ _id: pod._id }, { $set: { extra_seats: 1 } });
+      return flipped;
+    }) as never);
+
+    await expect(podMemberService.joinFree(String(pod._id), uid)).rejects.toMatchObject({
+      extensions: { code: 'POD_FULL' },
+    });
+
+    const row = (await PodMemberModel.findById(id))!;
+    expect(row.status).toBe('BACKED_OUT');
+    expect(row.spot_cancelled_at?.getTime()).toBe(cancelledAt?.getTime());
+    expect(row.backed_out_at).not.toBeNull();
+    expect(await PodMemberModel.countDocuments({ user_id: user._id, status: 'JOINED' })).toBe(0);
+    expect((await PodModel.findById(pod._id).lean())!.pod_attendees.map(String)).not.toContain(uid);
+    expect((await ticketOf(id))!.status).toBe('CANCELLED');
+  });
+
+  it('answers CONFLICT when the row moved before the flip and no booking was made by anyone', async () => {
+    const { pod, user, uid, id } = await cancelledBooking();
+    const realFlip = PodMemberModel.findOneAndUpdate.bind(PodMemberModel) as (...args: unknown[]) => Promise<unknown>;
+    jest.spyOn(PodMemberModel, 'findOneAndUpdate').mockImplementationOnce((async (...args: unknown[]) => {
+      // A concurrent request changes the row first, so the conditional flip misses it.
+      await PodMemberModel.collection.updateOne({ _id: new Types.ObjectId(id) }, { $set: { status: 'BACKOUT_IN_PROCESS' } });
+      return realFlip(...args);
+    }) as never);
+
+    await expect(podMemberService.joinFree(String(pod._id), uid)).rejects.toMatchObject({
+      message: 'Your booking changed while joining — please try again.',
+      extensions: { code: 'CONFLICT' },
+    });
+    expect(await PodMemberModel.countDocuments({ user_id: user._id, status: 'JOINED' })).toBe(0);
+    expect(await seatsOf(pod)).toBe(1);
   });
 });

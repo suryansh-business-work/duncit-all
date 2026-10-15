@@ -1,5 +1,5 @@
 import { logs } from '@duncit/logs';
-import type { FoodCartQuantities } from '@duncit/utils';
+import { foodOrderKeysOf, type FoodCartQuantities, type VenueFoodOrderKey } from '@duncit/utils';
 
 import { getItem, setItem } from '@/services/secure-storage';
 
@@ -21,8 +21,6 @@ const GUEST_KEY = 'duncit.food_guest';
 const ORDERS_KEY = 'duncit.food_orders';
 /** Orders kept on the device; the oldest fall off. */
 const MAX_ORDERS = 10;
-/** How long a placed order still earns the menu's "Track your order" link. */
-const TRACK_WINDOW_MS = 12 * 60 * 60 * 1000;
 
 export interface FoodGuestDetails {
   name: string;
@@ -159,13 +157,13 @@ async function storeFoodOrder(order: FoodOrderToSave): Promise<void> {
   await write(ORDERS_KEY, [next, ...rest].slice(0, MAX_ORDERS));
 }
 
-/** The member's latest order at this venue that is still in progress, if it is recent. */
-export async function recentFoodOrder(venueId: string): Promise<StoredFoodOrder | null> {
-  const since = Date.now() - TRACK_WINDOW_MS;
-  const orders = await readFoodOrders();
-  return (
-    orders.find(
-      (order) => order.venue_id === venueId && !order.finished && order.saved_at >= since,
-    ) ?? null
-  );
+/**
+ * Every order this device remembers, with the key that proves it — what "Your
+ * Food Orders" and the menu's running orders send, so the server can answer for
+ * orders placed without an account. The server decides which are still running.
+ * Read after any save still in flight, so a just-placed order is counted.
+ */
+export async function storedFoodOrderKeys(): Promise<VenueFoodOrderKey[]> {
+  await saving;
+  return foodOrderKeysOf(await readFoodOrders());
 }

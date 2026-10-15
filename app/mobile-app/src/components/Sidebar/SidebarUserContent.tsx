@@ -108,6 +108,11 @@ export function SidebarUserContent({
         />
       ) : null}
       <SidebarManageList
+        title={t('mweb.venueFood.myOrders.sidebarTitle')}
+        items={tiles.food}
+        onNavigate={onNavigate}
+      />
+      <SidebarManageList
         title={t('mweb.common.manageAccount')}
         items={buildManageItems(
           showPodPlans,

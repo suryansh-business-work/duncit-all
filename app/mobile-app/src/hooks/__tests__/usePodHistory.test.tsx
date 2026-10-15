@@ -2,11 +2,12 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
-import { CancelFreeSpotDocument } from '@/graphql/pod-history';
+import { CancelFreeSpotDocument, PodBackoutStateDocument } from '@/graphql/pod-history';
 import { graphqlRequest } from '@/services/graphql.client';
 import { ApiError } from '@/utils/errors';
 import {
   usePodBackout,
+  usePodBackoutAttempts,
   usePodBackoutDeduction,
   usePodCancelBackout,
   usePodCancelSpot,
@@ -170,6 +171,42 @@ describe('usePodHistoryCancelSpot', () => {
       'This pod has already started, so your spot can no longer be cancelled.',
     );
     expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens the confirm while cancellations are left, and hands back the counters', () => {
+    const onNotice = jest.fn();
+    const cancels = { spot_cancels_used: 1, spot_cancels_max: 3 };
+    const { result } = renderHook(() =>
+      usePodHistoryCancelSpot('pod1', onNotice, jest.fn(), cancels),
+    );
+    expect(result.current.cancels).toBe(cancels);
+    act(() => result.current.request());
+    expect(result.current.open).toBe(true);
+    expect(onNotice).not.toHaveBeenCalled();
+  });
+
+  // The server would refuse it anyway — say why instead of opening a doomed confirm.
+  it('explains the limit instead of opening the confirm once every cancel is used', () => {
+    const onNotice = jest.fn();
+    const { result } = renderHook(() =>
+      usePodHistoryCancelSpot('pod1', onNotice, jest.fn(), {
+        spot_cancels_used: 2,
+        spot_cancels_max: 2,
+      }),
+    );
+    act(() => result.current.request());
+    expect(result.current.open).toBe(false);
+    expect(onNotice).toHaveBeenCalledWith(
+      'You have cancelled your spot on this pod the maximum number of times allowed, so it can no longer be cancelled.',
+    );
+    expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it('opens the confirm and reports no counters before the state is answered', () => {
+    const { result } = renderHook(() => usePodHistoryCancelSpot('pod1', jest.fn(), jest.fn()));
+    expect(result.current.cancels).toBeNull();
+    act(() => result.current.request());
+    expect(result.current.open).toBe(true);
   });
 
   it('does nothing without a pod', async () => {
@@ -384,5 +421,71 @@ describe('usePodBackoutDeduction', () => {
       resolveFn({ publicFinanceSettings: { default_backout_deduction_pct: 5 } });
     });
     expect(mockRequest).toHaveBeenCalled();
+  });
+});
+
+describe('usePodBackoutAttempts', () => {
+  const attempts = {
+    backout_attempts_used: 1,
+    backout_attempts_max: 2,
+    spot_cancels_used: 0,
+    spot_cancels_max: 3,
+  };
+
+  it('stays unanswered and asks nothing without a pod', async () => {
+    const { result } = renderHook(() => usePodBackoutAttempts(null));
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(result.current.state).toBeUndefined();
+    expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it("reads the pod's attempt counters", async () => {
+    mockRequest.mockResolvedValueOnce({ podMembershipState: attempts });
+    const { result } = renderHook(() => usePodBackoutAttempts('pod1'));
+    await waitFor(() => expect(result.current.state).toEqual(attempts));
+    expect(mockRequest).toHaveBeenCalledWith(
+      PodBackoutStateDocument,
+      { pod_doc_id: 'pod1' },
+      { auth: true },
+    );
+  });
+
+  it('re-reads the counters after a backout spends an attempt', async () => {
+    const spent = { ...attempts, backout_attempts_used: 2 };
+    mockRequest
+      .mockResolvedValueOnce({ podMembershipState: attempts })
+      .mockResolvedValueOnce({ podMembershipState: spent });
+    const { result } = renderHook(() => usePodBackoutAttempts('pod1'));
+    await waitFor(() => expect(result.current.state).toEqual(attempts));
+
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(result.current.state).toEqual(spent);
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the control live when the first read fails', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('boom'));
+    const { result } = renderHook(() => usePodBackoutAttempts('pod1'));
+    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
+    expect(result.current.state).toBeUndefined();
+  });
+
+  it('ignores counters that arrive after unmount', async () => {
+    let resolveFn: (value: unknown) => void = () => undefined;
+    mockRequest.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveFn = resolve;
+      }),
+    );
+    const { result, unmount } = renderHook(() => usePodBackoutAttempts('pod1'));
+    unmount();
+    await act(async () => {
+      resolveFn({ podMembershipState: attempts });
+    });
+    expect(result.current.state).toBeUndefined();
   });
 });

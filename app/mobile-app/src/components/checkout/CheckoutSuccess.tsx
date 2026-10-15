@@ -17,10 +17,11 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 export interface CheckoutSuccessProps {
-  /** The pod payment, or the product checkout's — which never carries a ticket discount. */
-  payment: ReceiptPayment;
+  /** The pod payment, or the product checkout's — which never carries a ticket
+   * discount. Null for a FREE pod's instant join: no receipt, no invoice. */
+  payment: ReceiptPayment | null;
   pod?: CheckoutPod;
-  onDownloadInvoice: () => Promise<void>;
+  onDownloadInvoice?: () => Promise<void>;
   onDownloadTicket?: () => Promise<void>;
   onHome: () => void;
   onProfile: () => void;
@@ -29,8 +30,9 @@ export interface CheckoutSuccessProps {
   profileLabel?: string;
 }
 
-/** Payment success view — a calm success mark, the receipt, the booked pod,
- * ticket + invoice download and navigation. RN twin of mWeb's CheckoutSuccess. */
+/** Payment success view — or a free pod's join confirmation: a calm success
+ * mark, the receipt (paid only), the booked pod, ticket + invoice download and
+ * navigation. RN twin of mWeb's CheckoutSuccess. */
 export function CheckoutSuccess({
   payment,
   pod,
@@ -55,6 +57,8 @@ export function CheckoutSuccess({
   }, []);
 
   const download = async () => {
+    /* istanbul ignore next -- TS narrowing guard: the invoice button only mounts when onDownloadInvoice exists */
+    if (!onDownloadInvoice) return;
     setBusy(true);
     setError(null);
     try {
@@ -93,19 +97,19 @@ export function CheckoutSuccess({
         <MaterialIcons name="check-circle" size={56} color={primary} />
       </YStack>
       <TwoToneHeading
-        lead={t('mweb.checkout.successTitle')}
+        lead={payment ? t('mweb.checkout.successTitle') : t('mweb.checkout.freeJoinTitle')}
         trail={t('mweb.checkout.successOverline')}
         stacked
         align="center"
       />
       <Text fontSize={14} color="$muted" textAlign="center">
-        {t('mweb.checkout.successSubtitle')}
+        {payment ? t('mweb.checkout.successSubtitle') : t('mweb.checkout.freeJoinSubtitle')}
       </Text>
-      <CheckoutReceiptCard payment={payment} />
+      {payment ? <CheckoutReceiptCard payment={payment} /> : null}
 
       {pod ? <ConfirmationPodCard pod={pod} /> : null}
 
-      {venueTotal > 0 ? (
+      {payment && venueTotal > 0 ? (
         <XStack testID="success-venue-note" alignItems="center" gap={6} alignSelf="stretch">
           <MaterialIcons name="storefront" size={16} color={muted} />
           <Text fontSize={12} color="$muted" flex={1}>
@@ -134,15 +138,17 @@ export function CheckoutSuccess({
         />
       ) : null}
 
-      <ActionButton
-        testID="download-invoice"
-        ariaLabel={invoiceLabel}
-        busy={busy}
-        onPress={() => fireAndForget(download())}
-        label={invoiceLabel}
-        iconName="download"
-        variant="outlined"
-      />
+      {payment && onDownloadInvoice ? (
+        <ActionButton
+          testID="download-invoice"
+          ariaLabel={invoiceLabel}
+          busy={busy}
+          onPress={() => fireAndForget(download())}
+          label={invoiceLabel}
+          iconName="download"
+          variant="outlined"
+        />
+      ) : null}
 
       <XStack gap={10} alignSelf="stretch">
         <XStack

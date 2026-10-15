@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Spinner, YStack } from 'tamagui';
+import { nothingUpcoming } from '@duncit/utils';
 
 import { EmptyState } from '@/components/EmptyState';
 import { SectionHeader } from '@/components/SectionHeader';
 import { ClubPodsSchedule } from '@/components/details/club/ClubPodsSchedule';
+import { RequestEventCard } from '@/components/event-request';
 import { MobileVenuePodsDocument } from '@/graphql/hosts-venues';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import type { ClubPod } from '@/hooks/useDetails';
@@ -11,12 +13,14 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useLoadingRegion } from '@/components/Skeleton';
 
 /** "Pods at this venue" — every live pod hosted at the venue, in the same
- * Happening soon / Upcoming / Previous rails as the club page. mWeb twin:
- * venues-page/VenuePodsSection. */
+ * Happening soon / Upcoming / Previous rails as the club page. Given the
+ * venue's name (its own page), nothing coming up offers "Request an event".
+ * mWeb twin: venues-page/VenuePodsSection. */
 export function VenuePodsSection({
   venueId,
   title = 'Pods at this venue',
-}: Readonly<{ venueId: string; title?: string }>) {
+  venueName,
+}: Readonly<{ venueId: string; title?: string; venueName?: string }>) {
   const loadingRegion = useLoadingRegion();
   const { openPod } = useDetailNav();
   const [pods, setPods] = useState<ClubPod[]>([]);
@@ -51,6 +55,9 @@ export function VenuePodsSection({
           pods={pods}
           onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
         />
+      ) : null}
+      {!isLoading && venueName !== undefined && nothingUpcoming(pods) ? (
+        <RequestEventCard targetType="VENUE" targetId={venueId} targetName={venueName} />
       ) : null}
     </YStack>
   );

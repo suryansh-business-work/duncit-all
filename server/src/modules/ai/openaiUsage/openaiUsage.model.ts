@@ -101,6 +101,8 @@ openAiUsageLogSchema.index({ created_at: -1 });
 // The In App Prompts page reads one prompt's calls newest-first; the multikey
 // field alone would still scan every row of that prompt to sort them.
 openAiUsageLogSchema.index({ prompt_keys: 1, created_at: -1 });
+// The AI Features console pages one feature's calls newest-first.
+openAiUsageLogSchema.index({ task: 1, created_at: -1 });
 openAiUsageLogSchema.index({ created_at: 1 }, { expireAfterSeconds: RETENTION_SECONDS });
 
 export const OpenAiUsageLogModel = model<IOpenAiUsageLog>(

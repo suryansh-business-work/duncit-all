@@ -5,6 +5,7 @@ import PodLifecycleSettings from '../PodLifecycleSettings';
 const NUMBER_FIELDS = [
   'draft_retention_days',
   'max_backout_attempts',
+  'max_free_spot_cancellations',
   'venue_cancel_health_penalty',
   'pod_complete_timeout_hours',
   'pod_complete_reminder_hours',

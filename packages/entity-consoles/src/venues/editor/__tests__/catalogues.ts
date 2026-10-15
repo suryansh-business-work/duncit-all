@@ -83,5 +83,8 @@ export const registrationConfig = (
   food_image_limit: 3,
   food_price_max: 5000,
   food_discount_max_pct: 90,
+  food_video_limit: 2,
+  food_table_limit: 50,
+  venue_video_limit: 3,
   ...over,
 });

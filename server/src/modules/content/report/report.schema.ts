@@ -163,6 +163,13 @@ export const reportTypeDefs = /* GraphQL */ `
   extend type Query {
     "The categories the report dialog offers — active ones, in Legal's order."
     reportCategories: [ReportCategory!]!
+    """
+    The signed-in viewer's own report on this post, story or profile that Legal
+    has not closed yet, or null. While it exists a new report on the same thing
+    is refused with REPORT_ALREADY_PENDING, so the report sheet shows that
+    instead of the form.
+    """
+    myOpenReport(target_id: ID!): ContentReportReceipt
     "Legal-only: every category, for the UGC Monitoring settings table."
     reportCategoriesTable(query: TableQueryInput): ReportCategoryTablePage!
     "Legal-only queue of everything users have reported."
@@ -174,6 +181,8 @@ export const reportTypeDefs = /* GraphQL */ `
   extend type Mutation {
     """
     Report a post or a story. Open to any signed-in viewer — that is the point.
+    Refused with REPORT_ALREADY_PENDING while the viewer's earlier report on the
+    same thing is still open; allowed again once Legal has closed it.
 
     The reason is a report category key. The snapshot (media, caption, author,
     club) is taken server-side from the post itself, so a reporter cannot file a
@@ -182,7 +191,8 @@ export const reportTypeDefs = /* GraphQL */ `
     reportPost(post_doc_id: ID!, reason: String!, details: String): ContentReportReceipt!
     """
     Report a member's profile. Files into the same Legal queue as posts, with
-    the avatar, name, @handle and bio snapshotted server-side.
+    the avatar, name, @handle and bio snapshotted server-side. Same
+    REPORT_ALREADY_PENDING rule as reportPost.
     """
     reportProfile(user_id: ID!, reason: String!, details: String): ContentReportReceipt!
     updateContentReportStatus(id: ID!, input: UpdateContentReportStatusInput!): ContentReport!

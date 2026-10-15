@@ -53,8 +53,8 @@ export default function AppHeader({
 
   const branding = staticData?.branding;
   const effectiveStudio = resolveMode(studioMode, me?.roles ?? [], { products: showProducts });
-  // Home leads with its own search bar and greets the user; every other page
-  // keeps the header's search button and skips the greeting. The survey
+  // Home greets the user; every other page skips the greeting. The header's
+  // search button shows on every USER-studio page, Home included. The survey
   // header (`minimal`) keeps its greeting — it is all that header says.
   const onHome = pathname === '/';
   // The cart holds products from every super category — nothing to narrow.
@@ -141,11 +141,10 @@ export default function AppHeader({
               activeLocationIds={staticData?.activePodLocationIds ?? []}
             />
 
-            {/* Round actions: Search (not on Home) · Alerts · avatar with
-             * online dot. The cart is a bottom-bar destination, not a header
-             * action. */}
+            {/* Round actions: Search · Alerts · avatar with online dot. The
+             * cart is a bottom-bar destination, not a header action. */}
             <HeaderQuickActions
-              showSearch={isUserStudio && !onHome}
+              showSearch={isUserStudio}
               locationId={selectedLocationId}
               zoneName={selectedZoneName}
               onToast={handleNotifToast}

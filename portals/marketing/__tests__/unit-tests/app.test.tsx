@@ -19,6 +19,9 @@ vi.mock('../../src/pages/LoginPage', () => ({ default: () => <div>login-page</di
 vi.mock('../../src/pages/dashboard-page/DashboardPage', () => ({
   default: () => <div>welcome-page</div>,
 }));
+vi.mock('../../src/pages/contacts-page', () => ({
+  default: () => <div>contacts-page</div>,
+}));
 vi.mock('../../src/pages/target-audience-page/AudienceListsPage', () => ({
   default: () => <div>audience-lists-page</div>,
 }));
@@ -52,6 +55,7 @@ describe('App routing', () => {
   it.each([
     ['/', 'welcome-page'],
     ['/profile', 'profile-page'],
+    ['/contacts', 'contacts-page'],
     ['/audience', 'audience-lists-page'],
     ['/audience/new', 'create-audience-list-page'],
     ['/audience/l1', 'audience-list-detail-page'],

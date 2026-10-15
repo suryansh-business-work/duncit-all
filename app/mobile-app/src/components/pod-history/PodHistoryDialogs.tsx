@@ -19,7 +19,7 @@ export interface PodHistoryDialogsProps {
   /** A free pod's "Cancel Spot" confirm — absent where the screen offers none. */
   cancelSpot?: Pick<
     ReturnType<typeof usePodHistoryCancelSpot>,
-    'open' | 'busy' | 'setOpen' | 'confirm'
+    'open' | 'busy' | 'setOpen' | 'confirm' | 'cancels'
   >;
 }
 
@@ -54,6 +54,7 @@ export function PodHistoryDialogs({
           busy={cancelSpot.busy}
           onClose={() => cancelSpot.setOpen(false)}
           onConfirm={cancelSpot.confirm}
+          cancels={cancelSpot.cancels}
         />
       ) : null}
       <RejoinConfirmDialog

@@ -24,7 +24,8 @@ jest.mock('@/components/LocationDialog', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View: V } = require('react-native');
   return {
-    LocationDialog: ({ open }: { open: boolean }) => (open ? <V testID="location-dialog" /> : null),
+    LocationDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+      open ? <V testID="location-dialog" onTouchEnd={onClose} /> : null,
   };
 });
 jest.mock('@/components/LogoutButton', () => {
@@ -81,10 +82,11 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('header-studio-badge')).toBeNull();
   });
 
-  it('greets with the branding tagline on Home, where its own search bar replaces the icon', () => {
+  it('greets with the branding tagline on Home and keeps the search icon beside the bell', () => {
     renderWithProviders(<AppHeader home />);
     expect(screen.getByTestId('header-greeting-title')).toHaveTextContent('It All Starts Here!');
-    expect(screen.queryByTestId('header-search')).toBeNull();
+    fireEvent.press(screen.getByTestId('header-search'));
+    expect(mockNavigate).toHaveBeenCalledWith('Search');
   });
 
   it('shows the tappable location in User mode and opens the picker on press', () => {
@@ -93,6 +95,13 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('location-dialog')).toBeNull();
     fireEvent.press(screen.getByTestId('header-location'));
     expect(screen.getByTestId('location-dialog')).toBeOnTheScreen();
+  });
+
+  it('closes the location picker when it is dismissed', () => {
+    renderWithProviders(<AppHeader />);
+    fireEvent.press(screen.getByTestId('header-location'));
+    fireEvent(screen.getByTestId('location-dialog'), 'touchEnd');
+    expect(screen.queryByTestId('location-dialog')).toBeNull();
   });
 
   it('shows the studio badge, closes via backdrop, and switches mode back to User', () => {

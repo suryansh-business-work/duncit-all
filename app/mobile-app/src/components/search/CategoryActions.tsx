@@ -19,6 +19,10 @@ interface Props {
 const COLUMNS = 3;
 const GAP = 12;
 const SIDE_PADDING = 16;
+/** The tile's soft circle and the mark inside it: the mark fills most of the
+ * circle so an admin's category image reads at a glance (mWeb twin: CategoryActions). */
+const TILE_CIRCLE = 64;
+const TILE_MARK = 44;
 
 interface MarkProps {
   testID: string;
@@ -67,14 +71,15 @@ function CategoryTile({ category, width, tint, onSelect }: Readonly<TileProps>) 
     >
       <SurfaceCard width={width} alignItems="center" gap={8}>
         <YStack
-          width={44}
-          height={44}
-          borderRadius={22}
+          width={TILE_CIRCLE}
+          height={TILE_CIRCLE}
+          borderRadius={TILE_CIRCLE / 2}
           backgroundColor="$soft"
           alignItems="center"
           justifyContent="center"
+          overflow="hidden"
         >
-          <CategoryMark testID={testID} icon={category.icon} size={22} tint={tint} />
+          <CategoryMark testID={testID} icon={category.icon} size={TILE_MARK} tint={tint} />
         </YStack>
         <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
           {category.name}

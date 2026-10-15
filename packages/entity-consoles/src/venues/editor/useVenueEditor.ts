@@ -51,6 +51,7 @@ const EMPTY_CONFIG: VenueRegistrationConfig = {
   food_spice_levels: [],
   // Uncapped until the catalogue answers — the menu's bounds are the server's.
   ...UNCAPPED_FOOD_LIMITS,
+  venue_video_limit: NO_CATEGORY_LIMIT,
 };
 
 export function useVenueEditor(venueId: string) {
@@ -82,14 +83,15 @@ export function useVenueEditor(venueId: string) {
   // the catalogue lands, because the menu's bounds and the category cap are the
   // server's to state.
   const { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, category_limit } = config;
+  const { food_video_limit, food_table_limit } = config;
   const schema = useMemo(
     () =>
       makeVenueFormSchema(
         t,
-        { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct },
+        { food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, food_video_limit, food_table_limit },
         category_limit,
       ),
-    [t, food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, category_limit],
+    [t, food_menu_limit, food_image_limit, food_price_max, food_discount_max_pct, food_video_limit, food_table_limit, category_limit],
   );
 
   // The third generic pins the SUBMITTED shape to the form's own: the schema's

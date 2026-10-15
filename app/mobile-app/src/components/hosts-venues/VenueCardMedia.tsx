@@ -14,6 +14,10 @@ import { useTranslation } from '@/hooks/useTranslation';
  * twin (VenueCardMedia) uses the same ratio. */
 const RATIO = 3 / 2;
 const MAX_HEIGHT = 300;
+// The frame pins `width="100%"`: with only an aspect ratio, Yoga meets the
+// height cap by shrinking the width too, so on a tablet the photo stopped at
+// 450px and left the rest of the card empty. A fixed width keeps it full-bleed
+// and lets the cap trim the height alone.
 /** Media inside a card carries its own 18px corners. */
 const MEDIA_RADIUS = 18;
 
@@ -82,6 +86,7 @@ export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
   if (images.length === 0) {
     return (
       <YStack
+        width="100%"
         aspectRatio={RATIO}
         maxHeight={MAX_HEIGHT}
         borderRadius={MEDIA_RADIUS}
@@ -98,6 +103,7 @@ export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
   return (
     <YStack
       testID="venue-card-media"
+      width="100%"
       aspectRatio={RATIO}
       maxHeight={MAX_HEIGHT}
       backgroundColor="#000000"

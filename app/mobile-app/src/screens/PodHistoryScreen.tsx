@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Input, Text, XStack, YStack } from 'tamagui';
 
 import {
   PodHistoryCard,
@@ -24,7 +24,7 @@ import {
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
-import { useLoadingRegion } from '@/components/Skeleton';
+import { TipsLoader } from '@/components/TipsLoader';
 
 /** One icon on a soft disc and one short line — the list's empty states. */
 function EmptyLine({ text, testID }: Readonly<{ text: string; testID: string }>) {
@@ -58,7 +58,6 @@ function EmptyLine({ text, testID }: Readonly<{ text: string; testID: string }>)
  * and a top-right Filter (Super → Category) and Sort (date / price). RN twin of
  * mWeb's PodHistoryPage. */
 export function PodHistoryScreen() {
-  const loadingRegion = useLoadingRegion();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
   const { t } = useTranslation();
@@ -103,11 +102,7 @@ export function PodHistoryScreen() {
 
   let body: ReactNode;
   if (isLoading && uniqueItems.length === 0) {
-    body = (
-      <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner {...loadingRegion} testID="pod-history-loading" color="$primary" />
-      </YStack>
-    );
+    body = <TipsLoader testID="pod-history-loading" />;
   } else if (error) {
     body = (
       <Text role="alert" testID="pod-history-error" padding={24} color="$danger">

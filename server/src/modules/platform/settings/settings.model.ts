@@ -35,6 +35,10 @@ export interface IAppSettings extends Document {
   /** Max Backout attempts a user gets per pod (Admin > Pods > Pod Settings).
    * Each successful "Backout in process" counts one attempt. */
   max_backout_attempts: number;
+  /** Times a member may cancel their spot on the same FREE pod (Admin > Pods >
+   * Pod Settings). Counted on the booking (`spot_cancel_count`); once used up
+   * the spot stays booked. */
+  max_free_spot_cancellations: number;
   /** Account Health points deducted from a venue when its owner cancels a pod
    * booked there (Admin > Pods > Pod Settings). 0 disables the penalty. */
   venue_cancel_health_penalty: number;
@@ -150,6 +154,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     min_signup_age: { type: Number, default: 18 },
     draft_retention_days: { type: Number, default: 3, min: 1 },
     max_backout_attempts: { type: Number, default: 3, min: 1 },
+    max_free_spot_cancellations: { type: Number, default: 5, min: 1 },
     venue_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
     attendance_otp_required: { type: Boolean, default: true },
     pod_complete_timeout_hours: { type: Number, default: 24, min: 1, max: 8760 },

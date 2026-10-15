@@ -222,6 +222,85 @@ describe('PodBookingBar', () => {
       ).toBeOnTheScreen();
     });
 
+    // Pod Settings caps how often a free spot may be cancelled; the bar counts down.
+    it('says how many cancellations are left while the spot can still be cancelled', () => {
+      renderBar({
+        isFree: true,
+        membershipState: ms({ ...member, spot_cancels_used: 1, spot_cancels_max: 3 }),
+        onCancelSpot: jest.fn(),
+      });
+      expect(screen.getByTestId('pod-cancel-spot')).toBeOnTheScreen();
+      expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent(
+        'You can cancel your spot on this pod 2 more times.',
+      );
+    });
+
+    it('warns before the last cancellation', () => {
+      renderBar({
+        isFree: true,
+        membershipState: ms({ ...member, spot_cancels_used: 2, spot_cancels_max: 3 }),
+        onCancelSpot: jest.fn(),
+      });
+      expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent(
+        /You can cancel your spot on this pod one more time\./,
+      );
+    });
+
+    it('says the cancellations ran out once every one is used', () => {
+      renderBar({
+        isFree: true,
+        membershipState: ms({
+          ...member,
+          can_cancel_spot: false,
+          spot_cancels_used: 3,
+          spot_cancels_max: 3,
+        }),
+        onCancelSpot: jest.fn(),
+      });
+      expect(screen.queryByTestId('pod-cancel-spot')).toBeNull();
+      expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent(
+        'You have cancelled your spot on this pod the maximum number of times allowed, so it can no longer be cancelled.',
+      );
+    });
+
+    it('blames the check-in, not the cap, when cancellations are left but the spot is locked', () => {
+      renderBar({
+        isFree: true,
+        membershipState: ms({
+          ...member,
+          can_cancel_spot: false,
+          spot_cancels_used: 1,
+          spot_cancels_max: 3,
+        }),
+        onCancelSpot: jest.fn(),
+      });
+      expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent(
+        'You have already been checked in at this pod, so your spot can no longer be cancelled.',
+      );
+    });
+
+    it('says the pod already took place once it is over, whatever the cap says', () => {
+      const pastFreePod = {
+        id: 'p1',
+        pod_amount: 0,
+        pod_date_time: '2020-01-01T10:00:00Z',
+      } as unknown as PodDetail;
+      renderBar({
+        isFree: true,
+        pod: pastFreePod,
+        membershipState: ms({
+          ...member,
+          can_cancel_spot: false,
+          spot_cancels_used: 3,
+          spot_cancels_max: 3,
+        }),
+        onCancelSpot: jest.fn(),
+      });
+      expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent(
+        'This pod has already taken place.',
+      );
+    });
+
     it('is back to the Join CTA once the spot was cancelled', () => {
       const onCheckout = jest.fn();
       renderBar({

@@ -112,6 +112,31 @@ Picked with `@duncit/media-picker` (images only), filed in the venues media fold
 (`FOOD_PHOTO_FOLDER`, `/venues`) with the venue as the upload's entity — the server files them
 under `/{env}/venues/{venue id}/media`.
 
+### Videos (dishes and the venue)
+
+`VideoLinksField` is one list of videos — each an uploaded clip (the picker's video upload, the
+ImageKit direct-upload + compression pipeline) or a YouTube link (`makeYoutubeLinkSchema`,
+`@duncit/regex` `YOUTUBE_URL`). Every dish card has one (`food_video_limit`), and the Partners venue
+form and the Venues console editor mount the same field for the venue's own `videos`
+(`venue_video_limit`). The kind is read from the address (`venueVideoOf` in `@duncit/utils`).
+
+### Struck-through MRP
+
+Each dish may carry an `original_price` above its `price`, and a `saving_display` (`PERCENT` →
+"20% off", `AMOUNT` → "₹40 off"). `FoodDishPricing` shows the line the guest will see, through
+`foodPriceDisplay` / `foodSavingLabel` (`@duncit/utils`). Display only — the guest is always
+charged `price`; the server refuses an MRP at or below it.
+
+### Licences and tables
+
+`FoodLicenceFields` holds the FSSAI number (14 digits, `@duncit/regex` `FSSAI_NUMBER`; printed at
+the foot of the public menu and on food invoices) and the optional liquor licence number, each with
+an optional uploaded document that only the owner and Duncit see. `FoodTablesFields` lists the
+venue's tables (typed, or filled in from a count) and downloads every table's QR sticker in one PDF
+(`myVenueTableStickersPdfBase64`) — each QR opens the menu with `?table=<label>`, which the guest's
+checkout fills in. The stickers print the SAVED tables, so the button waits for a save
+(`hasSavedTables`).
+
 ## Use
 
 Each tool takes the venue it is about. Picking the venue — and what to show for one that serves no

@@ -33,7 +33,7 @@ import { BackoutRequestModel } from '@modules/pods/podMember/backoutRequest.mode
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
-import { podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
+import { markedUserIdsByPod, podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
 import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
 // `notifyEach`, not `whatsappService.sendEach`: every scenario this file
 // sweeps for now goes out as an email too — the pod reminder, the complete-pod
@@ -460,11 +460,20 @@ async function endedPods(now: number, cutoff: Date, delayHours: number): Promise
 const guestsOf = (pod: SweptPod) =>
   (pod.pod_attendees ?? []).map(String).filter((id) => id !== firstHostId(pod));
 
+/**
+ * Only guests the host marked present are asked to rate — a booking is not
+ * attendance. The rating form and its submit already refuse anyone else
+ * (`assertAttended`), so a link sent to a no-show is a message, and a bill,
+ * for a form that will only tell them they cannot answer it.
+ */
 async function askAttendeesForFeedback(pods: SweptPod[], mwebUrl: string) {
-  const users = await waUsers(pods.flatMap(guestsOf));
+  const marked = await markedUserIdsByPod(pods.map((pod) => pod._id));
+  const attendedGuests = (pod: SweptPod) =>
+    guestsOf(pod).filter((id) => marked.get(String(pod._id))?.has(id) ?? false);
+  const users = await waUsers(pods.flatMap(attendedGuests));
   await notifyEach(
     pods.flatMap((pod) =>
-      guestsOf(pod).map((id) => feedbackAsk('USER_POD_FEEDBACK', pod, users.get(id), mwebUrl))
+      attendedGuests(pod).map((id) => feedbackAsk('USER_POD_FEEDBACK', pod, users.get(id), mwebUrl))
     )
   );
 }

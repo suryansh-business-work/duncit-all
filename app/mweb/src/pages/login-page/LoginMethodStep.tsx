@@ -4,10 +4,12 @@ import { Alert, Divider, Link, Stack, Typography } from '@mui/material';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
+import { auth } from '@duncit/auth-tokens';
 import { BUTTON_SIZES, DuncitButton } from '@duncit/buttons';
 import type { SocialCredential } from '@duncit/utils';
 import LegalLinks from '../../components/LegalLinks';
 import SocialRoundButtons from '../../components/SocialRoundButtons';
+import { useAuthFit } from '../../hooks/useAuthFit';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useWithRedirect } from '../../utils/redirect';
 import LoginFeatureChips from './LoginFeatureChips';
@@ -78,9 +80,11 @@ export default function LoginMethodStep({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const authLink = useWithRedirect();
+  // The gaps between blocks shrink with the viewport; the doors themselves don't.
+  const { size } = useAuthFit();
 
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={`${size(auth.fit.gap * (2 / 3))}px`}>
       <LoginFeatureChips />
 
       <Stack spacing={1.5}>

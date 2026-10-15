@@ -11,7 +11,11 @@ export const foodMenuTextValues = (venue: FoodMenuVenue): FoodMenuFormValues => 
   const values = foodMenuToValues(venue);
   return {
     ...values,
-    food_menu: values.food_menu.map((dish) => ({ ...dish, price: text(dish.price) })),
+    food_menu: values.food_menu.map((dish) => ({
+      ...dish,
+      price: text(dish.price),
+      original_price: text(dish.original_price),
+    })),
     food_ordering: {
       ...values.food_ordering,
       discount_pct: text(values.food_ordering.discount_pct),

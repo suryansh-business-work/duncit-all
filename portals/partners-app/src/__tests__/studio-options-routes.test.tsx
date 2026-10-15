@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 import { STUDIO_OPTIONS_ENTRY, STUDIO_OPTION_LIST, type PartnerStudioMode } from '@duncit/utils';
 import App from '../App';
 import { sectionRoleFor } from '../config/partner-sections';
+import { EventRequestsPage } from '@duncit/shell';
 
 const routesElement = App() as ReactElement<{ children: ReactNode }>;
 const routes = createRoutesFromElements(routesElement.props.children);
@@ -55,5 +56,35 @@ describe('studio options routes', () => {
   it('keeps the named-venue availability link working beside the selected-venue one', () => {
     expect(patternFor('/venues/availability')).toBe('/venues/availability');
     expect(patternFor('/venues/venue-1/availability')).toBe('/venues/:venueId/availability');
+  });
+});
+
+/** The first element of `type` in a rendered-to-be tree, walking children only. */
+const findElement = (node: ReactNode, type: unknown): ReactElement<Record<string, unknown>> | null => {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findElement(child, type);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!isValidElement<{ children?: ReactNode }>(node)) return null;
+  if (node.type === type) return node as ReactElement<Record<string, unknown>>;
+  return findElement(node.props.children, type);
+};
+
+describe('event requests routes', () => {
+  it.each([
+    ['/venues/event-requests', 'VENUE', 'VENUE_OWNER'],
+    ['/host/event-requests', 'HOST', 'HOST'],
+  ])('opens %s on the shared Event Requests page, scoped to the partner’s own', (path, targetType, role) => {
+    expect(patternFor(path)).toBe(path);
+    // Kept to the studio it belongs to, like the rest of that studio's pages.
+    expect(sectionRoleFor(path)).toBe(role);
+
+    const route = matchRoutes(routes, path)?.at(-1)?.route;
+    const page = findElement(route?.element, EventRequestsPage);
+    // "owner" is the partner's own requests; the consoles mount it as "console".
+    expect(page?.props).toEqual({ targetType, scope: 'owner' });
   });
 });

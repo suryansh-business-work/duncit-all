@@ -94,6 +94,22 @@ export const BANK_ACCOUNT_NUMBER = /^\d{6,18}$/;
 export const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
 /**
+ * FSSAI licence / registration number — exactly 14 digits. Indian food law
+ * makes a food business print it on its menu, so a venue that serves food
+ * stores it and the public menu shows it.
+ */
+export const FSSAI_NUMBER = /^\d{14}$/;
+
+/**
+ * A YouTube video link — `youtube.com/watch?v=`, `/shorts/`, `/embed/`,
+ * `/live/` or `youtu.be/`, bare or on one subdomain (www, m). Group 1 is the
+ * 11-character video id. Every repeat is bounded by a class that cannot match
+ * the token after it, so the pattern stays linear (no ReDoS).
+ */
+export const YOUTUBE_URL =
+  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
+
+/**
  * A Duncit referral code — the `DUN-` prefix and six uppercase hex characters,
  * exactly what the server generates (referral.service `generateCode`).
  *
@@ -154,6 +170,10 @@ export const isUpiId = (v) => UPI_ID.test(v);
 export const isBankAccountNumber = (v) => BANK_ACCOUNT_NUMBER.test(v);
 /** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
 export const isGstin = (v) => GSTIN.test(v);
+/** FSSAI number shape check — 14 digits. */
+export const isFssaiNumber = (v) => FSSAI_NUMBER.test(v);
+/** True for a YouTube video link the players can embed. */
+export const isYoutubeUrl = (v) => YOUTUBE_URL.test(v);
 /** Person-name shape check — letters, spaces, apostrophes and periods only. */
 export const isPersonName = (v) => PERSON_NAME.test(v);
 /** Referral-code shape check. Case-sensitive: upper-case before calling it. */

@@ -7,7 +7,15 @@
  * the reason a document fails, and that a currency the built-in fonts cannot
  * draw is swapped rather than printed as a stray mark.
  */
-import { loadPdfImage, pdfCurrency, renderPdf } from '../../document';
+import PDFDocument from 'pdfkit';
+import {
+  loadPdfImage,
+  pdfCurrency,
+  pdfCurrencyNote,
+  pdfRowHeight,
+  pdfSafeText,
+  renderPdf,
+} from '../../document';
 
 describe('renderPdf', () => {
   it('resolves the drawn document as a PDF buffer', async () => {
@@ -52,6 +60,62 @@ describe('pdfCurrency', () => {
   it('leaves an unknown symbol alone rather than blanking the amount', () => {
     expect(pdfCurrency('Rs.')).toBe('Rs.');
     expect(pdfCurrency('')).toBe('');
+  });
+});
+
+describe('pdfSafeText', () => {
+  it('swaps every unprintable currency symbol inside text formatted elsewhere', () => {
+    expect(pdfSafeText('Revenue ₹1,200 · refunds ₹50')).toBe('Revenue INR 1,200 · refunds INR 50');
+    expect(pdfSafeText('₽10 and ₩20')).toBe('RUB 10 and KRW 20');
+  });
+
+  it('leaves drawable symbols and plain text untouched', () => {
+    expect(pdfSafeText('$5 · £4 · €3 · ¥2')).toBe('$5 · £4 · €3 · ¥2');
+    expect(pdfSafeText('No money here')).toBe('No money here');
+    expect(pdfSafeText('')).toBe('');
+  });
+});
+
+describe('pdfCurrencyNote', () => {
+  it('names the rupee in words, from the symbol or the code', () => {
+    expect(pdfCurrencyNote('₹')).toBe('All amounts are in Indian Rupees (INR).');
+    expect(pdfCurrencyNote('INR')).toBe('All amounts are in Indian Rupees (INR).');
+    expect(pdfCurrencyNote(' ₹ ')).toBe('All amounts are in Indian Rupees (INR).');
+  });
+
+  it('prints no line for a currency it cannot name, rather than guessing', () => {
+    expect(pdfCurrencyNote('$')).toBeNull();
+    expect(pdfCurrencyNote('₽')).toBeNull();
+    expect(pdfCurrencyNote('')).toBeNull();
+  });
+});
+
+describe('pdfRowHeight', () => {
+  const doc = () => new PDFDocument({ size: 'A4', margin: 0 }).font('Helvetica').fontSize(10);
+
+  it('is the height of one line for single-line cells', () => {
+    const d = doc();
+    const line = d.heightOfString('Qty', { width: 200 });
+
+    expect(pdfRowHeight(d, [{ text: 'Qty', width: 200 }, { text: '2', width: 40 }])).toBe(line);
+  });
+
+  it('grows to the tallest cell when a description wraps', () => {
+    const d = doc();
+    const long = 'Pod booking for the long-form Sunday sunset board games meetup at the riverside cafe';
+    const single = d.heightOfString('x', { width: 120 });
+
+    const height = pdfRowHeight(d, [
+      { text: long, width: 120 },
+      { text: 'INR 1000.00', width: 80 },
+    ]);
+
+    expect(height).toBe(d.heightOfString(long, { width: 120 }));
+    expect(height).toBeGreaterThan(single * 2);
+  });
+
+  it('is zero for a row with no cells', () => {
+    expect(pdfRowHeight(doc(), [])).toBe(0);
   });
 });
 

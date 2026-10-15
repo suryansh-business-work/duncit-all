@@ -2,7 +2,9 @@ import type { GraphQLContext } from '@context';
 import { hasRole, requireAuth } from '@middleware/rbac';
 import { consoleEditors } from '@modules/portals/console-access';
 import type { TableQueryInput } from '@utils/table-query';
+import { venueFoodRating } from './venueFood.rating';
 import { venueFoodStatsService } from './venueFood.stats';
+import { venueFoodMineService, type MyFoodOrdersInput } from './venueFoodOrder.mine';
 import { availableFoodCoupons } from './venueFoodCoupon.available';
 import { venueFoodGuestService, type FoodFeedbackInput } from './venueFoodOrder.guest';
 import {
@@ -60,6 +62,9 @@ export const venueFoodResolvers = {
       args: { order_id: string; access_key?: string | null },
       ctx: GraphQLContext
     ) => venueFoodGuestService.invoicePdfBase64(ctx, args.order_id, args.access_key),
+    myVenueFoodOrders: (_p: unknown, args: { input: MyFoodOrdersInput }, ctx: GraphQLContext) =>
+      venueFoodMineService.list(ctx, args.input),
+    venueFoodRating: (_p: unknown, args: { venue_id: string }) => venueFoodRating(args.venue_id),
     venueFoodStats: (_p: unknown, args: { venue_id: string; days?: number | null }, ctx: GraphQLContext) => {
       const { userId, isAdmin } = operator(ctx);
       return venueFoodStatsService.stats(userId, isAdmin, args.venue_id, args.days);

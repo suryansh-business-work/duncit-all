@@ -55,6 +55,8 @@ describe('Analytics routes', () => {
     ['/clubs', 'CLUBS'],
     ['/club-admins', 'CLUB_ADMINS'],
     ['/hosts', 'HOSTS'],
+    ['/growth/contacts', 'CONTACTS'],
+    ['/growth/communications', 'COMMUNICATIONS'],
   ])('opens the %s dashboard inside the chrome', async (path, entity) => {
     session.token = 'fixture-session';
     await open(path);

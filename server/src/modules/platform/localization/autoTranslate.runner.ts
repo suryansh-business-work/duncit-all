@@ -121,7 +121,9 @@ export async function translateBatch(input: Readonly<BatchInput>): Promise<Batch
   });
 
   if (!res.ok) {
-    return { ok: false, fatal: res.code === "NOT_CONFIGURED", message: res.message };
+    // No key, or switched off in AI Features: every later batch would refuse too.
+    const fatal = res.code === "NOT_CONFIGURED" || res.code === "DISABLED";
+    return { ok: false, fatal, message: res.message };
   }
 
   const table = parseTranslations(res.content);

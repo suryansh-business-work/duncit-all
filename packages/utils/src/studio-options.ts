@@ -155,6 +155,9 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'pods', labelKey: 'mweb.studioOptions.venuePods', hintKey: 'mweb.studioOptions.venuePodsHint', icon: 'pods', path: '/venues/pods', route: 'VenuePods', portal: '/venues/pods' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/venues/change-requests' },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromHosts', hintKey: 'mweb.studioOptions.podRequestsFromHostsHint', icon: 'requests', path: '/venues/pod-requests', route: 'VenuePodRequests', portal: '/venues/pod-requests' },
+    // What members asked for when the venue had nothing coming up. A Partner
+    // console screen — the apps open it there, like the brand catalogue.
+    { key: 'event-requests', labelKey: 'mweb.studioOptions.eventRequests', hintKey: 'mweb.studioOptions.venueEventRequestsHint', icon: 'requests', portal: '/venues/event-requests' },
     { key: 'nearby', labelKey: 'mweb.studioOptions.nearbyHosts', hintKey: 'mweb.studioOptions.nearbyHostsHint', icon: 'nearby', path: '/venues/nearby-hosts', route: 'NearbyHosts', portal: '/venues/nearby-hosts' },
     VERIFICATION,
     WITHDRAWAL,
@@ -165,6 +168,7 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'create', labelKey: 'mweb.studioOptions.createPod', hintKey: 'mweb.studioOptions.createPodHint', icon: 'create', path: '/create-pod', route: 'CreatePod', portal: '/host/pods?new=1' },
     { key: 'auto-pods', labelKey: 'mweb.studioOptions.autoPods', hintKey: 'mweb.studioOptions.hostAutoPodsHint', icon: 'autopods', path: '/host/auto-pods', route: 'HostAutoPods', portal: '/host/auto-pods', autoPods: true },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromVenues', hintKey: 'mweb.studioOptions.podRequestsFromVenuesHint', icon: 'requests', path: '/host/pod-requests', route: 'HostPodRequests', portal: '/host/pod-requests' },
+    { key: 'event-requests', labelKey: 'mweb.studioOptions.eventRequests', hintKey: 'mweb.studioOptions.hostEventRequestsHint', icon: 'requests', portal: '/host/event-requests' },
     { key: 'nearby', labelKey: 'mweb.studioOptions.nearbyVenues', hintKey: 'mweb.studioOptions.nearbyVenuesHint', icon: 'nearby', path: '/host/nearby-venues', route: 'NearbyVenues', portal: '/host/nearby-venues' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/host/change-requests' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishHost', hintKey: 'mweb.studioOptions.publishHostHint', icon: 'publish', path: '/host/publish', route: 'HostPublish', portal: '/host/publish' },

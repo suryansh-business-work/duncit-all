@@ -68,7 +68,8 @@ describe('EmailStatusBadge', () => {
       ['ravi@example.com'],
       [
         statusesMock(['ravi@example.com'], []),
-        { request: { query: CRM_VERIFY_EMAIL, variables: { email: 'ravi@example.com' } }, result: { data: { crmVerifyEmail: verification } } },
+        // Held briefly so the in-flight "checking" badge stays on screen long enough to assert.
+        { request: { query: CRM_VERIFY_EMAIL, variables: { email: 'ravi@example.com' } }, result: { data: { crmVerifyEmail: verification } }, delay: 200 },
       ],
     );
 

@@ -125,6 +125,10 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   // no ctx, returns a bare string; a Tech → Google Analytics edit reaches the
   // websites within the TTL.
   'googleAnalyticsTag',
+  // A venue's food rating on its menu and every dish page. Argument-keyed
+  // (venue_id), no auth, no ctx, one aggregate; a new rating shows within the TTL.
+  // Its documents ask for nothing else, so the whole response is cacheable.
+  'venueFoodRating',
 ]);
 
 /**

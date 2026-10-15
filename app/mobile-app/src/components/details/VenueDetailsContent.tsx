@@ -11,6 +11,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { TwoToneHeading } from '@/components/TwoToneHeading';
 import { HeroCarousel } from '@/components/details/DetailHero';
 import { VenueImagesGrid } from '@/components/details/VenueImagesGrid';
+import { VenueVideosSection } from '@/components/details/VenueVideosSection';
 import { VenuePodsSection } from '@/components/details/VenuePodsSection';
 import { FOOD_CART_BUTTON_SPACE } from '@/components/details/venue-food/FoodCartBar';
 import { VenueFoodMenuSection } from '@/components/details/venue-food/VenueFoodMenuSection';
@@ -137,13 +138,14 @@ export function VenueDetailsContent({ venue, gallery, onRefresh }: Readonly<Prop
           <MapEmbed query={mapQuery(venue)} />
         </SurfaceCard>
 
-        <VenuePodsSection venueId={venue.id} />
+        <VenuePodsSection venueId={venue.id} venueName={venue.venue_name} />
 
         <ChipsGroup title={t('mweb.common.amenities')} items={venue.amenities} />
         <ChipsGroup title={t('mweb.common.facilities')} items={venue.facilities} />
         <ChipsGroup title={t('mweb.common.venueSecurity')} items={venue.security} />
 
         <VenueImagesGrid images={gallery} onOpen={setViewerIndex} />
+        <VenueVideosSection videos={venue.videos} venueName={venue.venue_name} />
 
         <ImageViewerModal
           images={gallery}

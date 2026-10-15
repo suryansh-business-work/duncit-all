@@ -7,6 +7,8 @@ export const askBotTypeDefs = gql`
   """
   enum AskBotUnavailableReason {
     NOT_CONFIGURED
+    "Switched off in AI portal > AI Features."
+    DISABLED
   }
 
   """

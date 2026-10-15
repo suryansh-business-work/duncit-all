@@ -233,40 +233,46 @@ describe('usePodDetailActions', () => {
     expect(result.current.snack).toBeNull();
   });
 
-  it('onJoinFree sets confetti + snack and refetches', async () => {
+  // A free join lands on the booked confirmation (the ticket download lives
+  // there) instead of celebrating in place on Pod Details.
+  it('onJoinFree navigates to the booked confirmation — no snack, confetti or refetch', async () => {
     const mocks = [
       ...baseMocks(),
       makeMock({ id: 'pod-doc-1', referral: null, seats: 1 }, JOIN_FREE, {
         data: { joinFreePod: { id: 'm1', status: 'ACTIVE' } },
       }),
     ];
-    const { result, refetch } = renderActions({}, mocks);
+    const { result, refetch, navigate } = renderActions({}, mocks);
     await act(async () => {
       await result.current.onJoinFree();
     });
-    expect(result.current.confettiOpen).toBe(true);
-    expect(result.current.snack).toBe('Joined!');
-    expect(refetch).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/pod/pod-doc-1/booked');
+    expect(result.current.confettiOpen).toBe(false);
+    expect(result.current.snack).toBeNull();
+    expect(refetch).not.toHaveBeenCalled();
   });
 
-  it('onJoinFree snacks on error', async () => {
+  it('onJoinFree snacks on error and stays on Pod Details', async () => {
     const mocks = [
       ...baseMocks(),
       makeMock({ id: 'pod-doc-1', referral: null, seats: 1 }, JOIN_FREE, null, new Error('full')),
     ];
-    const { result } = renderActions({}, mocks);
+    const { result, navigate } = renderActions({}, mocks);
     await act(async () => {
       await result.current.onJoinFree();
     });
     await waitFor(() => expect(result.current.snack).toBe('full'));
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('onJoinFree no-ops with no pod', async () => {
-    const { result } = renderActions({ pod: null });
+    const { result, navigate } = renderActions({ pod: null });
     await act(async () => {
       await result.current.onJoinFree();
     });
     expect(result.current.snack).toBeNull();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('onPaidCheckout navigates with the membership amount only (no products)', () => {
@@ -382,7 +388,8 @@ describe('usePodDetailActions', () => {
     expect(result.current.keepSpotError).toBeNull();
   });
 
-  // A free pod: cancel the spot, join again instantly, cancel again — no limit.
+  // A free pod: cancel the spot, join again instantly, cancel again. The cap on
+  // cancels is the server's (Pod Settings) — the hook just calls through.
   it('cancels a free spot, joins again and cancels again, calling the right mutation each time', async () => {
     const cancelled = { data: { cancelFreeSpot: { id: 'm1', status: 'BACKED_OUT', seats: 1 } } };
     const mocks = [
@@ -393,7 +400,7 @@ describe('usePodDetailActions', () => {
       }),
       makeMock({ id: 'pod-doc-1' }, CANCEL_FREE_SPOT, cancelled),
     ];
-    const { result, refetch } = renderActions({}, mocks);
+    const { result, refetch, navigate } = renderActions({}, mocks);
     act(() => result.current.setCancelSpotOpen(true));
     expect(result.current.cancelSpotOpen).toBe(true);
     await act(async () => {
@@ -406,14 +413,16 @@ describe('usePodDetailActions', () => {
     await act(async () => {
       await result.current.onJoinFree();
     });
-    expect(result.current.snack).toBe('Joined!');
+    // The re-join lands on the booked confirmation; Pod Details re-reads on the way back.
+    expect(navigate).toHaveBeenCalledWith('/pod/pod-doc-1/booked');
     await act(async () => {
       await result.current.onConfirmCancelSpot();
     });
     expect(result.current.snack).toBe(
       'Your spot is cancelled. You can join again any time while the pod is open.',
     );
-    expect(refetch).toHaveBeenCalledTimes(3);
+    // Only the two cancels re-read the pod; the join navigates instead.
+    expect(refetch).toHaveBeenCalledTimes(2);
   });
 
   it('names a checked-in refusal and a started pod instead of the raw server text', async () => {

@@ -58,7 +58,10 @@ const validValues: RegisterVenueValues = {
 };
 
 /** A venue serving food: one saved dish, one typed in and not yet saved. */
-const withFood: Pick<RegisterVenueValues, 'offers_food' | 'food_menu' | 'food_ordering'> = {
+const withFood: Pick<
+  RegisterVenueValues,
+  'offers_food' | 'food_menu' | 'food_ordering' | 'food_licences' | 'food_tables'
+> = {
   offers_food: true,
   food_menu: [
     {
@@ -71,6 +74,9 @@ const withFood: Pick<RegisterVenueValues, 'offers_food' | 'food_menu' | 'food_or
       diet: 'VEG',
       spice_level: '',
       is_available: true,
+      videos: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+      original_price: '150',
+      saving_display: 'AMOUNT',
     },
     {
       item_id: '',
@@ -82,9 +88,19 @@ const withFood: Pick<RegisterVenueValues, 'offers_food' | 'food_menu' | 'food_or
       diet: '',
       spice_level: 'NONE',
       is_available: false,
+      videos: [],
+      original_price: '',
+      saving_display: 'PERCENT',
     },
   ],
   food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', razorpay_linked: true, discount_pct: '10', tax_override: false, tax_mode: '', gst_pct: '' },
+  food_licences: {
+    fssai_number: ' 12345678901234 ',
+    fssai_document_url: 'https://cdn.example.com/fssai.pdf',
+    liquor_licence_number: '',
+    liquor_document_url: '',
+  },
+  food_tables: '1, 2, Patio, 2',
 };
 
 const messagesOf = (values: RegisterVenueValues) => {
@@ -245,7 +261,14 @@ describe('registerVenueSchema', () => {
   });
 
   it('validates the food fields under Food Menu, not Type & Capacity', () => {
-    expect(SECTION_FIELDS.food).toEqual(['offers_food', 'food_menu', 'food_ordering', 'food_gstin']);
+    expect(SECTION_FIELDS.food).toEqual([
+      'offers_food',
+      'food_menu',
+      'food_ordering',
+      'food_licences',
+      'food_tables',
+      'food_gstin',
+    ]);
     expect(SECTION_FIELDS['type-capacity']).toEqual(['venue_type', 'capacity_items']);
 
     const parsed = registerVenueSchema().safeParse({
@@ -263,6 +286,45 @@ describe('registerVenueSchema', () => {
     expect(messagesOf({ ...validValues, ...withFood, food_ordering: { enabled: true, razorpay_integration_id: '', razorpay_linked: false, discount_pct: 0, tax_override: false, tax_mode: '', gst_pct: '' } })).toEqual([
       'Pick a Razorpay account before taking food orders',
     ]);
+  });
+
+  it('refuses a bad FSSAI number and too many tables under Food Menu, where saving it triggers them', () => {
+    const limits = {
+      food_menu_limit: 5,
+      food_image_limit: 2,
+      food_price_max: 10000,
+      food_discount_max_pct: 50,
+      food_video_limit: 2,
+      food_table_limit: 2,
+    };
+    const parsed = registerVenueSchema(undefined, undefined, limits).safeParse({
+      ...validValues,
+      ...withFood,
+      food_licences: { ...withFood.food_licences, fssai_number: '1234' },
+    });
+    const paths = parsed.success ? [] : parsed.error.issues.map((issue) => issue.path.join('.'));
+    expect(paths).toEqual(expect.arrayContaining(['food_licences.fssai_number', 'food_tables']));
+    // Both roots are Food Menu fields, so its save validates them rather than
+    // letting the server refuse what the form never showed.
+    expect(SECTION_FIELDS.food).toContain('food_licences');
+    expect(SECTION_FIELDS.food).toContain('food_tables');
+  });
+
+  it('accepts the same licences and tables while the venue serves no food', () => {
+    const parsed = registerVenueSchema().safeParse({
+      ...validValues,
+      ...withFood,
+      offers_food: false,
+      food_licences: { ...withFood.food_licences, fssai_number: '1234' },
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it('checks the venue videos under Venue Details', () => {
+    expect(SECTION_FIELDS.details).toContain('videos');
+    const parsed = registerVenueSchema().safeParse({ ...validValues, videos: [`https://x/${'a'.repeat(2050)}`] });
+    const roots = parsed.success ? [] : parsed.error.issues.map((issue) => String(issue.path[0]));
+    expect(roots).toEqual(['videos']);
   });
 
   it('maps every value field to exactly the sections that validate it', () => {
@@ -334,13 +396,23 @@ describe('register-venue mappers', () => {
 });
 
 describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
-  it('details → only description + images', () => {
+  it('details → only description, images and videos', () => {
     expect(
-      toApprovedUpdateInput('details', { ...validValues, cover_image_url: 'https://x/c.jpg', gallery: ['https://x/1.jpg'] }, 1)
+      toApprovedUpdateInput(
+        'details',
+        {
+          ...validValues,
+          cover_image_url: 'https://x/c.jpg',
+          gallery: ['https://x/1.jpg'],
+          videos: ['https://youtu.be/dQw4w9WgXcQ'],
+        },
+        1
+      )
     ).toEqual({
       description: 'A cosy corner cafe',
       cover_image_url: 'https://x/c.jpg',
       gallery: ['https://x/1.jpg'],
+      videos: ['https://youtu.be/dQw4w9WgXcQ'],
     });
   });
 
@@ -371,6 +443,10 @@ describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
           diet: 'VEG',
           spice_level: null,
           is_available: true,
+          videos: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+          // The struck-through MRP goes as a number; how the saving reads goes as picked.
+          original_price: 150,
+          saving_display: 'AMOUNT',
         },
         {
           name: 'Filter coffee',
@@ -381,11 +457,30 @@ describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
           diet: null,
           spice_level: 'NONE',
           is_available: false,
+          videos: [],
+          // A blank MRP is no strikethrough at all.
+          original_price: null,
+          saving_display: 'PERCENT',
         },
       ],
-      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', razorpay_linked: true, discount_pct: 10, tax_override: false },
+      food_ordering: { enabled: true, razorpay_integration_id: 'rzp-1', discount_pct: 10, tax_override: false },
+      // Numbers trimmed; the uploaded documents go as they are.
+      food_licences: {
+        fssai_number: '12345678901234',
+        fssai_document_url: 'https://cdn.example.com/fssai.pdf',
+        liquor_licence_number: '',
+        liquor_document_url: '',
+      },
+      // One sticker per table: split, trimmed, a repeated label kept once.
+      food_tables: ['1', '2', 'Patio'],
     });
     expect('capacity_items' in input).toBe(false);
+  });
+
+  it('food → step 1 carries the same licences and tables as an approved save', () => {
+    const input = toStep1Input({ ...validValues, ...withFood });
+    expect(input.food_licences).toEqual(toApprovedUpdateInput('food', { ...validValues, ...withFood }, 1).food_licences);
+    expect(input.food_tables).toEqual(['1', '2', 'Patio']);
   });
 
   it('food, switched off → only the switch, so the server keeps the menu for later', () => {

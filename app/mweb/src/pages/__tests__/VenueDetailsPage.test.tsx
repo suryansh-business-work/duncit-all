@@ -18,8 +18,10 @@ vi.mock('react-router', async (importOriginal) => ({
 
 // Stub the pods section so it doesn't fire its own GraphQL query / pricing hook.
 vi.mock('../venues-page/VenuePodsSection', () => ({
-  default: ({ venueId }: { venueId: string }) => (
-    <div data-testid="venue-pods-stub">pods-{venueId}</div>
+  default: ({ venueId, venueName }: { venueId: string; venueName?: string }) => (
+    <div data-testid="venue-pods-stub">
+      pods-{venueId}|{venueName ?? 'no-name'}
+    </div>
   ),
 }));
 // And the reels row, which runs its own pods query.
@@ -44,6 +46,8 @@ const baseVenue = (over: Record<string, unknown> = {}) => ({
   security: ['CCTV'],
   cover_image_url: 'https://img/cover.jpg',
   gallery: ['https://img/g1.jpg', 'https://img/g2.jpg'],
+  // Uploaded clips and YouTube links; none by default.
+  videos: [],
   address_line1: 'Line 1',
   address_line2: 'Line 2',
   city: 'Pune',
@@ -57,6 +61,7 @@ const baseVenue = (over: Record<string, unknown> = {}) => ({
   // No menu: the page keeps the layout it had before venues could serve food.
   offers_food: false,
   food_menu: [],
+  food_licences: null,
   food_ordering: { enabled: false, discount_pct: 0, tax_mode: 'INCLUSIVE', gst_pct: 5 },
   ...over,
 });
@@ -106,8 +111,10 @@ describe('VenueDetailsPage', () => {
     expect(screen.getByText('Venue Security')).toBeInTheDocument();
     // extra gallery images section ( >1 image )
     expect(screen.getByText('Images')).toBeInTheDocument();
-    // pods stub
-    expect(screen.getByTestId('venue-pods-stub')).toHaveTextContent('pods-v1');
+    // pods stub — given the venue's name, so "nothing coming up" can offer "Request an event"
+    expect(screen.getByTestId('venue-pods-stub')).toHaveTextContent('pods-v1|Grand Hall');
+    // no videos → no Videos section
+    expect(screen.queryByTestId('venue-videos-header')).not.toBeInTheDocument();
     // cover image present
     const cover = screen.getAllByRole('img')[0] as HTMLImageElement;
     expect(cover.src).toContain('cover.jpg');
@@ -152,6 +159,26 @@ describe('VenueDetailsPage', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     // no Images section with a single/zero image
     expect(screen.queryByText('Images')).not.toBeInTheDocument();
+  });
+
+  it('plays the venue’s videos under its photos, even with no gallery to show', async () => {
+    setup(
+      [
+        venueMock(
+          baseVenue({
+            gallery: [],
+            videos: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ', '  ', 'https://cdn.test/clip.mp4'],
+          }),
+        ),
+      ],
+      <VenueDetailsPage />,
+    );
+    expect(await screen.findByTestId('venue-videos-header')).toHaveTextContent('Videos');
+    expect(screen.queryByText('Images')).not.toBeInTheDocument();
+    // The blank entry is dropped; the two real ones play, titled by position and venue.
+    expect(screen.getByTitle('Video 1 of Grand Hall').tagName).toBe('IFRAME');
+    expect(screen.getByTestId('venue-video-1').tagName).toBe('VIDEO');
+    expect(screen.queryByTestId('venue-video-2')).not.toBeInTheDocument();
   });
 
   it('renders the not-found state when the venue is not public', async () => {

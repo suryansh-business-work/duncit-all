@@ -80,9 +80,17 @@ export default function VenueEditorPage() {
             onPick={picker.pickImage}
             categoryLimit={config.category_limit}
             minCategories={minCategories}
+            venueId={venueId}
+            videoLimit={config.venue_video_limit}
           />
           <TypeCapacitySection control={control} setValue={setValue} config={config} />
-          <FoodSection control={control} config={config} venueId={venueId} />
+          <FoodSection
+            control={control}
+            config={config}
+            venueId={venueId}
+            venueName={venue?.venue_name}
+            hasSavedTables={(venue?.food_tables?.length ?? 0) > 0}
+          />
           <AmenitiesSection control={control} config={config} />
           <DocumentsSection control={control} config={config} onPick={picker.pickImage} />
           <OwnerSection control={control} setValue={setValue} isEdit={isEdit} />

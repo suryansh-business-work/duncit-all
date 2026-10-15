@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 import { VenueSlotModel, type IVenueSlot, type VenueSlotStatus } from './venueSlot.model';
 import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import { notifyVenueSubscribers } from '@modules/venues/venueFood/venueSubscriber.service';
+import { fulfilEventRequests } from '@modules/venues/eventRequest/eventRequest.fulfil';
 import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -626,6 +627,21 @@ async function loadSlotDecisionFacts(pod: SlotDecisionPod, slot: IVenueSlot): Pr
   };
 }
 
+/** The pod is live: the open event requests to its venue and its hosts are
+ * answered and their members told in the app. Queues and returns; never throws. */
+function answerEventRequests(facts: SlotDecisionFacts, slot: IVenueSlot) {
+  fulfilEventRequests({
+    podId: facts.entityId,
+    podTitle: facts.podTitle,
+    venueId: slot.venue_id,
+    venueName: facts.venueName,
+    hostIds: facts.hosts.map((host) => host?._id),
+    hostName: facts.hostName,
+    date: facts.date,
+    time: facts.time,
+  });
+}
+
 /** Best-effort WhatsApp beside the in-app note: the decision to the hosts and
  * to the venue owner, plus the pod-is-live pair once it is approved. The sends
  * themselves never throw; the lookups feeding them can. */
@@ -638,6 +654,8 @@ async function whatsappSlotDecision(
   try {
     const facts = await loadSlotDecisionFacts(pod, slot);
     if (!facts) return;
+    // First, so a failed message below never leaves a request unanswered.
+    if (approved) answerEventRequests(facts, slot);
     const sends = [
       ...hostDecisionSends(facts, approved),
       ...(tellOwner ? await venueDecisionSends(facts, approved) : []),
@@ -740,7 +758,10 @@ export async function notifyFreeSlotBooked(pod: SlotDecisionPod, slot: IVenueSlo
   }
   try {
     const facts = await loadSlotDecisionFacts(pod, slot);
-    if (facts) await notifyEach(await podPublishedSends(facts));
+    if (facts) {
+      answerEventRequests(facts, slot);
+      await notifyEach(await podPublishedSends(facts));
+    }
   } catch (err) {
     logs.server.error('venueSlot', 'notifyFreeSlotBooked', { error: err, msg: 'free slot whatsapp failed', slot_id: String(slot._id) });
   }

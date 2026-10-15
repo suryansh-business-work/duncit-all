@@ -2,10 +2,14 @@ import { useState } from 'react';
 import AppleIcon from '@mui/icons-material/Apple';
 import { useTheme } from '@mui/material/styles';
 import { CircularProgress } from '@mui/material';
+import { auth as authTokens } from '@duncit/auth-tokens';
 import { BUTTON_SIZES, DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import type { SocialCredential } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { appleCredentialOf, isAppleCancel, useAppleJs, useAppleWebConfig } from './useAppleJs';
+
+/** The round button's logo: `socialIconRatio` of the circle (native twin's same number). */
+const ROUND_ICON = Math.round(BUTTON_SIZES.lg.height * authTokens.fit.socialIconRatio);
 
 interface Props {
   /** The visible label — sign in on the login screen, sign up on signup. */
@@ -77,7 +81,11 @@ export default function AppleSignInButton({
         data-testid="apple-auth-button"
         sx={{ width: BUTTON_SIZES.lg.height, height: BUTTON_SIZES.lg.height, ...ink }}
       >
-        {busy ? <CircularProgress size={BUTTON_SIZES.lg.iconSize} color="inherit" /> : <AppleIcon />}
+        {busy ? (
+          <CircularProgress size={BUTTON_SIZES.lg.iconSize} color="inherit" />
+        ) : (
+          <AppleIcon sx={{ fontSize: ROUND_ICON }} />
+        )}
       </DuncitIconButton>
     );
   }

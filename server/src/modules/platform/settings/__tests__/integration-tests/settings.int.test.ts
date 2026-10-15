@@ -106,6 +106,57 @@ describe('settingsService integration', () => {
     expect((await settingsService.getPublicAppSettings()).venue_cancel_health_penalty).toBe(5);
   });
 
+  it('caps free-pod spot cancellations at 5 by default, keeps at least 1 and floors fractions', async () => {
+    // Nothing saved yet: the getter and the admin read both fall back to 5.
+    expect(await settingsService.getMaxFreeSpotCancellations()).toBe(5);
+    expect((await settingsService.getAppSettings()).max_free_spot_cancellations).toBe(5);
+
+    const set = await settingsService.updateAppSettings({ max_free_spot_cancellations: 2 });
+    expect(set.max_free_spot_cancellations).toBe(2);
+    expect(await settingsService.getMaxFreeSpotCancellations()).toBe(2);
+
+    expect(
+      (await settingsService.updateAppSettings({ max_free_spot_cancellations: 3.8 })).max_free_spot_cancellations
+    ).toBe(3);
+    // Negative clamps to the minimum of 1 — never "no cancels at all".
+    expect(
+      (await settingsService.updateAppSettings({ max_free_spot_cancellations: -4 })).max_free_spot_cancellations
+    ).toBe(1);
+    // 0 and junk are unusable input and fall back to the default rather than storing 0 or NaN.
+    expect(
+      (await settingsService.updateAppSettings({ max_free_spot_cancellations: 0 })).max_free_spot_cancellations
+    ).toBe(5);
+    expect(
+      (await settingsService.updateAppSettings({ max_free_spot_cancellations: 'abc' as never }))
+        .max_free_spot_cancellations
+    ).toBe(5);
+    expect(await settingsService.getMaxFreeSpotCancellations()).toBe(5);
+  });
+
+  it('serves the default spot-cancel cap when the stored value is missing or below the minimum', async () => {
+    await settingsService.getAppSettings(); // seed the singleton
+    // Raw driver writes — Mongoose would fill the default / refuse min 1.
+    await AppSettingsModel.collection.updateOne(
+      { singleton_key: 'app' },
+      { $unset: { max_free_spot_cancellations: '' } }
+    );
+    expect(await settingsService.getMaxFreeSpotCancellations()).toBe(5);
+    expect((await settingsService.getAppSettings()).max_free_spot_cancellations).toBe(5);
+
+    await AppSettingsModel.collection.updateOne(
+      { singleton_key: 'app' },
+      { $set: { max_free_spot_cancellations: -2 } }
+    );
+    expect(await settingsService.getMaxFreeSpotCancellations()).toBe(1);
+  });
+
+  it('the model refuses a spot-cancel cap below 1', async () => {
+    const doc = new AppSettingsModel({ singleton_key: 'validate-only', max_free_spot_cancellations: 0 });
+    const error = doc.validateSync();
+    expect(error?.errors.max_free_spot_cancellations?.kind).toBe('min');
+    expect(new AppSettingsModel({ singleton_key: 'validate-ok' }).max_free_spot_cancellations).toBe(5);
+  });
+
   it('defaults the venue-cancel penalty when the stored value is missing', async () => {
     await settingsService.getAppSettings(); // seed the singleton
     // Raw driver write — Mongoose would fill the schema default back in.
@@ -365,6 +416,20 @@ describe('settingsService integration', () => {
     // The native force-update screen is gated on this flag, so it ships ON —
     // adding the toggle must not silently stop enforcing updates.
     expect(flags.find((f) => f.key === 'force_app_update')?.enabled).toBe(true);
+  });
+
+  it('seeds the soft Update App card flag OFF, as a system flag an operator turns on', async () => {
+    await settingsService.seedDefaults();
+    const flag = await FeatureFlagModel.findOne({ key: 'small_update_app_section' });
+    expect(flag?.enabled).toBe(false);
+    expect(flag?.is_system).toBe(true);
+    await expect(settingsService.deleteFlag(String(flag?._id))).rejects.toThrow(/system flag cannot be deleted/i);
+
+    // Turned on by Tech, it stays on across the next boot's seed.
+    await settingsService.setFlagEnabled(String(flag?._id), true);
+    await settingsService.seedDefaults();
+    expect((await settingsService.getFlag('small_update_app_section'))?.enabled).toBe(true);
+    expect(await FeatureFlagModel.countDocuments({ key: 'small_update_app_section' })).toBe(1);
   });
 
   it('leaves an operator-disabled force_app_update alone on the next boot', async () => {

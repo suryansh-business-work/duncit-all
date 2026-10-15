@@ -45,6 +45,17 @@ export default function PodLifecycleSettings({
         onSave={(next) => onSave({ max_backout_attempts: next })}
       />
       <NumberSettingCard
+        title={t('admin.podSettings.freeCancelLabel')}
+        description={t('admin.podSettings.freeCancelDesc')}
+        label={t('admin.podSettings.freeCancelLabel')}
+        helperText={t('admin.podSettings.freeCancelMin')}
+        invalidText={t('admin.podSettings.freeCancelInvalid')}
+        min={1}
+        loading={loading}
+        value={settings?.max_free_spot_cancellations ?? null}
+        onSave={(next) => onSave({ max_free_spot_cancellations: next })}
+      />
+      <NumberSettingCard
         title={t('admin.podSettings.penaltyTitle')}
         description={t('admin.podSettings.penaltyDesc')}
         label={t('admin.podSettings.penaltyLabel')}

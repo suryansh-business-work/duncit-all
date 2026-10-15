@@ -149,6 +149,27 @@ describe('reviewImageWithAi', () => {
     expect(log.error).toBe('no api key');
   });
 
+  it('marks a scan switched off in AI Features SKIPPED, not FAILED — it is a setting', async () => {
+    mockOpenaiChat.mockResolvedValue({
+      ok: false,
+      code: 'DISABLED',
+      status: 0,
+      message: 'switched off',
+      model: 'gpt-4o',
+    });
+    const log = makeLog();
+
+    await reviewImageWithAi(log);
+
+    expect(log.status).toBe('SKIPPED');
+    expect(log.risk).toBe('PENDING');
+    expect(log.action).toBe('NONE');
+    // Names the switch, not the key — the admin must know where to turn it back on.
+    expect(log.summary).toContain('switched off in the AI portal');
+    expect(log.summary).not.toContain('not configured');
+    expect(log.error).toBe('switched off');
+  });
+
   it('marks an upstream outage FAILED and keeps the reason', async () => {
     mockOpenaiChat.mockResolvedValue({
       ok: false,

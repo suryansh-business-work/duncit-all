@@ -28,6 +28,12 @@ export const VENUES_EXPLORE = gql`
   }
 `;
 
+const VENUES_GRID_SX = {
+  display: 'grid',
+  gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+  gap: 1.5,
+} as const;
+
 /** Resolves the header tile's slug to the id `publicVenues` filters on. Same
  * root field the header already fetched, so cache-first answers it without a
  * second network call. */
@@ -86,7 +92,7 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
     <Stack
       data-testid="venues-page"
       spacing={1.5}
-      sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
+      sx={{ width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
     >
       {/* No visible title: the coral Venues tab already names the page, as on the
           native Venues tab (rule 27). The h1 is for screen readers only. */}
@@ -115,13 +121,20 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
           title="No venues found here yet — try another search or category."
         />
       )}
-      {interleaveAds(venues, ads, 4).map((entry) =>
-        isAdEntry(entry) ? (
-          <AdCard key={entry.__ad.id} ad={entry.__ad} />
-        ) : (
-          <VenueExploreCard key={entry.id} venue={entry} onOpen={() => navigate(`/venue/${entry.id}`)} />
-        ),
-      )}
+      {/* One card a row on a phone, two from `sm` up (tablets, foldables,
+          desktop); a sponsored banner spans the whole row. Native twin:
+          VenuesScreen. */}
+      <Box data-testid="venues-grid" sx={VENUES_GRID_SX}>
+        {interleaveAds(venues, ads, 4).map((entry) =>
+          isAdEntry(entry) ? (
+            <Box key={entry.__ad.id} sx={{ gridColumn: '1 / -1' }}>
+              <AdCard ad={entry.__ad} />
+            </Box>
+          ) : (
+            <VenueExploreCard key={entry.id} venue={entry} onOpen={() => navigate(`/venue/${entry.id}`)} />
+          ),
+        )}
+      </Box>
     </Stack>
   );
 }

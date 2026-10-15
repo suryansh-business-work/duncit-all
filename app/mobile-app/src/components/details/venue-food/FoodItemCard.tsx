@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { DISABLED_OPACITY, PRESS_STYLE } from '@duncit/buttons-native';
-import { FOOD_ORDER_LIMITS, formatFoodMoney, type VenueFoodItem } from '@duncit/utils';
+import { FOOD_ORDER_LIMITS, type VenueFoodItem } from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
 import { CartNoticeChip } from '@/components/cart/CartNoticeChip';
@@ -13,6 +13,8 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import { DietMark } from './DietMark';
+import { FoodItemPrice } from './FoodItemPrice';
+import { FoodItemVideos } from './FoodItemVideos';
 import { SpiceMark } from './SpiceMark';
 
 interface Props {
@@ -20,6 +22,8 @@ interface Props {
   /** The configured currency symbol (Finance settings). */
   currency: string;
   onOpenImage: (item: VenueFoodItem) => void;
+  /** The dish's own screen — its name opens it. */
+  onOpenDetails?: (item: VenueFoodItem) => void;
   /** The venue takes orders right now — the dish gets its cart control. */
   canOrder: boolean;
   /** How many of this dish the cart holds. */
@@ -84,6 +88,7 @@ export function FoodItemCard({
   item,
   currency,
   onOpenImage,
+  onOpenDetails,
   canOrder,
   quantity,
   cartReady,
@@ -101,17 +106,24 @@ export function FoodItemCard({
           <DietMark diet={item.diet} />
           <SpiceMark level={item.spice_level} />
         </XStack>
-        <Text fontSize={15} fontWeight="600" color="$color" opacity={dim}>
+        <Text
+          testID={`food-item-open-${item.id}`}
+          role={onOpenDetails ? 'link' : undefined}
+          onPress={onOpenDetails ? () => onOpenDetails(item) : undefined}
+          fontSize={15}
+          fontWeight="600"
+          color="$color"
+          opacity={dim}
+        >
           {item.name}
         </Text>
-        <Text fontSize={14} fontWeight="700" color="$color" opacity={dim}>
-          {formatFoodMoney(item.price, currency)}
-        </Text>
+        <FoodItemPrice item={item} currency={currency} opacity={dim} />
         {item.description ? (
           <Text fontSize={13} color="$muted" lineHeight={18} opacity={dim}>
             {item.description}
           </Text>
         ) : null}
+        <FoodItemVideos item={item} />
         {item.is_available ? null : (
           <XStack
             testID={`food-item-unavailable-${item.id}`}

@@ -23,6 +23,8 @@ import { renderWithProviders } from '@/utils/test-utils';
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate, addListener: () => () => undefined }),
+  // The menu opened without a table sticker: the checkout starts with no table.
+  useRoute: () => ({ params: { venueId: 'v1' } }),
 }));
 jest.mock('@/hooks/usePublicFinance', () => ({
   usePublicFinance: () => ({ gstPct: 0, currency: '₹' }),
@@ -43,7 +45,7 @@ jest.mock('@/services/food-storage', () => ({
   writeFoodCoupon: jest.fn(() => Promise.resolve()),
   readFoodGuest: jest.fn(),
   writeFoodGuest: jest.fn(() => Promise.resolve()),
-  recentFoodOrder: jest.fn(() => Promise.resolve(null)),
+  storedFoodOrderKeys: jest.fn(() => Promise.resolve([])),
   saveFoodOrder: jest.fn(() => Promise.resolve()),
 }));
 // Only the round trips are replaced: the error readers are the real ones.

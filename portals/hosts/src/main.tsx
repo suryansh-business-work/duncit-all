@@ -7,6 +7,7 @@ import {
   HOSTS_SPEC,
 } from '@duncit/entity-consoles';
 import { logs } from '@duncit/logs';
+import { EventRequestsPage } from '@duncit/shell';
 import { appConfig } from './config/app-config';
 
 /**
@@ -25,12 +26,16 @@ mountDirectoryPortal({
   logsPortal: logs.portal['hosts'],
   console: {
     listPath: '/hosts',
-    nav: [{ label: 'Hosts', labelKey: 'shell.nav.hosts', to: '/hosts', icon: 'people' }],
+    nav: [
+      { label: 'Hosts', labelKey: 'shell.nav.hosts', to: '/hosts', icon: 'people' },
+      { label: 'Event Requests', labelKey: 'shell.nav.eventRequests', to: '/event-requests', icon: 'calendar' },
+    ],
     routes: (authed) => (
       <>
         {/* Static before dynamic so /hosts/new is never read as a host id. */}
         <Route path="/hosts/new" element={authed(<HostEditorPage />)} />
         <Route path="/hosts" element={authed(<HostsPage />)} />
+        <Route path="/event-requests" element={authed(<EventRequestsPage targetType="HOST" scope="console" />)} />
         <Route path="/hosts/:hostId" element={authed(<HostDetailsPage />)} />
         <Route path="/hosts/:hostId/edit" element={authed(<HostEditorPage />)} />
       </>

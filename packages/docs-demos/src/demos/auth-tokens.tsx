@@ -52,6 +52,9 @@ export default defineDemos('auth-tokens', [
       // The fade from the admin's login hero into the page. It flips with the
       // mode so the heading over it keeps its own theme's contrast.
       'Login hero': { ...auth.hero, fade: mock.mode === 'dark' ? auth.hero.dark : auth.hero.light },
+      // The login landing fitted to the window (fitScale in @duncit/utils);
+      // the heading on the photo sits on auth.hero.scrim in the dark palette.
+      'Login fit': auth.fit,
       'Radii': radii,
       'Typography': typography,
     }),

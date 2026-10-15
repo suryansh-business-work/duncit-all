@@ -37,6 +37,9 @@ export const venueRecord: AdminVenueDetail = {
       diet: 'VEG',
       spice_level: 'NONE',
       is_available: true,
+      videos: ['https://youtu.be/dQw4w9WgXcQ'],
+      original_price: 200,
+      saving_display: 'PERCENT',
     },
   ],
   food_ordering: {
@@ -47,6 +50,13 @@ export const venueRecord: AdminVenueDetail = {
     tax_mode: 'INCLUSIVE',
     gst_pct: 5,
   },
+  food_licences: {
+    fssai_number: '10020011000123',
+    fssai_document_url: 'https://ik.imagekit.io/duncit/venues/fssai.pdf',
+    liquor_licence_number: '',
+    liquor_document_url: '',
+  },
+  food_tables: ['1', '2', 'Terrace'],
   venue_category: {
     super_category_id: '66a0000000000000000000a1',
     category_id: '66a0000000000000000000b2',
@@ -81,6 +91,7 @@ export const venueRecord: AdminVenueDetail = {
   tags: ['premium'],
   cover_image_url: 'https://ik.imagekit.io/duncit/venues/tw.jpg',
   gallery: ['https://ik.imagekit.io/duncit/venues/tw-1.jpg'],
+  videos: ['https://ik.imagekit.io/duncit/venues/tw-tour.mp4'],
   country: 'India',
   country_code: 'IN',
   state_code: 'KA',

@@ -30,6 +30,8 @@ interface Props {
   /** True once the server says this pod has no Backout attempts left. Absent
    * while that query is still open, which renders the same as "not maxed". */
   backoutMaxed?: boolean;
+  /** True once the server says this free pod's spot cancellations are used up. */
+  cancelSpotMaxed?: boolean;
   backingOut: boolean;
   rejoining: boolean;
   /** True while a free pod's "Cancel Spot" is in flight. */
@@ -42,6 +44,7 @@ interface Props {
 export default function PodHistoryDetails({
   item,
   backoutMaxed = false,
+  cancelSpotMaxed = false,
   backingOut,
   rejoining,
   cancellingSpot = false,
@@ -121,6 +124,7 @@ export default function PodHistoryDetails({
             refundLabel={refundText}
             canRejoin={canRejoin}
             canCancelSpot={gate.canCancelSpot}
+            cancelSpotMaxed={cancelSpotMaxed}
             cancellingSpot={cancellingSpot}
             onCancelSpot={onCancelSpot}
             backingOut={backingOut}

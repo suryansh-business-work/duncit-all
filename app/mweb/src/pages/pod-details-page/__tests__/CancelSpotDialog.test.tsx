@@ -30,6 +30,39 @@ describe('CancelSpotDialog', () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
+  describe('the cancellations left (Pod Settings cap)', () => {
+    it('says nothing about a cap while the counters are unknown or the pod has none', () => {
+      const { rerender } = render(<CancelSpotDialog {...baseProps} />);
+      expect(screen.queryByTestId('cancel-spot-limit-hint')).not.toBeInTheDocument();
+      rerender(<CancelSpotDialog {...baseProps} cancels={null} />);
+      expect(screen.queryByTestId('cancel-spot-limit-hint')).not.toBeInTheDocument();
+      // A max of 0 is a pod with no Cancel Spot to count.
+      rerender(<CancelSpotDialog {...baseProps} cancels={{ spot_cancels_used: 0, spot_cancels_max: 0 }} />);
+      expect(screen.queryByTestId('cancel-spot-limit-hint')).not.toBeInTheDocument();
+    });
+
+    it('names how many cancellations are left', () => {
+      render(<CancelSpotDialog {...baseProps} cancels={{ spot_cancels_used: 1, spot_cancels_max: 4 }} />);
+      expect(screen.getByTestId('cancel-spot-limit-hint')).toHaveTextContent(
+        'You can cancel your spot on this pod 3 more times.',
+      );
+    });
+
+    it('warns when this is the last cancellation', () => {
+      render(<CancelSpotDialog {...baseProps} cancels={{ spot_cancels_used: 2, spot_cancels_max: 3 }} />);
+      expect(screen.getByTestId('cancel-spot-limit-hint')).toHaveTextContent(
+        'You can cancel your spot on this pod one more time. If you join again after that, the spot cannot be cancelled.',
+      );
+    });
+
+    it('says the limit is reached once every cancellation is used', () => {
+      render(<CancelSpotDialog {...baseProps} cancels={{ spot_cancels_used: 5, spot_cancels_max: 3 }} />);
+      expect(screen.getByTestId('cancel-spot-limit-hint')).toHaveTextContent(
+        'You have cancelled your spot on this pod the maximum number of times allowed, so it can no longer be cancelled.',
+      );
+    });
+  });
+
   it('locks both buttons and says it is cancelling while busy', () => {
     render(<CancelSpotDialog {...baseProps} busy />);
     expect(screen.getByTestId('cancel-spot-keep')).toBeDisabled();

@@ -1,4 +1,4 @@
-import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import type { CrmMatchedUser } from '../api/crm.types';
 import { EmailStatusBadge } from './email-status';
@@ -23,13 +23,11 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
   return (
     <Card variant="outlined" sx={{ borderColor: 'success.main' }} data-testid="matched-user-box">
       <CardContent>
-        <Stack direction="row" spacing={1.5} sx={{
-          alignItems: "center"
-        }}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
           <Avatar alt="" src={matched.profile_photo || undefined} sx={{ bgcolor: 'success.main' }}>
             {(matched.full_name || 'U')[0]?.toUpperCase()}
           </Avatar>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
             <Stack
               direction="row"
               spacing={1}
@@ -51,7 +49,7 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
               </Typography>
               <EmailStatusBadge email={matched.email} />
             </Stack>
-          </Box>
+          </Stack>
         </Stack>
       </CardContent>
     </Card>

@@ -14,7 +14,8 @@
  * write: the owner always, a Venues console editor on the console's path.
  */
 
-import type { VenueFoodItem } from './venue-food';
+import type { VenueFoodItem, VenueFoodLicences } from './venue-food';
+import { parseFoodTables, foodTablesText } from './venue-food-tables';
 
 /** Who is editing: the venue's owner (Partners, mWeb, native) or a Venues console editor. */
 export type FoodMenuMode = 'owner' | 'admin';
@@ -27,6 +28,10 @@ export interface FoodMenuConfig {
   food_image_limit: number;
   food_price_max: number;
   food_discount_max_pct: number;
+  /** Videos (uploaded clips or YouTube links) one dish may carry. */
+  food_video_limit: number;
+  /** Tables a venue may print per-table QR stickers for. */
+  food_table_limit: number;
 }
 
 /** QR ordering as the server returns it on a venue. */
@@ -50,6 +55,8 @@ export interface FoodMenuVenue {
   offers_food: boolean;
   food_menu: VenueFoodItem[];
   food_ordering?: FoodMenuOrdering | null;
+  food_licences?: VenueFoodLicences | null;
+  food_tables?: string[] | null;
 }
 
 /**
@@ -70,6 +77,12 @@ export interface FoodDishValues {
   diet: string;
   spice_level: string;
   is_available: boolean;
+  /** Uploaded clips and YouTube links, in the owner's order. */
+  videos: string[];
+  /** The struck-through MRP as typed — '' for none. Display only: `price` is what is charged. */
+  original_price: number | string;
+  /** 'PERCENT' | 'AMOUNT' — how the saving reads. */
+  saving_display: string;
 }
 
 /**
@@ -93,6 +106,10 @@ export interface VenueFoodFormValues {
   offers_food: boolean;
   food_menu: FoodDishValues[];
   food_ordering: FoodOrderingFormValues;
+  /** The FSSAI and liquor licences, each a number and an optional uploaded document. */
+  food_licences: VenueFoodLicences;
+  /** The table labels as typed: "1, 2, Patio" — one QR sticker each. */
+  food_tables: string;
 }
 
 /** The menu editor's whole form: the food block and the invoice GST number. */
@@ -110,6 +127,24 @@ export const blankFoodOrdering: FoodOrderingFormValues = {
   gst_pct: '',
 };
 
+export const blankFoodLicences: VenueFoodLicences = {
+  fssai_number: '',
+  fssai_document_url: '',
+  liquor_licence_number: '',
+  liquor_document_url: '',
+};
+
+/** Stored licences as form values; a venue that never gave any opens blank. */
+export const foodLicencesToValues = (licences: Partial<VenueFoodLicences> | null | undefined): VenueFoodLicences => ({
+  fssai_number: licences?.fssai_number ?? '',
+  fssai_document_url: licences?.fssai_document_url ?? '',
+  liquor_licence_number: licences?.liquor_licence_number ?? '',
+  liquor_document_url: licences?.liquor_document_url ?? '',
+});
+
+/** Stored table labels as the field's text. */
+export const foodTablesToValues = (tables: readonly string[] | null | undefined): string => foodTablesText(tables);
+
 /** A new dish: available, and filed under the catalogues' first entries — the server's own defaults. */
 export const blankFoodDish = (config: Pick<FoodMenuConfig, 'food_diets' | 'food_spice_levels'>): FoodDishValues => ({
   item_id: '',
@@ -121,6 +156,9 @@ export const blankFoodDish = (config: Pick<FoodMenuConfig, 'food_diets' | 'food_
   diet: config.food_diets[0] ?? '',
   spice_level: config.food_spice_levels[0] ?? '',
   is_available: true,
+  videos: [],
+  original_price: '',
+  saving_display: 'PERCENT',
 });
 
 /** A stored dish as a form row. Tolerates a partial record (a draft venue's). */
@@ -134,6 +172,9 @@ export const foodDishToValues = (item: Partial<VenueFoodItem>): FoodDishValues =
   diet: item.diet ?? '',
   spice_level: item.spice_level ?? '',
   is_available: item.is_available !== false,
+  videos: item.videos ?? [],
+  original_price: item.original_price ?? '',
+  saving_display: item.saving_display ?? 'PERCENT',
 });
 
 /** Stored QR ordering as form values; a venue that never set it up opens on the blank block. */
@@ -152,6 +193,8 @@ export const foodMenuToValues = (venue: FoodMenuVenue): FoodMenuFormValues => ({
   offers_food: venue.offers_food,
   food_menu: venue.food_menu.map(foodDishToValues),
   food_ordering: foodOrderingToValues(venue.food_ordering),
+  food_licences: foodLicencesToValues(venue.food_licences),
+  food_tables: foodTablesToValues(venue.food_tables),
   gstin: venue.gstin ?? '',
 });
 
@@ -191,6 +234,17 @@ const dishInput = (dish: FoodDishValues) => ({
   diet: dish.diet || null,
   spice_level: dish.spice_level || null,
   is_available: dish.is_available,
+  videos: dish.videos,
+  // Blank or 0 = no strikethrough. Display only — never part of what is charged.
+  original_price: Number(dish.original_price) || null,
+  saving_display: dish.saving_display || null,
+});
+
+const licencesInput = (licences: VenueFoodLicences): VenueFoodLicences => ({
+  fssai_number: licences.fssai_number.trim(),
+  fssai_document_url: licences.fssai_document_url,
+  liquor_licence_number: licences.liquor_licence_number.trim(),
+  liquor_document_url: licences.liquor_document_url,
 });
 
 /**
@@ -211,6 +265,8 @@ export function toVenueFoodInput(values: VenueFoodFormValues, options: VenueFood
       discount_pct: Number(ordering.discount_pct) || 0,
       ...foodTaxInput(ordering),
     },
+    food_licences: licencesInput(values.food_licences),
+    food_tables: parseFoodTables(values.food_tables),
   };
 }
 
@@ -263,7 +319,17 @@ const FOOD_MENU_VENUE_FIELDS = `
     diet
     spice_level
     is_available
+    videos
+    original_price
+    saving_display
   }
+  food_licences {
+    fssai_number
+    fssai_document_url
+    liquor_licence_number
+    liquor_document_url
+  }
+  food_tables
   food_ordering {
     enabled
     razorpay_integration_id
@@ -303,6 +369,8 @@ export const FOOD_MENU_CONFIG_QUERY = /* GraphQL */ `
       food_image_limit
       food_price_max
       food_discount_max_pct
+      food_video_limit
+      food_table_limit
     }
   }
 `;

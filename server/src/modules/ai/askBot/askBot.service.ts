@@ -4,6 +4,8 @@ import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
 import { hasPortalAccess } from '@modules/portals/portal.gate';
 import { openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
+import { openAiGraphQLError } from '@services/openai/openai.errors';
+import { isAiFeatureEnabled } from '@modules/ai/aiFeature/aiFeature.guard';
 import { logs } from '@observability/log';
 import { ASK_BOTS, BOT_BY_KEY } from './askBot.bots';
 import { findPage, navigationMap } from './askBot.catalog';
@@ -66,13 +68,19 @@ const text = (value: unknown): string => (typeof value === 'string' ? value.trim
  * asked once rather than per bot.
  */
 export async function listBots() {
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
+  const [apiKey, enabled] = await Promise.all([
+    getRuntimeEnvValue('OPENAI_API_KEY'),
+    isAiFeatureEnabled('askbot.navigation'),
+  ]);
   const configured = !!apiKey.trim();
+  let reason: 'NOT_CONFIGURED' | 'DISABLED' | null = null;
+  if (!configured) reason = 'NOT_CONFIGURED';
+  else if (!enabled) reason = 'DISABLED';
   return ASK_BOTS.map((bot) => ({
     key: bot.key,
     icon: bot.icon,
-    is_available: configured,
-    unavailable_reason: configured ? null : 'NOT_CONFIGURED',
+    is_available: reason === null,
+    unavailable_reason: reason,
   }));
 }
 
@@ -95,7 +103,10 @@ async function resolveLinks(raw: unknown, userId: string | null, req: RequestHea
   for (const entry of raw as ModelLink[]) {
     if (links.length >= MAX_LINKS) break;
     const surfaceKey = text(entry?.surface);
-    const page = findPage(surfaceKey, text(entry?.path));
+    const path = text(entry?.path);
+    // An absent path drops the link — findPage would otherwise read '' as the surface's "/".
+    if (!path) continue;
+    const page = findPage(surfaceKey, path);
     const surface = SURFACE_BY_KEY.get(surfaceKey);
     if (!page || !surface) continue;
     const dedupe = `${surfaceKey} ${page.path}`;
@@ -153,6 +164,8 @@ export async function chat(args: AskBotChatArgs, userId: string | null, req: Req
   });
 
   if (!result.ok) {
+    // Switched off in AI Features: say so, rather than blame the provider.
+    if (result.code === 'DISABLED') throw openAiGraphQLError(result);
     const code = result.code === 'NOT_CONFIGURED' ? 'AI_NOT_CONFIGURED' : 'AI_UPSTREAM_ERROR';
     throw new GraphQLError(result.message, { extensions: { code } });
   }

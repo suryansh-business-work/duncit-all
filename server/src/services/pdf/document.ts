@@ -75,6 +75,48 @@ const UNPRINTABLE_CURRENCY: Record<string, string> = {
 export const pdfCurrency = (symbol: string): string =>
   UNPRINTABLE_CURRENCY[symbol] ?? symbol;
 
+const UNPRINTABLE_SYMBOLS = new RegExp(`[${Object.keys(UNPRINTABLE_CURRENCY).join('')}]`, 'g');
+
+/**
+ * Text that was formatted somewhere else — a dashboard value, an AI summary —
+ * with any currency symbol the built-in fonts cannot draw swapped for its
+ * code. For text the generator formats itself, prefix with `pdfCurrency`.
+ */
+export const pdfSafeText = (text: string): string =>
+  text.replace(UNPRINTABLE_SYMBOLS, (symbol) => UNPRINTABLE_CURRENCY[symbol] ?? symbol);
+
+/** The currencies a document can name in words, keyed by the admin's symbol. */
+const CURRENCY_NAMES: Record<string, string> = {
+  '₹': 'Indian Rupees (INR)',
+  INR: 'Indian Rupees (INR)',
+};
+
+/**
+ * The line that says which currency every amount on a document is in, or null
+ * for a symbol it cannot name — a guess on a financial document is worse than
+ * no line. Printed on the invoices because the amounts carry the ISO code
+ * (see `pdfCurrency`) rather than the ₹ glyph, and a bare "INR 23.00" column
+ * should not leave a reader to infer it.
+ */
+export const pdfCurrencyNote = (symbol: string): string | null => {
+  const name = CURRENCY_NAMES[symbol.trim()];
+  return name ? `All amounts are in ${name}.` : null;
+};
+
+/**
+ * How tall a table row has to be: its tallest cell, as drawn.
+ *
+ * A row that advances by one line while its description wraps onto a second
+ * draws that second line across the divider and into the next row. Measured
+ * with the font and size the row is drawn in, so set those first.
+ */
+export function pdfRowHeight(
+  doc: PDFKit.PDFDocument,
+  cells: ReadonlyArray<{ text: string; width: number }>
+): number {
+  return Math.max(0, ...cells.map((cell) => doc.heightOfString(cell.text, { width: cell.width })));
+}
+
 /**
  * A branding image for a PDF, or null.
  *

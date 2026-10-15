@@ -49,6 +49,7 @@ export default function PodDetailsDialogs({
         onClose={() => actions.setCancelSpotOpen(false)}
         busy={actions.cancelSpotState.loading}
         onConfirm={actions.onConfirmCancelSpot}
+        cancels={membershipState}
       />
       <ConfettiOverlay
         open={actions.confettiOpen}

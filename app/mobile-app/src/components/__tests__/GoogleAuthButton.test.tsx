@@ -6,7 +6,10 @@ import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('expo-web-browser', () => ({ maybeCompleteAuthSession: jest.fn() }));
-jest.mock('expo-auth-session/providers/google', () => ({ useIdTokenAuthRequest: jest.fn() }));
+jest.mock('expo-auth-session/providers/google', () => ({
+  useIdTokenAuthRequest: jest.fn(),
+  discovery: { tokenEndpoint: 'https://oauth2.googleapis.com/token' },
+}));
 jest.mock('expo-auth-session', () => ({ exchangeCodeAsync: jest.fn() }));
 
 let mockScheme: 'light' | 'dark' = 'light';
@@ -119,7 +122,8 @@ describe('GoogleAuthButton — the native code exchange', () => {
         code: 'one-time-code',
         extraParams: { code_verifier: 'v1' },
       },
-      expect.anything(),
+      // Google's own token endpoint, as the provider module publishes it.
+      { tokenEndpoint: 'https://oauth2.googleapis.com/token' },
     );
   });
 

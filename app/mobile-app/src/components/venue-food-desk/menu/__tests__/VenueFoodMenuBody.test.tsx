@@ -13,7 +13,10 @@ jest.mock('@/components/venue-food-desk/menu/FoodMenuForm', () => {
   const { Text } = require('react-native');
   return {
     FoodMenuForm: ({ venue, onSaved }: { venue: { id: string }; onSaved: unknown }) => (
-      <Text testID="food-menu-form-stub" onPress={() => (onSaved as (v: unknown) => void)(venue)}>
+      <Text
+        testID="food-menu-form-stub"
+        onPress={() => (onSaved as (mockSaved: unknown) => void)(venue)}
+      >
         {venue.id}
       </Text>
     ),

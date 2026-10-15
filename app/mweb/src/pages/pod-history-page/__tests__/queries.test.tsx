@@ -68,3 +68,15 @@ describe('pod-history-page queries module', () => {
     expect(body(queries.POD_HISTORY_TICKET_PDF)).toContain('eventTicketPdfBase64(ticket_doc_id: $id)');
   });
 });
+
+describe('POD_HISTORY_BACKOUT_STATE', () => {
+  // The free pod's Cancel Spot is disabled at the Pod Settings cap — the page
+  // can only tell when the state carries both counters.
+  it('reads the free-spot cancel counters alongside the backout attempts', () => {
+    const source = body(queries.POD_HISTORY_BACKOUT_STATE);
+    expect(source).toContain('backout_attempts_used');
+    expect(source).toContain('backout_attempts_max');
+    expect(source).toContain('spot_cancels_used');
+    expect(source).toContain('spot_cancels_max');
+  });
+});

@@ -15,6 +15,15 @@ vi.mock('react-router', async (importOriginal) => ({
   useNavigate: () => navigate,
 }));
 
+// The request card has its own suite; here only whether and for whom it is offered.
+vi.mock('../../../components/event-request', () => ({
+  RequestEventCard: (props: { targetType: string; targetId: string; targetName: string }) => (
+    <div data-testid="request-event-stub">
+      {props.targetType}|{props.targetId}|{props.targetName}
+    </div>
+  ),
+}));
+
 import VenuePodsSection, { VENUE_PODS } from '../VenuePodsSection';
 
 // usePricing fires this internally (cache-first); provide it so no unmatched-op noise.
@@ -141,5 +150,32 @@ describe('VenuePodsSection', () => {
     setup([financeMock, podsMock('v1', [noSlug])], <VenuePodsSection venueId="v1" />);
     fireEvent.click(await screen.findByRole('button', { name: '₹500' }));
     expect(navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('VenuePodsSection — request an event when nothing is coming up', () => {
+  it('offers the request card for the venue once it is known nothing is coming up', async () => {
+    setup([financeMock, podsMock('v1', [])], <VenuePodsSection venueId="v1" venueName="Grand Hall" />);
+    // Not while the pods are still being read.
+    expect(screen.queryByTestId('request-event-stub')).not.toBeInTheDocument();
+    expect(await screen.findByTestId('request-event-stub')).toHaveTextContent('VENUE|v1|Grand Hall');
+  });
+
+  it('still offers it when every pod is in the past', async () => {
+    setup([financeMock, podsMock('v1', [previousPod])], <VenuePodsSection venueId="v1" venueName="Grand Hall" />);
+    expect(await screen.findByText('Past Show')).toBeInTheDocument();
+    expect(screen.getByTestId('request-event-stub')).toBeInTheDocument();
+  });
+
+  it('does not offer it while a pod is live or upcoming', async () => {
+    setup([financeMock, podsMock('v1', [upcomingPod, previousPod])], <VenuePodsSection venueId="v1" venueName="Grand Hall" />);
+    expect(await screen.findByText('Future Gig')).toBeInTheDocument();
+    expect(screen.queryByTestId('request-event-stub')).not.toBeInTheDocument();
+  });
+
+  it('does not offer it where the venue’s name is not given (not the venue’s own page)', async () => {
+    setup([financeMock, podsMock('v1', [])], <VenuePodsSection venueId="v1" />);
+    expect(await screen.findByText(/No pods scheduled for this club yet/)).toBeInTheDocument();
+    expect(screen.queryByTestId('request-event-stub')).not.toBeInTheDocument();
   });
 });

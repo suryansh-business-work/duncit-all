@@ -223,6 +223,39 @@ describe('PodActionPanel', () => {
       );
     });
 
+    it('names the cancellations left under the booked state while the spot can still be cancelled', () => {
+      renderPanel({ isFree: true, membershipState: { ...member, spot_cancels_used: 1, spot_cancels_max: 3 } });
+      expect(screen.getByTestId('pod-cancel-spot')).toBeEnabled();
+      expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent(
+        'You can cancel your spot on this pod 2 more times.',
+      );
+    });
+
+    it('warns on the last cancellation', () => {
+      renderPanel({ isFree: true, membershipState: { ...member, spot_cancels_used: 2, spot_cancels_max: 3 } });
+      expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent(
+        'You can cancel your spot on this pod one more time. If you join again after that, the spot cannot be cancelled.',
+      );
+    });
+
+    it('says the cancel limit is reached — not a check-in — once every cancellation is used', () => {
+      renderPanel({
+        isFree: true,
+        membershipState: { ...member, can_cancel_spot: false, spot_cancels_used: 3, spot_cancels_max: 3 },
+      });
+      expect(screen.queryByTestId('pod-cancel-spot')).not.toBeInTheDocument();
+      const note = screen.getByTestId('pod-backout-maxed');
+      expect(note).toHaveTextContent(
+        'You have cancelled your spot on this pod the maximum number of times allowed, so it can no longer be cancelled.',
+      );
+      expect(note).not.toHaveTextContent(/checked in/i);
+    });
+
+    it('shows no cancel counter on a paid pod even if the state carries one', () => {
+      renderPanel({ membershipState: { ...member, can_backout: true, spot_cancels_used: 1, spot_cancels_max: 3 } });
+      expect(screen.queryByText(/cancel your spot on this pod/i)).not.toBeInTheDocument();
+    });
+
     it('is back to an instant Join once the spot was cancelled — no referral refill', () => {
       const onJoinFree = vi.fn();
       renderPanel({

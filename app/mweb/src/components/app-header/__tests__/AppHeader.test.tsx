@@ -220,8 +220,9 @@ describe('AppHeader', () => {
     expect(screen.getByTestId('greeting-tagline')).toHaveTextContent('Find your people');
     // The city and zone live in the location pill on row one.
     expect(await screen.findByTestId('header-location')).toHaveTextContent('Delhi · North');
-    // Home leads with its own search bar, so the header's search button hides.
-    expect(screen.queryByTestId('search')).toBeNull();
+    // The header's search button shows on every USER-studio page, Home included,
+    // and searches the selected city and zone.
+    expect(screen.getByTestId('search')).toHaveTextContent('loc-1|North');
     expect(screen.getByTestId('tabs')).toHaveTextContent('tabs:all');
     // is_email_verified === false -> alert shown
     expect(await screen.findByText('Verify your email')).toBeInTheDocument();

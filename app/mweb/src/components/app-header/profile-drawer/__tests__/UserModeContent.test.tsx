@@ -213,4 +213,12 @@ describe('UserModeContent', () => {
     fireEvent.click(screen.getByText('Address Book'));
     expect(onNavigate).toHaveBeenCalledWith('/address-book');
   });
+
+  it('gives the orders placed from venue menus their own Food section, opening Your Food Orders', () => {
+    const onNavigate = vi.fn();
+    renderContent({ me: FULL_ME, showPodPlans: false, onNavigate, showProducts: false });
+    expect(screen.getByText('Food')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('sidebar-item-Your Food Orders'));
+    expect(onNavigate).toHaveBeenCalledWith('/food-orders');
+  });
 });

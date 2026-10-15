@@ -1,11 +1,13 @@
 import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FOOD_ORDER_LIMITS, type VenueFoodItem } from '@duncit/utils';
 import type { PublicVenue } from '../../queries';
 import VenueFoodMenu from '../VenueFoodMenu';
+import { MY_VENUE_FOOD_ORDERS, VENUE_FOOD_RATING } from '../queries';
 
 const dish = (over: Partial<VenueFoodItem> = {}): VenueFoodItem => ({
   id: 'chai',
@@ -221,5 +223,72 @@ describe('VenueFoodMenu — the floating cart button', () => {
 
     fireEvent.click(line.getByRole('button', { name: 'Remove one Masala Chai' }));
     expect(storedCart()).toEqual({ chai: 2 });
+  });
+});
+
+describe('VenueFoodMenu — around the dishes', () => {
+  const renderWith = (mocks: MockedResponse[], over: Partial<PublicVenue> = {}) =>
+    render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
+        <MemoryRouter>
+          <VenueFoodMenu venue={venue(over)} onRefresh={vi.fn(() => Promise.resolve())} />
+        </MemoryRouter>
+      </MockedProvider>,
+    );
+
+  it('prints the venue’s FSSAI licence at the foot of the menu, and nothing without one', () => {
+    const { unmount } = renderMenu({ food_licences: { fssai_number: ' 12345678901234 ' } });
+    expect(screen.getByTestId('venue-food-fssai')).toHaveTextContent('FSSAI Lic. No. 12345678901234');
+    unmount();
+    renderMenu({ food_licences: { fssai_number: '   ' } });
+    expect(screen.queryByTestId('venue-food-fssai')).not.toBeInTheDocument();
+  });
+
+  it('shows the venue’s food rating beside the menu title once guests have rated', async () => {
+    renderWith([
+      {
+        request: { query: VENUE_FOOD_RATING, variables: { venueId: 'v1' } },
+        result: { data: { venueFoodRating: { venue_id: 'v1', average: 4.5, count: 8 } } },
+      },
+    ]);
+    expect(await screen.findByTestId('venue-food-rating')).toHaveAccessibleName('Food rated 4.5 out of 5 by 8 guests');
+  });
+
+  it('links each of the visitor’s running orders here instead of a single "latest" one', async () => {
+    renderWith([
+      {
+        request: { query: MY_VENUE_FOOD_ORDERS, variables: () => true },
+        result: {
+          data: {
+            myVenueFoodOrders: {
+              rows: ['o1', 'o2'].map((id) => ({
+                id,
+                order_no: `F-${id}`,
+                venue_id: 'v1',
+                venue_name: 'Grand Hall',
+                total: 40,
+                currency_symbol: '₹',
+                status: 'PLACED',
+                payment_status: 'PAID',
+                created_at: '2026-10-15T10:00:00.000Z',
+                items: [{ name: 'Masala Chai', quantity: 1 }],
+              })),
+              total: 2,
+              page: 1,
+              page_size: 20,
+            },
+          },
+        },
+      },
+    ]);
+    expect(await screen.findByTestId('venue-food-track-order-o1')).toHaveTextContent('Track your order F-o1');
+    expect(screen.getByTestId('venue-food-track-order-o2')).toHaveTextContent('Track your order F-o2');
+  });
+
+  it('finds a dish from the menu’s search box', () => {
+    renderMenu();
+    fireEvent.change(screen.getByTestId('venue-food-search-input'), { target: { value: 'samosa' } });
+    expect(screen.getByText('Samosa')).toBeInTheDocument();
+    expect(screen.queryByText('Masala Chai')).not.toBeInTheDocument();
   });
 });

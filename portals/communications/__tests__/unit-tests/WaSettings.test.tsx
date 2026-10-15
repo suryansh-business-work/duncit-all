@@ -68,6 +68,7 @@ const pricing = {
   authentication_per_msg: 0.145,
   service_per_msg: 0,
   currency_symbol: '₹',
+  marketing_weekly_cap: 2,
 };
 
 const mount = (over: Record<string, unknown> = {}) => {
@@ -120,6 +121,7 @@ describe('WaSettings - pricing', () => {
       authentication_per_msg: 0.145,
       service_per_msg: 0,
       currency_symbol: '₹',
+      marketing_weekly_cap: 2,
     });
     await waitFor(() =>
       expect(m.notifySuccess).toHaveBeenCalledWith('Rates saved — they apply to sends from now on')
@@ -134,6 +136,27 @@ describe('WaSettings - pricing', () => {
     expect(screen.getByRole('button', { name: 'Save rates' })).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/Utility — per message/), { target: { value: '' } });
     expect(await screen.findByText('Utility rate is required')).toBeInTheDocument();
+  });
+
+  it('saves a weekly marketing cap as a number, and refuses one that is not 0 to 50', async () => {
+    mount();
+    const cap = screen.getByLabelText(/weeklyCap|Marketing messages per person per week/);
+    expect(cap).toHaveValue('2');
+    fireEvent.change(cap, { target: { value: '51' } });
+    expect(await screen.findByText(/weeklyCapInvalid|Use a whole number from 0 to 50/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save rates' })).toBeDisabled();
+    fireEvent.change(cap, { target: { value: '4' } });
+    const save = screen.getByRole('button', { name: 'Save rates' });
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(save);
+    await waitFor(() => expect(m.runners.get('UpdateWaPricing')).toHaveBeenCalled());
+    expect(m.runners.get('UpdateWaPricing')!.mock.calls[0][0].variables.input.marketing_weekly_cap).toBe(4);
+  });
+
+  it('reads a rate card saved before the cap existed as no cap', () => {
+    m.pricing = { ...pricing, marketing_weekly_cap: undefined };
+    mount();
+    expect(screen.getByLabelText(/weeklyCap|Marketing messages per person per week/)).toHaveValue('0');
   });
 
   it('reports a rejected save', async () => {

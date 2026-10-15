@@ -17,7 +17,7 @@ import { moderationService } from '@modules/moderation/moderation.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { notifyEvent } from '@services/notify/notify.service';
-import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { sendEmail } from '@services/email/email.service';
 import {
   InventoryProductModel,

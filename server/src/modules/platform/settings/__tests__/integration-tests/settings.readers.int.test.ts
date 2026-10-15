@@ -31,6 +31,7 @@ describe('getReminderSweepSettings', () => {
       pod_reminder_lead_hours: 24,
       venue_slot_reminder_lead_hours: 48,
       pod_feedback_delay_hours: 1,
+      pod_sameday_reminder_hours: 3,
       complete_reminder_hours: 12,
       complete_timeout_hours: 24,
     });
@@ -41,6 +42,7 @@ describe('getReminderSweepSettings', () => {
       pod_reminder_lead_hours: 6,
       venue_slot_reminder_lead_hours: 36,
       pod_feedback_delay_hours: 0,
+      pod_sameday_reminder_hours: 0,
       pod_complete_reminder_hours: 8,
       pod_complete_timeout_hours: 30,
     });
@@ -49,17 +51,21 @@ describe('getReminderSweepSettings', () => {
       venue_slot_reminder_lead_hours: 36,
       // 0 is a legal delay: feedback asked for the moment the pod ends.
       pod_feedback_delay_hours: 0,
+      // 0 is legal here too: the same-day reminder switched off.
+      pod_sameday_reminder_hours: 0,
       complete_reminder_hours: 8,
       complete_timeout_hours: 30,
     });
 
     await AppSettingsModel.collection.updateOne(
       { singleton_key: 'app' },
-      { $set: { pod_reminder_lead_hours: 99_999, venue_slot_reminder_lead_hours: 0 } }
+      { $set: { pod_reminder_lead_hours: 99_999, venue_slot_reminder_lead_hours: 0, pod_sameday_reminder_hours: 99 } }
     );
     const clamped = await settingsService.getReminderSweepSettings();
     expect(clamped.pod_reminder_lead_hours).toBe(8760);
     expect(clamped.venue_slot_reminder_lead_hours).toBe(48);
+    // A same-day reminder is inside the day: anything past 23 hours is clamped.
+    expect(clamped.pod_sameday_reminder_hours).toBe(23);
   });
 });
 

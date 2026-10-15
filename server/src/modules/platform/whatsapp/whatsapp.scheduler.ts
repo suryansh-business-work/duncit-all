@@ -707,12 +707,12 @@ export async function runWhatsappSweeps(): Promise<void> {
     settingsService.getReminderSweepSettings(),
   ]);
   await remindAttendees(now, cutoff, mwebUrl, clocks);
-  await remindAttendeesSameDay(now, cutoff, mwebUrl, clocks);
-  await remindVenues(now, cutoff, clocks);
   await remindHostsToComplete(now, cutoff, clocks);
   await remindVenuesOfPendingSlots(now, cutoff, clocks);
   await noticeReplacementNotFound(now, cutoff, mwebUrl);
   await requestPodFeedback(now, cutoff, mwebUrl, clocks);
+  await remindAttendeesSameDay(now, cutoff, mwebUrl, clocks);
+  await remindVenues(now, cutoff, clocks);
   // Last: while AiSensy is unreachable this costs a connect timeout, and the
   // sweeps above must not wait behind it.
   if (!emailOnly) await retryUnreachedMessages();

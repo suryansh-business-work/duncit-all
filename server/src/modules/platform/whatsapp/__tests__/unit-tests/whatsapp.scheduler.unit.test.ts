@@ -56,6 +56,7 @@ jest.mock('@modules/platform/settings/settings.service', () => ({
       pod_reminder_lead_hours: 24,
       venue_slot_reminder_lead_hours: 48,
       pod_feedback_delay_hours: 2,
+      pod_sameday_reminder_hours: 3,
       complete_reminder_hours: 12,
       complete_timeout_hours: 24,
     })),

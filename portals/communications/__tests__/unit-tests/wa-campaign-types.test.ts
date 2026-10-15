@@ -66,6 +66,15 @@ describe('waCampaignSchema', () => {
     expect(issuePaths(valid({ scheduled_at: '2026-08-06T11:00:00.000Z' }))).toEqual([]);
   });
 
+  it('takes a repeat of 0 to 90 whole days, and blank for a one-off', () => {
+    const list = { audience: 'AUDIENCE_LIST' as const, audience_list_id: 'L1' };
+    expect(issuePaths(valid({ ...list, repeat_every_days: '' }))).toEqual([]);
+    expect(issuePaths(valid({ ...list, repeat_every_days: '7' }))).toEqual([]);
+    expect(issuePaths(valid({ ...list, repeat_every_days: '91' }))).toContain('repeat_every_days');
+    expect(issuePaths(valid({ ...list, repeat_every_days: '1.5' }))).toContain('repeat_every_days');
+    expect(issuePaths(valid({ ...list, repeat_every_days: '-1' }))).toContain('repeat_every_days');
+  });
+
   it('requires the header asset a media template needs', () => {
     expect(issuePaths(valid({ media_required: true }))).toContain('media_url');
   });
@@ -112,6 +121,12 @@ describe('valuesFromCampaign', () => {
     expect(values.contacts).toEqual([]);
     expect(values.audience_list_id).toBe('L1');
   });
+
+  it('repeats a recurring send as recurring, and a one-off as a one-off', () => {
+    const recurring = { ...row, audience: 'AUDIENCE_LIST', audience_list_id: 'L1', repeat_every_days: 7 };
+    expect(valuesFromCampaign(recurring as unknown as WaCampaignRow).repeat_every_days).toBe('7');
+    expect(valuesFromCampaign({ ...row, repeat_every_days: 0 } as unknown as WaCampaignRow).repeat_every_days).toBe('');
+  });
 });
 
 describe('toSendInput', () => {
@@ -150,5 +165,13 @@ describe('toSendInput', () => {
     );
     expect(manual.contacts).toHaveLength(1);
     expect(manual.scheduled_at).toBeNull();
+  });
+
+  it('repeats only a send to a list, as whole days, and treats blank as once', () => {
+    const list = { audience: 'AUDIENCE_LIST' as const, audience_list_id: 'L1' };
+    expect(toSendInput(valid({ ...list, repeat_every_days: '14' })).repeat_every_days).toBe(14);
+    expect(toSendInput(valid({ ...list, repeat_every_days: '' })).repeat_every_days).toBe(0);
+    // A stale value left behind after switching away from a list never repeats a broadcast.
+    expect(toSendInput(valid({ audience: 'ALL_USERS', repeat_every_days: '14' })).repeat_every_days).toBe(0);
   });
 });

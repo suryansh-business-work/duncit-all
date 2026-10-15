@@ -8,7 +8,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { ClubAdminProfileModel, type IClubAdminProfile } from './clubAdminProfile.model';
 import { notifyEvent } from '@services/notify/notify.service';
-import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { getUrlConfigs } from '@config/url-configs';
 
 const notFound = () =>

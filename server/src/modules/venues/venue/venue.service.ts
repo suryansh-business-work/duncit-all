@@ -17,7 +17,8 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { SlotTemplateModel } from '@modules/venues/slotTemplate/slotTemplate.model';
 import { sendEmail } from '@services/email/email.service';
-import { transitionEntityId, whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {

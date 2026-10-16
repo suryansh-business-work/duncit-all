@@ -27,6 +27,7 @@ import useSavedClub from './useSavedClub';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useLocationMismatch } from '../../hooks/useLocationMismatch';
 import LocationMismatchDialog from '../../components/LocationMismatchDialog';
+import ChatPreviewCard from '../../components/chat-preview/ChatPreviewCard';
 
 export default function ClubDetailsPage() {
   const { t } = useTranslation();
@@ -175,6 +176,7 @@ export default function ClubDetailsPage() {
       />
       <ClubMeetupVenuesSection venues={venues} />
       <ClubSegments club={club} pods={pods} priceFormat={pricingFormat} onOpenPod={openPod} />
+      <ChatPreviewCard kind="CLUB" id={club.id} onJoinClub={toggleClubFollow} />
     </Stack>
   );
 }

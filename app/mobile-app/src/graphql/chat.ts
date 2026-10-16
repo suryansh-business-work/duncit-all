@@ -162,3 +162,24 @@ export const ReactToPodMessageDocument = gql(`
     }
   }
 `);
+
+/** A pod's or a club's history for the chat card on its details — any signed-in
+ * viewer, read-only. Mirrors mWeb's CHAT_PREVIEW. */
+export const ChatPreviewDocument = gql(`
+  query MobileChatPreview($podId: ID, $clubId: ID, $limit: Int, $before: String) {
+    chatPreview(pod_id: $podId, club_id: $clubId, limit: $limit, before: $before) {
+      messages {
+        id
+        user_id
+        user_name
+        user_photo
+        type
+        text
+        createdAt
+      }
+      total_count
+      is_member
+      closed
+    }
+  }
+`);

@@ -126,6 +126,17 @@ jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: mockAds, loading: false }),
 }));
 
+// The chat card has its own spec; here it only has to be this pod's room.
+jest.mock('@/components/chat-preview/ChatPreviewCard', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return {
+    ChatPreviewCard: ({ kind, id, onOpen }: { kind: string; id: string; onOpen: () => void }) => (
+      <Text testID="chat-preview-stub" onPress={onOpen}>{`${kind}:${id}`}</Text>
+    ),
+  };
+});
+
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -572,30 +583,12 @@ describe('PodDetailsScreen', () => {
     expect(mockBackout).toHaveBeenCalledWith('p1', 1);
   });
 
-  it('opens the pod’s chat room for a member whose booking is JOINED', () => {
-    mockedPod.mockReturnValue({
-      ...podData,
-      membershipState: { is_member: true, can_join: false, can_backout: true },
-      savedInitially: false,
-      isLoading: false,
-    });
-    renderWithProviders(<PodDetailsScreen />);
-    expect(screen.getByTestId('pod-chat-hint')).toHaveTextContent(
-      'Talk to the host and everyone going.',
-    );
-    fireEvent.press(screen.getByTestId('pod-chat-open'));
-    expect(mockNavigate).toHaveBeenCalledWith('ChatRoom', { podId: 'p1', title: 'Sunset Jam' });
-  });
-
-  it('shows Pod chat to a viewer without a booking, locked, and asks them to book first', () => {
+  it('ends with this pod’s chat, which opens the pod’s room', () => {
     mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
     renderWithProviders(<PodDetailsScreen />);
-    expect(screen.getByTestId('pod-chat-open')).toBeDisabled();
-    expect(screen.getByTestId('pod-chat-hint')).toHaveTextContent(
-      'Book a spot to join the pod chat.',
-    );
-    fireEvent.press(screen.getByTestId('pod-chat-open'));
-    expect(mockNavigate).not.toHaveBeenCalledWith('ChatRoom', expect.anything());
+    expect(screen.getByTestId('chat-preview-stub')).toHaveTextContent('POD:p1');
+    fireEvent.press(screen.getByTestId('chat-preview-stub'));
+    expect(mockNavigate).toHaveBeenCalledWith('ChatRoom', { podId: 'p1', title: 'Sunset Jam' });
   });
 
   it('shows the refund estimate inside the backout dialog for a paid member', () => {

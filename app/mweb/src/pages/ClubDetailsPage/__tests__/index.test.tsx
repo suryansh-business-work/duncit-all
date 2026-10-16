@@ -67,6 +67,11 @@ vi.mock('../../club-details-page/ClubRatingSection', () => ({
 vi.mock('../../club-details-page/ClubMeetupVenuesSection', () => ({
   default: (p: any) => <div>venues:{p.venues.length}</div>,
 }));
+vi.mock('../../../components/chat-preview/ChatPreviewCard', () => ({
+  default: ({ kind, id, onJoinClub }: { kind: string; id: string; onJoinClub: () => void }) => (
+    <button onClick={onJoinClub}>{`chat:${kind}:${id}`}</button>
+  ),
+}));
 vi.mock('../../club-details-page/ClubSegments', () => ({
   default: (p: any) => (
     <button onClick={() => p.onOpenPod('pod-doc-1')}>open-pod {p.priceFormat(5)}</button>
@@ -198,6 +203,14 @@ describe('ClubDetailsPage', () => {
     h.toggleFollow.mockRejectedValueOnce(new Error('nope'));
     fireEvent.click(screen.getByText('hero-follow'));
     await waitFor(() => expect(h.notify).toHaveBeenCalledWith('nope', 'error'));
+  });
+
+  it('shows the club’s chat at the foot, whose Join the room follows the club', async () => {
+    h.toggleFollow.mockResolvedValueOnce(true);
+    renderPage([slugMock({ clubBySlug: club }), relatedMock(), catMock]);
+    fireEvent.click(await screen.findByText('chat:CLUB:club-doc-1'));
+    await waitFor(() => expect(h.notify).toHaveBeenCalledWith('Following Chess Club', 'success'));
+    expect(h.toggleFollow).toHaveBeenCalledWith('club-doc-1');
   });
 
   it('unfollow branch produces the Unfollowed message', async () => {

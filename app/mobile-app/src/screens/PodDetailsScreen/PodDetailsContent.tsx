@@ -6,7 +6,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { PodAccordions } from '@/components/details/PodAccordions';
 import { PodContactSupportLink } from '@/components/details/PodContactSupportLink';
-import { PodChatEntry } from '@/components/details/PodChatEntry';
+import { ChatPreviewCard } from '@/components/chat-preview/ChatPreviewCard';
 import { PodInfo } from '@/components/details/PodInfo';
 import { PodSchedule } from '@/components/details/PodSchedule';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
@@ -34,9 +34,6 @@ interface PodDetailsContentProps extends Pick<
   actions: PodDetailActions;
   bookingBarHeight: number;
   isPodHost: boolean;
-  /** The signed-in viewer and whether their booking is JOINED — for the Pod Chat door. */
-  viewerId?: string | null;
-  isMember: boolean;
   isFree: boolean;
   saved: boolean;
   saveIcon: 'bookmark' | 'bookmark-border';
@@ -109,14 +106,6 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
           onOpenComments={props.onOpenComments}
         />
       </Reveal>
-      <YStack height={12} />
-      <PodChatEntry
-        viewerId={props.viewerId}
-        hostIds={pod.pod_hosts_id}
-        attendeeIds={pod.pod_attendees}
-        isMember={props.isMember}
-        onOpen={() => navigation.navigate('ChatRoom', { podId: pod.id, title: pod.pod_title })}
-      />
       <YStack height={16} />
       <PodChallengesSection podId={pod.id} />
       <PodShopSection
@@ -147,6 +136,12 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
           <AdSlot position="POD_DETAILS" variant="banner" />
         </YStack>
       </Reveal>
+      <YStack height={20} />
+      <ChatPreviewCard
+        kind="POD"
+        id={pod.id}
+        onOpen={() => navigation.navigate('ChatRoom', { podId: pod.id, title: pod.pod_title })}
+      />
       <PodContactSupportLink
         onPress={() =>
           navigation.navigate('SupportTickets', { podId: pod.id, podTitle: pod.pod_title })

@@ -98,8 +98,6 @@ export function PodDetailsScreen() {
         actions={actions}
         bookingBarHeight={bookingBarHeight}
         isPodHost={isPodHost}
-        viewerId={viewerId}
-        isMember={!!membershipState?.is_member}
         isFree={isFree}
         saved={saved}
         saveIcon={saveIcon}

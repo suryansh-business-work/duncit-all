@@ -20,6 +20,33 @@ jest.mock('@/hooks/useFollow', () => ({
   useClubFollow: () => ({ following: false, busy: false, toggle: mockClubToggle }),
 }));
 
+// The chat card has its own spec; here it only has to be this club's room,
+// joined through the club follow.
+jest.mock('@/components/chat-preview/ChatPreviewCard', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return {
+    ChatPreviewCard: ({
+      kind,
+      id,
+      onOpen,
+      onJoinClub,
+    }: {
+      kind: string;
+      id: string;
+      onOpen: () => void;
+      onJoinClub: () => void;
+    }) => (
+      <>
+        <Text testID="chat-preview-stub" onPress={onOpen}>{`${kind}:${id}`}</Text>
+        <Text testID="chat-preview-stub-join" onPress={onJoinClub}>
+          join
+        </Text>
+      </>
+    ),
+  };
+});
+
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -142,6 +169,24 @@ describe('ClubDetailsScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'm1' });
     fireEvent.press(screen.getByTestId('detail-back')); // DetailHero onBack
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it('ends with the club’s chat: it opens the club room, and joining follows the club', () => {
+    mockedClub.mockReturnValue({
+      club,
+      pods: [],
+      members: [],
+      followingUserIds: [],
+      categoryCrumbs: [],
+      followingInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<ClubDetailsScreen />);
+    expect(screen.getByTestId('chat-preview-stub')).toHaveTextContent('CLUB:c1');
+    fireEvent.press(screen.getByTestId('chat-preview-stub'));
+    expect(mockNavigate).toHaveBeenCalledWith('ChatRoom', { clubId: 'c1', title: 'Runners' });
+    fireEvent.press(screen.getByTestId('chat-preview-stub-join'));
+    expect(mockClubToggle).toHaveBeenCalled();
   });
 
   it('share button shares the tracked club link', async () => {

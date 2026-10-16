@@ -3505,22 +3505,28 @@ app time zone, so a device clock or zone that disagrees can only produce a refus
 statement for the wrong period. The Zod schema the three forms share is `makeWalletStatementSchema`
 in `@duncit/forms/schemas`, which calls `statementRangeError`.
 
-## Pod Chat on pod details — `pod-chat`
+## The chat card on pod and club details — `chat-preview`
 
-Every pod's details page on mWeb and in the app shows a Pod Chat entry. Who gets an open door is
-the server's own `isPodMember` rule, held here once so the two surfaces cannot disagree: the pod's
-hosts, its attendees, and anyone whose booking is JOINED. Everyone else sees the entry disabled,
-with a line telling them to book a spot. The server still refuses a non-member's read or post.
+The bottom of every pod's and club's details page, on mWeb and in the app, shows that room's chat:
+its whole history from everyone who has written (a page of `CHAT_PREVIEW_PAGE` at a time, newest
+first page, "Show earlier messages" for the rest) and how many messages it holds. It comes from the
+server's `chatPreview(pod_id | club_id)`, which any signed-in viewer may read — the same lines a
+member sees, without removed messages or anyone either side has blocked. Opening the room to post
+stays members-only, and the button says what the viewer has to do first.
 
 | Export | Meaning |
 | --- | --- |
-| `canOpenPodChat({ viewerId, hostIds, attendeeIds, isMember })` | True for a host, an attendee or a JOINED booking; always false when nobody is signed in. |
-| `podChatPath(podId)` | mWeb's room for the pod, `/chats/<pod document id>`. |
+| `chatPreviewAction(kind, isMember)` | `OPEN` for a member; a visitor gets `JOIN_CLUB` (following is joining) or `BOOK_POD`. |
+| `chatRoomPath(kind, id)` | mWeb's room: `/chats/<pod id>` or `/chats/club/<club id>`. |
+| `hasEarlierMessages(loaded, total)` | Whether "Show earlier messages" has anything left to load. |
+| `mergeEarlierMessages(earlier, current)` | An older page in front of the shown lines, each line once. |
+| `CHAT_PREVIEW_PAGE` | Lines per page (50). |
 
 ```ts
-canOpenPodChat({ viewerId: 'u1', hostIds: ['u1'], attendeeIds: [] })        // true — the host
-canOpenPodChat({ viewerId: 'u9', hostIds: ['u1'], attendeeIds: ['u2'] })    // false — book first
-canOpenPodChat({ viewerId: 'u4', hostIds: [], attendeeIds: [], isMember: true }) // true — JOINED
+chatPreviewAction('POD', false)               // 'BOOK_POD' — "Book a spot to join the pod chat."
+chatPreviewAction('CLUB', false)              // 'JOIN_CLUB' — the button follows the club
+chatRoomPath('CLUB', 'c1')                    // '/chats/club/c1'
+mergeEarlierMessages([{ id: 'a' }], [{ id: 'a' }, { id: 'b' }]) // a, b
 ```
 
 ## The venue bill at Complete Pod — `venue-bill`

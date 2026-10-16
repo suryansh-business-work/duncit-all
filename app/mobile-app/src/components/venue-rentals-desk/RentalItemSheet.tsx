@@ -47,6 +47,7 @@ export function RentalItemSheet({
 
   const done = async () => {
     try {
+      setDiag((d) => `${d} START`);
       const ok = await trigger(`items.${index}`);
       const c = control as unknown as {
         _formValues: { items: unknown[] };
@@ -56,7 +57,7 @@ export function RentalItemSheet({
         { values: c._formValues.items[index], errors: c._formState.errors },
         (k, v) => (k === 'ref' ? undefined : v),
       );
-      setDiag(`DIAGSHEET ok=${String(ok)} ${dump.replaceAll('"', "'")}`);
+      setDiag((d) => `${d} DIAGSHEET ok=${String(ok)} ${dump.replaceAll('"', "'")}`);
       if (ok) onClose(false);
     } catch (e) {
       setDiag(`DIAGSHEET THREW ${String(e)}`);

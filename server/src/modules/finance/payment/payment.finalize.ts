@@ -40,6 +40,8 @@ import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import type { GiftCardPurchaseFacts } from '@modules/finance/giftcard/giftcard.service';
+import { bookRentalsForPayment } from '@modules/venues/venueRental/rentalBooking.service';
+import { paymentRentalLines } from '@modules/venues/venueRental/rentalLines';
 
 /**
  * What checkout does once the money is in — as one transaction, then the rest.
@@ -257,6 +259,23 @@ async function runProductLeg(ctx: CoreContext): Promise<void> {
   step(ctx, 'STOCK_ADJUSTED', 'DONE', plural(lines.length, 'line', 'lines'), orderIds);
 }
 
+/** Rented items reserve their stock in the same transaction as the seat. A line
+ * that sold out after checkout is recorded with its money due back — it never
+ * costs the guest their seat. */
+async function runRentalLeg(ctx: CoreContext): Promise<void> {
+  if (paymentRentalLines(ctx.payment.metadata).length === 0) {
+    step(ctx, 'RENTALS_BOOKED', 'SKIPPED', 'This payment has no rented items');
+    return;
+  }
+  const { bookings, unavailable } = await bookRentalsForPayment(ctx.payment, ctx.session);
+  const ids = bookings.map((b) => String(b._id));
+  const detail =
+    unavailable > 0
+      ? `${plural(bookings.length - unavailable, 'item', 'items')} booked, ${unavailable} sold out (refund due)`
+      : plural(bookings.length, 'item', 'items');
+  step(ctx, 'RENTALS_BOOKED', 'DONE', detail, ids);
+}
+
 async function runGiftCardLeg(ctx: CoreContext): Promise<void> {
   const p = ctx.payment;
   if (p.target_type !== 'GIFT_CARD') {
@@ -394,6 +413,7 @@ async function runCore(
   runCaptureLeg(ctx, methodLabel);
   await runPodLeg(ctx);
   await runProductLeg(ctx);
+  await runRentalLeg(ctx);
   await runGiftCardLeg(ctx);
   await runCoinLeg(ctx);
   await runCouponLeg(ctx);

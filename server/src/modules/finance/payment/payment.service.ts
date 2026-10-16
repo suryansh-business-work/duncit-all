@@ -33,6 +33,7 @@ import { logs } from '@observability/log';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { assertPodOpenForBooking } from '@utils/hidden';
+import { EMPTY_RENTALS, resolveRentalLines, type RentalResolution } from '@modules/venues/venueRental/rentalCheckout';
 import {
   isFeatureEnabled,
   PRODUCT_VISIBILITY_FLAG,
@@ -428,7 +429,8 @@ const paymentMetadata = (
   input: any,
   pod: any,
   products: ProductResolution,
-  ticketDiscount: TicketDiscount
+  ticketDiscount: TicketDiscount,
+  rentals: RentalResolution = EMPTY_RENTALS
 ) => ({
   source: 'app_checkout',
   checkout_url: input.checkout_url,
@@ -449,6 +451,14 @@ const paymentMetadata = (
   // Fulfilment intent for the product order created on payment success.
   fulfilment_method: input.fulfilment_method ?? 'PICKUP',
   shipping_address: input.shipping_address ?? null,
+  // Rented items: priced lines plus their money, kept apart from the ticket the
+  // way products are (addOnMoneyOf). The venue is frozen beside them so the
+  // capture books the venue that was paid for.
+  rental_lines: rentals.lines,
+  rental_rent_total: rentals.rent_total,
+  rental_deposit_total: rentals.deposit_total,
+  rental_total: rentals.total,
+  rental_venue_id: rentals.lines.length > 0 && pod?.venue_id ? String(pod.venue_id) : null,
 });
 
 /** Apply an optional coupon to the payable, returning the priced quote, the
@@ -461,7 +471,8 @@ async function applyCoupon(
   input: any,
   payableAmount: number,
   userId: string,
-  ticketDiscountAmount: number
+  ticketDiscountAmount: number,
+  uncouponed = 0
 ) {
   const originalQuote = await computeQuote(payableAmount);
   const originalTotal = round2(originalQuote.total + ticketDiscountAmount);
@@ -474,12 +485,15 @@ async function applyCoupon(
       couponDiscount: 0,
     };
   }
-  const result = await couponService.evaluate(code, input.pod_id ?? null, payableAmount, userId);
+  // Rented items are charged in full: the coupon (its floor and minimum order
+  // too) is weighed on the rest of the bill, and the rentals are added back.
+  const couponable = round2(payableAmount - uncouponed);
+  const result = await couponService.evaluate(code, input.pod_id ?? null, couponable, userId);
   if (!result.ok)
     throw new GraphQLError(result.message ?? 'Invalid coupon', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
-  const quote = await computeQuote(result.final_total);
+  const quote = await computeQuote(round2(result.final_total + uncouponed));
   return {
     quote,
     originalTotal,
@@ -528,10 +542,13 @@ async function redeemableCoins(
 export async function applyCoins(
   requested: unknown,
   userId: string | null | undefined,
-  quote: QuoteBreakup
+  quote: QuoteBreakup,
+  uncoined = 0
 ): Promise<{ quote: QuoteBreakup; coinsRedeemed: number }> {
   const bill = roundUpBill(quote.total);
-  const coinsRedeemed = await redeemableCoins(requested, userId, bill.rounded);
+  // Coins never pay for `uncoined` money (rented items): they are capped at the
+  // rest of the rounded bill. Rental money is whole rupees, so the cap is too.
+  const coinsRedeemed = await redeemableCoins(requested, userId, Math.max(0, Math.floor(bill.rounded - uncoined)));
   // Coins that also cover the round-off take the taxable value to zero, never below.
   const priced =
     coinsRedeemed > 0 ? await computeQuote(Math.max(0, round2(quote.total - coinsRedeemed))) : quote;
@@ -604,6 +621,7 @@ async function resolvePayable(input: any, userId?: string) {
   let products: ProductResolution = EMPTY_PRODUCT_RESOLUTION;
   let seats = 1;
   let ticketDiscount = NO_TICKET_DISCOUNT;
+  let rentals = EMPTY_RENTALS;
   if (input.pod_id) {
     pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
@@ -630,13 +648,33 @@ async function resolvePayable(input: any, userId?: string) {
     // The ticket price is per seat, less the pod's multi-ticket discount for
     // this many seats; add-on products are charged once. The discount comes off
     // BEFORE the coupon, the coins and the GST split.
-    ({ ticketDiscount, payableAmount } = pricePodBooking(pod, seats, products.total));
+    // Rented items ride with the seat too, charged once at full price.
+    rentals = await resolveRentalLines(pod, input.selected_rentals ?? [], seats);
+    ({ ticketDiscount, payableAmount } = pricePodBooking(pod, seats, products.total + rentals.total));
   }
   if (!payableAmount || payableAmount <= 0)
     throw new GraphQLError('Amount must be greater than 0', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
-  return { pod, payableAmount, description, products, seats, ticketDiscount };
+  return { pod, payableAmount, description, products, seats, ticketDiscount, rentals };
+}
+
+/**
+ * Price a checkout end to end — the payable, the coupon, the coins — and the
+ * metadata it is recorded with. The dummy and live gateways share it, so the
+ * two can never price the same cart differently. Rented items are charged in
+ * full: neither the coupon nor the coins touch them.
+ */
+async function priceCheckout(input: Parameters<typeof resolvePayable>[0], userId: string) {
+  const payable = await resolvePayable(input, userId);
+  const uncharged = payable.rentals.total;
+  const couponed = await applyCoupon(input, payable.payableAmount, userId, payable.ticketDiscount.amount, uncharged);
+  const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponed.quote, uncharged);
+  const metadata = {
+    ...paymentMetadata(input, payable.pod, payable.products, payable.ticketDiscount, payable.rentals),
+    original_total: couponed.originalTotal,
+  };
+  return { ...payable, ...couponed, quote, coinsRedeemed, metadata };
 }
 
 /** Group cart selections by their pod so each pod's own product_requests
@@ -1154,17 +1192,8 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { pod, payableAmount, description, products, ticketDiscount } = await resolvePayable(
-      input,
-      userId
-    );
-    const {
-      quote: couponedQuote,
-      originalTotal,
-      couponCode,
-      couponDiscount,
-    } = await applyCoupon(input, payableAmount, userId, ticketDiscount.amount);
-    const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
+    const { description, ticketDiscount, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
+      await priceCheckout(input, userId);
 
     // Created PENDING even on the happy path: the finalizer is the only thing
     // that promotes a payment to SUCCESS, so there is exactly one promotion
@@ -1196,10 +1225,7 @@ export const paymentService = {
       gateway: 'DUMMY',
       gateway_ref: failed ? null : `dummy_${Date.now()}`,
       paid_at: null,
-      metadata: {
-        ...paymentMetadata(input, pod, products, ticketDiscount),
-        original_total: originalTotal,
-      },
+      metadata,
     });
 
     if (failed) return toPub(doc);
@@ -1214,17 +1240,8 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { pod, payableAmount, description, products, ticketDiscount } = await resolvePayable(
-      input,
-      userId
-    );
-    const {
-      quote: couponedQuote,
-      originalTotal,
-      couponCode,
-      couponDiscount,
-    } = await applyCoupon(input, payableAmount, userId, ticketDiscount.amount);
-    const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
+    const { description, ticketDiscount, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
+      await priceCheckout(input, userId);
     const payment_id = newPaymentId();
     const base = {
       payment_id,
@@ -1248,11 +1265,6 @@ export const paymentService = {
       ticket_discount_amount: ticketDiscount.amount,
       ticket_discount_pct: ticketDiscount.pct,
     };
-    const metadata = {
-      ...paymentMetadata(input, pod, products, ticketDiscount),
-      original_total: originalTotal,
-    };
-
     // Nothing left to charge (100%-off coupon, or coins covering the whole
     // bill) → finalize immediately and skip the gateway. The multi-ticket
     // discount alone never gets here: a tier tops out below 100%.

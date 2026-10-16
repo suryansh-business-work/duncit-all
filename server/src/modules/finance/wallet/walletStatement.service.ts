@@ -232,6 +232,7 @@ const EARNING_LABEL: Record<PaymentReleaseKind, string> = {
   VENUE_BILLING: 'Venue payout',
   CLUB_ADMIN: 'Club admin share',
   ECOMM_PAYMENT: 'Product sales payout',
+  VENUE_RENTAL: 'Rented items payout',
 };
 
 /** Everything but the last four characters hidden — the convention for a bank account on a statement. */

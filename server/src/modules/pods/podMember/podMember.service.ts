@@ -48,6 +48,8 @@ import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
 import { appDate, appTime } from '@utils/app-time';
 import { assertPodOpenForBooking } from '@utils/hidden';
+import { addOnMoneyOf } from '@modules/venues/venueRental/rentalLines';
+import { rentalLifecycleService } from '@modules/venues/venueRental/rentalLifecycle.service';
 
 // Legacy display constant kept for schema compatibility (refund_threshold_pct).
 const REFUND_THRESHOLD_PCT = 80;
@@ -431,6 +433,12 @@ export async function markSpotFilled(pod: any, request: IBackoutRequest, replace
     member.status = 'BACKED_OUT';
     member.active_backout_id = null;
     await member.save();
+    // The guest is out of the pod for good: their rented items go back to it.
+    if (member.payment_id) {
+      await rentalLifecycleService.releaseForPayment(member.payment_id).catch((error: unknown) => {
+        logs.server.error('podMember', 'markSpotFilled', { error, msg: 'rental release failed' });
+      });
+    }
   }
   if (request.status === 'IN_PROCESS') {
     request.status = 'SPOT_FILLED';
@@ -810,7 +818,7 @@ async function previewRefund(
   // Seats are valued on the TICKET money only: the payment's total can carry
   // one-off product add-ons which are not per-seat and are not returned (the
   // product order still ships) — `requestBackout` divides the same way.
-  const productMoney = Number((payment.metadata as any)?.product_cost_total) || 0;
+  const productMoney = addOnMoneyOf(payment.metadata);
   const perSeatPaid = Math.max(0, payment.total - productMoney) / paidSeats;
   return {
     perSeat: refundAfterDeduction(perSeatPaid, pct),
@@ -848,7 +856,7 @@ async function previewRefund(
  */
 function backoutRefundShare(payment: IPayment | null, held: number, release: number, deductionPct: number) {
   const paidSeats = normalizeSeats((payment?.metadata as any)?.seats ?? held);
-  const productMoney = Number((payment?.metadata as any)?.product_cost_total) || 0;
+  const productMoney = addOnMoneyOf(payment?.metadata);
   const ticketPaid = payment ? Math.max(0, payment.total - productMoney) : 0;
   const paymentAmount = payment ? round2((ticketPaid * release) / paidSeats) : null;
   const refundAmount = paymentAmount == null ? null : refundAfterDeduction(paymentAmount, deductionPct);

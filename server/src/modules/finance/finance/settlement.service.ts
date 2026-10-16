@@ -9,6 +9,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { roundOffOf } from '@modules/finance/payment/payment.roundoff';
 import { getFinanceSettings } from './finance.model';
 import { podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
+import { addOnMoneyOf } from '@modules/venues/venueRental/rentalLines';
 import {
   computePodFinanceBreakdown,
   type BreakdownOptions,
@@ -135,7 +136,8 @@ export const SETTLEMENT_ENGINE_VERSION = 2;
  * host-funded by construction — never add `ticket_discount_amount` back here.
  */
 const ticketMoneyOf = (p: { total?: number; round_off?: number; metadata?: any }) => {
-  const products = Number(p.metadata?.product_cost_total) || 0;
+  // Products and rented items (rent + deposit) settle outside the pod.
+  const products = addOnMoneyOf(p.metadata);
   const refunded = Number(p.metadata?.refunded_amount) || 0;
   // What the buyer paid for the tickets, and what of it they still hold.
   const paid = (Number(p.total) || 0) - products;
@@ -152,7 +154,10 @@ const TICKET_MONEY_EXPR = {
   $let: {
     vars: {
       paid: {
-        $subtract: [{ $ifNull: ['$total', 0] }, { $ifNull: ['$metadata.product_cost_total', 0] }],
+        $subtract: [
+          { $ifNull: ['$total', 0] },
+          { $add: [{ $ifNull: ['$metadata.product_cost_total', 0] }, { $ifNull: ['$metadata.rental_total', 0] }] },
+        ],
       },
       refunded: { $ifNull: ['$metadata.refunded_amount', 0] },
       round_off: { $ifNull: ['$round_off', 0] },

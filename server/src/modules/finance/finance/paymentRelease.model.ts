@@ -1,6 +1,9 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
-export type PaymentReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT';
+/** VENUE_RENTAL: a venue's rented-item money (rent less Duncit's rental
+ * commission, plus deposits it kept) — raised by the rentals sweep, never by a
+ * completion. */
+export type PaymentReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT' | 'VENUE_RENTAL';
 export type PaymentReleaseStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type PaymentReleaseApprovalType = 'FULL' | 'PARTIAL';
 
@@ -152,7 +155,7 @@ const paymentReleaseSchema = new Schema<IPaymentRelease>(
     batch_id: { type: String, default: null, index: true },
     kind: {
       type: String,
-      enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN', 'ECOMM_PAYMENT'],
+      enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN', 'ECOMM_PAYMENT', 'VENUE_RENTAL'],
       required: true,
       index: true,
     },

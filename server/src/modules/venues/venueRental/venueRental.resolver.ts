@@ -1,12 +1,32 @@
 import type { GraphQLContext } from '@context';
-import { FINANCE_READER, requireRole } from '@middleware/rbac';
+import { FINANCE_READER, hasRole, requireAuth, requireRole } from '@middleware/rbac';
+import { consoleEditors } from '@modules/portals/console-access';
+import type { TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { assertPlatformFinanceWrite } from '@modules/finance/financeScope';
 import { rentalSettingsService, type RentalSettingsInput } from './rentalSettings.service';
+import { rentalCatalogueService } from './rentalCatalogue.service';
+import { hydrateRentalBookings, rentalBookingTableService } from './rentalBookingTable.service';
+import { rentalLifecycleService } from './rentalLifecycle.service';
 
 // The same seats that read and write Finance's own settings.
 const FINANCE_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 const FINANCE_READ = [...FINANCE_WRITE, FINANCE_READER];
+const VENUE_EDIT = consoleEditors('VENUE');
+
+/** The signed-in venue operator, and whether the venues console lets them act on any venue. */
+function operator(ctx: GraphQLContext) {
+  const user = requireAuth(ctx);
+  return { userId: user.id, isAdmin: hasRole(user, VENUE_EDIT) };
+}
+
+interface MarkInput {
+  outcome: 'RETURNED' | 'DAMAGED';
+  damage_claim?: number | null;
+  note?: string | null;
+}
+
+const one = async (doc: Parameters<typeof hydrateRentalBookings>[0][number]) => (await hydrateRentalBookings([doc]))[0];
 
 export const venueRentalResolvers = {
   Query: {
@@ -24,6 +44,21 @@ export const venueRentalResolvers = {
         booking_cutoff_hours: s.booking_cutoff_hours,
       };
     },
+    podRentals: (_p: unknown, args: { pod_id: string }) => rentalCatalogueService.podCatalogue(args.pod_id),
+    rentablePods: (_p: unknown, args: { limit?: number | null }) => rentalCatalogueService.rentablePods(args.limit),
+    myRentalBookings: (_p: unknown, args: { limit?: number | null; offset?: number | null }, ctx: GraphQLContext) =>
+      rentalCatalogueService.myBookings(requireAuth(ctx).id, args.limit, args.offset),
+    rentalBookingsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, FINANCE_READ);
+      return rentalBookingTableService.financeTable(args.query);
+    },
+    venueRentalBookingsTable: (
+      _p: unknown,
+      args: { venue_id: string; query?: TableQueryInput | null },
+      ctx: GraphQLContext
+    ) => rentalBookingTableService.venueTable(operator(ctx), args.venue_id, args.query),
+    venueRentalStats: (_p: unknown, args: { venue_id: string }, ctx: GraphQLContext) =>
+      rentalBookingTableService.venueStats(operator(ctx), args.venue_id),
   },
   Mutation: {
     updateRentalSettings: async (_p: unknown, args: { input: RentalSettingsInput }, ctx: GraphQLContext) => {
@@ -39,6 +74,12 @@ export const venueRentalResolvers = {
         after: { ...after, terms_html: `${after.terms_html.length} chars` },
       });
       return after;
+    },
+    markRentalBooking: async (_p: unknown, args: { id: string; input: MarkInput }, ctx: GraphQLContext) =>
+      one(await rentalLifecycleService.markByVenue(operator(ctx), args.id, args.input)),
+    markRentalRefunded: async (_p: unknown, args: { id: string; reference: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, FINANCE_WRITE);
+      return one(await rentalLifecycleService.markRefunded(user.id, args.id, args.reference));
     },
   },
 };

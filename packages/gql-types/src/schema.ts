@@ -4118,6 +4118,12 @@ export type CheckoutQuoteInput = {
   seats?: InputMaybe<Scalars['Int']['input']>;
 };
 
+/** One rented item picked at pod checkout. The rate, deposit and stock come from the venue, never the client. */
+export type CheckoutRentalSelectionInput = {
+  item_id: Scalars['ID']['input'];
+  quantity: Scalars['Int']['input'];
+};
+
 export type ClaimStressRunInput = {
   dispatch_id: Scalars['String']['input'];
   shard: Scalars['Int']['input'];
@@ -7625,6 +7631,8 @@ export type DummyCheckoutInput = {
   /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
   seats?: InputMaybe<Scalars['Int']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
+  /** Rented items for the pod (item id + quantity). Priced on the server and charged in full: no coupon or coins. */
+  selected_rentals?: InputMaybe<Array<CheckoutRentalSelectionInput>>;
   /** Delivery address, required when any product ships. */
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
   simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
@@ -11831,6 +11839,14 @@ export type ManualLogInput = {
   summary?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type MarkRentalBookingInput = {
+  /** Rupees kept from the deposit, required for DAMAGED, never more than the deposit. */
+  damage_claim?: InputMaybe<Scalars['Float']['input']>;
+  /** What was damaged (required for DAMAGED). */
+  note?: InputMaybe<Scalars['String']['input']>;
+  outcome: RentalMarkOutcome;
+};
+
 export type MarketingCampaign = {
   __typename?: 'MarketingCampaign';
   audience: MarketingCampaignAudience;
@@ -13411,6 +13427,10 @@ export type Mutation = {
   markNotificationRead: Scalars['Boolean']['output'];
   /** The goods are back (handed in at the venue, or the courier scan never came). */
   markPodShopReturnReceived: PodShopReturn;
+  /** Venue owner or venues console: the item came back, or part of the deposit is kept for damage. */
+  markRentalBooking: RentalBooking;
+  /** Finance: the rental refund was paid back to the guest. */
+  markRentalRefunded: RentalBooking;
   /** The content is fine: close every open report on it as DISMISSED. */
   markReportedContentOk: ContentReport;
   /** Mark what they sent you as read. Returns how many that was. */
@@ -17047,6 +17067,18 @@ export type MutationMarkNotificationReadArgs = {
 
 export type MutationMarkPodShopReturnReceivedArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationMarkRentalBookingArgs = {
+  id: Scalars['ID']['input'];
+  input: MarkRentalBookingInput;
+};
+
+
+export type MutationMarkRentalRefundedArgs = {
+  id: Scalars['ID']['input'];
+  reference: Scalars['String']['input'];
 };
 
 
@@ -21585,7 +21617,9 @@ export type PaymentReleaseKind =
    */
   | 'ECOMM_PAYMENT'
   | 'HOST_PAYMENT'
-  | 'VENUE_BILLING';
+  | 'VENUE_BILLING'
+  /** A venue's rented-item money: rent less Duncit's rental commission, plus any deposit it kept. */
+  | 'VENUE_RENTAL';
 
 export type PaymentReleaseMedia = {
   __typename?: 'PaymentReleaseMedia';
@@ -23837,6 +23871,37 @@ export type PodProductRequest = {
 export type PodProductRequestInput = {
   product_id: Scalars['ID']['input'];
   quantity: Scalars['Int']['input'];
+};
+
+/** What a guest can rent for one pod. */
+export type PodRentalCatalogue = {
+  __typename?: 'PodRentalCatalogue';
+  /** DISABLED, NO_VENUE or CUTOFF while closed; null while open. */
+  closed_reason?: Maybe<Scalars['String']['output']>;
+  currency_symbol: Scalars['String']['output'];
+  /** Hours an HOUR item is charged for on this pod. */
+  hours: Scalars['Int']['output'];
+  items: Array<PodRentalItem>;
+  /** Whether renting is open for this pod right now. */
+  open: Scalars['Boolean']['output'];
+};
+
+/** One item a pod's venue rents out, with what is left of it for that pod. */
+export type PodRentalItem = {
+  __typename?: 'PodRentalItem';
+  /** Units still free for this pod. */
+  available: Scalars['Int']['output'];
+  /** Refundable deposit per unit. */
+  deposit: Scalars['Int']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  /** The most each guest on a booking may rent. */
+  per_guest_limit: Scalars['Int']['output'];
+  rate: Scalars['Int']['output'];
+  /** SLOT: the rate covers the whole pod. HOUR: the rate is per hour of the pod. */
+  unit: VenueRentalUnit;
 };
 
 /** Why a cancellation cannot be revoked. */
@@ -26297,6 +26362,8 @@ export type Query = {
   myRegionMembers: Array<RegionMember>;
   /** The whole canvas: Region -> City -> Locality -> Club Admin -> Host. */
   myRegionTree: RegionTree;
+  /** Signed in: the guest's own rented items, newest first. */
+  myRentalBookings: Array<RentalBooking>;
   /** The viewer's saved pods, with optional server-side search, category filter (matches the selected category and its sub-categories) and sort. */
   mySavedPods: Array<Pod>;
   /** The signed-in owner's saved recurring-slot templates (optionally scoped to a venue). */
@@ -26473,6 +26540,8 @@ export type Query = {
   podPaymentReleasesTable: PodPaymentReleaseTablePage;
   podPlans: Array<PodPlan>;
   podPlansTable: PodPlanTablePage;
+  /** Anyone: what the pod's venue rents out, and how much is left for this pod. */
+  podRentals: PodRentalCatalogue;
   /** What revoking this pod's cancellation would cost, and whether it is allowed. */
   podRevokePreview: PodRevokePreview;
   /** Every date a recurring plan would run on, each with its slot or why it cannot. */
@@ -26682,6 +26751,10 @@ export type Query = {
    */
   renderEmailTemplate: EmailTemplateRender;
   renderMarketingCampaign: MarketingCampaignRender;
+  /** Anyone: upcoming pods a guest can still rent items for, soonest first. */
+  rentablePods: Array<RentablePod>;
+  /** Finance: every rental booking. */
+  rentalBookingsTable: RentalBookingTablePage;
   /** Finance: the rental settings. */
   rentalSettings: RentalSettings;
   /** The categories the report dialog offers — active ones, in Legal's order. */
@@ -27085,6 +27158,10 @@ export type Query = {
    */
   venuePodsSummary: VenuePodSummary;
   venueRegistrationConfig: VenueRegistrationConfig;
+  /** Venue owner or venues console: the venue's rental bookings. */
+  venueRentalBookingsTable: RentalBookingTablePage;
+  /** Venue owner or venues console: the venue's rental numbers. */
+  venueRentalStats: RentalVenueStats;
   /** Owner: one request with its earnings, for the decision page linked from the request email. */
   venueSlotDecision: VenueSlotDecision;
   /** Owner: pending booking requests across their venues (or one venue). */
@@ -29059,6 +29136,12 @@ export type QueryMyReceivedEventRequestsTableArgs = {
 };
 
 
+export type QueryMyRentalBookingsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryMySavedPodsArgs = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -29494,6 +29577,11 @@ export type QueryPodPlansTableArgs = {
 };
 
 
+export type QueryPodRentalsArgs = {
+  pod_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodRevokePreviewArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -29866,6 +29954,16 @@ export type QueryRenderEmailTemplateArgs = {
 
 export type QueryRenderMarketingCampaignArgs = {
   input: MarketingCampaignPreviewInput;
+};
+
+
+export type QueryRentablePodsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryRentalBookingsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -30667,6 +30765,17 @@ export type QueryVenuePodsSummaryArgs = {
 };
 
 
+export type QueryVenueRentalBookingsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueRentalStatsArgs = {
+  venue_id: Scalars['ID']['input'];
+};
+
+
 export type QueryVenueSlotDecisionArgs = {
   slot_id: Scalars['ID']['input'];
 };
@@ -31102,6 +31211,8 @@ export type RazorpayOrderInput = {
   /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
   seats?: InputMaybe<Scalars['Int']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
+  /** Rented items for the pod (item id + quantity). Priced on the server and charged in full: no coupon or coins. */
+  selected_rentals?: InputMaybe<Array<CheckoutRentalSelectionInput>>;
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
 
@@ -31614,6 +31725,80 @@ export type ReleaseStore =
   | 'APP_STORE'
   | 'GOOGLE_PLAY';
 
+/** An upcoming pod a guest can still rent items for (Pod Rent on /shop). */
+export type RentablePod = {
+  __typename?: 'RentablePod';
+  /** The club's public id, for the pod's link. */
+  club_id: Scalars['String']['output'];
+  cover_url: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  /** The lowest rate among them. */
+  from_rate: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  /** Items the venue rents out. */
+  item_count: Scalars['Int']['output'];
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  /** The pod's public id, for its link. */
+  pod_id: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+/** One rented item on one pod booking: what was paid, and how it closed. */
+export type RentalBooking = {
+  __typename?: 'RentalBooking';
+  /** Closed by the deposit auto-release, not a person. */
+  auto_released: Scalars['Boolean']['output'];
+  commission_amount: Scalars['Float']['output'];
+  commission_pct: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  damage_claim: Scalars['Float']['output'];
+  damage_note: Scalars['String']['output'];
+  deposit_amount: Scalars['Float']['output'];
+  guest_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  item_id: Scalars['ID']['output'];
+  marked_at?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  payment_ref: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  rate: Scalars['Int']['output'];
+  /** Money owed back to the guest once the booking closed. */
+  refund_due: Scalars['Float']['output'];
+  refund_ref: Scalars['String']['output'];
+  /** NONE, DUE, PAID, or IN_PAYMENT (returned with the payment's cancellation refund). */
+  refund_status: Scalars['String']['output'];
+  refunded_at?: Maybe<Scalars['String']['output']>;
+  /** The VENUE_RENTAL payout that carried venue_amount, once raised. */
+  release_id?: Maybe<Scalars['String']['output']>;
+  rent_amount: Scalars['Float']['output'];
+  /** BOOKED, UNAVAILABLE (sold out after checkout), CANCELLED, RELEASED (guest left the pod), RETURNED or DAMAGED. */
+  status: Scalars['String']['output'];
+  unit: VenueRentalUnit;
+  /** 1 for a SLOT item, the pod's hours for an HOUR item. */
+  units: Scalars['Int']['output'];
+  /** What the venue earns from this booking: rent less commission, plus any deposit it kept. */
+  venue_amount: Scalars['Float']['output'];
+  venue_id: Scalars['ID']['output'];
+};
+
+/** Server-side table page for the shared table engine. */
+export type RentalBookingTablePage = {
+  __typename?: 'RentalBookingTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<RentalBooking>;
+  total: Scalars['Int']['output'];
+};
+
+export type RentalMarkOutcome =
+  | 'DAMAGED'
+  | 'RETURNED';
+
 /** Finance > Rented Items > Settings — the rules every venue rental runs under. */
 export type RentalSettings = {
   __typename?: 'RentalSettings';
@@ -31642,6 +31827,21 @@ export type RentalSettingsInput = {
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
   rent_refundable_on_backout?: InputMaybe<Scalars['Boolean']['input']>;
   terms_html?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A venue's rented items, in numbers. */
+export type RentalVenueStats = {
+  __typename?: 'RentalVenueStats';
+  bookings: Scalars['Int']['output'];
+  currency_symbol: Scalars['String']['output'];
+  deposits_held: Scalars['Float']['output'];
+  /** What the venue has earned from closed bookings. */
+  earned: Scalars['Float']['output'];
+  /** Items out or due out (not yet marked). */
+  open: Scalars['Int']['output'];
+  /** The part of earned already raised as a payout. */
+  paid_out: Scalars['Float']['output'];
+  rent_total: Scalars['Float']['output'];
 };
 
 /** Something a reviewer did to a report. */

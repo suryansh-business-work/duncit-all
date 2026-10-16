@@ -457,12 +457,20 @@ export const paymentTypeDefs = /* GraphQL */ `
     fulfilment_method: FulfilmentMethod
   }
 
+  "One rented item picked at pod checkout. The rate, deposit and stock come from the venue, never the client."
+  input CheckoutRentalSelectionInput {
+    item_id: ID!
+    quantity: Int!
+  }
+
   input DummyCheckoutInput {
     pod_id: ID
     amount: Float!
     "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
     seats: Int
     selected_products: [CheckoutProductSelectionInput!]
+    "Rented items for the pod (item id + quantity). Priced on the server and charged in full: no coupon or coins."
+    selected_rentals: [CheckoutRentalSelectionInput!]
     description: String
     "Buyer's full name for the invoice bill-to (falls back to the profile name)."
     contact_name: String
@@ -498,6 +506,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
     seats: Int
     selected_products: [CheckoutProductSelectionInput!]
+    "Rented items for the pod (item id + quantity). Priced on the server and charged in full: no coupon or coins."
+    selected_rentals: [CheckoutRentalSelectionInput!]
     description: String
     contact_name: String
     contact_email: String!

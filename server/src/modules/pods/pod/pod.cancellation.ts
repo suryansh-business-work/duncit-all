@@ -16,6 +16,7 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
 import { cancelHeldRefundsForPod, isRevokeWindowOpen } from './pod.refundHold';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
+import { rentalLifecycleService } from '@modules/venues/venueRental/rentalLifecycle.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { loadClubSlugMap, notFound, podOwnerId, toPub } from './pod.shared';
 import { findHostedPod } from './pod.validation';
@@ -393,7 +394,10 @@ export const podCancellationMethods = {
     // is dropped outright, so a revoke inside the window costs nothing. Refunds
     // that were actually paid out stay paid — the console names them as the
     // loss before the admin presses the button.
+    // Rentals ride the same held refunds: the ones being dropped go back out.
+    const held = await PaymentModel.find({ pod_id: restored._id, 'metadata.refund_hold': true }).select('_id').lean();
     await cancelHeldRefundsForPod(restored._id);
+    await rentalLifecycleService.restoreForPayments(held.map((p) => p._id));
     await podAuditService.record({
       pod: restored,
       action: 'RESTORE',

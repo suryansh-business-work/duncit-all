@@ -156,6 +156,8 @@ export const financeTypeDefs = /* GraphQL */ `
     Duncit commission — the same net the seller's product invoice bills.
     """
     ECOMM_PAYMENT
+    "A venue's rented-item money: rent less Duncit's rental commission, plus any deposit it kept."
+    VENUE_RENTAL
   }
 
   enum PaymentReleaseStatus {

@@ -31,6 +31,8 @@ import {
 import { applyProductDeltas } from './pod.products';
 import { notifyPartnersOfCancellation } from './pod.cancelPartners';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { addOnMoneyOf } from '@modules/venues/venueRental/rentalLines';
+import { rentalLifecycleService } from '@modules/venues/venueRental/rentalLifecycle.service';
 
 /** Who cancelled a pod — doubles as the refund metadata tag and the audit source.
  * SYSTEM is the auto-cancel sweep: no human pressed anything. */
@@ -219,9 +221,14 @@ export async function refundAndNotifyCancellation(
     // on the same payment but never enter the pod waterfall (settlement's
     // ticketMoneyOf), so the policy share applies to the ticket remainder and
     // product money returns in full. At pct 100 this is total − alreadyRefunded.
+    // Rented items are add-on money too, so the ticket share leaves all of it
+    // out. What returns here is only the rentals still out: a line that sold
+    // out at capture, or a booking that already ended, is refunded on its own
+    // rental record and must not be paid back twice.
+    const ticketRefundable = Math.max(0, (payment.total ?? 0) - addOnMoneyOf(meta) - alreadyRefunded);
     const products = Number(meta.product_cost_total) || 0;
-    const ticketRefundable = Math.max(0, (payment.total ?? 0) - products - alreadyRefunded);
-    const refund = round2(products + (ticketRefundable * pct) / 100);
+    const rentals = await rentalLifecycleService.cancellableMoney(payment._id);
+    const refund = round2(products + rentals + (ticketRefundable * pct) / 100);
     const claimed = await claimCancellationRefund({
       payment,
       refund,
@@ -232,6 +239,7 @@ export async function refundAndNotifyCancellation(
       holdUntil,
     });
     if (!claimed) continue;
+    if (rentals > 0) await rentalLifecycleService.cancelForPayment(payment._id);
     paymentRefunds.set(String(payment._id), refund);
     const payerId = String(payment.user_id);
     const soFar = refundedByUser.get(payerId);

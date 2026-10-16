@@ -34,6 +34,18 @@ export default function PodLifecycleSettings({
         onSave={(next) => onSave({ draft_retention_days: next })}
       />
       <NumberSettingCard
+        title={t('admin.podSettings.chatRetentionTitle')}
+        description={t('admin.podSettings.chatRetentionDesc')}
+        label={t('admin.podSettings.chatRetentionLabel')}
+        helperText={t('admin.podSettings.chatRetentionMin')}
+        invalidText={t('admin.podSettings.chatRetentionInvalid')}
+        min={1}
+        max={8760}
+        loading={loading}
+        value={settings?.pod_chat_retention_hours ?? null}
+        onSave={(next) => onSave({ pod_chat_retention_hours: next })}
+      />
+      <NumberSettingCard
         title={t('admin.podSettings.backoutLabel')}
         description={t('admin.podSettings.backoutDesc')}
         label={t('admin.podSettings.backoutLabel')}

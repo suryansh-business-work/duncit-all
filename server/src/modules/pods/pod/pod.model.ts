@@ -16,7 +16,14 @@ export type PodType = 'FREE' | 'PAID';
  */
 export const isFreePod = (pod: { pod_type?: string | null } | null | undefined): boolean =>
   pod?.pod_type === 'FREE';
-export type PodOccurrence = 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'ALTERNATE_DAY' | 'WEEKENDS_ONLY';
+export type PodOccurrence =
+  | 'ONE_TIME'
+  | 'DAILY'
+  | 'WEEKLY'
+  | 'BIWEEKLY'
+  | 'MONTHLY'
+  | 'ALTERNATE_DAY'
+  | 'WEEKENDS_ONLY';
 export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 /** Venue's decision on the pod's slot request. NONE = no approval needed
  * (own venue / no slot); PENDING pods stay offline until APPROVED. */
@@ -212,6 +219,14 @@ export interface IPod extends Document {
   venue_approval_status: PodVenueApproval;
   /** The Auto Pod offer this pod materialized from (null for ordinary pods). */
   source_auto_pod_id?: Types.ObjectId | null;
+  /** The recurring series this pod is one date of (null for a one-time pod).
+   * Every date is a full pod of its own — tickets, attendance, refunds and
+   * settlement never look at the series. */
+  series_id?: Types.ObjectId | null;
+  /** This date's position in the series, from 1, and how many dates it had
+   * when it was created — for "2 of 12" labels without a second read. */
+  series_index?: number | null;
+  series_total?: number | null;
   // Soft-delete marker (distinct from is_active, which is the venue-approval
   // offline flag). Set instead of hard-deleting so bookings/payments/history
   // survive; excluded from every discovery/listing read.
@@ -344,7 +359,7 @@ const podSchema = new Schema<IPod>(
     pod_amount: { type: Number, default: 0, min: 0, max: 1999 },
     pod_occurrence: {
       type: String,
-      enum: ['ONE_TIME', 'DAILY', 'WEEKLY', 'MONTHLY', 'ALTERNATE_DAY', 'WEEKENDS_ONLY'],
+      enum: ['ONE_TIME', 'DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'ALTERNATE_DAY', 'WEEKENDS_ONLY'],
       default: 'ONE_TIME',
     },
     no_of_spots: { type: Number, default: 0 },
@@ -375,6 +390,9 @@ const podSchema = new Schema<IPod>(
       default: 'NONE',
     },
     source_auto_pod_id: { type: Schema.Types.ObjectId, ref: 'AutoPod', default: null, index: true },
+    series_id: { type: Schema.Types.ObjectId, ref: 'PodSeries', default: null, index: true },
+    series_index: { type: Number, default: null },
+    series_total: { type: Number, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

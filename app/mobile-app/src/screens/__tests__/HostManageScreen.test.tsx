@@ -13,6 +13,8 @@ jest.mock('@/components/AppHeader', () => {
 });
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
+  // Arrival notices (a published series) ride in on the route params.
+  useRoute: () => ({ params: {} }),
 }));
 jest.mock('@/hooks/useHostDrafts', () => ({ useHostDrafts: jest.fn() }));
 jest.mock('@/hooks/useAppSettings', () => ({

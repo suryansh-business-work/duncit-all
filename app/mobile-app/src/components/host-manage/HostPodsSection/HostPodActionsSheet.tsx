@@ -66,6 +66,10 @@ export function HostPodActionsSheet({ s }: Readonly<{ s: HostPodSheetState }>) {
         }
         setActionsPod(null);
       }}
+      onHostAgain={() => {
+        if (actionsPod) s.hostAgain(actionsPod.id);
+        setActionsPod(null);
+      }}
       onOpenPodMedia={withActionsPod(mediaLink.open)}
       onSharePodMedia={withActionsPod(mediaLink.share)}
       onCopyPodMedia={withActionsPod(mediaLink.copy)}

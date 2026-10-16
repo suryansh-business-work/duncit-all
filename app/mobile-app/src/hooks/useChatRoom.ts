@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import {
+  ClubMessagesDocument,
+  DeleteChatMessageDocument,
   PodMessagesDocument,
   ReactToPodMessageDocument,
+  SendClubMessageDocument,
   SendPodMessageDocument,
 } from '@/graphql/chat';
 import { UploadImageDocument } from '@/graphql/status';
 import { PodMessageType } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
-import { usePodSocket } from '@/hooks/usePodSocket';
+import { usePodSocket, type ChatRoomKind } from '@/hooks/usePodSocket';
 import type { ChatMessage } from '@/hooks/useChat';
 import { toErrorMessage } from '@/utils/errors';
 import { isPodActive } from '@/utils/pod-format';
@@ -20,17 +23,87 @@ export interface ChatImageAsset {
   mimeType?: string | null;
 }
 
+/** What a room says about itself beyond its messages. */
+interface RoomFacts {
+  closed: boolean;
+  /** Pod rooms: when the whole room is deleted (ISO). */
+  deletesAt: string | null;
+  /** Club rooms: how many days a message is kept. */
+  retentionDays: number | null;
+  canModerate: boolean;
+  /** Club rooms: the club's name, for the header. */
+  title: string | null;
+}
+
+const NO_FACTS: RoomFacts = {
+  closed: false,
+  deletesAt: null,
+  retentionDays: null,
+  canModerate: false,
+  title: null,
+};
+
 const MESSAGE_LIMIT = 80;
 
+/** One page of a pod's or a club's room, with what the room says about itself. */
+async function loadRoom(kind: ChatRoomKind, id: string) {
+  if (kind === 'POD') {
+    const data = await graphqlRequest(
+      PodMessagesDocument,
+      { podId: id, limit: MESSAGE_LIMIT },
+      { auth: true },
+    );
+    const ended = !isPodActive(data.pod?.pod_date_time, data.pod?.pod_end_date_time);
+    return {
+      messages: data.podMessages,
+      facts: {
+        ...NO_FACTS,
+        // The server's word first; the dates are the fallback.
+        closed: data.podChatInfo.closed || ended,
+        deletesAt: data.podChatInfo.chat_deletes_at ?? null,
+        canModerate: data.podChatInfo.can_moderate,
+      },
+    };
+  }
+  const data = await graphqlRequest(
+    ClubMessagesDocument,
+    { clubId: id, limit: MESSAGE_LIMIT },
+    { auth: true },
+  );
+  return {
+    messages: data.clubMessages,
+    facts: {
+      ...NO_FACTS,
+      retentionDays: data.clubChatRoom.retention_days,
+      canModerate: data.clubChatRoom.can_moderate,
+      title: data.clubChatRoom.club_name,
+    },
+  };
+}
+
+/** Posts one line to the room — the server echoes it over the socket. */
+function postTo(
+  kind: ChatRoomKind,
+  id: string,
+  type: PodMessageType,
+  text: string,
+  imageUrl: string | null,
+) {
+  return kind === 'POD'
+    ? graphqlRequest(SendPodMessageDocument, { podId: id, type, text, imageUrl }, { auth: true })
+    : graphqlRequest(SendClubMessageDocument, { clubId: id, type, text, imageUrl }, { auth: true });
+}
+
 /**
- * Live pod chat room: loads recent history, merges socket updates (new
- * messages / reactions / deletions), and exposes send + react actions. The
- * server echoes sent messages over the socket, so we never optimistically
- * append — dedupe-by-id keeps the list clean. RN twin of mWeb's ChatRoomPage.
+ * Live chat room — a pod's or a club's: loads recent history, merges socket
+ * updates (new messages / reactions / deletions), and exposes send, react and
+ * delete. The server echoes sent messages over the socket, so we never
+ * optimistically append — dedupe-by-id keeps the list clean. RN twin of mWeb's
+ * ChatRoomPage + useChatRoomSource.
  */
-export function useChatRoom(podId: string) {
+export function useChatRoom(roomId: string, kind: ChatRoomKind = 'POD') {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [podEnded, setPodEnded] = useState(false);
+  const [facts, setFacts] = useState<RoomFacts>(NO_FACTS);
   const [isLoading, setIsLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,18 +114,18 @@ export function useChatRoom(podId: string) {
   useEffect(() => {
     let active = true;
     setIsLoading(true);
-    graphqlRequest(PodMessagesDocument, { podId, limit: MESSAGE_LIMIT }, { auth: true })
-      .then((data) => {
+    loadRoom(kind, roomId)
+      .then((room) => {
         if (!active) return;
-        setMessages(data.podMessages);
-        setPodEnded(!isPodActive(data.pod?.pod_date_time, data.pod?.pod_end_date_time));
+        setMessages(room.messages);
+        setFacts(room.facts);
       })
       .catch((e) => active && setError(toErrorMessage(e, 'Could not load messages.')))
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
     };
-  }, [podId, attempt]);
+  }, [roomId, kind, attempt]);
 
   useRefreshRegistration(refetch);
 
@@ -66,12 +139,13 @@ export function useChatRoom(podId: string) {
     );
   }, []);
 
-  const markDeleted = useCallback((msg: ChatMessage) => {
+  const markDeleted = useCallback((msg: Pick<ChatMessage, 'id'>) => {
     setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, deleted: true } : m)));
   }, []);
 
   usePodSocket({
-    podId,
+    podId: roomId,
+    kind,
     onMessage: appendMessage,
     onReaction: applyReaction,
     onDeleted: markDeleted,
@@ -83,16 +157,12 @@ export function useChatRoom(podId: string) {
       const body = text.trim();
       if (!body) return;
       try {
-        await graphqlRequest(
-          SendPodMessageDocument,
-          { podId, type: PodMessageType.Text, text: body, imageUrl: null },
-          { auth: true },
-        );
+        await postTo(kind, roomId, PodMessageType.Text, body, null);
       } catch (e) {
         setError(toErrorMessage(e, 'Could not send message.'));
       }
     },
-    [podId],
+    [roomId, kind],
   );
 
   const sendImage = useCallback(
@@ -112,23 +182,14 @@ export function useChatRoom(podId: string) {
           },
           { auth: true },
         );
-        await graphqlRequest(
-          SendPodMessageDocument,
-          {
-            podId,
-            type: PodMessageType.Image,
-            text: '',
-            imageUrl: uploaded.uploadImageToImagekit.url,
-          },
-          { auth: true },
-        );
+        await postTo(kind, roomId, PodMessageType.Image, '', uploaded.uploadImageToImagekit.url);
       } catch (e) {
         setError(toErrorMessage(e, 'Could not send image.'));
       } finally {
         setSending(false);
       }
     },
-    [podId],
+    [roomId, kind],
   );
 
   const react = useCallback(
@@ -147,5 +208,33 @@ export function useChatRoom(podId: string) {
     [applyReaction],
   );
 
-  return { messages, podEnded, isLoading, sending, error, setError, sendText, sendImage, react };
+  /** Removes a message; `failedText` is the already-translated failure line. */
+  const remove = useCallback(
+    async (messageId: string, failedText: string) => {
+      try {
+        await graphqlRequest(DeleteChatMessageDocument, { messageId }, { auth: true });
+        markDeleted({ id: messageId });
+      } catch {
+        setError(failedText);
+      }
+    },
+    [markDeleted],
+  );
+
+  return {
+    messages,
+    podEnded: facts.closed,
+    deletesAt: facts.deletesAt,
+    retentionDays: facts.retentionDays,
+    canModerate: facts.canModerate,
+    roomTitle: facts.title,
+    isLoading,
+    sending,
+    error,
+    setError,
+    sendText,
+    sendImage,
+    react,
+    remove,
+  };
 }

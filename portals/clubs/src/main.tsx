@@ -4,6 +4,7 @@ import {
   ClubAdminInClubPage,
   ClubDetailsPage,
   ClubEditorPage,
+  ClubSettingsPage,
   ClubsPage,
   HostEditorPage,
   HostInClubPage,
@@ -42,6 +43,12 @@ mountDirectoryPortal({
         to: '/club-admin-requests',
         icon: 'feedback',
       },
+      {
+        label: 'Club Settings',
+        labelKey: 'shell.nav.clubSettings',
+        to: '/club-settings',
+        icon: 'tune',
+      },
     ],
     routes: (authed) => (
       <>
@@ -49,6 +56,7 @@ mountDirectoryPortal({
         <Route path="/clubs/new" element={authed(<ClubEditorPage />)} />
         <Route path="/clubs" element={authed(<ClubsPage />)} />
         <Route path="/club-admin-requests" element={authed(<ClubSlotRequestsPage />)} />
+        <Route path="/club-settings" element={authed(<ClubSettingsPage />)} />
         <Route path="/clubs/:id" element={authed(<ClubDetailsPage />)} />
         <Route path="/clubs/:id/edit" element={authed(<ClubEditorPage />)} />
         <Route path="/clubs/:clubId/hosts/:hostId" element={authed(<HostInClubPage />)} />

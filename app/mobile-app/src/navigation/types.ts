@@ -57,7 +57,8 @@ export type RootStackParamList = {
   /** Booking deep link from the receipt email; forwards to the pod detail. */
   Booking: { bookingId: string };
   BecomeHost: undefined;
-  HostManage: undefined;
+  /** `notice`: a line to show on arrival, e.g. how many dates a recurring pod created. */
+  HostManage: { notice?: string } | undefined;
   /** Host Studio > Your Pods > actions > See Marked Attendance. */
   PodAttendance: { podId: string };
   /** Host Studio > Your Pods > actions > Challenges. */
@@ -134,6 +135,8 @@ export type RootStackParamList = {
   VenueFoodMenu: undefined;
   VenueFoodOrders: undefined;
   VenueFoodCoupons: undefined;
+  /** Venue Options → Rented Items. */
+  VenueRentedItems: undefined;
   /** Host Options → Publish Your Host Page, Host Share, Your Categories. */
   HostPublish: undefined;
   HostShare: undefined;
@@ -164,7 +167,8 @@ export type RootStackParamList = {
     | { podId?: string; podTitle?: string; subject?: string; message?: string; category?: string }
     | undefined;
   Policy: { slug: string };
-  ChatRoom: { podId: string; title: string };
+  /** A pod's room (`podId`) or a club's room (`clubId`). */
+  ChatRoom: { podId?: string; clubId?: string; title: string };
   // Always the slug pair (/club/:clubSlug/pod/:podSlug) — both in-app taps and
   // shared mWeb deep links — so the web URL matches mWeb exactly; resolved to a
   // doc id via podBySlugs. podId/title stay for back-compat with older links.
@@ -220,6 +224,8 @@ export type RootStackParamList = {
   VenueFoodItem: { venueId: string; itemId: string };
   /** /food-orders — Your Food Orders: the account's and this device's orders from venue menus. */
   MyFoodOrders: undefined;
+  /** My Rented Items (mWeb /rented-items). */
+  MyRentedItems: undefined;
   /** /city-launch/:locationId — a not-yet-launched city's waitlist (its slug, or Location.id). */
   CityLaunch: { locationId: string };
   NotFound: undefined;

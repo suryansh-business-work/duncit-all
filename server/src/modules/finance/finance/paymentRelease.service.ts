@@ -10,6 +10,7 @@ import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { getFinanceSettings, partyTemplateOf } from './finance.model';
 import {
+  venueUsageOf,
   computePodSettlement,
   SETTLEMENT_ENGINE_VERSION,
   type PodSettlement,
@@ -77,6 +78,10 @@ export function toPub(doc: IPaymentRelease) {
           attended_total: doc.breakdown.attended_total,
           venue_slot_price: doc.breakdown.venue_slot_price,
           include_slot_price: doc.breakdown.include_slot_price,
+          venue_pricing_mode: doc.breakdown.venue_pricing_mode ?? 'FLAT',
+          venue_pax: doc.breakdown.venue_pax ?? 0,
+          venue_overtime_hours: doc.breakdown.venue_overtime_hours ?? 0,
+          venue_overtime_amount: doc.breakdown.venue_overtime_amount ?? 0,
         }
       : null,
     created_at: doc.created_at.toISOString(),
@@ -309,12 +314,17 @@ const frozenInputsOf = (s: PodSettlement) => ({
   attended_total: s.attended_total,
   venue_slot_price: s.venue_slot_price,
   include_slot_price: s.include_slot_price,
+  venue_pricing_mode: s.venue_pricing_mode,
+  venue_pax: s.venue_pax,
+  venue_overtime_hours: s.venue_overtime_hours,
+  venue_overtime_amount: s.venue_overtime_amount,
 });
 
 function statementTypeLabel(kind: PaymentReleaseKind): string {
   if (kind === 'HOST_PAYMENT') return 'host commission';
   if (kind === 'CLUB_ADMIN') return 'club admin payout';
   if (kind === 'ECOMM_PAYMENT') return 'product sales payout';
+  if (kind === 'VENUE_RENTAL') return 'rented items payout';
   return 'venue payout';
 }
 
@@ -349,6 +359,8 @@ const WA_PAYOUT_EVENT: Record<PaymentReleaseKind, string> = {
   // rides their product invoice instead (see notifyApproval). Mapped because
   // the Record is exhaustive over the kind union.
   ECOMM_PAYMENT: 'ECOMM_PAYMENT_SENT',
+  // Venue money either way: the venue's own payout scenario announces it.
+  VENUE_RENTAL: 'VENUE_PAYMENT_SENT',
 };
 
 /**
@@ -358,7 +370,7 @@ const WA_PAYOUT_EVENT: Record<PaymentReleaseKind, string> = {
  */
 async function beneficiaryUser(doc: IPaymentRelease) {
   const fields = 'auth.phone communication.whatsapp';
-  if (doc.kind === 'VENUE_BILLING') {
+  if (doc.kind === 'VENUE_BILLING' || doc.kind === 'VENUE_RENTAL') {
     const venue = doc.venue_id ? await VenueModel.findById(doc.venue_id).select('owner_user_id') : null;
     if (!venue?.owner_user_id) return null;
     return UserModel.findById(venue.owner_user_id).select(fields).lean<Record<string, any> | null>();
@@ -540,6 +552,7 @@ const WA_PAYOUT_REJECTED_EVENT: Record<PaymentReleaseKind, string> = {
   VENUE_BILLING: 'VENUE_PAYMENT_REJECTED',
   CLUB_ADMIN: 'CLUB_ADMIN_PAYMENT_REJECTED',
   ECOMM_PAYMENT: 'ECOMM_PAYMENT_REJECTED',
+  VENUE_RENTAL: 'VENUE_PAYMENT_REJECTED',
 };
 
 /**
@@ -693,11 +706,13 @@ async function completePodOnApproval(doc: IPaymentRelease) {
 // kind credits ITS beneficiary's wallet: the host, the venue's owner user, or
 // the club's admin user. Idempotent per release_id in the wallet service.
 async function applyApproval(doc: IPaymentRelease) {
-  await completePodOnApproval(doc);
+  // Rental money is raised by the rentals sweep, not by a completion, so
+  // approving it must never stamp the pod complete.
+  if (doc.kind !== 'VENUE_RENTAL') await completePodOnApproval(doc);
   const payout = releasePayout(doc);
   const { walletService } = await import('@modules/finance/wallet/wallet.service');
 
-  if (doc.kind === 'VENUE_BILLING') {
+  if (doc.kind === 'VENUE_BILLING' || doc.kind === 'VENUE_RENTAL') {
     // Venue money goes to the venue owner's wallet.
     const venue = doc.venue_id
       ? await VenueModel.findById(doc.venue_id).select('owner_user_id')
@@ -1088,7 +1103,8 @@ export const paymentReleaseService = {
       String(pod._id),
       billAmount,
       input.host_user_id ?? null,
-      input.include_slot_price
+      input.include_slot_price,
+      venueUsageOf(input)
     );
 
     assertSettlementCompletable(settlement, billAmount);

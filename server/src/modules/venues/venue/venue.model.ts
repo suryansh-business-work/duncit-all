@@ -1,3 +1,4 @@
+import { VENUE_RENTAL_LIMITS, VENUE_RENTAL_UNITS, type IVenueRentalItem } from './venue.rentals';
 import { Schema, model, Types, type Document } from 'mongoose';
 import {
   bankAccountSchema,
@@ -205,6 +206,13 @@ export interface IVenue extends Document {
   food_licences?: IVenueFoodLicences;
   /** The cafe's table labels, one per-table QR sticker each ("1", "Patio 2"). */
   food_tables?: string[];
+  /** The venue rents items out to pod guests (venue.rentals.ts). */
+  offers_rentals?: boolean;
+  rental_items?: IVenueRentalItem[];
+  /** The venue's own rental terms (rich-text HTML), shown with Duncit's. */
+  rental_terms_html?: string;
+  /** Whether a refundable deposit is taxed with the rent — the Venues console decides. */
+  rental_deposit_gst?: boolean;
   /** Every category the venue belongs to, primary first. Read it through
    * `venueCategoriesOf` — a document older than the list has only the mirror. */
   venue_categories: IVenueCategory[];
@@ -306,6 +314,18 @@ const venueFoodItemSchema = new Schema<IVenueFoodItem>({
   videos: { type: [String], default: [] },
   original_price: { type: Number, default: null, min: 1, max: VENUE_FOOD_PRICE_MAX },
   saving_display: { type: String, enum: VENUE_FOOD_SAVING_DISPLAYS, default: 'PERCENT' },
+});
+
+const venueRentalItemSchema = new Schema<IVenueRentalItem>({
+  name: { type: String, required: true, trim: true, maxlength: 80 },
+  description: { type: String, default: '', trim: true, maxlength: 500 },
+  images: { type: [String], default: [] },
+  unit: { type: String, enum: VENUE_RENTAL_UNITS, default: 'SLOT' },
+  rate: { type: Number, required: true, min: 1, max: VENUE_RENTAL_LIMITS.rateMax },
+  deposit: { type: Number, default: 0, min: 0, max: VENUE_RENTAL_LIMITS.depositMax },
+  stock: { type: Number, required: true, min: 1, max: VENUE_RENTAL_LIMITS.stockMax },
+  per_guest_limit: { type: Number, default: 1, min: 1, max: VENUE_RENTAL_LIMITS.perGuestMax },
+  is_available: { type: Boolean, default: true },
 });
 
 const venueFoodLicencesSchema = new Schema<IVenueFoodLicences>(
@@ -416,6 +436,10 @@ const venueSchema = new Schema<IVenue>(
     food_ordering: { type: venueFoodOrderingSchema, default: () => ({}) },
     food_licences: { type: venueFoodLicencesSchema, default: () => ({}) },
     food_tables: { type: [String], default: [] },
+    offers_rentals: { type: Boolean, default: false },
+    rental_items: { type: [venueRentalItemSchema], default: [] },
+    rental_terms_html: { type: String, default: '', maxlength: 20_000 },
+    rental_deposit_gst: { type: Boolean, default: true },
     venue_categories: { type: [venueCategorySchema], default: [] },
     venue_category: { type: venueCategorySchema, default: () => ({}) },
     description: { type: String, default: '' },

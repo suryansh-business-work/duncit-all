@@ -16,6 +16,7 @@ import { useCoinBalance } from '@/hooks/useCoins';
 import { useServerIssue } from '@/hooks/useServerIssue';
 import { usePodTicket } from '@/hooks/usePodHistory';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useCheckoutRentals } from '@/hooks/useCheckoutRentals';
 import type { RootStackParamList } from '@/navigation/types';
 
 /** Which pay mutation the submit will call — named for the issue log. Module
@@ -56,6 +57,8 @@ export function useCheckoutState() {
     coupon,
   );
   const amount = ticket.gross;
+  // Rented items picked on Pod Details ride on this payment, charged in full.
+  const rentals = useCheckoutRentals(pod, payment !== null);
   // Razorpay takes precedence whenever its Tech-portal keys are set; the dummy
   // gateway is only a local fallback.
   const razorpayEnabled = !!finance?.razorpay_enabled;
@@ -116,6 +119,7 @@ export function useCheckoutState() {
     payBreakup,
     discounts,
     amount,
+    rentals,
     razorpayEnabled,
     dummyMode,
     paymentFailure,

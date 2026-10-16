@@ -13,6 +13,9 @@ export interface VenueSlotRow {
    * instead of clock times. start_at/end_at still hold the real span. */
   whole_day?: boolean;
   price: number;
+  /** FLAT, HOURLY or PER_PAX — absent on an older read (= FLAT). */
+  pricing_mode?: string | null;
+  overtime_rate?: number | null;
   status: VenueSlotStatus;
   booked_by_pod_id: string | null;
   booked_pod_title: string | null;
@@ -40,6 +43,10 @@ export interface NewSlotInput {
   /** True when the owner published this as a whole-day booking. */
   whole_day?: boolean;
   price: number;
+  /** FLAT (the slot), HOURLY (each hour of it) or PER_PAX (each guest). */
+  pricing_mode?: string;
+  /** Rupees for each hour past the slot's end. */
+  overtime_rate?: number;
   notes: string;
   /** Omitted / '' when the venue has no named spaces (whole-venue slot). */
   space_label?: string;

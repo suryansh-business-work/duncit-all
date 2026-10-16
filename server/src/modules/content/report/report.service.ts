@@ -16,6 +16,7 @@ import {
 } from './contentReport.model';
 import { sendContentReportMessage, sendReportNotice, type ReportNotice } from './report.email';
 import { reportCategoryService } from './reportCategory.service';
+import { takeDownChatMessage } from './report.message';
 import { sendReportReceivedWhatsApp } from './report.whatsapp';
 import { alertStaff } from '@services/notify/staffAlert';
 import {
@@ -439,12 +440,15 @@ export const reportService = {
    */
   async takeDown(handlerId: string, id: string, note?: string | null) {
     const doc = await findOrFail(id);
-    if (!POST_TARGETS.has(doc.target_type)) {
+    const isMessage = doc.target_type === 'MESSAGE';
+    if (!POST_TARGETS.has(doc.target_type) && !isMessage) {
       fail('BAD_USER_INPUT', 'This kind of content cannot be taken down from here');
     }
     if (doc.target_removed_at) fail('CONFLICT', 'This content has already been taken down');
 
-    const removed = await postService.takeDown(doc.target_id.toString());
+    const removed = isMessage
+      ? await takeDownChatMessage(doc.target_id.toString())
+      : await postService.takeDown(doc.target_id.toString());
     if (!removed) fail('CONFLICT', 'This content is already gone, so there is nothing to take down');
     const moved = await closeTarget(doc, handlerId, {
       status: 'ACTIONED',

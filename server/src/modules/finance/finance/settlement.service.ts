@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { slotVenueCharge, type SlotPricingMode } from '@modules/venues/venueSlot/slotCharge';
 import { Types } from 'mongoose';
 import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
@@ -8,6 +9,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { roundOffOf } from '@modules/finance/payment/payment.roundoff';
 import { getFinanceSettings } from './finance.model';
 import { podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
+import { addOnMoneyOf } from '@modules/venues/venueRental/rentalLines';
 import {
   computePodFinanceBreakdown,
   type BreakdownOptions,
@@ -77,6 +79,11 @@ export interface PodSettlement {
   venue_slot_linked: boolean;
   /** True when the bill is being paid on top of the slot price. */
   include_slot_price: boolean;
+  /** How the slot is priced, and the pax / overtime its charge used. */
+  venue_pricing_mode: SlotPricingMode;
+  venue_pax: number;
+  venue_overtime_hours: number;
+  venue_overtime_amount: number;
   gst_pct: number;
   host_commission_pct: number;
   venue_commission_pct: number;
@@ -129,7 +136,8 @@ export const SETTLEMENT_ENGINE_VERSION = 2;
  * host-funded by construction — never add `ticket_discount_amount` back here.
  */
 const ticketMoneyOf = (p: { total?: number; round_off?: number; metadata?: any }) => {
-  const products = Number(p.metadata?.product_cost_total) || 0;
+  // Products and rented items (rent + deposit) settle outside the pod.
+  const products = addOnMoneyOf(p.metadata);
   const refunded = Number(p.metadata?.refunded_amount) || 0;
   // What the buyer paid for the tickets, and what of it they still hold.
   const paid = (Number(p.total) || 0) - products;
@@ -146,7 +154,10 @@ const TICKET_MONEY_EXPR = {
   $let: {
     vars: {
       paid: {
-        $subtract: [{ $ifNull: ['$total', 0] }, { $ifNull: ['$metadata.product_cost_total', 0] }],
+        $subtract: [
+          { $ifNull: ['$total', 0] },
+          { $add: [{ $ifNull: ['$metadata.product_cost_total', 0] }, { $ifNull: ['$metadata.rental_total', 0] }] },
+        ],
       },
       refunded: { $ifNull: ['$metadata.refunded_amount', 0] },
       round_off: { $ifNull: ['$round_off', 0] },
@@ -332,8 +343,16 @@ export async function resolveEffectiveRates(options: {
 
 /** What a pod owes its venue, and the two figures that answer was built from. */
 export interface VenueCharge {
-  /** The slot's price as booked in the Partners portal. 0 without a slot link. */
+  /** The slot's charge as booked in the Partners portal — by its pricing mode,
+   * overtime included (slotCharge.ts). 0 without a slot link. */
   slot_price: number;
+  /** How the slot is priced: the whole slot, per hour, or per person. */
+  pricing_mode: SlotPricingMode;
+  /** People the PER_PAX charge was counted on (0 for the other modes). */
+  pax: number;
+  /** Hours past the slot's end, and what they cost. */
+  overtime_hours: number;
+  overtime_amount: number;
   /** A slot is linked, so `slot_price` is a real price and not an absent one. */
   slot_linked: boolean;
   /** The final bill entered at completion. 0 when none was. */
@@ -342,6 +361,55 @@ export interface VenueCharge {
   slot_included: boolean;
   /** The venue's money — what the waterfall takes off the pool. */
   amount: number;
+}
+
+/** What venueChargeForPod reads off a pod. The seat fields count its people
+ * for a PER_PAX slot; a caller holding only ids gets the pod's capacity. */
+export interface VenueChargePod {
+  venue_id?: Types.ObjectId | null;
+  venue_slot_id?: Types.ObjectId | null;
+  pod_type?: string | null;
+  pod_attendees?: readonly unknown[] | null;
+  extra_seats?: number | null;
+  no_of_spots?: number | null;
+}
+
+/** What the pod actually used, entered at completion: people at a PER_PAX
+ * slot (overriding the booked count) and hours past the slot's end. */
+export interface VenueUsage {
+  pax?: number | null;
+  overtimeHours?: number | null;
+}
+
+/**
+ * The completion's pax and overtime, checked. Left out = the booked seats and
+ * no overtime. Both move the venue's money, so both are bounded here and frozen
+ * on the release for Finance to see beside the slot price.
+ */
+export function venueUsageOf(input: { venue_pax?: number | null; overtime_hours?: number | null }): VenueUsage {
+  const usage: VenueUsage = {};
+  if (input.venue_pax !== undefined && input.venue_pax !== null) {
+    if (!Number.isInteger(input.venue_pax) || input.venue_pax < 0 || input.venue_pax > 10_000) {
+      throw new GraphQLError('Enter the people at the pod as a whole number from 0 to 10000', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    usage.pax = input.venue_pax;
+  }
+  if (input.overtime_hours !== undefined && input.overtime_hours !== null) {
+    if (!Number.isFinite(input.overtime_hours) || input.overtime_hours < 0 || input.overtime_hours > 48) {
+      throw new GraphQLError('Enter overtime as 0 to 48 hours', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    usage.overtimeHours = Math.round(input.overtime_hours * 4) / 4;
+  }
+  return usage;
+}
+
+/** The people a PER_PAX slot is charged for by default: everyone holding a
+ * seat (attendees plus their extra seats), or the capacity when unknown. */
+function defaultPaxOf(pod: VenueChargePod): number {
+  if (Array.isArray(pod.pod_attendees)) return pod.pod_attendees.length + Math.max(0, pod.extra_seats ?? 0);
+  return Math.max(0, pod.no_of_spots ?? 0);
 }
 
 /**
@@ -367,24 +435,42 @@ export interface VenueCharge {
  * can never change a venue's payout with a number nobody can check.
  */
 export async function venueChargeForPod(
-  pod: {
-    venue_id?: Types.ObjectId | null;
-    venue_slot_id?: Types.ObjectId | null;
-    pod_type?: string | null;
-  },
+  pod: VenueChargePod,
   venueBill: number,
-  includeSlotPrice?: boolean | null
+  includeSlotPrice?: boolean | null,
+  usage?: VenueUsage | null
 ): Promise<VenueCharge> {
-  const none = { slot_price: 0, slot_linked: false, bill: 0, slot_included: false, amount: 0 };
+  const none = {
+    slot_price: 0,
+    pricing_mode: 'FLAT' as const,
+    pax: 0,
+    overtime_hours: 0,
+    overtime_amount: 0,
+    slot_linked: false,
+    bill: 0,
+    slot_included: false,
+    amount: 0,
+  };
   // A free pod's venue is paid by the host directly, off the platform — the
   // platform owes it nothing, whatever the slot is priced at or a bill says.
   if (!pod.venue_id || isFreePod(pod)) return none;
   const slot = pod.venue_slot_id
-    ? await VenueSlotModel.findById(pod.venue_slot_id).select('price')
+    ? await VenueSlotModel.findById(pod.venue_slot_id).select('price pricing_mode overtime_rate start_at end_at')
     : null;
-  const slotPrice = slot ? round2(slot.price) : 0;
+  const pax = usage?.pax ?? defaultPaxOf(pod);
+  const overtimeHours = Math.max(0, Number(usage?.overtimeHours) || 0);
+  const slotCharge = slot ? slotVenueCharge(slot, { pax, overtimeHours }) : null;
+  const slotPrice = slotCharge ? slotCharge.total : 0;
   const bill = Math.max(0, round2(venueBill));
-  const base = { slot_price: slotPrice, slot_linked: !!slot, bill };
+  const base = {
+    slot_price: slotPrice,
+    pricing_mode: slotCharge?.mode ?? 'FLAT',
+    pax: slotCharge?.mode === 'PER_PAX' ? Math.max(0, Math.floor(pax)) : 0,
+    overtime_hours: slotCharge ? overtimeHours : 0,
+    overtime_amount: slotCharge?.overtime ?? 0,
+    slot_linked: !!slot,
+    bill,
+  };
   const evidenceOnly = includeSlotPrice == null && !!slot;
   if (bill <= 0 || evidenceOnly) return { ...base, slot_included: false, amount: slotPrice };
   const slotIncluded = !!includeSlotPrice && slotPrice > 0;
@@ -395,14 +481,7 @@ export async function venueChargeForPod(
  * and risk checks that run before any bill exists pass 0 and get the booked
  * slot price (a bill passed here is evidence only, so a slot's price wins).
  * One rule, {@link venueChargeForPod}'s. */
-export async function venueAmountForPod(
-  pod: {
-    venue_id?: Types.ObjectId | null;
-    venue_slot_id?: Types.ObjectId | null;
-    pod_type?: string | null;
-  },
-  venueBill: number
-): Promise<number> {
+export async function venueAmountForPod(pod: VenueChargePod, venueBill: number): Promise<number> {
   return (await venueChargeForPod(pod, venueBill)).amount;
 }
 
@@ -484,7 +563,8 @@ export async function computePodSettlement(
   podDocId: string,
   venueBillAmount: number,
   hostUserId?: string | null,
-  includeSlotPrice?: boolean | null
+  includeSlotPrice?: boolean | null,
+  usage?: VenueUsage | null
 ): Promise<PodSettlement> {
   if (!Types.ObjectId.isValid(podDocId)) {
     throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -523,7 +603,7 @@ export async function computePodSettlement(
     hostUserId: hostUserId ?? pod.pod_hosts_id?.[0] ?? null,
     venueId: hasVenue ? pod.venue_id : null,
   });
-  const charge = await venueChargeForPod(pod, venueBillAmount, includeSlotPrice);
+  const charge = await venueChargeForPod(pod, venueBillAmount, includeSlotPrice, usage);
   const venueBill = charge.bill;
   const venueAmount = charge.amount;
   const waterfall = free
@@ -575,6 +655,10 @@ export async function computePodSettlement(
     venue_slot_price: charge.slot_price,
     venue_slot_linked: charge.slot_linked,
     include_slot_price: charge.slot_included,
+    venue_pricing_mode: charge.pricing_mode,
+    venue_pax: charge.pax,
+    venue_overtime_hours: charge.overtime_hours,
+    venue_overtime_amount: charge.overtime_amount,
     gst_pct: waterfall.gst_pct,
     host_commission_pct: waterfall.host_commission_pct,
     venue_commission_pct: waterfall.venue_commission_pct,

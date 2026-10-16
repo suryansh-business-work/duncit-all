@@ -20,6 +20,8 @@ const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
   venue_bill_amount: 1500,
   venue_bill_media: BILL,
   include_slot_price: false,
+  venue_pax: '',
+  overtime_hours: '',
   media_text: 'https://cdn.test/party.jpg',
   notes: '',
   ...over,

@@ -21,6 +21,7 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'RhfTextField'
+  - 'VenueUsageFields'
   - 'PackagingFields'
   - 'PackagingFieldsProps'
   - 'PackagingTranslate'
@@ -69,6 +70,9 @@ exports:
   - 'makeWalletStatementSchema'
   - 'makePodCompleteSchema'
   - 'buildPodCompleteInput'
+  - 'venueUsageInput'
+  - 'addVenueUsageIssues'
+  - 'VENUE_USAGE_LIMITS'
   - 'blankPodCompleteValues'
   - 'buildWalletStatementVariables'
   - 'blankWalletStatementValues'
@@ -428,6 +432,22 @@ Every control keeps a `data-testid`: `statement-dialog`, `statement-preset` (opt
 
 `@duncit/buttons` and `@hookform/resolvers` are optional peers, needed only by this dialog.
 
+## Complete Pod: the venue's usage
+
+`PodCompleteValues` carries `venue_pax` and `overtime_hours` beside the bill: the guests the venue
+charged for (its slot is priced per guest) and the hours the pod ran past the slot. Both are optional
+— empty, the server counts everyone booked and adds no overtime — and both stand without a bill,
+because they price the slot, not the bill. `addVenueUsageIssues` checks them against the server's
+bounds (`VENUE_USAGE_LIMITS`: a whole guest count up to 10,000, up to 48 hours) and `venueUsageInput`
+maps them for the completion and its live preview. `VenueUsageFields` (package root, MUI) draws the
+two fields; the host's dialog (@duncit/host-pod-actions) and the Admin console's both mount it.
+
+```tsx
+import { VenueUsageFields } from '@duncit/forms';
+
+<VenueUsageFields control={control} paxName="venue_pax" overtimeName="overtime_hours" labels={venueBillLabels} idPrefix="pod-complete" />
+```
+
 ## `RhfTextField` vs `FormField`
 
 `RhfTextField` is the one to use in new code. `FormField` is the legacy wrapper kept for the
@@ -575,6 +595,8 @@ directly.
 | `makeVenueCancelPodSchema` | a venue owner cancelling a pod | the reason that goes into the cancellation email, at least 5 characters — see below |
 | `makePodRequestNoteSchema` | a venue or host sending a Pod Request | an optional note of at most 500 characters — see below |
 | `makePodRequestOverrideSchema` | an admin setting a venue's or host's monthly Pod Request limit | empty (the default of 10) or a whole number 0–1000 — see below |
+| `makeRentalItemsSchema` | a venue's rented items | offers switch, the venue's rental terms (≤ `rental_terms_max`) and each item: name, unit, rate, deposit, stock, most per guest (≤ stock) — the caps are the server's `venueRegistrationConfig`. The MUI desk and the native desk both use it |
+| `makeMarkRentalSchema` | marking a rental back | RETURNED or DAMAGED; a damage claim must be above 0 and at most the deposit held, and needs a note (≤ 500) |
 | `makeForceMarkSchema` | a Club Admin marking attendance by name | the names they were read for a multi-seat booking — see below |
 
 `makeContactValueSchema(channel, t, current?)` returns a different object schema per channel

@@ -17,6 +17,7 @@ const kindOptions = (t: Translate) => [
   { value: 'HOST_PAYMENT', label: t('finance.paymentRelease.hostPayment') },
   { value: 'CLUB_ADMIN', label: t('finance.common.clubAdmin') },
   { value: 'ECOMM_PAYMENT', label: t('finance.paymentRelease.eCommerceBrand') },
+  { value: 'VENUE_RENTAL', label: t('finance.paymentRelease.venueRental') },
 ];
 
 const statusOptions = (t: Translate) => [

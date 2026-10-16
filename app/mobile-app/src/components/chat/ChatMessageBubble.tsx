@@ -9,7 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface ChatMessageBubbleProps {
   message: ChatMessage;
   mine: boolean;
-  /** Long-press handler to open the reaction picker for this message. */
+  /** Long-press handler: opens this message's actions (react, delete, report). */
   onReact?: (messageId: string) => void;
 }
 

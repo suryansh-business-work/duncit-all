@@ -5,16 +5,23 @@ import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded
 import StudioPageHeader from '../../components/StudioPageHeader';
 import PillChips from '../../components/club-admin/PillChips';
 import SlotRequestCard from './SlotRequestCard';
+import { GroupedSlotRequests, mwebSeriesRequestLabels } from '@duncit/ui';
+import { formatDateTime } from '../../utils/dateFormat';
 import {
   ALL_VENUES,
   APPROVE_SLOT_REQUEST,
   DECLINE_SLOT_REQUEST,
   MY_VENUES,
+  VENUE_DECIDE_POD_SERIES,
   VENUE_SLOT_REQUESTS,
   type SlotRequestRow,
 } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useSelectedVenue } from '../../hooks/useSelectedVenue';
+
+interface SeriesDecisionData {
+  venueDecidePodSeries: { decided: number; failed: number };
+}
 
 /**
  * Slot Requests, for a venue owner on their phone.
@@ -45,6 +52,7 @@ export default function VenueSlotRequestsPage() {
   });
   const [approve, approveState] = useMutation<any>(APPROVE_SLOT_REQUEST);
   const [decline, declineState] = useMutation<any>(DECLINE_SLOT_REQUEST);
+  const [decideSeriesMut, decideSeriesState] = useMutation<SeriesDecisionData>(VENUE_DECIDE_POD_SERIES);
 
   const requests: SlotRequestRow[] = requestsQuery.data?.venueSlotRequests ?? [];
   const venueOptions = useMemo(
@@ -58,6 +66,7 @@ export default function VenueSlotRequestsPage() {
     [venues, t]
   );
   const busy = approveState.loading || declineState.loading;
+  const seriesLabels = useMemo(() => mwebSeriesRequestLabels(t), [t]);
 
   const decide = (run: Promise<unknown>, done: string) => {
     run
@@ -67,6 +76,41 @@ export default function VenueSlotRequestsPage() {
       })
       .catch((err: Error) => setFeedback({ severity: 'error', text: err.message }));
   };
+
+  /** Every pending date of a series at once; says how many could not be answered. */
+  const decideSeries = (seriesId: string, approveAll: boolean, reason?: string) => {
+    decideSeriesMut({ variables: { series_id: seriesId, approve: approveAll, reason: reason || null } })
+      .then((res) => {
+        const result = res.data?.venueDecidePodSeries;
+        const text = approveAll
+          ? t('mweb.podSeries.acceptedAll', { vars: { count: result?.decided ?? 0 } })
+          : t('mweb.podSeries.declinedAll', { vars: { count: result?.decided ?? 0 } });
+        const failed = result?.failed ? ` ${t('mweb.podSeries.someFailed', { vars: { count: result.failed } })}` : '';
+        setFeedback({ severity: 'success', text: text + failed });
+        return requestsQuery.refetch();
+      })
+      .catch((err: Error) => setFeedback({ severity: 'error', text: err.message }));
+  };
+
+  const card = (request: SlotRequestRow) => (
+    <SlotRequestCard
+      key={request.slot_id}
+      request={request}
+      busy={busy}
+      onApprove={(slotId) =>
+        decide(
+          approve({ variables: { slot_id: slotId } }),
+          'Booking approved — the pod is now live.'
+        )
+      }
+      onDecline={(slotId, reason) =>
+        decide(
+          decline({ variables: { slot_id: slotId, reason: reason || null } }),
+          'Booking declined — the slot is open again.'
+        )
+      }
+    />
+  );
 
   return (
     <Stack spacing={2.5} sx={{ p: 2 }} data-testid="venue-slot-requests-page">
@@ -110,25 +154,15 @@ export default function VenueSlotRequestsPage() {
         </Alert>
       )}
 
-      {requests.map((request) => (
-        <SlotRequestCard
-          key={request.slot_id}
-          request={request}
-          busy={busy}
-          onApprove={(slotId) =>
-            decide(
-              approve({ variables: { slot_id: slotId } }),
-              'Booking approved — the pod is now live.'
-            )
-          }
-          onDecline={(slotId, reason) =>
-            decide(
-              decline({ variables: { slot_id: slotId, reason: reason || null } }),
-              'Booking declined — the slot is open again.'
-            )
-          }
-        />
-      ))}
+      <GroupedSlotRequests
+        requests={requests}
+        busy={busy || decideSeriesState.loading}
+        labels={seriesLabels}
+        formatWhen={formatDateTime}
+        renderRow={card}
+        onDecideSeries={decideSeries}
+      />
     </Stack>
   );
 }
+

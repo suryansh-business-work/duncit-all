@@ -324,12 +324,16 @@ export const POD_SETTLEMENT_PREVIEW = gql`
     $venue_bill_amount: Float!
     $host_user_id: ID
     $include_slot_price: Boolean
+    $venue_pax: Int
+    $overtime_hours: Float
   ) {
     podSettlementPreview(
       pod_id: $pod_id
       venue_bill_amount: $venue_bill_amount
       host_user_id: $host_user_id
       include_slot_price: $include_slot_price
+      venue_pax: $venue_pax
+      overtime_hours: $overtime_hours
     ) {
       is_free
       currency_symbol

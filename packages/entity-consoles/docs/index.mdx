@@ -415,6 +415,21 @@ The tables are `EntityRecordsTab`, the frame `EntityPodsTab` is now a thin layer
 over; a club's pods and a venue's pods share one query and one column set
 (`shared/recordPods`).
 
+## Club Settings
+
+`ClubSettingsPage` is the Clubs console's settings page (`/club-settings`). It edits the
+platform setting `club_chat_retention_days`: a club's chat never closes, so messages older than
+this many days (1–3650, default 30) are deleted by the server's hourly chat retention sweep.
+Pod chat retention (`pod_chat_retention_hours`, hours after the pod ends) lives on Pod Settings
+beside the other pod lifecycle cards. Both read and write `appSettings` / `updateAppSettings`,
+so the same admin roles that edit Pod Settings edit these.
+
+```tsx
+import { ClubSettingsPage } from '@duncit/entity-consoles';
+
+<Route path="/club-settings" element={authed(<ClubSettingsPage />)} />
+```
+
 ## Hiding a pod or a club
 
 Pods and clubs both carry a **Hide / Show** action — on each list row and in the

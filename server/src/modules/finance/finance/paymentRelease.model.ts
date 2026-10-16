@@ -1,6 +1,9 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
-export type PaymentReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT';
+/** VENUE_RENTAL: a venue's rented-item money (rent less Duncit's rental
+ * commission, plus deposits it kept) — raised by the rentals sweep, never by a
+ * completion. */
+export type PaymentReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT' | 'VENUE_RENTAL';
 export type PaymentReleaseStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type PaymentReleaseApprovalType = 'FULL' | 'PARTIAL';
 
@@ -59,6 +62,12 @@ export interface IPaymentReleaseBreakdown {
    */
   venue_slot_price: number;
   include_slot_price: boolean;
+  /** How the slot was priced and what its charge used. Absent on docs written
+   * before pricing modes existed (= FLAT, no pax, no overtime). */
+  venue_pricing_mode?: 'FLAT' | 'HOURLY' | 'PER_PAX';
+  venue_pax?: number;
+  venue_overtime_hours?: number;
+  venue_overtime_amount?: number;
 }
 
 export interface IPaymentRelease extends Document {
@@ -132,6 +141,10 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
     attended_total: { type: Number, default: 0 },
     venue_slot_price: { type: Number, default: 0 },
     include_slot_price: { type: Boolean, default: false },
+    venue_pricing_mode: { type: String, enum: ['FLAT', 'HOURLY', 'PER_PAX'], default: 'FLAT' },
+    venue_pax: { type: Number, default: 0 },
+    venue_overtime_hours: { type: Number, default: 0 },
+    venue_overtime_amount: { type: Number, default: 0 },
   },
   { _id: false }
 );
@@ -142,7 +155,7 @@ const paymentReleaseSchema = new Schema<IPaymentRelease>(
     batch_id: { type: String, default: null, index: true },
     kind: {
       type: String,
-      enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN', 'ECOMM_PAYMENT'],
+      enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN', 'ECOMM_PAYMENT', 'VENUE_RENTAL'],
       required: true,
       index: true,
     },

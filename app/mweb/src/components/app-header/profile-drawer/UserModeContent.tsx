@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useProductVisibility } from '@duncit/app-settings';
-import { MY_FOOD_ORDERS_PATH, studioEntryFor } from '@duncit/utils';
+import { MY_FOOD_ORDERS_PATH, MY_RENTED_ITEMS_PATH, studioEntryFor } from '@duncit/utils';
 import ProfileIdentity from './ProfileIdentity';
 import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
@@ -84,6 +84,12 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       to: '/gift-cards/redeem',
     },
   ];
+  // Rented items ride on pod bookings, not on the product shop, so they show
+  // under Shop whether or not products are switched on.
+  const shopItems: ProfileTile[] = [
+    ...(productsVisible ? SHOP_ITEMS : []),
+    { key: 'rentals', label: t('venueRentals.guest.sidebarLabel'), caption: '', icon: 'rentals', to: MY_RENTED_ITEMS_PATH },
+  ];
   // The orders a member placed from venue menus — their own section, as on native.
   const foodItems: ProfileTile[] = [
     { key: 'food-orders', label: t('mweb.venueFood.myOrders.sidebarLabel'), caption: '', icon: 'menu', to: MY_FOOD_ORDERS_PATH },
@@ -134,9 +140,7 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       )}
       <ManageAccountList title={t('mweb.venueFood.myOrders.sidebarTitle')} items={foodItems} onNavigate={onNavigate} />
       <ManageAccountList title={t('mweb.common.manageAccount')} items={buildManageItems(showPodPlans, showTourGuide, t('mweb.badges.sidebarLabel'), t('mweb.contacts.sidebarLabel'))} onNavigate={onNavigate} />
-      {productsVisible && (
-        <ManageAccountList title={t('mweb.common.shop')} items={SHOP_ITEMS} onNavigate={onNavigate} />
-      )}
+      <ManageAccountList title={t('mweb.common.shop')} items={shopItems} onNavigate={onNavigate} />
     </>
   );
 }

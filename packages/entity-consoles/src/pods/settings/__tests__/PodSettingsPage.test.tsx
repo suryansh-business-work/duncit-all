@@ -35,6 +35,7 @@ const POD_SETTINGS = gql`
       pod_cancel_risk_alert_hours
       ticket_discount_max_pct
       happening_nearby_days
+      pod_chat_retention_hours
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
       auto_pod_assignment_expiry_hours
@@ -69,6 +70,7 @@ const UPDATE_POD_SETTINGS = gql`
       pod_cancel_risk_alert_hours
       ticket_discount_max_pct
       happening_nearby_days
+      pod_chat_retention_hours
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
       auto_pod_assignment_expiry_hours
@@ -103,6 +105,7 @@ const SAVED: SavedPodSettings = {
   pod_cancel_risk_alert_hours: 4,
   ticket_discount_max_pct: 50,
   happening_nearby_days: 7,
+  pod_chat_retention_hours: 72,
   auto_pod_slot_window_days: 14,
   auto_pod_venue_expiry_hours: 48,
   auto_pod_assignment_expiry_hours: 72,

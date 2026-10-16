@@ -122,6 +122,24 @@ describe('AddSlotForm — validation', () => {
 });
 
 describe('AddSlotForm — creating', () => {
+  it('sends an hourly slot with its overtime rate', async () => {
+    const onCreate = mount();
+    applyPatch({
+      startTime: at(10),
+      endTime: at(11),
+      price: '400',
+      pricingMode: 'HOURLY',
+      overtimeRate: '250',
+    });
+    fireEvent.press(screen.getByTestId('add-slot-submit'));
+    await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
+    expect(onCreate.mock.calls[0][0]).toMatchObject({
+      price: 400,
+      pricing_mode: 'HOURLY',
+      overtime_rate: 250,
+    });
+  });
+
   it('sends the slot in the first space, rounding the price, then resets', async () => {
     const onCreate = mount();
     applyPatch({ startTime: at(10), endTime: at(11), price: '99.6', notes: 'Bring shoes' });
@@ -135,6 +153,8 @@ describe('AddSlotForm — creating', () => {
         end_at: at(11).toISOString(),
         whole_day: false,
         price: 100,
+        pricing_mode: 'FLAT',
+        overtime_rate: 0,
         notes: 'Bring shoes',
         space_label: 'Court 1',
         capacity: 4,

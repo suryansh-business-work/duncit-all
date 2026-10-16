@@ -1,4 +1,5 @@
-import { Avatar, Box, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Box, IconButton, Paper, Stack, Typography } from '@mui/material';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { formatTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import { bubbleRadiusSx } from '../support-chat/calmStyles';
@@ -7,9 +8,16 @@ interface MessageBubbleProps {
   message: any;
   mine: boolean;
   onOpenReact: (el: HTMLElement, id: string) => void;
+  /** Opens the message's React / Delete / Report menu. */
+  onOpenActions?: (el: HTMLElement, id: string) => void;
 }
 
-export default function MessageBubble({ message, mine, onOpenReact }: Readonly<MessageBubbleProps>) {
+export default function MessageBubble({
+  message,
+  mine,
+  onOpenReact,
+  onOpenActions,
+}: Readonly<MessageBubbleProps>) {
   const { t } = useTranslation();
   const m = message;
   // Muted ink only on the paper bubble: faded white on the red fill fails 4.5:1.
@@ -110,6 +118,17 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
           </Stack>
         )}
       </Paper>
+      {onOpenActions && !m.deleted && (
+        <IconButton
+          size="small"
+          aria-label={t('mweb.chatRoom.messageActions')}
+          data-testid={`chat-message-more-${m.id}`}
+          onClick={(e) => onOpenActions(e.currentTarget, m.id)}
+          sx={{ order: mine ? -1 : 1, alignSelf: 'center', color: 'text.secondary' }}
+        >
+          <MoreHorizIcon fontSize="small" />
+        </IconButton>
+      )}
     </Stack>
   );
 }

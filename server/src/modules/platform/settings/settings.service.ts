@@ -90,6 +90,10 @@ const DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS = 7;
 /** Days ahead Home's "Happening nearby" looks — a week, so it reads as what is
  * on soon rather than everything ever scheduled. */
 const DEFAULT_HAPPENING_NEARBY_DAYS = 7;
+const DEFAULT_POD_CHAT_RETENTION_HOURS = 72;
+const DEFAULT_CLUB_CHAT_RETENTION_DAYS = 30;
+const DEFAULT_POD_SERIES_MAX_OCCURRENCES = 12;
+const DEFAULT_POD_SERIES_MAX_SPAN_DAYS = 90;
 /** Hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
 const DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS = 24;
 /** Hours an Auto Pod's venue, host and club admin have to all enrol before it is released. */
@@ -179,6 +183,22 @@ const cleanAutoPodSlotWindowDays = (value: unknown) =>
 const cleanHappeningNearbyDays = (value: unknown) =>
   Math.min(60, Math.max(1, Math.floor(Number(value)) || DEFAULT_HAPPENING_NEARBY_DAYS));
 
+/** Pod chat retention after the pod ends, clamped to 1 hour – 1 year. */
+export const cleanPodChatRetentionHours = (value: unknown) =>
+  Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_CHAT_RETENTION_HOURS));
+
+/** Dates per recurring series, clamped to 2–52. */
+export const cleanPodSeriesMaxOccurrences = (value: unknown) =>
+  Math.min(52, Math.max(2, Math.floor(Number(value)) || DEFAULT_POD_SERIES_MAX_OCCURRENCES));
+
+/** A recurring series' span past its first date, clamped to 7–365 days. */
+export const cleanPodSeriesMaxSpanDays = (value: unknown) =>
+  Math.min(365, Math.max(7, Math.floor(Number(value)) || DEFAULT_POD_SERIES_MAX_SPAN_DAYS));
+
+/** Club chat message age limit, clamped to 1 day – 10 years. */
+export const cleanClubChatRetentionDays = (value: unknown) =>
+  Math.min(3650, Math.max(1, Math.floor(Number(value)) || DEFAULT_CLUB_CHAT_RETENTION_DAYS));
+
 /** Auto Pod venue window, clamped to 1 hour – 30 days. */
 const cleanAutoPodVenueExpiryHours = (value: unknown) =>
   Math.min(720, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS));
@@ -249,6 +269,10 @@ const toAppPub = (d: any) => ({
   pod_cancel_risk_alert_hours: cleanPodCancelRiskAlertHours(d?.pod_cancel_risk_alert_hours),
   auto_pod_slot_window_days: cleanAutoPodSlotWindowDays(d?.auto_pod_slot_window_days),
   happening_nearby_days: cleanHappeningNearbyDays(d?.happening_nearby_days),
+  pod_chat_retention_hours: cleanPodChatRetentionHours(d?.pod_chat_retention_hours),
+  club_chat_retention_days: cleanClubChatRetentionDays(d?.club_chat_retention_days),
+  pod_series_max_occurrences: cleanPodSeriesMaxOccurrences(d?.pod_series_max_occurrences),
+  pod_series_max_span_days: cleanPodSeriesMaxSpanDays(d?.pod_series_max_span_days),
   auto_pod_venue_expiry_hours: cleanAutoPodVenueExpiryHours(d?.auto_pod_venue_expiry_hours),
   auto_pod_assignment_expiry_hours: cleanAutoPodAssignmentExpiryHours(
     d?.auto_pod_assignment_expiry_hours,
@@ -649,6 +673,10 @@ type AppSettingsUpdateInput = {
   pod_cancel_risk_alert_hours?: number;
   auto_pod_slot_window_days?: number;
   happening_nearby_days?: number;
+  pod_chat_retention_hours?: number;
+  club_chat_retention_days?: number;
+  pod_series_max_occurrences?: number;
+  pod_series_max_span_days?: number;
   auto_pod_venue_expiry_hours?: number;
   auto_pod_assignment_expiry_hours?: number;
   auto_pod_cancel_health_penalty?: number;
@@ -700,6 +728,10 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["pod_cancel_risk_alert_hours", cleanPodCancelRiskAlertHours],
   ["auto_pod_slot_window_days", cleanAutoPodSlotWindowDays],
   ["happening_nearby_days", cleanHappeningNearbyDays],
+  ["pod_chat_retention_hours", cleanPodChatRetentionHours],
+  ["club_chat_retention_days", cleanClubChatRetentionDays],
+  ["pod_series_max_occurrences", cleanPodSeriesMaxOccurrences],
+  ["pod_series_max_span_days", cleanPodSeriesMaxSpanDays],
   ["auto_pod_venue_expiry_hours", cleanAutoPodVenueExpiryHours],
   ["auto_pod_assignment_expiry_hours", cleanAutoPodAssignmentExpiryHours],
   ["auto_pod_cancel_health_penalty", cleanAutoPodCancelHealthPenalty],

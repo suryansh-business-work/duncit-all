@@ -15,6 +15,8 @@ import { PodShopSlider } from '@/components/shop/PodShopSlider';
 import { ShopFilterBar } from '@/components/shop/ShopFilterBar';
 import { ShopProductCard } from '@/components/shop/ShopProductCard';
 import { StackScreen } from '@/components/StackScreen';
+import { PillTabs, type PillTab } from '@/components/PillTabs';
+import { RentablePodsList } from '@/components/shop/RentablePodsList';
 import { ShopProductsDocument } from '@/graphql/shop';
 import { useHomeData } from '@/hooks/useHomeFeed';
 import { useQuickAddToCart } from '@/hooks/useQuickAddToCart';
@@ -29,6 +31,12 @@ import { useLoadingRegion } from '@/components/Skeleton';
 export type ShopProduct = ResultOf<typeof ShopProductsDocument>['availablePodProducts'][number];
 
 export type ShopSort = 'NAME' | 'PRICE_ASC' | 'PRICE_DESC';
+
+type ShopTab = 'shop' | 'rent';
+const SHOP_TABS: readonly PillTab<ShopTab>[] = [
+  { key: 'shop', labelKey: 'venueRentals.guest.shopTab' },
+  { key: 'rent', labelKey: 'venueRentals.guest.rentTab' },
+];
 
 /** Pure sort helper shared with tests (twin of mWeb's sortShopProducts). */
 export function sortShopProducts(products: ShopProduct[], sort: ShopSort): ShopProduct[] {
@@ -70,6 +78,8 @@ export function ShopScreen() {
   // The "Deliver to" pincode, once the bar knows it (null until then) — the
   // list leaves out brands that do not deliver there.
   const [pincode, setPincode] = useState<string | null>(null);
+  // Pod Shop | Pod Rent — the same switch as mWeb's /shop.
+  const [tab, setTab] = useState<ShopTab>('shop');
 
   useEffect(() => {
     if (pincode === null) return;
@@ -147,28 +157,42 @@ export function ShopScreen() {
     <StackScreen title={t('mweb.shop.title')} testID="shop-screen">
       {/* Where the shop's orders ship to — the shop's stand-in for the city pill. */}
       <DeliveryAddressBar onPincodeChange={setPincode} />
+      <YStack paddingHorizontal={16} paddingTop={8}>
+        <PillTabs
+          tabs={SHOP_TABS}
+          value={tab}
+          onChange={setTab}
+          ariaLabel={t('mweb.shop.title')}
+          testIDPrefix="shop-tab"
+        />
+      </YStack>
       <RefreshScrollView
         flex={1}
         contentContainerStyle={{ gap: 20, paddingTop: 4, paddingBottom: 32 }}
       >
-        <ShopFilterBar filters={filters} sortOptions={sortOptions} muted={muted} />
-        <PodShopSlider />
-        {filters.superOptions.length > 0 ? (
-          <YStack
-            paddingHorizontal={16}
-            testID="shop-category-pills"
-            aria-label={t('mweb.common.category')}
-          >
-            <OptionChipRow
-              testIDPrefix="shop-super"
-              options={[['', t('mweb.common.all')], ...filters.superOptions]}
-              value={filters.superId}
-              onSelect={filters.selectSuper}
-              layout="scroll"
-            />
-          </YStack>
+        {tab === 'rent' ? <RentablePodsList /> : null}
+        {tab === 'shop' ? (
+          <>
+            <ShopFilterBar filters={filters} sortOptions={sortOptions} muted={muted} />
+            <PodShopSlider />
+            {filters.superOptions.length > 0 ? (
+              <YStack
+                paddingHorizontal={16}
+                testID="shop-category-pills"
+                aria-label={t('mweb.common.category')}
+              >
+                <OptionChipRow
+                  testIDPrefix="shop-super"
+                  options={[['', t('mweb.common.all')], ...filters.superOptions]}
+                  value={filters.superId}
+                  onSelect={filters.selectSuper}
+                  layout="scroll"
+                />
+              </YStack>
+            ) : null}
+            {body}
+          </>
         ) : null}
-        {body}
       </RefreshScrollView>
     </StackScreen>
   );

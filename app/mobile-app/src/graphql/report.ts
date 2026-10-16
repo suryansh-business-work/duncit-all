@@ -3,6 +3,7 @@ import {
   BLOCK_USER_SDL,
   MY_OPEN_REPORT_SDL,
   REPORT_CATEGORIES_SDL,
+  REPORT_CHAT_MESSAGE_SDL,
   REPORT_POST_SDL,
   REPORT_PROFILE_SDL,
   UNBLOCK_USER_SDL,
@@ -24,6 +25,9 @@ export const ReportPostDocument = gql(REPORT_POST_SDL);
 
 /** Flag a member's profile for the Legal team. */
 export const ReportProfileDocument = gql(REPORT_PROFILE_SDL);
+
+/** Flag a line in a pod's or club's chat for the Legal team. */
+export const ReportChatMessageDocument = gql(REPORT_CHAT_MESSAGE_SDL);
 
 /** Block / unblock a member from their profile. */
 export const BlockUserDocument = gql(BLOCK_USER_SDL);

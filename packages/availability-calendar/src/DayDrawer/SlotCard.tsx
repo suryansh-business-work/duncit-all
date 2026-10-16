@@ -46,7 +46,7 @@ export default function SlotCard({ slot, onToggleBlock, onRequestDelete }: Reado
               fontWeight: 800,
               color: "text.secondary"
             }}>
-            {priceLabel(slot.price, t)}
+            {priceLabel(slot, t)}
           </Typography>
           <Chip
             size="small"

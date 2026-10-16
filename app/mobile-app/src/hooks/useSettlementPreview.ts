@@ -15,6 +15,9 @@ export function useSettlementPreview(
   podId: string | null,
   venueBillAmount: number,
   includeSlotPrice: boolean,
+  /** The venue's usage typed so far — it prices the slot. Absent = not entered. */
+  venuePax?: number,
+  overtimeHours?: number,
 ) {
   const [settlement, setSettlement] = useState<PodSettlement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +30,13 @@ export function useSettlementPreview(
     const timer = setTimeout(() => {
       graphqlRequest(
         PodSettlementPreviewDocument,
-        { pod_id: podId, venue_bill_amount: venueBillAmount, include_slot_price: includeSlotPrice },
+        {
+          pod_id: podId,
+          venue_bill_amount: venueBillAmount,
+          include_slot_price: includeSlotPrice,
+          venue_pax: venuePax,
+          overtime_hours: overtimeHours,
+        },
         { auth: true },
       )
         .then((res) => {
@@ -50,7 +59,7 @@ export function useSettlementPreview(
       active = false;
       clearTimeout(timer);
     };
-  }, [podId, venueBillAmount, includeSlotPrice]);
+  }, [podId, venueBillAmount, includeSlotPrice, venuePax, overtimeHours]);
 
   return { settlement, isLoading, error };
 }

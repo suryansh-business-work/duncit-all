@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { alpha } from '@mui/material/styles';
-import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
-import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
+import type { VenueCharge } from './VenueChargesDialog';
+import VenueChargesBox from './VenueChargesBox';
+import Row from './SummaryRow';
 import CoinSummaryRows from './CoinSummaryRows';
 import { exclusiveOfGstBill, isVideoMedia, round2, videoSourceUrl, type CoinCheckoutSummary } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
@@ -42,6 +42,8 @@ interface Props {
   /** What rounding the charge up to a whole rupee adds — on top of `breakup`,
    * which is the taxed value. Zero hides the row. */
   roundOff?: number;
+  /** Rented items charged with the seat: their rows, and the money they add to the total. */
+  rentals?: { rows: ReactNode; total: number } | null;
 }
 
 export default function OrderSummaryCard({
@@ -54,6 +56,7 @@ export default function OrderSummaryCard({
   unitAmount = 0,
   coins = null,
   roundOff = 0,
+  rentals = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // The buyer chose this on Pod Details and the ticket price is × it, so the
@@ -77,8 +80,6 @@ export default function OrderSummaryCard({
   // Venue charges are paid directly at the venue — shown for transparency but
   // NOT added to the online "Total payable".
   const venueCharges: VenueCharge[] = pod?.place_charges ?? [];
-  const venueTotal = venueCharges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
-  const [venueInfoOpen, setVenueInfoOpen] = useState(false);
 
   return (
     <Card data-testid="order-summary" sx={{ flex: 1 }}>
@@ -128,72 +129,13 @@ export default function OrderSummaryCard({
           {roundOff > 0 && (
             <Row testId="order-summary-round-off" label={t('mweb.checkout.roundOff')} value={`+ ${fmt(roundOff)}`} />
           )}
+          {rentals?.rows}
           <Divider sx={{ my: 1 }} />
-          <Row testId="order-summary-total" label={t('mweb.checkout.totalPayable')} value={fmt(round2(breakup.total + roundOff))} bold />
+          <Row testId="order-summary-total" label={t('mweb.checkout.totalPayable')} value={fmt(round2(breakup.total + roundOff + (rentals?.total ?? 0)))} bold />
           <CoinSummaryRows coins={coins} />
-          {venueCharges.length > 0 && (
-            <Box data-testid="venue-charges-row" sx={{ mt: 1, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{
-                  justifyContent: "space-between",
-                  alignItems: "center"
-                }}>
-                <Stack direction="row" spacing={0.5} sx={{
-                  alignItems: "center"
-                }}>
-                  <Typography variant="body2" sx={{
-                    fontWeight: 600
-                  }}>{t('mweb.checkout.venueCharges')}</Typography>
-                  <DuncitIconButton data-testid="venue-charges-info" size="small" aria-label={t('mweb.checkout.venueChargesAbout')} onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
-                    <InfoOutlinedIcon fontSize="inherit" color="action" />
-                  </DuncitIconButton>
-                </Stack>
-                <Typography variant="body2" sx={{
-                  fontWeight: 700
-                }}>{fmt(venueTotal)}</Typography>
-              </Stack>
-              <Typography variant="caption" sx={{
-                color: "text.secondary"
-              }}>{t('mweb.checkout.venuePayAtVenue')}</Typography>
-            </Box>
-          )}
+          <VenueChargesBox charges={venueCharges} currency={breakup.currency} fmt={fmt} />
         </Stack>
-        <VenueChargesDialog open={venueInfoOpen} charges={venueCharges} currency={breakup.currency} onClose={() => setVenueInfoOpen(false)} />
       </CardContent>
     </Card>
-  );
-}
-
-function Row({
-  label,
-  value,
-  bold,
-  tone,
-  testId,
-}: Readonly<{ label: string; value: string; bold?: boolean; tone?: string; testId?: string }>) {
-  return (
-    <Stack
-      data-testid={testId}
-      direction="row"
-      spacing={2}
-      sx={{
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}>
-      <Typography
-        variant={bold ? 'subtitle1' : 'body2'}
-        sx={{
-          fontWeight: bold ? 700 : 500,
-          color: tone ?? (bold ? 'text.primary' : 'text.secondary')
-        }}>{label}</Typography>
-      <Typography
-        variant={bold ? 'subtitle1' : 'body2'}
-        sx={{
-          fontWeight: bold ? 700 : 600,
-          color: tone
-        }}>{value}</Typography>
-    </Stack>
   );
 }

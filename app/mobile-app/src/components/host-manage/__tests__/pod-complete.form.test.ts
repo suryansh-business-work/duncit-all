@@ -17,6 +17,8 @@ const valid = (over: Partial<PodCompleteValues> = {}): PodCompleteValues => ({
   venue_bill_amount: '1500',
   venue_bill_media: 'https://cdn/bill.pdf',
   include_slot_price: false,
+  venue_pax: '',
+  overtime_hours: '',
   ...over,
 });
 
@@ -89,6 +91,20 @@ describe('buildCompleteInput', () => {
     expect(buildCompleteInput(valid({ venue_bill_amount: '0' }), 'pod2')).toEqual({
       pod_id: 'pod2',
       venue_bill_amount: 0,
+    });
+  });
+
+  it('sends the guests the venue charged for and the overtime hours, even with no bill', () => {
+    expect(
+      buildCompleteInput(
+        valid({ venue_bill_amount: '', venue_pax: '16', overtime_hours: '2' }),
+        'pod1',
+      ),
+    ).toEqual({
+      pod_id: 'pod1',
+      venue_bill_amount: 0,
+      venue_pax: 16,
+      overtime_hours: 2,
     });
   });
 

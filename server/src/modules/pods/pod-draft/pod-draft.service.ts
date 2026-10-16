@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodDraftModel, type IPodDraft } from './pod-draft.model';
 import { podService } from '../pod/pod.service';
+import { hostAgainDraftInput } from './pod-draft.host-again';
 
 const toPub = (d: IPodDraft) => ({
   id: String(d._id),
@@ -58,6 +59,10 @@ export const podDraftService = {
       user_id: new Types.ObjectId(userId),
     });
     return res.deletedCount > 0;
+  },
+
+  async hostAgain(userId: string, podDocId: string) {
+    return podDraftService.save(userId, null, await hostAgainDraftInput(podDocId, userId));
   },
 
   // Validates + creates the real pod via the shared partner path (approved

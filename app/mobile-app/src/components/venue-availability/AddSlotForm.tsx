@@ -5,6 +5,7 @@ import {
   emptyDraft,
   isDraftIncomplete,
   slotIssueMessage,
+  slotPricingInput,
   type SlotDraft,
 } from '@duncit/slots';
 
@@ -41,7 +42,7 @@ const toPayload = (
   start_at: window.start.toISOString(),
   end_at: window.end.toISOString(),
   whole_day: draft.wholeDay,
-  price: Math.max(0, Math.round(Number(draft.price) || 0)),
+  ...slotPricingInput(draft),
   notes: draft.notes,
   space_label: space?.label ?? '',
   capacity: space?.capacity ?? 0,

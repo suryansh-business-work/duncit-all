@@ -21,6 +21,9 @@ import BasicsStep from '../steps/BasicsStep';
 import LocationClubStep from '../steps/LocationClubStep';
 import VenueSlotStep from '../steps/VenueSlotStep';
 import PricingStep from '../steps/PricingStep';
+import PodRepeatSection from '../fields/PodRepeatSection';
+import { seriesPlanOf } from '../fields/useSeriesPreview';
+import { useDateFormat } from '../../../../utils/dateFormat';
 import { useFeatureFlag } from '../../../../hooks/useFeatureFlag';
 import type { CreatePodStepperProps } from './types';
 import { useCreatePodForm } from './useCreatePodForm';
@@ -49,6 +52,7 @@ export default function CreatePodStepper({
   onPublish,
 }: Readonly<CreatePodStepperProps>) {
   const { t } = useTranslation();
+  const { timeZone } = useDateFormat();
   const form = useCreatePodForm(t, initialValues);
   // Products are a flag-gated section inside the Pricing step (not a step of
   // their own), so the step list never changes shape.
@@ -110,7 +114,7 @@ export default function CreatePodStepper({
         return;
       }
       const id = await persist(step);
-      await onPublish(id, buildCreatePodInput(values));
+      await onPublish(id, buildCreatePodInput(values), seriesPlanOf(values, timeZone));
     } catch (e) {
       // Two pods may share a title — the server gives the second one a link of
       // its own — so nothing here is the title's fault any more. Whatever did
@@ -139,7 +143,10 @@ export default function CreatePodStepper({
       locations={locations}
     />,
     <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
-    <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} venueNotice={venueNotice} />,
+    <Stack key="venue" spacing={2}>
+      <VenueSlotStep form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} venueNotice={venueNotice} />
+      <PodRepeatSection form={form} />
+    </Stack>,
     <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} venueNotice={venueNotice} />,
   ];
 

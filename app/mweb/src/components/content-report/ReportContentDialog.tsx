@@ -27,7 +27,7 @@ import { notify } from '../notify';
 import ReportCategoryPicker from './ReportCategoryPicker';
 import ReportPendingNotice from './ReportPendingNotice';
 import { useMyOpenReport } from './useMyOpenReport';
-import { REPORT_CATEGORIES, REPORT_POST, REPORT_PROFILE } from './queries';
+import { REPORT_CATEGORIES, REPORT_MUTATION_OF } from './queries';
 
 interface Props {
   /** The post, story or member being reported; null keeps the dialog closed. */
@@ -49,6 +49,7 @@ interface ReportReceipt {
 interface ReportData {
   reportPost?: ReportReceipt;
   reportProfile?: ReportReceipt;
+  reportChatMessage?: ReportReceipt;
 }
 
 /** The translation key for a refusal the server names by code, else null. */
@@ -80,7 +81,7 @@ export default function ReportContentDialog({ targetId, kind, onClose }: Readonl
     // category that has since been switched off.
     fetchPolicy: 'cache-and-network',
   });
-  const [report, { loading }] = useMutation<ReportData>(kind === 'PROFILE' ? REPORT_PROFILE : REPORT_POST);
+  const [report, { loading }] = useMutation<ReportData>(REPORT_MUTATION_OF[kind]);
 
   // Re-seed on every open: one dialog instance serves every post and story.
   useEffect(() => {
@@ -104,7 +105,7 @@ export default function ReportContentDialog({ targetId, kind, onClose }: Readonl
     try {
       const { data } = await report({ variables: { id: targetId, reason, details: details.trim() } });
       // The reference is the one the acknowledgement email carries.
-      const ref = (data?.reportPost ?? data?.reportProfile)?.report_no;
+      const ref = (data?.reportPost ?? data?.reportProfile ?? data?.reportChatMessage)?.report_no;
       notify(
         ref ? t('contentReport.submittedRef', { vars: { ref } }) : t('contentReport.submitted'),
         'success'

@@ -7,6 +7,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { VenueUsageFields } from '@duncit/forms';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodCompleteValues } from './pod-complete.form';
 
@@ -49,6 +50,7 @@ export default function VenueBillFields({ control, billAmount }: Readonly<Props>
           />
         )}
       />
+      <VenueUsageFields control={control} paxName="venue_pax" overtimeName="overtime_hours" labels={copy} idPrefix="pod-complete" />
       {billAmount > 0 && (
         <>
           <Controller

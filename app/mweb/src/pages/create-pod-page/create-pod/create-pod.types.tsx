@@ -1,6 +1,6 @@
 /** Shared option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
-import type { PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
+import type { PodPickerProduct, PodSeriesFrequency, TicketDiscountTier } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 export type {
   CreatePodClub,
@@ -77,6 +77,13 @@ export interface CreatePodFormValues {
   agreed_to_terms: boolean;
   /** Hidden: the Pod Request this pod answers ('' when none) — the server books its confirmed slot. */
   partner_request_id: string;
+  /** Recurring pod: off = one time. On, the first date repeats at
+   * `repeat_frequency` until `repeat_ends_on` (yyyy-MM-dd, admin zone). */
+  repeat_enabled: boolean;
+  repeat_frequency: PodSeriesFrequency;
+  repeat_ends_on: string;
+  /** Dates (ISO starts) the host unticked in the preview. */
+  repeat_skip_dates: string[];
 }
 
 export const blankCreatePodForm: CreatePodFormValues = {
@@ -113,6 +120,10 @@ export const blankCreatePodForm: CreatePodFormValues = {
   payment_terms: '',
   agreed_to_terms: false,
   partner_request_id: '',
+  repeat_enabled: false,
+  repeat_frequency: 'WEEKLY',
+  repeat_ends_on: '',
+  repeat_skip_dates: [],
 };
 
 /** The catalogue row Step 4's product picker renders. Aliased to the shared

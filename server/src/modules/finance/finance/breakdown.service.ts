@@ -464,6 +464,8 @@ export const breakdownService = {
           {
             venue_id: new Types.ObjectId(venueId),
             venue_slot_id: input.venueSlotId ? new Types.ObjectId(input.venueSlotId) : null,
+            // A per-person slot is projected at a full pod.
+            no_of_spots: noOfSpots,
           },
           0
         )

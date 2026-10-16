@@ -33,5 +33,11 @@ export const podDraftTypeDefs = gql`
     savePodDraft(draft_id: ID, input: PodDraftInput!): PodDraft!
     deletePodDraft(draft_id: ID!): Boolean!
     publishPodDraft(draft_id: ID!, input: CreatePodInput!): Pod!
+    """
+    "Host again": a new draft holding one of the caller's own pods' content
+    (title, description, media, pricing, perks) with no date, slot or attendees,
+    ready to open in Create Pod. A cancelled pod can be hosted again too.
+    """
+    hostAgainPod(pod_doc_id: ID!): PodDraft!
   }
 `;

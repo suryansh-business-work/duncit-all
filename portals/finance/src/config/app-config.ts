@@ -35,6 +35,14 @@ export const appConfig = {
     { label: 'Default Deductions', labelKey: 'shell.nav.defaultDeductions', to: '/default-deductions', icon: 'percent' },
     // GST on venue food orders — what every venue without its own follows.
     { label: 'Food Menu Defaults', labelKey: 'shell.nav.foodMenuDefaults', to: '/food-menu-defaults', icon: 'menuBook' },
+    // Rented items: every venue rental, and the rules they run under.
+    {
+      label: 'Rented Items', labelKey: 'shell.nav.rentedItems', icon: 'handshake',
+      children: [
+        { label: 'Rentals', labelKey: 'shell.nav.rentedItemsBookings', to: '/rented-items', icon: 'receipt' },
+        { label: 'Rental Settings', labelKey: 'shell.nav.rentedItemsSettings', to: '/rented-items/settings', icon: 'tune' },
+      ],
+    },
     { label: 'Pod Finance', labelKey: 'shell.nav.podFinance', to: '/pod-finance', icon: 'analytics' },
     {
       label: 'Cancel & Refunds', labelKey: 'shell.nav.cancelAndRefunds',

@@ -2,8 +2,9 @@
 /**
  * Which pnpm workspaces a CI run actually has to check.
  *
- *   node scripts/ci-affected.mjs plan --under packages/ [--shards 4] [--global <path>...] [--extra <dir>...]
+ *   node scripts/ci-affected.mjs plan --under packages/ [--shards 4] [--global <path|glob>...] [--extra <dir>...] [--ledger <file>]
  *   node scripts/ci-affected.mjs hash <path>...
+ *   node scripts/ci-affected.mjs ledger-merge <ledger> <passed-file>...
  *
  * WHY THIS EXISTS
  * ---------------
@@ -28,6 +29,19 @@
  *         Writes `any`, `dirs` (JSON array) and `matrix` (shards of
  *         { name, dirs }) to GITHUB_OUTPUT.
  *
+ *         `--ledger` is the checkpoint. "Last green run" is one commit for the
+ *         whole workflow, so after ONE workspace fails, the fix commit used to
+ *         re-check every workspace changed since that green run — including the
+ *         ones that already passed in the red run. The ledger holds a
+ *         `<dir> <content key>` line for every workspace that passed; a selected
+ *         workspace whose current key is in it is dropped. Its key covers its
+ *         own tree, its transitive @duncit deps, the root files and the
+ *         `--global` files, so any change to what it is built from re-runs it.
+ *         Also writes `hashes` ({ dir: key }) for the jobs to record passes.
+ *
+ * `ledger-merge` appends the passed lines to the ledger, newest last, and keeps
+ *         the last LEDGER_LIMIT distinct lines.
+ *
  * `hash`  prints a content key for the given paths: the git tree id of each,
  *         with every workspace widened to its transitive `@duncit/*` deps,
  *         plus the root files. Same key ⇒ same code ⇒ same test result, which
@@ -37,8 +51,9 @@
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { appendFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const TEST_FILE = /\.(?:test|spec|cy)\.[cm]?[jt]sx?$/;
 // Root files that no workspace build, test or lint reads. Every OTHER root file
@@ -57,8 +72,25 @@ const VERSION_STAMPED = new Set([
   'app/mweb/package.json',
 ]);
 const VERSION_LINE = /^[ \t]*(?:"(?:version|buildNumber)": "[^"\n]*"|"versionCode": \d+),?$/;
+// Enough for every workspace a few hundred times over; older lines describe
+// content no branch tip still has.
+const LEDGER_LIMIT = 3000;
 
-const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim();
+
+/** `**` and `*` only — the spelling paths-filter and `--global` use. Anything else is literal. */
+export function globToRegex(glob) {
+  const escaped = glob.replaceAll(/[.+?^${}()|[\]\\]/g, String.raw`\$&`);
+  const source = escaped.replaceAll('**/', '\u0000').replaceAll('**', '\u0001').replaceAll('*', '[^/]*');
+  return new RegExp(`^${source.replaceAll('\u0000', '(?:.*/)?').replaceAll('\u0001', '.*')}$`);
+}
+
+/** A `--global` entry matches its exact path, anything under it, or its glob. */
+function globalMatcher(globals) {
+  const globs = globals.filter((g) => g.includes('*')).map(globToRegex);
+  const prefixes = globals.filter((g) => !g.includes('*'));
+  return (f) => prefixes.some((g) => f === g || f.startsWith(`${g}/`)) || globs.some((re) => re.test(f));
+}
 
 /** True when the only lines `file` changed since `base` are version stamps. */
 function onlyVersionStamped(base, file) {
@@ -186,7 +218,8 @@ async function changedFiles() {
 function affectedDirs(graph, files, globals) {
   const dirs = [...graph.keys()];
   if (!files) return dirs;
-  const isGlobal = (f) => (!f.includes('/') && !INERT_ROOT.test(f)) || globals.some((g) => f === g || f.startsWith(`${g}/`));
+  const matchesGlobal = globalMatcher(globals);
+  const isGlobal = (f) => (!f.includes('/') && !INERT_ROOT.test(f)) || matchesGlobal(f);
   const hit = files.find(isGlobal);
   if (hit) {
     console.log(`${hit} changed — checking everything`);
@@ -217,23 +250,54 @@ function option(args, flag, fallback) {
 /** Every value of a repeatable flag, trailing slash dropped. */
 const options = (args, flag) => args.flatMap((a, i) => (args[i - 1] === flag ? [a.replace(/\/$/, '')] : []));
 
+function readLedger(file) {
+  if (!file || !existsSync(file)) return new Set();
+  return new Set(readFileSync(file, 'utf8').split('\n').filter(Boolean));
+}
+
+/** Drops the workspaces whose current content already passed (see `--ledger` above). */
+function skipPassed(dirs, ledgerFile, globals, graph) {
+  const passed = readLedger(ledgerFile);
+  const files = globals.filter((g) => !g.includes('*'));
+  const hashes = Object.fromEntries(dirs.map((d) => [d, contentKey([d, ...files], graph)]));
+  const skipped = dirs.filter((d) => passed.has(`${d} ${hashes[d]}`));
+  if (skipped.length > 0) console.log(`already passed with identical inputs, skipped: ${skipped.join(' ')}`);
+  return { remaining: dirs.filter((d) => !skipped.includes(d)), hashes };
+}
+
 async function plan(args) {
   const under = option(args, '--under', '');
   const globals = [...options(args, '--global'), 'scripts/ci-affected.mjs'];
   const graph = workspaceGraph(options(args, '--extra'));
-  const selected = affectedDirs(graph, await changedFiles(), globals).filter((d) => d.startsWith(under));
+  const affected = affectedDirs(graph, await changedFiles(), globals).filter((d) => d.startsWith(under));
+  const ledger = option(args, '--ledger', null);
+  const { remaining: selected, hashes } = ledger ? skipPassed(affected, ledger, globals, graph) : { remaining: affected, hashes: {} };
   const shards = shard(selected, Number(option(args, '--shards', '4')));
   console.log(`${selected.length} workspace(s) under '${under}' to check:`);
   shards.forEach((s) => console.log(`  shard ${s.name}: ${s.dirs}`));
   const out = process.env.GITHUB_OUTPUT;
-  if (out) appendFileSync(out, `any=${selected.length > 0}\ndirs=${JSON.stringify(selected)}\nmatrix=${JSON.stringify(shards)}\n`);
+  if (out) {
+    appendFileSync(out, `any=${selected.length > 0}\ndirs=${JSON.stringify(selected)}\nmatrix=${JSON.stringify(shards)}\n`);
+    appendFileSync(out, `hashes=${JSON.stringify(hashes)}\n`);
+  }
+}
+
+/** Appends each passed-file's lines to the ledger, de-duplicated, newest kept. */
+function ledgerMerge([ledgerFile, ...passedFiles]) {
+  const lines = [...readLedger(ledgerFile), ...passedFiles.flatMap((f) => [...readLedger(f)])];
+  const latest = [...new Set(lines.toReversed())].toReversed().slice(-LEDGER_LIMIT);
+  writeFileSync(ledgerFile, latest.length > 0 ? `${latest.join('\n')}\n` : '');
+  console.log(`ledger: ${latest.length} line(s)`);
 }
 
 // ------------------------------------------------------------------ hash
 
-/** Accepts pnpm filter spelling too: `./portals/admin`, `./packages/**`. */
-function hash(paths) {
-  const graph = workspaceGraph();
+/**
+ * Content key of `paths`: their git trees, every workspace among them widened
+ * to its transitive `@duncit/*` deps, plus the root files. Accepts pnpm filter
+ * spelling too: `./portals/admin`, `./packages/**`.
+ */
+export function contentKey(paths, graph = workspaceGraph()) {
   const dirs = [...graph.keys()];
   const roots = paths.map((p) => p.replace(/^\.\//, '').replace(/\/\*\*$/, ''));
   const members = roots.flatMap((p) => dirs.filter((d) => d === p || d.startsWith(`${p}/`)));
@@ -244,13 +308,19 @@ function hash(paths) {
   const trees = [...inputs].toSorted(byName).map((p) => {
     return `${p} ${contentId(p)}`;
   });
-  process.stdout.write(createHash('sha256').update([...rootFiles, ...trees].join('\n')).digest('hex').slice(0, 32));
+  return createHash('sha256').update([...rootFiles, ...trees].join('\n')).digest('hex').slice(0, 32);
 }
 
-const [command, ...rest] = process.argv.slice(2);
-if (command === 'plan') await plan(rest);
-else if (command === 'hash') hash(rest);
-else {
-  console.error('usage: ci-affected.mjs plan --under <dir/> [--shards N] [--global <path>...] [--extra <dir>...] | hash <path>...');
-  process.exit(2);
+// Imported by ci-deploy-gate.mjs for globToRegex; the CLI only runs when invoked directly.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const [command, ...rest] = process.argv.slice(2);
+  if (command === 'plan') await plan(rest);
+  else if (command === 'hash') process.stdout.write(contentKey(rest));
+  else if (command === 'ledger-merge') ledgerMerge(rest);
+  else {
+    console.error(
+      'usage: ci-affected.mjs plan --under <dir/> [--shards N] [--global <path|glob>...] [--extra <dir>...] [--ledger <file>] | hash <path>... | ledger-merge <ledger> <passed>...',
+    );
+    process.exit(2);
+  }
 }

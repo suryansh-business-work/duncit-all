@@ -21,7 +21,12 @@ interface PodShopProps {
   /** Read-only when the pod owner closed the shop (products_enabled === false) —
    * add-to-cart works in every other pod state (member/expired/etc). */
   readOnly?: boolean;
+  /** Inside the Pod Shop | Pod Rent card (or its sheet): no card or header of its own. */
+  embedded?: boolean;
 }
+
+/** An embedded shop sits flat inside its host card. */
+const EMBEDDED_CARD = { padding: 0, borderWidth: 0, backgroundColor: 'transparent' } as const;
 
 /** Footer caption: neutral when nothing is picked, else the count of picks. */
 function productCountLabel(count: number): string {
@@ -40,6 +45,7 @@ export function PodShop({
   selectedTotal,
   onVariantQuantity,
   readOnly = false,
+  embedded = false,
 }: Readonly<PodShopProps>) {
   const { muted } = useThemeColors();
   const { t } = useTranslation();
@@ -73,22 +79,30 @@ export function PodShop({
     : undefined;
 
   return (
-    <SurfaceCard marginHorizontal={16} marginTop={20} gap={14} testID="pod-shop">
-      <XStack alignItems="center" justifyContent="space-between" gap={12}>
-        <YStack flex={1}>
-          <SectionHeader title={t('mweb.shop.title')} />
-        </YStack>
-        <XStack
-          paddingHorizontal={10}
-          paddingVertical={5}
-          borderRadius={999}
-          backgroundColor="$soft"
-        >
-          <Text fontSize={12} fontWeight="600" color="$color">
-            {pod.products_enabled ? 'Available' : 'Closed'}
-          </Text>
+    <SurfaceCard
+      marginHorizontal={embedded ? 0 : 16}
+      marginTop={embedded ? 0 : 20}
+      gap={14}
+      testID="pod-shop"
+      {...(embedded ? EMBEDDED_CARD : {})}
+    >
+      {embedded ? null : (
+        <XStack alignItems="center" justifyContent="space-between" gap={12}>
+          <YStack flex={1}>
+            <SectionHeader title={t('mweb.shop.title')} />
+          </YStack>
+          <XStack
+            paddingHorizontal={10}
+            paddingVertical={5}
+            borderRadius={999}
+            backgroundColor="$soft"
+          >
+            <Text fontSize={12} fontWeight="600" color="$color">
+              {pod.products_enabled ? 'Available' : 'Closed'}
+            </Text>
+          </XStack>
         </XStack>
-      </XStack>
+      )}
 
       {products.length === 0 ? (
         <XStack gap={8} alignItems="center" testID="pod-shop-empty">

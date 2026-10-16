@@ -70,6 +70,10 @@ const VENUE_FIELDS: readonly DiffField[] = [
   { path: 'food_licences.liquor_licence_number', label: 'Liquor Licence Number' },
   { path: 'food_licences.liquor_document_url', label: 'Liquor Licence Document' },
   { path: 'food_tables', label: 'Food Tables', ordered: true },
+  { path: 'offers_rentals', label: 'Offers Rented Items' },
+  { path: 'rental_items', label: 'Rented Items', ordered: true },
+  { path: 'rental_terms_html', label: 'Rental Terms' },
+  { path: 'rental_deposit_gst', label: 'GST on Rental Deposits' },
   { path: 'venue_categories', label: 'Categories', ordered: true },
   // The primary category — the mirror of the first entry above.
   { path: 'venue_category.super_category_name', label: 'Super Category' },

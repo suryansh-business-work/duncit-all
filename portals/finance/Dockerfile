@@ -74,6 +74,9 @@ COPY packages/buttons/package.json ./packages/buttons/
 COPY packages/verification/package.json ./packages/verification/
 COPY packages/regex/package.json ./packages/regex/
 COPY packages/forms/package.json ./packages/forms/
+COPY packages/rich-text/package.json ./packages/rich-text/
+COPY packages/venue-rentals/package.json ./packages/venue-rentals/
+COPY packages/venue-food/package.json ./packages/venue-food/
 
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 RUN pnpm install --frozen-lockfile

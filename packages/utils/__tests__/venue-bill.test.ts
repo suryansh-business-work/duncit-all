@@ -37,7 +37,8 @@ const catalogue =
 const STATIC_PROPS = [
   'title', 'amount', 'amountHint', 'amountInvalid', 'upload', 'uploadRequired', 'includeSlot',
   'includeSlotHint', 'viewBill', 'attendees', 'slotPrice', 'finalBill', 'noBill', 'venueTotal',
-  'venueTotalWithSlot', 'sentToFinance',
+  'venueTotalWithSlot', 'sentToFinance', 'pax', 'paxHint', 'paxInvalid', 'overtimeHours', 'overtimeHint',
+  'overtimeInvalid',
 ] as const satisfies readonly (keyof VenueBillLabels)[];
 
 /** Every key suffix the `venueBill` block of each bundle ships. */

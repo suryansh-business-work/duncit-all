@@ -152,6 +152,9 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'food-menu', labelKey: 'mweb.studioOptions.foodMenu', hintKey: 'mweb.studioOptions.foodMenuHint', icon: 'menu', path: '/venues/food-menu', route: 'VenueFoodMenu', portal: '/venues/food-menu', group: 'food' },
     { key: 'food-orders', labelKey: 'mweb.studioOptions.foodOrders', hintKey: 'mweb.studioOptions.foodOrdersHint', icon: 'orders', path: '/venues/food-orders', route: 'VenueFoodOrders', portal: '/venues/food-orders', group: 'food' },
     { key: 'food-coupons', labelKey: 'mweb.studioOptions.foodCoupons', hintKey: 'mweb.studioOptions.foodCouponsHint', icon: 'orders', path: '/venues/food-coupons', route: 'VenueFoodCoupons', portal: '/venues/food-coupons', group: 'food' },
+    // What the venue rents out with a pod booking, and the bookings to mark back
+    // (@duncit/venue-rentals on the web, a Tamagui twin in the app).
+    { key: 'rented-items', labelKey: 'mweb.studioOptions.rentedItems', hintKey: 'mweb.studioOptions.rentedItemsHint', icon: 'orders', path: '/venues/rented-items', route: 'VenueRentedItems', portal: '/venues/rented-items' },
     { key: 'pods', labelKey: 'mweb.studioOptions.venuePods', hintKey: 'mweb.studioOptions.venuePodsHint', icon: 'pods', path: '/venues/pods', route: 'VenuePods', portal: '/venues/pods' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/venues/change-requests' },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromHosts', hintKey: 'mweb.studioOptions.podRequestsFromHostsHint', icon: 'requests', path: '/venues/pod-requests', route: 'VenuePodRequests', portal: '/venues/pod-requests' },

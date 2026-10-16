@@ -5,6 +5,7 @@ import {
   emptyDraft,
   isDraftIncomplete,
   slotIssueMessage,
+  slotPricingInput,
   type SlotDraft,
 } from '@duncit/slots';
 import { isSlotConflictError } from '../../conflict';
@@ -92,7 +93,7 @@ export function useAddSlotForm({ date, spaces, onCreate }: AddSlotFormOptions) {
         start_at: window.start.toISOString(),
         end_at: window.end.toISOString(),
         whole_day: draft.wholeDay,
-        price: Math.max(0, Math.round(Number(draft.price) || 0)),
+        ...slotPricingInput(draft),
         notes: draft.notes,
         space_label: activeSpace?.label ?? '',
         capacity: activeSpace?.capacity ?? 0,

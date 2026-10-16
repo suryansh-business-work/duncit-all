@@ -585,6 +585,39 @@ describe('PodCompleteDialog settlement', () => {
     expect(props.onCompleted).toHaveBeenCalledTimes(1);
   });
 
+  // The venue's usage prices its slot (a per-guest slot, overtime) with or without a bill.
+  it('sends the guests the venue charged for and the overtime hours, without a bill', async () => {
+    const { mock, sent } = completeMock();
+    dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
+    await settle();
+
+    expect(screen.getByText(labels.venueBill.paxHint)).toBeInTheDocument();
+    fireEvent.change(within(screen.getByTestId('pod-complete-venue-pax')).getByRole('spinbutton'), {
+      target: { value: '18' },
+    });
+    fireEvent.change(within(screen.getByTestId('pod-complete-overtime-hours')).getByRole('spinbutton'), {
+      target: { value: '1.5' },
+    });
+    await settle();
+    await submitForm();
+
+    expect(sent).toEqual([{ pod_id: 'pod-1', venue_bill_amount: 0, venue_pax: 18, overtime_hours: 1.5 }]);
+  });
+
+  it('will not complete with a fractional guest count', async () => {
+    const { mock, sent } = completeMock();
+    dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);
+    await settle();
+
+    fireEvent.change(within(screen.getByTestId('pod-complete-venue-pax')).getByRole('spinbutton'), {
+      target: { value: '2.5' },
+    });
+    await submitForm();
+
+    expect(await screen.findByText(labels.venueBill.paxInvalid)).toBeInTheDocument();
+    expect(sent).toEqual([]);
+  });
+
   it('sends the choice to pay the slot price on top of the bill', async () => {
     const { mock, sent } = completeMock();
     const { props, notifySuccess } = dialog(VENUE_POD, [anyPreviewMock(), mediaBoardMock(), mock]);

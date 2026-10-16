@@ -31,6 +31,7 @@ const VENUE_OPTION_ROUTES = [
   '/venues/settings',
   '/venues/earnings',
   '/venues/publish',
+  '/venues/rented-items',
   '/venues/pods',
   '/venues/change-requests',
   '/venues/pod-requests',

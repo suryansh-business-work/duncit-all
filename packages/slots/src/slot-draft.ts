@@ -9,6 +9,30 @@ export const MAX_FUTURE_DAYS = 60;
 export const NO_SPACE = ' ';
 
 /**
+ * How the venue charges for a slot: one price for the slot, a price per hour
+ * of it, or a price per guest. The server prices a slot the same way
+ * (slotCharge.ts) — this is only what the form offers and sends.
+ */
+export type SlotPricingMode = 'FLAT' | 'HOURLY' | 'PER_PAX';
+export const SLOT_PRICING_MODES: readonly SlotPricingMode[] = ['FLAT', 'HOURLY', 'PER_PAX'];
+
+/** The label of each mode, and the unit a price reads in — every key written out whole. */
+export const SLOT_PRICING_MODE_KEY: Record<SlotPricingMode, string> = {
+  FLAT: 'availability.pricingFlat',
+  HOURLY: 'availability.pricingHourly',
+  PER_PAX: 'availability.pricingPerPax',
+};
+export const SLOT_PRICE_UNIT_KEY: Record<SlotPricingMode, string> = {
+  FLAT: 'availability.priceUnitFlat',
+  HOURLY: 'availability.priceUnitHourly',
+  PER_PAX: 'availability.priceUnitPerPax',
+};
+
+/** A mode as the server sends it; anything unknown reads as a flat price. */
+export const slotPricingModeOf = (raw: unknown): SlotPricingMode =>
+  SLOT_PRICING_MODES.find((mode) => mode === raw) ?? 'FLAT';
+
+/**
  * Everything the partner fills in before a slot is sent — one object rather
  * than nine pieces of state, so the form and its fields share exactly one
  * shape and a reset is a single assignment.
@@ -20,6 +44,9 @@ export interface SlotDraft {
   startTime: Date | null;
   endTime: Date | null;
   price: string;
+  pricingMode: SlotPricingMode;
+  /** Rupees for each hour past the slot's end. '' = no overtime charge. */
+  overtimeRate: string;
   notes: string;
   /** '' is a real value here (whole venue), so "not picked yet" is NO_SPACE. */
   spaceLabel: string;
@@ -32,8 +59,17 @@ export const emptyDraft = (date: Date): SlotDraft => ({
   startTime: null,
   endTime: null,
   price: '',
+  pricingMode: 'FLAT',
+  overtimeRate: '',
   notes: '',
   spaceLabel: NO_SPACE,
+});
+
+/** The draft's pricing as a create input sends it: whole rupees, never below 0. */
+export const slotPricingInput = (draft: Pick<SlotDraft, 'price' | 'pricingMode' | 'overtimeRate'>) => ({
+  price: Math.max(0, Math.round(Number(draft.price) || 0)),
+  pricing_mode: draft.pricingMode,
+  overtime_rate: Math.max(0, Math.round(Number(draft.overtimeRate) || 0)),
 });
 
 /** The one thing wrong with a draft. `pickDates` / `pickSlotTimes` mean it is

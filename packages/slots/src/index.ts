@@ -55,9 +55,14 @@ export {
   minEndTime,
   minTimeOn,
   NO_SPACE,
+  SLOT_PRICE_UNIT_KEY,
+  SLOT_PRICING_MODES,
+  SLOT_PRICING_MODE_KEY,
   slotIssueMessage,
+  slotPricingInput,
+  slotPricingModeOf,
 } from './slot-draft';
-export type { SlotDraft, SlotIssueCode, Translate } from './slot-draft';
+export type { SlotDraft, SlotIssueCode, SlotPricingMode, Translate } from './slot-draft';
 export {
   DEFAULT_AUTO_EXTEND,
   DEFAULT_VENUE_RULES,

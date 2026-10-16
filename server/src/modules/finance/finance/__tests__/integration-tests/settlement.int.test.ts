@@ -225,12 +225,15 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
   it('venueChargeForPod: no venue owes nothing, whatever is entered', async () => {
     const host = await seedHost();
     const pod = await seedPod(host._id);
-    expect(await venueChargeForPod(pod, 500, true)).toEqual({
+    expect(await venueChargeForPod(pod, 500, true)).toMatchObject({
       slot_price: 0,
       slot_linked: false,
       bill: 0,
       slot_included: false,
       amount: 0,
+      pricing_mode: 'FLAT',
+      overtime_hours: 0,
+      overtime_amount: 0,
     });
   });
 
@@ -267,30 +270,39 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
 
   it('venueChargeForPod: a bill replaces the slot price, or is paid on top of it', async () => {
     const { pod } = await seedSlotPod(300);
-    expect(await venueChargeForPod(pod, 450, false)).toEqual({
+    expect(await venueChargeForPod(pod, 450, false)).toMatchObject({
       slot_price: 300,
       slot_linked: true,
       bill: 450,
       slot_included: false,
       amount: 450,
+      pricing_mode: 'FLAT',
+      overtime_hours: 0,
+      overtime_amount: 0,
     });
-    expect(await venueChargeForPod(pod, 450, true)).toEqual({
+    expect(await venueChargeForPod(pod, 450, true)).toMatchObject({
       slot_price: 300,
       slot_linked: true,
       bill: 450,
       slot_included: true,
       amount: 750,
+      pricing_mode: 'FLAT',
+      overtime_hours: 0,
+      overtime_amount: 0,
     });
   });
 
   it('venueChargeForPod: a free slot has nothing to include, so the bill is the whole amount', async () => {
     const { pod } = await seedSlotPod(0);
-    expect(await venueChargeForPod(pod, 450, true)).toEqual({
+    expect(await venueChargeForPod(pod, 450, true)).toMatchObject({
       slot_price: 0,
       slot_linked: true,
       bill: 450,
       slot_included: false,
       amount: 450,
+      pricing_mode: 'FLAT',
+      overtime_hours: 0,
+      overtime_amount: 0,
     });
     // Still a linked slot, so a caller that names no mode cannot move it off ₹0.
     expect((await venueChargeForPod(pod, 450)).amount).toBe(0);

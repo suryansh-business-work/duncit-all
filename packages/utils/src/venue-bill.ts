@@ -39,6 +39,13 @@ export interface VenueBillLabels {
   venueTotalWithSlot: string;
   /** After submitting: the payouts wait on Finance. */
   sentToFinance: string;
+  /** The venue's usage at completion: guests charged for (a per-guest slot) and hours past the slot. */
+  pax: string;
+  paxHint: string;
+  paxInvalid: string;
+  overtimeHours: string;
+  overtimeHint: string;
+  overtimeInvalid: string;
 }
 
 /** `mweb.*` — mWeb and the native app. */
@@ -62,6 +69,12 @@ export function mwebVenueBillLabels(t: VenueBillTranslate): VenueBillLabels {
     venueTotal: t('mweb.venueBill.venueTotal'),
     venueTotalWithSlot: t('mweb.venueBill.venueTotalWithSlot'),
     sentToFinance: t('mweb.venueBill.sentToFinance'),
+    pax: t('mweb.venueBill.pax'),
+    paxHint: t('mweb.venueBill.paxHint'),
+    paxInvalid: t('mweb.venueBill.paxInvalid'),
+    overtimeHours: t('mweb.venueBill.overtimeHours'),
+    overtimeHint: t('mweb.venueBill.overtimeHint'),
+    overtimeInvalid: t('mweb.venueBill.overtimeInvalid'),
   };
 }
 
@@ -86,6 +99,12 @@ export function shellVenueBillLabels(t: VenueBillTranslate): VenueBillLabels {
     venueTotal: t('shell.venueBill.venueTotal'),
     venueTotalWithSlot: t('shell.venueBill.venueTotalWithSlot'),
     sentToFinance: t('shell.venueBill.sentToFinance'),
+    pax: t('shell.venueBill.pax'),
+    paxHint: t('shell.venueBill.paxHint'),
+    paxInvalid: t('shell.venueBill.paxInvalid'),
+    overtimeHours: t('shell.venueBill.overtimeHours'),
+    overtimeHint: t('shell.venueBill.overtimeHint'),
+    overtimeInvalid: t('shell.venueBill.overtimeInvalid'),
   };
 }
 

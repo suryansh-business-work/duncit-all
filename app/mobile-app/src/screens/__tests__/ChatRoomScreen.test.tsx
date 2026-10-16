@@ -121,9 +121,11 @@ describe('ChatRoomScreen', () => {
     expect(screen.queryByTestId('emoji-bar')).toBeNull();
   });
 
-  it('reacts to a message via long-press', () => {
+  it('reacts to a message from its long-press actions', () => {
     const actions = mount({ messages: [message('m2', 'u2')] });
     fireEvent(screen.getByTestId('chat-message-m2'), 'longPress');
+    // Long-press opens the message's actions; React opens the emoji picker.
+    fireEvent.press(screen.getByTestId('chat-message-action-react'));
     fireEvent.press(screen.getByTestId('emoji-👍'));
     expect(actions.react).toHaveBeenCalledWith('m2', '👍');
   });

@@ -1,4 +1,5 @@
 import { AccountHealthScreen } from '@/screens/AccountHealthScreen';
+import { VenueRentedItemsScreen } from '@/screens/VenueRentedItemsScreen';
 import { AccountScreen } from '@/screens/AccountScreen';
 import { AllSupportTicketsScreen } from '@/screens/AllSupportTicketsScreen';
 import { BeClubAdminScreen } from '@/screens/BeClubAdminScreen';
@@ -165,6 +166,7 @@ export function renderCoreScreens() {
       <Stack.Screen name="VenueFoodMenu" component={VenueFoodMenuScreen} />
       <Stack.Screen name="VenueFoodOrders" component={VenueFoodOrdersScreen} />
       <Stack.Screen name="VenueFoodCoupons" component={VenueFoodCouponsScreen} />
+      <Stack.Screen name="VenueRentedItems" component={VenueRentedItemsScreen} />
       <Stack.Screen name="BrandOrders" component={GatedBrandOrdersScreen} />
       <Stack.Screen name="BrandOrderDetail" component={GatedBrandOrderDetailScreen} />
       <Stack.Screen name="BrandWarehouses" component={GatedBrandWarehousesScreen} />

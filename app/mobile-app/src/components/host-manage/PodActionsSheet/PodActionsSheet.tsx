@@ -26,6 +26,7 @@ export function PodActionsSheet({
   onSlotRequest,
   onComplete,
   onEdit,
+  onHostAgain,
   onOpenPodMedia,
   onSharePodMedia,
   onCopyPodMedia,
@@ -116,6 +117,13 @@ export function PodActionsSheet({
           enabled={canAmend}
           reason={amendClosed}
           onPress={onEdit}
+        />
+        <ActionRow
+          testID="pod-action-host-again"
+          icon="replay"
+          label={t('mweb.hostPodActions.hostAgain')}
+          tint={primary}
+          onPress={onHostAgain}
         />
         {showAttendeeActions ? (
           <PodLinkRows

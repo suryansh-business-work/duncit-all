@@ -36,6 +36,8 @@ describe('blankPodCompleteValues', () => {
       venue_bill_amount: '',
       venue_bill_media: '',
       include_slot_price: false,
+      venue_pax: '',
+      overtime_hours: '',
     });
   });
 });

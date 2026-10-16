@@ -26,6 +26,7 @@ import {
   CLUB_ADMIN_BUNDLE,
   CLUB_FORM_BUNDLE,
   FULFILMENT_BUNDLE,
+  VENUE_RENTALS_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/i18n';
@@ -90,6 +91,8 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   // — the same ones the MUI form renders on mWeb (rule 27).
   ...CLUB_FORM_BUNDLE,
   ...FULFILMENT_BUNDLE,
+  // venueRentals.*: renting items at checkout and in the Pod Shop, the guest's rented items and the venue desk.
+  ...VENUE_RENTALS_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

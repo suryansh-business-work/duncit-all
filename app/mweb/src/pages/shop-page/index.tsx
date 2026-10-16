@@ -25,7 +25,7 @@ import { SHOP_PRODUCTS, type ShopProduct } from './queries';
  * include-out-of-stock and sort), the promo slider, then the super-category
  * pills over the product grid. The app header shows the "Deliver to" address
  * here instead of the city. Tapping a product opens its detail page. */
-export default function ShopPage() {
+export default function ShopPage({ hideHeader = false }: Readonly<{ hideHeader?: boolean }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
@@ -85,7 +85,7 @@ export default function ShopPage() {
   return (
     <Stack data-testid="shop-page" spacing={2.5} sx={{ py: 0.5 }}>
       {/* The cart lives in the app header now, on every page — not just here. */}
-      <PageHeader testId="shop-page-header" title={t('mweb.shop.title')} />
+      {!hideHeader && <PageHeader testId="shop-page-header" title={t('mweb.shop.title')} />}
       <ShopFilterBar filters={filters} />
       <PodShopSlider />
       {filters.superOptions.length > 0 && (

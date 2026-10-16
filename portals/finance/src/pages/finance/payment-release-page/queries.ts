@@ -183,7 +183,7 @@ export const REVIEW_PAYMENT_RELEASE = gql`
   }
 `;
 
-export type ReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT';
+export type ReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT' | 'VENUE_RENTAL';
 export type ReleaseStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 /** One pod request — a Payment Release table row. */

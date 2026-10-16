@@ -23,6 +23,7 @@ import { venueSubCategoryIds } from '@modules/venues/venue/venue.categories';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { buildProductRequests, validateHasImage } from '@modules/pods/pod/pod.service';
 import { breakdownService, venueSlotProjections } from '@modules/finance/finance/breakdown.service';
+import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
 import { ensureOwnedVenue, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
@@ -983,7 +984,8 @@ export const autoPodService = {
       venueId: String(venue._id),
       podAmount: doc.pod_amount ?? 0,
       noOfSpots: doc.no_of_spots ?? 0,
-      slotPrices: inWindow.map((slot) => slot.price),
+      // Each slot as the venue would charge it, by its pricing mode.
+      slotPrices: inWindow.map((slot) => slotVenueCharge(slot, { pax: doc.no_of_spots ?? 0 }).total),
     });
     // The venue goes first, so the offer is still unpriced: the host prices it
     // afterwards against THIS slot's price, and that write is where coverage
@@ -999,7 +1001,7 @@ export const autoPodService = {
         whole_day: slot.whole_day,
         space_label: slot.space_label,
         capacity: slot.capacity,
-        price: slot.price,
+        price: slotVenueCharge(slot, { pax: doc.no_of_spots ?? 0 }).total,
         ...projections[index],
         viable: unpriced || projections[index].viable,
       })),

@@ -1703,6 +1703,8 @@ export type AppSettings = {
   checkout_nudge_minutes: Scalars['Int']['output'];
   /** Account Health points a CLUB ADMIN loses for filing a Request Change on a pod in their club (0-10, 0 disables it). */
   club_admin_change_request_health_penalty: Scalars['Int']['output'];
+  /** Club chat messages older than this many days are permanently deleted (1-3650). */
+  club_chat_retention_days: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
   custom_time?: Maybe<Scalars['String']['output']>;
   /** Server's real time when the CUSTOM anchor was saved (ISO). */
@@ -1732,6 +1734,8 @@ export type AppSettings = {
   pod_cancel_risk_alert_hours: Scalars['Int']['output'];
   /** How many hours before a pod's start it is watched for cancellation risk: inside this window a finance-negative pod is flagged and its host and club admins are alerted. */
   pod_cancel_risk_window_hours: Scalars['Int']['output'];
+  /** How many hours after a pod ends its chat is permanently deleted (1-8760). */
+  pod_chat_retention_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends the host is emailed and WhatsApped a reminder to complete it. */
   pod_complete_reminder_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends its host has to complete it. Past that they can no longer mark attendance and the pod settles with no host earnings. */
@@ -1742,6 +1746,10 @@ export type AppSettings = {
   pod_reminder_lead_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
   pod_sameday_reminder_hours: Scalars['Int']['output'];
+  /** The most dates one recurring pod series may create (2-52). */
+  pod_series_max_occurrences: Scalars['Int']['output'];
+  /** How many days past its first date a recurring pod series may run (7-365). */
+  pod_series_max_span_days: Scalars['Int']['output'];
   /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -4021,6 +4029,10 @@ export type ChatParticipants = {
 
 export type ChatRoom = {
   __typename?: 'ChatRoom';
+  /** When this room's messages are permanently deleted: the pod's end plus the admin-set chat retention. Null when the pod has no usable start. */
+  chat_deletes_at?: Maybe<Scalars['String']['output']>;
+  /** Whether the pod has ended, which closes the room to new messages. */
+  closed: Scalars['Boolean']['output'];
   club_id?: Maybe<Scalars['ID']['output']>;
   /** The club's URL slug (Club.club_id) for building the pod detail path. */
   club_slug?: Maybe<Scalars['String']['output']>;
@@ -4104,6 +4116,12 @@ export type CheckoutQuoteInput = {
   pod_id?: InputMaybe<Scalars['ID']['input']>;
   /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
   seats?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** One rented item picked at pod checkout. The rate, deposit and stock come from the venue, never the client. */
+export type CheckoutRentalSelectionInput = {
+  item_id: Scalars['ID']['input'];
+  quantity: Scalars['Int']['input'];
 };
 
 export type ClaimStressRunInput = {
@@ -4476,6 +4494,25 @@ export type ClubAdminTrendPoint = {
   label: Scalars['String']['output'];
   pods: Scalars['Int']['output'];
   revenue: Scalars['Float']['output'];
+};
+
+/** A club's chat room, for everyone who joined the club plus its admins and hosts. */
+export type ClubChatRoom = {
+  __typename?: 'ClubChatRoom';
+  /** Whether the viewer may remove other members' messages (a club admin). */
+  can_moderate: Scalars['Boolean']['output'];
+  club_id: Scalars['ID']['output'];
+  club_name: Scalars['String']['output'];
+  /** The club's URL slug (Club.club_id). */
+  club_slug: Scalars['String']['output'];
+  cover_url?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  last_message_at?: Maybe<Scalars['String']['output']>;
+  last_message_preview?: Maybe<Scalars['String']['output']>;
+  last_message_type?: Maybe<PodMessageType>;
+  /** Messages older than this many days are permanently deleted (Clubs > Club Settings). */
+  retention_days: Scalars['Int']['output'];
+  super_category_id?: Maybe<Scalars['ID']['output']>;
 };
 
 export type ClubFaq = {
@@ -5559,6 +5596,8 @@ export type CompletePodInput = {
    */
   include_slot_price?: InputMaybe<Scalars['Boolean']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
+  /** Hours the pod ran past its slot's end, charged at the slot's overtime rate (0-48). */
+  overtime_hours?: InputMaybe<Scalars['Float']['input']>;
   pod_id: Scalars['ID']['input'];
   /**
    * The venue's final bill. 0 leaves the booked slot price standing; anything
@@ -5568,6 +5607,8 @@ export type CompletePodInput = {
   venue_bill_amount: Scalars['Float']['input'];
   /** The uploaded bill itself — required whenever a bill is to change the venue's money. */
   venue_bill_url?: InputMaybe<Scalars['String']['input']>;
+  /** A PER_PAX slot: the people actually at the pod, overriding the booked seats (0-10000). */
+  venue_pax?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /**
@@ -6523,7 +6564,10 @@ export type CreateVenueSlotInput = {
   capacity?: InputMaybe<Scalars['Int']['input']>;
   end_at: Scalars['String']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+  overtime_rate?: InputMaybe<Scalars['Int']['input']>;
   price?: InputMaybe<Scalars['Int']['input']>;
+  /** How price is read (defaults to FLAT). */
+  pricing_mode?: InputMaybe<SlotPricingMode>;
   /** The venue space this slot is for ('' = whole venue). Slots in different spaces may share a time. */
   space_label?: InputMaybe<Scalars['String']['input']>;
   start_at: Scalars['String']['input'];
@@ -7587,6 +7631,8 @@ export type DummyCheckoutInput = {
   /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
   seats?: InputMaybe<Scalars['Int']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
+  /** Rented items for the pod (item id + quantity). Priced on the server and charged in full: no coupon or coins. */
+  selected_rentals?: InputMaybe<Array<CheckoutRentalSelectionInput>>;
   /** Delivery address, required when any product ships. */
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
   simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
@@ -11793,6 +11839,14 @@ export type ManualLogInput = {
   summary?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type MarkRentalBookingInput = {
+  /** Rupees kept from the deposit, required for DAMAGED, never more than the deposit. */
+  damage_claim?: InputMaybe<Scalars['Float']['input']>;
+  /** What was damaged (required for DAMAGED). */
+  note?: InputMaybe<Scalars['String']['input']>;
+  outcome: RentalMarkOutcome;
+};
+
 export type MarketingCampaign = {
   __typename?: 'MarketingCampaign';
   audience: MarketingCampaignAudience;
@@ -13036,6 +13090,7 @@ export type Mutation = {
   deletePodExpense: Scalars['Boolean']['output'];
   deletePodIdea: Scalars['Boolean']['output'];
   deletePodIdeaComment: PodIdea;
+  /** Removes a pod OR club chat message: your own, or anyone's in a room you moderate. */
   deletePodMessage?: Maybe<PodMessage>;
   deletePodPlan: Scalars['Boolean']['output'];
   deletePolicy: Scalars['Boolean']['output'];
@@ -13193,6 +13248,12 @@ export type Mutation = {
    */
   grantE2eRunAccountRoles: Array<Scalars['String']['output']>;
   /**
+   * "Host again": a new draft holding one of the caller's own pods' content
+   * (title, description, media, pricing, perks) with no date, slot or attendees,
+   * ready to open in Create Pod. A cancelled pod can be hosted again too.
+   */
+  hostAgainPod: PodDraft;
+  /**
    * Host enrols: assigns themselves, setting the pod's ticket price and spots.
    * Only once a venue has fixed the slot on a physical offer. location_id is
    * the city the host had selected — required when nobody has enrolled yet on
@@ -13201,6 +13262,8 @@ export type Mutation = {
    * will run it in; it is ignored on a physical one.
    */
   hostAssignAutoPod: AutoPod;
+  /** Host: cancel every date of the series that has not started yet. Returns how many. */
+  hostCancelPodSeries: Scalars['Int']['output'];
   hostDeletePod: Scalars['Boolean']['output'];
   /**
    * Host marks one attendee present without a scan.
@@ -13364,6 +13427,10 @@ export type Mutation = {
   markNotificationRead: Scalars['Boolean']['output'];
   /** The goods are back (handed in at the venue, or the courier scan never came). */
   markPodShopReturnReceived: PodShopReturn;
+  /** Venue owner or venues console: the item came back, or part of the deposit is kept for damage. */
+  markRentalBooking: RentalBooking;
+  /** Finance: the rental refund was paid back to the guest. */
+  markRentalRefunded: RentalBooking;
   /** The content is fine: close every open report on it as DISMISSED. */
   markReportedContentOk: ContentReport;
   /** Mark what they sent you as read. Returns how many that was. */
@@ -13409,6 +13476,8 @@ export type Mutation = {
   /** Finalize & Publish. Republishing is a staff-only correction and needs a reason. */
   publishPodChallengeResult: PodChallenge;
   publishPodDraft: Pod;
+  /** Publishes a draft as a recurring pod: one pod per date that can run. */
+  publishPodDraftSeries: PodSeriesPublishResult;
   /** Publish the page and get its tracked link. Safe to repeat: one link per page. */
   publishPublicPage: PublicPageLink;
   /**
@@ -13464,6 +13533,7 @@ export type Mutation = {
   ratePodChallengeCompetitor: PodChallenge;
   /** Competitor: check in at a checkpoint with the code its QR link carries. */
   reachPodChallengeCheckpoint: PodChallenge;
+  /** Toggles a reaction on a pod OR club chat message. */
   reactToPodMessage: PodMessage;
   /**
    * React, or take the reaction back. The same kind again removes it; a
@@ -13576,6 +13646,12 @@ export type Mutation = {
    * announced every build twice would be ignored within a week.
    */
   reportAppBuild: AppBuild;
+  /**
+   * Report a line in a pod's or club's chat. Only a member of that room can, and
+   * the text (or photo) is snapshotted server-side. Same REPORT_ALREADY_PENDING
+   * rule as reportPost.
+   */
+  reportChatMessage: ContentReportReceipt;
   /**
    * Record progress, one suite's result, or the run's outcome. Tech/Super admin
    * only — the workflow authenticates with the same TECH_MANAGER JWT the build
@@ -13920,6 +13996,7 @@ export type Mutation = {
    * admin only; SMTP + OpenAI credentials come from the Tech portal env entries.
    */
   sendAppReleaseEmail: AppReleaseEmailResult;
+  sendClubMessage: PodMessage;
   /** Write to the reporter or to the content's owner about this report. */
   sendContentReportMail: ContentReport;
   sendCrmTestEmail: CrmEmailTestResult;
@@ -14089,6 +14166,8 @@ export type Mutation = {
   setVenueFoodOrderStatus: VenueFoodOrder;
   /** Admin-only: the venue's monthly host Pod Request limit (null = the default of 10). */
   setVenueHostRequestLimit: Venue;
+  /** Venues console: whether this venue's refundable deposits carry GST with the rent (default on). */
+  setVenueRentalDepositGst: VenueRentalDepositGst;
   /** Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it. */
   setWhatsappDefaultMedia: WaScenarioBoard;
   /** Flip one scenario. Pass __global__ as the key for the kill switch. */
@@ -14625,6 +14704,8 @@ export type Mutation = {
   updateReelProject: ReelProject;
   /** Finance: what a referral pays and what a member's share sheet says. */
   updateReferralSettings: ReferralSettings;
+  /** Finance: change the rental settings. Fields left out keep their value. */
+  updateRentalSettings: RentalSettings;
   updateReportCategory: ReportCategory;
   /** Support portal: edit the chips and prompt the app renders. */
   updateReportProblemConfig: ReportProblemConfig;
@@ -14684,6 +14765,8 @@ export type Mutation = {
   venueAcceptAutoPod: AutoPod;
   /** Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings. */
   venueCancelPod: VenueCancelPodResult;
+  /** Venue owner: accept or decline every still-pending date of a series at once. */
+  venueDecidePodSeries: PodSeriesDecisionResult;
   /** Public: a one-shot pass to upload one feedback photo for a served, not yet rated order. */
   venueFoodFeedbackUploadPass: ImagekitAuth;
   /** The venue takes its slot back while the offer is still enrolling; the offer returns to venues' lists and the venue pays the Pod Settings penalty. */
@@ -16783,12 +16866,24 @@ export type MutationGrantE2eRunAccountRolesArgs = {
 };
 
 
+export type MutationHostAgainPodArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationHostAssignAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   location_id?: InputMaybe<Scalars['ID']['input']>;
   meeting?: InputMaybe<AutoPodHostMeetingInput>;
   no_of_spots?: InputMaybe<Scalars['Int']['input']>;
   pod_amount?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type MutationHostCancelPodSeriesArgs = {
+  reason_note?: InputMaybe<Scalars['String']['input']>;
+  reason_subject: Scalars['String']['input'];
+  series_id: Scalars['ID']['input'];
 };
 
 
@@ -16977,6 +17072,18 @@ export type MutationMarkPodShopReturnReceivedArgs = {
 };
 
 
+export type MutationMarkRentalBookingArgs = {
+  id: Scalars['ID']['input'];
+  input: MarkRentalBookingInput;
+};
+
+
+export type MutationMarkRentalRefundedArgs = {
+  id: Scalars['ID']['input'];
+  reference: Scalars['String']['input'];
+};
+
+
 export type MutationMarkReportedContentOkArgs = {
   id: Scalars['ID']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
@@ -17087,6 +17194,13 @@ export type MutationPublishPodChallengeResultArgs = {
 export type MutationPublishPodDraftArgs = {
   draft_id: Scalars['ID']['input'];
   input: CreatePodInput;
+};
+
+
+export type MutationPublishPodDraftSeriesArgs = {
+  draft_id: Scalars['ID']['input'];
+  input: CreatePodInput;
+  plan: PodSeriesPlanInput;
 };
 
 
@@ -17431,6 +17545,13 @@ export type MutationReplyToTicketArgs = {
 
 export type MutationReportAppBuildArgs = {
   input: ReportAppBuildInput;
+};
+
+
+export type MutationReportChatMessageArgs = {
+  details?: InputMaybe<Scalars['String']['input']>;
+  message_id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
 };
 
 
@@ -17963,6 +18084,14 @@ export type MutationSendAppReleaseEmailArgs = {
 };
 
 
+export type MutationSendClubMessageArgs = {
+  club_id: Scalars['ID']['input'];
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  text?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<PodMessageType>;
+};
+
+
 export type MutationSendContentReportMailArgs = {
   id: Scalars['ID']['input'];
   input: ContentReportMailInput;
@@ -18426,6 +18555,12 @@ export type MutationSetVenueFoodOrderStatusArgs = {
 export type MutationSetVenueHostRequestLimitArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   venue_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetVenueRentalDepositGstArgs = {
+  charge_gst: Scalars['Boolean']['input'];
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -19973,6 +20108,11 @@ export type MutationUpdateReferralSettingsArgs = {
 };
 
 
+export type MutationUpdateRentalSettingsArgs = {
+  input: RentalSettingsInput;
+};
+
+
 export type MutationUpdateReportCategoryArgs = {
   id: Scalars['ID']['input'];
   input: ReportCategoryInput;
@@ -20184,6 +20324,13 @@ export type MutationVenueAcceptAutoPodArgs = {
 export type MutationVenueCancelPodArgs = {
   pod_id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
+};
+
+
+export type MutationVenueDecidePodSeriesArgs = {
+  approve: Scalars['Boolean']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  series_id: Scalars['ID']['input'];
 };
 
 
@@ -21449,6 +21596,11 @@ export type PaymentReleaseBreakdown = {
   share_amount: Scalars['Float']['output'];
   share_pct: Scalars['Float']['output'];
   venue_bill: Scalars['Float']['output'];
+  venue_overtime_amount: Scalars['Float']['output'];
+  venue_overtime_hours: Scalars['Float']['output'];
+  venue_pax: Scalars['Int']['output'];
+  /** How the slot was priced, and the pax and overtime its charge used — frozen at completion. */
+  venue_pricing_mode: SlotPricingMode;
   /**
    * The venue's booked slot price at completion. Beside venue_bill (the final
    * bill entered then) it is how the venue's amount was arrived at. 0 on
@@ -21473,7 +21625,9 @@ export type PaymentReleaseKind =
    */
   | 'ECOMM_PAYMENT'
   | 'HOST_PAYMENT'
-  | 'VENUE_BILLING';
+  | 'VENUE_BILLING'
+  /** A venue's rented-item money: rent less Duncit's rental commission, plus any deposit it kept. */
+  | 'VENUE_RENTAL';
 
 export type PaymentReleaseMedia = {
   __typename?: 'PaymentReleaseMedia';
@@ -21916,6 +22070,11 @@ export type Pod = {
   seats_available: Scalars['Int']['output'];
   /** Seats taken — attendees plus every extra seat a multi-seat booking holds. */
   seats_taken: Scalars['Int']['output'];
+  /** The recurring series this pod is one date of; null for a one-time pod. */
+  series_id?: Maybe<Scalars['ID']['output']>;
+  /** This date's position in its series (from 1), and how many dates the series had. */
+  series_index?: Maybe<Scalars['Int']['output']>;
+  series_total?: Maybe<Scalars['Int']['output']>;
   /** Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod. */
   ticket_discount_enabled: Scalars['Boolean']['output'];
   /** The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price. */
@@ -22776,6 +22935,16 @@ export type PodChangeStatus =
   | 'RESOLVED'
   | 'WITHDRAWN';
 
+export type PodChatInfo = {
+  __typename?: 'PodChatInfo';
+  /** Whether the viewer may remove other members' messages (a host of the pod). */
+  can_moderate: Scalars['Boolean']['output'];
+  /** When this room's messages are permanently deleted. Null when the pod has no usable start. */
+  chat_deletes_at?: Maybe<Scalars['String']['output']>;
+  /** Whether the pod has ended, which closes the room to new messages. */
+  closed: Scalars['Boolean']['output'];
+};
+
 /** A co-host on a pod. View-only: they cannot edit, complete or delete it, and the pod's earnings are unaffected. */
 export type PodCoHost = {
   __typename?: 'PodCoHost';
@@ -23480,13 +23649,15 @@ export type PodMembershipState = {
   status?: Maybe<MembershipStatus>;
 };
 
+/** A chat line in a pod's room (pod_id) or a club's room (club_id) — exactly one is set. */
 export type PodMessage = {
   __typename?: 'PodMessage';
+  club_id?: Maybe<Scalars['ID']['output']>;
   createdAt: Scalars['String']['output'];
   deleted: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   image_url?: Maybe<Scalars['String']['output']>;
-  pod_id: Scalars['ID']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
   reactions: Array<PodMessageReaction>;
   text?: Maybe<Scalars['String']['output']>;
   type: PodMessageType;
@@ -23513,6 +23684,7 @@ export type PodMode =
 
 export type PodOccurrence =
   | 'ALTERNATE_DAY'
+  | 'BIWEEKLY'
   | 'DAILY'
   | 'MONTHLY'
   | 'ONE_TIME'
@@ -23709,6 +23881,39 @@ export type PodProductRequestInput = {
   quantity: Scalars['Int']['input'];
 };
 
+/** What a guest can rent for one pod. */
+export type PodRentalCatalogue = {
+  __typename?: 'PodRentalCatalogue';
+  /** DISABLED, NO_VENUE or CUTOFF while closed; null while open. */
+  closed_reason?: Maybe<Scalars['String']['output']>;
+  currency_symbol: Scalars['String']['output'];
+  /** Hours an HOUR item is charged for on this pod. */
+  hours: Scalars['Int']['output'];
+  items: Array<PodRentalItem>;
+  /** Whether renting is open for this pod right now. */
+  open: Scalars['Boolean']['output'];
+  /** The venue's own rental terms (rich-text HTML), shown with Duncit's. Sanitise before rendering. */
+  venue_terms_html: Scalars['String']['output'];
+};
+
+/** One item a pod's venue rents out, with what is left of it for that pod. */
+export type PodRentalItem = {
+  __typename?: 'PodRentalItem';
+  /** Units still free for this pod. */
+  available: Scalars['Int']['output'];
+  /** Refundable deposit per unit. */
+  deposit: Scalars['Int']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  /** The most each guest on a booking may rent. */
+  per_guest_limit: Scalars['Int']['output'];
+  rate: Scalars['Int']['output'];
+  /** SLOT: the rate covers the whole pod. HOUR: the rate is per hour of the pod. */
+  unit: VenueRentalUnit;
+};
+
 /** Why a cancellation cannot be revoked. */
 export type PodRevokeBlockedReason =
   /** The pod is not cancelled — there is nothing to undo. */
@@ -23778,6 +23983,86 @@ export type PodRowStatus =
   /** The venue owner declined the slot request. */
   | 'VENUE_REJECTED';
 
+/** One date of a recurring plan. */
+export type PodSeriesDate = {
+  __typename?: 'PodSeriesDate';
+  available: Scalars['Boolean']['output'];
+  end_at?: Maybe<Scalars['String']['output']>;
+  /** That slot's price — it may differ from date to date. */
+  price?: Maybe<Scalars['Int']['output']>;
+  reason?: Maybe<PodSeriesSkipReason>;
+  /** Physical pods: the venue slot this date would book. */
+  slot_id?: Maybe<Scalars['ID']['output']>;
+  start_at: Scalars['String']['output'];
+};
+
+export type PodSeriesDecisionResult = {
+  __typename?: 'PodSeriesDecisionResult';
+  /** Dates answered. */
+  decided: Scalars['Int']['output'];
+  /** Dates that could no longer be answered (already started, already decided). */
+  failed: Scalars['Int']['output'];
+};
+
+/** How often a recurring pod repeats. */
+export type PodSeriesFrequency =
+  | 'BIWEEKLY'
+  | 'DAILY'
+  | 'WEEKLY';
+
+/** The recurring plan a host is about to publish. */
+export type PodSeriesPlanInput = {
+  /** The last moment of the chosen end day (ISO), worked out in the admin-set time zone. */
+  ends_on: Scalars['String']['input'];
+  frequency: PodSeriesFrequency;
+  /** Virtual pods: the first date's start and end. */
+  pod_date_time?: InputMaybe<Scalars['String']['input']>;
+  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
+  pod_mode: Scalars['String']['input'];
+  /** Dates (ISO starts) the host unticked in the preview. */
+  skip_dates?: InputMaybe<Array<Scalars['String']['input']>>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+  /** The slot of the FIRST date. Every later date needs an identical slot (same space and times). */
+  venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type PodSeriesPreview = {
+  __typename?: 'PodSeriesPreview';
+  dates: Array<PodSeriesDate>;
+  frequency: PodSeriesFrequency;
+  /** Admin limits the plan was checked against. */
+  max_occurrences: Scalars['Int']['output'];
+  max_span_days: Scalars['Int']['output'];
+};
+
+export type PodSeriesPublishResult = {
+  __typename?: 'PodSeriesPublishResult';
+  created_count: Scalars['Int']['output'];
+  pods: Array<Pod>;
+  series_id: Scalars['ID']['output'];
+  skipped: Array<PodSeriesSkippedDate>;
+};
+
+/** Why a date of a recurring pod did not become a pod. */
+export type PodSeriesSkipReason =
+  /** The date could not be created (in the past, or refused on its own). */
+  | 'FAILED'
+  /** The venue is on leave that day. */
+  | 'HOLIDAY'
+  /** The venue opened no matching slot on that date. */
+  | 'NO_SLOT'
+  /** The host took the date out before publishing. */
+  | 'REMOVED_BY_HOST'
+  /** The matching slot is already booked or held. */
+  | 'TAKEN';
+
+export type PodSeriesSkippedDate = {
+  __typename?: 'PodSeriesSkippedDate';
+  date: Scalars['String']['output'];
+  detail?: Maybe<Scalars['String']['output']>;
+  reason: PodSeriesSkipReason;
+};
+
 export type PodSettlement = {
   __typename?: 'PodSettlement';
   /** Seats a host scanned in at the door. The settlement basis. */
@@ -23819,6 +24104,13 @@ export type PodSettlement = {
   /** The venue's final bill as entered. 0 when none was. */
   venue_bill: Scalars['Float']['output'];
   venue_commission_pct: Scalars['Float']['output'];
+  venue_overtime_amount: Scalars['Float']['output'];
+  /** Hours the pod ran past the slot's end, and their charge. */
+  venue_overtime_hours: Scalars['Float']['output'];
+  /** People a PER_PAX slot was charged for (0 otherwise) — the booked seats unless overridden at completion. */
+  venue_pax: Scalars['Int']['output'];
+  /** How the slot is priced: the whole slot, per hour or per person. */
+  venue_pricing_mode: SlotPricingMode;
   /** The slot's booked price — what the venue was promised before any bill. 0 without a slot. */
   venue_slot_price: Scalars['Float']['output'];
   waterfall: PodFinanceWaterfall;
@@ -24997,6 +25289,16 @@ export type PublicProfile = {
   zone?: Maybe<Scalars['String']['output']>;
 };
 
+/** What a guest needs before renting: the terms and the rules that apply to them. */
+export type PublicRentalSettings = {
+  __typename?: 'PublicRentalSettings';
+  booking_cutoff_hours: Scalars['Int']['output'];
+  deposit_refundable: Scalars['Boolean']['output'];
+  enabled: Scalars['Boolean']['output'];
+  rent_refundable_on_backout: Scalars['Boolean']['output'];
+  terms_html: Scalars['String']['output'];
+};
+
 export type PublicRole = {
   __typename?: 'PublicRole';
   description?: Maybe<Scalars['String']['output']>;
@@ -25361,11 +25663,14 @@ export type Query = {
   /** Onboarded Club Admins, for the Onboarding portal's table. */
   clubAdminProfilesTable: ClubAdminProfileTablePage;
   clubBySlug?: Maybe<Club>;
+  /** One club's chat room header, for members only. */
+  clubChatRoom: ClubChatRoom;
   /**
    * People who follow this club — the list behind followers_count, so the count
    * on the club page can open the members it is counting.
    */
   clubFollowers: Array<PublicProfile>;
+  clubMessages: Array<PodMessage>;
   clubRatings: Array<ClubRating>;
   /** Every venue-slot request hosts have raised — the Clubs console's list. */
   clubSlotRequestsTable: ClubSlotRequestTablePage;
@@ -25923,6 +26228,8 @@ export type Query = {
   /** Partner: their deletion requests (optionally one brand's). */
   myCatalogDeletionRequests: Array<CatalogDeletionRequest>;
   myChatRooms: Array<ChatRoom>;
+  /** Club chat rooms the caller can open (joined, admin or host). */
+  myClubChatRooms: Array<ClubChatRoom>;
   /**
    * Pods across the signed-in Club Admin's clubs for the Club Studio "Your Pods"
    * section, newest first — the club-side twin of venuePods. Every stage shows,
@@ -26065,6 +26372,8 @@ export type Query = {
   myRegionMembers: Array<RegionMember>;
   /** The whole canvas: Region -> City -> Locality -> Club Admin -> Host. */
   myRegionTree: RegionTree;
+  /** Signed in: the guest's own rented items, newest first. */
+  myRentalBookings: Array<RentalBooking>;
   /** The viewer's saved pods, with optional server-side search, category filter (matches the selected category and its sub-categories) and sort. */
   mySavedPods: Array<Pod>;
   /** The signed-in owner's saved recurring-slot templates (optionally scoped to a venue). */
@@ -26198,6 +26507,8 @@ export type Query = {
   podChangeRequests: PodChangeRequestPage;
   /** Admin: free slots at a candidate venue, for a VENUE request. */
   podChangeVenueSlots: Array<PodChangeSlot>;
+  /** A pod room's retention and moderation facts, for its members. */
+  podChatInfo: PodChatInfo;
   podComments: Array<PodComment>;
   /** The Admin panel's Pods dashboard, in one read. */
   podDashboard: PodDashboard;
@@ -26239,8 +26550,12 @@ export type Query = {
   podPaymentReleasesTable: PodPaymentReleaseTablePage;
   podPlans: Array<PodPlan>;
   podPlansTable: PodPlanTablePage;
+  /** Anyone: what the pod's venue rents out, and how much is left for this pod. */
+  podRentals: PodRentalCatalogue;
   /** What revoking this pod's cancellation would cost, and whether it is allowed. */
   podRevokePreview: PodRevokePreview;
+  /** Every date a recurring plan would run on, each with its slot or why it cannot. */
+  podSeriesPreview: PodSeriesPreview;
   podSettlementPreview: PodSettlement;
   /** Products team: every return (optionally one brand's). Partner: their own brands' returns. */
   podShopReturnsTable: PodShopReturnTablePage;
@@ -26344,6 +26659,8 @@ export type Query = {
   publicPodEarningsEstimate: PodEarningsProjection;
   publicPodPlans: Array<PodPlan>;
   publicPolicies: Array<Policy>;
+  /** Anyone: the rental terms and refund rules. */
+  publicRentalSettings: PublicRentalSettings;
   publicRoles: Array<PublicRole>;
   /** What Home should show: active cards, in the order an admin put them. */
   publicSomethingForYou: Array<SomethingForYouItem>;
@@ -26444,6 +26761,12 @@ export type Query = {
    */
   renderEmailTemplate: EmailTemplateRender;
   renderMarketingCampaign: MarketingCampaignRender;
+  /** Anyone: upcoming pods a guest can still rent items for, soonest first. */
+  rentablePods: Array<RentablePod>;
+  /** Finance: every rental booking. */
+  rentalBookingsTable: RentalBookingTablePage;
+  /** Finance: the rental settings. */
+  rentalSettings: RentalSettings;
   /** The categories the report dialog offers — active ones, in Legal's order. */
   reportCategories: Array<ReportCategory>;
   /** Legal-only: every category, for the UGC Monitoring settings table. */
@@ -26845,6 +27168,10 @@ export type Query = {
    */
   venuePodsSummary: VenuePodSummary;
   venueRegistrationConfig: VenueRegistrationConfig;
+  /** Venue owner or venues console: the venue's rental bookings. */
+  venueRentalBookingsTable: RentalBookingTablePage;
+  /** Venue owner or venues console: the venue's rental numbers. */
+  venueRentalStats: RentalVenueStats;
   /** Owner: one request with its earnings, for the decision page linked from the request email. */
   venueSlotDecision: VenueSlotDecision;
   /** Owner: pending booking requests across their venues (or one venue). */
@@ -27448,8 +27775,20 @@ export type QueryClubBySlugArgs = {
 };
 
 
+export type QueryClubChatRoomArgs = {
+  club_id: Scalars['ID']['input'];
+};
+
+
 export type QueryClubFollowersArgs = {
   club_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubMessagesArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  club_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -28807,6 +29146,12 @@ export type QueryMyReceivedEventRequestsTableArgs = {
 };
 
 
+export type QueryMyRentalBookingsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryMySavedPodsArgs = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -29131,6 +29476,11 @@ export type QueryPodChangeVenueSlotsArgs = {
 };
 
 
+export type QueryPodChatInfoArgs = {
+  pod_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodCommentsArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -29237,16 +29587,28 @@ export type QueryPodPlansTableArgs = {
 };
 
 
+export type QueryPodRentalsArgs = {
+  pod_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodRevokePreviewArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodSeriesPreviewArgs = {
+  input: PodSeriesPlanInput;
 };
 
 
 export type QueryPodSettlementPreviewArgs = {
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
   include_slot_price?: InputMaybe<Scalars['Boolean']['input']>;
+  overtime_hours?: InputMaybe<Scalars['Float']['input']>;
   pod_id: Scalars['ID']['input'];
   venue_bill_amount: Scalars['Float']['input'];
+  venue_pax?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -29602,6 +29964,16 @@ export type QueryRenderEmailTemplateArgs = {
 
 export type QueryRenderMarketingCampaignArgs = {
   input: MarketingCampaignPreviewInput;
+};
+
+
+export type QueryRentablePodsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryRentalBookingsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -30403,6 +30775,17 @@ export type QueryVenuePodsSummaryArgs = {
 };
 
 
+export type QueryVenueRentalBookingsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueRentalStatsArgs = {
+  venue_id: Scalars['ID']['input'];
+};
+
+
 export type QueryVenueSlotDecisionArgs = {
   slot_id: Scalars['ID']['input'];
 };
@@ -30838,6 +31221,8 @@ export type RazorpayOrderInput = {
   /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
   seats?: InputMaybe<Scalars['Int']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
+  /** Rented items for the pod (item id + quantity). Priced on the server and charged in full: no coupon or coins. */
+  selected_rentals?: InputMaybe<Array<CheckoutRentalSelectionInput>>;
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
 
@@ -31350,6 +31735,125 @@ export type ReleaseStore =
   | 'APP_STORE'
   | 'GOOGLE_PLAY';
 
+/** An upcoming pod a guest can still rent items for (Pod Rent on /shop). */
+export type RentablePod = {
+  __typename?: 'RentablePod';
+  /** The club's public id, for the pod's link. */
+  club_id: Scalars['String']['output'];
+  cover_url: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  /** The lowest rate among them. */
+  from_rate: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  /** Items the venue rents out. */
+  item_count: Scalars['Int']['output'];
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  /** The pod's public id, for its link. */
+  pod_id: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+/** One rented item on one pod booking: what was paid, and how it closed. */
+export type RentalBooking = {
+  __typename?: 'RentalBooking';
+  /** Closed by the deposit auto-release, not a person. */
+  auto_released: Scalars['Boolean']['output'];
+  commission_amount: Scalars['Float']['output'];
+  commission_pct: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  damage_claim: Scalars['Float']['output'];
+  damage_note: Scalars['String']['output'];
+  deposit_amount: Scalars['Float']['output'];
+  guest_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  item_id: Scalars['ID']['output'];
+  marked_at?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  payment_ref: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  rate: Scalars['Int']['output'];
+  /** Money owed back to the guest once the booking closed. */
+  refund_due: Scalars['Float']['output'];
+  refund_ref: Scalars['String']['output'];
+  /** NONE, DUE, PAID, or IN_PAYMENT (returned with the payment's cancellation refund). */
+  refund_status: Scalars['String']['output'];
+  refunded_at?: Maybe<Scalars['String']['output']>;
+  /** The VENUE_RENTAL payout that carried venue_amount, once raised. */
+  release_id?: Maybe<Scalars['String']['output']>;
+  rent_amount: Scalars['Float']['output'];
+  /** BOOKED, UNAVAILABLE (sold out after checkout), CANCELLED, RELEASED (guest left the pod), RETURNED or DAMAGED. */
+  status: Scalars['String']['output'];
+  unit: VenueRentalUnit;
+  /** 1 for a SLOT item, the pod's hours for an HOUR item. */
+  units: Scalars['Int']['output'];
+  /** What the venue earns from this booking: rent less commission, plus any deposit it kept. */
+  venue_amount: Scalars['Float']['output'];
+  venue_id: Scalars['ID']['output'];
+};
+
+/** Server-side table page for the shared table engine. */
+export type RentalBookingTablePage = {
+  __typename?: 'RentalBookingTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<RentalBooking>;
+  total: Scalars['Int']['output'];
+};
+
+export type RentalMarkOutcome =
+  | 'DAMAGED'
+  | 'RETURNED';
+
+/** Finance > Rented Items > Settings — the rules every venue rental runs under. */
+export type RentalSettings = {
+  __typename?: 'RentalSettings';
+  /** Renting for a pod closes this many hours before it starts. */
+  booking_cutoff_hours: Scalars['Int']['output'];
+  /** Duncit's commission on rent (never on the deposit), percent. */
+  commission_pct: Scalars['Float']['output'];
+  /** An unmarked deposit is refunded automatically this many days after the pod ends. */
+  deposit_auto_release_days: Scalars['Int']['output'];
+  /** Whether a deposit comes back once the venue marks the item returned. */
+  deposit_refundable: Scalars['Boolean']['output'];
+  /** Off hides Pod Rent everywhere and refuses new rentals. */
+  enabled: Scalars['Boolean']['output'];
+  /** Whether a guest who backs out of the pod in time gets the rent back. A cancelled pod always refunds it. */
+  rent_refundable_on_backout: Scalars['Boolean']['output'];
+  /** Terms & Conditions every renter agrees to, as rich-text HTML. */
+  terms_html: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type RentalSettingsInput = {
+  booking_cutoff_hours?: InputMaybe<Scalars['Int']['input']>;
+  commission_pct?: InputMaybe<Scalars['Float']['input']>;
+  deposit_auto_release_days?: InputMaybe<Scalars['Int']['input']>;
+  deposit_refundable?: InputMaybe<Scalars['Boolean']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  rent_refundable_on_backout?: InputMaybe<Scalars['Boolean']['input']>;
+  terms_html?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A venue's rented items, in numbers. */
+export type RentalVenueStats = {
+  __typename?: 'RentalVenueStats';
+  bookings: Scalars['Int']['output'];
+  currency_symbol: Scalars['String']['output'];
+  deposits_held: Scalars['Float']['output'];
+  /** What the venue has earned from closed bookings. */
+  earned: Scalars['Float']['output'];
+  /** Items out or due out (not yet marked). */
+  open: Scalars['Int']['output'];
+  /** The part of earned already raised as a payout. */
+  paid_out: Scalars['Float']['output'];
+  rent_total: Scalars['Float']['output'];
+};
+
 /** Something a reviewer did to a report. */
 export type ReportActionType =
   | 'LOOKS_GOOD'
@@ -31580,6 +32084,8 @@ export type ReportStressRunInput = {
  */
 export type ReportTargetType =
   | 'CLUB'
+  /** A line in a pod's or club's chat. */
+  | 'MESSAGE'
   | 'POD'
   | 'POST'
   | 'PRODUCT'
@@ -32621,6 +33127,12 @@ export type SlackSendResult = {
   ok: Scalars['Boolean']['output'];
   ts: Scalars['String']['output'];
 };
+
+/** How a slot's price is read: the whole slot, per hour, or per person. */
+export type SlotPricingMode =
+  | 'FLAT'
+  | 'HOURLY'
+  | 'PER_PAX';
 
 export type SlotTemplate = {
   __typename?: 'SlotTemplate';
@@ -37640,6 +38152,8 @@ export type UpdateAppSettingsInput = {
   checkout_nudge_minutes?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a club admin loses for filing a Request Change (0-10, 0 disables it). */
   club_admin_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
+  /** Club chat messages older than this many days are permanently deleted (1-3650). */
+  club_chat_retention_days?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
   custom_time?: InputMaybe<Scalars['String']['input']>;
   date_format?: InputMaybe<Scalars['String']['input']>;
@@ -37667,6 +38181,8 @@ export type UpdateAppSettingsInput = {
   pod_cancel_risk_alert_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod's start it is watched for cancellation risk (1-8760). */
   pod_cancel_risk_window_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours after a pod ends its chat is permanently deleted (1-8760). */
+  pod_chat_retention_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends the host is reminded to complete it (1-8760). */
   pod_complete_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends its host has to complete it (1-8760). */
@@ -37677,6 +38193,10 @@ export type UpdateAppSettingsInput = {
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */
   pod_sameday_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** The most dates one recurring pod series may create (2-52). */
+  pod_series_max_occurrences?: InputMaybe<Scalars['Int']['input']>;
+  /** How many days past its first date a recurring pod series may run (7-365). */
+  pod_series_max_span_days?: InputMaybe<Scalars['Int']['input']>;
   /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
@@ -37713,10 +38233,15 @@ export type UpdateApprovedVenueInput = {
    */
   gstin?: InputMaybe<Scalars['String']['input']>;
   offers_food?: InputMaybe<Scalars['Boolean']['input']>;
+  offers_rentals?: InputMaybe<Scalars['Boolean']['input']>;
   owner_address?: InputMaybe<Scalars['String']['input']>;
   owner_dob?: InputMaybe<Scalars['String']['input']>;
   owner_name?: InputMaybe<Scalars['String']['input']>;
   owner_phone?: InputMaybe<Scalars['String']['input']>;
+  /** Omitted keeps the stored list. */
+  rental_items?: InputMaybe<Array<VenueRentalItemInput>>;
+  /** The venue's own rental terms (rich-text HTML). Omitted keeps the stored terms. */
+  rental_terms_html?: InputMaybe<Scalars['String']['input']>;
   /** Omitted keeps the stored list. */
   videos?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -38407,7 +38932,9 @@ export type UpdateVenueSlotInput = {
   block?: InputMaybe<Scalars['Boolean']['input']>;
   end_at?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
+  overtime_rate?: InputMaybe<Scalars['Int']['input']>;
   price?: InputMaybe<Scalars['Int']['input']>;
+  pricing_mode?: InputMaybe<SlotPricingMode>;
   start_at?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -38952,6 +39479,8 @@ export type Venue = {
   location_id?: Maybe<Scalars['ID']['output']>;
   /** The venue serves food. On publicVenue the menu is empty unless this is on. */
   offers_food: Scalars['Boolean']['output'];
+  /** The venue rents items out. On publicVenue the list is empty unless this is on, and shows available items only. */
+  offers_rentals: Scalars['Boolean']['output'];
   owner_address: Scalars['String']['output'];
   owner_dob?: Maybe<Scalars['String']['output']>;
   owner_email: Scalars['String']['output'];
@@ -38963,6 +39492,11 @@ export type Venue = {
   pod_count: Scalars['Int']['output'];
   postal_code: Scalars['String']['output'];
   rejected_at?: Maybe<Scalars['String']['output']>;
+  /** Whether a refundable deposit is taxed with the rent. Set in the Venues console. */
+  rental_deposit_gst: Scalars['Boolean']['output'];
+  rental_items: Array<VenueRentalItem>;
+  /** The venue's own rental terms (rich-text HTML), shown to guests with Duncit's. */
+  rental_terms_html: Scalars['String']['output'];
   reviewer_notes: Scalars['String']['output'];
   security: Array<Scalars['String']['output']>;
   settings: VenueSettings;
@@ -39706,11 +40240,63 @@ export type VenueRegistrationConfig = {
   gstin_doc_type: Scalars['String']['output'];
   /** The doc_types entry uploaded beside a PAN, not from the general list. */
   pan_doc_type: Scalars['String']['output'];
+  rental_deposit_max: Scalars['Int']['output'];
+  rental_image_limit: Scalars['Int']['output'];
+  rental_item_limit: Scalars['Int']['output'];
+  rental_per_guest_max: Scalars['Int']['output'];
+  rental_rate_max: Scalars['Int']['output'];
+  rental_stock_max: Scalars['Int']['output'];
+  rental_terms_max: Scalars['Int']['output'];
+  rental_units: Array<VenueRentalUnit>;
   security: Array<Scalars['String']['output']>;
   venue_types: Array<Scalars['String']['output']>;
   /** Videos the venue page may carry. */
   venue_video_limit: Scalars['Int']['output'];
 };
+
+/** Whether a venue's refundable rental deposits are taxed with the rent. */
+export type VenueRentalDepositGst = {
+  __typename?: 'VenueRentalDepositGst';
+  rental_deposit_gst: Scalars['Boolean']['output'];
+  venue_id: Scalars['ID']['output'];
+};
+
+/** One item a venue rents out to pod guests (a racket, court shoes). */
+export type VenueRentalItem = {
+  __typename?: 'VenueRentalItem';
+  /** Refundable deposit per unit, rupees. 0 = none. */
+  deposit: Scalars['Int']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  is_available: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  per_guest_limit: Scalars['Int']['output'];
+  /** Rupees per unit, for the slot or for each hour. */
+  rate: Scalars['Int']['output'];
+  /** Units available for one pod. */
+  stock: Scalars['Int']['output'];
+  unit: VenueRentalUnit;
+};
+
+export type VenueRentalItemInput = {
+  deposit?: InputMaybe<Scalars['Int']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** An existing item's id keeps it (and its bookings); omitted = a new item. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  is_available?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  per_guest_limit?: InputMaybe<Scalars['Int']['input']>;
+  rate: Scalars['Int']['input'];
+  stock: Scalars['Int']['input'];
+  unit?: InputMaybe<VenueRentalUnit>;
+};
+
+/** How a rented item's rate is charged: once for the pod's slot, or per hour of the pod. */
+export type VenueRentalUnit =
+  | 'HOUR'
+  | 'SLOT';
 
 export type VenueRules = {
   __typename?: 'VenueRules';
@@ -39764,7 +40350,11 @@ export type VenueSlot = {
   end_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   notes: Scalars['String']['output'];
+  /** Rupees per hour the pod runs past the slot's end. 0 = none. */
+  overtime_rate: Scalars['Int']['output'];
+  /** Rupees: the whole slot (FLAT), per hour (HOURLY) or per person (PER_PAX). */
   price: Scalars['Int']['output'];
+  pricing_mode: SlotPricingMode;
   /** The venue space/capacity-item this slot is for ('' = whole venue). */
   space_label: Scalars['String']['output'];
   start_at: Scalars['String']['output'];
@@ -39806,6 +40396,7 @@ export type VenueSlotDecision = {
   host_email: Scalars['String']['output'];
   host_name: Scalars['String']['output'];
   host_phone: Scalars['String']['output'];
+  overtime_rate: Scalars['Int']['output'];
   pod_description: Scalars['String']['output'];
   pod_id: Scalars['ID']['output'];
   /**
@@ -39817,6 +40408,7 @@ export type VenueSlotDecision = {
   pod_title: Scalars['String']['output'];
   /** The slot's gross price, before Duncit's venue commission. 0 when pod_is_free. */
   price: Scalars['Int']['output'];
+  pricing_mode: SlotPricingMode;
   requested_at: Scalars['String']['output'];
   slot_id: Scalars['ID']['output'];
   /** The venue space this slot is for ('' = whole venue). */
@@ -39846,6 +40438,7 @@ export type VenueSlotRequest = {
   host_email: Scalars['String']['output'];
   host_name: Scalars['String']['output'];
   host_phone: Scalars['String']['output'];
+  overtime_rate: Scalars['Int']['output'];
   pod_description: Scalars['String']['output'];
   pod_id: Scalars['ID']['output'];
   /**
@@ -39856,7 +40449,13 @@ export type VenueSlotRequest = {
   pod_title: Scalars['String']['output'];
   /** The slot's price. 0 when pod_is_free — the platform quotes the venue nothing. */
   price: Scalars['Int']['output'];
+  /** How price is read: the whole slot, per hour or per person. */
+  pricing_mode: SlotPricingMode;
   requested_at: Scalars['String']['output'];
+  /** Set when the pod is one date of a recurring series — the venue can answer every date at once. */
+  series_id?: Maybe<Scalars['ID']['output']>;
+  series_index?: Maybe<Scalars['Int']['output']>;
+  series_total?: Maybe<Scalars['Int']['output']>;
   slot_id: Scalars['ID']['output'];
   start_at: Scalars['String']['output'];
   venue_id: Scalars['ID']['output'];
@@ -39900,7 +40499,12 @@ export type VenueStep1Input = {
   locality?: InputMaybe<Scalars['String']['input']>;
   location_id?: InputMaybe<Scalars['ID']['input']>;
   offers_food?: InputMaybe<Scalars['Boolean']['input']>;
+  offers_rentals?: InputMaybe<Scalars['Boolean']['input']>;
   postal_code: Scalars['String']['input'];
+  /** The whole list of rented items (at most venueRegistrationConfig.rental_item_limit). Omitted keeps the stored list. */
+  rental_items?: InputMaybe<Array<VenueRentalItemInput>>;
+  /** The venue's own rental terms (rich-text HTML). Omitted keeps the stored terms. */
+  rental_terms_html?: InputMaybe<Scalars['String']['input']>;
   security?: InputMaybe<Array<Scalars['String']['input']>>;
   state: Scalars['String']['input'];
   state_code?: InputMaybe<Scalars['String']['input']>;

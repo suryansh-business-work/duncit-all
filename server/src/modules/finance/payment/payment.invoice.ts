@@ -1,4 +1,5 @@
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
+import { rentalInvoiceLines } from '@modules/venues/venueRental/rentalLines';
 import { normalizeSeats } from '@modules/pods/pod/pod.seats';
 import type { InvoiceData, InvoiceLineItem } from '@services/invoice/invoice.pdf';
 import {
@@ -75,7 +76,8 @@ function soldTicketGross(doc: IPayment, meta: Record<string, unknown>, seats: nu
 
 export function buildInvoiceItems(doc: IPayment, photos: InvoiceLinePhotos = NO_LINE_PHOTOS): InvoiceLineItem[] {
   const meta: Record<string, unknown> = doc.metadata ?? {};
-  const productLines = paymentProductLines(doc);
+  // Rented items print beside the products: charged once, at full price.
+  const productLines: Record<string, unknown>[] = [...paymentProductLines(doc), ...rentalInvoiceLines(doc.metadata)];
   const isProductPayment = meta.source === 'app_product_checkout';
   // `ticket_amount` is the price of ONE seat; the booking may hold several. The
   // split below weighs the ticket against the products, so comparing a unit

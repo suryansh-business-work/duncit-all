@@ -179,6 +179,8 @@ export {
   type FoodTaxDefaultsValues,
   type VenueFoodTaxValues,
 } from './food-tax';
+export { makeRentalItemsSchema, type RentalItemsOutput } from './rental-items';
+export { makeMarkRentalSchema, type MarkRentalOutput, type MarkRentalValues } from './mark-rental';
 export {
   FOOD_DISH_CATEGORY_MAX,
   FOOD_DISH_DESCRIPTION_MAX,
@@ -200,6 +202,9 @@ export {
   blankPodCompleteValues,
   buildPodCompleteInput,
   makePodCompleteSchema,
+  VENUE_USAGE_LIMITS,
+  addVenueUsageIssues,
+  venueUsageInput,
   type PodCompleteInput,
   type PodCompleteValues,
 } from './pod-complete';

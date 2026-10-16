@@ -34,6 +34,20 @@ export function VenueBillFields({ control, labels, billAmount }: Readonly<Props>
         hint={labels.amountHint}
         keyboardType="decimal-pad"
       />
+      <FormTextField
+        control={control}
+        name="venue_pax"
+        label={labels.pax}
+        hint={labels.paxHint}
+        keyboardType="number-pad"
+      />
+      <FormTextField
+        control={control}
+        name="overtime_hours"
+        label={labels.overtimeHours}
+        hint={labels.overtimeHint}
+        keyboardType="decimal-pad"
+      />
       {billAmount > 0 ? (
         <>
           <Controller

@@ -10,7 +10,7 @@ import {
 import { getFoodTaxDefaults, updateFoodTaxDefaults } from './foodTaxDefaults';
 import { paymentReleaseService } from './paymentRelease.service';
 import { paymentReleaseGroupService } from './paymentReleaseGroup.service';
-import { computePodSettlement } from './settlement.service';
+import { computePodSettlement, venueUsageOf } from './settlement.service';
 import { breakdownService } from './breakdown.service';
 import { podCancellationService, type PodCancelKind } from './podCancellation.service';
 import { isRazorpayConfigured } from '@modules/finance/payment/razorpay.gateway';
@@ -193,6 +193,8 @@ export const financeResolvers = {
         venue_bill_amount: number;
         host_user_id?: string | null;
         include_slot_price?: boolean | null;
+        venue_pax?: number | null;
+        overtime_hours?: number | null;
       },
       ctx: GraphQLContext
     ) => {
@@ -201,7 +203,8 @@ export const financeResolvers = {
         args.pod_id,
         args.venue_bill_amount,
         args.host_user_id ?? null,
-        args.include_slot_price
+        args.include_slot_price,
+        venueUsageOf(args)
       );
     },
     myHostPayouts: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

@@ -5,6 +5,8 @@ import { STEP_TITLE_KEYS } from '../create-pod.form';
 import { BasicsStep } from '../steps/BasicsStep';
 import { LocationClubStep } from '../steps/LocationClubStep';
 import { VenueSlotStep } from '../steps/VenueSlotStep';
+import { PodRepeatSection } from '../repeat/PodRepeatSection';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { PricingStep } from '../steps/PricingStep';
 import { AiMonitorOverlay } from '../AiMonitorOverlay';
 import { AssignHostsField } from '../AssignHostsField';
@@ -38,6 +40,7 @@ export function CreatePodStepper({
   onPublish,
   clubAdmin,
 }: Readonly<CreatePodStepperProps>) {
+  const fmt = useDateFormat();
   const state = useCreatePodForm({
     initialValues,
     initialStep,
@@ -57,6 +60,7 @@ export function CreatePodStepper({
     onModerate,
     onPublish,
     state,
+    timeZone: fmt.timeZone,
   });
 
   const {
@@ -90,16 +94,19 @@ export function CreatePodStepper({
       pinnedClub={clubAdmin?.club ?? null}
     />,
     <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
-    <VenueSlotStep
-      key="venue"
-      form={form}
-      venues={venues}
-      clubVenueIds={clubVenueIds}
-      viewerUserId={viewerUserId}
-      pinnedVenueId={pinnedVenueId}
-      venueNotice={venueNotice}
-      forClubAdmin={!!clubAdmin}
-    />,
+    <YStack key="venue" gap={16}>
+      <VenueSlotStep
+        form={form}
+        venues={venues}
+        clubVenueIds={clubVenueIds}
+        viewerUserId={viewerUserId}
+        pinnedVenueId={pinnedVenueId}
+        venueNotice={venueNotice}
+        forClubAdmin={!!clubAdmin}
+      />
+      {/* Recurring is the host's own flow; a Club Admin books one date. */}
+      {clubAdmin ? null : <PodRepeatSection form={form} />}
+    </YStack>,
     <PricingStep
       key="pricing"
       form={form}

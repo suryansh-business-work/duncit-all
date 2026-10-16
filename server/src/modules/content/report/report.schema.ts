@@ -13,6 +13,8 @@ export const reportTypeDefs = /* GraphQL */ `
     CLUB
     PROFILE
     PRODUCT
+    "A line in a pod's or club's chat."
+    MESSAGE
   }
 
   "Where the Legal team has taken it."
@@ -195,6 +197,12 @@ export const reportTypeDefs = /* GraphQL */ `
     REPORT_ALREADY_PENDING rule as reportPost.
     """
     reportProfile(user_id: ID!, reason: String!, details: String): ContentReportReceipt!
+    """
+    Report a line in a pod's or club's chat. Only a member of that room can, and
+    the text (or photo) is snapshotted server-side. Same REPORT_ALREADY_PENDING
+    rule as reportPost.
+    """
+    reportChatMessage(message_id: ID!, reason: String!, details: String): ContentReportReceipt!
     updateContentReportStatus(id: ID!, input: UpdateContentReportStatusInput!): ContentReport!
     """
     Remove the reported content for everyone and close every open report on it

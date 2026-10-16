@@ -21,6 +21,8 @@ export const VenueSlotRequestsDocument = gql(`
       end_at
       whole_day
       price
+      pricing_mode
+      overtime_rate
       requested_at
       pod_id
       pod_title
@@ -29,6 +31,9 @@ export const VenueSlotRequestsDocument = gql(`
       host_email
       host_phone
       pod_is_free
+      series_id
+      series_index
+      series_total
     }
   }
 `);

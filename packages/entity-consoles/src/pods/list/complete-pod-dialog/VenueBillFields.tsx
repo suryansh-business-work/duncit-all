@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Controller, type Control } from 'react-hook-form';
 import { Checkbox, FormControlLabel, FormHelperText, Stack, Typography } from '@mui/material';
-import { RhfTextField } from '@duncit/forms';
+import { RhfTextField, VenueUsageFields } from '@duncit/forms';
 import { MediaListField } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 import { shellVenueBillLabels } from '@duncit/utils';
@@ -33,6 +33,7 @@ export default function VenueBillFields({ control, billAmount }: Readonly<Props>
         label={copy.amount}
         hint={copy.amountHint}
       />
+      <VenueUsageFields control={control} paxName="venue_pax" overtimeName="overtime_hours" labels={copy} idPrefix="admin-complete" />
       {billAmount > 0 && (
         <>
           <Controller

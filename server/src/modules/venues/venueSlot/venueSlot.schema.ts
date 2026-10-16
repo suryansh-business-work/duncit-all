@@ -17,6 +17,9 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     whole_day: Boolean!
     "The slot's price. 0 when pod_is_free — the platform quotes the venue nothing."
     price: Int!
+    "How price is read: the whole slot, per hour or per person."
+    pricing_mode: SlotPricingMode!
+    overtime_rate: Int!
     """
     True when the requesting pod is FREE: the host settles the venue's charges
     directly, off the platform. Show the free-pod notice instead of any amount.
@@ -29,6 +32,10 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     host_name: String!
     host_email: String!
     host_phone: String!
+    "Set when the pod is one date of a recurring series — the venue can answer every date at once."
+    series_id: ID
+    series_index: Int
+    series_total: Int
   }
 
   "The owner's answer to a booking request. NONE = still waiting."
@@ -53,6 +60,8 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     whole_day: Boolean!
     "The slot's gross price, before Duncit's venue commission. 0 when pod_is_free."
     price: Int!
+    pricing_mode: SlotPricingMode!
+    overtime_rate: Int!
     """
     True when the requesting pod is FREE: the host settles the venue's charges
     directly, off the platform, so price, venue_commission_amount and
@@ -79,6 +88,13 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     venue_receives: Float!
   }
 
+  "How a slot's price is read: the whole slot, per hour, or per person."
+  enum SlotPricingMode {
+    FLAT
+    HOURLY
+    PER_PAX
+  }
+
   type VenueSlot {
     id: ID!
     venue_id: ID!
@@ -87,7 +103,11 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     end_at: String!
     "True for a whole-day / whole-date-range booking — render 'Whole day' instead of clock times."
     whole_day: Boolean!
+    "Rupees: the whole slot (FLAT), per hour (HOURLY) or per person (PER_PAX)."
     price: Int!
+    pricing_mode: SlotPricingMode!
+    "Rupees per hour the pod runs past the slot's end. 0 = none."
+    overtime_rate: Int!
     "The venue space/capacity-item this slot is for ('' = whole venue)."
     space_label: String!
     "Guests this slot can hold (0 = unset/whole venue)."
@@ -105,6 +125,9 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     "Mark this slot as a whole-day (or whole-date-range) booking (defaults to false)."
     whole_day: Boolean
     price: Int
+    "How price is read (defaults to FLAT)."
+    pricing_mode: SlotPricingMode
+    overtime_rate: Int
     notes: String
     "The venue space this slot is for ('' = whole venue). Slots in different spaces may share a time."
     space_label: String
@@ -140,6 +163,8 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     start_at: String
     end_at: String
     price: Int
+    pricing_mode: SlotPricingMode
+    overtime_rate: Int
     notes: String
     block: Boolean
   }

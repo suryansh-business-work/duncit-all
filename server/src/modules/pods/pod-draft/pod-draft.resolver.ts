@@ -37,6 +37,10 @@ export const podDraftResolvers = {
       const user = requireAuth(ctx);
       return podDraftService.remove(user.id, args.draft_id);
     },
+    hostAgainPod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return podDraftService.hostAgain(user.id, args.pod_doc_id);
+    },
     publishPodDraft: async (
       _p: unknown,
       args: { draft_id: string; input: any },

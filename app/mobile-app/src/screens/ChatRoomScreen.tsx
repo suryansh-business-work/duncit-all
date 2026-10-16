@@ -3,51 +3,61 @@ import { AccessibilityInfo, ScrollView } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { Text, XStack, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useGoBack } from '@/hooks/useGoBack';
 import { ChatClosedNotice } from '@/components/chat/ChatClosedNotice';
 import { ChatComposer } from '@/components/chat/ChatComposer';
-import { ChatMessageBubble } from '@/components/chat/ChatMessageBubble';
+import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
+import { ChatMessageList } from '@/components/chat/ChatMessageList';
+import {
+  ChatMessageActionsSheet,
+  type MessageActionsTarget,
+} from '@/components/chat/ChatMessageActionsSheet';
 import { ChatParticipantsPanel } from '@/components/chat/ChatParticipantsPanel';
+import { ChatRetentionNotice } from '@/components/chat/ChatRetentionNotice';
 import { ChatRoomHeaderBar } from '@/components/chat/ChatRoomHeaderBar';
 import { EmojiBar } from '@/components/chat/EmojiBar';
-import { ListSkeleton } from '@/components/Skeleton';
+import { ReportContentSheet } from '@/components/content-report/ReportContentSheet';
 import { useChatRoom } from '@/hooks/useChatRoom';
 import { useChatParticipants } from '@/hooks/useChat';
 import { useMe } from '@/hooks/useMe';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
-import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
 
-/** Live pod chat — history + realtime messages, with send, image and reactions.
- * RN twin of mWeb's ChatRoomPage. */
+/** Live chat — a pod's room (`podId`) or a club's (`clubId`): history + realtime
+ * messages, with send, image, reactions, delete and report. RN twin of mWeb's
+ * ChatRoomPage. */
 export function ChatRoomScreen() {
   const { t } = useTranslation();
   const goBack = useGoBack();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { podId, title } = useRoute<RouteProp<RootStackParamList, 'ChatRoom'>>().params;
-  const { messages, podEnded, isLoading, sending, error, setError, sendText, sendImage, react } =
-    useChatRoom(podId);
-  const { hosts, participants, count } = useChatParticipants(podId);
+  const { podId, clubId, title } = useRoute<RouteProp<RootStackParamList, 'ChatRoom'>>().params;
+  const isClub = !!clubId;
+  const roomId = clubId ?? podId ?? '';
+  const room = useChatRoom(roomId, isClub ? 'CLUB' : 'POD');
+  const { messages, podEnded, error, setError, sendText, sendImage, react } = room;
+  const { hosts, participants, count } = useChatParticipants(isClub ? '' : roomId);
   const { data: meData } = useMe();
   const meId = meData?.me?.user_id;
-  const { onDanger } = useThemeColors();
 
-  const openPod = () => navigation.navigate('PodDetails', { podId, title });
+  const openLinked = () => {
+    if (isClub)
+      navigation.navigate('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
+    else navigation.navigate('PodDetails', { podId: roomId, title });
+  };
   const openProfile = (userId: string) => navigation.navigate('PublicProfile', { userId });
 
   const [text, setText] = useState('');
   const [emojiFor, setEmojiFor] = useState<EmojiTarget>(null);
+  const [actions, setActions] = useState<MessageActionsTarget | null>(null);
+  const [reportId, setReportId] = useState<string | null>(null);
   const listRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -94,69 +104,33 @@ export function ChatRoomScreen() {
           so under the edge-to-edge window it would otherwise sit beneath the
           Android navigation bar. */}
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-        <ChatRoomHeaderBar title={title} onBack={goBack} onOpenPod={openPod} />
+        <ChatRoomHeaderBar title={room.roomTitle ?? title} onBack={goBack} onOpenPod={openLinked} />
 
-        <ChatParticipantsPanel
-          hosts={hosts}
-          participants={participants}
-          count={count}
-          onOpenProfile={openProfile}
-        />
+        {isClub ? null : (
+          <ChatParticipantsPanel
+            hosts={hosts}
+            participants={participants}
+            count={count}
+            onOpenProfile={openProfile}
+          />
+        )}
+
+        <ChatRetentionNotice deletesAt={room.deletesAt} retentionDays={room.retentionDays} />
 
         {/* Keyboard avoidance so the bottom composer rises above the keyboard
             (Android edge-to-edge no longer resizes the window). */}
         <KeyboardScreen>
-          {error ? (
-            <XStack
-              pressStyle={PRESS_STYLE.surface}
-              testID="chat-room-error"
-              role="button"
-              tabIndex={0}
-              aria-label={`${error}, ${t('mweb.chatRoom.dismissError')}`}
-              aria-live="assertive"
-              onPress={() => setError(null)}
-              margin={12}
-              padding={12}
-              borderRadius={14}
-              backgroundColor="$danger"
-            >
-              <Text flex={1} fontSize={13} color="$onDanger">
-                {error}
-              </Text>
-              <MaterialIcons name="close" size={18} color={onDanger} />
-            </XStack>
-          ) : null}
+          <ChatErrorBanner error={error} onDismiss={() => setError(null)} />
 
-          {isLoading && messages.length === 0 ? (
-            <ListSkeleton testID="chat-room-loading" count={5} />
-          ) : (
-            <RefreshScrollView
-              ref={listRef}
-              style={{ flex: 1 }}
-              contentContainerStyle={{ paddingVertical: 12, gap: 8 }}
-            >
-              {messages.length === 0 ? (
-                <Text
-                  testID="chat-room-empty"
-                  role="status"
-                  textAlign="center"
-                  color="$muted"
-                  paddingVertical={40}
-                >
-                  No messages yet. Say hello 👋
-                </Text>
-              ) : (
-                messages.map((message) => (
-                  <ChatMessageBubble
-                    key={message.id}
-                    message={message}
-                    mine={message.user_id === meId}
-                    onReact={(id) => setEmojiFor({ type: 'react', id })}
-                  />
-                ))
-              )}
-            </RefreshScrollView>
-          )}
+          <ChatMessageList
+            listRef={listRef}
+            isLoading={room.isLoading}
+            messages={messages}
+            meId={meId}
+            onOpenActions={(message) =>
+              setActions({ id: message.id, mine: message.user_id === meId })
+            }
+          />
 
           {emojiFor ? <EmojiBar onSelect={handleSelectEmoji} /> : null}
 
@@ -171,11 +145,21 @@ export function ChatRoomScreen() {
               onToggleEmoji={() =>
                 setEmojiFor((prev) => (prev?.type === 'compose' ? null : { type: 'compose' }))
               }
-              sending={sending}
+              sending={room.sending}
             />
           )}
         </KeyboardScreen>
       </SafeAreaView>
+
+      <ChatMessageActionsSheet
+        target={actions}
+        canModerate={room.canModerate}
+        onClose={() => setActions(null)}
+        onReact={(id) => setEmojiFor({ type: 'react', id })}
+        onDelete={(id) => fireAndForget(room.remove(id, t('mweb.chatRoom.deleteFailed')))}
+        onReport={setReportId}
+      />
+      <ReportContentSheet targetId={reportId} kind="MESSAGE" onClose={() => setReportId(null)} />
     </YStack>
   );
 }

@@ -14,6 +14,7 @@ import { addDays, startOfDay } from 'date-fns';
 import { useTranslation } from '@duncit/app-settings';
 import { minEndTime, minTimeOn, type SlotDraft } from '@duncit/slots';
 import type { VenueSpace } from '../types';
+import SlotPricingFields from './SlotPricingFields';
 
 export type { SlotDraft };
 
@@ -21,7 +22,6 @@ const START_DATE_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot
 const START_TIME_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-start-time' };
 const END_DATE_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-end-date' };
 const END_TIME_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-end-time' };
-const PRICE_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-price-input' };
 const NOTES_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-notes-input' };
 
 interface Props {
@@ -51,7 +51,7 @@ export default function AddSlotFields({
   maxFutureDays,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { wholeDay, startDate, endDate, startTime, endTime, price, notes } = draft;
+  const { wholeDay, startDate, endDate, startTime, endTime, notes } = draft;
   const isMultiDay =
     !!startDate && !!endDate && startOfDay(endDate).getTime() > startOfDay(startDate).getTime();
   const maxDate = addDays(now, maxFutureDays);
@@ -152,18 +152,7 @@ export default function AddSlotFields({
           {t('availability.multiDayHint')}
         </Alert>
       )}
-      <TextField
-        size="small"
-        type="number"
-        label={t('availability.price')}
-        value={price}
-        onChange={(e) => patch({ price: e.target.value })}
-        helperText={t('availability.priceHint')}
-        data-testid="add-slot-price"
-        slotProps={{
-          htmlInput: { min: 0, step: 50, ...PRICE_INPUT_TEST_ID }
-        }}
-      />
+      <SlotPricingFields draft={draft} patch={patch} />
       <TextField
         size="small"
         label={t('availability.notes')}

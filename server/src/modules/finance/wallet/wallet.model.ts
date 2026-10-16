@@ -64,6 +64,7 @@ export const WITHDRAWER_ROLE_BY_KIND: Record<PaymentReleaseKind, WithdrawerRole>
   VENUE_BILLING: 'VENUE_OWNER',
   CLUB_ADMIN: 'CLUB_ADMIN',
   ECOMM_PAYMENT: 'ECOMM_MANAGER',
+  VENUE_RENTAL: 'VENUE_OWNER',
 };
 
 export interface IWalletWithdrawal extends Document {
@@ -124,7 +125,7 @@ const allocationSchema = new Schema<IWithdrawalAllocation>(
     release_id: { type: String, default: '', trim: true },
     kind: {
       type: String,
-      enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN', 'ECOMM_PAYMENT'],
+      enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN', 'ECOMM_PAYMENT', 'VENUE_RENTAL'],
       required: true,
     },
     amount: { type: Number, required: true, min: 0 },

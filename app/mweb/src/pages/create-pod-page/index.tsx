@@ -1,7 +1,8 @@
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
 import { logs } from '@duncit/logs';
-import { hostPodChallengesPath, mustSetUpChallenge } from '@duncit/utils';
+import { hostPodChallengesPath, mustSetUpChallenge, type PodSeriesPlan } from '@duncit/utils';
+import { notifySuccess } from '../../components/notify';
 import { POD_CHALLENGE_SETUP } from '../host-pod-challenges-page/queries';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
@@ -23,9 +24,14 @@ import {
   MODERATE_POD_CONTENT,
   MY_POD_DRAFT,
   PUBLISH_POD_DRAFT,
+  PUBLISH_POD_DRAFT_SERIES,
   SAVE_POD_DRAFT,
 } from './queries';
 import { usePartnerRequestPrefill } from './usePartnerRequestPrefill';
+
+interface SeriesPublishData {
+  publishPodDraftSeries: { created_count: number; skipped: { date: string }[] };
+}
 
 /** Host-only page to create a pod via the 4-step stepper, reached from the Home
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
@@ -39,6 +45,7 @@ export default function CreatePodPage() {
   const draftQuery = useQuery<any>(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
   const [saveMut] = useMutation<any>(SAVE_POD_DRAFT);
   const [publishMut] = useMutation<any>(PUBLISH_POD_DRAFT);
+  const [publishSeriesMut] = useMutation<SeriesPublishData>(PUBLISH_POD_DRAFT_SERIES);
   const [moderateMut] = useMutation<any>(MODERATE_POD_CONTENT);
 
   // Host access mirrors the server's createForPartner check: the cached HOST
@@ -84,7 +91,23 @@ export default function CreatePodPage() {
       return false;
     }
   };
-  const publish = async (id: string, input: any) => {
+  /** A recurring pod: every date that could run is now a pod, each waiting on
+   * its venue (or live, at the host's own venue). Say how many, and which
+   * dates were skipped, then land on Host Management where they are listed. */
+  const publishSeries = async (id: string, input: unknown, plan: PodSeriesPlan) => {
+    const res = await publishSeriesMut({ variables: { draft_id: id, input, plan } });
+    const result = res.data?.publishPodDraftSeries;
+    const created = result?.created_count ?? 0;
+    const skipped = result?.skipped.length ?? 0;
+    notifySuccess(
+      skipped
+        ? t('mweb.podSeries.publishedSkipped', { vars: { created, skipped } })
+        : t('mweb.podSeries.published', { vars: { created } })
+    );
+    navigate('/host/manage');
+  };
+  const publish = async (id: string, input: any, plan: PodSeriesPlan | null) => {
+    if (plan) return publishSeries(id, input, plan);
     const res = await publishMut({ variables: { draft_id: id, input } });
     const created = res.data.publishPodDraft;
     // A pod holding a venue slot awaits the venue's decision — land the host on

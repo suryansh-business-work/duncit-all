@@ -19,6 +19,7 @@ import LocationMismatchDialog from '../../components/LocationMismatchDialog';
 import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
 import { PodDetailsSkeleton } from '../pod-details-page/queries';
 import PodCommerceSection from './PodCommerceSection';
+import { usePodRentalPicks } from '../pod-rent/usePodRentalPicks';
 import PodDetailsDialogs from './PodDetailsDialogs';
 import PodHashtagsAndSupport from './PodHashtagsAndSupport';
 import { usePodDetailsData } from './usePodDetailsData';
@@ -37,6 +38,9 @@ export default function PodDetailsPage() {
     slugResolution, id, data, error, refetch, peopleData, spotFillData, joinMeeting,
     seatsByUser, pod, locationPrompt, productSelection, actions,
   } = usePodDetailsData({ clubSlug, podSlug, referralFromUrl, navigate });
+  // Held here (not in the shop card) because Book reads them: a free pod with picks goes through checkout.
+  const rentalPicks = usePodRentalPicks(id);
+  const hasRentalPicks = Object.keys(rentalPicks.picks).length > 0;
 
   // The skeleton is for a page with nothing to show yet, so both halves wait on
   // DATA, never on `loading`. `cache-and-network` answers a revisit from the
@@ -130,9 +134,14 @@ export default function PodDetailsPage() {
 
       <AdSlot position="POD_DETAILS" variant="banner" />
 
-      {showProducts && pod.product_requests?.some((item: any) => item?.product_name) && (
-        <PodCommerceSection pod={pod} priceFormat={priceFormat} productSelection={productSelection} />
-      )}
+      <PodCommerceSection
+        pod={pod}
+        priceFormat={priceFormat}
+        productSelection={productSelection}
+        showProducts={showProducts}
+        seats={actions.seats}
+        picks={rentalPicks}
+      />
 
       <PodDetailAccordions
         pod={pod}
@@ -160,7 +169,8 @@ export default function PodDetailsPage() {
         cancellingSpot={actions.cancelSpotState.loading}
         seats={actions.seats}
         onSeatsChange={actions.setSeats}
-        onJoinFree={actions.onJoinFree}
+        // A free pod with items to rent is paid for: the rentals go through checkout.
+        onJoinFree={hasRentalPicks ? actions.onPaidCheckout : actions.onJoinFree}
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}
         onCancelSpot={() => actions.setCancelSpotOpen(true)}

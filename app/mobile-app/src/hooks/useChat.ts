@@ -44,6 +44,11 @@ export function useChatParticipants(podId: string) {
   const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
+    // A club room has no participant panel: there is nothing to ask for.
+    if (!podId) {
+      setIsLoading(false);
+      return;
+    }
     let active = true;
     setIsLoading(true);
     graphqlRequest(ChatParticipantsDocument, { podId }, { auth: true })

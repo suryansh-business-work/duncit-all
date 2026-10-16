@@ -341,7 +341,12 @@ export const partnerDashboardService = {
     // reassigned to a different host/venue.
     const [venueReleasesAll, hostReleasesAll] = await Promise.all([
       venueIds.length
-        ? PaymentReleaseModel.find({ kind: 'VENUE_BILLING', status: 'APPROVED', venue_id: { $in: venueIds } })
+        ? PaymentReleaseModel.find({
+            // Rented-item payouts are venue earnings too.
+            kind: { $in: ['VENUE_BILLING', 'VENUE_RENTAL'] },
+            status: 'APPROVED',
+            venue_id: { $in: venueIds },
+          })
             .select('approved_amount amount_requested pod_id')
             .lean()
         : [],

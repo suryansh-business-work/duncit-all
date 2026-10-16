@@ -182,6 +182,8 @@ vi.mock('../complete-pod-dialog', async (importOriginal) => {
               venue_bill_amount: 1500,
               venue_bill_media: 'https://cdn.test/bill.pdf',
               include_slot_price: false,
+              venue_pax: '',
+              overtime_hours: '',
               media_text: 'https://cdn.test/party.jpg',
               notes: '',
             })
@@ -603,6 +605,8 @@ describe('PodsPage / complete a pod', () => {
       venue_bill_amount: 1500,
       venue_bill_media: 'https://cdn.test/bill.pdf',
       include_slot_price: false,
+      venue_pax: '',
+      overtime_hours: '',
       media_text: 'https://cdn.test/party.jpg',
       notes: '',
     };

@@ -246,6 +246,7 @@ export const OCCURRENCES: PodKeyedOption[] = [
   { value: 'ONE_TIME', labelKey: 'podForm.occurrence.oneTime' },
   { value: 'DAILY', labelKey: 'podForm.occurrence.daily' },
   { value: 'WEEKLY', labelKey: 'podForm.occurrence.weekly' },
+  { value: 'BIWEEKLY', labelKey: 'podForm.occurrence.biweekly' },
   { value: 'MONTHLY', labelKey: 'podForm.occurrence.monthly' },
   { value: 'ALTERNATE_DAY', labelKey: 'podForm.occurrence.alternateDay' },
   { value: 'WEEKENDS_ONLY', labelKey: 'podForm.occurrence.weekends' },

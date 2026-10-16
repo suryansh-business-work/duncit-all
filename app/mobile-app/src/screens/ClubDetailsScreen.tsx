@@ -89,6 +89,9 @@ export function ClubDetailsScreen() {
           onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
           onOpenMember={(userId) => navigation.navigate('PublicProfile', { userId })}
           onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
+          onOpenChat={() =>
+            navigation.navigate('ChatRoom', { clubId: club.id, title: club.club_name })
+          }
         />
       </Reveal>
     </RefreshScrollView>

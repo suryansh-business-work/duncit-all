@@ -11,6 +11,7 @@ const kindChips = (t: Translate): Record<ReleaseKind, { label: string; color: Ki
   HOST_PAYMENT: { label: t('finance.paymentRelease.hostPayment'), color: 'secondary' },
   CLUB_ADMIN: { label: t('finance.common.clubAdmin'), color: 'success' },
   ECOMM_PAYMENT: { label: t('finance.paymentRelease.eCommerceBrand'), color: 'warning' },
+  VENUE_RENTAL: { label: t('finance.paymentRelease.venueRental'), color: 'info' },
 });
 
 export function ReleaseKindChip({ kind }: Readonly<{ kind: ReleaseKind }>) {

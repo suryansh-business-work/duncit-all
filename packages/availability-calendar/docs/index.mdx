@@ -171,6 +171,7 @@ published for (`SKIP`, the default, or `REPLACE`, whose warning is part of the c
 | Venue rules | `updateVenueSettings({ rules })` | buffer, notice, advance cap (≤ 60), bookings per slot, the four toggles |
 | Future availability | `updateVenueSettings({ auto_extend })` | a daily job rolls the **default** slot template forward; warns when there is none |
 | Save as template | `createSlotTemplate` / `deleteSlotTemplate` | captures weekdays + first window + base price; "Use" applies one back |
+| Add slot pricing | `createVenueSlots` | the add form picks how the slot is charged (one price, per hour, per guest) and an overtime rate per hour past its end (`SlotPricingFields`); the slot card reads the price in its unit |
 | Bulk actions | `bulkDeleteVenueSlots` / `bulkUpdateVenueSlots` | delete, block, unblock or re-price every matching upcoming slot; booked ones are never touched; every action confirms first |
 
 The preview bar under the form and the batch the Create button sends come from the **same**

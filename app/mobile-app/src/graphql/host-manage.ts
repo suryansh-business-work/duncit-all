@@ -37,6 +37,9 @@ export const HostPodsDocument = gql(`
       zone_name
       place_label
       venue_approval_status
+      series_id
+      series_index
+      series_total
       is_active
       created_at
     }

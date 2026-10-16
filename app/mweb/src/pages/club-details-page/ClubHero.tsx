@@ -25,6 +25,7 @@ interface Props {
   onToggleFollow: () => void;
   onToggleSave: () => void;
   onShare: () => void;
+  onOpenChat?: () => void;
 }
 
 /** Full-bleed hero with the calm design's 24px bottom corners (the native
@@ -80,6 +81,7 @@ export default function ClubHero({
   onToggleFollow,
   onToggleSave,
   onShare,
+  onOpenChat,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -95,6 +97,7 @@ export default function ClubHero({
       onToggleFollow={onToggleFollow}
       onToggleSave={onToggleSave}
       onShare={onShare}
+      onOpenChat={onOpenChat}
     />
   );
 

@@ -133,6 +133,11 @@ export interface HostPodActionLabels {
   amendClosed: string;
   completePod: string;
   editPod: string;
+  /** "Host again" — copies a pod's content into a new draft. */
+  hostAgain: string;
+  hostAgainHint: string;
+  /** Shown when the draft copy could not be made. */
+  hostAgainFailed: string;
   cancelPod: string;
   close: string;
   cancel: string;
@@ -309,6 +314,9 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     amendClosed: t('mweb.hostPodActions.amendClosed'),
     completePod: t('mweb.hostPodActions.completePod'),
     editPod: t('mweb.hostPodActions.editPod'),
+    hostAgain: t('mweb.hostPodActions.hostAgain'),
+    hostAgainHint: t('mweb.hostPodActions.hostAgainHint'),
+    hostAgainFailed: t('mweb.hostPodActions.hostAgainFailed'),
     cancelPod: t('mweb.hostPodActions.cancelPod'),
     close: t('mweb.hostPodActions.close'),
     cancel: t('mweb.hostPodActions.cancel'),
@@ -444,6 +452,9 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     amendClosed: t('shell.hostPodActions.amendClosed'),
     completePod: t('shell.hostPodActions.completePod'),
     editPod: t('shell.hostPodActions.editPod'),
+    hostAgain: t('shell.hostPodActions.hostAgain'),
+    hostAgainHint: t('shell.hostPodActions.hostAgainHint'),
+    hostAgainFailed: t('shell.hostPodActions.hostAgainFailed'),
     cancelPod: t('shell.hostPodActions.cancelPod'),
     close: t('shell.hostPodActions.close'),
     cancel: t('shell.hostPodActions.cancel'),

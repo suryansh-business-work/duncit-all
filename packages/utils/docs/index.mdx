@@ -3405,15 +3405,32 @@ const problem = reportSubmitError(pickedCategory, details); // a translation key
 | --- | --- | --- |
 | `REPORT_CATEGORIES_SDL` | query | The active report reasons, in Legal's order. |
 | `REPORT_POST_SDL` / `REPORT_PROFILE_SDL` | mutation `($id, $reason, $details)` | File a report on a post/story or a profile; answers `{ id, report_no }`. Refused with `REPORT_ALREADY_PENDING` while the same person's earlier report on it is still open. |
+| `REPORT_CHAT_MESSAGE_SDL` | mutation `($id, $reason, $details)` | File a report on a line in a pod's or club's chat. Only a member of that room can; the server snapshots the text (or photo) at report time, and Legal's take-down blanks the line for everyone. Same receipt and `REPORT_ALREADY_PENDING` rule. |
 | `MY_OPEN_REPORT_SDL` | query `($id)` | The viewer's own still-open report on a post, story or profile (`{ id, report_no }`), or null — the report sheet opens to "Already reported by you" when it is set. |
 | `REPORT_ALREADY_PENDING_CODE` | `'REPORT_ALREADY_PENDING'` | The `extensions.code` of that refusal. |
 | `reportErrorKey` | `(code) => string \| null` | The translation key for a refusal the server names by code, or null for the caller's generic copy. Takes the code because Apollo and the native `ApiError` carry it in different places. |
 | `reportPendingCopyKey` | `(reportNo) => string` | The "already reported" body key — with the reference when there is one. |
 | `BLOCK_USER_SDL` / `UNBLOCK_USER_SDL` | mutation `($user_id)` | Block or unblock a member. Both are idempotent. |
 | `BLOCK_ACTION_COPY` | `Record<BlockAction, BlockActionCopy>` | Menu, confirm, busy, toast and failure keys for Block and Unblock. |
-| `REPORT_DIALOG_TITLE` | `Record<ReportDialogKind, string>` | The report dialog's heading key for a story, post or profile. |
+| `REPORT_DIALOG_TITLE` | `Record<ReportDialogKind, string>` | The report dialog's heading key for a story, post, profile or chat message. |
 | `REPORT_COPY` | `Record<ReportableKind, ReportKindCopy>` | The content menu's label, Delete and Report keys for a story or post. |
 | `reportSubmitError` | `(category, details) => string \| null` | The first thing wrong with a report about to be sent, as a key. |
+
+## Recurring pods — `pod-series`
+
+A host can make a pod **Recurring**: its first date (a venue slot, or a virtual window) repeats
+daily, weekly or every two weeks until an end day. The server works out every date and the
+identical slot it needs (`podSeriesPreview`), and `publishPodDraftSeries` creates one real pod per
+date — each with its own tickets, attendance, refunds and settlement, and its own venue request.
+
+| Export | Meaning |
+| --- | --- |
+| `POD_SERIES_FREQUENCIES` | The repeat choices with their label keys (`DAILY`, `WEEKLY`, `BIWEEKLY`). |
+| `POD_SERIES_SKIP_REASON_KEY` | Why a date cannot run (no slot, venue on leave, taken, removed, failed), as a key. |
+| `endOfDayInZone(ymd, timeZone)` | The last moment of a calendar day in the admin zone, as ISO — what `ends_on` carries. |
+| `buildPodSeriesPlan(source, timeZone)` | The plan to preview/publish, or null while repeat is off or the first date is not chosen. |
+| `groupSlotRequestsBySeries(rows, keyOf)` | A venue's pending requests with each series folded into one group, dates in order. |
+| `POD_SERIES_PREVIEW_SDL` / `PUBLISH_POD_DRAFT_SERIES_SDL` / `VENUE_DECIDE_POD_SERIES_SDL` | The documents, as SDL strings. |
 
 ## Wallet statement periods — `statement-period`
 

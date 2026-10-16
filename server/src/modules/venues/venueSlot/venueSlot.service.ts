@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { SLOT_PRICING_MODES, pricingModeOf, slotVenueCharge, type SlotPricingMode } from './slotCharge';
 import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import { VenueSlotModel, type IVenueSlot, type VenueSlotStatus } from './venueSlot.model';
@@ -51,6 +52,8 @@ const toPub = (s: IVenueSlot, venueName: string, podTitle: string | null) => ({
   end_at: s.end_at.toISOString(),
   whole_day: s.whole_day ?? false,
   price: s.price ?? 0,
+  pricing_mode: pricingModeOf(s.pricing_mode),
+  overtime_rate: s.overtime_rate ?? 0,
   space_label: s.space_label ?? '',
   capacity: s.capacity ?? 0,
   status: s.status,
@@ -122,6 +125,8 @@ interface BulkCreateInput {
     whole_day?: boolean;
     notes?: string;
     price?: number;
+    pricing_mode?: string | null;
+    overtime_rate?: number | null;
     space_label?: string;
     capacity?: number;
   }>;
@@ -162,6 +167,20 @@ function normalizePrice(value: unknown): number {
   const n = Math.round(Number(value) || 0);
   if (n < 0) fail('BAD_USER_INPUT', 'price must be 0 or more');
   if (n > MAX_SLOT_PRICE) fail('BAD_USER_INPUT', `price must be ${MAX_SLOT_PRICE} or less`);
+  return n;
+}
+
+/** The pricing mode as sent, or FLAT; an unknown one is refused, not guessed. */
+function normalizePricingMode(value: unknown): SlotPricingMode {
+  if (value === undefined || value === null || value === '') return 'FLAT';
+  if (!SLOT_PRICING_MODES.includes(value as SlotPricingMode)) fail('BAD_USER_INPUT', 'Choose a valid pricing mode');
+  return value as SlotPricingMode;
+}
+
+/** Overtime per hour in whole rupees — 0 (none) to 100,000. */
+function normalizeOvertimeRate(value: unknown): number {
+  const n = Math.round(Number(value) || 0);
+  if (n < 0 || n > 100_000) fail('BAD_USER_INPUT', 'The overtime rate must be from 0 to 100000');
   return n;
 }
 
@@ -210,6 +229,8 @@ interface PreparedSlot {
   whole_day: boolean;
   notes: string;
   price: number;
+  pricing_mode: SlotPricingMode;
+  overtime_rate: number;
   space_label: string;
   capacity: number;
 }
@@ -314,6 +335,8 @@ async function createSlotsCore(
       whole_day: Boolean(s.whole_day),
       notes: (s.notes ?? '').trim(),
       price: normalizePrice(s.price),
+      pricing_mode: normalizePricingMode(s.pricing_mode),
+      overtime_rate: normalizeOvertimeRate(s.overtime_rate),
       space_label: (s.space_label ?? '').trim(),
       capacity: normalizeCapacity(s.capacity),
     };
@@ -341,6 +364,8 @@ async function createSlotsCore(
       end_at: p.end,
       whole_day: p.whole_day,
       price: p.price,
+      pricing_mode: p.pricing_mode,
+      overtime_rate: p.overtime_rate,
       space_label: p.space_label,
       capacity: p.capacity,
       notes: p.notes,
@@ -352,7 +377,15 @@ async function createSlotsCore(
 
 async function updateSlotCore(
   slot: IVenueSlot,
-  input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number },
+  input: {
+    start_at?: string;
+    end_at?: string;
+    notes?: string;
+    block?: boolean;
+    price?: number;
+    pricing_mode?: string | null;
+    overtime_rate?: number | null;
+  },
   rules: SlotRules
 ) {
   if (slot.status === 'BOOKED') {
@@ -377,6 +410,12 @@ async function updateSlotCore(
   }
   if (input.notes !== undefined) slot.notes = (input.notes ?? '').trim();
   if (input.price !== undefined) slot.price = normalizePrice(input.price);
+  if (input.pricing_mode !== undefined && input.pricing_mode !== null) {
+    slot.pricing_mode = normalizePricingMode(input.pricing_mode);
+  }
+  if (input.overtime_rate !== undefined && input.overtime_rate !== null) {
+    slot.overtime_rate = normalizeOvertimeRate(input.overtime_rate);
+  }
   if (input.block !== undefined) slot.status = input.block ? 'BLOCKED' : 'AVAILABLE';
   await (slot as any).save();
   return (await withVenueAndPod([slot]))[0];
@@ -837,6 +876,8 @@ function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
     end_at: s.end_at.toISOString(),
     whole_day: s.whole_day ?? false,
     price: free ? 0 : s.price ?? 0,
+    pricing_mode: pricingModeOf(s.pricing_mode),
+    overtime_rate: free ? 0 : s.overtime_rate ?? 0,
     pod_is_free: free,
     requested_at: s.updated_at?.toISOString() ?? '',
     pod_id: String(pod._id),
@@ -845,6 +886,9 @@ function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
     host_name: hostName,
     host_email: host?.auth?.email ?? '',
     host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
+    series_id: pod.series_id ? String(pod.series_id) : null,
+    series_index: pod.series_index ?? null,
+    series_total: pod.series_total ?? null,
   };
 }
 
@@ -1097,7 +1141,7 @@ export const venueSlotService = {
     if (!slots.length) return [];
     const podIds = slots.map((s) => s.booked_by_pod_id).filter(Boolean);
     const pods = await PodModel.find({ _id: { $in: podIds } }).select(
-      'pod_title pod_description pod_hosts_id pod_type'
+      'pod_title pod_description pod_hosts_id pod_type series_id series_index series_total'
     );
     const podMap = new Map(pods.map((p) => [String(p._id), p]));
     const hostIds = pods.flatMap((p) => (p.pod_hosts_id ?? []).slice(0, 1));
@@ -1130,7 +1174,9 @@ export const venueSlotService = {
     if (!podId) fail('NOT_FOUND', 'This slot has no booking request');
 
     const [pod, venue, rates] = await Promise.all([
-      PodModel.findById(podId).select('pod_title pod_description pod_hosts_id pod_type'),
+      PodModel.findById(podId).select(
+        'pod_title pod_description pod_hosts_id pod_type no_of_spots series_id series_index series_total'
+      ),
       VenueModel.findById(slot.venue_id).select('venue_name'),
       resolveEffectiveRates({ venueId: String(slot.venue_id) }),
     ]);
@@ -1142,7 +1188,10 @@ export const venueSlotService = {
 
     // Same rounding rule settlement uses, in paise, then back to rupees. A
     // free pod quotes nothing: the host settles the venue directly.
-    const pricePaise = isFreePod(pod) ? 0 : Math.round((slot.price ?? 0) * 100);
+    // The slot's charge by its mode — per hour of its window, or per person at
+    // a FULL pod (the most the venue can earn; the settlement uses real pax).
+    const charge = slotVenueCharge(slot, { pax: pod!.no_of_spots ?? 0 });
+    const pricePaise = isFreePod(pod) ? 0 : Math.round(charge.total * 100);
     const side = venueSideOf(pricePaise, rates.venue_commission_percent);
 
     return {

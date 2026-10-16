@@ -1,4 +1,5 @@
 import { formatMoney } from '@duncit/utils';
+import { SLOT_PRICE_UNIT_KEY, slotPricingModeOf } from '@duncit/slots';
 
 import type { Translate } from '@/i18n/fallback';
 
@@ -22,8 +23,20 @@ const TONE_BY_STATUS: Readonly<Record<string, string>> = SLOT_STATUS_TONE;
 export const slotStatusTone = (status: string): string => TONE_BY_STATUS[status] ?? '$muted';
 
 /** "₹399", or the word for a free slot. */
-export const slotPriceLabel = (price: number, t: Translate): string =>
-  price > 0 ? formatMoney(price) : t('availability.free');
+/** The slot's price as its mode reads it (per slot, per hour, per guest), plus any overtime rate. */
+export const slotPriceLabel = (
+  slot: { price: number; pricing_mode?: unknown; overtime_rate?: number | null },
+  t: Translate,
+): string => {
+  if (slot.price <= 0) return t('availability.free');
+  const base = t(SLOT_PRICE_UNIT_KEY[slotPricingModeOf(String(slot.pricing_mode))], {
+    vars: { price: formatMoney(slot.price) },
+  });
+  const overtime = slot.overtime_rate ?? 0;
+  return overtime > 0
+    ? `${base} ${t('availability.overtimeLabel', { vars: { price: formatMoney(overtime) } })}`
+    : base;
+};
 
 /** "Court 1 · holds 4" — the capacity is what tells two courts apart. */
 export function spaceOptionLabel(space: { label: string; capacity: number }, t: Translate): string {

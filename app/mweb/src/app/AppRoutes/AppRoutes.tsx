@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router';
 import { accountRoutes } from './accountRoutes';
 import { coreRoutes } from './coreRoutes';
-import { AddressBookPage, CartPage, ChatRoomPage, ChatsPage, CheckoutPage, ClubsPage, ContactsPage, ExplorePage, ForgotPasswordPage, HappeningNearbyPage, LoginPage, NotFoundPage, OrderDetailPage, OrdersHistoryPage, PreviousPodsPage, ProductCheckoutPage, ProductDetailPage, RegisterPage, SavedItemsPage, SearchPage, ShopPage } from './lazyPages';
+import { AddressBookPage, CartPage, ChatRoomPage, ChatsPage, CheckoutPage, ClubsPage, ContactsPage, ExplorePage, ForgotPasswordPage, HappeningNearbyPage, LoginPage, NotFoundPage, OrderDetailPage, OrdersHistoryPage, PreviousPodsPage, ProductCheckoutPage, ProductDetailPage, RegisterPage, SavedItemsPage, SearchPage, ShopTabsPage } from './lazyPages';
 import { partnerRoutes } from './partnerRoutes';
 import { redirectIfAuthed, withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
@@ -17,7 +17,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/checkout/:podId" element={withAuth(<CheckoutPage />)} />
         <Route path="/product-checkout" element={withProducts(<ProductCheckoutPage />)} />
         <Route path="/cart" element={withProducts(<CartPage />)} />
-        <Route path="/shop" element={withProducts(<ShopPage />)} />
+        <Route path="/shop" element={withProducts(<ShopTabsPage />)} />
         <Route path="/product/:productId" element={withProducts(<ProductDetailPage />)} />
         <Route path="/orders" element={withProducts(<OrdersHistoryPage />)} />
         <Route path="/orders/:orderId" element={withProducts(<OrderDetailPage />)} />
@@ -62,6 +62,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
           )}
         />
         <Route path="/chats" element={withAuth(<ChatsPage superCategorySlug={superCategory} />)} />
+        <Route path="/chats/club/:id" element={withAuth(<ChatRoomPage kind="CLUB" />)} />
         <Route path="/chats/:id" element={withAuth(<ChatRoomPage />)} />
         <Route path="/register" element={redirectIfAuthed(<RegisterPage />)} />
         <Route path="/login" element={redirectIfAuthed(<LoginPage />)} />

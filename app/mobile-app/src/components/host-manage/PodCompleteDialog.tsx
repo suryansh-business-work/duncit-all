@@ -1,4 +1,5 @@
 import { formResolver } from '../../utils/form-resolver';
+import { venueUsageInput } from '@duncit/forms/schemas';
 import { useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
@@ -45,11 +46,22 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
 
   const billAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
   const includeSlotPrice = billAmount > 0 && watch('include_slot_price');
+  // The venue's usage prices its slot, so the preview re-prices with it.
+  const usage = venueUsageInput({
+    venue_pax: watch('venue_pax'),
+    overtime_hours: watch('overtime_hours'),
+  });
   const {
     settlement,
     isLoading,
     error: previewError,
-  } = useSettlementPreview(pod?.id ?? null, billAmount, includeSlotPrice);
+  } = useSettlementPreview(
+    pod?.id ?? null,
+    billAmount,
+    includeSlotPrice,
+    usage.venue_pax,
+    usage.overtime_hours,
+  );
 
   const { busy, error, run } = usePodCompleteSubmit(
     pod,

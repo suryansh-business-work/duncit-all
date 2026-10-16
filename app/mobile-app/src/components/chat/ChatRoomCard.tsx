@@ -1,5 +1,5 @@
 import { useTranslation } from '@/hooks/useTranslation';
-import { AppImage } from '@/components/AppImage';
+import { ChatRoomAvatar } from '@/components/chat/ChatRoomAvatar';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -26,7 +26,7 @@ const statusMeta = (t: Translate): Record<PodStatus, StatusMeta> => ({
  * linked pod's status (Upcoming / Live / Previous). */
 export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPress: () => void }>) {
   const { t } = useTranslation();
-  const { onPrimary, muted } = useThemeColors();
+  const { muted } = useThemeColors();
   // Identity, deliberately: this counts who is IN the chat, and a multi-seat
   // buyer is one person in it. Do not seat-adjust it the way occupancy was.
   const members = room.pod_attendees.length;
@@ -45,25 +45,7 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
       padding={12}
       pressStyle={PRESS_STYLE.surface}
     >
-      <YStack
-        width={48}
-        height={48}
-        borderRadius={12}
-        overflow="hidden"
-        backgroundColor="$primary"
-        alignItems="center"
-        justifyContent="center"
-      >
-        {room.cover_url ? (
-          <AppImage
-            source={{ uri: room.cover_url }}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        ) : (
-          <MaterialIcons name="forum" size={24} color={onPrimary} />
-        )}
-      </YStack>
+      <ChatRoomAvatar coverUrl={room.cover_url} fallbackIcon="forum" />
       <YStack flex={1} gap={4}>
         <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {room.pod_title}

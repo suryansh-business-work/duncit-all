@@ -3,6 +3,7 @@
  * update, host resubmit and update, spot limits, status posts and meeting-link
  * generation. Composed into `podService` in pod.service.ts.
  */
+import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
 import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
@@ -88,6 +89,9 @@ export const podWriteMethods = {
       autoPodSlot?: { slotId: string; autoPodId: string };
       autoPodId?: string;
       partnerRequestSlot?: { slotId: string; requestId: string };
+      /** One date of a recurring series. `quietVenue` skips the per-date
+       * venue message — the series sends one for all its dates. */
+      series?: { id: string; index: number; total: number; quietVenue: boolean };
     }
   ) {
     const autoPodSlot = opts?.autoPodSlot ?? null;
@@ -133,7 +137,8 @@ export const podWriteMethods = {
       podAmount: input.pod_amount ?? 0,
       noOfSpots: input.no_of_spots ?? 0,
       venueId: venueLocation.venue_id,
-      venueAmount: slotDoc ? slotDoc.price : 0,
+      // By the slot's pricing mode; a per-person slot is judged at a full pod.
+      venueAmount: slotDoc ? slotVenueCharge(slotDoc, { pax: input.no_of_spots ?? 0 }).total : 0,
     });
     const clubCategory = await resolveClubCategory(input.club_id);
     await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);
@@ -206,12 +211,17 @@ export const podWriteMethods = {
         is_active: needsVenueApproval ? false : input.is_active ?? true,
         venue_approval_status: venueApprovalForCreate(autoPodSlot ?? partnerRequestSlot, needsVenueApproval),
         source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
+        series_id: opts?.series ? new Types.ObjectId(opts.series.id) : null,
+        series_index: opts?.series?.index ?? null,
+        series_total: opts?.series?.total ?? null,
       },
       input.club_id,
       slugBase
     );
 
-    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot);
+    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot, {
+      notifyVenue: !opts?.series?.quietVenue,
+    });
     if (partnerRequestSlot) {
       // The pod exists and holds the slot; closing the request is bookkeeping and
       // must never undo that, so a failure here is logged, not thrown.
@@ -235,7 +245,11 @@ export const podWriteMethods = {
     return toPub(doc, slugMap);
   },
 
-  async createForPartner(userId: string, input: any) {
+  async createForPartner(
+    userId: string,
+    input: any,
+    series?: { id: string; index: number; total: number; quietVenue: boolean }
+  ) {
     const userObjectId = new Types.ObjectId(userId);
     await assertActiveHost(userId);
     const podMode = normalizePodMode(input.pod_mode);
@@ -249,7 +263,7 @@ export const podWriteMethods = {
     return this.create(
       { ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] },
       { actorUserId: userId, source: 'HOST' },
-      partnerRequestSlot ? { partnerRequestSlot } : undefined,
+      partnerRequestSlot || series ? { ...(partnerRequestSlot ? { partnerRequestSlot } : {}), series } : undefined,
     );
   },
 
@@ -373,7 +387,9 @@ export const podWriteMethods = {
       podAmount: input.pod_amount ?? doc.pod_amount ?? 0,
       noOfSpots: input.no_of_spots ?? doc.no_of_spots ?? 0,
       venueId: resubmitVenueId,
-      venueAmount: slotDoc ? slotDoc.price : 0,
+      venueAmount: slotDoc
+        ? slotVenueCharge(slotDoc, { pax: input.no_of_spots ?? doc.no_of_spots ?? 0 }).total
+        : 0,
     });
 
     const before = snapshotPod(doc);

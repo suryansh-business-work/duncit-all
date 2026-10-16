@@ -146,7 +146,7 @@ describe('CompletePodDialog / venue bill', () => {
     renderDialog();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1500' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '1500' } });
 
     expect(screen.getByRole('checkbox')).not.toBeChecked();
     fireEvent.click(screen.getByRole('checkbox'));
@@ -155,15 +155,15 @@ describe('CompletePodDialog / venue bill', () => {
 
   it('forgets the slot-price choice again when the amount goes back to zero', () => {
     renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '800' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '800' } });
     fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '0' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '0' } });
     expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|0|false|u1');
   });
 
   it('treats a negative or unreadable amount as no bill for the preview', () => {
     renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '-40' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '-40' } });
     expect(screen.getByTestId('preview')).toHaveTextContent('pod-1|0|false|u1');
   });
 });
@@ -178,7 +178,7 @@ describe('CompletePodDialog / submit', () => {
 
   it('demands the uploaded bill when an amount is entered', async () => {
     const { props } = renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1500' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '1500' } });
     // Bill upload comes first in the form, party media second.
     const [, mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
     fireEvent.change(mediaField, { target: { value: MEDIA } });
@@ -190,7 +190,7 @@ describe('CompletePodDialog / submit', () => {
 
   it('submits the typed values once the bill and media are present', async () => {
     const { props } = renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1500' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '1500' } });
     const [billField, mediaField] = screen.getAllByRole('textbox').filter((el) => el.tagName === 'TEXTAREA');
     const bill = 'https://cdn.test/bill.pdf';
     fireEvent.change(billField, { target: { value: bill } });
@@ -209,12 +209,12 @@ describe('CompletePodDialog / submit', () => {
 
   it('starts clean for the next pod rather than keeping what was typed for the last', () => {
     const { rerender, props } = renderDialog();
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '900' } });
-    expect(screen.getByRole('spinbutton')).toHaveValue(900);
+    fireEvent.change(screen.getByRole('spinbutton', { name: /final bill amount/i }), { target: { value: '900' } });
+    expect(screen.getByRole('spinbutton', { name: /final bill amount/i })).toHaveValue(900);
 
     rerender(<CompletePodDialog {...props} pod={{ ...VENUE_POD, id: 'pod-2', pod_hosts_id: ['u2'] }} />);
 
-    expect(screen.getByRole('spinbutton')).toHaveValue(0);
+    expect(screen.getByRole('spinbutton', { name: /final bill amount/i })).toHaveValue(0);
     expect(screen.getByTestId('preview')).toHaveTextContent('pod-2|0|false|u2');
   });
 });
@@ -226,6 +226,8 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
     venue_bill_amount: 1500,
     venue_bill_media: 'https://cdn.test/bill.pdf',
     include_slot_price: false,
+    venue_pax: '',
+    overtime_hours: '',
     media_text: MEDIA,
     notes: '',
     ...over,
@@ -255,6 +257,20 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
     expect(messages(true, values({ venue_bill_media: '' }))).toEqual(['shell.venueBill.uploadRequired']);
     expect(messages(false, values({ venue_bill_media: '' }))).toEqual([]);
     expect(messages(true, values({ venue_bill_amount: 0, venue_bill_media: '' }))).toEqual([]);
+  });
+
+  it('checks the venue usage on a venue pod and sends what was entered', () => {
+    expect(messages(true, values({ venue_pax: '2.5', overtime_hours: '60' }))).toEqual([
+      'shell.venueBill.paxInvalid',
+      'shell.venueBill.overtimeInvalid',
+    ]);
+    // A pod with no venue has no usage to price.
+    expect(messages(false, values({ venue_pax: '2.5' }))).toEqual([]);
+    expect(buildCompleteInput(values({ venue_pax: '22', overtime_hours: '2' }), 'pod-9')).toMatchObject({
+      venue_pax: 22,
+      overtime_hours: 2,
+    });
+    expect(buildCompleteInput(values(), 'pod-9')).not.toHaveProperty('venue_pax');
   });
 
   it('maps a bill, its file and the slot-price choice onto the server input', () => {

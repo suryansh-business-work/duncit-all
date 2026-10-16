@@ -10,6 +10,7 @@ import StickyPodActionPanel from '../pod-details-page/StickyPodActionPanel';
 import PodDetailAccordions from '../pod-details-page/PodDetailAccordions';
 import PodMapSection from '../../components/pod-details/PodMapSection';
 import PodSocialBar from '../pod-details-page/PodSocialBar';
+import PodChatEntry from '../pod-details-page/PodChatEntry';
 import PodChallengesSection from '../../components/pod-challenge/PodChallengesSection';
 import AdSlot from '../../components/ads/AdSlot';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
@@ -132,6 +133,7 @@ export default function PodDetailsPage() {
         viewerId={data?.me?.user_id ?? null}
       />
 
+      <PodChatEntry podId={pod.id} viewerId={data?.me?.user_id ?? null} hostIds={pod.pod_hosts_id} attendeeIds={pod.pod_attendees} isMember={membershipState?.is_member} />
       <AdSlot position="POD_DETAILS" variant="banner" />
 
       <PodCommerceSection

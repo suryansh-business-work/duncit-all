@@ -3505,6 +3505,24 @@ app time zone, so a device clock or zone that disagrees can only produce a refus
 statement for the wrong period. The Zod schema the three forms share is `makeWalletStatementSchema`
 in `@duncit/forms/schemas`, which calls `statementRangeError`.
 
+## Pod Chat on pod details — `pod-chat`
+
+Every pod's details page on mWeb and in the app shows a Pod Chat entry. Who gets an open door is
+the server's own `isPodMember` rule, held here once so the two surfaces cannot disagree: the pod's
+hosts, its attendees, and anyone whose booking is JOINED. Everyone else sees the entry disabled,
+with a line telling them to book a spot. The server still refuses a non-member's read or post.
+
+| Export | Meaning |
+| --- | --- |
+| `canOpenPodChat({ viewerId, hostIds, attendeeIds, isMember })` | True for a host, an attendee or a JOINED booking; always false when nobody is signed in. |
+| `podChatPath(podId)` | mWeb's room for the pod, `/chats/<pod document id>`. |
+
+```ts
+canOpenPodChat({ viewerId: 'u1', hostIds: ['u1'], attendeeIds: [] })        // true — the host
+canOpenPodChat({ viewerId: 'u9', hostIds: ['u1'], attendeeIds: ['u2'] })    // false — book first
+canOpenPodChat({ viewerId: 'u4', hostIds: [], attendeeIds: [], isMember: true }) // true — JOINED
+```
+
 ## The venue bill at Complete Pod — `venue-bill`
 
 Whoever completes a pod may enter the venue final bill. The server decides the money

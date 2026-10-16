@@ -1681,6 +1681,7 @@ export {
   type SeriesGroupable,
   type SlotRequestGroup,
 } from './pod-series';
+export { canOpenPodChat, podChatPath, type PodChatAccessInput } from './pod-chat';
 
 // Rented items: the contract the venue desk, Finance and both apps share.
 export {

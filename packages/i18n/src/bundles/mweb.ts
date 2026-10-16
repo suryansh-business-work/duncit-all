@@ -3893,6 +3893,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       lastSticker: 'Sticker',
       clubChat: 'Club chat',
       openChat: 'Open chat',
+      podChat: 'Pod chat',
+      podChatHint: 'Talk to the host and everyone going.',
+      podChatLocked: 'Book a spot to join the pod chat.',
     },
     podSeries: {
       title: 'How often does this pod run?',

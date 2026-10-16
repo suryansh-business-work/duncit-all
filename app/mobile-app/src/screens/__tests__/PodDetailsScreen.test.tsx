@@ -572,6 +572,32 @@ describe('PodDetailsScreen', () => {
     expect(mockBackout).toHaveBeenCalledWith('p1', 1);
   });
 
+  it('opens the pod’s chat room for a member whose booking is JOINED', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: { is_member: true, can_join: false, can_backout: true },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.getByTestId('pod-chat-hint')).toHaveTextContent(
+      'Talk to the host and everyone going.',
+    );
+    fireEvent.press(screen.getByTestId('pod-chat-open'));
+    expect(mockNavigate).toHaveBeenCalledWith('ChatRoom', { podId: 'p1', title: 'Sunset Jam' });
+  });
+
+  it('shows Pod chat to a viewer without a booking, locked, and asks them to book first', () => {
+    mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.getByTestId('pod-chat-open')).toBeDisabled();
+    expect(screen.getByTestId('pod-chat-hint')).toHaveTextContent(
+      'Book a spot to join the pod chat.',
+    );
+    fireEvent.press(screen.getByTestId('pod-chat-open'));
+    expect(mockNavigate).not.toHaveBeenCalledWith('ChatRoom', expect.anything());
+  });
+
   it('shows the refund estimate inside the backout dialog for a paid member', () => {
     mockedPod.mockReturnValue({
       ...podData,

@@ -95,12 +95,15 @@ describe('settlement of a free pod', () => {
   it('owes the venue nothing, whatever its slot is priced at — a paid pod still owes the slot price', async () => {
     const { venue, slot } = await seedVenueAndSlot(4000);
     const free = { venue_id: venue._id, venue_slot_id: slot._id, pod_type: 'FREE' };
-    expect(await venueChargeForPod(free, 900, true)).toEqual({
+    expect(await venueChargeForPod(free, 900, true)).toMatchObject({
       slot_price: 0,
       slot_linked: false,
       bill: 0,
       slot_included: false,
       amount: 0,
+      pricing_mode: 'FLAT',
+      overtime_hours: 0,
+      overtime_amount: 0,
     });
     expect((await venueChargeForPod({ ...free, pod_type: 'PAID' }, 0)).amount).toBe(4000);
   });

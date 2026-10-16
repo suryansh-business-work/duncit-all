@@ -42,7 +42,13 @@ const msg = (id: string, over: Record<string, unknown> = {}) => ({
 
 function withDocs(messages: unknown[] = []) {
   req.mockImplementation((doc: unknown) => {
-    if (doc === PodMessagesDocument) return Promise.resolve({ podMessages: messages });
+    if (doc === PodMessagesDocument)
+      return Promise.resolve({
+        podMessages: messages,
+        // An upcoming pod's open room: the server's room facts ride with the page.
+        pod: { pod_date_time: '2099-01-01T10:00:00Z', pod_end_date_time: null },
+        podChatInfo: { closed: false, chat_deletes_at: null, can_moderate: false },
+      });
     if (doc === UploadImageDocument)
       return Promise.resolve({ uploadImageToImagekit: { url: 'http://img/x.jpg', fileId: 'f' } });
     if (doc === SendPodMessageDocument) return Promise.resolve({ sendPodMessage: { id: 'new' } });

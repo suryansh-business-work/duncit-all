@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
-import { rentalMoney, rentalRefundKey, rentalStatusKey, rentalUnitKey } from '@duncit/utils';
+import { rentalMoney, rentalRefundKey, rentalStatusKey } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { EmptyState } from '@/components/EmptyState';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { RentalUnitsLine } from '@/components/rentals/RentalUnitsLine';
 import { StackScreen } from '@/components/StackScreen';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { MyRentalBookingsDocument } from '@/graphql/rentals';
@@ -50,15 +51,7 @@ function RentalRow({ row }: Readonly<{ row: Row }>) {
         {t('venueRentals.guest.forPod', { vars: { pod: row.pod_title } })} ·{' '}
         {formatDateTime(row.created_at)}
       </Text>
-      <Text fontSize={12.5} color="$muted">
-        {t('venueRentals.guest.units', {
-          vars: { quantity: row.quantity, units: row.units, unit: t(rentalUnitKey(row.unit)) },
-        })}
-        {` · ${money(row.rent_amount)}`}
-        {row.deposit_amount > 0
-          ? ` · ${t('venueRentals.guest.deposit', { vars: { amount: money(row.deposit_amount) } })}`
-          : ''}
-      </Text>
+      <RentalUnitsLine row={row} />
       {outcome ? (
         <Text fontSize={12.5} fontWeight="600" color="$color">
           {t(outcome.key, { vars: { amount: money(outcome.amount) } })} ·{' '}

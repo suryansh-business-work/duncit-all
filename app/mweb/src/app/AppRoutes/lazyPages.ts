@@ -136,6 +136,7 @@ export const VenueListPage = lazy(() => import('../../pages/venue-list-page'));
 export const VenuePublishPage = lazy(() => import('../../pages/venue-publish-page'));
 // Venue Options → the food desk: Dashboard, Food Orders, Food Coupons (@duncit/venue-food).
 export const VenueFoodPage = lazy(() => import('../../pages/venue-food-page'));
+export const VenueRentedItemsPage = lazy(() => import('../../pages/venue-rented-items-page'));
 export const VenuePodsPage = lazy(() => import('../../pages/venue-pods-page'));
 export const HostPublishPage = lazy(() => import('../../pages/host-publish-page'));
 export const HostSharePage = lazy(() => import('../../pages/host-share-page'));

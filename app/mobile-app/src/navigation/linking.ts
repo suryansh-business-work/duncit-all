@@ -130,6 +130,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       VenueFoodMenu: 'venues/food-menu',
       VenueFoodOrders: 'venues/food-orders',
       VenueFoodCoupons: 'venues/food-coupons',
+      VenueRentedItems: 'venues/rented-items',
       // The brand desk, on mWeb's paths.
       BrandOrders: 'products/orders',
       BrandOrderDetail: 'products/orders/:id',

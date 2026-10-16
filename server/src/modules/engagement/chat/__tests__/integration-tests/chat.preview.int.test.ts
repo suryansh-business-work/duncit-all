@@ -102,7 +102,12 @@ describe('chatPreview', () => {
     await say(room, host._id, ['Welcome']);
     await say(room, host._id, ['Removed line'], { deleted: true });
     await say(room, attendee._id, ['From a blocked person']);
-    await UserBlockModel.create({ blocker_id: viewer._id, blocked_id: attendee._id, unblocked_at: null });
+    await UserBlockModel.create({
+      blocker_id: viewer._id,
+      blocked_id: attendee._id,
+      blocked_at: new Date(),
+      unblocked_at: null,
+    });
 
     const result = await preview(room, String(viewer._id));
 

@@ -147,7 +147,10 @@ describe('RentalItemsForm', () => {
         const texts = (JSON.stringify(screen.toJSON()).match(/"children":\["[^"]+"\]/g) ?? []).join(
           ' | ',
         );
-        throw new Error(`DIAG-RENTAL-SHEET ${texts} ${String(err)}`);
+        const g = globalThis as unknown as { __rentalDiag?: string[] };
+        throw new Error(
+          `DIAG-RENTAL-SHEET [${(g.__rentalDiag ?? []).join(',')}] ${texts} ${String(err)}`,
+        );
       },
     );
     expect(within(screen.getByTestId('rental-item-0')).getByText('Shoes')).toBeOnTheScreen();

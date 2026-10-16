@@ -1,6 +1,5 @@
 import { Controller, type Control, type UseFormTrigger } from 'react-hook-form';
-import { useState } from 'react';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import type { RentalItemsConfig, RentalItemsValues } from '@duncit/utils';
 
 import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
@@ -36,7 +35,6 @@ export function RentalItemSheet({
   isNew,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [diag, setDiag] = useState('');
   if (index === null) return null;
   const name = (field: 'name' | 'description' | 'rate' | 'deposit' | 'stock' | 'per_guest_limit') =>
     `items.${index}.${field}` as const;
@@ -46,21 +44,18 @@ export function RentalItemSheet({
   }));
 
   const done = async () => {
+    const g = globalThis as unknown as { __rentalDiag?: string[] };
+    g.__rentalDiag = g.__rentalDiag ?? [];
+    const log = g.__rentalDiag;
+    log.push('start');
+    setTimeout(() => log.push('t300'), 300);
     try {
-      setDiag((d) => `${d} START`);
       const ok = await trigger(`items.${index}`);
-      const c = control as unknown as {
-        _formValues: { items: unknown[] };
-        _formState: { errors: unknown };
-      };
-      const dump = JSON.stringify(
-        { values: c._formValues.items[index], errors: c._formState.errors },
-        (k, v) => (k === 'ref' ? undefined : v),
-      );
-      setDiag((d) => `${d} DIAGSHEET ok=${String(ok)} ${dump.replaceAll('"', "'")}`);
+      log.push(`ok=${String(ok)}`);
       if (ok) onClose(false);
+      log.push('after-close');
     } catch (e) {
-      setDiag(`DIAGSHEET THREW ${String(e)}`);
+      log.push(`threw ${String(e)}`);
     }
   };
 
@@ -86,7 +81,6 @@ export function RentalItemSheet({
       }
     >
       <YStack gap={12}>
-        <Text>{diag}</Text>
         <FormTextField
           control={control}
           name={name('name')}

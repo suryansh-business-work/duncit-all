@@ -64,7 +64,8 @@ describe('ChatPreviewCard', () => {
     renderWithProviders(<ChatPreviewCard kind="POD" id="p1" onOpen={jest.fn()} />);
     expect(await screen.findByText('Photo')).toBeOnTheScreen();
     expect(screen.getByTestId('chat-preview-count')).toHaveTextContent('1 message');
-    expect(screen.getByTestId('chat-preview-locked')).toHaveTextContent('Join the room');
+    // The pill also holds the lock glyph, so match its words, not its whole text.
+    expect(screen.getByTestId('chat-preview-locked')).toHaveTextContent(/Join the room/);
     expect(screen.getByTestId('chat-preview-locked-hint')).toHaveTextContent(
       'Book a spot to join the pod chat.',
     );
@@ -147,9 +148,8 @@ describe('ChatPreviewCard', () => {
       .mockRejectedValueOnce(new Error('offline'))
       .mockResolvedValueOnce(preview({ messages: [line('a', 'Back again')], total_count: 1 }));
     renderWithProviders(<ChatPreviewCard kind="POD" id="p1" onOpen={jest.fn()} />);
-    expect(await screen.findByTestId('chat-preview-error')).toHaveTextContent(
-      'The chat could not load.',
-    );
+    await screen.findByTestId('chat-preview-error');
+    expect(screen.getByRole('alert')).toHaveTextContent('The chat could not load.');
     await act(async () => {
       fireEvent.press(screen.getByTestId('chat-preview-retry'));
     });

@@ -4027,6 +4027,19 @@ export type ChatParticipants = {
   participants: Array<ChatUser>;
 };
 
+/** A pod's or club's chat history, read-only, for anyone signed in looking at its details page. */
+export type ChatPreview = {
+  __typename?: 'ChatPreview';
+  /** Whether the pod has ended, which closes its room. A club's room never closes. */
+  closed: Scalars['Boolean']['output'];
+  /** Whether the viewer may open the room and post (a member). */
+  is_member: Scalars['Boolean']['output'];
+  /** One page of messages, oldest first — the newest ones, or those older than the before time. */
+  messages: Array<PodMessage>;
+  /** Every message the viewer can see in the room, in all. */
+  total_count: Scalars['Int']['output'];
+};
+
 export type ChatRoom = {
   __typename?: 'ChatRoom';
   /** When this room's messages are permanently deleted: the pod's end plus the admin-set chat retention. Null when the pod has no usable start. */
@@ -25577,6 +25590,8 @@ export type Query = {
   challengesTable: ChallengeTablePage;
   /** Host(s) and participants of a pod's chat (members only). */
   chatParticipants: ChatParticipants;
+  /** A pod's (pod_id) or club's (club_id) chat history for its details page — any signed-in viewer. */
+  chatPreview: ChatPreview;
   checkoutQuote: CheckoutQuote;
   /** GoDaddy's zone beside Cloudflare's, and the nameservers the domain uses today. */
   cloudflareMigration: CloudflareMigration;
@@ -27665,6 +27680,14 @@ export type QueryChallengesTableArgs = {
 
 export type QueryChatParticipantsArgs = {
   pod_id: Scalars['ID']['input'];
+};
+
+
+export type QueryChatPreviewArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  club_id?: InputMaybe<Scalars['ID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  pod_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 

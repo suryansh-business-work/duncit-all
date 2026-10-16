@@ -13,6 +13,7 @@ import {
   blockedPeerIds,
   canModerateRoom,
   isPodMember,
+  isRoomMember,
   roomOfMessage,
   type ChatRoomRef,
 } from './chat.access';
@@ -50,20 +51,66 @@ function assertCleanText(text: string) {
 const roomFilter = (room: ChatRoomRef) =>
   room.kind === 'POD' ? { pod_id: room.id } : { club_id: room.id };
 
+/** The lines of a room this viewer may see: not removed, and from nobody they
+ * have blocked or who has blocked them. */
+async function visibleFilter(room: ChatRoomRef, userId: string) {
+  const q: Record<string, unknown> = { ...roomFilter(room), deleted: false };
+  const blocked = await blockedPeerIds(userId);
+  if (blocked.size > 0) q.user_id = { $nin: [...blocked] };
+  return q;
+}
+
+/** One page, newest `limit` before `before`, returned oldest first. */
+async function pageOfRoom(filter: Record<string, unknown>, limit: number, before?: string) {
+  const q = before ? { ...filter, createdAt: { $lt: new Date(before) } } : filter;
+  const docs = await PodMessageModel.find(q)
+    .sort({ createdAt: -1 })
+    .limit(Math.min(200, Math.max(1, limit)))
+    .lean();
+  return docs.reverse();
+}
+
+/** Whether a room is closed to new messages, or null when its pod or (active)
+ * club does not exist. A club's room never closes. */
+async function roomClosedOrMissing(room: ChatRoomRef): Promise<boolean | null> {
+  if (!mongoose.isValidObjectId(room.id)) return null;
+  if (room.kind === 'CLUB') {
+    return (await ClubModel.exists({ _id: room.id, is_active: true })) ? false : null;
+  }
+  const pod = await PodModel.findById(room.id).select('pod_date_time pod_end_date_time').lean();
+  return pod ? isPodEnded(pod) : null;
+}
+
 export const chatService = {
   isMember: isPodMember,
 
   async listMessages(room: ChatRoomRef, userId: string, limit = 50, before?: string) {
     await assertRoomMember(room, userId);
-    const q: Record<string, unknown> = { ...roomFilter(room), deleted: false };
-    const blocked = await blockedPeerIds(userId);
-    if (blocked.size > 0) q.user_id = { $nin: [...blocked] };
-    if (before) q.createdAt = { $lt: new Date(before) };
-    const docs = await PodMessageModel.find(q)
-      .sort({ createdAt: -1 })
-      .limit(Math.min(200, Math.max(1, limit)))
-      .lean();
-    return docs.reverse();
+    return pageOfRoom(await visibleFilter(room, userId), limit, before);
+  },
+
+  /**
+   * A room's history, read-only, for anyone signed in looking at the pod or
+   * club — the chat card on its details page. Same lines a member reads (no
+   * removed messages, nobody either side has blocked), plus how many there are
+   * in all and whether the viewer may open the room to post. It answers only
+   * for a pod or an active club that exists; reading the room itself and
+   * posting stay members-only.
+   */
+  async previewRoom(room: ChatRoomRef, userId: string, limit = 50, before?: string) {
+    const closed = await roomClosedOrMissing(room);
+    if (closed === null) {
+      throw new GraphQLError(room.kind === 'POD' ? 'Pod not found' : 'Club not found', {
+        extensions: { code: 'NOT_FOUND' },
+      });
+    }
+    const filter = await visibleFilter(room, userId);
+    const [docs, total, member] = await Promise.all([
+      pageOfRoom(filter, limit, before),
+      PodMessageModel.countDocuments(filter),
+      isRoomMember(room, userId),
+    ]);
+    return { docs, total, isMember: member, closed };
   },
 
   async postMessage(opts: {

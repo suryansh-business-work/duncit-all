@@ -59,6 +59,18 @@ export const chatTypeDefs = /* GraphQL */ `
     can_moderate: Boolean!
   }
 
+  "A pod's or club's chat history, read-only, for anyone signed in looking at its details page."
+  type ChatPreview {
+    "One page of messages, oldest first — the newest ones, or those older than the before time."
+    messages: [PodMessage!]!
+    "Every message the viewer can see in the room, in all."
+    total_count: Int!
+    "Whether the viewer may open the room and post (a member)."
+    is_member: Boolean!
+    "Whether the pod has ended, which closes its room. A club's room never closes."
+    closed: Boolean!
+  }
+
   "A club's chat room, for everyone who joined the club plus its admins and hosts."
   type ClubChatRoom {
     id: ID!
@@ -102,6 +114,8 @@ export const chatTypeDefs = /* GraphQL */ `
     "One club's chat room header, for members only."
     clubChatRoom(club_id: ID!): ClubChatRoom!
     clubMessages(club_id: ID!, limit: Int, before: String): [PodMessage!]!
+    "A pod's (pod_id) or club's (club_id) chat history for its details page — any signed-in viewer."
+    chatPreview(pod_id: ID, club_id: ID, limit: Int, before: String): ChatPreview!
   }
 
   extend type Mutation {

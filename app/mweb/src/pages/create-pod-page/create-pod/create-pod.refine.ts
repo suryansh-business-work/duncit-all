@@ -36,6 +36,21 @@ export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.Refinem
   }
 }
 
+/** A recurring pod needs the day it stops repeating, after its first date. The
+ * server checks the span and every date's slot; this only catches the empty
+ * or backwards end day before the preview is asked for. Native twin. */
+export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (!values.repeat_enabled) return;
+  if (!values.repeat_ends_on) {
+    ctx.addIssue({ code: 'custom', path: ['repeat_ends_on'], message: t('mweb.podSeries.endsOnRequired') });
+    return;
+  }
+  const first = values.pod_date_time;
+  if (first && new Date(`${values.repeat_ends_on}T23:59:59`) <= first) {
+    ctx.addIssue({ code: 'custom', path: ['repeat_ends_on'], message: t('mweb.podSeries.endsOnAfterStart') });
+  }
+}
+
 /** The ticket price is blank until the host types one, so a PAID pod can never
  * be published at ₹0 by default — only a FREE pod (which shows no price field
  * and always carries 0) may have no price. Native twin (rule 27). */

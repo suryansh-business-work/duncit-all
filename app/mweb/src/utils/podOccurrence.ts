@@ -9,6 +9,7 @@ export const POD_OCCURRENCE_LABELS: Record<string, string> = {
   ALTERNATE_DAY: 'Alternate day',
   WEEKENDS_ONLY: 'Weekends only',
   WEEKLY: 'Weekly',
+  BIWEEKLY: 'Every two weeks',
   MONTHLY: 'Monthly',
 };
 

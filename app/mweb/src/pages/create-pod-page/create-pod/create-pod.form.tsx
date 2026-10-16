@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
-import { refinePublish, refineVenueOrMeeting } from './create-pod.refine';
+import { refinePublish, refineRepeat, refineVenueOrMeeting } from './create-pod.refine';
 import { refineTicketDiscount } from './create-pod.ticket-discount';
 
 export { hasImageLine, buildCreatePodInput, buildModerationInput, MODERATION_FIELD_MAP } from './create-pod.payload';
@@ -105,9 +105,14 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       ticket_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
+      repeat_enabled: z.boolean(),
+      repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY']),
+      repeat_ends_on: z.string(),
+      repeat_skip_dates: z.array(z.string()),
     })
     .superRefine((values, ctx) => {
       refineVenueOrMeeting(values, ctx, t);
+      refineRepeat(values, ctx, t);
       if (values.pod_date_time.getTime() <= Date.now()) {
         ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });
       }

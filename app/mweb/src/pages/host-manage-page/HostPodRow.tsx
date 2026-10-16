@@ -69,6 +69,14 @@ export default function HostPodRow({
               {formatDate(pod.pod_date_time)}
               {pod.zone_name ? ` · ${pod.zone_name}` : ''}
             </Typography>
+            {pod.series_total ? (
+              <Chip
+                data-testid={`host-pod-series-${pod.id}`}
+                label={t('mweb.podSeries.badge', { vars: { index: pod.series_index, total: pod.series_total } })}
+                variant="outlined"
+                sx={{ mt: 0.5, mr: 0.5, height: 24 }}
+              />
+            ) : null}
             {approvalChip && (
               <Chip
                 data-testid={`host-pod-approval-${pod.id}`}

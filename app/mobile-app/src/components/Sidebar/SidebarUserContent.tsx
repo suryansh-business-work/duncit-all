@@ -122,13 +122,11 @@ export function SidebarUserContent({
         )}
         onNavigate={onNavigate}
       />
-      {showProducts ? (
-        <SidebarManageList
-          title={t('mweb.common.shop')}
-          items={SHOP_ITEMS}
-          onNavigate={onNavigate}
-        />
-      ) : null}
+      <SidebarManageList
+        title={t('mweb.common.shop')}
+        items={showProducts ? [...SHOP_ITEMS, ...tiles.rentals] : tiles.rentals}
+        onNavigate={onNavigate}
+      />
     </YStack>
   );
 }

@@ -64,6 +64,8 @@ export const MobileCheckoutPodDocument = gql(`
       pod_date_time
       pod_type
       pod_amount
+      pod_mode
+      venue_id
       ticket_discount_enabled
       ticket_discount_tiers {
         min_tickets

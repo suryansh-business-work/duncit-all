@@ -187,6 +187,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // A dish's own page and Your Food Orders, on mWeb's exact paths.
       VenueFoodItem: 'venue/:venueId/food/:itemId',
       MyFoodOrders: 'food-orders',
+      MyRentedItems: 'rented-items',
       // The link a member shares from a city's waitlist, on mWeb's exact path.
       CityLaunch: 'city-launch/:locationId',
       Checkout: 'checkout/:podId',

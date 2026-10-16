@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { RentalSelection } from '@duncit/utils';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import {
   classifyConfirmedPayment,
@@ -227,6 +228,7 @@ export function useCheckout(podId: string, seats = 1) {
     amount: number,
     couponCode?: string | null,
     redeemCoins = 0,
+    selectedRentals: RentalSelection[] = [],
   ) => ({
     pod_id: podId || null,
     amount,
@@ -242,6 +244,8 @@ export function useCheckout(podId: string, seats = 1) {
     // Duncit Coins cut the gross before GST, exactly like the coupon. The value
     // is a request: the server re-clamps it to the live balance and the bill.
     redeem_coins: redeemCoins,
+    // Rented items: ids and quantities only — the server prices them, charged in full.
+    selected_rentals: selectedRentals,
   });
 
   const pay = async (
@@ -249,13 +253,14 @@ export function useCheckout(podId: string, seats = 1) {
     amount: number,
     couponCode?: string | null,
     redeemCoins = 0,
+    selectedRentals: RentalSelection[] = [],
   ): Promise<CheckoutPayment> => {
     await maybeSaveMainAddress(values, me);
     const data = await graphqlRequest(
       MobileDummyCheckoutDocument,
       {
         input: {
-          ...contactInput(values, amount, couponCode, redeemCoins),
+          ...contactInput(values, amount, couponCode, redeemCoins, selectedRentals),
           simulate_failure: values.simulate_failure,
         },
       },
@@ -269,11 +274,12 @@ export function useCheckout(podId: string, seats = 1) {
     amount: number,
     couponCode?: string | null,
     redeemCoins = 0,
+    selectedRentals: RentalSelection[] = [],
   ): Promise<RazorpayOrder> => {
     await maybeSaveMainAddress(values, me);
     const data = await graphqlRequest(
       MobileCreateRazorpayOrderDocument,
-      { input: contactInput(values, amount, couponCode, redeemCoins) },
+      { input: contactInput(values, amount, couponCode, redeemCoins, selectedRentals) },
       { auth: true },
     );
     return data.createRazorpayOrder;

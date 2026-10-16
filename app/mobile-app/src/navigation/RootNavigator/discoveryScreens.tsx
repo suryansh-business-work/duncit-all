@@ -35,6 +35,7 @@ import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
 import { VenueFoodOrderScreen } from '@/screens/VenueFoodOrderScreen';
 import { VenueFoodItemScreen } from '@/screens/VenueFoodItemScreen';
 import { MyFoodOrdersScreen } from '@/screens/MyFoodOrdersScreen';
+import { MyRentedItemsScreen } from '@/screens/MyRentedItemsScreen';
 import { OrderDetailScreen } from '@/screens/OrderDetailScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
 import { ProductCheckoutScreen } from '@/screens/ProductCheckoutScreen';
@@ -81,6 +82,7 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="VenueFoodOrder" component={VenueFoodOrderScreen} />
       <Stack.Screen name="VenueFoodItem" component={VenueFoodItemScreen} />
       <Stack.Screen name="MyFoodOrders" component={MyFoodOrdersScreen} />
+      <Stack.Screen name="MyRentedItems" component={MyRentedItemsScreen} />
       <Stack.Screen name="CityLaunch" component={CityLaunchScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="FreeJoinSuccess" component={FreeJoinSuccessScreen} />

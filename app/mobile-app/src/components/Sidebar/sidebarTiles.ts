@@ -7,6 +7,8 @@ export interface SidebarTiles {
   giftCards: ProfileTile[];
   /** "Your Food Orders" — the orders placed from venue menus. */
   food: ProfileTile[];
+  /** "My Rented Items" — rented items ride on pod bookings, so they sit under Shop with or without products. */
+  rentals: ProfileTile[];
   grid: ProfileTile[];
 }
 
@@ -62,6 +64,15 @@ export function buildSidebarTiles(t: Translate): SidebarTiles {
         caption: '',
         icon: 'restaurant-menu',
         route: 'MyFoodOrders',
+      },
+    ],
+    rentals: [
+      {
+        key: 'rentals',
+        label: t('venueRentals.guest.sidebarLabel'),
+        caption: '',
+        icon: 'handshake',
+        route: 'MyRentedItems',
       },
     ],
     /*

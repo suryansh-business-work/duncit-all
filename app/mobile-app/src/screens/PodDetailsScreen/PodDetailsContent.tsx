@@ -114,6 +114,7 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
         onSelectionChange={props.onSelectionChange}
         selectedTotal={props.selectedTotal}
         onVariantQuantity={props.onVariantQuantity}
+        seats={actions.seats}
       />
       <Reveal index={4}>
         <PodAccordions

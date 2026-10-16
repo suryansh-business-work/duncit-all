@@ -1,6 +1,7 @@
 import type { ParsedIssue } from '@duncit/errors';
 
 import { CheckoutSavingsCard, OrderSummary } from '@/components/checkout';
+import { RentalCheckoutCard } from '@/components/checkout/RentalCheckoutCard';
 import { IssueNotice } from '@/components/issue-notice/IssueNotice';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { formatMoney } from '@/utils/checkout-math';
@@ -38,6 +39,7 @@ export function CheckoutPayForm({ s, actions, breakup }: Readonly<CheckoutPayFor
         coins={s.coinSummary}
         roundOff={s.payBreakup ? coins.roundOff : 0}
       />
+      <RentalCheckoutCard rentals={s.rentals} />
       <CheckoutSavingsCard
         code={s.couponCode}
         setCode={s.setCouponCode}
@@ -64,7 +66,9 @@ export function CheckoutPayForm({ s, actions, breakup }: Readonly<CheckoutPayFor
         // has usually scrolled away by the time the buyer reaches it, and the
         // last thing they read before paying should be what they will pay.
         payLabel={t('mweb.checkout.pay', {
-          vars: { amount: formatMoney(breakup.currency, coins.effectiveTotal) },
+          vars: {
+            amount: formatMoney(breakup.currency, coins.effectiveTotal + s.rentals.totals.total),
+          },
         })}
         onSubmit={actions.submit}
       />

@@ -52,7 +52,11 @@ export function checkoutActions(s: CheckoutState) {
   };
 
   const submit = async (values: CheckoutFormValues) => {
-    const { amount, appliedCode, coins } = s;
+    const { amount, appliedCode, coins, rentals } = s;
+    if (rentals.blocked) {
+      setError(t('venueRentals.guest.agreeRequired'));
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -62,6 +66,7 @@ export function checkoutActions(s: CheckoutState) {
           amount,
           appliedCode,
           coins.applied,
+          rentals.selections,
         );
         // 100%-off coupon → completed server-side, skip the gateway sheet.
         if (created.free && created.payment) setPayment(created.payment);
@@ -69,7 +74,13 @@ export function checkoutActions(s: CheckoutState) {
         return;
       }
       if (s.dummyMode) {
-        const result = await checkout.pay(values, amount, appliedCode, coins.applied);
+        const result = await checkout.pay(
+          values,
+          amount,
+          appliedCode,
+          coins.applied,
+          rentals.selections,
+        );
         if (result?.status === 'SUCCESS') setPayment(result);
         else setError(t('mweb.checkout.errorFailed'));
         return;

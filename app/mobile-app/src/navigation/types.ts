@@ -222,6 +222,8 @@ export type RootStackParamList = {
   VenueFoodItem: { venueId: string; itemId: string };
   /** /food-orders — Your Food Orders: the account's and this device's orders from venue menus. */
   MyFoodOrders: undefined;
+  /** My Rented Items (mWeb /rented-items). */
+  MyRentedItems: undefined;
   /** /city-launch/:locationId — a not-yet-launched city's waitlist (its slug, or Location.id). */
   CityLaunch: { locationId: string };
   NotFound: undefined;

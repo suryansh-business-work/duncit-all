@@ -176,47 +176,48 @@ jobs:
     # needs: e2e-gate
     runs-on: ubuntu-latest
     outputs:
-      server: ${{ steps.filter.outputs.server }}
-      admin:  ${{ steps.filter.outputs.admin }}
-      mweb:   ${{ steps.filter.outputs.mweb }}
-      website: ${{ steps.filter.outputs.website }}
-      partners_app: ${{ steps.filter.outputs.partners_app }}
-      partners_website: ${{ steps.filter.outputs.partners_website }}
-      ads_portal: ${{ steps.filter.outputs.ads_portal }}
-      ads_website: ${{ steps.filter.outputs.ads_website }}
-      native: ${{ steps.filter.outputs.native }}
-      crm: ${{ steps.filter.outputs.crm }}
-      open_wa: ${{ steps.filter.outputs.open_wa }}
-      finance: ${{ steps.filter.outputs.finance }}
-      tech: ${{ steps.filter.outputs.tech }}
-      support: ${{ steps.filter.outputs.support }}
-      website_app: ${{ steps.filter.outputs.website_app }}
-      legal: ${{ steps.filter.outputs.legal }}
-      ai: ${{ steps.filter.outputs.ai }}
-      products: ${{ steps.filter.outputs.products }}
-      marketing: ${{ steps.filter.outputs.marketing }}
-      onboarding: ${{ steps.filter.outputs.onboarding }}
-      hr: ${{ steps.filter.outputs.hr }}
-      employee: ${{ steps.filter.outputs.employee }}
-      status: ${{ steps.filter.outputs.status }}
-      challenge: ${{ steps.filter.outputs.challenge }}
-      developers: ${{ steps.filter.outputs.developers }}
-      regional_club_admin: ${{ steps.filter.outputs.regional_club_admin }}
-      venues: ${{ steps.filter.outputs.venues }}
-      clubs: ${{ steps.filter.outputs.clubs }}
-      club_admins: ${{ steps.filter.outputs.club_admins }}
-      hosts: ${{ steps.filter.outputs.hosts }}
-      pods: ${{ steps.filter.outputs.pods }}
-      communications: ${{ steps.filter.outputs.communications }}
-      logs: ${{ steps.filter.outputs.logs }}
-      analytics: ${{ steps.filter.outputs.analytics }}
-      localization: ${{ steps.filter.outputs.localization }}
-      targets: ${{ steps.filter.outputs.targets }}
-      ecomm_portal: ${{ steps.filter.outputs.ecomm_portal }}
-      ecomm_store: ${{ steps.filter.outputs.ecomm_store }}
-      lite: ${{ steps.filter.outputs.lite }}
-      earnwith: ${{ steps.filter.outputs.earnwith }}
-      cms_site: ${{ steps.filter.outputs.cms_site }}
+      server: ${{ steps.gate.outputs.server }}
+      admin:  ${{ steps.gate.outputs.admin }}
+      mweb:   ${{ steps.gate.outputs.mweb }}
+      website: ${{ steps.gate.outputs.website }}
+      partners_app: ${{ steps.gate.outputs.partners_app }}
+      partners_website: ${{ steps.gate.outputs.partners_website }}
+      ads_portal: ${{ steps.gate.outputs.ads_portal }}
+      ads_website: ${{ steps.gate.outputs.ads_website }}
+      native: ${{ steps.gate.outputs.native }}
+      crm: ${{ steps.gate.outputs.crm }}
+      open_wa: ${{ steps.gate.outputs.open_wa }}
+      finance: ${{ steps.gate.outputs.finance }}
+      tech: ${{ steps.gate.outputs.tech }}
+      support: ${{ steps.gate.outputs.support }}
+      website_app: ${{ steps.gate.outputs.website_app }}
+      legal: ${{ steps.gate.outputs.legal }}
+      ai: ${{ steps.gate.outputs.ai }}
+      products: ${{ steps.gate.outputs.products }}
+      marketing: ${{ steps.gate.outputs.marketing }}
+      onboarding: ${{ steps.gate.outputs.onboarding }}
+      hr: ${{ steps.gate.outputs.hr }}
+      employee: ${{ steps.gate.outputs.employee }}
+      status: ${{ steps.gate.outputs.status }}
+      challenge: ${{ steps.gate.outputs.challenge }}
+      developers: ${{ steps.gate.outputs.developers }}
+      regional_club_admin: ${{ steps.gate.outputs.regional_club_admin }}
+      venues: ${{ steps.gate.outputs.venues }}
+      clubs: ${{ steps.gate.outputs.clubs }}
+      club_admins: ${{ steps.gate.outputs.club_admins }}
+      hosts: ${{ steps.gate.outputs.hosts }}
+      pods: ${{ steps.gate.outputs.pods }}
+      communications: ${{ steps.gate.outputs.communications }}
+      logs: ${{ steps.gate.outputs.logs }}
+      analytics: ${{ steps.gate.outputs.analytics }}
+      localization: ${{ steps.gate.outputs.localization }}
+      targets: ${{ steps.gate.outputs.targets }}
+      ecomm_portal: ${{ steps.gate.outputs.ecomm_portal }}
+      ecomm_store: ${{ steps.gate.outputs.ecomm_store }}
+      lite: ${{ steps.gate.outputs.lite }}
+      earnwith: ${{ steps.gate.outputs.earnwith }}
+      cms_site: ${{ steps.gate.outputs.cms_site }}
+      hashes: ${{ steps.gate.outputs.hashes }}
     steps:
       - uses: actions/checkout@v5
       # Without a base, paths-filter diffs staging against main — every app
@@ -619,6 +620,28 @@ jobs:
               - 'packages/**'
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
+      # The checkpoint. The diff base above is the last FULLY green run, so one
+      # red build used to make the fix commit rebuild every image changed since
+      # then — including the ones that built and went live in the red run. The
+      # ledger holds, per service, the input key of what is live; a service
+      # paths-filter selected whose key is unchanged is not rebuilt. The key
+      # covers its filter's files, this workflow, and a digest of the secrets
+      # and variables the builds bake in (scripts/ci-deploy-gate.mjs). A manual
+      # dispatch still rebuilds everything, which is also the clean-build path.
+      - name: Restore deploy ledger
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-ledger/deploy.json
+          key: ci-ledger-deploy-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: ci-ledger-deploy-${{ github.ref_name }}-
+      - name: Skip what is already live
+        id: gate
+        env:
+          CHANGES: ${{ steps.filter.outputs.changes }}
+          # Hashed into one digest and nothing else; never printed or written.
+          BUILD_SECRETS: ${{ toJSON(secrets) }}
+          BUILD_VARS: ${{ toJSON(vars) }}
+        run: node scripts/ci-deploy-gate.mjs gate .ci-ledger/deploy.json
 
   # -----------------------------------------------------------
   # Per-portal pipeline: each build job now runs TypeScript -> Test (via the
@@ -2421,25 +2444,41 @@ jobs:
           EOF
 
       - name: Push files to VPS
+        # ssh/scp exit 255 only when the connection itself failed (timeout,
+        # reset, refused) — that is transient and retried with backoff. Any other
+        # exit is the remote command or a missing file, and retrying it would
+        # only hide the real error, so it fails at once. Every command here is
+        # idempotent (mkdir -p, overwrite, chmod), so a retry is safe.
         run: |
-          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+          with_retry() {
+            local delay=10
+            for attempt in 1 2 3 4; do
+              "$@" && return 0
+              local code=$?
+              if [ "$code" -ne 255 ] || [ "$attempt" -eq 4 ]; then return "$code"; fi
+              echo "::warning::$1 lost the connection to the VPS (attempt $attempt of 4) — retrying in ${delay}s"
+              sleep "$delay"
+              delay=$((delay * 2))
+            done
+          }
+          with_retry ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "mkdir -p ${{ env.STACK_DIR }} ${{ env.STACK_DIR }}/nginx ${{ env.STACK_DIR }}/open-wa-data ${{ env.STACK_DIR }}/app-builds"
-          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/docker-compose.yml \
+          with_retry scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/docker-compose.yml \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/docker-compose.yml
-          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/server.env \
+          with_retry scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/server.env \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/server.env
-          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/open-wa.env \
+          with_retry scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/open-wa.env \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/open-wa.env
-          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/lite.env \
+          with_retry scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/lite.env \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/lite.env
-          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/redeploy.sh \
+          with_retry scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/redeploy.sh \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/redeploy.sh
-          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 scripts/configure-nginx-tls.sh \
+          with_retry scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 scripts/configure-nginx-tls.sh \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/configure-nginx-tls.sh
-          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/nginx/${{ env.NGINX_SITE }} \
+          with_retry scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/nginx/${{ env.NGINX_SITE }} \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/nginx/${{ env.NGINX_SITE }}
-          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+          with_retry ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "chmod 600 ${{ env.STACK_DIR }}/server.env ${{ env.STACK_DIR }}/open-wa.env ${{ env.STACK_DIR }}/lite.env; chmod +x ${{ env.STACK_DIR }}/redeploy.sh ${{ env.STACK_DIR }}/configure-nginx-tls.sh; chmod 755 ${{ env.STACK_DIR }} ${{ env.STACK_DIR }}/app-builds"
 
@@ -2540,3 +2579,27 @@ jobs:
                 curl -fsSI http://127.0.0.1:$((p+O))/ | head -1
               done
               '
+
+      # Only after the health gate passed: these services are live with the
+      # inputs `changes` hashed, so the next run need not rebuild them. A red
+      # step above skips this, and those services are rebuilt next time.
+      - name: Restore deploy ledger
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-ledger/deploy.json
+          key: ci-ledger-deploy-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: ci-ledger-deploy-${{ github.ref_name }}-
+
+      - name: Record what is live
+        env:
+          DEPLOYED: ${{ steps.which.outputs.list }}
+          HASHES: ${{ needs.changes.outputs.hashes }}
+        run: |
+          mkdir -p .ci-ledger
+          node scripts/ci-deploy-gate.mjs record .ci-ledger/deploy.json
+
+      - name: Save deploy ledger
+        uses: actions/cache/save@v5
+        with:
+          path: .ci-ledger/deploy.json
+          key: ci-ledger-deploy-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}

@@ -20,6 +20,9 @@ import {
   type PodModerationResult,
 } from '@/components/create-pod';
 import { graphqlRequest } from '@/services/graphql.client';
+import { PublishPodDraftSeriesDocument } from '@/graphql/pod-series';
+import { PodSeriesFrequency } from '@/generated/graphql/graphql';
+import type { PodSeriesPlan } from '@duncit/utils';
 import { useAppSettingsStore } from '@/stores/app-settings.store';
 import { appFormatter } from '@/utils/app-formatter';
 import { loadPartnerRequestPrefill } from '@/hooks/partnerRequestPrefill';
@@ -135,6 +138,19 @@ export function useCreatePod(draftId?: string, partnerRequestId = '') {
     );
     return res.publishPodDraft;
   };
+  /** A recurring pod: one pod per date that can run. */
+  const publishSeries = async (
+    id: string,
+    input: ReturnType<typeof buildCreatePodInput>,
+    plan: PodSeriesPlan,
+  ) => {
+    const res = await graphqlRequest(
+      PublishPodDraftSeriesDocument,
+      { draft_id: id, input, plan: { ...plan, frequency: plan.frequency as PodSeriesFrequency } },
+      { auth: true },
+    );
+    return res.publishPodDraftSeries;
+  };
   // AI + rules moderation preflight run when the host taps "Create Pod".
   const moderate = async (
     input: ReturnType<typeof buildModerationInput>,
@@ -169,5 +185,6 @@ export function useCreatePod(draftId?: string, partnerRequestId = '') {
     saveDraft,
     moderate,
     publish,
+    publishSeries,
   };
 }

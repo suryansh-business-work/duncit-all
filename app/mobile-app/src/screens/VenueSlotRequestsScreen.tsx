@@ -5,6 +5,9 @@ import { StackScreen } from '@/components/StackScreen';
 import { SelectChip } from '@/components/venue-availability/SelectChip';
 import { SlotRequestCard } from '@/components/venue-slot-requests/SlotRequestCard';
 import { SlotRequestDecisionSheets } from '@/components/venue-slot-requests/SlotRequestDecisionSheets';
+import { SeriesRequestGroup } from '@/components/venue-slot-requests/SeriesRequestGroup';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { groupSlotRequestsBySeries } from '@duncit/utils';
 import {
   useVenueSlotRequests,
   ALL_VENUES,
@@ -28,10 +31,26 @@ export function VenueSlotRequestsScreen() {
   const [approving, setApproving] = useState<SlotRequestRow | null>(null);
   const [declining, setDeclining] = useState<string | null>(null);
   const [reason, setReason] = useState('');
+  // A recurring pod answered as a whole: the series being accepted / declined.
+  const [approvingSeries, setApprovingSeries] = useState<string | null>(null);
+  const [decliningSeries, setDecliningSeries] = useState<string | null>(null);
 
   const dismiss = () => {
     setApproving(null);
     setDeclining(null);
+    setApprovingSeries(null);
+    setDecliningSeries(null);
+  };
+  const seriesResult = (approveAll: boolean) => (decided: number, failed: number) => {
+    const text = approveAll
+      ? t('mweb.podSeries.acceptedAll', { vars: { count: decided } })
+      : t('mweb.podSeries.declinedAll', { vars: { count: decided } });
+    return failed ? `${text} ${t('mweb.podSeries.someFailed', { vars: { count: failed } })}` : text;
+  };
+  const approveSeries = () => {
+    const seriesId = approvingSeries;
+    dismiss();
+    if (seriesId) slots.decideSeries(seriesId, true, '', seriesResult(true)).catch(() => undefined);
   };
   const approve = () => {
     const slotId = approving?.slot_id;
@@ -40,9 +59,23 @@ export function VenueSlotRequestsScreen() {
   };
   const decline = () => {
     const slotId = declining;
+    const seriesId = decliningSeries;
     dismiss();
-    if (slotId) slots.decline(slotId, reason.trim()).catch(() => undefined);
+    if (seriesId)
+      slots
+        .decideSeries(seriesId, false, reason.trim(), seriesResult(false))
+        .catch(() => undefined);
+    else if (slotId) slots.decline(slotId, reason.trim()).catch(() => undefined);
   };
+  const card = (request: SlotRequestRow) => (
+    <SlotRequestCard
+      key={request.slot_id}
+      request={request}
+      busy={slots.busy}
+      onApprove={setApproving}
+      onDecline={openDecline}
+    />
+  );
   const openDecline = (slotId: string) => {
     setReason('');
     setDeclining(slotId);
@@ -101,25 +134,42 @@ export function VenueSlotRequestsScreen() {
           </Text>
         )}
 
-        {slots.requests.map((request) => (
-          <SlotRequestCard
-            key={request.slot_id}
-            request={request}
-            busy={slots.busy}
-            onApprove={setApproving}
-            onDecline={openDecline}
-          />
-        ))}
+        {groupSlotRequestsBySeries(slots.requests, (r) => r.slot_id).map((group) =>
+          group.kind === 'SERIES' ? (
+            <SeriesRequestGroup
+              key={group.key}
+              rows={group.rows}
+              busy={slots.busy}
+              onApproveAll={() => setApprovingSeries(group.seriesId)}
+              onDeclineAll={() => {
+                setReason('');
+                setDecliningSeries(group.seriesId);
+              }}
+              renderRow={card}
+            />
+          ) : (
+            card(group.row)
+          ),
+        )}
       </RefreshScrollView>
 
       <SlotRequestDecisionSheets
         approving={approving}
-        declining={!!declining}
+        declining={!!declining || !!decliningSeries}
         reason={reason}
         onReason={setReason}
         onApprove={approve}
         onDecline={decline}
         onDismiss={dismiss}
+      />
+      <ConfirmDialog
+        open={!!approvingSeries}
+        testID="slot-series-approve"
+        title={t('mweb.podSeries.acceptAllTitle')}
+        message={t('mweb.podSeries.acceptAllMessage')}
+        confirmLabel={t('mweb.venueSlotRequests.approve')}
+        onConfirm={approveSeries}
+        onCancel={dismiss}
       />
     </StackScreen>
   );

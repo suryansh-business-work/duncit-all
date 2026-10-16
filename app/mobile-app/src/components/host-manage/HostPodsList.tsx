@@ -68,6 +68,13 @@ export function HostPodsList({ pods, visible, isLoading, onOpen, onActions }: Re
         cover={coverImageUrl(pod.pod_images_and_videos)}
         approval={venueApprovalChip(pod.venue_approval_status)}
         rejectedNote={isVenueRejected(pod.venue_approval_status) ? VENUE_REJECTED_NOTE : null}
+        seriesLabel={
+          pod.series_total
+            ? t('mweb.podSeries.badge', {
+                vars: { index: pod.series_index ?? 0, total: pod.series_total },
+              })
+            : null
+        }
         onOpen={() => onOpen(pod)}
         onActions={() => onActions(pod)}
       />

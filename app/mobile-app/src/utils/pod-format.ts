@@ -71,6 +71,7 @@ export const POD_OCCURRENCE_LABELS: Record<PodOccurrence, string> = {
   [PodOccurrence.AlternateDay]: 'Alternate day',
   [PodOccurrence.WeekendsOnly]: 'Weekends only',
   [PodOccurrence.Weekly]: 'Weekly',
+  [PodOccurrence.Biweekly]: 'Every two weeks',
   [PodOccurrence.Monthly]: 'Monthly',
 };
 

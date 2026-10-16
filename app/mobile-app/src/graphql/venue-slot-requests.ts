@@ -29,6 +29,9 @@ export const VenueSlotRequestsDocument = gql(`
       host_email
       host_phone
       pod_is_free
+      series_id
+      series_index
+      series_total
     }
   }
 `);

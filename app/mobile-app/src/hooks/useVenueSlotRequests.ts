@@ -6,6 +6,7 @@ import {
   DeclineVenueSlotRequestDocument,
   VenueSlotRequestsDocument,
 } from '@/graphql/venue-slot-requests';
+import { VenueDecidePodSeriesDocument } from '@/graphql/pod-series';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 import { useSelectedVenue } from '@/hooks/useSelectedVenue';
@@ -67,11 +68,11 @@ export function useVenueSlotRequests() {
   useRefreshRegistration(load);
 
   const decide = useCallback(
-    async (run: Promise<unknown>, done: string) => {
+    async (run: Promise<unknown>, done: string | (() => string)) => {
       setBusy(true);
       try {
         await run;
-        setFeedback({ ok: true, text: done });
+        setFeedback({ ok: true, text: typeof done === 'function' ? done() : done });
         await load();
       } catch (err) {
         setFeedback({ ok: false, text: err instanceof Error ? err.message : 'That did not work' });
@@ -104,6 +105,29 @@ export function useVenueSlotRequests() {
     [decide],
   );
 
+  /** Every pending date of a recurring pod at once; the caller words the result. */
+  const decideSeries = useCallback(
+    (
+      seriesId: string,
+      approveAll: boolean,
+      reason: string,
+      word: (decided: number, failed: number) => string,
+    ) => {
+      let text = '';
+      return decide(
+        graphqlRequest(
+          VenueDecidePodSeriesDocument,
+          { series_id: seriesId, approve: approveAll, reason: reason || null },
+          { auth: true },
+        ).then((res) => {
+          text = word(res.venueDecidePodSeries.decided, res.venueDecidePodSeries.failed);
+        }),
+        () => text,
+      );
+    },
+    [decide],
+  );
+
   return {
     venueId,
     setVenueId,
@@ -115,6 +139,7 @@ export function useVenueSlotRequests() {
     clearFeedback: () => setFeedback(null),
     approve,
     decline,
+    decideSeries,
     refetch: load,
   };
 }

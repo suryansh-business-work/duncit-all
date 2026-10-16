@@ -211,6 +211,28 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  * The messages are copy, so they come from the shared catalogue (rule 38): the
  * stepper passes its live `t`, and the export below resolves against the
  * bundled English for callers that parse the schema outside React. */
+/** A recurring pod needs the day it stops repeating, after its first date. The
+ * server checks the span and every date's slot. mWeb twin: refineRepeat. */
+function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (!values.repeat_enabled) return;
+  if (!values.repeat_ends_on) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['repeat_ends_on'],
+      message: t('mweb.podSeries.endsOnRequired'),
+    });
+    return;
+  }
+  const first = parseDateTimeText(values.pod_date_time_text);
+  if (first && new Date(`${values.repeat_ends_on}T23:59:59`) <= first) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['repeat_ends_on'],
+      message: t('mweb.podSeries.endsOnAfterStart'),
+    });
+  }
+}
+
 export function makeCreatePodSchema(t: Translate = fallbackT) {
   return z
     .object({
@@ -289,11 +311,16 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       ...ticketDiscountSchemaShape,
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
+      repeat_enabled: z.boolean(),
+      repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY']),
+      repeat_ends_on: z.string(),
+      repeat_skip_dates: z.array(z.string()),
     })
     .superRefine((values, ctx) => {
       refineVenue(values, ctx, t);
       refineMeeting(values, ctx, t);
       refineSchedule(values, ctx, t);
+      refineRepeat(values, ctx, t);
       refinePodType(values, ctx, t);
       refineTicketPrice(values, ctx, t);
       refineTicketDiscount(
@@ -337,6 +364,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'venue_space_label',
     'pod_date_time_text',
     'pod_end_date_time_text',
+    'repeat_ends_on',
   ],
   [
     'pod_type',

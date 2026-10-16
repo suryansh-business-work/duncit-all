@@ -57,7 +57,8 @@ export type RootStackParamList = {
   /** Booking deep link from the receipt email; forwards to the pod detail. */
   Booking: { bookingId: string };
   BecomeHost: undefined;
-  HostManage: undefined;
+  /** `notice`: a line to show on arrival, e.g. how many dates a recurring pod created. */
+  HostManage: { notice?: string } | undefined;
   /** Host Studio > Your Pods > actions > See Marked Attendance. */
   PodAttendance: { podId: string };
   /** Host Studio > Your Pods > actions > Challenges. */

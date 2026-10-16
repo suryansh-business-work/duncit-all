@@ -53,7 +53,7 @@ describe('FoodMenuBrowser — sections', () => {
     expect(summary(0)).toHaveTextContent('Drinks');
     expect(summary(0)).toHaveTextContent('2 items');
     expect(summary(1)).toHaveTextContent('Snacks');
-    expect(summary(1)).toHaveTextContent('1 items');
+    expect(summary(1)).toHaveTextContent(/1 item$/);
     expect(summary(2)).toHaveTextContent('More dishes');
     expect([0, 1, 2].every(isOpen)).toBe(true);
     // Each summary controls its own region.
@@ -123,7 +123,7 @@ describe('FoodMenuBrowser — search', () => {
     expect(screen.getByText('Masala Chai')).toBeInTheDocument();
     expect(screen.queryByText('Sweet Lassi')).not.toBeInTheDocument();
     expect(screen.queryByText('Samosa')).not.toBeInTheDocument();
-    expect(summary(0)).toHaveTextContent('1 items');
+    expect(summary(0)).toHaveTextContent(/1 item$/);
     expect(screen.queryByTestId('food-menu-section-1')).not.toBeInTheDocument();
 
     search('SWEET lassi');

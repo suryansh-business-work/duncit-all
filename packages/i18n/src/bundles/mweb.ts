@@ -5003,7 +5003,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         expandAll: 'Expand all',
         collapseAll: 'Collapse all',
         otherSection: 'More dishes',
-        sectionCount: '{count} items',
+        sectionCount: {
+          one: '{count} item',
+          other: '{count} items',
+        },
       },
       // The venue's food rating — one rating per served order, so it is the venue's, not a dish's.
       rating: {

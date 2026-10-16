@@ -83,19 +83,20 @@ export default function FoodMenuList({ groups, sectioned, collapsed, onToggle, .
               expandIcon={<ExpandMoreIcon />}
               id={`food-menu-section-${index}-header`}
               aria-controls={`food-menu-section-${index}-content`}
-              sx={{ px: 0 }}
+              sx={{ px: 2 }}
             >
               <Stack direction="row" spacing={1} sx={{ alignItems: 'baseline', minWidth: 0 }}>
                 <Typography component="span" sx={{ fontSize: '1rem', fontWeight: 700, wordBreak: 'break-word' }}>
                   {title}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary', flex: '0 0 auto' }}>
-                  {t('mweb.venueFood.menuSearch.sectionCount', { vars: { count: String(group.items.length) } })}
+                  {t('mweb.venueFood.menuSearch.sectionCount', { count: group.items.length })}
                 </Typography>
               </Stack>
             </AccordionSummary>
             {/* MUI wraps the summary in an h3 and gives the region the summary's id and aria-controls. */}
-            <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            {/* The theme draws each section as a bordered card, so its heading and dishes sit inset from that border. */}
+            <AccordionDetails sx={{ px: 1.5, pt: 0, pb: 1.5 }}>
               <Dishes {...dishes} items={group.items} />
             </AccordionDetails>
           </Accordion>

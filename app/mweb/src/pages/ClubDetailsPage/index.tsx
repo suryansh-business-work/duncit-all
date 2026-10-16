@@ -148,6 +148,7 @@ export default function ClubDetailsPage() {
         onToggleFollow={toggleClubFollow}
         onToggleSave={toggleSaved}
         onShare={shareClub}
+        onOpenChat={() => navigate(`/chats/club/${club.id}`)}
       />
       <LocationMismatchDialog kind="CLUB" {...locationPrompt} />
       <ClubSummaryHeader

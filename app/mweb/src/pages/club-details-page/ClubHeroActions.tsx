@@ -6,6 +6,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import CheckIcon from '@mui/icons-material/CheckRounded';
 import AddIcon from '@mui/icons-material/AddRounded';
+import ChatIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -31,6 +32,8 @@ interface Props {
   onToggleFollow: () => void;
   onToggleSave: () => void;
   onShare: () => void;
+  /** Opens the club's chat — offered once the viewer has joined the club. */
+  onOpenChat?: () => void;
 }
 
 /** Back on the left; Follow (green, or a dark "Following" pill once followed),
@@ -43,6 +46,7 @@ export default function ClubHeroActions({
   onToggleFollow,
   onToggleSave,
   onShare,
+  onOpenChat,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
@@ -80,6 +84,16 @@ export default function ClubHeroActions({
         >
           {following ? 'Following' : 'Follow'}
         </DuncitButton>
+        {following && onOpenChat && (
+          <DuncitIconButton
+            data-testid="club-hero-chat"
+            aria-label={t('mweb.chat.openChat')}
+            onClick={onOpenChat}
+            sx={ROUND_SX}
+          >
+            <ChatIcon fontSize="small" />
+          </DuncitIconButton>
+        )}
         <DuncitIconButton
           data-testid="club-hero-save"
           aria-label={saved ? 'Saved' : 'Save'}

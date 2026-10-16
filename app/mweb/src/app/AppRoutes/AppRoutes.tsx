@@ -62,6 +62,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
           )}
         />
         <Route path="/chats" element={withAuth(<ChatsPage superCategorySlug={superCategory} />)} />
+        <Route path="/chats/club/:id" element={withAuth(<ChatRoomPage kind="CLUB" />)} />
         <Route path="/chats/:id" element={withAuth(<ChatRoomPage />)} />
         <Route path="/register" element={redirectIfAuthed(<RegisterPage />)} />
         <Route path="/login" element={redirectIfAuthed(<LoginPage />)} />

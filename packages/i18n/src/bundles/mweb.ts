@@ -3896,6 +3896,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       react: 'React',
       deleteMessage: 'Delete message',
       deleteFailed: 'Could not delete this message. Please try again.',
+      sendFailed: 'Could not send your message. Please try again.',
+      reactFailed: 'Could not add your reaction. Please try again.',
       reportMessage: 'Report message',
       openClub: 'Open club',
       joinToChat: 'Join this club to chat with its members.',

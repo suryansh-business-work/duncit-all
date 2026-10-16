@@ -35,11 +35,37 @@ interface Props {
 
 const THUMB_SIZE = 96;
 
-/** The dish's first photo — a button into the image viewer — or a plain mark when it has none. */
-function Thumb({ item, onOpenImage }: Readonly<Pick<Props, 'item' | 'onOpenImage'>>) {
+/**
+ * The dish's first photo, or a plain mark when it has none. With no screen of
+ * its own to open, the photo is a button into the image viewer; otherwise the
+ * press falls through to the card, which opens the dish.
+ */
+function Thumb({
+  item,
+  onOpenImage,
+  opensDetails,
+}: Readonly<Pick<Props, 'item' | 'onOpenImage'> & { opensDetails: boolean }>) {
   const { t } = useTranslation();
   const { muted } = useThemeColors();
   const src = item.images[0];
+  if (src && opensDetails) {
+    return (
+      <YStack
+        testID={`food-item-image-${item.id}`}
+        width={THUMB_SIZE}
+        height={THUMB_SIZE}
+        borderRadius={16}
+        backgroundColor="$soft"
+        overflow="hidden"
+      >
+        <AppImage
+          source={{ uri: src }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="cover"
+        />
+      </YStack>
+    );
+  }
   if (!src) {
     return (
       <YStack
@@ -78,7 +104,8 @@ function Thumb({ item, onOpenImage }: Readonly<Pick<Props, 'item' | 'onOpenImage
 }
 
 /**
- * One dish: its diet and heat marks, name, price and description on the left,
+ * One dish — the whole card opens the dish's own screen when it has one: its
+ * diet and heat marks, name, price and description on the left,
  * its photo on the right with the cart control under it — the photo says when
  * the dish goes in or comes out. A dish that is off for now stays on the menu,
  * dimmed and labelled, and cannot be added. Tamagui twin of mWeb's
@@ -98,9 +125,20 @@ export function FoodItemCard({
   const labels = cartControlLabels(t, item.name);
   const notice = useCartControlNotice(quantity, cartReady);
   const dim = item.is_available ? 1 : DISABLED_OPACITY;
+  const openDetails = onOpenDetails ? () => onOpenDetails(item) : undefined;
 
+  // The whole card opens the dish; the cart control and clips inside it take
+  // their own presses. No tabIndex, so screen readers still reach those
+  // controls — the dish name stays the card's accessible link.
   return (
-    <SurfaceCard testID={`food-item-${item.id}`} flexDirection="row" gap={12} padding={12}>
+    <SurfaceCard
+      testID={`food-item-${item.id}`}
+      flexDirection="row"
+      gap={12}
+      padding={12}
+      onPress={openDetails}
+      pressStyle={openDetails ? PRESS_STYLE.surface : undefined}
+    >
       <YStack flex={1} gap={4}>
         <XStack alignItems="center" gap={6} opacity={dim}>
           <DietMark diet={item.diet} />
@@ -108,8 +146,8 @@ export function FoodItemCard({
         </XStack>
         <Text
           testID={`food-item-open-${item.id}`}
-          role={onOpenDetails ? 'link' : undefined}
-          onPress={onOpenDetails ? () => onOpenDetails(item) : undefined}
+          role={openDetails ? 'link' : undefined}
+          onPress={openDetails}
           fontSize={15}
           fontWeight="600"
           color="$color"
@@ -141,7 +179,7 @@ export function FoodItemCard({
       </YStack>
       <YStack alignItems="center" gap={8}>
         <YStack opacity={dim}>
-          <Thumb item={item} onOpenImage={onOpenImage} />
+          <Thumb item={item} onOpenImage={onOpenImage} opensDetails={Boolean(openDetails)} />
           <CartNoticeChip notice={notice} labels={labels} testID={`food-item-notice-${item.id}`} />
         </YStack>
         {canOrder && item.is_available ? (

@@ -185,12 +185,12 @@ describe('VenueFoodMenuSection', () => {
     await waitFor(() => expect(fetchOrders).toHaveBeenCalled());
   });
 
-  it('opens a dish’s photo in the viewer and closes it again', async () => {
+  it('opens a dish’s own screen from its card, not the photo viewer', async () => {
     renderWithProviders(<VenueFoodMenuSection venue={venueWith()} />);
-    fireEvent.press(screen.getByTestId('food-item-image-chai'));
-    expect(screen.getByTestId('image-viewer')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('image-viewer-close'));
-    await waitFor(() => expect(screen.queryByTestId('image-viewer')).toBeNull());
+    fireEvent.press(screen.getByTestId('food-item-chai'));
+    expect(mockNavigate).toHaveBeenCalledWith('VenueFoodItem', { venueId: 'v1', itemId: 'chai' });
+    expect(screen.queryByTestId('image-viewer')).toBeNull();
+    await waitFor(() => expect(fetchOrders).toHaveBeenCalled());
   });
 
   it('says the venue stopped taking orders, without the QR discount it no longer gives', async () => {

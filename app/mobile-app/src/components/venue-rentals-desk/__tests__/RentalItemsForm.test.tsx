@@ -144,12 +144,8 @@ describe('RentalItemsForm', () => {
 
     await waitFor(() => expect(screen.queryByTestId('rental-item-sheet')).toBeNull()).catch(
       (err: unknown) => {
-        // eslint-disable-next-line no-console
-        console.log(
-          'DIAG-RENTAL-SHEET',
-          (JSON.stringify(screen.toJSON()).match(/"children":\["[^"]+"\]/g) ?? []).join(' | '),
-        );
-        throw err;
+        const texts = (JSON.stringify(screen.toJSON()).match(/"children":\["[^"]+"\]/g) ?? []).join(' | ');
+        throw new Error(`DIAG-RENTAL-SHEET ${texts} ${String(err)}`);
       },
     );
     expect(within(screen.getByTestId('rental-item-0')).getByText('Shoes')).toBeOnTheScreen();

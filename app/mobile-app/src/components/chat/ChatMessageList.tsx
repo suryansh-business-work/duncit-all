@@ -18,7 +18,13 @@ interface Props {
 }
 
 /** The room's scrolling log — skeleton while it loads, a hello when empty. */
-export function ChatMessageList({ listRef, isLoading, messages, meId, onOpenActions }: Readonly<Props>) {
+export function ChatMessageList({
+  listRef,
+  isLoading,
+  messages,
+  meId,
+  onOpenActions,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   if (isLoading && messages.length === 0) {
     return <ListSkeleton testID="chat-room-loading" count={5} />;
@@ -30,7 +36,13 @@ export function ChatMessageList({ listRef, isLoading, messages, meId, onOpenActi
       contentContainerStyle={{ paddingVertical: 12, gap: 8 }}
     >
       {messages.length === 0 ? (
-        <Text testID="chat-room-empty" role="status" textAlign="center" color="$muted" paddingVertical={40}>
+        <Text
+          testID="chat-room-empty"
+          role="status"
+          textAlign="center"
+          color="$muted"
+          paddingVertical={40}
+        >
           {t('mweb.chat.noMessagesYet')}
         </Text>
       ) : (

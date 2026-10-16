@@ -20,7 +20,10 @@ function lastLine(room: ClubChatRoom, t: Translate): string {
 }
 
 /** A club room row in the Chats screen's Clubs tab — mWeb's ClubChatsPanel row. */
-export function ClubChatRoomCard({ room, onPress }: Readonly<{ room: ClubChatRoom; onPress: () => void }>) {
+export function ClubChatRoomCard({
+  room,
+  onPress,
+}: Readonly<{ room: ClubChatRoom; onPress: () => void }>) {
   const { t } = useTranslation();
   const { muted } = useThemeColors();
   const line = lastLine(room, t);

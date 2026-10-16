@@ -52,7 +52,7 @@ export function ChatsScreen() {
         if (selectedSuperId && room.super_category_id !== selectedSuperId) return false;
         return !needle || room.club_name.toLowerCase().includes(needle);
       }),
-    [clubs.rooms, needle, selectedSuperId]
+    [clubs.rooms, needle, selectedSuperId],
   );
 
   const isPods = tab === 'PODS';
@@ -121,7 +121,9 @@ export function ChatsScreen() {
           renderItem={(room) => (
             <ClubChatRoomCard
               room={room}
-              onPress={() => navigation.navigate('ChatRoom', { clubId: room.id, title: room.club_name })}
+              onPress={() =>
+                navigation.navigate('ChatRoom', { clubId: room.id, title: room.club_name })
+              }
             />
           )}
         />

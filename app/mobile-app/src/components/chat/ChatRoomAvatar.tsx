@@ -26,7 +26,11 @@ export function ChatRoomAvatar({
       justifyContent="center"
     >
       {coverUrl ? (
-        <AppImage source={{ uri: coverUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+        <AppImage
+          source={{ uri: coverUrl }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="cover"
+        />
       ) : (
         <MaterialIcons name={fallbackIcon} size={24} color={onPrimary} />
       )}

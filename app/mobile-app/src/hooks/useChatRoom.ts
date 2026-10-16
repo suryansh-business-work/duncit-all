@@ -48,7 +48,11 @@ const MESSAGE_LIMIT = 80;
 /** One page of a pod's or a club's room, with what the room says about itself. */
 async function loadRoom(kind: ChatRoomKind, id: string) {
   if (kind === 'POD') {
-    const data = await graphqlRequest(PodMessagesDocument, { podId: id, limit: MESSAGE_LIMIT }, { auth: true });
+    const data = await graphqlRequest(
+      PodMessagesDocument,
+      { podId: id, limit: MESSAGE_LIMIT },
+      { auth: true },
+    );
     const ended = !isPodActive(data.pod?.pod_date_time, data.pod?.pod_end_date_time);
     return {
       messages: data.podMessages,
@@ -61,7 +65,11 @@ async function loadRoom(kind: ChatRoomKind, id: string) {
       },
     };
   }
-  const data = await graphqlRequest(ClubMessagesDocument, { clubId: id, limit: MESSAGE_LIMIT }, { auth: true });
+  const data = await graphqlRequest(
+    ClubMessagesDocument,
+    { clubId: id, limit: MESSAGE_LIMIT },
+    { auth: true },
+  );
   return {
     messages: data.clubMessages,
     facts: {
@@ -74,7 +82,13 @@ async function loadRoom(kind: ChatRoomKind, id: string) {
 }
 
 /** Posts one line to the room — the server echoes it over the socket. */
-function postTo(kind: ChatRoomKind, id: string, type: PodMessageType, text: string, imageUrl: string | null) {
+function postTo(
+  kind: ChatRoomKind,
+  id: string,
+  type: PodMessageType,
+  text: string,
+  imageUrl: string | null,
+) {
   return kind === 'POD'
     ? graphqlRequest(SendPodMessageDocument, { podId: id, type, text, imageUrl }, { auth: true })
     : graphqlRequest(SendClubMessageDocument, { clubId: id, type, text, imageUrl }, { auth: true });

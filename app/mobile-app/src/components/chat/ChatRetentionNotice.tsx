@@ -19,7 +19,8 @@ export function ChatRetentionNotice({ deletesAt, retentionDays }: Readonly<Props
   const { muted } = useThemeColors();
   let line: string | null = null;
   if (deletesAt) line = t('mweb.chatRoom.deletesOn', { vars: { date: formatDateTime(deletesAt) } });
-  else if (retentionDays) line = t('mweb.chatRoom.deletesAfterDays', { vars: { days: retentionDays } });
+  else if (retentionDays)
+    line = t('mweb.chatRoom.deletesAfterDays', { vars: { days: retentionDays } });
   if (!line) return null;
   return (
     <XStack

@@ -48,7 +48,8 @@ export function ChatRoomScreen() {
   const meId = meData?.me?.user_id;
 
   const openLinked = () => {
-    if (isClub) navigation.navigate('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
+    if (isClub)
+      navigation.navigate('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
     else navigation.navigate('PodDetails', { podId: roomId, title });
   };
   const openProfile = (userId: string) => navigation.navigate('PublicProfile', { userId });
@@ -126,7 +127,9 @@ export function ChatRoomScreen() {
             isLoading={room.isLoading}
             messages={messages}
             meId={meId}
-            onOpenActions={(message) => setActions({ id: message.id, mine: message.user_id === meId })}
+            onOpenActions={(message) =>
+              setActions({ id: message.id, mine: message.user_id === meId })
+            }
           />
 
           {emojiFor ? <EmojiBar onSelect={handleSelectEmoji} /> : null}

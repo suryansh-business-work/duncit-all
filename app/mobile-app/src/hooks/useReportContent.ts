@@ -131,7 +131,11 @@ export async function reportProfile(id: string, reason: string, details: string)
 }
 
 /** Report a chat message — same contract and receipt as `reportPost`. */
-export async function reportChatMessage(id: string, reason: string, details: string): Promise<string> {
+export async function reportChatMessage(
+  id: string,
+  reason: string,
+  details: string,
+): Promise<string> {
   const data = await graphqlRequest<
     { reportChatMessage: { id: string; report_no: string } },
     { id: string; reason: string; details: string }

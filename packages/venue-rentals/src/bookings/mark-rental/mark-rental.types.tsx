@@ -1,5 +1,5 @@
 import type { RentalBookingRow } from '@duncit/utils';
-import type { MarkRentalOutput, MarkRentalValues } from './mark-rental.schema';
+import type { MarkRentalOutput, MarkRentalValues } from '@duncit/forms/schemas';
 
 export type { MarkRentalOutput, MarkRentalValues };
 

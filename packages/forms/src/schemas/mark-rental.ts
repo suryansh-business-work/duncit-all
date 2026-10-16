@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Translate } from '../../types';
+import type { Translate } from './translate';
 
 /**
  * The venue's mark on a rental. The server enforces the same rules

@@ -6,7 +6,7 @@ import { DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { FoodDishPhotos, type FoodPhotoUpload } from '@duncit/venue-food';
 import type { RentalItemsConfig, RentalItemsValues } from '@duncit/utils';
-import type { RentalItemsOutput } from './rental-items.schema';
+import type { RentalItemsOutput } from '@duncit/forms/schemas';
 
 interface Props {
   control: Control<RentalItemsValues, unknown, RentalItemsOutput>;

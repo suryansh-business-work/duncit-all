@@ -18,6 +18,7 @@
     "@duncit/dialogs": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/media-picker": "workspace:*",
+    "@duncit/rich-text": "workspace:*",
     "@duncit/table": "workspace:*",
     "@duncit/tabs": "workspace:*",
     "@duncit/ui": "workspace:*",

@@ -63,6 +63,31 @@ rate, deposit, units per pod, most per guest, available) and **Bookings**. The e
 `updateApprovedVenue`, so only an approved venue lists items, and every kept item sends its id so its
 bookings stay linked.
 
+## The venue's own rental terms
+
+Duncit's rental terms come from Finance > Rented Items > Settings. A venue can add its own beside
+them: the Items tab has a rich-text **Rental terms** box (`RentalTermsField`, `@duncit/rich-text`),
+written by the venue owner (Partners console) or any Venues-console editor and saved with the items
+as `rental_terms_html` (at most `rental_terms_max` characters). The pod's rental catalogue returns it
+as `venue_terms_html`, and checkout shows **both** sections — Duncit's first, then the venue's —
+sanitised before rendering. A venue that stops offering rentals has its terms hidden from guests.
+
+## GST on deposits — per venue
+
+Whether a deposit is charged GST is a venue decision, made only in the **Venues console**:
+`VenueRentalItems` in `mode="admin"` shows a switch (`RentalDepositGstSwitch`) that calls
+`setVenueRentalDepositGst` (VENUE_EDIT role, audited on the venue). Off keeps the deposit in the bill
+but outside the taxable value — the rent is always taxed. The choice in force is frozen into the
+payment's metadata, so flipping it never re-prices a payment already made. The owner never sees the
+switch.
+
+## On the app
+
+The native app has the same desk (`VenueRentedItems` screen, `/venues/rented-items`), drawn in
+Tamagui on the shared pieces: the same GraphQL documents, `makeRentalItemsSchema` /
+`makeMarkRentalSchema` from `@duncit/forms/schemas`, and the same label maps. The app reads the
+venue's rental terms; it links to the Partners console to edit them, where the rich-text editor is.
+
 ## Usage
 
 ```tsx

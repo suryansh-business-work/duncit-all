@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import type { RentalItemsConfig } from '@duncit/utils';
-import type { Translate } from '../types';
+import type { Translate } from './translate';
 
 /**
- * A venue's rented items. The caps are venueRegistrationConfig's (the server's
+ * A venue's rented items — shared by the MUI desk (@duncit/venue-rentals) and
+ * the app's Tamagui desk. The caps are venueRegistrationConfig's (the server's
  * own VENUE_RENTAL_LIMITS), so the form refuses exactly what the server would.
  * Numbers arrive from text fields, so they are coerced and kept whole.
  */
@@ -32,6 +33,7 @@ export function makeRentalItemsSchema(t: Translate, config: RentalItemsConfig) {
     });
   return z.object({
     offers_rentals: z.boolean(),
+    rental_terms_html: z.string().max(config.rental_terms_max, t('venueRentals.items.termsTooLong', { vars: { max: config.rental_terms_max } })),
     items: z.array(item).max(config.rental_item_limit, t('venueRentals.items.tooManyItems', { vars: { max: config.rental_item_limit } })),
   });
 }

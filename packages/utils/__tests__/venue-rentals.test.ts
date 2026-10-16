@@ -6,6 +6,7 @@ import {
   OWNER_RENTAL_ITEMS_QUERY,
   RENTAL_ITEMS_CONFIG_QUERY,
   RENTABLE_PODS_QUERY,
+  SET_VENUE_RENTAL_DEPOSIT_GST_MUTATION,
   UPDATE_VENUE_RENTALS_MUTATION,
   emptyRentalItem,
   isRentalListEditable,
@@ -135,6 +136,8 @@ describe('the venue rental list', () => {
     venue_name: 'Smash Arena',
     status: 'APPROVED',
     offers_rentals: true,
+    rental_terms_html: '<p>Return by 9 pm</p>',
+    rental_deposit_gst: true,
     rental_items: [
       {
         id: 'i1',
@@ -154,6 +157,9 @@ describe('the venue rental list', () => {
   it('opens the form on what is stored, without sharing the stored photo list', () => {
     const values = rentalItemsToValues(stored);
     expect(values.offers_rentals).toBe(true);
+    expect(values.rental_terms_html).toBe('<p>Return by 9 pm</p>');
+    // A venue read before terms existed opens with none.
+    expect(rentalItemsToValues({ ...stored, rental_terms_html: undefined as unknown as string }).rental_terms_html).toBe('');
     expect(values.items[0]).toMatchObject({ id: 'i1', name: 'Racket', rate: 100 });
     values.items[0].images.push('b.jpg');
     expect(stored.rental_items[0].images).toEqual(['a.jpg']);
@@ -161,7 +167,12 @@ describe('the venue rental list', () => {
 
   it('saves a kept item with its id and a new item without one, numbers as numbers and text trimmed', () => {
     const fresh = { ...emptyRentalItem(), name: '  Shoes ', rate: '80', deposit: '0', stock: '4', per_guest_limit: '1' };
-    const input = toVenueRentalsInput({ offers_rentals: true, items: [rentalItemsToValues(stored).items[0], fresh] });
+    const input = toVenueRentalsInput({
+      offers_rentals: true,
+      rental_terms_html: '<p>Return by 9 pm</p>',
+      items: [rentalItemsToValues(stored).items[0], fresh],
+    });
+    expect(input.rental_terms_html).toBe('<p>Return by 9 pm</p>');
     expect(input.rental_items[0]).toMatchObject({ id: 'i1', rate: 100 });
     expect(input.rental_items[1]).toEqual({
       name: 'Shoes',
@@ -191,11 +202,19 @@ describe('the venue rental list', () => {
     expect(ADMIN_RENTAL_ITEMS_QUERY).toContain('venue(venue_doc_id: $venue_id)');
     expect(RENTAL_ITEMS_CONFIG_QUERY).toContain('rental_item_limit');
     expect(RENTABLE_PODS_QUERY).toContain('rentablePods(limit: $limit)');
+    expect(SET_VENUE_RENTAL_DEPOSIT_GST_MUTATION).toContain('setVenueRentalDepositGst');
   });
 });
 
 describe('checkoutRentalLines', () => {
-  const catalogue = { open: true, closed_reason: null, hours: 2, currency_symbol: '₹', items: [racket, projector] };
+  const catalogue = {
+    open: true,
+    closed_reason: null,
+    hours: 2,
+    currency_symbol: '₹',
+    venue_terms_html: '',
+    items: [racket, projector],
+  };
 
   it('prices only the picks the venue still lists and sends them as selections', () => {
     const { totals, selections } = checkoutRentalLines(catalogue, { racket: 1, gone: 4 });

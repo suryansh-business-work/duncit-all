@@ -34,6 +34,8 @@ export interface PodRentalCatalogue {
   closed_reason: RentalClosedReason | null;
   hours: number;
   currency_symbol: string;
+  /** The venue's own rental terms (rich-text HTML, written by the venue): sanitise before rendering. */
+  venue_terms_html: string;
   items: PodRentalItem[];
 }
 
@@ -145,9 +147,9 @@ export function rentalClosedKey(catalogue: Pick<PodRentalCatalogue, 'open' | 'cl
 }
 
 /** Only a booking still out can be marked returned or damaged. */
-export const canMarkRental = (row: Pick<RentalBookingRow, 'status'>) => row.status === 'BOOKED';
+export const canMarkRental = (row: { status: unknown }) => String(row.status) === 'BOOKED';
 /** Only a refund owed can be recorded as paid. */
-export const canRecordRentalRefund = (row: Pick<RentalBookingRow, 'refund_status'>) => row.refund_status === 'DUE';
+export const canRecordRentalRefund = (row: { refund_status: unknown }) => String(row.refund_status) === 'DUE';
 
 /** The most of one item a booking may take: the venue's per-guest limit for every seat, never past what is left. */
 export function rentalMaxQuantity(item: Pick<PodRentalItem, 'available' | 'per_guest_limit'>, seats: number): number {
@@ -200,7 +202,7 @@ const BOOKING_FIELDS = `id currency_symbol payment_ref pod_id pod_title guest_na
   commission_pct commission_amount venue_amount release_id marked_at auto_released created_at`;
 
 export const POD_RENTALS_QUERY = `query PodRentals($pod_id: ID!) {
-  podRentals(pod_id: $pod_id) { open closed_reason hours currency_symbol items { ${ITEM_FIELDS} } }
+  podRentals(pod_id: $pod_id) { open closed_reason hours currency_symbol venue_terms_html items { ${ITEM_FIELDS} } }
 }`;
 
 export const PUBLIC_RENTAL_SETTINGS_QUERY = `query PublicRentalSettings {
@@ -254,6 +256,10 @@ export interface RentalsVenue {
   status: string;
   offers_rentals: boolean;
   rental_items: VenueRentalItem[];
+  /** The venue's own rental terms (rich-text HTML), shown with Duncit's. */
+  rental_terms_html: string;
+  /** Whether its refundable deposits are taxed with the rent — the Venues console decides. */
+  rental_deposit_gst: boolean;
 }
 
 /** The editor's caps, from venueRegistrationConfig — never hardcoded in a client. */
@@ -265,6 +271,7 @@ export interface RentalItemsConfig {
   rental_deposit_max: number;
   rental_stock_max: number;
   rental_per_guest_max: number;
+  rental_terms_max: number;
 }
 
 /** One item as the form holds it: numbers stay as typed until they are checked. */
@@ -284,6 +291,8 @@ export interface RentalItemValues {
 export interface RentalItemsValues {
   offers_rentals: boolean;
   items: RentalItemValues[];
+  /** The venue's own rental terms, as rich-text HTML. */
+  rental_terms_html: string;
 }
 
 export const emptyRentalItem = (): RentalItemValues => ({
@@ -299,15 +308,19 @@ export const emptyRentalItem = (): RentalItemValues => ({
   is_available: true,
 });
 
-export const rentalItemsToValues = (venue: Pick<RentalsVenue, 'offers_rentals' | 'rental_items'>): RentalItemsValues => ({
+export const rentalItemsToValues = (
+  venue: Pick<RentalsVenue, 'offers_rentals' | 'rental_items' | 'rental_terms_html'>
+): RentalItemsValues => ({
   offers_rentals: venue.offers_rentals,
   items: venue.rental_items.map((item) => ({ ...item, images: [...item.images] })),
+  rental_terms_html: venue.rental_terms_html ?? '',
 });
 
 /** What updateApprovedVenue is sent: the whole list, with each kept item's id so its bookings stay linked. */
 export function toVenueRentalsInput(values: RentalItemsValues) {
   return {
     offers_rentals: values.offers_rentals,
+    rental_terms_html: values.rental_terms_html,
     rental_items: values.items.map((item) => ({
       ...(item.id ? { id: item.id } : {}),
       name: item.name.trim(),
@@ -326,7 +339,7 @@ export function toVenueRentalsInput(values: RentalItemsValues) {
 /** Only an approved venue edits its live listing. */
 export const isRentalListEditable = (venue: Pick<RentalsVenue, 'status'>): boolean => venue.status === 'APPROVED';
 
-const RENTALS_VENUE_FIELDS = `id venue_name status offers_rentals
+const RENTALS_VENUE_FIELDS = `id venue_name status offers_rentals rental_terms_html rental_deposit_gst
   rental_items { id name description images unit rate deposit stock per_guest_limit is_available }`;
 
 export const OWNER_RENTAL_ITEMS_QUERY = `query OwnerVenueRentalItems($venue_id: ID!) {
@@ -340,7 +353,7 @@ export const ADMIN_RENTAL_ITEMS_QUERY = `query AdminVenueRentalItems($venue_id: 
 
 export const RENTAL_ITEMS_CONFIG_QUERY = `query VenueRentalItemsConfig {
   venueRegistrationConfig { rental_units rental_item_limit rental_image_limit rental_rate_max
-    rental_deposit_max rental_stock_max rental_per_guest_max }
+    rental_deposit_max rental_stock_max rental_per_guest_max rental_terms_max }
 }`;
 
 export const UPDATE_VENUE_RENTALS_MUTATION = `mutation UpdateVenueRentals($venue_id: ID!, $input: UpdateApprovedVenueInput!) {
@@ -380,3 +393,8 @@ export function checkoutRentalLines(
   const listed = Object.fromEntries(Object.entries(picks).filter(([id]) => ids.has(id)));
   return { totals: rentalSelectionTotals(catalogue.items, listed, catalogue.hours), selections: rentalSelections(listed) };
 }
+
+/** Venues console: whether the venue's refundable deposits are taxed with the rent. */
+export const SET_VENUE_RENTAL_DEPOSIT_GST_MUTATION = `mutation SetVenueRentalDepositGst($venue_id: ID!, $charge_gst: Boolean!) {
+  setVenueRentalDepositGst(venue_id: $venue_id, charge_gst: $charge_gst) { venue_id rental_deposit_gst }
+}`;

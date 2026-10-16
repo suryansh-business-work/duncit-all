@@ -169,6 +169,9 @@ importers:
       '@duncit/venue-food':
         specifier: workspace:*
         version: link:../../packages/venue-food
+      '@duncit/venue-rentals':
+        specifier: workspace:*
+        version: link:../../packages/venue-rentals
       '@duncit/verification':
         specifier: workspace:*
         version: link:../../packages/verification
@@ -223,6 +226,9 @@ importers:
       date-fns-tz:
         specifier: ^3.2.0
         version: 3.2.0(date-fns@4.4.0)
+      dompurify:
+        specifier: 3.4.15
+        version: 3.4.15
       graphql:
         specifier: 16.14.2
         version: 16.14.2
@@ -3533,6 +3539,9 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../media-picker
+      '@duncit/rich-text':
+        specifier: workspace:*
+        version: link:../rich-text
       '@duncit/table':
         specifier: workspace:*
         version: link:../table

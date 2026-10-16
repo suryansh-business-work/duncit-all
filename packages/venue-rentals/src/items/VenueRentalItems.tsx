@@ -6,6 +6,7 @@ import type { UploadSurface } from '@duncit/media-picker';
 import { isRentalListEditable, parseApiError, type RentalsVenue } from '@duncit/utils';
 import { ADMIN_RENTAL_ITEMS, OWNER_RENTAL_ITEMS, RENTAL_ITEMS_CONFIG } from '../documents';
 import RentalItemsForm from '.';
+import RentalDepositGstSwitch from './RentalDepositGstSwitch';
 
 export interface VenueRentalItemsProps {
   venueId: string;
@@ -67,6 +68,8 @@ export default function VenueRentalItems({ venueId, surface, mode, uploadSurface
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
+        {/* A tax decision: only the Venues console makes it. */}
+        {mode === 'admin' && <RentalDepositGstSwitch venueId={venue.id} chargeGst={venue.rental_deposit_gst} />}
         <RentalItemsForm
           key={venue.id}
           venue={venue}

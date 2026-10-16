@@ -6,7 +6,7 @@ import { RhfTextField } from '@duncit/forms';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { rentalMoney } from '@duncit/utils';
-import { makeMarkRentalSchema } from './mark-rental.schema';
+import { makeMarkRentalSchema } from '@duncit/forms/schemas';
 import type { MarkRentalFormProps, MarkRentalOutput, MarkRentalValues } from './mark-rental.types';
 
 const DEFAULTS: MarkRentalValues = { outcome: 'RETURNED', damage_claim: '', note: '' };

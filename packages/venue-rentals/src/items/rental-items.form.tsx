@@ -10,7 +10,8 @@ import { notifySuccess } from '@duncit/dialogs';
 import { emptyRentalItem, parseApiError, rentalItemsToValues, toVenueRentalsInput, type RentalItemsValues } from '@duncit/utils';
 import { UPDATE_VENUE_RENTALS } from '../documents';
 import RentalItemFields from './RentalItemFields';
-import { makeRentalItemsSchema, type RentalItemsOutput } from './rental-items.schema';
+import RentalTermsField from './RentalTermsField';
+import { makeRentalItemsSchema, type RentalItemsOutput } from '@duncit/forms/schemas';
 import type { RentalItemsFormProps } from './rental-items.types';
 
 /**
@@ -70,6 +71,7 @@ export default function RentalItemsForm({ venue, config, upload, idPrefix, onSav
             </Stack>
           )}
         />
+        <RentalTermsField control={control} />
         {items.fields.length === 0 && <Alert severity="info">{t('venueRentals.items.empty')}</Alert>}
         {items.fields.map((item, index) => (
           <RentalItemFields

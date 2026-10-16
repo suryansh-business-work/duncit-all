@@ -55,6 +55,8 @@ export const venueRentalTypeDefs = gql`
     "Hours an HOUR item is charged for on this pod."
     hours: Int!
     currency_symbol: String!
+    "The venue's own rental terms (rich-text HTML), shown with Duncit's. Sanitise before rendering."
+    venue_terms_html: String!
     items: [PodRentalItem!]!
   }
 
@@ -139,6 +141,12 @@ export const venueRentalTypeDefs = gql`
     paid_out: Float!
   }
 
+  "Whether a venue's refundable rental deposits are taxed with the rent."
+  type VenueRentalDepositGst {
+    venue_id: ID!
+    rental_deposit_gst: Boolean!
+  }
+
   enum RentalMarkOutcome {
     RETURNED
     DAMAGED
@@ -188,5 +196,7 @@ export const venueRentalTypeDefs = gql`
     markRentalBooking(id: ID!, input: MarkRentalBookingInput!): RentalBooking!
     "Finance: the rental refund was paid back to the guest."
     markRentalRefunded(id: ID!, reference: String!): RentalBooking!
+    "Venues console: whether this venue's refundable deposits carry GST with the rent (default on)."
+    setVenueRentalDepositGst(venue_id: ID!, charge_gst: Boolean!): VenueRentalDepositGst!
   }
 `;

@@ -36,9 +36,20 @@ export interface RentalResolution {
   deposit_total: number;
   /** rent_total + deposit_total — charged in full, never couponed or paid in coins. */
   total: number;
+  /** Whether the venue's deposits are taxed with the rent (the Venues console's switch). */
+  deposit_gst: boolean;
+  /** The part of `total` outside the GST: the deposits, when the venue does not tax them. */
+  untaxed: number;
 }
 
-export const EMPTY_RENTALS: RentalResolution = { lines: [], rent_total: 0, deposit_total: 0, total: 0 };
+export const EMPTY_RENTALS: RentalResolution = {
+  lines: [],
+  rent_total: 0,
+  deposit_total: 0,
+  total: 0,
+  deposit_gst: true,
+  untaxed: 0,
+};
 
 const HOUR_MS = 3_600_000;
 const MAX_SELECTIONS = 50;
@@ -115,7 +126,7 @@ export async function resolveRentalLines(
   if (selections.length === 0) return EMPTY_RENTALS;
   const picks = normalizeSelections(selections);
   await assertRentingOpen(pod);
-  const venue = await VenueModel.findById(pod.venue_id).select('offers_rentals rental_items').lean();
+  const venue = await VenueModel.findById(pod.venue_id).select('offers_rentals rental_items rental_deposit_gst').lean();
   if (!venue?.offers_rentals) bad('This venue does not rent items');
   const items = new Map((venue?.rental_items ?? []).map((item) => [item._id.toHexString(), item]));
   const booked = await bookedFor(
@@ -134,5 +145,13 @@ export async function resolveRentalLines(
   });
   const rent_total = lines.reduce((sum, l) => sum + l.rent, 0);
   const deposit_total = lines.reduce((sum, l) => sum + l.deposit, 0);
-  return { lines, rent_total, deposit_total, total: rent_total + deposit_total };
+  const deposit_gst = venue?.rental_deposit_gst !== false;
+  return {
+    lines,
+    rent_total,
+    deposit_total,
+    total: rent_total + deposit_total,
+    deposit_gst,
+    untaxed: deposit_gst ? 0 : deposit_total,
+  };
 }

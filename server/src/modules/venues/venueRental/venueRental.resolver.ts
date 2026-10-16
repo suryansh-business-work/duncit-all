@@ -8,6 +8,7 @@ import { rentalSettingsService, type RentalSettingsInput } from './rentalSetting
 import { rentalCatalogueService } from './rentalCatalogue.service';
 import { hydrateRentalBookings, rentalBookingTableService } from './rentalBookingTable.service';
 import { rentalLifecycleService } from './rentalLifecycle.service';
+import { setVenueRentalDepositGst } from './rentalVenueSettings';
 
 // The same seats that read and write Finance's own settings.
 const FINANCE_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
@@ -77,6 +78,11 @@ export const venueRentalResolvers = {
     },
     markRentalBooking: async (_p: unknown, args: { id: string; input: MarkInput }, ctx: GraphQLContext) =>
       one(await rentalLifecycleService.markByVenue(operator(ctx), args.id, args.input)),
+    setVenueRentalDepositGst: (_p: unknown, args: { venue_id: string; charge_gst: boolean }, ctx: GraphQLContext) => {
+      // A tax decision: the Venues console's, never the owner's.
+      const user = requireRole(ctx, VENUE_EDIT);
+      return setVenueRentalDepositGst(user.id, args.venue_id, args.charge_gst);
+    },
     markRentalRefunded: async (_p: unknown, args: { id: string; reference: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, FINANCE_WRITE);
       return one(await rentalLifecycleService.markRefunded(user.id, args.id, args.reference));

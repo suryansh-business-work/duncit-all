@@ -222,6 +222,7 @@ export const venueTypeDefs = /* GraphQL */ `
     rental_deposit_max: Int!
     rental_stock_max: Int!
     rental_per_guest_max: Int!
+    rental_terms_max: Int!
   }
 
   type VenueOperatingHours {
@@ -357,6 +358,10 @@ export const venueTypeDefs = /* GraphQL */ `
     "The venue rents items out. On publicVenue the list is empty unless this is on, and shows available items only."
     offers_rentals: Boolean!
     rental_items: [VenueRentalItem!]!
+    "The venue's own rental terms (rich-text HTML), shown to guests with Duncit's."
+    rental_terms_html: String!
+    "Whether a refundable deposit is taxed with the rent. Set in the Venues console."
+    rental_deposit_gst: Boolean!
     "Every category the venue belongs to, primary first. Empty only while the venue has none."
     venue_categories: [VenueCategory!]!
     "The primary category — always venue_categories[0]. Kept for clients that read one."
@@ -435,6 +440,8 @@ export const venueTypeDefs = /* GraphQL */ `
     offers_rentals: Boolean
     "The whole list of rented items (at most venueRegistrationConfig.rental_item_limit). Omitted keeps the stored list."
     rental_items: [VenueRentalItemInput!]
+    "The venue's own rental terms (rich-text HTML). Omitted keeps the stored terms."
+    rental_terms_html: String
     """
     Every category the venue belongs to, primary first (at most
     venueRegistrationConfig.category_limit; a repeated sub category is dropped).
@@ -503,6 +510,8 @@ export const venueTypeDefs = /* GraphQL */ `
     offers_rentals: Boolean
     "Omitted keeps the stored list."
     rental_items: [VenueRentalItemInput!]
+    "The venue's own rental terms (rich-text HTML). Omitted keeps the stored terms."
+    rental_terms_html: String
     """
     The venue's GST number, printed on its food invoices. Accepted only while the
     venue has none: once one is saved, only the venues console (adminUpdateVenue)

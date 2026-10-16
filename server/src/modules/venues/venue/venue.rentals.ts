@@ -27,6 +27,8 @@ export const VENUE_RENTAL_LIMITS = {
   stockMax: 1_000,
   /** Units of one item one guest may rent for a pod. */
   perGuestMax: 20,
+  /** The venue's own rental terms, as rich-text HTML. */
+  termsMax: 20_000,
 } as const;
 
 export interface IVenueRentalItem {
@@ -50,14 +52,19 @@ export interface IVenueRentalItem {
 export interface VenueRentalInput {
   offers_rentals?: boolean | null;
   rental_items?: unknown[] | null;
+  /** The venue's own rental terms (rich-text HTML), shown with Duncit's. */
+  rental_terms_html?: string | null;
 }
 
 export interface VenueRentalState {
   offers_rentals?: boolean;
   rental_items?: IVenueRentalItem[];
+  rental_terms_html?: string;
+  /** Whether the refundable deposit is taxed with the rent. Venues console only. */
+  rental_deposit_gst?: boolean;
 }
 
-export const VENUE_RENTAL_INPUT_KEYS = ['offers_rentals', 'rental_items'] as const;
+export const VENUE_RENTAL_INPUT_KEYS = ['offers_rentals', 'rental_items', 'rental_terms_html'] as const;
 
 const bad = (message: string): never => {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -129,7 +136,18 @@ export function buildVenueRentalPatch(input: VenueRentalInput, state: VenueRenta
   const offers = typeof input.offers_rentals === 'boolean' ? input.offers_rentals : state.offers_rentals === true;
   const current = state.rental_items ?? [];
   const items = Array.isArray(input.rental_items) ? normalizeRentalItems(input.rental_items, current) : current;
-  return { offers_rentals: offers, rental_items: items };
+  const patch: { offers_rentals: boolean; rental_items: IVenueRentalItem[]; rental_terms_html?: string } = {
+    offers_rentals: offers,
+    rental_items: items,
+  };
+  if (typeof input.rental_terms_html === 'string') {
+    const terms = input.rental_terms_html.trim();
+    if (terms.length > VENUE_RENTAL_LIMITS.termsMax) {
+      bad(`Keep the rental terms under ${VENUE_RENTAL_LIMITS.termsMax} characters`);
+    }
+    patch.rental_terms_html = terms;
+  }
+  return patch;
 }
 
 export const toRentalItemPub = (item: IVenueRentalItem) => ({
@@ -148,6 +166,8 @@ export const toRentalItemPub = (item: IVenueRentalItem) => ({
 export const toVenueRentalPub = (venue: VenueRentalState) => ({
   offers_rentals: venue.offers_rentals === true,
   rental_items: (venue.rental_items ?? []).map(toRentalItemPub),
+  rental_terms_html: venue.rental_terms_html ?? '',
+  rental_deposit_gst: venue.rental_deposit_gst !== false,
 });
 
 type VenueRentalPub = ReturnType<typeof toVenueRentalPub>;
@@ -156,6 +176,8 @@ type VenueRentalPub = ReturnType<typeof toVenueRentalPub>;
 export const redactVenueRentalForPublic = (pub: VenueRentalPub): VenueRentalPub => ({
   offers_rentals: pub.offers_rentals,
   rental_items: pub.offers_rentals ? pub.rental_items.filter((item) => item.is_available) : [],
+  rental_terms_html: pub.offers_rentals ? pub.rental_terms_html : '',
+  rental_deposit_gst: pub.rental_deposit_gst,
 });
 
 export const venueRentalConfig = () => ({
@@ -166,4 +188,5 @@ export const venueRentalConfig = () => ({
   rental_deposit_max: VENUE_RENTAL_LIMITS.depositMax,
   rental_stock_max: VENUE_RENTAL_LIMITS.stockMax,
   rental_per_guest_max: VENUE_RENTAL_LIMITS.perGuestMax,
+  rental_terms_max: VENUE_RENTAL_LIMITS.termsMax,
 });

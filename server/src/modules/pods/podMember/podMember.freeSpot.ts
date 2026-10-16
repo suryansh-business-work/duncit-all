@@ -33,6 +33,7 @@ import { normalizeSeats } from '@modules/pods/pod/pod.seats';
 import { TicketModel } from '@modules/pods/ticket/ticket.model';
 import { withTransaction } from '@utils/mongoTransaction';
 import { logs } from '@observability/log';
+import { rentalLifecycleService } from '@modules/venues/venueRental/rentalLifecycle.service';
 
 /** Shown when a checked-in member tries to cancel: attendance drives the
  * leaderboard and badges, so a cancel must never be a way to erase a scan. */
@@ -135,6 +136,12 @@ export async function cancelFreeSpot(
       cancel_count: cancelled.spot_cancel_count,
       msg: 'free pod spot cancelled',
     });
+    // Items rented with the spot go back to the pod, their money owed back to the guest.
+    if (cancelled.payment_id) {
+      await rentalLifecycleService.releaseForPayment(cancelled.payment_id).catch((error: unknown) => {
+        logs.server.error('podMember', 'cancelFreeSpot', { error, msg: 'rental release failed' });
+      });
+    }
     return cancelled;
   }
   // Nothing JOINED to cancel. A spot this member already cancelled is the

@@ -38,6 +38,7 @@ const emptyCatalogue = async () => ({
   closed_reason: 'NO_VENUE' as RentalClosedReason,
   hours: 1,
   currency_symbol: (await getFinanceSettings()).currency_symbol,
+  venue_terms_html: '',
   items: [],
 });
 
@@ -48,7 +49,7 @@ async function podCatalogue(podId: string) {
   const [settings, finance, venue] = await Promise.all([
     rentalSettingsService.get(),
     getFinanceSettings(),
-    pod.venue_id ? VenueModel.findById(pod.venue_id).select('offers_rentals rental_items').lean() : null,
+    pod.venue_id ? VenueModel.findById(pod.venue_id).select('offers_rentals rental_items rental_terms_html').lean() : null,
   ]);
   const reason = closedReason(pod, settings, venue?.offers_rentals === true);
   const listed = reason === 'NO_VENUE' ? [] : (venue?.rental_items ?? []).filter((i) => i.is_available !== false);
@@ -61,6 +62,7 @@ async function podCatalogue(podId: string) {
     closed_reason: reason,
     hours: podRentalHours(pod),
     currency_symbol: finance.currency_symbol,
+    venue_terms_html: reason === 'NO_VENUE' ? '' : (venue?.rental_terms_html ?? ''),
     items: listed.map((item) => ({
       id: item._id.toHexString(),
       name: item.name,

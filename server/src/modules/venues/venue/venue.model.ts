@@ -209,6 +209,10 @@ export interface IVenue extends Document {
   /** The venue rents items out to pod guests (venue.rentals.ts). */
   offers_rentals?: boolean;
   rental_items?: IVenueRentalItem[];
+  /** The venue's own rental terms (rich-text HTML), shown with Duncit's. */
+  rental_terms_html?: string;
+  /** Whether a refundable deposit is taxed with the rent — the Venues console decides. */
+  rental_deposit_gst?: boolean;
   /** Every category the venue belongs to, primary first. Read it through
    * `venueCategoriesOf` — a document older than the list has only the mirror. */
   venue_categories: IVenueCategory[];
@@ -434,6 +438,8 @@ const venueSchema = new Schema<IVenue>(
     food_tables: { type: [String], default: [] },
     offers_rentals: { type: Boolean, default: false },
     rental_items: { type: [venueRentalItemSchema], default: [] },
+    rental_terms_html: { type: String, default: '', maxlength: 20_000 },
+    rental_deposit_gst: { type: Boolean, default: true },
     venue_categories: { type: [venueCategorySchema], default: [] },
     venue_category: { type: venueCategorySchema, default: () => ({}) },
     description: { type: String, default: '' },

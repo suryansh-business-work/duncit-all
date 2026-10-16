@@ -77,6 +77,35 @@ describe('computeQuote', () => {
     expect(await computeQuote(Number.NaN)).toMatchObject({ total: 0 });
   });
 
+  it('keeps untaxed money (a deposit the venue does not tax) in the bill but out of GST and the fee', async () => {
+    // 1680 = 1180 taxable + 500 untaxed deposit: GST only on 1180 → 180; the deposit
+    // stays in subtotal, so subtotal + gst still equals the bill; fee 5% of 1000.
+    expect(await computeQuote(1680, { untaxed: 500 })).toMatchObject({
+      subtotal: 1500,
+      gst_amount: 180,
+      total: 1680,
+      platform_fee_amount: 50,
+    });
+    // Exclusive: GST is added on the taxable part only.
+    expect(await computeQuote(1500, { inclusive: false, untaxed: 500 })).toMatchObject({
+      subtotal: 1500,
+      gst_amount: 180,
+      total: 1680,
+      platform_fee_amount: 50,
+    });
+  });
+
+  it('never lets untaxed money exceed the bill or go negative', async () => {
+    expect(await computeQuote(300, { untaxed: 1000 })).toMatchObject({
+      subtotal: 300,
+      gst_amount: 0,
+      total: 300,
+      platform_fee_amount: 0,
+    });
+    expect(await computeQuote(1180, { untaxed: -50 })).toMatchObject({ gst_amount: 180, platform_fee_amount: 50 });
+    expect(await computeQuote(1180, { untaxed: Number.NaN })).toMatchObject({ gst_amount: 180 });
+  });
+
   it('follows the configured rates', async () => {
     await settings({ gst_pct: 0, platform_fee_pct: 10, currency_symbol: '$', dummy_mode: false });
     expect(await computeQuote(200)).toEqual({
@@ -110,6 +139,16 @@ describe('applyCoins', () => {
     const { quote, coinsRedeemed } = await applyCoins(500, id, await computeQuote(1180));
     expect(coinsRedeemed).toBe(100);
     expect(quote.total).toBe(1080);
+  });
+
+  it('never pays rentals with coins, and re-prices the rest with the deposit still untaxed', async () => {
+    const id = user();
+    await wallet(id, 5000);
+    // Ticket 1080 + rentals 600 (rent 100 + untaxed deposit 500) = 1680.
+    const { quote, coinsRedeemed } = await applyCoins(5000, id, await computeQuote(1680, { untaxed: 500 }), 600, 500);
+    expect(coinsRedeemed).toBe(1080);
+    // 600 left: 100 rent taxed (GST 15.25), the 500 deposit not; fee 5% of 84.75.
+    expect(quote).toMatchObject({ total: 600, gst_amount: 15.25, subtotal: 584.75, platform_fee_amount: 4.24 });
   });
 
   it('clamps to the bill: a whole-rupee bill can be paid to exactly zero', async () => {

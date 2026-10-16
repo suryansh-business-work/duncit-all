@@ -161,22 +161,30 @@ export interface QuoteBreakup {
   dummy_mode: boolean;
 }
 
-export async function computeQuote(amount: number, opts?: { inclusive?: boolean }): Promise<QuoteBreakup> {
+export async function computeQuote(
+  amount: number,
+  opts?: { inclusive?: boolean; untaxed?: number }
+): Promise<QuoteBreakup> {
   const fs = await getFinanceSettings();
   const f = fs.platform_fee_pct / 100;
   const inclusive = opts?.inclusive !== false; // default: pod_amount is the gross GST-inclusive total
   const value = Math.max(0, Number(amount) || 0);
+  // Money inside the bill but outside the GST — a venue's rental deposits when
+  // the Venues console does not tax them. It stays in subtotal (subtotal + gst
+  // still equals the bill) but carries no tax and no platform fee.
+  const untaxed = Math.min(value, Math.max(0, Number(opts?.untaxed) || 0));
+  const taxable = value - untaxed;
   // Mirror the settlement engine (breakdown.math.ts): GST is extracted inclusive
   // from the total (P × g/(100+g)); the taxable value is the net-of-GST amount.
   const gst_amount = inclusive
-    ? round2((value * fs.gst_pct) / (100 + fs.gst_pct))
-    : round2(value * (fs.gst_pct / 100));
+    ? round2((taxable * fs.gst_pct) / (100 + fs.gst_pct))
+    : round2(taxable * (fs.gst_pct / 100));
   const subtotal = inclusive ? round2(value - gst_amount) : round2(value);
   const total = inclusive ? round2(value) : round2(subtotal + gst_amount);
   // Platform fee is Duncit's revenue taken FROM the net (fee = net × f) — a memo
   // line that already sits inside `subtotal`, never added on top of the total.
   // Defined on the same base as the engine so invoices reconcile with settlement.
-  const platform_fee_amount = round2(subtotal * f);
+  const platform_fee_amount = round2(Math.max(0, subtotal - untaxed) * f);
   return {
     subtotal,
     platform_fee_pct: fs.platform_fee_pct,
@@ -459,6 +467,8 @@ const paymentMetadata = (
   rental_deposit_total: rentals.deposit_total,
   rental_total: rentals.total,
   rental_venue_id: rentals.lines.length > 0 && pod?.venue_id ? String(pod.venue_id) : null,
+  // Frozen: whether these deposits were taxed, as the venue was set at checkout.
+  rental_deposit_gst: rentals.deposit_gst,
 });
 
 /** Apply an optional coupon to the payable, returning the priced quote, the
@@ -472,9 +482,10 @@ async function applyCoupon(
   payableAmount: number,
   userId: string,
   ticketDiscountAmount: number,
-  uncouponed = 0
+  uncouponed = 0,
+  untaxed = 0
 ) {
-  const originalQuote = await computeQuote(payableAmount);
+  const originalQuote = await computeQuote(payableAmount, { untaxed });
   const originalTotal = round2(originalQuote.total + ticketDiscountAmount);
   const code = (input.coupon_code || '').trim();
   if (!code) {
@@ -493,7 +504,7 @@ async function applyCoupon(
     throw new GraphQLError(result.message ?? 'Invalid coupon', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
-  const quote = await computeQuote(round2(result.final_total + uncouponed));
+  const quote = await computeQuote(round2(result.final_total + uncouponed), { untaxed });
   return {
     quote,
     originalTotal,
@@ -543,7 +554,8 @@ export async function applyCoins(
   requested: unknown,
   userId: string | null | undefined,
   quote: QuoteBreakup,
-  uncoined = 0
+  uncoined = 0,
+  untaxed = 0
 ): Promise<{ quote: QuoteBreakup; coinsRedeemed: number }> {
   const bill = roundUpBill(quote.total);
   // Coins never pay for `uncoined` money (rented items): they are capped at the
@@ -551,7 +563,7 @@ export async function applyCoins(
   const coinsRedeemed = await redeemableCoins(requested, userId, Math.max(0, Math.floor(bill.rounded - uncoined)));
   // Coins that also cover the round-off take the taxable value to zero, never below.
   const priced =
-    coinsRedeemed > 0 ? await computeQuote(Math.max(0, round2(quote.total - coinsRedeemed))) : quote;
+    coinsRedeemed > 0 ? await computeQuote(Math.max(0, round2(quote.total - coinsRedeemed)), { untaxed }) : quote;
   return {
     quote: { ...priced, total: bill.rounded - coinsRedeemed, round_off: bill.round_off },
     coinsRedeemed,
@@ -668,8 +680,9 @@ async function resolvePayable(input: any, userId?: string) {
 async function priceCheckout(input: Parameters<typeof resolvePayable>[0], userId: string) {
   const payable = await resolvePayable(input, userId);
   const uncharged = payable.rentals.total;
-  const couponed = await applyCoupon(input, payable.payableAmount, userId, payable.ticketDiscount.amount, uncharged);
-  const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponed.quote, uncharged);
+  const untaxed = payable.rentals.untaxed;
+  const couponed = await applyCoupon(input, payable.payableAmount, userId, payable.ticketDiscount.amount, uncharged, untaxed);
+  const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponed.quote, uncharged, untaxed);
   const metadata = {
     ...paymentMetadata(input, payable.pod, payable.products, payable.ticketDiscount, payable.rentals),
     original_total: couponed.originalTotal,

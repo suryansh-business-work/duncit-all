@@ -79,8 +79,13 @@ describe('DayDrawer', () => {
       }),
       makeSlot({ id: 'booked', status: 'BOOKED', price: 250, booked_pod_title: 'Dance Pod' }),
       makeSlot({ id: 'blocked', status: 'BLOCKED', price: 0 }),
+      makeSlot({ id: 'hourly', status: 'AVAILABLE', price: 300, pricing_mode: 'HOURLY', overtime_rate: 150 }),
+      makeSlot({ id: 'per-guest', status: 'AVAILABLE', price: 120, pricing_mode: 'PER_PAX' }),
     ];
     render(<DayDrawer {...baseProps({ slots })} />);
+    // A slot's price reads in its mode, with the overtime rate after it.
+    expect(screen.getByText('₹300 / hour + ₹150 / hour overtime')).toBeInTheDocument();
+    expect(screen.getByText('₹120 / guest')).toBeInTheDocument();
 
     expect(screen.getAllByText('Free')).toHaveLength(2); // available + blocked slots are 0-priced
     expect(screen.getByText('₹500')).toBeInTheDocument();
@@ -91,7 +96,7 @@ describe('DayDrawer', () => {
     expect(screen.getByText('Bring your own mat')).toBeInTheDocument();
 
     // Locked (BOOKED, PENDING) rows have no Block/Delete actions; unlocked ones do.
-    expect(screen.getAllByRole('button', { name: 'Block' })).toHaveLength(1); // the AVAILABLE row
+    expect(screen.getAllByRole('button', { name: 'Block' })).toHaveLength(3); // the three AVAILABLE rows
     expect(screen.getAllByRole('button', { name: 'Unblock' })).toHaveLength(1); // the BLOCKED row
     expect(screen.getAllByRole('button', { name: 'Delete' })).toHaveLength(2); // AVAILABLE + BLOCKED rows
   });

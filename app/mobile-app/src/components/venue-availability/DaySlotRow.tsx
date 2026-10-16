@@ -58,7 +58,7 @@ export function DaySlotRow({ slot, busy, onToggleBlock, onDelete }: Readonly<Pro
           {when}
         </Text>
         <Text fontSize={13} fontWeight="700" color="$color">
-          {slotPriceLabel(slot.price, t)}
+          {slotPriceLabel(slot, t)}
         </Text>
         <XStack
           testID={`day-slot-${slot.id}-status`}

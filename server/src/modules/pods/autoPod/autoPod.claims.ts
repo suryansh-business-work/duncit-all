@@ -21,6 +21,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
 import { venueSlotService, ensureOwnedVenue } from '@modules/venues/venueSlot/venueSlot.service';
 import { venueHostsSubCategory } from '@modules/venues/venue/venue.categories';
 import {
@@ -148,6 +149,10 @@ export async function venueAcceptAutoPod(
     autoPodFail('BAD_USER_INPUT', 'Pick a slot in the future');
   }
 
+  // What the venue charges for this slot by its pricing mode — an hourly slot
+  // by its length, a per-pax slot by the offer's spots (completion can adjust).
+  const slotCharge = slotVenueCharge(slot!, { pax: doc.no_of_spots ?? 0 }).total;
+
   // The venue learns HERE, before it commits, whether its price can be covered
   // — under the real host's rates when a host is already on it.
   await breakdownService.assertViablePodEconomics({
@@ -155,7 +160,7 @@ export async function venueAcceptAutoPod(
     podAmount: doc.pod_amount ?? 0,
     noOfSpots: doc.no_of_spots ?? 0,
     venueId: String(venueId),
-    venueAmount: slot!.price ?? 0,
+    venueAmount: slotCharge,
   });
 
   await venueSlotService.bookForAutoPod(slotId, venueId, userId, autoPodId);
@@ -173,7 +178,7 @@ export async function venueAcceptAutoPod(
               venue_name: venue.venue_name ?? '',
               pod_date_time: slot!.start_at,
               pod_end_date_time: slot!.end_at ?? null,
-              slot_price: slot!.price ?? 0,
+              slot_price: slotCharge,
               accepted_at: new Date(),
             },
           },

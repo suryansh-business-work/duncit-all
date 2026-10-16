@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { SlotPricingMode as SharedSlotPricingMode } from '@duncit/slots';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import { VenueSlotConflictMode } from '@/generated/graphql/graphql';
+import { SlotPricingMode, VenueSlotConflictMode } from '@/generated/graphql/graphql';
 import {
   CreateVenueSlotsDocument,
   DeleteVenueSlotDocument,
@@ -14,11 +15,20 @@ import { useRefreshRegistration } from '@/components/PullToRefresh';
 export type VenueSlot = ResultOf<typeof VenueSlotsDocument>['venueSlots'][number];
 
 /** The payload the day sheet builds for a new slot. */
+/** The shared pricing mode as the app's generated enum. */
+const GQL_PRICING_MODE: Record<SharedSlotPricingMode, SlotPricingMode> = {
+  FLAT: SlotPricingMode.Flat,
+  HOURLY: SlotPricingMode.Hourly,
+  PER_PAX: SlotPricingMode.PerPax,
+};
+
 export interface NewVenueSlotInput {
   start_at: string;
   end_at: string;
   whole_day: boolean;
   price: number;
+  pricing_mode: SharedSlotPricingMode;
+  overtime_rate: number;
   notes: string;
   space_label: string;
   capacity: number;
@@ -80,7 +90,7 @@ export function useOwnerVenueSlots(venueId: string | null, range: SlotRange) {
         {
           input: {
             venue_id: venueId,
-            slots: [input],
+            slots: [{ ...input, pricing_mode: GQL_PRICING_MODE[input.pricing_mode] }],
             on_conflict: overwrite ? VenueSlotConflictMode.Replace : VenueSlotConflictMode.Fail,
           },
         },

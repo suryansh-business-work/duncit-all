@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { SlotRequestCard } from '@/components/venue-slot-requests/SlotRequestCard';
+import { SlotPricingMode } from '@/generated/graphql/graphql';
 import type { SlotRequestRow } from '@/hooks/useVenueSlotRequests';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -10,6 +11,8 @@ const request = (over: Partial<SlotRequestRow> = {}): SlotRequestRow => ({
   venue_name: 'Indiranagar Courts',
   start_at: '2026-09-02T10:00:00.000Z',
   end_at: '2026-09-02T12:00:00.000Z',
+  pricing_mode: SlotPricingMode.Flat,
+  overtime_rate: 0,
   whole_day: false,
   price: 1200,
   requested_at: '2026-08-25T09:00:00.000Z',

@@ -45,6 +45,8 @@ export const VENUE_SLOTS = gql`
       end_at
       whole_day
       price
+      pricing_mode
+      overtime_rate
       space_label
       capacity
       status

@@ -91,7 +91,7 @@ export function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonl
         {request.pod_is_free ? null : (
           <Detail
             label={t('mweb.venueSlotRequests.slotPrice')}
-            value={slotPriceLabel(request.price, t)}
+            value={slotPriceLabel(request, t)}
           />
         )}
         <Detail

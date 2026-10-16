@@ -8,6 +8,7 @@ import { ToggleRow } from '@/components/ToggleRow';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DateTimePickerField } from './DateTimePickerField';
 import { spaceOptionLabel } from './slot-labels';
+import { SlotPricingFields } from './SlotPricingFields';
 
 /** One of the venue's capacity entries — "Court 1", holds 4. */
 export interface VenueSpace {
@@ -37,7 +38,7 @@ interface Props {
  */
 export function AddSlotFields({ draft, patch, spaces, activeSpace, now }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { wholeDay, startDate, endDate, price, notes } = draft;
+  const { wholeDay, startDate, endDate, notes } = draft;
   const isMultiDay =
     !!startDate && !!endDate && startOfDay(endDate).getTime() > startOfDay(startDate).getTime();
 
@@ -89,14 +90,7 @@ export function AddSlotFields({ draft, patch, spaces, activeSpace, now }: Readon
           {t('availability.multiDayHint')}
         </Text>
       ) : null}
-      <LabeledInput
-        testID="add-slot-price"
-        label={t('availability.price')}
-        hint={t('availability.priceHint')}
-        value={price}
-        onChangeText={(next) => patch({ price: next })}
-        keyboardType="numeric"
-      />
+      <SlotPricingFields draft={draft} patch={patch} />
       <LabeledInput
         testID="add-slot-notes"
         label={t('availability.notes')}

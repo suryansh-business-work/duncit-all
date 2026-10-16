@@ -2,6 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   checkSlotDraft,
   emptyDraft,
+  SLOT_PRICE_UNIT_KEY,
+  SLOT_PRICING_MODES,
+  SLOT_PRICING_MODE_KEY,
+  slotPricingInput,
+  slotPricingModeOf,
   isDraftIncomplete,
   MAX_FUTURE_DAYS,
   minEndTime,
@@ -35,10 +40,38 @@ describe('emptyDraft', () => {
       startTime: null,
       endTime: null,
       price: '',
+      pricingMode: 'FLAT',
+      overtimeRate: '',
       notes: '',
       spaceLabel: NO_SPACE,
     });
     expect(NO_SPACE).not.toBe(''); // '' is the whole venue, a real pick
+  });
+});
+
+describe('slot pricing', () => {
+  it('sends whole rupees, never below zero, with the picked mode', () => {
+    expect(slotPricingInput({ price: '499.6', pricingMode: 'HOURLY', overtimeRate: '150' })).toEqual({
+      price: 500,
+      pricing_mode: 'HOURLY',
+      overtime_rate: 150,
+    });
+    expect(slotPricingInput({ price: '-20', pricingMode: 'FLAT', overtimeRate: '' })).toEqual({
+      price: 0,
+      pricing_mode: 'FLAT',
+      overtime_rate: 0,
+    });
+  });
+
+  it('reads an unknown mode from the server as a flat price', () => {
+    expect(slotPricingModeOf('PER_PAX')).toBe('PER_PAX');
+    expect(slotPricingModeOf(undefined)).toBe('FLAT');
+    expect(SLOT_PRICING_MODES.map((mode) => SLOT_PRICING_MODE_KEY[mode])).toEqual([
+      'availability.pricingFlat',
+      'availability.pricingHourly',
+      'availability.pricingPerPax',
+    ]);
+    expect(SLOT_PRICE_UNIT_KEY.PER_PAX).toBe('availability.priceUnitPerPax');
   });
 });
 

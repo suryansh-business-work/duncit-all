@@ -53,6 +53,8 @@ const TIMED_PAYLOAD: NewSlotInput = {
   end_at: iso(2026, 0, 20, 10),
   whole_day: false,
   price: 0,
+  pricing_mode: 'FLAT',
+  overtime_rate: 0,
   notes: '',
   space_label: '',
   capacity: 0,
@@ -82,6 +84,32 @@ describe('AddSlotForm', () => {
     await waitFor(() => expect(screen.getByLabelText('Price (₹)')).toHaveValue(null));
     expect(screen.getByLabelText('Start time')).toHaveValue('');
     expect(screen.getByLabelText('Notes (optional)')).toHaveValue('');
+  });
+
+  it('sends an hourly slot with its overtime rate', async () => {
+    const { onCreate } = renderForm();
+    setTime('Start time', '09:00');
+    setTime('End time', '10:00');
+    fireEvent.change(screen.getByTestId('add-slot-pricing-mode').querySelector('input') as HTMLInputElement, {
+      target: { value: 'HOURLY' },
+    });
+    fireEvent.change(screen.getByLabelText('Price (₹)'), { target: { value: '400' } });
+    fireEvent.change(screen.getByLabelText('Overtime per hour (₹)'), { target: { value: '250' } });
+    fireEvent.click(addButton());
+    await waitFor(() =>
+      expect(onCreate).toHaveBeenCalledWith(
+        { ...TIMED_PAYLOAD, price: 400, pricing_mode: 'HOURLY', overtime_rate: 250 },
+        false,
+      ),
+    );
+  });
+
+  it('says per guest is counted from the bookings once that mode is picked', () => {
+    renderForm();
+    fireEvent.change(screen.getByTestId('add-slot-pricing-mode').querySelector('input') as HTMLInputElement, {
+      target: { value: 'PER_PAX' },
+    });
+    expect(screen.getByText(/Per guest counts everyone booked/)).toBeInTheDocument();
   });
 
   it('defaults an empty price to 0', async () => {

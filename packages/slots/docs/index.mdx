@@ -31,6 +31,11 @@ exports:
   - 'slotCoversDay'
   - 'slotCoveredDays'
   - 'emptyDraft'
+  - 'slotPricingInput'
+  - 'slotPricingModeOf'
+  - 'SLOT_PRICING_MODES'
+  - 'SLOT_PRICING_MODE_KEY'
+  - 'SLOT_PRICE_UNIT_KEY'
   - 'checkSlotDraft'
   - 'isDraftIncomplete'
   - 'minTimeOn'
@@ -156,7 +161,10 @@ native twin cannot disagree about which slot is addable.
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
-| `emptyDraft` | `(date: Date) => SlotDraft` | A draft seeded on the clicked day: no times, no price, no space picked (`NO_SPACE`, because `''` is a real space — the whole venue). |
+| `emptyDraft` | `(date: Date) => SlotDraft` | A draft seeded on the clicked day: no times, no price, a FLAT price with no overtime, no space picked (`NO_SPACE`, because `''` is a real space — the whole venue). |
+| `slotPricingInput` | `(draft) => { price, pricing_mode, overtime_rate }` | The draft's pricing as the create input sends it: whole rupees, never below 0. |
+| `slotPricingModeOf` | `(raw: unknown) => SlotPricingMode` | A mode as the server sends it; anything unknown reads as FLAT. |
+| `SLOT_PRICING_MODE_KEY` / `SLOT_PRICE_UNIT_KEY` | `Record<SlotPricingMode, string>` | The mode's label and the unit a price reads in ("₹300 / hour", "₹120 / guest"), as literal keys. |
 | `checkSlotDraft` | `(draft, now) => { start; end } \| SlotIssueCode` | The window the draft asks for, or the ONE thing wrong with it. `now` is a parameter so the same draft can be re-judged against a moving clock. |
 | `isDraftIncomplete` | `(code) => boolean` | True for `pickDates` / `pickSlotTimes` — unfinished, not wrong. Say it on submit; never shout it mid-typing. |
 | `minTimeOn` / `minEndTime` | `(…, now) => Date \| undefined` | The picker bounds: "now" on today, a minute past the start while the slot sits on one day. An hour that has gone by is never offered. |

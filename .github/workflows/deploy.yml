@@ -638,9 +638,16 @@ jobs:
         id: gate
         env:
           CHANGES: ${{ steps.filter.outputs.changes }}
-          # Hashed into one digest and nothing else; never printed or written.
-          BUILD_SECRETS: ${{ toJSON(secrets) }}
-          BUILD_VARS: ${{ toJSON(vars) }}
+          # Exactly the secrets the build jobs bake into images (top-level env +
+          # build-args). Hashed into one digest and nothing else; never printed
+          # or written. A secret newly baked into a build must be added here.
+          BUILD_SECRETS: |
+            ${{ env.BUILD_GOOGLE_CLIENT_ID }}
+            ${{ env.BUILD_GOOGLE_MAP_API }}
+            ${{ secrets.DOCKERHUB_USERNAME }}
+            ${{ secrets.MWEB_ANDROID_CERT_SHA256 }}
+            ${{ secrets.MWEB_IOS_TEAM_ID }}
+            ${{ secrets.REMOTION_LICENSE_KEY }}
         run: node scripts/ci-deploy-gate.mjs gate .ci-ledger/deploy.json
 
   # -----------------------------------------------------------

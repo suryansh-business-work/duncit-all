@@ -3,7 +3,7 @@
  * Deploy checkpoint: skip an image whose inputs are exactly what is already
  * deployed on this branch.
  *
- *   node scripts/ci-deploy-gate.mjs gate   <ledger.json>   (env CHANGES, BUILD_SECRETS, BUILD_VARS)
+ *   node scripts/ci-deploy-gate.mjs gate   <ledger.json>   (env CHANGES, BUILD_SECRETS)
  *   node scripts/ci-deploy-gate.mjs record <ledger.json>   (env DEPLOYED, HASHES)
  *
  * WHY THIS EXISTS
@@ -19,8 +19,8 @@
  *          ledger says is LIVE for it. The key is the git blob ids of every
  *          tracked file its own paths-filter globs match (read from deploy.yml,
  *          so the two can never disagree), plus deploy.yml itself, plus a
- *          digest of the repository secrets and variables the builds bake in —
- *          rotate one and every key changes. The ledger maps a service to the
+ *          digest of the secrets the builds bake in (deploy.yml names them
+ *          one by one in BUILD_SECRETS) — rotate one and every key changes. The ledger maps a service to the
  *          LAST key deployed, not every key ever deployed: after A → B → A the
  *          VPS runs B, so A must rebuild.
  *          Writes `<service>=true|false` for every filter and `hashes`.
@@ -64,13 +64,9 @@ export function readFilters(yaml) {
   return filters;
 }
 
-/** Repository secrets + variables, without the per-run token, as one digest. */
-export function envDigest(secretsJson = '{}', varsJson = '{}') {
-  const secrets = JSON.parse(secretsJson || '{}');
-  delete secrets.github_token;
-  const vars = JSON.parse(varsJson || '{}');
-  const stable = (o) => JSON.stringify(Object.keys(o).sort().map((k) => [k, o[k]]));
-  return sha(`${stable(secrets)}\n${stable(vars)}`);
+/** The build-baked secrets (one per line, as deploy.yml lists them) as one digest. */
+export function envDigest(secrets = '') {
+  return sha(secrets);
 }
 
 /** `mode blob stage\tpath` for every tracked file. */
@@ -101,7 +97,7 @@ function gate(ledgerFile) {
   let filters;
   try {
     filters = readFilters(readFileSync(WORKFLOW, 'utf8'));
-    const digest = envDigest(process.env.BUILD_SECRETS, process.env.BUILD_VARS);
+    const digest = envDigest(process.env.BUILD_SECRETS);
     const entries = indexEntries();
     const live = readLedger(ledgerFile);
     const hashes = Object.fromEntries([...changed].map((s) => [s, serviceKey(filters[s] ?? [], entries, digest)]));

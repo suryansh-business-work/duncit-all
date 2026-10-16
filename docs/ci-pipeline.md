@@ -30,7 +30,7 @@ run. The ledgers fix that:
   workspace whose key is already recorded.
 - Deploy: after the health check passes, each restarted service's input key is
   recorded as **live**. The key covers every file its paths-filter globs match,
-  `deploy.yml`, and a one-way digest of the repository secrets and variables
+  `deploy.yml`, and a one-way digest of the secrets the builds bake in
   (rotate a secret and every service rebuilds). Only the latest live key per
   service counts, so a revert to older content still rebuilds.
 

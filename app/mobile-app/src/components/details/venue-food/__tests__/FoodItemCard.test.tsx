@@ -22,7 +22,6 @@ describe('FoodItemCard cart control', () => {
     <FoodItemCard
       item={dish(over)}
       currency="₹"
-      onOpenImage={jest.fn()}
       canOrder={canOrder}
       quantity={quantity}
       cartReady

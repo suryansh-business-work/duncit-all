@@ -141,6 +141,13 @@ describe('WaCampaignForm', () => {
     expect(await screen.findByRole('option', { name: 'VIP · 1,200' })).toBeInTheDocument();
   });
 
+  it('offers a repeat only for a saved audience list', async () => {
+    mount();
+    expect(screen.queryByLabelText(/marketing.whatsappCampaigns.repeatEveryDays|Repeat every/)).not.toBeInTheDocument();
+    await pick(/Send to/, 'Saved audience list');
+    expect(await screen.findByLabelText(/marketing.whatsappCampaigns.repeatEveryDays|Repeat every/)).toBeInTheDocument();
+  });
+
   it('says so when there are no saved audience lists', async () => {
     mount({ audienceLists: [] });
     await pick(/Send to/, 'Saved audience list');

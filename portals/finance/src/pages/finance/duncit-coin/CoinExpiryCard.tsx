@@ -34,6 +34,15 @@ export default function CoinExpiryCard({ control }: Readonly<Props>) {
               helper={t('finance.duncitCoin.coinExpiryHelper')}
             />
           </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <CoinSettingField
+              control={control}
+              name="coin_expiry_reminder_days"
+              label={t('finance.duncitCoin.coinExpiryReminder')}
+              unit={t('finance.duncitCoin.days')}
+              helper={t('finance.duncitCoin.coinExpiryReminderHelper')}
+            />
+          </Grid>
         </Grid>
       </CardContent>
     </Card>

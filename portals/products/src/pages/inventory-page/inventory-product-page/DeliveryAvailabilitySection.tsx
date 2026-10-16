@@ -10,7 +10,7 @@ import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
 import DeliveryTargetSelect from './DeliveryTargetSelect';
 import WarehouseSelect from './WarehouseSelect';
-import type { InventoryProductFormValues } from './types';
+import { managesWarehouse, type InventoryProductFormValues } from './types';
 import { useTranslation } from '@duncit/shell';
 
 type SwitchName = 'pod_available' | 'host_request_allowed' | 'delivery_available';
@@ -28,6 +28,7 @@ export default function DeliveryAvailabilitySection() {
   const { control } = useFormContext<InventoryProductFormValues>();
   const deliveryAvailable = useWatch({ control, name: 'delivery_available' });
   const ownership = useWatch({ control, name: 'ownership' });
+  const newBrandId = useWatch({ control, name: 'new_brand_id' });
   const shiprocket = useWatch({ control, name: 'delivery_target' }) === 'SHIPROCKET';
   // On ShipRocket the live warehouse rate is what the buyer pays, so this
   // number is only the fallback when the lane cannot be rated — saying
@@ -78,9 +79,10 @@ export default function DeliveryAvailabilitySection() {
           slotProps={{ input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> } }}
         />
       </Grid>
-      {/* Duncit products only — a brand product keeps the delivery method and
-          warehouse it was listed with, neither of which this form manages. */}
-      {ownership === 'DUNCIT' && (
+      {/* Duncit products, and a product being added to a brand — an existing
+          brand product keeps the delivery method and warehouse it was listed
+          with, neither of which this form manages. */}
+      {managesWarehouse({ ownership, new_brand_id: newBrandId }) && (
         <>
           <Grid
             size={{

@@ -21,6 +21,11 @@ import { lockAccount, unlockAccount } from './accountDeletion.lock';
 import { userTrace } from './accountDeletion.trace';
 import { purgeKind, purgeReference } from './accountDeletion.purge';
 import { retentionReason } from './accountDeletion.retention';
+import {
+  notifyDeletionCompleted,
+  notifyDeletionRejected,
+  notifyDeletionRequested,
+} from './accountDeletion.notify';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -423,6 +428,7 @@ export const accountDeletionService = {
     // would survive a failed create as an account nobody can sign in to and
     // no queue entry explains.
     sealAccount(String(user._id), requestedAt);
+    await notifyDeletionRequested(doc);
     return toPublic(doc);
   },
 
@@ -585,6 +591,7 @@ export const accountDeletionService = {
     // token naming it is already answered by nothing. Dropping the id keeps the
     // seal map from growing by one row per deleted member forever.
     releaseAccount(userId);
+    await notifyDeletionCompleted(doc);
     return accountDeletionService.detail(request_doc_id);
   },
 
@@ -605,6 +612,7 @@ export const accountDeletionService = {
     doc.reviewed_at = new Date();
     await doc.save();
     releaseAccount(String(doc.user_id));
+    await notifyDeletionRejected(doc);
     return accountDeletionService.detail(request_doc_id);
   },
 };

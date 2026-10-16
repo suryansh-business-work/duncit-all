@@ -123,7 +123,8 @@ describe('review round-trips', () => {
       to: 'pm@duncit.com',
       subject: `Brand awaiting review: ${brand.brand_name}`,
       template: 'ecomm-brand-review-requested',
-      category: 'notification',
+      // A staff notice: internal, never the customer opt-out list.
+      category: 'internal',
       vars: {
         name: 'Priya',
         brand: brand.brand_name,

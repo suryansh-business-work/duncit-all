@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { skipToken, useMutation, useQuery } from '@apollo/client/react';
 import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, CircularProgress, Container, Snackbar, Stack } from '@mui/material';
@@ -14,18 +14,19 @@ import {
   INVENTORY_CATEGORIES,
   INVENTORY_PRODUCT_DETAIL,
   INVENTORY_STOCK_MOVEMENTS,
+  NEW_PRODUCT_BRAND,
 } from './productQueries';
 import { CREATE_PRODUCT, UPDATE_PRODUCT } from '../queries';
-import { productListLabel, productListPath } from './productPaths';
+import { productEditPath, productListLabel, productListPath } from './productPaths';
 import { makeProductSchema } from './schema';
-import { toFormValues, toSubmitInput, type InventoryProductFormValues } from './types';
+import { blankProductForm, toFormValues, toSubmitInput, type InventoryProductFormValues } from './types';
 import { useTranslation } from '@duncit/shell';
 
 export default function InventoryProductPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  // `brandId` is present only on /catalog/brands/:brandId/products/:id/edit,
-  // where the editor belongs to one brand's catalogue instead of Duncit's.
+  // `brandId` is present only under /catalog/brands/:brandId/products (new or
+  // :id/edit), where the editor belongs to one brand's catalogue instead of Duncit's.
   const { id, brandId } = useParams<{ id: string; brandId: string }>();
   const isNew = !id;
   const backTo = productListPath(brandId);
@@ -55,13 +56,19 @@ export default function InventoryProductPage() {
     fetchPolicy: 'cache-and-network',
   });
 
+  const newBrandQuery = useQuery(NEW_PRODUCT_BRAND, isNew && brandId ? { variables: { id: brandId } } : skipToken);
+
   const [createProduct] = useMutation<any>(CREATE_PRODUCT);
   const [updateProduct] = useMutation<any>(UPDATE_PRODUCT);
 
-  const initialValues = useMemo(
-    () => toFormValues(productQuery.data?.inventoryProduct),
-    [productQuery.data]
-  );
+  const newBrandName = (newBrandQuery.data as { ecommBrand?: { brand_name?: string } | null } | undefined)?.ecommBrand?.brand_name ?? '';
+  const initialValues = useMemo<InventoryProductFormValues>(() => {
+    // Adding to a brand's catalogue: the product is the brand's from the start.
+    if (isNew && brandId) {
+      return { ...blankProductForm, ownership: 'BRAND', new_brand_id: brandId, brand_name: newBrandName };
+    }
+    return toFormValues(productQuery.data?.inventoryProduct);
+  }, [isNew, brandId, newBrandName, productQuery.data]);
   const categories = (categoriesQuery.data?.categories ?? []).filter(
     (c: any) => c.level !== 'SUPER'
   );
@@ -91,7 +98,7 @@ export default function InventoryProductPage() {
         const res = await createProduct({ variables: { input } });
         const newId = res.data?.createInventoryProduct?.id;
         setToast(t('products.inventory.created'));
-        if (newId) navigate(`/inventory/${newId}/edit`, { replace: true });
+        if (newId) navigate(productEditPath(newId, brandId), { replace: true });
       }
     } catch (err: any) {
       /* v8 ignore next -- Apollo rejects with an Error carrying a message; fallback is defensive */

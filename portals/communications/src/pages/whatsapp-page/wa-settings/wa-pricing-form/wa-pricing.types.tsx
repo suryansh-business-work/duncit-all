@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { fallbackT } from '@duncit/shell';
 import type { WaPricing } from '../../queries';
 
 /**
@@ -26,6 +27,12 @@ export const waPricingSchema = z.object({
     .trim()
     .min(1, 'Currency symbol is required')
     .max(4, 'Keep the symbol to 4 characters'),
+  marketing_weekly_cap: z
+    .string()
+    .trim()
+    .refine((value) => value !== '' && Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 50, {
+      message: fallbackT('marketing.whatsappCampaigns.weeklyCapInvalid'),
+    }),
 });
 
 export type WaPricingValues = z.infer<typeof waPricingSchema>;
@@ -42,6 +49,7 @@ export const fromWaPricing = (pricing: WaPricing): WaPricingValues => ({
   authentication_per_msg: String(pricing.authentication_per_msg),
   service_per_msg: String(pricing.service_per_msg),
   currency_symbol: pricing.currency_symbol,
+  marketing_weekly_cap: String(pricing.marketing_weekly_cap ?? 0),
 });
 
 export const toUpdateWaPricingInput = (values: WaPricingValues) => ({
@@ -50,4 +58,5 @@ export const toUpdateWaPricingInput = (values: WaPricingValues) => ({
   authentication_per_msg: Number(values.authentication_per_msg),
   service_per_msg: Number(values.service_per_msg),
   currency_symbol: values.currency_symbol.trim(),
+  marketing_weekly_cap: Number(values.marketing_weekly_cap),
 });

@@ -496,6 +496,92 @@ async function notifyApproval(doc: IPaymentRelease) {
   }
 }
 
+/**
+ * Tell each beneficiary their payout is now with Finance.
+ *
+ * Completing a pod creates every release PENDING, and until Finance decides
+ * nobody heard a thing — the host, the venue and the club admin each asked
+ * support where their money was. One email per release, quoting what was
+ * requested; the venue's names the bill it was filed against. Sellers are left
+ * out: their product invoice is the one message about that money (see
+ * notifyApproval). Email only — the decision itself goes out on both channels.
+ * Best-effort: the releases are saved before anyone is told.
+ */
+async function notifySubmitted(releases: readonly IPaymentRelease[]) {
+  const told = releases.filter((doc) => doc.kind !== 'ECOMM_PAYMENT' && doc.beneficiary_email);
+  if (told.length === 0) return;
+  try {
+    const fs = await getFinanceSettings();
+    for (const doc of told) {
+      // eslint-disable-next-line no-await-in-loop -- a handful of releases per pod
+      await sendEmail({
+        to: doc.beneficiary_email,
+        subject: `Payout submitted for review · ${doc.pod_title}`,
+        template: 'payout-submitted',
+        category: 'billing',
+        vars: {
+          name: doc.beneficiary_name,
+          pod_title: doc.pod_title,
+          amount: `${fs.currency_symbol}${(Number(doc.amount_requested) || 0).toFixed(2)}`,
+          release_id: doc.release_id,
+          bill_note: doc.bill_url ? 'Based on the venue bill uploaded at completion.' : '-',
+        },
+      });
+    }
+  } catch (error) {
+    logs.server.warn('paymentRelease', 'notifySubmitted', { error });
+  }
+}
+
+/** The WhatsApp scenario each kind of rejected payout announces — one shared
+ * campaign, one key per audience so the Automation board groups them. */
+const WA_PAYOUT_REJECTED_EVENT: Record<PaymentReleaseKind, string> = {
+  HOST_PAYMENT: 'HOST_PAYMENT_REJECTED',
+  VENUE_BILLING: 'VENUE_PAYMENT_REJECTED',
+  CLUB_ADMIN: 'CLUB_ADMIN_PAYMENT_REJECTED',
+  ECOMM_PAYMENT: 'ECOMM_PAYMENT_REJECTED',
+};
+
+/**
+ * Tell the beneficiary Finance turned their payout down, and why.
+ *
+ * An approval mailed a statement; a rejection said nothing at all, so a host
+ * waited on money that was never coming and found out by asking support. The
+ * reason Finance typed is the whole message — it is what they can act on.
+ * A release is reviewed once (only PENDING can be), so it is keyed on itself.
+ * Best-effort: the decision is saved before anybody is told.
+ */
+async function notifyRejection(doc: IPaymentRelease) {
+  if (doc.status !== 'REJECTED') return;
+  try {
+    const fs = await getFinanceSettings();
+    const amount = `${fs.currency_symbol}${(Number(doc.amount_requested) || 0).toFixed(2)}`;
+    const reason = (doc.approval_reason ?? '').trim() || '-';
+    await sendEmail({
+      to: doc.beneficiary_email,
+      subject: `Payout not approved · ${doc.pod_title}`,
+      template: 'payout-rejected',
+      category: 'billing',
+      vars: {
+        name: doc.beneficiary_name,
+        pod_title: doc.pod_title,
+        amount,
+        reason,
+        release_id: doc.release_id,
+      },
+    });
+    await whatsappService.send({
+      event: WA_PAYOUT_REJECTED_EVENT[doc.kind],
+      entityId: `${String(doc._id)}:REJECTED`,
+      user: await beneficiaryUser(doc),
+      name: doc.beneficiary_name,
+      params: [doc.beneficiary_name, doc.pod_title, amount, reason],
+    });
+  } catch (error) {
+    logs.server.warn('paymentRelease', 'notifyRejection', { error, release_id: doc.release_id });
+  }
+}
+
 // Validate a review payload against the pending request and return the decided
 // fields. Throws the same BAD_USER_INPUT errors as before, in the same order.
 function parseReviewInput(doc: IPaymentRelease, input: any) {
@@ -974,6 +1060,7 @@ export const paymentReleaseService = {
       await applyApproval(doc);
     }
     await notifyApproval(doc);
+    await notifyRejection(doc);
     return toPub(doc);
   },
 
@@ -1110,6 +1197,7 @@ export const paymentReleaseService = {
     // the venue's amount can now come from a bill somebody typed in, and that
     // is checked against the uploaded document before it is paid.
     await markPodSubmitted(pod, actor.id);
+    await notifySubmitted(releases);
 
     // Leaderboard points for host, venue owner and club admin ride the same
     // trigger. Best-effort and idempotent inside the service — a points hiccup

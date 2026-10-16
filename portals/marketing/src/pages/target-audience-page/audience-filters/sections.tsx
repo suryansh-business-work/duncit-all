@@ -71,6 +71,9 @@ export function ActivitySection({ state, set }: Readonly<SectionProps>) {
       <DateRange label={t('marketing.targetAudience.lastActive')} from={bind('activeFrom')} to={bind('activeTo')} />
       <TriStateSelect label={t('marketing.targetAudience.onboardingSurveyDone')} {...bind('surveyCompleted')} />
       <TriStateSelect label={t('marketing.targetAudience.neverEngaged')} {...bind('firstTimeUser')} />
+      <TriStateSelect label={t('marketing.targetAudience.hasBooked')} {...bind('hasBooked')} />
+      <DateRange label={t('marketing.targetAudience.lastBooked')} from={bind('bookedFrom')} to={bind('bookedTo')} />
+      <NumberRange label={t('marketing.targetAudience.podsAttended')} from={bind('attendedMin')} to={bind('attendedMax')} />
     </Stack>
   );
 }

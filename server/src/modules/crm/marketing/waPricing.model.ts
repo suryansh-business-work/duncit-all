@@ -20,6 +20,9 @@ export interface IWaPricing extends Document {
   authentication_per_msg: number;
   service_per_msg: number;
   currency_symbol: string;
+  /** The most marketing WhatsApp messages one number may get in 7 days,
+   * campaigns and automatic marketing scenarios together. 0 is no cap. */
+  marketing_weekly_cap: number;
 }
 
 const waPricingSchema = new Schema<IWaPricing>(
@@ -34,6 +37,9 @@ const waPricingSchema = new Schema<IWaPricing>(
     // stops being free is a settings edit rather than a migration.
     service_per_msg: { type: Number, default: 0, min: 0 },
     currency_symbol: { type: String, default: '₹' },
+    // Off until Marketing sets it: a cap is a policy somebody decides, not
+    // something a deploy should start doing to live campaigns.
+    marketing_weekly_cap: { type: Number, default: 0, min: 0, max: 50 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

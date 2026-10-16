@@ -496,7 +496,7 @@ describe('setActive', () => {
       to: 'olu@example.com',
       subject: 'Your venue is now active',
       template: 'venue-activated',
-      category: 'notification',
+      category: 'transactional',
       vars: { owner_name: 'Olu', venue_name: 'Hall', status: 'active' },
     });
     expect(waSend).toHaveBeenCalledWith(

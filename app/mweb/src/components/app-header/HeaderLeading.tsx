@@ -1,6 +1,7 @@
 import { Chip, Stack } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import HeaderDeliveryAddress from './HeaderDeliveryAddress';
 import HeaderLocationRow from './HeaderLocationRow';
 import { STUDIO_LABEL, type StudioMode } from '../../studio-mode';
 
@@ -12,6 +13,9 @@ interface Props {
   selectedZoneName?: string;
   placeReady: boolean;
   onOpenLocation: () => void;
+  /** On the Pod Shop the city pill gives way to the "Deliver to" address pill. */
+  deliveryAddress?: boolean;
+  signedIn?: boolean;
 }
 
 /**
@@ -28,10 +32,17 @@ export default function HeaderLeading({
   selectedZoneName,
   placeReady,
   onOpenLocation,
+  deliveryAddress = false,
+  signedIn = false,
 }: Readonly<Props>) {
   if (minimal) return <Stack data-testid="header-leading" sx={{ flex: 1, minWidth: 0 }} />;
   return (
-    <Stack data-testid="header-leading" direction="row" spacing={1} sx={{ flex: 1, minWidth: 0, alignItems: 'center' }}>
+    <Stack
+      data-testid="header-leading"
+      direction="row"
+      spacing={1}
+      sx={{ flex: 1, minWidth: 0, alignItems: 'center' }}
+    >
       {studio === 'USER' ? null : (
         <Chip
           data-testid="header-studio-badge"
@@ -52,13 +63,17 @@ export default function HeaderLeading({
           }}
         />
       )}
-      <HeaderLocationRow
-        selectedLocationName={selectedLocationName}
-        selectedZoneName={selectedZoneName}
-        loading={!placeReady}
-        hasData={placeReady}
-        onOpen={onOpenLocation}
-      />
+      {deliveryAddress ? (
+        <HeaderDeliveryAddress signedIn={signedIn} />
+      ) : (
+        <HeaderLocationRow
+          selectedLocationName={selectedLocationName}
+          selectedZoneName={selectedZoneName}
+          loading={!placeReady}
+          hasData={placeReady}
+          onOpen={onOpenLocation}
+        />
+      )}
     </Stack>
   );
 }

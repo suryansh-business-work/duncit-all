@@ -18,6 +18,7 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { SlotTemplateModel } from '@modules/venues/slotTemplate/slotTemplate.model';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -40,6 +41,7 @@ import {
   type VenueCategoryRef,
 } from './venue.categories';
 import { notifyEach } from '@services/notify/notify.service';
+import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/finance/bankAccount.notify';
 import { getUrlConfigs } from '@config/url-configs';
 import {
   VENUE_FOOD_INPUT_KEYS,
@@ -949,9 +951,21 @@ export const venueService = {
     v.owner_phone = input.owner_phone;
     if (input.owner_dob) v.owner_dob = new Date(input.owner_dob);
     if (input.owner_address !== undefined) v.owner_address = input.owner_address;
+    // A plain copy: the subdocument itself is replaced by the write below.
+    const previousBank = normalizeBankAccountInput(v.bank_account ?? {});
     if (input.bank_account !== undefined) v.bank_account = normalizeBankAccountInput(input.bank_account) as any;
     if (v.step_completed < 3) v.step_completed = 3;
     await v.save();
+    if (v.status === 'APPROVED' && bankAccountChanged(previousBank, v.bank_account)) {
+      await alertBankAccountChanged({
+        audience: 'VENUE',
+        recordId: v.id,
+        userId: v.owner_user_id,
+        name: v.owner_name ?? '',
+        email: v.owner_email ?? '',
+        account: v.bank_account,
+      });
+    }
     return toPub(v);
   },
   async submitFinal(userId: string, venueId?: string | null) {
@@ -1009,6 +1023,7 @@ export const venueService = {
       await notifyEach([
         {
           event: 'VENUE_ONBOARDING_APPROVED',
+          entityId: transitionEntityId(v.id, v.approved_at),
           user: recipient,
           name: v.owner_name,
           // The template's second value is the partner-portal login address,
@@ -1019,6 +1034,7 @@ export const venueService = {
         },
         {
           event: 'VENUE_NEW_REQUESTED',
+          entityId: transitionEntityId(v.id, v.approved_at),
           user: recipient,
           name: v.owner_name,
           // Every sub category the venue was approved for, primary first.
@@ -1039,10 +1055,26 @@ export const venueService = {
   async reject(id: string, notes: string) {
     const v = await VenueModel.findById(id);
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
+    // Re-rejecting is how an admin edits the note, so the owner is only told
+    // on the transition — as host and brand rejections already were.
+    const wasRejected = v.status === 'REJECTED';
     v.status = 'REJECTED';
     v.rejected_at = new Date();
     v.reviewer_notes = notes;
     await v.save();
+    const reason = notes?.trim() ?? '';
+    if (!wasRejected && reason) {
+      await notifyEach([
+        {
+          event: 'VENUE_ONBOARDING_REJECTED',
+          entityId: transitionEntityId(v.id, v.rejected_at),
+          user: await waRecipient(v.owner_user_id),
+          name: v.owner_name,
+          params: [v.owner_name, reason],
+          email: v.owner_email ?? '',
+        },
+      ]);
+    }
     return toPub(v);
   },
   async adminCreate(opts: {
@@ -1222,7 +1254,7 @@ export const venueService = {
         to: v.owner_email ?? '',
         subject: active ? 'Your venue is now active' : 'Your venue has been deactivated',
         template: slug,
-        category: 'notification',
+        category: 'transactional',
         vars: {
           owner_name: v.owner_name ?? '',
           venue_name: v.venue_name ?? '',
@@ -1240,6 +1272,7 @@ export const venueService = {
 
     await whatsappService.send({
       event: active ? 'VENUE_ACCOUNT_REACTIVATED' : 'VENUE_ACCOUNT_SUSPENDED',
+      entityId: transitionEntityId(v.id),
       user: await waRecipient(v.owner_user_id),
       name: v.owner_name,
       params: [v.owner_name],

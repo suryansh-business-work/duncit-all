@@ -60,6 +60,9 @@ const meetingSchema = new Schema(
     /** The interviewer's feedback, captured when "Send feedback" is submitted. */
     feedback: { type: String, default: null },
     feedback_sent_at: { type: Date, default: null },
+    /** The slot (scheduled_at) the applicant was last reminded about — so a
+     * meeting is reminded once per slot, and again only if it moves. */
+    reminded_for: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -122,6 +125,9 @@ const meetingAvailabilitySchema = new Schema(
     /** How many days ahead users can book. */
     horizon_days: { type: Number, default: 7 },
     timezone_offset_minutes: { type: Number, default: 330 },
+    /** Hours before a scheduled meeting the applicant is reminded of it over
+     * email and WhatsApp. 0 switches the reminder off. */
+    reminder_lead_hours: { type: Number, default: 2, min: 0, max: 72 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

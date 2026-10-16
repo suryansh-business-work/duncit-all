@@ -11,6 +11,8 @@ jest.mock('@modules/finance/payment/payment.refundRecord', () => ({
   creditCoinsBack: jest.fn(),
   recordPaymentRefund: jest.fn(),
 }));
+// A refused refund alerts Finance; left real it reads Mongo and posts to Slack.
+jest.mock('@services/notify/staffAlert', () => ({ alertStaff: jest.fn(async () => undefined) }));
 jest.mock('@modules/finance/payment/razorpay.gateway', () => ({
   createRazorpayRefund: jest.fn(),
   listRazorpayRefunds: jest.fn(),
@@ -19,6 +21,7 @@ jest.mock('@modules/finance/payment/razorpay.gateway', () => ({
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { creditCoinsBack, recordPaymentRefund } from '@modules/finance/payment/payment.refundRecord';
 import { createRazorpayRefund, listRazorpayRefunds } from '@modules/finance/payment/razorpay.gateway';
+import { alertStaff } from '@services/notify/staffAlert';
 import { issueRefund, refundShare, retryRefund, type Refundable } from '../../productOrder.refund';
 
 const m = (fn: unknown) => fn as jest.Mock;
@@ -149,6 +152,10 @@ describe('issueRefund', () => {
     expect(out).toMatchObject({ status: 'FAILED', error: 'Insufficient balance' });
     expect(out.refunded_at).toBeUndefined();
     expect(m(recordPaymentRefund).mock.calls[0][3]).toBe('POD_SHOP_ADMIN_CANCEL:MANUAL_PAYOUT');
+    // Finance hears at once, with the gateway's own reason.
+    expect(alertStaff).toHaveBeenCalledWith(
+      expect.objectContaining({ desk: 'FINANCE', lines: expect.arrayContaining(['Gateway said: Insufficient balance']) })
+    );
   });
 
   it('looks up a refund that may already exist before sending a second one', async () => {

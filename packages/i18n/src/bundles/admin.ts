@@ -621,6 +621,18 @@ changeRequests: {
       podReminderLeadLabel: 'Remind Before (Hours)',
       podReminderLeadMin: 'Between 1 and 8760 hours. Default 24.',
       podReminderLeadInvalid: 'Enter a whole number between 1 and 8760.',
+      samedayReminderTitle: 'Same-Day Pod Reminder (Hours Before)',
+      samedayReminderDesc:
+        'A second, short reminder sent on the day — the pod, its start time and where it is — so guests leave on time. It goes out this many hours before the pod starts, over email and WhatsApp. Set 0 to send only the reminder above.',
+      samedayReminderLabel: 'Remind Before (Hours)',
+      samedayReminderMin: 'Between 0 and 23 hours. Default 3.',
+      samedayReminderInvalid: 'Enter a whole number between 0 and 23.',
+      checkoutNudgeTitle: 'Unfinished Booking Nudge (Minutes After)',
+      checkoutNudgeDesc:
+        'When somebody starts paying for a pod and does not finish, they get ONE email and WhatsApp this many minutes later, as long as the pod still has spots and has not started. Members who switched off marketing messages are not nudged. Set 0 to turn it off.',
+      checkoutNudgeLabel: 'Nudge After (Minutes)',
+      checkoutNudgeMin: 'Between 0 and 1440 minutes. Default 60.',
+      checkoutNudgeInvalid: 'Enter a whole number between 0 and 1440.',
       slotReminderLeadTitle: 'Venue Slot Request Chase (Hours Before)',
       slotReminderLeadDesc:
         'How long before the requested slot a venue that has still not answered a pod slot request is chased over email and WhatsApp. Keep it wider than the pod reminder above: the venue’s answer is what decides whether the pod happens at all, and the host needs time to find another venue if it is no.',

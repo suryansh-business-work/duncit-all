@@ -2,7 +2,7 @@
   "expo": {
     "name": "Duncit",
     "slug": "duncit-mobile",
-    "version": "1.83.210",
+    "version": "1.83.229",
     "orientation": "default",
     "scheme": [
       "duncit",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.duncit.mobile",
-      "buildNumber": "211629651",
+      "buildNumber": "211629670",
       "usesAppleSignIn": true,
       "associatedDomains": [
         "applinks:mweb.duncit.com"
@@ -28,7 +28,7 @@
     },
     "android": {
       "package": "com.duncit.mobile",
-      "versionCode": 211629651,
+      "versionCode": 211629670,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/duncit-icon-foreground.png",

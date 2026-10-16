@@ -17,7 +17,6 @@ import { FoodItemCard } from './FoodItemCard';
 interface Props {
   groups: FoodMenuGroup[];
   currency: string;
-  onOpenImage: (item: VenueFoodItem) => void;
   /** The dish's own screen — opened from its name. */
   onOpenDetails: (item: VenueFoodItem) => void;
   /** The venue takes orders right now — dishes get their cart control. */
@@ -75,7 +74,7 @@ function SectionToggle({ title, count, open, onPress, testID }: Readonly<ToggleP
         {title}
       </Text>
       <Text flex={1} fontSize={12} color="$muted">
-        {t('mweb.venueFood.menuSearch.sectionCount', { vars: { count: String(count) } })}
+        {t('mweb.venueFood.menuSearch.sectionCount', { count })}
       </Text>
       <MaterialIcons name={open ? 'expand-less' : 'expand-more'} size={24} color={muted} />
     </XStack>

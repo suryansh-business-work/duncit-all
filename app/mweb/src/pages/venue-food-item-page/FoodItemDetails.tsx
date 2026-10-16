@@ -72,7 +72,7 @@ export default function FoodItemDetails({ venue, item }: Readonly<Props>) {
         <CartControlNoticeChip notice={notice} labels={labels} testId={`food-item-details-${item.id}-notice`} />
         <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
           <DietMark diet={item.diet} />
-          <SpiceMark level={item.spice_level} />
+          <SpiceMark level={item.spice_level} showNone />
         </Stack>
         <Typography component="h2" sx={{ fontSize: '1.25rem', fontWeight: 700, wordBreak: 'break-word' }}>
           {item.name}

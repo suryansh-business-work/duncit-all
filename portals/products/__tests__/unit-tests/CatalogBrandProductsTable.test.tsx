@@ -64,8 +64,8 @@ describe('CatalogBrandProductsTable', () => {
     expect(screen.getAllByText('PENDING').length).toBeGreaterThan(0);
     expect(screen.getAllByText('DENIED').length).toBeGreaterThan(0);
     expect(screen.getAllByText('12%').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Active').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Inactive').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Shown').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Hidden').length).toBeGreaterThan(0);
     // Archived rows keep their fallbacks: no image, no selling price, no date.
     expect(screen.getByText('?')).toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument();

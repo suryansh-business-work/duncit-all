@@ -20,6 +20,7 @@ import { logs } from '@observability/log';
 import type { OtpMedium, OtpPurpose } from '@modules/platform/otp/otp.model';
 import { sendEmailVerificationOtpEmail } from '@services/email/email.service';
 import { isFeatureEnabled, PHONE_OTP_FLAG } from '@modules/platform/settings/featureFlag.gate';
+import { alertContactChanged } from './contactChange.alert';
 
 /** Which number on the account is moving. */
 export type ContactPhoneField = 'PHONE' | 'WHATSAPP';
@@ -161,6 +162,7 @@ async function applyNumber(
   );
   if (!after) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
   await userAuditService.record({ userId: user_id, before, after });
+  await alertContactChanged(before, after, field);
   return after;
 }
 
@@ -358,6 +360,7 @@ export const contactChangeService = {
     });
     if (!after) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     await userAuditService.record({ userId: user_id, before, after });
+    await alertContactChanged(before, after, 'EMAIL');
     return after;
   },
 };

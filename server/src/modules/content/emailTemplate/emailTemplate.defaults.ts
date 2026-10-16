@@ -3,10 +3,13 @@ import {
   LIVE,
   PAUSED,
   callout,
+  closing,
+  cta,
   detailRows,
   intro,
   note,
   shell,
+  text,
   type Tone,
 } from '@services/email/catalogue';
 
@@ -81,7 +84,7 @@ function statusTemplate(input: {
     name: input.name,
     description: input.description,
     subject: input.subject,
-    mjml: shell(titleKey, body),
+    mjml: shell(titleKey, body, `${input.copyKey}.body`),
   };
 }
 
@@ -182,19 +185,15 @@ const PORTAL_ACCESS_APPROVED: TemplateDefault = {
   name: 'Portal Access Approved',
   description:
     'The requester, when an admin approves their Jump-to-Portal request. Carries the console link.',
-  subject: 'Your Duncit {{portal_name}} portal access is live 🎉',
+  subject: 'Your Duncit {{portal_name}} portal access is live',
   mjml: shell(
     'email.portalAccess.approvedTitle',
     [
       intro('email.portalAccess.approvedTitle', 'email.portalAccess.approvedBody', 'name'),
       callout(LIVE, 'email.portalAccess.portalLabel', 'portal_name'),
-      `    <mj-section background-color="#ffffff" padding="16px 20px 24px 20px">
-      <mj-column>
-        <mj-button href="{{portal_url}}">{{t:email.portalAccess.openPortal}}</mj-button>
-        <mj-text font-size="13px" color="#888888" align="center">{{portal_url}}</mj-text>
-      </mj-column>
-    </mj-section>`,
-    ].join('\n')
+      cta('email.portalAccess.openPortal', 'portal_url'),
+    ].join('\n'),
+    'email.portalAccess.approvedBody'
   ),
 };
 
@@ -209,7 +208,8 @@ const PORTAL_ACCESS_DECLINED: TemplateDefault = {
     [
       intro('email.portalAccess.declinedTitle', 'email.portalAccess.declinedBody', 'name'),
       callout(PAUSED, 'email.portalAccess.portalLabel', 'portal_name'),
-    ].join('\n')
+    ].join('\n'),
+    'email.portalAccess.declinedBody'
   ),
 };
 
@@ -228,13 +228,10 @@ const POLICY_ACCEPTANCE: TemplateDefault = {
     [
       intro('email.policyAcceptance.heading', 'email.policyAcceptance.intro', 'name'),
       callout(LIVE, 'email.policyAcceptance.listLabel', 'policies'),
-      `    <mj-section background-color="#ffffff" padding="16px 20px 24px 20px">
-      <mj-column>
-        <mj-text color="#555555">{{t:email.policyAcceptance.revisit}}</mj-text>
-        <mj-button href="{{policies_url}}">{{t:email.policyAcceptance.cta}}</mj-button>
-      </mj-column>
-    </mj-section>`,
-    ].join('\n')
+      text('email.policyAcceptance.revisit'),
+      cta('email.policyAcceptance.cta', 'policies_url'),
+    ].join('\n'),
+    'email.policyAcceptance.intro'
   ),
 };
 
@@ -265,13 +262,10 @@ const ATTENDANCE_MARKED: TemplateDefault = {
         { labelKey: 'email.attendanceMarked.ticketLabel', valueVar: 'ticket_code' },
         { labelKey: 'email.attendanceMarked.seatsLabel', valueVar: 'seats_count' },
       ]),
-      `    <mj-section background-color="#ffffff" padding="8px 20px 24px 20px">
-      <mj-column>
-        <mj-button href="{{booking_url}}">{{t:email.attendanceMarked.cta}}</mj-button>
-        <mj-text font-size="13px" color="#888888">{{t:email.attendanceMarked.disputeNote}}</mj-text>
-      </mj-column>
-    </mj-section>`,
-    ].join('\n')
+      cta('email.attendanceMarked.cta', 'booking_url'),
+      closing('email.attendanceMarked.disputeNote'),
+    ].join('\n'),
+    'email.attendanceMarked.body'
   ),
 };
 
@@ -298,14 +292,10 @@ const POLICY_UPDATED: TemplateDefault = {
         { labelKey: 'email.policyUpdated.updatedLabel', valueVar: 'updated_at' },
         { labelKey: 'email.policyUpdated.summaryLabel', valueVar: 'summary' },
       ]),
-      `    <mj-section background-color="#ffffff" padding="8px 20px 24px 20px">
-      <mj-column>
-        <mj-button href="{{policy_url}}">{{t:email.policyUpdated.cta}}</mj-button>
-        <mj-text font-size="13px" color="#888888" align="center">{{policy_url}}</mj-text>
-        <mj-text font-size="13px" color="#888888">{{t:email.policyUpdated.reaccept}}</mj-text>
-      </mj-column>
-    </mj-section>`,
-    ].join('\n')
+      cta('email.policyUpdated.cta', 'policy_url'),
+      closing('email.policyUpdated.reaccept'),
+    ].join('\n'),
+    'email.policyUpdated.intro'
   ),
 };
 

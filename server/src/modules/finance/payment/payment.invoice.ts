@@ -1,6 +1,13 @@
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { normalizeSeats } from '@modules/pods/pod/pod.seats';
 import type { InvoiceData, InvoiceLineItem } from '@services/invoice/invoice.pdf';
+import {
+  invoiceLinePhotos,
+  lineOwnPhoto,
+  NO_LINE_PHOTOS,
+  paymentProductLines,
+  type InvoiceLinePhotos,
+} from './payment.invoicePhotos';
 import type { IPayment } from './payment.model';
 import { chargedRoundOff } from './payment.roundoff';
 
@@ -66,11 +73,9 @@ function soldTicketGross(doc: IPayment, meta: Record<string, unknown>, seats: nu
   return round2(Math.max(0, listGross - (doc.ticket_discount_amount ?? 0)));
 }
 
-export function buildInvoiceItems(doc: IPayment): InvoiceLineItem[] {
+export function buildInvoiceItems(doc: IPayment, photos: InvoiceLinePhotos = NO_LINE_PHOTOS): InvoiceLineItem[] {
   const meta: Record<string, unknown> = doc.metadata ?? {};
-  const productLines = Array.isArray(meta.product_lines)
-    ? (meta.product_lines as Record<string, unknown>[])
-    : [];
+  const productLines = paymentProductLines(doc);
   const isProductPayment = meta.source === 'app_product_checkout';
   // `ticket_amount` is the price of ONE seat; the booking may hold several. The
   // split below weighs the ticket against the products, so comparing a unit
@@ -90,6 +95,7 @@ export function buildInvoiceItems(doc: IPayment): InvoiceLineItem[] {
     qty: seats,
     unit_price: round2(amount / seats),
     amount,
+    image_url: photos.pod,
   });
 
   if (productLines.length === 0 || totalGross <= 0) {
@@ -105,7 +111,8 @@ export function buildInvoiceItems(doc: IPayment): InvoiceLineItem[] {
     // Named explicitly as a string: a product line comes off `metadata`, which
     // is Mixed, so anything at all could be sitting in `name`.
     const name = typeof l.name === 'string' && l.name ? l.name : 'Product';
-    return { description: name, qty, unit_price: round2(amount / qty), amount };
+    const image_url = lineOwnPhoto(l) || photos.products.get(String(l.product_id ?? '')) || undefined;
+    return { description: name, qty, unit_price: round2(amount / qty), amount, image_url };
   });
   const productsNet = round2(items.reduce((sum, it) => sum + it.amount, 0));
   const residualNet = round2(doc.subtotal - productsNet);
@@ -133,7 +140,7 @@ export async function invoiceDataForPayment(
   doc: IPayment,
   options: { paymentMethod: string; currencySymbol?: string }
 ): Promise<InvoiceData> {
-  const fs = await getFinanceSettings();
+  const [fs, photos] = await Promise.all([getFinanceSettings(), invoiceLinePhotos(doc)]);
   return {
     invoice_no: doc.invoice_no ?? '',
     invoice_date: doc.paid_at ?? doc.created_at,
@@ -142,7 +149,7 @@ export async function invoiceDataForPayment(
     business_address: fs.business_address,
     business_gstin: fs.business_gstin,
     currency_symbol: options.currencySymbol ?? fs.currency_symbol,
-    items: buildInvoiceItems(doc),
+    items: buildInvoiceItems(doc, photos),
     subtotal: doc.subtotal,
     gst_amount: doc.gst_amount,
     gst_pct: doc.gst_pct,

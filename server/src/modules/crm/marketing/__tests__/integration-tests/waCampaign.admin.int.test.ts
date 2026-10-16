@@ -157,6 +157,8 @@ describe('waCampaignService rate card', () => {
       authentication_per_msg: 0,
       service_per_msg: 0,
       currency_symbol: '₹',
+      // Off until Marketing sets it.
+      marketing_weekly_cap: 0,
     });
   });
 
@@ -174,8 +176,23 @@ describe('waCampaignService rate card', () => {
       authentication_per_msg: 0,
       service_per_msg: 0.05,
       currency_symbol: '₹',
+      // Not sent, so the saved cap is left alone.
+      marketing_weekly_cap: 0,
     });
     expect(await waCampaignService.pricing()).toEqual(saved);
+  });
+
+  it('saves a weekly marketing cap, and refuses one that is not a whole number from 0 to 50', async () => {
+    const rates = { marketing_per_msg: 1, utility_per_msg: 1, authentication_per_msg: 1, service_per_msg: 1 };
+    expect((await waCampaignService.updatePricing({ ...rates, marketing_weekly_cap: 3 })).marketing_weekly_cap).toBe(3);
+    expect((await waCampaignService.updatePricing(rates)).marketing_weekly_cap).toBe(3);
+    await expect(waCampaignService.updatePricing({ ...rates, marketing_weekly_cap: 51 })).rejects.toThrow(
+      'The weekly limit must be a whole number from 0 to 50'
+    );
+    await expect(waCampaignService.updatePricing({ ...rates, marketing_weekly_cap: -1 })).rejects.toThrow(
+      'The weekly limit must be a whole number from 0 to 50'
+    );
+    expect((await waCampaignService.pricing()).marketing_weekly_cap).toBe(3);
   });
 
   it.each([

@@ -8,8 +8,7 @@ import HomeSearch from './HomeSearch';
 import HomeSkeleton from './HomeSkeleton';
 import HomeStatusRail from './HomeStatusRail';
 import HomeEmptyState from './HomeEmptyState';
-import HomeFeaturedPods from './HomeFeaturedPods';
-import HomeNearbyHeader from './HomeNearbyHeader';
+import HomeNearbySection from './HomeNearbySection';
 import HomeVibeChips from './HomeVibeChips';
 import HostCtaBanner from './HostCtaBanner';
 import OngoingPodsRail from './OngoingPodsRail';
@@ -137,20 +136,15 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
           allIcon={branding?.home_all_vibe_icon_url}
         />
       </Box>
-      <Stack spacing={1.5}>
-        <HomeNearbyHeader onOpen={() => navigate('/happening-nearby')} />
-        <Box data-tour="home-pods">
-          <HomeFeaturedPods
-            pods={featuredPods}
-            totalCount={totalPods}
-            filtered={railsFiltered}
-            categoryLabelOf={categoryLabelOf}
-            savedOf={savedOf}
-            savingOf={savingOf}
-            onToggleSave={onToggleSave}
-          />
-        </Box>
-      </Stack>
+      <HomeNearbySection
+        pods={featuredPods}
+        totalCount={totalPods}
+        filtered={railsFiltered}
+        categoryLabelOf={categoryLabelOf}
+        savedOf={savedOf}
+        savingOf={savingOf}
+        onToggleSave={onToggleSave}
+      />
       <OngoingPodsRail pods={ongoingPods} hostNameOf={hostNameOf} />
       <HostCtaBanner
         isHost={isHost}

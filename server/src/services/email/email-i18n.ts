@@ -1,6 +1,8 @@
 import { localizationService } from "@modules/platform/localization/localization.service";
 import { UserModel } from "@modules/access/user/user.model";
 import { CATALOGUE_FALLBACK } from "./catalogue/catalogue.bundle";
+import { CORE_EMAIL_FALLBACK } from "./catalogue/catalogue.bundle.core";
+import { LIFECYCLE_FALLBACK } from "./catalogue/catalogue.lifecycle.bundle";
 
 /**
  * Localized copy for MJML emails (CLAUDE.md rule 38).
@@ -23,6 +25,10 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   // stays readable; the seeder and `serverTranslationSeed` read EMAIL_FALLBACK,
   // so they are shipped and seeded exactly like the keys written out below.
   ...CATALOGUE_FALLBACK,
+  // The core emails' copy — codes, access, bookings, payouts, onboarding —
+  // which used to be typed into `.mjml` files and so could not be translated.
+  ...CORE_EMAIL_FALLBACK,
+  ...LIFECYCLE_FALLBACK,
   "email.common.greeting": "Hi",
   "email.common.regards": "Thanks",
   "email.common.supportNote":

@@ -83,6 +83,8 @@ export const meetingTypeDefs = gql`
     slot_minutes: Int!
     horizon_days: Int!
     timezone_offset_minutes: Int!
+    "Hours before a scheduled meeting the applicant is reminded of it. 0 is off."
+    reminder_lead_hours: Int!
   }
 
   input MeetingAvailabilityInput {
@@ -92,6 +94,8 @@ export const meetingTypeDefs = gql`
     slot_minutes: Int
     horizon_days: Int
     timezone_offset_minutes: Int
+    "Hours before a scheduled meeting the applicant is reminded of it (0-72, 0 is off)."
+    reminder_lead_hours: Int
   }
 
   "A bookable onboarding-meeting slot; unavailable when another user holds it."

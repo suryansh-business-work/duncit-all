@@ -71,6 +71,7 @@ export const coinResolvers = {
           coins_per_referral?: number | null;
           pod_feedback_coins?: number | null;
           coin_expiry_days?: number | null;
+          coin_expiry_reminder_days?: number | null;
         };
       },
       ctx: GraphQLContext

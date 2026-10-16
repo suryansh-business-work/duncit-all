@@ -3,7 +3,6 @@
  *
  *   npm run migrate:email-fragments:dry     # report only, touches nothing
  *   npm run migrate:email-fragments         # write to the database
- *   npm run migrate:email-fragments -- --disk   # rewrite the on-disk .mjml too
  *   npm run migrate:email-fragments:dry -- --assign-unmapped=transactional
  *
  * Every template carried its own copy of the logo section and the copyright
@@ -37,8 +36,6 @@
  *   no-fragment  names a fragment this database does not have; NOT written,
  *                because the key alone would send the email bare
  */
-import fs from 'node:fs';
-import path from 'node:path';
 import mongoose from 'mongoose';
 import { EmailTemplateModel } from '@modules/content/emailTemplate/emailTemplate.model';
 import { EmailFragmentModel } from '@modules/content/emailFragment/emailFragment.model';
@@ -55,10 +52,8 @@ function argValue(flag: string): string | null {
 }
 
 const DRY = process.argv.includes('--dry-run');
-const DISK = process.argv.includes('--disk');
 /** The fragment an admin's own template gets when it names none. */
 const ASSIGN_UNMAPPED = argValue('--assign-unmapped');
-const TEMPLATES_DIR = path.join(__dirname, '..', 'src', 'services', 'email', 'templates');
 
 export interface StripResult {
   mjml: string;
@@ -194,21 +189,6 @@ function report(rows: Row[]): void {
   }
 }
 
-/** Rewrite the .mjml files so a fresh install seeds bodies, not chrome. */
-function migrateDisk(): Row[] {
-  const rows: Row[] = [];
-  for (const file of fs.readdirSync(TEMPLATES_DIR).filter((f) => f.endsWith('.mjml'))) {
-    const slug = file.replace(/\.mjml$/, '');
-    const full = path.join(TEMPLATES_DIR, file);
-    const source = fs.readFileSync(full, 'utf8');
-    const result = stripChrome(source);
-    const action = result.removedHeader || result.removedFooter ? 'stripped' : 'already';
-    rows.push({ slug, category: TEMPLATE_CATEGORIES[slug] ?? '(unmapped)', note: result.footerNote, action });
-    if (action === 'stripped' && !DRY) fs.writeFileSync(full, result.mjml);
-  }
-  return rows;
-}
-
 /**
  * The fragment this template should end up naming, or null when there is
  * nothing to point it at.
@@ -327,12 +307,6 @@ async function migrateDatabase(known: ReadonlySet<string>, fallback: string | nu
 
 async function main(): Promise<void> {
   console.log(DRY ? 'DRY RUN — nothing is written\n' : 'Writing changes\n');
-
-  if (DISK) {
-    console.log('On-disk templates:');
-    report(migrateDisk());
-    console.log('');
-  }
 
   const uri = process.env.MONGO_URI;
   if (!uri) {

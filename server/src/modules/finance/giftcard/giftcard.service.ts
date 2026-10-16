@@ -14,6 +14,7 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { coinService } from '@modules/finance/coin/coin.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { sendGiftCardReceivedEmail } from '@services/email/email.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { emailTranslationVars, recipientLocale } from '@services/email/email-i18n';
 import { getUrlConfigs } from '@config/url-configs';
 import { appDate } from '@utils/app-time';
@@ -356,6 +357,27 @@ export const giftcardService = {
       redeem_url: `${urlConfigs.appUrl}/gift-card/${card.code}`,
       expires_on: appDate(card.expires_at),
     });
+    // A gift is the one email people most often miss. When the address belongs
+    // to a Duncit account, the same news goes to its WhatsApp too — the card is
+    // keyed by its own id, so a retried payment step cannot send it twice.
+    const holder = await UserModel.findOne({ 'auth.email': to })
+      .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
+      .lean();
+    if (holder) {
+      const name = card.recipient_name || holder.profile?.first_name || 'there';
+      await whatsappService.send({
+        event: 'USER_GIFT_CARD_RECEIVED',
+        entityId: String(card._id),
+        user: holder,
+        name,
+        params: [
+          name,
+          payment.user_name || 'Someone',
+          `${fs.currency_symbol}${card.initial_amount.toFixed(2)}`,
+          `${urlConfigs.appUrl}/gift-card/${card.code}`,
+        ],
+      });
+    }
     return { to, cardId: String(card._id) };
   },
 

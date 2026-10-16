@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client/react';
+import { useEffect, useRef } from 'react';
 import { MenuItem, TextField } from '@mui/material';
-import { MY_ADDRESSES } from '../account-page/AddressBookSection';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useDeliveryAddress } from '../../hooks/useDeliveryAddress';
 import type { UserAddress } from '../account-page/address-book-form';
 
 interface Props {
@@ -10,23 +9,22 @@ interface Props {
 }
 
 /** Address-book dropdown for checkout — the saved delivery address the order
- * ships to and that delivery charges are quoted for. The default address is
- * pre-selected as soon as the book loads (picking another re-quotes delivery).
+ * ships to and that delivery charges are quoted for. It opens on the address
+ * the Pod Shop header's "Deliver to" pill picked (else the default), and a pick
+ * here becomes the shop's delivery address too (picking re-quotes delivery).
  * Hidden while the book is empty. */
 export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data } = useQuery<any>(MY_ADDRESSES, { fetchPolicy: 'cache-and-network' });
-  const addresses: UserAddress[] = data?.myAddresses ?? [];
-  const [selectedId, setSelectedId] = useState('');
+  const { addresses, selected, select } = useDeliveryAddress();
+  const pickedRef = useRef('');
 
-  // Auto-select the default (or first) saved address once the book loads, so the
-  // checkout opens pre-filled and delivery is quoted for it immediately.
+  // Hand the chosen address to the form once per change, so the checkout opens
+  // pre-filled and delivery is quoted for it immediately.
   useEffect(() => {
-    if (selectedId || addresses.length === 0) return;
-    const preferred = addresses.find((address) => address.is_default) ?? addresses[0];
-    setSelectedId(preferred.id);
-    onPick(preferred);
-  }, [addresses, selectedId, onPick]);
+    if (!selected || pickedRef.current === selected.id) return;
+    pickedRef.current = selected.id;
+    onPick(selected);
+  }, [selected, onPick]);
 
   if (addresses.length === 0) return null;
   return (
@@ -35,20 +33,19 @@ export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
       select
       size="small"
       label={t('mweb.checkout.deliverToSaved')}
-      value={selectedId}
-      onChange={(event) => {
-        const picked = addresses.find((address) => address.id === event.target.value);
-        if (picked) {
-          setSelectedId(picked.id);
-          onPick(picked);
-        }
-      }}
+      value={selected?.id ?? ''}
+      onChange={(event) => select(event.target.value)}
       sx={{ mb: 2, minWidth: 260 }}
     >
       {addresses.map((address) => (
-        <MenuItem key={address.id} data-testid={`checkout-address-option-${address.id}`} value={address.id}>
+        <MenuItem
+          key={address.id}
+          data-testid={`checkout-address-option-${address.id}`}
+          value={address.id}
+        >
           {address.label}
-          {address.is_default ? ` ${t('mweb.checkout.addressDefault')}` : ''} — {address.line1}, {address.city}
+          {address.is_default ? ` ${t('mweb.checkout.addressDefault')}` : ''} — {address.line1},{' '}
+          {address.city}
         </MenuItem>
       ))}
     </TextField>

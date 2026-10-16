@@ -56,9 +56,12 @@ export default function AuthHero({ room, gap, children }: Readonly<Props>) {
       data-testid="auth-hero"
       sx={{
         position: 'relative',
-        // Full-bleed out of the centred auth column.
+        // Full-bleed out of the centred auth column. Shifted with `left`, not a
+        // margin: every auth screen renders this inside a MUI Stack, whose
+        // `& > :not(style)` rule resets child margins to 0 and would leave the
+        // band starting at the column's left edge.
         width: '100vw',
-        ml: 'calc(50% - 50vw)',
+        left: 'calc(50% - 50vw)',
         overflow: 'hidden',
       }}
     >

@@ -461,6 +461,214 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Aarav, a new pod is happening at Dek Cafe: Board Games Night on 18 Oct 2026 at 07:00 PM. ' +
       'See the details and grab your spot: https://duncit.com/4hT9xQa — Team Duncit',
   },
+
+  // --- Communication gaps closed 2026-10-15. Plain text only: no emoji. -----
+  // A scenario that shares its campaign with others (the payout, bank-detail
+  // and meeting-reminder rows) carries ONE draft, on its first key: the
+  // template is one at AiSensy, and provisioning it twice would be refused.
+  USER_POD_RESCHEDULED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit pod {{2}} has moved. It now takes place on {{3}} at {{4}}, at {{5}}. ' +
+      'Your spot has moved with it, so there is nothing to rebook. Pod details: {{6}} Team Duncit',
+    sample:
+      'Hi Aarav, your Duncit pod Sunday Badminton Doubles has moved. It now takes place on 25 Aug 2026 at 08:00 AM, at Smash Arena. ' +
+      'Your spot has moved with it, so there is nothing to rebook. Pod details: https://mweb.duncit.com/club/sunset-club/pod/sunday-badminton Team Duncit',
+  },
+  USER_POD_REMINDER_SAMEDAY: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a quick reminder that {{2}} is today at {{3}}, at {{4}}. ' +
+      'Please leave in good time. Pod details and directions: {{5}} See you there, Team Duncit',
+    sample:
+      'Hi Aarav, a quick reminder that Sunday Badminton Doubles is today at 07:00 AM, at Smash Arena. ' +
+      'Please leave in good time. Pod details and directions: https://mweb.duncit.com/club/sunset-club/pod/sunday-badminton See you there, Team Duncit',
+  },
+  USER_REFUND_PROCESSED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your refund of {{2}} for {{3}} has been processed. ' +
+      'It usually reaches your original payment method within {{4}} working days. Team Duncit',
+    sample:
+      'Hi Aarav, your refund of Rs 450.00 for Sunday Badminton Doubles has been processed. ' +
+      'It usually reaches your original payment method within 5-7 working days. Team Duncit',
+  },
+  USER_CONTACT_CHANGED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the {{2}} on your Duncit account was just changed. If this was you, there is nothing to do. ' +
+      'If it was not you, contact us right away: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, the phone number on your Duncit account was just changed. If this was you, there is nothing to do. ' +
+      'If it was not you, contact us right away: https://duncit.com/contact Team Duncit',
+  },
+  POD_SHOP_ORDER_SHIPPED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit order {{2}} has been shipped with {{3}} and is on its way to you. ' +
+      'Track it from your orders: {{4}} Team Duncit',
+    sample:
+      'Hi Aarav, your Duncit order DUN-ORD-1042 has been shipped with Delhivery and is on its way to you. ' +
+      'Track it from your orders: https://mweb.duncit.com/orders Team Duncit',
+  },
+  POD_SHOP_ORDER_OUT_FOR_DELIVERY: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit order {{2}} is out for delivery today. ' +
+      'Please keep your phone close in case the courier calls. Your orders: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, your Duncit order DUN-ORD-1042 is out for delivery today. ' +
+      'Please keep your phone close in case the courier calls. Your orders: https://mweb.duncit.com/orders Team Duncit',
+  },
+  POD_SHOP_ORDER_DELIVERED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit order {{2}} has been delivered. ' +
+      'If anything is missing or not right, you can raise it from your orders: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, your Duncit order DUN-ORD-1042 has been delivered. ' +
+      'If anything is missing or not right, you can raise it from your orders: https://mweb.duncit.com/orders Team Duncit',
+  },
+  STORE_ORDER_DELIVERY_FAILED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the courier could not deliver your order {{2}} today. ' +
+      'Please check the delivery details and let us know when to try again: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, the courier could not deliver your order DUN-ORD-1042 today. ' +
+      'Please check the delivery details and let us know when to try again: https://ecomm.duncit.com/orders/DUN-ORD-1042 Team Duncit',
+  },
+  HOST_POD_AUTO_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your pod {{2}} on {{3}} at {{4}} has been cancelled automatically because the bookings could not cover its costs. ' +
+      'All {{5}} booked guests are being refunded in full. You can create a new pod any time. Team Duncit',
+    sample:
+      'Hi Meera, your pod Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM has been cancelled automatically because the bookings could not cover its costs. ' +
+      'All 4 booked guests are being refunded in full. You can create a new pod any time. Team Duncit',
+  },
+  VENUE_POD_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the pod {{2}} booked at your venue on {{3}} at {{4}} has been cancelled by {{5}}. ' +
+      'The space you set aside for it is free again. Team Duncit',
+    sample:
+      'Hi Rohan, the pod Sunday Badminton Doubles booked at your venue on 24 Aug 2026 at 07:00 AM has been cancelled by the host. ' +
+      'The space you set aside for it is free again. Team Duncit',
+  },
+  CLUB_ADMIN_POD_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the pod {{2}} in your club on {{3}} at {{4}} has been cancelled by {{5}}. ' +
+      'Its guests have been told and their refunds are on the way. Team Duncit',
+    sample:
+      'Hi Kabir, the pod Sunday Badminton Doubles in your club on 24 Aug 2026 at 07:00 AM has been cancelled by the venue. ' +
+      'Its guests have been told and their refunds are on the way. Team Duncit',
+  },
+  VENUE_POD_REMINDER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a reminder that {{2}} is booked at your venue on {{3}} at {{4}}. ' +
+      'Guests booked so far: {{5}}. Your host will be {{6}}. Please have the space ready. Team Duncit',
+    sample:
+      'Hi Rohan, a reminder that Sunday Badminton Doubles is booked at your venue on 24 Aug 2026 at 07:00 AM. ' +
+      'Guests booked so far: 12. Your host will be Meera N. Please have the space ready. Team Duncit',
+  },
+  ECOMM_NEW_ORDER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, you have a new Duncit order {{2}} to pack: {{3}}. ' +
+      'Open the order and get it ready for pickup: {{4}} Team Duncit',
+    sample:
+      'Hi Kavya, you have a new Duncit order DUN-ORD-1042 to pack: 2 x Tug Rope, 1 x Ball. ' +
+      'Open the order and get it ready for pickup: https://partners-app.duncit.com/ecomm-brand/orders/66f0a1 Team Duncit',
+  },
+  HOST_PAYMENT_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your payout for {{2}} of {{3}} was not approved by our Finance team. ' +
+      'Reason: {{4}}. Nothing has been credited for it. Reply here or contact support if you think this is wrong. Team Duncit',
+    sample:
+      'Hi Meera, your payout for Sunday Badminton Doubles of Rs 2400.00 was not approved by our Finance team. ' +
+      'Reason: The venue bill does not match the booking. Nothing has been credited for it. Reply here or contact support if you think this is wrong. Team Duncit',
+  },
+  HOST_BANK_DETAILS_CHANGED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the account your Duncit payouts are sent to was just changed to {{2}}. ' +
+      'If this was you, there is nothing to do. If it was not you, contact us right away: {{3}} Team Duncit',
+    sample:
+      'Hi Meera, the account your Duncit payouts are sent to was just changed to XXXXXX4321. ' +
+      'If this was you, there is nothing to do. If it was not you, contact us right away: https://duncit.com/contact Team Duncit',
+  },
+  HOST_ONBOARDING_REMINDER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a reminder of your Duncit onboarding call on {{2}} at {{3}}. ' +
+      'Meeting link: {{4}} Please join a couple of minutes early. Team Duncit',
+    sample:
+      'Hi Meera, a reminder of your Duncit onboarding call on 24 Aug 2026 at 11:30 AM. ' +
+      'Meeting link: https://meet.google.com/abc-defg-hij Please join a couple of minutes early. Team Duncit',
+  },
+  HOST_POD_REMINDER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a reminder that you are hosting {{2}} on {{3}} at {{4}}. ' +
+      'Guests booked so far: {{5}}. Open the pod to check guests in at the door: {{6}} Team Duncit',
+    sample:
+      'Hi Meera, a reminder that you are hosting Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM. ' +
+      'Guests booked so far: 12. Open the pod to check guests in at the door: https://mweb.duncit.com/club/sunset-club/pod/sunday-badminton Team Duncit',
+  },
+  USER_CHECKOUT_PENDING: {
+    // MARKETING: a nudge to finish something the person chose not to finish.
+    // Meta treats an abandoned checkout as marketing, and so do we: it only
+    // reaches people who have not switched marketing off.
+    category: 'MARKETING',
+    language: 'English',
+    body:
+      'Hi {{1}}, you started booking {{2}} on {{3}} but did not finish. ' +
+      'Spots are still open if you would like to join: {{4}} Reply STOP to stop these messages. Team Duncit',
+    sample:
+      'Hi Aarav, you started booking Sunday Badminton Doubles on 24 Aug 2026, 07:00 AM but did not finish. ' +
+      'Spots are still open if you would like to join: https://mweb.duncit.com/club/sunset-club/pod/sunday-badminton Reply STOP to stop these messages. Team Duncit',
+  },
+  USER_GIFT_CARD_RECEIVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, {{2}} has sent you a Duncit gift card worth {{3}}. ' +
+      'Open it here to add it to your account: {{4}} Team Duncit',
+    sample:
+      'Hi Aarav, Priya has sent you a Duncit gift card worth Rs 500.00. ' +
+      'Open it here to add it to your account: https://mweb.duncit.com/gift-card/GC-7H2K-9QXA Team Duncit',
+  },
+  ECOMM_PRODUCT_DECLINED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your product {{2}} for {{3}} was not approved at review. ' +
+      'Reason: {{4}}. You can update the listing and submit it again from the Partners console. Team Duncit',
+    sample:
+      'Hi Kavya, your product Tug Rope Large for Pawsome was not approved at review. ' +
+      'Reason: The product photos are blurred. You can update the listing and submit it again from the Partners console. Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

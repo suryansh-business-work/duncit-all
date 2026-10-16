@@ -3,7 +3,8 @@ import { getUrlConfigs } from '@config/url-configs';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { UserModel } from '@modules/access/user/user.model';
-import type { IOrderRefund, IProductOrder } from './productOrder.model';
+import { notifyEvent } from '@services/notify/notify.service';
+import type { FulfilmentStatus, IOrderRefund, IProductOrder } from './productOrder.model';
 
 /**
  * The pod-shop buyer's email + WhatsApp for what happens to an order after it
@@ -77,6 +78,50 @@ export interface ReturnNotice {
   status_label: string;
   note: string;
   refund: IOrderRefund;
+}
+
+/**
+ * The moves a pod-shop buyer waits for. Every other status — an AWB being
+ * assigned, a pickup being booked — is the seller's business, and buzzing the
+ * buyer's phone for it is the noise that teaches people to mute us.
+ */
+const EVENT_BY_STATUS: Partial<Record<FulfilmentStatus, string>> = {
+  SHIPPED: 'POD_SHOP_ORDER_SHIPPED',
+  OUT_FOR_DELIVERY: 'POD_SHOP_ORDER_OUT_FOR_DELIVERY',
+  DELIVERED: 'POD_SHOP_ORDER_DELIVERED',
+};
+
+/** Who is carrying it, when ShipRocket has not said yet. */
+const COURIER_FALLBACK = 'our delivery partner';
+
+/**
+ * Shipped, out for delivery, delivered — on WhatsApp and email from one set of
+ * values. Pod-shop buyers used to hear nothing between paying and the parcel
+ * turning up. Keyed on the order AND the status, so each move is told once
+ * however many tracking pulls report it.
+ */
+export async function notifyOrderStatus(order: IProductOrder) {
+  const event = EVENT_BY_STATUS[order.fulfilment_status];
+  if (!event) return;
+  try {
+    const user = await buyerOf(order);
+    const name = order.buyer_name || user?.profile?.first_name || 'there';
+    const url = await ordersUrl();
+    const params =
+      event === 'POD_SHOP_ORDER_SHIPPED'
+        ? [name, order.order_no, order.shiprocket?.courier_name || COURIER_FALLBACK, url]
+        : [name, order.order_no, url];
+    await notifyEvent({
+      event,
+      entityId: `${String(order._id)}:${order.fulfilment_status}`,
+      user,
+      name,
+      params,
+      email: order.buyer_email || user?.auth?.email || '',
+    });
+  } catch (error) {
+    logs.server.error('productOrder', 'notifyOrderStatus', { error, order_no: order.order_no });
+  }
 }
 
 /** One step of a pod-shop return: requested, approved, rejected, received, refunded. */

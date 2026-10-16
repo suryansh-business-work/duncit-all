@@ -133,7 +133,7 @@ export function FoodItemDetails({ venue, item }: Readonly<Props>) {
         />
         <XStack alignItems="center" gap={6}>
           <DietMark diet={item.diet} />
-          <SpiceMark level={item.spice_level} />
+          <SpiceMark level={item.spice_level} showNone />
         </XStack>
         <Text role="heading" fontSize={20} fontWeight="700" color="$color">
           {item.name}

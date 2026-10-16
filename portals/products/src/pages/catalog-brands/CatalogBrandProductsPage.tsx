@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router';
 import { Alert, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
@@ -23,9 +24,6 @@ import { useTranslation } from '@duncit/shell';
 const ARCHIVE_MESSAGE =
   'Archiving hides this product from active lists and the pod product picker. You can restore it here anytime.';
 const RESTORE_MESSAGE = 'The product becomes active again and reappears in this brand’s catalogue.';
-const PAUSE_MESSAGE =
-  'The product is hidden from the shop and pod product picker until it is reactivated. Orders already placed are not affected.';
-const RESUME_MESSAGE = 'The product becomes visible and purchasable in the shop again.';
 
 /**
  * Catalog > Brands > one brand's products. Scoped with ownership=BRAND +
@@ -90,7 +88,7 @@ export default function CatalogBrandProductsPage() {
     const activating = pauseTarget.is_active === false;
     try {
       await setProductActive({ variables: { id: pauseTarget.id, active: activating } });
-      notifySuccess(activating ? 'Product reactivated' : 'Product temporarily deactivated');
+      notifySuccess(activating ? t('products.brandProducts.shownDone') : t('products.brandProducts.hiddenDone'));
       refetchRef.current?.();
     } catch (error) {
       notifyError(parseApiError(error, 'Could not update the product'));
@@ -113,7 +111,7 @@ export default function CatalogBrandProductsPage() {
   const restoring = lifecycleTarget?.status === 'ARCHIVED';
   const lifecycleLabel = restoring ? 'Restore' : 'Archive';
   const activating = pauseTarget?.is_active === false;
-  const pauseLabel = activating ? 'Reactivate' : 'Deactivate';
+  const pauseLabel = activating ? t('products.brandProducts.show') : t('products.brandProducts.hide');
 
   return (
     <Stack spacing={3}>
@@ -123,14 +121,25 @@ export default function CatalogBrandProductsPage() {
         backTo="/catalog/brands"
         backAriaLabel="Back to brands"
         actions={
-          <DuncitButton
-            component={RouterLink}
-            to={`/catalog/brands/${brandId}`}
-            size="small"
-            startIcon={<TuneIcon />}
-          >
-            Manage brand
-          </DuncitButton>
+          <Stack direction="row" spacing={1}>
+            <DuncitButton
+              component={RouterLink}
+              to={`/catalog/brands/${brandId}`}
+              size="small"
+              startIcon={<TuneIcon />}
+            >
+              Manage brand
+            </DuncitButton>
+            <DuncitButton
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              disabled={!brand}
+              onClick={() => navigate(`${productsBase}/new`)}
+            >
+              {t('products.brandProducts.addProduct')}
+            </DuncitButton>
+          </Stack>
         }
       />
 
@@ -168,8 +177,8 @@ export default function CatalogBrandProductsPage() {
 
       <ConfirmDialog
         open={!!pauseTarget}
-        title={`${pauseLabel} product?`}
-        message={activating ? RESUME_MESSAGE : PAUSE_MESSAGE}
+        title={activating ? t('products.brandProducts.showTitle') : t('products.brandProducts.hideTitle')}
+        message={activating ? t('products.brandProducts.showMessage') : t('products.brandProducts.hideMessage')}
         confirmLabel={pauseLabel}
         confirmColor={activating ? 'success' : 'warning'}
         loading={pauseState.loading}

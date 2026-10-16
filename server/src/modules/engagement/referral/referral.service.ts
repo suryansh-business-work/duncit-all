@@ -11,6 +11,7 @@ import {
 import { coinService } from '@modules/finance/coin/coin.service';
 import { coinSettingsService } from '@modules/finance/coin/coin.settings.service';
 import { logs } from '@observability/log';
+import { notifyReferrerRewarded } from './referral.notify';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const badInput = (message: string): never => {
@@ -178,6 +179,7 @@ export const referralService = {
         reason: `Signed up with referral code ${code}`,
         source: 'REFERRAL_SIGNUP',
       });
+      await notifyReferrerRewarded(referrerId, referredUserId, coins);
     } catch (e) {
       logs.server.warn('referral', 'link', {
         error: e,

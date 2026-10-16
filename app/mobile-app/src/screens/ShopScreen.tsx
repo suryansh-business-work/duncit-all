@@ -9,6 +9,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { SectionHeader } from '@/components/SectionHeader';
 import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
+import { OptionChipRow } from '@/components/home/HomeFilterParts';
+import { DeliveryAddressBar } from '@/components/shop/DeliveryAddressBar';
 import { PodShopSlider } from '@/components/shop/PodShopSlider';
 import { ShopFilterBar } from '@/components/shop/ShopFilterBar';
 import { ShopProductCard } from '@/components/shop/ShopProductCard';
@@ -37,9 +39,9 @@ export function sortShopProducts(products: ShopProduct[], sort: ShopSort): ShopP
 }
 
 /** Pod Shop — the platform-wide browse catalogue of approved, pod-available
- * products with category chips, debounced search and sorting. Tapping a product
- * opens its detail screen; purchases happen through a pod's shop. RN twin of
- * mWeb's ShopPage. */
+ * products: the "Deliver to" bar, debounced search with a filter button, the
+ * promo slider, then the super-category pills over the product grid. Tapping a
+ * product opens its detail screen. RN twin of mWeb's ShopPage. */
 export function ShopScreen() {
   const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
@@ -65,11 +67,18 @@ export function ShopScreen() {
     [t],
   );
 
+  // The "Deliver to" pincode, once the bar knows it (null until then) — the
+  // list leaves out brands that do not deliver there.
+  const [pincode, setPincode] = useState<string | null>(null);
+
   useEffect(() => {
+    if (pincode === null) return;
     let active = true;
     setIsLoading(true);
     setFailed(false);
-    graphqlRequest(ShopProductsDocument, undefined, { auth: true })
+    graphqlRequest(ShopProductsDocument, pincode ? { deliveryPincode: pincode } : {}, {
+      auth: true,
+    })
       .then((data) => active && setProducts(data.availablePodProducts))
       .catch((error: unknown) => {
         logs.mobileApp.error('ShopScreen', 'loadProducts', { error });
@@ -79,7 +88,7 @@ export function ShopScreen() {
     return () => {
       active = false;
     };
-  }, [attempt]);
+  }, [attempt, pincode]);
 
   // Pull-to-refresh reloads the catalogue.
   useRefreshRegistration(reload);
@@ -136,12 +145,29 @@ export function ShopScreen() {
   // same header cart every other screen shows.
   return (
     <StackScreen title={t('mweb.shop.title')} testID="shop-screen">
+      {/* Where the shop's orders ship to — the shop's stand-in for the city pill. */}
+      <DeliveryAddressBar onPincodeChange={setPincode} />
       <RefreshScrollView
         flex={1}
         contentContainerStyle={{ gap: 20, paddingTop: 4, paddingBottom: 32 }}
       >
-        <PodShopSlider />
         <ShopFilterBar filters={filters} sortOptions={sortOptions} muted={muted} />
+        <PodShopSlider />
+        {filters.superOptions.length > 0 ? (
+          <YStack
+            paddingHorizontal={16}
+            testID="shop-category-pills"
+            aria-label={t('mweb.common.category')}
+          >
+            <OptionChipRow
+              testIDPrefix="shop-super"
+              options={[['', t('mweb.common.all')], ...filters.superOptions]}
+              value={filters.superId}
+              onSelect={filters.selectSuper}
+              layout="scroll"
+            />
+          </YStack>
+        ) : null}
         {body}
       </RefreshScrollView>
     </StackScreen>

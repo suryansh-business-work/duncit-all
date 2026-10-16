@@ -8,6 +8,7 @@ import { InventoryProductModel } from '@modules/venues/inventory/inventory.model
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { logs } from '@observability/log';
 import { notifyEach, notifyEvent } from '@services/notify/notify.service';
 import { getUrlConfigs } from '@config/url-configs';
@@ -302,7 +303,7 @@ async function notifyReviewers(brand: IEcommBrand) {
         to,
         subject: `Brand awaiting review: ${brand.brand_name}`,
         template: 'ecomm-brand-review-requested',
-        category: 'notification',
+        category: 'internal',
         vars: {
           name: String(manager.profile?.first_name ?? ''),
           brand: brand.brand_name,
@@ -543,6 +544,7 @@ export const ecommBrandService = {
       await notifyEach([
         {
           event: 'ECOMM_ONBOARDING_APPROVED',
+          entityId: transitionEntityId(brand.id),
           user: recipient,
           name: brand.contact_person,
           // The template's second value is the partner-portal login address,
@@ -553,6 +555,7 @@ export const ecommBrandService = {
         },
         {
           event: 'ECOMM_BRAND_ADDED',
+          entityId: transitionEntityId(brand.id),
           user: recipient,
           name: brand.contact_person,
           params: [brand.contact_person, brand.brand_name, categories],
@@ -613,7 +616,7 @@ export const ecommBrandService = {
         to: brand.contact_email ?? '',
         subject: active ? 'Your brand is now active' : 'Your brand has been deactivated',
         template: slug,
-        category: 'notification',
+        category: 'transactional',
         vars: {
           contact_person: brand.contact_person ?? '',
           brand_name: brand.brand_name ?? '',
@@ -630,6 +633,7 @@ export const ecommBrandService = {
 
     await whatsappService.send({
       event: active ? 'ECOMM_ACCOUNT_REACTIVATED' : 'ECOMM_ACCOUNT_SUSPENDED',
+      entityId: transitionEntityId(brand.id),
       user: await waRecipient(brand.owner_user_id),
       name: brand.contact_person,
       params: [brand.contact_person],

@@ -93,22 +93,13 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
       </XStack>
       {open ? (
         <YStack gap={14} paddingBottom={4}>
-          {filters.superOptions.length > 0 ? (
-            <Section title={t('mweb.common.superCategory')}>
-              <OptionChipRow
-                testIDPrefix="shop-super"
-                options={[['', 'All'], ...filters.superOptions]}
-                value={filters.superId}
-                onSelect={filters.selectSuper}
-                layout="scroll"
-              />
-            </Section>
-          ) : null}
+          {/* The super-category pills sit on the screen itself (ShopScreen);
+              the narrower levels they open stay in here. */}
           {filters.categoryOptions.length > 0 ? (
             <Section title={t('mweb.common.category')}>
               <OptionChipRow
                 testIDPrefix="shop-cat"
-                options={[['', 'All'], ...filters.categoryOptions]}
+                options={[['', t('mweb.common.all')], ...filters.categoryOptions]}
                 value={filters.categoryId}
                 onSelect={filters.selectCategory}
                 layout="scroll"
@@ -119,7 +110,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
             <Section title={t('mweb.shop.subCategory')}>
               <OptionChipRow
                 testIDPrefix="shop-sub"
-                options={[['', 'All'], ...filters.subOptions]}
+                options={[['', t('mweb.common.all')], ...filters.subOptions]}
                 value={filters.subId}
                 onSelect={filters.setSubId}
                 layout="scroll"

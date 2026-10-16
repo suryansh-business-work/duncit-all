@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useQuery } from '@apollo/client/react';
+import { skipToken, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import SearchOffRoundedIcon from '@mui/icons-material/SearchOffRounded';
@@ -14,22 +14,34 @@ import PageHeader from '../../components/PageHeader';
 import PodShopSlider from './PodShopSlider';
 import ShopProductCard from './ShopProductCard';
 import ShopFilterBar from './ShopFilterBar';
+import FilterChipRow, { withAll } from './ShopFilterBar/FilterChipRow';
 import { useQuickAddToCart } from './useQuickAddToCart';
+import { useDeliveryAddress } from '../../hooks/useDeliveryAddress';
 import { useShopFilters } from './useShopFilters';
 import { SHOP_PRODUCTS, type ShopProduct } from './queries';
 
 /** Pod Shop — the platform-wide browse catalogue of approved, pod-available
- * products with a filter button (Super → Category → Sub cascade, rating,
- * include-out-of-stock and sort) and debounced search. Tapping a product opens
- * its detail page; purchases happen through a pod's shop. */
+ * products: debounced search with a filter button (Category → Sub, rating,
+ * include-out-of-stock and sort), the promo slider, then the super-category
+ * pills over the product grid. The app header shows the "Deliver to" address
+ * here instead of the city. Tapping a product opens its detail page. */
 export default function ShopPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
-  const { data, loading, error, refetch } = useQuery<{ availablePodProducts: ShopProduct[] }>(
+  // The "Deliver to" pincode hides brands that do not deliver there; wait for
+  // it so the list is not fetched twice on open.
+  const delivery = useDeliveryAddress();
+  const { data, loading: productsLoading, error, refetch } = useQuery<{ availablePodProducts: ShopProduct[] }>(
     SHOP_PRODUCTS,
-    { fetchPolicy: 'cache-and-network' },
+    delivery.loading
+      ? skipToken
+      : {
+          variables: delivery.selected?.pincode ? { deliveryPincode: delivery.selected.pincode } : {},
+          fetchPolicy: 'cache-and-network',
+        },
   );
+  const loading = productsLoading || delivery.loading;
   const { all, matchesCategory } = useSearchCategories();
   const { addingId, lineOf, setQuantity } = useQuickAddToCart();
   const products = useMemo<ShopProduct[]>(() => data?.availablePodProducts ?? [], [data]);
@@ -43,9 +55,10 @@ export default function ShopPage() {
       <Stack
         data-testid="shop-loading"
         sx={{
-          alignItems: "center",
-          p: 6
-        }}>
+          alignItems: 'center',
+          p: 6,
+        }}
+      >
         <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
@@ -55,7 +68,12 @@ export default function ShopPage() {
         data-testid="shop-error"
         severity="error"
         action={
-          <DuncitButton data-testid="shop-error-retry" color="inherit" size="small" onClick={() => refetch()}>
+          <DuncitButton
+            data-testid="shop-error-retry"
+            color="inherit"
+            size="small"
+            onClick={() => refetch()}
+          >
             {t('mweb.shop.retry')}
           </DuncitButton>
         }
@@ -68,10 +86,24 @@ export default function ShopPage() {
     <Stack data-testid="shop-page" spacing={2.5} sx={{ py: 0.5 }}>
       {/* The cart lives in the app header now, on every page — not just here. */}
       <PageHeader testId="shop-page-header" title={t('mweb.shop.title')} />
-      <PodShopSlider />
       <ShopFilterBar filters={filters} />
+      <PodShopSlider />
+      {filters.superOptions.length > 0 && (
+        <Box data-testid="shop-category-pills" role="group" aria-label={t('mweb.common.category')}>
+          <FilterChipRow
+            options={withAll(filters.superOptions, t('mweb.common.all'))}
+            value={filters.superId}
+            onSelect={filters.selectSuper}
+            idPrefix="shop-super"
+          />
+        </Box>
+      )}
       {filters.visible.length === 0 ? (
-        <EmptyState testId="shop-empty" icon={<SearchOffRoundedIcon />} title={t('mweb.shop.emptyState')} />
+        <EmptyState
+          testId="shop-empty"
+          icon={<SearchOffRoundedIcon />}
+          title={t('mweb.shop.emptyState')}
+        />
       ) : (
         <Stack spacing={1.5}>
           <SectionHeader testId="shop-featured-heading" title={t('mweb.shop.featured')} />

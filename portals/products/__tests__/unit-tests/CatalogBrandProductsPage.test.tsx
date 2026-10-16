@@ -203,59 +203,81 @@ describe('CatalogBrandProductsPage', () => {
     await waitFor(() => expect(notifyError).toHaveBeenCalledWith('SKU already exists'));
   });
 
-  it('temporarily deactivates a live product and refreshes the table', async () => {
+  it('hides a shown, approved product from the shop and refreshes the table', async () => {
+    __setTableRows([makeRow({ listing_review_status: 'APPROVED' })]);
     renderPage();
     await rowsReady();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Temporarily deactivate' }));
+    fireEvent.click(screen.getByLabelText('Shown: Cold Brew'));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Deactivate product?')).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Deactivate' }));
+    expect(within(dialog).getByText('Hide product from the shop?')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Hide' }));
 
     await waitFor(() =>
       expect(m.setActive).toHaveBeenCalledWith({ variables: { id: 'p1', active: false } }),
     );
-    expect(notifySuccess).toHaveBeenCalledWith('Product temporarily deactivated');
+    expect(notifySuccess).toHaveBeenCalledWith('Product is hidden from the shop');
+    expect(nav.fn).not.toHaveBeenCalled();
   });
 
-  it('reactivates a paused product, moving it the other way', async () => {
-    __setTableRows([makeRow({ is_active: false })]);
+  it('shows a hidden product again, moving it the other way', async () => {
+    __setTableRows([makeRow({ listing_review_status: 'APPROVED', is_active: false })]);
     renderPage();
     await rowsReady();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reactivate' }));
+    fireEvent.click(screen.getByLabelText('Hidden: Cold Brew'));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Reactivate product?')).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Reactivate' }));
+    expect(within(dialog).getByText('Show product in the shop?')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Show' }));
 
     await waitFor(() =>
       expect(m.setActive).toHaveBeenCalledWith({ variables: { id: 'p1', active: true } }),
     );
-    expect(notifySuccess).toHaveBeenCalledWith('Product reactivated');
+    expect(notifySuccess).toHaveBeenCalledWith('Product is shown in the shop');
   });
 
-  it('reports a refused pause rather than pretending it worked', async () => {
+  it('locks the switch on a listing still awaiting review', async () => {
+    renderPage();
+    await rowsReady();
+    expect(screen.getByLabelText('Shown: Cold Brew')).toBeDisabled();
+  });
+
+  it('reports a refused hide rather than pretending it worked', async () => {
     m.setActive = vi.fn().mockRejectedValue(new Error('not allowed'));
+    __setTableRows([makeRow({ listing_review_status: 'APPROVED' })]);
     renderPage();
     await rowsReady();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Temporarily deactivate' }));
+    fireEvent.click(screen.getByLabelText('Shown: Cold Brew'));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Deactivate' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Hide' }));
 
-    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    await waitFor(() => expect(notifyError).toHaveBeenCalledWith('not allowed'));
     expect(notifySuccess).not.toHaveBeenCalled();
   });
 
-  it('closes the pause dialog without touching the product', async () => {
+  it('closes the show/hide dialog without touching the product', async () => {
+    __setTableRows([makeRow({ listing_review_status: 'APPROVED' })]);
     renderPage();
     await rowsReady();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Temporarily deactivate' }));
+    fireEvent.click(screen.getByLabelText('Shown: Cold Brew'));
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(m.setActive).not.toHaveBeenCalled();
+  });
+
+  it('opens the shared editor to add a product to this brand', () => {
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Add product' }));
+    expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1/products/new');
+  });
+
+  it('cannot add a product while the brand is unknown', () => {
+    m.query = { data: { ecommBrand: null }, loading: false };
+    renderPage();
+    expect(screen.getByRole('button', { name: 'Add product' })).toBeDisabled();
   });
 });

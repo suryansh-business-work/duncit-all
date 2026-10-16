@@ -1,10 +1,10 @@
-import { renderTemplateBody } from '@modules/content/emailTemplate/emailTemplate.service';
+import { emailTemplateService } from '@modules/content/emailTemplate/emailTemplate.service';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { settingsService } from '@modules/platform/settings/settings.service';
-import { sendHtmlEmail, type EmailAttachment } from '@services/email/email.service';
+import { emailPreviewVars, sendHtmlEmail, type EmailAttachment } from '@services/email/email.service';
 import { buildChangelog, type ReleaseCommit } from './appRelease.changelog';
-import { buildReleaseMjml } from './appRelease.mjml';
+import { buildReleaseVars } from './appRelease.email';
 import { RELEASE_NOTIFY_RECIPIENTS } from './appRelease.recipients';
 
 export interface SendAppReleaseEmailInput {
@@ -73,7 +73,6 @@ export async function sendAppReleaseEmail(
 
   const branding = await settingsService.getBranding().catch(() => null);
   const appName = branding?.app_name || 'Duncit';
-  const logoUrl = branding?.mobile_logo_url || branding?.logo_url || '';
 
   const changelog = await buildChangelog(input.commits, {
     appName,
@@ -81,40 +80,46 @@ export async function sendAppReleaseEmail(
     rangeLabel: input.range_label,
   });
 
-  const mjml = buildReleaseMjml({
-    appName,
-    logoUrl,
-    version: input.version,
-    buildName: input.build_name,
-    apkUrl: input.apk_url,
-    apkSizeMb: input.apk_size_mb,
-    builtOn: new Date().toUTCString(),
-    rangeLabel: input.range_label,
-    changelog,
-    commits: input.commits,
-    filesChanged: input.files_changed,
-    insertions: input.insertions,
-    deletions: input.deletions,
-  });
-
-  // Through the shared renderer, wrapped in the INTERNAL fragment: this goes to
-  // staff testers, and it was the last MJML in the server rendered its own way.
-  const { html, errors } = await renderTemplateBody({ mjml, fragment_key: 'internal' });
+  // The `app-release-build` template (Communications > Emails > Templates),
+  // filled with what a real send supplies — logo, links, translations — plus
+  // the build's own values. Rendered here rather than through `sendEmail`
+  // because one message goes to the whole release list at once.
+  const vars = {
+    ...(await emailPreviewVars()),
+    app_name: appName,
+    ...buildReleaseVars({
+      version: input.version,
+      buildName: input.build_name,
+      apkUrl: input.apk_url,
+      apkSizeMb: input.apk_size_mb,
+      builtOn: new Date().toUTCString(),
+      rangeLabel: input.range_label,
+      changelog,
+      commits: input.commits,
+      filesChanged: input.files_changed,
+      insertions: input.insertions,
+      deletions: input.deletions,
+    }),
+  };
+  const { subject, html, errors } = await emailTemplateService.render('app-release-build', vars);
   if (errors?.length)
     logs.server.warn('appRelease', 'sendAppReleaseEmail', {
       msg: 'Release MJML warnings',
       errors,
     });
+  if (!html) {
+    throw new GraphQLError(errors?.join('; ') || 'The release email rendered an empty body');
+  }
 
   const attachments = await maybeAttachApk(input.apk_url, input.apk_size_mb, input.build_name);
-  const subject = `📱 ${appName} v${input.version} — new build ready to test`;
 
   const info = await sendHtmlEmail({
     to: recipients,
-    subject,
+    subject: subject || `${appName} v${input.version}`,
     html,
     attachments,
     category: 'internal',
+    template: 'app-release-build',
   });
 
   return {

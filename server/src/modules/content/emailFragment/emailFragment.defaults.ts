@@ -1,5 +1,10 @@
 import { EMAIL_CATEGORIES, type EmailCategory } from '@services/email/email.provider';
 import { isOptionalMailCategory } from '@modules/content/mailPreference/mailPreference.categories';
+import {
+  EMAIL_COLOR as C,
+  EMAIL_SPACE as S,
+  EMAIL_TYPE as F,
+} from '@services/email/catalogue/tokens';
 
 /**
  * The nine fragments as they are first seeded.
@@ -65,24 +70,24 @@ const DESCRIPTIONS: Record<EmailCategory, string> = {
   internal: 'Staff-only. Never reaches a customer.',
 };
 
-/** The brand mark. One image, the admin's logo, on every email. */
-const header = () => `    <mj-section padding="24px 0 8px 0">
+/**
+ * The brand mark, centred on the canvas above the card — the admin's logo on
+ * every email, linked to the website so it does what a reader expects a logo
+ * to do.
+ */
+const header = () => `    <mj-section padding="32px 0 20px 0">
       <mj-column>
-        <mj-image src="{{brand_logo_url}}" alt="{{app_name}}" width="120px" align="center" padding="0" />
+        <mj-image src="{{brand_logo_url}}" alt="{{app_name}}" href="{{website_url}}" width="${S.logoWidth}" align="center" padding="0" />
       </mj-column>
     </mj-section>`;
 
-/**
- * The footer: why this arrived, where to get help, and the copyright line.
- *
- * The first line is `{{footer_note}}` — the TEMPLATE's own sentence, because
- * every template had a different one ("you made a booking", "you backed out of
- * this pod") and collapsing fifteen of those into nine generic ones would be a
- * downgrade nobody asked for. The render path falls back to the category's
- * note when a template has none.
- * `support_email`, `website_url`, `app_name` and `year` are supplied by
- * `sendEmail` on every send, so a fragment never has to be told them.
- */
+/** One centred line of the footer. */
+const footerText = (content: string, bottom = '8px') =>
+  `        <mj-text align="center" font-size="${F.caption.size}" line-height="${F.caption.line}" color="${C.muted}" padding="0 0 ${bottom} 0">${content}</mj-text>`;
+
+const footerLink = (href: string, label: string) =>
+  `<a href="${href}" style="color:${C.primary};font-weight:600;text-decoration:none">${label}</a>`;
+
 /**
  * The way out, for the categories that have one.
  *
@@ -95,21 +100,28 @@ const header = () => `    <mj-section padding="24px 0 8px 0">
  * recipient is known, the same screen behind a sign-in for a bcc'd campaign
  * batch, which has no single recipient to sign for.
  */
-const unsubscribeLine = () => `
-        <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">
-          {{t:email.fragment.unsubscribe}} <a href="{{unsubscribe_url}}" style="color:#2563eb;text-decoration:none">{{t:email.fragment.unsubscribeLink}}</a>
-        </mj-text>`;
+const unsubscribeLine = () =>
+  `\n${footerText(`{{t:email.fragment.unsubscribe}} ${footerLink('{{unsubscribe_url}}', '{{t:email.fragment.unsubscribeLink}}')}`)}`;
 
-const footer = (optOutable: boolean) => `    <mj-section padding="8px 0 28px 0">
+/**
+ * The footer, on the canvas under the card: why this arrived, where to get
+ * help, the opt-out where there is one, and the copyright line.
+ *
+ * The first line is `{{footer_note}}` — the TEMPLATE's own sentence, because
+ * every template had a different one ("you made a booking", "you backed out of
+ * this pod") and collapsing fifteen of those into nine generic ones would be a
+ * downgrade nobody asked for. The render path falls back to the category's
+ * note when a template has none.
+ * `support_email`, `website_url`, `app_name` and `year` are supplied by
+ * `sendEmail` on every send, so a fragment never has to be told them. Every
+ * colour clears 4.5:1 on the canvas; the old grey copyright line did not.
+ */
+const footer = (optOutable: boolean) => `    <mj-section padding="24px ${S.gutter} 40px ${S.gutter}">
       <mj-column>
-        <mj-divider border-width="1px" border-color="#e5e7eb" padding="0 0 16px 0" />
-        <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">{{footer_note}}</mj-text>
-        <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">
-          {{t:email.fragment.help}} <a href="mailto:{{support_email}}" style="color:#2563eb;text-decoration:none">{{support_email}}</a>
-        </mj-text>${optOutable ? unsubscribeLine() : ''}
-        <mj-text align="center" font-size="11px" color="#9ca3af" padding="0">
-          &copy; {{year}} <a href="{{website_url}}" style="color:#9ca3af;text-decoration:none">{{app_name}}</a>. {{t:email.fragment.rights}}
-        </mj-text>
+${footerText('{{footer_note}}', '10px')}
+${footerText(`{{t:email.fragment.help}} ${footerLink('mailto:{{support_email}}', '{{support_email}}')}`)}${optOutable ? unsubscribeLine() : ''}
+        <mj-divider border-width="1px" border-color="${C.border}" width="48px" padding="8px 0 16px 0" />
+${footerText(`&copy; {{year}} ${footerLink('{{website_url}}', '{{app_name}}')}. {{t:email.fragment.rights}}`, '0')}
       </mj-column>
     </mj-section>`;
 

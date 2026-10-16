@@ -44,7 +44,6 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
 
   // Staff only — never reaches a customer.
   internal: [
-    'signed-contract',
     'admin-access-granted',
     'admin-access-revoked',
     'interview-admin',
@@ -59,18 +58,11 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
 
   // Something changed on their account or booking.
   notification: [
-    'attendance-marked',
     'club-admin-change-request-offer',
     'host-change-request-offer',
     'venue-change-request-offer',
-    'brand-activated',
-    'brand-deactivated',
-    'host-activated',
-    'host-deactivated',
     'product-activated',
     'product-deactivated',
-    'venue-activated',
-    'venue-deactivated',
     'host-request-acknowledged',
     'host-request-approved',
     'host-request-rejected',
@@ -86,7 +78,6 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'partner-access-granted',
     'pod-backout-spot-filled',
     'pod-cancelled',
-    'pod-updated',
     'venue-slot-request',
   ],
 
@@ -99,7 +90,23 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
   // exactly who receives it.
   // `gift-card-received` is transactional, not notification: the code in it IS
   // the value somebody paid for, so an opt-out must never be able to eat it.
-  transactional: ['event-ticket', 'gift-card-received', 'unsubscribe-confirmed', 'welcome'],
+  transactional: [
+    'event-ticket',
+    'gift-card-received',
+    'unsubscribe-confirmed',
+    'welcome',
+    // Told whether or not they opted out of updates: being switched off, the
+    // record of a check-in that decides a payout, and a paid booking whose
+    // time or place moved.
+    'attendance-marked',
+    'brand-activated',
+    'brand-deactivated',
+    'host-activated',
+    'host-deactivated',
+    'venue-activated',
+    'venue-deactivated',
+    'pod-updated',
+  ],
 
   // No template sends as these yet; the fragments exist for when one does.
   service: [],
@@ -112,6 +119,8 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'grievance-rejected',
     'policy-acceptance',
     'policy-updated',
+    // Goes to the counterparty of a contract, who is not staff.
+    'signed-contract',
   ],
 };
 

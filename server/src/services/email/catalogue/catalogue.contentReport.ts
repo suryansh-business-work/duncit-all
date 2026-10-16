@@ -1,4 +1,4 @@
-import { CALM, LIVE, STOPPED, callout, closing, intro, shell, type Tone } from './mjml';
+import { CALM, LIVE, STOPPED, callout, closing, htmlBlock, intro, shell, type Tone } from './mjml';
 import { FIELD, FOOTER, LABEL } from './catalogue.copy';
 import { defineEmail, v, type EmailDef } from './catalogue.types';
 
@@ -23,11 +23,7 @@ const COPY_KEY = 'email.contentReportMessage';
  * (`report.email`). Its own block rather than a detail row: a row is one bold
  * line, and a notice is usually several paragraphs.
  */
-const MESSAGE_BLOCK = `    <mj-section background-color="#ffffff" padding="8px 20px">
-      <mj-column>
-        <mj-text color="#333333" line-height="1.6">{{message}}</mj-text>
-      </mj-column>
-    </mj-section>`;
+const MESSAGE_BLOCK = htmlBlock('message');
 
 /** Who an automatic report email is for, and the footer line that says why. */
 const FOOTER_REPORTER = '{{t:email.contentReport.footerReporter}}';

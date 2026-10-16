@@ -44,10 +44,11 @@ describe('ShopFilterBar', () => {
     const filters = makeFilters();
     render(filters);
     expect(screen.queryByTestId('shop-filter-count')).toBeNull();
-    expect(screen.queryByTestId('shop-super-all')).toBeNull();
+    expect(screen.queryByTestId('shop-cat-all')).toBeNull();
 
     fireEvent.press(screen.getByTestId('shop-filter-toggle'));
-    expect(screen.getByTestId('shop-super-all')).toBeOnTheScreen();
+    // The super-category pills live on the screen itself (ShopScreen), never in here.
+    expect(screen.queryByTestId('shop-super-all')).toBeNull();
     expect(screen.getByTestId('shop-cat-all')).toBeOnTheScreen();
     expect(screen.getByTestId('shop-sub-all')).toBeOnTheScreen();
     expect(screen.getByTestId('shop-rating-0')).toBeOnTheScreen();
@@ -55,8 +56,6 @@ describe('ShopFilterBar', () => {
 
     fireEvent.changeText(screen.getByTestId('shop-search-input'), 'abc');
     expect(filters.setQuery).toHaveBeenCalledWith('abc');
-    fireEvent.press(screen.getByTestId('shop-super-s1'));
-    expect(filters.selectSuper).toHaveBeenCalledWith('s1');
     fireEvent.press(screen.getByTestId('shop-cat-c1'));
     expect(filters.selectCategory).toHaveBeenCalledWith('c1');
     fireEvent.press(screen.getByTestId('shop-sub-b1'));
@@ -69,7 +68,7 @@ describe('ShopFilterBar', () => {
     expect(filters.setIncludeOutOfStock).toHaveBeenCalledWith(true);
 
     fireEvent.press(screen.getByTestId('shop-filter-toggle'));
-    expect(screen.queryByTestId('shop-super-all')).toBeNull();
+    expect(screen.queryByTestId('shop-cat-all')).toBeNull();
   });
 
   it('shows the active-count badge, a checked out-of-stock box, and hides empty cascades', () => {

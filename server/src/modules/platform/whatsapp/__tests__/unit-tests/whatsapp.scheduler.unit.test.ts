@@ -4,8 +4,9 @@
  * This file sends real messages to real numbers and costs real money, and none
  * of it had ever run in a test. Four rules keep it from doing that wrongly:
  *
- *  - the GLOBAL switch gates everything. Off means no query runs at all, rather
- *    than every send reaching the funnel and being recorded as a skip.
+ *  - the GLOBAL switch gates the WhatsApp leg only. Off still sweeps, but every
+ *    send goes out on email alone — a reminder must not stop because a
+ *    different channel was switched off.
  *  - the window is bounded at BOTH ends, and the lower bound is never earlier
  *    than the moment the feature was switched on. A cutoff later than the edge
  *    yields an impossible range, which is exactly right: the feature was not on
@@ -55,6 +56,7 @@ jest.mock('@modules/platform/settings/settings.service', () => ({
       pod_reminder_lead_hours: 24,
       venue_slot_reminder_lead_hours: 48,
       pod_feedback_delay_hours: 2,
+      pod_sameday_reminder_hours: 3,
       complete_reminder_hours: 12,
       complete_timeout_hours: 24,
     })),
@@ -142,6 +144,10 @@ const nothingAnywhere = () => {
   backouts.find.mockReturnValue(chain([]));
 };
 
+/** The guest-side pod reminders the sweep handed to the notifier. */
+const guestReminders = () =>
+  sentEvents().filter((entry) => entry.event === 'USER_POD_REMINDER') as unknown as { params: string[] }[];
+
 /** Every message the sweep handed to the notifier, across all its calls. */
 const sentEvents = () =>
   notify.mock.calls.flatMap((call) => (call[0] as { event: string }[]) ?? []);
@@ -157,29 +163,39 @@ beforeEach(() => {
 });
 
 describe('the global switch', () => {
-  it('runs nothing at all while WhatsApp is off', async () => {
+  const remindOne = () => {
+    pods.find.mockReturnValueOnce(chain([pod()])).mockReturnValue(chain([]));
+    users.find.mockReturnValue(chain([user('u-1')]));
+  };
+  const reminderSkips = () =>
+    (sentEvents() as unknown as { event: string; skip?: { whatsapp?: boolean } }[])
+      .filter((entry) => entry.event === 'USER_POD_REMINDER')
+      .map((entry) => entry.skip?.whatsapp ?? false);
+
+  it('still sends the reminder while WhatsApp is off — on email alone', async () => {
     settings.findOne.mockReturnValue(chain({ enabled: false, updated_at: CUTOFF }));
+    remindOne();
 
     await runWhatsappSweeps();
 
-    // Not one query — sending into the funnel to have it record a skip per
-    // recipient is the expensive way to do nothing.
-    expect(pods.find).not.toHaveBeenCalled();
-    expect(notify).not.toHaveBeenCalled();
+    expect(reminderSkips()).toEqual([true]);
   });
 
-  it('runs nothing when nobody has ever turned it on', async () => {
+  it('sends on email alone when nobody has ever turned WhatsApp on', async () => {
     settings.findOne.mockReturnValue(chain(null));
+    remindOne();
 
     await runWhatsappSweeps();
 
-    expect(pods.find).not.toHaveBeenCalled();
+    expect(reminderSkips()).toEqual([true]);
   });
 
-  it('sweeps once it is on', async () => {
+  it('sends on both channels once WhatsApp is on', async () => {
+    remindOne();
+
     await runWhatsappSweeps();
 
-    expect(pods.find).toHaveBeenCalled();
+    expect(reminderSkips()).toEqual([false]);
   });
 });
 
@@ -214,23 +230,29 @@ describe('USER_POD_REMINDER', () => {
     users.find.mockReturnValue(chain([user('u-1'), user('u-2', 'Vikram')]));
   };
 
-  it('reminds every attendee of a pod that starts soon', async () => {
-    remindable();
-
-    await runWhatsappSweeps();
-
-    const reminders = sentEvents().filter((entry) => entry.event === 'USER_POD_REMINDER');
-    expect(reminders).toHaveLength(2);
-  });
-
-  it('reminds the HOST too — they are an attendee and have no template of their own', async () => {
+  it('reminds every guest of a pod that starts soon with the guest wording', async () => {
     remindable();
 
     await runWhatsappSweeps();
 
     const reminders = sentEvents().filter((entry) => entry.event === 'USER_POD_REMINDER');
     const names = reminders.map((entry) => (entry as unknown as { name: string }).name);
-    expect(names).toContain('Meera N');
+    expect(names).toEqual(['Vikram N']);
+  });
+
+  it('reminds the HOST with their own template, quoting how many are booked', async () => {
+    remindable();
+
+    await runWhatsappSweeps();
+
+    const hostReminders = sentEvents().filter((entry) => entry.event === 'HOST_POD_REMINDER') as unknown as {
+      name: string;
+      params: string[];
+    }[];
+    expect(hostReminders).toHaveLength(1);
+    expect(hostReminders[0]?.name).toBe('Meera N');
+    // Two attendees on the pod, no extra seats.
+    expect(hostReminders[0]?.params[4]).toBe('2');
   });
 
   it('carries a link built from the club slug', async () => {
@@ -238,7 +260,7 @@ describe('USER_POD_REMINDER', () => {
 
     await runWhatsappSweeps();
 
-    const [reminder] = sentEvents() as unknown as { params: string[] }[];
+    const [reminder] = guestReminders();
     expect(reminder?.params).toContain('https://mweb.duncit.com/club/sunset-club/pod/sunday-badminton');
   });
 
@@ -248,7 +270,7 @@ describe('USER_POD_REMINDER', () => {
 
     await runWhatsappSweeps();
 
-    const [reminder] = sentEvents() as unknown as { params: string[] }[];
+    const [reminder] = guestReminders();
     expect(reminder?.params).toContain('');
     expect(reminder?.params.some((value) => value.includes('/club//pod/'))).toBe(false);
   });
@@ -259,7 +281,7 @@ describe('USER_POD_REMINDER', () => {
 
     await runWhatsappSweeps();
 
-    const [reminder] = sentEvents() as unknown as { params: string[] }[];
+    const [reminder] = guestReminders();
     expect(reminder?.params.some((value) => value.includes('/club/'))).toBe(false);
   });
 
@@ -281,7 +303,7 @@ describe('USER_POD_REMINDER', () => {
 
     await runWhatsappSweeps();
 
-    const [reminder] = sentEvents() as unknown as { params: string[] }[];
+    const [reminder] = guestReminders();
     // "starts in {{2}} hours" reading 0 is worse than reading 1.
     expect(reminder?.params[1]).toBe('1');
   });

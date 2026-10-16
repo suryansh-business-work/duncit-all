@@ -2,14 +2,20 @@ import PDFDocument from 'pdfkit';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appDate } from '@utils/app-time';
-import { pdfCurrency, pdfCurrencyNote, pdfRowHeight } from '@services/pdf/document';
+import { PDF_PALETTE, pdfCurrency, pdfCurrencyNote, pdfRowHeight } from '@services/pdf/document';
+import { drawPdfThumb, loadPdfThumbs, PDF_THUMB_GAP, PDF_THUMB_SIZE } from '@services/pdf/thumbnail';
 
 export interface InvoiceLineItem {
   description: string;
   qty: number;
   unit_price: number;
   amount: number;
+  /** The pod's cover or the product's photo, drawn beside the line. Optional: an invoice with no photos keeps its plain table. */
+  image_url?: string;
 }
+
+/** Loaded line photos, keyed by `image_url`. */
+export type InvoicePhotos = ReadonlyMap<string, Buffer>;
 
 export interface InvoiceData {
   invoice_no: string;
@@ -72,6 +78,11 @@ const LINE = '#e5e7eb';
 // under it) starts.
 const CELL_PAD = 8;
 const VALUE_X = 456;
+const DESC_WIDTH = 252;
+/** Below this a row would run off the page, so the table continues on a new one. */
+const PAGE_BOTTOM = 790;
+/** Room the totals, the coins and the footer need below the last item. */
+const TOTALS_HEIGHT = 250;
 
 // Bundled white brand mark embedded on the header band (loaded once).
 const BRAND_MARK_PATH = path.resolve(__dirname, '../_assets/duncit-mark-white.png');
@@ -169,8 +180,12 @@ function drawBrandHeader(doc: PDFKit.PDFDocument, data: InvoiceData, logo: Buffe
  * right size before the invoice is drawn onto it. */
 export const INVOICE_PAGE = { size: 'A4' as const, margin: 0 };
 
-/** The logo fetch is the only asynchronous part; resolve it before drawing. */
+/** The logo fetch is asynchronous; resolve it before drawing. */
 export const invoiceLogo = (url?: string) => loadLogo(url);
+
+/** So are the line photos. */
+export const invoicePhotos = (items: readonly InvoiceLineItem[]): Promise<InvoicePhotos> =>
+  loadPdfThumbs(items.map((item) => item.image_url));
 
 /**
  * Draw the invoice onto the CURRENT page of a document.
@@ -182,7 +197,8 @@ export const invoiceLogo = (url?: string) => loadLogo(url);
 export function drawInvoice(
  doc: PDFKit.PDFDocument,
  data: InvoiceData,
- logo: Buffer | null
+ logo: Buffer | null,
+ photos: InvoicePhotos = new Map()
 ): void {
   const W = doc.page.width;
   const L = 48; // left margin
@@ -219,9 +235,14 @@ export function drawInvoice(
   const cardH = drawBillToCard(doc, data, L, R, y);
 
   // ---- Items table ----
-  y = drawItemsTable(doc, data.items, fmt, L, R, y + cardH + 22);
+  y = drawItemsTable(doc, { items: data.items, photos, fmt, L, R }, y + cardH + 22);
 
   // ---- Totals ----
+  // The totals, the coins and the footer stay together on one page.
+  if (y > PAGE_BOTTOM - TOTALS_HEIGHT) {
+    doc.addPage(INVOICE_PAGE);
+    y = L;
+  }
   y += 10;
   const totalsRow = (label: string, value: string, bold = false) => {
     // The label box starts at the left margin but still ends at 450, right
@@ -248,7 +269,10 @@ export function drawInvoice(
   if (roundOff > 0) totalsRow('Round off', `+ ${fmt(roundOff)}`);
   doc.moveTo(300, y).lineTo(R, y).strokeColor('#cbd5e1').stroke();
   y += 8;
+  // The figure the reader is looking for sits on its own soft band.
+  doc.roundedRect(300, y - 6, R - 300, 28, 8).fill(ACCENT_SOFT);
   totalsRow('Total Paid', fmt(data.total), true);
+  y += 6;
 
   // ---- Duncit Coins ----
   // Below the paid total on purpose: coins are not money the tax lines
@@ -273,43 +297,71 @@ export function drawInvoice(
  * used to end flush on the band's right edge and read as clipped. Each row is
  * as tall as its tallest cell, so a description that wraps pushes the divider
  * and the next row down instead of running into them.
+ *
+ * When any line has a photo, every line gets a thumbnail (an initial tile for
+ * the ones without), the row grows to fit it and the text is centred on it.
+ * Every other row is tinted, and a long cart continues on a new page under the
+ * table's own head.
  */
-function drawItemsTable(
-  doc: PDFKit.PDFDocument,
-  items: readonly InvoiceLineItem[],
-  fmt: (n: number) => string,
-  L: number,
-  R: number,
-  top: number
-): number {
-  let y = top;
-  const cols = {
-    desc: { x: L + CELL_PAD, w: 252 },
+interface ItemsTable {
+  items: readonly InvoiceLineItem[];
+  photos: InvoicePhotos;
+  fmt: (n: number) => string;
+  L: number;
+  R: number;
+}
+
+function itemColumns(t: ItemsTable) {
+  const shift = t.items.some((it) => it.image_url) ? PDF_THUMB_SIZE + PDF_THUMB_GAP : 0;
+  return {
+    shift,
+    desc: { x: t.L + CELL_PAD + shift, w: DESC_WIDTH - shift },
     qty: { x: 312, w: 40 },
     price: { x: 360, w: 88 },
-    amount: { x: VALUE_X, w: R - CELL_PAD - VALUE_X },
+    amount: { x: VALUE_X, w: t.R - CELL_PAD - VALUE_X },
   };
-  doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
+}
+
+function drawItemsHead(doc: PDFKit.PDFDocument, t: ItemsTable, y: number): number {
+  const cols = itemColumns(t);
+  doc.roundedRect(t.L, y - 6, t.R - t.L, 24, 6).fill(ACCENT);
   doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
   doc
-    .text('DESCRIPTION', cols.desc.x, y, { width: cols.desc.w })
+    .text('DESCRIPTION', t.L + CELL_PAD, y, { width: DESC_WIDTH })
     .text('QTY', cols.qty.x, y, { width: cols.qty.w, align: 'right' })
     .text('PRICE', cols.price.x, y, { width: cols.price.w, align: 'right' })
     .text('AMOUNT', cols.amount.x, y, { width: cols.amount.w, align: 'right' });
+  return y + 26;
+}
 
-  y += 26;
-  doc.fillColor(INK).fontSize(10).font('Helvetica');
-  for (const it of items) {
+function drawItemsTable(doc: PDFKit.PDFDocument, t: ItemsTable, top: number): number {
+  const cols = itemColumns(t);
+  let y = drawItemsHead(doc, t, top);
+  t.items.forEach((it, index) => {
     const cells = [
       { text: it.description, ...cols.desc, align: 'left' as const },
       { text: String(it.qty), ...cols.qty, align: 'right' as const },
-      { text: fmt(it.unit_price), ...cols.price, align: 'right' as const },
-      { text: fmt(it.amount), ...cols.amount, align: 'right' as const },
+      { text: t.fmt(it.unit_price), ...cols.price, align: 'right' as const },
+      { text: t.fmt(it.amount), ...cols.amount, align: 'right' as const },
     ];
-    for (const cell of cells) doc.text(cell.text, cell.x, y, { width: cell.w, align: cell.align });
-    y += pdfRowHeight(doc, cells.map((cell) => ({ text: cell.text, width: cell.w }))) + 8;
-    doc.moveTo(L, y - 2).lineTo(R, y - 2).strokeColor(LINE).stroke();
-  }
+    doc.fontSize(10).font('Helvetica');
+    const textH = pdfRowHeight(doc, cells.map((cell) => ({ text: cell.text, width: cell.w })));
+    const rowH = cols.shift ? Math.max(textH, PDF_THUMB_SIZE) : textH;
+    if (y + rowH > PAGE_BOTTOM) {
+      doc.addPage(INVOICE_PAGE);
+      y = drawItemsHead(doc, t, t.L + 6);
+    }
+    if (index % 2 === 1) doc.rect(t.L, y - 2, t.R - t.L, rowH + 8).fill(PDF_PALETTE.stripe);
+    if (cols.shift) {
+      const photo = it.image_url ? t.photos.get(it.image_url) : undefined;
+      drawPdfThumb(doc, photo, it.description, t.L + CELL_PAD, y + (rowH - PDF_THUMB_SIZE) / 2);
+    }
+    const textY = y + (rowH - textH) / 2;
+    doc.fillColor(INK).fontSize(10).font('Helvetica');
+    for (const cell of cells) doc.text(cell.text, cell.x, textY, { width: cell.w, align: cell.align });
+    y += rowH + 8;
+    doc.moveTo(t.L, y - 2).lineTo(t.R, y - 2).lineWidth(1).strokeColor(LINE).stroke();
+  });
   return y;
 }
 
@@ -346,7 +398,7 @@ function drawFooter(doc: PDFKit.PDFDocument, data: InvoiceData, L: number, R: nu
 
 /** Renders a standalone invoice PDF. */
 export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
-  const logo = await invoiceLogo(data.invoice_logo_url);
+  const [logo, photos] = await Promise.all([invoiceLogo(data.invoice_logo_url), invoicePhotos(data.items)]);
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument(INVOICE_PAGE);
@@ -354,7 +406,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
       doc.on('data', (c: Buffer) => chunks.push(c));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
-      drawInvoice(doc, data, logo);
+      drawInvoice(doc, data, logo, photos);
       doc.end();
     } catch (e) {
       reject(e);

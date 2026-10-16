@@ -7,10 +7,12 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { MeetingModel } from '@modules/survey/meeting.model';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
+import { alertBankAccountChanged, bankAccountChanged } from '@modules/finance/finance/bankAccount.notify';
 import { getUrlConfigs } from '@config/url-configs';
 import { userContactNumber } from '@utils/contact';
 
@@ -362,10 +364,22 @@ export const hostService = {
     }
     h.police_verification_url = input.police_verification_url;
     h.full_address = input.full_address;
+    // A plain copy: the subdocument itself is replaced by the write below.
+    const previousBank = normalizeBankAccountInput(h.bank_account ?? {});
     if (input.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(input.bank_account) as any;
     if (input.tags !== undefined) h.tags = input.tags;
     if (h.step_completed < 3) h.step_completed = 3;
     await h.save();
+    if (h.status === 'APPROVED' && bankAccountChanged(previousBank, h.bank_account)) {
+      await alertBankAccountChanged({
+        audience: 'HOST',
+        recordId: h.id,
+        userId: h.user_id,
+        name: h.full_name ?? '',
+        email: h.email ?? '',
+        account: h.bank_account,
+      });
+    }
     return toPub(h);
   },
   async submitFinal(userId: string) {
@@ -413,6 +427,7 @@ export const hostService = {
       const { partnersUrl } = await getUrlConfigs();
       await notifyEvent({
         event: 'HOST_ONBOARDING_APPROVED',
+        entityId: transitionEntityId(h.id, h.approved_at),
         user: await waRecipient(h.user_id),
         name: h.full_name,
         params: [h.full_name, h.email],
@@ -561,7 +576,7 @@ export const hostService = {
         to: h.email ?? '',
         subject: active ? 'Your host account is now active' : 'Your host account has been deactivated',
         template: slug,
-        category: 'notification',
+        category: 'transactional',
         vars: {
           host_name: h.full_name ?? '',
           host_email: h.email ?? '',
@@ -580,6 +595,7 @@ export const hostService = {
 
     await whatsappService.send({
       event: active ? 'HOST_ACCOUNT_REACTIVATED' : 'HOST_ACCOUNT_SUSPENDED',
+      entityId: transitionEntityId(h.id),
       user: await waRecipient(h.user_id),
       name: h.full_name,
       params: [h.full_name],

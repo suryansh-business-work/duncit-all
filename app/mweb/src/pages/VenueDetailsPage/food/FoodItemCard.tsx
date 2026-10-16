@@ -1,5 +1,5 @@
 import { Link as RouterLink } from 'react-router';
-import { Box, ButtonBase, Chip, Link, Stack, Typography } from '@mui/material';
+import { Box, Chip, Link, Stack, Typography } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/RestaurantRounded';
 import { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from '@duncit/ui';
 import { FOOD_ORDER_LIMITS, type VenueFoodItem } from '@duncit/utils';
@@ -18,8 +18,7 @@ interface Props {
   canOrder: boolean;
   quantity: number;
   onQuantity: (itemId: string, quantity: number) => void;
-  onOpenImage: (item: VenueFoodItem) => void;
-  /** The dish's own page — its name links there. */
+  /** The dish's own page — its name links there, stretched over the card. */
   detailsPath?: string;
 }
 
@@ -32,9 +31,23 @@ const THUMB_SX = {
   bgcolor: 'action.hover',
 } as const;
 
-/** The dish's first photo — a button into the image viewer — or a plain mark when it has none. */
-function Thumb({ item, onOpenImage }: Readonly<Pick<Props, 'item' | 'onOpenImage'>>) {
-  const { t } = useTranslation();
+/** Lifts a control above the card's stretched link, so it keeps its own clicks. */
+const ABOVE_LINK_SX = { position: 'relative', zIndex: 1 } as const;
+
+/**
+ * The dish's name as a link to its page, stretched over the whole card — the
+ * photo and any blank space open the dish too, with one link for a screen reader.
+ */
+const STRETCHED_LINK_SX = {
+  '&::after': { content: '""', position: 'absolute', inset: 0, borderRadius: 'inherit' },
+} as const;
+
+/**
+ * The dish's first photo, or a plain mark when it has none. It is a picture,
+ * not a control: the card's stretched link opens the dish, whose page holds
+ * every photo and the viewer.
+ */
+function Thumb({ item }: Readonly<Pick<Props, 'item'>>) {
   const src = item.images[0];
   if (!src) {
     return (
@@ -44,33 +57,22 @@ function Thumb({ item, onOpenImage }: Readonly<Pick<Props, 'item' | 'onOpenImage
     );
   }
   return (
-    <ButtonBase
-      focusRipple
-      onClick={() => onOpenImage(item)}
-      aria-label={t('mweb.venueFood.viewImage', { vars: { name: item.name } })}
-      sx={THUMB_SX}
-      data-testid={`food-item-image-${item.id}`}
-    >
-      <Box
-        component="img"
-        src={src}
-        alt={item.name}
-        loading="lazy"
-        sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-      />
-    </ButtonBase>
+    <Box sx={THUMB_SX} data-testid={`food-item-image-${item.id}`}>
+      <Box component="img" src={src} alt={item.name} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+    </Box>
   );
 }
 
 /**
- * One dish: its diet and heat marks, name, price and description on the left,
+ * One dish — the whole card opens the dish's own page when it has one: its
+ * diet and heat marks, name, price and description on the left,
  * its photo on the right, and — when the venue takes QR orders — the cart
  * control under the photo: a "+" that becomes the remove / count / add pill.
  * The "Item added" / "Item removed" notice lies on the card, the photo being
  * too small to hold it. A dish that is off for now stays on the menu, greyed
  * and labelled, and cannot be added.
  */
-export default function FoodItemCard({ item, currency, canOrder, quantity, onQuantity, onOpenImage, detailsPath }: Readonly<Props>) {
+export default function FoodItemCard({ item, currency, canOrder, quantity, onQuantity, detailsPath }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = useCartControlLabels()(item.name);
   // The cart is read from storage before the first render, so a dish already
@@ -95,7 +97,14 @@ export default function FoodItemCard({ item, currency, canOrder, quantity, onQua
         </Stack>
         <Typography component="h4" sx={{ fontSize: '0.9375rem', fontWeight: 600, wordBreak: 'break-word', ...dim }}>
           {detailsPath ? (
-            <Link component={RouterLink} to={detailsPath} color="inherit" underline="hover" data-testid={`food-item-open-${item.id}`}>
+            <Link
+              component={RouterLink}
+              to={detailsPath}
+              color="inherit"
+              underline="hover"
+              sx={STRETCHED_LINK_SX}
+              data-testid={`food-item-open-${item.id}`}
+            >
               {item.name}
             </Link>
           ) : (
@@ -108,7 +117,9 @@ export default function FoodItemCard({ item, currency, canOrder, quantity, onQua
             {item.description}
           </Typography>
         )}
-        <FoodItemVideos item={item} />
+        <Box sx={ABOVE_LINK_SX}>
+          <FoodItemVideos item={item} />
+        </Box>
         {!available && (
           <Chip
             size="small"
@@ -119,18 +130,21 @@ export default function FoodItemCard({ item, currency, canOrder, quantity, onQua
         )}
       </Stack>
       <Stack spacing={1} sx={{ alignItems: 'center', flex: '0 0 auto' }}>
-        <Box sx={dim}>
-          <Thumb item={item} onOpenImage={onOpenImage} />
+        {/* Under the stretched link a dimmed photo would still catch the click, so it lets it through. */}
+        <Box sx={{ ...dim, pointerEvents: 'none' }}>
+          <Thumb item={item} />
         </Box>
         {canOrder && available && (
-          <CartQuantityControl
-            size="small"
-            quantity={quantity}
-            max={FOOD_ORDER_LIMITS.maxQuantity}
-            labels={labels}
-            onChange={(next) => onQuantity(item.id, next)}
-            testIdPrefix={`food-item-${item.id}`}
-          />
+          <Box sx={ABOVE_LINK_SX}>
+            <CartQuantityControl
+              size="small"
+              quantity={quantity}
+              max={FOOD_ORDER_LIMITS.maxQuantity}
+              labels={labels}
+              onChange={(next) => onQuantity(item.id, next)}
+              testIdPrefix={`food-item-${item.id}`}
+            />
+          </Box>
         )}
       </Stack>
     </Stack>

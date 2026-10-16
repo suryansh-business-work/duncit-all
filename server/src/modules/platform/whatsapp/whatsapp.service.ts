@@ -1,6 +1,7 @@
 import { logs } from '@observability/log';
 import { destinationFor } from '@modules/crm/marketing/waCampaign.recipients';
 import { getWaPricing, ratePerMessage } from '@modules/crm/marketing/waPricing.model';
+import { CAPPED_REASON, marketingWeeklyCap, overMarketingCap } from '@modules/crm/marketing/waMarketingCap';
 import {
   INVALID_NUMBER_REASON,
   isCampaignMissing,
@@ -52,7 +53,9 @@ export interface WaSendInput {
   event: string;
   /** The pod / release / ticket this is about. Two messages for the same event
    * and the same recipient about the SAME entity are the duplicate the unique
-   * index exists to stop; leave it empty for account-level messages. */
+   * index exists to stop. Never leave it empty for a state change on an
+   * account (approved, suspended, reactivated): a blank entity holds the slot
+   * on the NUMBER forever — use `transitionEntityId` (whatsapp.entity). */
   entityId?: string | null;
   /** The recipient account. Its WhatsApp number is preferred over its login phone. */
   user?: Record<string, any> | null;
@@ -344,6 +347,11 @@ async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
 
   if (!(await waPreferenceAllows(destination, event.category))) {
     return record(event, input, destination, skip('Recipient switched this off'));
+  }
+  // The same weekly cap a campaign respects: an automatic marketing message
+  // (a nudge, an invite) counts towards it and is held back past it.
+  if (event.category === 'marketing' && (await overMarketingCap(destination, await marketingWeeklyCap()))) {
+    return record(event, input, destination, skip(CAPPED_REASON));
   }
 
   const params = input.params.map(text);

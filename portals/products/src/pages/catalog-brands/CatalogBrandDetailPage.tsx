@@ -7,6 +7,7 @@ import { notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import BrandCommercePanel from './BrandCommercePanel';
 import BrandSummaryCard from './BrandSummaryCard';
+import BrandDeliveryPincodesPanel from './delivery-pincodes/BrandDeliveryPincodesPanel';
 import { BrandForm, toFormValues, toSubmitInput, type BrandFormValues } from './brand-form';
 import { ADMIN_UPDATE_ECOMM_BRAND, CATALOG_BRAND, type CatalogBrandDetail } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -76,6 +77,8 @@ export default function CatalogBrandDetailPage() {
       <BrandSummaryCard brand={brand} productsTo={`/catalog/brands/${brandId}/products`} />
 
       <BrandCommercePanel brand={brand} onChanged={brandQuery.refetch} />
+
+      <BrandDeliveryPincodesPanel brandId={brandId} />
 
       <Card variant="outlined" sx={{ borderRadius: 3 }}>
         <CardContent>

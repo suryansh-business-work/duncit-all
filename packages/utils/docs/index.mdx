@@ -798,6 +798,21 @@ isCartFlowRoute('/pod/DUN-POD-8842')      // false
 The web path and the native screen name reduce to the same key, which is what keeps the
 header identical on both surfaces (rule 27).
 
+### Delivery address
+
+The Pod Shop header's "Deliver to" pill and the checkout's address picker read the same choice.
+Each app stores the picked id on the device under `DELIVERY_ADDRESS_STORAGE_KEY`.
+
+```ts
+pickDeliveryAddress(book, 'a-parents') // the picked address, while it is still in the book
+pickDeliveryAddress(book, 'a-deleted') // the default — a stale pick falls through
+pickDeliveryAddress(book)              // the default, else the first
+pickDeliveryAddress([], 'a-home')      // null
+
+deliveryAddressLine({ id: 'a', line1: '12 MG Road', city: 'Pune', pincode: '411001' })
+// '12 MG Road, Pune 411001'
+```
+
 ### Cart reminder and wishlist
 
 The "your cart is calling" nudge and the Cart / Wishlist tabs follow the same rules on mWeb and

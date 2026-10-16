@@ -140,6 +140,8 @@ export const EMAIL_BUNDLE_FILE = "server/src/services/email/email-i18n.ts";
  */
 const EMAIL_SPREAD_FILES = {
   CATALOGUE_FALLBACK: "server/src/services/email/catalogue/catalogue.bundle.ts",
+  CORE_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.bundle.core.ts",
+  LIFECYCLE_FALLBACK: "server/src/services/email/catalogue/catalogue.lifecycle.bundle.ts",
 };
 
 /** Turns a backslash escape into the character it stands for. */

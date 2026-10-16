@@ -637,7 +637,8 @@ describe('notifyAttendanceMarked', () => {
       to: 'asha@example.test',
       subject: 'Attendance marked — Sunday Run',
       template: 'attendance-marked',
-      category: 'notification',
+      // The check-in record that decides a payout: an opt-out cannot eat it.
+      category: 'transactional',
     });
     expect(mail.vars).toMatchObject({
       name: 'Asha Rao',

@@ -1,10 +1,11 @@
 import { gql } from '@apollo/client';
 
 /** Every approved, pod-available product platform-wide — the Pod Shop browse
- * catalogue. Category filter/search/sort run client-side over this list. */
+ * catalogue. Category filter/search/sort run client-side over this list. The
+ * buyer's "Deliver to" pincode leaves out brands that do not deliver there. */
 export const SHOP_PRODUCTS = gql`
-  query ShopProducts {
-    availablePodProducts {
+  query ShopProducts($deliveryPincode: String) {
+    availablePodProducts(delivery_pincode: $deliveryPincode) {
       id
       product_name
       brand_name

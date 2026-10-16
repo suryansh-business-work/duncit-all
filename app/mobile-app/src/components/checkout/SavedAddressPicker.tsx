@@ -1,19 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Modal } from 'react-native';
-import { ModalSafeArea } from '@/components/ModalSafeArea';
-import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
+import { useEffect, useRef, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import type { ResultOf } from '@graphql-typed-document-node/core';
-
-import { ModalThemeScope } from '@/components/ModalThemeScope';
-import { MyAddressesDocument } from '@/graphql/address-book';
-import { graphqlRequest } from '@/services/graphql.client';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { useTranslation } from '@/hooks/useTranslation';
+import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-type UserAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
+import { AddressSheet } from '@/components/checkout/AddressSheet';
+import { useDeliveryAddress, type UserAddress } from '@/hooks/useDeliveryAddress';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   onPick: (address: UserAddress) => void;
@@ -26,47 +19,25 @@ const summary = (address: UserAddress, defaultTag: string) => {
 };
 
 /** Checkout address-book dropdown — the saved delivery address the order ships
- * to and that delivery charges are quoted for. The default address is
- * pre-selected once the book loads (picking another re-quotes delivery). Hidden
- * while the book is empty. RN twin of mWeb's SavedAddressPicker. */
+ * to and that delivery charges are quoted for. It opens on the address the Pod
+ * Shop's "Deliver to" bar picked (else the default), and a pick here becomes the
+ * shop's delivery address too (picking re-quotes delivery). Hidden while the
+ * book is empty. RN twin of mWeb's SavedAddressPicker. */
 export function SavedAddressPicker({ onPick }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
-  const defaultTag = t('mweb.checkout.addressDefault');
-  const [addresses, setAddresses] = useState<UserAddress[]>([]);
-  const [selectedId, setSelectedId] = useState('');
+  const { addresses, selected, select } = useDeliveryAddress();
   const [open, setOpen] = useState(false);
+  const pickedRef = useRef('');
 
+  // Hand the chosen address to the form once per change.
   useEffect(() => {
-    let active = true;
-    graphqlRequest(MyAddressesDocument, undefined, { auth: true })
-      .then((data) => {
-        if (active) setAddresses(data.myAddresses);
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const choose = useCallback(
-    (address: UserAddress) => {
-      setSelectedId(address.id);
-      onPick(address);
-    },
-    [onPick],
-  );
-
-  // Auto-select the default (or first) saved address once the book loads.
-  useEffect(() => {
-    if (selectedId) return;
-    const preferred = addresses.find((address) => address.is_default) ?? addresses[0];
-    if (preferred) choose(preferred);
-  }, [addresses, selectedId, choose]);
+    if (!selected || pickedRef.current === selected.id) return;
+    pickedRef.current = selected.id;
+    onPick(selected);
+  }, [selected, onPick]);
 
   if (addresses.length === 0) return null;
-  const selected = addresses.find((address) => address.id === selectedId) ?? null;
-  const close = () => setOpen(false);
 
   return (
     <YStack gap={6} testID="checkout-address-picker">
@@ -97,87 +68,22 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
           color="$color"
           numberOfLines={1}
         >
-          {selected ? summary(selected, defaultTag) : t('mweb.checkout.selectAddress')}
+          {selected
+            ? summary(selected, t('mweb.checkout.addressDefault'))
+            : t('mweb.checkout.selectAddress')}
         </Text>
         <MaterialIcons name="expand-more" size={20} color={muted} />
       </XStack>
 
-      <Modal visible={open} transparent animationType="slide" onRequestClose={close}>
-        <ModalThemeScope>
-          <YStack flex={1} justifyContent="flex-end">
-            <YStack
-              pressStyle={PRESS_STYLE.surface}
-              testID="checkout-address-backdrop"
-              role="button"
-              importantForAccessibility="no"
-              aria-label={t('mweb.checkout.close')}
-              onPress={close}
-              position="absolute"
-              top={0}
-              left={0}
-              right={0}
-              bottom={0}
-              backgroundColor="rgba(0,0,0,0.5)"
-            />
-            <YStack
-              backgroundColor="$surface"
-              borderTopLeftRadius={28}
-              borderTopRightRadius={28}
-              maxHeight="70%"
-            >
-              <ModalSafeArea edges={['bottom']} style={SHEET_SAFE_AREA}>
-                <Text padding={16} fontSize={16} fontWeight="700" color="$color" role="heading">
-                  {t('mweb.checkout.deliverToSaved')}
-                </Text>
-                <ScrollView>
-                  <YStack paddingHorizontal={16} paddingBottom={16} gap={8} role="radiogroup">
-                    {addresses.map((address) => (
-                      <XStack
-                        key={address.id}
-                        testID={`checkout-address-option-${address.id}`}
-                        role="radio"
-                        aria-checked={address.id === selectedId}
-                        tabIndex={0}
-                        aria-label={address.label}
-                        onPress={() => {
-                          choose(address);
-                          close();
-                        }}
-                        alignItems="center"
-                        gap={10}
-                        padding={12}
-                        borderRadius={12}
-                        borderWidth={1}
-                        borderColor={address.id === selectedId ? primary : '$borderColor'}
-                        pressStyle={PRESS_STYLE.control}
-                      >
-                        <MaterialIcons
-                          name={
-                            address.id === selectedId
-                              ? 'radio-button-checked'
-                              : 'radio-button-unchecked'
-                          }
-                          size={18}
-                          color={address.id === selectedId ? primary : muted}
-                        />
-                        <Text
-                          flex={1}
-                          fontSize={13}
-                          fontWeight="700"
-                          color="$color"
-                          numberOfLines={2}
-                        >
-                          {summary(address, defaultTag)}
-                        </Text>
-                      </XStack>
-                    ))}
-                  </YStack>
-                </ScrollView>
-              </ModalSafeArea>
-            </YStack>
-          </YStack>
-        </ModalThemeScope>
-      </Modal>
+      <AddressSheet
+        testID="checkout-address"
+        open={open}
+        onClose={() => setOpen(false)}
+        title={t('mweb.checkout.deliverToSaved')}
+        addresses={addresses}
+        selectedId={selected?.id ?? ''}
+        onSelect={(address) => select(address.id)}
+      />
     </YStack>
   );
 }

@@ -1699,6 +1699,8 @@ export type AppSettings = {
   auto_pod_slot_window_days: Scalars['Int']['output'];
   /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
   auto_pod_venue_expiry_hours: Scalars['Int']['output'];
+  /** Minutes after a pod checkout is left unpaid when the member is nudged once to finish it. 0 switches it off. */
+  checkout_nudge_minutes: Scalars['Int']['output'];
   /** Account Health points a CLUB ADMIN loses for filing a Request Change on a pod in their club (0-10, 0 disables it). */
   club_admin_change_request_health_penalty: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
@@ -1738,6 +1740,8 @@ export type AppSettings = {
   pod_feedback_delay_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its attendees are reminded over email and WhatsApp. */
   pod_reminder_lead_hours: Scalars['Int']['output'];
+  /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
+  pod_sameday_reminder_hours: Scalars['Int']['output'];
   /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -3144,6 +3148,46 @@ export type BrandConsent = {
   policy_title: Scalars['String']['output'];
   signed_at?: Maybe<Scalars['String']['output']>;
   signed_name: Scalars['String']['output'];
+};
+
+/** One pincode a brand delivers to. serviceable is null until a ShipRocket sync has checked it. */
+export type BrandDeliveryPincode = {
+  __typename?: 'BrandDeliveryPincode';
+  checked_at?: Maybe<Scalars['String']['output']>;
+  courier_name: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  etd: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  pincode: Scalars['String']['output'];
+  serviceable?: Maybe<Scalars['Boolean']['output']>;
+  sync_error: Scalars['String']['output'];
+};
+
+export type BrandDeliveryPincodeAddResult = {
+  __typename?: 'BrandDeliveryPincodeAddResult';
+  added: Scalars['Int']['output'];
+  duplicates: Scalars['Int']['output'];
+  /** Entries that are not a 6-digit Indian PIN, as typed. */
+  invalid: Array<Scalars['String']['output']>;
+};
+
+export type BrandDeliveryPincodePage = {
+  __typename?: 'BrandDeliveryPincodePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<BrandDeliveryPincode>;
+  total: Scalars['Int']['output'];
+};
+
+export type BrandDeliveryPincodeSyncResult = {
+  __typename?: 'BrandDeliveryPincodeSyncResult';
+  checked: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  serviceable: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  /** Pincodes never checked yet — press Sync again to continue. */
+  unchecked: Scalars['Int']['output'];
+  unserviceable: Scalars['Int']['output'];
 };
 
 /** The two accounts a brand ships and gets paid through. Each brand holds its own — never the Tech portal's. */
@@ -5271,6 +5315,8 @@ export type CoinSettings = {
    * Read at the moment of each grant, so a change never moves coins already given.
    */
   coin_expiry_days: Scalars['Int']['output'];
+  /** Days before a member's coins expire that they are reminded by email and in-app (0 turns it off). */
+  coin_expiry_reminder_days: Scalars['Int']['output'];
   /** Flat coins paid to EACH side of a referral — the referrer and the new member. */
   coins_per_referral: Scalars['Int']['output'];
   /** Flat coins paid for feedback on an attended pod (0 turns it off). */
@@ -5285,6 +5331,7 @@ export type CoinSettings = {
 /** Every field is optional; an omitted one is left alone. */
 export type CoinSettingsInput = {
   coin_expiry_days?: InputMaybe<Scalars['Int']['input']>;
+  coin_expiry_reminder_days?: InputMaybe<Scalars['Int']['input']>;
   coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
   pod_feedback_coins?: InputMaybe<Scalars['Int']['input']>;
   pod_join_earn_pct?: InputMaybe<Scalars['Int']['input']>;
@@ -10821,6 +10868,8 @@ export type InventoryProduct = {
 export type InventoryProductInput = {
   barcode?: InputMaybe<Scalars['String']['input']>;
   batch_number?: InputMaybe<Scalars['String']['input']>;
+  /** Products portal: add the product to this brand's catalogue (ownership BRAND, approved and live) instead of Duncit's. */
+  brand_id?: InputMaybe<Scalars['ID']['input']>;
   brand_name?: InputMaybe<Scalars['String']['input']>;
   breadth_cm?: InputMaybe<Scalars['Float']['input']>;
   category_id?: InputMaybe<Scalars['ID']['input']>;
@@ -10852,7 +10901,7 @@ export type InventoryProductInput = {
   mrp?: InputMaybe<Scalars['Float']['input']>;
   /** How a unit is packed for the courier (default BOX). */
   package_type?: InputMaybe<PackageType>;
-  /** Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side). */
+  /** Duncit warehouse (owner_kind DUNCIT) origin — or, with brand_id, one of that brand's approved warehouses. Required (enforced server-side). */
   pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   pod_available?: InputMaybe<Scalars['Boolean']['input']>;
   product_name: Scalars['String']['input'];
@@ -12034,6 +12083,8 @@ export type MeetingAvailability = {
   end_time: Scalars['String']['output'];
   horizon_days: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  /** Hours before a scheduled meeting the applicant is reminded of it. 0 is off. */
+  reminder_lead_hours: Scalars['Int']['output'];
   slot_minutes: Scalars['Int']['output'];
   start_time: Scalars['String']['output'];
   timezone_offset_minutes: Scalars['Int']['output'];
@@ -12044,6 +12095,8 @@ export type MeetingAvailability = {
 export type MeetingAvailabilityInput = {
   end_time?: InputMaybe<Scalars['String']['input']>;
   horizon_days?: InputMaybe<Scalars['Int']['input']>;
+  /** Hours before a scheduled meeting the applicant is reminded of it (0-72, 0 is off). */
+  reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   slot_minutes?: InputMaybe<Scalars['Int']['input']>;
   start_time?: InputMaybe<Scalars['String']['input']>;
   timezone_offset_minutes?: InputMaybe<Scalars['Int']['input']>;
@@ -12364,6 +12417,8 @@ export type Mutation = {
    * dropped rather than stored.
    */
   addAudienceListMembers: AudienceList;
+  /** Products portal: add pincodes to a brand's delivery area (duplicates skipped, invalid ones reported). */
+  addBrandDeliveryPincodes: BrandDeliveryPincodeAddResult;
   /** Submit or update a star rating (1-5) on a club. Requires authentication. */
   addClubRating: Club;
   /** Append an uploaded image to the template's library (persists immediately). */
@@ -13484,6 +13539,8 @@ export type Mutation = {
    * return. Removing somebody the list never held succeeds quietly.
    */
   removeAudienceListMember: AudienceList;
+  /** Products portal: remove pincodes from a brand's delivery area. */
+  removeBrandDeliveryPincodes: Scalars['Int']['output'];
   /** Primary host withdraws an invite / removes a co-host. */
   removeCoHost: Pod;
   removeCrmEmailTemplateImage: CrmEmailTemplate;
@@ -14331,6 +14388,8 @@ export type Mutation = {
   subscribeNewsletter: NewsletterSubscribeResult;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
+  /** Products portal: check the next batch of a brand's pincodes against ShipRocket from its own warehouse. */
+  syncBrandDeliveryPincodes: BrandDeliveryPincodeSyncResult;
   /**
    * Match a phone book against Duncit accounts and remember the hits.
    *
@@ -14716,6 +14775,12 @@ export type MutationAcknowledgeHostRequestArgs = {
 export type MutationAddAudienceListMembersArgs = {
   id: Scalars['ID']['input'];
   user_ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationAddBrandDeliveryPincodesArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  pincodes: Array<Scalars['String']['input']>;
 };
 
 
@@ -17264,6 +17329,12 @@ export type MutationRemoveAudienceListMemberArgs = {
 };
 
 
+export type MutationRemoveBrandDeliveryPincodesArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
 export type MutationRemoveCoHostArgs = {
   pod_doc_id: Scalars['ID']['input'];
   user_id: Scalars['ID']['input'];
@@ -19124,6 +19195,11 @@ export type MutationSubscribeNewsletterArgs = {
 
 export type MutationSupportCreateUserArgs = {
   input: SupportCreateUserInput;
+};
+
+
+export type MutationSyncBrandDeliveryPincodesArgs = {
+  brand_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -25123,6 +25199,7 @@ export type Query = {
   automationRuns: Array<AutomationRun>;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
+  /** Approved, live products for pods and the Pod Shop. delivery_pincode (the buyer's Deliver-to PIN) hides brands whose delivery area leaves it out. */
   availablePodProducts: Array<InventoryProduct>;
   /** Public: the coupons a guest can pick from at this venue's checkout right now, best first. Empty when the venue is not taking orders. */
   availableVenueFoodCoupons: Array<AvailableVenueFoodCoupon>;
@@ -25146,6 +25223,8 @@ export type Query = {
   brandAnalytics: BrandAnalytics;
   /** The Brand Consent Legal publishes for brand partners to sign (slug brand-partner-consent). Null until Legal writes one. */
   brandConsentPolicy?: Maybe<Policy>;
+  /** Products portal: the pincodes a brand delivers to. An empty list means the brand delivers everywhere. */
+  brandDeliveryPincodesTable: BrandDeliveryPincodePage;
   /** Products portal: the products that ship from a pickup address. */
   brandPickupLocationUsage: BrandPickupUsage;
   /** Pickup addresses of a Duncit or brand owner (Products portal). */
@@ -27065,6 +27144,7 @@ export type QueryAvailableCouponsForPodArgs = {
 
 export type QueryAvailablePodProductsArgs = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
+  delivery_pincode?: InputMaybe<Scalars['String']['input']>;
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -27140,6 +27220,12 @@ export type QueryBouncerSosAlertsArgs = {
 export type QueryBrandAnalyticsArgs = {
   brand_doc_id: Scalars['ID']['input'];
   days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryBrandDeliveryPincodesTableArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -31821,6 +31907,8 @@ export type SendWaCampaignInput = {
   media?: InputMaybe<AisensyMediaInput>;
   /** Internal name for this send. */
   name: Scalars['String']['input'];
+  /** Repeat every N days (1-90) against the audience list's members at that time; 0 or absent sends once. */
+  repeat_every_days?: InputMaybe<Scalars['Int']['input']>;
   /** ISO time to send at. Absent, or already past, sends immediately. */
   scheduled_at?: InputMaybe<Scalars['String']['input']>;
   /** Ordered template variables — literal text, or {{first_name}} style tokens. */
@@ -37548,6 +37636,8 @@ export type UpdateAppSettingsInput = {
   auto_pod_slot_window_days?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720). */
   auto_pod_venue_expiry_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** Minutes after an unpaid pod checkout the member is nudged (0-1440, 0 is off). */
+  checkout_nudge_minutes?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a club admin loses for filing a Request Change (0-10, 0 disables it). */
   club_admin_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
@@ -37585,6 +37675,8 @@ export type UpdateAppSettingsInput = {
   pod_feedback_delay_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its attendees are reminded (1-8760). */
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */
+  pod_sameday_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
   /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
@@ -38323,6 +38415,8 @@ export type UpdateWaPricingInput = {
   authentication_per_msg: Scalars['Float']['input'];
   currency_symbol: Scalars['String']['input'];
   marketing_per_msg: Scalars['Float']['input'];
+  /** 0-50; omitted keeps the saved cap. */
+  marketing_weekly_cap?: InputMaybe<Scalars['Int']['input']>;
   service_per_msg: Scalars['Float']['input'];
   utility_per_msg: Scalars['Float']['input'];
 };
@@ -39935,10 +40029,14 @@ export type WaCampaign = {
   name: Scalars['String']['output'];
   /** How many people the audience resolved to at send time. */
   recipient_count: Scalars['Int']['output'];
+  /** Days between runs of a recurring campaign; 0 for a one-off. */
+  repeat_every_days: Scalars['Int']['output'];
   /** When a scheduled send is due. Null for one that went out immediately. */
   scheduled_at?: Maybe<Scalars['String']['output']>;
   sent_at?: Maybe<Scalars['String']['output']>;
   sent_count: Scalars['Int']['output'];
+  /** Shared by every run of one recurring campaign; empty for a one-off. */
+  series_id: Scalars['String']['output'];
   /** Matched the audience but had no usable number or an empty variable. */
   skipped_count: Scalars['Int']['output'];
   status: WaCampaignStatus;
@@ -40341,6 +40439,8 @@ export type WaPricing = {
   authentication_per_msg: Scalars['Float']['output'];
   currency_symbol: Scalars['String']['output'];
   marketing_per_msg: Scalars['Float']['output'];
+  /** The most marketing WhatsApp messages one number may get in 7 days, campaigns and automatic marketing together. 0 is no cap. */
+  marketing_weekly_cap: Scalars['Int']['output'];
   /** Service conversations are free today — a rate is kept so that can change without a deploy. */
   service_per_msg: Scalars['Float']['output'];
   utility_per_msg: Scalars['Float']['output'];

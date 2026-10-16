@@ -34,6 +34,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { markedUserIdsByPod, podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
+import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
 // `notifyEach`, not `whatsappService.sendEach`: every scenario this file
 // sweeps for now goes out as an email too — the pod reminder, the complete-pod
@@ -89,6 +90,7 @@ interface SweptPod {
   pod_hosts_id?: any[];
   club_id?: any;
   venue_id?: any;
+  extra_seats?: number;
   /** The pod's own pictures. Every pod-shaped message headed by one instead of
    * the platform placeholder — so every projection that feeds a send selects it. */
   pod_images_and_videos?: StoredMedia[];
@@ -196,7 +198,28 @@ function podReminders(
   const hostName = nameOf(users.get(firstHostId(pod)));
   const link = podUrl(mwebUrl, pod, slugById);
   const hours = hoursUntil(pod.pod_date_time);
-  return (pod.pod_attendees ?? []).map((attendeeId) => {
+  const hostIds = new Set((pod.pod_hosts_id ?? []).map(String));
+  const guests = (pod.pod_attendees ?? []).filter((attendeeId) => !hostIds.has(String(attendeeId)));
+  const hostReminders = [...hostIds].map((hostId) => {
+    const user = users.get(hostId);
+    const name = nameOf(user);
+    return {
+      event: 'HOST_POD_REMINDER',
+      entityId: String(pod._id),
+      user,
+      name,
+      assets: podImageAssets(pod.pod_images_and_videos),
+      params: [
+        name,
+        pod.pod_title,
+        appDate(pod.pod_date_time),
+        appTime(pod.pod_date_time),
+        String(podSeatsTaken(pod)),
+        link || trimTrailingSlash(mwebUrl),
+      ],
+    };
+  });
+  const guestReminders = guests.map((attendeeId) => {
     const user = users.get(String(attendeeId));
     const name = nameOf(user);
     return {
@@ -216,12 +239,13 @@ function podReminders(
       ],
     };
   });
+  return [...hostReminders, ...guestReminders];
 }
 
 /**
- * The host is deliberately left in: they sit in `pod_attendees` like everybody
- * else and there is no host-side reminder template, so excluding them would
- * mean the one person who has to turn up gets no reminder at all.
+ * Guests get the attendee reminder; every host gets their own, with how many
+ * are booked — the host used to be sent the guest wording ("your host will
+ * check you in") because no host template existed.
  */
 async function remindAttendees(
   now: number,
@@ -233,15 +257,126 @@ async function remindAttendees(
     is_active: true,
     pod_date_time: crossing(now + clocks.pod_reminder_lead_hours * HOUR_MS, cutoff),
   })
-    .select('pod_id pod_title pod_date_time pod_attendees pod_hosts_id club_id pod_images_and_videos')
+    .select('pod_id pod_title pod_date_time pod_attendees extra_seats pod_hosts_id club_id pod_images_and_videos')
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const slugById = await loadPodClubSlugMap(pods);
   const users = await waUsers(
     pods.flatMap((pod) => [...(pod.pod_attendees ?? []), ...(pod.pod_hosts_id ?? [])])
   );
-  await notifyEach(
+  await sweepSend(
     pods.flatMap((pod) => podReminders(pod, users, slugById, mwebUrl))
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * 1b. USER_POD_REMINDER_SAMEDAY — the pod starts in a few hours.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The day-before reminder is too early to carry what somebody needs on the way
+ * out of the door: where it is and what time. A second, short one lands a few
+ * hours before (`pod_sameday_reminder_hours`, Admin > Pods > Pod Settings).
+ * Zero switches it off.
+ */
+async function remindAttendeesSameDay(now: number, cutoff: Date, mwebUrl: string, clocks: SweepClocks) {
+  if (clocks.pod_sameday_reminder_hours <= 0) return;
+  const pods = await PodModel.find({
+    is_active: true,
+    pod_date_time: crossing(now + clocks.pod_sameday_reminder_hours * HOUR_MS, cutoff),
+  })
+    .select('pod_id pod_title pod_date_time pod_attendees club_id venue_id pod_images_and_videos')
+    .lean<SweptPod[]>();
+  if (pods.length === 0) return;
+  const [slugById, users, venueNames] = await Promise.all([
+    loadPodClubSlugMap(pods),
+    waUsers(pods.flatMap((pod) => pod.pod_attendees ?? [])),
+    venueNamesOf(pods),
+  ]);
+  await sweepSend(
+    pods.flatMap((pod) =>
+      (pod.pod_attendees ?? []).map((attendeeId) => {
+        const user = users.get(String(attendeeId));
+        const name = nameOf(user);
+        return {
+          event: 'USER_POD_REMINDER_SAMEDAY',
+          entityId: String(pod._id),
+          user,
+          name,
+          assets: podImageAssets(pod.pod_images_and_videos),
+          params: [
+            name,
+            pod.pod_title,
+            appTime(pod.pod_date_time),
+            venueNames.get(String(pod.venue_id)) || ONLINE,
+            podUrl(mwebUrl, pod, slugById) || trimTrailingSlash(mwebUrl),
+          ],
+        };
+      })
+    )
+  );
+}
+
+/** Where a pod with no venue happens. */
+const ONLINE = 'Online';
+
+async function venueNamesOf(pods: SweptPod[]): Promise<Map<string, string>> {
+  const ids = pods.map((pod) => pod.venue_id).filter(Boolean);
+  if (ids.length === 0) return new Map();
+  const venues = await VenueModel.find({ _id: { $in: ids } })
+    .select('venue_name')
+    .lean<{ _id: unknown; venue_name?: string | null }[]>();
+  return new Map(venues.map((venue) => [String(venue._id), venue.venue_name ?? '']));
+}
+
+/* ------------------------------------------------------------------ *
+ * 1c. VENUE_POD_REMINDER — a pod is booked at the venue soon.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The venue blocked a room weeks ago and nobody reminded it. On the same clock
+ * as the attendees' reminder, with the headcount — the one number the venue
+ * plans the room around — and the host it should expect at the door.
+ */
+async function remindVenues(now: number, cutoff: Date, clocks: SweepClocks) {
+  const pods = await PodModel.find({
+    is_active: true,
+    venue_id: { $ne: null },
+    pod_date_time: crossing(now + clocks.pod_reminder_lead_hours * HOUR_MS, cutoff),
+  })
+    .select('pod_title pod_date_time pod_attendees extra_seats pod_hosts_id venue_id pod_images_and_videos')
+    .lean<SweptPod[]>();
+  if (pods.length === 0) return;
+  const venues = await VenueModel.find({ _id: { $in: pods.map((pod) => pod.venue_id) } })
+    .select('owner_user_id')
+    .lean<{ _id: unknown; owner_user_id?: unknown }[]>();
+  const ownerByVenue = new Map(
+    venues.map((venue) => [String(venue._id), String(venue.owner_user_id ?? '')])
+  );
+  const users = await waUsers([...ownerByVenue.values(), ...pods.map(firstHostId)]);
+  await sweepSend(
+    pods.flatMap((pod) => {
+      const owner = users.get(ownerByVenue.get(String(pod.venue_id)) ?? '');
+      if (!owner) return [];
+      const name = nameOf(owner);
+      return [
+        {
+          event: 'VENUE_POD_REMINDER',
+          entityId: String(pod._id),
+          user: owner,
+          name,
+          assets: podImageAssets(pod.pod_images_and_videos),
+          params: [
+            name,
+            pod.pod_title,
+            appDate(pod.pod_date_time),
+            appTime(pod.pod_date_time),
+            String(podSeatsTaken(pod)),
+            nameOf(users.get(firstHostId(pod))),
+          ],
+        },
+      ];
+    })
   );
 }
 
@@ -278,7 +413,7 @@ async function remindHostsToComplete(now: number, cutoff: Date, clocks: SweepClo
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const users = await waUsers(pods.map(firstHostId));
-  await notifyEach(
+  await sweepSend(
     pods.map((pod) => {
       const host = users.get(firstHostId(pod));
       const name = nameOf(host);
@@ -323,7 +458,7 @@ async function remindVenuesOfPendingSlots(now: number, cutoff: Date, clocks: Swe
     .lean<SweptPod[]>();
   const podById = new Map(pods.map((pod) => [String(pod._id), pod]));
   const users = await waUsers([...slots.map((slot) => slot.owner_user_id), ...pods.map(firstHostId)]);
-  await notifyEach(
+  await sweepSend(
     slots.map((slot) => {
       const pod = podById.get(String(slot.booked_by_pod_id));
       const owner = users.get(String(slot.owner_user_id));
@@ -374,7 +509,7 @@ async function noticeReplacementNotFound(now: number, cutoff: Date, mwebUrl: str
     waUsers(requests.map((request) => request.user_id)),
   ]);
   const podById = new Map(pods.map((pod) => [String(pod._id), pod]));
-  await notifyEach(
+  await sweepSend(
     requests.flatMap((request) => {
       const pod = podById.get(String(request.pod_id));
       if (!pod) return [];
@@ -471,7 +606,7 @@ async function askAttendeesForFeedback(pods: SweptPod[], mwebUrl: string) {
   const attendedGuests = (pod: SweptPod) =>
     guestsOf(pod).filter((id) => marked.get(String(pod._id))?.has(id) ?? false);
   const users = await waUsers(pods.flatMap(attendedGuests));
-  await notifyEach(
+  await sweepSend(
     pods.flatMap((pod) =>
       attendedGuests(pod).map((id) => feedbackAsk('USER_POD_FEEDBACK', pod, users.get(id), mwebUrl))
     )
@@ -480,7 +615,7 @@ async function askAttendeesForFeedback(pods: SweptPod[], mwebUrl: string) {
 
 async function askHostsForFeedback(pods: SweptPod[], mwebUrl: string) {
   const users = await waUsers(pods.map(firstHostId));
-  await notifyEach(
+  await sweepSend(
     pods.map((pod) => feedbackAsk('HOST_POD_FEEDBACK', pod, users.get(firstHostId(pod)), mwebUrl))
   );
 }
@@ -495,7 +630,7 @@ async function askVenuesForFeedback(pods: SweptPod[], mwebUrl: string) {
     venues.map((venue: any) => [String(venue._id), String(venue.owner_user_id ?? '')])
   );
   const users = await waUsers([...ownerByVenue.values()]);
-  await notifyEach(
+  await sweepSend(
     pods.flatMap((pod) => {
       const owner = users.get(ownerByVenue.get(String(pod.venue_id)) ?? '');
       return owner ? [feedbackAsk('VENUE_POD_FEEDBACK', pod, owner, mwebUrl)] : [];
@@ -515,7 +650,7 @@ async function askClubAdminsForFeedback(pods: SweptPod[], mwebUrl: string) {
     clubs.map((club: any) => [String(club._id), (club.admin_user_ids ?? []).map(String)])
   );
   const users = await waUsers([...adminsByClub.values()].flat());
-  await notifyEach(
+  await sweepSend(
     pods.flatMap((pod) =>
       (adminsByClub.get(String(pod.club_id)) ?? []).map((adminId: string) =>
         feedbackAsk('CLUB_ADMIN_FEEDBACK', pod, users.get(adminId), mwebUrl)
@@ -540,10 +675,32 @@ async function requestPodFeedback(
 
 /* ------------------------------------------------------------------ */
 
+/**
+ * Whether this tick's sends go out on email alone. Automatic WhatsApp being
+ * switched off is no reason to stop the reminder EMAILS — they used to stop
+ * with it, because the whole sweep returned early. Set once per tick by
+ * {@link runWhatsappSweeps}; only the scheduler leader runs a tick.
+ */
+let emailOnly = false;
+
+/** Every sweep's fan-out: both channels, or email alone while WhatsApp is off. */
+function sweepSend(inputs: NotifyInput[]): Promise<void> {
+  if (!emailOnly) return notifyEach(inputs);
+  return notifyEach(inputs.map((input) => ({ ...input, skip: { ...input.skip, whatsapp: true } })));
+}
+
+/**
+ * The cutoff while WhatsApp is off. Each sweep's own window is already only
+ * three ticks wide, and the email leg is deduplicated per entity, so nothing
+ * older than that window can be reached — there is no backlog to hold back.
+ */
+const EMAIL_ONLY_CUTOFF = new Date(0);
+
 /** Run every sweep once. Safe to call twice — the second run is a no-op. */
 export async function runWhatsappSweeps(): Promise<void> {
-  const cutoff = await sweepCutoff();
-  if (!cutoff) return;
+  const whatsappCutoff = await sweepCutoff();
+  emailOnly = !whatsappCutoff;
+  const cutoff = whatsappCutoff ?? EMAIL_ONLY_CUTOFF;
   const now = Date.now();
   const [{ mwebUrl }, clocks] = await Promise.all([
     getUrlConfigs(),
@@ -554,9 +711,11 @@ export async function runWhatsappSweeps(): Promise<void> {
   await remindVenuesOfPendingSlots(now, cutoff, clocks);
   await noticeReplacementNotFound(now, cutoff, mwebUrl);
   await requestPodFeedback(now, cutoff, mwebUrl, clocks);
+  await remindAttendeesSameDay(now, cutoff, mwebUrl, clocks);
+  await remindVenues(now, cutoff, clocks);
   // Last: while AiSensy is unreachable this costs a connect timeout, and the
   // sweeps above must not wait behind it.
-  await retryUnreachedMessages();
+  if (!emailOnly) await retryUnreachedMessages();
 }
 
 /**

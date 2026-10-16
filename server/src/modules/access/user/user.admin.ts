@@ -19,6 +19,7 @@ import type { CreateUserDTO, UpdateUserDTO } from './user.validator';
 import { rbacService } from '@modules/access/role/rbac.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { notifyEvent } from '@services/notify/notify.service';
+import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
 import { publishSession, toPublic } from './user.public';
 import {
   isPlaceholderPhone,
@@ -406,6 +407,7 @@ export const userAdminMethods = {
       // asks for one.
       await notifyEvent({
         event: statusEvent,
+        entityId: transitionEntityId(user_id),
         user: fresh,
         name: fresh?.profile?.first_name,
         params: [fresh?.profile?.first_name],

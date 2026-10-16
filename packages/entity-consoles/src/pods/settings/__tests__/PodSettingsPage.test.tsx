@@ -24,6 +24,8 @@ const POD_SETTINGS = gql`
       pod_complete_timeout_hours
       pod_complete_reminder_hours
       pod_reminder_lead_hours
+      pod_sameday_reminder_hours
+      checkout_nudge_minutes
       venue_slot_reminder_lead_hours
       pod_feedback_delay_hours
       pod_cancel_refund_hold
@@ -56,6 +58,8 @@ const UPDATE_POD_SETTINGS = gql`
       pod_complete_timeout_hours
       pod_complete_reminder_hours
       pod_reminder_lead_hours
+      pod_sameday_reminder_hours
+      checkout_nudge_minutes
       venue_slot_reminder_lead_hours
       pod_feedback_delay_hours
       pod_cancel_refund_hold
@@ -88,6 +92,8 @@ const SAVED: SavedPodSettings = {
   pod_complete_timeout_hours: 24,
   pod_complete_reminder_hours: 12,
   pod_reminder_lead_hours: 24,
+  pod_sameday_reminder_hours: 3,
+  checkout_nudge_minutes: 60,
   venue_slot_reminder_lead_hours: 48,
   pod_feedback_delay_hours: 1,
   pod_cancel_refund_hold: true,

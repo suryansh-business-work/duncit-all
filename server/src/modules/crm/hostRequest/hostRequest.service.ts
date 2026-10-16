@@ -359,7 +359,7 @@ export const hostRequestService = {
       'Congratulations! 🎉',
       `Your request to host in ${catPath(h)} has been approved. You can now start hosting experiences in this category.`
     );
-    await emailHost(h, 'host-request-approved', 'Your Duncit host request is approved 🎉');
+    await emailHost(h, 'host-request-approved', 'Your Duncit host request is approved');
     // The account is loaded rather than reusing the request's contact_phone
     // snapshot: the funnel reads the number off the user document, where a saved
     // WhatsApp number wins over the login phone.

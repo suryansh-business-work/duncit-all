@@ -32,7 +32,6 @@ function renderBrowser(menu: VenueFoodItem[] = MENU) {
     <FoodMenuBrowser
       groups={groupFoodMenu(menu)}
       currency="₹"
-      onOpenImage={jest.fn()}
       onOpenDetails={onOpenDetails}
       canOrder
       quantityOf={(id) => (id === 'samosa' ? 2 : 0)}

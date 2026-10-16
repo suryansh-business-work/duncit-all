@@ -73,9 +73,9 @@ export interface EmailDef {
   /** Declared variables. Ordered to match `waEvent`'s params when linked. */
   vars: readonly EmailVar[];
   /**
-   * The MJML body. Absent means the template ships as an on-disk `.mjml` file
-   * and this row only carries its metadata — the disk copy stays the source of
-   * the body, so seeding it from here would silently replace it.
+   * The MJML body. Absent only on the rows whose body is written elsewhere in
+   * code — `emailTemplate.defaults.ts` or a `catalogue.bodies.*` file — which
+   * fills it in; there are no `.mjml` files on disk (rule 28).
    */
   mjml?: string;
 }
@@ -115,7 +115,7 @@ export function standardBody(spec: BodySpec): string {
   if (spec.rows?.length) parts.push(detailRows(spec.rows));
   if (spec.ctaKey && spec.ctaVar) parts.push(cta(spec.ctaKey, spec.ctaVar));
   if (spec.helpKey) parts.push(closing(spec.helpKey));
-  return shell(titleKey, parts.join('\n'));
+  return shell(titleKey, parts.join('\n'), `${spec.copyKey}.body`);
 }
 
 /** One catalogue row plus the body built from its spec. */
@@ -127,7 +127,7 @@ export const defineEmail = (spec: EmailSpec): EmailDef => {
   return { ...rest, mjml: standardBody(body) };
 };
 
-/** A row for a template whose body is an on-disk `.mjml` file — metadata only. */
+/** A row whose body is written elsewhere in code — metadata only. */
 export const describeEmail = (def: Omit<EmailDef, 'mjml'>): EmailDef => def;
 
 /** The shorthand every `vars` list is written with. */
@@ -153,6 +153,7 @@ export const CHROME_VARS: readonly EmailVar[] = [
   v('brand_logo_url', 'The admin’s brand logo, from Admin > Settings > Branding.', 'https://cdn.duncit.com/logo.png'),
   v('app_name', 'The product name on the footer’s copyright line.', 'Duncit'),
   v('app_url', 'The app’s base URL, for a CTA that opens Duncit.', 'https://duncit.com'),
+  v('admin_url', 'The Admin console’s base URL, for a CTA that opens it.', 'https://admin.duncit.com'),
   v('website_url', 'The public website, linked from the footer.', 'https://duncit.com'),
   v('support_email', 'Where the footer tells the reader to write for help.', 'support@duncit.com'),
   v('year', 'The current year, on the copyright line.', '2026'),

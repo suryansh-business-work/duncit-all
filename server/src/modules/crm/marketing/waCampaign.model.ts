@@ -101,6 +101,10 @@ const waCampaignSchema = new Schema(
     },
     /** When a scheduled send is due. Null for one that went out immediately. */
     scheduled_at: { type: Date, default: null, index: true },
+    /** Days between runs of a recurring (lifecycle) campaign; 0 sends once. */
+    repeat_every_days: { type: Number, default: 0, min: 0, max: 90 },
+    /** Shared by every run of one recurring campaign; empty for a one-off. */
+    series_id: { type: String, default: '', index: true },
     recipient_count: { type: Number, default: 0, min: 0 },
     sent_count: { type: Number, default: 0, min: 0 },
     failed_count: { type: Number, default: 0, min: 0 },

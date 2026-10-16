@@ -1,4 +1,4 @@
-import { CALM, LIVE, STOPPED, callout, closing, cta, intro, shell } from './mjml';
+import { CALM, LIVE, STOPPED, callout, closing, cta, htmlBlock, intro, shell } from './mjml';
 import { defineEmail, v, type EmailDef, type EmailVar } from './catalogue.types';
 
 /**
@@ -22,11 +22,7 @@ const URL_VAR: EmailVar = v(
 );
 
 /** The report's tiles, drawn by the server as plain HTML — this row only places them. */
-const REPORT_TILES = `    <mj-section background-color="#ffffff" padding="16px 20px 8px 20px">
-      <mj-column>
-        <mj-text>{{analytics_html}}</mj-text>
-      </mj-column>
-    </mj-section>`;
+const REPORT_TILES = htmlBlock('analytics_html');
 
 const REPORT_BODY = shell(
   'email.analyticsReport.title',
@@ -36,7 +32,8 @@ const REPORT_BODY = shell(
     REPORT_TILES,
     cta('email.analyticsReport.openAnalytics', 'analytics_url'),
     closing('email.analyticsReport.pdfNote'),
-  ].join('\n')
+  ].join('\n'),
+  'email.analyticsReport.body'
 );
 
 export const ANALYTICS_EMAILS: readonly EmailDef[] = [

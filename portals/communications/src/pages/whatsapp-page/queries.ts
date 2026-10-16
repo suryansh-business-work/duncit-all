@@ -6,7 +6,7 @@ const WA_CAMPAIGN_FIELDS = `
   user_ids contacts { name extension number }
   template_name template_category msg_rate cost
   media { url filename }
-  status scheduled_at recipient_count sent_count failed_count skipped_count
+  status scheduled_at repeat_every_days series_id recipient_count sent_count failed_count skipped_count
   error sent_at created_at updated_at
 `;
 
@@ -102,6 +102,7 @@ export const WA_USER_SEARCH = gql`
 
 const WA_PRICING_FIELDS = `
   marketing_per_msg utility_per_msg authentication_per_msg service_per_msg currency_symbol
+  marketing_weekly_cap
 `;
 
 export const WA_PRICING = gql`
@@ -495,6 +496,7 @@ export interface WaPricing {
   authentication_per_msg: number;
   service_per_msg: number;
   currency_symbol: string;
+  marketing_weekly_cap: number;
 }
 
 export interface WaDashboardCategory {
@@ -600,6 +602,9 @@ export interface WaCampaignRow {
   template_params: string[];
   status: string;
   scheduled_at: string | null;
+  /** Days between runs of a recurring campaign; 0 for a one-off. */
+  repeat_every_days: number;
+  series_id: string;
   recipient_count: number;
   sent_count: number;
   failed_count: number;

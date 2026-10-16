@@ -11,6 +11,7 @@ import {
   VenueFoodOrders,
   type FoodAccountMode,
 } from '@duncit/venue-food';
+import { VenueRentalDesk } from '@duncit/venue-rentals';
 
 /** The table-id prefix the food desk's tables remember their columns under in this console. */
 const SURFACE = 'venues';
@@ -25,6 +26,7 @@ const OWNER_ACCOUNT: FoodAccountMode = { kind: 'status' };
  * They are tabs of the record, selected through the URL like the record's own.
  * The menu tab is there for every venue, because it is where food is switched
  * on; an editor may also change the GST number on the food invoices there.
+ * The Rented Items tab is the venue's rental desk (@duncit/venue-rentals).
  */
 export default function VenueRecordPage() {
   const { t } = useTranslation();
@@ -68,6 +70,12 @@ export default function VenueRecordPage() {
             },
           ]
         : []),
+      // Rented items: any venue can list them, so the tab is there for every venue.
+      {
+        value: 'rentedItems',
+        label: t('venueRentals.items.pageTitle'),
+        render: () => <VenueRentalDesk key={venue.id} venueId={venue.id} surface={SURFACE} mode="admin" />,
+      },
     ],
     [t],
   );

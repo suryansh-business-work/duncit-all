@@ -42,6 +42,7 @@ import VenueFoodDashboardPage from './pages/venue-food-dashboard-page/VenueFoodD
 import VenueFoodMenuPage from './pages/venue-food-menu-page/VenueFoodMenuPage';
 import VenueFoodOrdersPage from './pages/venue-food-orders-page/VenueFoodOrdersPage';
 import VenueFoodCouponsPage from './pages/venue-food-coupons-page/VenueFoodCouponsPage';
+import VenueRentedItemsPage from './pages/venue-rented-items-page/VenueRentedItemsPage';
 import HostPublishPage from './pages/publish-page/HostPublishPage';
 import {
   ClubsHub,
@@ -110,6 +111,7 @@ export default function App() {
       <Route path="/venues/food-menu" element={authed(<VenueFoodMenuPage />)} />
       <Route path="/venues/food-orders" element={authed(<VenueFoodOrdersPage />)} />
       <Route path="/venues/food-coupons" element={authed(<VenueFoodCouponsPage />)} />
+      <Route path="/venues/rented-items" element={authed(<VenueRentedItemsPage />)} />
       <Route path="/host" element={authed(<Navigate to="/host/dashboard" replace />)} />
       <Route path="/host/options" element={authed(<StudioOptionsPage mode="HOST" />)} />
       <Route path="/host/dashboard" element={authed(<HostDashboardPage />)} />

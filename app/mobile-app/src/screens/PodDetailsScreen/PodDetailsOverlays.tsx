@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
+import { usePodRentalPicks } from '@/stores/rental-picks.store';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { PodBookingBar } from '@/components/details/PodBookingBar';
@@ -49,6 +50,9 @@ export function PodDetailsOverlays({
   setCommentDelta,
   locationPrompt,
 }: Readonly<PodDetailsOverlaysProps>) {
+  // A free pod with items to rent is paid for: the rentals go through checkout.
+  const { picks } = usePodRentalPicks(pod.id);
+  const freeJoin = isFree && Object.keys(picks).length === 0;
   return (
     <>
       <PodBookingBar
@@ -60,7 +64,7 @@ export function PodDetailsOverlays({
         seats={actions.seats}
         onSeatsChange={actions.setSeats}
         onCheckout={
-          isFree
+          freeJoin
             ? () => fireAndForget(actions.onJoinFree())
             : () => navigation.navigate('Checkout', { podId: pod.id, seats: actions.seats })
         }

@@ -19,10 +19,8 @@ interface CheckoutPod {
  */
 export function useCheckoutRentals(pod: CheckoutPod | null | undefined, paid: boolean) {
   const podId = pod?.id ?? '';
-  const rentable =
-    Boolean(pod?.venue_id) &&
-    String(pod?.pod_mode) !== 'VIRTUAL' &&
-    Number(pod?.pod_amount ?? 0) > 0;
+  // Free pods rent too: the rentals are then the whole payment.
+  const rentable = Boolean(pod?.venue_id) && String(pod?.pod_mode) !== 'VIRTUAL';
   const rentals = usePodRentals(podId, rentable);
   const { picks, clear } = usePodRentalPicks(podId);
   const [agreed, setAgreed] = useState(false);
@@ -41,6 +39,7 @@ export function useCheckoutRentals(pod: CheckoutPod | null | undefined, paid: bo
     selections,
     totals,
     currency: catalogue?.currency_symbol ?? '',
+    venueTerms: catalogue?.venue_terms_html ?? '',
     settings: rentals.settings,
     agreed,
     setAgreed,

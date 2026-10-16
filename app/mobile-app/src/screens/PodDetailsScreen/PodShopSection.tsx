@@ -22,7 +22,7 @@ interface PodShopSectionProps {
  * The pod's add-ons: the Pod Shop (when products are gated on and the pod
  * lists some) and what its venue rents out. A paid pod at a venue that rents
  * things gets the Pod Shop | Pod Rent card; otherwise the shop card stays as
- * it was. Rentals ride on the seat's payment, so a free pod offers none.
+ * it was. Rentals ride on the seat's payment; on a free pod they are the whole payment.
  */
 export function PodShopSection({
   pod,
@@ -34,8 +34,7 @@ export function PodShopSection({
   seats,
 }: Readonly<PodShopSectionProps>) {
   // The generated PodMode is a TS enum; compared as the string the server sends.
-  const rentable =
-    String(pod.pod_mode) !== 'VIRTUAL' && Boolean(pod.venue_id) && Number(pod.pod_amount ?? 0) > 0;
+  const rentable = String(pod.pod_mode) !== 'VIRTUAL' && Boolean(pod.venue_id);
   const rentals = usePodRentals(pod.id, rentable);
   const picks = usePodRentalPicks(pod.id);
   const hasProducts = showProducts && Boolean(pod.product_requests?.length);

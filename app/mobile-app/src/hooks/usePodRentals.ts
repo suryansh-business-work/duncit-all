@@ -20,6 +20,7 @@ function toCatalogue(data: CatalogueResult): PodRentalCatalogue {
     closed_reason: reason,
     hours: data.hours,
     currency_symbol: data.currency_symbol,
+    venue_terms_html: data.venue_terms_html,
     items: data.items.map((item) => ({
       ...item,
       unit: String(item.unit) === 'HOUR' ? 'HOUR' : 'SLOT',

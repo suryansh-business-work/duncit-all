@@ -14,6 +14,7 @@ export const PodRentalsDocument = gql(`
       closed_reason
       hours
       currency_symbol
+      venue_terms_html
       items {
         id
         name

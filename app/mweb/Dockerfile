@@ -91,6 +91,8 @@ COPY packages/communication/package.json ./packages/communication/
 COPY packages/host-pod-actions/package.json ./packages/host-pod-actions/
 COPY packages/public-page/package.json ./packages/public-page/
 COPY packages/venue-food/package.json ./packages/venue-food/
+COPY packages/venue-rentals/package.json ./packages/venue-rentals/
+COPY packages/rich-text/package.json ./packages/rich-text/
 COPY packages/pod-change-requests/package.json ./packages/pod-change-requests/
 COPY packages/earn/package.json ./packages/earn/
 COPY packages/buttons-native/package.json ./packages/buttons-native/

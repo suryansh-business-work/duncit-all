@@ -62,7 +62,7 @@ export default function ChatPreviewCard({ kind, id, onJoinClub }: Readonly<ChatP
     );
   } else {
     body = (
-      <Box ref={listRef} role="log" aria-labelledby={titleId} tabIndex={0} data-testid="chat-preview-list" sx={{ maxHeight: 360, overflowY: 'auto' }}>
+      <Box ref={listRef} role="log" aria-labelledby={titleId} data-testid="chat-preview-list" sx={{ maxHeight: 360, overflowY: 'auto' }}>
         <Stack spacing={1.5}>
           {chat.canLoadEarlier && (
             <DuncitButton

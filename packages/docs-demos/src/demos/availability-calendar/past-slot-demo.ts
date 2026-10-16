@@ -33,6 +33,8 @@ export const pastSlotDemo = defineDemo<DraftMock>({
       startTime: new Date(`${mock.slot_date}T${mock.start_time}:00`),
       endTime: new Date(`${mock.slot_date}T${mock.end_time}:00`),
       price: '1500',
+      pricingMode: 'FLAT' as const,
+      overtimeRate: '',
       notes: '',
       spaceLabel: 'Court 1',
     };

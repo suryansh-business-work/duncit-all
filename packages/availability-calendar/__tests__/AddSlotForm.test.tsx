@@ -261,7 +261,8 @@ describe('AddSlotForm', () => {
       ),
     );
 
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    // The space picker, not the pricing-mode one beside it.
+    fireEvent.mouseDown(within(screen.getByTestId('add-slot-space')).getByRole('combobox'));
     expect(screen.getByRole('option', { name: 'Court 1 · holds 4' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('option', { name: 'Whole venue' }));
     setTime('Start time', '09:00');
@@ -334,7 +335,7 @@ describe('AddSlotForm', () => {
         maxFutureDays={60}
       />,
     );
-    expect(screen.getByRole('combobox')).toHaveTextContent(/^​?$/); // no space resolved yet
+    expect(within(screen.getByTestId('add-slot-space')).getByRole('combobox')).toHaveTextContent(/^​?$/); // no space resolved yet
     setDate('Start date', '2026-01-21');
     expect(patch).toHaveBeenCalledWith({ startDate: new Date(2026, 0, 21) });
   });

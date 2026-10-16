@@ -165,7 +165,7 @@ describe('PodCompleteDialog', () => {
     // Nothing to upload against, and nothing for the bill to come on top of.
     expect(screen.queryByTestId('media-upload-add')).toBeNull();
     expect(screen.queryByTestId('pod-complete-include-slot')).toBeNull();
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 0, false);
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 0, false, undefined, undefined);
 
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '1500');
     expect(screen.getByTestId('media-upload-add')).toBeOnTheScreen();
@@ -173,7 +173,15 @@ describe('PodCompleteDialog', () => {
     expect(screen.getByLabelText('Upload the venue bill, required')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-complete-include-slot')).toBeOnTheScreen();
     expect(screen.getByText('Also pay the booked slot price with this bill')).toBeOnTheScreen();
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, false);
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, false, undefined, undefined);
+
+    // The venue's usage re-prices the slot in the preview; an unreadable head count is left out.
+    fireEvent.changeText(screen.getByTestId('field-venue_pax'), '12');
+    fireEvent.changeText(screen.getByTestId('field-overtime_hours'), '1.5');
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, false, 12, 1.5);
+    fireEvent.changeText(screen.getByTestId('field-venue_pax'), 'abc');
+    fireEvent.changeText(screen.getByTestId('field-overtime_hours'), '0');
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, false, undefined, undefined);
 
     // Clearing the amount takes both away again.
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '');
@@ -213,7 +221,7 @@ describe('PodCompleteDialog', () => {
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), typed);
     // Not an amount, so there is nothing to upload a bill against either.
     expect(screen.queryByTestId('media-upload-add')).toBeNull();
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 0, false);
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 0, false, undefined, undefined);
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(screen.getByTestId('venue_bill_amount-error')).toBeOnTheScreen());
     expect(screen.getByText('Enter a valid bill amount')).toBeOnTheScreen();
@@ -249,7 +257,7 @@ describe('PodCompleteDialog', () => {
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '1500');
     await uploadBill();
     fireEvent(screen.getByTestId('pod-complete-include-slot-switch'), 'valueChange', true);
-    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, true);
+    expect(mockPreviewArgs).toHaveBeenLastCalledWith('p1', 1500, true, undefined, undefined);
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
     expect(completionInputs()).toEqual([

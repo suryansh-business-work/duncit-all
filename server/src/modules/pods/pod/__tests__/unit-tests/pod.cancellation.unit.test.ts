@@ -26,6 +26,9 @@ jest.mock('@modules/access/accountHealth/accountHealth.service', () => ({
 }));
 jest.mock('../../pod.refundHold', () => ({ cancelHeldRefundsForPod: jest.fn(), isRevokeWindowOpen: jest.fn() }));
 jest.mock('@modules/pods/podAudit/podAudit.service', () => ({ podAuditService: { record: jest.fn() } }));
+jest.mock('@modules/venues/venueRental/rentalLifecycle.service', () => ({
+  rentalLifecycleService: { restoreForPayments: jest.fn() },
+}));
 jest.mock('../../pod.shared', () => ({
   loadClubSlugMap: jest.fn(),
   notFound: () => {
@@ -56,6 +59,7 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
 import { cancelHeldRefundsForPod, isRevokeWindowOpen } from '../../pod.refundHold';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
+import { rentalLifecycleService } from '@modules/venues/venueRental/rentalLifecycle.service';
 import { loadClubSlugMap, podOwnerId, toPub } from '../../pod.shared';
 import { findHostedPod } from '../../pod.validation';
 import { assertOwnedVenue } from '../../pod.venue';
@@ -345,6 +349,7 @@ describe('revokeCancellation', () => {
     m(loadClubSlugMap).mockResolvedValue(new Map());
     m(toPub).mockReturnValue({ id: POD_ID, restored: true });
     m(PodModel.updateOne).mockReturnValue(query({}));
+    m(PaymentModel.find).mockReturnValue(query([]));
   });
 
   const restoreTo = (restored: unknown) => {
@@ -374,6 +379,7 @@ describe('revokeCancellation', () => {
   it('flips the pod back online, re-books its slot, re-reserves stock, drops held refunds and audits RESTORE', async () => {
     const restored = { ...base, deleted_at: null };
     restoreTo(restored);
+    m(PaymentModel.find).mockReturnValue(query([{ _id: 'pay-1' }, { _id: 'pay-2' }]));
 
     await expect(svc.revokeCancellation(POD_ID, 'admin-7')).resolves.toEqual({ id: POD_ID, restored: true });
 
@@ -386,6 +392,9 @@ describe('revokeCancellation', () => {
     expect(venueSlotService.holdForPod).not.toHaveBeenCalled();
     expect(applyProductDeltas).toHaveBeenCalledWith([], base.product_requests);
     expect(cancelHeldRefundsForPod).toHaveBeenCalledWith(POD_ID);
+    // The rentals on the refunds being dropped are booked again.
+    expect(PaymentModel.find).toHaveBeenCalledWith({ pod_id: POD_ID, 'metadata.refund_hold': true });
+    expect(rentalLifecycleService.restoreForPayments).toHaveBeenCalledWith(['pay-1', 'pay-2']);
     expect(podAuditService.record).toHaveBeenCalledWith({
       pod: restored,
       action: 'RESTORE',
@@ -423,6 +432,7 @@ describe('revokeCancellation', () => {
     expect(venueSlotService.releaseForPod).toHaveBeenCalledWith(POD_ID);
     expect(PodModel.updateOne).toHaveBeenCalledWith({ _id: POD_ID }, { $set: { deleted_at: CANCELLED_AT, is_active: false } });
     expect(cancelHeldRefundsForPod).not.toHaveBeenCalled();
+    expect(rentalLifecycleService.restoreForPayments).not.toHaveBeenCalled();
     expect(podAuditService.record).not.toHaveBeenCalled();
   });
 

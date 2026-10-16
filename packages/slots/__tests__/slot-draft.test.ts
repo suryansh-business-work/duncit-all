@@ -63,6 +63,15 @@ describe('slot pricing', () => {
     });
   });
 
+  it('treats a price that is blank or not a number as free, not NaN', () => {
+    expect(slotPricingInput({ price: 'abc', pricingMode: 'PER_PAX', overtimeRate: 'x' })).toEqual({
+      price: 0,
+      pricing_mode: 'PER_PAX',
+      overtime_rate: 0,
+    });
+    expect(slotPricingInput({ price: '', pricingMode: 'FLAT', overtimeRate: '' }).price).toBe(0);
+  });
+
   it('reads an unknown mode from the server as a flat price', () => {
     expect(slotPricingModeOf('PER_PAX')).toBe('PER_PAX');
     expect(slotPricingModeOf(undefined)).toBe('FLAT');

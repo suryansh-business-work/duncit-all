@@ -421,6 +421,8 @@ describe('VenueAvailabilityEditor day drawer', () => {
             end_at: atHour(target, 22),
             whole_day: false,
             price: 750,
+            pricing_mode: 'FLAT',
+            overtime_rate: 0,
             notes: 'Terrace',
             space_label: 'Hall',
             capacity: 80,

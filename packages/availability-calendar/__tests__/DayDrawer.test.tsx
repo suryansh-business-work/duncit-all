@@ -98,7 +98,7 @@ describe('DayDrawer', () => {
     // Locked (BOOKED, PENDING) rows have no Block/Delete actions; unlocked ones do.
     expect(screen.getAllByRole('button', { name: 'Block' })).toHaveLength(3); // the three AVAILABLE rows
     expect(screen.getAllByRole('button', { name: 'Unblock' })).toHaveLength(1); // the BLOCKED row
-    expect(screen.getAllByRole('button', { name: 'Delete' })).toHaveLength(2); // AVAILABLE + BLOCKED rows
+    expect(screen.getAllByRole('button', { name: 'Delete' })).toHaveLength(4); // the three AVAILABLE rows + BLOCKED
   });
 
   it('labels timed, multi-day and whole-day slots, and names the space each one is for', () => {

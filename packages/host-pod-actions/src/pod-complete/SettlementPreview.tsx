@@ -39,9 +39,9 @@ export default function SettlementPreview({
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
   // The bill and the usage settle for a moment before the preview re-prices, not on every keystroke.
-  const [typed, setTyped] = useState({ amount: venueBillAmount, usage: venueUsage ?? {} });
+  const [typed, setTyped] = useState({ amount: venueBillAmount, usage: venueUsage });
   useEffect(() => {
-    const timer = setTimeout(() => setTyped({ amount: venueBillAmount, usage: venueUsage ?? {} }), 350);
+    const timer = setTimeout(() => setTyped({ amount: venueBillAmount, usage: venueUsage }), 350);
     return () => clearTimeout(timer);
   }, [venueBillAmount, venueUsage]);
   const amount = typed.amount;

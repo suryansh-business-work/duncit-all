@@ -169,9 +169,6 @@ importers:
       '@duncit/venue-food':
         specifier: workspace:*
         version: link:../../packages/venue-food
-      '@duncit/venue-rentals':
-        specifier: workspace:*
-        version: link:../../packages/venue-rentals
       '@duncit/verification':
         specifier: workspace:*
         version: link:../../packages/verification

@@ -191,7 +191,6 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/user-core", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/venue-food", range: "workspace:*", kind: "dependencies" },
-      { name: "@duncit/venue-rentals", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/verification", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/virtual-scroll", range: "workspace:*", kind: "dependencies" },
       { name: "@emotion/react", range: "^11.14.0", kind: "dependencies" },

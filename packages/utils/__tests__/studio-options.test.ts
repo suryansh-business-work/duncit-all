@@ -182,6 +182,7 @@ describe('studioOptionGroups', () => {
       'settings',
       'earnings',
       'publish',
+      'rented-items',
       'pods',
       'change-requests',
       'pod-requests',

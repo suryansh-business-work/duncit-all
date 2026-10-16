@@ -13193,6 +13193,12 @@ export type Mutation = {
    */
   grantE2eRunAccountRoles: Array<Scalars['String']['output']>;
   /**
+   * "Host again": a new draft holding one of the caller's own pods' content
+   * (title, description, media, pricing, perks) with no date, slot or attendees,
+   * ready to open in Create Pod. A cancelled pod can be hosted again too.
+   */
+  hostAgainPod: PodDraft;
+  /**
    * Host enrols: assigns themselves, setting the pod's ticket price and spots.
    * Only once a venue has fixed the slot on a physical offer. location_id is
    * the city the host had selected — required when nobody has enrolled yet on
@@ -16780,6 +16786,11 @@ export type MutationGrantAdminAccessArgs = {
 
 export type MutationGrantE2eRunAccountRolesArgs = {
   input: GrantE2eRunAccountRolesInput;
+};
+
+
+export type MutationHostAgainPodArgs = {
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 

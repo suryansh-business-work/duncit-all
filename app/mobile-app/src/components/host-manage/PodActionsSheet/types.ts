@@ -37,6 +37,9 @@ export interface PodActionsSheetProps {
   onSlotRequest: () => void;
   onComplete: () => void;
   onEdit: () => void;
+  /** "Host again" — copies this pod's content into a new draft. Open on a past
+   * pod too, the same row mWeb's menu shows (rule 27). */
+  onHostAgain: () => void;
   /** The pod's media upload screen and the link to it — the same three actions. */
   onOpenPodMedia: () => void;
   onSharePodMedia: () => void;

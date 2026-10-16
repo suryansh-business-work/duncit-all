@@ -55,6 +55,10 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
     [navigate],
   );
   const onOpenPodMedia = useCallback((podId: string) => navigate(podMediaPath(podId)), [navigate]);
+  const onHostAgainDraft = useCallback(
+    (draftId: string) => navigate(`/create-pod/${draftId}`),
+    [navigate],
+  );
 
   return (
     <HostPodActionsProvider
@@ -68,6 +72,7 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
       linkBaseUrl={globalThis.window.location.origin}
       onOpenFeedback={onOpenFeedback}
       onOpenPodMedia={onOpenPodMedia}
+      onHostAgainDraft={onHostAgainDraft}
       resolveShareUrl={resolvePodShareUrl}
       notifySuccess={notifySuccess}
       notifyError={notifyError}

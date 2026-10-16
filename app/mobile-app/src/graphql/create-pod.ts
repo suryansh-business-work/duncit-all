@@ -219,6 +219,16 @@ export const SavePodDraftDocument = gql(`
   }
 `);
 
+/** "Host again" — a fresh draft carrying one of the host's own pods' content
+ * (no date, slot or attendees), opened straight in Create Pod. */
+export const HostAgainPodDocument = gql(`
+  mutation MobileHostAgainPod($pod_doc_id: ID!) {
+    hostAgainPod(pod_doc_id: $pod_doc_id) {
+      id
+    }
+  }
+`);
+
 /** Removes a draft. */
 export const DeletePodDraftDocument = gql(`
   mutation MobileDeletePodDraft($draft_id: ID!) {

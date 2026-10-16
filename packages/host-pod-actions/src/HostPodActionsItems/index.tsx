@@ -8,6 +8,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import ReplayIcon from '@mui/icons-material/Replay';
 import PodLinkRows from './PodLinkRows';
 import type { HostPodMenuItemsProps } from './types';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
@@ -43,6 +44,7 @@ export default function HostPodActionsItems({
   onShareFeedback,
   onCopyFeedback,
   onCancel,
+  onHostAgain,
   onClubAdmin,
   onRequestChange,
   requestChangeLabel,
@@ -115,6 +117,14 @@ export default function HostPodActionsItems({
           secondary={canAmend ? undefined : labels.amendClosed}
         />
       </MenuItem>
+      {onHostAgain && (
+        <MenuItem onClick={pick(onHostAgain)} data-testid={`host-pod-action-host-again-${podId}`}>
+          <ListItemIcon>
+            <ReplayIcon fontSize="small" color="primary" />
+          </ListItemIcon>
+          <ListItemText primary={labels.hostAgain} secondary={labels.hostAgainHint} />
+        </MenuItem>
+      )}
       <PodLinkRows
         podId={podId}
         showAttendeeActions={showAttendeeActions}

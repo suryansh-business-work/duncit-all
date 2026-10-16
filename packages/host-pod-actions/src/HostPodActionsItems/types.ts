@@ -35,6 +35,10 @@ export interface HostPodMenuItemsProps {
   onShareFeedback: () => void;
   onCopyFeedback: () => void;
   onCancel: () => void;
+  /** "Host again" — copies this pod's content into a new draft. Open on a past
+   * pod too (that is when it is most wanted); absent where the surface has no
+   * draft route. */
+  onHostAgain?: () => void;
   onClubAdmin?: () => void;
   /** "Request Change Host" — asks Duncit for a different host rather than
    * cancelling the pod. Only appears where the surface passes it. */

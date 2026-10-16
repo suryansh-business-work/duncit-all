@@ -144,7 +144,9 @@ describe('RentalItemsForm', () => {
 
     await waitFor(() => expect(screen.queryByTestId('rental-item-sheet')).toBeNull()).catch(
       (err: unknown) => {
-        const texts = (JSON.stringify(screen.toJSON()).match(/"children":\["[^"]+"\]/g) ?? []).join(' | ');
+        const texts = (JSON.stringify(screen.toJSON()).match(/"children":\["[^"]+"\]/g) ?? []).join(
+          ' | ',
+        );
         throw new Error(`DIAG-RENTAL-SHEET ${texts} ${String(err)}`);
       },
     );

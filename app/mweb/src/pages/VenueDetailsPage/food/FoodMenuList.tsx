@@ -18,7 +18,6 @@ interface Props {
   canOrder: boolean;
   quantityOf: (itemId: string) => number;
   onQuantity: (itemId: string, quantity: number) => void;
-  onOpenImage: (item: VenueFoodItem) => void;
   /** The menu has named categories — each becomes a section that folds. */
   sectioned: boolean;
   /** The sections the guest folded (their keys). */
@@ -26,11 +25,11 @@ interface Props {
   onToggle: (key: string) => void;
 }
 
-type DishesProps = Pick<Props, 'venueId' | 'currency' | 'canOrder' | 'quantityOf' | 'onQuantity' | 'onOpenImage'> & {
+type DishesProps = Pick<Props, 'venueId' | 'currency' | 'canOrder' | 'quantityOf' | 'onQuantity'> & {
   items: VenueFoodItem[];
 };
 
-function Dishes({ venueId, items, currency, canOrder, quantityOf, onQuantity, onOpenImage }: Readonly<DishesProps>) {
+function Dishes({ venueId, items, currency, canOrder, quantityOf, onQuantity }: Readonly<DishesProps>) {
   return (
     <Stack component="ul" spacing={1.25} sx={{ listStyle: 'none', m: 0, p: 0 }}>
       {items.map((item) => (
@@ -41,7 +40,6 @@ function Dishes({ venueId, items, currency, canOrder, quantityOf, onQuantity, on
           canOrder={canOrder}
           quantity={quantityOf(item.id)}
           onQuantity={onQuantity}
-          onOpenImage={onOpenImage}
           detailsPath={venueFoodItemPath(venueId, item.id)}
         />
       ))}

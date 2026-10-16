@@ -17,7 +17,6 @@ import { FoodItemCard } from './FoodItemCard';
 interface Props {
   groups: FoodMenuGroup[];
   currency: string;
-  onOpenImage: (item: VenueFoodItem) => void;
   /** The dish's own screen — opened from its name. */
   onOpenDetails: (item: VenueFoodItem) => void;
   /** The venue takes orders right now — dishes get their cart control. */

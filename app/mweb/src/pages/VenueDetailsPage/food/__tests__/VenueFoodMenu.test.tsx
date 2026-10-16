@@ -1,10 +1,10 @@
 import '@testing-library/jest-dom/vitest';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FOOD_ORDER_ERROR, FOOD_ORDER_LIMITS, type PlaceVenueFoodOrderInput, type VenueFoodItem } from '@duncit/utils';
+import { FOOD_ORDER_ERROR, FOOD_ORDER_LIMITS, venueFoodItemPath, type PlaceVenueFoodOrderInput, type VenueFoodItem } from '@duncit/utils';
 import type { PublicVenue } from '../../queries';
 import VenueFoodMenu from '../VenueFoodMenu';
 import { MY_VENUE_FOOD_ORDERS, VENUE_FOOD_RATING } from '../queries';
@@ -341,19 +341,15 @@ describe('VenueFoodMenu — what the guest is told about the menu', () => {
     expect(screen.queryByTestId('venue-food-discount')).not.toBeInTheDocument();
   });
 
-  it('opens a dish’s photos in the viewer, steps through them and closes it', async () => {
+  it('sends a dish’s card and photo to the dish’s own page rather than a viewer on the menu', () => {
     renderMenu({ food_menu: [dish({ images: ['https://img/chai-1.jpg', 'https://img/chai-2.jpg'] })] });
+    const card = screen.getByTestId('food-item-chai');
+
+    // One link per dish — the photo is a picture inside the card, not a second control.
+    expect(within(card).getByRole('link', { name: 'Masala Chai' })).toHaveAttribute('href', venueFoodItemPath('v1', 'chai'));
+    expect(within(card).getByRole('img', { name: 'Masala Chai' })).toHaveAttribute('src', 'https://img/chai-1.jpg');
+    expect(screen.queryByRole('button', { name: 'View the photo of Masala Chai' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('moment-lightbox')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'View the photo of Masala Chai' }));
-    const viewer = await screen.findByTestId('moment-lightbox');
-    expect(within(viewer).getByTestId('moment-lightbox-media')).toHaveAttribute('src', 'https://img/chai-1.jpg');
-
-    fireEvent.click(within(viewer).getByTestId('moment-lightbox-next'));
-    expect(within(viewer).getByTestId('moment-lightbox-media')).toHaveAttribute('src', 'https://img/chai-2.jpg');
-
-    fireEvent.click(within(viewer).getByTestId('moment-lightbox-close'));
-    await waitFor(() => expect(screen.queryByTestId('moment-lightbox')).not.toBeInTheDocument());
   });
 });
 

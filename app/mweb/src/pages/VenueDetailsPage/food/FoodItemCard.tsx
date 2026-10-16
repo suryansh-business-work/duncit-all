@@ -1,5 +1,5 @@
 import { Link as RouterLink } from 'react-router';
-import { Box, ButtonBase, Chip, Link, Stack, Typography } from '@mui/material';
+import { Box, Chip, Link, Stack, Typography } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/RestaurantRounded';
 import { CartControlNoticeChip, CartQuantityControl, useCartControlNotice } from '@duncit/ui';
 import { FOOD_ORDER_LIMITS, type VenueFoodItem } from '@duncit/utils';
@@ -18,8 +18,7 @@ interface Props {
   canOrder: boolean;
   quantity: number;
   onQuantity: (itemId: string, quantity: number) => void;
-  onOpenImage: (item: VenueFoodItem) => void;
-  /** The dish's own page — its name links there. */
+  /** The dish's own page — its name links there, stretched over the card. */
   detailsPath?: string;
 }
 
@@ -44,12 +43,11 @@ const STRETCHED_LINK_SX = {
 } as const;
 
 /**
- * The dish's first photo, or a plain mark when it has none. With no page of
- * its own to open, the photo is a button into the image viewer; otherwise it
- * is a plain picture under the card's stretched link.
+ * The dish's first photo, or a plain mark when it has none. It is a picture,
+ * not a control: the card's stretched link opens the dish, whose page holds
+ * every photo and the viewer.
  */
-function Thumb({ item, onOpenImage, opensDetails }: Readonly<Pick<Props, 'item' | 'onOpenImage'> & { opensDetails: boolean }>) {
-  const { t } = useTranslation();
+function Thumb({ item }: Readonly<Pick<Props, 'item'>>) {
   const src = item.images[0];
   if (!src) {
     return (
@@ -58,29 +56,10 @@ function Thumb({ item, onOpenImage, opensDetails }: Readonly<Pick<Props, 'item' 
       </Box>
     );
   }
-  if (opensDetails) {
-    return (
-      <Box sx={THUMB_SX} data-testid={`food-item-image-${item.id}`}>
-        <Box component="img" src={src} alt={item.name} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-      </Box>
-    );
-  }
   return (
-    <ButtonBase
-      focusRipple
-      onClick={() => onOpenImage(item)}
-      aria-label={t('mweb.venueFood.viewImage', { vars: { name: item.name } })}
-      sx={THUMB_SX}
-      data-testid={`food-item-image-${item.id}`}
-    >
-      <Box
-        component="img"
-        src={src}
-        alt={item.name}
-        loading="lazy"
-        sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-      />
-    </ButtonBase>
+    <Box sx={THUMB_SX} data-testid={`food-item-image-${item.id}`}>
+      <Box component="img" src={src} alt={item.name} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+    </Box>
   );
 }
 
@@ -93,7 +72,7 @@ function Thumb({ item, onOpenImage, opensDetails }: Readonly<Pick<Props, 'item' 
  * too small to hold it. A dish that is off for now stays on the menu, greyed
  * and labelled, and cannot be added.
  */
-export default function FoodItemCard({ item, currency, canOrder, quantity, onQuantity, onOpenImage, detailsPath }: Readonly<Props>) {
+export default function FoodItemCard({ item, currency, canOrder, quantity, onQuantity, detailsPath }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = useCartControlLabels()(item.name);
   // The cart is read from storage before the first render, so a dish already
@@ -152,8 +131,8 @@ export default function FoodItemCard({ item, currency, canOrder, quantity, onQua
       </Stack>
       <Stack spacing={1} sx={{ alignItems: 'center', flex: '0 0 auto' }}>
         {/* Under the stretched link a dimmed photo would still catch the click, so it lets it through. */}
-        <Box sx={{ ...dim, pointerEvents: detailsPath ? 'none' : undefined }}>
-          <Thumb item={item} onOpenImage={onOpenImage} opensDetails={Boolean(detailsPath)} />
+        <Box sx={{ ...dim, pointerEvents: 'none' }}>
+          <Thumb item={item} />
         </Box>
         {canOrder && available && (
           <Box sx={ABOVE_LINK_SX}>

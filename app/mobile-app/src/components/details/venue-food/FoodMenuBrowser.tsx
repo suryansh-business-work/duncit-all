@@ -21,7 +21,6 @@ import { FoodMenuList } from './FoodMenuList';
 interface Props {
   groups: FoodMenuGroup[];
   currency: string;
-  onOpenImage: (item: VenueFoodItem) => void;
   onOpenDetails: (item: VenueFoodItem) => void;
   canOrder: boolean;
   quantityOf: (itemId: string) => number;

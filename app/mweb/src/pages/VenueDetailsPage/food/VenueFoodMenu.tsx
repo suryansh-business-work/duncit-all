@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Alert, FormControlLabel, Stack, Switch } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenuRounded';
-import { groupFoodMenu, isVegFood, type VenueFoodItem } from '@duncit/utils';
+import { groupFoodMenu, isVegFood } from '@duncit/utils';
 import EmptyState from '../../../components/EmptyState';
 import ErrorBoundary from '../../../components/ErrorBoundary';
-import MomentLightbox from '../../../components/moments/MomentLightbox';
 import SectionHeader from '../../../components/SectionHeader';
 import { usePricing } from '../../../hooks/usePricing';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -23,11 +22,6 @@ interface Props {
   onRefresh: () => Promise<unknown>;
 }
 
-interface Zoom {
-  images: string[];
-  index: number;
-}
-
 /**
  * The venue's menu, and — when it takes QR orders — the cart that goes with
  * it. The menu is always readable: ordering switched off, or closed just now,
@@ -39,7 +33,6 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
   const ordering = useFoodOrdering(venue, onRefresh);
   const { cart, canOrder } = ordering;
   const [vegOnly, setVegOnly] = useState(false);
-  const [zoom, setZoom] = useState<Zoom | null>(null);
 
   const menu = venue.food_menu;
   const discountPct = venue.food_ordering.discount_pct;
@@ -49,8 +42,6 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
     () => groupFoodMenu(vegOnly && mixed ? menu.filter((item) => isVegFood(item.diet)) : menu),
     [menu, vegOnly, mixed],
   );
-
-  const openImage = (item: VenueFoodItem) => setZoom({ images: item.images, index: 0 });
 
   return (
     <Stack spacing={2} data-testid="venue-food-menu">
@@ -92,7 +83,6 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
           canOrder={canOrder}
           quantityOf={cart.quantityOf}
           onQuantity={cart.setQuantity}
-          onOpenImage={openImage}
         />
       )}
       <FoodLicenceNote fssai={venue.food_licences?.fssai_number} />
@@ -111,12 +101,6 @@ function Section({ venue, onRefresh }: Readonly<Props>) {
         error={ordering.checkout.error}
         onDismissError={ordering.checkout.clearError}
         onPay={ordering.pay}
-      />
-      <MomentLightbox
-        moments={(zoom?.images ?? []).map((url) => ({ url }))}
-        index={zoom ? zoom.index : null}
-        onClose={() => setZoom(null)}
-        onIndexChange={(index) => setZoom((prev) => (prev ? { ...prev, index } : prev))}
       />
     </Stack>
   );

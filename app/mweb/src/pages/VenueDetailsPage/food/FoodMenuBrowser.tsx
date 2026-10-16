@@ -10,7 +10,6 @@ import {
   toggleAllFoodSections,
   toggleFoodSection,
   type FoodMenuGroup,
-  type VenueFoodItem,
 } from '@duncit/utils';
 import { useTranslation } from '../../../i18n/useTranslation';
 import SearchPillField from '../../pod-list/SearchPillField';
@@ -24,7 +23,6 @@ interface Props {
   canOrder: boolean;
   quantityOf: (itemId: string) => number;
   onQuantity: (itemId: string, quantity: number) => void;
-  onOpenImage: (item: VenueFoodItem) => void;
 }
 
 /**

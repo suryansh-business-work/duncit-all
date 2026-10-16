@@ -21,7 +21,6 @@ interface Props {
   item: VenueFoodItem;
   /** The configured currency symbol (Finance settings). */
   currency: string;
-  onOpenImage: (item: VenueFoodItem) => void;
   /** The dish's own screen — its name opens it. */
   onOpenDetails?: (item: VenueFoodItem) => void;
   /** The venue takes orders right now — the dish gets its cart control. */
@@ -36,36 +35,13 @@ interface Props {
 const THUMB_SIZE = 96;
 
 /**
- * The dish's first photo, or a plain mark when it has none. With no screen of
- * its own to open, the photo is a button into the image viewer; otherwise the
- * press falls through to the card, which opens the dish.
+ * The dish's first photo, or a plain mark when it has none. It is a picture,
+ * not a control: a press falls through to the card, which opens the dish —
+ * whose screen holds every photo and the viewer.
  */
-function Thumb({
-  item,
-  onOpenImage,
-  opensDetails,
-}: Readonly<Pick<Props, 'item' | 'onOpenImage'> & { opensDetails: boolean }>) {
-  const { t } = useTranslation();
+function Thumb({ item }: Readonly<Pick<Props, 'item'>>) {
   const { muted } = useThemeColors();
   const src = item.images[0];
-  if (src && opensDetails) {
-    return (
-      <YStack
-        testID={`food-item-image-${item.id}`}
-        width={THUMB_SIZE}
-        height={THUMB_SIZE}
-        borderRadius={16}
-        backgroundColor="$soft"
-        overflow="hidden"
-      >
-        <AppImage
-          source={{ uri: src }}
-          style={{ width: '100%', height: '100%' }}
-          resizeMode="cover"
-        />
-      </YStack>
-    );
-  }
   if (!src) {
     return (
       <YStack
@@ -81,13 +57,8 @@ function Thumb({
     );
   }
   return (
-    <XStack
+    <YStack
       testID={`food-item-image-${item.id}`}
-      role="button"
-      tabIndex={0}
-      aria-label={t('mweb.venueFood.viewImage', { vars: { name: item.name } })}
-      pressStyle={PRESS_STYLE.surface}
-      onPress={() => onOpenImage(item)}
       width={THUMB_SIZE}
       height={THUMB_SIZE}
       borderRadius={16}
@@ -99,7 +70,7 @@ function Thumb({
         style={{ width: '100%', height: '100%' }}
         resizeMode="cover"
       />
-    </XStack>
+    </YStack>
   );
 }
 
@@ -114,7 +85,6 @@ function Thumb({
 export function FoodItemCard({
   item,
   currency,
-  onOpenImage,
   onOpenDetails,
   canOrder,
   quantity,
@@ -179,7 +149,7 @@ export function FoodItemCard({
       </YStack>
       <YStack alignItems="center" gap={8}>
         <YStack opacity={dim}>
-          <Thumb item={item} onOpenImage={onOpenImage} opensDetails={Boolean(openDetails)} />
+          <Thumb item={item} />
           <CartNoticeChip notice={notice} labels={labels} testID={`food-item-notice-${item.id}`} />
         </YStack>
         {canOrder && item.is_available ? (

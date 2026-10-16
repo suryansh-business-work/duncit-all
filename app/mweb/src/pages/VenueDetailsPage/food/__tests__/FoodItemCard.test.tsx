@@ -19,7 +19,6 @@ const dish = (over: Partial<VenueFoodItem> = {}): VenueFoodItem => ({
 });
 
 const renderCard = (item: VenueFoodItem, props: { detailsPath?: string; canOrder?: boolean; quantity?: number } = {}) => {
-  const onOpenImage = vi.fn<(item: VenueFoodItem) => void>();
   const onQuantity = vi.fn<(itemId: string, quantity: number) => void>();
   render(
     <MemoryRouter>
@@ -30,28 +29,23 @@ const renderCard = (item: VenueFoodItem, props: { detailsPath?: string; canOrder
           canOrder={props.canOrder ?? true}
           quantity={props.quantity ?? 0}
           onQuantity={onQuantity}
-          onOpenImage={onOpenImage}
           detailsPath={props.detailsPath}
         />
       </ul>
     </MemoryRouter>,
   );
-  return { onOpenImage, onQuantity };
+  return { onQuantity };
 };
 
 describe('FoodItemCard', () => {
-  it('opens the image viewer on the dish when its photo is pressed', () => {
-    const item = dish({ images: ['https://img/paneer-1.jpg', 'https://img/paneer-2.jpg'] });
-    const { onOpenImage } = renderCard(item);
+  it('shows only the first photo, as a picture rather than a control of its own', () => {
+    renderCard(dish({ images: ['https://img/paneer-1.jpg', 'https://img/paneer-2.jpg'] }), { detailsPath: '/venues/v1/food/paneer' });
 
-    const thumb = screen.getByRole('button', { name: 'View the photo of Paneer Tikka' });
-    expect(thumb).toBe(screen.getByTestId('food-item-image-paneer'));
-    // Only the first photo sits on the card.
+    const thumb = screen.getByTestId('food-item-image-paneer');
     expect(within(thumb).getByRole('img', { name: 'Paneer Tikka' })).toHaveAttribute('src', 'https://img/paneer-1.jpg');
-
-    fireEvent.click(thumb);
-    expect(onOpenImage).toHaveBeenCalledTimes(1);
-    expect(onOpenImage).toHaveBeenCalledWith(item);
+    expect(screen.queryByRole('button', { name: /View the photo/ })).not.toBeInTheDocument();
+    // The card's one link is the dish name, stretched over the photo too.
+    expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
   it('shows a plain mark, not a button, for a dish with no photo', () => {

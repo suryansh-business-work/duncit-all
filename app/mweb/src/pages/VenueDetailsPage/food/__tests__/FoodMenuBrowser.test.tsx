@@ -35,7 +35,6 @@ function renderBrowser(menu: VenueFoodItem[] = SECTIONED) {
         canOrder
         quantityOf={() => 0}
         onQuantity={vi.fn()}
-        onOpenImage={vi.fn()}
       />
     </MemoryRouter>,
   );

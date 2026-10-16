@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { XStack, YStack } from 'tamagui';
@@ -7,7 +7,6 @@ import { FOOD_ORDER_LIMITS, groupFoodMenu, type VenueFoodItem } from '@duncit/ut
 import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { SectionHeader } from '@/components/SectionHeader';
 import type { PublicVenueDetails } from '@/hooks/useHostsVenues';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
@@ -35,12 +34,10 @@ function Section({ venue }: Props) {
   const ordering = useVenueFoodOrdering();
   const { cart, canOrder } = ordering;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [zoom, setZoom] = useState<string[] | null>(null);
 
   const groups = useMemo(() => groupFoodMenu(venue.food_menu), [venue.food_menu]);
   const discountPct = venue.food_ordering.discount_pct;
 
-  const openImage = (item: VenueFoodItem) => setZoom(item.images);
   const openDetails = (item: VenueFoodItem) =>
     navigation.navigate('VenueFoodItem', { venueId: venue.id, itemId: item.id });
 
@@ -94,7 +91,6 @@ function Section({ venue }: Props) {
         <FoodMenuBrowser
           groups={groups}
           currency={currency}
-          onOpenImage={openImage}
           onOpenDetails={openDetails}
           canOrder={canOrder}
           quantityOf={cart.quantityOf}
@@ -103,7 +99,6 @@ function Section({ venue }: Props) {
         />
       )}
       <FoodLicenceNote fssai={venue.food_licences?.fssai_number} />
-      <ImageViewerModal images={zoom ?? []} index={zoom ? 0 : null} onClose={() => setZoom(null)} />
     </YStack>
   );
 }

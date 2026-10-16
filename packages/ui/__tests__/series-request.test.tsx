@@ -144,7 +144,7 @@ describe('GroupedSlotRequests', () => {
     expect(screen.getByText('card one')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sunday Badminton' })).toBeInTheDocument();
     // The series' own dates stay folded until the venue opens them.
-    expect(screen.queryByText('card s1')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Answer each' })).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('answers the whole series by its id', () => {

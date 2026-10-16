@@ -666,6 +666,35 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
     },
     // Finance → Food Menu Defaults: the GST on venue food orders for every venue without its own.
     // The field labels are shell.foodTax.* — the venue forms say them too.
+    rentedItems: {
+      settingsTitle: 'Rental Settings',
+      settingsSubtitle: 'The rules every rented item runs under: the terms guests agree to, Duncit’s commission and what is refunded when.',
+      howItApplies:
+        'A change applies to the next rental that closes. A rental already closed keeps the commission and refund it was closed with. Coupons and Duncit Coins never apply to rent or deposits.',
+      enabled: 'Rentals are on',
+      enabledHint: 'Off hides Pod Rent everywhere and refuses new rentals. Rentals already paid for carry on.',
+      terms: 'Terms & Conditions',
+      termsHint: 'Every guest agrees to these before renting.',
+      termsAiContext: 'rental terms and conditions for items a venue rents to pod guests',
+      termsTooLong: 'Keep the terms under 50,000 characters',
+      commission: 'Duncit commission on rent (%)',
+      commissionHint: 'Taken from the rent only, never from a deposit.',
+      commissionInvalid: 'Enter a percent from {min} to {max}',
+      rentRefundable: 'Refund rent when a guest leaves the pod',
+      rentRefundableHint: 'When a guest’s backout spot is filled. A cancelled pod always refunds rent and deposits.',
+      depositRefundable: 'Deposits are refundable',
+      depositRefundableHint: 'On: the deposit comes back once the item is returned, less any damage claim. Off: the venue keeps it.',
+      cutoff: 'Renting closes (hours before the pod)',
+      cutoffHint: 'Guests cannot add rentals after this.',
+      cutoffInvalid: 'Enter whole hours from {min} to {max}',
+      autoRelease: 'Auto-release deposits after (days)',
+      autoReleaseHint: 'An item the venue never marks counts as returned this many days after the pod ends.',
+      autoReleaseInvalid: 'Enter whole days from {min} to {max}',
+      saved: 'Rental settings saved',
+      loading: 'Loading the rental settings',
+      bookingsTitle: 'Rentals',
+      bookingsSubtitle: 'Every rented item across the platform: what was paid, how it closed, what the guest is owed and what the venue earns.',
+    },
     foodMenuDefaults: {
       title: 'Food Menu Defaults',
       subtitle: 'How GST meets the food prices of venues that take QR orders.',
@@ -929,6 +958,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       venueAmountBookedSlotPrice: 'Venue amount (slot price and/or final bill)',
       venueBill: 'Venue bill',
       venueBilling: 'Venue Billing',
+      venueRental: 'Venue Rented Items',
       noPaymentReleaseRequestsFound: 'No payment release requests found.',
     },
     payoutCycles: {

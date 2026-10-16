@@ -22,6 +22,8 @@ export { default as FoodGstinField } from './menu/fields/FoodGstinField';
 export { sendsFoodAccount, type FoodAccountMode } from './menu/fields/FoodOrderingFields';
 export type { AddFoodAccount } from './menu/fields/FoodAccountPicker';
 export { FOOD_PHOTO_FOLDER, type FoodPhotoUpload } from './menu/fields/FoodDishPhotos';
+// The venue's photo field itself: a rented item's photos (@duncit/venue-rentals) use the same one.
+export { default as FoodDishPhotos } from './menu/fields/FoodDishPhotos';
 // A venue's own videos (the Partners venue form, the Venues console editor) — the same field a dish uses.
 export { default as VideoLinksField, type VideoLinksFieldProps } from './menu/fields/VideoLinksField';
 

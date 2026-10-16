@@ -1,0 +1,82 @@
+---
+name: '@duncit/venue-rentals'
+summary: 'A venue''s rented items as its owner and Finance work them: the bookings board with return and damage marking, the refund record and the rental numbers, as one MUI set the Finance, Venues and Partners consoles mount.'
+category: 'domain'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/finance'
+  - 'portals/partners-app'
+  - 'portals/venues'
+exports:
+  - 'VenueRentalDesk'
+  - 'VenueRentalItems'
+  - 'VenueRentalBookings'
+  - 'FinanceRentalBookings'
+  - 'VenueRentalStatsTiles'
+  - 'MarkRentalDialog'
+  - 'RentalRefundDialog'
+  - 'buildRentalBookingColumns'
+  - 'getRentalBookingRowId'
+---
+
+## Why this exists
+
+A venue can rent things out with a pod booking: a racket, court shoes, a projector. The guest pays
+for them through Duncit with the seat, Duncit keeps its rental commission and pays the rest to the
+venue. Three consoles look at the same rentals:
+
+- **Finance** sees every rental, records the refunds it pays back, and sets the rules (Finance >
+  Rented Items > Settings).
+- **The venue owner** (Partners console) marks each item returned or damaged and sees its numbers.
+- **The Venues console** does the same for any venue its editors look after.
+
+So the board, the dialogs and the tiles are one package instead of three copies. The native app
+cannot import MUI, so everything that is not drawing lives in **`@duncit/utils` →
+`venue-rentals.ts`**: the GraphQL documents as plain strings, the row types, the label keys
+(`rentalStatusKey`, `rentalRefundKey`, `rentalUnitKey`), the rules (`canMarkRental`,
+`canRecordRentalRefund`, `rentalMaxQuantity`) and the client twin of the server's price
+(`rentalSelectionTotals`). Copy is the `venueRentals` namespace.
+
+## How the money moves
+
+1. **Checkout.** The guest picks items with their seat. The server prices them (rate × hours for an
+   HOUR item, × 1 for a SLOT item, deposit per unit). Coupons and coins apply to the ticket only.
+2. **Capture.** Inside the payment's transaction each line reserves the pod's stock atomically. A line
+   that sold out since checkout is recorded **UNAVAILABLE** with its money due back; the seat still books.
+3. **Outcome.** The venue marks **RETURNED** (the deposit comes back) or **DAMAGED** (it
+   keeps up to the deposit). An item never marked is auto-released after the configured days. A guest
+   whose backout spot is filled is **RELEASED** (the deposit always back, the rent per the settings). A
+   cancelled pod returns the rentals with the payment's own refund (**IN_PAYMENT**).
+4. **Payout.** An hourly sweep raises one **VENUE_RENTAL** payout per ended pod from the settled bookings
+   (rent less commission, plus any deposit kept). Finance approves it in Payment Release like any other.
+
+Every outcome freezes `refund_due`, `venue_amount` and the commission on the booking, so a later
+settings change never rewrites a closed rental.
+
+## The desk
+
+`VenueRentalDesk` is the whole venue side on one page, with URL-selected tabs: **Dashboard** (the
+numbers and the bookings), **Items** (the rented-items editor: name, photos, per slot or per hour,
+rate, deposit, units per pod, most per guest, available) and **Bookings**. The editor saves through
+`updateApprovedVenue`, so only an approved venue lists items, and every kept item sends its id so its
+bookings stay linked.
+
+## Usage
+
+```tsx
+import { FinanceRentalBookings, VenueRentalBookings, VenueRentalStatsTiles } from '@duncit/venue-rentals';
+
+// Finance > Rented Items
+<FinanceRentalBookings />
+
+// A venue's desk: the host page picks the venue.
+<VenueRentalDesk venueId={venueId} surface="partners-app" mode="owner" />
+
+// Or its parts:
+<VenueRentalStatsTiles venueId={venueId} />
+<VenueRentalBookings venueId={venueId} surface="partners-app" />
+```
+
+`surface` prefixes the table id, so each console remembers its own column choices.

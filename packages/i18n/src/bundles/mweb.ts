@@ -5318,6 +5318,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       foodOrdersHint: 'Orders guests placed from your venue QR',
       foodCoupons: 'Food Coupons',
       foodCouponsHint: 'Coupon codes for food orders at your venue',
+      rentedItems: 'Rented Items',
+      rentedItemsHint: 'What guests can rent with their pod, and the items to mark back',
       venuePods: 'Pods at Your Venue',
       venuePodsHint: 'Upcoming, live now and past pods',
       changeRequests: 'Change Requests',

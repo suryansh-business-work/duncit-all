@@ -26,6 +26,7 @@ describe('STUDIO_OPTION_LIST', () => {
       'food-menu',
       'food-orders',
       'food-coupons',
+      'rented-items',
       'pods',
       'change-requests',
       'pod-requests',

@@ -1,0 +1,58 @@
+{
+  "name": "@duncit/venue-rentals",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A venue's rented items as its owner and Finance work them: the bookings board with return and damage marking, the refund record and the rental numbers, as one MUI set the Finance, Venues and Partners consoles mount. The contract (documents, labels, price math) lives framework-free in @duncit/utils so the native app reads the same.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/buttons": "workspace:*",
+    "@duncit/dialogs": "workspace:*",
+    "@duncit/forms": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
+    "@duncit/table": "workspace:*",
+    "@duncit/tabs": "workspace:*",
+    "@duncit/ui": "workspace:*",
+    "@duncit/utils": "workspace:*",
+    "@duncit/venue-food": "workspace:*"
+  },
+  "peerDependencies": {
+    "@apollo/client": ">=3",
+    "@hookform/resolvers": ">=3",
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "react": ">=18",
+    "react-dom": ">=18",
+    "react-hook-form": ">=7",
+    "zod": ">=4",
+    "react-router": ">=8"
+  },
+  "devDependencies": {
+    "@apollo/client": "^4.3.1",
+    "@hookform/resolvers": "^5.9.1",
+    "@mui/icons-material": "^9.4.0",
+    "@mui/material": "^9.4.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "graphql": "^16.14.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.89.0",
+    "react-router": "^8.4.0",
+    "typescript": "^7.0.2",
+    "zod": "^4.6.5"
+  },
+  "scripts": {
+    "deps:check": "node ../../scripts/deps.mjs check",
+    "deps:update": "node ../../scripts/deps.mjs update",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/venue-rentals"
+  }
+}

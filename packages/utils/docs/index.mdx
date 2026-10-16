@@ -3416,6 +3416,22 @@ const problem = reportSubmitError(pickedCategory, details); // a translation key
 | `REPORT_COPY` | `Record<ReportableKind, ReportKindCopy>` | The content menu's label, Delete and Report keys for a story or post. |
 | `reportSubmitError` | `(category, details) => string \| null` | The first thing wrong with a report about to be sent, as a key. |
 
+## Recurring pods — `pod-series`
+
+A host can make a pod **Recurring**: its first date (a venue slot, or a virtual window) repeats
+daily, weekly or every two weeks until an end day. The server works out every date and the
+identical slot it needs (`podSeriesPreview`), and `publishPodDraftSeries` creates one real pod per
+date — each with its own tickets, attendance, refunds and settlement, and its own venue request.
+
+| Export | Meaning |
+| --- | --- |
+| `POD_SERIES_FREQUENCIES` | The repeat choices with their label keys (`DAILY`, `WEEKLY`, `BIWEEKLY`). |
+| `POD_SERIES_SKIP_REASON_KEY` | Why a date cannot run (no slot, venue on leave, taken, removed, failed), as a key. |
+| `endOfDayInZone(ymd, timeZone)` | The last moment of a calendar day in the admin zone, as ISO — what `ends_on` carries. |
+| `buildPodSeriesPlan(source, timeZone)` | The plan to preview/publish, or null while repeat is off or the first date is not chosen. |
+| `groupSlotRequestsBySeries(rows, keyOf)` | A venue's pending requests with each series folded into one group, dates in order. |
+| `POD_SERIES_PREVIEW_SDL` / `PUBLISH_POD_DRAFT_SERIES_SDL` / `VENUE_DECIDE_POD_SERIES_SDL` | The documents, as SDL strings. |
+
 ## Wallet statement periods — `statement-period`
 
 The partner console, mWeb and the native app all offer "Download statement" on the wallet. This

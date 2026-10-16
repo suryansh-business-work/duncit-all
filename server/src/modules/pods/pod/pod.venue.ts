@@ -457,7 +457,8 @@ export async function bookOrHoldSlotForPod(
   slotDoc: any,
   needsVenueApproval: boolean,
   autoPodSlot?: { slotId: string; autoPodId: string } | null,
-  partnerRequestSlot?: { slotId: string; requestId: string } | null
+  partnerRequestSlot?: { slotId: string; requestId: string } | null,
+  opts: { notifyVenue: boolean } = { notifyVenue: true }
 ) {
   if (!slotDoc) return;
   // A Pod Request already holds this slot: hand it over in one conditional
@@ -502,6 +503,16 @@ export async function bookOrHoldSlotForPod(
     announceFreeSlotBooking(doc, slotDoc);
     return;
   }
+  if (!opts.notifyVenue) return;
+  announceSlotRequest(doc, slotDoc);
+}
+
+/** Tells the venue a pod asked for one of its slots. A recurring series calls
+ * this once, for its first date, instead of once per date. */
+export function announceSlotRequest(
+  doc: Parameters<typeof notifyVenueSlotRequested>[0],
+  slotDoc: Parameters<typeof notifyVenueSlotRequested>[1]
+) {
   // Fire-and-forget: never block the publish response, never fail the pod.
   notifyVenueSlotRequested(doc, slotDoc).catch((error) =>
     logs.server.error('pods', 'notifyVenueSlotRequested', { error, pod_id: String(doc._id) })

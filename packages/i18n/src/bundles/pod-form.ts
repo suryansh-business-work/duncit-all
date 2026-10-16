@@ -154,6 +154,7 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
     // enum in @duncit/pod-form; only the words a person reads are here.
     occurrence: {
       alternateDay: 'Alternate day',
+      biweekly: 'Every two weeks',
       daily: 'Daily',
       monthly: 'Monthly',
       oneTime: 'One time',

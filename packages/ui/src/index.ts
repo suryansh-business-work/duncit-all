@@ -78,3 +78,5 @@ export { ScrollRail } from './ScrollRail';
 export type { ScrollRailProps } from './ScrollRail';
 export { DuncitErrorBoundary, ErrorFallback } from './error-boundary';
 export type { BoundaryLogger, DuncitErrorBoundaryProps, ErrorFallbackProps } from './error-boundary';
+export { GroupedSlotRequests, SeriesRequestGroup, mwebSeriesRequestLabels, shellSeriesRequestLabels } from './series-request';
+export type { GroupedSlotRequestsProps, SeriesRequestGroupProps, SeriesRequestLabels, SeriesRequestRow, SeriesRequestTranslate } from './series-request';

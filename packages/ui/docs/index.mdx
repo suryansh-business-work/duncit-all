@@ -1038,3 +1038,30 @@ const labels = shellVenueBillLabels(t);
   viewBillLabel={labels.viewBill}
 />
 ```
+
+## Recurring pod requests: `SeriesRequestGroup`
+
+A recurring pod is one real pod per date, and each date asks the venue for its own slot. On a
+venue's Slot Requests page those dates fold into one card (group them with `@duncit/utils`
+`groupSlotRequestsBySeries`): **Accept all** / **Decline all** answer every still-pending date at once
+through `venueDecidePodSeries`, and the list underneath keeps each date answerable on its own card.
+
+```tsx
+import { SeriesRequestGroup, mwebSeriesRequestLabels } from '@duncit/ui';
+import { groupSlotRequestsBySeries } from '@duncit/utils';
+
+{groupSlotRequestsBySeries(requests, (r) => r.slot_id).map((group) =>
+  group.kind === 'SERIES' ? (
+    <SeriesRequestGroup
+      key={group.key}
+      rows={group.rows}
+      labels={mwebSeriesRequestLabels(t)} // shellSeriesRequestLabels(t) in a portal
+      formatWhen={formatDateTime}
+      busy={busy}
+      onApproveAll={() => decide(group.seriesId, true)}
+      onDeclineAll={(reason) => decide(group.seriesId, false, reason)}
+      renderRow={card}
+    />
+  ) : card(group.row)
+)}
+```

@@ -9,6 +9,7 @@ export const podTypeDefs = /* GraphQL */ `
     ONE_TIME
     DAILY
     WEEKLY
+    BIWEEKLY
     MONTHLY
     ALTERNATE_DAY
     WEEKENDS_ONLY
@@ -227,6 +228,11 @@ export const podTypeDefs = /* GraphQL */ `
     pod_type: PodType!
     pod_amount: Int!
     pod_occurrence: PodOccurrence!
+    "The recurring series this pod is one date of; null for a one-time pod."
+    series_id: ID
+    "This date's position in its series (from 1), and how many dates the series had."
+    series_index: Int
+    series_total: Int
     no_of_spots: Int!
     pod_info: String
     what_this_pod_offers: [String!]!

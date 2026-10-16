@@ -845,6 +845,9 @@ function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
     host_name: hostName,
     host_email: host?.auth?.email ?? '',
     host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
+    series_id: pod.series_id ? String(pod.series_id) : null,
+    series_index: pod.series_index ?? null,
+    series_total: pod.series_total ?? null,
   };
 }
 
@@ -1097,7 +1100,7 @@ export const venueSlotService = {
     if (!slots.length) return [];
     const podIds = slots.map((s) => s.booked_by_pod_id).filter(Boolean);
     const pods = await PodModel.find({ _id: { $in: podIds } }).select(
-      'pod_title pod_description pod_hosts_id pod_type'
+      'pod_title pod_description pod_hosts_id pod_type series_id series_index series_total'
     );
     const podMap = new Map(pods.map((p) => [String(p._id), p]));
     const hostIds = pods.flatMap((p) => (p.pod_hosts_id ?? []).slice(0, 1));
@@ -1130,7 +1133,7 @@ export const venueSlotService = {
     if (!podId) fail('NOT_FOUND', 'This slot has no booking request');
 
     const [pod, venue, rates] = await Promise.all([
-      PodModel.findById(podId).select('pod_title pod_description pod_hosts_id pod_type'),
+      PodModel.findById(podId).select('pod_title pod_description pod_hosts_id pod_type series_id series_index series_total'),
       VenueModel.findById(slot.venue_id).select('venue_name'),
       resolveEffectiveRates({ venueId: String(slot.venue_id) }),
     ]);

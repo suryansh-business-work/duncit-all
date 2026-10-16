@@ -1803,6 +1803,17 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       sentToFinance:
         'Pod completed. The payouts are with Finance and reach each wallet once approved.',
     },
+    podSeries: {
+      requestSummary: 'Recurring pod · {count} dates, {from} to {to}',
+      acceptAll: 'Accept all {count} dates',
+      declineAll: 'Decline all {count} dates',
+      declineAllShort: 'Decline all',
+      declineReason: 'Reason (shared with the host)',
+      answerEach: 'Answer each date on its own',
+      acceptedAll: 'Accepted {count} dates — those pods are now live.',
+      declinedAll: 'Declined {count} dates — the slots are open again.',
+      someFailed: '{count} dates could no longer be answered.',
+    },
     hostPodActions: {
       menuTooltip: 'Pod actions',
       menuAria: 'Actions for {title}',

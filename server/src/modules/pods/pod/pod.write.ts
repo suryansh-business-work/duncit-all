@@ -88,6 +88,9 @@ export const podWriteMethods = {
       autoPodSlot?: { slotId: string; autoPodId: string };
       autoPodId?: string;
       partnerRequestSlot?: { slotId: string; requestId: string };
+      /** One date of a recurring series. `quietVenue` skips the per-date
+       * venue message — the series sends one for all its dates. */
+      series?: { id: string; index: number; total: number; quietVenue: boolean };
     }
   ) {
     const autoPodSlot = opts?.autoPodSlot ?? null;
@@ -206,12 +209,17 @@ export const podWriteMethods = {
         is_active: needsVenueApproval ? false : input.is_active ?? true,
         venue_approval_status: venueApprovalForCreate(autoPodSlot ?? partnerRequestSlot, needsVenueApproval),
         source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
+        series_id: opts?.series ? new Types.ObjectId(opts.series.id) : null,
+        series_index: opts?.series?.index ?? null,
+        series_total: opts?.series?.total ?? null,
       },
       input.club_id,
       slugBase
     );
 
-    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot);
+    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot, {
+      notifyVenue: !opts?.series?.quietVenue,
+    });
     if (partnerRequestSlot) {
       // The pod exists and holds the slot; closing the request is bookkeeping and
       // must never undo that, so a failure here is logged, not thrown.
@@ -235,7 +243,11 @@ export const podWriteMethods = {
     return toPub(doc, slugMap);
   },
 
-  async createForPartner(userId: string, input: any) {
+  async createForPartner(
+    userId: string,
+    input: any,
+    series?: { id: string; index: number; total: number; quietVenue: boolean }
+  ) {
     const userObjectId = new Types.ObjectId(userId);
     await assertActiveHost(userId);
     const podMode = normalizePodMode(input.pod_mode);
@@ -249,7 +261,7 @@ export const podWriteMethods = {
     return this.create(
       { ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] },
       { actorUserId: userId, source: 'HOST' },
-      partnerRequestSlot ? { partnerRequestSlot } : undefined,
+      partnerRequestSlot || series ? { ...(partnerRequestSlot ? { partnerRequestSlot } : {}), series } : undefined,
     );
   },
 

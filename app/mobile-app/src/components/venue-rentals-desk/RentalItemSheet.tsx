@@ -44,19 +44,7 @@ export function RentalItemSheet({
   }));
 
   const done = async () => {
-    const g = globalThis as unknown as { __rentalDiag?: string[] };
-    g.__rentalDiag = g.__rentalDiag ?? [];
-    const log = g.__rentalDiag;
-    log.push('start');
-    setTimeout(() => log.push('t300'), 300);
-    try {
-      const ok = await trigger(`items.${index}`);
-      log.push(`ok=${String(ok)}`);
-      if (ok) onClose(false);
-      log.push('after-close');
-    } catch (e) {
-      log.push(`threw ${String(e)}`);
-    }
+    if (await trigger(`items.${index}`)) onClose(false);
   };
 
   return (

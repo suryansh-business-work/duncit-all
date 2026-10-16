@@ -1,5 +1,5 @@
 import { Linking } from 'react-native';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { partnerPortalUrl } from '@duncit/onboarding';
 import type { RentalItemsConfig, RentalsVenue, VenueRentalItem } from '@duncit/utils';
 
@@ -140,19 +140,12 @@ describe('RentalItemsForm', () => {
     fireEvent.changeText(screen.getByTestId('field-items.0.rate'), '80');
     fireEvent.changeText(screen.getByTestId('field-items.0.stock'), '3');
     fireEvent.changeText(screen.getByTestId('field-items.0.per_guest_limit'), '1');
-    fireEvent.press(screen.getByTestId('rental-item-done'));
+    // Done validates asynchronously, then closes the sheet — flush that inside act.
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('rental-item-done'));
+    });
 
-    await waitFor(() => expect(screen.queryByTestId('rental-item-sheet')).toBeNull()).catch(
-      (err: unknown) => {
-        const texts = (JSON.stringify(screen.toJSON()).match(/"children":\["[^"]+"\]/g) ?? []).join(
-          ' | ',
-        );
-        const g = globalThis as unknown as { __rentalDiag?: string[] };
-        throw new Error(
-          `DIAG-RENTAL-SHEET [${(g.__rentalDiag ?? []).join(',')}] ${texts} ${String(err)}`,
-        );
-      },
-    );
+    await waitFor(() => expect(screen.queryByTestId('rental-item-sheet')).toBeNull());
     expect(within(screen.getByTestId('rental-item-0')).getByText('Shoes')).toBeOnTheScreen();
     expect(screen.getByText('80 per hour · 3 per pod')).toBeOnTheScreen();
   });

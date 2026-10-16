@@ -48,15 +48,29 @@ jobs:
     outputs:
       any: ${{ steps.plan.outputs.any }}
       matrix: ${{ steps.plan.outputs.matrix }}
+      hashes: ${{ steps.plan.outputs.hashes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      # The checkpoint: every portal that passed, keyed by the content it passed
+      # on. After one red portal, the fix commit re-checks only that portal (and
+      # whatever the fix itself touches), not every portal since the last green
+      # run. A PR also reads the base branch's ledger.
+      - name: Restore pass ledger
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-ledger/portals.txt
+          key: ci-ledger-portals-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ci-ledger-portals-${{ github.ref_name }}-
+            ci-ledger-portals-${{ github.base_ref }}-
 
       - name: Affected portals
         id: plan
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/ci-affected.mjs plan --under portals/ --shards 4 --global .github/workflows/portals-ci.yml
+        run: node scripts/ci-affected.mjs plan --under portals/ --shards 4 --global .github/workflows/portals-ci.yml --ledger .ci-ledger/portals.txt
 
   # Up to four shards, not one runner per portal. Each portal's real work
   # (typecheck, lint, build) is about a minute, but every runner also pays a full
@@ -101,12 +115,16 @@ jobs:
       # so wiring ESLint later needs no workflow change.
       - name: Typecheck → lint → build
         shell: bash
+        env:
+          HASHES: ${{ needs.plan.outputs.hashes }}
         run: |
+          mkdir -p .ci-pass
           failed=()
           for dir in ${{ matrix.shard.dirs }}; do
             echo "::group::$dir"
             if (cd "$dir" && pnpm exec tsc -b --noEmit && pnpm run --if-present lint && pnpm run build); then
               echo "::endgroup::"
+              echo "$dir $(jq -r --arg d "$dir" '.[$d]' <<< "$HASHES")" >> .ci-pass/passed.txt
             else
               echo "::endgroup::"
               echo "::error::$dir failed typecheck, lint or build"
@@ -115,5 +133,55 @@ jobs:
           done
           if [ ${#failed[@]} -gt 0 ]; then
             echo "Failed: ${failed[*]}"
+            echo "Push the fix: the next run re-checks only these, every other portal here is recorded as passed."
             exit 1
           fi
+
+      - name: Hand passes to the ledger
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ci-pass-portals-${{ strategy.job-index }}
+          path: .ci-pass/passed.txt
+          if-no-files-found: ignore
+          retention-days: 1
+
+  # Runs after every shard, red or green, so a red run still records the
+  # portals that passed in it. One job writes, so parallel shards never race.
+  record:
+    name: Record passed portals
+    needs: [plan, portal]
+    if: always() && needs.plan.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+
+      - name: Restore pass ledger
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-ledger/portals.txt
+          key: ci-ledger-portals-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ci-ledger-portals-${{ github.ref_name }}-
+            ci-ledger-portals-${{ github.base_ref }}-
+
+      - name: Collect passes
+        uses: actions/download-artifact@v6
+        with:
+          pattern: ci-pass-portals-*
+          path: .ci-pass
+
+      - name: Merge
+        run: |
+          mkdir -p .ci-ledger
+          node scripts/ci-affected.mjs ledger-merge .ci-ledger/portals.txt $(find .ci-pass -name passed.txt)
+
+      - name: Save pass ledger
+        uses: actions/cache/save@v5
+        with:
+          path: .ci-ledger/portals.txt
+          key: ci-ledger-portals-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}

@@ -130,15 +130,27 @@ jobs:
     outputs:
       any: ${{ steps.plan.outputs.any }}
       matrix: ${{ steps.plan.outputs.matrix }}
+      hashes: ${{ steps.plan.outputs.hashes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      # The checkpoint (see portals-ci.yml): packages that already passed on
+      # identical content are not re-run after another package goes red.
+      - name: Restore pass ledger
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-ledger/packages.txt
+          key: ci-ledger-packages-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ci-ledger-packages-${{ github.ref_name }}-
+            ci-ledger-packages-${{ github.base_ref }}-
 
       - name: Affected packages
         id: plan
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/ci-affected.mjs plan --under packages/ --shards 4 --global .github/workflows/shared-gates.yml
+        run: node scripts/ci-affected.mjs plan --under packages/ --shards 4 --global .github/workflows/shared-gates.yml --ledger .ci-ledger/packages.txt
 
   package-tests:
     name: Package suites ${{ matrix.shard.name }} (tests + coverage thresholds)
@@ -174,11 +186,81 @@ jobs:
       # failure. It was reproducible only by luck: the same commit passed on the
       # push event and failed on the pull_request event. The parallelism comes
       # from the shards instead — one vitest at a time on each runner.
+      #
+      # One package per iteration (still one vitest at a time) so each pass can
+      # be recorded on its own, and one red package no longer stops the rest of
+      # the shard from running and being recorded.
       - name: Package suites + coverage thresholds
+        env:
+          HASHES: ${{ needs.plan.outputs.hashes }}
         run: |
-          filters=()
-          for dir in ${{ matrix.shard.dirs }}; do filters+=(--filter "./$dir"); done
-          pnpm --workspace-concurrency=1 "${filters[@]}" --if-present test:coverage
+          mkdir -p .ci-pass
+          failed=()
+          for dir in ${{ matrix.shard.dirs }}; do
+            echo "::group::$dir"
+            if pnpm --filter "./$dir" --if-present test:coverage; then
+              echo "::endgroup::"
+              echo "$dir $(jq -r --arg d "$dir" '.[$d]' <<< "$HASHES")" >> .ci-pass/passed.txt
+            else
+              echo "::endgroup::"
+              echo "::error::$dir failed its suite or its coverage threshold"
+              failed+=("$dir")
+            fi
+          done
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "Failed: ${failed[*]}"
+            echo "Push the fix: the next run re-runs only these, every other package here is recorded as passed."
+            exit 1
+          fi
+
+      - name: Hand passes to the ledger
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ci-pass-packages-${{ strategy.job-index }}
+          path: .ci-pass/passed.txt
+          if-no-files-found: ignore
+          retention-days: 1
+
+  # Runs after every shard, red or green, so a red run still records what
+  # passed in it. One job writes, so parallel shards never race.
+  record-package-tests:
+    name: Record passed package suites
+    needs: [plan, package-tests]
+    if: always() && needs.plan.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+
+      - name: Restore pass ledger
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-ledger/packages.txt
+          key: ci-ledger-packages-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ci-ledger-packages-${{ github.ref_name }}-
+            ci-ledger-packages-${{ github.base_ref }}-
+
+      - name: Collect passes
+        uses: actions/download-artifact@v6
+        with:
+          pattern: ci-pass-packages-*
+          path: .ci-pass
+
+      - name: Merge
+        run: |
+          mkdir -p .ci-ledger
+          node scripts/ci-affected.mjs ledger-merge .ci-ledger/packages.txt $(find .ci-pass -name passed.txt)
+
+      - name: Save pass ledger
+        uses: actions/cache/save@v5
+        with:
+          path: .ci-ledger/packages.txt
+          key: ci-ledger-packages-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
   packages:
     name: Shared contracts (docs + GraphQL + WhatsApp + Ask Bot + prompts)

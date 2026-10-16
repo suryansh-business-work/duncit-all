@@ -60,6 +60,11 @@ describe('canTakeDownReport', () => {
     expect(canTakeDownReport({ ...OPEN, target_type: 'STORY' })).toBe(true);
   });
 
+  it('offers it for a chat message still up in its room, and not once it is gone', () => {
+    expect(canTakeDownReport({ ...OPEN, target_type: 'MESSAGE' })).toBe(true);
+    expect(canTakeDownReport({ ...OPEN, target_type: 'MESSAGE', target_live: false })).toBe(false);
+  });
+
   it('withholds it once the content is no longer up', () => {
     expect(canTakeDownReport({ ...OPEN, target_live: false })).toBe(false);
     expect(

@@ -4,43 +4,60 @@ import { PodMessageModel } from './chat.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { UserModel } from '@modules/access/user/user.model';
-
-// A pod with no explicit end time is treated as live for this long after start.
-const POD_LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
+import { ClubModel } from '@modules/clubs/club/club.model';
+import { ClubFollowerModel } from '@modules/access/user/relations/clubFollower.model';
+import { podLiveEnd } from '@modules/pods/pod/pod.lifecycle';
+import { moderateText } from '@modules/moderation/moderation.rules';
+import {
+  assertRoomMember,
+  blockedPeerIds,
+  canModerateRoom,
+  isPodMember,
+  roomOfMessage,
+  type ChatRoomRef,
+} from './chat.access';
+import type { ClubRoomDoc, PodRoomDoc } from './chat.shape';
 
 /** Mirrors the clients' podStatus/isPodActive util: a pod has "ended" once it is
- * past its end time, or 4h after start when no end time is set. Chat is closed
- * for ended pods. */
-function isPodEnded(start?: Date | null, end?: Date | null): boolean {
-  if (!start) return false;
-  const startMs = start.getTime();
-  if (Number.isNaN(startMs)) return false;
-  const endMs = end ? end.getTime() : startMs + POD_LIVE_TAIL_MS;
-  return Date.now() > endMs;
+ * past its end time, or the live tail after start when no end time is set. A
+ * pod's chat is closed once it has ended; a club's never closes. */
+function isPodEnded(pod: { pod_date_time?: Date | null; pod_end_date_time?: Date | null } | null) {
+  const end = pod ? podLiveEnd(pod) : null;
+  return !!end && Date.now() > end.getTime();
 }
 
-async function isMember(podId: string, userId: string): Promise<boolean> {
-  const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees').lean();
-  if (!pod) return false;
-  const uid = String(userId);
-  if ((pod.pod_hosts_id || []).map(String).includes(uid)) return true;
-  if ((pod.pod_attendees || []).map(String).includes(uid)) return true;
-  const m = await PodMemberModel.findOne({
-    pod_id: podId,
-    user_id: userId,
-    status: 'JOINED',
-  }).lean();
-  return !!m;
+async function assertRoomOpen(room: ChatRoomRef) {
+  if (room.kind !== 'POD') return;
+  const pod = await PodModel.findById(room.id).select('pod_date_time pod_end_date_time').lean();
+  if (isPodEnded(pod)) {
+    throw new GraphQLError('This pod has ended — chat is closed.', {
+      extensions: { code: 'BAD_REQUEST' },
+    });
+  }
 }
+
+/** The same content rules a pod's own text is held to: no contact details,
+ * outside links, payment asks, abuse or adult content. */
+function assertCleanText(text: string) {
+  const [first] = moderateText('message', text);
+  if (first) {
+    throw new GraphQLError(first.message, {
+      extensions: { code: 'BAD_USER_INPUT', reason: 'MODERATION_BLOCKED', type: first.type },
+    });
+  }
+}
+
+const roomFilter = (room: ChatRoomRef) =>
+  room.kind === 'POD' ? { pod_id: room.id } : { club_id: room.id };
 
 export const chatService = {
-  isMember,
+  isMember: isPodMember,
 
-  async listMessages(podId: string, userId: string, limit = 50, before?: string) {
-    if (!(await isMember(podId, userId))) {
-      throw new GraphQLError('Not a pod member', { extensions: { code: 'FORBIDDEN' } });
-    }
-    const q: any = { pod_id: podId, deleted: false };
+  async listMessages(room: ChatRoomRef, userId: string, limit = 50, before?: string) {
+    await assertRoomMember(room, userId);
+    const q: Record<string, unknown> = { ...roomFilter(room), deleted: false };
+    const blocked = await blockedPeerIds(userId);
+    if (blocked.size > 0) q.user_id = { $nin: [...blocked] };
     if (before) q.createdAt = { $lt: new Date(before) };
     const docs = await PodMessageModel.find(q)
       .sort({ createdAt: -1 })
@@ -50,23 +67,14 @@ export const chatService = {
   },
 
   async postMessage(opts: {
-    podId: string;
+    room: ChatRoomRef;
     userId: string;
     type?: 'TEXT' | 'IMAGE' | 'STICKER';
     text?: string;
     imageUrl?: string;
   }) {
-    if (!(await isMember(opts.podId, opts.userId))) {
-      throw new GraphQLError('Not a pod member', { extensions: { code: 'FORBIDDEN' } });
-    }
-    const pod = await PodModel.findById(opts.podId)
-      .select('pod_date_time pod_end_date_time')
-      .lean();
-    if (isPodEnded(pod?.pod_date_time, pod?.pod_end_date_time)) {
-      throw new GraphQLError('This pod has ended — chat is closed.', {
-        extensions: { code: 'BAD_REQUEST' },
-      });
-    }
+    await assertRoomMember(opts.room, opts.userId);
+    await assertRoomOpen(opts.room);
     const text = (opts.text || '').trim();
     const type = opts.type || (opts.imageUrl ? 'IMAGE' : 'TEXT');
     if (type === 'TEXT' && !text) {
@@ -75,11 +83,12 @@ export const chatService = {
     if (type === 'IMAGE' && !opts.imageUrl) {
       throw new GraphQLError('Image URL required', { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    if (type === 'TEXT') assertCleanText(text);
     // Only the id is stored. The name and photo are resolved at read time by
     // `userDisplayMap`, so a user who renames themselves is renamed everywhere
     // they have ever posted rather than in nothing they have already sent.
     const doc = await PodMessageModel.create({
-      pod_id: opts.podId,
+      ...roomFilter(opts.room),
       user_id: opts.userId,
       type,
       text: type === 'TEXT' || type === 'STICKER' ? text : '',
@@ -91,9 +100,7 @@ export const chatService = {
   async toggleReaction(opts: { messageId: string; userId: string; emoji: string }) {
     const msg = await PodMessageModel.findById(opts.messageId);
     if (!msg) throw new GraphQLError('Message not found', { extensions: { code: 'NOT_FOUND' } });
-    if (!(await isMember(msg.pod_id, opts.userId))) {
-      throw new GraphQLError('Not a pod member', { extensions: { code: 'FORBIDDEN' } });
-    }
+    await assertRoomMember(roomOfMessage(msg), opts.userId);
     const idx = msg.reactions.findIndex(
       (r: any) => String(r.user_id) === String(opts.userId) && r.emoji === opts.emoji
     );
@@ -103,10 +110,13 @@ export const chatService = {
     return msg.toObject();
   },
 
+  /** The author removes their own message; a club's admins (in a club room)
+   * and a pod's hosts (in a pod room) may remove anyone's. */
   async deleteMessage(messageId: string, userId: string) {
     const msg = await PodMessageModel.findById(messageId);
     if (!msg) return null;
-    if (String(msg.user_id) !== String(userId)) {
+    const own = String(msg.user_id) === String(userId);
+    if (!own && !(await canModerateRoom(roomOfMessage(msg), userId))) {
       throw new GraphQLError('Cannot delete others’ messages', {
         extensions: { code: 'FORBIDDEN' },
       });
@@ -131,8 +141,32 @@ export const chatService = {
       )
       .populate({ path: 'club_id', select: 'club_id super_category_id' })
       .sort({ pod_date_time: 1 })
-      .lean();
+      .lean<PodRoomDoc[]>();
     return pods;
+  },
+
+  /** Clubs whose chat I can open: the ones I joined, admin or host. */
+  async listMyClubRooms(userId: string) {
+    const uid = new mongoose.Types.ObjectId(userId);
+    const followed = await ClubFollowerModel.find({ user_id: uid }).select('club_id').lean();
+    const clubs = await ClubModel.find({
+      is_active: true,
+      $or: [
+        { _id: { $in: followed.map((f) => f.club_id) } },
+        { admin_user_ids: uid },
+        { host_ids: uid },
+      ],
+    })
+      .select('club_id club_name club_feature_images_and_videos super_category_id admin_user_ids')
+      .sort({ club_name: 1 })
+      .lean<ClubRoomDoc[]>();
+    const lastByClub = await PodMessageModel.aggregate<{ _id: string; at: Date; text: string; type: string }>([
+      { $match: { club_id: { $in: clubs.map((c) => String(c._id)) }, deleted: false } },
+      { $sort: { createdAt: -1 } },
+      { $group: { _id: '$club_id', at: { $first: '$createdAt' }, text: { $first: '$text' }, type: { $first: '$type' } } },
+    ]);
+    const last = new Map(lastByClub.map((row) => [row._id, row]));
+    return clubs.map((club) => ({ club, last: last.get(String(club._id)) ?? null }));
   },
 
   /** Host(s) + participants of a pod's chat, for the detail people panel.

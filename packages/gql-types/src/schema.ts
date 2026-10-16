@@ -1703,6 +1703,8 @@ export type AppSettings = {
   checkout_nudge_minutes: Scalars['Int']['output'];
   /** Account Health points a CLUB ADMIN loses for filing a Request Change on a pod in their club (0-10, 0 disables it). */
   club_admin_change_request_health_penalty: Scalars['Int']['output'];
+  /** Club chat messages older than this many days are permanently deleted (1-3650). */
+  club_chat_retention_days: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
   custom_time?: Maybe<Scalars['String']['output']>;
   /** Server's real time when the CUSTOM anchor was saved (ISO). */
@@ -1732,6 +1734,8 @@ export type AppSettings = {
   pod_cancel_risk_alert_hours: Scalars['Int']['output'];
   /** How many hours before a pod's start it is watched for cancellation risk: inside this window a finance-negative pod is flagged and its host and club admins are alerted. */
   pod_cancel_risk_window_hours: Scalars['Int']['output'];
+  /** How many hours after a pod ends its chat is permanently deleted (1-8760). */
+  pod_chat_retention_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends the host is emailed and WhatsApped a reminder to complete it. */
   pod_complete_reminder_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends its host has to complete it. Past that they can no longer mark attendance and the pod settles with no host earnings. */
@@ -4021,6 +4025,10 @@ export type ChatParticipants = {
 
 export type ChatRoom = {
   __typename?: 'ChatRoom';
+  /** When this room's messages are permanently deleted: the pod's end plus the admin-set chat retention. Null when the pod has no usable start. */
+  chat_deletes_at?: Maybe<Scalars['String']['output']>;
+  /** Whether the pod has ended, which closes the room to new messages. */
+  closed: Scalars['Boolean']['output'];
   club_id?: Maybe<Scalars['ID']['output']>;
   /** The club's URL slug (Club.club_id) for building the pod detail path. */
   club_slug?: Maybe<Scalars['String']['output']>;
@@ -4476,6 +4484,25 @@ export type ClubAdminTrendPoint = {
   label: Scalars['String']['output'];
   pods: Scalars['Int']['output'];
   revenue: Scalars['Float']['output'];
+};
+
+/** A club's chat room, for everyone who joined the club plus its admins and hosts. */
+export type ClubChatRoom = {
+  __typename?: 'ClubChatRoom';
+  /** Whether the viewer may remove other members' messages (a club admin). */
+  can_moderate: Scalars['Boolean']['output'];
+  club_id: Scalars['ID']['output'];
+  club_name: Scalars['String']['output'];
+  /** The club's URL slug (Club.club_id). */
+  club_slug: Scalars['String']['output'];
+  cover_url?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  last_message_at?: Maybe<Scalars['String']['output']>;
+  last_message_preview?: Maybe<Scalars['String']['output']>;
+  last_message_type?: Maybe<PodMessageType>;
+  /** Messages older than this many days are permanently deleted (Clubs > Club Settings). */
+  retention_days: Scalars['Int']['output'];
+  super_category_id?: Maybe<Scalars['ID']['output']>;
 };
 
 export type ClubFaq = {
@@ -13036,6 +13063,7 @@ export type Mutation = {
   deletePodExpense: Scalars['Boolean']['output'];
   deletePodIdea: Scalars['Boolean']['output'];
   deletePodIdeaComment: PodIdea;
+  /** Removes a pod OR club chat message: your own, or anyone's in a room you moderate. */
   deletePodMessage?: Maybe<PodMessage>;
   deletePodPlan: Scalars['Boolean']['output'];
   deletePolicy: Scalars['Boolean']['output'];
@@ -13470,6 +13498,7 @@ export type Mutation = {
   ratePodChallengeCompetitor: PodChallenge;
   /** Competitor: check in at a checkpoint with the code its QR link carries. */
   reachPodChallengeCheckpoint: PodChallenge;
+  /** Toggles a reaction on a pod OR club chat message. */
   reactToPodMessage: PodMessage;
   /**
    * React, or take the reaction back. The same kind again removes it; a
@@ -13582,6 +13611,12 @@ export type Mutation = {
    * announced every build twice would be ignored within a week.
    */
   reportAppBuild: AppBuild;
+  /**
+   * Report a line in a pod's or club's chat. Only a member of that room can, and
+   * the text (or photo) is snapshotted server-side. Same REPORT_ALREADY_PENDING
+   * rule as reportPost.
+   */
+  reportChatMessage: ContentReportReceipt;
   /**
    * Record progress, one suite's result, or the run's outcome. Tech/Super admin
    * only — the workflow authenticates with the same TECH_MANAGER JWT the build
@@ -13926,6 +13961,7 @@ export type Mutation = {
    * admin only; SMTP + OpenAI credentials come from the Tech portal env entries.
    */
   sendAppReleaseEmail: AppReleaseEmailResult;
+  sendClubMessage: PodMessage;
   /** Write to the reporter or to the content's owner about this report. */
   sendContentReportMail: ContentReport;
   sendCrmTestEmail: CrmEmailTestResult;
@@ -17445,6 +17481,13 @@ export type MutationReportAppBuildArgs = {
 };
 
 
+export type MutationReportChatMessageArgs = {
+  details?: InputMaybe<Scalars['String']['input']>;
+  message_id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
+};
+
+
 export type MutationReportE2eRunArgs = {
   input: ReportE2eRunInput;
 };
@@ -17971,6 +18014,14 @@ export type MutationSendAnalyticsMailNowArgs = {
 
 export type MutationSendAppReleaseEmailArgs = {
   input: SendAppReleaseEmailInput;
+};
+
+
+export type MutationSendClubMessageArgs = {
+  club_id: Scalars['ID']['input'];
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  text?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<PodMessageType>;
 };
 
 
@@ -22787,6 +22838,16 @@ export type PodChangeStatus =
   | 'RESOLVED'
   | 'WITHDRAWN';
 
+export type PodChatInfo = {
+  __typename?: 'PodChatInfo';
+  /** Whether the viewer may remove other members' messages (a host of the pod). */
+  can_moderate: Scalars['Boolean']['output'];
+  /** When this room's messages are permanently deleted. Null when the pod has no usable start. */
+  chat_deletes_at?: Maybe<Scalars['String']['output']>;
+  /** Whether the pod has ended, which closes the room to new messages. */
+  closed: Scalars['Boolean']['output'];
+};
+
 /** A co-host on a pod. View-only: they cannot edit, complete or delete it, and the pod's earnings are unaffected. */
 export type PodCoHost = {
   __typename?: 'PodCoHost';
@@ -23491,13 +23552,15 @@ export type PodMembershipState = {
   status?: Maybe<MembershipStatus>;
 };
 
+/** A chat line in a pod's room (pod_id) or a club's room (club_id) — exactly one is set. */
 export type PodMessage = {
   __typename?: 'PodMessage';
+  club_id?: Maybe<Scalars['ID']['output']>;
   createdAt: Scalars['String']['output'];
   deleted: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   image_url?: Maybe<Scalars['String']['output']>;
-  pod_id: Scalars['ID']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
   reactions: Array<PodMessageReaction>;
   text?: Maybe<Scalars['String']['output']>;
   type: PodMessageType;
@@ -25372,11 +25435,14 @@ export type Query = {
   /** Onboarded Club Admins, for the Onboarding portal's table. */
   clubAdminProfilesTable: ClubAdminProfileTablePage;
   clubBySlug?: Maybe<Club>;
+  /** One club's chat room header, for members only. */
+  clubChatRoom: ClubChatRoom;
   /**
    * People who follow this club — the list behind followers_count, so the count
    * on the club page can open the members it is counting.
    */
   clubFollowers: Array<PublicProfile>;
+  clubMessages: Array<PodMessage>;
   clubRatings: Array<ClubRating>;
   /** Every venue-slot request hosts have raised — the Clubs console's list. */
   clubSlotRequestsTable: ClubSlotRequestTablePage;
@@ -25934,6 +26000,8 @@ export type Query = {
   /** Partner: their deletion requests (optionally one brand's). */
   myCatalogDeletionRequests: Array<CatalogDeletionRequest>;
   myChatRooms: Array<ChatRoom>;
+  /** Club chat rooms the caller can open (joined, admin or host). */
+  myClubChatRooms: Array<ClubChatRoom>;
   /**
    * Pods across the signed-in Club Admin's clubs for the Club Studio "Your Pods"
    * section, newest first — the club-side twin of venuePods. Every stage shows,
@@ -26209,6 +26277,8 @@ export type Query = {
   podChangeRequests: PodChangeRequestPage;
   /** Admin: free slots at a candidate venue, for a VENUE request. */
   podChangeVenueSlots: Array<PodChangeSlot>;
+  /** A pod room's retention and moderation facts, for its members. */
+  podChatInfo: PodChatInfo;
   podComments: Array<PodComment>;
   /** The Admin panel's Pods dashboard, in one read. */
   podDashboard: PodDashboard;
@@ -27459,8 +27529,20 @@ export type QueryClubBySlugArgs = {
 };
 
 
+export type QueryClubChatRoomArgs = {
+  club_id: Scalars['ID']['input'];
+};
+
+
 export type QueryClubFollowersArgs = {
   club_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubMessagesArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  club_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -29139,6 +29221,11 @@ export type QueryPodChangeRequestsArgs = {
 export type QueryPodChangeVenueSlotsArgs = {
   request_id: Scalars['ID']['input'];
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodChatInfoArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -31591,6 +31678,8 @@ export type ReportStressRunInput = {
  */
 export type ReportTargetType =
   | 'CLUB'
+  /** A line in a pod's or club's chat. */
+  | 'MESSAGE'
   | 'POD'
   | 'POST'
   | 'PRODUCT'
@@ -37651,6 +37740,8 @@ export type UpdateAppSettingsInput = {
   checkout_nudge_minutes?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a club admin loses for filing a Request Change (0-10, 0 disables it). */
   club_admin_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
+  /** Club chat messages older than this many days are permanently deleted (1-3650). */
+  club_chat_retention_days?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
   custom_time?: InputMaybe<Scalars['String']['input']>;
   date_format?: InputMaybe<Scalars['String']['input']>;
@@ -37678,6 +37769,8 @@ export type UpdateAppSettingsInput = {
   pod_cancel_risk_alert_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod's start it is watched for cancellation risk (1-8760). */
   pod_cancel_risk_window_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours after a pod ends its chat is permanently deleted (1-8760). */
+  pod_chat_retention_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends the host is reminded to complete it (1-8760). */
   pod_complete_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends its host has to complete it (1-8760). */

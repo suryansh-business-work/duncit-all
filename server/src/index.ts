@@ -11,6 +11,7 @@ import { buildStatusProbeRouter } from './observability/statusProbe';
 import { buildUploadRouter } from './routes/upload.router';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
+import { startChatRetentionScheduler } from '@modules/engagement/chat/chat.cleanup';
 import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
 import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
 import { startRefundHoldReleaseScheduler } from '@modules/pods/pod/pod.refundHold';
@@ -559,6 +560,9 @@ async function bootstrap() {
 
   // Draft-pod retention: delete drafts past the admin-configured window daily.
   startPodDraftCleanupScheduler();
+
+  // Chat retention: pod rooms some hours after the pod ends, club messages by age.
+  startChatRetentionScheduler();
 
   // Auto Pods: expire offers whose slot date passed, recover stuck materializations.
   startAutoPodSweepScheduler();

@@ -66,6 +66,10 @@ export const settingsTypeDefs = gql`
     auto_pod_slot_window_days: Int!
     "How many days ahead Home's Happening nearby looks: only upcoming pods starting within this many days (1-60) are shown there."
     happening_nearby_days: Int!
+    "How many hours after a pod ends its chat is permanently deleted (1-8760)."
+    pod_chat_retention_hours: Int!
+    "Club chat messages older than this many days are permanently deleted (1-3650)."
+    club_chat_retention_days: Int!
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires."
     auto_pod_venue_expiry_hours: Int!
     "How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol; past that it is released."
@@ -180,6 +184,10 @@ export const settingsTypeDefs = gql`
     auto_pod_slot_window_days: Int
     "How many days ahead Home's Happening nearby looks (1-60)."
     happening_nearby_days: Int
+    "How many hours after a pod ends its chat is permanently deleted (1-8760)."
+    pod_chat_retention_hours: Int
+    "Club chat messages older than this many days are permanently deleted (1-3650)."
+    club_chat_retention_days: Int
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720)."
     auto_pod_venue_expiry_hours: Int
     "How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol before it is released (1-720)."

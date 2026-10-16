@@ -1,13 +1,21 @@
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import { chatService } from './chat.service';
 import type { GraphQLContext } from '@context';
-import { emitToPod } from './chat.socket';
+import { emitToRoom } from './chat.socket';
+import { chatRetention, podChatDeletesAt } from './chat.retention';
+import { PodModel } from '@modules/pods/pod/pod.model';
+import { assertRoomMember, canModerateRoom, roomOfMessage, type ChatRoomRef } from './chat.access';
+import { notifyNewChatMessage } from './chat.notify';
 import {
-  displayFrom,
-  userDisplayMap,
-  userDisplayOf,
-  type UserDisplay,
-} from '@modules/access/user/user.display';
+  shapeClubRoom,
+  shapeMessage,
+  shapePodRoom,
+  type ClubRoomDoc,
+  type StoredMessage,
+} from './chat.shape';
+import { ClubModel } from '@modules/clubs/club/club.model';
+import { displayFrom, userDisplayMap, userDisplayOf } from '@modules/access/user/user.display';
 
 function requireAuth(ctx: GraphQLContext) {
   if (!ctx.user?.id) {
@@ -18,112 +26,124 @@ function requireAuth(ctx: GraphQLContext) {
   return ctx.user.id;
 }
 
-/**
- * Shape a message for both GraphQL and the socket.
- *
- * The name and photo are resolved from the account NOW rather than read off the
- * row, which no longer stores them. `display` is passed in so a page of
- * messages costs one user query instead of one per message.
- *
- * Both paths go through here on purpose: the socket pushes this object
- * straight to connected clients, so a field resolver would never run for the
- * realtime copy and a renamed user would appear correctly on refresh and
- * wrongly the moment they posted.
- */
-function shape(doc: any, display: UserDisplay) {
+type MessageType = 'TEXT' | 'IMAGE' | 'STICKER';
+type SendArgs = { type?: MessageType; text?: string; image_url?: string };
+type PageArgs = { limit?: number; before?: string };
+
+/** One page of a room, oldest first, with names resolved in one query. */
+async function pageOf(room: ChatRoomRef, uid: string, limit?: number, before?: string) {
+  const docs: StoredMessage[] = await chatService.listMessages(room, uid, limit, before);
+  const display = await userDisplayMap(docs.map((d) => String(d.user_id)));
+  return docs.map((d) => shapeMessage(d, displayFrom(display, String(d.user_id))));
+}
+
+/** Posts, broadcasts to the room, and pushes the members who are away. */
+async function send(room: ChatRoomRef, uid: string, args: SendArgs) {
+  const doc: StoredMessage = await chatService.postMessage({
+    room,
+    userId: uid,
+    type: args.type,
+    text: args.text,
+    imageUrl: args.image_url,
+  });
+  const shaped = shapeMessage(doc, await userDisplayOf(uid));
+  emitToRoom(room, 'message', shaped);
+  notifyNewChatMessage({
+    room,
+    senderId: uid,
+    senderName: shaped.user_name || '',
+    preview: shaped.type === 'IMAGE' ? 'Photo' : shaped.text.slice(0, 120),
+  }).catch(() => undefined);
+  return shaped;
+}
+
+async function clubRoomFor(clubId: string, uid: string) {
+  await assertRoomMember({ kind: 'CLUB', id: clubId }, uid);
+  const club = await ClubModel.findById(clubId)
+    .select('club_id club_name club_feature_images_and_videos super_category_id')
+    .lean<ClubRoomDoc>();
+  if (!club) throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
+  const [{ clubDays }, canModerate] = await Promise.all([
+    chatRetention(),
+    canModerateRoom({ kind: 'CLUB', id: clubId }, uid),
+  ]);
+  return shapeClubRoom(club, { retentionDays: clubDays, canModerate });
+}
+
+/** A pod room's retention and moderation facts, for its members. */
+async function podChatInfo(podId: string, uid: string) {
+  const room: ChatRoomRef = { kind: 'POD', id: podId };
+  await assertRoomMember(room, uid);
+  const [pod, { podHours }, canModerate] = await Promise.all([
+    PodModel.findById(podId).select('pod_date_time pod_end_date_time').lean(),
+    chatRetention(),
+    canModerateRoom(room, uid),
+  ]);
+  const end = pod ? podChatDeletesAt(pod, 0) : null;
   return {
-    id: String(doc._id || doc.id),
-    pod_id: String(doc.pod_id),
-    user_id: String(doc.user_id),
-    user_name: display.name,
-    user_photo: display.photo,
-    type: doc.type,
-    text: doc.text || '',
-    image_url: doc.image_url || '',
-    reactions: (doc.reactions || []).map((r: any) => ({
-      user_id: String(r.user_id),
-      emoji: r.emoji,
-    })),
-    deleted: !!doc.deleted,
-    createdAt: (doc.createdAt || new Date()).toISOString(),
+    chat_deletes_at: pod ? (podChatDeletesAt(pod, podHours)?.toISOString() ?? null) : null,
+    closed: !!end && Date.now() > end.getTime(),
+    can_moderate: canModerate,
   };
 }
 
 export const chatResolvers = {
   Query: {
-    myChatRooms: async (_: any, __: any, ctx: GraphQLContext) => {
+    myChatRooms: async (_: unknown, __: unknown, ctx: GraphQLContext) => {
       const uid = requireAuth(ctx);
-      const pods = await chatService.listMyChatRooms(uid);
-      return pods.map((p: any) => {
-        // club_id is populated to { _id, club_id (slug), super_category_id }.
-        const club = p.club_id && typeof p.club_id === 'object' ? p.club_id : null;
-        let clubId: string | null = null;
-        if (club) {
-          clubId = String(club._id);
-        } else if (p.club_id) {
-          clubId = String(p.club_id);
-        }
-        return {
-          id: String(p._id),
-          pod_id: String(p._id),
-          pod_slug: p.pod_id || null,
-          pod_title: p.pod_title,
-          pod_date_time: p.pod_date_time ? new Date(p.pod_date_time).toISOString() : null,
-          pod_end_date_time: p.pod_end_date_time
-            ? new Date(p.pod_end_date_time).toISOString()
-            : null,
-          // Identity, deliberately: this drives who is IN the chat, and a
-          // multi-seat buyer is still one person in it. Do not seat-adjust this
-          // the way pod occupancy was — the guests they brought have no account.
-          pod_attendees: (p.pod_attendees || []).map(String),
-          no_of_spots: p.no_of_spots,
-          club_id: clubId,
-          club_slug: club?.club_id || null,
-          super_category_id: club?.super_category_id ? String(club.super_category_id) : null,
-          cover_url: p.pod_images_and_videos?.find((m: any) => m.type !== 'VIDEO')?.url || null,
-        };
-      });
+      const [pods, { podHours }] = await Promise.all([
+        chatService.listMyChatRooms(uid),
+        chatRetention(),
+      ]);
+      return pods.map((p) => shapePodRoom(p, podHours));
     },
-    chatParticipants: async (_: any, args: { pod_id: string }, ctx: GraphQLContext) => {
+    chatParticipants: async (_: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
       const uid = requireAuth(ctx);
       return chatService.chatParticipants(args.pod_id, uid);
     },
-    podMessages: async (
-      _: any,
-      args: { pod_id: string; limit?: number; before?: string },
-      ctx: GraphQLContext
-    ) => {
+    podMessages: async (_: unknown, args: PageArgs & { pod_id: string }, ctx: GraphQLContext) =>
+      pageOf({ kind: 'POD', id: args.pod_id }, requireAuth(ctx), args.limit, args.before),
+    podChatInfo: async (_: unknown, args: { pod_id: string }, ctx: GraphQLContext) =>
+      podChatInfo(args.pod_id, requireAuth(ctx)),
+    myClubChatRooms: async (_: unknown, __: unknown, ctx: GraphQLContext) => {
       const uid = requireAuth(ctx);
-      const docs = await chatService.listMessages(args.pod_id, uid, args.limit, args.before);
-      const display = await userDisplayMap(docs.map((d: any) => d.user_id));
-      return docs.map((d: any) => shape(d, displayFrom(display, d.user_id)));
+      const [rooms, { clubDays }] = await Promise.all([
+        chatService.listMyClubRooms(uid),
+        chatRetention(),
+      ]);
+      return rooms.map(({ club, last }) =>
+        shapeClubRoom(club, {
+          retentionDays: clubDays,
+          canModerate: (club.admin_user_ids || []).map(String).includes(uid),
+          last,
+        })
+      );
     },
+    clubChatRoom: async (_: unknown, args: { club_id: string }, ctx: GraphQLContext) =>
+      clubRoomFor(args.club_id, requireAuth(ctx)),
+    clubMessages: async (_: unknown, args: PageArgs & { club_id: string }, ctx: GraphQLContext) =>
+      pageOf({ kind: 'CLUB', id: args.club_id }, requireAuth(ctx), args.limit, args.before),
   },
   Mutation: {
-    sendPodMessage: async (
-      _: any,
-      args: { pod_id: string; type?: any; text?: string; image_url?: string },
+    sendPodMessage: async (_: unknown, args: SendArgs & { pod_id: string }, ctx: GraphQLContext) =>
+      send({ kind: 'POD', id: args.pod_id }, requireAuth(ctx), args),
+    sendClubMessage: async (
+      _: unknown,
+      args: SendArgs & { club_id: string },
       ctx: GraphQLContext
     ) => {
-      const uid = requireAuth(ctx);
-      const doc = await chatService.postMessage({
-        podId: args.pod_id,
-        userId: uid,
-        type: args.type,
-        text: args.text,
-        imageUrl: args.image_url,
-      });
-      const shaped = shape(doc, await userDisplayOf(uid));
-      emitToPod(args.pod_id, 'message', shaped);
-      return shaped;
+      if (!Types.ObjectId.isValid(args.club_id)) {
+        throw new GraphQLError('Invalid club id', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      return send({ kind: 'CLUB', id: args.club_id }, requireAuth(ctx), args);
     },
     reactToPodMessage: async (
-      _: any,
+      _: unknown,
       args: { message_id: string; emoji: string },
       ctx: GraphQLContext
     ) => {
       const uid = requireAuth(ctx);
-      const doc = await chatService.toggleReaction({
+      const doc: StoredMessage = await chatService.toggleReaction({
         messageId: args.message_id,
         userId: uid,
         emoji: args.emoji,
@@ -131,20 +151,16 @@ export const chatResolvers = {
       // The message's AUTHOR, not the reacting user — a reaction rebroadcasts
       // the whole message, and resolving `uid` here would relabel someone
       // else's message with the name of whoever last tapped an emoji on it.
-      const shaped = shape(doc, await userDisplayOf(doc.user_id));
-      emitToPod(shaped.pod_id, 'reaction', shaped);
+      const shaped = shapeMessage(doc, await userDisplayOf(String(doc.user_id)));
+      emitToRoom(roomOfMessage(doc), 'reaction', shaped);
       return shaped;
     },
-    deletePodMessage: async (
-      _: any,
-      args: { message_id: string },
-      ctx: GraphQLContext
-    ) => {
+    deletePodMessage: async (_: unknown, args: { message_id: string }, ctx: GraphQLContext) => {
       const uid = requireAuth(ctx);
-      const doc = await chatService.deleteMessage(args.message_id, uid);
+      const doc: StoredMessage | null = await chatService.deleteMessage(args.message_id, uid);
       if (!doc) return null;
-      const shaped = shape(doc, await userDisplayOf(doc.user_id));
-      emitToPod(shaped.pod_id, 'deleted', shaped);
+      const shaped = shapeMessage(doc, await userDisplayOf(String(doc.user_id)));
+      emitToRoom(roomOfMessage(doc), 'deleted', shaped);
       return shaped;
     },
   },

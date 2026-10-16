@@ -9,7 +9,14 @@ import { nextEntityNo } from '@modules/venues/entityIdCounter';
  * profile — files into the SAME record and the SAME Legal queue. A second
  * "reports" collection per surface is exactly the drift rule 40 exists to stop.
  */
-export type ReportTargetType = 'STORY' | 'POST' | 'POD' | 'CLUB' | 'PROFILE' | 'PRODUCT';
+export type ReportTargetType =
+  | 'STORY'
+  | 'POST'
+  | 'POD'
+  | 'CLUB'
+  | 'PROFILE'
+  | 'PRODUCT'
+  | 'MESSAGE';
 export const REPORT_TARGET_TYPES: ReportTargetType[] = [
   'STORY',
   'POST',
@@ -17,6 +24,7 @@ export const REPORT_TARGET_TYPES: ReportTargetType[] = [
   'CLUB',
   'PROFILE',
   'PRODUCT',
+  'MESSAGE',
 ];
 
 /** Where the Legal team has taken it. */

@@ -116,6 +116,12 @@ export interface IAppSettings extends Document {
   /** How many days ahead Home's "Happening nearby" looks (Admin > Pods > Pod Settings):
    * only upcoming pods starting within this many days are shown there. */
   happening_nearby_days: number;
+  /** How many hours after a pod ENDS its chat is permanently deleted
+   * (Admin > Pods > Pod Settings). */
+  pod_chat_retention_hours: number;
+  /** Club chat messages older than this many days are permanently deleted
+   * (Clubs > Club Settings). A club never ends, so its chat ages out instead. */
+  club_chat_retention_days: number;
   /** How many hours a physical Auto Pod stays on venues' lists — and stays
    * open at all — before it expires if no venue has accepted it. */
   auto_pod_venue_expiry_hours: number;
@@ -183,6 +189,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     pod_cancel_risk_alert_hours: { type: Number, default: 4, min: 1, max: 168 },
     auto_pod_slot_window_days: { type: Number, default: 7, min: 1, max: 60 },
     happening_nearby_days: { type: Number, default: 7, min: 1, max: 60 },
+    pod_chat_retention_hours: { type: Number, default: 72, min: 1, max: 8760 },
+    club_chat_retention_days: { type: Number, default: 30, min: 1, max: 3650 },
     auto_pod_venue_expiry_hours: { type: Number, default: 24, min: 1, max: 720 },
     auto_pod_assignment_expiry_hours: { type: Number, default: 72, min: 1, max: 720 },
     auto_pod_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },

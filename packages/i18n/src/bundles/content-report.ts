@@ -73,6 +73,7 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     // A member's profile: its 3-dot menu offers Block and Report. A block is
     // never announced to the blocked member, and the copy says so.
     titleProfile: 'Report this profile',
+    titleMessage: 'Report this message',
     profileMenuLabel: 'Profile options',
     reportProfile: 'Report profile',
     block: 'Block',
@@ -196,6 +197,7 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     targetPod: 'Pod',
     targetClub: 'Club',
     targetProfile: 'Profile',
+    targetMessage: 'Chat message',
     targetProduct: 'Product',
     // Settings: the categories the report dialog offers.
     settingsTitle: 'Report categories',

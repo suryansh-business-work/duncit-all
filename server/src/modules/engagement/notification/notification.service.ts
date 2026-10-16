@@ -19,6 +19,12 @@ import { logs } from '@observability/log';
 
 let vapidReady = false;
 
+/** What a push needs: a stored notification, or a push-only message such as a
+ * new chat line (its `_id` is then whatever identifies the message). */
+export type PushMessage = Pick<INotification, 'title' | 'body' | 'image_url' | 'link_url'> & {
+  _id: unknown;
+};
+
 const toPub = (n: INotification) => ({
   id: String(n._id),
   title: n.title,
@@ -237,7 +243,7 @@ export const notificationService = {
     return users.map((u) => String(u._id));
   },
 
-  async fanOutPush(notif: INotification, userIds: string[]) {
+  async fanOutPush(notif: PushMessage, userIds: string[]) {
     await this.ensureVapid();
     let delivered = 0;
     let failed = 0;
@@ -277,7 +283,7 @@ export const notificationService = {
   },
 
   /** Deliver to native devices via Expo's push service (chunks of 100). */
-  async fanOutExpoPush(notif: INotification, userIds: string[]) {
+  async fanOutExpoPush(notif: PushMessage, userIds: string[]) {
     let delivered = 0;
     let failed = 0;
     if (userIds.length === 0) return { delivered, failed };

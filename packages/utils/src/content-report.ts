@@ -17,7 +17,14 @@
  */
 
 /** What was reported. Mirrors the server's `ReportTargetType`. */
-export type ReportTargetType = 'STORY' | 'POST' | 'POD' | 'CLUB' | 'PROFILE' | 'PRODUCT';
+export type ReportTargetType =
+  | 'STORY'
+  | 'POST'
+  | 'POD'
+  | 'CLUB'
+  | 'PROFILE'
+  | 'PRODUCT'
+  | 'MESSAGE';
 
 /** Where the Legal team has taken it. Mirrors `ReportStatus`. */
 export type ReportStatus = 'RECEIVED' | 'IN_REVIEW' | 'ACTIONED' | 'DISMISSED';
@@ -41,7 +48,7 @@ export type ReportableKind = 'STORY' | 'POST';
  * is not a content-menu kind: it has no Delete, and its menu is the profile's
  * own (Block / Report).
  */
-export type ReportDialogKind = ReportableKind | 'PROFILE';
+export type ReportDialogKind = ReportableKind | 'PROFILE' | 'MESSAGE';
 
 /** One reason the report dialog offers, as `reportCategories` returns it. */
 export interface ReportCategoryOption {
@@ -88,6 +95,19 @@ export const REPORT_POST_SDL = `
 export const REPORT_PROFILE_SDL = `
   mutation ReportProfile($id: ID!, $reason: String!, $details: String) {
     reportProfile(user_id: $id, reason: $reason, details: $details) {
+      id
+      report_no
+    }
+  }
+`;
+
+/**
+ * Report a line in a pod's or club's chat. Only a member of that room can; the
+ * server copies the text at report time, as it does for a post.
+ */
+export const REPORT_CHAT_MESSAGE_SDL = `
+  mutation ReportChatMessage($id: ID!, $reason: String!, $details: String) {
+    reportChatMessage(message_id: $id, reason: $reason, details: $details) {
       id
       report_no
     }
@@ -198,6 +218,7 @@ export const REPORT_DIALOG_TITLE: Record<ReportDialogKind, string> = {
   STORY: 'contentReport.title',
   POST: 'contentReport.titlePost',
   PROFILE: 'contentReport.titleProfile',
+  MESSAGE: 'contentReport.titleMessage',
 };
 
 /**
@@ -279,6 +300,7 @@ export const REPORT_TARGET_KEY: Record<ReportTargetType, string> = {
   CLUB: 'reportLogs.targetClub',
   PROFILE: 'reportLogs.targetProfile',
   PRODUCT: 'reportLogs.targetProduct',
+  MESSAGE: 'reportLogs.targetMessage',
 };
 
 /** What each line of a report's activity log says happened. */
@@ -300,12 +322,12 @@ export interface ReportDecisionState {
 }
 
 /**
- * Only posts and stories can be taken down today, and only while they are
+ * Posts, stories and chat messages can be taken down, and only while they are
  * still up: an expired story or a post its owner already deleted leaves
  * nothing to remove, and its reports are closed from the status instead.
  */
 export function canTakeDownReport(report: ReportDecisionState): boolean {
-  const removable = report.target_type === 'POST' || report.target_type === 'STORY';
+  const removable = ['POST', 'STORY', 'MESSAGE'].includes(report.target_type);
   return removable && report.target_live;
 }
 

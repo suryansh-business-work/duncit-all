@@ -422,6 +422,8 @@ describe('ChatsScreen', () => {
   it('shows the empty hint when there are no rooms at all', () => {
     mockedChatRooms.mockReturnValue({ rooms: [], isLoading: false, refetch: jest.fn() });
     renderWithProviders(<ChatsScreen />);
-    expect(screen.getByText(/No chats yet/)).toBeOnTheScreen();
+    // No rooms at all (not merely none matching): the way in is to join or host a pod.
+    expect(screen.getByText(/You haven't joined any pods yet/)).toBeOnTheScreen();
+    expect(screen.queryByText('No chats match your filters.')).toBeNull();
   });
 });

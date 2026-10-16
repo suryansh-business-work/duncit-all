@@ -78,14 +78,34 @@ fi
 
 echo ">>> Restarting only: ${to_restart[*]}"
 
-# Pull just the images we'll restart so an unrelated registry hiccup can't
-# cascade into our healthy services.
-echo ">>> Pulling images for ${to_restart[*]}..."
-docker compose pull "${to_restart[@]}"
+# Read-only disk report, so a full disk is diagnosable from the deploy log.
+disk_report() {
+  echo ">>> Disk:"
+  df -h / /var/lib/docker 2>/dev/null | uniq || true
+  docker system df || true
+  du -sh /opt/duncit*/app-builds /opt/duncit-mongo /var/lib/docker/containers 2>/dev/null || true
+}
 
-# For each changed service: stop + remove the named container (releasing its
-# host port), then start fresh. Everything else keeps running.
+# Both stacks pull a MOVING tag (:latest / :staging); every image is also kept
+# in the registry under its commit tag, so an untagged image here is never the
+# only copy. A failed or partial deploy leaves such images behind; drop them
+# before pulling more. Images any container uses are never removed.
+docker image prune -f
+disk_report
+
+# For each changed service: pull its image, stop + remove the named container
+# (releasing its host port), start fresh, then drop the image it replaced.
+# One service at a time: pulling all of them first needed room for every new
+# image beside every old one — a 41-image deploy failed with "no space left on
+# device" (run 38942788492). A pull failure still stops before that service is
+# touched; services restarted before it keep their new, healthy image.
 for s in "${to_restart[@]}"; do
+  echo ">>> Pulling $s..."
+  if ! docker compose pull "$s"; then
+    disk_report
+    exit 1
+  fi
+
   cname="${CONTAINER_PREFIX}${s}"
   port="${PORT_OF[$s]:-}"
   if [ -n "$port" ]; then port=$((port + PORT_OFFSET)); fi
@@ -116,6 +136,7 @@ for s in "${to_restart[@]}"; do
 
   echo ">>> Starting $s"
   docker compose up -d --no-deps "$s"
+  docker image prune -f >/dev/null
 done
 
 echo ">>> Waiting for restarted containers to settle..."

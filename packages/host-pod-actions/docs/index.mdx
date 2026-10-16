@@ -313,6 +313,13 @@ only the attendance roster (rows without amounts — scanning still gates comple
 note, never a split of zeros, and the success toast says the pod is completed rather than
 "sent to Finance".
 
+### The venue's usage
+
+Under the bill, the dialog asks (both optional) how many guests the venue charged for and how many
+hours the pod ran past its slot (`VenueUsageFields` from @duncit/forms). A per-guest slot is priced by
+the guests, an overtime rate by the hours; the live preview re-prices as they are typed, and the
+completion sends them with or without a bill.
+
 ## Copy lives in two namespaces
 
 `mweb.podFeedback.*` / `mweb.hostScan.*` / `mweb.podMedia.*` for mWeb and native,

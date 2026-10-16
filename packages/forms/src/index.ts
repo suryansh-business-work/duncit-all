@@ -9,6 +9,7 @@ export {
   type FoodTaxFieldsProps,
   type FoodTaxTranslate,
 } from './FoodTaxFields';
+export { default as VenueUsageFields, type VenueUsageFieldsProps } from './VenueUsageFields';
 export {
   default as WalletStatementFields,
   type WalletStatementClock,

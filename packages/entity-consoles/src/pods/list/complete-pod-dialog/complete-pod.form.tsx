@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
+import { addVenueUsageIssues, venueUsageInput } from '@duncit/forms/schemas';
 import { firstMediaUrl, isFreePod } from '@duncit/utils';
 import { MediaListField } from '@duncit/media-picker';
 import SettlementPreview from './SettlementPreview';
@@ -42,10 +43,18 @@ export const buildCompleteSchema = (hasVenue: boolean, t: Translate) =>
         .min(0, t('admin.completePod.invalidAmount')),
       venue_bill_media: z.string(),
       include_slot_price: z.boolean(),
+      venue_pax: z.string(),
+      overtime_hours: z.string(),
       media_text: z.string().trim().min(1, t('admin.completePod.mediaRequired')),
       notes: z.string().trim().max(1000, t('admin.completePod.notesTooLong')),
     })
     .superRefine((values, ctx) => {
+      if (hasVenue) {
+        addVenueUsageIssues(values, ctx, {
+          paxInvalid: t('shell.venueBill.paxInvalid'),
+          overtimeInvalid: t('shell.venueBill.overtimeInvalid'),
+        });
+      }
       if (hasVenue && values.venue_bill_amount > 0 && !firstMediaUrl(values.venue_bill_media)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -65,6 +74,7 @@ export function buildCompleteInput(values: CompletePodValues, podId: string) {
     venue_bill_amount: billAmount,
     venue_bill_url: billAmount > 0 ? firstMediaUrl(values.venue_bill_media) : undefined,
     include_slot_price: billAmount > 0 ? values.include_slot_price : undefined,
+    ...venueUsageInput(values),
     evidence_media: mediaTextToInput(values.media_text),
     notes: values.notes.trim() || undefined,
   };
@@ -90,6 +100,8 @@ export default function CompletePodDialog({
     venue_bill_amount: 0,
     venue_bill_media: '',
     include_slot_price: false,
+    venue_pax: '',
+    overtime_hours: '',
     media_text: '',
     notes: '',
   };
@@ -109,6 +121,13 @@ export default function CompletePodDialog({
   const venueBillAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
   const includeSlotPrice = venueBillAmount > 0 && watch('include_slot_price');
   const selectedHostId = watch('host_user_id') || '';
+  const paxTyped = watch('venue_pax');
+  const overtimeTyped = watch('overtime_hours');
+  // The venue's usage prices its slot, so the preview re-prices with it.
+  const venueUsage = useMemo(
+    () => venueUsageInput({ venue_pax: paxTyped, overtime_hours: overtimeTyped }),
+    [paxTyped, overtimeTyped],
+  );
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -147,6 +166,7 @@ export default function CompletePodDialog({
                   venueBillAmount={venueBillAmount}
                   includeSlotPrice={includeSlotPrice}
                   hostUserId={selectedHostId}
+                  venueUsage={venueUsage}
                   free={free}
                 />
               )}

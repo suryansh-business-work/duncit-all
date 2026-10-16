@@ -21,6 +21,7 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'RhfTextField'
+  - 'VenueUsageFields'
   - 'PackagingFields'
   - 'PackagingFieldsProps'
   - 'PackagingTranslate'
@@ -69,6 +70,9 @@ exports:
   - 'makeWalletStatementSchema'
   - 'makePodCompleteSchema'
   - 'buildPodCompleteInput'
+  - 'venueUsageInput'
+  - 'addVenueUsageIssues'
+  - 'VENUE_USAGE_LIMITS'
   - 'blankPodCompleteValues'
   - 'buildWalletStatementVariables'
   - 'blankWalletStatementValues'
@@ -427,6 +431,22 @@ Every control keeps a `data-testid`: `statement-dialog`, `statement-preset` (opt
 `statement-error`, `statement-retry`, `statement-close` and `statement-submit`.
 
 `@duncit/buttons` and `@hookform/resolvers` are optional peers, needed only by this dialog.
+
+## Complete Pod: the venue's usage
+
+`PodCompleteValues` carries `venue_pax` and `overtime_hours` beside the bill: the guests the venue
+charged for (its slot is priced per guest) and the hours the pod ran past the slot. Both are optional
+— empty, the server counts everyone booked and adds no overtime — and both stand without a bill,
+because they price the slot, not the bill. `addVenueUsageIssues` checks them against the server's
+bounds (`VENUE_USAGE_LIMITS`: a whole guest count up to 10,000, up to 48 hours) and `venueUsageInput`
+maps them for the completion and its live preview. `VenueUsageFields` (package root, MUI) draws the
+two fields; the host's dialog (@duncit/host-pod-actions) and the Admin console's both mount it.
+
+```tsx
+import { VenueUsageFields } from '@duncit/forms';
+
+<VenueUsageFields control={control} paxName="venue_pax" overtimeName="overtime_hours" labels={venueBillLabels} idPrefix="pod-complete" />
+```
 
 ## `RhfTextField` vs `FormField`
 

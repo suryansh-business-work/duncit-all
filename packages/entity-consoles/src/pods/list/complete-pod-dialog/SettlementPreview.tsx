@@ -13,14 +13,17 @@ export default function SettlementPreview({
   venueBillAmount,
   includeSlotPrice,
   hostUserId,
+  venueUsage,
   free = false,
 }: Readonly<SettlementPreviewProps>) {
   const { t } = useTranslation();
-  const [amount, setAmount] = useState(venueBillAmount);
+  // The bill and the usage settle for a moment before the preview re-prices.
+  const [typed, setTyped] = useState({ amount: venueBillAmount, usage: venueUsage ?? {} });
   useEffect(() => {
-    const timer = setTimeout(() => setAmount(venueBillAmount), 350);
+    const timer = setTimeout(() => setTyped({ amount: venueBillAmount, usage: venueUsage ?? {} }), 350);
     return () => clearTimeout(timer);
-  }, [venueBillAmount]);
+  }, [venueBillAmount, venueUsage]);
+  const amount = typed.amount;
 
   const { data, loading, error } = useQuery<any>(POD_SETTLEMENT_PREVIEW, {
     variables: {
@@ -28,6 +31,7 @@ export default function SettlementPreview({
       venue_bill_amount: amount,
       host_user_id: hostUserId || null,
       include_slot_price: includeSlotPrice,
+      ...typed.usage,
     },
     fetchPolicy: 'cache-and-network',
   });

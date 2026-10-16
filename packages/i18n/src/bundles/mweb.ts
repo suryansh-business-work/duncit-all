@@ -3075,6 +3075,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       noBill: 'None',
       venueTotal: 'Venue total',
       venueTotalWithSlot: 'Venue total (slot price + bill)',
+      pax: 'Guests the venue charged for (optional)',
+      paxHint: 'Used only when the venue prices its slot per guest. Leave empty to count everyone booked.',
+      paxInvalid: 'Enter a whole number of guests from 0 to 10000',
+      overtimeHours: 'Overtime hours (optional)',
+      overtimeHint: 'Hours the pod ran past its slot. Charged only if the venue set an overtime rate.',
+      overtimeInvalid: 'Enter hours from 0 to 48',
       sentToFinance:
         'Pod completed. The payouts are with Finance and reach each wallet once approved.',
     },

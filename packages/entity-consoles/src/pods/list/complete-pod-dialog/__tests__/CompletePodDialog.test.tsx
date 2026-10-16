@@ -226,6 +226,8 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
     venue_bill_amount: 1500,
     venue_bill_media: 'https://cdn.test/bill.pdf',
     include_slot_price: false,
+    venue_pax: '',
+    overtime_hours: '',
     media_text: MEDIA,
     notes: '',
     ...over,
@@ -255,6 +257,20 @@ describe('buildCompleteSchema / buildCompleteInput / mediaTextToInput', () => {
     expect(messages(true, values({ venue_bill_media: '' }))).toEqual(['shell.venueBill.uploadRequired']);
     expect(messages(false, values({ venue_bill_media: '' }))).toEqual([]);
     expect(messages(true, values({ venue_bill_amount: 0, venue_bill_media: '' }))).toEqual([]);
+  });
+
+  it('checks the venue usage on a venue pod and sends what was entered', () => {
+    expect(messages(true, values({ venue_pax: '2.5', overtime_hours: '60' }))).toEqual([
+      'shell.venueBill.paxInvalid',
+      'shell.venueBill.overtimeInvalid',
+    ]);
+    // A pod with no venue has no usage to price.
+    expect(messages(false, values({ venue_pax: '2.5' }))).toEqual([]);
+    expect(buildCompleteInput(values({ venue_pax: '22', overtime_hours: '2' }), 'pod-9')).toMatchObject({
+      venue_pax: 22,
+      overtime_hours: 2,
+    });
+    expect(buildCompleteInput(values(), 'pod-9')).not.toHaveProperty('venue_pax');
   });
 
   it('maps a bill, its file and the slot-price choice onto the server input', () => {

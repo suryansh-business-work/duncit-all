@@ -4,6 +4,7 @@ import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material
 import { EarningsSplitView, VenueBillSummary } from '@duncit/ui';
 import { buildVenueBillLines } from '@duncit/utils';
 import AttendanceRoster from './AttendanceRoster';
+import { AttendanceNote, FreeSettlement } from './SettlementNotes';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodSettlement, PodSettlementAttendee } from '../types';
@@ -13,6 +14,8 @@ interface Props {
   venueBillAmount: number;
   /** The bill is paid on top of the booked slot price rather than instead of it. */
   includeSlotPrice: boolean;
+  /** The venue's usage typed so far (guests charged for, overtime hours) — it prices the slot. */
+  venueUsage?: { venue_pax?: number; overtime_hours?: number };
   /** Opens the ticket scanner for this pod. Attendance is only ever created by
    * scanning a ticket, so the roster's action defers to the host's scanner. */
   onScan: () => void;
@@ -24,78 +27,32 @@ interface Props {
   free?: boolean;
 }
 
-/** The head-count note under the roster — the seats these figures come from. */
-function AttendanceNote({ settlement }: Readonly<{ settlement: PodSettlement }>) {
-  const seatWord = settlement.attended_seats === 1 ? 'seat' : 'seats';
-  const unscanned = settlement.collected_total - settlement.attended_total;
-  return (
-    <>
-      {/* The payout is computed from the SCANNED seats — a booking nobody
-          checked in is not part of it, even though its money was collected and
-          is not refunded. */}
-      <Typography variant="caption" data-testid="settlement-attendees" sx={{
-        color: "text.secondary"
-      }}>
-        Based on {settlement.attended_seats} attended {seatWord} of {settlement.booked_seats} booked
-        — your own spot is free.
-      </Typography>
-      {settlement.attended_seats < settlement.booked_seats && (
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>
-          {settlement.currency_symbol}
-          {unscanned.toFixed(2)} was collected from seats nobody scanned in, so it is not part of
-          this payout.
-        </Typography>
-      )}
-    </>
-  );
-}
-
-/** A free pod's preview: who was scanned in (attendance still gates completion)
- * and why there is no money in it — never a row of zeros. */
-function FreeSettlement({
-  attendees,
-  settlement,
-  onScan,
-}: Readonly<{ attendees: PodSettlementAttendee[]; settlement: PodSettlement; onScan: () => void }>) {
-  const { labels } = useHostPodActionsConfig();
-  return (
-    <Stack spacing={1}>
-      <AttendanceRoster
-        attendees={attendees}
-        attendedSeats={settlement.attended_seats}
-        bookedSeats={settlement.booked_seats}
-        symbol={settlement.currency_symbol}
-        showAmounts={false}
-        onScan={onScan}
-      />
-      <Divider />
-      <Typography variant="caption" data-testid="settlement-free-note" sx={{ color: 'text.secondary' }}>
-        {labels.shareFreeNote}
-      </Typography>
-    </Stack>
-  );
-}
-
 /** Live "Host Share" preview — the finance-engine split for this pod. */
 export default function SettlementPreview({
   podId,
   venueBillAmount,
   includeSlotPrice,
+  venueUsage,
   onScan,
   refreshToken,
   free = false,
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
-  const [amount, setAmount] = useState(venueBillAmount);
+  // The bill and the usage settle for a moment before the preview re-prices, not on every keystroke.
+  const [typed, setTyped] = useState({ amount: venueBillAmount, usage: venueUsage ?? {} });
   useEffect(() => {
-    const timer = setTimeout(() => setAmount(venueBillAmount), 350);
+    const timer = setTimeout(() => setTyped({ amount: venueBillAmount, usage: venueUsage ?? {} }), 350);
     return () => clearTimeout(timer);
-  }, [venueBillAmount]);
+  }, [venueBillAmount, venueUsage]);
+  const amount = typed.amount;
 
   const { data, loading, error, refetch } = useQuery<any>(POD_SETTLEMENT_PREVIEW, {
-    variables: { pod_id: podId, venue_bill_amount: amount, include_slot_price: includeSlotPrice },
+    variables: {
+      pod_id: podId,
+      venue_bill_amount: amount,
+      include_slot_price: includeSlotPrice,
+      ...typed.usage,
+    },
     fetchPolicy: 'cache-and-network',
   });
 

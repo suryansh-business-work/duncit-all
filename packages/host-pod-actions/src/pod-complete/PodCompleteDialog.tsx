@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client/react';
@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { isFreePod } from '@duncit/utils';
+import { venueUsageInput } from '@duncit/forms/schemas';
 import SettlementPreview from './SettlementPreview';
 import PodMediaSummary from './PodMediaSummary';
 import VenueBillFields from './VenueBillFields';
@@ -60,6 +61,13 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
 
   const billAmount = Math.max(0, Number(watch('venue_bill_amount')) || 0);
   const includeSlotPrice = watch('include_slot_price');
+  // The venue's usage prices the slot, so the preview re-prices as it is typed.
+  const paxTyped = watch('venue_pax');
+  const overtimeTyped = watch('overtime_hours');
+  const venueUsage = useMemo(
+    () => venueUsageInput({ venue_pax: paxTyped, overtime_hours: overtimeTyped }),
+    [paxTyped, overtimeTyped],
+  );
   // Read once: the dialog only submits while a pod is open, so the id the
   // write carries is settled here rather than re-checked inside the handler.
   const podId = pod?.id ?? '';
@@ -103,6 +111,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
               podId={pod.id}
               venueBillAmount={billAmount}
               includeSlotPrice={billAmount > 0 && includeSlotPrice}
+              venueUsage={venueUsage}
               refreshToken={scansDone}
               free={free}
               onScan={() => setScanOpen(true)}

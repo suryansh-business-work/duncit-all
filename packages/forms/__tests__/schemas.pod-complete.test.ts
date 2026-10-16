@@ -8,7 +8,12 @@ import {
 } from '../src/schemas';
 
 const BILL = 'https://cdn.duncit.com/pod-completion/bill.pdf';
-const labels = { amountInvalid: 'invalid-amount', uploadRequired: 'upload-required' };
+const labels = {
+  amountInvalid: 'invalid-amount',
+  uploadRequired: 'upload-required',
+  paxInvalid: 'invalid-pax',
+  overtimeInvalid: 'invalid-overtime',
+};
 const venueSchema = makePodCompleteSchema(true, labels);
 const noVenueSchema = makePodCompleteSchema(false, labels);
 
@@ -29,7 +34,23 @@ describe('makePodCompleteSchema', () => {
       venue_bill_amount: '',
       venue_bill_media: '',
       include_slot_price: false,
+      venue_pax: '',
+      overtime_hours: '',
     });
+  });
+
+  it('takes the venue usage as optional: empty, or a whole guest count and hours within the server bounds', () => {
+    expect(errorsFor(venueSchema, values({ venue_pax: '24', overtime_hours: '1.5' }))).toEqual({});
+    expect(errorsFor(venueSchema, values({ venue_pax: '2.5', overtime_hours: '49' }))).toEqual({
+      venue_pax: 'invalid-pax',
+      overtime_hours: 'invalid-overtime',
+    });
+    expect(errorsFor(venueSchema, values({ venue_pax: '-1', overtime_hours: 'abc' }))).toEqual({
+      venue_pax: 'invalid-pax',
+      overtime_hours: 'invalid-overtime',
+    });
+    // No venue, nothing to charge for.
+    expect(errorsFor(noVenueSchema, values({ venue_pax: '-1' }))).toEqual({});
   });
 
   // Without a bill the venue is paid its booked slot price, so an empty box is
@@ -90,5 +111,22 @@ describe('buildPodCompleteInput', () => {
         'pod-1',
       ).include_slot_price,
     ).toBe(true);
+  });
+  it('sends the guests and overtime with or without a bill, and leaves out what was not entered', () => {
+    expect(buildPodCompleteInput(values({ venue_pax: '18', overtime_hours: '2' }), 'pod-1')).toEqual({
+      pod_id: 'pod-1',
+      venue_bill_amount: 0,
+      venue_pax: 18,
+      overtime_hours: 2,
+    });
+    // Empty pax lets the server count everyone booked; zero hours is no overtime.
+    expect(buildPodCompleteInput(values({ venue_pax: '', overtime_hours: '0' }), 'pod-1')).toEqual({
+      pod_id: 'pod-1',
+      venue_bill_amount: 0,
+    });
+    expect(buildPodCompleteInput(values({ venue_bill_amount: '450', venue_bill_media: BILL, venue_pax: '0' }), 'pod-1')).toMatchObject({
+      venue_bill_amount: 450,
+      venue_pax: 0,
+    });
   });
 });

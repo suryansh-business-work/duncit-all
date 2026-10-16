@@ -27,6 +27,11 @@ vi.mock('../PodCouponsSection', () => ({
     <div data-testid="coupons">{`${podId}|${podTitle}`}</div>
   ),
 }));
+vi.mock('../PodRentalsSection', () => ({
+  default: ({ podId, editTo }: { podId: string; editTo: string }) => (
+    <div data-testid="rentals">{`${podId}|${editTo}`}</div>
+  ),
+}));
 vi.mock('../PodCancellationRiskSection', () => ({
   default: ({ podId, cancelled }: { podId: string; cancelled: boolean }) => (
     <div data-testid="risk">{`${podId}|${cancelled}`}</div>
@@ -87,5 +92,7 @@ describe('AdminPodDetailsPage', () => {
     const view = mountPage();
     render(<>{view.footer({ id: 'p1', pod_title: 'Chess Night' })}</>);
     expect(screen.getByTestId('coupons')).toHaveTextContent('p1|Chess Night');
+    // The Pod Shop link opens this portal's own editor; the rented items sit beside it.
+    expect(screen.getByTestId('rentals')).toHaveTextContent('p1|/pods/p1/edit');
   });
 });

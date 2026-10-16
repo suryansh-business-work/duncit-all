@@ -350,6 +350,8 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       quickEditHint: 'Quick edit (name, description, images)',
       place: 'Place',
       offerCodes: 'Offer codes',
+      manageShop: 'Manage Pod Shop',
+      manageShopHint: 'Pick the products this pod sells from the approved catalogue, in the pod editor.',
       deleteCoupon: 'Delete coupon',
       subtitle: 'Events organised inside a club. Hosts are attendees by default.',
       meetingPlatformOther: 'Other (paste link manually)',

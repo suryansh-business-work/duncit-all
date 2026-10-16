@@ -5,6 +5,7 @@ import {
   type PodDetailsViewProps,
 } from '@duncit/pod-details';
 import PodCouponsSection from './PodCouponsSection';
+import PodRentalsSection from './PodRentalsSection';
 import PodCancellationRiskSection from './PodCancellationRiskSection';
 import RevokeCancellationAction from '../list/revoke-cancellation';
 import PodVisibilityAction from './PodVisibilityAction';
@@ -24,10 +25,18 @@ const renderRiskBanner: PodDetailsBanner = (pod) => (
   </>
 );
 
+/** Admin's own pod editor. Passed explicitly rather than left to a default in
+ * the shared package: the route belongs to this portal, and a console without
+ * one must be able to render the page with no Edit button at all. */
+const editTo = (podId: string) => `/pods/${podId}/edit`;
+
 /** The footer the shared view calls with the pod it loaded — hoisted to module
  * scope so React keeps one component identity across renders (S6478). */
 const renderCouponsFooter: NonNullable<PodDetailsViewProps['footer']> = (pod) => (
-  <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
+  <>
+    <PodRentalsSection podId={pod.id} editTo={editTo(pod.id)} />
+    <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
+  </>
 );
 
 /** A cancelled pod is the only one with anything to revoke, and admin is the
@@ -43,11 +52,6 @@ const renderPodActions: PodDetailsActions = (pod) => (
 /** Admin is the one portal with user pages, so it is the one that links a club
  * admin's name through to theirs. */
 const userTo = (userId: string) => `/users/${userId}`;
-
-/** Admin's own pod editor. Passed explicitly rather than left to a default in
- * the shared package: the route belongs to this portal, and a console without
- * one must be able to render the page with no Edit button at all. */
-const editTo = (podId: string) => `/pods/${podId}/edit`;
 
 /** Admin's pod detail — the shared view at ADMIN scope (its default).
  *

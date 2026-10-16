@@ -759,6 +759,8 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "admin.pods.draft": "Draft",
   "admin.pods.empty": "No pods yet.",
   "admin.pods.includeCancelled": "Include cancelled",
+  "admin.pods.manageShop": "Manage Pod Shop",
+  "admin.pods.manageShopHint": "Pick the products this pod sells from the approved catalogue, in the pod editor.",
   "admin.pods.meetingPlatformOther": "Other (paste link manually)",
   "admin.pods.offerCodes": "Offer codes",
   "admin.pods.place": "Place",

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Text, YStack } from 'tamagui';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodSections';
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
@@ -11,6 +12,9 @@ import { ClubSocialLinks } from '@/components/details/club/ClubSocialLinks';
 import { ClubStoriesRail } from '@/components/details/club/ClubStoriesRail';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { FollowPillButton } from '@/components/FollowPillButton';
+import { DuncitButton } from '@/components/DuncitButton';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { LocalityChip } from '@/components/LocalityChip';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
@@ -35,6 +39,7 @@ export function ClubBody({
   onOpenPod,
   onOpenMember,
   onOpenVenue,
+  onOpenChat,
 }: Readonly<{
   club: ClubDetail;
   pods: ClubPod[];
@@ -47,7 +52,11 @@ export function ClubBody({
   onOpenPod: (pod: ClubPod) => void;
   onOpenMember: (userId: string) => void;
   onOpenVenue: (venueId: string) => void;
+  /** Opens the club's chat — offered once the viewer has joined the club. */
+  onOpenChat?: () => void;
 }>) {
+  const { t } = useTranslation();
+  const { primary } = useThemeColors();
   const viewerId = useMeStore((s) => s.data?.me?.user_id);
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
 
@@ -81,14 +90,26 @@ export function ClubBody({
             </Text>
           ) : null}
         </TourAnchor>
-        <TourAnchor tour="club" anchor="club-follow" style={{ alignSelf: 'flex-start' }}>
-          <FollowPillButton
-            testID="club-follow"
-            following={following}
-            busy={followBusy}
-            onToggle={onToggleFollow}
-          />
-        </TourAnchor>
+        <XStack gap={8} alignItems="center" flexWrap="wrap">
+          <TourAnchor tour="club" anchor="club-follow" style={{ alignSelf: 'flex-start' }}>
+            <FollowPillButton
+              testID="club-follow"
+              following={following}
+              busy={followBusy}
+              onToggle={onToggleFollow}
+            />
+          </TourAnchor>
+          {following && onOpenChat ? (
+            <DuncitButton
+              testID="club-open-chat"
+              label={t('mweb.chat.openChat')}
+              variant="outline"
+              size="sm"
+              icon={<MaterialIcons name="chat-bubble-outline" size={16} color={primary} />}
+              onPress={onOpenChat}
+            />
+          ) : null}
+        </XStack>
       </SurfaceCard>
       {/* Ephemeral 24h club stories + the "Add" tile — directly under the club
           summary, as on mWeb. */}

@@ -7,6 +7,7 @@ import {
   ReportCategoriesDocument,
   ReportPostDocument,
   ReportProfileDocument,
+  ReportChatMessageDocument,
 } from '@/graphql/report';
 import { graphqlRequest } from '@/services/graphql.client';
 
@@ -127,4 +128,13 @@ export async function reportProfile(id: string, reason: string, details: string)
     { id: string; reason: string; details: string }
   >(ReportProfileDocument, { id, reason, details }, { auth: true });
   return data.reportProfile.report_no;
+}
+
+/** Report a chat message — same contract and receipt as `reportPost`. */
+export async function reportChatMessage(id: string, reason: string, details: string): Promise<string> {
+  const data = await graphqlRequest<
+    { reportChatMessage: { id: string; report_no: string } },
+    { id: string; reason: string; details: string }
+  >(ReportChatMessageDocument, { id, reason, details }, { auth: true });
+  return data.reportChatMessage.report_no;
 }

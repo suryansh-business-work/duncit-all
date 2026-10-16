@@ -9,6 +9,7 @@ import { ReportReceivedNotice } from '@/components/content-report/ReportReceived
 import {
   reportPost,
   reportProfile,
+  reportChatMessage,
   useMyOpenReport,
   useReportCategories,
 } from '@/hooks/useReportContent';
@@ -22,6 +23,14 @@ import {
   REPORT_DIALOG_TITLE,
   type ReportDialogKind,
 } from '@duncit/utils';
+
+/** The request each kind files through; posts and stories share one. */
+const SEND_OF: Record<ReportDialogKind, typeof reportPost> = {
+  STORY: reportPost,
+  POST: reportPost,
+  PROFILE: reportProfile,
+  MESSAGE: reportChatMessage,
+};
 
 interface Props {
   /** The post, story or member being reported; null keeps the sheet closed. */
@@ -76,7 +85,7 @@ export function ReportContentSheet({ targetId, kind, onClose, onReported }: Read
     }
     setBusy(true);
     try {
-      const send = kind === 'PROFILE' ? reportProfile : reportPost;
+      const send = SEND_OF[kind];
       setReceipt(await send(targetId, reason, details.trim()));
       onReported?.();
     } catch (e) {

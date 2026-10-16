@@ -39,30 +39,98 @@ export const ChatParticipantsDocument = gql(`
   }
 `);
 
+/** One chat line — a pod room's or a club room's; the bubble reads these. */
+export const ChatMessageFieldsFragment = gql(`
+  fragment MobileChatMessageFields on PodMessage {
+    id
+    pod_id
+    club_id
+    user_id
+    user_name
+    user_photo
+    type
+    text
+    image_url
+    reactions {
+      user_id
+      emoji
+    }
+    deleted
+    createdAt
+  }
+`);
+
 /** Recent messages in a room. Newest-last is handled in the UI. Mirrors mWeb's
  * POD_MESSAGES (reactions + deleted included for the live room). */
 export const PodMessagesDocument = gql(`
   query MobilePodMessages($podId: ID!, $limit: Int) {
     podMessages(pod_id: $podId, limit: $limit) {
-      id
-      pod_id
-      user_id
-      user_name
-      user_photo
-      type
-      text
-      image_url
-      reactions {
-        user_id
-        emoji
-      }
-      deleted
-      createdAt
+      ...MobileChatMessageFields
     }
     pod(pod_doc_id: $podId) {
       id
       pod_date_time
       pod_end_date_time
+    }
+    podChatInfo(pod_id: $podId) {
+      chat_deletes_at
+      closed
+      can_moderate
+    }
+  }
+`);
+
+/** A club's room: the same message fields as a pod's, plus its header. */
+export const ClubMessagesDocument = gql(`
+  query MobileClubMessages($clubId: ID!, $limit: Int) {
+    clubMessages(club_id: $clubId, limit: $limit) {
+      ...MobileChatMessageFields
+    }
+    clubChatRoom(club_id: $clubId) {
+      id
+      club_slug
+      club_name
+      retention_days
+      can_moderate
+    }
+  }
+`);
+
+/** Club rooms the user can open — the Chats screen's Clubs tab. */
+export const ClubChatRoomsDocument = gql(`
+  query MobileClubChatRooms {
+    myClubChatRooms {
+      id
+      club_name
+      cover_url
+      super_category_id
+      last_message_at
+      last_message_preview
+      last_message_type
+    }
+  }
+`);
+
+/** Post to a club room — the club twin of SendPodMessageDocument. */
+export const SendClubMessageDocument = gql(`
+  mutation MobileSendClubMessage(
+    $clubId: ID!
+    $type: PodMessageType
+    $text: String
+    $imageUrl: String
+  ) {
+    sendClubMessage(club_id: $clubId, type: $type, text: $text, image_url: $imageUrl) {
+      id
+    }
+  }
+`);
+
+/** Remove a message: your own, or anyone's in a room you moderate. */
+export const DeleteChatMessageDocument = gql(`
+  mutation MobileDeleteChatMessage($messageId: ID!) {
+    deletePodMessage(message_id: $messageId) {
+      id
+      deleted
     }
   }
 `);

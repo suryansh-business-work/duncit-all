@@ -5,19 +5,39 @@ import { config } from '@/constants/config';
 import { getAuthToken } from '@/services/auth-token';
 import type { ChatMessage } from '@/hooks/useChat';
 
+/** Which room the socket follows. Club rooms speak the same events under a
+ * `club_` prefix, so a pod room and a club room never mix (mWeb's twin). */
+export type ChatRoomKind = 'POD' | 'CLUB';
+
 interface UsePodSocketParams {
+  /** The pod's id, or the club's when `kind` is CLUB. */
   podId: string;
+  kind?: ChatRoomKind;
   onMessage: (msg: ChatMessage) => void;
   onReaction: (msg: ChatMessage) => void;
   onDeleted: (msg: ChatMessage) => void;
   onError: (message: string) => void;
 }
 
-type PodSocketHandlersRef = { current: Omit<UsePodSocketParams, 'podId'> };
+type PodSocketHandlersRef = { current: Omit<UsePodSocketParams, 'podId' | 'kind'> };
 
-/** Connects, joins the pod room and wires message/reaction/deleted/error events.
+const EVENTS: Record<ChatRoomKind, { join: string; leave: string; prefix: string }> = {
+  POD: { join: 'join_pod', leave: 'leave_pod', prefix: '' },
+  CLUB: { join: 'join_club', leave: 'leave_club', prefix: 'club_' },
+};
+
+const roomIdOf = (msg: ChatMessage, kind: ChatRoomKind) =>
+  kind === 'POD' ? msg.pod_id : msg.club_id;
+
+/** Connects, joins the room and wires message/reaction/deleted/error events.
  * Hoisted out of the hook so the event handlers don't nest too deeply. */
-function createPodSocket(token: string, podId: string, handlers: PodSocketHandlersRef): Socket {
+function createPodSocket(
+  token: string,
+  roomId: string,
+  kind: ChatRoomKind,
+  handlers: PodSocketHandlersRef,
+): Socket {
+  const { join, prefix } = EVENTS[kind];
   const s = io(config.apiUrl, {
     path: '/socket.io',
     auth: { token },
@@ -26,31 +46,32 @@ function createPodSocket(token: string, podId: string, handlers: PodSocketHandle
     transports: ['websocket', 'polling'],
   });
   s.on('connect', () => {
-    s.emit('join_pod', podId, (ok: boolean, err?: string) => {
+    s.emit(join, roomId, (ok: boolean, err?: string) => {
       if (!ok) handlers.current.onError(err || 'Cannot join chat');
     });
   });
-  s.on('message', (msg: ChatMessage) => {
-    if (msg.pod_id === podId) handlers.current.onMessage(msg);
+  s.on(`${prefix}message`, (msg: ChatMessage) => {
+    if (roomIdOf(msg, kind) === roomId) handlers.current.onMessage(msg);
   });
-  s.on('reaction', (msg: ChatMessage) => {
-    if (msg.pod_id === podId) handlers.current.onReaction(msg);
+  s.on(`${prefix}reaction`, (msg: ChatMessage) => {
+    if (roomIdOf(msg, kind) === roomId) handlers.current.onReaction(msg);
   });
-  s.on('deleted', (msg: ChatMessage) => {
-    if (msg.pod_id === podId) handlers.current.onDeleted(msg);
+  s.on(`${prefix}deleted`, (msg: ChatMessage) => {
+    if (roomIdOf(msg, kind) === roomId) handlers.current.onDeleted(msg);
   });
   s.on('connect_error', (e: Error) => handlers.current.onError(e?.message || 'Socket error'));
   return s;
 }
 
 /**
- * Live pod chat over socket.io — RN twin of mWeb's usePodSocket. Authenticates
- * with the stored JWT, joins the pod room, and forwards `message` / `reaction` /
- * `deleted` events (scoped to this pod) to the caller. Callbacks are held in a
- * ref so the connection only re-establishes when the pod changes.
+ * Live chat over socket.io — RN twin of mWeb's usePodSocket. Authenticates
+ * with the stored JWT, joins the pod's (or club's) room, and forwards
+ * `message` / `reaction` / `deleted` events scoped to that room. Callbacks are
+ * held in a ref so the connection only re-establishes when the room changes.
  */
 export function usePodSocket({
   podId,
+  kind = 'POD',
   onMessage,
   onReaction,
   onDeleted,
@@ -65,15 +86,15 @@ export function usePodSocket({
 
     getAuthToken().then((token) => {
       if (cancelled || !token) return;
-      socket = createPodSocket(token, podId, handlers);
+      socket = createPodSocket(token, podId, kind, handlers);
     });
 
     return () => {
       cancelled = true;
       if (socket) {
-        socket.emit('leave_pod', podId);
+        socket.emit(EVENTS[kind].leave, podId);
         socket.disconnect();
       }
     };
-  }, [podId]);
+  }, [podId, kind]);
 }

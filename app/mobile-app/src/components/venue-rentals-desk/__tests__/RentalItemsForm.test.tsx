@@ -142,7 +142,16 @@ describe('RentalItemsForm', () => {
     fireEvent.changeText(screen.getByTestId('field-items.0.per_guest_limit'), '1');
     fireEvent.press(screen.getByTestId('rental-item-done'));
 
-    await waitFor(() => expect(screen.queryByTestId('rental-item-sheet')).toBeNull());
+    await waitFor(() => expect(screen.queryByTestId('rental-item-sheet')).toBeNull()).catch(
+      (err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.log(
+          'DIAG-RENTAL-SHEET',
+          (JSON.stringify(screen.toJSON()).match(/"children":\["[^"]+"\]/g) ?? []).join(' | '),
+        );
+        throw err;
+      },
+    );
     expect(within(screen.getByTestId('rental-item-0')).getByText('Shoes')).toBeOnTheScreen();
     expect(screen.getByText('80 per hour · 3 per pod')).toBeOnTheScreen();
   });

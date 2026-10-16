@@ -10,6 +10,7 @@ import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { getFinanceSettings, partyTemplateOf } from './finance.model';
 import {
+  venueUsageOf,
   computePodSettlement,
   SETTLEMENT_ENGINE_VERSION,
   type PodSettlement,
@@ -77,6 +78,10 @@ export function toPub(doc: IPaymentRelease) {
           attended_total: doc.breakdown.attended_total,
           venue_slot_price: doc.breakdown.venue_slot_price,
           include_slot_price: doc.breakdown.include_slot_price,
+          venue_pricing_mode: doc.breakdown.venue_pricing_mode ?? 'FLAT',
+          venue_pax: doc.breakdown.venue_pax ?? 0,
+          venue_overtime_hours: doc.breakdown.venue_overtime_hours ?? 0,
+          venue_overtime_amount: doc.breakdown.venue_overtime_amount ?? 0,
         }
       : null,
     created_at: doc.created_at.toISOString(),
@@ -309,6 +314,10 @@ const frozenInputsOf = (s: PodSettlement) => ({
   attended_total: s.attended_total,
   venue_slot_price: s.venue_slot_price,
   include_slot_price: s.include_slot_price,
+  venue_pricing_mode: s.venue_pricing_mode,
+  venue_pax: s.venue_pax,
+  venue_overtime_hours: s.venue_overtime_hours,
+  venue_overtime_amount: s.venue_overtime_amount,
 });
 
 function statementTypeLabel(kind: PaymentReleaseKind): string {
@@ -1088,7 +1097,8 @@ export const paymentReleaseService = {
       String(pod._id),
       billAmount,
       input.host_user_id ?? null,
-      input.include_slot_price
+      input.include_slot_price,
+      venueUsageOf(input)
     );
 
     assertSettlementCompletable(settlement, billAmount);

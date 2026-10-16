@@ -51,6 +51,13 @@ import {
   toVenueFoodPub,
   venueFoodConfig,
 } from './venue.food';
+import {
+  VENUE_RENTAL_INPUT_KEYS,
+  buildVenueRentalPatch,
+  redactVenueRentalForPublic,
+  toVenueRentalPub,
+  venueRentalConfig,
+} from './venue.rentals';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -307,6 +314,7 @@ const toPub = (v: IVenue) => ({
     capacity: item.capacity,
   })),
   ...toVenueFoodPub(v),
+  ...toVenueRentalPub(v),
   // Primary first. A venue saved before the list existed answers with its one
   // legacy category, so no client ever has to look in two places.
   venue_categories: venueCategoriesOf(v).map(toVenueCategoryPub),
@@ -376,6 +384,7 @@ const toPub = (v: IVenue) => ({
 const redactForPublic = (v: ReturnType<typeof toPub>) => ({
   ...v,
   ...redactVenueFoodForPublic(v),
+  ...redactVenueRentalForPublic(v),
   documents: [],
   gstin: '',
   pan: '',
@@ -582,6 +591,7 @@ async function buildStep1Patch(input: any, current: readonly VenueCategoryRef[] 
   const patch: any = await normalizeStep1Location(input);
   // Food is validated against the venue it lands on (buildVenueFoodPatch), never spread on raw.
   for (const key of VENUE_FOOD_INPUT_KEYS) delete patch[key];
+  for (const key of VENUE_RENTAL_INPUT_KEYS) delete patch[key];
   // Videos are checked (YouTube or an uploaded clip) — never spread on raw. Left out = kept.
   delete patch.videos;
   if (Array.isArray(input.videos)) patch.videos = normalizeVenueVideos(input.videos);
@@ -780,6 +790,7 @@ export const venueService = {
       facilities: VENUE_FACILITIES,
       security: VENUE_SECURITY,
       ...venueFoodConfig(),
+      ...venueRentalConfig(),
     };
   },
   async getMine(userId: string, venueId?: string | null) {
@@ -916,7 +927,8 @@ export const venueService = {
     Object.assign(
       v,
       await buildStep1Patch(input, venueCategoriesOf(v)),
-      await buildVenueFoodPatch(input, v)
+      await buildVenueFoodPatch(input, v),
+      buildVenueRentalPatch(input, v)
     );
     if (v.step_completed < 1) v.step_completed = 1;
     if (v.status === 'REJECTED') v.status = 'DRAFT';
@@ -993,7 +1005,7 @@ export const venueService = {
       fail('BAD_REQUEST', 'Only approved venues can be edited here');
     }
     applyApprovedVenueInput(v, input, isAdmin);
-    Object.assign(v, await buildVenueFoodPatch(input, v));
+    Object.assign(v, await buildVenueFoodPatch(input, v), buildVenueRentalPatch(input, v));
     await v.save();
     return toPub(v);
   },
@@ -1097,6 +1109,7 @@ export const venueService = {
     const normalized = await buildStep1Patch(opts.step1);
     const ownerUserId = new Types.ObjectId(opts.ownerUserId);
     const food = await buildVenueFoodPatch(opts.step1, { owner_user_id: ownerUserId });
+    const rentals = buildVenueRentalPatch(opts.step1, {});
     const documents = (opts.step2.documents || [])
       .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({
@@ -1108,6 +1121,7 @@ export const venueService = {
       owner_user_id: ownerUserId,
       ...normalized,
       ...food,
+      ...rentals,
       documents,
       gstin: opts.step2.gstin ?? '',
       pan: opts.step2.pan ?? '',
@@ -1130,7 +1144,8 @@ export const venueService = {
     Object.assign(
       v,
       await buildStep1Patch(opts.step1, venueCategoriesOf(v)),
-      await buildVenueFoodPatch(opts.step1, v)
+      await buildVenueFoodPatch(opts.step1, v),
+      buildVenueRentalPatch(opts.step1, v)
     );
     v.documents = (opts.step2.documents || [])
       .filter((d: any) => d?.type && d?.url)

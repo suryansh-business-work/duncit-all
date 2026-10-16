@@ -140,6 +140,43 @@ export const venueTypeDefs = /* GraphQL */ `
     gst_pct: Int!
   }
 
+  "How a rented item's rate is charged: once for the pod's slot, or per hour of the pod."
+  enum VenueRentalUnit {
+    SLOT
+    HOUR
+  }
+
+  "One item a venue rents out to pod guests (a racket, court shoes)."
+  type VenueRentalItem {
+    id: ID!
+    name: String!
+    description: String!
+    images: [String!]!
+    unit: VenueRentalUnit!
+    "Rupees per unit, for the slot or for each hour."
+    rate: Int!
+    "Refundable deposit per unit, rupees. 0 = none."
+    deposit: Int!
+    "Units available for one pod."
+    stock: Int!
+    per_guest_limit: Int!
+    is_available: Boolean!
+  }
+
+  input VenueRentalItemInput {
+    "An existing item's id keeps it (and its bookings); omitted = a new item."
+    id: ID
+    name: String!
+    description: String
+    images: [String!]
+    unit: VenueRentalUnit
+    rate: Int!
+    deposit: Int
+    stock: Int!
+    per_guest_limit: Int
+    is_available: Boolean
+  }
+
   input VenueFoodOrderingInput {
     enabled: Boolean
     "One of the venue owner's own myPartnerIntegrations(provider: RAZORPAY) that passed its check; null unlinks."
@@ -178,6 +215,13 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_video_limit: Int!
     "Tables a venue may print per-table QR stickers for."
     food_table_limit: Int!
+    rental_units: [VenueRentalUnit!]!
+    rental_item_limit: Int!
+    rental_image_limit: Int!
+    rental_rate_max: Int!
+    rental_deposit_max: Int!
+    rental_stock_max: Int!
+    rental_per_guest_max: Int!
   }
 
   type VenueOperatingHours {
@@ -310,6 +354,9 @@ export const venueTypeDefs = /* GraphQL */ `
     food_licences: VenueFoodLicences!
     "The venue's table labels, one per-table QR sticker each. Always empty on publicVenue."
     food_tables: [String!]!
+    "The venue rents items out. On publicVenue the list is empty unless this is on, and shows available items only."
+    offers_rentals: Boolean!
+    rental_items: [VenueRentalItem!]!
     "Every category the venue belongs to, primary first. Empty only while the venue has none."
     venue_categories: [VenueCategory!]!
     "The primary category — always venue_categories[0]. Kept for clients that read one."
@@ -385,6 +432,9 @@ export const venueTypeDefs = /* GraphQL */ `
     food_licences: VenueFoodLicencesInput
     "The venue's table labels (at most venueRegistrationConfig.food_table_limit). Omitted keeps the stored list."
     food_tables: [String!]
+    offers_rentals: Boolean
+    "The whole list of rented items (at most venueRegistrationConfig.rental_item_limit). Omitted keeps the stored list."
+    rental_items: [VenueRentalItemInput!]
     """
     Every category the venue belongs to, primary first (at most
     venueRegistrationConfig.category_limit; a repeated sub category is dropped).
@@ -450,6 +500,9 @@ export const venueTypeDefs = /* GraphQL */ `
     food_licences: VenueFoodLicencesInput
     "Omitted keeps the stored list."
     food_tables: [String!]
+    offers_rentals: Boolean
+    "Omitted keeps the stored list."
+    rental_items: [VenueRentalItemInput!]
     """
     The venue's GST number, printed on its food invoices. Accepted only while the
     venue has none: once one is saved, only the venues console (adminUpdateVenue)

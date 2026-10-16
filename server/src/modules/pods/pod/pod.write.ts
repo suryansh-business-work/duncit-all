@@ -3,6 +3,7 @@
  * update, host resubmit and update, spot limits, status posts and meeting-link
  * generation. Composed into `podService` in pod.service.ts.
  */
+import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
 import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
@@ -136,7 +137,8 @@ export const podWriteMethods = {
       podAmount: input.pod_amount ?? 0,
       noOfSpots: input.no_of_spots ?? 0,
       venueId: venueLocation.venue_id,
-      venueAmount: slotDoc ? slotDoc.price : 0,
+      // By the slot's pricing mode; a per-person slot is judged at a full pod.
+      venueAmount: slotDoc ? slotVenueCharge(slotDoc, { pax: input.no_of_spots ?? 0 }).total : 0,
     });
     const clubCategory = await resolveClubCategory(input.club_id);
     await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);
@@ -385,7 +387,9 @@ export const podWriteMethods = {
       podAmount: input.pod_amount ?? doc.pod_amount ?? 0,
       noOfSpots: input.no_of_spots ?? doc.no_of_spots ?? 0,
       venueId: resubmitVenueId,
-      venueAmount: slotDoc ? slotDoc.price : 0,
+      venueAmount: slotDoc
+        ? slotVenueCharge(slotDoc, { pax: input.no_of_spots ?? doc.no_of_spots ?? 0 }).total
+        : 0,
     });
 
     const before = snapshotPod(doc);

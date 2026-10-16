@@ -59,6 +59,12 @@ export interface IPaymentReleaseBreakdown {
    */
   venue_slot_price: number;
   include_slot_price: boolean;
+  /** How the slot was priced and what its charge used. Absent on docs written
+   * before pricing modes existed (= FLAT, no pax, no overtime). */
+  venue_pricing_mode?: 'FLAT' | 'HOURLY' | 'PER_PAX';
+  venue_pax?: number;
+  venue_overtime_hours?: number;
+  venue_overtime_amount?: number;
 }
 
 export interface IPaymentRelease extends Document {
@@ -132,6 +138,10 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
     attended_total: { type: Number, default: 0 },
     venue_slot_price: { type: Number, default: 0 },
     include_slot_price: { type: Boolean, default: false },
+    venue_pricing_mode: { type: String, enum: ['FLAT', 'HOURLY', 'PER_PAX'], default: 'FLAT' },
+    venue_pax: { type: Number, default: 0 },
+    venue_overtime_hours: { type: Number, default: 0 },
+    venue_overtime_amount: { type: Number, default: 0 },
   },
   { _id: false }
 );

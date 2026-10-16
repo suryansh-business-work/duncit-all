@@ -1,4 +1,5 @@
 import { Schema, model, Types, type Document } from 'mongoose';
+import { SLOT_PRICING_MODES, type SlotPricingMode } from './slotCharge';
 
 /** PENDING = a hold placed by a host's pod that is waiting for the venue
  * owner's approval; it books into BOOKED or releases back to AVAILABLE. */
@@ -13,7 +14,12 @@ export interface IVenueSlot extends Document {
    * booking rather than a timed window — surfaces label it "Whole day" instead
    * of showing clock times. start_at/end_at still hold the real span. */
   whole_day: boolean;
+  /** Rupees — the whole slot (FLAT), per hour (HOURLY) or per person (PER_PAX). See slotCharge.ts. */
   price: number;
+  /** How `price` is read. Absent on a slot saved before modes existed = FLAT. */
+  pricing_mode?: SlotPricingMode;
+  /** Rupees per hour the pod runs past the slot's end. 0 = no overtime charge. */
+  overtime_rate?: number;
   /** The venue space/capacity-item this slot is for ('' = whole venue). Slots in
    * different spaces may share the same time window. */
   space_label: string;
@@ -64,6 +70,8 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     end_at: { type: Date, required: true },
     whole_day: { type: Boolean, default: false },
     price: { type: Number, default: 0, min: 0, max: 1_000_000 },
+    pricing_mode: { type: String, enum: SLOT_PRICING_MODES, default: 'FLAT' },
+    overtime_rate: { type: Number, default: 0, min: 0, max: 100_000 },
     space_label: { type: String, default: '', trim: true, maxlength: 120 },
     capacity: { type: Number, default: 0, min: 0, max: 100_000 },
     status: {

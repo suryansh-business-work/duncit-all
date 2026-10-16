@@ -220,6 +220,11 @@ export const financeTypeDefs = /* GraphQL */ `
     venue_slot_price: Float!
     "True when the final bill was paid on top of the slot price rather than instead of it."
     include_slot_price: Boolean!
+    "How the slot was priced, and the pax and overtime its charge used — frozen at completion."
+    venue_pricing_mode: SlotPricingMode!
+    venue_pax: Int!
+    venue_overtime_hours: Float!
+    venue_overtime_amount: Float!
   }
 
   # The complete GST-inclusive money waterfall for one pod (engine v2):
@@ -474,6 +479,13 @@ export const financeTypeDefs = /* GraphQL */ `
     venue_slot_price: Float!
     "True when the bill is being paid on top of the slot price rather than instead of it."
     include_slot_price: Boolean!
+    "How the slot is priced: the whole slot, per hour or per person."
+    venue_pricing_mode: SlotPricingMode!
+    "People a PER_PAX slot was charged for (0 otherwise) — the booked seats unless overridden at completion."
+    venue_pax: Int!
+    "Hours the pod ran past the slot's end, and their charge."
+    venue_overtime_hours: Float!
+    venue_overtime_amount: Float!
     gst_pct: Float!
     host_commission_pct: Float!
     venue_commission_pct: Float!
@@ -547,6 +559,10 @@ export const financeTypeDefs = /* GraphQL */ `
     stands — what app builds from before the bill could move money rely on.
     """
     include_slot_price: Boolean
+    "A PER_PAX slot: the people actually at the pod, overriding the booked seats (0-10000)."
+    venue_pax: Int
+    "Hours the pod ran past its slot's end, charged at the slot's overtime rate (0-48)."
+    overtime_hours: Float
     host_user_id: ID
     evidence_media: [PaymentReleaseMediaInput!]
     notes: String
@@ -670,6 +686,8 @@ export const financeTypeDefs = /* GraphQL */ `
       venue_bill_amount: Float!
       host_user_id: ID
       include_slot_price: Boolean
+      venue_pax: Int
+      overtime_hours: Float
     ): PodSettlement!
     # The signed-in host's own completion payouts (Host Share history).
     myHostPayouts: [PaymentReleaseRequest!]!

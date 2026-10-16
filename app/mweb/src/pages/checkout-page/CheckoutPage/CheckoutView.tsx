@@ -14,6 +14,8 @@ import type { usePodCheckoutBill } from '../usePodCheckoutBill';
 import { PaymentFailureDialog, type usePaymentFailure } from '../../../components/payment-failure';
 import { IssueNotice, type useServerIssue } from '../../../components/issue-notice';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { RentalBillRows, RentalTermsConsent } from '../../pod-rent/RentalCheckoutBlock';
+import type { CheckoutRentals } from '../../pod-rent/useCheckoutRentals';
 
 /** The inner page's back control — a 40px round surface button. */
 const roundBackSx = {
@@ -37,6 +39,7 @@ interface CheckoutViewProps {
   bill: Omit<Bill, 'breakup' | 'amount'>;
   breakup: NonNullable<Bill['breakup']>;
   seats: number;
+  rentals: CheckoutRentals;
   submit: () => void;
   payment: ReturnType<typeof usePaymentFailure>;
   alreadyBookedOpen: boolean;
@@ -53,6 +56,7 @@ export default function CheckoutView({
   bill,
   breakup,
   seats,
+  rentals,
   submit,
   payment,
   alreadyBookedOpen,
@@ -86,14 +90,14 @@ export default function CheckoutView({
         )}
         <SavedAddressPicker onPick={session.pickAddress} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <OrderSummaryCard pod={pod} stateTitle={stateTitle} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} coins={coinSummary} roundOff={payBreakup ? coins.roundOff : 0} />
+          <OrderSummaryCard pod={pod} stateTitle={stateTitle} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} coins={coinSummary} roundOff={payBreakup ? coins.roundOff : 0} rentals={rentals.totals.count > 0 ? { rows: <RentalBillRows rentals={rentals} />, total: rentals.totals.total } : null} />
           <PaymentDetailsCard
             control={session.control}
             onSubmit={submit}
             error={session.error}
             submitting={session.submitting}
-            total={breakup.total}
-            effectiveTotal={coins.effectiveTotal}
+            total={breakup.total + rentals.totals.total}
+            effectiveTotal={coins.effectiveTotal + rentals.totals.total}
             currency={breakup.currency}
             dummyMode={!!session.finance?.dummy_mode && !session.finance?.razorpay_enabled}
             mainAddress={session.mainAddress}
@@ -111,6 +115,9 @@ export default function CheckoutView({
             coins={coins}
           />
         </Stack>
+        <Box sx={{ mt: 2 }}>
+          <RentalTermsConsent rentals={rentals} />
+        </Box>
       </Box>
       <PaymentFailureDialog
         failure={payment.failure}

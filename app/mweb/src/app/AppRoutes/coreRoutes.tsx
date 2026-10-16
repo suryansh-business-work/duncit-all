@@ -1,6 +1,7 @@
 import { Route } from 'react-router';
-import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, FreeJoinSuccessPage, FoodOrdersPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, HostPodChallengesPage, PodAttendancePage, PodChallengeArenaPage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenueFoodItemPage, VenueFoodOrderPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
+import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, FreeJoinSuccessPage, FoodOrdersPage, RentedItemsPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, NearbyVenuesPage, HostPodChallengesPage, PodAttendancePage, PodChallengeArenaPage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PodRequestDetailPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenueFoodItemPage, VenueFoodOrderPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
 import { PartnerRedirect, withAuth, type AppRoutesProps } from './routeGuards';
+import { MY_RENTED_ITEMS_PATH } from '@duncit/utils';
 
 /** Home, profile, pod and host routes. Rendered as a fragment so `<Routes>` still sees plain `<Route>` children. */
 export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<AppRoutesProps>) {
@@ -33,6 +34,7 @@ export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<App
         {/* Your Food Orders. Public: a guest sees the orders this browser placed (their
             keys are remembered); a member also sees every order their account placed. */}
         <Route path="/food-orders" element={<FoodOrdersPage />} />
+        <Route path={MY_RENTED_ITEMS_PATH} element={withAuth(<RentedItemsPage />)} />
         {/* A host's published page — public like the venue page; its pods ask
             a signed-out visitor to sign in, carrying the pod through it. */}
         <Route path="/hosts/:handle" element={<HostPage />} />

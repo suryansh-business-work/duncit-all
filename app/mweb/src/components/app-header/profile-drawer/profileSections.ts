@@ -25,6 +25,7 @@ export type ProfileIconKey =
   | 'orders'
   | 'addresses'
   | 'cart'
+  | 'rentals'
   | 'wallet'
   | 'coin'
   | 'leaderboard'

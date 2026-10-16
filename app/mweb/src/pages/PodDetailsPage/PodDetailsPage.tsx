@@ -130,9 +130,13 @@ export default function PodDetailsPage() {
 
       <AdSlot position="POD_DETAILS" variant="banner" />
 
-      {showProducts && pod.product_requests?.some((item: any) => item?.product_name) && (
-        <PodCommerceSection pod={pod} priceFormat={priceFormat} productSelection={productSelection} />
-      )}
+      <PodCommerceSection
+        pod={pod}
+        priceFormat={priceFormat}
+        productSelection={productSelection}
+        showProducts={showProducts}
+        seats={actions.seats}
+      />
 
       <PodDetailAccordions
         pod={pod}

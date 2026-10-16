@@ -22,6 +22,7 @@ import { useCheckoutSession } from '../useCheckoutSession';
 import { usePodCheckoutBill } from '../usePodCheckoutBill';
 import { CheckoutSkeleton, EmptyCheckout } from './CheckoutFallbacks';
 import CheckoutView from './CheckoutView';
+import { useCheckoutRentals } from '../../pod-rent/useCheckoutRentals';
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
@@ -44,6 +45,8 @@ export default function CheckoutPage() {
   const session = useCheckoutSession({ couponPodId: checkoutPodId || null });
 
   const pod = podData?.pod;
+  // Rented items picked on Pod Details ride on this payment, charged in full.
+  const rentals = useCheckoutRentals(pod, Boolean(session.success));
   // Pod checkout pays the membership (pod_amount) ONLY — products are a separate
   // payment through the standalone product checkout. Never mix the two.
   // Seats ride in from Pod Details. The ticket price multiplies; the server
@@ -92,6 +95,10 @@ export default function CheckoutPage() {
   };
 
   const onCheckout = async (values: CheckoutForm) => {
+    if (rentals.blocked) {
+      session.setError(t('venueRentals.guest.agreeRequired'));
+      return;
+    }
     session.setError(null);
     session.setSubmitting(true);
     const finance = session.finance;
@@ -108,6 +115,7 @@ export default function CheckoutPage() {
       checkout_url: globalThis.window.location.href,
       coupon_code: session.coupon?.ok ? session.coupon.code : null,
       redeem_coins: coins.applied,
+      selected_rentals: rentals.selections,
     };
     await session.persistMainAddress(values);
     try {
@@ -170,6 +178,7 @@ export default function CheckoutPage() {
       bill={{ unitAmount, base, coins, payBreakup, coinSummary, discounts }}
       breakup={breakup}
       seats={seats}
+      rentals={rentals}
       submit={submit}
       payment={payment}
       alreadyBookedOpen={alreadyBookedOpen}

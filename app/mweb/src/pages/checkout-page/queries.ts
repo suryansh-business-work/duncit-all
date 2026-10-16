@@ -62,6 +62,9 @@ export const CHECKOUT_POD = gql`
       pod_end_date_time
       pod_type
       pod_amount
+      # Rented items: only a paid pod at a venue rents things out.
+      pod_mode
+      venue_id
       # The multi-ticket tier comes off the ticket money before the coupon and
       # coins — the server prices the charge from the same two fields.
       ticket_discount_enabled

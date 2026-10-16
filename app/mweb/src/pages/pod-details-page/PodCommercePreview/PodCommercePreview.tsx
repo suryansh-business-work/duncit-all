@@ -15,6 +15,10 @@ interface Props {
   selectedTotal?: number;
   /** A variant line change from the detail dialog (row + picked variant + qty). */
   onVariantQuantity?: (row: any, variant: VariantPick, quantity: number) => void;
+  /** Inside the Pod Shop | Pod Rent switch: no frame or header of its own. */
+  embedded?: boolean;
+  /** Show only the first rows (the Pod Details card); the See all sheet shows every one. */
+  limit?: number;
 }
 
 /** Footer label: a count of selected products, or a neutral total caption. */
@@ -25,7 +29,7 @@ function productCountLabel(count: number): string {
 
 /** The pod's own shop: its products as rows on one card, with a running total.
  * Native twin: details/PodShop. */
-export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity }: Readonly<Props>) {
+export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity, embedded = false, limit }: Readonly<Props>) {
   const { t } = useTranslation();
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
   // Add-to-cart works in ANY pod state — the ONLY gate is the owner closing the shop.
@@ -59,13 +63,15 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
   };
 
   return (
-    <Box data-testid="pod-shop" sx={{ ...SURFACE_SX, p: 2, overflow: 'hidden' }}>
+    <Box data-testid="pod-shop" sx={embedded ? undefined : { ...SURFACE_SX, p: 2, overflow: 'hidden' }}>
+      {!embedded && (
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ minWidth: 0 }}>
           <SectionHeader testId="pod-shop-header" title={t('mweb.shop.title')} />
         </Box>
         <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: 'action.hover', color: 'text.primary' }} />
       </Stack>
+      )}
 
       {requests.length === 0 ? (
         <Stack
@@ -81,8 +87,8 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           </Typography>
         </Stack>
       ) : (
-        <Stack spacing={0.9} sx={{ mt: 2 }}>
-          {requests.map((item: any) => (
+        <Stack spacing={0.9} sx={{ mt: embedded ? 0 : 2 }}>
+          {(limit ? requests.slice(0, limit) : requests).map((item: any) => (
             <PodShopRow
               key={`${item.product_id}-${item.product_name}`}
               item={item}

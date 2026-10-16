@@ -17,6 +17,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import HandshakeIcon from '@mui/icons-material/Handshake';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -68,6 +69,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   orders: <LocalShippingIcon />,
   addresses: <HomeWorkIcon />,
   cart: <ShoppingCartIcon />,
+  rentals: <HandshakeIcon />,
   wallet: <AccountBalanceWalletIcon />,
   coin: <MonetizationOnIcon />,
   leaderboard: <EmojiEventsIcon />,

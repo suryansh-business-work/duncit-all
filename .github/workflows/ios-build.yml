@@ -90,7 +90,33 @@ env:
   BUILD_STAGE: ''
 
 jobs:
+  # Only when the app can have changed — see android-build.yml's `plan`. On
+  # macOS minutes this is also the most expensive build to run for nothing.
+  plan:
+    name: Did the app change?
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      any: ${{ steps.plan.outputs.any }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Affected app
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          node scripts/ci-affected.mjs plan --under app/mobile-app --extra app/mobile-app
+          --global .github/workflows/ios-build.yml --global 'server/src/modules/**/*.schema.ts'
+
   build:
+    needs: plan
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.plan.outputs.any == 'true')
     name: Build & publish IPA
     runs-on: macos-26
     timeout-minutes: 120

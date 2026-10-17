@@ -1742,6 +1742,8 @@ export type AppSettings = {
   pod_complete_timeout_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends its guests, host, venue and club admins are asked how it went. 0 asks the moment it ends. */
   pod_feedback_delay_hours: Scalars['Int']['output'];
+  /** The multi-date booking discount a new recurring pod starts with. */
+  pod_multi_date_discount_tiers: Array<MultiDateDiscountTier>;
   /** How many hours before a pod starts its attendees are reminded over email and WhatsApp. */
   pod_reminder_lead_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
@@ -7635,6 +7637,8 @@ export type DummyCheckoutInput = {
   contact_phone_extension: Scalars['String']['input'];
   contact_phone_number: Scalars['String']['input'];
   coupon_code?: InputMaybe<Scalars['String']['input']>;
+  /** Recurring pod: the dates being booked together (pod_id is then the recurring pod). One payment per date. */
+  date_pod_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   description?: InputMaybe<Scalars['String']['input']>;
   /** How the add-on products are delivered (default PICKUP). */
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
@@ -10328,6 +10332,25 @@ export type HostAccountProfile = {
   phone: Scalars['String']['output'];
 };
 
+/**
+ * "Host again": the Create Pod form filled from one of the caller's own pods.
+ * Nothing is saved — the draft is created when the host moves on in the form.
+ */
+export type HostAgainPrefill = {
+  __typename?: 'HostAgainPrefill';
+  /**
+   * What could not be carried over: CLUB_UNAVAILABLE, VENUE_UNAVAILABLE,
+   * LOCATION_MISSING, CATEGORY_MISSING, PRODUCTS_UNAVAILABLE.
+   */
+  notices: Array<Scalars['String']['output']>;
+  /** The stepper's form state as JSON, in the same shape as PodDraft.payload. */
+  payload: Scalars['String']['output'];
+  source_pod_id: Scalars['ID']['output'];
+  source_title: Scalars['String']['output'];
+  /** The step to open on: the date step when the place carried over, else step 1. */
+  step: Scalars['Int']['output'];
+};
+
 export type HostCategory = {
   __typename?: 'HostCategory';
   category_id?: Maybe<Scalars['ID']['output']>;
@@ -12463,6 +12486,18 @@ export type Msg91WidgetLogPage = {
   total: Scalars['Int']['output'];
 };
 
+/** Percent off a booking of at least min_dates dates of a recurring pod. */
+export type MultiDateDiscountTier = {
+  __typename?: 'MultiDateDiscountTier';
+  discount_pct: Scalars['Int']['output'];
+  min_dates: Scalars['Int']['output'];
+};
+
+export type MultiDateDiscountTierInput = {
+  discount_pct: Scalars['Int']['input'];
+  min_dates: Scalars['Int']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   _noop?: Maybe<Scalars['Boolean']['output']>;
@@ -13264,6 +13299,7 @@ export type Mutation = {
    * "Host again": a new draft holding one of the caller's own pods' content
    * (title, description, media, pricing, perks) with no date, slot or attendees,
    * ready to open in Create Pod. A cancelled pod can be hosted again too.
+   * @deprecated Use hostAgainPrefill; the draft is saved when the host moves on.
    */
   hostAgainPod: PodDraft;
   /**
@@ -13357,6 +13393,8 @@ export type Mutation = {
   issueAppBuildCiToken: AppBuildCiToken;
   /** Book a free pod — always one seat. The seats argument is ignored; it stays for installed app builds. */
   joinFreePod: PodMember;
+  /** Joins the picked dates of a FREE recurring pod, one free seat each. */
+  joinFreePodDates: PodSeriesJoinResult;
   /**
    * Open a virtual pod's meeting as a joined member.
    *
@@ -13489,7 +13527,7 @@ export type Mutation = {
   /** Finalize & Publish. Republishing is a staff-only correction and needs a reason. */
   publishPodChallengeResult: PodChallenge;
   publishPodDraft: Pod;
-  /** Publishes a draft as a recurring pod: one pod per date that can run. */
+  /** Publishes a draft as ONE recurring pod whose dates can each run, and be booked, on their own. */
   publishPodDraftSeries: PodSeriesPublishResult;
   /** Publish the page and get its tracked link. Safe to repeat: one link per page. */
   publishPublicPage: PublicPageLink;
@@ -17002,6 +17040,12 @@ export type MutationJoinFreePodArgs = {
   pod_doc_id: Scalars['ID']['input'];
   referral_token?: InputMaybe<Scalars['String']['input']>;
   seats?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type MutationJoinFreePodDatesArgs = {
+  date_pod_ids: Array<Scalars['ID']['input']>;
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -22083,10 +22127,14 @@ export type Pod = {
   seats_available: Scalars['Int']['output'];
   /** Seats taken — attendees plus every extra seat a multi-seat booking holds. */
   seats_taken: Scalars['Int']['output'];
-  /** The recurring series this pod is one date of; null for a one-time pod. */
+  /** The recurring pod this row belongs to; null for a one-time pod. */
   series_id?: Maybe<Scalars['ID']['output']>;
-  /** This date's position in its series (from 1), and how many dates the series had. */
+  /** This date's position in its series (from 1), and how many dates the series has. */
   series_index?: Maybe<Scalars['Int']['output']>;
+  /** A DATE's recurring pod (its PARENT row). */
+  series_parent_id?: Maybe<Scalars['ID']['output']>;
+  /** PARENT: the recurring pod people browse and book from. DATE: one of its dates. Null for a one-time pod. */
+  series_role?: Maybe<PodSeriesRole>;
   series_total?: Maybe<Scalars['Int']['output']>;
   /** Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod. */
   ticket_discount_enabled: Scalars['Boolean']['output'];
@@ -24009,6 +24057,42 @@ export type PodSeriesDate = {
   start_at: Scalars['String']['output'];
 };
 
+/** One date of a recurring pod, as its details page lists it. */
+export type PodSeriesDateRow = {
+  __typename?: 'PodSeriesDateRow';
+  /** Whether the viewer can book this date now. */
+  bookable: Scalars['Boolean']['output'];
+  end_at?: Maybe<Scalars['String']['output']>;
+  /** Seats the viewer holds on this date (0: not booked). */
+  my_seats: Scalars['Int']['output'];
+  /** The date's own pod — what a ticket, backout or host action on that date uses. */
+  pod_doc_id: Scalars['ID']['output'];
+  /** Spots left on this date (null: unlimited). */
+  seats_available?: Maybe<Scalars['Int']['output']>;
+  slug: Scalars['String']['output'];
+  start_at: Scalars['String']['output'];
+  status: PodSeriesDateStatus;
+};
+
+/** Where one date of a recurring pod stands. */
+export type PodSeriesDateStatus =
+  /** Waiting for the venue to accept the date. */
+  | 'AWAITING_VENUE'
+  /** Cancelled, or refused by the venue. */
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'ONGOING'
+  | 'UPCOMING';
+
+/** Every date of a recurring pod. */
+export type PodSeriesDates = {
+  __typename?: 'PodSeriesDates';
+  dates: Array<PodSeriesDateRow>;
+  frequency?: Maybe<PodSeriesFrequency>;
+  multi_date_discount_tiers: Array<MultiDateDiscountTier>;
+  parent_pod_id: Scalars['ID']['output'];
+};
+
 export type PodSeriesDecisionResult = {
   __typename?: 'PodSeriesDecisionResult';
   /** Dates answered. */
@@ -24023,11 +24107,27 @@ export type PodSeriesFrequency =
   | 'DAILY'
   | 'WEEKLY';
 
+export type PodSeriesJoinFailure = {
+  __typename?: 'PodSeriesJoinFailure';
+  message: Scalars['String']['output'];
+  pod_doc_id: Scalars['ID']['output'];
+};
+
+export type PodSeriesJoinResult = {
+  __typename?: 'PodSeriesJoinResult';
+  /** Dates that could not be joined, and why. */
+  failed: Array<PodSeriesJoinFailure>;
+  /** Dates joined. */
+  joined: Array<Scalars['ID']['output']>;
+};
+
 /** The recurring plan a host is about to publish. */
 export type PodSeriesPlanInput = {
   /** The last moment of the chosen end day (ISO), worked out in the admin-set time zone. */
   ends_on: Scalars['String']['input'];
   frequency: PodSeriesFrequency;
+  /** Percent off a booking of several dates; omitted means the Pod Settings default, [] means none. */
+  multi_date_discount_tiers?: InputMaybe<Array<MultiDateDiscountTierInput>>;
   /** Virtual pods: the first date's start and end. */
   pod_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
@@ -24042,7 +24142,11 @@ export type PodSeriesPlanInput = {
 export type PodSeriesPreview = {
   __typename?: 'PodSeriesPreview';
   dates: Array<PodSeriesDate>;
+  /** The multi-date discount a new recurring pod starts with (Pod Settings). */
+  default_multi_date_discount_tiers: Array<MultiDateDiscountTier>;
   frequency: PodSeriesFrequency;
+  /** The largest discount a tier may give (Pod Settings' multi-ticket ceiling). */
+  max_discount_pct: Scalars['Int']['output'];
   /** Admin limits the plan was checked against. */
   max_occurrences: Scalars['Int']['output'];
   max_span_days: Scalars['Int']['output'];
@@ -24051,10 +24155,17 @@ export type PodSeriesPreview = {
 export type PodSeriesPublishResult = {
   __typename?: 'PodSeriesPublishResult';
   created_count: Scalars['Int']['output'];
+  /** The one pod people see and book from. */
+  parent_pod_id: Scalars['ID']['output'];
   pods: Array<Pod>;
   series_id: Scalars['ID']['output'];
   skipped: Array<PodSeriesSkippedDate>;
 };
+
+/** A recurring pod's visible row, or one of its dates. */
+export type PodSeriesRole =
+  | 'DATE'
+  | 'PARENT';
 
 /** Why a date of a recurring pod did not become a pod. */
 export type PodSeriesSkipReason =
@@ -26030,6 +26141,7 @@ export type Query = {
   grievanceTicket?: Maybe<GrievanceTicket>;
   grievanceTicketsTable: GrievanceTicketTablePage;
   host?: Maybe<Host>;
+  hostAgainPrefill: HostAgainPrefill;
   /**
    * Offers this host may still take (in a sub-category they are approved in),
    * plus the ones they took. sub_category_id narrows to one of their categories;
@@ -26569,6 +26681,8 @@ export type Query = {
   podRentals: PodRentalCatalogue;
   /** What revoking this pod's cancellation would cost, and whether it is allowed. */
   podRevokePreview: PodRevokePreview;
+  /** Every date of the recurring pod that pod_doc_id is (or is a date of); null for a one-time pod. */
+  podSeriesDates?: Maybe<PodSeriesDates>;
   /** Every date a recurring plan would run on, each with its slot or why it cannot. */
   podSeriesPreview: PodSeriesPreview;
   podSettlementPreview: PodSettlement;
@@ -26717,6 +26831,8 @@ export type Query = {
   rateLimitStats: RateLimitStats;
   /** Every system that has called, with what it has spent. */
   rateLimitSystems: Array<RateLimitSystem>;
+  /** The exact bill for booking several dates of a recurring pod in one checkout. */
+  recurringCheckoutQuote: RecurringCheckoutQuote;
   /** The videos, pictures, sound files and sub-folders of a Drive folder. folder is a link or a folder id. */
   reelDriveFolder: ReelDriveFolder;
   reelDriveStatus: ReelDriveStatus;
@@ -28596,6 +28712,11 @@ export type QueryHostArgs = {
 };
 
 
+export type QueryHostAgainPrefillArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryHostAutoPodsArgs = {
   location_id?: InputMaybe<Scalars['ID']['input']>;
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
@@ -29620,6 +29741,11 @@ export type QueryPodRevokePreviewArgs = {
 };
 
 
+export type QueryPodSeriesDatesArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodSeriesPreviewArgs = {
   input: PodSeriesPlanInput;
 };
@@ -29896,6 +30022,11 @@ export type QueryRateLimitRuleArgs = {
 
 export type QueryRateLimitRulesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryRecurringCheckoutQuoteArgs = {
+  input: RecurringCheckoutQuoteInput;
 };
 
 
@@ -31236,6 +31367,8 @@ export type RazorpayOrderInput = {
   contact_phone_extension: Scalars['String']['input'];
   contact_phone_number: Scalars['String']['input'];
   coupon_code?: InputMaybe<Scalars['String']['input']>;
+  /** Recurring pod: the dates being booked together (pod_id is then the recurring pod). One payment per date, one order. */
+  date_pod_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   description?: InputMaybe<Scalars['String']['input']>;
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
@@ -31276,6 +31409,46 @@ export type RecordUserContactActionInput = {
   target: Scalars['String']['input'];
   type: AdminContactActionType;
   user_id: Scalars['ID']['input'];
+};
+
+/** What a multi-date booking is charged: each date is its own payment, these are their sums. */
+export type RecurringCheckoutQuote = {
+  __typename?: 'RecurringCheckoutQuote';
+  /** Products and rented items, charged once. */
+  add_ons_total: Scalars['Float']['output'];
+  coins_redeemed: Scalars['Int']['output'];
+  coupon_code?: Maybe<Scalars['String']['output']>;
+  coupon_discount: Scalars['Float']['output'];
+  currency_symbol: Scalars['String']['output'];
+  dates: Scalars['Int']['output'];
+  gst_amount: Scalars['Float']['output'];
+  /** Multi-date discount across the dates. */
+  multi_date_discount_amount: Scalars['Float']['output'];
+  multi_date_discount_pct: Scalars['Int']['output'];
+  /** The bill before every discount. */
+  original_total: Scalars['Float']['output'];
+  platform_fee_amount: Scalars['Float']['output'];
+  round_off: Scalars['Float']['output'];
+  subtotal: Scalars['Float']['output'];
+  /** Multi-ticket discount across the dates. */
+  ticket_discount_amount: Scalars['Float']['output'];
+  ticket_discount_pct: Scalars['Int']['output'];
+  /** Every ticket of every date at list price. */
+  ticket_gross: Scalars['Float']['output'];
+  /** What the buyer pays. */
+  total: Scalars['Float']['output'];
+};
+
+/** A recurring pod's dates being priced together, with the buyer's coupon and coins. */
+export type RecurringCheckoutQuoteInput = {
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+  date_pod_ids: Array<Scalars['ID']['input']>;
+  /** The recurring pod. */
+  pod_id: Scalars['ID']['input'];
+  redeem_coins?: InputMaybe<Scalars['Int']['input']>;
+  seats?: InputMaybe<Scalars['Int']['input']>;
+  selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
+  selected_rentals?: InputMaybe<Array<CheckoutRentalSelectionInput>>;
 };
 
 /** One clip, picture or sound file a reel can use. */
@@ -38212,6 +38385,8 @@ export type UpdateAppSettingsInput = {
   pod_complete_timeout_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends everyone who was there is asked how it went (0-8760). */
   pod_feedback_delay_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** The multi-date booking discount a new recurring pod starts with ([] for none). */
+  pod_multi_date_discount_tiers?: InputMaybe<Array<MultiDateDiscountTierInput>>;
   /** How many hours before a pod starts its attendees are reminded (1-8760). */
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */

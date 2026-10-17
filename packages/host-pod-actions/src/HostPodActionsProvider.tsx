@@ -28,10 +28,12 @@ export interface HostPodActionsConfig {
    */
   onOpenPodMedia?: (podId: string) => void;
   /**
-   * Opens a "Host again" draft in the surface's Create Pod route. Optional: a
-   * console with no draft route omits it, and the menu then has no such row.
+   * "Host again": opens the surface's Create Pod route filled from this pod.
+   * Nothing is saved until the host moves on in the form, so a host who backs
+   * out leaves no empty draft behind. Optional: a console with no Create Pod
+   * route omits it, and the menu then has no such row.
    */
-  onHostAgainDraft?: (draftId: string) => void;
+  onHostAgain?: (podId: string) => void;
   /**
    * Turns one of those links into its tracked short link before the host sends
    * it. Optional: a surface without a client for it hands out the plain link,
@@ -65,7 +67,7 @@ export function HostPodActionsProvider({ children, ...config }: Readonly<Provide
     linkBaseUrl,
     onOpenFeedback,
     onOpenPodMedia,
-    onHostAgainDraft,
+    onHostAgain,
     resolveShareUrl,
     notifySuccess,
     notifyError,
@@ -80,7 +82,7 @@ export function HostPodActionsProvider({ children, ...config }: Readonly<Provide
       linkBaseUrl,
       onOpenFeedback,
       onOpenPodMedia,
-      onHostAgainDraft,
+      onHostAgain,
       resolveShareUrl,
       notifySuccess,
       notifyError,
@@ -94,7 +96,7 @@ export function HostPodActionsProvider({ children, ...config }: Readonly<Provide
       linkBaseUrl,
       onOpenFeedback,
       onOpenPodMedia,
-      onHostAgainDraft,
+      onHostAgain,
       resolveShareUrl,
       notifySuccess,
       notifyError,

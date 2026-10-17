@@ -126,6 +126,13 @@ async function recordCoHostAudit(pod: IPod, actorUserId: string, note: string) {
   await podAuditService.record({ pod, action: 'UPDATE', source: 'HOST', actorUserId, note });
 }
 
+/** A recurring pod's co-hosts run every one of its dates, so a change made on
+ * the pod (its PARENT row) is copied onto each date. */
+async function mirrorCoHostsToDates(pod: IPod) {
+  if (pod.series_role !== 'PARENT') return;
+  await PodModel.updateMany({ series_parent_id: pod._id }, { $set: { co_hosts: pod.co_hosts } });
+}
+
 /** Fire-and-forget in-app notification; a failure must never fail the mutation. */
 async function notify(userIds: string[], title: string, body: string) {
   if (!userIds.length) return;
@@ -208,6 +215,7 @@ export const coHostService = {
       } as any);
     }
     await pod.save();
+    await mirrorCoHostsToDates(pod);
     await recordCoHostAudit(pod, userId, `Co-host invited (${inviteeId})`);
     await notify(
       [String(inviteeId)],
@@ -226,6 +234,7 @@ export const coHostService = {
     ) as any;
     if (pod.co_hosts.length === before) notFound('That co-host is not on this pod');
     await pod.save();
+    await mirrorCoHostsToDates(pod);
     await recordCoHostAudit(pod, userId, `Co-host removed (${coHostId})`);
     return pod;
   },
@@ -243,6 +252,7 @@ export const coHostService = {
     entry.status = accept ? 'ACCEPTED' : 'DECLINED';
     entry.responded_at = new Date();
     await pod.save();
+    await mirrorCoHostsToDates(pod);
     await recordCoHostAudit(pod, userId, `Co-host invite ${accept ? 'accepted' : 'declined'}`);
 
     const user = await UserModel.findById(userId).select('profile.first_name profile.last_name');

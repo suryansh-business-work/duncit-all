@@ -1,5 +1,10 @@
 import { Text, XStack, YStack } from 'tamagui';
-import { rentalMoney, rentalUnitKey, type PodRentalItem } from '@duncit/utils';
+import {
+  rentalMoney,
+  rentalUnitKey,
+  type PodRentalCatalogue,
+  type PodRentalItem,
+} from '@duncit/utils';
 
 import { CartQuantityControl } from '@/components/cart/CartQuantityControl';
 import { cartControlLabels } from '@/components/cart/cartControlLabels';
@@ -7,9 +12,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 import { ProductRowShell, ProductThumb } from '../PodShopProductRow/ProductRowParts';
 
+import { RentalLineBreakdown } from './RentalLineBreakdown';
+
 interface Props {
   item: PodRentalItem;
-  currency: string;
+  /** The currency every price prints in, and the pod's chargeable hours for the price breakdown. */
+  catalogue: Pick<PodRentalCatalogue, 'currency_symbol' | 'hours'>;
   quantity: number;
   /** The most this booking may take: the per-guest limit for every seat, never past what is left. */
   max: number;
@@ -21,16 +29,19 @@ interface Props {
 /** One thing the venue rents: photo, name, rate per slot or hour, deposit, what is left, and the picker. RN twin of mWeb's RentalItemRow. */
 export function RentalItemRow({
   item,
-  currency,
+  catalogue,
   quantity,
   max,
   readOnly,
   onQuantity,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const currency = catalogue.currency_symbol;
   const labels = cartControlLabels(t, item.name);
   const soldOut = item.available <= 0;
   const selected = !readOnly && quantity > 0;
+  // The venue's per-guest limit, not the stock, is what stops the + here: say so.
+  const capped = max > 0 && max < item.available;
   const stock = soldOut
     ? t('venueRentals.guest.soldOut')
     : t('venueRentals.guest.left', { vars: { count: item.available } });
@@ -60,6 +71,14 @@ export function RentalItemRow({
               testIdPrefix={`pod-rent-${item.id}`}
             />
           </XStack>
+        ) : null}
+        {!readOnly && !soldOut && capped ? (
+          <Text fontSize={12} color="$muted" testID={`pod-rent-max-${item.id}`}>
+            {t('venueRentals.guest.maxPerBooking', { vars: { count: max } })}
+          </Text>
+        ) : null}
+        {selected ? (
+          <RentalLineBreakdown item={item} quantity={quantity} catalogue={catalogue} />
         ) : null}
       </YStack>
       <Text fontSize={13.5} fontWeight="700" color="$color">

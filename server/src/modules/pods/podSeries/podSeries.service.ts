@@ -15,6 +15,10 @@ import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { PodSeriesModel, type IPodSeriesSkip, type PodSeriesFrequency } from './podSeries.model';
 import { seriesWindows, withinSpan, type SeriesWindow } from './podSeries.dates';
 import { firstSeriesSlot, matchSeriesSlots, type SeriesSlotMatch } from './podSeries.slots';
+import { assertMultiDateDiscountTiers, type MultiDateDiscountTier } from './podSeries.discount';
+import { createSeriesParent, syncSeriesParent } from './podSeries.parent';
+import { cleanTicketDiscountMaxPct } from '@modules/platform/settings/settings.service';
+import { appFormat } from '@utils/app-time';
 
 export interface SeriesPlanInput {
   pod_mode: string;
@@ -25,6 +29,8 @@ export interface SeriesPlanInput {
   frequency: PodSeriesFrequency;
   /** The last moment of the host's chosen end day (ISO), in the admin zone. */
   ends_on: string;
+  /** Percent off a booking of several dates; omitted means the Pod Settings default. */
+  multi_date_discount_tiers?: MultiDateDiscountTier[] | null;
 }
 
 type CreatedPod = NonNullable<Awaited<ReturnType<typeof podService.createForPartner>>>;
@@ -35,11 +41,13 @@ const fail = (code: string, message: string): never => {
 
 async function seriesLimits() {
   const doc = await AppSettingsModel.findOne({ singleton_key: 'app' })
-    .select('pod_series_max_occurrences pod_series_max_span_days')
+    .select('pod_series_max_occurrences pod_series_max_span_days pod_multi_date_discount_tiers ticket_discount_max_pct')
     .lean();
   return {
     maxOccurrences: cleanPodSeriesMaxOccurrences(doc?.pod_series_max_occurrences),
     maxSpanDays: cleanPodSeriesMaxSpanDays(doc?.pod_series_max_span_days),
+    maxDiscountPct: cleanTicketDiscountMaxPct(doc?.ticket_discount_max_pct),
+    defaultDiscountTiers: doc?.pod_multi_date_discount_tiers ?? [],
   };
 }
 
@@ -85,6 +93,9 @@ async function planDates(plan: SeriesPlanInput) {
   return { limits, physical, dates };
 }
 
+/** A date's own slug — the title plus its day — so the parent keeps the title's. */
+const dateSlug = (title: string, start: Date): string => `${title} ${appFormat(start, 'yyyy-MM-dd')}`;
+
 const toPubDate = (m: SeriesSlotMatch) => ({
   start_at: m.window.start.toISOString(),
   end_at: m.window.end ? m.window.end.toISOString() : null,
@@ -118,6 +129,8 @@ export const podSeriesService = {
       frequency: plan.frequency,
       max_occurrences: limits.maxOccurrences,
       max_span_days: limits.maxSpanDays,
+      max_discount_pct: limits.maxDiscountPct,
+      default_multi_date_discount_tiers: limits.defaultDiscountTiers,
       dates: dates.map(toPubDate),
     };
   },
@@ -141,7 +154,11 @@ export const podSeriesService = {
   ) {
     const draft = await PodDraftModel.findOne({ _id: draftId, user_id: new Types.ObjectId(userId) });
     if (!draft) fail('NOT_FOUND', 'Draft not found');
-    const { physical, dates } = await planDates(plan);
+    const { limits, physical, dates } = await planDates(plan);
+    const discountTiers = assertMultiDateDiscountTiers(
+      plan.multi_date_discount_tiers ?? limits.defaultDiscountTiers,
+      { maxPct: limits.maxDiscountPct, maxDates: limits.maxOccurrences }
+    );
     const skipByHost = new Set((plan.skip_dates ?? []).map((d) => new Date(d).getTime()));
     const runnable = dates.filter((m) => !m.reason && !skipByHost.has(m.window.start.getTime()));
     if (runnable.length < 2) fail('BAD_USER_INPUT', 'A recurring pod needs at least two dates that can run');
@@ -155,6 +172,7 @@ export const podSeriesService = {
       frequency: plan.frequency,
       starts_at: runnable[0].window.start,
       ends_on: new Date(plan.ends_on),
+      multi_date_discount_tiers: discountTiers,
     });
     const created: { id: Types.ObjectId; pub: CreatedPod }[] = [];
     const skipped: IPodSeriesSkip[] = dates
@@ -167,6 +185,7 @@ export const podSeriesService = {
     for (const [i, m] of runnable.entries()) {
       const dateInput = {
         ...input,
+        pod_id: dateSlug(String(input.pod_title ?? ''), m.window.start),
         pod_occurrence: plan.frequency,
         pod_date_time: m.window.start.toISOString(),
         pod_end_date_time: m.window.end ? m.window.end.toISOString() : null,
@@ -198,12 +217,17 @@ export const podSeriesService = {
     );
     series.pod_ids = created.map((c) => c.id);
     series.skipped = skipped;
+    series.parent_pod_id = await createSeriesParent(series._id, series.pod_ids, {
+      club_id: input.club_id,
+      pod_title: input.pod_title,
+    });
     await series.save();
     await PodDraftModel.deleteOne({ _id: draft!._id });
     await announceSeries(series.pod_ids);
     const pods = created.map((c, i) => ({ ...c.pub, series_index: i + 1, series_total: created.length }));
     return {
       series_id: String(series._id),
+      parent_pod_id: String(series.parent_pod_id),
       created_count: created.length,
       pods,
       skipped: skipped.map((s) => ({ date: s.date.toISOString(), reason: s.reason, detail: s.detail ?? null })),
@@ -244,7 +268,7 @@ export const podSeriesService = {
    * included — and the dates that already ran are left alone. */
   async hostCancelUpcoming(userId: string, seriesId: string, reasonSubject: string, reasonNote?: string | null) {
     if (!Types.ObjectId.isValid(seriesId)) fail('BAD_USER_INPUT', 'Invalid series');
-    const series = await PodSeriesModel.findById(seriesId).select('host_user_id').lean();
+    const series = await PodSeriesModel.findById(seriesId).select('host_user_id parent_pod_id').lean();
     if (!series || String(series.host_user_id) !== userId) fail('FORBIDDEN', 'Only the host can cancel this series');
     const upcoming = await PodModel.find({
       series_id: new Types.ObjectId(seriesId),
@@ -257,6 +281,7 @@ export const podSeriesService = {
       await podService.hostRemove(String(pod._id), userId, reasonSubject, reasonNote);
       cancelled += 1;
     }
+    if (series?.parent_pod_id) await syncSeriesParent(series.parent_pod_id);
     return cancelled;
   },
 };

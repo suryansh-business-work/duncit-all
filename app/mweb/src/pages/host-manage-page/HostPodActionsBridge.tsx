@@ -1,7 +1,7 @@
 import { useCallback, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { buildSlotLabels } from '@duncit/slots';
-import { mwebPodMediaLabels, podFeedbackPath, podMediaPath } from '@duncit/utils';
+import { HOST_AGAIN_PARAM, mwebPodMediaLabels, podFeedbackPath, podMediaPath } from '@duncit/utils';
 import {
   HostPodActionsProvider,
   mwebHostPodLabels,
@@ -55,8 +55,9 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
     [navigate],
   );
   const onOpenPodMedia = useCallback((podId: string) => navigate(podMediaPath(podId)), [navigate]);
-  const onHostAgainDraft = useCallback(
-    (draftId: string) => navigate(`/create-pod/${draftId}`),
+  // Opens Create Pod filled from the pod; the draft is saved once the host moves on.
+  const onHostAgain = useCallback(
+    (podId: string) => navigate(`/create-pod?${HOST_AGAIN_PARAM}=${encodeURIComponent(podId)}`),
     [navigate],
   );
 
@@ -72,7 +73,7 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
       linkBaseUrl={globalThis.window.location.origin}
       onOpenFeedback={onOpenFeedback}
       onOpenPodMedia={onOpenPodMedia}
-      onHostAgainDraft={onHostAgainDraft}
+      onHostAgain={onHostAgain}
       resolveShareUrl={resolvePodShareUrl}
       notifySuccess={notifySuccess}
       notifyError={notifyError}

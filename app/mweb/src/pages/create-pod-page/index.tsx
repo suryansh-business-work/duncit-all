@@ -1,21 +1,11 @@
-import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
-import { logs } from '@duncit/logs';
-import { hostPodChallengesPath, mustSetUpChallenge, type PodSeriesPlan } from '@duncit/utils';
-import { notifySuccess } from '../../components/notify';
-import { POD_CHALLENGE_SETUP } from '../host-pod-challenges-page/queries';
+import { clubCityName } from '@duncit/utils';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
-import {
-  CreatePodStepper,
-  blankCreatePodForm,
-  hydrateDraft,
-  STEP_TITLES,
-  type DraftPayload,
-  type CreatePodFormValues,
-} from './create-pod';
+import { CreatePodStepper, type DraftPayload } from './create-pod';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useAppLocation } from '../../app/AppLocationContext';
 import StudioPageHeader from '../../components/StudioPageHeader';
@@ -23,30 +13,27 @@ import {
   CREATE_POD_OPTIONS,
   MODERATE_POD_CONTENT,
   MY_POD_DRAFT,
-  PUBLISH_POD_DRAFT,
-  PUBLISH_POD_DRAFT_SERIES,
   SAVE_POD_DRAFT,
 } from './queries';
 import { usePartnerRequestPrefill } from './usePartnerRequestPrefill';
-
-interface SeriesPublishData {
-  publishPodDraftSeries: { created_count: number; skipped: { date: string }[] };
-}
+import { useHostAgainPrefill } from './useHostAgainPrefill';
+import HostAgainNotice from './HostAgainNotice';
+import { createPodSeed } from './createPodSeed';
+import { useCreatePodPublish } from './useCreatePodPublish';
+import type { CreatePodLocation } from './create-pod/create-pod.types';
 
 /** Host-only page to create a pod via the 4-step stepper, reached from the Home
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
 export default function CreatePodPage() {
   const navigate = useNavigate();
-  const client = useApolloClient();
   const { t } = useTranslation();
   const { draftId } = useParams<{ draftId?: string }>();
   const { locationId: globalLocationId } = useAppLocation();
   const options = useQuery<any>(CREATE_POD_OPTIONS, { fetchPolicy: 'cache-and-network' });
   const draftQuery = useQuery<any>(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
   const [saveMut] = useMutation<any>(SAVE_POD_DRAFT);
-  const [publishMut] = useMutation<any>(PUBLISH_POD_DRAFT);
-  const [publishSeriesMut] = useMutation<SeriesPublishData>(PUBLISH_POD_DRAFT_SERIES);
   const [moderateMut] = useMutation<any>(MODERATE_POD_CONTENT);
+  const publish = useCreatePodPublish();
 
   // Host access mirrors the server's createForPartner check: the cached HOST
   // role OR an approved, active host profile (legacy/HOSTREQ hosts may lack the
@@ -68,58 +55,19 @@ export default function CreatePodPage() {
 
   // Arriving from a confirmed Pod Request: its venue and slot come pre-chosen.
   const prefill = usePartnerRequestPrefill(venues, !draftId);
+  // "Host again": the form filled from an earlier pod, in THAT pod's city.
+  const hostAgain = useHostAgainPrefill(!draftId);
 
   const draft = draftQuery.data?.myPodDraft;
   // A new pod is in the city the header has selected — step 1 lists that city's
   // localities. The page re-mounts when the header's pick changes.
-  const initialValues: CreatePodFormValues = draft
-    ? hydrateDraft(draft.payload)
-    : { ...blankCreatePodForm, location_id: globalLocationId, ...prefill.values };
-  const initialStep = draft ? Math.min(Math.max(draft.step ?? 0, 0), STEP_TITLES.length - 1) : 0;
+  const seed = createPodSeed(draft ?? hostAgain.prefill, { location_id: globalLocationId, ...prefill.values });
+  const copiedCityId = hostAgain.prefill && seed.values.location_id !== globalLocationId ? seed.values.location_id : '';
+  const otherCity = locations.find((item: CreatePodLocation) => copiedCityId && item.id === copiedCityId);
 
   const saveDraft = async (id: string | null, payload: DraftPayload) => {
     const res = await saveMut({ variables: { draft_id: id, input: payload } });
     return res.data.savePodDraft.id as string;
-  };
-  /** Never blocks the publish it follows: an unreadable setup means "not required". */
-  const challengeRequired = async (podId: string) => {
-    try {
-      const res = await client.query({ query: POD_CHALLENGE_SETUP, variables: { podId }, fetchPolicy: 'network-only' });
-      return mustSetUpChallenge(res.data?.podChallengeSetup);
-    } catch (error) {
-      logs.mWeb.warn('create-pod', 'challengeSetup', { error });
-      return false;
-    }
-  };
-  /** A recurring pod: every date that could run is now a pod, each waiting on
-   * its venue (or live, at the host's own venue). Say how many, and which
-   * dates were skipped, then land on Host Management where they are listed. */
-  const publishSeries = async (id: string, input: unknown, plan: PodSeriesPlan) => {
-    const res = await publishSeriesMut({ variables: { draft_id: id, input, plan } });
-    const result = res.data?.publishPodDraftSeries;
-    const created = result?.created_count ?? 0;
-    const skipped = result?.skipped.length ?? 0;
-    notifySuccess(
-      skipped
-        ? t('mweb.podSeries.publishedSkipped', { vars: { created, skipped } })
-        : t('mweb.podSeries.published', { vars: { created } })
-    );
-    navigate('/host/manage');
-  };
-  const publish = async (id: string, input: any, plan: PodSeriesPlan | null) => {
-    if (plan) return publishSeries(id, input, plan);
-    const res = await publishMut({ variables: { draft_id: id, input } });
-    const created = res.data.publishPodDraft;
-    // A pod holding a venue slot awaits the venue's decision — land the host on
-    // the waiting page instead of Host Management (native twin, rule 27).
-    if (created.venue_approval_status === 'PENDING') {
-      navigate(`/host/pod-pending/${created.id}`);
-    } else if (await challengeRequired(created.id)) {
-      // The pod's category requires a challenge: take the host to set it up.
-      navigate(hostPodChallengesPath(created.id));
-    } else {
-      navigate('/host/manage');
-    }
   };
   const moderate = async (input: any) => {
     const res = await moderateMut({ variables: { input } });
@@ -127,7 +75,12 @@ export default function CreatePodPage() {
   };
 
   const loading =
-    (options.loading && !options.data) || (!!draftId && draftQuery.loading && !draftQuery.data) || prefill.loading;
+    (options.loading && !options.data) ||
+    (!!draftId && draftQuery.loading && !draftQuery.data) ||
+    prefill.loading ||
+    hostAgain.loading;
+  // A copy that cannot be read opens nothing rather than a blank form posing as it.
+  const pageError = hostAgain.failed ? t('mweb.hostPodActions.hostAgainFailed') : null;
   let body: React.ReactNode;
   if (loading) {
     body = (
@@ -135,26 +88,35 @@ export default function CreatePodPage() {
         <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Box>
     );
-  } else if (options.error || prefill.error) {
-    body = <Alert data-testid="create-pod-page-error" severity="error">{options.error?.message ?? prefill.error}</Alert>;
+  } else if (options.error || prefill.error || pageError) {
+    body = (
+      <Alert data-testid="create-pod-page-error" severity="error">
+        {options.error?.message ?? prefill.error ?? pageError}
+      </Alert>
+    );
   } else if (isHost) {
     body = (
-      <CreatePodStepper
-        initialValues={initialValues}
-        initialStep={initialStep}
-        initialDraftId={draft?.id ?? null}
-        clubs={clubs}
-        locations={locations}
-        venues={venues}
-        products={products}
-        subCategories={subCategories}
-        hostCategories={hostCategories}
-        viewerUserId={viewerUserId}
-        pinnedVenueId={prefill.pinnedVenueId}
-        onSaveDraft={saveDraft}
-        onModerate={moderate}
-        onPublish={publish}
-      />
+      <>
+        {hostAgain.prefill && (
+          <HostAgainNotice prefill={hostAgain.prefill} otherCityName={otherCity ? clubCityName(otherCity) : null} />
+        )}
+        <CreatePodStepper
+          initialValues={seed.values}
+          initialStep={seed.step}
+          initialDraftId={draft?.id ?? null}
+          clubs={clubs}
+          locations={locations}
+          venues={venues}
+          products={products}
+          subCategories={subCategories}
+          hostCategories={hostCategories}
+          viewerUserId={viewerUserId}
+          pinnedVenueId={prefill.pinnedVenueId}
+          onSaveDraft={saveDraft}
+          onModerate={moderate}
+          onPublish={publish}
+        />
+      </>
     );
   } else {
     body = (

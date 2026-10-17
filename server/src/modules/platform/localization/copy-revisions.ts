@@ -299,4 +299,11 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "partners.foodOrders.noFood": [
     "This venue does not offer food. Turn food on in its Type & Capacity section to take orders.",
   ],
+  // Recurring pods became ONE pod with many dates (not one pod per date).
+  "mweb.podSeries.published": ["{created} pods created, one for each date."],
+  "mweb.podSeries.publishedSkipped": ["{created} pods created. {skipped} dates were skipped."],
+  "mweb.podSeries.willCreate": ["{count} of {total} dates will be created"],
+  "mweb.podSeries.limitsHint": [
+    "Up to {max} dates, within {days} days of the first one. Each date is its own pod, sent to the venue as its own request.",
+  ],
 };

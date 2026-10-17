@@ -47,6 +47,7 @@ import {
   resolveClubCategory,
 } from './pod.products';
 import { insertPodWithFreeSlug, resolvePodSlugForCreate } from './pod.slug';
+import { syncSeriesParent } from '../podSeries/podSeries.parent';
 import {
   assertRequestReadyForPod,
   markPartnerRequestPodCreated,
@@ -445,8 +446,9 @@ export const podWriteMethods = {
   },
 
   /** Host self-service edit — title, description, media and a bigger pod (2A). */
-  async hostUpdate(id: string, userId: string, input: any) {
+  async hostUpdate(id: string, userId: string, input: any): Promise<ReturnType<typeof toPub>> {
     const doc = await findHostedPod(id, userId);
+    if (doc.series_role === 'PARENT') return this.hostUpdateRecurring(doc, userId, input);
     const before = snapshotPod(doc);
     const title = (input.pod_title ?? '').trim();
     if (title.length < 3) {
@@ -504,6 +506,50 @@ export const podWriteMethods = {
 
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
+  },
+
+  /**
+   * The host edits a recurring pod: the edit is made on every date that has
+   * not ended yet — each through the ordinary edit, so each is screened,
+   * checked against its own slot's capacity and announced to its own
+   * attendees — then the recurring pod takes the result. The first date goes
+   * first: if it is refused, no date is changed.
+   */
+  async hostUpdateRecurring(
+    parent: Awaited<ReturnType<typeof findHostedPod>>,
+    userId: string,
+    input: Record<string, unknown>
+  ): Promise<ReturnType<typeof toPub>> {
+    const dates = await PodModel.find({
+      series_parent_id: parent._id,
+      completed_at: null,
+      pod_date_time: { $gt: new Date() },
+    })
+      .select('_id')
+      .sort({ pod_date_time: 1 })
+      .lean();
+    if (dates.length === 0) {
+      throw new GraphQLError('Every date of this pod has already started', { extensions: { code: 'BAD_REQUEST' } });
+    }
+    for (const date of dates) await this.hostUpdate(String(date._id), userId, input);
+    const source = await PodModel.findById(dates[0]._id).lean();
+    const before = snapshotPod(parent);
+    for (const field of [
+      'pod_title',
+      'pod_description',
+      'pod_images_and_videos',
+      'reel_url',
+      'no_of_spots',
+      'ticket_discount_enabled',
+      'ticket_discount_tiers',
+    ] as const) {
+      parent.set(field, source?.[field] ?? parent.get(field));
+    }
+    await parent.save();
+    await syncSeriesParent(parent._id);
+    await podAuditService.record({ pod: parent, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });
+    const slugMap = await loadClubSlugMap([parent]);
+    return toPub(parent, slugMap);
   },
 
   async addStatus(id: string, viewerId: string, media: any, isAdmin = false) {

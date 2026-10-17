@@ -10,6 +10,8 @@ import { parseDateTimeText } from '../create-pod.form';
 import type { CreatePodForm } from '../create-pod.types';
 import { RepeatEndDateField } from './RepeatEndDateField';
 import { SeriesDatesList } from './SeriesDatesList';
+import { RepeatDiscountField } from './RepeatDiscountField';
+import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { useSeriesPreview } from './useSeriesPreview';
 
 type RepeatMode = 'ONE_TIME' | 'RECURRING';
@@ -25,7 +27,8 @@ const FREQUENCIES = POD_SERIES_FREQUENCIES.map((f) => ({ key: f.value, labelKey:
  * One time or Recurring, under the pod's first date — mWeb's PodRepeatSection
  * (rule 27). Recurring repeats that date daily, weekly or every two weeks until
  * an end day; the server lists every date and its slot, and the host can
- * untick any of them before publishing.
+ * untick any of them before publishing. It publishes as ONE pod with those
+ * dates, which members book with the multi-date discount set here.
  */
 export function PodRepeatSection({ form }: Readonly<{ form: CreatePodForm }>) {
   const { t } = useTranslation();
@@ -38,6 +41,7 @@ export function PodRepeatSection({ form }: Readonly<{ form: CreatePodForm }>) {
   } = form;
   const values = watch();
   const { loading, error, preview } = useSeriesPreview(values, fmt.timeZone);
+  const { currency } = usePublicFinance();
   // A Pod Request's slot is one agreed date — it has nothing to repeat.
   if (values.partner_request_id) return null;
 
@@ -116,6 +120,15 @@ export function PodRepeatSection({ form }: Readonly<{ form: CreatePodForm }>) {
                 skipped={values.repeat_skip_dates}
                 onToggle={toggleDate}
               />
+              {values.pod_type === 'FREE' ? null : (
+                <RepeatDiscountField
+                  form={form}
+                  defaults={preview.default_multi_date_discount_tiers}
+                  maxDates={preview.max_occurrences}
+                  maxPct={preview.max_discount_pct}
+                  currency={currency}
+                />
+              )}
               <Text fontSize={12} color="$muted">
                 {t('mweb.podSeries.limitsHint', {
                   vars: { max: preview.max_occurrences, days: preview.max_span_days },

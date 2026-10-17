@@ -9,6 +9,8 @@ import type { CreatePodForm, CreatePodLocation } from '../create-pod.types';
 interface Props {
   form: CreatePodForm;
   locations: CreatePodLocation[];
+  /** Told after a move whether it cleared the club, venue or slot. */
+  onMoved: (cleared: boolean) => void;
 }
 
 /**
@@ -17,7 +19,7 @@ interface Props {
  * chosen) — the header stays as it was and the rest of the form is kept.
  * Native twin: steps/EditPodLocation (rule 27).
  */
-export default function EditPodLocation({ form, locations }: Readonly<Props>) {
+export default function EditPodLocation({ form, locations, onMoved }: Readonly<Props>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [draftLocationId, setDraftLocationId] = useState('');
@@ -29,7 +31,7 @@ export default function EditPodLocation({ form, locations }: Readonly<Props>) {
     setOpen(true);
   };
   const apply = (locationId: string, zone: string) => {
-    applyPodLocation(form, locationId, zone);
+    onMoved(applyPodLocation(form, locationId, zone));
     setOpen(false);
   };
 

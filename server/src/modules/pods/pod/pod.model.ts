@@ -1,4 +1,12 @@
-import { Schema, model, Types, type Document } from 'mongoose';
+import { GraphQLError } from 'graphql';
+import {
+  Schema,
+  model,
+  Types,
+  type CallbackWithoutResultAndOptionalError,
+  type Document,
+  type Query,
+} from 'mongoose';
 import { ClubModel } from '@modules/clubs/club/club.model';
 
 /** A pod of either mode can be FREE (amount 0) or PAID. Legacy values are
@@ -28,6 +36,55 @@ export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 /** Venue's decision on the pod's slot request. NONE = no approval needed
  * (own venue / no slot); PENDING pods stay offline until APPROVED. */
 export type PodVenueApproval = 'NONE' | 'PENDING' | 'APPROVED' | 'DECLINED';
+
+/** A recurring pod's visible row, or one of its dates (see `series_id`). */
+export type PodSeriesRole = 'PARENT' | 'DATE';
+
+/** Query options that choose which rows of a recurring pod a read sees. */
+export interface PodSeriesViewOptions {
+  /** Act on real dates: show DATE rows, hide PARENT rows. */
+  seriesDates?: boolean;
+  /** See every row. */
+  seriesAll?: boolean;
+}
+
+/**
+ * Spread into a filter by engines that act on pods that really happen —
+ * reminders, auto-cancel, payouts: every one-time pod and every DATE of a
+ * recurring pod, never the recurring pod's PARENT row.
+ */
+export const SERIES_DATES = { series_role: { $ne: 'PARENT' as PodSeriesRole } };
+
+/**
+ * A recurring pod is booked one date at a time — each DATE row holds its own
+ * seats and money. Booking the PARENT row itself (an app that predates
+ * recurring pods) is refused with a message saying what to do instead.
+ */
+export function assertBookableRow(pod: { series_role?: PodSeriesRole | null }): void {
+  if (pod.series_role !== 'PARENT') return;
+  throw new GraphQLError('This pod runs on several dates — pick the dates you want to book. Update the app if you do not see them.', {
+    extensions: { code: 'BAD_USER_INPUT' },
+  });
+}
+
+/** Filter keys that ADDRESS particular pods; a read naming one is left alone
+ * so a ticket, payment, slug or series lookup still reaches its own row. */
+const SERIES_ADDRESSED = ['_id', 'pod_id', 'series_id', 'series_role', 'series_parent_id'];
+
+/**
+ * Which recurring-pod rows a read must NOT see, or null to leave it alone.
+ * By default reads see a recurring pod once — its PARENT — and never its DATE
+ * rows; `seriesDates` flips that, `seriesAll` turns it off.
+ */
+export function seriesRowsHidden(
+  options: PodSeriesViewOptions | undefined,
+  filters: (Record<string, unknown> | undefined)[]
+): PodSeriesRole | null {
+  if (options?.seriesAll) return null;
+  const addressed = filters.some((filter) => filter && SERIES_ADDRESSED.some((key) => filter[key] !== undefined));
+  if (addressed) return null;
+  return options?.seriesDates ? 'PARENT' : 'DATE';
+}
 
 export interface IPodMedia {
   url: string;
@@ -219,10 +276,17 @@ export interface IPod extends Document {
   venue_approval_status: PodVenueApproval;
   /** The Auto Pod offer this pod materialized from (null for ordinary pods). */
   source_auto_pod_id?: Types.ObjectId | null;
-  /** The recurring series this pod is one date of (null for a one-time pod).
-   * Every date is a full pod of its own — tickets, attendance, refunds and
-   * settlement never look at the series. */
+  /** The recurring series this pod belongs to (null for a one-time pod).
+   *
+   * A recurring pod is ONE pod to everyone who browses it — the PARENT row,
+   * which feeds, the shop, counts and details show. Each of its dates is a
+   * DATE row underneath (`series_parent_id` → the parent) holding that date's
+   * venue slot, seats, tickets, attendance, refunds and settlement, so every
+   * per-date rule works exactly as on a one-time pod. DATE rows are kept out
+   * of reads by the `seriesView` hook below. */
   series_id?: Types.ObjectId | null;
+  series_role?: PodSeriesRole | null;
+  series_parent_id?: Types.ObjectId | null;
   /** This date's position in the series, from 1, and how many dates it had
    * when it was created — for "2 of 12" labels without a second read. */
   series_index?: number | null;
@@ -393,6 +457,8 @@ const podSchema = new Schema<IPod>(
     series_id: { type: Schema.Types.ObjectId, ref: 'PodSeries', default: null, index: true },
     series_index: { type: Number, default: null },
     series_total: { type: Number, default: null },
+    series_role: { type: String, enum: ['PARENT', 'DATE'], default: null },
+    series_parent_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -434,6 +500,28 @@ podSchema.pre('updateOne', excludeDeleted);
 podSchema.pre('aggregate', function (next) {
   if ((this.options as { includeDeleted?: boolean } | undefined)?.includeDeleted) return next();
   this.pipeline().unshift({ $match: { deleted_at: null } });
+  next();
+});
+
+// Series view: a recurring pod is one pod. Reads see its PARENT row and not its
+// DATE rows, so discovery, the shop, counts and tables list it once. Engines
+// that act on real dates (reminders, auto-cancel, payouts) opt in with
+// `.setOptions({ seriesDates: true })`, which shows the dates and hides the
+// parent; `seriesAll` sees both. See `seriesRowsHidden`.
+function seriesView(this: Query<unknown, unknown>, next: CallbackWithoutResultAndOptionalError) {
+  const hidden = seriesRowsHidden(this.getOptions() as PodSeriesViewOptions, [this.getQuery()]);
+  if (hidden) this.where({ series_role: { $ne: hidden } });
+  next();
+}
+podSchema.pre('find', seriesView);
+podSchema.pre('findOne', seriesView);
+podSchema.pre('countDocuments', seriesView);
+podSchema.pre('aggregate', function (next) {
+  const matches = this.pipeline()
+    .map((stage) => (stage as { $match?: Record<string, unknown> }).$match)
+    .filter((match): match is Record<string, unknown> => !!match);
+  const hidden = seriesRowsHidden(this.options as PodSeriesViewOptions | undefined, matches);
+  if (hidden) this.pipeline().unshift({ $match: { series_role: { $ne: hidden } } });
   next();
 });
 

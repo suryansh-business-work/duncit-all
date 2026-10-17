@@ -23,7 +23,7 @@ import DeletionNoticeDialog from './components/DeletionNoticeDialog';
 import AppRoutes from './app/AppRoutes';
 import RouteFallback from './app/RouteFallback';
 import { AppLocationProvider } from './app/AppLocationContext';
-import { APP_SHELL_MAX_WIDTH, MAIN_CONTENT_ID } from './app/appLayout';
+import { APP_SHELL_MAX_WIDTH, MAIN_CONTENT_ID, bottomNavReserve, isFullHeightRoute } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 import { useHapticFeedback } from './app/useHapticFeedback';
@@ -35,7 +35,6 @@ import CartProviders from './components/cart/CartProviders';
 import { TourProvider } from './tours/TourContext';
 import { TourRunner } from './tours/TourRunner';
 
-const BOTTOM_NAV_CONTENT_OFFSET = 'var(--duncit-bottom-nav-content-offset, 148px)';
 /** Height the app-install bar reserves at the bottom (0 when it is not shown). */
 const APP_BANNER_CONTENT_OFFSET = 'var(--duncit-app-banner-offset, 0px)';
 
@@ -54,7 +53,7 @@ export default function App() {
   const showAppHeader = isAuthed && !isMenu;
   const comingSoon = useComingSoonPage(locationId);
   const showBottomNav = isAuthed && !isSignupSurvey && !isMenu && !comingSoon;
-  const navPadBottom = showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : '0px';
+  const navPadBottom = bottomNavReserve(showBottomNav, location.pathname);
   const contentPadBottom = fullBleed ? 0 : `calc(${navPadBottom} + ${APP_BANNER_CONTENT_OFFSET})`;
 
   const [splashOpen, setSplashOpen] = useState(
@@ -135,10 +134,10 @@ export default function App() {
             display: 'flex',
             flexDirection: 'column',
             overflowY: fullBleed ? 'hidden' : 'auto',
-            scrollPaddingBottom: showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : undefined,
+            scrollPaddingBottom: showBottomNav ? navPadBottom : undefined,
           }),
           py: fullBleed || isMenu ? 0 : 2,
-          pb: fullBleed || isMenu ? 0 : 2,
+          pb: fullBleed || isMenu || isFullHeightRoute(location.pathname) ? 0 : 2,
         }}
       >
         <RouteScroll />

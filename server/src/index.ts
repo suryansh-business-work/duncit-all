@@ -34,6 +34,7 @@ import { startPaymentReconciler } from '@modules/finance/payment/payment.reconci
 import { startVenueFoodReconciler } from '@modules/venues/venueFood/venueFoodOrder.payment';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startProductCartReminderScheduler } from '@modules/commerce/productCart/productCart.scheduler';
+import { startSeriesParentScheduler } from '@modules/pods/podSeries/podSeries.parent';
 import { startCatalogDeletionScheduler } from '@modules/commerce/catalogDeletion/catalogDeletion.scheduler';
 import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
@@ -153,6 +154,16 @@ async function bootstrap() {
     await safeSeed('podTypeMigration', async () => {
       const { migrateLegacyPodTypes } = await import('@modules/pods/pod/pod-type.migration');
       await migrateLegacyPodTypes();
+    });
+  }
+  // Recurring pods published as one pod per date get their one parent pod.
+  // Gated like the pod-type migration: a local boot must never write the parent
+  // rows into a database the deployed server (which would list them as extra
+  // pods) is still serving. Idempotent; see podSeries.migration.ts.
+  if (process.env.RUN_POD_SERIES_PARENT_MIGRATION === '1') {
+    await safeSeed('podSeriesParentMigration', async () => {
+      const { migrateSeriesParents } = await import('@modules/pods/podSeries/podSeries.migration');
+      logs.server.info('bootstrap', 'podSeriesParentMigration', await migrateSeriesParents());
     });
   }
   /*
@@ -638,6 +649,10 @@ async function bootstrap() {
   startShiprocketScheduler();
   // Pod Shop: the "your cart is calling" reminder email (Products > Cart Settings).
   startProductCartReminderScheduler();
+
+  // Recurring pods: roll each pod on to its next date and repair any parent a
+  // booking or cancellation left behind.
+  startSeriesParentScheduler();
 
   // Database backups: a one-minute tick that takes the archive when the
   // admin-configured window has passed (Tech > Database > Backups; off until

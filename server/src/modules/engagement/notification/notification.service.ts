@@ -23,6 +23,8 @@ let vapidReady = false;
  * new chat line (its `_id` is then whatever identifies the message). */
 export type PushMessage = Pick<INotification, 'title' | 'body' | 'image_url' | 'link_url'> & {
   _id: unknown;
+  /** Pushes sharing a tag replace each other on the device (one per chat room). */
+  tag?: string;
 };
 
 const toPub = (n: INotification) => ({
@@ -259,6 +261,7 @@ export const notificationService = {
       body: notif.body,
       image: notif.image_url ?? undefined,
       link: notif.link_url ?? '/',
+      tag: notif.tag,
     });
 
     await Promise.all(

@@ -1,23 +1,34 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodModel, type IPod } from '../pod/pod.model';
-import { VenueModel } from '../../venues/venue/venue.model';
-import { ClubModel } from '../../clubs/club/club.model';
+import {
+  clubBookable,
+  hostCategoryKeyFor,
+  loadHostAgainSource,
+  sourceLocality,
+  sourceLocationId,
+  venueBookable,
+  type HostAgainNotice,
+  type HostAgainSource,
+} from './pod-draft.host-again-source';
 
 /**
- * "Host again": a fresh draft carrying an earlier pod's CONTENT, so a host can
- * run the same pod again without retyping it.
+ * "Host again": the Create Pod form filled with an earlier pod's CONTENT and
+ * PLACE, so a host can run the same pod again by picking only a new date.
  *
- * Only what describes the pod travels. Everything that belonged to that one
- * run stays behind — its date and time, its venue slot, its attendees, the
- * venue's decision and the organizer terms the host must accept again.
+ * Everything that belonged to that one run stays behind — its date and time,
+ * its venue slot, its attendees, the venue's decision and the organizer terms
+ * the host must accept again.
  *
- * The draft payload is the stepper's own form state, which mWeb and the app
- * shape slightly differently: mWeb keeps price and spots as numbers, the app as
- * typed text. Both are written so whichever surface opens the draft finds its
- * own field; the other is ignored by its hydrate, which spreads the payload over
- * a blank form.
+ * The payload is the stepper's own form state, which mWeb and the app shape
+ * slightly differently: mWeb keeps price and spots as numbers, the app as typed
+ * text. Both are written so whichever surface opens it finds its own field; the
+ * other is ignored by its hydrate, which spreads the payload over a blank form.
  */
+
+/** Create Pod's step indexes (both surfaces): category/place, basics, venue & date, pricing. */
+const PLACE_STEP = 0;
+const DATE_STEP = 2;
 
 const forbidden = () =>
   new GraphQLError('Only the pod host can host this pod again', {
@@ -39,31 +50,40 @@ async function hostedPod(podDocId: string, userId: string): Promise<IPod> {
   return pod;
 }
 
-/** The venue and club are kept only while they can still take a new pod, so
- * the stepper never opens on a choice it would refuse at publish. */
-async function stillBookable(pod: IPod) {
-  const [venueOk, clubOk] = await Promise.all([
-    pod.venue_id
-      ? VenueModel.exists({ _id: pod.venue_id, status: 'APPROVED', is_active: true })
-      : null,
-    ClubModel.exists({ _id: pod.club_id, is_active: true }),
-  ]);
-  return { venueOk: !!venueOk, clubOk: !!clubOk };
+/** The pod's place: city, area, category, club and venue. A club or venue that
+ * can no longer take a pod is left blank (and reported), so the stepper never
+ * opens on a choice it would refuse at publish. */
+function placeFields(pod: IPod, source: HostAgainSource) {
+  const physical = pod.pod_mode !== 'VIRTUAL';
+  const clubOk = clubBookable(source.club);
+  const venueOk = physical && venueBookable(source.venue);
+  return {
+    location_id: sourceLocationId(pod, source),
+    locality: physical ? sourceLocality(pod, source, clubOk) : '',
+    host_category_key: hostCategoryKeyFor(source.club, source.hostCategories),
+    club_id: clubOk ? String(pod.club_id) : '',
+    pod_mode: physical ? 'PHYSICAL' : 'VIRTUAL',
+    venue_id: venueOk && pod.venue_id ? String(pod.venue_id) : '',
+  };
 }
 
-export async function buildHostAgainPayload(pod: IPod) {
-  const { venueOk, clubOk } = await stillBookable(pod);
-  const physical = pod.pod_mode !== 'VIRTUAL';
+/** Pod Shop items still on sale; a delisted or sold-out one is dropped. */
+function liveProductRequests(pod: IPod, source: HostAgainSource) {
+  return (pod.product_requests ?? [])
+    .filter((item) => source.liveProductIds.has(String(item.product_id)))
+    .map((item) => ({ product_id: String(item.product_id), quantity: item.quantity }));
+}
+
+export function buildHostAgainPayload(pod: IPod, source: HostAgainSource) {
+  const place = placeFields(pod, source);
+  const physical = place.pod_mode === 'PHYSICAL';
   const free = pod.pod_type === 'FREE';
   const amount = free ? 0 : (pod.pod_amount ?? 0);
   const spots = pod.no_of_spots ?? 0;
+  const productRequests = liveProductRequests(pod, source);
   return {
-    location_id: pod.location_id ? String(pod.location_id) : '',
-    locality: pod.zone_name ?? '',
+    ...place,
     pod_title: pod.pod_title ?? '',
-    club_id: clubOk ? String(pod.club_id) : '',
-    pod_mode: physical ? 'PHYSICAL' : 'VIRTUAL',
-    venue_id: physical && venueOk && pod.venue_id ? String(pod.venue_id) : '',
     meeting_platform: physical ? '' : (pod.meeting_platform ?? ''),
     meeting_url: physical ? '' : (pod.meeting_url ?? ''),
     meeting_notes: physical ? '' : (pod.meeting_notes ?? ''),
@@ -79,11 +99,8 @@ export async function buildHostAgainPayload(pod: IPod) {
     reel_url: pod.reel_url ?? '',
     what_this_pod_offers: [...(pod.what_this_pod_offers ?? [])],
     available_perks: [...(pod.available_perks ?? [])],
-    products_enabled: (pod.product_requests ?? []).length > 0,
-    product_requests: (pod.product_requests ?? []).map((item) => ({
-      product_id: String(item.product_id),
-      quantity: item.quantity,
-    })),
+    products_enabled: productRequests.length > 0,
+    product_requests: productRequests,
     place_charges: (pod.place_charges ?? []).map((charge) => ({
       label: charge.label,
       amount: charge.amount,
@@ -98,14 +115,52 @@ export async function buildHostAgainPayload(pod: IPod) {
   };
 }
 
-/** The draft fields `podDraftService.save` stores for a Host Again copy. */
-export async function hostAgainDraftInput(podDocId: string, userId: string) {
+type HostAgainPayload = ReturnType<typeof buildHostAgainPayload>;
+
+/** What the copy had to leave out, for the stepper to say so. */
+export function hostAgainNotices(pod: IPod, source: HostAgainSource, payload: HostAgainPayload): HostAgainNotice[] {
+  const notices: HostAgainNotice[] = [];
+  if (!payload.location_id) notices.push('LOCATION_MISSING');
+  if (!payload.host_category_key) notices.push('CATEGORY_MISSING');
+  if (pod.club_id && !payload.club_id) notices.push('CLUB_UNAVAILABLE');
+  if (payload.pod_mode === 'PHYSICAL' && pod.venue_id && !payload.venue_id) notices.push('VENUE_UNAVAILABLE');
+  if (payload.product_requests.length < (pod.product_requests ?? []).length) notices.push('PRODUCTS_UNAVAILABLE');
+  return notices;
+}
+
+/** With the category, city, area and club all carried over, the host opens on
+ * the date step; anything missing opens step 1, where it is asked for. A city
+ * with areas needs one picked, which only the client knows — a blank area
+ * there is caught by step 1's own gate when the host goes back. */
+export const hostAgainStep = (payload: HostAgainPayload) =>
+  payload.location_id && payload.host_category_key && payload.club_id ? DATE_STEP : PLACE_STEP;
+
+async function copyOf(podDocId: string, userId: string) {
   const pod = await hostedPod(podDocId, userId);
-  const payload = await buildHostAgainPayload(pod);
+  const source = await loadHostAgainSource(pod, userId);
+  return { pod, source, payload: buildHostAgainPayload(pod, source) };
+}
+
+/** The filled form for one of the caller's own pods — nothing is saved. */
+export async function hostAgainPrefill(podDocId: string, userId: string) {
+  const { pod, source, payload } = await copyOf(podDocId, userId);
+  return {
+    source_pod_id: String(pod._id),
+    source_title: payload.pod_title.trim(),
+    payload: JSON.stringify(payload),
+    step: hostAgainStep(payload),
+    notices: hostAgainNotices(pod, source, payload),
+  };
+}
+
+/** The draft fields `podDraftService.save` stores for a Host Again copy — kept
+ * for app builds that still create the draft on the menu tap. */
+export async function hostAgainDraftInput(podDocId: string, userId: string) {
+  const { payload } = await copyOf(podDocId, userId);
   return {
     payload: JSON.stringify(payload),
     pod_title: payload.pod_title.trim(),
     pod_mode: payload.pod_mode,
-    step: 0,
+    step: hostAgainStep(payload),
   };
 }

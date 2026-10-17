@@ -8,7 +8,8 @@ import { useRefreshRegistration } from '@/components/PullToRefresh';
 export type HostDraft = ResultOf<typeof MyPodDraftsDocument>['myPodDrafts'][number];
 
 /** Loads the signed-in host's resumable Create Pod drafts and supports deleting
- * one (optimistically removed from the list). */
+ * one (removed from the list once the server confirms; a refused delete re-reads
+ * the list, which may show the draft was already gone). */
 export function useHostDrafts() {
   const [drafts, setDrafts] = useState<HostDraft[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +31,13 @@ export function useHostDrafts() {
   useRefreshRegistration(refetch);
 
   const remove = async (id: string) => {
-    await graphqlRequest(DeletePodDraftDocument, { draft_id: id }, { auth: true });
+    try {
+      const res = await graphqlRequest(DeletePodDraftDocument, { draft_id: id }, { auth: true });
+      if (res.deletePodDraft !== true) throw new Error('deletePodDraft did not confirm the delete');
+    } catch (error) {
+      refetch();
+      throw error;
+    }
     setDrafts((current) => current.filter((draft) => draft.id !== id));
   };
 

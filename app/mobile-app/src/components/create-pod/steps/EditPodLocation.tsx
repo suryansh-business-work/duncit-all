@@ -11,6 +11,8 @@ import type { CreatePodForm } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
+  /** Told after a move whether it cleared the club, venue or slot. */
+  onMoved: (cleared: boolean) => void;
 }
 
 /**
@@ -19,7 +21,7 @@ interface Props {
  * chosen) — the header stays as it was and the rest of the form is kept.
  * mWeb twin: steps/EditPodLocation (rule 27).
  */
-export function EditPodLocation({ form }: Readonly<Props>) {
+export function EditPodLocation({ form, onMoved }: Readonly<Props>) {
   const { t } = useTranslation();
   const { accent } = useThemeColors();
   const [open, setOpen] = useState(false);
@@ -48,7 +50,7 @@ export function EditPodLocation({ form }: Readonly<Props>) {
         open={open}
         onClose={() => setOpen(false)}
         initialLocationId={form.getValues('location_id')}
-        onApply={(location, zone) => applyPodLocation(form, location.id, zone)}
+        onApply={(location, zone) => onMoved(applyPodLocation(form, location.id, zone))}
       />
     </>
   );

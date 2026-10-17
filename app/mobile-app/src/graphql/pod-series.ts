@@ -13,6 +13,11 @@ export const PodSeriesPreviewDocument = gql(`
       frequency
       max_occurrences
       max_span_days
+      max_discount_pct
+      default_multi_date_discount_tiers {
+        min_dates
+        discount_pct
+      }
       dates {
         start_at
         end_at
@@ -25,16 +30,79 @@ export const PodSeriesPreviewDocument = gql(`
   }
 `);
 
-/** Publishes the draft as a recurring series — one pod per date that can run. */
+/** Publishes the draft as ONE recurring pod with every date that can run. */
 export const PublishPodDraftSeriesDocument = gql(`
   mutation MobilePublishPodDraftSeries($draft_id: ID!, $input: CreatePodInput!, $plan: PodSeriesPlanInput!) {
     publishPodDraftSeries(draft_id: $draft_id, input: $input, plan: $plan) {
       series_id
+      parent_pod_id
       created_count
       skipped {
         date
         reason
       }
+    }
+  }
+`);
+
+/** Every date of a recurring pod, for Pod Details (mWeb: POD_SERIES_DATES_SDL). */
+export const PodSeriesDatesDocument = gql(`
+  query MobilePodSeriesDates($pod_doc_id: ID!) {
+    podSeriesDates(pod_doc_id: $pod_doc_id) {
+      parent_pod_id
+      frequency
+      multi_date_discount_tiers {
+        min_dates
+        discount_pct
+      }
+      dates {
+        pod_doc_id
+        slug
+        start_at
+        end_at
+        status
+        seats_available
+        my_seats
+        bookable
+      }
+    }
+  }
+`);
+
+/** Joins the picked dates of a FREE recurring pod (mWeb: JOIN_FREE_POD_DATES_SDL). */
+export const JoinFreePodDatesDocument = gql(`
+  mutation MobileJoinFreePodDates($pod_doc_id: ID!, $date_pod_ids: [ID!]!) {
+    joinFreePodDates(pod_doc_id: $pod_doc_id, date_pod_ids: $date_pod_ids) {
+      joined
+      failed {
+        pod_doc_id
+        message
+      }
+    }
+  }
+`);
+
+/** The exact bill for several dates in one checkout (mWeb: RECURRING_CHECKOUT_QUOTE_SDL). */
+export const RecurringCheckoutQuoteDocument = gql(`
+  query MobileRecurringCheckoutQuote($input: RecurringCheckoutQuoteInput!) {
+    recurringCheckoutQuote(input: $input) {
+      dates
+      currency_symbol
+      ticket_gross
+      ticket_discount_amount
+      ticket_discount_pct
+      multi_date_discount_amount
+      multi_date_discount_pct
+      add_ons_total
+      coupon_code
+      coupon_discount
+      coins_redeemed
+      subtotal
+      platform_fee_amount
+      gst_amount
+      round_off
+      total
+      original_total
     }
   }
 `);

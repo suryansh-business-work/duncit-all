@@ -106,6 +106,20 @@ describe('venueFoodRating in the response cache', () => {
     expect(ctx.response.http.headers.get('x-redis-cache')).toBeUndefined();
   });
 
+  // A host deletes a draft and re-reads the list at once: a cached list
+  // brought the deleted draft back and its second delete found nothing.
+  it("never caches a host's drafts list, even signed in", async () => {
+    const { served, ctx } = await run('query MyPodDrafts { myPodDrafts { id step } }', {
+      id: '65b000000000000000000007',
+      roles: ['USER'],
+    });
+
+    expect(served).toBeNull();
+    expect(get).not.toHaveBeenCalled();
+    expect(set).not.toHaveBeenCalled();
+    expect(ctx.response.http.headers.get('x-redis-cache')).toBeUndefined();
+  });
+
   it('never caches a mutation, and does nothing while Redis is down', async () => {
     await run('mutation Rate { venueFoodRating(venue_id: "v") { average } }');
     expect(get).not.toHaveBeenCalled();

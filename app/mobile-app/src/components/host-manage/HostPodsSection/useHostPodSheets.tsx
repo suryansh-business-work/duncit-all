@@ -7,7 +7,6 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useFeedbackLinkActions, usePodMediaLinkActions } from '@/hooks/usePodLinkActions';
 import type { HostPod } from '@/hooks/useHostPods';
 import { usePodChangeRequests } from '@/hooks/usePodChangeRequests';
-import { useHostAgain } from '@/hooks/useHostAgain';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ScanTarget } from '@/components/host-manage/ticket-scan';
 import type { HostPodSummary } from '@/components/host-manage/pod-edit.form';
@@ -47,7 +46,6 @@ export function useHostPodSheets({ refetch, onPodCompleted }: Readonly<Options>)
   const { openPod: openPodDetail } = useDetailNav();
   const feedbackLink = useFeedbackLinkActions();
   const mediaLink = usePodMediaLinkActions();
-  const hostAgain = useHostAgain();
   // The whole row, not the narrower edit shape — the sheet routes to complete,
   // resubmit and cancel, which each need different fields off the pod.
   const [actionsPod, setActionsPod] = useState<HostPod | null>(null);
@@ -71,7 +69,8 @@ export function useHostPodSheets({ refetch, onPodCompleted }: Readonly<Options>)
     navigation,
     feedbackLink,
     mediaLink,
-    hostAgain: hostAgain.hostAgain,
+    // Create Pod filled from this pod; the draft is saved once the host moves on.
+    hostAgain: (podId: string) => navigation.navigate('CreatePod', { hostAgainPodId: podId }),
     actionsPod,
     setActionsPod,
     changePod,
@@ -103,7 +102,7 @@ export function useHostPodSheets({ refetch, onPodCompleted }: Readonly<Options>)
   return {
     openActions: setActionsPod,
     openPod: (pod) => openPodDetail(pod.club_slug, pod.pod_id),
-    notice: feedbackLink.notice ?? mediaLink.notice ?? hostAgain.notice ?? null,
+    notice: feedbackLink.notice ?? mediaLink.notice ?? null,
     sheets,
   };
 }
@@ -114,7 +113,7 @@ export interface HostPodSheetState {
   navigation: NativeStackNavigationProp<RootStackParamList>;
   feedbackLink: ReturnType<typeof useFeedbackLinkActions>;
   mediaLink: ReturnType<typeof usePodMediaLinkActions>;
-  /** "Host again" — copies a pod into a new draft and opens Create Pod on it. */
+  /** "Host again" — opens Create Pod filled from this pod (nothing saved yet). */
   hostAgain: (podId: string) => void;
   actionsPod: HostPod | null;
   setActionsPod: (pod: HostPod | null) => void;

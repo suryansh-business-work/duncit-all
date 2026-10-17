@@ -165,11 +165,69 @@ export interface RentalSelectionTotals {
   count: number;
 }
 
+export interface RentalLinePrice {
+  /** Hours charged for an HOUR item (the pod's length, rounded up by the server); 1 for a SLOT item. */
+  units: number;
+  quantity: number;
+  /** rate × units × quantity. */
+  rent: number;
+  /** deposit × quantity: refundable, shown apart from the rent. */
+  deposit: number;
+}
+
 /**
- * The selection's price, the server's way: a SLOT item's rate covers the pod,
- * an HOUR item's rate is per hour of it; the deposit is per unit. Items no
- * longer listed, and quantities of 0 or less, count for nothing.
+ * One item's price, the server's way (rentalCheckout.ts `priceLine`): a SLOT
+ * item's rate covers the pod, an HOUR item's rate is per hour of it; the
+ * deposit is per unit. A quantity of 0 or less prices at nothing.
  */
+export function rentalLinePrice(
+  item: Pick<PodRentalItem, 'unit' | 'rate' | 'deposit'>,
+  quantity: number,
+  hours: number
+): RentalLinePrice {
+  const whole = Math.max(0, Math.floor(quantity));
+  const units = item.unit === 'HOUR' ? Math.max(1, hours) : 1;
+  return { units, quantity: whole, rent: item.rate * units * whole, deposit: item.deposit * whole };
+}
+
+export type RentalTranslate = (
+  key: string,
+  options?: { count?: number; vars?: Record<string, string | number> }
+) => string;
+
+/** One picked item's breakdown sentences, or null when none is picked. */
+export interface RentalLineCopy {
+  /** "₹50 × 5 hrs × 1 qty = ₹250" (an HOUR item) or "₹50 × 1 qty = ₹50" (a SLOT item). */
+  rent: string;
+  /** "Deposit (refundable): ₹30 × 1 qty = ₹30", or null when the item takes no deposit. */
+  deposit: string | null;
+}
+
+/** How one picked item's price is made, in words: what Pod Rent prints under the row on mWeb and the app. */
+export function rentalLineCopy(
+  t: RentalTranslate,
+  item: Pick<PodRentalItem, 'unit' | 'rate' | 'deposit'>,
+  quantity: number,
+  catalogue: Pick<PodRentalCatalogue, 'hours' | 'currency_symbol'>
+): RentalLineCopy | null {
+  const line = rentalLinePrice(item, quantity, catalogue.hours);
+  if (line.quantity <= 0) return null;
+  const money = (amount: number) => rentalMoney(catalogue.currency_symbol, amount);
+  const vars = { rate: money(item.rate), quantity: line.quantity, amount: money(line.rent) };
+  const rent =
+    item.unit === 'HOUR'
+      ? t('venueRentals.guest.rentMathHour', { count: line.units, vars })
+      : t('venueRentals.guest.rentMathSlot', { vars });
+  const deposit =
+    line.deposit > 0
+      ? t('venueRentals.guest.depositMath', {
+          vars: { rate: money(item.deposit), quantity: line.quantity, amount: money(line.deposit) },
+        })
+      : null;
+  return { rent, deposit };
+}
+
+/** The selection's price: every listed item's line summed. Items no longer listed count for nothing. */
 export function rentalSelectionTotals(
   items: readonly PodRentalItem[],
   picks: Readonly<Record<string, number>>,
@@ -179,12 +237,10 @@ export function rentalSelectionTotals(
   let deposit = 0;
   let count = 0;
   for (const item of items) {
-    const quantity = Math.floor(picks[item.id] ?? 0);
-    if (quantity <= 0) continue;
-    const units = item.unit === 'HOUR' ? Math.max(1, hours) : 1;
-    rent += item.rate * units * quantity;
-    deposit += item.deposit * quantity;
-    count += quantity;
+    const line = rentalLinePrice(item, picks[item.id] ?? 0, hours);
+    rent += line.rent;
+    deposit += line.deposit;
+    count += line.quantity;
   }
   return { rent, deposit, total: rent + deposit, count };
 }

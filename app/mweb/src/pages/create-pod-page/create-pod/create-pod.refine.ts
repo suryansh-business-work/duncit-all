@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isMeetingPlatform } from '@duncit/utils';
+import { isMeetingPlatform, repeatDiscountFormIssues } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
 import { POD_TYPE_VALUES, type CreatePodFormValues } from './create-pod.types';
@@ -39,8 +39,9 @@ export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.Refinem
 /** A recurring pod needs the day it stops repeating, after its first date. The
  * server checks the span and every date's slot; this only catches the empty
  * or backwards end day before the preview is asked for. Native twin. */
-export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate, maxPct: number) {
   if (!values.repeat_enabled) return;
+  refineRepeatDiscount(values, ctx, t, maxPct);
   if (!values.repeat_ends_on) {
     ctx.addIssue({ code: 'custom', path: ['repeat_ends_on'], message: t('mweb.podSeries.endsOnRequired') });
     return;
@@ -49,6 +50,12 @@ export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, 
   if (first && new Date(`${values.repeat_ends_on}T23:59:59`) <= first) {
     ctx.addIssue({ code: 'custom', path: ['repeat_ends_on'], message: t('mweb.podSeries.endsOnAfterStart') });
   }
+}
+
+/** The multi-date discount's tiers, by the shared rules (@duncit/utils). Native twin. */
+function refineRepeatDiscount(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate, maxPct: number) {
+  const input = { enabled: values.repeat_discount_enabled, tiers: values.repeat_discount_tiers, maxPct };
+  for (const issue of repeatDiscountFormIssues(input, t)) ctx.addIssue({ code: 'custom', ...issue });
 }
 
 /** The ticket price is blank until the host types one, so a PAID pod can never

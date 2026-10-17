@@ -2419,7 +2419,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       localityCityHint: 'Localities in {city}, your selected city',
       localityPlaceholder: 'Search your locality',
       editLocation: 'Edit location',
+      // A new area or city clears the picks that belonged to the old one.
+      locationResetNotice: 'Location changed. Pick the club, venue and slot again for the new area.',
       localitiesEmpty: 'No matching localities',
+      // "Host again": Create Pod filled from one of the host's earlier pods.
+      hostAgain: {
+        copiedFrom: 'Copied from “{title}”. Pick a new date and slot; everything else is filled in.',
+        // Shown when the pod's city is not the one picked in the header.
+        otherCity: 'This pod is in {city}, like the original, not your selected city. Use Edit location on step 1 to move it.',
+        clubUnavailable: 'The original club is no longer active. Pick another club on step 1.',
+        venueUnavailable: 'The original venue is no longer taking pods. Pick another venue on step 3.',
+        locationMissing: 'The original city is no longer available, so this pod starts in your selected city. Check the location on step 1.',
+        categoryMissing: 'The original category is not one you can host now. Pick a category on step 1.',
+        productsUnavailable: 'Some Pod Shop items from the original pod are out of stock or no longer listed, so they were left out.',
+      },
       noOptions: 'No options available.',
       podTitleLabel: 'Pod title',
       // mWeb only — the native title field carries no placeholder.
@@ -3931,17 +3944,84 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       endsOnAfterStart: 'Pick a day after the first date.',
       datesLabel: 'Dates this pod will run on',
       dateWithPrice: '{date} · ₹{price}',
-      willCreate: '{count} of {total} dates will be created',
+      willCreate: '{count} of {total} dates will be added',
       needTwoDates: 'A recurring pod needs at least two dates that can run. Pick a later end day or tick more dates.',
-      limitsHint: 'Up to {max} dates, within {days} days of the first one. Each date is its own pod, sent to the venue as its own request.',
+      limitsHint: 'Up to {max} dates, within {days} days of the first one. It is one pod; each date goes to the venue as its own slot request.',
       previewFailed: 'Could not check these dates. Please try again.',
       reasonNoSlot: 'No matching slot at the venue',
       reasonHoliday: 'Venue is on leave',
       reasonTaken: 'Slot already booked',
       reasonRemoved: 'Removed by you',
       reasonFailed: 'Cannot be booked',
-      published: '{created} pods created, one for each date.',
-      publishedSkipped: '{created} pods created. {skipped} dates were skipped.',
+      published: 'Your recurring pod is live with {created} dates.',
+      publishedSkipped: 'Your recurring pod is live with {created} dates. {skipped} dates were skipped.',
+      badgeDates: {
+        one: 'Recurring · 1 date',
+        other: 'Recurring · {count} dates',
+      },
+    },
+    // Booking a recurring pod: it is ONE pod with many dates, and a member
+    // picks the dates they want. mWeb and the native app share these.
+    podSeriesBooking: {
+      datesTitle: {
+        one: 'Runs on 1 date',
+        other: 'Runs on {count} dates',
+      },
+      discountHint: 'Book {count} or more dates and save {pct}%',
+      spotsLeft: {
+        one: '1 spot left',
+        other: '{count} spots left',
+      },
+      full: 'Full',
+      booked: 'Booked',
+      statusUpcoming: 'Upcoming',
+      statusOngoing: 'Happening now',
+      statusCompleted: 'Completed',
+      statusCancelled: 'Cancelled',
+      statusAwaitingVenue: 'Awaiting venue',
+      pickTitle: 'Which dates do you want to book?',
+      choiceNext: 'Only the next date',
+      choiceAll: {
+        one: 'The 1 open date',
+        other: 'All {count} open dates',
+      },
+      choicePick: 'Let me pick the dates',
+      noneOpen: 'No date is open for booking right now.',
+      datesCount: {
+        one: '1 date',
+        other: '{count} dates',
+      },
+      discountRow: 'Multi-date discount ({count} dates, {pct}%)',
+      estimateTotal: 'Total {amount}',
+      joinDates: {
+        one: 'Join 1 date',
+        other: 'Join {count} dates',
+      },
+      continue: 'Continue',
+      ticketMultiplier: 'Ticket {price} x {seats} seats x {dates} dates',
+      loadFailed: 'Could not load the dates of this pod.',
+    },
+    // The multi-date booking discount editor in Create Pod (the shared tier
+    // editor, counted in dates). mWeb and the native app share these.
+    multiDateDiscount: {
+      title: 'Multi-date discount',
+      switchLabel: 'Offer a discount when one person books several dates',
+      hint: 'The best matching tier applies to the ticket price when a single booking covers at least that many dates.',
+      baseRow: '1 date · 0% (full price)',
+      datesLabel: 'Dates',
+      discountLabel: 'Discount %',
+      addTier: 'Add tier',
+      removeTier: 'Remove tier',
+      maxHint: 'Up to {max}% off',
+      perDate: '{price} per date',
+      errorTiersRequired: 'Add at least one discount tier',
+      errorTooManyTiers: 'You can add up to {max} tiers',
+      errorDatesMin: 'Dates must be a whole number of at least 2',
+      errorDatesMax: 'Dates can’t be more than {max}',
+      errorDatesNotIncreasing: 'Needs more dates than the row above',
+      errorPctMin: 'Discount must be a whole number of at least 1%',
+      errorPctMax: 'Discount can’t be more than {max}%',
+      errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
     chatRoom: {
       dismissError: 'Dismiss error',
@@ -3960,6 +4040,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       image: 'Image',
       photoAccessIsNeededToSend: 'Photo access is needed to send an image.',
       podDetailsAreUnavailableForThis: 'Pod details are unavailable for this chat.',
+      // Day separators in the room, WhatsApp-style; older days use the admin date format.
+      today: 'Today',
+      yesterday: 'Yesterday',
+      // The pill over the composer when messages arrive while the reader is scrolled up.
+      newMessages: {
+        one: '{count} new message',
+        other: '{count} new messages',
+      },
     },
     chats: {
       searchChats: 'Search chats',
@@ -4206,6 +4294,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       draftExpiresInHours: 'Deleted in {hours}h',
       draftExpiresWithinHour: 'Deleted within the hour',
       draftPods: 'Draft pods',
+      // A draft delete the server refused (already gone, not yours, offline); mWeb and the app.
+      draftDeleteFailed: 'Could not delete the draft. Please try again.',
       draftRetentionNote:
         'Draft Pods are automatically deleted {days} days after they are created. Publish your Pod before it expires.',
       draftsExpiringSoon: 'Deleted in the next 24 hours',

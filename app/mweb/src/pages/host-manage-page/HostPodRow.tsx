@@ -72,7 +72,12 @@ export default function HostPodRow({
             {pod.series_total ? (
               <Chip
                 data-testid={`host-pod-series-${pod.id}`}
-                label={t('mweb.podSeries.badge', { vars: { index: pod.series_index, total: pod.series_total } })}
+                // The recurring pod itself counts its dates; one of its dates says which it is.
+                label={
+                  pod.series_index
+                    ? t('mweb.podSeries.badge', { vars: { index: pod.series_index, total: pod.series_total } })
+                    : t('mweb.podSeries.badgeDates', { count: pod.series_total })
+                }
                 variant="outlined"
                 sx={{ mt: 0.5, mr: 0.5, height: 24 }}
               />

@@ -85,6 +85,9 @@ self.addEventListener('push', (event) => {
     data: { link: data.link || '/', id: data.id || null },
     vibrate: [120, 60, 120],
     requireInteraction: false,
+    // A tagged push (a chat room) replaces the room's last one and still alerts.
+    tag: data.tag || undefined,
+    renotify: !!data.tag,
   };
   event.waitUntil(
     Promise.all([

@@ -13,6 +13,7 @@ const physical: PodSeriesPlanSource = {
   repeat_frequency: 'WEEKLY',
   repeat_ends_on: '2026-12-31',
   repeat_skip_dates: ['2026-11-12T13:30:00.000Z'],
+  repeat_discount_tiers: [{ min_dates: 3, discount_pct: 10 }],
   pod_mode: 'PHYSICAL',
   venue_id: 'venue-1',
   venue_slot_id: 'slot-1',
@@ -49,7 +50,14 @@ describe('buildPodSeriesPlan', () => {
       frequency: 'WEEKLY',
       ends_on: '2026-12-31T18:29:59.999Z',
       skip_dates: ['2026-11-12T13:30:00.000Z'],
+      multi_date_discount_tiers: [{ min_dates: 3, discount_pct: 10 }],
     });
+  });
+
+  it('sends no multi-date discount when the host switched it off', () => {
+    expect(buildPodSeriesPlan({ ...physical, repeat_discount_tiers: [] }, 'UTC')?.multi_date_discount_tiers).toEqual(
+      []
+    );
   });
 
   it('asks about the first window for a virtual pod and sends no venue', () => {

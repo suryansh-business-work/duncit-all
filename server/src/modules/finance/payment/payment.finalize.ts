@@ -349,10 +349,24 @@ async function runCoinLeg(ctx: CoreContext): Promise<void> {
   }
 }
 
+/** A later date of a multi-date booking (payment.group.ts): the first date's
+ * payment carries the booking's coupon redemption and its receipt. */
+const isGroupSibling = (payment: { metadata?: Record<string, unknown> | null }) => {
+  const group = payment.metadata?.checkout_group as { primary?: boolean } | undefined;
+  return !!group && group.primary !== true;
+};
+
+const GROUP_SIBLING_DETAIL = 'Sent with the first date of this multi-date booking';
+
 async function runCouponLeg(ctx: CoreContext): Promise<void> {
   const code = ctx.payment.coupon_code;
   if (!code) {
     step(ctx, 'COUPON_REDEEMED', 'SKIPPED', 'No coupon was applied');
+    return;
+  }
+  // One booking is one use of the coupon, however many dates it covers.
+  if (isGroupSibling(ctx.payment)) {
+    step(ctx, 'COUPON_REDEEMED', 'SKIPPED', 'Counted once, on the first date of this multi-date booking');
     return;
   }
   // This used to sit at the CALL SITES, so it was skipped whenever finalization
@@ -614,6 +628,8 @@ async function emailGiftCard(ctx: DeferredContext): Promise<StepOutcome> {
 async function emailTicket(ctx: DeferredContext): Promise<StepOutcome> {
   const ticketId = ctx.steps.find((s) => s.key === 'TICKET')?.refs?.[0];
   if (!ticketId) return { status: 'SKIPPED', detail: NO_POD_DETAIL };
+  // Every date's ticket is in the app; one email per booking, not per date.
+  if (isGroupSibling(ctx.payment)) return { status: 'SKIPPED', detail: GROUP_SIBLING_DETAIL };
   await ticketService.emailById(ticketId);
   return { detail: ctx.payment.user_email, refs: [ticketId] };
 }
@@ -813,6 +829,13 @@ async function emailReceipt(ctx: DeferredContext): Promise<void> {
   // either one puts both in scope and this single check covers them.
   if (!inScope(ctx, 'RECEIPT_EMAIL')) return;
   if (isDone(ctx.steps, 'RECEIPT_EMAIL')) return;
+  // A booking of several dates is one purchase to the buyer: one receipt, from
+  // the first date. Every date's invoice stays downloadable in their payments.
+  if (isGroupSibling(ctx.payment)) {
+    ctx.steps = recordStep(ctx.steps, 'INVOICE_PDF', 'SKIPPED', GROUP_SIBLING_DETAIL);
+    ctx.steps = recordStep(ctx.steps, 'RECEIPT_EMAIL', 'SKIPPED', GROUP_SIBLING_DETAIL);
+    return;
+  }
   let pdf: Buffer;
   try {
     pdf = await generateInvoicePdf(

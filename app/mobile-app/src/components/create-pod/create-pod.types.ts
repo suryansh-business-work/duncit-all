@@ -80,6 +80,10 @@ export interface CreatePodFormValues {
   repeat_ends_on: string;
   /** Dates (ISO starts) the host unticked in the preview. */
   repeat_skip_dates: string[];
+  /** Multi-date booking discount, in the shared tier editor's shape (a tier's
+   * `min_tickets` is its number of dates). Prefilled from Pod Settings. mWeb twin. */
+  repeat_discount_enabled: boolean;
+  repeat_discount_tiers: TicketDiscountTier[];
 }
 
 export const blankCreatePodForm: CreatePodFormValues = {
@@ -120,6 +124,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   repeat_frequency: 'WEEKLY',
   repeat_ends_on: '',
   repeat_skip_dates: [],
+  repeat_discount_enabled: false,
+  repeat_discount_tiers: [],
 };
 
 export interface CreatePodClub extends ClubOpenSlots {

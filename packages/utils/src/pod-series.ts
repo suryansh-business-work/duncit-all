@@ -2,10 +2,12 @@
  * Recurring pods — the rules both apps' Create Pod steppers share (rule 40).
  *
  * A host picks the first date (a venue slot, or a virtual window), how often it
- * repeats and the last day it may run. The SERVER works out every date and its
- * slot (`podSeriesPreview`) and creates one real pod per date; this module only
- * words the choices and builds the plan the server is asked about.
+ * repeats, the last day it may run and the multi-date booking discount. The
+ * SERVER works out every date and its slot (`podSeriesPreview`) and publishes
+ * ONE pod with those dates; this module only words the choices and builds the
+ * plan the server is asked about. Booking it: pod-series-booking.ts.
  */
+import type { MultiDateDiscountTier } from './pod-series-booking';
 
 export type PodSeriesFrequency = 'DAILY' | 'WEEKLY' | 'BIWEEKLY';
 
@@ -74,6 +76,8 @@ export interface PodSeriesPlan {
   frequency: PodSeriesFrequency;
   ends_on: string;
   skip_dates: string[];
+  /** Percent off a booking of several dates ([] for none). */
+  multi_date_discount_tiers: MultiDateDiscountTier[];
 }
 
 export interface PodSeriesPlanSource {
@@ -82,6 +86,8 @@ export interface PodSeriesPlanSource {
   /** The last day the series may run, `yyyy-MM-dd`. */
   repeat_ends_on: string;
   repeat_skip_dates: readonly string[];
+  /** The multi-date discount the host set; empty when switched off. */
+  repeat_discount_tiers: readonly MultiDateDiscountTier[];
   pod_mode: string;
   venue_id: string;
   venue_slot_id: string;
@@ -109,6 +115,7 @@ export function buildPodSeriesPlan(source: PodSeriesPlanSource, timeZone: string
     frequency: source.repeat_frequency,
     ends_on: endsOn,
     skip_dates: [...source.repeat_skip_dates],
+    multi_date_discount_tiers: source.repeat_discount_tiers.map((tier) => ({ ...tier })),
   };
 }
 
@@ -122,6 +129,11 @@ export const POD_SERIES_PREVIEW_SDL = `
       frequency
       max_occurrences
       max_span_days
+      max_discount_pct
+      default_multi_date_discount_tiers {
+        min_dates
+        discount_pct
+      }
       dates {
         start_at
         end_at
@@ -138,6 +150,7 @@ export const PUBLISH_POD_DRAFT_SERIES_SDL = `
   mutation PublishPodDraftSeries($draft_id: ID!, $input: CreatePodInput!, $plan: PodSeriesPlanInput!) {
     publishPodDraftSeries(draft_id: $draft_id, input: $input, plan: $plan) {
       series_id
+      parent_pod_id
       created_count
       skipped {
         date

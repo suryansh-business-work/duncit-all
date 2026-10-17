@@ -24,6 +24,9 @@ import { usePodRentalPicks } from '../pod-rent/usePodRentalPicks';
 import PodDetailsDialogs from './PodDetailsDialogs';
 import PodHashtagsAndSupport from './PodHashtagsAndSupport';
 import { usePodDetailsData } from './usePodDetailsData';
+import { useSeriesBooking } from '../pod-details-page/series/useSeriesBooking';
+import PodSeriesDatesSection from '../pod-details-page/series/PodSeriesDatesSection';
+import SeriesBookingDialog from '../pod-details-page/series/SeriesBookingDialog';
 
 export default function PodDetailsPage() {
   const { clubSlug = '', podSlug = '' } = useParams();
@@ -36,9 +39,11 @@ export default function PodDetailsPage() {
   const { compute: priceCompute, format: priceFormat, currency: priceCurrency } = usePricing();
   const showProducts = useFeatureFlag('is_product_visible');
   const {
-    slugResolution, id, data, error, refetch, peopleData, spotFillData, joinMeeting,
+    slugResolution, id, data, error, peopleData, spotFillData, onJoinMeeting,
     seatsByUser, pod, locationPrompt, productSelection, actions,
   } = usePodDetailsData({ clubSlug, podSlug, referralFromUrl, navigate });
+  // A recurring pod is one pod with many dates: Book opens its date picker.
+  const series = useSeriesBooking({ pod, seats: actions.seats, navigate, onError: actions.setSnack });
   // Held here (not in the shop card) because Book reads them: a free pod with picks goes through checkout.
   const rentalPicks = usePodRentalPicks(id);
   const hasRentalPicks = Object.keys(rentalPicks.picks).length > 0;
@@ -89,14 +94,6 @@ export default function PodDetailsPage() {
   const media = pod.pod_images_and_videos ?? [];
   const membershipState = data?.podMembershipState;
   const backoutAttemptsLeft = attemptsLeftFor(membershipState);
-  // The link comes back from a write that may have just marked this member
-  // present, so the pod is re-read behind it — not awaited, so the tab opens
-  // while the click's activation is still fresh.
-  const onJoinMeeting = async (): Promise<string> => {
-    const result = await joinMeeting({ variables: { id: pod.id } });
-    refetch().catch(() => undefined);
-    return result.data.joinPodMeeting.meeting_url;
-  };
   return (
     <Stack
       spacing={2.5}
@@ -121,6 +118,7 @@ export default function PodDetailsPage() {
 
       <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => openPodPicker(pod.id)} categoryCrumbs={clubCategoryCrumbs} />
 
+      <PodSeriesDatesSection series={series} clubSlug={pod.club_slug} currentPodId={pod.id} isHost={isPodHost} />
       <PodChallengesSection podId={pod.id} />
 
       <PodMapSection pod={pod} location={location} venue={venue} onJoinMeeting={onJoinMeeting} />
@@ -157,7 +155,8 @@ export default function PodDetailsPage() {
       />
 
       <PodHashtagsAndSupport pod={pod} />
-      <ChatPreviewCard kind="POD" id={pod.id} />
+      {/* A recurring pod has one chat room, on the pod itself — every date shares it. */}
+      <ChatPreviewCard kind="POD" id={pod.series_parent_id ?? pod.id} />
 
       <StickyPodActionPanel
         pod={pod}
@@ -172,11 +171,11 @@ export default function PodDetailsPage() {
         seats={actions.seats}
         onSeatsChange={actions.setSeats}
         // A free pod with items to rent is paid for: the rentals go through checkout.
-        onJoinFree={hasRentalPicks ? actions.onPaidCheckout : actions.onJoinFree}
+        onJoinFree={series.guard(hasRentalPicks ? actions.onPaidCheckout : actions.onJoinFree)}
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}
         onCancelSpot={() => actions.setCancelSpotOpen(true)}
-        onPaidCheckout={actions.onPaidCheckout}
+        onPaidCheckout={series.guard(actions.onPaidCheckout)}
         onCopyReferral={actions.onCopyReferral}
         onGoToDashboard={() => {
           setMode('HOST');
@@ -194,6 +193,7 @@ export default function PodDetailsPage() {
         currency={priceCurrency}
         backoutAttemptsLeft={backoutAttemptsLeft}
       />
+      <SeriesBookingDialog series={series} isFree={isFree} priceFormat={priceFormat} />
       <LocationMismatchDialog kind="POD" {...locationPrompt} />
     </Stack>
   );

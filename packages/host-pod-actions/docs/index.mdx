@@ -152,24 +152,23 @@ on passes neither prop and keeps the menu it had.
 
 ### "Host again" is opt-in
 
-Pass `onHostAgainDraft` to the provider and every row's menu grows a **Host again** item, right
-under Edit. A tap calls the `hostAgainPod` mutation, which copies the pod's content (title,
-description, media, pricing, perks, products, place charges, ticket discount) into a fresh Create
-Pod draft — with no date, slot, attendees or accepted terms — and the provider hands the new
-draft id to `onHostAgainDraft`, which opens it in the surface's own Create Pod route:
+Pass `onHostAgain` to the provider and every row's menu grows a **Host again** item, right
+under Edit. A tap hands the pod id to `onHostAgain`, which opens the surface's own Create Pod
+route for it. That page asks the `hostAgainPrefill` query for the filled form — the pod's
+category, city, area, club, venue, content, pricing, perks, Pod Shop items, place charges and
+ticket discount, with no date, slot, attendees or accepted terms — and saves nothing. The draft is
+created only when the host moves on in the form, so backing out leaves no empty draft behind:
 
 ```tsx
 <HostPodActionsProvider
   {...rest}
-  onHostAgainDraft={(draftId) => navigate(`/create-pod/${draftId}`)}
+  onHostAgain={(podId) => navigate(`/create-pod?host_again=${podId}`)}
 >
 ```
 
 Unlike Edit and Cancel it stays live on a pod that has ended — running a pod again is exactly what
-a host wants once the last one is over, a cancelled one included. A failed copy calls
-`notifyError(labels.hostAgainFailed)`, and a second tap while the first copy is still in flight is
-ignored so a double tap never leaves two identical drafts. A surface with no draft route (the
-Partners console) omits the prop and keeps the menu it had.
+a host wants once the last one is over, a cancelled one included. A surface with no Create Pod
+route (the Partners console) omits the prop and keeps the menu it had.
 
 ### Complete Pod is a PAST-pod action
 

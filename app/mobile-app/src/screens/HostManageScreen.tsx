@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { YStack } from 'tamagui';
+import { logs } from '@duncit/logs';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
@@ -26,14 +27,28 @@ export function HostManageScreen() {
   const { drafts, isLoading, remove } = useHostDrafts();
   const [target, setTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // A refused delete re-reads the list; once the draft is not in it, there is nothing left to confirm.
+  useEffect(() => {
+    if (target && !isLoading && !drafts.some((draft) => draft.id === target)) setTarget(null);
+  }, [target, drafts, isLoading]);
+
+  const closeConfirm = () => {
+    setTarget(null);
+    setDeleteError(null);
+  };
 
   const doDelete = async (id: string) => {
     setDeleting(true);
+    setDeleteError(null);
     try {
       await remove(id);
-      setTarget(null);
-    } catch {
-      /* keep the modal open so the host can retry */
+      closeConfirm();
+    } catch (error) {
+      // The sheet stays open so the host can retry, and says why.
+      logs.mobileApp.warn('HostManageScreen', 'deleteDraft', { error });
+      setDeleteError(t('mweb.hostManage.draftDeleteFailed'));
     } finally {
       setDeleting(false);
     }
@@ -63,7 +78,8 @@ export function HostManageScreen() {
         <DraftDeleteConfirm
           open
           busy={deleting}
-          onCancel={() => setTarget(null)}
+          error={deleteError}
+          onCancel={closeConfirm}
           onConfirm={() => fireAndForget(doDelete(target))}
         />
       ) : null}

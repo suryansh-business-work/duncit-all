@@ -2419,7 +2419,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       localityCityHint: 'Localities in {city}, your selected city',
       localityPlaceholder: 'Search your locality',
       editLocation: 'Edit location',
+      // A new area or city clears the picks that belonged to the old one.
+      locationResetNotice: 'Location changed. Pick the club, venue and slot again for the new area.',
       localitiesEmpty: 'No matching localities',
+      // "Host again": Create Pod filled from one of the host's earlier pods.
+      hostAgain: {
+        copiedFrom: 'Copied from “{title}”. Pick a new date and slot; everything else is filled in.',
+        // Shown when the pod's city is not the one picked in the header.
+        otherCity: 'This pod is in {city}, like the original, not your selected city. Use Edit location on step 1 to move it.',
+        clubUnavailable: 'The original club is no longer active. Pick another club on step 1.',
+        venueUnavailable: 'The original venue is no longer taking pods. Pick another venue on step 3.',
+        locationMissing: 'The original city is no longer available, so this pod starts in your selected city. Check the location on step 1.',
+        categoryMissing: 'The original category is not one you can host now. Pick a category on step 1.',
+        productsUnavailable: 'Some Pod Shop items from the original pod are out of stock or no longer listed, so they were left out.',
+      },
       noOptions: 'No options available.',
       podTitleLabel: 'Pod title',
       // mWeb only — the native title field carries no placeholder.

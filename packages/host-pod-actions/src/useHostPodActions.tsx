@@ -7,7 +7,6 @@ import PodResubmitDialog from './pod-resubmit/PodResubmitDialog';
 import TicketScanDialog from './ticket-scan/TicketScanDialog';
 import { useHostFeedbackLink, useHostPodMediaLink } from './usePodLinkActions';
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
-import { useHostAgain } from './useHostAgain';
 import { isVenueRejected } from './venue-approval';
 import type { HostPodForComplete, HostPodTarget, ScanTarget } from './types';
 
@@ -69,8 +68,7 @@ export interface HostPodActions {
 export function useHostPodActions(onChanged: () => void): HostPodActions {
   const feedback = useHostFeedbackLink();
   const media = useHostPodMediaLink();
-  const { onOpenPodMedia } = useHostPodActionsConfig();
-  const hostAgain = useHostAgain();
+  const { onOpenPodMedia, onHostAgain } = useHostPodActionsConfig();
   const [scanPod, setScanPod] = useState<ScanTarget | null>(null);
   const [editPod, setEditPod] = useState<HostPodTarget | null>(null);
   const [resubmitPod, setResubmitPod] = useState<HostPodTarget | null>(null);
@@ -111,7 +109,7 @@ export function useHostPodActions(onChanged: () => void): HostPodActions {
     onShareFeedback: () => fireLink(feedback.share, pod),
     onCopyFeedback: () => fireLink(feedback.copy, pod),
     onCancel: () => setCancelPod({ id: pod.id, title: pod.pod_title }),
-    onHostAgain: hostAgain ? () => hostAgain(pod.id) : undefined,
+    onHostAgain: onHostAgain ? () => onHostAgain(pod.id) : undefined,
   });
 
   const settle = (close: () => void) => () => {

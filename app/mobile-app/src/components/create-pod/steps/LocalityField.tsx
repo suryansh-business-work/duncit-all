@@ -73,7 +73,8 @@ function LocalityRow({ name, countLabel, selected, disabled, onPick }: Readonly<
  * of this host's clubs in it. Localities with clubs come first; the empty ones
  * sit at the bottom, disabled. Picking one is what opens the club picker below,
  * and a new pick clears the club chosen for the old area. "Edit location"
- * beside the label moves the pod to another city. mWeb twin (rule 27).
+ * beside the label moves the pod to another city. A move that clears the club,
+ * venue or slot says so under the field. mWeb twin (rule 27).
  */
 export function LocalityField({
   form,
@@ -86,6 +87,7 @@ export function LocalityField({
   const { muted } = useThemeColors();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [picksCleared, setPicksCleared] = useState(false);
   const locality = form.watch('locality');
   const term = query.trim().toLowerCase();
   const ranked = localitiesByClubCount(
@@ -94,7 +96,7 @@ export function LocalityField({
   );
   const shown = term ? ranked.filter((item) => item.locality.toLowerCase().includes(term)) : ranked;
   const pick = (name: string) => {
-    applyPodLocation(form, form.getValues('location_id'), name);
+    setPicksCleared(applyPodLocation(form, form.getValues('location_id'), name));
     setOpen(false);
     setQuery('');
   };
@@ -104,7 +106,7 @@ export function LocalityField({
     <YStack gap={6} testID="create-pod-locality">
       <XStack alignItems="center" justifyContent="space-between" gap={8}>
         <FieldLabel label={label} required testID="create-pod-locality-label" />
-        <EditPodLocation form={form} />
+        <EditPodLocation form={form} onMoved={setPicksCleared} />
       </XStack>
       <Text fontSize={12} color="$muted">
         {t('mweb.createPod.localityCityHint', { vars: { city: cityName } })}
@@ -166,6 +168,11 @@ export function LocalityField({
             </Text>
           ) : null}
         </YStack>
+      ) : null}
+      {picksCleared ? (
+        <Text testID="create-pod-location-reset" role="status" fontSize={12} color="$warning">
+          {t('mweb.createPod.locationResetNotice')}
+        </Text>
       ) : null}
     </YStack>
   );

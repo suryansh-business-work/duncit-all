@@ -3,7 +3,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
+import { clubCityName } from '@duncit/utils';
+
 import { CreatePodStepper } from '@/components/create-pod';
+import { HostAgainNotice } from '@/components/create-pod/HostAgainNotice';
 import { PodVenueApproval } from '@/generated/graphql/graphql';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
@@ -15,8 +18,8 @@ import { challengeRequired } from '@/services/challenge-setup';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
-/** Host-only Create Pod screen — reached from the Home "+" button or by resuming
- * a draft from Host Management. The draft autosaves; finishing the last step
+/** Host-only Create Pod screen — reached from the Home "+" button, by resuming
+ * a draft from Host Management, or by "Host again" on one of the host's pods. The draft autosaves; finishing the last step
  * publishes the pod, refreshes the feed and lands the host on Hosts Management —
  * or on the venue-approval waiting screen when the slot request is PENDING. */
 export function CreatePodScreen() {
@@ -38,12 +41,24 @@ export function CreatePodScreen() {
     initialValues,
     initialStep,
     initialDraftId,
+    hostAgain,
+    selectedLocationId,
     pinnedVenueId,
     saveDraft,
     moderate,
     publish,
     publishSeries,
-  } = useCreatePod(route.params?.draftId, route.params?.partnerRequestId);
+  } = useCreatePod(
+    route.params?.draftId,
+    route.params?.partnerRequestId,
+    route.params?.hostAgainPodId,
+  );
+  const copied = hostAgain === 'failed' ? null : hostAgain;
+  // A copy keeps its own city; when that is not the header's, the notice names it.
+  const otherCity =
+    copied && initialValues.location_id !== selectedLocationId
+      ? locations.find((item) => item.id === initialValues.location_id)
+      : undefined;
 
   return (
     <StackScreen title={t('mweb.createPod.title')} testID="create-pod-screen">
@@ -69,9 +84,30 @@ export function CreatePodScreen() {
           />
         </YStack>
       ) : null}
-      {!isLoading && isHost ? (
+      {!isLoading && isHost && hostAgain === 'failed' ? (
+        <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
+          <Text
+            testID="create-pod-host-again-failed"
+            role="alert"
+            textAlign="center"
+            color="$danger"
+          >
+            {t('mweb.hostPodActions.hostAgainFailed')}
+          </Text>
+        </YStack>
+      ) : null}
+      {!isLoading && isHost && hostAgain !== 'failed' ? (
         <RefreshScrollView showsVerticalScrollIndicator={false}>
           <Reveal>
+            {copied ? (
+              <YStack paddingHorizontal={16} paddingTop={12}>
+                <HostAgainNotice
+                  sourceTitle={copied.source_title}
+                  notices={copied.notices}
+                  otherCityName={otherCity ? clubCityName(otherCity) : null}
+                />
+              </YStack>
+            ) : null}
             <CreatePodStepper
               initialValues={initialValues}
               initialStep={initialStep}

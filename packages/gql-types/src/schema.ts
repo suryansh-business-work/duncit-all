@@ -10332,6 +10332,25 @@ export type HostAccountProfile = {
   phone: Scalars['String']['output'];
 };
 
+/**
+ * "Host again": the Create Pod form filled from one of the caller's own pods.
+ * Nothing is saved — the draft is created when the host moves on in the form.
+ */
+export type HostAgainPrefill = {
+  __typename?: 'HostAgainPrefill';
+  /**
+   * What could not be carried over: CLUB_UNAVAILABLE, VENUE_UNAVAILABLE,
+   * LOCATION_MISSING, CATEGORY_MISSING, PRODUCTS_UNAVAILABLE.
+   */
+  notices: Array<Scalars['String']['output']>;
+  /** The stepper's form state as JSON, in the same shape as PodDraft.payload. */
+  payload: Scalars['String']['output'];
+  source_pod_id: Scalars['ID']['output'];
+  source_title: Scalars['String']['output'];
+  /** The step to open on: the date step when the place carried over, else step 1. */
+  step: Scalars['Int']['output'];
+};
+
 export type HostCategory = {
   __typename?: 'HostCategory';
   category_id?: Maybe<Scalars['ID']['output']>;
@@ -13280,6 +13299,7 @@ export type Mutation = {
    * "Host again": a new draft holding one of the caller's own pods' content
    * (title, description, media, pricing, perks) with no date, slot or attendees,
    * ready to open in Create Pod. A cancelled pod can be hosted again too.
+   * @deprecated Use hostAgainPrefill; the draft is saved when the host moves on.
    */
   hostAgainPod: PodDraft;
   /**
@@ -24122,7 +24142,11 @@ export type PodSeriesPlanInput = {
 export type PodSeriesPreview = {
   __typename?: 'PodSeriesPreview';
   dates: Array<PodSeriesDate>;
+  /** The multi-date discount a new recurring pod starts with (Pod Settings). */
+  default_multi_date_discount_tiers: Array<MultiDateDiscountTier>;
   frequency: PodSeriesFrequency;
+  /** The largest discount a tier may give (Pod Settings' multi-ticket ceiling). */
+  max_discount_pct: Scalars['Int']['output'];
   /** Admin limits the plan was checked against. */
   max_occurrences: Scalars['Int']['output'];
   max_span_days: Scalars['Int']['output'];
@@ -26117,6 +26141,7 @@ export type Query = {
   grievanceTicket?: Maybe<GrievanceTicket>;
   grievanceTicketsTable: GrievanceTicketTablePage;
   host?: Maybe<Host>;
+  hostAgainPrefill: HostAgainPrefill;
   /**
    * Offers this host may still take (in a sub-category they are approved in),
    * plus the ones they took. sub_category_id narrows to one of their categories;
@@ -28684,6 +28709,11 @@ export type QueryGrievanceTicketsTableArgs = {
 
 export type QueryHostArgs = {
   host_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryHostAgainPrefillArgs = {
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 

@@ -219,12 +219,16 @@ export const SavePodDraftDocument = gql(`
   }
 `);
 
-/** "Host again" — a fresh draft carrying one of the host's own pods' content
- * (no date, slot or attendees), opened straight in Create Pod. */
-export const HostAgainPodDocument = gql(`
-  mutation MobileHostAgainPod($pod_doc_id: ID!) {
-    hostAgainPod(pod_doc_id: $pod_doc_id) {
-      id
+/** "Host again" — Create Pod filled from one of the host's own pods (no date,
+ * slot or attendees). Read-only: the draft is saved once the host moves on. */
+export const HostAgainPrefillDocument = gql(`
+  query MobileHostAgainPrefill($pod_doc_id: ID!) {
+    hostAgainPrefill(pod_doc_id: $pod_doc_id) {
+      source_pod_id
+      source_title
+      payload
+      step
+      notices
     }
   }
 `);

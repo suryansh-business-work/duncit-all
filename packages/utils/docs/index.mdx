@@ -3459,6 +3459,24 @@ const ids = seriesDatesForChoice(rows, 'ALL', []);
 const { total, pct } = seriesBookingEstimate(499, ids.length, [{ min_dates: 4, discount_pct: 10 }]);
 ```
 
+## Hosting a pod again — `host-again`
+
+Host again opens Create Pod filled from one of the host's earlier pods. The server's
+`hostAgainPrefill` query returns the filled form, the step to open on and the codes for anything
+it could not carry over (an inactive club or venue, a removed city, a category the host no longer
+runs, Pod Shop items no longer on sale). mWeb and the app word those codes through the same map.
+
+| Export | Meaning |
+| --- | --- |
+| `HOST_AGAIN_NOTICE_KEYS` / `HostAgainNoticeCode` | Each notice code and its `mweb.createPod.hostAgain.*` copy key. |
+| `hostAgainNoticeKeys(codes)` | The copy keys for the codes this build knows, in order; unknown codes are skipped. |
+| `HOST_AGAIN_PARAM` | `host_again` — the search param mWeb's `/create-pod` reads the source pod id from. |
+
+```ts
+hostAgainNoticeKeys(['CLUB_UNAVAILABLE', 'SOMETHING_NEW']).map((key) => t(key));
+// → ['The original club is no longer active. Pick another club on step 1.']
+```
+
 ## Wallet statement periods — `statement-period`
 
 The partner console, mWeb and the native app all offer "Download statement" on the wallet. This

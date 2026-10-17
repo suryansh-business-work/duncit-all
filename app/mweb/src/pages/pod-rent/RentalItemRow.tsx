@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/HandshakeOutlined';
 import { CartQuantityControl } from '@duncit/ui';
-import { rentalMoney, rentalUnitKey, type PodRentalItem } from '@duncit/utils';
+import { rentalMoney, rentalUnitKey, type PodRentalCatalogue, type PodRentalItem } from '@duncit/utils';
 import { useCartControlLabels } from '../../components/cart/useCartControlLabels';
 import { useTranslation } from '../../i18n/useTranslation';
 import { rowSx } from '../pod-details-page/PodCommercePreview/podShopStyles';
@@ -10,9 +10,8 @@ import RentalLineBreakdown from './RentalLineBreakdown';
 
 interface Props {
   item: PodRentalItem;
-  currency: string;
-  /** The pod's chargeable hours (catalogue.hours), for the price breakdown. */
-  hours: number;
+  /** The currency every price prints in, and the pod's chargeable hours for the price breakdown. */
+  catalogue: Pick<PodRentalCatalogue, 'currency_symbol' | 'hours'>;
   quantity: number;
   /** The most this booking may take: the per-guest limit for every seat, never past what is left. */
   max: number;
@@ -22,8 +21,9 @@ interface Props {
 }
 
 /** One thing the venue rents: photo, name, rate per slot or hour, deposit, what is left, and the picker. */
-export default function RentalItemRow({ item, currency, hours, quantity, max, readOnly, onQuantity }: Readonly<Props>) {
+export default function RentalItemRow({ item, catalogue, quantity, max, readOnly, onQuantity }: Readonly<Props>) {
   const { t } = useTranslation();
+  const currency = catalogue.currency_symbol;
   const labels = useCartControlLabels()(item.name);
   const [imageFailed, setImageFailed] = useState(false);
   const image = item.images[0] ?? '';
@@ -65,7 +65,7 @@ export default function RentalItemRow({ item, currency, hours, quantity, max, re
             )}
           </Box>
         )}
-        {selected && <RentalLineBreakdown item={item} quantity={quantity} hours={hours} currency={currency} />}
+        {selected && <RentalLineBreakdown item={item} quantity={quantity} catalogue={catalogue} />}
       </Box>
       <Typography variant="body2" sx={{ fontWeight: 700, textAlign: 'right' }}>
         {t('venueRentals.guest.rate', { vars: { amount: rentalMoney(currency, item.rate), unit: t(rentalUnitKey(item.unit)) } })}

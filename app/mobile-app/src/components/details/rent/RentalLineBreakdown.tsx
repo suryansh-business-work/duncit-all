@@ -1,37 +1,27 @@
 import { Text, YStack } from 'tamagui';
-import { rentalLinePrice, rentalMoney, type PodRentalItem } from '@duncit/utils';
+import { rentalLineCopy, type PodRentalCatalogue, type PodRentalItem } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   item: PodRentalItem;
   quantity: number;
-  /** The pod's chargeable hours, as the server counts them (catalogue.hours). */
-  hours: number;
-  currency: string;
+  catalogue: Pick<PodRentalCatalogue, 'hours' | 'currency_symbol'>;
 }
 
-/** How one picked item's price is made: rate × hours × qty, and the refundable deposit on its own line. RN twin of mWeb's RentalLineBreakdown. */
-export function RentalLineBreakdown({ item, quantity, hours, currency }: Readonly<Props>) {
+/** How one picked item's price is made, and the refundable deposit on its own line. RN twin of mWeb's RentalLineBreakdown. */
+export function RentalLineBreakdown({ item, quantity, catalogue }: Readonly<Props>) {
   const { t } = useTranslation();
-  const line = rentalLinePrice(item, quantity, hours);
-  if (line.quantity <= 0) return null;
-  const money = (amount: number) => rentalMoney(currency, amount);
-  const rentVars = { rate: money(item.rate), quantity: line.quantity, amount: money(line.rent) };
-  const rent =
-    item.unit === 'HOUR'
-      ? t('venueRentals.guest.rentMathHour', { count: line.units, vars: rentVars })
-      : t('venueRentals.guest.rentMathSlot', { vars: rentVars });
+  const copy = rentalLineCopy(t, item, quantity, catalogue);
+  if (!copy) return null;
   return (
     <YStack marginTop={4} testID={`pod-rent-math-${item.id}`}>
       <Text fontSize={12} color="$muted">
-        {rent}
+        {copy.rent}
       </Text>
-      {line.deposit > 0 ? (
+      {copy.deposit ? (
         <Text fontSize={12} color="$muted">
-          {t('venueRentals.guest.depositMath', {
-            vars: { rate: money(item.deposit), quantity: line.quantity, amount: money(line.deposit) },
-          })}
+          {copy.deposit}
         </Text>
       ) : null}
     </YStack>

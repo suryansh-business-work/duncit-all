@@ -19,6 +19,7 @@ import {
   rentalClosedKey,
   rentalMaxQuantity,
   rentalMoney,
+  rentalLineCopy,
   rentalLinePrice,
   rentalRefundKey,
   rentalSelectionTotals,
@@ -86,6 +87,33 @@ describe('rentalLinePrice', () => {
       total: 560,
       count: 2,
     });
+  });
+});
+
+describe('rentalLineCopy', () => {
+  // Echoes the key, the plural count and the vars, so each assertion pins what the surface asks the translator for.
+  const t = (key: string, options?: { count?: number; vars?: Record<string, string | number> }) =>
+    `${key}|${options?.count ?? '-'}|${JSON.stringify(options?.vars ?? {})}`;
+  const catalogue = { hours: 5, currency_symbol: '₹' };
+  const uno = { unit: 'HOUR' as const, rate: 50, deposit: 30 };
+  const m = (amount: number) => rentalMoney('₹', amount);
+
+  it('words an hour item with the hours as the plural count, and the deposit on its own line', () => {
+    expect(rentalLineCopy(t, uno, 2, catalogue)).toEqual({
+      rent: `venueRentals.guest.rentMathHour|5|${JSON.stringify({ rate: m(50), quantity: 2, amount: m(500) })}`,
+      deposit: `venueRentals.guest.depositMath|-|${JSON.stringify({ rate: m(30), quantity: 2, amount: m(60) })}`,
+    });
+  });
+
+  it('words a slot item without hours, and leaves out a deposit it does not take', () => {
+    expect(rentalLineCopy(t, { ...uno, unit: 'SLOT', deposit: 0 }, 1, catalogue)).toEqual({
+      rent: `venueRentals.guest.rentMathSlot|-|${JSON.stringify({ rate: m(50), quantity: 1, amount: m(50) })}`,
+      deposit: null,
+    });
+  });
+
+  it('says nothing for an item not picked', () => {
+    expect(rentalLineCopy(t, uno, 0, catalogue)).toBeNull();
   });
 });
 

@@ -1,5 +1,10 @@
 import { Text, XStack, YStack } from 'tamagui';
-import { rentalMoney, rentalUnitKey, type PodRentalItem } from '@duncit/utils';
+import {
+  rentalMoney,
+  rentalUnitKey,
+  type PodRentalCatalogue,
+  type PodRentalItem,
+} from '@duncit/utils';
 
 import { CartQuantityControl } from '@/components/cart/CartQuantityControl';
 import { cartControlLabels } from '@/components/cart/cartControlLabels';
@@ -11,9 +16,8 @@ import { RentalLineBreakdown } from './RentalLineBreakdown';
 
 interface Props {
   item: PodRentalItem;
-  currency: string;
-  /** The pod's chargeable hours (catalogue.hours), for the price breakdown. */
-  hours: number;
+  /** The currency every price prints in, and the pod's chargeable hours for the price breakdown. */
+  catalogue: Pick<PodRentalCatalogue, 'currency_symbol' | 'hours'>;
   quantity: number;
   /** The most this booking may take: the per-guest limit for every seat, never past what is left. */
   max: number;
@@ -25,14 +29,14 @@ interface Props {
 /** One thing the venue rents: photo, name, rate per slot or hour, deposit, what is left, and the picker. RN twin of mWeb's RentalItemRow. */
 export function RentalItemRow({
   item,
-  currency,
-  hours,
+  catalogue,
   quantity,
   max,
   readOnly,
   onQuantity,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const currency = catalogue.currency_symbol;
   const labels = cartControlLabels(t, item.name);
   const soldOut = item.available <= 0;
   const selected = !readOnly && quantity > 0;
@@ -74,7 +78,7 @@ export function RentalItemRow({
           </Text>
         ) : null}
         {selected ? (
-          <RentalLineBreakdown item={item} quantity={quantity} hours={hours} currency={currency} />
+          <RentalLineBreakdown item={item} quantity={quantity} catalogue={catalogue} />
         ) : null}
       </YStack>
       <Text fontSize={13.5} fontWeight="700" color="$color">

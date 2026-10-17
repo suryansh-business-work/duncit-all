@@ -63,8 +63,7 @@ export function PodRentList({ rentals, picks, seats, limit }: Readonly<Props>) {
         <RentalItemRow
           key={item.id}
           item={item}
-          currency={catalogue.currency_symbol}
-          hours={catalogue.hours}
+          catalogue={catalogue}
           quantity={picks.picks[item.id] ?? 0}
           max={rentalMaxQuantity(item, seats)}
           readOnly={!catalogue.open}
@@ -105,7 +104,11 @@ function SummaryRow({
 }: Readonly<{ label: string; amount: string; testID: string; strong?: boolean }>) {
   return (
     <XStack justifyContent="space-between" alignItems="center" gap={8} testID={testID}>
-      <Text fontSize={strong ? 13.5 : 12} fontWeight={strong ? '700' : '400'} color={strong ? '$color' : '$muted'}>
+      <Text
+        fontSize={strong ? 13.5 : 12}
+        fontWeight={strong ? '700' : '400'}
+        color={strong ? '$color' : '$muted'}
+      >
         {label}
       </Text>
       <Text fontSize={strong ? 15 : 12} fontWeight={strong ? '700' : '600'} color="$color">

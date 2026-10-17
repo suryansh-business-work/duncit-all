@@ -82,7 +82,9 @@ describe('PodRentList', () => {
     expect(screen.getByTestId('pod-rent-math-racket')).toHaveTextContent(
       /₹\s?50 × 3 hrs × 2 qty = ₹\s?300Deposit \(refundable\): ₹\s?200 × 2 qty = ₹\s?400/,
     );
-    expect(screen.getByTestId('pod-rent-math-shoes')).toHaveTextContent(/^₹\s?100 × 1 qty = ₹\s?100$/);
+    expect(screen.getByTestId('pod-rent-math-shoes')).toHaveTextContent(
+      /^₹\s?100 × 1 qty = ₹\s?100$/,
+    );
   });
 
   it('leaves the deposit row out when nothing picked carries one', () => {
@@ -96,7 +98,9 @@ describe('PodRentList', () => {
 
   it('says when the per-guest limit, not the stock, caps the quantity', () => {
     // Racket: 2 per guest × 1 seat, 5 left → capped at 2; with 3 seats the cap is 5 (stock).
-    const { rerender } = renderWithProviders(<PodRentList rentals={rentals()} picks={picksOf()} seats={1} />);
+    const { rerender } = renderWithProviders(
+      <PodRentList rentals={rentals()} picks={picksOf()} seats={1} />,
+    );
     expect(screen.getByTestId('pod-rent-max-racket')).toHaveTextContent('Max 2 per booking');
     rerender(<PodRentList rentals={rentals()} picks={picksOf()} seats={3} />);
     expect(screen.queryByTestId('pod-rent-max-racket')).toBeNull();

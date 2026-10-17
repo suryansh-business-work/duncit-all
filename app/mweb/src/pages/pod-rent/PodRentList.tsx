@@ -56,8 +56,7 @@ export default function PodRentList({ rentals, picks, seats, limit }: Readonly<P
         <RentalItemRow
           key={item.id}
           item={item}
-          currency={catalogue.currency_symbol}
-          hours={catalogue.hours}
+          catalogue={catalogue}
           quantity={picks.picks[item.id] ?? 0}
           max={rentalMaxQuantity(item, seats)}
           readOnly={!catalogue.open}

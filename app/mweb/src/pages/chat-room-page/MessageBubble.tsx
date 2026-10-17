@@ -1,4 +1,4 @@
-import { Avatar, Box, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, IconButton, Paper, Stack, Typography } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { formatTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -10,6 +10,8 @@ interface MessageBubbleProps {
   onOpenReact: (el: HTMLElement, id: string) => void;
   /** Opens the message's React / Delete / Report menu. */
   onOpenActions?: (el: HTMLElement, id: string) => void;
+  /** Opens a photo full screen, where it can be zoomed. */
+  onOpenImage?: (id: string) => void;
 }
 
 export default function MessageBubble({
@@ -17,6 +19,7 @@ export default function MessageBubble({
   mine,
   onOpenReact,
   onOpenActions,
+  onOpenImage,
 }: Readonly<MessageBubbleProps>) {
   const { t } = useTranslation();
   const m = message;
@@ -24,12 +27,21 @@ export default function MessageBubble({
   const metaInk = mine ? 'inherit' : 'text.secondary';
   const messageContent =
     m.type === 'IMAGE' ? (
-      <Box
-        component="img"
-        src={m.image_url}
-        alt={t('mweb.chatRoom.image')}
-        sx={{ maxWidth: 240, maxHeight: 240, borderRadius: '12px', display: 'block' }}
-      />
+      <ButtonBase
+        aria-label={t('mweb.common.zoomImage')}
+        data-testid={`chat-message-image-${m.id}`}
+        onClick={() => onOpenImage?.(m.id)}
+        // A tap on the photo opens it; it is not the bubble's double-tap to react.
+        onDoubleClick={(e) => e.stopPropagation()}
+        sx={{ borderRadius: '12px', overflow: 'hidden', cursor: 'zoom-in', display: 'block' }}
+      >
+        <Box
+          component="img"
+          src={m.image_url}
+          alt={t('mweb.chatRoom.image')}
+          sx={{ maxWidth: 240, maxHeight: 240, borderRadius: '12px', display: 'block' }}
+        />
+      </ButtonBase>
     ) : (
       <Typography
         variant="body2"

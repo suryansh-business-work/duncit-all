@@ -1,5 +1,6 @@
-import type { ComponentProps, RefObject } from 'react';
+import { useMemo, useState, type ComponentProps, type RefObject } from 'react';
 import { Box, Typography } from '@mui/material';
+import MomentLightbox from '../../../components/moments/MomentLightbox';
 import ChatRoomNotice from '../ChatRoomNotice';
 import MessageBubble from '../MessageBubble';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -26,6 +27,12 @@ export default function ChatMessageList({
   onOpenActions,
 }: Readonly<ChatMessageListProps>) {
   const { t } = useTranslation();
+  // Every photo in the room, so the viewer swipes through them in order.
+  const photos = useMemo(
+    () => messages.filter((m: ChatMessage) => m.type === 'IMAGE' && !m.deleted && m.image_url),
+    [messages],
+  );
+  const [photoIndex, setPhotoIndex] = useState<number | null>(null);
   return (
     <Box
       ref={scrollRef}
@@ -50,8 +57,15 @@ export default function ChatMessageList({
           mine={String(m.user_id) === String(myId)}
           onOpenReact={onOpenReact}
           onOpenActions={onOpenActions}
+          onOpenImage={(id) => setPhotoIndex(photos.findIndex((p: ChatMessage) => p.id === id))}
         />
       ))}
+      <MomentLightbox
+        moments={photos.map((p: ChatMessage) => ({ url: p.image_url }))}
+        index={photoIndex}
+        onClose={() => setPhotoIndex(null)}
+        onIndexChange={setPhotoIndex}
+      />
     </Box>
   );
 }

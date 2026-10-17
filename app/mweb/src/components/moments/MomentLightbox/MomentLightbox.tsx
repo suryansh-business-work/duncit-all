@@ -149,7 +149,14 @@ export default function MomentLightbox({
             </DuncitRoundButton>
           </>
         )}
-        <MomentLightboxMedia moment={moment} current={current} total={moments.length} />
+        {/* Keyed by position so every image opens unzoomed. */}
+        <MomentLightboxMedia
+          key={current}
+          moment={moment}
+          current={current}
+          total={moments.length}
+          onSwipe={moments.length > 1 ? (dir) => (dir === 'next' ? next() : prev()) : undefined}
+        />
         {moments.length > 1 && (
           <Box
             data-testid="moment-lightbox-counter"

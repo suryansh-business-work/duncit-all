@@ -1,11 +1,5 @@
 import { z } from 'zod';
-import {
-  isMeetingPlatform,
-  mwebMultiDateDiscountLabels,
-  POD_SERIES_MAX_DATES,
-  TICKET_DISCOUNT_MAX_TIERS,
-  ticketDiscountTierIssues,
-} from '@duncit/utils';
+import { isMeetingPlatform, repeatDiscountFormIssues } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
 import { POD_TYPE_VALUES, type CreatePodFormValues } from './create-pod.types';
@@ -58,23 +52,10 @@ export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, 
   }
 }
 
-/** The multi-date discount's tiers, by the shared tier rules counted in dates.
- * The server holds the real ceiling on dates (Pod Settings); the editor's own
- * bound is the most a recurring pod can ever have. Native twin. */
+/** The multi-date discount's tiers, by the shared rules (@duncit/utils). Native twin. */
 function refineRepeatDiscount(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate, maxPct: number) {
-  const issues = ticketDiscountTierIssues({
-    enabled: values.repeat_discount_enabled,
-    tiers: values.repeat_discount_tiers,
-    maxPct,
-    maxTickets: POD_SERIES_MAX_DATES,
-  });
-  const labels = mwebMultiDateDiscountLabels(t);
-  const limits = { maxPct, maxTickets: POD_SERIES_MAX_DATES, maxTiers: TICKET_DISCOUNT_MAX_TIERS };
-  for (const issue of issues) {
-    const path =
-      issue.index === null ? ['repeat_discount_tiers'] : ['repeat_discount_tiers', issue.index, issue.field];
-    ctx.addIssue({ code: 'custom', path, message: labels.errors[issue.code](limits) });
-  }
+  const input = { enabled: values.repeat_discount_enabled, tiers: values.repeat_discount_tiers, maxPct };
+  for (const issue of repeatDiscountFormIssues(input, t)) ctx.addIssue({ code: 'custom', ...issue });
 }
 
 /** The ticket price is blank until the host types one, so a PAID pod can never

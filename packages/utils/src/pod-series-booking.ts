@@ -1,5 +1,5 @@
 import { round2 } from './checkout-bill';
-import type { TicketDiscountTier } from './pod-ticket-discount';
+import { TICKET_DISCOUNT_MAX_TIERS, ticketDiscountTierIssues, type TicketDiscountTier } from './pod-ticket-discount';
 import type { TicketDiscountLabels, TicketDiscountTranslate } from './pod-ticket-discount-copy';
 
 /**
@@ -102,6 +102,25 @@ export function seriesBookingEstimate(
   const pct = resolveMultiDateTier(tiers, dates)?.discount_pct ?? 0;
   const discount = round2((gross * pct) / 100);
   return { gross, pct, discount, total: round2(gross - discount) };
+}
+
+/**
+ * The Create Pod form's multi-date discount problems, each with the form path
+ * it belongs on and its message — the shared tier rules counted in dates, up
+ * to the most dates any recurring pod may have (the server holds the real,
+ * lower ceiling). Both apps' Zod refines add these as they come.
+ */
+export function repeatDiscountFormIssues(
+  input: { enabled: boolean; tiers: readonly TicketDiscountTier[]; maxPct: number },
+  t: TicketDiscountTranslate,
+): { path: (string | number)[]; message: string }[] {
+  const issues = ticketDiscountTierIssues({ ...input, maxTickets: POD_SERIES_MAX_DATES });
+  const labels = mwebMultiDateDiscountLabels(t);
+  const limits = { maxPct: input.maxPct, maxTickets: POD_SERIES_MAX_DATES, maxTiers: TICKET_DISCOUNT_MAX_TIERS };
+  return issues.map((issue) => ({
+    path: issue.index === null ? ['repeat_discount_tiers'] : ['repeat_discount_tiers', issue.index, issue.field],
+    message: labels.errors[issue.code](limits),
+  }));
 }
 
 /** The multi-date tiers as the shared tier editor holds them (it counts "tickets"). */

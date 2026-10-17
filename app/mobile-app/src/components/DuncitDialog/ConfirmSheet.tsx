@@ -82,7 +82,13 @@ export function ConfirmSheet({
         {message}
       </Text>
       {error ? (
-        <Text role="alert" testID={`${testIDPrefix}-error`} marginTop={12} fontSize={12.5} color="$danger">
+        <Text
+          role="alert"
+          testID={`${testIDPrefix}-error`}
+          marginTop={12}
+          fontSize={12.5}
+          color="$danger"
+        >
           {error}
         </Text>
       ) : null}

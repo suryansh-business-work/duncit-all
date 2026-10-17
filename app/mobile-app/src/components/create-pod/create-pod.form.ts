@@ -2,11 +2,8 @@ import { z } from 'zod';
 import {
   isMeetingPlatform,
   isVideoUrl,
-  mwebMultiDateDiscountLabels,
-  POD_SERIES_MAX_DATES,
-  TICKET_DISCOUNT_MAX_TIERS,
+  repeatDiscountFormIssues,
   ticketDiscountInput,
-  ticketDiscountTierIssues,
 } from '@duncit/utils';
 
 import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
@@ -223,22 +220,13 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
 /** The multi-date discount's tiers, by the shared tier rules counted in dates.
  * The server holds the real ceiling on dates (Pod Settings). mWeb twin. */
 function refineRepeatDiscount(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  const maxPct = ticketDiscountMaxPct();
-  const issues = ticketDiscountTierIssues({
+  const input = {
     enabled: values.repeat_discount_enabled,
     tiers: values.repeat_discount_tiers,
-    maxPct,
-    maxTickets: POD_SERIES_MAX_DATES,
-  });
-  const labels = mwebMultiDateDiscountLabels(t);
-  const limits = { maxPct, maxTickets: POD_SERIES_MAX_DATES, maxTiers: TICKET_DISCOUNT_MAX_TIERS };
-  for (const issue of issues) {
-    const path =
-      issue.index === null
-        ? ['repeat_discount_tiers']
-        : ['repeat_discount_tiers', issue.index, issue.field];
-    ctx.addIssue({ code: 'custom', path, message: labels.errors[issue.code](limits) });
-  }
+    maxPct: ticketDiscountMaxPct(),
+  };
+  for (const issue of repeatDiscountFormIssues(input, t))
+    ctx.addIssue({ code: 'custom', ...issue });
 }
 
 /** A recurring pod needs the day it stops repeating, after its first date. The

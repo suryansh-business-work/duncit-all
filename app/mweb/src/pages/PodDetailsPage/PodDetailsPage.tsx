@@ -10,6 +10,7 @@ import StickyPodActionPanel from '../pod-details-page/StickyPodActionPanel';
 import PodDetailAccordions from '../pod-details-page/PodDetailAccordions';
 import PodMapSection from '../../components/pod-details/PodMapSection';
 import PodSocialBar from '../pod-details-page/PodSocialBar';
+import ChatPreviewCard from '../../components/chat-preview/ChatPreviewCard';
 import PodChallengesSection from '../../components/pod-challenge/PodChallengesSection';
 import AdSlot from '../../components/ads/AdSlot';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
@@ -156,6 +157,7 @@ export default function PodDetailsPage() {
       />
 
       <PodHashtagsAndSupport pod={pod} />
+      <ChatPreviewCard kind="POD" id={pod.id} />
 
       <StickyPodActionPanel
         pod={pod}

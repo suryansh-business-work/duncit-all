@@ -24,6 +24,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { ChatPreviewCard } from '@/components/chat-preview/ChatPreviewCard';
 
 const DEEP_LINK_BASE = 'https://duncit.com/club';
 
@@ -94,6 +95,14 @@ export function ClubDetailsScreen() {
           }
         />
       </Reveal>
+      <YStack height={20} />
+      <ChatPreviewCard
+        kind="CLUB"
+        id={club.id}
+        onOpen={() => navigation.navigate('ChatRoom', { clubId: club.id, title: club.club_name })}
+        onJoinClub={toggleFollow}
+      />
+      <YStack height={24} />
     </RefreshScrollView>
   ) : (
     <YStack flex={1} alignItems="center" justifyContent="center">

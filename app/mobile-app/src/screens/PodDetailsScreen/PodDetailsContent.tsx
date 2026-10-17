@@ -6,6 +6,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { PodAccordions } from '@/components/details/PodAccordions';
 import { PodContactSupportLink } from '@/components/details/PodContactSupportLink';
+import { ChatPreviewCard } from '@/components/chat-preview/ChatPreviewCard';
 import { PodInfo } from '@/components/details/PodInfo';
 import { PodSchedule } from '@/components/details/PodSchedule';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
@@ -135,6 +136,12 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
           <AdSlot position="POD_DETAILS" variant="banner" />
         </YStack>
       </Reveal>
+      <YStack height={20} />
+      <ChatPreviewCard
+        kind="POD"
+        id={pod.id}
+        onOpen={() => navigation.navigate('ChatRoom', { podId: pod.id, title: pod.pod_title })}
+      />
       <PodContactSupportLink
         onPress={() =>
           navigation.navigate('SupportTickets', { podId: pod.id, podTitle: pod.pod_title })

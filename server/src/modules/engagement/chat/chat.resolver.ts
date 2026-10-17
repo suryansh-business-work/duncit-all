@@ -30,11 +30,36 @@ type MessageType = 'TEXT' | 'IMAGE' | 'STICKER';
 type SendArgs = { type?: MessageType; text?: string; image_url?: string };
 type PageArgs = { limit?: number; before?: string };
 
-/** One page of a room, oldest first, with names resolved in one query. */
-async function pageOf(room: ChatRoomRef, uid: string, limit?: number, before?: string) {
-  const docs: StoredMessage[] = await chatService.listMessages(room, uid, limit, before);
+/** Stored lines shaped for the client, with names resolved in one query. */
+async function shapeAll(docs: StoredMessage[]) {
   const display = await userDisplayMap(docs.map((d) => String(d.user_id)));
   return docs.map((d) => shapeMessage(d, displayFrom(display, String(d.user_id))));
+}
+
+/** One page of a room, oldest first, for its members. */
+async function pageOf(room: ChatRoomRef, uid: string, limit?: number, before?: string) {
+  return shapeAll(await chatService.listMessages(room, uid, limit, before));
+}
+
+type PreviewArgs = PageArgs & { pod_id?: string | null; club_id?: string | null };
+
+/** The details-page chat card: a pod's or a club's history, read-only. */
+async function chatPreview(args: PreviewArgs, uid: string) {
+  if (!args.pod_id === !args.club_id) {
+    throw new GraphQLError('Pass exactly one of pod_id or club_id', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const room: ChatRoomRef = args.pod_id
+    ? { kind: 'POD', id: args.pod_id }
+    : { kind: 'CLUB', id: String(args.club_id) };
+  const preview = await chatService.previewRoom(room, uid, args.limit, args.before);
+  return {
+    messages: await shapeAll(preview.docs),
+    total_count: preview.total,
+    is_member: preview.isMember,
+    closed: preview.closed,
+  };
 }
 
 /** Posts, broadcasts to the room, and pushes the members who are away. */
@@ -105,6 +130,8 @@ export const chatResolvers = {
       pageOf({ kind: 'POD', id: args.pod_id }, requireAuth(ctx), args.limit, args.before),
     podChatInfo: async (_: unknown, args: { pod_id: string }, ctx: GraphQLContext) =>
       podChatInfo(args.pod_id, requireAuth(ctx)),
+    chatPreview: async (_: unknown, args: PreviewArgs, ctx: GraphQLContext) =>
+      chatPreview(args, requireAuth(ctx)),
     myClubChatRooms: async (_: unknown, __: unknown, ctx: GraphQLContext) => {
       const uid = requireAuth(ctx);
       const [rooms, { clubDays }] = await Promise.all([

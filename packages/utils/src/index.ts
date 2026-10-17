@@ -1681,6 +1681,15 @@ export {
   type SeriesGroupable,
   type SlotRequestGroup,
 } from './pod-series';
+export {
+  CHAT_PREVIEW_PAGE,
+  chatPreviewAction,
+  chatRoomPath,
+  hasEarlierMessages,
+  mergeEarlierMessages,
+  type ChatPreviewAction,
+  type ChatPreviewKind,
+} from './chat-preview';
 
 // Rented items: the contract the venue desk, Finance and both apps share.
 export {

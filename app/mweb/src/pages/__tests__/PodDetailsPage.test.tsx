@@ -125,6 +125,9 @@ vi.mock('../pod-details-page/StickyPodActionPanel', () => ({
 vi.mock('../pod-details-page/PodDetailAccordions', () => ({
   default: () => <div data-testid="accordions" />,
 }));
+vi.mock('../../components/chat-preview/ChatPreviewCard', () => ({
+  default: ({ kind, id }: { kind: string; id: string }) => <div>{`chat:${kind}:${id}`}</div>,
+}));
 vi.mock('../pod-details-page/PodSocialBar', () => ({
   default: () => <div data-testid="social" />,
 }));
@@ -249,6 +252,8 @@ describe('PodDetailsPage', () => {
     expect(screen.getByText('#chill')).toBeInTheDocument();
     // products visible -> commerce preview present
     expect(screen.getByText('commerce')).toBeInTheDocument();
+    // The pod's chat sits at the foot of its details, for this pod's room.
+    expect(screen.getByText('chat:POD:pod1')).toBeInTheDocument();
   });
 
   it('wires hero + panel + overview callbacks', async () => {

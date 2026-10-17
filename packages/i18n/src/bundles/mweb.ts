@@ -3893,6 +3893,17 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       lastSticker: 'Sticker',
       clubChat: 'Club chat',
       openChat: 'Open chat',
+      podChat: 'Pod chat',
+      podChatLocked: 'Book a spot to join the pod chat.',
+      liveNow: 'Live now',
+      messageCount: {
+        one: '{count} message',
+        other: '{count} messages',
+      },
+      joinRoom: 'Join the room',
+      showEarlier: 'Show earlier messages',
+      previewFailed: 'The chat could not load.',
+      previewRetry: 'Try again',
     },
     podSeries: {
       title: 'How often does this pod run?',

@@ -126,6 +126,17 @@ jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: mockAds, loading: false }),
 }));
 
+// The chat card has its own spec; here it only has to be this pod's room.
+jest.mock('@/components/chat-preview/ChatPreviewCard', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return {
+    ChatPreviewCard: ({ kind, id, onOpen }: { kind: string; id: string; onOpen: () => void }) => (
+      <Text testID="chat-preview-stub" onPress={onOpen}>{`${kind}:${id}`}</Text>
+    ),
+  };
+});
+
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -570,6 +581,14 @@ describe('PodDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('backout-confirm'));
     await screen.findByTestId('backout-dialog');
     expect(mockBackout).toHaveBeenCalledWith('p1', 1);
+  });
+
+  it('ends with this pod’s chat, which opens the pod’s room', () => {
+    mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.getByTestId('chat-preview-stub')).toHaveTextContent('POD:p1');
+    fireEvent.press(screen.getByTestId('chat-preview-stub'));
+    expect(mockNavigate).toHaveBeenCalledWith('ChatRoom', { podId: 'p1', title: 'Sunset Jam' });
   });
 
   it('shows the refund estimate inside the backout dialog for a paid member', () => {

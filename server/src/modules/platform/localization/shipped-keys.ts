@@ -11760,6 +11760,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.hostManage.couldNotResubmitThePod": "Could not resubmit the pod",
   "mweb.hostManage.createAPod": "Create a Pod",
   "mweb.hostManage.customerPaid": "Customer Paid",
+  "mweb.hostManage.draftDeleteFailed": "Could not delete the draft. Please try again.",
   "mweb.hostManage.draftExpiresInHours": "Deleted in {hours}h",
   "mweb.hostManage.draftExpiresWithinHour": "Deleted within the hour",
   "mweb.hostManage.draftPods": "Draft pods",

@@ -12,6 +12,7 @@ import DraftRow from './DraftRow';
 import ExpiringDraftsPanel from './ExpiringDraftsPanel';
 import { DELETE_POD_DRAFT, MY_POD_DRAFTS, type DraftRowData } from './drafts';
 import { fireAndForget, logs } from '@duncit/logs';
+import { notifyError } from '../../components/notify';
 
 /**
  * Resumable Create Pod drafts for the signed-in host. Drafts the retention
@@ -28,9 +29,18 @@ export default function HostDraftsCard() {
 
   const confirmDelete = async () => {
     if (!target) return;
-    await deleteMut({ variables: { draft_id: target } });
-    setTarget(null);
-    await refetch();
+    try {
+      const res = await deleteMut({ variables: { draft_id: target } });
+      if (res.data?.deletePodDraft !== true) throw new Error('deletePodDraft did not confirm the delete');
+      setTarget(null);
+      await refetch();
+    } catch (error) {
+      // The dialog stays open to retry — unless the fresh list shows the draft is already gone.
+      logs.mWeb.warn('HostDraftsCard', 'deleteDraft', { error });
+      notifyError(t('mweb.hostManage.draftDeleteFailed'));
+      const fresh = await refetch();
+      if (!fresh.data?.myPodDrafts?.some((d: DraftRowData) => d.id === target)) setTarget(null);
+    }
   };
 
   if (loading && !data) return null;

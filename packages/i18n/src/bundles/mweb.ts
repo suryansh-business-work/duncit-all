@@ -4214,6 +4214,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       draftExpiresInHours: 'Deleted in {hours}h',
       draftExpiresWithinHour: 'Deleted within the hour',
       draftPods: 'Draft pods',
+      // A draft delete the server refused (already gone, not yours, offline); mWeb and the app.
+      draftDeleteFailed: 'Could not delete the draft. Please try again.',
       draftRetentionNote:
         'Draft Pods are automatically deleted {days} days after they are created. Publish your Pod before it expires.',
       draftsExpiringSoon: 'Deleted in the next 24 hours',

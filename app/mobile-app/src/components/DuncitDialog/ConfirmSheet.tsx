@@ -19,6 +19,8 @@ interface Props {
   confirmLabel: string;
   /** CTA copy while `busy`, e.g. `Deleting…`. */
   busyLabel: string;
+  /** Why the last attempt failed, shown under the message so the host can retry. */
+  error?: string | null;
   onCancel: () => void;
   onConfirm: () => void;
 }
@@ -45,6 +47,7 @@ export function ConfirmSheet({
   cancelLabel,
   confirmLabel,
   busyLabel,
+  error,
   onCancel,
   onConfirm,
 }: Readonly<Props>) {
@@ -78,6 +81,11 @@ export function ConfirmSheet({
       <Text fontSize={14} lineHeight={20} color="$muted">
         {message}
       </Text>
+      {error ? (
+        <Text role="alert" testID={`${testIDPrefix}-error`} marginTop={12} fontSize={12.5} color="$danger">
+          {error}
+        </Text>
+      ) : null}
     </DuncitDialog>
   );
 }

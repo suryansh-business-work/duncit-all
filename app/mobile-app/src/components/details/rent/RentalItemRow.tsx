@@ -7,9 +7,13 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 import { ProductRowShell, ProductThumb } from '../PodShopProductRow/ProductRowParts';
 
+import { RentalLineBreakdown } from './RentalLineBreakdown';
+
 interface Props {
   item: PodRentalItem;
   currency: string;
+  /** The pod's chargeable hours (catalogue.hours), for the price breakdown. */
+  hours: number;
   quantity: number;
   /** The most this booking may take: the per-guest limit for every seat, never past what is left. */
   max: number;
@@ -22,6 +26,7 @@ interface Props {
 export function RentalItemRow({
   item,
   currency,
+  hours,
   quantity,
   max,
   readOnly,
@@ -31,6 +36,8 @@ export function RentalItemRow({
   const labels = cartControlLabels(t, item.name);
   const soldOut = item.available <= 0;
   const selected = !readOnly && quantity > 0;
+  // The venue's per-guest limit, not the stock, is what stops the + here: say so.
+  const capped = max > 0 && max < item.available;
   const stock = soldOut
     ? t('venueRentals.guest.soldOut')
     : t('venueRentals.guest.left', { vars: { count: item.available } });
@@ -60,6 +67,14 @@ export function RentalItemRow({
               testIdPrefix={`pod-rent-${item.id}`}
             />
           </XStack>
+        ) : null}
+        {!readOnly && !soldOut && capped ? (
+          <Text fontSize={12} color="$muted" testID={`pod-rent-max-${item.id}`}>
+            {t('venueRentals.guest.maxPerBooking', { vars: { count: max } })}
+          </Text>
+        ) : null}
+        {selected ? (
+          <RentalLineBreakdown item={item} quantity={quantity} hours={hours} currency={currency} />
         ) : null}
       </YStack>
       <Text fontSize={13.5} fontWeight="700" color="$color">

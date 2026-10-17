@@ -64,6 +64,7 @@ export function PodRentList({ rentals, picks, seats, limit }: Readonly<Props>) {
           key={item.id}
           item={item}
           currency={catalogue.currency_symbol}
+          hours={catalogue.hours}
           quantity={picks.picks[item.id] ?? 0}
           max={rentalMaxQuantity(item, seats)}
           readOnly={!catalogue.open}
@@ -71,16 +72,45 @@ export function PodRentList({ rentals, picks, seats, limit }: Readonly<Props>) {
         />
       ))}
       {totals.count > 0 ? (
-        <XStack justifyContent="space-between" alignItems="center" testID="pod-rent-total">
-          <Text fontSize={12} color="$muted">
-            {t('venueRentals.guest.rentLine')}
-            {totals.deposit > 0 ? ` + ${t('venueRentals.guest.depositLine')}` : ''}
-          </Text>
-          <Text fontSize={15} fontWeight="700" color="$color">
-            {rentalMoney(catalogue.currency_symbol, totals.total)}
-          </Text>
-        </XStack>
+        <YStack gap={2} testID="pod-rent-total">
+          <SummaryRow
+            label={t('venueRentals.guest.rentSubtotal')}
+            amount={rentalMoney(catalogue.currency_symbol, totals.rent)}
+            testID="pod-rent-subtotal"
+          />
+          {totals.deposit > 0 ? (
+            <SummaryRow
+              label={t('venueRentals.guest.depositLine')}
+              amount={rentalMoney(catalogue.currency_symbol, totals.deposit)}
+              testID="pod-rent-deposit"
+            />
+          ) : null}
+          <SummaryRow
+            label={t('venueRentals.guest.total')}
+            amount={rentalMoney(catalogue.currency_symbol, totals.total)}
+            testID="pod-rent-grand-total"
+            strong
+          />
+        </YStack>
       ) : null}
     </YStack>
+  );
+}
+
+function SummaryRow({
+  label,
+  amount,
+  testID,
+  strong = false,
+}: Readonly<{ label: string; amount: string; testID: string; strong?: boolean }>) {
+  return (
+    <XStack justifyContent="space-between" alignItems="center" gap={8} testID={testID}>
+      <Text fontSize={strong ? 13.5 : 12} fontWeight={strong ? '700' : '400'} color={strong ? '$color' : '$muted'}>
+        {label}
+      </Text>
+      <Text fontSize={strong ? 15 : 12} fontWeight={strong ? '700' : '600'} color="$color">
+        {amount}
+      </Text>
+    </XStack>
   );
 }

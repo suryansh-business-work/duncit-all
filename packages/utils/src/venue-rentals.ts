@@ -165,11 +165,32 @@ export interface RentalSelectionTotals {
   count: number;
 }
 
+export interface RentalLinePrice {
+  /** Hours charged for an HOUR item (the pod's length, rounded up by the server); 1 for a SLOT item. */
+  units: number;
+  quantity: number;
+  /** rate × units × quantity. */
+  rent: number;
+  /** deposit × quantity: refundable, shown apart from the rent. */
+  deposit: number;
+}
+
 /**
- * The selection's price, the server's way: a SLOT item's rate covers the pod,
- * an HOUR item's rate is per hour of it; the deposit is per unit. Items no
- * longer listed, and quantities of 0 or less, count for nothing.
+ * One item's price, the server's way (rentalCheckout.ts `priceLine`): a SLOT
+ * item's rate covers the pod, an HOUR item's rate is per hour of it; the
+ * deposit is per unit. A quantity of 0 or less prices at nothing.
  */
+export function rentalLinePrice(
+  item: Pick<PodRentalItem, 'unit' | 'rate' | 'deposit'>,
+  quantity: number,
+  hours: number
+): RentalLinePrice {
+  const whole = Math.max(0, Math.floor(quantity));
+  const units = item.unit === 'HOUR' ? Math.max(1, hours) : 1;
+  return { units, quantity: whole, rent: item.rate * units * whole, deposit: item.deposit * whole };
+}
+
+/** The selection's price: every listed item's line summed. Items no longer listed count for nothing. */
 export function rentalSelectionTotals(
   items: readonly PodRentalItem[],
   picks: Readonly<Record<string, number>>,
@@ -179,12 +200,10 @@ export function rentalSelectionTotals(
   let deposit = 0;
   let count = 0;
   for (const item of items) {
-    const quantity = Math.floor(picks[item.id] ?? 0);
-    if (quantity <= 0) continue;
-    const units = item.unit === 'HOUR' ? Math.max(1, hours) : 1;
-    rent += item.rate * units * quantity;
-    deposit += item.deposit * quantity;
-    count += quantity;
+    const line = rentalLinePrice(item, picks[item.id] ?? 0, hours);
+    rent += line.rent;
+    deposit += line.deposit;
+    count += line.quantity;
   }
   return { rent, deposit, total: rent + deposit, count };
 }

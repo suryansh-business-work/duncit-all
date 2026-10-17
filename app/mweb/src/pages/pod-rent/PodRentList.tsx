@@ -57,6 +57,7 @@ export default function PodRentList({ rentals, picks, seats, limit }: Readonly<P
           key={item.id}
           item={item}
           currency={catalogue.currency_symbol}
+          hours={catalogue.hours}
           quantity={picks.picks[item.id] ?? 0}
           max={rentalMaxQuantity(item, seats)}
           readOnly={!catalogue.open}
@@ -64,16 +65,27 @@ export default function PodRentList({ rentals, picks, seats, limit }: Readonly<P
         />
       ))}
       {totals.count > 0 && (
-        <Stack direction="row" sx={{ justifyContent: 'space-between', pt: 0.5 }} data-testid="pod-rent-total">
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {t('venueRentals.guest.rentLine')}
-            {totals.deposit > 0 && ` + ${t('venueRentals.guest.depositLine')}`}
-          </Typography>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-            {rentalMoney(catalogue.currency_symbol, totals.total)}
-          </Typography>
+        <Stack spacing={0.25} sx={{ pt: 0.5 }} data-testid="pod-rent-total">
+          <SummaryRow label={t('venueRentals.guest.rentSubtotal')} amount={rentalMoney(catalogue.currency_symbol, totals.rent)} testId="pod-rent-subtotal" />
+          {totals.deposit > 0 && (
+            <SummaryRow label={t('venueRentals.guest.depositLine')} amount={rentalMoney(catalogue.currency_symbol, totals.deposit)} testId="pod-rent-deposit" />
+          )}
+          <SummaryRow label={t('venueRentals.guest.total')} amount={rentalMoney(catalogue.currency_symbol, totals.total)} testId="pod-rent-grand-total" strong />
         </Stack>
       )}
+    </Stack>
+  );
+}
+
+function SummaryRow({ label, amount, testId, strong = false }: Readonly<{ label: string; amount: string; testId: string; strong?: boolean }>) {
+  return (
+    <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 1 }} data-testid={testId}>
+      <Typography variant={strong ? 'subtitle2' : 'caption'} sx={{ color: strong ? 'text.primary' : 'text.secondary', fontWeight: strong ? 700 : undefined }}>
+        {label}
+      </Typography>
+      <Typography variant={strong ? 'subtitle2' : 'caption'} sx={{ fontWeight: strong ? 700 : 600 }}>
+        {amount}
+      </Typography>
     </Stack>
   );
 }

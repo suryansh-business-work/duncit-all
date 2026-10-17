@@ -19,6 +19,7 @@ import {
   rentalClosedKey,
   rentalMaxQuantity,
   rentalMoney,
+  rentalLinePrice,
   rentalRefundKey,
   rentalSelectionTotals,
   rentalSelections,
@@ -55,6 +56,36 @@ describe('rentalSelectionTotals', () => {
     const totals = rentalSelectionTotals([racket], { racket: 0, gone: 3 }, 2);
     expect(totals).toEqual({ rent: 0, deposit: 0, total: 0, count: 0 });
     expect(rentalSelectionTotals([racket], { racket: -1 }, 2).count).toBe(0);
+  });
+});
+
+describe('rentalLinePrice', () => {
+  const uno = { unit: 'HOUR' as const, rate: 50, deposit: 30 };
+
+  it('prices an hour item as rate × hours × qty, with the deposit per unit kept apart', () => {
+    expect(rentalLinePrice(uno, 1, 5)).toEqual({ units: 5, quantity: 1, rent: 250, deposit: 30 });
+    expect(rentalLinePrice(uno, 2, 5)).toEqual({ units: 5, quantity: 2, rent: 500, deposit: 60 });
+  });
+
+  it('charges a slot item once whatever the pod length', () => {
+    expect(rentalLinePrice({ ...uno, unit: 'SLOT' }, 2, 5)).toEqual({ units: 1, quantity: 2, rent: 100, deposit: 60 });
+  });
+
+  it('prices nothing for zero, negative or fractional-below-one quantities', () => {
+    expect(rentalLinePrice(uno, 0, 5)).toEqual({ units: 5, quantity: 0, rent: 0, deposit: 0 });
+    expect(rentalLinePrice(uno, -2, 5).rent).toBe(0);
+    expect(rentalLinePrice(uno, 0.6, 5).quantity).toBe(0);
+  });
+
+  it('sums to the same total rentalSelectionTotals reports', () => {
+    const item = { ...projector, deposit: 30, rate: 50 };
+    const line = rentalLinePrice(item, 2, 5);
+    expect(rentalSelectionTotals([item], { projector: 2 }, 5)).toEqual({
+      rent: line.rent,
+      deposit: line.deposit,
+      total: 560,
+      count: 2,
+    });
   });
 });
 

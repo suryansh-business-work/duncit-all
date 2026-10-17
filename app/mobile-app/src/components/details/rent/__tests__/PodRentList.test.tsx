@@ -69,17 +69,37 @@ describe('PodRentList', () => {
     renderWithProviders(
       <PodRentList rentals={rentals()} picks={picksOf({ racket: 2, shoes: 1 })} seats={1} />,
     );
-    expect(screen.getByTestId('pod-rent-total')).toBeOnTheScreen();
-    expect(screen.getByText('Rented items + Refundable deposit')).toBeOnTheScreen();
-    expect(screen.getByText(/₹\s?800/)).toBeOnTheScreen();
+    expect(screen.getByTestId('pod-rent-subtotal')).toHaveTextContent(/Rent subtotal₹\s?400/);
+    expect(screen.getByTestId('pod-rent-deposit')).toHaveTextContent(/Refundable deposit₹\s?400/);
+    expect(screen.getByTestId('pod-rent-grand-total')).toHaveTextContent(/Total₹\s?800/);
     expect(screen.getByTestId('pod-rent-racket-count')).toHaveTextContent('2');
   });
 
-  it('leaves the deposit out of the total label when nothing picked carries one', () => {
+  it('shows how each picked item is priced, with the deposit on its own refundable line', () => {
+    renderWithProviders(
+      <PodRentList rentals={rentals()} picks={picksOf({ racket: 2, shoes: 1 })} seats={1} />,
+    );
+    expect(screen.getByTestId('pod-rent-math-racket')).toHaveTextContent(
+      /₹\s?50 × 3 hrs × 2 qty = ₹\s?300Deposit \(refundable\): ₹\s?200 × 2 qty = ₹\s?400/,
+    );
+    expect(screen.getByTestId('pod-rent-math-shoes')).toHaveTextContent(/^₹\s?100 × 1 qty = ₹\s?100$/);
+  });
+
+  it('leaves the deposit row out when nothing picked carries one', () => {
     renderWithProviders(
       <PodRentList rentals={rentals()} picks={picksOf({ shoes: 1 })} seats={1} />,
     );
-    expect(screen.getByText('Rented items')).toBeOnTheScreen();
+    expect(screen.getByTestId('pod-rent-subtotal')).toHaveTextContent(/₹\s?100/);
+    expect(screen.queryByTestId('pod-rent-deposit')).toBeNull();
+    expect(screen.getByTestId('pod-rent-grand-total')).toHaveTextContent(/₹\s?100/);
+  });
+
+  it('says when the per-guest limit, not the stock, caps the quantity', () => {
+    // Racket: 2 per guest × 1 seat, 5 left → capped at 2; with 3 seats the cap is 5 (stock).
+    const { rerender } = renderWithProviders(<PodRentList rentals={rentals()} picks={picksOf()} seats={1} />);
+    expect(screen.getByTestId('pod-rent-max-racket')).toHaveTextContent('Max 2 per booking');
+    rerender(<PodRentList rentals={rentals()} picks={picksOf()} seats={3} />);
+    expect(screen.queryByTestId('pod-rent-max-racket')).toBeNull();
   });
 
   it('shows only the first few on the card', () => {

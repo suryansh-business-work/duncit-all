@@ -3960,6 +3960,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       image: 'Image',
       photoAccessIsNeededToSend: 'Photo access is needed to send an image.',
       podDetailsAreUnavailableForThis: 'Pod details are unavailable for this chat.',
+      // Day separators in the room, WhatsApp-style; older days use the admin date format.
+      today: 'Today',
+      yesterday: 'Yesterday',
+      // The pill over the composer when messages arrive while the reader is scrolled up.
+      newMessages: {
+        one: '{count} new message',
+        other: '{count} new messages',
+      },
     },
     chats: {
       searchChats: 'Search chats',

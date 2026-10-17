@@ -147,13 +147,12 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
  * independently-mutable FollowRequest document — whole-response caching
  * freezes it, showing Accept/Reject controls on an already-answered request).
  *
- * ONE audited exception to (d): PodDraft.expires_at is a field resolver over
- * the app-wide draft_retention_days setting. It is not identity-scoped, but it
- * is a date days out that the client renders as an hour countdown, so a 60s
- * stale copy cannot change what a host is told.
+ * `myPodDrafts` was cut too: invalidation is TTL-only, so for a minute after a
+ * delete or a publish the host's own refetch was served the old list, the
+ * deleted draft came back, and deleting it again found nothing. A list its
+ * owner edits and re-reads in the same breath must read live.
  */
 const PERSONAL_CACHEABLE_FIELDS = new Set([
-  'myPodDrafts',
   'myPodIdeas',
   'myAddresses',
 ]);

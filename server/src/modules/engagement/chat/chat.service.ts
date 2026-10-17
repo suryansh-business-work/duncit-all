@@ -247,7 +247,8 @@ export const chatService = {
     };
     return {
       hosts: hostIds.map(toChatUser),
-      participants: attendeeIds.map(toChatUser),
+      // A host who booked their own pod is listed once, as the host.
+      participants: attendeeIds.filter((id) => !hostIds.includes(id)).map(toChatUser),
       participant_count: attendeeIds.length,
     };
   },

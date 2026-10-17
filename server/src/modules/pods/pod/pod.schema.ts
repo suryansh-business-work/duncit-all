@@ -228,11 +228,15 @@ export const podTypeDefs = /* GraphQL */ `
     pod_type: PodType!
     pod_amount: Int!
     pod_occurrence: PodOccurrence!
-    "The recurring series this pod is one date of; null for a one-time pod."
+    "The recurring pod this row belongs to; null for a one-time pod."
     series_id: ID
-    "This date's position in its series (from 1), and how many dates the series had."
+    "This date's position in its series (from 1), and how many dates the series has."
     series_index: Int
     series_total: Int
+    "PARENT: the recurring pod people browse and book from. DATE: one of its dates. Null for a one-time pod."
+    series_role: PodSeriesRole
+    "A DATE's recurring pod (its PARENT row)."
+    series_parent_id: ID
     no_of_spots: Int!
     pod_info: String
     what_this_pod_offers: [String!]!

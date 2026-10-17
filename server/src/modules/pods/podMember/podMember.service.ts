@@ -8,7 +8,7 @@ import {
   type BackoutStatus,
   type IBackoutRequest,
 } from './backoutRequest.model';
-import { isFreePod, PodModel, type IPod } from '@modules/pods/pod/pod.model';
+import { assertBookableRow, isFreePod, PodModel, type IPod } from '@modules/pods/pod/pod.model';
 import {
   cancelFreeSpot,
   createFreeMembership,
@@ -1127,6 +1127,7 @@ export const podMemberService = {
   async joinFree(podDocId: string, userId: string, referralToken?: string | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    assertBookableRow(pod);
     assertPodOpenForBooking(pod);
     if (pod.pod_date_time && pod.pod_date_time.getTime() < Date.now()) {
       throw new GraphQLError('This pod has already taken place — booking is closed.', {

@@ -39,6 +39,8 @@ interface CheckoutViewProps {
   bill: Omit<Bill, 'breakup' | 'amount'>;
   breakup: NonNullable<Bill['breakup']>;
   seats: number;
+  /** Dates of a recurring pod booked together (absent: one pod or one date). */
+  dates?: number;
   rentals: CheckoutRentals;
   submit: () => void;
   payment: ReturnType<typeof usePaymentFailure>;
@@ -56,6 +58,7 @@ export default function CheckoutView({
   bill,
   breakup,
   seats,
+  dates,
   rentals,
   submit,
   payment,
@@ -90,7 +93,7 @@ export default function CheckoutView({
         )}
         <SavedAddressPicker onPick={session.pickAddress} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <OrderSummaryCard pod={pod} stateTitle={stateTitle} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} coins={coinSummary} roundOff={payBreakup ? coins.roundOff : 0} rentals={rentals.totals.count > 0 ? { rows: <RentalBillRows rentals={rentals} />, total: rentals.totals.total } : null} />
+          <OrderSummaryCard pod={pod} stateTitle={stateTitle} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} dates={dates} unitAmount={unitAmount} coins={coinSummary} roundOff={payBreakup ? coins.roundOff : 0} rentals={rentals.totals.count > 0 ? { rows: <RentalBillRows rentals={rentals} />, total: rentals.totals.total } : null} />
           <PaymentDetailsCard
             control={session.control}
             onSubmit={submit}

@@ -13,8 +13,12 @@ import { useStudioModeStore } from '@/stores/studio-mode.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
+import { SeriesBookingSheet } from '@/components/details/series/SeriesBookingSheet';
+import { formatMoney } from '@/utils/checkout-math';
+
 import { PodBackoutDialogs } from './PodBackoutDialogs';
 import type { PodDetailActions } from './usePodDetailActions';
+import type { SeriesBooking } from './useSeriesBooking';
 
 type PodDetailsData = ReturnType<typeof usePodDetails>;
 
@@ -22,6 +26,9 @@ interface PodDetailsOverlaysProps {
   pod: PodDetail;
   navigation: NativeStackNavigationProp<RootStackParamList>;
   actions: PodDetailActions;
+  series: SeriesBooking;
+  /** The platform currency symbol, for the date picker's prices. */
+  currency: string;
   isFree: boolean;
   isPodHost: boolean;
   membershipState: PodMembershipState | null;
@@ -39,6 +46,8 @@ export function PodDetailsOverlays({
   pod,
   navigation,
   actions,
+  series,
+  currency,
   isFree,
   isPodHost,
   membershipState,
@@ -63,11 +72,11 @@ export function PodDetailsOverlays({
         membershipState={membershipState}
         seats={actions.seats}
         onSeatsChange={actions.setSeats}
-        onCheckout={
+        onCheckout={series.guard(
           freeJoin
             ? () => fireAndForget(actions.onJoinFree())
-            : () => navigation.navigate('Checkout', { podId: pod.id, seats: actions.seats })
-        }
+            : () => navigation.navigate('Checkout', { podId: pod.id, seats: actions.seats }),
+        )}
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}
         onCancelSpot={() => actions.setCancelSpotOpen(true)}
@@ -87,6 +96,11 @@ export function PodDetailsOverlays({
           setCommentDelta((prev) => prev + delta);
           useExploreStore.getState().bumpComment(pod.id, delta);
         }}
+      />
+      <SeriesBookingSheet
+        series={series}
+        isFree={isFree}
+        formatPrice={(amount) => formatMoney(currency, amount)}
       />
       <LocationMismatchDialog kind="POD" {...locationPrompt} />
       <PodBackoutDialogs

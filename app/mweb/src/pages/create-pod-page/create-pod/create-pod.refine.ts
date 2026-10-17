@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { isMeetingPlatform } from '@duncit/utils';
+import {
+  isMeetingPlatform,
+  mwebMultiDateDiscountLabels,
+  POD_SERIES_MAX_DATES,
+  TICKET_DISCOUNT_MAX_TIERS,
+  ticketDiscountTierIssues,
+} from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
 import { POD_TYPE_VALUES, type CreatePodFormValues } from './create-pod.types';
@@ -39,8 +45,9 @@ export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.Refinem
 /** A recurring pod needs the day it stops repeating, after its first date. The
  * server checks the span and every date's slot; this only catches the empty
  * or backwards end day before the preview is asked for. Native twin. */
-export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate, maxPct: number) {
   if (!values.repeat_enabled) return;
+  refineRepeatDiscount(values, ctx, t, maxPct);
   if (!values.repeat_ends_on) {
     ctx.addIssue({ code: 'custom', path: ['repeat_ends_on'], message: t('mweb.podSeries.endsOnRequired') });
     return;
@@ -48,6 +55,25 @@ export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, 
   const first = values.pod_date_time;
   if (first && new Date(`${values.repeat_ends_on}T23:59:59`) <= first) {
     ctx.addIssue({ code: 'custom', path: ['repeat_ends_on'], message: t('mweb.podSeries.endsOnAfterStart') });
+  }
+}
+
+/** The multi-date discount's tiers, by the shared tier rules counted in dates.
+ * The server holds the real ceiling on dates (Pod Settings); the editor's own
+ * bound is the most a recurring pod can ever have. Native twin. */
+function refineRepeatDiscount(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate, maxPct: number) {
+  const issues = ticketDiscountTierIssues({
+    enabled: values.repeat_discount_enabled,
+    tiers: values.repeat_discount_tiers,
+    maxPct,
+    maxTickets: POD_SERIES_MAX_DATES,
+  });
+  const labels = mwebMultiDateDiscountLabels(t);
+  const limits = { maxPct, maxTickets: POD_SERIES_MAX_DATES, maxTiers: TICKET_DISCOUNT_MAX_TIERS };
+  for (const issue of issues) {
+    const path =
+      issue.index === null ? ['repeat_discount_tiers'] : ['repeat_discount_tiers', issue.index, issue.field];
+    ctx.addIssue({ code: 'custom', path, message: labels.errors[issue.code](limits) });
   }
 }
 

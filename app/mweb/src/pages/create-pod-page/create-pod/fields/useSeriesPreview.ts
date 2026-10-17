@@ -4,6 +4,8 @@ import { useQuery } from '@apollo/client/react';
 import {
   POD_SERIES_PREVIEW_SDL,
   buildPodSeriesPlan,
+  multiDateTiersFromEditor,
+  type MultiDateDiscountTier,
   type PodSeriesPlan,
   type PodSeriesSkipReason,
 } from '@duncit/utils';
@@ -25,6 +27,8 @@ interface PreviewData {
   podSeriesPreview: {
     max_occurrences: number;
     max_span_days: number;
+    max_discount_pct: number;
+    default_multi_date_discount_tiers: MultiDateDiscountTier[];
     dates: SeriesPreviewDate[];
   };
 }
@@ -36,6 +40,9 @@ export function seriesPlanOf(values: CreatePodFormValues, timeZone: string): Pod
       ...values,
       pod_date_time: values.pod_date_time ? values.pod_date_time.toISOString() : null,
       pod_end_date_time: values.pod_end_date_time ? values.pod_end_date_time.toISOString() : null,
+      repeat_discount_tiers: values.repeat_discount_enabled
+        ? multiDateTiersFromEditor(values.repeat_discount_tiers)
+        : [],
     },
     timeZone
   );

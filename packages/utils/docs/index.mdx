@@ -3420,8 +3420,10 @@ const problem = reportSubmitError(pickedCategory, details); // a translation key
 
 A host can make a pod **Recurring**: its first date (a venue slot, or a virtual window) repeats
 daily, weekly or every two weeks until an end day. The server works out every date and the
-identical slot it needs (`podSeriesPreview`), and `publishPodDraftSeries` creates one real pod per
-date — each with its own tickets, attendance, refunds and settlement, and its own venue request.
+identical slot it needs (`podSeriesPreview`), and `publishPodDraftSeries` publishes **one pod**
+with those dates. Feeds, the shop, counts and Pod Details show it once; underneath, each date keeps
+its own seats, tickets, attendance, refunds, settlement and venue request. The plan also carries
+the multi-date discount the host set (prefilled from Admin > Pods > Pod Settings).
 
 | Export | Meaning |
 | --- | --- |
@@ -3431,6 +3433,31 @@ date — each with its own tickets, attendance, refunds and settlement, and its 
 | `buildPodSeriesPlan(source, timeZone)` | The plan to preview/publish, or null while repeat is off or the first date is not chosen. |
 | `groupSlotRequestsBySeries(rows, keyOf)` | A venue's pending requests with each series folded into one group, dates in order. |
 | `POD_SERIES_PREVIEW_SDL` / `PUBLISH_POD_DRAFT_SERIES_SDL` / `VENUE_DECIDE_POD_SERIES_SDL` | The documents, as SDL strings. |
+
+### Booking a recurring pod — `pod-series-booking`
+
+A member picks the dates to book — the next one, all open dates, or a hand-picked set — and pays
+each date's ticket less the multi-date discount. One date is booked like any pod; several dates of
+a paid pod go through one checkout that the server prices (`recurringCheckoutQuote`) and charges
+as one payment per date under a single Razorpay order.
+
+| Export | Meaning |
+| --- | --- |
+| `MultiDateDiscountTier` | `{ min_dates, discount_pct }` — percent off a booking of at least that many dates. |
+| `SeriesDateRow` / `SeriesDateStatus` | One date as `podSeriesDates` returns it, and how it stands. |
+| `SERIES_BOOKING_CHOICES` / `SERIES_DATE_STATUS_KEY` | The picker's choices and the status labels, as keys. |
+| `bookableSeriesDates(rows)` / `bookedSeriesDates(rows)` | The dates open to book, and the viewer's booked dates. |
+| `seriesDatesForChoice(rows, choice, picked)` | The date ids a choice books, in date order. |
+| `resolveMultiDateTier(tiers, dates)` / `seriesBookingEstimate(perDate, dates, tiers)` | The tier reached, and the picker's price preview. |
+| `multiDateTiersForEditor` / `multiDateTiersFromEditor` | Map tiers to and from the shared tier editor (`TicketDiscountField`). |
+| `mwebMultiDateDiscountLabels(t)` / `adminMultiDateDiscountLabels(t)` | The tier editor's words, counted in dates. |
+| `POD_SERIES_MAX_DATES` | The most dates any recurring pod may have (Pod Settings caps it lower). |
+| `POD_SERIES_DATES_SDL` / `JOIN_FREE_POD_DATES_SDL` / `RECURRING_CHECKOUT_QUOTE_SDL` | The documents, as SDL strings. |
+
+```ts
+const ids = seriesDatesForChoice(rows, 'ALL', []);
+const { total, pct } = seriesBookingEstimate(499, ids.length, [{ min_dates: 4, discount_pct: 10 }]);
+```
 
 ## Wallet statement periods — `statement-period`
 

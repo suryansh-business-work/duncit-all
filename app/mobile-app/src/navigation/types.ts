@@ -183,7 +183,8 @@ export type RootStackParamList = {
   PreviousPods: { initialIndex?: number } | undefined;
   HappeningNearby: { initialIndex?: number } | undefined;
   // Pod-membership checkout (pod_amount only — never carries products).
-  Checkout: { podId: string; seats?: number };
+  /** `dateIds`: several dates of a recurring pod (podId is then the recurring pod). */
+  Checkout: { podId: string; seats?: number; dateIds?: string[] };
   /** Where a FREE pod's instant join lands — the checkout confirmation with the
    * ticket and nothing paid (mWeb /pod/:podId/booked). */
   FreeJoinSuccess: { podId: string };

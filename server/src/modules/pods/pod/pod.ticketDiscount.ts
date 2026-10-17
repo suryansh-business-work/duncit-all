@@ -81,22 +81,33 @@ function badTiers(message: string): never {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 }
 
+/** What a tier list counts and calls itself in its error messages. */
+export interface TierNoun {
+  /** The list, as in "Multi-ticket discount tier 2: …". */
+  name: string;
+  /** What a tier counts, as in "tickets must be …". */
+  unit: string;
+}
+
+const TICKET_TIERS: TierNoun = { name: 'Multi-ticket', unit: 'tickets' };
+
 /** The first thing wrong with one row, judged against the row above it. */
 function tierProblem(
   tier: TicketDiscountTier,
   above: TicketDiscountTier | null,
   maxTickets: number,
-  maxPct: number
+  maxPct: number,
+  unit: string
 ): string | null {
   const tickets = Number(tier.min_tickets);
   const pct = Number(tier.discount_pct);
   if (!Number.isInteger(tickets) || tickets < LOWEST_TIER_TICKETS) {
-    return `tickets must be a whole number of at least ${LOWEST_TIER_TICKETS}`;
+    return `${unit} must be a whole number of at least ${LOWEST_TIER_TICKETS}`;
   }
-  if (tickets > maxTickets) return `tickets cannot be more than ${maxTickets}`;
+  if (tickets > maxTickets) return `${unit} cannot be more than ${maxTickets}`;
   if (!Number.isInteger(pct) || pct < 1) return 'discount must be a whole number of at least 1%';
   if (pct > maxPct) return `discount cannot be more than ${maxPct}%`;
-  if (above && tickets <= above.min_tickets) return 'needs more tickets than the tier above';
+  if (above && tickets <= above.min_tickets) return `needs more ${unit} than the tier above`;
   if (above && pct <= above.discount_pct) return 'needs a bigger discount than the tier above';
   return null;
 }
@@ -108,17 +119,19 @@ function tierProblem(
  */
 export function assertTicketDiscountTiers(
   tiers: TicketDiscountTier[],
-  limits: { maxPct: number; noOfSpots: number }
+  limits: { maxPct: number; noOfSpots: number },
+  noun: TierNoun = TICKET_TIERS
 ): TicketDiscountTier[] {
-  if (tiers.length === 0) badTiers('Add at least one multi-ticket discount tier');
+  const lower = noun.name.toLowerCase();
+  if (tiers.length === 0) badTiers(`Add at least one ${lower} discount tier`);
   if (tiers.length > TICKET_DISCOUNT_MAX_TIERS) {
-    badTiers(`A pod can have at most ${TICKET_DISCOUNT_MAX_TIERS} multi-ticket discount tiers`);
+    badTiers(`A pod can have at most ${TICKET_DISCOUNT_MAX_TIERS} ${lower} discount tiers`);
   }
   const maxTickets = ticketDiscountMaxTickets(limits.noOfSpots);
   const clean: TicketDiscountTier[] = [];
   for (const tier of tiers) {
-    const problem = tierProblem(tier, clean.at(-1) ?? null, maxTickets, limits.maxPct);
-    if (problem) badTiers(`Multi-ticket discount tier ${clean.length + 1}: ${problem}`);
+    const problem = tierProblem(tier, clean.at(-1) ?? null, maxTickets, limits.maxPct, noun.unit);
+    if (problem) badTiers(`${noun.name} discount tier ${clean.length + 1}: ${problem}`);
     clean.push({ min_tickets: Number(tier.min_tickets), discount_pct: Number(tier.discount_pct) });
   }
   return clean;

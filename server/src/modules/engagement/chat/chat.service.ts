@@ -12,6 +12,7 @@ import {
   assertRoomMember,
   blockedPeerIds,
   canModerateRoom,
+  chatBookingPodIds,
   isPodMember,
   isRoomMember,
   roomOfMessage,
@@ -179,8 +180,10 @@ export const chatService = {
     // Pods I host or attend or am a podMember of. The club is joined so each
     // room carries its Super-category (classification) and slug (pod-detail nav).
     const uid = new mongoose.Types.ObjectId(userId);
+    // A recurring pod has one room, on its parent: a date I booked opens it.
+    const recurring = await PodModel.distinct('series_parent_id', { series_role: 'DATE', pod_attendees: uid });
     const pods = await PodModel.find({
-      $or: [{ pod_hosts_id: uid }, { pod_attendees: uid }],
+      $or: [{ pod_hosts_id: uid }, { pod_attendees: uid }, { _id: { $in: recurring } }],
       is_active: true,
     })
       .select(
@@ -219,15 +222,23 @@ export const chatService = {
   /** Host(s) + participants of a pod's chat, for the detail people panel.
    * Members only — mirrors the read gate on the messages. */
   async chatParticipants(podId: string, userId: string) {
-    const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees').lean();
+    const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees series_role').lean();
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     const hostIds = (pod.pod_hosts_id || []).map(String);
-    const attendeeIds = (pod.pod_attendees || []).map(String);
+    // A recurring pod's room holds everyone on any of its dates.
+    const attendeeIds =
+      pod.series_role === 'PARENT'
+        ? (await PodModel.distinct('pod_attendees', { series_parent_id: pod._id })).map(String)
+        : (pod.pod_attendees || []).map(String);
     const uid = String(userId);
     const member =
       hostIds.includes(uid) ||
       attendeeIds.includes(uid) ||
-      !!(await PodMemberModel.findOne({ pod_id: podId, user_id: userId, status: 'JOINED' }).lean());
+      !!(await PodMemberModel.findOne({
+        pod_id: { $in: await chatBookingPodIds(pod) },
+        user_id: userId,
+        status: 'JOINED',
+      }).lean());
     if (!member) {
       throw new GraphQLError('Not a pod member', { extensions: { code: 'FORBIDDEN' } });
     }

@@ -441,6 +441,45 @@ export const paymentTypeDefs = /* GraphQL */ `
     ticket_discount_pct: Int!
   }
 
+  "A recurring pod's dates being priced together, with the buyer's coupon and coins."
+  input RecurringCheckoutQuoteInput {
+    "The recurring pod."
+    pod_id: ID!
+    date_pod_ids: [ID!]!
+    seats: Int
+    selected_products: [CheckoutProductSelectionInput!]
+    selected_rentals: [CheckoutRentalSelectionInput!]
+    coupon_code: String
+    redeem_coins: Int
+  }
+
+  "What a multi-date booking is charged: each date is its own payment, these are their sums."
+  type RecurringCheckoutQuote {
+    dates: Int!
+    currency_symbol: String!
+    "Every ticket of every date at list price."
+    ticket_gross: Float!
+    "Multi-ticket discount across the dates."
+    ticket_discount_amount: Float!
+    ticket_discount_pct: Int!
+    "Multi-date discount across the dates."
+    multi_date_discount_amount: Float!
+    multi_date_discount_pct: Int!
+    "Products and rented items, charged once."
+    add_ons_total: Float!
+    coupon_code: String
+    coupon_discount: Float!
+    coins_redeemed: Int!
+    subtotal: Float!
+    platform_fee_amount: Float!
+    gst_amount: Float!
+    round_off: Float!
+    "What the buyer pays."
+    total: Float!
+    "The bill before every discount."
+    original_total: Float!
+  }
+
   input CheckoutQuoteInput {
     pod_id: ID
     amount: Float!
@@ -465,6 +504,8 @@ export const paymentTypeDefs = /* GraphQL */ `
 
   input DummyCheckoutInput {
     pod_id: ID
+    "Recurring pod: the dates being booked together (pod_id is then the recurring pod). One payment per date."
+    date_pod_ids: [ID!]
     amount: Float!
     "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
     seats: Int
@@ -502,6 +543,8 @@ export const paymentTypeDefs = /* GraphQL */ `
   "Live checkout — same contact/billing fields as the dummy flow (no simulate_failure)."
   input RazorpayOrderInput {
     pod_id: ID
+    "Recurring pod: the dates being booked together (pod_id is then the recurring pod). One payment per date, one order."
+    date_pod_ids: [ID!]
     amount: Float!
     "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
     seats: Int
@@ -732,6 +775,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     "One of the caller's own payments. Null when it does not exist or is not theirs — the checkout confirmation poll reads this instead of the whole history."
     myPayment(payment_doc_id: ID!): Payment
     checkoutQuote(input: CheckoutQuoteInput!): CheckoutQuote!
+    "The exact bill for booking several dates of a recurring pod in one checkout."
+    recurringCheckoutQuote(input: RecurringCheckoutQuoteInput!): RecurringCheckoutQuote!
     paymentInvoicePdfBase64(payment_doc_id: ID!): String!
     "Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout)."
     productShippingQuote(input: ProductShippingQuoteInput!): ProductShippingQuote!

@@ -29,6 +29,12 @@ const FIELDS = `
   ticket_discount_max_pct
   happening_nearby_days
   pod_chat_retention_hours
+  pod_series_max_occurrences
+  pod_series_max_span_days
+  pod_multi_date_discount_tiers {
+    min_dates
+    discount_pct
+  }
   auto_pod_slot_window_days
   auto_pod_venue_expiry_hours
   auto_pod_assignment_expiry_hours
@@ -55,5 +61,5 @@ export const UPDATE_POD_SETTINGS = gql`
 export interface PodSettingsSectionProps {
   settings: any;
   loading: boolean;
-  onSave: (input: Record<string, number | boolean>) => Promise<void>;
+  onSave: (input: Record<string, unknown>) => Promise<void>;
 }

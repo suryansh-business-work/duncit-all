@@ -109,10 +109,13 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY']),
       repeat_ends_on: z.string(),
       repeat_skip_dates: z.array(z.string()),
+      // Shape only — the tier rules run in refineRepeat below.
+      repeat_discount_enabled: z.boolean(),
+      repeat_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),
     })
     .superRefine((values, ctx) => {
       refineVenueOrMeeting(values, ctx, t);
-      refineRepeat(values, ctx, t);
+      refineRepeat(values, ctx, t, ticketDiscountMaxPct);
       if (values.pod_date_time.getTime() <= Date.now()) {
         ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });
       }

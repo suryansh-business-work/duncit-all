@@ -178,8 +178,10 @@ export const isDuplicateKeyError = (error: unknown) =>
   (error as { code?: unknown } | null)?.code === 11000;
 
 /** E11000 raised by the one-unpaid-booking index — and by no other index. */
-export const isConcurrentFreeJoinError = (error: unknown) =>
-  isDuplicateKeyError(error) &&
-  String((error as { message?: unknown }).message ?? '').includes(ONE_UNPAID_JOINED_INDEX);
+export const isConcurrentFreeJoinError = (error: unknown) => {
+  if (!isDuplicateKeyError(error)) return false;
+  const message = (error as { message?: unknown }).message;
+  return typeof message === 'string' && message.includes(ONE_UNPAID_JOINED_INDEX);
+};
 
 export const PodMemberModel = model<IPodMember>('PodMember', podMemberSchema);

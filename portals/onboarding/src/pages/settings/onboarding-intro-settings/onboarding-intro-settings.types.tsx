@@ -2,17 +2,18 @@ import { z } from 'zod';
 
 /** A full web link — the survey pages open it as-is. The message is a localization key. */
 const WEB_LINK = /^https?:\/\/\S+$/i;
-const socialLink = z
+/** An optional full https:// link — empty is allowed. Shared with the Earn card images. */
+export const webLink = z
   .string()
   .trim()
   .refine((value) => value === '' || WEB_LINK.test(value), { message: 'onboarding.settingsPage.socialLinkInvalid' });
 
 export const socialHandlesSchema = z.object({
-  x_url: socialLink,
-  instagram_url: socialLink,
-  youtube_url: socialLink,
-  facebook_url: socialLink,
-  website_url: socialLink,
+  x_url: webLink,
+  instagram_url: webLink,
+  youtube_url: webLink,
+  facebook_url: webLink,
+  website_url: webLink,
 });
 
 export type SocialHandlesValues = z.infer<typeof socialHandlesSchema>;

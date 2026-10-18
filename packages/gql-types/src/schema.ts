@@ -8184,6 +8184,25 @@ export type E2eVideoUploadAuthInput = {
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** The featured image on each Earn with Duncit card, keyed by the card's icon key — Duncit's default when none is set. */
+export type EarnCardImages = {
+  __typename?: 'EarnCardImages';
+  club: Scalars['String']['output'];
+  ecomm: Scalars['String']['output'];
+  freelancer: Scalars['String']['output'];
+  host: Scalars['String']['output'];
+  venue: Scalars['String']['output'];
+};
+
+/** Each image must be a full https:// address, or empty to fall back to Duncit's default. */
+export type EarnCardImagesInput = {
+  club?: InputMaybe<Scalars['String']['input']>;
+  ecomm?: InputMaybe<Scalars['String']['input']>;
+  freelancer?: InputMaybe<Scalars['String']['input']>;
+  host?: InputMaybe<Scalars['String']['input']>;
+  venue?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type EarningsSummary = {
   __typename?: 'EarningsSummary';
   currency_symbol: Scalars['String']['output'];
@@ -9645,6 +9664,29 @@ export type FounderSettingKv = {
   value: Scalars['Float']['output'];
 };
 
+export type FreelancerAdminRow = {
+  __typename?: 'FreelancerAdminRow';
+  category_titles: Array<Scalars['String']['output']>;
+  city: Scalars['String']['output'];
+  contact: GigContact;
+  created_at: Scalars['String']['output'];
+  display_name: Scalars['String']['output'];
+  experience_years: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  is_available: Scalars['Boolean']['output'];
+  portfolio_url: Scalars['String']['output'];
+  skills: Array<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+};
+
+export type FreelancerAdminTablePage = {
+  __typename?: 'FreelancerAdminTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<FreelancerAdminRow>;
+  total: Scalars['Int']['output'];
+};
+
 export type FreelancerProfile = {
   __typename?: 'FreelancerProfile';
   bio: Scalars['String']['output'];
@@ -9974,6 +10016,26 @@ export type GigInterest = {
   skills: Array<Scalars['String']['output']>;
 };
 
+export type GigInterestAdminRow = {
+  __typename?: 'GigInterestAdminRow';
+  contact: GigContact;
+  created_at: Scalars['String']['output'];
+  freelancer_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  job_id: Scalars['ID']['output'];
+  job_title: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  skills: Array<Scalars['String']['output']>;
+};
+
+export type GigInterestAdminTablePage = {
+  __typename?: 'GigInterestAdminTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GigInterestAdminRow>;
+  total: Scalars['Int']['output'];
+};
+
 export type GigJob = {
   __typename?: 'GigJob';
   /** Rupees. Null = to be discussed with the poster. */
@@ -9999,6 +10061,34 @@ export type GigJob = {
   title: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
   viewer_interested: Scalars['Boolean']['output'];
+};
+
+export type GigJobAdminRow = {
+  __typename?: 'GigJobAdminRow';
+  budget?: Maybe<Scalars['Int']['output']>;
+  category_title: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  contact: GigContact;
+  created_at: Scalars['String']['output'];
+  event_date?: Maybe<Scalars['String']['output']>;
+  event_type: GigEventType;
+  id: Scalars['ID']['output'];
+  interest_count: Scalars['Int']['output'];
+  openings: Scalars['Int']['output'];
+  poster_name: Scalars['String']['output'];
+  poster_role: GigPosterRole;
+  poster_user_id: Scalars['ID']['output'];
+  roles: Array<Scalars['String']['output']>;
+  status: GigJobStatus;
+  title: Scalars['String']['output'];
+};
+
+export type GigJobAdminTablePage = {
+  __typename?: 'GigJobAdminTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GigJobAdminRow>;
+  total: Scalars['Int']['output'];
 };
 
 export type GigJobFilter = {
@@ -10028,6 +10118,18 @@ export type GigJobInput = {
 export type GigJobPage = {
   __typename?: 'GigJobPage';
   rows: Array<GigJob>;
+  total: Scalars['Int']['output'];
+};
+
+/** The Gig Jobs console's dashboard numbers. */
+export type GigJobStats = {
+  __typename?: 'GigJobStats';
+  categories: Scalars['Int']['output'];
+  closed: Scalars['Int']['output'];
+  freelancers: Scalars['Int']['output'];
+  interests: Scalars['Int']['output'];
+  open: Scalars['Int']['output'];
+  posters: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
 };
 
@@ -12722,7 +12824,9 @@ export type Mutation = {
   adminCreateVenueSlots: Array<VenueSlot>;
   /** Products portal: delete a brand that is not approved (or approved with no products). The owner is told. */
   adminDeleteEcommBrand: Scalars['Boolean']['output'];
+  adminDeleteGigJob: Scalars['Boolean']['output'];
   adminDeleteVenueSlot: Scalars['Boolean']['output'];
+  adminSetGigJobStatus: Scalars['Boolean']['output'];
   /**
    * Replace a host's operating categories and nothing else. adminUpdateHost
    * requires the whole step1/2/3 payload, so a caller that only wants to set
@@ -15217,8 +15321,19 @@ export type MutationAdminDeleteEcommBrandArgs = {
 };
 
 
+export type MutationAdminDeleteGigJobArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationAdminDeleteVenueSlotArgs = {
   slot_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAdminSetGigJobStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: GigJobStatus;
 };
 
 
@@ -21066,6 +21181,7 @@ export type OfficialStatusTablePage = {
 export type OnboardingIntro = {
   __typename?: 'OnboardingIntro';
   club_admin_intro_html: Scalars['String']['output'];
+  earn_card_images: EarnCardImages;
   ecomm_intro_html: Scalars['String']['output'];
   host_intro_html: Scalars['String']['output'];
   social_handles: OnboardingSocialHandles;
@@ -26336,6 +26452,7 @@ export type Query = {
   foodTaxDefaults: FoodTaxDefaults;
   /** Founder/Startup dashboard: every KPI for the date range, computed + manual. */
   founderDashboard: FounderDashboard;
+  freelancersAdminTable: FreelancerAdminTablePage;
   /** Finance > Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
   giftCardAdminStats: GiftCardAdminStats;
   /** One card by its code, for the claim/redeem page. Holding the code is holding the value, so any signed-in holder may look. */
@@ -26346,9 +26463,13 @@ export type Query = {
   giftCardsTable: GiftCardAdminCardTablePage;
   gigCategories: Array<GigCategory>;
   gigCategoriesTable: GigCategoryTablePage;
+  gigInterestsAdminTable: GigInterestAdminTablePage;
   gigJob?: Maybe<GigJob>;
   gigJobInterests: Array<GigInterest>;
+  /** The Gig Jobs console (SUPER_ADMIN / GIG_JOBS_MANAGER). */
+  gigJobStats: GigJobStats;
   gigJobs: GigJobPage;
+  gigJobsAdminTable: GigJobAdminTablePage;
   gigViewer: GigViewer;
   /** Every Duncit website, with its tag where one is set. */
   googleAnalyticsSites: Array<GoogleAnalyticsSite>;
@@ -28874,6 +28995,11 @@ export type QueryFounderDashboardArgs = {
 };
 
 
+export type QueryFreelancersAdminTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryGiftCardAdminStatsArgs = {
   months?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -28899,6 +29025,12 @@ export type QueryGigCategoriesTableArgs = {
 };
 
 
+export type QueryGigInterestsAdminTableArgs = {
+  job_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryGigJobArgs = {
   id: Scalars['ID']['input'];
 };
@@ -28913,6 +29045,11 @@ export type QueryGigJobsArgs = {
   filter?: InputMaybe<GigJobFilter>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryGigJobsAdminTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -39194,6 +39331,7 @@ export type UpdateMyProfileInput = {
 
 export type UpdateOnboardingIntroInput = {
   club_admin_intro_html?: InputMaybe<Scalars['String']['input']>;
+  earn_card_images?: InputMaybe<EarnCardImagesInput>;
   ecomm_intro_html?: InputMaybe<Scalars['String']['input']>;
   host_intro_html?: InputMaybe<Scalars['String']['input']>;
   social_handles?: InputMaybe<OnboardingSocialHandlesInput>;

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Box, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { useState, type ReactNode } from 'react';
+import { Box, Card, CardActionArea, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 
 /** Contextual next-step action shown beside the "Already enabled" chip for a
@@ -11,6 +11,9 @@ export interface EarnBoxCta {
 
 interface Props {
   icon: ReactNode;
+  /** Featured image across the top of the card; the card renders without one
+   * when it is missing or fails to load. */
+  imageUrl?: string;
   title: string;
   description: string;
   /** Unlocked card click — the surface decides where the application flow lives. */
@@ -29,6 +32,7 @@ interface Props {
  * stays clickable). */
 export default function EarnBox({
   icon,
+  imageUrl,
   title,
   description,
   onOpen,
@@ -36,6 +40,8 @@ export default function EarnBox({
   disabledLabel = 'Already enabled',
   cta,
 }: Readonly<Props>) {
+  const [brokenImage, setBrokenImage] = useState<string | null>(null);
+  const showImage = Boolean(imageUrl) && brokenImage !== imageUrl;
   return (
     <Card
       variant="outlined"
@@ -46,8 +52,20 @@ export default function EarnBox({
         '&:hover': { boxShadow: 'none' },
       }}
     >
-      <CardActionArea disabled={disabled} onClick={onOpen} sx={{ p: 1 }}>
-        <CardContent>
+      <CardActionArea disabled={disabled} onClick={onOpen}>
+        {showImage && (
+          <CardMedia
+            component="img"
+            image={imageUrl}
+            // Decorative: the card's title says what it is (WCAG 1.1.1).
+            alt=""
+            loading="lazy"
+            height={140}
+            onError={() => setBrokenImage(imageUrl ?? null)}
+            sx={{ objectFit: 'cover', bgcolor: 'action.hover' }}
+          />
+        )}
+        <CardContent sx={{ p: 3 }}>
           <Stack spacing={1.25} sx={{
             alignItems: "flex-start"
           }}>

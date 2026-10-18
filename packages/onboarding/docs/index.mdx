@@ -123,6 +123,19 @@ socialHandleLinks({
 `SOCIAL_HANDLE_KEYS` is the display order and matches the
 `OnboardingSocialHandles` GraphQL fields one for one.
 
+## Earn card images
+
+Onboarding Portal > Earn with Duncit sets a featured image for each Earn card.
+`EarnCardImages` is keyed by the same `iconKey` as the journeys, and matches the
+`EarnCardImages` GraphQL fields one for one, so a surface reads its card's image
+as `images[box.iconKey]`. The server fills in Duncit's default image for any
+card the admin left blank, so a surface never has to pick one itself.
+
+```js
+const images = data.onboardingIntro.earn_card_images;
+images.host; // 'https://…' — the admin's pick, or Duncit's default
+```
+
 ## What is NOT here
 
 The GraphQL documents. Each surface declares its own `myMeetings` selection

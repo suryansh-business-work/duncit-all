@@ -1,7 +1,8 @@
-import type { ComponentProps } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AppImage } from '@/components/AppImage/AppImage';
 import { DuncitButton } from '@/components/DuncitButton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -20,6 +21,9 @@ interface Props {
   title: string;
   description: string;
   icon: IconName;
+  /** Featured image across the top of the card; the card renders without one
+   * when it is missing or fails to load. */
+  imageUrl?: string;
   disabled: boolean;
   /** Label shown when disabled (role held / meeting pending). */
   disabledLabel?: string;
@@ -59,6 +63,8 @@ function EnabledStatus({
   );
 }
 
+const IMAGE_STYLE = { width: '100%', height: 140, borderRadius: 12 } as const;
+
 /** A single "earn" path card on the Earn with Duncit screen — disabled when the
  * user already holds the matching role. Approved cards keep the "Already enabled"
  * label and add a contextual next-step CTA. */
@@ -66,6 +72,7 @@ export function EarnBox({
   title,
   description,
   icon,
+  imageUrl,
   disabled,
   disabledLabel = 'Already enabled',
   cta,
@@ -73,6 +80,8 @@ export function EarnBox({
   testID,
 }: Readonly<Props>) {
   const { accent } = useThemeColors();
+  const [brokenImage, setBrokenImage] = useState<string | null>(null);
+  const showImage = Boolean(imageUrl) && brokenImage !== imageUrl;
   const handlePress = () => {
     if (!disabled) onPress();
   };
@@ -90,6 +99,15 @@ export function EarnBox({
       gap={10}
       pressStyle={disabled ? undefined : PRESS_STYLE.surface}
     >
+      {showImage ? (
+        // Decorative: the card's title says what it is, so no label (WCAG 1.1.1).
+        <AppImage
+          testID={`${testID}-image`}
+          source={{ uri: imageUrl }}
+          style={IMAGE_STYLE}
+          onError={() => setBrokenImage(imageUrl ?? null)}
+        />
+      ) : null}
       <YStack
         width={44}
         height={44}

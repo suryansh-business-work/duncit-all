@@ -107,6 +107,18 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       onboardingTrendLast6Months: 'Onboarding trend (last 6 months)',
       venuesByStatus: 'Venues by status',
     },
+    earnConfigPage: {
+      title: 'Earn with Duncit',
+      subtitle: 'The featured image on each Earn with Duncit card, in the app and on the web.',
+      hint: 'Upload an image or pick one from Pexels for each card. Clear an image to go back to the Duncit default.',
+      host: 'Host card',
+      venue: 'Venue card',
+      ecomm: 'E-Commerce Brand card',
+      club: 'Club Admin card',
+      freelancer: 'Freelancer card',
+      saved: 'Earn card images saved.',
+      saveFailed: 'Could not save the Earn card images.',
+    },
     ecommBrands: {
       addDocument: 'Add document',
       brand: 'Brand',

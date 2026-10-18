@@ -1,4 +1,4 @@
-export type { EarnBoxState, EarnJourney, EarnJourneyCta, EarnMeeting } from './types';
+export type { EarnBoxState, EarnCardImages, EarnJourney, EarnJourneyCta, EarnMeeting } from './types';
 export {
   ALREADY_ENABLED_LABEL,
   IN_PROCESS_LABEL,

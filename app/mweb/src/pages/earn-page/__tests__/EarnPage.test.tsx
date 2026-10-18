@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
-import { gql } from '@apollo/client';
+import { EARN_ME } from '@duncit/earn';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const navigateMock = vi.fn();
@@ -19,25 +19,6 @@ vi.mock('../../../hooks/useFeatureFlag', () => ({
 
 import EarnPage from '../index';
 
-const EARN_ME = gql`
-  query EarnMe {
-    me {
-      user_id
-      roles
-    }
-    myMeetings {
-      id
-      request_no
-      kind
-      status
-      approval_status
-      onboarded_status
-      scheduled_at
-      requested_at
-      reschedule_count
-    }
-  }
-`;
 
 const meeting = (over: Record<string, unknown> = {}) => ({
   id: 'm1',
@@ -54,7 +35,13 @@ const meeting = (over: Record<string, unknown> = {}) => ({
 
 const makeMock = (roles: string[], meetings: unknown[]) => ({
   request: { query: EARN_ME },
-  result: { data: { me: { user_id: 'u1', roles }, myMeetings: meetings } },
+  result: {
+    data: {
+      me: { user_id: 'u1', roles },
+      myMeetings: meetings,
+      onboardingIntro: { earn_card_images: { host: 'https://img.test/host.jpg', venue: 'https://img.test/venue.jpg', ecomm: 'https://img.test/ecomm.jpg', club: 'https://img.test/club.jpg', freelancer: 'https://img.test/freelancer.jpg' } },
+    },
+  },
 });
 
 function setup(mock: ReturnType<typeof makeMock>) {

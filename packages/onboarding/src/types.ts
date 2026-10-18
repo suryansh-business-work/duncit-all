@@ -61,6 +61,12 @@ export interface EarnJourney {
   cta: EarnJourneyCta;
 }
 
+/**
+ * Featured image URL per Earn card, keyed by the card's iconKey. Authored in the
+ * Onboarding portal; the server fills in Duncit's default for any card left blank.
+ */
+export type EarnCardImages = Record<EarnJourney['iconKey'], string>;
+
 export interface EarnBoxState {
   disabled: boolean;
   disabledLabel: string;

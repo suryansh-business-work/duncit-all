@@ -9,6 +9,7 @@ import WorkOutlineIcon from '@mui/icons-material/WorkOutlineOutlined';
 import {
   EARN_JOURNEYS,
   earnBoxState,
+  type EarnCardImages,
   type EarnJourney,
   type EarnMeeting,
 } from '@duncit/onboarding';
@@ -50,6 +51,7 @@ export default function EarnJourneyList({ showProducts, kinds }: Readonly<Props>
   const { data, loading, refetch } = useQuery<any>(EARN_ME, { fetchPolicy: 'cache-and-network' });
   const roles: string[] = data?.me?.roles ?? [];
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
+  const images: Partial<EarnCardImages> = data?.onboardingIntro?.earn_card_images ?? {};
   const showSkeleton = loading && !data;
   const scoped = EARN_JOURNEYS.filter((box) => kinds.includes(box.kind));
   const boxes = showProducts ? scoped : scoped.filter((box) => box.kind !== 'ECOMM');
@@ -71,6 +73,7 @@ export default function EarnJourneyList({ showProducts, kinds }: Readonly<Props>
           <Stack key={box.role} spacing={0}>
             <EarnBox
               icon={ICONS[box.iconKey]}
+              imageUrl={images[box.iconKey]}
               title={box.title}
               description={state.description}
               onOpen={() => openJourney(box)}

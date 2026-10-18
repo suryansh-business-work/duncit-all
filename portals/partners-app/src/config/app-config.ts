@@ -60,10 +60,14 @@ export const appConfig: AppConfig = {
     // Gig Jobs: hosts, venue owners and brand owners post what an event needs;
     // freelancers apply. Every signed-in partner sees it, whatever role they hold.
     {
-      label: 'Gig Jobs', labelKey: 'shell.nav.gigJobs',
-      caption: 'Find or post gigs for events and workshops', captionKey: 'gigJobs.nav.caption',
-      to: '/gigs',
+      label: 'Gig Jobs',
+      labelKey: 'shell.nav.gigJobs',
       icon: 'work',
+      children: [
+        { label: 'Browse gigs', labelKey: 'shell.nav.browseGigs', to: '/gigs', icon: 'work' },
+        { label: 'Post a gig', labelKey: 'shell.nav.postGig', to: '/gigs/new', icon: 'campaign' },
+        { label: 'My gig posts', labelKey: 'shell.nav.myGigPosts', to: '/gigs/mine', icon: 'article' },
+      ],
     },
     // Featured invitation into the other earn journeys — the same entry
     // mWeb/native show in their profile grids, styled as a highlighted card.

@@ -39,6 +39,8 @@ export const PORTALS = [
   'localization',
   // Team goals and progress.
   'targets',
+  // Gig Jobs moderation.
+  'gig-jobs',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

@@ -250,6 +250,15 @@ export const SURFACES: readonly Surface[] = [
       'The console for the goals each team is working towards. It holds the dashboard and your profile today; its screens are still being built.',
   },
   {
+    key: 'gig-jobs',
+    name: 'Gig Jobs',
+    kind: 'PORTAL',
+    host: 'gig-jobs.duncit.com',
+    dev_port: 2045,
+    summary:
+      'The console for Gig Jobs: every gig hosts, venue owners and brand owners post (close, reopen or delete it), the freelancers who are interested and their shared contact, every freelancer who joined from Earn with Duncit, and the gig categories.',
+  },
+  {
     key: 'ecomm',
     name: 'Duncit Pet Store',
     kind: 'WEBSITE',

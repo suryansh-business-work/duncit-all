@@ -60,6 +60,7 @@ const consoles: StatusService[] = [
   { key: 'ecomm-portal', name: 'E-commerce', url: 'https://ecomm-portal.duncit.com/', description: 'Pet store console' },
   { key: 'localization', name: 'Localization', url: 'https://localization.duncit.com/', description: 'Languages & translations' },
   { key: 'targets', name: 'Targets', url: 'https://targets.duncit.com/', description: 'Team goals & progress' },
+  { key: 'gig-jobs', name: 'Gig Jobs', url: 'https://gig-jobs.duncit.com/', description: 'Gig moderation & freelancers' },
   { key: 'ecomm', name: 'Pet Store', url: 'https://ecomm.duncit.com/', description: 'Online pet store' },
 ];
 

@@ -42,7 +42,7 @@ export default function GigCategoryFormDialog({ open, editing, loading, onClose,
         <DialogTitle id={TITLE_ID}>{editing ? t('gigJobs.admin.edit') : t('gigJobs.admin.new')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
-            <RhfTextField control={control} name="title" label={t('gigJobs.admin.fieldTitle')} autoFocus />
+            <RhfTextField control={control} name="title" label={t('gigJobs.admin.fieldTitle')} />
             <RhfTextField control={control} name="description" label={t('gigJobs.admin.fieldDescription')} multiline minRows={2} />
             <RhfTextField
               control={control}

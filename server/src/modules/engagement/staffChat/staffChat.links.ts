@@ -53,6 +53,7 @@ const PORTAL_ROLES: Record<string, string[]> = {
   'ecomm-portal': ['ECOMM_STORE_MANAGER'],
   localization: ['LOCALIZATION_MANAGER'],
   targets: ['TARGETS_MANAGER'],
+  'gig-jobs': ['GIG_JOBS_MANAGER'],
   partners: [],
   mweb: [],
 };

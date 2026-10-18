@@ -5,9 +5,10 @@ import type { GigJobStatus } from './gigJob.model';
 import { gigCategoryService } from './gigCategory.service';
 import { gigJobService, type GigJobFilter } from './gigJob.service';
 import { freelancerService } from './freelancer.service';
+import { gigAdminService } from './gigAdmin.service';
 
-/** Who keeps the category catalogue — the same seats that keep Badges. */
-const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+/** The Gig Jobs console's seats (gig-jobs.duncit.com): categories, moderation, the tables. */
+const GIG_ADMIN = ['SUPER_ADMIN', 'GIG_JOBS_MANAGER'];
 
 type Page = { offset?: number | null; limit?: number | null };
 
@@ -27,8 +28,28 @@ export const gigJobResolvers = {
     gigViewer: (_p: unknown, _a: unknown, ctx: GraphQLContext) => gigJobService.viewer(requireAuth(ctx).id),
     myFreelancerProfile: (_p: unknown, _a: unknown, ctx: GraphQLContext) => freelancerService.mine(requireAuth(ctx).id),
     gigCategoriesTable: (_p: unknown, args: { query?: TableQueryInput }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, GIG_ADMIN);
       return gigCategoryService.table(args.query);
+    },
+    gigJobStats: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, GIG_ADMIN);
+      return gigAdminService.stats();
+    },
+    gigJobsAdminTable: (_p: unknown, args: { query?: TableQueryInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, GIG_ADMIN);
+      return gigAdminService.jobsTable(args.query);
+    },
+    freelancersAdminTable: (_p: unknown, args: { query?: TableQueryInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, GIG_ADMIN);
+      return gigAdminService.freelancersTable(args.query);
+    },
+    gigInterestsAdminTable: (
+      _p: unknown,
+      args: { query?: TableQueryInput; job_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, GIG_ADMIN);
+      return gigAdminService.interestsTable(args.query, args.job_id);
     },
   },
   Mutation: {
@@ -43,16 +64,20 @@ export const gigJobResolvers = {
     saveFreelancerProfile: (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) =>
       freelancerService.save(requireAuth(ctx).id, args.input),
     createGigCategory: (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, GIG_ADMIN);
       return gigCategoryService.create(args.input);
     },
     updateGigCategory: (_p: unknown, args: { id: string; input: unknown }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, GIG_ADMIN);
       return gigCategoryService.update(args.id, args.input);
     },
     deleteGigCategory: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, GIG_ADMIN);
       return gigCategoryService.remove(args.id);
     },
+    adminSetGigJobStatus: (_p: unknown, args: { id: string; status: GigJobStatus }, ctx: GraphQLContext) =>
+      gigAdminService.setStatus(requireRole(ctx, GIG_ADMIN).id, args.id, args.status),
+    adminDeleteGigJob: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      gigAdminService.remove(requireRole(ctx, GIG_ADMIN).id, args.id),
   },
 };

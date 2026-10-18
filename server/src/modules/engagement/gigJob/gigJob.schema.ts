@@ -116,6 +116,84 @@ export const gigJobTypeDefs = /* GraphQL */ `
     default_contact: GigContact!
   }
 
+  """
+  The Gig Jobs console's dashboard numbers.
+  """
+  type GigJobStats {
+    total: Int!
+    open: Int!
+    closed: Int!
+    interests: Int!
+    freelancers: Int!
+    posters: Int!
+    categories: Int!
+  }
+
+  type GigJobAdminRow {
+    id: ID!
+    title: String!
+    category_title: String!
+    roles: [String!]!
+    event_type: GigEventType!
+    event_date: String
+    city: String!
+    budget: Int
+    openings: Int!
+    status: GigJobStatus!
+    poster_role: GigPosterRole!
+    poster_name: String!
+    poster_user_id: ID!
+    interest_count: Int!
+    contact: GigContact!
+    created_at: String!
+  }
+
+  type GigJobAdminTablePage {
+    rows: [GigJobAdminRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  type FreelancerAdminRow {
+    id: ID!
+    user_id: ID!
+    display_name: String!
+    city: String!
+    skills: [String!]!
+    category_titles: [String!]!
+    experience_years: Int!
+    portfolio_url: String!
+    contact: GigContact!
+    is_available: Boolean!
+    created_at: String!
+  }
+
+  type FreelancerAdminTablePage {
+    rows: [FreelancerAdminRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  type GigInterestAdminRow {
+    id: ID!
+    job_id: ID!
+    job_title: String!
+    freelancer_name: String!
+    skills: [String!]!
+    message: String!
+    contact: GigContact!
+    created_at: String!
+  }
+
+  type GigInterestAdminTablePage {
+    rows: [GigInterestAdminRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input GigJobFilter {
     category_id: ID
     city: String
@@ -170,6 +248,11 @@ export const gigJobTypeDefs = /* GraphQL */ `
     gigViewer: GigViewer!
     myFreelancerProfile: FreelancerProfile
     gigCategoriesTable(query: TableQueryInput): GigCategoryTablePage!
+    "The Gig Jobs console (SUPER_ADMIN / GIG_JOBS_MANAGER)."
+    gigJobStats: GigJobStats!
+    gigJobsAdminTable(query: TableQueryInput): GigJobAdminTablePage!
+    freelancersAdminTable(query: TableQueryInput): FreelancerAdminTablePage!
+    gigInterestsAdminTable(query: TableQueryInput, job_id: ID): GigInterestAdminTablePage!
   }
 
   extend type Mutation {
@@ -181,5 +264,7 @@ export const gigJobTypeDefs = /* GraphQL */ `
     createGigCategory(input: GigCategoryInput!): GigCategory!
     updateGigCategory(id: ID!, input: GigCategoryInput!): GigCategory!
     deleteGigCategory(id: ID!): Boolean!
+    adminSetGigJobStatus(id: ID!, status: GigJobStatus!): Boolean!
+    adminDeleteGigJob(id: ID!): Boolean!
   }
 `;

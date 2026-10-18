@@ -439,6 +439,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoTitle: 'Every language, one console',
         promoText: 'Add a language, then let AI keep it in sync with English while you work on.',
       },
+      gigJobs: {
+        tagline: 'Every gig, freelancer and category on Duncit, in one place.',
+        promoTitle: 'Every gig, one console',
+        promoText: 'Moderate the gigs hosts, venues and brands post, see who is interested, and keep the categories tidy.',
+      },
       targets: {
         tagline: 'Every goal Duncit is chasing, in one place.',
         promoTitle: 'Every target, one console',
@@ -655,6 +660,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       categoryMapping: 'Category Mapping',
       gigCategories: 'Gig Categories',
       gigJobs: 'Gig Jobs',
+      gigInterests: 'Interested freelancers',
+      freelancers: 'Freelancers',
+      browseGigs: 'Browse gigs',
+      postGig: 'Post a gig',
+      myGigPosts: 'My gig posts',
       challengeAuditLogs: 'Audit Logs',
       challengeLiveMonitor: 'Live Challenge Monitor',
       challengeResults: 'Results & Leaderboards',
@@ -2035,6 +2045,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         ecommerce: 'E-commerce',
         localization: 'Localization',
         targets: 'Targets',
+        gigJobs: 'Gig Jobs',
       },
       header: {
         back: 'Back to coworkers',

@@ -52,7 +52,12 @@ export function BookingClashDialog({ guard, onOpenPod }: Readonly<Props>) {
           {t('mweb.bookingClash.intro')}
         </Text>
         {pods.map((pod) => (
-          <XStack key={pod.pod_id} gap={10} alignItems="flex-start" testID={`booking-clash-row-${pod.pod_id}`}>
+          <XStack
+            key={pod.pod_id}
+            gap={10}
+            alignItems="flex-start"
+            testID={`booking-clash-row-${pod.pod_id}`}
+          >
             <MaterialIcons name="event-busy" size={22} color={warning} />
             <YStack gap={2} flexShrink={1}>
               <Text fontSize={15} fontWeight="600" color="$color">
@@ -60,7 +65,10 @@ export function BookingClashDialog({ guard, onOpenPod }: Readonly<Props>) {
               </Text>
               <Text fontSize={13} color="$muted">
                 {t('mweb.bookingClash.when', {
-                  vars: { start: formatDateTime(pod.pod_date_time), end: formatTime(pod.pod_end_date_time) },
+                  vars: {
+                    start: formatDateTime(pod.pod_date_time),
+                    end: formatTime(pod.pod_end_date_time),
+                  },
                 })}
               </Text>
               {pod.club_slug && pod.pod_slug ? (

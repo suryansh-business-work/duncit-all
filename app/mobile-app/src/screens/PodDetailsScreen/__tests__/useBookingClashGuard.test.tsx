@@ -43,7 +43,9 @@ describe('useBookingClashGuard (native)', () => {
   });
 
   it('holds the booking until the member forces it', async () => {
-    mockGraphql.mockResolvedValue({ myBookingClashes: [booked, { ...booked, target_pod_id: 'other' }] });
+    mockGraphql.mockResolvedValue({
+      myBookingClashes: [booked, { ...booked, target_pod_id: 'other' }],
+    });
     const { result } = renderHook(() => useBookingClashGuard());
     let decision: Promise<boolean> = Promise.resolve(false);
     act(() => {

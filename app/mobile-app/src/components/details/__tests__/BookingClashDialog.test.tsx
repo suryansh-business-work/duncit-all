@@ -33,7 +33,9 @@ describe('BookingClashDialog', () => {
     expect(screen.getByText('You already have 2 pods at this time')).toBeOnTheScreen();
     expect(screen.getByText('Friday Jam')).toBeOnTheScreen();
     expect(screen.getByText('Saturday Run')).toBeOnTheScreen();
-    expect(screen.getByTestId('booking-clash-advice')).toHaveTextContent(/freeing your spot on the clashing pod first/);
+    expect(screen.getByTestId('booking-clash-advice')).toHaveTextContent(
+      /freeing your spot on the clashing pod first/,
+    );
     expect(screen.getByText('Force book')).toBeOnTheScreen();
   });
 

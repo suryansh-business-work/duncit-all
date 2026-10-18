@@ -32,7 +32,7 @@ describe('Pods console app config', () => {
     vi.stubEnv('VITE_LOGIN_IMAGE', '');
     const appConfig = await loadConfig();
     expect(appConfig.requiredRoles).toEqual(['ALL_PODS_ACCESS']);
-    expect(appConfig.loginImage).toBe('https://images.pexels.com/photos/1153213/pexels-photo-1153213.jpeg');
+    expect(appConfig.loginImage).toBe('https://images.pexels.com/photos/7149165/pexels-photo-7149165.jpeg');
   });
 
   it('honours the environment overrides for roles and the login image', async () => {

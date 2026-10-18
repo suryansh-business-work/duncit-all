@@ -15,6 +15,7 @@ import { bookableSeriesDates, SERIES_BOOKING_CHOICES, type SeriesBookingChoice }
 import { useTranslation } from '../../../i18n/useTranslation';
 import { formatDateTime } from '../../../utils/dateFormat';
 import type { SeriesBooking } from './useSeriesBooking';
+import BookingClashDialog from '../clash/BookingClashDialog';
 
 interface Props {
   series: SeriesBooking;
@@ -33,6 +34,7 @@ export default function SeriesBookingDialog({ series, isFree, priceFormat }: Rea
   const count = series.chosen.length;
   const { estimate } = series;
   return (
+    <>
     <Dialog
       open={series.open}
       onClose={series.busy ? undefined : () => series.setOpen(false)}
@@ -109,5 +111,9 @@ export default function SeriesBookingDialog({ series, isFree, priceFormat }: Rea
         </DuncitButton>
       </DialogActions>
     </Dialog>
+    {/* Every Book on Pod Details goes through this hook, recurring or not — so
+        the time-clash prompt lives beside its date picker. */}
+    <BookingClashDialog guard={series.clash} />
+    </>
   );
 }

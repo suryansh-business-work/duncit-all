@@ -1703,6 +1703,7 @@ export {
   type SeriesDateRow,
   type SeriesDateStatus,
 } from './pod-series-booking';
+export { MY_BOOKING_CLASHES_SDL, uniqueClashingPods, type PodBookingClash } from './pod-booking-clash';
 export {
   CHAT_PREVIEW_PAGE,
   chatPreviewAction,

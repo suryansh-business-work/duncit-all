@@ -3459,6 +3459,23 @@ const ids = seriesDatesForChoice(rows, 'ALL', []);
 const { total, pct } = seriesBookingEstimate(499, ids.length, [{ min_dates: 4, discount_pct: 10 }]);
 ```
 
+### Time clash before a booking — `pod-booking-clash`
+
+Just before a join or a checkout, Pod Details asks the server (`myBookingClashes`) which of the
+member's JOINED pods overlap the pod(s) being booked, then lists them with Force book / Cancel
+booking. Advisory only: no booking path refuses on it.
+
+| Export | What it is |
+| --- | --- |
+| `MY_BOOKING_CLASHES_SDL` | The query, as an SDL string (mWeb wraps it with `gql`; native re-declares it for codegen). |
+| `PodBookingClash` | One overlapping booked pod: its id, slugs, title, start and resolved end, and the target it clashes with. |
+| `uniqueClashingPods(clashes)` | Each clashing pod once, earliest first — several booked dates can clash with the same pod. |
+
+```ts
+const pods = uniqueClashingPods(data.myBookingClashes);
+if (pods.length > 0) showClashDialog(pods);
+```
+
 ## Hosting a pod again — `host-again`
 
 Host again opens Create Pod filled from one of the host's earlier pods. The server's

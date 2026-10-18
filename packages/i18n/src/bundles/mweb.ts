@@ -3969,6 +3969,21 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         other: 'Recurring · {count} dates',
       },
     },
+    // Shown just before a booking when the member already holds a spot on a pod
+    // at the same time. mWeb and the native app share these.
+    bookingClash: {
+      title: {
+        one: 'You already have a pod at this time',
+        other: 'You already have {count} pods at this time',
+      },
+      intro: 'This booking overlaps with the pod(s) below that you have already booked:',
+      advice:
+        'We recommend freeing your spot on the clashing pod first. That keeps the spot open for someone who can make it, and keeps Duncit healthy and fair for everyone. If you still want both, you can force book.',
+      openPod: 'Open pod to free the spot',
+      forceBook: 'Force book',
+      cancelBooking: 'Cancel booking',
+      when: '{start} to {end}',
+    },
     // Booking a recurring pod: it is ONE pod with many dates, and a member
     // picks the dates they want. mWeb and the native app share these.
     podSeriesBooking: {

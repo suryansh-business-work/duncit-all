@@ -15,6 +15,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
+import { fireAndForget } from '@/utils/fire-and-forget';
+
+import { useBookingClashGuard } from './useBookingClashGuard';
 
 type SeriesDates = NonNullable<ResultOf<typeof PodSeriesDatesDocument>['podSeriesDates']>;
 
@@ -39,6 +42,7 @@ export function useSeriesBooking(
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const clash = useBookingClashGuard();
 
   const load = useCallback(async () => {
     if (!podId || !role) return;
@@ -95,6 +99,8 @@ export function useSeriesBooking(
 
   const confirm = async () => {
     if (!pod || chosen.length === 0) return;
+    // Every chosen date is checked against the member's other bookings first.
+    if (!(await clash.check(chosen))) return;
     if (pod.pod_type === 'FREE') {
       await joinFree();
       return;
@@ -124,8 +130,21 @@ export function useSeriesBooking(
     error,
     confirm,
     reload: load,
-    /** The Book handler for this pod: the date picker on a recurring pod, else `handler`. */
-    guard: (handler: () => void) => (role === 'PARENT' ? () => setOpen(true) : handler),
+    /** "You already have a pod at this time" — rendered by PodDetailsOverlays. */
+    clash,
+    /**
+     * The Book handler for this pod: the date picker on a recurring pod, else
+     * `handler` once the member has seen (and accepted) any time clash.
+     */
+    guard: (handler: () => void) => {
+      if (role === 'PARENT') return () => setOpen(true);
+      return () =>
+        fireAndForget(
+          (async () => {
+            if (!podId || (await clash.check([podId]))) handler();
+          })(),
+        );
+    },
   };
 }
 

@@ -12,6 +12,8 @@ import {
   type SeriesBookingChoice,
   type SeriesDateRow,
 } from '@duncit/utils';
+import { fireAndForget, logs } from '@duncit/logs';
+import { useBookingClashGuard } from '../clash/useBookingClashGuard';
 
 export const POD_SERIES_DATES = gql(POD_SERIES_DATES_SDL);
 export const JOIN_FREE_POD_DATES = gql(JOIN_FREE_POD_DATES_SDL);
@@ -57,6 +59,7 @@ export function useSeriesBooking({ pod, seats, navigate, onError }: Readonly<Arg
   const [joinFreeDates, joinState] = useMutation<{
     joinFreePodDates: { joined: string[]; failed: { pod_doc_id: string; message: string }[] };
   }>(JOIN_FREE_POD_DATES);
+  const clash = useBookingClashGuard();
   const [open, setOpen] = useState(false);
   const [choice, setChoice] = useState<SeriesBookingChoice>('NEXT');
   const [picked, setPicked] = useState<string[]>([]);
@@ -73,6 +76,8 @@ export function useSeriesBooking({ pod, seats, navigate, onError }: Readonly<Arg
 
   const confirm = async () => {
     if (!pod || chosen.length === 0) return;
+    // Every chosen date is checked against the member's other bookings first.
+    if (!(await clash.check(chosen))) return;
     if (pod.pod_type === 'FREE') {
       try {
         const res = await joinFreeDates({ variables: { pod_doc_id: pod.id, date_pod_ids: chosen } });
@@ -112,8 +117,25 @@ export function useSeriesBooking({ pod, seats, navigate, onError }: Readonly<Arg
     estimate,
     busy: joinState.loading,
     confirm,
-    /** The Book handler for this pod: the date picker on a recurring pod, else `handler`. */
-    guard: (handler: () => void) => (role === 'PARENT' ? () => setOpen(true) : handler),
+    /** "You already have a pod at this time" — rendered by SeriesBookingDialog. */
+    clash,
+    /**
+     * The Book handler for this pod: the date picker on a recurring pod, else
+     * `handler` once the member has seen (and accepted) any time clash.
+     */
+    guard: (handler: () => void) => {
+      if (role === 'PARENT') return () => setOpen(true);
+      const podId = pod?.id;
+      return () =>
+        fireAndForget(
+          (async () => {
+            if (!podId || (await clash.check([podId]))) handler();
+          })(),
+          logs.mWeb,
+          'pod-details',
+          'bookingClash',
+        );
+    },
   };
 }
 

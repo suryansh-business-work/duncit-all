@@ -3,6 +3,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
 import { JoinFreePodDocument } from '@/graphql/details';
+import { MyBookingClashesDocument } from '@/graphql/pod-booking-clash';
 import { usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useCartStore } from '@/stores/cart.store';
@@ -139,8 +140,9 @@ jest.mock('@/components/chat-preview/ChatPreviewCard', () => {
 
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
+const mockPush = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack, navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack, navigate: mockNavigate, push: mockPush }),
   useRoute: () => ({ params: { podId: 'p1', title: 'Pod 1' } }),
   useFocusEffect: (cb: () => void) => cb(),
 }));
@@ -390,7 +392,7 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByText('Jazz Club')).toBeOnTheScreen();
   });
 
-  it('adds a pod-shop product to the cart while the pod checkout stays membership-only', () => {
+  it('adds a pod-shop product to the cart while the pod checkout stays membership-only', async () => {
     mockedPod.mockReturnValue({
       ...podData,
       pod: {
@@ -419,7 +421,8 @@ describe('PodDetailsScreen', () => {
     // checkout), NOT mixed into the pod-membership payment.
     expect(useCartStore.getState().lines.some((l) => l.product_id === 'pr1')).toBe(true);
     fireEvent.press(screen.getByTestId('pod-book'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1', seats: 1 });
+    // Book first asks for a time clash (offline here, so it never blocks).
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1', seats: 1 }));
   });
 
   it('adds a picked variant line to the cart from the product detail sheet', () => {
@@ -539,6 +542,55 @@ describe('PodDetailsScreen', () => {
     expect(mockNavigate).not.toHaveBeenCalledWith('Checkout', expect.anything());
     // Lands on the same confirmation a paid booking ends on (ticket download).
     expect(mockNavigate).toHaveBeenCalledWith('FreeJoinSuccess', { podId: 'p1' });
+  });
+
+  describe('a time clash with another booked pod', () => {
+    const clash = {
+      target_pod_id: 'p1',
+      pod_id: 'other',
+      pod_slug: 'friday-jam',
+      club_slug: 'jazz-club',
+      pod_title: 'Friday Jam',
+      pod_date_time: '2026-11-06T13:30:00.000Z',
+      pod_end_date_time: '2026-11-06T15:30:00.000Z',
+    };
+    const withClash = () =>
+      mockGraphql.mockImplementation((doc: unknown) => {
+        if (doc === MyBookingClashesDocument) return Promise.resolve({ myBookingClashes: [clash] });
+        if (doc === JoinFreePodDocument) return Promise.resolve({ joinFreePod: { id: 'p1' } });
+        return Promise.reject(new Error('offline'));
+      });
+
+    it('shows the clash before joining and joins only on Force book', async () => {
+      withClash();
+      mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+      renderWithProviders(<PodDetailsScreen />);
+      fireEvent.press(screen.getByTestId('pod-book'));
+      expect(await screen.findByText('Friday Jam')).toBeOnTheScreen();
+      expect(mockGraphql).not.toHaveBeenCalledWith(JoinFreePodDocument, expect.anything(), expect.anything());
+      fireEvent.press(screen.getByTestId('booking-clash-force'));
+      await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('FreeJoinSuccess', { podId: 'p1' }));
+    });
+
+    it('books nothing on Cancel booking', async () => {
+      withClash();
+      mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+      renderWithProviders(<PodDetailsScreen />);
+      fireEvent.press(screen.getByTestId('pod-book'));
+      fireEvent.press(await screen.findByTestId('booking-clash-cancel'));
+      await waitFor(() => expect(screen.queryByText('Friday Jam')).toBeNull());
+      expect(mockGraphql).not.toHaveBeenCalledWith(JoinFreePodDocument, expect.anything(), expect.anything());
+    });
+
+    it('opens the clashing pod so the member can free that spot', async () => {
+      withClash();
+      mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+      renderWithProviders(<PodDetailsScreen />);
+      fireEvent.press(screen.getByTestId('pod-book'));
+      fireEvent.press(await screen.findByTestId('booking-clash-open-other'));
+      expect(mockPush).toHaveBeenCalledWith('PodDetails', { clubSlug: 'jazz-club', podSlug: 'friday-jam' });
+      expect(mockGraphql).not.toHaveBeenCalledWith(JoinFreePodDocument, expect.anything(), expect.anything());
+    });
   });
 
   it('stays on the pod and never lands on the confirmation when the free join fails', async () => {

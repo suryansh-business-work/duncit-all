@@ -479,6 +479,15 @@ async function bootstrap() {
     await PodPartnerRequestModel.syncIndexes();
     await PartnerRequestQuotaModel.syncIndexes();
   });
+  // Replaces the legacy `payment_id_1` {unique, sparse} index with the model's
+  // partial one. Sparse still indexes the null every free join writes, so the
+  // old index let ONE free booking exist in the whole collection and refused
+  // every other with E11000 — answered as "Your booking changed while joining".
+  // autoIndex cannot fix it (same name, different options), only syncIndexes.
+  await safeSeed('podMemberIndexes', async () => {
+    const { PodMemberModel } = await import('@modules/pods/podMember/podMember.model');
+    await PodMemberModel.syncIndexes();
+  });
   // Creates the gift card sales policy singleton (amount presets, validity) so
   // the buy page has amounts on day one.
   await safeSeed('giftCardSettings', async () => {

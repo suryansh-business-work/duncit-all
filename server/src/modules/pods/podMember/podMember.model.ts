@@ -150,6 +150,8 @@ podMemberSchema.index(
   { payment_id: 1 },
   { unique: true, partialFilterExpression: { payment_id: { $type: 'objectId' } } }
 );
+/** Name of the index that makes a concurrent free join lose with E11000. */
+export const ONE_UNPAID_JOINED_INDEX = 'one_unpaid_joined_booking_per_pod_user';
 // One JOINED unpaid booking per person per pod. A free join reads "no booking
 // yet" and then writes one, so two concurrent joins (or a join racing a cancel)
 // could each write a JOINED row — two tickets, and a later cancel of one would
@@ -166,7 +168,7 @@ podMemberSchema.index(
   { pod_id: 1, user_id: 1 },
   {
     unique: true,
-    name: 'one_unpaid_joined_booking_per_pod_user',
+    name: ONE_UNPAID_JOINED_INDEX,
     partialFilterExpression: { status: 'JOINED', payment_id: { $type: 'null' } },
   }
 );
@@ -174,5 +176,10 @@ podMemberSchema.index(
 /** E11000 — the write lost to a unique index. */
 export const isDuplicateKeyError = (error: unknown) =>
   (error as { code?: unknown } | null)?.code === 11000;
+
+/** E11000 raised by the one-unpaid-booking index — and by no other index. */
+export const isConcurrentFreeJoinError = (error: unknown) =>
+  isDuplicateKeyError(error) &&
+  String((error as { message?: unknown }).message ?? '').includes(ONE_UNPAID_JOINED_INDEX);
 
 export const PodMemberModel = model<IPodMember>('PodMember', podMemberSchema);

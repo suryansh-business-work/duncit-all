@@ -1,7 +1,15 @@
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
+import { BUTTON_SIZES } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
+
+/** Our round provider buttons (Apple's too) are the large button's height. */
+const ROUND_SIZE = BUTTON_SIZES.lg.height;
+/** The visible disk of Google's own round `icon` button at size="large" (its
+ * largest; GIS takes no other size): 40px outlined on light, but the dark theme
+ * rings it inside that box, leaving 36px of disk. */
+const GOOGLE_DISK = { light: 40, dark: 36 } as const;
 
 interface Props {
   onCredential: (idToken: string) => void;
@@ -65,13 +73,8 @@ export default function GoogleSignInButton({
     );
   }
 
-  return (
-    <Stack
-      data-testid="google-auth-button"
-      aria-busy={loading ? true : undefined}
-      sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}
-    >
-      <GoogleLogin
+  const google = (
+    <GoogleLogin
         onSuccess={(response) => {
           if (response.credential) onCredential(response.credential);
         }}
@@ -84,6 +87,34 @@ export default function GoogleSignInButton({
         size="large"
         logo_alignment="left"
       />
+  );
+
+  return (
+    <Stack
+      data-testid="google-auth-button"
+      aria-busy={loading ? true : undefined}
+      sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}
+    >
+      {variant === 'icon' ? (
+        // Google draws its round button in its own frame at a fixed size, smaller
+        // than our large round buttons. Hold it in the same square the Apple
+        // button takes and scale it to fill, so the row's circles and captions line up.
+        <Box
+          data-testid="google-icon-frame"
+          sx={{
+            width: ROUND_SIZE,
+            height: ROUND_SIZE,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            '& > div': { transform: `scale(${ROUND_SIZE / GOOGLE_DISK[isDark ? 'dark' : 'light']})` },
+          }}
+        >
+          {google}
+        </Box>
+      ) : (
+        google
+      )}
       {loading && (
         <Box
           data-testid="google-signin-loading"

@@ -24,9 +24,28 @@ export const podDraftTypeDefs = gql`
     step: Int
   }
 
+  """
+  "Host again": the Create Pod form filled from one of the caller's own pods.
+  Nothing is saved — the draft is created when the host moves on in the form.
+  """
+  type HostAgainPrefill {
+    source_pod_id: ID!
+    source_title: String!
+    "The stepper's form state as JSON, in the same shape as PodDraft.payload."
+    payload: String!
+    "The step to open on: the date step when the place carried over, else step 1."
+    step: Int!
+    """
+    What could not be carried over: CLUB_UNAVAILABLE, VENUE_UNAVAILABLE,
+    LOCATION_MISSING, CATEGORY_MISSING, PRODUCTS_UNAVAILABLE.
+    """
+    notices: [String!]!
+  }
+
   extend type Query {
     myPodDrafts: [PodDraft!]!
     myPodDraft(draft_id: ID!): PodDraft
+    hostAgainPrefill(pod_doc_id: ID!): HostAgainPrefill!
   }
 
   extend type Mutation {
@@ -39,5 +58,6 @@ export const podDraftTypeDefs = gql`
     ready to open in Create Pod. A cancelled pod can be hosted again too.
     """
     hostAgainPod(pod_doc_id: ID!): PodDraft!
+      @deprecated(reason: "Use hostAgainPrefill; the draft is saved when the host moves on.")
   }
 `;

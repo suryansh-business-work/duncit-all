@@ -50,7 +50,8 @@ export function CheckoutScreen() {
   } else {
     checkoutBody = (
       <Text testID="checkout-unavailable" padding={24} color="$muted">
-        {t('mweb.checkout.unavailable')}
+        {/* Dates that could not be priced say why (one filled up, the pod changed). */}
+        {s.recurringError ?? t('mweb.checkout.unavailable')}
       </Text>
     );
   }

@@ -4,6 +4,7 @@ import { logs } from '@duncit/logs';
 
 import {
   CreatePodOptionsDocument,
+  HostAgainPrefillDocument,
   ModeratePodContentDocument,
   MyPodDraftDocument,
   PublishPodDraftDocument,
@@ -28,7 +29,7 @@ import { appFormatter } from '@/utils/app-formatter';
 import { loadPartnerRequestPrefill } from '@/hooks/partnerRequestPrefill';
 
 type OptionsData = ResultOf<typeof CreatePodOptionsDocument>;
-type DraftData = ResultOf<typeof MyPodDraftDocument>['myPodDraft'];
+export type HostAgainPrefill = ResultOf<typeof HostAgainPrefillDocument>['hostAgainPrefill'];
 export type CreatePodClub = OptionsData['clubs'][number];
 export type CreatePodVenue = OptionsData['publicVenues'][number];
 
@@ -49,11 +50,28 @@ const activeVenues = (options: OptionsData | null) =>
 const slotInputFormat = () =>
   appFormatter(useAppSettingsStore.getState().data?.publicAppSettings).dateTimeInputFormat;
 
-async function loadCreatePodData(draftId: string | undefined, partnerRequestId: string) {
+/** "Host again": the form filled from an earlier pod, or `failed` when it cannot
+ * be read — the screen then says so instead of opening a blank form. */
+async function loadHostAgain(podId: string): Promise<HostAgainPrefill | 'failed'> {
+  try {
+    return (await graphqlRequest(HostAgainPrefillDocument, { pod_doc_id: podId }, { auth: true }))
+      .hostAgainPrefill;
+  } catch (error) {
+    logs.mobileApp.error('useCreatePod', 'hostAgainPrefill', { error });
+    return 'failed';
+  }
+}
+
+async function loadCreatePodData(
+  draftId: string | undefined,
+  partnerRequestId: string,
+  hostAgainPodId: string,
+) {
   const options = await graphqlRequest(CreatePodOptionsDocument, undefined, { auth: true });
   const draft = draftId
     ? (await graphqlRequest(MyPodDraftDocument, { draft_id: draftId }, { auth: true })).myPodDraft
     : null;
+  const hostAgain = !draft && hostAgainPodId ? await loadHostAgain(hostAgainPodId) : null;
   // A Pod Request only seeds a FRESH pod — a resumed draft is already the host's.
   const prefill =
     !draft && partnerRequestId
@@ -67,46 +85,57 @@ async function loadCreatePodData(draftId: string | undefined, partnerRequestId: 
           return null;
         })
       : null;
-  return { options, draft, prefill };
+  return { options, draft, prefill, hostAgain };
 }
 
 /**
  * Data layer for the host Create Pod stepper: loads the host status, the
  * clubs/approved venues/products to pick from, hydrates a draft when resuming,
- * lays a confirmed Pod Request's venue + slot over a fresh pod, and
- * autosaves/publishes the draft server-side.
+ * lays a confirmed Pod Request's venue + slot over a fresh pod, fills the form
+ * from an earlier pod for "Host again" (saving nothing until the host moves on),
+ * and autosaves/publishes the draft server-side.
  */
-export function useCreatePod(draftId?: string, partnerRequestId = '') {
+export function useCreatePod(draftId?: string, partnerRequestId = '', hostAgainPodId = '') {
   const [data, setData] = useState<OptionsData | null>(null);
   const [initialValues, setInitialValues] = useState<CreatePodFormValues>(blankCreatePodForm);
   const [initialStep, setInitialStep] = useState(0);
   const [resolvedDraftId, setResolvedDraftId] = useState<string | null>(draftId ?? null);
   const [isLoading, setIsLoading] = useState(true);
   const [pinnedVenueId, setPinnedVenueId] = useState<string | undefined>(undefined);
+  const [hostAgain, setHostAgain] = useState<HostAgainPrefill | 'failed' | null>(null);
 
   useEffect(() => {
     let active = true;
-    const applyDraft = (draft: NonNullable<DraftData>) => {
-      const values = hydrateDraft(draft.payload);
-      setInitialValues(values);
+    // A draft, or a Host Again copy that has no draft yet (id null). One whose
+    // city is gone opens in the header's: step 1 can only move a pod in a city.
+    const applyStored = (
+      stored: { payload: string; step: number },
+      id: string | null,
+      fallbackLocationId: string,
+    ) => {
+      const values = hydrateDraft(stored.payload);
+      setInitialValues({ ...values, location_id: values.location_id || fallbackLocationId });
       // A draft started from a Pod Request keeps that venue on offer too.
       setPinnedVenueId(values.partner_request_id ? values.venue_id : undefined);
-      setInitialStep(clampStep(draft.step));
-      setResolvedDraftId(draft.id);
+      setInitialStep(clampStep(stored.step));
+      setResolvedDraftId(id);
     };
-    loadCreatePodData(draftId, partnerRequestId)
+    loadCreatePodData(draftId, partnerRequestId, hostAgainPodId)
       .then((result) => {
         if (!active) return;
         setData(result.options);
+        setHostAgain(result.hostAgain);
+        // A fresh pod starts in the host's selected location (header pick).
+        const locations = result.options.locations ?? [];
+        const preferred =
+          locations.find((item) => item.id === result.options.me?.selected_location_id)?.id ??
+          locations[0]?.id ??
+          '';
         if (result.draft) {
-          applyDraft(result.draft);
+          applyStored(result.draft, result.draft.id, preferred);
+        } else if (result.hostAgain && result.hostAgain !== 'failed') {
+          applyStored(result.hostAgain, null, preferred);
         } else {
-          // A fresh pod starts in the host's selected location (header pick).
-          const locations = result.options.locations ?? [];
-          const preferred =
-            locations.find((item) => item.id === result.options.me?.selected_location_id)?.id ??
-            locations[0]?.id ??
-            '';
           setInitialValues({
             ...blankCreatePodForm,
             location_id: preferred,
@@ -120,7 +149,7 @@ export function useCreatePod(draftId?: string, partnerRequestId = '') {
     return () => {
       active = false;
     };
-  }, [draftId, partnerRequestId]);
+  }, [draftId, partnerRequestId, hostAgainPodId]);
 
   const saveDraft = async (id: string | null, payload: ReturnType<typeof serializeDraft>) => {
     const res = await graphqlRequest(
@@ -181,6 +210,9 @@ export function useCreatePod(draftId?: string, partnerRequestId = '') {
     initialValues,
     initialStep,
     initialDraftId: resolvedDraftId,
+    hostAgain,
+    /** The header's city — a Host Again copy in another city says so. */
+    selectedLocationId: data?.me?.selected_location_id ?? '',
     pinnedVenueId,
     saveDraft,
     moderate,

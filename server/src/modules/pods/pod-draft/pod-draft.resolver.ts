@@ -2,6 +2,7 @@ import { podDraftService } from './pod-draft.service';
 import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
 import { draftExpiresAt, draftRetentionDays } from './pod-draft.retention';
+import { hostAgainPrefill } from './pod-draft.host-again';
 
 export const podDraftResolvers = {
   // Resolved per-request rather than stamped on every draft row: only the
@@ -22,6 +23,10 @@ export const podDraftResolvers = {
     myPodDraft: async (_p: unknown, args: { draft_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return podDraftService.getMine(user.id, args.draft_id);
+    },
+    hostAgainPrefill: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return hostAgainPrefill(args.pod_doc_id, user.id);
     },
   },
   Mutation: {

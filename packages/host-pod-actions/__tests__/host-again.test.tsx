@@ -1,21 +1,18 @@
 /**
  * "Host again" on a host's own pod row.
  *
- * The row is only worth offering where the surface can open the draft it
- * makes, so it must be absent without `onHostAgainDraft`. When it is there, a
- * tap asks the server for a draft copy and hands the draft id to the surface;
- * a failed copy must tell the host rather than do nothing, and a double tap
- * must not leave two identical drafts behind.
+ * The row is only worth offering where the surface can open Create Pod, so it
+ * must be absent without `onHostAgain`. When it is there, a tap hands the pod
+ * id to the surface and asks the server for nothing: the draft is made only
+ * once the host moves on in the form, so a tap and a back-out leave no draft.
  */
 import type { ReactNode } from 'react';
-import type { MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import HostPodActionsMenu from '../src/HostPodActionsMenu';
 import { HostPodActionsProvider, type HostPodActionsConfig } from '../src/HostPodActionsProvider';
-import { HOST_AGAIN_POD } from '../src/queries';
 import { useHostPodActions } from '../src/useHostPodActions';
 import type { HostPodTarget } from '../src/types';
 import { hostActionsConfig, labelsFor } from './host-actions-config';
@@ -33,19 +30,6 @@ const POD = {
   venue_approval_status: 'APPROVED',
 } as HostPodTarget;
 
-const settle = async () => {
-  await act(async () => {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0);
-    });
-  });
-};
-
-const draftMock = (id: string): MockedResponse => ({
-  request: { query: HOST_AGAIN_POD, variables: { pod_doc_id: 'pod-1' } },
-  result: { data: { hostAgainPod: { __typename: 'PodDraft', id } } },
-});
-
 function Row() {
   const { menuHandlers, dialogs } = useHostPodActions(vi.fn());
   return (
@@ -56,10 +40,11 @@ function Row() {
   );
 }
 
-const mount = (config: Partial<HostPodActionsConfig>, mocks: MockedResponse[] = []) => {
+const mount = (config: Partial<HostPodActionsConfig>) => {
   const all = hostActionsConfig(config);
+  // No mocked answers: any request the row made would surface as an error.
   const ui: ReactNode = (
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
+    <MockedProvider mocks={[]}>
       <HostPodActionsProvider {...all}>
         <Row />
       </HostPodActionsProvider>
@@ -78,14 +63,14 @@ afterEach(() => {
 });
 
 describe('Host again', () => {
-  it('is not offered where the surface has no draft route to open', () => {
+  it('is not offered where the surface has no Create Pod route to open', () => {
     mount({});
 
     expect(hostAgainRow()).toBeNull();
   });
 
   it('is offered, with its hint, on a pod that has already ended', () => {
-    mount({ onHostAgainDraft: vi.fn() });
+    mount({ onHostAgain: vi.fn() });
 
     const row = hostAgainRow();
     expect(row).not.toBeNull();
@@ -94,55 +79,14 @@ describe('Host again', () => {
     expect(row?.getAttribute('aria-disabled')).not.toBe('true');
   });
 
-  it('opens the draft the server made for this pod', async () => {
-    const onHostAgainDraft = vi.fn();
-    const config = mount({ onHostAgainDraft }, [draftMock('draft-9')]);
+  it('opens Create Pod for this pod without making a draft', () => {
+    const onHostAgain = vi.fn();
+    const config = mount({ onHostAgain });
 
     fireEvent.click(hostAgainRow()!);
-    await settle();
 
-    expect(onHostAgainDraft).toHaveBeenCalledWith('draft-9');
-    expect(config.notifyError).not.toHaveBeenCalled();
-  });
-
-  it('tells the host when the copy fails, and opens nothing', async () => {
-    const onHostAgainDraft = vi.fn();
-    const config = mount({ onHostAgainDraft }, [
-      {
-        request: { query: HOST_AGAIN_POD, variables: { pod_doc_id: 'pod-1' } },
-        error: new Error('Only the pod host can host this pod again'),
-      },
-    ]);
-
-    fireEvent.click(hostAgainRow()!);
-    await settle();
-
-    expect(config.notifyError).toHaveBeenCalledWith(labels.hostAgainFailed);
-    expect(onHostAgainDraft).not.toHaveBeenCalled();
-  });
-
-  it('treats an answer without a draft id as a failed copy', async () => {
-    const onHostAgainDraft = vi.fn();
-    const config = mount({ onHostAgainDraft }, [draftMock('')]);
-
-    fireEvent.click(hostAgainRow()!);
-    await settle();
-
-    expect(config.notifyError).toHaveBeenCalledWith(labels.hostAgainFailed);
-    expect(onHostAgainDraft).not.toHaveBeenCalled();
-  });
-
-  it('makes one draft for a double tap', async () => {
-    const onHostAgainDraft = vi.fn();
-    // One mocked answer: a second request would find none and report an error.
-    const config = mount({ onHostAgainDraft }, [draftMock('draft-9')]);
-
-    fireEvent.click(hostAgainRow()!);
-    fireEvent.click(screen.getByTestId('host-pod-actions-pod-1'));
-    fireEvent.click(hostAgainRow()!);
-    await settle();
-
-    expect(onHostAgainDraft).toHaveBeenCalledTimes(1);
+    expect(onHostAgain).toHaveBeenCalledTimes(1);
+    expect(onHostAgain).toHaveBeenCalledWith('pod-1');
     expect(config.notifyError).not.toHaveBeenCalled();
   });
 });

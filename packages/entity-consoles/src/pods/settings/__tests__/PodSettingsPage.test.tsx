@@ -36,6 +36,12 @@ const POD_SETTINGS = gql`
       ticket_discount_max_pct
       happening_nearby_days
       pod_chat_retention_hours
+      pod_series_max_occurrences
+      pod_series_max_span_days
+      pod_multi_date_discount_tiers {
+        min_dates
+        discount_pct
+      }
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
       auto_pod_assignment_expiry_hours
@@ -71,6 +77,12 @@ const UPDATE_POD_SETTINGS = gql`
       ticket_discount_max_pct
       happening_nearby_days
       pod_chat_retention_hours
+      pod_series_max_occurrences
+      pod_series_max_span_days
+      pod_multi_date_discount_tiers {
+        min_dates
+        discount_pct
+      }
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
       auto_pod_assignment_expiry_hours
@@ -83,7 +95,7 @@ const UPDATE_POD_SETTINGS = gql`
   }
 `;
 
-type SavedPodSettings = Record<string, number | boolean>;
+type SavedPodSettings = Record<string, number | boolean | { __typename: string; min_dates: number; discount_pct: number }[]>;
 
 const SAVED: SavedPodSettings = {
   draft_retention_days: 3,
@@ -106,6 +118,9 @@ const SAVED: SavedPodSettings = {
   ticket_discount_max_pct: 50,
   happening_nearby_days: 7,
   pod_chat_retention_hours: 72,
+  pod_series_max_occurrences: 12,
+  pod_series_max_span_days: 180,
+  pod_multi_date_discount_tiers: [{ __typename: 'MultiDateDiscountTier', min_dates: 4, discount_pct: 10 }],
   auto_pod_slot_window_days: 14,
   auto_pod_venue_expiry_hours: 48,
   auto_pod_assignment_expiry_hours: 72,

@@ -6,15 +6,17 @@ import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
 import type { CreatePodForm } from '../create-pod.types';
 import SeriesDatesList from './SeriesDatesList';
+import RepeatDiscountField from './RepeatDiscountField';
 import { useSeriesPreview } from './useSeriesPreview';
 
 /**
  * One time or Recurring, under the pod's first date (its slot, or its virtual
  * window). Recurring repeats that date daily, weekly or every two weeks until
  * an end day; the server lists every date and its slot, and the host can
- * untick any of them before publishing. Each date becomes its own pod and goes
- * to the venue as its own request — grouped, so the venue can answer all at
- * once. Native twin: PodRepeatSection.
+ * untick any of them before publishing. It publishes as ONE pod with those
+ * dates; members book the dates they want, with the multi-date discount set
+ * here. Each date goes to the venue as its own slot request — grouped, so the
+ * venue can answer all at once. Native twin: PodRepeatSection.
  */
 export default function PodRepeatSection({ form }: Readonly<{ form: CreatePodForm }>) {
   const { t } = useTranslation();
@@ -95,6 +97,14 @@ export default function PodRepeatSection({ form }: Readonly<{ form: CreatePodFor
                 <Alert severity="warning" data-testid="pod-repeat-too-few">{t('mweb.podSeries.needTwoDates')}</Alert>
               )}
               <SeriesDatesList dates={preview.dates} skipped={values.repeat_skip_dates} onToggle={toggleDate} />
+              {values.pod_type !== 'FREE' && (
+                <RepeatDiscountField
+                  form={form}
+                  defaults={preview.default_multi_date_discount_tiers}
+                  maxDates={preview.max_occurrences}
+                  maxPct={preview.max_discount_pct}
+                />
+              )}
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {t('mweb.podSeries.limitsHint', { vars: { max: preview.max_occurrences, days: preview.max_span_days } })}
               </Typography>

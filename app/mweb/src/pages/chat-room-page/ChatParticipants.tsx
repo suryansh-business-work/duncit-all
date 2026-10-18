@@ -26,7 +26,7 @@ export default function ChatParticipants({ hosts, participants, count, onOpenPro
 
   const personChip = (person: ChatPerson, isHost: boolean) => {
     const avatar = (
-      <Avatar alt="" src={person.profile_photo || undefined} sx={{ width: 34, height: 34 }}>
+      <Avatar alt="" src={person.profile_photo || undefined} sx={{ width: '100%', height: '100%' }}>
         {(person.full_name?.[0] ?? 'U').toUpperCase()}
       </Avatar>
     );
@@ -49,8 +49,26 @@ export default function ChatParticipants({ hosts, participants, count, onOpenPro
               avatar
             )
           }
-          label={person.full_name}
-          sx={{ height: 42, borderRadius: 999, bgcolor: 'background.paper' }}
+          label={
+            isHost ? (
+              <>
+                {person.full_name}
+                <Typography component="span" variant="caption" sx={{ ml: 0.75, color: 'primary.main', fontWeight: 600 }}>
+                  {hostWord}
+                </Typography>
+              </>
+            ) : (
+              person.full_name
+            )
+          }
+          // Chip shrinks its avatar slot to 24px; size the slot itself so a
+          // host's badge wrapper and a plain avatar render the same.
+          sx={{
+            height: 42,
+            borderRadius: 999,
+            bgcolor: 'background.paper',
+            '& .MuiChip-avatar': { width: 32, height: 32, ml: 0.625 },
+          }}
         />
       </Tooltip>
     );

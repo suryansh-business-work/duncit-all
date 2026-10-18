@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
@@ -90,10 +90,6 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
     onDeleted,
     onError: setError,
   });
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages.length]);
 
   const submit = async (overrideImage?: string) => {
     const body = text.trim();

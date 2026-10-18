@@ -19,6 +19,8 @@ import {
   rentalClosedKey,
   rentalMaxQuantity,
   rentalMoney,
+  rentalLineCopy,
+  rentalLinePrice,
   rentalRefundKey,
   rentalSelectionTotals,
   rentalSelections,
@@ -55,6 +57,63 @@ describe('rentalSelectionTotals', () => {
     const totals = rentalSelectionTotals([racket], { racket: 0, gone: 3 }, 2);
     expect(totals).toEqual({ rent: 0, deposit: 0, total: 0, count: 0 });
     expect(rentalSelectionTotals([racket], { racket: -1 }, 2).count).toBe(0);
+  });
+});
+
+describe('rentalLinePrice', () => {
+  const uno = { unit: 'HOUR' as const, rate: 50, deposit: 30 };
+
+  it('prices an hour item as rate × hours × qty, with the deposit per unit kept apart', () => {
+    expect(rentalLinePrice(uno, 1, 5)).toEqual({ units: 5, quantity: 1, rent: 250, deposit: 30 });
+    expect(rentalLinePrice(uno, 2, 5)).toEqual({ units: 5, quantity: 2, rent: 500, deposit: 60 });
+  });
+
+  it('charges a slot item once whatever the pod length', () => {
+    expect(rentalLinePrice({ ...uno, unit: 'SLOT' }, 2, 5)).toEqual({ units: 1, quantity: 2, rent: 100, deposit: 60 });
+  });
+
+  it('prices nothing for zero, negative or fractional-below-one quantities', () => {
+    expect(rentalLinePrice(uno, 0, 5)).toEqual({ units: 5, quantity: 0, rent: 0, deposit: 0 });
+    expect(rentalLinePrice(uno, -2, 5).rent).toBe(0);
+    expect(rentalLinePrice(uno, 0.6, 5).quantity).toBe(0);
+  });
+
+  it('sums to the same total rentalSelectionTotals reports', () => {
+    const item = { ...projector, deposit: 30, rate: 50 };
+    const line = rentalLinePrice(item, 2, 5);
+    expect(rentalSelectionTotals([item], { projector: 2 }, 5)).toEqual({
+      rent: line.rent,
+      deposit: line.deposit,
+      total: 560,
+      count: 2,
+    });
+  });
+});
+
+describe('rentalLineCopy', () => {
+  // Echoes the key, the plural count and the vars, so each assertion pins what the surface asks the translator for.
+  const t = (key: string, options?: { count?: number; vars?: Record<string, string | number> }) =>
+    `${key}|${options?.count ?? '-'}|${JSON.stringify(options?.vars ?? {})}`;
+  const catalogue = { hours: 5, currency_symbol: '₹' };
+  const uno = { unit: 'HOUR' as const, rate: 50, deposit: 30 };
+  const m = (amount: number) => rentalMoney('₹', amount);
+
+  it('words an hour item with the hours as the plural count, and the deposit on its own line', () => {
+    expect(rentalLineCopy(t, uno, 2, catalogue)).toEqual({
+      rent: `venueRentals.guest.rentMathHour|5|${JSON.stringify({ rate: m(50), quantity: 2, amount: m(500) })}`,
+      deposit: `venueRentals.guest.depositMath|-|${JSON.stringify({ rate: m(30), quantity: 2, amount: m(60) })}`,
+    });
+  });
+
+  it('words a slot item without hours, and leaves out a deposit it does not take', () => {
+    expect(rentalLineCopy(t, { ...uno, unit: 'SLOT', deposit: 0 }, 1, catalogue)).toEqual({
+      rent: `venueRentals.guest.rentMathSlot|-|${JSON.stringify({ rate: m(50), quantity: 1, amount: m(50) })}`,
+      deposit: null,
+    });
+  });
+
+  it('says nothing for an item not picked', () => {
+    expect(rentalLineCopy(t, uno, 0, catalogue)).toBeNull();
   });
 });
 

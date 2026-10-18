@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { isMeetingPlatform, isVideoUrl, ticketDiscountInput } from '@duncit/utils';
+import {
+  isMeetingPlatform,
+  isVideoUrl,
+  repeatDiscountFormIssues,
+  ticketDiscountInput,
+} from '@duncit/utils';
 
 import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
@@ -13,6 +18,7 @@ import {
 import {
   hydrateTicketDiscount,
   refineTicketDiscount,
+  ticketDiscountMaxPct,
   ticketDiscountSchemaShape,
 } from './ticket-discount.form';
 
@@ -211,10 +217,23 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  * The messages are copy, so they come from the shared catalogue (rule 38): the
  * stepper passes its live `t`, and the export below resolves against the
  * bundled English for callers that parse the schema outside React. */
+/** The multi-date discount's tiers, by the shared tier rules counted in dates.
+ * The server holds the real ceiling on dates (Pod Settings). mWeb twin. */
+function refineRepeatDiscount(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  const input = {
+    enabled: values.repeat_discount_enabled,
+    tiers: values.repeat_discount_tiers,
+    maxPct: ticketDiscountMaxPct(),
+  };
+  for (const issue of repeatDiscountFormIssues(input, t))
+    ctx.addIssue({ code: 'custom', ...issue });
+}
+
 /** A recurring pod needs the day it stops repeating, after its first date. The
  * server checks the span and every date's slot. mWeb twin: refineRepeat. */
 function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (!values.repeat_enabled) return;
+  refineRepeatDiscount(values, ctx, t);
   if (!values.repeat_ends_on) {
     ctx.addIssue({
       code: 'custom',
@@ -315,6 +334,11 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY']),
       repeat_ends_on: z.string(),
       repeat_skip_dates: z.array(z.string()),
+      // Shape only — the tier rules run in refineRepeat.
+      repeat_discount_enabled: z.boolean(),
+      repeat_discount_tiers: z.array(
+        z.object({ min_tickets: z.number(), discount_pct: z.number() }),
+      ),
     })
     .superRefine((values, ctx) => {
       refineVenue(values, ctx, t);
@@ -365,6 +389,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'pod_date_time_text',
     'pod_end_date_time_text',
     'repeat_ends_on',
+    'repeat_discount_tiers',
   ],
   [
     'pod_type',

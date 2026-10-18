@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import crypto from 'node:crypto';
 import { PaymentModel, type IPayment } from './payment.model';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { assertBookableRow, PodModel } from '@modules/pods/pod/pod.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -433,7 +433,7 @@ function pricePodBooking(pod: any, seats: number, addOns: number) {
  * `products` is the checkout's resolved product selection (variant-aware);
  * `ticketDiscount` is the multi-ticket tier that priced it, frozen here so the
  * invoice, finance and refunds never re-read the pod's (editable) tiers. */
-const paymentMetadata = (
+export const paymentMetadata = (
   input: any,
   pod: any,
   products: ProductResolution,
@@ -626,7 +626,7 @@ const hasShipTo = (address?: { line1?: string | null; pincode?: string | null } 
 
 /** Resolve what the user actually pays (pod ticket + selected products, or a raw
  * amount) plus the human description. Shared by the dummy + Razorpay flows. */
-async function resolvePayable(input: any, userId?: string) {
+export async function resolvePayable(input: any, userId?: string) {
   let pod: any = null;
   let payableAmount = Number(input.amount) || 0;
   let description = input.description || 'Booking';
@@ -637,6 +637,7 @@ async function resolvePayable(input: any, userId?: string) {
   if (input.pod_id) {
     pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    assertBookableRow(pod);
     assertPodOpenForBooking(pod);
     if (pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now()) {
       throw new GraphQLError('This pod has already taken place — booking is closed.', {
@@ -897,6 +898,32 @@ export async function settle(paymentDocId: string, methodLabel: string, componen
 }
 
 /**
+ * The other dates of a multi-date booking (payment.group.ts): one Razorpay
+ * order paid for every date, and each date has its own payment, so once the
+ * first date's payment is proven the rest are settled on the same proof. A
+ * date already settled — by an earlier verify or the reconciler — is skipped.
+ */
+async function settleGroupSiblings(primary: IPayment, razorpayPaymentId: string, orderId: string, component: string) {
+  const groupId = primary.metadata?.checkout_group?.id;
+  if (!groupId) return;
+  const siblings = await PaymentModel.find({
+    'metadata.checkout_group.id': groupId,
+    _id: { $ne: primary._id },
+    status: 'PENDING',
+  });
+  for (const sibling of siblings) {
+    sibling.gateway_ref = razorpayPaymentId;
+    (sibling as any).metadata = {
+      ...(sibling as any).metadata,
+      razorpay_order_id: orderId,
+      razorpay_payment_id: razorpayPaymentId,
+    };
+    await sibling.save();
+    await settle(String(sibling._id), 'Razorpay', component);
+  }
+}
+
+/**
  * Check a Razorpay checkout's signature and, when it holds, hand the payment to
  * the finalizer. The caller has already decided the payment is theirs to verify
  * — an account's own payment, or a pet-store guest's by its cart — because the
@@ -905,7 +932,10 @@ export async function settle(paymentDocId: string, methodLabel: string, componen
 export async function verifyRazorpayAndSettle(doc: IPayment, input: any, component: string) {
   if (doc.gateway !== 'RAZORPAY' || doc.gateway_ref !== input.razorpay_order_id)
     throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
-  if (doc.status === 'SUCCESS') return toPub(doc);
+  if (doc.status === 'SUCCESS') {
+    await settleGroupSiblings(doc, String(doc.metadata?.razorpay_payment_id ?? doc.gateway_ref), input.razorpay_order_id, component);
+    return toPub(doc);
+  }
 
   const ok = await verifyRazorpaySignature({
     orderId: input.razorpay_order_id,
@@ -948,7 +978,9 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
     razorpay_payment_id: input.razorpay_payment_id,
   };
   await doc.save();
-  return settle(String(doc._id), 'Razorpay', component);
+  const settled = await settle(String(doc._id), 'Razorpay', component);
+  await settleGroupSiblings(doc, input.razorpay_payment_id, input.razorpay_order_id, component);
+  return settled;
 }
 
 type PaymentListFilter = { status?: string; user_id?: string; pod_id?: string; search?: string };

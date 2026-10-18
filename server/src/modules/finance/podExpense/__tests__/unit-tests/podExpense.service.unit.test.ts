@@ -142,8 +142,9 @@ describe('podsTable', () => {
       page_size: 10,
     });
     // Cancelled pods are IN this list on purpose — the aggregation opts into
-    // soft-deleted pods rather than inheriting the global hide.
-    expect(pods.aggregate.mock.calls[0]?.[1]).toEqual({ includeDeleted: true });
+    // soft-deleted pods rather than inheriting the global hide — and into the
+    // date rows of recurring pods, since spend is logged against each date.
+    expect(pods.aggregate.mock.calls[0]?.[1]).toEqual({ includeDeleted: true, seriesDates: true });
   });
 
   it('reads a pod with nothing recorded against it as a zeroed row, not a gap', async () => {

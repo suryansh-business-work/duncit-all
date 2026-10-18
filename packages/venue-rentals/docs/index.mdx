@@ -37,7 +37,8 @@ cannot import MUI, so everything that is not drawing lives in **`@duncit/utils` 
 `venue-rentals.ts`**: the GraphQL documents as plain strings, the row types, the label keys
 (`rentalStatusKey`, `rentalRefundKey`, `rentalUnitKey`), the rules (`canMarkRental`,
 `canRecordRentalRefund`, `rentalMaxQuantity`) and the client twin of the server's price
-(`rentalSelectionTotals`). Copy is the `venueRentals` namespace.
+(`rentalLinePrice` for one item's rent and deposit, the breakdown Pod Rent prints under each
+picked item; `rentalSelectionTotals` sums those lines). Copy is the `venueRentals` namespace.
 
 ## How the money moves
 

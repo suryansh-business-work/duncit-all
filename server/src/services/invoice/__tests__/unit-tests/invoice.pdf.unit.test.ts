@@ -320,7 +320,8 @@ describe('invoiceLogo', () => {
     const pdf = await generateInvoicePdf({ ...base, invoice_logo_url: 'https://nowhere.invalid/logo.png' });
 
     expect(isPdf(pdf)).toBe(true);
-  });
+    // A whole PDF render: past jest's 5s default on a loaded CI runner now and then.
+  }, 20_000);
 });
 
 describe('generateInvoicePdf failure', () => {

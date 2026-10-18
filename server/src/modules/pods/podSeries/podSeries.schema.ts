@@ -1,6 +1,70 @@
 import gql from 'graphql-tag';
 
 export const podSeriesTypeDefs = gql`
+  "A recurring pod's visible row, or one of its dates."
+  enum PodSeriesRole {
+    PARENT
+    DATE
+  }
+
+  "Percent off a booking of at least min_dates dates of a recurring pod."
+  type MultiDateDiscountTier {
+    min_dates: Int!
+    discount_pct: Int!
+  }
+
+  input MultiDateDiscountTierInput {
+    min_dates: Int!
+    discount_pct: Int!
+  }
+
+  "Where one date of a recurring pod stands."
+  enum PodSeriesDateStatus {
+    UPCOMING
+    ONGOING
+    COMPLETED
+    "Cancelled, or refused by the venue."
+    CANCELLED
+    "Waiting for the venue to accept the date."
+    AWAITING_VENUE
+  }
+
+  "One date of a recurring pod, as its details page lists it."
+  type PodSeriesDateRow {
+    "The date's own pod — what a ticket, backout or host action on that date uses."
+    pod_doc_id: ID!
+    slug: String!
+    start_at: String!
+    end_at: String
+    status: PodSeriesDateStatus!
+    "Spots left on this date (null: unlimited)."
+    seats_available: Int
+    "Seats the viewer holds on this date (0: not booked)."
+    my_seats: Int!
+    "Whether the viewer can book this date now."
+    bookable: Boolean!
+  }
+
+  "Every date of a recurring pod."
+  type PodSeriesDates {
+    parent_pod_id: ID!
+    frequency: PodSeriesFrequency
+    multi_date_discount_tiers: [MultiDateDiscountTier!]!
+    dates: [PodSeriesDateRow!]!
+  }
+
+  type PodSeriesJoinFailure {
+    pod_doc_id: ID!
+    message: String!
+  }
+
+  type PodSeriesJoinResult {
+    "Dates joined."
+    joined: [ID!]!
+    "Dates that could not be joined, and why."
+    failed: [PodSeriesJoinFailure!]!
+  }
+
   "How often a recurring pod repeats."
   enum PodSeriesFrequency {
     DAILY
@@ -36,6 +100,8 @@ export const podSeriesTypeDefs = gql`
     ends_on: String!
     "Dates (ISO starts) the host unticked in the preview."
     skip_dates: [String!]
+    "Percent off a booking of several dates; omitted means the Pod Settings default, [] means none."
+    multi_date_discount_tiers: [MultiDateDiscountTierInput!]
   }
 
   "One date of a recurring plan."
@@ -55,6 +121,10 @@ export const podSeriesTypeDefs = gql`
     "Admin limits the plan was checked against."
     max_occurrences: Int!
     max_span_days: Int!
+    "The largest discount a tier may give (Pod Settings' multi-ticket ceiling)."
+    max_discount_pct: Int!
+    "The multi-date discount a new recurring pod starts with (Pod Settings)."
+    default_multi_date_discount_tiers: [MultiDateDiscountTier!]!
     dates: [PodSeriesDate!]!
   }
 
@@ -66,6 +136,8 @@ export const podSeriesTypeDefs = gql`
 
   type PodSeriesPublishResult {
     series_id: ID!
+    "The one pod people see and book from."
+    parent_pod_id: ID!
     created_count: Int!
     pods: [Pod!]!
     skipped: [PodSeriesSkippedDate!]!
@@ -81,10 +153,12 @@ export const podSeriesTypeDefs = gql`
   extend type Query {
     "Every date a recurring plan would run on, each with its slot or why it cannot."
     podSeriesPreview(input: PodSeriesPlanInput!): PodSeriesPreview!
+    "Every date of the recurring pod that pod_doc_id is (or is a date of); null for a one-time pod."
+    podSeriesDates(pod_doc_id: ID!): PodSeriesDates
   }
 
   extend type Mutation {
-    "Publishes a draft as a recurring pod: one pod per date that can run."
+    "Publishes a draft as ONE recurring pod whose dates can each run, and be booked, on their own."
     publishPodDraftSeries(
       draft_id: ID!
       input: CreatePodInput!
@@ -94,5 +168,7 @@ export const podSeriesTypeDefs = gql`
     venueDecidePodSeries(series_id: ID!, approve: Boolean!, reason: String): PodSeriesDecisionResult!
     "Host: cancel every date of the series that has not started yet. Returns how many."
     hostCancelPodSeries(series_id: ID!, reason_subject: String!, reason_note: String): Int!
+    "Joins the picked dates of a FREE recurring pod, one free seat each."
+    joinFreePodDates(pod_doc_id: ID!, date_pod_ids: [ID!]!): PodSeriesJoinResult!
   }
 `;

@@ -178,6 +178,11 @@ const podCheckoutHead = {
 
 const podCheckoutTail = {
   selected_products: arr(z.array(z.unknown()).optional(), { default: undefined }),
+  // Rented items picked at checkout. Undeclared, they were dropped here and a
+  // rental was never charged or booked; the GraphQL input types each row.
+  selected_rentals: arr(z.array(z.unknown()).optional(), { default: undefined }),
+  // Dates of a recurring pod being booked together (payment.group.ts).
+  date_pod_ids: arr(z.array(z.string()).optional(), { default: undefined }),
   fulfilment_method: fulfilmentMethod(),
   shipping_address: shippingAddress(),
 };

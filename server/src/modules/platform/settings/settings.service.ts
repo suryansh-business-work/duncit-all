@@ -25,6 +25,11 @@ import {
   type ThemeTokensInput,
 } from "./theme-tokens";
 import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from "@modules/pods/pod/pod.ticketDiscount";
+import {
+  cleanDefaultMultiDateDiscountTiers,
+  DEFAULT_MULTI_DATE_DISCOUNT_TIERS,
+  type MultiDateDiscountTier,
+} from "@modules/pods/podSeries/podSeries.discount";
 import { launchMediaOf } from "@modules/platform/location/location.model";
 import { launchMediaSchema, type LaunchMediaInput } from "@modules/platform/location/location.validator";
 import { validate } from "@utils/validate";
@@ -139,7 +144,7 @@ const cleanPodCompleteTimeoutHours = (value: unknown) =>
 
 /** The biggest multi-ticket tier discount, clamped to 1–99% — a tier can never
  * take a ticket to nothing, and 0 would forbid every tier outright. */
-const cleanTicketDiscountMaxPct = (value: unknown) =>
+export const cleanTicketDiscountMaxPct = (value: unknown) =>
   Math.min(99, Math.max(1, Math.floor(Number(value)) || DEFAULT_TICKET_DISCOUNT_MAX_PCT));
 
 /** When the complete-pod reminder goes out, clamped to 1 hour – 1 year. */
@@ -273,6 +278,11 @@ const toAppPub = (d: any) => ({
   club_chat_retention_days: cleanClubChatRetentionDays(d?.club_chat_retention_days),
   pod_series_max_occurrences: cleanPodSeriesMaxOccurrences(d?.pod_series_max_occurrences),
   pod_series_max_span_days: cleanPodSeriesMaxSpanDays(d?.pod_series_max_span_days),
+  // Plain rows, never the document's Mongoose array: callers compare, spread
+  // and cache these. A stored [] (discount off) stays empty; only null defaults.
+  pod_multi_date_discount_tiers: (d?.pod_multi_date_discount_tiers ?? DEFAULT_MULTI_DATE_DISCOUNT_TIERS).map(
+    (tier: MultiDateDiscountTier) => ({ min_dates: tier.min_dates, discount_pct: tier.discount_pct }),
+  ),
   auto_pod_venue_expiry_hours: cleanAutoPodVenueExpiryHours(d?.auto_pod_venue_expiry_hours),
   auto_pod_assignment_expiry_hours: cleanAutoPodAssignmentExpiryHours(
     d?.auto_pod_assignment_expiry_hours,
@@ -677,6 +687,7 @@ type AppSettingsUpdateInput = {
   club_chat_retention_days?: number;
   pod_series_max_occurrences?: number;
   pod_series_max_span_days?: number;
+  pod_multi_date_discount_tiers?: MultiDateDiscountTier[];
   auto_pod_venue_expiry_hours?: number;
   auto_pod_assignment_expiry_hours?: number;
   auto_pod_cancel_health_penalty?: number;
@@ -732,6 +743,7 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["club_chat_retention_days", cleanClubChatRetentionDays],
   ["pod_series_max_occurrences", cleanPodSeriesMaxOccurrences],
   ["pod_series_max_span_days", cleanPodSeriesMaxSpanDays],
+  ["pod_multi_date_discount_tiers", cleanDefaultMultiDateDiscountTiers],
   ["auto_pod_venue_expiry_hours", cleanAutoPodVenueExpiryHours],
   ["auto_pod_assignment_expiry_hours", cleanAutoPodAssignmentExpiryHours],
   ["auto_pod_cancel_health_penalty", cleanAutoPodCancelHealthPenalty],

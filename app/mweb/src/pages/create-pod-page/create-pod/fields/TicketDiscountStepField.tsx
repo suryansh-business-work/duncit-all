@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useController } from 'react-hook-form';
 import { Box } from '@mui/material';
-import { TicketDiscountField, type TicketDiscountFieldErrors } from '@duncit/ui';
+import { TicketDiscountField } from '@duncit/ui';
 import {
   mwebTicketDiscountLabels,
   ticketDiscountMaxTickets,
@@ -12,27 +12,8 @@ import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
 import { useTicketDiscountMaxPct } from '../../../../utils/dateFormat';
 import type { CreatePodForm } from '../create-pod.types';
+import { toTierFieldErrors as toFieldErrors } from './tier-errors';
 
-/** One message slot on an RHF error node, whatever else the node carries. */
-type ErrorNode = { message?: string } | undefined;
-
-/**
- * The tier list's RHF error as the field's messages. A list-level issue sits on
- * the node itself (or its `root`); a row's issues sit under the row's index.
- */
-function toFieldErrors(error: unknown, count: number): TicketDiscountFieldErrors | undefined {
-  if (!error) return undefined;
-  const node = error as Record<string, unknown> & { message?: string; root?: ErrorNode };
-  const rowAt = (index: number) =>
-    node[String(index)] as Record<'min_tickets' | 'discount_pct', ErrorNode> | undefined;
-  return {
-    list: node.message ?? node.root?.message,
-    rows: Array.from({ length: count }, (_, index) => ({
-      min_tickets: rowAt(index)?.min_tickets?.message,
-      discount_pct: rowAt(index)?.discount_pct?.message,
-    })),
-  };
-}
 
 /**
  * Step 4's multi-ticket discount card: the shared `@duncit/ui` editor bound to

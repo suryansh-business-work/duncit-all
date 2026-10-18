@@ -109,7 +109,7 @@ export default function ChatPreviewCard({ kind, id, onJoinClub }: Readonly<ChatP
           <Chip color="primary" size="small" data-testid="chat-preview-count" label={t('mweb.chat.messageCount', { count: chat.total })} />
         )}
       </Stack>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
+      <Paper variant="outlined" sx={{ p: 2 }}>
         <Stack spacing={2}>
           {body}
           {chat.preview && action === 'OPEN' && (

@@ -6,6 +6,20 @@ import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * The pod a POD-scoped coupon is matched against. A coupon is made for the pod
+ * people see — for a recurring pod that is its parent — so a booking of one of
+ * its dates is matched against the parent, the pod the coupon was made for.
+ */
+async function couponPodOf(podId: string | null | undefined): Promise<string | null> {
+  if (!podId || !Types.ObjectId.isValid(podId)) return podId ?? null;
+  const { PodModel } = await import('@modules/pods/pod/pod.model');
+  const pod = await PodModel.findById(podId)
+    .select('series_role series_parent_id')
+    .lean<{ series_role?: string | null; series_parent_id?: Types.ObjectId | null }>();
+  return pod?.series_role === 'DATE' && pod.series_parent_id ? String(pod.series_parent_id) : podId;
+}
 const iso = (d?: Date | null) => (d ? d.toISOString() : null);
 
 const toPub = (c: ICoupon) => ({
@@ -214,7 +228,8 @@ async function evaluate(
 
   const coupon = await CouponModel.findOne({ code: String(code).toUpperCase().trim() });
   if (!coupon?.is_active) return fail('Invalid or inactive coupon code');
-  const rejection = couponTermsRejection(coupon, podId, original, redeem?.channel);
+  const scopePodId = coupon.scope === 'POD' ? await couponPodOf(podId) : podId;
+  const rejection = couponTermsRejection(coupon, scopePodId, original, redeem?.channel);
   if (rejection) return fail(rejection);
   const redeemer = redeemerFilter(userId, redeem?.email);
   if (coupon.per_user_limit != null && redeemer) {
@@ -368,8 +383,9 @@ export const couponService = {
   async listAvailableForPod(podId?: string | null) {
     const now = new Date();
     const scopes: any[] = [{ scope: 'GLOBAL' }];
-    if (podId && Types.ObjectId.isValid(podId)) {
-      scopes.push({ scope: 'POD', pod_id: new Types.ObjectId(podId) });
+    const scopePodId = await couponPodOf(podId);
+    if (scopePodId && Types.ObjectId.isValid(scopePodId)) {
+      scopes.push({ scope: 'POD', pod_id: new Types.ObjectId(scopePodId) });
     }
     const docs = await CouponModel.find({
       is_active: true,

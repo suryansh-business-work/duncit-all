@@ -29,12 +29,20 @@ function zonedDayKey(iso: string, timeZone: string): string {
  * the admin-configured zone so it never drifts by the viewer's device tz (B10).
  */
 export function dayLabel(iso: string, timeZone: string): string {
+  const day = relativeDay(iso, timeZone);
+  if (day === 'TODAY') return 'Today';
+  if (day === 'YESTERDAY') return 'Yesterday';
+  return formatInTimeZone(new Date(iso), timeZone, 'd MMM yyyy');
+}
+
+/** Whether an instant fell today or yesterday in the configured zone, else null. */
+export function relativeDay(iso: string, timeZone: string): 'TODAY' | 'YESTERDAY' | null {
   const key = zonedDayKey(iso, timeZone);
   const now = new Date();
-  if (key === formatInTimeZone(now, timeZone, 'yyyy-MM-dd')) return 'Today';
+  if (key === formatInTimeZone(now, timeZone, 'yyyy-MM-dd')) return 'TODAY';
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  if (key === formatInTimeZone(yesterday, timeZone, 'yyyy-MM-dd')) return 'Yesterday';
-  return formatInTimeZone(new Date(iso), timeZone, 'd MMM yyyy');
+  if (key === formatInTimeZone(yesterday, timeZone, 'yyyy-MM-dd')) return 'YESTERDAY';
+  return null;
 }
 
 /** Whether a day separator should be shown before this message (zone-aware). */

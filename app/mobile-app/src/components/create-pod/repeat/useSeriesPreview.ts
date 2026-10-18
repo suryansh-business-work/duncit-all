@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { buildPodSeriesPlan, type PodSeriesPlan } from '@duncit/utils';
+import { buildPodSeriesPlan, multiDateTiersFromEditor, type PodSeriesPlan } from '@duncit/utils';
 
 import { PodSeriesPreviewDocument } from '@/graphql/pod-series';
 import { PodSeriesFrequency } from '@/generated/graphql/graphql';
@@ -20,6 +20,9 @@ export function seriesPlanOf(values: CreatePodFormValues, timeZone: string): Pod
       ...values,
       pod_date_time: parseDateTimeText(values.pod_date_time_text)?.toISOString() ?? null,
       pod_end_date_time: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
+      repeat_discount_tiers: values.repeat_discount_enabled
+        ? multiDateTiersFromEditor(values.repeat_discount_tiers)
+        : [],
     },
     timeZone,
   );

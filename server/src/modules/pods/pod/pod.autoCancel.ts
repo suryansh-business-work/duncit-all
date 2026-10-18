@@ -26,7 +26,7 @@
  * race with a human cancel, is inherently a no-op. SINGLE REPLICA ONLY, like
  * every scheduler here (see whatsapp.scheduler.ts). No-ops under NODE_ENV=test.
  */
-import { isFreePod, PodModel } from './pod.model';
+import { isFreePod, PodModel, SERIES_DATES } from './pod.model';
 import { podService } from './pod.service';
 import { podLifecycleFilter } from './pod.lifecycle';
 import { podFinanceNow, runPodCancellationRiskSweep } from './pod.cancellationRisk';
@@ -168,6 +168,7 @@ export async function runPodAutoCancelSweep(): Promise<number> {
   // tick and never reach a loss-making pod behind it. Overlap between ticks is
   // already prevented by the `sweeping` guard in startPodAutoCancelScheduler.
   const cursor = PodModel.find({
+    ...SERIES_DATES,
     ...podLifecycleFilter('UPCOMING', new Date(now)),
     is_active: true,
     pod_type: { $ne: 'FREE' },

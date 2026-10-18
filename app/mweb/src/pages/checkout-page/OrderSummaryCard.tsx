@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import { alpha } from '@mui/material/styles';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
@@ -37,6 +38,8 @@ interface Props {
   seats?: number;
   /** Price of ONE seat, so the multiplied total below can be reconciled. */
   unitAmount?: number;
+  /** Dates of a recurring pod booked together; the ticket line multiplies by them too. */
+  dates?: number;
   /** Coins spent, left and earned on this bill. Absent hides the coin block. */
   coins?: CoinCheckoutSummary | null;
   /** What rounding the charge up to a whole rupee adds — on top of `breakup`,
@@ -53,6 +56,7 @@ export default function OrderSummaryCard({
   grossTotal,
   discounts = [],
   seats = 1,
+  dates = 1,
   unitAmount = 0,
   coins = null,
   roundOff = 0,
@@ -77,6 +81,18 @@ export default function OrderSummaryCard({
   // Read like a GST invoice: the discounts come off the value BEFORE tax, so
   // subtotal and discounts are excl. GST and the GST row is the tax charged.
   const bill = exclusiveOfGstBill(ticketTotal, discounts, breakup.subtotal, breakup.gstPct);
+  // The ticket line says what the total multiplies: seats, and dates when several.
+  const ticketLine = (() => {
+    if (unitAmount > 0 && dates > 1) {
+      const vars = { price: fmt(unitAmount), seats, dates };
+      return { label: t('mweb.podSeriesBooking.ticketMultiplier', { vars }), value: fmt(ticketTotal) };
+    }
+    if (unitAmount > 0 && seats > 1) {
+      const vars = { price: fmt(unitAmount), seats };
+      return { label: t('mweb.checkout.ticketMultiplier', { vars }), value: fmt(unitAmount * seats) };
+    }
+    return { label: t('mweb.checkout.ticketPrice'), value: fmt(ticketTotal) };
+  })();
   // Venue charges are paid directly at the venue — shown for transparency but
   // NOT added to the online "Total payable".
   const venueCharges: VenueCharge[] = pod?.place_charges ?? [];
@@ -102,16 +118,18 @@ export default function OrderSummaryCard({
           label={seatsText}
           sx={(theme) => ({ mt: 1.25, bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main', '& .MuiChip-icon': { color: 'primary.main' } })}
         />
+        {dates > 1 && (
+          <Chip
+            data-testid="order-summary-dates"
+            size="small"
+            icon={<EventRepeatIcon />}
+            label={t('mweb.podSeriesBooking.datesCount', { count: dates })}
+            sx={{ mt: 1.25, ml: 1 }}
+          />
+        )}
         <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>
-          {seats > 1 && unitAmount > 0 ? (
-            <Row
-              label={t('mweb.checkout.ticketMultiplier', { vars: { price: fmt(unitAmount), seats } })}
-              value={fmt(unitAmount * seats)}
-            />
-          ) : (
-            <Row label={t('mweb.checkout.ticketPrice')} value={fmt(ticketTotal)} />
-          )}
+          <Row label={ticketLine.label} value={ticketLine.value} />
           <Row label={t('mweb.checkout.subtotalExclGst')} value={fmt(bill.subtotal)} />
           {bill.discounts.map((discount) => (
             <Row

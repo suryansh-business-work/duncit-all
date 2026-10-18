@@ -72,7 +72,8 @@ export type RootStackParamList = {
   HostDashboard: undefined;
   Wallet: undefined;
   /** `partnerRequestId` opens a fresh pod on a Pod Request's confirmed venue + slot. */
-  CreatePod: { draftId?: string; partnerRequestId?: string } | undefined;
+  /** `hostAgainPodId`: open filled from one of the host's earlier pods ("Host again"). */
+  CreatePod: { draftId?: string; partnerRequestId?: string; hostAgainPodId?: string } | undefined;
   /** Post-create waiting screen while the venue slot request is PENDING. */
   PodPending: { podId: string };
   RegisterVenue: undefined;
@@ -183,7 +184,8 @@ export type RootStackParamList = {
   PreviousPods: { initialIndex?: number } | undefined;
   HappeningNearby: { initialIndex?: number } | undefined;
   // Pod-membership checkout (pod_amount only — never carries products).
-  Checkout: { podId: string; seats?: number };
+  /** `dateIds`: several dates of a recurring pod (podId is then the recurring pod). */
+  Checkout: { podId: string; seats?: number; dateIds?: string[] };
   /** Where a FREE pod's instant join lands — the checkout confirmation with the
    * ticket and nothing paid (mWeb /pod/:podId/booked). */
   FreeJoinSuccess: { podId: string };

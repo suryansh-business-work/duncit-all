@@ -7,6 +7,7 @@ import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import { notifyVenueSubscribers } from '@modules/venues/venueFood/venueSubscriber.service';
 import { fulfilEventRequests } from '@modules/venues/eventRequest/eventRequest.fulfil';
 import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
+import { syncSeriesParentOf } from '@modules/pods/podSeries/podSeries.parent';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
@@ -850,6 +851,8 @@ async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActo
     { new: true }
   );
   if (!pod) return;
+  // A refused date of a recurring pod drops out; the pod keeps its other dates.
+  await syncSeriesParentOf(pod._id);
   await notifySlotDecision(pod, slot, false, note, actor.source === 'VENUE_OWNER');
   await podAuditService.record({
     pod,
@@ -1233,6 +1236,7 @@ export const venueSlotService = {
       { new: true }
     );
     if (pod) {
+      await syncSeriesParentOf(pod._id);
       await notifySlotDecision(pod, slot, true);
       await podAuditService.record({
         pod,

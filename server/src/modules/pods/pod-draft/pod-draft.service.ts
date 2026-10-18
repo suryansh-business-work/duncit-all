@@ -53,12 +53,22 @@ export const podDraftService = {
     return toPub(created);
   },
 
+  /** Deletes one of the caller's drafts, whatever step it reached. Never
+   * answers false: a draft that no longer exists (already deleted, published
+   * or swept) is NOT_FOUND and someone else's is FORBIDDEN, so a client cannot
+   * mistake a no-op for a delete. */
   async remove(userId: string, draftId: string) {
-    const res = await PodDraftModel.deleteOne({
-      _id: draftId,
-      user_id: new Types.ObjectId(userId),
-    });
-    return res.deletedCount > 0;
+    const draft = Types.ObjectId.isValid(draftId)
+      ? await PodDraftModel.findById(draftId).select('user_id').lean()
+      : null;
+    if (!draft) throw new GraphQLError('Draft not found', { extensions: { code: 'NOT_FOUND' } });
+    if (String(draft.user_id) !== String(userId)) {
+      throw new GraphQLError('This draft belongs to another host', { extensions: { code: 'FORBIDDEN' } });
+    }
+    const res = await PodDraftModel.deleteOne({ _id: draft._id, user_id: draft.user_id });
+    // Gone between the read and the delete (a second tap, the sweep): still not ours to report as done.
+    if (res.deletedCount === 0) throw new GraphQLError('Draft not found', { extensions: { code: 'NOT_FOUND' } });
+    return true;
   },
 
   async hostAgain(userId: string, podDocId: string) {

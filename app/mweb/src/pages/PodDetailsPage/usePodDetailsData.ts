@@ -91,6 +91,15 @@ export function usePodDetailsData({ clubSlug, podSlug, referralFromUrl, navigate
     navigate,
   });
 
+  // The link comes back from a write that may have just marked this member
+  // present, so the pod is re-read behind it — not awaited, so the tab opens
+  // while the click's activation is still fresh.
+  const onJoinMeeting = async (): Promise<string> => {
+    const result = await joinMeeting({ variables: { id: pod?.id } });
+    refetch().catch(() => undefined);
+    return result.data.joinPodMeeting.meeting_url;
+  };
+
   return {
     slugResolution,
     id,
@@ -99,7 +108,7 @@ export function usePodDetailsData({ clubSlug, podSlug, referralFromUrl, navigate
     refetch,
     peopleData,
     spotFillData,
-    joinMeeting,
+    onJoinMeeting,
     seatsByUser,
     pod,
     locationPrompt,

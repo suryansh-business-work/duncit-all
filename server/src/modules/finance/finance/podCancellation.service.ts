@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
+import { isFreePod, PodModel, SERIES_DATES } from '@modules/pods/pod/pod.model';
 import { PodAuditLogModel, type IPodAuditLog } from '@modules/pods/podAudit/podAudit.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { REFUNDED_MONEY_EXPR } from '@modules/finance/payment/payment.refund.service';
@@ -125,12 +125,12 @@ function cancelledAt(pod: any, deleted: boolean, audit: IPodAuditLog | undefined
 async function buildRows(): Promise<PodCancellationRow[]> {
   // lean(): plain DB shapes, so legacy pods keep their genuinely-missing fields.
   const [deletedPods, declinedPods, settings] = await Promise.all([
-    PodModel.find({ deleted_at: { $ne: null } })
+    PodModel.find({ ...SERIES_DATES, deleted_at: { $ne: null } })
       .setOptions({ includeDeleted: true })
       .sort({ deleted_at: -1 })
       .limit(CANCELLATION_LIMIT)
       .lean(),
-    PodModel.find({ deleted_at: null, venue_approval_status: 'DECLINED' })
+    PodModel.find({ ...SERIES_DATES, deleted_at: null, venue_approval_status: 'DECLINED' })
       .sort({ updated_at: -1 })
       .limit(CANCELLATION_LIMIT)
       .lean(),
@@ -222,11 +222,11 @@ export const podCancellationService = {
    */
   async stats() {
     const [deletedIds, declinedIds, settings] = await Promise.all([
-      PodModel.find({ deleted_at: { $ne: null } })
+      PodModel.find({ ...SERIES_DATES, deleted_at: { $ne: null } })
         .setOptions({ includeDeleted: true })
         .select('_id')
         .lean(),
-      PodModel.find({ deleted_at: null, venue_approval_status: 'DECLINED' }).select('_id').lean(),
+      PodModel.find({ ...SERIES_DATES, deleted_at: null, venue_approval_status: 'DECLINED' }).select('_id').lean(),
       getFinanceSettings(),
     ]);
     const cancelledIds = [...deletedIds, ...declinedIds].map((p) => p._id);

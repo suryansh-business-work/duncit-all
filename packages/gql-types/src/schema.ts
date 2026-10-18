@@ -11927,6 +11927,37 @@ export type LogStoreRejectionInput = {
   version: Scalars['String']['input'];
 };
 
+/** One successful sign-in, shown under Profile > Login activity. */
+export type LoginActivity = {
+  __typename?: 'LoginActivity';
+  browser?: Maybe<Scalars['String']['output']>;
+  /** Approximate place from an offline geo-IP lookup — null when unknown. */
+  city?: Maybe<Scalars['String']['output']>;
+  /** ISO country code. */
+  country?: Maybe<Scalars['String']['output']>;
+  /** MOBILE, TABLET, DESKTOP, BOT or UNKNOWN. */
+  device_type?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  ip?: Maybe<Scalars['String']['output']>;
+  /** The site or console it was made on, e.g. admin.duncit.com. */
+  origin_host?: Maybe<Scalars['String']['output']>;
+  os?: Maybe<Scalars['String']['output']>;
+  /** How it was made (EMAIL, OTP, GOOGLE or APPLE). */
+  provider?: Maybe<Scalars['String']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+  /** ISO timestamp of the sign-in. */
+  signed_in_at: Scalars['String']['output'];
+  /** The client it was made on (NATIVE, MWEB, PORTAL…). */
+  surface?: Maybe<Scalars['String']['output']>;
+};
+
+export type LoginActivityHistory = {
+  __typename?: 'LoginActivityHistory';
+  entries: Array<LoginActivity>;
+  /** How many days a sign-in is kept before it is removed. */
+  retention_days: Scalars['Int']['output'];
+};
+
 export type LoginInput = {
   /**
    * Which of the two the password is being proved against. Defaults to EMAIL, so
@@ -26792,6 +26823,8 @@ export type Query = {
   myHostRequests: Array<HostRequest>;
   myHostTakenCategoryIds: Array<Scalars['ID']['output']>;
   myInterviews: Array<Interview>;
+  /** The signed-in member's own recent sign-ins, newest first (default 50, at most 100). */
+  myLoginActivity: LoginActivityHistory;
   /** The signed-in person's own mail preferences. */
   myMailPreferences: MailPreference;
   /** Current user's meeting request for a kind. */
@@ -29601,6 +29634,11 @@ export type QueryMyHostPodsArgs = {
 
 export type QueryMyHostPodsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMyLoginActivityArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 

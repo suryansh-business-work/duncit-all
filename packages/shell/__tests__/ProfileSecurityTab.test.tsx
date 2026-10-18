@@ -23,6 +23,7 @@ vi.mock('@duncit/logs', async (importOriginal) => ({
 }));
 
 import { SecurityTab } from '../src/chrome/ProfilePage/security/SecurityTab';
+import { SignInActivitySection } from '../src/chrome/ProfilePage/activity/SignInActivitySection';
 import {
   CHANGE_PASSWORD_WITH_OTP,
   MY_CONNECTED_ACCOUNTS,
@@ -207,6 +208,9 @@ describe('PasswordSection', () => {
 });
 
 describe('SignInActivitySection', () => {
+  // Lives on the Login activity tab now; rendered on its own off the same accounts.
+  const renderSection = () => render(<SignInActivitySection accounts={query.data?.myConnectedAccounts ?? ACCOUNTS} />);
+
   it.each([
     ['EMAIL', 'with password'],
     ['OTP', 'with a one-time code'],
@@ -214,7 +218,7 @@ describe('SignInActivitySection', () => {
     ['APPLE', 'with Apple'],
   ])('names a %s sign-in', (provider, words) => {
     withAccounts({ last_login_provider: provider });
-    render(<SecurityTab onSignedOut={vi.fn()} />);
+    renderSection();
 
     expect(screen.getByTestId('profile-last-sign-in')).toHaveTextContent(
       `Last signed in on 2026-10-02T08:30:00Z · ${words}`,
@@ -223,25 +227,25 @@ describe('SignInActivitySection', () => {
 
   it('leaves the method off for a provider it has no words for', () => {
     withAccounts({ last_login_provider: 'SAML' });
-    render(<SecurityTab onSignedOut={vi.fn()} />);
+    renderSection();
 
     expect(screen.getByTestId('profile-last-sign-in').textContent).toBe('Last signed in on 2026-10-02T08:30:00Z');
   });
 
   it('says no sign-in is recorded, without a method, when there is no date', () => {
     withAccounts({ last_login_at: null, last_login_provider: 'EMAIL' });
-    render(<SecurityTab onSignedOut={vi.fn()} />);
+    renderSection();
 
     expect(screen.getByTestId('profile-last-sign-in').textContent).toBe('No sign-in recorded yet.');
   });
 
   it('shows the linked Gmail, or that none is linked', () => {
-    const { unmount } = render(<SecurityTab onSignedOut={vi.fn()} />);
+    const { unmount } = renderSection();
     expect(screen.getByTestId('profile-google-link')).toHaveTextContent('Google account linked: ada@gmail.test');
     unmount();
 
     withAccounts({ google: null });
-    render(<SecurityTab onSignedOut={vi.fn()} />);
+    renderSection();
     expect(screen.getByTestId('profile-google-link')).toHaveTextContent(
       'No Google account linked. You can link one from the Duncit app.',
     );

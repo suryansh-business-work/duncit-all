@@ -3,17 +3,19 @@ import { Box, Container, Paper, Stack } from '@mui/material';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
+import HistoryIcon from '@mui/icons-material/History';
 import { DuncitTabs, tabPanelProps, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { useUserData } from '@duncit/user-context';
 import { useBranding } from '../../hooks/useBranding';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { Translate } from '../../i18n/fallback';
+import { LoginActivityTab } from './activity/LoginActivityTab';
 import { DetailsTab } from './details/DetailsTab';
 import { NotificationsTab } from './notifications/NotificationsTab';
 import { ProfileIdentity } from './ProfileIdentity';
 import { SecurityTab } from './security/SecurityTab';
 
-type ProfileTab = 'profile' | 'security' | 'notifications';
+type ProfileTab = 'profile' | 'security' | 'activity' | 'notifications';
 
 const TAB_ID_PREFIX = 'profile';
 
@@ -21,6 +23,7 @@ function buildTabs(t: Translate): DuncitTabItem<ProfileTab>[] {
   return [
     { value: 'profile', label: t('shell.profile.tabs.profile'), icon: <PersonOutlineIcon />, iconPosition: 'start', testId: 'profile-tab-profile' },
     { value: 'security', label: t('shell.profile.tabs.security'), icon: <LockOutlinedIcon />, iconPosition: 'start', testId: 'profile-tab-security' },
+    { value: 'activity', label: t('shell.profile.tabs.activity'), icon: <HistoryIcon />, iconPosition: 'start', testId: 'profile-tab-activity' },
     {
       value: 'notifications',
       label: t('shell.profile.tabs.notifications'),
@@ -36,9 +39,10 @@ function buildTabs(t: Translate): DuncitTabItem<ProfileTab>[] {
  * opened from the header avatar menu, so account management is identical
  * across all consoles.
  *
- * Three tabs, selected through the URL so a link can open one directly:
+ * Four tabs, selected through the URL so a link can open one directly:
  * Profile (photo, name, bio, links, privacy, language, roles), Security
- * (password with an emailed OTP, sign-in activity, sign out everywhere) and
+ * (password with an emailed OTP, two-factor, sign out everywhere), Login
+ * activity (last sign-in and every recent one, with place and device) and
  * Notifications (email, WhatsApp, where codes are sent). Every switch and form
  * here writes through the same server rules mWeb and the app use.
  */
@@ -66,6 +70,7 @@ export function ProfilePage() {
         <Box {...tabPanelProps(TAB_ID_PREFIX, tabs.value)}>
           {tabs.value === 'profile' && <DetailsTab roles={user?.roles ?? []} />}
           {tabs.value === 'security' && <SecurityTab onSignedOut={logout} />}
+          {tabs.value === 'activity' && <LoginActivityTab />}
           {tabs.value === 'notifications' && <NotificationsTab />}
         </Box>
       </Stack>

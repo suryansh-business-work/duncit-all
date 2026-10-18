@@ -24,6 +24,7 @@ import {
   type PasswordResetLookup,
 } from './password-reset.service';
 import { signOutEverywhere } from './sign-out-everywhere';
+import { loginActivityService } from './login-activity/loginActivity.service';
 import { validate } from '@utils/validate';
 import { assertEligibleDob } from '@utils/age';
 import { referralService } from '@modules/engagement/referral/referral.service';
@@ -77,12 +78,18 @@ const signInContext = (ctx: GraphQLContext): SignInContext => ({
   place: String(ctx.req.headers['x-forwarded-for'] ?? '')
     .split(',')[0]
     ?.trim(),
+  remoteAddress: ctx.req.socket?.remoteAddress ?? null,
+  surface: String(ctx.req.headers['x-duncit-surface'] ?? ''),
+  origin: String(ctx.req.headers.origin ?? ''),
 });
 
 export const authResolvers = {
   Query: {
     myConnectedAccounts: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       return userService.myConnectedAccounts(await requireUserId(ctx));
+    },
+    myLoginActivity: async (_p: unknown, args: { limit?: number | null }, ctx: GraphQLContext) => {
+      return loginActivityService.listMine(await requireUserId(ctx), args.limit);
     },
     // Public by design — see the schema note: the verified token IS the
     // question, and the answer is only ever about the caller's own identity.

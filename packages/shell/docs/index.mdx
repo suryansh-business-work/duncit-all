@@ -141,13 +141,14 @@ const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> 
 
 ### The profile page
 
-`ProfilePage` takes no props — every portal mounts the same one. It has three tabs, selected by
+`ProfilePage` takes no props — every portal mounts the same one. It has four tabs, selected by
 `?selectedtab=` so a link can open one directly:
 
 | Tab | What it holds | Server operations |
 |---|---|---|
 | `profile` | Photo upload, first/last name, bio, up to 5 links (website / social accounts), private-profile switch, language, access roles | `me`, `updateMyProfile`, `updateMyProfileVisibility`, `setMyLocale` |
-| `security` | Change or create the password (current password → emailed 6-digit code → new password), when it last changed, **Authenticator app** (set up / turn off), last sign-in and method, linked Google account (read-only), **Sign out of all devices** | `myConnectedAccounts`, `requestPasswordChangeOtp`, `changePasswordWithOtp`, `startTwoFactorSetup`, `enableTwoFactor`, `disableTwoFactor`, `signOutEverywhere` |
+| `security` | Change or create the password (current password → emailed 6-digit code → new password), when it last changed, **Authenticator app** (set up / turn off), **Sign out of all devices** | `myConnectedAccounts`, `requestPasswordChangeOtp`, `changePasswordWithOtp`, `startTwoFactorSetup`, `enableTwoFactor`, `disableTwoFactor`, `signOutEverywhere` |
+| `activity` | Last sign-in and method, linked Google account (read-only), and a `@duncit/table` of every sign-in kept by the server (90 days): when, method, approximate location (offline geo-IP), browser/OS/device, which console or app, IP | `myConnectedAccounts`, `myLoginActivity` |
 | `notifications` | Email categories, WhatsApp categories (locked rows shown, never hidden), which channels may carry sign-in codes | `myMailPreferences`, `myWhatsappPreference`, `myCommunicationPreference` and their setters |
 
 The rules are mWeb's, not a portal copy: names, bio and links validate through

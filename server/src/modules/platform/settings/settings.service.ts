@@ -278,7 +278,11 @@ const toAppPub = (d: any) => ({
   club_chat_retention_days: cleanClubChatRetentionDays(d?.club_chat_retention_days),
   pod_series_max_occurrences: cleanPodSeriesMaxOccurrences(d?.pod_series_max_occurrences),
   pod_series_max_span_days: cleanPodSeriesMaxSpanDays(d?.pod_series_max_span_days),
-  pod_multi_date_discount_tiers: d?.pod_multi_date_discount_tiers ?? DEFAULT_MULTI_DATE_DISCOUNT_TIERS,
+  // Plain rows, never the document's Mongoose array: callers compare, spread
+  // and cache these. A stored [] (discount off) stays empty; only null defaults.
+  pod_multi_date_discount_tiers: (d?.pod_multi_date_discount_tiers ?? DEFAULT_MULTI_DATE_DISCOUNT_TIERS).map(
+    (tier: MultiDateDiscountTier) => ({ min_dates: tier.min_dates, discount_pct: tier.discount_pct }),
+  ),
   auto_pod_venue_expiry_hours: cleanAutoPodVenueExpiryHours(d?.auto_pod_venue_expiry_hours),
   auto_pod_assignment_expiry_hours: cleanAutoPodAssignmentExpiryHours(
     d?.auto_pod_assignment_expiry_hours,

@@ -1,12 +1,14 @@
 import { useQuery } from '@apollo/client/react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
-import { Alert, Box, Card, Divider, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import PageHeader from '../../components/PageHeader';
 import GatewayChip from '../checkout-page/GatewayChip';
 import ProcessingBackdrop from '../checkout-page/ProcessingBackdrop';
-import { PUBLIC_FINANCE } from '../checkout-page/queries';
+import { PUBLIC_FINANCE, type CheckoutContact } from '../checkout-page/queries';
+import CheckoutContactFields from '../checkout-page/CheckoutContactFields';
+import { CHECKOUT_FIELD_SX } from '../checkout-page/checkoutFieldSx';
 import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
 import { CheckoutRequirementsCard, useCheckoutEligibility } from '../../components/checkout-gate';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -65,9 +67,15 @@ export default function GiftCardCheckoutPage() {
   const recipientValue = selection.gift
     ? selection.recipient_name || selection.recipient_email
     : t('mweb.giftCards.checkoutSelf');
-  const me = payment.me;
-  const contactName = [me?.first_name, me?.last_name].filter(Boolean).join(' ').trim();
-  const contactPhone = [me?.phone_extension, me?.phone_number].filter(Boolean).join(' ').trim();
+  const { me, billingForm } = payment;
+  const contact: CheckoutContact | null = me
+    ? {
+        fullName: [me.first_name, me.last_name].filter(Boolean).join(' ').trim(),
+        email: me.email ?? '',
+        phoneExtension: me.phone_extension ?? '',
+        phoneNumber: me.phone_number ?? '',
+      }
+    : null;
 
   return (
     <Box data-testid="gift-card-checkout-screen" sx={{ maxWidth: 560, mx: 'auto', py: 0.5 }}>
@@ -101,33 +109,16 @@ export default function GiftCardCheckoutPage() {
           </Typography>
         </Card>
         <Card sx={{ p: 2 }}>
-          <Typography component="h2" sx={{ fontSize: '1rem', fontWeight: 600, mb: 0.75 }}>
-            {t('mweb.checkout.contactDetails')}
-          </Typography>
-          {payment.meLoading && !me ? (
-            <Skeleton variant="text" width="60%" role="progressbar" aria-label={t('mweb.a11y.loading')} />
-          ) : (
-            <>
-              {contactName && <Typography variant="body2">{contactName}</Typography>}
-              <Typography variant="body2" sx={{
-                color: "text.secondary"
-              }}>
-                {me?.email ?? ''}
-              </Typography>
-              {contactPhone && (
-                <Typography variant="body2" sx={{
-                  color: "text.secondary"
-                }}>
-                  {contactPhone}
-                </Typography>
-              )}
-              <Typography variant="caption" sx={{
-                color: "text.secondary"
-              }}>
-                {t('mweb.checkout.contactEditNote')}
-              </Typography>
-            </>
-          )}
+          {/* Contact (read-only) + the billing address and GST every invoice needs. */}
+          <CheckoutContactFields
+            control={billingForm.control}
+            fieldSx={CHECKOUT_FIELD_SX}
+            mainAddress={billingForm.mainAddress}
+            hasMainAddress={billingForm.hasMainAddress}
+            contact={contact}
+            contactLoading={payment.meLoading && !me}
+            addressRequired
+          />
         </Card>
         {payment.error && (
           <Alert data-testid="gift-card-checkout-error" severity="error" onClose={() => payment.setError(null)}>
@@ -146,7 +137,7 @@ export default function GiftCardCheckoutPage() {
             !me?.email ||
             eligibility.missing.length > 0
           }
-          onClick={() => payment.pay(selection)}
+          onClick={billingForm.handleSubmit((values) => payment.pay(selection, values))}
         >
           {t('mweb.giftCards.payCta', { vars: { amount: amountLabel } })}
         </DuncitButton>

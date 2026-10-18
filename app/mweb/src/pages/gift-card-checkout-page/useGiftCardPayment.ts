@@ -12,6 +12,9 @@ import {
   type RazorpayOrderData,
   type RazorpaySignature,
 } from '../checkout-page/razorpayCheckout';
+import { toCheckoutBilling } from '../checkout-page/checkout';
+import type { CheckoutForm } from '../checkout-page/queries';
+import { useCheckoutBillingForm } from '../checkout-page/useCheckoutBillingForm';
 import { parseApiError } from '../../utils/parseApiError';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { GiftCardSelection } from '../gift-cards-page/queries';
@@ -42,6 +45,9 @@ export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
 
   const finance = financeData?.publicFinanceSettings;
   const me = meData?.me;
+  // Every payment is invoiced, so the server refuses one without a billing
+  // address — the same billing form the pod checkout uses, prefilled from the profile.
+  const billingForm = useCheckoutBillingForm(me);
 
   const verifyRazorpay = async (paymentDocId: string, sig: RazorpaySignature) => {
     setSubmitting(true);
@@ -57,7 +63,7 @@ export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
     }
   };
 
-  const pay = async (selection: GiftCardSelection) => {
+  const pay = async (selection: GiftCardSelection, values: CheckoutForm) => {
     setError(null);
     setSubmitting(true);
     const input = {
@@ -71,9 +77,11 @@ export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
       contact_email: me?.email ?? '',
       contact_phone_extension: me?.phone_extension ?? '',
       contact_phone_number: me?.phone_number ?? '',
+      billing: toCheckoutBilling(values, billingForm.mainAddress),
       checkout_url: globalThis.window.location.href,
     };
     try {
+      await billingForm.persistMainAddress(values);
       if (finance?.razorpay_enabled) {
         const orderRes = await doOrder({ variables: { input } });
         const order = orderRes.data?.createRazorpayGiftCardOrder;
@@ -103,5 +111,5 @@ export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
     }
   };
 
-  return { finance, financeLoading, me, meLoading, submitting, error, setError, success, pay };
+  return { finance, financeLoading, me, meLoading, billingForm, submitting, error, setError, success, pay };
 }

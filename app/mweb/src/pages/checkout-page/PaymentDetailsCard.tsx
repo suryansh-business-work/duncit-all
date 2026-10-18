@@ -5,6 +5,7 @@ import SectionHeader from '../../components/SectionHeader';
 import type { Control } from 'react-hook-form';
 import type { AvailableCoupon, CheckoutContact, CheckoutForm, CouponPreview } from './queries';
 import { CheckoutFields, type PostalAddressParts } from './checkout';
+import { CHECKOUT_FIELD_SX } from './checkoutFieldSx';
 import CouponField from './CouponField';
 import CoinRedeemField from './CoinRedeemField';
 import type { CoinRedemption } from './useCoinRedemption';
@@ -77,14 +78,7 @@ export default function PaymentDetailsCard({
   // filling in a card rather than after.
   const eligibility = useCheckoutEligibility();
   const blocked = eligibility.missing.length > 0;
-  // Fields sit on the card at the theme's own input look; only the height and
-  // corner are the checkout's.
-  const fieldSx = {
-    '& .MuiOutlinedInput-root': { minHeight: 56, borderRadius: '14px' },
-    '& .MuiInputBase-input, & .MuiSelect-select': { py: 1.45 },
-    '& .MuiSelect-select': { display: 'flex', alignItems: 'center' },
-    '& .MuiSelect-icon': { color: 'text.secondary' },
-  };
+  const fieldSx = CHECKOUT_FIELD_SX;
   const selectMenuProps = {
     PaperProps: {
       sx: {

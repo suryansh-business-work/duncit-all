@@ -189,6 +189,12 @@ export const linking: LinkingOptions<RootStackParamList> = {
       VenueFoodItem: 'venue/:venueId/food/:itemId',
       MyFoodOrders: 'food-orders',
       MyRentedItems: 'rented-items',
+      // Gig Jobs on mWeb's exact paths — the poster's interest notification links to /gigs/:id.
+      GigJobs: 'gigs',
+      GigJobForm: 'gigs/new',
+      MyGigJobs: 'gigs/mine',
+      GigJobDetail: 'gigs/:id',
+      FreelancerProfile: 'earn/freelancer',
       // The link a member shares from a city's waitlist, on mWeb's exact path.
       CityLaunch: 'city-launch/:locationId',
       Checkout: 'checkout/:podId',

@@ -1,4 +1,4 @@
-/** The four ways to earn with Duncit, and the state machine that locks each one. */
+/** The ways to earn with Duncit, and the state machine that locks each one. */
 
 /** One `myMeetings` row, as every surface selects it. */
 export interface EarnMeeting {
@@ -47,13 +47,14 @@ export type EarnJourneyCta =
 export interface EarnJourney {
   /** Role that means the user already has this — the card locks as "enabled". */
   role: string;
-  /** MeetingKind this journey books. */
+  /** MeetingKind this journey books (FREELANCER books none — saving the profile grants the role). */
   kind: string;
   title: string;
   description: string;
   /** Surface-agnostic icon name; each app maps it to its own icon component. */
-  iconKey: 'host' | 'venue' | 'ecomm' | 'club';
-  /** mWeb / portal survey route. */
+  iconKey: 'host' | 'venue' | 'ecomm' | 'club' | 'freelancer';
+  /** mWeb route that starts the journey: the onboarding survey, or for the
+   * self-serve freelancer journey (no meeting) its profile form. */
   surveyPath: string;
   /** Native stack screen that starts the same journey. */
   nativeRoute: string;

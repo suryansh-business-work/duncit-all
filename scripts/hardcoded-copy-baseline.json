@@ -289,7 +289,7 @@
   "packages/media-picker/src/SelectionTray.tsx": 1,
   "packages/media-picker/src/upload.ts": 1,
   "packages/media-picker/src/useImagekitDirectUpload.ts": 1,
-  "packages/onboarding/src/journeys.ts": 12,
+  "packages/onboarding/src/journeys.ts": 15,
   "packages/shell/src/file-manager/FileCard.tsx": 1,
   "packages/shell/src/mountPortal.tsx": 1,
   "packages/shell/src/staff-chat/LocationDialog.tsx": 1,

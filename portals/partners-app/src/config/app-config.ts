@@ -57,6 +57,14 @@ export const appConfig: AppConfig = {
         { label: 'Policies', labelKey: 'shell.nav.policies', to: '/policies', icon: 'policy' },
       ],
     },
+    // Gig Jobs: hosts, venue owners and brand owners post what an event needs;
+    // freelancers apply. Every signed-in partner sees it, whatever role they hold.
+    {
+      label: 'Gig Jobs', labelKey: 'shell.nav.gigJobs',
+      caption: 'Find or post gigs for events and workshops', captionKey: 'gigJobs.nav.caption',
+      to: '/gigs',
+      icon: 'work',
+    },
     // Featured invitation into the other earn journeys — the same entry
     // mWeb/native show in their profile grids, styled as a highlighted card.
     // Last on purpose, and pinned to the sidebar's foot (just above the

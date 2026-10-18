@@ -36,6 +36,11 @@ import { VenueFoodOrderScreen } from '@/screens/VenueFoodOrderScreen';
 import { VenueFoodItemScreen } from '@/screens/VenueFoodItemScreen';
 import { MyFoodOrdersScreen } from '@/screens/MyFoodOrdersScreen';
 import { MyRentedItemsScreen } from '@/screens/MyRentedItemsScreen';
+import { FreelancerProfileScreen } from '@/screens/FreelancerProfileScreen';
+import { GigJobDetailScreen } from '@/screens/GigJobDetailScreen';
+import { GigJobFormScreen } from '@/screens/GigJobFormScreen';
+import { GigJobsScreen } from '@/screens/GigJobsScreen';
+import { MyGigJobsScreen } from '@/screens/MyGigJobsScreen';
 import { OrderDetailScreen } from '@/screens/OrderDetailScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
 import { ProductCheckoutScreen } from '@/screens/ProductCheckoutScreen';
@@ -83,6 +88,11 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="VenueFoodItem" component={VenueFoodItemScreen} />
       <Stack.Screen name="MyFoodOrders" component={MyFoodOrdersScreen} />
       <Stack.Screen name="MyRentedItems" component={MyRentedItemsScreen} />
+      <Stack.Screen name="GigJobs" component={GigJobsScreen} />
+      <Stack.Screen name="GigJobDetail" component={GigJobDetailScreen} />
+      <Stack.Screen name="GigJobForm" component={GigJobFormScreen} />
+      <Stack.Screen name="MyGigJobs" component={MyGigJobsScreen} />
+      <Stack.Screen name="FreelancerProfile" component={FreelancerProfileScreen} />
       <Stack.Screen name="CityLaunch" component={CityLaunchScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="FreeJoinSuccess" component={FreeJoinSuccessScreen} />

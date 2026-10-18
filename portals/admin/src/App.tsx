@@ -11,6 +11,7 @@ import SettingsPage from './pages/SettingsPage';
 import PortalAppSettingsPage from './pages/portal-app-settings';
 import RolesPage from './pages/RolesPage';
 import CategoriesPage from './pages/CategoriesPage';
+import GigCategoriesPage from './pages/gig-categories/GigCategoriesPage';
 import LocationsPage from './pages/LocationsPage';
 import LocationSubscriptionsPage from './pages/location-subscriptions';
 import PartnersPage from './pages/PartnersPage';
@@ -42,6 +43,7 @@ export default function App() {
                   <Route path="/users/:user_id" element={<UserDetailsPage />} />
                   <Route path="/users-dashboard" element={<UsersDashboardPage />} />
                   <Route path="/categories" element={<CategoriesPage />} />
+                  <Route path="/gig-categories" element={<GigCategoriesPage />} />
                   <Route path="/locations" element={<LocationsPage />} />
                   <Route path="/location-subscriptions" element={<LocationSubscriptionsPage />} />
                   <Route path="/partners" element={<PartnersPage />} />

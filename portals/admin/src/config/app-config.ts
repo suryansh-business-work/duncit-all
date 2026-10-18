@@ -64,6 +64,7 @@ export const appConfig = {
       icon: 'inventory',
       children: [
         { label: 'Categories', labelKey: 'shell.nav.categories', to: '/categories', icon: 'accountTree' },
+        { label: 'Gig Categories', labelKey: 'shell.nav.gigCategories', to: '/gig-categories', icon: 'work' },
         { label: 'Locations', labelKey: 'shell.nav.locations', to: '/locations', icon: 'location' },
         { label: 'Subscribe for location', labelKey: 'shell.nav.locationSubscriptions', to: '/location-subscriptions', icon: 'notifications' },
       ],
@@ -126,6 +127,7 @@ export const appConfig = {
       keywords: ['membership', 'notify', 'waitlist', 'news'],
     },
     { label: 'Categories', labelKey: 'shell.nav.categories', to: '/categories', section: 'Catalog', sectionKey: 'shell.nav.catalog' },
+    { label: 'Gig Categories', labelKey: 'shell.nav.gigCategories', to: '/gig-categories', section: 'Catalog', sectionKey: 'shell.nav.catalog' },
     { label: 'Locations', labelKey: 'shell.nav.locations', to: '/locations', section: 'Catalog', sectionKey: 'shell.nav.catalog' },
     {
       label: 'Subscribe for location', labelKey: 'shell.nav.locationSubscriptions',

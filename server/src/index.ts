@@ -541,6 +541,12 @@ async function bootstrap() {
     const { badgeService } = await import('@modules/engagement/badge/badge.service');
     await badgeService.seedDefaults();
   });
+  // Gig Jobs categories (Photography, Catering, Sponsorship …). Create-only, so
+  // Admin > Gig Categories edits survive every redeploy.
+  await safeSeed('gigCategories', async () => {
+    const { gigCategoryService } = await import('@modules/engagement/gigJob/gigCategory.service');
+    await gigCategoryService.seedDefaults();
+  });
   // Tech > E2E Tests > Flows: every journey the codebase ships. Additive only,
   // so a flow or sub flow a tech admin has edited survives every redeploy.
   await safeSeed('e2eFlows', async () => {

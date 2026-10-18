@@ -35,6 +35,7 @@ const ICONS: Record<EarnJourney['iconKey'], ComponentProps<typeof MaterialIcons>
   venue: 'store',
   ecomm: 'inventory-2',
   club: 'groups',
+  freelancer: 'work-outline',
 };
 
 /** "Earn with Duncit" — three ways to start earning; a box is disabled when the

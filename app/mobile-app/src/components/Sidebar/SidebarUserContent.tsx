@@ -86,6 +86,11 @@ export function SidebarUserContent({
       <AdSlot position="SIDEBAR" variant="card" />
       {mode === 'USER' ? <SidebarDuncitCoinCard onNavigate={onNavigate} /> : null}
       <SidebarReferralCard onNavigate={onNavigate} />
+      <SidebarManageList
+        title={t('gigJobs.nav.section')}
+        items={tiles.gigs}
+        onNavigate={onNavigate}
+      />
       {showLeaderboard ? (
         <SidebarManageList
           title={t('mweb.leaderboard.title')}

@@ -1,0 +1,76 @@
+---
+name: '@duncit/gig-jobs'
+summary: 'Gig Jobs as one MUI set for mWeb and the Partners console: the board, a gig''s page with contact sharing, the post form, My posts and the freelancer profile.'
+category: 'domain'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'app/mweb'
+  - 'portals/partners-app'
+exports:
+  - 'GigSurfaceProvider'
+  - 'useGigSurface'
+  - 'GigBoard'
+  - 'MyGigJobs'
+  - 'GigJobDetail'
+  - 'GigJobEditor'
+  - 'FreelancerProfileEditor'
+  - 'ContactSharingNotice'
+---
+
+## Why this exists
+
+Hosts, venue owners and brand owners run events and workshops that need people and things:
+a photographer, a caterer, a DJ, a sponsor, chairs and a tent. **Gig Jobs** is where they post
+that need and where freelancers find it.
+
+- **Posting** is for `HOST`, `VENUE_OWNER` and `ECOMM_MANAGER` (a Partner Brand owner — never the
+  pet store's staff). The server checks the role on every save; the UI only mirrors it.
+- **Browsing** is for anyone signed in.
+- **Showing interest** is for freelancers. A freelancer joins from **Earn with Duncit** — a
+  self-serve card with no meeting: saving the profile grants the `FREELANCER` role.
+- **"I'm interested"** swaps contacts: the freelancer's profile contact goes to the poster (with an
+  in-app notification) and the poster's comes back. It is free today; every screen that shares a
+  contact shows an info notice that it may become a paid feature. On the server one function
+  (`contactVisibleTo` in `gigJob.service.ts`) decides who sees a contact — that is where a paid
+  unlock would sit.
+
+Categories (Photography & Videography, Food & Catering, … Sponsorship) and the roles under each
+are admin master data — **Admin > Catalog > Gig Categories** — seeded create-only on boot.
+
+The native app cannot import MUI, so everything that is not drawing lives in
+**`@duncit/utils` → `gig-jobs.ts`**: the documents as plain strings, the row types, the label keys
+(`gigPosterRoleKey`, `gigEventTypeKey`, `gigStatusKey`), the rules (`canPostGigs`,
+`gigViewerAction`, `gigRoleOptions`, `freelancerSkillOptions`, `gigContactLinks`) and the
+conversion between form values and mutation inputs. The form rules are `@duncit/forms/schemas` → `gig-job.ts`. Copy is
+the `gigJobs` namespace.
+
+## Mounting it
+
+Every screen needs a `GigSurfaceProvider` that says where links go:
+
+```tsx
+<GigSurfaceProvider
+  value={{
+    go: (path) => navigate(path),
+    // mWeb: in-app. Partners: open mWeb's /earn/freelancer, where Earn with Duncit lives.
+    openFreelancerProfile: () => navigate(FREELANCER_PROFILE_PATH),
+    // Background refreshes report through fireAndForget against this logger.
+    logger: logs.mWeb,
+  }}
+>
+  <GigBoard />
+</GigSurfaceProvider>
+```
+
+| Screen | Path | Who |
+| --- | --- | --- |
+| `GigBoard` | `/gigs` | everyone signed in |
+| `GigJobEditor` | `/gigs/new`, `/gigs/:id/edit` | hosts, venue owners, brand owners (own gigs) |
+| `MyGigJobs` | `/gigs/mine` | posters |
+| `GigJobDetail` | `/gigs/:id` | everyone; the poster also sees the interested freelancers |
+| `FreelancerProfileEditor` | `/earn/freelancer` | anyone — saving joins |
+
+Dates read and write `yyyy-MM-dd` through MUI X's `DatePicker`, inside the surface's
+`DuncitLocalizationProvider`, so they follow the admin-configured format.

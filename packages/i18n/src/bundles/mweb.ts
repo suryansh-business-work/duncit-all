@@ -312,6 +312,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       coin: { title: 'Duncit Coin' },
       leaderboard: { title: 'Leaderboard' },
+      gigJobs: {
+        title: 'Gig Jobs',
+        description: 'Gigs for events and workshops — photographers, caterers, DJs, sponsors and more, posted by hosts, venues and brands.',
+      },
+      gigPost: { title: 'Post a gig' },
+      gigEdit: { title: 'Edit gig' },
+      myGigs: { title: 'My gig posts' },
+      gigDetail: { title: 'Gig' },
+      freelancerProfile: { title: 'Freelancer profile' },
       badges: {
         title: 'Badges',
         description: 'Every Duncit badge, what it takes to unlock it, and how far along you are.',

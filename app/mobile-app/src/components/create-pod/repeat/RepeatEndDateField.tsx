@@ -17,6 +17,9 @@ interface Props {
   /** The pod's first date — the series cannot end before it. */
   minDate: Date | null;
   error?: string;
+  /** Gig Jobs reuses the field for an optional day; the pod repeat end is required. */
+  required?: boolean;
+  testID?: string;
 }
 
 /** The day a recurring pod stops repeating, picked from the app's calendar
@@ -29,6 +32,8 @@ export function RepeatEndDateField({
   onChange,
   minDate,
   error,
+  required = true,
+  testID = 'pod-repeat-ends-on',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
@@ -36,9 +41,9 @@ export function RepeatEndDateField({
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   return (
-    <Field label={label} required hint={hint} error={error} testID="pod-repeat-ends-on">
+    <Field label={label} required={required} hint={hint} error={error} testID={testID}>
       <PickerTrigger
-        testID="pod-repeat-ends-on"
+        testID={testID}
         label={label}
         shown={value ? fmt.formatDay(value) : fmt.datePlaceholder}
         hasValue={!!value}
@@ -48,14 +53,14 @@ export function RepeatEndDateField({
       <DuncitDialog
         open={open}
         onClose={close}
-        testID="pod-repeat-ends-on-sheet"
+        testID={`${testID}-sheet`}
         title={label}
         closeLabel={t('mweb.common.close')}
         variant="center"
       >
         {open ? (
           <CalendarSheet
-            testID="pod-repeat-ends-on"
+            testID={testID}
             initial={value ? new Date(`${value}T12:00:00`) : minDate}
             minDateTime={minDate}
             muted={muted}

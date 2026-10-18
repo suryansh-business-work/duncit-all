@@ -4,7 +4,7 @@ import type { EarnJourney } from './types';
 export const PARTNER_PORTAL_URL = 'https://partners-app.duncit.com';
 
 /**
- * The four Earn With Duncit journeys, in display order. One definition for
+ * The Earn With Duncit journeys, in display order. One definition for
  * mWeb, native and the partner portal: the copy, the role that unlocks each
  * card, the MeetingKind it books and both route shapes.
  */
@@ -54,6 +54,19 @@ export const EARN_JOURNEYS: readonly EarnJourney[] = [
     surveyPath: '/survey/club_admin',
     nativeRoute: 'BeClubAdmin',
     cta: { target: 'partner', label: 'Manage your clubs', partnerPath: '/club-admin/dashboard' },
+  },
+  {
+    // Self-serve: no survey, no meeting. Saving the freelancer profile grants
+    // FREELANCER, which turns this card to Already enabled like the others.
+    role: 'FREELANCER',
+    kind: 'FREELANCER',
+    title: 'As a freelancer',
+    description:
+      'Photographer, caterer, DJ, decorator or sponsor? Take gig jobs from hosts, venues and brands. Set up in a minute, no meeting needed.',
+    iconKey: 'freelancer',
+    surveyPath: '/earn/freelancer',
+    nativeRoute: 'FreelancerProfile',
+    cta: { target: 'internal', label: 'Browse gig jobs', internalTo: '/gigs', internalRoute: 'GigJobs' },
   },
 ];
 

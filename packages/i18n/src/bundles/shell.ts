@@ -653,6 +653,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       catalog: 'Catalog',
       categories: 'Categories',
       categoryMapping: 'Category Mapping',
+      gigCategories: 'Gig Categories',
+      gigJobs: 'Gig Jobs',
       challengeAuditLogs: 'Audit Logs',
       challengeLiveMonitor: 'Live Challenge Monitor',
       challengeResults: 'Results & Leaderboards',

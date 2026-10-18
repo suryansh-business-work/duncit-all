@@ -3604,6 +3604,29 @@ The slot-price line is left out when there is none to state (a legacy pod with n
 `firstMediaUrl` reads the single bill URL out of a media picker newline-separated value. Web
 renderer: `VenueBillSummary` in `@duncit/ui`.
 
+## Gig Jobs — `gig-jobs`
+
+Hosts, venue owners and brand owners post what an event or workshop needs; freelancers
+who joined from Earn with Duncit say they are interested, which swaps contacts (free
+today). The MUI screens are `@duncit/gig-jobs`; this module is what every surface —
+native included — shares:
+
+- **Documents** as plain strings (`GIG_JOBS_QUERY`, `GIG_JOB_QUERY`, `CREATE_GIG_JOB_MUTATION`,
+  `EXPRESS_GIG_INTEREST_MUTATION`, `SAVE_FREELANCER_PROFILE_MUTATION` …). The board never asks
+  for a contact; only a gig's own page does, and the server answers null until the viewer may see it.
+- **Paths** — `GIG_JOBS_PATH`, `GIG_POST_PATH`, `MY_GIGS_PATH`, `gigJobPath(id)`,
+  `gigJobEditPath(id)`, `FREELANCER_PROFILE_PATH`.
+- **Literal label keys** — `gigPosterRoleKey`, `gigEventTypeKey`, `gigStatusKey` (an unknown value
+  falls back to a real label), and `gigBudgetText` (null = to be discussed).
+- **Rules** — `canPostGigs(viewer)`; `gigViewerAction(job, viewer)` = MANAGE / CONTACT_SHARED /
+  CLOSED / JOIN_AS_FREELANCER / INTEREST, the one button a viewer gets; `gigRoleOptions`,
+  `freelancerSkillOptions`, `prunedGigRoles` (roles a new category still offers, null = no change);
+  `settledGigFilter` + `GIG_FILTER_SETTLE_MS` for the board's typed boxes; `gigContactLinks` (tel /
+  wa.me / mailto).
+- **Forms** — `emptyGigJobValues(viewer)` (contact prefilled from the account, the poster role
+  preselected only when there is one), `gigJobToValues` / `toGigJobInput`, `freelancerToValues` /
+  `toFreelancerInput` (drops skills no chosen category offers). Phones go out compacted.
+
 ## A venue's food menu and its QR order — `venue-food`
 
 A guest scans the QR on the table, opens the venue's public page on its menu, fills a cart, pays the

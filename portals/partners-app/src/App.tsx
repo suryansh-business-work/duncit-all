@@ -35,6 +35,7 @@ import ClubAdminPodEditorPage from './pages/club-admin-pod-editor-page';
 import ClubAdminAutoPodEditorPage from './pages/club-admin-auto-pod-editor-page';
 import VerificationPage from './pages/verification-page/VerificationPage';
 import EarnPage from './pages/earn-page/EarnPage';
+import { GigDetailPage, GigEditorPage, GigsPage, MyGigsPage } from './pages/gigs-page';
 import StudioOptionsPage from './pages/studio-options-page/StudioOptionsPage';
 import VenueEarningsPage from './pages/venue-earnings-page/VenueEarningsPage';
 import VenuePublishPage from './pages/publish-page/VenuePublishPage';
@@ -178,6 +179,12 @@ export default function App() {
       />
       <Route path="/wallet" element={authed(<WalletPage />)} />
       <Route path="/earn" element={authed(<EarnPage />)} />
+      {/* Gig Jobs: open to every signed-in partner (no section prefix, so SectionGate lets it through). */}
+      <Route path="/gigs" element={authed(<GigsPage />)} />
+      <Route path="/gigs/new" element={authed(<GigEditorPage />)} />
+      <Route path="/gigs/mine" element={authed(<MyGigsPage />)} />
+      <Route path="/gigs/:id" element={authed(<GigDetailPage />)} />
+      <Route path="/gigs/:id/edit" element={authed(<GigEditorPage />)} />
       <Route path="/verification" element={authed(<VerificationPage />)} />
       <Route path="/support" element={authed(<HelpHub />)} />
       <Route path="/policies" element={authed(<HelpHub />)} />

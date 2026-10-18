@@ -5,6 +5,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import GroupsIcon from '@mui/icons-material/Groups';
+import WorkOutlineIcon from '@mui/icons-material/WorkOutlineOutlined';
 import {
   EARN_JOURNEYS,
   earnBoxState,
@@ -23,6 +24,7 @@ const ICONS: Record<EarnJourney['iconKey'], JSX.Element> = {
   venue: <StorefrontIcon />,
   ecomm: <Inventory2Icon />,
   club: <GroupsIcon />,
+  freelancer: <WorkOutlineIcon />,
 };
 
 interface Props {

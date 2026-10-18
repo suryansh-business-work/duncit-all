@@ -228,6 +228,14 @@ export type RootStackParamList = {
   MyFoodOrders: undefined;
   /** My Rented Items (mWeb /rented-items). */
   MyRentedItems: undefined;
+  /** Gig Jobs (mWeb /gigs): the board, one gig, the post form, My posts. */
+  GigJobs: undefined;
+  GigJobDetail: { id: string };
+  /** No id = a new post; an id = editing the viewer's own gig. */
+  GigJobForm: { id?: string };
+  MyGigJobs: undefined;
+  /** Earn with Duncit's self-serve freelancer step (mWeb /earn/freelancer). */
+  FreelancerProfile: undefined;
   /** /city-launch/:locationId — a not-yet-launched city's waitlist (its slug, or Location.id). */
   CityLaunch: { locationId: string };
   NotFound: undefined;
@@ -286,6 +294,8 @@ export type MenuStackRoute = Exclude<
   | 'ClubEdit'
   | 'BrandOrderDetail'
   | 'OrderDetail'
+  | 'GigJobDetail'
+  | 'GigJobForm'
 >;
 
 declare global {

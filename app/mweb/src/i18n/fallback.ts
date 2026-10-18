@@ -23,6 +23,7 @@ import {
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
+  GIG_JOBS_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/app-settings';
@@ -78,6 +79,8 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...SHELL_FOOD_TAX_SLICE,
   // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
   ...POD_REQUESTS_BUNDLE,
+  // gigJobs.*: the Gig Jobs board, post form and freelancer profile (@duncit/gig-jobs).
+  ...GIG_JOBS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,
   ...FULFILMENT_BUNDLE,
 };

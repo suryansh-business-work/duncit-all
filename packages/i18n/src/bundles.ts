@@ -30,6 +30,7 @@ import { PUBLIC_PAGE_BUNDLE } from './bundles/public-page';
 import { VENUE_SETTINGS_BUNDLE } from './bundles/venue-settings';
 import { VENUE_FOOD_OWNER_BUNDLE } from './bundles/venue-food-owner';
 import { VENUE_RENTALS_BUNDLE } from './bundles/venue-rentals';
+import { GIG_JOBS_BUNDLE } from './bundles/gig-jobs';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -131,6 +132,7 @@ export {
   VENUE_SETTINGS_BUNDLE,
   VENUE_FOOD_OWNER_BUNDLE,
   VENUE_RENTALS_BUNDLE,
+  GIG_JOBS_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -182,6 +184,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   venueSettings: VENUE_SETTINGS_BUNDLE,
   venueFoodOwner: VENUE_FOOD_OWNER_BUNDLE,
   venueRentals: VENUE_RENTALS_BUNDLE,
+  gigJobs: GIG_JOBS_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

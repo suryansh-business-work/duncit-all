@@ -135,6 +135,8 @@ describe('LoginHistorySection rows', () => {
       device_type: 'MOBILE',
       surface: 'NATIVE',
       origin_host: null,
+      // No network address recorded: still findable by everything else.
+      ip: null,
     });
     reads.set(MY_LOGIN_ACTIVITY, {
       data: { myLoginActivity: { retention_days: 30, entries: [office, phone] } },
@@ -145,8 +147,8 @@ describe('LoginHistorySection rows', () => {
     await expect(table().fetchRows({ ...QUERY, search: 'pune' })).resolves.toEqual({ rows: [phone], total: 1 });
     await expect(table().fetchRows({ ...QUERY, search: 'duncit app' })).resolves.toEqual({ rows: [phone], total: 1 });
     await expect(table().fetchRows({ ...QUERY, search: '203.0.113' })).resolves.toEqual({
-      rows: [office, phone],
-      total: 2,
+      rows: [office],
+      total: 1,
     });
     await expect(table().fetchRows({ ...QUERY, search: 'admin.duncit' })).resolves.toEqual({
       rows: [office],

@@ -40,7 +40,7 @@ export default function EarnBox({
   disabledLabel = 'Already enabled',
   cta,
 }: Readonly<Props>) {
-  const [brokenImage, setBrokenImage] = useState<string | null>(null);
+  const [brokenImage, setBrokenImage] = useState<string | undefined>(undefined);
   const showImage = Boolean(imageUrl) && brokenImage !== imageUrl;
   return (
     <Card
@@ -61,7 +61,7 @@ export default function EarnBox({
             alt=""
             loading="lazy"
             height={140}
-            onError={() => setBrokenImage(imageUrl ?? null)}
+            onError={() => setBrokenImage(imageUrl)}
             sx={{ objectFit: 'cover', bgcolor: 'action.hover' }}
           />
         )}

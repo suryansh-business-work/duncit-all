@@ -16,8 +16,12 @@ const booked = {
   pod_end_date_time: '2026-11-06T15:30:00.000Z',
 };
 
-const answering = (result: { data: unknown } | { error: Error }) => [
-  { request: { query: MY_BOOKING_CLASHES, variables: { pod_doc_ids: ['target'] } }, ...result },
+// A MockedResponse carries data under `result`; only an error sits at the top level.
+const answering = (reply: { data: unknown } | { error: Error }) => [
+  {
+    request: { query: MY_BOOKING_CLASHES, variables: { pod_doc_ids: ['target'] } },
+    ...('error' in reply ? reply : { result: reply }),
+  },
 ];
 
 const setup = (mocks: unknown[]) =>

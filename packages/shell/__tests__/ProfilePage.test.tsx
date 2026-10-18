@@ -158,6 +158,15 @@ describe('ProfilePage', () => {
     expect(screen.getByTestId('profile-otp-channels')).toBeInTheDocument();
   });
 
+  it('opens the Login activity tab from the URL', () => {
+    // Nothing answered here, so the panel owns the failure rather than the page.
+    renderPage('/profile?selectedtab=activity');
+
+    expect(screen.getByTestId('profile-tab-activity')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('profile-activity-error')).toBeInTheDocument();
+    expect(screen.queryByTestId('profile-about')).not.toBeInTheDocument();
+  });
+
   it('falls back to the Profile tab for an unknown tab in the URL', () => {
     renderPage('/profile?selectedtab=billing');
     expect(screen.getByTestId('profile-tab-profile')).toHaveAttribute('aria-selected', 'true');

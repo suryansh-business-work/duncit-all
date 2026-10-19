@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
+import { makeQuickAccessSchema, type QuickAccessValues } from '@duncit/forms/schemas';
 import {
   DEFAULT_QUICK_ACCESS,
   QUICK_ACCESS_SIZE,
@@ -17,12 +18,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { formResolver } from '@/utils/form-resolver';
 import { menuEntry } from './profileSections';
 import { QuickAccessEditorRow } from './QuickAccessEditorRow';
-import { makeQuickAccessSchema, type QuickAccessFormValues } from './quickAccess.form';
 
 /**
  * "Edit Quick Access" — a small sheet where the member picks which six
  * destinations the grid shows and in what order. A pick only lands on Save.
- * mWeb twin: profile-drawer/quick-access-form.
+ * The parent remounts it on every opening, so each opening starts on the grid
+ * as it is. mWeb twin: profile-drawer/quick-access-form.
  */
 export function SidebarQuickAccessEditor({
   open,
@@ -43,20 +44,15 @@ export function SidebarQuickAccessEditor({
 }>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeQuickAccessSchema(t, flags), [t, flags]);
-  const { control, handleSubmit, reset, setValue, formState } = useForm<
-    QuickAccessFormValues,
+  const { control, handleSubmit, setValue, formState } = useForm<
+    QuickAccessValues,
     unknown,
-    QuickAccessFormValues
+    QuickAccessValues
   >({
     defaultValues: { selection: [...current] },
-    resolver: formResolver<QuickAccessFormValues>(schema),
+    resolver: formResolver<QuickAccessValues>(schema),
   });
   const selection = useWatch({ control, name: 'selection' });
-
-  // The sheet stays mounted between openings: each opening starts on the grid as it is.
-  useEffect(() => {
-    if (open) reset({ selection: [...current] });
-  }, [open, current, reset]);
 
   const update = (next: ProfileMenuKey[]) =>
     setValue('selection', next, { shouldDirty: true, shouldValidate: formState.isSubmitted });

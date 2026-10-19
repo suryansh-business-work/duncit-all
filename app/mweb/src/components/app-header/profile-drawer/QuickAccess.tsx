@@ -19,6 +19,8 @@ export default function QuickAccess({ flags, badgeCounts, onNavigate }: Readonly
   const { t } = useTranslation();
   const { selection, save } = useQuickAccess(flags);
   const [editing, setEditing] = useState(false);
+  // Each opening mounts a fresh editor, seeded with the grid as it is now.
+  const [opening, setOpening] = useState(0);
   const [saveFailed, setSaveFailed] = useState(false);
 
   return (
@@ -28,11 +30,13 @@ export default function QuickAccess({ flags, badgeCounts, onNavigate }: Readonly
         badgeCounts={badgeCounts}
         onEdit={() => {
           setSaveFailed(false);
+          setOpening((count) => count + 1);
           setEditing(true);
         }}
         onNavigate={onNavigate}
       />
       <QuickAccessForm
+        key={opening}
         open={editing}
         current={selection}
         flags={flags}

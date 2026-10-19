@@ -1,17 +1,15 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { makeQuickAccessSchema } from '@duncit/forms/schemas';
 import {
   DEFAULT_QUICK_ACCESS,
   QUICK_ACCESS_SIZE,
-  isValidQuickAccess,
   moveQuickAccess,
   quickAccessEditorRows,
   toggleQuickAccess,
-  type ProfileMenuFlags,
   type ProfileMenuKey,
 } from '@duncit/utils';
 import { useTranslation } from '../../../../i18n/useTranslation';
@@ -19,35 +17,20 @@ import { menuEntry } from '../profileSections';
 import QuickAccessOption from './QuickAccessOption';
 import type { QuickAccessFormProps, QuickAccessFormValues } from './quick-access.types';
 
-/** The editor's schema: exactly six distinct destinations, each pickable under
- * `flags` — the shared `isValidQuickAccess` rule native's sheet refines on too. */
-export function quickAccessSchema(flags: ProfileMenuFlags, invalidMessage: string) {
-  return z.object({
-    selection: z.array(z.string()).refine((selection) => isValidQuickAccess(selection, flags), {
-      message: invalidMessage,
-    }),
-  });
-}
-
 /**
  * "Edit Quick Access" — a small dialog where the member picks which six
  * destinations the grid shows and in what order. A pick only lands on Save.
- * Native twin: Sidebar/SidebarQuickAccessEditor.
+ * The parent remounts it on every opening, so each opening starts on the grid
+ * as it is. Native twin: Sidebar/SidebarQuickAccessEditor.
  */
 export default function QuickAccessForm({ open, current, flags, saveFailed, onClose, onSave }: Readonly<QuickAccessFormProps>) {
   const { t } = useTranslation();
-  const invalid = t('mweb.sidebar.editorInvalid', { vars: { max: QUICK_ACCESS_SIZE } });
-  const schema = useMemo(() => quickAccessSchema(flags, invalid), [flags, invalid]);
-  const { control, handleSubmit, reset, setValue, formState } = useForm<QuickAccessFormValues, unknown, QuickAccessFormValues>({
+  const schema = useMemo(() => makeQuickAccessSchema(t, flags), [t, flags]);
+  const { control, handleSubmit, setValue, formState } = useForm<QuickAccessFormValues, unknown, QuickAccessFormValues>({
     defaultValues: { selection: [...current] },
     resolver: zodResolver(schema) as unknown as Resolver<QuickAccessFormValues, unknown, QuickAccessFormValues>,
   });
   const selection = useWatch({ control, name: 'selection' });
-
-  // The dialog stays mounted between openings: each opening starts on the grid as it is.
-  useEffect(() => {
-    if (open) reset({ selection: [...current] });
-  }, [open, current, reset]);
 
   const update = (next: ProfileMenuKey[]) =>
     setValue('selection', next, { shouldDirty: true, shouldValidate: formState.isSubmitted });

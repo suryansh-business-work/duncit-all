@@ -42,6 +42,7 @@ exports:
   - 'quickAccessEditorRows'
   - 'toggleQuickAccess'
   - 'moveQuickAccess'
+  - 'profileMenuFlagsFrom'
   - 'profileMenuSections'
   - 'profileSectionSubtitleKeys'
   - 'ProfileMenuKey'
@@ -4191,8 +4192,11 @@ default set is Chats, Following, Pod History, Earn with Duncit, Pod Ideas and He
 none of them flag-gated, so the default grid is always whole. The pick is kept per device under
 `QUICK_ACCESS_STORAGE_KEY` (localStorage on mWeb, the secure store on native) and read back through
 `parseStoredQuickAccess`: unknown, duplicate and now-hidden keys are dropped and the grid is topped
-up from the defaults, so a flag switching off never leaves a hole. The editors refine their form
-schema on `isValidQuickAccess` and move tiles with `toggleQuickAccess` / `moveQuickAccess`.
+up from the defaults, so a flag switching off never leaves a hole. Both editors validate with
+`makeQuickAccessSchema` from `@duncit/forms/schemas` (built on `isValidQuickAccess`) and move tiles
+with `toggleQuickAccess` / `moveQuickAccess`. Each app's `useMenuFlags` reads the server's public
+flag list and hands it to `profileMenuFlagsFrom(rows, productFlagKey)`; a missing or not-yet-loaded
+flag counts as off.
 
 **Section cards** come from `profileMenuSections(flags)`: Explore & Community, Work & Earnings,
 Shopping & Orders, Account & Preferences and Support & Legal, each with only its visible rows. A

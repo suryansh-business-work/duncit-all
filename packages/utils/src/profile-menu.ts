@@ -56,6 +56,37 @@ export type ProfileMenuFlag =
 /** Which flags are on. A flag left out counts as off. */
 export type ProfileMenuFlags = Readonly<Partial<Record<ProfileMenuFlag, boolean>>>;
 
+/** One flag as both apps' `publicFeatureFlags` read returns it. */
+export interface PublicFeatureFlagRow {
+  key: string;
+  enabled?: boolean | null;
+}
+
+/** The server key each menu flag is read from — the menu's own name, except
+ * `products`, which is the shop visibility flag the caller passes in. */
+const MENU_FLAG_KEYS: readonly Exclude<ProfileMenuFlag, 'products'>[] = [
+  'pod_plans_section',
+  'leaderboard',
+  'membership',
+  'gift_cards',
+  'tour_guide',
+];
+
+/**
+ * The menu's flags from the server's public flag list. A flag missing from the
+ * list — or the list not loaded yet — counts as off, exactly as each app's
+ * `useFeatureFlag` reads it. Both apps' `useMenuFlags` wrap this.
+ */
+export function profileMenuFlagsFrom(
+  rows: readonly PublicFeatureFlagRow[] | null | undefined,
+  productFlagKey: string,
+): ProfileMenuFlags {
+  const on = new Set((rows ?? []).filter((row) => row.enabled === true).map((row) => row.key));
+  const flags: Partial<Record<ProfileMenuFlag, boolean>> = { products: on.has(productFlagKey) };
+  for (const key of MENU_FLAG_KEYS) flags[key] = on.has(key);
+  return flags;
+}
+
 export interface ProfileMenuItem {
   key: ProfileMenuKey;
   /** The row's or tile's own label. */
@@ -239,8 +270,12 @@ export function toggleQuickAccess(selection: readonly ProfileMenuKey[], key: Pro
 export function moveQuickAccess(selection: readonly ProfileMenuKey[], index: number, step: -1 | 1): ProfileMenuKey[] {
   const target = index + step;
   const next = [...selection];
-  if (index < 0 || index >= next.length || target < 0 || target >= next.length) return next;
-  [next[index], next[target]] = [next[target], next[index]];
+  const moving = next[index];
+  const displaced = next[target];
+  // Either end missing means the move is off the list: nothing changes.
+  if (moving === undefined || displaced === undefined) return next;
+  next[index] = displaced;
+  next[target] = moving;
   return next;
 }
 

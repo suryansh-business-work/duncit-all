@@ -12,6 +12,7 @@ import {
   moveQuickAccess,
   normaliseQuickAccess,
   parseStoredQuickAccess,
+  profileMenuFlagsFrom,
   profileMenuSections,
   profileSectionSubtitleKeys,
   quickAccessEditorRows,
@@ -271,6 +272,43 @@ describe('toggleQuickAccess', () => {
     const next = toggleQuickAccess(full, 'saved');
     expect(next).toEqual(full);
     expect(next).not.toBe(full);
+  });
+});
+
+describe('profileMenuFlagsFrom', () => {
+  it('turns on exactly the menu flags the server enables, reading products from the shop flag', () => {
+    const flags = profileMenuFlagsFrom(
+      [
+        { key: 'leaderboard', enabled: true },
+        { key: 'membership', enabled: false },
+        { key: 'is_product_visible', enabled: true },
+        { key: 'unrelated', enabled: true },
+      ],
+      'is_product_visible',
+    );
+    expect(flags).toEqual({
+      pod_plans_section: false,
+      leaderboard: true,
+      membership: false,
+      gift_cards: false,
+      tour_guide: false,
+      products: true,
+    });
+  });
+
+  it('counts a flag that is missing, null or not loaded yet as off', () => {
+    const off = {
+      pod_plans_section: false,
+      leaderboard: false,
+      membership: false,
+      gift_cards: false,
+      tour_guide: false,
+      products: false,
+    };
+    expect(profileMenuFlagsFrom(undefined, 'is_product_visible')).toEqual(off);
+    expect(profileMenuFlagsFrom([{ key: 'gift_cards', enabled: null }], 'is_product_visible')).toEqual(off);
+    // The menu's `products` name is not the server key: only the passed-in key turns it on.
+    expect(profileMenuFlagsFrom([{ key: 'products', enabled: true }], 'is_product_visible').products).toBe(false);
   });
 });
 

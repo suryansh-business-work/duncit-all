@@ -27,6 +27,8 @@ export function SidebarQuickAccess({
   const hydrate = useQuickAccessStore((s) => s.hydrate);
   const save = useQuickAccessStore((s) => s.save);
   const [editing, setEditing] = useState(false);
+  // Each opening mounts a fresh sheet, seeded with the grid as it is now.
+  const [opening, setOpening] = useState(0);
   const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
@@ -50,11 +52,13 @@ export function SidebarQuickAccess({
         badgeCounts={badgeCounts}
         onEdit={() => {
           setSaveFailed(false);
+          setOpening((count) => count + 1);
           setEditing(true);
         }}
         onNavigate={onNavigate}
       />
       <SidebarQuickAccessEditor
+        key={opening}
         open={editing}
         current={selection}
         flags={flags}

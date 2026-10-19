@@ -41,6 +41,9 @@ jest.mock('@/hooks/useMe', () => ({
 }));
 jest.mock('@/hooks/useFeatureFlag', () => ({
   useFeatureFlag: (key: string) => mockFlags[key] ?? false,
+  // The menu reads the whole list (useMenuFlags): the same flags, as rows.
+  usePublicFeatureFlags: () =>
+    Object.entries(mockFlags).map(([key, enabled]) => ({ key, enabled })),
 }));
 jest.mock('@/hooks/usePolicies', () => ({ usePublicPolicies: () => mockPolicies() }));
 

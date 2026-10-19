@@ -16,7 +16,12 @@ const studioState = { mode: 'USER', setMode: vi.fn() };
 vi.mock('../../../../StudioModeContext', () => ({ useStudioMode: () => studioState }));
 
 let flagValue = false;
-vi.mock('../../../../hooks/useFeatureFlag', () => ({ useFeatureFlag: () => flagValue }));
+// Every flag reads `flagValue`: one at a time, and as the list the menu reads.
+const MENU_FLAG_KEYS = ['pod_plans_section', 'leaderboard', 'membership', 'gift_cards', 'tour_guide', 'is_product_visible'];
+vi.mock('../../../../hooks/useFeatureFlag', () => ({
+  useFeatureFlag: () => flagValue,
+  usePublicFeatureFlags: () => MENU_FLAG_KEYS.map((key) => ({ key, enabled: flagValue })),
+}));
 
 // The menu fetches the Auto Pod counts as it mounts, and `useQuery` needs a
 // client in context even when it is skipped — so without this the panel throws

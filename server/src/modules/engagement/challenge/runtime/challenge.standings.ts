@@ -73,7 +73,7 @@ function aggregate(values: number[], how: unknown): number | null {
     case 'SUM':
       return values.reduce((a, b) => a + b, 0);
     case 'LAST':
-      return values[values.length - 1];
+      return values.at(-1) ?? null;
     default:
       return Math.max(...values);
   }

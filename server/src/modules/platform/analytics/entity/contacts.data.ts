@@ -104,7 +104,8 @@ export async function joinedAfterInvite(invites: readonly SentInvite[]): Promise
   if (firstByKey.size === 0) return joined;
   const keys = [...firstByKey.keys()];
   // A reduce, not Math.min(...dates): a year of invites can outgrow the argument limit.
-  const earliest = [...firstByKey.values()].reduce((min, date) => (date < min ? date : min));
+  const earliestMs = [...firstByKey.values()].reduce((min, date) => Math.min(min, date.getTime()), Number.POSITIVE_INFINITY);
+  const earliest = new Date(earliestMs);
   const users = await UserModel.find({
     $or: [{ 'auth.phone.number': { $in: keys } }, { 'communication.whatsapp.number': { $in: keys } }],
     'metadata.created_at': { $gt: earliest },

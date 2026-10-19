@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { GraphQLError } from 'graphql';
 import { isEmailAddress } from '@utils/email';
+import { scalarText } from '@modules/commerce/store/store.shared';
 
 /** One upload's ceiling — a bulk check of this size already takes hours of SMTP. */
 export const MAX_BULK_EMAILS = 5000;
@@ -9,7 +10,7 @@ const EMAIL_HEADER = /e-?mail/i;
 
 const badInput = (message: string) => new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 
-const cellText = (value: unknown): string => String(value ?? '').trim().toLowerCase();
+const cellText = (value: unknown): string => scalarText(value).trim().toLowerCase();
 
 /**
  * The column that holds the addresses: the first header naming an email, else
@@ -17,7 +18,7 @@ const cellText = (value: unknown): string => String(value ?? '').trim().toLowerC
  */
 function emailColumn(matrix: unknown[][]): { index: number; hasHeader: boolean } {
   const header = matrix[0] ?? [];
-  const named = header.findIndex((cell) => EMAIL_HEADER.test(String(cell ?? '')));
+  const named = header.findIndex((cell) => EMAIL_HEADER.test(scalarText(cell)));
   if (named >= 0) return { index: named, hasHeader: true };
 
   const width = Math.max(0, ...matrix.map((row) => row.length));

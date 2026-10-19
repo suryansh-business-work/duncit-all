@@ -143,12 +143,12 @@ export const cmsSiteInputSchema = obj(
   })
 );
 
-const FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+const FONT_WEIGHTS = new Set([100, 200, 300, 400, 500, 600, 700, 800, 900]);
 // Written into css (`font-family: "<family>"` and Google's css2 URL), so plain
 // names only — letters, digits, spaces, hyphens.
 const isFontFamily = (value: string) => CMS_FONT_FAMILY.test(value);
 const isFontStack = (value: string) => !/[;{}<>]/.test(value);
-const weight = num(finite().check(int()).refine((w) => FONT_WEIGHTS.includes(w), 'A weight is 100, 200 … 900'), { required: true });
+const weight = num(finite().check(int()).refine((w) => FONT_WEIGHTS.has(w), 'A weight is 100, 200 … 900'), { required: true });
 
 const fontShape = obj(
   shape({

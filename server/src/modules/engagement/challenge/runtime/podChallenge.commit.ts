@@ -74,8 +74,8 @@ async function guardedUpdate(
   session?: ClientSession
 ) {
   const next = await PodChallengeModel.findOneAndUpdate(
-    { _id: id, status: { $in: guard.statuses }, ...(guard.filter ?? {}) },
-    { ...update, $inc: { ...(update.$inc ?? {}), revision: 1 } },
+    { _id: id, status: { $in: guard.statuses }, ...guard.filter },
+    { ...update, $inc: { ...update.$inc, revision: 1 } },
     { new: true, session, ...(guard.arrayFilters ? { arrayFilters: guard.arrayFilters } : {}) }
   ).lean<PodChallengeDoc>();
   if (!next) conflict();

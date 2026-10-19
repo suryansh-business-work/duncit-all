@@ -12,8 +12,10 @@ const slugify = (value: string) =>
   value
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    // Splitting on the separators (not an anchored trim) can never backtrack.
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .join('-')
     .slice(0, 60);
 
 export const toGigCategory = (doc: IGigCategory) => ({

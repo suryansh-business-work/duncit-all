@@ -59,9 +59,9 @@ function sassProblem(error: unknown, offset: number): CmsCodeProblem {
 
 function remember(key: string, css: string): string {
   // Maps keep insertion order: the first key is the oldest.
-  if (compiled.size >= CACHE_LIMIT) for (const oldest of compiled.keys()) {
-    compiled.delete(oldest);
-    break;
+  if (compiled.size >= CACHE_LIMIT) {
+    const oldest = compiled.keys().next();
+    if (!oldest.done) compiled.delete(oldest.value);
   }
   compiled.set(key, css);
   return css;

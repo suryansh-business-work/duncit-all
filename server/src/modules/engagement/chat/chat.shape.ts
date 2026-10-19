@@ -1,3 +1,4 @@
+import { idText } from '@modules/commerce/store/store.shared';
 import type { UserDisplay } from '@modules/access/user/user.display';
 import { podChatDeletesAt } from './chat.retention';
 
@@ -95,7 +96,7 @@ export function shapePodRoom(p: PodRoomDoc, retentionHours: number, now = Date.n
   if (club) {
     clubId = String(club._id);
   } else if (p.club_id) {
-    clubId = String(p.club_id);
+    clubId = idText(p.club_id);
   }
   // With 0 hours this is the pod's own end — the moment its room closes.
   const endsAt = podChatDeletesAt(p, 0);
@@ -113,7 +114,7 @@ export function shapePodRoom(p: PodRoomDoc, retentionHours: number, now = Date.n
     no_of_spots: p.no_of_spots,
     club_id: clubId,
     club_slug: club?.club_id || null,
-    super_category_id: club?.super_category_id ? String(club.super_category_id) : null,
+    super_category_id: idText(club?.super_category_id) || null,
     cover_url: firstPhoto(p.pod_images_and_videos),
     chat_deletes_at: podChatDeletesAt(p, retentionHours)?.toISOString() ?? null,
     closed: !!endsAt && now > endsAt.getTime(),
@@ -136,7 +137,7 @@ export function shapeClubRoom(
     club_slug: club.club_id,
     club_name: club.club_name,
     cover_url: firstPhoto(club.club_feature_images_and_videos),
-    super_category_id: club.super_category_id ? String(club.super_category_id) : null,
+    super_category_id: idText(club.super_category_id) || null,
     retention_days: opts.retentionDays,
     can_moderate: opts.canModerate,
     last_message_at: last ? new Date(last.at).toISOString() : null,

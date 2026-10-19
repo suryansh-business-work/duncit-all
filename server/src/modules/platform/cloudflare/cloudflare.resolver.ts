@@ -16,9 +16,11 @@ export const cloudflareResolvers = {
     },
   },
   Mutation: {
-    createCloudflareZone: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+    createCloudflareZone: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireRole(ctx, TECH_MANAGE);
-      return cloudflareService.createZone(user.id);
+      // The zone is there once this resolves — made now or already present.
+      await cloudflareService.createZone(user.id);
+      return true;
     },
     copyDnsToCloudflare: (_p: unknown, args: { ids: string[] }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, TECH_MANAGE);

@@ -18,6 +18,7 @@ import { parseServiceAccount } from '@utils/googleServiceAccount';
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 import { sonarGet } from '@utils/sonarqube';
+import { scalarText } from '@modules/commerce/store/store.shared';
 import { godaddyConfigOf, godaddyDomain, godaddyRecords } from '@modules/platform/dns/godaddy.gateway';
 import {
   cloudflareConfigOf,
@@ -189,6 +190,34 @@ export async function slackConnection(str: EnvConfigReader): Promise<EnvConnecti
 
 // --- ShipRocket -------------------------------------------------------------
 
+/** A refused login, with ShipRocket's own reason when it gave one. */
+function shiprocketRejected(status: number, message: unknown): EnvConnectionResult {
+  const text = scalarText(message);
+  const reason = text ? `: ${text}` : '';
+  // ShipRocket answers 403 for a wrong password, a blocked user and a login
+  // that is not an API user — all three look the same from here.
+  const hint =
+    status === 403
+      ? ['Use an API user (ShipRocket → Settings → API), not the account login, and check its password. Repeated failures lock the user for a while.']
+      : [];
+  return {
+    ok: false,
+    message: `ShipRocket rejected the credentials (HTTP ${status})${reason}`,
+    details: hint,
+  };
+}
+
+/** Which account the test answered for — the first lines of a passing check. */
+function shiprocketModeDetails(sandbox: boolean, ownSandboxUser: boolean): string[] {
+  if (!sandbox) return ['PRODUCTION mode — real shipments, billed to this ShipRocket wallet.'];
+  return [
+    'SANDBOX mode — orders booked with this account are test orders; no courier collects them.',
+    ownSandboxUser
+      ? 'Signed in with the sandbox API user; the production email and password are kept and not used.'
+      : 'No sandbox API user is saved, so the production email and password were sent to the sandbox.',
+  ];
+}
+
 /**
  * ShipRocket has no credential endpoint other than login, so login IS the test.
  * The token it hands back is short-lived, so its remaining life is reported —
@@ -223,31 +252,8 @@ export async function shiprocketConnection(str: EnvConfigReader): Promise<EnvCon
     return { ok: false, message: SANDBOX_GATEWAY_DENIED, details: [] };
   }
   const token = typeof res.data.token === 'string' ? res.data.token : '';
-  if (!res.ok || !token) {
-    const reason = res.data.message ? `: ${String(res.data.message)}` : '';
-    // ShipRocket answers 403 for a wrong password, a blocked user and a login
-    // that is not an API user — all three look the same from here.
-    const hint =
-      res.status === 403
-        ? ['Use an API user (ShipRocket → Settings → API), not the account login, and check its password. Repeated failures lock the user for a while.']
-        : [];
-    return {
-      ok: false,
-      message: `ShipRocket rejected the credentials (HTTP ${res.status})${reason}`,
-      details: hint,
-    };
-  }
-  const details = [tokenLifetime(token)];
-  if (sandbox) {
-    details.unshift(
-      'SANDBOX mode — orders booked with this account are test orders; no courier collects them.',
-      login.ownSandboxUser
-        ? 'Signed in with the sandbox API user; the production email and password are kept and not used.'
-        : 'No sandbox API user is saved, so the production email and password were sent to the sandbox.'
-    );
-  } else {
-    details.unshift('PRODUCTION mode — real shipments, billed to this ShipRocket wallet.');
-  }
+  if (!res.ok || !token) return shiprocketRejected(res.status, res.data.message);
+  const details = [...shiprocketModeDetails(sandbox, login.ownSandboxUser), tokenLifetime(token)];
   if (res.data.company_id) details.push(`ShipRocket company id ${String(res.data.company_id)}`);
   const pickup = str('pickup_location');
   details.push(

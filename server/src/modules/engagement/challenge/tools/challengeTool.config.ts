@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { toolDefinition, type ConfigField } from './challengeTool.catalogue';
+import { scalarText } from '@modules/commerce/store/store.shared';
 
 /**
  * Validates and normalises a tool configuration against the tool's field list.
@@ -36,13 +37,13 @@ const MAX_CRITERIA = 10;
 
 function criterion(raw: unknown, index: number): JudgeCriterion {
   const c = (raw ?? {}) as Record<string, unknown>;
-  const label = String(c.label ?? '').trim().slice(0, MAX_TEXT);
+  const label = scalarText(c.label).trim().slice(0, MAX_TEXT);
   if (!label) bad(`Criterion ${index + 1} needs a label`);
   const weight = Number(c.weight ?? 1);
   const max = Number(c.max ?? 10);
   if (!Number.isFinite(weight) || weight <= 0) bad(`Criterion ${index + 1} weight must be positive`);
   if (!Number.isFinite(max) || max < 1 || max > 100) bad(`Criterion ${index + 1} max must be 1-100`);
-  const key = String(c.key ?? '').trim() || `c${index + 1}`;
+  const key = scalarText(c.key).trim() || `c${index + 1}`;
   return { key, label, weight, max };
 }
 
@@ -59,9 +60,9 @@ function boundedNumber(raw: Raw, key: string, fallback: number, min: number, max
 
 /** A stable key plus a required label, for any labelled list entry. */
 function labelOf(raw: Raw, index: number, prefix: string): { key: string; label: string } {
-  const label = String(raw.label ?? '').trim().slice(0, MAX_LABEL);
+  const label = scalarText(raw.label).trim().slice(0, MAX_LABEL);
   if (!label) bad(`Entry ${index + 1} needs a label`);
-  return { key: String(raw.key ?? '').trim() || `${prefix}${index + 1}`, label };
+  return { key: scalarText(raw.key).trim() || `${prefix}${index + 1}`, label };
 }
 
 /** A non-empty list of labelled entries with unique keys. */
@@ -99,7 +100,7 @@ function weights(field: ConfigField, value: unknown): { type: string; weight: nu
   if (!Array.isArray(value) || value.length === 0) bad('A formula needs at least one term');
   const list = (value as unknown[]).slice(0, MAX_ITEMS).map((entry) => {
     const raw = (entry ?? {}) as Raw;
-    const type = String(raw.type ?? '');
+    const type = scalarText(raw.type);
     if (!field.options?.includes(type)) bad('A formula term names a tool that produces no score');
     return { type, weight: boundedNumber(raw, 'weight', 1, -1000, 1000) };
   });
@@ -135,7 +136,7 @@ function coerce(field: ConfigField, value: unknown): unknown {
       return weights(field, value);
     case 'criteria': {
       if (!Array.isArray(value) || value.length === 0) bad('At least one judging criterion is required');
-      const list = (value as unknown[]).slice(0, MAX_CRITERIA).map(criterion);
+      const list = (value as unknown[]).slice(0, MAX_CRITERIA).map((raw, index) => criterion(raw, index));
       if (new Set(list.map((c) => c.key)).size !== list.length) bad('Criterion keys must be unique');
       return list;
     }
@@ -149,7 +150,7 @@ function coerce(field: ConfigField, value: unknown): unknown {
 export function normalizeToolConfig(type: string, base: ToolConfig, override?: ToolConfig | null): ToolConfig {
   const def = toolDefinition(type);
   if (!def) bad(`Unknown tool type ${type}`);
-  const merged = { ...base, ...(override ?? {}) };
+  const merged = { ...base, ...override };
   const out: ToolConfig = {};
   for (const field of def.fields) {
     out[field.key] = coerce(field, merged[field.key] ?? field.default);

@@ -45,7 +45,7 @@ type PreviewArgs = PageArgs & { pod_id?: string | null; club_id?: string | null 
 
 /** The details-page chat card: a pod's or a club's history, read-only. */
 async function chatPreview(args: PreviewArgs, uid: string) {
-  if (!args.pod_id === !args.club_id) {
+  if (Boolean(args.pod_id) === Boolean(args.club_id)) {
     throw new GraphQLError('Pass exactly one of pod_id or club_id', {
       extensions: { code: 'BAD_USER_INPUT' },
     });

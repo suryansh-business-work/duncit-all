@@ -44,7 +44,7 @@ export async function seriesSeen(doc: { series_id?: string | null; campaign_id: 
  */
 export async function scheduleNextInSeries(doc: WaCampaignDoc) {
   const every = Number(doc.repeat_every_days ?? 0);
-  if (!(every > 0) || !doc.series_id || doc.status === 'CANCELLED') return null;
+  if (Number.isNaN(every) || every <= 0 || !doc.series_id || doc.status === 'CANCELLED') return null;
   return WaCampaignModel.create({
     campaign_id: crypto.randomUUID(),
     series_id: doc.series_id,

@@ -1,3 +1,5 @@
+import { trimTrailingSlash } from '@utils/url';
+
 /**
  * A Google OAuth client id as Google expects it: `<number>-<hash>.apps.googleusercontent.com`.
  *
@@ -10,8 +12,5 @@
  * is read: the public client config the apps fetch, and the audience check.
  */
 export function cleanGoogleClientId(raw: string | null | undefined): string {
-  return (raw ?? '')
-    .trim()
-    .replace(/^https?:\/\//i, '')
-    .replace(/\/+$/, '');
+  return trimTrailingSlash((raw ?? '').trim().replace(/^https?:\/\//i, ''));
 }

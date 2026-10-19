@@ -128,12 +128,23 @@ async function buildActor(userId: Types.ObjectId | string | null | undefined) {
  * should.
  */
 /**
+ * The newest agent message before index `end`, read from the end (the server's
+ * ES2022 lib has no `findLast`).
+ */
+function lastAgentMessageBefore(messages: ITicket['messages'], end: number): ITicket['messages'][number] | undefined {
+  for (let i = end - 1; i >= 0; i -= 1) {
+    if (messages[i].author_role === 'AGENT') return messages[i];
+  }
+  return undefined;
+}
+
+/**
  * Whether the agent reply just pushed is the first one the raiser has not seen.
  * A burst of three agent messages is one ping, not three: once the raiser has
  * been told and not yet opened the thread, the next reply stays in the thread.
  */
 function isFirstUnseenAgentReply(doc: ITicket): boolean {
-  const earlier = doc.messages.slice(0, -1).filter((m) => m.author_role === 'AGENT').at(-1);
+  const earlier = lastAgentMessageBefore(doc.messages, doc.messages.length - 1);
   if (!earlier) return true;
   const seenAt = doc.user_last_read_at?.getTime() ?? 0;
   return seenAt >= new Date(earlier.created_at).getTime();
@@ -439,12 +450,12 @@ export const ticketService = {
     // The reply above is already saved; the mail send records its own outcome.
     if (asAgent && doc!.source === 'EMAIL') {
       await emailAgentReply(doc, actorId, bodyText);
-    } else if (asAgent && isFirstUnseenAgentReply(doc!)) {
+    } else if (asAgent && isFirstUnseenAgentReply(doc)) {
       // An app or website ticket has no mail thread to carry the reply, so the
       // raiser is told on WhatsApp and email — keyed on the message, so every
       // reply they have not yet seen can reach them, not just the first one.
       const reply = doc!.messages.at(-1);
-      await notifyTicketRaiser('SUPPORT_TICKET_UPDATED', doc!, `${String(doc!._id)}:${String(reply?._id)}`);
+      await notifyTicketRaiser('SUPPORT_TICKET_UPDATED', doc, `${String(doc!._id)}:${String(reply?._id)}`);
     }
 
     const pub = await toPub(doc);

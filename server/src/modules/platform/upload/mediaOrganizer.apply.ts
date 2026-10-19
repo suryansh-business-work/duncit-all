@@ -71,7 +71,7 @@ async function destinationTaken(source: string, destination: string): Promise<bo
   const existing = await fileAt(destination);
   if (!existing) return false;
   const original = await fileAt(source);
-  return !original || original.size !== existing.size;
+  return original?.size !== existing.size;
 }
 
 /**

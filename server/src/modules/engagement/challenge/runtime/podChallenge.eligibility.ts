@@ -1,3 +1,4 @@
+import type { Types } from 'mongoose';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { resolveClubCategory } from '@modules/pods/pod/pod.products';
 import { ChallengeModel } from '../challenge.model';
@@ -25,7 +26,7 @@ async function categoryChain(leafId: string): Promise<string[]> {
   const ids: string[] = [];
   let next: string | null = leafId;
   while (next && ids.length < 3) {
-    const cat: { parent_id?: unknown } | null = await CategoryModel.findById(next).select('parent_id').lean();
+    const cat: { parent_id?: Types.ObjectId | null } | null = await CategoryModel.findById(next).select('parent_id').lean();
     if (!cat) break;
     ids.push(next);
     next = cat.parent_id ? String(cat.parent_id) : null;

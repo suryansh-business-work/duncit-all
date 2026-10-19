@@ -45,7 +45,7 @@ export async function loadPod(podId: string): Promise<PodRef> {
   }
   const pod = await PodModel.findById(podId).select('pod_title pod_hosts_id club_id pod_attendees').lean();
   if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
-  return pod as unknown as PodRef;
+  return pod;
 }
 
 export async function accessFor(user: AuthUser | null, pod: PodRef): Promise<ChallengeAccess> {

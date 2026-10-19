@@ -187,7 +187,7 @@ export const podChallengeScoring = {
       round: e.round,
       voided: e.voided,
       void_reason: e.void_reason,
-      created_at: (e as typeof e & { created_at: Date }).created_at.toISOString(),
+      created_at: e.created_at.toISOString(),
     }));
   },
 };

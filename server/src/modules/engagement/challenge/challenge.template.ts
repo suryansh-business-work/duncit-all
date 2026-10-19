@@ -76,7 +76,7 @@ export async function buildToolInstances(input: ToolInstanceInput[]): Promise<Bu
     if (seen.has(instanceId)) bad('Tool instance ids must be unique');
     seen.add(instanceId);
 
-    const base = { ...(tool.default_config as ToolConfig), ...((preset?.config as ToolConfig) ?? {}) };
+    const base = { ...(tool.default_config as ToolConfig), ...(preset?.config as ToolConfig | undefined) };
     return {
       instance_id: instanceId,
       tool_id: tool._id,

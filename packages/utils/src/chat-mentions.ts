@@ -22,7 +22,7 @@ export const EMOJI_QUERY = /:([a-z_]+)$/i;
 /** What is being typed after a `:`, or null. */
 export function emojiQuery(text: string, caret: number): string | null {
   const match = EMOJI_QUERY.exec(text.slice(0, caret));
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }
 
 export interface MentionEdit {
@@ -63,7 +63,7 @@ export function applyMention(text: string, caret: number, name: string): Mention
 /** The name fragment being typed, or null when the caret is not in a mention. */
 export function mentionQuery(text: string, caret: number): string | null {
   const match = MENTION_QUERY.exec(text.slice(0, caret));
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }
 
 /**

@@ -37,8 +37,10 @@ export function refundStatusLabel(status: RefundStatus, t: Translate): string {
 const money = (row: DeletionRefundRow, amount: number) =>
   formatMoney(amount, { decimals: 2, symbol: row.currency_symbol || undefined });
 
+const variantSuffix = (label: DeletionRefundRow['line_items'][number]['variant_label']) => (label ? ` (${label})` : '');
+
 const itemsOf = (row: DeletionRefundRow) =>
-  row.line_items.map((line) => `${line.name}${line.variant_label ? ` (${line.variant_label})` : ''} × ${line.qty}`).join(', ');
+  row.line_items.map((line) => `${line.name}${variantSuffix(line.variant_label)} × ${line.qty}`).join(', ');
 
 /**
  * One cancelled order per row. Every cell has a `valueGetter`, so the CSV the

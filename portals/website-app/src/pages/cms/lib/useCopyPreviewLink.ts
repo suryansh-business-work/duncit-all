@@ -23,26 +23,30 @@ export function useCopyPreviewLink() {
           return copyToClipboard(url);
         })
         .then((copied) => (copied ? notifySuccess(t('websiteApp.cms.preview.linkCopied')) : notifyError(t('websiteApp.cms.preview.copyFailed'))))
-        .catch((failure: unknown) => notifyError(cmsErrorMessage(failure, t('websiteApp.cms.preview.copyFailed'))));
+        .catch((error_: unknown) => notifyError(cmsErrorMessage(error_, t('websiteApp.cms.preview.copyFailed'))));
     },
     [t],
   );
 
   return useMemo(
     () => ({
-      page: (pageId: string) =>
-        copy(() =>
-          client
-            .query<CmsPreviewLinkData>({ query: CMS_PREVIEW_LINK, variables: { pageId }, fetchPolicy: 'network-only' })
-            .then((result) => result.data?.cmsPreviewLink.url),
-        ),
-      component: (id: string) =>
-        copy(() =>
-          client
-            .query<CmsComponentPreviewLinkData>({ query: CMS_COMPONENT_PREVIEW_LINK, variables: { id }, fetchPolicy: 'network-only' })
-            .then((result) => result.data?.cmsComponentPreviewLink.url),
-        ),
+      page: (pageId: string) => copy(() => signPageLink(client, pageId)),
+      component: (id: string) => copy(() => signComponentLink(client, id)),
     }),
     [client, copy],
   );
 }
+
+type Client = ReturnType<typeof useApolloClient>;
+
+/** A fresh signed preview link for a page draft. */
+const signPageLink = (client: Client, pageId: string) =>
+  client
+    .query<CmsPreviewLinkData>({ query: CMS_PREVIEW_LINK, variables: { pageId }, fetchPolicy: 'network-only' })
+    .then((result) => result.data?.cmsPreviewLink.url);
+
+/** A fresh signed preview link for a component draft on its own. */
+const signComponentLink = (client: Client, id: string) =>
+  client
+    .query<CmsComponentPreviewLinkData>({ query: CMS_COMPONENT_PREVIEW_LINK, variables: { id }, fetchPolicy: 'network-only' })
+    .then((result) => result.data?.cmsComponentPreviewLink.url);

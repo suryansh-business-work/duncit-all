@@ -45,8 +45,8 @@ export default function VersionsDialog({ owner, onClose, onRestored }: Readonly<
       notifySuccess(t('websiteApp.cms.versions.restored'));
       onRestored();
       onClose();
-    } catch (failure) {
-      notifyError(cmsErrorMessage(failure, t('websiteApp.cms.versions.restoreFailed')));
+    } catch (error_) {
+      notifyError(cmsErrorMessage(error_, t('websiteApp.cms.versions.restoreFailed')));
     }
   };
 
@@ -62,8 +62,8 @@ export default function VersionsDialog({ owner, onClose, onRestored }: Readonly<
       notifySuccess(t('websiteApp.cms.versions.published', { vars: { version: version.version } }));
       onRestored();
       await refetch();
-    } catch (failure) {
-      notifyError(cmsErrorMessage(failure, t('websiteApp.cms.versions.publishFailed')));
+    } catch (error_) {
+      notifyError(cmsErrorMessage(error_, t('websiteApp.cms.versions.publishFailed')));
     }
   };
 

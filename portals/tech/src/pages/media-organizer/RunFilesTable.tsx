@@ -29,6 +29,13 @@ function PathCell({ path }: Readonly<{ path: string }>) {
   );
 }
 
+const renderFilePath = (row: RelocationRow) => <PathCell path={row.file_path} />;
+const renderNewFilePath = (row: RelocationRow) => <PathCell path={row.new_file_path} />;
+
+const makeRenderStatus = (labels: Readonly<Record<RelocationStatus, string>>) => (row: RelocationRow) => (
+  <StatusChip status={row.status} label={labels[row.status]} colorMap={STATUS_COLORS} />
+);
+
 /** Every file one run found, filterable by what happened to it. */
 export default function RunFilesTable({ runId }: Readonly<{ runId: string }>) {
   const { t } = useTranslation();
@@ -58,7 +65,7 @@ export default function RunFilesTable({ runId }: Readonly<{ runId: string }>) {
         type: 'enum',
         options: Object.entries(labels).map(([value, label]) => ({ value, label })),
         valueGetter: (row) => labels[row.status],
-        cellRenderer: (row) => <StatusChip status={row.status} label={labels[row.status]} colorMap={STATUS_COLORS} />,
+        cellRenderer: makeRenderStatus(labels),
       },
       {
         field: 'file_path',
@@ -67,7 +74,7 @@ export default function RunFilesTable({ runId }: Readonly<{ runId: string }>) {
         minWidth: 260,
         type: 'text',
         valueGetter: (row) => row.file_path,
-        cellRenderer: (row) => <PathCell path={row.file_path} />,
+        cellRenderer: renderFilePath,
       },
       {
         field: 'new_file_path',
@@ -78,7 +85,7 @@ export default function RunFilesTable({ runId }: Readonly<{ runId: string }>) {
         sortable: false,
         filterable: false,
         valueGetter: (row) => row.new_file_path,
-        cellRenderer: (row) => <PathCell path={row.new_file_path} />,
+        cellRenderer: renderNewFilePath,
       },
       {
         field: 'owners',

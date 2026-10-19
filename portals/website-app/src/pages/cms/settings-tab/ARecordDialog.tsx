@@ -42,8 +42,8 @@ export default function ARecordDialog({ siteId, target, onClose, onSaved }: Read
       notifySuccess(t('websiteApp.cms.dns.saved', { vars: { host } }));
       onSaved();
       close();
-    } catch (failure) {
-      setError(cmsErrorMessage(failure, t('websiteApp.cms.dns.saveFailed')));
+    } catch (error_) {
+      setError(cmsErrorMessage(error_, t('websiteApp.cms.dns.saveFailed')));
     } finally {
       setSubmitting(false);
     }

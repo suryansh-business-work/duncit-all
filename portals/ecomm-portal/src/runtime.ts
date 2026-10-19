@@ -7,8 +7,15 @@ export const graphqlUrl = resolvePortalGraphqlUrl(import.meta.env);
 /** The Apollo client, session, chrome and login page, wired to this console. */
 export const runtime = createPortalRuntime(appConfig, graphqlUrl);
 
+/** Drops trailing slashes with a linear scan, so a long run of `/` can never backtrack. */
+const withoutTrailingSlashes = (url: string): string => {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === '/') end -= 1;
+  return url.slice(0, end);
+};
+
 /** The storefront this console manages — for "View on store" links. */
-export const STORE_URL = (import.meta.env.VITE_STORE_URL || 'https://ecomm.duncit.com').replace(/\/+$/, '');
+export const STORE_URL = withoutTrailingSlashes(import.meta.env.VITE_STORE_URL || 'https://ecomm.duncit.com');
 
 /** The Support console, where the store's shopper tickets land. */
-export const SUPPORT_URL = (import.meta.env.VITE_SUPPORT_URL || 'https://support.duncit.com').replace(/\/+$/, '');
+export const SUPPORT_URL = withoutTrailingSlashes(import.meta.env.VITE_SUPPORT_URL || 'https://support.duncit.com');

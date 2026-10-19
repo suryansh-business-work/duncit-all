@@ -99,7 +99,7 @@ export function classifyLabelOf(config: NodeData, handle: string): string | null
 }
 
 export const newId = (prefix: string): string =>
-  `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  `${prefix}_${Date.now().toString(36)}${globalThis.crypto.randomUUID().slice(0, 5)}`;
 
 /** Where a step added from the palette lands: under the lowest step, in the trigger's column. */
 export function nextPosition(nodes: readonly CanvasNode[]): { x: number; y: number } {

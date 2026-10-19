@@ -30,6 +30,23 @@ interface Props {
   onRemove: (row: BrandDeliveryPincodeRow) => void;
 }
 
+/** The last ShipRocket check, with its sync error on hover. */
+const makeRenderStatus = (t: Translate) => (row: BrandDeliveryPincodeRow) => (
+  <Tooltip describeChild title={row.sync_error}>
+    <span>
+      <StatusChip status={statusOf(row)} label={statusLabel(row, t)} colorMap={STATUS_COLOR} />
+    </span>
+  </Tooltip>
+);
+
+const makeRenderRemove = (t: Translate, onRemove: Props['onRemove']) => (row: BrandDeliveryPincodeRow) => (
+  <Tooltip title={t('shell.common.delete')}>
+    <DuncitIconButton size="small" aria-label={`${t('shell.common.delete')} ${row.pincode}`} onClick={() => onRemove(row)}>
+      <DeleteOutlineIcon fontSize="small" />
+    </DuncitIconButton>
+  </Tooltip>
+);
+
 /** A brand's delivery pincodes with their last ShipRocket check. */
 export default function BrandDeliveryPincodesTable({ fetchRows, refetchRef, onRemove }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -43,13 +60,7 @@ export default function BrandDeliveryPincodesTable({ fetchRows, refetchRef, onRe
         headerName: t('products.deliveryPincodes.colShiprocket'),
         type: 'boolean',
         width: 170,
-        cellRenderer: (row) => (
-          <Tooltip describeChild title={row.sync_error}>
-            <span>
-              <StatusChip status={statusOf(row)} label={statusLabel(row, t)} colorMap={STATUS_COLOR} />
-            </span>
-          </Tooltip>
-        ),
+        cellRenderer: makeRenderStatus(t),
         valueGetter: (row) => statusLabel(row, t),
       },
       {
@@ -73,17 +84,7 @@ export default function BrandDeliveryPincodesTable({ fetchRows, refetchRef, onRe
         headerName: t('shell.common.actions'),
         type: 'actions',
         width: 90,
-        cellRenderer: (row) => (
-          <Tooltip title={t('shell.common.delete')}>
-            <DuncitIconButton
-              size="small"
-              aria-label={`${t('shell.common.delete')} ${row.pincode}`}
-              onClick={() => onRemove(row)}
-            >
-              <DeleteOutlineIcon fontSize="small" />
-            </DuncitIconButton>
-          </Tooltip>
-        ),
+        cellRenderer: makeRenderRemove(t, onRemove),
       },
     ],
     [t, formatDate, onRemove],

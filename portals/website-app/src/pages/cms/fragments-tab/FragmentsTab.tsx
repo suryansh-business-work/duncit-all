@@ -11,7 +11,7 @@ import { CMS_FRAGMENTS_TABLE, CREATE_CMS_FRAGMENT, UPDATE_CMS_FRAGMENT, type Cms
 import { useCmsLabels } from '../lib/labels';
 import { cmsErrorMessage } from '../lib/errors';
 import PublishStatus from '../components/PublishStatus';
-import RowActions from '../components/RowActions';
+import RowActions, { type RowAction } from '../components/RowActions';
 import VersionsDialog from '../components/VersionsDialog';
 import { FragmentForm, toFragmentInput, type FragmentFormOutput } from './fragment-form';
 import { useFragmentRowActions } from './useFragmentRowActions';
@@ -20,6 +20,12 @@ import ComponentCodeDialog from './ComponentCodeDialog';
 import { useCopyPreviewLink } from '../lib/useCopyPreviewLink';
 
 const getRowId = (fragment: CmsFragmentRow) => fragment.id;
+
+const renderStatus = (f: CmsFragmentRow) => <PublishStatus published={f.is_published} changes={f.has_unpublished_changes} />;
+
+const makeRenderActions = (actionsFor: (fragment: CmsFragmentRow) => RowAction[]) => (f: CmsFragmentRow) => (
+  <RowActions label={f.name} actions={actionsFor(f)} />
+);
 
 /** The site's components: headers, footers, sections and live blocks — designed once, dragged into any page. */
 export default function FragmentsTab({ site }: Readonly<{ site: CmsSiteRow }>) {
@@ -63,10 +69,10 @@ export default function FragmentsTab({ site }: Readonly<{ site: CmsSiteRow }>) {
         headerName: t('shell.common.status'),
         type: 'boolean',
         width: 200,
-        cellRenderer: (f) => <PublishStatus published={f.is_published} changes={f.has_unpublished_changes} />,
+        cellRenderer: renderStatus,
       },
       { field: 'updated_at', headerName: t('shell.common.updated'), type: 'date', width: 170, valueGetter: (f) => (f.updated_at ? formatDateTime(f.updated_at) : '') },
-      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 110, cellRenderer: (f) => <RowActions label={f.name} actions={actionsFor(f)} /> },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 110, cellRenderer: makeRenderActions(actionsFor) },
     ],
     [actionsFor, formatDateTime, labels, t],
   );

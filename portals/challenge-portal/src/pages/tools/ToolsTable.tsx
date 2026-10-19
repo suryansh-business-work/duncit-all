@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
-import { useTranslation } from '@duncit/shell';
+import { useTranslation, type Translate } from '@duncit/shell';
 import { DuncitTable, actionsColumn, activeChipColumn, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import type { ToolRow } from '../../graphql/engine';
 
@@ -23,6 +23,15 @@ const renderName = (r: ToolRow) => (
   </Box>
 );
 
+/** Whether the challenge engine can run the tool yet. */
+const makeRenderAvailability = (t: Translate) => (r: ToolRow) => (
+  <Chip
+    size="small"
+    variant={r.engine_ready ? 'filled' : 'outlined'}
+    label={t(r.engine_ready ? 'challenge.tools.available' : 'challenge.tools.comingSoon')}
+  />
+);
+
 /** Tool Master: every universal tool, its status, version and how widely it is mapped. */
 export default function ToolsTable({ rows, onEdit }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -36,13 +45,7 @@ export default function ToolsTable({ rows, onEdit }: Readonly<Props>) {
         headerName: t('challenge.tools.colAvailability'),
         type: 'boolean',
         width: 150,
-        cellRenderer: (r) => (
-          <Chip
-            size="small"
-            variant={r.engine_ready ? 'filled' : 'outlined'}
-            label={t(r.engine_ready ? 'challenge.tools.available' : 'challenge.tools.comingSoon')}
-          />
-        ),
+        cellRenderer: makeRenderAvailability(t),
       },
       { field: 'version', headerName: t('challenge.tools.colVersion'), type: 'number', width: 110 },
       {

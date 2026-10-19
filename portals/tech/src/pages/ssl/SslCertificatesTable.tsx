@@ -34,6 +34,19 @@ interface Props {
   onDetails: (row: SslCertificate) => void;
 }
 
+const makeRenderDetails = (t: Translate, onDetails: Props['onDetails']) => (row: SslCertificate) => (
+  <DuncitButton
+    size="small"
+    variant="outlined"
+    startIcon={<InfoOutlinedIcon fontSize="small" />}
+    onClick={() => onDetails(row)}
+    aria-label={t('tech.ssl.detailsFor', { vars: { name: row.name } })}
+    data-testid={`ssl-details-${row.name}`}
+  >
+    {t('tech.ssl.details')}
+  </DuncitButton>
+);
+
 /** Every certbot lineage on the host — a handful of rows, so paged in the browser. */
 export default function SslCertificatesTable({ certificates, onDetails }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -90,18 +103,7 @@ export default function SslCertificatesTable({ certificates, onDetails }: Readon
         type: 'actions',
         width: 130,
         valueGetter: (row) => row.serial_number,
-        cellRenderer: (row: SslCertificate) => (
-          <DuncitButton
-            size="small"
-            variant="outlined"
-            startIcon={<InfoOutlinedIcon fontSize="small" />}
-            onClick={() => onDetails(row)}
-            aria-label={t('tech.ssl.detailsFor', { vars: { name: row.name } })}
-            data-testid={`ssl-details-${row.name}`}
-          >
-            {t('tech.ssl.details')}
-          </DuncitButton>
-        ),
+        cellRenderer: makeRenderDetails(t, onDetails),
       },
     ],
     [coverages, onDetails, t],

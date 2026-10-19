@@ -39,8 +39,10 @@ const REFUND_COLORS: StatusColorMap = { PROCESSED: 'success', RECORDED: 'info', 
 
 const money = (row: UserShopOrderRow, value: number) => formatMoney(value, { symbol: row.currency_symbol, decimals: 2 });
 
+const variantSuffix = (label: string) => (label ? ` (${label})` : '');
+
 const itemsText = (row: UserShopOrderRow) =>
-  row.line_items.map((l) => `${l.name}${l.variant_label ? ` (${l.variant_label})` : ''} × ${l.qty}`).join(', ');
+  row.line_items.map((l) => `${l.name}${variantSuffix(l.variant_label)} × ${l.qty}`).join(', ');
 
 /** The order number, with the pod it was bought at under it. */
 const renderOrder = (row: UserShopOrderRow) => (

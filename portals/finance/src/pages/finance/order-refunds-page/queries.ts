@@ -1,7 +1,5 @@
 import { gql } from '@apollo/client';
-import type { PaymentShop } from '../payment-logs-page/queries';
-
-export type { PaymentShop };
+export type { PaymentShop } from '../payment-logs-page/queries';
 
 export type OrderRefundKind = 'CANCELLATION' | 'RETURN';
 export type OrderRefundMode = 'RAZORPAY' | 'COINS' | 'RAZORPAY_COINS';

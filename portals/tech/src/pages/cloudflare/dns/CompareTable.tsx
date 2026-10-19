@@ -39,6 +39,10 @@ function CloudflareCell({ row, t }: Readonly<{ row: CloudflareCompareRow; t: Tra
   );
 }
 
+const renderGodaddy = (row: CloudflareCompareRow) => <ValueCell value={row.godaddy_value} missing={false} />;
+
+const makeRenderCloudflare = (t: Translate) => (row: CloudflareCompareRow) => <CloudflareCell row={row} t={t} />;
+
 const renderState = (state: CloudflareRowState, t: Translate) => (
   <Chip size="small" color={ROW_TONE[state]} label={t(ROW_LABEL_KEY[state])} />
 );
@@ -84,7 +88,7 @@ export default function CompareTable({ rows, busy, onCopy, onDelete, toolbarActi
         minWidth: 180,
         type: 'text',
         sortable: false,
-        cellRenderer: (row) => <ValueCell value={row.godaddy_value} missing={false} />,
+        cellRenderer: renderGodaddy,
         valueGetter: (row) => row.godaddy_value ?? EM_DASH,
       },
       {
@@ -94,7 +98,7 @@ export default function CompareTable({ rows, busy, onCopy, onDelete, toolbarActi
         minWidth: 180,
         type: 'text',
         sortable: false,
-        cellRenderer: (row) => <CloudflareCell row={row} t={t} />,
+        cellRenderer: makeRenderCloudflare(t),
         valueGetter: (row) => row.cloudflare_value ?? EM_DASH,
       },
       { field: 'priority', headerName: t('tech.cloudflare.colPriority'), width: 100, type: 'number' },

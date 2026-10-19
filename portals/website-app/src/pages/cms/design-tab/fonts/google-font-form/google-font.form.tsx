@@ -18,6 +18,10 @@ interface Props {
   onBack: () => void;
 }
 
+/** The picked weights with one weight ticked on or off. */
+const toggleWeight = (picked: number[], weight: number, checked: boolean) =>
+  checked ? [...picked, weight] : picked.filter((w) => w !== weight);
+
 /** The weights, italics and role a chosen Google family is added with. */
 export default function GoogleFontForm({ family, weights, hasItalic, onSubmit, onBack }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -48,7 +52,7 @@ export default function GoogleFontForm({ family, weights, hasItalic, onSubmit, o
                     control={
                       <Checkbox
                         checked={field.value.includes(weight)}
-                        onChange={(_e, checked) => field.onChange(checked ? [...field.value, weight] : field.value.filter((w) => w !== weight))}
+                        onChange={(_e, checked) => field.onChange(toggleWeight(field.value, weight, checked))}
                       />
                     }
                   />

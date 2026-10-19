@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Editor, Property, PropertySelect } from 'grapesjs';
+import type { AssetsCustomData, Editor, Property, PropertySelect } from 'grapesjs';
 import { fontStack, type CmsDesignFont } from '@duncit/brand/cms-design';
 import { registerCmsComponents, type EditorLabels, type FragmentPreview } from './editorComponents';
 import type { BlockFrameUrl } from './blockFrame';
@@ -46,6 +46,34 @@ function parseProject(project: string): Record<string, unknown> | null {
   }
 }
 
+/** Hands GrapesJS's image request to the console's picker. */
+function openAssetPicker(args: Args, props: AssetsCustomData, getEditor: () => Editor | null) {
+  args.onPickAsset({
+    select: (url) => {
+      // Registered in the editor's own library, so it can be re-picked
+      // later without another upload.
+      const added = getEditor()?.Assets.add({ src: url, type: 'image' });
+      const asset = Array.isArray(added) ? added[0] : added;
+      if (asset) props.select(asset, true);
+      props.close();
+    },
+  });
+}
+
+/** Paints the design system into the loaded canvas and starts tracking edits. */
+function prepareCanvas(canvas: Editor, args: Args, onDirty: (dirty: boolean) => void) {
+  const doc = canvas.Canvas.getDocument();
+  if (!doc) return;
+  const style = doc.createElement('style');
+  style.dataset.cmsDesign = 'true';
+  style.textContent = args.canvasCss;
+  doc.head.prepend(style);
+  offerSiteFonts(canvas, args.fonts);
+  canvas.clearDirtyCount?.();
+  // Attached after the load, so opening a page is not itself an edit.
+  canvas.on('update', () => onDirty(canvas.getDirtyCount() > 0));
+}
+
 /**
  * GrapesJS, loaded on demand (it is a large module wanted on one screen) and
  * built once per document. Built with the CMS components and blocks as plugins
@@ -64,12 +92,14 @@ export function useGrapesEditor(args: Args) {
     if (!host || !source) return undefined;
     let disposed = false;
     let built: Editor | null = null;
+    const currentEditor = () => built;
 
     const build = async () => {
       const [{ default: grapesjs }] = await Promise.all([import('grapesjs'), import('grapesjs/dist/css/grapes.min.css')]);
       if (disposed) return;
       const a = argsRef.current;
       const project = parseProject(source.project);
+      const openFragment = (fragment: FragmentPreview) => argsRef.current.onOpenFragment(fragment);
       const canvas = grapesjs.init({
         container: host,
         height: '100%',
@@ -83,16 +113,7 @@ export function useGrapesEditor(args: Args) {
         assetManager: {
           custom: {
             open(props) {
-              argsRef.current.onPickAsset({
-                select: (url) => {
-                  // Registered in the editor's own library, so it can be re-picked
-                  // later without another upload.
-                  const added = built?.Assets.add({ src: url, type: 'image' });
-                  const asset = Array.isArray(added) ? added[0] : added;
-                  if (asset) props.select(asset, true);
-                  props.close();
-                },
-              });
+              openAssetPicker(argsRef.current, props, currentEditor);
             },
             close() {
               // The console's picker closes itself.
@@ -100,23 +121,12 @@ export function useGrapesEditor(args: Args) {
           },
         },
         plugins: [
-          (ed) => registerCmsComponents(ed, a.labels.components, a.fragments, a.labels.fields, (fragment) => argsRef.current.onOpenFragment(fragment), a.blockUrl),
+          (ed) => registerCmsComponents(ed, a.labels.components, a.fragments, a.labels.fields, openFragment, a.blockUrl),
           (ed) => registerBlocks(ed, a.labels.blocks, a.fragments, { template: a.template, selfKey: a.selfKey }),
         ],
       });
       built = canvas;
-      canvas.onReady(() => {
-        const doc = canvas.Canvas.getDocument();
-        if (!doc) return;
-        const style = doc.createElement('style');
-        style.dataset.cmsDesign = 'true';
-        style.textContent = argsRef.current.canvasCss;
-        doc.head.prepend(style);
-        offerSiteFonts(canvas, argsRef.current.fonts);
-        canvas.clearDirtyCount?.();
-        // Attached after the load, so opening a page is not itself an edit.
-        canvas.on('update', () => setDirty(canvas.getDirtyCount() > 0));
-      });
+      canvas.onReady(() => prepareCanvas(canvas, argsRef.current, setDirty));
       setEditor(canvas);
     };
 

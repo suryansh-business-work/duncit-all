@@ -18,8 +18,10 @@ export const RETURN_STATUS_COLORS: StatusColorMap = {
   CANCELLED: 'default',
 };
 
+const variantSuffix = (label: PodShopReturnRow['items'][number]['variant_label']) => (label ? ` (${label})` : '');
+
 export const returnItemsText = (row: PodShopReturnRow) =>
-  row.items.map((i) => `${i.name}${i.variant_label ? ` (${i.variant_label})` : ''} × ${i.qty}`).join(', ');
+  row.items.map((i) => `${i.name}${variantSuffix(i.variant_label)} × ${i.qty}`).join(', ');
 
 export const returnColumns = (t: Translate, formatDateTime: DateFormatter['formatDateTime']): DuncitColumn<PodShopReturnRow>[] => [
   {

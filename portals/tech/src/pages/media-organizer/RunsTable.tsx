@@ -18,6 +18,54 @@ interface Props {
 
 const getRowId = (run: OrganizerRun) => run.run_id;
 
+type RunActionProps = Pick<Props, 'busy' | 'onView' | 'onApply' | 'onRollback'>;
+
+/** View a run's files, apply what it planned, or roll back what it moved. */
+function RunActions({ run, busy, onView, onApply, onRollback }: Readonly<RunActionProps & { run: OrganizerRun }>) {
+  const { t } = useTranslation();
+  return (
+    <Stack direction="row" spacing={0.5}>
+      <Tooltip title={t('tech.mediaOrganizer.viewFiles')}>
+        <span>
+          <DuncitIconButton
+            aria-label={t('tech.mediaOrganizer.viewFiles')}
+            data-testid={`media-organizer-view-${run.run_id}`}
+            onClick={() => onView(run.run_id)}
+          >
+            <FolderOpenIcon fontSize="small" />
+          </DuncitIconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title={t('tech.mediaOrganizer.apply')}>
+        <span>
+          <DuncitIconButton
+            aria-label={t('tech.mediaOrganizer.apply')}
+            data-testid={`media-organizer-apply-${run.run_id}`}
+            disabled={busy || run.PENDING === 0}
+            onClick={() => onApply(run)}
+          >
+            <DriveFileMoveIcon fontSize="small" />
+          </DuncitIconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title={t('tech.mediaOrganizer.rollback')}>
+        <span>
+          <DuncitIconButton
+            aria-label={t('tech.mediaOrganizer.rollback')}
+            data-testid={`media-organizer-rollback-${run.run_id}`}
+            disabled={busy || run.DONE === 0}
+            onClick={() => onRollback(run)}
+          >
+            <UndoIcon fontSize="small" />
+          </DuncitIconButton>
+        </span>
+      </Tooltip>
+    </Stack>
+  );
+}
+
+const makeRenderActions = (actions: RunActionProps) => (run: OrganizerRun) => <RunActions run={run} {...actions} />;
+
 /** One row per organizer run, with what it found and the actions it still allows. */
 export default function RunsTable({ runs, busy, onView, onApply, onRollback }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -50,45 +98,7 @@ export default function RunsTable({ runs, busy, onView, onApply, onRollback }: R
         width: 150,
         type: 'actions',
         valueGetter: () => '',
-        cellRenderer: (run) => (
-          <Stack direction="row" spacing={0.5}>
-            <Tooltip title={t('tech.mediaOrganizer.viewFiles')}>
-              <span>
-                <DuncitIconButton
-                  aria-label={t('tech.mediaOrganizer.viewFiles')}
-                  data-testid={`media-organizer-view-${run.run_id}`}
-                  onClick={() => onView(run.run_id)}
-                >
-                  <FolderOpenIcon fontSize="small" />
-                </DuncitIconButton>
-              </span>
-            </Tooltip>
-            <Tooltip title={t('tech.mediaOrganizer.apply')}>
-              <span>
-                <DuncitIconButton
-                  aria-label={t('tech.mediaOrganizer.apply')}
-                  data-testid={`media-organizer-apply-${run.run_id}`}
-                  disabled={busy || run.PENDING === 0}
-                  onClick={() => onApply(run)}
-                >
-                  <DriveFileMoveIcon fontSize="small" />
-                </DuncitIconButton>
-              </span>
-            </Tooltip>
-            <Tooltip title={t('tech.mediaOrganizer.rollback')}>
-              <span>
-                <DuncitIconButton
-                  aria-label={t('tech.mediaOrganizer.rollback')}
-                  data-testid={`media-organizer-rollback-${run.run_id}`}
-                  disabled={busy || run.DONE === 0}
-                  onClick={() => onRollback(run)}
-                >
-                  <UndoIcon fontSize="small" />
-                </DuncitIconButton>
-              </span>
-            </Tooltip>
-          </Stack>
-        ),
+        cellRenderer: makeRenderActions({ busy, onView, onApply, onRollback }),
       },
     ];
   }, [t, busy, onView, onApply, onRollback]);

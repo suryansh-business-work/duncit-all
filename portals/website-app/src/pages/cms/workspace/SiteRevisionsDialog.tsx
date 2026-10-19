@@ -48,8 +48,8 @@ export default function SiteRevisionsDialog({ site, open, onClose }: Readonly<Pr
     try {
       await restore({ variables: { id } });
       notifySuccess(t('websiteApp.cms.revisions.restored', { vars: { revision } }));
-    } catch (failure) {
-      notifyError(cmsErrorMessage(failure, t('websiteApp.cms.revisions.restoreFailed')));
+    } catch (error_) {
+      notifyError(cmsErrorMessage(error_, t('websiteApp.cms.revisions.restoreFailed')));
     }
   };
 

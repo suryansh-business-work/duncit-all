@@ -22,6 +22,8 @@ const renderName = (row: FreelancerAdminRow) => (
   </Stack>
 );
 
+const renderContact = (row: FreelancerAdminRow) => <ContactCell contact={row.contact} />;
+
 /** Everyone who joined as a freelancer from Earn with Duncit, with what they do and how to reach them. */
 export default function FreelancersPage() {
   const { t } = useTranslation();
@@ -57,7 +59,7 @@ export default function FreelancersPage() {
         minWidth: 200,
         sortable: false,
         filterable: false,
-        cellRenderer: (row) => <ContactCell contact={row.contact} />,
+        cellRenderer: renderContact,
         valueGetter: (row) => row.contact.phone,
       },
       activeChipColumn<FreelancerAdminRow>({ field: 'is_available', headerName: t('gigJobs.freelancer.available') }),

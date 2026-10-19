@@ -17,6 +17,14 @@ const renderSkills = (row: GigInterestAdminRow) => (
   </Stack>
 );
 
+const renderContact = (row: GigInterestAdminRow) => <ContactCell contact={row.contact} />;
+
+const renderMessage = (row: GigInterestAdminRow) => (
+  <Typography variant="body2" component="span" noWrap title={row.message}>
+    {row.message}
+  </Typography>
+);
+
 /**
  * Who said "I'm interested", with the contact that was shared. Every gig's,
  * or one gig's when `jobId` is set (the gig's own dialog).
@@ -40,7 +48,7 @@ export default function InterestsTable({ jobId }: Readonly<{ jobId?: string }>) 
         minWidth: 200,
         sortable: false,
         filterable: false,
-        cellRenderer: (row) => <ContactCell contact={row.contact} />,
+        cellRenderer: renderContact,
         valueGetter: (row) => row.contact.phone,
       },
       {
@@ -62,11 +70,7 @@ export default function InterestsTable({ jobId }: Readonly<{ jobId?: string }>) 
         minWidth: 200,
         sortable: false,
         filterable: false,
-        cellRenderer: (row) => (
-          <Typography variant="body2" component="span" noWrap title={row.message}>
-            {row.message}
-          </Typography>
-        ),
+        cellRenderer: renderMessage,
         valueGetter: (row) => row.message,
       },
       dateColumn<GigInterestAdminRow>({ field: 'created_at', headerName: t('gigJobs.console.columnWhen'), hide: false }),

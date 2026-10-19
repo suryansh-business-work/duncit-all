@@ -12,6 +12,7 @@ import {
   NavigationPage,
   ReelsPage,
   ReelSettingsPage,
+  EarnPage,
 } from './pages/website';
 import { CmsEditorPage, EntryEditorPage, SitesPage, SiteWorkspacePage } from './pages/cms';
 import AppShell from './components/AppShell';
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/navigation" element={authed(<NavigationPage />)} />
       <Route path="/reels" element={authed(<ReelsPage />)} />
       <Route path="/reels/settings" element={authed(<ReelSettingsPage />)} />
+      <Route path="/earn" element={authed(<EarnPage />)} />
       <Route path="/sites" element={authed(<SitesPage />)} />
       <Route path="/sites/:siteId" element={authed(<SiteWorkspacePage />)} />
       <Route path="/sites/:siteId/:target/:docId/design" element={authed(<CmsEditorPage />)} />

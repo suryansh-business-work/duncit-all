@@ -32,6 +32,7 @@ export const appConfig = {
     { label: 'Contact Submission', labelKey: 'shell.nav.contactSubmission', to: '/contact-submissions', icon: 'contactMail' },
     { label: 'Job Applications', labelKey: 'shell.nav.jobApplications', to: '/job-applications', icon: 'personSearch' },
     { label: 'Navigation', labelKey: 'shell.nav.navigation', to: '/navigation', icon: 'accountTree' },
+    { label: 'Earn with Duncit', labelKey: 'shell.nav.earnWithDuncit', to: '/earn', icon: 'volunteer-activism' },
   ],
   modules: [],
 } satisfies AppConfig;

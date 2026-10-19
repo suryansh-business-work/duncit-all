@@ -9698,6 +9698,8 @@ export type FreelancerProfile = {
   experience_years: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   is_available: Scalars['Boolean']['output'];
+  locality: Scalars['String']['output'];
+  location_id?: Maybe<Scalars['ID']['output']>;
   portfolio_url: Scalars['String']['output'];
   skills: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
@@ -9706,12 +9708,14 @@ export type FreelancerProfile = {
 export type FreelancerProfileInput = {
   bio?: InputMaybe<Scalars['String']['input']>;
   category_ids: Array<Scalars['ID']['input']>;
-  city: Scalars['String']['input'];
+  city?: InputMaybe<Scalars['String']['input']>;
   contact_email?: InputMaybe<Scalars['String']['input']>;
   contact_phone: Scalars['String']['input'];
   display_name: Scalars['String']['input'];
   experience_years?: InputMaybe<Scalars['Int']['input']>;
   is_available?: InputMaybe<Scalars['Boolean']['input']>;
+  locality?: InputMaybe<Scalars['String']['input']>;
+  location_id?: InputMaybe<Scalars['ID']['input']>;
   portfolio_url?: InputMaybe<Scalars['String']['input']>;
   skills: Array<Scalars['String']['input']>;
 };
@@ -10042,8 +10046,12 @@ export type GigJob = {
   budget?: Maybe<Scalars['Int']['output']>;
   category_id: Scalars['ID']['output'];
   category_title: Scalars['String']['output'];
+  /** The city's name — copied from the Location, or the typed text on older gigs. */
   city: Scalars['String']['output'];
-  /** The poster's contact. Only for the poster and for a freelancer who said they are interested. */
+  /**
+   * The poster's contact. Only for the poster and for a freelancer who said they are interested;
+   * anyone else signed in reads it with gigJobContact.
+   */
   contact?: Maybe<GigContact>;
   created_at: Scalars['String']['output'];
   description: Scalars['String']['output'];
@@ -10052,7 +10060,11 @@ export type GigJob = {
   id: Scalars['ID']['output'];
   interest_count: Scalars['Int']['output'];
   is_mine: Scalars['Boolean']['output'];
+  /** One of that city's areas (a Location zone name), or empty for the whole city. */
+  locality: Scalars['String']['output'];
   location: Scalars['String']['output'];
+  /** The admin Location (city) the gig is in. Null on gigs posted before the city picker. */
+  location_id?: Maybe<Scalars['ID']['output']>;
   openings: Scalars['Int']['output'];
   poster_name: Scalars['String']['output'];
   poster_role: GigPosterRole;
@@ -10095,20 +10107,27 @@ export type GigJobFilter = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   event_type?: InputMaybe<GigEventType>;
+  /** The admin Location (city). Wins over city, which older clients send as typed text. */
+  location_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type GigJobInput = {
   budget?: InputMaybe<Scalars['Int']['input']>;
   category_id: Scalars['ID']['input'];
-  city: Scalars['String']['input'];
+  /** Typed city — only read when location_id is absent; otherwise filled from the Location. */
+  city?: InputMaybe<Scalars['String']['input']>;
   contact_email?: InputMaybe<Scalars['String']['input']>;
   contact_name: Scalars['String']['input'];
   contact_phone: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   event_date?: InputMaybe<Scalars['String']['input']>;
   event_type?: InputMaybe<GigEventType>;
+  /** One of that Location's zone names; empty for the whole city. */
+  locality?: InputMaybe<Scalars['String']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
+  /** The admin Location (city). Required unless an older client sends city instead. */
+  location_id?: InputMaybe<Scalars['ID']['input']>;
   openings?: InputMaybe<Scalars['Int']['input']>;
   poster_role: GigPosterRole;
   roles: Array<Scalars['String']['input']>;
@@ -26536,6 +26555,8 @@ export type Query = {
   gigCategoriesTable: GigCategoryTablePage;
   gigInterestsAdminTable: GigInterestAdminTablePage;
   gigJob?: Maybe<GigJob>;
+  /** The poster's contact for any signed-in member ("View contact"). Each reveal is logged. */
+  gigJobContact: GigContact;
   gigJobInterests: Array<GigInterest>;
   /** The Gig Jobs console (SUPER_ADMIN / GIG_JOBS_MANAGER). */
   gigJobStats: GigJobStats;
@@ -29108,6 +29129,11 @@ export type QueryGigInterestsAdminTableArgs = {
 
 export type QueryGigJobArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryGigJobContactArgs = {
+  job_id: Scalars['ID']['input'];
 };
 
 

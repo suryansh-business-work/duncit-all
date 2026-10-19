@@ -5,6 +5,7 @@ import { validate } from '@utils/validate';
 import { logs } from '@observability/log';
 import { FREELANCER_ROLE, FreelancerProfileModel, GigCategoryModel, type IFreelancerProfile } from './gigJob.model';
 import { freelancerProfileInputSchema } from './gigJob.validator';
+import { resolveGigPlace } from './gigPlace';
 
 const fail = (code: string, message: string) => new GraphQLError(message, { extensions: { code } });
 
@@ -13,6 +14,8 @@ const toFreelancerProfile = (doc: IFreelancerProfile) => ({
   display_name: doc.display_name ?? '',
   category_ids: (doc.category_ids ?? []).map(String),
   skills: doc.skills ?? [],
+  location_id: doc.location_id ? String(doc.location_id) : null,
+  locality: doc.locality ?? '',
   city: doc.city ?? '',
   bio: doc.bio ?? '',
   portfolio_url: doc.portfolio_url ?? '',
@@ -51,9 +54,12 @@ export const freelancerService = {
     const ids = Array.from(new Set(input.category_ids)).filter((id) => Types.ObjectId.isValid(id));
     const active = await GigCategoryModel.countDocuments({ _id: { $in: ids }, is_active: true });
     if (ids.length === 0 || active !== ids.length) throw fail('BAD_USER_INPUT', 'Pick categories from the list');
+    const userOid = new Types.ObjectId(userId);
+    const saved = await FreelancerProfileModel.findOne({ user_id: userOid }).select('location_id').lean();
+    const place = await resolveGigPlace(input, saved?.location_id ? String(saved.location_id) : null);
     const doc = await FreelancerProfileModel.findOneAndUpdate(
-      { user_id: new Types.ObjectId(userId) },
-      { $set: { ...input, category_ids: ids.map((id) => new Types.ObjectId(id)) } },
+      { user_id: userOid },
+      { $set: { ...input, ...place, category_ids: ids.map((id) => new Types.ObjectId(id)) } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     await grantFreelancerRole(userId);

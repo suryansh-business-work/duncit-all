@@ -371,7 +371,7 @@ function settingsPatch(input: Doc) {
   if (input.payment_badges) {
     patch.payment_badges = (input.payment_badges as Doc[])
       .map((b) => ({ label: String(b.label ?? '').trim().slice(0, 40), image_url: String(b.image_url ?? '').trim() }))
-      .filter((b) => b.label && /^https:\/\//.test(b.image_url))
+      .filter((b) => b.label && b.image_url.startsWith('https://'))
       .slice(0, 12);
   }
   return patch;

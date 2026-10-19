@@ -19,19 +19,21 @@ export function FestiveCanvas({ effect }: Readonly<{ effect: OccasionEffect }>) 
     return runFestiveEffect(canvas, effect);
   }, [effect]);
 
+  // The wrapper (not the canvas) carries aria-hidden, so the hidden node is never one a browser could focus.
   return (
-    <canvas
-      ref={ref}
-      aria-hidden="true"
-      data-testid="festive-canvas"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: theme.zIndex.speedDial - 1,
-      }}
-    />
+    <div aria-hidden="true">
+      <canvas
+        ref={ref}
+        data-testid="festive-canvas"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: theme.zIndex.speedDial - 1,
+        }}
+      />
+    </div>
   );
 }

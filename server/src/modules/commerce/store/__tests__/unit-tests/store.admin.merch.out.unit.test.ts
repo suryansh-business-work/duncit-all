@@ -85,6 +85,9 @@ describe('occasions', () => {
       announcement_text: '',
       is_active: true,
       sort_order: 0,
+      theme: 'NONE',
+      effects_enabled: true,
+      greeting: '',
     });
   });
 
@@ -98,8 +101,12 @@ describe('occasions', () => {
       announcement_text: 'Sale',
       is_active: false,
       sort_order: 4,
+      theme: 'DIWALI',
+      effects_enabled: false,
+      greeting: 'Happy Diwali',
     } as never);
     expect(out).toMatchObject({ logo_url: 'l', background_color: '#FFF', announcement_text: 'Sale', is_active: false, sort_order: 4 });
+    expect(out).toMatchObject({ theme: 'DIWALI', effects_enabled: false, greeting: 'Happy Diwali' });
   });
 });
 
@@ -253,7 +260,7 @@ describe('home sections', () => {
       kind: 'FLASH_SALE',
       title: 'T',
       subtitle: 'S',
-      items: [{ _id: 'i1', title: 'a', subtitle: 'b', image_url: 'c', mobile_image_url: 'd', cta_label: 'e', link: 'f' }, {}],
+      items: [{ _id: 'i1', eyebrow: 'g', title: 'a', subtitle: 'b', image_url: 'c', mobile_image_url: 'd', cta_label: 'e', link: 'f' }, {}],
       collection_id: 'k1',
       category_ids: ['c1'],
       product_limit: 6,
@@ -265,8 +272,8 @@ describe('home sections', () => {
       starts_at: when,
       ends_at: when,
     });
-    expect(out.items[0]).toEqual({ id: 'i1', title: 'a', subtitle: 'b', image_url: 'c', mobile_image_url: 'd', cta_label: 'e', link: 'f' });
-    expect(out.items[1]).toEqual({ id: '', title: '', subtitle: '', image_url: '', mobile_image_url: '', cta_label: '', link: '' });
+    expect(out.items[0]).toEqual({ id: 'i1', eyebrow: 'g', title: 'a', subtitle: 'b', image_url: 'c', mobile_image_url: 'd', cta_label: 'e', link: 'f' });
+    expect(out.items[1]).toEqual({ id: '', eyebrow: '', title: '', subtitle: '', image_url: '', mobile_image_url: '', cta_label: '', link: '' });
     expect(out).toMatchObject({
       collection_id: 'k1',
       product_limit: 6,

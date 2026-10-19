@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 
 import { DEFAULT_PREFERENCES, readPreferences, savePreferences, type StorePreferences } from '../../lib/preferences';
@@ -30,20 +30,15 @@ const ColorModeContext = createContext<ColorModeValue>({
  * counts as the shopper asking for it.
  */
 export function ColorModeProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const [prefs, setPrefsState] = useState<StorePreferences>(readPreferences);
+  const [prefs, setPrefs] = useState<StorePreferences>(readPreferences);
   const deviceDark = useMediaQuery('(prefers-color-scheme: dark)', { noSsr: true });
   const deviceStill = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
   const deviceMode: StoreColorMode = deviceDark ? 'dark' : 'light';
   const mode: StoreColorMode = prefs.color === 'system' ? deviceMode : prefs.color;
 
-  const setPrefs = useCallback((patch: Partial<StorePreferences>) => {
-    setPrefsState((prev) => {
-      const next = { ...prev, ...patch };
-      savePreferences(next);
-      return next;
-    });
-  }, []);
-  const toggle = useCallback(() => setPrefs({ color: mode === 'light' ? 'dark' : 'light' }), [mode, setPrefs]);
+  useEffect(() => savePreferences(prefs), [prefs]);
+  const updatePrefs = useCallback((patch: Partial<StorePreferences>) => setPrefs((prev) => ({ ...prev, ...patch })), []);
+  const toggle = useCallback(() => updatePrefs({ color: mode === 'light' ? 'dark' : 'light' }), [mode, updatePrefs]);
 
   const themePrefs = useMemo<StoreThemePrefs>(
     () => ({
@@ -54,7 +49,10 @@ export function ColorModeProvider({ children }: Readonly<{ children: ReactNode }
     }),
     [prefs.textScale, prefs.underlineLinks, prefs.reduceMotion, prefs.readableFont, deviceStill],
   );
-  const value = useMemo(() => ({ mode, toggle, prefs, setPrefs, themePrefs }), [mode, toggle, prefs, setPrefs, themePrefs]);
+  const value = useMemo(
+    () => ({ mode, toggle, prefs, setPrefs: updatePrefs, themePrefs }),
+    [mode, toggle, prefs, updatePrefs, themePrefs],
+  );
   const theme = useMemo(() => buildStoreTheme(mode, STORE_PALETTES[mode], themePrefs), [mode, themePrefs]);
   return (
     <ColorModeContext.Provider value={value}>

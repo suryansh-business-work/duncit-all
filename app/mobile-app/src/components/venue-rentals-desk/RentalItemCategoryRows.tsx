@@ -24,8 +24,11 @@ export function RentalItemCategoryRows({ control, index, max }: Readonly<Props>)
   // Every pick goes through `update`, so each field already holds its row's live value.
   const { fields, append, remove, update } = useFieldArray({ control, name });
   const { errors } = useFormState({ control, name });
-  // The list-level refusals ("at least one", "the same sub twice") land on the array's root.
-  const listError = errors.items?.[index]?.categories?.root?.message;
+  // The list-level refusals ("at least one", "the same sub twice"). The resolver
+  // files them under `root` only when row fields are mounted; these rows are
+  // field-array values with no mounted inputs, so they land on the array itself.
+  const listErrors = errors.items?.[index]?.categories;
+  const listError = listErrors?.root?.message ?? listErrors?.message;
   const rowError = (row: number) => errors.items?.[index]?.categories?.[row]?.sub_id?.message;
 
   return (

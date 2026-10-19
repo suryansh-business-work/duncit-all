@@ -205,6 +205,7 @@ describe('useVenueRentalBookings', () => {
       .mockResolvedValueOnce({
         venueRentalBookingsTable: { rows: [booking('b1'), booking('b2', { status: 'DAMAGED' })] },
         venueRentalStats: { ...STATS, open: 1 },
+        publicRentalSettings: { deposit_refundable: true },
       });
     await act(() =>
       result.current.mark('b2', { outcome: 'DAMAGED', damage_claim: 150, note: 'Cracked frame' }),

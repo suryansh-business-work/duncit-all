@@ -7,7 +7,7 @@ import { ReelMusicForm } from '../../../../forms/reel-music';
 import { ReelOverlayForm } from '../../../../forms/reel-overlay';
 import { ReelSceneForm } from '../../../../forms/reel-scene';
 import { ReelTextForm } from '../../../../forms/reel-text';
-import { selectionExists, type ReelSelection } from '../../editor/layout';
+import { resolveSelection, type ReelSelection } from '../../editor/layout';
 import { maxSceneMs, updateMusic, updateOverlay, updateScene, updateText } from '../../editor/specEdits';
 import type { SpecEditor } from '../../editor/useSpecEditor';
 import type { ReelAsset, ReelSpec } from '../../types';
@@ -66,40 +66,33 @@ export default function InspectorPanel({ spec, assets, selection, apply }: Reado
   );
   const onMusic = useCallback((patch: Partial<ReelMusic>) => apply((s) => updateMusic(s, patch)), [apply]);
 
-  if (!selection || !selectionExists(spec, selection)) return <EmptyInspector />;
+  const resolved = resolveSelection(spec, selection);
+  if (!resolved) return <EmptyInspector />;
 
-  if (selection.kind === 'music' && spec.music) {
+  if (resolved.kind === 'music') {
     return (
       <Section title={t('ai.reels.editor.musicTitle')}>
-        <ReelMusicForm music={spec.music} onChange={onMusic} />
+        <ReelMusicForm music={resolved.music} onChange={onMusic} />
       </Section>
     );
   }
 
-  const index = spec.scenes.findIndex((scene) => scene.id === sceneId);
-  const scene = spec.scenes[index];
-  if (!scene) return <EmptyInspector />;
+  const { scene, index } = resolved;
   const sceneSeconds = scene.duration_ms / 1000;
 
-  if (selection.kind === 'text') {
-    const text = scene.texts.find((item) => item.id === itemId);
-    return text ? (
+  if (resolved.kind === 'text') {
+    return (
       <Section title={t('ai.reels.editor.textTitle')}>
-        <ReelTextForm key={text.id} text={text} sceneSeconds={sceneSeconds} onChange={onText} />
+        <ReelTextForm key={resolved.text.id} text={resolved.text} sceneSeconds={sceneSeconds} onChange={onText} />
       </Section>
-    ) : (
-      <EmptyInspector />
     );
   }
 
-  if (selection.kind === 'overlay') {
-    const overlay = scene.overlays.find((item) => item.id === itemId);
-    return overlay ? (
+  if (resolved.kind === 'overlay') {
+    return (
       <Section title={t('ai.reels.editor.overlayTitle')}>
-        <ReelOverlayForm key={overlay.id} overlay={overlay} sceneSeconds={sceneSeconds} onChange={onOverlay} />
+        <ReelOverlayForm key={resolved.overlay.id} overlay={resolved.overlay} sceneSeconds={sceneSeconds} onChange={onOverlay} />
       </Section>
-    ) : (
-      <EmptyInspector />
     );
   }
 

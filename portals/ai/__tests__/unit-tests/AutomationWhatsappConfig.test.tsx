@@ -104,6 +104,17 @@ describe('WhatsappSendConfig — picking and odd saved data', () => {
     expect(screen.getByLabelText(en('ai.automation.inspector.whatsapp.param', { n: 2 }))).toBeInTheDocument();
   });
 
+  it('empties the campaign, and drops its template fields, when the picker is cleared', async () => {
+    const spy = vi.fn();
+    renderWithProviders(<Harness initial={{ campaign_name: 'welcome', template_params: ['a', 'b'] }} spy={spy} />);
+    expect(await screen.findByText('welcome_tpl')).toBeInTheDocument();
+    fireEvent.click(screen.getByTitle('Clear'));
+    await waitFor(() => expect(last(spy)).toMatchObject({ campaign_name: '' }));
+    expect(screen.getByLabelText(en('ai.automation.inspector.whatsapp.campaign'))).toHaveValue('');
+    expect(screen.queryByText('welcome_tpl')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(en('ai.automation.inspector.whatsapp.param', { n: 1 }))).not.toBeInTheDocument();
+  });
+
   it('files a saved button value with no position under the first button', async () => {
     renderWithProviders(
       <Harness initial={{ campaign_name: 'welcome', template_params: ['a', 'b'], buttons: [{ value: 'promo' }, null, { index: 'x', value: 'z' }] }} spy={vi.fn()} />

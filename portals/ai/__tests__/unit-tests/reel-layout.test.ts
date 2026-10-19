@@ -64,20 +64,32 @@ describe('itemSpans', () => {
   });
 });
 
-describe('selectionExists', () => {
+describe('resolveSelection', () => {
+  const music = { asset_id: 'song', volume: 0.5, trim_start_ms: 0 } as ReelSpec['music'];
   const reel = spec(
-    [scene('a', 2000, { texts: [{ id: 't1' }] as never, overlays: [{ id: 'o1' }] as never })],
-    { asset_id: 'song', volume: 0.5, trim_start_ms: 0 } as ReelSpec['music']
+    [scene('a', 2000), scene('b', 2000, { texts: [{ id: 't1' }] as never, overlays: [{ id: 'o1' }] as never })],
+    music
   );
+  const [, sceneB] = reel.scenes;
 
-  it('answers for every kind of selection, and false once its target is gone', () => {
-    expect(selectionExists(reel, null)).toBe(false);
-    expect(selectionExists(reel, { kind: 'music' })).toBe(true);
-    expect(selectionExists(spec([]), { kind: 'music' })).toBe(false);
-    expect(selectionExists(reel, { kind: 'scene', sceneId: 'a' })).toBe(true);
-    expect(selectionExists(reel, { kind: 'scene', sceneId: 'gone' })).toBe(false);
-    expect(selectionExists(reel, { kind: 'text', sceneId: 'a', itemId: 't1' })).toBe(true);
-    expect(selectionExists(reel, { kind: 'text', sceneId: 'a', itemId: 'gone' })).toBe(false);
-    expect(selectionExists(reel, { kind: 'overlay', sceneId: 'a', itemId: 'o1' })).toBe(true);
+  it('hands back what each kind of selection points at, with its scene and position', () => {
+    expect(resolveSelection(reel, { kind: 'music' })).toEqual({ kind: 'music', music });
+    expect(resolveSelection(reel, { kind: 'scene', sceneId: 'b' })).toEqual({ kind: 'scene', scene: sceneB, index: 1 });
+    expect(resolveSelection(reel, { kind: 'text', sceneId: 'b', itemId: 't1' })).toEqual({ kind: 'text', scene: sceneB, index: 1, text: { id: 't1' } });
+    expect(resolveSelection(reel, { kind: 'overlay', sceneId: 'b', itemId: 'o1' })).toEqual({
+      kind: 'overlay',
+      scene: sceneB,
+      index: 1,
+      overlay: { id: 'o1' },
+    });
+  });
+
+  it('answers null for no selection, and once its target is gone', () => {
+    expect(resolveSelection(reel, null)).toBeNull();
+    expect(resolveSelection(spec([]), { kind: 'music' })).toBeNull();
+    expect(resolveSelection(reel, { kind: 'scene', sceneId: 'gone' })).toBeNull();
+    expect(resolveSelection(reel, { kind: 'text', sceneId: 'gone', itemId: 't1' })).toBeNull();
+    expect(resolveSelection(reel, { kind: 'text', sceneId: 'b', itemId: 'gone' })).toBeNull();
+    expect(resolveSelection(reel, { kind: 'overlay', sceneId: 'b', itemId: 'gone' })).toBeNull();
   });
 });

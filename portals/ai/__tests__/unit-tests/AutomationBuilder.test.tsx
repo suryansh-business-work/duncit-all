@@ -243,15 +243,24 @@ describe('Automation builder — waiting, pausing and quiet answers', () => {
     answerQuery(AUTOMATION_FLOW, { loading: true });
     answerQuery(AUTOMATION_OPTIONS, { data: { automationOptions: OPTIONS } });
     const first = mount();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByTestId('loader')).toHaveAttribute('role', 'status');
     expect(screen.queryByTestId('automation-builder')).not.toBeInTheDocument();
     first.unmount();
 
     answerQuery(AUTOMATION_FLOW, { data: { automationFlow: flow() } });
     answerQuery(AUTOMATION_OPTIONS, { loading: true });
     mount();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByTestId('loader')).toHaveAttribute('role', 'status');
     expect(screen.queryByTestId('automation-builder')).not.toBeInTheDocument();
+  });
+
+  it('keeps the builder drawn while both queries refetch over data it already has', async () => {
+    answerQuery(AUTOMATION_FLOW, { data: { automationFlow: flow() }, loading: true });
+    answerQuery(AUTOMATION_OPTIONS, { data: { automationOptions: OPTIONS }, loading: true });
+    mount();
+    expect(await screen.findByTestId('automation-builder')).toBeInTheDocument();
+    expect(screen.queryByTestId('loader')).not.toBeInTheDocument();
+    expect(nameField()).toHaveValue('Welcome flow');
   });
 
   it('reports options that could not be read', () => {

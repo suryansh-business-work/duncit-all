@@ -227,7 +227,7 @@ describe('Automation flows list — waiting and naming', () => {
   it('waits for the first read before drawing the table', () => {
     answerQuery(AUTOMATION_FLOWS, { loading: true });
     mount();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByTestId('loader')).toHaveAttribute('role', 'status');
     expect(screen.queryByTestId('duncit-table')).not.toBeInTheDocument();
   });
 

@@ -37,6 +37,7 @@ export function LiveChatScreen() {
     retry,
     uploadAttachment,
     emitTyping,
+    history,
   } = chat;
   const { timeZone } = useAppSettings();
   const [showJump, setShowJump] = useState(false);
@@ -87,6 +88,7 @@ export function LiveChatScreen() {
     const distance = contentSize.height - layoutMeasurement.height - contentOffset.y;
     pinnedRef.current = distance <= 80;
     setShowJump(distance > 160);
+    history.onScroll(e);
   };
 
   const onSendText = (text: string) => {
@@ -123,6 +125,7 @@ export function LiveChatScreen() {
 
         <ChatBody
           ref={scrollRef}
+          history={history}
           isLoading={isLoading}
           error={error}
           messages={messages}

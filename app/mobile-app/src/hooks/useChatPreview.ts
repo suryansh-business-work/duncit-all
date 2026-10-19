@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import {
   CHAT_PREVIEW_PAGE,
@@ -6,6 +6,7 @@ import {
   mergeEarlierMessages,
   type ChatPreviewKind,
 } from '@duncit/utils';
+import { logs } from '@duncit/logs';
 
 import { ChatPreviewDocument } from '@/graphql/chat';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -53,16 +54,22 @@ export function useChatPreview(kind: ChatPreviewKind, id: string) {
     fireAndForget(load());
   }, [load]);
 
+  // Scrolling to the top fires many events: one older page at a time.
+  const inFlight = useRef(false);
   const loadEarlier = async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setLoadingEarlier(true);
     setEarlierFailed(false);
     try {
       const data = await fetchPage(kind, id, messages[0]?.createdAt);
       setMessages((shown) => mergeEarlierMessages(data.chatPreview.messages, shown));
-    } catch {
+    } catch (error) {
       // The card says so beside the button; nothing already shown is lost.
       setEarlierFailed(true);
+      logs.mobileApp.error('chat-preview', 'loadEarlier', { error });
     } finally {
+      inFlight.current = false;
       setLoadingEarlier(false);
     }
   };

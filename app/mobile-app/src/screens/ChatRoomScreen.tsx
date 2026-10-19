@@ -60,10 +60,12 @@ export function ChatRoomScreen() {
   const [reportId, setReportId] = useState<string | null>(null);
   const listRef = useRef<ScrollView>(null);
 
+  // Follow the newest line (the room opening, a live line, your own send) —
+  // never an older page put above the line the reader is on.
+  const newestId = messages.at(-1)?.id;
   useEffect(() => {
-    /* istanbul ignore next -- native autoscroll; method absent under the test renderer */
-    listRef.current?.scrollToEnd?.({ animated: true });
-  }, [messages.length]);
+    listRef.current?.scrollToEnd({ animated: true });
+  }, [newestId]);
 
   // The error banner appears without focus moving to it, so say it (4.1.3).
   useEffect(() => {
@@ -126,6 +128,7 @@ export function ChatRoomScreen() {
             listRef={listRef}
             isLoading={room.isLoading}
             messages={messages}
+            history={room.history}
             meId={meId}
             onOpenActions={(message) =>
               setActions({ id: message.id, mine: message.user_id === meId })

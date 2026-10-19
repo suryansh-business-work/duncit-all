@@ -1,5 +1,5 @@
 import { Linking } from 'react-native';
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 
 import { MapEmbed } from '@/components/MapEmbed';
 import { PodClubCard } from '@/components/details/PodClubCard';
@@ -282,6 +282,18 @@ describe('PodShop', () => {
     // In-stock rows offer Add to cart; the out-of-stock row (max 0) hides it.
     expect(screen.getByTestId('pod-shop-add-1')).toBeOnTheScreen();
     expect(screen.queryByTestId('pod-shop-add-4')).toBeNull();
+  });
+
+  it('keeps the products in their own scrolling box so a big shop never stretches the page', () => {
+    renderWithProviders(
+      <PodShop pod={podWith()} selectedProducts={{}} onSelectionChange={jest.fn()} />,
+    );
+    const box = screen.getByTestId('pod-shop-products');
+    expect(box).toHaveProp('nestedScrollEnabled', true);
+    expect(within(box).getByTestId('pod-shop-row-1')).toBeOnTheScreen();
+    // The running total stays outside the box, always in view.
+    expect(within(box).queryByTestId('pod-shop-total')).toBeNull();
+    expect(screen.getByTestId('pod-shop-total')).toBeOnTheScreen();
   });
 
   it('adds a product from its Add to cart button (row press never toggles)', () => {

@@ -96,6 +96,25 @@ export const ClubMessagesDocument = gql(`
   }
 `);
 
+/** One older page of a pod's room, for scroll-up history. Only the lines: the
+ * room's facts already came with the newest page. */
+export const PodMessagesPageDocument = gql(`
+  query MobilePodMessagesPage($podId: ID!, $limit: Int, $before: String) {
+    podMessages(pod_id: $podId, limit: $limit, before: $before) {
+      ...MobileChatMessageFields
+    }
+  }
+`);
+
+/** One older page of a club's room — the club twin of PodMessagesPageDocument. */
+export const ClubMessagesPageDocument = gql(`
+  query MobileClubMessagesPage($clubId: ID!, $limit: Int, $before: String) {
+    clubMessages(club_id: $clubId, limit: $limit, before: $before) {
+      ...MobileChatMessageFields
+    }
+  }
+`);
+
 /** Club rooms the user can open — the Chats screen's Clubs tab. */
 export const ClubChatRoomsDocument = gql(`
   query MobileClubChatRooms {

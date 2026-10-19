@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 import { ChatRoomScreen } from '@/screens/ChatRoomScreen';
@@ -43,6 +44,28 @@ const message = (id: string, userId: string) =>
     createdAt: '2026-06-09T10:00:00.000Z',
   }) as never;
 
+const historyStub = (over: Record<string, unknown> = {}) => ({
+  hasOlder: false,
+  loadingOlder: false,
+  olderFailed: false,
+  startHistory: jest.fn(),
+  loadOlder: jest.fn().mockResolvedValue(undefined),
+  onScroll: jest.fn(),
+  ...over,
+});
+
+function roomValue(over: Record<string, unknown>, actions: Record<string, unknown>) {
+  return {
+    messages: [],
+    isLoading: false,
+    sending: false,
+    error: null,
+    history: historyStub(),
+    ...actions,
+    ...over,
+  };
+}
+
 function mount(over: Record<string, unknown> = {}) {
   const actions = {
     sendText: jest.fn(),
@@ -50,16 +73,14 @@ function mount(over: Record<string, unknown> = {}) {
     react: jest.fn().mockResolvedValue(undefined),
     setError: jest.fn(),
   };
-  hook.mockReturnValue({
-    messages: [],
-    isLoading: false,
-    sending: false,
-    error: null,
-    ...actions,
-    ...over,
-  });
-  renderWithProviders(<ChatRoomScreen />);
-  return actions;
+  hook.mockReturnValue(roomValue(over, actions));
+  const view = renderWithProviders(<ChatRoomScreen />);
+  /** Re-renders the screen with the room hook now answering `next`. */
+  const rerenderWith = (next: Record<string, unknown>) => {
+    hook.mockReturnValue(roomValue(next, actions));
+    view.rerender(<ChatRoomScreen />);
+  };
+  return { ...actions, rerenderWith };
 }
 
 beforeEach(() => {
@@ -188,6 +209,64 @@ describe('ChatRoomScreen', () => {
     mount();
     fireEvent.press(screen.getByTestId('chat-room-title'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Coffee Chat' });
+  });
+
+  describe('scroll-up history', () => {
+    const scrollToEnd = ScrollView.prototype.scrollToEnd as unknown as jest.Mock;
+    beforeEach(() => scrollToEnd.mockClear());
+
+    it('follows a new newest line to the bottom, but not an older page put on top', () => {
+      const first = [message('m2', 'u2'), message('m3', 'me1')];
+      const { rerenderWith } = mount({ messages: first });
+      expect(scrollToEnd).toHaveBeenCalledTimes(1);
+
+      // An older page lands in front: the newest line is unchanged, so the reader stays put.
+      rerenderWith({ messages: [message('m0', 'u2'), message('m1', 'u2'), ...first] });
+      expect(screen.getByTestId('chat-message-m0')).toBeOnTheScreen();
+      expect(scrollToEnd).toHaveBeenCalledTimes(1);
+
+      // A live line (or your own send) is the new newest line: follow it.
+      rerenderWith({ messages: [message('m0', 'u2'), ...first, message('m4', 'u2')] });
+      expect(scrollToEnd).toHaveBeenCalledTimes(2);
+    });
+
+    it('hands the list scroll to the history and keeps the reader in place on a prepend', () => {
+      const history = historyStub({ hasOlder: true });
+      mount({ messages: [message('m1', 'u2')], history });
+      const list = screen.getByTestId('chat-room-list');
+      expect(list).toHaveProp('maintainVisibleContentPosition', { minIndexForVisible: 0 });
+      fireEvent.scroll(list, { nativeEvent: { contentOffset: { y: 40 } } });
+      expect(history.onScroll).toHaveBeenCalledTimes(1);
+    });
+
+    it('offers earlier messages at the top, and shows a spinner while they load', () => {
+      const history = historyStub({ hasOlder: true });
+      const { rerenderWith } = mount({ messages: [message('m1', 'u2')], history });
+      fireEvent.press(screen.getByTestId('chat-room-earlier'));
+      expect(history.loadOlder).toHaveBeenCalledTimes(1);
+
+      rerenderWith({
+        messages: [message('m1', 'u2')],
+        history: historyStub({ hasOlder: true, loadingOlder: true }),
+      });
+      expect(screen.getByTestId('chat-room-loading-earlier')).toBeOnTheScreen();
+      expect(screen.queryByTestId('chat-room-earlier')).toBeNull();
+    });
+
+    it('says when an older page failed and offers it again', () => {
+      mount({
+        messages: [message('m1', 'u2')],
+        history: historyStub({ hasOlder: true, olderFailed: true }),
+      });
+      expect(screen.getByRole('alert')).toHaveTextContent('The chat could not load.');
+      expect(screen.getByTestId('chat-room-earlier')).toBeOnTheScreen();
+    });
+
+    it('shows no control once the room’s first line is loaded', () => {
+      mount({ messages: [message('m1', 'u2')] });
+      expect(screen.queryByTestId('chat-room-earlier')).toBeNull();
+      expect(screen.queryByTestId('chat-room-loading-earlier')).toBeNull();
+    });
   });
 
   it('shows host + participants and opens a profile on tap', () => {

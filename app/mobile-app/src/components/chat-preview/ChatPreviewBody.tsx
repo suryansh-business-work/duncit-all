@@ -1,57 +1,76 @@
 import { useEffect, useRef } from 'react';
-import { ScrollView } from 'react-native';
-import { Text, YStack } from 'tamagui';
+import type { ScrollView as RNScrollView } from 'react-native';
+import { ScrollView, Text, YStack } from 'tamagui';
 
+import { ChatHistoryTop } from '@/components/chat/ChatHistoryTop';
 import { DuncitButton } from '@/components/DuncitButton';
 import { ListSkeleton } from '@/components/Skeleton/ListSkeleton';
+import { NESTED_SCROLL_HEIGHT } from '@/constants/nested-scroll';
 import type { useChatPreview } from '@/hooks/useChatPreview';
+import { useHistoryTopScroll } from '@/hooks/useChatHistory';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 import { ChatPreviewLine } from './ChatPreviewLine';
 
+/** Keeps the line being read in place when an older page lands above it. */
+const KEEP_POSITION = { minIndexForVisible: 0 } as const;
+/** Few lines sit at the bottom of the box, newest last, as a chat does. */
+const BOTTOM_ALIGNED = { flexGrow: 1, justifyContent: 'flex-end' } as const;
+
 interface Props {
   chat: ReturnType<typeof useChatPreview>;
 }
 
-/** The lines of a chat preview, oldest first, under a "show earlier" control. */
+/**
+ * The lines of a chat preview in a fixed-height box, oldest first. Scrolling
+ * up to its top loads the earlier page; the control at the top asks for the
+ * same page for screen-reader and switch users.
+ */
 function ChatPreviewList({ chat }: Readonly<Props>) {
-  const { t } = useTranslation();
-  return (
-    <YStack gap={12}>
-      {chat.canLoadEarlier ? (
-        <DuncitButton
-          testID="chat-preview-earlier"
-          label={t('mweb.chat.showEarlier')}
-          variant="ghost"
-          size="sm"
-          loading={chat.loadingEarlier}
-          onPress={() => fireAndForget(chat.loadEarlier())}
-        />
-      ) : null}
-      {chat.earlierFailed ? (
-        <Text role="alert" fontSize={12} color="$danger" textAlign="center">
-          {t('mweb.chat.previewFailed')}
-        </Text>
-      ) : null}
-      {chat.messages.map((m) => (
-        <ChatPreviewLine key={m.id} message={m} />
-      ))}
-    </YStack>
-  );
-}
-
-/** What the chat preview card shows inside its surface: loading, error, empty or the lines. */
-export function ChatPreviewBody({ chat }: Readonly<Props>) {
-  const { t } = useTranslation();
-  const listRef = useRef<ScrollView>(null);
-
+  const listRef = useRef<RNScrollView>(null);
   // Open on the newest line, as a chat does — only when the newest line
   // changes, never when an older page is put above what the reader is looking at.
   const newestId = chat.messages.at(-1)?.id;
   useEffect(() => {
     listRef.current?.scrollToEnd({ animated: false });
   }, [newestId]);
+
+  const loadEarlier = () => fireAndForget(chat.loadEarlier());
+  const onScroll = useHistoryTopScroll(() => {
+    if (chat.canLoadEarlier) loadEarlier();
+  });
+
+  return (
+    <ScrollView
+      ref={listRef}
+      nestedScrollEnabled
+      height={NESTED_SCROLL_HEIGHT}
+      onScroll={onScroll}
+      scrollEventThrottle={64}
+      maintainVisibleContentPosition={KEEP_POSITION}
+      contentContainerStyle={BOTTOM_ALIGNED}
+      testID="chat-preview-list"
+    >
+      <YStack gap={12}>
+        <ChatHistoryTop
+          testIDPrefix="chat-preview"
+          loading={chat.loadingEarlier}
+          failed={chat.earlierFailed}
+          hasOlder={chat.canLoadEarlier}
+          onLoadOlder={loadEarlier}
+        />
+        {chat.messages.map((m) => (
+          <ChatPreviewLine key={m.id} message={m} />
+        ))}
+      </YStack>
+    </ScrollView>
+  );
+}
+
+/** What the chat preview card shows inside its surface: loading, error, empty or the lines. */
+export function ChatPreviewBody({ chat }: Readonly<Props>) {
+  const { t } = useTranslation();
 
   if (chat.loading) return <ListSkeleton count={3} testID="chat-preview-loading" />;
   if (chat.error) {
@@ -77,14 +96,5 @@ export function ChatPreviewBody({ chat }: Readonly<Props>) {
       </Text>
     );
   }
-  return (
-    <ScrollView
-      ref={listRef}
-      nestedScrollEnabled
-      style={{ maxHeight: 360 }}
-      testID="chat-preview-list"
-    >
-      <ChatPreviewList chat={chat} />
-    </ScrollView>
-  );
+  return <ChatPreviewList chat={chat} />;
 }

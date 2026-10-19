@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { NESTED_SCROLL_HEIGHT } from '@/constants/nested-scroll';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -141,18 +142,21 @@ export function PodShop({
           </Text>
         </XStack>
       ) : (
-        <YStack gap={8}>
-          {products.map((product) => (
-            <PodShopProductRow
-              key={product.product_id}
-              product={product}
-              quantity={selectedProducts[product.product_id] ?? 0}
-              onUpdate={updateQuantity}
-              onInfo={setInfoProductId}
-              readOnly={readOnly}
-            />
-          ))}
-        </YStack>
+        // A capped box with its own scroll, so a big shop never stretches the page.
+        <ScrollView nestedScrollEnabled maxHeight={NESTED_SCROLL_HEIGHT} testID="pod-shop-products">
+          <YStack gap={8}>
+            {products.map((product) => (
+              <PodShopProductRow
+                key={product.product_id}
+                product={product}
+                quantity={selectedProducts[product.product_id] ?? 0}
+                onUpdate={updateQuantity}
+                onInfo={setInfoProductId}
+                readOnly={readOnly}
+              />
+            ))}
+          </YStack>
+        </ScrollView>
       )}
 
       {products.length > 0 ? (

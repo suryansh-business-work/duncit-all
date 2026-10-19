@@ -8,7 +8,7 @@ import type { StoreNavigation, StorePageLink } from '../../../graphql/settings';
 import { logFailure } from '../../../lib/log';
 import { paths } from '../../../lib/paths';
 import { useStoreT } from '../../../i18n';
-import { POLICY_LINKS } from '../../footer';
+import { POLICY_LINKS } from '../../footer/policyLinks';
 import { ACCOUNT_LINKS } from '../AccountMenu';
 
 interface MenuLinkProps {
@@ -52,6 +52,7 @@ export function ShopLinks({ nav, onNavigate }: Readonly<NavProps>) {
     <>
       <List disablePadding>
         <MenuLink to={paths.shop} label={t('ecommStore.menu.shopAll')} onNavigate={onNavigate} testId="mobile-menu-shop-all" />
+        <MenuLink to={paths.deals} label={t('ecommStore.menu.deals')} onNavigate={onNavigate} testId="mobile-menu-deals" />
         <MenuLink to={paths.brands} label={t('ecommStore.menu.brands')} onNavigate={onNavigate} testId="mobile-menu-brands" />
         {autoship ? <MenuLink to={paths.autoship} label={t('ecommStore.nav.autoship')} onNavigate={onNavigate} testId="mobile-menu-autoship" /> : null}
       </List>

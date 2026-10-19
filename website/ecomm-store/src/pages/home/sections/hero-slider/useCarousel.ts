@@ -1,6 +1,6 @@
 import { useEffect, useState, type FocusEvent } from 'react';
-import { useMediaQuery } from '@mui/material';
 
+import { useColorMode } from '../../../../app/providers/ColorModeProvider';
 import { useCarouselIndex } from '../../../../lib/useCarouselIndex';
 
 const INTERVAL_MS = 6000;
@@ -14,7 +14,8 @@ const INTERVAL_MS = 6000;
  * explicit Pause always stops it.
  */
 export function useCarousel(count: number) {
-  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  // The OS setting or the store's own "reduce motion" preference (already OR-ed together).
+  const reducedMotion = useColorMode().themePrefs.reduceMotion;
   const { index, goTo, next, prev } = useCarouselIndex(count);
   const [paused, setPaused] = useState(false);
   const [resumed, setResumed] = useState(false);

@@ -20,11 +20,24 @@ export function DeliverToPill() {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-label={t('ecommStore.deliverTo.label', { vars: { place } })}
-        sx={{ borderRadius: T.radius.pill, px: 1, py: 0.5, minHeight: 44, textAlign: 'left', minWidth: 0, maxWidth: '100%' }}
+        sx={{
+          borderRadius: T.radius.pill,
+          border: 1,
+          borderColor: T.border,
+          bgcolor: T.surface,
+          pl: 0.5,
+          pr: 1.5,
+          py: 0.5,
+          minHeight: 48,
+          textAlign: 'left',
+          minWidth: 0,
+          maxWidth: '100%',
+          '&:hover': { borderColor: T.inputBorder },
+        }}
       >
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
           <Box
-            sx={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', bgcolor: T.surface, border: 1, borderColor: T.border, display: 'grid', placeItems: 'center' }}
+            sx={{ width: 38, height: 38, flexShrink: 0, borderRadius: '50%', bgcolor: T.brandTint, color: T.ctaInk, display: 'grid', placeItems: 'center' }}
             aria-hidden
           >
             <FmdGoodOutlinedIcon fontSize="small" />

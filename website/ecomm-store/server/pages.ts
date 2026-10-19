@@ -37,6 +37,7 @@ const copy = (key: string): string => COPY[key] ?? '';
 const FIXED_TITLES: Record<string, string> = {
   '/brands': 'ecommStore.menu.brands',
   '/shop': 'ecommStore.shelf.shopTitle',
+  '/deals': 'ecommStore.deals.title',
   '/search': 'ecommStore.shelf.shopTitle',
   '/contact': 'ecommStore.contact.title',
   '/track': 'ecommStore.track.title',

@@ -37,7 +37,7 @@
     "@duncit/utils": "workspace:*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@fontsource/nunito": "^5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "@hookform/resolvers": "^5.9.1",
     "@mui/icons-material": "^9.4.0",
     "@mui/material": "^9.4.0",

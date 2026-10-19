@@ -3821,7 +3821,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@emotion/react", range: "^11.14.0", kind: "dependencies" },
       { name: "@emotion/styled", range: "^11.14.1", kind: "dependencies" },
-      { name: "@fontsource/nunito", range: "^5.3.0", kind: "dependencies" },
+      { name: "@fontsource-variable/plus-jakarta-sans", range: "^5.2.8", kind: "dependencies" },
       { name: "@hookform/resolvers", range: "^5.9.1", kind: "dependencies" },
       { name: "@mui/icons-material", range: "^9.4.0", kind: "dependencies" },
       { name: "@mui/material", range: "^9.4.0", kind: "dependencies" },

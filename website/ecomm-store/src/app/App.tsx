@@ -12,6 +12,7 @@ import { StoreClosedPage } from '../pages/closed/StoreClosedPage';
 import { createStoreClient } from './apolloClient';
 import { CartProvider } from './providers/CartProvider';
 import { ColorModeProvider } from './providers/ColorModeProvider';
+import { OccasionThemeProvider } from './providers/OccasionThemeProvider';
 import { SessionProvider, useStoreSession } from './providers/SessionProvider';
 import { StoreSettingsProvider, useStoreSettings } from './providers/StoreSettingsProvider';
 import { WishlistProvider } from './providers/WishlistProvider';
@@ -60,7 +61,9 @@ export function App() {
               <ConfirmProvider>
                 <NotifyProvider>
                   <StoreSettingsProvider>
-                    <StoreGate />
+                    <OccasionThemeProvider>
+                      <StoreGate />
+                    </OccasionThemeProvider>
                   </StoreSettingsProvider>
                 </NotifyProvider>
               </ConfirmProvider>

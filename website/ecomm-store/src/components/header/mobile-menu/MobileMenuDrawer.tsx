@@ -7,6 +7,7 @@ import { CircleButton } from '../../CircleButton';
 import { ColorModeButton } from '../ColorModeButton';
 import { useNavigationData } from '../navigation';
 import { SearchForm } from '../search-form';
+import { ExtrasSection } from './ExtrasSection';
 import { AccountSection, HelpSection, ShopLinks } from './MenuSections';
 import { PetSections } from './PetSections';
 
@@ -53,6 +54,8 @@ export function MobileMenuDrawer({ id, open, onClose }: Readonly<MobileMenuDrawe
           <AccountSection onNavigate={onClose} />
           <Divider />
           <HelpSection pages={nav.pages} onNavigate={onClose} />
+          <Divider />
+          <ExtrasSection onNavigate={onClose} />
         </Box>
       </Stack>
     </Drawer>

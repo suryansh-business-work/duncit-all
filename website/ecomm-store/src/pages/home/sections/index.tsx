@@ -1,12 +1,17 @@
 import type { ComponentType } from 'react';
 
 import type { StoreHomeSectionKind } from '../../../graphql/catalog';
-import { CollectionSection, NewsletterSection, PromoBannersSection, UspStripSection } from './ContentSections';
+import { CollectionSection, NewsletterSection } from './ContentSections';
+import { EarnPromoSection } from './EarnPromoSection';
 import { FlashSale } from './flash-sale';
 import { HeroSlider } from './hero-slider';
+import { PetTypesSection } from './pet-types';
+import { PromoBannersSection } from './PromoBannersSection';
+import { RangeShowcaseSection } from './RangeShowcaseSection';
 import { CategoryIconsSection, ProductSliderSection } from './SliderSections';
-import { BrandsSection, CategoryGridSection, PetTypesSection } from './TileSections';
+import { BrandsSection, CategoryGridSection } from './TileSections';
 import type { SectionProps } from './types';
+import { UspStripSection } from './UspStripSection';
 
 /** Which component draws each kind of home section the operator arranges. */
 export const SECTION_RENDERERS: Record<StoreHomeSectionKind, ComponentType<SectionProps>> = {
@@ -21,6 +26,8 @@ export const SECTION_RENDERERS: Record<StoreHomeSectionKind, ComponentType<Secti
   NEWSLETTER: NewsletterSection,
   PRODUCT_SLIDER: ProductSliderSection,
   CATEGORY_ICONS: CategoryIconsSection,
+  RANGE_SHOWCASE: RangeShowcaseSection,
+  EARN_PROMO: EarnPromoSection,
 };
 
 export { FreeDeliveryBanner } from './ContentSections';

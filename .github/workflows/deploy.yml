@@ -2086,6 +2086,7 @@ jobs:
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --build-arg VITE_MWEB_URL=${{ env.MWEB_URL }} \
               --build-arg VITE_SITE_URL=${{ env.ECOMM_URL }} \
+              --build-arg VITE_EARNWITH_URL=${{ env.EARNWITH_URL }} \
               --cache-from type=gha,scope=duncit-ecomm-store${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-ecomm-store${{ env.SCOPE_SUFFIX }},mode=max \
               --push .

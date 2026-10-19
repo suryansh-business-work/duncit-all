@@ -1,51 +1,61 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { CssBaseline, ThemeProvider } from '@mui/material';
+import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 
-import { storeLog } from '../../lib/log';
-import { buildStoreTheme } from '../../theme/storeTheme';
-import type { StoreColorMode } from '../../theme/tokens';
+import { DEFAULT_PREFERENCES, readPreferences, savePreferences, type StorePreferences } from '../../lib/preferences';
+import { buildStoreTheme, type StoreThemePrefs } from '../../theme/storeTheme';
+import { STORE_PALETTES, type StoreColorMode } from '../../theme/tokens';
 
 interface ColorModeValue {
+  /** The mode actually painted (a `system` choice resolved against the device). */
   mode: StoreColorMode;
   toggle: () => void;
+  prefs: StorePreferences;
+  /** Change some choices; the rest stay. Saved for this browser. */
+  setPrefs: (patch: Partial<StorePreferences>) => void;
+  /** The parts of the choices the theme is built from — an occasion theme reuses them. */
+  themePrefs: StoreThemePrefs;
 }
 
-const ColorModeContext = createContext<ColorModeValue>({ mode: 'light', toggle: () => undefined });
+const ColorModeContext = createContext<ColorModeValue>({
+  mode: 'light',
+  toggle: () => undefined,
+  prefs: DEFAULT_PREFERENCES,
+  setPrefs: () => undefined,
+  themePrefs: { textScale: 1, underlineLinks: false, reduceMotion: false, readableFont: false },
+});
 
-const STORAGE_KEY = 'ecomm_color_mode';
-
-/** The shopper's saved choice, else the device's preference. */
-function initialMode(): StoreColorMode {
-  try {
-    const saved = globalThis.localStorage?.getItem(STORAGE_KEY);
-    if (saved === 'light' || saved === 'dark') return saved;
-  } catch (error) {
-    storeLog.warn('colorMode', 'read', { error });
-  }
-  return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-/** Persisting is a convenience: a blocked storage only means the choice lasts this visit. */
-function saveMode(mode: StoreColorMode): void {
-  try {
-    globalThis.localStorage?.setItem(STORAGE_KEY, mode);
-  } catch (error) {
-    storeLog.warn('colorMode', 'save', { error });
-  }
-}
-
-/** The store theme in the shopper's light/dark mode, with `useColorMode` to switch it. */
+/**
+ * The store theme in the shopper's light/dark mode and accessibility choices,
+ * with `useColorMode` to change them. An operating-system "reduce motion"
+ * counts as the shopper asking for it.
+ */
 export function ColorModeProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const [mode, setMode] = useState<StoreColorMode>(initialMode);
-  const toggle = useCallback(() => {
-    setMode((prev) => {
-      const next = prev === 'light' ? 'dark' : 'light';
-      saveMode(next);
+  const [prefs, setPrefsState] = useState<StorePreferences>(readPreferences);
+  const deviceDark = useMediaQuery('(prefers-color-scheme: dark)', { noSsr: true });
+  const deviceStill = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
+  const deviceMode: StoreColorMode = deviceDark ? 'dark' : 'light';
+  const mode: StoreColorMode = prefs.color === 'system' ? deviceMode : prefs.color;
+
+  const setPrefs = useCallback((patch: Partial<StorePreferences>) => {
+    setPrefsState((prev) => {
+      const next = { ...prev, ...patch };
+      savePreferences(next);
       return next;
     });
   }, []);
-  const value = useMemo(() => ({ mode, toggle }), [mode, toggle]);
-  const theme = useMemo(() => buildStoreTheme(mode), [mode]);
+  const toggle = useCallback(() => setPrefs({ color: mode === 'light' ? 'dark' : 'light' }), [mode, setPrefs]);
+
+  const themePrefs = useMemo<StoreThemePrefs>(
+    () => ({
+      textScale: prefs.textScale,
+      underlineLinks: prefs.underlineLinks,
+      reduceMotion: prefs.reduceMotion || deviceStill,
+      readableFont: prefs.readableFont,
+    }),
+    [prefs.textScale, prefs.underlineLinks, prefs.reduceMotion, prefs.readableFont, deviceStill],
+  );
+  const value = useMemo(() => ({ mode, toggle, prefs, setPrefs, themePrefs }), [mode, toggle, prefs, setPrefs, themePrefs]);
+  const theme = useMemo(() => buildStoreTheme(mode, STORE_PALETTES[mode], themePrefs), [mode, themePrefs]);
   return (
     <ColorModeContext.Provider value={value}>
       <ThemeProvider theme={theme}>

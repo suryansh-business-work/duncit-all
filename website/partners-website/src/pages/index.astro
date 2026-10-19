@@ -3,134 +3,35 @@ import Layout from '../layouts/Layout.astro';
 import DownloadApps from '../components/DownloadApps.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import Hero from '../components/home/Hero.astro';
+import PartnerPaths from '../components/home/PartnerPaths.astro';
+import PartnerSteps from '../components/home/PartnerSteps.astro';
 import ReelSlider from '@duncit/brand/ReelSlider.astro';
 import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
-import { partnerLanding } from '../config/landing';
 import { urlConfigs } from '../config/url-configs';
 import { getSiteTranslator } from '@duncit/brand/site-i18n';
-import { fetchBranding } from '../lib/site-data';
 
-const branding = await fetchBranding();
-const landing = await partnerLanding();
 const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
-const venueUrl = `${urlConfigs.partnersAppUrl}/register-venue`;
-const hostUrl = `${urlConfigs.partnersAppUrl}/become-host`;
 ---
 
 <Layout title={t('website.partners.brand.title')}>
-  <main class="bg-ink p-3 sm:p-4 min-h-screen">
-    <section class="relative overflow-hidden rounded-3xl min-h-[650px] px-5 sm:px-8 pt-5 pb-10">
-      <div class="absolute inset-0 z-0">
-        <img
-          src={landing.heroImage}
-          alt={t('website.partners.hero.imageAlt')}
-          class="w-full h-full object-cover"
-        />
-        <div class="absolute inset-0 bg-gradient-to-br from-ink/92 via-ink/48 to-primary/45"></div>
-      </div>
+  <div class="min-h-screen bg-frame p-3 sm:p-4">
+    <SiteHeader />
+    <main class="mt-3 sm:mt-4">
+      <Hero />
 
-      <SiteHeader />
+      <!-- Reels second, straight after the hero (hidden when there are none),
+           then the Earn section the Website portal can move into a slot below. -->
+      <ReelSlider graphqlUrl={urlConfigs.graphqlUrl} site="PARTNERS" t={t} />
+      <EarnShowcase href={urlConfigs.earnwithUrl} graphqlUrl={urlConfigs.graphqlUrl} site="PARTNERS" t={t} class="rounded-3xl mt-3" />
 
+      <PartnerPaths />
+      <PartnerSteps />
 
-
-      <div class="relative z-10 max-w-6xl mx-auto min-h-[560px] grid lg:grid-cols-[1.08fr_0.92fr] gap-10 items-center">
-        <div data-hero-copy>
-          <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary text-ink font-bold sticker mb-6">
-            <i class="fa-solid fa-handshake-angle"></i> {t('website.partners.hero.badge')}
-          </span>
-          <h1 class="font-head font-black text-white text-5xl sm:text-7xl lg:text-[5.8rem] max-w-4xl">
-            {t('website.partners.hero.heading')}
-          </h1>
-          <p class="text-white/86 text-lg sm:text-xl max-w-2xl mt-6 leading-relaxed">
-            {t('website.partners.hero.text')}
-          </p>
-          <div class="flex flex-col sm:flex-row gap-3 mt-8">
-            <a href={venueUrl} class="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-primary text-white font-head font-black text-lg sticker hover:-translate-y-1 transition">
-              <i class="fa-solid fa-store"></i> {t('website.partners.hero.venueCta')}
-            </a>
-            <a href={hostUrl} class="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-white text-ink font-head font-black text-lg sticker hover:-translate-y-1 transition">
-              <i class="fa-solid fa-champagne-glasses"></i> {t('website.partners.hero.hostCta')}
-            </a>
-          </div>
-        </div>
-
-        <div data-hero-card class="relative">
-          <div class="absolute -top-5 -left-5 rotate-[-7deg] px-4 py-2 rounded-full bg-secondary text-white font-bold sticker">
-            <i class="fa-solid fa-bolt"></i> {t('website.partners.hero.cardBadge')}
-          </div>
-          <div class="bg-cream rounded-3xl p-4 sm:p-5 sticker">
-            <img
-              src={landing.proofImage}
-              alt={t('website.partners.hero.cardImageAlt')}
-              class="w-full h-72 sm:h-80 object-cover rounded-2xl sticker"
-            />
-            <div class="grid grid-cols-3 gap-3 mt-4">
-              {landing.stats.map((stat) => (
-                <div class="bg-white rounded-2xl p-3 text-center sticker">
-                  <div class="font-head font-black text-2xl text-primary">{stat.value}</div>
-                  <div class="text-[11px] font-bold text-ink-soft uppercase">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="ways" class="bg-cream rounded-3xl mt-3 scroll-mt-24 px-5 sm:px-8 py-16">
-      <div class="max-w-6xl mx-auto grid lg:grid-cols-[0.85fr_1.15fr] gap-10 items-start">
-        <div>
-          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-black text-xs uppercase mb-4">
-            <i class="fa-solid fa-route"></i> {t('website.partners.ways.eyebrow')}
-          </span>
-          <h2 class="text-4xl sm:text-5xl text-ink">{t('website.partners.ways.heading')}</h2>
-          <p class="text-ink-soft text-base sm:text-lg mt-4 leading-relaxed">
-            {t('website.partners.ways.text')}
-          </p>
-        </div>
-        <div class="grid sm:grid-cols-3 gap-4">
-          {landing.pillars.map((pillar) => (
-            <article class="bg-white rounded-2xl p-5 sticker hover:-translate-y-1 transition">
-              <div class="w-12 h-12 rounded-xl bg-lilac inline-flex items-center justify-center mb-4">
-                <i class={`fa-solid ${pillar.icon} text-secondary text-xl`}></i>
-              </div>
-              <h3 class="text-xl text-ink mb-2">{pillar.title}</h3>
-              <p class="text-sm text-ink-soft leading-relaxed">{pillar.text}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    <EarnShowcase href={urlConfigs.earnwithUrl} t={t} class="rounded-3xl mt-3" />
-
-    <DownloadApps />
+      <DownloadApps />
+      <div data-earn-slot="AFTER_DOWNLOAD"></div>
+      <div data-earn-slot="BEFORE_FOOTER"></div>
+    </main>
     <SiteFooter />
-    <ReelSlider graphqlUrl={urlConfigs.graphqlUrl} site="PARTNERS" t={t} />
-  </main>
+  </div>
 </Layout>
-
-<script>
-  import { animate, stagger } from 'animejs';
-
-  try {
-    animate('[data-hero-copy] > *', {
-      opacity: [0, 1],
-      translateY: [24, 0],
-      delay: stagger(90, { start: 120 }),
-      duration: 650,
-      ease: 'outQuart',
-    });
-    animate('[data-hero-card]', {
-      opacity: [0, 1],
-      translateY: [30, 0],
-      duration: 750,
-      delay: 260,
-      ease: 'outQuart',
-    });
-  } catch {
-    document.querySelectorAll('[data-hero-copy] > *, [data-hero-card]').forEach((el) => {
-      (el as HTMLElement).style.opacity = '1';
-    });
-  }
-</script>

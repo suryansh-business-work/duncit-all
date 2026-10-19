@@ -1,9 +1,10 @@
 ---
-// The partner site's header. It had none: the landing page drew a logo pill and
-// a login button inline, with no navigation at all — nothing linked to the
-// sections below it, and on a phone there was nothing to open.
+// The partner site's top bar: a floating pill that stays with the visitor as
+// they scroll. Menu (below lg), the mark, the page's real destinations, the
+// light/dark toggle (always visible, phone included) and the one ask.
 import BrandLogo from '@duncit/brand/BrandLogo.astro';
 import SiteMenu from '@duncit/brand/SiteMenu.astro';
+import ThemeToggle from '@duncit/brand/ThemeToggle.astro';
 import { fetchBranding } from '../lib/site-data';
 import { urlConfigs } from '../config/url-configs';
 import { getSiteTranslator } from '@duncit/brand/site-i18n';
@@ -11,14 +12,13 @@ import { getSiteTranslator } from '@duncit/brand/site-i18n';
 const branding = await fetchBranding();
 const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
 
-// Every one of these goes somewhere that exists. The page has two sections and
-// a download band, so the nav names those and the two real destinations in the
-// partner app — not four anchors to headings nobody wrote.
+// Every one of these goes somewhere that exists: the partner paths on this
+// page, the two real destinations in the partner app, and the download band.
 const links = [
-  { label: t('website.partners.nav.how'), href: '#ways' },
+  { label: t('website.partners.nav.how'), href: '/#ways' },
   { label: t('website.partners.nav.listVenue'), href: `${urlConfigs.partnersAppUrl}/register-venue` },
   { label: t('website.partners.nav.becomeHost'), href: `${urlConfigs.partnersAppUrl}/become-host` },
-  { label: t('website.partners.nav.getApp'), href: '#download' },
+  { label: t('website.partners.nav.getApp'), href: '/#download' },
 ];
 const login = { label: t('website.partners.nav.login'), href: urlConfigs.partnersAppUrl };
 const join = {
@@ -27,94 +27,63 @@ const join = {
 };
 ---
 
-<!-- Rendered INSIDE the hero card, not absolutely over the page. The page is a
-     dark frame around rounded panels, so a header pinned to the viewport hangs
-     over the frame and the card's corner at once — which is exactly what it
-     did: it landed on top of the hero's own badge. -->
-<header class="partner-header relative z-20">
-  <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 py-1">
-    <!-- No white pill behind the mark. It was there to keep a logo legible on
-         the photograph, and it read as a sticker stuck on the banner; the
-         scrim under the header does that job without boxing the brand in. -->
-    <a href={urlConfigs.mainSiteUrl} class="partner-brand" aria-label={t('website.partners.nav.brandAria')}>
-      <BrandLogo
-        src={branding.website_header_logo_url}
-        name={branding.app_name}
-        height={56}
-        href={null}
-        graphqlUrl={urlConfigs.graphqlUrl}
-      />
-      <span class="partner-brand-word">{t('website.partners.brand.word')}</span>
-    </a>
-
-    <div class="hidden items-center gap-7 lg:flex">
-      {links.map((link) => <a class="partner-link" href={link.href}>{link.label}</a>)}
+<header class="sticky top-3 z-50 mx-auto max-w-6xl sm:top-4">
+  <nav
+    aria-label={t('website.partners.nav.mainAria')}
+    class="glass flex h-16 items-center justify-between gap-2 rounded-full pl-2 pr-2 sm:pl-3"
+  >
+    <div class="flex min-w-0 items-center gap-1 sm:gap-2">
+      <SiteMenu links={links} actions={[join, login]} t={t} />
+      <a
+        href={urlConfigs.mainSiteUrl}
+        class="inline-flex min-h-11 items-center gap-2 rounded-full px-1 no-underline"
+        aria-label={t('website.partners.nav.brandAria')}
+      >
+        <BrandLogo
+          src={branding.website_header_logo_url}
+          name={branding.app_name}
+          height={36}
+          href={null}
+          graphqlUrl={urlConfigs.graphqlUrl}
+        />
+        <span class="hidden font-head text-lg font-extrabold tracking-tight text-ink sm:inline">
+          {t('website.partners.brand.word')}
+        </span>
+      </a>
     </div>
 
-    <div class="flex items-center gap-2 sm:gap-3">
-      <a class="partner-login" href={login.href}>
+    <div class="hidden items-center gap-1 lg:flex">
+      {
+        links.map((link) => (
+          <a
+            class="rounded-full px-4 py-2.5 text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-lilac hover:text-ink"
+            href={link.href}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="flex shrink-0 items-center gap-2">
+      <ThemeToggle label={t('website.nav.theme')} />
+      <a
+        class="hidden min-h-11 items-center gap-2 rounded-full px-3 text-sm font-bold text-ink transition-colors hover:text-primary-ink lg:inline-flex"
+        href={login.href}
+      >
         <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
-        <span class="hidden sm:inline">{login.label}</span>
+        {login.label}
       </a>
-      <SiteMenu links={links} actions={[join, login]} onDark t={t} />
+      <a
+        class="group inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-primary-dark px-4 font-head text-sm font-bold text-on-primary shadow-lg shadow-primary/30 transition-transform duration-300 ease-soft hover:-translate-y-0.5 sm:h-12 sm:px-5"
+        href={join.href}
+      >
+        {join.label}
+        <i
+          class="fa-solid fa-arrow-right hidden text-xs transition-transform duration-300 ease-soft group-hover:-rotate-45 sm:inline"
+          aria-hidden="true"
+        ></i>
+      </a>
     </div>
   </nav>
 </header>
-
-<style>
-  /* No scrim of its own: the hero already lays a gradient over the photograph,
-     and a second one stacked on top just darkened a band across the top of the
-     card. */
-
-  .partner-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-  }
-  .partner-brand-word {
-    font-family: var(--font-head, system-ui, sans-serif);
-    font-size: 1.125rem;
-    font-weight: 900;
-    color: var(--color-on-primary);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-  }
-  .partner-brand :global(img) {
-    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
-  }
-
-  .partner-link {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: color-mix(in srgb, var(--color-on-primary) 85%, transparent);
-    text-decoration: none;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-    transition: color 150ms ease;
-  }
-  .partner-link:hover {
-    color: var(--color-on-primary);
-  }
-
-  .partner-login {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1.1rem;
-    border: 1px solid color-mix(in srgb, var(--color-on-primary) 55%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
-    font-size: 0.875rem;
-    font-weight: 700;
-    /* Two words in a pill between a wordmark and a burger — it broke across
-       two lines on a phone before the label was hidden, and would again at the
-       widths that show it. */
-    white-space: nowrap;
-    color: var(--color-on-primary);
-    text-decoration: none;
-    backdrop-filter: blur(6px);
-    transition: background-color 150ms ease;
-  }
-  .partner-login:hover {
-    background: color-mix(in srgb, var(--color-on-primary) 22%, transparent);
-  }
-</style>

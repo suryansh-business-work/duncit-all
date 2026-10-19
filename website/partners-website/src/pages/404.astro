@@ -1,0 +1,33 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { urlConfigs } from '../config/url-configs';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+
+const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
+---
+
+<Layout title={`${t('website.partners.notFound.title')} — ${t('website.partners.brand.footerName')}`}>
+  <div class="min-h-screen bg-frame p-3 sm:p-4">
+    <SiteHeader />
+    <main class="relative isolate mt-3 overflow-hidden rounded-[2rem] bg-cream px-5 py-24 sm:mt-4 sm:rounded-[2.75rem] sm:py-32">
+      <div class="absolute -right-24 -top-24 -z-10 h-80 w-80 animate-drift rounded-full bg-primary opacity-20 blur-3xl" aria-hidden="true"></div>
+      <div class="mx-auto flex max-w-3xl flex-col items-center text-center" data-reveal-group>
+        <span data-reveal="scale" class="font-head text-8xl font-extrabold tracking-tight text-primary-ink sm:text-9xl">404</span>
+        <h1 data-reveal class="mt-6 text-4xl text-ink sm:text-5xl">{t('website.partners.notFound.heading')}</h1>
+        <p data-reveal class="mt-4 max-w-xl text-lg leading-relaxed text-ink-soft">{t('website.partners.notFound.text')}</p>
+        <div data-reveal class="mt-9">
+          <a
+            href="/"
+            class="group inline-flex h-14 items-center gap-2.5 rounded-full bg-primary-dark px-7 font-head text-base font-bold text-on-primary shadow-xl shadow-primary/30 transition-transform duration-300 ease-soft hover:-translate-y-0.5"
+          >
+            {t('website.partners.notFound.cta')}
+            <i class="fa-solid fa-arrow-right transition-transform duration-300 ease-soft group-hover:-rotate-45" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </main>
+    <SiteFooter />
+  </div>
+</Layout>

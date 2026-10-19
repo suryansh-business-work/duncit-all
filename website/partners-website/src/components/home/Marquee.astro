@@ -1,0 +1,28 @@
+---
+// The tilted band of what partners get. Decorative — the same points are read
+// out as text in the hero — so it is hidden from assistive tech, and the track
+// is written twice so the -50% loop never shows a gap.
+interface Props {
+  items: { icon: string; label: string }[];
+}
+
+const { items } = Astro.props;
+const copies = [0, 1];
+---
+
+<div class="-mx-6 mb-8 -rotate-[1.5deg] overflow-hidden bg-tertiary py-5 text-on-accent sm:mb-10" aria-hidden="true">
+  <div class="flex w-max animate-marquee gap-12 whitespace-nowrap font-head text-2xl font-extrabold tracking-tight sm:text-3xl">
+    {
+      copies.map(() => (
+        <span class="flex items-center gap-12">
+          {items.map((item) => (
+            <span class="inline-flex items-center gap-4">
+              <i class={`fa-solid ${item.icon} text-primary-dark`} />
+              {item.label}
+            </span>
+          ))}
+        </span>
+      ))
+    }
+  </div>
+</div>

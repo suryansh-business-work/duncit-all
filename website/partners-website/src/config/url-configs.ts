@@ -12,6 +12,7 @@ const urls = isDevelopment
       mainSiteUrl: 'http://localhost:2000',
       partnersAppUrl: 'http://localhost:2005',
       earnwithUrl: 'http://localhost:2025',
+      mwebUrl: 'http://localhost:2003',
     }
   : {
       graphqlUrl: 'https://server.duncit.com/graphql',
@@ -19,6 +20,7 @@ const urls = isDevelopment
       mainSiteUrl: 'https://duncit.com',
       partnersAppUrl: 'https://partners-app.duncit.com',
       earnwithUrl: 'https://earnwith.duncit.com',
+      mwebUrl: 'https://mweb.duncit.com',
     };
 
 export const urlConfigs = {
@@ -28,4 +30,5 @@ export const urlConfigs = {
   mainSiteUrl: import.meta.env.PUBLIC_MAIN_SITE_URL || urls.mainSiteUrl,
   partnersAppUrl: import.meta.env.PUBLIC_PARTNERS_APP_URL || urls.partnersAppUrl,
   earnwithUrl: import.meta.env.PUBLIC_EARNWITH_URL || urls.earnwithUrl,
+  mwebUrl: import.meta.env.PUBLIC_MWEB_URL || urls.mwebUrl,
 };

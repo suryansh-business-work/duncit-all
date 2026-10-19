@@ -1,0 +1,80 @@
+---
+// The partner paths — venues, clubs, brands — and the console they all share.
+// Each card opens its own journey in the partner app.
+import SectionHead from './SectionHead.astro';
+import { partnerLanding } from '../../config/landing';
+import { urlConfigs } from '../../config/url-configs';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+
+const landing = await partnerLanding();
+const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
+
+// Colour per path. The red and the indigo keep white text above 4.5:1; the
+// yellow never inverts, so it writes in on-accent; the console card follows the
+// theme like any other surface.
+const tones: Record<string, { card: string; glyph: string; tag: string; muted: string }> = {
+  venue: {
+    card: 'bg-primary-dark text-on-primary',
+    glyph: 'bg-on-primary/15',
+    tag: 'bg-tertiary text-on-accent',
+    muted: 'text-on-primary',
+  },
+  club: {
+    card: 'bg-secondary text-on-primary',
+    glyph: 'bg-on-primary/15',
+    tag: 'bg-surface text-ink',
+    muted: 'text-on-primary',
+  },
+  brand: {
+    card: 'bg-tertiary text-on-accent',
+    glyph: 'bg-on-primary/50',
+    tag: 'bg-primary-dark text-on-primary',
+    muted: 'text-on-accent/80',
+  },
+  console: {
+    card: 'bg-surface text-ink border border-line',
+    glyph: 'bg-lilac text-secondary',
+    tag: 'bg-tertiary text-on-accent',
+    muted: 'text-ink-soft',
+  },
+};
+---
+
+<section id="ways" class="mt-3 scroll-mt-24 rounded-[2rem] bg-cream px-5 py-20 sm:rounded-[2.75rem] sm:px-8 lg:py-32" aria-labelledby="ways-heading">
+  <div class="mx-auto max-w-6xl">
+    <SectionHead
+      id="ways-heading"
+      kicker={t('website.partners.ways.kicker')}
+      title={t('website.partners.ways.title')}
+      lead={t('website.partners.ways.lead')}
+    />
+
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4" data-reveal-group>
+      {
+        landing.pillars.map((pillar, index) => {
+          const tone = tones[pillar.tone];
+          return (
+            <div data-reveal><article class:list={['lift group relative flex h-full min-h-[26rem] flex-col overflow-hidden rounded-[2rem] p-7', tone.card]}>
+              <span class="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full border-[1.75rem] border-current opacity-10" aria-hidden="true" />
+              <span class:list={['absolute right-5 top-6 rounded-full px-3 py-1.5 font-head text-xs font-extrabold shadow-md', index % 2 ? 'rotate-[5deg]' : '-rotate-[4deg]', tone.tag]}>
+                {pillar.tag}
+              </span>
+              <span class:list={['grid h-16 w-16 place-items-center rounded-2xl text-2xl', tone.glyph]}>
+                <i class={`fa-solid ${pillar.icon}`} aria-hidden="true" />
+              </span>
+              <h3 class="mt-auto pt-10 text-4xl">{pillar.title}</h3>
+              <p class:list={['mt-3 text-[0.9375rem] font-semibold leading-relaxed', tone.muted]}>{pillar.text}</p>
+              <a
+                href={pillar.href}
+                class="mt-6 inline-flex min-h-11 items-center gap-2 self-start font-head text-sm font-extrabold underline-offset-4 hover:underline"
+              >
+                {pillar.cta}
+                <i class="fa-solid fa-arrow-right transition-transform duration-300 ease-soft group-hover:-rotate-45" aria-hidden="true" />
+              </a>
+            </article></div>
+          );
+        })
+      }
+    </div>
+  </div>
+</section>

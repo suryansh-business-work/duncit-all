@@ -1,0 +1,20 @@
+---
+// Kicker, heading and lead for a home-page section — one shape for all of them.
+interface Props {
+  /** The heading's id, for the section's aria-labelledby. */
+  id: string;
+  kicker: string;
+  title: string;
+  lead: string;
+}
+
+const { id, kicker, title, lead } = Astro.props;
+---
+
+<div data-reveal class="mb-12 flex flex-col justify-between gap-6 lg:mb-14 lg:flex-row lg:items-end">
+  <div>
+    <span class="kicker">{kicker}</span>
+    <h2 id={id} class="mt-4 max-w-3xl text-4xl text-ink sm:text-6xl">{title}</h2>
+  </div>
+  <p class="max-w-sm text-lg leading-relaxed text-ink-soft">{lead}</p>
+</div>

@@ -1,5 +1,6 @@
 import {
   CALM,
+  INFO,
   LIVE,
   PAUSED,
   STOPPED,
@@ -110,7 +111,7 @@ export const ACCOUNT_BODIES: Record<string, string> = {
       intro('email.partnerAccess.title', 'email.partnerAccess.body', 'name'),
       callout(LIVE, 'email.partnerAccess.accessLabel', 'partner_type'),
       cta('email.partnerAccess.cta', 'portal_url'),
-      notice(CALM, 'email.partnerAccess.loginTitle', '{{t:email.partnerAccess.loginBody}}'),
+      notice(INFO, 'email.partnerAccess.loginTitle', '{{t:email.partnerAccess.loginBody}}'),
     ].join('\n'),
     'email.partnerAccess.body'
   ),

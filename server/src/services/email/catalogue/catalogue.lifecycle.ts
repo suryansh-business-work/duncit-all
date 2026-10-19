@@ -129,7 +129,7 @@ const MEMBER_EMAILS: readonly EmailDef[] = [
     body: {
       copyKey: 'email.userPodReminderSameDay',
       nameVar: 'name',
-      tone: LIVE,
+      tone: CALM,
       calloutLabelKey: LABEL.pod,
       calloutVar: 'pod_title',
       rows: [
@@ -347,7 +347,7 @@ const PARTNER_EMAILS: readonly EmailDef[] = [
     body: {
       copyKey: 'email.venuePodReminder',
       nameVar: 'name',
-      tone: LIVE,
+      tone: CALM,
       calloutLabelKey: LABEL.pod,
       calloutVar: 'pod_title',
       rows: [
@@ -465,7 +465,7 @@ const PARTNER_EMAILS: readonly EmailDef[] = [
     body: {
       copyKey: 'email.meetingReminder',
       nameVar: 'name',
-      tone: LIVE,
+      tone: CALM,
       calloutLabelKey: LABEL.meeting,
       calloutVar: 'date',
       rows: [
@@ -527,7 +527,7 @@ const FOLLOW_UP_EMAILS: readonly EmailDef[] = [
     body: {
       copyKey: 'email.hostPodReminder',
       nameVar: 'name',
-      tone: LIVE,
+      tone: CALM,
       calloutLabelKey: LABEL.pod,
       calloutVar: 'pod_title',
       rows: [

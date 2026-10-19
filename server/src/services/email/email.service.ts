@@ -17,6 +17,7 @@ import { joinUrl } from '@utils/url';
 import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from './template-categories';
 import { ONBOARDING_SLUG_BY_AUDIENCE } from './catalogue';
+import { EMAIL_ASSETS_PATH } from './catalogue/icons';
 import {
   SmtpProvider,
   resolveEmailProvider,
@@ -107,7 +108,7 @@ function swapLegacyLogo(html: string, brandLogoUrl: string): string {
  * than one extra variable.
  */
 async function chromeVars(to?: string): Promise<Record<string, string>> {
-  const [{ supportEmail, websiteUrl, appUrl, adminUrl }, brand] = await Promise.all([
+  const [{ supportEmail, websiteUrl, appUrl, adminUrl, serverUrl }, brand] = await Promise.all([
     getUrlConfigs(),
     getBrand(),
   ]);
@@ -125,6 +126,9 @@ async function chromeVars(to?: string): Promise<Record<string, string>> {
     admin_url: adminUrl,
     app_name: brand.appName,
     year: String(new Date().getFullYear()),
+    // The icon PNGs the builders draw with (catalogue/icons.ts), served by this
+    // API — so a staging mail loads staging's copy, never production's.
+    email_assets_url: `${serverUrl}${EMAIL_ASSETS_PATH}`,
     unsubscribe_url: mailPreferenceUrl(appUrl, to),
   };
 }

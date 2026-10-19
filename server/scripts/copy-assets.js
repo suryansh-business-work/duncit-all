@@ -9,16 +9,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-function copyBrandAssets() {
-  const src = path.join(__dirname, '..', 'src', 'services', '_assets');
-  const dest = path.join(__dirname, '..', 'dist', 'services', '_assets');
+function copyBrandAssets(folder) {
+  const src = path.join(__dirname, '..', 'src', 'services', '_assets', folder);
+  const dest = path.join(__dirname, '..', 'dist', 'services', '_assets', folder);
   if (!fs.existsSync(src)) return;
   fs.mkdirSync(dest, { recursive: true });
   const files = fs.readdirSync(src).filter((f) => /\.(png|jpe?g|svg|woff|txt)$/i.test(f));
   for (const file of files) {
     fs.copyFileSync(path.join(src, file), path.join(dest, file));
   }
-  console.log(`[copy-assets] copied ${files.length} brand assets to dist`);
+  console.log(`[copy-assets] copied ${files.length} assets to dist/services/_assets/${folder}`);
 }
 
-copyBrandAssets();
+copyBrandAssets('');
+// The email icons, served at /email-assets (services/email/emailAssets.router.ts).
+copyBrandAssets('email-icons');

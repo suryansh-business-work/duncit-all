@@ -157,6 +157,7 @@ export const CHROME_VARS: readonly EmailVar[] = [
   v('website_url', 'The public website, linked from the footer.', 'https://duncit.com'),
   v('support_email', 'Where the footer tells the reader to write for help.', 'support@duncit.com'),
   v('year', 'The current year, on the copyright line.', '2026'),
+  v('email_assets_url', 'Where the email icons are served from (the API’s /email-assets).', 'https://server.duncit.com/email-assets'),
   v('unsubscribe_url', 'One-click mail preferences for this recipient.', 'https://duncit.com/mail-preferences?t=…'),
   v('footer_note', 'This template’s “you’re receiving this because…” sentence.', 'You joined this pod on Duncit.'),
 ];

@@ -1,7 +1,7 @@
 import { Box, IconButton, Stack, Tooltip } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import DeleteIcon from '@mui/icons-material/DeleteOutline';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {

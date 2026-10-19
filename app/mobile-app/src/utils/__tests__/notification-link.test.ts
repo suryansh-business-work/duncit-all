@@ -43,4 +43,21 @@ describe('resolveNotificationLink', () => {
   it('returns none for an unrecognised in-app path', () => {
     expect(resolveNotificationLink('/unknown')).toEqual({ kind: 'none' });
   });
+
+  it('opens the room a chat push names — a pod room or a club room', () => {
+    expect(resolveNotificationLink('/chats/p1')).toEqual({
+      kind: 'chat',
+      room: { kind: 'POD', id: 'p1' },
+    });
+    expect(resolveNotificationLink('/chats/club/c1')).toEqual({
+      kind: 'chat',
+      room: { kind: 'CLUB', id: 'c1' },
+    });
+    // The Chats list itself is not a room.
+    expect(resolveNotificationLink('/chats')).toEqual({ kind: 'none' });
+  });
+
+  it('opens Live Chat for a support reply push', () => {
+    expect(resolveNotificationLink('/support/live')).toEqual({ kind: 'screen', route: 'LiveChat' });
+  });
 });

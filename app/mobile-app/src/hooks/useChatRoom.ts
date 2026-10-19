@@ -17,6 +17,9 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { usePodSocket, type ChatRoomKind } from '@/hooks/usePodSocket';
 import type { ChatMessage } from '@/hooks/useChat';
 import { useChatHistory } from '@/hooks/useChatHistory';
+import type { MuteFields } from '@/hooks/useChatMute';
+import { useMarkChatRead } from '@/hooks/useMarkChatRead';
+import { pingForMessage } from '@/services/chat-sound';
 import { toErrorMessage } from '@/utils/errors';
 import { isPodActive } from '@/utils/pod-format';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
@@ -35,8 +38,10 @@ interface RoomFacts {
   /** Club rooms: how many days a message is kept. */
   retentionDays: number | null;
   canModerate: boolean;
-  /** Club rooms: the club's name, for the header. */
+  /** The pod's title or the club's name, for the header. */
   title: string | null;
+  /** The viewer's mute of this room. */
+  mute: MuteFields | null;
 }
 
 const NO_FACTS: RoomFacts = {
@@ -45,7 +50,22 @@ const NO_FACTS: RoomFacts = {
   retentionDays: null,
   canModerate: false,
   title: null,
+  mute: null,
 };
+
+/** What a send carries beyond the line itself. */
+export interface ChatSendExtras {
+  replyToId?: string | null;
+  mentions?: string[];
+}
+
+/** Who is reading and whether the room is muted — read when a line arrives. */
+export interface RoomReader {
+  meId?: string | null;
+  muted?: boolean;
+}
+
+const NO_READER: { readonly current: RoomReader } = { current: {} };
 
 /** The newest page of a pod's or a club's room, with what the room says about itself. */
 async function loadRoom(kind: ChatRoomKind, id: string) {
@@ -64,6 +84,8 @@ async function loadRoom(kind: ChatRoomKind, id: string) {
         closed: data.podChatInfo.closed || ended,
         deletesAt: data.podChatInfo.chat_deletes_at ?? null,
         canModerate: data.podChatInfo.can_moderate,
+        title: data.pod?.pod_title ?? null,
+        mute: data.podChatInfo,
       },
     };
   }
@@ -79,6 +101,7 @@ async function loadRoom(kind: ChatRoomKind, id: string) {
       retentionDays: data.clubChatRoom.retention_days,
       canModerate: data.clubChatRoom.can_moderate,
       title: data.clubChatRoom.club_name,
+      mute: data.clubChatRoom,
     },
   };
 }
@@ -110,10 +133,18 @@ function postTo(
   type: PodMessageType,
   text: string,
   imageUrl: string | null,
+  extras: ChatSendExtras = {},
 ) {
+  const line = {
+    type,
+    text,
+    imageUrl,
+    replyToId: extras.replyToId ?? null,
+    mentions: extras.mentions ?? [],
+  };
   return kind === 'POD'
-    ? graphqlRequest(SendPodMessageDocument, { podId: id, type, text, imageUrl }, { auth: true })
-    : graphqlRequest(SendClubMessageDocument, { clubId: id, type, text, imageUrl }, { auth: true });
+    ? graphqlRequest(SendPodMessageDocument, { podId: id, ...line }, { auth: true })
+    : graphqlRequest(SendClubMessageDocument, { clubId: id, ...line }, { auth: true });
 }
 
 /**
@@ -123,7 +154,14 @@ function postTo(
  * optimistically append — dedupe-by-id keeps the list clean. RN twin of mWeb's
  * ChatRoomPage + useChatRoomSource.
  */
-export function useChatRoom(roomId: string, kind: ChatRoomKind = 'POD') {
+export function useChatRoom(
+  roomId: string,
+  kind: ChatRoomKind = 'POD',
+  /** Read when a line arrives, so the socket never reconnects when it changes —
+   * the screen fills it once it knows who is reading and the room's mute. */
+  reader: { readonly current: RoomReader } = NO_READER,
+) {
+  const markRead = useMarkChatRead(kind, roomId);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [facts, setFacts] = useState<RoomFacts>(NO_FACTS);
   const [isLoading, setIsLoading] = useState(true);
@@ -159,9 +197,17 @@ export function useChatRoom(roomId: string, kind: ChatRoomKind = 'POD') {
 
   useRefreshRegistration(refetch);
 
-  const appendMessage = useCallback((msg: ChatMessage) => {
-    setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
-  }, []);
+  // A line from someone else, while the room is open: ping (one per burst,
+  // never in a muted room) and mark the room read — the reader is looking at it.
+  const appendMessage = useCallback(
+    (msg: ChatMessage) => {
+      setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+      if (msg.user_id === reader.current.meId) return;
+      if (!reader.current.muted) pingForMessage(msg.id);
+      markRead();
+    },
+    [markRead, reader],
+  );
 
   const applyReaction = useCallback((msg: Pick<ChatMessage, 'id' | 'reactions'>) => {
     setMessages((prev) =>
@@ -182,14 +228,17 @@ export function useChatRoom(roomId: string, kind: ChatRoomKind = 'POD') {
     onError: setError,
   });
 
+  /** Sends a line, with what it replies to and who it mentions; true once sent. */
   const sendText = useCallback(
-    async (text: string) => {
+    async (text: string, extras: ChatSendExtras = {}) => {
       const body = text.trim();
-      if (!body) return;
+      if (!body) return false;
       try {
-        await postTo(kind, roomId, PodMessageType.Text, body, null);
+        await postTo(kind, roomId, PodMessageType.Text, body, null, extras);
+        return true;
       } catch (e) {
         setError(toErrorMessage(e, 'Could not send message.'));
+        return false;
       }
     },
     [roomId, kind],
@@ -258,6 +307,7 @@ export function useChatRoom(roomId: string, kind: ChatRoomKind = 'POD') {
     retentionDays: facts.retentionDays,
     canModerate: facts.canModerate,
     roomTitle: facts.title,
+    mute: facts.mute,
     isLoading,
     history,
     sending,

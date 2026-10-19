@@ -1,5 +1,6 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { ChatRoomAvatar } from '@/components/chat/ChatRoomAvatar';
+import { ChatUnreadBadge } from '@/components/chat/ChatUnreadBadge';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -67,6 +68,7 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
           </XStack>
         </XStack>
       </YStack>
+      <ChatUnreadBadge count={room.unread_count} testID={`chat-room-${room.id}-unread`} />
       <MaterialIcons name="chevron-right" size={22} color={muted} />
     </SurfaceCard>
   );

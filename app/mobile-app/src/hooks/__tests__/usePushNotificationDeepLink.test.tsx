@@ -49,6 +49,13 @@ describe('navigateForPushLink', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PodRequestDetail', { id: 'r5' });
   });
 
+  it('opens the pod or club chat room a chat push names', () => {
+    navigateForPushLink(nav, '/chats/p7');
+    expect(mockNavigate).toHaveBeenCalledWith('ChatRoom', { podId: 'p7', title: '' });
+    navigateForPushLink(nav, '/chats/club/c3');
+    expect(mockNavigate).toHaveBeenCalledWith('ChatRoom', { clubId: 'c3', title: '' });
+  });
+
   it('navigates to a known param-less screen', () => {
     navigateForPushLink(nav, '/earn');
     expect(mockNavigate).toHaveBeenCalledWith('Earn');

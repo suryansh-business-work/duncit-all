@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ScrollView } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
 import { YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
@@ -16,14 +15,21 @@ import {
   ChatMessageActionsSheet,
   type MessageActionsTarget,
 } from '@/components/chat/ChatMessageActionsSheet';
+import { ChatMuteButton } from '@/components/chat/ChatMuteButton';
 import { ChatParticipantsPanel } from '@/components/chat/ChatParticipantsPanel';
+import { ChatReplyStrip } from '@/components/chat/ChatReplyStrip';
 import { ChatRetentionNotice } from '@/components/chat/ChatRetentionNotice';
 import { ChatRoomHeaderBar } from '@/components/chat/ChatRoomHeaderBar';
 import { EmojiBar } from '@/components/chat/EmojiBar';
+import { MentionSuggestionList } from '@/components/chat/MentionSuggestionList';
 import { ReportContentSheet } from '@/components/content-report/ReportContentSheet';
-import { useChatRoom } from '@/hooks/useChatRoom';
+import { ChatRoomKind } from '@/generated/graphql/graphql';
+import { useChatRoom, type RoomReader } from '@/hooks/useChatRoom';
+import { useChatImagePicker } from '@/hooks/useChatImagePicker';
+import { useChatMute } from '@/hooks/useChatMute';
 import { useChatParticipants } from '@/hooks/useChat';
 import { useMe } from '@/hooks/useMe';
+import { useRoomComposer } from '@/hooks/useRoomComposer';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -31,34 +37,46 @@ import { useTranslation } from '@/hooks/useTranslation';
 type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
 
 /** Live chat — a pod's room (`podId`) or a club's (`clubId`): history + realtime
- * messages, with send, image, reactions, delete and report. RN twin of mWeb's
- * ChatRoomPage. */
+ * messages, with send, image, reactions, replies, @-mentions, mute, delete and
+ * report. RN twin of mWeb's ChatRoomPage. */
 export function ChatRoomScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { podId, clubId, title } = useRoute<RouteProp<RootStackParamList, 'ChatRoom'>>().params;
   const isClub = !!clubId;
   const roomId = clubId ?? podId ?? '';
-  const room = useChatRoom(roomId, isClub ? 'CLUB' : 'POD');
-  const { messages, podEnded, error, setError, sendText, sendImage, react } = room;
+  const kind = isClub ? 'CLUB' : 'POD';
+  const reader = useRef<RoomReader>({});
+  const room = useChatRoom(roomId, kind, reader);
+  const { messages, podEnded, error, setError, sendText, react } = room;
   const { hosts, participants, count } = useChatParticipants(isClub ? '' : roomId);
   const { data: meData } = useMe();
   const meId = meData?.me?.user_id;
+  const mute = useChatMute({
+    kind: isClub ? ChatRoomKind.Club : ChatRoomKind.Pod,
+    id: roomId,
+    initial: room.mute,
+    onError: setError,
+    failedText: t('mweb.chatRoom.mute.failed'),
+  });
+  reader.current = { meId, muted: mute.muted };
+  const podPeople = useMemo(() => [...hosts, ...participants], [hosts, participants]);
+  const composer = useRoomComposer({ kind, roomId, meId, messages, podPeople, sendText });
+  const pickImage = useChatImagePicker({ sendImage: room.sendImage, onError: setError });
+  const roomTitle = room.roomTitle ?? title;
 
   const openLinked = () => {
-    if (isClub)
-      navigation.navigate('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
-    else navigation.navigate('PodDetails', { podId: roomId, title });
+    if (isClub) navigation.navigate('ClubDetails', { clubId: roomId, title: roomTitle });
+    else navigation.navigate('PodDetails', { podId: roomId, title: roomTitle });
   };
   // Back lands on the room's pod or club: popTo returns to it when it is already
   // in the stack, otherwise it replaces this chat with it.
   const goBack = () => {
-    if (isClub) navigation.popTo('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
-    else navigation.popTo('PodDetails', { podId: roomId, title });
+    if (isClub) navigation.popTo('ClubDetails', { clubId: roomId, title: roomTitle });
+    else navigation.popTo('PodDetails', { podId: roomId, title: roomTitle });
   };
   const openProfile = (userId: string) => navigation.navigate('PublicProfile', { userId });
 
-  const [text, setText] = useState('');
   const [emojiFor, setEmojiFor] = useState<EmojiTarget>(null);
   const [actions, setActions] = useState<MessageActionsTarget | null>(null);
   const [reportId, setReportId] = useState<string | null>(null);
@@ -76,31 +94,10 @@ export function ChatRoomScreen() {
     if (error) AccessibilityInfo.announceForAccessibility(error);
   }, [error]);
 
-  const handleSend = () => {
-    sendText(text);
-    setText('');
-  };
-
   const handleSelectEmoji = (emoji: string) => {
     if (emojiFor?.type === 'react') fireAndForget(react(emojiFor.id, emoji));
-    else setText((prev) => prev + emoji);
+    else composer.setText((prev) => prev + emoji);
     setEmojiFor(null);
-  };
-
-  const handlePickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError(t('mweb.chatRoom.photoAccessIsNeededToSend'));
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      base64: true,
-      quality: 0.8,
-    });
-    const asset = result.canceled ? undefined : result.assets[0];
-    if (!asset) return;
-    await sendImage({ base64: asset.base64, fileName: asset.fileName, mimeType: asset.mimeType });
   };
 
   return (
@@ -110,7 +107,19 @@ export function ChatRoomScreen() {
           so under the edge-to-edge window it would otherwise sit beneath the
           Android navigation bar. */}
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-        <ChatRoomHeaderBar title={room.roomTitle ?? title} onBack={goBack} onOpenPod={openLinked} />
+        <ChatRoomHeaderBar
+          title={roomTitle}
+          onBack={goBack}
+          onOpenPod={openLinked}
+          actions={
+            <ChatMuteButton
+              muted={mute.muted}
+              mutedUntil={mute.mutedUntil}
+              busy={mute.busy}
+              onChoose={mute.choose}
+            />
+          }
+        />
 
         {isClub ? null : (
           <ChatParticipantsPanel
@@ -137,6 +146,8 @@ export function ChatRoomScreen() {
             onOpenActions={(message) =>
               setActions({ id: message.id, mine: message.user_id === meId })
             }
+            onReply={podEnded ? undefined : composer.startReply}
+            onOpenProfile={openProfile}
           />
 
           {emojiFor ? <EmojiBar onSelect={handleSelectEmoji} /> : null}
@@ -144,16 +155,28 @@ export function ChatRoomScreen() {
           {podEnded ? (
             <ChatClosedNotice />
           ) : (
-            <ChatComposer
-              value={text}
-              onChangeText={setText}
-              onSend={handleSend}
-              onPickImage={() => fireAndForget(handlePickImage())}
-              onToggleEmoji={() =>
-                setEmojiFor((prev) => (prev?.type === 'compose' ? null : { type: 'compose' }))
-              }
-              sending={room.sending}
-            />
+            <>
+              {composer.replyTo ? (
+                <ChatReplyStrip
+                  replyTo={composer.replyTo}
+                  mine={composer.replyTo.user_id === meId}
+                  onCancel={composer.cancelReply}
+                />
+              ) : null}
+              <MentionSuggestionList members={composer.candidates} onPick={composer.pickMention} />
+              <ChatComposer
+                value={composer.text}
+                onChangeText={composer.setText}
+                onSend={() => fireAndForget(composer.send())}
+                onPickImage={() => fireAndForget(pickImage())}
+                onToggleEmoji={() =>
+                  setEmojiFor((prev) => (prev?.type === 'compose' ? null : { type: 'compose' }))
+                }
+                sending={room.sending}
+                inputRef={composer.inputRef}
+                onCaret={composer.onCaret}
+              />
+            </>
           )}
         </KeyboardScreen>
       </SafeAreaView>
@@ -163,6 +186,7 @@ export function ChatRoomScreen() {
         canModerate={room.canModerate}
         onClose={() => setActions(null)}
         onReact={(id) => setEmojiFor({ type: 'react', id })}
+        onReply={podEnded ? undefined : composer.startReply}
         onDelete={(id) => fireAndForget(room.remove(id, t('mweb.chatRoom.deleteFailed')))}
         onReport={setReportId}
       />

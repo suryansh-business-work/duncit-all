@@ -29,6 +29,16 @@ export function navigateForPushLink(navigation: Nav, link: unknown) {
     navigation.navigate('PodRequestDetail', { id: target.id });
     return;
   }
+  if (target.kind === 'chat') {
+    // The room reads its own title once it loads.
+    navigation.navigate(
+      'ChatRoom',
+      target.room.kind === 'CLUB'
+        ? { clubId: target.room.id, title: '' }
+        : { podId: target.room.id, title: '' },
+    );
+    return;
+  }
   if (target.kind === 'screen') {
     navigation.navigate(target.route);
   }

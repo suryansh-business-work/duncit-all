@@ -97,15 +97,21 @@ export function LiveChatScreen() {
     setAttachments([]);
   };
 
-  const headerActions = (
-    <LiveChatHeader actions={a} closed={!!closed} reopenAllowed={!!reopenAllowed} />
-  );
+  const headerActions = session ? (
+    <LiveChatHeader
+      actions={a}
+      closed={!!closed}
+      reopenAllowed={!!reopenAllowed}
+      sessionId={session.id}
+      onMuteError={setSendError}
+    />
+  ) : undefined;
 
   return (
     <StackScreen
       title={t('mweb.common.chatWithUs')}
       testID="live-chat-screen"
-      right={session ? headerActions : undefined}
+      right={headerActions}
     >
       {/* StackScreen already lifts its content clear of the keyboard. A second
           KeyboardScreen here doubled that lift and floated the composer a whole

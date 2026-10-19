@@ -16,6 +16,7 @@ export const ChatRoomsDocument = gql(`
       club_id
       club_slug
       super_category_id
+      unread_count
     }
   }
 `);
@@ -57,6 +58,20 @@ export const ChatMessageFieldsFragment = gql(`
     }
     deleted
     createdAt
+    reply_to_id
+    reply_to {
+      id
+      user_id
+      user_name
+      text
+      type
+      deleted
+    }
+    mentions
+    mention_users {
+      user_id
+      full_name
+    }
   }
 `);
 
@@ -69,6 +84,7 @@ export const PodMessagesDocument = gql(`
     }
     pod(pod_doc_id: $podId) {
       id
+      pod_title
       pod_date_time
       pod_end_date_time
     }
@@ -76,6 +92,8 @@ export const PodMessagesDocument = gql(`
       chat_deletes_at
       closed
       can_moderate
+      is_muted
+      muted_until
     }
   }
 `);
@@ -92,6 +110,8 @@ export const ClubMessagesDocument = gql(`
       club_name
       retention_days
       can_moderate
+      is_muted
+      muted_until
     }
   }
 `);
@@ -126,6 +146,7 @@ export const ClubChatRoomsDocument = gql(`
       last_message_at
       last_message_preview
       last_message_type
+      unread_count
     }
   }
 `);
@@ -137,8 +158,17 @@ export const SendClubMessageDocument = gql(`
     $type: PodMessageType
     $text: String
     $imageUrl: String
+    $replyToId: ID
+    $mentions: [ID!]
   ) {
-    sendClubMessage(club_id: $clubId, type: $type, text: $text, image_url: $imageUrl) {
+    sendClubMessage(
+      club_id: $clubId
+      type: $type
+      text: $text
+      image_url: $imageUrl
+      reply_to_id: $replyToId
+      mentions: $mentions
+    ) {
       id
     }
   }
@@ -162,8 +192,17 @@ export const SendPodMessageDocument = gql(`
     $type: PodMessageType
     $text: String
     $imageUrl: String
+    $replyToId: ID
+    $mentions: [ID!]
   ) {
-    sendPodMessage(pod_id: $podId, type: $type, text: $text, image_url: $imageUrl) {
+    sendPodMessage(
+      pod_id: $podId
+      type: $type
+      text: $text
+      image_url: $imageUrl
+      reply_to_id: $replyToId
+      mentions: $mentions
+    ) {
       id
     }
   }

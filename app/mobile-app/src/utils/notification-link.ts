@@ -1,6 +1,14 @@
+import { chatRoomFromPath, type OpenChatRoom } from '@duncit/utils';
+
 /** Param-less in-app deep-link routes reachable from a notification. */
 type ParamlessRoute =
-  'Earn' | 'PodIdeas' | 'VenueAutoPods' | 'HostAutoPods' | 'ClubAutoPods' | 'ChangeRequests';
+  | 'Earn'
+  | 'PodIdeas'
+  | 'VenueAutoPods'
+  | 'HostAutoPods'
+  | 'ClubAutoPods'
+  | 'ChangeRequests'
+  | 'LiveChat';
 
 /** Param-less in-app deep-link path → React Navigation screen.
  *
@@ -17,6 +25,8 @@ const IN_APP_ROUTES: Record<string, ParamlessRoute> = {
   // filing acknowledgement and the resolution. Without this row the tap does
   // nothing at all, silently.
   '/change-requests': 'ChangeRequests',
+  // A support reply's push (`supportChat.notify.ts`).
+  '/support/live': 'LiveChat',
 };
 
 /** Resolved navigation intent for a notification's `link_url`. */
@@ -26,6 +36,7 @@ export type NotificationLinkTarget =
   | { kind: 'post'; postId: string }
   | { kind: 'pod'; clubSlug: string; podSlug: string }
   | { kind: 'podRequest'; id: string }
+  | { kind: 'chat'; room: OpenChatRoom }
   | { kind: 'none' };
 
 /**
@@ -50,6 +61,10 @@ export function resolveNotificationLink(link: string | null | undefined): Notifi
 
   const podRequest = /^\/pod-requests\/([^/?#]+)/.exec(link);
   if (podRequest?.[1]) return { kind: 'podRequest', id: podRequest[1] };
+
+  // A pod or club room's push (`chat.notify.ts`): `/chats/:id`, `/chats/club/:id`.
+  const room = chatRoomFromPath(link);
+  if (room) return { kind: 'chat', room };
 
   const route = IN_APP_ROUTES[link];
   if (route) return { kind: 'screen', route };

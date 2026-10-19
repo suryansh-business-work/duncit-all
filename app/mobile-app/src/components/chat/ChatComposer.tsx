@@ -1,3 +1,5 @@
+import type { Ref } from 'react';
+import type { TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, XStack } from 'tamagui';
 
@@ -12,6 +14,10 @@ interface ChatComposerProps {
   onPickImage: () => void;
   onToggleEmoji: () => void;
   sending: boolean;
+  /** The text input, so the @ list can return focus and place the caret. */
+  inputRef?: Ref<TextInput>;
+  /** The caret moved — the @ list follows it. */
+  onCaret?: (position: number) => void;
 }
 
 /** Message composer: image picker, text input, emoji toggle and send button.
@@ -23,6 +29,8 @@ export function ChatComposer({
   onPickImage,
   onToggleEmoji,
   sending,
+  inputRef,
+  onCaret,
 }: Readonly<ChatComposerProps>) {
   const { t } = useTranslation();
   const { muted, onPrimary } = useThemeColors();
@@ -63,10 +71,12 @@ export function ChatComposer({
 
       <Input
         testID="chat-input"
+        ref={inputRef}
         aria-label={t('mweb.common.message')}
         flex={1}
         value={value}
         onChangeText={onChangeText}
+        onSelectionChange={(e) => onCaret?.(e.nativeEvent.selection.start)}
         placeholder={t('mweb.common.typeAMessage')}
         placeholderTextColor="$muted"
         multiline

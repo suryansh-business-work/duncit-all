@@ -3,12 +3,25 @@ import { Platform } from 'react-native';
 
 import { ApiError } from '@/utils/errors';
 
-/** Foreground presentation behaviour for incoming notifications. */
-export async function handleNotification(): Promise<Notifications.NotificationBehavior> {
+/** Whether a push is a pod or club room's (its tag is `chat:<room>`). */
+function isChatRoomPush(notification?: Notifications.Notification): boolean {
+  const tag: unknown = notification?.request?.content?.data?.tag;
+  return typeof tag === 'string' && tag.startsWith('chat:');
+}
+
+/**
+ * Foreground presentation behaviour for incoming notifications. A chat room's
+ * push stays in the list but makes no banner or sound while the app is open:
+ * the in-app banner and ping (`chat:new`) have already said it.
+ */
+export async function handleNotification(
+  notification?: Notifications.Notification,
+): Promise<Notifications.NotificationBehavior> {
+  const roomPush = isChatRoomPush(notification);
   return {
-    shouldShowBanner: true,
+    shouldShowBanner: !roomPush,
     shouldShowList: true,
-    shouldPlaySound: true,
+    shouldPlaySound: !roomPush,
     shouldSetBadge: false,
   };
 }

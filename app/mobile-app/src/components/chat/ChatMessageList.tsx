@@ -1,6 +1,6 @@
-import type { RefObject } from 'react';
+import { useRef, type RefObject } from 'react';
 import type { ScrollView } from 'react-native';
-import { Text } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { ChatHistoryTop } from '@/components/chat/ChatHistoryTop';
 import { ChatMessageBubble } from '@/components/chat/ChatMessageBubble';
@@ -23,7 +23,14 @@ interface Props {
   meId?: string | null;
   /** Long press on a bubble: opens that message's actions. */
   onOpenActions: (message: ChatMessage) => void;
+  /** Swipe right on a bubble: answer it. Absent in a closed room. */
+  onReply?: (messageId: string) => void;
+  /** A highlighted @mention was tapped. */
+  onOpenProfile?: (userId: string) => void;
 }
+
+/** Room left above a line scrolled to from a quote, so it is not under the header. */
+const JUMP_MARGIN = 80;
 
 /** The room's scrolling log — skeleton while it loads, a hello when empty. */
 export function ChatMessageList({
@@ -33,8 +40,17 @@ export function ChatMessageList({
   history,
   meId,
   onOpenActions,
+  onReply,
+  onOpenProfile,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  // Where each loaded line sits in the list, so a quote can scroll to its original.
+  const positions = useRef(new Map<string, number>());
+  const jumpTo = (messageId: string) => {
+    const y = positions.current.get(messageId);
+    if (y !== undefined)
+      listRef.current?.scrollTo({ y: Math.max(0, y - JUMP_MARGIN), animated: true });
+  };
   if (isLoading && messages.length === 0) {
     return <ListSkeleton testID="chat-room-loading" count={5} />;
   }
@@ -67,12 +83,19 @@ export function ChatMessageList({
         </Text>
       ) : (
         messages.map((message) => (
-          <ChatMessageBubble
+          <YStack
             key={message.id}
-            message={message}
-            mine={message.user_id === meId}
-            onReact={message.deleted ? undefined : () => onOpenActions(message)}
-          />
+            onLayout={(e) => positions.current.set(message.id, e.nativeEvent.layout.y)}
+          >
+            <ChatMessageBubble
+              message={message}
+              mine={message.user_id === meId}
+              onReact={message.deleted ? undefined : () => onOpenActions(message)}
+              onReply={onReply}
+              onJumpTo={jumpTo}
+              onOpenProfile={onOpenProfile}
+            />
+          </YStack>
         ))
       )}
     </RefreshScrollView>

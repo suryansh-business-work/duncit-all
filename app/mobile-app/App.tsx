@@ -16,6 +16,7 @@ import { useBrandFont } from '@/hooks/useBrandFont';
 import { setWebFavicon } from '@/services/web-favicon';
 import { cachedDuid, logClientInfo } from '@/services/device';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { ChatNewBanner } from '@/components/chat/ChatNewBanner';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { NativeTourProvider } from '@/tours/NativeTourProvider';
 import { SplashOverlay } from '@/components/SplashOverlay';
@@ -172,6 +173,8 @@ export default function App() {
                   <NativeTourProvider>
                     <RootNavigator />
                   </NativeTourProvider>
+                  {/* Over every screen: a message in a room that is not open. */}
+                  <ChatNewBanner />
                 </NavigationContainer>
                 <SplashOverlay />
                 {/* Below the update gate on purpose: a blocked build must see

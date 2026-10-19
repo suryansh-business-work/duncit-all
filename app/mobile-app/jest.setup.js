@@ -106,6 +106,12 @@ jest.mock('@/navigation/navigationRef', () => ({
 // the whole library; animations become no-ops, which is what specs asserting
 // structure rather than frames want anyway.
 jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+// The chat bubble's swipe-to-reply imports worklets directly (scheduleOnRN):
+// the same TurboModule, so the same kind of shipped mock.
+jest.mock('react-native-worklets', () => require('react-native-worklets/lib/module/mock'));
+// Gesture handler's own jest setup: GestureDetector renders its child and the
+// gesture builders are inert.
+require('react-native-gesture-handler/jestSetup');
 
 // moti drives decorative state transitions (chevrons, pills); render them as
 // plain host Views in tests so specs assert structure, not animation frames.

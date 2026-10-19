@@ -74,6 +74,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "expo", range: "~57.0.26", kind: "dependencies" },
       { name: "expo-apple-authentication", range: "~57.0.2", kind: "dependencies" },
       { name: "expo-asset", range: "~57.0.18", kind: "dependencies" },
+      { name: "expo-audio", range: "~57.0.4", kind: "dependencies" },
       { name: "expo-auth-session", range: "~57.0.13", kind: "dependencies" },
       { name: "expo-build-properties", range: "~57.0.22", kind: "dependencies" },
       { name: "expo-camera", range: "~57.0.6", kind: "dependencies" },

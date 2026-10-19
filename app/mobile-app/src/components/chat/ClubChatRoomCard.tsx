@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import { ChatRoomAvatar } from '@/components/chat/ChatRoomAvatar';
+import { ChatUnreadBadge } from '@/components/chat/ChatUnreadBadge';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import type { ClubChatRoom } from '@/hooks/useClubChatRooms';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -54,6 +55,7 @@ export function ClubChatRoomCard({
           </Text>
         ) : null}
       </YStack>
+      <ChatUnreadBadge count={room.unread_count} testID={`club-chat-room-${room.id}-unread`} />
       <XStack>
         <MaterialIcons name="chevron-right" size={22} color={muted} />
       </XStack>

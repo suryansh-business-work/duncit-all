@@ -15,12 +15,14 @@ interface Props {
   canModerate: boolean;
   onClose: () => void;
   onReact: (id: string) => void;
+  /** Answer the message (quoted over the composer). Absent in a closed room. */
+  onReply?: (id: string) => void;
   onDelete: (id: string) => void;
   onReport: (id: string) => void;
 }
 
 /**
- * What can be done to one message, opened by a long press: react, delete
+ * What can be done to one message, opened by a long press: react, reply, delete
  * (your own, or anyone's in a room you moderate) and report (anyone's but your
  * own). The server is the gate — this only decides what is offered. The
  * Tamagui twin of mWeb's MessageActionsMenu (rule 27).
@@ -30,6 +32,7 @@ export function ChatMessageActionsSheet({
   canModerate,
   onClose,
   onReact,
+  onReply,
   onDelete,
   onReport,
 }: Readonly<Props>) {
@@ -55,6 +58,15 @@ export function ChatMessageActionsSheet({
           tint={ink}
           onPress={pick(onReact)}
         />
+        {onReply ? (
+          <ActionRow
+            testID="chat-message-action-reply"
+            icon="reply"
+            label={t('mweb.chatRoom.reply.action')}
+            tint={ink}
+            onPress={pick(onReply)}
+          />
+        ) : null}
         {target && (target.mine || canModerate) ? (
           <ActionRow
             testID="chat-message-action-delete"

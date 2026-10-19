@@ -3271,7 +3271,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // with its own plural counter, so `{coins}` is what actually renders.
     coin: {
       title: 'Duncit Coin',
-      sidebarCaption: 'Earn {pct}% back when you join a pod',
+      sidebarCaption: 'Earn {pct}% back when you join pods',
       balanceLabel: 'Coin balance',
       lifetimeLabel: 'Lifetime earned',
       rateNote:
@@ -4910,6 +4910,37 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // other tile in that grid says what it is for, so these do too.
       chatsCaption: 'Your pod conversations',
       followingCaption: 'People and clubs you follow',
+      // The completion nudge inside the profile card.
+      profileProgress: 'Your profile is {pct}% complete',
+      complete: 'Complete',
+      // Quick Access: the six tiles a member picks (catalogue in @duncit/utils profile-menu).
+      quickAccess: 'Quick Access',
+      edit: 'Edit',
+      editQuickAccess: 'Edit Quick Access',
+      editorHint: 'Pick {max} shortcuts and put them in the order you like.',
+      editorCount: '{selected} of {max} picked',
+      editorMoveUp: 'Move {label} up',
+      editorMoveDown: 'Move {label} down',
+      editorSave: 'Save',
+      editorReset: 'Reset to default',
+      editorInvalid: 'Pick exactly {max} shortcuts to save.',
+      editorSaveFailed: 'Your shortcuts are set for now, but this device could not keep them for next time.',
+      unreadBadge: '{unread} unread',
+      // Menu destinations without a page title of their own to borrow.
+      earnWithDuncit: 'Earn with Duncit',
+      helpSupport: 'Help & Support',
+      help: 'Help',
+      faqs: 'FAQs',
+      productOrders: 'My Product Order History',
+      // The Account section subtitle's short name for the contacts row.
+      contacts: 'Contacts',
+      // The collapsible section cards.
+      sectionExplore: 'Explore & Community',
+      sectionWork: 'Work & Earnings',
+      sectionShopping: 'Shopping & Orders',
+      sectionAccount: 'Account & Preferences',
+      sectionSupport: 'Support & Legal',
+      appVersion: 'App version {version}',
     },
     sos: {
       sendSos: 'Send SOS',
@@ -5421,7 +5452,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The ONE sidebar entry every partner gets, and the role switcher at the
       // top of the Studio page it opens (@duncit/utils studio-switcher).
       studioEntry: 'Studio',
-      studioEntryHint: 'Every option for your partner roles in one place',
+      studioEntryHint: 'Everything for your partner roles in one place',
       roleSwitcherLabel: 'Choose a role',
       roleHost: 'Host',
       roleVenue: 'Venue',

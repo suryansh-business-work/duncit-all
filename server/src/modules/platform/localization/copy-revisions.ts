@@ -318,4 +318,8 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "gigJobs.board.freelancerHint": [
     "Freelancers can show interest in a gig and get the poster’s contact. Join from Earn with Duncit — it takes a minute.",
   ],
+  // The profile menu redesign: the coin card speaks of pods in general, and the
+  // Studio card hint was tightened.
+  "mweb.coin.sidebarCaption": ["Earn {pct}% back when you join a pod"],
+  "mweb.studioOptions.studioEntryHint": ["Every option for your partner roles in one place"],
 };

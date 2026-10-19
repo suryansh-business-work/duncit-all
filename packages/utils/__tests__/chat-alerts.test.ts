@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  createChatReadMarker,
   CHAT_REPLY_PREVIEW_MAX,
   chatMuteCopy,
   chatNewToastLine,
@@ -92,6 +93,48 @@ describe('createChatPingGate', () => {
     expect(gate('a')).toBe(true);
     now = 100;
     expect(gate('a')).toBe(false);
+  });
+});
+
+describe('createChatReadMarker', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('marks at once on open, then collapses a burst of lines into one trailing mark per interval', () => {
+    vi.useFakeTimers();
+    const send = vi.fn();
+    const marker = createChatReadMarker(send, 2000);
+    marker.now();
+    expect(send).toHaveBeenCalledTimes(1);
+
+    marker.soon();
+    marker.soon();
+    marker.soon();
+    vi.advanceTimersByTime(1999);
+    expect(send).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(1);
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it('marks straight away when the room has been quiet longer than the interval', () => {
+    vi.useFakeTimers();
+    const send = vi.fn();
+    const marker = createChatReadMarker(send, 2000);
+    marker.now();
+    vi.advanceTimersByTime(5000);
+    marker.soon();
+    vi.advanceTimersByTime(0);
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it('drops a waiting mark once the room closes', () => {
+    vi.useFakeTimers();
+    const send = vi.fn();
+    const marker = createChatReadMarker(send, 2000);
+    marker.now();
+    marker.soon();
+    marker.cancel();
+    vi.advanceTimersByTime(10_000);
+    expect(send).toHaveBeenCalledTimes(1);
   });
 });
 

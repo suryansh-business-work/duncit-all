@@ -98,6 +98,48 @@ export function createChatPingGate(
   };
 }
 
+/** A busy open room marks itself read at most this often. */
+export const CHAT_READ_MARK_EVERY_MS = 2000;
+
+/** The read marker an open room drives (see {@link createChatReadMarker}). */
+export interface ChatReadMarker {
+  /** Mark read now — when the room opens. */
+  now: () => void;
+  /** A line arrived while the room is open: mark read soon, at most once per interval. */
+  soon: () => void;
+  /** The room closed: drop a mark still waiting. */
+  cancel: () => void;
+}
+
+/**
+ * The throttle behind both apps' `useMarkChatRead`: `send` runs at once on
+ * open, then a burst of arriving lines collapses into one trailing mark no
+ * sooner than `everyMs` after the last.
+ */
+export function createChatReadMarker(send: () => void, everyMs = CHAT_READ_MARK_EVERY_MS): ChatReadMarker {
+  let last = Number.NEGATIVE_INFINITY;
+  let pending: ReturnType<typeof setTimeout> | null = null;
+  const fire = () => {
+    last = Date.now();
+    send();
+  };
+  return {
+    now: fire,
+    soon: () => {
+      if (pending) return;
+      const wait = Math.max(0, last + everyMs - Date.now());
+      pending = setTimeout(() => {
+        pending = null;
+        fire();
+      }, wait);
+    },
+    cancel: () => {
+      if (pending) clearTimeout(pending);
+      pending = null;
+    },
+  };
+}
+
 /** The mute lengths offered at the top of a chat. */
 export const CHAT_MUTE_DURATIONS = ['EIGHT_HOURS', 'ONE_WEEK', 'ALWAYS'] as const;
 export type ChatMuteDuration = (typeof CHAT_MUTE_DURATIONS)[number];

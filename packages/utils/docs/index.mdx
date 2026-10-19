@@ -3690,6 +3690,7 @@ never a blocked peer, never a muted room unless they were @-mentioned).
 | `CHAT_NEW_EVENT` / `parseChatNewFrame(raw)` | The event name / a payload as a typed frame, or `null`. |
 | `isViewingRoom(open, frame)` / `chatRoomFromPath(path)` | Whether the frame is for the open room / the room a mWeb path opens. |
 | `createChatPingGate(windowMs?, now?)` | One ping per burst, never two for the same message id. |
+| `createChatReadMarker(send, everyMs?)` | An open room's read marker: `now()` on open, `soon()` per arriving line (one trailing mark per `CHAT_READ_MARK_EVERY_MS`), `cancel()` on close. Both apps' `useMarkChatRead` wrap it. |
 | `CHAT_MUTE_DURATIONS` / `isChatMuted(state, now?)` / `chatMuteCopy(t)` | 8 hours, 1 week, Always / whether a mute is in force / the menu's words. |
 | `formatUnreadBadge(count, max?)` | `''` for zero, `99+` past the cap. |
 | `chatReplyPreview(reply)` / `chatReplyText(reply, t)` | What a quoted line shows, in data / in words. |

@@ -19,9 +19,11 @@ export interface ExpiryThresholds {
   soon: number;
 }
 
+const DOMAIN_THRESHOLDS: Readonly<ExpiryThresholds> = { critical: CRITICAL_DAYS, soon: SOON_DAYS };
+
 export function expiryLevel(
   days: number | null | undefined,
-  thresholds: ExpiryThresholds = { critical: CRITICAL_DAYS, soon: SOON_DAYS },
+  thresholds: ExpiryThresholds = DOMAIN_THRESHOLDS,
 ): ExpiryLevel {
   if (days === null || days === undefined) return 'UNKNOWN';
   if (days < 0) return 'EXPIRED';

@@ -36,7 +36,9 @@ function toComparable(raw: unknown, type: DuncitColumnType): Comparable {
     return Number.isNaN(ms) ? null : ms;
   }
   if (type === 'boolean') return Boolean(raw);
-  return typeof raw === 'object' ? JSON.stringify(raw) : String(raw as string | number | boolean);
+  if (typeof raw === 'string') return raw;
+  if (typeof raw === 'number' || typeof raw === 'boolean' || typeof raw === 'bigint') return String(raw);
+  return typeof raw === 'object' ? JSON.stringify(raw) : '';
 }
 
 /** Empty first, then numerically — or as text, ignoring case — like the server's sort. */

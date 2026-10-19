@@ -48,6 +48,7 @@ export const appConfig = {
         { label: 'Onboarded Club Admins', labelKey: 'shell.nav.onboardedClubAdmins', to: '/club-admins', icon: 'groups' },
       ],
     },
+    { label: 'Earn with Duncit', labelKey: 'shell.nav.earnWithDuncit', to: '/earn-config', icon: 'volunteer-activism' },
     { label: 'Settings', labelKey: 'shell.nav.settings', to: '/settings', icon: 'settings' },
   ],
   modules: [],

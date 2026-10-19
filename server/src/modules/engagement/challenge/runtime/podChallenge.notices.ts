@@ -9,7 +9,7 @@ import { podChallengeNotify, type ChallengeNoticeKind } from './podChallenge.not
  * challenge is in play, the result link once a result is published.
  */
 
-const KINDS: readonly ChallengeNoticeKind[] = ['LIVE', 'RESULT'];
+const KINDS = new Set<string>(['LIVE', 'RESULT'] satisfies ChallengeNoticeKind[]);
 
 function bad(message: string): never {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -17,7 +17,7 @@ function bad(message: string): never {
 
 export const podChallengeNotices = {
   async send(challengeId: string, kind: string, retryFailed: boolean, user: AuthUser): Promise<number> {
-    if (!KINDS.includes(kind as ChallengeNoticeKind)) bad('Unknown notification');
+    if (!KINDS.has(kind)) bad('Unknown notification');
     const notice = kind as ChallengeNoticeKind;
     const { doc, pod } = await managed(challengeId, user);
     if (notice === 'LIVE' && doc.status !== 'LIVE' && doc.status !== 'PAUSED') {

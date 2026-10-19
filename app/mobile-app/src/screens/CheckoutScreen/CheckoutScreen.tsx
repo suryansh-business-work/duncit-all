@@ -42,6 +42,7 @@ export function CheckoutScreen() {
           onDownloadTicket={s.onDownloadTicket}
           onHome={() => navigation.navigate('Home')}
           onProfile={() => navigation.navigate('PodHistory')}
+          rentalDepositRefundable={s.rentals.settings?.deposit_refundable !== false}
         />
       </RefreshScrollView>
     ) : (

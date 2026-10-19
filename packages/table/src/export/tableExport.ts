@@ -36,8 +36,9 @@ function cellText(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (value instanceof Date) return value.toISOString();
   if (typeof value === 'object') return JSON.stringify(value);
-  const text = String(value as string | number | boolean);
-  return typeof value === 'string' && FORMULA_START.test(text) ? `'${text}` : text;
+  if (typeof value === 'string') return FORMULA_START.test(value) ? `'${value}` : value;
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return String(value);
+  return '';
 }
 
 function csvField(value: unknown): string {

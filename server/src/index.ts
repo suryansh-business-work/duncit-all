@@ -11,7 +11,6 @@ import { buildStatusProbeRouter } from './observability/statusProbe';
 import { buildUploadRouter } from './routes/upload.router';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
-import { startChatRetentionScheduler } from '@modules/engagement/chat/chat.cleanup';
 import { startRentalScheduler } from '@modules/venues/venueRental/rentalPayout.service';
 import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
 import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
@@ -99,11 +98,14 @@ import { notificationEvents, type NotifyEvent } from '@modules/engagement/notifi
 import jwt from 'jsonwebtoken';
 import { policyService } from '@modules/content/policy/policy.service';
 import { initSocketServer } from './realtime/io';
-import { attachChatHandlers } from '@modules/engagement/chat/chat.socket';
-import { attachStaffChatHandlers } from '@modules/engagement/staffChat/staffChat.socket';
+import {
+  attachChatHandlers,
+  attachStaffChatHandlers,
+  attachSupportChatHandlers,
+  startChatRetentionScheduler,
+} from '@microservices/chat';
 import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
 import { attachChallengeHandlers } from '@modules/engagement/challenge/runtime/challenge.socket';
-import { attachSupportChatHandlers } from '@modules/support/supportChat/supportChat.socket';
 import { attachCallHandlers } from '@modules/crm/call/call.socket';
 import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
 import { buildShiprocketWebhookRouter } from '@modules/commerce/shiprocket/shiprocket.webhook';
@@ -479,6 +481,15 @@ async function bootstrap() {
     await PodPartnerRequestModel.syncIndexes();
     await PartnerRequestQuotaModel.syncIndexes();
   });
+  // Replaces the legacy `payment_id_1` {unique, sparse} index with the model's
+  // partial one. Sparse still indexes the null every free join writes, so the
+  // old index let ONE free booking exist in the whole collection and refused
+  // every other with E11000 — answered as "Your booking changed while joining".
+  // autoIndex cannot fix it (same name, different options), only syncIndexes.
+  await safeSeed('podMemberIndexes', async () => {
+    const { PodMemberModel } = await import('@modules/pods/podMember/podMember.model');
+    await PodMemberModel.syncIndexes();
+  });
   // Creates the gift card sales policy singleton (amount presets, validity) so
   // the buy page has amounts on day one.
   await safeSeed('giftCardSettings', async () => {
@@ -540,6 +551,12 @@ async function bootstrap() {
   await safeSeed('badges', async () => {
     const { badgeService } = await import('@modules/engagement/badge/badge.service');
     await badgeService.seedDefaults();
+  });
+  // Gig Jobs categories (Photography, Catering, Sponsorship …). Create-only, so
+  // Admin > Gig Categories edits survive every redeploy.
+  await safeSeed('gigCategories', async () => {
+    const { gigCategoryService } = await import('@modules/engagement/gigJob/gigCategory.service');
+    await gigCategoryService.seedDefaults();
   });
   // Tech > E2E Tests > Flows: every journey the codebase ships. Additive only,
   // so a flow or sub flow a tech admin has edited survives every redeploy.

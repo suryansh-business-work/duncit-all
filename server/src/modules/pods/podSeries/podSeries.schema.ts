@@ -41,6 +41,8 @@ export const podSeriesTypeDefs = gql`
     seats_available: Int
     "Seats the viewer holds on this date (0: not booked)."
     my_seats: Int!
+    "This date's ticket price, before any discount."
+    pod_amount: Float!
     "Whether the viewer can book this date now."
     bookable: Boolean!
   }
@@ -50,6 +52,8 @@ export const podSeriesTypeDefs = gql`
     parent_pod_id: ID!
     frequency: PodSeriesFrequency
     multi_date_discount_tiers: [MultiDateDiscountTier!]!
+    "Whether the viewer hosts this pod. Members only get the dates the venue accepted."
+    is_host: Boolean!
     dates: [PodSeriesDateRow!]!
   }
 
@@ -70,6 +74,10 @@ export const podSeriesTypeDefs = gql`
     DAILY
     WEEKLY
     BIWEEKLY
+    "The same day of every month (the month's last day when the month is shorter)."
+    MONTHLY
+    "Only the dates the host picked on the calendar (custom_dates)."
+    CUSTOM
   }
 
   "Why a date of a recurring pod did not become a pod."
@@ -90,7 +98,7 @@ export const podSeriesTypeDefs = gql`
   input PodSeriesPlanInput {
     pod_mode: String!
     venue_id: ID
-    "The slot of the FIRST date. Every later date needs an identical slot (same space and times)."
+    "The slot of the FIRST date. Later dates book the identical slot (same space and times); where the venue has none, one is requested and opened when the venue accepts."
     venue_slot_id: ID
     "Virtual pods: the first date's start and end."
     pod_date_time: String
@@ -98,6 +106,8 @@ export const podSeriesTypeDefs = gql`
     frequency: PodSeriesFrequency!
     "The last moment of the chosen end day (ISO), worked out in the admin-set time zone."
     ends_on: String!
+    "CUSTOM only: the ISO start of every date after the first, each at the first date's time of day."
+    custom_dates: [String!]
     "Dates (ISO starts) the host unticked in the preview."
     skip_dates: [String!]
     "Percent off a booking of several dates; omitted means the Pod Settings default, [] means none."
@@ -113,6 +123,8 @@ export const podSeriesTypeDefs = gql`
     "That slot's price — it may differ from date to date."
     price: Int
     available: Boolean!
+    "The venue has no slot here yet: the request asks for one, opened when the venue accepts."
+    on_request: Boolean!
     reason: PodSeriesSkipReason
   }
 
@@ -126,6 +138,15 @@ export const podSeriesTypeDefs = gql`
     "The multi-date discount a new recurring pod starts with (Pod Settings)."
     default_multi_date_discount_tiers: [MultiDateDiscountTier!]!
     dates: [PodSeriesDate!]!
+  }
+
+  "The Pod Settings every recurring plan is held to."
+  type PodSeriesLimits {
+    max_occurrences: Int!
+    "How far after the first date the last one may fall."
+    max_span_days: Int!
+    max_discount_pct: Int!
+    default_multi_date_discount_tiers: [MultiDateDiscountTier!]!
   }
 
   type PodSeriesSkippedDate {
@@ -153,6 +174,8 @@ export const podSeriesTypeDefs = gql`
   extend type Query {
     "Every date a recurring plan would run on, each with its slot or why it cannot."
     podSeriesPreview(input: PodSeriesPlanInput!): PodSeriesPreview!
+    "The limits a recurring plan is held to — so Create Pod can bound the end day before previewing."
+    podSeriesLimits: PodSeriesLimits!
     "Every date of the recurring pod that pod_doc_id is (or is a date of); null for a one-time pod."
     podSeriesDates(pod_doc_id: ID!): PodSeriesDates
   }

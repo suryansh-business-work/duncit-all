@@ -79,6 +79,7 @@ export const SESSION_BUNDLE: NestedCatalogue = {
         ecommPortal: 'The Duncit Pet Store — listings, orders, returns and customers.',
         localization: 'Languages and every string across Duncit, translated with AI.',
         targets: 'The goals each team is working towards, and how close they are.',
+        gigJobs: 'Every gig, freelancer and category behind Gig Jobs, moderated in one place.',
         support: 'Tickets, live chat and customer support.',
         tech: 'Environment, feature flags and platform config.',
         websiteApp: 'Site content, careers, newsroom and blog.',

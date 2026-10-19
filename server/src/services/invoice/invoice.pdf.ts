@@ -12,6 +12,8 @@ export interface InvoiceLineItem {
   amount: number;
   /** The pod's cover or the product's photo, drawn beside the line. Optional: an invoice with no photos keeps its plain table. */
   image_url?: string;
+  /** RENTAL: a rented item, printed in its own block under the main table. Absent: the main table. */
+  section?: 'RENTAL';
 }
 
 /** Loaded line photos, keyed by `image_url`. */
@@ -74,6 +76,8 @@ const ACCENT_SOFT = '#fff1f1';
 const INK = '#111827';
 const MUTED = '#6b7280';
 const LINE = '#e5e7eb';
+/** Every other row of the rented-items block: a warm tint, so the block reads apart from the main table. */
+const RENTAL_STRIPE = '#fff7f7';
 // Inner padding of a table cell, and where the money column (and the totals
 // under it) starts.
 const CELL_PAD = 8;
@@ -235,7 +239,16 @@ export function drawInvoice(
   const cardH = drawBillToCard(doc, data, L, R, y);
 
   // ---- Items table ----
-  y = drawItemsTable(doc, { items: data.items, photos, fmt, L, R }, y + cardH + 22);
+  // Rented items get their own block under the main table: the same columns,
+  // so the amounts still line up with the totals, but drawn apart because they
+  // are collected at the venue and their deposit is settled there.
+  const thumbs = data.items.some((it) => it.image_url);
+  const mainItems = data.items.filter((it) => it.section !== 'RENTAL');
+  const rentalItems = data.items.filter((it) => it.section === 'RENTAL');
+  y = drawItemsTable(doc, { items: mainItems, photos, fmt, L, R, thumbs, tone: 'main' }, y + cardH + 22);
+  if (rentalItems.length > 0) {
+    y = drawRentalSection(doc, { items: rentalItems, photos, fmt, L, R, thumbs, tone: 'rental' }, y + 14);
+  }
 
   // ---- Totals ----
   // The totals, the coins and the footer stay together on one page.
@@ -309,10 +322,14 @@ interface ItemsTable {
   fmt: (n: number) => string;
   L: number;
   R: number;
+  /** Whether ANY line on the invoice has a photo: both tables then share the thumbnail column. */
+  thumbs: boolean;
+  /** main: the accent header band. rental: the soft, outlined band of the rented-items block. */
+  tone: 'main' | 'rental';
 }
 
 function itemColumns(t: ItemsTable) {
-  const shift = t.items.some((it) => it.image_url) ? PDF_THUMB_SIZE + PDF_THUMB_GAP : 0;
+  const shift = t.thumbs ? PDF_THUMB_SIZE + PDF_THUMB_GAP : 0;
   return {
     shift,
     desc: { x: t.L + CELL_PAD + shift, w: DESC_WIDTH - shift },
@@ -324,8 +341,13 @@ function itemColumns(t: ItemsTable) {
 
 function drawItemsHead(doc: PDFKit.PDFDocument, t: ItemsTable, y: number): number {
   const cols = itemColumns(t);
-  doc.roundedRect(t.L, y - 6, t.R - t.L, 24, 6).fill(ACCENT);
-  doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
+  if (t.tone === 'rental') {
+    doc.roundedRect(t.L, y - 6, t.R - t.L, 24, 6).fillAndStroke(ACCENT_SOFT, ACCENT);
+    doc.fillColor(ACCENT).fontSize(9.5).font('Helvetica-Bold');
+  } else {
+    doc.roundedRect(t.L, y - 6, t.R - t.L, 24, 6).fill(ACCENT);
+    doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
+  }
   doc
     .text('DESCRIPTION', t.L + CELL_PAD, y, { width: DESC_WIDTH })
     .text('QTY', cols.qty.x, y, { width: cols.qty.w, align: 'right' })
@@ -351,7 +373,7 @@ function drawItemsTable(doc: PDFKit.PDFDocument, t: ItemsTable, top: number): nu
       doc.addPage(INVOICE_PAGE);
       y = drawItemsHead(doc, t, t.L + 6);
     }
-    if (index % 2 === 1) doc.rect(t.L, y - 2, t.R - t.L, rowH + 8).fill(PDF_PALETTE.stripe);
+    if (index % 2 === 1) doc.rect(t.L, y - 2, t.R - t.L, rowH + 8).fill(t.tone === 'rental' ? RENTAL_STRIPE : PDF_PALETTE.stripe);
     if (cols.shift) {
       const photo = it.image_url ? t.photos.get(it.image_url) : undefined;
       drawPdfThumb(doc, photo, it.description, t.L + CELL_PAD, y + (rowH - PDF_THUMB_SIZE) / 2);
@@ -363,6 +385,40 @@ function drawItemsTable(doc: PDFKit.PDFDocument, t: ItemsTable, top: number): nu
     doc.moveTo(t.L, y - 2).lineTo(t.R, y - 2).lineWidth(1).strokeColor(LINE).stroke();
   });
   return y;
+}
+
+/** Room the rented-items title, its head and first row need, so the title never sits alone at a page foot. */
+const RENTAL_SECTION_MIN = 96;
+
+/**
+ * The rented-items block: a title, the same columns as the main table under a
+ * soft outlined head, and the note that says where the items and their
+ * deposits are handled. Returns the cursor below the note.
+ */
+function drawRentalSection(doc: PDFKit.PDFDocument, t: ItemsTable, top: number): number {
+  let y = top;
+  if (y + RENTAL_SECTION_MIN > PAGE_BOTTOM) {
+    doc.addPage(INVOICE_PAGE);
+    y = t.L;
+  }
+  doc.fillColor(ACCENT).fontSize(8.5).font('Helvetica-Bold').text('RENTED ITEMS', t.L, y);
+  doc
+    .fillColor(MUTED)
+    .fontSize(8.5)
+    .font('Helvetica')
+    .text('Collected at the venue', t.L, y, { width: t.R - t.L, align: 'right' });
+  y = drawItemsTable(doc, t, y + 20);
+  doc
+    .fillColor(MUTED)
+    .fontSize(8.5)
+    .font('Helvetica')
+    .text(
+      'Collect these items at the venue. The venue hands the refundable deposit back when the item is returned; it is not refunded online.',
+      t.L,
+      y + 2,
+      { width: t.R - t.L }
+    );
+  return doc.y + 4;
 }
 
 /** Currency note, payment method, support contacts, terms and the closing line. */

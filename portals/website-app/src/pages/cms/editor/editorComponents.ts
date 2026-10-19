@@ -96,8 +96,8 @@ function addBlockType(editor: Editor, labels: EditorLabels, blockUrl: BlockFrame
   editor.DomComponents.addType('cms-block', {
     isComponent: (el) => {
       if (el.tagName !== 'CMS-BLOCK') return false;
-      const cmsProps = parseProps(el.getAttribute('data-props'));
-      const block = el.getAttribute('data-block') ?? '';
+      const cmsProps = parseProps(el.dataset.props ?? null);
+      const block = el.dataset.block ?? '';
       const traitValues = Object.fromEntries((BLOCK_TRAITS[block] ?? []).map((key) => [`prop_${key}`, cmsProps[key] ?? '']));
       return { type: 'cms-block', cmsProps, ...traitValues };
     },

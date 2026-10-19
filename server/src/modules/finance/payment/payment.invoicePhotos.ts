@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { logs } from '@observability/log';
+import { idText } from '@modules/commerce/store/store.shared';
 import type { IPayment } from './payment.model';
 
 /**
@@ -23,7 +24,7 @@ export const NO_LINE_PHOTOS: InvoiceLinePhotos = { products: new Map() };
 
 /** The product lines frozen on the payment's metadata. */
 export function paymentProductLines(doc: Pick<IPayment, 'metadata'>): Record<string, unknown>[] {
-  const lines = (doc.metadata ?? {}).product_lines;
+  const lines = doc.metadata?.product_lines;
   return Array.isArray(lines) ? (lines as Record<string, unknown>[]) : [];
 }
 
@@ -40,7 +41,7 @@ export async function invoiceLinePhotos(doc: Pick<IPayment, 'pod_id' | 'metadata
       ...new Set(
         paymentProductLines(doc)
           .filter((line) => !lineOwnPhoto(line))
-          .map((line) => String(line.product_id ?? ''))
+          .map((line) => idText(line.product_id))
           .filter((id) => Types.ObjectId.isValid(id))
       ),
     ];

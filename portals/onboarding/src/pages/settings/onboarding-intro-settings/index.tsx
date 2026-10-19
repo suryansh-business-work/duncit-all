@@ -3,6 +3,7 @@ export { default as SocialHandlesFields } from './SocialHandlesFields';
 export {
   onboardingIntroSettingsSchema,
   socialHandlesSchema,
+  webLink,
   BLANK_ONBOARDING_INTRO,
   type OnboardingIntroSettingsValues,
   type SocialHandlesValues,

@@ -213,6 +213,9 @@ async function findOverlap(
   return VenueSlotModel.findOne(q);
 }
 
+/** A slot a host asked for that the venue has not approved — never the venue's to offer. */
+const UNAPPROVED_HOST_REQUEST = { requested_by_host: true, decision: { $ne: 'APPROVED' } };
+
 async function loadSlot(slotId: string) {
   if (!Types.ObjectId.isValid(slotId)) fail('BAD_USER_INPUT', 'Invalid slot_id');
   const slot = await VenueSlotModel.findById(slotId);
@@ -376,19 +379,33 @@ async function createSlotsCore(
   return withVenueAndPod(docs as IVenueSlot[]);
 }
 
-async function updateSlotCore(
-  slot: IVenueSlot,
-  input: {
-    start_at?: string;
-    end_at?: string;
-    notes?: string;
-    block?: boolean;
-    price?: number;
-    pricing_mode?: string | null;
-    overtime_rate?: number | null;
-  },
-  rules: SlotRules
-) {
+interface SlotUpdateInput {
+  start_at?: string;
+  end_at?: string;
+  notes?: string;
+  block?: boolean;
+  price?: number;
+  pricing_mode?: string | null;
+  overtime_rate?: number | null;
+}
+
+/** Moves the slot to its new start/end (either may be kept), refusing a window that breaks the rules or overlaps another slot. */
+async function moveSlotWindow(slot: IVenueSlot, input: SlotUpdateInput, rules: SlotRules) {
+  const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot.start_at;
+  const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot.end_at;
+  validateSlotWindow(start, end, rules);
+  const overlap = await findOverlap(String(slot.venue_id), start, end, slot.space_label ?? '', String(slot._id));
+  if (overlap) {
+    fail(
+      'CONFLICT',
+      `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
+    );
+  }
+  slot.start_at = start;
+  slot.end_at = end;
+}
+
+async function updateSlotCore(slot: IVenueSlot, input: SlotUpdateInput, rules: SlotRules) {
   if (slot.status === 'BOOKED') {
     fail('BAD_REQUEST', 'Booked slots cannot be edited. Cancel the pod first.');
   }
@@ -396,18 +413,7 @@ async function updateSlotCore(
     fail('BAD_REQUEST', 'This slot has a pending booking request. Approve or decline it first.');
   }
   if (input.start_at !== undefined || input.end_at !== undefined) {
-    const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot.start_at;
-    const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot.end_at;
-    validateSlotWindow(start, end, rules);
-    const overlap = await findOverlap(String(slot.venue_id), start, end, slot.space_label ?? '', String(slot._id));
-    if (overlap) {
-      fail(
-        'CONFLICT',
-        `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
-      );
-    }
-    slot.start_at = start;
-    slot.end_at = end;
+    await moveSlotWindow(slot, input, rules);
   }
   if (input.notes !== undefined) slot.notes = (input.notes ?? '').trim();
   if (input.price !== undefined) slot.price = normalizePrice(input.price);
@@ -842,7 +848,9 @@ async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActo
   slot.decided_at = new Date();
   slot.decided_pod_id = podId;
   slot.decline_reason = note;
-  await (slot as any).save();
+  // A slot the host asked the venue to open was never the venue's: it goes.
+  if (slot.requested_by_host) await VenueSlotModel.deleteOne({ _id: slot._id });
+  else await (slot as any).save();
   const beforePod = await PodModel.findById(podId);
   const before = beforePod ? snapshotPod(beforePod) : null;
   const pod = await PodModel.findByIdAndUpdate(
@@ -933,6 +941,7 @@ export const venueSlotService = {
       venue_id: new Types.ObjectId(venueId),
       ...bookable,
       start_at: { $gte: cutoff },
+      $nor: [UNAPPROVED_HOST_REQUEST],
     })
       .sort({ start_at: 1 })
       .limit(500);
@@ -1106,6 +1115,52 @@ export const venueSlotService = {
       affected += 1;
     }
     return { matched: slots.length, affected, skipped };
+  },
+
+  /**
+   * Opens the slot a recurring pod's date asks for on a day the venue has none:
+   * a copy of the host's first slot (space, price, pricing, capacity) at the
+   * date's window, flagged `requested_by_host`. The pod's ordinary hold then
+   * makes it a PENDING request, so the venue answers it like any other.
+   * Refuses (CONFLICT) when anything in that space already covers the window.
+   */
+  async openHostRequestSlot(
+    template: {
+      venue_id: Types.ObjectId;
+      owner_user_id: Types.ObjectId;
+      space_label?: string | null;
+      price?: number;
+      pricing_mode?: SlotPricingMode;
+      overtime_rate?: number;
+      capacity?: number;
+    },
+    start: Date,
+    end: Date
+  ): Promise<IVenueSlot> {
+    const clash = await findOverlap(String(template.venue_id), start, end, template.space_label ?? '');
+    if (clash) fail('CONFLICT', 'The venue already has a slot at this time.');
+    return VenueSlotModel.create({
+      venue_id: template.venue_id,
+      owner_user_id: template.owner_user_id,
+      start_at: start,
+      end_at: end,
+      price: template.price ?? 0,
+      pricing_mode: template.pricing_mode ?? 'FLAT',
+      overtime_rate: template.overtime_rate ?? 0,
+      space_label: template.space_label ?? '',
+      capacity: template.capacity ?? 0,
+      requested_by_host: true,
+    });
+  },
+
+  /** Deletes a host-requested slot no pod ended up holding (its pod failed to publish). */
+  async dropUnheldHostRequestSlot(slotId: string): Promise<void> {
+    await VenueSlotModel.deleteOne({
+      _id: new Types.ObjectId(slotId),
+      requested_by_host: true,
+      status: 'AVAILABLE',
+      booked_by_pod_id: null,
+    });
   },
 
   /** Atomic hold: AVAILABLE → PENDING for a pod that needs the venue owner's
@@ -1383,6 +1438,7 @@ export const venueSlotService = {
 
   // Release any slot tied to a pod (called when the pod is deleted/cancelled).
   async releaseForPod(podId: string): Promise<void> {
+    await VenueSlotModel.deleteMany({ booked_by_pod_id: new Types.ObjectId(podId), ...UNAPPROVED_HOST_REQUEST });
     await VenueSlotModel.updateMany(
       { booked_by_pod_id: new Types.ObjectId(podId) },
       { $set: { status: 'AVAILABLE', booked_by_pod_id: null } }
@@ -1394,6 +1450,11 @@ export const venueSlotService = {
    * on booked_by_pod_id keeps it a no-op if the slot moved on meanwhile.
    * `slotId` always comes from a pod's stored venue_slot_id, so it is a valid id. */
   async releaseSlotForPod(slotId: string, podId: string): Promise<void> {
+    await VenueSlotModel.deleteOne({
+      _id: new Types.ObjectId(slotId),
+      booked_by_pod_id: new Types.ObjectId(podId),
+      ...UNAPPROVED_HOST_REQUEST,
+    });
     await VenueSlotModel.updateOne(
       { _id: new Types.ObjectId(slotId), booked_by_pod_id: new Types.ObjectId(podId) },
       { $set: { status: 'AVAILABLE', booked_by_pod_id: null } }

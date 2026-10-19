@@ -61,7 +61,7 @@ export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
       capacity: item.capacity,
     })),
     offers_food: venue.offers_food,
-    food_menu: venue.food_menu.map(foodDishToValues),
+    food_menu: venue.food_menu.map((dish) => foodDishToValues(dish)),
     // What the server resolved: the venue's own GST, or Finance's default while it follows it.
     food_ordering: foodOrderingToValues(venue.food_ordering),
     food_licences: foodLicencesToValues(venue.food_licences),

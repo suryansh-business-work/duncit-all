@@ -221,15 +221,13 @@ function unifiedFields(shop: PaymentShop): PipelineStage[] {
   return [
     {
       $addFields: {
+        // `$cond` in its array form: [if, then, else], checked in this order.
         mode: {
-          $switch: {
-            branches: [
-              { case: { $and: [HAS_CASH, HAS_COINS] }, then: 'RAZORPAY_COINS' },
-              { case: HAS_CASH, then: 'RAZORPAY' },
-              { case: HAS_COINS, then: 'COINS' },
-            ],
-            default: 'NONE',
-          },
+          $cond: [
+            { $and: [HAS_CASH, HAS_COINS] },
+            'RAZORPAY_COINS',
+            { $cond: [HAS_CASH, 'RAZORPAY', { $cond: [HAS_COINS, 'COINS', 'NONE'] }] },
+          ],
         },
         // 1 coin = 1 rupee, so the two destinations add up to one value.
         refund_value: { $add: ['$cash_amount', '$coins'] },

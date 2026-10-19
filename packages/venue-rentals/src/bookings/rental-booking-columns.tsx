@@ -105,6 +105,16 @@ export function buildRentalBookingColumns(t: Translate, options: RentalColumnOpt
       filterable: false,
       valueGetter: (row) => (row.damage_claim > 0 ? money(row, row.damage_claim) : EM_DASH),
     },
+    {
+      // Cash the venue handed the guest when the item came back — never a gateway refund.
+      field: 'deposit_at_venue',
+      headerName: t('venueRentals.table.depositAtVenue'),
+      type: 'number',
+      width: 160,
+      sortable: false,
+      filterable: false,
+      valueGetter: (row) => (row.deposit_at_venue > 0 ? money(row, row.deposit_at_venue) : EM_DASH),
+    },
     { field: 'refund_due', headerName: t('venueRentals.table.refundDue'), type: 'number', width: 130, valueGetter: (row) => money(row, row.refund_due) },
     {
       field: 'refund_status',

@@ -17,7 +17,7 @@ import { trimTrailingSlash } from '@utils/url';
  * screen where they typed the code. Never throws — the coins are already paid.
  */
 export async function notifyReferrerRewarded(referrerId: string, referredUserId: string, coins: number) {
-  if (!(coins > 0)) return;
+  if (Number.isNaN(coins) || coins <= 0) return;
   try {
     const [users, { mwebUrl }] = await Promise.all([
       loadNotifyRecipients([referrerId, referredUserId]),

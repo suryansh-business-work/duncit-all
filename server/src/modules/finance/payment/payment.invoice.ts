@@ -1,6 +1,7 @@
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
-import { rentalInvoiceLines } from '@modules/venues/venueRental/rentalLines';
+import { RENTAL_INVOICE_SECTION, rentalInvoiceLines } from '@modules/venues/venueRental/rentalLines';
 import { normalizeSeats } from '@modules/pods/pod/pod.seats';
+import { idText } from '@modules/commerce/store/store.shared';
 import type { InvoiceData, InvoiceLineItem } from '@services/invoice/invoice.pdf';
 import {
   invoiceLinePhotos,
@@ -113,8 +114,10 @@ export function buildInvoiceItems(doc: IPayment, photos: InvoiceLinePhotos = NO_
     // Named explicitly as a string: a product line comes off `metadata`, which
     // is Mixed, so anything at all could be sitting in `name`.
     const name = typeof l.name === 'string' && l.name ? l.name : 'Product';
-    const image_url = lineOwnPhoto(l) || photos.products.get(String(l.product_id ?? '')) || undefined;
-    return { description: name, qty, unit_price: round2(amount / qty), amount, image_url };
+    const image_url = lineOwnPhoto(l) || photos.products.get(idText(l.product_id)) || undefined;
+    // Rented items print in their own block: collected at the venue, deposit settled there.
+    const section = l.section === RENTAL_INVOICE_SECTION ? RENTAL_INVOICE_SECTION : undefined;
+    return { description: name, qty, unit_price: round2(amount / qty), amount, image_url, ...(section ? { section } : {}) };
   });
   const productsNet = round2(items.reduce((sum, it) => sum + it.amount, 0));
   const residualNet = round2(doc.subtotal - productsNet);

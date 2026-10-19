@@ -17,10 +17,10 @@ import ProductBuyBar from '../product-detail-page/ProductBuyBar';
 import { cartLineKey, useCart } from '../../components/cart/CartContext';
 import { useTranslation } from '../../i18n/useTranslation';
 import { PODS_FOR_PRODUCT } from './queries';
-import { BACK_SX, IDLE_PILL_SX, PILL_SX } from './productDetailStyles';
+import { BACK_SX, IDLE_PILL_SX } from './productDetailStyles';
 import PodAvailabilityNotice from './PodAvailabilityNotice';
-
-const variantName = (v: any): string => v.option_label || v.color || v.size_label || 'Variant';
+import VariantPills, { variantName } from './VariantPills';
+import { shownImages } from './productDetailView';
 
 /** Standalone product detail page (Pod Shop browse → tap a product). The hero
  * carousel, name, price, variant pills and description, with the add/quantity
@@ -55,11 +55,7 @@ export default function ProductDetailPage() {
   useEntityPageMeta(product?.name);
   const variants: any[] = product?.variants ?? [];
   const selectedVariant = variants.find((v) => v.id === variantId) ?? variants[0] ?? null;
-  const variantImages: string[] = selectedVariant?.images ?? [];
-  const baseImages = product?.images?.length
-    ? product.images
-    : [product?.image_url].filter(Boolean);
-  const images: string[] = variantImages.length ? variantImages : baseImages;
+  const images = shownImages(product, selectedVariant);
   const price = selectedVariant?.unit_cost ?? product?.unit_cost ?? 0;
   // `product` is undefined while loading and after a failed read — the loading
   // and error states render below, so there are no specs to build yet.
@@ -132,22 +128,7 @@ export default function ProductDetailPage() {
         </Typography>
       </Stack>
       {variants.length > 0 && (
-        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-          {variants.map((v: any) => {
-            const selected = selectedVariant?.id === v.id;
-            return (
-              <Chip
-                key={v.id}
-                data-testid={`variant-${v.id}`}
-                label={variantName(v)}
-                onClick={() => setVariantId(v.id)}
-                aria-pressed={selected}
-                color={selected ? 'primary' : 'default'}
-                sx={selected ? PILL_SX : IDLE_PILL_SX}
-              />
-            );
-          })}
-        </Stack>
+        <VariantPills variants={variants} selectedId={selectedVariant?.id} onSelect={setVariantId} />
       )}
       {product.brand_name && (
         <Chip

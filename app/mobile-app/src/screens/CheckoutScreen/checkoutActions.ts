@@ -69,7 +69,8 @@ export function checkoutActions(s: CheckoutState) {
           rentals.selections,
         );
         // 100%-off coupon → completed server-side, skip the gateway sheet.
-        if (created.free && created.payment) setPayment(created.payment);
+        // A free order never carries rentals: coupons and coins never cover rent or deposits.
+        if (created.free && created.payment) setPayment({ ...created.payment, rental_lines: [] });
         else setOrder(created);
         return;
       }

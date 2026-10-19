@@ -11,6 +11,10 @@ export const podSeriesResolvers = {
       requireAuth(ctx);
       return podSeriesService.preview(args.input);
     },
+    podSeriesLimits: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return podSeriesService.limits();
+    },
     podSeriesDates: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
       podSeriesReadService.dates(args.pod_doc_id, ctx.user ? String(ctx.user.id) : null),
   },

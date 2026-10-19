@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useProductVisibility } from '@duncit/app-settings';
-import { MY_FOOD_ORDERS_PATH, MY_RENTED_ITEMS_PATH, studioEntryFor } from '@duncit/utils';
+import { GIG_JOBS_PATH, MY_FOOD_ORDERS_PATH, MY_RENTED_ITEMS_PATH, studioEntryFor } from '@duncit/utils';
 import ProfileIdentity from './ProfileIdentity';
 import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
@@ -90,6 +90,10 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
     ...(productsVisible ? SHOP_ITEMS : []),
     { key: 'rentals', label: t('venueRentals.guest.sidebarLabel'), caption: '', icon: 'rentals', to: MY_RENTED_ITEMS_PATH },
   ];
+  // Gig Jobs: open to everyone — hosts, venues and brands post, freelancers apply.
+  const gigItems: ProfileTile[] = [
+    { key: 'gigs', label: t('gigJobs.nav.label'), caption: '', icon: 'gigs', to: GIG_JOBS_PATH },
+  ];
   // The orders a member placed from venue menus — their own section, as on native.
   const foodItems: ProfileTile[] = [
     { key: 'food-orders', label: t('mweb.venueFood.myOrders.sidebarLabel'), caption: '', icon: 'menu', to: MY_FOOD_ORDERS_PATH },
@@ -129,6 +133,7 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       {mode === 'USER' && <DuncitCoinCard onNavigate={onNavigate} />}
       {studioEntry && <StudioOptionsCard entry={studioEntry} onNavigate={onNavigate} />}
       <ReferralCard onNavigate={onNavigate} />
+      <ManageAccountList title={t('gigJobs.nav.section')} items={gigItems} onNavigate={onNavigate} />
       {showLeaderboard && (
         <ManageAccountList title={t('mweb.leaderboard.title')} items={leaderboardItems} onNavigate={onNavigate} />
       )}

@@ -5,6 +5,7 @@ import { getUrlConfigs } from '@config/url-configs';
 import { UserModel } from './user.model';
 import { joinUrl } from '@utils/url';
 import { appDateTime } from '@utils/app-time';
+import { loginActivityService } from '@modules/access/auth/login-activity/loginActivity.service';
 
 /**
  * "A new sign-in to your account" — the notice, and the rule for when it is one.
@@ -39,6 +40,12 @@ export interface SignInContext {
   userAgent?: string | null;
   /** Where from, as far as a reverse proxy can tell us. */
   place?: string | null;
+  /** The socket's own address — the fallback when no proxy said where from. */
+  remoteAddress?: string | null;
+  /** The client family it declared (`x-duncit-surface`). */
+  surface?: string | null;
+  /** The `origin` header — which console or site the sign-in was made on. */
+  origin?: string | null;
 }
 
 /**
@@ -114,15 +121,41 @@ async function claimDevice(userId: string, fingerprint: string): Promise<'new' |
 }
 
 /**
+ * Add the sign-in to the member's Login activity (Profile > Login activity).
+ * Every account gets a row, including one with no email to notify.
+ */
+async function recordLoginActivity(
+  user: { _id: unknown; auth?: { last_login_provider?: string | null } },
+  context: SignInContext
+): Promise<void> {
+  try {
+    await loginActivityService.record(String(user._id), user.auth?.last_login_provider ?? null, {
+      userAgent: context.userAgent,
+      forwardedFor: context.place,
+      remoteAddress: context.remoteAddress,
+      surface: context.surface,
+      origin: context.origin,
+    });
+  } catch (error) {
+    logs.server.warn('user.signin', 'recordLoginActivity', { error });
+  }
+}
+
+/**
  * Note a successful sign-in, and mail the account if the device is new to it.
  *
  * Never throws and is never awaited for its result by a login: signing in must
  * not fail because a mailbox did.
  */
 export async function noteSignIn(
-  user: { _id: unknown; auth?: { email?: string | null }; profile?: { first_name?: string | null } },
+  user: {
+    _id: unknown;
+    auth?: { email?: string | null; last_login_provider?: string | null };
+    profile?: { first_name?: string | null };
+  },
   context: SignInContext
 ): Promise<void> {
+  await recordLoginActivity(user, context);
   try {
     const email = user.auth?.email ?? '';
     if (!email) return;

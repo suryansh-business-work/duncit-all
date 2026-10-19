@@ -105,6 +105,7 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   { key: 'ecomm-portal', name: 'E-commerce', url: url('ecomm-portal'), roles: [{ key: 'ECOMM_STORE_MANAGER', name: 'Pet Store Manager' }] },
   { key: 'localization', name: 'Localization', url: url('localization'), roles: [{ key: 'LOCALIZATION_MANAGER', name: 'Localization Manager' }] },
   { key: 'targets', name: 'Targets', url: url('targets'), roles: [{ key: 'TARGETS_MANAGER', name: 'Targets Manager' }] },
+  { key: 'gig-jobs', name: 'Gig Jobs', url: url('gig-jobs'), roles: [{ key: 'GIG_JOBS_MANAGER', name: 'Gig Jobs Manager' }] },
 ];
 
 export interface RolePortalInfo {

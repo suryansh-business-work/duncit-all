@@ -179,3 +179,25 @@ describe('CustomFontDialog', () => {
     expect(screen.queryByTestId('cms-custom-font-form')).not.toBeInTheDocument();
   });
 });
+
+describe('GoogleFontDialog — while the catalogue loads', () => {
+  it('shows progress and no result count yet', () => {
+    answerQuery(CMS_GOOGLE_FONTS, { loading: true });
+    renderWithProviders(<GoogleFontDialog open onClose={vi.fn()} onAdd={vi.fn()} />);
+    expect(within(screen.getByRole('dialog')).getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByText(en('websiteApp.cms.fonts.noResults'))).not.toBeInTheDocument();
+  });
+});
+
+describe('CustomFontDialog — a cancelled file pick', () => {
+  it('uploads nothing when the picker closes without a file', async () => {
+    render(<CustomFontDialog open onClose={vi.fn()} onAdd={vi.fn()} />);
+    const dialog = await screen.findByRole('dialog');
+    const input = dialog.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [] } });
+    expect(upload).not.toHaveBeenCalled();
+    expect(within(dialog).getByText(en('websiteApp.cms.fonts.chooseFile'))).toBeInTheDocument();
+    expect(within(dialog).queryByText(en('websiteApp.cms.fonts.uploadFailed'))).not.toBeInTheDocument();
+  });
+});

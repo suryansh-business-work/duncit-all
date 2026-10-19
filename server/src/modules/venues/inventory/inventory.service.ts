@@ -18,6 +18,7 @@ import { notificationService } from '@modules/engagement/notification/notificati
 import { UserModel } from '@modules/access/user/user.model';
 import { notifyEvent } from '@services/notify/notify.service';
 import { transitionEntityId } from '@modules/platform/whatsapp/whatsapp.entity';
+import { idText } from '@modules/commerce/store/store.shared';
 import { sendEmail } from '@services/email/email.service';
 import {
   InventoryProductModel,
@@ -479,7 +480,7 @@ async function assertBrandActive(brandId: unknown) {
  * product. The brand must exist and be able to list (approved, active). */
 async function adminCreateBrand(brandId: unknown) {
   if (brandId === null || brandId === undefined || brandId === '') return null;
-  const id = String(brandId);
+  const id = idText(brandId);
   const brand = Types.ObjectId.isValid(id)
     ? await EcommBrandModel.findById(id).select('brand_name owner_user_id').lean()
     : null;

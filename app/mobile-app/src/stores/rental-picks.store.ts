@@ -16,7 +16,7 @@ export const useRentalPicksStore = create<RentalPicksState>((set) => ({
   byPod: {},
   setQuantity: (podId, itemId, quantity) =>
     set((state) => {
-      const picks = { ...(state.byPod[podId] ?? {}) };
+      const picks = { ...state.byPod[podId] };
       if (quantity > 0) picks[itemId] = Math.floor(quantity);
       else delete picks[itemId];
       return { byPod: { ...state.byPod, [podId]: picks } };

@@ -57,6 +57,20 @@ export const CLUB_MESSAGES = gql`
   }
 `;
 
+/** One older page of a pod room, scrolling up: the lines alone, not the room again. */
+export const POD_MESSAGE_PAGE = gql`
+  query PodMessagePage($pod_id: ID!, $limit: Int, $before: String) {
+    podMessages(pod_id: $pod_id, limit: $limit, before: $before) { ${MESSAGE_FIELDS} }
+  }
+`;
+
+/** One older page of a club room, scrolling up: the lines alone. */
+export const CLUB_MESSAGE_PAGE = gql`
+  query ClubMessagePage($club_id: ID!, $limit: Int, $before: String) {
+    clubMessages(club_id: $club_id, limit: $limit, before: $before) { ${MESSAGE_FIELDS} }
+  }
+`;
+
 export const SEND_CLUB_MSG = gql`
   mutation SendClub($club_id: ID!, $type: PodMessageType, $text: String, $image_url: String) {
     sendClubMessage(club_id: $club_id, type: $type, text: $text, image_url: $image_url) {

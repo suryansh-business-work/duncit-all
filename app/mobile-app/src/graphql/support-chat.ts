@@ -37,8 +37,8 @@ export const StartSupportChatDocument = gql(`
 `);
 
 export const SupportChatMessagesDocument = gql(`
-  query MobileSupportChatMessages($sessionId: ID!, $limit: Int) {
-    supportChatMessages(session_id: $sessionId, limit: $limit) {
+  query MobileSupportChatMessages($sessionId: ID!, $limit: Int, $before: String) {
+    supportChatMessages(session_id: $sessionId, limit: $limit, before: $before) {
       id
       session_id
       sender_id

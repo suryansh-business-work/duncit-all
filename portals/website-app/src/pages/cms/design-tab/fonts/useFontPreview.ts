@@ -17,7 +17,8 @@ export function useGooglePreview(family: string, text: string) {
     loaded.add(key);
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}&text=${encodeURIComponent(`${family}${text}`)}&display=swap`;
+    const glyphs = encodeURIComponent(family + text);
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}&text=${glyphs}&display=swap`;
     document.head.append(link);
   }, [family, text]);
 }

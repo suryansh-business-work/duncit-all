@@ -20,13 +20,13 @@ import { SERVER_ENV } from '@observability/log';
  * API created as `product_reviews`.
  */
 
-const SEGMENT = /^[A-Za-z0-9_]{1,64}$/;
+const SEGMENT = /^\w{1,64}$/;
 
 /** A path segment, or null when the value cannot safely be one. */
 export function folderSegment(value: unknown): string | null {
   const text = typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
   if (SEGMENT.test(text)) return text;
-  const cleaned = text.replace(/[^A-Za-z0-9_]/g, '_').slice(0, 64);
+  const cleaned = text.replaceAll(/\W/g, '_').slice(0, 64);
   return /[A-Za-z0-9]/.test(cleaned) ? cleaned : null;
 }
 

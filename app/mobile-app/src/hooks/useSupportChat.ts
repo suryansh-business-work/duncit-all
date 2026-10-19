@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { CHAT_HISTORY_PAGE } from '@duncit/utils';
 
 import { config } from '@/constants/config';
+import { useChatHistory } from '@/hooks/useChatHistory';
 import { getAuthToken } from '@/services/auth-token';
 import {
   EmailSupportChatTranscriptDocument,
@@ -36,6 +38,8 @@ interface TypingPayload {
   role?: 'USER' | 'AGENT' | null;
   name?: string | null;
 }
+
+const messageTime = (message: SupportChatMessage) => message.created_at;
 
 interface PickedAsset {
   uri?: string | null;
@@ -95,6 +99,20 @@ export function useSupportChat() {
     );
   }, []);
 
+  const fetchOlder = useCallback(
+    async (before: string) => {
+      const data = await graphqlRequest(
+        SupportChatMessagesDocument,
+        { sessionId, limit: CHAT_HISTORY_PAGE, before },
+        { auth: true },
+      );
+      return data.supportChatMessages;
+    },
+    [sessionId],
+  );
+  const history = useChatHistory({ messages, setMessages, fetchOlder, timeOf: messageTime });
+  const { startHistory } = history;
+
   // Boot: start/reuse the session, then pull history + mark read.
   useEffect(() => {
     let active = true;
@@ -106,11 +124,12 @@ export function useSupportChat() {
         const id = started.startSupportChat.id;
         const data = await graphqlRequest(
           SupportChatMessagesDocument,
-          { sessionId: id, limit: 100 },
+          { sessionId: id, limit: CHAT_HISTORY_PAGE },
           { auth: true },
         );
         if (!active) return;
         setMessages(data.supportChatMessages);
+        startHistory(data.supportChatMessages.length);
         markRead(id);
       } catch (e) {
         if (active) setError(e instanceof Error ? e.message : 'Could not open the chat.');
@@ -121,7 +140,7 @@ export function useSupportChat() {
     return () => {
       active = false;
     };
-  }, [markRead]);
+  }, [markRead, startHistory]);
 
   // Live updates once the session is known.
   useEffect(() => {
@@ -307,6 +326,7 @@ export function useSupportChat() {
     session,
     sessionId,
     messages,
+    history,
     isLoading,
     error,
     typing,

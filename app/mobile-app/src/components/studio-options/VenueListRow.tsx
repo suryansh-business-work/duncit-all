@@ -30,7 +30,8 @@ export function VenueListRow({ venue, selected, onOpen, onEdit }: Readonly<Props
         testID={`venue-list-row-${venue.id}`}
         role="button"
         aria-label={name}
-        aria-selected={selected}
+        aria-pressed={selected}
+        accessibilityState={{ selected }}
         accessibilityHint={[venue.city, venue.status].filter(Boolean).join(', ')}
         tabIndex={0}
         onPress={onOpen}

@@ -46,15 +46,29 @@ picked item; `rentalSelectionTotals` sums those lines). Copy is the `venueRental
    HOUR item, × 1 for a SLOT item, deposit per unit). Coupons and coins apply to the ticket only.
 2. **Capture.** Inside the payment's transaction each line reserves the pod's stock atomically. A line
    that sold out since checkout is recorded **UNAVAILABLE** with its money due back; the seat still books.
-3. **Outcome.** The venue marks **RETURNED** (the deposit comes back) or **DAMAGED** (it
-   keeps up to the deposit). An item never marked is auto-released after the configured days. A guest
-   whose backout spot is filled is **RELEASED** (the deposit always back, the rent per the settings). A
-   cancelled pod returns the rentals with the payment's own refund (**IN_PAYMENT**).
+3. **Outcome.** Items are handed over AT THE VENUE and their deposits are settled there. The venue
+   checks the returned item and marks **RETURNED** (it hands the whole deposit back in cash) or
+   **DAMAGED** (it hands back the deposit less its claim). Duncit never refunds such a deposit
+   through the gateway: it pays the WHOLE deposit to the venue in its payout, so the venue is made
+   whole for the cash it handed back. `deposit_at_venue` records that cash (0 when Finance made
+   deposits non-refundable). An item never marked is closed as returned after the configured days. A
+   guest whose backout spot is filled is **RELEASED** (the item never went out, so Duncit refunds the
+   deposit, and the rent per the settings). A cancelled pod returns the rentals with the payment's own
+   refund (**IN_PAYMENT**).
 4. **Payout.** An hourly sweep raises one **VENUE_RENTAL** payout per ended pod from the settled bookings
-   (rent less commission, plus any deposit kept). Finance approves it in Payment Release like any other.
+   (rent less commission, plus the deposits settled at the venue); its notes split the two.
+   Finance approves it in Payment Release like any other.
 
-Every outcome freezes `refund_due`, `venue_amount` and the commission on the booking, so a later
-settings change never rewrites a closed rental.
+Every outcome freezes `refund_due`, `deposit_at_venue`, `venue_amount` and the commission on the
+booking, so a later settings change never rewrites a closed rental. `rentalHandBack` in
+`@duncit/utils` is the client twin the mark dialogs use to say "hand ₹X back now".
+
+## Categories
+
+Every item names one or more Super → Category → Sub rows (`RentalItemCategories`, the shared
+`@duncit/category` rows field). A pod offers the item only when its club's Super + Sub is one of
+them; the server enforces it in the catalogue, in Pod Rent's pod list and at checkout. An item with
+no rows is offered to no pod.
 
 ## The desk
 

@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, HostAutoPodsPage, HostCategoriesPage, HostPublishPage, HostSharePage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueFoodPage, VenueRentedItemsPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
+import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, FreelancerProfilePage, GigDetailPage, GigEditorPage, GigsPage, HostAutoPodsPage, MyGigsPage, HostCategoriesPage, HostPublishPage, HostSharePage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueFoodPage, VenueRentedItemsPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
 import { withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
 /** Earn, venue, club and Auto Pod routes. */
@@ -7,6 +7,13 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
   return (
     <>
         <Route path="/earn" element={withAuth(<EarnPage />)} />
+        {/* Earn with Duncit's self-serve freelancer step, and Gig Jobs (sidebar). */}
+        <Route path="/earn/freelancer" element={withAuth(<FreelancerProfilePage />)} />
+        <Route path="/gigs" element={withAuth(<GigsPage />)} />
+        <Route path="/gigs/new" element={withAuth(<GigEditorPage />)} />
+        <Route path="/gigs/mine" element={withAuth(<MyGigsPage />)} />
+        <Route path="/gigs/:id" element={withAuth(<GigDetailPage />)} />
+        <Route path="/gigs/:id/edit" element={withAuth(<GigEditorPage />)} />
         <Route path="/tour-guide" element={withAuth(<TourGuidePage />)} />
         <Route path="/products/manage" element={withProducts(<ProductsManagePage />)} />
         {/* Each studio's Options page — the drawer's one highlighted entry

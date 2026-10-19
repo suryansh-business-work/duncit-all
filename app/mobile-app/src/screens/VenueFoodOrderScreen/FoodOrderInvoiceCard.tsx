@@ -13,7 +13,7 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 interface Props {
   order: VenueFoodOrder;
   /** The key the screen reads the order with. */
-  accessKey: string | null;
+  orderKey: string | null;
 }
 
 /**
@@ -21,10 +21,10 @@ interface Props {
  * Drawn only once the server says there is one. Tamagui twin of mWeb's
  * venue-food-order-page invoice card.
  */
-export function FoodOrderInvoiceCard({ order, accessKey }: Readonly<Props>) {
+export function FoodOrderInvoiceCard({ order, orderKey }: Readonly<Props>) {
   const { t } = useTranslation();
   const { accent } = useThemeColors();
-  const invoice = useFoodInvoice(order, accessKey);
+  const invoice = useFoodInvoice(order, orderKey);
 
   return (
     <SurfaceCard gap={12} testID="food-order-invoice">

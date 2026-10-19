@@ -118,7 +118,7 @@ export default function PodDetailsPage() {
 
       <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => openPodPicker(pod.id)} categoryCrumbs={clubCategoryCrumbs} />
 
-      <PodSeriesDatesSection series={series} clubSlug={pod.club_slug} currentPodId={pod.id} isHost={isPodHost} />
+      <PodSeriesDatesSection series={series} clubSlug={pod.club_slug} currentPodId={pod.id} isHost={isPodHost} priceFormat={priceFormat} />
       <PodChallengesSection podId={pod.id} />
 
       <PodMapSection pod={pod} location={location} venue={venue} onJoinMeeting={onJoinMeeting} />

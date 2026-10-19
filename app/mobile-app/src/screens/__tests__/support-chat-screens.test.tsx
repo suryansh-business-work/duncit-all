@@ -82,9 +82,20 @@ const session = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+const historyStub = (over: Record<string, unknown> = {}) => ({
+  hasOlder: false,
+  loadingOlder: false,
+  olderFailed: false,
+  startHistory: jest.fn(),
+  loadOlder: jest.fn().mockResolvedValue(undefined),
+  onScroll: jest.fn(),
+  ...over,
+});
+
 const chatBase = () => ({
   session: session(),
   messages: [],
+  history: historyStub(),
   isLoading: false,
   error: '',
   typing: '',
@@ -641,6 +652,40 @@ describe('LiveChatScreen — reopen + transcript', () => {
     const jump = screen.getByTestId('chat-jump-bottom');
     expect(jump).toBeOnTheScreen();
     fireEvent.press(jump);
+  });
+
+  it('hands every scroll to the history too, keeping the reader in place on a prepend', () => {
+    const history = historyStub({ hasOlder: true });
+    mockedChat.mockReturnValue({ ...chatBase(), history, messages: [chatMsg('1', 'USER')] });
+    renderWithProviders(<LiveChatScreen />);
+    const scroller = screen.getByTestId('support-chat-list');
+    expect(scroller).toHaveProp('maintainVisibleContentPosition', { minIndexForVisible: 0 });
+    const event = {
+      nativeEvent: {
+        contentOffset: { y: 20 },
+        contentSize: { height: 1000 },
+        layoutMeasurement: { height: 300 },
+      },
+    };
+    fireEvent.scroll(scroller, event);
+    expect(history.onScroll).toHaveBeenCalledWith(event);
+  });
+
+  it('offers earlier messages at the top of the transcript, with a spinner while they load', () => {
+    const history = historyStub({ hasOlder: true });
+    mockedChat.mockReturnValue({ ...chatBase(), history, messages: [chatMsg('1', 'USER')] });
+    const view = renderWithProviders(<LiveChatScreen />);
+    fireEvent.press(screen.getByTestId('support-chat-earlier'));
+    expect(history.loadOlder).toHaveBeenCalledTimes(1);
+
+    mockedChat.mockReturnValue({
+      ...chatBase(),
+      history: historyStub({ hasOlder: true, loadingOlder: true }),
+      messages: [chatMsg('1', 'USER')],
+    });
+    view.rerender(<LiveChatScreen />);
+    expect(screen.getByTestId('support-chat-loading-earlier')).toBeOnTheScreen();
+    expect(screen.queryByTestId('support-chat-earlier')).toBeNull();
   });
 
   it('hides the header actions while the session is still booting', () => {

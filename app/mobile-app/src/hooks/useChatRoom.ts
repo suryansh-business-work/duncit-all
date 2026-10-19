@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import { CHAT_HISTORY_PAGE } from '@duncit/utils';
 
 import {
   ClubMessagesDocument,
+  ClubMessagesPageDocument,
   DeleteChatMessageDocument,
   PodMessagesDocument,
+  PodMessagesPageDocument,
   ReactToPodMessageDocument,
   SendClubMessageDocument,
   SendPodMessageDocument,
@@ -13,6 +16,7 @@ import { PodMessageType } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import { usePodSocket, type ChatRoomKind } from '@/hooks/usePodSocket';
 import type { ChatMessage } from '@/hooks/useChat';
+import { useChatHistory } from '@/hooks/useChatHistory';
 import { toErrorMessage } from '@/utils/errors';
 import { isPodActive } from '@/utils/pod-format';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
@@ -43,14 +47,12 @@ const NO_FACTS: RoomFacts = {
   title: null,
 };
 
-const MESSAGE_LIMIT = 80;
-
-/** One page of a pod's or a club's room, with what the room says about itself. */
+/** The newest page of a pod's or a club's room, with what the room says about itself. */
 async function loadRoom(kind: ChatRoomKind, id: string) {
   if (kind === 'POD') {
     const data = await graphqlRequest(
       PodMessagesDocument,
-      { podId: id, limit: MESSAGE_LIMIT },
+      { podId: id, limit: CHAT_HISTORY_PAGE },
       { auth: true },
     );
     const ended = !isPodActive(data.pod?.pod_date_time, data.pod?.pod_end_date_time);
@@ -67,7 +69,7 @@ async function loadRoom(kind: ChatRoomKind, id: string) {
   }
   const data = await graphqlRequest(
     ClubMessagesDocument,
-    { clubId: id, limit: MESSAGE_LIMIT },
+    { clubId: id, limit: CHAT_HISTORY_PAGE },
     { auth: true },
   );
   return {
@@ -80,6 +82,26 @@ async function loadRoom(kind: ChatRoomKind, id: string) {
     },
   };
 }
+
+/** The page of a room's lines older than `before` — scroll-up history. */
+async function loadOlderPage(kind: ChatRoomKind, id: string, before: string) {
+  if (kind === 'POD') {
+    const data = await graphqlRequest(
+      PodMessagesPageDocument,
+      { podId: id, limit: CHAT_HISTORY_PAGE, before },
+      { auth: true },
+    );
+    return data.podMessages;
+  }
+  const data = await graphqlRequest(
+    ClubMessagesPageDocument,
+    { clubId: id, limit: CHAT_HISTORY_PAGE, before },
+    { auth: true },
+  );
+  return data.clubMessages;
+}
+
+const messageTime = (message: ChatMessage) => message.createdAt;
 
 /** Posts one line to the room — the server echoes it over the socket. */
 function postTo(
@@ -111,6 +133,13 @@ export function useChatRoom(roomId: string, kind: ChatRoomKind = 'POD') {
   const [attempt, setAttempt] = useState(0);
   const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
+  const fetchOlder = useCallback(
+    (before: string) => loadOlderPage(kind, roomId, before),
+    [kind, roomId],
+  );
+  const history = useChatHistory({ messages, setMessages, fetchOlder, timeOf: messageTime });
+  const { startHistory } = history;
+
   useEffect(() => {
     let active = true;
     setIsLoading(true);
@@ -119,13 +148,14 @@ export function useChatRoom(roomId: string, kind: ChatRoomKind = 'POD') {
         if (!active) return;
         setMessages(room.messages);
         setFacts(room.facts);
+        startHistory(room.messages.length);
       })
       .catch((e) => active && setError(toErrorMessage(e, 'Could not load messages.')))
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
     };
-  }, [roomId, kind, attempt]);
+  }, [roomId, kind, attempt, startHistory]);
 
   useRefreshRegistration(refetch);
 
@@ -229,6 +259,7 @@ export function useChatRoom(roomId: string, kind: ChatRoomKind = 'POD') {
     canModerate: facts.canModerate,
     roomTitle: facts.title,
     isLoading,
+    history,
     sending,
     error,
     setError,

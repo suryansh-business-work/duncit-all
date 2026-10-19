@@ -17,6 +17,12 @@ interface Props {
 
 const getRowId = (page: CmsPageRow) => page.id;
 
+const renderStatus = (page: CmsPageRow) => <PublishStatus published={page.is_published} changes={page.has_unpublished_changes} />;
+
+const makeRenderActions = (actionsFor: Props['actionsFor']) => (page: CmsPageRow) => (
+  <RowActions label={page.title} actions={actionsFor(page)} />
+);
+
 /** A site's pages and collection templates. */
 export default function PagesTable({ siteKey, fetchRows, refetchRef, toolbarActions, actionsFor }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -34,7 +40,7 @@ export default function PagesTable({ siteKey, fetchRows, refetchRef, toolbarActi
         headerName: t('shell.common.status'),
         type: 'boolean',
         width: 200,
-        cellRenderer: (page) => <PublishStatus published={page.is_published} changes={page.has_unpublished_changes} />,
+        cellRenderer: renderStatus,
         valueGetter: (page) => (page.is_published ? t('websiteApp.cms.pages.published') : t('websiteApp.cms.pages.draft')),
       },
       {
@@ -56,7 +62,7 @@ export default function PagesTable({ siteKey, fetchRows, refetchRef, toolbarActi
         headerName: t('shell.common.actions'),
         type: 'actions',
         width: 110,
-        cellRenderer: (page) => <RowActions label={page.title} actions={actionsFor(page)} />,
+        cellRenderer: makeRenderActions(actionsFor),
       },
     ];
   }, [actionsFor, formatDateTime, labels, t]);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import type { PlayerRef } from '@remotion/player';
 import { useTranslation } from '@duncit/shell';
@@ -101,10 +101,9 @@ export default function TimelinePanel({ assets, player, selection, onSelect, edi
   // not a control, so it carries no JSX key handler of its own.
   const shortcuts = useRef(onKeyDown);
   shortcuts.current = onKeyDown;
-  const sectionRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return undefined;
+  // A ref callback that returns its cleanup is never handed null (React 19): the
+  // cleanup runs on detach instead.
+  const sectionRef = useCallback((section: HTMLElement) => {
     const listener = (event: KeyboardEvent) => shortcuts.current(event);
     section.addEventListener('keydown', listener);
     return () => section.removeEventListener('keydown', listener);

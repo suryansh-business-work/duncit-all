@@ -27,6 +27,14 @@ export const OwnerRentalItemsDocument = gql(`
         stock
         per_guest_limit
         is_available
+        categories {
+          super_category_id
+          category_id
+          sub_category_id
+          super_category_name
+          category_name
+          sub_category_name
+        }
       }
     }
     venueRegistrationConfig {
@@ -38,6 +46,7 @@ export const OwnerRentalItemsDocument = gql(`
       rental_stock_max
       rental_per_guest_max
       rental_terms_max
+      rental_category_limit
     }
   }
 `);
@@ -60,6 +69,14 @@ export const UpdateVenueRentalsDocument = gql(`
         stock
         per_guest_limit
         is_available
+        categories {
+          super_category_id
+          category_id
+          sub_category_id
+          super_category_name
+          category_name
+          sub_category_name
+        }
       }
     }
   }
@@ -85,6 +102,7 @@ export const VenueRentalDeskDocument = gql(`
         status
         damage_claim
         refund_due
+        deposit_at_venue
         venue_amount
         created_at
       }
@@ -98,6 +116,9 @@ export const VenueRentalDeskDocument = gql(`
       earned
       paid_out
     }
+    publicRentalSettings {
+      deposit_refundable
+    }
   }
 `);
 
@@ -109,6 +130,7 @@ export const MarkRentalBookingDocument = gql(`
       status
       damage_claim
       refund_due
+      deposit_at_venue
       venue_amount
     }
   }

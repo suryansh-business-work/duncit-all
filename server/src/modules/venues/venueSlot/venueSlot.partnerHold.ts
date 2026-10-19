@@ -19,7 +19,7 @@ export async function holdSlotForPartnerRequest(slotId: string, venueId: string,
     throw new GraphQLError('Invalid slot_id', { extensions: { code: 'BAD_USER_INPUT' } });
   }
   const slot = await VenueSlotModel.findOne({ _id: slotId, venue_id: venueId }).select('start_at status').lean();
-  if (!slot || slot.status !== 'AVAILABLE') return conflict('This slot is no longer available. Pick another slot.');
+  if (slot?.status !== 'AVAILABLE') return conflict('This slot is no longer available. Pick another slot.');
   if (slot.start_at.getTime() <= Date.now()) return conflict('This slot has already started. Pick a later one.');
   const venue = await VenueModel.findById(venueId).select('settings.holidays').lean();
   const { venueLocalYmd } = await import('@modules/venues/autoExtend/slotGenerator');

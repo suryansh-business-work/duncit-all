@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { participationForMembership } from './membershipTimeline.service';
 import { podMemberService, type BackoutRefundPart } from './podMember.service';
+import { myBookingClashes } from './podMember.clash';
 import { podService } from '@modules/pods/pod/pod.service';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
@@ -105,6 +106,8 @@ export const podMemberResolvers = {
       const uid = requireUser(ctx);
       return podMemberService.listMine(uid, args.status);
     },
+    myBookingClashes: async (_p: unknown, args: { pod_doc_ids: string[] }, ctx: GraphQLContext) =>
+      myBookingClashes(requireUser(ctx), args.pod_doc_ids),
     podMembershipState: async (
       _p: unknown,
       args: { pod_doc_id: string },

@@ -1,8 +1,8 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { PodMessageModel } from '@modules/engagement/chat/chat.model';
-import { assertRoomMember, roomOfMessage, socketRoomOf } from '@modules/engagement/chat/chat.access';
-import { shapeMessage } from '@modules/engagement/chat/chat.shape';
+import { PodMessageModel } from '@microservices/chat/rooms/chat.model';
+import { assertRoomMember, roomOfMessage, socketRoomOf } from '@microservices/chat/rooms/chat.access';
+import { shapeMessage } from '@microservices/chat/rooms/chat.shape';
 import { userDisplayOf } from '@modules/access/user/user.display';
 import type { ReportTargetSnapshot } from './report.service';
 
@@ -48,7 +48,7 @@ export async function takeDownChatMessage(messageId: string): Promise<boolean> {
   msg.text = '';
   msg.image_url = '';
   await msg.save();
-  const { emitToRoom } = await import('@modules/engagement/chat/chat.socket');
+  const { emitToRoom } = await import('@microservices/chat/rooms/chat.socket');
   const shaped = shapeMessage(msg.toObject(), await userDisplayOf(String(msg.user_id)));
   emitToRoom(roomOfMessage(msg), 'deleted', shaped);
   return true;

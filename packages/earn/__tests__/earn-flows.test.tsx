@@ -154,6 +154,17 @@ describe('EarnJourneyList with the schema answering', () => {
           meeting({ id: 'DUN-MTG-2', kind: 'ECOMM', requested_at: SLOT_CURRENT, reschedule_count: 1 }),
           meeting({ id: 'DUN-MTG-3', kind: 'CLUB_ADMIN', status: 'REQUESTED' }),
         ],
+        onboardingIntro: {
+          earn_card_images: {
+            host: 'https://img.test/host.jpg',
+            venue: 'https://img.test/venue.jpg',
+            ecomm: 'https://img.test/ecomm.jpg',
+            club: 'https://img.test/club.jpg',
+            freelancer: 'https://img.test/freelancer.jpg',
+            __typename: 'EarnCardImages',
+          },
+          __typename: 'OnboardingIntro',
+        },
       },
     },
   };

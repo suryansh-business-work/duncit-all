@@ -256,8 +256,10 @@ export interface OrderSupportDraft {
   message: string;
 }
 
-const lineText = (line: Readonly<{ name: string; variant_label?: string | null; qty: number }>): string =>
-  `${line.variant_label ? `${line.name} (${line.variant_label})` : line.name} × ${line.qty}`;
+const lineText = (line: Readonly<{ name: string; variant_label?: string | null; qty: number }>): string => {
+  const name = line.variant_label ? `${line.name} (${line.variant_label})` : line.name;
+  return `${name} × ${line.qty}`;
+};
 
 /**
  * The ticket "Get help with this order" opens, prefilled — the buyer edits it

@@ -9,9 +9,8 @@ import {
   POD_SERIES_MAX_DATES,
   repeatDiscountFormIssues,
   resolveMultiDateTier,
+  pickedSeriesDates,
   seriesBookingEstimate,
-  seriesDatesForChoice,
-  SERIES_BOOKING_CHOICES,
   SERIES_DATE_STATUS_KEY,
   type MultiDateDiscountTier,
   type SeriesDateRow,
@@ -26,6 +25,7 @@ const row = (id: string, overrides: Partial<SeriesDateRow> = {}): SeriesDateRow 
   status: 'UPCOMING',
   seats_available: 4,
   my_seats: 0,
+  pod_amount: 499,
   bookable: true,
   ...overrides,
 });
@@ -58,23 +58,21 @@ describe('bookable and booked dates', () => {
   });
 });
 
-describe('seriesDatesForChoice', () => {
-  it('books just the next open date for NEXT, skipping finished and sold-out ones', () => {
-    expect(seriesDatesForChoice(ROWS, 'NEXT', [])).toEqual(['d2']);
+describe('pickedSeriesDates', () => {
+  const ids = (rows: SeriesDateRow[]) => rows.map((r) => r.pod_doc_id);
+
+  it('books every open date when all are ticked, skipping finished and sold-out ones', () => {
+    expect(ids(pickedSeriesDates(ROWS, ['d1', 'd2', 'd3', 'd4', 'd5']))).toEqual(['d2', 'd3', 'd5']);
   });
 
-  it('books every open date for ALL', () => {
-    expect(seriesDatesForChoice(ROWS, 'ALL', ['d1'])).toEqual(['d2', 'd3', 'd5']);
+  it('books only ticked dates that are still open, in date order not tick order', () => {
+    expect(ids(pickedSeriesDates(ROWS, ['d5', 'd4', 'd1', 'd3']))).toEqual(['d3', 'd5']);
   });
 
-  it('books only picked dates that are still open, in date order not pick order', () => {
-    expect(seriesDatesForChoice(ROWS, 'PICK', ['d5', 'd4', 'd1', 'd3'])).toEqual(['d3', 'd5']);
-  });
-
-  it('books nothing when no date is open', () => {
+  it('books nothing when nothing is ticked or no date is open', () => {
+    expect(pickedSeriesDates(ROWS, [])).toEqual([]);
     const closed = ROWS.map((r) => ({ ...r, bookable: false }));
-    expect(seriesDatesForChoice(closed, 'NEXT', [])).toEqual([]);
-    expect(seriesDatesForChoice(closed, 'ALL', [])).toEqual([]);
+    expect(pickedSeriesDates(closed, ['d2', 'd3'])).toEqual([]);
   });
 });
 
@@ -101,12 +99,12 @@ describe('resolveMultiDateTier', () => {
 
 describe('seriesBookingEstimate', () => {
   it('charges the full price for one date', () => {
-    expect(seriesBookingEstimate(499, 1, TIERS)).toEqual({ gross: 499, pct: 0, discount: 0, total: 499 });
+    expect(seriesBookingEstimate([499], TIERS)).toEqual({ gross: 499, pct: 0, discount: 0, total: 499 });
   });
 
   it('takes the reached tier off the gross, rounded to the paisa', () => {
     // 4 × 333.33 = 1333.32; 15% = 199.998 → 200.00
-    expect(seriesBookingEstimate(333.33, 4, TIERS)).toEqual({
+    expect(seriesBookingEstimate([333.33, 333.33, 333.33, 333.33], TIERS)).toEqual({
       gross: 1333.32,
       pct: 15,
       discount: 200,
@@ -115,11 +113,20 @@ describe('seriesBookingEstimate', () => {
   });
 
   it('prices a free pod at zero', () => {
-    expect(seriesBookingEstimate(0, 3, TIERS)).toEqual({ gross: 0, pct: 5, discount: 0, total: 0 });
+    expect(seriesBookingEstimate([0, 0, 0], TIERS)).toEqual({ gross: 0, pct: 5, discount: 0, total: 0 });
+  });
+
+  it('adds each date at its own price before the tier comes off', () => {
+    // 499 + 599 = 1098; 2 dates reach 5% = 54.90
+    expect(seriesBookingEstimate([499, 599], TIERS)).toEqual({ gross: 1098, pct: 5, discount: 54.9, total: 1043.1 });
+  });
+
+  it('prices no dates at zero', () => {
+    expect(seriesBookingEstimate([], TIERS)).toEqual({ gross: 0, pct: 0, discount: 0, total: 0 });
   });
 
   it('gives no discount when the pod offers none', () => {
-    expect(seriesBookingEstimate(200, 5, null)).toEqual({ gross: 1000, pct: 0, discount: 0, total: 1000 });
+    expect(seriesBookingEstimate([200, 200, 200, 200, 200], null)).toEqual({ gross: 1000, pct: 0, discount: 0, total: 1000 });
   });
 });
 
@@ -135,11 +142,6 @@ describe('tier editor mapping', () => {
 });
 
 describe('picker copy keys', () => {
-  it('offers next, all and pick, each with its own copy key', () => {
-    expect(SERIES_BOOKING_CHOICES.map((c) => c.value)).toEqual(['NEXT', 'ALL', 'PICK']);
-    expect(new Set(SERIES_BOOKING_CHOICES.map((c) => c.labelKey)).size).toBe(3);
-  });
-
   it('words every date status under the booking namespace', () => {
     for (const key of Object.values(SERIES_DATE_STATUS_KEY)) {
       expect(key.startsWith('mweb.podSeriesBooking.status')).toBe(true);

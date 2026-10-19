@@ -36,8 +36,8 @@ export function useSpecEditor(project: ReelProject) {
   const specRef = useRef(spec);
   const past = useRef<ReelSpec[]>([]);
   const future = useRef<ReelSpec[]>([]);
-  const waiting = useRef<ReelSpec | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The hand edit waiting to be saved, and the timer that will save it.
+  const queued = useRef<{ spec: ReelSpec; timer: ReturnType<typeof setTimeout> } | null>(null);
   const inFlight = useRef(0);
   const serverSpec = useRef(project.spec);
 
@@ -46,19 +46,16 @@ export function useSpecEditor(project: ReelProject) {
     setSpec(next);
   }, []);
 
-  const flush = useCallback(async () => {
-    timer.current = null;
-    const next = waiting.current;
-    if (!next) return;
-    waiting.current = null;
+  const flush = useCallback(async (next: ReelSpec) => {
+    queued.current = null;
     inFlight.current += 1;
     setSaveState('saving');
     try {
       const { data } = await save({ variables: { project_id: project.id, spec_json: JSON.stringify(next) } });
       // The server's answer is the sanitized reel; it is what plays from now on —
       // unless the operator has edited again meanwhile, in which case theirs wins.
-      if (!waiting.current && data) show(data.saveReelSpec.spec);
-      setSaveState(waiting.current ? 'pending' : 'saved');
+      if (!queued.current && data) show(data.saveReelSpec.spec);
+      setSaveState(queued.current ? 'pending' : 'saved');
     } catch (error) {
       setSaveState('failed');
       notifyError(parseApiError(error, t('ai.reels.editor.saveFailed')));
@@ -70,12 +67,12 @@ export function useSpecEditor(project: ReelProject) {
 
   const queueSave = useCallback(
     (next: ReelSpec) => {
-      waiting.current = next;
       setSaveState('pending');
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => {
-        flush().catch(() => undefined);
+      if (queued.current) clearTimeout(queued.current.timer);
+      const timer = setTimeout(() => {
+        flush(next).catch(() => undefined);
       }, SAVE_DELAY_MS);
+      queued.current = { spec: next, timer };
     },
     [flush]
   );
@@ -118,7 +115,7 @@ export function useSpecEditor(project: ReelProject) {
   useEffect(() => {
     if (project.spec === serverSpec.current) return;
     serverSpec.current = project.spec;
-    if (!waiting.current && inFlight.current === 0) show(project.spec);
+    if (!queued.current && inFlight.current === 0) show(project.spec);
   }, [project.spec, show]);
 
   // Leaving the studio saves what is waiting rather than dropping it. Read
@@ -128,9 +125,10 @@ export function useSpecEditor(project: ReelProject) {
   latestFlush.current = flush;
   useEffect(
     () => () => {
-      if (!timer.current) return;
-      clearTimeout(timer.current);
-      latestFlush.current().catch(() => undefined);
+      const pending = queued.current;
+      if (!pending) return;
+      clearTimeout(pending.timer);
+      latestFlush.current(pending.spec).catch(() => undefined);
     },
     []
   );

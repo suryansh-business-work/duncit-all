@@ -85,7 +85,7 @@ export const cloudflareService = {
       domain: godaddy?.domain ?? cloudflare?.domain ?? '',
       cloudflare_domain: cloudflare?.domain ?? '',
     };
-    if (!godaddy || !cloudflare || godaddy.domain !== cloudflare.domain) {
+    if (!godaddy || godaddy.domain !== cloudflare?.domain) {
       return {
         ...base,
         connected: false,
@@ -118,12 +118,11 @@ export const cloudflareService = {
   },
 
   /** Add the domain to Cloudflare. Idempotent: a zone already there is left as it is. */
-  async createZone(by: string) {
+  async createZone(by: string): Promise<void> {
     const { cloudflare } = await requireConnected();
-    if (await cloudflareZone(cloudflare)) return true;
+    if (await cloudflareZone(cloudflare)) return;
     const zone = await cloudflareCreateZone(cloudflare);
     logs.server.info('cloudflare', 'zone-create', { domain: cloudflare.domain, zone_id: zone.id, by });
-    return true;
   },
 
   /**

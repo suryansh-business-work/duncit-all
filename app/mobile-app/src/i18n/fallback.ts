@@ -27,6 +27,7 @@ import {
   CLUB_FORM_BUNDLE,
   FULFILMENT_BUNDLE,
   VENUE_RENTALS_BUNDLE,
+  GIG_JOBS_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/i18n';
@@ -93,6 +94,8 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   ...FULFILMENT_BUNDLE,
   // venueRentals.*: renting items at checkout and in the Pod Shop, the guest's rented items and the venue desk.
   ...VENUE_RENTALS_BUNDLE,
+  // gigJobs.*: the Gig Jobs board, post form and freelancer profile.
+  ...GIG_JOBS_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

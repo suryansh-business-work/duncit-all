@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { PaymentRentalLine } from '@duncit/utils';
 
 export const PUBLIC_FINANCE = gql`
   query PublicFinanceSettings {
@@ -116,6 +117,7 @@ export const DUMMY_CHECKOUT = gql`
       status
       paid_at
       created_at
+      rental_lines { item_id name quantity rent deposit }
     }
   }
 `;
@@ -201,6 +203,7 @@ export const VERIFY_RAZORPAY_PAYMENT = gql`
       status
       paid_at
       created_at
+      rental_lines { item_id name quantity rent deposit }
     }
   }
 `;
@@ -226,6 +229,7 @@ export const MY_PAYMENT = gql`
       status
       paid_at
       created_at
+      rental_lines { item_id name quantity rent deposit }
     }
   }
 `;
@@ -244,6 +248,8 @@ export interface CheckoutPaymentRow {
   status: string;
   paid_at: string | null;
   created_at: string;
+  /** The rented items this booking carried, frozen at checkout. */
+  rental_lines?: PaymentRentalLine[];
 }
 
 /** Standalone product-cart checkout via the dummy gateway (no pod ticket).

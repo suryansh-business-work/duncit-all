@@ -153,6 +153,13 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/referral', titleKey: 'mweb.meta.referral.title', descriptionKey: 'mweb.meta.referral.description' },
   { pattern: '/duncit-coin', titleKey: 'mweb.meta.coin.title' },
   { pattern: '/leaderboard', titleKey: 'mweb.meta.leaderboard.title' },
+  // Gig Jobs: the static paths before `/gigs/:id` — the first row that matches wins.
+  { pattern: '/gigs', titleKey: 'mweb.meta.gigJobs.title', descriptionKey: 'mweb.meta.gigJobs.description' },
+  { pattern: '/gigs/new', titleKey: 'mweb.meta.gigPost.title' },
+  { pattern: '/gigs/mine', titleKey: 'mweb.meta.myGigs.title' },
+  { pattern: '/gigs/:id/edit', titleKey: 'mweb.meta.gigEdit.title' },
+  { pattern: '/gigs/:id', titleKey: 'mweb.meta.gigDetail.title' },
+  { pattern: '/earn/freelancer', titleKey: 'mweb.meta.freelancerProfile.title' },
   { pattern: '/membership', titleKey: 'mweb.meta.membership.title', descriptionKey: 'mweb.meta.membership.description' },
   { pattern: '/gift-cards', titleKey: 'mweb.meta.giftCards.title', descriptionKey: 'mweb.meta.giftCards.description' },
   { pattern: '/gift-cards/checkout', titleKey: 'mweb.meta.giftCardsCheckout.title' },

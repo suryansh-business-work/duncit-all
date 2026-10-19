@@ -1,4 +1,5 @@
 import { YStack } from 'tamagui';
+import type { PaymentRentalLine } from '@duncit/utils';
 
 import { Row } from '@/components/checkout/SuccessParts';
 import { SurfaceCard } from '@/components/SurfaceCard';
@@ -16,6 +17,8 @@ export interface ReceiptPayment {
   invoice_no?: string | null;
   ticket_discount_amount?: number | null;
   ticket_discount_pct?: number | null;
+  /** The rented items this booking carried, frozen at checkout. */
+  rental_lines?: PaymentRentalLine[] | null;
 }
 
 function Divider() {

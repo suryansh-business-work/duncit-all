@@ -80,6 +80,9 @@ export interface CreatePodFormValues {
   repeat_ends_on: string;
   /** Dates (ISO starts) the host unticked in the preview. */
   repeat_skip_dates: string[];
+  /** CUSTOM only: the days (yyyy-MM-dd, admin zone) the host tapped on the
+   * calendar, after the first date. mWeb twin. */
+  repeat_custom_days: string[];
   /** Multi-date booking discount, in the shared tier editor's shape (a tier's
    * `min_tickets` is its number of dates). Prefilled from Pod Settings. mWeb twin. */
   repeat_discount_enabled: boolean;
@@ -124,6 +127,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   repeat_frequency: 'WEEKLY',
   repeat_ends_on: '',
   repeat_skip_dates: [],
+  repeat_custom_days: [],
   repeat_discount_enabled: false,
   repeat_discount_tiers: [],
 };

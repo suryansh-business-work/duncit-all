@@ -112,7 +112,7 @@ async function orderableVenue(venueId: Types.ObjectId, finance: IFinanceSettings
   const venue = await VenueModel.findById(venueId).select(
     'venue_name status is_active offers_food food_menu food_ordering food_licences gstin address_line1 address_line2 locality city state postal_code'
   );
-  if (!venue || venue.status !== 'APPROVED' || venue.is_active === false) return fail('NOT_FOUND', 'Venue not found');
+  if (venue?.status !== 'APPROVED' || venue.is_active === false) return fail('NOT_FOUND', 'Venue not found');
   const ordering = venue.food_ordering;
   if (!venue.offers_food || !ordering?.enabled || !ordering.razorpay_integration_id) return orderingClosed();
   return {

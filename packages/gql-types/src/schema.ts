@@ -8184,6 +8184,25 @@ export type E2eVideoUploadAuthInput = {
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** The featured image on each Earn with Duncit card, keyed by the card's icon key — Duncit's default when none is set. */
+export type EarnCardImages = {
+  __typename?: 'EarnCardImages';
+  club: Scalars['String']['output'];
+  ecomm: Scalars['String']['output'];
+  freelancer: Scalars['String']['output'];
+  host: Scalars['String']['output'];
+  venue: Scalars['String']['output'];
+};
+
+/** Each image must be a full https:// address, or empty to fall back to Duncit's default. */
+export type EarnCardImagesInput = {
+  club?: InputMaybe<Scalars['String']['input']>;
+  ecomm?: InputMaybe<Scalars['String']['input']>;
+  freelancer?: InputMaybe<Scalars['String']['input']>;
+  host?: InputMaybe<Scalars['String']['input']>;
+  venue?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type EarningsSummary = {
   __typename?: 'EarningsSummary';
   currency_symbol: Scalars['String']['output'];
@@ -9645,6 +9664,58 @@ export type FounderSettingKv = {
   value: Scalars['Float']['output'];
 };
 
+export type FreelancerAdminRow = {
+  __typename?: 'FreelancerAdminRow';
+  category_titles: Array<Scalars['String']['output']>;
+  city: Scalars['String']['output'];
+  contact: GigContact;
+  created_at: Scalars['String']['output'];
+  display_name: Scalars['String']['output'];
+  experience_years: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  is_available: Scalars['Boolean']['output'];
+  portfolio_url: Scalars['String']['output'];
+  skills: Array<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+};
+
+export type FreelancerAdminTablePage = {
+  __typename?: 'FreelancerAdminTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<FreelancerAdminRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type FreelancerProfile = {
+  __typename?: 'FreelancerProfile';
+  bio: Scalars['String']['output'];
+  category_ids: Array<Scalars['ID']['output']>;
+  city: Scalars['String']['output'];
+  contact_email: Scalars['String']['output'];
+  contact_phone: Scalars['String']['output'];
+  display_name: Scalars['String']['output'];
+  experience_years: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  is_available: Scalars['Boolean']['output'];
+  portfolio_url: Scalars['String']['output'];
+  skills: Array<Scalars['String']['output']>;
+  updated_at: Scalars['String']['output'];
+};
+
+export type FreelancerProfileInput = {
+  bio?: InputMaybe<Scalars['String']['input']>;
+  category_ids: Array<Scalars['ID']['input']>;
+  city: Scalars['String']['input'];
+  contact_email?: InputMaybe<Scalars['String']['input']>;
+  contact_phone: Scalars['String']['input'];
+  display_name: Scalars['String']['input'];
+  experience_years?: InputMaybe<Scalars['Int']['input']>;
+  is_available?: InputMaybe<Scalars['Boolean']['input']>;
+  portfolio_url?: InputMaybe<Scalars['String']['input']>;
+  skills: Array<Scalars['String']['input']>;
+};
+
 export type FulfilmentMethod =
   | 'PICKUP'
   | 'SHIP';
@@ -9891,6 +9962,194 @@ export type GiftCardStatus =
   | 'ACTIVE'
   | 'EXPIRED'
   | 'REDEEMED';
+
+export type GigCategory = {
+  __typename?: 'GigCategory';
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  /** The gig roles under this category, offered as picks on a post and a freelancer's skills. */
+  examples: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  slug_id: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type GigCategoryInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  examples: Array<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type GigCategoryTablePage = {
+  __typename?: 'GigCategoryTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GigCategory>;
+  total: Scalars['Int']['output'];
+};
+
+export type GigContact = {
+  __typename?: 'GigContact';
+  email: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+};
+
+export type GigEventType =
+  | 'EVENT'
+  | 'OTHER'
+  | 'WORKSHOP';
+
+export type GigInterest = {
+  __typename?: 'GigInterest';
+  contact: GigContact;
+  created_at: Scalars['String']['output'];
+  freelancer_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  job_id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  skills: Array<Scalars['String']['output']>;
+};
+
+export type GigInterestAdminRow = {
+  __typename?: 'GigInterestAdminRow';
+  contact: GigContact;
+  created_at: Scalars['String']['output'];
+  freelancer_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  job_id: Scalars['ID']['output'];
+  job_title: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  skills: Array<Scalars['String']['output']>;
+};
+
+export type GigInterestAdminTablePage = {
+  __typename?: 'GigInterestAdminTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GigInterestAdminRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type GigJob = {
+  __typename?: 'GigJob';
+  /** Rupees. Null = to be discussed with the poster. */
+  budget?: Maybe<Scalars['Int']['output']>;
+  category_id: Scalars['ID']['output'];
+  category_title: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  /** The poster's contact. Only for the poster and for a freelancer who said they are interested. */
+  contact?: Maybe<GigContact>;
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  event_date?: Maybe<Scalars['String']['output']>;
+  event_type: GigEventType;
+  id: Scalars['ID']['output'];
+  interest_count: Scalars['Int']['output'];
+  is_mine: Scalars['Boolean']['output'];
+  location: Scalars['String']['output'];
+  openings: Scalars['Int']['output'];
+  poster_name: Scalars['String']['output'];
+  poster_role: GigPosterRole;
+  roles: Array<Scalars['String']['output']>;
+  status: GigJobStatus;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  viewer_interested: Scalars['Boolean']['output'];
+};
+
+export type GigJobAdminRow = {
+  __typename?: 'GigJobAdminRow';
+  budget?: Maybe<Scalars['Int']['output']>;
+  category_title: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  contact: GigContact;
+  created_at: Scalars['String']['output'];
+  event_date?: Maybe<Scalars['String']['output']>;
+  event_type: GigEventType;
+  id: Scalars['ID']['output'];
+  interest_count: Scalars['Int']['output'];
+  openings: Scalars['Int']['output'];
+  poster_name: Scalars['String']['output'];
+  poster_role: GigPosterRole;
+  poster_user_id: Scalars['ID']['output'];
+  roles: Array<Scalars['String']['output']>;
+  status: GigJobStatus;
+  title: Scalars['String']['output'];
+};
+
+export type GigJobAdminTablePage = {
+  __typename?: 'GigJobAdminTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GigJobAdminRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type GigJobFilter = {
+  category_id?: InputMaybe<Scalars['ID']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  event_type?: InputMaybe<GigEventType>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type GigJobInput = {
+  budget?: InputMaybe<Scalars['Int']['input']>;
+  category_id: Scalars['ID']['input'];
+  city: Scalars['String']['input'];
+  contact_email?: InputMaybe<Scalars['String']['input']>;
+  contact_name: Scalars['String']['input'];
+  contact_phone: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  event_date?: InputMaybe<Scalars['String']['input']>;
+  event_type?: InputMaybe<GigEventType>;
+  location?: InputMaybe<Scalars['String']['input']>;
+  openings?: InputMaybe<Scalars['Int']['input']>;
+  poster_role: GigPosterRole;
+  roles: Array<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type GigJobPage = {
+  __typename?: 'GigJobPage';
+  rows: Array<GigJob>;
+  total: Scalars['Int']['output'];
+};
+
+/** The Gig Jobs console's dashboard numbers. */
+export type GigJobStats = {
+  __typename?: 'GigJobStats';
+  categories: Scalars['Int']['output'];
+  closed: Scalars['Int']['output'];
+  freelancers: Scalars['Int']['output'];
+  interests: Scalars['Int']['output'];
+  open: Scalars['Int']['output'];
+  posters: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type GigJobStatus =
+  | 'CLOSED'
+  | 'OPEN';
+
+/** Who a gig is posted as. ECOMM_MANAGER is a Partner Brand owner. */
+export type GigPosterRole =
+  | 'ECOMM_MANAGER'
+  | 'HOST'
+  | 'VENUE_OWNER';
+
+/** What the signed-in member may do on the gig board. */
+export type GigViewer = {
+  __typename?: 'GigViewer';
+  default_contact: GigContact;
+  is_freelancer: Scalars['Boolean']['output'];
+  poster_roles: Array<GigPosterRole>;
+};
 
 /** One website's Google Analytics tag, as set in Tech → Google Analytics. */
 export type GoogleAnalyticsSite = {
@@ -11668,6 +11927,37 @@ export type LogStoreRejectionInput = {
   version: Scalars['String']['input'];
 };
 
+/** One successful sign-in, shown under Profile > Login activity. */
+export type LoginActivity = {
+  __typename?: 'LoginActivity';
+  browser?: Maybe<Scalars['String']['output']>;
+  /** Approximate place from an offline geo-IP lookup — null when unknown. */
+  city?: Maybe<Scalars['String']['output']>;
+  /** ISO country code. */
+  country?: Maybe<Scalars['String']['output']>;
+  /** MOBILE, TABLET, DESKTOP, BOT or UNKNOWN. */
+  device_type?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  ip?: Maybe<Scalars['String']['output']>;
+  /** The site or console it was made on, e.g. admin.duncit.com. */
+  origin_host?: Maybe<Scalars['String']['output']>;
+  os?: Maybe<Scalars['String']['output']>;
+  /** How it was made (EMAIL, OTP, GOOGLE or APPLE). */
+  provider?: Maybe<Scalars['String']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+  /** ISO timestamp of the sign-in. */
+  signed_in_at: Scalars['String']['output'];
+  /** The client it was made on (NATIVE, MWEB, PORTAL…). */
+  surface?: Maybe<Scalars['String']['output']>;
+};
+
+export type LoginActivityHistory = {
+  __typename?: 'LoginActivityHistory';
+  entries: Array<LoginActivity>;
+  /** How many days a sign-in is kept before it is removed. */
+  retention_days: Scalars['Int']['output'];
+};
+
 export type LoginInput = {
   /**
    * Which of the two the password is being proved against. Defaults to EMAIL, so
@@ -12565,7 +12855,9 @@ export type Mutation = {
   adminCreateVenueSlots: Array<VenueSlot>;
   /** Products portal: delete a brand that is not approved (or approved with no products). The owner is told. */
   adminDeleteEcommBrand: Scalars['Boolean']['output'];
+  adminDeleteGigJob: Scalars['Boolean']['output'];
   adminDeleteVenueSlot: Scalars['Boolean']['output'];
+  adminSetGigJobStatus: Scalars['Boolean']['output'];
   /**
    * Replace a host's operating categories and nothing else. adminUpdateHost
    * requires the whole step1/2/3 payload, so a caller that only wants to set
@@ -12931,6 +13223,8 @@ export type Mutation = {
   createExpenseOption: ExpenseOption;
   createFaq: Faq;
   createFeatureFlag: FeatureFlag;
+  createGigCategory: GigCategory;
+  createGigJob: GigJob;
   createHostLead: HostLead;
   createInterview: Interview;
   createInventoryProduct: InventoryProduct;
@@ -13098,6 +13392,7 @@ export type Mutation = {
   deleteExpoPushToken: Scalars['Boolean']['output'];
   deleteFaq: Scalars['Boolean']['output'];
   deleteFeatureFlag: Scalars['Boolean']['output'];
+  deleteGigCategory: Scalars['Boolean']['output'];
   /** Removes one website's tag. The website stops loading Google Analytics. */
   deleteGoogleAnalyticsSite: Scalars['Boolean']['output'];
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods. */
@@ -13254,6 +13549,7 @@ export type Mutation = {
   enableTwoFactor: TwoFactorEnableResult;
   /** Erase every recorded click for one link. The link and its lifetime count stay. */
   eraseShortLinkClicks: Scalars['Int']['output'];
+  expressGigInterest: GigJob;
   /** CI: a runner's final report. */
   finishStressRun: Scalars['Boolean']['output'];
   followClub: User;
@@ -14010,6 +14306,7 @@ export type Mutation = {
   saveExpoPushToken: Scalars['Boolean']['output'];
   /** Save a founder setting (constant / manual metric value). */
   saveFounderSetting: FounderSettingKv;
+  saveFreelancerProfile: FreelancerProfile;
   /** Sets or replaces one website's tag. */
   saveGoogleAnalyticsSite: GoogleAnalyticsSite;
   saveGrievanceOfficer: GrievanceOfficer;
@@ -14138,6 +14435,7 @@ export type Mutation = {
   setFeatureFlag: FeatureFlag;
   /** Support portal: move a report through triage. */
   setFeedbackReportStatus: FeedbackReport;
+  setGigJobStatus: GigJob;
   setHostActive: Host;
   setHostDeductions: Scalars['Boolean']['output'];
   /** Admin-only: a host's monthly Pod Request limit to venues (null = the default of 10). */
@@ -14711,6 +15009,8 @@ export type Mutation = {
   updateFoodTaxDefaults: FoodTaxDefaults;
   /** Finance: set the amounts offered and how long a card lives. */
   updateGiftCardSettings: GiftCardSettings;
+  updateGigCategory: GigCategory;
+  updateGigJob: GigJob;
   updateGraphqlMonitorSettings: GraphqlMonitorSettings;
   updateGrievanceStatus: GrievanceTicket;
   updateHostLead: HostLead;
@@ -15052,8 +15352,19 @@ export type MutationAdminDeleteEcommBrandArgs = {
 };
 
 
+export type MutationAdminDeleteGigJobArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationAdminDeleteVenueSlotArgs = {
   slot_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAdminSetGigJobStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: GigJobStatus;
 };
 
 
@@ -15812,6 +16123,16 @@ export type MutationCreateFeatureFlagArgs = {
 };
 
 
+export type MutationCreateGigCategoryArgs = {
+  input: GigCategoryInput;
+};
+
+
+export type MutationCreateGigJobArgs = {
+  input: GigJobInput;
+};
+
+
 export type MutationCreateHostLeadArgs = {
   input: HostLeadInput;
 };
@@ -16345,6 +16666,11 @@ export type MutationDeleteFeatureFlagArgs = {
 };
 
 
+export type MutationDeleteGigCategoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteGoogleAnalyticsSiteArgs = {
   site: TrackedWebsite;
 };
@@ -16840,6 +17166,12 @@ export type MutationEnableTwoFactorArgs = {
 
 export type MutationEraseShortLinkClicksArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationExpressGigInterestArgs = {
+  job_id: Scalars['ID']['input'];
+  message?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -18061,6 +18393,11 @@ export type MutationSaveFounderSettingArgs = {
 };
 
 
+export type MutationSaveFreelancerProfileArgs = {
+  input: FreelancerProfileInput;
+};
+
+
 export type MutationSaveGoogleAnalyticsSiteArgs = {
   input: GoogleAnalyticsSiteInput;
 };
@@ -18386,6 +18723,12 @@ export type MutationSetFeatureFlagArgs = {
 export type MutationSetFeedbackReportStatusArgs = {
   id: Scalars['ID']['input'];
   status: FeedbackStatus;
+};
+
+
+export type MutationSetGigJobStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: GigJobStatus;
 };
 
 
@@ -19948,6 +20291,18 @@ export type MutationUpdateGiftCardSettingsArgs = {
 };
 
 
+export type MutationUpdateGigCategoryArgs = {
+  id: Scalars['ID']['input'];
+  input: GigCategoryInput;
+};
+
+
+export type MutationUpdateGigJobArgs = {
+  id: Scalars['ID']['input'];
+  input: GigJobInput;
+};
+
+
 export type MutationUpdateGraphqlMonitorSettingsArgs = {
   input: GraphqlMonitorSettingsInput;
 };
@@ -20857,6 +21212,7 @@ export type OfficialStatusTablePage = {
 export type OnboardingIntro = {
   __typename?: 'OnboardingIntro';
   club_admin_intro_html: Scalars['String']['output'];
+  earn_card_images: EarnCardImages;
   ecomm_intro_html: Scalars['String']['output'];
   host_intro_html: Scalars['String']['output'];
   social_handles: OnboardingSocialHandles;
@@ -21481,6 +21837,8 @@ export type Payment = {
   platform_fee_pct: Scalars['Float']['output'];
   pod?: Maybe<Pod>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** The rented items this pod payment carried, as checkout froze them (empty when none). */
+  rental_lines: Array<PaymentRentalLine>;
   /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
   round_off: Scalars['Float']['output'];
   status: PaymentStatus;
@@ -21740,6 +22098,22 @@ export type PaymentReleaseStatus =
   | 'APPROVED'
   | 'PENDING'
   | 'REJECTED';
+
+/** One rented item on a pod payment, frozen at checkout: collected at the venue, its deposit settled there. */
+export type PaymentRentalLine = {
+  __typename?: 'PaymentRentalLine';
+  /** Refundable deposit for every unit of the line, handed back at the venue. */
+  deposit: Scalars['Float']['output'];
+  image_url: Scalars['String']['output'];
+  item_id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  rate: Scalars['Float']['output'];
+  rent: Scalars['Float']['output'];
+  unit: VenueRentalUnit;
+  /** 1 for a SLOT item, the pod's hours for an HOUR item. */
+  units: Scalars['Int']['output'];
+};
 
 /** One payment whose bill was rounded up to a whole rupee (Finance › Round Offs). */
 export type PaymentRoundOff = {
@@ -22359,6 +22733,21 @@ export type PodAuditSource =
   | 'HOST'
   | 'SYSTEM'
   | 'VENUE_OWNER';
+
+/** A pod the caller is already JOINED on whose time overlaps a pod they are about to book. */
+export type PodBookingClash = {
+  __typename?: 'PodBookingClash';
+  club_slug: Scalars['String']['output'];
+  pod_date_time: Scalars['String']['output'];
+  /** Its end — pod_end_date_time, or the start plus the live tail when none is set. */
+  pod_end_date_time: Scalars['String']['output'];
+  /** The already-booked pod's document id. */
+  pod_id: Scalars['ID']['output'];
+  pod_slug: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  /** The pod being booked (one of the ids asked about). */
+  target_pod_id: Scalars['ID']['output'];
+};
 
 /**
  * A saved calculation in the Finance portal's Pod Profit Calculator.
@@ -24049,6 +24438,8 @@ export type PodSeriesDate = {
   __typename?: 'PodSeriesDate';
   available: Scalars['Boolean']['output'];
   end_at?: Maybe<Scalars['String']['output']>;
+  /** The venue has no slot here yet: the request asks for one, opened when the venue accepts. */
+  on_request: Scalars['Boolean']['output'];
   /** That slot's price — it may differ from date to date. */
   price?: Maybe<Scalars['Int']['output']>;
   reason?: Maybe<PodSeriesSkipReason>;
@@ -24065,6 +24456,8 @@ export type PodSeriesDateRow = {
   end_at?: Maybe<Scalars['String']['output']>;
   /** Seats the viewer holds on this date (0: not booked). */
   my_seats: Scalars['Int']['output'];
+  /** This date's ticket price, before any discount. */
+  pod_amount: Scalars['Float']['output'];
   /** The date's own pod — what a ticket, backout or host action on that date uses. */
   pod_doc_id: Scalars['ID']['output'];
   /** Spots left on this date (null: unlimited). */
@@ -24089,6 +24482,8 @@ export type PodSeriesDates = {
   __typename?: 'PodSeriesDates';
   dates: Array<PodSeriesDateRow>;
   frequency?: Maybe<PodSeriesFrequency>;
+  /** Whether the viewer hosts this pod. Members only get the dates the venue accepted. */
+  is_host: Scalars['Boolean']['output'];
   multi_date_discount_tiers: Array<MultiDateDiscountTier>;
   parent_pod_id: Scalars['ID']['output'];
 };
@@ -24104,7 +24499,11 @@ export type PodSeriesDecisionResult = {
 /** How often a recurring pod repeats. */
 export type PodSeriesFrequency =
   | 'BIWEEKLY'
+  /** Only the dates the host picked on the calendar (custom_dates). */
+  | 'CUSTOM'
   | 'DAILY'
+  /** The same day of every month (the month's last day when the month is shorter). */
+  | 'MONTHLY'
   | 'WEEKLY';
 
 export type PodSeriesJoinFailure = {
@@ -24121,8 +24520,20 @@ export type PodSeriesJoinResult = {
   joined: Array<Scalars['ID']['output']>;
 };
 
+/** The Pod Settings every recurring plan is held to. */
+export type PodSeriesLimits = {
+  __typename?: 'PodSeriesLimits';
+  default_multi_date_discount_tiers: Array<MultiDateDiscountTier>;
+  max_discount_pct: Scalars['Int']['output'];
+  max_occurrences: Scalars['Int']['output'];
+  /** How far after the first date the last one may fall. */
+  max_span_days: Scalars['Int']['output'];
+};
+
 /** The recurring plan a host is about to publish. */
 export type PodSeriesPlanInput = {
+  /** CUSTOM only: the ISO start of every date after the first, each at the first date's time of day. */
+  custom_dates?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The last moment of the chosen end day (ISO), worked out in the admin-set time zone. */
   ends_on: Scalars['String']['input'];
   frequency: PodSeriesFrequency;
@@ -24135,7 +24546,7 @@ export type PodSeriesPlanInput = {
   /** Dates (ISO starts) the host unticked in the preview. */
   skip_dates?: InputMaybe<Array<Scalars['String']['input']>>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
-  /** The slot of the FIRST date. Every later date needs an identical slot (same space and times). */
+  /** The slot of the FIRST date. Later dates book the identical slot (same space and times); where the venue has none, one is requested and opened when the venue accepts. */
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -26112,6 +26523,7 @@ export type Query = {
   foodTaxDefaults: FoodTaxDefaults;
   /** Founder/Startup dashboard: every KPI for the date range, computed + manual. */
   founderDashboard: FounderDashboard;
+  freelancersAdminTable: FreelancerAdminTablePage;
   /** Finance > Gift Cards > Dashboard. 'months' bounds the monthly series (default 12, max 36). */
   giftCardAdminStats: GiftCardAdminStats;
   /** One card by its code, for the claim/redeem page. Holding the code is holding the value, so any signed-in holder may look. */
@@ -26120,6 +26532,16 @@ export type Query = {
   giftCardTransactionsTable: GiftCardAdminTransactionTablePage;
   /** Finance > Gift Cards > Cards. Every card ever sold, with buyer and redeemer. */
   giftCardsTable: GiftCardAdminCardTablePage;
+  gigCategories: Array<GigCategory>;
+  gigCategoriesTable: GigCategoryTablePage;
+  gigInterestsAdminTable: GigInterestAdminTablePage;
+  gigJob?: Maybe<GigJob>;
+  gigJobInterests: Array<GigInterest>;
+  /** The Gig Jobs console (SUPER_ADMIN / GIG_JOBS_MANAGER). */
+  gigJobStats: GigJobStats;
+  gigJobs: GigJobPage;
+  gigJobsAdminTable: GigJobAdminTablePage;
+  gigViewer: GigViewer;
   /** Every Duncit website, with its tag where one is set. */
   googleAnalyticsSites: Array<GoogleAnalyticsSite>;
   /** The measurement id a website loads, or null when it has none or it is switched off. Public: every page of every website asks for it. */
@@ -26346,6 +26768,12 @@ export type Query = {
   myBackgroundJobs: Array<BackgroundJob>;
   myBadgeProgress: Array<BadgeProgress>;
   myBadges: Array<UserBadge>;
+  /**
+   * The caller's JOINED pods whose time overlaps any of pod_doc_ids — asked just
+   * before a booking so the member can free a clashing spot or book anyway.
+   * Advisory only: no booking path refuses on it.
+   */
+  myBookingClashes: Array<PodBookingClash>;
   /** Partner: the products of an own-brand pickup address — shown before it is disabled or deleted. */
   myBrandPickupLocationUsage: BrandPickupUsage;
   /** Pickup addresses of one of the caller's OWN brands (partner portal Brand Settings). */
@@ -26421,8 +26849,10 @@ export type Query = {
   myEventTickets: Array<EventTicket>;
   /** Open follow requests waiting on the signed-in user, newest first. */
   myFollowRequests: Array<FollowRequest>;
+  myFreelancerProfile?: Maybe<FreelancerProfile>;
   /** The caller's gift cards — held or redeemed, and gifted away. */
   myGiftCards: MyGiftCards;
+  myGigJobs: GigJobPage;
   myHost?: Maybe<Host>;
   myHostEarningsSummary: EarningsSummary;
   myHostPayouts: Array<PaymentReleaseRequest>;
@@ -26433,6 +26863,8 @@ export type Query = {
   myHostRequests: Array<HostRequest>;
   myHostTakenCategoryIds: Array<Scalars['ID']['output']>;
   myInterviews: Array<Interview>;
+  /** The signed-in member's own recent sign-ins, newest first (default 50, at most 100). */
+  myLoginActivity: LoginActivityHistory;
   /** The signed-in person's own mail preferences. */
   myMailPreferences: MailPreference;
   /** Current user's meeting request for a kind. */
@@ -26683,6 +27115,8 @@ export type Query = {
   podRevokePreview: PodRevokePreview;
   /** Every date of the recurring pod that pod_doc_id is (or is a date of); null for a one-time pod. */
   podSeriesDates?: Maybe<PodSeriesDates>;
+  /** The limits a recurring plan is held to — so Create Pod can bound the end day before previewing. */
+  podSeriesLimits: PodSeriesLimits;
   /** Every date a recurring plan would run on, each with its slot or why it cannot. */
   podSeriesPreview: PodSeriesPreview;
   podSettlementPreview: PodSettlement;
@@ -28636,6 +29070,11 @@ export type QueryFounderDashboardArgs = {
 };
 
 
+export type QueryFreelancersAdminTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryGiftCardAdminStatsArgs = {
   months?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -28652,6 +29091,39 @@ export type QueryGiftCardTransactionsTableArgs = {
 
 
 export type QueryGiftCardsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryGigCategoriesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryGigInterestsAdminTableArgs = {
+  job_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryGigJobArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGigJobInterestsArgs = {
+  job_id: Scalars['ID']['input'];
+};
+
+
+export type QueryGigJobsArgs = {
+  filter?: InputMaybe<GigJobFilter>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryGigJobsAdminTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -29102,6 +29574,11 @@ export type QueryMyApiKeysTableArgs = {
 };
 
 
+export type QueryMyBookingClashesArgs = {
+  pod_doc_ids: Array<Scalars['ID']['input']>;
+};
+
+
 export type QueryMyBrandPickupLocationUsageArgs = {
   brand_doc_id: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
@@ -29185,6 +29662,12 @@ export type QueryMyEventTicketForPodArgs = {
 };
 
 
+export type QueryMyGigJobsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryMyHostPodsArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
@@ -29193,6 +29676,11 @@ export type QueryMyHostPodsArgs = {
 
 export type QueryMyHostPodsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMyLoginActivityArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -31962,6 +32450,8 @@ export type RentalBooking = {
   damage_claim: Scalars['Float']['output'];
   damage_note: Scalars['String']['output'];
   deposit_amount: Scalars['Float']['output'];
+  /** The deposit the venue hands the guest in cash at the venue when the item comes back. */
+  deposit_at_venue: Scalars['Float']['output'];
   guest_name: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image_url: Scalars['String']['output'];
@@ -31973,7 +32463,7 @@ export type RentalBooking = {
   pod_title: Scalars['String']['output'];
   quantity: Scalars['Int']['output'];
   rate: Scalars['Int']['output'];
-  /** Money owed back to the guest once the booking closed. */
+  /** Money Duncit owes back to the guest once the booking closed (never a deposit settled at the venue). */
   refund_due: Scalars['Float']['output'];
   refund_ref: Scalars['String']['output'];
   /** NONE, DUE, PAID, or IN_PAYMENT (returned with the payment's cancellation refund). */
@@ -31987,7 +32477,7 @@ export type RentalBooking = {
   unit: VenueRentalUnit;
   /** 1 for a SLOT item, the pod's hours for an HOUR item. */
   units: Scalars['Int']['output'];
-  /** What the venue earns from this booking: rent less commission, plus any deposit it kept. */
+  /** What Duncit pays the venue for this booking: rent less commission, plus the deposit it settled at the venue. */
   venue_amount: Scalars['Float']['output'];
   venue_id: Scalars['ID']['output'];
 };
@@ -32012,9 +32502,9 @@ export type RentalSettings = {
   booking_cutoff_hours: Scalars['Int']['output'];
   /** Duncit's commission on rent (never on the deposit), percent. */
   commission_pct: Scalars['Float']['output'];
-  /** An unmarked deposit is refunded automatically this many days after the pod ends. */
+  /** An unmarked rental is closed as returned automatically this many days after the pod ends. */
   deposit_auto_release_days: Scalars['Int']['output'];
-  /** Whether a deposit comes back once the venue marks the item returned. */
+  /** Whether the venue hands the deposit back at the venue once the item comes back. Either way Duncit pays the deposit to the venue. */
   deposit_refundable: Scalars['Boolean']['output'];
   /** Off hides Pod Rent everywhere and refuses new rentals. */
   enabled: Scalars['Boolean']['output'];
@@ -38923,6 +39413,7 @@ export type UpdateMyProfileInput = {
 
 export type UpdateOnboardingIntroInput = {
   club_admin_intro_html?: InputMaybe<Scalars['String']['input']>;
+  earn_card_images?: InputMaybe<EarnCardImagesInput>;
   ecomm_intro_html?: InputMaybe<Scalars['String']['input']>;
   host_intro_html?: InputMaybe<Scalars['String']['input']>;
   social_handles?: InputMaybe<OnboardingSocialHandlesInput>;
@@ -40438,6 +40929,8 @@ export type VenueRegistrationConfig = {
   gstin_doc_type: Scalars['String']['output'];
   /** The doc_types entry uploaded beside a PAN, not from the general list. */
   pan_doc_type: Scalars['String']['output'];
+  /** Category rows one rented item may be offered under. */
+  rental_category_limit: Scalars['Int']['output'];
   rental_deposit_max: Scalars['Int']['output'];
   rental_image_limit: Scalars['Int']['output'];
   rental_item_limit: Scalars['Int']['output'];
@@ -40462,6 +40955,8 @@ export type VenueRentalDepositGst = {
 /** One item a venue rents out to pod guests (a racket, court shoes). */
 export type VenueRentalItem = {
   __typename?: 'VenueRentalItem';
+  /** The Super → Category → Sub rows the item is offered under: a pod shows it only when its club's category is one of them. */
+  categories: Array<VenueCategory>;
   /** Refundable deposit per unit, rupees. 0 = none. */
   deposit: Scalars['Int']['output'];
   description: Scalars['String']['output'];
@@ -40478,6 +40973,8 @@ export type VenueRentalItem = {
 };
 
 export type VenueRentalItemInput = {
+  /** At least one row when sent. Omitted (an older client) keeps the item's categories. */
+  categories?: InputMaybe<Array<VenueCategoryInput>>;
   deposit?: InputMaybe<Scalars['Int']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   /** An existing item's id keeps it (and its bookings); omitted = a new item. */

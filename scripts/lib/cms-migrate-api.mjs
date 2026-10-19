@@ -112,7 +112,8 @@ export async function upsertPage(gql, siteId, page, { overwriteEdited = false } 
         ];
   const existing = await findPage(gql, siteId, filters);
   if (!overwriteEdited && edited(existing)) {
-    skipped.push(`page ${page.kind === 'PAGE' ? page.path : `${page.kind} ${page.collection}`}`);
+    const label = page.kind === 'PAGE' ? page.path : `${page.kind} ${page.collection}`;
+    skipped.push(`page ${label}`);
     return existing.id;
   }
   let id = existing?.id;

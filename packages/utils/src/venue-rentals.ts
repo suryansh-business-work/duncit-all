@@ -71,6 +71,8 @@ export interface RentalBookingRow {
   refund_status: RentalRefundStatus;
   refund_ref: string;
   refunded_at: string | null;
+  /** The deposit the venue hands the guest in cash at the venue when the item comes back. */
+  deposit_at_venue: number;
   commission_pct: number;
   commission_amount: number;
   venue_amount: number;
@@ -144,6 +146,19 @@ export function rentalClosedKey(catalogue: Pick<PodRentalCatalogue, 'open' | 'cl
   if (catalogue.closed_reason === 'CUTOFF') return 'venueRentals.guest.closedCutoff';
   if (catalogue.closed_reason === 'DISABLED') return 'venueRentals.guest.closedDisabled';
   return 'venueRentals.guest.none';
+}
+
+/**
+ * What the venue hands the guest at the venue when it marks an item back — the
+ * twin of the server's `settleRentalOutcome`: the deposit less any damage
+ * claim, or nothing when Finance made deposits non-refundable. Duncit pays the
+ * whole deposit to the venue in its payout either way.
+ */
+export function rentalHandBack(deposit: number, claim: number, depositRefundable: boolean): number {
+  if (!depositRefundable) return 0;
+  const safeDeposit = Math.max(0, deposit);
+  const safeClaim = Math.min(safeDeposit, Math.max(0, Number.isFinite(claim) ? claim : 0));
+  return Math.round((safeDeposit - safeClaim) * 100) / 100;
 }
 
 /** Only a booking still out can be marked returned or damaged. */
@@ -255,7 +270,7 @@ const ITEM_FIELDS = 'id name description images unit rate deposit available per_
 
 const BOOKING_FIELDS = `id currency_symbol payment_ref pod_id pod_title guest_name venue_id item_id name image_url unit rate units quantity
   rent_amount deposit_amount status damage_claim damage_note refund_due refund_status refund_ref refunded_at
-  commission_pct commission_amount venue_amount release_id marked_at auto_released created_at`;
+  deposit_at_venue commission_pct commission_amount venue_amount release_id marked_at auto_released created_at`;
 
 export const POD_RENTALS_QUERY = `query PodRentals($pod_id: ID!) {
   podRentals(pod_id: $pod_id) { open closed_reason hours currency_symbol venue_terms_html items { ${ITEM_FIELDS} } }
@@ -293,6 +308,17 @@ export const MARK_RENTAL_REFUNDED_MUTATION = `mutation MarkRentalRefunded($id: I
  * The venue's own list: what the rented-items editor loads and saves.
  * ------------------------------------------------------------------ */
 
+/** One Super → Category → Sub row a rented item is offered under, ids and names as the server stores them. */
+export interface RentalItemCategory {
+  // Optional: a client's generated types read nullable ids as optional.
+  super_category_id?: string | null;
+  category_id?: string | null;
+  sub_category_id?: string | null;
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
+
 export interface VenueRentalItem {
   id: string;
   name: string;
@@ -304,6 +330,8 @@ export interface VenueRentalItem {
   stock: number;
   per_guest_limit: number;
   is_available: boolean;
+  /** A pod offers the item only when its club's category is one of these. */
+  categories: RentalItemCategory[];
 }
 
 export interface RentalsVenue {
@@ -328,6 +356,21 @@ export interface RentalItemsConfig {
   rental_stock_max: number;
   rental_per_guest_max: number;
   rental_terms_max: number;
+  rental_category_limit: number;
+}
+
+/**
+ * One category row as the forms hold it — the shape `@duncit/category`'s
+ * picker emits (super_id / category_id / sub_id, names alongside), so the MUI
+ * rows field and the app's twin read and write the same thing.
+ */
+export interface RentalCategoryValue {
+  super_id: string;
+  super_name: string;
+  category_id: string;
+  category_name: string;
+  sub_id: string;
+  sub_name: string;
 }
 
 /** One item as the form holds it: numbers stay as typed until they are checked. */
@@ -342,6 +385,7 @@ export interface RentalItemValues {
   stock: number | string;
   per_guest_limit: number | string;
   is_available: boolean;
+  categories: RentalCategoryValue[];
 }
 
 export interface RentalItemsValues {
@@ -350,6 +394,15 @@ export interface RentalItemsValues {
   /** The venue's own rental terms, as rich-text HTML. */
   rental_terms_html: string;
 }
+
+export const emptyRentalCategory = (): RentalCategoryValue => ({
+  super_id: '',
+  super_name: '',
+  category_id: '',
+  category_name: '',
+  sub_id: '',
+  sub_name: '',
+});
 
 export const emptyRentalItem = (): RentalItemValues => ({
   id: null,
@@ -362,15 +415,36 @@ export const emptyRentalItem = (): RentalItemValues => ({
   stock: 1,
   per_guest_limit: 1,
   is_available: true,
+  categories: [emptyRentalCategory()],
+});
+
+/** A stored row as the form's picker value. */
+export const rentalCategoryToValue = (row: RentalItemCategory): RentalCategoryValue => ({
+  super_id: row.super_category_id ?? '',
+  super_name: row.super_category_name ?? '',
+  category_id: row.category_id ?? '',
+  category_name: row.category_name ?? '',
+  sub_id: row.sub_category_id ?? '',
+  sub_name: row.sub_category_name ?? '',
 });
 
 export const rentalItemsToValues = (
   venue: Pick<RentalsVenue, 'offers_rentals' | 'rental_items' | 'rental_terms_html'>
 ): RentalItemsValues => ({
   offers_rentals: venue.offers_rentals,
-  items: venue.rental_items.map((item) => ({ ...item, images: [...item.images] })),
+  items: venue.rental_items.map((item) => {
+    const rows = (item.categories ?? []).map(rentalCategoryToValue);
+    // An item saved before categories existed opens on one empty row to fill.
+    return { ...item, images: [...item.images], categories: rows.length > 0 ? rows : [emptyRentalCategory()] };
+  }),
   rental_terms_html: venue.rental_terms_html ?? '',
 });
+
+/** The item's rows as the names a card or list prints: "Sports › Racquet › Badminton". */
+export const rentalCategoryLabels = (rows: readonly RentalCategoryValue[]): string[] =>
+  rows
+    .filter((row) => row.sub_id)
+    .map((row) => [row.super_name, row.category_name, row.sub_name].filter(Boolean).join(' › '));
 
 /** What updateApprovedVenue is sent: the whole list, with each kept item's id so its bookings stay linked. */
 export function toVenueRentalsInput(values: RentalItemsValues) {
@@ -388,6 +462,11 @@ export function toVenueRentalsInput(values: RentalItemsValues) {
       stock: Number(item.stock),
       per_guest_limit: Number(item.per_guest_limit),
       is_available: item.is_available,
+      categories: item.categories.map((row) => ({
+        super_category_id: row.super_id,
+        category_id: row.category_id,
+        sub_category_id: row.sub_id,
+      })),
     })),
   };
 }
@@ -396,7 +475,8 @@ export function toVenueRentalsInput(values: RentalItemsValues) {
 export const isRentalListEditable = (venue: Pick<RentalsVenue, 'status'>): boolean => venue.status === 'APPROVED';
 
 const RENTALS_VENUE_FIELDS = `id venue_name status offers_rentals rental_terms_html rental_deposit_gst
-  rental_items { id name description images unit rate deposit stock per_guest_limit is_available }`;
+  rental_items { id name description images unit rate deposit stock per_guest_limit is_available
+    categories { super_category_id category_id sub_category_id super_category_name category_name sub_category_name } }`;
 
 export const OWNER_RENTAL_ITEMS_QUERY = `query OwnerVenueRentalItems($venue_id: ID!) {
   myVenue(venue_id: $venue_id) { ${RENTALS_VENUE_FIELDS} }
@@ -409,7 +489,7 @@ export const ADMIN_RENTAL_ITEMS_QUERY = `query AdminVenueRentalItems($venue_id: 
 
 export const RENTAL_ITEMS_CONFIG_QUERY = `query VenueRentalItemsConfig {
   venueRegistrationConfig { rental_units rental_item_limit rental_image_limit rental_rate_max
-    rental_deposit_max rental_stock_max rental_per_guest_max rental_terms_max }
+    rental_deposit_max rental_stock_max rental_per_guest_max rental_terms_max rental_category_limit }
 }`;
 
 export const UPDATE_VENUE_RENTALS_MUTATION = `mutation UpdateVenueRentals($venue_id: ID!, $input: UpdateApprovedVenueInput!) {
@@ -443,12 +523,45 @@ export const RENTABLE_PODS_QUERY = `query RentablePods($limit: Int) {
 export function checkoutRentalLines(
   catalogue: PodRentalCatalogue | null | undefined,
   picks: Readonly<Record<string, number>>
-): { totals: RentalSelectionTotals; selections: RentalSelection[] } {
-  if (!catalogue?.open) return { totals: rentalSelectionTotals([], {}, 1), selections: [] };
+): { totals: RentalSelectionTotals; selections: RentalSelection[]; lines: RentalSummaryLine[] } {
+  if (!catalogue?.open) return { totals: rentalSelectionTotals([], {}, 1), selections: [], lines: [] };
   const ids = new Set(catalogue.items.map((item) => item.id));
   const listed = Object.fromEntries(Object.entries(picks).filter(([id]) => ids.has(id)));
-  return { totals: rentalSelectionTotals(catalogue.items, listed, catalogue.hours), selections: rentalSelections(listed) };
+  const lines = catalogue.items
+    .map((item) => ({ item, price: rentalLinePrice(item, listed[item.id] ?? 0, catalogue.hours) }))
+    .filter(({ price }) => price.quantity > 0)
+    .map(({ item, price }) => ({ id: item.id, name: item.name, quantity: price.quantity, rent: price.rent, deposit: price.deposit }));
+  return {
+    totals: rentalSelectionTotals(catalogue.items, listed, catalogue.hours),
+    selections: rentalSelections(listed),
+    lines,
+  };
 }
+
+/** One rented item as a bill lists it: what, how many, its rent and its refundable deposit. */
+export interface RentalSummaryLine {
+  id: string;
+  name: string;
+  quantity: number;
+  rent: number;
+  deposit: number;
+}
+
+/** A paid pod payment's rented items, as the server froze them at checkout (`Payment.rental_lines`). */
+export interface PaymentRentalLine {
+  item_id: string;
+  name: string;
+  quantity: number;
+  rent: number;
+  deposit: number;
+}
+
+/** The selection for `Payment.rental_lines` — what a confirmation lists. */
+export const PAYMENT_RENTAL_LINE_FIELDS = 'rental_lines { item_id name quantity rent deposit }';
+
+/** A payment's lines in the bill's shape, so the confirmation lists them like the checkout did. */
+export const paymentRentalSummary = (lines: readonly PaymentRentalLine[] | null | undefined): RentalSummaryLine[] =>
+  (lines ?? []).map((line) => ({ id: line.item_id, name: line.name, quantity: line.quantity, rent: line.rent, deposit: line.deposit }));
 
 /** Venues console: whether the venue's refundable deposits are taxed with the rent. */
 export const SET_VENUE_RENTAL_DEPOSIT_GST_MUTATION = `mutation SetVenueRentalDepositGst($venue_id: ID!, $charge_gst: Boolean!) {

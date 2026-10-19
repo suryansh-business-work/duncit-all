@@ -674,6 +674,26 @@ async function sendFreePodProductInvoices(doc: IPaymentRelease) {
   }
 }
 
+/**
+ * A recurring pod's PARENT row holds no slot, seats or money — each DATE row
+ * settles on its own. Completing or billing the parent would raise a venue
+ * bill on top of every date's, so it is refused outright.
+ */
+function assertSettlesOnItsOwn(pod: { series_role?: string | null }) {
+  if (pod.series_role !== 'PARENT') return;
+  throw new GraphQLError('A recurring pod is completed and settled date by date. Open the date you want to complete.', {
+    extensions: { code: 'BAD_USER_INPUT' },
+  });
+}
+
+/** A completed date of a recurring pod may finish the whole pod: the parent
+ * re-derives from its dates now rather than waiting on the sweep, which only
+ * looks a day back and would miss a date completed later than that. */
+async function syncParentOfCompleted(podId: unknown) {
+  const { syncSeriesParentOf } = await import('@modules/pods/podSeries/podSeries.parent');
+  await syncSeriesParentOf(String(podId));
+}
+
 // Approval is the moment the pod is officially completed (first release wins).
 // When this approval is the one that stamps it, the unsold stock is released
 // and the monitored trail gets its COMPLETE entry.
@@ -683,6 +703,7 @@ async function completePodOnApproval(doc: IPaymentRelease) {
     { $set: { completed_at: new Date() } }
   );
   if (stamped.modifiedCount === 0) return;
+  await syncParentOfCompleted(doc.pod_id);
   // Completion frees the pod's unsold reserved stock back to the brand.
   const { podService } = await import('@modules/pods/pod/pod.service');
   await podService.releaseCompletedPodStock(doc.pod_id).catch((e: Error) => {
@@ -702,6 +723,29 @@ async function completePodOnApproval(doc: IPaymentRelease) {
   });
 }
 
+// Venue money (a venue bill or a rental) goes to the venue owner's wallet.
+async function creditVenueOwner(doc: IPaymentRelease, payout: number) {
+  const { walletService } = await import('@modules/finance/wallet/wallet.service');
+  const venue = doc.venue_id
+    ? await VenueModel.findById(doc.venue_id).select('owner_user_id')
+    : null;
+  const ownerId = venue?.owner_user_id ? String(venue.owner_user_id) : null;
+  if (ownerId) {
+    await walletService.creditPodPayout(ownerId, payout, {
+      pod_id: doc.pod_id,
+      release_id: doc.release_id,
+      reason: `Venue payout for ${doc.pod_title}`,
+    });
+    return;
+  }
+  // A venue without a linked owner user gets a statement but no wallet —
+  // loud in the logs so Finance can fix the venue record, never silent.
+  logs.server.warn('paymentRelease', 'applyApproval', {
+    release_id: doc.release_id,
+    msg: 'venue payout approved but the venue has no owner_user_id — wallet credit skipped',
+  });
+}
+
 // Side effects of an APPROVED release — the wallet leg of every payout. Each
 // kind credits ITS beneficiary's wallet: the host, the venue's owner user, or
 // the club's admin user. Idempotent per release_id in the wallet service.
@@ -710,30 +754,13 @@ async function applyApproval(doc: IPaymentRelease) {
   // approving it must never stamp the pod complete.
   if (doc.kind !== 'VENUE_RENTAL') await completePodOnApproval(doc);
   const payout = releasePayout(doc);
-  const { walletService } = await import('@modules/finance/wallet/wallet.service');
 
   if (doc.kind === 'VENUE_BILLING' || doc.kind === 'VENUE_RENTAL') {
-    // Venue money goes to the venue owner's wallet.
-    const venue = doc.venue_id
-      ? await VenueModel.findById(doc.venue_id).select('owner_user_id')
-      : null;
-    const ownerId = venue?.owner_user_id ? String(venue.owner_user_id) : null;
-    if (ownerId) {
-      await walletService.creditPodPayout(ownerId, payout, {
-        pod_id: doc.pod_id,
-        release_id: doc.release_id,
-        reason: `Venue payout for ${doc.pod_title}`,
-      });
-    } else {
-      // A venue without a linked owner user gets a statement but no wallet —
-      // loud in the logs so Finance can fix the venue record, never silent.
-      logs.server.warn('paymentRelease', 'applyApproval', {
-        release_id: doc.release_id,
-        msg: 'venue payout approved but the venue has no owner_user_id — wallet credit skipped',
-      });
-    }
+    await creditVenueOwner(doc, payout);
     return;
   }
+
+  const { walletService } = await import('@modules/finance/wallet/wallet.service');
 
   if (doc.kind === 'CLUB_ADMIN') {
     // The club-admin cut goes to the club admin's wallet.
@@ -806,6 +833,7 @@ async function markPodSubmitted(pod: any, actorId: string | null) {
     { $set: { completed_at: new Date() } }
   );
   if (stamped.modifiedCount === 0) return;
+  await syncParentOfCompleted(pod._id);
   // Completion frees the pod's unsold reserved stock back to the brand.
   const { podService } = await import('@modules/pods/pod/pod.service');
   await podService.releaseCompletedPodStock(pod._id).catch((e: Error) => {
@@ -1024,6 +1052,7 @@ export const paymentReleaseService = {
     }
     const pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    assertSettlesOnItsOwn(pod);
     if (isFreePod(pod)) throw freePodNoPayout();
     const beneficiary = await beneficiaryFor(kind, pod, input.host_user_id);
     const evidence = (input.evidence_media ?? [])
@@ -1087,6 +1116,7 @@ export const paymentReleaseService = {
   async completePod(input: any, actor: { id: string; isAdmin: boolean }) {
     const pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    assertSettlesOnItsOwn(pod);
     assertMayComplete(pod, actor);
 
     await assertNotSubmitted(pod);

@@ -15,8 +15,10 @@ import type { RentalUnit } from './rentalLines';
  * DAMAGED      the venue kept part or all of the deposit as a damage claim.
  *
  * Every outcome but BOOKED is final, and freezes what it owes: `refund_due` to
- * the guest, `venue_amount` to the venue (rent less Duncit's commission, plus
- * any deposit the venue keeps) and the commission itself.
+ * the guest through Finance, `deposit_at_venue` the venue hands the guest in
+ * cash when the item comes back, `venue_amount` to the venue (rent less
+ * Duncit's commission, plus the deposits it settled at the venue) and the
+ * commission itself. See rentalOutcome.ts.
  */
 export type RentalBookingStatus = 'BOOKED' | 'UNAVAILABLE' | 'CANCELLED' | 'RELEASED' | 'RETURNED' | 'DAMAGED';
 export const RENTAL_BOOKING_STATUSES: readonly RentalBookingStatus[] = [
@@ -54,6 +56,8 @@ export interface IRentalBooking {
   damage_claim: number;
   damage_note: string;
   refund_due: number;
+  /** The deposit the venue hands back in cash at the venue. Duncit repays it in the venue's payout. */
+  deposit_at_venue: number;
   refund_status: RentalRefundStatus;
   refund_ref: string;
   refunded_at: Date | null;
@@ -92,6 +96,7 @@ const rentalBookingSchema = new Schema<IRentalBooking>(
     damage_claim: { type: Number, default: 0, min: 0 },
     damage_note: { type: String, default: '', maxlength: 500 },
     refund_due: { type: Number, default: 0, min: 0 },
+    deposit_at_venue: { type: Number, default: 0, min: 0 },
     refund_status: { type: String, enum: ['NONE', 'DUE', 'PAID', 'IN_PAYMENT'], default: 'NONE' },
     refund_ref: { type: String, default: '', maxlength: 120 },
     refunded_at: { type: Date, default: null },

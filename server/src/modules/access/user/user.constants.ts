@@ -12,6 +12,11 @@ export const ROLES = [
   'ECOMM_STORE_MANAGER',
   'CLUB_ADMIN',
   'REGIONAL_CLUB_ADMIN',
+  // Self-serve from Earn with Duncit: saving a freelancer profile grants it, and
+  // it unlocks "I'm interested" on Gig Jobs. No console, no approval.
+  'FREELANCER',
+  // The Gig Jobs console (gig-jobs.duncit.com): categories, moderation, freelancers.
+  'GIG_JOBS_MANAGER',
   'SUPPORT_USER',
   'FINANCE_USER',
   'ADS_MANAGER',
@@ -75,6 +80,8 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'ECOMM_STORE_MANAGER', name: 'Pet Store Manager', description: 'E-commerce console — ecomm-portal.duncit.com (runs the Duncit Pet Store at ecomm.duncit.com).' },
   { key: 'CLUB_ADMIN', name: 'Club Admin', description: 'Manages assigned clubs and their pods from the Partners portal.' },
   { key: 'REGIONAL_CLUB_ADMIN', name: 'Regional Club Admin', description: 'Oversees a region of Club Admins from the Partners portal. Granted directly — there is no onboarding application for it.' },
+  { key: 'GIG_JOBS_MANAGER', name: 'Gig Jobs Manager', description: 'Gig Jobs console — gig-jobs.duncit.com: every gig, freelancer and interest, the categories, and moderation.' },
+  { key: 'FREELANCER', name: 'Freelancer', description: 'Takes gig jobs (photography, catering, sponsorship …) posted by hosts, venue owners and brand owners. Self-serve from Earn with Duncit — no meeting or approval.' },
   { key: 'SUPPORT_USER', name: 'Support Agent', description: 'Support console access (agent level).' },
   { key: 'FINANCE_USER', name: 'Finance Analyst', description: 'Finance console access (analyst level).' },
   { key: 'ADS_MANAGER', name: 'Ads Manager', description: 'Ads console — ads.duncit.com.' },

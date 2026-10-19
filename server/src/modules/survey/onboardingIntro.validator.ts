@@ -4,15 +4,18 @@ import { matches, obj, shape, str, trim } from '@utils/zod-fields';
 /** A full web link — the survey pages open it as-is, so it must carry its scheme. */
 const WEB_LINK = /^https?:\/\/\S+$/i;
 
-const socialLink = (label: string) =>
+/** An optional full web link: null is "not sent", an empty link is allowed. */
+const webLink = (message: string) =>
   str(
     z
       .string()
-      .check(matches(WEB_LINK, { message: `${label} must be a full link starting with https://`, excludeEmptyString: true }))
+      .check(matches(WEB_LINK, { message, excludeEmptyString: true }))
       .nullable()
       .optional(),
     { transforms: [trim] }
   );
+
+const socialLink = (label: string) => webLink(`${label} must be a full link starting with https://`);
 
 /**
  * Duncit's social links an Onboarding Admin sets. Null is "not sent"; an empty
@@ -29,3 +32,21 @@ export const socialHandlesSchema = obj(
 );
 
 export type SocialHandlesInput = z.infer<typeof socialHandlesSchema>;
+
+const imageLink = (label: string) => webLink(`${label} image must be a full link starting with https://`);
+
+/**
+ * The Earn with Duncit card images an Onboarding Admin sets. Null is "not
+ * sent"; an empty link falls back to Duncit's default image.
+ */
+export const earnCardImagesSchema = obj(
+  shape({
+    host: imageLink('Host'),
+    venue: imageLink('Venue'),
+    ecomm: imageLink('E-commerce'),
+    club: imageLink('Club Admin'),
+    freelancer: imageLink('Freelancer'),
+  })
+);
+
+export type EarnCardImagesInput = z.infer<typeof earnCardImagesSchema>;

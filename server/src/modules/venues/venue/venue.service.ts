@@ -928,7 +928,7 @@ export const venueService = {
       v,
       await buildStep1Patch(input, venueCategoriesOf(v)),
       await buildVenueFoodPatch(input, v),
-      buildVenueRentalPatch(input, v)
+      await buildVenueRentalPatch(input, v, normalizeVenueCategoryInput)
     );
     if (v.step_completed < 1) v.step_completed = 1;
     if (v.status === 'REJECTED') v.status = 'DRAFT';
@@ -1005,7 +1005,11 @@ export const venueService = {
       fail('BAD_REQUEST', 'Only approved venues can be edited here');
     }
     applyApprovedVenueInput(v, input, isAdmin);
-    Object.assign(v, await buildVenueFoodPatch(input, v), buildVenueRentalPatch(input, v));
+    Object.assign(
+      v,
+      await buildVenueFoodPatch(input, v),
+      await buildVenueRentalPatch(input, v, normalizeVenueCategoryInput)
+    );
     await v.save();
     return toPub(v);
   },
@@ -1109,7 +1113,7 @@ export const venueService = {
     const normalized = await buildStep1Patch(opts.step1);
     const ownerUserId = new Types.ObjectId(opts.ownerUserId);
     const food = await buildVenueFoodPatch(opts.step1, { owner_user_id: ownerUserId });
-    const rentals = buildVenueRentalPatch(opts.step1, {});
+    const rentals = await buildVenueRentalPatch(opts.step1, {}, normalizeVenueCategoryInput);
     const documents = (opts.step2.documents || [])
       .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({
@@ -1145,7 +1149,7 @@ export const venueService = {
       v,
       await buildStep1Patch(opts.step1, venueCategoriesOf(v)),
       await buildVenueFoodPatch(opts.step1, v),
-      buildVenueRentalPatch(opts.step1, v)
+      await buildVenueRentalPatch(opts.step1, v, normalizeVenueCategoryInput)
     );
     v.documents = (opts.step2.documents || [])
       .filter((d: any) => d?.type && d?.url)

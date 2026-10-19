@@ -1,3 +1,5 @@
+import { idText } from '@modules/commerce/store/store.shared';
+
 /**
  * The rented-item lines a pod payment carries, as checkout froze them on
  * `metadata.rental_lines`, and the add-on money that never belongs to the pod.
@@ -38,7 +40,7 @@ export function paymentRentalLines(metadata: unknown): RentalLine[] {
   return raw.map((entry) => {
     const line = (entry ?? {}) as Record<string, unknown>;
     return {
-      item_id: String(line.item_id ?? ''),
+      item_id: idText(line.item_id),
       name: typeof line.name === 'string' ? line.name : '',
       image_url: typeof line.image_url === 'string' ? line.image_url : '',
       unit: line.unit === 'HOUR' ? 'HOUR' : 'SLOT',
@@ -62,12 +64,27 @@ export function addOnMoneyOf(metadata: unknown): number {
   return Math.max(0, num(meta.product_cost_total)) + Math.max(0, num(meta.rental_total));
 }
 
-/** The rental lines as invoice rows: the rent, and the deposit on its own row. */
-export function rentalInvoiceLines(metadata: unknown): { name: string; quantity: number; gross: number; image_url: string }[] {
+/** Invoice rows printed in their own "Rented items" block, apart from the ticket and products. */
+export const RENTAL_INVOICE_SECTION = 'RENTAL' as const;
+
+// A type alias, not an interface: the invoice reads these rows as plain records.
+export type RentalInvoiceLine = {
+  name: string;
+  quantity: number;
+  gross: number;
+  image_url: string;
+  section: typeof RENTAL_INVOICE_SECTION;
+};
+
+/** The rental lines as invoice rows: the rent, and the refundable deposit on its own row. */
+export function rentalInvoiceLines(metadata: unknown): RentalInvoiceLine[] {
   return paymentRentalLines(metadata).flatMap((line) => {
-    const rows = [{ name: `${line.name} (rent)`, quantity: line.quantity, gross: line.rent, image_url: line.image_url }];
+    const section = RENTAL_INVOICE_SECTION;
+    const rows: RentalInvoiceLine[] = [
+      { name: `${line.name} (rent)`, quantity: line.quantity, gross: line.rent, image_url: line.image_url, section },
+    ];
     if (line.deposit > 0) {
-      rows.push({ name: `${line.name} (deposit)`, quantity: line.quantity, gross: line.deposit, image_url: '' });
+      rows.push({ name: `${line.name} (refundable deposit)`, quantity: line.quantity, gross: line.deposit, image_url: '', section });
     }
     return rows;
   });

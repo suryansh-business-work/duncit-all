@@ -1,10 +1,3 @@
-import {
-  EVENT_REQUEST_NOTE_MAX,
-  eventRequestDefaults,
-  makeEventRequestSchema,
-  type EventRequestValues,
-} from '@duncit/forms/schemas';
-
 /**
  * The optional note sent with "Request an event" — the shared rule, so mWeb
  * and native accept the same note (rules 27 + 56).
@@ -14,7 +7,7 @@ export {
   eventRequestDefaults,
   makeEventRequestSchema,
   type EventRequestValues,
-};
+} from '@duncit/forms/schemas';
 
 export interface RequestEventSheetProps {
   open: boolean;

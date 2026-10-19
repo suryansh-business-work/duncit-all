@@ -1,6 +1,6 @@
 ---
 name: '@duncit/onboarding'
-summary: 'The four Earn With Duncit journeys and the state machine that decides whether each one is open, locked or already held.'
+summary: 'The Earn With Duncit journeys and the state machine that decides whether each one is open, locked or already held.'
 category: 'domain'
 zeroDeps: true
 frameworkFree: true
@@ -57,6 +57,12 @@ same journey is a path on the web and a stack screen on native:
   cta: { label: 'Ready to register another venue?', partnerPath: '/register-venue/new' },
 }
 ```
+
+**One journey books no meeting.** `FREELANCER` is self-serve: its `surveyPath`
+is the freelancer profile form (`/earn/freelancer`, native `FreelancerProfile`)
+rather than a survey, and saving that profile grants the `FREELANCER` role — so
+`earnBoxState` turns the card to *Already enabled* through its ordinary role
+check, and its CTA opens Gig Jobs (`/gigs` / `GigJobs`). See `@duncit/gig-jobs`.
 
 `EARN_KINDS` is the same list reduced to its `kind` values, in the same
 order. It is what a surface passes to `EarnJourneyList`'s `kinds` when it wants
@@ -116,6 +122,19 @@ socialHandleLinks({
 
 `SOCIAL_HANDLE_KEYS` is the display order and matches the
 `OnboardingSocialHandles` GraphQL fields one for one.
+
+## Earn card images
+
+Onboarding Portal > Earn with Duncit sets a featured image for each Earn card.
+`EarnCardImages` is keyed by the same `iconKey` as the journeys, and matches the
+`EarnCardImages` GraphQL fields one for one, so a surface reads its card's image
+as `images[box.iconKey]`. The server fills in Duncit's default image for any
+card the admin left blank, so a surface never has to pick one itself.
+
+```js
+const images = data.onboardingIntro.earn_card_images;
+images.host; // 'https://…' — the admin's pick, or Duncit's default
+```
 
 ## What is NOT here
 

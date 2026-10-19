@@ -62,7 +62,7 @@ export async function loadFaqGroups(root: HTMLElement): Promise<void> {
     root.innerHTML = groups.map(groupSection).join('');
     // Honour a #slug deep-link (e.g. from the Help Center topic cards) now
     // that the anchored headings exist in the DOM.
-    const hash = window.location.hash.slice(1);
+    const hash = globalThis.location.hash.slice(1);
     if (hash) document.getElementById(decodeURIComponent(hash))?.scrollIntoView({ behavior: 'smooth' });
   } catch {
     root.innerHTML = `<p class="text-ink-soft">${copy.error}</p>`;

@@ -1,7 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Stack, Typography } from '@mui/material';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { useTranslation } from '@duncit/shell';
+import { useTranslation, type Translate } from '@duncit/shell';
 import type { CheckedEmailStatus, CrmEmailVerification } from '../../../api/emailVerification.gql';
 import { EMAIL_STATUS_COPY, EmailStatusChip } from '../../../components/email-status';
 
@@ -16,6 +16,20 @@ const getRowId = (row: CrmEmailVerification) => row.id;
 
 const renderStatus = (row: CrmEmailVerification) => <EmailStatusChip status={row.status} />;
 
+/** The checked address, with the typo fix the verifier suggested under it. */
+const makeRenderEmail = (t: Translate) => (row: CrmEmailVerification) => (
+  <Stack component="span" sx={{ lineHeight: 1.2, minWidth: 0 }}>
+    <Typography variant="body2" component="span" sx={{ fontWeight: 600, wordBreak: 'break-all' }}>
+      {row.email}
+    </Typography>
+    {row.suggestion && (
+      <Typography variant="caption" component="span" sx={{ color: 'text.secondary' }}>
+        {t('crm.emailVerifier.didYouMean', { vars: { email: row.suggestion } })}
+      </Typography>
+    )}
+  </Stack>
+);
+
 /** Every check the CRM has run — single and bulk — newest first. */
 export function HistoryTable({ fetchRows, refetchRef }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -27,18 +41,7 @@ export function HistoryTable({ fetchRows, refetchRef }: Readonly<Props>) {
         type: 'text',
         flex: 1,
         minWidth: 220,
-        cellRenderer: (row) => (
-          <Stack component="span" sx={{ lineHeight: 1.2, minWidth: 0 }}>
-            <Typography variant="body2" component="span" sx={{ fontWeight: 600, wordBreak: 'break-all' }}>
-              {row.email}
-            </Typography>
-            {row.suggestion && (
-              <Typography variant="caption" component="span" sx={{ color: 'text.secondary' }}>
-                {t('crm.emailVerifier.didYouMean', { vars: { email: row.suggestion } })}
-              </Typography>
-            )}
-          </Stack>
-        ),
+        cellRenderer: makeRenderEmail(t),
         valueGetter: (row) => row.email,
       },
       {

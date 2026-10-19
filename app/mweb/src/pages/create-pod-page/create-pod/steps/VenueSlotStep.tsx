@@ -10,6 +10,7 @@ import { VENUE_AVAILABLE_SLOTS } from '../venueSlots';
 import VenuePicker from '../VenuePicker';
 import VenueContactCard from '../VenueContactCard';
 import VirtualMeetingFields from '../VirtualMeetingFields';
+import PodRepeatSection from '../fields/PodRepeatSection';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
@@ -113,7 +114,8 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
   };
 
   if (mode !== 'PHYSICAL') {
-    return <VirtualMeetingFields form={form} />;
+    // Recurring: the repeat details follow the first date (virtual window).
+    return <Stack spacing={2}><VirtualMeetingFields form={form} /><PodRepeatSection form={form} /></Stack>;
   }
 
   return (

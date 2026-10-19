@@ -597,6 +597,9 @@ directly.
 | `makePodRequestOverrideSchema` | an admin setting a venue's or host's monthly Pod Request limit | empty (the default of 10) or a whole number 0–1000 — see below |
 | `makeRentalItemsSchema` | a venue's rented items | offers switch, the venue's rental terms (≤ `rental_terms_max`) and each item: name, unit, rate, deposit, stock, most per guest (≤ stock) — the caps are the server's `venueRegistrationConfig`. The MUI desk and the native desk both use it |
 | `makeMarkRentalSchema` | marking a rental back | RETURNED or DAMAGED; a damage claim must be above 0 and at most the deposit held, and needs a note (≤ 500) |
+| `makeGigJobSchema` | a Gig Jobs post (host, venue owner or brand owner) | poster role, category, 1–10 roles, a 3–120 character title, optional date, city, whole-rupee budget or blank, 1–100 openings, and the contact freelancers receive (phone through `PHONE_INTL_PLUS`, optional email through `EMAIL`). Bounds are `GIG_LIMITS`, the server's own — mWeb, Partners and native all use it |
+| `makeFreelancerProfileSchema` | the Earn with Duncit freelancer profile | name, 1–5 categories, 1–15 skills, city, optional bio, an http(s) portfolio link or blank, whole years of experience, contact, availability |
+| `makeGigInterestSchema` | "I'm interested" on a gig | an optional note of at most 500 characters (`gigInterestDefaults`) |
 | `makeForceMarkSchema` | a Club Admin marking attendance by name | the names they were read for a multi-seat booking — see below |
 
 `makeContactValueSchema(channel, t, current?)` returns a different object schema per channel

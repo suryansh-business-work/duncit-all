@@ -17,8 +17,16 @@ const open = (
   value: DeskBooking | null,
   onMark = jest.fn().mockResolvedValue(undefined),
   onClose = jest.fn(),
+  depositRefundable = true,
 ) => {
-  renderWithProviders(<MarkRentalSheet booking={value} onClose={onClose} onMark={onMark} />);
+  renderWithProviders(
+    <MarkRentalSheet
+      booking={value}
+      depositRefundable={depositRefundable}
+      onClose={onClose}
+      onMark={onMark}
+    />,
+  );
   return { onMark, onClose };
 };
 
@@ -97,6 +105,36 @@ describe('MarkRentalSheet', () => {
       expect(screen.getByTestId('mark-rental-error')).toHaveTextContent('Already marked'),
     );
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('tells the venue to hand the whole deposit back for an item returned fine', () => {
+    open(booking());
+    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(
+      /Hand ₹\s?500 back to the guest now\. Duncit adds the full deposit to your next rental payout\./,
+    );
+  });
+
+  it('takes the damage claim off what the venue hands back, as it is typed', () => {
+    open(booking());
+    fireEvent.press(screen.getByTestId('mark-rental-outcome-DAMAGED'));
+    fireEvent.changeText(screen.getByTestId('field-damage_claim'), '200');
+    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(/Hand ₹\s?300 back/);
+
+    // The whole deposit kept: nothing goes back, the payout still carries it.
+    fireEvent.changeText(screen.getByTestId('field-damage_claim'), '500');
+    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(
+      'Nothing to hand back. Duncit adds the full deposit to your next rental payout.',
+    );
+  });
+
+  it('hands nothing back when Finance made deposits non-refundable', () => {
+    open(booking(), undefined, undefined, false);
+    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(/^Nothing to hand back/);
+  });
+
+  it('says nothing about a hand-back when no deposit was taken', () => {
+    open(booking({ deposit_amount: 0 }));
+    expect(screen.queryByTestId('mark-rental-hand-back')).toBeNull();
   });
 
   it('Cancel closes without marking', () => {

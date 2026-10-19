@@ -67,9 +67,9 @@ async function load(root: HTMLElement, slug: string, copy: ReaderCopy): Promise<
 export function mount(root: HTMLElement): void {
   if (!claimRoot(root)) return;
   const copy = readJson<ReaderCopy>(root.dataset.copy);
-  const slug = root.dataset.policySlug || slugFromPath(window.location.pathname);
+  const slug = root.dataset.policySlug || slugFromPath(globalThis.location.pathname);
   if (!slug) {
-    window.location.replace('/policies');
+    globalThis.location.replace('/policies');
     return;
   }
   detach(load(root, slug, copy), 'policy-reader');

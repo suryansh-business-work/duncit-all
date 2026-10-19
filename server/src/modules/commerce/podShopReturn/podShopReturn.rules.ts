@@ -22,14 +22,16 @@ export interface ReturnableLine {
   returnable_until: string | null;
 }
 
-const lineKey = (productId: unknown, variantId: unknown) => `${String(productId)}|${String(variantId ?? '')}`;
+const lineKey = (productId: unknown, variantId: string | undefined) => `${String(productId)}|${variantId ?? ''}`;
+
+/** Return statuses that hold no units: the return never went ahead. */
+const DEAD_RETURN_STATUSES = new Set<string>(['REJECTED', 'CANCELLED']);
 
 /** Units already on a return that is not rejected or cancelled, per `product|variant`. */
 export function returnedQty(returns: ReturnFacts[]) {
   const taken = new Map<string, number>();
-  const dead: string[] = ['REJECTED', 'CANCELLED'];
   for (const r of returns) {
-    if (dead.includes(r.status)) continue;
+    if (DEAD_RETURN_STATUSES.has(r.status)) continue;
     for (const item of r.items) {
       const key = lineKey(item.product_id, item.variant_id);
       taken.set(key, (taken.get(key) ?? 0) + item.qty);

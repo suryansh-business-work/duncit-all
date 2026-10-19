@@ -30,7 +30,7 @@ const EASE = 'cubic-bezier(0.2, 0, 0, 1)';
  * touch UI feel broken — the finger is lifting before the control has finished
  * reacting.
  */
-export const pressTransition = `transform ${PRESS_RELEASE_MS}ms ${EASE}, opacity ${PRESS_RELEASE_MS}ms ${EASE}, background-color ${PRESS_RELEASE_MS}ms ${EASE}, filter ${PRESS_RELEASE_MS}ms ${EASE}, box-shadow ${PRESS_RELEASE_MS}ms ${EASE}`;
+export const pressTransition = `scale ${PRESS_RELEASE_MS}ms ${EASE}, transform ${PRESS_RELEASE_MS}ms ${EASE}, opacity ${PRESS_RELEASE_MS}ms ${EASE}, background-color ${PRESS_RELEASE_MS}ms ${EASE}, filter ${PRESS_RELEASE_MS}ms ${EASE}, box-shadow ${PRESS_RELEASE_MS}ms ${EASE}`;
 
 function tintColor(tint: TintSource, colors: Readonly<PressColors>): string | undefined {
   if (tint === 'ink') {
@@ -60,7 +60,7 @@ export function pressCss(
   const active: CSSObject = { transition: 'none' };
 
   if (recipe.scale !== 1) {
-    active.transform = `scale(${recipe.scale})`;
+    active.scale = String(recipe.scale);
   }
   if (recipe.opacity !== 1) {
     active.opacity = recipe.opacity;
@@ -78,7 +78,7 @@ export function pressCss(
     // A control with nothing to do must not react to being held. MUI already
     // sets pointer-events: none on a disabled button, so this is the belt to
     // that braces — a call site can re-enable pointer events for a tooltip.
-    '&.Mui-disabled:active, &:disabled:active': { transform: 'none', filter: 'none' },
+    '&.Mui-disabled:active, &:disabled:active': { scale: 'none', filter: 'none' },
   };
 }
 

@@ -12,6 +12,18 @@ const socialHandlesSchema = new Schema(
   { _id: false }
 );
 
+/** Featured image per Earn with Duncit card, keyed like the card's iconKey. Blank = Duncit's default. */
+const earnCardImagesSchema = new Schema(
+  {
+    host: { type: String, default: '' },
+    venue: { type: String, default: '' },
+    ecomm: { type: String, default: '' },
+    club: { type: String, default: '' },
+    freelancer: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
 /**
  * Singleton: the rich-text "intro" screen shown before the Super/Category/Sub
  * picker on each of the four onboarding flows (Become a Host, Register Venue,
@@ -26,6 +38,7 @@ const onboardingIntroSchema = new Schema(
     ecomm_intro_html: { type: String, default: '' },
     club_admin_intro_html: { type: String, default: '' },
     social_handles: { type: socialHandlesSchema, default: () => ({}) },
+    earn_card_images: { type: earnCardImagesSchema, default: () => ({}) },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

@@ -42,7 +42,7 @@ interface StoredInstance {
   tool_id: unknown;
   tool_type: string;
   tool_version?: number | null;
-  preset_id?: unknown;
+  preset_id?: Types.ObjectId | null;
   label: string;
   config?: unknown;
 }

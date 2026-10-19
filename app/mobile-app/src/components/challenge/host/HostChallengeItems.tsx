@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
-import { challengeItems, doneItemKeys, toolsFedBy } from '@duncit/utils';
+import { challengeItems, doneItemKeys, toolsFedBy, type ChallengeItem } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { MediumToggle } from '@/components/attendance/AttendanceOtpControls';
@@ -14,6 +14,39 @@ import { CheckpointLinksSheet } from './CheckpointLinksSheet';
 interface Props {
   challenge: Pick<PodChallengeView, 'id' | 'tools' | 'competitors'>;
   actions: HostChallengeActions;
+}
+
+interface CompetitorItemsProps {
+  tool: PodChallengeView['tools'][number];
+  competitor: PodChallengeView['competitors'][number];
+  items: ChallengeItem[];
+  actions: HostChallengeActions;
+}
+
+/** One competitor's tasks or checkpoints, each a toggle the host ticks. */
+function CompetitorItems({ tool, competitor, items, actions }: Readonly<CompetitorItemsProps>) {
+  const done = new Set(doneItemKeys(tool, competitor.competitor_id));
+  const toggle = (key: string) => {
+    if (actions.busy) return;
+    fireAndForget(actions.item(tool.instance_id, competitor.competitor_id, key, !done.has(key)));
+  };
+  return (
+    <YStack gap={6}>
+      <Text fontSize={14} fontWeight="600" color="$color">
+        {competitor.name}
+      </Text>
+      <XStack gap={6} flexWrap="wrap" role="group" aria-label={competitor.name}>
+        {items.map((item) => (
+          <MediumToggle
+            key={item.key}
+            label={item.label}
+            selected={done.has(item.key)}
+            onPress={() => toggle(item.key)}
+          />
+        ))}
+      </XStack>
+    </YStack>
+  );
 }
 
 /**
@@ -46,36 +79,15 @@ export function HostChallengeItems({ challenge, actions }: Readonly<Props>) {
                 />
               ) : null}
             </XStack>
-            {challenge.competitors.map((c) => {
-              const done = new Set(doneItemKeys(tool, c.competitor_id));
-              return (
-                <YStack key={c.competitor_id} gap={6}>
-                  <Text fontSize={14} fontWeight="600" color="$color">
-                    {c.name}
-                  </Text>
-                  <XStack gap={6} flexWrap="wrap" role="group" aria-label={c.name}>
-                    {items.map((item) => (
-                      <MediumToggle
-                        key={item.key}
-                        label={item.label}
-                        selected={done.has(item.key)}
-                        onPress={() => {
-                          if (actions.busy) return;
-                          fireAndForget(
-                            actions.item(
-                              tool.instance_id,
-                              c.competitor_id,
-                              item.key,
-                              !done.has(item.key),
-                            ),
-                          );
-                        }}
-                      />
-                    ))}
-                  </XStack>
-                </YStack>
-              );
-            })}
+            {challenge.competitors.map((c) => (
+              <CompetitorItems
+                key={c.competitor_id}
+                tool={tool}
+                competitor={c}
+                items={items}
+                actions={actions}
+              />
+            ))}
           </YStack>
         );
       })}

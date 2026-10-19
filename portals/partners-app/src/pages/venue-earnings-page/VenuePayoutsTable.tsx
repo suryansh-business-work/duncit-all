@@ -10,6 +10,7 @@ const STATUS_COLORS: StatusColorMap = { PENDING: 'warning', APPROVED: 'success',
 
 const getRowId = (row: VenuePayout) => row.id;
 const searchOf = (row: VenuePayout) => `${row.pod_title} ${row.status}`;
+const renderStatus = (row: VenuePayout) => <StatusChip status={row.status} colorMap={STATUS_COLORS} />;
 
 interface Props {
   payouts: readonly VenuePayout[];
@@ -35,7 +36,7 @@ export default function VenuePayoutsTable({ payouts, symbol }: Readonly<Props>) 
         headerName: t('shell.common.status'),
         width: 140,
         type: 'text',
-        cellRenderer: (row) => <StatusChip status={row.status} colorMap={STATUS_COLORS} />,
+        cellRenderer: renderStatus,
       },
       {
         field: 'amount',

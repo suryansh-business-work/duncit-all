@@ -5,6 +5,7 @@ import {
   CHECKOUT_ME,
   PUBLIC_FINANCE,
   VERIFY_RAZORPAY_PAYMENT,
+  type CheckoutForm,
   type CheckoutPaymentRow,
 } from '../checkout-page/queries';
 import {
@@ -13,7 +14,6 @@ import {
   type RazorpaySignature,
 } from '../checkout-page/razorpayCheckout';
 import { toCheckoutBilling } from '../checkout-page/checkout';
-import type { CheckoutForm } from '../checkout-page/queries';
 import { useCheckoutBillingForm } from '../checkout-page/useCheckoutBillingForm';
 import { parseApiError } from '../../utils/parseApiError';
 import { useTranslation } from '../../i18n/useTranslation';

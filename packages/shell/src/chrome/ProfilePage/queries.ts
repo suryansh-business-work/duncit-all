@@ -26,6 +26,27 @@ export interface ConnectedAccounts {
   two_factor_recovery_codes_left: number;
 }
 
+/** One sign-in, as Profile > Login activity lists it. */
+export interface LoginActivityEntry {
+  id: string;
+  signed_in_at: string;
+  provider: string | null;
+  ip: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  browser: string | null;
+  os: string | null;
+  device_type: string | null;
+  surface: string | null;
+  origin_host: string | null;
+}
+
+export interface LoginActivityHistory {
+  retention_days: number;
+  entries: LoginActivityEntry[];
+}
+
 /** The secret to put into an authenticator app, as a QR code and as text. */
 export interface TwoFactorSetup {
   secret: string;
@@ -90,6 +111,30 @@ export const MY_CONNECTED_ACCOUNTS = gql`
       google {
         google_email
         linked_at
+      }
+    }
+  }
+`;
+
+/** The account's own recent sign-ins, newest first. 100 is the server's cap and
+ * covers well over a month for anyone; the table pages through them locally. */
+export const MY_LOGIN_ACTIVITY = gql`
+  query ShellMyLoginActivity {
+    myLoginActivity(limit: 100) {
+      retention_days
+      entries {
+        id
+        signed_in_at
+        provider
+        ip
+        city
+        region
+        country
+        browser
+        os
+        device_type
+        surface
+        origin_host
       }
     }
   }

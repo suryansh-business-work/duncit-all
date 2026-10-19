@@ -99,7 +99,7 @@ const FSSAI_NUMBER = /^\d{14}$/;
 
 /** A YouTube video link; group 1 is the video id. See regex.mjs. */
 const YOUTUBE_URL =
-  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
+  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/watch\?(?:[\w%.=-]*&)?v=|youtube\.com\/shorts\/|youtube\.com\/embed\/|youtube\.com\/live\/|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
 
 /**
  * A Duncit referral code — the `DUN-` prefix and six uppercase hex characters,

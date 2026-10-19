@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useScrollUpHistory } from '../../hooks/useScrollUpHistory';
 import ThreadEntry, { type ThreadEntryHandlers } from '../ThreadEntry';
 import { JumpToLatest, ThreadSkeleton } from '../ThreadChrome';
 import type { ChatFormats, ChatSettings } from '../useChatSettings';
@@ -71,9 +72,18 @@ export default function MessageThread({
   }, []);
   const [atBottom, setAtBottom] = useState(true);
   const [unseen, setUnseen] = useState(0);
-  const lastCount = useRef(messages.length);
+  const newest = messages[messages.length - 1];
+  // Unset on mount, so the thread opens on its newest line rather than its oldest.
+  const lastNewestId = useRef<string | undefined>(undefined);
 
   const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
+  const history = useScrollUpHistory({
+    scrollRef: scroller,
+    oldestId: messages[0]?.id ?? null,
+    hasMore,
+    loading: loadingMore,
+    onLoadOlder: onLoadMore,
+  });
   const timeline = useMemo(() => buildTimeline(messages, calls), [messages, calls]);
 
   // The first message they have not read — where the "new" line goes.
@@ -82,18 +92,22 @@ export default function MessageThread({
     [messages, meId],
   );
 
+  // Keyed on the NEWEST line: an older page landing above must neither move the
+  // reader nor count as unseen. Your own message always follows you down.
   useEffect(() => {
-    const grew = messages.length > lastCount.current;
-    lastCount.current = messages.length;
-    if (!grew) return;
-    if (atBottom) {
+    const previous = lastNewestId.current;
+    lastNewestId.current = newest?.id;
+    if (!newest || newest.id === previous) return;
+    if (atBottom || newest.from_user_id === meId) {
+      // A first page (or another conversation) jumps; an arrival glides.
+      const behavior = previous && byId.has(previous) ? 'smooth' : 'auto';
       // Optional call: jsdom has the element but not the method, and a chat
       // that throws while scrolling would take the panel down with it.
-      endRef.current?.scrollIntoView?.({ block: 'end', behavior: 'smooth' });
+      endRef.current?.scrollIntoView?.({ block: 'end', behavior });
     } else {
       setUnseen((count) => count + 1);
     }
-  }, [messages, atBottom]);
+  }, [newest, atBottom, meId, byId]);
 
   // Centred, not just "into view": a hit at the very top of the box with no
   // conversation around it reads as the start of the thread rather than a hit.
@@ -110,7 +124,7 @@ export default function MessageThread({
     setAtBottom(near);
     if (near) setUnseen(0);
     // Reaching the top asks for the page before this one.
-    if (node.scrollTop < 40 && hasMore && !loadingMore) onLoadMore();
+    history.onScroll();
   };
 
   const jump = () => {
@@ -127,15 +141,17 @@ export default function MessageThread({
         ref={scroller}
         onScroll={onScroll}
         spacing={spacing}
+        aria-busy={loadingMore}
         // `contain` keeps a wheel that hits the top or bottom of the thread from
-        // carrying on into the page behind the panel.
-        sx={{ height: '100%', overflowY: 'auto', overscrollBehavior: 'contain', px: 1.5, py: 1 }}
+        // carrying on into the page behind the panel. `overflowAnchor: none` because
+        // the history hook keeps the reader's line in place itself.
+        sx={{ height: '100%', overflowY: 'auto', overscrollBehavior: 'contain', overflowAnchor: 'none', px: 1.5, py: 1 }}
       >
         <ThreadLead
           hasMore={hasMore}
           loadingMore={loadingMore}
           empty={messages.length === 0}
-          onLoadMore={onLoadMore}
+          onLoadMore={history.loadOlder}
         />
 
         {timeline.map((entry) => {

@@ -4,13 +4,13 @@ import { createLogger } from '@duncit/logs';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { MY_CONNECTED_ACCOUNTS, type ConnectedAccounts } from '../queries';
 import { PasswordSection } from './PasswordSection';
-import { SignInActivitySection } from './SignInActivitySection';
 import { SignOutEverywhereSection } from './SignOutEverywhereSection';
 import { TwoFactorSection } from './two-factor/TwoFactorSection';
 
 const logger = createLogger('portal');
 
-/** Password, sign-in history and every open session, on one tab. */
+/** Password, two-factor and every open session, on one tab. Sign-in history
+ * has its own Login activity tab. */
 export function SecurityTab({ onSignedOut }: Readonly<{ onSignedOut: () => void }>) {
   const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery<{ myConnectedAccounts: ConnectedAccounts }>(
@@ -41,7 +41,6 @@ export function SecurityTab({ onSignedOut }: Readonly<{ onSignedOut: () => void 
         onChanged={reload}
       />
       <TwoFactorSection accounts={accounts} onChanged={reload} />
-      <SignInActivitySection accounts={accounts} />
       <SignOutEverywhereSection onSignedOut={onSignedOut} />
     </Stack>
   );

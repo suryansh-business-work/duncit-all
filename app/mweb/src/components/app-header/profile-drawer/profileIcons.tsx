@@ -45,9 +45,11 @@ import ExtensionIcon from '@mui/icons-material/Extension';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import WorkOutlineIcon from '@mui/icons-material/WorkOutlineOutlined';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
+  gigs: <WorkOutlineIcon />,
   // The two glyphs the bottom bar used, kept exactly as they were so the tiles
   // read as the destinations that moved rather than as new ones.
   chats: <ChatBubbleOutlineIcon />,

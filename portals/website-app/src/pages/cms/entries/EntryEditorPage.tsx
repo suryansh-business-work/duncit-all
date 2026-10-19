@@ -24,13 +24,14 @@ export default function EntryEditorPage() {
   const [updateEntry] = useMutation(UPDATE_CMS_ENTRY);
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const entry = isNew ? null : (data?.cmsEntry ?? null);
   const backTo = `/sites/${siteId}?${TAB_PARAM}=${collectionSlug}`;
   const entryTitle = isNew ? t('websiteApp.cms.entryForm.titleNew') : (data?.cmsEntry?.title ?? '');
   useSetBreadcrumbs(collection ? [{ label: labels.collection[collection], to: backTo }, { label: entryTitle }] : null);
 
   if (!collection) return <Alert severity="warning">{t('websiteApp.cms.notFound')}</Alert>;
   if (!isNew && loading) return <Skeleton variant="rounded" height={480} />;
-  if (!isNew && (error || !data?.cmsEntry)) return <Alert severity="error">{t('websiteApp.cms.entryForm.loadFailed')}</Alert>;
+  if (!isNew && (error || !entry)) return <Alert severity="error">{t('websiteApp.cms.entryForm.loadFailed')}</Alert>;
 
   const save = async (values: EntryFormOutput) => {
     setSubmitting(true);
@@ -53,7 +54,7 @@ export default function EntryEditorPage() {
     <Stack spacing={2}>
       <PageHeader title={isNew ? t('websiteApp.cms.entryForm.titleNew') : t('websiteApp.cms.entryForm.titleEdit')} subtitle={label} titleWeight={700} />
       <EntryForm
-        entry={isNew ? null : (data?.cmsEntry ?? null)}
+        entry={entry}
         aiContext={`Duncit website ${label}`}
         submitting={submitting}
         errorMessage={saveError}

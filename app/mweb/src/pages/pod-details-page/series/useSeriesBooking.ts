@@ -4,14 +4,16 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import type { NavigateFunction } from 'react-router';
 import {
   JOIN_FREE_POD_DATES_SDL,
+  bookableSeriesDates,
+  pickedSeriesDates,
   POD_SERIES_DATES_SDL,
   seriesBookingEstimate,
-  seriesDatesForChoice,
   ticketDiscountFor,
   type MultiDateDiscountTier,
-  type SeriesBookingChoice,
   type SeriesDateRow,
 } from '@duncit/utils';
+import { fireAndForget, logs } from '@duncit/logs';
+import { useBookingClashGuard } from '../clash/useBookingClashGuard';
 
 export const POD_SERIES_DATES = gql(POD_SERIES_DATES_SDL);
 export const JOIN_FREE_POD_DATES = gql(JOIN_FREE_POD_DATES_SDL);
@@ -20,6 +22,8 @@ interface SeriesDatesData {
   podSeriesDates: {
     parent_pod_id: string;
     multi_date_discount_tiers: MultiDateDiscountTier[];
+    /** The viewer hosts this pod — only then may a date open its own page. */
+    is_host: boolean;
     dates: SeriesDateRow[];
   } | null;
 }
@@ -57,22 +61,32 @@ export function useSeriesBooking({ pod, seats, navigate, onError }: Readonly<Arg
   const [joinFreeDates, joinState] = useMutation<{
     joinFreePodDates: { joined: string[]; failed: { pod_doc_id: string; message: string }[] };
   }>(JOIN_FREE_POD_DATES);
+  const clash = useBookingClashGuard();
   const [open, setOpen] = useState(false);
-  const [choice, setChoice] = useState<SeriesBookingChoice>('NEXT');
   const [picked, setPicked] = useState<string[]>([]);
   const series = data?.podSeriesDates ?? null;
   const rows = useMemo(() => series?.dates ?? [], [series]);
   const tiers = series?.multi_date_discount_tiers ?? [];
-  const chosen = useMemo(() => seriesDatesForChoice(rows, choice, picked), [rows, choice, picked]);
+  const openRows = useMemo(() => bookableSeriesDates(rows), [rows]);
+  const chosenRows = useMemo(() => pickedSeriesDates(rows, picked), [rows, picked]);
+  const chosen = useMemo(() => chosenRows.map((row) => row.pod_doc_id), [chosenRows]);
   // Each date's ticket after its own multi-ticket tier, then the multi-date tier.
-  const perDate = pod ? ticketDiscountFor(Number(pod.pod_amount) || 0, seats, pod).net : 0;
-  const estimate = seriesBookingEstimate(perDate, chosen.length, tiers);
+  const netFor = (row: SeriesDateRow) => (pod ? ticketDiscountFor(Number(row.pod_amount) || 0, seats, pod).net : 0);
+  const estimate = seriesBookingEstimate(chosenRows.map(netFor), tiers);
 
   const togglePicked = (dateId: string) =>
     setPicked((current) => (current.includes(dateId) ? current.filter((id) => id !== dateId) : [...current, dateId]));
+  const toggleAll = () => setPicked(chosen.length === openRows.length ? [] : openRows.map((row) => row.pod_doc_id));
+  // The picker opens with the next open date ticked.
+  const openPicker = () => {
+    setPicked(openRows.slice(0, 1).map((row) => row.pod_doc_id));
+    setOpen(true);
+  };
 
   const confirm = async () => {
     if (!pod || chosen.length === 0) return;
+    // Every chosen date is checked against the member's other bookings first.
+    if (!(await clash.check(chosen))) return;
     if (pod.pod_type === 'FREE') {
       try {
         const res = await joinFreeDates({ variables: { pod_doc_id: pod.id, date_pod_ids: chosen } });
@@ -101,19 +115,41 @@ export function useSeriesBooking({ pod, seats, navigate, onError }: Readonly<Arg
     /** Booking goes through the date picker — true on the recurring pod itself. */
     picksDates: role === 'PARENT',
     rows,
+    /** The dates the member can tick, in date order. */
+    openRows,
+    /** The viewer hosts this pod, as the server decides it. */
+    isHost: series?.is_host ?? false,
     tiers,
     open,
     setOpen,
-    choice,
-    setChoice,
     picked,
     togglePicked,
+    toggleAll,
     chosen,
+    /** A date's ticket for the chosen seats, after the multi-ticket tier. */
+    netFor,
     estimate,
     busy: joinState.loading,
     confirm,
-    /** The Book handler for this pod: the date picker on a recurring pod, else `handler`. */
-    guard: (handler: () => void) => (role === 'PARENT' ? () => setOpen(true) : handler),
+    /** "You already have a pod at this time" — rendered by SeriesBookingDialog. */
+    clash,
+    /**
+     * The Book handler for this pod: the date picker on a recurring pod, else
+     * `handler` once the member has seen (and accepted) any time clash.
+     */
+    guard: (handler: () => void) => {
+      if (role === 'PARENT') return openPicker;
+      const podId = pod?.id;
+      return () =>
+        fireAndForget(
+          (async () => {
+            if (!podId || (await clash.check([podId]))) handler();
+          })(),
+          logs.mWeb,
+          'pod-details',
+          'bookingClash',
+        );
+    },
   };
 }
 

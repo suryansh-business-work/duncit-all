@@ -51,7 +51,8 @@ export type ProfileIconKey =
   | 'integrations'
   | 'returns'
   | 'warehouses'
-  | 'menu';
+  | 'menu'
+  | 'gigs';
 
 export interface ProfileTile {
   key: string;

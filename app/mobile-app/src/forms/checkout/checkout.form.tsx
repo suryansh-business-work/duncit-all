@@ -1,5 +1,5 @@
 import { formResolver } from '../../utils/form-resolver';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { useController, useForm, useWatch } from 'react-hook-form';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -50,6 +50,8 @@ export interface CheckoutFormProps {
    * stays shut until it is READY. The pod checkout ships nothing and omits it. */
   deliveryStatus?: DeliveryQuoteStatus;
   onRetryDelivery?: () => void;
+  /** Shown right above Pay — the rental-terms agreement, the last thing read before paying (mWeb twin). */
+  beforePay?: ReactNode;
   onSubmit: (values: CheckoutFormValues) => void | Promise<void>;
 }
 
@@ -67,6 +69,7 @@ export function CheckoutForm({
   onPincodeChange,
   deliveryStatus = 'READY',
   onRetryDelivery,
+  beforePay = null,
   onSubmit,
 }: Readonly<CheckoutFormProps>) {
   const { primary, color } = useThemeColors();
@@ -132,6 +135,7 @@ export function CheckoutForm({
 
       <CheckoutRequirementsCard missing={eligibility.missing} />
       <DeliveryQuoteNotice status={deliveryStatus} onRetry={onRetryDelivery} />
+      {beforePay}
       <PrimaryButton
         testID="checkout-submit"
         label={loading ? t('mweb.checkout.processing') : (payLabel ?? t('mweb.checkout.payNow'))}

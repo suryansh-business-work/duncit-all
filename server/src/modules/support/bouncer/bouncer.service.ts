@@ -28,7 +28,7 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { coinService } from '@modules/finance/coin/coin.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { getIo } from '@realtime/io';
-import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
+import { ticketNo } from '@microservices/chat/support/unifiedTickets.service';
 import { aiValidateCallbackReason } from '@modules/moderation/moderation.ai';
 import {
   paginateDocs,

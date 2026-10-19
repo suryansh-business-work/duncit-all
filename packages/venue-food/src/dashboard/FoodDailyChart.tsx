@@ -31,7 +31,8 @@ export default function FoodDailyChart({ daily, currencySymbol }: Readonly<Props
     orders: t('venueFoodOwner.dashboard.seriesOrders'),
   };
   const first = daily.length > 0 ? formatDay(daily[0].date) : '';
-  const last = daily.length > 0 ? formatDay(daily[daily.length - 1].date) : '';
+  const lastDay = daily.at(-1);
+  const last = lastDay ? formatDay(lastDay.date) : '';
 
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }} data-testid="food-dashboard-daily">

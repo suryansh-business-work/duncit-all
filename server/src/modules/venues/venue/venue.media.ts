@@ -9,9 +9,11 @@ import { GraphQLError } from 'graphql';
  * package by design (rule 40) — keep them in sync, as `username.ts` does.
  */
 
+/** The part of a YouTube link before the video id: a watch, shorts, embed or live path, or a youtu.be short link. */
+const YOUTUBE_VIDEO_PATH = String.raw`(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)`;
+
 /** Mirror of `@duncit/regex` YOUTUBE_URL — group 1 is the video id. */
-export const YOUTUBE_URL_REGEX =
-  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
+export const YOUTUBE_URL_REGEX = new RegExp(String.raw`^https?:\/\/(?:[a-z]+\.)?${YOUTUBE_VIDEO_PATH}([\w-]{11})(?:[?&#]\S*)?$`, 'i');
 
 /** Mirror of `@duncit/regex` FSSAI_NUMBER — exactly 14 digits. */
 export const FSSAI_NUMBER_REGEX = /^\d{14}$/;

@@ -91,6 +91,18 @@ describe('PodCommercePreview', () => {
     expect(screen.getByText('Available 3')).toBeInTheDocument();
   });
 
+  it('keeps a big shop inside a capped, scrolling list on its own card', () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({ ...requestA, product_id: `p${i}`, product_name: `Item ${i}` }));
+    renderPreview({ pod: makePod({ product_requests: many }) });
+    expect(screen.getByText('Item 19')).toBeInTheDocument();
+    expect(screen.getByTestId('pod-shop-rows')).toHaveStyle({ maxHeight: '360px', overflowY: 'auto' });
+  });
+
+  it('leaves the rows uncapped when embedded (the Pod Shop | Pod Rent card and its sheet frame them)', () => {
+    renderPreview({ embedded: true });
+    expect(screen.getByTestId('pod-shop-rows')).not.toHaveStyle({ maxHeight: '360px' });
+  });
+
   it('shows a Closed chip when products are disabled', () => {
     renderPreview({ pod: makePod({ products_enabled: false }) });
     expect(screen.getByText('Closed')).toBeInTheDocument();

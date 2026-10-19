@@ -683,7 +683,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       rentRefundable: 'Refund rent when a guest leaves the pod',
       rentRefundableHint: 'When a guest’s backout spot is filled. A cancelled pod always refunds rent and deposits.',
       depositRefundable: 'Deposits are refundable',
-      depositRefundableHint: 'On: the deposit comes back once the item is returned, less any damage claim. Off: the venue keeps it.',
+      depositRefundableHint: 'On: the venue hands the deposit back at the venue when the item is returned, less any damage claim. Off: the venue keeps it. Either way Duncit pays the deposit to the venue in its rental payout; deposits are never refunded online.',
       cutoff: 'Renting closes (hours before the pod)',
       cutoffHint: 'Guests cannot add rentals after this.',
       cutoffInvalid: 'Enter whole hours from {min} to {max}',

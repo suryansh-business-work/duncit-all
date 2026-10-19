@@ -1,7 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import {
+  ClubMessagesDocument,
+  ClubMessagesPageDocument,
   PodMessagesDocument,
+  PodMessagesPageDocument,
   ReactToPodMessageDocument,
   SendPodMessageDocument,
 } from '@/graphql/chat';
@@ -193,6 +196,91 @@ describe('useChatRoom', () => {
       resolve({ podMessages: [msg('m1')] });
     });
     expect(result.current.messages).toEqual([]);
+  });
+
+  describe('scroll-up history', () => {
+    /** A full page of lines `from`..`from + 29`, oldest first, minutes as timestamps. */
+    const page = (from: number, size = 30) =>
+      Array.from({ length: size }, (_, i) =>
+        msg(`m${from + i}`, {
+          createdAt: `2026-06-09T08:${String(from + i).padStart(2, '0')}:00Z`,
+        }),
+      );
+
+    it('opens a pod room on its newest page of 30, with no cursor', async () => {
+      const { result } = await mountLoaded(page(30));
+      expect(req).toHaveBeenCalledWith(
+        PodMessagesDocument,
+        { podId: 'p1', limit: 30 },
+        { auth: true },
+      );
+      expect(result.current.history.hasOlder).toBe(true);
+    });
+
+    it('puts the older page in front of the room, and live lines still land at the end', async () => {
+      withDocs(page(30));
+      const older = page(0);
+      const base = req.getMockImplementation();
+      req.mockImplementation((doc: unknown, vars: unknown) =>
+        doc === PodMessagesPageDocument
+          ? Promise.resolve({ podMessages: older })
+          : base?.(doc, vars),
+      );
+      const { result } = renderHook(() => useChatRoom('p1'));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.history.loadOlder();
+      });
+      expect(req).toHaveBeenCalledWith(
+        PodMessagesPageDocument,
+        { podId: 'p1', limit: 30, before: '2026-06-09T08:30:00Z' },
+        { auth: true },
+      );
+      expect(result.current.messages.map((m) => m.id).slice(0, 2)).toEqual(['m0', 'm1']);
+      expect(result.current.messages).toHaveLength(60);
+
+      act(() => socketArgs.onMessage(msg('live')));
+      expect(result.current.messages.at(-1)?.id).toBe('live');
+      expect(result.current.messages).toHaveLength(61);
+    });
+
+    it('pages a club room through its own lean query', async () => {
+      req.mockImplementation((doc: unknown) => {
+        if (doc === ClubMessagesDocument)
+          return Promise.resolve({
+            clubMessages: page(30),
+            clubChatRoom: { club_name: 'Run Club', retention_days: 30, can_moderate: true },
+          });
+        if (doc === ClubMessagesPageDocument) return Promise.resolve({ clubMessages: page(20, 5) });
+        return Promise.resolve({});
+      });
+      const { result } = renderHook(() => useChatRoom('c1', 'CLUB'));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(req).toHaveBeenCalledWith(
+        ClubMessagesDocument,
+        { clubId: 'c1', limit: 30 },
+        { auth: true },
+      );
+      expect(result.current.roomTitle).toBe('Run Club');
+
+      await act(async () => {
+        await result.current.history.loadOlder();
+      });
+      expect(req).toHaveBeenCalledWith(
+        ClubMessagesPageDocument,
+        { clubId: 'c1', limit: 30, before: '2026-06-09T08:30:00Z' },
+        { auth: true },
+      );
+      // Five lines is a short page: the start of the room, so no more asks.
+      expect(result.current.history.hasOlder).toBe(false);
+      expect(result.current.messages[0]?.id).toBe('m20');
+    });
+
+    it('expects no older page after a short first page', async () => {
+      const { result } = await mountLoaded([msg('m1')]);
+      expect(result.current.history.hasOlder).toBe(false);
+    });
   });
 
   it('ignores a load that rejects after unmount', async () => {

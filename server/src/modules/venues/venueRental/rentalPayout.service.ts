@@ -5,6 +5,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { podLiveEnd } from '@modules/pods/pod/pod.lifecycle';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { PaymentReleaseModel } from '@modules/finance/finance/paymentRelease.model';
+import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { RentalBookingModel } from './rentalBooking.model';
 import { rentalLifecycleService } from './rentalLifecycle.service';
 
@@ -25,6 +26,34 @@ const EARNING_STATUSES = ['RETURNED', 'DAMAGED', 'RELEASED'];
 
 const releaseId = () => `rel_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 const round2 = (n: number) => Math.round(n * 100) / 100;
+
+interface CarriedBooking {
+  venue_amount: number;
+  status: string;
+  deposit_amount: number;
+  deposit_at_venue?: number;
+  refund_due?: number;
+}
+
+/**
+ * How a payout's amount is made, for Finance's record: the deposits the venue
+ * settled at the venue (paid to it in full here, because it handed the guest
+ * their share in cash), and the rent left after commission. A RELEASED booking
+ * carries no deposit: Duncit refunded that one itself.
+ */
+export function payoutSplit(carried: readonly CarriedBooking[]) {
+  let deposits = 0;
+  let handedBack = 0;
+  for (const b of carried) {
+    if (b.status !== 'RETURNED' && b.status !== 'DAMAGED') continue;
+    // A booking closed before deposits moved to the venue had its deposit refunded through Finance.
+    if ((b.refund_due ?? 0) > 0) continue;
+    deposits += b.deposit_amount;
+    handedBack += b.deposit_at_venue ?? 0;
+  }
+  const total = carried.reduce((sum, b) => sum + b.venue_amount, 0);
+  return { rent: round2(total - deposits), deposits: round2(deposits), handedBack: round2(handedBack) };
+}
 
 /** Raise one payout for a pod's settled rentals. Null when nothing was owed or the venue cannot be paid yet. */
 async function payoutForPod(podId: unknown) {
@@ -48,9 +77,13 @@ async function payoutForPod(podId: unknown) {
     { pod_id: pod._id, status: { $in: EARNING_STATUSES }, venue_amount: { $gt: 0 }, release_id: null },
     { $set: { release_id: id } }
   );
-  const carried = await RentalBookingModel.find({ release_id: id }).select('venue_amount').lean();
+  const carried = await RentalBookingModel.find({ release_id: id })
+    .select('venue_amount status deposit_amount deposit_at_venue refund_due')
+    .lean();
   const amount = round2(carried.reduce((sum, b) => sum + b.venue_amount, 0));
   if (amount <= 0) return null;
+  const split = payoutSplit(carried);
+  const { currency_symbol: cur } = await getFinanceSettings();
   try {
     return await PaymentReleaseModel.create({
       release_id: id,
@@ -62,7 +95,10 @@ async function payoutForPod(podId: unknown) {
       beneficiary_name: venue.venue_name || venue.owner_name || 'Venue',
       beneficiary_email: venue.owner_email,
       amount_requested: amount,
-      notes: `Rented items: ${carried.length} booking${carried.length === 1 ? '' : 's'}`,
+      notes:
+        `Rented items: ${carried.length} booking${carried.length === 1 ? '' : 's'} · ` +
+        `rent after commission ${cur}${split.rent} + deposits ${cur}${split.deposits} ` +
+        `(${cur}${split.handedBack} handed back to guests at the venue, not refunded through the gateway)`,
       requested_by: null,
       requested_at: new Date(),
     });

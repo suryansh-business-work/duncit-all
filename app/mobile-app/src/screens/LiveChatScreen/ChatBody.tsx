@@ -6,13 +6,21 @@ import {
 } from 'react-native';
 import { Spinner, Text, YStack } from 'tamagui';
 
+import { ChatHistoryTop } from '@/components/chat/ChatHistoryTop';
 import { SupportChatBubble } from '@/components/support-chat/SupportChatBubble';
+import type { ChatHistory } from '@/hooks/useChatHistory';
 import type { SupportChatMessage, SupportChatSession } from '@/hooks/useSupportChat';
 import { dayLabel, showDaySeparator } from '@/utils/support-chat';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { useLoadingRegion } from '@/components/Skeleton';
 
+/** Keeps the line being read in place when an older page lands above it. */
+const KEEP_POSITION = { minIndexForVisible: 0 } as const;
+
 interface Props {
+  /** Scroll-up history: the spinner / "show earlier" control at the top. */
+  history: ChatHistory;
   isLoading: boolean;
   error: string;
   messages: SupportChatMessage[];
@@ -28,6 +36,7 @@ interface Props {
 /** The scrollable chat transcript: day separators, bubbles and the typing line. */
 export const ChatBody = forwardRef<RNScrollView, Props>(function ChatBody(
   {
+    history,
     isLoading,
     error,
     messages,
@@ -62,12 +71,21 @@ export const ChatBody = forwardRef<RNScrollView, Props>(function ChatBody(
   return (
     <RefreshScrollView
       ref={ref}
+      testID="support-chat-list"
       flex={1}
       onScroll={onScroll}
       scrollEventThrottle={64}
       contentContainerStyle={{ padding: 16, gap: 10 }}
       onContentSizeChange={onContentSizeChange}
+      maintainVisibleContentPosition={KEEP_POSITION}
     >
+      <ChatHistoryTop
+        testIDPrefix="support-chat"
+        loading={history.loadingOlder}
+        failed={history.olderFailed}
+        hasOlder={history.hasOlder}
+        onLoadOlder={() => fireAndForget(history.loadOlder())}
+      />
       {messages.length === 0 ? (
         <Text testID="support-chat-empty" color="$muted" textAlign="center" padding={24}>
           Say hello — our assistant replies instantly and connects you to a human when needed.

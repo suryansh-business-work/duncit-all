@@ -14,6 +14,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 import { SeriesBookingSheet } from '@/components/details/series/SeriesBookingSheet';
+import { BookingClashDialog } from '@/components/details/BookingClashDialog';
 import { formatMoney } from '@/utils/checkout-math';
 
 import { PodBackoutDialogs } from './PodBackoutDialogs';
@@ -101,6 +102,10 @@ export function PodDetailsOverlays({
         series={series}
         isFree={isFree}
         formatPrice={(amount) => formatMoney(currency, amount)}
+      />
+      <BookingClashDialog
+        guard={series.clash}
+        onOpenPod={(clubSlug, podSlug) => navigation.push('PodDetails', { clubSlug, podSlug })}
       />
       <LocationMismatchDialog kind="POD" {...locationPrompt} />
       <PodBackoutDialogs

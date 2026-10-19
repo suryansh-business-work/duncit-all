@@ -47,9 +47,9 @@ export default function PreviewDialog({ pageId, title, onClose }: Readonly<Props
         if (tab) tab.location.href = url;
         else window.open(url, '_blank', 'noopener');
       })
-      .catch((failure: unknown) => {
+      .catch((error_: unknown) => {
         tab?.close();
-        notifyError(cmsErrorMessage(failure, t('websiteApp.cms.preview.openFailed')));
+        notifyError(cmsErrorMessage(error_, t('websiteApp.cms.preview.openFailed')));
       });
   };
 

@@ -9,6 +9,8 @@ import { FormTextField } from '@/components/FormTextField';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
+import { RentalItemCategoryRows } from './RentalItemCategoryRows';
+
 interface Props {
   control: Control<RentalItemsValues>;
   trigger: UseFormTrigger<RentalItemsValues>;
@@ -121,6 +123,11 @@ export function RentalItemSheet({
           label={t('venueRentals.items.perGuest')}
           keyboardType="number-pad"
           required
+        />
+        <RentalItemCategoryRows
+          control={control}
+          index={index}
+          max={config.rental_category_limit}
         />
       </YStack>
     </DuncitDialog>

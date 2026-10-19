@@ -276,8 +276,8 @@ export async function syncBrandPickupLocations(brandId: string) {
     sent = await pushMissingWarehouses(await BrandPickupLocationModel.find(mine), held);
     // What was just sent is read back, so each warehouse is judged on what the account now holds.
     if (sent.size > 0) pickups = await withShiprocketAccount(account, () => listPickupLocations());
-  } catch (caught) {
-    error = (caught as Error).message;
+  } catch (error_) {
+    error = (error_ as Error).message;
   }
   const warehouses = await BrandPickupLocationModel.find(mine).sort({ is_default: -1, nickname: 1 });
   if (pickups) {

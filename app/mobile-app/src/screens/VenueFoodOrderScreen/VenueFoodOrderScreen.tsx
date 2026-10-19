@@ -143,7 +143,7 @@ export function VenueFoodOrderScreen() {
         <FoodOrderSummary order={order} />
         <FoodOrderFollowUp
           order={order}
-          accessKey={accessKey}
+          orderKey={accessKey}
           paid={paid}
           onChanged={reload}
           onFeedbackLayout={onFeedbackLayout}

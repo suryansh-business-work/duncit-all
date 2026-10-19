@@ -59,6 +59,7 @@ export function toRentalBookingPub(b: IRentalBooking, names: { pod: string; gues
     refund_status: b.refund_status ?? 'NONE',
     refund_ref: b.refund_ref ?? '',
     refunded_at: iso(b.refunded_at),
+    deposit_at_venue: b.deposit_at_venue ?? 0,
     commission_pct: b.commission_pct ?? 0,
     commission_amount: b.commission_amount ?? 0,
     venue_amount: b.venue_amount ?? 0,

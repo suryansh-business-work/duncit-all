@@ -45,6 +45,12 @@ const makeRenderCost = (t: Translate) => (row: AiFeature) => {
   );
 };
 
+/** The on/off switch cell, busy while that feature's toggle is saving. */
+const makeRenderStatus =
+  (pendingKey: string | null, onToggle: Props['onToggle']) => (row: AiFeature) => (
+    <FeatureSwitch feature={row} busy={pendingKey === row.key} onToggle={onToggle} />
+  );
+
 /**
  * Every AI feature, its switch and its spend. The list is the server catalogue
  * (a few dozen rows), so it is filtered and sorted client-side; a feature's
@@ -69,9 +75,7 @@ export default function FeaturesTable({ rows, pendingKey, onToggle, onOpen }: Re
         headerName: t('ai.features.colStatus'),
         width: 120,
         type: 'text',
-        cellRenderer: (row) => (
-          <FeatureSwitch feature={row} busy={pendingKey === row.key} onToggle={onToggle} />
-        ),
+        cellRenderer: makeRenderStatus(pendingKey, onToggle),
         valueGetter: (row) => (row.enabled ? t('ai.features.on') : t('ai.features.off')),
       },
       { field: 'calls', headerName: t('ai.features.colCalls'), width: 100, type: 'number', valueGetter: (row) => row.calls },

@@ -70,6 +70,15 @@ describe('rowsToCsv', () => {
     ], {}, fallbackT);
     expect(csv.slice(1).split('\r\n')[1]).toBe('-5,true');
   });
+
+  it('writes a bigint as its digits and leaves a function or symbol cell blank', () => {
+    const csv = rowsToCsv([{ big: 9007199254740993n, fn: () => 'secret', sym: Symbol('s') }], [
+      { field: 'big', headerName: 'Big', type: 'text' },
+      { field: 'fn', headerName: 'Fn', type: 'text' },
+      { field: 'sym', headerName: 'Sym', type: 'text' },
+    ], {}, fallbackT);
+    expect(csv.slice(1).split('\r\n')[1]).toBe('9007199254740993,,');
+  });
 });
 
 describe('rowsToJson', () => {

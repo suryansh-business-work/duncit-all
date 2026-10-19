@@ -13,6 +13,10 @@ interface Props {
   selected?: SupportChatSession;
   busy: boolean;
   messages: SupportChatMessage[];
+  /** The server may hold lines above the oldest one shown. */
+  hasOlder: boolean;
+  loadingOlder: boolean;
+  onLoadOlder: () => void;
   typingLabel: string | null;
   text: string;
   attachments: string[];
@@ -32,6 +36,9 @@ export default function ChatPane({
   selected,
   busy,
   messages,
+  hasOlder,
+  loadingOlder,
+  onLoadOlder,
   typingLabel,
   text,
   attachments,
@@ -58,7 +65,16 @@ export default function ChatPane({
             onDownload={onDownload}
             onEmail={onEmail}
           />
-          <ChatThread session={selected} messages={messages} typingLabel={typingLabel} />
+          <ChatThread
+            // Its own scroll state per chat: a new one opens on its newest line.
+            key={selected.id}
+            session={selected}
+            messages={messages}
+            typingLabel={typingLabel}
+            hasOlder={hasOlder}
+            loadingOlder={loadingOlder}
+            onLoadOlder={onLoadOlder}
+          />
           {selected.status !== 'CLOSED' && (
             <ChatComposer
               text={text}

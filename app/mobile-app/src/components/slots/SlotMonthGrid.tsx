@@ -1,10 +1,9 @@
-import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { addMonths, buildMonthGrid, clampMonth, monthKeyOf, weekdayInitials } from '@duncit/slots';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { MonthNav } from './MonthNav';
 import { WeekdayHeader } from './WeekdayHeader';
 
 export interface SlotMonthGridProps {
@@ -34,7 +33,6 @@ export default function SlotMonthGrid({
   fmt,
   labels,
 }: Readonly<SlotMonthGridProps>) {
-  const { color: ink } = useThemeColors();
   const weeks = buildMonthGrid(monthKey);
   const initials = weekdayInitials(fmt);
   const firstMonth = bounds ? monthKeyOf(bounds.first) : monthKey;
@@ -49,49 +47,14 @@ export default function SlotMonthGrid({
 
   return (
     <YStack gap={4} testID="slot-month-grid">
-      <XStack alignItems="center" justifyContent="space-between" paddingHorizontal={4}>
-        <XStack
-          testID="slot-month-prev"
-          role="button"
-          aria-label={labels.previousMonth}
-          aria-disabled={!canGoBack}
-          onPress={() => {
-            if (canGoBack) step(-1);
-          }}
-          width={40}
-          height={40}
-          borderRadius={20}
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor="$soft"
-          opacity={canGoBack ? 1 : 0.3}
-          pressStyle={PRESS_STYLE.control}
-        >
-          <MaterialIcons name="chevron-left" size={22} color={ink} />
-        </XStack>
-        <Text fontSize={15} fontWeight="600" color="$color">
-          {title}
-        </Text>
-        <XStack
-          testID="slot-month-next"
-          role="button"
-          aria-label={labels.nextMonth}
-          aria-disabled={!canGoNext}
-          onPress={() => {
-            if (canGoNext) step(1);
-          }}
-          width={40}
-          height={40}
-          borderRadius={20}
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor="$soft"
-          opacity={canGoNext ? 1 : 0.3}
-          pressStyle={PRESS_STYLE.control}
-        >
-          <MaterialIcons name="chevron-right" size={22} color={ink} />
-        </XStack>
-      </XStack>
+      <MonthNav
+        title={title}
+        canGoBack={canGoBack}
+        canGoNext={canGoNext}
+        onStep={step}
+        labels={labels}
+        testIDPrefix="slot-month"
+      />
 
       <WeekdayHeader initials={initials} />
 

@@ -34,6 +34,10 @@ const dateText = (iso: string | null) => (iso ? formatDateTime(iso) || EM_DASH :
 
 const renderStatus = (r: RoundOffRow) => <StatusChip status={r.status} colorMap={STATUS_COLORS} />;
 
+const makeRenderSource = (sourceLabel: (r: RoundOffRow) => string) => (r: RoundOffRow) => (
+  <Chip size="small" variant="outlined" label={sourceLabel(r)} />
+);
+
 interface Props {
   fetchRows: TableFetch<RoundOffRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
@@ -80,7 +84,7 @@ export default function RoundOffsTable({ fetchRows, refetchRef, onOpen }: Readon
         type: 'enum',
         sortable: false,
         options: SOURCES.map((value) => ({ value, label: labels[value] })),
-        cellRenderer: (r) => <Chip size="small" variant="outlined" label={sourceLabel(r)} />,
+        cellRenderer: makeRenderSource(sourceLabel),
         valueGetter: sourceLabel,
       },
       {

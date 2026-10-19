@@ -34,7 +34,7 @@ export default function SiteSeoFields({ control, fragments }: Readonly<Props>) {
           name="favicon_url"
           render={({ field, fieldState }) => (
             <SingleImageUploadField
-              value={field.value ?? ''}
+              value={field.value}
               onChange={field.onChange}
               folder={IMAGE_FOLDER}
               label={t('websiteApp.cms.site.favicon')}
@@ -48,7 +48,7 @@ export default function SiteSeoFields({ control, fragments }: Readonly<Props>) {
           name="seo_image"
           render={({ field, fieldState }) => (
             <SingleImageUploadField
-              value={field.value ?? ''}
+              value={field.value}
               onChange={field.onChange}
               folder={IMAGE_FOLDER}
               label={t('websiteApp.cms.site.seoImage')}

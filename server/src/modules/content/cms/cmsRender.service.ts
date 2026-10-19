@@ -244,6 +244,29 @@ async function compose(site: ICmsSite, resolved: Resolved, mode: Mode) {
   };
 }
 
+/**
+ * A collection page's preview content: a list shows the newest entries, a
+ * detail shows `entryId` (or the newest entry when none is given).
+ */
+async function previewCollection(resolved: Resolved, page: ICmsPage, site: ICmsSite, entryId?: string | null) {
+  const collection = page.collection_type;
+  if (page.kind === 'PAGE' || !collection) return;
+  const filter = { site_id: site._id, collection_type: collection };
+  if (page.kind === 'COLLECTION_LIST') {
+    resolved.entries = await CmsEntryModel.find(filter).sort({ published_at: -1 }).limit(CMS_LIST_PAGE_SIZE).exec();
+  } else {
+    const entry = entryId
+      ? await CmsEntryModel.findOne({ ...filter, _id: assertId(entryId, 'entry') }).exec()
+      : await CmsEntryModel.findOne(filter).sort({ published_at: -1 }).exec();
+    if (entry) resolved.entry = entry;
+  }
+  resolved.collectionBase = collectionPathsOf(site)[collection];
+  resolved.template ||= page.kind === 'COLLECTION_LIST' ? DEFAULT_LIST_TEMPLATE : DEFAULT_DETAIL_TEMPLATE;
+}
+
+/** The error codes as plain numbers, so any status can be looked up. */
+const ERROR_CODES: readonly number[] = CMS_ERROR_CODES;
+
 function siteOut(site: ICmsSite) {
   const pub = toSite(site);
   return {
@@ -304,19 +327,7 @@ export const cmsRenderService = {
       resolved.css = joinCss(saved.css, saved.scss);
       resolved.js = saved.js;
     }
-    if (page.kind !== 'PAGE' && page.collection_type) {
-      const filter = { site_id: site._id, collection_type: page.collection_type };
-      if (page.kind === 'COLLECTION_LIST') {
-        resolved.entries = await CmsEntryModel.find(filter).sort({ published_at: -1 }).limit(CMS_LIST_PAGE_SIZE).exec();
-      } else {
-        const entry = entryId
-          ? await CmsEntryModel.findOne({ ...filter, _id: assertId(entryId, 'entry') }).exec()
-          : await CmsEntryModel.findOne(filter).sort({ published_at: -1 }).exec();
-        if (entry) resolved.entry = entry;
-      }
-      resolved.collectionBase = collectionPathsOf(site)[page.collection_type];
-      resolved.template ||= page.kind === 'COLLECTION_LIST' ? DEFAULT_LIST_TEMPLATE : DEFAULT_DETAIL_TEMPLATE;
-    }
+    await previewCollection(resolved, page, site, entryId);
     return respond(site, resolved, mode);
   },
 
@@ -326,7 +337,7 @@ export const cmsRenderService = {
    * show the 503 page while this API is the thing that is down.
    */
   async errorPage(host: string, code: number) {
-    if (!CMS_ERROR_CODES.some((known) => known === code)) return null;
+    if (!ERROR_CODES.includes(code)) return null;
     const site = await CmsSiteModel.findOne({ domains: normaliseHost(host), is_active: true }).exec();
     if (!site) return null;
     const page = await CmsPageModel.findOne({ site_id: site._id, kind: 'PAGE', path: `/${code}`, is_published: true }).exec();

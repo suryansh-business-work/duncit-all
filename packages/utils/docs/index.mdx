@@ -3419,44 +3419,78 @@ const problem = reportSubmitError(pickedCategory, details); // a translation key
 ## Recurring pods — `pod-series`
 
 A host can make a pod **Recurring**: its first date (a venue slot, or a virtual window) repeats
-daily, weekly or every two weeks until an end day. The server works out every date and the
-identical slot it needs (`podSeriesPreview`), and `publishPodDraftSeries` publishes **one pod**
-with those dates. Feeds, the shop, counts and Pod Details show it once; underneath, each date keeps
-its own seats, tickets, attendance, refunds, settlement and venue request. The plan also carries
-the multi-date discount the host set (prefilled from Admin > Pods > Pod Settings).
+daily, weekly, every two weeks or monthly until an end day — or runs only on the days the host
+taps on the calendar (`CUSTOM`). The end day is held within Pod Settings' span (`podSeriesLimits`).
+The server works out every date and its slot (`podSeriesPreview`): the venue's identical free slot
+when it has one, otherwise the date is **on request** — the venue gets the request and the slot is
+opened only if it accepts. `publishPodDraftSeries` publishes **one pod** with those dates. Feeds,
+the shop, counts and Pod Details show it once; underneath, each date keeps its own seats, tickets,
+attendance, refunds, settlement and venue request. The plan also carries the multi-date discount
+the host set (prefilled from Admin > Pods > Pod Settings); the host's share funds it, so the
+server refuses a discount that would leave a date unable to cover its venue.
 
 | Export | Meaning |
 | --- | --- |
-| `POD_SERIES_FREQUENCIES` | The repeat choices with their label keys (`DAILY`, `WEEKLY`, `BIWEEKLY`). |
+| `POD_SERIES_FREQUENCIES` | The repeat choices with their label keys (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`, `CUSTOM`). |
 | `POD_SERIES_SKIP_REASON_KEY` | Why a date cannot run (no slot, venue on leave, taken, removed, failed), as a key. |
 | `endOfDayInZone(ymd, timeZone)` | The last moment of a calendar day in the admin zone, as ISO — what `ends_on` carries. |
-| `buildPodSeriesPlan(source, timeZone)` | The plan to preview/publish, or null while repeat is off or the first date is not chosen. |
+| `ymdInZone(iso, timeZone)` | The calendar day an instant falls on in the admin zone — where the host's calendar marks a date. |
+| `customDateStart(firstIso, ymd, timeZone)` | A tapped calendar day at the first date's time of day, as ISO — what `custom_dates` carries. |
+| `buildPodSeriesPlan(source, timeZone)` | The plan to preview/publish, or null while repeat is off or the first date is not chosen. `CUSTOM` sends the tapped days (`repeat_custom_days`) and skips nothing. |
 | `groupSlotRequestsBySeries(rows, keyOf)` | A venue's pending requests with each series folded into one group, dates in order. |
-| `POD_SERIES_PREVIEW_SDL` / `PUBLISH_POD_DRAFT_SERIES_SDL` / `VENUE_DECIDE_POD_SERIES_SDL` | The documents, as SDL strings. |
+| `POD_SERIES_PREVIEW_SDL` / `POD_SERIES_LIMITS_SDL` / `PUBLISH_POD_DRAFT_SERIES_SDL` / `VENUE_DECIDE_POD_SERIES_SDL` | The documents, as SDL strings. |
+
+```ts
+const plan = buildPodSeriesPlan(
+  { ...form, repeat_frequency: 'CUSTOM', repeat_custom_days: ['2026-11-09', '2026-11-20'] },
+  'Asia/Kolkata',
+);
+// plan.custom_dates → each day at the first date's time, e.g. '2026-11-09T13:30:00.000Z'
+```
 
 ### Booking a recurring pod — `pod-series-booking`
 
-A member picks the dates to book — the next one, all open dates, or a hand-picked set — and pays
-each date's ticket less the multi-date discount. One date is booked like any pod; several dates of
-a paid pod go through one checkout that the server prices (`recurringCheckoutQuote`) and charges
-as one payment per date under a single Razorpay order.
+A member sees only the dates the venue accepted. They tick the dates to book (or **Select all**),
+each priced on its own, and pay those tickets less the multi-date discount. One date is booked like
+any pod; several dates of a paid pod go through one checkout that the server prices
+(`recurringCheckoutQuote`) and charges as one payment per date under a single Razorpay order.
 
 | Export | Meaning |
 | --- | --- |
 | `MultiDateDiscountTier` | `{ min_dates, discount_pct }` — percent off a booking of at least that many dates. |
-| `SeriesDateRow` / `SeriesDateStatus` | One date as `podSeriesDates` returns it, and how it stands. |
-| `SERIES_BOOKING_CHOICES` / `SERIES_DATE_STATUS_KEY` | The picker's choices and the status labels, as keys. |
+| `SeriesDateRow` / `SeriesDateStatus` | One date as `podSeriesDates` returns it (with its own `pod_amount`), and how it stands. |
+| `SERIES_DATE_STATUS_KEY` | The status labels, as keys. |
 | `bookableSeriesDates(rows)` / `bookedSeriesDates(rows)` | The dates open to book, and the viewer's booked dates. |
-| `seriesDatesForChoice(rows, choice, picked)` | The date ids a choice books, in date order. |
-| `resolveMultiDateTier(tiers, dates)` / `seriesBookingEstimate(perDate, dates, tiers)` | The tier reached, and the picker's price preview. |
+| `pickedSeriesDates(rows, picked)` | The ticked dates that can still be booked, in date order (the first carries products). |
+| `resolveMultiDateTier(tiers, dates)` / `seriesBookingEstimate(perDatePrices, tiers)` | The tier reached, and the picker's price preview over each picked date's price. |
 | `multiDateTiersForEditor` / `multiDateTiersFromEditor` | Map tiers to and from the shared tier editor (`TicketDiscountField`). |
 | `mwebMultiDateDiscountLabels(t)` / `adminMultiDateDiscountLabels(t)` | The tier editor's words, counted in dates. |
 | `POD_SERIES_MAX_DATES` | The most dates any recurring pod may have (Pod Settings caps it lower). |
 | `POD_SERIES_DATES_SDL` / `JOIN_FREE_POD_DATES_SDL` / `RECURRING_CHECKOUT_QUOTE_SDL` | The documents, as SDL strings. |
 
 ```ts
-const ids = seriesDatesForChoice(rows, 'ALL', []);
-const { total, pct } = seriesBookingEstimate(499, ids.length, [{ min_dates: 4, discount_pct: 10 }]);
+const picked = pickedSeriesDates(rows, tickedIds);
+const { total, pct } = seriesBookingEstimate(
+  picked.map((row) => row.pod_amount),
+  [{ min_dates: 4, discount_pct: 10 }],
+);
+```
+
+### Time clash before a booking — `pod-booking-clash`
+
+Just before a join or a checkout, Pod Details asks the server (`myBookingClashes`) which of the
+member's JOINED pods overlap the pod(s) being booked, then lists them with Force book / Cancel
+booking. Advisory only: no booking path refuses on it.
+
+| Export | What it is |
+| --- | --- |
+| `MY_BOOKING_CLASHES_SDL` | The query, as an SDL string (mWeb wraps it with `gql`; native re-declares it for codegen). |
+| `PodBookingClash` | One overlapping booked pod: its id, slugs, title, start and resolved end, and the target it clashes with. |
+| `uniqueClashingPods(clashes)` | Each clashing pod once, earliest first — several booked dates can clash with the same pod. |
+
+```ts
+const pods = uniqueClashingPods(data.myBookingClashes);
+if (pods.length > 0) showClashDialog(pods);
 ```
 
 ## Hosting a pod again — `host-again`
@@ -3574,6 +3608,29 @@ chatRoomPath('CLUB', 'c1')                    // '/chats/club/c1'
 mergeEarlierMessages([{ id: 'a' }], [{ id: 'a' }, { id: 'b' }]) // a, b
 ```
 
+## Scroll-up history in every chat room — `chat-history`
+
+Pod, club, support and staff rooms all open on their newest page and load older lines only when
+the reader scrolls up to the top — never the whole history at once. The server pages every room
+with `limit` + `before` (the oldest loaded line's time); these helpers are the client half, shared by
+mWeb, the app and the portals. An older page goes in front with `mergeEarlierMessages`.
+
+| Export | Meaning |
+| --- | --- |
+| `CHAT_HISTORY_PAGE` | Lines per page (30). |
+| `CHAT_HISTORY_TRIGGER_PX` | How near the top (px) reading must come to ask for the older page (120). |
+| `hasOlderPage(pageLength, pageSize?)` | A full page may have more before it; a short page is the start of the room. |
+| `olderPageCursor(messages, timeOf)` | The `before` for the next page — the oldest line's time, or `null` when empty. |
+| `isNearHistoryTop(scrollTop, triggerPx?)` | Whether the list is scrolled close enough to the top to load. |
+| `anchoredScrollTop(top, heightBefore, heightAfter)` | The scroll position that keeps the reader's line still after older lines were added above. |
+
+```ts
+const page = await fetchRoom({ limit: CHAT_HISTORY_PAGE, before: olderPageCursor(lines, (l) => l.createdAt) });
+const more = hasOlderPage(page.length);             // false once the first message is reached
+lines = mergeEarlierMessages(page, lines);
+list.scrollTop = anchoredScrollTop(top, heightBefore, list.scrollHeight); // no jump
+```
+
 ## The venue bill at Complete Pod — `venue-bill`
 
 Whoever completes a pod may enter the venue final bill. The server decides the money
@@ -3603,6 +3660,29 @@ const lines = buildVenueBillLines(
 The slot-price line is left out when there is none to state (a legacy pod with no slot link).
 `firstMediaUrl` reads the single bill URL out of a media picker newline-separated value. Web
 renderer: `VenueBillSummary` in `@duncit/ui`.
+
+## Gig Jobs — `gig-jobs`
+
+Hosts, venue owners and brand owners post what an event or workshop needs; freelancers
+who joined from Earn with Duncit say they are interested, which swaps contacts (free
+today). The MUI screens are `@duncit/gig-jobs`; this module is what every surface —
+native included — shares:
+
+- **Documents** as plain strings (`GIG_JOBS_QUERY`, `GIG_JOB_QUERY`, `CREATE_GIG_JOB_MUTATION`,
+  `EXPRESS_GIG_INTEREST_MUTATION`, `SAVE_FREELANCER_PROFILE_MUTATION` …). The board never asks
+  for a contact; only a gig's own page does, and the server answers null until the viewer may see it.
+- **Paths** — `GIG_JOBS_PATH`, `GIG_POST_PATH`, `MY_GIGS_PATH`, `gigJobPath(id)`,
+  `gigJobEditPath(id)`, `FREELANCER_PROFILE_PATH`.
+- **Literal label keys** — `gigPosterRoleKey`, `gigEventTypeKey`, `gigStatusKey` (an unknown value
+  falls back to a real label), and `gigBudgetText` (null = to be discussed).
+- **Rules** — `canPostGigs(viewer)`; `gigViewerAction(job, viewer)` = MANAGE / CONTACT_SHARED /
+  CLOSED / JOIN_AS_FREELANCER / INTEREST, the one button a viewer gets; `gigRoleOptions`,
+  `freelancerSkillOptions`, `prunedGigRoles` (roles a new category still offers, null = no change);
+  `settledGigFilter` + `GIG_FILTER_SETTLE_MS` for the board's typed boxes; `gigContactLinks` (tel /
+  wa.me / mailto).
+- **Forms** — `emptyGigJobValues(viewer)` (contact prefilled from the account, the poster role
+  preselected only when there is one), `gigJobToValues` / `toGigJobInput`, `freelancerToValues` /
+  `toFreelancerInput` (drops skills no chosen category offers). Phones go out compacted.
 
 ## A venue's food menu and its QR order — `venue-food`
 

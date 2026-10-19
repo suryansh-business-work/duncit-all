@@ -23,18 +23,32 @@ const meeting = (over: Partial<EarnMeeting> = {}): EarnMeeting => ({
 });
 
 describe('EARN_JOURNEYS', () => {
-  it('ships the four journeys in display order with distinct roles and kinds', () => {
-    expect(EARN_JOURNEYS.map((j) => j.kind)).toEqual(['HOST', 'VENUE', 'ECOMM', 'CLUB_ADMIN']);
-    expect(new Set(EARN_JOURNEYS.map((j) => j.role)).size).toBe(4);
-    expect(EARN_JOURNEYS.map((j) => j.iconKey)).toEqual(['host', 'venue', 'ecomm', 'club']);
+  it('ships the five journeys in display order with distinct roles and kinds', () => {
+    expect(EARN_JOURNEYS.map((j) => j.kind)).toEqual(['HOST', 'VENUE', 'ECOMM', 'CLUB_ADMIN', 'FREELANCER']);
+    expect(new Set(EARN_JOURNEYS.map((j) => j.role)).size).toBe(5);
+    expect(EARN_JOURNEYS.map((j) => j.iconKey)).toEqual(['host', 'venue', 'ecomm', 'club', 'freelancer']);
   });
 
-  it('gives every journey both a survey path and a native route', () => {
+  it('starts every meeting journey at its survey, and the freelancer one at its profile form', () => {
     for (const journey of EARN_JOURNEYS) {
-      expect(journey.surveyPath.startsWith('/survey/')).toBe(true);
+      const start = journey.kind === 'FREELANCER' ? '/earn/freelancer' : '/survey/';
+      expect(journey.surveyPath.startsWith(start)).toBe(true);
       expect(journey.nativeRoute).not.toBe('');
       expect(journey.cta.label).not.toBe('');
     }
+  });
+
+  it('sends an enabled freelancer to the gig board in-app', () => {
+    const freelancer = EARN_JOURNEYS.find((j) => j.kind === 'FREELANCER') as EarnJourney;
+    expect(freelancer.role).toBe('FREELANCER');
+    expect(freelancer.cta).toEqual({
+      target: 'internal',
+      label: 'Browse gig jobs',
+      internalTo: '/gigs',
+      internalRoute: 'GigJobs',
+    });
+    expect(earnBoxState(freelancer, ['USER', 'FREELANCER'], [])).toMatchObject({ disabled: true, approved: true });
+    expect(earnBoxState(freelancer, ['USER'], [])).toMatchObject({ disabled: false, approved: false });
   });
 
   it('builds an absolute partner-portal URL', () => {

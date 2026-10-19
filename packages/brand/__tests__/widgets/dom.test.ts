@@ -48,6 +48,12 @@ describe('formText', () => {
     expect(formText(data, 'name')).toBe('Asha');
     expect(formText(data, 'missing')).toBe('');
   });
+
+  it('reads a file field as empty rather than as the File object', () => {
+    const data = new FormData();
+    data.set('name', new File(['x'], 'cv.pdf', { type: 'application/pdf' }));
+    expect(formText(data, 'name')).toBe('');
+  });
 });
 
 describe('postGraphql', () => {

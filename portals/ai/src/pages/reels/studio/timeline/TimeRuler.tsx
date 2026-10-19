@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent, type PointerEvent } from 'react';
+import type { KeyboardEvent, PointerEvent } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { formatReelDuration } from '../../format';
@@ -22,23 +22,21 @@ const BIG_STEP_MS = 1000;
  */
 export default function TimeRuler({ lengthMs, playheadMs, zoom, onSeek }: Readonly<Props>) {
   const { t } = useTranslation();
-  const ref = useRef<HTMLDivElement>(null);
   const step = tickSeconds(zoom);
   const ticks = Array.from({ length: Math.floor(lengthMs / 1000 / step) + 1 }, (_value, index) => index * step);
 
-  const msAt = (clientX: number): number => {
-    const left = ref.current?.getBoundingClientRect().left ?? 0;
-    return clamp(pxToMs(clientX - left, zoom), 0, lengthMs);
-  };
+  // The pointer handlers sit on the ruler itself, so its box is the event's currentTarget.
+  const msAt = (event: PointerEvent<HTMLDivElement>): number =>
+    clamp(pxToMs(event.clientX - event.currentTarget.getBoundingClientRect().left, zoom), 0, lengthMs);
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    onSeek(msAt(event.clientX));
+    onSeek(msAt(event));
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     // Only while the button is held — a hover is not a scrub.
-    if (event.buttons === 1) onSeek(msAt(event.clientX));
+    if (event.buttons === 1) onSeek(msAt(event));
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -57,7 +55,6 @@ export default function TimeRuler({ lengthMs, playheadMs, zoom, onSeek }: Readon
 
   return (
     <Box
-      ref={ref}
       role="slider"
       tabIndex={0}
       aria-label={t('ai.reels.editor.rulerLabel')}

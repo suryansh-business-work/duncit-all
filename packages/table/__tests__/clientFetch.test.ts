@@ -205,3 +205,19 @@ describe('clientTableFetch column filters', () => {
     expect(page.total).toBe(1);
   });
 });
+
+describe('clientTableFetch sorting non-text cells in a text column', () => {
+  it('compares numbers, flags and bigints by their text and sorts a function cell as blank', async () => {
+    type Cell = { label: string; code: unknown };
+    const cells: Cell[] = [
+      { label: 'flag', code: true },
+      { label: 'twelve', code: 12 },
+      { label: 'callback', code: () => 'secret' },
+      { label: 'seven', code: 7n },
+      { label: 'text', code: 'abc' },
+    ];
+    const fetchCells = clientTableFetch(cells, (row) => row.label, [{ field: 'code', headerName: 'Code', type: 'text' }]);
+    const page = await fetchCells(query({ sortBy: 'code', sortDir: 'asc' }));
+    expect(page.rows.map((row) => row.label)).toEqual(['callback', 'seven', 'twelve', 'text', 'flag']);
+  });
+});

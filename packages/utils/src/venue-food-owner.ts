@@ -19,7 +19,6 @@ import { PUBLIC_PAGE_RANGES } from './public-page';
 import {
   FOOD_ORDER_FLOW,
   formatFoodMoney,
-  type VenueFoodDiet,
   type VenueFoodFeedback,
   type VenueFoodOrderLine,
   type VenueFoodOrderStatus,
@@ -391,7 +390,8 @@ export const foodOrderAdvanceLabel = (t: FoodOwnerTranslate, next: VenueFoodOrde
   return key ? t(key) : foodOrderStatusLabel(t, next);
 };
 
-export const foodDietLabel = (t: FoodOwnerTranslate, diet: VenueFoodDiet | string): string =>
+/** A dish's diet in words — a `VenueFoodDiet`, though any stored value is accepted. */
+export const foodDietLabel = (t: FoodOwnerTranslate, diet: string): string =>
   labelOf(t, DIET_KEYS, diet);
 
 /** A dish's spice level in words — what the menu editor's select offers on every surface. */

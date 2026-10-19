@@ -39,8 +39,8 @@ export default function ComponentCodeDialog({ siteId, component, onClose, onSave
       notifySuccess(t('websiteApp.cms.componentCode.saved'));
       onSaved();
       onClose();
-    } catch (failure) {
-      setSaveError(cmsErrorMessage(failure, t('websiteApp.cms.componentCode.saveFailed')));
+    } catch (error_) {
+      setSaveError(cmsErrorMessage(error_, t('websiteApp.cms.componentCode.saveFailed')));
     } finally {
       setSubmitting(false);
     }

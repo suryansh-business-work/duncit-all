@@ -1,5 +1,5 @@
 import { parse } from 'graphql';
-import type { SocialHandles } from '@duncit/onboarding';
+import type { EarnCardImages, SocialHandles } from '@duncit/onboarding';
 
 /**
  * Venue/Host onboarding survey shown before "Be a host" / "Register a venue".
@@ -82,6 +82,9 @@ export interface MeetingSlotsResult {
   meetingSlots: MeetingSlot[];
 }
 export interface MyMeetingsResult {
+  /** Each Earn card's featured image — read alongside the meetings so the Earn
+   * screen stays one request. */
+  onboardingIntro?: { earn_card_images: EarnCardImages } | null;
   myMeetings: (MyMeeting & {
     kind: string;
     /** Linked onboarded record status (DRAFT|SUBMITTED|APPROVED|REJECTED) once a
@@ -214,6 +217,15 @@ export const MyMeetingsDocument = parse(`
       requested_at
       scheduled_at
       reschedule_count
+    }
+    onboardingIntro {
+      earn_card_images {
+        host
+        venue
+        ecomm
+        club
+        freelancer
+      }
     }
   }
 `);

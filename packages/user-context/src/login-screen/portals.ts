@@ -65,13 +65,14 @@ export const PORTALS: PortalEntry[] = [
   { key: 'clubs', name: 'Clubs', descriptionKey: 'session.portals.descriptions.clubs', port: 2031, subdomain: 'clubs', category: 'partners', image: PEXELS('3184398') },
   { key: 'club-admins', name: 'Club Admins', descriptionKey: 'session.portals.descriptions.clubAdmins', port: 2032, subdomain: 'club-admins', category: 'partners', image: PEXELS('3182812') },
   { key: 'hosts', name: 'Hosts', descriptionKey: 'session.portals.descriptions.hosts', port: 2033, subdomain: 'hosts', category: 'partners', image: PEXELS('1181395') },
-  { key: 'pods', name: 'Pods', descriptionKey: 'session.portals.descriptions.pods', port: 2034, subdomain: 'pods', category: 'operations', image: PEXELS('1153213') },
+  { key: 'pods', name: 'Pods', descriptionKey: 'session.portals.descriptions.pods', port: 2034, subdomain: 'pods', category: 'operations', image: PEXELS('7149165') },
   { key: 'communications', name: 'Communications', descriptionKey: 'session.portals.descriptions.communications', port: 2035, subdomain: 'communications', category: 'growth', image: PEXELS('1591062') },
   { key: 'logs', name: 'Logs', descriptionKey: 'session.portals.descriptions.logs', port: 2036, subdomain: 'logs', category: 'operations', image: PEXELS('546819') },
   { key: 'analytics', name: 'Analytics', descriptionKey: 'session.portals.descriptions.analytics', port: 2037, subdomain: 'analytics', category: 'operations', image: PEXELS('590022') },
   { key: 'ecomm-portal', name: 'E-commerce', descriptionKey: 'session.portals.descriptions.ecommPortal', port: 2038, subdomain: 'ecomm-portal', category: 'growth', image: PEXELS('1350593') },
   { key: 'localization', name: 'Localization', descriptionKey: 'session.portals.descriptions.localization', port: 2042, subdomain: 'localization', category: 'operations', image: PEXELS('267669') },
   { key: 'targets', name: 'Targets', descriptionKey: 'session.portals.descriptions.targets', port: 2044, subdomain: 'targets', category: 'operations', image: PEXELS('3184291') },
+  { key: 'gig-jobs', name: 'Gig Jobs', descriptionKey: 'session.portals.descriptions.gigJobs', port: 2045, subdomain: 'gig-jobs', category: 'operations', image: PEXELS('3184465') },
 ];
 
 /** Resolves a portal URL: localhost:<port> in dev, https://<sub>.duncit.com in prod. */

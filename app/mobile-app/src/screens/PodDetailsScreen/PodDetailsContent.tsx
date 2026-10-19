@@ -16,6 +16,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { usePublicFinance } from '@/hooks/usePublicFinance';
 import type { CartLineMeta } from '@/stores/cart.store';
 import type { RootStackParamList } from '@/navigation/types';
+import { formatMoney } from '@/utils/checkout-math';
 
 import { PodChallengesSection } from '@/components/challenge/PodChallengesSection';
 
@@ -103,7 +104,9 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
       <PodSeriesDates
         series={props.series}
         currentPodId={pod.id}
-        isHost={props.isPodHost}
+        formatPrice={
+          props.isFree ? undefined : (amount) => formatMoney(props.finance.currency, amount)
+        }
         onOpenDate={(datePodId) => navigation.push('PodDetails', { podId: datePodId })}
       />
       <YStack height={20} />

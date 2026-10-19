@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
+import { CHAT_HISTORY_PAGE } from '@duncit/utils';
 import { canReopen, downloadBase64File, mergeReal, transcriptMime } from '../chatHelpers';
 import { useSupportChatSocket, type TypingPayload } from '../useSupportChatSocket';
+import { useSupportChatHistory } from './useSupportChatHistory';
 import {
   MARK_SUPPORT_CHAT_READ,
   MY_SUPPORT_CHAT,
@@ -41,7 +43,7 @@ export function useSupportChat() {
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const messagesQuery = useQuery<{ supportChatMessages: SupportChatMessage[] }>(SUPPORT_CHAT_MESSAGES, {
-    variables: { session_id: sessionId, limit: 100 }, skip: !sessionId, fetchPolicy: 'network-only',
+    variables: { session_id: sessionId, limit: CHAT_HISTORY_PAGE }, skip: !sessionId, fetchPolicy: 'network-only',
   });
   const [startChat] = useMutation<any>(START_SUPPORT_CHAT);
   const [sendMessage, { loading: sending }] = useMutation<any>(SEND_SUPPORT_CHAT_MESSAGE);
@@ -69,6 +71,9 @@ export function useSupportChat() {
 
   useEffect(() => { if (sessionQuery.data) setSession(sessionQuery.data.mySupportChat); }, [sessionQuery.data]);
   useEffect(() => { if (messagesQuery.data) setMessages(messagesQuery.data.supportChatMessages); }, [messagesQuery.data]);
+  const history = useSupportChatHistory({
+    sessionId, firstPageLength: messagesQuery.data?.supportChatMessages.length ?? 0, messages, setMessages,
+  });
   useEffect(() => { if (sessionId) markRead({ variables: { session_id: sessionId } }); }, [sessionId, markRead]);
 
   const deliver = useCallback(async (tempId: string, text: string, attachments: string[]) => {
@@ -132,5 +137,6 @@ export function useSupportChat() {
     session, sessionId, messages, loading: sessionQuery.loading && !session,
     closed, reopenable, typingText, resolving, reopening, sending,
     emitTyping, send, retry, resolve, reopen, download, applyFeedback,
+    canLoadOlder: history.canLoadOlder, loadOlder: history.loadOlder,
   };
 }

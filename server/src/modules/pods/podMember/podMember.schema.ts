@@ -398,6 +398,20 @@ export const podMemberTypeDefs = /* GraphQL */ `
     payment_id: ID
   }
 
+  "A pod the caller is already JOINED on whose time overlaps a pod they are about to book."
+  type PodBookingClash {
+    "The pod being booked (one of the ids asked about)."
+    target_pod_id: ID!
+    "The already-booked pod's document id."
+    pod_id: ID!
+    pod_slug: String!
+    club_slug: String!
+    pod_title: String!
+    pod_date_time: String!
+    "Its end — pod_end_date_time, or the start plus the live tail when none is set."
+    pod_end_date_time: String!
+  }
+
   "Server-side table page for the shared table engine (backoutRefundRequestsTable)."
   type BackoutRefundRequestTablePage {
     rows: [BackoutRefundRequest!]!
@@ -408,6 +422,12 @@ export const podMemberTypeDefs = /* GraphQL */ `
 
   extend type Query {
     myPodMemberships(status: MembershipStatus): [PodMember!]!
+    """
+    The caller's JOINED pods whose time overlaps any of pod_doc_ids — asked just
+    before a booking so the member can free a clashing spot or book anyway.
+    Advisory only: no booking path refuses on it.
+    """
+    myBookingClashes(pod_doc_ids: [ID!]!): [PodBookingClash!]!
     podMembershipState(pod_doc_id: ID!): PodMembershipState!
     podMembers(pod_doc_id: ID!, status: MembershipStatus): [PodMember!]!
     """

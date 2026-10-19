@@ -11,6 +11,10 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./__tests__/unit-tests/setup.ts'],
+    // Full table + dialog suites (ReelsManager) run 2-6s each under v8 coverage on
+    // CI, so the 5s default fails them on runner speed alone — same as support/crm.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     // Vitest specs live under __tests__/unit-tests; the co-located *.form.cy.tsx
     // schema spec also runs here. Cypress e2e specs under __tests__/e2e are
     // discovered separately by Cypress.

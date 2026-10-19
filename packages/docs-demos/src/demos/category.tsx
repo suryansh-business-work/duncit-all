@@ -83,7 +83,7 @@ export default defineDemos('category', [
       const duplicates = duplicateCategoryRows(mock.rows);
       return {
         'Primary (row 1)': mock.rows[0]?.sub_name || '(not chosen yet)',
-        'isCompleteCategory(row), per row': mock.rows.map(isCompleteCategory),
+        'isCompleteCategory(row), per row': mock.rows.map((row) => isCompleteCategory(row)),
         'duplicateCategoryRows(rows) — row indexes flagged with labels.duplicate': [...duplicates],
         'Add button': mock.rows.length >= mock.max ? 'disabled — the list is at max' : 'enabled',
         'What a venue form sends: whole rows only, primary first': mock.rows

@@ -1,6 +1,8 @@
 import { Fragment, useMemo, useState, type ComponentProps, type RefObject } from 'react';
 import { Badge, Box, Chip, Fab, Typography } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ChatHistoryTop from '../../../components/chat-history/ChatHistoryTop';
+import { useScrollUpHistory } from '../../../components/chat-history/useScrollUpHistory';
 import MomentLightbox from '../../../components/moments/MomentLightbox';
 import ChatRoomNotice from '../ChatRoomNotice';
 import MessageBubble from '../MessageBubble';
@@ -19,9 +21,16 @@ interface ChatMessageListProps {
   myId: unknown;
   onOpenReact: (el: HTMLElement, id: string) => void;
   onOpenActions: (el: HTMLElement, id: string) => void;
+  /** Scroll-up history: whether an older page may exist, and how to load it. */
+  canLoadOlder: boolean;
+  loadOlder: () => Promise<void>;
 }
 
-/** The scrolling message log, opened by the room's status notice, split by day. */
+/**
+ * The scrolling message log, split by day. It opens on the newest page; reading
+ * up to the top loads the one before. The room's status notice opens it once
+ * its first line is in.
+ */
 export default function ChatMessageList({
   scrollRef,
   podEnded,
@@ -29,10 +38,13 @@ export default function ChatMessageList({
   myId,
   onOpenReact,
   onOpenActions,
+  canLoadOlder,
+  loadOlder,
 }: Readonly<ChatMessageListProps>) {
   const { t } = useTranslation();
   const { formatDate, timeZone } = useDateFormat();
   const follow = useChatFollow(scrollRef, messages, myId);
+  const history = useScrollUpHistory({ scrollRef, oldestId: messages[0]?.id, canLoadOlder, loadOlder });
   // Every photo in the room, so the viewer swipes through them in order.
   const photos = useMemo(
     () => messages.filter((m: ChatMessage) => m.type === 'IMAGE' && !m.deleted && m.image_url),
@@ -53,10 +65,20 @@ export default function ChatMessageList({
         ref={scrollRef}
         data-testid="chat-room-messages"
         role="log"
-        onScroll={follow.onScroll}
-        sx={{ flex: 1, overflowY: 'auto', px: { xs: 1.25, sm: 2 }, py: 1.25 }}
+        aria-busy={history.loadingOlder}
+        onScroll={() => {
+          follow.onScroll();
+          history.onScrollNearTop();
+        }}
+        sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: { xs: 1.25, sm: 2 }, py: 1.25 }}
       >
-        {podEnded !== null && <ChatRoomNotice ended={podEnded} />}
+        <ChatHistoryTop
+          canLoadOlder={canLoadOlder}
+          loadingOlder={history.loadingOlder}
+          olderFailed={history.olderFailed}
+          onShowOlder={history.showOlder}
+        />
+        {podEnded !== null && !canLoadOlder && <ChatRoomNotice ended={podEnded} />}
         {messages.length === 0 && (
           <Typography
             variant="body2"

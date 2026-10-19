@@ -27,7 +27,7 @@ export const SUPPORT_PROMPTS = [
     variables: [],
     usage: [
       {
-        file: 'server/src/modules/support/supportChat/supportChat.ai.ts',
+        file: 'server/src/microservices/chat/support/supportChat.ai.ts',
         surface: 'Mobile app · mWeb · "Chat with Us"',
         trigger: 'A member sends a message in support chat',
       },

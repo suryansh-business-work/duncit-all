@@ -94,11 +94,11 @@ export function mount(root: HTMLElement): void {
   /** Fill the rate table when this build shipped it empty. One fetch serves
    * both sections — the contract is the `data-rate-empty` marker. */
   const fillRateTable = () => {
-    const body = document.querySelector('[data-rate-rows][data-rate-empty]');
+    const body = document.querySelector<HTMLElement>('[data-rate-rows][data-rate-empty]');
     if (!body) return;
     const notes = placementNotes();
     body.innerHTML = card.entries.map((entry) => rateRow(entry, notes, money)).join('');
-    body.removeAttribute('data-rate-empty');
+    delete body.dataset.rateEmpty;
   };
 
   /** Rebuild the chips from the live card, keeping whatever was ticked. A

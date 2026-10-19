@@ -240,7 +240,7 @@ export const OPENAI_TASK_KEYS = Object.keys(OPENAI_TASKS) as OpenAiTaskKey[];
 
 /** Narrow a client-supplied key to the catalogue — an unknown key is not a feature. */
 export const isOpenAiTaskKey = (key: string): key is OpenAiTaskKey =>
-  Object.prototype.hasOwnProperty.call(OPENAI_TASKS, key);
+  Object.hasOwn(OPENAI_TASKS, key);
 
 /** The catalogue as the filter options the Logs page renders. */
 export const openAiTaskOptions = () =>

@@ -139,7 +139,7 @@ export const podChallengeService = {
     if (input.tool_overrides?.length && !eligibility.mapping?.allow_host_customization) {
       bad('Hosts cannot customise tools for this category');
     }
-    const tools = applyOverrides(tpl.tool_instances as PodChallengeDoc['tools'], input.tool_overrides);
+    const tools = applyOverrides(tpl.tool_instances, input.tool_overrides);
     const doc = await PodChallengeModel.create({
       pod_id: pod._id,
       template_id: tpl._id,
@@ -152,7 +152,7 @@ export const podChallengeService = {
       audience_interaction_enabled: eligibility.mapping?.allow_audience_voting,
       created_by: user.id,
     });
-    const created = doc.toObject() as PodChallengeDoc;
+    const created = doc.toObject();
     await commit(created, { statuses: ['DRAFT'] }, {}, { actorId: user.id, action: 'CREATE', newValue: { template_id: input.template_id } });
     return viewOf(await loadChallenge(created._id.toString()), pod, user);
   },

@@ -9,7 +9,7 @@
  */
 import type { MultiDateDiscountTier } from './pod-series-booking';
 
-export type PodSeriesFrequency = 'DAILY' | 'WEEKLY' | 'BIWEEKLY';
+export type PodSeriesFrequency = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'CUSTOM';
 
 export type PodSeriesSkipReason = 'NO_SLOT' | 'HOLIDAY' | 'TAKEN' | 'REMOVED_BY_HOST' | 'FAILED';
 
@@ -18,6 +18,8 @@ export const POD_SERIES_FREQUENCIES: readonly { value: PodSeriesFrequency; label
   { value: 'DAILY', labelKey: 'mweb.podSeries.daily' },
   { value: 'WEEKLY', labelKey: 'mweb.podSeries.weekly' },
   { value: 'BIWEEKLY', labelKey: 'mweb.podSeries.biweekly' },
+  { value: 'MONTHLY', labelKey: 'mweb.podSeries.monthly' },
+  { value: 'CUSTOM', labelKey: 'mweb.podSeries.custom' },
 ];
 
 /** Why a date cannot run, as the preview list says it. */
@@ -54,6 +56,30 @@ function zoneOffsetMs(at: Date, timeZone: string): number {
   }
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The calendar day (`yyyy-MM-dd`) an instant falls on in `timeZone` — how a
+ * date of the series is marked on the host's calendar. Null for a bad instant. */
+export function ymdInZone(iso: string, timeZone: string): string | null {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return null;
+  return new Date(at.getTime() + zoneOffsetMs(at, timeZone)).toISOString().slice(0, 10);
+}
+
+/**
+ * The start of a CUSTOM date the host tapped on the calendar: the first date's
+ * time of day on calendar day `ymd` (in `timeZone`), as an ISO instant — a
+ * whole number of days after the first date, which is what the server accepts.
+ * Null when either side is not a real day.
+ */
+export function customDateStart(firstStartIso: string, ymd: string, timeZone: string): string | null {
+  const firstDay = ymdInZone(firstStartIso, timeZone);
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? Date.parse(`${ymd}T00:00:00Z`) : Number.NaN;
+  if (!firstDay || Number.isNaN(day)) return null;
+  const days = Math.round((day - Date.parse(`${firstDay}T00:00:00Z`)) / DAY_MS);
+  return new Date(new Date(firstStartIso).getTime() + days * DAY_MS).toISOString();
+}
+
 /**
  * The last moment of calendar day `ymd` (`yyyy-MM-dd`) in `timeZone`, as an ISO
  * instant — what the server reads as "the series may run until this day".
@@ -75,6 +101,8 @@ export interface PodSeriesPlan {
   pod_end_date_time: string | null;
   frequency: PodSeriesFrequency;
   ends_on: string;
+  /** CUSTOM only: the ISO start of every date after the first. */
+  custom_dates: string[];
   skip_dates: string[];
   /** Percent off a booking of several dates ([] for none). */
   multi_date_discount_tiers: MultiDateDiscountTier[];
@@ -86,6 +114,8 @@ export interface PodSeriesPlanSource {
   /** The last day the series may run, `yyyy-MM-dd`. */
   repeat_ends_on: string;
   repeat_skip_dates: readonly string[];
+  /** CUSTOM only: the days (`yyyy-MM-dd`) the host picked on the calendar. */
+  repeat_custom_days?: readonly string[];
   /** The multi-date discount the host set; empty when switched off. */
   repeat_discount_tiers: readonly MultiDateDiscountTier[];
   pod_mode: string;
@@ -106,6 +136,7 @@ export function buildPodSeriesPlan(source: PodSeriesPlanSource, timeZone: string
   if (!endsOn) return null;
   const physical = source.pod_mode !== 'VIRTUAL';
   if (physical ? !source.venue_slot_id : !source.pod_date_time) return null;
+  const firstStart = source.repeat_frequency === 'CUSTOM' ? source.pod_date_time : null;
   return {
     pod_mode: physical ? 'PHYSICAL' : 'VIRTUAL',
     venue_id: physical ? source.venue_id || null : null,
@@ -114,7 +145,11 @@ export function buildPodSeriesPlan(source: PodSeriesPlanSource, timeZone: string
     pod_end_date_time: physical ? null : source.pod_end_date_time,
     frequency: source.repeat_frequency,
     ends_on: endsOn,
-    skip_dates: [...source.repeat_skip_dates],
+    // Hand-picked dates are the plan itself, so nothing is skipped from them.
+    custom_dates: firstStart
+      ? (source.repeat_custom_days ?? []).flatMap((ymd) => customDateStart(firstStart, ymd, timeZone) ?? [])
+      : [],
+    skip_dates: firstStart ? [] : [...source.repeat_skip_dates],
     multi_date_discount_tiers: source.repeat_discount_tiers.map((tier) => ({ ...tier })),
   };
 }
@@ -141,6 +176,22 @@ export const POD_SERIES_PREVIEW_SDL = `
         price
         available
         reason
+        on_request
+      }
+    }
+  }
+`;
+
+/** The Pod Settings a plan is held to — read before there is a plan, to bound the end day. */
+export const POD_SERIES_LIMITS_SDL = `
+  query PodSeriesLimits {
+    podSeriesLimits {
+      max_occurrences
+      max_span_days
+      max_discount_pct
+      default_multi_date_discount_tiers {
+        min_dates
+        discount_pct
       }
     }
   }

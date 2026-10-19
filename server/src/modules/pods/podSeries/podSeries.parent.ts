@@ -50,9 +50,19 @@ function parentApproval(dates: DateRow[]): PodVenueApproval {
 /** Every write the parent needs to mirror its dates as they stand at `now`. */
 export function parentMirror(dates: DateRow[], now: Date): Record<string, unknown> {
   const live = dates.filter(runs).sort((a, b) => a.pod_date_time.getTime() - b.pod_date_time.getTime());
-  const last = live.at(-1);
-  if (!last) return { deleted_at: now, is_active: false, series_total: 0 };
-  const next = live.find((d) => (podLiveEnd(d)?.getTime() ?? 0) > now.getTime()) ?? last;
+  if (!live.at(-1)) return { deleted_at: now, is_active: false, series_total: 0 };
+  // Members only ever see the dates the venue accepted, so the pod is timed by
+  // those; while every date still waits on the venue, by all of them.
+  const confirmed = live.filter((d) => d.venue_approval_status !== 'PENDING');
+  const shown = confirmed.length ? confirmed : live;
+  const last = shown.at(-1) as DateRow;
+  const at = now.getTime();
+  // The next date that has not STARTED, so a running date never makes the whole
+  // pod look over while later dates are still on sale; then a running one.
+  const next =
+    shown.find((d) => d.pod_date_time.getTime() > at) ??
+    shown.find((d) => (podLiveEnd(d)?.getTime() ?? 0) > at) ??
+    last;
   const doneAt = live.map((d) => d.completed_at?.getTime() ?? null);
   const allDone = doneAt.every((at) => at !== null);
   return {

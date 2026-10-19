@@ -151,7 +151,7 @@ export async function venueAcceptAutoPod(
 
   // What the venue charges for this slot by its pricing mode — an hourly slot
   // by its length, a per-pax slot by the offer's spots (completion can adjust).
-  const slotCharge = slotVenueCharge(slot!, { pax: doc.no_of_spots ?? 0 }).total;
+  const slotCharge = slotVenueCharge(slot, { pax: doc.no_of_spots ?? 0 }).total;
 
   // The venue learns HERE, before it commits, whether its price can be covered
   // — under the real host's rates when a host is already on it.

@@ -22,8 +22,8 @@ export default function FontRow({ control, index, onRemove }: Readonly<Props>) {
   const font = useWatch({ control, name: `fonts.${index}` });
   const sample = t('websiteApp.cms.fonts.preview');
   const stack = fontStack({ family: font?.family ?? '', fallback: font?.fallback ?? '' });
-  useGooglePreview(font?.source === 'GOOGLE' ? (font.family ?? '') : '', sample);
-  useUploadedPreview(font?.source === 'CUSTOM' ? (font.family ?? '') : '', font?.files ?? []);
+  useGooglePreview(font?.source === 'GOOGLE' ? font.family : '', sample);
+  useUploadedPreview(font?.source === 'CUSTOM' ? font.family : '', font?.files ?? []);
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>

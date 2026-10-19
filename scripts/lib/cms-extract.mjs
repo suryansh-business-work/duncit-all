@@ -164,7 +164,11 @@ function fragmentKey(html, used) {
   const tag = /^<([a-z]+)/.exec(html)?.[1] ?? 'section';
   const base = CHROME_TAGS.has(tag) ? tag : 'shared';
   let key = base;
-  for (let n = 2; used.has(key); n += 1) key = `${base}-${n}`;
+  let n = 2;
+  while (used.has(key)) {
+    key = `${base}-${n}`;
+    n += 1;
+  }
   used.add(key);
   return key;
 }
@@ -172,7 +176,8 @@ function fragmentKey(html, used) {
 function tokensFrom(css) {
   const root = /:root[^{]*{([^}]*)}/.exec(css)?.[1] ?? '';
   const tokens = [];
-  for (const [, name, value] of root.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);?/g)) {
+  for (const [, name, value] of root.matchAll(/(--[a-z0-9-]+)\s*:([^;]+)/g)) {
+    // The value keeps the spaces after the colon; `.trim()` below drops them.
     if (!TOKEN_PREFIXES.some((prefix) => name.startsWith(prefix)) || /[;{}<>]/.test(value)) continue;
     tokens.push({ name, value: value.trim(), group: name.split('-')[2] || 'other' });
   }

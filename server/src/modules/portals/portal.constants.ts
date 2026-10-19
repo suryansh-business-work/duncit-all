@@ -13,6 +13,7 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   'ecomm-portal': ['ECOMM_STORE_MANAGER'],
   localization: ['LOCALIZATION_MANAGER'],
   targets: ['TARGETS_MANAGER'],
+  'gig-jobs': ['GIG_JOBS_MANAGER'],
   challenge: ['CHALLENGE_MANAGER'],
   communications: ['COMMUNICATIONS_MANAGER'],
   // The directory consoles. An Onboarding Manager opens the venue and

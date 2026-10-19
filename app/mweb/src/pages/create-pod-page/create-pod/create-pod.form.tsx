@@ -106,9 +106,10 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
       repeat_enabled: z.boolean(),
-      repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY']),
+      repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'CUSTOM']),
       repeat_ends_on: z.string(),
       repeat_skip_dates: z.array(z.string()),
+      repeat_custom_days: z.array(z.string()),
       // Shape only — the tier rules run in refineRepeat below.
       repeat_discount_enabled: z.boolean(),
       repeat_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),

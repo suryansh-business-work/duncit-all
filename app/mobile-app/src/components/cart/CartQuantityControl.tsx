@@ -51,7 +51,16 @@ interface PartProps {
 }
 
 /** One round press target; smaller than 44pt to the eye, 44pt to the finger. */
-function ControlButton({ testID, icon, label, inert, busy, filled, size, onPress }: PartProps) {
+function ControlButton({
+  testID,
+  icon,
+  label,
+  inert,
+  busy,
+  filled,
+  size,
+  onPress,
+}: Readonly<PartProps>) {
   const { color: ink, muted, onPrimary } = useThemeColors();
   const diameter = DIAMETER[size];
   const idle = inert ? muted : ink;

@@ -13,8 +13,9 @@ import {
   toNodeInputs,
   type CanvasNode,
 } from '../../src/pages/automation/graph-io';
-import { NODE_KINDS, isNodeKind, paletteFor } from '../../src/pages/automation/node-kinds';
+import { NODE_KINDS, isNodeKind, paletteFor, type NodeKind } from '../../src/pages/automation/node-kinds';
 import { summaryOf } from '../../src/pages/automation/builder/nodes/node-summary';
+import { exitLabel } from '../../src/pages/automation/builder/nodes/ExitHandles';
 import { toneColor } from '../../src/pages/automation/builder/nodes/tone';
 import {
   aiClassifySchema,
@@ -175,6 +176,21 @@ describe('summaryOf', () => {
     expect(summaryOf('delay', { unit: 'WEEKS' }, t)).toContain('"amount":"1","unit":"weeks"');
     expect(summaryOf('set_variable', {}, t)).toBe('ai.automation.summary.variableUnnamed');
     expect(summaryOf('set_variable', { name: 'x' }, t)).toContain('{{x}}');
+  });
+
+  it('has no line for a kind a newer server sent that this portal does not know', () => {
+    expect(summaryOf(String('send_sms') as NodeKind, { body: 'hi' }, t)).toBe('');
+  });
+});
+
+describe('exitLabel', () => {
+  it('reads a known exit through its copy key and a classify exit as its own label', () => {
+    expect(exitLabel('yes', {}, t)).toBe('ai.automation.handles.yes');
+    expect(exitLabel('label:1', { labels: ['Sales', 'Help'] }, t)).toBe('Help');
+  });
+
+  it('shows an exit with no copy as its raw name rather than nothing', () => {
+    expect(exitLabel('escalate', {}, t)).toBe('escalate');
   });
 });
 

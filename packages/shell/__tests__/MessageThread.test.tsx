@@ -536,3 +536,104 @@ describe('MessageThread', () => {
     expect((container.querySelector('.MuiFab-root') as HTMLElement).textContent).not.toBe('1');
   });
 });
+
+describe('MessageThread — scroll-up history', () => {
+  const tree = (over: Partial<ThreadProps>, spies = handlers()) => (
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
+      <ThemeProvider theme={testTheme}>
+        <MessageThread
+          messages={MESSAGES}
+          calls={[]}
+          meId={ME}
+          loading={false}
+          hasMore
+          loadingMore={false}
+          settings={DEFAULT_CHAT_SETTINGS}
+          formats={formats}
+          spacing={1}
+          nameOf={(userId) => (userId === ME ? 'Asha Rao' : 'Vikram N')}
+          {...spies}
+          {...over}
+        />
+      </ThemeProvider>
+    </MockedProvider>
+  );
+
+  /** Puts the reader at `top` in a list `height` tall. */
+  const place = (scroller: HTMLElement, top: number, height: number) => {
+    Object.defineProperty(scroller, 'scrollHeight', { value: height, configurable: true, writable: true });
+    Object.defineProperty(scroller, 'scrollTop', { value: top, configurable: true, writable: true });
+  };
+
+  const OLDER = [
+    message({ id: 'm-older-1', text: 'From last week.' }),
+    message({ id: 'm-older-2', text: 'Also from last week.' }),
+  ];
+
+  it('keeps the reader on the same line when the older page lands above it, without counting it as new', () => {
+    const spies = handlers();
+    const { container, rerender } = render(tree({}, spies));
+    const scroller = container.querySelector('.MuiStack-root') as HTMLElement;
+    place(scroller, 30, 2000);
+
+    fireEvent.scroll(scroller);
+    expect(spies.onLoadMore).toHaveBeenCalledTimes(1);
+
+    rerender(tree({ loadingMore: true }, spies));
+    expect(scroller.getAttribute('aria-busy')).toBe('true');
+
+    // The older page renders above: the list is 600px taller.
+    Object.defineProperty(scroller, 'scrollHeight', { value: 2600, configurable: true, writable: true });
+    rerender(tree({ messages: [...OLDER, ...MESSAGES], loadingMore: false }, spies));
+
+    expect(scroller.scrollTop).toBe(630);
+    expect(scroller.getAttribute('aria-busy')).toBe('false');
+    // Lines above are history, not arrivals: no unseen count on the pill.
+    expect((container.querySelector('.MuiFab-root') as HTMLElement).textContent).not.toBe('1');
+    expect(container.textContent).toContain('From last week.');
+  });
+
+  it('loads the older page from the "Earlier messages" button too, for keyboard readers', () => {
+    const spies = handlers();
+    const { getByRole } = render(tree({}, spies));
+
+    fireEvent.click(getByRole('button', { name: 'Earlier messages' }));
+
+    expect(spies.onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks for nothing above once the start of the conversation is reached', () => {
+    const spies = handlers();
+    const { container } = render(tree({ hasMore: false }, spies));
+    const scroller = container.querySelector('.MuiStack-root') as HTMLElement;
+    place(scroller, 0, 2000);
+
+    fireEvent.scroll(scroller);
+
+    expect(spies.onLoadMore).not.toHaveBeenCalled();
+  });
+
+  it('opens on the newest line with a jump, not a glide past every line', () => {
+    const spy = vi.spyOn(Element.prototype, 'scrollIntoView');
+    render(tree({}));
+
+    expect(spy).toHaveBeenCalledWith({ block: 'end', behavior: 'auto' });
+    spy.mockRestore();
+  });
+
+  it('follows your own message down even while scrolled up reading history', () => {
+    const spies = handlers();
+    const { container, rerender } = render(tree({}, spies));
+    const scroller = container.querySelector('.MuiStack-root') as HTMLElement;
+    place(scroller, 500, 2000);
+    fireEvent.scroll(scroller);
+    const spy = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+    const mine = message({ id: 'm-own', from_user_id: ME, to_user_id: PEER, text: 'Sent by me' });
+    rerender(tree({ messages: [...MESSAGES, mine] }, spies));
+
+    expect(spy).toHaveBeenCalledWith({ block: 'end', behavior: 'smooth' });
+    expect((container.querySelector('.MuiFab-root') as HTMLElement).textContent).not.toBe('1');
+    spy.mockRestore();
+  });
+});

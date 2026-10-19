@@ -8,7 +8,6 @@ import { YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
-import { useGoBack } from '@/hooks/useGoBack';
 import { ChatClosedNotice } from '@/components/chat/ChatClosedNotice';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
@@ -36,7 +35,6 @@ type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
  * ChatRoomPage. */
 export function ChatRoomScreen() {
   const { t } = useTranslation();
-  const goBack = useGoBack();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { podId, clubId, title } = useRoute<RouteProp<RootStackParamList, 'ChatRoom'>>().params;
   const isClub = !!clubId;
@@ -52,6 +50,12 @@ export function ChatRoomScreen() {
       navigation.navigate('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
     else navigation.navigate('PodDetails', { podId: roomId, title });
   };
+  // Back lands on the room's pod or club: popTo returns to it when it is already
+  // in the stack, otherwise it replaces this chat with it.
+  const goBack = () => {
+    if (isClub) navigation.popTo('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
+    else navigation.popTo('PodDetails', { podId: roomId, title });
+  };
   const openProfile = (userId: string) => navigation.navigate('PublicProfile', { userId });
 
   const [text, setText] = useState('');
@@ -60,10 +64,12 @@ export function ChatRoomScreen() {
   const [reportId, setReportId] = useState<string | null>(null);
   const listRef = useRef<ScrollView>(null);
 
+  // Follow the newest line (the room opening, a live line, your own send) —
+  // never an older page put above the line the reader is on.
+  const newestId = messages.at(-1)?.id;
   useEffect(() => {
-    /* istanbul ignore next -- native autoscroll; method absent under the test renderer */
-    listRef.current?.scrollToEnd?.({ animated: true });
-  }, [messages.length]);
+    listRef.current?.scrollToEnd({ animated: true });
+  }, [newestId]);
 
   // The error banner appears without focus moving to it, so say it (4.1.3).
   useEffect(() => {
@@ -126,6 +132,7 @@ export function ChatRoomScreen() {
             listRef={listRef}
             isLoading={room.isLoading}
             messages={messages}
+            history={room.history}
             meId={meId}
             onOpenActions={(message) =>
               setActions({ id: message.id, mine: message.user_id === meId })

@@ -134,7 +134,7 @@ const AFTER_ACTION_TEMPLATE: Partial<Record<HostAction, string>> = {
 export const registrationService = {
   async register(user: LiteUserDoc, eventId: string, input: RegisterInput) {
     const event = await LiteEventModel.findById(eventId);
-    if (!event || event.status !== 'PUBLISHED' || event.hidden) throw notFound('Event');
+    if (event?.status !== 'PUBLISHED' || event.hidden) throw notFound('Event');
     if (event.end_at.getTime() < Date.now()) throw badInput('This event has already ended');
     const existing = await LiteRegistrationModel.findOne({ event_id: event._id, user_id: user._id });
     const existingStatus = existing?.status;

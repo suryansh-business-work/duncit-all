@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
 /** Roles + onboarding meetings — everything the journey list needs to decide
- * which cards are locked, pending or approved. */
+ * which cards are locked, pending or approved — plus each card's featured image. */
 export const EARN_ME = gql`
   query EarnMe {
     me {
@@ -18,6 +18,15 @@ export const EARN_ME = gql`
       scheduled_at
       requested_at
       reschedule_count
+    }
+    onboardingIntro {
+      earn_card_images {
+        host
+        venue
+        ecomm
+        club
+        freelancer
+      }
     }
   }
 `;

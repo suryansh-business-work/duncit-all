@@ -157,6 +157,20 @@ describe('useEmailFragments - preview', () => {
     });
   });
 
+  it('clears a stale preview when the renderer answers without a result', async () => {
+    m.clientQuery.mockResolvedValueOnce({
+      data: { renderEmailTemplate: { html: '<p>old</p>', errors: ['old warning'] } },
+    });
+    const { result } = mount();
+    await waitFor(() => expect(result.current.previewHtml).toBe('<p>old</p>'), { timeout: 3000 });
+    expect(result.current.previewErrors).toEqual(['old warning']);
+
+    m.clientQuery.mockResolvedValueOnce({ data: undefined });
+    act(() => result.current.setDraft({ ...result.current.draft!, name: 'Edited' }));
+    await waitFor(() => expect(result.current.previewHtml).toBe(''), { timeout: 3000 });
+    expect(result.current.previewErrors).toEqual([]);
+  });
+
   it('shows a thrown request as a preview error', async () => {
     m.clientQuery.mockRejectedValue(new Error('network down'));
     const { result } = mount();

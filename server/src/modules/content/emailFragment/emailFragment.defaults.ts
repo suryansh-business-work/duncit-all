@@ -100,8 +100,11 @@ const footerLink = (href: string, label: string) =>
  * recipient is known, the same screen behind a sign-in for a bcc'd campaign
  * batch, which has no single recipient to sign for.
  */
-const unsubscribeLine = () =>
-  `\n${footerText(`{{t:email.fragment.unsubscribe}} ${footerLink('{{unsubscribe_url}}', '{{t:email.fragment.unsubscribeLink}}')}`)}`;
+const unsubscribeLine = () => {
+  const link = footerLink('{{unsubscribe_url}}', '{{t:email.fragment.unsubscribeLink}}');
+  const line = footerText(`{{t:email.fragment.unsubscribe}} ${link}`);
+  return `\n${line}`;
+};
 
 /**
  * The footer, on the canvas under the card: why this arrived, where to get

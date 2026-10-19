@@ -1,4 +1,6 @@
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import ChatHistoryTop from '../../../components/chat-history/ChatHistoryTop';
+import { useScrollUpHistory } from '../../../components/chat-history/useScrollUpHistory';
 import ChatBubble from '../ChatBubble';
 import { dayLabel, showDaySeparator } from '../chatHelpers';
 import type { SupportChatMessage } from '../queries';
@@ -14,9 +16,12 @@ interface Props {
   onRetry: (msg: SupportChatMessage) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
   onScroll: () => void;
+  /** Scroll-up history: whether an older page may exist, and how to load it. */
+  canLoadOlder: boolean;
+  loadOlder: () => Promise<void>;
 }
 
-/** Scrollable chat transcript with day separators + a typing indicator (B10/B14a). */
+/** Scrollable chat transcript with day separators + a typing indicator (B10/B14a); reading up to the top loads older lines. */
 export default function ChatMessageList({
   loading,
   messages,
@@ -27,8 +32,11 @@ export default function ChatMessageList({
   onRetry,
   scrollRef,
   onScroll,
+  canLoadOlder,
+  loadOlder,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const history = useScrollUpHistory({ scrollRef, oldestId: messages[0]?.id, canLoadOlder, loadOlder });
   let body: React.ReactNode;
   if (loading) {
     body = (
@@ -52,6 +60,12 @@ export default function ChatMessageList({
   } else {
     body = (
       <Stack spacing={1.25}>
+        <ChatHistoryTop
+          canLoadOlder={canLoadOlder}
+          loadingOlder={history.loadingOlder}
+          olderFailed={history.olderFailed}
+          onShowOlder={history.showOlder}
+        />
         {messages.map((m, i) => (
           <Box key={m.id}>
             {showDaySeparator(m.created_at, messages[i - 1]?.created_at, timeZone) && (
@@ -91,7 +105,17 @@ export default function ChatMessageList({
   }
 
   return (
-    <Box data-testid="support-chat-messages" role="log" ref={scrollRef} onScroll={onScroll} sx={{ flex: 1, overflowY: 'auto', px: 0.5 }}>
+    <Box
+      data-testid="support-chat-messages"
+      role="log"
+      aria-busy={history.loadingOlder}
+      ref={scrollRef}
+      onScroll={() => {
+        onScroll();
+        history.onScrollNearTop();
+      }}
+      sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 0.5 }}
+    >
       {body}
     </Box>
   );

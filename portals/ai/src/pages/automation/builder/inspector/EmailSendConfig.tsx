@@ -26,7 +26,7 @@ export default function EmailSendConfig({ nodeId, config, options, onChange }: R
     // Only the variables the chosen template asks for travel — a switch of
     // template must not carry the old one's values along.
     const keep = new Set(template?.variables ?? []);
-    const vars = Object.fromEntries(Object.entries(next.vars ?? {}).filter(([key]) => keep.has(key)));
+    const vars = Object.fromEntries(Object.entries(next.vars).filter(([key]) => keep.has(key)));
     onChange({ ...config, ...next, vars });
   });
   const slug = watch('template_slug');

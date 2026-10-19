@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { NESTED_SCROLL_HEIGHT } from '@/constants/nested-scroll';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -32,6 +33,49 @@ const EMBEDDED_CARD = { padding: 0, borderWidth: 0, backgroundColor: 'transparen
 function productCountLabel(count: number): string {
   if (count === 0) return 'Selected product total';
   return `${count} product${count === 1 ? '' : 's'} selected`;
+}
+
+/** The standalone shop's title and its open/closed chip. */
+function PodShopHeader({ title, open }: Readonly<{ title: string; open: boolean }>) {
+  return (
+    <XStack alignItems="center" justifyContent="space-between" gap={12}>
+      <YStack flex={1}>
+        <SectionHeader title={title} />
+      </YStack>
+      <XStack paddingHorizontal={10} paddingVertical={5} borderRadius={999} backgroundColor="$soft">
+        <Text fontSize={12} fontWeight="600" color="$color">
+          {open ? 'Available' : 'Closed'}
+        </Text>
+      </XStack>
+    </XStack>
+  );
+}
+
+interface PodShopFooterProps {
+  readOnly: boolean;
+  selectedCount: number;
+  total: number;
+}
+
+/** Under the products: a closed note when read-only, else the running selected total. */
+function PodShopFooter({ readOnly, selectedCount, total }: Readonly<PodShopFooterProps>) {
+  if (readOnly) {
+    return (
+      <Text testID="pod-shop-closed-note" fontSize={12.5} color="$muted">
+        The shop is currently closed.
+      </Text>
+    );
+  }
+  return (
+    <XStack justifyContent="space-between" alignItems="center" testID="pod-shop-total">
+      <Text fontSize={12} color="$muted">
+        {productCountLabel(selectedCount)}
+      </Text>
+      <Text fontSize={15} fontWeight="700" color="$color">
+        ₹{total}
+      </Text>
+    </XStack>
+  );
 }
 
 /** Pod Shop — lists the pod's real products with buyer selection (checkbox +
@@ -87,21 +131,7 @@ export function PodShop({
       {...(embedded ? EMBEDDED_CARD : {})}
     >
       {embedded ? null : (
-        <XStack alignItems="center" justifyContent="space-between" gap={12}>
-          <YStack flex={1}>
-            <SectionHeader title={t('mweb.shop.title')} />
-          </YStack>
-          <XStack
-            paddingHorizontal={10}
-            paddingVertical={5}
-            borderRadius={999}
-            backgroundColor="$soft"
-          >
-            <Text fontSize={12} fontWeight="600" color="$color">
-              {pod.products_enabled ? 'Available' : 'Closed'}
-            </Text>
-          </XStack>
-        </XStack>
+        <PodShopHeader title={t('mweb.shop.title')} open={!!pod.products_enabled} />
       )}
 
       {products.length === 0 ? (
@@ -112,34 +142,25 @@ export function PodShop({
           </Text>
         </XStack>
       ) : (
-        <YStack gap={8}>
-          {products.map((product) => (
-            <PodShopProductRow
-              key={product.product_id}
-              product={product}
-              quantity={selectedProducts[product.product_id] ?? 0}
-              onUpdate={updateQuantity}
-              onInfo={setInfoProductId}
-              readOnly={readOnly}
-            />
-          ))}
-        </YStack>
+        // A capped box with its own scroll, so a big shop never stretches the page.
+        <ScrollView nestedScrollEnabled maxHeight={NESTED_SCROLL_HEIGHT} testID="pod-shop-products">
+          <YStack gap={8}>
+            {products.map((product) => (
+              <PodShopProductRow
+                key={product.product_id}
+                product={product}
+                quantity={selectedProducts[product.product_id] ?? 0}
+                onUpdate={updateQuantity}
+                onInfo={setInfoProductId}
+                readOnly={readOnly}
+              />
+            ))}
+          </YStack>
+        </ScrollView>
       )}
 
-      {products.length > 0 && readOnly ? (
-        <Text testID="pod-shop-closed-note" fontSize={12.5} color="$muted">
-          The shop is currently closed.
-        </Text>
-      ) : null}
-      {products.length > 0 && !readOnly ? (
-        <XStack justifyContent="space-between" alignItems="center" testID="pod-shop-total">
-          <Text fontSize={12} color="$muted">
-            {productCountLabel(selectedCount)}
-          </Text>
-          <Text fontSize={15} fontWeight="700" color="$color">
-            ₹{shownTotal}
-          </Text>
-        </XStack>
+      {products.length > 0 ? (
+        <PodShopFooter readOnly={readOnly} selectedCount={selectedCount} total={shownTotal} />
       ) : null}
 
       <ProductDetailSheet

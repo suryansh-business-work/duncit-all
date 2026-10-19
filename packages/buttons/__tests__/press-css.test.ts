@@ -14,7 +14,7 @@ const active = (css: CSSObject): CSSObject => css['&:active'] as CSSObject;
 
 describe('pressTransition', () => {
   it('eases every animatable channel over the shared release duration', () => {
-    for (const channel of ['transform', 'opacity', 'background-color', 'filter', 'box-shadow']) {
+    for (const channel of ['scale', 'transform', 'opacity', 'background-color', 'filter', 'box-shadow']) {
       expect(pressTransition).toContain(
         `${channel} ${PRESS_RELEASE_MS}ms cubic-bezier(0.2, 0, 0, 1)`
       );
@@ -35,7 +35,7 @@ describe('pressCss', () => {
     const css = pressCss('solid', COLORS);
     expect(active(css)).toEqual({
       transition: 'none',
-      transform: `scale(${PRESS.solid.scale})`,
+      scale: String(PRESS.solid.scale),
       filter: `brightness(${PRESS.solid.brightness})`,
     });
   });
@@ -44,7 +44,7 @@ describe('pressCss', () => {
     const css = pressCss('control', COLORS, { tint: 'ink' });
     expect(active(css)).toEqual({
       transition: 'none',
-      transform: 'scale(0.96)',
+      scale: '0.96',
       opacity: 0.85,
       backgroundColor: 'rgba(31, 41, 55, 0.12)',
     });
@@ -54,20 +54,20 @@ describe('pressCss', () => {
     const css = pressCss('ghost', COLORS, { tint: 'accent' });
     expect(active(css)).toEqual({
       transition: 'none',
-      transform: 'scale(0.94)',
+      scale: '0.94',
       opacity: 0.75,
       backgroundColor: 'rgba(225, 29, 72, 0.12)',
     });
   });
 
-  it('row never compresses — no transform even with a layer', () => {
+  it('row never compresses — no scale even with a layer', () => {
     const css = pressCss('row', COLORS, { tint: 'ink' });
     expect(active(css)).toEqual({
       transition: 'none',
       opacity: 0.7,
       backgroundColor: 'rgba(31, 41, 55, 0.1)',
     });
-    expect(active(css).transform).toBeUndefined();
+    expect(active(css).scale).toBeUndefined();
   });
 
   it('inline paints no layer even when a tint source is given (recipe tint is 0)', () => {
@@ -79,7 +79,7 @@ describe('pressCss', () => {
     const css = pressCss('surface', COLORS);
     expect(active(css)).toEqual({
       transition: 'none',
-      transform: 'scale(0.985)',
+      scale: '0.985',
       opacity: 0.9,
     });
   });
@@ -88,10 +88,10 @@ describe('pressCss', () => {
     expect(pressCss('control', COLORS, { tint: 'none' })).toEqual(pressCss('control', COLORS, {}));
   });
 
-  it('pins a disabled control while held: no transform, no filter', () => {
+  it('pins a disabled control while held: no scale, no filter', () => {
     const css = pressCss('solid', COLORS);
     expect(css['&.Mui-disabled:active, &:disabled:active']).toEqual({
-      transform: 'none',
+      scale: 'none',
       filter: 'none',
     });
   });

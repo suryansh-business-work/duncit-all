@@ -306,4 +306,8 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "mweb.podSeries.limitsHint": [
     "Up to {max} dates, within {days} days of the first one. Each date is its own pod, sent to the venue as its own request.",
   ],
+  // Rental deposits moved to the venue: handed back there, paid to the venue in its payout.
+  "finance.rentedItems.depositRefundableHint": [
+    "On: the deposit comes back once the item is returned, less any damage claim. Off: the venue keeps it.",
+  ],
 };

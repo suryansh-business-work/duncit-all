@@ -475,3 +475,59 @@ describe('useSupportChat', () => {
     });
   });
 });
+
+describe('useSupportChat — scroll-up history', () => {
+  /** A full page: 30 lines, oldest first, a minute apart. */
+  const fullPage = (from: number) =>
+    Array.from({ length: 30 }, (_, i) =>
+      msg(`h${from + i}`, 's1', {
+        created_at: `2026-06-01T10:${String(from + i).padStart(2, '0')}:00.000Z`,
+      }),
+    );
+
+  it('opens on the newest 30 lines, then pages back before the oldest one', async () => {
+    const newest = fullPage(30);
+    const older = fullPage(0).slice(25);
+    mockBoot();
+    const boot = mockRequest.getMockImplementation();
+    mockRequest.mockImplementation((doc: unknown, vars: Record<string, unknown> | undefined) => {
+      if (JSON.stringify(doc).includes('supportChatMessages'))
+        return Promise.resolve({ supportChatMessages: vars?.before ? older : newest });
+      return boot?.(doc, vars);
+    });
+    mockIo.mockReturnValue(fakeSocket());
+    const { result } = renderHook(() => useSupportChat());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { sessionId: 's1', limit: 30 },
+      { auth: true },
+    );
+    expect(result.current.history.hasOlder).toBe(true);
+
+    await act(async () => {
+      await result.current.history.loadOlder();
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { sessionId: 's1', limit: 30, before: '2026-06-01T10:30:00.000Z' },
+      { auth: true },
+    );
+    expect(result.current.messages.map((m) => m.id).slice(0, 6)).toEqual([
+      'h25',
+      'h26',
+      'h27',
+      'h28',
+      'h29',
+      'h30',
+    ]);
+    // Five lines is the start of the chat: nothing older to ask for.
+    expect(result.current.history.hasOlder).toBe(false);
+  });
+
+  it('expects no older lines after a short first page', async () => {
+    const { result } = await bootedHook();
+    expect(result.current.history.hasOlder).toBe(false);
+  });
+});

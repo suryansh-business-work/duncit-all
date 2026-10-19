@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { outboundFetch } from '@utils/outboundFetch';
+import { trimTrailingSlash } from '@utils/url';
 import type { EmailVerificationStatus } from './emailVerification.model';
 
 /**
@@ -69,7 +70,7 @@ export function toCheckResult(body: Record<string, unknown>): EmailCheckResult {
 
 /** Ask Reacher about one address. Throws BAD_GATEWAY when the verifier itself is down. */
 export async function checkEmailWithReacher(email: string): Promise<EmailCheckResult> {
-  const baseUrl = (await getRuntimeEnvValue('REACHER_INTERNAL_URL')).replace(/\/+$/, '');
+  const baseUrl = trimTrailingSlash(await getRuntimeEnvValue('REACHER_INTERNAL_URL'));
   if (!baseUrl) {
     throw new GraphQLError(`${SERVICE} is not configured (REACHER_INTERNAL_URL is missing)`, {
       extensions: { code: 'BAD_GATEWAY', service: SERVICE },
@@ -87,7 +88,8 @@ export async function checkEmailWithReacher(email: string): Promise<EmailCheckRe
   });
   if (!res.ok) {
     const detail = (await res.text().catch(() => '')).slice(0, 300);
-    throw new GraphQLError(`${SERVICE} answered ${res.status}${detail ? `: ${detail}` : ''}`, {
+    const suffix = detail ? `: ${detail}` : '';
+    throw new GraphQLError(`${SERVICE} answered ${res.status}${suffix}`, {
       extensions: { code: 'BAD_GATEWAY', service: SERVICE },
     });
   }

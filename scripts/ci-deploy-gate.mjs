@@ -56,8 +56,10 @@ export function readFilters(yaml) {
     if (line.search(/\S/) <= outer) break;
     const key = /^\s+([a-z_]+):\s*$/.exec(line)?.[1];
     const glob = /^\s+-\s+'([^']+)'\s*$/.exec(line)?.[1];
-    if (key) filters[(current = key)] = [];
-    else if (glob && current) filters[current].push(glob);
+    if (key) {
+      current = key;
+      filters[key] = [];
+    } else if (glob && current) filters[current].push(glob);
     else throw new Error(`unrecognised filter line: ${line.trim()}`);
   }
   if (Object.keys(filters).length === 0) throw new Error('the filters block is empty');

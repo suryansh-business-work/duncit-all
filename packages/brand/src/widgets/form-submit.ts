@@ -72,7 +72,7 @@ export async function submitForm(
     reloadCaptcha(form);
     restore();
   } finally {
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       if (!btn) return;
       btn.disabled = false;
       if (!btn.innerHTML.includes('check')) restore();

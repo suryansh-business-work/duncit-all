@@ -9,13 +9,46 @@ import { DuncitButton } from '@/components/DuncitButton';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { StackScreen } from '@/components/StackScreen';
 import { SurfaceCard } from '@/components/SurfaceCard';
-import { useBrandWarehouses } from '@/hooks/useBrandWarehouses';
+import { useBrandWarehouses, type BrandPickupSync } from '@/hooks/useBrandWarehouses';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** The Partner console's warehouse desk, where warehouses are added and edited. */
 const MANAGE_PATH = '/ecomm-brand/warehouses';
+
+interface SyncOutcomeProps {
+  syncError: string | null;
+  result: BrandPickupSync | null;
+}
+
+/** What the last ShipRocket sync said: the request failing, ShipRocket refusing, or done. */
+function SyncOutcomeNote({ syncError, result }: Readonly<SyncOutcomeProps>) {
+  const { t } = useTranslation();
+  if (syncError) {
+    return (
+      <Text role="alert" fontSize={13} color="$danger" testID="brand-warehouses-sync-error">
+        {syncError}
+      </Text>
+    );
+  }
+  if (result?.shiprocket_error) {
+    return (
+      <Text role="alert" fontSize={13} color="$danger" testID="brand-warehouses-sync-error">
+        {t('mweb.brandWarehouses.syncFailed', { vars: { error: result.shiprocket_error } })}
+      </Text>
+    );
+  }
+  if (!result) return null;
+  return (
+    <Text role="status" fontSize={13} color="$success" testID="brand-warehouses-synced">
+      {t('mweb.brandWarehouses.synced')}
+      {result.adopted > 0
+        ? ` ${t('mweb.brandWarehouses.adopted', { count: result.adopted, vars: { count: result.adopted } })}`
+        : ''}
+    </Text>
+  );
+}
 
 /**
  * Brand Studio → ShipRocket Warehouses (/products/warehouses): a brand's pickup
@@ -27,7 +60,6 @@ export function BrandWarehousesScreen() {
   const { t } = useTranslation();
   const { color, onPrimary } = useThemeColors();
   const desk = useBrandWarehouses();
-  const result = desk.outcome;
 
   let body;
   if (desk.isLoading && desk.warehouses.length === 0) {
@@ -75,30 +107,6 @@ export function BrandWarehousesScreen() {
           </YStack>
         ))}
       </SurfaceCard>
-    );
-  }
-
-  let said = null;
-  if (desk.syncError) {
-    said = (
-      <Text role="alert" fontSize={13} color="$danger" testID="brand-warehouses-sync-error">
-        {desk.syncError}
-      </Text>
-    );
-  } else if (result?.shiprocket_error) {
-    said = (
-      <Text role="alert" fontSize={13} color="$danger" testID="brand-warehouses-sync-error">
-        {t('mweb.brandWarehouses.syncFailed', { vars: { error: result.shiprocket_error } })}
-      </Text>
-    );
-  } else if (result) {
-    said = (
-      <Text role="status" fontSize={13} color="$success" testID="brand-warehouses-synced">
-        {t('mweb.brandWarehouses.synced')}
-        {result.adopted > 0
-          ? ` ${t('mweb.brandWarehouses.adopted', { count: result.adopted, vars: { count: result.adopted } })}`
-          : ''}
-      </Text>
     );
   }
 
@@ -151,7 +159,7 @@ export function BrandWarehousesScreen() {
               />
             </XStack>
           ) : null}
-          {said}
+          <SyncOutcomeNote syncError={desk.syncError} result={desk.outcome} />
           {body}
           <Text fontSize={12} color="$muted">
             {t('mweb.brandWarehouses.manageHint')}

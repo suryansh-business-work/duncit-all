@@ -160,6 +160,47 @@ describe('SiteRevisionsDialog', () => {
     await waitFor(() => expect(notifyError).toHaveBeenCalledWith('That revision is gone'));
   });
 
+  it('goes back to every section after narrowing to one', async () => {
+    const dialog = await open();
+    fireEvent.mouseDown(within(dialog).getByRole('combobox'));
+    fireEvent.click(await screen.findByRole('option', { name: en('websiteApp.cms.revisions.design') }));
+    await waitFor(() => expect(queryOptions.get(CMS_SITE_REVISIONS)?.variables).toEqual({ siteId: 'site-1', section: 'DESIGN' }));
+    // A narrowed list has no "current" badge: the newest of one section is not the site's current state.
+    expect(within(dialog).queryByText(en('websiteApp.cms.revisions.latest'))).not.toBeInTheDocument();
+
+    fireEvent.mouseDown(within(dialog).getByRole('combobox'));
+    fireEvent.click(await screen.findByRole('option', { name: en('websiteApp.cms.revisions.all') }));
+    await waitFor(() => expect(queryOptions.get(CMS_SITE_REVISIONS)?.variables).toEqual({ siteId: 'site-1', section: null }));
+    expect(within(dialog).getByText(en('websiteApp.cms.revisions.latest'))).toBeInTheDocument();
+  });
+
+  it('shows progress while revisions load, and nothing else', async () => {
+    answerQuery(CMS_SITE, { data: { cmsSite: SITE } });
+    answerQuery(CMS_SITE_REVISIONS, { loading: true });
+    mount();
+    fireEvent.click(screen.getByTestId('cms-site-revisions'));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('progressbar', { name: en('websiteApp.cms.revisions.loading') })).toBeInTheDocument();
+    expect(within(dialog).queryByText(en('websiteApp.cms.revisions.empty'))).not.toBeInTheDocument();
+  });
+
+  it('says so when the revisions cannot be read', async () => {
+    answerQuery(CMS_SITE, { data: { cmsSite: SITE } });
+    answerQuery(CMS_SITE_REVISIONS, { error: new Error('down') });
+    mount();
+    fireEvent.click(screen.getByTestId('cms-site-revisions'));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(en('websiteApp.cms.revisions.loadFailed'))).toBeInTheDocument();
+    expect(within(dialog).queryByText(en('websiteApp.cms.revisions.empty'))).not.toBeInTheDocument();
+  });
+
+  it('closes on Escape and stops reading revisions', async () => {
+    const dialog = await open();
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(queryOptions.get(CMS_SITE_REVISIONS)?.skip).toBe(true);
+  });
+
   it('shows the empty and failed states', async () => {
     answerQuery(CMS_SITE, { data: { cmsSite: SITE } });
     answerQuery(CMS_SITE_REVISIONS, { data: { cmsSiteRevisions: [] } });

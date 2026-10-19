@@ -87,7 +87,7 @@ describe('generateInvoicePdf currency', () => {
   it('says in words which currency the amounts are in', async () => {
     const text = await drawn(base);
 
-    drawnOnce(text, 'All amounts are in Indian Rupees (INR).');
+    expect(text.filter((entry) => entry.text === 'All amounts are in Indian Rupees (INR).')).toHaveLength(1);
   });
 
   it('keeps a drawable symbol as it is, and prints no currency line it cannot word', async () => {
@@ -140,6 +140,52 @@ describe('generateInvoicePdf line items', () => {
 
     const rowCells = text.filter((entry) => entry.y === first.y).map((entry) => entry.text);
     expect(rowCells).toEqual([LONG_DESC, '1', 'INR 500.00', 'INR 500.00']);
+  });
+});
+
+describe('generateInvoicePdf rented items', () => {
+  const withRentals: InvoiceData = {
+    ...base,
+    items: [
+      { description: 'Pod booking · Sunset Pod', qty: 1, unit_price: 677.13, amount: 677.13 },
+      { description: 'UNO Cards (rent)', qty: 1, unit_price: 42.37, amount: 42.37, section: 'RENTAL' },
+      { description: 'UNO Cards (refundable deposit)', qty: 1, unit_price: 25.42, amount: 25.42, section: 'RENTAL' },
+    ],
+  };
+
+  it('prints rented items in their own block under the ticket, with a second table head', async () => {
+    const text = await drawn(withRentals);
+    const ticket = drawnOnce(text, 'Pod booking · Sunset Pod');
+    const title = drawnOnce(text, 'RENTED ITEMS');
+    const rent = drawnOnce(text, 'UNO Cards (rent)');
+    const deposit = drawnOnce(text, 'UNO Cards (refundable deposit)');
+
+    expect(title.y).toBeGreaterThan(ticket.y);
+    expect(rent.y).toBeGreaterThan(title.y);
+    expect(deposit.y).toBeGreaterThan(rent.y);
+    // The block repeats the table's own columns under a head of its own.
+    expect(text.filter((entry) => entry.text === 'DESCRIPTION')).toHaveLength(2);
+    expect(drawnOnce(text, 'Collected at the venue').y).toBe(title.y);
+  });
+
+  it('says the deposit is handed back at the venue, never refunded online', async () => {
+    const text = (await drawn(withRentals)).map((entry) => entry.text).join(' ');
+    expect(text).toContain('The venue hands the refundable deposit back when the item is returned');
+    expect(text).toContain('it is not refunded online');
+  });
+
+  it('keeps every amount in the shared AMOUNT column, so the totals still line up under it', async () => {
+    const text = await drawn(withRentals);
+    // At qty 1 the PRICE and AMOUNT cells print the same figure; AMOUNT is the right-most.
+    const amountX = (figure: string) => Math.max(...text.filter((entry) => entry.text === figure).map((entry) => entry.x));
+    expect(amountX('INR 42.37')).toBe(amountX('INR 677.13'));
+    expect(amountX('INR 25.42')).toBe(amountX('INR 677.13'));
+  });
+
+  it('draws no rented-items block for a booking without rentals', async () => {
+    const text = await texts(base);
+    expect(text).not.toContain('RENTED ITEMS');
+    expect(text.filter((entry) => entry === 'DESCRIPTION')).toHaveLength(1);
   });
 });
 

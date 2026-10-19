@@ -21,6 +21,7 @@ const row = (id: string, over: Record<string, unknown> = {}) => ({
   quantity: 1,
   rent_amount: 300,
   deposit_amount: 500,
+  deposit_at_venue: 0,
   ...over,
 });
 const STATS = {
@@ -37,6 +38,7 @@ const serve = (over: Record<string, unknown> = {}) => {
   const value = {
     bookings: [row('b1'), row('b2', { status: 'RETURNED', deposit_amount: 0, guest_name: '' })],
     stats: STATS,
+    depositRefundable: true,
     failed: false,
     loading: false,
     refetch: jest.fn().mockResolvedValue(undefined),
@@ -94,6 +96,22 @@ describe('RentalBookingsPanel', () => {
       }),
     );
     await waitFor(() => expect(screen.queryByTestId('mark-rental-sheet')).toBeNull());
+  });
+
+  it('shows what the venue handed back at the venue on a closed rental, and nothing on an open one', () => {
+    serve({ bookings: [row('b1'), row('b3', { status: 'RETURNED', deposit_at_venue: 500 })] });
+    renderWithProviders(<RentalBookingsPanel venueId="v1" withStats={false} />);
+    expect(screen.getByTestId('venue-rental-b3-deposit-back')).toHaveTextContent(
+      /Deposit back at venue: ₹\s?500/,
+    );
+    expect(screen.queryByTestId('venue-rental-b1-deposit-back')).toBeNull();
+  });
+
+  it('tells the sheet whether deposits go back, per Finance’s rule', () => {
+    serve({ depositRefundable: false });
+    renderWithProviders(<RentalBookingsPanel venueId="v1" withStats={false} />);
+    fireEvent.press(screen.getByTestId('venue-rental-b1-mark'));
+    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(/^Nothing to hand back/);
   });
 
   it('says there are no rentals yet', () => {

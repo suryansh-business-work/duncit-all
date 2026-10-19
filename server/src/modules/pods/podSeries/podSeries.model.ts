@@ -2,8 +2,8 @@ import { Schema, model, type Types } from 'mongoose';
 import type { MultiDateDiscountTier } from './podSeries.discount';
 
 /** How often a recurring pod repeats. */
-export type PodSeriesFrequency = 'DAILY' | 'WEEKLY' | 'BIWEEKLY';
-export const POD_SERIES_FREQUENCIES: readonly PodSeriesFrequency[] = ['DAILY', 'WEEKLY', 'BIWEEKLY'];
+export type PodSeriesFrequency = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'CUSTOM';
+export const POD_SERIES_FREQUENCIES: readonly PodSeriesFrequency[] = ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'CUSTOM'];
 
 /** A date the host asked for that did not become a pod, and why. */
 export interface IPodSeriesSkip {

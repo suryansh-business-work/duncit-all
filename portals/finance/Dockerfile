@@ -75,6 +75,7 @@ COPY packages/verification/package.json ./packages/verification/
 COPY packages/regex/package.json ./packages/regex/
 COPY packages/forms/package.json ./packages/forms/
 COPY packages/rich-text/package.json ./packages/rich-text/
+COPY packages/category/package.json ./packages/category/
 COPY packages/venue-rentals/package.json ./packages/venue-rentals/
 COPY packages/venue-food/package.json ./packages/venue-food/
 

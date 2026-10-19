@@ -28,16 +28,17 @@ interface ActionOptions {
   onEdit: (row: AutomationFlow) => void;
   onDelete: (row: AutomationFlow) => void;
   renderExtra: (row: AutomationFlow) => ReactNode;
+  edit: { ariaLabel: (row: AutomationFlow) => string };
 }
 
 vi.mock('@duncit/table', async () => ({
   ...(await import('./table-mock')),
   dateColumn: (options: object) => options,
-  actionsColumn: ({ onEdit, onDelete, renderExtra }: ActionOptions) => ({
+  actionsColumn: ({ onEdit, onDelete, renderExtra, edit }: ActionOptions) => ({
     field: 'actions',
     cellRenderer: (row: AutomationFlow): ReactNode => (
       <>
-        <button type="button" data-testid={`open-${row.id}`} onClick={(event) => { event.stopPropagation(); onEdit(row); }} />
+        <button type="button" aria-label={edit.ariaLabel(row)} data-testid={`open-${row.id}`} onClick={(event) => { event.stopPropagation(); onEdit(row); }} />
         <button type="button" data-testid={`delete-${row.id}`} onClick={(event) => { event.stopPropagation(); onDelete(row); }} />
         {renderExtra(row)}
       </>
@@ -219,5 +220,20 @@ describe('New flow dialog', () => {
     fireEvent.change(await screen.findByTestId('automation-flow-name'), { target: { value: 'Busy' } });
     await waitFor(() => expect(screen.getByTestId('automation-flow-name')).toHaveValue('Busy'));
     expect(screen.getByTestId('automation-flow-submit')).toBeDisabled();
+  });
+});
+
+describe('Automation flows list — waiting and naming', () => {
+  it('waits for the first read before drawing the table', () => {
+    answerQuery(AUTOMATION_FLOWS, { loading: true });
+    mount();
+    expect(screen.getByTestId('loader')).toHaveAttribute('role', 'status');
+    expect(screen.queryByTestId('duncit-table')).not.toBeInTheDocument();
+  });
+
+  it('names each row’s open action after its flow, for a screen reader', async () => {
+    answerQuery(AUTOMATION_FLOWS, { data: { automationFlows: FLOWS } });
+    mount();
+    expect(await screen.findByTestId('open-F2')).toHaveAccessibleName(en('ai.automation.list.actionsFor', { name: 'Win-back' }));
   });
 });

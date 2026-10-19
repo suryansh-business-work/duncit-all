@@ -90,7 +90,8 @@ export const podChallengeHostTools = {
     return Promise.all(
       items.map(async (item) => {
         const code = checkpointCode(doc._id.toString(), instanceId, item.key);
-        const url = `${base}?checkpoint=${encodeURIComponent(`${instanceId}.${code}`)}`;
+        const checkpoint = `${instanceId}.${code}`;
+        const url = `${base}?checkpoint=${encodeURIComponent(checkpoint)}`;
         return { item_key: item.key, label: item.label, url, qr_data_url: await QRCode.toDataURL(url, { width: 512, margin: 1 }) };
       })
     );

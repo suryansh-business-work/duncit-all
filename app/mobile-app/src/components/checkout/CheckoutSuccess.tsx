@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { CheckoutReceiptCard, type ReceiptPayment } from './CheckoutReceiptCard';
+import { RentalSuccessCard } from './RentalSuccessCard';
 import { ConfirmationPodCard } from '@/components/checkout/ConfirmationPodCard';
 import { ActionButton } from '@/components/checkout/SuccessParts';
 import { TwoToneHeading } from '@/components/TwoToneHeading';
@@ -28,6 +29,8 @@ export interface CheckoutSuccessProps {
   /** Label for the secondary action (defaults to "My bookings"; the product
    * checkout routes to "My orders"). */
   profileLabel?: string;
+  /** Finance's rental rule for the rented-items card: false = the venue keeps deposits. */
+  rentalDepositRefundable?: boolean;
 }
 
 /** Payment success view — or a free pod's join confirmation: a calm success
@@ -41,6 +44,7 @@ export function CheckoutSuccess({
   onHome,
   onProfile,
   profileLabel,
+  rentalDepositRefundable = true,
 }: Readonly<CheckoutSuccessProps>) {
   const { t } = useTranslation();
   const { primary, muted } = useThemeColors();
@@ -106,6 +110,7 @@ export function CheckoutSuccess({
         {payment ? t('mweb.checkout.successSubtitle') : t('mweb.checkout.freeJoinSubtitle')}
       </Text>
       {payment ? <CheckoutReceiptCard payment={payment} /> : null}
+      <RentalSuccessCard payment={payment} depositRefundable={rentalDepositRefundable} />
 
       {pod ? <ConfirmationPodCard pod={pod} /> : null}
 

@@ -7,6 +7,7 @@ import { DuncitButton } from '@/components/DuncitButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   composeSelection,
+  dayAfterMax,
   dayBlocked,
   hourBlocked,
   minuteBlocked,
@@ -78,6 +79,8 @@ interface SheetProps {
   initial: Date | null;
   /** Earliest pickable moment — earlier days/hours/minutes are blocked. */
   minDateTime?: Date | null;
+  /** Latest pickable day — later days are blocked (date-only picks). */
+  maxDate?: Date | null;
   muted: string;
   /** Off for a date-only pick (a whole-day slot, a date range) — the hour and
    * minute rows are not shown and the seed's time rides along unchanged. */
@@ -90,6 +93,7 @@ export function CalendarSheet({
   testID,
   initial,
   minDateTime = null,
+  maxDate = null,
   muted,
   showTime = true,
   onDone,
@@ -102,7 +106,7 @@ export function CalendarSheet({
   const [minute, setMinute] = useState(MINUTES.includes(seed.getMinutes()) ? seed.getMinutes() : 0);
   const days = buildMonthDays(view.getFullYear(), view.getMonth());
   const picked = composeSelection(view, day, hour, minute);
-  const pickedBlocked = !!minDateTime && picked < minDateTime;
+  const pickedBlocked = (!!minDateTime && picked < minDateTime) || dayAfterMax(view, day, maxDate);
 
   return (
     <YStack gap={12}>
@@ -141,7 +145,7 @@ export function CalendarSheet({
             testID={testID}
             d={d}
             selected={d === day}
-            blocked={!!d && dayBlocked(view, d, minDateTime)}
+            blocked={!!d && (dayBlocked(view, d, minDateTime) || dayAfterMax(view, d, maxDate))}
             ariaLabel={d ? t('mweb.createPod.dayAria', { vars: { day: d } }) : undefined}
             onSelect={setDay}
           />

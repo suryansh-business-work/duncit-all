@@ -3,7 +3,7 @@ import { useApolloClient } from '@apollo/client/react';
 import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SportsScoreIcon from '@mui/icons-material/SportsScore';
-import { useTranslation } from '@duncit/shell';
+import { useTranslation, type Translate } from '@duncit/shell';
 import { DuncitTable, activeChipColumn, dateColumn, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { POD_CHALLENGES_TABLE, type PodChallengeListRow } from '../../graphql/pod-challenges';
 
@@ -45,6 +45,15 @@ const STATUS_KEYS: Record<string, string> = {
 const LIVE_REFRESH_MS = 10_000;
 
 const rowId = (r: PodChallengeListRow) => r.id;
+
+/** The "open the live arena" link for one challenge. */
+const makeRenderOpen = (t: Translate) => (r: PodChallengeListRow) => (
+  <Tooltip title={t('challenge.podChallenges.openArena')}>
+    <IconButton size="small" component="a" href={r.live_url} target="_blank" rel="noopener noreferrer" aria-label={`${t('challenge.podChallenges.openArena')}: ${r.name}`}>
+      <OpenInNewIcon fontSize="small" />
+    </IconButton>
+  </Tooltip>
+);
 
 /** Challenge Portal > Pod Challenges / Live Challenge Monitor / Results & Leaderboards. */
 export default function PodChallengesPage({ view }: Readonly<{ view: PodChallengesView }>) {
@@ -88,13 +97,7 @@ export default function PodChallengesPage({ view }: Readonly<{ view: PodChalleng
         headerName: t('challenge.podChallenges.colOpen'),
         type: 'actions',
         width: 90,
-        cellRenderer: (r) => (
-          <Tooltip title={t('challenge.podChallenges.openArena')}>
-            <IconButton size="small" component="a" href={r.live_url} target="_blank" rel="noopener noreferrer" aria-label={`${t('challenge.podChallenges.openArena')}: ${r.name}`}>
-              <OpenInNewIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        ),
+        cellRenderer: makeRenderOpen(t),
       },
     ],
     [t]

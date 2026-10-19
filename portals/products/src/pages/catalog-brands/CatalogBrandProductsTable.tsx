@@ -61,6 +61,10 @@ const renderStatus = (p: CatalogBrandProductRow) => (
   <StatusChip status={p.status} colorMap={STATUS_CHIP_COLOR} />
 );
 
+const makeRenderShopSwitch = (onToggle: Props['onToggleActive']) => (p: CatalogBrandProductRow) => (
+  <ShopVisibilitySwitch product={p} onToggle={onToggle} />
+);
+
 /**
  * Every product of one brand — approved listings plus the PENDING and DENIED
  * ones the storefront query hides. Listing approve/reject is NOT offered here;
@@ -138,7 +142,7 @@ export default function CatalogBrandProductsTable({
         headerName: t('products.brandProducts.colShop'),
         type: 'boolean',
         width: 140,
-        cellRenderer: (p) => <ShopVisibilitySwitch product={p} onToggle={onToggleActive} />,
+        cellRenderer: makeRenderShopSwitch(onToggleActive),
         valueGetter: (p) => (p.is_active ? t('products.brandProducts.shown') : t('products.brandProducts.hidden')),
       },
       {

@@ -10,6 +10,15 @@ export const onboardingIntroTypeDefs = gql`
     website_url: String!
   }
 
+  "The featured image on each Earn with Duncit card, keyed by the card's icon key — Duncit's default when none is set."
+  type EarnCardImages {
+    host: String!
+    venue: String!
+    ecomm: String!
+    club: String!
+    freelancer: String!
+  }
+
   "The rich-text intro shown first on each onboarding flow — blank fields skip straight to the category picker."
   type OnboardingIntro {
     host_intro_html: String!
@@ -17,6 +26,7 @@ export const onboardingIntroTypeDefs = gql`
     ecomm_intro_html: String!
     club_admin_intro_html: String!
     social_handles: OnboardingSocialHandles!
+    earn_card_images: EarnCardImages!
   }
 
   "Each link must be a full https:// address, or empty to hide it."
@@ -28,12 +38,22 @@ export const onboardingIntroTypeDefs = gql`
     website_url: String
   }
 
+  "Each image must be a full https:// address, or empty to fall back to Duncit's default."
+  input EarnCardImagesInput {
+    host: String
+    venue: String
+    ecomm: String
+    club: String
+    freelancer: String
+  }
+
   input UpdateOnboardingIntroInput {
     host_intro_html: String
     venue_intro_html: String
     ecomm_intro_html: String
     club_admin_intro_html: String
     social_handles: OnboardingSocialHandlesInput
+    earn_card_images: EarnCardImagesInput
   }
 
   extend type Query {

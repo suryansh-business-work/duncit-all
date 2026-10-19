@@ -40,7 +40,8 @@ export const isFreePod = (podType?: string | null): boolean => podType === 'FREE
  */
 export function freePodVenueNotice(input: Readonly<FreePodVenueInput>): FreePodVenueNotice {
   if (!isFreePod(input.podType) || input.ownVenue) return 'NONE';
-  if (!(Number(input.slotPrice) > 0)) return 'NONE';
+  const slotPrice = Number(input.slotPrice);
+  if (Number.isNaN(slotPrice) || slotPrice <= 0) return 'NONE';
   return input.slotConfirmed ? 'SETTLE' : 'SETTLE_BEFORE_APPROVAL';
 }
 

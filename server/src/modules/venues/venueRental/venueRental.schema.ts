@@ -11,11 +11,11 @@ export const venueRentalTypeDefs = gql`
     commission_pct: Float!
     "Whether a guest who backs out of the pod in time gets the rent back. A cancelled pod always refunds it."
     rent_refundable_on_backout: Boolean!
-    "Whether a deposit comes back once the venue marks the item returned."
+    "Whether the venue hands the deposit back at the venue once the item comes back. Either way Duncit pays the deposit to the venue."
     deposit_refundable: Boolean!
     "Renting for a pod closes this many hours before it starts."
     booking_cutoff_hours: Int!
-    "An unmarked deposit is refunded automatically this many days after the pod ends."
+    "An unmarked rental is closed as returned automatically this many days after the pod ends."
     deposit_auto_release_days: Int!
     updated_at: String
   }
@@ -101,15 +101,17 @@ export const venueRentalTypeDefs = gql`
     status: String!
     damage_claim: Float!
     damage_note: String!
-    "Money owed back to the guest once the booking closed."
+    "Money Duncit owes back to the guest once the booking closed (never a deposit settled at the venue)."
     refund_due: Float!
     "NONE, DUE, PAID, or IN_PAYMENT (returned with the payment's cancellation refund)."
     refund_status: String!
     refund_ref: String!
     refunded_at: String
+    "The deposit the venue hands the guest in cash at the venue when the item comes back."
+    deposit_at_venue: Float!
     commission_pct: Float!
     commission_amount: Float!
-    "What the venue earns from this booking: rent less commission, plus any deposit it kept."
+    "What Duncit pays the venue for this booking: rent less commission, plus the deposit it settled at the venue."
     venue_amount: Float!
     "The VENUE_RENTAL payout that carried venue_amount, once raised."
     release_id: String

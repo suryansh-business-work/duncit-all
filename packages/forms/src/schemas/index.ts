@@ -235,3 +235,12 @@ export {
   type VenueVideo,
   type YoutubeVideo,
 } from './venue-videos';
+export {
+  GIG_LIMITS,
+  gigInterestDefaults,
+  makeFreelancerProfileSchema,
+  makeGigInterestSchema,
+  makeGigJobSchema,
+  type FreelancerProfileSchemaValues,
+  type GigJobSchemaValues,
+} from './gig-job';

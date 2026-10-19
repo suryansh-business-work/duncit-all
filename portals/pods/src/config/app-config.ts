@@ -18,7 +18,7 @@ export const appConfig = {
   portalLabel: 'Pods Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
-    'https://images.pexels.com/photos/1153213/pexels-photo-1153213.jpeg',
+    'https://images.pexels.com/photos/7149165/pexels-photo-7149165.jpeg',
   requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['ALL_PODS_ACCESS']),
   tokenKey: 'pods_token',
   colorModeKey: 'pods_color_mode',

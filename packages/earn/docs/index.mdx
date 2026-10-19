@@ -95,7 +95,8 @@ host CTA live on mWeb and open externally via `urlConfigs.mwebUrl`.
 
 ## GraphQL
 
-`EARN_ME` (roles + `myMeetings`), `MEETING_SLOTS`, `RESCHEDULE_MY_MEETING`,
+`EARN_ME` (roles + `myMeetings` + each card's `earn_card_images`, set in
+Onboarding Portal > Earn with Duncit), `MEETING_SLOTS`, `RESCHEDULE_MY_MEETING`,
 `CANCEL_MY_MEETING`, `PUBLIC_FEATURE_FLAGS`. The package calls
 `@apollo/client` hooks directly — both consumers already mount an
 `ApolloProvider`, so nothing is injected.

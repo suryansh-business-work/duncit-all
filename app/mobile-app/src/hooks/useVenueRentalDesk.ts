@@ -108,6 +108,8 @@ export function useVenueRentalItems(venueId: string) {
 export function useVenueRentalBookings(venueId: string) {
   const [bookings, setBookings] = useState<DeskBooking[] | null>(null);
   const [stats, setStats] = useState<DeskStats | null>(null);
+  // Finance's rule: whether the venue hands deposits back at the venue.
+  const [depositRefundable, setDepositRefundable] = useState(true);
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
@@ -119,6 +121,7 @@ export function useVenueRentalBookings(venueId: string) {
     );
     setBookings(data.venueRentalBookingsTable.rows);
     setStats(data.venueRentalStats);
+    setDepositRefundable(data.publicRentalSettings.deposit_refundable);
     setFailed(false);
   }, [venueId]);
   const query = useReloadableQuery(load, { onError: () => setFailed(true) });
@@ -153,6 +156,7 @@ export function useVenueRentalBookings(venueId: string) {
   return {
     bookings,
     stats,
+    depositRefundable,
     failed,
     loading: query.isLoading && !bookings,
     refetch: query.refetch,

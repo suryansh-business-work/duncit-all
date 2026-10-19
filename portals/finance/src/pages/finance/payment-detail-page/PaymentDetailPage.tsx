@@ -6,6 +6,7 @@ import { QueryGuard } from '@duncit/ui';
 import { useDateFormat, useTranslation, type DateFormatter } from '@duncit/app-settings';
 import PaymentDetailHeader from './PaymentDetailHeader';
 import AmountBreakupCard from './AmountBreakupCard';
+import RentalBreakupCard from './RentalBreakupCard';
 import PaymentSection from './PaymentSection';
 import CheckoutTabs from './CheckoutTabs';
 import CoinsCard from './CoinsCard';
@@ -52,6 +53,8 @@ function PaymentDetailBody({ detail, formatDateTime }: Readonly<Props>) {
             formatDateTime={formatDateTime}
           />
         </Stack>
+
+        <RentalBreakupCard payment={detail.payment} />
 
         <PaymentSection
           detail={detail}

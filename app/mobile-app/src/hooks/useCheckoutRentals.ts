@@ -25,7 +25,7 @@ export function useCheckoutRentals(pod: CheckoutPod | null | undefined, paid: bo
   const { picks, clear } = usePodRentalPicks(podId);
   const [agreed, setAgreed] = useState(false);
   const catalogue = rentable ? rentals.catalogue : null;
-  const { totals, selections } = useMemo(
+  const { totals, selections, lines } = useMemo(
     () => checkoutRentalLines(catalogue, picks),
     [catalogue, picks],
   );
@@ -38,6 +38,8 @@ export function useCheckoutRentals(pod: CheckoutPod | null | undefined, paid: bo
   return {
     selections,
     totals,
+    /** Each picked item with its own rent and deposit, for the bill. */
+    lines,
     currency: catalogue?.currency_symbol ?? '',
     venueTerms: catalogue?.venue_terms_html ?? '',
     settings: rentals.settings,

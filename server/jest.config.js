@@ -4,6 +4,7 @@ const tsJest = ['ts-jest', { tsconfig: 'tsconfig.test.json', isolatedModules: tr
 const moduleNameMapper = {
   '^@modules$': '<rootDir>/src/modules/index.ts',
   '^@modules/(.*)$': '<rootDir>/src/modules/$1',
+  '^@microservices/(.*)$': '<rootDir>/src/microservices/$1',
   '^@observability/(.*)$': '<rootDir>/src/observability/$1',
   '^@config/(.*)$': '<rootDir>/src/config/$1',
   '^@services/(.*)$': '<rootDir>/src/services/$1',
@@ -44,6 +45,7 @@ module.exports = {
   ],
   collectCoverageFrom: [
     'src/modules/**/*.ts',
+    'src/microservices/**/*.ts',
     'src/services/**/*.ts',
     'src/utils/**/*.ts',
     // Status page / health probes — six unit suites cover these, but nothing

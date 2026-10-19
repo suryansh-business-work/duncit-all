@@ -449,6 +449,13 @@ export const podWriteMethods = {
   async hostUpdate(id: string, userId: string, input: any): Promise<ReturnType<typeof toPub>> {
     const doc = await findHostedPod(id, userId);
     if (doc.series_role === 'PARENT') return this.hostUpdateRecurring(doc, userId, input);
+    // A completed pod (or date) is settled history: what people paid for and
+    // what Finance approved must stay as it was.
+    if (doc.completed_at) {
+      throw new GraphQLError('This pod is completed and can no longer be edited', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
     const before = snapshotPod(doc);
     const title = (input.pod_title ?? '').trim();
     if (title.length < 3) {

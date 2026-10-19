@@ -14,7 +14,7 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 interface Props {
   order: VenueFoodOrder;
   /** The key the screen reads the order with. */
-  accessKey: string | null;
+  orderKey: string | null;
   /** The rating went in: read the order again. */
   onSubmitted: () => void;
 }
@@ -44,9 +44,13 @@ function FeedbackThanks({ feedback }: Readonly<{ feedback: VenueFoodFeedback }>)
   );
 }
 
-function FeedbackAsk({ order, accessKey, onSubmitted }: Readonly<Props>) {
+function FeedbackAsk({ order, orderKey, onSubmitted }: Readonly<Props>) {
   const { t } = useTranslation();
-  const feedback = useFoodFeedback({ orderId: order.id, accessKey, onDone: onSubmitted });
+  const feedback = useFoodFeedback({
+    orderId: order.id,
+    accessKey: orderKey,
+    onDone: onSubmitted,
+  });
   // A photo still going up would be left out of the rating, so Send waits for it.
   const busy = feedback.submitting || feedback.uploading;
 
@@ -83,7 +87,7 @@ function FeedbackAsk({ order, accessKey, onSubmitted }: Readonly<Props>) {
  * order in one of those two states. Tamagui twin of mWeb's
  * venue-food-order-page feedback card.
  */
-export function FoodOrderFeedbackCard({ order, accessKey, onSubmitted }: Readonly<Props>) {
+export function FoodOrderFeedbackCard({ order, orderKey, onSubmitted }: Readonly<Props>) {
   if (order.feedback) return <FeedbackThanks feedback={order.feedback} />;
-  return <FeedbackAsk order={order} accessKey={accessKey} onSubmitted={onSubmitted} />;
+  return <FeedbackAsk order={order} orderKey={orderKey} onSubmitted={onSubmitted} />;
 }

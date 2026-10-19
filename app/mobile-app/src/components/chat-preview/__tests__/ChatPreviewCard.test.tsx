@@ -133,6 +133,58 @@ describe('ChatPreviewCard', () => {
     expect(screen.getByText('second')).toBeOnTheScreen();
   });
 
+  it('loads the earlier page as the reader scrolls up to the top of its fixed box, one page at a time', async () => {
+    let resolveEarlier: (value: unknown) => void = () => undefined;
+    mockRequest
+      .mockResolvedValueOnce(
+        preview({ messages: [line('cc', 'third'), line('ddd', 'fourth')], total_count: 4 }),
+      )
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveEarlier = resolve;
+        }),
+      );
+    renderWithProviders(<ChatPreviewCard kind="POD" id="p1" onOpen={jest.fn()} />);
+    await screen.findByText('third');
+    const list = screen.getByTestId('chat-preview-list');
+    expect(list).toHaveProp('nestedScrollEnabled', true);
+    expect(list).toHaveProp('maintainVisibleContentPosition', { minIndexForVisible: 0 });
+    const scrollTo = (y: number) =>
+      fireEvent.scroll(list, { nativeEvent: { contentOffset: { y } } });
+
+    // Downwards (the card opening on its newest line) asks for nothing.
+    scrollTo(0);
+    scrollTo(400);
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+
+    scrollTo(60);
+    expect(await screen.findByTestId('chat-preview-loading-earlier')).toBeOnTheScreen();
+    // Still at the top while the page is on its way: no second request.
+    scrollTo(10);
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { podId: 'p1', limit: 50, before: '2026-10-02T10:00:00.000Z' },
+      { auth: true },
+    );
+
+    await act(async () => {
+      resolveEarlier(preview({ messages: [line('b', 'second')], total_count: 4 }));
+    });
+    expect(await screen.findByText('second')).toBeOnTheScreen();
+    expect(screen.queryByTestId('chat-preview-loading-earlier')).toBeNull();
+  });
+
+  it('does not ask for earlier lines on scroll once the whole room is shown', async () => {
+    mockRequest.mockResolvedValue(preview({ messages: [line('a', 'only')], total_count: 1 }));
+    renderWithProviders(<ChatPreviewCard kind="POD" id="p1" onOpen={jest.fn()} />);
+    await screen.findByText('only');
+    const list = screen.getByTestId('chat-preview-list');
+    fireEvent.scroll(list, { nativeEvent: { contentOffset: { y: 300 } } });
+    fireEvent.scroll(list, { nativeEvent: { contentOffset: { y: 0 } } });
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+  });
+
   it('marks an ended pod’s room as Ended and an empty room as waiting for its first line', async () => {
     mockRequest.mockResolvedValue(preview({ closed: true }));
     renderWithProviders(<ChatPreviewCard kind="POD" id="p1" onOpen={jest.fn()} />);

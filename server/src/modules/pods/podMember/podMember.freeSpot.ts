@@ -26,7 +26,13 @@
  */
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { PodMemberModel, isDuplicateKeyError, type IPodMember, type JoinSource } from './podMember.model';
+import {
+  PodMemberModel,
+  isConcurrentFreeJoinError,
+  isDuplicateKeyError,
+  type IPodMember,
+  type JoinSource,
+} from './podMember.model';
 import { BackoutRequestModel } from './backoutRequest.model';
 import { claimSeats, releaseSeats } from '@modules/pods/pod/pod.seats.service';
 import { normalizeSeats } from '@modules/pods/pod/pod.seats';
@@ -187,7 +193,9 @@ async function lostToConcurrentBooking<T>(
   try {
     return await write();
   } catch (error) {
-    if (!isDuplicateKeyError(error)) throw error;
+    // Only the one-unpaid-booking index means "a concurrent join won"; any other
+    // unique index refusing the write is a real failure and must surface.
+    if (!isConcurrentFreeJoinError(error)) throw error;
     logs.server.warn('podMember', 'joinFreeConcurrent', {
       pod_id: podId.toString(),
       msg: 'a concurrent free join already holds the booking — answering with it',

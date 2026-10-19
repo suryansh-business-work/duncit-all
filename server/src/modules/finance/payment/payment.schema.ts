@@ -84,6 +84,23 @@ export const paymentTypeDefs = /* GraphQL */ `
     finalize_state: String!
     needs_refund: Boolean!
     coins_earned: Float!
+    "The rented items this pod payment carried, as checkout froze them (empty when none)."
+    rental_lines: [PaymentRentalLine!]!
+  }
+
+  "One rented item on a pod payment, frozen at checkout: collected at the venue, its deposit settled there."
+  type PaymentRentalLine {
+    item_id: ID!
+    name: String!
+    image_url: String!
+    unit: VenueRentalUnit!
+    rate: Float!
+    "1 for a SLOT item, the pod's hours for an HOUR item."
+    units: Int!
+    quantity: Int!
+    rent: Float!
+    "Refundable deposit for every unit of the line, handed back at the venue."
+    deposit: Float!
   }
 
   enum PaymentStepStatus {

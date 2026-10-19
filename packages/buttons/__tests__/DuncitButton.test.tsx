@@ -22,14 +22,14 @@ describe('DuncitButton', () => {
     const button = screen.getByRole('button', { name: 'Book DUN-POD-4821 · ₹499' });
     expect(button.className).toContain('MuiButton-contained');
     expect(injectedCss()).toContain('filter:brightness(0.92)');
-    expect(injectedCss()).toContain('transform:scale(0.96)');
+    expect(injectedCss()).toContain('scale:0.96');
   });
 
   it('renders a text button with the ghost press: ink layer and deeper compression', () => {
     mount(<DuncitButton variant="text">View pod</DuncitButton>);
     expect(screen.getByRole('button', { name: 'View pod' }).className).toContain('MuiButton-text');
     const css = injectedCss();
-    expect(css).toContain('transform:scale(0.94)');
+    expect(css).toContain('scale:0.94');
     expect(css).toContain('background-color:rgba(17, 24, 39, 0.12)');
   });
 

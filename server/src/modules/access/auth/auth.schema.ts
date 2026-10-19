@@ -287,6 +287,35 @@ export const authTypeDefs = gql`
     linked_at: String
   }
 
+  "One successful sign-in, shown under Profile > Login activity."
+  type LoginActivity {
+    id: ID!
+    "ISO timestamp of the sign-in."
+    signed_in_at: String!
+    "How it was made (EMAIL, OTP, GOOGLE or APPLE)."
+    provider: String
+    ip: String
+    "Approximate place from an offline geo-IP lookup — null when unknown."
+    city: String
+    region: String
+    "ISO country code."
+    country: String
+    browser: String
+    os: String
+    "MOBILE, TABLET, DESKTOP, BOT or UNKNOWN."
+    device_type: String
+    "The client it was made on (NATIVE, MWEB, PORTAL…)."
+    surface: String
+    "The site or console it was made on, e.g. admin.duncit.com."
+    origin_host: String
+  }
+
+  type LoginActivityHistory {
+    "How many days a sign-in is kept before it is removed."
+    retention_days: Int!
+    entries: [LoginActivity!]!
+  }
+
   """
   What a user can currently sign in with.
 
@@ -393,6 +422,8 @@ export const authTypeDefs = gql`
     field on User.
     """
     myConnectedAccounts: ConnectedAccounts!
+    "The signed-in member's own recent sign-ins, newest first (default 50, at most 100)."
+    myLoginActivity(limit: Int): LoginActivityHistory!
     """
     Public: is this Google/Apple person already on Duncit?
 

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
@@ -65,20 +65,19 @@ export default function CollectionTab({ site, collection }: Readonly<Props>) {
     [confirm, deleteEntry, t],
   );
 
-  const actionsFor = useMemo(
-    () =>
-      (entry: CmsEntryRow): RowAction[] => [
-        { key: 'edit', label: t('shell.common.edit'), icon: <EditIcon fontSize="small" />, onClick: () => navigate(entryPath(entry.id)) },
-        {
-          key: 'delete',
-          label: t('shell.common.delete'),
-          icon: <DeleteOutlineIcon fontSize="small" />,
-          destructive: true,
-          onClick: () => {
-            remove(entry).catch(() => notifyError(t('websiteApp.cms.entries.deleteFailed')));
-          },
+  const actionsFor = useCallback(
+    (entry: CmsEntryRow): RowAction[] => [
+      { key: 'edit', label: t('shell.common.edit'), icon: <EditIcon fontSize="small" />, onClick: () => navigate(entryPath(entry.id)) },
+      {
+        key: 'delete',
+        label: t('shell.common.delete'),
+        icon: <DeleteOutlineIcon fontSize="small" />,
+        destructive: true,
+        onClick: () => {
+          remove(entry).catch(() => notifyError(t('websiteApp.cms.entries.deleteFailed')));
         },
-      ],
+      },
+    ],
     [entryPath, navigate, remove, t],
   );
 

@@ -85,8 +85,8 @@ describe('BrandOrdersScreen', () => {
     renderWithProviders(<BrandOrdersScreen />);
     fireEvent.changeText(screen.getByTestId('brand-orders-search'), 'DUN-1');
     expect(desk.setSearch).toHaveBeenCalledWith('DUN-1');
-    expect(screen.getByTestId('brand-orders-status-FAILED')).toHaveProp('aria-selected', true);
-    expect(screen.getByTestId('brand-orders-status-all')).toHaveProp('aria-selected', false);
+    expect(screen.getByTestId('brand-orders-status-FAILED')).toHaveProp('aria-pressed', true);
+    expect(screen.getByTestId('brand-orders-status-all')).toHaveProp('aria-pressed', false);
     fireEvent.press(screen.getByTestId('brand-orders-status-SHIPPED'));
     expect(desk.setStatus).toHaveBeenCalledWith('SHIPPED');
     fireEvent.press(screen.getByTestId('brand-orders-status-all'));

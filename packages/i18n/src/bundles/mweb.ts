@@ -312,6 +312,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       coin: { title: 'Duncit Coin' },
       leaderboard: { title: 'Leaderboard' },
+      gigJobs: {
+        title: 'Gig Jobs',
+        description: 'Gigs for events and workshops — photographers, caterers, DJs, sponsors and more, posted by hosts, venues and brands.',
+      },
+      gigPost: { title: 'Post a gig' },
+      gigEdit: { title: 'Edit gig' },
+      myGigs: { title: 'My gig posts' },
+      gigDetail: { title: 'Gig' },
+      freelancerProfile: { title: 'Freelancer profile' },
       badges: {
         title: 'Badges',
         description: 'Every Duncit badge, what it takes to unlock it, and how far along you are.',
@@ -3938,10 +3947,22 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       daily: 'Every day',
       weekly: 'Every week',
       biweekly: 'Every two weeks',
+      monthly: 'Every month',
+      custom: 'Pick dates',
+      modeHint: 'Recurring: pick the first date and time below, then how often it repeats.',
       endsOnLabel: 'Repeat until',
       endsOnHint: 'The last day a date may fall on.',
+      endsOnMaxHint: 'Up to {days} days after the first date.',
       endsOnRequired: 'Pick the day the pod stops repeating.',
       endsOnAfterStart: 'Pick a day after the first date.',
+      calendarTitle: 'Dates on the calendar',
+      calendarHint: 'Tap a marked date to leave it out, or tap it again to bring it back.',
+      customHint: 'Tap every day the pod should run on, up to the end day.',
+      legendRuns: 'Runs',
+      legendOnRequest: 'Venue opens a slot when it accepts',
+      legendCannotRun: 'Cannot run',
+      legendRemoved: 'Left out',
+      dayLabel: '{date}: {status}',
       datesLabel: 'Dates this pod will run on',
       dateWithPrice: '{date} · ₹{price}',
       willCreate: '{count} of {total} dates will be added',
@@ -3959,6 +3980,21 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         one: 'Recurring · 1 date',
         other: 'Recurring · {count} dates',
       },
+    },
+    // Shown just before a booking when the member already holds a spot on a pod
+    // at the same time. mWeb and the native app share these.
+    bookingClash: {
+      title: {
+        one: 'You already have a pod at this time',
+        other: 'You already have {count} pods at this time',
+      },
+      intro: 'This booking overlaps with the pod(s) below that you have already booked:',
+      advice:
+        'We recommend freeing your spot on the clashing pod first. That keeps the spot open for someone who can make it, and keeps Duncit healthy and fair for everyone. If you still want both, you can force book.',
+      openPod: 'Open pod to free the spot',
+      forceBook: 'Force book',
+      cancelBooking: 'Cancel booking',
+      when: '{start} to {end}',
     },
     // Booking a recurring pod: it is ONE pod with many dates, and a member
     // picks the dates they want. mWeb and the native app share these.
@@ -3980,12 +4016,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       statusCancelled: 'Cancelled',
       statusAwaitingVenue: 'Awaiting venue',
       pickTitle: 'Which dates do you want to book?',
-      choiceNext: 'Only the next date',
-      choiceAll: {
-        one: 'The 1 open date',
-        other: 'All {count} open dates',
-      },
-      choicePick: 'Let me pick the dates',
+      selectAll: 'Select all',
       noneOpen: 'No date is open for booking right now.',
       datesCount: {
         one: '1 date',

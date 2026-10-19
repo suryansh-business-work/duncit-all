@@ -95,7 +95,7 @@ export const brandProductOrderService = {
     const order = await ownedOrder(userId, id);
     if (order.fulfilment_method !== 'SHIP') bad('Only a shipped order has a delivery address');
     if (order.shiprocket.order_id) bad('The shipment is already booked with this address — cancel it with the courier first');
-    order.shipping_address = cleanShipTo(input) as IProductOrder['shipping_address'];
+    order.shipping_address = cleanShipTo(input);
     order.notes.push({ text: 'Ship-to address corrected', by_id: userId, by_name: byName, at: new Date() });
     await order.save();
     return productOrderService.toPub(order);

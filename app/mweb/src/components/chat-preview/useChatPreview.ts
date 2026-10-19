@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import {
   CHAT_PREVIEW_PAGE,
   hasEarlierMessages,
   mergeEarlierMessages,
+  olderPageCursor,
   type ChatPreviewKind,
 } from '@duncit/utils';
 import { CHAT_PREVIEW, type ChatPreviewData } from './queries';
@@ -11,7 +11,8 @@ import { CHAT_PREVIEW, type ChatPreviewData } from './queries';
 /**
  * The chat card's data: the newest page of the room's history, older pages on
  * request (put in front of what is shown, each line once), the total and the
- * viewer's membership.
+ * viewer's membership. Loading and failure of an older page are the card's
+ * scroll-up history's to show (useScrollUpHistory).
  */
 export function useChatPreview(kind: ChatPreviewKind, id: string) {
   const room = kind === 'POD' ? { pod_id: id } : { club_id: id };
@@ -19,32 +20,24 @@ export function useChatPreview(kind: ChatPreviewKind, id: string) {
     variables: { ...room, limit: CHAT_PREVIEW_PAGE },
     fetchPolicy: 'cache-and-network',
   });
-  const [loadingEarlier, setLoadingEarlier] = useState(false);
-  const [earlierFailed, setEarlierFailed] = useState(false);
 
   const preview = data?.chatPreview ?? null;
   const messages = preview?.messages ?? [];
   const total = preview?.total_count ?? 0;
 
+  /** Rejects when the page failed, so the card can say so; nothing shown is lost. */
   const loadEarlier = async () => {
-    setLoadingEarlier(true);
-    setEarlierFailed(false);
-    try {
-      await fetchMore({
-        variables: { ...room, limit: CHAT_PREVIEW_PAGE, before: messages[0].createdAt },
-        updateQuery: (shown, { fetchMoreResult }) => ({
-          chatPreview: {
-            ...fetchMoreResult.chatPreview,
-            messages: mergeEarlierMessages(fetchMoreResult.chatPreview.messages, shown.chatPreview.messages),
-          },
-        }),
-      });
-    } catch {
-      // The card says so beside the button; nothing already shown is lost.
-      setEarlierFailed(true);
-    } finally {
-      setLoadingEarlier(false);
-    }
+    const before = olderPageCursor(messages, (m) => m.createdAt);
+    if (!before) return;
+    await fetchMore({
+      variables: { ...room, limit: CHAT_PREVIEW_PAGE, before },
+      updateQuery: (shown, { fetchMoreResult }) => ({
+        chatPreview: {
+          ...fetchMoreResult.chatPreview,
+          messages: mergeEarlierMessages(fetchMoreResult.chatPreview.messages, shown.chatPreview.messages),
+        },
+      }),
+    });
   };
 
   return {
@@ -58,7 +51,5 @@ export function useChatPreview(kind: ChatPreviewKind, id: string) {
     retry: () => refetch(),
     canLoadEarlier: hasEarlierMessages(messages.length, total),
     loadEarlier,
-    loadingEarlier,
-    earlierFailed,
   };
 }

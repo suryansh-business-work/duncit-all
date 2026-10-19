@@ -42,7 +42,7 @@ function bounds<T>(f: TableFilterInput, parse: (raw?: string | null) => T | unde
 }
 
 async function bookedIds(): Promise<Types.ObjectId[]> {
-  return (await TicketModel.distinct('user_id', LIVE_TICKET)) as unknown as Types.ObjectId[];
+  return TicketModel.distinct('user_id', LIVE_TICKET);
 }
 
 /** Members whose most recent live booking falls in the range. */

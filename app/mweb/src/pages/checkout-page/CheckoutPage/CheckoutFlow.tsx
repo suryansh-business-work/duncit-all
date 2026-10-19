@@ -142,6 +142,7 @@ export default function CheckoutFlow({ ctx, bill, billLoading = false }: Readonl
         pod={pod}
         onHome={() => navigate('/')}
         onProfile={() => navigate('/profile')}
+        rentalDepositRefundable={rentals.settings?.deposit_refundable !== false}
       />
     );
   }

@@ -1,4 +1,4 @@
-import type { ReelOverlay, ReelScene, ReelSpec, ReelText } from '@duncit/gql-types';
+import type { ReelMusic, ReelOverlay, ReelScene, ReelSpec, ReelText } from '@duncit/gql-types';
 import { sceneTimings } from '../composition/timing';
 
 /**
@@ -84,13 +84,25 @@ export function itemSpans(spans: readonly SceneSpan[], kind: ItemKind): ItemSpan
   return assignLanes(items);
 }
 
-/** Whether a selection still points at something — an edit or a chat reply can remove it. */
-export function selectionExists(spec: ReelSpec, selection: ReelSelection | null): boolean {
-  if (!selection) return false;
-  if (selection.kind === 'music') return spec.music !== null && spec.music !== undefined;
+/** What a selection points at, found in the reel. */
+export type ResolvedSelection =
+  | { kind: 'music'; music: ReelMusic }
+  | { kind: 'scene'; scene: ReelScene; index: number }
+  | { kind: 'text'; scene: ReelScene; index: number; text: ReelText }
+  | { kind: 'overlay'; scene: ReelScene; index: number; overlay: ReelOverlay };
+
+/** What a selection still points at — null once an edit or a chat reply has removed it. */
+export function resolveSelection(spec: ReelSpec, selection: ReelSelection | null): ResolvedSelection | null {
+  if (!selection) return null;
+  if (selection.kind === 'music') return spec.music ? { kind: 'music', music: spec.music } : null;
   const scene = spec.scenes.find((item) => item.id === selection.sceneId);
-  if (!scene) return false;
-  if (selection.kind === 'scene') return true;
-  const list: readonly { id: string }[] = selection.kind === 'text' ? scene.texts : scene.overlays;
-  return list.some((item) => item.id === selection.itemId);
+  if (!scene) return null;
+  const index = spec.scenes.indexOf(scene);
+  if (selection.kind === 'scene') return { kind: 'scene', scene, index };
+  if (selection.kind === 'text') {
+    const text = scene.texts.find((item) => item.id === selection.itemId);
+    return text ? { kind: 'text', scene, index, text } : null;
+  }
+  const overlay = scene.overlays.find((item) => item.id === selection.itemId);
+  return overlay ? { kind: 'overlay', scene, index, overlay } : null;
 }

@@ -9,6 +9,8 @@ export interface SidebarTiles {
   food: ProfileTile[];
   /** "My Rented Items" — rented items ride on pod bookings, so they sit under Shop with or without products. */
   rentals: ProfileTile[];
+  /** Gig Jobs — open to everyone: hosts, venues and brands post, freelancers apply. */
+  gigs: ProfileTile[];
   grid: ProfileTile[];
 }
 
@@ -73,6 +75,15 @@ export function buildSidebarTiles(t: Translate): SidebarTiles {
         caption: '',
         icon: 'handshake',
         route: 'MyRentedItems',
+      },
+    ],
+    gigs: [
+      {
+        key: 'gigs',
+        label: t('gigJobs.nav.label'),
+        caption: '',
+        icon: 'work-outline',
+        route: 'GigJobs',
       },
     ],
     /*

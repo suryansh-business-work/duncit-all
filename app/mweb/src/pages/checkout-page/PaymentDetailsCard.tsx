@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Alert, Card, CardContent, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { DuncitButton } from '@duncit/buttons';
@@ -43,6 +44,8 @@ interface Props {
    * stays shut until it is READY. The pod checkout ships nothing and omits it. */
   deliveryStatus?: DeliveryQuoteStatus;
   onRetryDelivery?: () => void;
+  /** Shown right above Pay — the rental-terms agreement, so it is the last thing read before paying. */
+  beforePay?: ReactNode;
 }
 
 export default function PaymentDetailsCard({
@@ -70,6 +73,7 @@ export default function PaymentDetailsCard({
   addressRequired = true,
   deliveryStatus = 'READY',
   onRetryDelivery,
+  beforePay = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const discounted = effectiveTotal < total;
@@ -129,6 +133,7 @@ export default function PaymentDetailsCard({
           )}
           <CheckoutRequirementsCard missing={eligibility.missing} />
           <DeliveryQuoteNotice status={deliveryStatus} onRetry={onRetryDelivery} />
+          {beforePay}
           <DuncitButton
             data-testid="checkout-submit"
             variant="contained"

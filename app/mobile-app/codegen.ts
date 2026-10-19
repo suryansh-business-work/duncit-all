@@ -8,7 +8,11 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
  */
 const config: CodegenConfig = {
   overwrite: true,
-  schema: '../../server/src/modules/**/*.schema.ts',
+  // Both trees the server builds its schema from (see server/codegen.ts).
+  schema: [
+    '../../server/src/modules/**/*.schema.ts',
+    '../../server/src/microservices/**/*.schema.ts',
+  ],
   ignoreNoDocuments: true,
   generates: {
     './src/generated/graphql/': {

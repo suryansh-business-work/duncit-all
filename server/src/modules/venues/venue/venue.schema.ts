@@ -161,6 +161,8 @@ export const venueTypeDefs = /* GraphQL */ `
     stock: Int!
     per_guest_limit: Int!
     is_available: Boolean!
+    "The Super → Category → Sub rows the item is offered under: a pod shows it only when its club's category is one of them."
+    categories: [VenueCategory!]!
   }
 
   input VenueRentalItemInput {
@@ -175,6 +177,8 @@ export const venueTypeDefs = /* GraphQL */ `
     stock: Int!
     per_guest_limit: Int
     is_available: Boolean
+    "At least one row when sent. Omitted (an older client) keeps the item's categories."
+    categories: [VenueCategoryInput!]
   }
 
   input VenueFoodOrderingInput {
@@ -223,6 +227,8 @@ export const venueTypeDefs = /* GraphQL */ `
     rental_stock_max: Int!
     rental_per_guest_max: Int!
     rental_terms_max: Int!
+    "Category rows one rented item may be offered under."
+    rental_category_limit: Int!
   }
 
   type VenueOperatingHours {

@@ -16,6 +16,44 @@ interface Props {
   onToggleBool: (name: string, checked: boolean) => void;
 }
 
+/** A boolean config value as a switch, its hint wired up as the description. */
+function BoolConfigField({ field, value, helperText, onToggleBool }: Readonly<Pick<Props, 'field' | 'value' | 'helperText' | 'onToggleBool'>>) {
+  const hintId = `config-${field.name}-hint`;
+  return (
+    <FormControl>
+      <FormControlLabel
+        control={
+          <Switch
+            checked={value === 'true'}
+            onChange={(e) => onToggleBool(field.name, e.target.checked)}
+            slotProps={{ input: { 'aria-describedby': helperText ? hintId : undefined } }}
+          />
+        }
+        label={field.label}
+      />
+      {helperText ? <FormHelperText id={hintId} sx={{ mx: 0 }}>{helperText}</FormHelperText> : null}
+    </FormControl>
+  );
+}
+
+/** The eye toggle that reveals or masks a secret value. */
+function RevealAdornment({ label, reveal, onToggle }: Readonly<{ label: string; reveal: boolean; onToggle: () => void }>) {
+  return (
+    <InputAdornment position="end">
+      <Tooltip title={reveal ? 'Hide' : 'Show'}>
+        <DuncitIconButton
+          aria-label={reveal ? `Hide ${label}` : `Show ${label}`}
+          edge="end"
+          size="small"
+          onClick={onToggle}
+        >
+          {reveal ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+        </DuncitIconButton>
+      </Tooltip>
+    </InputAdornment>
+  );
+}
+
 /**
  * One environment config input. Booleans render as a switch; secrets render a
  * masked field with an eye toggle so the value can be revealed on demand
@@ -25,22 +63,7 @@ export default function ConfigField({ field, value, error, helperText, required,
   const [reveal, setReveal] = useState(false);
 
   if (field.bool) {
-    const hintId = `config-${field.name}-hint`;
-    return (
-      <FormControl>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={value === 'true'}
-              onChange={(e) => onToggleBool(field.name, e.target.checked)}
-              slotProps={{ input: { 'aria-describedby': helperText ? hintId : undefined } }}
-            />
-          }
-          label={field.label}
-        />
-        {helperText ? <FormHelperText id={hintId} sx={{ mx: 0 }}>{helperText}</FormHelperText> : null}
-      </FormControl>
-    );
+    return <BoolConfigField field={field} value={value} helperText={helperText} onToggleBool={onToggleBool} />;
   }
 
   const visibleType = field.number ? 'number' : 'text';
@@ -62,22 +85,7 @@ export default function ConfigField({ field, value, error, helperText, required,
       autoComplete={field.secret ? 'new-password' : 'off'}
       slotProps={{
         input: field.secret
-          ? {
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Tooltip title={reveal ? 'Hide' : 'Show'}>
-                    <DuncitIconButton
-                      aria-label={reveal ? `Hide ${field.label}` : `Show ${field.label}`}
-                      edge="end"
-                      size="small"
-                      onClick={() => setReveal((v) => !v)}
-                    >
-                      {reveal ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                    </DuncitIconButton>
-                  </Tooltip>
-                </InputAdornment>
-              ),
-            }
+          ? { endAdornment: <RevealAdornment label={field.label} reveal={reveal} onToggle={() => setReveal((v) => !v)} /> }
           : undefined,
 
         htmlInput: { autoComplete: field.secret ? 'new-password' : 'off', 'data-1p-ignore': true, 'data-lpignore': true }

@@ -32,6 +32,9 @@ vi.mock('../../src/pages/whatsapp-page/wa-campaign-detail', () => ({
         <button type="button" onClick={() => p.onDelete({ campaign_id: p.campaignId, name: 'Diwali' })}>
           ask-delete
         </button>
+        <button type="button" onClick={p.onClose}>
+          close-detail
+        </button>
         {p.onDuplicate && (
           <button type="button" onClick={() => p.onDuplicate?.({ campaign_id: p.campaignId })}>
             ask-duplicate
@@ -41,10 +44,13 @@ vi.mock('../../src/pages/whatsapp-page/wa-campaign-detail', () => ({
     ) : null,
 }));
 vi.mock('../../src/pages/whatsapp-page/wa-message', () => ({
-  default: (p: { campaignName: string; params: string[] }) => (
-    <div>
-      sent:{p.campaignName}:{p.params.join('|')}
-    </div>
+  default: (p: { campaignName: string; params: string[]; labels?: readonly string[] }) => (
+    <>
+      <div>
+        sent:{p.campaignName}:{p.params.join('|')}
+      </div>
+      <div>labels:{p.labels ? p.labels.join('|') : 'none'}</div>
+    </>
   ),
 }));
 
@@ -123,6 +129,19 @@ describe('log columns', () => {
     expect(screen.getByText(/902\.75/)).toBeInTheDocument();
     expect(screen.getByText(/marketingWhatsapp.logs.perMessage/)).toHaveTextContent('0.785');
     expect(screen.getByText('adminWhatsapp.statusFailed')).toBeInTheDocument();
+  });
+
+  it('falls back to the raw kind and status when the server sends one this build does not know', () => {
+    const row = log({ kind: 'IMPORTED' as never, status: 'PAUSED' });
+    expect(value('kind', row)).toBe('IMPORTED');
+    renderWithProviders(
+      <>
+        {cell('kind', row)}
+        {cell('status', row)}
+      </>
+    );
+    expect(screen.getByText('IMPORTED')).toBeInTheDocument();
+    expect(screen.getByText('PAUSED')).toBeInTheDocument();
   });
 
   it('hides the failure line on a clean send, shows a dash for no reason, and says when no rate was frozen', () => {
@@ -204,6 +223,29 @@ describe('AutoLogDetail', () => {
     await waitFor(() => expect(within(dialog).getByText('order_placed')).toBeInTheDocument());
     expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
     expect(within(dialog).getAllByText('—').length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('labels the values from the scenario registry, and leaves an unknown scenario unlabelled', async () => {
+    const known = renderWithProviders(<AutoLogDetail logId="M1" currency="$" onClose={vi.fn()} />, {
+      mocks: [detailMock(detailRow({ event_key: 'USER_WELCOME', params: ['Asha'] }))],
+    });
+    expect(await screen.findByText('labels:Recipient name')).toBeInTheDocument();
+    known.unmount();
+
+    renderWithProviders(<AutoLogDetail logId="M1" currency="$" onClose={vi.fn()} />, {
+      mocks: [detailMock(detailRow())],
+    });
+    expect(await screen.findByText('labels:none')).toBeInTheDocument();
+  });
+
+  it('shows a dash for a log with no category of ours', async () => {
+    renderWithProviders(<AutoLogDetail logId="M1" currency="$" onClose={vi.fn()} />, {
+      mocks: [detailMock(detailRow({ category: '' }))],
+    });
+    const dialog = await screen.findByRole('dialog');
+    await waitFor(() => expect(within(dialog).getByText('order_placed')).toBeInTheDocument());
+    // Every other meta row has a value, so the one dash is the category.
+    expect(within(dialog).getAllByText('—')).toHaveLength(1);
   });
 
   it('says the log is gone when the server has no such row', async () => {
@@ -306,6 +348,33 @@ describe('WaLogs', () => {
     mount();
     fireEvent.click(await screen.findByRole('button', { name: 'open-CAMPAIGN-L1' }));
     expect(screen.queryByRole('button', { name: 'ask-duplicate' })).not.toBeInTheDocument();
+  });
+
+  it('closes the campaign detail from its own close', async () => {
+    mount();
+    fireEvent.click(await screen.findByRole('button', { name: 'open-CAMPAIGN-L1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'close-detail' }));
+    expect(screen.queryByText('detail:L1')).not.toBeInTheDocument();
+  });
+
+  it('closes the automatic message detail from its Close button', async () => {
+    mount();
+    fireEvent.click(await screen.findByRole('button', { name: 'open-AUTOMATIC-M1' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('backs out of the delete without removing anything', async () => {
+    const actionSet = actions();
+    mount({ actions: actionSet });
+    fireEvent.click(await screen.findByRole('button', { name: 'open-CAMPAIGN-L1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'ask-delete' }));
+    const confirm = await screen.findByRole('dialog');
+    fireEvent.click(within(confirm).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect((actionSet as { remove: ReturnType<typeof vi.fn> }).remove).not.toHaveBeenCalled();
+    expect(screen.getByText('detail:L1')).toBeInTheDocument();
   });
 
   it('keeps the detail open when the delete was refused', async () => {

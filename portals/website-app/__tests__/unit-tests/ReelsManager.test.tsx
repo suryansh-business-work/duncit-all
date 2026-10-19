@@ -37,11 +37,11 @@ interface Seen {
   remove: Record<string, unknown>[];
 }
 
-const mount = (extra: { settings?: MockedResponse; fail?: Partial<Record<'create' | 'update' | 'remove', ReelFailure>> } = {}) => {
+const mount = (extra: { rows?: ReelMock[]; settings?: MockedResponse; fail?: Partial<Record<'create' | 'update' | 'remove', ReelFailure>> } = {}) => {
   const seen: Seen = { table: [], create: [], update: [], remove: [] };
   renderWithProviders(<ReelsManager site="MAIN" />, {
     mocks: [
-      reelsTableMock(ROWS, seen.table),
+      reelsTableMock(extra.rows ?? ROWS, seen.table),
       extra.settings ?? reelSettingsMock(),
       createReelMock(seen.create, extra.fail?.create),
       updateReelMock(seen.update, extra.fail?.update),
@@ -72,6 +72,14 @@ describe('ReelsManager — the list', () => {
     const query = JSON.stringify(seen.table[0]);
     expect(query).toContain('"field":"site"');
     expect(query).toContain('"value":"MAIN"');
+  });
+
+  it('leaves the created date blank for a reel the server sent without one', async () => {
+    mount({ rows: [makeReel(), makeReel({ id: 'r3', title: 'Undated', created_at: '' })] });
+    await screen.findByText('Undated');
+    const createdOf = (id: string) => document.querySelector(`[row-id="${id}"] [col-id="created_at"]`);
+    await waitFor(() => expect(createdOf('r1')?.textContent).not.toBe(''));
+    expect(createdOf('r3')).toHaveTextContent(/^$/);
   });
 
   it('keeps Add disabled and says so when the size cap could not be read', async () => {
@@ -168,6 +176,15 @@ describe('ReelsManager — add and edit', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(seen.update).toHaveLength(0);
   });
+
+  it('closes the dialog on Escape without writing', async () => {
+    const seen = mount();
+    await screen.findByText('Sunday jam');
+    fireEvent.click(screen.getAllByRole('button', { name: en('shell.common.edit') })[0]);
+    fireEvent.keyDown(await screen.findByRole('dialog'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(seen.update).toHaveLength(0);
+  });
 });
 
 describe('ReelsManager — delete', () => {
@@ -183,6 +200,16 @@ describe('ReelsManager — delete', () => {
     expect(within(dialog).getByText(en('websiteApp.reels.deleteText', { title: 'Sunday jam' }))).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: en('shell.common.delete') }));
     await waitFor(() => expect(seen.remove).toEqual([{ id: 'r1' }]));
+  });
+
+  it('names an untitled reel as such when asking to delete it', async () => {
+    const seen = mount();
+    await screen.findByText('Sunday jam');
+    fireEvent.click(screen.getAllByRole('button', { name: en('shell.common.delete') })[1]);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(en('websiteApp.reels.deleteText', { title: en('websiteApp.reels.untitled') }))).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: en('shell.common.delete') }));
+    await waitFor(() => expect(seen.remove).toEqual([{ id: 'r2' }]));
   });
 
   it('does nothing when the operator backs out', async () => {

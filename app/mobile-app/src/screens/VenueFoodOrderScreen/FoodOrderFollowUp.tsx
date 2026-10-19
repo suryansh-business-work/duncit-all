@@ -11,7 +11,7 @@ import { FoodOrderInvoiceCard } from './FoodOrderInvoiceCard';
 interface Props {
   order: VenueFoodOrder;
   /** The key the screen reads the order with — the invoice and the rating use it too. */
-  accessKey: string | null;
+  orderKey: string | null;
   /** The payment went through (it may since have been refunded). */
   paid: boolean;
   /** The rating went in: read the order again. */
@@ -26,7 +26,7 @@ interface Props {
  */
 export function FoodOrderFollowUp({
   order,
-  accessKey,
+  orderKey,
   paid,
   onChanged,
   onFeedbackLayout,
@@ -36,14 +36,12 @@ export function FoodOrderFollowUp({
 
   return (
     <>
-      {order.invoice_available ? (
-        <FoodOrderInvoiceCard order={order} accessKey={accessKey} />
-      ) : null}
+      {order.invoice_available ? <FoodOrderInvoiceCard order={order} orderKey={orderKey} /> : null}
       {rateable || order.feedback ? (
         <YStack
           onLayout={rateable ? (event) => onFeedbackLayout(event.nativeEvent.layout.y) : undefined}
         >
-          <FoodOrderFeedbackCard order={order} accessKey={accessKey} onSubmitted={onChanged} />
+          <FoodOrderFeedbackCard order={order} orderKey={orderKey} onSubmitted={onChanged} />
         </YStack>
       ) : null}
       {order.subscribe_events && paid ? (

@@ -18,6 +18,7 @@ import {
   EARN_JOURNEYS,
   earnBoxState,
   partnerPortalUrl,
+  type EarnCardImages,
   type EarnJourney,
   type EarnJourneyCta,
   type EarnMeeting,
@@ -35,6 +36,7 @@ const ICONS: Record<EarnJourney['iconKey'], ComponentProps<typeof MaterialIcons>
   venue: 'store',
   ecomm: 'inventory-2',
   club: 'groups',
+  freelancer: 'work-outline',
 };
 
 /** "Earn with Duncit" — three ways to start earning; a box is disabled when the
@@ -52,10 +54,14 @@ export function EarnScreen() {
   // unlocked state depends on both roles and meetings, so a skeleton must
   // wait on both instead of rendering a box that flips a moment later.
   const [meetings, setMeetings] = useState<EarnMeeting[] | null>(null);
+  const [images, setImages] = useState<Partial<EarnCardImages>>({});
 
   const loadMeetings = () =>
     graphqlRequest<MyMeetingsResult>(MyMeetingsDocument, undefined, { auth: true })
-      .then((res) => setMeetings(res.myMeetings))
+      .then((res) => {
+        setMeetings(res.myMeetings);
+        setImages(res.onboardingIntro?.earn_card_images ?? {});
+      })
       .catch(() => setMeetings((prev) => prev ?? []));
 
   useEffect(() => {
@@ -110,6 +116,7 @@ export function EarnScreen() {
                       title={box.title}
                       description={state.description}
                       icon={ICONS[box.iconKey]}
+                      imageUrl={images[box.iconKey]}
                       disabled={state.disabled}
                       disabledLabel={state.disabledLabel}
                       cta={cta}

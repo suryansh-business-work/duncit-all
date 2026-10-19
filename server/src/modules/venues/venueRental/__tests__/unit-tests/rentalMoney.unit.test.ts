@@ -14,22 +14,48 @@ const splitsEverything = (money: ReturnType<typeof settleRentalOutcome>) =>
   money.refund_due + money.venue_amount + money.commission_amount;
 
 describe('settleRentalOutcome', () => {
-  it('pays a returned item to the venue less commission on rent only, and gives the deposit back', () => {
+  it('settles a returned item’s deposit at the venue: no gateway refund, the whole deposit rides the venue payout', () => {
     const money = settleRentalOutcome(booking, 'RETURNED', rules);
-    expect(money).toEqual({ refund_due: 500, venue_amount: 900, commission_amount: 100, damage_claim: 0 });
+    expect(money).toEqual({
+      refund_due: 0,
+      deposit_at_venue: 500,
+      venue_amount: 1400,
+      commission_amount: 100,
+      damage_claim: 0,
+    });
     expect(splitsEverything(money)).toBe(1500);
   });
 
-  it('lets the venue keep the deposit when Finance made deposits non-refundable, with no commission on it', () => {
+  it('has the venue hand nothing back when Finance made deposits non-refundable, with no commission on the deposit', () => {
     const money = settleRentalOutcome(booking, 'RETURNED', { ...rules, deposit_refundable: false });
-    expect(money).toEqual({ refund_due: 0, venue_amount: 1400, commission_amount: 100, damage_claim: 0 });
+    expect(money).toEqual({
+      refund_due: 0,
+      deposit_at_venue: 0,
+      venue_amount: 1400,
+      commission_amount: 100,
+      damage_claim: 0,
+    });
     expect(splitsEverything(money)).toBe(1500);
   });
 
-  it('keeps a damage claim from the deposit and returns the rest', () => {
+  it('has the venue hand back the deposit less the damage claim, and still pays it the whole deposit', () => {
     const money = settleRentalOutcome(booking, 'DAMAGED', rules, 200);
-    expect(money).toEqual({ refund_due: 300, venue_amount: 1100, commission_amount: 100, damage_claim: 200 });
+    expect(money).toEqual({
+      refund_due: 0,
+      deposit_at_venue: 300,
+      venue_amount: 1400,
+      commission_amount: 100,
+      damage_claim: 200,
+    });
     expect(splitsEverything(money)).toBe(1500);
+    // What the venue keeps net of the cash it handed back: rent less commission plus the claim.
+    expect(money.venue_amount - money.deposit_at_venue).toBe(1100);
+  });
+
+  it('hands nothing back for an item kept whole as damage', () => {
+    const money = settleRentalOutcome(booking, 'DAMAGED', rules, 500);
+    expect(money.deposit_at_venue).toBe(0);
+    expect(money.refund_due).toBe(0);
   });
 
   it('never claims more than the deposit, nor a negative amount', () => {
@@ -43,12 +69,12 @@ describe('settleRentalOutcome', () => {
 
   it('refunds rent and deposit to a guest who left the pod when rent is refundable on backout', () => {
     const money = settleRentalOutcome(booking, 'RELEASED', rules);
-    expect(money).toEqual({ refund_due: 1500, venue_amount: 0, commission_amount: 0, damage_claim: 0 });
+    expect(money).toEqual({ refund_due: 1500, deposit_at_venue: 0, venue_amount: 0, commission_amount: 0, damage_claim: 0 });
   });
 
-  it('keeps the rent for the venue on a backout when it is not refundable, the deposit still comes back', () => {
+  it('keeps the rent for the venue on a backout when it is not refundable, Duncit still returns the deposit', () => {
     const money = settleRentalOutcome(booking, 'RELEASED', { ...rules, rent_refundable_on_backout: false });
-    expect(money).toEqual({ refund_due: 500, venue_amount: 900, commission_amount: 100, damage_claim: 0 });
+    expect(money).toEqual({ refund_due: 500, deposit_at_venue: 0, venue_amount: 900, commission_amount: 100, damage_claim: 0 });
     // The item never went out, so even a non-refundable deposit comes back.
     expect(
       settleRentalOutcome(booking, 'RELEASED', { ...rules, rent_refundable_on_backout: false, deposit_refundable: false })
@@ -90,11 +116,11 @@ describe('rental lines on a payment', () => {
     expect(paymentRentalLines({ rental_lines: 'nope' })).toEqual([]);
   });
 
-  it('prints the rent and, when there is one, the deposit as their own invoice rows', () => {
+  it('prints the rent and, when there is one, the refundable deposit as their own rows in the rented-items section', () => {
     expect(rentalInvoiceLines(metadata)).toEqual([
-      { name: 'Racket (rent)', quantity: 2, gross: 600, image_url: 'r.jpg' },
-      { name: 'Racket (deposit)', quantity: 2, gross: 400, image_url: '' },
-      { name: 'Shoes (rent)', quantity: 1, gross: 500, image_url: '' },
+      { name: 'Racket (rent)', quantity: 2, gross: 600, image_url: 'r.jpg', section: 'RENTAL' },
+      { name: 'Racket (refundable deposit)', quantity: 2, gross: 400, image_url: '', section: 'RENTAL' },
+      { name: 'Shoes (rent)', quantity: 1, gross: 500, image_url: '', section: 'RENTAL' },
     ]);
   });
 });

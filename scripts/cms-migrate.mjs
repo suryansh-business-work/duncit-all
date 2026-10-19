@@ -135,7 +135,9 @@ async function main() {
   if (skipped.length) console.log(`cms-migrate: left ${skipped.length} edited item(s) as they are (--overwrite-edited replaces them): ${skipped.join(', ')}`);
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
   console.error(`cms-migrate: ${error.message}`);
   process.exit(1);
-});
+}

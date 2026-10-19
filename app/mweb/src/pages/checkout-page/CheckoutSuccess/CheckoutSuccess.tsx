@@ -14,23 +14,26 @@ import { formatMoney } from '../checkoutMath';
 import { parseApiError } from '../../../utils/parseApiError';
 import { useDateFormat } from '../../../utils/dateFormat';
 import { INVOICE_PDF, MY_TICKET_FOR_POD, TICKET_PDF } from './queries';
+import RentalSuccessCard from '../../pod-rent/RentalSuccessCard';
 
 interface Props {
   /** Null for a FREE pod's instant join: nothing was paid, so there is no
    * receipt or invoice — only the pod and its ticket. */
-  payment: any | null;
+  payment: any;
   pod?: any;
   onHome: () => void;
   onProfile: () => void;
   /** Label for the primary action (defaults to "My Profile"; the product
    * checkout routes to "My orders"). */
   profileLabel?: string;
+  /** Finance's rental rule, for the rented-items card: false = the venue keeps deposits. */
+  rentalDepositRefundable?: boolean;
 }
 
 /** The confirmation after a paid checkout — or a free pod's instant join: a
  * calm success mark, the receipt (paid only), the booked pod, the ticket, and
  * what to do next. Native twin: checkout/CheckoutSuccess. */
-export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profileLabel }: Readonly<Props>) {
+export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profileLabel, rentalDepositRefundable = true }: Readonly<Props>) {
   const [confetti, setConfetti] = useState(true);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
   const [loadInvoice, { loading: invoiceLoading }] = useLazyQuery<any>(INVOICE_PDF, { fetchPolicy: 'network-only' });
@@ -109,7 +112,8 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           sx={(theme) => ({
             width: 96,
             height: 96,
-            mx: 'auto',
+            // Stack zeroes its children's margins, so `mx: auto` never centred this: the column centres it.
+            alignSelf: 'center',
             borderRadius: '50%',
             bgcolor: alpha(theme.palette.primary.main, 0.12),
             display: 'grid',
@@ -128,6 +132,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           {payment ? t('mweb.checkout.successSubtitle') : t('mweb.checkout.freeJoinSubtitle')}
         </Typography>
         {payment && <SuccessReceiptCard payment={payment} />}
+        {payment && <RentalSuccessCard lines={payment.rental_lines} currency={payment.currency_symbol} depositRefundable={rentalDepositRefundable} />}
         {pod && (
           <SuccessPodCard
             title={pod.pod_title}

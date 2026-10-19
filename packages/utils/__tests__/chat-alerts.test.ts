@@ -94,6 +94,20 @@ describe('createChatPingGate', () => {
     now = 100;
     expect(gate('a')).toBe(false);
   });
+
+  it('forgets the oldest ids after 200, so memory stays bounded', () => {
+    let now = 0;
+    const gate = createChatPingGate(10, () => now);
+    for (let i = 0; i <= 200; i += 1) {
+      now += 100;
+      gate(`m${i}`);
+    }
+    now += 100;
+    // m0 dropped out of the 200 remembered ids; m200 is still remembered.
+    expect(gate('m0')).toBe(true);
+    now += 100;
+    expect(gate('m200')).toBe(false);
+  });
 });
 
 describe('createChatReadMarker', () => {
@@ -183,6 +197,11 @@ describe('chatReplyPreview / chatReplyText', () => {
     const preview = chatReplyPreview({ id: '1', text: long });
     expect(preview.kind === 'TEXT' && preview.text.length).toBe(CHAT_REPLY_PREVIEW_MAX);
     expect(preview.kind === 'TEXT' && preview.text.endsWith('…')).toBe(true);
+  });
+
+  it('quotes a text line that carries no text as an empty quote', () => {
+    expect(chatReplyPreview({ id: '1' })).toEqual({ kind: 'TEXT', text: '' });
+    expect(chatReplyPreview({ id: '1', type: 'STICKER', text: 'hi' })).toEqual({ kind: 'TEXT', text: 'hi' });
   });
 });
 

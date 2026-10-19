@@ -60,8 +60,8 @@ export function safeHttpsUrl(value: string): string {
   }
 }
 
-/** A field the portal left blank keeps the words already on the page. */
-export const pick = (override: string, current: string): string => override.trim() || current;
+/** A field the portal left blank keeps the words already on the page (none, when the page has none). */
+export const pick = (override: string, current: string | null): string => override.trim() || (current ?? '');
 
 /**
  * Photos for `count` tiles: the portal's images in order, repeated to fill the

@@ -11,7 +11,7 @@ const DISMISS_KEY = 'duncit-earn-pill-dismissed';
 
 const setText = (root: HTMLElement, selector: string, override: string): void => {
   const el = root.querySelector<HTMLElement>(selector);
-  if (el) el.textContent = pick(override, el.textContent ?? '');
+  if (el) el.textContent = pick(override, el.textContent);
 };
 
 function applyPhotos(section: HTMLElement, images: string[]): void {

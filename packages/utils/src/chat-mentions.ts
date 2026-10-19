@@ -104,7 +104,8 @@ const NOT_HANDLE = /[^\w.-]/g;
  */
 export function mentionHandle(fullName: string): string {
   const trimmed = fullName.trim();
-  const first = (trimmed.split(/\s+/)[0] ?? '').replace(NOT_HANDLE, '');
+  // `split(…, 1)` is always one element (the first word, '' for a blank name), so `join` reads it without an index.
+  const first = trimmed.split(/\s+/, 1).join('').replace(NOT_HANDLE, '');
   if (first) return first;
   return trimmed.replace(NOT_HANDLE, '') || 'member';
 }

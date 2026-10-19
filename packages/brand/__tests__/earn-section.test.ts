@@ -25,6 +25,11 @@ describe('pick', () => {
     expect(pick('   ', 'Earn with Duncit')).toBe('Earn with Duncit');
     expect(pick('', 'Earn with Duncit')).toBe('Earn with Duncit');
   });
+
+  it('answers empty text when both the portal value and the page are blank', () => {
+    expect(pick('', null)).toBe('');
+    expect(pick(' Earn ', null)).toBe('Earn');
+  });
 });
 
 describe('tilePhotos', () => {

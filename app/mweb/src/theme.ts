@@ -49,6 +49,9 @@ export const RADIUS = {
   hairline: radii.sm, // 8 — scrollbar thumb
 } as const;
 const SCROLLBAR_SIZE = 8;
+// Outlined field block padding — medium (~52px, native FIELD_HEIGHT) and small.
+const FIELD_PAD = 15;
+const FIELD_PAD_SMALL = 8.5;
 
 /**
  * The card look for surfaces drawn with a `Box`/`Stack` rather than `<Card>` —
@@ -360,9 +363,24 @@ export const buildTheme = (mode: PaletteMode = 'light', palette?: ModeColors) =>
             '&.Mui-focused fieldset': { borderColor: PRIMARY, borderWidth: 1.5 },
           },
           // MUI's medium is 16.5px each side (~55px tall); 15px lands on ~52.
+          // MUI 9 dropped `.MuiInputBase-inputSizeSmall`, so small is keyed off
+          // the root's `sizeSmall` class (covers <input>, <textarea> and Select).
           input: {
-            paddingBlock: 15,
-            '&.MuiInputBase-inputSizeSmall': { paddingBlock: 8.5 },
+            paddingBlock: FIELD_PAD,
+            '.MuiInputBase-sizeSmall > &': { paddingBlock: FIELD_PAD_SMALL },
+          },
+        },
+      },
+      MuiInputLabel: {
+        styleOverrides: {
+          // The resting label shares the input's line box, so its top offset is
+          // the input's block padding — vertically centred in single-line fields
+          // and selects. MUI's 16px / 9px assume its own 16.5px / 8.5px padding.
+          outlined: {
+            '&:not(.MuiInputLabel-shrink)': { transform: `translate(14px, ${FIELD_PAD}px) scale(1)` },
+            '&.MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
+              transform: `translate(14px, ${FIELD_PAD_SMALL}px) scale(1)`,
+            },
           },
         },
       },

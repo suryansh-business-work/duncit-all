@@ -1,9 +1,4 @@
-import {
-  blankPodCompleteValues,
-  buildPodCompleteInput,
-  makePodCompleteSchema,
-  type PodCompleteValues,
-} from '@duncit/forms/schemas';
+import { makePodCompleteSchema } from '@duncit/forms/schemas';
 import type { HostPodActionLabels } from '../labels';
 
 /**
@@ -12,10 +7,11 @@ import type { HostPodActionLabels } from '../labels';
  * `pod-complete`, shared with the native app; this only hands it the dialog's
  * own labels.
  */
-export { blankPodCompleteValues };
-export type { PodCompleteValues };
+export {
+  blankPodCompleteValues,
+  buildPodCompleteInput as buildCompleteInput,
+  type PodCompleteValues,
+} from '@duncit/forms/schemas';
 
 export const buildPodCompleteSchema = (hasVenue: boolean, labels: HostPodActionLabels) =>
   makePodCompleteSchema(hasVenue, labels.venueBill);
-
-export const buildCompleteInput = buildPodCompleteInput;

@@ -42,16 +42,7 @@ export function GigJobDetailScreen() {
     );
   } else if (gig.missing) {
     body = <GigNote text={t('gigJobs.detail.notFound')} testID="gig-not-found" />;
-  } else if (!job) {
-    body = (
-      <Spinner
-        role="progressbar"
-        aria-label={t('mweb.a11y.loading')}
-        color="$primary"
-        testID="gig-loading"
-      />
-    );
-  } else {
+  } else if (job) {
     body = (
       <>
         <GigFacts job={job} />
@@ -59,6 +50,15 @@ export function GigJobDetailScreen() {
         {job.contact && !job.is_mine ? <GigContactCard contact={job.contact} /> : null}
         {job.is_mine ? <GigInterestsList jobId={job.id} /> : null}
       </>
+    );
+  } else {
+    body = (
+      <Spinner
+        role="progressbar"
+        aria-label={t('mweb.a11y.loading')}
+        color="$primary"
+        testID="gig-loading"
+      />
     );
   }
 

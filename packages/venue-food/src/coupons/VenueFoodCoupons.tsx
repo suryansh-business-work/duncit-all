@@ -91,10 +91,8 @@ export default function VenueFoodCoupons({ venueId, surface }: Readonly<VenueFoo
   }, [t, toggle, deleteCoupon]);
 
   // A new coupon changes which rows the view holds, so the list is asked again; an edit repaints its own row.
-  const onSaved = (coupon: FoodOwnerCoupon, created: boolean) => {
-    if (created) refetchRef.current?.();
-    else updateRowRef.current?.(coupon);
-  };
+  const onCreated = () => refetchRef.current?.();
+  const onUpdated = (coupon: FoodOwnerCoupon) => updateRowRef.current?.(coupon);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -128,7 +126,8 @@ export default function VenueFoodCoupons({ venueId, surface }: Readonly<VenueFoo
         venueId={venueId}
         coupon={editing === 'new' ? null : editing}
         onClose={() => setEditing(null)}
-        onSaved={onSaved}
+        onCreated={onCreated}
+        onUpdated={onUpdated}
       />
     </Card>
   );

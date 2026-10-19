@@ -1,14 +1,10 @@
-import {
-  POD_REQUEST_NOTE_MAX,
-  makePodRequestNoteSchema,
-  type PodRequestNoteValues,
-} from '@duncit/forms/schemas';
+import type { PodRequestNoteValues } from '@duncit/forms/schemas';
 
 /**
  * The optional note sent with a Pod Request — the shared rule, so the
  * Partners console, mWeb and native accept the same note (rules 27 + 40).
  */
-export { POD_REQUEST_NOTE_MAX, makePodRequestNoteSchema, type PodRequestNoteValues };
+export { POD_REQUEST_NOTE_MAX, makePodRequestNoteSchema, type PodRequestNoteValues } from '@duncit/forms/schemas';
 
 export const podRequestNoteDefaults: PodRequestNoteValues = { note: '' };
 

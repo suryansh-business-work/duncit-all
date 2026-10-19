@@ -9,6 +9,7 @@ import {
   toGenderValue,
   toPetOwnerValue,
   type ContactSnapshot,
+  type Gender,
 } from '@duncit/utils';
 import { makeProfileBioSchema } from '@duncit/forms/schemas';
 import {
@@ -23,7 +24,7 @@ import {
 import { fallbackT, type Translate } from '@/i18n/fallback';
 
 import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
-import type { Gender as GqlGender } from '@/generated/graphql/graphql';
+import { Gender as GqlGender } from '@/generated/graphql/graphql';
 
 /**
  * Edit-profile contract — mirrors mWeb's account-edit schema so both apps
@@ -160,6 +161,13 @@ export function accountEditContacts(me: AccountMe | null): ContactSnapshot {
   };
 }
 
+/** The form's gender answer as the API's enum member. */
+const GQL_GENDER: Record<Gender, GqlGender> = {
+  MALE: GqlGender.Male,
+  FEMALE: GqlGender.Female,
+  OTHER: GqlGender.Other,
+};
+
 /**
  * Map validated form values to the GraphQL UpdateMyProfileInput.
  *
@@ -174,7 +182,7 @@ export function toUpdateProfileInput(values: AccountEditValues): UpdateProfileIn
     last_name: values.last_name,
     bio: values.bio,
     // An unanswered select is omitted, so a save never clears a stored answer.
-    gender: (values.gender || undefined) as GqlGender | undefined,
+    gender: values.gender ? GQL_GENDER[values.gender] : undefined,
     is_pet_owner: fromPetOwnerValue(values.pet_owner),
     dob: values.dob || undefined,
     country: values.country,

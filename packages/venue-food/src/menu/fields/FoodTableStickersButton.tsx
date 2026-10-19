@@ -48,8 +48,8 @@ export default function FoodTableStickersButton({ venueId, venueName, hasSavedTa
         return;
       }
       downloadBase64File(pdf, publicPageTableStickersFileName(venueName ?? ''), 'application/pdf');
-    } catch (failure) {
-      setError(parseApiError(failure, t('venueFoodOwner.tables.downloadFailed')));
+    } catch (error_) {
+      setError(parseApiError(error_, t('venueFoodOwner.tables.downloadFailed')));
     } finally {
       setLoading(false);
     }

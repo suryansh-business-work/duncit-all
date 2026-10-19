@@ -16,7 +16,8 @@ export function ChoiceChip({ label, active, onPress, testID }: Readonly<Props>) 
       testID={testID}
       role="button"
       aria-label={label}
-      aria-selected={active}
+      aria-pressed={active}
+      accessibilityState={{ selected: active }}
       tabIndex={0}
       onPress={onPress}
       pressStyle={PRESS_STYLE.control}

@@ -88,7 +88,7 @@ export function mountReelSlider(root: HTMLElement, reels: SiteReel[], copy: Reel
   if (!stage || !dots || !prev || !next || reels.length === 0) return () => undefined;
 
   const total = reels.length;
-  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const still = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const state = { active: 0, sound: null as number | null, paused: still, inView: false };
 
   const slides: Slide[] = reels.map((reel, index) => {
@@ -155,7 +155,7 @@ export function mountReelSlider(root: HTMLElement, reels: SiteReel[], copy: Reel
   }
 
   function sync() {
-    slides.forEach(syncSlide);
+    slides.forEach((slide, index) => syncSlide(slide, index));
   }
 
   function goTo(index: number) {

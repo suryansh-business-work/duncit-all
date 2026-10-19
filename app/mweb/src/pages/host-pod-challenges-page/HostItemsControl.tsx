@@ -3,7 +3,7 @@ import { Checkbox, FormControlLabel, FormGroup, Stack, Typography } from '@mui/m
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import { DuncitButton } from '@duncit/buttons';
 import { fireAndForget, logs } from '@duncit/logs';
-import { challengeItems, doneItemKeys, toolsFedBy } from '@duncit/utils';
+import { challengeItems, doneItemKeys, toolsFedBy, type ChallengeItem } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { PodChallengeView } from '../../components/pod-challenge/queries';
 import CheckpointLinksDialog from './CheckpointLinksDialog';
@@ -12,6 +12,48 @@ import type { HostChallengeActions } from './useHostChallengeActions';
 interface Props {
   challenge: Pick<PodChallengeView, 'id' | 'tools' | 'competitors'>;
   actions: HostChallengeActions;
+}
+
+interface CompetitorItemsProps {
+  tool: PodChallengeView['tools'][number];
+  competitor: PodChallengeView['competitors'][number];
+  items: ChallengeItem[];
+  actions: HostChallengeActions;
+}
+
+/** One competitor's tasks or checkpoints, each a checkbox the host ticks. */
+function CompetitorItems({ tool, competitor, items, actions }: Readonly<CompetitorItemsProps>) {
+  const done = new Set(doneItemKeys(tool, competitor.competitor_id));
+  const tick = (key: string, checked: boolean) =>
+    fireAndForget(
+      actions.item(tool.instance_id, competitor.competitor_id, key, checked),
+      logs.mWeb,
+      'host-pod-challenges',
+      'item'
+    );
+  return (
+    <Stack component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+      <Typography variant="body2" component="legend" sx={{ fontWeight: 600 }}>
+        {competitor.name}
+      </Typography>
+      <FormGroup row>
+        {items.map((item) => (
+          <FormControlLabel
+            key={item.key}
+            label={item.label}
+            control={
+              <Checkbox
+                size="small"
+                checked={done.has(item.key)}
+                disabled={actions.scoring}
+                onChange={(_e, checked) => tick(item.key, checked)}
+              />
+            }
+          />
+        ))}
+      </FormGroup>
+    </Stack>
+  );
 }
 
 /**
@@ -39,34 +81,9 @@ export default function HostItemsControl({ challenge, actions }: Readonly<Props>
                 </DuncitButton>
               )}
             </Stack>
-            {challenge.competitors.map((c) => {
-              const done = new Set(doneItemKeys(tool, c.competitor_id));
-              return (
-                <Stack key={c.competitor_id} component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
-                  <Typography variant="body2" component="legend" sx={{ fontWeight: 600 }}>
-                    {c.name}
-                  </Typography>
-                  <FormGroup row>
-                    {items.map((item) => (
-                      <FormControlLabel
-                        key={item.key}
-                        label={item.label}
-                        control={
-                          <Checkbox
-                            size="small"
-                            checked={done.has(item.key)}
-                            disabled={actions.scoring}
-                            onChange={(_e, checked) =>
-                              fireAndForget(actions.item(tool.instance_id, c.competitor_id, item.key, checked), logs.mWeb, 'host-pod-challenges', 'item')
-                            }
-                          />
-                        }
-                      />
-                    ))}
-                  </FormGroup>
-                </Stack>
-              );
-            })}
+            {challenge.competitors.map((c) => (
+              <CompetitorItems key={c.competitor_id} tool={tool} competitor={c} items={items} actions={actions} />
+            ))}
           </Stack>
         );
       })}

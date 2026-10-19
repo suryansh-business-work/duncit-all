@@ -18,7 +18,7 @@ import { INVOICE_PDF, MY_TICKET_FOR_POD, TICKET_PDF } from './queries';
 interface Props {
   /** Null for a FREE pod's instant join: nothing was paid, so there is no
    * receipt or invoice — only the pod and its ticket. */
-  payment: any | null;
+  payment: any;
   pod?: any;
   onHome: () => void;
   onProfile: () => void;

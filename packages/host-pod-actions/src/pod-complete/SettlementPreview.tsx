@@ -7,7 +7,7 @@ import AttendanceRoster from './AttendanceRoster';
 import { AttendanceNote, FreeSettlement } from './SettlementNotes';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
-import type { PodSettlement, PodSettlementAttendee } from '../types';
+import type { PodSettlement } from '../types';
 
 interface Props {
   podId: string;

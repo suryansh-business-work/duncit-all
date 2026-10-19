@@ -10,9 +10,8 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 
 import { HostChallengeItems } from './HostChallengeItems';
 import { HostChallengeTools } from './HostChallengeTools';
+import { ScoreSteps } from './ScoreSteps';
 import { ValueEntry } from './ValueEntry';
-
-type Tool = PodChallengeView['tools'][number];
 
 /** The tools whose window a host opens and closes: votes, ratings and polls. */
 const VOTING_KINDS = new Set(['VOTE', 'RATE', 'POLL']);
@@ -44,13 +43,6 @@ export function HostChallengeLive({ challenge, receivedAt, actions }: Readonly<P
       (tool.input_kind === 'CLOCK' &&
         parseJsonObject(tool.config_json).record_competitor_times === true),
   );
-  const stepsOf = (tool: Tool) => {
-    const settings = parseJsonObject(tool.config_json);
-    return ((settings.increments as number[] | undefined) ?? []).flatMap((s) =>
-      settings.allow_negative ? [s, -s] : [s],
-    );
-  };
-
   return (
     <YStack gap={16}>
       {challenge.tools
@@ -146,21 +138,7 @@ export function HostChallengeLive({ challenge, receivedAt, actions }: Readonly<P
                   {c.name} · {String(metrics.get(c.competitor_id)?.[tool.instance_id] ?? '—')}
                 </Text>
                 {tool.input_kind === 'INCREMENT' ? (
-                  <XStack gap={6} flexWrap="wrap">
-                    {stepsOf(tool).map((step) => (
-                      <DuncitButton
-                        key={step}
-                        size="sm"
-                        variant={step > 0 ? 'solid' : 'outline'}
-                        disabled={actions.busy}
-                        label={step > 0 ? `+${step}` : String(step)}
-                        onPress={() =>
-                          fireAndForget(actions.score(tool.instance_id, c.competitor_id, step))
-                        }
-                        testID={`challenge-score-${tool.instance_id}-${c.competitor_id}-${step}`}
-                      />
-                    ))}
-                  </XStack>
+                  <ScoreSteps tool={tool} competitorId={c.competitor_id} actions={actions} />
                 ) : (
                   <ValueEntry tool={tool} competitorId={c.competitor_id} actions={actions} />
                 )}

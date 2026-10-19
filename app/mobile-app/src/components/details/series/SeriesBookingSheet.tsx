@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { bookableSeriesDates, SERIES_BOOKING_CHOICES } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -8,6 +8,8 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDateTime } from '@/utils/date-format';
 import type { SeriesBooking } from '@/screens/PodDetailsScreen/useSeriesBooking';
+
+import { SeriesConfirmButton, SeriesEstimate } from './SeriesBookingParts';
 
 interface Props {
   series: SeriesBooking;
@@ -70,37 +72,19 @@ function OptionRow({
  */
 export function SeriesBookingSheet({ series, isFree, formatPrice }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary } = useThemeColors();
   const open = bookableSeriesDates(series.rows);
   const count = series.chosen.length;
-  const { estimate } = series;
-  const disabled = series.busy || count === 0;
   const confirmLabel = isFree
     ? t('mweb.podSeriesBooking.joinDates', { count })
     : t('mweb.podSeriesBooking.continue');
 
   const footer = (
-    <XStack
-      testID="series-booking-confirm"
-      role="button"
-      tabIndex={0}
-      aria-label={confirmLabel}
-      aria-disabled={disabled}
-      onPress={disabled ? undefined : () => series.confirm()}
-      height={48}
-      alignItems="center"
-      justifyContent="center"
-      gap={8}
-      borderRadius={999}
-      backgroundColor="$primary"
-      opacity={disabled ? 0.6 : 1}
-      pressStyle={PRESS_STYLE.control}
-    >
-      {series.busy ? <Spinner size="small" color={onPrimary} /> : null}
-      <Text fontSize={14} fontWeight="700" color={onPrimary}>
-        {confirmLabel}
-      </Text>
-    </XStack>
+    <SeriesConfirmButton
+      label={confirmLabel}
+      busy={series.busy}
+      disabled={series.busy || count === 0}
+      onConfirm={() => series.confirm()}
+    />
   );
 
   return (
@@ -144,22 +128,7 @@ export function SeriesBookingSheet({ series, isFree, formatPrice }: Readonly<Pro
         </YStack>
       )}
       {!isFree && count > 0 ? (
-        <YStack gap={4} marginTop={12} testID="series-booking-estimate">
-          <Text fontSize={13} color="$muted">
-            {t('mweb.podSeriesBooking.datesCount', { count })} · {formatPrice(estimate.gross)}
-          </Text>
-          {estimate.discount > 0 ? (
-            <Text fontSize={13} color="$success">
-              {t('mweb.podSeriesBooking.discountRow', { vars: { pct: estimate.pct, count } })} −{' '}
-              {formatPrice(estimate.discount)}
-            </Text>
-          ) : null}
-          <Text fontSize={15} fontWeight="700" color="$color">
-            {t('mweb.podSeriesBooking.estimateTotal', {
-              vars: { amount: formatPrice(estimate.total) },
-            })}
-          </Text>
-        </YStack>
+        <SeriesEstimate count={count} estimate={series.estimate} formatPrice={formatPrice} />
       ) : null}
       {series.error ? (
         <Text fontSize={13} color="$danger" role="alert" marginTop={8}>

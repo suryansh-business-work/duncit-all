@@ -19,7 +19,7 @@ export function readJson<T>(raw: string | undefined): T {
 }
 
 /** Text as HTML-safe markup, for strings that land in an innerHTML template. */
-export function escapeHtml(value: unknown): string {
+export function escapeHtml(value: string | number | null | undefined): string {
   const div = document.createElement('div');
   div.textContent = String(value ?? '');
   return div.innerHTML;
@@ -27,7 +27,8 @@ export function escapeHtml(value: unknown): string {
 
 /** A form field's trimmed text value ('' when absent). */
 export function formText(data: FormData, name: string): string {
-  return String(data.get(name) || '').trim();
+  const value = data.get(name);
+  return typeof value === 'string' ? value.trim() : '';
 }
 
 export interface GraphqlError {

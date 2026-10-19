@@ -31,6 +31,19 @@ export function getProductRequestTotal(requests: PodProductRequest[], products: 
   }, 0);
 }
 
+/** The picked products with a real quantity, as the pod input sends them. */
+const productRequestsOf = (values: PodFormValues) =>
+  values.product_requests
+    .map((item) => ({ product_id: item.product_id, quantity: Number(item.quantity) || 0 }))
+    .filter((item) => item.product_id && item.quantity > 0);
+
+/** The meeting details a VIRTUAL pod sends; a physical pod nulls them. */
+const meetingFieldsOf = (values: PodFormValues, isVirtual: boolean) => ({
+  meeting_platform: isVirtual ? values.meeting_platform.trim() || null : null,
+  meeting_url: isVirtual ? values.meeting_url.trim() : null,
+  meeting_notes: isVirtual ? values.meeting_notes.trim() || null : null,
+});
+
 export interface BuildPodInputOptions {
   draft?: boolean;
   config: PodFormConfig;
@@ -61,9 +74,7 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     venue_id: isPhysical ? values.venue_id : null,
     location_id: isPhysical ? values.location_id || null : null,
     zone_name: null,
-    meeting_platform: isVirtual ? values.meeting_platform.trim() || null : null,
-    meeting_url: isVirtual ? values.meeting_url.trim() : null,
-    meeting_notes: isVirtual ? values.meeting_notes.trim() || null : null,
+    ...meetingFieldsOf(values, isVirtual),
     pod_hosts_id: config.showHosts ? values.pod_hosts_id : [],
     pod_description: values.pod_description,
     pod_date_time: values.pod_date_time ? values.pod_date_time.toISOString() : undefined,
@@ -84,11 +95,7 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     available_perks: values.available_perks,
     place_charges: isPhysical && config.showPlaceCharges ? placeChargesOf(values) : [],
     products_enabled: productsOn,
-    product_requests: productsOn
-      ? values.product_requests
-          .map((item) => ({ product_id: item.product_id, quantity: Number(item.quantity) || 0 }))
-          .filter((item) => item.product_id && item.quantity > 0)
-      : [],
+    product_requests: productsOn ? productRequestsOf(values) : [],
     // A free or unpriced pod always sends the discount cleared, whatever the
     // (hidden) switch still holds.
     ...ticketDiscountInput(values, !podHasTicketPrice(values)),
@@ -139,11 +146,7 @@ export function buildAutoPodInput(values: PodFormValues) {
     reel_url: values.reel_url.trim() || null,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
-    product_requests: isVirtual
-      ? []
-      : values.product_requests
-          .map((item) => ({ product_id: item.product_id, quantity: Number(item.quantity) || 0 }))
-          .filter((item) => item.product_id && item.quantity > 0),
+    product_requests: isVirtual ? [] : productRequestsOf(values),
   };
 }
 

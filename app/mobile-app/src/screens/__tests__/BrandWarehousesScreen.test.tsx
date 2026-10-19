@@ -84,7 +84,7 @@ describe('BrandWarehousesScreen', () => {
     const desk = deskState();
     mockedDesk.mockReturnValue(desk);
     renderWithProviders(<BrandWarehousesScreen />);
-    expect(screen.getByTestId('brand-warehouses-brand-b1')).toHaveProp('aria-selected', true);
+    expect(screen.getByTestId('brand-warehouses-brand-b1')).toHaveProp('aria-pressed', true);
     fireEvent.press(screen.getByTestId('brand-warehouses-brand-b2'));
     expect(desk.selectBrand).toHaveBeenCalledWith('b2');
   });

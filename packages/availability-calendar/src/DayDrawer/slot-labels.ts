@@ -15,7 +15,11 @@ export const priceLabel = (
   if (slot.price <= 0) return t('availability.free');
   const base = t(SLOT_PRICE_UNIT_KEY[slotPricingModeOf(slot.pricing_mode)], { vars: { price: `₹${slot.price}` } });
   const overtime = slot.overtime_rate ?? 0;
-  return overtime > 0 ? `${base} ${t('availability.overtimeLabel', { vars: { price: `₹${overtime}` } })}` : base;
+  if (overtime > 0) {
+    const overtimeText = t('availability.overtimeLabel', { vars: { price: `₹${overtime}` } });
+    return `${base} ${overtimeText}`;
+  }
+  return base;
 };
 
 export const STATUS_COLOR: Record<VenueSlotRow['status'], 'success' | 'info' | 'warning' | 'default'> = {

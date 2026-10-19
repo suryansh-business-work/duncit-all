@@ -34,6 +34,49 @@ function productCountLabel(count: number): string {
   return `${count} product${count === 1 ? '' : 's'} selected`;
 }
 
+/** The standalone shop's title and its open/closed chip. */
+function PodShopHeader({ title, open }: Readonly<{ title: string; open: boolean }>) {
+  return (
+    <XStack alignItems="center" justifyContent="space-between" gap={12}>
+      <YStack flex={1}>
+        <SectionHeader title={title} />
+      </YStack>
+      <XStack paddingHorizontal={10} paddingVertical={5} borderRadius={999} backgroundColor="$soft">
+        <Text fontSize={12} fontWeight="600" color="$color">
+          {open ? 'Available' : 'Closed'}
+        </Text>
+      </XStack>
+    </XStack>
+  );
+}
+
+interface PodShopFooterProps {
+  readOnly: boolean;
+  selectedCount: number;
+  total: number;
+}
+
+/** Under the products: a closed note when read-only, else the running selected total. */
+function PodShopFooter({ readOnly, selectedCount, total }: Readonly<PodShopFooterProps>) {
+  if (readOnly) {
+    return (
+      <Text testID="pod-shop-closed-note" fontSize={12.5} color="$muted">
+        The shop is currently closed.
+      </Text>
+    );
+  }
+  return (
+    <XStack justifyContent="space-between" alignItems="center" testID="pod-shop-total">
+      <Text fontSize={12} color="$muted">
+        {productCountLabel(selectedCount)}
+      </Text>
+      <Text fontSize={15} fontWeight="700" color="$color">
+        ₹{total}
+      </Text>
+    </XStack>
+  );
+}
+
 /** Pod Shop — lists the pod's real products with buyer selection (checkbox +
  * quantity steppers) tracked as a `{ productId: qty }` map, plus a running
  * selected-total. RN port of mWeb's PodCommercePreview; only real products, no
@@ -87,21 +130,7 @@ export function PodShop({
       {...(embedded ? EMBEDDED_CARD : {})}
     >
       {embedded ? null : (
-        <XStack alignItems="center" justifyContent="space-between" gap={12}>
-          <YStack flex={1}>
-            <SectionHeader title={t('mweb.shop.title')} />
-          </YStack>
-          <XStack
-            paddingHorizontal={10}
-            paddingVertical={5}
-            borderRadius={999}
-            backgroundColor="$soft"
-          >
-            <Text fontSize={12} fontWeight="600" color="$color">
-              {pod.products_enabled ? 'Available' : 'Closed'}
-            </Text>
-          </XStack>
-        </XStack>
+        <PodShopHeader title={t('mweb.shop.title')} open={!!pod.products_enabled} />
       )}
 
       {products.length === 0 ? (
@@ -126,20 +155,8 @@ export function PodShop({
         </YStack>
       )}
 
-      {products.length > 0 && readOnly ? (
-        <Text testID="pod-shop-closed-note" fontSize={12.5} color="$muted">
-          The shop is currently closed.
-        </Text>
-      ) : null}
-      {products.length > 0 && !readOnly ? (
-        <XStack justifyContent="space-between" alignItems="center" testID="pod-shop-total">
-          <Text fontSize={12} color="$muted">
-            {productCountLabel(selectedCount)}
-          </Text>
-          <Text fontSize={15} fontWeight="700" color="$color">
-            ₹{shownTotal}
-          </Text>
-        </XStack>
+      {products.length > 0 ? (
+        <PodShopFooter readOnly={readOnly} selectedCount={selectedCount} total={shownTotal} />
       ) : null}
 
       <ProductDetailSheet

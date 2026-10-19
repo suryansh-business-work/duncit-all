@@ -1,4 +1,3 @@
-import { parseJsonObject } from '@duncit/utils';
 import type { PodChallengeStanding, PodChallengeTool } from '@duncit/gql-types';
 
 /**
@@ -6,7 +5,7 @@ import type { PodChallengeStanding, PodChallengeTool } from '@duncit/gql-types';
  * score: standings, ranks and winners arrive from the server as they are.
  */
 
-export const parseConfig = parseJsonObject;
+export { parseJsonObject as parseConfig } from '@duncit/utils';
 
 /** Grouped by how each tool is fed (the server's input_kind), not by its name. */
 type ToolLike = Pick<PodChallengeTool, 'input_kind'>;

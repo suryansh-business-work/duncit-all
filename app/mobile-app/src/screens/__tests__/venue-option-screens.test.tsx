@@ -61,8 +61,8 @@ describe('VenueListScreen', () => {
     expect(screen.getByTestId('venue-list-row-v1')).toHaveTextContent(/Hall/);
     expect(screen.getByTestId('venue-list-status-v2')).toHaveTextContent('SUBMITTED');
     // The selected venue is the one marked as such.
-    expect(screen.getByTestId('venue-list-row-v1')).toHaveProp('aria-selected', true);
-    expect(screen.getByTestId('venue-list-row-v2')).toHaveProp('aria-selected', false);
+    expect(screen.getByTestId('venue-list-row-v1')).toHaveProp('aria-pressed', true);
+    expect(screen.getByTestId('venue-list-row-v2')).toHaveProp('aria-pressed', false);
 
     fireEvent.press(screen.getByTestId('venue-list-row-v2'));
     expect(selectVenue).toHaveBeenCalledWith('v2');

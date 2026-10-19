@@ -7,8 +7,8 @@
 const MAX_SHIFT_PX = 6;
 
 export function bindEarnShowcaseParallax(section: HTMLElement): void {
-  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finePointer = globalThis.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reducedMotion = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!finePointer || reducedMotion) return;
 
   section.addEventListener('pointermove', (event) => {

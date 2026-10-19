@@ -14,8 +14,10 @@ interface Props {
   /** The coupon being edited; null creates a new one. */
   coupon: FoodOwnerCoupon | null;
   onClose: () => void;
-  /** The server's copy after the save, and whether it is a new row. */
-  onSaved: (coupon: FoodOwnerCoupon, created: boolean) => void;
+  /** The server's copy of a coupon just created. */
+  onCreated: (coupon: FoodOwnerCoupon) => void;
+  /** The server's copy of the coupon just edited. */
+  onUpdated: (coupon: FoodOwnerCoupon) => void;
 }
 
 const TITLE_ID = 'food-coupon-dialog-title';
@@ -25,7 +27,7 @@ const TITLE_ID = 'food-coupon-dialog-title';
  * window that ends before it starts — stays in the dialog above the fields, so
  * the owner fixes it without typing the rest again.
  */
-export default function FoodCouponDialog({ open, venueId, coupon, onClose, onSaved }: Readonly<Props>) {
+export default function FoodCouponDialog({ open, venueId, coupon, onClose, onCreated, onUpdated }: Readonly<Props>) {
   const { t } = useTranslation();
   const [apiError, setApiError] = useState<string | null>(null);
   const [create, creating] = useMutation(CREATE_VENUE_FOOD_COUPON);
@@ -56,7 +58,8 @@ export default function FoodCouponDialog({ open, venueId, coupon, onClose, onSav
           ? t('venueFoodOwner.coupons.updated', { vars: { code: saved.code } })
           : t('venueFoodOwner.coupons.created', { vars: { code: saved.code } }),
       );
-      onSaved(saved, coupon === null);
+      if (coupon) onUpdated(saved);
+      else onCreated(saved);
       close();
     } catch (error) {
       setApiError(parseApiError(error));

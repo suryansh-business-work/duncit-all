@@ -3,7 +3,7 @@ import { FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/mater
 import { useTranslation, type Translate } from '../i18n';
 import { CriteriaEditor } from './CriteriaEditor';
 import { ListField } from './ListField';
-import type { JudgeCriterion, ToolConfig, ToolConfigIssue, ToolField } from './fields';
+import { textOf, type JudgeCriterion, type ToolConfig, type ToolConfigIssue, type ToolField } from './fields';
 
 export interface ToolConfigFieldsProps {
   fields: ToolField[];
@@ -96,7 +96,7 @@ export function ToolConfigFields({ fields, value, onChange, issues, disabled }: 
                 type="number"
                 size="small"
                 label={label(t, f.key)}
-                value={current === null || current === undefined ? '' : String(current)}
+                value={textOf(current)}
                 onChange={(e) => set(f.key, e.target.value === '' ? '' : Number(e.target.value))}
                 error={!!error}
                 helperText={error}
@@ -105,7 +105,7 @@ export function ToolConfigFields({ fields, value, onChange, issues, disabled }: 
               />
             );
           default:
-            return <TextField key={f.key} size="small" label={label(t, f.key)} value={String(current ?? '')} onChange={(e) => set(f.key, e.target.value)} disabled={disabled} />;
+            return <TextField key={f.key} size="small" label={label(t, f.key)} value={textOf(current)} onChange={(e) => set(f.key, e.target.value)} disabled={disabled} />;
         }
       })}
     </Stack>

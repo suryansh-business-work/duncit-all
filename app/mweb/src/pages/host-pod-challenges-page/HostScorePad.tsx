@@ -30,9 +30,37 @@ function ValueEntry({ label, onRecord, disabled }: Readonly<{ label: string; onR
   );
 }
 
+interface ScoreStepsProps {
+  steps: number[];
+  /** The competitor's name, for each button's accessible label. */
+  name: string;
+  disabled: boolean;
+  onStep: (step: number) => void;
+}
+
+/** One competitor's row of +/- buttons for an INCREMENT tool. */
+function ScoreSteps({ steps, name, disabled, onStep }: Readonly<ScoreStepsProps>) {
+  const { t } = useTranslation();
+  return (
+    <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
+      {steps.map((step) => (
+        <DuncitButton
+          key={step}
+          size="small"
+          variant={step > 0 ? 'contained' : 'outlined'}
+          disabled={disabled}
+          aria-label={t('mweb.challenge.addPoints', { vars: { points: step, name } })}
+          onClick={() => onStep(step)}
+        >
+          {step > 0 ? `+${step}` : String(step)}
+        </DuncitButton>
+      ))}
+    </Stack>
+  );
+}
+
 /** Live score entry: one row per competitor for every tool the host scores by hand. */
 export default function HostScorePad({ challenge, actions }: Readonly<Props>) {
-  const { t } = useTranslation();
   const metrics = new Map(challenge.standings.map((s) => [s.competitor_id, parseJsonObject(s.metrics_json)]));
   // The server says how each tool is fed; a clock also takes per-competitor
   // times when its settings record them.
@@ -62,20 +90,12 @@ export default function HostScorePad({ challenge, actions }: Readonly<Props>) {
                   {c.name} · {String(metrics.get(c.competitor_id)?.[tool.instance_id] ?? '—')}
                 </Typography>
                 {tool.input_kind === 'INCREMENT' ? (
-                  <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
-                    {steps.map((step) => (
-                      <DuncitButton
-                        key={step}
-                        size="small"
-                        variant={step > 0 ? 'contained' : 'outlined'}
-                        disabled={actions.scoring}
-                        aria-label={t('mweb.challenge.addPoints', { vars: { points: step, name: c.name } })}
-                        onClick={() => record(tool, c.competitor_id, step)}
-                      >
-                        {step > 0 ? `+${step}` : String(step)}
-                      </DuncitButton>
-                    ))}
-                  </Stack>
+                  <ScoreSteps
+                    steps={steps}
+                    name={c.name}
+                    disabled={actions.scoring}
+                    onStep={(step) => record(tool, c.competitor_id, step)}
+                  />
                 ) : (
                   <ValueEntry label={tool.label} disabled={actions.scoring} onRecord={(v) => record(tool, c.competitor_id, v)} />
                 )}

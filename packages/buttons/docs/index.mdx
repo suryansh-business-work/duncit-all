@@ -105,6 +105,11 @@ A state layer only ever lands on a part that is **transparent to begin with**.
 filled chip would turn it translucent grey rather than pressing it. Anything
 carrying its own fill darkens with `brightness()` instead.
 
+The compression is the CSS `scale` property, never `transform: scale()`. A
+`transform` on `:active` would replace the call site's own transform, so a
+slider arrow centred with `top: 50%; transform: translateY(-50%)` would drop by
+half its height every time it was pressed. `scale` composes with `transform`.
+
 ### `DuncitRoundButton` — the one that has to stay a circle
 
 A close button drawn over a photo, pinned to a thumbnail's corner or sat in a

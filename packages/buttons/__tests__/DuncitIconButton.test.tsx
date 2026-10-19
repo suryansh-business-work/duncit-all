@@ -21,7 +21,7 @@ describe('DuncitIconButton', () => {
     const button = screen.getByRole('button', { name: 'Scan attendance QR' });
     expect(button.className).toContain('MuiIconButton-root');
     const css = injectedCss();
-    expect(css).toContain('transform:scale(0.94)');
+    expect(css).toContain('scale:0.94');
     expect(css).toContain('opacity:0.75');
     expect(css).toContain('background-color:rgba(17, 24, 39, 0.12)');
   });

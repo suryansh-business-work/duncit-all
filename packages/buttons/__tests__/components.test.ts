@@ -6,7 +6,7 @@ import { pressTransition, type PressColors } from '../src/press-css';
 const COLORS: PressColors = { ink: '#1F2937', accent: '#E11D48' };
 const INK_12 = 'rgba(31, 41, 55, 0.12)';
 const FOCUS_KEY = '&.Mui-focusVisible, &:focus-visible';
-const SOLID_ACTIVE = { transition: 'none', transform: 'scale(0.96)', filter: 'brightness(0.92)' };
+const SOLID_ACTIVE = { transition: 'none', scale: '0.96', filter: 'brightness(0.92)' };
 
 type Bag = { styleOverrides?: Record<string, unknown> } & Record<string, unknown>;
 const slotCss = (components: Components<Theme>, component: string, part: string): CSSObject =>
@@ -49,7 +49,7 @@ describe('withPress', () => {
   it('text buttons press as ghost with an ink state layer', () => {
     expect(active(slotCss(result, 'MuiButton', 'text'))).toEqual({
       transition: 'none',
-      transform: 'scale(0.94)',
+      scale: '0.94',
       opacity: 0.75,
       backgroundColor: INK_12,
     });
@@ -58,7 +58,7 @@ describe('withPress', () => {
   it('outlined buttons press as control with an ink state layer', () => {
     expect(active(slotCss(result, 'MuiButton', 'outlined'))).toEqual({
       transition: 'none',
-      transform: 'scale(0.96)',
+      scale: '0.96',
       opacity: 0.85,
       backgroundColor: INK_12,
     });
@@ -77,7 +77,7 @@ describe('withPress', () => {
   it('card action areas press as surface with the faint 6% layer', () => {
     expect(active(slotCss(result, 'MuiCardActionArea', 'root'))).toEqual({
       transition: 'none',
-      transform: 'scale(0.985)',
+      scale: '0.985',
       opacity: 0.9,
       backgroundColor: 'rgba(31, 41, 55, 0.06)',
     });

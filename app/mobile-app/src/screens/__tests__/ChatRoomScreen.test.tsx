@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -141,7 +141,10 @@ describe('ChatRoomScreen', () => {
     fireEvent.press(await screen.findByTestId('chat-message-action-reply'));
     expect(screen.getByText('Replying to Asha')).toBeOnTheScreen();
     fireEvent.changeText(screen.getByTestId('chat-input'), 'yes');
-    fireEvent.press(screen.getByTestId('chat-send'));
+    // The send awaits the server before clearing the strip, so the press runs inside act.
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('chat-send'));
+    });
     expect(actions.sendText).toHaveBeenCalledWith('yes', { replyToId: 'm2', mentions: [] });
     await waitFor(() => expect(screen.queryByTestId('chat-reply-strip')).toBeNull());
   });

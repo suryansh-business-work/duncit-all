@@ -32,7 +32,7 @@ export function useChatAlerts(): void {
     if (!token) return undefined;
     let disposed = false;
     let cleanup: (() => void) | null = null;
-    openUserSocket()
+    openUserSocket(() => disposed)
       .then((socket) => {
         if (!socket) return;
         socket.on(CHAT_NEW_EVENT, (raw: unknown) => {

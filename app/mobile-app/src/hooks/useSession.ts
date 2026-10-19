@@ -68,7 +68,7 @@ function useUserRealtime(userId: string, apply: (patch: Record<string, unknown>)
     let disposed = false;
     let cleanup: (() => void) | null = null;
 
-    openUserSocket()
+    openUserSocket(() => disposed)
       .then((socket) => {
         if (!socket) return;
         const off = subscribeUserChanged(socket, userId, apply);

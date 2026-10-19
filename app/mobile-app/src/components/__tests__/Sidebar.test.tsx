@@ -62,16 +62,21 @@ describe('Sidebar', () => {
   });
 
   it('badges the Chats tile with the unread count, and shows no badge at zero', () => {
+    // The badge is aria-hidden (the count rides as the tile's hint), so the
+    // visual check opts into hidden elements and the hint is the a11y check.
+    const hidden = { includeHiddenElements: true };
     mockUnreadChats = 3;
     const { unmount } = renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(
-      within(screen.getByTestId('sidebar-grid-chats')).getByTestId('sidebar-grid-badge'),
+      within(screen.getByTestId('sidebar-grid-chats')).getByTestId('sidebar-grid-badge', hidden),
     ).toHaveTextContent('3');
+    expect(screen.getByHintText('3 unread')).toBeOnTheScreen();
     unmount();
 
     mockUnreadChats = 0;
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
-    expect(screen.queryByTestId('sidebar-grid-badge')).toBeNull();
+    expect(screen.queryByTestId('sidebar-grid-badge', hidden)).toBeNull();
+    expect(screen.queryByHintText('3 unread')).toBeNull();
   });
 
   it('shows the profile card, Quick Access, the five collapsed sections, logout and app version', () => {

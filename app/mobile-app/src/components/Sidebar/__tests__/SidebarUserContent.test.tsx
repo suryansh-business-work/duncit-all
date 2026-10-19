@@ -56,10 +56,11 @@ function renderContent(props: Props = {}) {
   return onNavigate;
 }
 
-/** The grid's tile keys, in the order they are drawn. */
+/** The grid's tile keys, in the order they are drawn (the count badge is not a
+ * tile; the Badges tile, `sidebar-grid-badges`, is). */
 const gridOrder = () =>
   within(screen.getByTestId('sidebar-quick-grid'))
-    .getAllByTestId(/^sidebar-grid-(?!badge)/)
+    .getAllByTestId(/^sidebar-grid-(?!badge$)/)
     .map((tile) => String(tile.props.testID).replace('sidebar-grid-', ''));
 
 describe('SidebarUserContent — profile card', () => {
@@ -215,8 +216,9 @@ describe('SidebarUserContent — cards', () => {
     expect(screen.getByTestId('sidebar-duncit-coin')).toBeOnTheScreen();
     expect(screen.queryByTestId('sidebar-studio-options')).toBeNull();
 
+    // `screen` reads the latest render only: Host mode drops the coin card.
     renderContent({ roles: ['HOST'], mode: 'HOST' });
-    expect(screen.getAllByTestId('sidebar-duncit-coin')).toHaveLength(1);
+    expect(screen.queryByTestId('sidebar-duncit-coin')).toBeNull();
     expect(screen.getByTestId('sidebar-studio-options')).toBeOnTheScreen();
   });
 });

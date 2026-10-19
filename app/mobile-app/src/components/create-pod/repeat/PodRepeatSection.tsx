@@ -10,14 +10,16 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { ChipSelectField } from '../ChipSelectField';
 import { parseDateTimeText } from '../create-pod.form';
 import type { CreatePodForm } from '../create-pod.types';
-import { RepeatDiscountField } from './RepeatDiscountField';
 import { RepeatEndDateField } from './RepeatEndDateField';
+import { RepeatSeriesSummary } from './RepeatSeriesSummary';
 import { SeriesCalendar } from './SeriesCalendar';
 import { seriesDayMarks, type SeriesDayMark } from './series-calendar';
 import { useSeriesLimits, useSeriesPreview } from './useSeriesPreview';
 
 const toggled = (list: readonly string[], item: string): string[] =>
-  list.includes(item) ? list.filter((x) => x !== item) : [...list, item].sort();
+  list.includes(item)
+    ? list.filter((x) => x !== item)
+    : [...list, item].sort((a, b) => a.localeCompare(b));
 
 /**
  * How a recurring pod repeats, once its first date is chosen — mWeb's
@@ -136,32 +138,13 @@ export function PodRepeatSection({ form }: Readonly<{ form: CreatePodForm }>) {
         </YStack>
       ) : null}
       {preview ? (
-        <YStack gap={8}>
-          <Text testID="pod-repeat-count" fontSize={14} fontWeight="600">
-            {t('mweb.podSeries.willCreate', {
-              vars: { count: runnable.length, total: preview.dates.length },
-            })}
-          </Text>
-          {runnable.length < 2 ? (
-            <Text testID="pod-repeat-too-few" color="$warning">
-              {t('mweb.podSeries.needTwoDates')}
-            </Text>
-          ) : null}
-          {values.pod_type === 'FREE' ? null : (
-            <RepeatDiscountField
-              form={form}
-              defaults={preview.default_multi_date_discount_tiers}
-              maxDates={preview.max_occurrences}
-              maxPct={preview.max_discount_pct}
-              currency={currency}
-            />
-          )}
-          <Text fontSize={12} color="$muted">
-            {t('mweb.podSeries.limitsHint', {
-              vars: { max: preview.max_occurrences, days: preview.max_span_days },
-            })}
-          </Text>
-        </YStack>
+        <RepeatSeriesSummary
+          form={form}
+          preview={preview}
+          runnableCount={runnable.length}
+          free={values.pod_type === 'FREE'}
+          currency={currency}
+        />
       ) : null}
     </SurfaceCard>
   );

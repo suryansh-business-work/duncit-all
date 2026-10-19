@@ -91,10 +91,12 @@ export function seriesWindows(
       .map(windowAt);
   }
   const out: SeriesWindow[] = [];
-  for (let n = 0; out.length < maxCount; n += 1) {
+  let n = 0;
+  while (out.length < maxCount) {
     const start = nthStart(first.start, frequency, n);
     if (!start || start.getTime() > lastStart) break;
     out.push(windowAt(start));
+    n += 1;
   }
   return out;
 }

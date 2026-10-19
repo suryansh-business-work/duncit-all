@@ -47,6 +47,42 @@ export interface ChatRoomSource {
   send: (input: ChatSendInput) => Promise<unknown>;
 }
 
+/** The room's own fields — everything but its lines and actions. */
+type RoomDetails = Pick<
+  ChatRoomSource,
+  'hasData' | 'myId' | 'title' | 'closed' | 'deletesAt' | 'retentionDays' | 'canModerate' | 'pod' | 'clubSlug'
+>;
+
+function podRoomDetails(data: PodRoomData | undefined): RoomDetails {
+  const info = data?.podChatInfo;
+  return {
+    hasData: !!data,
+    myId: data?.me?.user_id,
+    title: data?.pod?.pod_title,
+    closed: !!info?.closed,
+    deletesAt: info?.chat_deletes_at ?? null,
+    retentionDays: null,
+    canModerate: !!info?.can_moderate,
+    pod: data?.pod ?? null,
+    clubSlug: null,
+  };
+}
+
+function clubRoomDetails(data: ClubRoomData | undefined): RoomDetails {
+  const club = data?.clubChatRoom;
+  return {
+    hasData: !!data,
+    myId: data?.me?.user_id,
+    title: club?.club_name,
+    closed: false,
+    deletesAt: null,
+    retentionDays: club?.retention_days ?? null,
+    canModerate: !!club?.can_moderate,
+    pod: null,
+    clubSlug: club?.club_slug ?? null,
+  };
+}
+
 /**
  * Loads a pod's or a club's room. Exactly one of the two queries runs. It opens
  * on the newest page; older pages are fetched on request and kept in the cache
@@ -72,8 +108,6 @@ export function useChatRoomSource(kind: ChatRoomKind, id: string | undefined): C
   const podData = isPod ? podQuery.data : undefined;
   const clubData = isPod ? undefined : clubQuery.data;
   const active = isPod ? podQuery : clubQuery;
-  const info = podData?.podChatInfo;
-  const club = clubData?.clubChatRoom;
   const messages = (isPod ? podData?.podMessages : clubData?.clubMessages) ?? [];
 
   /**
@@ -118,20 +152,12 @@ export function useChatRoomSource(kind: ChatRoomKind, id: string | undefined): C
   }, []);
 
   return {
+    ...(isPod ? podRoomDetails(podData) : clubRoomDetails(clubData)),
     loading: active.loading,
-    hasData: !!(podData ?? clubData),
     refetch,
-    myId: (podData ?? clubData)?.me?.user_id,
-    title: isPod ? podData?.pod?.pod_title : club?.club_name,
     messages,
     canLoadOlder: startOf !== id && hasOlderPage(messages.length),
     loadOlder,
-    closed: isPod ? !!info?.closed : false,
-    deletesAt: isPod ? (info?.chat_deletes_at ?? null) : null,
-    retentionDays: isPod ? null : (club?.retention_days ?? null),
-    canModerate: isPod ? !!info?.can_moderate : !!club?.can_moderate,
-    pod: podData?.pod ?? null,
-    clubSlug: club?.club_slug ?? null,
     send: (input) =>
       isPod
         ? sendPod({ variables: { pod_id: id, ...input } })

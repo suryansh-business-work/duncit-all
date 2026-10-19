@@ -107,7 +107,7 @@ export const FSSAI_NUMBER = /^\d{14}$/;
  * the token after it, so the pattern stays linear (no ReDoS).
  */
 export const YOUTUBE_URL =
-  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/watch\?(?:[\w%.=-]*&)?v=|youtube\.com\/shorts\/|youtube\.com\/embed\/|youtube\.com\/live\/|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
+  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
 
 /**
  * A Duncit referral code — the `DUN-` prefix and six uppercase hex characters,

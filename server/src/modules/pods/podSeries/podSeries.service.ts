@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, type HydratedDocument } from 'mongoose';
 import { logs } from '@observability/log';
 import { AppSettingsModel } from '@modules/platform/settings/settings.model';
 import {
@@ -14,7 +14,7 @@ import { announceSlotRequest } from '../pod/pod.venue';
 import { PodDraftModel } from '../pod-draft/pod-draft.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
-import { PodSeriesModel, type IPodSeriesSkip, type PodSeriesFrequency } from './podSeries.model';
+import { PodSeriesModel, type IPodSeries, type IPodSeriesSkip, type PodSeriesFrequency } from './podSeries.model';
 import { seriesWindows, withinSpan, type SeriesWindow } from './podSeries.dates';
 import { firstSeriesSlot, matchSeriesSlots, type FirstSlot, type SeriesSlotMatch } from './podSeries.slots';
 import { assertMultiDateDiscountTiers, type MultiDateDiscountTier } from './podSeries.discount';
@@ -184,6 +184,51 @@ function dateInputFor(input: Record<string, unknown>, m: SeriesSlotMatch, freque
   };
 }
 
+type PublishedDate = { id: Types.ObjectId; pub: CreatedPod };
+
+/** What every date of one publish shares; `created` and `skipped` fill as the dates go. */
+interface SeriesRun {
+  userId: string;
+  input: Record<string, unknown>;
+  frequency: PodSeriesFrequency;
+  physical: boolean;
+  firstSlot: FirstSlot | null;
+  series: HydratedDocument<IPodSeries>;
+  total: number;
+  created: PublishedDate[];
+  skipped: IPodSeriesSkip[];
+}
+
+/**
+ * Publishes the `i`-th runnable date as a pod of the series. When no date has
+ * become a pod yet, a refusal deletes the series and is thrown — every other
+ * date would be refused the same way; a later date that fails is skipped and
+ * reported instead.
+ */
+async function publishSeriesDate(run: SeriesRun, m: SeriesSlotMatch, i: number) {
+  let slotId: string | null = null;
+  try {
+    slotId = run.physical ? await slotForDate(m, run.firstSlot) : null;
+    const dateInput = dateInputFor(run.input, m, run.frequency, slotId);
+    const pub = await podService.createForPartner(run.userId, dateInput, {
+      id: String(run.series._id),
+      index: i + 1,
+      total: run.total,
+      quietVenue: true,
+    });
+    if (pub) run.created.push({ id: new Types.ObjectId(pub.id), pub });
+  } catch (error) {
+    // A slot opened for this date that no pod went on to hold is not the venue's.
+    if (m.onRequest && slotId) await venueSlotService.dropUnheldHostRequestSlot(slotId);
+    if (run.created.length === 0) {
+      await run.series.deleteOne();
+      throw error;
+    }
+    run.skipped.push(skipOf(m, error));
+    logs.server.warn('podSeries', 'publishFromDraft.date', { series_id: String(run.series._id), error });
+  }
+}
+
 /** Sends the venue ONE request message for the whole series, on its first
  * still-pending date, rather than one per date. */
 async function announceSeries(podIds: Types.ObjectId[]) {
@@ -258,31 +303,21 @@ export const podSeriesService = {
       ends_on: new Date(plan.ends_on),
       multi_date_discount_tiers: discountTiers,
     });
-    const created: { id: Types.ObjectId; pub: CreatedPod }[] = [];
+    const created: PublishedDate[] = [];
     const skipped = plannedSkips(dates, skipByHost);
-
+    const run: SeriesRun = {
+      userId,
+      input,
+      frequency: plan.frequency,
+      physical,
+      firstSlot,
+      series,
+      total: runnable.length,
+      created,
+      skipped,
+    };
     for (const [i, m] of runnable.entries()) {
-      let slotId: string | null = null;
-      try {
-        slotId = physical ? await slotForDate(m, firstSlot) : null;
-        const dateInput = dateInputFor(input, m, plan.frequency, slotId);
-        const pub = await podService.createForPartner(userId, dateInput, {
-          id: String(series._id),
-          index: i + 1,
-          total: runnable.length,
-          quietVenue: true,
-        });
-        if (pub) created.push({ id: new Types.ObjectId(pub.id), pub });
-      } catch (error) {
-        // A slot opened for this date that no pod went on to hold is not the venue's.
-        if (m.onRequest && slotId) await venueSlotService.dropUnheldHostRequestSlot(slotId);
-        if (created.length === 0) {
-          await series.deleteOne();
-          throw error;
-        }
-        skipped.push(skipOf(m, error));
-        logs.server.warn('podSeries', 'publishFromDraft.date', { series_id: String(series._id), error });
-      }
+      await publishSeriesDate(run, m, i);
     }
 
     // Number the dates that exist, in order, so "2 of 11" never has a gap.

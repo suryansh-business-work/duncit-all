@@ -1,4 +1,9 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
+import { ColorModeProvider } from '@duncit/shell';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WaTestForm } from '../../src/pages/whatsapp-page/wa-test-form';
 import { emptyValues, toTestInput, waTestSchema } from '../../src/pages/whatsapp-page/wa-test-form/wa-test.types';
@@ -161,6 +166,27 @@ describe('WaTestForm', () => {
     await waitFor(() =>
       expect(screen.getByLabelText(/Header media URL/)).toHaveValue('https://cdn.example.test/banner.png')
     );
+  });
+
+  it('renders nothing while closed and lays the form out once opened', async () => {
+    const props = { busy: false, names: [], onClose: vi.fn(), onSubmit: vi.fn() };
+    const view = renderWithProviders(<WaTestForm open={false} {...props} />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    view.rerender(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+        <ColorModeProvider>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <MemoryRouter>
+              <WaTestForm open {...props} />
+            </MemoryRouter>
+          </LocalizationProvider>
+        </ColorModeProvider>
+      </MockedProvider>
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('combobox', { name: /WhatsApp campaign/ })).toHaveTextContent('order_camp')
+    );
+    expect(await screen.findByLabelText(/Value \{\{1\}\}/)).toHaveValue('');
   });
 
   it('shows the busy label and locks cancel while sending', () => {

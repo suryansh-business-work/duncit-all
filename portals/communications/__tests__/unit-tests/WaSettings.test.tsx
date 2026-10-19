@@ -169,6 +169,27 @@ describe('WaSettings - pricing', () => {
     await waitFor(() => expect(m.notifyError).toHaveBeenCalledWith('Not allowed'));
   });
 
+  it('keeps the cost example in rupees while the currency symbol is blank, and refuses to save it', async () => {
+    m.pricing = { ...pricing, currency_symbol: '$' };
+    mount();
+    expect(screen.getByText(/Marketing \$785\.00/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Currency symbol/), { target: { value: '  ' } });
+    expect(await screen.findByText(/Marketing ₹785\.00/)).toBeInTheDocument();
+    expect(await screen.findByText('Currency symbol is required')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save rates' })).toBeDisabled();
+  });
+
+  it('says it is saving while the rates are being written', async () => {
+    m.runners.set('UpdateWaPricing', vi.fn().mockReturnValue(new Promise(() => undefined)));
+    mount();
+    fireEvent.change(screen.getByLabelText(/Marketing — per message/), { target: { value: '0.8' } });
+    const save = screen.getByRole('button', { name: 'Save rates' });
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(save);
+    expect(await screen.findByRole('button', { name: 'Saving…' })).toBeInTheDocument();
+    expect(m.notifySuccess).not.toHaveBeenCalled();
+  });
+
   it('shows a spinner while loading and an error when the rates cannot be read', () => {
     m.pricing = undefined;
     m.pricingLoading = true;
@@ -281,6 +302,28 @@ describe('WaSettings - default media', () => {
         filename: '',
       })
     );
+  });
+
+  it('starts both defaults empty and without the warning while the first read is in flight', () => {
+    m.media = undefined;
+    m.mediaLoading = true;
+    mount();
+    expect(screen.getByLabelText(/Header image/)).toHaveValue('');
+    expect(screen.getByLabelText('Header document URL')).toHaveValue('');
+    // "Nothing is set" is only true once the read has answered.
+    expect(screen.queryByText(/^No default set/)).not.toBeInTheDocument();
+    for (const save of screen.getAllByRole('button', { name: 'Save default' })) {
+      expect(save).toBeDisabled();
+    }
+  });
+
+  it('refuses an image link that is not public', async () => {
+    mount();
+    fireEvent.change(screen.getByLabelText(/Header image/), { target: { value: 'blob:local' } });
+    expect(
+      await screen.findByText('Use a full public link that starts with http:// or https://')
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Save default' })[0]).toBeDisabled();
   });
 
   it('refuses a document link that is not public', async () => {

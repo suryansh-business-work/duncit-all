@@ -17,6 +17,8 @@ vi.mock('@apollo/client/react', async (io) => ({
 }));
 
 import WaDashboard from '../../src/pages/whatsapp-page/wa-dashboard';
+import SpendByCategory from '../../src/pages/whatsapp-page/wa-dashboard/SpendByCategory';
+import { categoryLabel } from '../../src/pages/whatsapp-page/helpers';
 
 const board = (over: Record<string, unknown> = {}) => ({
   currency_symbol: '$',
@@ -98,6 +100,33 @@ describe('WaDashboard', () => {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /Window/ }));
     fireEvent.click(within(screen.getByRole('listbox')).getByText('All time'));
     expect(m.calls.at(-1)).toEqual({ from: null, to: null });
+  });
+
+  it('draws each bar against the biggest spender', () => {
+    renderWithProviders(
+      <SpendByCategory
+        currency="$"
+        rows={[
+          { category: 'MARKETING', campaigns: 1, messages: 10, failed: 0, skipped: 0, cost: 200 },
+          { category: 'UTILITY', campaigns: 1, messages: 5, failed: 0, skipped: 0, cost: 50 },
+        ]}
+      />
+    );
+    const bars = screen.getAllByRole('progressbar');
+    expect(bars[0]).toHaveAttribute('aria-valuenow', '100');
+    expect(bars[1]).toHaveAttribute('aria-valuenow', '25');
+  });
+
+  it('keeps an uncategorised, free send at an empty bar', () => {
+    renderWithProviders(
+      <SpendByCategory
+        currency="$"
+        rows={[{ category: '', campaigns: 1, messages: 3, failed: 0, skipped: 0, cost: 0 }]}
+      />
+    );
+    expect(screen.getByText(categoryLabel(''))).toBeInTheDocument();
+    expect(screen.getByText('3 · $0.00')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
   });
 
   it('shows a skeleton while the first answer loads', () => {

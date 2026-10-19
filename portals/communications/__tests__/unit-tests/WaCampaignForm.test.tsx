@@ -1,6 +1,12 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
+import { ColorModeProvider } from '@duncit/shell';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AisensyCampaign, AisensyTemplate } from '../../src/pages/whatsapp-page/queries';
+import { emptyValues } from '../../src/pages/whatsapp-page/wa-campaign-form/wa-campaign.types';
 import { renderWithProviders } from '../testkit';
 
 const m = vi.hoisted(() => ({
@@ -229,6 +235,46 @@ describe('WaCampaignForm', () => {
       expect(screen.getByLabelText(/Campaign name \(internal\)/)).toHaveValue('Diwali (copy)')
     );
     expect(await screen.findByLabelText(/Value \{\{1\}\}/)).toHaveValue('Prefilled');
+  });
+
+  it('says it is scheduling while a scheduled send is busy', async () => {
+    mount({
+      busy: true,
+      initial: {
+        ...emptyValues('diwali_camp'),
+        name: 'Later',
+        scheduled_at: '2099-01-01T10:00:00.000Z',
+      },
+    });
+    expect(await screen.findByRole('button', { name: 'Scheduling…' })).toBeInTheDocument();
+  });
+
+  it('renders nothing while closed and loads the prefilled values once opened', async () => {
+    const props = {
+      busy: false,
+      names: [],
+      audienceLists: [],
+      variables: [],
+      onClose: vi.fn(),
+      onSubmit: vi.fn(),
+      initial: { ...emptyValues(), name: 'Reopened send' },
+    };
+    const view = renderWithProviders(<WaCampaignForm open={false} {...props} />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    view.rerender(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+        <ColorModeProvider>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <MemoryRouter>
+              <WaCampaignForm open {...props} />
+            </MemoryRouter>
+          </LocalizationProvider>
+        </ColorModeProvider>
+      </MockedProvider>
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText(/Campaign name \(internal\)/)).toHaveValue('Reopened send')
+    );
   });
 
   it('offers the saved campaign names when AiSensy cannot be read', async () => {

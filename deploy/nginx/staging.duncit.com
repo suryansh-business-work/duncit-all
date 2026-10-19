@@ -19,9 +19,10 @@ server {
     client_max_body_size 25m;
 
     location / {
-        # Served by the Website CMS renderer (cms-site), which hands anything the CMS
-        # has no page for to this site's old container on :2100. Rollback: point back at :2100.
-        proxy_pass         http://127.0.0.1:2143;
+        # The redesigned site itself (its own container on :2100). The Website CMS
+        # renderer (cms-site, :2143) is parked: its pages are copies of the old design.
+        # To serve the CMS again, point this back at :2143.
+        proxy_pass         http://127.0.0.1:2100;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
@@ -226,9 +227,10 @@ server {
     client_max_body_size 25m;
 
     location / {
-        # Served by the Website CMS renderer (cms-site), which hands anything the CMS
-        # has no page for to this site's old container on :2104. Rollback: point back at :2104.
-        proxy_pass         http://127.0.0.1:2143;
+        # The redesigned site itself (its own container on :2104). The Website CMS
+        # renderer (cms-site, :2143) is parked: its pages are copies of the old design.
+        # To serve the CMS again, point this back at :2143.
+        proxy_pass         http://127.0.0.1:2104;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
@@ -268,9 +270,10 @@ server {
     client_max_body_size 25m;
 
     location / {
-        # Served by the Website CMS renderer (cms-site), which hands anything the CMS
-        # has no page for to this site's old container on :2120. Rollback: point back at :2120.
-        proxy_pass         http://127.0.0.1:2143;
+        # The redesigned site itself (its own container on :2120). The Website CMS
+        # renderer (cms-site, :2143) is parked: its pages are copies of the old design.
+        # To serve the CMS again, point this back at :2143.
+        proxy_pass         http://127.0.0.1:2120;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
@@ -590,9 +593,10 @@ server {
     client_max_body_size 25m;
 
     location / {
-        # Served by the Website CMS renderer (cms-site), which hands anything the CMS
-        # has no page for to this site's old container on :2125. Rollback: point back at :2125.
-        proxy_pass         http://127.0.0.1:2143;
+        # The redesigned site itself (its own container on :2125). The Website CMS
+        # renderer (cms-site, :2143) is parked: its pages are copies of the old design.
+        # To serve the CMS again, point this back at :2143.
+        proxy_pass         http://127.0.0.1:2125;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;

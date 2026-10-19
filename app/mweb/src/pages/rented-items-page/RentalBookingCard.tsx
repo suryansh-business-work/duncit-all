@@ -12,6 +12,8 @@ function outcomeLine(t: ReturnType<typeof useTranslation>['t'], row: RentalBooki
     return t('venueRentals.guest.refunded', { vars: { amount: money(row.refund_due) } });
   }
   if (row.refund_status === 'DUE') return t('venueRentals.guest.refundDue', { vars: { amount: money(row.refund_due) } });
+  // Settled at the venue: the venue handed this back in cash when the item came back.
+  if (row.deposit_at_venue > 0) return t('venueRentals.guest.depositBack', { vars: { amount: money(row.deposit_at_venue) } });
   if (row.damage_claim > 0) return t('venueRentals.guest.damageKept', { vars: { amount: money(row.damage_claim) } });
   return null;
 }
@@ -48,7 +50,8 @@ export default function RentalBookingCard({ row }: Readonly<{ row: RentalBooking
         </Typography>
         {outcome && (
           <Typography variant="caption" sx={{ fontWeight: 600 }} data-testid={`rented-item-${row.id}-outcome`}>
-            {outcome} · {t(rentalRefundKey(row.refund_status))}
+            {outcome}
+            {row.refund_status === 'NONE' ? '' : ` · ${t(rentalRefundKey(row.refund_status))}`}
           </Typography>
         )}
       </Stack>

@@ -23,7 +23,7 @@ export function useCheckoutRentals(pod: CheckoutPod | null | undefined, paid: bo
   const { picks, clear } = usePodRentalPicks(pod?.id);
   const [agreed, setAgreed] = useState(false);
   const catalogue = rentable ? rentals.catalogue : null;
-  const { totals, selections } = useMemo(() => checkoutRentalLines(catalogue, picks), [catalogue, picks]);
+  const { totals, selections, lines } = useMemo(() => checkoutRentalLines(catalogue, picks), [catalogue, picks]);
 
   // A paid booking used its picks: the next visit starts clean.
   useEffect(() => {
@@ -33,6 +33,8 @@ export function useCheckoutRentals(pod: CheckoutPod | null | undefined, paid: bo
   return {
     selections,
     totals,
+    /** Each picked item with its own rent and deposit, for the bill. */
+    lines,
     currency: catalogue?.currency_symbol ?? '',
     venueTerms: catalogue?.venue_terms_html ?? '',
     settings: rentals.settings,

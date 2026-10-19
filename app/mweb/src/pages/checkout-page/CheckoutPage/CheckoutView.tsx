@@ -7,7 +7,6 @@ import GatewayChip from '../GatewayChip';
 import OrderSummaryCard from '../OrderSummaryCard';
 import PaymentDetailsCard from '../PaymentDetailsCard';
 import ProcessingBackdrop from '../ProcessingBackdrop';
-import SavedAddressPicker from '../SavedAddressPicker';
 import AlreadyBookedDialog from '../AlreadyBookedDialog';
 import type { useCheckoutSession } from '../useCheckoutSession';
 import type { usePodCheckoutBill } from '../usePodCheckoutBill';
@@ -91,7 +90,7 @@ export default function CheckoutView({
             <IssueNotice issue={serverIssue.issue} page="/checkout" onClose={serverIssue.clear} />
           </Box>
         )}
-        <SavedAddressPicker onPick={session.pickAddress} />
+        {/* No "Deliver to" picker here: a pod ships nothing, and rented items are collected at the venue. */}
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <OrderSummaryCard pod={pod} stateTitle={stateTitle} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} dates={dates} unitAmount={unitAmount} coins={coinSummary} roundOff={payBreakup ? coins.roundOff : 0} rentals={rentals.totals.count > 0 ? { rows: <RentalBillRows rentals={rentals} />, total: rentals.totals.total } : null} />
           <PaymentDetailsCard
@@ -116,11 +115,9 @@ export default function CheckoutView({
             onApplyCoupon={(code) => session.applyCoupon(base, code)}
             onRemoveCoupon={session.removeCoupon}
             coins={coins}
+            beforePay={<RentalTermsConsent rentals={rentals} />}
           />
         </Stack>
-        <Box sx={{ mt: 2 }}>
-          <RentalTermsConsent rentals={rentals} />
-        </Box>
       </Box>
       <PaymentFailureDialog
         failure={payment.failure}

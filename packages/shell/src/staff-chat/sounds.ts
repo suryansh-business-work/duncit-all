@@ -1,8 +1,7 @@
-import pingUrl from '../media/chat-ping-new-message.mp3';
 import ringUrl from '../media/audio-video-call-incoming.mp3';
 
 /**
- * The two sounds this chat makes.
+ * The sounds this chat makes.
  *
  * Imported rather than fetched from a public folder: `@duncit/shell` is a
  * library, so a `public/` inside it is copied by nobody — an import is what
@@ -14,16 +13,8 @@ import ringUrl from '../media/audio-video-call-incoming.mp3';
  * nobody hears must never cost the message that caused it.
  */
 
-/** One short ping for an arriving message. */
-export function playMessagePing(): void {
-  try {
-    const audio = new Audio(pingUrl);
-    audio.volume = 0.6;
-    audio.play().catch(() => undefined);
-  } catch {
-    // Best-effort.
-  }
-}
+/** The message ping lives in `@duncit/ui`, shared with mWeb's chat rooms. */
+export { playMessagePing } from '@duncit/ui';
 
 /**
  * The incoming-call ring, which repeats until the call is answered, declined

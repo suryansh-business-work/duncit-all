@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Dialog, DialogContent, DialogTitle } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { notifySuccess } from '@duncit/dialogs';
 import { parseApiError, type RentalBookingRow } from '@duncit/utils';
-import { MARK_RENTAL_BOOKING } from '../documents';
+import { MARK_RENTAL_BOOKING, PUBLIC_RENTAL_SETTINGS } from '../documents';
 import MarkRentalForm, { type MarkRentalOutput } from './mark-rental';
 
 interface Props {
@@ -26,6 +26,9 @@ export default function MarkRentalDialog({ booking, onClose, onMarked }: Readonl
   const { t } = useTranslation();
   const [apiError, setApiError] = useState<string | null>(null);
   const [mark, { loading }] = useMutation(MARK_RENTAL_BOOKING);
+  // Finance's rule decides whether the venue hands the deposit back; refundable until it says otherwise.
+  const settings = useQuery(PUBLIC_RENTAL_SETTINGS, { skip: booking === null, fetchPolicy: 'cache-first' });
+  const depositRefundable = settings.data?.publicRentalSettings.deposit_refundable !== false;
 
   const close = () => {
     setApiError(null);
@@ -63,7 +66,15 @@ export default function MarkRentalDialog({ booking, onClose, onMarked }: Readonl
         <>
           <DialogTitle id={TITLE_ID}>{t('venueRentals.mark.title', { vars: { name: booking.name } })}</DialogTitle>
           <DialogContent dividers>
-            <MarkRentalForm key={booking.id} booking={booking} busy={loading} errorMessage={apiError} onSubmit={submit} onCancel={close} />
+            <MarkRentalForm
+              key={booking.id}
+              booking={booking}
+              depositRefundable={depositRefundable}
+              busy={loading}
+              errorMessage={apiError}
+              onSubmit={submit}
+              onCancel={close}
+            />
           </DialogContent>
         </>
       )}

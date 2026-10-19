@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Box, Stack } from '@mui/material';
+import { Alert, Box, Stack } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { DuncitTabs, TAB_PARAM, tabPanelProps, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import type { UploadSurface } from '@duncit/media-picker';
@@ -40,6 +40,9 @@ export default function VenueRentalDesk({ venueId, surface, mode, uploadSurface 
 
   return (
     <Stack spacing={2}>
+      <Alert severity="info" data-testid={`${idPrefix}-deposit-notice`}>
+        {t('venueRentals.desk.depositNotice')}
+      </Alert>
       <DuncitTabs {...tabs} idPrefix={idPrefix} />
       <Box {...tabPanelProps(idPrefix, tabs.value)}>
         {tabs.value === 'dashboard' && (

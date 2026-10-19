@@ -3600,6 +3600,9 @@ importers:
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../buttons
+      '@duncit/category':
+        specifier: workspace:*
+        version: link:../category
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../dialogs

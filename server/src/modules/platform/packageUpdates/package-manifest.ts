@@ -1978,6 +1978,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/media-picker", range: "workspace:*", kind: "dependencies" },

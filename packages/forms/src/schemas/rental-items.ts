@@ -13,6 +13,29 @@ const whole = (t: Translate, min: number, max: number) => {
   return z.coerce.number({ error: message }).int(message).min(min, message).max(max, message);
 };
 
+/**
+ * The Super → Category → Sub rows an item is offered under: at least one, each
+ * picked all the way down to its sub, never the same sub twice. The chain
+ * itself (a sub under its category) is the picker's and the server's job.
+ */
+const categoryRows = (t: Translate, max: number) =>
+  z
+    .array(
+      z.object({
+        super_id: z.string().min(1, t('venueRentals.items.categoryIncomplete')),
+        super_name: z.string(),
+        category_id: z.string().min(1, t('venueRentals.items.categoryIncomplete')),
+        category_name: z.string(),
+        sub_id: z.string().min(1, t('venueRentals.items.categoryIncomplete')),
+        sub_name: z.string(),
+      })
+    )
+    .min(1, t('venueRentals.items.categoryRequired'))
+    .max(max, t('venueRentals.items.categoriesMax', { vars: { max } }))
+    .refine((rows) => new Set(rows.map((row) => row.sub_id)).size === rows.length, {
+      message: t('venueRentals.items.categoryDuplicate'),
+    });
+
 export function makeRentalItemsSchema(t: Translate, config: RentalItemsConfig) {
   const item = z
     .object({
@@ -26,6 +49,7 @@ export function makeRentalItemsSchema(t: Translate, config: RentalItemsConfig) {
       stock: whole(t, 1, config.rental_stock_max),
       per_guest_limit: whole(t, 1, config.rental_per_guest_max),
       is_available: z.boolean(),
+      categories: categoryRows(t, config.rental_category_limit),
     })
     .refine((value) => value.per_guest_limit <= value.stock, {
       path: ['per_guest_limit'],

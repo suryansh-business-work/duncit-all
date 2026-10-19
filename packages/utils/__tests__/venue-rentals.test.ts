@@ -8,8 +8,13 @@ import {
   RENTABLE_PODS_QUERY,
   SET_VENUE_RENTAL_DEPOSIT_GST_MUTATION,
   UPDATE_VENUE_RENTALS_MUTATION,
+  PAYMENT_RENTAL_LINE_FIELDS,
+  emptyRentalCategory,
   emptyRentalItem,
   isRentalListEditable,
+  paymentRentalSummary,
+  rentalCategoryLabels,
+  rentalHandBack,
   rentalItemsToValues,
   toVenueRentalsInput,
   POD_RENTALS_QUERY,
@@ -209,9 +214,31 @@ describe('the venue rental list', () => {
         stock: 6,
         per_guest_limit: 2,
         is_available: true,
+        categories: [
+          {
+            super_category_id: 's1',
+            category_id: 'c1',
+            sub_category_id: 'b1',
+            super_category_name: 'Sports',
+            category_name: 'Racquet',
+            sub_category_name: 'Badminton',
+          },
+        ],
       },
     ],
   };
+
+  it('opens each item on its stored category rows, and an item saved without any on one empty row', () => {
+    const values = rentalItemsToValues(stored);
+    expect(values.items[0].categories).toEqual([
+      { super_id: 's1', super_name: 'Sports', category_id: 'c1', category_name: 'Racquet', sub_id: 'b1', sub_name: 'Badminton' },
+    ]);
+    expect(rentalCategoryLabels(values.items[0].categories)).toEqual(['Sports › Racquet › Badminton']);
+    const legacy = rentalItemsToValues({ ...stored, rental_items: [{ ...stored.rental_items[0], categories: [] }] });
+    expect(legacy.items[0].categories).toEqual([emptyRentalCategory()]);
+    // A row not yet picked down to its sub names nothing.
+    expect(rentalCategoryLabels(legacy.items[0].categories)).toEqual([]);
+  });
 
   it('opens the form on what is stored, without sharing the stored photo list', () => {
     const values = rentalItemsToValues(stored);
@@ -225,14 +252,26 @@ describe('the venue rental list', () => {
   });
 
   it('saves a kept item with its id and a new item without one, numbers as numbers and text trimmed', () => {
-    const fresh = { ...emptyRentalItem(), name: '  Shoes ', rate: '80', deposit: '0', stock: '4', per_guest_limit: '1' };
+    const fresh = {
+      ...emptyRentalItem(),
+      name: '  Shoes ',
+      rate: '80',
+      deposit: '0',
+      stock: '4',
+      per_guest_limit: '1',
+      categories: [{ ...emptyRentalCategory(), super_id: 's1', category_id: 'c1', sub_id: 'b2' }],
+    };
     const input = toVenueRentalsInput({
       offers_rentals: true,
       rental_terms_html: '<p>Return by 9 pm</p>',
       items: [rentalItemsToValues(stored).items[0], fresh],
     });
     expect(input.rental_terms_html).toBe('<p>Return by 9 pm</p>');
-    expect(input.rental_items[0]).toMatchObject({ id: 'i1', rate: 100 });
+    expect(input.rental_items[0]).toMatchObject({
+      id: 'i1',
+      rate: 100,
+      categories: [{ super_category_id: 's1', category_id: 'c1', sub_category_id: 'b1' }],
+    });
     expect(input.rental_items[1]).toEqual({
       name: 'Shoes',
       description: '',
@@ -243,11 +282,14 @@ describe('the venue rental list', () => {
       stock: 4,
       per_guest_limit: 1,
       is_available: true,
+      // Only the ids travel: the server re-reads the names from the category tree.
+      categories: [{ super_category_id: 's1', category_id: 'c1', sub_category_id: 'b2' }],
     });
   });
 
-  it('starts a new item available, per slot, one unit and no deposit', () => {
+  it('starts a new item available, per slot, one unit, no deposit and one category row to pick', () => {
     expect(emptyRentalItem()).toMatchObject({ id: null, unit: 'SLOT', stock: 1, deposit: 0, is_available: true });
+    expect(emptyRentalItem().categories).toEqual([emptyRentalCategory()]);
   });
 
   it('lets only an approved venue edit its listing', () => {
@@ -276,13 +318,48 @@ describe('checkoutRentalLines', () => {
   };
 
   it('prices only the picks the venue still lists and sends them as selections', () => {
-    const { totals, selections } = checkoutRentalLines(catalogue, { racket: 1, gone: 4 });
+    const { totals, selections, lines } = checkoutRentalLines(catalogue, { racket: 1, gone: 4 });
     expect(totals).toEqual({ rent: 100, deposit: 300, total: 400, count: 1 });
     expect(selections).toEqual([{ item_id: 'racket', quantity: 1 }]);
+    // The bill lists each picked item with its own rent and deposit; an unpicked one is left off.
+    expect(lines).toEqual([{ id: 'racket', name: racket.name, quantity: 1, rent: 100, deposit: 300 }]);
   });
 
   it('carries nothing once renting closed, or before the catalogue loaded', () => {
     expect(checkoutRentalLines({ ...catalogue, open: false }, { racket: 1 }).selections).toEqual([]);
+    expect(checkoutRentalLines({ ...catalogue, open: false }, { racket: 1 }).lines).toEqual([]);
     expect(checkoutRentalLines(null, { racket: 1 }).totals.total).toBe(0);
+  });
+});
+
+describe('rentalHandBack', () => {
+  it('has the venue hand back the deposit less the damage it claims', () => {
+    expect(rentalHandBack(500, 0, true)).toBe(500);
+    expect(rentalHandBack(500, 200, true)).toBe(300);
+    expect(rentalHandBack(25.5, 0.25, true)).toBe(25.25);
+  });
+
+  it('never hands back less than nothing, nor more than the deposit, whatever is typed', () => {
+    expect(rentalHandBack(500, 900, true)).toBe(0);
+    expect(rentalHandBack(500, -50, true)).toBe(500);
+    expect(rentalHandBack(500, Number.NaN, true)).toBe(500);
+  });
+
+  it('hands back nothing when Finance made deposits non-refundable', () => {
+    expect(rentalHandBack(500, 0, false)).toBe(0);
+  });
+});
+
+describe('paymentRentalSummary', () => {
+  it('lists a paid payment’s frozen lines in the bill’s shape', () => {
+    expect(
+      paymentRentalSummary([{ item_id: 'i1', name: 'UNO Cards', quantity: 2, rent: 84, deposit: 50 }])
+    ).toEqual([{ id: 'i1', name: 'UNO Cards', quantity: 2, rent: 84, deposit: 50 }]);
+  });
+
+  it('reads a payment with no rentals, or none sent, as an empty list', () => {
+    expect(paymentRentalSummary([])).toEqual([]);
+    expect(paymentRentalSummary(undefined)).toEqual([]);
+    expect(PAYMENT_RENTAL_LINE_FIELDS).toContain('rental_lines');
   });
 });

@@ -11,8 +11,19 @@ const config = {
   rental_stock_max: 10,
   rental_per_guest_max: 3,
   rental_terms_max: 20,
+  rental_category_limit: 2,
 };
 const schema = makeRentalItemsSchema(t, config);
+
+const row = (sub: string, over: Record<string, unknown> = {}) => ({
+  super_id: 's1',
+  super_name: 'Sports',
+  category_id: 'c1',
+  category_name: 'Racquet',
+  sub_id: sub,
+  sub_name: sub,
+  ...over,
+});
 
 const item = (over: Record<string, unknown> = {}) => ({
   id: null,
@@ -25,6 +36,7 @@ const item = (over: Record<string, unknown> = {}) => ({
   stock: '4',
   per_guest_limit: '2',
   is_available: true,
+  categories: [row('badminton')],
   ...over,
 });
 
@@ -58,6 +70,26 @@ describe('makeRentalItemsSchema', () => {
     expect(
       issues({ offers_rentals: true, rental_terms_html: '', items: [item({ stock: '2', per_guest_limit: '3' })] })
     ).toEqual(['items.0.per_guest_limit:venueRentals.items.perGuestOverStock']);
+  });
+
+  it('needs every item offered under at least one category, picked all the way down to its sub', () => {
+    expect(issues({ offers_rentals: true, rental_terms_html: '', items: [item({ categories: [] })] })).toEqual([
+      'items.0.categories:venueRentals.items.categoryRequired',
+    ]);
+    expect(
+      issues({ offers_rentals: true, rental_terms_html: '', items: [item({ categories: [row('', { sub_id: '' })] })] })
+    ).toEqual(['items.0.categories.0.sub_id:venueRentals.items.categoryIncomplete']);
+  });
+
+  it('accepts several categories up to the configured cap, but never the same sub twice', () => {
+    const two = item({ categories: [row('badminton'), row('tennis')] });
+    expect(issues({ offers_rentals: true, rental_terms_html: '', items: [two] })).toEqual([]);
+    expect(
+      issues({ offers_rentals: true, rental_terms_html: '', items: [item({ categories: [row('a'), row('b'), row('c')] })] })
+    ).toEqual(['items.0.categories:venueRentals.items.categoriesMax']);
+    expect(
+      issues({ offers_rentals: true, rental_terms_html: '', items: [item({ categories: [row('a'), row('a')] })] })
+    ).toEqual(['items.0.categories:venueRentals.items.categoryDuplicate']);
   });
 
   it('caps the list and the venue terms at the configured limits', () => {

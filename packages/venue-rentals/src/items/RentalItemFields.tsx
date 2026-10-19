@@ -7,6 +7,7 @@ import { RhfTextField } from '@duncit/forms';
 import { FoodDishPhotos, type FoodPhotoUpload } from '@duncit/venue-food';
 import type { RentalItemsConfig, RentalItemsValues } from '@duncit/utils';
 import type { RentalItemsOutput } from '@duncit/forms/schemas';
+import RentalItemCategories from './RentalItemCategories';
 
 interface Props {
   control: Control<RentalItemsValues, unknown, RentalItemsOutput>;
@@ -85,6 +86,7 @@ export default function RentalItemFields({ control, index, config, upload, idPre
               slotProps={{ htmlInput: { min: 1, max: config.rental_per_guest_max, step: 1 } }}
             />
           </Stack>
+          <RentalItemCategories control={control} index={index} max={config.rental_category_limit} testId={field('categories')} />
           <Controller
             control={control}
             name={`items.${index}.images`}

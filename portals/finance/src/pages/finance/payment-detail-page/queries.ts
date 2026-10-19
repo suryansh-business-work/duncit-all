@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { formatMoney } from '@duncit/utils';
+import { formatMoney, type PaymentRentalLine } from '@duncit/utils';
 
 /** The whole audit, as one fragment: the detail query reads it and the retry
  * mutation answers with it, so a re-run refreshes the page from its own reply
@@ -45,6 +45,13 @@ export const PAYMENT_DETAIL_FIELDS = gql`
       gateway_ref
       paid_at
       created_at
+      rental_lines {
+        item_id
+        name
+        quantity
+        rent
+        deposit
+      }
     }
     finalize_state
     finalize_attempts
@@ -195,6 +202,8 @@ export interface DetailPayment {
   status: string;
   gateway: string;
   gateway_ref: string | null;
+  /** Rented items on a pod payment, frozen at checkout (empty when none). */
+  rental_lines?: PaymentRentalLine[];
   paid_at: string | null;
   created_at: string;
 }

@@ -79,6 +79,7 @@ COPY packages/buttons/package.json ./packages/buttons/
 COPY packages/verification/package.json ./packages/verification/
 COPY packages/entity-consoles/package.json ./packages/entity-consoles/
 COPY packages/venue-food/package.json ./packages/venue-food/
+COPY packages/category/package.json ./packages/category/
 COPY packages/venue-rentals/package.json ./packages/venue-rentals/
 
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate

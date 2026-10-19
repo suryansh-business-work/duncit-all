@@ -11,6 +11,8 @@ import {
   RENTAL_BOOKINGS_TABLE_QUERY,
   VENUE_RENTAL_BOOKINGS_TABLE_QUERY,
   VENUE_RENTAL_STATS_QUERY,
+  PUBLIC_RENTAL_SETTINGS_QUERY,
+  type PublicRentalSettings,
   type RentalBookingRow,
   type RentalVenueStats,
   type toVenueRentalsInput,
@@ -43,6 +45,10 @@ export const MARK_RENTAL_REFUNDED: TypedDocumentNode<
   { markRentalRefunded: RentalBookingRow },
   { id: string; reference: string }
 > = gql(MARK_RENTAL_REFUNDED_MUTATION);
+
+/** Finance's rules, read by the mark dialog to say what the venue hands back. */
+export const PUBLIC_RENTAL_SETTINGS: TypedDocumentNode<{ publicRentalSettings: PublicRentalSettings }, Record<string, never>> =
+  gql(PUBLIC_RENTAL_SETTINGS_QUERY);
 
 export const OWNER_RENTAL_ITEMS: TypedDocumentNode<{ myVenue: RentalsVenue | null }, { venue_id: string }> =
   gql(OWNER_RENTAL_ITEMS_QUERY);

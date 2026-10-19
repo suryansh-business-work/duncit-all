@@ -48,6 +48,20 @@ export const VENUE_RENTALS_BUNDLE: NestedCatalogue = {
       damage: 'Damage kept',
       payment: 'Payment',
       autoReleased: 'Closed automatically',
+      depositAtVenue: 'Deposit back at venue',
+    },
+    desk: {
+      depositNotice:
+        'Hand each guest’s refundable deposit back at the venue once you have checked the returned item. Duncit does not refund deposits online: it pays every deposit to you in your rental payout.',
+    },
+    finance: {
+      title: 'Rented items',
+      itemLine: '{name} × {quantity}',
+      rent: 'Rent',
+      deposit: 'Refundable deposit',
+      total: 'Rented items total',
+      depositNote:
+        'Deposits are handed back by the venue when the item is returned, not refunded through the gateway. Duncit pays them to the venue in its rental payout.',
     },
     mark: {
       action: 'Mark',
@@ -63,6 +77,8 @@ export const VENUE_RENTALS_BUNDLE: NestedCatalogue = {
       save: 'Save',
       saved: 'Rental marked',
       cancel: 'Cancel',
+      handBack: 'Hand {amount} back to the guest now. Duncit adds the full deposit to your next rental payout.',
+      handBackNone: 'Nothing to hand back. Duncit adds the full deposit to your next rental payout.',
     },
     refundAction: {
       action: 'Mark refunded',
@@ -131,6 +147,20 @@ export const VENUE_RENTALS_BUNDLE: NestedCatalogue = {
       depositGstHint: 'Off keeps this venue’s deposits outside the taxable value. Applies to the next booking.',
       depositGstSaved: 'GST on deposits updated',
       pageHint: 'List what guests can rent with their pod, and mark each item back after the pod.',
+      categories: 'Offered for pods in',
+      categoriesHint: 'Guests see this item only on pods whose category is listed here.',
+      superCategory: 'Super Category',
+      category: 'Category',
+      subCategory: 'Sub Category',
+      addCategory: 'Add category',
+      removeCategory: 'Remove category {n}',
+      categoryRow: 'Category {n}',
+      categoryRequired: 'Choose at least one category',
+      categoryIncomplete: 'Pick the super category, category and sub category',
+      categoriesMax: 'An item can be offered under at most {max} categories',
+      categoryDuplicate: 'This sub category is already listed',
+      categoryMaxReached: 'That is the most categories one item can have',
+      noCategories: 'No category yet: guests cannot see this item',
     },
     guest: {
       shopTab: 'Pod Shop',
@@ -151,7 +181,6 @@ export const VENUE_RENTALS_BUNDLE: NestedCatalogue = {
       termsTitle: 'Rental terms',
       duncitTerms: 'Duncit’s rental terms',
       venueTerms: 'The venue’s rental terms',
-      agree: 'I agree to the rental terms',
       agreeRequired: 'Agree to the rental terms to rent items',
       rentLine: 'Rented items',
       depositLine: 'Refundable deposit',
@@ -179,6 +208,17 @@ export const VENUE_RENTALS_BUNDLE: NestedCatalogue = {
       retry: 'Retry',
       loadMore: 'Load more',
       podItems: '{count} items to rent, from {amount}',
+      agreeLead: 'I agree to the',
+      termsLink: 'rental terms',
+      itemLine: '{name} × {quantity}',
+      depositAtVenue: 'Deposit {amount}, refundable at the venue',
+      collectTitle: 'Collected at the venue',
+      collectNote:
+        'You receive rented items at the venue. Your refundable deposit is returned by the venue when you bring the item back; Duncit does not refund deposits online.',
+      collectNoteKept:
+        'You receive rented items at the venue. The deposit is kept by the venue and is not refundable.',
+      bookedTitle: 'Rented items on this booking',
+      depositBack: 'Deposit back at the venue {amount}',
     },
   },
 };

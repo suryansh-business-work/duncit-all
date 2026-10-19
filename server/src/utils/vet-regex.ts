@@ -24,7 +24,7 @@ const OPEN_RANGE = /\{\d+,\d*\}/y;
 /** What makes a group quantified: optional whitespace, then `+`, `*` or an unbounded range (sticky). */
 const QUANTIFIER_AFTER = /\s*(?:[+*]|\{\d+,\d*\})/y;
 /** The characters an escape (`\` + one character) cannot pair with — what `.` never matches. */
-const LINE_TERMINATORS = new Set(['\n', '\r', ' ', ' ']);
+const LINE_TERMINATORS = new Set(['\n', '\r', '\u2028', '\u2029']);
 /** A backreference (`\1` … `\9`) — matching it can backtrack without bound too. */
 const BACKREFERENCE = /\\[1-9]/;
 

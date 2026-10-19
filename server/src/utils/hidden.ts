@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { hasRole } from '@middleware/rbac';
 import { requestIdentity } from '@observability/requestIdentity';
-import { STAFF_ROLES } from '@modules/engagement/staffChat/staffChat.model';
+import { STAFF_ROLES } from '@microservices/chat/staff/staffChat.model';
 
 /**
  * Hiding a pod or a club — what the flag means, in one place.

@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
-import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
+import { ticketNo } from '@microservices/chat/support/unifiedTickets.service';
 import { isEmailAddress } from '@utils/email';
 import { TicketModel, type TicketCategory } from './ticket.model';
 

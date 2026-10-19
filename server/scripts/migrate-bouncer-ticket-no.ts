@@ -24,7 +24,7 @@ import {
   BouncerSosAlertModel,
   BouncerCallbackRequestModel,
 } from '../src/modules/support/bouncer/bouncer.model';
-import { ticketNo } from '../src/modules/support/supportChat/unifiedTickets.service';
+import { ticketNo } from '../src/microservices/chat/support/unifiedTickets.service';
 
 const dryRun = process.argv.includes('--dry-run');
 const log = (...m: unknown[]) => console.log('[migrate-bouncer-ticket-no]', ...m);

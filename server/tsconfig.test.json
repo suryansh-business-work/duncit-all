@@ -12,6 +12,7 @@
       "@generated/*": ["src/generated/*"],
       "@modules/*": ["src/modules/*"],
       "@modules": ["src/modules/index.ts"],
+      "@microservices/*": ["src/microservices/*"],
       "@context": ["src/context.ts"],
       "@test/*": ["test/*"]
     }

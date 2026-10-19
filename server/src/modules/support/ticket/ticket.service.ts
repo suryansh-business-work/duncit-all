@@ -16,9 +16,9 @@ import {
   userDisplayMap,
   userDisplayOf,
 } from '@modules/access/user/user.display';
-import { emitToSupportAgents, emitToSupportUser } from '@modules/support/supportChat/supportChat.socket';
+import { emitToSupportAgents, emitToSupportUser } from '@microservices/chat/support/supportChat.socket';
 import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
-import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
+import { ticketNo } from '@microservices/chat/support/unifiedTickets.service';
 import { sendEmail, sendHtmlEmail } from '@services/email/email.service';
 import {
   buildTranscriptArtifact,

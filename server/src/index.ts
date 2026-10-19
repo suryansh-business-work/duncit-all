@@ -11,7 +11,6 @@ import { buildStatusProbeRouter } from './observability/statusProbe';
 import { buildUploadRouter } from './routes/upload.router';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
-import { startChatRetentionScheduler } from '@modules/engagement/chat/chat.cleanup';
 import { startRentalScheduler } from '@modules/venues/venueRental/rentalPayout.service';
 import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
 import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
@@ -99,11 +98,14 @@ import { notificationEvents, type NotifyEvent } from '@modules/engagement/notifi
 import jwt from 'jsonwebtoken';
 import { policyService } from '@modules/content/policy/policy.service';
 import { initSocketServer } from './realtime/io';
-import { attachChatHandlers } from '@modules/engagement/chat/chat.socket';
-import { attachStaffChatHandlers } from '@modules/engagement/staffChat/staffChat.socket';
+import {
+  attachChatHandlers,
+  attachStaffChatHandlers,
+  attachSupportChatHandlers,
+  startChatRetentionScheduler,
+} from '@microservices/chat';
 import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
 import { attachChallengeHandlers } from '@modules/engagement/challenge/runtime/challenge.socket';
-import { attachSupportChatHandlers } from '@modules/support/supportChat/supportChat.socket';
 import { attachCallHandlers } from '@modules/crm/call/call.socket';
 import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
 import { buildShiprocketWebhookRouter } from '@modules/commerce/shiprocket/shiprocket.webhook';

@@ -120,7 +120,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >-
           node scripts/ci-affected.mjs plan --under app/mobile-app --extra app/mobile-app
-          --global .github/workflows/android-build.yml --global 'server/src/modules/**/*.schema.ts'
+          --global .github/workflows/android-build.yml --global 'server/src/modules/**/*.schema.ts' --global 'server/src/microservices/**/*.schema.ts'
 
   build:
     needs: plan

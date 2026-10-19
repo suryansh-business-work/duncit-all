@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
 import { TicketModel } from '@modules/support/ticket/ticket.model';
-import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
+import { ticketNo } from '@microservices/chat/support/unifiedTickets.service';
 import { GrievanceTicketModel } from '@modules/content/grievance/grievanceTicket.model';
 import {
   FeedbackReportModel,

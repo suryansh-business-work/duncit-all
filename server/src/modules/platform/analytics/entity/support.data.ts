@@ -6,7 +6,7 @@ import {
   type TicketSource,
   type TicketStatus,
 } from '@modules/support/ticket/ticket.model';
-import { SupportChatSessionModel } from '@modules/support/supportChat/supportChat.model';
+import { SupportChatSessionModel } from '@microservices/chat/support/supportChat.model';
 import { BouncerCallbackRequestModel, BouncerSosAlertModel } from '@modules/support/bouncer/bouncer.model';
 import { FeedbackReportModel } from '@modules/support/feedback/feedback.model';
 import { inEitherPeriod, inRange, type AnalyticsWindow } from './window';

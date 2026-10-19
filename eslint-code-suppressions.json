@@ -5644,19 +5644,14 @@
       "count": 3
     }
   },
-  "server/src/modules/engagement/chat/chat.resolver.ts": {
+  "server/src/microservices/chat/rooms/chat.service.ts": {
     "no-restricted-syntax": {
-      "count": 14
+      "count": 4
     }
   },
-  "server/src/modules/engagement/chat/chat.service.ts": {
+  "server/src/microservices/chat/rooms/chat.socket.ts": {
     "no-restricted-syntax": {
-      "count": 5
-    }
-  },
-  "server/src/modules/engagement/chat/chat.socket.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "server/src/modules/engagement/leaderboard/leaderboard.admin.service.ts": {
@@ -5709,7 +5704,7 @@
       "count": 9
     }
   },
-  "server/src/modules/engagement/staffChat/staffChat.service.ts": {
+  "server/src/microservices/chat/staff/staffChat.service.ts": {
     "no-restricted-syntax": {
       "count": 9
     }
@@ -6414,22 +6409,22 @@
       "count": 3
     }
   },
-  "server/src/modules/support/supportChat/supportChat.resolver.ts": {
+  "server/src/microservices/chat/support/supportChat.resolver.ts": {
     "no-restricted-syntax": {
       "count": 3
     }
   },
-  "server/src/modules/support/supportChat/supportChat.service.ts": {
+  "server/src/microservices/chat/support/supportChat.service.ts": {
     "no-restricted-syntax": {
       "count": 2
     }
   },
-  "server/src/modules/support/supportChat/supportChat.socket.ts": {
+  "server/src/microservices/chat/support/supportChat.socket.ts": {
     "no-restricted-syntax": {
       "count": 5
     }
   },
-  "server/src/modules/support/supportChat/unifiedTickets.service.ts": {
+  "server/src/microservices/chat/support/unifiedTickets.service.ts": {
     "no-restricted-syntax": {
       "count": 4
     }

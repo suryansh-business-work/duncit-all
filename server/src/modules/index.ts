@@ -184,10 +184,14 @@ import { publicPageTypeDefs } from '@modules/venues/publicPage/publicPage.schema
 import { publicPageResolvers } from '@modules/venues/publicPage/publicPage.resolver';
 import { venueFoodTypeDefs } from '@modules/venues/venueFood/venueFood.schema';
 import { venueFoodResolvers } from '@modules/venues/venueFood/venueFood.resolver';
-import { chatTypeDefs } from '@modules/engagement/chat/chat.schema';
-import { chatResolvers } from '@modules/engagement/chat/chat.resolver';
-import { staffChatTypeDefs } from '@modules/engagement/staffChat/staffChat.schema';
-import { staffChatResolvers } from '@modules/engagement/staffChat/staffChat.resolver';
+import {
+  chatTypeDefs,
+  chatResolvers,
+  staffChatTypeDefs,
+  staffChatResolvers,
+  supportChatTypeDefs,
+  supportChatResolvers,
+} from '@microservices/chat';
 import { newsletterTypeDefs } from '@modules/crm/newsletter/newsletter.schema';
 import { newsletterResolvers } from '@modules/crm/newsletter/newsletter.resolver';
 import { contactTypeDefs } from '@modules/crm/contact/contact.schema';
@@ -289,8 +293,6 @@ import { accountHealthTypeDefs } from '@modules/access/accountHealth/accountHeal
 import { accountHealthResolvers } from '@modules/access/accountHealth/accountHealth.resolver';
 import { ticketTypeDefs } from '@modules/support/ticket/ticket.schema';
 import { ticketResolvers } from '@modules/support/ticket/ticket.resolver';
-import { supportChatTypeDefs } from '@modules/support/supportChat/supportChat.schema';
-import { supportChatResolvers } from '@modules/support/supportChat/supportChat.resolver';
 import { legalDocumentTypeDefs } from '@modules/content/legalDocument/legalDocument.schema';
 import { legalDocumentResolvers } from '@modules/content/legalDocument/legalDocument.resolver';
 import { envEntryTypeDefs } from '@modules/platform/envEntry/envEntry.schema';

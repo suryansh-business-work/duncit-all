@@ -40,6 +40,9 @@ describe('useUsernameCheck', () => {
   });
 
   it('debounces, then reports the server answer', async () => {
+    // A clock that only moves when told: with shouldAdvanceTime a slow runner's
+    // real time leaks in and fires the 400 ms debounce before the 399 ms check.
+    vi.useFakeTimers({ shouldAdvanceTime: false });
     query.mockReturnValue(answer('ravi-plays', true));
     const { result } = renderHook(() => useUsernameCheck('ravi-plays', 'ravi-9x3m'), { wrapper });
 
@@ -48,7 +51,11 @@ describe('useUsernameCheck', () => {
     expect(query).not.toHaveBeenCalled();
 
     await act(() => vi.advanceTimersByTimeAsync(1));
+    expect(query).toHaveBeenCalledTimes(1);
+    // The debounce has fired; real timers let waitFor poll for the answer's update.
+    vi.useRealTimers();
     await waitFor(() => expect(result.current.available).toBe(true));
+    expect(result.current.checking).toBe(false);
     expect(query).toHaveBeenCalledTimes(1);
   });
 

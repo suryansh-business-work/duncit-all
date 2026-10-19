@@ -57,8 +57,15 @@ export function PetTile({ tile, position }: Readonly<{ tile: PetTileData; positi
           </Typography>
         ) : null}
       </Stack>
-      <Box sx={{ alignSelf: 'end', minWidth: 0 }}>
-        <StoreImage src={tile.image} alt="" width={220} height={220} sx={{ objectFit: 'contain' }} />
+      {/* The picture fills its half of the tile whatever its shape: a wide banner or a square cut-out. */}
+      <Box sx={{ alignSelf: 'stretch', minWidth: 0, minHeight: 140, borderRadius: `${T.radius.panel}px`, overflow: 'hidden' }}>
+        <StoreImage
+          src={tile.image}
+          alt=""
+          width={320}
+          height={320}
+          sx={{ height: '100%', aspectRatio: 'auto', objectFit: 'cover' }}
+        />
       </Box>
       <Box
         aria-hidden

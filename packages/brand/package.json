@@ -43,6 +43,7 @@
     "./widgets/policy-reader": "./src/widgets/policy-reader.ts",
     "./widgets/site-nav": "./src/widgets/site-nav.ts",
     "./widgets/site-header": "./src/widgets/site-header.ts",
+    "./widgets/theme-toggle": "./src/widgets/theme-toggle.ts",
     "./cms-design": "./src/cms-design.ts"
   },
   "files": [

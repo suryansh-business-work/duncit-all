@@ -61,10 +61,11 @@ export function SlideView({ item, eager, trust }: Readonly<SlideViewProps>) {
       </Stack>
       <Box sx={{ minWidth: 0 }}>
         <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
-          <StoreImage src={mobileImage} alt="" width={640} height={520} eager={eager} sx={{ objectFit: 'contain' }} />
+          {/* Natural aspect once loaded (the attributes only reserve space), so a wide picture leaves no empty band. */}
+          <StoreImage src={mobileImage} alt="" width={640} height={520} eager={eager} sx={{ objectFit: 'contain', aspectRatio: 'auto' }} />
         </Box>
         <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-          <StoreImage src={item.image_url} alt="" width={720} height={560} eager={eager} sx={{ objectFit: 'contain' }} />
+          <StoreImage src={item.image_url} alt="" width={720} height={560} eager={eager} sx={{ objectFit: 'contain', aspectRatio: 'auto' }} />
         </Box>
       </Box>
     </Box>

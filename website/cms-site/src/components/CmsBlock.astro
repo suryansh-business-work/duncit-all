@@ -26,6 +26,8 @@ interface Props {
 
 const { block, props, graphqlUrl, legacySite, t } = Astro.props;
 const reelSite = legacySite === 'MAIN' || legacySite === 'PARTNERS' || legacySite === 'ADS' || legacySite === 'EARNWITH' ? legacySite : null;
+// Website portal > Earn with Duncit has a row for these three (earnwith IS the earn site).
+const earnSite = reelSite === 'EARNWITH' ? undefined : (reelSite ?? undefined);
 const variant = text(props.variant) === 'inline' ? 'inline' : 'card';
 const stores = list(props.stores).map(record).map((s) => ({
   icon: text(s.icon),
@@ -58,6 +60,9 @@ const accounts = list(props.accounts).map(record).map((a) => ({ icon: text(a.ico
     headingMuted={text(props.headingMuted) || undefined}
     text={text(props.text) || undefined}
     cta={text(props.cta) || undefined}
+    graphqlUrl={earnSite ? graphqlUrl : undefined}
+    site={earnSite}
+    class={text(props.class) || undefined}
     t={t}
   />
 )}
@@ -69,8 +74,11 @@ const accounts = list(props.accounts).map(record).map((a) => ({ icon: text(a.ico
     text={text(props.text) || undefined}
     perks={list(props.perks).map(text).filter(Boolean)}
     stores={stores}
+    webUrl={text(props.webUrl) || null}
     soonLabel={text(props.soonLabel) || undefined}
     screenshot={text(props.screenshot) || null}
+    class={text(props.class) || undefined}
+    t={t}
   />
 )}
 {block === 'social-links' && <SocialLinks accounts={accounts.length ? accounts : undefined} heading={text(props.heading) || null} />}

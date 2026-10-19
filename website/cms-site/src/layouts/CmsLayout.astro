@@ -8,6 +8,7 @@
 import { buildSiteMetaTags } from '@duncit/brand/site-meta';
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
 import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
+import ScrollReveal from '@duncit/brand/ScrollReveal.astro';
 import type { CmsRenderSite, CmsSeo } from '@duncit/gql-types';
 import type { SiteTranslate } from '@duncit/brand/site-i18n';
 import { fontCss, googleFontsHref, tokensCss } from '@duncit/brand/cms-design';
@@ -61,6 +62,18 @@ const js = bare ? [] : [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      // The visitor's light/dark choice, applied before the first paint so the
+      // page never flashes one theme and settles on another — the same key and
+      // light-first default as the hand-built sites' layouts.
+      (() => {
+        try {
+          document.documentElement.dataset.theme = localStorage.getItem('duncit-theme') || 'light';
+        } catch {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
     <Fragment set:html={meta} />
     {seo.noindex && <meta name="robots" content="noindex" />}
     {seo.keywords && <meta name="keywords" content={seo.keywords} />}
@@ -80,9 +93,14 @@ const js = bare ? [] : [site.custom_js, pageJs].filter(Boolean).map(scriptSafe);
     <slot />
     {tracked && <ConsentBanner policyUrl={privacyUrl} t={t} />}
     <script>
+      import { wireThemeToggle } from '@duncit/brand/widgets/theme-toggle';
       import { mountWidgets } from '../scripts/widgets';
       mountWidgets(document);
+      // Every light/dark button on the page (a site's top bar as well as its
+      // menu drawer) — the page's own scripts are not part of a CMS snapshot.
+      wireThemeToggle(document);
     </script>
+    {!bare && <ScrollReveal />}
     {!bare && site.body_end_html && <Fragment set:html={site.body_end_html} />}
     {js.map((source) => <script is:inline set:html={source} />)}
   </body>

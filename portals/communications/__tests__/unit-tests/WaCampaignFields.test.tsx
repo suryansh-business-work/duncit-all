@@ -270,6 +270,9 @@ describe('UserPickerField', () => {
     m.search = { data: { waCampaignUserSearch: [] }, loading: false };
     mount();
     const input = screen.getByRole('combobox', { name: /People/ });
+    // MUI resets an UNfocused autocomplete's text on the next render, so type
+    // into it the way a person does: focused, popup open.
+    fireEvent.focus(input);
     fireEvent.mouseDown(input);
     fireEvent.change(input, { target: { value: 'Zed' } });
     expect(await screen.findByText('Nobody matches that')).toBeInTheDocument();

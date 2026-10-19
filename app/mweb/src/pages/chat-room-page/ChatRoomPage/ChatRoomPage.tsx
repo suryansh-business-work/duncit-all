@@ -151,6 +151,8 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
         myId={room.myId}
         onOpenReact={(el, messageId) => setReactAnchor({ el, id: messageId })}
         onOpenActions={actions.open}
+        canLoadOlder={room.canLoadOlder}
+        loadOlder={room.loadOlder}
       />
 
       {podEnded ? (

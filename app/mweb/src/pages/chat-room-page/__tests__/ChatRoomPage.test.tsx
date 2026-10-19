@@ -83,7 +83,7 @@ const podActive = {
 
 function messagesMock(pod = podActive, messages = [otherMsg, mineMsg]) {
   return {
-    request: { query: POD_MESSAGES, variables: { pod_id: 'pod1', limit: 80 } },
+    request: { query: POD_MESSAGES, variables: { pod_id: 'pod1', limit: 30 } },
     result: {
       data: { me: { user_id: 'me1' }, podMessages: messages, pod },
     },

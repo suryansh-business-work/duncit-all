@@ -64,7 +64,9 @@ describe('ChatPreviewCard', () => {
     expect(screen.getByText('?')).toBeInTheDocument();
     expect(screen.getByTestId('chat-preview-count')).toHaveTextContent('2 messages');
     expect(screen.getByTestId('chat-preview-status')).toHaveTextContent('Live now');
-    expect(screen.queryByTestId('chat-preview-earlier')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Show earlier messages' })).not.toBeInTheDocument();
+    // One fixed height, scrolling inside, so the details page never jumps.
+    expect(screen.getByTestId('chat-preview-list')).toHaveStyle({ height: '360px', overflowY: 'auto' });
     fireEvent.click(screen.getByRole('button', { name: 'Open chat' }));
     expect(screen.getByText('pod room')).toBeInTheDocument();
   });
@@ -121,9 +123,38 @@ describe('ChatPreviewCard', () => {
     expect(screen.getByText('second')).toBeInTheDocument();
   });
 
+  it('loads earlier lines on scrolling to the top, once per page, keeping the reader in place', async () => {
+    renderCard([
+      previewMock(POD, { messages: [line('cc', 'third'), line('ddd', 'fourth')], total_count: 3, is_member: true }),
+      previewMock({ ...POD, before: '2026-10-02T10:00:00.000Z' }, { messages: [line('b', 'second')], total_count: 3, is_member: true }),
+    ]);
+    await screen.findByText('fourth');
+    const list = screen.getByTestId('chat-preview-list');
+    let top = 300;
+    Object.defineProperty(list, 'scrollTop', { configurable: true, get: () => top, set: (v: number) => (top = v) });
+    Object.defineProperty(list, 'scrollHeight', {
+      configurable: true,
+      get: () => 100 * list.querySelectorAll('[data-testid^="chat-preview-line-"]').length,
+    });
+    // The first scroll is where the reader starts; reading up into the top band asks, once.
+    fireEvent.scroll(list);
+    top = 10;
+    fireEvent.scroll(list);
+    top = 5;
+    fireEvent.scroll(list);
+    expect(list).toHaveAttribute('aria-busy', 'true');
+    expect(await screen.findByText('second')).toBeInTheDocument();
+    await waitFor(() => expect(list).toHaveAttribute('aria-busy', 'false'));
+    // Every line is in: no control left, and the reader's line kept its place.
+    expect(screen.queryByRole('button', { name: 'Show earlier messages' })).not.toBeInTheDocument();
+    // One 100px line went in above the two shown, measured from where the load began.
+    expect(top).toBe(10 + 100);
+  });
+
   it('marks an ended pod’s room as Ended and an empty room as waiting for its first line', async () => {
     renderCard([previewMock(POD, { messages: [], total_count: 0, is_member: true, closed: true })]);
     expect(await screen.findByTestId('chat-preview-empty')).toHaveTextContent('No messages yet. Say hello!');
+    expect(screen.getByTestId('chat-preview-empty').parentElement).toHaveStyle({ height: '360px' });
     expect(screen.getByTestId('chat-preview-status')).toHaveTextContent('Ended');
     expect(screen.queryByTestId('chat-preview-count')).not.toBeInTheDocument();
   });

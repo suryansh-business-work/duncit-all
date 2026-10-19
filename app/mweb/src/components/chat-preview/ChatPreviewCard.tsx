@@ -6,6 +6,9 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { chatPreviewAction, chatRoomPath, type ChatPreviewKind } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
+import ChatHistoryTop from '../chat-history/ChatHistoryTop';
+import { useScrollUpHistory } from '../chat-history/useScrollUpHistory';
+import { FIXED_PANEL_SX } from '../scroll-panel/scrollPanelSx';
 import ChatPreviewLine from './ChatPreviewLine';
 import { useChatPreview } from './useChatPreview';
 
@@ -29,6 +32,12 @@ export default function ChatPreviewCard({ kind, id, onJoinClub }: Readonly<ChatP
   const chat = useChatPreview(kind, id);
   const listRef = useRef<HTMLDivElement>(null);
   const titleId = `chat-preview-title-${id}`;
+  const history = useScrollUpHistory({
+    scrollRef: listRef,
+    oldestId: chat.messages[0]?.id,
+    canLoadOlder: chat.canLoadEarlier,
+    loadOlder: chat.loadEarlier,
+  });
 
   // Open on the newest line, as a chat does — only when the newest line
   // changes, never when an older page is put above what the reader is looking at.
@@ -41,46 +50,52 @@ export default function ChatPreviewCard({ kind, id, onJoinClub }: Readonly<ChatP
   const action = chatPreviewAction(kind, !!chat.preview?.is_member);
   const lockedHint = kind === 'POD' ? t('mweb.chat.podChatLocked') : t('mweb.chatRoom.joinToChat');
 
+  // One height whatever the card holds, so the details page never jumps.
   let body;
   if (chat.loading) {
-    body = <Skeleton variant="rounded" height={160} data-testid="chat-preview-loading" />;
+    body = (
+      <Box sx={FIXED_PANEL_SX}>
+        <Skeleton variant="rounded" height="100%" data-testid="chat-preview-loading" />
+      </Box>
+    );
   } else if (chat.error) {
     body = (
-      <Alert
-        severity="error"
-        data-testid="chat-preview-error"
-        action={<DuncitButton size="small" onClick={chat.retry}>{t('mweb.chat.previewRetry')}</DuncitButton>}
-      >
-        {t('mweb.chat.previewFailed')}
-      </Alert>
+      <Box sx={FIXED_PANEL_SX}>
+        <Alert
+          severity="error"
+          data-testid="chat-preview-error"
+          action={<DuncitButton size="small" onClick={chat.retry}>{t('mweb.chat.previewRetry')}</DuncitButton>}
+        >
+          {t('mweb.chat.previewFailed')}
+        </Alert>
+      </Box>
     );
   } else if (chat.messages.length === 0) {
     body = (
-      <Typography variant="body2" color="text.secondary" role="status" data-testid="chat-preview-empty">
-        {t('mweb.chat.noMessagesYet')}
-      </Typography>
+      <Box sx={{ ...FIXED_PANEL_SX, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography variant="body2" color="text.secondary" role="status" data-testid="chat-preview-empty">
+          {t('mweb.chat.noMessagesYet')}
+        </Typography>
+      </Box>
     );
   } else {
     body = (
-      <Box ref={listRef} role="log" aria-labelledby={titleId} data-testid="chat-preview-list" sx={{ maxHeight: 360, overflowY: 'auto' }}>
+      <Box
+        ref={listRef}
+        role="log"
+        aria-labelledby={titleId}
+        aria-busy={history.loadingOlder}
+        data-testid="chat-preview-list"
+        onScroll={history.onScrollNearTop}
+        sx={FIXED_PANEL_SX}
+      >
         <Stack spacing={1.5}>
-          {chat.canLoadEarlier && (
-            <DuncitButton
-              variant="text"
-              size="small"
-              loading={chat.loadingEarlier}
-              onClick={() => chat.loadEarlier()}
-              data-testid="chat-preview-earlier"
-              sx={{ alignSelf: 'center' }}
-            >
-              {t('mweb.chat.showEarlier')}
-            </DuncitButton>
-          )}
-          {chat.earlierFailed && (
-            <Typography variant="caption" color="error" role="alert" sx={{ textAlign: 'center' }}>
-              {t('mweb.chat.previewFailed')}
-            </Typography>
-          )}
+          <ChatHistoryTop
+            canLoadOlder={chat.canLoadEarlier}
+            loadingOlder={history.loadingOlder}
+            olderFailed={history.olderFailed}
+            onShowOlder={history.showOlder}
+          />
           {chat.messages.map((m) => (
             <ChatPreviewLine key={m.id} message={m} />
           ))}

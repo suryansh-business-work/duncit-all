@@ -3,6 +3,7 @@ import { Box, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
 import SectionHeader from '../../components/SectionHeader';
+import { CAPPED_PANEL_SX } from '../../components/scroll-panel/scrollPanelSx';
 import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 import PodRentList from './PodRentList';
@@ -25,7 +26,8 @@ interface Props {
 
 /**
  * Pod Details' compact Pod Shop | Pod Rent card. See all opens a bottom sheet
- * named for this pod with everything it sells and rents, on the same tab.
+ * named for this pod with everything it sells and rents, on the same tab. The
+ * card's panel scrolls inside a capped height, so it never stretches the page.
  */
 export default function PodShopRentCard({ podTitle, hasProducts, renderShop, rentals, picks, seats }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -43,8 +45,8 @@ export default function PodShopRentCard({ podTitle, hasProducts, renderShop, ren
       <PodShopRentTabs
         idPrefix="pod-shop-rent"
         hasProducts={hasProducts}
-        shop={renderShop(PREVIEW_ROWS)}
-        rent={rentList(PREVIEW_ROWS)}
+        shop={<Box sx={CAPPED_PANEL_SX}>{renderShop(PREVIEW_ROWS)}</Box>}
+        rent={<Box sx={CAPPED_PANEL_SX}>{rentList(PREVIEW_ROWS)}</Box>}
       />
       <ResponsiveDialog
         open={sheetOpen}

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import ProductDetailDialog, { type VariantPick } from '../ProductDetailDialog';
 import SectionHeader from '../../../components/SectionHeader';
+import { CAPPED_PANEL_SX } from '../../../components/scroll-panel/scrollPanelSx';
 import { SURFACE_SX } from '../../../theme';
 import { useTranslation } from '../../../i18n/useTranslation';
 import PodShopRow from './PodShopRow';
@@ -28,6 +29,8 @@ function productCountLabel(count: number): string {
 }
 
 /** The pod's own shop: its products as rows on one card, with a running total.
+ * On its own card the rows scroll inside a capped height, so a big shop never
+ * stretches Pod Details (embedded, the Pod Shop | Pod Rent card caps it).
  * Native twin: details/PodShop. */
 export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity, embedded = false, limit }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -87,7 +90,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           </Typography>
         </Stack>
       ) : (
-        <Stack spacing={0.9} sx={{ mt: embedded ? 0 : 2 }}>
+        <Stack spacing={0.9} data-testid="pod-shop-rows" sx={embedded ? undefined : { ...CAPPED_PANEL_SX, mt: 2 }}>
           {(limit ? requests.slice(0, limit) : requests).map((item: any) => (
             <PodShopRow
               key={`${item.product_id}-${item.product_name}`}

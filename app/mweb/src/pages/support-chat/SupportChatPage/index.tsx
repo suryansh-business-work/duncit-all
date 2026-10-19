@@ -96,6 +96,8 @@ export default function SupportChatPage() {
         onRetry={(m: SupportChatMessage) => chat.retry(m)}
         scrollRef={scrollRef}
         onScroll={onScroll}
+        canLoadOlder={chat.canLoadOlder}
+        loadOlder={chat.loadOlder}
       />
 
       {showJump && (

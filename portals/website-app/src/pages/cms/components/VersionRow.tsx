@@ -25,9 +25,10 @@ export default function VersionRow({ version, busy, onRestore, onPublish }: Read
   const { formatDateTime } = useDateFormat();
   const label = t('websiteApp.cms.versions.version', { vars: { version: version.version } });
 
-  const copy = () => {
-    if (!version.preview_url) return;
-    copyToClipboard(version.preview_url)
+  const previewUrl = version.preview_url;
+
+  const copy = (url: string) => {
+    copyToClipboard(url)
       .then((copied) => (copied ? notifySuccess(t('websiteApp.cms.versions.copied')) : notifyError(t('websiteApp.cms.versions.copyFailed'))))
       .catch(() => notifyError(t('websiteApp.cms.versions.copyFailed')));
   };
@@ -61,7 +62,7 @@ export default function VersionRow({ version, busy, onRestore, onPublish }: Read
             {t('websiteApp.cms.versions.openDemo')}
           </DuncitButton>
         )}
-        <DuncitButton size="small" startIcon={<ContentCopyIcon fontSize="small" />} disabled={!version.preview_url} onClick={copy} aria-label={`${t('websiteApp.cms.versions.copyLink')}: ${label}`}>
+        <DuncitButton size="small" startIcon={<ContentCopyIcon fontSize="small" />} disabled={!previewUrl} onClick={previewUrl ? () => copy(previewUrl) : undefined}aria-label={`${t('websiteApp.cms.versions.copyLink')}: ${label}`}>
           {t('websiteApp.cms.versions.copyLink')}
         </DuncitButton>
         <DuncitButton size="small" startIcon={<RestoreIcon fontSize="small" />} disabled={busy} onClick={() => onRestore(version)} aria-label={`${t('websiteApp.cms.versions.restore')}: ${label}`}>

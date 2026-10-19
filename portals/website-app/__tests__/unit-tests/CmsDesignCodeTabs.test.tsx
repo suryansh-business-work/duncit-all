@@ -189,6 +189,8 @@ describe('DesignTab — fonts', () => {
 
     expect(within(fonts()).getByRole('heading', { name: 'Lora' })).toBeInTheDocument();
     expect(within(fonts()).queryByText(en('websiteApp.cms.fonts.empty'))).not.toBeInTheDocument();
+    // Adding a font only edits the form; the design is saved by its own button.
+    expect(mutationOf(UPDATE_CMS_SITE_DESIGN)).not.toHaveBeenCalled();
     fireEvent.click(screen.getByTestId('cms-design-save'));
     await waitFor(() => expect(mutationOf(UPDATE_CMS_SITE_DESIGN)).toHaveBeenCalledTimes(1));
     expect(mutationOf(UPDATE_CMS_SITE_DESIGN).mock.calls[0][0]?.variables).toMatchObject({

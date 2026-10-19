@@ -19,12 +19,11 @@ export default function DuplicateDialog({ page, onClose, onDuplicated }: Readonl
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const save = async (values: DuplicateFormOutput) => {
-    if (!page) return;
+  const save = async (source: CmsPageRow, values: DuplicateFormOutput) => {
     setSubmitting(true);
     setSaveError(null);
     try {
-      await duplicatePage({ variables: { id: page.id, title: values.title, path: values.path } });
+      await duplicatePage({ variables: { id: source.id, title: values.title, path: values.path } });
       onDuplicated();
       onClose();
     } catch (error) {
@@ -45,7 +44,7 @@ export default function DuplicateDialog({ page, onClose, onDuplicated }: Readonl
             submitting={submitting}
             errorMessage={saveError}
             onSubmit={(values) => {
-              save(values).catch(() => setSaveError(t('websiteApp.cms.pages.duplicateFailed')));
+              save(page, values).catch(() => setSaveError(t('websiteApp.cms.pages.duplicateFailed')));
             }}
             onCancel={onClose}
           />

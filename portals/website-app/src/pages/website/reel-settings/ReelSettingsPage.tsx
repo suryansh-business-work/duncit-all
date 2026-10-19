@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Paper, Skeleton, Stack, Typography } from '@mui/material';
 import { notifySuccess } from '@duncit/dialogs';
 import { PageHeader } from '@duncit/ui';
@@ -14,13 +14,15 @@ import { ReelSettingsForm, type ReelSettingsFormOutput } from './reel-settings-f
 /** Reel Slider Settings — the max reel size and the max reels per website. Also a section of a website's Reels tab (`embedded`). */
 export default function ReelSettingsPage({ embedded = false }: Readonly<{ embedded?: boolean }>) {
   const { t } = useTranslation();
+  const client = useApolloClient();
   const { data, loading, error } = useQuery<WebsiteReelSettingsData>(WEBSITE_REEL_SETTINGS);
   const [update] = useMutation<{ updateWebsiteReelSettings: WebsiteReelSettingsData['websiteReelSettings'] }>(
     UPDATE_WEBSITE_REEL_SETTINGS,
     {
-      update(cache, { data: result }) {
-        if (!result) return;
-        cache.writeQuery({
+      // The settings have no id to normalise on, so the saved values are written
+      // back over the read by hand. onCompleted only runs with the answer's data.
+      onCompleted(result) {
+        client.cache.writeQuery({
           query: WEBSITE_REEL_SETTINGS,
           data: { websiteReelSettings: result.updateWebsiteReelSettings },
         });

@@ -34,7 +34,7 @@ export default function PageAdvancedFields({ control, tokens }: Readonly<{ contr
             name="seo_image"
             render={({ field, fieldState }) => (
               <SingleImageUploadField
-                value={field.value ?? ''}
+                value={field.value}
                 onChange={field.onChange}
                 folder="/website/cms"
                 label={t('websiteApp.cms.pageForm.seoImage')}

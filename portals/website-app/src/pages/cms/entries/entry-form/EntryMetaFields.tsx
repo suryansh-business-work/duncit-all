@@ -20,7 +20,7 @@ export default function EntryMetaFields({ control }: Readonly<{ control: Control
           <DateTimeField
             label={t('websiteApp.cms.entryForm.publishedAt')}
             helperText={t('websiteApp.cms.entryForm.publishedAtHint')}
-            value={field.value ?? ''}
+            value={field.value}
             onChange={field.onChange}
           />
         )}
@@ -30,7 +30,7 @@ export default function EntryMetaFields({ control }: Readonly<{ control: Control
         name="cover_image_url"
         render={({ field, fieldState }) => (
           <SingleImageUploadField
-            value={field.value ?? ''}
+            value={field.value}
             onChange={field.onChange}
             folder="/website/cms"
             label={t('websiteApp.cms.entryForm.cover')}

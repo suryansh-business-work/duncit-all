@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useFieldArray, type Control } from 'react-hook-form';
-import { Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { DuncitButton } from '@duncit/buttons';
@@ -39,8 +39,12 @@ export default function FontsSection({ control }: Readonly<{ control: Control<De
           {t('websiteApp.cms.fonts.upload')}
         </DuncitButton>
       </Stack>
-      <GoogleFontDialog open={picker === 'google'} onClose={close} onAdd={(font) => append(font)} />
-      <CustomFontDialog open={picker === 'custom'} onClose={close} onAdd={(font) => append(font)} />
+      {/* The dialogs portal out of the DOM but not out of React's tree: their own
+          form's submit would bubble on into the design form and save it early. */}
+      <Box component="span" sx={{ display: 'contents' }} onSubmit={(event) => event.stopPropagation()}>
+        <GoogleFontDialog open={picker === 'google'} onClose={close} onAdd={(font) => append(font)} />
+        <CustomFontDialog open={picker === 'custom'} onClose={close} onAdd={(font) => append(font)} />
+      </Box>
     </Stack>
   );
 }

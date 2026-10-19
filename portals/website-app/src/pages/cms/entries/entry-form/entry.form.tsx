@@ -53,7 +53,7 @@ export default function EntryForm({ entry, aiContext, submitting, errorMessage, 
               <Stack spacing={0.75} role="group" aria-labelledby={bodyLabelId}>
                 <FormLabel id={bodyLabelId}>{t('websiteApp.cms.entryForm.body')}</FormLabel>
                 <DuncitRichTextInput
-                  value={field.value ?? ''}
+                  value={field.value}
                   onChange={(html) => field.onChange(html)}
                   ariaLabel={t('websiteApp.cms.entryForm.body')}
                   aiContext={aiContext}

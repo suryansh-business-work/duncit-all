@@ -24,7 +24,7 @@ vi.mock('@duncit/media-picker', async (importOriginal) => ({
     <label>
       {text}
       <input value={value} onChange={(event) => onChange(event.target.value)} />
-      {helperText}
+      {helperText && <span>{helperText}</span>}
     </label>
   ),
 }));

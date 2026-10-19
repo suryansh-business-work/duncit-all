@@ -184,6 +184,18 @@ describe('useEditorSave — publish', () => {
     expect(saveFragment).toHaveBeenLastCalledWith({ variables: { id: 'doc-1', input: { ...SNAPSHOT, base_updated_at: 't1' } } });
   });
 
+  it("locks a published component on the server's published updated_at", async () => {
+    const saveFragment = mutationOf(SAVE_CMS_FRAGMENT_DRAFT).mockResolvedValue({ data: { saveCmsFragmentDraft: { updated_at: 't1' } } });
+    mutationOf(PUBLISH_CMS_FRAGMENT).mockResolvedValue({ data: { publishCmsFragment: { updated_at: 't2' } } });
+    const { result } = mountSave('fragments');
+
+    await act(() => result.current.publish(editor));
+    expect(notifySuccess).toHaveBeenCalledWith(en('websiteApp.cms.pages.publishedToast'));
+
+    await act(() => result.current.save(editor));
+    expect(saveFragment).toHaveBeenLastCalledWith({ variables: { id: 'doc-1', input: { ...SNAPSHOT, base_updated_at: 't2' } } });
+  });
+
   it('publishes nothing when the save before it fails', async () => {
     mutationOf(SAVE_CMS_PAGE_DRAFT).mockRejectedValue(new Error('down'));
     const publishPage = mutationOf(PUBLISH_CMS_PAGE);

@@ -77,7 +77,8 @@ describe('RowActions — the menu itself', () => {
     const list = actions();
     renderWithProviders(<RowActions label="About" actions={list} />);
     expect(openMenu('About')).toEqual(['Edit', 'Delete']);
-    expect(screen.getByRole('button', { name: 'Actions: About' })).toHaveAttribute('aria-expanded', 'true');
+    // The open menu's modal aria-hides the page, trigger included.
+    expect(screen.getByRole('button', { name: 'Actions: About', hidden: true })).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(list[2].onClick).toHaveBeenCalledTimes(1);
     expect(list[0].onClick).not.toHaveBeenCalled();

@@ -3,25 +3,17 @@ import { useNavigate } from 'react-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@apollo/client/react';
-import { Autocomplete, Box, TextField } from '@mui/material';
+import { Autocomplete, Box, InputAdornment, TextField } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import { useDebouncedValue } from '@duncit/ui';
 
 import { STORE_SUGGEST, type StoreSuggest } from '../../../graphql/catalog';
 import { paths } from '../../../lib/paths';
 import { useStoreT } from '../../../i18n';
-import { SearchSubmit, SUBMIT_ROOM } from './SearchSubmit';
 import { renderSuggestRow } from './SuggestRow';
 import { searchSchema, type SearchValues, type SuggestOption } from './search.types';
 
 const MIN_CHARS = 2;
-
-/** A tall rounded field with the red search button sitting inside its right end. */
-const FORM_SX = {
-  width: '100%',
-  position: 'relative',
-  '& .MuiAutocomplete-inputRoot.MuiOutlinedInput-root': { minHeight: 52, pl: 2.5, pr: `${SUBMIT_ROOM}px` },
-  '& .MuiAutocomplete-endAdornment': { right: `${SUBMIT_ROOM - 4}px` },
-} as const;
 
 function toOptions(found: StoreSuggest | undefined, q: string, searchLabel: string): SuggestOption[] {
   if (!q) return [];
@@ -77,7 +69,7 @@ export function SearchForm({ onDone, id }: Readonly<SearchFormProps>) {
   });
 
   return (
-    <Box component="form" role="search" onSubmit={submit} sx={FORM_SX} noValidate>
+    <Box component="form" role="search" onSubmit={submit} sx={{ width: '100%' }} noValidate>
       <Controller
         control={control}
         name="q"
@@ -103,13 +95,20 @@ export function SearchForm({ onDone, id }: Readonly<SearchFormProps>) {
                 slotProps={{
                   ...params.slotProps,
                   htmlInput: { ...params.slotProps.htmlInput, 'aria-label': t('ecommStore.search.label') },
+                  input: {
+                    ...params.slotProps.input,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon aria-hidden />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             )}
           />
         )}
       />
-      <SearchSubmit />
     </Box>
   );
 }

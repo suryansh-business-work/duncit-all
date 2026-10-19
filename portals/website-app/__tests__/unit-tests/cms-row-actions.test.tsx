@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import RowActions from '../../src/pages/cms/components/RowActions';
 import { useFragmentRowActions } from '../../src/pages/cms/fragments-tab/useFragmentRowActions';
 import { usePageRowActions, type PageDialogs } from '../../src/pages/cms/pages-tab/usePageRowActions';
@@ -63,5 +63,34 @@ describe('page row menu', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Copy preview link' }));
     expect(dialogs.copyLink).toHaveBeenCalledWith(row);
     expect(dialogs.preview).not.toHaveBeenCalled();
+  });
+});
+
+describe('RowActions — the menu itself', () => {
+  const actions = () => [
+    { key: 'edit', label: 'Edit', icon: null, onClick: vi.fn() },
+    { key: 'archive', label: 'Archive', icon: null, onClick: vi.fn(), hidden: true },
+    { key: 'delete', label: 'Delete', icon: null, onClick: vi.fn(), destructive: true },
+  ];
+
+  it('lists only the visible actions and runs the one picked', () => {
+    const list = actions();
+    renderWithProviders(<RowActions label="About" actions={list} />);
+    expect(openMenu('About')).toEqual(['Edit', 'Delete']);
+    expect(screen.getByRole('button', { name: 'Actions: About' })).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+    expect(list[2].onClick).toHaveBeenCalledTimes(1);
+    expect(list[0].onClick).not.toHaveBeenCalled();
+    expect(list[1].onClick).not.toHaveBeenCalled();
+  });
+
+  it('closes on Escape without running anything', async () => {
+    const list = actions();
+    renderWithProviders(<RowActions label="About" actions={list} />);
+    openMenu('About');
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Actions: About' })).not.toHaveAttribute('aria-expanded');
+    for (const action of list) expect(action.onClick).not.toHaveBeenCalled();
   });
 });

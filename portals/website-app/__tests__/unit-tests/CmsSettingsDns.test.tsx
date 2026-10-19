@@ -73,6 +73,55 @@ describe('SettingsTab', () => {
     expect(notifySuccess).toHaveBeenCalledWith(en('websiteApp.cms.site.saved'));
   });
 
+  it('turns serving off and a section on, and saves both', async () => {
+    const onSaved = mount();
+    const blogPath = screen.getByLabelText(en('websiteApp.cms.site.collectionPath', { name: en('websiteApp.cms.collection.blog') }));
+    expect(blogPath).toBeDisabled();
+    fireEvent.click(screen.getByLabelText(en('websiteApp.cms.site.active')));
+    fireEvent.click(screen.getByLabelText(en('websiteApp.cms.collection.blog')));
+    expect(blogPath).toBeEnabled();
+    fireEvent.click(screen.getByTestId('cms-site-save'));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(mutationOf(UPDATE_CMS_SITE).mock.calls[0][0]?.variables).toMatchObject({ input: { is_active: false, collections: ['BLOG'] } });
+  });
+
+  it("offers only the site's headers and footers for its chrome, and saves the chosen header", async () => {
+    answerQuery(CMS_FRAGMENT_OPTIONS, {
+      data: {
+        cmsFragments: [
+          { id: 'f-h', name: 'Top bar', kind: 'HEADER' },
+          { id: 'f-f', name: 'Bottom bar', kind: 'FOOTER' },
+          { id: 'f-s', name: 'Hero', kind: 'SECTION' },
+        ],
+      },
+    });
+    const onSaved = mount();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: new RegExp(en('websiteApp.cms.site.header')) }));
+    const options = await screen.findAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual([en('websiteApp.cms.site.none'), 'Top bar']);
+    fireEvent.click(screen.getByRole('option', { name: 'Top bar' }));
+    fireEvent.click(screen.getByTestId('cms-site-save'));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(mutationOf(UPDATE_CMS_SITE).mock.calls[0][0]?.variables).toMatchObject({ input: { header_fragment_id: 'f-h', footer_fragment_id: null } });
+  });
+
+  it('has no header or footer pickers while the components are still loading', () => {
+    answerQuery(CMS_FRAGMENT_OPTIONS, { loading: true });
+    mount();
+    expect(screen.getByLabelText(label('websiteApp.cms.site.name'))).toHaveValue('Main site');
+    expect(screen.queryByRole('combobox', { name: new RegExp(en('websiteApp.cms.site.header')) })).not.toBeInTheDocument();
+  });
+
+  it('refuses a favicon or share image that is neither an https link nor a site path', async () => {
+    const onSaved = mount();
+    fireEvent.change(screen.getByLabelText(en('websiteApp.cms.site.favicon')), { target: { value: '//cdn.test/favicon.ico' } });
+    fireEvent.change(screen.getByLabelText(en('websiteApp.cms.site.seoImage')), { target: { value: 'share.png' } });
+    fireEvent.click(screen.getByTestId('cms-site-save'));
+    expect(await screen.findAllByText(en('websiteApp.cms.pageForm.errUrl'))).toHaveLength(2);
+    expect(mutationOf(UPDATE_CMS_SITE)).not.toHaveBeenCalled();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
   it('shows the generic line for an unexpected save failure', async () => {
     mutationOf(UPDATE_CMS_SITE).mockRejectedValue(new Error('socket hang up'));
     const onSaved = mount();
@@ -119,6 +168,13 @@ describe('DnsPanel', () => {
     expect(within(outside).queryByRole('button')).not.toBeInTheDocument();
     // Only an A record can be repointed.
     expect(within(apex).getAllByRole('button', { name: new RegExp(en('websiteApp.cms.dns.repoint')) })).toHaveLength(1);
+  });
+
+  it('shows progress while the records load, and no hostnames yet', () => {
+    answerQuery(CMS_SITE_DNS, { loading: true });
+    mount();
+    expect(screen.getByRole('progressbar', { name: en('websiteApp.cms.dns.loading') })).toBeInTheDocument();
+    expect(screen.queryByTestId('cms-dns-host-duncit.com')).not.toBeInTheDocument();
   });
 
   it('tells the editor when no DNS provider is connected', () => {

@@ -88,6 +88,19 @@ describe('SitesPage', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
+  it('closes the new-website dialog on Cancel and on Escape without creating anything', async () => {
+    answerQuery(CMS_SITES, { data: { cmsSites: [] } });
+    mount();
+    fireEvent.click(screen.getByTestId('cms-new-site'));
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: en('shell.common.cancel') }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('cms-new-site'));
+    fireEvent.keyDown(await screen.findByRole('dialog'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(mutationOf(CREATE_CMS_SITE)).not.toHaveBeenCalled();
+  });
+
   it('shows the server sentence for a refused site and keeps the dialog', async () => {
     answerQuery(CMS_SITES, { data: { cmsSites: [] } });
     mutationOf(CREATE_CMS_SITE).mockRejectedValue({

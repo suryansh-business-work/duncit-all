@@ -127,6 +127,16 @@ describe('EntryEditorPage — new entry', () => {
     expect(screen.queryByTestId('back-route')).not.toBeInTheDocument();
   });
 
+  it('refuses a cover or share image that is neither an https link nor a site path', async () => {
+    mount('/sites/site-1/blog/new');
+    fireEvent.change(screen.getByLabelText(label('websiteApp.cms.entryForm.title')), { target: { value: 'Fresh post' } });
+    fireEvent.change(screen.getByLabelText(en('websiteApp.cms.entryForm.cover')), { target: { value: '//cdn.test/cover.png' } });
+    fireEvent.change(screen.getByLabelText(en('websiteApp.cms.pageForm.seoImage')), { target: { value: 'share.png' } });
+    fireEvent.click(screen.getByTestId('cms-entry-save'));
+    expect(await screen.findAllByText(en('websiteApp.cms.pageForm.errUrl'))).toHaveLength(2);
+    expect(mutationOf(CREATE_CMS_ENTRY)).not.toHaveBeenCalled();
+  });
+
   it('says not found for a collection the site does not know', () => {
     mount('/sites/site-1/podcasts/new');
     expect(screen.getByText(en('websiteApp.cms.notFound'))).toBeInTheDocument();

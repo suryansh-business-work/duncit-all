@@ -41,6 +41,14 @@ describe('ReelVideoField', () => {
     expect(screen.getByRole('button', { name: en('websiteApp.reels.replace') })).toBeInTheDocument();
   });
 
+  it('opens the video picker from its button', () => {
+    const { input } = mount();
+    const openPicker = vi.spyOn(input, 'click').mockImplementation(() => undefined);
+    fireEvent.click(screen.getByRole('button', { name: en('websiteApp.reels.choose') }));
+    expect(openPicker).toHaveBeenCalledTimes(1);
+    expect(input).toHaveAttribute('accept', 'video/*');
+  });
+
   it('refuses a file that is not a video without sending a byte', async () => {
     const { input, onUploaded } = mount();
     pick(input, fileOf(100, 'image/png', 'a.png'));

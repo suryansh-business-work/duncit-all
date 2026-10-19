@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
@@ -202,5 +203,95 @@ describe('previewDocument', () => {
     expect(doc).toContain('<body><p>x</p></body>');
     // The placeholder rules are always present so live blocks read as outlines.
     expect(doc).toContain('cms-block');
+  });
+});
+
+describe('VersionsDialog — loading, failure and cancel', () => {
+  const owner = { kind: 'FRAGMENT' as const, id: 'f1', name: 'Hero' };
+
+  it('shows progress, not the empty text, while the versions load', () => {
+    answerQuery(CMS_VERSIONS, { loading: true });
+    renderWithProviders(<VersionsDialog owner={owner} onClose={vi.fn()} onRestored={vi.fn()} />);
+    expect(screen.getByRole('progressbar', { name: en('websiteApp.cms.versions.loading') })).toBeInTheDocument();
+    expect(screen.queryByText(en('websiteApp.cms.versions.empty'))).not.toBeInTheDocument();
+    expect(queryOptions.get(CMS_VERSIONS)?.variables).toEqual({ owner: 'FRAGMENT', id: 'f1' });
+  });
+
+  it('says the versions could not be loaded instead of claiming there are none', () => {
+    answerQuery(CMS_VERSIONS, { error: new Error('down') });
+    renderWithProviders(<VersionsDialog owner={owner} onClose={vi.fn()} onRestored={vi.fn()} />);
+    expect(screen.getByText(en('websiteApp.cms.versions.loadFailed'))).toBeInTheDocument();
+    expect(screen.queryByText(en('websiteApp.cms.versions.empty'))).not.toBeInTheDocument();
+  });
+
+  it('publishes nothing when the editor backs out of the confirmation', async () => {
+    answerQuery(CMS_VERSIONS, { data: { cmsVersions: VERSIONS } });
+    confirm.mockResolvedValue(false);
+    const onRestored = vi.fn();
+    renderWithProviders(<VersionsDialog owner={owner} onClose={vi.fn()} onRestored={onRestored} />);
+    fireEvent.click(screen.getByRole('button', { name: `${en('websiteApp.cms.versions.publish')}: ${en('websiteApp.cms.versions.version', { version: 2 })}` }));
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ title: en('websiteApp.cms.versions.publishTitle', { version: 2 }) })));
+    expect(mutationOf(PUBLISH_CMS_VERSION)).not.toHaveBeenCalled();
+    expect(onRestored).not.toHaveBeenCalled();
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  it('reports a restore or publish whose confirmation could not be shown', async () => {
+    answerQuery(CMS_VERSIONS, { data: { cmsVersions: VERSIONS } });
+    confirm.mockRejectedValue(new Error('no dialog host'));
+    renderWithProviders(<VersionsDialog owner={owner} onClose={vi.fn()} onRestored={vi.fn()} />);
+    const label = en('websiteApp.cms.versions.version', { version: 1 });
+    fireEvent.click(screen.getByRole('button', { name: `${en('websiteApp.cms.versions.restore')}: ${label}` }));
+    await waitFor(() => expect(notifyError).toHaveBeenCalledWith(en('websiteApp.cms.versions.restoreFailed')));
+    fireEvent.click(screen.getByRole('button', { name: `${en('websiteApp.cms.versions.publish')}: ${label}` }));
+    await waitFor(() => expect(notifyError).toHaveBeenCalledWith(en('websiteApp.cms.versions.publishFailed')));
+    expect(mutationOf(RESTORE_CMS_VERSION)).not.toHaveBeenCalled();
+    expect(mutationOf(PUBLISH_CMS_VERSION)).not.toHaveBeenCalled();
+  });
+
+  it('asks for nothing while closed', () => {
+    renderWithProviders(<VersionsDialog owner={null} onClose={vi.fn()} onRestored={vi.fn()} />);
+    expect(queryOptions.get(CMS_VERSIONS)?.skip).toBe(true);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('PreviewDialog — loading and dismissal', () => {
+  it('shows progress while the preview link is being signed', () => {
+    answerQuery(CMS_PREVIEW_LINK, { loading: true });
+    renderWithProviders(<PreviewDialog pageId="p1" title="About" onClose={vi.fn()} />);
+    expect(within(screen.getByRole('dialog')).getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByTitle(en('websiteApp.cms.preview.frameTitle'))).not.toBeInTheDocument();
+  });
+
+  it('shows progress while the fallback preview is being composed', () => {
+    answerQuery(CMS_PREVIEW_LINK, { error: new Error('no domain') });
+    answerQuery(CMS_PREVIEW, { loading: true });
+    renderWithProviders(<PreviewDialog pageId="p1" title="About" onClose={vi.fn()} />);
+    expect(within(screen.getByRole('dialog')).getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByText(en('websiteApp.cms.preview.failed'))).not.toBeInTheDocument();
+  });
+
+  it('opens no tab from a dialog that is already closing', () => {
+    answerQuery(CMS_PREVIEW_LINK, { data: { cmsPreviewLink: { url: 'https://duncit.com/a', expires_at: '' } } });
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    function Closable() {
+      const [pageId, setPageId] = useState<string | null>('p1');
+      return (
+        <>
+          <button type="button" onClick={() => setPageId(null)}>
+            dismiss
+          </button>
+          <PreviewDialog pageId={pageId} title="About" onClose={() => setPageId(null)} />
+        </>
+      );
+    }
+    renderWithProviders(<Closable />);
+    fireEvent.click(screen.getByText('dismiss'));
+    // The dialog fades out, so its button is still on screen for a moment.
+    fireEvent.click(screen.getByTestId('cms-preview-open-on-site'));
+    expect(open).not.toHaveBeenCalled();
+    expect(lazyOf(CMS_PREVIEW_LINK)).not.toHaveBeenCalled();
+    open.mockRestore();
   });
 });

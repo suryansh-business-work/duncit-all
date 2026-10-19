@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { useForm } from 'react-hook-form';
 import WhatsappSendConfig from '../../src/pages/automation/builder/inspector/WhatsappSendConfig';
+import TemplateParamFields from '../../src/pages/automation/builder/inspector/TemplateParamFields';
+import type { WhatsappValues } from '../../src/pages/automation/builder/inspector/schemas';
 import type { AutomationOptions, NodeData } from '../../src/pages/automation/types';
 import { renderWithProviders } from '../testkit';
 import { OPTIONS, en } from './automation-fixtures';
@@ -86,5 +89,76 @@ describe('WhatsappSendConfig', () => {
     fireEvent.mouseDown(screen.getByLabelText(en('ai.automation.inspector.whatsapp.campaign')));
     expect(await screen.findByRole('option', { name: 'welcome' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'saved-one' })).toBeInTheDocument();
+  });
+});
+
+describe('WhatsappSendConfig — picking and odd saved data', () => {
+  it('fills the step from a campaign picked in the dropdown', async () => {
+    const spy = vi.fn();
+    renderWithProviders(<Harness initial={{ campaign_name: '' }} spy={spy} />);
+    fireEvent.mouseDown(screen.getByLabelText(en('ai.automation.inspector.whatsapp.campaign')));
+    fireEvent.click(await screen.findByRole('option', { name: 'welcome' }));
+    await waitFor(() => expect(last(spy)).toMatchObject({ campaign_name: 'welcome' }));
+    // The campaign's template now decides the fields.
+    expect(await screen.findByText('welcome_tpl')).toBeInTheDocument();
+    expect(screen.getByLabelText(en('ai.automation.inspector.whatsapp.param', { n: 2 }))).toBeInTheDocument();
+  });
+
+  it('files a saved button value with no position under the first button', async () => {
+    renderWithProviders(
+      <Harness initial={{ campaign_name: 'welcome', template_params: ['a', 'b'], buttons: [{ value: 'promo' }, null, { index: 'x', value: 'z' }] }} spy={vi.fn()} />
+    );
+    expect(await screen.findByLabelText(en('ai.automation.inspector.whatsapp.button', { n: 1 }))).toHaveValue('promo');
+  });
+
+  it('says the template is unknown when a listed campaign points at a template that is gone', () => {
+    const options: AutomationOptions = {
+      ...OPTIONS,
+      campaigns: [{ ...OPTIONS.campaigns[0], name: 'orphan', template_name: 'deleted_tpl' }],
+    };
+    renderWithProviders(<Harness initial={{ campaign_name: 'orphan' }} options={options} spy={vi.fn()} />);
+    expect(screen.getByText(en('ai.automation.inspector.whatsapp.templateUnknown'))).toBeInTheDocument();
+    expect(screen.queryByLabelText(en('ai.automation.inspector.whatsapp.param', { n: 1 }))).not.toBeInTheDocument();
+  });
+
+  it('marks a campaign name longer than AiSensy accepts', async () => {
+    renderWithProviders(<Harness initial={{ campaign_name: '' }} spy={vi.fn()} />);
+    const field = screen.getByLabelText(en('ai.automation.inspector.whatsapp.campaign'));
+    fireEvent.change(field, { target: { value: 'x'.repeat(121) } });
+    await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
+    expect(screen.queryByText(en('ai.automation.inspector.whatsapp.campaignHint'))).not.toBeInTheDocument();
+  });
+});
+
+/** The fields on their own, on a form that has not been given params or buttons yet. */
+function BareFields() {
+  const { control, watch } = useForm<WhatsappValues>({ defaultValues: { campaign_name: 'welcome' } });
+  const template = OPTIONS.templates[0];
+  const dynamicButtons = template.cta_buttons.map((button, index) => ({ ...button, index }));
+  return <TemplateParamFields control={control} watch={watch} template={template} paramCount={2} dynamicButtons={dynamicButtons} />;
+}
+
+describe('TemplateParamFields', () => {
+  it('previews the body with its placeholders until values are typed', () => {
+    renderWithProviders(<BareFields />);
+    expect(screen.getByText(/Hi \{\{1\}\}, your code is \{\{2\}\}/)).toBeInTheDocument();
+    expect(screen.getByText(/Duncit/)).toBeInTheDocument();
+  });
+
+  it('starts the button list from nothing when the first value is typed', async () => {
+    renderWithProviders(<BareFields />);
+    const field = screen.getByLabelText(en('ai.automation.inspector.whatsapp.button', { n: 1 }));
+    expect(field).toHaveValue('');
+    fireEvent.change(field, { target: { value: 'ref-42' } });
+    await waitFor(() => expect(field).toHaveValue('ref-42'));
+  });
+
+  it('draws nothing without a template', () => {
+    function NoTemplate() {
+      const { control, watch } = useForm<WhatsappValues>();
+      return <TemplateParamFields control={control} watch={watch} template={null} paramCount={0} dynamicButtons={[]} />;
+    }
+    renderWithProviders(<NoTemplate />);
+    expect(screen.queryByText(en('ai.automation.inspector.whatsapp.preview'))).not.toBeInTheDocument();
   });
 });

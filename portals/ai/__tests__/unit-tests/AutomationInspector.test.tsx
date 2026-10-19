@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, renderHook, screen, waitFor, within } from '@testing-library/react';
 import { notifySuccess } from '@duncit/dialogs';
 import NodeInspector from '../../src/pages/automation/builder/inspector/NodeInspector';
+import ExitConnections from '../../src/pages/automation/builder/inspector/ExitConnections';
+import { triggerSchema, type TriggerValues } from '../../src/pages/automation/builder/inspector/schemas';
+import { useNodeForm } from '../../src/pages/automation/builder/inspector/useNodeForm';
 import type { CanvasNode } from '../../src/pages/automation/graph-io';
 import type { AutomationChannel, AutomationOptions } from '../../src/pages/automation/types';
 import { renderWithProviders } from '../testkit';
@@ -255,5 +258,73 @@ describe('NodeInspector — step settings write through', () => {
     );
     expect(screen.getByText(en('ai.automation.inspector.email.noSenders'))).toBeInTheDocument();
     expect(screen.getByText(en('ai.automation.inspector.email.noTemplates'))).toBeInTheDocument();
+  });
+});
+
+describe('NodeInspector — lists only shown when opened', () => {
+  it('trigger: names each mailbox, marks a paused one, and writes the pick', async () => {
+    const spy = vi.fn();
+    renderWithProviders(
+      <Harness channel="EMAIL" initial={[node('t', 'trigger', { trigger: 'INBOUND_EMAIL', mailbox: 'in@duncit.test' })]} onChangeSpy={spy} />
+    );
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: label('ai.automation.inspector.trigger.mailbox') }));
+    expect(await screen.findByRole('option', { name: 'Inbox — in@duncit.test' })).toBeInTheDocument();
+    const paused = screen.getByRole('option', { name: `old@duncit.test ${en('ai.automation.inspector.trigger.mailboxPaused')}` });
+    fireEvent.click(paused);
+    await waitFor(() => expect(lastConfig(spy)).toMatchObject({ trigger: 'INBOUND_EMAIL', mailbox: 'old@duncit.test' }));
+  });
+
+  it('send email: shows a sender without an address by its name alone', async () => {
+    const options: AutomationOptions = {
+      ...OPTIONS,
+      email_senders: [...OPTIONS.email_senders, { id: 'snd2', name: 'Ops', from_address: '', is_default: false }],
+    };
+    renderWithProviders(<Harness channel="EMAIL" initial={[node('m', 'send_email', {})]} options={options} />);
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: label('ai.automation.inspector.email.sender') }));
+    expect(await screen.findByRole('option', { name: 'Support — help@duncit.test' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Ops' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: en('ai.automation.inspector.email.defaultSender') })).toBeInTheDocument();
+  });
+
+  it('send email: a template that is no longer offered carries no variables along', async () => {
+    const spy = vi.fn();
+    renderWithProviders(
+      <Harness channel="EMAIL" initial={[node('m', 'send_email', { template_slug: 'retired', vars: { body: 'old text' } })]} onChangeSpy={spy} />
+    );
+    // No template matched, so no subject preview and no variable fields.
+    expect(screen.queryByText('Re: you')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(en('ai.automation.inspector.email.variable', { name: 'body' }))).not.toBeInTheDocument();
+    type(en('ai.automation.inspector.email.subject'), 'Hello');
+    await waitFor(() => expect(lastConfig(spy)).toMatchObject({ subject: 'Hello', template_slug: 'retired' }));
+    expect(lastConfig(spy).vars).toEqual({});
+  });
+});
+
+describe('ExitConnections', () => {
+  it('reads an arrow with no exit name as the step’s "next" exit', () => {
+    const steps = [node('a', 'delay', { amount: 1, unit: 'HOURS' }), node('b', 'http_request', { url: 'https://x.test' })];
+    renderWithProviders(
+      <ExitConnections node={steps[0]} nodes={steps} edges={[{ id: 'e1', source: 'a', target: 'b' }]} onConnect={vi.fn()} onDisconnect={vi.fn()} />
+    );
+    const next = within(screen.getByTestId('automation-exit-next')).getByRole('combobox');
+    expect(next).toHaveTextContent(en('ai.automation.kinds.http_request'));
+    expect(next).toHaveTextContent('https://x.test');
+  });
+});
+
+describe('useNodeForm', () => {
+  it('resets to another step’s settings without reporting it as an edit, then reports a real one', () => {
+    const onChange = vi.fn();
+    const schema = triggerSchema();
+    const { result, rerender } = renderHook(
+      ({ id, values }) => useNodeForm(id, schema, values, onChange),
+      { initialProps: { id: 't1', values: { trigger: 'MANUAL', keywords: '', mailbox: '' } as TriggerValues } }
+    );
+    rerender({ id: 't2', values: { trigger: 'INBOUND_MESSAGE', keywords: 'hi', mailbox: '' } });
+    expect(result.current.getValues()).toEqual({ trigger: 'INBOUND_MESSAGE', keywords: 'hi', mailbox: '' });
+    expect(onChange).not.toHaveBeenCalled();
+
+    act(() => result.current.setValue('keywords', 'hi, hello'));
+    expect(onChange).toHaveBeenCalledWith({ trigger: 'INBOUND_MESSAGE', keywords: 'hi, hello', mailbox: '' });
   });
 });

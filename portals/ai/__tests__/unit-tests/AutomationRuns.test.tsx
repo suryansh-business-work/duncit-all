@@ -125,3 +125,12 @@ describe('RunContactDialog', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 });
+
+describe('RunsPanel — first read', () => {
+  it('shows a spinner, not the empty state, until the runs arrive', () => {
+    answerQuery(AUTOMATION_RUNS, { loading: true });
+    renderWithProviders(<RunsPanel flowId="F1" onClose={vi.fn()} />);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByText(en('ai.automation.runs.empty'))).not.toBeInTheDocument();
+  });
+});

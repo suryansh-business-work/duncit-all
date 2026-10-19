@@ -6,6 +6,7 @@ import AutomationBuilderPage from '../../src/pages/automation/builder';
 import { useFlowGraph } from '../../src/pages/automation/builder/useFlowGraph';
 import { AUTOMATION_FLOW, AUTOMATION_OPTIONS } from '../../src/pages/automation/queries';
 import { DRAG_KIND } from '../../src/pages/automation/builder/FlowCanvas';
+import type { AutomationFlow } from '../../src/pages/automation/types';
 import { renderWithProviders } from '../testkit';
 import { answerQuery, resetApollo } from './reel-apollo-mock';
 import { OPTIONS, en, flow } from './automation-fixtures';
@@ -140,5 +141,124 @@ describe('Builder canvas with branching steps', () => {
     fireEvent.keyDown(wrapper, { key: 'Enter' });
     await waitFor(() => expect(screen.getByTestId('automation-inspector')).toBeInTheDocument());
     expect(screen.getByLabelText(en('ai.automation.inspector.delay.amount'))).toHaveValue(1);
+  });
+});
+
+describe('useFlowGraph — arrows React Flow drew without an exit name', () => {
+  /** An arrow added straight from the canvas: React Flow leaves `sourceHandle` unset for a card's only exit. */
+  const withBareArrow = () => {
+    const hook = renderHook(() => useFlowGraph('WHATSAPP'));
+    act(() => hook.result.current.load(BRANCHING));
+    act(() => hook.result.current.onEdgesChange([{ type: 'add', item: { id: 'bare', source: 'd1', target: 'k1' } }]));
+    return hook;
+  };
+
+  it('treats a bare arrow as the "next" exit when that exit is re-pointed', () => {
+    const hook = withBareArrow();
+    act(() => hook.result.current.connect('d1', 'next', 'c1'));
+    const fromDelay = hook.result.current.edges.filter((edge) => edge.source === 'd1');
+    expect(fromDelay.map((edge) => edge.target)).toEqual(['c1']);
+  });
+
+  it('treats a bare arrow as the "next" exit when that exit is disconnected', () => {
+    const hook = withBareArrow();
+    act(() => hook.result.current.disconnect('d1', 'next'));
+    expect(hook.result.current.edges.some((edge) => edge.source === 'd1')).toBe(false);
+    expect(hook.result.current.dirty).toBe(true);
+  });
+
+  it('keeps a bare arrow when the step still has a "next" exit after its settings change', () => {
+    const hook = withBareArrow();
+    act(() => hook.result.current.updateConfig('d1', { amount: 5, unit: 'DAYS' }));
+    expect(hook.result.current.edges.map((edge) => edge.id)).toContain('bare');
+    expect(hook.result.current.nodes.find((n) => n.id === 'd1')?.data.config).toEqual({ amount: 5, unit: 'DAYS' });
+  });
+
+  it('leaves every arrow alone when the step being changed is no longer on the canvas', () => {
+    const hook = withBareArrow();
+    const before = hook.result.current.edges;
+    act(() => hook.result.current.updateConfig('gone', { labels: [] }));
+    expect(hook.result.current.edges).toBe(before);
+  });
+});
+
+describe('Builder canvas — pointer and keyboard', () => {
+  const mount = (over: Parameters<typeof flow>[0] = BRANCHING) => {
+    resetApollo();
+    answerQuery(AUTOMATION_FLOW, { data: { automationFlow: flow(over) } });
+    answerQuery(AUTOMATION_OPTIONS, { data: { automationOptions: OPTIONS } });
+    return renderWithProviders(<AutomationBuilderPage />, {
+      initialEntries: ['/automation/whatsapp/F1'],
+      routes: <Route path="/automation/:channel/:flowId" element={<AutomationBuilderPage />} />,
+    });
+  };
+
+  it('closes the inspector when the empty canvas is clicked', async () => {
+    mount();
+    fireEvent.click(await screen.findByTestId('automation-node-delay'));
+    expect(await screen.findByTestId('automation-inspector')).toBeInTheDocument();
+    fireEvent.click(document.querySelector('.react-flow__pane') as HTMLElement);
+    await waitFor(() => expect(screen.queryByTestId('automation-inspector')).not.toBeInTheDocument());
+    expect(screen.getByTestId('automation-node-delay')).toBeInTheDocument();
+  });
+
+  it('deletes the selected step with the Delete key and closes its inspector', async () => {
+    mount();
+    fireEvent.click(await screen.findByTestId('automation-node-delay'));
+    expect(await screen.findByTestId('automation-inspector')).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: 'Delete', code: 'Delete' });
+    fireEvent.keyUp(document.body, { key: 'Delete', code: 'Delete' });
+    await waitFor(() => expect(screen.queryByTestId('automation-node-delay')).not.toBeInTheDocument());
+    expect(screen.queryByTestId('automation-inspector')).not.toBeInTheDocument();
+    expect(screen.getByText(en('ai.automation.builder.unsaved'))).toBeInTheDocument();
+  });
+
+  it('places a step dragged from the palette where it is dropped', async () => {
+    mount();
+    const carried: Record<string, string> = {};
+    const dataTransfer = {
+      effectAllowed: '',
+      setData: (format: string, value: string) => {
+        carried[format] = value;
+      },
+      getData: (format: string) => carried[format] ?? '',
+    };
+    fireEvent.dragStart(await screen.findByTestId('automation-palette-set_variable'), { dataTransfer });
+    expect(carried[DRAG_KIND]).toBe('set_variable');
+    expect(dataTransfer.effectAllowed).toBe('move');
+
+    fireEvent.drop(document.querySelector('.react-flow') as HTMLElement, { clientX: 300, clientY: 200, dataTransfer });
+    expect(await screen.findByTestId('automation-node-set_variable')).toBeInTheDocument();
+  });
+
+  it('tints the minimap mask for the colour mode in use', async () => {
+    const mask = () => screen.getByTestId('rf__minimap').style.getPropertyValue('--xy-minimap-mask-background-color-props');
+    const dark = mount();
+    await screen.findByTestId('automation-canvas');
+    expect(mask()).toBe('rgba(8, 12, 20, 0.72)');
+    dark.unmount();
+
+    localStorage.setItem('duncit_color_mode', 'light');
+    mount();
+    await screen.findByTestId('automation-canvas');
+    expect(mask()).toBe('rgba(226, 232, 240, 0.72)');
+  });
+
+  it('still draws the flow when an arrow leaves a step this portal cannot show, or names no exit', async () => {
+    mount({
+      nodes: [
+        ...BRANCHING.nodes,
+        // A kind from a newer server: the card is dropped, its arrow stays in the data.
+        { id: 'x1', kind: 'send_sms', x: 0, y: 450, data: '{}' },
+      ],
+      edges: [
+        ...BRANCHING.edges,
+        { id: 'e4', source: 'x1', source_handle: 'next', target: 'd1' },
+        { id: 'e5', source: 'c1', target: 'k1' } as AutomationFlow['edges'][number],
+      ],
+    });
+    expect(await screen.findByTestId('automation-node-condition')).toBeInTheDocument();
+    expect(screen.getByTestId('automation-node-delay')).toBeInTheDocument();
+    expect(screen.getAllByTestId(/^automation-node-/)).toHaveLength(4);
   });
 });

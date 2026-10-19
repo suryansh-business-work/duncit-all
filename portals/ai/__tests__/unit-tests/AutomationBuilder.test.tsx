@@ -11,7 +11,7 @@ import {
   SET_FLOW_STATUS,
 } from '../../src/pages/automation/queries';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, mutationOf, resetApollo } from './reel-apollo-mock';
+import { answerQuery, mutationOf, resetApollo, setMutationBusy } from './reel-apollo-mock';
 import { OPTIONS, en, flow } from './automation-fixtures';
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
@@ -235,5 +235,78 @@ describe('Automation builder — activation, panels and canvas', () => {
     expect(screen.getByTestId('automation-canvas-full')).toHaveAccessibleName(en('ai.automation.builder.exitFullScreen'));
     fireEvent.click(screen.getByTestId('automation-canvas-full'));
     expect(screen.getByTestId('automation-canvas-full')).toHaveAccessibleName(en('ai.automation.builder.fullScreen'));
+  });
+});
+
+describe('Automation builder — waiting, pausing and quiet answers', () => {
+  it('waits on the flow, then on the options, before drawing anything', () => {
+    answerQuery(AUTOMATION_FLOW, { loading: true });
+    answerQuery(AUTOMATION_OPTIONS, { data: { automationOptions: OPTIONS } });
+    const first = mount();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByTestId('automation-builder')).not.toBeInTheDocument();
+    first.unmount();
+
+    answerQuery(AUTOMATION_FLOW, { data: { automationFlow: flow() } });
+    answerQuery(AUTOMATION_OPTIONS, { loading: true });
+    mount();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByTestId('automation-builder')).not.toBeInTheDocument();
+  });
+
+  it('reports options that could not be read', () => {
+    answerQuery(AUTOMATION_FLOW, { data: { automationFlow: flow() } });
+    answerQuery(AUTOMATION_OPTIONS, { error: new Error('Options read failed') });
+    mount();
+    expect(screen.getByText('Options read failed')).toBeInTheDocument();
+    expect(screen.queryByTestId('automation-builder')).not.toBeInTheDocument();
+  });
+
+  it('pauses a live flow', async () => {
+    load({ status: 'ACTIVE' });
+    mutationOf(SET_FLOW_STATUS).mockResolvedValue({ data: { setAutomationFlowStatus: flow({ status: 'PAUSED' }) } });
+    mount();
+    const toggle = await screen.findByTestId('automation-toggle-active');
+    expect(toggle).toHaveTextContent(en('ai.automation.builder.pause'));
+    fireEvent.click(toggle);
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith(en('ai.automation.builder.paused')));
+    expect(mutationOf(SET_FLOW_STATUS)).toHaveBeenCalledWith({ variables: { id: 'F1', status: 'PAUSED' } });
+    await waitFor(() => expect(screen.getByTestId('automation-toggle-active')).toHaveTextContent(en('ai.automation.builder.activate')));
+  });
+
+  it('claims nothing when a save comes back without the flow', async () => {
+    load();
+    mutationOf(SAVE_FLOW).mockResolvedValue({ data: {} });
+    mount();
+    await screen.findByTestId('automation-builder');
+    fireEvent.click(screen.getByTestId('automation-palette-delay'));
+    fireEvent.click(screen.getByTestId('automation-save'));
+    await waitFor(() => expect(mutationOf(SAVE_FLOW)).toHaveBeenCalledTimes(1));
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(notifyError).not.toHaveBeenCalled();
+    // The work is still unsaved, because nothing confirmed it was.
+    expect(screen.getByText(en('ai.automation.builder.unsaved'))).toBeInTheDocument();
+  });
+
+  it('shows a save in flight and holds the button', async () => {
+    load();
+    setMutationBusy(SAVE_FLOW, true);
+    mount();
+    const saveButton = await screen.findByTestId('automation-save');
+    expect(saveButton).toHaveTextContent(en('ai.automation.builder.saving'));
+    expect(saveButton).toBeDisabled();
+  });
+
+  it('closes the test chat from its own toolbar toggle', async () => {
+    load();
+    mount();
+    await screen.findByTestId('automation-builder');
+    const toggle = screen.getByTestId('automation-test-toggle');
+    fireEvent.click(toggle);
+    expect(await screen.findByTestId('automation-test-panel')).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(toggle);
+    expect(screen.queryByTestId('automation-test-panel')).not.toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
   });
 });

@@ -1,9 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, renderHook, screen, waitFor, within } from '@testing-library/react';
+import { useTheme } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { notifyError } from '@duncit/dialogs';
 import TestChatPanel from '../../src/pages/automation/test-chat/TestChatPanel';
+import ChatTranscript from '../../src/pages/automation/test-chat/ChatTranscript';
+import MessageBubble from '../../src/pages/automation/test-chat/MessageBubble';
+import StepTrace from '../../src/pages/automation/test-chat/StepTrace';
+import { useTestRun } from '../../src/pages/automation/test-chat/useTestRun';
 import { RESUME_TEST, START_TEST } from '../../src/pages/automation/queries';
-import type { AutomationChannel, AutomationRun, RunMessage } from '../../src/pages/automation/types';
+import type { AutomationChannel, AutomationRun, RunMessage, StepStatus } from '../../src/pages/automation/types';
 import { renderWithProviders } from '../testkit';
 import { mutationOf, resetApollo } from './reel-apollo-mock';
 import { en, node, run } from './automation-fixtures';
@@ -208,5 +214,115 @@ describe('TestChatPanel', () => {
     fireEvent.click(within(document.body).getByText(new RegExp(en('ai.automation.test.trace'))));
     expect(await screen.findByText('legacy_kind')).toBeInTheDocument();
     expect(screen.getByText(en('ai.automation.kinds.send_email'))).toBeInTheDocument();
+  });
+});
+
+describe('TestChatPanel — the remembered tester', () => {
+  it('starts the form on the tester saved on this device', () => {
+    localStorage.setItem('ai_automation_test_contact', JSON.stringify({ name: 'Asha', phone: '+919999900000', email: '' }));
+    mount();
+    expect(screen.getByTestId('automation-contact-name')).toHaveValue('Asha');
+    expect(screen.getByTestId('automation-contact-phone')).toHaveValue('+919999900000');
+  });
+
+  it('starts blank when what was saved cannot be read', () => {
+    localStorage.setItem('ai_automation_test_contact', '{not json');
+    mount();
+    expect(screen.getByTestId('automation-contact-name')).toHaveValue('');
+  });
+
+  it('still runs the test when the device refuses to store the tester', async () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    try {
+      mutationOf(START_TEST).mockResolvedValue(started({ status: 'COMPLETED', messages: [message({})] }));
+      mount();
+      fillContact('Asha', '+919999900000');
+      await waitFor(() => expect(screen.getByTestId('automation-contact-submit')).toBeEnabled());
+      fireEvent.click(screen.getByTestId('automation-contact-submit'));
+      expect(await screen.findByText('Welcome aboard')).toBeInTheDocument();
+      expect(setItem).toHaveBeenCalled();
+    } finally {
+      setItem.mockRestore();
+    }
+  });
+
+  it('sends nothing when Enter is pressed on a blank reply', async () => {
+    mutationOf(START_TEST).mockResolvedValue(started({ status: 'WAITING_REPLY', messages: [message({})] }));
+    mount();
+    fillContact('Asha', '+919999900000');
+    await waitFor(() => expect(screen.getByTestId('automation-contact-submit')).toBeEnabled());
+    fireEvent.click(screen.getByTestId('automation-contact-submit'));
+    const composer = await screen.findByTestId('automation-test-composer');
+    fireEvent.change(composer, { target: { value: '   ' } });
+    fireEvent.submit(composer.closest('form') as HTMLFormElement);
+    expect(mutationOf(RESUME_TEST)).not.toHaveBeenCalled();
+    expect(composer).toHaveValue('   ');
+  });
+});
+
+describe('useTestRun', () => {
+  it('ignores a reply before any test has started', async () => {
+    const { result } = renderHook(() => useTestRun({ flowId: 'F1', channel: 'WHATSAPP', nodes: [], edges: [], onIssues: vi.fn() }));
+    await act(() => result.current.reply('hello'));
+    expect(mutationOf(RESUME_TEST)).not.toHaveBeenCalled();
+    expect(result.current.run).toBeNull();
+  });
+});
+
+describe('ChatTranscript', () => {
+  it('adds no status line while the run is still going', () => {
+    renderWithProviders(<ChatTranscript run={run({ status: 'RUNNING', messages: [message({})] })} />);
+    expect(screen.getByText('Welcome aboard')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('titles the preview of an email with no subject by the preview name, and closes it', async () => {
+    renderWithProviders(<ChatTranscript run={run({ status: 'COMPLETED', messages: [message({ kind: 'email', subject: '', html: '<p>Hi</p>', text: '' })] })} />);
+    fireEvent.click(screen.getByRole('button', { name: en('ai.automation.test.emailPreviewTitle') }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByTitle(en('ai.automation.test.emailPreviewTitle'))).toHaveAttribute('srcdoc', '<p>Hi</p>');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+});
+
+describe('StepTrace', () => {
+  it('shows a status this portal has no word for as the server sent it', () => {
+    renderWithProviders(
+      <StepTrace defaultExpanded steps={[{ node_id: 'n1', kind: 'delay', status: String('RETRIED') as StepStatus, detail: 'second try', at: '2026-10-01T10:00:00.000Z' }]} />
+    );
+    expect(screen.getByText('RETRIED')).toBeInTheDocument();
+    expect(screen.getByText('second try')).toBeInTheDocument();
+  });
+});
+
+describe('MessageBubble', () => {
+  /** Reads the theme the bubble is drawn with, to know the tint it should carry. */
+  let palette: { primary: string } = { primary: '' };
+  function ThemeProbe() {
+    palette = { primary: useTheme().palette.primary.main };
+    return null;
+  }
+
+  it('tints the flow’s own message more strongly in dark mode than in light', () => {
+    const first = renderWithProviders(
+      <>
+        <ThemeProbe />
+        <MessageBubble message={message({})} onOpenEmail={vi.fn()} />
+      </>
+    );
+    expect(screen.getByTestId('automation-message-out')).toHaveStyle({ backgroundColor: alpha(palette.primary, 0.28) });
+    first.unmount();
+
+    localStorage.setItem('duncit_color_mode', 'light');
+    renderWithProviders(
+      <>
+        <ThemeProbe />
+        <MessageBubble message={message({})} onOpenEmail={vi.fn()} />
+      </>
+    );
+    expect(screen.getByTestId('automation-message-out')).toHaveStyle({ backgroundColor: alpha(palette.primary, 0.1) });
   });
 });

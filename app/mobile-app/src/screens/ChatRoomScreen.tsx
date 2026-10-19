@@ -56,7 +56,7 @@ export function ChatRoomScreen() {
     if (isClub) navigation.popTo('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
     else navigation.popTo('PodDetails', { podId: roomId, title });
   };
-  const openProfile =(userId: string) => navigation.navigate('PublicProfile', { userId });
+  const openProfile = (userId: string) => navigation.navigate('PublicProfile', { userId });
 
   const [text, setText] = useState('');
   const [emojiFor, setEmojiFor] = useState<EmojiTarget>(null);

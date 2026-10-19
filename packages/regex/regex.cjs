@@ -98,8 +98,11 @@ const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 const FSSAI_NUMBER = /^\d{14}$/;
 
 /** A YouTube video link; group 1 is the video id. See regex.mjs. */
-const YOUTUBE_URL =
-  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
+const YOUTUBE_VIDEO_PATH = String.raw`(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)`;
+const YOUTUBE_URL = new RegExp(
+  String.raw`^https?:\/\/(?:[a-z]+\.)?${YOUTUBE_VIDEO_PATH}([\w-]{11})(?:[?&#]\S*)?$`,
+  'i',
+);
 
 /**
  * A Duncit referral code — the `DUN-` prefix and six uppercase hex characters,

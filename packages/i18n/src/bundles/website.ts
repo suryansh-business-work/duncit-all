@@ -50,8 +50,19 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         login: 'Partner login',
         join: 'Become a partner',
         brandAria: 'Duncit',
+        mainAria: 'Main',
       },
       hero: {
+        eyebrow: 'For venues, clubs & brands',
+        headingLead: 'Grow where people',
+        headingAccent: 'gather.',
+        lead: 'Venues fill quiet hours with ready groups, clubs grow their members and run events, and brands sell where people meet. Everything runs from one partner console.',
+        floatRequestTitle: 'New slot request',
+        floatRequestText: 'Accept it from your console',
+        floatVerifiedTitle: 'Verified partner',
+        floatVerifiedText: 'Details reviewed before you go live',
+        floatPayoutTitle: 'Payouts',
+        floatPayoutText: 'Tracked for every completed pod',
         badge: 'For venues & hosts',
         heading: 'Fill the room. Host the moment.',
         text: "A focused partner entry point for venues and hosts who want real groups, clean operations, and Duncit's trust layer behind every plan.",
@@ -78,15 +89,66 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         statReview: 'review target',
         statFee: 'launch-period platform fee',
         statPaths: 'partner paths',
+        kicker: 'Partner paths',
+        title: 'Three ways in. One console to run it.',
+        lead: 'Pick the path that fits what you run. Applications, approvals, bookings and payouts all live in the same partner console.',
+        venueTag: 'Quiet hours',
+        venueName: 'Venues',
+        venueBody:
+          'Fill quiet hours with ready-made groups. Duncit pods request your slots, and you accept the ones that suit you.',
+        clubTag: 'Members & events',
+        clubName: 'Clubs',
+        clubBody:
+          'Grow your members and run events. Schedule pods for your club and see who signed up and who checked in.',
+        clubCta: 'Start your club',
+        brandTag: 'Sell at pods',
+        brandName: 'Brands',
+        brandBody:
+          'Sell where people gather. List your products so hosts can add them to their pods, then manage orders and shipping in one place.',
+        brandCta: 'Become a brand partner',
+        consoleTag: 'One login',
+        consoleName: 'Partner console',
+      },
+      /** The tilted band of what partners get, under the hero. */
+      marquee: {
+        quietHours: 'Fill quiet hours',
+        readyGroups: 'Ready-made groups',
+        clubEvents: 'Run club events',
+        growMembers: 'Grow your members',
+        sellProducts: 'Sell where people gather',
+        verified: 'Verified partners',
+        payouts: 'Clear payouts',
+        console: 'One partner console',
+      },
+      /** Apply → verified → run → paid. */
+      steps: {
+        kicker: 'How partnering works',
+        title: 'Apply, get verified, start earning.',
+        lead: 'The same four steps whether you run a venue, a club or a brand.',
+        applyTitle: 'Apply',
+        applyText: 'Tell us about your venue, club or brand in a short application from the partner console.',
+        verifyTitle: 'Get verified',
+        verifyText:
+          'We review your details and documents before you go live, so members know every partner is real.',
+        runTitle: 'Run it from the console',
+        runText: 'Accept slot requests, schedule club pods and manage product orders from one dashboard.',
+        payoutTitle: 'Get paid',
+        payoutText: 'Track what you have earned and every payout in your console.',
+      },
+      notFound: {
+        title: 'Page not found',
+        heading: "This page isn't on the guest list",
+        text: 'The link may be old or mistyped. Head back to the partner home and pick a path.',
+        cta: 'Back to partner home',
       },
       /** The shared app-download band, in this site's words. */
       download: {
         heading: 'Your partners,',
         headingAccent: 'in their pocket',
         text: 'Members book your venue and join your pods from the Duncit app on Android and iOS.',
-        googlePlayEyebrow: 'Get it on',
-        googlePlayName: 'Google Play',
-        appStoreEyebrow: 'Download on the',
+        googlePlayEyebrow: 'Download for',
+        googlePlayName: 'Android',
+        appStoreEyebrow: 'iPhone app on the',
         appStoreName: 'App Store',
         perkBookings: 'Real bookings',
         perkOps: 'Clean operations',
@@ -135,9 +197,19 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         primaryCta: 'Start advertising',
         secondaryCta: 'See what it costs',
         imageAlt: 'A brand team planning a campaign',
+        /** The h1, split so the second half carries the accent colour. */
+        headingLead: 'Reach people while they',
+        headingAccent: 'plan real life.',
+        slotLabel: 'Your ad here',
+        adBadge: 'Ad',
+        floatImpressions: 'Impressions',
+        floatImpressionsHint: 'Counted while it runs',
+        floatClicks: 'Clicks',
+        floatClicksHint: 'Tracked per placement',
       },
       /** Numbers that describe the network, not any one campaign. */
       proof: {
+        liveValue: 'A day',
         placementsLabel: 'placements',
         placementsHint: 'From the home feed to pod detail pages.',
         daysLabel: 'days max',
@@ -146,6 +218,7 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         liveHint: 'Once Marketing approves your creative.',
       },
       features: {
+        eyebrow: 'The Ads console',
         heading: 'Everything you need to run ads',
         text: 'One console for the full campaign lifecycle.',
         campaignsTitle: 'Campaigns',
@@ -162,6 +235,13 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         heading: 'Nine places to be seen',
         text: 'Every placement is priced per day and bookable on its own. The prices below are the live rate card — the same one the Ads console quotes.',
         rateCardCaption: 'Duncit advertising rate card, per placement per day',
+        sticker: 'Priced by the day',
+        from: 'From',
+        colPlacement: 'Placement',
+        colWhere: 'Where it shows',
+        colPerDay: 'Per day',
+        loading: 'Loading today’s rates…',
+        noscript: 'Rates are shown with JavaScript enabled, or in the Ads console.',
         /** Copy for the placements the rate card returns. A placement with no
          * note still renders — the server owns the list, this only enriches it. */
         auto: 'Rotates through every placement below.',
@@ -225,6 +305,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         disclaimer:
           'This is an estimate at today’s published rates. Rates can change, and the cost is frozen at the figure quoted when your campaign is approved.',
         cta: 'Book this campaign',
+        /** The slider's read-out: the whole label for one, the word after a number. */
+        dayOne: '1 day',
+        daysMany: 'days',
       },
       steps: {
         eyebrow: 'How it works',
@@ -250,7 +333,7 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
       },
       cta: {
         heading: 'Ready to launch your first campaign?',
-        text: 'Sign in to the Ads console and go live in minutes.',
+        text: 'Book a placement by the day in the Ads console — your ad goes live within a day of approval.',
         button: 'Get started',
       },
       newsletter: {
@@ -276,6 +359,8 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
       notFound: {
         heading: 'This page wandered off.',
         text: 'The page you’re looking for doesn’t exist or has moved.',
+        title: 'Page not found',
+        cta: 'Back home',
       },
       /** The shared app-download band, in this site's words. */
       download: {
@@ -285,9 +370,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         perkPlacements: 'Nine placements',
         perkSpeed: 'Live within a day',
         perkMetrics: 'Impressions and clicks',
-        googlePlayEyebrow: 'Get it on',
-        googlePlayName: 'Google Play',
-        appStoreEyebrow: 'Download on the',
+        googlePlayEyebrow: 'Download for',
+        googlePlayName: 'Android',
+        appStoreEyebrow: 'iPhone app on the',
         appStoreName: 'App Store',
       },
       header: {
@@ -338,6 +423,19 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         ribbon3: 'Earn Together',
         ribbon4: 'Grow Your Business',
         ribbon5: 'Repeat',
+        // The banner headline as one sentence in two parts: the accent half is
+        // coloured and underlined. Whole words, so a translator can reorder.
+        headingLead: 'Turn your network into',
+        headingAccent: 'income.',
+        // The line beside the four role badges under the buttons.
+        proof: 'Built for hosts, venues, club admins and brands',
+        // The three cards floating beside the headline — what the app does.
+        card1Title: 'Fill your pod',
+        card1Text: 'Guests book their spots in the app',
+        card2Title: 'Check guests in',
+        card2Text: 'Mark who showed up, right at the door',
+        card3Title: 'Track your earnings',
+        card3Text: 'See what every pod paid you',
       },
       paths: {
         // The section's own heading. `headingLead` + `headingAccent` are one
@@ -362,6 +460,22 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         brandText: 'Promote your brand, sponsor events and connect with highly engaged communities.',
         brandImageAlt: 'A brand owner at their store',
         brandCta: 'Partner With Us',
+        sectionText:
+          'Pick how you want to earn. Each card opens a short sign-up survey in the Duncit app — we review it and get you set up.',
+        // The rotated sticker on each card, and the two things each role does
+        // in the app.
+        venueTag: 'Venues',
+        venueChip1: 'Publish your slots',
+        venueChip2: 'Accept pod requests',
+        hostTag: 'Hosts',
+        hostChip1: 'Create & fill pods',
+        hostChip2: 'Check guests in',
+        clubTag: 'Clubs',
+        clubChip1: 'Run your club',
+        clubChip2: 'Guide its hosts',
+        brandTag: 'Brands',
+        brandChip1: 'List your products',
+        brandChip2: 'Track your orders',
       },
       why: {
         eyebrow: 'Why choose Duncit?',
@@ -370,6 +484,12 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         item3: 'Trusted Community',
         item4: 'Smart Matching',
         item5: 'Marketing Support',
+        heading: 'Built so you can focus on the people',
+        item1Text: 'Signing up costs nothing. Duncit’s fee comes out of a pod’s tickets, not your pocket.',
+        item2Text: 'Guests pay in the app, and your share of every pod shows up in your earnings.',
+        item3Text: 'Guests join with verified profiles, so you know who is coming.',
+        item4Text: 'Duncit matches people to pods by energy and interests, so your spots fill with the right crowd.',
+        item5Text: 'Your pods appear in the app, right where people plan their next outing.',
       },
       steps: {
         eyebrow: 'How it works',
@@ -380,10 +500,11 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         verificationText: 'Submit details and get verified.',
         approvedTitle: 'Get Approved',
         approvedText: 'We review and approve your profile.',
-        bookingsTitle: 'Receive Bookings',
-        bookingsText: 'Get booking requests from real users.',
-        earnTitle: 'Earn',
-        earnText: 'Provide great experiences and earn every month.',
+        bookingsTitle: 'Create & Fill Pods',
+        bookingsText: 'Publish a pod or your venue’s slots, and guests book their spots in the app.',
+        earnTitle: 'Check In & Earn',
+        earnText: 'Check guests in on the day and track what each pod paid you.',
+        text: 'From sign-up to your first payout, everything runs inside the Duncit app.',
       },
       calculator: {
         eyebrow: 'Estimate your earnings',
@@ -439,6 +560,8 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         podsHint: 'Both sides earn per pod, so the month is that many times over.',
         // Names the host / club-admin tab strip for a screen reader.
         rolesAriaLabel: 'Whose earnings',
+        loadError:
+          'The estimate could not be loaded right now. The figures come from Duncit itself, so nothing is shown rather than a guess — please try again shortly.',
       },
       screenshots: {
         eyebrow: 'Inside Duncit',
@@ -463,6 +586,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         text: 'Duncit helps people, venues, clubs and brands come together and grow together.',
         button: 'Join Duncit Today',
         imageAlt: 'Friends looking at the Duncit app together',
+        // The two rotated stickers on the closing band's photo.
+        sticker1: 'Hosts & venues',
+        sticker2: 'Clubs & brands',
       },
       /** The shared @duncit/brand download band, in this site's words. Same
        * shape as `website.partners.download` — the store names are keyed there
@@ -471,13 +597,14 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         heading: 'Run your pods',
         headingAccent: 'from your pocket',
         text: 'Create a pod, fill it, check people in and watch the money land — all from the app.',
-        googlePlayEyebrow: 'Get it on',
-        googlePlayName: 'Google Play',
-        appStoreEyebrow: 'Download on the',
+        googlePlayEyebrow: 'Download for',
+        googlePlayName: 'Android',
+        appStoreEyebrow: 'iPhone app on the',
         appStoreName: 'App Store',
         perk1: 'Create and fill pods',
         perk2: 'Check guests in',
         perk3: 'Track your earnings',
+        eyebrow: 'The Duncit app',
       },
       footer: {
         tagline: 'Building communities. Creating opportunities. Earning together.',
@@ -562,6 +689,11 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         menu: 'Menu',
         home: 'Home',
         contact: 'Contact',
+        // Top bar + menu drawer chrome.
+        primary: 'Primary',
+        drawer: 'Site menu',
+        promoTitle: 'Get the Duncit app',
+        promoText: 'Find a pod near you that matches your energy.',
       },
       layout: {
         siteDescription:
@@ -598,6 +730,28 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         flowHeadingLine2: 'moment',
         flowText:
           'Discover new friends without the pressure—see what you have in common, start fun or meaningful conversations, and connect naturally.',
+        // Hero social-proof line and the floating cards beside the headline.
+        proof: 'Verified people doing real plans in real places, near you.',
+        floatVerifiedText: 'Real people, checked',
+        floatMatchedText: 'Same frequency, not the same feed',
+        floatGatheringsText: 'Small groups, real places',
+        // The tilted band of activities under the hero.
+        activitySports: 'Sports',
+        activityMusic: 'Live music',
+        activityNightlife: 'Nightlife',
+        activityOutdoors: 'The outdoors',
+        activityGames: 'Game nights',
+        activityFood: 'Food crawls',
+        activityPets: 'Pet meetups',
+        // The photo strip: stickers on the photos and the line under each.
+        flowKicker: 'Low pressure, high vibes',
+        flowStickerNeon: 'NEON',
+        flowStickerYum: 'YUM',
+        flowStickerChill: 'CHILL',
+        flowCaptionNights: 'Night outs',
+        flowCaptionFood: 'Food crawls',
+        flowCaptionGroups: 'Big group energy',
+        flowCaptionWeekends: 'Slow weekends',
       },
       notFound: {
         title: '404 — Lost in the Vibe | Duncit',
@@ -674,6 +828,10 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         general: 'General',
         questionOne: 'answered question',
         questionMany: 'answered questions',
+        // Section openers on the redesigned page.
+        topicsKicker: 'Browse by topic',
+        topicsHeading: 'Popular topics',
+        stillKicker: 'Talk to us',
       },
       careers: {
         title: 'Careers',
@@ -692,6 +850,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         noRoleHeading: "Don't see your role?",
         noRoleText: 'We love hearing from talented people. Send us a note at',
         noRoleTextAfter: "and tell us what you'd build.",
+        whyKicker: 'Life at Duncit',
+        openKicker: 'Join the crew',
+        noRoleCta: 'Send us a note',
       },
       contact: {
         title: 'Contact us',
@@ -713,6 +874,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         sent: 'Message sent!',
         failed: 'Could not send. Try again.',
         failedRetry: 'Could not send. Please try again.',
+        reachKicker: 'Reach us',
+        reachHeading: 'Pick your channel',
+        formKicker: 'Drop a line',
       },
       faq: {
         title: 'FAQ',
@@ -733,6 +897,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         gotIt: 'Got it!',
         failed: 'Could not send. Try again.',
         failedRetry: 'Could not send. Please try again.',
+        // The side list of FAQ groups, and the ask section's opener.
+        topicsLabel: 'Topics',
+        askKicker: 'Still curious?',
       },
       policies: {
         title: 'Policy Hub',
@@ -750,6 +917,11 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         matchOne: 'policy matches',
         matchMany: 'policies match',
         nothingMatches: 'Nothing matches',
+        // The call-out under the list.
+        helpKicker: 'Need a hand?',
+        helpTitle: 'Questions about a policy?',
+        helpText:
+          'Our support team can walk you through any policy. If something went wrong, you can raise a formal grievance.',
       },
       policyRedirect: {
         moved: 'Policies moved to their own addresses.',
@@ -763,6 +935,8 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         notFound: 'This policy could not be found. It may have been renamed or retired.',
         empty: 'No content published yet.',
         error: 'The policy could not be loaded right now. Please try again later.',
+        // The side list of the policy's own sections.
+        onThisPage: 'On this page',
       },
       blog: {
         title: 'Blog',
@@ -772,6 +946,11 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         subscribe: 'Subscribe',
         subscribeText: 'Get one short email a week. No spam, just the good stuff.',
         joinList: 'Join the list →',
+        latestKicker: 'Fresh reads',
+        latestHeading: 'Latest posts',
+        subscribeKicker: 'Stay in the loop',
+        // The button form of `joinList`; the button draws its own arrow.
+        joinCta: 'Join the list',
       },
       blogPost: {
         title: 'Blog',
@@ -783,6 +962,10 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         archive: 'Archive',
         notFound: 'This post could not be found. It may have been unpublished.',
         error: 'The post could not be loaded right now. Please try again later.',
+        noSuggested: 'No other posts in this category yet.',
+        noRelated: 'More posts coming soon.',
+        noArchive: 'No archive yet.',
+        allPosts: 'All posts',
       },
       newsroom: {
         title: 'Newsroom',
@@ -793,6 +976,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         press: 'Press inquiries',
         pressText: 'For interviews, assets, or quotes, reach our team at',
         pressTextAfter: 'We aim to respond within 24 hours.',
+        latestKicker: 'Fresh off the press',
+        pressKicker: 'For journalists',
+        pressCta: 'Email the team',
       },
       contentList: {
         close: 'Close',
@@ -805,6 +991,8 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         applyFor: 'Apply for',
         empty: 'No published items yet.',
         error: 'Content is temporarily unavailable.',
+        // The link on a newsroom card.
+        readMore: 'Read more',
       },
       /** This site's words on the shared @duncit/brand download band. Same
        * shape as `website.partners.download` and `website.earn.download`. */
@@ -812,9 +1000,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         headingLead: 'One app,',
         headingAccent: 'many communities',
         text: 'Match with people by energy, then go and do the thing — real plans, real places, real people.',
-        googlePlayEyebrow: 'Get it on',
-        googlePlayName: 'Google Play',
-        appStoreEyebrow: 'Download on the',
+        googlePlayEyebrow: 'Download for',
+        googlePlayName: 'Android',
+        appStoreEyebrow: 'iPhone app on the',
         appStoreName: 'App Store',
         perk1: 'Match by energy, in seconds',
         perk2: 'Real chats, no pressure',
@@ -844,6 +1032,13 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         teamHeading: 'The team',
         teamText:
           'A tiny crew of designers, engineers, and community builders spread across three continents, united by one belief: friendship is a feature worth fighting for.',
+        whyKicker: 'The why',
+        believeKicker: 'Our values',
+        teamKicker: 'Who we are',
+        goingKicker: "What's next",
+        teamDesign: 'Design',
+        teamEngineering: 'Engineering',
+        teamCommunity: 'Community',
       },
       community: {
         title: 'Community',
@@ -870,6 +1065,10 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         rulesText: 'Before posting, please skim the',
         rulesLink: 'community guidelines',
         rulesTextAfter: "They're short and mostly common sense, but they keep the vibe right.",
+        vibeKicker: 'The vibe',
+        plugKicker: 'Get involved',
+        rulesKicker: 'Before you post',
+        rulesCta: 'Read the guidelines',
       },
       guidelines: {
         title: 'Community Guidelines',
@@ -896,6 +1095,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         wrongText: 'Reach out to',
         wrongTextAfter:
           'or use the in-app report flow. Our Trust & Safety team reviews every report, every time.',
+        rulesKicker: 'House rules',
+        rulesTitle: 'Six rules, one vibe',
+        wrongKicker: 'We have your back',
       },
       safetyAdvice: {
         title: 'Safety Advice',
@@ -920,6 +1122,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         helpText: 'Visit',
         helpLink: 'our resources page',
         helpTextAfter: 'for crisis hotlines, or email',
+        tipsKicker: 'Good habits',
+        tipsHeading: 'Before, during and after',
+        helpKicker: "We're here",
       },
       safetyApproach: {
         title: 'Our Safety Approach',
@@ -942,6 +1147,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         readAdvice: 'Safety advice for users',
         readTools: 'In-app safety tools',
         readResources: 'Crisis resources',
+        principlesKicker: 'What guides us',
+        howKicker: 'Behind the scenes',
+        readKicker: 'Keep reading',
       },
       safetyTools: {
         title: 'Safety Tools',
@@ -963,6 +1171,9 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         reportsHeading: 'How reports work',
         reportsText:
           'When you report, our team gets a notification immediately. Most reports are reviewed within a few hours. Serious reports (harassment, threats, illegal content) get priority and are actioned in under an hour, 24/7.',
+        toolsKicker: 'In the app',
+        toolsHeading: 'Your safety toolkit',
+        reportsKicker: 'After you report',
       },
       safetyResources: {
         title: 'Crisis Resources',
@@ -987,6 +1198,17 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         supportHeading: 'On-platform support',
         supportText: 'For Duncit-specific issues, contact',
         supportTextAfter: "We don't replace professional help, but we'll listen and act on what we can.",
+        emergencyLabel: 'In an emergency',
+        helplinesKicker: 'Talk to someone',
+        supportKicker: 'On Duncit',
+      },
+      /** The grievance page's own chrome; the form's words are `grievance.*`. */
+      grievance: {
+        eyebrow: 'Grievance redressal',
+        officerKicker: 'Who reviews it',
+        processKicker: 'Before you file',
+        formKicker: 'The form',
+        formHeading: 'Tell us what happened',
       },
     },
     /**
@@ -1051,6 +1273,16 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         headingMuted: 'into what you earn',
         text: 'Hosts, venues, clubs and sellers earn from real gatherings in their own city. Pick your path and start today.',
         cta: 'Start earning',
+        /** The floating pill (EarnPill.astro) that jumps to this section. */
+        floating: 'Earn with Duncit',
+        floatingClose: 'Hide the Earn with Duncit shortcut',
+      },
+      /** The shared app-download band (AppDownload.astro): the words every
+       * site's band says the same way. Store names stay per site. */
+      appDownload: {
+        soon: 'Coming soon',
+        webEyebrow: 'Direct access through the',
+        webName: 'Web',
       },
       /** The home-page Reel Slider (ReelSlider.astro). Reel titles and
        * descriptions are content from the Website portal, not keys. */

@@ -322,4 +322,25 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // Studio card hint was tightened.
   "mweb.coin.sidebarCaption": ["Earn {pct}% back when you join a pod"],
   "mweb.studioOptions.studioEntryHint": ["Every option for your partner roles in one place"],
+  // The website download band: Android is live ("Download for Android"), the
+  // iPhone app is still coming, and the band gained a third, web door.
+  "website.main.download.googlePlayEyebrow": ["Get it on"],
+  "website.main.download.googlePlayName": ["Google Play"],
+  "website.main.download.appStoreEyebrow": ["Download on the"],
+  "website.ads.download.googlePlayEyebrow": ["Get it on"],
+  "website.ads.download.googlePlayName": ["Google Play"],
+  "website.ads.download.appStoreEyebrow": ["Download on the"],
+  "website.earn.download.googlePlayEyebrow": ["Get it on"],
+  "website.earn.download.googlePlayName": ["Google Play"],
+  "website.earn.download.appStoreEyebrow": ["Download on the"],
+  "website.partners.download.googlePlayEyebrow": ["Get it on"],
+  "website.partners.download.googlePlayName": ["Google Play"],
+  "website.partners.download.appStoreEyebrow": ["Download on the"],
+  // The websites redesign: the ads CTA no longer promises "minutes" (it is a
+  // day), and the earn steps now describe what a host actually does in the app.
+  "website.ads.cta.text": ["Sign in to the Ads console and go live in minutes."],
+  "website.earn.steps.bookingsTitle": ["Receive Bookings"],
+  "website.earn.steps.bookingsText": ["Get booking requests from real users."],
+  "website.earn.steps.earnTitle": ["Earn"],
+  "website.earn.steps.earnText": ["Provide great experiences and earn every month."],
 };

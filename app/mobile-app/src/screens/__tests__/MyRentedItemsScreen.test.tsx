@@ -26,6 +26,7 @@ const rental = (id: string, over: Record<string, unknown> = {}) => ({
   damage_claim: 0,
   refund_due: 0,
   refund_status: 'NONE',
+  deposit_at_venue: 0,
   created_at: '2026-10-10T10:00:00.000Z',
   ...over,
 });
@@ -55,12 +56,18 @@ describe('MyRentedItemsScreen', () => {
     expect(screen.queryByTestId('rented-items-more')).toBeNull();
   });
 
-  it('says how each closed rental ended: refunded, refund due, or deposit kept for damage', async () => {
+  it('says how each closed rental ended: refunded, refund due, deposit back at the venue, or kept for damage', async () => {
     respond([
       rental('paid', { status: 'RETURNED', refund_status: 'PAID', refund_due: 500 }),
       rental('inpay', { status: 'CANCELLED', refund_status: 'IN_PAYMENT', refund_due: 800 }),
       rental('due', { status: 'UNAVAILABLE', refund_status: 'DUE', refund_due: 300 }),
       rental('kept', { status: 'DAMAGED', refund_status: 'NONE', damage_claim: 200 }),
+      rental('venue', {
+        status: 'DAMAGED',
+        refund_status: 'NONE',
+        damage_claim: 100,
+        deposit_at_venue: 400,
+      }),
     ]);
     renderWithProviders(<MyRentedItemsScreen />);
 
@@ -68,7 +75,10 @@ describe('MyRentedItemsScreen', () => {
     expect(screen.getByText(/Refunded ₹\s?500 · Refunded$/)).toBeOnTheScreen();
     expect(screen.getByText(/Refunded ₹\s?800 · Refunded with the booking/)).toBeOnTheScreen();
     expect(screen.getByText(/Refund due ₹\s?300 · Refund due/)).toBeOnTheScreen();
-    expect(screen.getByText(/₹\s?200 kept for damage · No refund/)).toBeOnTheScreen();
+    // Nothing owed through Duncit: no refund status tagged on.
+    expect(screen.getByText(/^₹\s?200 kept for damage$/)).toBeOnTheScreen();
+    // Settled at the venue: the cash the venue handed back, again with no gateway refund.
+    expect(screen.getByText(/^Deposit back at the venue ₹\s?400$/)).toBeOnTheScreen();
   });
 
   it('shows the empty state when nothing was ever rented', async () => {

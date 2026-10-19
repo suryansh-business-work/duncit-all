@@ -1,6 +1,11 @@
 import { Controller, useWatch, type Control } from 'react-hook-form';
 import { Text, XStack } from 'tamagui';
-import { rentalUnitKey, type RentalItemsConfig, type RentalItemsValues } from '@duncit/utils';
+import {
+  rentalCategoryLabels,
+  rentalUnitKey,
+  type RentalItemsConfig,
+  type RentalItemsValues,
+} from '@duncit/utils';
 
 import { MediaUploadField } from '@/components/create-pod/MediaUploadField/MediaUploadField';
 import { splitLines } from '@/components/create-pod/MediaUploadField/mediaUploadHelpers';
@@ -25,6 +30,7 @@ export function RentalItemCard({ control, index, config, onEdit, onRemove }: Rea
   const { t } = useTranslation();
   const item = useWatch({ control, name: `items.${index}` });
   const heading = item.name.trim() || t('venueRentals.items.itemTitle', { vars: { n: index + 1 } });
+  const categories = rentalCategoryLabels(item.categories ?? []);
   return (
     <SurfaceCard gap={10} testID={`rental-item-${index}`}>
       <Text fontSize={15} fontWeight="700" color="$color">
@@ -34,6 +40,13 @@ export function RentalItemCard({ control, index, config, onEdit, onRemove }: Rea
         {t('venueRentals.items.cardSummary', {
           vars: { rate: item.rate, unit: t(rentalUnitKey(item.unit)), stock: item.stock },
         })}
+      </Text>
+      <Text
+        fontSize={12.5}
+        color={categories.length > 0 ? '$muted' : '$danger'}
+        testID={`rental-item-${index}-category-summary`}
+      >
+        {categories.length > 0 ? categories.join(', ') : t('venueRentals.items.noCategories')}
       </Text>
       <Controller
         control={control}

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 import { makeMarkRentalSchema, type MarkRentalValues } from '@duncit/forms/schemas';
-import { rentalMoney } from '@duncit/utils';
+import { rentalHandBack, rentalMoney } from '@duncit/utils';
 
 import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
 import { DuncitDialog } from '@/components/DuncitDialog';
@@ -22,13 +22,20 @@ type MarkInput = {
 interface Props {
   /** The rental being marked; null closes the sheet. */
   booking: DeskBooking | null;
+  /** Finance's rule: whether the venue hands the deposit back at the venue. */
+  depositRefundable: boolean;
   onClose: () => void;
   onMark: (id: string, input: MarkInput) => Promise<void>;
 }
 
 const DEFAULTS: MarkRentalValues = { outcome: 'RETURNED', damage_claim: '', note: '' };
 
-function MarkForm({ booking, onClose, onMark }: Readonly<Props & { booking: DeskBooking }>) {
+function MarkForm({
+  booking,
+  depositRefundable,
+  onClose,
+  onMark,
+}: Readonly<Props & { booking: DeskBooking }>) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +48,13 @@ function MarkForm({ booking, onClose, onMark }: Readonly<Props & { booking: Desk
     defaultValues: DEFAULTS,
   });
   const outcome = useWatch({ control, name: 'outcome' });
+  const claim = useWatch({ control, name: 'damage_claim' });
+  // The cash the venue gives back now; Duncit repays the whole deposit in the payout.
+  const handBack = rentalHandBack(
+    booking.deposit_amount,
+    outcome === 'DAMAGED' ? Number(claim) : 0,
+    depositRefundable,
+  );
   // Nothing to claim from when no deposit was taken.
   const options = [
     { value: 'RETURNED', label: t('venueRentals.mark.returned') },
@@ -126,6 +140,15 @@ function MarkForm({ booking, onClose, onMark }: Readonly<Props & { booking: Desk
               required
             />
           </>
+        ) : null}
+        {booking.deposit_amount > 0 ? (
+          <Text role="status" testID="mark-rental-hand-back" fontSize={13} color="$color">
+            {handBack > 0
+              ? t('venueRentals.mark.handBack', {
+                  vars: { amount: rentalMoney(booking.currency_symbol, handBack) },
+                })
+              : t('venueRentals.mark.handBackNone')}
+          </Text>
         ) : null}
         {error ? (
           <Text role="alert" testID="mark-rental-error" fontSize={12.5} color="$danger">

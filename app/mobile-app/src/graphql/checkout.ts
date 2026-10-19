@@ -110,6 +110,7 @@ export const MobileDummyCheckoutDocument = gql(`
       status
       paid_at
       created_at
+      rental_lines { item_id name quantity rent deposit }
     }
   }
 `);
@@ -190,6 +191,7 @@ export const MobileVerifyRazorpayDocument = gql(`
       status
       paid_at
       created_at
+      rental_lines { item_id name quantity rent deposit }
     }
   }
 `);
@@ -216,6 +218,7 @@ export const MobileMyPaymentDocument = gql(`
       status
       paid_at
       created_at
+      rental_lines { item_id name quantity rent deposit }
     }
   }
 `);

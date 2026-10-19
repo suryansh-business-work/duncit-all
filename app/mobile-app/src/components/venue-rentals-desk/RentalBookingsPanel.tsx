@@ -78,6 +78,11 @@ function BookingCard({
           .join(' · ')}
       </Text>
       <RentalUnitsLine row={row} />
+      {row.deposit_at_venue > 0 ? (
+        <Text fontSize={12.5} color="$muted" testID={`venue-rental-${row.id}-deposit-back`}>
+          {`${t('venueRentals.table.depositAtVenue')}: ${formatMoney(row.deposit_at_venue, { symbol: row.currency_symbol })}`}
+        </Text>
+      ) : null}
       {canMarkRental(row) ? (
         <XStack marginTop={6}>
           <DuncitButton
@@ -102,7 +107,8 @@ interface Props {
 /** The venue's recent rental bookings, each markable back or damaged, with its numbers. */
 export function RentalBookingsPanel({ venueId, withStats }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { bookings, stats, failed, refetch, mark } = useVenueRentalBookings(venueId);
+  const { bookings, stats, depositRefundable, failed, refetch, mark } =
+    useVenueRentalBookings(venueId);
   const [marking, setMarking] = useState<DeskBooking | null>(null);
 
   if (failed && !bookings) {
@@ -130,7 +136,12 @@ export function RentalBookingsPanel({ venueId, withStats }: Readonly<Props>) {
       {(bookings ?? []).map((row) => (
         <BookingCard key={row.id} row={row} onMark={setMarking} />
       ))}
-      <MarkRentalSheet booking={marking} onClose={() => setMarking(null)} onMark={mark} />
+      <MarkRentalSheet
+        booking={marking}
+        depositRefundable={depositRefundable}
+        onClose={() => setMarking(null)}
+        onMark={mark}
+      />
     </YStack>
   );
 }

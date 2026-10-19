@@ -2,6 +2,7 @@ import type { ParsedIssue } from '@duncit/errors';
 
 import { CheckoutSavingsCard, OrderSummary } from '@/components/checkout';
 import { RentalCheckoutCard } from '@/components/checkout/RentalCheckoutCard';
+import { RentalTermsConsent } from '@/components/checkout/RentalTermsConsent';
 import { IssueNotice } from '@/components/issue-notice/IssueNotice';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { formatMoney } from '@/utils/checkout-math';
@@ -73,6 +74,7 @@ export function CheckoutPayForm({ s, actions, breakup }: Readonly<CheckoutPayFor
             amount: formatMoney(breakup.currency, coins.effectiveTotal + s.rentals.totals.total),
           },
         })}
+        beforePay={<RentalTermsConsent rentals={s.rentals} />}
         onSubmit={actions.submit}
       />
     </RefreshScrollView>

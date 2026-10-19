@@ -28,6 +28,9 @@ function outcomeKey(row: Row): { key: string; amount: number } | null {
   if (refund === 'PAID' || refund === 'IN_PAYMENT')
     return { key: 'venueRentals.guest.refunded', amount: row.refund_due };
   if (refund === 'DUE') return { key: 'venueRentals.guest.refundDue', amount: row.refund_due };
+  // Settled at the venue: the venue handed this back in cash when the item came back.
+  if (row.deposit_at_venue > 0)
+    return { key: 'venueRentals.guest.depositBack', amount: row.deposit_at_venue };
   if (row.damage_claim > 0)
     return { key: 'venueRentals.guest.damageKept', amount: row.damage_claim };
   return null;
@@ -54,8 +57,10 @@ function RentalRow({ row }: Readonly<{ row: Row }>) {
       <RentalUnitsLine row={row} />
       {outcome ? (
         <Text fontSize={12.5} fontWeight="600" color="$color">
-          {t(outcome.key, { vars: { amount: money(outcome.amount) } })} ·{' '}
-          {t(rentalRefundKey(row.refund_status))}
+          {t(outcome.key, { vars: { amount: money(outcome.amount) } })}
+          {String(row.refund_status) === 'NONE'
+            ? ''
+            : ` · ${t(rentalRefundKey(row.refund_status))}`}
         </Text>
       ) : null}
     </SurfaceCard>

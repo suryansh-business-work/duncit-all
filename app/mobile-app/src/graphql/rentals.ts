@@ -61,6 +61,7 @@ export const MyRentalBookingsDocument = gql(`
       damage_claim
       refund_due
       refund_status
+      deposit_at_venue
       created_at
     }
   }

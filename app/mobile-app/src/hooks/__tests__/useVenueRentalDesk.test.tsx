@@ -25,6 +25,7 @@ const ITEM = {
   stock: 4,
   per_guest_limit: 2,
   is_available: true,
+  categories: [],
 };
 const CONFIG = {
   rental_units: ['SLOT', 'HOUR', 'SOMETHING'],
@@ -35,6 +36,7 @@ const CONFIG = {
   rental_stock_max: 500,
   rental_per_guest_max: 20,
   rental_terms_max: 20000,
+  rental_category_limit: 5,
 };
 const VENUE = {
   id: 'v1',
@@ -171,6 +173,7 @@ describe('useVenueRentalBookings', () => {
     mockRequest.mockResolvedValue({
       venueRentalBookingsTable: { rows: [booking('b1'), booking('b2')] },
       venueRentalStats: STATS,
+      publicRentalSettings: { deposit_refundable: true },
     });
     const { result } = renderHook(() => useVenueRentalBookings('v1'));
 
@@ -181,6 +184,8 @@ describe('useVenueRentalBookings', () => {
       AUTH,
     );
     expect(result.current.stats).toEqual(STATS);
+    // Finance's rule rides the same read: the mark sheet says what the venue hands back.
+    expect(result.current.depositRefundable).toBe(true);
     expect(result.current.loading).toBe(false);
   });
 
@@ -188,6 +193,7 @@ describe('useVenueRentalBookings', () => {
     mockRequest.mockResolvedValueOnce({
       venueRentalBookingsTable: { rows: [booking('b1'), booking('b2')] },
       venueRentalStats: STATS,
+      publicRentalSettings: { deposit_refundable: true },
     });
     const { result } = renderHook(() => useVenueRentalBookings('v1'));
     await waitFor(() => expect(result.current.bookings).toHaveLength(2));
@@ -217,6 +223,7 @@ describe('useVenueRentalBookings', () => {
     mockRequest.mockResolvedValue({
       venueRentalBookingsTable: { rows: [] },
       venueRentalStats: STATS,
+      publicRentalSettings: { deposit_refundable: true },
     });
     const { result } = renderHook(() => useVenueRentalBookings('v1'));
     await waitFor(() => expect(result.current.bookings).toEqual([]));
@@ -240,6 +247,7 @@ describe('useVenueRentalBookings', () => {
     mockRequest.mockResolvedValueOnce({
       venueRentalBookingsTable: { rows: [] },
       venueRentalStats: STATS,
+      publicRentalSettings: { deposit_refundable: true },
     });
     await act(() => result.current.refetch());
     expect(result.current.failed).toBe(false);

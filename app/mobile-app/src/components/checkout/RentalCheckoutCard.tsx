@@ -1,104 +1,124 @@
-import { useState } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { PRESS_STYLE } from '@duncit/buttons-native';
-import { rentalMoney } from '@duncit/utils';
+import { rentalMoney, type RentalSummaryLine } from '@duncit/utils';
 
-import { DuncitDialog } from '@/components/DuncitDialog/DuncitDialog';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
-import { ToggleRow } from '@/components/ToggleRow/ToggleRow';
 import type { CheckoutRentals } from '@/hooks/useCheckoutRentals';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { stripHtml } from '@/utils/html';
 
 import { SummaryRow } from './SummaryRow';
 
+interface RentalLinesProps {
+  lines: readonly RentalSummaryLine[];
+  currency: string;
+  /** Finance's rule: false means the venue keeps the deposit. */
+  depositRefundable: boolean;
+  testID: string;
+}
+
+/** Each rented item on its own line — what, how many, its rent and its deposit. Shared with the confirmation. */
+export function RentalItemLines({
+  lines,
+  currency,
+  depositRefundable,
+  testID,
+}: Readonly<RentalLinesProps>) {
+  const { t } = useTranslation();
+  return (
+    <YStack gap={6} testID={testID}>
+      {lines.map((line) => (
+        <YStack key={line.id} gap={2}>
+          <SummaryRow
+            testID={`${testID}-${line.id}`}
+            label={t('venueRentals.guest.itemLine', {
+              vars: { name: line.name, quantity: line.quantity },
+            })}
+            value={rentalMoney(currency, line.rent)}
+          />
+          {line.deposit > 0 ? (
+            <Text fontSize={12} color="$muted">
+              {depositRefundable
+                ? t('venueRentals.guest.depositAtVenue', {
+                    vars: { amount: rentalMoney(currency, line.deposit) },
+                  })
+                : `${t('venueRentals.guest.depositKept')} ${rentalMoney(currency, line.deposit)}`}
+            </Text>
+          ) : null}
+        </YStack>
+      ))}
+    </YStack>
+  );
+}
+
+/** Where the items and their deposits are handled: at the venue, never refunded online. */
+export function RentalCollectNotice({
+  depositRefundable,
+}: Readonly<{ depositRefundable: boolean }>) {
+  const { t } = useTranslation();
+  const { primary } = useThemeColors();
+  return (
+    <XStack
+      gap={10}
+      padding={12}
+      borderRadius={14}
+      backgroundColor="$soft"
+      testID="rental-collect-notice"
+      role="note"
+    >
+      <MaterialIcons name="storefront" size={20} color={primary} />
+      <YStack flex={1} gap={2}>
+        <Text fontSize={13} fontWeight="700" color="$color">
+          {t('venueRentals.guest.collectTitle')}
+        </Text>
+        <Text fontSize={12.5} color="$muted">
+          {depositRefundable
+            ? t('venueRentals.guest.collectNote')
+            : t('venueRentals.guest.collectNoteKept')}
+        </Text>
+      </YStack>
+    </XStack>
+  );
+}
+
 /**
- * The rented items on this booking: rent, deposit (refundable or kept, per
- * Finance's rule), the ticket-only note and the agreement to the rental
- * terms. Hidden when nothing is picked. RN twin of mWeb's RentalCheckoutBlock.
+ * The rented items on this booking: every item, the rent and deposit totals,
+ * the ticket-only note and where it is all settled. The agreement to the
+ * terms sits above Pay (RentalTermsConsent). RN twin of mWeb's RentalBillRows.
  */
 export function RentalCheckoutCard({ rentals }: Readonly<{ rentals: CheckoutRentals }>) {
   const { t } = useTranslation();
-  const [termsOpen, setTermsOpen] = useState(false);
-  const { totals, currency, settings } = rentals;
+  const { totals, currency, settings, lines } = rentals;
   if (totals.count === 0) return null;
-  const depositKey =
-    settings?.deposit_refundable === false
-      ? 'venueRentals.guest.depositKept'
-      : 'venueRentals.guest.depositLine';
-  // Duncit's terms and the venue's own, read together — as plain text, so no
-  // venue-written markup ever renders.
-  const terms = stripHtml(settings?.terms_html);
-  const venueTerms = stripHtml(rentals.venueTerms);
+  const refundable = settings?.deposit_refundable !== false;
   return (
     <SurfaceCard gap={10} testID="checkout-rentals">
       <SectionHeader title={t('venueRentals.guest.rentLine')} />
+      <RentalItemLines
+        lines={lines}
+        currency={currency}
+        depositRefundable={refundable}
+        testID="checkout-rental-line"
+      />
       <SummaryRow
         testID="checkout-rental-rent"
-        label={t('venueRentals.guest.rentLine')}
+        label={t('venueRentals.guest.rentSubtotal')}
         value={`+ ${rentalMoney(currency, totals.rent)}`}
       />
       {totals.deposit > 0 ? (
         <SummaryRow
           testID="checkout-rental-deposit"
-          label={t(depositKey)}
+          label={t(
+            refundable ? 'venueRentals.guest.depositLine' : 'venueRentals.guest.depositKept',
+          )}
           value={`+ ${rentalMoney(currency, totals.deposit)}`}
         />
       ) : null}
       <Text fontSize={12} color="$muted">
         {t('venueRentals.guest.ticketOnly')}
       </Text>
-      <ToggleRow
-        label={t('venueRentals.guest.agree')}
-        value={rentals.agreed}
-        onChange={rentals.setAgreed}
-        testID="checkout-rental-agree"
-      />
-      {terms || venueTerms ? (
-        <XStack
-          role="button"
-          tabIndex={0}
-          aria-label={t('venueRentals.guest.termsTitle')}
-          testID="checkout-rental-terms"
-          onPress={() => setTermsOpen(true)}
-          {...PRESS_STYLE}
-        >
-          <Text fontSize={13} fontWeight="600" color="$accent">
-            {t('venueRentals.guest.termsTitle')}
-          </Text>
-        </XStack>
-      ) : null}
-      <DuncitDialog
-        open={termsOpen}
-        onClose={() => setTermsOpen(false)}
-        testID="rental-terms-sheet"
-        title={t('venueRentals.guest.termsTitle')}
-        closeLabel={t('mweb.common.close')}
-      >
-        <YStack gap={14}>
-          {terms ? (
-            <YStack gap={4}>
-              <Text fontSize={13.5} fontWeight="700" color="$color">
-                {t('venueRentals.guest.duncitTerms')}
-              </Text>
-              <Text fontSize={13.5} color="$color">
-                {terms}
-              </Text>
-            </YStack>
-          ) : null}
-          {venueTerms ? (
-            <YStack gap={4}>
-              <Text fontSize={13.5} fontWeight="700" color="$color">
-                {t('venueRentals.guest.venueTerms')}
-              </Text>
-              <Text fontSize={13.5} color="$color">
-                {venueTerms}
-              </Text>
-            </YStack>
-          ) : null}
-        </YStack>
-      </DuncitDialog>
+      <RentalCollectNotice depositRefundable={refundable} />
     </SurfaceCard>
   );
 }

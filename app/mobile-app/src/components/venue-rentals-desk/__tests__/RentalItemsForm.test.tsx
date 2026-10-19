@@ -26,6 +26,19 @@ jest.mock('@/components/create-pod/MediaUploadField/MediaUploadField', () => {
   };
 });
 
+// The admin category tree: one Super → Category → Sub chain, the way the cascade reads it.
+jest.mock('@/hooks/useCategoryLevel', () => ({
+  useCategoryLevel: (level: string, _parent: string, enabled: boolean) => {
+    if (!enabled) return { options: [] };
+    const byLevel: Record<string, { id: string; name: string; level: string }[]> = {
+      SUPER: [{ id: 's1', name: 'Sports', level: 'SUPER' }],
+      CATEGORY: [{ id: 'c1', name: 'Racquet', level: 'CATEGORY' }],
+      SUB: [{ id: 'b1', name: 'Badminton', level: 'SUB' }],
+    };
+    return { options: byLevel[level] };
+  },
+}));
+
 const CONFIG: RentalItemsConfig = {
   rental_units: ['SLOT', 'HOUR'],
   rental_item_limit: 2,
@@ -35,6 +48,7 @@ const CONFIG: RentalItemsConfig = {
   rental_stock_max: 500,
   rental_per_guest_max: 20,
   rental_terms_max: 20000,
+  rental_category_limit: 5,
 };
 const ITEM: VenueRentalItem = {
   id: 'i1',
@@ -47,6 +61,16 @@ const ITEM: VenueRentalItem = {
   stock: 4,
   per_guest_limit: 2,
   is_available: true,
+  categories: [
+    {
+      super_category_id: 's1',
+      category_id: 'c1',
+      sub_category_id: 'b1',
+      super_category_name: 'Sports',
+      category_name: 'Racquet',
+      sub_category_name: 'Badminton',
+    },
+  ],
 };
 const venue = (over: Partial<RentalsVenue> = {}): RentalsVenue => ({
   id: 'v1',
@@ -71,6 +95,17 @@ describe('RentalItemsForm', () => {
     expect(within(card).getByText('Racket')).toBeOnTheScreen();
     expect(within(card).getByText('120 per hour · 4 per pod')).toBeOnTheScreen();
     expect(within(card).getByTestId('stub-media-upload')).toHaveTextContent('http://x/a.jpg');
+    // The pods it is offered on, by name.
+    expect(within(card).getByTestId('rental-item-0-category-summary')).toHaveTextContent(
+      'Sports › Racquet › Badminton',
+    );
+  });
+
+  it('warns on a card whose item names no category yet, since no pod can show it', () => {
+    renderForm(venue({ rental_items: [{ ...ITEM, categories: [] }] }));
+    expect(screen.getByTestId('rental-item-0-category-summary')).toHaveTextContent(
+      'No category yet: guests cannot see this item',
+    );
   });
 
   it('reads the venue’s terms as plain text and sends the owner to the Partner console to edit them', () => {
@@ -114,6 +149,7 @@ describe('RentalItemsForm', () => {
       stock: 4,
       is_available: false,
       images: ['http://x/a.jpg', 'http://x/new.jpg'],
+      categories: [expect.objectContaining({ super_id: 's1', category_id: 'c1', sub_id: 'b1' })],
     });
   });
 
@@ -140,6 +176,18 @@ describe('RentalItemsForm', () => {
     fireEvent.changeText(screen.getByTestId('field-items.0.rate'), '80');
     fireEvent.changeText(screen.getByTestId('field-items.0.stock'), '3');
     fireEvent.changeText(screen.getByTestId('field-items.0.per_guest_limit'), '1');
+    // Without a category no pod could show it: the rules refuse it and the sheet stays.
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('rental-item-done'));
+    });
+    expect(
+      screen.getByText('Pick the super category, category and sub category'),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId('rental-item-sheet')).toBeOnTheScreen();
+    // The chain unlocks level by level: Super, then Category, then Sub.
+    fireEvent.press(screen.getByTestId('rental-item-0-category-0-super_category_id-s1'));
+    fireEvent.press(screen.getByTestId('rental-item-0-category-0-category_id-c1'));
+    fireEvent.press(screen.getByTestId('rental-item-0-category-0-sub_category_id-b1'));
     // Done validates asynchronously, then closes the sheet — flush that inside act.
     await act(async () => {
       fireEvent.press(screen.getByTestId('rental-item-done'));
@@ -148,6 +196,40 @@ describe('RentalItemsForm', () => {
     await waitFor(() => expect(screen.queryByTestId('rental-item-sheet')).toBeNull());
     expect(within(screen.getByTestId('rental-item-0')).getByText('Shoes')).toBeOnTheScreen();
     expect(screen.getByText('80 per hour · 3 per pod')).toBeOnTheScreen();
+    expect(screen.getByTestId('rental-item-0-category-summary')).toHaveTextContent(
+      'Sports › Racquet › Badminton',
+    );
+  });
+
+  it('offers an item under several categories, removes one, and stops at the cap', () => {
+    renderForm();
+    fireEvent.press(screen.getByTestId('rental-item-0-edit'));
+    // A single row cannot be removed: an item needs at least one.
+    expect(screen.queryByTestId('rental-item-0-category-0-remove')).toBeNull();
+    for (let added = 1; added < CONFIG.rental_category_limit; added += 1) {
+      fireEvent.press(screen.getByTestId('rental-item-0-category-add'));
+    }
+    expect(screen.getByTestId('rental-item-0-category-add')).toBeDisabled();
+    expect(screen.getByText('That is the most categories one item can have')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('rental-item-0-category-4-remove'));
+    expect(screen.queryByTestId('rental-item-0-category-4-remove')).toBeNull();
+    expect(screen.getByTestId('rental-item-0-category-add')).not.toBeDisabled();
+  });
+
+  it('refuses the same sub category twice on one item', async () => {
+    renderForm();
+    fireEvent.press(screen.getByTestId('rental-item-0-edit'));
+    fireEvent.press(screen.getByTestId('rental-item-0-category-add'));
+    fireEvent.press(screen.getByTestId('rental-item-0-category-1-super_category_id-s1'));
+    fireEvent.press(screen.getByTestId('rental-item-0-category-1-category_id-c1'));
+    fireEvent.press(screen.getByTestId('rental-item-0-category-1-sub_category_id-b1'));
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('rental-item-done'));
+    });
+    expect(screen.getByTestId('rental-item-0-categories-error')).toHaveTextContent(
+      'This sub category is already listed',
+    );
   });
 
   it('cancelling a new item drops it, while cancelling an edit keeps the item', () => {

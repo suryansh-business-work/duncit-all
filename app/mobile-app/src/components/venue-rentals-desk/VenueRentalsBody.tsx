@@ -53,6 +53,9 @@ export function VenueRentalsBody({ venueId }: Readonly<{ venueId: string }>) {
   const [tab, setTab] = useState<DeskTab>('dashboard');
   return (
     <YStack gap={16} testID="venue-rentals-desk">
+      <Text role="note" fontSize={13} color="$muted" testID="venue-rentals-deposit-notice">
+        {t('venueRentals.desk.depositNotice')}
+      </Text>
       <PillTabs
         tabs={TABS}
         value={tab}

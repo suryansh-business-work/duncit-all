@@ -1,0 +1,52 @@
+---
+/**
+ * The always-visible light/dark button for a site's top bar. Any number can
+ * sit on one page (top bar + menu drawer); widgets/theme-toggle.ts keeps them
+ * in step. The site's layout applies the saved theme before first paint.
+ */
+interface Props {
+  /** Localized accessible name, e.g. website.nav.theme. */
+  label: string;
+  class?: string;
+}
+
+const { label, class: className = '' } = Astro.props;
+---
+
+<button type="button" class:list={['theme-toggle-btn', className]} data-theme-toggle aria-label={label} aria-pressed="false">
+  <i class="fa-solid fa-moon text-sm" data-theme-icon aria-hidden="true"></i>
+</button>
+
+<script>
+  import { wireThemeToggle } from './widgets/theme-toggle';
+
+  wireThemeToggle(document);
+</script>
+
+<style>
+  .theme-toggle-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-line, rgba(22, 19, 26, 0.12));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-surface, #fff) 80%, transparent);
+    backdrop-filter: blur(10px);
+    color: var(--color-ink, #16131a);
+    cursor: pointer;
+    transition:
+      transform 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease;
+  }
+  .theme-toggle-btn:hover {
+    transform: rotate(-12deg) scale(1.06);
+    border-color: var(--color-primary, #ff5757);
+    color: var(--color-primary, #ff5757);
+  }
+  .theme-toggle-btn:focus-visible {
+    outline: 3px solid var(--color-primary, #ff5757);
+    outline-offset: 2px;
+  }
+</style>

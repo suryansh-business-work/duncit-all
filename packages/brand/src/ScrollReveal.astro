@@ -1,0 +1,42 @@
+---
+/**
+ * Mount once per page (each site's Layout). Arms `data-reveal` /
+ * `data-reveal-group` scroll animations — see reveal.ts. Global styles because
+ * the targets live in every site's own markup.
+ */
+---
+
+<script>
+  import { startReveal } from './reveal';
+
+  startReveal();
+</script>
+
+<style is:global>
+  /* `translate` / `scale`, not `transform`: a card's own hover transform keeps
+     working, and the transition is set inline only while the reveal plays. */
+  .reveal-ready [data-reveal]:not(.is-revealed) {
+    opacity: 0;
+    translate: 0 28px;
+  }
+  .reveal-ready [data-reveal='fade']:not(.is-revealed) {
+    translate: none;
+  }
+  .reveal-ready [data-reveal='scale']:not(.is-revealed) {
+    translate: none;
+    scale: 0.94;
+  }
+  .reveal-ready [data-reveal='left']:not(.is-revealed) {
+    translate: -36px 0;
+  }
+  .reveal-ready [data-reveal='right']:not(.is-revealed) {
+    translate: 36px 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-ready [data-reveal]:not(.is-revealed) {
+      opacity: 1;
+      translate: none;
+      scale: none;
+    }
+  }
+</style>

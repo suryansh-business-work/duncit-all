@@ -11,10 +11,19 @@
 import { siteT, type SiteTranslate } from './site-i18n';
 import { EARN_SHOWCASE_COLUMNS, earnShowcaseImage } from './earn-showcase';
 import { cmsBlockProps } from './cms-block';
+import EarnPill from './EarnPill.astro';
+import type { EarnSite } from './earn-section';
 
 interface Props {
   /** earnwith.duncit.com for this environment, from the site's URL config. */
   href: string;
+  /**
+   * Set both and the section follows Website portal > Earn with Duncit at page
+   * load (copy, link, photos, accent, layout, position, on/off) and brings the
+   * floating Earn pill. Omitted (CMS pages), it renders exactly as built.
+   */
+  graphqlUrl?: string;
+  site?: EarnSite;
   /** The site's build-time translator. Omit it and the shipped copy renders. */
   t?: SiteTranslate;
   /** The words, set per page in the Website CMS. Each one omitted renders the shipped copy. */
@@ -27,7 +36,8 @@ interface Props {
   class?: string;
 }
 
-const { href, t = siteT, id = 'earn-with-duncit', class: className = '' } = Astro.props;
+const { href, graphqlUrl, site, t = siteT, id = 'earn-with-duncit', class: className = '' } = Astro.props;
+const live = Boolean(graphqlUrl && site);
 const eyebrow = Astro.props.eyebrow || t('website.brand.earnShowcase.eyebrow');
 const heading = Astro.props.heading || t('website.brand.earnShowcase.heading');
 const headingMuted = Astro.props.headingMuted || t('website.brand.earnShowcase.headingMuted');
@@ -42,14 +52,25 @@ const columns = EARN_SHOWCASE_COLUMNS.map((column, col) => ({
 }));
 ---
 
-<section id={id} class:list={['earn-showcase', className]} aria-labelledby={headingId} data-earn-showcase data-cms-block="earn-showcase" data-cms-props={cmsBlockProps(Astro.props)}>
+<section
+  id={id}
+  class:list={['earn-showcase', className]}
+  aria-labelledby={headingId}
+  data-earn-showcase
+  data-graphql={live ? graphqlUrl : undefined}
+  data-site={live ? site : undefined}
+  data-accent="primary"
+  data-variant="wall"
+  data-cms-block="earn-showcase"
+  data-cms-props={cmsBlockProps(Astro.props)}
+>
   <div class="earn-card">
     <div class="earn-wall" aria-hidden="true">
       {columns.map((column) => (
         <div class="earn-col" style={`--offset:${column.offset};--depth:${column.depth}`}>
           <span class="earn-ghost" />
           {column.photos.map((photo, row) => (
-            <span class="earn-tile" style={`--i:${column.first + row}`}>
+            <span class="earn-tile" style={`--i:${column.first + row}`} data-earn-tile>
               <img
                 src={earnShowcaseImage(photo, 240)}
                 srcset={`${earnShowcaseImage(photo, 240)} 1x, ${earnShowcaseImage(photo, 480)} 2x`}
@@ -66,24 +87,36 @@ const columns = EARN_SHOWCASE_COLUMNS.map((column, col) => ({
     </div>
 
     <div class="earn-copy">
-      <span class="earn-eyebrow">{eyebrow}</span>
+      <span class="earn-eyebrow" data-earn-eyebrow>{eyebrow}</span>
       <h2 id={headingId} class="earn-heading">
-        {heading}
-        <span>{headingMuted}</span>
+        <span data-earn-heading-main>{heading}</span>
+        <span class="is-muted" data-earn-heading-muted>{headingMuted}</span>
       </h2>
-      <p class="earn-text">{text}</p>
-      <a class="earn-cta" href={href}>
-        {cta}
+      <p class="earn-text" data-earn-text>{text}</p>
+      <a class="earn-cta" href={href} data-earn-cta>
+        <span data-earn-cta-label>{cta}</span>
         <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
       </a>
     </div>
   </div>
+  {live && <EarnPill target={`#${id}`} t={t} />}
 </section>
 
 <script>
   import { bindEarnShowcaseParallax } from './earn-showcase-dom';
+  import { fetchEarnSection, type EarnSite } from './earn-section';
+  import { applyEarnSection, mountEarnPill } from './earn-section-dom';
 
-  document.querySelectorAll<HTMLElement>('[data-earn-showcase]').forEach(bindEarnShowcaseParallax);
+  for (const section of document.querySelectorAll<HTMLElement>('[data-earn-showcase]')) {
+    bindEarnShowcaseParallax(section);
+    const { graphql, site } = section.dataset;
+    if (!graphql || !site) continue;
+    const pill = section.querySelector<HTMLElement>('[data-earn-pill]');
+    fetchEarnSection(graphql, site as EarnSite).then((config) => {
+      applyEarnSection(section, config);
+      if (pill) mountEarnPill(pill, section, config);
+    });
+  }
 </script>
 
 <style>
@@ -203,6 +236,8 @@ const columns = EARN_SHOWCASE_COLUMNS.map((column, col) => ({
   }
   .earn-heading span {
     display: block;
+  }
+  .earn-heading .is-muted {
     color: var(--color-ink-soft, #4b4651);
     opacity: 0.75;
   }
@@ -265,6 +300,55 @@ const columns = EARN_SHOWCASE_COLUMNS.map((column, col) => ({
       margin-top: -7.5rem;
     }
   }
+  /* Accent: a brand token picked in the portal, never a raw colour. */
+  .earn-showcase {
+    --earn-accent: var(--color-primary, #ff5757);
+  }
+  .earn-showcase[data-accent='secondary'] {
+    --earn-accent: var(--color-secondary, #5865f2);
+  }
+  .earn-showcase[data-accent='tertiary'] {
+    --earn-accent: var(--color-tertiary, #ffd166);
+  }
+  .earn-card::before {
+    content: '';
+    position: absolute;
+    inset: auto -20% -60% -20%;
+    height: 80%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--earn-accent) 22%, transparent), transparent);
+    pointer-events: none;
+  }
+  .earn-eyebrow {
+    background: color-mix(in srgb, var(--earn-accent) 16%, var(--color-surface, #fff));
+  }
+  .earn-cta {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--earn-accent) 28%, transparent);
+  }
+
+  /* SPLIT: the words beside a short collage instead of under a full wall. */
+  @media (min-width: 1024px) {
+    .earn-showcase[data-variant='split'] .earn-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      align-items: center;
+      gap: 2rem;
+      padding: 3rem;
+    }
+    .earn-showcase[data-variant='split'] .earn-copy {
+      order: -1;
+      align-items: flex-start;
+      margin: 0;
+      text-align: start;
+    }
+    .earn-showcase[data-variant='split'] .earn-wall {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    .earn-showcase[data-variant='split'] .earn-col:nth-child(-n + 2),
+    .earn-showcase[data-variant='split'] .earn-col:nth-child(n + 8) {
+      display: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .earn-tile,
     .earn-tile img,

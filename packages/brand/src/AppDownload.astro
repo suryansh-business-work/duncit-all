@@ -12,6 +12,7 @@
  */
 import AppPhone from './AppPhone.astro';
 import { cmsBlockProps } from './cms-block';
+import { siteT, type SiteTranslate } from './site-i18n';
 
 interface Store {
   /** Font Awesome brand class. */
@@ -31,11 +32,15 @@ interface Props {
   /** One line each. Prose blocks under a headline made this section busy. */
   perks?: string[];
   stores: Store[];
+  /** The web app (mWeb). Set, it adds a third "use it in the browser" door —
+   * nothing to install, so it is open on every phone the stores are not. */
+  webUrl?: string | null;
   soonLabel?: string;
   /** A real screenshot when there is one; the drawn app screen until then. */
   screenshot?: string | null;
   id?: string;
   class?: string;
+  t?: SiteTranslate;
 }
 
 const {
@@ -45,11 +50,13 @@ const {
   text = '',
   perks = [],
   stores,
-  soonLabel = 'Soon',
+  webUrl = null,
   screenshot = null,
   id = 'download',
   class: className = '',
+  t = siteT,
 } = Astro.props;
+const soonLabel = Astro.props.soonLabel || t('website.brand.appDownload.soon');
 ---
 
 <section id={id} class:list={['app-download', className]} data-cms-block="app-download" data-cms-props={cmsBlockProps(Astro.props)}>
@@ -102,6 +109,17 @@ const {
                 <span class="app-store-soon">{soonLabel}</span>
               </span>
             )
+          )
+        }
+        {
+          webUrl && (
+            <a href={webUrl} target="_blank" rel="noopener noreferrer" class="app-store is-live is-web">
+              <i class="fa-solid fa-globe" aria-hidden="true" />
+              <span>
+                <span class="app-store-eyebrow">{t('website.brand.appDownload.webEyebrow')}</span>
+                <span class="app-store-name">{t('website.brand.appDownload.webName')}</span>
+              </span>
+            </a>
           )
         }
       </div>
@@ -251,6 +269,16 @@ const {
   }
   .app-store.is-live:hover {
     transform: scale(1.03);
+  }
+  /* The web door sits with the store badges but is not a store: outlined in
+     the accent, so it reads as the no-install option. */
+  .app-store.is-live.is-web {
+    border-color: var(--color-primary, #ff5757);
+    background: transparent;
+    color: var(--color-ink, #16131a);
+  }
+  .app-store.is-web i {
+    color: var(--color-primary, #ff5757);
   }
   .app-store i {
     font-size: 1.875rem;

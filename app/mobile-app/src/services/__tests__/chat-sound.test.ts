@@ -2,7 +2,9 @@
  * The chat ping: one per burst, never with notifications switched off, and
  * silent (never throwing) where expo-audio's native module is missing.
  * Each case loads a fresh module, since the player and the burst gate are
- * module-level by design.
+ * module-level by design. expo-audio is required lazily at the first ping —
+ * after loading — so the registry is reset (not isolated) to make that require
+ * see this case's mock rather than one cached by an earlier case.
  */
 jest.mock('../../../assets/sounds/chat-ping-new-message.mp3', () => 7, { virtual: true });
 
@@ -10,17 +12,14 @@ const play = jest.fn();
 const seekTo = jest.fn();
 const createAudioPlayer = jest.fn(() => ({ volume: 1, play, seekTo }));
 
-function loadWith(audio: unknown, enabled = true) {
-  let ping: (id: string) => void = () => undefined;
-  jest.isolateModules(() => {
-    jest.doMock('expo-audio', () => audio, { virtual: true });
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- fresh module per case (isolateModules)
-    const prefs = require('@/stores/notification-prefs.store');
-    prefs.useNotificationPrefsStore.setState({ enabled });
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- fresh module per case (isolateModules)
-    ping = require('@/services/chat-sound').pingForMessage;
-  });
-  return ping;
+function loadWith(audio: unknown, enabled = true): (id: string) => void {
+  jest.resetModules();
+  jest.doMock('expo-audio', () => audio, { virtual: true });
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- fresh module per case (resetModules)
+  const prefs = require('@/stores/notification-prefs.store');
+  prefs.useNotificationPrefsStore.setState({ enabled });
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- fresh module per case (resetModules)
+  return require('@/services/chat-sound').pingForMessage;
 }
 
 beforeEach(() => {

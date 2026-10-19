@@ -122,9 +122,11 @@ describe('SidebarUserContent — Quick Access', () => {
 
   it('shows a count on a tile only when one is supplied and above zero', () => {
     renderContent({ badgeCounts: { chats: 12, following: 0 } });
-    const badges = screen.getAllByTestId('sidebar-grid-badge');
-    expect(badges).toHaveLength(1);
-    expect(within(screen.getByTestId('sidebar-grid-chats')).getByText('9+')).toBeOnTheScreen();
+    // The badge is aria-hidden (the count rides as the tile's hint), so the
+    // visual check opts into hidden elements and the hint is the a11y check.
+    const hidden = { includeHiddenElements: true };
+    expect(screen.getAllByTestId('sidebar-grid-badge', hidden)).toHaveLength(1);
+    expect(within(screen.getByTestId('sidebar-grid-chats')).getByText('9+', hidden)).toBeOnTheScreen();
     expect(screen.getByHintText('12 unread')).toBeOnTheScreen();
   });
 

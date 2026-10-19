@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyEmoji,
   applyMention,
+  emojiQuery,
   filterMentionCandidates,
   mentionHandle,
   mentionIdsInText,
@@ -28,6 +30,7 @@ describe('mentionHandle', () => {
   it('falls back to the squeezed name, then to "member", when no token characters remain', () => {
     expect(mentionHandle('  ')).toBe('member');
     expect(mentionHandle('आशा राव')).toBe('member');
+    expect(mentionHandle('आशा Rao')).toBe('Rao');
   });
 });
 
@@ -79,6 +82,26 @@ describe('lifted staff-chat helpers', () => {
   it('still finds and replaces the half-typed mention under the caret', () => {
     expect(mentionQuery('hi @As', 6)).toBe('As');
     expect(applyMention('hi @As', 6, 'Asha')).toEqual({ text: 'hi @Asha ', caret: 9 });
+  });
+
+  it('adds no second space when a mention is inserted mid-sentence', () => {
+    expect(applyMention('hi @As there', 6, 'Asha')).toEqual({ text: 'hi @Asha there', caret: 8 });
+  });
+
+  it('leaves the text alone when the caret is not in a mention', () => {
+    expect(mentionQuery('hi there', 8)).toBeNull();
+    expect(applyMention('hi there', 8, 'Asha')).toEqual({ text: 'hi there', caret: 8 });
+  });
+
+  it('reads a :shortcode only once a letter follows the colon', () => {
+    expect(emojiQuery('nice :smi', 9)).toBe('smi');
+    expect(emojiQuery('Ready to ship:', 14)).toBeNull();
+    expect(emojiQuery('nice :smi later', 4)).toBeNull();
+  });
+
+  it('swaps the :shortcode under the caret for the emoji and keeps what follows', () => {
+    expect(applyEmoji('nice :smi ok', 9, '😄')).toEqual({ text: 'nice 😄 ok', caret: 7 });
+    expect(applyEmoji('no code', 7, '😄')).toEqual({ text: 'no code', caret: 7 });
   });
 
   it('still splits text into plain and mention pieces', () => {

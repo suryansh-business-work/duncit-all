@@ -73,6 +73,21 @@ describe('ChatPreviewCard', () => {
     expect(screen.queryByTestId('chat-preview-open')).toBeNull();
   });
 
+  it('re-reads the room once the visitor books, and unlocks it', async () => {
+    mockRequest.mockResolvedValueOnce(preview({ is_member: false }));
+    const { rerender } = renderWithProviders(
+      <ChatPreviewCard kind="POD" id="p1" onOpen={jest.fn()} reloadKey="NONE" />,
+    );
+    expect(await screen.findByTestId('chat-preview-locked')).toBeOnTheScreen();
+
+    // Back from checkout: the membership flips, so the card asks again.
+    mockRequest.mockResolvedValueOnce(preview({ is_member: true }));
+    rerender(<ChatPreviewCard kind="POD" id="p1" onOpen={jest.fn()} reloadKey="JOINED" />);
+    expect(await screen.findByTestId('chat-preview-open')).toBeOnTheScreen();
+    expect(screen.queryByTestId('chat-preview-locked')).toBeNull();
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
+
   it('joins a club visitor through the follow, then reads the room as a member', async () => {
     mockRequest
       .mockResolvedValueOnce(

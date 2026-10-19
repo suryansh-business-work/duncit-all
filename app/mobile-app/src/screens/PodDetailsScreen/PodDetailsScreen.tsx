@@ -96,6 +96,7 @@ export function PodDetailsScreen() {
         seatsByUser={seatsByUser}
         categoryCrumbs={categoryCrumbs}
         refetch={refetch}
+        membershipState={membershipState}
         navigation={navigation}
         goBack={goBack}
         actions={actions}

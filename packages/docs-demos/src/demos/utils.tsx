@@ -21,6 +21,7 @@ import { crashReportDemos } from './utils/crash-report';
 import { cartReminderDemos } from './utils/cart-reminder';
 import { fitScaleDemos } from './utils/fit-scale';
 import { gigJobsDemos } from './utils/gig-jobs';
+import { profileMenuDemos } from './utils/profile-menu';
 import { defineDemos } from '../types';
 
 export default defineDemos('utils', [
@@ -42,4 +43,5 @@ export default defineDemos('utils', [
   ...cartReminderDemos,
   ...fitScaleDemos,
   ...gigJobsDemos,
+  ...profileMenuDemos,
 ]);

@@ -28,6 +28,30 @@ exports:
   - 'resolveThemeTokens'
   - 'fitScale'
   - 'fitSize'
+  - 'PROFILE_MENU_ITEMS'
+  - 'PROFILE_MENU_SECTIONS'
+  - 'QUICK_ACCESS_CATALOGUE'
+  - 'DEFAULT_QUICK_ACCESS'
+  - 'QUICK_ACCESS_SIZE'
+  - 'QUICK_ACCESS_STORAGE_KEY'
+  - 'isProfileMenuItemVisible'
+  - 'availableQuickAccess'
+  - 'isValidQuickAccess'
+  - 'normaliseQuickAccess'
+  - 'parseStoredQuickAccess'
+  - 'quickAccessEditorRows'
+  - 'toggleQuickAccess'
+  - 'moveQuickAccess'
+  - 'profileMenuSections'
+  - 'profileSectionSubtitleKeys'
+  - 'ProfileMenuKey'
+  - 'ProfileMenuFlag'
+  - 'ProfileMenuFlags'
+  - 'ProfileMenuItem'
+  - 'ProfileMenuSection'
+  - 'ProfileMenuSectionDef'
+  - 'ProfileMenuSectionId'
+  - 'ProfileMenuSectionsOptions'
   - 'ThemePalettes'
   - 'ThemeTokenOverrides'
   - 'ThemeTokenSettings'
@@ -4153,3 +4177,67 @@ height minus the safe-area insets) and mWeb `AuthBackground` (the viewport heigh
 | --- | --- |
 | `fitScale` | `(available: number, designHeight: number, min: number, max: number, fixed?: number) => number` |
 | `fitSize` | `(base: number, scale: number, floor?: number) => number` |
+
+## The account menu — `profile-menu`
+
+The account menu (/menu) on mWeb and the native app draws from ONE catalogue, so the two cannot
+list different destinations, gate them on different flags or group them differently. Every word is
+a translation key; the mWeb path, the native route and the icon of each destination stay in each
+app (`profile-drawer/profileSections.ts`, `components/Sidebar/profileSections.ts`), keyed by
+`ProfileMenuKey`.
+
+**Quick Access** is the grid of `QUICK_ACCESS_SIZE` (6) tiles a member picks and orders. The
+default set is Chats, Following, Pod History, Earn with Duncit, Pod Ideas and Help & Support —
+none of them flag-gated, so the default grid is always whole. The pick is kept per device under
+`QUICK_ACCESS_STORAGE_KEY` (localStorage on mWeb, the secure store on native) and read back through
+`parseStoredQuickAccess`: unknown, duplicate and now-hidden keys are dropped and the grid is topped
+up from the defaults, so a flag switching off never leaves a hole. The editors refine their form
+schema on `isValidQuickAccess` and move tiles with `toggleQuickAccess` / `moveQuickAccess`.
+
+**Section cards** come from `profileMenuSections(flags)`: Explore & Community, Work & Earnings,
+Shopping & Orders, Account & Preferences and Support & Legal, each with only its visible rows. A
+section with no visible row is left out unless named in `extraRows` (the apps add Switch role and
+Dark mode to Account, and the Policies list to Support). `profileSectionSubtitleKeys` gives the
+one-line subtitle — a row's short name (`subtitleKey`) when it has one, the gift-card pair once.
+
+```ts
+import {
+  isValidQuickAccess,
+  moveQuickAccess,
+  parseStoredQuickAccess,
+  profileMenuSections,
+  profileSectionSubtitleKeys,
+  toggleQuickAccess,
+} from '@duncit/utils';
+
+const flags = { products: true, leaderboard: false };
+
+parseStoredQuickAccess(null, flags);
+// ['chats', 'following', 'pod-history', 'earn', 'ideas', 'support']
+parseStoredQuickAccess('["cart","leaderboard","saved"]', flags);
+// ['cart', 'saved', 'chats', 'following', 'pod-history', 'earn'] — leaderboard is off
+isValidQuickAccess(['chats', 'saved'], flags); // false — six or nothing
+toggleQuickAccess(['chats', 'saved'], 'saved'); // ['chats']
+moveQuickAccess(['chats', 'saved'], 1, -1); // ['saved', 'chats']
+
+const explore = profileMenuSections(flags).find((s) => s.id === 'explore');
+profileSectionSubtitleKeys(explore?.items ?? []);
+// ['mweb.podIdeas.podIdeas', 'mweb.badges.sidebarLabel']
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `PROFILE_MENU_ITEMS` | `Record<ProfileMenuKey, ProfileMenuItem>` | Every destination: `labelKey`, optional `flag`, `badgeKey` and `subtitleKey`. |
+| `PROFILE_MENU_SECTIONS` | `ProfileMenuSectionDef[]` | The five section cards, their title keys and rows, in order. |
+| `QUICK_ACCESS_CATALOGUE` / `DEFAULT_QUICK_ACCESS` | `ProfileMenuKey[]` | What may be pinned, in editor order / the grid until edited. |
+| `isProfileMenuItemVisible` | `(key, flags) => boolean` | False while the destination's flag is not explicitly on. |
+| `availableQuickAccess` | `(flags) => ProfileMenuKey[]` | The catalogue entries pickable right now. |
+| `isValidQuickAccess` | `(selection, flags) => boolean` | Exactly six, distinct, each pickable. |
+| `normaliseQuickAccess` / `parseStoredQuickAccess` | `(stored, flags) => ProfileMenuKey[]` | A stored value (parsed / JSON string) read back into a valid grid. |
+| `quickAccessEditorRows` | `(selection, flags) => ProfileMenuKey[]` | Picked tiles first, then the rest of the catalogue. |
+| `toggleQuickAccess` / `moveQuickAccess` | `(selection, key)` / `(selection, index, step)` | The editor's pick/unpick (refuses a seventh) and up/down move. |
+| `profileMenuSections` | `(flags, { extraRows?, sections? }) => ProfileMenuSection[]` | The section cards with their visible rows; empty ones dropped. |
+| `profileSectionSubtitleKeys` | `(items) => string[]` | The keys the section subtitle lists, deduplicated. |
+
+Renderers: mWeb `profile-drawer/UserModeContent` + `MenuSections`, native
+`components/Sidebar/SidebarUserContent` + `SidebarSections`.

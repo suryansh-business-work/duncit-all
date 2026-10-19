@@ -6,6 +6,10 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useBranding', () => ({
   useBranding: () => ({ data: { branding: { venues_card_video_url: 'https://cdn/v.mp4' } } }),
 }));
+jest.mock('@/services/secure-storage', () => ({
+  getItem: jest.fn(async () => null),
+  setItem: jest.fn(async () => undefined),
+}));
 jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: [], loading: false }),
 }));
@@ -35,7 +39,7 @@ describe('SidebarUserContent — Studio entry', () => {
         account={FULL_ACCOUNT}
         roles={['HOST', 'VENUE_OWNER']}
         mode="USER"
-        showPodPlans={false}
+        flags={{}}
         onNavigate={onNavigate}
       />,
     );
@@ -49,7 +53,7 @@ describe('SidebarUserContent — Studio entry', () => {
         account={FULL_ACCOUNT}
         roles={['HOST', 'VENUE_OWNER']}
         mode="VENUE"
-        showPodPlans={false}
+        flags={{}}
         onNavigate={onNavigate}
       />,
     );
@@ -57,7 +61,7 @@ describe('SidebarUserContent — Studio entry', () => {
     // not listed in the sidebar — they live on the Studio screen it opens.
     const entry = screen.getByTestId('sidebar-studio-options');
     expect(screen.getAllByTestId('sidebar-studio-options')).toHaveLength(1);
-    expect(entry).toHaveTextContent(/Every option for your partner roles in one place/);
+    expect(entry).toHaveTextContent(/Everything for your partner roles in one place/);
     expect(entry).not.toHaveTextContent(/Venue Options/);
     expect(screen.queryByTestId('sidebar-item-Your Pods')).toBeNull();
     expect(screen.queryByTestId('sidebar-item-Withdrawal')).toBeNull();
@@ -73,8 +77,7 @@ describe('SidebarUserContent — Studio entry', () => {
         account={FULL_ACCOUNT}
         roles={['ECOMM_MANAGER']}
         mode="USER"
-        showPodPlans={false}
-        showProducts={showProducts}
+        flags={{ products: showProducts }}
         onNavigate={onNavigate}
       />
     );
@@ -94,7 +97,7 @@ describe('SidebarUserContent — Studio entry', () => {
         account={FULL_ACCOUNT}
         roles={['CLUB_ADMIN']}
         mode="VENUE"
-        showPodPlans={false}
+        flags={{}}
         onNavigate={onNavigate}
       />,
     );
@@ -107,7 +110,7 @@ describe('SidebarUserContent — Studio entry', () => {
         account={FULL_ACCOUNT}
         roles={[]}
         mode="VENUE"
-        showPodPlans={false}
+        flags={{}}
         onNavigate={onNavigate}
       />,
     );

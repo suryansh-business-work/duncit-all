@@ -22,7 +22,7 @@ export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) 
         />
       </SurfaceCard>
       <Text testID="sidebar-app-version" fontSize={12} color="$muted" textAlign="center">
-        App version {version}
+        {t('mweb.sidebar.appVersion', { vars: { version } })}
       </Text>
     </YStack>
   );

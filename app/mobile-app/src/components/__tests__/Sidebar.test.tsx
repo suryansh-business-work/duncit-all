@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { Sidebar } from '@/components/Sidebar';
+import { useQuickAccessStore } from '@/stores/quick-access.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { STUDIO_ROUTE } from '@/utils/studio-mode';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -11,6 +12,10 @@ const mockFlags: Record<string, boolean> = {};
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
+}));
+jest.mock('@/services/secure-storage', () => ({
+  getItem: jest.fn(async () => null),
+  setItem: jest.fn(async () => undefined),
 }));
 jest.mock('@/hooks/useLogout', () => ({ useLogout: () => mockLogout }));
 jest.mock('@/hooks/useActiveAds', () => ({
@@ -37,7 +42,11 @@ jest.mock('@/hooks/usePolicies', () => ({
 beforeEach(() => {
   jest.clearAllMocks();
   useStudioModeStore.setState({ mode: 'USER' });
+  useQuickAccessStore.setState({ raw: null });
 });
+
+/** Opens one of the collapsed section cards. */
+const expand = (id: string) => fireEvent.press(screen.getByTestId(`sidebar-section-${id}-toggle`));
 
 describe('Sidebar', () => {
   it('renders as a full page (no drawer backdrop)', () => {
@@ -46,16 +55,23 @@ describe('Sidebar', () => {
     expect(screen.queryByTestId('sidebar-backdrop')).toBeNull();
   });
 
-  it('shows the USER profile cards, the switch-role button, logout and app version', () => {
+  it('shows the profile card, Quick Access, the five collapsed sections, logout and app version', () => {
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByText('Asha Roy')).toBeOnTheScreen();
+    expect(screen.getByText('Quick Access')).toBeOnTheScreen();
     expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
     expect(screen.getByTestId('sidebar-grid-earn')).toBeOnTheScreen();
-    expect(screen.getByTestId('sidebar-referral')).toBeOnTheScreen();
-    expect(screen.getByTestId('sidebar-item-Saved Items')).toBeOnTheScreen();
+    for (const id of ['explore', 'work', 'shopping', 'account', 'support']) {
+      expect(screen.getByTestId(`sidebar-section-${id}-toggle`)).toBeCollapsed();
+    }
+    // Collapsed: the rows inside a section are not drawn until it opens.
+    expect(screen.queryByTestId('sidebar-switch-role')).toBeNull();
+    expand('account');
+    expect(screen.getByTestId('sidebar-section-account-toggle')).toBeExpanded();
     expect(screen.getByTestId('sidebar-switch-role')).toBeOnTheScreen();
+    expect(screen.getByTestId('sidebar-item-saved')).toBeOnTheScreen();
     expect(screen.getByTestId('sidebar-logout')).toBeOnTheScreen();
-    expect(screen.getByTestId('sidebar-app-version')).toBeOnTheScreen();
+    expect(screen.getByTestId('sidebar-app-version')).toHaveTextContent(/^App version /);
   });
 
   it('opens the profile from the identity card', () => {
@@ -66,27 +82,31 @@ describe('Sidebar', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Profile');
   });
 
-  it('closes and navigates from a quick-grid tile, referral and manage rows', () => {
+  it('closes and navigates from a Quick Access tile and from section rows', () => {
     const onClose = jest.fn();
     renderWithProviders(<Sidebar onClose={onClose} />);
     fireEvent.press(screen.getByTestId('sidebar-grid-pod-history'));
     expect(onClose).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith('PodHistory');
-    fireEvent.press(screen.getByTestId('sidebar-referral'));
+    expand('work');
+    fireEvent.press(screen.getByTestId('sidebar-item-referral'));
     expect(mockNavigate).toHaveBeenCalledWith('Referral');
-    fireEvent.press(screen.getByTestId('sidebar-item-Saved Items'));
+    expand('account');
+    fireEvent.press(screen.getByTestId('sidebar-item-saved'));
     expect(mockNavigate).toHaveBeenCalledWith('Saved');
   });
 
-  it('shows the incomplete banner and opens Account from it', () => {
+  it('shows the completion nudge in the profile card and opens Account from it', () => {
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
+    expect(screen.getByText('Your profile is 10% complete')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('profile-completion-cta'));
     expect(mockNavigate).toHaveBeenCalledWith('Account');
   });
 
   it('switches into Host Studio and keeps the unified card layout', () => {
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    expand('account');
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     // Dismissing via the backdrop keeps the current (USER) mode.
     fireEvent.press(screen.getByTestId('studio-switch-backdrop'));
@@ -111,6 +131,7 @@ describe('Sidebar', () => {
   it('expands the policies group and navigates to a policy', () => {
     const onClose = jest.fn();
     renderWithProviders(<Sidebar onClose={onClose} />);
+    expand('support');
     expect(screen.queryByTestId('sidebar-policy-terms')).toBeNull();
     fireEvent.press(screen.getByText('Policies'));
     fireEvent.press(screen.getByTestId('sidebar-policy-terms'));
@@ -130,6 +151,7 @@ describe('Sidebar', () => {
     const original = useThemeStore.getState();
     useThemeStore.setState({ ...original, scheme: 'dark' });
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    expand('account');
     expect(screen.getByTestId('sidebar-theme-switch').props.value).toBe(true);
     useThemeStore.setState(original);
   });
@@ -140,6 +162,7 @@ describe('Sidebar', () => {
     const original = useThemeStore.getState();
     useThemeStore.setState({ ...original, toggle });
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    expand('account');
     fireEvent(screen.getByTestId('sidebar-theme-switch'), 'valueChange', true);
     expect(toggle).toHaveBeenCalled();
     useThemeStore.setState(original);

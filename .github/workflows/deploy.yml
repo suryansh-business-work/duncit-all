@@ -878,6 +878,7 @@ jobs:
               --build-arg PUBLIC_MAIN_SITE_URL=${{ env.MAIN_SITE_URL }} \
               --build-arg PUBLIC_PARTNERS_APP_URL=${{ env.PARTNERS_APP_URL }} \
               --build-arg PUBLIC_EARNWITH_URL=${{ env.EARNWITH_URL }} \
+              --build-arg PUBLIC_MWEB_URL=${{ env.MWEB_URL }} \
               --cache-from type=gha,scope=duncit-partners-website${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-partners-website${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -952,6 +953,7 @@ jobs:
               --build-arg PUBLIC_MAIN_SITE_URL=${{ env.MAIN_SITE_URL }} \
               --build-arg PUBLIC_ADS_SITE_URL=${{ env.ADS_SITE_URL }} \
               --build-arg PUBLIC_EARNWITH_URL=${{ env.EARNWITH_URL }} \
+              --build-arg PUBLIC_MWEB_URL=${{ env.MWEB_URL }} \
               --cache-from type=gha,scope=duncit-ads-website${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-ads-website${{ env.SCOPE_SUFFIX }},mode=max \
               --push .

@@ -19,6 +19,7 @@ exports:
   - 'SiteMenu.astro'
   - 'SiteMeta.astro'
   - 'site-meta'
+  - 'site-branding'
   - 'GoogleAnalytics.astro'
   - 'google-analytics'
   - 'ConsentBanner.astro'
@@ -136,6 +137,12 @@ the mark is DRAWN.
 
 The exceptions are `ReelSlider` and the CMS widgets, which read live data in the browser
 at visit time on purpose — see their sections below.
+
+`site-branding` is the shape of that build-time fetch, not a fetch: each site's own client
+sends `SITE_BRANDING_QUERY` and hands the answer to
+`resolveSiteBranding(data, fallback)`, which lays it over the site's fallback and — when
+Admin > Branding has no Android link — falls back to the server's store listing. The
+`SiteBranding` and `SiteBrandingData` types come with it.
 
 ## API
 

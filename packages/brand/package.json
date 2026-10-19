@@ -19,6 +19,7 @@
     "./ScrollReveal.astro": "./src/ScrollReveal.astro",
     "./reveal": "./src/reveal.ts",
     "./site-i18n": "./src/site-i18n.ts",
+    "./site-branding": "./src/site-branding.ts",
     "./SiteMeta.astro": "./src/SiteMeta.astro",
     "./GoogleAnalytics.astro": "./src/GoogleAnalytics.astro",
     "./google-analytics": "./src/google-analytics.ts",

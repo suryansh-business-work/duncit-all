@@ -36,6 +36,10 @@ export default defineDemos('brand', [
         { name: 'ThemeToggle.astro', renders: 'The always-visible light/dark button for a site top bar; every toggle on a page stays in step.' },
         { name: 'ScrollReveal.astro', renders: 'Arms data-reveal / data-reveal-group scroll animations; nothing hides for no-JS or reduced motion.' },
         {
+          name: 'site-branding',
+          renders: 'The build-time branding query every site sends, and the fallback merge (blank Android link = the store listing).',
+        },
+        {
           name: 'ReelSlider.astro',
           renders:
             'The 3D reel slider under each home-page footer: the reels from Website portal > Reel Slider, muted and looping, one reel with sound at a time.',

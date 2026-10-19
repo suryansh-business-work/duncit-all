@@ -58,6 +58,13 @@ export interface IVenueSlot extends Document {
   decided_pod_id: Types.ObjectId | null;
   /** Owner's reason for declining (also mirrored into the pod audit note). */
   decline_reason: string;
+  /**
+   * Opened for a recurring pod's date on a day the venue had no slot — the
+   * host's request IS the slot. It becomes the venue's own slot only once the
+   * venue approves it; refused, expired or released before that, it is deleted
+   * rather than freed, so the venue never ends up offering a time it never opened.
+   */
+  requested_by_host: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -90,6 +97,7 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     decided_at: { type: Date, default: null },
     decided_pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null },
     decline_reason: { type: String, default: '', trim: true, maxlength: 280 },
+    requested_by_host: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

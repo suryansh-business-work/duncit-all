@@ -60,7 +60,16 @@ export const SERIES_DATES = { series_role: { $ne: 'PARENT' as PodSeriesRole } };
  * seats and money. Booking the PARENT row itself (an app that predates
  * recurring pods) is refused with a message saying what to do instead.
  */
-export function assertBookableRow(pod: { series_role?: PodSeriesRole | null }): void {
+export function assertBookableRow(pod: {
+  series_role?: PodSeriesRole | null;
+  venue_approval_status?: PodVenueApproval | null;
+}): void {
+  // A date of a recurring pod is sold only once its venue has accepted it.
+  if (pod.series_role === 'DATE' && (pod.venue_approval_status === 'PENDING' || pod.venue_approval_status === 'DECLINED')) {
+    throw new GraphQLError('This date is not confirmed by the venue yet. Pick another date.', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
   if (pod.series_role !== 'PARENT') return;
   throw new GraphQLError('This pod runs on several dates — pick the dates you want to book. Update the app if you do not see them.', {
     extensions: { code: 'BAD_USER_INPUT' },

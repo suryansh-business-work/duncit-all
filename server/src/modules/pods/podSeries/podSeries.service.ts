@@ -16,10 +16,12 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { PodSeriesModel, type IPodSeriesSkip, type PodSeriesFrequency } from './podSeries.model';
 import { seriesWindows, withinSpan, type SeriesWindow } from './podSeries.dates';
-import { firstSeriesSlot, matchSeriesSlots, type SeriesSlotMatch } from './podSeries.slots';
+import { firstSeriesSlot, matchSeriesSlots, type FirstSlot, type SeriesSlotMatch } from './podSeries.slots';
 import { assertMultiDateDiscountTiers, type MultiDateDiscountTier } from './podSeries.discount';
 import { createSeriesParent, syncSeriesParent } from './podSeries.parent';
 import { appFormat } from '@utils/app-time';
+import { breakdownService } from '@modules/finance/finance/breakdown.service';
+import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
 
 export interface SeriesPlanInput {
   pod_mode: string;
@@ -30,6 +32,8 @@ export interface SeriesPlanInput {
   frequency: PodSeriesFrequency;
   /** The last moment of the host's chosen end day (ISO), in the admin zone. */
   ends_on: string;
+  /** CUSTOM only: the ISO start of every date after the first. */
+  custom_dates?: string[] | null;
   /** Percent off a booking of several dates; omitted means the Pod Settings default. */
   multi_date_discount_tiers?: MultiDateDiscountTier[] | null;
 }
@@ -82,16 +86,58 @@ async function planDates(plan: SeriesPlanInput) {
   if (!withinSpan(first.start, endsOn, limits.maxSpanDays)) {
     fail('BAD_USER_INPUT', `A recurring pod can run for at most ${limits.maxSpanDays} days`);
   }
-  const windows = seriesWindows(first, plan.frequency, endsOn, limits.maxOccurrences);
+  const windows = seriesWindows(first, plan.frequency, endsOn, limits.maxOccurrences, plan.custom_dates ?? []);
   const now = Date.now();
   const matches: SeriesSlotMatch[] = slot
     ? await matchSeriesSlots(slot, windows)
-    : windows.map((window) => ({ window, slotId: null, price: null, reason: null }));
+    : windows.map((window) => ({ window, slotId: null, price: null, reason: null, onRequest: false }));
   // A date already in the past cannot be booked, whatever the slot says.
   const dates = matches.map((m) =>
-    m.window.start.getTime() <= now ? { ...m, slotId: null, reason: 'FAILED' as const } : m
+    m.window.start.getTime() <= now ? { ...m, slotId: null, reason: 'FAILED' as const, onRequest: false } : m
   );
-  return { limits, physical, dates };
+  return { limits, physical, dates, slot };
+}
+
+/**
+ * The multi-date discount comes out of the host's share; the venue is paid in
+ * full per date. So a date must still cover its venue — and leave the host
+ * something — at the deepest tier, judged on the dearest date's slot. Without
+ * this a big discount would leave Duncit paying the venue's shortfall.
+ */
+async function assertDiscountKeepsVenueCovered(
+  userId: string,
+  input: Record<string, unknown>,
+  tiers: readonly MultiDateDiscountTier[],
+  first: FirstSlot | null,
+  runnable: SeriesSlotMatch[]
+) {
+  const deepest = Math.max(0, ...tiers.map((t) => t.discount_pct));
+  if (!first || deepest <= 0) return;
+  const podAmount = Number(input.pod_amount) || 0;
+  const noOfSpots = Number(input.no_of_spots) || 0;
+  const dearest = Math.max(first.price ?? 0, ...runnable.map((m) => m.price ?? 0));
+  try {
+    await breakdownService.assertViablePodEconomics({
+      hostUserId: userId,
+      podAmount: (podAmount * (100 - deepest)) / 100,
+      noOfSpots,
+      venueId: String(first.venue_id),
+      venueAmount: slotVenueCharge({ ...first, price: dearest }, { pax: noOfSpots }).total,
+    });
+  } catch (error) {
+    if (!(error instanceof GraphQLError)) throw error;
+    fail(
+      'BAD_USER_INPUT',
+      `With the ${deepest}% multi-date discount a date no longer covers the venue. Lower the discount or raise the ticket price.`
+    );
+  }
+}
+
+/** The slot a date books: the venue's own, or — on request — one opened for it now. */
+async function slotForDate(m: SeriesSlotMatch, first: FirstSlot | null): Promise<string | null> {
+  if (!m.onRequest || !first || !m.window.end) return m.slotId;
+  const opened = await venueSlotService.openHostRequestSlot(first, m.window.start, m.window.end);
+  return String(opened._id);
 }
 
 /** A date's own slug — the title plus its day — so the parent keeps the title's. */
@@ -104,6 +150,7 @@ const toPubDate = (m: SeriesSlotMatch) => ({
   price: m.price,
   available: !m.reason,
   reason: m.reason,
+  on_request: m.onRequest,
 });
 
 /** Skips a date that failed to become a pod, keeping the server's message. */
@@ -125,14 +172,15 @@ function plannedSkips(dates: SeriesSlotMatch[], skipByHost: ReadonlySet<number>)
 }
 
 /** One date's pod input: the draft's fields with this date's time, slug and slot. */
-function dateInputFor(input: Record<string, unknown>, m: SeriesSlotMatch, frequency: PodSeriesFrequency, physical: boolean) {
+function dateInputFor(input: Record<string, unknown>, m: SeriesSlotMatch, frequency: PodSeriesFrequency, slotId: string | null) {
   return {
     ...input,
     pod_id: dateSlug(scalarText(input.pod_title), m.window.start),
-    pod_occurrence: frequency,
+    // A pod's occurrence has no "custom"; hand-picked dates each run once.
+    pod_occurrence: frequency === 'CUSTOM' ? 'ONE_TIME' : frequency,
     pod_date_time: m.window.start.toISOString(),
     pod_end_date_time: m.window.end ? m.window.end.toISOString() : null,
-    venue_slot_id: physical ? m.slotId : null,
+    venue_slot_id: slotId,
   };
 }
 
@@ -178,7 +226,7 @@ export const podSeriesService = {
   ) {
     const draft = await PodDraftModel.findOne({ _id: draftId, user_id: new Types.ObjectId(userId) });
     if (!draft) fail('NOT_FOUND', 'Draft not found');
-    const { limits, physical, dates } = await planDates(plan);
+    const { limits, physical, dates, slot: firstSlot } = await planDates(plan);
     const discountTiers = assertMultiDateDiscountTiers(
       plan.multi_date_discount_tiers ?? limits.defaultDiscountTiers,
       { maxPct: limits.maxDiscountPct, maxDates: limits.maxOccurrences }
@@ -186,6 +234,7 @@ export const podSeriesService = {
     const skipByHost = new Set((plan.skip_dates ?? []).map((d) => new Date(d).getTime()));
     const runnable = dates.filter((m) => !m.reason && !skipByHost.has(m.window.start.getTime()));
     if (runnable.length < 2) fail('BAD_USER_INPUT', 'A recurring pod needs at least two dates that can run');
+    if (physical) await assertDiscountKeepsVenueCovered(userId, input, discountTiers, firstSlot, runnable);
 
     const series = await PodSeriesModel.create({
       host_user_id: new Types.ObjectId(userId),
@@ -202,8 +251,10 @@ export const podSeriesService = {
     const skipped = plannedSkips(dates, skipByHost);
 
     for (const [i, m] of runnable.entries()) {
-      const dateInput = dateInputFor(input, m, plan.frequency, physical);
+      let slotId: string | null = null;
       try {
+        slotId = physical ? await slotForDate(m, firstSlot) : null;
+        const dateInput = dateInputFor(input, m, plan.frequency, slotId);
         const pub = await podService.createForPartner(userId, dateInput, {
           id: String(series._id),
           index: i + 1,
@@ -212,6 +263,8 @@ export const podSeriesService = {
         });
         if (pub) created.push({ id: new Types.ObjectId(pub.id), pub });
       } catch (error) {
+        // A slot opened for this date that no pod went on to hold is not the venue's.
+        if (m.onRequest && slotId) await venueSlotService.dropUnheldHostRequestSlot(slotId);
         if (created.length === 0) {
           await series.deleteOne();
           throw error;

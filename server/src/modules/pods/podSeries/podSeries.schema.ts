@@ -41,6 +41,8 @@ export const podSeriesTypeDefs = gql`
     seats_available: Int
     "Seats the viewer holds on this date (0: not booked)."
     my_seats: Int!
+    "This date's ticket price, before any discount."
+    pod_amount: Float!
     "Whether the viewer can book this date now."
     bookable: Boolean!
   }
@@ -50,6 +52,8 @@ export const podSeriesTypeDefs = gql`
     parent_pod_id: ID!
     frequency: PodSeriesFrequency
     multi_date_discount_tiers: [MultiDateDiscountTier!]!
+    "Whether the viewer hosts this pod. Members only get the dates the venue accepted."
+    is_host: Boolean!
     dates: [PodSeriesDateRow!]!
   }
 
@@ -70,6 +74,10 @@ export const podSeriesTypeDefs = gql`
     DAILY
     WEEKLY
     BIWEEKLY
+    "The same day of every month (the month's last day when the month is shorter)."
+    MONTHLY
+    "Only the dates the host picked on the calendar (custom_dates)."
+    CUSTOM
   }
 
   "Why a date of a recurring pod did not become a pod."
@@ -90,7 +98,7 @@ export const podSeriesTypeDefs = gql`
   input PodSeriesPlanInput {
     pod_mode: String!
     venue_id: ID
-    "The slot of the FIRST date. Every later date needs an identical slot (same space and times)."
+    "The slot of the FIRST date. Later dates book the identical slot (same space and times); where the venue has none, one is requested and opened when the venue accepts."
     venue_slot_id: ID
     "Virtual pods: the first date's start and end."
     pod_date_time: String
@@ -98,6 +106,8 @@ export const podSeriesTypeDefs = gql`
     frequency: PodSeriesFrequency!
     "The last moment of the chosen end day (ISO), worked out in the admin-set time zone."
     ends_on: String!
+    "CUSTOM only: the ISO start of every date after the first, each at the first date's time of day."
+    custom_dates: [String!]
     "Dates (ISO starts) the host unticked in the preview."
     skip_dates: [String!]
     "Percent off a booking of several dates; omitted means the Pod Settings default, [] means none."
@@ -113,6 +123,8 @@ export const podSeriesTypeDefs = gql`
     "That slot's price — it may differ from date to date."
     price: Int
     available: Boolean!
+    "The venue has no slot here yet: the request asks for one, opened when the venue accepts."
+    on_request: Boolean!
     reason: PodSeriesSkipReason
   }
 

@@ -24438,6 +24438,8 @@ export type PodSeriesDate = {
   __typename?: 'PodSeriesDate';
   available: Scalars['Boolean']['output'];
   end_at?: Maybe<Scalars['String']['output']>;
+  /** The venue has no slot here yet: the request asks for one, opened when the venue accepts. */
+  on_request: Scalars['Boolean']['output'];
   /** That slot's price — it may differ from date to date. */
   price?: Maybe<Scalars['Int']['output']>;
   reason?: Maybe<PodSeriesSkipReason>;
@@ -24454,6 +24456,8 @@ export type PodSeriesDateRow = {
   end_at?: Maybe<Scalars['String']['output']>;
   /** Seats the viewer holds on this date (0: not booked). */
   my_seats: Scalars['Int']['output'];
+  /** This date's ticket price, before any discount. */
+  pod_amount: Scalars['Float']['output'];
   /** The date's own pod — what a ticket, backout or host action on that date uses. */
   pod_doc_id: Scalars['ID']['output'];
   /** Spots left on this date (null: unlimited). */
@@ -24478,6 +24482,8 @@ export type PodSeriesDates = {
   __typename?: 'PodSeriesDates';
   dates: Array<PodSeriesDateRow>;
   frequency?: Maybe<PodSeriesFrequency>;
+  /** Whether the viewer hosts this pod. Members only get the dates the venue accepted. */
+  is_host: Scalars['Boolean']['output'];
   multi_date_discount_tiers: Array<MultiDateDiscountTier>;
   parent_pod_id: Scalars['ID']['output'];
 };
@@ -24493,7 +24499,11 @@ export type PodSeriesDecisionResult = {
 /** How often a recurring pod repeats. */
 export type PodSeriesFrequency =
   | 'BIWEEKLY'
+  /** Only the dates the host picked on the calendar (custom_dates). */
+  | 'CUSTOM'
   | 'DAILY'
+  /** The same day of every month (the month's last day when the month is shorter). */
+  | 'MONTHLY'
   | 'WEEKLY';
 
 export type PodSeriesJoinFailure = {
@@ -24512,6 +24522,8 @@ export type PodSeriesJoinResult = {
 
 /** The recurring plan a host is about to publish. */
 export type PodSeriesPlanInput = {
+  /** CUSTOM only: the ISO start of every date after the first, each at the first date's time of day. */
+  custom_dates?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The last moment of the chosen end day (ISO), worked out in the admin-set time zone. */
   ends_on: Scalars['String']['input'];
   frequency: PodSeriesFrequency;
@@ -24524,7 +24536,7 @@ export type PodSeriesPlanInput = {
   /** Dates (ISO starts) the host unticked in the preview. */
   skip_dates?: InputMaybe<Array<Scalars['String']['input']>>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
-  /** The slot of the FIRST date. Every later date needs an identical slot (same space and times). */
+  /** The slot of the FIRST date. Later dates book the identical slot (same space and times); where the venue has none, one is requested and opened when the venue accepts. */
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
 

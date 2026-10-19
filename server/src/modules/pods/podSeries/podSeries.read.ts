@@ -25,17 +25,22 @@ interface DateDoc {
   no_of_spots?: number;
   pod_attendees?: Types.ObjectId[];
   extra_seats?: number;
+  pod_amount?: number;
 }
 
 const DATE_FIELDS =
-  'pod_id pod_date_time pod_end_date_time deleted_at completed_at is_active is_hidden venue_approval_status no_of_spots pod_attendees extra_seats';
+  'pod_id pod_date_time pod_end_date_time deleted_at completed_at is_active is_hidden venue_approval_status no_of_spots pod_attendees extra_seats pod_amount';
+
+/** Dates a member is never shown: the venue has not accepted them, or they are off. */
+const HOST_ONLY_STATUSES: ReadonlySet<SeriesDateStatus> = new Set(['AWAITING_VENUE', 'CANCELLED']);
 
 export function seriesDateStatus(d: DateDoc, now: Date): SeriesDateStatus {
   if (d.deleted_at || d.venue_approval_status === 'DECLINED') return 'CANCELLED';
   if (d.completed_at) return 'COMPLETED';
+  // Never accepted, so it never ran — even once its time has passed.
+  if (d.venue_approval_status === 'PENDING') return 'AWAITING_VENUE';
   const end = podLiveEnd(d)?.getTime() ?? 0;
   if (end < now.getTime()) return 'COMPLETED';
-  if (d.venue_approval_status === 'PENDING') return 'AWAITING_VENUE';
   return d.pod_date_time.getTime() <= now.getTime() ? 'ONGOING' : 'UPCOMING';
 }
 
@@ -60,6 +65,17 @@ async function datesOf(parentId: Types.ObjectId) {
     .lean<DateDoc[]>();
 }
 
+/** Whether the viewer runs this recurring pod — a host, or an accepted co-host. */
+async function viewerHosts(parentId: Types.ObjectId, userId: string | null): Promise<boolean> {
+  if (!userId || !Types.ObjectId.isValid(userId)) return false;
+  const viewer = new Types.ObjectId(userId);
+  const hit = await PodModel.exists({
+    _id: parentId,
+    $or: [{ pod_hosts_id: viewer }, { co_hosts: { $elemMatch: { user_id: viewer, status: 'ACCEPTED' } } }],
+  }).setOptions({ includeDeleted: true });
+  return !!hit;
+}
+
 /** Seats the viewer holds on each date they booked. */
 async function mySeats(dateIds: Types.ObjectId[], userId: string | null) {
   if (!userId) return new Map<string, number>();
@@ -78,13 +94,17 @@ export const podSeriesReadService = {
    * Every date of a recurring pod for its details page: when, how it stands,
    * how many spots it has left, whether the viewer booked it and whether it
    * can be booked now. Null for a one-time pod.
+   *
+   * Members see only the dates the venue accepted (plus any they hold a seat
+   * on); a date still waiting on the venue, or refused, is the host's business.
    */
   async dates(podDocId: string, userId: string | null) {
     const parentId = await parentOf(podDocId);
     if (!parentId) return null;
-    const [series, dates] = await Promise.all([
+    const [series, dates, isHost] = await Promise.all([
       PodSeriesModel.findOne({ parent_pod_id: parentId }).select('frequency multi_date_discount_tiers').lean(),
       datesOf(parentId),
+      viewerHosts(parentId, userId),
     ]);
     const mine = await mySeats(
       dates.map((d) => d._id),
@@ -95,12 +115,14 @@ export const podSeriesReadService = {
       parent_pod_id: String(parentId),
       frequency: series?.frequency ?? null,
       multi_date_discount_tiers: series?.multi_date_discount_tiers ?? [],
-      dates: dates.map((d) => {
+      is_host: isHost,
+      dates: dates.flatMap((d) => {
         const status = seriesDateStatus(d, now);
+        const booked = mine.get(String(d._id)) ?? 0;
+        if (!isHost && booked === 0 && HOST_ONLY_STATUSES.has(status)) return [];
         const spots = Number(d.no_of_spots);
         const unlimited = Number.isNaN(spots) || spots <= 0;
         const seatsLeft = unlimited ? null : podSeatsAvailable(d);
-        const booked = mine.get(String(d._id)) ?? 0;
         return {
           pod_doc_id: String(d._id),
           slug: d.pod_id,
@@ -109,6 +131,7 @@ export const podSeriesReadService = {
           status,
           seats_available: seatsLeft,
           my_seats: booked,
+          pod_amount: Number(d.pod_amount) || 0,
           bookable:
             status === 'UPCOMING' && !!d.is_active && !d.is_hidden && booked === 0 && (seatsLeft === null || seatsLeft > 0),
         };

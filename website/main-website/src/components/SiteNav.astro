@@ -1,162 +1,147 @@
 ---
-// Site-wide side navigation drawer, toggled by any element with
-// [data-nav-toggle]. Sections come from the Website portal (Navigation
-// manager); the Policy Hub group is the Legal portal's active policies.
+// Site-wide side navigation drawer, opened by any element with
+// [data-nav-toggle] (the TopBar's menu button). Sections come from the Website
+// portal (Navigation manager); the Policy Hub group is the Legal portal's
+// active policies.
 import BrandLogo from './BrandLogo.astro';
 import { fetchNavGroups, fetchPolicies } from '../lib/site-data';
+import { navFallback, type FallbackNavGroup } from '../lib/nav-fallback';
 import { getTranslator } from '../lib/i18n';
+import { urlConfigs } from '../config/url-configs';
 import SmartLink from './SmartLink.astro';
 
 // Chrome copy from Admin > Localization; link labels stay Navigation-manager
 // content (rule 38).
 const { t } = await getTranslator();
 
-const FALLBACK_GROUPS = [
-  {
-    label: t("website.main.nav.about"),
-    icon: "fa-circle-info",
-    links: [
-      { id: "n-about", label: t("website.main.nav.aboutUs"), url: "/about" },
-      { id: "n-newsroom", label: t("website.main.nav.newsroom"), url: "/newsroom" },
-      { id: "n-careers", label: t("website.main.nav.careers"), url: "/careers" },
-      { id: "n-contact", label: t("website.main.nav.contactUs"), url: "/contact" },
-    ],
-  },
-  {
-    label: t("website.main.nav.community"),
-    icon: "fa-people-group",
-    links: [
-      { id: "n-community", label: t("website.main.nav.community"), url: "/community" },
-      { id: "n-guidelines", label: t("website.main.nav.guidelines"), url: "/guidelines" },
-      { id: "n-blog", label: t("website.main.nav.blog"), url: "/blog" },
-    ],
-  },
-  {
-    label: t("website.main.nav.safetyHub"),
-    icon: "fa-shield-heart",
-    links: [
-      { id: "n-approach", label: t("website.main.nav.ourApproach"), url: "/safety/approach" },
-      { id: "n-advice", label: t("website.main.nav.advice"), url: "/safety/advice" },
-      { id: "n-tools", label: t("website.main.nav.safetyTools"), url: "/safety/tools" },
-      { id: "n-resources", label: t("website.main.nav.resources"), url: "/safety/resources" },
-    ],
-  },
-  {
-    label: t("website.main.nav.support"),
-    icon: "fa-life-ring",
-    links: [
-      { id: "n-help", label: t("website.main.nav.helpCenter"), url: "/help" },
-      { id: "n-faq", label: t("website.main.nav.faq"), url: "/faq" },
-    ],
-  },
-];
-
 // The Navigation manager owns the labels when it answers, and its groups are
 // stored in English — so the icon for a PORTAL group is still looked up by its
-// English label. A FALLBACK group carries its own icon instead, because its
-// label is translated and an icon map keyed on display text stops matching the
-// moment the display text changes language.
+// English label. A FALLBACK group carries its own icon instead.
 const GROUP_ICONS: Record<string, string> = {
-  About: "fa-circle-info",
-  Community: "fa-people-group",
-  "Safety Hub": "fa-shield-heart",
-  Support: "fa-life-ring",
-  "Policy Hub": "fa-lock",
+  About: 'fa-circle-info',
+  Community: 'fa-people-group',
+  'Safety Hub': 'fa-shield-heart',
+  Support: 'fa-life-ring',
+  'Policy Hub': 'fa-lock',
 };
 
-const navGroups = await fetchNavGroups('MAIN', 'HEADER', FALLBACK_GROUPS as never);
+const navGroups: FallbackNavGroup[] = await fetchNavGroups('MAIN', 'HEADER', navFallback(t));
 const policies = await fetchPolicies();
 const sections = [
   ...navGroups.map((group) => ({
     title: group.label,
-    icon: (group as { icon?: string }).icon ?? GROUP_ICONS[group.label] ?? 'fa-hashtag',
-    links: group.links.map((link) => ({ href: link.url, label: link.label })),
+    icon: group.icon ?? GROUP_ICONS[group.label] ?? 'fa-hashtag',
+    links: group.links.map((link) => ({ href: link.url, label: link.label, more: false })),
   })),
   {
     title: t('website.footer.policyHub'),
     icon: 'fa-lock',
     links: [
-      ...policies.map((policy) => ({ href: `/policy/${policy.slug}`, label: policy.title })),
-      { href: '/policies', label: t('website.footer.allPolicies') },
+      ...policies.map((policy) => ({ href: `/policy/${policy.slug}`, label: policy.title, more: false })),
+      { href: '/policies', label: t('website.footer.allPolicies'), more: true },
     ],
   },
 ];
+const chip =
+  'inline-flex min-h-11 items-center rounded-2xl border px-3.5 py-2 text-sm font-bold transition duration-200 ease-soft hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-cream';
+const iconButton = 'inline-flex h-11 w-11 items-center justify-center rounded-full border transition';
 ---
 
 <!-- Backdrop -->
 <div
   id="navBackdrop"
   data-nav-backdrop
-  class="fixed inset-0 z-40 bg-frame/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"
-></div>
+  class="fixed inset-0 z-40 bg-frame/55 opacity-0 pointer-events-none backdrop-blur-sm transition-opacity duration-500 ease-soft"
+>
+</div>
 
-<!-- Drawer -->
+<!-- Drawer: a floating panel. Closed, it slides fully past the screen edge
+     and turns invisible, so its links leave the tab order too. -->
 <aside
   id="siteNav"
   data-cms-widget="site-nav"
-  class="fixed top-0 left-0 z-50 h-full w-[88%] max-w-md bg-cream shadow-2xl -translate-x-full transition-transform duration-300 flex flex-col"
+  aria-label={t('website.main.nav.drawer')}
+  class="group fixed inset-y-3 left-3 z-50 flex w-[calc(100%-1.5rem)] max-w-[27rem] -translate-x-full flex-col overflow-hidden rounded-panel bg-cream shadow-lift transition-[transform,visibility] duration-500 ease-soft aria-[hidden=true]:invisible aria-[hidden=true]:-translate-x-[calc(100%+2rem)]"
   aria-hidden="true"
 >
-  <div class="flex items-center justify-between p-5 border-b border-ink/10">
-    <BrandLogo height={48} />
+  <div class="flex items-center justify-between px-5 pt-5 pb-4">
+    <BrandLogo height={40} />
     <div class="flex items-center gap-2">
-      <!-- The theme lives with the menu rather than in the page chrome: every
-           page here opens on a photograph, and a toggle on top of one is a
-           control nobody can see. -->
       <button
         type="button"
         data-theme-toggle
-        class="w-10 h-10 rounded-full border-2 border-ink/15 text-ink inline-flex items-center justify-center transition hover:border-primary hover:text-primary"
+        class={`${iconButton} border-line bg-surface text-ink hover:border-primary hover:text-primary-ink`}
         aria-label={t('website.nav.theme')}
         aria-pressed="false"
       >
         <i class="fa-solid fa-moon text-sm" data-theme-icon aria-hidden="true"></i>
       </button>
       <button
+        type="button"
         data-nav-close
-        class="w-10 h-10 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:bg-primary transition"
+        class={`${iconButton} border-ink bg-ink text-cream hover:border-primary-dark hover:bg-primary-dark hover:text-white`}
         aria-label={t('website.nav.closeMenu')}
       >
-        <i class="fa-solid fa-xmark text-lg"></i>
+        <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
       </button>
     </div>
   </div>
 
-  <nav class="flex-1 overflow-y-auto p-5 space-y-6">
-    {sections.map((section) => (
-      <div>
-        <h4 class="flex items-center gap-2 text-xs uppercase tracking-wider font-extrabold text-ink-soft mb-2">
-          <i class={`fa-solid ${section.icon} text-primary`}></i>
-          {section.title}
-        </h4>
-        <ul class="space-y-1">
-          {section.links.map((link) => (
-            <li>
-              {/* The Navigation manager can point an entry at another Duncit
-                  surface, so whether this leaves the site is not knowable
-                  here — SmartLink decides from the URL. */}
-              <SmartLink
-                href={link.href}
-                label={link.label}
-                glyph={false}
-                class="flex items-center justify-between px-3 py-2.5 rounded-lg text-ink hover:bg-primary/10 hover:text-primary font-semibold transition group"
-              >
-                <span>{link.label}</span>
-                <i class="fa-solid fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition"></i>
-              </SmartLink>
-            </li>
-          ))}
-        </ul>
-      </div>
-    ))}
-  </nav>
-
-  <div class="p-5 border-t border-ink/10 bg-surface">
+  <nav class="flex-1 overflow-y-auto px-5 pb-5">
     <a
       href="/#download"
-      class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-ink text-cream font-bold text-sm hover:bg-primary transition"
+      class="relative mb-6 block overflow-hidden rounded-3xl bg-primary-dark p-5 text-white transition duration-300 ease-soft hover:-translate-y-0.5 hover:shadow-soft"
     >
-      <i class="fa-solid fa-download"></i> Get the Duncit app
+      <i class="fa-solid fa-mobile-screen-button absolute -right-2 -bottom-5 text-[6.5rem] opacity-20" aria-hidden="true"></i>
+      <span class="relative block headline text-[1.375rem]">{t('website.main.nav.promoTitle')}</span>
+      <span class="relative mt-1 block text-sm font-semibold">{t('website.main.nav.promoText')}</span>
+    </a>
+
+    {
+      sections.map((section, index) => (
+        <div
+          class="mb-6 translate-x-0 opacity-100 transition duration-500 ease-soft group-aria-[hidden=true]:-translate-x-6 group-aria-[hidden=true]:opacity-0"
+          style={`transition-delay:${Math.min(index, 6) * 60}ms`}
+        >
+          <p id={`nav-group-${index}`} class="mb-2.5 flex items-center gap-2.5 font-head text-xs font-extrabold uppercase tracking-[0.14em] text-ink-soft">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary-light text-primary-ink">
+              <i class={`fa-solid ${section.icon} text-sm`} aria-hidden="true" />
+            </span>
+            {section.title}
+          </p>
+          <ul class="flex flex-wrap gap-2" aria-labelledby={`nav-group-${index}`}>
+            {section.links.map((link) => (
+              <li>
+                {/* The Navigation manager can point an entry at another Duncit
+                    surface — SmartLink decides from the URL. */}
+                <SmartLink
+                  href={link.href}
+                  label={link.label}
+                  glyph={false}
+                  class={`${chip} ${link.more ? 'border-dashed border-line text-primary-ink' : 'border-line bg-surface text-ink'}`}
+                >
+                  {link.label}
+                </SmartLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </nav>
+
+  <div class="flex gap-2.5 border-t border-line px-5 pt-4 pb-5">
+    <a
+      href={`${urlConfigs.mwebUrl}/register`}
+      class="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-primary-dark font-head text-sm font-bold text-white transition hover:-translate-y-0.5"
+    >
+      {t('website.main.home.join')}
+    </a>
+    <a
+      href={`${urlConfigs.mwebUrl}/login`}
+      class="inline-flex h-12 flex-1 items-center justify-center rounded-full border border-line font-head text-sm font-bold text-ink transition hover:border-ink"
+    >
+      {t('website.main.home.signIn')}
     </a>
   </div>
 </aside>
@@ -164,7 +149,7 @@ const sections = [
 <!--
   The drawer + theme button behaviour is the CMS widget
   @duncit/brand/widgets/site-nav. Openers are delegated, so any
-  [data-nav-toggle] (homepage hero, sub-page headers) opens it.
+  [data-nav-toggle] opens it.
 -->
 <script>
   import { mount } from '@duncit/brand/widgets/site-nav';

@@ -1,11 +1,11 @@
 ---
+// The shell every inner page wears: the top bar floating over a photo hero,
+// the article panel, the footer.
 import Layout from './Layout.astro';
 import SiteNav from '../components/SiteNav.astro';
+import TopBar from '../components/TopBar.astro';
 import Footer from '../components/Footer.astro';
-import BrandLogo from '../components/BrandLogo.astro';
-import { getTranslator } from '../lib/i18n';
-
-const { t } = await getTranslator();
+import '../styles/prose-page.css';
 
 interface Props {
   title: string;
@@ -14,84 +14,72 @@ interface Props {
   intro?: string;
   heroImage?: string;
   accent?: 'primary' | 'secondary' | 'tertiary';
+  /** Bento grids, card lists and side navs need the full panel width; a
+   * page of running prose reads best at a measure. */
+  wide?: boolean;
 }
 
 const {
-  title,
   eyebrow,
   heading,
   intro,
   heroImage = 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop',
   accent = 'primary',
+  wide = false,
 } = Astro.props;
 
+// The accent word sits on the photo's fixed-dark scrim, so the bright tones
+// read in both themes.
 const accentClass = {
   primary: 'text-primary',
   secondary: 'text-secondary',
-  tertiary: 'text-tertiary-dark',
+  tertiary: 'text-tertiary',
 }[accent];
 
-const accentBg = {
-  primary: 'bg-primary',
-  secondary: 'bg-secondary',
-  tertiary: 'bg-tertiary',
+// The eyebrow badge: white only on tones dark enough to carry small white
+// text; yellow never inverts, so it takes the fixed dark `on-accent`.
+const badgeClass = {
+  primary: 'bg-primary-dark text-white',
+  secondary: 'bg-secondary text-white',
+  tertiary: 'bg-tertiary text-on-accent',
 }[accent];
 
-// The eyebrow badge sits directly on accentBg — tertiary (yellow) is a
-// fixed, non-inverting accent, so it needs the dark on-accent token, not
-// white, or the label goes near-invisible (same reasoning as global.css's
-// --color-on-accent comment).
-const accentText = {
-  primary: 'text-white',
-  secondary: 'text-white',
-  tertiary: 'text-on-accent',
-}[accent];
+const words = heading.split(' ');
+const lead = words.slice(0, -1).join(' ');
+const last = words[words.length - 1];
 ---
 
 <Layout title={`${heading} — Duncit`}>
   <SiteNav />
-  <div class="bg-frame p-3 sm:p-4">
-    <!-- Hero -->
-    <section class="relative overflow-hidden rounded-3xl min-h-[420px] px-6 pt-5 pb-16">
-      <div class="absolute inset-0 z-0">
-        <img src={heroImage} alt="" class="w-full h-full object-cover" />
-        <!-- The heading over this scrim is always white, so the scrim must
-             stay dark in both themes — `frame` never inverts, `ink` does. -->
-        <div class="absolute inset-0 bg-linear-to-b from-frame/30 via-frame/40 to-frame/70"></div>
+  <div class="bg-frame p-2 sm:p-3">
+    <TopBar />
+
+    <section class="relative isolate flex min-h-[26rem] items-end overflow-hidden rounded-panel bg-frame px-5 pt-32 pb-14 sm:min-h-[30rem] sm:px-10 sm:pb-16">
+      <div class="absolute inset-0 -z-10" aria-hidden="true">
+        <img src={heroImage} alt="" class="h-full w-full object-cover" />
+        <!-- The heading over this scrim is always white, so the scrim must stay
+             dark in both themes — `frame` never inverts, `ink` does. -->
+        <div class="absolute inset-0 bg-linear-to-r from-frame/85 via-frame/55 to-frame/25"></div>
+        <div class="absolute inset-0 bg-linear-to-t from-frame/80 to-transparent to-60%"></div>
       </div>
 
-      <nav class="relative z-20 flex items-center justify-between">
-        <button
-          data-nav-toggle
-          class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition"
-          aria-label={t('website.main.nav.menu')}
-        >
-          <i class="fa-solid fa-bars text-lg"></i>
-        </button>
-        <BrandLogo height={56} />
-        <a href="/" class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label={t('website.main.nav.home')}>
-          <i class="fa-solid fa-house text-base"></i>
-        </a>
-      </nav>
-
-      <div class="relative z-10 mt-16 max-w-3xl">
-        {eyebrow && (
-          <span data-page-eyebrow class={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${accentBg} ${accentText} font-bold text-xs uppercase tracking-wider mb-4 sticker`}>
-            <i class="fa-solid fa-sparkles"></i> {eyebrow}
-          </span>
-        )}
-        <h1 data-page-heading class={`text-4xl sm:text-5xl md:text-6xl text-white`}>
-          {heading.split(' ').map((w, i, arr) =>
-            i === arr.length - 1 ? <span class={accentClass}>{w}</span> : <Fragment>{w}{' '}</Fragment>
-          )}
+      <div data-reveal-group class="mx-auto w-full max-w-6xl">
+        {
+          eyebrow && (
+            <span data-reveal class={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-head text-xs font-extrabold tracking-[0.12em] uppercase ${badgeClass}`}>
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> {eyebrow}
+            </span>
+          )
+        }
+        <h1 data-reveal data-page-heading class="headline mt-5 max-w-4xl text-[2.75rem] text-white sm:text-6xl lg:text-[5.25rem]">
+          {lead && <Fragment>{lead} </Fragment>}<span class={accentClass}>{last}</span>
         </h1>
-        {intro && <p data-page-intro class="mt-4 text-white/85 text-lg max-w-2xl">{intro}</p>}
+        {intro && <p data-reveal class="mt-5 max-w-2xl text-lg leading-relaxed text-white/85 sm:text-xl">{intro}</p>}
       </div>
     </section>
 
-    <!-- Content -->
-    <main class="bg-cream rounded-3xl mt-3 px-6 sm:px-10 py-14">
-      <article class="prose-page max-w-3xl mx-auto text-ink-soft text-[1.02rem] leading-relaxed">
+    <main class="mt-3 rounded-panel bg-cream px-5 py-14 sm:px-10 lg:py-24">
+      <article class:list={['prose-page mx-auto text-[1.05rem] leading-relaxed text-ink-soft', wide ? 'max-w-6xl' : 'max-w-3xl']}>
         <slot />
       </article>
     </main>
@@ -99,141 +87,3 @@ const accentText = {
     <Footer />
   </div>
 </Layout>
-
-<script>
-  import { animate, stagger } from 'animejs';
-
-  // Hero entrance
-  try {
-    const targets = ['[data-page-eyebrow]', '[data-page-heading]', '[data-page-intro]']
-      .map((s) => document.querySelector(s))
-      .filter(Boolean) as Element[];
-    if (targets.length) {
-      animate(targets, {
-        opacity: [0, 1],
-        translateY: [24, 0],
-        delay: stagger(120, { start: 100 }),
-        duration: 600,
-        ease: 'outQuart',
-      });
-    }
-  } catch (e) {
-    // Fallback: ensure elements visible
-    document.querySelectorAll('[data-page-eyebrow],[data-page-heading],[data-page-intro]')
-      .forEach((el) => ((el as HTMLElement).style.opacity = '1'));
-  }
-
-  // Reveal headings & lists & cards in the article on scroll
-  try {
-    const article = document.querySelector('.prose-page');
-    if (article) {
-      const items = article.querySelectorAll('h2, h3, p, ul, ol, blockquote, .not-prose > *, details');
-      items.forEach((el) => ((el as HTMLElement).style.opacity = '0'));
-      const io = new IntersectionObserver((entries, obs) => {
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-          animate(e.target, {
-            opacity: [0, 1],
-            translateY: [16, 0],
-            duration: 500,
-            ease: 'outQuart',
-          });
-          obs.unobserve(e.target);
-        });
-      }, { threshold: 0.12 });
-      items.forEach((it) => io.observe(it));
-    }
-  } catch (e) {
-    document.querySelectorAll('.prose-page *')
-      .forEach((el) => ((el as HTMLElement).style.opacity = '1'));
-  }
-</script>
-
-<style is:global>
-  .prose-page h2 {
-    font-family: var(--font-head);
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--color-ink);
-    margin-top: 2.5rem;
-    margin-bottom: 0.75rem;
-    letter-spacing: -0.02em;
-  }
-  .prose-page h3 {
-    font-family: var(--font-head);
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--color-ink);
-    margin-top: 1.75rem;
-    margin-bottom: 0.5rem;
-  }
-  .prose-page p { margin-bottom: 1rem; }
-  .prose-page ul, .prose-page ol {
-    margin: 0.75rem 0 1.25rem 1.25rem;
-  }
-  .prose-page ul li { list-style: disc; margin-bottom: 0.4rem; }
-  .prose-page ol li { list-style: decimal; margin-bottom: 0.4rem; }
-  .prose-page a {
-    color: var(--color-primary);
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  .prose-page .not-prose a,
-  .prose-page .not-prose a:hover {
-    color: inherit;
-    text-decoration: none;
-    font-weight: inherit;
-  }
-  .prose-page .not-prose h1,
-  .prose-page .not-prose h2,
-  .prose-page .not-prose h3,
-  .prose-page .not-prose h4 {
-    color: inherit;
-    margin: 0;
-  }
-  .prose-page .not-prose p { margin: 0; }
-  .prose-page .not-prose ul,
-  .prose-page .not-prose ol { margin: 0; padding: 0; }
-  .prose-page .not-prose ul li,
-  .prose-page .not-prose ol li { list-style: none; margin: 0; }
-  .prose-page strong { color: var(--color-ink); font-weight: 700; }
-  .prose-page hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-line); }
-  .prose-page blockquote {
-    border-left: 4px solid var(--color-primary);
-    padding: 0.5rem 0 0.5rem 1rem;
-    margin: 1.25rem 0;
-    color: var(--color-ink);
-    font-style: italic;
-  }
-  .prose-page code {
-    background: var(--color-lilac);
-    padding: 0.1rem 0.4rem;
-    border-radius: 4px;
-    font-size: 0.9em;
-  }
-  .prose-page table {
-    display: block;
-    overflow-x: auto;
-    border-collapse: collapse;
-    table-layout: fixed;
-    width: 100%;
-    margin: 1.25rem 0;
-  }
-  .prose-page th,
-  .prose-page td {
-    border: 1px solid var(--color-line);
-    padding: 0.5rem 0.75rem;
-    text-align: left;
-    vertical-align: top;
-  }
-  .prose-page th {
-    background: var(--color-lilac);
-    color: var(--color-ink);
-    font-weight: 700;
-  }
-  .prose-page td p,
-  .prose-page th p {
-    margin-bottom: 0;
-  }
-</style>

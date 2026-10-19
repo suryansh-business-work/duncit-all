@@ -6,8 +6,10 @@
 // a query string on a single page. The TEXT is still loaded live, so a legal
 // edit is on the site immediately without a redeploy. A policy published after
 // the build is answered with the reader page (see lib/policy-page.ts), so it is
-// live the moment Legal activates it too.
+// live the moment Legal activates it too. The side list of its sections is
+// built from that live text (DocToc) — nothing of the wording is written here.
 import PageLayout from '../../layouts/PageLayout.astro';
+import DocToc from '../../components/page/DocToc.astro';
 import { fetchPolicies } from '../../lib/site-data';
 import { getTranslator } from '../../lib/i18n';
 import { POLICY_READER_SLUG } from '../../lib/policy-page';
@@ -34,22 +36,36 @@ const { title } = Astro.props;
   heading={title ?? t('website.main.policyDetail.fallbackTitle')}
   intro={t('website.main.policyDetail.intro')}
   heroImage="https://images.pexels.com/photos/7654588/pexels-photo-7654588.jpeg?auto=compress&cs=tinysrgb&w=1600"
+  wide
 >
-  <div id="policyBody" data-cms-widget="policy-reader" data-graphql-url={urlConfigs.graphqlUrl}
-    data-copy={JSON.stringify({ notFound: t('website.main.policyDetail.notFound'), empty: t('website.main.policyDetail.empty'), error: t('website.main.policyDetail.error') })}>
-    <div class="not-prose space-y-3" aria-hidden="true">
-      <div class="skeleton h-8 w-2/3"></div>
-      <div class="skeleton h-4"></div>
-      <div class="skeleton h-4"></div>
-      <div class="skeleton h-4 w-5/6"></div>
-      <div class="skeleton h-4 w-4/6"></div>
+  <div class="grid items-start gap-10 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-16">
+    <div class="not-prose grid gap-6 lg:sticky lg:top-28">
+      <a
+        href="/policies"
+        class="group inline-flex min-h-11 items-center gap-2 self-start rounded-full border border-line bg-surface px-5 font-head text-sm font-bold text-ink shadow-soft transition duration-300 ease-soft hover:-translate-y-0.5 hover:border-primary"
+      >
+        <i class="fa-solid fa-arrow-left text-primary-ink transition duration-300 ease-soft group-hover:-translate-x-0.5" aria-hidden="true"></i>
+        {t('website.footer.allPolicies')}
+      </a>
+      <DocToc target="#policyBody" headings="h2, h3" label={t('website.main.policyDetail.onThisPage')} />
+    </div>
+
+    <div
+      id="policyBody"
+      data-cms-widget="policy-reader"
+      data-graphql-url={urlConfigs.graphqlUrl}
+      data-copy={JSON.stringify({ notFound: t('website.main.policyDetail.notFound'), empty: t('website.main.policyDetail.empty'), error: t('website.main.policyDetail.error') })}
+      class="min-w-0 max-w-3xl"
+    >
+      <div class="not-prose space-y-3" aria-hidden="true">
+        <div class="skeleton h-8 w-2/3"></div>
+        <div class="skeleton h-4"></div>
+        <div class="skeleton h-4"></div>
+        <div class="skeleton h-4 w-5/6"></div>
+        <div class="skeleton h-4 w-4/6"></div>
+      </div>
     </div>
   </div>
-  <p class="not-prose mt-8">
-    <a href="/policies" class="inline-flex items-center gap-2 font-bold text-primary">
-      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All policies
-    </a>
-  </p>
 </PageLayout>
 
 <script>

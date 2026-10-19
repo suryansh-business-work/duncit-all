@@ -1,5 +1,8 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import CtaBand from '../components/page/CtaBand.astro';
+import PillLink from '../components/page/PillLink.astro';
 import WebsiteContentList from '../components/WebsiteContentList.astro';
 import { getTranslator } from '../lib/i18n';
 
@@ -13,9 +16,16 @@ const { t } = await getTranslator();
   intro={t('website.main.blog.intro')}
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <WebsiteContentList type="BLOG" variant="cards" />
+  <Block kicker={t('website.main.blog.latestKicker')} title={t('website.main.blog.latestHeading')}>
+    <WebsiteContentList type="BLOG" variant="cards" />
+  </Block>
 
-  <h2>{t('website.main.blog.subscribe')}</h2>
-  <p>{t('website.main.blog.subscribeText')} <a href="/">{t('website.main.blog.joinList')}</a></p>
+  <CtaBand kicker={t('website.main.blog.subscribeKicker')} title={t('website.main.blog.subscribe')} icon="fa-envelope-open-text">
+    {t('website.main.blog.subscribeText')}
+    <Fragment slot="actions">
+      <PillLink href="/" label={t('website.main.blog.joinCta')} />
+    </Fragment>
+  </CtaBand>
 </PageLayout>

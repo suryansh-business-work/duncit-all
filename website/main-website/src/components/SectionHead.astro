@@ -1,0 +1,29 @@
+---
+// The redesign's section opener: kicker, big tight heading, and a short line
+// set beside it on wide screens. The heading slot takes rich markup (an accent
+// word, a line break); `title` is the plain-text fallback.
+interface Props {
+  kicker: string;
+  title?: string;
+  text?: string;
+  /** `on-accent` when the section sits on a colour that never inverts (the yellow band). */
+  tone?: 'default' | 'on-accent';
+  class?: string;
+}
+
+const { kicker, title, text, tone = 'default', class: className = '' } = Astro.props;
+const muted = tone === 'on-accent' ? 'text-on-accent' : 'text-ink-soft';
+---
+
+<div
+  data-reveal
+  class:list={['mb-10 flex flex-col gap-4 md:mb-16 md:flex-row md:items-end md:justify-between md:gap-10', className]}
+>
+  <div class="max-w-3xl">
+    <span class:list={['kicker', tone === 'on-accent' && 'text-on-accent!']}>{kicker}</span>
+    <h2 class:list={['headline mt-4 text-[2.75rem] sm:text-6xl lg:text-7xl', tone === 'on-accent' ? 'text-on-accent' : 'text-ink']}>
+      <slot>{title}</slot>
+    </h2>
+  </div>
+  {text && <p class:list={['max-w-sm text-lg leading-relaxed font-medium', muted]}>{text}</p>}
+</div>

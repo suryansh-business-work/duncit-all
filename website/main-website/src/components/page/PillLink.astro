@@ -1,0 +1,31 @@
+---
+// The inner pages' call-to-action pill. `primary` is the deep coral that
+// carries white in both themes; `soft` sits on the inverted CtaBand; `ink`
+// is the quiet dark pill on a plain panel.
+import SmartLink from '../SmartLink.astro';
+
+interface Props {
+  href: string;
+  label: string;
+  icon?: string;
+  variant?: 'primary' | 'soft' | 'ink';
+  class?: string;
+}
+
+const { href, label, icon = 'fa-arrow-right', variant = 'primary', class: className = '' } = Astro.props;
+
+const tone = {
+  primary: 'bg-primary-dark text-white shadow-lift',
+  soft: 'border border-cream/30 text-cream hover:bg-cream/10',
+  ink: 'bg-ink text-cream hover:bg-primary-dark hover:text-white',
+}[variant];
+---
+
+<SmartLink
+  href={href}
+  label={label}
+  class={`group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full px-6 py-3 font-head text-base font-bold transition duration-300 ease-soft hover:-translate-y-0.5 hover:scale-[1.02] ${tone} ${className}`}
+>
+  {label}
+  <i class={`fa-solid ${icon} text-sm transition duration-300 ease-soft group-hover:translate-x-0.5`} aria-hidden="true"></i>
+</SmartLink>

@@ -1,11 +1,41 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
+import Block from '../../components/page/Block.astro';
+import IconCard from '../../components/page/IconCard.astro';
+import CtaBand from '../../components/page/CtaBand.astro';
+import PillLink from '../../components/page/PillLink.astro';
+import SafetyNav from '../../components/page/SafetyNav.astro';
 import { fetchBranding } from '../../lib/site-data';
 import { getTranslator } from '../../lib/i18n';
 
 const { t } = await getTranslator();
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
+
+// Two lists of things to do, and one of things to watch for.
+const groups = [
+  {
+    icon: 'fa-user-shield',
+    tone: 'secondary',
+    warn: false,
+    title: t('website.main.safetyAdvice.beforeHeading'),
+    items: [t('website.main.safetyAdvice.before1'), t('website.main.safetyAdvice.before2'), t('website.main.safetyAdvice.before3')],
+  },
+  {
+    icon: 'fa-people-group',
+    tone: 'tertiary',
+    warn: false,
+    title: t('website.main.safetyAdvice.meetHeading'),
+    items: [t('website.main.safetyAdvice.meet1'), t('website.main.safetyAdvice.meet2'), t('website.main.safetyAdvice.meet3'), t('website.main.safetyAdvice.meet4')],
+  },
+  {
+    icon: 'fa-flag',
+    tone: 'primary',
+    warn: true,
+    title: t('website.main.safetyAdvice.flagsHeading'),
+    items: [t('website.main.safetyAdvice.flag1'), t('website.main.safetyAdvice.flag2'), t('website.main.safetyAdvice.flag3'), t('website.main.safetyAdvice.flag4')],
+  },
+] as const;
 ---
 
 <PageLayout
@@ -15,35 +45,38 @@ const supportEmail = branding.support_email || 'support@duncit.com';
   intro={t('website.main.safetyAdvice.intro')}
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <h2>{t('website.main.safetyAdvice.beforeHeading')}</h2>
-  <ul>
-    <li>{t('website.main.safetyAdvice.before1')}</li>
-    <li>{t('website.main.safetyAdvice.before2')}</li>
-    <li>{t('website.main.safetyAdvice.before3')}</li>
-  </ul>
+  <SafetyNav />
 
-  <h2>{t('website.main.safetyAdvice.meetHeading')}</h2>
-  <ul>
-    <li>{t('website.main.safetyAdvice.meet1')}</li>
-    <li>{t('website.main.safetyAdvice.meet2')}</li>
-    <li>{t('website.main.safetyAdvice.meet3')}</li>
-    <li>{t('website.main.safetyAdvice.meet4')}</li>
-  </ul>
+  <Block kicker={t('website.main.safetyAdvice.tipsKicker')} title={t('website.main.safetyAdvice.tipsHeading')}>
+    <ul data-reveal-group class="grid gap-5 lg:grid-cols-3">
+      {
+        groups.map((group) => (
+          <IconCard icon={group.icon} tone={group.tone} title={group.title}>
+            <ul class="grid gap-3">
+              {group.items.map((item) => (
+                <li class="flex gap-3 text-[0.95rem] leading-relaxed text-ink-soft">
+                  <i
+                    class:list={['fa-solid mt-1 shrink-0', group.warn ? 'fa-triangle-exclamation text-primary-ink' : 'fa-circle-check text-secondary']}
+                    aria-hidden="true"
+                  />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </IconCard>
+        ))
+      }
+    </ul>
+  </Block>
 
-  <h2>{t('website.main.safetyAdvice.flagsHeading')}</h2>
-  <ul>
-    <li>{t('website.main.safetyAdvice.flag1')}</li>
-    <li>{t('website.main.safetyAdvice.flag2')}</li>
-    <li>{t('website.main.safetyAdvice.flag3')}</li>
-    <li>{t('website.main.safetyAdvice.flag4')}</li>
-  </ul>
-
-  <h2>{t('website.main.safetyAdvice.helpHeading')}</h2>
-  <p>
-    {t('website.main.safetyAdvice.helpText')}
-    <a href="/safety/resources">{t('website.main.safetyAdvice.helpLink')}</a>
-    {t('website.main.safetyAdvice.helpTextAfter')}
-    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-  </p>
+  <CtaBand kicker={t('website.main.safetyAdvice.helpKicker')} title={t('website.main.safetyAdvice.helpHeading')} icon="fa-hand-holding-heart">
+    {t('website.main.safetyAdvice.helpText')} <a href="/safety/resources">{t('website.main.safetyAdvice.helpLink')}</a>
+    {t('website.main.safetyAdvice.helpTextAfter')} <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+    <Fragment slot="actions">
+      <PillLink href="/safety/resources" label={t('website.main.nav.resources')} icon="fa-phone-volume" />
+      <PillLink href={`mailto:${supportEmail}`} label={t('website.main.nav.emailSupport')} icon="fa-envelope" variant="soft" />
+    </Fragment>
+  </CtaBand>
 </PageLayout>

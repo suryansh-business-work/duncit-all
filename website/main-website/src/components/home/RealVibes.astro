@@ -1,0 +1,57 @@
+---
+// "No bots. No fakes. Just vibes." — the trust panel: a tilted photo with
+// stickers beside the statement and the three promises as chips.
+import { getTranslator } from '../../lib/i18n';
+
+const { t } = await getTranslator();
+
+// Real group photo from Unsplash (free to use).
+const vibesImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=80&auto=format&fit=crop';
+const chips = [
+  { icon: 'fa-user-check', tone: 'text-secondary', label: t('website.main.home.chipVerified') },
+  { icon: 'fa-bolt', tone: 'text-primary-ink', label: t('website.main.home.chipMatched') },
+  { icon: 'fa-champagne-glasses', tone: 'text-tertiary-dark', label: t('website.main.home.chipGatherings') },
+];
+---
+
+<section class="relative mt-3 overflow-hidden rounded-panel bg-lilac px-5 py-20 sm:px-10 lg:py-32">
+  <div class="pointer-events-none absolute -top-48 -right-48 h-[36rem] w-[36rem] rounded-full bg-primary/20 blur-[90px]" aria-hidden="true"></div>
+  <div class="relative mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+    <div data-reveal-group>
+      <span data-reveal class="kicker">{t('website.main.home.vibesEyebrow')}</span>
+      <h2 data-reveal class="headline mt-5 text-[3.25rem] text-ink sm:text-7xl lg:text-[6.5rem]">
+        {t('website.main.home.vibesNoBots')}<br />
+        <span class="text-primary-ink">{t('website.main.home.vibesNoFakes')}</span><br />
+        {t('website.main.home.vibesJust')} <span class="text-secondary">{t('website.main.home.vibesVibes')}</span>
+      </h2>
+      <p data-reveal class="mt-7 max-w-lg text-lg leading-relaxed text-ink-soft sm:text-xl">{t('website.main.home.vibesText')}</p>
+      <ul data-reveal class="mt-8 flex flex-wrap gap-3">
+        {
+          chips.map((chip) => (
+            <li class="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2.5 font-head text-sm font-bold text-ink shadow-soft">
+              <i class={`fa-solid ${chip.icon} ${chip.tone}`} aria-hidden="true" />
+              {chip.label}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <figure data-reveal="scale" class="relative mx-auto w-full max-w-md lg:max-w-none">
+      <img
+        src={vibesImg}
+        alt={t('website.main.home.vibesImageAlt')}
+        loading="lazy"
+        class="aspect-[4/5] w-full rotate-[2.5deg] rounded-card object-cover shadow-lift"
+      />
+      <span class="absolute -top-3.5 -left-2 inline-flex -rotate-6 items-center gap-1.5 rounded-full bg-tertiary px-4 py-2.5 font-head text-sm font-extrabold text-on-accent shadow-soft sm:-left-4">
+        <i class="fa-solid fa-heart text-primary-dark" aria-hidden="true"></i>
+        {t('website.main.home.authentic')}
+      </span>
+      <span class="absolute right-0 bottom-8 inline-flex rotate-[4deg] items-center gap-1.5 rounded-full bg-surface px-4 py-2.5 font-head text-sm font-extrabold text-ink shadow-soft sm:-right-4">
+        <i class="fa-solid fa-circle-check text-secondary" aria-hidden="true"></i>
+        {t('website.main.home.chipVerified')}
+      </span>
+    </figure>
+  </div>
+</section>

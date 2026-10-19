@@ -1,429 +1,48 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SiteNav from '../components/SiteNav.astro';
+import TopBar from '../components/TopBar.astro';
 import Footer from '../components/Footer.astro';
-import BrandLogo from '../components/BrandLogo.astro';
 import DownloadApps from '../components/DownloadApps.astro';
 import DuncitNetwork from '../components/DuncitNetwork.astro';
+import HomeHero from '../components/home/HomeHero.astro';
+import ActivityMarquee from '../components/home/ActivityMarquee.astro';
+import RealVibes from '../components/home/RealVibes.astro';
+import FlowStrip from '../components/home/FlowStrip.astro';
 import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 import ReelSlider from '@duncit/brand/ReelSlider.astro';
 import { urlConfigs } from '../config/url-configs';
 import { getTranslator } from '../lib/i18n';
 
 const { t } = await getTranslator();
-
-// Real group photos from Unsplash (free to use)
-const vibesImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=80&auto=format&fit=crop';
-const flow1 = 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q=80&auto=format&fit=crop';
-const flow2 = 'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&q=80&auto=format&fit=crop';
-const flow3 = 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&q=80&auto=format&fit=crop';
-const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&q=80&auto=format&fit=crop';
-const mwebLoginUrl = `${urlConfigs.mwebUrl}/login`;
-const mwebRegisterUrl = `${urlConfigs.mwebUrl}/register`;
 ---
 
 <Layout title={t('website.main.home.title')}>
   <SiteNav />
-  <div class="bg-frame p-3 sm:p-4">
-    <!-- ============== HERO ============== -->
-    <section class="relative overflow-hidden rounded-3xl min-h-[640px] px-6 pt-5 pb-8">
-      <!-- Background reel (muted, looping, autoplay) with overlay.
-           `preload="auto"`, not metadata: with metadata the browser fetches the
-           header and stops, and a 20MB reel behind a poster is exactly what
-           "the video is not playing" looks like. The script below also asks it
-           to play and, if the browser refuses, asks again on the first tap —
-           an autoplay block is silent otherwise. -->
-      <div class="absolute inset-0 z-0">
-        <video
-          id="heroReel"
-          class="w-full h-full object-cover"
-          poster="/media/duncit-reel-poster.jpg"
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="auto"
-          aria-hidden="true"
-        >
-          <source src="/media/duncit-reel.mp4" type="video/mp4" />
-        </video>
-        <!-- The scrim is a LITERAL dark in both themes: the words on it are
-             always white, so what darkens them must never invert. -->
-        <div class="absolute inset-0 hero-scrim"></div>
-      </div>
+  <div class="bg-frame p-2 sm:p-3">
+    <TopBar />
+    <main>
+      <HomeHero />
+      <ActivityMarquee />
 
-      <!-- Marquee ribbon running around the banner border (transparent, 12px bold) -->
-      <svg
-        id="bannerMarquee"
-        class="absolute inset-0 w-full h-full z-10 pointer-events-none overflow-visible"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <defs><path id="bannerMarqueePath" fill="none"></path></defs>
-        <text
-          id="bannerMarqueeText"
-          style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;fill:rgba(250,246,240,0.85);"
-        >
-          <textPath id="bannerMarqueeTextPath" href="#bannerMarqueePath" startOffset="0"></textPath>
-        </text>
-      </svg>
+      <!-- Website portal > Reel Slider. Second on the page, straight after the
+           hero. Hidden when there are no reels. -->
+      <ReelSlider graphqlUrl={urlConfigs.graphqlUrl} site="MAIN" t={t} />
 
-      <!-- Nav -->
-      <nav class="relative z-20 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label={t('website.main.nav.menu')}>
-            <i class="fa-solid fa-bars text-lg"></i>
-          </button>
-          <BrandLogo height={56} />
-        </div>
-        <div class="flex items-center gap-2">
-          <a href="#download" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full glass-chip text-ink text-xs font-bold whitespace-nowrap hover:scale-105 transition">
-            <i class="fa-solid fa-download"></i> {t('website.main.home.getApp')}
-          </a>
-        </div>
-      </nav>
+      <!-- Website portal > Earn with Duncit. Renders here (AFTER_REELS); the
+           portal can move it into a slot below. -->
+      <EarnShowcase href={urlConfigs.earnwithUrl} graphqlUrl={urlConfigs.graphqlUrl} site="MAIN" t={t} />
 
-      <!-- Stage: the statement over the reel. The words carry themselves now —
-           a frosted slab around a headline is a box asking to be read, and the
-           reel behind it was the thing worth looking at. -->
-      <div class="relative z-10 flex min-h-[480px] flex-col items-center justify-center gap-7 py-10 text-center">
-        <span
-          class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-white backdrop-blur"
-        >
-          <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
-          {t('website.main.home.badge')}
-        </span>
+      <DownloadApps />
+      <div data-earn-slot="AFTER_DOWNLOAD"></div>
 
-        <h1 class="max-w-4xl text-4xl leading-[1.02] text-white sm:text-6xl md:text-7xl">
-          {t('website.main.home.headingLine1')}<br />{t('website.main.home.headingLine2Lead')} <span class="text-primary">{t('website.main.home.headingLine2Accent')}</span>.
-        </h1>
+      <DuncitNetwork />
+      <RealVibes />
+      <FlowStrip />
 
-        <p class="max-w-xl text-base text-white/80 sm:text-lg">
-          {t('website.main.home.intro')}
-        </p>
+      <div data-earn-slot="BEFORE_FOOTER"></div>
+    </main>
 
-        <div class="flex flex-col items-center gap-3 sm:flex-row">
-          <a
-            href={mwebRegisterUrl}
-            class="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-primary/40 transition hover:scale-[1.03]"
-          >
-            <i class="fa-solid fa-bolt"></i> {t('website.main.home.join')}
-          </a>
-          <a
-            href={mwebLoginUrl}
-            class="inline-flex items-center gap-2 rounded-full border border-white/45 px-8 py-3.5 text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
-          >
-            <i class="fa-solid fa-right-to-bracket"></i> {t('website.main.home.signIn')}
-          </a>
-        </div>
-
-        <!-- Where the page goes next. Decorative: the section below says the
-             same thing to a screen reader in words. -->
-        <a
-          href="#download"
-          class="mt-2 inline-flex flex-col items-center gap-2 text-xs font-semibold text-white/70 transition hover:text-white"
-        >
-          {t('website.main.home.scroll')}
-          <span
-            class="scroll-cue flex h-9 w-9 items-center justify-center rounded-full border border-white/40"
-            aria-hidden="true"
-          >
-            <i class="fa-solid fa-arrow-down text-xs"></i>
-          </span>
-        </a>
-      </div>
-    </section>
-
-    <!-- ============== DOWNLOAD THE APP ============== -->
-    <DownloadApps />
-
-    <!-- ============== THE DUNCIT NETWORK ============== -->
-    <DuncitNetwork />
-
-    <!-- ============== EARN WITH DUNCIT ============== -->
-    <EarnShowcase href={urlConfigs.earnwithUrl} t={t} />
-
-    <!-- ============== REAL VIBES ============== -->
-    <section class="bg-lilac py-20 px-6">
-      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-        <div>
-          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/15 text-secondary font-bold text-xs uppercase tracking-wider mb-4">
-            <i class="fa-solid fa-fire"></i> {t('website.main.home.vibesEyebrow')}
-          </span>
-          <h2 class="text-4xl sm:text-5xl md:text-6xl mb-5">
-            <span class="text-primary">{t('website.main.home.vibesNoBots')}</span><br />
-            <span class="text-secondary">{t('website.main.home.vibesNoFakes')}</span><br />
-            {t('website.main.home.vibesJust')} <span class="relative inline-block">{t('website.main.home.vibesVibes')}<span class="absolute -bottom-1 left-0 w-full h-3 bg-tertiary/70 -z-10 -rotate-1 rounded"></span></span>
-          </h2>
-          <p class="text-ink-soft text-lg max-w-md">
-            {t('website.main.home.vibesText')}
-          </p>
-          <div class="mt-6 flex flex-wrap gap-3">
-            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-user-check text-primary"></i> {t('website.main.home.chipVerified')}</span>
-            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-bolt text-secondary"></i> {t('website.main.home.chipMatched')}</span>
-            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-champagne-glasses text-tertiary-dark"></i> {t('website.main.home.chipGatherings')}</span>
-          </div>
-        </div>
-        <div class="relative">
-          <img src={vibesImg} alt={t('website.main.home.vibesImageAlt')} class="w-full aspect-[4/5] object-cover rounded-3xl sticker" />
-          <span class="absolute -top-4 -left-4 px-4 py-2 rounded-full bg-tertiary text-on-accent font-bold sticker -rotate-6">
-            <i class="fa-solid fa-heart text-primary"></i> {t('website.main.home.authentic')}
-          </span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============== FLOW ============== -->
-    <section class="bg-tertiary text-on-accent py-20 px-6">
-      <div class="max-w-6xl mx-auto">
-        <div class="grid md:grid-cols-2 gap-10 items-start">
-          <h2 class="text-4xl sm:text-5xl md:text-6xl">
-            {t('website.main.home.flowHeadingLine1')}<br />{t('website.main.home.flowHeadingLine2')}
-          </h2>
-          <p class="text-on-accent font-medium text-lg max-w-md">
-            {t('website.main.home.flowText')}
-          </p>
-        </div>
-
-        <div data-reveal-group class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div data-reveal class="relative -translate-y-4 md:-translate-y-8">
-            <img src={flow1} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
-            <span class="absolute -top-2 -left-2 px-3 py-1 rounded-full bg-tertiary text-on-accent font-bold text-xs sticker -rotate-12">NEON</span>
-          </div>
-          <div data-reveal class="relative">
-            <img src={flow2} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
-            <span class="absolute -top-2 -right-2 px-3 py-1 rounded-full bg-purple-300 text-on-accent font-bold text-xs sticker rotate-12">YUM</span>
-          </div>
-          <div data-reveal class="relative -translate-y-2 md:-translate-y-6">
-            <img src={flow3} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
-            <span class="absolute -top-3 -right-3 w-11 h-11 rounded-full bg-primary text-white font-bold text-xl inline-flex items-center justify-center sticker rotate-12">
-              <i class="fa-solid fa-bolt"></i>
-            </span>
-          </div>
-          <div data-reveal class="relative">
-            <img src={flow4} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
-            <span class="absolute -bottom-2 -right-2 px-3 py-1 rounded-full bg-secondary text-white font-bold text-xs sticker -rotate-6">CHILL</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============== FOOTER ============== -->
     <Footer />
-
-    <!-- ============== REEL SLIDER (Website portal > Reel Slider) ============== -->
-    <ReelSlider graphqlUrl={urlConfigs.graphqlUrl} site="MAIN" t={t} />
   </div>
 </Layout>
-
-<script>
-  import { animate, stagger } from 'animejs';
-
-  // ---------- Scroll reveals ----------
-  const revealGroups = document.querySelectorAll('[data-reveal-group]');
-  const io = new IntersectionObserver((entries, obs) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      const items = entry.target.querySelectorAll('[data-reveal]');
-      try {
-        animate(items, {
-          opacity: [0, 1],
-          translateY: [40, 0],
-          scale: [0.92, 1],
-          delay: stagger(90),
-          duration: 600,
-          ease: 'outQuart',
-        });
-      } catch (e) {
-        items.forEach((el) => ((el as HTMLElement).style.opacity = '1'));
-      }
-      obs.unobserve(entry.target);
-    });
-  }, { threshold: 0.15 });
-
-  revealGroups.forEach((g) => {
-    const items = g.querySelectorAll('[data-reveal]');
-    items.forEach((el) => ((el as HTMLElement).style.opacity = '0'));
-    io.observe(g);
-  });
-
-  // ---------- Email capture (stores locally — wire to your API later) ----------
-  function handleSubmit(formId: string, inputId?: string) {
-    const form = document.getElementById(formId) as HTMLFormElement | null;
-    if (!form) return;
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = inputId
-        ? (document.getElementById(inputId) as HTMLInputElement)
-        : (form.querySelector('input[type="email"]') as HTMLInputElement);
-      const email = input?.value?.trim();
-      if (!email) return;
-      const list = JSON.parse(localStorage.getItem('duncit_emails') || '[]');
-      if (!list.includes(email)) {
-        list.push(email);
-        localStorage.setItem('duncit_emails', JSON.stringify(list));
-      }
-      input.value = '';
-      const ok = document.getElementById('successMsg');
-      if (formId === 'emailForm' && ok) {
-        form.classList.add('hidden');
-        ok.classList.remove('hidden');
-        ok.classList.add('inline-flex');
-        animate(ok, {
-          scale: [0.7, 1.05, 1],
-          opacity: [0, 1],
-          duration: 500,
-          ease: 'outBack(1.4)',
-        });
-      } else {
-        const btn = form.querySelector('button');
-        if (btn) {
-          const orig = btn.innerHTML;
-          btn.innerHTML = '<i class="fa-solid fa-check"></i> Got it!';
-          setTimeout(() => { btn.innerHTML = orig; }, 2500);
-        }
-      }
-    });
-  }
-  handleSubmit('footerForm');
-</script>
-
-<!--
-  Banner marquee: isolated + dependency-free so it always runs (and can't be
-  broken by the bundled animejs script). ResizeObserver rebuilds the rounded-rect
-  textPath once the SVG actually has a size, which is what makes it reliably show.
--->
-<script is:inline define:vars={{ MARQUEE: t('website.main.home.marquee') }}>
-  (function () {
-    try {
-      var svg = document.getElementById('bannerMarquee');
-      var path = document.getElementById('bannerMarqueePath');
-      var textEl = document.getElementById('bannerMarqueeText');
-      var tp = document.getElementById('bannerMarqueeTextPath');
-      if (!svg || !path || !textEl || !tp) return;
-
-      var MSG =
-        MARQUEE + '  •  ';
-      var unitLen = 0;
-      var offset = 0;
-      var ready = false;
-
-      function build() {
-        var r = svg.getBoundingClientRect();
-        var w = Math.round(r.width);
-        var h = Math.round(r.height);
-        if (!w || !h) return;
-        svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-        var i = 20; // 20px inside the banner edge
-        var rad = 26;
-        path.setAttribute(
-          'd',
-          'M ' + (i + rad) + ',' + i + ' H ' + (w - i - rad) +
-          ' A ' + rad + ',' + rad + ' 0 0 1 ' + (w - i) + ',' + (i + rad) +
-          ' V ' + (h - i - rad) + ' A ' + rad + ',' + rad + ' 0 0 1 ' + (w - i - rad) + ',' + (h - i) +
-          ' H ' + (i + rad) + ' A ' + rad + ',' + rad + ' 0 0 1 ' + i + ',' + (h - i - rad) +
-          ' V ' + (i + rad) + ' A ' + rad + ',' + rad + ' 0 0 1 ' + (i + rad) + ',' + i + ' Z',
-        );
-        var pathLen = path.getTotalLength();
-        tp.textContent = MSG;
-        unitLen = textEl.getComputedTextLength() || MSG.length * 7;
-        var copies = Math.max(2, Math.ceil((pathLen + unitLen) / unitLen) + 1);
-        tp.textContent = MSG.repeat(copies);
-        ready = true;
-      }
-
-      function tick() {
-        if (ready) {
-          offset -= 0.5; // slow, ambient drift
-          if (unitLen && offset <= -unitLen) offset += unitLen; // seamless wrap
-          tp.setAttribute('startOffset', String(offset));
-        }
-        requestAnimationFrame(tick);
-      }
-
-      function rebuild() {
-        try { build(); } catch (e) {}
-      }
-
-      // Observe the banner section itself so the ribbon re-fits whenever the
-      // actual banner height changes (responsive breakpoints, font/video load).
-      if (window.ResizeObserver) {
-        var ro = new ResizeObserver(rebuild);
-        ro.observe(svg);
-        if (svg.parentElement) ro.observe(svg.parentElement);
-      }
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(rebuild);
-      }
-      rebuild();
-      requestAnimationFrame(tick);
-      window.addEventListener('resize', rebuild);
-      window.addEventListener('load', rebuild);
-    } catch (e) {}
-  })();
-</script>
-
-<style>
-  /* A LITERAL dark, in both themes. The words on the reel are always white, so
-     what darkens the reel under them must never invert with the palette. */
-  .hero-scrim {
-    background: linear-gradient(
-      180deg,
-      rgba(9, 7, 18, 0.55) 0%,
-      rgba(9, 7, 18, 0.3) 45%,
-      rgba(9, 7, 18, 0.75) 100%
-    );
-  }
-
-  .scroll-cue {
-    animation: scroll-bob 2.2s ease-in-out infinite;
-  }
-  @keyframes scroll-bob {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(5px);
-    }
-  }
-</style>
-
-<script is:inline>
-  // The reel. `autoplay` is a request, not a guarantee: a browser can refuse it
-  // on a metered connection or a saved data setting, and it refuses SILENTLY —
-  // which looks exactly like a broken video. So ask, and if refused, ask again
-  // on the first thing the visitor touches.
-  (function () {
-    var video = document.getElementById('heroReel');
-    if (!video) return;
-
-    // Someone who asked their system for less motion gets the poster frame,
-    // which is what the poster is for.
-    var still = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (still.matches) {
-      video.removeAttribute('autoplay');
-      video.pause();
-      return;
-    }
-
-    function play() {
-      var attempt = video.play();
-      if (attempt && attempt.catch) attempt.catch(function () {});
-    }
-
-    play();
-    video.addEventListener('canplay', play, { once: true });
-
-    var events = ['pointerdown', 'touchstart', 'keydown'];
-    function onFirstInteraction() {
-      play();
-      events.forEach(function (name) {
-        document.removeEventListener(name, onFirstInteraction);
-      });
-    }
-    events.forEach(function (name) {
-      document.addEventListener(name, onFirstInteraction, { passive: true });
-    });
-  })();
-</script>

@@ -3,15 +3,27 @@
 // the contact details from Admin branding, so support stays in sync without
 // a redeploy.
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import IconCard, { type CardTone } from '../components/page/IconCard.astro';
 import { fetchBranding } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
 import { urlConfigs } from '../config/url-configs';
+import '../styles/widgets.css';
 
 const { t } = await getTranslator();
 
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
 const supportPhone = branding.support_phone;
+
+const channels: { icon: string; tone: CardTone; href: string; title: string; text: string }[] = [
+  { icon: 'fa-envelope', tone: 'primary', href: `mailto:${supportEmail}`, title: t('website.main.help.emailTitle'), text: `${supportEmail} — ${t('website.main.help.emailText')}` },
+  ...(supportPhone
+    ? [{ icon: 'fa-phone', tone: 'secondary' as const, href: `tel:${supportPhone}`, title: t('website.main.help.callTitle'), text: `${supportPhone} — ${t('website.main.help.callText')}` }]
+    : []),
+  { icon: 'fa-paper-plane', tone: 'tertiary', href: '/contact', title: t('website.main.help.formTitle'), text: t('website.main.help.formText') },
+  { icon: 'fa-circle-question', tone: 'ink', href: '/faq', title: t('website.main.help.askTitle'), text: t('website.main.help.askText') },
+];
 ---
 
 <PageLayout
@@ -21,77 +33,39 @@ const supportPhone = branding.support_phone;
   intro={t('website.main.help.intro')}
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <div class="not-prose my-6">
-    <div class="relative">
-      <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft" aria-hidden="true"></i>
-      <input
-        id="helpSearch"
-        data-help-search
-        type="search"
-        placeholder={t('website.main.help.searchPlaceholder')}
-        aria-label={t('website.main.help.searchLabel')}
-        class="w-full pl-11 pr-4 py-3.5 rounded-xl glass border-2 border-ink/10 focus:border-primary outline-none"
-      />
+  <div data-reveal class="not-prose relative mx-auto max-w-3xl">
+    <i class="fa-solid fa-magnifying-glass pointer-events-none absolute top-1/2 left-6 -translate-y-1/2 text-lg text-ink-soft" aria-hidden="true"></i>
+    <input
+      id="helpSearch"
+      data-help-search
+      type="search"
+      placeholder={t('website.main.help.searchPlaceholder')}
+      aria-label={t('website.main.help.searchLabel')}
+      class="form-field min-h-16! rounded-full! pl-14! text-lg! shadow-soft"
+    />
+  </div>
+
+  <Block kicker={t('website.main.help.topicsKicker')} title={t('website.main.help.topicsHeading')}>
+    <div
+      id="helpTopics"
+      data-cms-widget="help-center"
+      data-graphql-url={urlConfigs.graphqlUrl}
+      data-copy={JSON.stringify({ empty: t('website.main.help.empty'), error: t('website.main.help.error'), general: t('website.main.help.general'), one: t('website.main.help.questionOne'), many: t('website.main.help.questionMany') })}
+      class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      <div class="skeleton h-28 rounded-card" aria-hidden="true"></div>
+      <div class="skeleton h-28 rounded-card" aria-hidden="true"></div>
+      <div class="skeleton h-28 rounded-card" aria-hidden="true"></div>
     </div>
-  </div>
+  </Block>
 
-  <div id="helpTopics" data-cms-widget="help-center" data-graphql-url={urlConfigs.graphqlUrl} data-copy={JSON.stringify({ empty: t('website.main.help.empty'), error: t('website.main.help.error'), general: t('website.main.help.general'), one: t('website.main.help.questionOne'), many: t('website.main.help.questionMany') })} class="not-prose grid sm:grid-cols-2 gap-4 my-6">
-    <div class="skeleton h-24" aria-hidden="true"></div>
-    <div class="skeleton h-24" aria-hidden="true"></div>
-    <div class="skeleton h-24" aria-hidden="true"></div>
-    <div class="skeleton h-24" aria-hidden="true"></div>
-  </div>
-
-  <h2>{t('website.main.help.stillHeading')}</h2>
-  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
-    <a href={`mailto:${supportEmail}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
-      <div class="flex items-start gap-4">
-        <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-envelope text-lg" aria-hidden="true"></i>
-        </div>
-        <div>
-          <div class="font-head font-bold text-ink mb-0.5">{t('website.main.help.emailTitle')}</div>
-          <div class="text-sm text-ink-soft">{supportEmail} — {t('website.main.help.emailText')}</div>
-        </div>
-      </div>
-    </a>
-    {supportPhone && (
-      <a href={`tel:${supportPhone}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
-        <div class="flex items-start gap-4">
-          <div class="w-11 h-11 rounded-xl bg-secondary/15 text-secondary inline-flex items-center justify-center shrink-0">
-            <i class="fa-solid fa-phone text-lg" aria-hidden="true"></i>
-          </div>
-          <div>
-            <div class="font-head font-bold text-ink mb-0.5">{t('website.main.help.callTitle')}</div>
-            <div class="text-sm text-ink-soft">{supportPhone} — {t('website.main.help.callText')}</div>
-          </div>
-        </div>
-      </a>
-    )}
-    <a href="/contact" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
-      <div class="flex items-start gap-4">
-        <div class="w-11 h-11 rounded-xl bg-tertiary/30 text-on-accent inline-flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-paper-plane text-lg" aria-hidden="true"></i>
-        </div>
-        <div>
-          <div class="font-head font-bold text-ink mb-0.5">{t('website.main.help.formTitle')}</div>
-          <div class="text-sm text-ink-soft">{t('website.main.help.formText')}</div>
-        </div>
-      </div>
-    </a>
-    <a href="/faq" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
-      <div class="flex items-start gap-4">
-        <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-circle-question text-lg" aria-hidden="true"></i>
-        </div>
-        <div>
-          <div class="font-head font-bold text-ink mb-0.5">{t('website.main.help.askTitle')}</div>
-          <div class="text-sm text-ink-soft">{t('website.main.help.askText')}</div>
-        </div>
-      </div>
-    </a>
-  </div>
+  <Block kicker={t('website.main.help.stillKicker')} title={t('website.main.help.stillHeading')}>
+    <ul data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {channels.map((channel) => <IconCard icon={channel.icon} tone={channel.tone} href={channel.href} title={channel.title} text={channel.text} />)}
+    </ul>
+  </Block>
 </PageLayout>
 
 <script>

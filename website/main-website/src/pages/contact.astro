@@ -4,14 +4,30 @@
 import { captchaCopy } from '@duncit/i18n';
 import Captcha from '@duncit/captcha/Captcha.astro';
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import IconCard, { type CardTone } from '../components/page/IconCard.astro';
 import { fetchBranding } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
 import { urlConfigs } from '../config/url-configs';
+import '../styles/widgets.css';
 
 const { t } = await getTranslator();
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
 const supportPhone = branding.support_phone;
+
+const channels: { icon: string; tone: CardTone; href: string; title: string; text: string }[] = [
+  { icon: 'fa-envelope', tone: 'primary', href: `mailto:${supportEmail}`, title: t('website.main.contact.emailUs'), text: supportEmail },
+  supportPhone
+    ? { icon: 'fa-phone', tone: 'secondary', href: `tel:${supportPhone}`, title: t('website.main.contact.callUs'), text: supportPhone }
+    : { icon: 'fa-life-ring', tone: 'secondary', href: '/help', title: t('website.main.contact.helpCenter'), text: t('website.main.contact.helpCenterText') },
+  { icon: 'fa-circle-question', tone: 'tertiary', href: '/faq', title: t('website.main.nav.faq'), text: t('website.main.faq.intro') },
+];
+
+const fields = [
+  { name: 'name', type: 'text', required: true, autocomplete: 'name', label: t('website.main.contact.namePlaceholder') },
+  { name: 'email', type: 'email', required: true, autocomplete: 'email', label: t('website.main.contact.emailPlaceholder') },
+] as const;
 ---
 
 <PageLayout
@@ -21,52 +37,56 @@ const supportPhone = branding.support_phone;
   intro={t('website.main.contact.intro')}
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
-    <a href={`mailto:${supportEmail}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
-      <i class="fa-solid fa-envelope text-2xl text-primary mb-2" aria-hidden="true"></i>
-      <div class="font-head font-bold text-ink">{t('website.main.contact.emailUs')}</div>
-      <div class="text-sm text-ink-soft mt-1">{supportEmail}</div>
-    </a>
-    {supportPhone ? (
-      <a href={`tel:${supportPhone}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
-        <i class="fa-solid fa-phone text-2xl text-secondary mb-2" aria-hidden="true"></i>
-        <div class="font-head font-bold text-ink">{t('website.main.contact.callUs')}</div>
-        <div class="text-sm text-ink-soft mt-1">{supportPhone}</div>
-      </a>
-    ) : (
-      <a href="/help" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
-        <i class="fa-solid fa-life-ring text-2xl text-tertiary-dark mb-2" aria-hidden="true"></i>
-        <div class="font-head font-bold text-ink">{t('website.main.contact.helpCenter')}</div>
-        <div class="text-sm text-ink-soft mt-1">{t('website.main.contact.helpCenterText')}</div>
-      </a>
-    )}
-  </div>
+  <div class="grid items-start gap-14 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16">
+    <Block kicker={t('website.main.contact.reachKicker')} title={t('website.main.contact.reachHeading')}>
+      <ul data-reveal-group class="grid gap-4">
+        {channels.map((channel) => <IconCard icon={channel.icon} tone={channel.tone} href={channel.href} title={channel.title} text={channel.text} />)}
+      </ul>
+    </Block>
 
-  <h2>{t('website.main.contact.formHeading')}</h2>
-  <form
-    class="not-prose grid gap-4 max-w-xl mt-4"
-    id="contactForm"
-    data-cms-widget="contact-form"
-    data-graphql-url={urlConfigs.graphqlUrl}
-    data-copy={JSON.stringify({
-      sending: t('website.main.contact.sending'),
-      sent: t('website.main.contact.sent'),
-      send: t('website.main.contact.send'),
-      failed: t('website.main.contact.failed'),
-      failedRetry: t('website.main.contact.failedRetry'),
-    })}
-  >
-    <input name="name" required placeholder={t('website.main.contact.namePlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
-    <input name="email" required type="email" placeholder={t('website.main.contact.emailPlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
-    <input name="subject" placeholder={t('website.main.contact.subjectPlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
-    <textarea name="message" required rows="5" placeholder={t('website.main.contact.messagePlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none resize-y"></textarea>
-    <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
-    <p id="contactErr" data-form-error class="text-sm text-red-600 hidden"></p>
-    <button class="px-6 py-3.5 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
-      {t('website.main.contact.send')} <i class="fa-solid fa-paper-plane"></i>
-    </button>
-  </form>
+    <Block kicker={t('website.main.contact.formKicker')} title={t('website.main.contact.formHeading')} class="mt-0!">
+      <form
+        data-reveal
+        class="grid gap-5 rounded-panel border border-line bg-surface p-6 shadow-soft sm:p-10"
+        id="contactForm"
+        data-cms-widget="contact-form"
+        data-graphql-url={urlConfigs.graphqlUrl}
+        data-copy={JSON.stringify({
+          sending: t('website.main.contact.sending'),
+          sent: t('website.main.contact.sent'),
+          send: t('website.main.contact.send'),
+          failed: t('website.main.contact.failed'),
+          failedRetry: t('website.main.contact.failedRetry'),
+        })}
+      >
+        <div class="grid gap-5 sm:grid-cols-2">
+          {
+            fields.map((field) => (
+              <label class="form-label">
+                {field.label}
+                <input name={field.name} type={field.type} required={field.required} autocomplete={field.autocomplete} class="form-field" />
+              </label>
+            ))
+          }
+        </div>
+        <label class="form-label">
+          {t('website.main.contact.subjectPlaceholder')}
+          <input name="subject" type="text" class="form-field" />
+        </label>
+        <label class="form-label">
+          {t('website.main.contact.messagePlaceholder')}
+          <textarea name="message" required rows="5" class="form-field"></textarea>
+        </label>
+        <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
+        <p id="contactErr" data-form-error class="form-error hidden" role="alert"></p>
+        <button class="form-submit justify-self-start">
+          {t('website.main.contact.send')} <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+        </button>
+      </form>
+    </Block>
+  </div>
 </PageLayout>
 
 <!-- The copy reaches the script through the form's own data attribute, NOT

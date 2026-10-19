@@ -1,0 +1,24 @@
+---
+// A big-type statement card — one paragraph that deserves to be read at
+// display size, on the lilac tint with a drifting blob. Chips or a footnote
+// go in the default slot under it.
+interface Props {
+  text: string;
+  icon?: string;
+  class?: string;
+}
+
+const { text, icon = 'fa-quote-left', class: className = '' } = Astro.props;
+---
+
+<div
+  data-reveal
+  class:list={['relative isolate overflow-hidden rounded-panel border border-line bg-lilac p-7 sm:p-12', className]}
+>
+  <div class="pointer-events-none absolute -top-32 -right-24 -z-10 h-80 w-80 rounded-full bg-primary/20 blur-[80px] motion-safe:animate-drift" aria-hidden="true"></div>
+  <span class="inline-flex h-12 w-12 -rotate-6 items-center justify-center rounded-2xl bg-tertiary text-lg text-on-accent shadow-soft" aria-hidden="true">
+    <i class={`fa-solid ${icon}`}></i>
+  </span>
+  <p class="mt-6 max-w-4xl font-head text-[1.4rem] leading-snug font-bold tracking-tight text-ink sm:text-[1.9rem]">{text}</p>
+  <slot />
+</div>

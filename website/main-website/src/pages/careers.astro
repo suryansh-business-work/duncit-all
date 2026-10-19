@@ -2,6 +2,10 @@
 // Careers — open roles come live from the Website portal (CAREERS content)
 // and applications land in its Job Applications inbox.
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import IconCard from '../components/page/IconCard.astro';
+import CtaBand from '../components/page/CtaBand.astro';
+import PillLink from '../components/page/PillLink.astro';
 import WebsiteContentList from '../components/WebsiteContentList.astro';
 import { fetchBranding } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
@@ -10,6 +14,12 @@ const { t } = await getTranslator();
 
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
+
+const reasons = [
+  { icon: 'fa-rocket', tone: 'primary', title: t('website.main.careers.why1Label'), text: t('website.main.careers.why1Text') },
+  { icon: 'fa-key', tone: 'tertiary', title: t('website.main.careers.why2Label'), text: t('website.main.careers.why2Text') },
+  { icon: 'fa-bolt', tone: 'secondary', title: t('website.main.careers.why3Label'), text: t('website.main.careers.why3Text') },
+] as const;
 ---
 
 <PageLayout
@@ -19,20 +29,23 @@ const supportEmail = branding.support_email || 'support@duncit.com';
   intro={t('website.main.careers.intro')}
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <h2>{t('website.main.careers.whyHeading')}</h2>
-  <ul>
-    <li><strong>{t('website.main.careers.why1Label')}</strong> {t('website.main.careers.why1Text')}</li>
-    <li><strong>{t('website.main.careers.why2Label')}</strong> {t('website.main.careers.why2Text')}</li>
-    <li><strong>{t('website.main.careers.why3Label')}</strong> {t('website.main.careers.why3Text')}</li>
-  </ul>
+  <Block kicker={t('website.main.careers.whyKicker')} title={t('website.main.careers.whyHeading')}>
+    <ul data-reveal-group class="grid gap-5 md:grid-cols-3">
+      {reasons.map((reason) => <IconCard icon={reason.icon} tone={reason.tone} title={reason.title} text={reason.text} />)}
+    </ul>
+  </Block>
 
-  <h2>{t('website.main.careers.openHeading')}</h2>
-  <WebsiteContentList type="CAREERS" variant="jobs" />
+  <Block kicker={t('website.main.careers.openKicker')} title={t('website.main.careers.openHeading')}>
+    <WebsiteContentList type="CAREERS" variant="jobs" />
+  </Block>
 
-  <h2>{t('website.main.careers.noRoleHeading')}</h2>
-  <p>
-    {t('website.main.careers.noRoleText')}
-    <a href={`mailto:${supportEmail}`}>{supportEmail}</a> {t('website.main.careers.noRoleTextAfter')}
-  </p>
+  <CtaBand title={t('website.main.careers.noRoleHeading')}>
+    {t('website.main.careers.noRoleText')} <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+    {t('website.main.careers.noRoleTextAfter')}
+    <Fragment slot="actions">
+      <PillLink href={`mailto:${supportEmail}`} label={t('website.main.careers.noRoleCta')} icon="fa-paper-plane" />
+    </Fragment>
+  </CtaBand>
 </PageLayout>

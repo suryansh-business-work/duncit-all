@@ -1,5 +1,9 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
+import Block from '../../components/page/Block.astro';
+import CtaBand from '../../components/page/CtaBand.astro';
+import PillLink from '../../components/page/PillLink.astro';
+import SafetyNav from '../../components/page/SafetyNav.astro';
 import { fetchBranding } from '../../lib/site-data';
 import { getTranslator } from '../../lib/i18n';
 
@@ -11,36 +15,12 @@ const supportEmail = branding.support_email || 'support@duncit.com';
 // helpline name is a helpline nobody can search for. The region and the
 // instruction beside it are what a reader actually has to understand.
 const resources = [
-  {
-    region: t('website.main.safetyResources.regionUs'),
-    name: 'Crisis Text Line',
-    contact: t('website.main.safetyResources.crisisTextLineContact'),
-  },
-  {
-    region: t('website.main.safetyResources.regionUs'),
-    name: 'National Suicide Prevention Lifeline',
-    contact: t('website.main.safetyResources.lifelineContact'),
-  },
-  {
-    region: t('website.main.safetyResources.regionUk'),
-    name: 'Samaritans',
-    contact: t('website.main.safetyResources.samaritansContact'),
-  },
-  {
-    region: t('website.main.safetyResources.regionEu'),
-    name: 'Mental Health Europe Helplines',
-    contact: t('website.main.safetyResources.mheContact'),
-  },
-  {
-    region: t('website.main.safetyResources.regionIndia'),
-    name: 'iCall',
-    contact: t('website.main.safetyResources.icallContact'),
-  },
-  {
-    region: t('website.main.safetyResources.regionWorldwide'),
-    name: 'Find A Helpline',
-    contact: t('website.main.safetyResources.findAHelplineContact'),
-  },
+  { region: t('website.main.safetyResources.regionUs'), name: 'Crisis Text Line', contact: t('website.main.safetyResources.crisisTextLineContact'), icon: 'fa-comment-sms' },
+  { region: t('website.main.safetyResources.regionUs'), name: 'National Suicide Prevention Lifeline', contact: t('website.main.safetyResources.lifelineContact'), icon: 'fa-phone-volume' },
+  { region: t('website.main.safetyResources.regionUk'), name: 'Samaritans', contact: t('website.main.safetyResources.samaritansContact'), icon: 'fa-phone-volume' },
+  { region: t('website.main.safetyResources.regionEu'), name: 'Mental Health Europe Helplines', contact: t('website.main.safetyResources.mheContact'), icon: 'fa-globe' },
+  { region: t('website.main.safetyResources.regionIndia'), name: 'iCall', contact: t('website.main.safetyResources.icallContact'), icon: 'fa-phone-volume' },
+  { region: t('website.main.safetyResources.regionWorldwide'), name: 'Find A Helpline', contact: t('website.main.safetyResources.findAHelplineContact'), icon: 'fa-earth-americas' },
 ];
 ---
 
@@ -50,29 +30,47 @@ const resources = [
   heading={t('website.main.safetyResources.heading')}
   intro={t('website.main.safetyResources.intro')}
   heroImage="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <p>{t('website.main.safetyResources.emergencyText')}</p>
+  <SafetyNav />
 
-  <h2>{t('website.main.safetyResources.helplinesHeading')}</h2>
-  <div class="not-prose space-y-3 my-6">
-    {resources.map((resource) => (
-      <div class="p-5 rounded-2xl bg-surface sticker flex items-center gap-4">
-        <div class="w-11 h-11 rounded-xl bg-secondary/15 text-secondary inline-flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-phone-volume"></i>
-        </div>
-        <div class="flex-1">
-          <div class="text-xs uppercase tracking-wider text-ink-soft font-bold">{resource.region}</div>
-          <div class="font-head font-bold text-ink">{resource.name}</div>
-          <div class="text-sm text-primary font-semibold mt-0.5">{resource.contact}</div>
-        </div>
-      </div>
-    ))}
+  <!-- The one line that must not be missed: deep coral carries white in both themes. -->
+  <div data-reveal role="note" class="not-prose flex flex-col gap-4 rounded-card bg-primary-dark p-6 text-white shadow-lift sm:flex-row sm:items-center sm:gap-6 sm:p-8">
+    <span class="inline-flex h-14 w-14 shrink-0 -rotate-6 items-center justify-center rounded-2xl bg-white/15 text-2xl motion-safe:animate-pulse-dot" aria-hidden="true">
+      <i class="fa-solid fa-truck-medical"></i>
+    </span>
+    <div>
+      <p class="font-head text-xs font-extrabold tracking-[0.14em] uppercase opacity-85">{t('website.main.safetyResources.emergencyLabel')}</p>
+      <p class="mt-1 font-head text-xl leading-snug font-extrabold sm:text-2xl">{t('website.main.safetyResources.emergencyText')}</p>
+    </div>
   </div>
 
-  <h2>{t('website.main.safetyResources.supportHeading')}</h2>
-  <p>
-    {t('website.main.safetyResources.supportText')}
-    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+  <Block kicker={t('website.main.safetyResources.helplinesKicker')} title={t('website.main.safetyResources.helplinesHeading')}>
+    <ul data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        resources.map((resource) => (
+          <li data-reveal class="list-none">
+            <div class="flex h-full flex-col gap-4 rounded-card border border-line bg-surface p-6 shadow-soft transition duration-500 ease-soft hover:-translate-y-1.5 hover:shadow-lift">
+              <div class="flex items-center justify-between gap-3">
+                <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-light text-lg text-secondary" aria-hidden="true">
+                  <i class={`fa-solid ${resource.icon}`} />
+                </span>
+                <span class="rotate-2 rounded-full bg-tertiary px-3 py-1 font-head text-xs font-extrabold text-on-accent">{resource.region}</span>
+              </div>
+              <h3 class="font-head text-lg leading-snug font-extrabold tracking-tight text-ink">{resource.name}</h3>
+              <p class="mt-auto font-bold break-words text-primary-ink">{resource.contact}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </Block>
+
+  <CtaBand kicker={t('website.main.safetyResources.supportKicker')} title={t('website.main.safetyResources.supportHeading')} icon="fa-heart">
+    {t('website.main.safetyResources.supportText')} <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
     {t('website.main.safetyResources.supportTextAfter')}
-  </p>
+    <Fragment slot="actions">
+      <PillLink href={`mailto:${supportEmail}`} label={t('website.main.nav.emailSupport')} icon="fa-envelope" />
+    </Fragment>
+  </CtaBand>
 </PageLayout>

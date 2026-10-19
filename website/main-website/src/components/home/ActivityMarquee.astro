@@ -1,0 +1,38 @@
+---
+// The tilted band of things people do on Duncit, between the hero and the
+// reels. Two identical runs scroll by half their width for a seamless loop;
+// only the first is read aloud. Stops dead for reduced motion.
+import { getTranslator } from '../../lib/i18n';
+
+const { t } = await getTranslator();
+
+const activities = [
+  { icon: 'fa-futbol', label: t('website.main.home.activitySports') },
+  { icon: 'fa-music', label: t('website.main.home.activityMusic') },
+  { icon: 'fa-champagne-glasses', label: t('website.main.home.activityNightlife') },
+  { icon: 'fa-person-hiking', label: t('website.main.home.activityOutdoors') },
+  { icon: 'fa-dice', label: t('website.main.home.activityGames') },
+  { icon: 'fa-utensils', label: t('website.main.home.activityFood') },
+  { icon: 'fa-paw', label: t('website.main.home.activityPets') },
+];
+const runs = [false, true];
+---
+
+<div class="overflow-hidden py-5">
+  <div class="-mx-4 -rotate-[1.5deg] bg-primary py-5 text-white">
+    <div class="flex w-max motion-safe:animate-marquee">
+      {
+        runs.map((hidden) => (
+          <ul class="flex shrink-0 items-center gap-12 pr-12 headline text-2xl whitespace-nowrap sm:text-[2.125rem]" aria-hidden={hidden ? 'true' : undefined}>
+            {activities.map((item, i) => (
+              <li class="flex items-center gap-4">
+                <i class:list={['fa-solid', item.icon, i % 2 ? 'text-tertiary' : 'text-on-accent']} aria-hidden="true" />
+                {item.label}
+              </li>
+            ))}
+          </ul>
+        ))
+      }
+    </div>
+  </div>
+</div>

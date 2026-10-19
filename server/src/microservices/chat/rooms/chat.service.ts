@@ -19,6 +19,7 @@ import {
   type ChatRoomRef,
 } from './chat.access';
 import type { ClubRoomDoc, PodRoomDoc } from './chat.shape';
+import { roomAudience, validMentions } from './chat.members';
 
 /** Mirrors the clients' podStatus/isPodActive util: a pod has "ended" once it is
  * past its end time, or the live tail after start when no end time is set. A
@@ -82,6 +83,54 @@ async function roomClosedOrMissing(room: ChatRoomRef): Promise<boolean | null> {
   return pod ? isPodEnded(pod) : null;
 }
 
+/** A reply must answer a live message in the SAME room — never a line from
+ * another pod or club, which would leak it into this one. */
+async function assertReplyTarget(room: ChatRoomRef, replyToId: string): Promise<string> {
+  const target = mongoose.isValidObjectId(replyToId)
+    ? await PodMessageModel.exists({ _id: replyToId, ...roomFilter(room), deleted: false })
+    : null;
+  if (!target) {
+    throw new GraphQLError('The message you are replying to is not in this chat', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  return String(target._id);
+}
+
+/** Mentions name members of this room, at most MAX_MENTIONS of them. */
+async function assertMentions(room: ChatRoomRef, requested: ReadonlyArray<string>, senderId: string) {
+  const { ids } = await roomAudience(room);
+  const result = validMentions(requested, ids, senderId);
+  if (!result.ok) {
+    throw new GraphQLError(
+      result.reason === 'TOO_MANY' ? 'Too many people mentioned' : 'Mentioned user is not in this chat',
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
+  return result.ids;
+}
+
+/** The pods whose rooms a user can open: hosted, attended, or — a recurring
+ * pod's one room — the parent of a date they booked. */
+export async function myPodRoomsFilter(userId: string) {
+  const uid = new mongoose.Types.ObjectId(userId);
+  const recurring = await PodModel.distinct('series_parent_id', { series_role: 'DATE', pod_attendees: uid });
+  return {
+    $or: [{ pod_hosts_id: uid }, { pod_attendees: uid }, { _id: { $in: recurring } }],
+    is_active: true,
+  };
+}
+
+/** The clubs whose rooms a user can open: joined, admin or host. */
+export async function myClubRoomsFilter(userId: string) {
+  const uid = new mongoose.Types.ObjectId(userId);
+  const followed = await ClubFollowerModel.find({ user_id: uid }).select('club_id').lean();
+  return {
+    is_active: true,
+    $or: [{ _id: { $in: followed.map((f) => f.club_id) } }, { admin_user_ids: uid }, { host_ids: uid }],
+  };
+}
+
 export const chatService = {
   isMember: isPodMember,
 
@@ -120,6 +169,8 @@ export const chatService = {
     type?: 'TEXT' | 'IMAGE' | 'STICKER';
     text?: string;
     imageUrl?: string;
+    replyToId?: string | null;
+    mentions?: ReadonlyArray<string> | null;
   }) {
     await assertRoomMember(opts.room, opts.userId);
     await assertRoomOpen(opts.room);
@@ -132,6 +183,8 @@ export const chatService = {
       throw new GraphQLError('Image URL required', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     if (type === 'TEXT') assertCleanText(text);
+    const replyToId = opts.replyToId ? await assertReplyTarget(opts.room, opts.replyToId) : null;
+    const mentions = opts.mentions?.length ? await assertMentions(opts.room, opts.mentions, opts.userId) : [];
     // Only the id is stored. The name and photo are resolved at read time by
     // `userDisplayMap`, so a user who renames themselves is renamed everywhere
     // they have ever posted rather than in nothing they have already sent.
@@ -141,6 +194,8 @@ export const chatService = {
       type,
       text: type === 'TEXT' || type === 'STICKER' ? text : '',
       image_url: type === 'IMAGE' ? opts.imageUrl : '',
+      reply_to_id: replyToId,
+      mentions,
     });
     return doc.toObject();
   },
@@ -179,13 +234,8 @@ export const chatService = {
   async listMyChatRooms(userId: string) {
     // Pods I host or attend or am a podMember of. The club is joined so each
     // room carries its Super-category (classification) and slug (pod-detail nav).
-    const uid = new mongoose.Types.ObjectId(userId);
     // A recurring pod has one room, on its parent: a date I booked opens it.
-    const recurring = await PodModel.distinct('series_parent_id', { series_role: 'DATE', pod_attendees: uid });
-    const pods = await PodModel.find({
-      $or: [{ pod_hosts_id: uid }, { pod_attendees: uid }, { _id: { $in: recurring } }],
-      is_active: true,
-    })
+    const pods = await PodModel.find(await myPodRoomsFilter(userId))
       .select(
         'pod_id pod_title pod_date_time pod_end_date_time pod_attendees no_of_spots club_id pod_images_and_videos'
       )
@@ -197,16 +247,7 @@ export const chatService = {
 
   /** Clubs whose chat I can open: the ones I joined, admin or host. */
   async listMyClubRooms(userId: string) {
-    const uid = new mongoose.Types.ObjectId(userId);
-    const followed = await ClubFollowerModel.find({ user_id: uid }).select('club_id').lean();
-    const clubs = await ClubModel.find({
-      is_active: true,
-      $or: [
-        { _id: { $in: followed.map((f) => f.club_id) } },
-        { admin_user_ids: uid },
-        { host_ids: uid },
-      ],
-    })
+    const clubs = await ClubModel.find(await myClubRoomsFilter(userId))
       .select('club_id club_name club_feature_images_and_videos super_category_id admin_user_ids')
       .sort({ club_name: 1 })
       .lean<ClubRoomDoc[]>();

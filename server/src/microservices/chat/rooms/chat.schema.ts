@@ -25,6 +25,47 @@ export const chatTypeDefs = /* GraphQL */ `
     reactions: [PodMessageReaction!]!
     deleted: Boolean!
     createdAt: String!
+    "The message this one replies to (same room), or null."
+    reply_to_id: ID
+    "The quoted line of a reply, read now — deleted (no text) when the original is gone."
+    reply_to: PodMessageReplyTo
+    "Ids of the members this message @-mentions."
+    mentions: [ID!]!
+    "The mentioned members, named now, so a bubble can find and link each @token."
+    mention_users: [ChatUser!]!
+  }
+
+  "The quoted line shown inside a reply."
+  type PodMessageReplyTo {
+    id: ID!
+    user_id: ID!
+    user_name: String
+    text: String
+    type: PodMessageType!
+    deleted: Boolean!
+  }
+
+  "Which room a mute or a read mark is about."
+  enum ChatRoomKind {
+    POD
+    CLUB
+    SUPPORT
+  }
+
+  "How long a chat stays muted. ALWAYS lasts until it is unmuted."
+  enum ChatMuteDuration {
+    EIGHT_HOURS
+    ONE_WEEK
+    ALWAYS
+  }
+
+  "One member's mute of one room."
+  type ChatMuteState {
+    kind: ChatRoomKind!
+    id: ID!
+    is_muted: Boolean!
+    "When the mute ends (ISO); null while muted means Always."
+    muted_until: String
   }
 
   type ChatRoom {
@@ -48,6 +89,11 @@ export const chatTypeDefs = /* GraphQL */ `
     chat_deletes_at: String
     "Whether the pod has ended, which closes the room to new messages."
     closed: Boolean!
+    "Lines the viewer has not read yet (a never-opened room counts the last week)."
+    unread_count: Int!
+    "Whether the viewer muted this room's notifications."
+    is_muted: Boolean!
+    muted_until: String
   }
 
   type PodChatInfo {
@@ -57,6 +103,9 @@ export const chatTypeDefs = /* GraphQL */ `
     closed: Boolean!
     "Whether the viewer may remove other members' messages (a host of the pod)."
     can_moderate: Boolean!
+    "Whether the viewer muted this room's notifications."
+    is_muted: Boolean!
+    muted_until: String
   }
 
   "A pod's or club's chat history, read-only, for anyone signed in looking at its details page."
@@ -87,6 +136,11 @@ export const chatTypeDefs = /* GraphQL */ `
     last_message_at: String
     last_message_preview: String
     last_message_type: PodMessageType
+    "Lines the viewer has not read yet (a never-opened room counts the last week)."
+    unread_count: Int!
+    "Whether the viewer muted this room's notifications."
+    is_muted: Boolean!
+    muted_until: String
   }
 
   "A host or participant shown in the chat detail people panel."
@@ -116,6 +170,12 @@ export const chatTypeDefs = /* GraphQL */ `
     clubMessages(club_id: ID!, limit: Int, before: String): [PodMessage!]!
     "A pod's (pod_id) or club's (club_id) chat history for its details page — any signed-in viewer."
     chatPreview(pod_id: ID, club_id: ID, limit: Int, before: String): ChatPreview!
+    "A club room's members whose name starts with search, for the @ list (members only)."
+    clubChatMembers(club_id: ID!, search: String, limit: Int): [ChatUser!]!
+    "The viewer's mute of one pod, club or support chat."
+    chatMuteState(kind: ChatRoomKind!, id: ID!): ChatMuteState!
+    "Unread lines across the viewer's pod and club rooms, muted rooms left out."
+    chatUnreadTotal: Int!
   }
 
   extend type Mutation {
@@ -124,13 +184,24 @@ export const chatTypeDefs = /* GraphQL */ `
       type: PodMessageType
       text: String
       image_url: String
+      "Reply to this message (it must be in the same room)."
+      reply_to_id: ID
+      "Members @-mentioned in the text (they must be in the room)."
+      mentions: [ID!]
     ): PodMessage!
     sendClubMessage(
       club_id: ID!
       type: PodMessageType
       text: String
       image_url: String
+      reply_to_id: ID
+      mentions: [ID!]
     ): PodMessage!
+    "Mutes a chat you can open. Muting again replaces the length."
+    muteChat(kind: ChatRoomKind!, id: ID!, duration: ChatMuteDuration!): ChatMuteState!
+    unmuteChat(kind: ChatRoomKind!, id: ID!): ChatMuteState!
+    "Marks a pod or club room read up to now (on open, and while it stays open)."
+    markChatRead(kind: ChatRoomKind!, id: ID!): Boolean!
     "Toggles a reaction on a pod OR club chat message."
     reactToPodMessage(message_id: ID!, emoji: String!): PodMessage!
     "Removes a pod OR club chat message: your own, or anyone's in a room you moderate."

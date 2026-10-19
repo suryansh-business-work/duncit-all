@@ -24,9 +24,10 @@ describe('Duncit Website app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('exposes the dashboard, the websites and the inboxes', () => {
+  it('exposes the dashboard, the websites, the inboxes and the Earn section', () => {
     const targets = appConfig.nav.flatMap((n) => ('children' in n ? n.children.map((c) => c.to) : [n.to]));
-    expect(targets).toEqual(['/', '/sites', '/newsletter', '/contact-submissions', '/job-applications', '/navigation']);
+    expect(targets).toEqual(['/', '/sites', '/newsletter', '/contact-submissions', '/job-applications', '/navigation', '/earn']);
+    expect(appConfig.nav.find((n) => 'to' in n && n.to === '/earn')?.labelKey).toBe('shell.nav.earnWithDuncit');
     expect(appConfig.nav.find((n) => 'to' in n && n.to === '/')?.label).toBe('Dashboard');
     expect(appConfig.nav.find((n) => 'to' in n && n.to === '/sites')?.labelKey).toBe('shell.nav.websites');
   });

@@ -68,7 +68,8 @@ export function loadJsPdf(): Promise<JsPdfCtor> {
 const readDataUrl = (blob: Blob): Promise<string> =>
   new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    // readAsDataURL always settles `result` as a string (the data: URL).
+    reader.onload = () => resolve(reader.result as string);
     reader.readAsDataURL(blob);
   });
 

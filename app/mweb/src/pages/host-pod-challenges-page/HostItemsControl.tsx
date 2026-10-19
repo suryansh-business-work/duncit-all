@@ -14,12 +14,11 @@ interface Props {
   actions: HostChallengeActions;
 }
 
-interface CompetitorItemsProps {
-  tool: PodChallengeView['tools'][number];
-  competitor: PodChallengeView['competitors'][number];
+type CompetitorItemsProps = Pick<Props, 'actions'> & {
+  tool: Props['challenge']['tools'][number];
+  competitor: Props['challenge']['competitors'][number];
   items: ChallengeItem[];
-  actions: HostChallengeActions;
-}
+};
 
 /** One competitor's tasks or checkpoints, each a checkbox the host ticks. */
 function CompetitorItems({ tool, competitor, items, actions }: Readonly<CompetitorItemsProps>) {

@@ -102,7 +102,8 @@ describe('CallPromptsPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
 
     expect(await screen.findByText(/No Static Content yet/i)).toBeInTheDocument();
-    expect(screen.queryByText('Venue intro')).toBeNull();
+    // The grid can paint its empty overlay a tick before it drops the old row.
+    await waitFor(() => expect(screen.queryByText('Venue intro')).toBeNull());
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 

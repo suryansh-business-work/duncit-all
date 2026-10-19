@@ -1,5 +1,5 @@
 import { toOptionalInt } from '../../../lib/format';
-import { CATEGORY_KINDS, ITEM_KINDS } from '../section-kinds';
+import { CATEGORY_KINDS, ITEM_KINDS, MOBILE_IMAGE_KINDS } from '../section-kinds';
 import { DEFAULT_PRODUCTS, tiersOf } from './home-section.rules';
 import type { HomeSectionValues } from './home-section.types';
 
@@ -19,6 +19,13 @@ const categoriesOf = (values: HomeSectionValues): string[] => {
   return [];
 };
 
+/** The kind's items; a phone picture only goes with the kinds that draw one. */
+const itemsOf = (values: HomeSectionValues): HomeSectionValues['items'] => {
+  if (!ITEM_KINDS.has(values.kind)) return [];
+  if (MOBILE_IMAGE_KINDS.has(values.kind)) return values.items;
+  return values.items.map((item) => ({ ...item, mobile_image_url: '' }));
+};
+
 /** The server input: only the fields the chosen kind (and slider source) uses carry anything. */
 export const toHomeSectionInput = (values: HomeSectionValues) => {
   const slider = values.kind === 'PRODUCT_SLIDER';
@@ -29,7 +36,7 @@ export const toHomeSectionInput = (values: HomeSectionValues) => {
     is_active: values.is_active,
     starts_at: values.starts_at || null,
     ends_at: values.ends_at || null,
-    items: ITEM_KINDS.has(values.kind) ? values.items : [],
+    items: itemsOf(values),
     collection_id: collectionOf(values),
     category_ids: categoriesOf(values),
     product_limit: toOptionalInt(values.product_limit) ?? DEFAULT_PRODUCTS,

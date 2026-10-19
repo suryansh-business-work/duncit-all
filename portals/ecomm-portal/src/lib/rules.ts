@@ -8,6 +8,9 @@ const WHOLE = /^\d+$/;
 
 /** Blank, or a link — absolute, or a path on the store itself. */
 const isLink = (value: string) => value === '' || value.startsWith('/') || PUBLIC_URL_PATTERN.test(value);
+const isHttps = (value: string) => value.toLowerCase().startsWith('https://') && PUBLIC_URL_PATTERN.test(value);
+/** Blank, a path on the store (`/x`, never the protocol-relative `//host`), or a secure link. */
+const isStoreLink = (value: string) => value === '' || (value.startsWith('/') && !value.startsWith('//')) || isHttps(value);
 const isEmail = (value: string) => value === '' || z.email().safeParse(value).success;
 
 /**
@@ -33,6 +36,10 @@ export function makeRules(t: Translate) {
     /** What a search result shows — the shape `SeoFields` edits. */
     seo: () => ({ seo_title: optionalText(120), seo_description: optionalText(320) }),
     link: () => z.string().trim().refine(isLink, t('ecommPortal.form.invalidLink')),
+    /** Where a home tile or banner goes — a store path or an https:// link. */
+    storeLink: () => z.string().trim().refine(isStoreLink, t('ecommPortal.form.invalidLink')),
+    /** A required https:// address — a picture the store serves on its own pages. */
+    httpsUrl: () => z.string().trim().refine(isHttps, t('ecommPortal.form.invalidUrl')),
     /** A required absolute http(s) address — a social profile, say. */
     webUrl: () => z.string().trim().regex(PUBLIC_URL_PATTERN, t('ecommPortal.form.invalidUrl')),
     email: () => z.string().trim().refine(isEmail, t('ecommPortal.form.invalidEmail')),

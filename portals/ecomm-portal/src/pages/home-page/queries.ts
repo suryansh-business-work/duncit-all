@@ -11,13 +11,17 @@ export type SectionKind =
   | 'NEWSLETTER'
   | 'FLASH_SALE'
   | 'PRODUCT_SLIDER'
-  | 'CATEGORY_ICONS';
+  | 'CATEGORY_ICONS'
+  | 'RANGE_SHOWCASE'
+  | 'EARN_PROMO';
 
 /** Where a product slider takes its products from. */
 export type ProductSource = 'MANUAL' | 'COLLECTION' | 'CATEGORY' | 'BESTSELLING' | 'NEWEST' | 'DISCOUNT' | 'FEATURED';
 
 export interface StoreSectionItem {
   id: string;
+  /** The small line above a title, or the badge on a tile. */
+  eyebrow: string;
   title: string;
   subtitle: string;
   image_url: string;
@@ -53,6 +57,7 @@ const SECTION_FIELDS = `
   subtitle
   items {
     id
+    eyebrow
     title
     subtitle
     image_url
@@ -97,5 +102,24 @@ export const DELETE_SECTION = gql`
 export const REORDER_SECTIONS = gql`
   mutation StoreReorderSections($ids: [ID!]!) {
     storeReorderSections(ids: $ids)
+  }
+`;
+
+export type StoreLinkTargetGroup = 'PET_TYPE' | 'CATEGORY' | 'COLLECTION' | 'BRAND' | 'PAGE';
+
+/** A live storefront page a tile or banner can link to: its name and its same-site path. */
+export interface StoreLinkTarget {
+  group: StoreLinkTargetGroup;
+  label: string;
+  path: string;
+}
+
+export const STORE_LINK_TARGETS: TypedDocumentNode<{ storeAdminLinkTargets: StoreLinkTarget[] }> = gql`
+  query StoreAdminLinkTargets {
+    storeAdminLinkTargets {
+      group
+      label
+      path
+    }
   }
 `;

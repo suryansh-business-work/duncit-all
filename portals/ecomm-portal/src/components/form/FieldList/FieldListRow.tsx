@@ -4,16 +4,23 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
+import type { ImageFit } from '../../../lib/image-fit';
 import MoveButtons from '../../MoveButtons';
 import RhfImageField from '../RhfImageField';
+import RhfLinkField, { type LinkOption } from '../RhfLinkField';
 
 /** One input of a list row. */
 export interface ListColumn {
   key: string;
   label: string;
-  kind?: 'text' | 'multiline' | 'image';
+  kind?: 'text' | 'multiline' | 'image' | 'link';
   /** Marks the input required: the asterisk on its label. The list schema decides whether blank is refused. */
   required?: boolean;
+  hint?: string;
+  /** `image` only: the size an uploaded picture is resized to. */
+  fit?: ImageFit;
+  /** `link` only: the store pages offered; any other link can still be typed. */
+  options?: readonly LinkOption[];
 }
 
 interface FieldListRowProps<T extends FieldValues> {
@@ -35,13 +42,19 @@ function RowInput<T extends FieldValues>({
   name,
   column,
 }: Readonly<{ control: Control<T>; name: Path<T>; column: ListColumn }>) {
-  if (column.kind === 'image') return <RhfImageField control={control} name={name} label={column.label} required={column.required} />;
+  if (column.kind === 'image') {
+    return <RhfImageField control={control} name={name} label={column.label} hint={column.hint} required={column.required} fit={column.fit} />;
+  }
+  if (column.kind === 'link') {
+    return <RhfLinkField control={control} name={name} label={column.label} hint={column.hint} options={column.options ?? []} required={column.required} />;
+  }
   const multiline = column.kind === 'multiline';
   return (
     <RhfTextField
       control={control}
       name={name}
       label={column.label}
+      hint={column.hint}
       size="small"
       multiline={multiline}
       minRows={multiline ? 2 : undefined}

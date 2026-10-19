@@ -310,4 +310,12 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "finance.rentedItems.depositRefundableHint": [
     "On: the deposit comes back once the item is returned, less any damage claim. Off: the venue keeps it.",
   ],
+  // Gig Jobs: the city became a pick from the Location list (with its own area
+  // field), and any signed-in member can now view a poster's contact.
+  "gigJobs.validation.cityRequired": ["Enter a city"],
+  "gigJobs.form.location": ["Venue or area (optional)"],
+  "gigJobs.contact.hidden": ["The poster’s contact is shared with you once you show interest."],
+  "gigJobs.board.freelancerHint": [
+    "Freelancers can show interest in a gig and get the poster’s contact. Join from Earn with Duncit — it takes a minute.",
+  ],
 };

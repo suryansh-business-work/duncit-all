@@ -2,6 +2,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import {
   gigBudgetText,
   gigEventTypeKey,
+  gigPlaceText,
   gigPosterRoleKey,
   gigStatusKey,
   type GigJob,
@@ -30,7 +31,7 @@ export function GigFacts({ job }: Readonly<{ job: GigJob }>) {
   const when = job.event_date
     ? fmt.formatDay(job.event_date.slice(0, 10))
     : t('gigJobs.card.noDate');
-  const where = [job.location, job.city].filter(Boolean).join(', ');
+  const where = [job.location, gigPlaceText(job)].filter(Boolean).join(', ');
 
   return (
     <YStack gap={12}>

@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
-import { GIG_POST_PATH, MY_GIGS_PATH, canPostGigs, type GigJobFilter } from '@duncit/utils';
+import { GIG_POST_PATH, MY_GIGS_PATH, canPostGigs, gigBoardFilter, type GigJobFilter } from '@duncit/utils';
 import { useGigSurface } from '../GigSurfaceProvider';
 import { useGigContext } from '../useGigContext';
 import GigFilters from './GigFilters';
@@ -19,10 +19,12 @@ import { useGigBoard } from './usePagedGigs';
  */
 export default function GigBoard() {
   const { t } = useTranslation();
-  const { go, openFreelancerProfile } = useGigSurface();
+  const { go, openFreelancerProfile, selectedLocationId } = useGigSurface();
   const { categories, viewer } = useGigContext();
-  const [filter, setFilter] = useState<GigJobFilter>({});
-  const onFilter = useCallback((next: GigJobFilter) => setFilter(next), []);
+  // Null until the viewer touches a filter: the board follows the selected city.
+  const [picked, setPicked] = useState<GigJobFilter | null>(null);
+  const filter = useMemo(() => gigBoardFilter(picked, selectedLocationId), [picked, selectedLocationId]);
+  const onFilter = useCallback((next: GigJobFilter) => setPicked(next), []);
   const board = useGigBoard(filter);
   const canPost = canPostGigs(viewer);
 

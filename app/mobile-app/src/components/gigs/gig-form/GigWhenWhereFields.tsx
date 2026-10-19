@@ -1,15 +1,18 @@
-import { Controller, type Control } from 'react-hook-form';
+import { Controller, useController, type Control } from 'react-hook-form';
 import { GIG_EVENT_TYPES, gigEventTypeKey, type GigJobFormValues } from '@duncit/utils';
 
 import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
 import { RepeatEndDateField } from '@/components/create-pod/repeat/RepeatEndDateField';
 import { FormTextField } from '@/components/FormTextField';
 import { useTranslation } from '@/hooks/useTranslation';
+import { GigPlaceField } from '../GigPlaceField';
 
 /** Event type, day, place, budget and headcount. mWeb twin: GigWhenWhereFields. */
 export function GigWhenWhereFields({ control }: Readonly<{ control: Control<GigJobFormValues> }>) {
   const { t } = useTranslation();
   const today = new Date();
+  const city = useController({ control, name: 'location_id' });
+  const area = useController({ control, name: 'locality' });
 
   return (
     <>
@@ -47,7 +50,13 @@ export function GigWhenWhereFields({ control }: Readonly<{ control: Control<GigJ
           />
         )}
       />
-      <FormTextField control={control} name="city" label={t('gigJobs.form.city')} required />
+      <GigPlaceField
+        testID="gig-form"
+        label={t('gigJobs.form.city')}
+        city={city.field}
+        area={area.field}
+        error={city.fieldState.error?.message}
+      />
       <FormTextField control={control} name="location" label={t('gigJobs.form.location')} />
       <FormTextField
         control={control}

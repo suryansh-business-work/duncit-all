@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
+import { Controller, useController, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, FormControlLabel, Stack, Switch } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
@@ -8,6 +8,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { freelancerSkillOptions, type FreelancerFormValues } from '@duncit/utils';
 import ChipMultiSelect from '../../form/ChipMultiSelect';
+import GigPlaceField from '../../form/GigPlaceField';
 import ContactSharingNotice from '../../ContactSharingNotice';
 import type { FreelancerProfileFormProps } from './freelancer-profile.types';
 
@@ -28,6 +29,8 @@ export default function FreelancerProfileForm({
     mode: 'onBlur',
   });
   const categoryIds = useWatch({ control, name: 'category_ids' });
+  const city = useController({ control, name: 'location_id' });
+  const area = useController({ control, name: 'locality' });
   const titles = useMemo(() => new Map(categories.map((category) => [category.id, category.title])), [categories]);
 
   return (
@@ -52,15 +55,18 @@ export default function FreelancerProfileForm({
           disabled={categoryIds.length === 0}
           testId="freelancer-skills"
         />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <RhfTextField control={control} name="city" label={t('gigJobs.freelancer.city')} />
-          <RhfTextField
-            control={control}
-            name="experience_years"
-            label={t('gigJobs.freelancer.experience')}
-            slotProps={{ htmlInput: { inputMode: 'numeric' } }}
-          />
-        </Stack>
+        <GigPlaceField
+          legend={t('gigJobs.freelancer.city')}
+          city={city.field}
+          area={area.field}
+          error={city.fieldState.error?.message}
+        />
+        <RhfTextField
+          control={control}
+          name="experience_years"
+          label={t('gigJobs.freelancer.experience')}
+          slotProps={{ htmlInput: { inputMode: 'numeric' } }}
+        />
         <RhfTextField control={control} name="bio" label={t('gigJobs.freelancer.bio')} multiline minRows={3} />
         <RhfTextField control={control} name="portfolio_url" label={t('gigJobs.freelancer.portfolio')} type="url" />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

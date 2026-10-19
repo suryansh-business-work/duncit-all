@@ -3664,25 +3664,33 @@ renderer: `VenueBillSummary` in `@duncit/ui`.
 ## Gig Jobs — `gig-jobs`
 
 Hosts, venue owners and brand owners post what an event or workshop needs; freelancers
-who joined from Earn with Duncit say they are interested, which swaps contacts (free
-today). The MUI screens are `@duncit/gig-jobs`; this module is what every surface —
+who joined from Earn with Duncit say they are interested, which shares their contact with
+the poster, and any signed-in member may view a poster's contact (free today). The MUI screens are `@duncit/gig-jobs`; this module is what every surface —
 native included — shares:
 
 - **Documents** as plain strings (`GIG_JOBS_QUERY`, `GIG_JOB_QUERY`, `CREATE_GIG_JOB_MUTATION`,
   `EXPRESS_GIG_INTEREST_MUTATION`, `SAVE_FREELANCER_PROFILE_MUTATION` …). The board never asks
-  for a contact; only a gig's own page does, and the server answers null until the viewer may see it.
+  for a contact; a gig's own page does, and the server answers null unless the viewer posted it or
+  showed interest. Anyone else signed in reads it on "View contact" with `GIG_JOB_CONTACT_QUERY`.
+- **Place** — a gig and a freelancer profile carry `location_id` (an admin Location) and
+  `locality` (one of its zones) beside the display `city`; `GigJobFilter` takes `location_id`
+  (`city` stays for older clients). `gigPlaceText(row)` reads "Gomti Nagar, Lucknow".
 - **Paths** — `GIG_JOBS_PATH`, `GIG_POST_PATH`, `MY_GIGS_PATH`, `gigJobPath(id)`,
   `gigJobEditPath(id)`, `FREELANCER_PROFILE_PATH`.
 - **Literal label keys** — `gigPosterRoleKey`, `gigEventTypeKey`, `gigStatusKey` (an unknown value
   falls back to a real label), and `gigBudgetText` (null = to be discussed).
 - **Rules** — `canPostGigs(viewer)`; `gigViewerAction(job, viewer)` = MANAGE / CONTACT_SHARED /
-  CLOSED / JOIN_AS_FREELANCER / INTEREST, the one button a viewer gets; `gigRoleOptions`,
-  `freelancerSkillOptions`, `prunedGigRoles` (roles a new category still offers, null = no change);
-  `settledGigFilter` + `GIG_FILTER_SETTLE_MS` for the board's typed boxes; `gigContactLinks` (tel /
-  wa.me / mailto).
+  CLOSED / JOIN_AS_FREELANCER / INTEREST, the one button a viewer gets; `canRevealGigContact(job)`
+  (open, not theirs, contact not already shown); `gigBoardFilter(picked, selectedLocationId)` (the
+  viewer's own filter, else their selected city); `gigRoleOptions`, `freelancerSkillOptions`,
+  `prunedGigRoles` (roles a new category still offers, null = no change); `settledGigFilter` +
+  `GIG_FILTER_SETTLE_MS` for the board's search box (the city is a pick, not typing);
+  `gigContactLinks` (tel / wa.me / mailto).
 - **Forms** — `emptyGigJobValues(viewer)` (contact prefilled from the account, the poster role
   preselected only when there is one), `gigJobToValues` / `toGigJobInput`, `freelancerToValues` /
-  `toFreelancerInput` (drops skills no chosen category offers). Phones go out compacted.
+  `toFreelancerInput` (drops skills no chosen category offers). Phones go out compacted. The place
+  goes out as `location_id` + `locality`, never a typed city; a gig or profile saved before the
+  picker loads with no city, so its editor asks for one. Demo: **utils › gig-jobs-place-and-contact**.
 
 ## A venue's food menu and its QR order — `venue-food`
 

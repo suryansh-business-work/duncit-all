@@ -14,6 +14,7 @@ import {
 import { MY_FREELANCER_PROFILE, SAVE_FREELANCER_PROFILE } from '../documents';
 import { useGigSurface } from '../GigSurfaceProvider';
 import { useGigContext } from '../useGigContext';
+import { useLoggedError } from '../useLoggedError';
 import FreelancerProfileForm from './freelancer-profile';
 
 /**
@@ -26,6 +27,7 @@ export default function FreelancerProfileEditor() {
   const { go } = useGigSurface();
   const { categories, viewer, loading, error } = useGigContext();
   const profile = useQuery(MY_FREELANCER_PROFILE, { fetchPolicy: 'cache-and-network' });
+  useLoggedError(profile.error, 'freelancer-profile', 'loadProfile');
   const [save, saving] = useMutation(SAVE_FREELANCER_PROFILE, { refetchQueries: ['GigViewer', 'EarnMe'] });
   const [apiError, setApiError] = useState<string | null>(null);
   const existing = profile.data?.myFreelancerProfile ?? null;

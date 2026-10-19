@@ -9,6 +9,7 @@ import {
 
 import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
 import { FIELD_HEIGHT, FIELD_RADIUS } from '@/components/Field';
+import { LocationPickerField } from '@/components/LocationPickerField/LocationPickerField';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -20,18 +21,20 @@ interface Props {
   onChange: (next: GigJobFilter) => void;
 }
 
-/** Search, city and category. Typed boxes settle before they query. mWeb twin: GigFilters. */
+/**
+ * Search, city and category. The search settles before it queries; the city
+ * is a pick from the admin Location list (the viewer's selected city until
+ * they change it). mWeb twin: GigFilters.
+ */
 export function GigFilters({ categories, value, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
   const [search, setSearch] = useState(value.search ?? '');
-  const [city, setCity] = useState(value.city ?? '');
   const settledSearch = useDebouncedValue(search, GIG_FILTER_SETTLE_MS);
-  const settledCity = useDebouncedValue(city, GIG_FILTER_SETTLE_MS);
 
   useEffect(() => {
-    const next = settledGigFilter(value, settledSearch, settledCity);
+    const next = settledGigFilter(value, settledSearch);
     if (next) onChange(next);
-  }, [settledSearch, settledCity, value, onChange]);
+  }, [settledSearch, value, onChange]);
 
   const options = [
     { value: ALL, label: t('gigJobs.board.allCategories') },
@@ -49,14 +52,18 @@ export function GigFilters({ categories, value, onChange }: Readonly<Props>) {
         height={FIELD_HEIGHT}
         borderRadius={FIELD_RADIUS}
       />
-      <Input
-        testID="gig-filter-city"
-        value={city}
-        onChangeText={setCity}
-        placeholder={t('gigJobs.board.city')}
-        aria-label={t('gigJobs.board.city')}
-        height={FIELD_HEIGHT}
-        borderRadius={FIELD_RADIUS}
+      <LocationPickerField
+        testID="gig-filter"
+        locationId={value.location_id ?? ''}
+        locality=""
+        onChange={(locationId) => onChange({ ...value, location_id: locationId || null })}
+        copy={{
+          label: t('gigJobs.board.city'),
+          placeholder: t('gigJobs.board.allCities'),
+          change: t('gigJobs.form.changeCity'),
+          cityAria: (city) => t('gigJobs.form.cityAria', { vars: { city } }),
+          clear: t('gigJobs.board.allCities'),
+        }}
       />
       <ChipSelectField
         testID="gig-filter-category"

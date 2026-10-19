@@ -1205,6 +1205,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/location", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },

@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack, YStack } from 'tamagui';
-import { canPostGigs, type GigJobFilter } from '@duncit/utils';
+import { canPostGigs, gigBoardFilter, type GigJobFilter } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { GigFilters } from '@/components/gigs/GigFilters';
@@ -12,6 +12,7 @@ import { useGigContext } from '@/components/gigs/useGigContext';
 import { usePagedGigs } from '@/components/gigs/usePagedGigs';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { StackScreen } from '@/components/StackScreen';
+import { useLocations } from '@/hooks/useLocations';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -24,8 +25,11 @@ export function GigJobsScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { categories, viewer } = useGigContext();
-  const [filter, setFilter] = useState<GigJobFilter>({});
-  const onFilter = useCallback((next: GigJobFilter) => setFilter(next), []);
+  const { selectedId } = useLocations();
+  // Null until the viewer touches a filter: the board follows the header's city, as the pods lists do.
+  const [picked, setPicked] = useState<GigJobFilter | null>(null);
+  const filter = useMemo(() => gigBoardFilter(picked, selectedId), [picked, selectedId]);
+  const onFilter = useCallback((next: GigJobFilter) => setPicked(next), []);
   const board = usePagedGigs('BOARD', filter);
   const canPost = canPostGigs(viewer);
 

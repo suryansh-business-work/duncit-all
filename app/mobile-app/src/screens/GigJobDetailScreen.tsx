@@ -1,8 +1,10 @@
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { Spinner, Text, YStack } from 'tamagui';
+import { canRevealGigContact } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { GigContactCard } from '@/components/gigs/GigContactCard';
+import { GigContactReveal } from '@/components/gigs/GigContactReveal';
 import { GigFacts } from '@/components/gigs/GigFacts';
 import { GigInterestsList } from '@/components/gigs/GigInterestsList';
 import { GigNote } from '@/components/gigs/GigNote';
@@ -16,7 +18,8 @@ import type { RootStackParamList } from '@/navigation/types';
 
 /**
  * One gig (mWeb /gigs/:id): what it is, what this viewer can do, the poster's
- * contact once shared, and — for the poster — who is interested.
+ * contact (shown once shared, or on "View contact"), and — for the poster —
+ * who is interested.
  * mWeb twin: @duncit/gig-jobs GigJobDetail.
  */
 export function GigJobDetailScreen() {
@@ -48,6 +51,7 @@ export function GigJobDetailScreen() {
         <GigFacts job={job} />
         <GigViewerActions job={job} viewer={viewer} onChanged={gig.replace} />
         {job.contact && !job.is_mine ? <GigContactCard contact={job.contact} /> : null}
+        {canRevealGigContact(job) ? <GigContactReveal key={job.id} jobId={job.id} /> : null}
         {job.is_mine ? <GigInterestsList jobId={job.id} /> : null}
       </>
     );

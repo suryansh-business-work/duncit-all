@@ -15,7 +15,7 @@ export const GIG_LIMITS = {
   titleMax: 120,
   descriptionMax: 2000,
   rolesMax: 10,
-  cityMax: 80,
+  localityMax: 120,
   locationMax: 160,
   budgetMax: 10_000_000,
   openingsMax: 100,
@@ -32,6 +32,20 @@ const wholeNumberIn = (min: number, max: number) => (value: string) =>
   DIGITS.test(value) && Number(value) >= min && Number(value) <= max;
 
 const isHttpLink = (value: string) => z.url({ protocol: /^https?$/ }).safeParse(value).success;
+
+/**
+ * Where: a city picked from the admin Location list (its id) and, optionally,
+ * one of its areas. The server checks the Location and fills the city's name.
+ */
+function placeRules(t: Translate) {
+  return {
+    location_id: z.string().trim().min(1, t('gigJobs.validation.cityRequired')),
+    locality: z
+      .string()
+      .trim()
+      .max(GIG_LIMITS.localityMax, t('gigJobs.validation.tooLong', { vars: { max: GIG_LIMITS.localityMax } })),
+  };
+}
 
 function contactRules(t: Translate) {
   return {
@@ -73,11 +87,7 @@ export function makeGigJobSchema(t: Translate) {
     event_date: z
       .string()
       .refine((value) => value === '' || !Number.isNaN(Date.parse(value)), t('gigJobs.validation.dateInvalid')),
-    city: z
-      .string()
-      .trim()
-      .min(1, t('gigJobs.validation.cityRequired'))
-      .max(GIG_LIMITS.cityMax, t('gigJobs.validation.tooLong', { vars: { max: GIG_LIMITS.cityMax } })),
+    ...placeRules(t),
     location: z
       .string()
       .trim()
@@ -119,11 +129,7 @@ export function makeFreelancerProfileSchema(t: Translate) {
       .array(z.string())
       .min(1, t('gigJobs.validation.skillsRequired'))
       .max(GIG_LIMITS.skillsMax, t('gigJobs.validation.skillsTooMany', { vars: { max: GIG_LIMITS.skillsMax } })),
-    city: z
-      .string()
-      .trim()
-      .min(1, t('gigJobs.validation.cityRequired'))
-      .max(GIG_LIMITS.cityMax, t('gigJobs.validation.tooLong', { vars: { max: GIG_LIMITS.cityMax } })),
+    ...placeRules(t),
     bio: z
       .string()
       .trim()

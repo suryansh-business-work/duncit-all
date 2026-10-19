@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 import { makeFreelancerProfileSchema } from '@duncit/forms/schemas';
+import { logs } from '@duncit/logs';
 import {
   freelancerToValues,
   parseApiError,
@@ -102,7 +103,15 @@ export function FreelancerProfileScreen() {
     );
     setFailed(false);
   }, []);
-  useReloadableQuery(load, { onError: () => setFailed(true) });
+  useReloadableQuery(load, {
+    onError: (error) => {
+      logs.mobileApp.error('FreelancerProfile', 'loadProfile', {
+        error,
+        reason: parseApiError(error),
+      });
+      setFailed(true);
+    },
+  });
 
   let body;
   if (failed || context.failed)

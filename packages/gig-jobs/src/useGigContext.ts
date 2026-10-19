@@ -3,6 +3,7 @@ import { fireAndForget } from '@duncit/logs';
 import type { GigCategory } from '@duncit/utils';
 import { GIG_CATEGORIES, GIG_VIEWER } from './documents';
 import { useGigSurface } from './GigSurfaceProvider';
+import { useLoggedError } from './useLoggedError';
 
 /** One stable empty list, so a memo keyed on the categories does not rerun every render. */
 const EMPTY: readonly GigCategory[] = [];
@@ -16,6 +17,7 @@ export function useGigContext() {
   const { logger } = useGigSurface();
   const categories = useQuery(GIG_CATEGORIES, { fetchPolicy: 'cache-first' });
   const viewer = useQuery(GIG_VIEWER, { fetchPolicy: 'cache-and-network' });
+  useLoggedError(categories.error ?? viewer.error, 'gig-jobs', 'useGigContext');
   return {
     categories: categories.data?.gigCategories ?? EMPTY,
     viewer: viewer.data?.gigViewer ?? null,

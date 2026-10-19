@@ -3,10 +3,14 @@
  * documents, the row shapes, the LITERAL label keys and the form <-> input
  * conversion. Hosts, venue owners and brand owners post what an event or a
  * workshop needs; freelancers who joined from Earn with Duncit say they are
- * interested, which shares contacts both ways (free today). Copy is the
+ * interested, which shares their contact with the poster; any signed-in member
+ * may reveal a poster's contact ("View contact", free today). Where a gig is
+ * (and where a freelancer works) is an admin Location id plus one of its
+ * zones — the same picker pods and clubs use. Copy is the
  * `gigJobs` namespace; the server is `server/src/modules/engagement/gigJob`.
  */
 
+import { placeLabel } from './club-grouping';
 import { formatMoney } from './format-money';
 
 export const GIG_JOBS_PATH = '/gigs';
@@ -43,7 +47,10 @@ export interface GigJobRow {
   roles: string[];
   event_type: GigEventType;
   event_date?: string | null;
+  /** The city's name — from the admin Location, or typed on gigs posted before the picker. */
   city: string;
+  /** One of the city's areas, or '' for the whole city. */
+  locality?: string;
   budget?: number | null;
   openings: number;
   status: GigJobStatus;
@@ -59,6 +66,8 @@ export interface GigJobRow {
 export interface GigJob extends GigJobRow {
   description: string;
   category_id: string;
+  /** The admin Location — null on gigs posted before the picker. */
+  location_id?: string | null;
   location: string;
   /** Null (or absent) until the viewer may see it. */
   contact?: GigContact | null;
@@ -83,6 +92,8 @@ export interface FreelancerProfile {
   display_name: string;
   category_ids: string[];
   skills: string[];
+  location_id?: string | null;
+  locality?: string;
   city: string;
   bio: string;
   portfolio_url: string;
@@ -100,6 +111,8 @@ export interface GigViewer {
 
 export interface GigJobFilter {
   category_id?: string | null;
+  /** The admin Location. The typed `city` stays in the contract for older clients only. */
+  location_id?: string | null;
   city?: string | null;
   search?: string | null;
 }
@@ -108,11 +121,11 @@ export interface GigJobFilter {
  * Documents
  * ------------------------------------------------------------------ */
 
-const ROW_FIELDS = `id title category_title roles event_type event_date city budget openings status poster_role
-  poster_name interest_count is_mine viewer_interested created_at`;
-const JOB_FIELDS = `${ROW_FIELDS} description category_id location contact { name phone email }`;
-const PROFILE_FIELDS = `id display_name category_ids skills city bio portfolio_url experience_years contact_phone
-  contact_email is_available`;
+const ROW_FIELDS = `id title category_title roles event_type event_date city locality budget openings status
+  poster_role poster_name interest_count is_mine viewer_interested created_at`;
+const JOB_FIELDS = `${ROW_FIELDS} description category_id location_id location contact { name phone email }`;
+const PROFILE_FIELDS = `id display_name category_ids skills location_id locality city bio portfolio_url
+  experience_years contact_phone contact_email is_available`;
 
 export const GIG_CATEGORIES_QUERY = `query GigCategories {
   gigCategories { id title examples }
@@ -132,6 +145,11 @@ export const MY_GIG_JOBS_QUERY = `query MyGigJobs($offset: Int, $limit: Int) {
 
 export const GIG_JOB_QUERY = `query GigJob($id: ID!) {
   gigJob(id: $id) { ${JOB_FIELDS} }
+}`;
+
+/** "View contact" — the poster's contact, one gig at a time, for any signed-in member. */
+export const GIG_JOB_CONTACT_QUERY = `query GigJobContact($job_id: ID!) {
+  gigJobContact(job_id: $job_id) { name phone email }
 }`;
 
 export const GIG_JOB_INTERESTS_QUERY = `query GigJobInterests($job_id: ID!) {
@@ -190,6 +208,10 @@ export const gigPosterRoleKey = (role: unknown) => POSTER_ROLE_KEY[pick(GIG_POST
 export const gigEventTypeKey = (type: unknown) => EVENT_TYPE_KEY[pick(GIG_EVENT_TYPES, type, 'EVENT')];
 export const gigStatusKey = (status: unknown) => STATUS_KEY[pick(['OPEN', 'CLOSED'] as const, status, 'OPEN')];
 
+/** 'Gomti Nagar, Lucknow' — where a gig is (or a freelancer works), area first when there is one. */
+export const gigPlaceText = (place: { locality?: string | null; city?: string | null }): string =>
+  placeLabel(place.locality, place.city);
+
 /** "₹15,000", or null when the poster left the budget to be discussed. */
 export const gigBudgetText = (budget: number | null | undefined): string | null =>
   typeof budget === 'number' ? formatMoney(budget) : null;
@@ -214,20 +236,36 @@ export function gigViewerAction(
   return viewer?.is_freelancer ? 'INTEREST' : 'JOIN_AS_FREELANCER';
 }
 
+/**
+ * Whether the viewer is offered "View contact": anyone signed in, on an open
+ * gig that is not theirs and whose contact they do not already see.
+ */
+export const canRevealGigContact = (job: Pick<GigJob, 'is_mine' | 'status' | 'contact'>): boolean =>
+  !job.is_mine && !job.contact && job.status === 'OPEN';
+
+/**
+ * The filter the board queries: what the viewer picked, or — until they pick
+ * anything — their selected city (the header's), as the pods lists do. An
+ * empty id there means "every city".
+ */
+export const gigBoardFilter = (picked: GigJobFilter | null, selectedLocationId?: string | null): GigJobFilter =>
+  picked ?? { location_id: selectedLocationId || null };
+
 /** The gig roles a post in this category may ask for. */
 export const gigRoleOptions = (categories: readonly GigCategory[], categoryId: string): string[] =>
   categories.find((category) => category.id === categoryId)?.examples ?? [];
 
-/** How long the board's typed boxes (search, city) wait for typing to stop before they query. */
+/** How long the board's search box waits for typing to stop before it queries. */
 export const GIG_FILTER_SETTLE_MS = 350;
 
 /**
- * The filter to query once typing settles, or null when the typed search and
- * city already match it — so a settled box that changed nothing fires nothing.
+ * The filter to query once typing settles, or null when the typed search
+ * already matches it — so a settled box that changed nothing fires nothing.
+ * The city is a pick, not typing, so it changes the filter directly.
  */
-export function settledGigFilter(filter: GigJobFilter, search: string, city: string): GigJobFilter | null {
-  if (search === (filter.search ?? '') && city === (filter.city ?? '')) return null;
-  return { ...filter, search, city };
+export function settledGigFilter(filter: GigJobFilter, search: string): GigJobFilter | null {
+  if (search === (filter.search ?? '')) return null;
+  return { ...filter, search };
 }
 
 /**
@@ -280,7 +318,10 @@ export interface GigJobFormValues {
   event_type: GigEventType;
   /** yyyy-MM-dd, or '' for "no fixed date yet". */
   event_date: string;
-  city: string;
+  /** The admin Location id — '' until a city is picked. */
+  location_id: string;
+  /** One of that city's zone names, or '' for the whole city. */
+  locality: string;
   location: string;
   /** Whole rupees as typed; '' = to be discussed. */
   budget: string;
@@ -301,7 +342,8 @@ export function emptyGigJobValues(viewer?: Pick<GigViewer, 'poster_roles' | 'def
     roles: [],
     event_type: 'EVENT',
     event_date: '',
-    city: '',
+    location_id: '',
+    locality: '',
     location: '',
     budget: '',
     openings: '1',
@@ -319,7 +361,9 @@ export const gigJobToValues = (job: GigJob): GigJobFormValues => ({
   roles: [...job.roles],
   event_type: job.event_type,
   event_date: job.event_date ? job.event_date.slice(0, 10) : '',
-  city: job.city,
+  // A gig typed before the picker has no Location: its editor asks for a city again.
+  location_id: job.location_id ?? '',
+  locality: job.locality ?? '',
   location: job.location,
   budget: typeof job.budget === 'number' ? String(job.budget) : '',
   openings: String(job.openings),
@@ -337,7 +381,9 @@ export const toGigJobInput = (values: GigJobFormValues) => ({
   roles: values.roles,
   event_type: values.event_type,
   event_date: values.event_date || null,
-  city: values.city.trim(),
+  // The server fills the city's name from the Location.
+  location_id: values.location_id,
+  locality: values.locality,
   location: values.location.trim(),
   budget: values.budget.trim() === '' ? null : Number(values.budget),
   openings: Number(values.openings),
@@ -350,7 +396,8 @@ export interface FreelancerFormValues {
   display_name: string;
   category_ids: string[];
   skills: string[];
-  city: string;
+  location_id: string;
+  locality: string;
   bio: string;
   portfolio_url: string;
   experience_years: string;
@@ -369,7 +416,8 @@ export function freelancerToValues(
       display_name: fallback?.name ?? '',
       category_ids: [],
       skills: [],
-      city: '',
+      location_id: '',
+      locality: '',
       bio: '',
       portfolio_url: '',
       experience_years: '0',
@@ -382,7 +430,8 @@ export function freelancerToValues(
     display_name: profile.display_name,
     category_ids: [...profile.category_ids],
     skills: [...profile.skills],
-    city: profile.city,
+    location_id: profile.location_id ?? '',
+    locality: profile.locality ?? '',
     bio: profile.bio,
     portfolio_url: profile.portfolio_url,
     experience_years: String(profile.experience_years),
@@ -399,7 +448,8 @@ export function toFreelancerInput(values: FreelancerFormValues, categories: read
     display_name: values.display_name.trim(),
     category_ids: values.category_ids,
     skills: values.skills.filter((skill) => offered.has(skill)),
-    city: values.city.trim(),
+    location_id: values.location_id,
+    locality: values.locality,
     bio: values.bio.trim(),
     portfolio_url: values.portfolio_url.trim(),
     experience_years: Number(values.experience_years || 0),

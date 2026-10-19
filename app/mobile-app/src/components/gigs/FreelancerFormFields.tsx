@@ -1,9 +1,10 @@
-import { Controller, useWatch, type Control } from 'react-hook-form';
+import { Controller, useController, useWatch, type Control } from 'react-hook-form';
 import { freelancerSkillOptions, type FreelancerFormValues, type GigCategory } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
 import { ToggleRow } from '@/components/ToggleRow';
 import { useTranslation } from '@/hooks/useTranslation';
+import { GigPlaceField } from './GigPlaceField';
 import { MultiChipField } from './MultiChipField';
 
 interface Props {
@@ -16,6 +17,8 @@ export function FreelancerFormFields({ control, categories }: Readonly<Props>) {
   const { t } = useTranslation();
   const categoryIds = useWatch({ control, name: 'category_ids' });
   const skills = freelancerSkillOptions(categories, categoryIds);
+  const city = useController({ control, name: 'location_id' });
+  const area = useController({ control, name: 'locality' });
 
   return (
     <>
@@ -57,7 +60,13 @@ export function FreelancerFormFields({ control, categories }: Readonly<Props>) {
           />
         )}
       />
-      <FormTextField control={control} name="city" label={t('gigJobs.freelancer.city')} required />
+      <GigPlaceField
+        testID="freelancer"
+        label={t('gigJobs.freelancer.city')}
+        city={city.field}
+        area={area.field}
+        error={city.fieldState.error?.message}
+      />
       <FormTextField
         control={control}
         name="experience_years"

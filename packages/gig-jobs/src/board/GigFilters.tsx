@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import { MenuItem, Stack, TextField } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
+import { useAdminLocations } from '@duncit/location';
 import { useDebouncedValue } from '@duncit/ui';
-import { GIG_FILTER_SETTLE_MS, settledGigFilter, type GigCategory, type GigJobFilter } from '@duncit/utils';
+import {
+  GIG_FILTER_SETTLE_MS,
+  clubCityName,
+  settledGigFilter,
+  type GigCategory,
+  type GigJobFilter,
+} from '@duncit/utils';
 
 interface Props {
   categories: readonly GigCategory[];
@@ -10,14 +17,19 @@ interface Props {
   onChange: (next: GigJobFilter) => void;
 }
 
-/** Category, city and free-text search. Typed boxes settle before they query. */
+/**
+ * Free-text search, category and city. The search settles before it queries;
+ * the city is a pick from the admin Location list (the viewer's selected city
+ * until they change it), so "Lu" can no longer miss Lucknow.
+ */
 export default function GigFilters({ categories, value, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [typed, setTyped] = useState({ search: value.search ?? '', city: value.city ?? '' });
-  const settled = useDebouncedValue(typed, GIG_FILTER_SETTLE_MS);
+  const { locations } = useAdminLocations();
+  const [search, setSearch] = useState(value.search ?? '');
+  const settled = useDebouncedValue(search, GIG_FILTER_SETTLE_MS);
 
   useEffect(() => {
-    const next = settledGigFilter(value, settled.search, settled.city);
+    const next = settledGigFilter(value, settled);
     if (next) onChange(next);
   }, [settled, value, onChange]);
 
@@ -25,8 +37,8 @@ export default function GigFilters({ categories, value, onChange }: Readonly<Pro
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
       <TextField
         label={t('gigJobs.board.search')}
-        value={typed.search}
-        onChange={(event) => setTyped((now) => ({ ...now, search: event.target.value }))}
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
         size="small"
         fullWidth
         type="search"
@@ -47,12 +59,22 @@ export default function GigFilters({ categories, value, onChange }: Readonly<Pro
         ))}
       </TextField>
       <TextField
+        select
         label={t('gigJobs.board.city')}
-        value={typed.city}
-        onChange={(event) => setTyped((now) => ({ ...now, city: event.target.value }))}
+        // A city the list no longer offers (switched off since) reads as "All cities".
+        value={locations.some((location) => location.id === value.location_id) ? value.location_id : ''}
+        onChange={(event) => onChange({ ...value, location_id: event.target.value || null })}
         size="small"
         fullWidth
-      />
+        data-testid="gig-filter-city"
+      >
+        <MenuItem value="">{t('gigJobs.board.allCities')}</MenuItem>
+        {locations.map((location) => (
+          <MenuItem key={location.id} value={location.id}>
+            {clubCityName({ id: location.id, city: location.city, location_name: location.location_name ?? '' })}
+          </MenuItem>
+        ))}
+      </TextField>
     </Stack>
   );
 }

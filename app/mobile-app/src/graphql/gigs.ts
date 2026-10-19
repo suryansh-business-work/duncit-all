@@ -61,6 +61,7 @@ export const GigRowFragment = gql(`
     event_type
     event_date
     city
+    locality
     budget
     openings
     status
@@ -78,6 +79,7 @@ export const GigJobFragment = gql(`
     ...MobileGigRow
     description
     category_id
+    location_id
     location
     contact {
       name
@@ -91,6 +93,17 @@ export const GigJobDocument = gql(`
   query MobileGigJob($id: ID!) {
     gigJob(id: $id) {
       ...MobileGigJob
+    }
+  }
+`);
+
+/** "View contact" — the poster's contact for any signed-in member, one gig at a time. */
+export const GigJobContactDocument = gql(`
+  query MobileGigJobContact($job_id: ID!) {
+    gigJobContact(job_id: $job_id) {
+      name
+      phone
+      email
     }
   }
 `);
@@ -119,6 +132,8 @@ export const MyFreelancerProfileDocument = gql(`
       display_name
       category_ids
       skills
+      location_id
+      locality
       city
       bio
       portfolio_url

@@ -3,7 +3,8 @@ import type { NestedCatalogue } from '../catalogue';
 /**
  * Gig Jobs: hosts, venue owners and brand owners post what an event or a
  * workshop needs (a photographer, a caterer, a sponsor); freelancers who
- * joined from Earn with Duncit show interest and the two swap contacts.
+ * joined from Earn with Duncit show interest, which shares their profile with
+ * the poster; any signed-in member can view a poster's contact.
  *
  * A namespace of its own because the same sentences render on mWeb and the
  * Partners console (through @duncit/gig-jobs), in the native app's Tamagui
@@ -36,6 +37,7 @@ export const GIG_JOBS_BUNDLE: NestedCatalogue = {
       category: 'Category',
       allCategories: 'All categories',
       city: 'City',
+      allCities: 'All cities',
       empty: 'No open gigs match right now',
       emptyHint: 'Try another category or city, or check back soon.',
       loadMore: 'Load more',
@@ -45,7 +47,7 @@ export const GIG_JOBS_BUNDLE: NestedCatalogue = {
       myPosts: 'My posts',
       myProfile: 'My freelancer profile',
       joinAsFreelancer: 'Join as a freelancer',
-      freelancerHint: 'Freelancers can show interest in a gig and get the poster’s contact. Join from Earn with Duncit — it takes a minute.',
+      freelancerHint: 'Freelancers can show interest in a gig and share their profile with the poster. Join from Earn with Duncit — it takes a minute.',
     },
     card: {
       openings: {
@@ -98,7 +100,9 @@ export const GIG_JOBS_BUNDLE: NestedCatalogue = {
       call: 'Call',
       whatsapp: 'WhatsApp',
       email: 'Email',
-      hidden: 'The poster’s contact is shared with you once you show interest.',
+      hidden: 'Tap View contact to see the poster’s phone and email.',
+      view: 'View contact',
+      viewFailed: 'We could not load the contact. Please try again.',
       monetizeNotice: 'Contact sharing is free right now. In future, sharing contact details on Gig Jobs may become a paid feature.',
     },
     interests: {
@@ -123,7 +127,13 @@ export const GIG_JOBS_BUNDLE: NestedCatalogue = {
       eventType: 'Type',
       eventDate: 'Event date (optional)',
       city: 'City',
-      location: 'Venue or area (optional)',
+      cityPlaceholder: 'Choose a city',
+      cityAria: 'City: {city}',
+      changeCity: 'Change',
+      locality: 'Area (optional)',
+      anyLocality: 'Whole city',
+      noLocalities: 'This city has no areas yet.',
+      location: 'Venue or address (optional)',
       budget: 'Budget in rupees (optional)',
       budgetHint: 'Leave blank to discuss with the freelancer',
       openings: 'How many people',
@@ -174,7 +184,7 @@ export const GIG_JOBS_BUNDLE: NestedCatalogue = {
       rolesRequired: 'Pick at least one role',
       rolesTooMany: 'Pick up to {max} roles',
       dateInvalid: 'Enter a valid date',
-      cityRequired: 'Enter a city',
+      cityRequired: 'Choose a city',
       budgetInvalid: 'Enter whole rupees from 0 to {max}',
       openingsInvalid: 'Enter a number from 1 to {max}',
       nameRequired: 'Enter a name of at least 2 characters',

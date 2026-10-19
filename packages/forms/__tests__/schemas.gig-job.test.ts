@@ -27,7 +27,8 @@ const POST = {
   roles: ['Photographer'],
   event_type: 'WORKSHOP' as const,
   event_date: '2026-11-02',
-  city: 'Pune',
+  location_id: 'loc-pune',
+  locality: '',
   location: '',
   budget: '',
   openings: '1',
@@ -40,7 +41,8 @@ const PROFILE = {
   display_name: 'Ravi',
   category_ids: ['c1'],
   skills: ['Photographer'],
-  city: 'Pune',
+  location_id: 'loc-pune',
+  locality: 'Baner',
   bio: '',
   portfolio_url: '',
   experience_years: '',
@@ -74,7 +76,13 @@ describe('makeGigJobSchema', () => {
     expect(issuesFor({ title: '  ab  ' })).toEqual([`title=${titleLength}`]);
     expect(issuesFor({ title: 'x'.repeat(GIG_LIMITS.titleMax + 1) })).toEqual([`title=${titleLength}`]);
     expect(issuesFor({ roles: [] })).toEqual(['roles=gigJobs.validation.rolesRequired']);
-    expect(issuesFor({ city: '   ' })).toEqual(['city=gigJobs.validation.cityRequired']);
+    expect(issuesFor({ location_id: '' })).toEqual(['location_id=gigJobs.validation.cityRequired']);
+    expect(issuesFor({ location_id: '   ' })).toEqual(['location_id=gigJobs.validation.cityRequired']);
+  });
+
+  it('takes the whole city when no area is picked', () => {
+    expect(issuesFor({ locality: '' })).toEqual([]);
+    expect(issuesFor({ locality: 'Koregaon Park' })).toEqual([]);
   });
 
   it('caps the number of roles', () => {
@@ -114,8 +122,8 @@ describe('makeGigJobSchema', () => {
     expect(issuesFor({ location: 'x'.repeat(GIG_LIMITS.locationMax + 1) })).toEqual([
       `location=gigJobs.validation.tooLong:{"max":${GIG_LIMITS.locationMax}}`,
     ]);
-    expect(issuesFor({ city: 'x'.repeat(GIG_LIMITS.cityMax + 1) })).toEqual([
-      `city=gigJobs.validation.tooLong:{"max":${GIG_LIMITS.cityMax}}`,
+    expect(issuesFor({ locality: 'x'.repeat(GIG_LIMITS.localityMax + 1) })).toEqual([
+      `locality=gigJobs.validation.tooLong:{"max":${GIG_LIMITS.localityMax}}`,
     ]);
     expect(issuesFor({ contact_name: 'x'.repeat(GIG_LIMITS.nameMax + 1) })).toEqual([
       `contact_name=gigJobs.validation.tooLong:{"max":${GIG_LIMITS.nameMax}}`,
@@ -139,7 +147,7 @@ describe('makeFreelancerProfileSchema', () => {
     expect(issuesFor({ display_name: ' ' })).toEqual(['display_name=gigJobs.validation.nameRequired']);
     expect(issuesFor({ category_ids: [] })).toEqual(['category_ids=gigJobs.validation.categoriesRequired']);
     expect(issuesFor({ skills: [] })).toEqual(['skills=gigJobs.validation.skillsRequired']);
-    expect(issuesFor({ city: '' })).toEqual(['city=gigJobs.validation.cityRequired']);
+    expect(issuesFor({ location_id: '' })).toEqual(['location_id=gigJobs.validation.cityRequired']);
   });
 
   it('caps categories and skills', () => {

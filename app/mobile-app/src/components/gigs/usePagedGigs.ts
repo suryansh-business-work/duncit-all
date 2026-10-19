@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { GigJobFilter, GigJobRow } from '@duncit/utils';
+import { logs } from '@duncit/logs';
+import { parseApiError, type GigJobFilter, type GigJobRow } from '@duncit/utils';
 
 import { GigJobsDocument, MyGigJobsDocument } from '@/graphql/gigs';
 import { useReloadableQuery } from '@/hooks/useReloadableQuery';
@@ -18,7 +19,7 @@ export function usePagedGigs(source: 'BOARD' | 'MINE', filter: GigJobFilter = {}
   const [rows, setRows] = useState<GigJobRow[] | null>(null);
   const [total, setTotal] = useState(0);
   const [failed, setFailed] = useState(false);
-  const { category_id, city, search } = filter;
+  const { category_id, location_id, search } = filter;
 
   const load = useCallback(async () => {
     const page =
@@ -27,16 +28,25 @@ export function usePagedGigs(source: 'BOARD' | 'MINE', filter: GigJobFilter = {}
         : (
             await graphqlRequest(
               GigJobsDocument,
-              { filter: { category_id, city, search }, offset: 0, limit },
+              { filter: { category_id, location_id, search }, offset: 0, limit },
               { auth: true },
             )
           ).gigJobs;
     setRows(page.rows);
     setTotal(page.total);
     setFailed(false);
-  }, [source, limit, category_id, city, search]);
+  }, [source, limit, category_id, location_id, search]);
 
-  const query = useReloadableQuery(load, { onError: () => setFailed(true) });
+  const query = useReloadableQuery(load, {
+    onError: (error) => {
+      logs.mobileApp.error('GigJobs', 'usePagedGigs', {
+        error,
+        source,
+        reason: parseApiError(error),
+      });
+      setFailed(true);
+    },
+  });
   useRefetchOnReturn(query.refetch);
 
   return {

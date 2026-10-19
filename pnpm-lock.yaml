@@ -2190,6 +2190,9 @@ importers:
       '@duncit/forms':
         specifier: workspace:*
         version: link:../forms
+      '@duncit/location':
+        specifier: workspace:*
+        version: link:../location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../logs

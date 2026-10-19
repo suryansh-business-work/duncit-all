@@ -1,49 +1,112 @@
 ---
 import { siteContent } from '../config/site-config';
 import SmartLink from './SmartLink.astro';
+import SectionHead from './home/SectionHead.astro';
 
 const siteConfig = await siteContent();
 const { paths, pathsSection } = siteConfig;
+
+// Each journey gets its own colourway so the four read as four different
+// doors. `frame-scope` on the dark one hands its contents the dark palette.
+const LOOKS = [
+  { card: 'bg-primary-fill text-on-primary', chip: 'bg-frame/20', arrow: 'bg-on-primary text-primary-fill', tag: 'bg-accent text-on-accent -rotate-6' },
+  { card: 'border border-line bg-surface text-ink', chip: 'bg-primary-light', arrow: 'bg-primary-fill text-on-primary', tag: 'bg-primary-fill text-on-primary rotate-6' },
+  { card: 'frame-scope bg-frame text-ink', chip: 'bg-surface', arrow: 'bg-primary text-frame', tag: 'bg-surface text-ink -rotate-3' },
+  { card: 'bg-accent text-on-accent', chip: 'bg-on-primary/40', arrow: 'bg-on-accent text-accent', tag: 'bg-on-primary text-on-accent rotate-3' },
+];
 ---
 
-<section id="paths" class="scroll-mt-20 bg-surface/70 py-16">
-  <div class="mx-auto max-w-6xl px-5">
-    <p class="text-center text-xs font-black uppercase tracking-[0.2em] text-primary">{pathsSection.eyebrow}</p>
-    <h2 class="mt-2 text-center text-3xl text-ink sm:text-4xl">
-      {pathsSection.headingLead} <span class="text-primary">{pathsSection.headingAccent}</span>
-    </h2>
+<section id="paths" class="scroll-mt-24 py-20 sm:py-28 lg:py-36">
+  <div class="mx-auto max-w-6xl px-4 sm:px-5">
+    <SectionHead
+      kicker={pathsSection.eyebrow}
+      headingLead={pathsSection.headingLead}
+      headingAccent={pathsSection.headingAccent}
+      text={pathsSection.text}
+    />
 
-    <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4" data-reveal-group>
       {
-        paths.map((path) => (
-          <article class="flex flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-            <img
-              src={path.image}
-              alt={path.imageAlt}
-              width="800"
-              height="600"
-              class="aspect-4/3 w-full object-cover"
-              loading="lazy"
-            />
-            <div class="relative flex grow flex-col p-6">
-              {/* The icon badge straddles the image edge, as in the mock. */}
-              <span class="absolute -top-6 left-6 flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-primary-light text-primary-dark">
-                <i class={`fa-solid ${path.icon}`} aria-hidden="true" />
-              </span>
-              <h3 class="text-lg text-ink">{path.title}</h3>
-              <p class="mt-2 grow text-sm leading-relaxed text-ink-soft">{path.text}</p>
+        paths.map((path, index) => {
+          const look = LOOKS[index % LOOKS.length];
+          return (
+            <div data-reveal>
               <SmartLink
                 href={path.href}
                 label={path.cta}
                 glyph={false}
-                class="mt-5 inline-flex items-center justify-center gap-1 rounded-full border border-primary/40 px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary hover:text-white"
+                class={`path-card group relative flex h-full flex-col overflow-hidden rounded-card p-3 shadow-soft ${look.card}`}
               >
-                {path.cta}
+                <span class="relative block">
+                  <img
+                    src={path.image}
+                    alt={path.imageAlt}
+                    width="800"
+                    height="600"
+                    class="aspect-4/3 w-full rounded-[1.25rem] object-cover transition duration-700 ease-smooth group-hover:scale-[1.04]"
+                    loading="lazy"
+                  />
+                  <span class={`absolute -top-1 right-3 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-head text-xs font-extrabold uppercase tracking-wider shadow-soft ${look.tag}`}>
+                    <i class={`fa-solid ${path.icon}`} aria-hidden="true" />
+                    {path.tag}
+                  </span>
+                </span>
+                <span class="flex grow flex-col px-3 pt-5 pb-3">
+                  <span class="font-head text-2xl leading-tight font-extrabold tracking-tight sm:text-[1.7rem]">{path.title}</span>
+                  <span class="mt-3 block text-[0.95rem] leading-relaxed">{path.text}</span>
+                  <span class="mt-5 flex flex-wrap gap-2">
+                    {path.chips.map((chip) => (
+                      <span class={`rounded-full px-3 py-1.5 text-xs font-bold ${look.chip}`}>{chip}</span>
+                    ))}
+                  </span>
+                  <span class="mt-auto flex items-center justify-between gap-3 pt-7 font-head text-base font-extrabold">
+                    {path.cta}
+                    <span class={`path-arrow grid h-12 w-12 shrink-0 place-items-center rounded-full ${look.arrow}`}>
+                      <i class="fa-solid fa-arrow-right" aria-hidden="true" />
+                    </span>
+                  </span>
+                </span>
               </SmartLink>
             </div>
-          </article>
-        ))
+          );
+        })
       }
     </div>
   </div>
 </section>
+
+<style>
+  /* The whole card is the link: it lifts, and its arrow turns to point out. */
+  :global(.path-card) {
+    transition:
+      transform 500ms var(--ease-smooth),
+      box-shadow 500ms var(--ease-smooth);
+  }
+  :global(.path-card:hover),
+  :global(.path-card:focus-visible) {
+    transform: translateY(-8px) rotate(-0.6deg);
+    box-shadow: var(--shadow-lift);
+  }
+  :global(.path-card:focus-visible) {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 4px;
+  }
+  :global(.path-card .path-arrow) {
+    transition: transform 400ms var(--ease-smooth);
+  }
+  :global(.path-card:hover .path-arrow),
+  :global(.path-card:focus-visible .path-arrow) {
+    transform: rotate(-45deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.path-card),
+    :global(.path-card .path-arrow) {
+      transition: none;
+    }
+    :global(.path-card:hover),
+    :global(.path-card:focus-visible),
+    :global(.path-card:hover .path-arrow) {
+      transform: none;
+    }
+  }
+</style>

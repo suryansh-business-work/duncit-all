@@ -87,7 +87,7 @@ const BRANDING_FALLBACK: SiteBranding = {
 
 /** Admin-managed branding (Website Logos section) — baked in at build time. */
 export async function fetchBranding(): Promise<SiteBranding> {
-  const data = await gqlFetch<{ branding: SiteBranding }>(`
+  const data = await gqlFetch<{ branding: SiteBranding; appVersionInfo?: { android_store_url: string } }>(`
     query WebsiteBranding {
       branding {
         app_name
@@ -99,9 +99,15 @@ export async function fetchBranding(): Promise<SiteBranding> {
         android_app_url
         ios_app_url
       }
+      appVersionInfo {
+        android_store_url
+      }
     }
   `);
-  return { ...BRANDING_FALLBACK, ...data?.branding };
+  const branding = { ...BRANDING_FALLBACK, ...data?.branding };
+  // A blank Android link in Admin > Branding falls back to the server's store
+  // listing, so the download band links the live app instead of saying "soon".
+  return { ...branding, android_app_url: branding.android_app_url || data?.appVersionInfo?.android_store_url || '' };
 }
 
 export interface SitePolicy {

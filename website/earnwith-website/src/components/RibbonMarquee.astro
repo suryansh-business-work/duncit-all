@@ -11,14 +11,14 @@ interface Props {
   seconds?: number;
 }
 
-const { tilt = 16, seconds = 26 } = Astro.props;
+const { tilt = 10, seconds = 40 } = Astro.props;
 
 // The marquee runs forever by scrolling exactly half the track and resetting —
 // the copies land where the previous ones were, so the reset is invisible.
 // FOUR copies, not two: half a two-copy track is barely a desktop width, and a
 // track narrower than the band would run out and show the gap it resets across.
-const run = `${siteConfig.hero.ribbon.join('  •  ')}  •  `;
-const copies = [run, run, run, run];
+const words = siteConfig.hero.ribbon;
+const copies = [0, 1, 2, 3];
 ---
 
 <!-- Decorative: the words are marketing copy that already appears as prose on
@@ -26,7 +26,18 @@ const copies = [run, run, run, run];
 <div class="ribbon-stage" style={`--ribbon-tilt:${tilt}deg;--ribbon-seconds:${seconds}s`} aria-hidden="true">
   <div class="ribbon-band">
     <div class="ribbon-track">
-      {copies.map((copy) => <span class="ribbon-run">{copy}</span>)}
+      {
+        copies.map(() => (
+          <span class="ribbon-run">
+            {words.map((word) => (
+              <>
+                <span>{word}</span>
+                <i class="fa-solid fa-bolt ribbon-mark" />
+              </>
+            ))}
+          </span>
+        ))
+      }
     </div>
   </div>
 </div>
@@ -36,42 +47,26 @@ const copies = [run, run, run, run];
      tilt on the band, so the text inside inherits the same plane and the whole
      thing reads as one ribbon rather than skewed lettering.
 
-     The stage OWNS the clip and the widening. Call sites used to do it with
-     `mx-[-4%]`, which made the element wider than the page — the body's
-     `overflow-x: hidden` stopped it scrolling but the band still ran off the
-     right edge and left a strip of dead space beside it. Widening the band
-     INSIDE a full-width clip gets the same look with nothing sticking out.
-
-     The vertical padding is the tilt's own room: a band rotated 1.6° lifts one
-     end and drops the other by half its width times sin(1.6°), and without
-     space for that the ends get sliced off. */
+     The stage OWNS the clip and the widening: the band is wider than the stage
+     so both ends run past the clip, and nothing sticks out of the page. The
+     vertical padding is the tilt's own room, so the ends are not sliced off. */
   .ribbon-stage {
     perspective: 700px;
     pointer-events: none;
     overflow: hidden;
-    padding-block: 1.25rem;
+    padding-block: 1.5rem;
   }
 
   .ribbon-band {
-    /* Wider than the stage so both ends run past the clip rather than stopping
-       in view — the reason the negative margin existed. */
     width: 112%;
     margin-inline-start: -6%;
-    padding: 0.85rem 0;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-primary) 82%, white) 0%,
-      var(--color-primary) 45%,
-      var(--color-primary-dark) 100%
-    );
-    /* The lift: tilted back, turned a degree off level, and shadowed under the
-       lower edge so it sits above what is behind it instead of on it. */
-    transform: rotateX(var(--ribbon-tilt)) rotate(-1.6deg);
+    padding: 1.1rem 0;
+    /* The AA pink: the words on it are large, white, and must read in both
+       themes — the band does not invert. */
+    background: linear-gradient(180deg, var(--color-primary-fill) 0%, var(--color-primary-dark) 100%);
+    transform: rotateX(var(--ribbon-tilt)) rotate(-1.5deg);
     transform-style: preserve-3d;
-    box-shadow:
-      0 18px 30px -12px rgba(0, 0, 0, 0.55),
-      inset 0 1px 0 rgba(255, 255, 255, 0.45),
-      inset 0 -2px 6px rgba(0, 0, 0, 0.22);
+    box-shadow: var(--shadow-lift);
   }
 
   .ribbon-track {
@@ -81,15 +76,21 @@ const copies = [run, run, run, run];
   }
 
   .ribbon-run {
-    padding-right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    padding-right: 2.5rem;
     font-family: var(--font-head);
-    font-size: 0.95rem;
+    font-size: 2rem;
     font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: -0.03em;
     white-space: nowrap;
-    color: #fff;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+    color: var(--color-on-primary);
+  }
+
+  .ribbon-mark {
+    font-size: 1.4rem;
+    color: var(--color-frame);
   }
 
   /* Exactly half the track — the second pair of copies has arrived where the
@@ -111,7 +112,12 @@ const copies = [run, run, run, run];
 
   @media (max-width: 640px) {
     .ribbon-run {
-      font-size: 0.8rem;
+      gap: 1.6rem;
+      padding-right: 1.6rem;
+      font-size: 1.25rem;
+    }
+    .ribbon-mark {
+      font-size: 1rem;
     }
   }
 </style>

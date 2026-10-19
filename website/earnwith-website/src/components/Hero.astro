@@ -2,15 +2,16 @@
 import { siteContent } from '../config/site-config';
 import SmartLink from './SmartLink.astro';
 import RibbonMarquee from './RibbonMarquee.astro';
+import HeroCards from './home/HeroCards.astro';
 
 const siteConfig = await siteContent();
-const { hero } = siteConfig;
-
+const { hero, paths } = siteConfig;
 ---
 
-<section class="relative isolate flex min-h-[86svh] items-center overflow-hidden">
-  <!-- The banner runs edge to edge, from under the transparent header down to
-       the ribbon. It is the page's first paint, so it loads eagerly. -->
+<!-- The banner is a rounded panel on the dark matte, running from under the
+     floating top bar. `frame-scope` gives everything inside it the dark
+     palette in both themes: the words sit on a photograph, never on cream. -->
+<section class="frame-scope relative isolate mx-2 mt-2 overflow-hidden rounded-[2rem] bg-frame text-ink sm:mx-4 sm:mt-3 sm:rounded-panel">
   <img
     src={hero.image}
     alt={hero.imageAlt}
@@ -18,54 +19,100 @@ const { hero } = siteConfig;
     loading="eager"
     fetchpriority="high"
   />
-  <!-- Copy sits on the left, so the scrim is heaviest there and clears to the
-       right: the photograph keeps its subject, the words keep their contrast.
-       A LITERAL dark, not the ink token: ink inverts with the theme, so in dark
-       mode the scrim turned near-white and washed the photograph out. The words
-       on it are always white, so what darkens them must always be dark. -->
   <div class="hero-scrim absolute inset-0 -z-10" aria-hidden="true"></div>
+  <div class="blob -top-40 -right-20 -z-10 h-[28rem] w-[28rem] bg-primary opacity-35 mix-blend-screen" aria-hidden="true"></div>
+  <div class="blob top-80 -left-32 -z-10 h-96 w-96 bg-accent opacity-25 mix-blend-screen [animation-delay:-9s]" aria-hidden="true"></div>
 
-  <div class="mx-auto w-full max-w-6xl px-5 pt-32 pb-36 sm:pt-36 sm:pb-40">
-    <span
-      class="inline-block rounded-full border border-white/30 bg-white/15 px-4 py-1 text-sm font-bold text-white backdrop-blur"
-    >
-      {hero.eyebrow}
-    </span>
-    <h1 class="mt-6 max-w-2xl text-5xl text-white sm:text-6xl lg:text-7xl">{hero.heading}</h1>
-    {hero.paragraphs.map((paragraph) => <p class="mt-5 max-w-lg text-lg text-white/85">{paragraph}</p>)}
-    <div class="mt-9 flex flex-wrap items-center gap-3">
-      <SmartLink
-        href={hero.primaryCta.href}
-        label={hero.primaryCta.label}
-        glyph={false}
-        class="inline-flex items-center gap-1 rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/40 transition hover:bg-primary-dark"
-      >
-        {hero.primaryCta.label}
-      </SmartLink>
-      <a
-        href={hero.secondaryCta.href}
-        class="rounded-full border border-white/40 bg-white/10 px-7 py-3 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
-      >
-        {hero.secondaryCta.label}
-      </a>
+  <div class="mx-auto grid w-full max-w-6xl items-center gap-12 px-5 pt-32 pb-24 sm:pt-40 lg:grid-cols-[1.15fr_0.85fr] lg:pb-32">
+    <div>
+      <span data-reveal="fade" class="inline-flex items-center gap-2 rounded-full border border-line bg-surface/40 py-1.5 pr-4 pl-1.5 font-head text-sm font-bold backdrop-blur">
+        <span class="grid h-7 w-7 place-items-center rounded-full bg-primary-fill text-on-primary">
+          <i class="fa-solid fa-sack-dollar text-xs" aria-hidden="true"></i>
+        </span>
+        {hero.eyebrow}
+      </span>
+      <h1 data-reveal class="mt-7 text-5xl leading-[0.98] sm:text-7xl lg:text-[5.5rem]">
+        {hero.headingLead}
+        <span class="relative inline-block text-primary">
+          {hero.headingAccent}
+          <svg class="hero-underline absolute text-accent -bottom-3 left-[-2%] h-5 w-[104%]" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M4 16 C 80 4, 160 4, 220 12 S 340 22, 396 8" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" />
+          </svg>
+        </span>
+      </h1>
+      <div data-reveal class="mt-7 max-w-xl space-y-2 text-lg leading-relaxed text-ink-soft sm:text-xl">
+        {hero.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+      <div data-reveal class="mt-9 flex flex-wrap items-center gap-3">
+        <SmartLink
+          href={hero.primaryCta.href}
+          label={hero.primaryCta.label}
+          glyph={false}
+          class="btn grow bg-primary-fill text-on-primary shadow-lift sm:grow-0"
+        >
+          {hero.primaryCta.label}
+          <i class="fa-solid fa-arrow-right text-sm" aria-hidden="true"></i>
+        </SmartLink>
+        <a href={hero.secondaryCta.href} class="btn grow border border-ink-soft/50 bg-surface/30 text-ink backdrop-blur hover:border-ink sm:grow-0">
+          {hero.secondaryCta.label}
+        </a>
+      </div>
+      <!-- Who this is for, as the role badges the cards below open. -->
+      <div data-reveal="fade" class="mt-10 flex items-center gap-4 text-sm font-semibold text-ink-soft">
+        <span class="flex" aria-hidden="true">
+          {
+            paths.map((path) => (
+              <span class="-ml-2.5 grid h-10 w-10 place-items-center rounded-full border-[3px] border-frame bg-primary-fill text-on-primary first:ml-0">
+                <i class={`fa-solid ${path.icon} text-sm`} />
+              </span>
+            ))
+          }
+        </span>
+        <span>{hero.proof}</span>
+      </div>
     </div>
-  </div>
 
-  <!-- The band straddles the banner's lower edge; the component owns the band
-       and its motion, this owns where it sits. -->
-  <div class="absolute right-0 bottom-14 left-0">
-    <RibbonMarquee />
+    <HeroCards cards={hero.cards} />
   </div>
 </section>
 
+<!-- The ribbon straddles the banner's lower edge. -->
+<div class="relative z-10 -mt-12 sm:-mt-14">
+  <RibbonMarquee />
+</div>
+
 <style>
   .hero-scrim {
-    background: linear-gradient(
-      90deg,
-      rgba(9, 7, 18, 0.9) 0%,
-      rgba(9, 7, 18, 0.7) 45%,
-      rgba(9, 7, 18, 0.25) 100%
-    );
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-frame) 92%, transparent) 0%,
+        color-mix(in srgb, var(--color-frame) 65%, transparent) 55%,
+        color-mix(in srgb, var(--color-frame) 30%, transparent) 100%
+      ),
+      linear-gradient(0deg, color-mix(in srgb, var(--color-frame) 75%, transparent), transparent 45%);
   }
-
+  /* One column on a phone: the words cross the whole photograph, so the
+     scrim is even rather than clearing to the right. */
+  @media (max-width: 1023px) {
+    .hero-scrim {
+      background: color-mix(in srgb, var(--color-frame) 82%, transparent);
+    }
+  }
+  .hero-underline path {
+    stroke-dasharray: 420;
+    stroke-dashoffset: 420;
+    animation: hero-draw 1.2s 0.6s var(--ease-smooth) forwards;
+  }
+  @keyframes hero-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-underline path {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
 </style>

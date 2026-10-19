@@ -1,0 +1,29 @@
+---
+/**
+ * A section's opening: kicker and big heading on the left, the short
+ * explanation on the right (stacked on a phone). One shape for every section
+ * so the page keeps a single rhythm.
+ */
+interface Props {
+  kicker: string;
+  /** The heading, or its first half when part of it is accented. */
+  headingLead: string;
+  /** Coloured words after the lead. */
+  headingAccent?: string;
+  text?: string;
+  class?: string;
+}
+
+const { kicker, headingLead, headingAccent, text, class: className = '' } = Astro.props;
+---
+
+<div class:list={['mb-10 flex flex-col gap-5 sm:mb-14 lg:flex-row lg:items-end lg:justify-between lg:gap-12', className]} data-reveal>
+  <div class="max-w-3xl">
+    <p class="kicker">{kicker}</p>
+    <h2 class="mt-4 text-4xl text-ink sm:text-5xl lg:text-6xl">
+      {headingLead}
+      {headingAccent && <span class="text-primary-strong">{headingAccent}</span>}
+    </h2>
+  </div>
+  {text && <p class="max-w-sm text-lg leading-relaxed text-ink-soft">{text}</p>}
+</div>

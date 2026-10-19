@@ -1,37 +1,84 @@
 ---
 import { siteContent } from '../config/site-config';
+import SmartLink from './SmartLink.astro';
+import SectionHead from './home/SectionHead.astro';
 
 const siteConfig = await siteContent();
-const { steps } = siteConfig;
+const { steps, hero } = siteConfig;
 ---
 
-<section id="how" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-10">
-  <div class="rounded-3xl bg-surface px-6 py-12 shadow-sm sm:px-12">
-    <p class="text-center text-xs font-black uppercase tracking-[0.2em] text-primary">{steps.eyebrow}</p>
-    <h2 class="mt-2 text-center text-3xl text-ink sm:text-4xl">{steps.heading}</h2>
+<!-- The journey on one raised panel: five numbered cards, then the door in. -->
+<section id="how" class="mx-2 scroll-mt-24 rounded-[2rem] bg-surface py-20 sm:mx-4 sm:rounded-panel sm:py-28">
+  <div class="mx-auto max-w-6xl px-4 sm:px-5">
+    <SectionHead kicker={steps.eyebrow} headingLead={steps.heading} text={steps.text} />
 
-    <ol class="mt-10 grid gap-8 sm:grid-cols-3 lg:grid-cols-5">
+    <ol class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5" data-reveal-group>
       {
         steps.items.map((step, index) => (
-          <li class="relative text-center">
-            {/* The dashed run to the next step, on the wide layout only —
-                stacked columns have no gap for it to cross. */}
-            {index < steps.items.length - 1 && (
-              <span
-                class="pointer-events-none absolute top-8 left-[calc(50%+2.5rem)] hidden h-px w-[calc(100%-5rem)] border-t-2 border-dashed border-primary/30 lg:block"
-                aria-hidden="true"
-              />
-            )}
-            <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-light text-primary-dark">
-              <i class={`fa-solid ${step.icon} text-xl`} aria-hidden="true" />
+          <li data-reveal class="relative flex flex-col overflow-hidden rounded-card bg-cream p-7 sm:p-8">
+            <span class="step-number font-head text-8xl leading-[0.8] font-extrabold" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
             </span>
-            <h3 class="mt-4 text-base text-ink">
-              {index + 1}. {step.title}
+            <span class="absolute top-7 right-7 grid h-12 w-12 place-items-center rounded-2xl bg-primary-light text-primary-strong">
+              <i class={`fa-solid ${step.icon}`} aria-hidden="true" />
+            </span>
+            <h3 class="mt-6 text-2xl text-ink">
+              <span class="sr-only">{index + 1}.</span>
+              {step.title}
             </h3>
-            <p class="mt-1 text-sm leading-relaxed text-ink-soft">{step.text}</p>
+            <p class="mt-2 leading-relaxed text-ink-soft">{step.text}</p>
           </li>
         ))
       }
+      <li data-reveal class="flex">
+        <SmartLink
+          href={hero.primaryCta.href}
+          label={hero.primaryCta.label}
+          glyph={false}
+          class="step-cta group flex w-full flex-col justify-between gap-8 rounded-card border-2 border-dashed border-primary/40 p-7 text-ink sm:p-8"
+        >
+          <span class="grid h-14 w-14 place-items-center rounded-2xl bg-primary-fill text-xl text-on-primary">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          </span>
+          <span class="flex items-center justify-between gap-3 font-head text-2xl font-extrabold">
+            {hero.primaryCta.label}
+            <span class="step-arrow grid h-12 w-12 shrink-0 place-items-center rounded-full bg-ink text-cream">
+              <i class="fa-solid fa-arrow-right text-base" aria-hidden="true"></i>
+            </span>
+          </span>
+        </SmartLink>
+      </li>
     </ol>
   </div>
 </section>
+
+<style>
+  /* The big outlined numeral — a shape, not a word, so it is hidden from
+     screen readers; the heading carries the number for them. */
+  .step-number {
+    color: transparent;
+    -webkit-text-stroke: 2px var(--color-ink);
+    opacity: 0.16;
+    letter-spacing: -0.06em;
+  }
+  :global(.step-cta) {
+    transition:
+      background-color 300ms ease,
+      border-color 300ms ease;
+  }
+  :global(.step-cta:hover) {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+  }
+  :global(.step-cta .step-arrow) {
+    transition: transform 400ms var(--ease-smooth);
+  }
+  :global(.step-cta:hover .step-arrow) {
+    transform: rotate(-45deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.step-cta .step-arrow) {
+      transition: none;
+    }
+  }
+</style>

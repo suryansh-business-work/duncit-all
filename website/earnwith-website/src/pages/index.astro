@@ -22,6 +22,8 @@ const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
   <SiteHeader overlay />
   <main>
     <Hero />
+    <!-- Reels second, straight after the hero; hidden when there are none. -->
+    <ReelSlider graphqlUrl={siteConfig.graphqlUrl} site="EARNWITH" t={t} />
     <EarnPaths />
     <WhyChoose />
     <Steps />
@@ -31,5 +33,4 @@ const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
     <CtaBand />
   </main>
   <SiteFooter />
-  <ReelSlider graphqlUrl={siteConfig.graphqlUrl} site="EARNWITH" t={t} />
 </Layout>

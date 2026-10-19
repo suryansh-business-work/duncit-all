@@ -43,6 +43,10 @@ export interface EarnPath {
   /** Duncit web-app survey-gate route this path opens. */
   href: string;
   cta: string;
+  /** The rotated sticker on the card. */
+  tag: string;
+  /** What the role does in the app, as two short chips. */
+  chips: string[];
 }
 
 export interface Step {
@@ -54,6 +58,7 @@ export interface Step {
 export interface WhyItem {
   icon: string;
   label: string;
+  text: string;
 }
 
 /**
@@ -87,7 +92,9 @@ const build = (t: SiteTranslate) => ({
   },
   hero: {
     eyebrow: t('website.earn.hero.eyebrow'),
-    heading: t('website.earn.hero.heading'),
+    // One sentence in two parts: the accent half is coloured and underlined.
+    headingLead: t('website.earn.hero.headingLead'),
+    headingAccent: t('website.earn.hero.headingAccent'),
     paragraphs: [t('website.earn.hero.paragraph1'), t('website.earn.hero.paragraph2')],
     primaryCta: { label: t('website.earn.hero.primaryCta'), href: `${mwebUrl}/earn` },
     secondaryCta: { label: t('website.earn.hero.secondaryCta'), href: '#paths' },
@@ -95,6 +102,13 @@ const build = (t: SiteTranslate) => ({
     // survives a desktop viewport.
     image: photo('34766307', 1920),
     imageAlt: t('website.earn.hero.imageAlt'),
+    proof: t('website.earn.hero.proof'),
+    /** The cards floating beside the headline — what the app does for an earner. */
+    cards: [
+      { icon: 'fa-users', title: t('website.earn.hero.card1Title'), text: t('website.earn.hero.card1Text') },
+      { icon: 'fa-clipboard-check', title: t('website.earn.hero.card2Title'), text: t('website.earn.hero.card2Text') },
+      { icon: 'fa-wallet', title: t('website.earn.hero.card3Title'), text: t('website.earn.hero.card3Text') },
+    ],
     /** Rides the 3D band under the banner, scrolling past on a loop. */
     ribbon: [
       t('website.earn.hero.ribbon1'),
@@ -110,6 +124,7 @@ const build = (t: SiteTranslate) => ({
     eyebrow: t('website.earn.paths.sectionEyebrow'),
     headingLead: t('website.earn.paths.sectionHeadingLead'),
     headingAccent: t('website.earn.paths.sectionHeadingAccent'),
+    text: t('website.earn.paths.sectionText'),
   },
   paths: [
     {
@@ -120,6 +135,8 @@ const build = (t: SiteTranslate) => ({
       imageAlt: t('website.earn.paths.venueImageAlt'),
       href: `${mwebUrl}/survey/venue`,
       cta: t('website.earn.paths.venueCta'),
+      tag: t('website.earn.paths.venueTag'),
+      chips: [t('website.earn.paths.venueChip1'), t('website.earn.paths.venueChip2')],
     },
     {
       icon: 'fa-user',
@@ -129,6 +146,8 @@ const build = (t: SiteTranslate) => ({
       imageAlt: t('website.earn.paths.hostImageAlt'),
       href: `${mwebUrl}/survey/host`,
       cta: t('website.earn.paths.hostCta'),
+      tag: t('website.earn.paths.hostTag'),
+      chips: [t('website.earn.paths.hostChip1'), t('website.earn.paths.hostChip2')],
     },
     {
       icon: 'fa-people-group',
@@ -138,6 +157,8 @@ const build = (t: SiteTranslate) => ({
       imageAlt: t('website.earn.paths.clubImageAlt'),
       href: `${mwebUrl}/survey/club_admin`,
       cta: t('website.earn.paths.clubCta'),
+      tag: t('website.earn.paths.clubTag'),
+      chips: [t('website.earn.paths.clubChip1'), t('website.earn.paths.clubChip2')],
     },
     {
       icon: 'fa-tag',
@@ -147,21 +168,25 @@ const build = (t: SiteTranslate) => ({
       imageAlt: t('website.earn.paths.brandImageAlt'),
       href: `${mwebUrl}/survey/ecomm`,
       cta: t('website.earn.paths.brandCta'),
+      tag: t('website.earn.paths.brandTag'),
+      chips: [t('website.earn.paths.brandChip1'), t('website.earn.paths.brandChip2')],
     },
   ] as EarnPath[],
   why: {
     eyebrow: t('website.earn.why.eyebrow'),
+    heading: t('website.earn.why.heading'),
     items: [
-      { icon: 'fa-gift', label: t('website.earn.why.item1') },
-      { icon: 'fa-wallet', label: t('website.earn.why.item2') },
-      { icon: 'fa-shield-halved', label: t('website.earn.why.item3') },
-      { icon: 'fa-wand-magic-sparkles', label: t('website.earn.why.item4') },
-      { icon: 'fa-bullhorn', label: t('website.earn.why.item5') },
+      { icon: 'fa-gift', label: t('website.earn.why.item1'), text: t('website.earn.why.item1Text') },
+      { icon: 'fa-wallet', label: t('website.earn.why.item2'), text: t('website.earn.why.item2Text') },
+      { icon: 'fa-shield-halved', label: t('website.earn.why.item3'), text: t('website.earn.why.item3Text') },
+      { icon: 'fa-wand-magic-sparkles', label: t('website.earn.why.item4'), text: t('website.earn.why.item4Text') },
+      { icon: 'fa-bullhorn', label: t('website.earn.why.item5'), text: t('website.earn.why.item5Text') },
     ] as WhyItem[],
   },
   steps: {
     eyebrow: t('website.earn.steps.eyebrow'),
     heading: t('website.earn.steps.heading'),
+    text: t('website.earn.steps.text'),
     items: [
       {
         icon: 'fa-user-plus',
@@ -261,6 +286,7 @@ const build = (t: SiteTranslate) => ({
       },
     ],
     note: t('website.earn.calculator.note'),
+    loadError: t('website.earn.calculator.loadError'),
     /** The downloadable copy of an estimate — a real PDF the visitor keeps, drawn
      * page-first rather than handed to the browser's print dialog. The library
      * that draws it is fetched on the first click, so the page costs nothing to
@@ -358,10 +384,12 @@ const build = (t: SiteTranslate) => ({
     button: { label: t('website.earn.platform.button'), href: `${mwebUrl}/earn` },
     image: photo('34766307', 900),
     imageAlt: t('website.earn.platform.imageAlt'),
+    stickers: [t('website.earn.platform.sticker1'), t('website.earn.platform.sticker2')],
   },
   /** The shared @duncit/brand download band. The store URLs come from branding,
    * so only the words are here. */
   download: {
+    eyebrow: t('website.earn.download.eyebrow'),
     heading: t('website.earn.download.heading'),
     headingAccent: t('website.earn.download.headingAccent'),
     text: t('website.earn.download.text'),

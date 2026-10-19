@@ -9,6 +9,11 @@ import {
   type BrandAnalytics,
 } from '@duncit/shell';
 import { defineDemo, defineDemos } from '../types';
+import {
+  SCROLL_UP_HISTORY_MOCK,
+  ScrollUpHistoryDemo,
+  type ScrollUpHistoryMock,
+} from './shell/ScrollUpHistoryDemo';
 
 interface NavMock {
   /** A portal's sidebar, exactly as it is declared in its app-config. */
@@ -155,5 +160,13 @@ export default defineDemos('shell', [
       'Busiest day (orders)': trendPeak(mock.trend),
       'Bar heights (% of the busiest day)': trendBarPercents(mock.trend),
     }),
+  }),
+  defineDemo<ScrollUpHistoryMock>({
+    id: 'scroll-up-history',
+    title: 'A chat thread opens on its newest page and loads older lines as you read up',
+    note:
+      'useScrollUpHistory — what staff chat and the support console share. Scroll to the top: the page before the oldest line is fetched, put in front, and the line you were reading stays where it was. Set totalLines below pageSize and the whole conversation fits on the first page.',
+    mock: SCROLL_UP_HISTORY_MOCK,
+    render: (mock) => <ScrollUpHistoryDemo {...mock} />,
   }),
 ]);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
+import { CHAT_HISTORY_PAGE } from '@duncit/utils';
 import { useTranslation } from '../i18n/useTranslation';
 import { readToken, useShellRuntime } from '../lib/runtime';
 import { buildChatExport, downloadChatExport } from './export-chat';
@@ -29,9 +30,13 @@ import {
 import { describeFailure, type Failure } from './failure';
 import { usePresence, type PresenceStatus } from './usePresence';
 import { useStaffSocket } from './useStaffSocket';
+import { useStaffHistory } from './useStaffHistory';
 
 /** Where chat files land, so they are findable in the file manager later. */
 const UPLOAD_FOLDER = '/staff-chat';
+
+/** Stable while the thread has not answered, so the history hook is not re-run every render. */
+const NO_MESSAGES: StaffMessage[] = [];
 
 interface Options {
   open: boolean;
@@ -94,7 +99,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     fetchPolicy: 'cache-and-network',
   });
   const messagesQuery = useQuery<{ staffMessages: StaffMessage[] }>(STAFF_MESSAGES, {
-    variables: { peerId: peer?.id, limit: 100 },
+    variables: { peerId: peer?.id, limit: CHAT_HISTORY_PAGE },
     skip: !peer,
     fetchPolicy: 'cache-and-network',
   });
@@ -137,21 +142,24 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
    * flag that would look like it had done more than it did.
    */
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  /** Counter behind the local ids, so two sends in one millisecond differ. */
+  const outboxSeq = useRef(0);
+
+  const onHistoryError = useCallback(
+    (err: Error) => setError(describeFailure(err, 'shell.chat.failure.unknown')),
+    []
+  );
   /**
    * History fetched by scrolling up, oldest-first, kept apart from the live
    * page so an arriving message cannot renumber what is already on screen.
    */
-  const [older, setOlder] = useState<StaffMessage[]>([]);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [reachedStart, setReachedStart] = useState(false);
-  /** Counter behind the local ids, so two sends in one millisecond differ. */
-  const outboxSeq = useRef(0);
-
-  // A different conversation starts its own history.
-  useEffect(() => {
-    setOlder([]);
-    setReachedStart(false);
-  }, [peer?.id]);
+  const history = useStaffHistory({
+    client,
+    peerId: peer?.id,
+    live: messagesQuery.data?.staffMessages ?? NO_MESSAGES,
+    onError: onHistoryError,
+  });
+  const { clearHistory } = history;
 
   // The bound `refetch`es, never the query results: a result object changes
   // identity on every fetch, so a callback depending on it re-ran the mark-read
@@ -340,26 +348,25 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
       {
         me: { id: meId, name: meName || 'You' },
         peer,
-        messages: messagesQuery.data?.staffMessages ?? [],
+        // Everything loaded so far — the live page alone is only the newest lines.
+        messages: history.messages,
         calls: calls.data?.staffCalls ?? [],
       },
       t
     );
     downloadChatExport(text, peer.name);
-  }, [client, peer, meId, meName, messagesQuery.data, t]);
+  }, [client, peer, meId, meName, history.messages, t]);
 
   /**
    * What the thread renders: the history scrolled into view, then the live
    * page, minus anything hidden with "delete for me".
    */
-  const visibleMessages = useMemo(() => {
-    const live = messagesQuery.data?.staffMessages ?? [];
-    const seen = new Set(live.map((message) => message.id));
-    const history = older.filter((message) => !seen.has(message.id));
+  const visibleMessages = useMemo(
     // The outbox goes last: it is always the newest thing in the thread, and
     // it is what has not landed yet.
-    return [...history, ...live, ...outbox].filter((message) => !hiddenIds.has(message.id));
-  }, [messagesQuery.data, older, hiddenIds, outbox]);
+    () => [...history.messages, ...outbox].filter((message) => !hiddenIds.has(message.id)),
+    [history.messages, hiddenIds, outbox]
+  );
 
   /** Names for reaction tooltips, reply strips and forwarded-from lines. */
   const nameOf = useCallback(
@@ -370,33 +377,6 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     },
     [meId, peer]
   );
-
-  /**
-   * History above what is loaded.
-   *
-   * A created_at cursor, not an offset: the thread gains messages while it is
-   * being scrolled, and an offset would show one twice or skip one every time
-   * that happened. A short page means there is nothing above it.
-   */
-  const loadOlder = useCallback(async () => {
-    const oldest = visibleMessages[0];
-    if (!peer || !oldest?.created_at || loadingMore) return;
-    setLoadingMore(true);
-    try {
-      const page = await client.query<{ staffMessages: StaffMessage[] }>({
-        query: STAFF_MESSAGES,
-        variables: { peerId: peer.id, limit: 50, before: oldest.created_at },
-        fetchPolicy: 'network-only',
-      });
-      const rows = page.data?.staffMessages ?? [];
-      if (rows.length < 50) setReachedStart(true);
-      if (rows.length > 0) setOlder((current) => [...rows, ...current]);
-    } catch {
-      // Leave what is on screen alone; the button stays for another try.
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [client, peer, visibleMessages, loadingMore]);
 
   /** Run a mutation that changes one message, then re-read the thread. */
   const change = useCallback(
@@ -417,14 +397,13 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     clearThread({ variables: { peerId: peer.id } })
       .then(() => {
         // The local history and the outbox are copies of what just went.
-        setOlder([]);
+        clearHistory();
         setOutbox([]);
-        setReachedStart(true);
         refetchMessages().catch(() => undefined);
         refreshAll();
       })
       .catch((err: Error) => setError(describeFailure(err, 'shell.chat.failure.unknown')));
-  }, [peer, clearThread, refetchMessages, refreshAll]);
+  }, [peer, clearThread, refetchMessages, refreshAll, clearHistory]);
 
   const hideForMe = useCallback(
     (id: string) => setHiddenIds((current) => new Set(current).add(id)),
@@ -450,9 +429,9 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     refetchCalls: callsQuery.refetch,
     messagesLoading: messagesQuery.loading,
     visibleMessages,
-    hasMore: !reachedStart && visibleMessages.length > 0,
-    loadingMore,
-    loadOlder,
+    hasMore: history.hasMore,
+    loadingMore: history.loadingMore,
+    loadOlder: history.loadOlder,
     nameOf,
     send,
     retry,

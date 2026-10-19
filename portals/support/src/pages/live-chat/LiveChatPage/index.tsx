@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useRef, useState } from 'react';
+import { useMutation } from '@apollo/client/react';
 import { Box, Snackbar } from '@mui/material';
 import {
   CLAIM_SUPPORT_CHAT,
   MARK_SUPPORT_CHAT_READ,
   SEND_SUPPORT_CHAT_MESSAGE,
-  SUPPORT_CHAT_MESSAGES,
   type SupportChatMessage,
   type SupportChatSession,
 } from '../../../graphql/supportChat';
@@ -16,6 +15,7 @@ import ChatPane from './ChatPane';
 import { useTranslation } from '@duncit/shell';
 import { useChatActions } from './useChatActions';
 import { useSessionList } from './useSessionList';
+import { useSessionMessages } from './useSessionMessages';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -41,7 +41,6 @@ export default function LiveChatPage() {
   } = useSessionList(t);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<SupportChatMessage[]>([]);
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const [typingLabel, setTypingLabel] = useState<string | null>(null);
@@ -51,16 +50,12 @@ export default function LiveChatPage() {
   const selectedIdRef = useRef<string | null>(null);
   selectedIdRef.current = selectedId;
 
-  const messagesQuery = useQuery<{ supportChatMessages: SupportChatMessage[] }>(SUPPORT_CHAT_MESSAGES, {
-    variables: { session_id: selectedId, limit: 100 },
-    skip: !selectedId,
-    fetchPolicy: 'network-only',
-  });
+  const actions = useChatActions(() => sessionsQuery.refetch());
+  const thread = useSessionMessages(selectedId, actions.notify);
 
   const [sendMessage, { loading: sending }] = useMutation<any>(SEND_SUPPORT_CHAT_MESSAGE);
   const [markRead] = useMutation<any>(MARK_SUPPORT_CHAT_READ);
   const [claimChat] = useMutation<any>(CLAIM_SUPPORT_CHAT);
-  const actions = useChatActions(() => sessionsQuery.refetch());
 
   const socketRef = useSupportSocket({
     onChatSessionNew: (sess: SupportChatSession) => {
@@ -70,7 +65,7 @@ export default function LiveChatPage() {
     onChatSessionUpdate: () => sessionsQuery.refetch(),
     onChatMessage: (m: SupportChatMessage) => {
       if (m.session_id !== selectedIdRef.current) return;
-      setMessages((prev) => (prev.some((p) => p.id === m.id) ? prev : [...prev, m]));
+      thread.append(m);
       if (m.sender_role === 'USER') {
         markRead({ variables: { session_id: m.session_id } }).catch(() => undefined);
       }
@@ -84,15 +79,10 @@ export default function LiveChatPage() {
     },
   });
 
-  useEffect(() => {
-    if (messagesQuery.data?.supportChatMessages) setMessages(messagesQuery.data.supportChatMessages);
-  }, [messagesQuery.data]);
-
   const selectSession = (id: string) => {
     if (id === selectedId) return;
     const prev = selectedId;
     setSelectedId(id);
-    setMessages([]);
     setTypingLabel(null);
     const socket = socketRef.current;
     if (socket) {
@@ -151,8 +141,11 @@ export default function LiveChatPage() {
 
       <ChatPane
         selected={selected}
-        busy={messagesQuery.loading}
-        messages={messages}
+        busy={thread.loading}
+        messages={thread.messages}
+        hasOlder={thread.hasMore}
+        loadingOlder={thread.loadingOlder}
+        onLoadOlder={thread.loadOlder}
         typingLabel={typingLabel}
         text={text}
         attachments={attachments}

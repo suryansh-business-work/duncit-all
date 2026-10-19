@@ -44,7 +44,7 @@ const harness = vi.hoisted(() => ({
   data: {} as Record<string, unknown>,
   queries: {} as Record<
     string,
-    { data: unknown; loading: boolean; refetch: ReturnType<typeof vi.fn> }
+    { data: unknown; loading: boolean; refetch: ReturnType<typeof vi.fn>; variables?: unknown }
   >,
   mutations: {} as Record<string, ReturnType<typeof vi.fn>>,
   client: {
@@ -61,7 +61,7 @@ vi.mock('@apollo/client/react', async (importOriginal) => {
   return {
     ...actual,
     useApolloClient: () => harness.client,
-    useQuery: (doc: Doc) => {
+    useQuery: (doc: Doc, options?: { variables?: unknown }) => {
       const name = opName(doc);
       harness.queries[name] ??= {
         data: undefined,
@@ -70,6 +70,7 @@ vi.mock('@apollo/client/react', async (importOriginal) => {
       };
       const q = harness.queries[name];
       q.data = harness.data[name];
+      q.variables = options?.variables;
       return q;
     },
     useMutation: (doc: Doc) => {
@@ -299,33 +300,70 @@ describe('exportChat', () => {
 });
 
 describe('history paging', () => {
-  it('pages by created_at cursor and stops when a page comes back short', async () => {
+  /** A full newest page: 30 lines, a minute apart, ending at 10:30. */
+  const fullPage = () =>
+    Array.from({ length: 30 }, (_, i) =>
+      live(`p${i + 1}`, `line ${i + 1}`, new Date(Date.UTC(2026, 7, 20, 10, i + 1)).toISOString())
+    );
+
+  it('opens the conversation on its newest page of 30 lines', () => {
+    mount();
+    expect(harness.queries.StaffMessages.variables).toEqual({ peerId: 'u1', limit: 30 });
+  });
+
+  it('offers nothing above a first page that came back short', () => {
     harness.data.StaffMessages = { staffMessages: [live('m2', 'later', '2026-08-20T10:00:00Z')] };
+    const { result } = mount();
+    expect(result.current.hasMore).toBe(false);
+  });
+
+  it('pages by created_at cursor, keeps a duplicate once, and stops when a page comes back short', async () => {
+    const page = fullPage();
+    harness.data.StaffMessages = { staffMessages: page };
     harness.client.query = vi
       .fn()
-      .mockResolvedValue({ data: { staffMessages: [live('m1', 'earlier', '2026-08-20T09:00:00Z'), live('m2', 'later', '2026-08-20T10:00:00Z')] } });
+      .mockResolvedValue({ data: { staffMessages: [live('m1', 'earlier', '2026-08-20T09:00:00Z'), page[0]] } });
     const { result } = mount();
     expect(result.current.hasMore).toBe(true);
 
     await act(() => result.current.loadOlder());
     expect(harness.client.query).toHaveBeenCalledWith(
       expect.objectContaining({
-        variables: { peerId: 'u1', limit: 50, before: '2026-08-20T10:00:00Z' },
+        variables: { peerId: 'u1', limit: 30, before: page[0].created_at },
       })
     );
     // The short page marks the start; the duplicate row is not shown twice.
     expect(result.current.hasMore).toBe(false);
-    expect(result.current.visibleMessages.map((m) => m.id)).toEqual(['m1', 'm2']);
+    expect(result.current.visibleMessages.map((m) => m.id)).toEqual(['m1', ...page.map((m) => m.id)]);
   });
 
-  it('leaves the thread alone when the page fails, so the button can retry', async () => {
-    harness.data.StaffMessages = { staffMessages: [live('m2', 'later', '2026-08-20T10:00:00Z')] };
+  it('exports every line loaded so far, not only the live page', async () => {
+    const page = fullPage();
+    harness.data.StaffMessages = { staffMessages: page };
+    harness.client.query = vi
+      .fn()
+      .mockResolvedValueOnce({ data: { staffMessages: [live('m1', 'earlier', '2026-08-20T09:00:00Z')] } })
+      .mockResolvedValueOnce({ data: { staffCalls: [] } });
+    const { result } = mount();
+    await act(() => result.current.loadOlder());
+
+    await act(() => result.current.exportChat());
+
+    expect(exporter.build).toHaveBeenCalledWith(
+      expect.objectContaining({ messages: expect.arrayContaining([expect.objectContaining({ id: 'm1' })]) }),
+      expect.any(Function)
+    );
+  });
+
+  it('shows why a page failed and leaves the thread alone, so the button can retry', async () => {
+    harness.data.StaffMessages = { staffMessages: fullPage() };
     harness.client.query = vi.fn().mockRejectedValue(new Error('offline'));
     const { result } = mount();
 
     await act(() => result.current.loadOlder());
+    expect(result.current.error?.message).toBe('offline');
     expect(result.current.loadingMore).toBe(false);
-    expect(result.current.visibleMessages).toHaveLength(1);
+    expect(result.current.visibleMessages).toHaveLength(30);
     expect(result.current.hasMore).toBe(true);
   });
 
@@ -336,14 +374,14 @@ describe('history paging', () => {
   });
 
   it('treats an empty answer as a short page rather than throwing', async () => {
-    harness.data.StaffMessages = { staffMessages: [live('m2', 'later', '2026-08-20T10:00:00Z')] };
+    harness.data.StaffMessages = { staffMessages: fullPage() };
     harness.client.query = vi.fn().mockResolvedValue({ data: {} });
     const { result } = mount();
 
     await act(() => result.current.loadOlder());
 
     expect(result.current.hasMore).toBe(false);
-    expect(result.current.visibleMessages).toHaveLength(1);
+    expect(result.current.visibleMessages).toHaveLength(30);
   });
 });
 

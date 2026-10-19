@@ -47,5 +47,5 @@ export function useChatActions(onChanged: () => void) {
     }
   };
 
-  return { notice, clearNotice: () => setNotice(''), resolve, reopen, download, email };
+  return { notice, notify: setNotice, clearNotice: () => setNotice(''), resolve, reopen, download, email };
 }

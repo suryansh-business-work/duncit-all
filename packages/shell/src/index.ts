@@ -96,6 +96,7 @@ export type { ShellUser } from './chrome/user-display';
 
 // Shared helpers the portals previously carried as identical copies.
 export { useBranding, type BrandingSummary } from './hooks/useBranding';
+export { useScrollUpHistory, type ScrollUpHistoryOptions } from './hooks/useScrollUpHistory';
 export { createSession, SUPER_ROLE, type PortalSession } from './lib/session';
 export { createPortalRuntime, type PortalRuntime } from './lib/portal-runtime';
 export { createApolloClient, apolloErrorLink, type CreateApolloClientOptions } from './lib/apollo';

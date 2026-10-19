@@ -1,4 +1,5 @@
 import type { MockedResponse } from '@apollo/client/testing';
+import { CHAT_HISTORY_PAGE } from '@duncit/utils';
 import type {
   SupportChatMessage,
   SupportChatSession,
@@ -180,10 +181,36 @@ export const messagesMock = (
   sessionId: string,
   messages: SupportChatMessageMock[],
 ): MockedResponse => ({
-  request: { query: SUPPORT_CHAT_MESSAGES, variables: { session_id: sessionId, limit: 100 } },
+  request: { query: SUPPORT_CHAT_MESSAGES, variables: { session_id: sessionId, limit: CHAT_HISTORY_PAGE } },
   result: { data: { supportChatMessages: messages } },
   maxUsageCount: 10,
 });
+
+/** The page before `before` (the oldest loaded line's created_at), as scrolling up asks for it. */
+export const olderMessagesMock = (
+  sessionId: string,
+  before: string,
+  messages: SupportChatMessageMock[],
+): MockedResponse => ({
+  request: {
+    query: SUPPORT_CHAT_MESSAGES,
+    variables: { session_id: sessionId, limit: CHAT_HISTORY_PAGE, before },
+  },
+  result: { data: { supportChatMessages: messages } },
+});
+
+/** `count` user lines a minute apart from `hour`:00 UTC on 26 June 2026, oldest first. */
+export const chatPage = (
+  sessionId: string,
+  count: number,
+  prefix = 'p',
+  hour = 10,
+): SupportChatMessageMock[] =>
+  Array.from({ length: count }, (_, i) =>
+    chatMessage(`${prefix}${i + 1}`, sessionId, 'USER', `${prefix} line ${i + 1}`, {
+      created_at: new Date(Date.UTC(2026, 5, 26, hour, i)).toISOString(),
+    }),
+  );
 
 /**
  * The page claims an unclaimed, open session on select (fire-and-forget).

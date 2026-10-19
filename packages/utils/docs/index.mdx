@@ -3591,6 +3591,29 @@ chatRoomPath('CLUB', 'c1')                    // '/chats/club/c1'
 mergeEarlierMessages([{ id: 'a' }], [{ id: 'a' }, { id: 'b' }]) // a, b
 ```
 
+## Scroll-up history in every chat room — `chat-history`
+
+Pod, club, support and staff rooms all open on their newest page and load older lines only when
+the reader scrolls up to the top — never the whole history at once. The server pages every room
+with `limit` + `before` (the oldest loaded line's time); these helpers are the client half, shared by
+mWeb, the app and the portals. An older page goes in front with `mergeEarlierMessages`.
+
+| Export | Meaning |
+| --- | --- |
+| `CHAT_HISTORY_PAGE` | Lines per page (30). |
+| `CHAT_HISTORY_TRIGGER_PX` | How near the top (px) reading must come to ask for the older page (120). |
+| `hasOlderPage(pageLength, pageSize?)` | A full page may have more before it; a short page is the start of the room. |
+| `olderPageCursor(messages, timeOf)` | The `before` for the next page — the oldest line's time, or `null` when empty. |
+| `isNearHistoryTop(scrollTop, triggerPx?)` | Whether the list is scrolled close enough to the top to load. |
+| `anchoredScrollTop(top, heightBefore, heightAfter)` | The scroll position that keeps the reader's line still after older lines were added above. |
+
+```ts
+const page = await fetchRoom({ limit: CHAT_HISTORY_PAGE, before: olderPageCursor(lines, (l) => l.createdAt) });
+const more = hasOlderPage(page.length);             // false once the first message is reached
+lines = mergeEarlierMessages(page, lines);
+list.scrollTop = anchoredScrollTop(top, heightBefore, list.scrollHeight); // no jump
+```
+
 ## The venue bill at Complete Pod — `venue-bill`
 
 Whoever completes a pod may enter the venue final bill. The server decides the money

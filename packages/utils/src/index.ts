@@ -1713,6 +1713,14 @@ export {
   type ChatPreviewAction,
   type ChatPreviewKind,
 } from './chat-preview';
+export {
+  CHAT_HISTORY_PAGE,
+  CHAT_HISTORY_TRIGGER_PX,
+  anchoredScrollTop,
+  hasOlderPage,
+  isNearHistoryTop,
+  olderPageCursor,
+} from './chat-history';
 
 // Rented items: the contract the venue desk, Finance and both apps share.
 export {

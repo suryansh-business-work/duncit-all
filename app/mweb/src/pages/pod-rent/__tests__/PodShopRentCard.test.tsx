@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import PodShopRentCard from '../PodShopRentCard';
@@ -23,25 +23,30 @@ function renderCard(hasProducts = true) {
   return renderShop;
 }
 
+// The bottom sheet stays mounted with every row, so the card's own preview is the one that shows the first rows.
+const preview = (testId: string) => screen.getAllByTestId(testId).find((el) => el.textContent === 'first 2');
+
 describe('PodShopRentCard', () => {
   it('shows the first rows of the shop inside a capped, scrolling panel', () => {
     const renderShop = renderCard();
     expect(renderShop).toHaveBeenCalledWith(2);
-    const shop = screen.getByTestId('shop-list');
-    expect(shop).toHaveTextContent('first 2');
-    expect(shop.parentElement).toHaveStyle({ maxHeight: '360px', overflowY: 'auto' });
+    const shop = preview('shop-list');
+    expect(shop).toBeDefined();
+    expect(shop?.parentElement).toHaveStyle({ maxHeight: '360px', overflowY: 'auto' });
   });
 
   it('caps the rent panel the same way when the pod sells nothing', () => {
     renderCard(false);
-    const rent = screen.getByTestId('rent-list');
-    expect(rent).toHaveTextContent('first 2');
-    expect(rent.parentElement).toHaveStyle({ maxHeight: '360px', overflowY: 'auto' });
+    const rent = preview('rent-list');
+    expect(rent).toBeDefined();
+    expect(rent?.parentElement).toHaveStyle({ maxHeight: '360px', overflowY: 'auto' });
   });
 
-  it('keeps See all, which opens every product in the sheet', () => {
+  it('keeps See all, which opens every product in the sheet', async () => {
     renderCard();
+    // The closed sheet is mounted but hidden; See all is what shows it.
+    expect(screen.getByText('every product')).not.toBeVisible();
     fireEvent.click(screen.getByTestId('pod-shop-rent-see-all'));
-    expect(screen.getByText('every product')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('every product')).toBeVisible());
   });
 });

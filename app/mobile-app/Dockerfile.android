@@ -66,6 +66,8 @@ RUN --mount=type=cache,target=/root/.npm \
 # GraphQL schema for codegen — copied AFTER `npm ci` so unrelated server edits
 # can never invalidate the install. codegen reads server/src/modules/**/*.schema.ts.
 COPY server/src/modules /repo/server/src/modules
+# Chat schemas (rooms, staff, support) live in the chat service folder.
+COPY server/src/microservices /repo/server/src/microservices
 
 # App source last (edited most often) → an app edit only re-runs codegen, not the
 # install. `.dockerignore` keeps node_modules/android build state out, so this

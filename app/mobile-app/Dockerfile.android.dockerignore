@@ -41,6 +41,7 @@
 app/mobile-app/e2e
 app/mobile-app/e2e-web
 server/src/modules/**/__tests__
+server/src/microservices/**/__tests__
 
 # ── Monorepo areas the Android build never reads (context shrink only) ───────
 # Whole-directory excludes → safe, no whitelist gymnastics. The build only COPYs

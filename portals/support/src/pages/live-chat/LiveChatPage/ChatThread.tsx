@@ -83,7 +83,7 @@ export default function ChatThread({
       >
         {loadingOlder && (
           <Box role="status" sx={{ display: 'flex', justifyContent: 'center', pb: 1.5 }}>
-            <CircularProgress size={20} aria-label={t('shell.common.loading')} />
+            <CircularProgress size={20} aria-label={t('shell.a11y.loading')} />
           </Box>
         )}
         {session.status === 'CLOSED' && (

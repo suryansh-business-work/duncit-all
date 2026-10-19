@@ -41,6 +41,8 @@ COPY packages/slots ./packages/slots
 COPY packages/verification ./packages/verification
 COPY packages/forms ./packages/forms
 COPY server/src/modules ./server/src/modules
+# Chat schemas (rooms, staff, support) live in the chat service folder.
+COPY server/src/microservices ./server/src/microservices
 
 WORKDIR /repo/app/mobile-app
 COPY app/mobile-app/package.json app/mobile-app/package-lock.json ./

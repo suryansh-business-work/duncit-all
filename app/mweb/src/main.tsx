@@ -16,6 +16,7 @@ import {
 } from '@duncit/user-context';
 import { useTranslation } from './i18n/useTranslation';
 import { getSocketUrl } from './lib/socket-url';
+import { forwardChatNew } from './components/chat-state/chatAlerts';
 import { apolloClient } from './apollo';
 import { captureShortLinkClick } from './lib/short-link-journey';
 import { requireAuthForShortLinkLanding } from './lib/session-guard';
@@ -69,15 +70,19 @@ const isAuthed = () => !!localStorage.getItem('token');
 // Real-time: a profile change made in a portal or on the phone lands in this
 // tab without a refetch. The factory is what keeps `@duncit/user-context` free
 // of a socket.io dependency — each surface opens its own connection.
+// The same connection carries `chat:new`, a message in a room this tab is not
+// showing, which ChatNewAlerts turns into a ping and a toast.
 configureSessionSocket(() => {
   const token = localStorage.getItem('token');
   if (!token) return null;
-  return io(getSocketUrl(), {
+  const socket = io(getSocketUrl(), {
     path: '/socket.io',
     auth: { token },
     // Same fallback as the chat sockets: some networks block WebSockets.
     transports: ['websocket', 'polling'],
   });
+  forwardChatNew(socket);
+  return socket;
 });
 
 // Ship structured, file-level logs to SignOz (via the server /logs ingest).

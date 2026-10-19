@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { CHAT_HISTORY_PAGE, hasOlderPage } from '@duncit/utils';
 import { CLUB_MESSAGE_PAGE, CLUB_MESSAGES, POD_MESSAGE_PAGE, POD_MESSAGES, SEND_CLUB_MSG, SEND_MSG } from './queries';
 import type { ChatRoomKind } from './usePodSocket';
-import type { ChatMessage, ClubRoomData, LinkedPod, PodRoomData } from './chat.types';
+import type { ChatMessage, ChatMuteFields, ClubRoomData, LinkedPod, PodRoomData } from './chat.types';
 import {
   clubPageInto,
   podPageInto,
@@ -19,6 +19,10 @@ export interface ChatSendInput {
   type: 'TEXT' | 'IMAGE';
   text: string;
   image_url: string | null;
+  /** The message this one answers (same room). */
+  reply_to_id?: string | null;
+  /** Members @-mentioned in the text. */
+  mentions?: string[];
 }
 
 /** Everything the room page reads, the same shape for a pod and a club. */
@@ -44,14 +48,19 @@ export interface ChatRoomSource {
   pod: LinkedPod | null;
   /** The club's slug (club rooms) — for the header's "open club" link. */
   clubSlug: string | null;
+  /** The viewer's mute of this room, as the room query read it (null while loading). */
+  mute: ChatMuteFields | null;
   send: (input: ChatSendInput) => Promise<unknown>;
 }
 
 /** The room's own fields — everything but its lines and actions. */
 type RoomDetails = Pick<
   ChatRoomSource,
-  'hasData' | 'myId' | 'title' | 'closed' | 'deletesAt' | 'retentionDays' | 'canModerate' | 'pod' | 'clubSlug'
+  'hasData' | 'myId' | 'title' | 'closed' | 'deletesAt' | 'retentionDays' | 'canModerate' | 'pod' | 'clubSlug' | 'mute'
 >;
+
+const muteOf = (room: ChatMuteFields | null | undefined): ChatMuteFields | null =>
+  room ? { is_muted: room.is_muted, muted_until: room.muted_until ?? null } : null;
 
 function podRoomDetails(data: PodRoomData | undefined): RoomDetails {
   const info = data?.podChatInfo;
@@ -65,6 +74,7 @@ function podRoomDetails(data: PodRoomData | undefined): RoomDetails {
     canModerate: !!info?.can_moderate,
     pod: data?.pod ?? null,
     clubSlug: null,
+    mute: muteOf(info),
   };
 }
 
@@ -80,6 +90,7 @@ function clubRoomDetails(data: ClubRoomData | undefined): RoomDetails {
     canModerate: !!club?.can_moderate,
     pod: null,
     clubSlug: club?.club_slug ?? null,
+    mute: muteOf(club),
   };
 }
 

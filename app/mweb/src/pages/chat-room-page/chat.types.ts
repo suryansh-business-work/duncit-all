@@ -1,6 +1,8 @@
 import type {
+  ChatMuteState,
   ChatParticipants,
   ChatRoom,
+  ChatUser,
   ClubChatRoom,
   PodChatInfo,
   PodMessage,
@@ -8,6 +10,17 @@ import type {
 
 /** One chat line as the room documents select it — a pod's or a club's. */
 export type ChatMessage = Omit<PodMessage, '__typename'>;
+
+/** Someone in the room, for the @ list. */
+export type ChatMember = Pick<ChatUser, 'user_id' | 'full_name' | 'profile_photo'>;
+
+/** A room's mute as the header reads it. */
+export type ChatMuteFields = Pick<ChatMuteState, 'is_muted' | 'muted_until'>;
+
+/** `CLUB_CHAT_MEMBERS` */
+export interface ClubChatMembersData {
+  clubChatMembers: ChatMember[];
+}
 
 /** What arrives over the socket for a reaction or a delete: at least the id,
  * and the room it belongs to. */
@@ -36,7 +49,7 @@ export interface LinkedPod {
 export interface PodRoomData {
   me?: Me | null;
   podMessages: ChatMessage[];
-  podChatInfo: Pick<PodChatInfo, 'chat_deletes_at' | 'closed' | 'can_moderate'>;
+  podChatInfo: Pick<PodChatInfo, 'chat_deletes_at' | 'closed' | 'can_moderate' | 'is_muted' | 'muted_until'>;
   pod?: LinkedPod | null;
 }
 
@@ -44,7 +57,10 @@ export interface PodRoomData {
 export interface ClubRoomData {
   me?: Me | null;
   clubMessages: ChatMessage[];
-  clubChatRoom: Pick<ClubChatRoom, 'id' | 'club_slug' | 'club_name' | 'retention_days' | 'can_moderate'>;
+  clubChatRoom: Pick<
+    ClubChatRoom,
+    'id' | 'club_slug' | 'club_name' | 'retention_days' | 'can_moderate' | 'is_muted' | 'muted_until'
+  >;
 }
 
 interface SuperCategoryRef {
@@ -65,6 +81,7 @@ export interface PodChatRoomsData {
     | 'cover_url'
     | 'club_id'
     | 'super_category_id'
+    | 'unread_count'
   >[];
   superCategories: SuperCategoryRef[];
 }
@@ -78,6 +95,7 @@ export type ClubChatRoomRow = Pick<
   | 'last_message_at'
   | 'last_message_preview'
   | 'last_message_type'
+  | 'unread_count'
 >;
 
 /** The Chats page's Clubs tab. */

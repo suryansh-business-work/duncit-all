@@ -20,6 +20,7 @@ import { NotifyHost } from './components/notify';
 import PodFeedbackPrompt from './components/pod-feedback';
 import AppPopupDialog from './components/app-popup';
 import DeletionNoticeDialog from './components/DeletionNoticeDialog';
+import ChatNewAlerts from './components/chat-state/ChatNewAlerts';
 import AppRoutes from './app/AppRoutes';
 import RouteFallback from './app/RouteFallback';
 import { AppLocationProvider } from './app/AppLocationContext';
@@ -183,6 +184,7 @@ export default function App() {
       {isAuthed && <PodFeedbackPrompt />}
       {isAuthed && <AppPopupDialog />}
       {isAuthed && <DeletionNoticeDialog />}
+      {isAuthed && <ChatNewAlerts />}
       <OpenInAppBanner />
       <ConsentHost isAuthed={isAuthed} />
       <BrandFontLoader />

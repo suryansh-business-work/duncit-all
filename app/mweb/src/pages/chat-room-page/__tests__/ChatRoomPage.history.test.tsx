@@ -34,6 +34,10 @@ const line = (n: number, text = `line ${n}`) => ({
   reactions: [],
   deleted: false,
   createdAt: new Date(Date.UTC(2026, 9, 1, 0, n)).toISOString(),
+  reply_to_id: null,
+  reply_to: null,
+  mentions: [],
+  mention_users: [],
 });
 const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => line(from + i));
 

@@ -21,6 +21,7 @@ const MY_CLUB_CHAT_ROOMS = gql`
       last_message_at
       last_message_preview
       last_message_type
+      unread_count
     }
     superCategories: categories(filter: { level: SUPER }) {
       id
@@ -90,6 +91,7 @@ export default function ClubChatsPanel({ superCategorySlug }: Readonly<{ superCa
               coverUrl={room.cover_url}
               fallbackIcon={<GroupsIcon />}
               title={room.club_name}
+              unreadCount={room.unread_count}
               onOpen={() => navigate(`/chats/club/${room.id}`)}
             >
               <Typography variant="body2" noWrap sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>

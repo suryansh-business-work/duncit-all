@@ -32,6 +32,7 @@ const MY_CHAT_ROOMS = gql`
       cover_url
       club_id
       super_category_id
+      unread_count
     }
     superCategories: categories(filter: { level: SUPER }) {
       id
@@ -53,6 +54,7 @@ const room = (id: string, over: Record<string, unknown> = {}) => ({
   cover_url: null,
   club_id: 'c1',
   super_category_id: 's1',
+  unread_count: 0,
   ...over,
 });
 
@@ -101,6 +103,14 @@ describe('ChatsPage', () => {
     // live chip + members count
     expect(screen.getAllByText('Live').length).toBeGreaterThan(0);
     expect(screen.getAllByText('2/5 members').length).toBe(2);
+  });
+
+  it('shows an unread count on a room with unread lines and none on a read room', async () => {
+    setup([chatMock([room('1', { unread_count: 120 }), room('2', { unread_count: 0 })])], <ChatsPage />);
+    const badge = await screen.findByTestId('chat-room-1-unread');
+    expect(badge).toHaveTextContent('99+');
+    expect(badge).toHaveAccessibleName('120 unread messages');
+    expect(screen.queryByTestId('chat-room-2-unread')).not.toBeInTheDocument();
   });
 
   it('opens the chat room when its card is pressed', async () => {

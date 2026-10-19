@@ -1,23 +1,29 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
+import { parseApiError } from '@duncit/utils';
 import { isPodActive } from '../../../utils/podStatus';
 import { clubUrl, podUrl } from '../../../utils/seoUrls';
 import ReportContentDialog from '../../../components/content-report/ReportContentDialog';
+import ChatMuteMenu from '../../../components/chat-state/ChatMuteMenu';
+import { useChatMute } from '../../../components/chat-state/useChatMute';
 import ChatClosedNotice from '../ChatClosedNotice';
 import ChatParticipants from '../ChatParticipants';
+import ChatReplyStrip from '../ChatReplyStrip';
 import ChatRetentionNotice from '../ChatRetentionNotice';
 import ChatRoomHeader from '../ChatRoomHeader';
+import MentionSuggestions from '../MentionSuggestions';
 import MessageActionsMenu from '../MessageActionsMenu';
 import MessageComposer from '../MessageComposer';
 import { CHAT_PARTICIPANTS, REACT_MSG } from '../queries';
 import { useMessageActions } from '../useMessageActions';
 import { useChatRoomSource } from '../useChatRoomSource';
-import { usePodSocket, type ChatRoomKind } from '../usePodSocket';
+import { useLiveMessages } from '../useLiveMessages';
+import { useRoomComposer } from '../useRoomComposer';
+import type { ChatRoomKind } from '../usePodSocket';
 import { useTranslation } from '../../../i18n/useTranslation';
-import { parseApiError } from '@duncit/utils';
-import type { ChatMessage, ChatParticipantsData, ChatSocketMessage } from '../chat.types';
+import type { ChatParticipantsData } from '../chat.types';
 import ChatMessageList from './ChatMessageList';
 import ChatRoomLoading from './ChatRoomLoading';
 import ChatRoomOverlays from './ChatRoomOverlays';
@@ -34,19 +40,27 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
     fetchPolicy: 'cache-and-network',
     skip: !isPod || !id,
   });
-  const [text, setText] = useState('');
   const [picker, setPicker] = useState(false);
   const [emojiAnchor, setEmojiAnchor] = useState<HTMLElement | null>(null);
   const [reactAnchor, setReactAnchor] = useState<{ el: HTMLElement; id: string } | null>(null);
   const [react] = useMutation(REACT_MSG);
-  const [live, setLive] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const people = peopleData?.chatParticipants;
+
+  const mute = useChatMute({
+    kind,
+    id,
+    initial: room.mute,
+    onError: setError,
+    failedText: t('mweb.chatRoom.mute.failed'),
+  });
+  const { messages, onDeleted } = useLiveMessages({ kind, id, room, muted: mute.muted, onError: setError });
+  const composer = useRoomComposer({ kind, id, room, messages, people, onError: setError });
 
   const pod = room.pod;
   // The server's word first; the dates are the fallback while it loads.
   const podEnded = isPod && (room.closed || (pod ? !isPodActive(pod.pod_date_time, pod.pod_end_date_time) : false));
-  const people = peopleData?.chatParticipants;
 
   const podLink = pod?.club_slug && pod?.pod_id ? podUrl(pod.club_slug, pod.pod_id) : null;
   const linked = isPod ? podLink : room.clubSlug && clubUrl(room.clubSlug);
@@ -54,23 +68,7 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
     linked ? navigate(linked) : setError(t('mweb.chatRoom.podDetailsAreUnavailableForThis'));
   // Back lands on the room's pod or club; the chats list only when that link is unknown.
   const goBack = () => navigate(linked || (isPod ? '/chats' : '/chats?selectedtab_chats=CLUBS'));
-  const messages = useMemo(() => {
-    const merged = [...room.messages];
-    const ids = new Set(room.messages.map((m) => m.id));
-    for (const m of live) if (!ids.has(m.id)) merged.push(m);
-    return merged;
-  }, [room.messages, live]);
-
-  const onMessage = useCallback((msg: ChatMessage) => setLive((p) => [...p, msg]), []);
-  const onReactionUpdate = useCallback(
-    (msg: ChatSocketMessage) =>
-      setLive((p) => p.map((m) => (m.id === msg.id ? { ...m, reactions: msg.reactions ?? m.reactions } : m))),
-    []
-  );
-  const onDeleted = useCallback(
-    (msg: ChatSocketMessage) => setLive((p) => p.filter((m) => m.id !== msg.id)),
-    []
-  );
+  const openProfile = (userId: string) => navigate(`/u/${userId}`);
 
   const actions = useMessageActions({
     messages,
@@ -81,31 +79,6 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
     },
     onError: setError,
   });
-
-  usePodSocket({
-    podId: id,
-    kind,
-    refetch: room.refetch,
-    onMessage,
-    onReactionUpdate,
-    onDeleted,
-    onError: setError,
-  });
-
-  const submit = async (overrideImage?: string) => {
-    const body = text.trim();
-    if (!body && !overrideImage) return;
-    try {
-      await room.send({
-        type: overrideImage ? 'IMAGE' : 'TEXT',
-        text: overrideImage ? '' : body,
-        image_url: overrideImage || null,
-      });
-      setText('');
-    } catch (e) {
-      setError(parseApiError(e) || t('mweb.chatRoom.sendFailed'));
-    }
-  };
 
   const onReact = async (emoji: string) => {
     if (!reactAnchor) return;
@@ -126,6 +99,7 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
         messageCount={messages.length}
         onBack={goBack}
         onOpenPod={openLinked}
+        actions={<ChatMuteMenu muted={mute.muted} mutedUntil={mute.mutedUntil} busy={mute.busy} onChoose={mute.choose} />}
       />
 
       {people && (
@@ -133,7 +107,7 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
           hosts={people.hosts}
           participants={people.participants}
           count={people.participant_count}
-          onOpenProfile={(userId) => navigate(`/u/${userId}`)}
+          onOpenProfile={openProfile}
         />
       )}
 
@@ -154,25 +128,39 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
         onOpenActions={actions.open}
         canLoadOlder={room.canLoadOlder}
         loadOlder={room.loadOlder}
+        onOpenProfile={openProfile}
       />
 
       {podEnded ? (
         <ChatClosedNotice />
       ) : (
-        <MessageComposer
-          text={text}
-          setText={setText}
-          onSend={() => submit()}
-          onOpenPicker={() => setPicker(true)}
-          onOpenEmoji={setEmojiAnchor}
-        />
+        <>
+          {composer.replyTo && (
+            <ChatReplyStrip
+              replyTo={composer.replyTo}
+              mine={String(composer.replyTo.user_id) === String(room.myId)}
+              onCancel={composer.cancelReply}
+            />
+          )}
+          <MentionSuggestions members={composer.mention.candidates} onPick={composer.mention.pick} />
+          <MessageComposer
+            text={composer.text}
+            setText={composer.setText}
+            onSend={() => composer.submit()}
+            onOpenPicker={() => setPicker(true)}
+            onOpenEmoji={setEmojiAnchor}
+            inputRef={composer.inputRef}
+            onCaretMove={composer.trackCaret}
+            onEnterPick={composer.mention.pickFirst}
+          />
+        </>
       )}
 
       <ChatRoomOverlays
         emojiAnchor={emojiAnchor}
         onCloseEmoji={() => setEmojiAnchor(null)}
         onInsertEmoji={(e) => {
-          setText((p) => p + e);
+          composer.setText((p) => p + e);
           setEmojiAnchor(null);
         }}
         reactAnchorEl={reactAnchor?.el ?? null}
@@ -182,7 +170,7 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
         onClosePicker={() => setPicker(false)}
         onPicked={(url) => {
           setPicker(false);
-          submit(url);
+          composer.submit(url);
         }}
       />
       <MessageActionsMenu
@@ -190,6 +178,7 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
         canModerate={room.canModerate}
         onClose={actions.close}
         onReact={(el, messageId) => setReactAnchor({ el, id: messageId })}
+        onReply={podEnded ? undefined : composer.startReply}
         onDelete={actions.remove}
         onReport={actions.report}
       />

@@ -481,11 +481,6 @@
       "count": 5
     }
   },
-  "app/mweb/src/pages/chat-room-page/ChatRoomPage/ChatRoomPage.tsx": {
-    "no-restricted-syntax": {
-      "count": 10
-    }
-  },
   "app/mweb/src/pages/chat-room-page/MessageBubble.tsx": {
     "no-restricted-syntax": {
       "count": 3

@@ -90,14 +90,17 @@ self.addEventListener('push', (event) => {
     renotify: !!data.tag,
   };
   event.waitUntil(
-    Promise.all([
-      globalThis.registration.showNotification(title, options),
-      globalThis.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => {
-        for (const c of cs) {
-          c.postMessage({ type: 'PUSH_RECEIVED', payload: { title, ...data } });
-        }
-      }),
-    ])
+    globalThis.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => {
+      for (const c of cs) {
+        c.postMessage({ type: 'PUSH_RECEIVED', payload: { title, ...data } });
+      }
+      // A pod or club room push while a tab is open and in front: that tab has
+      // already pinged and shown the in-app toast for it (chat:new), so a
+      // system notification on top would be the same alert twice.
+      const inFront = cs.some((c) => c.visibilityState === 'visible' && c.focused);
+      if (String(data.tag || '').startsWith('chat:') && inFront) return undefined;
+      return globalThis.registration.showNotification(title, options);
+    })
   );
 });
 

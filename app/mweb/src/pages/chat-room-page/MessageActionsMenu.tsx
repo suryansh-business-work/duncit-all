@@ -1,5 +1,6 @@
 import { ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import AddReactionOutlinedIcon from '@mui/icons-material/AddReactionOutlined';
+import ReplyIcon from '@mui/icons-material/Reply';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -16,12 +17,14 @@ interface Props {
   canModerate: boolean;
   onClose: () => void;
   onReact: (el: HTMLElement, id: string) => void;
+  /** Answer this message: it is quoted over the composer. Absent in a closed room. */
+  onReply?: (id: string) => void;
   onDelete: (id: string) => void;
   onReport: (id: string) => void;
 }
 
 /**
- * What can be done to one message: react to it, delete it (your own, or
+ * What can be done to one message: react to it, reply to it, delete it (your own, or
  * anyone's in a room you moderate) and report it (anyone's but your own).
  * The server is the gate for both — this only decides what is offered.
  */
@@ -30,6 +33,7 @@ export default function MessageActionsMenu({
   canModerate,
   onClose,
   onReact,
+  onReply,
   onDelete,
   onReport,
 }: Readonly<Props>) {
@@ -51,6 +55,14 @@ export default function MessageActionsMenu({
         </ListItemIcon>
         <ListItemText primary={t('mweb.chatRoom.react')} />
       </MenuItem>
+      {onReply && (
+        <MenuItem onClick={pick((m) => onReply(m.id))} data-testid="chat-message-action-reply">
+          <ListItemIcon>
+            <ReplyIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={t('mweb.chatRoom.reply.action')} />
+        </MenuItem>
+      )}
       {target && (target.mine || canModerate) && (
         <MenuItem onClick={pick((m) => onDelete(m.id))} data-testid="chat-message-action-delete">
           <ListItemIcon>

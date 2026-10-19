@@ -49,6 +49,8 @@ export const storeTypeDefs = /* GraphQL */ `
     terms_html: String!
     about_html: String!
     social_links: [StoreSocialLink!]!
+    "The payment methods the footer shows as accepted, with the marks the operator uploaded."
+    payment_badges: [StorePaymentBadge!]!
     currency_symbol: String!
     "On: no Razorpay account is configured and Finance's test switch is on, so checkout captures without taking money."
     dummy_mode: Boolean!
@@ -58,9 +60,57 @@ export const storeTypeDefs = /* GraphQL */ `
     active_occasion: StoreActiveOccasion
   }
 
+  type StorePaymentBadge {
+    label: String!
+    image_url: String!
+  }
+
+  "A festive look the storefront ships: its own colour tokens and light animation. NONE keeps the house look."
+  enum StoreOccasionTheme {
+    NONE
+    DIWALI
+    HOLI
+    DUSSEHRA
+    NAVRATRI
+    DURGA_PUJA
+    GANESH_CHATURTHI
+    JANMASHTAMI
+    MAKAR_SANKRANTI
+    LOHRI
+    PONGAL
+    ONAM
+    RAKSHA_BANDHAN
+    KARWA_CHAUTH
+    BAISAKHI
+    GURU_NANAK_JAYANTI
+    EID
+    CHRISTMAS
+    HALLOWEEN
+    NEW_YEAR
+    VALENTINES_DAY
+    EASTER
+    FRIENDSHIP_DAY
+    MOTHERS_DAY
+    FATHERS_DAY
+    APRIL_FOOLS
+    INDEPENDENCE_DAY
+    REPUBLIC_DAY
+    GANDHI_JAYANTI
+    CHILDRENS_DAY
+    WOMENS_DAY
+    YOGA_DAY
+    EARTH_DAY
+    CHHATH_PUJA
+  }
+
   type StoreActiveOccasion {
     slug: String!
     label: String!
+    theme: StoreOccasionTheme!
+    "Off: the theme's colours only, no animation."
+    effects_enabled: Boolean!
+    "A short festive line over the home page's first banner; blank shows none."
+    greeting: String!
     logo_url: String!
     favicon_url: String!
     background_url: String!
@@ -401,10 +451,16 @@ export const storeTypeDefs = /* GraphQL */ `
     PRODUCT_SLIDER
     "A row of round category icons."
     CATEGORY_ICONS
+    "Large picture-and-words cards that lead into a range (Explore our range)."
+    RANGE_SHOWCASE
+    "A promotion for Earn with Duncit; a blank link goes to the Earn with Duncit site."
+    EARN_PROMO
   }
 
   type StoreSectionItem {
     id: ID!
+    "The small line above a title, or the badge on a tile."
+    eyebrow: String!
     title: String!
     subtitle: String!
     image_url: String!

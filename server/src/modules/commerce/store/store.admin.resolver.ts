@@ -3,6 +3,7 @@ import type { IStoreSettings } from './storeSettings.model';
 import { occasionOut, storeAdminMerchService } from './store.admin.merch.service';
 import { paymentService } from '@modules/finance/payment/payment.service';
 import { storeAdminCatalogService } from './store.admin.catalog.service';
+import { storeLinkTargets } from './store.admin.links.service';
 import { storeAdminProductsService } from './store.admin.products.service';
 import { storeAdminPackagingService } from './store.admin.packaging.service';
 import { storeAdminPincodeService } from './store.admin.pincode.service';
@@ -34,6 +35,7 @@ const settingsOut = (s: IStoreSettings | null) => {
   return {
     ...plain,
     social_links: (plain.social_links ?? []).map((l: Args) => ({ label: l.label, url: l.url })),
+    payment_badges: (plain.payment_badges ?? []).map((b: Args) => ({ label: b.label, image_url: b.image_url })),
     serviceable_pincodes: plain.serviceable_pincodes ?? [],
     occasions: (plain.occasions ?? []).map(occasionOut),
     updated_at: iso(plain.updated_at) ?? '',
@@ -56,6 +58,7 @@ export const storeAdminResolvers = {
     storeAdminWarehouses: admin(() => storeAdminProductsService.warehouses()),
     storeAdminBrands: admin(() => storeAdminMerchService.brands()),
     storeAdminPages: admin(() => storeAdminMerchService.pages()),
+    storeAdminLinkTargets: admin(() => storeLinkTargets()),
     storeAdminRazorpayAccounts: admin(() => storeAdminMerchService.razorpayAccounts()),
     storePaymentsTable: admin((a) => paymentService.tableForStore(a.query)),
     storePackagingExport: admin((a) => storeAdminPackagingService.exportRows(a.product_ids)),

@@ -46,6 +46,7 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     terms_html: String!
     about_html: String!
     social_links: [StoreSocialLink!]!
+    payment_badges: [StorePaymentBadge!]!
     serviceable_pincodes_enabled: Boolean! @deprecated(reason: "Read storeServiceablePincodesTable.")
     serviceable_pincodes: [String!]! @deprecated(reason: "Read storeServiceablePincodesTable.")
     occasions: [StoreOccasion!]!
@@ -57,10 +58,33 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     url: String!
   }
 
-  "A festive window: while it is open the store swaps its logo, favicon and background."
+  enum StoreLinkTargetGroup {
+    PET_TYPE
+    CATEGORY
+    COLLECTION
+    BRAND
+    PAGE
+  }
+
+  "A storefront page a home tile or banner can link to: its name and its same-site path."
+  type StoreLinkTarget {
+    group: StoreLinkTargetGroup!
+    label: String!
+    path: String!
+  }
+
+  input StorePaymentBadgeInput {
+    label: String!
+    image_url: String!
+  }
+
+  "A festive window: while it is open the store swaps its logo, favicon and background and wears its theme."
   type StoreOccasion {
     slug: String!
     label: String!
+    theme: StoreOccasionTheme!
+    effects_enabled: Boolean!
+    greeting: String!
     starts_at: String!
     ends_at: String!
     logo_url: String!
@@ -76,6 +100,11 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     "Blank mints one from the label."
     slug: String
     label: String!
+    "Omitted keeps NONE, the house look."
+    theme: StoreOccasionTheme
+    "Off plays no animation; omitted = on."
+    effects_enabled: Boolean
+    greeting: String
     starts_at: String!
     ends_at: String!
     logo_url: String
@@ -163,6 +192,7 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     terms_html: String
     about_html: String
     social_links: [StoreSocialLinkInput!]
+    payment_badges: [StorePaymentBadgeInput!]
     "Ignored: serviceable pincodes are saved with storeSaveServiceablePincode."
     serviceable_pincodes_enabled: Boolean
     "Ignored: serviceable pincodes are saved with storeSaveServiceablePincode."
@@ -339,6 +369,7 @@ export const storeAdminTypeDefs = /* GraphQL */ `
   }
 
   input StoreSectionItemInput {
+    eyebrow: String
     title: String
     subtitle: String
     image_url: String
@@ -866,6 +897,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     storeAdminWarehouses: [StoreWarehouse!]!
     storeAdminBrands: [StoreAdminBrand!]!
     storeAdminPages: [StoreAdminPage!]!
+    "Every live storefront page the store's data makes (pets, aisles, collections, brands, pages), for link pickers."
+    storeAdminLinkTargets: [StoreLinkTarget!]!
     "The Razorpay accounts the store can take online payments with."
     storeAdminRazorpayAccounts: [StoreRazorpayAccount!]!
     "Every payment the pet store took, for its Logs › Payment logs page."

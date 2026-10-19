@@ -14,6 +14,31 @@ export interface StoredMessage {
   reactions?: ReadonlyArray<{ user_id: unknown; emoji: string }> | null;
   deleted?: boolean | null;
   createdAt?: Date | null;
+  reply_to_id?: string | null;
+  mentions?: ReadonlyArray<string> | null;
+}
+
+/** The quoted line a reply carries: who wrote it and what it said, read now. */
+export interface ReplySnippet {
+  id: string;
+  user_id: string;
+  user_name: string;
+  text: string;
+  type: string;
+  deleted: boolean;
+}
+
+/** Someone a message @-mentions, named now so a bubble can find the token. */
+export interface MentionUser {
+  user_id: string;
+  full_name: string;
+  profile_photo: string | null;
+}
+
+/** What a message carries beyond its own row, loaded in batches by the caller. */
+export interface MessageExtras {
+  replyTo?: ReplySnippet | null;
+  mentionUsers?: MentionUser[];
 }
 
 interface MediaRef {
@@ -68,7 +93,7 @@ const firstPhoto = (media?: ReadonlyArray<MediaRef> | null) =>
  * realtime copy and a renamed user would appear correctly on refresh and
  * wrongly the moment they posted.
  */
-export function shapeMessage(doc: StoredMessage, display: UserDisplay) {
+export function shapeMessage(doc: StoredMessage, display: UserDisplay, extras: MessageExtras = {}) {
   return {
     id: String(doc._id),
     pod_id: doc.pod_id ? String(doc.pod_id) : null,
@@ -85,6 +110,10 @@ export function shapeMessage(doc: StoredMessage, display: UserDisplay) {
     })),
     deleted: !!doc.deleted,
     createdAt: (doc.createdAt || new Date()).toISOString(),
+    reply_to_id: doc.reply_to_id ? String(doc.reply_to_id) : null,
+    reply_to: extras.replyTo ?? null,
+    mentions: (doc.mentions || []).map(String),
+    mention_users: extras.mentionUsers ?? [],
   };
 }
 

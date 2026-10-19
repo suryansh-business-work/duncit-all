@@ -2,12 +2,12 @@ import { useId, useState } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { Divider, Menu, MenuItem } from '@mui/material';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlineRounded';
-import { CircleButton } from '../CircleButton';
 
 import { useStoreSession } from '../../app/providers/SessionProvider';
 import { logFailure } from '../../lib/log';
 import { paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
+import { HeaderAction } from './HeaderAction';
 
 export const ACCOUNT_LINKS = [
   { to: paths.account, labelKey: 'ecommStore.account.overview' },
@@ -25,23 +25,21 @@ export function AccountMenu() {
   const close = () => setAnchor(null);
 
   if (!signedIn) {
-    return (
-      <CircleButton aria-label={t('ecommStore.auth.signIn')} onClick={openSignIn}>
-        <PersonOutlineIcon />
-      </CircleButton>
-    );
+    const signIn = t('ecommStore.auth.signIn');
+    return <HeaderAction icon={<PersonOutlineIcon />} caption={signIn} aria-label={signIn} aria-haspopup="dialog" onClick={openSignIn} testId="header-sign-in" />;
   }
   return (
     <>
-      <CircleButton
+      <HeaderAction
+        icon={<PersonOutlineIcon />}
+        caption={t('ecommStore.header.account')}
         aria-label={t('ecommStore.account.menu')}
         aria-haspopup="menu"
         aria-expanded={Boolean(anchor)}
         aria-controls={anchor ? menuId : undefined}
         onClick={(event) => setAnchor(event.currentTarget)}
-      >
-        <PersonOutlineIcon />
-      </CircleButton>
+        testId="header-account"
+      />
       <Menu id={menuId} anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
         {ACCOUNT_LINKS.map((link) => (
           <MenuItem key={link.to} component={RouterLink} to={link.to} onClick={close}>

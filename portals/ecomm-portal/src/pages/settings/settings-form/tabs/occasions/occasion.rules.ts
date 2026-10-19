@@ -3,9 +3,13 @@ import { numberText, toOptionalInt } from '../../../../../lib/format';
 import { makeRules } from '../../../../../lib/rules';
 import type { Translate } from '../../../../../lib/translate';
 import type { StoreOccasion } from '../../../queries';
+import { OCCASION_THEMES } from './occasion-themes';
 
 /** How many windows the tab lets an operator keep — a year of festivals, with room to spare. */
 export const MAX_OCCASIONS = 20;
+
+/** The home-banner greeting is one short line. */
+export const MAX_GREETING = 80;
 
 /** A CSS hex colour — `#RGB` or `#RRGGBB`. */
 const HEX_COLOR = /^#(?:[\dA-Fa-f]{3}|[\dA-Fa-f]{6})$/;
@@ -23,6 +27,9 @@ export const makeOccasionSchema = (t: Translate) => {
     .object({
       label: r.requiredText(60),
       slug: r.optionalText(60),
+      theme: z.enum(OCCASION_THEMES),
+      effects_enabled: z.boolean(),
+      greeting: r.optionalText(MAX_GREETING),
       starts_at: z.string().min(1, required),
       ends_at: z.string().min(1, required),
       logo_url: r.link(),
@@ -45,10 +52,13 @@ export const makeOccasionsSchema = (t: Translate) => z.object({ occasions: z.arr
 export type OccasionValues = z.infer<ReturnType<typeof makeOccasionSchema>>;
 export type OccasionsValues = z.infer<ReturnType<typeof makeOccasionsSchema>>;
 
-/** A fresh row: switched on, with nothing chosen yet. */
+/** A fresh row: switched on, the house look with its animation on, nothing else chosen yet. */
 export const blankOccasion = (): OccasionValues => ({
   label: '',
   slug: '',
+  theme: 'NONE',
+  effects_enabled: true,
+  greeting: '',
   starts_at: '',
   ends_at: '',
   logo_url: '',
@@ -63,6 +73,9 @@ export const blankOccasion = (): OccasionValues => ({
 export const toOccasionValues = (occasion: StoreOccasion): OccasionValues => ({
   label: occasion.label,
   slug: occasion.slug,
+  theme: occasion.theme,
+  effects_enabled: occasion.effects_enabled,
+  greeting: occasion.greeting,
   starts_at: occasion.starts_at,
   ends_at: occasion.ends_at,
   logo_url: occasion.logo_url,

@@ -1,8 +1,25 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
+import Block from '../../components/page/Block.astro';
+import IconCard from '../../components/page/IconCard.astro';
+import Statement from '../../components/page/Statement.astro';
+import SafetyNav from '../../components/page/SafetyNav.astro';
 import { getTranslator } from '../../lib/i18n';
 
 const { t } = await getTranslator();
+
+const principles = [
+  { icon: 'fa-shield-halved', tone: 'primary', title: t('website.main.safetyApproach.principle1Label'), text: t('website.main.safetyApproach.principle1Text') },
+  { icon: 'fa-user-group', tone: 'secondary', title: t('website.main.safetyApproach.principle2Label'), text: t('website.main.safetyApproach.principle2Text') },
+  { icon: 'fa-eye', tone: 'tertiary', title: t('website.main.safetyApproach.principle3Label'), text: t('website.main.safetyApproach.principle3Text') },
+  { icon: 'fa-sliders', tone: 'ink', title: t('website.main.safetyApproach.principle4Label'), text: t('website.main.safetyApproach.principle4Text') },
+] as const;
+
+const further = [
+  { icon: 'fa-lightbulb', tone: 'tertiary', href: '/safety/advice', title: t('website.main.safetyApproach.readAdvice') },
+  { icon: 'fa-toolbox', tone: 'secondary', href: '/safety/tools', title: t('website.main.safetyApproach.readTools') },
+  { icon: 'fa-hand-holding-heart', tone: 'primary', href: '/safety/resources', title: t('website.main.safetyApproach.readResources') },
+] as const;
 ---
 
 <PageLayout
@@ -11,34 +28,23 @@ const { t } = await getTranslator();
   heading={t('website.main.safetyApproach.heading')}
   intro={t('website.main.safetyApproach.intro')}
   heroImage="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <h2>{t('website.main.safetyApproach.principlesHeading')}</h2>
-  <ul>
-    <li>
-      <strong>{t('website.main.safetyApproach.principle1Label')}</strong>
-      {t('website.main.safetyApproach.principle1Text')}
-    </li>
-    <li>
-      <strong>{t('website.main.safetyApproach.principle2Label')}</strong>
-      {t('website.main.safetyApproach.principle2Text')}
-    </li>
-    <li>
-      <strong>{t('website.main.safetyApproach.principle3Label')}</strong>
-      {t('website.main.safetyApproach.principle3Text')}
-    </li>
-    <li>
-      <strong>{t('website.main.safetyApproach.principle4Label')}</strong>
-      {t('website.main.safetyApproach.principle4Text')}
-    </li>
-  </ul>
+  <SafetyNav />
 
-  <h2>{t('website.main.safetyApproach.howHeading')}</h2>
-  <p>{t('website.main.safetyApproach.howText')}</p>
+  <Block kicker={t('website.main.safetyApproach.principlesKicker')} title={t('website.main.safetyApproach.principlesHeading')}>
+    <ul data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {principles.map((item) => <IconCard icon={item.icon} tone={item.tone} title={item.title} text={item.text} />)}
+    </ul>
+  </Block>
 
-  <h2>{t('website.main.safetyApproach.readHeading')}</h2>
-  <ul>
-    <li><a href="/safety/advice">{t('website.main.safetyApproach.readAdvice')}</a></li>
-    <li><a href="/safety/tools">{t('website.main.safetyApproach.readTools')}</a></li>
-    <li><a href="/safety/resources">{t('website.main.safetyApproach.readResources')}</a></li>
-  </ul>
+  <Block kicker={t('website.main.safetyApproach.howKicker')} title={t('website.main.safetyApproach.howHeading')}>
+    <Statement text={t('website.main.safetyApproach.howText')} icon="fa-user-shield" />
+  </Block>
+
+  <Block kicker={t('website.main.safetyApproach.readKicker')} title={t('website.main.safetyApproach.readHeading')}>
+    <ul data-reveal-group class="grid gap-5 md:grid-cols-3">
+      {further.map((item) => <IconCard icon={item.icon} tone={item.tone} href={item.href} title={item.title} />)}
+    </ul>
+  </Block>
 </PageLayout>

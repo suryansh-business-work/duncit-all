@@ -173,10 +173,46 @@ function fragmentKey(html, used) {
   return key;
 }
 
+const isNameChar = (ch) => (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch === '-';
+
+/** Where the `--name` run starting at `at` ends, and the `:` after it (past any whitespace) — or -1 when there is none. */
+function nameAndColon(block, at) {
+  let nameEnd = at + 2;
+  while (nameEnd < block.length && isNameChar(block[nameEnd])) nameEnd += 1;
+  let colon = nameEnd;
+  while (colon < block.length && /\s/.test(block[colon])) colon += 1;
+  return { nameEnd, colon: nameEnd > at + 2 && block[colon] === ':' ? colon : -1 };
+}
+
+/**
+ * Every `--name: value` pair in `block` — what `/(--[a-z0-9-]+)\s*:([^;]+)/g`
+ * finds — in one forward pass, so a long run of dashes cannot make it rescan.
+ * A start that fails fails for every later start inside the same name, so the
+ * scan resumes past the name rather than one character on.
+ */
+function customProperties(block) {
+  const found = [];
+  let at = block.indexOf('--');
+  while (at !== -1) {
+    const { nameEnd, colon } = nameAndColon(block, at);
+    let next = nameEnd;
+    if (colon !== -1) {
+      const semicolon = block.indexOf(';', colon + 1);
+      const valueEnd = semicolon === -1 ? block.length : semicolon;
+      if (valueEnd > colon + 1) {
+        found.push([block.slice(at, nameEnd), block.slice(colon + 1, valueEnd)]);
+        next = valueEnd;
+      }
+    }
+    at = block.indexOf('--', next);
+  }
+  return found;
+}
+
 function tokensFrom(css) {
   const root = /:root[^{]*{([^}]*)}/.exec(css)?.[1] ?? '';
   const tokens = [];
-  for (const [, name, value] of root.matchAll(/(--[a-z0-9-]+)\s*:([^;]+)/g)) {
+  for (const [name, value] of customProperties(root)) {
     // The value keeps the spaces after the colon; `.trim()` below drops them.
     if (!TOKEN_PREFIXES.some((prefix) => name.startsWith(prefix)) || /[;{}<>]/.test(value)) continue;
     tokens.push({ name, value: value.trim(), group: name.split('-')[2] || 'other' });

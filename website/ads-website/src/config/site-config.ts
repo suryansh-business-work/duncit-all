@@ -34,6 +34,10 @@ const earnwithUrl =
   import.meta.env.PUBLIC_EARNWITH_URL ||
   (isDevelopment ? 'http://localhost:2025' : 'https://earnwith.duncit.com');
 
+const mwebUrl =
+  import.meta.env.PUBLIC_MWEB_URL ||
+  (isDevelopment ? 'http://localhost:2003' : 'https://mweb.duncit.com');
+
 export interface Feature {
   icon: string;
   title: string;
@@ -52,7 +56,7 @@ export interface WhyItem {
 }
 
 /** Everything that is not copy: the environment, and where each link goes. */
-export const siteUrls = { isDevelopment, portalUrl, graphqlUrl, mainSiteUrl, siteUrl, earnwithUrl };
+export const siteUrls = { isDevelopment, portalUrl, graphqlUrl, mainSiteUrl, siteUrl, earnwithUrl, mwebUrl };
 
 const build = (t: SiteTranslate) => ({
   ...siteUrls,
@@ -74,25 +78,44 @@ const build = (t: SiteTranslate) => ({
   },
   hero: {
     eyebrow: t('website.ads.hero.eyebrow'),
-    heading: t('website.ads.hero.heading'),
+    headingLead: t('website.ads.hero.headingLead'),
+    headingAccent: t('website.ads.hero.headingAccent'),
     subheading: t('website.ads.hero.subheading'),
     primaryCta: { label: t('website.ads.hero.primaryCta'), href: portalUrl },
     secondaryCta: { label: t('website.ads.hero.secondaryCta'), href: '#calculator' },
     image:
       'https://images.pexels.com/photos/6406691/pexels-photo-6406691.jpeg?auto=compress&cs=tinysrgb&w=1600',
     imageAlt: t('website.ads.hero.imageAlt'),
+    slotLabel: t('website.ads.hero.slotLabel'),
+    adBadge: t('website.ads.hero.adBadge'),
+    /** The cards that float beside the slot: what a campaign reports. */
+    floats: [
+      {
+        icon: 'fa-eye',
+        title: t('website.ads.hero.floatImpressions'),
+        text: t('website.ads.hero.floatImpressionsHint'),
+      },
+      {
+        icon: 'fa-hand-pointer',
+        title: t('website.ads.hero.floatClicks'),
+        text: t('website.ads.hero.floatClicksHint'),
+      },
+    ],
   },
-  /** Numbers that describe the network, not any one campaign. */
-  proof: [
-    {
-      value: '9',
-      label: t('website.ads.proof.placementsLabel'),
-      hint: t('website.ads.proof.placementsHint'),
-    },
-    { value: '30', label: t('website.ads.proof.daysLabel'), hint: t('website.ads.proof.daysHint') },
-    { value: '24h', label: t('website.ads.proof.liveLabel'), hint: t('website.ads.proof.liveHint') },
-  ],
+  /** Facts about the network, not any one campaign. The placement count and
+   * the longest booking come from the live rate card (see Hero.astro), so
+   * the page never states a number the card does not. */
+  proof: {
+    placementsLabel: t('website.ads.proof.placementsLabel'),
+    placementsHint: t('website.ads.proof.placementsHint'),
+    daysLabel: t('website.ads.proof.daysLabel'),
+    daysHint: t('website.ads.proof.daysHint'),
+    liveValue: t('website.ads.proof.liveValue'),
+    liveLabel: t('website.ads.proof.liveLabel'),
+    liveHint: t('website.ads.proof.liveHint'),
+  },
   featuresSection: {
+    eyebrow: t('website.ads.features.eyebrow'),
     heading: t('website.ads.features.heading'),
     text: t('website.ads.features.text'),
   },
@@ -123,6 +146,13 @@ const build = (t: SiteTranslate) => ({
     heading: t('website.ads.placements.heading'),
     text: t('website.ads.placements.text'),
     rateCardCaption: t('website.ads.placements.rateCardCaption'),
+    sticker: t('website.ads.placements.sticker'),
+    from: t('website.ads.placements.from'),
+    colPlacement: t('website.ads.placements.colPlacement'),
+    colWhere: t('website.ads.placements.colWhere'),
+    colPerDay: t('website.ads.placements.colPerDay'),
+    loading: t('website.ads.placements.loading'),
+    noscript: t('website.ads.placements.noscript'),
     /** Copy for the placements the rate card returns. A placement with no note
      * still renders — the server owns the list, this only enriches it. */
     notes: {
@@ -199,6 +229,8 @@ const build = (t: SiteTranslate) => ({
     failedNote: t('website.ads.calculator.failedNote'),
     disclaimer: t('website.ads.calculator.disclaimer'),
     cta: { label: t('website.ads.calculator.cta'), href: portalUrl },
+    dayOne: t('website.ads.calculator.dayOne'),
+    daysMany: t('website.ads.calculator.daysMany'),
   },
   stepsSection: {
     eyebrow: t('website.ads.steps.eyebrow'),
@@ -223,6 +255,7 @@ const build = (t: SiteTranslate) => ({
     { icon: 'fa-rocket', title: t('website.ads.steps.liveTitle'), text: t('website.ads.steps.liveText') },
   ] as Step[],
   why: {
+    eyebrow: t('website.ads.nav.why'),
     heading: t('website.ads.why.heading'),
     text: t('website.ads.why.text'),
     items: [
@@ -254,6 +287,8 @@ const build = (t: SiteTranslate) => ({
   notFound: {
     heading: t('website.ads.notFound.heading'),
     text: t('website.ads.notFound.text'),
+    title: t('website.ads.notFound.title'),
+    cta: t('website.ads.notFound.cta'),
   },
   download: {
     heading: t('website.ads.download.heading'),

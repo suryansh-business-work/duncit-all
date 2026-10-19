@@ -72,7 +72,7 @@ export default function MessageThread({
   }, []);
   const [atBottom, setAtBottom] = useState(true);
   const [unseen, setUnseen] = useState(0);
-  const newest = messages[messages.length - 1];
+  const newest = messages.at(-1);
   // Unset on mount, so the thread opens on its newest line rather than its oldest.
   const lastNewestId = useRef<string | undefined>(undefined);
 

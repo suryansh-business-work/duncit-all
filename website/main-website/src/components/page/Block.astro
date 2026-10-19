@@ -1,0 +1,27 @@
+---
+// One designed section inside an inner page's article panel: an optional
+// kicker, a tight heading, an optional line beside it, then the section's own
+// content (cards, a form, a widget). The heading reveals on its own — never
+// the whole section, which can be taller than the viewport and would then
+// wait for a scroll position that never comes.
+interface Props {
+  title: string;
+  kicker?: string;
+  text?: string;
+  id?: string;
+  class?: string;
+}
+
+const { title, kicker, text, id, class: className = '' } = Astro.props;
+---
+
+<section id={id} class:list={['not-prose mt-20 scroll-mt-28 first:mt-0 sm:mt-24', className]}>
+  <header data-reveal class="mb-8 flex flex-col gap-3 md:mb-10 md:flex-row md:items-end md:justify-between md:gap-10">
+    <div class="max-w-2xl">
+      {kicker && <span class="kicker">{kicker}</span>}
+      <h2 class:list={['headline text-[2rem] text-ink sm:text-[2.6rem] lg:text-5xl', kicker && 'mt-3']}>{title}</h2>
+    </div>
+    {text && <p class="max-w-sm text-base leading-relaxed font-medium text-ink-soft">{text}</p>}
+  </header>
+  <slot />
+</section>

@@ -310,4 +310,37 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "finance.rentedItems.depositRefundableHint": [
     "On: the deposit comes back once the item is returned, less any damage claim. Off: the venue keeps it.",
   ],
+  // Gig Jobs: the city became a pick from the Location list (with its own area
+  // field), and any signed-in member can now view a poster's contact.
+  "gigJobs.validation.cityRequired": ["Enter a city"],
+  "gigJobs.form.location": ["Venue or area (optional)"],
+  "gigJobs.contact.hidden": ["The poster’s contact is shared with you once you show interest."],
+  "gigJobs.board.freelancerHint": [
+    "Freelancers can show interest in a gig and get the poster’s contact. Join from Earn with Duncit — it takes a minute.",
+  ],
+  // The profile menu redesign: the coin card speaks of pods in general, and the
+  // Studio card hint was tightened.
+  "mweb.coin.sidebarCaption": ["Earn {pct}% back when you join a pod"],
+  "mweb.studioOptions.studioEntryHint": ["Every option for your partner roles in one place"],
+  // The website download band: Android is live ("Download for Android"), the
+  // iPhone app is still coming, and the band gained a third, web door.
+  "website.main.download.googlePlayEyebrow": ["Get it on"],
+  "website.main.download.googlePlayName": ["Google Play"],
+  "website.main.download.appStoreEyebrow": ["Download on the"],
+  "website.ads.download.googlePlayEyebrow": ["Get it on"],
+  "website.ads.download.googlePlayName": ["Google Play"],
+  "website.ads.download.appStoreEyebrow": ["Download on the"],
+  "website.earn.download.googlePlayEyebrow": ["Get it on"],
+  "website.earn.download.googlePlayName": ["Google Play"],
+  "website.earn.download.appStoreEyebrow": ["Download on the"],
+  "website.partners.download.googlePlayEyebrow": ["Get it on"],
+  "website.partners.download.googlePlayName": ["Google Play"],
+  "website.partners.download.appStoreEyebrow": ["Download on the"],
+  // The websites redesign: the ads CTA no longer promises "minutes" (it is a
+  // day), and the earn steps now describe what a host actually does in the app.
+  "website.ads.cta.text": ["Sign in to the Ads console and go live in minutes."],
+  "website.earn.steps.bookingsTitle": ["Receive Bookings"],
+  "website.earn.steps.bookingsText": ["Get booking requests from real users."],
+  "website.earn.steps.earnTitle": ["Earn"],
+  "website.earn.steps.earnText": ["Provide great experiences and earn every month."],
 };

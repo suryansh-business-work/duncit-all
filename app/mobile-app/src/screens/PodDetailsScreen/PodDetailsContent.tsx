@@ -30,7 +30,14 @@ type PodDetailsData = ReturnType<typeof usePodDetails>;
 
 interface PodDetailsContentProps extends Pick<
   PodDetailsData,
-  'venue' | 'location' | 'people' | 'spotFills' | 'seatsByUser' | 'categoryCrumbs' | 'refetch'
+  | 'venue'
+  | 'location'
+  | 'people'
+  | 'spotFills'
+  | 'seatsByUser'
+  | 'categoryCrumbs'
+  | 'refetch'
+  | 'membershipState'
 > {
   pod: PodDetail;
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -154,6 +161,7 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
       <ChatPreviewCard
         kind="POD"
         id={pod.series_parent_id ?? pod.id}
+        reloadKey={props.membershipState?.status ?? undefined}
         onOpen={() =>
           navigation.navigate('ChatRoom', {
             podId: pod.series_parent_id ?? pod.id,

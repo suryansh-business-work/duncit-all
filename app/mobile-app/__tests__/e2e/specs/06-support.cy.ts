@@ -161,7 +161,9 @@ describe('Native · 06 support', () => {
       const faq = group.faqs[0];
       openMenu();
       cy.interceptOperation('MobileFaqs');
-      tap('sidebar-item-FAQs');
+      // FAQs sits in the collapsed Support & Legal card.
+      tap('sidebar-section-support-toggle');
+      tap('sidebar-item-faqs');
       cy.wait('@MobileFaqs');
       cy.byTestId('faqs-screen').should('exist');
       cy.byTestId(`faqs-group-${group.super_category?.id ?? 'GENERIC'}-header-title`).should(

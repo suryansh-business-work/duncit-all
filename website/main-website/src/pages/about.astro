@@ -1,8 +1,32 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import IconCard from '../components/page/IconCard.astro';
+import Statement from '../components/page/Statement.astro';
+import CtaBand from '../components/page/CtaBand.astro';
+import PillLink from '../components/page/PillLink.astro';
 import { getTranslator } from '../lib/i18n';
 
 const { t } = await getTranslator();
+
+const beliefs = [
+  { icon: 'fa-heart', tone: 'primary', title: t('website.main.about.believe1Label'), text: t('website.main.about.believe1Text') },
+  { icon: 'fa-bolt', tone: 'tertiary', title: t('website.main.about.believe2Label'), text: t('website.main.about.believe2Text') },
+  { icon: 'fa-shield-heart', tone: 'secondary', title: t('website.main.about.believe3Label'), text: t('website.main.about.believe3Text') },
+  { icon: 'fa-face-smile', tone: 'ink', title: t('website.main.about.believe4Label'), text: t('website.main.about.believe4Text') },
+] as const;
+
+const chips = [
+  { icon: 'fa-user-check', tone: 'text-secondary', label: t('website.main.home.chipVerified') },
+  { icon: 'fa-bolt', tone: 'text-primary-ink', label: t('website.main.home.chipMatched') },
+  { icon: 'fa-champagne-glasses', tone: 'text-tertiary-dark', label: t('website.main.home.chipGatherings') },
+];
+
+const crew = [
+  { icon: 'fa-pen-ruler', tint: 'bg-primary-dark text-white', label: t('website.main.about.teamDesign') },
+  { icon: 'fa-code', tint: 'bg-secondary text-white', label: t('website.main.about.teamEngineering') },
+  { icon: 'fa-people-group', tint: 'bg-tertiary text-on-accent', label: t('website.main.about.teamCommunity') },
+];
 ---
 
 <PageLayout
@@ -11,24 +35,51 @@ const { t } = await getTranslator();
   heading={t('website.main.about.heading')}
   intro={t('website.main.about.intro')}
   heroImage="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <h2>{t('website.main.about.whyHeading')}</h2>
-  <p>{t('website.main.about.whyText')}</p>
+  <Block kicker={t('website.main.about.whyKicker')} title={t('website.main.about.whyHeading')}>
+    <Statement text={t('website.main.about.whyText')} icon="fa-seedling">
+      <ul class="mt-8 flex flex-wrap gap-3">
+        {
+          chips.map((chip) => (
+            <li class="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2.5 font-head text-sm font-bold text-ink shadow-soft">
+              <i class:list={['fa-solid', chip.icon, chip.tone]} aria-hidden="true" />
+              {chip.label}
+            </li>
+          ))
+        }
+      </ul>
+    </Statement>
+  </Block>
 
-  <h2>{t('website.main.about.believeHeading')}</h2>
-  <ul>
-    <li><strong>{t('website.main.about.believe1Label')}</strong> {t('website.main.about.believe1Text')}</li>
-    <li><strong>{t('website.main.about.believe2Label')}</strong> {t('website.main.about.believe2Text')}</li>
-    <li><strong>{t('website.main.about.believe3Label')}</strong> {t('website.main.about.believe3Text')}</li>
-    <li><strong>{t('website.main.about.believe4Label')}</strong> {t('website.main.about.believe4Text')}</li>
-  </ul>
+  <Block kicker={t('website.main.about.believeKicker')} title={t('website.main.about.believeHeading')}>
+    <ul data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {beliefs.map((belief) => <IconCard icon={belief.icon} tone={belief.tone} title={belief.title} text={belief.text} />)}
+    </ul>
+  </Block>
 
-  <h2>{t('website.main.about.goingHeading')}</h2>
-  <p>
+  <Block kicker={t('website.main.about.teamKicker')} title={t('website.main.about.teamHeading')}>
+    <div data-reveal class="grid items-center gap-8 rounded-panel border border-line bg-surface p-7 shadow-soft sm:p-12 lg:grid-cols-[1.4fr_1fr]">
+      <p class="font-head text-xl leading-snug font-bold tracking-tight text-ink sm:text-2xl">{t('website.main.about.teamText')}</p>
+      <ul class="flex flex-wrap gap-3 lg:flex-col lg:items-start">
+        {
+          crew.map((member, index) => (
+            <li class:list={['inline-flex items-center gap-3 rounded-full border border-line bg-cream py-1.5 pr-5 pl-1.5 font-head text-sm font-bold text-ink', index % 2 === 1 ? 'lg:ml-10 lg:rotate-2' : 'lg:-rotate-2']}>
+              <span class={`inline-flex h-10 w-10 items-center justify-center rounded-full ${member.tint}`} aria-hidden="true">
+                <i class:list={['fa-solid', member.icon]} />
+              </span>
+              {member.label}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </Block>
+
+  <CtaBand kicker={t('website.main.about.goingKicker')} title={t('website.main.about.goingHeading')} icon="fa-rocket">
     {t('website.main.about.goingText')}
-    <a href="/#download">{t('website.main.about.goingLink')}</a>.
-  </p>
-
-  <h2>{t('website.main.about.teamHeading')}</h2>
-  <p>{t('website.main.about.teamText')}</p>
+    <Fragment slot="actions">
+      <PillLink href="/#download" label={t('website.main.about.goingLink')} icon="fa-download" />
+    </Fragment>
+  </CtaBand>
 </PageLayout>

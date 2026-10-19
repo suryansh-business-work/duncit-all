@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -68,7 +68,7 @@ function roomValue(over: Record<string, unknown>, actions: Record<string, unknow
 
 function mount(over: Record<string, unknown> = {}) {
   const actions = {
-    sendText: jest.fn(),
+    sendText: jest.fn().mockResolvedValue(true),
     sendImage: jest.fn().mockResolvedValue(undefined),
     react: jest.fn().mockResolvedValue(undefined),
     setError: jest.fn(),
@@ -118,12 +118,69 @@ describe('ChatRoomScreen', () => {
     expect(actions.setError).toHaveBeenCalledWith(null);
   });
 
-  it('sends typed text then clears the input', () => {
+  it('sends typed text then clears the input', async () => {
     const actions = mount();
     fireEvent.changeText(screen.getByTestId('chat-input'), 'hello');
     fireEvent.press(screen.getByTestId('chat-send'));
-    expect(actions.sendText).toHaveBeenCalledWith('hello');
-    expect(screen.getByTestId('chat-input').props.value).toBe('');
+    expect(actions.sendText).toHaveBeenCalledWith('hello', { replyToId: null, mentions: [] });
+    await waitFor(() => expect(screen.getByTestId('chat-input').props.value).toBe(''));
+  });
+
+  it('keeps the text when the send fails, so nothing typed is lost', async () => {
+    const actions = mount();
+    actions.sendText.mockResolvedValue(false);
+    fireEvent.changeText(screen.getByTestId('chat-input'), 'hello');
+    fireEvent.press(screen.getByTestId('chat-send'));
+    await waitFor(() => expect(actions.sendText).toHaveBeenCalled());
+    expect(screen.getByTestId('chat-input').props.value).toBe('hello');
+  });
+
+  it('replies from the long-press menu: quotes the line and sends its id', async () => {
+    const actions = mount({ messages: [message('m2', 'u2')] });
+    fireEvent(screen.getByTestId('chat-message-m2'), 'longPress');
+    fireEvent.press(await screen.findByTestId('chat-message-action-reply'));
+    expect(screen.getByText('Replying to Asha')).toBeOnTheScreen();
+    fireEvent.changeText(screen.getByTestId('chat-input'), 'yes');
+    // The send awaits the server before clearing the strip, so the press runs inside act.
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('chat-send'));
+    });
+    expect(actions.sendText).toHaveBeenCalledWith('yes', { replyToId: 'm2', mentions: [] });
+    await waitFor(() => expect(screen.queryByTestId('chat-reply-strip')).toBeNull());
+  });
+
+  it('offers no Reply once the pod has ended', () => {
+    mount({ messages: [message('m2', 'u2')], podEnded: true });
+    fireEvent(screen.getByTestId('chat-message-m2'), 'longPress');
+    expect(screen.queryByTestId('chat-message-action-reply')).toBeNull();
+  });
+
+  it('suggests pod members after @, inserts the pick and sends the mention', async () => {
+    participantsHook.mockReturnValue({
+      hosts: [{ user_id: 'h1', full_name: 'Alice Host', profile_photo: null }],
+      participants: [{ user_id: 'me1', full_name: 'Me Myself', profile_photo: null }],
+      count: 1,
+      isLoading: false,
+    });
+    const actions = mount();
+    const input = screen.getByTestId('chat-input');
+    fireEvent.changeText(input, 'hi @Al');
+    fireEvent(input, 'selectionChange', { nativeEvent: { selection: { start: 6, end: 6 } } });
+    // The writer is never offered to themselves.
+    expect(screen.queryByTestId('chat-mention-option-me1')).toBeNull();
+    fireEvent.press(screen.getByTestId('chat-mention-option-h1'));
+    expect(screen.getByTestId('chat-input').props.value).toBe('hi @Alice ');
+    fireEvent.press(screen.getByTestId('chat-send'));
+    expect(actions.sendText).toHaveBeenCalledWith('hi @Alice', {
+      replyToId: null,
+      mentions: ['h1'],
+    });
+  });
+
+  it('mutes the room from the header bell', () => {
+    mount();
+    fireEvent.press(screen.getByTestId('chat-mute-toggle'));
+    expect(screen.getByTestId('chat-mute-EIGHT_HOURS')).toBeOnTheScreen();
   });
 
   it('inserts an emoji into the composer', () => {

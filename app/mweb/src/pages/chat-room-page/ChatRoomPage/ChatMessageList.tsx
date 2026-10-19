@@ -24,6 +24,16 @@ interface ChatMessageListProps {
   /** Scroll-up history: whether an older page may exist, and how to load it. */
   canLoadOlder: boolean;
   loadOlder: () => Promise<void>;
+  /** A highlighted @mention was activated. */
+  onOpenProfile: (userId: string) => void;
+}
+
+/** Brings a loaded line into view and focuses it; an unloaded one is left alone. */
+function jumpToMessage(scroller: HTMLElement | null, id: string) {
+  const row = scroller?.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(id)}"]`);
+  if (!row) return;
+  row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  row.querySelector<HTMLElement>('[role="button"]')?.focus({ preventScroll: true });
 }
 
 /**
@@ -40,6 +50,7 @@ export default function ChatMessageList({
   onOpenActions,
   canLoadOlder,
   loadOlder,
+  onOpenProfile,
 }: Readonly<ChatMessageListProps>) {
   const { t } = useTranslation();
   const { formatDate, timeZone } = useDateFormat();
@@ -107,6 +118,8 @@ export default function ChatMessageList({
               onOpenReact={onOpenReact}
               onOpenActions={onOpenActions}
               onOpenImage={(id) => setPhotoIndex(photos.findIndex((p: ChatMessage) => p.id === id))}
+              onJumpTo={(id) => jumpToMessage(scrollRef.current, id)}
+              onOpenProfile={onOpenProfile}
             />
           </Fragment>
         ))}

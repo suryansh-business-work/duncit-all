@@ -46,6 +46,7 @@ import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import WorkOutlineIcon from '@mui/icons-material/WorkOutlineOutlined';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -113,6 +114,9 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   warehouses: <WarehouseIcon />,
   // A venue's food menu — the dishes guests order from the venue QR.
   menu: <RestaurantMenuIcon />,
+  // The account menu's section cards (native: explore / shopping-bag).
+  explore: <ExploreIcon />,
+  shopping: <ShoppingBagIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

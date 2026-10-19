@@ -127,7 +127,11 @@ export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
           No cities here yet.
         </Text>
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <XStack
             testID="city-options"
             role="radiogroup"

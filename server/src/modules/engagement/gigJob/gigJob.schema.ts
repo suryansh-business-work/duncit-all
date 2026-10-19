@@ -56,6 +56,17 @@ export const gigJobTypeDefs = /* GraphQL */ `
     roles: [String!]!
     event_type: GigEventType!
     event_date: String
+    """
+    The admin Location (city) the gig is in. Null on gigs posted before the city picker.
+    """
+    location_id: ID
+    """
+    One of that city's areas (a Location zone name), or empty for the whole city.
+    """
+    locality: String!
+    """
+    The city's name — copied from the Location, or the typed text on older gigs.
+    """
     city: String!
     location: String!
     """
@@ -70,7 +81,8 @@ export const gigJobTypeDefs = /* GraphQL */ `
     is_mine: Boolean!
     viewer_interested: Boolean!
     """
-    The poster's contact. Only for the poster and for a freelancer who said they are interested.
+    The poster's contact. Only for the poster and for a freelancer who said they are interested;
+    anyone else signed in reads it with gigJobContact.
     """
     contact: GigContact
     created_at: String!
@@ -97,6 +109,8 @@ export const gigJobTypeDefs = /* GraphQL */ `
     display_name: String!
     category_ids: [ID!]!
     skills: [String!]!
+    location_id: ID
+    locality: String!
     city: String!
     bio: String!
     portfolio_url: String!
@@ -196,6 +210,10 @@ export const gigJobTypeDefs = /* GraphQL */ `
 
   input GigJobFilter {
     category_id: ID
+    """
+    The admin Location (city). Wins over city, which older clients send as typed text.
+    """
+    location_id: ID
     city: String
     search: String
     event_type: GigEventType
@@ -209,7 +227,18 @@ export const gigJobTypeDefs = /* GraphQL */ `
     roles: [String!]!
     event_type: GigEventType
     event_date: String
-    city: String!
+    """
+    The admin Location (city). Required unless an older client sends city instead.
+    """
+    location_id: ID
+    """
+    One of that Location's zone names; empty for the whole city.
+    """
+    locality: String
+    """
+    Typed city — only read when location_id is absent; otherwise filled from the Location.
+    """
+    city: String
     location: String
     budget: Int
     openings: Int
@@ -222,7 +251,9 @@ export const gigJobTypeDefs = /* GraphQL */ `
     display_name: String!
     category_ids: [ID!]!
     skills: [String!]!
-    city: String!
+    location_id: ID
+    locality: String
+    city: String
     bio: String
     portfolio_url: String
     experience_years: Int
@@ -245,6 +276,10 @@ export const gigJobTypeDefs = /* GraphQL */ `
     gigJob(id: ID!): GigJob
     myGigJobs(offset: Int, limit: Int): GigJobPage!
     gigJobInterests(job_id: ID!): [GigInterest!]!
+    """
+    The poster's contact for any signed-in member ("View contact"). Each reveal is logged.
+    """
+    gigJobContact(job_id: ID!): GigContact!
     gigViewer: GigViewer!
     myFreelancerProfile: FreelancerProfile
     gigCategoriesTable(query: TableQueryInput): GigCategoryTablePage!

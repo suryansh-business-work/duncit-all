@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Chip, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
@@ -22,6 +22,8 @@ interface Props {
   onReopen: () => void;
   onDownload: (format: TranscriptFormat) => void;
   onEmail: () => void;
+  /** The mute bell, once there is a session to mute. */
+  muteSlot?: ReactNode;
 }
 
 export default function ChatHeader({
@@ -33,6 +35,7 @@ export default function ChatHeader({
   onReopen,
   onDownload,
   onEmail,
+  muteSlot,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
@@ -69,6 +72,7 @@ export default function ChatHeader({
           label={status === 'OPEN' ? 'Open' : 'Resolved'}
         />
       )}
+      {muteSlot}
       <DuncitRoundButton
         data-testid="chat-header-menu-button"
         aria-label={t('mweb.supportChat.chatOptions')}

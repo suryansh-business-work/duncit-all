@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { Sidebar } from '@/components/Sidebar';
+import { useQuickAccessStore } from '@/stores/quick-access.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { STUDIO_ROUTE } from '@/utils/studio-mode';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -27,6 +28,10 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 jest.mock('@/hooks/useLogout', () => ({ useLogout: () => jest.fn() }));
+jest.mock('@/services/secure-storage', () => ({
+  getItem: jest.fn(async () => null),
+  setItem: jest.fn(async () => undefined),
+}));
 jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: [], loading: false }),
 }));
@@ -36,6 +41,9 @@ jest.mock('@/hooks/useMe', () => ({
 }));
 jest.mock('@/hooks/useFeatureFlag', () => ({
   useFeatureFlag: (key: string) => mockFlags[key] ?? false,
+  // The menu reads the whole list (useMenuFlags): the same flags, as rows.
+  usePublicFeatureFlags: () =>
+    Object.entries(mockFlags).map(([key, enabled]) => ({ key, enabled })),
 }));
 jest.mock('@/hooks/usePolicies', () => ({ usePublicPolicies: () => mockPolicies() }));
 
@@ -43,6 +51,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   Object.keys(mockFlags).forEach((k) => delete mockFlags[k]);
   useStudioModeStore.setState({ mode: 'USER' });
+  useQuickAccessStore.setState({ raw: null });
   mockMe.mockReturnValue({
     data: { me: { full_name: 'Asha', email: 'a@d.com', roles: ['HOST', 'VENUE_OWNER'] } },
   });
@@ -52,11 +61,32 @@ beforeEach(() => {
 });
 
 describe('Sidebar branch coverage', () => {
-  it('shows the Pod Plans manage row when the flag is on', () => {
+  it('lists Pod Plans in the Account section only while its flag is on', () => {
+    const { unmount } = renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    fireEvent.press(screen.getByTestId('sidebar-section-account-toggle'));
+    expect(screen.queryByTestId('sidebar-item-plans')).toBeNull();
+    expect(screen.getByTestId('sidebar-section-account-subtitle')).not.toHaveTextContent(
+      /Pod Plans/,
+    );
+    unmount();
+
     mockFlags.pod_plans_section = true;
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
-    fireEvent.press(screen.getByTestId('sidebar-item-Pod Plans'));
+    expect(screen.getByTestId('sidebar-section-account-subtitle')).toHaveTextContent(/Pod Plans/);
+    fireEvent.press(screen.getByTestId('sidebar-section-account-toggle'));
+    fireEvent.press(screen.getByTestId('sidebar-item-plans'));
     expect(mockNavigate).toHaveBeenCalledWith('PodPlans');
+  });
+
+  it('puts the Pod Shop rows in Shopping & Orders and the cart tab under Home, behind the products flag', () => {
+    mockFlags.is_product_visible = true;
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    fireEvent.press(screen.getByTestId('sidebar-section-shopping-toggle'));
+    fireEvent.press(screen.getByTestId('sidebar-item-orders'));
+    expect(mockNavigate).toHaveBeenCalledWith('OrdersHistory');
+    fireEvent.press(screen.getByTestId('sidebar-item-cart'));
+    // The cart is a tab, so it is reached through Home rather than navigated to bare.
+    expect(mockNavigate).toHaveBeenCalledWith('Home', { screen: 'Cart' });
   });
 
   it('hides the incomplete banner once the profile is 100% complete', () => {
@@ -70,6 +100,7 @@ describe('Sidebar branch coverage', () => {
 
   it('jumps to the venue Studio screen after switching modes, keeping the card layout', () => {
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    fireEvent.press(screen.getByTestId('sidebar-section-account-toggle'));
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     fireEvent.press(screen.getByTestId('studio-switch-VENUE'));
     fireEvent.press(screen.getByTestId('studio-switch-confirm'));
@@ -84,6 +115,13 @@ describe('Sidebar branch coverage', () => {
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByTestId('sidebar-panel')).toBeOnTheScreen();
     expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
+    // Support lists Help and FAQs but no Policies, and Account no Switch role.
+    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent('Help, FAQs');
+    expect(screen.getByTestId('sidebar-section-account-subtitle')).not.toHaveTextContent(
+      /Switch role/,
+    );
+    fireEvent.press(screen.getByTestId('sidebar-section-support-toggle'));
+    fireEvent.press(screen.getByTestId('sidebar-section-account-toggle'));
     expect(screen.queryByTestId('sidebar-policies')).toBeNull();
     expect(screen.queryByTestId('sidebar-switch-role')).toBeNull();
   });

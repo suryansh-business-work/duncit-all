@@ -51,8 +51,8 @@ export async function firstSeriesSlot(slotId: string, venueId?: string | null): 
 
 /** The space filter every overlap check uses: '' also matches legacy slots with no field. */
 export const spaceFilter = (label: string | null | undefined) => {
-  const space = label ?? '';
-  return space === '' ? { $in: ['', null] } : space;
+  if (!label) return { $in: ['', null] };
+  return label;
 };
 
 interface NearSlot {

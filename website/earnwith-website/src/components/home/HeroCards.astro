@@ -1,0 +1,43 @@
+---
+/**
+ * The cards floating beside the hero headline: what the app does for someone
+ * earning on it. Stacked in the flow on a phone; scattered and bobbing on wide
+ * screens. Each card says one true thing — no figures, no faces.
+ */
+interface Card {
+  icon: string;
+  title: string;
+  text: string;
+}
+
+interface Props {
+  cards: Card[];
+}
+
+const { cards } = Astro.props;
+
+// Where each card sits on the wide layout, and how its badge is coloured.
+const PLACES = ['lg:top-6 lg:left-0', 'lg:top-44 lg:right-0', 'lg:top-[22rem] lg:left-10'];
+const BADGES = ['bg-primary-fill text-on-primary', 'bg-accent text-on-accent', 'bg-surface text-primary-strong'];
+const DELAYS = ['[animation-delay:-2s]', '[animation-delay:-4s]', ''];
+---
+
+<ul class="relative grid gap-3 sm:max-w-md lg:block lg:h-[30rem] lg:max-w-none" data-reveal-group>
+  {
+    cards.map((card, index) => (
+      <li class={`lg:absolute ${PLACES[index % PLACES.length]}`} data-reveal="scale">
+        <div class={`bob ${DELAYS[index % DELAYS.length]}`}>
+          <div class="flex items-center gap-4 rounded-3xl border border-line bg-surface/85 p-4 pr-6 shadow-lift backdrop-blur-xl">
+            <span class={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${BADGES[index % BADGES.length]}`}>
+              <i class={`fa-solid ${card.icon}`} aria-hidden="true" />
+            </span>
+            <span>
+              <span class="block font-head text-base font-extrabold text-ink">{card.title}</span>
+              <span class="block text-sm font-semibold text-ink-soft">{card.text}</span>
+            </span>
+          </div>
+        </div>
+      </li>
+    ))
+  }
+</ul>

@@ -55,7 +55,8 @@ function showLanded(form: HTMLFormElement, grievanceNo: string): void {
 
 async function submit(form: HTMLFormElement, errBox: HTMLElement | null): Promise<void> {
   const failedMessage = form.dataset.failed ?? '';
-  const btn = form.querySelector('button');
+  // The submit button, not the first one: a captcha's refresh button can come first.
+  const btn = form.querySelector<HTMLButtonElement>('button[type="submit"], button:not([type])');
   const orig = btn?.innerHTML;
   const restore = () => {
     if (!btn) return;

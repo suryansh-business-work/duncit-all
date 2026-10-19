@@ -100,6 +100,15 @@ describe('buildPodSeriesPlan', () => {
     expect(plan?.skip_dates).toEqual([]);
   });
 
+  it('sends no custom dates while a physical CUSTOM pod has no first start yet, keeping its skips', () => {
+    const plan = buildPodSeriesPlan(
+      { ...physical, repeat_frequency: 'CUSTOM', pod_date_time: null, repeat_custom_days: ['2026-11-09'] },
+      'UTC'
+    );
+    expect(plan?.custom_dates).toEqual([]);
+    expect(plan?.skip_dates).toEqual(['2026-11-12T13:30:00.000Z']);
+  });
+
   it('sends no custom dates for a stepping frequency', () => {
     const plan = buildPodSeriesPlan({ ...physical, repeat_custom_days: ['2026-11-09'] }, 'UTC');
     expect(plan?.custom_dates).toEqual([]);
@@ -131,6 +140,10 @@ describe('customDateStart', () => {
 
   it('refuses a day that is not a calendar day', () => {
     expect(customDateStart('2026-11-05T13:30:00.000Z', '12/12/2026', 'UTC')).toBeNull();
+  });
+
+  it('refuses a first date that is not an instant', () => {
+    expect(customDateStart('soon', '2026-12-12', 'UTC')).toBeNull();
   });
 });
 

@@ -4,34 +4,68 @@ import SmartLink from './SmartLink.astro';
 
 const siteConfig = await siteContent();
 const { platform } = siteConfig;
+
+// The decorative tiles orbiting the closing band — what people do at pods.
+const ORBITS = [
+  { icon: 'fa-futbol', place: 'top-6 left-[53%]', look: 'bg-primary-fill text-on-primary -rotate-12', delay: '' },
+  { icon: 'fa-mug-hot', place: 'top-6 right-6', look: 'bg-accent text-on-accent rotate-6', delay: '[animation-delay:-3s]' },
+  { icon: 'fa-dice', place: 'bottom-6 left-[51%]', look: 'bg-surface text-primary-strong -rotate-6', delay: '[animation-delay:-1.5s]' },
+];
+const STICKERS = ['-top-4 -left-3 -rotate-6 bg-accent text-on-accent', '-right-3 bottom-8 rotate-3 bg-surface text-ink'];
 ---
 
 <!-- The closing band: what Duncit is, next to the people it is for. -->
-<section class="mx-auto max-w-6xl px-5 py-14">
-  <div class="grid items-center gap-8 rounded-3xl border border-line bg-surface p-5 shadow-sm sm:p-8 lg:grid-cols-2">
-    <img
-      src={platform.image}
-      alt={platform.imageAlt}
-      width="900"
-      height="600"
-      class="aspect-3/2 w-full rounded-2xl object-cover"
-      loading="lazy"
-    />
-    <div class="relative">
-      <h2 class="text-3xl text-ink sm:text-4xl">
-        {platform.headingLead} <span class="text-primary">{platform.headingAccent}</span><br />{
-          platform.headingTail
+<section class="px-2 py-16 sm:px-4 sm:py-24">
+  <div class="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-primary-light p-6 sm:rounded-panel sm:p-12 lg:p-16">
+    <div class="blob -bottom-40 -left-24 h-96 w-96 bg-accent opacity-25" aria-hidden="true"></div>
+    {
+      ORBITS.map((orbit) => (
+        <span class={`absolute hidden lg:block ${orbit.place}`} aria-hidden="true">
+          <span class={`bob grid h-16 w-16 place-items-center rounded-[1.25rem] shadow-soft ${orbit.delay}`}>
+            <span class={`grid h-full w-full place-items-center rounded-[1.25rem] text-2xl ${orbit.look}`}>
+              <i class={`fa-solid ${orbit.icon}`} />
+            </span>
+          </span>
+        </span>
+      ))
+    }
+
+    <div class="relative grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+      <div data-reveal>
+        <h2 class="text-5xl leading-[0.95] text-ink sm:text-6xl lg:text-7xl">
+          {platform.headingLead} <span class="text-primary-strong">{platform.headingAccent}</span>
+          <span class="block">{platform.headingTail}</span>
+        </h2>
+        <p class="mt-6 max-w-md text-lg leading-relaxed text-ink-soft">{platform.text}</p>
+        <SmartLink
+          href={platform.button.href}
+          label={platform.button.label}
+          glyph={false}
+          class="btn mt-9 w-full bg-primary-fill text-on-primary shadow-lift sm:w-auto"
+        >
+          {platform.button.label}
+          <i class="fa-solid fa-arrow-right text-sm" aria-hidden="true"></i>
+        </SmartLink>
+      </div>
+
+      <figure class="relative mx-2 sm:mx-6" data-reveal="right">
+        <img
+          src={platform.image}
+          alt={platform.imageAlt}
+          width="900"
+          height="600"
+          class="aspect-4/5 w-full rotate-2 rounded-card object-cover shadow-lift sm:aspect-3/2 lg:aspect-4/5"
+          loading="lazy"
+        />
+        {
+          platform.stickers.map((sticker, index) => (
+            <span class={`absolute inline-flex items-center gap-2 rounded-full px-4 py-2.5 font-head text-sm font-extrabold shadow-soft ${STICKERS[index % STICKERS.length]}`}>
+              <i class="fa-solid fa-star text-xs" aria-hidden="true" />
+              {sticker}
+            </span>
+          ))
         }
-      </h2>
-      <p class="mt-4 max-w-md text-ink-soft">{platform.text}</p>
-      <SmartLink
-        href={platform.button.href}
-        label={platform.button.label}
-        glyph={false}
-        class="mt-7 inline-flex items-center gap-1 rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/30 transition hover:bg-primary-dark"
-      >
-        {platform.button.label}
-      </SmartLink>
+      </figure>
     </div>
   </div>
 </section>

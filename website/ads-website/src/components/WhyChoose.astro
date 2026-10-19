@@ -1,25 +1,36 @@
 ---
 import { siteContent } from '../config/site-config';
+import SectionHead from './SectionHead.astro';
 
-const siteConfig = await siteContent();
-const { why } = siteConfig;
+const { why } = await siteContent();
 ---
 
-<section id="why" class="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
-  <div class="mx-auto max-w-2xl text-center">
-    <h2 class="text-3xl text-ink sm:text-4xl">{why.heading}</h2>
-    <p class="mt-4 text-ink-soft">{why.text}</p>
+<section id="why" class="scroll-mt-28 px-3 py-6 sm:px-5">
+  <div class="relative isolate mx-auto max-w-7xl overflow-hidden rounded-panel-lg bg-frame px-5 py-16 sm:px-10 lg:px-16 lg:py-28">
+    <div class="blob -right-40 -top-40 -z-10 h-[34rem] w-[34rem] bg-primary opacity-25" aria-hidden="true"></div>
+    <div class="blob -bottom-48 -left-32 -z-10 h-96 w-96 bg-accent opacity-15 [animation-delay:-9s]" aria-hidden="true"></div>
+
+    <SectionHead eyebrow={why.eyebrow} heading={why.heading} text={why.text} onFrame />
+
+    <ul class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-reveal-group>
+      {
+        why.items.map((item, index) => (
+          <li
+            class="lift flex items-start gap-4 rounded-panel border border-on-frame/10 bg-on-frame/5 p-6"
+            data-reveal
+          >
+            <span
+              class:list={[
+                'grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-on-accent',
+                index % 2 === 0 ? 'bg-primary' : 'bg-accent',
+              ]}
+            >
+              <i class={`fa-solid ${item.icon}`} aria-hidden="true" />
+            </span>
+            <span class="pt-1 font-head text-lg font-bold leading-snug text-on-frame">{item.label}</span>
+          </li>
+        ))
+      }
+    </ul>
   </div>
-  <ul class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {
-      why.items.map((item) => (
-        <li class="flex items-start gap-3 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-          <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary-dark">
-            <i class={`fa-solid ${item.icon}`} aria-hidden="true" />
-          </span>
-          <span class="text-sm font-semibold text-ink">{item.label}</span>
-        </li>
-      ))
-    }
-  </ul>
 </section>

@@ -33,7 +33,7 @@ export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) 
           mt: 1,
         }}
       >
-        App version {__APP_VERSION__}
+        {t('mweb.sidebar.appVersion', { vars: { version: __APP_VERSION__ } })}
       </Typography>
     </Box>
   );

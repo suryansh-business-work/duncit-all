@@ -2,7 +2,13 @@ import type { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { StoreProductModel } from './storeProduct.model';
-import { getStoreSettings, StoreSettingsModel, type IStoreOccasion } from './storeSettings.model';
+import {
+  getStoreSettings,
+  STORE_OCCASION_THEMES,
+  StoreSettingsModel,
+  type IStoreOccasion,
+  type StoreOccasionTheme,
+} from './storeSettings.model';
 import { StorePageModel } from './storePage.model';
 import { StoreBrandModel, StoreCategoryModel, StoreFacetModel, StorePetTypeModel } from './storeTaxonomy.model';
 import {
@@ -112,6 +118,9 @@ export const pageOut = (p: Doc) => ({
 export const occasionOut = (o: IStoreOccasion) => ({
   slug: o.slug,
   label: o.label,
+  theme: o.theme ?? 'NONE',
+  effects_enabled: o.effects_enabled !== false,
+  greeting: o.greeting ?? '',
   starts_at: o.starts_at.toISOString(),
   ends_at: o.ends_at.toISOString(),
   logo_url: o.logo_url ?? '',
@@ -191,6 +200,7 @@ export const sectionOut = (s: Doc) => ({
   subtitle: s.subtitle ?? '',
   items: (s.items ?? []).map((i: Doc) => ({
     id: String(i._id ?? ''),
+    eyebrow: i.eyebrow ?? '',
     title: i.title ?? '',
     subtitle: i.subtitle ?? '',
     image_url: i.image_url ?? '',
@@ -258,9 +268,14 @@ function occasionsOf(input: Doc[]): IStoreOccasion[] {
     let slug = slugify(o.slug || label) || `occasion-${index + 1}`;
     while (seen.has(slug)) slug = `${slug}-2`;
     seen.add(slug);
+    const theme = String(o.theme ?? 'NONE') as StoreOccasionTheme;
+    if (!STORE_OCCASION_THEMES.includes(theme)) badInput(`Choose a theme for "${label}"`);
     return {
       slug,
       label,
+      theme,
+      effects_enabled: o.effects_enabled !== false,
+      greeting: String(o.greeting ?? '').trim().slice(0, 80),
       starts_at: starts,
       ends_at: ends,
       logo_url: String(o.logo_url ?? '').trim(),
@@ -353,11 +368,18 @@ function settingsPatch(input: Doc) {
       .filter((l) => l.label && /^https?:\/\//.test(l.url))
       .slice(0, 12);
   }
+  if (input.payment_badges) {
+    patch.payment_badges = (input.payment_badges as Doc[])
+      .map((b) => ({ label: String(b.label ?? '').trim().slice(0, 40), image_url: String(b.image_url ?? '').trim() }))
+      .filter((b) => b.label && b.image_url.startsWith('https://'))
+      .slice(0, 12);
+  }
   return patch;
 }
 
 function sectionItems(items: Doc[] | null | undefined) {
   return (items ?? []).slice(0, 24).map((i) => ({
+    eyebrow: String(i.eyebrow ?? '').trim().slice(0, 40),
     title: String(i.title ?? '').trim(),
     subtitle: String(i.subtitle ?? '').trim(),
     image_url: String(i.image_url ?? '').trim(),

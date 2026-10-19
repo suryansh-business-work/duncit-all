@@ -106,8 +106,11 @@ export const FSSAI_NUMBER = /^\d{14}$/;
  * 11-character video id. Every repeat is bounded by a class that cannot match
  * the token after it, so the pattern stays linear (no ReDoS).
  */
-export const YOUTUBE_URL =
-  /^https?:\/\/(?:[a-z]+\.)?(?:youtube\.com\/watch\?(?:[\w%.=-]*&)?v=|youtube\.com\/shorts\/|youtube\.com\/embed\/|youtube\.com\/live\/|youtu\.be\/)([\w-]{11})(?:[?&#]\S*)?$/i;
+const YOUTUBE_VIDEO_PATH = String.raw`(?:youtube\.com\/(?:watch\?(?:[\w%.=-]*&)?v=|(?:shorts|embed|live)\/)|youtu\.be\/)`;
+export const YOUTUBE_URL = new RegExp(
+  String.raw`^https?:\/\/(?:[a-z]+\.)?${YOUTUBE_VIDEO_PATH}([\w-]{11})(?:[?&#]\S*)?$`,
+  'i',
+);
 
 /**
  * A Duncit referral code — the `DUN-` prefix and six uppercase hex characters,

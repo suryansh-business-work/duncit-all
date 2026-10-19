@@ -1,137 +1,71 @@
 import { YStack } from 'tamagui';
-import { studioEntryFor } from '@duncit/utils';
+import { studioEntryFor, type ProfileMenuFlags, type ProfileMenuKey } from '@duncit/utils';
 
 import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-completion';
 import type { MenuRoute } from '@/navigation/types';
 import type { StudioMode } from '@/utils/studio-mode';
 import { AdSlot } from '@/components/ads/AdSlot';
-import { useTranslation } from '@/hooks/useTranslation';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { SidebarProfileIdentity, type SidebarIdentityUser } from './SidebarProfileIdentity';
-import { SidebarIncompleteBanner } from './SidebarIncompleteBanner';
-import { SidebarQuickGrid } from './SidebarQuickGrid';
+import { SidebarProfileCompletion } from './SidebarProfileCompletion';
+import { SidebarQuickAccess } from './SidebarQuickAccess';
 import { SidebarDuncitCoinCard } from './SidebarDuncitCoinCard';
-import { SidebarReferralCard } from './SidebarReferralCard';
-import { SidebarManageList } from './SidebarManageList';
-import { buildSidebarTiles } from './sidebarTiles';
-import { buildManageItems, SHOP_ITEMS } from './profileSections';
 import { SidebarStudioOptionsCard } from './SidebarStudioOptionsCard';
 
-/** The profile layout every mode shares — RN twin of mWeb's <UserModeContent/>:
- * identity, incomplete nudge, quick-action grid, referral card and the Manage
- * Account list. A partner — in any mode — also gets ONE highlighted "Studio"
- * entry, which opens the Studio screen: every option of the role in effect,
- * with the role switcher at its top. Identity and completion both come from
- * the user info record (useMe). */
+/** The top of the account menu — RN twin of mWeb's <UserModeContent/>: the
+ * profile card (with the completion nudge inside it while the profile is
+ * incomplete), Quick Access, ONE "Studio" card for a partner in any mode, the
+ * Duncit Coin card in User mode and the sponsored slot. The section cards
+ * follow, from <SidebarSections/>. Identity and completion both come from the
+ * user info record (useMe). */
 export function SidebarUserContent({
   me,
   account,
   accountLoading = false,
   roles,
   mode,
-  showPodPlans,
-  showLeaderboard = false,
-  showMembership = false,
-  showGiftCards = false,
-  showTourGuide = false,
-  showProducts = false,
+  flags,
+  badgeCounts,
   onNavigate,
 }: Readonly<{
   me?: SidebarIdentityUser | null;
   account?: ProfileForCompletion | null;
   /**
-   * The completion record is its own query, so it is still in flight after the
-   * identity has landed. An unanswered account completes to a low percentage,
-   * which would flash the nudge at a profile that is actually finished — mWeb
-   * reads completion off the same record as the identity and never sees this.
+   * The completion record is still in flight. An unanswered account completes
+   * to a low percentage, which would flash the nudge at a profile that is
+   * actually finished.
    */
   accountLoading?: boolean;
   roles: readonly string[];
   /** Studio mode in effect — the role the one Studio entry opens on. */
   mode: StudioMode;
-  showPodPlans: boolean;
-  /** Server `leaderboard` feature flag — the whole section hides without it. */
-  showLeaderboard?: boolean;
-  /** Server `membership` feature flag — the whole section hides without it. */
-  showMembership?: boolean;
-  /** Server `gift_cards` feature flag — the whole section hides without it. */
-  showGiftCards?: boolean;
-  /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
-  showTourGuide?: boolean;
-  /** Server `is_product_visible` flag — the whole Shop group hides without it. */
-  showProducts?: boolean;
+  /** The server flags the menu is gated on (`useMenuFlags`). */
+  flags: ProfileMenuFlags;
+  /** Per-tile counts for Quick Access (the Chats unread count). */
+  badgeCounts?: Readonly<Partial<Record<ProfileMenuKey, number>>>;
   onNavigate: (route: MenuRoute) => void;
 }>) {
-  const { t } = useTranslation();
   const percent = profileCompletion(account ?? {});
   const showIncomplete = !accountLoading && percent < 100;
   // The ONE "Studio" entry every partner gets, whichever role is active — it
   // opens the Studio on the role in effect (or the first role held, from User
   // mode). Null for an account with no partner role.
-  const studioEntry = studioEntryFor(mode, roles, { products: showProducts });
-  // The flag-gated sections and the grid's translated tiles (rule 38).
-  const tiles = buildSidebarTiles(t);
+  const studioEntry = studioEntryFor(mode, roles, { products: flags.products === true });
   return (
     <YStack testID="sidebar-user-content">
       <TourAnchor tour="profile" anchor="profile-details">
-        <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')} />
+        <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')}>
+          {showIncomplete ? (
+            <SidebarProfileCompletion percent={percent} onComplete={() => onNavigate('Account')} />
+          ) : null}
+        </SidebarProfileIdentity>
       </TourAnchor>
-      {showIncomplete ? (
-        <SidebarIncompleteBanner percent={percent} onComplete={() => onNavigate('Account')} />
-      ) : null}
-      <SidebarQuickGrid tiles={tiles.grid} onNavigate={onNavigate} />
+      <SidebarQuickAccess flags={flags} badgeCounts={badgeCounts} onNavigate={onNavigate} />
       {studioEntry ? (
         <SidebarStudioOptionsCard entry={studioEntry} onNavigate={onNavigate} />
       ) : null}
-      <AdSlot position="SIDEBAR" variant="card" />
       {mode === 'USER' ? <SidebarDuncitCoinCard onNavigate={onNavigate} /> : null}
-      <SidebarReferralCard onNavigate={onNavigate} />
-      <SidebarManageList
-        title={t('gigJobs.nav.section')}
-        items={tiles.gigs}
-        onNavigate={onNavigate}
-      />
-      {showLeaderboard ? (
-        <SidebarManageList
-          title={t('mweb.leaderboard.title')}
-          items={tiles.leaderboard}
-          onNavigate={onNavigate}
-        />
-      ) : null}
-      {showMembership ? (
-        <SidebarManageList
-          title={t('mweb.membership.title')}
-          items={tiles.membership}
-          onNavigate={onNavigate}
-        />
-      ) : null}
-      {showGiftCards ? (
-        <SidebarManageList
-          title={t('mweb.giftCards.title')}
-          items={tiles.giftCards}
-          onNavigate={onNavigate}
-        />
-      ) : null}
-      <SidebarManageList
-        title={t('mweb.venueFood.myOrders.sidebarTitle')}
-        items={tiles.food}
-        onNavigate={onNavigate}
-      />
-      <SidebarManageList
-        title={t('mweb.common.manageAccount')}
-        items={buildManageItems(
-          showPodPlans,
-          showTourGuide,
-          t('mweb.badges.sidebarLabel'),
-          t('mweb.contacts.sidebarLabel'),
-        )}
-        onNavigate={onNavigate}
-      />
-      <SidebarManageList
-        title={t('mweb.common.shop')}
-        items={showProducts ? [...SHOP_ITEMS, ...tiles.rentals] : tiles.rentals}
-        onNavigate={onNavigate}
-      />
+      <AdSlot position="SIDEBAR" variant="card" />
     </YStack>
   );
 }

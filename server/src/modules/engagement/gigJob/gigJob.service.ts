@@ -19,6 +19,7 @@ import {
 import { gigInterestInputSchema, gigJobInputSchema, type GigJobInput } from './gigJob.validator';
 import { categoryTitles, gigCategoryService } from './gigCategory.service';
 import { accountContact } from './gigContact';
+import { gigCityCondition, resolveGigPlace } from './gigPlace';
 
 const fail = (code: string, message: string) => new GraphQLError(message, { extensions: { code } });
 
@@ -27,6 +28,8 @@ const PAGE_MAX = 50;
 
 export interface GigJobFilter {
   category_id?: string | null;
+  /** The admin Location — wins over `city`, which older clients still send. */
+  location_id?: string | null;
   city?: string | null;
   search?: string | null;
   event_type?: GigEventType | null;
@@ -41,9 +44,10 @@ interface RowContext {
 const iso = (value: Date | null | undefined) => value?.toISOString?.() ?? null;
 
 /**
- * Whose eyes the poster's contact is for: the poster, and a freelancer who has
- * said they are interested. Free for now — this is the one gate a future paid
- * unlock replaces, so no other read hands the contact out.
+ * Who gets the poster's contact inline on the gig: the poster, and a freelancer
+ * who has said they are interested. Everyone else signed in asks for it with
+ * `revealContact`, so list and detail payloads never carry it for them. Free
+ * for now — these two reads are what a future paid unlock replaces.
  */
 const contactVisibleTo = (job: IGigJob, ctx: RowContext) =>
   String(job.poster_user_id) === ctx.viewerId || ctx.interested.has(String(job._id));
@@ -59,6 +63,8 @@ function toGigJob(job: IGigJob, ctx: RowContext) {
     roles: job.roles ?? [],
     event_type: job.event_type,
     event_date: iso(job.event_date),
+    location_id: job.location_id ? String(job.location_id) : null,
+    locality: job.locality ?? '',
     city: job.city ?? '',
     location: job.location ?? '',
     budget: job.budget ?? null,
@@ -107,19 +113,30 @@ async function rowsFor(viewerId: string, jobs: IGigJob[]) {
   return jobs.map((job) => toGigJob(job, ctx));
 }
 
-function boardQuery(filter: GigJobFilter = {}) {
+/** The city part of the board's filter: the Location when one is picked, else a typed name (older clients). */
+async function cityFilter(filter: GigJobFilter): Promise<Record<string, unknown> | null> {
+  const locationId = filter.location_id?.trim();
+  if (locationId) return gigCityCondition(locationId);
+  const city = filter.city?.trim();
+  return city ? { city: new RegExp(`^${escapedSearchRegex(city).source}$`, 'i') } : null;
+}
+
+async function boardQuery(filter: GigJobFilter = {}) {
   const query: Record<string, unknown> = { status: 'OPEN' };
   if (filter.category_id && Types.ObjectId.isValid(filter.category_id)) {
     query.category_id = new Types.ObjectId(filter.category_id);
   }
   if (filter.event_type) query.event_type = filter.event_type;
-  const city = filter.city?.trim();
-  if (city) query.city = new RegExp(`^${escapedSearchRegex(city).source}$`, 'i');
+  // Both the city and the search may be an $or, so each is its own clause.
+  const clauses: Record<string, unknown>[] = [];
+  const city = await cityFilter(filter);
+  if (city) clauses.push(city);
   const search = filter.search?.trim();
   if (search) {
     const re = escapedSearchRegex(search);
-    query.$or = [{ title: re }, { description: re }, { roles: re }];
+    clauses.push({ $or: [{ title: re }, { description: re }, { roles: re }] });
   }
+  if (clauses.length) query.$and = clauses;
   return query;
 }
 
@@ -136,17 +153,24 @@ async function ownJob(userId: string, id: string) {
   return job;
 }
 
+/** What an edit may keep although an admin has since switched it off. */
+interface Kept {
+  categoryId?: string;
+  locationId?: string | null;
+}
+
 /** The validated input, with the poster's right to post as that role checked server-side. */
-async function postable(userId: string, raw: unknown, keepCategoryId?: string) {
+async function postable(userId: string, raw: unknown, kept: Kept = {}) {
   const input: GigJobInput = await validate(gigJobInputSchema, raw);
   const roles = await posterRolesOf(userId);
   if (!roles.includes(input.poster_role)) {
     throw fail('FORBIDDEN', 'Only hosts, venue owners and brand owners can post gigs');
   }
-  // Editing a gig may keep a category an admin has since switched off.
-  if (input.category_id !== keepCategoryId) await gigCategoryService.requireActive(input.category_id);
+  if (input.category_id !== kept.categoryId) await gigCategoryService.requireActive(input.category_id);
+  const place = await resolveGigPlace(input, kept.locationId);
   return {
     ...input,
+    ...place,
     category_id: new Types.ObjectId(input.category_id),
     event_date: input.event_date ? new Date(input.event_date) : null,
     budget: input.budget ?? null,
@@ -215,7 +239,7 @@ async function readBack(viewerId: string, id: string) {
 export const gigJobService = {
   async board(viewerId: string, filter?: GigJobFilter, offset?: number | null, limit?: number | null) {
     const { skip, take } = pageOf(offset, limit);
-    const query = boardQuery(filter);
+    const query = await boardQuery(filter);
     const [jobs, total] = await Promise.all([
       GigJobModel.find(query).sort({ created_at: -1 }).skip(skip).limit(take),
       GigJobModel.countDocuments(query),
@@ -250,7 +274,10 @@ export const gigJobService = {
 
   async update(userId: string, id: string, raw: unknown) {
     const job = await ownJob(userId, id);
-    const values = await postable(userId, raw, String(job.category_id));
+    const values = await postable(userId, raw, {
+      categoryId: String(job.category_id),
+      locationId: job.location_id ? String(job.location_id) : null,
+    });
     job.set(values);
     await job.save();
     return readBack(userId, id);
@@ -268,6 +295,30 @@ export const gigJobService = {
     const job = await ownJob(userId, jobId);
     const rows = await GigInterestModel.find({ job_id: job._id }).sort({ created_at: -1 }).limit(500);
     return rows.map(toGigInterest);
+  },
+
+  /**
+   * "View contact": the poster's contact, for any signed-in member, read one
+   * gig at a time so list payloads never carry it. A closed gig answers only
+   * those who already had it (the poster and freelancers who showed interest).
+   * Every reveal is logged — who, which gig — the trail a paid unlock or an
+   * abuse review would start from.
+   */
+  async revealContact(viewerId: string, jobId: string) {
+    if (!Types.ObjectId.isValid(jobId)) throw fail('NOT_FOUND', 'Gig not found');
+    const job = await GigJobModel.findById(jobId)
+      .select('poster_user_id status contact_name contact_phone contact_email')
+      .lean();
+    if (!job) throw fail('NOT_FOUND', 'Gig not found');
+    const own = String(job.poster_user_id) === viewerId;
+    if (!own && job.status !== 'OPEN') {
+      const interested =
+        Types.ObjectId.isValid(viewerId) &&
+        (await GigInterestModel.exists({ job_id: job._id, freelancer_user_id: new Types.ObjectId(viewerId) }));
+      if (!interested) throw fail('FORBIDDEN', 'This gig is closed');
+    }
+    logs.server.info('gigJob', 'revealContact', { jobId, viewerId, own });
+    return { name: job.contact_name ?? '', phone: job.contact_phone ?? '', email: job.contact_email ?? '' };
   },
 
   /**

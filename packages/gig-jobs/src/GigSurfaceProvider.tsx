@@ -2,8 +2,8 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { LevelFns } from '@duncit/logs';
 
 /**
- * What differs between the surfaces that mount Gig Jobs — only where links
- * go. mWeb routes everything in-app; the Partners console routes the board
+ * What differs between the surfaces that mount Gig Jobs — where links go,
+ * and which city the board starts on. mWeb routes everything in-app; the Partners console routes the board
  * in-portal but opens the freelancer profile on mWeb, where Earn with Duncit's
  * freelancer step lives.
  */
@@ -14,6 +14,12 @@ export interface GigSurfaceConfig {
   openFreelancerProfile: () => void;
   /** The surface's logger — a failed background refresh is filed against the screen that started it. */
   logger: LevelFns;
+  /**
+   * The viewer's selected city (mWeb's header), which the board filters on
+   * until they pick another — as the pods lists do. Left out, the board starts
+   * on every city.
+   */
+  selectedLocationId?: string;
 }
 
 const GigSurfaceContext = createContext<GigSurfaceConfig | null>(null);

@@ -1,6 +1,9 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
+import { QUICK_ACCESS_STORAGE_KEY } from '@duncit/utils';
 
 import { SidebarUserContent } from '@/components/Sidebar/SidebarUserContent';
+import { getItem, setItem } from '@/services/secure-storage';
+import { useQuickAccessStore } from '@/stores/quick-access.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useBranding', () => ({
@@ -10,8 +13,16 @@ let mockAds: unknown[] = [];
 jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: mockAds, loading: false }),
 }));
+jest.mock('@/services/secure-storage', () => ({ getItem: jest.fn(), setItem: jest.fn() }));
+
+const mockGet = getItem as jest.Mock;
+const mockSet = setItem as jest.Mock;
+
 beforeEach(() => {
   mockAds = [];
+  mockGet.mockReset().mockResolvedValue(null);
+  mockSet.mockReset().mockResolvedValue(undefined);
+  useQuickAccessStore.setState({ raw: null });
 });
 
 const FULL_ACCOUNT = {
@@ -27,86 +38,164 @@ const FULL_ACCOUNT = {
   profile_photo: 'https://x/p.png',
 };
 
-describe('SidebarUserContent', () => {
-  it('renders the identity, incomplete banner and cards, and routes every tap', () => {
-    const onNavigate = jest.fn();
-    renderWithProviders(
-      <SidebarUserContent
-        me={{
-          first_name: 'Asha',
-          full_name: 'Asha Roy',
-          email: 'a@x.com',
-          profile_photo: 'https://x/p.png',
-        }}
-        account={{ first_name: 'Asha' }}
-        roles={[]}
-        mode="USER"
-        showPodPlans={false}
-        showProducts
-        onNavigate={onNavigate}
-      />,
-    );
+type Props = Partial<Parameters<typeof SidebarUserContent>[0]>;
 
-    // Identity (photo + name + email) opens the profile.
-    expect(screen.getByText('Asha Roy')).toBeOnTheScreen();
-    expect(screen.getByText('a@x.com')).toBeOnTheScreen();
+function renderContent(props: Props = {}) {
+  const onNavigate = jest.fn();
+  renderWithProviders(
+    <SidebarUserContent
+      me={null}
+      account={null}
+      roles={[]}
+      mode="USER"
+      flags={{}}
+      onNavigate={onNavigate}
+      {...props}
+    />,
+  );
+  return onNavigate;
+}
+
+/** The grid's tile keys, in the order they are drawn (the count badge is not a
+ * tile; the Badges tile, `sidebar-grid-badges`, is). */
+const gridOrder = () =>
+  within(screen.getByTestId('sidebar-quick-grid'))
+    .getAllByTestId(/^sidebar-grid-(?!badge$)/)
+    .map((tile) => String(tile.props.testID).replace('sidebar-grid-', ''));
+
+describe('SidebarUserContent — profile card', () => {
+  it('shows the identity and the completion nudge in one card, each opening its own page', () => {
+    const onNavigate = renderContent({
+      me: {
+        first_name: 'Asha',
+        full_name: 'Asha Roy',
+        email: 'a@x.com',
+        profile_photo: 'https://x/p.png',
+      },
+      account: { first_name: 'Asha' },
+    });
+    const card = screen.getByTestId('sidebar-profile-card');
+    expect(within(card).getByText('Asha Roy')).toBeOnTheScreen();
+    expect(within(card).getByText('a@x.com')).toBeOnTheScreen();
+    // 1 of the 10 completion fields is filled.
+    expect(within(card).getByText('Your profile is 10% complete')).toBeOnTheScreen();
+    expect(screen.getByTestId('profile-completion-bar')).toHaveAccessibilityValue({
+      min: 0,
+      max: 100,
+      now: 10,
+    });
+    expect(within(card).getByText('Complete')).toBeOnTheScreen();
+
     fireEvent.press(screen.getByTestId('sidebar-identity'));
-    expect(onNavigate).toHaveBeenCalledWith('Profile');
-
-    // Incomplete nudge: 1 of 10 fields filled → 10%.
-    expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
-    expect(screen.getByText('10% complete')).toBeOnTheScreen();
+    expect(onNavigate).toHaveBeenLastCalledWith('Profile');
     fireEvent.press(screen.getByTestId('profile-completion-cta'));
-    expect(onNavigate).toHaveBeenCalledWith('Account');
-
-    // Quick grid (Pod History / Earn) + referral card. Venues moved down to
-    // the bottom bar, so the sidebar no longer carries a venues card.
-    fireEvent.press(screen.getByTestId('sidebar-grid-pod-history'));
-    expect(onNavigate).toHaveBeenCalledWith('PodHistory');
-    expect(screen.queryByTestId('sidebar-venues')).toBeNull();
-    fireEvent.press(screen.getByTestId('sidebar-grid-earn'));
-    expect(onNavigate).toHaveBeenCalledWith('Earn');
-    fireEvent.press(screen.getByTestId('sidebar-referral'));
-    expect(onNavigate).toHaveBeenCalledWith('Referral');
-
-    // Manage list — Saved/Verification live here now; no Pod Plans when off.
-    expect(screen.queryByTestId('sidebar-item-Pod Plans')).toBeNull();
-    fireEvent.press(screen.getByTestId('sidebar-item-Saved Items'));
-    expect(onNavigate).toHaveBeenCalledWith('Saved');
-
-    // Shop section — the e-commerce group parallel to Manage Account.
-    fireEvent.press(screen.getByTestId('sidebar-item-Pod Shop'));
-    expect(onNavigate).toHaveBeenCalledWith('Shop');
-    fireEvent.press(screen.getByTestId('sidebar-item-Address Book'));
-    expect(onNavigate).toHaveBeenCalledWith('AddressBook');
-    fireEvent.press(screen.getByTestId('sidebar-item-Cart'));
-    expect(onNavigate).toHaveBeenCalledWith('Cart');
-
-    // No studio Options entry for a pure consumer.
-    expect(screen.queryByTestId('sidebar-studio-options')).toBeNull();
+    expect(onNavigate).toHaveBeenLastCalledWith('Account');
   });
 
-  it('hides the banner at 100% and shows Pod Plans when the flag is on', () => {
-    const onNavigate = jest.fn();
-    renderWithProviders(
-      <SidebarUserContent
-        me={{ full_name: 'Bob Roy' }}
-        account={FULL_ACCOUNT}
-        roles={[]}
-        mode="USER"
-        showPodPlans
-        onNavigate={onNavigate}
-      />,
-    );
-    // No photo/email → placeholder initial + name only.
+  it('drops the nudge at 100%, and while the completion record is still loading', () => {
+    renderContent({ me: { full_name: 'Bob Roy' }, account: FULL_ACCOUNT });
     expect(screen.getByText('B')).toBeOnTheScreen();
-    expect(screen.getByText('Bob Roy')).toBeOnTheScreen();
     expect(screen.queryByTestId('profile-completion')).toBeNull();
-    fireEvent.press(screen.getByTestId('sidebar-item-Pod Plans'));
-    expect(onNavigate).toHaveBeenCalledWith('PodPlans');
+
+    renderContent({ me: { full_name: 'Bob Roy' }, account: {}, accountLoading: true });
+    expect(screen.queryByTestId('profile-completion')).toBeNull();
   });
 
-  it('shows the SIDEBAR sponsored card under the venues card when an ad is live', () => {
+  it('falls back to placeholders with no user and no account (0% complete)', () => {
+    renderContent();
+    expect(screen.getByText('U')).toBeOnTheScreen();
+    expect(screen.getByText('User')).toBeOnTheScreen();
+    expect(screen.getByText('Your profile is 0% complete')).toBeOnTheScreen();
+  });
+});
+
+describe('SidebarUserContent — Quick Access', () => {
+  it('draws the six default tiles under the Quick Access header, each opening its screen', () => {
+    const onNavigate = renderContent();
+    expect(screen.getByText('Quick Access')).toBeOnTheScreen();
+    expect(gridOrder()).toEqual(['chats', 'following', 'pod-history', 'earn', 'ideas', 'support']);
+    fireEvent.press(screen.getByTestId('sidebar-grid-chats'));
+    expect(onNavigate).toHaveBeenLastCalledWith('Chats');
+    fireEvent.press(screen.getByTestId('sidebar-grid-support'));
+    expect(onNavigate).toHaveBeenLastCalledWith('Support');
+    expect(screen.getByLabelText('Help & Support')).toBeOnTheScreen();
+  });
+
+  it('shows a count on a tile only when one is supplied and above zero', () => {
+    renderContent({ badgeCounts: { chats: 12, following: 0 } });
+    // The badge is aria-hidden (the count rides as the tile's hint), so the
+    // visual check opts into hidden elements and the hint is the a11y check.
+    const hidden = { includeHiddenElements: true };
+    expect(screen.getAllByTestId('sidebar-grid-badge', hidden)).toHaveLength(1);
+    expect(
+      within(screen.getByTestId('sidebar-grid-chats')).getByText('9+', hidden),
+    ).toBeOnTheScreen();
+    expect(screen.getByHintText('12 unread')).toBeOnTheScreen();
+  });
+
+  it('restores the grid the device kept', async () => {
+    const kept = JSON.stringify(['faqs', 'saved', 'chats', 'gigs', 'badges', 'referral']);
+    // The store reads the device once per launch; either way the kept pick is what it holds.
+    mockGet.mockResolvedValue(kept);
+    useQuickAccessStore.setState({ raw: kept });
+    renderContent();
+    await waitFor(() =>
+      expect(gridOrder()).toEqual(['faqs', 'saved', 'chats', 'gigs', 'badges', 'referral']),
+    );
+  });
+
+  it('edits the grid: unpick, refuse to save five, pick, reorder, then save to the device', async () => {
+    renderContent();
+    fireEvent.press(screen.getByTestId('sidebar-quick-edit'));
+    expect(screen.getByTestId('quick-access-editor')).toBeOnTheScreen();
+    expect(screen.getByTestId('quick-access-count')).toHaveTextContent('6 of 6 picked');
+    // Full: an unpicked destination cannot be added yet.
+    expect(screen.getByTestId('quick-access-option-saved')).toBeDisabled();
+
+    fireEvent.press(screen.getByTestId('quick-access-option-earn'));
+    expect(screen.getByTestId('quick-access-count')).toHaveTextContent('5 of 6 picked');
+    fireEvent.press(screen.getByTestId('quick-access-save'));
+    expect(await screen.findByTestId('quick-access-error')).toHaveTextContent(
+      'Pick exactly 6 shortcuts to save.',
+    );
+    expect(mockSet).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByTestId('quick-access-option-saved'));
+    // Saved landed last; move it up one, ahead of Help & Support.
+    fireEvent.press(screen.getByTestId('quick-access-up-saved'));
+    fireEvent.press(screen.getByTestId('quick-access-save'));
+
+    const expected = ['chats', 'following', 'pod-history', 'ideas', 'saved', 'support'];
+    await waitFor(() =>
+      expect(mockSet).toHaveBeenCalledWith(QUICK_ACCESS_STORAGE_KEY, JSON.stringify(expected)),
+    );
+    await waitFor(() => expect(screen.queryByTestId('quick-access-editor')).toBeNull());
+    expect(gridOrder()).toEqual(expected);
+  });
+
+  it('keeps the edit on screen with the reason when the device will not keep it', async () => {
+    mockSet.mockRejectedValue(new Error('keychain locked'));
+    renderContent();
+    fireEvent.press(screen.getByTestId('sidebar-quick-edit'));
+    fireEvent.press(screen.getByTestId('quick-access-reset'));
+    fireEvent.press(screen.getByTestId('quick-access-option-earn'));
+    fireEvent.press(screen.getByTestId('quick-access-option-faqs'));
+    fireEvent.press(screen.getByTestId('quick-access-save'));
+    expect(await screen.findByTestId('quick-access-save-failed')).toBeOnTheScreen();
+    // The new grid still shows for this session.
+    expect(gridOrder()).toContain('faqs');
+    expect(gridOrder()).not.toContain('earn');
+  });
+
+  it('offers a flag-gated destination in the editor only while its flag is on', () => {
+    renderContent({ flags: { products: false } });
+    fireEvent.press(screen.getByTestId('sidebar-quick-edit'));
+    expect(screen.queryByTestId('quick-access-option-cart')).toBeNull();
+  });
+});
+
+describe('SidebarUserContent — cards', () => {
+  it('shows the sponsored card when a SIDEBAR ad is live', () => {
     mockAds = [
       {
         id: 'ad1',
@@ -117,34 +206,19 @@ describe('SidebarUserContent', () => {
         position: 'SIDEBAR',
       },
     ];
-    renderWithProviders(
-      <SidebarUserContent
-        me={null}
-        account={null}
-        roles={[]}
-        mode="USER"
-        showPodPlans={false}
-        onNavigate={jest.fn()}
-      />,
-    );
+    renderContent();
     expect(screen.getByTestId('ad-slot-SIDEBAR')).toBeOnTheScreen();
     expect(screen.getByText('Sponsored Venue')).toBeOnTheScreen();
   });
 
-  it('falls back to placeholders with no user and no account (0% complete)', () => {
-    renderWithProviders(
-      <SidebarUserContent
-        me={null}
-        account={null}
-        roles={[]}
-        mode="USER"
-        showPodPlans={false}
-        onNavigate={jest.fn()}
-      />,
-    );
-    expect(screen.getByText('U')).toBeOnTheScreen();
-    expect(screen.getByText('User')).toBeOnTheScreen();
-    expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
-    expect(screen.getByText('0% complete')).toBeOnTheScreen();
+  it('keeps the Duncit Coin card to User mode, and the Studio card to partners', () => {
+    renderContent();
+    expect(screen.getByTestId('sidebar-duncit-coin')).toBeOnTheScreen();
+    expect(screen.queryByTestId('sidebar-studio-options')).toBeNull();
+
+    // `screen` reads the latest render only: Host mode drops the coin card.
+    renderContent({ roles: ['HOST'], mode: 'HOST' });
+    expect(screen.queryByTestId('sidebar-duncit-coin')).toBeNull();
+    expect(screen.getByTestId('sidebar-studio-options')).toBeOnTheScreen();
   });
 });

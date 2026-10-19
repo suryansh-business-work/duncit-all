@@ -1,33 +1,32 @@
 ---
 import { siteContent } from '../config/site-config';
-
-const siteConfig = await siteContent();
 import { fetchAdRateCard } from '../lib/site-data';
+import SectionHead from './SectionHead.astro';
 
-const { placements } = siteConfig;
+const { placements, calculator } = await siteContent();
 const rateCard = await fetchAdRateCard();
 const entries = rateCard?.entries ?? [];
 const symbol = rateCard?.currency_symbol ?? '₹';
 const price = (value: number) => `${symbol}${Math.round(value).toLocaleString('en-IN')}`;
+const th = 'px-5 py-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink-soft';
 ---
 
-<!-- The rate card, as a rate card. An advertiser reads this the way they read a
-     media kit: one row per placement, the price on the right, nothing else in
-     the way. It renders from the card at BUILD time, so the prices are in the
-     HTML for a reader with no JavaScript and for a search engine. -->
-<section id="placements" class="mx-auto max-w-5xl scroll-mt-24 px-5 py-20">
-  <div class="flex flex-wrap items-end justify-between gap-6">
-    <div class="max-w-xl">
-      <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">{placements.eyebrow}</p>
-      <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{placements.heading}</h2>
-      <p class="mt-3 text-ink-soft">{placements.text}</p>
-    </div>
+<!-- The rate card, as a rate card: one row per placement, the price on the
+     right. Rendered from the card at BUILD time, so the prices are in the HTML
+     for a reader with no JavaScript and for a search engine. -->
+<section id="placements" class="mx-auto max-w-6xl scroll-mt-28 px-5 py-20 sm:py-28 lg:py-32">
+  <SectionHead eyebrow={placements.eyebrow} heading={placements.heading} text={placements.text} />
+
+  <div class="mt-8 flex flex-wrap items-center gap-3" data-reveal>
+    <span class="-rotate-2 rounded-full bg-accent px-4 py-2 font-head text-sm font-extrabold text-on-accent shadow-soft">
+      {placements.sticker}
+    </span>
     {
       rateCard && (
-        <p class="font-head text-2xl font-extrabold text-ink">
-          From {price(rateCard.from_per_day)}
-          <span class="text-sm font-bold text-ink-soft"> / day</span>
-        </p>
+        <span class="rounded-full border border-line bg-surface px-4 py-2 font-head text-sm font-extrabold text-ink">
+          {placements.from} {price(rateCard.from_per_day)}
+          <span class="font-bold text-ink-soft">{calculator.perDaySuffix}</span>
+        </span>
       )
     }
   </div>
@@ -36,26 +35,14 @@ const price = (value: number) => `${symbol}${Math.round(value).toLocaleString('e
        API the body ships one placeholder row, and the calculator's live fetch
        fills it in — one request serves both, which is why the contract is a
        data attribute rather than a second query here. -->
-  <div class="mt-10 overflow-hidden rounded-2xl border border-line">
+  <div class="mt-10 overflow-hidden rounded-panel border border-line bg-surface shadow-soft" data-reveal="scale">
     <table class="w-full border-collapse text-left">
       <caption class="sr-only">{placements.rateCardCaption}</caption>
       <thead>
-        <tr class="bg-surface">
-          <th scope="col" class="px-5 py-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink-soft">
-            Placement
-          </th>
-          <th
-            scope="col"
-            class="hidden px-5 py-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink-soft sm:table-cell"
-          >
-            Where it shows
-          </th>
-          <th
-            scope="col"
-            class="px-5 py-3 text-right font-head text-xs font-extrabold uppercase tracking-wider text-ink-soft"
-          >
-            Per day
-          </th>
+        <tr class="bg-cream/60">
+          <th scope="col" class={th}>{placements.colPlacement}</th>
+          <th scope="col" class={`hidden sm:table-cell ${th}`}>{placements.colWhere}</th>
+          <th scope="col" class={`text-right ${th}`}>{placements.colPerDay}</th>
         </tr>
       </thead>
       <tbody data-rate-rows data-rate-empty={entries.length === 0 ? 'true' : undefined}>
@@ -78,10 +65,8 @@ const price = (value: number) => `${symbol}${Math.round(value).toLocaleString('e
           entries.length === 0 && (
             <tr class="border-t border-line">
               <td colspan="3" class="px-5 py-6 text-sm text-ink-soft">
-                Loading today’s rates…
-                <noscript>
-                  Rates are shown with JavaScript enabled, or in the Ads console.
-                </noscript>
+                {placements.loading}
+                <noscript>{placements.noscript}</noscript>
               </td>
             </tr>
           )
@@ -90,9 +75,16 @@ const price = (value: number) => `${symbol}${Math.round(value).toLocaleString('e
     </table>
   </div>
 
-  <!-- The bundled descriptions, kept only as the answer for a placement Marketing
-       has not written one for. The card now carries its own, so this is a
-       fallback rather than the source it used to be. -->
-  <script type="application/json" data-placement-notes set:html={JSON.stringify(placements.notes)}
-  ></script>
+  <!-- The bundled descriptions, the fallback for a placement Marketing has not
+       written one for. -->
+  <script is:inline type="application/json" data-placement-notes set:html={JSON.stringify(placements.notes)}></script>
 </section>
+
+<style>
+  /* Prices are small type: they take the deeper coral that holds 4.5:1 on the
+     panel. :global because the live refresh redraws these rows from the
+     widget, without this component's scope. */
+  [data-rate-rows] :global(.text-primary) {
+    color: var(--color-primary-strong);
+  }
+</style>

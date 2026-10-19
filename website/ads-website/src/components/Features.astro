@@ -1,26 +1,44 @@
 ---
 import { siteContent } from '../config/site-config';
+import SectionHead from './SectionHead.astro';
 
-const siteConfig = await siteContent();
-const { features, featuresSection } = siteConfig;
+const { features, featuresSection } = await siteContent();
+// One bento tile per console feature: the first is the hero tile, the last
+// runs wide. Each pairs a fill with the ink that reads on it.
+const tiles = [
+  { box: 'bg-primary text-on-accent lg:col-span-2 lg:row-span-2', glyph: 'bg-on-accent/10', title: 'text-4xl sm:text-5xl', body: 'text-on-accent' },
+  { box: 'bg-frame text-on-frame', glyph: 'bg-on-frame/10 text-accent', title: 'text-2xl', body: 'text-on-frame-soft' },
+  { box: 'bg-accent text-on-accent', glyph: 'bg-on-accent/10', title: 'text-2xl', body: 'text-on-accent' },
+  { box: 'border border-line bg-surface text-ink lg:col-span-2', glyph: 'bg-primary-light text-primary-strong', title: 'text-3xl', body: 'text-ink-soft' },
+];
 ---
 
-<section id="features" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
-  <div class="mx-auto max-w-2xl text-center">
-    <h2 class="text-3xl text-ink sm:text-4xl">{featuresSection.heading}</h2>
-    <p class="mt-4 text-ink-soft">{featuresSection.text}</p>
-  </div>
-  <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+<section id="features" class="mx-auto max-w-6xl scroll-mt-28 px-5 py-20 sm:py-28 lg:py-32">
+  <SectionHead eyebrow={featuresSection.eyebrow} heading={featuresSection.heading} text={featuresSection.text} />
+
+  <div class="mt-14 grid gap-5 sm:grid-cols-2 lg:auto-rows-[15rem] lg:grid-cols-4" data-reveal-group>
     {
-      features.map((feature) => (
-        <article class="rounded-2xl border border-line bg-surface p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-          <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light text-primary-dark">
-            <i class={`fa-solid ${feature.icon} text-xl`} aria-hidden="true"></i>
-          </span>
-          <h3 class="mt-5 text-lg text-ink">{feature.title}</h3>
-          <p class="mt-2 text-sm leading-relaxed text-ink-soft">{feature.text}</p>
-        </article>
-      ))
+      features.map((feature, index) => {
+        const tile = tiles[index % tiles.length];
+        return (
+          <article
+            class:list={['lift relative flex min-h-60 flex-col overflow-hidden rounded-panel p-7', tile.box]}
+            data-reveal
+          >
+            <span class:list={['grid h-14 w-14 place-items-center rounded-2xl', tile.glyph]}>
+              <i class={`fa-solid ${feature.icon} text-2xl`} aria-hidden="true" />
+            </span>
+            <h3 class:list={['mt-auto pt-8', tile.title]}>{feature.title}</h3>
+            <p class:list={['mt-2 max-w-md text-sm font-semibold leading-relaxed', tile.body]}>{feature.text}</p>
+            {index === 0 && (
+              <span
+                class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border-[28px] border-on-accent/10"
+                aria-hidden="true"
+              />
+            )}
+          </article>
+        );
+      })
     }
   </div>
 </section>

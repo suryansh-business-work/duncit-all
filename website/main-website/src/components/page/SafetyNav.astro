@@ -1,0 +1,40 @@
+---
+// The Safety Hub's own row of pills — the four safety pages, the one being
+// read marked as current — so a reader moves between them without the drawer.
+import { getTranslator } from '../../lib/i18n';
+
+const { t } = await getTranslator();
+
+const pages = [
+  { href: '/safety/approach', icon: 'fa-shield-heart', label: t('website.main.nav.ourApproach') },
+  { href: '/safety/advice', icon: 'fa-lightbulb', label: t('website.main.nav.advice') },
+  { href: '/safety/tools', icon: 'fa-toolbox', label: t('website.main.nav.safetyTools') },
+  { href: '/safety/resources', icon: 'fa-hand-holding-heart', label: t('website.main.nav.resources') },
+];
+const here = Astro.url.pathname.replace(/\/+$/, '');
+---
+
+<nav aria-label={t('website.main.nav.safetyHub')} class="not-prose mb-14 sm:mb-16">
+  <ul data-reveal class="flex flex-wrap gap-2.5">
+    {
+      pages.map((page) => {
+        const current = here === page.href;
+        return (
+          <li>
+            <a
+              href={page.href}
+              aria-current={current ? 'page' : undefined}
+              class:list={[
+                'inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2 font-head text-sm font-bold transition duration-300 ease-soft hover:-translate-y-0.5',
+                current ? 'border-ink bg-ink text-cream' : 'border-line bg-surface text-ink shadow-soft hover:border-primary',
+              ]}
+            >
+              <i class={`fa-solid ${page.icon}`} aria-hidden="true" />
+              {page.label}
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</nav>

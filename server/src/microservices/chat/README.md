@@ -9,7 +9,7 @@ moved here.
 
 | Folder     | What it is                                                         | Collections                                             |
 | ---------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
-| `rooms/`   | Pod and club group chat (one `PodMessage` collection for both)     | `PodMessage`                                            |
+| `rooms/`   | Pod and club group chat (one `PodMessage` collection for both), replies, @-mentions, per-member mute and read marks | `PodMessage`, `ChatMute`, `ChatReadState`, `ChatNotifyClaim` |
 | `staff/`   | Employee-to-employee direct messages, presence and WebRTC calls    | `StaffMessage`, `StaffCall`, `StaffChatState`           |
 | `support/` | Member-to-support-agent chat, AI first reply, unified ticket list  | `SupportChatSession`, `SupportChatMessage`              |
 
@@ -46,7 +46,12 @@ model import never loads every resolver and socket with it. Current consumers:
 - Pod lifecycle helpers (`pods/pod/pod.lifecycle`) for when a room closes.
 - Moderation: `moderation/moderation.rules` screens every room message.
 - Notification push: `engagement/notification/notification.service`, loaded
-  lazily by `rooms/chat.notify.ts` for new-message pushes.
+  lazily by `rooms/chat.notify.ts` (new room messages) and
+  `support/supportChat.notify.ts` (support replies to the customer). Each push
+  is claimed once per message in `ChatNotifyClaim` (unique key, 48h TTL), so a
+  retry never pushes twice; muted members are skipped unless @-mentioned.
+- App-wide alert: `rooms/chat.notify.ts` emits `chat:new` to `userRoom(id)` for
+  members away from the room (the apps ping and toast on it).
 - Realtime: `@realtime/io` (`getIo`) — the shared Socket.IO server.
 - `@utils/clusterJob` — runs the retention sweep on one replica only.
 - Support only: `support/transcript`, `support/reopenWindow`,
@@ -61,8 +66,10 @@ model import never loads every resolver and socket with it. Current consumers:
 
 **rooms** — Query: `myChatRooms`, `chatParticipants`, `podMessages`,
 `podChatInfo`, `myClubChatRooms`, `clubChatRoom`, `clubMessages`,
-`chatPreview`. Mutation: `sendPodMessage`, `sendClubMessage`,
-`reactToPodMessage`, `deletePodMessage`.
+`chatPreview`, `clubChatMembers`, `chatMuteState`, `chatUnreadTotal`.
+Mutation: `sendPodMessage`, `sendClubMessage` (both take `reply_to_id` and
+`mentions`), `reactToPodMessage`, `deletePodMessage`, `muteChat`,
+`unmuteChat` (POD / CLUB / SUPPORT), `markChatRead`.
 
 **staff** — Query: `coworkers`, `staffThreads`, `staffMessages`,
 `staffLinkPreview`, `pinnedStaffMessages`, `searchStaffMessages`,

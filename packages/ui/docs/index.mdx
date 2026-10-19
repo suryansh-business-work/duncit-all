@@ -50,6 +50,7 @@ exports:
   - 'FormActionsRow'
   - 'useDebouncedValue'
   - 'useRouteFocus'
+  - 'playMessagePing'
   - 'mergeSx'
   - 'RICH_TEXT_BODY_SX'
   - 'ModerationBlockedDialog'
@@ -1064,4 +1065,20 @@ import { groupSlotRequestsBySeries } from '@duncit/utils';
     />
   ) : card(group.row)
 )}
+```
+
+## `playMessagePing` — one sound for an arriving chat message
+
+The portals' staff chat (`@duncit/shell` re-exports it) and mWeb's pod and club rooms make the
+same short ping. The mp3 ships inside this package and is imported, so each app's Vite build emits
+it with a hashed URL. It is best-effort: a browser that blocks audio before the first interaction
+plays nothing and throws nothing. Throttle it with `createChatPingGate` from `@duncit/utils` so a
+burst of messages makes one ping.
+
+```ts
+import { playMessagePing } from '@duncit/ui';
+import { createChatPingGate } from '@duncit/utils';
+
+const shouldPing = createChatPingGate();
+if (shouldPing(message.id)) playMessagePing();
 ```

@@ -55,6 +55,8 @@ import { startAccountLockRefresh } from '@modules/access/accountDeletion/account
 import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
+import { buildEmailAssetsRouter } from '@services/email/emailAssets.router';
+import { EMAIL_ASSETS_PATH } from '@services/email/catalogue/icons';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { buildAutomationRouter } from '@modules/ai/automation/automation.router';
 import { startAutomationScheduler } from '@modules/ai/automation/automation.scheduler';
@@ -977,6 +979,10 @@ async function bootstrap() {
   // reachable with no session — behind a signed link that names one ticket and
   // lives for half an hour. See ticket.router.ts.
   app.use('/tickets', buildTicketRouter());
+
+  // The icons every email is drawn with. A mail client fetches them with no
+  // session, so they are public; the folder holds nothing but those PNGs.
+  app.use(EMAIL_ASSETS_PATH, buildEmailAssetsRouter());
 
   app.use('/status', buildStatusProbeRouter());
 

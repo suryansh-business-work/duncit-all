@@ -8,3 +8,5 @@ export { default as JobApplicationsPage } from './job-applications';
 export { default as NavigationPage } from './navigation';
 export { default as ReelsPage } from './reels';
 export { default as ReelSettingsPage } from './reel-settings';
+export { default as EarnPage } from './earn';
+

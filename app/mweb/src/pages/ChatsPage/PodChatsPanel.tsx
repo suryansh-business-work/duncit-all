@@ -29,6 +29,7 @@ const MY_CHAT_ROOMS = gql`
       cover_url
       club_id
       super_category_id
+      unread_count
     }
     superCategories: categories(filter: { level: SUPER }) {
       id

@@ -3,7 +3,15 @@ import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
 import { useTranslation } from '@duncit/app-settings';
 import { formatDay } from '@duncit/datetime';
-import { gigBudgetText, gigEventTypeKey, gigJobPath, gigPosterRoleKey, gigStatusKey, type GigJobRow } from '@duncit/utils';
+import {
+  gigBudgetText,
+  gigEventTypeKey,
+  gigJobPath,
+  gigPlaceText,
+  gigPosterRoleKey,
+  gigStatusKey,
+  type GigJobRow,
+} from '@duncit/utils';
 import { useGigSurface } from '../GigSurfaceProvider';
 
 const MAX_ROLE_CHIPS = 3;
@@ -42,7 +50,7 @@ export default function GigJobCard({ job }: Readonly<{ job: GigJobRow }>) {
               </Stack>
               <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
                 <PlaceOutlinedIcon fontSize="small" aria-hidden />
-                <Typography variant="body2">{job.city}</Typography>
+                <Typography variant="body2">{gigPlaceText(job)}</Typography>
               </Stack>
             </Stack>
             <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>

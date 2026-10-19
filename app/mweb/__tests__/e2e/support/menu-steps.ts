@@ -2,7 +2,8 @@
 
 /**
  * The account menu (/menu): the header avatar on Home opens it, and its tiles
- * (`sidebar-grid-<key>`) and rows (`sidebar-item-<label>`) are how a member
+ * (`sidebar-grid-<key>`) and the rows of its collapsible section cards
+ * (`sidebar-section-<id>-toggle`, then `sidebar-item-<key>`) are how a member
  * reaches the support and pod-idea pages — so the specs arrive the same way.
  */
 
@@ -14,9 +15,11 @@ export function openMenu(): void {
   cy.byTestId('menu-panel').should('be.visible');
 }
 
-/** A tile or row on the menu, and the page it leads to. */
-export function openFromMenu(testId: string, pathname: string): void {
+/** A tile or row on the menu, and the page it leads to. A row lives in a
+ * collapsed section card, so its `section` is opened first. */
+export function openFromMenu(testId: string, pathname: string, section?: string): void {
   openMenu();
+  if (section) cy.byTestId(`sidebar-section-${section}-toggle`).click();
   cy.byTestId(testId).click();
   cy.location('pathname').should('eq', pathname);
 }

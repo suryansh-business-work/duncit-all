@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { GigCategory } from '@duncit/utils';
+import { logs } from '@duncit/logs';
+import { parseApiError, type GigCategory } from '@duncit/utils';
 
 import { GigCategoriesDocument, GigViewerDocument } from '@/graphql/gigs';
 import { useReloadableQuery } from '@/hooks/useReloadableQuery';
@@ -30,7 +31,13 @@ export function useGigContext() {
     setViewer(me);
     setFailed(false);
   }, []);
-  const query = useReloadableQuery(load, { onError: () => setFailed(true) });
+  const query = useReloadableQuery(load, {
+    onError: (error) => {
+      // The screen shows a fixed line; the parsed cause (e.g. GRAPHQL_VALIDATION_FAILED) goes to the log.
+      logs.mobileApp.error('GigJobs', 'useGigContext', { error, reason: parseApiError(error) });
+      setFailed(true);
+    },
+  });
   useRefetchOnReturn(query.refetch);
   return { categories, viewer, failed, loading: query.isLoading, refetch: query.refetch };
 }

@@ -19,6 +19,7 @@ function ChatRoomRow({ room, onOpen }: Readonly<RowProps>) {
       coverUrl={room.cover_url}
       fallbackIcon={<GroupsIcon />}
       title={room.pod_title}
+      unreadCount={room.unread_count}
       onOpen={() => onOpen(room.id)}
     >
       <Typography variant="body2" noWrap sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>

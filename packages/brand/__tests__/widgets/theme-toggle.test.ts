@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { THEME_STORAGE_KEY, wireThemeToggle } from '../../src/widgets/theme-toggle';
 
 beforeEach(() => {
@@ -41,6 +41,37 @@ describe('wireThemeToggle', () => {
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
     expect(toggle().getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('wires a button once, so wiring the page again never flips the theme twice', () => {
+    wireThemeToggle(scope());
+    wireThemeToggle(scope());
+    toggle().click();
+    expect(document.documentElement.dataset.theme).toBe('dark');
+  });
+
+  it('keeps every toggle on the page in step, each with its own icon', () => {
+    document.body.innerHTML = `<div id="s">
+      <button id="top" data-theme-toggle><i data-theme-icon></i></button>
+      <button id="drawer" data-theme-toggle><i data-theme-icon></i></button></div>`;
+    wireThemeToggle(scope());
+    document.getElementById('top')?.click();
+    const icons = [...document.querySelectorAll('[data-theme-icon]')].map((i) => i.className);
+    expect(icons).toEqual(['fa-solid fa-sun text-sm', 'fa-solid fa-sun text-sm']);
+    expect(document.getElementById('drawer')?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('still changes the theme when storage is blocked, and reports it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    wireThemeToggle(scope());
+    toggle().click();
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(warn).toHaveBeenCalledWith('[theme-toggle] choice not remembered', expect.any(Error));
+    setItem.mockRestore();
+    warn.mockRestore();
   });
 
   it('does nothing when the icon is missing', () => {

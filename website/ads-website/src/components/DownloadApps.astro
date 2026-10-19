@@ -4,10 +4,12 @@
 // four versions of the same two store listings.
 import AppDownload from '@duncit/brand/AppDownload.astro';
 import { fetchBranding } from '../lib/site-data';
-import { siteContent } from '../config/site-config';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+import { siteContent, siteUrls } from '../config/site-config';
 
 const branding = await fetchBranding();
 const { download } = await siteContent();
+const { t } = await getSiteTranslator(siteUrls.graphqlUrl);
 const stores = [
   {
     icon: 'fa-google-play',
@@ -24,10 +26,15 @@ const stores = [
 ];
 ---
 
-<AppDownload
-  heading={download.heading}
-  headingAccent={download.headingAccent}
-  text={download.text}
-  perks={download.perks}
-  stores={stores}
-/>
+<!-- The band eases in as one piece, like every other section on the page. -->
+<div class="py-10 sm:py-16" data-reveal>
+  <AppDownload
+    heading={download.heading}
+    headingAccent={download.headingAccent}
+    text={download.text}
+    perks={download.perks}
+    stores={stores}
+    webUrl={siteUrls.mwebUrl}
+    t={t}
+  />
+</div>

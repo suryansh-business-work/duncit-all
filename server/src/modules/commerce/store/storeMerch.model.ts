@@ -84,7 +84,9 @@ export type StoreHomeSectionKind =
   | 'NEWSLETTER'
   | 'FLASH_SALE'
   | 'PRODUCT_SLIDER'
-  | 'CATEGORY_ICONS';
+  | 'CATEGORY_ICONS'
+  | 'RANGE_SHOWCASE'
+  | 'EARN_PROMO';
 
 export const STORE_HOME_SECTION_KINDS: StoreHomeSectionKind[] = [
   'HERO_SLIDER',
@@ -98,6 +100,8 @@ export const STORE_HOME_SECTION_KINDS: StoreHomeSectionKind[] = [
   'FLASH_SALE',
   'PRODUCT_SLIDER',
   'CATEGORY_ICONS',
+  'RANGE_SHOWCASE',
+  'EARN_PROMO',
 ];
 
 /** Where a PRODUCT_SLIDER takes its products from. */
@@ -122,6 +126,8 @@ export const STORE_SECTION_PRODUCT_SOURCES: StoreSectionProductSource[] = [
 
 /** One slide / tile / badge inside a block. */
 export interface IStoreSectionItem {
+  /** The small line above a title or the badge on a tile ("Premium pet store", "Bestseller"). */
+  eyebrow: string;
   title: string;
   subtitle: string;
   image_url: string;
@@ -153,6 +159,7 @@ export interface IStoreHomeSection extends Document {
 
 const sectionItemSchema = new Schema<IStoreSectionItem>(
   {
+    eyebrow: { type: String, default: '', trim: true, maxlength: 40 },
     title: { type: String, default: '', trim: true, maxlength: 120 },
     subtitle: { type: String, default: '', trim: true, maxlength: 240 },
     image_url: { type: String, default: '', trim: true },

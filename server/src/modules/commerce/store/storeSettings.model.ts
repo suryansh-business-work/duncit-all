@@ -14,13 +14,70 @@ export interface IStoreSocialLink {
 }
 
 /**
+ * The festive looks the storefront ships: each recolours the store from its own
+ * design tokens and plays its own light animation; NONE keeps the house look.
+ * The storefront keeps one token set + effect per key (website/ecomm-store
+ * `theme/occasions`), so a key added here needs its entry there and in the SDL.
+ */
+export const STORE_OCCASION_THEMES = [
+  'NONE',
+  'DIWALI',
+  'HOLI',
+  'DUSSEHRA',
+  'NAVRATRI',
+  'DURGA_PUJA',
+  'GANESH_CHATURTHI',
+  'JANMASHTAMI',
+  'MAKAR_SANKRANTI',
+  'LOHRI',
+  'PONGAL',
+  'ONAM',
+  'RAKSHA_BANDHAN',
+  'KARWA_CHAUTH',
+  'BAISAKHI',
+  'GURU_NANAK_JAYANTI',
+  'EID',
+  'CHRISTMAS',
+  'HALLOWEEN',
+  'NEW_YEAR',
+  'VALENTINES_DAY',
+  'EASTER',
+  'FRIENDSHIP_DAY',
+  'MOTHERS_DAY',
+  'FATHERS_DAY',
+  'APRIL_FOOLS',
+  'INDEPENDENCE_DAY',
+  'REPUBLIC_DAY',
+  'GANDHI_JAYANTI',
+  'CHILDRENS_DAY',
+  'WOMENS_DAY',
+  'YOGA_DAY',
+  'EARTH_DAY',
+  'CHHATH_PUJA',
+] as const;
+
+export type StoreOccasionTheme = (typeof STORE_OCCASION_THEMES)[number];
+
+/** A payment method the footer shows as accepted — the operator uploads its mark. */
+export interface IStorePaymentBadge {
+  label: string;
+  image_url: string;
+}
+
+/**
  * A festive window. While "now" sits inside it the store swaps its logo,
- * favicon and background (and, when set, the announcement bar) for these.
+ * favicon and background (and, when set, the announcement bar) for these, and
+ * repaints itself in `theme`'s tokens with that theme's animation.
  * Overlapping windows: the higher `sort_order` wins, ties to the later start.
  */
 export interface IStoreOccasion {
   slug: string;
   label: string;
+  theme: StoreOccasionTheme;
+  /** Off: the theme's colours only, no animation. */
+  effects_enabled: boolean;
+  /** A short festive line over the home page's first banner, e.g. "Happy Diwali". */
+  greeting: string;
   starts_at: Date;
   ends_at: Date;
   logo_url: string;
@@ -75,6 +132,7 @@ export interface IStoreSettings extends Document {
   terms_html: string;
   about_html: string;
   social_links: IStoreSocialLink[];
+  payment_badges: IStorePaymentBadge[];
   /**
    * Legacy: the pincode list once kept here. `migrateServiceablePincodes` moves
    * it into StoreServiceablePincode and empties it; nothing else reads it.
@@ -95,10 +153,21 @@ const socialLinkSchema = new Schema<IStoreSocialLink>(
   { _id: false }
 );
 
+const paymentBadgeSchema = new Schema<IStorePaymentBadge>(
+  {
+    label: { type: String, default: '', trim: true, maxlength: 40 },
+    image_url: { type: String, default: '', trim: true, maxlength: 500 },
+  },
+  { _id: false }
+);
+
 const occasionSchema = new Schema<IStoreOccasion>(
   {
     slug: { type: String, required: true, trim: true, lowercase: true, maxlength: 60 },
     label: { type: String, required: true, trim: true, maxlength: 60 },
+    theme: { type: String, enum: STORE_OCCASION_THEMES, default: 'NONE' },
+    effects_enabled: { type: Boolean, default: true },
+    greeting: { type: String, default: '', trim: true, maxlength: 80 },
     starts_at: { type: Date, required: true },
     ends_at: { type: Date, required: true },
     logo_url: { type: String, default: '', trim: true },
@@ -155,6 +224,7 @@ const storeSettingsSchema = new Schema<IStoreSettings>(
     terms_html: { type: String, default: '', maxlength: 50000 },
     about_html: { type: String, default: '', maxlength: 50000 },
     social_links: { type: [socialLinkSchema], default: [] },
+    payment_badges: { type: [paymentBadgeSchema], default: [] },
     serviceable_pincodes_enabled: { type: Boolean, default: false },
     serviceable_pincodes: { type: [String], default: [] },
     occasions: { type: [occasionSchema], default: [] },

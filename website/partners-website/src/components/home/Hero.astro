@@ -1,0 +1,108 @@
+---
+// The opening panel: the photograph under a scrim, the headline with its drawn
+// underline, the two doors into the partner console, and the cards that float
+// over the proof photo. The words come from the catalogue via landing.ts.
+import Marquee from './Marquee.astro';
+import { partnerLanding } from '../../config/landing';
+import { urlConfigs } from '../../config/url-configs';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+
+const landing = await partnerLanding();
+const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
+const joinUrl = `${urlConfigs.partnersAppUrl}/register-venue`;
+// Where each floating card sits over the photo, and how far out of step it bobs.
+const floatPlacement = [
+  'left-3 top-6 sm:-left-8 sm:top-10',
+  'right-3 top-1/2 [animation-delay:-2s] sm:-right-8',
+  'bottom-6 left-3 [animation-delay:-4s] sm:-left-4',
+];
+---
+
+<section class="relative isolate overflow-hidden rounded-[2rem] bg-frame sm:rounded-[2.75rem]" aria-labelledby="hero-heading">
+  <div class="absolute inset-0 -z-10" aria-hidden="true">
+    <img src={landing.heroImage} alt="" class="h-full w-full object-cover" />
+    <div class="absolute inset-0 bg-gradient-to-br from-frame/95 via-frame/70 to-primary-dark/50"></div>
+    <div class="absolute -right-20 -top-40 h-[32rem] w-[32rem] animate-drift rounded-full bg-primary opacity-40 blur-3xl"></div>
+    <div class="absolute -left-32 bottom-0 h-96 w-96 animate-drift rounded-full bg-secondary opacity-30 blur-3xl [animation-delay:-9s]"></div>
+  </div>
+
+  <div class="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-16 pt-14 sm:px-8 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:pb-24 lg:pt-24">
+    <div data-reveal-group>
+      <span data-reveal class="inline-flex items-center gap-2 rounded-full bg-surface py-2 pl-2 pr-4 font-head text-sm font-bold text-ink shadow-lg">
+        <span class="grid h-7 w-7 place-items-center rounded-full bg-primary-dark text-on-primary">
+          <i class="fa-solid fa-handshake-angle text-xs" aria-hidden="true"></i>
+        </span>
+        {t('website.partners.hero.eyebrow')}
+      </span>
+      <h1 id="hero-heading" data-reveal class="mt-7 text-[2.75rem] text-on-primary sm:text-7xl lg:text-[5.75rem]">
+        {t('website.partners.hero.headingLead')}
+        <span class="relative inline-block text-tertiary">
+          {t('website.partners.hero.headingAccent')}
+          <svg class="absolute -bottom-3 left-[-2%] h-5 w-[104%]" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true">
+            <path
+              d="M4 16 C 80 4, 160 4, 220 12 S 340 22, 396 8"
+              fill="none"
+              stroke-width="9"
+              stroke-linecap="round"
+              stroke-dasharray="420"
+              stroke-dashoffset="420"
+              class="animate-draw stroke-primary"></path>
+          </svg>
+        </span>
+      </h1>
+      <p data-reveal class="mt-8 max-w-xl text-lg leading-relaxed text-on-primary/85 sm:text-xl">
+        {t('website.partners.hero.lead')}
+      </p>
+      <div data-reveal class="mt-9 flex flex-col gap-3 sm:flex-row">
+        <a
+          href={joinUrl}
+          class="group inline-flex h-14 items-center justify-center gap-2.5 rounded-full bg-primary-dark px-7 font-head text-base font-bold text-on-primary shadow-xl shadow-primary/40 transition-transform duration-300 ease-soft hover:-translate-y-0.5 hover:scale-[1.02]"
+        >
+          {t('website.partners.nav.join')}
+          <i class="fa-solid fa-arrow-right transition-transform duration-300 ease-soft group-hover:-rotate-45" aria-hidden="true"></i>
+        </a>
+        <a
+          href={urlConfigs.partnersAppUrl}
+          class="inline-flex h-14 items-center justify-center gap-2.5 rounded-full border border-on-primary/40 bg-on-primary/10 px-7 font-head text-base font-bold text-on-primary backdrop-blur transition-colors duration-300 hover:bg-on-primary/20"
+        >
+          <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+          {t('website.partners.nav.login')}
+        </a>
+      </div>
+      <ul data-reveal class="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-on-primary/85">
+        {
+          landing.proof.map((item) => (
+            <li class="inline-flex items-center gap-2">
+              <i class:list={['fa-solid', item.icon, 'text-tertiary']} aria-hidden="true" />
+              {item.label}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div data-reveal="scale" class="relative mx-auto w-full max-w-md">
+      <img
+        src={landing.proofImage}
+        alt={t('website.partners.hero.cardImageAlt')}
+        class="aspect-[4/5] w-full rotate-2 rounded-[2rem] object-cover shadow-2xl"
+        loading="eager"
+      />
+      {
+        landing.floats.map((card, index) => (
+          <div class:list={['absolute flex max-w-[15rem] animate-bob items-center gap-3 rounded-2xl bg-surface p-3.5 text-ink shadow-2xl', floatPlacement[index]]}>
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-dark text-on-primary">
+              <i class:list={['fa-solid', card.icon]} aria-hidden="true" />
+            </span>
+            <span>
+              <b class="block font-head text-sm font-extrabold">{card.title}</b>
+              <span class="block text-xs font-semibold text-ink-soft">{card.text}</span>
+            </span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <Marquee items={landing.marquee} />
+</section>

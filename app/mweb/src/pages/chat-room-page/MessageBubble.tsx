@@ -3,15 +3,21 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { formatTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import { bubbleRadiusSx } from '../support-chat/calmStyles';
+import MessageQuote from './MessageQuote';
+import MessageText from './MessageText';
 
 interface MessageBubbleProps {
   message: any;
   mine: boolean;
   onOpenReact: (el: HTMLElement, id: string) => void;
-  /** Opens the message's React / Delete / Report menu. */
+  /** Opens the message's React / Reply / Delete / Report menu. */
   onOpenActions?: (el: HTMLElement, id: string) => void;
   /** Opens a photo full screen, where it can be zoomed. */
   onOpenImage?: (id: string) => void;
+  /** A reply's quote was activated: show the original. */
+  onJumpTo?: (id: string) => void;
+  /** A highlighted @mention was activated. */
+  onOpenProfile?: (userId: string) => void;
 }
 
 export default function MessageBubble({
@@ -20,6 +26,8 @@ export default function MessageBubble({
   onOpenReact,
   onOpenActions,
   onOpenImage,
+  onJumpTo,
+  onOpenProfile,
 }: Readonly<MessageBubbleProps>) {
   const { t } = useTranslation();
   const m = message;
@@ -43,18 +51,19 @@ export default function MessageBubble({
         />
       </ButtonBase>
     ) : (
-      <Typography
-        variant="body2"
-        sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-      >
-        {m.text}
-      </Typography>
+      <MessageText
+        text={m.text}
+        mine={mine}
+        mentioned={m.mention_users ?? []}
+        onOpenProfile={(userId) => onOpenProfile?.(userId)}
+      />
     );
   return (
     <Stack
       direction="row"
       spacing={1}
       data-testid={`chat-message-${m.id}`}
+      data-message-id={m.id}
       sx={{ mb: 1, justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}
     >
       {!mine && (
@@ -92,6 +101,9 @@ export default function MessageBubble({
           >
             {m.user_name || 'User'}
           </Typography>
+        )}
+        {m.reply_to && !m.deleted && (
+          <MessageQuote quote={m.reply_to} mine={mine} onJump={(id) => onJumpTo?.(id)} />
         )}
         {m.deleted ? (
           <Typography variant="body2" sx={{ fontStyle: 'italic', color: metaInk }}>

@@ -11,6 +11,7 @@ import RhfImageField from '../../../../../components/form/RhfImageField';
 import RhfNumberField from '../../../../../components/form/RhfNumberField';
 import RhfSwitch from '../../../../../components/form/RhfSwitch';
 import { TWO_COLUMNS } from '../../../../../lib/layout';
+import OccasionThemeFields from './OccasionThemeFields';
 import { isOccasionLive, type OccasionsValues } from './occasion.rules';
 
 interface OccasionRowProps {
@@ -78,6 +79,7 @@ export default function OccasionRow({ control, index, isFirst, isLast, onMoveUp,
           data-testid="settings-occasion-color"
         />
       </Box>
+      <OccasionThemeFields control={control} index={index} rowLabel={label} />
       <RhfTextField
         control={control}
         name={`${path}.announcement_text`}

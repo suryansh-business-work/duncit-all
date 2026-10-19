@@ -14,12 +14,10 @@ import { PodRentList } from './PodRentList';
 
 type ShopRentTab = 'shop' | 'rent';
 
-const RENT_TAB: PillTab<ShopRentTab> = { key: 'rent', labelKey: 'venueRentals.guest.rentTab' };
 const TABS: readonly PillTab<ShopRentTab>[] = [
   { key: 'shop', labelKey: 'venueRentals.guest.shopTab' },
-  RENT_TAB,
+  { key: 'rent', labelKey: 'venueRentals.guest.rentTab' },
 ];
-const RENT_ONLY: readonly PillTab<ShopRentTab>[] = [RENT_TAB];
 
 /** Rows the Pod Details card shows of the rentals before See all. */
 const PREVIEW_ROWS = 2;
@@ -35,7 +33,8 @@ interface Props {
 }
 
 /**
- * Pod Details' Pod Shop | Pod Rent card. See all opens a sheet named for this
+ * Pod Details' Pod Shop | Pod Rent card. The switch shows only when the pod both
+ * sells and rents; a rent-only pod's card is simply "Pod Rent". See all opens a sheet named for this
  * pod with everything it sells and rents. RN twin of mWeb's PodShopRentCard.
  */
 export function PodShopRentCard({
@@ -50,11 +49,12 @@ export function PodShopRentCard({
   const [tab, setTab] = useState<ShopRentTab>(hasProducts ? 'shop' : 'rent');
   const [sheetOpen, setSheetOpen] = useState(false);
   const shown = hasProducts ? tab : 'rent';
+  const title = hasProducts ? t('mweb.shop.title') : t('venueRentals.guest.rentTab');
   return (
     <SurfaceCard marginHorizontal={16} marginTop={20} gap={14} testID="pod-shop-rent">
       <XStack alignItems="center" justifyContent="space-between" gap={12}>
         <YStack flex={1}>
-          <SectionHeader title={t('mweb.shop.title')} />
+          <SectionHeader title={title} />
         </YStack>
         <XStack
           role="button"
@@ -70,13 +70,15 @@ export function PodShopRentCard({
           </Text>
         </XStack>
       </XStack>
-      <PillTabs
-        tabs={hasProducts ? TABS : RENT_ONLY}
-        value={shown}
-        onChange={setTab}
-        ariaLabel={t('mweb.shop.title')}
-        testIDPrefix="pod-shop-rent-tab"
-      />
+      {hasProducts ? (
+        <PillTabs
+          tabs={TABS}
+          value={shown}
+          onChange={setTab}
+          ariaLabel={title}
+          testIDPrefix="pod-shop-rent-tab"
+        />
+      ) : null}
       {shown === 'shop' ? (
         shop
       ) : (
@@ -97,7 +99,8 @@ export function PodShopRentCard({
             </YStack>
           ) : null}
           <YStack gap={8}>
-            <SectionHeader title={t('venueRentals.guest.rentTab')} />
+            {/* A rent-only sheet needs no sub-heading: the card already says Pod Rent. */}
+            {hasProducts ? <SectionHeader title={t('venueRentals.guest.rentTab')} /> : null}
             <PodRentList rentals={rentals} picks={picks} seats={seats} />
           </YStack>
         </YStack>

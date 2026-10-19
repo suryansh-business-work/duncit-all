@@ -26,6 +26,13 @@ jest.mock('@/hooks/usePodSocket', () => ({
   },
 }));
 
+// The read mark and the ping are their own modules (tested there); here only
+// when the room asks for them matters.
+const mockMarkRead = jest.fn();
+jest.mock('@/hooks/useMarkChatRead', () => ({ useMarkChatRead: () => mockMarkRead }));
+const mockPing = jest.fn();
+jest.mock('@/services/chat-sound', () => ({ pingForMessage: (id: string) => mockPing(id) }));
+
 const req = graphqlRequest as jest.Mock;
 
 const msg = (id: string, over: Record<string, unknown> = {}) => ({
@@ -296,5 +303,82 @@ describe('useChatRoom', () => {
       reject(new Error('late'));
     });
     expect(result.current.error).toBeNull();
+  });
+
+  describe('a line arriving while the room is open', () => {
+    const mountAs = async (reader: { meId?: string; muted?: boolean }) => {
+      withDocs([]);
+      const view = renderHook(() => useChatRoom('p1', 'POD', { current: reader }));
+      await waitFor(() => expect(view.result.current.isLoading).toBe(false));
+      mockPing.mockClear();
+      mockMarkRead.mockClear();
+      return view;
+    };
+
+    it('pings and marks the room read for a line from someone else', async () => {
+      await mountAs({ meId: 'me' });
+      act(() => socketArgs.onMessage(msg('n1', { user_id: 'other' })));
+      expect(mockPing).toHaveBeenCalledWith('n1');
+      expect(mockMarkRead).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays silent for my own line, and does not mark it', async () => {
+      await mountAs({ meId: 'me' });
+      act(() => socketArgs.onMessage(msg('n2', { user_id: 'me' })));
+      expect(mockPing).not.toHaveBeenCalled();
+      expect(mockMarkRead).not.toHaveBeenCalled();
+    });
+
+    it('marks a muted room read but never pings in it', async () => {
+      await mountAs({ meId: 'me', muted: true });
+      act(() => socketArgs.onMessage(msg('n3', { user_id: 'other' })));
+      expect(mockPing).not.toHaveBeenCalled();
+      expect(mockMarkRead).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('sends a reply with its mentions and says whether it was sent', async () => {
+    const { result } = await mountLoaded();
+    let sent: boolean | undefined;
+    await act(async () => {
+      sent = await result.current.sendText('yes @Ravi', { replyToId: 'm0', mentions: ['u2'] });
+    });
+    expect(sent).toBe(true);
+    expect(req).toHaveBeenCalledWith(
+      SendPodMessageDocument,
+      expect.objectContaining({ text: 'yes @Ravi', replyToId: 'm0', mentions: ['u2'] }),
+      { auth: true },
+    );
+    req.mockRejectedValueOnce(new Error('send fail'));
+    await act(async () => {
+      sent = await result.current.sendText('again');
+    });
+    expect(sent).toBe(false);
+  });
+
+  it('reads the pod title and the mute off the room', async () => {
+    req.mockImplementation((doc: unknown) =>
+      doc === PodMessagesDocument
+        ? Promise.resolve({
+            podMessages: [],
+            pod: {
+              pod_title: 'Sunday run',
+              pod_date_time: '2099-01-01T10:00:00Z',
+              pod_end_date_time: null,
+            },
+            podChatInfo: {
+              closed: false,
+              chat_deletes_at: null,
+              can_moderate: false,
+              is_muted: true,
+              muted_until: null,
+            },
+          })
+        : Promise.resolve({}),
+    );
+    const { result } = renderHook(() => useChatRoom('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.roomTitle).toBe('Sunday run');
+    expect(result.current.mute).toMatchObject({ is_muted: true, muted_until: null });
   });
 });

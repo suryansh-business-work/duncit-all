@@ -22,12 +22,22 @@ export default defineDemos('brand', [
         },
         { name: 'PolicyStrip.astro', renders: 'The legal links row above the copyright line.' },
         { name: 'SocialLinks.astro', renders: 'The social icon row, from admin-configured URLs.' },
-        { name: 'AppDownload.astro', renders: 'The store badges, pointed at the live listings.' },
+        {
+          name: 'AppDownload.astro',
+          renders: 'The store badges, pointed at the live listings (blank = "Coming soon"), plus an optional webUrl door to the mWeb app.',
+        },
         { name: 'AppPhone.astro', renders: 'The phone mockup used on landing hero sections.' },
         {
           name: 'EarnShowcase.astro',
           renders:
-            'The "Earn with Duncit" drifting photo wall on every home page except earnwith\'s own; its one CTA goes to earnwith.duncit.com.',
+            'The "Earn with Duncit" drifting photo wall on every home page except earnwith\'s own; with graphqlUrl + site it follows Website portal > Earn with Duncit and carries the floating Earn pill.',
+        },
+        { name: 'EarnPill.astro', renders: 'The floating, dismissible "Earn with Duncit" pill that jumps to the section.' },
+        { name: 'ThemeToggle.astro', renders: 'The always-visible light/dark button for a site top bar; every toggle on a page stays in step.' },
+        { name: 'ScrollReveal.astro', renders: 'Arms data-reveal / data-reveal-group scroll animations; nothing hides for no-JS or reduced motion.' },
+        {
+          name: 'site-branding',
+          renders: 'The build-time branding query every site sends, and the fallback merge (blank Android link = the store listing).',
         },
         {
           name: 'ReelSlider.astro',

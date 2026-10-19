@@ -1,0 +1,32 @@
+---
+// "On this page" — a sticky side nav for a long document whose sections only
+// exist once its text has loaded (a Legal-portal policy, the live FAQ). It
+// watches `target` and lists that element's headings as they arrive, marking
+// the one being read. Stays hidden until there are at least two to list.
+interface Props {
+  /** CSS selector of the element whose headings are listed. */
+  target: string;
+  /** Which headings count as sections. */
+  headings?: string;
+  label: string;
+}
+
+const { target, headings = 'h2', label } = Astro.props;
+---
+
+<nav
+  data-doc-toc
+  data-toc-target={target}
+  data-toc-headings={headings}
+  aria-label={label}
+  class="not-prose hidden lg:sticky lg:top-28"
+>
+  <p class="kicker mb-4">{label}</p>
+  <ol data-toc-list class="relative grid gap-1 border-l-2 border-line"></ol>
+</nav>
+
+<script>
+  import { startDocToc } from '../../scripts/doc-toc';
+
+  for (const nav of document.querySelectorAll<HTMLElement>('[data-doc-toc]')) startDocToc(nav);
+</script>

@@ -28,6 +28,31 @@ exports:
   - 'resolveThemeTokens'
   - 'fitScale'
   - 'fitSize'
+  - 'PROFILE_MENU_ITEMS'
+  - 'PROFILE_MENU_SECTIONS'
+  - 'QUICK_ACCESS_CATALOGUE'
+  - 'DEFAULT_QUICK_ACCESS'
+  - 'QUICK_ACCESS_SIZE'
+  - 'QUICK_ACCESS_STORAGE_KEY'
+  - 'isProfileMenuItemVisible'
+  - 'availableQuickAccess'
+  - 'isValidQuickAccess'
+  - 'normaliseQuickAccess'
+  - 'parseStoredQuickAccess'
+  - 'quickAccessEditorRows'
+  - 'toggleQuickAccess'
+  - 'moveQuickAccess'
+  - 'profileMenuFlagsFrom'
+  - 'profileMenuSections'
+  - 'profileSectionSubtitleKeys'
+  - 'ProfileMenuKey'
+  - 'ProfileMenuFlag'
+  - 'ProfileMenuFlags'
+  - 'ProfileMenuItem'
+  - 'ProfileMenuSection'
+  - 'ProfileMenuSectionDef'
+  - 'ProfileMenuSectionId'
+  - 'ProfileMenuSectionsOptions'
   - 'ThemePalettes'
   - 'ThemeTokenOverrides'
   - 'ThemeTokenSettings'
@@ -3631,6 +3656,56 @@ lines = mergeEarlierMessages(page, lines);
 list.scrollTop = anchoredScrollTop(top, heightBefore, list.scrollHeight); // no jump
 ```
 
+## @-mentions in any chat composer — `chat-mentions`
+
+Lifted from the portals' staff chat so `@duncit/shell`, mWeb and the app find, insert and draw a
+mention the same way (`@duncit/shell` re-exports the originals). A member is mentioned by their
+first name (`mentionHandle`); the composer sends the picked members' ids, and the bubble resolves a
+tapped `@token` back to the user the server says was mentioned.
+
+| Export | Meaning |
+| --- | --- |
+| `MENTION_TOKEN` / `MENTION_QUERY` | An `@name` in text / the half-typed one under the caret. |
+| `mentionQuery(text, caret)` / `applyMention(text, caret, name)` | The fragment being typed / replace it with `@name `. |
+| `splitMentions(text)` | Plain and mention pieces, in order, for the bubble. |
+| `mentionHandle(fullName)` | The token a member is mentioned by — first name, with fallbacks. |
+| `filterMentionCandidates(members, query, selfId, limit?)` | Who to offer for `@query`, never the writer. |
+| `mentionIdsInText(text, picked)` | The ids to send — picks whose `@handle` is still in the text. |
+| `mentionTarget(token, mentioned)` | The user a tapped `@token` names, or `null`. |
+
+```ts
+const offer = filterMentionCandidates(members, mentionQuery(text, caret) ?? '', myId);
+const edit = applyMention(text, caret, mentionHandle(offer[0].full_name));
+send({ text: edit.text, mentions: mentionIdsInText(edit.text, [offer[0]]) });
+```
+
+## New-message alerts, mute, unread and reply quotes — `chat-alerts`
+
+The rules both apps follow for a pod's or a club's room. The server emits `chat:new` on the
+reader's app-wide socket when a message lands in a room they are not looking at (never the sender,
+never a blocked peer, never a muted room unless they were @-mentioned).
+
+| Export | Meaning |
+| --- | --- |
+| `CHAT_NEW_EVENT` / `parseChatNewFrame(raw)` | The event name / a payload as a typed frame, or `null`. |
+| `isViewingRoom(open, frame)` / `chatRoomFromPath(path)` | Whether the frame is for the open room / the room a mWeb path opens. |
+| `createChatPingGate(windowMs?, now?)` | One ping per burst, never two for the same message id. |
+| `createChatReadMarker(send, everyMs?)` | An open room's read marker: `now()` on open, `soon()` per arriving line (one trailing mark per `CHAT_READ_MARK_EVERY_MS`), `cancel()` on close. Both apps' `useMarkChatRead` wrap it. |
+| `CHAT_MUTE_DURATIONS` / `isChatMuted(state, now?)` / `chatMuteCopy(t)` | 8 hours, 1 week, Always / whether a mute is in force / the menu's words. |
+| `formatUnreadBadge(count, max?)` | `''` for zero, `99+` past the cap. |
+| `chatReplyPreview(reply)` / `chatReplyText(reply, t)` | What a quoted line shows, in data / in words. |
+| `chatNewToastLine(frame, t)` | "Name: words" for the in-app toast. |
+
+```ts
+const shouldPing = createChatPingGate();
+socket.on(CHAT_NEW_EVENT, (raw) => {
+  const frame = parseChatNewFrame(raw);
+  if (!frame || isViewingRoom(openRoom, frame)) return;
+  if (shouldPing(frame.message_id)) playPing();
+  toast(frame.title, chatNewToastLine(frame, t));
+});
+```
+
 ## The venue bill at Complete Pod — `venue-bill`
 
 Whoever completes a pod may enter the venue final bill. The server decides the money
@@ -3664,25 +3739,33 @@ renderer: `VenueBillSummary` in `@duncit/ui`.
 ## Gig Jobs — `gig-jobs`
 
 Hosts, venue owners and brand owners post what an event or workshop needs; freelancers
-who joined from Earn with Duncit say they are interested, which swaps contacts (free
-today). The MUI screens are `@duncit/gig-jobs`; this module is what every surface —
+who joined from Earn with Duncit say they are interested, which shares their contact with
+the poster, and any signed-in member may view a poster's contact (free today). The MUI screens are `@duncit/gig-jobs`; this module is what every surface —
 native included — shares:
 
 - **Documents** as plain strings (`GIG_JOBS_QUERY`, `GIG_JOB_QUERY`, `CREATE_GIG_JOB_MUTATION`,
   `EXPRESS_GIG_INTEREST_MUTATION`, `SAVE_FREELANCER_PROFILE_MUTATION` …). The board never asks
-  for a contact; only a gig's own page does, and the server answers null until the viewer may see it.
+  for a contact; a gig's own page does, and the server answers null unless the viewer posted it or
+  showed interest. Anyone else signed in reads it on "View contact" with `GIG_JOB_CONTACT_QUERY`.
+- **Place** — a gig and a freelancer profile carry `location_id` (an admin Location) and
+  `locality` (one of its zones) beside the display `city`; `GigJobFilter` takes `location_id`
+  (`city` stays for older clients). `gigPlaceText(row)` reads "Gomti Nagar, Lucknow".
 - **Paths** — `GIG_JOBS_PATH`, `GIG_POST_PATH`, `MY_GIGS_PATH`, `gigJobPath(id)`,
   `gigJobEditPath(id)`, `FREELANCER_PROFILE_PATH`.
 - **Literal label keys** — `gigPosterRoleKey`, `gigEventTypeKey`, `gigStatusKey` (an unknown value
   falls back to a real label), and `gigBudgetText` (null = to be discussed).
 - **Rules** — `canPostGigs(viewer)`; `gigViewerAction(job, viewer)` = MANAGE / CONTACT_SHARED /
-  CLOSED / JOIN_AS_FREELANCER / INTEREST, the one button a viewer gets; `gigRoleOptions`,
-  `freelancerSkillOptions`, `prunedGigRoles` (roles a new category still offers, null = no change);
-  `settledGigFilter` + `GIG_FILTER_SETTLE_MS` for the board's typed boxes; `gigContactLinks` (tel /
-  wa.me / mailto).
+  CLOSED / JOIN_AS_FREELANCER / INTEREST, the one button a viewer gets; `canRevealGigContact(job)`
+  (open, not theirs, contact not already shown); `gigBoardFilter(picked, selectedLocationId)` (the
+  viewer's own filter, else their selected city); `gigRoleOptions`, `freelancerSkillOptions`,
+  `prunedGigRoles` (roles a new category still offers, null = no change); `settledGigFilter` +
+  `GIG_FILTER_SETTLE_MS` for the board's search box (the city is a pick, not typing);
+  `gigContactLinks` (tel / wa.me / mailto).
 - **Forms** — `emptyGigJobValues(viewer)` (contact prefilled from the account, the poster role
   preselected only when there is one), `gigJobToValues` / `toGigJobInput`, `freelancerToValues` /
-  `toFreelancerInput` (drops skills no chosen category offers). Phones go out compacted.
+  `toFreelancerInput` (drops skills no chosen category offers). Phones go out compacted. The place
+  goes out as `location_id` + `locality`, never a typed city; a gig or profile saved before the
+  picker loads with no city, so its editor asks for one. Demo: **utils › gig-jobs-place-and-contact**.
 
 ## A venue's food menu and its QR order — `venue-food`
 
@@ -4145,3 +4228,70 @@ height minus the safe-area insets) and mWeb `AuthBackground` (the viewport heigh
 | --- | --- |
 | `fitScale` | `(available: number, designHeight: number, min: number, max: number, fixed?: number) => number` |
 | `fitSize` | `(base: number, scale: number, floor?: number) => number` |
+
+## The account menu — `profile-menu`
+
+The account menu (/menu) on mWeb and the native app draws from ONE catalogue, so the two cannot
+list different destinations, gate them on different flags or group them differently. Every word is
+a translation key; the mWeb path, the native route and the icon of each destination stay in each
+app (`profile-drawer/profileSections.ts`, `components/Sidebar/profileSections.ts`), keyed by
+`ProfileMenuKey`.
+
+**Quick Access** is the grid of `QUICK_ACCESS_SIZE` (6) tiles a member picks and orders. The
+default set is Chats, Following, Pod History, Earn with Duncit, Pod Ideas and Help & Support —
+none of them flag-gated, so the default grid is always whole. The pick is kept per device under
+`QUICK_ACCESS_STORAGE_KEY` (localStorage on mWeb, the secure store on native) and read back through
+`parseStoredQuickAccess`: unknown, duplicate and now-hidden keys are dropped and the grid is topped
+up from the defaults, so a flag switching off never leaves a hole. Both editors validate with
+`makeQuickAccessSchema` from `@duncit/forms/schemas` (built on `isValidQuickAccess`) and move tiles
+with `toggleQuickAccess` / `moveQuickAccess`. Each app's `useMenuFlags` reads the server's public
+flag list and hands it to `profileMenuFlagsFrom(rows, productFlagKey)`; a missing or not-yet-loaded
+flag counts as off.
+
+**Section cards** come from `profileMenuSections(flags)`: Explore & Community, Work & Earnings,
+Shopping & Orders, Account & Preferences and Support & Legal, each with only its visible rows. A
+section with no visible row is left out unless named in `extraRows` (the apps add Switch role and
+Dark mode to Account, and the Policies list to Support). `profileSectionSubtitleKeys` gives the
+one-line subtitle — a row's short name (`subtitleKey`) when it has one, the gift-card pair once.
+
+```ts
+import {
+  isValidQuickAccess,
+  moveQuickAccess,
+  parseStoredQuickAccess,
+  profileMenuSections,
+  profileSectionSubtitleKeys,
+  toggleQuickAccess,
+} from '@duncit/utils';
+
+const flags = { products: true, leaderboard: false };
+
+parseStoredQuickAccess(null, flags);
+// ['chats', 'following', 'pod-history', 'earn', 'ideas', 'support']
+parseStoredQuickAccess('["cart","leaderboard","saved"]', flags);
+// ['cart', 'saved', 'chats', 'following', 'pod-history', 'earn'] — leaderboard is off
+isValidQuickAccess(['chats', 'saved'], flags); // false — six or nothing
+toggleQuickAccess(['chats', 'saved'], 'saved'); // ['chats']
+moveQuickAccess(['chats', 'saved'], 1, -1); // ['saved', 'chats']
+
+const explore = profileMenuSections(flags).find((s) => s.id === 'explore');
+profileSectionSubtitleKeys(explore?.items ?? []);
+// ['mweb.podIdeas.podIdeas', 'mweb.badges.sidebarLabel']
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `PROFILE_MENU_ITEMS` | `Record<ProfileMenuKey, ProfileMenuItem>` | Every destination: `labelKey`, optional `flag`, `badgeKey` and `subtitleKey`. |
+| `PROFILE_MENU_SECTIONS` | `ProfileMenuSectionDef[]` | The five section cards, their title keys and rows, in order. |
+| `QUICK_ACCESS_CATALOGUE` / `DEFAULT_QUICK_ACCESS` | `ProfileMenuKey[]` | What may be pinned, in editor order / the grid until edited. |
+| `isProfileMenuItemVisible` | `(key, flags) => boolean` | False while the destination's flag is not explicitly on. |
+| `availableQuickAccess` | `(flags) => ProfileMenuKey[]` | The catalogue entries pickable right now. |
+| `isValidQuickAccess` | `(selection, flags) => boolean` | Exactly six, distinct, each pickable. |
+| `normaliseQuickAccess` / `parseStoredQuickAccess` | `(stored, flags) => ProfileMenuKey[]` | A stored value (parsed / JSON string) read back into a valid grid. |
+| `quickAccessEditorRows` | `(selection, flags) => ProfileMenuKey[]` | Picked tiles first, then the rest of the catalogue. |
+| `toggleQuickAccess` / `moveQuickAccess` | `(selection, key)` / `(selection, index, step)` | The editor's pick/unpick (refuses a seventh) and up/down move. |
+| `profileMenuSections` | `(flags, { extraRows?, sections? }) => ProfileMenuSection[]` | The section cards with their visible rows; empty ones dropped. |
+| `profileSectionSubtitleKeys` | `(items) => string[]` | The keys the section subtitle lists, deduplicated. |
+
+Renderers: mWeb `profile-drawer/UserModeContent` + `MenuSections`, native
+`components/Sidebar/SidebarUserContent` + `SidebarSections`.

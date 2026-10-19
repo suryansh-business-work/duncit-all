@@ -1,151 +1,48 @@
 import { Box } from '@mui/material';
-import { useProductVisibility } from '@duncit/app-settings';
-import { GIG_JOBS_PATH, MY_FOOD_ORDERS_PATH, MY_RENTED_ITEMS_PATH, studioEntryFor } from '@duncit/utils';
+import { studioEntryFor, type ProfileMenuFlags, type ProfileMenuKey } from '@duncit/utils';
 import ProfileIdentity from './ProfileIdentity';
-import IncompleteBanner from './IncompleteBanner';
-import QuickActionGrid from './QuickActionGrid';
-import ReferralCard from './ReferralCard';
+import ProfileCompletion from './ProfileCompletion';
+import QuickAccess from './QuickAccess';
 import DuncitCoinCard from './DuncitCoinCard';
 import StudioOptionsCard from './StudioOptionsCard';
-import ManageAccountList from './ManageAccountList';
 import AdSlot from '../../ads/AdSlot';
-import {
-  buildManageItems,
-  PROFILE_GRID,
-  SHOP_ITEMS,
-  type ProfileTile,
-} from './profileSections';
 import type { StudioMode } from '../../../studio-mode';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
-import { useTranslation } from '../../../i18n/useTranslation';
 
 interface UserModeContentProps {
   me: any;
   roles: string[];
   /** Studio mode in effect — the role the one Studio entry opens on. */
   mode: StudioMode;
-  showPodPlans: boolean;
-  /** Server `leaderboard` feature flag — the whole section hides without it. */
-  showLeaderboard?: boolean;
-  /** Server `membership` feature flag — the whole section hides without it. */
-  showMembership?: boolean;
-  /** Server `gift_cards` feature flag — the whole section hides without it. */
-  showGiftCards?: boolean;
-  /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
-  showTourGuide?: boolean;
+  /** The server flags the menu is gated on (`useMenuFlags`). */
+  flags: ProfileMenuFlags;
+  /** Per-tile counts for Quick Access (the Chats unread count). */
+  badgeCounts?: Readonly<Partial<Record<ProfileMenuKey, number>>>;
   onNavigate: (to: string) => void;
 }
 
-/** The profile layout every mode shares: identity, incomplete nudge,
- * quick-action grid, referral card and the Manage Account list. In User mode
- * the Duncit Coin card is featured. A partner — in any mode — also gets ONE
- * highlighted "Studio" entry, which opens the Studio page: every option of the
- * role in effect, with the role switcher at its top. */
-export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showGiftCards = false, showTourGuide = false, onNavigate }: Readonly<UserModeContentProps>) {
-  const { t } = useTranslation();
-  // The Shop group is the drawer's whole e-commerce entry point, so it lives
-  // and dies with the product system flag rather than being listed as four
-  // destinations that redirect straight back home.
-  const { visible: productsVisible } = useProductVisibility();
+/** The top of the account menu: the profile card (with the completion nudge
+ * inside it while the profile is incomplete), Quick Access, ONE "Studio" card
+ * for a partner in any mode, the Duncit Coin card in User mode and the
+ * sponsored slot. The section cards follow, from <MenuSections/>. Native twin:
+ * Sidebar/SidebarUserContent. */
+export default function UserModeContent({ me, roles, mode, flags, badgeCounts, onNavigate }: Readonly<UserModeContentProps>) {
   const percent = profileCompletion(me ?? {});
   // The ONE "Studio" entry every partner gets, whichever role is active — the
   // rule native reads too. It opens the Studio on the role in effect (or the
   // first role held, from User mode); null for an account with no partner role.
-  const studioEntry = studioEntryFor(mode, roles, { products: productsVisible });
-  // Built here rather than in profileSections so the label is translated —
-  // the section ships flag-gated and localized from day one (rule 38).
-  const leaderboardItems: ProfileTile[] = [
-    { key: 'leaderboard', label: t('mweb.leaderboard.sidebarLabel'), caption: '', icon: 'leaderboard', to: '/leaderboard' },
-  ];
-  const membershipItems: ProfileTile[] = [
-    {
-      key: 'membership',
-      label: t('mweb.membership.sidebarLabel'),
-      caption: '',
-      icon: 'membership',
-      to: '/membership',
-      badge: t('mweb.membership.comingSoon'),
-    },
-  ];
-  // Rows carry no caption in the calm menu: the label says where each goes.
-  const giftCardItems: ProfileTile[] = [
-    {
-      key: 'giftcards-buy',
-      label: t('mweb.giftCards.sidebarBuyLabel'),
-      caption: '',
-      icon: 'giftcards',
-      to: '/gift-cards',
-    },
-    {
-      key: 'giftcards-redeem',
-      label: t('mweb.giftCards.sidebarRedeemLabel'),
-      caption: '',
-      icon: 'giftcardRedeem',
-      to: '/gift-cards/redeem',
-    },
-  ];
-  // Rented items ride on pod bookings, not on the product shop, so they show
-  // under Shop whether or not products are switched on.
-  const shopItems: ProfileTile[] = [
-    ...(productsVisible ? SHOP_ITEMS : []),
-    { key: 'rentals', label: t('venueRentals.guest.sidebarLabel'), caption: '', icon: 'rentals', to: MY_RENTED_ITEMS_PATH },
-  ];
-  // Gig Jobs: open to everyone — hosts, venues and brands post, freelancers apply.
-  const gigItems: ProfileTile[] = [
-    { key: 'gigs', label: t('gigJobs.nav.label'), caption: '', icon: 'gigs', to: GIG_JOBS_PATH },
-  ];
-  // The orders a member placed from venue menus — their own section, as on native.
-  const foodItems: ProfileTile[] = [
-    { key: 'food-orders', label: t('mweb.venueFood.myOrders.sidebarLabel'), caption: '', icon: 'menu', to: MY_FOOD_ORDERS_PATH },
-  ];
-  /*
-    Chats and Following open the grid, ahead of the config's own four. They came
-    down from the bottom bar — where Venues and the cart now sit — and they are
-    used far more often than Pod Ideas, so they take the first row rather than
-    the last. Built here because their labels are translated and
-    `profileSections` holds no copy (rule 38).
-  */
-  const gridTiles: ProfileTile[] = [
-    {
-      key: 'chats',
-      label: t('mweb.nav.chats'),
-      caption: '',
-      icon: 'chats',
-      to: '/chats',
-    },
-    {
-      key: 'following',
-      label: t('mweb.nav.following'),
-      caption: '',
-      icon: 'following',
-      to: '/follow',
-    },
-    ...PROFILE_GRID,
-  ];
+  const studioEntry = studioEntryFor(mode, roles, { products: flags.products === true });
   return (
     <>
       <Box data-tour="profile-details">
-        <ProfileIdentity me={me} onClick={() => onNavigate('/profile')} />
+        <ProfileIdentity me={me} onClick={() => onNavigate('/profile')}>
+          {percent < 100 && <ProfileCompletion percent={percent} onComplete={() => onNavigate('/account')} />}
+        </ProfileIdentity>
       </Box>
-      {percent < 100 && <IncompleteBanner percent={percent} onComplete={() => onNavigate('/account')} />}
-      <QuickActionGrid tiles={gridTiles} onNavigate={onNavigate} />
-      <AdSlot position="SIDEBAR" variant="card" sx={{ width: 'auto', mx: 2, mb: 1.25 }} />
-      {mode === 'USER' && <DuncitCoinCard onNavigate={onNavigate} />}
+      <QuickAccess flags={flags} badgeCounts={badgeCounts} onNavigate={onNavigate} />
       {studioEntry && <StudioOptionsCard entry={studioEntry} onNavigate={onNavigate} />}
-      <ReferralCard onNavigate={onNavigate} />
-      <ManageAccountList title={t('gigJobs.nav.section')} items={gigItems} onNavigate={onNavigate} />
-      {showLeaderboard && (
-        <ManageAccountList title={t('mweb.leaderboard.title')} items={leaderboardItems} onNavigate={onNavigate} />
-      )}
-      {showMembership && (
-        <ManageAccountList title={t('mweb.membership.title')} items={membershipItems} onNavigate={onNavigate} />
-      )}
-      {showGiftCards && (
-        <ManageAccountList title={t('mweb.giftCards.title')} items={giftCardItems} onNavigate={onNavigate} />
-      )}
-      <ManageAccountList title={t('mweb.venueFood.myOrders.sidebarTitle')} items={foodItems} onNavigate={onNavigate} />
-      <ManageAccountList title={t('mweb.common.manageAccount')} items={buildManageItems(showPodPlans, showTourGuide, t('mweb.badges.sidebarLabel'), t('mweb.contacts.sidebarLabel'))} onNavigate={onNavigate} />
-      <ManageAccountList title={t('mweb.common.shop')} items={shopItems} onNavigate={onNavigate} />
+      {mode === 'USER' && <DuncitCoinCard onNavigate={onNavigate} />}
+      <AdSlot position="SIDEBAR" variant="card" sx={{ width: 'auto', mx: 2, mb: 1.5 }} />
     </>
   );
 }

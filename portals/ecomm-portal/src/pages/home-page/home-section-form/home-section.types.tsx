@@ -22,12 +22,13 @@ export const makeHomeSectionSchema = (t: Translate) => {
       ends_at: z.string(),
       items: z.array(
         z.object({
+          eyebrow: r.optionalText(40),
           title: r.optionalText(120),
           subtitle: r.optionalText(240),
           image_url: r.link(),
           mobile_image_url: r.link(),
           cta_label: r.optionalText(40),
-          link: r.link(),
+          link: r.storeLink(),
         }),
       ),
       collection_id: z.string(),
@@ -56,7 +57,7 @@ export const makeHomeSectionSchema = (t: Translate) => {
 
 export type HomeSectionValues = z.infer<ReturnType<typeof makeHomeSectionSchema>>;
 
-export const BLANK_SECTION_ITEM = { title: '', subtitle: '', image_url: '', mobile_image_url: '', cta_label: '', link: '' };
+export const BLANK_SECTION_ITEM = { eyebrow: '', title: '', subtitle: '', image_url: '', mobile_image_url: '', cta_label: '', link: '' };
 
 export const toHomeSectionValues = (section: StoreSection | null): HomeSectionValues => ({
   kind: section?.kind ?? 'HERO_SLIDER',
@@ -66,6 +67,7 @@ export const toHomeSectionValues = (section: StoreSection | null): HomeSectionVa
   starts_at: section?.starts_at ?? '',
   ends_at: section?.ends_at ?? '',
   items: (section?.items ?? []).map((item) => ({
+    eyebrow: item.eyebrow,
     title: item.title,
     subtitle: item.subtitle,
     image_url: item.image_url,

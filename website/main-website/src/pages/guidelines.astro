@@ -1,11 +1,24 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import IconCard from '../components/page/IconCard.astro';
+import CtaBand from '../components/page/CtaBand.astro';
+import PillLink from '../components/page/PillLink.astro';
 import { fetchBranding } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
 
 const { t } = await getTranslator();
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
+
+const rules = [
+  { icon: 'fa-hand-holding-heart', tone: 'primary', title: t('website.main.guidelines.rule1Heading'), text: t('website.main.guidelines.rule1Text') },
+  { icon: 'fa-id-badge', tone: 'secondary', title: t('website.main.guidelines.rule2Heading'), text: t('website.main.guidelines.rule2Text') },
+  { icon: 'fa-shield-halved', tone: 'tertiary', title: t('website.main.guidelines.rule3Heading'), text: t('website.main.guidelines.rule3Text') },
+  { icon: 'fa-ban', tone: 'ink', title: t('website.main.guidelines.rule4Heading'), text: t('website.main.guidelines.rule4Text') },
+  { icon: 'fa-user-lock', tone: 'primary', title: t('website.main.guidelines.rule5Heading'), text: t('website.main.guidelines.rule5Text') },
+  { icon: 'fa-toolbox', tone: 'secondary', title: t('website.main.guidelines.rule6Heading'), text: t('website.main.guidelines.rule6Text') },
+] as const;
 ---
 
 <PageLayout
@@ -15,29 +28,20 @@ const supportEmail = branding.support_email || 'support@duncit.com';
   intro={t('website.main.guidelines.intro')}
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <h2>{t('website.main.guidelines.rule1Heading')}</h2>
-  <p>{t('website.main.guidelines.rule1Text')}</p>
+  <Block kicker={t('website.main.guidelines.rulesKicker')} title={t('website.main.guidelines.rulesTitle')}>
+    <ul data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {rules.map((rule) => <IconCard icon={rule.icon} tone={rule.tone} title={rule.title} text={rule.text} />)}
+    </ul>
+  </Block>
 
-  <h2>{t('website.main.guidelines.rule2Heading')}</h2>
-  <p>{t('website.main.guidelines.rule2Text')}</p>
-
-  <h2>{t('website.main.guidelines.rule3Heading')}</h2>
-  <p>{t('website.main.guidelines.rule3Text')}</p>
-
-  <h2>{t('website.main.guidelines.rule4Heading')}</h2>
-  <p>{t('website.main.guidelines.rule4Text')}</p>
-
-  <h2>{t('website.main.guidelines.rule5Heading')}</h2>
-  <p>{t('website.main.guidelines.rule5Text')}</p>
-
-  <h2>{t('website.main.guidelines.rule6Heading')}</h2>
-  <p>{t('website.main.guidelines.rule6Text')}</p>
-
-  <h2>{t('website.main.guidelines.wrongHeading')}</h2>
-  <p>
-    {t('website.main.guidelines.wrongText')}
-    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+  <CtaBand kicker={t('website.main.guidelines.wrongKicker')} title={t('website.main.guidelines.wrongHeading')} icon="fa-life-ring">
+    {t('website.main.guidelines.wrongText')} <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
     {t('website.main.guidelines.wrongTextAfter')}
-  </p>
+    <Fragment slot="actions">
+      <PillLink href={`mailto:${supportEmail}`} label={t('website.main.nav.emailSupport')} icon="fa-envelope" />
+      <PillLink href="/safety/tools" label={t('website.main.nav.safetyTools')} variant="soft" />
+    </Fragment>
+  </CtaBand>
 </PageLayout>

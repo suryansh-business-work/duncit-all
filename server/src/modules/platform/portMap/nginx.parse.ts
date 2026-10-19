@@ -35,7 +35,7 @@ function endDirective(current: NginxDirective[], words: string[], opensBlock: bo
 
 /** The config as tokens, comments dropped. A quoted `{` stays quoted, so it is never mistaken for structure. */
 export function tokenize(text: string): string[] {
-  return (text.match(TOKEN) ?? []).filter((token) => !token.startsWith('#'));
+  return Array.from(text.matchAll(TOKEN), ([token]) => token).filter((token) => !token.startsWith('#'));
 }
 
 /** Parses tokens into a directive tree. An unbalanced `}` is ignored rather than thrown on — a half-written file still maps. */

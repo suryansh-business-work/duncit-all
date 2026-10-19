@@ -38,6 +38,13 @@ const PodMessageSchema = new Schema(
     image_url: { type: String, default: '' },
     reactions: { type: [ReactionSchema], default: [] },
     deleted: { type: Boolean, default: false },
+    // The message this one answers (same room, checked when it is sent). The
+    // quote is read from that message at display time, never copied here, so
+    // a deleted original reads as deleted in every reply to it.
+    reply_to_id: { type: String, default: null },
+    // Members named with @, checked against the room when it is sent. They are
+    // notified even when they muted the room. Indexed for "where was I mentioned".
+    mentions: { type: [String], default: [], index: true },
   },
   { timestamps: true }
 );

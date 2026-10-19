@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { InputAdornment, Stack, TextField, Tooltip } from '@mui/material';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
@@ -12,6 +13,12 @@ interface MessageComposerProps {
   onSend: () => void;
   onOpenPicker: () => void;
   onOpenEmoji: (el: HTMLElement) => void;
+  /** The text area, so the @ list can read and place the caret. */
+  inputRef?: Ref<HTMLTextAreaElement>;
+  /** The caret moved (typing, clicking, arrow keys) — the @ list follows it. */
+  onCaretMove?: () => void;
+  /** Enter while the @ list is open picks its first name instead of sending. */
+  onEnterPick?: () => boolean;
 }
 
 export default function MessageComposer({
@@ -20,6 +27,9 @@ export default function MessageComposer({
   onSend,
   onOpenPicker,
   onOpenEmoji,
+  inputRef,
+  onCaretMove,
+  onEnterPick,
 }: Readonly<MessageComposerProps>) {
   const { t } = useTranslation();
   return (
@@ -53,10 +63,12 @@ export default function MessageComposer({
         multiline
         maxRows={4}
         data-testid="chat-input-field"
+        inputRef={inputRef}
+        onSelect={onCaretMove}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            onSend();
+            if (!onEnterPick?.()) onSend();
           }
         }}
         slotProps={{

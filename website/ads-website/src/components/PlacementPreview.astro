@@ -2,10 +2,9 @@
 /**
  * A phone showing where each placement actually sits in the app.
  *
- * This is the ads site's own device — not a slogan strip, a picture of the
- * product being sold. The calculator toggles `is-live` on the zone whose
- * placement is ticked, so choosing a placement and seeing where it lands are
- * the same action.
+ * The ads site's own device — a picture of the product being sold. The
+ * calculator toggles `is-live` on the zone whose placement is ticked, so
+ * choosing a placement and seeing where it lands are the same action.
  */
 import { siteContent } from '../config/site-config';
 
@@ -13,10 +12,10 @@ const { preview } = await siteContent();
 ---
 
 <div class="phone-shell mx-auto w-full max-w-[280px]">
-  <div class="relative rounded-[2rem] border-[10px] border-[#16131a] bg-cream shadow-2xl">
-    <span class="absolute left-1/2 top-0 z-10 h-4 w-20 -translate-x-1/2 rounded-b-xl bg-[#16131a]"></span>
+  <div class="relative rotate-2 rounded-[2.6rem] bg-frame p-2.5 shadow-lift">
+    <span class="absolute left-1/2 top-2.5 z-10 h-5 w-20 -translate-x-1/2 rounded-full bg-frame"></span>
 
-    <div class="flex h-[430px] flex-col gap-1.5 overflow-hidden rounded-[1.4rem] p-2 pt-5">
+    <div class="flex h-[440px] flex-col gap-1.5 overflow-hidden rounded-[2.1rem] bg-cream p-2.5 pt-9">
       <div class="zone h-11" data-zone="STATUS"><span>{preview.STATUS}</span></div>
 
       <div class="flex min-h-0 flex-1 gap-1.5">
@@ -33,7 +32,7 @@ const { preview } = await siteContent();
       <div class="zone h-12" data-zone="HOME_BOTTOM"><span>{preview.HOME_BOTTOM}</span></div>
     </div>
   </div>
-  <p class="mt-3 text-center text-xs text-ink-soft" data-preview-caption>
+  <p class="mt-5 text-center text-sm text-ink-soft" data-preview-caption>
     {preview.caption}
   </p>
 </div>
@@ -42,7 +41,7 @@ const { preview } = await siteContent();
   .zone {
     display: grid;
     place-items: center;
-    border-radius: 0.6rem;
+    border-radius: 0.75rem;
     border: 1px dashed var(--color-line);
     background: color-mix(in srgb, var(--color-ink) 4%, transparent);
     font-family: var(--font-head);
@@ -53,16 +52,26 @@ const { preview } = await siteContent();
     text-align: center;
     padding: 0 0.25rem;
     overflow: hidden;
-    transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+    transition:
+      background-color 250ms ease,
+      color 250ms ease,
+      border-color 250ms ease,
+      transform 400ms var(--ease-smooth);
   }
 
-  /* A bought placement stops looking like an empty slot. */
+  /* A bought placement stops looking like an empty slot — it fills and pops. */
   .zone.is-live {
     border-style: solid;
     border-color: var(--color-primary);
     background: var(--color-primary);
-    color: #fff;
+    color: var(--color-on-accent);
     box-shadow: 0 6px 18px -8px var(--color-primary);
+    transform: scale(1.02);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .zone.is-live {
+      transform: none;
+    }
   }
 
   .vertical {

@@ -83,7 +83,12 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                   error={draft.error}
                 />
 
-                <ScrollView style={SHEET_SAFE_AREA} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                  style={SHEET_SAFE_AREA}
+                  showsVerticalScrollIndicator={false}
+                  // One tap selects even while the area search keyboard is up.
+                  keyboardShouldPersistTaps="handled"
+                >
                   <YStack paddingHorizontal={16} paddingVertical={16} gap={16}>
                     <CountryStateChips
                       tree={draft.tree}

@@ -188,10 +188,14 @@ export type StoreHomeSectionKind =
   | 'NEWSLETTER'
   | 'FLASH_SALE'
   | 'PRODUCT_SLIDER'
-  | 'CATEGORY_ICONS';
+  | 'CATEGORY_ICONS'
+  | 'RANGE_SHOWCASE'
+  | 'EARN_PROMO';
 
 export interface StoreSectionItem {
   id: string;
+  /** The small line above a title, or the badge on a tile. */
+  eyebrow: string;
   title: string;
   subtitle: string;
   image_url: string;
@@ -231,7 +235,7 @@ export const STORE_HOME: TypedDocumentNode<{ storeHome: StoreHomeSection[] }, No
       kind
       title
       subtitle
-      items { id title subtitle image_url mobile_image_url cta_label link }
+      items { id eyebrow title subtitle image_url mobile_image_url cta_label link }
       collection { id name slug }
       products { ${CARD_FIELDS} }
       categories { id name slug image_url }

@@ -2,17 +2,18 @@ import { describe, expect, it } from 'vitest';
 import type { ChatMessage, ClubRoomData, PodRoomData } from '../chat.types';
 import { clubPageInto, podPageInto, prependOlderPage, refreshNewestPage, roomCursor } from '../chatRoomPages';
 
-const line = (id: string, minute: number, text = id): ChatMessage =>
-  ({
-    id,
-    pod_id: 'pod1',
-    user_id: 'u1',
-    type: 'TEXT',
-    text,
-    reactions: [],
-    deleted: false,
-    createdAt: `2026-10-01T10:${String(minute).padStart(2, '0')}:00.000Z`,
-  }) as ChatMessage;
+const line = (id: string, minute: number, text = id): ChatMessage => ({
+  id,
+  pod_id: 'pod1',
+  user_id: 'u1',
+  type: 'TEXT',
+  text,
+  reactions: [],
+  mentions: [],
+  mention_users: [],
+  deleted: false,
+  createdAt: `2026-10-01T10:${String(minute).padStart(2, '0')}:00.000Z`,
+});
 
 describe('chat room pages', () => {
   it('puts an older page in front of the shown lines, each line once in its older place', () => {

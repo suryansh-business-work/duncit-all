@@ -17,7 +17,7 @@ const PREFIX: Record<SitemapKind, string> = {
 };
 
 /** The fixed pages worth indexing; everything else comes from the catalogue. */
-const FIXED_PATHS = ['/', '/shop', '/brands', '/pages/about', '/pages/shipping', '/pages/returns', '/pages/terms', '/contact'];
+const FIXED_PATHS = ['/', '/shop', '/deals', '/brands', '/pages/about', '/pages/shipping', '/pages/returns', '/pages/terms', '/contact'];
 
 const entry = (loc: string, lastmod?: string | null): string => {
   const modified = lastmod ? `<lastmod>${escapeXml(lastmod.slice(0, 10))}</lastmod>` : '';

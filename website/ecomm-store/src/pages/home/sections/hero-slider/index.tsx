@@ -9,74 +9,69 @@ import { CircleButton } from '../../../../components/CircleButton';
 import { useStoreT } from '../../../../i18n';
 import { STORE_TOKENS as T } from '../../../../theme/tokens';
 import type { SectionProps } from '../types';
+import { CarouselDots } from './CarouselDots';
 import { SlideView } from './SlideView';
 import { useCarousel } from './useCarousel';
 
+const NO_TRUST: NonNullable<SectionProps['trust']> = [];
+
+/** The round arrows over the card's left and right edges, desktop only. */
+const edgeArrow = (side: 'left' | 'right') =>
+  ({ position: 'absolute', top: '50%', [side]: 12, transform: 'translateY(-50%)', display: { xs: 'none', md: 'inline-flex' }, boxShadow: T.shadow }) as const;
+
 /** The accessible hero carousel: labelled slides, prev/next, dots, and a pause control. */
-export function HeroSlider({ section }: Readonly<SectionProps>) {
+export function HeroSlider({ section, trust = NO_TRUST }: Readonly<SectionProps>) {
   const { t } = useStoreT();
   const slides = section.items;
   const carousel = useCarousel(slides.length);
   const regionId = useId();
   if (slides.length === 0) return null;
   const total = slides.length;
+  const prevLabel = t('ecommStore.hero.previous');
+  const nextLabel = t('ecommStore.hero.next');
   return (
     <Box
       component="section"
       aria-roledescription={t('ecommStore.hero.carousel')}
       aria-label={section.title || t('ecommStore.hero.label')}
       {...carousel.bind}
-      sx={{ position: 'relative' }}
     >
-      <Box id={regionId} aria-live={carousel.playing ? 'off' : 'polite'}>
-        {slides.map((item, index) => (
-          <Box
-            key={item.id}
-            role="group"
-            aria-roledescription={t('ecommStore.hero.slide')}
-            aria-label={t('ecommStore.hero.slideOf', { vars: { n: index + 1, total } })}
-            hidden={index !== carousel.index}
-          >
-            <SlideView item={item} eager={index === 0} />
-          </Box>
-        ))}
-      </Box>
-      {total > 1 ? (
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'center', mt: 1.5 }}>
-          <CircleButton aria-label={t('ecommStore.hero.previous')} aria-controls={regionId} onClick={carousel.prev}>
-            <ChevronLeftRoundedIcon />
-          </CircleButton>
+      <Box sx={{ position: 'relative' }}>
+        <Box id={regionId} aria-live={carousel.playing ? 'off' : 'polite'}>
           {slides.map((item, index) => (
             <Box
               key={item.id}
-              component="button"
-              type="button"
-              aria-label={t('ecommStore.hero.goTo', { vars: { n: index + 1 } })}
-              aria-current={index === carousel.index ? 'true' : undefined}
-              onClick={() => carousel.goTo(index)}
-              sx={{ border: 0, p: 0, bgcolor: 'transparent', cursor: 'pointer', minWidth: 24, height: 24, display: 'grid', placeItems: 'center' }}
+              role="group"
+              aria-roledescription={t('ecommStore.hero.slide')}
+              aria-label={t('ecommStore.hero.slideOf', { vars: { n: index + 1, total } })}
+              hidden={index !== carousel.index}
             >
-              <Box
-                component="span"
-                sx={{
-                  display: 'block',
-                  width: index === carousel.index ? 28 : 10,
-                  height: 10,
-                  borderRadius: T.radius.pill,
-                  bgcolor: index === carousel.index ? T.navBar : T.inputBorder,
-                  transition: 'width 200ms ease',
-                }}
-              />
+              <SlideView item={item} eager={index === 0} trust={trust} />
             </Box>
           ))}
-          <CircleButton aria-label={t('ecommStore.hero.next')} aria-controls={regionId} onClick={carousel.next}>
+        </Box>
+        {total > 1 ? (
+          <>
+            <CircleButton aria-label={prevLabel} aria-controls={regionId} onClick={carousel.prev} sx={edgeArrow('left')}>
+              <ChevronLeftRoundedIcon />
+            </CircleButton>
+            <CircleButton aria-label={nextLabel} aria-controls={regionId} onClick={carousel.next} sx={edgeArrow('right')}>
+              <ChevronRightRoundedIcon />
+            </CircleButton>
+          </>
+        ) : null}
+      </Box>
+      {total > 1 ? (
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'center', mt: 2 }}>
+          <CircleButton aria-label={prevLabel} aria-controls={regionId} onClick={carousel.prev} sx={{ display: { md: 'none' } }}>
+            <ChevronLeftRoundedIcon />
+          </CircleButton>
+          <CarouselDots slides={slides} index={carousel.index} goTo={carousel.goTo} />
+          <CircleButton aria-label={nextLabel} aria-controls={regionId} onClick={carousel.next} sx={{ display: { md: 'none' } }}>
             <ChevronRightRoundedIcon />
           </CircleButton>
           {carousel.canAutoplay ? (
-            <CircleButton
-              aria-label={carousel.paused ? t('ecommStore.hero.play') : t('ecommStore.hero.pause')}
-              onClick={carousel.togglePaused}
-            >
+            <CircleButton aria-label={carousel.paused ? t('ecommStore.hero.play') : t('ecommStore.hero.pause')} onClick={carousel.togglePaused}>
               {carousel.paused ? <PlayArrowRoundedIcon /> : <PauseRoundedIcon />}
             </CircleButton>
           ) : null}

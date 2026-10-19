@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Classes the shared earnings-calculator widget writes at runtime
+   (@duncit/brand/widgets/earnings-calculator-view + calculator-note). The
+   package sits outside this site's source scan, so they are named here or
+   Tailwind never generates them. */
+@source inline("flex items-baseline justify-between gap-2 gap-3 mt-1 mt-5 text-xs text-sm text-4xl font-head font-bold font-semibold font-extrabold text-ink text-ink-soft text-primary text-primary-dark");
+
 /* The palette is declared as tokens and REDEFINED for dark mode below, so a
    theme switch recolours every utility built from them (bg-surface, text-ink,
    border-line …) instead of asking each component to know about themes. */
@@ -7,7 +13,15 @@
   --color-primary: #ff4f73;
   --color-primary-dark: #e23a5e;
   --color-primary-light: #ffe1e8;
+  /* Pink TEXT on the page background. Primary itself is a 3:1 colour on
+     cream — fine for a big headline, too faint for a kicker or a link. */
+  --color-primary-strong: #c81e4a;
+  /* A filled pink that white text reads on at AA (the buttons, the ribbon).
+     Does not invert: what sits on it is always on-primary. */
+  --color-primary-fill: #d42a59;
   --color-accent: #ff7a59;
+  /* Ink on the coral accent. The accent does not invert, so neither does this. */
+  --color-on-accent: #16131a;
   --color-ink: #16131a;
   --color-ink-soft: #4b4651;
   --color-cream: #fff7f4;
@@ -19,20 +33,43 @@
      while it is over the banner. A token so no component writes `#fff` itself;
      it holds in both themes because what is behind it does not invert. */
   --color-on-primary: #ffffff;
+  /* The dark matte the hero, the calculator's result and the footer sit on —
+     dark in BOTH themes, so the words on it are on-frame, never ink. */
+  --color-frame: #100e14;
+  --color-on-frame: #f5f2f7;
+  --color-on-frame-soft: #bdb6c6;
+
+  --radius-card: 1.75rem;
+  --radius-panel: 2.75rem;
+  --shadow-soft: 0 1px 2px rgba(22, 19, 26, 0.06), 0 8px 24px rgba(22, 19, 26, 0.08);
+  --shadow-lift: 0 30px 80px -20px rgba(22, 19, 26, 0.35);
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 
   --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
 }
 
-/* Dark theme. Set by the no-flash script in the layout from the saved choice,
-   falling back to the operating system's. */
-:root[data-theme='dark'] {
+/* Dark theme. Set by the no-flash script in the layout from the saved choice.
+   `.frame-scope` borrows the same palette: a panel on the dark matte (hero,
+   footer, the estimate) gets dark-theme tokens in BOTH themes, so the shared
+   components inside it (newsletter, policy strip, social links) stay legible
+   without knowing where they sit. */
+:root[data-theme='dark'],
+.frame-scope {
   --color-primary-light: rgba(255, 79, 115, 0.18);
+  --color-primary-strong: #ff7a95;
   --color-ink: #f5f2f7;
   --color-ink-soft: #a9a2b3;
   --color-cream: #0f0d14;
   --color-surface: #191621;
   --color-line: rgba(255, 255, 255, 0.1);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme='dark'] {
+  /* A touch deeper than the dark page, so the matte still reads as a panel. */
+  --color-frame: #08070b;
 }
 
 @layer base {
@@ -55,8 +92,8 @@
   h1, h2, h3, h4 {
     font-family: var(--font-head);
     font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.08;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
   }
   a, button, [role="button"] {
     cursor: pointer;
@@ -74,18 +111,71 @@
   }
 }
 
-/* Glassmorphism — shared look across all Duncit websites. */
-@utility glass {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow: 0 8px 32px rgba(22, 19, 26, 0.12);
+/* Small uppercase label over a section heading. */
+@utility kicker {
+  font-family: var(--font-head);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-primary-strong);
 }
-@utility glass-dark {
-  background: rgba(22, 19, 26, 0.45);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+/* The two button shapes every section uses: a filled pink pill and a ghost. */
+@utility btn {
+  display: inline-flex;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 999px;
+  padding-inline: 1.6rem;
+  font-family: var(--font-head);
+  font-weight: 700;
+  transition:
+    transform 350ms var(--ease-smooth),
+    box-shadow 350ms var(--ease-smooth),
+    background-color 200ms ease,
+    border-color 200ms ease;
+  &:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+/* Soft colour blobs that drift behind a panel. Decorative only. */
+@utility blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+  pointer-events: none;
+  animation: blob-drift 18s ease-in-out infinite alternate;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A floating card that gently bobs. */
+@utility bob {
+  animation: bob 6s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes blob-drift {
+  to {
+    transform: translate(40px, -30px) scale(1.08);
+  }
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-10px);
+  }
 }

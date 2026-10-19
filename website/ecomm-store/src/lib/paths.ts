@@ -2,6 +2,7 @@
 export const paths = {
   home: '/',
   shop: '/shop',
+  deals: '/deals',
   product: (slug: string) => `/p/${encodeURIComponent(slug)}`,
   category: (slug: string) => `/c/${encodeURIComponent(slug)}`,
   petType: (slug: string) => `/pet/${encodeURIComponent(slug)}`,

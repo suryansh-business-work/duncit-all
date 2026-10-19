@@ -19,6 +19,7 @@ exports:
   - 'SiteMenu.astro'
   - 'SiteMeta.astro'
   - 'site-meta'
+  - 'site-branding'
   - 'GoogleAnalytics.astro'
   - 'google-analytics'
   - 'ConsentBanner.astro'
@@ -136,6 +137,12 @@ the mark is DRAWN.
 
 The exceptions are `ReelSlider` and the CMS widgets, which read live data in the browser
 at visit time on purpose — see their sections below.
+
+`site-branding` is the shape of that build-time fetch, not a fetch: each site's own client
+sends `SITE_BRANDING_QUERY` and hands the answer to
+`resolveSiteBranding(data, fallback)`, which lays it over the site's fallback and — when
+Admin > Branding has no Android link — falls back to the server's store listing. The
+`SiteBranding` and `SiteBrandingData` types come with it.
 
 ## API
 
@@ -304,6 +311,7 @@ import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
 | Prop | Type | Meaning |
 | --- | --- | --- |
 | `href` | `string` | earnwith for this environment (`PUBLIC_EARNWITH_URL`), never a literal. |
+| `graphqlUrl` / `site` | `string` / `'MAIN' \| 'PARTNERS' \| 'ADS'` | Set both on a home page and the section follows **Website portal > Earn with Duncit** at page load (see below) and carries the floating Earn pill. Omit them (CMS pages) and it renders exactly as built. |
 | `t` | `SiteTranslate` | The site's build-time translator (`website.brand.earnShowcase.*`). |
 | `eyebrow` / `heading` / `headingMuted` / `text` / `cta` | `string` | The section's words, set per page in the Website CMS; each one omitted renders the shipped copy. |
 | `id` / `class` | `string` | Anchor id (default `earn-with-duncit`) and extra classes for the section. |
@@ -313,6 +321,39 @@ The photos live in `earn-showcase.ts` (`EARN_SHOWCASE_COLUMNS`), served from the
 phone. The wall is decoration (`aria-hidden`), the CTA is the one link, tiles tilt on hover,
 the wall leans toward a fine pointer (`earn-showcase-dom.ts`), and reduced-motion visitors
 get a still wall.
+
+**Portal-driven (`earn-section` + `earn-section-dom.ts`).** With `graphqlUrl` + `site`, the
+browser asks `publicWebsiteEarnSection(site)` and applies it to the built markup: `enabled`
+(off hides the section and the pill), blank-means-default copy (`eyebrow`, `heading`,
+`heading_muted`, `text`, `cta_label`), `cta_url` (https only), `images` (fill the tiles in
+order, repeating), `accent` (`PRIMARY | SECONDARY | TERTIARY` → `--earn-accent` from the
+site's tokens), `variant` (`WALL | SPLIT`) and `position` — the section moves into the page's
+`<div data-earn-slot="AFTER_DOWNLOAD | BEFORE_FOOTER">` anchor; `AFTER_REELS` is where the
+page renders it. Any failure keeps the built section. Pure helpers: `fetchEarnSection`,
+`tilePhotos`, `pick`, `safeHttpsUrl`, `EARN_SECTION_DEFAULTS`.
+
+**`EarnPill.astro`** (rendered inside the section): the floating "Earn with Duncit" pill,
+bottom-right. It slides in once the visitor is past the hero, steps aside while the section is
+on screen, jumps to the section, and stays closed for the visit once dismissed
+(`sessionStorage`). Copy: `website.brand.earnShowcase.floating` / `floatingClose`, or the
+portal's `floating_label`. Don't put a transform on the section itself — it would trap the
+fixed pill.
+
+### `ThemeToggle.astro`
+
+The always-visible light/dark button for a site's top bar:
+`<ThemeToggle label={t('website.nav.theme')} />`. Any number per page — the top bar and the
+menu drawer stay in step through `widgets/theme-toggle.ts` (`wireThemeToggle(scope)` wires
+every `[data-theme-toggle]` under `scope`). The site's layout still applies the saved theme
+(`duncit-theme`) before first paint.
+
+### `ScrollReveal.astro` and `reveal`
+
+Mount once in a site's layout. Mark elements `data-reveal` (`up` default, `fade`, `scale`,
+`left`, `right`) and they ease in the first time they scroll into view; children of a
+`data-reveal-group` are staggered (`staggerDelay`, 80 ms, capped at 8 steps). Nothing is hidden
+until the script has armed `<html class="reveal-ready">`, so no-JS and reduced-motion visitors
+see everything at once.
 
 ### `ReelSlider.astro` and `reel-slider`
 
@@ -423,7 +464,7 @@ so a migration can swap the snapshot back for the live block. `cmsBlockProps` (f
 | `newsletter` | `NewsletterSignup.astro` | `{ source, heading?, text?, placeholder?, button?, variant?, consent?, consentLinkLabel?, consentLinkHref?, captcha?, busyText?, okText?, errorText?, class? }` |
 | `reel-slider` | `ReelSlider.astro` | `{ site, eyebrow?, heading?, class? }` |
 | `earn-showcase` | `EarnShowcase.astro` | `{ href, eyebrow?, heading?, headingMuted?, text?, cta?, id?, class? }` |
-| `app-download` | `AppDownload.astro` | `{ eyebrow?, heading, headingAccent?, text?, perks?, stores: { icon, eyebrow, name, url? }[], soonLabel?, screenshot?, id?, class? }` |
+| `app-download` | `AppDownload.astro` | `{ eyebrow?, heading, headingAccent?, text?, perks?, stores: { icon, eyebrow, name, url? }[], webUrl?, soonLabel?, screenshot?, id?, class?, t? }` |
 | `social-links` | `SocialLinks.astro` | `{ accounts?: { icon, label, href }[], heading?, class? }` |
 | `policy-strip` | `PolicyStrip.astro` (only when it has policies) | `{ policies: { slug, title }[], baseUrl?, heading?, allLabel?, class? }` |
 

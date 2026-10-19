@@ -30,6 +30,14 @@ vi.mock('../usePodSocket', () => ({
   },
 }));
 
+// The tab-wide ping (one per burst) is @duncit/utils' gate, tested there; here
+// only which lines ask for it matters.
+const { pingForMessage } = vi.hoisted(() => ({ pingForMessage: vi.fn() }));
+vi.mock('../../../components/chat-state/chatAlerts', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../components/chat-state/chatAlerts')>()),
+  pingForMessage: (id: string) => pingForMessage(id),
+}));
+
 // Replace the media picker (pulls in @duncit/media-picker) with a lightweight stub.
 vi.mock('../../../components/MediaPickerDialog', () => ({
   default: ({ open, onPicked }: any) =>
@@ -56,6 +64,10 @@ const otherMsg = {
   reactions: [],
   deleted: false,
   createdAt: new Date('2024-01-01T10:00:00Z').toISOString(),
+  reply_to_id: null,
+  reply_to: null,
+  mentions: [],
+  mention_users: [],
 };
 
 const mineMsg = {
@@ -70,6 +82,10 @@ const mineMsg = {
   reactions: [],
   deleted: false,
   createdAt: new Date('2024-01-01T10:05:00Z').toISOString(),
+  reply_to_id: null,
+  reply_to: null,
+  mentions: [],
+  mention_users: [],
 };
 
 const podActive = {
@@ -188,7 +204,7 @@ describe('ChatRoomPage', () => {
     const sendMock = {
       request: {
         query: SEND_MSG,
-        variables: { pod_id: 'pod1', type: 'TEXT', text: 'hi there', image_url: null },
+        variables: { pod_id: 'pod1', type: 'TEXT', text: 'hi there', image_url: null, reply_to_id: null, mentions: [] },
       },
       result: { data: { sendPodMessage: { id: 'new1' } } },
     };
@@ -216,7 +232,7 @@ describe('ChatRoomPage', () => {
     const imageMock = {
       request: {
         query: SEND_MSG,
-        variables: { pod_id: 'pod1', type: 'IMAGE', text: '', image_url: 'https://img/pic.png' },
+        variables: { pod_id: 'pod1', type: 'IMAGE', text: '', image_url: 'https://img/pic.png', reply_to_id: null, mentions: [] },
       },
       result: { data: { sendPodMessage: { id: 'img1' } } },
     };
@@ -302,5 +318,67 @@ describe('ChatRoomPage', () => {
     await screen.findByText('hello other');
     act(() => socketParams.onError('Cannot join chat'));
     expect(await screen.findByText('Cannot join chat')).toBeInTheDocument();
+  });
+
+  it('replies to a message: quotes it over the composer and sends its id', async () => {
+    const replyMock = {
+      request: {
+        query: SEND_MSG,
+        variables: { pod_id: 'pod1', type: 'TEXT', text: 'yes!', image_url: null, reply_to_id: 'm1', mentions: [] },
+      },
+      result: { data: { sendPodMessage: { id: 'r1' } } },
+    };
+    renderPage([replyMock]);
+    await screen.findByText('hello other');
+    fireEvent.click(screen.getByTestId('chat-message-more-m1'));
+    fireEvent.click(await screen.findByTestId('chat-message-action-reply'));
+    const strip = await screen.findByTestId('chat-reply-strip');
+    expect(strip).toHaveTextContent('Replying to Bob');
+    expect(strip).toHaveTextContent('hello other');
+    const input = screen.getByPlaceholderText('Type a message');
+    fireEvent.change(input, { target: { value: 'yes!' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(screen.queryByTestId('chat-reply-strip')).not.toBeInTheDocument());
+  });
+
+  it('cancels a reply from the strip without sending', async () => {
+    renderPage();
+    await screen.findByText('hello other');
+    fireEvent.click(screen.getByTestId('chat-message-more-m1'));
+    fireEvent.click(await screen.findByTestId('chat-message-action-reply'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel reply' }));
+    expect(screen.queryByTestId('chat-reply-strip')).not.toBeInTheDocument();
+  });
+
+  it('offers room members for @, inserts the pick and sends the mention', async () => {
+    const mentionMock = {
+      request: {
+        query: SEND_MSG,
+        variables: { pod_id: 'pod1', type: 'TEXT', text: 'hi @Alice', image_url: null, reply_to_id: null, mentions: ['h1'] },
+      },
+      result: { data: { sendPodMessage: { id: 'n1' } } },
+    };
+    renderPage([mentionMock]);
+    await screen.findByText('2 participants');
+    const input = screen.getByPlaceholderText('Type a message') as HTMLTextAreaElement;
+    fireEvent.change(input, { target: { value: 'hi @Al' } });
+    input.setSelectionRange(6, 6);
+    fireEvent.select(input);
+    fireEvent.click(await screen.findByTestId('chat-mention-option-h1'));
+    expect(input.value).toBe('hi @Alice ');
+    expect(screen.queryByTestId('chat-mention-suggestions')).not.toBeInTheDocument();
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(input.value).toBe(''));
+  });
+
+  it('asks for a ping on lines from others, never on my own', async () => {
+    pingForMessage.mockClear();
+    renderPage();
+    await screen.findByText('hello other');
+    const from = (id: string, user_id: string) => ({ ...otherMsg, id, user_id, text: `line ${id}` });
+    act(() => socketParams.onMessage(from('a1', 'other')));
+    act(() => socketParams.onMessage(from('a2', 'me1')));
+    expect(await screen.findByText('line a2')).toBeInTheDocument();
+    expect(pingForMessage.mock.calls).toEqual([['a1']]);
   });
 });

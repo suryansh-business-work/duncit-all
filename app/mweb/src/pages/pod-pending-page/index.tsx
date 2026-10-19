@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useParams } from 'react-router';
-import { Alert, Box, CircularProgress, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import PullToRefreshIndicator from '../../components/PullToRefreshIndicator';
+import TipsLoader from '../../components/TipsLoader';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';
 import { useTranslation } from '../../i18n/useTranslation';
 import ClubAdminCard from './ClubAdminCard';
@@ -32,11 +33,7 @@ export default function PodPendingPage() {
 
   let body: ReactNode;
   if (loading && !view) {
-    body = (
-      <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }} data-testid="pod-pending-loading">
-        <CircularProgress aria-label={t('mweb.a11y.loading')} />
-      </Box>
-    );
+    body = <TipsLoader testId="pod-pending-loading" />;
   } else if (error || !view) {
     body = (
       <Alert severity="error" data-testid="pod-pending-error">

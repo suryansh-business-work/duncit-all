@@ -6,16 +6,16 @@ import { useNavigate } from 'react-router';
 import { useColorMode } from '../../../ColorModeContext';
 import { useStudioMode } from '../../../StudioModeContext';
 import { useAutoPodCounts } from '../../../hooks/useAutoPodCounts';
-import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
-import { PRODUCT_VISIBILITY_FLAG } from '@duncit/app-settings';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
 import StudioSwitchDialog from './StudioSwitchDialog';
 import MenuRefreshBar from './MenuRefreshBar';
-import MenuSettingsGroup from './MenuSettingsGroup';
+import MenuSections from './MenuSections';
 import MenuSkeleton from './MenuSkeleton';
 import UserModeContent from './UserModeContent';
+import { useMenuFlags } from './useMenuFlags';
+import { useChatUnreadTotal } from '../../chat-state/useChatUnreadTotal';
 
 interface Props {
   /** Closes the menu — the page hands back to the previous route. */
@@ -33,8 +33,9 @@ interface Props {
   onLogout: () => void;
 }
 
-/** Body of the account menu page (/menu): identity + quick actions, role switch,
- * dark mode, policies and logout. It is a full page rather than a drawer so the
+/** Body of the account menu page (/menu): the profile card, Quick Access, the
+ * Studio and Duncit Coin cards, the five collapsible section cards (role switch
+ * and dark mode in Account, policies in Support) and logout. It is a full page rather than a drawer so the
  * browser Back button and a refresh behave like any other route — the ✕ in the
  * header is what returns to where the user came from. */
 export default function MenuPanel({
@@ -52,12 +53,10 @@ export default function MenuPanel({
   const { t } = useTranslation();
   const colorMode = useColorMode();
   const { mode, setMode } = useStudioMode();
-  const showPodPlans = useFeatureFlag('pod_plans_section');
-  const showLeaderboard = useFeatureFlag('leaderboard');
-  const showMembership = useFeatureFlag('membership');
-  const showGiftCards = useFeatureFlag('gift_cards');
-  const showTourGuide = useFeatureFlag('tour_guide');
-  const showProducts = useFeatureFlag(PRODUCT_VISIBILITY_FLAG);
+  const flags = useMenuFlags();
+  // Unread lines across the member's pod and club rooms: the Chats tile's badge.
+  const unreadChats = useChatUnreadTotal(Boolean(me));
+  const showProducts = flags.products === true;
   const [switchOpen, setSwitchOpen] = useState(false);
   const isDark = colorMode.mode === 'dark';
   const roles: string[] = me?.roles ?? [];
@@ -101,16 +100,15 @@ export default function MenuPanel({
             me={me}
             roles={roles}
             mode={effectiveMode}
-            showPodPlans={showPodPlans}
-            showLeaderboard={showLeaderboard}
-            showMembership={showMembership}
-            showGiftCards={showGiftCards}
-            showTourGuide={showTourGuide}
+            flags={flags}
+            badgeCounts={{ chats: unreadChats }}
             onNavigate={go}
           />
         )}
 
-        <MenuSettingsGroup
+        <MenuSections
+          flags={flags}
+          onNavigate={go}
           canSwitch={canSwitch}
           modeLabel={STUDIO_LABEL[effectiveMode]}
           onSwitch={() => {

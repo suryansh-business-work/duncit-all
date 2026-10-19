@@ -1,8 +1,26 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import IconCard from '../components/page/IconCard.astro';
+import Statement from '../components/page/Statement.astro';
+import CtaBand from '../components/page/CtaBand.astro';
+import PillLink from '../components/page/PillLink.astro';
 import { getTranslator } from '../lib/i18n';
 
 const { t } = await getTranslator();
+
+const plugs = [
+  { icon: 'fa-discord', iconSet: 'brands', tone: 'secondary', title: t('website.main.community.plug1Label'), text: t('website.main.community.plug1Text') },
+  { icon: 'fa-flask', iconSet: 'solid', tone: 'tertiary', title: t('website.main.community.plug2Label'), text: t('website.main.community.plug2Text') },
+  { icon: 'fa-house-flag', iconSet: 'solid', tone: 'primary', title: t('website.main.community.plug3Label'), text: t('website.main.community.plug3Text') },
+  { icon: 'fa-palette', iconSet: 'solid', tone: 'ink', title: t('website.main.community.plug4Label'), text: t('website.main.community.plug4Text') },
+] as const;
+
+// The two big doors: deep coral and indigo both carry white text in either theme.
+const doors = [
+  { href: '/#download', icon: 'fa-rocket', tint: 'bg-primary-dark', title: t('website.main.community.getAppTitle'), text: t('website.main.community.getAppText') },
+  { href: '/contact', icon: 'fa-hand-peace', tint: 'bg-secondary', title: t('website.main.community.sayHiTitle'), text: t('website.main.community.sayHiText') },
+];
 ---
 
 <PageLayout
@@ -11,35 +29,45 @@ const { t } = await getTranslator();
   heading={t('website.main.community.heading')}
   intro={t('website.main.community.intro')}
   heroImage="https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <h2>{t('website.main.community.vibeHeading')}</h2>
-  <p>{t('website.main.community.vibeText')}</p>
+  <Block kicker={t('website.main.community.vibeKicker')} title={t('website.main.community.vibeHeading')}>
+    <Statement text={t('website.main.community.vibeText')} icon="fa-face-grin-stars" />
+  </Block>
 
-  <h2>{t('website.main.community.plugHeading')}</h2>
-  <ul>
-    <li><strong>{t('website.main.community.plug1Label')}</strong> {t('website.main.community.plug1Text')}</li>
-    <li><strong>{t('website.main.community.plug2Label')}</strong> {t('website.main.community.plug2Text')}</li>
-    <li><strong>{t('website.main.community.plug3Label')}</strong> {t('website.main.community.plug3Text')}</li>
-    <li><strong>{t('website.main.community.plug4Label')}</strong> {t('website.main.community.plug4Text')}</li>
-  </ul>
+  <Block kicker={t('website.main.community.plugKicker')} title={t('website.main.community.plugHeading')}>
+    <ul data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {plugs.map((plug) => <IconCard icon={plug.icon} iconSet={plug.iconSet} tone={plug.tone} title={plug.title} text={plug.text} />)}
+    </ul>
 
-  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
-    <a href="/#download" class="block p-6 rounded-2xl bg-primary text-white sticker hover:-translate-y-0.5 transition">
-      <i class="fa-solid fa-rocket text-3xl mb-2"></i>
-      <div class="font-head font-bold text-xl">{t('website.main.community.getAppTitle')}</div>
-      <div class="text-sm opacity-90 mt-1">{t('website.main.community.getAppText')}</div>
-    </a>
-    <a href="/contact" class="block p-6 rounded-2xl bg-secondary text-white sticker hover:-translate-y-0.5 transition">
-      <i class="fa-solid fa-hand-peace text-3xl mb-2"></i>
-      <div class="font-head font-bold text-xl">{t('website.main.community.sayHiTitle')}</div>
-      <div class="text-sm opacity-90 mt-1">{t('website.main.community.sayHiText')}</div>
-    </a>
-  </div>
+    <ul data-reveal-group class="mt-5 grid gap-5 sm:grid-cols-2">
+      {
+        doors.map((door) => (
+          <li data-reveal>
+            <a
+              href={door.href}
+              class={`group relative flex h-full items-center gap-5 overflow-hidden rounded-card p-7 text-white shadow-soft transition duration-500 ease-soft hover:-translate-y-1.5 hover:shadow-lift sm:p-9 ${door.tint}`}
+            >
+              <span class="inline-flex h-14 w-14 shrink-0 -rotate-6 items-center justify-center rounded-2xl bg-white/15 text-2xl transition duration-500 ease-soft group-hover:rotate-0" aria-hidden="true">
+                <i class={`fa-solid ${door.icon}`} />
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block font-head text-2xl font-extrabold tracking-tight">{door.title}</span>
+                <span class="mt-1 block text-white/85">{door.text}</span>
+              </span>
+              <i class="fa-solid fa-arrow-right transition duration-300 ease-soft group-hover:-rotate-45" aria-hidden="true" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Block>
 
-  <h2>{t('website.main.community.rulesHeading')}</h2>
-  <p>
-    {t('website.main.community.rulesText')}
-    <a href="/guidelines">{t('website.main.community.rulesLink')}</a>.
+  <CtaBand kicker={t('website.main.community.rulesKicker')} title={t('website.main.community.rulesHeading')} icon="fa-scroll">
+    {t('website.main.community.rulesText')} <a href="/guidelines">{t('website.main.community.rulesLink')}</a>.
     {t('website.main.community.rulesTextAfter')}
-  </p>
+    <Fragment slot="actions">
+      <PillLink href="/guidelines" label={t('website.main.community.rulesCta')} />
+    </Fragment>
+  </CtaBand>
 </PageLayout>

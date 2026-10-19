@@ -4,7 +4,8 @@ import { buildSiteMetaTags, injectSiteMeta } from '@duncit/brand/site-meta';
 
 import { PORT } from './config';
 import { escapeXml, robotsTxt, sitemapXml } from './crawl';
-import { distFile, indexHtml, sendBody, sendStatic } from './files';
+import { distFile, indexHtml, sendBody, sendServiceWorker, sendStatic } from './files';
+import { manifestJson } from './manifest';
 import { headFor } from './pages';
 import { jsonLdTag } from './structured';
 
@@ -57,6 +58,9 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   if (path === '/healthz') return sendBody(req, res, 'ok', 'text/plain; charset=utf-8', 'no-store');
   if (path === '/robots.txt') return sendBody(req, res, robotsTxt(), 'text/plain; charset=utf-8', 'public, max-age=3600');
   if (path === '/sitemap.xml') return sendBody(req, res, await sitemapXml(), 'application/xml; charset=utf-8', 'public, max-age=3600');
+  if (path === '/manifest.webmanifest') return sendBody(req, res, await manifestJson(), 'application/manifest+json', 'public, max-age=600');
+  const worker = path === '/sw.js' ? distFile(path) : null;
+  if (worker) return sendServiceWorker(req, res, worker);
   const file = path === '/' || path === '/index.html' ? null : distFile(path);
   if (file) return sendStatic(req, res, file, path);
   if (extname(path)) {

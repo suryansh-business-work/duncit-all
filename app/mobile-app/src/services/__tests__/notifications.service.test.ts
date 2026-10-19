@@ -81,4 +81,23 @@ describe('notifications.service', () => {
       shouldPlaySound: true,
     });
   });
+
+  const pushTagged = (tag: unknown) =>
+    ({ request: { content: { data: { tag } } } }) as unknown as Notifications.Notification;
+
+  it('keeps a chat room push silent in the foreground — the in-app banner says it — but listed', async () => {
+    const behavior = await handleNotification(pushTagged('chat:pod:abc'));
+    expect(behavior).toMatchObject({
+      shouldShowBanner: false,
+      shouldShowList: true,
+      shouldPlaySound: false,
+    });
+  });
+
+  it('still alerts for a support reply or any other tagged push', async () => {
+    for (const tag of ['support:s1', undefined, 42]) {
+      const behavior = await handleNotification(pushTagged(tag));
+      expect(behavior).toMatchObject({ shouldShowBanner: true, shouldPlaySound: true });
+    }
+  });
 });

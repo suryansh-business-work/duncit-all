@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { SurfaceCard } from '@/components/SurfaceCard';
@@ -16,62 +17,66 @@ export interface SidebarIdentityUser {
 
 const AVATAR = 52;
 
-/** The profile header card — a round avatar, the name at 18/600 and the email
- * muted under it, with a chevron; the whole card opens the profile. RN port of
- * mWeb's <ProfileIdentity/>. */
+/** The profile card — a round avatar, the name at 18/600 and the email muted
+ * under it, with a chevron; that row opens the profile. `children` (the
+ * completion nudge) sits under it in the same card, as its own control rather
+ * than inside the row's button. RN port of mWeb's <ProfileIdentity/>. */
 export function SidebarProfileIdentity({
   me,
   onPress,
-}: Readonly<{ me?: SidebarIdentityUser | null; onPress: () => void }>) {
+  children,
+}: Readonly<{ me?: SidebarIdentityUser | null; onPress: () => void; children?: ReactNode }>) {
   const { t } = useTranslation();
   const { muted } = useThemeColors();
   const initial = (me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase();
 
   return (
-    <YStack paddingHorizontal={16} paddingBottom={12}>
-      <SurfaceCard
-        testID="sidebar-identity"
-        role="button"
-        aria-label={t('mweb.common.openYourProfile')}
-        // One element on native, so whose profile it is rides as the hint.
-        accessibilityHint={me?.full_name ?? undefined}
-        tabIndex={0}
-        onPress={onPress}
-        flexDirection="row"
-        alignItems="center"
-        gap={14}
-        pressStyle={PRESS_STYLE.surface}
-      >
-        {me?.profile_photo ? (
-          <AppImage
-            source={{ uri: me.profile_photo }}
-            style={{ width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2 }}
-          />
-        ) : (
-          <YStack
-            width={AVATAR}
-            height={AVATAR}
-            alignItems="center"
-            justifyContent="center"
-            borderRadius={AVATAR / 2}
-            backgroundColor="$primary"
-          >
-            <Text fontSize={20} fontWeight="600" color="$onPrimary">
-              {initial}
+    <YStack paddingHorizontal={16} paddingBottom={16}>
+      <SurfaceCard testID="sidebar-profile-card">
+        <XStack
+          testID="sidebar-identity"
+          role="button"
+          aria-label={t('mweb.common.openYourProfile')}
+          // One element on native, so whose profile it is rides as the hint.
+          accessibilityHint={me?.full_name ?? undefined}
+          tabIndex={0}
+          onPress={onPress}
+          alignItems="center"
+          gap={14}
+          pressStyle={PRESS_STYLE.surface}
+        >
+          {me?.profile_photo ? (
+            <AppImage
+              source={{ uri: me.profile_photo }}
+              style={{ width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2 }}
+            />
+          ) : (
+            <YStack
+              width={AVATAR}
+              height={AVATAR}
+              alignItems="center"
+              justifyContent="center"
+              borderRadius={AVATAR / 2}
+              backgroundColor="$primary"
+            >
+              <Text fontSize={20} fontWeight="600" color="$onPrimary">
+                {initial}
+              </Text>
+            </YStack>
+          )}
+          <YStack flex={1} minWidth={0} gap={2}>
+            <Text numberOfLines={1} fontSize={18} fontWeight="600" color="$color">
+              {me?.full_name ?? 'User'}
             </Text>
+            {me?.email ? (
+              <Text numberOfLines={1} fontSize={13} color="$muted">
+                {me.email}
+              </Text>
+            ) : null}
           </YStack>
-        )}
-        <YStack flex={1} minWidth={0} gap={2}>
-          <Text numberOfLines={1} fontSize={18} fontWeight="600" color="$color">
-            {me?.full_name ?? 'User'}
-          </Text>
-          {me?.email ? (
-            <Text numberOfLines={1} fontSize={13} color="$muted">
-              {me.email}
-            </Text>
-          ) : null}
-        </YStack>
-        <MaterialIcons name="chevron-right" size={22} color={muted} />
+          <MaterialIcons name="chevron-right" size={22} color={muted} />
+        </XStack>
+        {children}
       </SurfaceCard>
     </YStack>
   );

@@ -1,0 +1,72 @@
+---
+// The inner pages' card: an icon tile, a title, a line or two, and — when it
+// leads somewhere — an arrow that turns as the card lifts. Renders as a list
+// item so a grid of them is a real list to a screen reader.
+//
+// Tones: the tile's colour. `tertiary` is yellow, which never inverts, so it
+// writes in `on-accent`; the others use their light tint, which the dark
+// theme redefines.
+import SmartLink from '../SmartLink.astro';
+
+export type CardTone = 'primary' | 'secondary' | 'tertiary' | 'ink';
+
+interface Props {
+  icon: string;
+  title: string;
+  text?: string;
+  href?: string;
+  tone?: CardTone;
+  /** A small rotated label in the card's corner. */
+  sticker?: string;
+  /** `brands` for a brand glyph (Discord…), `solid` otherwise. */
+  iconSet?: 'solid' | 'brands';
+  class?: string;
+}
+
+const { icon, title, text, href, tone = 'primary', sticker, iconSet = 'solid', class: className = '' } = Astro.props;
+
+const tile = {
+  primary: 'bg-primary-light text-primary-ink',
+  secondary: 'bg-secondary-light text-secondary',
+  tertiary: 'bg-tertiary text-on-accent',
+  ink: 'bg-ink text-cream',
+}[tone];
+
+const card =
+  'group relative flex h-full flex-col gap-4 rounded-card border border-line bg-surface p-6 shadow-soft transition duration-500 ease-soft sm:p-7';
+const lift = 'hover:-translate-y-1.5 hover:shadow-lift';
+---
+
+<li data-reveal class:list={['relative list-none', className]}>
+  {
+    href ? (
+      <SmartLink href={href} label={title} class={`${card} ${lift}`}>
+        <span class={`inline-flex h-12 w-12 items-center justify-center rounded-2xl text-lg ${tile}`} aria-hidden="true">
+          <i class:list={[`fa-${iconSet}`, icon]} />
+        </span>
+        <span class="flex items-start justify-between gap-3">
+          <span class="font-head text-xl font-extrabold tracking-tight text-ink">{title}</span>
+          <i class="fa-solid fa-arrow-right mt-1.5 text-sm text-ink-soft transition duration-300 ease-soft group-hover:-rotate-45 group-hover:text-primary-ink" aria-hidden="true" />
+        </span>
+        {text && <span class="text-[0.95rem] leading-relaxed text-ink-soft">{text}</span>}
+        <slot />
+      </SmartLink>
+    ) : (
+      <div class={card}>
+        <span class={`inline-flex h-12 w-12 items-center justify-center rounded-2xl text-lg ${tile}`} aria-hidden="true">
+          <i class:list={[`fa-${iconSet}`, icon]} />
+        </span>
+        <h3 class="font-head text-xl font-extrabold tracking-tight text-ink">{title}</h3>
+        {text && <p class="text-[0.95rem] leading-relaxed text-ink-soft">{text}</p>}
+        <slot />
+      </div>
+    )
+  }
+  {
+    sticker && (
+      <span class="absolute -top-3 right-5 rotate-[4deg] rounded-full bg-tertiary px-3 py-1 font-head text-xs font-extrabold text-on-accent shadow-soft" aria-hidden="true">
+        {sticker}
+      </span>
+    )
+  }
+</li>

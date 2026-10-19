@@ -5,6 +5,7 @@
 import AppDownload from '@duncit/brand/AppDownload.astro';
 import { fetchBranding } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
+import { urlConfigs } from '../config/url-configs';
 
 const { t } = await getTranslator();
 const branding = await fetchBranding();
@@ -34,4 +35,7 @@ const stores = [
     t('website.main.download.perk3'),
   ]}
   stores={stores}
+  webUrl={urlConfigs.mwebUrl}
+  class="mt-3 rounded-panel"
+  t={t}
 />

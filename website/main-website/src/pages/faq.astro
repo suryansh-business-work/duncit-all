@@ -1,12 +1,16 @@
 ---
 // FAQs load client-side from the Support portal so new answers appear
-// without a redeploy; the support email comes from Admin branding.
+// without a redeploy; the support email comes from Admin branding. The side
+// list of topics is built from the groups as they arrive (DocToc).
 import { captchaCopy } from '@duncit/i18n';
 import Captcha from '@duncit/captcha/Captcha.astro';
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import DocToc from '../components/page/DocToc.astro';
 import { fetchBranding } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
 import { urlConfigs } from '../config/url-configs';
+import '../styles/widgets.css';
 
 const { t } = await getTranslator();
 const branding = await fetchBranding();
@@ -20,52 +24,62 @@ const supportEmail = branding.support_email || 'support@duncit.com';
   intro={t('website.main.faq.intro')}
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <div id="faqGroups" data-cms-widget="faq" data-graphql-url={urlConfigs.graphqlUrl} data-copy={JSON.stringify({ empty: t('website.main.faq.empty'), error: t('website.main.faq.error') })} class="not-prose my-6 space-y-3">
-    <div class="skeleton h-8 w-48" aria-hidden="true"></div>
-    <div class="skeleton h-20" aria-hidden="true"></div>
-    <div class="skeleton h-20" aria-hidden="true"></div>
-    <div class="skeleton h-20" aria-hidden="true"></div>
+  <div class="grid items-start gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-14">
+    <DocToc target="#faqGroups" label={t('website.main.faq.topicsLabel')} />
+    <div
+      id="faqGroups"
+      data-cms-widget="faq"
+      data-graphql-url={urlConfigs.graphqlUrl}
+      data-copy={JSON.stringify({ empty: t('website.main.faq.empty'), error: t('website.main.faq.error') })}
+      class="not-prose min-w-0 lg:col-start-2"
+    >
+      <div class="space-y-3" aria-hidden="true">
+        <div class="skeleton h-8 w-48"></div>
+        <div class="skeleton h-16 rounded-2xl"></div>
+        <div class="skeleton h-16 rounded-2xl"></div>
+        <div class="skeleton h-16 rounded-2xl"></div>
+      </div>
+    </div>
   </div>
 
-  <h2>{t('website.main.faq.askHeading')}</h2>
-  <p>{t('website.main.faq.askText')}</p>
-  <form
-    class="not-prose grid gap-3 max-w-xl mt-4"
-    id="askFaqForm"
-    data-cms-widget="faq"
-    data-graphql-url={urlConfigs.graphqlUrl}
-    data-copy={JSON.stringify({
-      ask: t('website.main.faq.ask'),
-      sending: t('website.main.faq.sending'),
-      gotIt: t('website.main.faq.gotIt'),
-      tooShort: t('website.main.faq.tooShort'),
-      needEmail: t('website.main.faq.needEmail'),
-      failed: t('website.main.faq.failed'),
-      failedRetry: t('website.main.faq.failedRetry'),
-    })}
-  >
-    <textarea
-      name="question"
-      required
-      rows="3"
-      placeholder={t('website.main.faq.questionPlaceholder')}
-      class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none resize-y"
-    ></textarea>
-    <input
-      name="email"
-      type="email"
-      required
-      placeholder={t('website.main.faq.emailPlaceholder')}
-      class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none"
-    />
-    <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
-    <p id="askFaqErr" data-form-error class="text-sm text-red-600 hidden"></p>
-    <button class="px-6 py-3 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
-      {t('website.main.faq.ask')} <i class="fa-solid fa-paper-plane"></i>
-    </button>
-  </form>
-  <p class="mt-4">{t('website.main.faq.orEmail')} <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>
+  <Block kicker={t('website.main.faq.askKicker')} title={t('website.main.faq.askHeading')} text={t('website.main.faq.askText')}>
+    <div data-reveal class="grid gap-8 rounded-panel border border-line bg-surface p-6 shadow-soft sm:p-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+      <form
+        class="grid gap-4"
+        id="askFaqForm"
+        data-cms-widget="faq"
+        data-graphql-url={urlConfigs.graphqlUrl}
+        data-copy={JSON.stringify({
+          ask: t('website.main.faq.ask'),
+          sending: t('website.main.faq.sending'),
+          gotIt: t('website.main.faq.gotIt'),
+          tooShort: t('website.main.faq.tooShort'),
+          needEmail: t('website.main.faq.needEmail'),
+          failed: t('website.main.faq.failed'),
+          failedRetry: t('website.main.faq.failedRetry'),
+        })}
+      >
+        <label class="sr-only" for="faqQuestion">{t('website.main.faq.questionPlaceholder')}</label>
+        <textarea id="faqQuestion" name="question" required rows="3" placeholder={t('website.main.faq.questionPlaceholder')} class="form-field"></textarea>
+        <label class="sr-only" for="faqEmail">{t('website.main.faq.emailPlaceholder')}</label>
+        <input id="faqEmail" name="email" type="email" required autocomplete="email" placeholder={t('website.main.faq.emailPlaceholder')} class="form-field" />
+        <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
+        <p id="askFaqErr" data-form-error class="form-error hidden" role="alert"></p>
+        <button class="form-submit justify-self-start">
+          {t('website.main.faq.ask')} <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+        </button>
+      </form>
+      <div class="flex flex-col justify-center gap-3 rounded-card bg-lilac p-6">
+        <span class="inline-flex h-12 w-12 -rotate-6 items-center justify-center rounded-2xl bg-tertiary text-lg text-on-accent" aria-hidden="true">
+          <i class="fa-solid fa-envelope-open-text"></i>
+        </span>
+        <p class="text-ink-soft">{t('website.main.faq.orEmail')}</p>
+        <a href={`mailto:${supportEmail}`} class="font-head text-lg font-extrabold break-all text-ink underline decoration-primary decoration-2 underline-offset-4">{supportEmail}</a>
+      </div>
+    </div>
+  </Block>
 </PageLayout>
 
 <script>

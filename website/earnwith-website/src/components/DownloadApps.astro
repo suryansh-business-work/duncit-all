@@ -3,12 +3,14 @@
 // section at all — the one place a host actually runs their pods from was never
 // offered on the page that recruits them.
 import AppDownload from '@duncit/brand/AppDownload.astro';
-import { siteContent } from '../config/site-config';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+import { siteContent, siteUrls } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
 
 const siteConfig = await siteContent();
 const { download } = siteConfig;
 const branding = await fetchBranding();
+const { t } = await getSiteTranslator(siteUrls.graphqlUrl);
 const stores = [
   {
     icon: 'fa-google-play',
@@ -25,10 +27,15 @@ const stores = [
 ];
 ---
 
-<AppDownload
-  heading={download.heading}
-  headingAccent={download.headingAccent}
-  text={download.text}
-  perks={download.perks}
-  stores={stores}
-/>
+<div data-reveal>
+  <AppDownload
+    eyebrow={download.eyebrow}
+    heading={download.heading}
+    headingAccent={download.headingAccent}
+    text={download.text}
+    perks={download.perks}
+    stores={stores}
+    webUrl={siteUrls.mwebUrl}
+    t={t}
+  />
+</div>

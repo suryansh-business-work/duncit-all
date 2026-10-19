@@ -1,0 +1,47 @@
+---
+/**
+ * The tilted band under the banner: every place an ad can run, scrolling
+ * past. The rate table below says the same thing properly, so the band is
+ * decoration and hidden from assistive tech. Two copies make the loop seamless.
+ */
+interface Props {
+  items: string[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="relative z-10 -mx-4 -mt-7 overflow-hidden py-4" aria-hidden="true">
+  <div class="-rotate-[1.5deg] bg-ink py-5 text-cream">
+    <div class="marquee-track flex w-max">
+      {
+        [0, 1].map(() => (
+          <ul class="flex shrink-0 items-center gap-10 pr-10 font-head text-2xl font-extrabold tracking-tight sm:text-3xl">
+            {items.map((item) => (
+              <li class="flex items-center gap-10 whitespace-nowrap">
+                {item}
+                <i class="fa-solid fa-star-of-life text-lg text-primary" />
+              </li>
+            ))}
+          </ul>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .marquee-track {
+    animation: marquee-scroll 40s linear infinite;
+  }
+  @keyframes marquee-scroll {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+    }
+  }
+</style>

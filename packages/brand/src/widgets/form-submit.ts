@@ -42,7 +42,8 @@ export async function submitForm(
   request: SubmitRequest,
   copy: SubmitCopy
 ): Promise<void> {
-  const btn = form.querySelector('button');
+  // The submit button, not the first one: a captcha's refresh button can come first.
+  const btn = form.querySelector<HTMLButtonElement>('button[type="submit"], button:not([type])');
   const orig = btn?.innerHTML;
   const restore = () => {
     if (btn) btn.innerHTML = orig || copy.idle;

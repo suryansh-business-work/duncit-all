@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client/react';
 import { Navigate, useParams } from 'react-router';
-import { Alert, Box, CircularProgress } from '@mui/material';
+import { Alert } from '@mui/material';
+import TipsLoader from '../../components/TipsLoader';
 import { podUrl } from '../../utils/seoUrls';
 import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
@@ -53,9 +54,5 @@ export default function BookingPage() {
       </Alert>
     );
   }
-  return (
-    <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }} data-testid="booking-loading">
-      <CircularProgress aria-label={t('mweb.a11y.loading')} />
-    </Box>
-  );
+  return <TipsLoader testId="booking-loading" />;
 }

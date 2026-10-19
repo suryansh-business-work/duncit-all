@@ -2,8 +2,11 @@
 // Policy Hub — every active policy from the Legal portal. Fetched in the
 // browser so newly published policies appear without a site redeploy.
 import PageLayout from '../layouts/PageLayout.astro';
+import CtaBand from '../components/page/CtaBand.astro';
+import PillLink from '../components/page/PillLink.astro';
 import { getTranslator } from '../lib/i18n';
 import { urlConfigs } from '../config/url-configs';
+import '../styles/widgets.css';
 
 const { t } = await getTranslator();
 ---
@@ -14,34 +17,46 @@ const { t } = await getTranslator();
   heading={t('website.main.policies.heading')}
   intro={t('website.main.policies.intro')}
   heroImage="https://images.pexels.com/photos/7654588/pexels-photo-7654588.jpeg?auto=compress&cs=tinysrgb&w=1600"
+  wide
 >
   <!-- Thirteen policies is more than anyone scans. The field filters the list
        as you type; it stays hidden until the list has actually loaded, because
        a search box over four skeletons is a control that does nothing. -->
-  <div class="not-prose mb-6 hidden" id="policySearchWrap" data-policy-search-wrap>
+  <div class="not-prose mx-auto mb-10 hidden max-w-3xl" id="policySearchWrap" data-policy-search-wrap>
     <label class="sr-only" for="policySearch">{t('website.main.policies.searchLabel')}</label>
     <div class="relative">
-      <i
-        class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft"
-        aria-hidden="true"></i>
+      <i class="fa-solid fa-magnifying-glass pointer-events-none absolute top-1/2 left-6 -translate-y-1/2 text-lg text-ink-soft" aria-hidden="true"></i>
       <input
         id="policySearch"
         data-policy-search
         type="search"
         autocomplete="off"
         placeholder={t('website.main.policies.searchPlaceholder')}
-        class="w-full rounded-xl border-2 border-ink/10 bg-surface py-3 pl-11 pr-4 text-ink outline-none transition focus:border-primary"
+        class="form-field min-h-16! rounded-full! pl-14! text-lg! shadow-soft"
       />
     </div>
-    <p class="mt-2 text-sm text-ink-soft" id="policyCount" data-policy-count role="status" aria-live="polite"></p>
+    <p class="mt-3 text-center text-sm font-semibold text-ink-soft" id="policyCount" data-policy-count role="status" aria-live="polite"></p>
   </div>
 
-  <div id="policyList" data-cms-widget="policy-list" data-graphql-url={urlConfigs.graphqlUrl} data-copy={JSON.stringify({ readCurrent: t('website.main.policies.readCurrent'), showAll: t('website.main.policies.showAll'), empty: t('website.main.policies.empty'), error: t('website.main.policies.error'), matchOne: t('website.main.policies.matchOne'), matchMany: t('website.main.policies.matchMany'), nothingMatches: t('website.main.policies.nothingMatches') })} class="not-prose grid sm:grid-cols-2 gap-4">
-    <div class="skeleton h-28" aria-hidden="true"></div>
-    <div class="skeleton h-28" aria-hidden="true"></div>
-    <div class="skeleton h-28" aria-hidden="true"></div>
-    <div class="skeleton h-28" aria-hidden="true"></div>
+  <div
+    id="policyList"
+    data-cms-widget="policy-list"
+    data-graphql-url={urlConfigs.graphqlUrl}
+    data-copy={JSON.stringify({ readCurrent: t('website.main.policies.readCurrent'), showAll: t('website.main.policies.showAll'), empty: t('website.main.policies.empty'), error: t('website.main.policies.error'), matchOne: t('website.main.policies.matchOne'), matchMany: t('website.main.policies.matchMany'), nothingMatches: t('website.main.policies.nothingMatches') })}
+    class="not-prose grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+  >
+    <div class="skeleton h-28 rounded-card" aria-hidden="true"></div>
+    <div class="skeleton h-28 rounded-card" aria-hidden="true"></div>
+    <div class="skeleton h-28 rounded-card" aria-hidden="true"></div>
   </div>
+
+  <CtaBand kicker={t('website.main.policies.helpKicker')} title={t('website.main.policies.helpTitle')} icon="fa-scale-balanced">
+    {t('website.main.policies.helpText')}
+    <Fragment slot="actions">
+      <PillLink href="/contact" label={t('website.main.nav.contactUs')} icon="fa-envelope" />
+      <PillLink href="/grievance" label={t('grievance.title')} variant="soft" />
+    </Fragment>
+  </CtaBand>
 </PageLayout>
 
 <script>

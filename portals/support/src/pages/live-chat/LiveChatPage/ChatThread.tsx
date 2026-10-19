@@ -36,7 +36,7 @@ export default function ChatThread({
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [atBottom, setAtBottom] = useState(true);
-  const newest = messages[messages.length - 1];
+  const newest = messages.at(-1);
   const lastNewestId = useRef<string | undefined>(undefined);
   const history = useScrollUpHistory({
     scrollRef,

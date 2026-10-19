@@ -1,12 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 
 import { CheckoutSuccess } from '@/components/checkout';
 import { StackScreen } from '@/components/StackScreen';
 import { RefreshScrollView } from '@/components/PullToRefresh';
-import { useLoadingRegion } from '@/components/Skeleton';
+import { TipsLoader } from '@/components/TipsLoader';
 import { MobileCheckoutPodDocument } from '@/graphql/checkout';
 import type { CheckoutPod } from '@/hooks/useCheckout';
 import { usePodTicket } from '@/hooks/usePodHistory';
@@ -25,7 +25,6 @@ import { logs } from '@duncit/logs';
  * ticket in Pod History. The pod is read with the checkout's own query.
  */
 export function FreeJoinSuccessScreen() {
-  const loadingRegion = useLoadingRegion();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'FreeJoinSuccess'>>();
   const podId = route.params?.podId ?? '';
@@ -51,11 +50,7 @@ export function FreeJoinSuccessScreen() {
 
   let body: ReactNode;
   if (loading) {
-    body = (
-      <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner {...loadingRegion} testID="free-join-success-loading" color="$primary" />
-      </YStack>
-    );
+    body = <TipsLoader testID="free-join-success-loading" />;
   } else if (error || !pod) {
     body = (
       <Text role="alert" testID="free-join-success-error" padding={24} color="$danger">

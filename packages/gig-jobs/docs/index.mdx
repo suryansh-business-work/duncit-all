@@ -27,14 +27,26 @@ that need and where freelancers find it.
 
 - **Posting** is for `HOST`, `VENUE_OWNER` and `ECOMM_MANAGER` (a Partner Brand owner — never the
   pet store's staff). The server checks the role on every save; the UI only mirrors it.
-- **Browsing** is for anyone signed in.
+- **Browsing** is for anyone signed in. The board starts on the viewer's selected city (mWeb's
+  header, via `GigSurfaceConfig.selectedLocationId`), as the pods lists do; "All cities" and
+  any other city are one pick away.
+- **Where** a gig is, and where a freelancer works, is a city from the admin **Location** list
+  plus, optionally, one of its areas: the same `AdminLocationSelect` cascade pods and clubs use
+  (`GigPlaceField` inside the package). The form keeps `location_id` + `locality`; the server
+  checks the Location is active and fills `city` from it. Gigs typed before the picker keep
+  their free-text city and still show on their city's board.
 - **Showing interest** is for freelancers. A freelancer joins from **Earn with Duncit** — a
   self-serve card with no meeting: saving the profile grants the `FREELANCER` role.
-- **"I'm interested"** swaps contacts: the freelancer's profile contact goes to the poster (with an
-  in-app notification) and the poster's comes back. It is free today; every screen that shares a
-  contact shows an info notice that it may become a paid feature. On the server one function
-  (`contactVisibleTo` in `gigJob.service.ts`) decides who sees a contact — that is where a paid
-  unlock would sit.
+- **"View contact"** is for anyone signed in, on an open gig that is not theirs
+  (`canRevealGigContact`). The contact is read on the tap through its own query
+  (`gigJobContact(job_id)`), never shipped with the gig, and the server logs every reveal.
+- **"I'm interested"** shares the freelancer's profile contact with the poster (with an in-app
+  notification); the poster's contact then shows on the gig without a tap. It is free today; every
+  screen that shares a contact shows an info notice that it may become a paid feature. On the
+  server, `contactVisibleTo` and `revealContact` in `gigJob.service.ts` are the only reads that
+  hand a poster's contact out — that is where a paid unlock would sit.
+- A failed load shows one fixed line, and the parsed cause goes to the surface's `logger`
+  (`useLoggedError`), so a `GRAPHQL_VALIDATION_FAILED` can be diagnosed.
 
 Categories (Photography & Videography, Food & Catering, … Sponsorship) and the roles under each
 are admin master data — **Admin > Catalog > Gig Categories** — seeded create-only on boot.
@@ -42,7 +54,8 @@ are admin master data — **Admin > Catalog > Gig Categories** — seeded create
 The native app cannot import MUI, so everything that is not drawing lives in
 **`@duncit/utils` → `gig-jobs.ts`**: the documents as plain strings, the row types, the label keys
 (`gigPosterRoleKey`, `gigEventTypeKey`, `gigStatusKey`), the rules (`canPostGigs`,
-`gigViewerAction`, `gigRoleOptions`, `freelancerSkillOptions`, `gigContactLinks`) and the
+`gigViewerAction`, `canRevealGigContact`, `gigBoardFilter`, `gigPlaceText`, `gigRoleOptions`,
+`freelancerSkillOptions`, `gigContactLinks`) and the
 conversion between form values and mutation inputs. The form rules are `@duncit/forms/schemas` → `gig-job.ts`. Copy is
 the `gigJobs` namespace.
 
@@ -56,8 +69,10 @@ Every screen needs a `GigSurfaceProvider` that says where links go:
     go: (path) => navigate(path),
     // mWeb: in-app. Partners: open mWeb's /earn/freelancer, where Earn with Duncit lives.
     openFreelancerProfile: () => navigate(FREELANCER_PROFILE_PATH),
-    // Background refreshes report through fireAndForget against this logger.
+    // Background refreshes and failed loads report against this logger.
     logger: logs.mWeb,
+    // Optional: the city the board starts on (mWeb passes the header's).
+    selectedLocationId: locationId,
   }}
 >
   <GigBoard />

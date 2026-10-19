@@ -5,6 +5,7 @@ import {
   FREELANCER_PROFILE_PATH,
   GIG_CATEGORIES_QUERY,
   GIG_JOBS_QUERY,
+  GIG_JOB_CONTACT_QUERY,
   GIG_JOB_INTERESTS_QUERY,
   GIG_JOB_QUERY,
   GIG_POST_PATH,
@@ -16,15 +17,18 @@ import {
   SET_GIG_JOB_STATUS_MUTATION,
   UPDATE_GIG_JOB_MUTATION,
   canPostGigs,
+  canRevealGigContact,
   emptyGigJobValues,
   freelancerSkillOptions,
   freelancerToValues,
+  gigBoardFilter,
   gigBudgetText,
   gigContactLinks,
   gigEventTypeKey,
   gigJobEditPath,
   gigJobPath,
   gigJobToValues,
+  gigPlaceText,
   gigPosterRoleKey,
   gigRoleOptions,
   gigStatusKey,
@@ -59,8 +63,10 @@ const JOB: GigJob = {
   roles: ['Photographer'],
   event_type: 'WORKSHOP',
   event_date: '2026-11-02T00:00:00.000Z',
+  location_id: 'loc-pune',
+  locality: 'Koregaon Park',
   city: 'Pune',
-  location: 'Koregaon Park',
+  location: 'Blue Tokai, lane 5',
   description: 'Two hours of candid shots.',
   budget: 5000,
   openings: 2,
@@ -95,6 +101,7 @@ describe('gig documents', () => {
     ['GigJobs', GIG_JOBS_QUERY],
     ['MyGigJobs', MY_GIG_JOBS_QUERY],
     ['GigJob', GIG_JOB_QUERY],
+    ['GigJobContact', GIG_JOB_CONTACT_QUERY],
     ['GigJobInterests', GIG_JOB_INTERESTS_QUERY],
     ['MyFreelancerProfile', MY_FREELANCER_PROFILE_QUERY],
     ['CreateGigJob', CREATE_GIG_JOB_MUTATION],
@@ -114,6 +121,53 @@ describe('gig documents', () => {
     expect(GIG_JOB_QUERY).toContain('contact { name phone email }');
     expect(GIG_JOBS_QUERY).not.toContain('contact');
     expect(MY_GIG_JOBS_QUERY).not.toContain('contact');
+  });
+
+  it('reveals a contact through its own query, keyed by the gig', () => {
+    expect(GIG_JOB_CONTACT_QUERY).toContain('gigJobContact(job_id: $job_id) { name phone email }');
+  });
+
+  it('reads and writes the place as a Location id and an area, keeping the city name for display', () => {
+    expect(GIG_JOBS_QUERY).toContain('city locality');
+    expect(GIG_JOB_QUERY).toContain('location_id');
+    expect(MY_FREELANCER_PROFILE_QUERY).toContain('location_id locality city');
+  });
+});
+
+describe('gigPlaceText', () => {
+  it('names the area before its city, or whichever of the two is known', () => {
+    expect(gigPlaceText({ locality: 'Gomti Nagar', city: 'Lucknow' })).toBe('Gomti Nagar, Lucknow');
+    expect(gigPlaceText({ locality: '', city: 'Lucknow' })).toBe('Lucknow');
+    expect(gigPlaceText({ city: '  Pune ' })).toBe('Pune');
+    expect(gigPlaceText({ locality: null, city: null })).toBe('');
+  });
+});
+
+describe('canRevealGigContact', () => {
+  it('offers "View contact" on an open gig that is not the viewer’s and whose contact is hidden', () => {
+    expect(canRevealGigContact(JOB)).toBe(true);
+  });
+
+  it('does not offer it to the poster, on a closed gig, or once the contact is already shown', () => {
+    expect(canRevealGigContact({ ...JOB, is_mine: true })).toBe(false);
+    expect(canRevealGigContact({ ...JOB, status: 'CLOSED' })).toBe(false);
+    expect(canRevealGigContact({ ...JOB, contact: { name: 'A', phone: '+911', email: '' } })).toBe(false);
+  });
+});
+
+describe('gigBoardFilter', () => {
+  it('starts on the viewer’s selected city until they pick something', () => {
+    expect(gigBoardFilter(null, 'loc-lko')).toEqual({ location_id: 'loc-lko' });
+  });
+
+  it('shows every city when no city is selected', () => {
+    expect(gigBoardFilter(null, '')).toEqual({ location_id: null });
+    expect(gigBoardFilter(null, undefined)).toEqual({ location_id: null });
+  });
+
+  it('keeps the viewer’s own pick, "All cities" included, over the selected city', () => {
+    expect(gigBoardFilter({ location_id: null, search: 'dj' }, 'loc-lko')).toEqual({ location_id: null, search: 'dj' });
+    expect(gigBoardFilter({ location_id: 'loc-pune' }, 'loc-lko')).toEqual({ location_id: 'loc-pune' });
   });
 });
 
@@ -193,17 +247,21 @@ describe('settledGigFilter', () => {
     expect(GIG_FILTER_SETTLE_MS).toBe(350);
   });
 
-  it('queries the typed search and city, keeping the picked category', () => {
-    expect(settledGigFilter({ category_id: 'c1' }, 'dj', 'Pune')).toEqual({ category_id: 'c1', search: 'dj', city: 'Pune' });
+  it('queries the typed search, keeping the picked category and city', () => {
+    expect(settledGigFilter({ category_id: 'c1', location_id: 'loc-pune' }, 'dj')).toEqual({
+      category_id: 'c1',
+      location_id: 'loc-pune',
+      search: 'dj',
+    });
   });
 
-  it('fires nothing when the boxes already match the filter, empty or filled', () => {
-    expect(settledGigFilter({}, '', '')).toBeNull();
-    expect(settledGigFilter({ search: 'dj', city: 'Pune' }, 'dj', 'Pune')).toBeNull();
+  it('fires nothing when the box already matches the filter, empty or filled', () => {
+    expect(settledGigFilter({}, '')).toBeNull();
+    expect(settledGigFilter({ search: 'dj', location_id: 'loc-pune' }, 'dj')).toBeNull();
   });
 
-  it('queries when only one box changed', () => {
-    expect(settledGigFilter({ search: 'dj', city: 'Pune' }, 'dj', '')).toEqual({ search: 'dj', city: '' });
+  it('queries a cleared search', () => {
+    expect(settledGigFilter({ search: 'dj' }, '')).toEqual({ search: '' });
   });
 });
 
@@ -246,6 +304,8 @@ describe('gig post form values', () => {
     expect(values.contact_email).toBe('asha@example.com');
     expect(values.openings).toBe('1');
     expect(values.event_type).toBe('EVENT');
+    expect(values.location_id).toBe('');
+    expect(values.locality).toBe('');
   });
 
   it('makes the poster choose when they hold several roles, and starts blank with no viewer', () => {
@@ -271,8 +331,9 @@ describe('gig post form values', () => {
       roles: ['Photographer'],
       event_type: 'WORKSHOP',
       event_date: '2026-11-02',
-      city: 'Pune',
-      location: 'Koregaon Park',
+      location_id: 'loc-pune',
+      locality: 'Koregaon Park',
+      location: 'Blue Tokai, lane 5',
       budget: 5000,
       openings: 2,
       contact_name: 'Asha',
@@ -292,6 +353,14 @@ describe('gig post form values', () => {
     expect(input.event_date).toBeNull();
     expect(input.title).toBe('Trimmed');
   });
+
+  it('asks again for the city of a gig typed before the picker, and never sends the typed name', () => {
+    const legacy: GigJob = { ...JOB, location_id: null, locality: undefined, city: 'pune' };
+    const values = gigJobToValues(legacy);
+    expect(values.location_id).toBe('');
+    expect(values.locality).toBe('');
+    expect(toGigJobInput(values)).not.toHaveProperty('city');
+  });
 });
 
 describe('freelancer form values', () => {
@@ -300,6 +369,8 @@ describe('freelancer form values', () => {
     display_name: 'Ravi',
     category_ids: ['c1'],
     skills: ['Photographer', 'Drone Operator'],
+    location_id: 'loc-pune',
+    locality: 'Baner',
     city: 'Pune',
     bio: 'Weddings and workshops.',
     portfolio_url: 'https://ravi.example',
@@ -315,6 +386,7 @@ describe('freelancer form values', () => {
     expect(values.contact_phone).toBe('+919876543210');
     expect(values.experience_years).toBe('0');
     expect(values.is_available).toBe(true);
+    expect(values.location_id).toBe('');
     expect(freelancerToValues(undefined).display_name).toBe('');
   });
 
@@ -323,6 +395,14 @@ describe('freelancer form values', () => {
     expect(values.experience_years).toBe('4');
     expect(values.is_available).toBe(false);
     expect(values.skills).toEqual(['Photographer', 'Drone Operator']);
+    expect(values.location_id).toBe('loc-pune');
+    expect(values.locality).toBe('Baner');
+  });
+
+  it('loads a profile saved before the picker with no city picked', () => {
+    const values = freelancerToValues({ ...PROFILE, location_id: null, locality: undefined });
+    expect(values.location_id).toBe('');
+    expect(values.locality).toBe('');
   });
 
   it('drops skills no chosen category offers any more', () => {
@@ -333,6 +413,8 @@ describe('freelancer form values', () => {
       skills: ['Photographer'],
       experience_years: 0,
       is_available: false,
+      location_id: 'loc-pune',
+      locality: 'Baner',
     });
   });
 });

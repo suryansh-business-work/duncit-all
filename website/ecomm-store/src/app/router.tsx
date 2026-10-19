@@ -10,6 +10,7 @@ const page = <T extends Record<string, unknown>>(load: () => Promise<T>, name: k
 const HomePage = page(() => import('../pages/home'), 'HomePage');
 const ShopPage = page(() => import('../pages/shelf/ShelfPages'), 'ShopPage');
 const SearchPage = page(() => import('../pages/shelf/ShelfPages'), 'SearchPage');
+const DealsPage = page(() => import('../pages/deals'), 'DealsPage');
 const PetTypePage = page(() => import('../pages/shelf/PetTypePage'), 'PetTypePage');
 const CategoryPage = page(() => import('../pages/shelf/CategoryPage'), 'CategoryPage');
 const CollectionPage = page(() => import('../pages/shelf/CollectionPage'), 'CollectionPage');
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: '/shop', element: <ShopPage /> },
       { path: '/search', element: <SearchPage /> },
+      { path: '/deals', element: <DealsPage /> },
       { path: '/pet/:slug', element: <PetTypePage /> },
       { path: '/c/:slug', element: <CategoryPage /> },
       { path: '/collections/:slug', element: <CollectionPage /> },

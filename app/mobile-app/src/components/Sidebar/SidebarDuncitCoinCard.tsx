@@ -9,16 +9,16 @@ import { useCoinBalance, useCoinGold } from '@/hooks/useCoins';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MenuRoute } from '@/navigation/types';
-import { COIN_TILE } from './profileSections';
+import { COIN_DESTINATION } from './profileSections';
 
-/** Full-width Duncit Coin featured card (gold accent) — RN port of mWeb's
- * <DuncitCoinCard/>: the consumer's coin balance and the way into the ledger.
- * Rendered in User mode only. */
+/** Full-width Duncit Coin card — RN port of mWeb's <DuncitCoinCard/>: the
+ * coin's gold glyph, the earn-back caption, the balance in the accent colour
+ * and the way into the ledger. Rendered in User mode only. */
 export function SidebarDuncitCoinCard({
   onNavigate,
 }: Readonly<{ onNavigate: (route: MenuRoute) => void }>) {
   const { t } = useTranslation();
-  const { muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const gold = useCoinGold();
   const { balance, isLoading } = useCoinBalance();
   // A balance of 0 is a real answer, so it must not be what the card shows
@@ -34,7 +34,7 @@ export function SidebarDuncitCoinCard({
         // One element on native, so the balance it shows rides as the hint.
         accessibilityHint={pending ? undefined : String(balance?.balance ?? 0)}
         tabIndex={0}
-        onPress={() => onNavigate(COIN_TILE.route)}
+        onPress={() => onNavigate(COIN_DESTINATION.route)}
         flexDirection="row"
         alignItems="center"
         gap={12}
@@ -48,7 +48,7 @@ export function SidebarDuncitCoinCard({
           borderRadius={22}
           backgroundColor={COIN_GOLD_TINT}
         >
-          <MaterialIcons name={COIN_TILE.icon} size={22} color={gold} />
+          <MaterialIcons name={COIN_DESTINATION.icon} size={22} color={gold} />
         </YStack>
         <YStack flex={1} minWidth={0}>
           <Text numberOfLines={1} fontSize={15} fontWeight="600" color="$color">
@@ -70,7 +70,7 @@ export function SidebarDuncitCoinCard({
             numberOfLines={1}
             fontSize={16}
             fontWeight="700"
-            color={gold}
+            color={accent}
           >
             {balance?.balance ?? 0}
           </Text>

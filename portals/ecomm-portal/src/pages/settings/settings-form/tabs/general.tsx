@@ -10,6 +10,7 @@ import { TWO_COLUMNS } from '../../../../lib/layout';
 import { makeRules } from '../../../../lib/rules';
 import type { Translate } from '../../../../lib/translate';
 import type { SettingsTabSpec, StoreSettings } from '../settings.types';
+import PaymentBadgesField, { MAX_PAYMENT_BADGES } from './PaymentBadgesField';
 
 const makeSchema = (t: Translate) => {
   const r = makeRules(t);
@@ -26,10 +27,11 @@ const makeSchema = (t: Translate) => {
     announcement_text: r.optionalText(200),
     announcement_link: r.link(),
     social_links: z.array(z.object({ label: r.requiredText(40), url: r.webUrl() })).max(12),
+    payment_badges: z.array(z.object({ label: r.requiredText(40), image_url: r.httpsUrl() })).max(MAX_PAYMENT_BADGES),
   });
 };
 
-type GeneralValues = z.infer<ReturnType<typeof makeSchema>>;
+export type GeneralValues = z.infer<ReturnType<typeof makeSchema>>;
 
 const toValues = (s: StoreSettings): GeneralValues => ({
   store_enabled: s.store_enabled,
@@ -44,6 +46,7 @@ const toValues = (s: StoreSettings): GeneralValues => ({
   announcement_text: s.announcement_text,
   announcement_link: s.announcement_link,
   social_links: s.social_links.map((link) => ({ label: link.label, url: link.url })),
+  payment_badges: s.payment_badges.map((badge) => ({ label: badge.label, image_url: badge.image_url })),
 });
 
 function GeneralFields({ control }: Readonly<{ control: Control<GeneralValues> }>) {
@@ -80,6 +83,8 @@ function GeneralFields({ control }: Readonly<{ control: Control<GeneralValues> }
         addLabel={t('ecommPortal.settings.addSocial')}
         itemLabel={(position) => t('ecommPortal.settings.socialN', { vars: { n: position } })}
       />
+      <Divider />
+      <PaymentBadgesField control={control} />
     </Stack>
   );
 }

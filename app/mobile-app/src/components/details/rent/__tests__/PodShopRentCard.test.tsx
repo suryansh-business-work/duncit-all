@@ -60,10 +60,22 @@ describe('PodShopRentCard', () => {
     expect(screen.queryByTestId('pod-rent-row-c')).toBeNull();
   });
 
-  it('is rent-only, with no Pod Shop tab, when the pod sells nothing', () => {
-    renderCard(false);
-    expect(screen.queryByTestId('pod-shop-rent-tab-shop')).toBeNull();
+  it('titles the card Pod Shop and offers the switch only when the pod both sells and rents', () => {
+    renderCard(true);
+    expect(
+      within(screen.getByTestId('pod-shop-rent')).getAllByText('Pod Shop').length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByTestId('pod-shop-rent-tab-shop')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-shop-rent-tab-rent')).toBeOnTheScreen();
+  });
+
+  it('is simply "Pod Rent", with no switch at all, when the pod sells nothing', () => {
+    renderCard(false);
+    expect(screen.getByText('Pod Rent')).toBeOnTheScreen();
+    expect(screen.queryByText('Pod Shop')).toBeNull();
+    // A single-option toggle is noise: neither tab is drawn.
+    expect(screen.queryByTestId('pod-shop-rent-tab-shop')).toBeNull();
+    expect(screen.queryByTestId('pod-shop-rent-tab-rent')).toBeNull();
     expect(screen.getByTestId('pod-rent-list')).toBeOnTheScreen();
   });
 
@@ -83,5 +95,7 @@ describe('PodShopRentCard', () => {
     const sheet = screen.getByTestId('pod-shop-rent-sheet');
     expect(within(sheet).queryByTestId('pod-shop-body')).toBeNull();
     expect(within(sheet).getByTestId('pod-rent-row-c')).toBeOnTheScreen();
+    // The card already says Pod Rent, so the sheet repeats no sub-heading.
+    expect(within(sheet).queryByText('Pod Rent')).toBeNull();
   });
 });

@@ -39,7 +39,9 @@ const BLOCK_NAMES = {
 function trimDashes(text, leading = true) {
   let start = 0;
   let end = text.length;
-  while (leading && start < end && text[start] === '-') start += 1;
+  if (leading) {
+    while (start < end && text[start] === '-') start += 1;
+  }
   while (end > start && text[end - 1] === '-') end -= 1;
   return text.slice(start, end);
 }

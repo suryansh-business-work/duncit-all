@@ -1,3 +1,9 @@
+import {
+  SITE_BRANDING_QUERY,
+  resolveSiteBranding,
+  type SiteBranding,
+  type SiteBrandingData,
+} from '@duncit/brand/site-branding';
 import { clientIdentityHeaders } from '@duncit/user-core';
 import { siteUrls } from '../config/site-config';
 
@@ -63,16 +69,7 @@ async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): 
   return request;
 }
 
-export interface SiteBranding {
-  app_name: string;
-  support_email: string;
-  support_phone: string;
-  website_header_logo_url: string;
-  website_footer_logo_url: string;
-  website_favicon_url: string;
-  android_app_url: string;
-  ios_app_url: string;
-}
+export type { SiteBranding };
 
 const BRANDING_FALLBACK: SiteBranding = {
   app_name: 'Duncit',
@@ -87,21 +84,7 @@ const BRANDING_FALLBACK: SiteBranding = {
 
 /** Admin-managed branding (Website Logos section) — baked in at build time. */
 export async function fetchBranding(): Promise<SiteBranding> {
-  const data = await gqlFetch<{ branding: SiteBranding }>(`
-    query WebsiteBranding {
-      branding {
-        app_name
-        support_email
-        support_phone
-        website_header_logo_url
-        website_footer_logo_url
-        website_favicon_url
-        android_app_url
-        ios_app_url
-      }
-    }
-  `);
-  return { ...BRANDING_FALLBACK, ...data?.branding };
+  return resolveSiteBranding(await gqlFetch<SiteBrandingData>(SITE_BRANDING_QUERY), BRANDING_FALLBACK);
 }
 
 export interface SitePolicy {

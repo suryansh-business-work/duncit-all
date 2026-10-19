@@ -6,6 +6,7 @@ import { DuncitRoundButton } from '@duncit/buttons';
 import { GigSurfaceProvider, type GigSurfaceConfig } from '@duncit/gig-jobs';
 import { logs } from '@duncit/logs';
 import { FREELANCER_PROFILE_PATH } from '@duncit/utils';
+import { useAppLocation } from '../../app/AppLocationContext';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -16,13 +17,16 @@ import { useTranslation } from '../../i18n/useTranslation';
 export default function GigsShell({ children, testId }: Readonly<{ children: ReactNode; testId: string }>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { locationId } = useAppLocation();
   const surface = useMemo<GigSurfaceConfig>(
     () => ({
       go: (path) => navigate(path),
       openFreelancerProfile: () => navigate(FREELANCER_PROFILE_PATH),
       logger: logs.mWeb,
+      // The board starts on the header's city, as the pods lists do.
+      selectedLocationId: locationId,
     }),
-    [navigate],
+    [navigate, locationId],
   );
 
   return (

@@ -6,8 +6,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
-import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { PRODUCT_VISIBILITY_FLAG } from '@/hooks/useProductVisibility';
 import { useLogout } from '@/hooks/useLogout';
 import { useMe } from '@/hooks/useMe';
 import { usePublicPolicies } from '@/hooks/usePolicies';
@@ -22,17 +20,19 @@ import { isTabRoute } from '@/navigation/tabs';
 import type { MenuRoute, MenuStackRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarRefreshBar } from './SidebarRefreshBar';
-import { SidebarSettings } from './SidebarSettings';
+import { SidebarSections } from './SidebarSections';
 import { SidebarSkeleton } from './SidebarSkeleton';
 import { SidebarUserContent } from './SidebarUserContent';
+import { useMenuFlags } from './useMenuFlags';
+import { useChatUnreadTotal } from '@/hooks/useChatUnreadTotal';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Body of the account menu screen (/menu) — the RN twin of mWeb's <MenuPanel/>.
- * Every role shares one card-based profile layout (identity, quick grid,
- * referral, Manage Account) with the role switch, dark-mode toggle, policies and
- * logout. It is a pushed screen rather than a drawer, so hardware Back and a
+ * Every role shares one card-based layout: the profile card, Quick Access,
+ * the Studio and Duncit Coin cards, then five collapsible section cards (the
+ * role switch and dark mode sit in Account, the policies in Support) and logout. It is a pushed screen rather than a drawer, so hardware Back and a
  * cold deep link behave like any other route; the ✕ returns to where the user
  * came from.
  */
@@ -54,12 +54,10 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   // the thin bar rather than flashing a skeleton over content that is correct.
   const refreshing = !pending && (isLoading || policiesLoading);
   const roles = me?.roles ?? [];
-  const showPodPlans = useFeatureFlag('pod_plans_section');
-  const showLeaderboard = useFeatureFlag('leaderboard');
-  const showMembership = useFeatureFlag('membership');
-  const showGiftCards = useFeatureFlag('gift_cards');
-  const showTourGuide = useFeatureFlag('tour_guide');
-  const showProducts = useFeatureFlag(PRODUCT_VISIBILITY_FLAG);
+  const flags = useMenuFlags();
+  // Unread lines across the member's pod and club rooms: the Chats tile's badge.
+  const unreadChats = useChatUnreadTotal();
+  const showProducts = flags.products === true;
   const studioMode = useStudioModeStore((s) => s.mode);
   const setStudioMode = useStudioModeStore((s) => s.setMode);
   // Products off drops the E-commerce studio from the switcher AND from a
@@ -140,17 +138,15 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
               account={me}
               roles={roles}
               mode={effectiveMode}
-              showPodPlans={showPodPlans}
-              showLeaderboard={showLeaderboard}
-              showMembership={showMembership}
-              showGiftCards={showGiftCards}
-              showTourGuide={showTourGuide}
-              showProducts={showProducts}
+              flags={flags}
+              badgeCounts={{ chats: unreadChats }}
               onNavigate={go}
             />
           )}
 
-          <SidebarSettings
+          <SidebarSections
+            flags={flags}
+            onNavigate={go}
             canSwitch={canSwitch}
             modeLabel={STUDIO_LABEL[effectiveMode]}
             onSwitch={openSwitch}

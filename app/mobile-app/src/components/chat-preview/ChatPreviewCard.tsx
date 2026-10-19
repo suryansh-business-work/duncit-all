@@ -19,6 +19,8 @@ interface ChatPreviewCardProps {
   onOpen: () => void;
   /** A club visitor joins the room by following the club; the card re-reads after. */
   onJoinClub?: () => Promise<void>;
+  /** Changes when the viewer's access may have changed (a booking), so the card re-reads. */
+  reloadKey?: string;
 }
 
 /**
@@ -27,10 +29,16 @@ interface ChatPreviewCardProps {
  * room to post; a visitor is told what to do first. mWeb twin:
  * components/chat-preview/ChatPreviewCard.
  */
-export function ChatPreviewCard({ kind, id, onOpen, onJoinClub }: Readonly<ChatPreviewCardProps>) {
+export function ChatPreviewCard({
+  kind,
+  id,
+  onOpen,
+  onJoinClub,
+  reloadKey,
+}: Readonly<ChatPreviewCardProps>) {
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
-  const chat = useChatPreview(kind, id);
+  const chat = useChatPreview(kind, id, reloadKey);
 
   const action = chatPreviewAction(kind, !!chat.preview?.is_member);
   const lockedHint = kind === 'POD' ? t('mweb.chat.podChatLocked') : t('mweb.chatRoom.joinToChat');

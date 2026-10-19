@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Classes the @duncit/brand widgets (faq, help-center, policy-list) write at
+   runtime. That package sits outside this site's source scan, so they are
+   listed here to be generated; styles/widgets.css restyles their look. */
+@source inline("group group-open:rotate-45 list-none cursor-pointer block flex inline-flex items-center items-start justify-between justify-center shrink-0 gap-3 gap-4 my-6 mt-1 mt-3 mt-8 mb-0.5 mb-3 p-5 w-11 h-11 rounded-xl rounded-2xl space-y-3 col-span-full sm:col-span-2 scroll-mt-24 whitespace-pre-line underline transition hover:-translate-y-0.5 text-xs text-sm text-lg text-2xl font-bold font-extrabold font-head text-ink text-ink-soft text-primary bg-surface bg-primary/15 hidden");
+
 /* The palette is declared as tokens and REDEFINED for dark mode below, so a
    theme switch recolours every utility built from them (bg-surface, text-ink,
    border-line …) instead of asking each component to know about themes.
@@ -34,9 +39,63 @@
      page's border white, which looked like a rendering fault rather than a
      theme. So it never moves either. */
   --color-frame: #100e14;
+  /* Small coral TEXT (kickers, links). Plain primary is under 3:1 on cream, so
+     the light theme writes it in the deep coral; on the dark panels the bright
+     one reads at 5.9:1. */
+  --color-primary-ink: #c4262a;
 
   --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
+
+  /* The redesign's shared feel: big rounded panels, soft lifts, one easing. */
+  --radius-panel: 2.25rem;
+  --radius-card: 1.75rem;
+  --shadow-soft: 0 1px 2px rgba(22, 19, 26, 0.06), 0 8px 24px rgba(22, 19, 26, 0.08);
+  --shadow-lift: 0 30px 80px -20px rgba(22, 19, 26, 0.35);
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Ambient loops. Every user applies them behind `motion-safe:`, so a visitor
+     who asked for less motion never starts one. */
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-bob: bob 6s ease-in-out infinite;
+  --animate-drift: drift 18s ease-in-out infinite alternate;
+  --animate-draw: draw 1.2s 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-dot: pulse-dot 1.8s ease-out infinite;
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes bob {
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes drift {
+    to {
+      transform: translate(40px, -30px) scale(1.08);
+    }
+  }
+  @keyframes draw {
+    from {
+      stroke-dasharray: 420;
+      stroke-dashoffset: 420;
+    }
+    to {
+      stroke-dasharray: 420;
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes pulse-dot {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 70%, transparent);
+    }
+    70%,
+    100% {
+      box-shadow: 0 0 0 12px transparent;
+    }
+  }
 }
 
 /* Dark theme. Set by the no-flash script in the layout from the saved choice,
@@ -50,6 +109,7 @@
   --color-lilac: #191a26;
   --color-surface: #1e1b24;
   --color-line: rgba(255, 255, 255, 0.1);
+  --color-primary-ink: #ff5757;
 }
 
 @layer base {
@@ -110,6 +170,27 @@
 @utility text-stroke-sm {
   -webkit-text-stroke: 2.5px var(--color-ink);
   text-shadow: 4px 4px 0 var(--color-ink);
+}
+/* The redesign's display type: big, tight, heavy. */
+@utility headline {
+  font-family: var(--font-head);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+/* Small uppercase label above a section heading. */
+@utility kicker {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.8125rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary-ink);
+}
+/* Hollow letters — the footer's big wordmark. */
+@utility outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--color-ink) 16%, transparent);
 }
 @utility sticker {
   border: 2.5px solid var(--color-ink);

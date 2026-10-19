@@ -1,8 +1,9 @@
 ---
 // Shared footer used across all pages. Link columns come from the Website
-// portal (Navigation manager) and the Policy Hub column from the Legal
-// portal's active policies — both baked in at build time with safe fallbacks.
+// portal (Navigation manager) and the Policy Hub strip from the Legal portal's
+// active policies — both baked in at build time with localized fallbacks.
 import { fetchBranding, fetchNavGroups, fetchPolicies } from '../lib/site-data';
+import { navFallback } from '../lib/nav-fallback';
 import { getTranslator } from '../lib/i18n';
 import FooterLogo from '@duncit/brand/FooterLogo.astro';
 import SharedNewsletter from '@duncit/brand/NewsletterSignup.astro';
@@ -12,75 +13,35 @@ import SmartLink from './SmartLink.astro';
 import { urlConfigs } from '../config/url-configs';
 
 // Chrome copy comes from Admin > Localization, baked in at build time with the
-// bundled fallback behind it (rule 38).
-//
-// The columns below are the FALLBACK for the Navigation manager's own groups,
-// which win whenever the portal answers (see `fetchNavGroups`). The fallback is
-// localized like every other fallback in the repo — it is what renders when the
-// API is unreachable, and a page that degrades into a second language is not a
-// degraded page, it is a broken one.
+// bundled fallback behind it (rule 38). The fallback columns are the same list
+// the header uses, plus the support mailbox.
 const { t } = await getTranslator();
 const branding = await fetchBranding();
-
-const FALLBACK_COLUMNS = [
-  {
-    label: t("website.main.nav.about"),
-    links: [
-      { id: "f-about", label: t("website.main.nav.aboutUs"), url: "/about" },
-      { id: "f-newsroom", label: t("website.main.nav.newsroom"), url: "/newsroom" },
-      { id: "f-careers", label: t("website.main.nav.careers"), url: "/careers" },
-      { id: "f-contact", label: t("website.main.nav.contactUs"), url: "/contact" },
-    ],
-  },
-  {
-    label: t("website.main.nav.community"),
-    links: [
-      { id: "f-community", label: t("website.main.nav.community"), url: "/community" },
-      { id: "f-guidelines", label: t("website.main.nav.guidelines"), url: "/guidelines" },
-      { id: "f-blog", label: t("website.main.nav.blog"), url: "/blog" },
-    ],
-  },
-  {
-    label: t("website.main.nav.safetyHub"),
-    links: [
-      { id: "f-approach", label: t("website.main.nav.ourApproach"), url: "/safety/approach" },
-      { id: "f-advice", label: t("website.main.nav.advice"), url: "/safety/advice" },
-      { id: "f-tools", label: t("website.main.nav.safetyTools"), url: "/safety/tools" },
-      { id: "f-resources", label: t("website.main.nav.resources"), url: "/safety/resources" },
-    ],
-  },
-  {
-    label: t("website.main.nav.support"),
-    links: [
-      { id: "f-help", label: t("website.main.nav.helpCenter"), url: "/help" },
-      { id: "f-faq", label: t("website.main.nav.faq"), url: "/faq" },
-      { id: "f-support-mail", label: t("website.main.nav.emailSupport"), url: `mailto:${branding.support_email}` },
-    ],
-  },
-];
-
-const columns = await fetchNavGroups('MAIN', 'FOOTER', FALLBACK_COLUMNS as never);
+const columns = await fetchNavGroups('MAIN', 'FOOTER', navFallback(t, branding.support_email));
 const policies = await fetchPolicies();
 const year = new Date().getFullYear();
 ---
 
-<footer class="bg-cream rounded-3xl mt-3 pt-16 pb-8 px-6">
-  <div class="max-w-6xl mx-auto">
-    <div class="grid md:grid-cols-2 gap-8 items-center">
-      <FooterLogo
-        footerSrc={branding.website_footer_logo_url}
-        headerSrc={branding.website_header_logo_url}
-        name={branding.app_name}
-        height={112}
-        graphqlUrl={urlConfigs.graphqlUrl}
-      />
-      <!-- The same form the other Duncit sites use. It used to be written out
-           here with its own mutation and its own status handling; the copy is
-           still this site's (Admin > Localization), the mechanism is not. -->
+<footer class="mt-3 overflow-hidden rounded-panel bg-cream px-5 pt-16 pb-8 sm:px-10 sm:pt-24">
+  <div class="mx-auto max-w-6xl">
+    <div data-reveal class="grid items-start gap-10 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+      <div>
+        <FooterLogo
+          footerSrc={branding.website_footer_logo_url}
+          headerSrc={branding.website_header_logo_url}
+          name={branding.app_name}
+          height={72}
+          graphqlUrl={urlConfigs.graphqlUrl}
+        />
+        <p class="mt-5 max-w-sm leading-relaxed text-ink-soft">{t('website.main.layout.siteDescription')}</p>
+        <SocialLinks heading={t('website.footer.followUs')} class="mt-6" />
+      </div>
+      <!-- The same form the other Duncit sites use; the copy is this site's
+           (Admin > Localization), the mechanism is shared. -->
       <SharedNewsletter
         graphqlUrl={urlConfigs.graphqlUrl}
         source="WEBSITE_FOOTER"
-        variant="inline"
+        variant="card"
         heading={t('website.footer.newsletterTitle')}
         placeholder={t('website.footer.emailPlaceholder')}
         button={t('website.footer.notify')}
@@ -90,20 +51,17 @@ const year = new Date().getFullYear();
       />
     </div>
 
-    <hr class="my-10 border-ink/10" />
-
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+    <div data-reveal-group class="mt-14 grid grid-cols-2 gap-x-6 gap-y-10 border-t border-line pt-12 md:grid-cols-4">
       {
         columns.map((column) => (
-          <div>
-            <h4 class="font-head font-extrabold mb-3">{column.label}</h4>
-            <ul class="space-y-2 text-sm text-ink-soft">
+          <div data-reveal>
+            <h2 class="mb-4 font-head text-xs font-extrabold tracking-[0.12em] text-ink uppercase">{column.label}</h2>
+            <ul class="space-y-1 text-[0.95rem] font-semibold text-ink-soft">
               {column.links.map((link) => (
                 <li>
                   {/* The Navigation manager can point a column at another
-                      Duncit surface, so whether this leaves the site is not
-                      knowable here — SmartLink decides from the URL. */}
-                  <SmartLink href={link.url} label={link.label} class="hover:text-primary">
+                      Duncit surface — SmartLink decides from the URL. */}
+                  <SmartLink href={link.url} label={link.label} class="inline-flex min-h-9 items-center transition hover:text-primary-ink">
                     {link.label}
                   </SmartLink>
                 </li>
@@ -112,23 +70,26 @@ const year = new Date().getFullYear();
           </div>
         ))
       }
-      <div>
-        <h4 class="font-head font-extrabold mb-3">{t('website.footer.followUs')}</h4>
-        <SocialLinks />
-      </div>
     </div>
 
-    <!-- Policies get the full width. As a narrow column they were a scroll of
-         thirteen one-word-per-line links; across the footer they are a list. -->
+    <!-- Policies get the full width: as a narrow column they were a scroll of
+         one-word-per-line links; across the footer they are a list. -->
     <PolicyStrip
       policies={policies}
       heading={t('website.footer.policyHub')}
       allLabel={t('website.footer.allPolicies')}
-      class="mt-10"
+      class="mt-12"
     />
 
-    <div class="mt-10 pt-6 border-t border-ink/10 flex justify-center items-center text-sm text-ink-soft">
-      <span>© {branding.app_name} {year} | {t('website.footer.rights')}</span>
+    <p
+      class="headline outline-text mt-14 overflow-hidden text-center text-[clamp(4.5rem,21vw,13.5rem)] leading-[0.8] tracking-[-0.07em] whitespace-nowrap lowercase select-none"
+      aria-hidden="true"
+    >
+      {branding.app_name}
+    </p>
+
+    <div class="mt-8 border-t border-line pt-6 text-center text-sm text-ink-soft">
+      © {branding.app_name} {year} | {t('website.footer.rights')}
     </div>
   </div>
 </footer>

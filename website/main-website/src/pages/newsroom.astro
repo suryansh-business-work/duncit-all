@@ -1,5 +1,8 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
+import Block from '../components/page/Block.astro';
+import CtaBand from '../components/page/CtaBand.astro';
+import PillLink from '../components/page/PillLink.astro';
 import WebsiteContentList from '../components/WebsiteContentList.astro';
 import { fetchBranding } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
@@ -17,13 +20,17 @@ const supportEmail = branding.support_email || 'support@duncit.com';
   intro={t('website.main.newsroom.intro')}
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1495020689067-958852a7765e?w=1600&q=80&auto=format&fit=crop"
+  wide
 >
-  <h2>{t('website.main.newsroom.latest')}</h2>
-  <WebsiteContentList type="NEWSROOM" variant="news" />
+  <Block kicker={t('website.main.newsroom.latestKicker')} title={t('website.main.newsroom.latest')}>
+    <WebsiteContentList type="NEWSROOM" variant="news" />
+  </Block>
 
-  <h2>{t('website.main.newsroom.press')}</h2>
-  <p>
-    {t('website.main.newsroom.pressText')}
-    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. {t('website.main.newsroom.pressTextAfter')}
-  </p>
+  <CtaBand kicker={t('website.main.newsroom.pressKicker')} title={t('website.main.newsroom.press')} icon="fa-microphone">
+    {t('website.main.newsroom.pressText')} <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+    {t('website.main.newsroom.pressTextAfter')}
+    <Fragment slot="actions">
+      <PillLink href={`mailto:${supportEmail}`} label={t('website.main.newsroom.pressCta')} icon="fa-envelope" />
+    </Fragment>
+  </CtaBand>
 </PageLayout>

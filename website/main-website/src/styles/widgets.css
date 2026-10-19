@@ -1,0 +1,213 @@
+/* The inner pages' forms, and the markup the @duncit/brand widgets render at
+   runtime (faq, help-center, policy-list), restyled from the site side.
+
+   The widgets inject their own utility strings; these rules are deliberately
+   UNLAYERED so they win over those utilities without touching the package.
+   Only tokens — both themes recolour everything here. */
+
+/* ---------- Form fields ---------- */
+.form-label {
+  display: grid;
+  gap: 0.45rem;
+  font-family: var(--font-head);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.form-hint {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+}
+.form-field {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.8rem 1.1rem;
+  border: 1.5px solid var(--color-line);
+  border-radius: 1rem;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 500;
+  transition:
+    border-color 200ms var(--ease-soft),
+    box-shadow 200ms var(--ease-soft),
+    background-color 200ms var(--ease-soft);
+}
+.form-field::placeholder {
+  color: var(--color-ink-soft);
+}
+.form-field:hover {
+  border-color: color-mix(in srgb, var(--color-ink) 22%, transparent);
+}
+.form-field:focus,
+.form-field:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+textarea.form-field {
+  resize: vertical;
+  min-height: 8rem;
+}
+.form-error {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-primary-ink);
+}
+.form-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+  font-family: var(--font-head);
+  font-weight: 800;
+  box-shadow: var(--shadow-soft);
+  transition:
+    translate 300ms var(--ease-soft),
+    scale 300ms var(--ease-soft),
+    box-shadow 300ms var(--ease-soft);
+}
+.form-submit:hover:not(:disabled) {
+  translate: 0 -2px;
+  scale: 1.02;
+  box-shadow: var(--shadow-lift);
+}
+.form-submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+/* ---------- Shared card look for widget-rendered links ---------- */
+[data-cms-widget='help-center'] [data-topic-card],
+[data-cms-widget='policy-list'] > a {
+  position: relative;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  padding: 1.5rem;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition:
+    translate 400ms var(--ease-soft),
+    box-shadow 400ms var(--ease-soft),
+    border-color 400ms var(--ease-soft);
+}
+[data-cms-widget='help-center'] [data-topic-card]:hover,
+[data-cms-widget='policy-list'] > a:hover {
+  translate: 0 -6px;
+  box-shadow: var(--shadow-lift);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+/* Help Center topic tiles: the icon square becomes the redesign's tinted tile. */
+[data-cms-widget='help-center'] [data-topic-card] > div > div:first-child {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary-ink);
+}
+[data-cms-widget='help-center'] [data-topic-card] .font-head {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Policy Hub cards: the arrow turns as the card lifts. */
+[data-cms-widget='policy-list'] > a {
+  min-height: 7rem;
+}
+[data-cms-widget='policy-list'] > a i {
+  color: var(--color-primary-ink);
+  transition: rotate 300ms var(--ease-soft);
+}
+[data-cms-widget='policy-list'] > a:hover i {
+  rotate: -45deg;
+}
+[data-cms-widget='policy-list'] [data-clear-search] {
+  color: var(--color-primary-ink);
+}
+
+/* ---------- FAQ accordion ---------- */
+[data-cms-widget='faq']:not(form) > section {
+  margin: 0 0 3rem;
+}
+[data-cms-widget='faq']:not(form) h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 0 1rem;
+  font-family: var(--font-head);
+  font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  scroll-margin-top: 7rem;
+}
+[data-cms-widget='faq']:not(form) h2::before {
+  content: '';
+  flex-shrink: 0;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+[data-cms-widget='faq'] details {
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-radius: 1.25rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  transition:
+    border-color 300ms var(--ease-soft),
+    box-shadow 300ms var(--ease-soft);
+}
+[data-cms-widget='faq'] details + details {
+  margin-top: 0.75rem;
+}
+[data-cms-widget='faq'] details[open] {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+[data-cms-widget='faq'] summary {
+  min-height: 3.5rem;
+  padding: 1.1rem 1.35rem;
+  border-radius: inherit;
+}
+[data-cms-widget='faq'] summary::-webkit-details-marker {
+  display: none;
+}
+[data-cms-widget='faq'] summary i {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-ink);
+  transition:
+    rotate 300ms var(--ease-soft),
+    background-color 300ms var(--ease-soft),
+    color 300ms var(--ease-soft);
+}
+[data-cms-widget='faq'] details[open] summary i {
+  rotate: 45deg;
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+}
+[data-cms-widget='faq'] details p {
+  margin: 0;
+  padding: 0 1.35rem 1.35rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+}

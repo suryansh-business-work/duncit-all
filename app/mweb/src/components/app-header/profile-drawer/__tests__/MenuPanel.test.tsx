@@ -16,7 +16,12 @@ const studioState = { mode: 'USER', setMode: vi.fn() };
 vi.mock('../../../../StudioModeContext', () => ({ useStudioMode: () => studioState }));
 
 let flagValue = false;
-vi.mock('../../../../hooks/useFeatureFlag', () => ({ useFeatureFlag: () => flagValue }));
+// Every flag reads `flagValue`: one at a time, and as the list the menu reads.
+const MENU_FLAG_KEYS = ['pod_plans_section', 'leaderboard', 'membership', 'gift_cards', 'tour_guide', 'is_product_visible'];
+vi.mock('../../../../hooks/useFeatureFlag', () => ({
+  useFeatureFlag: () => flagValue,
+  usePublicFeatureFlags: () => MENU_FLAG_KEYS.map((key) => ({ key, enabled: flagValue })),
+}));
 
 // The menu fetches the Auto Pod counts as it mounts, and `useQuery` needs a
 // client in context even when it is skipped — so without this the panel throws
@@ -29,9 +34,9 @@ vi.mock('../../../../hooks/useAutoPodCounts', () => ({
 // Stub the heavy consumer layout (fires ads/branding queries) — it is covered
 // by its own tests; here we only need a marker to assert it mounts.
 vi.mock('../UserModeContent', () => ({
-  default: ({ showPodPlans, mode }: { showPodPlans: boolean; mode: string }) => (
+  default: ({ flags, mode }: { flags: { pod_plans_section?: boolean }; mode: string }) => (
     <div data-testid="user-mode-content">
-      pod-plans:{String(showPodPlans)} mode:{mode}
+      pod-plans:{String(flags.pod_plans_section)} mode:{mode}
     </div>
   ),
 }));
@@ -61,6 +66,9 @@ function renderPanel(props: Partial<Parameters<typeof MenuPanel>[0]> = {}) {
   return merged;
 }
 
+/** Opens one of the collapsed section cards. */
+const expand = (id: string) => fireEvent.click(screen.getByTestId(`sidebar-section-${id}-toggle`));
+
 describe('MenuPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,6 +82,7 @@ describe('MenuPanel', () => {
     expect(screen.getByTestId('user-mode-content')).toHaveTextContent('pod-plans:false');
     expect(screen.getByTestId('user-mode-content')).toHaveTextContent('mode:USER');
     // No switch-role affordance for a role-less user.
+    expand('account');
     expect(screen.queryByText('Switch role')).not.toBeInTheDocument();
   });
 
@@ -92,14 +101,17 @@ describe('MenuPanel', () => {
   it('renders the studio label as the title when in a non-USER effective mode', () => {
     studioState.mode = 'HOST';
     renderPanel({ me: { roles: ['HOST'] } });
-    // Title becomes the studio label (both the header and the switch button's
-    // secondary line show it, so there is more than one match).
-    expect(screen.getAllByText('Host Studio').length).toBeGreaterThan(0);
+    // The switch row, inside Account, names the studio in effect under it.
+    expand('account');
+    expect(screen.getByTestId('sidebar-switch-role')).toHaveTextContent('Host Studio');
   });
 
   it('shows the switch-role button when more than one mode is available', () => {
     studioState.mode = 'HOST';
     renderPanel({ me: { roles: ['HOST', 'VENUE_OWNER'] } });
+    // Named in the Account subtitle while collapsed, and a row once open.
+    expect(screen.getByTestId('sidebar-section-account-subtitle')).toHaveTextContent(/Switch role/);
+    expand('account');
     expect(screen.getByText('Switch role')).toBeInTheDocument();
     // secondary text shows the current effective mode label
     expect(screen.getAllByText('Host Studio').length).toBeGreaterThan(0);
@@ -108,6 +120,7 @@ describe('MenuPanel', () => {
   it('opens the switch dialog and selecting a mode sets mode and navigates', () => {
     studioState.mode = 'HOST';
     renderPanel({ me: { roles: ['HOST', 'VENUE_OWNER'] } });
+    expand('account');
     fireEvent.click(screen.getByText('Switch role'));
     // Dialog title appears
     expect(screen.getByRole('heading', { name: 'Switch role' })).toBeInTheDocument();
@@ -127,11 +140,13 @@ describe('MenuPanel', () => {
     studioState.mode = 'VENUE';
     renderPanel({ me: { roles: [] } });
     expect(screen.getByTestId('user-mode-content')).toHaveTextContent('mode:USER');
+    expand('account');
     expect(screen.queryByText('Switch role')).not.toBeInTheDocument();
   });
 
   it('reflects light mode and toggles color mode from the switch', () => {
     renderPanel();
+    expand('account');
     expect(screen.getByTestId('LightModeIcon')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('switch', { name: 'Toggle dark mode' }));
     expect(colorState.toggle).toHaveBeenCalledTimes(1);
@@ -140,18 +155,47 @@ describe('MenuPanel', () => {
   it('shows the dark-mode icon and a checked switch when in dark mode', () => {
     colorState.mode = 'dark';
     renderPanel();
+    expand('account');
     expect(screen.getByTestId('DarkModeIcon')).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Toggle dark mode' })).toBeChecked();
   });
 
   it('renders the policies section only when policies exist', () => {
     renderPanel({ publicPolicies: policies });
+    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent('Help, FAQs, Policies');
+    expand('support');
     expect(screen.getByText('Policies')).toBeInTheDocument();
   });
 
   it('omits the policies section when there are no policies', () => {
     renderPanel({ publicPolicies: [] });
+    expect(screen.getByTestId('sidebar-section-support-subtitle')).toHaveTextContent(/^Help, FAQs$/);
+    expand('support');
     expect(screen.queryByText('Policies')).not.toBeInTheDocument();
+  });
+
+  it('opens a section card on click, announcing it, and navigates from its rows', () => {
+    renderPanel();
+    const toggle = screen.getByTestId('sidebar-section-explore-toggle');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('sidebar-item-ideas')).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('region', { name: 'Explore & Community' })).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('sidebar-item-ideas'));
+    expect(mockNavigate).toHaveBeenCalledWith('/pod-ideas', { replace: true });
+  });
+
+  it('lists every flag-gated row once the flags are on', () => {
+    flagValue = true;
+    renderPanel();
+    expect(screen.getByTestId('sidebar-section-shopping-subtitle')).toHaveTextContent(
+      'Pod Shop, Cart, Food, Gift Cards, My Product Order History, Address Book, My Rented Items'
+    );
+    expand('work');
+    expect(screen.getByTestId('sidebar-item-membership')).toHaveTextContent('Coming soon');
+    fireEvent.click(screen.getByTestId('sidebar-item-membership'));
+    expect(mockNavigate).toHaveBeenCalledWith('/membership', { replace: true });
   });
 
   it('fires onLogout from the footer button', () => {

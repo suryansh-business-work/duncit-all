@@ -4,7 +4,7 @@ import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneR
 import { useStoreSession } from '../../app/providers/SessionProvider';
 import { CircleButton } from '../../components/CircleButton';
 import { DeliverToPill } from '../../components/DeliverToPill';
-import { CartButton } from '../../components/header';
+import { CartButton, HomeLink } from '../../components/header';
 import { AnnouncementBar } from '../../components/header/AnnouncementBar';
 import { MobileMenuButton } from '../../components/header/mobile-menu';
 import { SearchForm } from '../../components/header/search-form';
@@ -13,9 +13,9 @@ import { useStoreT } from '../../i18n';
 import { STORE_TOKENS as T } from '../../theme/tokens';
 
 /**
- * The phone home's top: the menu, delivery pincode, cart and order updates,
- * then the brand-tinted block greeting the shopper's pet by name, with the
- * search pill.
+ * The phone home's top: the menu and logo, cart and order updates, the
+ * delivery pincode, then the soft hero block greeting the shopper's pet by
+ * name, with the search field.
  */
 export function HomeHeader() {
   const { t } = useStoreT();
@@ -25,21 +25,24 @@ export function HomeHeader() {
   return (
     <Box sx={{ display: { xs: 'block', md: 'none' } }}>
       <AnnouncementBar />
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', py: 1 }}>
+      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1, py: 1 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
           <MobileMenuButton />
-          <DeliverToPill />
+          <HomeLink height={36} />
         </Stack>
         <Stack direction="row" spacing={1}>
-          <CartButton />
           {signedIn ? (
             <CircleButton to={paths.orders} aria-label={t('ecommStore.home.updates')}>
               <NotificationsNoneRoundedIcon />
             </CircleButton>
           ) : null}
+          <CartButton />
         </Stack>
       </Stack>
-      <Stack spacing={2} sx={{ bgcolor: T.brandTint, borderRadius: `${T.radius.card}px`, p: 2.5 }}>
+      <Stack spacing={2} sx={{ background: T.heroGradient, borderRadius: `${T.radius.card}px`, boxShadow: T.shadow, p: 2.5 }}>
+        <Box sx={{ alignSelf: 'flex-start', maxWidth: '100%' }}>
+          <DeliverToPill />
+        </Box>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           {pet?.photo_url ? <Avatar src={pet.photo_url} alt="" sx={{ width: 48, height: 48 }} /> : null}
           <Typography variant="h1" component="h1">

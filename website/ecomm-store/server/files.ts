@@ -39,11 +39,19 @@ export function distFile(urlPath: string): string | null {
 export const wantsGzip = (req: IncomingMessage): boolean => /\bgzip\b/.test(String(req.headers['accept-encoding'] ?? ''));
 
 /** Write a body with its type, compressing text when the client accepts gzip. */
-export function sendBody(req: IncomingMessage, res: ServerResponse, body: Buffer | string, type: string, cache: string): void {
+export function sendBody(
+  req: IncomingMessage,
+  res: ServerResponse,
+  body: Buffer | string,
+  type: string,
+  cache: string,
+  extraHeaders: Readonly<Record<string, string>> = {},
+): void {
   const raw = typeof body === 'string' ? Buffer.from(body) : body;
   const gzip = TEXTUAL.test(type) && wantsGzip(req);
   const payload = gzip ? gzipSync(raw) : raw;
   res.writeHead(200, {
+    ...extraHeaders,
     'Content-Type': type,
     'Cache-Control': cache,
     'Content-Length': payload.length,
@@ -51,6 +59,14 @@ export function sendBody(req: IncomingMessage, res: ServerResponse, body: Buffer
     ...(gzip ? { 'Content-Encoding': 'gzip' } : {}),
   });
   res.end(req.method === 'HEAD' ? undefined : payload);
+}
+
+/**
+ * The service worker: always revalidated, so a new deploy's worker is picked
+ * up on the next visit, and allowed to control the whole site.
+ */
+export function sendServiceWorker(req: IncomingMessage, res: ServerResponse, file: string): void {
+  sendBody(req, res, readFileSync(file), 'text/javascript; charset=utf-8', 'no-cache', { 'Service-Worker-Allowed': '/' });
 }
 
 /** A built asset: hashed /assets/* never change under their name; everything else revalidates. */

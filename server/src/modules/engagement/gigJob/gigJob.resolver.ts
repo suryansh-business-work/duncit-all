@@ -25,6 +25,8 @@ export const gigJobResolvers = {
       gigJobService.mine(requireAuth(ctx).id, args.offset, args.limit),
     gigJobInterests: (_p: unknown, args: { job_id: string }, ctx: GraphQLContext) =>
       gigJobService.interests(requireAuth(ctx).id, args.job_id),
+    gigJobContact: (_p: unknown, args: { job_id: string }, ctx: GraphQLContext) =>
+      gigJobService.revealContact(requireAuth(ctx).id, args.job_id),
     gigViewer: (_p: unknown, _a: unknown, ctx: GraphQLContext) => gigJobService.viewer(requireAuth(ctx).id),
     myFreelancerProfile: (_p: unknown, _a: unknown, ctx: GraphQLContext) => freelancerService.mine(requireAuth(ctx).id),
     gigCategoriesTable: (_p: unknown, args: { query?: TableQueryInput }, ctx: GraphQLContext) => {

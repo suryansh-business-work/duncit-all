@@ -4022,6 +4022,22 @@ export type ChangePasswordInput = {
   otp: Scalars['String']['input'];
 };
 
+/** How long a chat stays muted. ALWAYS lasts until it is unmuted. */
+export type ChatMuteDuration =
+  | 'ALWAYS'
+  | 'EIGHT_HOURS'
+  | 'ONE_WEEK';
+
+/** One member's mute of one room. */
+export type ChatMuteState = {
+  __typename?: 'ChatMuteState';
+  id: Scalars['ID']['output'];
+  is_muted: Scalars['Boolean']['output'];
+  kind: ChatRoomKind;
+  /** When the mute ends (ISO); null while muted means Always. */
+  muted_until?: Maybe<Scalars['String']['output']>;
+};
+
 export type ChatParticipants = {
   __typename?: 'ChatParticipants';
   hosts: Array<ChatUser>;
@@ -4053,6 +4069,9 @@ export type ChatRoom = {
   club_slug?: Maybe<Scalars['String']['output']>;
   cover_url?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** Whether the viewer muted this room's notifications. */
+  is_muted: Scalars['Boolean']['output'];
+  muted_until?: Maybe<Scalars['String']['output']>;
   no_of_spots?: Maybe<Scalars['Int']['output']>;
   pod_attendees: Array<Scalars['ID']['output']>;
   pod_date_time?: Maybe<Scalars['String']['output']>;
@@ -4064,7 +4083,15 @@ export type ChatRoom = {
   pod_title: Scalars['String']['output'];
   /** Super category the linked club maps to (For You / For Your Pet classification). */
   super_category_id?: Maybe<Scalars['ID']['output']>;
+  /** Lines the viewer has not read yet (a never-opened room counts the last week). */
+  unread_count: Scalars['Int']['output'];
 };
+
+/** Which room a mute or a read mark is about. */
+export type ChatRoomKind =
+  | 'CLUB'
+  | 'POD'
+  | 'SUPPORT';
 
 /** A host or participant shown in the chat detail people panel. */
 export type ChatUser = {
@@ -4522,12 +4549,17 @@ export type ClubChatRoom = {
   club_slug: Scalars['String']['output'];
   cover_url?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** Whether the viewer muted this room's notifications. */
+  is_muted: Scalars['Boolean']['output'];
   last_message_at?: Maybe<Scalars['String']['output']>;
   last_message_preview?: Maybe<Scalars['String']['output']>;
   last_message_type?: Maybe<PodMessageType>;
+  muted_until?: Maybe<Scalars['String']['output']>;
   /** Messages older than this many days are permanently deleted (Clubs > Club Settings). */
   retention_days: Scalars['Int']['output'];
   super_category_id?: Maybe<Scalars['ID']['output']>;
+  /** Lines the viewer has not read yet (a never-opened room counts the last week). */
+  unread_count: Scalars['Int']['output'];
 };
 
 export type ClubFaq = {
@@ -9698,6 +9730,8 @@ export type FreelancerProfile = {
   experience_years: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   is_available: Scalars['Boolean']['output'];
+  locality: Scalars['String']['output'];
+  location_id?: Maybe<Scalars['ID']['output']>;
   portfolio_url: Scalars['String']['output'];
   skills: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
@@ -9706,12 +9740,14 @@ export type FreelancerProfile = {
 export type FreelancerProfileInput = {
   bio?: InputMaybe<Scalars['String']['input']>;
   category_ids: Array<Scalars['ID']['input']>;
-  city: Scalars['String']['input'];
+  city?: InputMaybe<Scalars['String']['input']>;
   contact_email?: InputMaybe<Scalars['String']['input']>;
   contact_phone: Scalars['String']['input'];
   display_name: Scalars['String']['input'];
   experience_years?: InputMaybe<Scalars['Int']['input']>;
   is_available?: InputMaybe<Scalars['Boolean']['input']>;
+  locality?: InputMaybe<Scalars['String']['input']>;
+  location_id?: InputMaybe<Scalars['ID']['input']>;
   portfolio_url?: InputMaybe<Scalars['String']['input']>;
   skills: Array<Scalars['String']['input']>;
 };
@@ -10042,8 +10078,12 @@ export type GigJob = {
   budget?: Maybe<Scalars['Int']['output']>;
   category_id: Scalars['ID']['output'];
   category_title: Scalars['String']['output'];
+  /** The city's name — copied from the Location, or the typed text on older gigs. */
   city: Scalars['String']['output'];
-  /** The poster's contact. Only for the poster and for a freelancer who said they are interested. */
+  /**
+   * The poster's contact. Only for the poster and for a freelancer who said they are interested;
+   * anyone else signed in reads it with gigJobContact.
+   */
   contact?: Maybe<GigContact>;
   created_at: Scalars['String']['output'];
   description: Scalars['String']['output'];
@@ -10052,7 +10092,11 @@ export type GigJob = {
   id: Scalars['ID']['output'];
   interest_count: Scalars['Int']['output'];
   is_mine: Scalars['Boolean']['output'];
+  /** One of that city's areas (a Location zone name), or empty for the whole city. */
+  locality: Scalars['String']['output'];
   location: Scalars['String']['output'];
+  /** The admin Location (city) the gig is in. Null on gigs posted before the city picker. */
+  location_id?: Maybe<Scalars['ID']['output']>;
   openings: Scalars['Int']['output'];
   poster_name: Scalars['String']['output'];
   poster_role: GigPosterRole;
@@ -10095,20 +10139,27 @@ export type GigJobFilter = {
   category_id?: InputMaybe<Scalars['ID']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   event_type?: InputMaybe<GigEventType>;
+  /** The admin Location (city). Wins over city, which older clients send as typed text. */
+  location_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type GigJobInput = {
   budget?: InputMaybe<Scalars['Int']['input']>;
   category_id: Scalars['ID']['input'];
-  city: Scalars['String']['input'];
+  /** Typed city — only read when location_id is absent; otherwise filled from the Location. */
+  city?: InputMaybe<Scalars['String']['input']>;
   contact_email?: InputMaybe<Scalars['String']['input']>;
   contact_name: Scalars['String']['input'];
   contact_phone: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   event_date?: InputMaybe<Scalars['String']['input']>;
   event_type?: InputMaybe<GigEventType>;
+  /** One of that Location's zone names; empty for the whole city. */
+  locality?: InputMaybe<Scalars['String']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
+  /** The admin Location (city). Required unless an older client sends city instead. */
+  location_id?: InputMaybe<Scalars['ID']['input']>;
   openings?: InputMaybe<Scalars['Int']['input']>;
   poster_role: GigPosterRole;
   roles: Array<Scalars['String']['input']>;
@@ -13771,6 +13822,8 @@ export type Mutation = {
   mailAutomationConnectUrl: Scalars['String']['output'];
   markAllNotificationsRead: Scalars['Boolean']['output'];
   markBouncerCallbackContacted: BouncerCallbackRequest;
+  /** Marks a pod or club room read up to now (on open, and while it stays open). */
+  markChatRead: Scalars['Boolean']['output'];
   markNotificationRead: Scalars['Boolean']['output'];
   /** The goods are back (handed in at the venue, or the courier scan never came). */
   markPodShopReturnReceived: PodShopReturn;
@@ -13789,6 +13842,8 @@ export type Mutation = {
   moderatePodContent: ModerationResult;
   /** Deep-analyses a product listing's content against community guidelines before submit. */
   moderateProductContent: ModerationResult;
+  /** Mutes a chat you can open. Muting again replaces the length. */
+  muteChat: ChatMuteState;
   /** Buyer: the seller's tax invoice (PDF) for one of their own pod-shop orders, once its shipment is booked. */
   myProductOrderSellerInvoice: ShipmentFile;
   /**
@@ -14919,6 +14974,7 @@ export type Mutation = {
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
+  unmuteChat: ChatMuteState;
   unpublishCmsPage: CmsPage;
   unsubscribeAllByToken: MailPreference;
   unsubscribeNewsletter: Scalars['Boolean']['output'];
@@ -17451,6 +17507,12 @@ export type MutationMarkBouncerCallbackContactedArgs = {
 };
 
 
+export type MutationMarkChatReadArgs = {
+  id: Scalars['ID']['input'];
+  kind: ChatRoomKind;
+};
+
+
 export type MutationMarkNotificationReadArgs = {
   user_notification_doc_id: Scalars['ID']['input'];
 };
@@ -17501,6 +17563,13 @@ export type MutationModeratePodContentArgs = {
 
 export type MutationModerateProductContentArgs = {
   input: ModerateProductContentInput;
+};
+
+
+export type MutationMuteChatArgs = {
+  duration: ChatMuteDuration;
+  id: Scalars['ID']['input'];
+  kind: ChatRoomKind;
 };
 
 
@@ -18481,6 +18550,8 @@ export type MutationSendAppReleaseEmailArgs = {
 export type MutationSendClubMessageArgs = {
   club_id: Scalars['ID']['input'];
   image_url?: InputMaybe<Scalars['String']['input']>;
+  mentions?: InputMaybe<Array<Scalars['ID']['input']>>;
+  reply_to_id?: InputMaybe<Scalars['ID']['input']>;
   text?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<PodMessageType>;
 };
@@ -18518,7 +18589,9 @@ export type MutationSendPodChallengeNoticeArgs = {
 
 export type MutationSendPodMessageArgs = {
   image_url?: InputMaybe<Scalars['String']['input']>;
+  mentions?: InputMaybe<Array<Scalars['ID']['input']>>;
   pod_id: Scalars['ID']['input'];
+  reply_to_id?: InputMaybe<Scalars['ID']['input']>;
   text?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<PodMessageType>;
 };
@@ -19919,6 +19992,12 @@ export type MutationUnfollowPodArgs = {
 
 export type MutationUnfollowUserArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUnmuteChatArgs = {
+  id: Scalars['ID']['input'];
+  kind: ChatRoomKind;
 };
 
 
@@ -23393,6 +23472,9 @@ export type PodChatInfo = {
   chat_deletes_at?: Maybe<Scalars['String']['output']>;
   /** Whether the pod has ended, which closes the room to new messages. */
   closed: Scalars['Boolean']['output'];
+  /** Whether the viewer muted this room's notifications. */
+  is_muted: Scalars['Boolean']['output'];
+  muted_until?: Maybe<Scalars['String']['output']>;
 };
 
 /** A co-host on a pod. View-only: they cannot edit, complete or delete it, and the pod's earnings are unaffected. */
@@ -24107,8 +24189,16 @@ export type PodMessage = {
   deleted: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   image_url?: Maybe<Scalars['String']['output']>;
+  /** The mentioned members, named now, so a bubble can find and link each @token. */
+  mention_users: Array<ChatUser>;
+  /** Ids of the members this message @-mentions. */
+  mentions: Array<Scalars['ID']['output']>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   reactions: Array<PodMessageReaction>;
+  /** The quoted line of a reply, read now — deleted (no text) when the original is gone. */
+  reply_to?: Maybe<PodMessageReplyTo>;
+  /** The message this one replies to (same room), or null. */
+  reply_to_id?: Maybe<Scalars['ID']['output']>;
   text?: Maybe<Scalars['String']['output']>;
   type: PodMessageType;
   user_id: Scalars['ID']['output'];
@@ -24120,6 +24210,17 @@ export type PodMessageReaction = {
   __typename?: 'PodMessageReaction';
   emoji: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
+};
+
+/** The quoted line shown inside a reply. */
+export type PodMessageReplyTo = {
+  __typename?: 'PodMessageReplyTo';
+  deleted: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  text?: Maybe<Scalars['String']['output']>;
+  type: PodMessageType;
+  user_id: Scalars['ID']['output'];
+  user_name?: Maybe<Scalars['String']['output']>;
 };
 
 export type PodMessageType =
@@ -26110,10 +26211,14 @@ export type Query = {
   /** All challenges (optionally filtered by a name search). */
   challenges: Array<Challenge>;
   challengesTable: ChallengeTablePage;
+  /** The viewer's mute of one pod, club or support chat. */
+  chatMuteState: ChatMuteState;
   /** Host(s) and participants of a pod's chat (members only). */
   chatParticipants: ChatParticipants;
   /** A pod's (pod_id) or club's (club_id) chat history for its details page — any signed-in viewer. */
   chatPreview: ChatPreview;
+  /** Unread lines across the viewer's pod and club rooms, muted rooms left out. */
+  chatUnreadTotal: Scalars['Int']['output'];
   checkoutQuote: CheckoutQuote;
   /** GoDaddy's zone beside Cloudflare's, and the nameservers the domain uses today. */
   cloudflareMigration: CloudflareMigration;
@@ -26200,6 +26305,8 @@ export type Query = {
   /** Onboarded Club Admins, for the Onboarding portal's table. */
   clubAdminProfilesTable: ClubAdminProfileTablePage;
   clubBySlug?: Maybe<Club>;
+  /** A club room's members whose name starts with search, for the @ list (members only). */
+  clubChatMembers: Array<ChatUser>;
   /** One club's chat room header, for members only. */
   clubChatRoom: ClubChatRoom;
   /**
@@ -26536,6 +26643,8 @@ export type Query = {
   gigCategoriesTable: GigCategoryTablePage;
   gigInterestsAdminTable: GigInterestAdminTablePage;
   gigJob?: Maybe<GigJob>;
+  /** The poster's contact for any signed-in member ("View contact"). Each reveal is logged. */
+  gigJobContact: GigContact;
   gigJobInterests: Array<GigInterest>;
   /** The Gig Jobs console (SUPER_ADMIN / GIG_JOBS_MANAGER). */
   gigJobStats: GigJobStats;
@@ -28228,6 +28337,12 @@ export type QueryChallengesTableArgs = {
 };
 
 
+export type QueryChatMuteStateArgs = {
+  id: Scalars['ID']['input'];
+  kind: ChatRoomKind;
+};
+
+
 export type QueryChatParticipantsArgs = {
   pod_id: Scalars['ID']['input'];
 };
@@ -28345,6 +28460,13 @@ export type QueryClubAdminProfilesTableArgs = {
 
 export type QueryClubBySlugArgs = {
   club_slug: Scalars['String']['input'];
+};
+
+
+export type QueryClubChatMembersArgs = {
+  club_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -29108,6 +29230,11 @@ export type QueryGigInterestsAdminTableArgs = {
 
 export type QueryGigJobArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryGigJobContactArgs = {
+  job_id: Scalars['ID']['input'];
 };
 
 

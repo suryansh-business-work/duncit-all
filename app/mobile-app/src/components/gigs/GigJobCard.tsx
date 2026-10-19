@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import {
   gigBudgetText,
   gigEventTypeKey,
+  gigPlaceText,
   gigPosterRoleKey,
   gigStatusKey,
   type GigJobRow,
@@ -69,7 +70,7 @@ export function GigJobCard({ job, onOpen }: Readonly<{ job: GigJobRow; onOpen: (
           <XStack gap={4} alignItems="center">
             <MaterialIcons name="place" size={14} color={muted} />
             <Text fontSize={12.5} color="$muted">
-              {job.city}
+              {gigPlaceText(job)}
             </Text>
           </XStack>
         </XStack>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Fab, Stack } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChatHeader from '../ChatHeader';
+import SupportChatMute from '../../../components/chat-state/SupportChatMute';
 import ChatComposer from '../ChatComposer';
 import ChatMessageList from './ChatMessageList';
 import ClosedNotice from './ClosedNotice';
@@ -84,6 +85,7 @@ export default function SupportChatPage() {
         onReopen={() => setReopenOpen(true)}
         onDownload={chat.download}
         onEmail={() => setEmailOpen(true)}
+        muteSlot={sessionId ? <SupportChatMute sessionId={sessionId} /> : null}
       />
 
       <ChatMessageList

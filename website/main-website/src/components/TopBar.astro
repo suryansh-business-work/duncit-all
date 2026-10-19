@@ -1,0 +1,73 @@
+---
+// The one top bar every page wears: a floating glass pill that stays put as
+// the page scrolls. It sits over each page's first panel (the home reel, an
+// inner page's photo, the 404 card) — the wrapper is zero-height and sticky,
+// so the pill floats ON that panel instead of pushing it down. The panel
+// leaves room for it with its own top padding.
+//
+// Menu opens the SiteNav drawer (any [data-nav-toggle] does — see
+// @duncit/brand/widgets/site-nav). The theme button here and the one in the
+// drawer are kept in step by @duncit/brand/widgets/theme-toggle.
+import ThemeToggle from '@duncit/brand/ThemeToggle.astro';
+import BrandLogo from './BrandLogo.astro';
+import SmartLink from './SmartLink.astro';
+import { fetchNavGroups } from '../lib/site-data';
+import { navFallback } from '../lib/nav-fallback';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
+
+// The desktop shortcuts are the header groups' own first links — the
+// Navigation manager decides them, the same request the drawer makes.
+const groups = await fetchNavGroups('MAIN', 'HEADER', navFallback(t));
+const shortcuts = groups
+  .flatMap((group) => (group.links[0] ? [{ label: group.label, href: group.links[0].url }] : []))
+  .slice(0, 4);
+---
+
+<div class="sticky top-0 z-30 h-0">
+  <nav
+    aria-label={t('website.main.nav.primary')}
+    class="mx-auto mt-3 flex h-16 max-w-6xl items-center justify-between gap-2 rounded-full border border-line bg-surface/80 px-2 shadow-soft backdrop-blur-xl backdrop-saturate-150 sm:mx-3 sm:mt-4 sm:h-[4.25rem] lg:mx-auto"
+  >
+    <div class="flex min-w-0 items-center gap-2 sm:gap-3">
+      <button
+        type="button"
+        data-nav-toggle
+        aria-controls="siteNav"
+        aria-label={t('website.main.nav.menu')}
+        class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-cream transition duration-300 ease-soft hover:scale-105 hover:bg-primary-dark hover:text-white"
+      >
+        <i class="fa-solid fa-bars text-base" aria-hidden="true"></i>
+      </button>
+      <BrandLogo height={40} />
+    </div>
+
+    <ul class="hidden items-center gap-1 lg:flex">
+      {
+        shortcuts.map((item) => (
+          <li>
+            <SmartLink
+              href={item.href}
+              label={item.label}
+              class="rounded-full px-4 py-2.5 text-[0.95rem] font-semibold text-ink-soft transition hover:bg-lilac hover:text-ink"
+            >
+              {item.label}
+            </SmartLink>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="flex shrink-0 items-center gap-2">
+      <ThemeToggle label={t('website.nav.theme')} />
+      <a
+        href="/#download"
+        class="inline-flex h-11 items-center gap-2 rounded-full bg-ink px-4 font-head text-sm font-bold text-cream transition duration-300 ease-soft hover:-translate-y-0.5 hover:bg-primary-dark hover:text-white sm:h-12 sm:px-5"
+      >
+        <i class="fa-solid fa-download" aria-hidden="true"></i>
+        <span class="max-[379px]:sr-only">{t('website.main.home.getApp')}</span>
+      </a>
+    </div>
+  </nav>
+</div>

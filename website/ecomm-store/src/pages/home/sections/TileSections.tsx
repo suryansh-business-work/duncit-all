@@ -1,26 +1,12 @@
 import { Link as RouterLink } from 'react-router';
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 
-import { PetTypeChips } from '../../../components/PetTypeChips';
 import { SectionHeading } from '../../../components/SectionHeading';
 import { StoreImage } from '../../../components/StoreImage';
 import { paths } from '../../../lib/paths';
 import { useStoreT } from '../../../i18n';
 import { STORE_TOKENS as T, tintAt } from '../../../theme/tokens';
 import type { SectionProps } from './types';
-
-/** "Categories": the pet types as a row of pill chips. */
-export function PetTypesSection({ section }: Readonly<SectionProps>) {
-  const { t } = useStoreT();
-  if (section.pet_types.length === 0) return null;
-  const title = section.title || t('ecommStore.home.petTypes');
-  return (
-    <Box component="section" aria-label={title}>
-      <SectionHeading title={title} subtitle={section.subtitle} viewAll={paths.shop} />
-      <PetTypeChips pets={section.pet_types} label={title} />
-    </Box>
-  );
-}
 
 /** Aisles as pastel tiles with their photo. */
 export function CategoryGridSection({ section }: Readonly<SectionProps>) {
@@ -32,19 +18,19 @@ export function CategoryGridSection({ section }: Readonly<SectionProps>) {
       <SectionHeading title={title} subtitle={section.subtitle} />
       <Box
         component="ul"
-        sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(3, minmax(0, 1fr))', md: 'repeat(6, minmax(0, 1fr))' } }}
+        sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: { xs: 1.5, md: 2 }, gridTemplateColumns: { xs: 'repeat(3, minmax(0, 1fr))', md: 'repeat(6, minmax(0, 1fr))' } }}
       >
         {section.categories.map((category, position) => (
           <Box component="li" key={category.id}>
             <ButtonBase
               component={RouterLink}
               to={paths.category(category.slug)}
-              sx={{ width: '100%', borderRadius: `${T.radius.card}px`, bgcolor: tintAt(position), p: 1, display: 'block', textAlign: 'center' }}
+              sx={{ width: '100%', borderRadius: `${T.radius.card}px`, bgcolor: tintAt(position), p: 1.25, display: 'block', textAlign: 'center' }}
             >
               <Box sx={{ bgcolor: T.surface, borderRadius: `${T.radius.panel}px`, overflow: 'hidden', mb: 1 }}>
                 <StoreImage src={category.image_url} alt="" width={160} height={160} sx={{ objectFit: 'contain' }} />
               </Box>
-              <Typography sx={{ fontWeight: 700 }}>{category.name}</Typography>
+              <Typography sx={{ fontWeight: 800 }}>{category.name}</Typography>
             </ButtonBase>
           </Box>
         ))}

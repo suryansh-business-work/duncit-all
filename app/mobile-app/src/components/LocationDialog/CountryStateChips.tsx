@@ -85,7 +85,11 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
     <YStack gap={16}>
       <YStack gap={8}>
         <SectionLabel>COUNTRY</SectionLabel>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <XStack
             testID="country-options"
             role="radiogroup"

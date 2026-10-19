@@ -52,6 +52,9 @@ function activeOccasionOut(s: IStoreSettings) {
   return {
     slug: occasion.slug,
     label: occasion.label,
+    theme: occasion.theme ?? 'NONE',
+    effects_enabled: occasion.effects_enabled !== false,
+    greeting: occasion.greeting ?? '',
     logo_url: occasion.logo_url ?? '',
     favicon_url: occasion.favicon_url ?? '',
     background_url: occasion.background_url ?? '',
@@ -103,6 +106,7 @@ export async function publicSettingsOut(s: IStoreSettings) {
     terms_html: s.terms_html,
     about_html: s.about_html,
     social_links: s.social_links.map((l) => ({ label: l.label, url: l.url })),
+    payment_badges: (s.payment_badges ?? []).map((b) => ({ label: b.label, image_url: b.image_url })),
     currency_symbol: fs.currency_symbol,
     // What the buyer will actually meet at checkout, not Finance's switch alone:
     // with a Razorpay account configured the sheet opens and dummy mode is moot.
@@ -193,6 +197,7 @@ async function resolveSection(section: Doc) {
     subtitle: section.subtitle ?? '',
     items: (section.items ?? []).map((i: any) => ({
       id: String(i._id ?? ''),
+      eyebrow: i.eyebrow ?? '',
       title: i.title ?? '',
       subtitle: i.subtitle ?? '',
       image_url: i.image_url ?? '',
@@ -247,6 +252,8 @@ async function resolveSection(section: Doc) {
       };
     }
     case 'PET_TYPES': {
+      // Tiles the operator built (own picture + link each) replace the pet-type list.
+      if (base.items.length > 0) return base;
       const pets = await StorePetTypeModel.find({ is_active: true }).sort({ sort_order: 1, name: 1 }).lean();
       return { ...base, pet_types: pets.map(petOut) };
     }

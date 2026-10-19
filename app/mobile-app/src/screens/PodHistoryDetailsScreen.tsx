@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Linking } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 import { isBackoutMaxed } from '@duncit/utils';
 
 import { PodHistoryDetails, PodHistoryDialogs } from '@/components/pod-history';
@@ -24,13 +24,12 @@ import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { podHistoryGate, refundLabel } from '@/utils/pod-history';
 import { RefreshScrollView } from '@/components/PullToRefresh';
-import { useLoadingRegion } from '@/components/Skeleton';
+import { TipsLoader } from '@/components/TipsLoader';
 import { useLegalUrls } from '@/hooks/useLegalUrls';
 
 /** Pod History details — status, actions (pod details, backout, refund, invoice,
  * support), terms links and timeline. RN twin of mWeb's PodHistoryDetailsPage. */
 export function PodHistoryDetailsScreen() {
-  const loadingRegion = useLoadingRegion();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod } = useDetailNav();
   const { t } = useTranslation();
@@ -118,11 +117,7 @@ export function PodHistoryDetailsScreen() {
 
   let body: ReactNode;
   if (isLoading && items.length === 0) {
-    body = (
-      <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner {...loadingRegion} testID="pod-history-details-loading" color="$primary" />
-      </YStack>
-    );
+    body = <TipsLoader testID="pod-history-details-loading" />;
   } else if (error) {
     body = (
       <Text role="alert" testID="pod-history-details-error" padding={24} color="$danger">

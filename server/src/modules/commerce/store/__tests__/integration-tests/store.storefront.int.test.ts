@@ -102,6 +102,9 @@ describe('storeStorefrontService.settings', () => {
     expect(s.active_occasion).toEqual({
       slug: 'diwali',
       label: 'Diwali',
+      theme: 'NONE',
+      effects_enabled: true,
+      greeting: '',
       logo_url: '',
       favicon_url: '',
       background_url: '',

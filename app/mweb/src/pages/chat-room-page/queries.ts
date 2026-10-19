@@ -17,6 +17,20 @@ const MESSAGE_FIELDS = `
   }
   deleted
   createdAt
+  reply_to_id
+  reply_to {
+    id
+    user_id
+    user_name
+    text
+    type
+    deleted
+  }
+  mentions
+  mention_users {
+    user_id
+    full_name
+  }
 `;
 
 export const POD_MESSAGES = gql`
@@ -29,6 +43,8 @@ export const POD_MESSAGES = gql`
       chat_deletes_at
       closed
       can_moderate
+      is_muted
+      muted_until
     }
     pod(pod_doc_id: $pod_id) {
       id
@@ -53,6 +69,8 @@ export const CLUB_MESSAGES = gql`
       club_name
       retention_days
       can_moderate
+      is_muted
+      muted_until
     }
   }
 `;
@@ -72,8 +90,22 @@ export const CLUB_MESSAGE_PAGE = gql`
 `;
 
 export const SEND_CLUB_MSG = gql`
-  mutation SendClub($club_id: ID!, $type: PodMessageType, $text: String, $image_url: String) {
-    sendClubMessage(club_id: $club_id, type: $type, text: $text, image_url: $image_url) {
+  mutation SendClub(
+    $club_id: ID!
+    $type: PodMessageType
+    $text: String
+    $image_url: String
+    $reply_to_id: ID
+    $mentions: [ID!]
+  ) {
+    sendClubMessage(
+      club_id: $club_id
+      type: $type
+      text: $text
+      image_url: $image_url
+      reply_to_id: $reply_to_id
+      mentions: $mentions
+    ) {
       id
     }
   }
@@ -107,8 +139,22 @@ export const CHAT_PARTICIPANTS = gql`
 `;
 
 export const SEND_MSG = gql`
-  mutation Send($pod_id: ID!, $type: PodMessageType, $text: String, $image_url: String) {
-    sendPodMessage(pod_id: $pod_id, type: $type, text: $text, image_url: $image_url) {
+  mutation Send(
+    $pod_id: ID!
+    $type: PodMessageType
+    $text: String
+    $image_url: String
+    $reply_to_id: ID
+    $mentions: [ID!]
+  ) {
+    sendPodMessage(
+      pod_id: $pod_id
+      type: $type
+      text: $text
+      image_url: $image_url
+      reply_to_id: $reply_to_id
+      mentions: $mentions
+    ) {
       id
     }
   }

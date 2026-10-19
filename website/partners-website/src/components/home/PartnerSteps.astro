@@ -1,0 +1,41 @@
+---
+// Apply → verified → run it → paid: the same four steps on every partner path.
+import SectionHead from './SectionHead.astro';
+import { partnerLanding } from '../../config/landing';
+import { urlConfigs } from '../../config/url-configs';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+
+const landing = await partnerLanding();
+const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
+---
+
+<section class="relative isolate mt-3 overflow-hidden rounded-[2rem] bg-lilac px-5 py-20 sm:rounded-[2.75rem] sm:px-8 lg:py-28" aria-labelledby="steps-heading">
+  <div class="absolute -right-24 -top-24 -z-10 h-80 w-80 animate-drift rounded-full bg-primary opacity-15 blur-3xl" aria-hidden="true"></div>
+  <div class="mx-auto max-w-6xl">
+    <SectionHead
+      id="steps-heading"
+      kicker={t('website.partners.steps.kicker')}
+      title={t('website.partners.steps.title')}
+      lead={t('website.partners.steps.lead')}
+    />
+
+    <ol class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4" data-reveal-group>
+      {
+        landing.steps.map((step, index) => (
+          <li data-reveal><div class="lift h-full rounded-[1.75rem] border border-line bg-surface p-7">
+            <div class="flex items-center justify-between">
+              <span class="grid h-12 w-12 place-items-center rounded-2xl bg-primary-dark text-lg text-on-primary">
+                <i class={`fa-solid ${step.icon}`} aria-hidden="true" />
+              </span>
+              <span class="font-head text-4xl font-extrabold tracking-tight text-ink-soft opacity-40" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+            </div>
+            <h3 class="mt-8 text-2xl text-ink">{step.title}</h3>
+            <p class="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">{step.text}</p>
+          </div></li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

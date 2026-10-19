@@ -42,7 +42,8 @@ export function mount(root: HTMLElement): void {
   const titleEl = dialog.querySelector<HTMLElement>('[data-apply-role-title]');
   const errBox = dialog.querySelector<HTMLElement>('[data-form-error]');
   // The form's only button: submitForm drives the first one, and leaves it reading "sent" after a success.
-  const submitBtn = form.querySelector('button');
+  // The submit button, not the first one: a captcha's refresh button can come first.
+  const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"], button:not([type])');
   const idleLabel = submitBtn?.innerHTML ?? '';
   let role: { id: string | null; title: string } | null = null;
 

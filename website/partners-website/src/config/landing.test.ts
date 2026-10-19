@@ -28,11 +28,18 @@ describe('partnerLanding', () => {
     const landing = await partnerLanding();
 
     expect(landing.pillars.map((p) => p.title)).toEqual([
-      'website.partners.ways.venueTitle',
-      'website.partners.ways.hostTitle',
-      'website.partners.ways.earningsTitle',
+      'website.partners.ways.venueName',
+      'website.partners.ways.clubName',
+      'website.partners.ways.brandName',
+      'website.partners.ways.consoleName',
     ]);
-    expect(landing.stats.map((s) => s.value)).toEqual(['24h', '0', '2']);
+    const { urlConfigs } = await import('./url-configs');
+    expect(landing.pillars.map((p) => p.href)).toEqual([
+      `${urlConfigs.partnersAppUrl}/register-venue`,
+      `${urlConfigs.partnersAppUrl}/earn`,
+      `${urlConfigs.partnersAppUrl}/become-a-brand-partner`,
+      urlConfigs.partnersAppUrl,
+    ]);
   });
 
   it('asks the API the site is configured against', async () => {

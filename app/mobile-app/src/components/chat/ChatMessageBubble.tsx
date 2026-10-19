@@ -5,12 +5,21 @@ import { Text, XStack, YStack } from 'tamagui';
 import type { ChatMessage } from '@/hooks/useChat';
 import { formatMessageTime, groupReactions } from '@/utils/chat';
 import { useTranslation } from '@/hooks/useTranslation';
+import { ChatMessageQuote } from '@/components/chat/ChatMessageQuote';
+import { ChatMessageText } from '@/components/chat/ChatMessageText';
+import { SwipeToReply } from '@/components/chat/SwipeToReply';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
   mine: boolean;
-  /** Long-press handler: opens this message's actions (react, delete, report). */
+  /** Long-press handler: opens this message's actions (react, reply, delete, report). */
   onReact?: (messageId: string) => void;
+  /** Swipe right: answer this message. Absent when replying is not possible. */
+  onReply?: (messageId: string) => void;
+  /** A reply's quote was tapped: show the original. */
+  onJumpTo?: (messageId: string) => void;
+  /** A highlighted @mention was tapped. */
+  onOpenProfile?: (userId: string) => void;
 }
 
 /** Foreground text colour for the bubble — tinted for my own messages. */
@@ -22,7 +31,14 @@ function BubbleBody({
   mine,
   ink,
   imageLabel,
-}: Readonly<{ message: ChatMessage; mine: boolean; ink: Ink; imageLabel: string }>) {
+  onOpenProfile,
+}: Readonly<{
+  message: ChatMessage;
+  mine: boolean;
+  ink: Ink;
+  imageLabel: string;
+  onOpenProfile?: (userId: string) => void;
+}>) {
   if (message.deleted) {
     return (
       <Text fontSize={14} fontStyle="italic" color={mine ? '$onPrimary' : '$muted'}>
@@ -41,9 +57,12 @@ function BubbleBody({
         />
       ) : null}
       {message.text ? (
-        <Text fontSize={14} color={ink}>
-          {message.text}
-        </Text>
+        <ChatMessageText
+          text={message.text}
+          ink={ink}
+          mentioned={message.mention_users}
+          onOpenProfile={onOpenProfile}
+        />
       ) : null}
     </>
   );
@@ -106,7 +125,14 @@ const THEIRS_TONE: BubbleTone = {
 
 /** A single chat bubble: author, text/image, reactions and time. Right-aligned
  * and tinted for my own messages. Long-press opens the reaction picker. */
-export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessageBubbleProps>) {
+export function ChatMessageBubble({
+  message,
+  mine,
+  onReact,
+  onReply,
+  onJumpTo,
+  onOpenProfile,
+}: Readonly<ChatMessageBubbleProps>) {
   const { t } = useTranslation();
   const time = formatMessageTime(message.createdAt);
   const reactions = groupReactions(message.reactions);
@@ -115,41 +141,54 @@ export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessa
   // One spoken line per message: who, what and when — never a bare "Chat message".
   const spoken = [message.user_name, message.text, time].filter(Boolean).join(', ');
 
+  const quote = message.deleted ? null : message.reply_to;
+
   return (
-    <XStack justifyContent={tone.justify} paddingHorizontal={12}>
-      <YStack
-        testID={`chat-message-${message.id}`}
-        role="button"
-        aria-label={`${t('mweb.chat.chatMessage')}: ${spoken}`}
-        tabIndex={0}
-        onLongPress={onReact ? () => onReact(message.id) : undefined}
-        pressStyle={onReact ? { opacity: 0.85 } : undefined}
-        maxWidth="80%"
-        gap={4}
-        paddingHorizontal={12}
-        paddingVertical={8}
-        borderRadius={18}
-        borderBottomRightRadius={tone.bottomRight}
-        borderBottomLeftRadius={tone.bottomLeft}
-        borderWidth={1}
-        backgroundColor={tone.fill}
-        borderColor={tone.border}
-      >
-        {!mine && message.user_name ? (
-          <Text fontSize={12} fontWeight="600" color="$muted">
-            {message.user_name}
-          </Text>
-        ) : null}
+    <SwipeToReply onReply={onReply && !message.deleted ? () => onReply(message.id) : undefined}>
+      <XStack justifyContent={tone.justify} paddingHorizontal={12}>
+        <YStack
+          testID={`chat-message-${message.id}`}
+          role="button"
+          aria-label={`${t('mweb.chat.chatMessage')}: ${spoken}`}
+          tabIndex={0}
+          onLongPress={onReact ? () => onReact(message.id) : undefined}
+          pressStyle={onReact ? { opacity: 0.85 } : undefined}
+          maxWidth="80%"
+          gap={4}
+          paddingHorizontal={12}
+          paddingVertical={8}
+          borderRadius={18}
+          borderBottomRightRadius={tone.bottomRight}
+          borderBottomLeftRadius={tone.bottomLeft}
+          borderWidth={1}
+          backgroundColor={tone.fill}
+          borderColor={tone.border}
+        >
+          {!mine && message.user_name ? (
+            <Text fontSize={12} fontWeight="600" color="$muted">
+              {message.user_name}
+            </Text>
+          ) : null}
 
-        <BubbleBody message={message} mine={mine} ink={ink} imageLabel={t('mweb.chatRoom.image')} />
-        <BubbleReactions reactions={reactions} ink={ink} messageId={message.id} />
+          {quote ? (
+            <ChatMessageQuote quote={quote} mine={mine} onJump={(id) => onJumpTo?.(id)} />
+          ) : null}
+          <BubbleBody
+            message={message}
+            mine={mine}
+            ink={ink}
+            imageLabel={t('mweb.chatRoom.image')}
+            onOpenProfile={onOpenProfile}
+          />
+          <BubbleReactions reactions={reactions} ink={ink} messageId={message.id} />
 
-        {time ? (
-          <Text fontSize={10} alignSelf="flex-end" color={metaInk}>
-            {time}
-          </Text>
-        ) : null}
-      </YStack>
-    </XStack>
+          {time ? (
+            <Text fontSize={10} alignSelf="flex-end" color={metaInk}>
+              {time}
+            </Text>
+          ) : null}
+        </YStack>
+      </XStack>
+    </SwipeToReply>
   );
 }

@@ -10,8 +10,10 @@ export const SECTION_KIND_KEYS: Record<SectionKind, string> = {
   PRODUCT_SLIDER: 'ecommPortal.homePage.kindProductSlider',
   FLASH_SALE: 'ecommPortal.homePage.kindFlashSale',
   PROMO_BANNERS: 'ecommPortal.homePage.kindPromoBanners',
+  RANGE_SHOWCASE: 'ecommPortal.homePage.kindRangeShowcase',
   BRANDS: 'ecommPortal.homePage.kindBrands',
   USP_STRIP: 'ecommPortal.homePage.kindUspStrip',
+  EARN_PROMO: 'ecommPortal.homePage.kindEarnPromo',
   NEWSLETTER: 'ecommPortal.homePage.kindNewsletter',
 };
 
@@ -25,15 +27,35 @@ export const SECTION_KIND_HINT_KEYS: Record<SectionKind, string> = {
   PRODUCT_SLIDER: 'ecommPortal.homePage.hintProductSlider',
   FLASH_SALE: 'ecommPortal.homePage.hintFlashSale',
   PROMO_BANNERS: 'ecommPortal.homePage.hintPromoBanners',
+  RANGE_SHOWCASE: 'ecommPortal.homePage.hintRangeShowcase',
   BRANDS: 'ecommPortal.homePage.hintBrands',
   USP_STRIP: 'ecommPortal.homePage.hintUspStrip',
+  EARN_PROMO: 'ecommPortal.homePage.hintEarnPromo',
   NEWSLETTER: 'ecommPortal.homePage.hintNewsletter',
 };
 
 export const SECTION_KINDS = Object.keys(SECTION_KIND_KEYS) as SectionKind[];
 
-/** Kinds built from slides / banners / points the operator writes. */
-export const ITEM_KINDS: ReadonlySet<SectionKind> = new Set<SectionKind>(['HERO_SLIDER', 'PROMO_BANNERS', 'USP_STRIP']);
+/** Kinds built from slides / banners / tiles / points the operator writes. */
+export const ITEM_KINDS: ReadonlySet<SectionKind> = new Set<SectionKind>([
+  'HERO_SLIDER',
+  'PROMO_BANNERS',
+  'USP_STRIP',
+  'PET_TYPES',
+  'RANGE_SHOWCASE',
+  'EARN_PROMO',
+]);
+
+/** Kinds whose items the store draws with a separate phone picture. */
+export const MOBILE_IMAGE_KINDS: ReadonlySet<SectionKind> = new Set<SectionKind>(['HERO_SLIDER', 'PROMO_BANNERS']);
+
+/** Kinds whose item list may be left empty — the store then fills the band itself. */
+export const OPTIONAL_ITEM_KINDS: ReadonlySet<SectionKind> = new Set<SectionKind>(['PET_TYPES']);
+
+/** A line over the item editor, for the kinds whose items need explaining. */
+export const ITEM_HINT_KEYS: Partial<Record<SectionKind, string>> = {
+  PET_TYPES: 'ecommPortal.homePage.petTypesItemsHint',
+};
 
 /** Kinds that show a chosen set of categories (none chosen = the top level). */
 export const CATEGORY_KINDS: ReadonlySet<SectionKind> = new Set<SectionKind>(['CATEGORY_GRID', 'CATEGORY_ICONS']);

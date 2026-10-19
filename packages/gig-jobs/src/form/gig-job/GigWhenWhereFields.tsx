@@ -1,19 +1,23 @@
-import { Controller } from 'react-hook-form';
+import { Controller, useController } from 'react-hook-form';
 import { MenuItem, Stack } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/app-settings';
 import { parseIsoDay, toIsoDay } from '@duncit/datetime';
 import { GIG_EVENT_TYPES, gigEventTypeKey } from '@duncit/utils';
+import GigPlaceField from '../GigPlaceField';
 import type { GigJobSectionProps } from './gig-job.types';
 
 /**
- * Event type, date, place, budget and headcount. The date stores 'yyyy-MM-dd'
+ * Event type, date, place, budget and headcount. The city is a pick from the
+ * admin Location list (with an optional area). The date stores 'yyyy-MM-dd'
  * and reads in the admin's configured pattern (the surface's
  * DuncitLocalizationProvider), never the browser's own date order.
  */
 export default function GigWhenWhereFields({ control }: Readonly<GigJobSectionProps>) {
   const { t } = useTranslation();
+  const city = useController({ control, name: 'location_id' });
+  const area = useController({ control, name: 'locality' });
 
   return (
     <>
@@ -47,10 +51,13 @@ export default function GigWhenWhereFields({ control }: Readonly<GigJobSectionPr
           )}
         />
       </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <RhfTextField control={control} name="city" label={t('gigJobs.form.city')} data-testid="gig-form-city" />
-        <RhfTextField control={control} name="location" label={t('gigJobs.form.location')} />
-      </Stack>
+      <GigPlaceField
+        legend={t('gigJobs.form.city')}
+        city={city.field}
+        area={area.field}
+        error={city.fieldState.error?.message}
+      />
+      <RhfTextField control={control} name="location" label={t('gigJobs.form.location')} />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <RhfTextField
           control={control}

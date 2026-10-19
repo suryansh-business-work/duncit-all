@@ -73,7 +73,7 @@ const pod = (over: Record<string, unknown> = {}) =>
     pod_mode: 'PHYSICAL',
     venue_id: 'v1',
     products_enabled: true,
-    product_requests: [{ product_id: 'p1' }],
+    product_requests: [{ product_id: 'p1', product_name: 'Tee' }],
     ...over,
   }) as unknown as PodDetail;
 
@@ -124,6 +124,13 @@ describe('PodShopSection', () => {
     renderSection(pod({ product_requests: [] }));
     expect(screen.queryByTestId('shop-standalone')).toBeNull();
     expect(screen.queryByTestId('pod-shop-rent')).toBeNull();
+  });
+
+  it('ignores product requests that name no product yet', () => {
+    withItems([]);
+    renderSection(pod({ product_requests: [{ product_id: 'p1', product_name: '' }] }));
+    expect(screen.queryByTestId('shop-standalone')).toBeNull();
+    expect(mockShopProps).toHaveLength(0);
   });
 
   it('never rents for a virtual pod or a pod with no venue, whatever the catalogue holds', () => {

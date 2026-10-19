@@ -5,6 +5,8 @@ import {
   EMAIL_SPACE as S,
   EMAIL_TYPE as F,
 } from '@services/email/catalogue/tokens';
+import { CATEGORY_ICON } from '@services/email/catalogue/icons';
+import { badge } from '@services/email/catalogue/mjml';
 
 /**
  * The nine fragments as they are first seeded.
@@ -70,16 +72,49 @@ const DESCRIPTIONS: Record<EmailCategory, string> = {
   internal: 'Staff-only. Never reaches a customer.',
 };
 
+/** The words beside the header's badge, naming what kind of email this is. */
+export const CATEGORY_LABEL_KEY: Record<EmailCategory, string> = {
+  transactional: 'email.fragment.transactional.label',
+  authentication: 'email.fragment.authentication.label',
+  marketing: 'email.fragment.marketing.label',
+  service: 'email.fragment.service.label',
+  notification: 'email.fragment.notification.label',
+  support: 'email.fragment.support.label',
+  billing: 'email.fragment.billing.label',
+  legal: 'email.fragment.legal.label',
+  internal: 'email.fragment.internal.label',
+};
+
+/** The header's label: a caption, uppercase and quiet. */
+const LABEL_STYLE = `font-size:${F.caption.size};line-height:${F.caption.line};font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${C.muted}`;
+
+/** The card's side edges — the body's wrapper draws the same two between them. */
+const SIDES = `border-left="1px solid ${C.border}" border-right="1px solid ${C.border}"`;
+
 /**
- * The brand mark, centred on the canvas above the card — the admin's logo on
- * every email, linked to the website so it does what a reader expects a logo
- * to do.
+ * The top of the card: the brand stripe, the admin's logo (linked to the
+ * website, as a reader expects a logo to be) and, opposite it, a badge naming
+ * the kind of email — "Security", "Billing" — so a reader knows what this is
+ * before reading a word of it. An `<mj-group>` keeps the two side by side on a
+ * phone instead of stacking them.
  */
-const header = () => `    <mj-section padding="32px 0 20px 0">
-      <mj-column>
-        <mj-image src="{{brand_logo_url}}" alt="{{app_name}}" href="{{website_url}}" width="${S.logoWidth}" align="center" padding="0" />
-      </mj-column>
-    </mj-section>`;
+const header = (category: EmailCategory) => `    <mj-wrapper padding="24px 0 0 0">
+      <mj-section css-class="gutter" background-color="${C.surface}" border-top="4px solid ${C.brand}" ${SIDES} border-radius="${S.cardRadius} ${S.cardRadius} 0 0" padding="24px ${S.gutter} 20px ${S.gutter}">
+        <mj-group>
+          <mj-column width="45%" vertical-align="middle">
+            <mj-image src="{{brand_logo_url}}" alt="{{app_name}}" href="{{website_url}}" width="${S.logoWidth}" align="left" padding="0" />
+          </mj-column>
+          <mj-column width="55%" vertical-align="middle">
+            <mj-text align="right" padding="0"><table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr><td valign="middle">${badge(CATEGORY_ICON[category])}</td><td valign="middle" style="padding-left:10px;${LABEL_STYLE}">{{t:${CATEGORY_LABEL_KEY[category]}}}</td></tr></table></mj-text>
+          </mj-column>
+        </mj-group>
+      </mj-section>
+      <mj-section css-class="gutter" background-color="${C.surface}" ${SIDES} padding="0 ${S.gutter}">
+        <mj-column>
+          <mj-divider border-color="${C.border}" border-width="1px" padding="0" />
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>`;
 
 /** One centred line of the footer. */
 const footerText = (content: string, bottom = '8px') =>
@@ -119,20 +154,22 @@ const unsubscribeLine = () => {
  * `sendEmail` on every send, so a fragment never has to be told them. Every
  * colour clears 4.5:1 on the canvas; the old grey copyright line did not.
  */
-const footer = (optOutable: boolean) => `    <mj-section padding="24px ${S.gutter} 40px ${S.gutter}">
-      <mj-column>
+const footer = (optOutable: boolean) => `    <mj-wrapper padding="0 0 32px 0">
+      <mj-section css-class="gutter" background-color="${C.panel}" border-top="1px solid ${C.border}" ${SIDES} border-bottom="1px solid ${C.border}" border-radius="0 0 ${S.cardRadius} ${S.cardRadius}" padding="24px ${S.gutter} 28px ${S.gutter}">
+        <mj-column>
 ${footerText('{{footer_note}}', '10px')}
 ${footerText(`{{t:email.fragment.help}} ${footerLink('mailto:{{support_email}}', '{{support_email}}')}`)}${optOutable ? unsubscribeLine() : ''}
-        <mj-divider border-width="1px" border-color="${C.border}" width="48px" padding="8px 0 16px 0" />
+        <mj-divider border-width="1px" border-color="${C.border}" width="64px" padding="8px 0 16px 0" />
 ${footerText(`&copy; {{year}} ${footerLink('{{website_url}}', '{{app_name}}')}. {{t:email.fragment.rights}}`, '0')}
-      </mj-column>
-    </mj-section>`;
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>`;
 
 export const FRAGMENT_DEFAULTS: FragmentDefault[] = EMAIL_CATEGORIES.map((category) => ({
   category,
   name: LABELS[category],
   description: DESCRIPTIONS[category],
-  header_mjml: header(),
+  header_mjml: header(category),
   footer_mjml: footer(isOptionalMailCategory(category)),
 }));
 

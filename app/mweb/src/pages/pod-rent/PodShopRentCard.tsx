@@ -37,7 +37,10 @@ export default function PodShopRentCard({ podTitle, hasProducts, renderShop, ren
   return (
     <Box data-testid="pod-shop-rent" sx={{ ...SURFACE_SX, p: 2, overflow: 'hidden' }}>
       <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-        <SectionHeader testId="pod-shop-rent-header" title={t('mweb.shop.title')} />
+        <SectionHeader
+          testId="pod-shop-rent-header"
+          title={hasProducts ? t('mweb.shop.title') : t('venueRentals.guest.rentTab')}
+        />
         <DuncitButton size="small" onClick={() => setSheetOpen(true)} data-testid="pod-shop-rent-see-all">
           {t('venueRentals.guest.seeAll')}
         </DuncitButton>

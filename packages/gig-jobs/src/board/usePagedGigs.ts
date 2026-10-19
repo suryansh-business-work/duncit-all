@@ -3,6 +3,7 @@ import { fireAndForget } from '@duncit/logs';
 import type { GigJobFilter, GigJobRow } from '@duncit/utils';
 import { GIG_JOBS, MY_GIG_JOBS } from '../documents';
 import { useGigSurface } from '../GigSurfaceProvider';
+import { useLoggedError } from '../useLoggedError';
 
 export const GIG_PAGE_SIZE = 20;
 
@@ -28,6 +29,7 @@ export function useGigBoard(filter: GigJobFilter): PagedGigs {
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   });
+  useLoggedError(error, 'gig-jobs', 'useGigBoard');
   const page = (data ?? previousData)?.gigJobs;
   const rows = page?.rows ?? [];
   return {
@@ -57,6 +59,7 @@ export function useMyGigs(): PagedGigs {
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   });
+  useLoggedError(error, 'my-gigs', 'useMyGigs');
   const rows = data?.myGigJobs.rows ?? [];
   return {
     rows,

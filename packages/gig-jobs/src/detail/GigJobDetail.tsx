@@ -4,16 +4,17 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
 import { fireAndForget } from '@duncit/logs';
 import { useTranslation } from '@duncit/app-settings';
-import { GIG_JOBS_PATH } from '@duncit/utils';
+import { GIG_JOBS_PATH, canRevealGigContact } from '@duncit/utils';
 import { GIG_JOB } from '../documents';
 import { useGigSurface } from '../GigSurfaceProvider';
 import { useGigContext } from '../useGigContext';
 import GigContactCard from './GigContactCard';
+import GigContactReveal from './GigContactReveal';
 import GigInterestsList from './GigInterestsList';
 import GigJobFacts from './GigJobFacts';
 import GigViewerActions from './GigViewerActions';
 
-/** One gig: what it is, what this viewer can do, and — once shared — the contact. */
+/** One gig: what it is, what this viewer can do, and the poster's contact — shown once shared, or on "View contact". */
 export default function GigJobDetail({ id }: Readonly<{ id: string }>) {
   const { t } = useTranslation();
   const { go, logger } = useGigSurface();
@@ -67,6 +68,7 @@ export default function GigJobDetail({ id }: Readonly<{ id: string }>) {
       <GigJobFacts job={job} />
       <GigViewerActions job={job} viewer={viewer} />
       {job.contact && !job.is_mine && <GigContactCard contact={job.contact} />}
+      {canRevealGigContact(job) && <GigContactReveal key={job.id} jobId={job.id} />}
       {job.is_mine && (
         <>
           <Divider />

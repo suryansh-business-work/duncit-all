@@ -1,0 +1,48 @@
+---
+// The closing call-out on an inner page: an inverted rounded card with a
+// drifting blob, a heading, a line (the default slot) and its actions (the
+// `actions` slot). `ink` and `cream` swap together, so it is dark on the light
+// theme and light on the dark one — always the loudest thing on the panel.
+interface Props {
+  title: string;
+  kicker?: string;
+  icon?: string;
+  class?: string;
+}
+
+const { title, kicker, icon = 'fa-bolt', class: className = '' } = Astro.props;
+---
+
+<section
+  data-reveal="scale"
+  class:list={['not-prose relative isolate mt-20 overflow-hidden rounded-panel bg-ink px-6 py-10 text-cream sm:mt-24 sm:px-12 sm:py-14', className]}
+>
+  <div class="pointer-events-none absolute -top-24 -right-16 -z-10 h-72 w-72 rounded-full bg-primary/35 blur-[70px] motion-safe:animate-drift" aria-hidden="true"></div>
+  <div class="pointer-events-none absolute -bottom-28 -left-10 -z-10 h-64 w-64 rounded-full bg-secondary/30 blur-[70px] motion-safe:animate-drift [animation-delay:-9s]" aria-hidden="true"></div>
+  <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+    <div class="max-w-2xl">
+      {
+        kicker && (
+          <span class="mb-5 inline-flex -rotate-2 items-center gap-2 rounded-full bg-tertiary px-3.5 py-1.5 font-head text-xs font-extrabold tracking-[0.12em] text-on-accent uppercase">
+            <i class={`fa-solid ${icon}`} aria-hidden="true" />
+            {kicker}
+          </span>
+        )
+      }
+      <h2 class="headline text-[2rem] text-cream sm:text-5xl">{title}</h2>
+      <div class="cta-copy mt-4 text-lg leading-relaxed text-cream/80"><slot /></div>
+    </div>
+    {Astro.slots.has('actions') && <div class="flex shrink-0 flex-col gap-3 sm:flex-row md:flex-col"><slot name="actions" /></div>}
+  </div>
+</section>
+
+<style>
+  /* An address inside the line (an email) reads as a link on the inverted card. */
+  .cta-copy :global(a) {
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    color: var(--color-cream);
+  }
+</style>

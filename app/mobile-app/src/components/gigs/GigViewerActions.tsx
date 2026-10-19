@@ -20,7 +20,8 @@ interface Props {
 /**
  * The one thing this viewer can do on this gig (shared rule `gigViewerAction`)
  * — manage it, show interest, join as a freelancer first, or read that it is
- * closed. mWeb twin: @duncit/gig-jobs GigViewerActions.
+ * closed. The poster's contact is the detail screen's "View contact", open to
+ * every signed-in member. mWeb twin: @duncit/gig-jobs GigViewerActions.
  */
 export function GigViewerActions({ job, viewer, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -44,7 +45,6 @@ export function GigViewerActions({ job, viewer, onChanged }: Readonly<Props>) {
           onPress={() => navigation.navigate('FreelancerProfile')}
           testID="gig-join-freelancer"
         />
-        <GigNote text={t('gigJobs.contact.hidden')} testID="gig-contact-hidden" />
       </YStack>
     );
   }
@@ -55,7 +55,6 @@ export function GigViewerActions({ job, viewer, onChanged }: Readonly<Props>) {
         onPress={() => setInterestOpen(true)}
         testID="gig-interest-open"
       />
-      <GigNote text={t('gigJobs.contact.hidden')} testID="gig-contact-hidden" />
       <InterestSheet
         job={job}
         open={interestOpen}

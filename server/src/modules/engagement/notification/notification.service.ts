@@ -27,6 +27,17 @@ export type PushMessage = Pick<INotification, 'title' | 'body' | 'image_url' | '
   tag?: string;
 };
 
+/**
+ * How Expo groups a tagged push on the device: Android `tag` replaces the
+ * room's last notification, iOS `threadId` groups them under the room, and
+ * `collapseId` (FCM collapse_key / apns-collapse-id) coalesces pushes still in
+ * transit and, on iOS, replaces the shown one. Untagged pushes stack as before.
+ */
+export function expoGrouping(tag: string | undefined | null) {
+  if (!tag) return {};
+  return { tag, threadId: tag, collapseId: tag };
+}
+
 const toPub = (n: INotification) => ({
   id: String(n._id),
   title: n.title,
@@ -300,7 +311,8 @@ export const notificationService = {
       sound: 'default',
       title: notif.title,
       body: notif.body,
-      data: { id: String(notif._id), link: notif.link_url ?? '/' },
+      data: { id: String(notif._id), link: notif.link_url ?? '/', tag: notif.tag ?? null },
+      ...expoGrouping(notif.tag),
     }));
 
     for (let i = 0; i < messages.length; i += 100) {

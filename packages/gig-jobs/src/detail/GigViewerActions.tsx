@@ -11,7 +11,8 @@ import InterestDialog from './InterestDialog';
 /**
  * The one thing this viewer can do on this gig (shared rule:
  * `gigViewerAction`) — manage it, show interest, join as a freelancer first,
- * or read that it is closed. A shared contact needs no action: it is shown.
+ * or read that it is closed. The poster's contact is the page's own "View
+ * contact" (any signed-in member), or shown outright once interest is shared.
  */
 export default function GigViewerActions({ job, viewer }: Readonly<{ job: GigJob; viewer: GigViewer | null }>) {
   const { t } = useTranslation();
@@ -29,9 +30,6 @@ export default function GigViewerActions({ job, viewer }: Readonly<{ job: GigJob
         <DuncitButton variant="contained" onClick={openFreelancerProfile}>
           {t('gigJobs.interest.joinCta')}
         </DuncitButton>
-        <Alert severity="info" variant="outlined">
-          {t('gigJobs.contact.hidden')}
-        </Alert>
       </Stack>
     );
   }
@@ -45,9 +43,6 @@ export default function GigViewerActions({ job, viewer }: Readonly<{ job: GigJob
       >
         {t('gigJobs.interest.cta')}
       </DuncitButton>
-      <Alert severity="info" variant="outlined">
-        {t('gigJobs.contact.hidden')}
-      </Alert>
       <InterestDialog job={job} open={interestOpen} onClose={() => setInterestOpen(false)} />
     </Stack>
   );

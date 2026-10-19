@@ -9,6 +9,7 @@ import { fetchBranding } from '../lib/site-data';
 import SiteMeta from '@duncit/brand/SiteMeta.astro';
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
 import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
+import ScrollReveal from '@duncit/brand/ScrollReveal.astro';
 import '../styles/global.css';
 
 const siteConfig = await siteContent();
@@ -74,6 +75,8 @@ const favicon = branding.website_favicon_url || '/favicon.svg';
     );
   </script>
     <slot />
+    <!-- Arms every `data-reveal` / `data-reveal-group` on the page, once. -->
+    <ScrollReveal />
     <script>
       // Ship console errors to SignOz (via the server /logs ingest).
       import { configureLogs, httpTransport } from '@duncit/logs';

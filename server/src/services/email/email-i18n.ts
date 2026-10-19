@@ -210,6 +210,16 @@ export const EMAIL_FALLBACK: Record<string, string> = {
     "This is a notice about your Duncit account that we are required to send.",
   "email.fragment.internal.note":
     "Internal Duncit message. Please do not forward it outside the team.",
+  // The label beside the header's badge, naming what kind of email this is.
+  "email.fragment.transactional.label": "Confirmation",
+  "email.fragment.authentication.label": "Security",
+  "email.fragment.marketing.label": "What's new",
+  "email.fragment.service.label": "Message",
+  "email.fragment.notification.label": "Update",
+  "email.fragment.support.label": "Support",
+  "email.fragment.billing.label": "Billing",
+  "email.fragment.legal.label": "Account notice",
+  "email.fragment.internal.label": "Staff only",
 };
 
 const PREFIX = "t:";

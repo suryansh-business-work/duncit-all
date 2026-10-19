@@ -27,6 +27,7 @@ import {
   type NestedCatalogue,
   type Translator,
 } from '@duncit/app-settings';
+import { VENUE_RENTALS_BUNDLE } from '@duncit/i18n';
 
 /**
  * mWeb's LOCAL FALLBACK bundle (CLAUDE.md rule 38).
@@ -77,6 +78,8 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...VENUE_FOOD_OWNER_BUNDLE,
   // shell.foodTax.*: the GST words and rules the food menu editor shares with the consoles.
   ...SHELL_FOOD_TAX_SLICE,
+  // venueRentals.*: Pod Rent, the rental checkout lines and My Rented Items (@duncit/venue-rentals).
+  ...VENUE_RENTALS_BUNDLE,
   // podRequests.*: venue <-> host Pod Requests (search, lists, detail, limits).
   ...POD_REQUESTS_BUNDLE,
   // gigJobs.*: the Gig Jobs board, post form and freelancer profile (@duncit/gig-jobs).

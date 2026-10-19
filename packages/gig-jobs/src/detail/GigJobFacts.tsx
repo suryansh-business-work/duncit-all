@@ -1,7 +1,7 @@
 import { Chip, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { formatDay } from '@duncit/datetime';
-import { gigBudgetText, gigEventTypeKey, gigPosterRoleKey, gigStatusKey, type GigJob } from '@duncit/utils';
+import { gigBudgetText, gigEventTypeKey, gigPlaceText, gigPosterRoleKey, gigStatusKey, type GigJob } from '@duncit/utils';
 
 function Fact({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
@@ -18,7 +18,7 @@ function Fact({ label, value }: Readonly<{ label: string; value: string }>) {
 export default function GigJobFacts({ job }: Readonly<{ job: GigJob }>) {
   const { t } = useTranslation();
   const when = job.event_date ? formatDay(job.event_date.slice(0, 10)) : t('gigJobs.card.noDate');
-  const where = [job.location, job.city].filter(Boolean).join(', ');
+  const where = [job.location, gigPlaceText(job)].filter(Boolean).join(', ');
 
   return (
     <Stack spacing={2}>

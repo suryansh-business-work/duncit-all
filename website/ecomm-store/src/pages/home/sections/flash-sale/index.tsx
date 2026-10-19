@@ -44,10 +44,10 @@ export function FlashSale({ section }: Readonly<SectionProps>) {
   const viewAll = section.collection ? paths.collection(section.collection.slug) : undefined;
   return (
     <Stack component="section" aria-label={section.title || t('ecommStore.flash.title')} spacing={2}>
-      <Stack spacing={2} sx={{ bgcolor: T.brandTint, borderRadius: `${T.radius.card}px`, p: 2 }}>
+      <Stack spacing={2} sx={{ bgcolor: T.brandTint, borderRadius: `${T.radius.card}px`, p: { xs: 2, md: 3 } }}>
         <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
           <Stack sx={{ minWidth: 0 }}>
-            <Typography variant="h2" component="h2">
+            <Typography variant="h2" component="h2" sx={{ fontWeight: 800 }}>
               {section.title || t('ecommStore.flash.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -76,7 +76,7 @@ export function FlashSale({ section }: Readonly<SectionProps>) {
       </Stack>
       {viewAll ? <SectionHeading title={t('ecommStore.flash.deals')} viewAll={viewAll} /> : null}
       {loading && products.length === 0 ? <Loader label={t('ecommStore.common.loading')} /> : null}
-      <Box component="ul" aria-live="polite" sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+      <Box component="ul" aria-live="polite" sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: { xs: 1.5, md: 2 }, gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' } }}>
         {products.map((product, position) => (
           <Box component="li" key={product.id}>
             <ProductCard product={product} position={position} />

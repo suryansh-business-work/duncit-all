@@ -14,6 +14,7 @@ import {
   type UserDisplay,
 } from '@modules/access/user/user.display';
 import { emitToSupportAgents, emitToSupportUser, emitToSupportSession } from './supportChat.socket';
+import { notifySupportReply } from './supportChat.notify';
 import { ticketNo } from './unifiedTickets.service';
 import { aiSupportReply, isOpenAiConfigured, type SupportAiTurn } from './supportChat.ai';
 import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
@@ -277,6 +278,16 @@ export const supportChatService = {
     emitToSupportSession(String(session!._id), 'support_chat:message', pubMsg);
     emitToSupportAgents('support_chat:session_update', pubSession);
     emitToSupportUser(String(session!.user_id), 'support_chat:session_update', pubSession);
+    if (isAgent) {
+      notifySupportReply({
+        sessionId: String(session!._id),
+        userId: String(session!.user_id),
+        messageId: String(msg._id),
+        senderName: meta.name,
+        text,
+        hasAttachment: attachments.length > 0,
+      }).catch(() => undefined);
+    }
 
     // The send returns immediately; the AI reply is produced out-of-band and
     // delivered over the socket so the user never waits on the model.
@@ -399,6 +410,17 @@ export const supportChatService = {
     emitToSupportSession(String(session._id), 'support_chat:message', pubMsg);
     emitToSupportAgents('support_chat:session_update', pubSession);
     emitToSupportUser(String(session.user_id), 'support_chat:session_update', pubSession);
+    // The assistant's answers reach the customer like an agent's; system lines do not push.
+    if (opts.role === 'AGENT') {
+      notifySupportReply({
+        sessionId: String(session._id),
+        userId: String(session.user_id),
+        messageId: String(msg._id),
+        senderName: pubMsg.sender_name || opts.name,
+        text: opts.text,
+        hasAttachment: (opts.attachments ?? []).length > 0,
+      }).catch(() => undefined);
+    }
     return msg;
   },
 

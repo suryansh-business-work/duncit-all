@@ -20,6 +20,7 @@ vi.mock('../../src/pages/website', () => ({
   NavigationPage: () => <div>NAVIGATION PAGE</div>,
   ReelsPage: () => <div>REELS PAGE</div>,
   ReelSettingsPage: () => <div>REEL SETTINGS PAGE</div>,
+  EarnPage: () => <div>EARN PAGE</div>,
 }));
 vi.mock('@duncit/shell', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/shell')>()),
@@ -52,6 +53,7 @@ describe('App routing', () => {
     ['/reels', 'REELS PAGE'],
     // The more specific route must win over /reels.
     ['/reels/settings', 'REEL SETTINGS PAGE'],
+    ['/earn', 'EARN PAGE'],
     ['/profile', 'PROFILE PAGE'],
   ])('renders %s behind auth', (path, text) => {
     setToken('tok');

@@ -3,10 +3,16 @@ import { Schema, model, type Document, type Types } from 'mongoose';
 /**
  * Gig Jobs — what a host, a venue owner or a brand owner needs for an event or
  * a workshop (a photographer, a caterer, a sponsor), posted for freelancers to
- * pick up. Nothing here is billed: interest shares contacts both ways for free
- * today, which is why every contact read goes through one gate
- * (`gigJob.service` `contactVisibleTo`) — the gate is where a future paid
- * unlock would sit.
+ * pick up. Nothing here is billed. Any signed-in member may reveal a poster's
+ * contact on demand (`gigJobService.revealContact`, logged per reveal), and
+ * interest still shares the freelancer's contact with the poster. The two
+ * reads that hand a poster's contact out — `contactVisibleTo` and
+ * `revealContact` — are where a future paid unlock would sit.
+ *
+ * Where a gig happens is the admin Location pods and clubs use (`location_id`
+ * plus one of its zones as `locality`). `city` stays filled from that Location
+ * for display and back-compat, and is all that rows saved before the picker
+ * (free text, no `location_id`) carry.
  */
 
 /** The partner roles that may post a gig. Brand owner = ECOMM_MANAGER (Partner
@@ -64,6 +70,11 @@ export interface IGigJob extends Document {
   roles: string[];
   event_type: GigEventType;
   event_date: Date | null;
+  /** The admin Location (city). Null on rows posted before the picker. */
+  location_id: Types.ObjectId | null;
+  /** One of that Location's zone names, or '' for the whole city. */
+  locality: string;
+  /** The city's name, copied from the Location on save (free text on old rows). */
   city: string;
   location: string;
   /** Rupees, whole. Null = "discuss with the poster". */
@@ -89,6 +100,8 @@ const gigJobSchema = new Schema<IGigJob>(
     roles: { type: [String], default: [] },
     event_type: { type: String, enum: GIG_EVENT_TYPES, default: 'EVENT' },
     event_date: { type: Date, default: null },
+    location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
+    locality: { type: String, default: '', trim: true, maxlength: 120 },
     city: { type: String, default: '', trim: true },
     location: { type: String, default: '', trim: true },
     budget: { type: Number, default: null, min: 0 },
@@ -105,6 +118,8 @@ const gigJobSchema = new Schema<IGigJob>(
 // The board (open gigs, newest first, optionally one category) and "My posts".
 gigJobSchema.index({ status: 1, created_at: -1 });
 gigJobSchema.index({ status: 1, category_id: 1, created_at: -1 });
+// The board's city filter, which defaults to the viewer's selected city.
+gigJobSchema.index({ status: 1, location_id: 1, created_at: -1 });
 gigJobSchema.index({ poster_user_id: 1, created_at: -1 });
 
 export const GigJobModel = model<IGigJob>('GigJob', gigJobSchema);
@@ -152,6 +167,10 @@ export interface IFreelancerProfile extends Document {
   display_name: string;
   category_ids: Types.ObjectId[];
   skills: string[];
+  /** The admin Location (city). Null on profiles saved before the picker. */
+  location_id: Types.ObjectId | null;
+  locality: string;
+  /** The city's name, copied from the Location on save (free text on old profiles). */
   city: string;
   bio: string;
   portfolio_url: string;
@@ -169,6 +188,8 @@ const freelancerProfileSchema = new Schema<IFreelancerProfile>(
     display_name: { type: String, default: '', trim: true },
     category_ids: { type: [Schema.Types.ObjectId], ref: 'GigCategory', default: [] },
     skills: { type: [String], default: [] },
+    location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
+    locality: { type: String, default: '', trim: true, maxlength: 120 },
     city: { type: String, default: '', trim: true },
     bio: { type: String, default: '' },
     portfolio_url: { type: String, default: '' },

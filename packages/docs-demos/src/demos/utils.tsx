@@ -20,6 +20,9 @@ import { privacyDemos } from './utils/privacy';
 import { crashReportDemos } from './utils/crash-report';
 import { cartReminderDemos } from './utils/cart-reminder';
 import { fitScaleDemos } from './utils/fit-scale';
+import { gigJobsDemos } from './utils/gig-jobs';
+import { profileMenuDemos } from './utils/profile-menu';
+import { chatRoomDemos } from './utils/chat-rooms';
 import { defineDemos } from '../types';
 
 export default defineDemos('utils', [
@@ -40,4 +43,7 @@ export default defineDemos('utils', [
   ...crashReportDemos,
   ...cartReminderDemos,
   ...fitScaleDemos,
+  ...gigJobsDemos,
+  ...profileMenuDemos,
+  ...chatRoomDemos,
 ]);

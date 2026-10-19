@@ -29,11 +29,14 @@ beforeEach(() => {
 });
 
 describe('BookingScreen (mWeb BookingPage twin, rule 27)', () => {
-  it('shows the spinner while the booking resolves', () => {
+  it('shows the loader with a tip while the booking resolves', () => {
     mockedUse.mockReturnValue({ booking: null, isLoading: true, error: undefined });
     renderWithProviders(<BookingScreen />);
     expect(mockedUse).toHaveBeenCalledWith('bk-1');
     expect(screen.getByTestId('booking-loading')).toBeOnTheScreen();
+    // Not a bare spinner: the wait carries a "Did you know?" tip.
+    expect(screen.getByText('Did you know?')).toBeOnTheScreen();
+    expect(screen.getByTestId('booking-loading-tip')).toHaveTextContent(/\S/);
     expect(mockReplace).not.toHaveBeenCalled();
   });
 

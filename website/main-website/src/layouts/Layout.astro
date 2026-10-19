@@ -6,6 +6,7 @@ import { getTranslator } from '../lib/i18n';
 import SiteMeta from '@duncit/brand/SiteMeta.astro';
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
 import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
+import ScrollReveal from '@duncit/brand/ScrollReveal.astro';
 
 const { t } = await getTranslator();
 
@@ -53,7 +54,7 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link
@@ -77,6 +78,7 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
     );
   </script>
     <slot />
+    <ScrollReveal />
       <script>
       // Ship console errors to SignOz (via the server /logs ingest).
       import { configureLogs, httpTransport } from '@duncit/logs';

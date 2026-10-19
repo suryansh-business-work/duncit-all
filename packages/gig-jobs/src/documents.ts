@@ -4,6 +4,7 @@ import {
   EXPRESS_GIG_INTEREST_MUTATION,
   GIG_CATEGORIES_QUERY,
   GIG_JOBS_QUERY,
+  GIG_JOB_CONTACT_QUERY,
   GIG_JOB_INTERESTS_QUERY,
   GIG_JOB_QUERY,
   GIG_VIEWER_QUERY,
@@ -14,6 +15,7 @@ import {
   UPDATE_GIG_JOB_MUTATION,
   type FreelancerProfile,
   type GigCategory,
+  type GigContact,
   type GigInterest,
   type GigJob,
   type GigJobFilter,
@@ -46,6 +48,10 @@ export const GIG_JOBS: TypedDocumentNode<{ gigJobs: GigJobPage }, PageVars & { f
 export const MY_GIG_JOBS: TypedDocumentNode<{ myGigJobs: GigJobPage }, PageVars> = gql(MY_GIG_JOBS_QUERY);
 
 export const GIG_JOB: TypedDocumentNode<{ gigJob: GigJob | null }, { id: string }> = gql(GIG_JOB_QUERY);
+
+/** "View contact" — read on the tap, never shipped with the gig. */
+export const GIG_JOB_CONTACT: TypedDocumentNode<{ gigJobContact: GigContact }, { job_id: string }> =
+  gql(GIG_JOB_CONTACT_QUERY);
 
 export const GIG_JOB_INTERESTS: TypedDocumentNode<{ gigJobInterests: GigInterest[] }, { job_id: string }> =
   gql(GIG_JOB_INTERESTS_QUERY);

@@ -45,10 +45,51 @@ type NumberSetting =
   | 'return_window_days'
   | 'autoship_discount_pct';
 
-/** A festive window: while it is open the store swaps its logo, favicon and background. */
+/** A festive look the storefront ships: its own colours and light animation. NONE keeps the house look. */
+export type StoreOccasionTheme =
+  | 'NONE'
+  | 'DIWALI'
+  | 'HOLI'
+  | 'DUSSEHRA'
+  | 'NAVRATRI'
+  | 'DURGA_PUJA'
+  | 'GANESH_CHATURTHI'
+  | 'JANMASHTAMI'
+  | 'MAKAR_SANKRANTI'
+  | 'LOHRI'
+  | 'PONGAL'
+  | 'ONAM'
+  | 'RAKSHA_BANDHAN'
+  | 'KARWA_CHAUTH'
+  | 'BAISAKHI'
+  | 'GURU_NANAK_JAYANTI'
+  | 'EID'
+  | 'CHRISTMAS'
+  | 'HALLOWEEN'
+  | 'NEW_YEAR'
+  | 'VALENTINES_DAY'
+  | 'EASTER'
+  | 'FRIENDSHIP_DAY'
+  | 'MOTHERS_DAY'
+  | 'FATHERS_DAY'
+  | 'APRIL_FOOLS'
+  | 'INDEPENDENCE_DAY'
+  | 'REPUBLIC_DAY'
+  | 'GANDHI_JAYANTI'
+  | 'CHILDRENS_DAY'
+  | 'WOMENS_DAY'
+  | 'YOGA_DAY'
+  | 'EARTH_DAY'
+  | 'CHHATH_PUJA';
+
+/** A festive window: while it is open the store swaps its logo, favicon and background and wears its theme. */
 export interface StoreOccasion {
   slug: string;
   label: string;
+  theme: StoreOccasionTheme;
+  effects_enabled: boolean;
+  /** Shown above the home banner, e.g. "Happy Diwali". */
+  greeting: string;
   starts_at: string;
   ends_at: string;
   logo_url: string;
@@ -69,6 +110,8 @@ export type StoreSettings = Record<TextSetting, string> &
     cancel_reasons: string[];
     autoship_frequencies: number[];
     social_links: { label: string; url: string }[];
+    /** The accepted payment methods the store footer shows. */
+    payment_badges: { label: string; image_url: string }[];
     occasions: StoreOccasion[];
   };
 
@@ -116,9 +159,16 @@ const SETTINGS_FIELDS = `
     label
     url
   }
+  payment_badges {
+    label
+    image_url
+  }
   occasions {
     slug
     label
+    theme
+    effects_enabled
+    greeting
     starts_at
     ends_at
     logo_url

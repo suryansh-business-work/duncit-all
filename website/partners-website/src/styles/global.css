@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
+/* The palette is declared as tokens and REDEFINED for dark mode below, so a
+   theme switch recolours every utility built from them (bg-surface, text-ink,
+   border-line …) instead of asking each component to know about themes.
+
+   `ink` and `cream` are an inverting PAIR: ink is the text, cream is the panel
+   it sits on, and they swap together. Anything that must stay light on a
+   surface that never inverts (the hero photograph, the frame, the coloured
+   cards) writes in `on-primary`; anything on the yellow writes in `on-accent`. */
 @theme {
   --color-primary: #ff5757;
   --color-primary-dark: #c4262a;
+  /* The brand red as TEXT on a panel. Small type in plain primary falls under
+     4.5:1 on cream, and primary-dark does on the dark panels — so the shade
+     moves with the theme. */
+  --color-primary-ink: #c4262a;
   --color-secondary: #5865f2;
   --color-tertiary: #ffd166;
   --color-tertiary-dark: #e0a92e;
@@ -10,57 +22,139 @@
   --color-ink-soft: #4b4651;
   --color-cream: #faf6f0;
   --color-lilac: #eef0fb;
-  /* Ink that sits ON a filled or dark surface — the primary button, the header
-     over the hero photograph. A token so no component writes `#fff` itself. */
+  /* Cards and panels sitting ON a background: white on light, lifted slate on
+     dark. Hairlines get a token too, because black/8 cannot invert. */
+  --color-surface: #ffffff;
+  --color-line: rgba(22, 19, 26, 0.08);
+  /* Ink that sits ON a filled or dark surface — the primary button, the hero
+     photograph. A token so no component writes `#fff` itself. Never moves. */
   --color-on-primary: #ffffff;
+  /* Text on a block whose colour does NOT invert — the yellow bands and
+     stickers stay yellow in the dark, so `ink` on them would vanish. */
+  --color-on-accent: #16131a;
+  /* The matte the rounded panels sit in. It reads as a frame in both themes,
+     so it never moves either. */
+  --color-frame: #100e14;
+
   --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-bob: bob 6s ease-in-out infinite;
+  --animate-drift: drift 18s ease-in-out infinite alternate;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-draw: draw 1.2s 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+
+  @keyframes bob {
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes drift {
+    to {
+      transform: translate(40px, -30px) scale(1.08);
+    }
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+/* Dark theme. Set by the no-flash script in the layout from the saved choice. */
+:root[data-theme='dark'] {
+  --color-primary-ink: #ff8080;
+  --color-ink: #f5f2f7;
+  --color-ink-soft: #a9a2b3;
+  --color-cream: #15131a;
+  --color-lilac: #191a26;
+  --color-surface: #1e1b24;
+  --color-line: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
   html {
     font-family: var(--font-body);
     scroll-behavior: smooth;
+    color-scheme: light;
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
   }
   body {
-    background: var(--color-ink);
-    color: var(--color-cream);
+    /* The matte behind the rounded panels, so an overscroll bounce shows the
+       frame rather than a flash of some other colour. */
+    background: var(--color-frame);
+    color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    transition: background-color 200ms ease, color 200ms ease;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-head);
     font-weight: 800;
-    letter-spacing: 0;
-    line-height: 1.05;
+    letter-spacing: -0.035em;
+    line-height: 1;
   }
   a, button {
     cursor: pointer;
   }
+  /* Keyboard users get a visible ring everywhere; mouse users get none. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    /* Entrances, the marquee, the bobbing cards: someone who asked for less
+       motion gets the end state, not the journey. */
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
-@utility text-stroke {
-  -webkit-text-stroke: 3px var(--color-ink);
-  text-shadow: 6px 6px 0 var(--color-ink);
+/* Small uppercase label above every section heading. */
+@utility kicker {
+  font-family: var(--font-head);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary-ink);
 }
 
-@utility sticker {
-  border: 2.5px solid var(--color-ink);
-  box-shadow: 3px 3px 0 var(--color-ink);
+/* A card that lifts on hover. */
+@utility lift {
+  transition:
+    transform 500ms var(--ease-soft),
+    box-shadow 500ms var(--ease-soft);
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 30px 60px -24px rgba(16, 14, 20, 0.45);
+  }
 }
 
-/* Glassmorphism — shared look across all Duncit websites. */
+/* Frosted glass, built from the surface token so it is dark glass over a dark
+   page rather than a white pane nobody can read through. */
 @utility glass {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow: 0 8px 32px rgba(22, 19, 26, 0.12);
-}
-@utility glass-dark {
-  background: rgba(22, 19, 26, 0.45);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  border: 1px solid var(--color-line);
+  box-shadow: 0 8px 32px rgba(16, 14, 20, 0.14);
 }

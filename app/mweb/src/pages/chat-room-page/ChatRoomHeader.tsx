@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
@@ -11,6 +12,8 @@ interface ChatRoomHeaderProps {
   onBack: () => void;
   /** Opens the linked pod's detail page (group name is tappable). */
   onOpenPod: () => void;
+  /** Buttons at the right end — the mute bell. */
+  actions?: ReactNode;
 }
 
 export default function ChatRoomHeader({
@@ -18,6 +21,7 @@ export default function ChatRoomHeader({
   messageCount,
   onBack,
   onOpenPod,
+  actions,
 }: Readonly<ChatRoomHeaderProps>) {
   const { t } = useTranslation();
   const label = title || 'Chat';
@@ -61,6 +65,7 @@ export default function ChatRoomHeader({
           <ChevronRightRoundedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
         </ButtonBase>
       </Box>
+      {actions}
     </Stack>
   );
 }

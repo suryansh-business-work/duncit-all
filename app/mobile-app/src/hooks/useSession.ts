@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { io } from 'socket.io-client';
 import {
   accountEmail,
   accountName,
@@ -14,9 +13,8 @@ import {
   type SessionSnapshot,
 } from '@duncit/user-core';
 
-import { config } from '@/constants/config';
-import { getAuthToken } from '@/services/auth-token';
 import { readDevice } from '@/services/device';
+import { openUserSocket } from '@/services/user-socket';
 import { endRejectedSession } from '@/services/session-guard';
 import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
 import { patchMe, useMeStore } from '@/stores/me.store';
@@ -70,16 +68,9 @@ function useUserRealtime(userId: string, apply: (patch: Record<string, unknown>)
     let disposed = false;
     let cleanup: (() => void) | null = null;
 
-    getAuthToken()
-      .then((token) => {
-        if (!token || disposed) return;
-        const socket = io(config.apiUrl, {
-          path: '/socket.io',
-          auth: { token },
-          // Same fallback as the chat sockets: some mobile and captive networks
-          // block WebSockets outright.
-          transports: ['websocket', 'polling'],
-        });
+    openUserSocket(() => disposed)
+      .then((socket) => {
+        if (!socket) return;
         const off = subscribeUserChanged(socket, userId, apply);
         const offRevoked = subscribeSessionRevoked(socket, userId, endRejectedSession);
         cleanup = () => {

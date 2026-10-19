@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 
 import {
   CheckoutSuccess,
@@ -10,7 +10,7 @@ import {
 import { PaymentFailureDialog } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
 import { RefreshScrollView } from '@/components/PullToRefresh';
-import { useLoadingRegion } from '@/components/Skeleton';
+import { TipsLoader } from '@/components/TipsLoader';
 
 import { checkoutActions } from './checkoutActions';
 import { CheckoutPayForm } from './CheckoutPayForm';
@@ -19,7 +19,6 @@ import { useCheckoutState } from './useCheckoutState';
 /** Checkout — order summary + contact/payment form. Uses the dummy gateway when
  * finance dummy_mode is on, else live Razorpay. RN twin of mWeb's CheckoutPage. */
 export function CheckoutScreen() {
-  const loadingRegion = useLoadingRegion();
   const s = useCheckoutState();
   const { t, navigation, checkout, payment, breakup, order, setOrder, paymentFailure } = s;
   const { finance, pod, isLoading, downloadInvoice, confirmingMessage } = checkout;
@@ -27,11 +26,7 @@ export function CheckoutScreen() {
 
   let checkoutBody: ReactNode;
   if (isLoading && !finance) {
-    checkoutBody = (
-      <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner {...loadingRegion} testID="checkout-loading" color="$primary" />
-      </YStack>
-    );
+    checkoutBody = <TipsLoader testID="checkout-loading" />;
   } else if (breakup) {
     checkoutBody = payment ? (
       <RefreshScrollView contentContainerStyle={{ padding: 16 }}>

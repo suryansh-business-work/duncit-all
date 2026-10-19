@@ -76,7 +76,7 @@ export function BottomNav() {
                 height: 48,
                 color: T.onBrand,
                 bgcolor: active ? T.brand : 'transparent',
-                '&:hover': { bgcolor: active ? T.brand : 'rgba(255,255,255,0.12)' },
+                '&:hover': { bgcolor: active ? T.brand : T.navBarHover },
               }}
             >
               {item.icon}

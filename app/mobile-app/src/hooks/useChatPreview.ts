@@ -32,7 +32,7 @@ const fetchPage = (kind: ChatPreviewKind, id: string, before?: string) =>
  * request (put in front of what is shown, each line once), the total and the
  * viewer's membership. mWeb twin: components/chat-preview/useChatPreview.
  */
-export function useChatPreview(kind: ChatPreviewKind, id: string) {
+export function useChatPreview(kind: ChatPreviewKind, id: string, reloadKey?: string) {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [messages, setMessages] = useState<PreviewLine[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +50,11 @@ export function useChatPreview(kind: ChatPreviewKind, id: string) {
     }
   }, [kind, id]);
 
+  // Re-read when the viewer's access changes: booking a pod makes them a
+  // member, and the card must stop showing the locked join prompt.
   useEffect(() => {
     fireAndForget(load());
-  }, [load]);
+  }, [load, reloadKey]);
 
   // Scrolling to the top fires many events: one older page at a time.
   const inFlight = useRef(false);

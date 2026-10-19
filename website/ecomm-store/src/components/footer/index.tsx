@@ -1,78 +1,46 @@
-import { Link as RouterLink } from 'react-router';
-import { Box, Container, Divider, Link, Stack, Typography } from '@mui/material';
-import { useDateFormat } from '@duncit/app-settings';
+import { Box, Container, Divider, Typography } from '@mui/material';
 
-import { useStoreSettings } from '../../app/providers/StoreSettingsProvider';
-import { paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
-import { useNavigationData } from '../header/navigation';
+import { STORE_TOKENS as T } from '../../theme/tokens';
 import { NewsletterForm } from '../newsletter-form';
+import { FooterBottom } from './FooterBottom';
+import { FooterBrand } from './FooterBrand';
+import { AboutColumn, HelpColumn, ShopColumn } from './FooterLinkColumns';
 import { FooterColumn } from './FooterColumn';
-import { SocialLinks } from './SocialLinks';
 
-/** The four pages every store has; the phone menu lists the same four. */
-export const POLICY_LINKS = [
-  { slug: 'shipping', labelKey: 'ecommStore.pages.shipping' },
-  { slug: 'returns', labelKey: 'ecommStore.pages.returns' },
-  { slug: 'terms', labelKey: 'ecommStore.pages.terms' },
-  { slug: 'about', labelKey: 'ecommStore.pages.about' },
-] as const;
+export { POLICY_LINKS } from './policyLinks';
 
-function SupportColumn() {
-  const { t } = useStoreT();
-  const s = useStoreSettings();
-  return (
-    <FooterColumn title={t('ecommStore.footer.help')}>
-      <Link component={RouterLink} to={paths.contact}>
-        {t('ecommStore.footer.contactUs')}
-      </Link>
-      <Link component={RouterLink} to={paths.track}>
-        {t('ecommStore.menu.trackOrder')}
-      </Link>
-      {s.support_email ? <Link href={`mailto:${s.support_email}`}>{s.support_email}</Link> : null}
-      {s.support_phone ? <Link href={`tel:${s.support_phone}`}>{s.support_phone}</Link> : null}
-    </FooterColumn>
-  );
-}
+const GRID_COLUMNS = {
+  xs: 'minmax(0, 1fr)',
+  sm: 'repeat(2, minmax(0, 1fr))',
+  md: 'minmax(0, 1.3fr) repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr)',
+} as const;
+
+/** Footer links read as quiet text until hovered or focused. */
+const FOOTER_SX = {
+  bgcolor: T.surface,
+  borderTop: 1,
+  borderColor: T.border,
+  mt: 8,
+  // On a phone this is the room the floating bottom nav sits in, so it never covers the last links.
+  pb: { xs: 12, md: 0 },
+  '& a.MuiLink-root': { color: 'text.secondary', fontWeight: 600, width: 'fit-content', '&:hover': { color: T.ink } },
+} as const;
 
 /**
- * Aisles, policies, support contacts, social links and the newsletter. On a
- * phone its bottom padding is the room the floating bottom nav sits in, so the
- * nav never covers the last links.
+ * The brand column, Shop, Help & Support, About and the newsletter; then the
+ * copyright, accessibility and cookie controls and the payment marks.
  */
 export function Footer() {
   const { t } = useStoreT();
-  const s = useStoreSettings();
-  const { categories, pages } = useNavigationData();
-  const dates = useDateFormat();
-  const aisles = categories.filter((c) => c.show_in_menu).slice(0, 8);
   return (
-    <Box component="footer" sx={{ bgcolor: 'background.paper', borderTop: 1, borderColor: 'divider', mt: 6, pb: { xs: 12, md: 0 } }}>
-      <Container maxWidth="xl" sx={{ py: 5 }}>
-        <Box sx={{ display: 'grid', gap: 4, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' } }}>
-          <FooterColumn title={t('ecommStore.footer.shop')}>
-            {aisles.map((c) => (
-              <Link key={c.id} component={RouterLink} to={paths.category(c.slug)}>
-                {c.name}
-              </Link>
-            ))}
-            <Link component={RouterLink} to={paths.brands}>
-              {t('ecommStore.menu.brands')}
-            </Link>
-          </FooterColumn>
-          <FooterColumn title={t('ecommStore.footer.policies')}>
-            {POLICY_LINKS.map((p) => (
-              <Link key={p.slug} component={RouterLink} to={paths.page(p.slug)}>
-                {t(p.labelKey)}
-              </Link>
-            ))}
-            {pages.map((page) => (
-              <Link key={page.id} component={RouterLink} to={paths.page(page.slug)} data-testid={`footer-page-${page.id}`}>
-                {page.title}
-              </Link>
-            ))}
-          </FooterColumn>
-          <SupportColumn />
+    <Box component="footer" sx={FOOTER_SX}>
+      <Container maxWidth={false} sx={{ maxWidth: T.contentMax, py: { xs: 5, md: 7 } }}>
+        <Box sx={{ display: 'grid', columnGap: 4, rowGap: 5, gridTemplateColumns: GRID_COLUMNS }}>
+          <FooterBrand />
+          <ShopColumn />
+          <HelpColumn />
+          <AboutColumn />
           <FooterColumn title={t('ecommStore.footer.newsletter')}>
             <Typography variant="body2" color="text.secondary">
               {t('ecommStore.newsletter.pitch')}
@@ -80,13 +48,8 @@ export function Footer() {
             <NewsletterForm source="WEBSITE_FOOTER" />
           </FooterColumn>
         </Box>
-        <Divider sx={{ my: 3 }} />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}>
-          <Typography variant="body2" color="text.secondary">
-            {t('ecommStore.footer.copyright', { vars: { year: dates.now().getFullYear(), name: s.store_name } })}
-          </Typography>
-          <SocialLinks links={s.social_links} />
-        </Stack>
+        <Divider sx={{ my: 4 }} />
+        <FooterBottom />
       </Container>
     </Box>
   );

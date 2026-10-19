@@ -7,10 +7,58 @@ export interface StoreSocialLink {
   url: string;
 }
 
+/** A payment method the footer shows as accepted, with the mark the operator uploaded. */
+export interface StorePaymentBadge {
+  label: string;
+  image_url: string;
+}
+
+/** The festive looks the store ships (server enum StoreOccasionTheme); NONE keeps the house look. */
+export type StoreOccasionTheme =
+  | 'NONE'
+  | 'DIWALI'
+  | 'HOLI'
+  | 'DUSSEHRA'
+  | 'NAVRATRI'
+  | 'DURGA_PUJA'
+  | 'GANESH_CHATURTHI'
+  | 'JANMASHTAMI'
+  | 'MAKAR_SANKRANTI'
+  | 'LOHRI'
+  | 'PONGAL'
+  | 'ONAM'
+  | 'RAKSHA_BANDHAN'
+  | 'KARWA_CHAUTH'
+  | 'BAISAKHI'
+  | 'GURU_NANAK_JAYANTI'
+  | 'EID'
+  | 'CHRISTMAS'
+  | 'HALLOWEEN'
+  | 'NEW_YEAR'
+  | 'VALENTINES_DAY'
+  | 'EASTER'
+  | 'FRIENDSHIP_DAY'
+  | 'MOTHERS_DAY'
+  | 'FATHERS_DAY'
+  | 'APRIL_FOOLS'
+  | 'INDEPENDENCE_DAY'
+  | 'REPUBLIC_DAY'
+  | 'GANDHI_JAYANTI'
+  | 'CHILDRENS_DAY'
+  | 'WOMENS_DAY'
+  | 'YOGA_DAY'
+  | 'EARTH_DAY'
+  | 'CHHATH_PUJA';
+
 /** The festive window open right now: the look the store swaps to while it lasts. */
 export interface StoreActiveOccasion {
   slug: string;
   label: string;
+  theme: StoreOccasionTheme;
+  /** Off: the theme's colours only, no animation. */
+  effects_enabled: boolean;
+  /** A short festive line over the home page's first banner; '' shows none. */
+  greeting: string;
   logo_url: string;
   favicon_url: string;
   background_url: string;
@@ -50,6 +98,7 @@ export interface StoreSettings {
   terms_html: string;
   about_html: string;
   social_links: StoreSocialLink[];
+  payment_badges: StorePaymentBadge[];
   currency_symbol: string;
   autoship_enabled: boolean;
   autoship_discount_pct: number;
@@ -98,6 +147,10 @@ export const STORE_SETTINGS: TypedDocumentNode<{ storeSettings: StoreSettings },
         label
         url
       }
+      payment_badges {
+        label
+        image_url
+      }
       currency_symbol
       autoship_enabled
       autoship_discount_pct
@@ -107,6 +160,9 @@ export const STORE_SETTINGS: TypedDocumentNode<{ storeSettings: StoreSettings },
       active_occasion {
         slug
         label
+        theme
+        effects_enabled
+        greeting
         logo_url
         favicon_url
         background_url

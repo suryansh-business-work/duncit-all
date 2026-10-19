@@ -5,17 +5,20 @@ import type { GraphQLContext } from '@context';
 import { emitToRoom } from './chat.socket';
 import { chatRetention, podChatDeletesAt } from './chat.retention';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { assertRoomMember, canModerateRoom, roomOfMessage, type ChatRoomRef } from './chat.access';
-import { notifyNewChatMessage } from './chat.notify';
 import {
-  shapeClubRoom,
-  shapeMessage,
-  shapePodRoom,
-  type ClubRoomDoc,
-  type StoredMessage,
-} from './chat.shape';
+  assertRoomMember,
+  blockedPeerIds,
+  canModerateRoom,
+  roomOfMessage,
+  type ChatRoomRef,
+} from './chat.access';
+import { notifyNewChatMessage } from './chat.notify';
+import { shapeClubRoom, shapePodRoom, type ClubRoomDoc, type StoredMessage } from './chat.shape';
+import { shapeMessages, shapeOne } from './chat.messages';
+import { chatMuteService } from './chat.mute';
+import { unreadCounts } from './chat.unread';
+import { chatStateResolvers } from './chat.state.resolver';
 import { ClubModel } from '@modules/clubs/club/club.model';
-import { displayFrom, userDisplayMap, userDisplayOf } from '@modules/access/user/user.display';
 
 function requireAuth(ctx: GraphQLContext) {
   if (!ctx.user?.id) {
@@ -27,18 +30,42 @@ function requireAuth(ctx: GraphQLContext) {
 }
 
 type MessageType = 'TEXT' | 'IMAGE' | 'STICKER';
-type SendArgs = { type?: MessageType; text?: string; image_url?: string };
+type SendArgs = {
+  type?: MessageType;
+  text?: string;
+  image_url?: string;
+  reply_to_id?: string | null;
+  mentions?: string[] | null;
+};
 type PageArgs = { limit?: number; before?: string };
 
-/** Stored lines shaped for the client, with names resolved in one query. */
-async function shapeAll(docs: StoredMessage[]) {
-  const display = await userDisplayMap(docs.map((d) => String(d.user_id)));
-  return docs.map((d) => shapeMessage(d, displayFrom(display, String(d.user_id))));
+/** Stored lines shaped for one reader, quotes and mentions resolved in batches. */
+async function shapeAll(docs: StoredMessage[], uid: string) {
+  return shapeMessages(docs, await blockedPeerIds(uid));
 }
 
 /** One page of a room, oldest first, for its members. */
 async function pageOf(room: ChatRoomRef, uid: string, limit?: number, before?: string) {
-  return shapeAll(await chatService.listMessages(room, uid, limit, before));
+  return shapeAll(await chatService.listMessages(room, uid, limit, before), uid);
+}
+
+/** The viewer's unread count and mute for each room of a kind — two reads per kind. */
+async function roomStates(uid: string, kind: ChatRoomRef['kind'], ids: string[]) {
+  const [unread, mutes] = await Promise.all([
+    unreadCounts(uid, kind, ids),
+    chatMuteService.statesFor(uid, kind, ids),
+  ]);
+  return (id: string) => ({
+    unread_count: unread.get(id) ?? 0,
+    is_muted: mutes.get(id)?.is_muted ?? false,
+    muted_until: mutes.get(id)?.muted_until ?? null,
+  });
+}
+
+/** The viewer's mute of one room, as the room's own fields. */
+async function muteFields(uid: string, room: ChatRoomRef) {
+  const state = (await chatMuteService.statesFor(uid, room.kind, [room.id])).get(room.id);
+  return { is_muted: state?.is_muted ?? false, muted_until: state?.muted_until ?? null };
 }
 
 type PreviewArgs = PageArgs & { pod_id?: string | null; club_id?: string | null };
@@ -55,7 +82,7 @@ async function chatPreview(args: PreviewArgs, uid: string) {
     : { kind: 'CLUB', id: String(args.club_id) };
   const preview = await chatService.previewRoom(room, uid, args.limit, args.before);
   return {
-    messages: await shapeAll(preview.docs),
+    messages: await shapeAll(preview.docs, uid),
     total_count: preview.total,
     is_member: preview.isMember,
     closed: preview.closed,
@@ -70,14 +97,19 @@ async function send(room: ChatRoomRef, uid: string, args: SendArgs) {
     type: args.type,
     text: args.text,
     imageUrl: args.image_url,
+    replyToId: args.reply_to_id,
+    mentions: args.mentions,
   });
-  const shaped = shapeMessage(doc, await userDisplayOf(uid));
+  const shaped = await shapeOne(doc);
   emitToRoom(room, 'message', shaped);
   notifyNewChatMessage({
     room,
+    messageId: shaped.id,
     senderId: uid,
     senderName: shaped.user_name || '',
     preview: shaped.type === 'IMAGE' ? 'Photo' : shaped.text.slice(0, 120),
+    type: shaped.type || 'TEXT',
+    mentions: shaped.mentions,
   }).catch(() => undefined);
   return shaped;
 }
@@ -88,27 +120,31 @@ async function clubRoomFor(clubId: string, uid: string) {
     .select('club_id club_name club_feature_images_and_videos super_category_id')
     .lean<ClubRoomDoc>();
   if (!club) throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
-  const [{ clubDays }, canModerate] = await Promise.all([
+  const [{ clubDays }, canModerate, mute] = await Promise.all([
     chatRetention(),
     canModerateRoom({ kind: 'CLUB', id: clubId }, uid),
+    muteFields(uid, { kind: 'CLUB', id: clubId }),
   ]);
-  return shapeClubRoom(club, { retentionDays: clubDays, canModerate });
+  // The open room's own header: its unread count is not shown there.
+  return { ...shapeClubRoom(club, { retentionDays: clubDays, canModerate }), ...mute, unread_count: 0 };
 }
 
 /** A pod room's retention and moderation facts, for its members. */
 async function podChatInfo(podId: string, uid: string) {
   const room: ChatRoomRef = { kind: 'POD', id: podId };
   await assertRoomMember(room, uid);
-  const [pod, { podHours }, canModerate] = await Promise.all([
+  const [pod, { podHours }, canModerate, mute] = await Promise.all([
     PodModel.findById(podId).select('pod_date_time pod_end_date_time').lean(),
     chatRetention(),
     canModerateRoom(room, uid),
+    muteFields(uid, room),
   ]);
   const end = pod ? podChatDeletesAt(pod, 0) : null;
   return {
     chat_deletes_at: pod ? (podChatDeletesAt(pod, podHours)?.toISOString() ?? null) : null,
     closed: !!end && Date.now() > end.getTime(),
     can_moderate: canModerate,
+    ...mute,
   };
 }
 
@@ -120,7 +156,8 @@ export const chatResolvers = {
         chatService.listMyChatRooms(uid),
         chatRetention(),
       ]);
-      return pods.map((p) => shapePodRoom(p, podHours));
+      const stateOf = await roomStates(uid, 'POD', pods.map((p) => String(p._id)));
+      return pods.map((p) => ({ ...shapePodRoom(p, podHours), ...stateOf(String(p._id)) }));
     },
     chatParticipants: async (_: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
       const uid = requireAuth(ctx);
@@ -138,20 +175,24 @@ export const chatResolvers = {
         chatService.listMyClubRooms(uid),
         chatRetention(),
       ]);
-      return rooms.map(({ club, last }) =>
-        shapeClubRoom(club, {
+      const stateOf = await roomStates(uid, 'CLUB', rooms.map(({ club }) => String(club._id)));
+      return rooms.map(({ club, last }) => ({
+        ...shapeClubRoom(club, {
           retentionDays: clubDays,
           canModerate: (club.admin_user_ids || []).map(String).includes(uid),
           last,
-        })
-      );
+        }),
+        ...stateOf(String(club._id)),
+      }));
     },
     clubChatRoom: async (_: unknown, args: { club_id: string }, ctx: GraphQLContext) =>
       clubRoomFor(args.club_id, requireAuth(ctx)),
     clubMessages: async (_: unknown, args: PageArgs & { club_id: string }, ctx: GraphQLContext) =>
       pageOf({ kind: 'CLUB', id: args.club_id }, requireAuth(ctx), args.limit, args.before),
+    ...chatStateResolvers.Query,
   },
   Mutation: {
+    ...chatStateResolvers.Mutation,
     sendPodMessage: async (_: unknown, args: SendArgs & { pod_id: string }, ctx: GraphQLContext) =>
       send({ kind: 'POD', id: args.pod_id }, requireAuth(ctx), args),
     sendClubMessage: async (
@@ -178,7 +219,7 @@ export const chatResolvers = {
       // The message's AUTHOR, not the reacting user — a reaction rebroadcasts
       // the whole message, and resolving `uid` here would relabel someone
       // else's message with the name of whoever last tapped an emoji on it.
-      const shaped = shapeMessage(doc, await userDisplayOf(String(doc.user_id)));
+      const shaped = await shapeOne(doc);
       emitToRoom(roomOfMessage(doc), 'reaction', shaped);
       return shaped;
     },
@@ -186,7 +227,7 @@ export const chatResolvers = {
       const uid = requireAuth(ctx);
       const doc: StoredMessage | null = await chatService.deleteMessage(args.message_id, uid);
       if (!doc) return null;
-      const shaped = shapeMessage(doc, await userDisplayOf(String(doc.user_id)));
+      const shaped = await shapeOne(doc);
       emitToRoom(roomOfMessage(doc), 'deleted', shaped);
       return shaped;
     },

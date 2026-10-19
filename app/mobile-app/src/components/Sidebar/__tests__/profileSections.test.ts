@@ -1,74 +1,52 @@
-import { PROFILE_GRID, REFERRAL_TILE, SHOP_ITEMS, buildManageItems } from '../profileSections';
+import { PROFILE_MENU_ITEMS, PROFILE_MENU_SECTIONS, type ProfileMenuKey } from '@duncit/utils';
 
-/** The sidebar's Badges row arrives already translated, so the test passes the
- * label the same way the component does. */
-const BADGES_LABEL = 'Badges';
-const CONTACTS_LABEL = 'Your Contacts on Duncit';
+import { COIN_DESTINATION, MENU_DESTINATIONS, SECTION_ICONS, menuEntry } from '../profileSections';
 
-describe('profileSections', () => {
-  it('exposes exactly four quick-action tiles pointing at real screens', () => {
-    expect(PROFILE_GRID).toHaveLength(4);
-    expect(PROFILE_GRID.map((t) => t.route)).toEqual(['PodHistory', 'Support', 'Earn', 'PodIdeas']);
-    expect(PROFILE_GRID.every((t) => t.label && t.caption)).toBe(true);
+const KEYS = Object.keys(PROFILE_MENU_ITEMS) as ProfileMenuKey[];
+
+describe('profileSections (native destinations)', () => {
+  it('gives every shared menu destination a route and an icon', () => {
+    expect(Object.keys(MENU_DESTINATIONS).sort()).toEqual([...KEYS].sort());
+    for (const key of KEYS) {
+      expect(MENU_DESTINATIONS[key].route).toMatch(/^[A-Z]\w+$/);
+      expect(MENU_DESTINATIONS[key].icon).toBeTruthy();
+    }
   });
 
-  it('points the referral tile at Referral without a hardcoded amount', () => {
-    expect(REFERRAL_TILE.route).toBe('Referral');
-    expect(REFERRAL_TILE.caption).not.toMatch(/\d/);
+  it('keeps the routes the menu has always opened', () => {
+    expect(MENU_DESTINATIONS['pod-history'].route).toBe('PodHistory');
+    expect(MENU_DESTINATIONS.support.route).toBe('Support');
+    expect(MENU_DESTINATIONS.help.route).toBe('Support');
+    expect(MENU_DESTINATIONS.faqs.route).toBe('Faqs');
+    expect(MENU_DESTINATIONS.referral.route).toBe('Referral');
+    expect(MENU_DESTINATIONS.orders.route).toBe('OrdersHistory');
+    expect(MENU_DESTINATIONS['food-orders'].route).toBe('MyFoodOrders');
+    expect(MENU_DESTINATIONS['gift-cards-redeem'].route).toBe('GiftCardRedeem');
+    expect(MENU_DESTINATIONS.rentals.route).toBe('MyRentedItems');
+    expect(COIN_DESTINATION.route).toBe('DuncitCoin');
   });
 
-  it('builds the manage list (account rows only) without Pod Plans by default', () => {
-    const labels = buildManageItems(false, true, BADGES_LABEL, CONTACTS_LABEL).map((i) => i.label);
-    expect(labels).toEqual([
-      'Manage Account',
-      'Saved Items',
-      CONTACTS_LABEL,
-      'Verification',
-      'Tour Guide',
-      'FAQs',
-      BADGES_LABEL,
-    ]);
+  it('has an icon tile for every section card', () => {
+    expect(Object.keys(SECTION_ICONS).sort()).toEqual(
+      PROFILE_MENU_SECTIONS.map((s) => s.id).sort(),
+    );
   });
 
-  it('inserts Pod Plans before FAQs when the flag is on', () => {
-    const labels = buildManageItems(true, true, BADGES_LABEL, CONTACTS_LABEL).map((i) => i.label);
-    expect(labels).toEqual([
-      'Manage Account',
-      'Saved Items',
-      CONTACTS_LABEL,
-      'Verification',
-      'Tour Guide',
-      'Pod Plans',
-      'FAQs',
-      BADGES_LABEL,
-    ]);
-  });
-
-  it('routes every manage item to a Pod-Plans-gated screen name', () => {
-    expect(buildManageItems(true, true, BADGES_LABEL, CONTACTS_LABEL).map((i) => i.route)).toEqual([
-      'Account',
-      'Saved',
-      'Contacts',
-      'Verification',
-      'TourGuide',
-      'PodPlans',
-      'Faqs',
-      'Badges',
-    ]);
-  });
-
-  it('exposes the Shop e-commerce section as its own list of real screens', () => {
-    expect(SHOP_ITEMS.map((i) => i.label)).toEqual([
-      'Pod Shop',
-      'My Product Order History',
-      'Address Book',
-      'Cart',
-    ]);
-    expect(SHOP_ITEMS.map((i) => i.route)).toEqual([
-      'Shop',
-      'OrdersHistory',
-      'AddressBook',
-      'Cart',
-    ]);
+  it('builds an entry with the translated label, the badge and this app’s route', () => {
+    const t = jest.fn((key: string) => `[${key}]`);
+    expect(menuEntry('membership', t)).toEqual({
+      key: 'membership',
+      label: '[mweb.membership.sidebarLabel]',
+      badge: '[mweb.membership.comingSoon]',
+      route: 'Membership',
+      icon: 'card-membership',
+    });
+    expect(menuEntry('saved', t)).toEqual({
+      key: 'saved',
+      label: '[mweb.saved.savedItems]',
+      badge: undefined,
+      route: 'Saved',
+      icon: 'bookmark-border',
+    });
   });
 });

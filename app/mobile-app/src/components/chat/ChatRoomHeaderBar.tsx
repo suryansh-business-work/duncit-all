@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
@@ -10,11 +11,13 @@ interface Props {
   onBack: () => void;
   /** Opens the linked pod's detail page (the title is tappable). */
   onOpenPod: () => void;
+  /** Buttons at the right end — the mute bell. */
+  actions?: ReactNode;
 }
 
-/** The chat room's top bar: a round back button and the tappable pod title.
- * mWeb twin: chat-room-page/ChatRoomHeader. */
-export function ChatRoomHeaderBar({ title, onBack, onOpenPod }: Readonly<Props>) {
+/** The chat room's top bar: a round back button, the tappable pod title and
+ * the room's actions. mWeb twin: chat-room-page/ChatRoomHeader. */
+export function ChatRoomHeaderBar({ title, onBack, onOpenPod, actions }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color: ink, muted } = useThemeColors();
   return (
@@ -52,6 +55,7 @@ export function ChatRoomHeaderBar({ title, onBack, onOpenPod }: Readonly<Props>)
         </Text>
         <MaterialIcons name="chevron-right" size={20} color={muted} />
       </XStack>
+      {actions}
     </XStack>
   );
 }

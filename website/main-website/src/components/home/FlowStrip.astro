@@ -1,0 +1,75 @@
+---
+// "Flow with the moment" — the yellow band with four tilted photos, each with
+// a sticker and a caption. Yellow never inverts, so everything written on the
+// band itself uses `on-accent`.
+import SectionHead from '../SectionHead.astro';
+import { getTranslator } from '../../lib/i18n';
+
+const { t } = await getTranslator();
+
+// Real group photos from Unsplash (free to use).
+const photos = [
+  {
+    src: 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q=80&auto=format&fit=crop',
+    caption: t('website.main.home.flowCaptionNights'),
+    icon: 'fa-moon',
+    sticker: t('website.main.home.flowStickerNeon'),
+    stickerClass: '-top-3 -left-2 -rotate-[10deg] bg-ink text-cream',
+    tilt: 'md:-translate-y-8 -rotate-3',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&q=80&auto=format&fit=crop',
+    caption: t('website.main.home.flowCaptionFood'),
+    icon: 'fa-utensils',
+    sticker: t('website.main.home.flowStickerYum'),
+    stickerClass: '-top-3 -right-2 rotate-[10deg] bg-surface text-ink',
+    tilt: 'rotate-2',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&q=80&auto=format&fit=crop',
+    caption: t('website.main.home.flowCaptionGroups'),
+    icon: 'fa-champagne-glasses',
+    sticker: null,
+    stickerClass: '-top-4 -right-3 h-12 w-12 justify-center rotate-12 bg-primary-dark text-white',
+    tilt: 'md:-translate-y-5 -rotate-[1.5deg]',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&q=80&auto=format&fit=crop',
+    caption: t('website.main.home.flowCaptionWeekends'),
+    icon: 'fa-tree',
+    sticker: t('website.main.home.flowStickerChill'),
+    stickerClass: '-bottom-3 -right-2 -rotate-6 bg-secondary text-white',
+    tilt: 'md:translate-y-2 rotate-3',
+  },
+];
+---
+
+<section class="mt-3 rounded-panel bg-tertiary px-5 py-20 sm:px-10 lg:py-32">
+  <div class="mx-auto max-w-6xl">
+    <SectionHead kicker={t('website.main.home.flowKicker')} text={t('website.main.home.flowText')} tone="on-accent">
+      {t('website.main.home.flowHeadingLine1')}<br />{t('website.main.home.flowHeadingLine2')}
+    </SectionHead>
+
+    <ul data-reveal-group class="grid grid-cols-2 gap-x-4 gap-y-10 pt-6 md:grid-cols-4 md:gap-6">
+      {
+        photos.map((photo) => (
+          <li data-reveal>
+            <figure class={`relative transition duration-500 ease-soft hover:translate-y-[-0.75rem] hover:rotate-0 hover:scale-[1.03] ${photo.tilt}`}>
+              <img src={photo.src} alt="" loading="lazy" class="aspect-[3/4] w-full rounded-[1.25rem] object-cover shadow-soft md:rounded-card" />
+              <span
+                class={`absolute inline-flex items-center rounded-full px-3.5 py-2 font-head text-xs font-extrabold shadow-soft ${photo.stickerClass}`}
+                aria-hidden="true"
+              >
+                {photo.sticker ?? <i class="fa-solid fa-bolt text-xl" />}
+              </span>
+              <figcaption class="mt-3.5 flex items-center gap-1.5 font-head text-[0.95rem] font-bold text-on-accent">
+                <i class:list={['fa-solid', photo.icon, 'text-sm']} aria-hidden="true" />
+                {photo.caption}
+              </figcaption>
+            </figure>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

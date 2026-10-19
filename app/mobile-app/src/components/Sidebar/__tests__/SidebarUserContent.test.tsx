@@ -126,7 +126,9 @@ describe('SidebarUserContent — Quick Access', () => {
     // visual check opts into hidden elements and the hint is the a11y check.
     const hidden = { includeHiddenElements: true };
     expect(screen.getAllByTestId('sidebar-grid-badge', hidden)).toHaveLength(1);
-    expect(within(screen.getByTestId('sidebar-grid-chats')).getByText('9+', hidden)).toBeOnTheScreen();
+    expect(
+      within(screen.getByTestId('sidebar-grid-chats')).getByText('9+', hidden),
+    ).toBeOnTheScreen();
     expect(screen.getByHintText('12 unread')).toBeOnTheScreen();
   });
 

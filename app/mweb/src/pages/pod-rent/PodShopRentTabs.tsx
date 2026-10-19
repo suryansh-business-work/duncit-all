@@ -11,23 +11,28 @@ const SHOP_RENT_PARAM = `${TAB_PARAM}_podshop`;
 
 interface Props {
   idPrefix: string;
-  /** Without products the strip offers Pod Rent alone. */
+  /** Without products there is nothing to switch between: Pod Rent shows on its own. */
   hasProducts: boolean;
   shop: ReactNode;
   rent: ReactNode;
 }
 
-/** The Pod Shop | Pod Rent switch, and the panel it selects. */
+/** The Pod Shop | Pod Rent switch and the panel it selects — drawn only when the pod both sells and rents. */
 export default function PodShopRentTabs({ idPrefix, hasProducts, shop, rent }: Readonly<Props>) {
+  if (!hasProducts) return <>{rent}</>;
+  return <ShopRentStrip idPrefix={idPrefix} shop={shop} rent={rent} />;
+}
+
+function ShopRentStrip({ idPrefix, shop, rent }: Readonly<Omit<Props, 'hasProducts'>>) {
   const { t } = useTranslation();
   const items = useMemo<DuncitTabItem<ShopRentTab>[]>(
     () => [
-      ...(hasProducts ? [{ value: 'shop' as const, label: t('venueRentals.guest.shopTab'), testId: `${idPrefix}-tab-shop` }] : []),
+      { value: 'shop', label: t('venueRentals.guest.shopTab'), testId: `${idPrefix}-tab-shop` },
       { value: 'rent', label: t('venueRentals.guest.rentTab'), testId: `${idPrefix}-tab-rent` },
     ],
-    [hasProducts, idPrefix, t]
+    [idPrefix, t]
   );
-  const tabs = useTabParam<ShopRentTab>({ items, fallback: hasProducts ? 'shop' : 'rent', param: SHOP_RENT_PARAM });
+  const tabs = useTabParam<ShopRentTab>({ items, fallback: 'shop', param: SHOP_RENT_PARAM });
   return (
     <>
       <DuncitTabs {...tabs} idPrefix={idPrefix} variant="fullWidth" sx={SEGMENTED_TABS_SX} />

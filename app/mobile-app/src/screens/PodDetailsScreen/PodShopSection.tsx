@@ -37,7 +37,9 @@ export function PodShopSection({
   const rentable = String(pod.pod_mode) !== 'VIRTUAL' && Boolean(pod.venue_id);
   const rentals = usePodRentals(pod.id, rentable);
   const picks = usePodRentalPicks(pod.id);
-  const hasProducts = showProducts && Boolean(pod.product_requests?.length);
+  // A request only counts once it names a product — the same rule as mWeb's PodCommerceSection.
+  const hasProducts =
+    showProducts && (pod.product_requests ?? []).some((row) => Boolean(row?.product_name));
   const hasRentals = rentable && (rentals.catalogue?.items.length ?? 0) > 0;
 
   const shop = (embedded: boolean) => (

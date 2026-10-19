@@ -42,6 +42,21 @@ describe('PodShopRentCard', () => {
     expect(rent?.parentElement).toHaveStyle({ maxHeight: '360px', overflowY: 'auto' });
   });
 
+  it('is titled Pod Shop with the Shop | Rent switch when the pod both sells and rents', () => {
+    renderCard();
+    expect(screen.getByTestId('pod-shop-rent-header')).toHaveTextContent('Pod Shop');
+    expect(screen.getByTestId('pod-shop-rent-tab-shop')).toBeInTheDocument();
+    expect(screen.getByTestId('pod-shop-rent-tab-rent')).toBeInTheDocument();
+  });
+
+  it('is simply Pod Rent, with no switch, when the pod sells nothing', () => {
+    renderCard(false);
+    expect(screen.getByTestId('pod-shop-rent-header')).toHaveTextContent('Pod Rent');
+    expect(screen.queryByTestId('pod-shop-rent-tab-rent')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pod-shop-rent-sheet-tab-rent')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+  });
+
   it('keeps See all, which opens every product in the sheet', async () => {
     renderCard();
     // The closed sheet is mounted but hidden; See all is what shows it.

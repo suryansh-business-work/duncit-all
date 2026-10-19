@@ -376,19 +376,33 @@ async function createSlotsCore(
   return withVenueAndPod(docs as IVenueSlot[]);
 }
 
-async function updateSlotCore(
-  slot: IVenueSlot,
-  input: {
-    start_at?: string;
-    end_at?: string;
-    notes?: string;
-    block?: boolean;
-    price?: number;
-    pricing_mode?: string | null;
-    overtime_rate?: number | null;
-  },
-  rules: SlotRules
-) {
+interface SlotUpdateInput {
+  start_at?: string;
+  end_at?: string;
+  notes?: string;
+  block?: boolean;
+  price?: number;
+  pricing_mode?: string | null;
+  overtime_rate?: number | null;
+}
+
+/** Moves the slot to its new start/end (either may be kept), refusing a window that breaks the rules or overlaps another slot. */
+async function moveSlotWindow(slot: IVenueSlot, input: SlotUpdateInput, rules: SlotRules) {
+  const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot.start_at;
+  const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot.end_at;
+  validateSlotWindow(start, end, rules);
+  const overlap = await findOverlap(String(slot.venue_id), start, end, slot.space_label ?? '', String(slot._id));
+  if (overlap) {
+    fail(
+      'CONFLICT',
+      `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
+    );
+  }
+  slot.start_at = start;
+  slot.end_at = end;
+}
+
+async function updateSlotCore(slot: IVenueSlot, input: SlotUpdateInput, rules: SlotRules) {
   if (slot.status === 'BOOKED') {
     fail('BAD_REQUEST', 'Booked slots cannot be edited. Cancel the pod first.');
   }
@@ -396,18 +410,7 @@ async function updateSlotCore(
     fail('BAD_REQUEST', 'This slot has a pending booking request. Approve or decline it first.');
   }
   if (input.start_at !== undefined || input.end_at !== undefined) {
-    const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot.start_at;
-    const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot.end_at;
-    validateSlotWindow(start, end, rules);
-    const overlap = await findOverlap(String(slot.venue_id), start, end, slot.space_label ?? '', String(slot._id));
-    if (overlap) {
-      fail(
-        'CONFLICT',
-        `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
-      );
-    }
-    slot.start_at = start;
-    slot.end_at = end;
+    await moveSlotWindow(slot, input, rules);
   }
   if (input.notes !== undefined) slot.notes = (input.notes ?? '').trim();
   if (input.price !== undefined) slot.price = normalizePrice(input.price);

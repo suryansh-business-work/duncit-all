@@ -5,6 +5,7 @@ import type { IPayment } from '@modules/finance/payment/payment.model';
 import { RentalBookingModel, type IRentalBooking } from './rentalBooking.model';
 import { RentalStockModel } from './rentalStock.model';
 import { paymentRentalLines, type RentalLine } from './rentalLines';
+import { idText } from '@modules/commerce/store/store.shared';
 
 /**
  * Turn a captured pod payment's rental lines into bookings — the capture leg of
@@ -81,7 +82,7 @@ export async function bookRentalsForPayment(
   }
   // Frozen at checkout, so the bookings name the venue that was paid for even
   // if the pod has since moved venues or lost one.
-  const venueId = String((payment.metadata as { rental_venue_id?: unknown } | null)?.rental_venue_id ?? '');
+  const venueId = idText((payment.metadata as { rental_venue_id?: unknown } | null)?.rental_venue_id);
   if (!Types.ObjectId.isValid(venueId)) {
     throw new GraphQLError('This payment has rented items but no venue to book them with', {
       extensions: { code: 'INTERNAL_SERVER_ERROR' },

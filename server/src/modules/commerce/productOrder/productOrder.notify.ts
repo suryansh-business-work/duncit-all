@@ -1,5 +1,6 @@
 import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
+import { trimTrailingSlash } from '@utils/url';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { UserModel } from '@modules/access/user/user.model';
@@ -18,7 +19,7 @@ const money = (symbol: string, n: number) => `${symbol || '₹'}${Number(n || 0)
 
 async function ordersUrl() {
   const { mwebUrl } = await getUrlConfigs();
-  return `${mwebUrl.replace(/\/+$/, '')}/orders`;
+  return `${trimTrailingSlash(mwebUrl)}/orders`;
 }
 
 /** The buyer's account: the number AND the preference fields the WhatsApp funnel reads. */
@@ -28,6 +29,12 @@ const buyerOf = (order: IProductOrder) =>
         .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
         .lean()
     : null;
+
+/** One ordered line as the cancellation email lists it: `Name (Variant) × 2`. */
+function lineItemText(line: IProductOrder['line_items'][number]) {
+  const variant = line.variant_label ? ` (${line.variant_label})` : '';
+  return `${line.name}${variant} × ${line.qty}`;
+}
 
 /** What the buyer is told comes back: cash, coins, or both. */
 export function refundText(order: IProductOrder, refund: IOrderRefund) {
@@ -52,7 +59,7 @@ export async function notifyOrderCancelled(order: IProductOrder) {
       vars: {
         name,
         order_no: order.order_no,
-        items: order.line_items.map((l) => `${l.name}${l.variant_label ? ` (${l.variant_label})` : ''} × ${l.qty}`).join(', '),
+        items: order.line_items.map(lineItemText).join(', '),
         refund_amount: refund,
         reason: order.cancel_reason || '—',
         orders_url: url,

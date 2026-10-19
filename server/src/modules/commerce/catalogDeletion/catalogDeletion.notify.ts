@@ -1,5 +1,6 @@
 import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
+import { trimTrailingSlash } from '@utils/url';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { UserModel } from '@modules/access/user/user.model';
@@ -32,7 +33,7 @@ export async function notifyDeletionUpdate(req: ICatalogDeletionRequest, statusW
         item_name: item,
         status: statusWords,
         note: note || '—',
-        partners_url: `${String(partnersUrl ?? '').replace(/\/+$/, '')}/ecomm-brand`,
+        partners_url: `${trimTrailingSlash(String(partnersUrl ?? ''))}/ecomm-brand`,
       },
     });
     await whatsappService.send({

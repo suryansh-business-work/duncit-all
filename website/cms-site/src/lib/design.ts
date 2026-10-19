@@ -1,8 +1,8 @@
 /** Css that came from an editor, made safe to sit inside a <style> element. */
-export const styleSafe = (css: string): string => css.replaceAll('</style', '<\\/style');
+export const styleSafe = (css: string): string => css.replaceAll('</style', String.raw`<\/style`);
 
 /** Same for script bodies inside a <script> element. */
-export const scriptSafe = (js: string): string => js.replaceAll('</script', '<\\/script');
+export const scriptSafe = (js: string): string => js.replaceAll('</script', String.raw`<\/script`);
 
 const DATE = /<time datetime="([^"]+)">[^<]*<\/time>/g;
 

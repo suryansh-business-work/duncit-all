@@ -87,7 +87,7 @@ function block(source, name, indent) {
 /** Every `key: '#rrggbb'` pair in a block of source text. */
 function hexes(body) {
   return Object.fromEntries(
-    [...body.matchAll(/(\w+): '(#[\da-f]{6})'/gi)].map(([, key, hex]) => [key, hex.toLowerCase()])
+    [...body.matchAll(/\b(\w+): '(#[\da-f]{6})'/gi)].map(([, key, hex]) => [key, hex.toLowerCase()])
   );
 }
 

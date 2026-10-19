@@ -53,7 +53,9 @@ RUN pnpm --filter cms-site build
 FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080
-COPY --from=builder --chown=node:node /repo/website/cms-site/dist ./dist
+# Root-owned and read-only to the runtime user: the server only reads dist/,
+# so `node` gets no write access to the code it runs.
+COPY --from=builder /repo/website/cms-site/dist ./dist
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

@@ -97,7 +97,8 @@ export const podSeriesReadService = {
       multi_date_discount_tiers: series?.multi_date_discount_tiers ?? [],
       dates: dates.map((d) => {
         const status = seriesDateStatus(d, now);
-        const unlimited = !(Number(d.no_of_spots) > 0);
+        const spots = Number(d.no_of_spots);
+        const unlimited = Number.isNaN(spots) || spots <= 0;
         const seatsLeft = unlimited ? null : podSeatsAvailable(d);
         const booked = mine.get(String(d._id)) ?? 0;
         return {

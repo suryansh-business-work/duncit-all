@@ -30,6 +30,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { appDate } from '@utils/app-time';
+import { scalarText } from '@modules/commerce/store/store.shared';
 import { createRazorpayOrder, getRazorpayKeys } from './razorpay.gateway';
 import { roundUpBill } from './payment.roundoff';
 import {
@@ -136,7 +137,7 @@ async function priceLegs(input: GroupCheckoutInput, userId: string) {
 
 /** The coupon on the whole booking, shared out across the dates by their couponable money. */
 async function couponCuts(input: GroupCheckoutInput, parentId: string, legs: Leg[], userId: string) {
-  const code = String(input.coupon_code ?? '').trim();
+  const code = scalarText(input.coupon_code).trim();
   const couponable = legs.map((l) => round2(l.payable - l.rentals.total));
   if (!code) return { couponCode: null as string | null, cuts: legs.map(() => 0) };
   const whole = round2(couponable.reduce((sum, c) => sum + c, 0));
@@ -198,7 +199,7 @@ function legRow(p: PricedLeg, couponCode: string | null, input: GroupCheckoutInp
     invoice_no: null,
     user_id: (user as { _id: Types.ObjectId })._id,
     ...buildBuyerFields(input, user),
-    checkout_url: String(input.checkout_url ?? ''),
+    checkout_url: scalarText(input.checkout_url),
     target_type: 'POD' as const,
     pod_id: new Types.ObjectId(String(p.leg.input.pod_id)),
     description: p.leg.description,

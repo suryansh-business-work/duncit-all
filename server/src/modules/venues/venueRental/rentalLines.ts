@@ -1,3 +1,5 @@
+import { idText } from '@modules/commerce/store/store.shared';
+
 /**
  * The rented-item lines a pod payment carries, as checkout froze them on
  * `metadata.rental_lines`, and the add-on money that never belongs to the pod.
@@ -38,7 +40,7 @@ export function paymentRentalLines(metadata: unknown): RentalLine[] {
   return raw.map((entry) => {
     const line = (entry ?? {}) as Record<string, unknown>;
     return {
-      item_id: String(line.item_id ?? ''),
+      item_id: idText(line.item_id),
       name: typeof line.name === 'string' ? line.name : '',
       image_url: typeof line.image_url === 'string' ? line.image_url : '',
       unit: line.unit === 'HOUR' ? 'HOUR' : 'SLOT',

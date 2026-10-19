@@ -702,6 +702,29 @@ async function completePodOnApproval(doc: IPaymentRelease) {
   });
 }
 
+// Venue money (a venue bill or a rental) goes to the venue owner's wallet.
+async function creditVenueOwner(doc: IPaymentRelease, payout: number) {
+  const { walletService } = await import('@modules/finance/wallet/wallet.service');
+  const venue = doc.venue_id
+    ? await VenueModel.findById(doc.venue_id).select('owner_user_id')
+    : null;
+  const ownerId = venue?.owner_user_id ? String(venue.owner_user_id) : null;
+  if (ownerId) {
+    await walletService.creditPodPayout(ownerId, payout, {
+      pod_id: doc.pod_id,
+      release_id: doc.release_id,
+      reason: `Venue payout for ${doc.pod_title}`,
+    });
+    return;
+  }
+  // A venue without a linked owner user gets a statement but no wallet —
+  // loud in the logs so Finance can fix the venue record, never silent.
+  logs.server.warn('paymentRelease', 'applyApproval', {
+    release_id: doc.release_id,
+    msg: 'venue payout approved but the venue has no owner_user_id — wallet credit skipped',
+  });
+}
+
 // Side effects of an APPROVED release — the wallet leg of every payout. Each
 // kind credits ITS beneficiary's wallet: the host, the venue's owner user, or
 // the club's admin user. Idempotent per release_id in the wallet service.
@@ -710,30 +733,13 @@ async function applyApproval(doc: IPaymentRelease) {
   // approving it must never stamp the pod complete.
   if (doc.kind !== 'VENUE_RENTAL') await completePodOnApproval(doc);
   const payout = releasePayout(doc);
-  const { walletService } = await import('@modules/finance/wallet/wallet.service');
 
   if (doc.kind === 'VENUE_BILLING' || doc.kind === 'VENUE_RENTAL') {
-    // Venue money goes to the venue owner's wallet.
-    const venue = doc.venue_id
-      ? await VenueModel.findById(doc.venue_id).select('owner_user_id')
-      : null;
-    const ownerId = venue?.owner_user_id ? String(venue.owner_user_id) : null;
-    if (ownerId) {
-      await walletService.creditPodPayout(ownerId, payout, {
-        pod_id: doc.pod_id,
-        release_id: doc.release_id,
-        reason: `Venue payout for ${doc.pod_title}`,
-      });
-    } else {
-      // A venue without a linked owner user gets a statement but no wallet —
-      // loud in the logs so Finance can fix the venue record, never silent.
-      logs.server.warn('paymentRelease', 'applyApproval', {
-        release_id: doc.release_id,
-        msg: 'venue payout approved but the venue has no owner_user_id — wallet credit skipped',
-      });
-    }
+    await creditVenueOwner(doc, payout);
     return;
   }
+
+  const { walletService } = await import('@modules/finance/wallet/wallet.service');
 
   if (doc.kind === 'CLUB_ADMIN') {
     // The club-admin cut goes to the club admin's wallet.

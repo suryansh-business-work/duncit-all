@@ -65,7 +65,7 @@ describe('generatePayoutPdf currency', () => {
   it('says in words which currency the amounts are in', async () => {
     const text = await drawn(base);
 
-    drawnOnce(text, 'All amounts are in Indian Rupees (INR).');
+    expect(text.filter((entry) => entry.text === 'All amounts are in Indian Rupees (INR).')).toHaveLength(1);
   });
 
   it('prints no currency line for a symbol it cannot word, and keeps that symbol', async () => {

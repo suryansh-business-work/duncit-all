@@ -43,14 +43,13 @@ const GROUP_STAGES: PipelineStage[] = [
     $addFields: {
       // A request is waiting while ANY payout on it is; settled once one was
       // paid; rejected only when Finance turned every payout down.
+      // `$cond` in its array form: [if, then, else], checked in this order.
       status: {
-        $switch: {
-          branches: [
-            { case: { $in: ['PENDING', '$statuses'] }, then: 'PENDING' },
-            { case: { $in: ['APPROVED', '$statuses'] }, then: 'APPROVED' },
-          ],
-          default: 'REJECTED',
-        },
+        $cond: [
+          { $in: ['PENDING', '$statuses'] },
+          'PENDING',
+          { $cond: [{ $in: ['APPROVED', '$statuses'] }, 'APPROVED', 'REJECTED'] },
+        ],
       },
     },
   },

@@ -6,6 +6,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { getFinanceSettings, type IFinanceSettings } from '@modules/finance/finance/finance.model';
 import type { PaymentReleaseKind } from '@modules/finance/finance/paymentRelease.model';
 import { logs } from '@observability/log';
+import { scalarText } from '@modules/commerce/store/store.shared';
 import { appDateTime, appFormat, getAppTimeZone } from '@utils/app-time';
 import {
   WalletModel,
@@ -138,7 +139,7 @@ const fromPaise = (paise: number) => paise / 100;
 
 /** A real yyyy-MM-dd calendar day, or null — "2026-02-30" and "1/4/26" are not. */
 function realDay(value: unknown): string | null {
-  const key = String(value ?? '').trim();
+  const key = scalarText(value).trim();
   const parsed = parse(key, DAY_PATTERN, new Date(0));
   return isValid(parsed) && format(parsed, DAY_PATTERN) === key ? key : null;
 }
@@ -371,7 +372,7 @@ function buildRows(
 
 /** Opening + credits - debits must land on the balance the ledger stored on the period's last entry. */
 function isReconciled(docs: LedgerDoc[], closingPaise: number): boolean {
-  const last = docs[docs.length - 1];
+  const last = docs.at(-1);
   // An empty period has nothing to disagree with: closing is the opening balance.
   return !last || toPaise(last.balance_after) === closingPaise;
 }
@@ -430,7 +431,7 @@ export async function loadWalletStatement(
       from: period.from,
       to: period.to,
       computed_closing: fromPaise(built.closingPaise),
-      stored_closing: docs[docs.length - 1]?.balance_after,
+      stored_closing: docs.at(-1)?.balance_after,
     });
   }
   const statement: WalletStatement = {

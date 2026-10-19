@@ -35,12 +35,36 @@ const BLOCK_NAMES = {
   'policy-strip': 'Policy links',
 };
 
-const slug = (text) =>
-  text
-    .toLowerCase()
-    .normalize('NFKD')
-    .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-+|-+$/g, '');
+/** `text` without its leading (when `leading`) and trailing dashes — a plain scan, no backtracking. */
+function trimDashes(text, leading = true) {
+  let start = 0;
+  let end = text.length;
+  while (leading && start < end && text[start] === '-') start += 1;
+  while (end > start && text[end - 1] === '-') end -= 1;
+  return text.slice(start, end);
+}
+
+/** Every `<…>` tag (at least one character inside) replaced by `replacement`. */
+function replaceTags(html, replacement) {
+  let out = '';
+  let from = 0;
+  let open = html.indexOf('<');
+  while (open !== -1) {
+    const close = html.indexOf('>', open + 1);
+    if (close === -1) break;
+    if (close === open + 1) {
+      out += html.slice(from, close);
+      from = close;
+    } else {
+      out += html.slice(from, open) + replacement;
+      from = close + 1;
+    }
+    open = html.indexOf('<', from);
+  }
+  return out + html.slice(from);
+}
+
+const slug = (text) => trimDashes(text.toLowerCase().normalize('NFKD').replaceAll(/[^a-z0-9]+/g, '-'));
 
 const tagOf = (html) => /^<([a-z0-9-]+)/i.exec(html.trim())?.[1]?.toLowerCase() ?? '';
 const openTagOf = (html) => /^<[^>]+>/.exec(html.trim())?.[0] ?? '';
@@ -50,15 +74,19 @@ const innerOf = (html) => html.trim().slice(openTagOf(html).length).replace(/<\/
 function headingOf(html) {
   const match = /<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/i.exec(html);
   if (!match) return '';
-  return decodeEntities(match[1].replaceAll(/<[^>]+>/g, ' ')).replaceAll(/\s+/g, ' ').trim();
+  return decodeEntities(replaceTags(match[1], ' ')).replaceAll(/\s+/g, ' ').trim();
 }
 
 const pageName = (path) => (path === '/' ? 'Home' : path.split('/').filter(Boolean).map((part) => part.replaceAll('-', ' ')).join(' / ')).replace(/^./, (c) => c.toUpperCase());
 
 function uniqueKey(base, used) {
-  const root = (base || 'section').slice(0, MAX_KEY - 4).replaceAll(/-+$/g, '');
+  const root = trimDashes((base || 'section').slice(0, MAX_KEY - 4), false);
   let key = root;
-  for (let n = 2; used.has(key); n += 1) key = `${root}-${n}`;
+  let n = 2;
+  while (used.has(key)) {
+    key = `${root}-${n}`;
+    n += 1;
+  }
   used.add(key);
   return key;
 }

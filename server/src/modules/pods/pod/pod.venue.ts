@@ -69,9 +69,10 @@ export async function notifyVenueSlotRequested(pod: any, slot: any) {
     );
     const when = appDateTime(slot.start_at);
     const notice = await freePodVenueNotice(pod);
+    const noticeLine = notice ? ` ${notice}` : '';
     await notificationService.create({
       title: 'New slot booking request',
-      body: `"${pod.pod_title}" requested your venue slot on ${when}. Review it in the Partners portal.${notice ? ` ${notice}` : ''}`,
+      body: `"${pod.pod_title}" requested your venue slot on ${when}. Review it in the Partners portal.${noticeLine}`,
       scope: 'USER',
       target_user_ids: [String(slot.owner_user_id)],
       silent: false,
@@ -458,7 +459,7 @@ export async function bookOrHoldSlotForPod(
   needsVenueApproval: boolean,
   autoPodSlot?: { slotId: string; autoPodId: string } | null,
   partnerRequestSlot?: { slotId: string; requestId: string } | null,
-  opts: { notifyVenue: boolean } = { notifyVenue: true }
+  opts: { notifyVenue?: boolean } = {}
 ) {
   if (!slotDoc) return;
   // A Pod Request already holds this slot: hand it over in one conditional
@@ -503,7 +504,7 @@ export async function bookOrHoldSlotForPod(
     announceFreeSlotBooking(doc, slotDoc);
     return;
   }
-  if (!opts.notifyVenue) return;
+  if (opts.notifyVenue === false) return;
   announceSlotRequest(doc, slotDoc);
 }
 

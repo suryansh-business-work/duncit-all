@@ -8,7 +8,11 @@ const pick = (value: string | undefined, fallback: string): string => {
   return trimmed === '' ? fallback : trimmed;
 };
 
-const withoutTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
+const withoutTrailingSlash = (url: string): string => {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === '/') end -= 1;
+  return url.slice(0, end);
+};
 
 export const GRAPHQL_URL = pick(import.meta.env.VITE_LITE_GRAPHQL_URL, '/graphql');
 

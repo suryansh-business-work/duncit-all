@@ -7,7 +7,12 @@
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 const RAW = new Set(['script', 'style', 'textarea']);
-const TAG = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z][\w:-]*)((?:\s+[^\s=>/]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(\/?)>/g;
+/** An attribute value: double-quoted, single-quoted or bare. */
+const ATTR_VALUE = String.raw`(?:"[^"]*"|'[^']*'|[^\s>]+)`;
+/** One attribute: a name with an optional `= value`. */
+const ATTR = String.raw`\s+[^\s=>/]+(?:\s*=\s*${ATTR_VALUE})?`;
+/** A comment, or a tag: (closing slash)(name)(attributes)(self-closing slash). */
+const TAG = new RegExp(String.raw`<!--[\s\S]*?-->|<(\/?)([a-zA-Z][\w:-]*)((?:${ATTR})*)\s*(\/?)>`, 'g');
 
 /**
  * Every tag in source order: { start, end, name, closing, attrs, selfClosing }.

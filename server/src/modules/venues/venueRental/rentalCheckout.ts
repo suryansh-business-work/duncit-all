@@ -6,6 +6,7 @@ import { podLiveEnd } from '@modules/pods/pod/pod.lifecycle';
 import { rentalSettingsService } from './rentalSettings.service';
 import { RentalStockModel } from './rentalStock.model';
 import type { RentalLine } from './rentalLines';
+import { idText } from '@modules/commerce/store/store.shared';
 
 /**
  * Price the rented items a guest picked at pod checkout. The server is the only
@@ -69,7 +70,7 @@ export function podRentalHours(pod: RentalPod): number {
 /** The selections as whole, distinct (item, quantity) pairs. */
 function normalizeSelections(raw: readonly RentalSelection[]): { itemId: string; quantity: number }[] {
   if (raw.length > MAX_SELECTIONS) bad('Too many rented items in one booking');
-  const picks = raw.map((s) => ({ itemId: String(s.item_id ?? ''), quantity: Number(s.quantity) }));
+  const picks = raw.map((s) => ({ itemId: idText(s.item_id), quantity: Number(s.quantity) }));
   for (const pick of picks) {
     if (!Types.ObjectId.isValid(pick.itemId)) bad('That rented item could not be found');
     if (!Number.isInteger(pick.quantity) || pick.quantity < 1) bad('Choose how many of each rented item you need');

@@ -31,7 +31,7 @@ const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 const ADMIN_POD = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
 // The Finance console's reads — the analyst seat reads them, never writes.
 const FINANCE_READ = [...ADMIN_RW, FINANCE_READER];
-const POD_BREAKDOWN_READ = [...ADMIN_POD, FINANCE_READER];
+const POD_BREAKDOWN_READ = new Set<string>([...ADMIN_POD, FINANCE_READER]);
 // Everyone who can open Review Host or Review Venue in the Onboarding console
 // reads the global default those commission fields seed from — the same role
 // set host.resolver guards the review mutations with, plus finance itself.
@@ -217,7 +217,7 @@ export const financeResolvers = {
     },
     podFinanceBreakdown: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      const isAdmin = (user.roles ?? []).some((r) => POD_BREAKDOWN_READ.includes(r));
+      const isAdmin = (user.roles ?? []).some((r) => POD_BREAKDOWN_READ.has(r));
       if (!isAdmin && !(await breakdownService.canViewPodBreakdown(args.pod_id, user.id))) {
         throw new GraphQLError('Only this pod’s host, venue owner, or an admin can view its breakdown', {
           extensions: { code: 'FORBIDDEN' },

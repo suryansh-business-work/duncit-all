@@ -5,7 +5,9 @@ import { AppSettingsModel } from '@modules/platform/settings/settings.model';
 import {
   cleanPodSeriesMaxOccurrences,
   cleanPodSeriesMaxSpanDays,
+  cleanTicketDiscountMaxPct,
 } from '@modules/platform/settings/settings.service';
+import { scalarText } from '@modules/commerce/store/store.shared';
 import { PodModel } from '../pod/pod.model';
 import { podService } from '../pod/pod.service';
 import { announceSlotRequest } from '../pod/pod.venue';
@@ -17,7 +19,6 @@ import { seriesWindows, withinSpan, type SeriesWindow } from './podSeries.dates'
 import { firstSeriesSlot, matchSeriesSlots, type SeriesSlotMatch } from './podSeries.slots';
 import { assertMultiDateDiscountTiers, type MultiDateDiscountTier } from './podSeries.discount';
 import { createSeriesParent, syncSeriesParent } from './podSeries.parent';
-import { cleanTicketDiscountMaxPct } from '@modules/platform/settings/settings.service';
 import { appFormat } from '@utils/app-time';
 
 export interface SeriesPlanInput {
@@ -112,6 +113,29 @@ const skipOf = (m: SeriesSlotMatch, error: unknown): IPodSeriesSkip => ({
   detail: error instanceof Error ? error.message.slice(0, 300) : null,
 });
 
+/** The dates that will not run: refused by the plan, or taken out by the host. */
+function plannedSkips(dates: SeriesSlotMatch[], skipByHost: ReadonlySet<number>): IPodSeriesSkip[] {
+  const skipped: IPodSeriesSkip[] = dates
+    .filter((m) => m.reason)
+    .map((m) => ({ date: m.window.start, reason: m.reason as IPodSeriesSkip['reason'] }));
+  for (const m of dates.filter((d) => !d.reason && skipByHost.has(d.window.start.getTime()))) {
+    skipped.push({ date: m.window.start, reason: 'REMOVED_BY_HOST' });
+  }
+  return skipped;
+}
+
+/** One date's pod input: the draft's fields with this date's time, slug and slot. */
+function dateInputFor(input: Record<string, unknown>, m: SeriesSlotMatch, frequency: PodSeriesFrequency, physical: boolean) {
+  return {
+    ...input,
+    pod_id: dateSlug(scalarText(input.pod_title), m.window.start),
+    pod_occurrence: frequency,
+    pod_date_time: m.window.start.toISOString(),
+    pod_end_date_time: m.window.end ? m.window.end.toISOString() : null,
+    venue_slot_id: physical ? m.slotId : null,
+  };
+}
+
 /** Sends the venue ONE request message for the whole series, on its first
  * still-pending date, rather than one per date. */
 async function announceSeries(podIds: Types.ObjectId[]) {
@@ -168,29 +192,17 @@ export const podSeriesService = {
       club_id: new Types.ObjectId(String(input.club_id)),
       venue_id: physical && plan.venue_id ? new Types.ObjectId(plan.venue_id) : null,
       pod_mode: physical ? 'PHYSICAL' : 'VIRTUAL',
-      pod_title: String(input.pod_title ?? '').trim(),
+      pod_title: scalarText(input.pod_title).trim(),
       frequency: plan.frequency,
       starts_at: runnable[0].window.start,
       ends_on: new Date(plan.ends_on),
       multi_date_discount_tiers: discountTiers,
     });
     const created: { id: Types.ObjectId; pub: CreatedPod }[] = [];
-    const skipped: IPodSeriesSkip[] = dates
-      .filter((m) => m.reason)
-      .map((m) => ({ date: m.window.start, reason: m.reason as IPodSeriesSkip['reason'] }));
-    for (const m of dates.filter((d) => !d.reason && skipByHost.has(d.window.start.getTime()))) {
-      skipped.push({ date: m.window.start, reason: 'REMOVED_BY_HOST' });
-    }
+    const skipped = plannedSkips(dates, skipByHost);
 
     for (const [i, m] of runnable.entries()) {
-      const dateInput = {
-        ...input,
-        pod_id: dateSlug(String(input.pod_title ?? ''), m.window.start),
-        pod_occurrence: plan.frequency,
-        pod_date_time: m.window.start.toISOString(),
-        pod_end_date_time: m.window.end ? m.window.end.toISOString() : null,
-        venue_slot_id: physical ? m.slotId : null,
-      };
+      const dateInput = dateInputFor(input, m, plan.frequency, physical);
       try {
         const pub = await podService.createForPartner(userId, dateInput, {
           id: String(series._id),

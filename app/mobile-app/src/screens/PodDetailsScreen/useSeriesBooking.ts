@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import {
+  bookableSeriesDates,
+  pickedSeriesDates,
   seriesBookingEstimate,
-  seriesDatesForChoice,
   ticketDiscountFor,
-  type SeriesBookingChoice,
   type SeriesDateRow,
 } from '@duncit/utils';
 
@@ -23,7 +23,7 @@ type SeriesDates = NonNullable<ResultOf<typeof PodSeriesDatesDocument>['podSerie
 
 /**
  * A recurring pod on its details screen: its dates, and booking the ones the
- * member picks — the next one, all of them, or a hand-picked set. One date is
+ * member ticks (the first open one to start, or "select all"). One date is
  * booked like any pod (its own checkout or free join); several dates of a
  * paid pod go through one checkout carrying them all. mWeb twin:
  * pages/pod-details-page/series/useSeriesBooking.
@@ -38,7 +38,6 @@ export function useSeriesBooking(
   const podId = pod?.id ?? '';
   const [series, setSeries] = useState<SeriesDates | null>(null);
   const [open, setOpen] = useState(false);
-  const [choice, setChoice] = useState<SeriesBookingChoice>('NEXT');
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,15 +63,31 @@ export function useSeriesBooking(
 
   const rows = useMemo<SeriesDateRow[]>(() => (series?.dates ?? []) as SeriesDateRow[], [series]);
   const tiers = series?.multi_date_discount_tiers ?? [];
-  const chosen = useMemo(() => seriesDatesForChoice(rows, choice, picked), [rows, choice, picked]);
-  // Each date's ticket after its own multi-ticket tier, then the multi-date tier.
-  const perDate = pod ? ticketDiscountFor(Number(pod.pod_amount) || 0, seats, pod).net : 0;
-  const estimate = seriesBookingEstimate(perDate, chosen.length, tiers);
+  const bookable = useMemo(() => bookableSeriesDates(rows), [rows]);
+  const pickedRows = useMemo(() => pickedSeriesDates(rows, picked), [rows, picked]);
+  const chosen = useMemo(() => pickedRows.map((row) => row.pod_doc_id), [pickedRows]);
+
+  // The first open date starts ticked; a reload (after booking) starts over.
+  useEffect(() => {
+    const [first] = bookable;
+    setPicked(first ? [first.pod_doc_id] : []);
+  }, [bookable]);
+
+  /** One date's ticket for the chosen seats, after its own multi-ticket tier. */
+  const netFor = useCallback(
+    (row: SeriesDateRow) =>
+      pod ? ticketDiscountFor(Number(row.pod_amount) || 0, seats, pod).net : 0,
+    [pod, seats],
+  );
+  // Each ticked date at its own net price, then the multi-date tier.
+  const estimate = seriesBookingEstimate(pickedRows.map(netFor), tiers);
 
   const togglePicked = (dateId: string) =>
     setPicked((current) =>
       current.includes(dateId) ? current.filter((id) => id !== dateId) : [...current, dateId],
     );
+  const toggleAll = () =>
+    setPicked(chosen.length === bookable.length ? [] : bookable.map((row) => row.pod_doc_id));
 
   const joinFree = async () => {
     setBusy(true);
@@ -117,13 +132,17 @@ export function useSeriesBooking(
     /** This pod is recurring (its parent row or one of its dates). */
     active: !!role,
     rows,
+    /** The dates open to book, in date order. */
+    bookable,
     tiers,
+    /** The viewer hosts this pod — only they open a single date's screen. */
+    isHost: series?.is_host ?? false,
     open,
     setOpen,
-    choice,
-    setChoice,
     picked,
     togglePicked,
+    toggleAll,
+    netFor,
     chosen,
     estimate,
     busy,

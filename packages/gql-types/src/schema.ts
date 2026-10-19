@@ -24520,6 +24520,16 @@ export type PodSeriesJoinResult = {
   joined: Array<Scalars['ID']['output']>;
 };
 
+/** The Pod Settings every recurring plan is held to. */
+export type PodSeriesLimits = {
+  __typename?: 'PodSeriesLimits';
+  default_multi_date_discount_tiers: Array<MultiDateDiscountTier>;
+  max_discount_pct: Scalars['Int']['output'];
+  max_occurrences: Scalars['Int']['output'];
+  /** How far after the first date the last one may fall. */
+  max_span_days: Scalars['Int']['output'];
+};
+
 /** The recurring plan a host is about to publish. */
 export type PodSeriesPlanInput = {
   /** CUSTOM only: the ISO start of every date after the first, each at the first date's time of day. */
@@ -27105,6 +27115,8 @@ export type Query = {
   podRevokePreview: PodRevokePreview;
   /** Every date of the recurring pod that pod_doc_id is (or is a date of); null for a one-time pod. */
   podSeriesDates?: Maybe<PodSeriesDates>;
+  /** The limits a recurring plan is held to — so Create Pod can bound the end day before previewing. */
+  podSeriesLimits: PodSeriesLimits;
   /** Every date a recurring plan would run on, each with its slot or why it cannot. */
   podSeriesPreview: PodSeriesPreview;
   podSettlementPreview: PodSettlement;

@@ -1,21 +1,9 @@
-import {
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { bookableSeriesDates, SERIES_BOOKING_CHOICES, type SeriesBookingChoice } from '@duncit/utils';
 import { useTranslation } from '../../../i18n/useTranslation';
-import { formatDateTime } from '../../../utils/dateFormat';
 import type { SeriesBooking } from './useSeriesBooking';
 import BookingClashDialog from '../clash/BookingClashDialog';
+import SeriesDatePickList from './SeriesDatePickList';
 
 interface Props {
   series: SeriesBooking;
@@ -24,13 +12,12 @@ interface Props {
 }
 
 /**
- * Book a recurring pod: the next date, every date, or a hand-picked set —
+ * Book a recurring pod: tick the dates (or select all), each at its own price,
  * with what that costs, the multi-date discount included. The checkout prices
  * it again on the server; this is the preview.
  */
 export default function SeriesBookingDialog({ series, isFree, priceFormat }: Readonly<Props>) {
   const { t } = useTranslation();
-  const open = bookableSeriesDates(series.rows);
   const count = series.chosen.length;
   const { estimate } = series;
   return (
@@ -44,45 +31,15 @@ export default function SeriesBookingDialog({ series, isFree, priceFormat }: Rea
     >
       <DialogTitle>{t('mweb.podSeriesBooking.pickTitle')}</DialogTitle>
       <DialogContent dividers>
-        {open.length === 0 ? (
+        {series.openRows.length === 0 ? (
           <Typography variant="body2" data-testid="series-booking-none">
             {t('mweb.podSeriesBooking.noneOpen')}
           </Typography>
         ) : (
-          <RadioGroup
-            value={series.choice}
-            onChange={(event) => series.setChoice(event.target.value as SeriesBookingChoice)}
-            aria-label={t('mweb.podSeriesBooking.pickTitle')}
-          >
-            {SERIES_BOOKING_CHOICES.map((option) => (
-              <FormControlLabel
-                key={option.value}
-                value={option.value}
-                control={<Radio data-testid={`series-booking-choice-${option.value}`} />}
-                label={t(option.labelKey, { count: open.length })}
-              />
-            ))}
-          </RadioGroup>
-        )}
-        {series.choice === 'PICK' && (
-          <Stack sx={{ pl: 4 }} data-testid="series-booking-pick-list">
-            {open.map((row) => (
-              <FormControlLabel
-                key={row.pod_doc_id}
-                control={
-                  <Checkbox
-                    checked={series.picked.includes(row.pod_doc_id)}
-                    onChange={() => series.togglePicked(row.pod_doc_id)}
-                    data-testid={`series-booking-pick-${row.pod_doc_id}`}
-                  />
-                }
-                label={formatDateTime(row.start_at)}
-              />
-            ))}
-          </Stack>
+          <SeriesDatePickList series={series} isFree={isFree} priceFormat={priceFormat} />
         )}
         {!isFree && count > 0 && (
-          <Stack spacing={0.5} sx={{ mt: 2 }} data-testid="series-booking-estimate">
+          <Stack spacing={0.5} sx={{ mt: 2 }} data-testid="series-booking-estimate" aria-live="polite">
             <Typography variant="body2">
               {t('mweb.podSeriesBooking.datesCount', { count })} · {priceFormat(estimate.gross)}
             </Typography>

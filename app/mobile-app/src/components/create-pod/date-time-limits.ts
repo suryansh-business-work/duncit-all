@@ -18,6 +18,10 @@ export const composeSelection = (view: Date, day: number, hour: number, minute: 
 export const dayBlocked = (view: Date, day: number, min: Date | null): boolean =>
   !!min && composeSelection(view, day, LAST_HOUR, LAST_MINUTE) < min;
 
+/** True when this day cell starts after `max` — a date-only pick's last day. */
+export const dayAfterMax = (view: Date, day: number, max: Date | null): boolean =>
+  !!max && composeSelection(view, day, 0, 0) > max;
+
 /** True when this hour chip can never reach `min` on the selected day. */
 export const hourBlocked = (view: Date, day: number, hour: number, min: Date | null): boolean =>
   !!min && composeSelection(view, day, hour, LAST_MINUTE) < min;

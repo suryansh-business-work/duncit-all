@@ -25,6 +25,22 @@ export const PodSeriesPreviewDocument = gql(`
         price
         available
         reason
+        on_request
+      }
+    }
+  }
+`);
+
+/** The Pod Settings a plan is held to — read before there is a plan, to bound the end day. */
+export const PodSeriesLimitsDocument = gql(`
+  query MobilePodSeriesLimits {
+    podSeriesLimits {
+      max_occurrences
+      max_span_days
+      max_discount_pct
+      default_multi_date_discount_tiers {
+        min_dates
+        discount_pct
       }
     }
   }
@@ -55,6 +71,7 @@ export const PodSeriesDatesDocument = gql(`
         min_dates
         discount_pct
       }
+      is_host
       dates {
         pod_doc_id
         slug
@@ -63,6 +80,7 @@ export const PodSeriesDatesDocument = gql(`
         status
         seats_available
         my_seats
+        pod_amount
         bookable
       }
     }

@@ -234,6 +234,14 @@ function refineRepeatDiscount(values: CreatePodFormValues, ctx: z.RefinementCtx,
 function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (!values.repeat_enabled) return;
   refineRepeatDiscount(values, ctx, t);
+  // Hand-picked dates: the first date plus at least one the host tapped.
+  if (values.repeat_frequency === 'CUSTOM' && values.repeat_custom_days.length === 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['repeat_custom_days'],
+      message: t('mweb.podSeries.needTwoDates'),
+    });
+  }
   if (!values.repeat_ends_on) {
     ctx.addIssue({
       code: 'custom',
@@ -331,9 +339,10 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
       repeat_enabled: z.boolean(),
-      repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY']),
+      repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'CUSTOM']),
       repeat_ends_on: z.string(),
       repeat_skip_dates: z.array(z.string()),
+      repeat_custom_days: z.array(z.string()),
       // Shape only — the tier rules run in refineRepeat.
       repeat_discount_enabled: z.boolean(),
       repeat_discount_tiers: z.array(
@@ -389,6 +398,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'pod_date_time_text',
     'pod_end_date_time_text',
     'repeat_ends_on',
+    'repeat_custom_days',
     'repeat_discount_tiers',
   ],
   [

@@ -14,6 +14,7 @@ interface Props {
   currentPodId: string;
   /** Hosts open any date to run it (attendance, completion). */
   isHost: boolean;
+  priceFormat: (amount: number) => string;
 }
 
 /** Spots left on a date, or nothing for an unlimited one. */
@@ -26,11 +27,11 @@ function spotsText(row: SeriesDateRow, t: ReturnType<typeof useTranslation>['t']
 
 /**
  * Every date of a recurring pod on its details page: when it is, how it
- * stands, the spots it has left and whether the viewer booked it. A date the
- * viewer booked (or, for the host, any date) opens that date's own page —
- * its ticket, backout and attendance live there.
+ * stands, its price, the spots it has left and whether the viewer booked it.
+ * Only the host opens a date's own page (attendance, completion); members
+ * book from the recurring pod itself.
  */
-export default function PodSeriesDatesSection({ series, clubSlug, currentPodId, isHost }: Readonly<Props>) {
+export default function PodSeriesDatesSection({ series, clubSlug, currentPodId, isHost, priceFormat }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!series.active || series.rows.length === 0) return null;
   const best = series.tiers.at(-1);
@@ -51,7 +52,7 @@ export default function PodSeriesDatesSection({ series, clubSlug, currentPodId, 
         <Stack component="ul" spacing={1} sx={{ listStyle: 'none', p: 0, m: 0 }}>
           {series.rows.map((row) => {
             const when = formatDateTime(row.start_at);
-            const linked = (isHost || row.my_seats > 0) && row.pod_doc_id !== currentPodId;
+            const linked = (isHost || series.isHost) && row.pod_doc_id !== currentPodId;
             const spots = spotsText(row, t);
             return (
               <Stack
@@ -69,6 +70,11 @@ export default function PodSeriesDatesSection({ series, clubSlug, currentPodId, 
                 ) : (
                   <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }}>
                     {when}
+                  </Typography>
+                )}
+                {row.pod_amount > 0 && (
+                  <Typography variant="body2" sx={{ fontWeight: 600 }} data-testid={`pod-series-date-price-${row.pod_doc_id}`}>
+                    {priceFormat(row.pod_amount)}
                   </Typography>
                 )}
                 {row.my_seats > 0 && <Chip size="small" color="primary" label={t('mweb.podSeriesBooking.booked')} />}

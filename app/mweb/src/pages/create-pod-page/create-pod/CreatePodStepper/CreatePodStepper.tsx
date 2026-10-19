@@ -21,7 +21,7 @@ import BasicsStep from '../steps/BasicsStep';
 import LocationClubStep from '../steps/LocationClubStep';
 import VenueSlotStep from '../steps/VenueSlotStep';
 import PricingStep from '../steps/PricingStep';
-import PodRepeatSection from '../fields/PodRepeatSection';
+import PodRepeatModeToggle from '../fields/PodRepeatModeToggle';
 import { seriesPlanOf } from '../fields/useSeriesPreview';
 import { useDateFormat } from '../../../../utils/dateFormat';
 import { useFeatureFlag } from '../../../../hooks/useFeatureFlag';
@@ -144,8 +144,8 @@ export default function CreatePodStepper({
     />,
     <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
     <Stack key="venue" spacing={2}>
+      <PodRepeatModeToggle form={form} />
       <VenueSlotStep form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} venueNotice={venueNotice} />
-      <PodRepeatSection form={form} />
     </Stack>,
     <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} venueNotice={venueNotice} />,
   ];

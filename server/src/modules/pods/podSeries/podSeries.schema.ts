@@ -140,6 +140,15 @@ export const podSeriesTypeDefs = gql`
     dates: [PodSeriesDate!]!
   }
 
+  "The Pod Settings every recurring plan is held to."
+  type PodSeriesLimits {
+    max_occurrences: Int!
+    "How far after the first date the last one may fall."
+    max_span_days: Int!
+    max_discount_pct: Int!
+    default_multi_date_discount_tiers: [MultiDateDiscountTier!]!
+  }
+
   type PodSeriesSkippedDate {
     date: String!
     reason: PodSeriesSkipReason!
@@ -165,6 +174,8 @@ export const podSeriesTypeDefs = gql`
   extend type Query {
     "Every date a recurring plan would run on, each with its slot or why it cannot."
     podSeriesPreview(input: PodSeriesPlanInput!): PodSeriesPreview!
+    "The limits a recurring plan is held to — so Create Pod can bound the end day before previewing."
+    podSeriesLimits: PodSeriesLimits!
     "Every date of the recurring pod that pod_doc_id is (or is a date of); null for a one-time pod."
     podSeriesDates(pod_doc_id: ID!): PodSeriesDates
   }

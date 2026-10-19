@@ -16,6 +16,8 @@ interface Props {
   onChange: (day: string) => void;
   /** The pod's first date — the series cannot end before it. */
   minDate: Date | null;
+  /** The last day the series may reach (the Pod Settings span), or none. */
+  maxDate?: Date | null;
   error?: string;
   /** Gig Jobs reuses the field for an optional day; the pod repeat end is required. */
   required?: boolean;
@@ -31,6 +33,7 @@ export function RepeatEndDateField({
   value,
   onChange,
   minDate,
+  maxDate = null,
   error,
   required = true,
   testID = 'pod-repeat-ends-on',
@@ -63,6 +66,7 @@ export function RepeatEndDateField({
             testID={testID}
             initial={value ? new Date(`${value}T12:00:00`) : minDate}
             minDateTime={minDate}
+            maxDate={maxDate}
             muted={muted}
             showTime={false}
             onDone={(picked) => {

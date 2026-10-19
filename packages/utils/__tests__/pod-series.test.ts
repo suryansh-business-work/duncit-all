@@ -5,6 +5,8 @@ import {
   buildPodSeriesPlan,
   groupSlotRequestsBySeries,
   endOfDayInZone,
+  customDateStart,
+  ymdInZone,
   type PodSeriesPlanSource,
 } from '../src/pod-series';
 
@@ -49,6 +51,7 @@ describe('buildPodSeriesPlan', () => {
       pod_end_date_time: null,
       frequency: 'WEEKLY',
       ends_on: '2026-12-31T18:29:59.999Z',
+      custom_dates: [],
       skip_dates: ['2026-11-12T13:30:00.000Z'],
       multi_date_discount_tiers: [{ min_dates: 3, discount_pct: 10 }],
     });
@@ -81,11 +84,53 @@ describe('buildPodSeriesPlan', () => {
   it('sends a physical pod with no venue picked as a null venue, not an empty id', () => {
     expect(buildPodSeriesPlan({ ...physical, venue_id: '' }, 'UTC')?.venue_id).toBeNull();
   });
+
+  it('sends the calendar picks of a CUSTOM pod at the first date\'s time, and skips nothing', () => {
+    const plan = buildPodSeriesPlan(
+      { ...physical, repeat_frequency: 'CUSTOM', repeat_custom_days: ['2026-11-09', 'not-a-day', '2026-11-20'] },
+      'Asia/Kolkata'
+    );
+    expect(plan?.custom_dates).toEqual(['2026-11-09T13:30:00.000Z', '2026-11-20T13:30:00.000Z']);
+    expect(plan?.skip_dates).toEqual([]);
+  });
+
+  it('sends no custom dates for a stepping frequency', () => {
+    const plan = buildPodSeriesPlan({ ...physical, repeat_custom_days: ['2026-11-09'] }, 'UTC');
+    expect(plan?.custom_dates).toEqual([]);
+  });
+});
+
+describe('ymdInZone', () => {
+  it('reads the day on the zone\'s own clock, not UTC', () => {
+    // 20:00 UTC on 4 Nov is already 5 Nov in Kolkata (+05:30).
+    expect(ymdInZone('2026-11-04T20:00:00.000Z', 'Asia/Kolkata')).toBe('2026-11-05');
+    expect(ymdInZone('2026-11-04T20:00:00.000Z', 'UTC')).toBe('2026-11-04');
+  });
+
+  it('refuses an instant that is not one', () => {
+    expect(ymdInZone('soon', 'UTC')).toBeNull();
+  });
+});
+
+describe('customDateStart', () => {
+  it('keeps the first date\'s wall-clock time on the picked day', () => {
+    // First date 7 PM IST on 5 Nov; 12 Dec at 7 PM IST.
+    expect(customDateStart('2026-11-05T13:30:00.000Z', '2026-12-12', 'Asia/Kolkata')).toBe('2026-12-12T13:30:00.000Z');
+  });
+
+  it('counts days in the zone when the first date crosses UTC midnight', () => {
+    // 2 AM IST on 6 Nov is 20:30 UTC on 5 Nov; the 8th is two days later.
+    expect(customDateStart('2026-11-05T20:30:00.000Z', '2026-11-08', 'Asia/Kolkata')).toBe('2026-11-07T20:30:00.000Z');
+  });
+
+  it('refuses a day that is not a calendar day', () => {
+    expect(customDateStart('2026-11-05T13:30:00.000Z', '12/12/2026', 'UTC')).toBeNull();
+  });
 });
 
 describe('copy tables', () => {
   it('offers every frequency the server accepts, once each', () => {
-    expect(POD_SERIES_FREQUENCIES.map((f) => f.value)).toEqual(['DAILY', 'WEEKLY', 'BIWEEKLY']);
+    expect(POD_SERIES_FREQUENCIES.map((f) => f.value)).toEqual(['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'CUSTOM']);
   });
 
   it('names every reason a date can be skipped', () => {

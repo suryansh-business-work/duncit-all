@@ -12,8 +12,8 @@ interface Props {
   series: SeriesBooking;
   /** The screen's own pod — its row is not a link to itself. */
   currentPodId: string;
-  /** Hosts open any date to run it (attendance, completion). */
-  isHost: boolean;
+  /** Each date's own price; omitted for a free pod. */
+  formatPrice?: (amount: number) => string;
   onOpenDate: (datePodId: string) => void;
 }
 
@@ -33,12 +33,12 @@ function spotsText(row: SeriesDateRow, t: Translate): string | null {
 }
 
 /**
- * Every date of a recurring pod: when, how it stands, spots left, and whether
- * the viewer booked it. A booked date (or, for the host, any date) opens that
- * date's own screen — its ticket, backout and attendance live there. mWeb
- * twin: PodSeriesDatesSection.
+ * Every date of a recurring pod: when, its price, how it stands, spots left,
+ * and whether the viewer booked it. Members book from the Book Now sheet, so
+ * only the host opens a date's own screen (attendance, completion). mWeb twin:
+ * PodSeriesDatesSection.
  */
-export function PodSeriesDates({ series, currentPodId, isHost, onOpenDate }: Readonly<Props>) {
+export function PodSeriesDates({ series, currentPodId, formatPrice, onOpenDate }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!series.active || series.rows.length === 0) return null;
   const best = series.tiers.at(-1);
@@ -55,7 +55,7 @@ export function PodSeriesDates({ series, currentPodId, isHost, onOpenDate }: Rea
       <YStack gap={10} role="list">
         {series.rows.map((row) => {
           const when = formatDateTime(row.start_at);
-          const linked = (isHost || row.my_seats > 0) && row.pod_doc_id !== currentPodId;
+          const linked = series.isHost && row.pod_doc_id !== currentPodId;
           const spots = spotsText(row, t);
           return (
             <XStack
@@ -74,6 +74,11 @@ export function PodSeriesDates({ series, currentPodId, isHost, onOpenDate }: Rea
               <Text flex={1} fontSize={14} color={linked ? '$accent' : '$color'}>
                 {when}
               </Text>
+              {formatPrice ? (
+                <Text fontSize={13} fontWeight="700" color="$color">
+                  {formatPrice(row.pod_amount)}
+                </Text>
+              ) : null}
               {row.my_seats > 0 ? (
                 <Text fontSize={12} fontWeight="700" color="$primary">
                   {t('mweb.podSeriesBooking.booked')}

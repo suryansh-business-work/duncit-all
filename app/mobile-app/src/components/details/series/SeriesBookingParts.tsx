@@ -1,9 +1,63 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SeriesBooking } from '@/screens/PodDetailsScreen/useSeriesBooking';
+
+interface CheckRowProps {
+  testID: string;
+  /** `mixed` for "select all" when only some dates are ticked. */
+  checked: boolean | 'mixed';
+  label: string;
+  /** The date's own price, right-aligned; omitted for a free pod. */
+  price?: string;
+  onPress: () => void;
+  indent?: boolean;
+}
+
+/** One checkbox row of the sheet — "select all", or a date with its price. */
+export function CheckRow({
+  testID,
+  checked,
+  label,
+  price,
+  onPress,
+  indent = false,
+}: Readonly<CheckRowProps>) {
+  const { primary, muted } = useThemeColors();
+  let icon: 'check-box' | 'check-box-outline-blank' | 'indeterminate-check-box' =
+    'check-box-outline-blank';
+  if (checked === 'mixed') icon = 'indeterminate-check-box';
+  else if (checked) icon = 'check-box';
+  const accessibleLabel = price ? `${label}, ${price}` : label;
+  return (
+    <XStack
+      testID={testID}
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={accessibleLabel}
+      tabIndex={0}
+      onPress={onPress}
+      pressStyle={PRESS_STYLE.control}
+      alignItems="center"
+      gap={10}
+      minHeight={44}
+      paddingLeft={indent ? 12 : 0}
+    >
+      <MaterialIcons name={icon} size={22} color={checked ? primary : muted} />
+      <Text fontSize={14} color="$color" flex={1}>
+        {label}
+      </Text>
+      {price ? (
+        <Text fontSize={14} fontWeight="700" color="$color">
+          {price}
+        </Text>
+      ) : null}
+    </XStack>
+  );
+}
 
 interface ConfirmProps {
   label: string;

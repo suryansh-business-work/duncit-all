@@ -195,6 +195,17 @@ async function announceSeries(podIds: Types.ObjectId[]) {
 }
 
 export const podSeriesService = {
+  /** The Pod Settings a host's plan is held to, before there is a plan to preview. */
+  async limits() {
+    const limits = await seriesLimits();
+    return {
+      max_occurrences: limits.maxOccurrences,
+      max_span_days: limits.maxSpanDays,
+      max_discount_pct: limits.maxDiscountPct,
+      default_multi_date_discount_tiers: limits.defaultDiscountTiers,
+    };
+  },
+
   async preview(plan: SeriesPlanInput) {
     const { limits, dates } = await planDates(plan);
     return {

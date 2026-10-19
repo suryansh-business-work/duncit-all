@@ -6,6 +6,7 @@ import { BasicsStep } from '../steps/BasicsStep';
 import { LocationClubStep } from '../steps/LocationClubStep';
 import { VenueSlotStep } from '../steps/VenueSlotStep';
 import { PodRepeatSection } from '../repeat/PodRepeatSection';
+import { RepeatModeToggle } from '../repeat/RepeatModeToggle';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { PricingStep } from '../steps/PricingStep';
 import { AiMonitorOverlay } from '../AiMonitorOverlay';
@@ -95,6 +96,9 @@ export function CreatePodStepper({
     />,
     <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
     <YStack key="venue" gap={16}>
+      {/* Recurring is the host's own flow; a Club Admin books one date. Asked
+          before the venue / slot / date so that date reads as the first one. */}
+      {clubAdmin ? null : <RepeatModeToggle form={form} />}
       <VenueSlotStep
         form={form}
         venues={venues}
@@ -104,7 +108,6 @@ export function CreatePodStepper({
         venueNotice={venueNotice}
         forClubAdmin={!!clubAdmin}
       />
-      {/* Recurring is the host's own flow; a Club Admin books one date. */}
       {clubAdmin ? null : <PodRepeatSection form={form} />}
     </YStack>,
     <PricingStep

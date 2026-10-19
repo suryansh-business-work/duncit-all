@@ -5,9 +5,9 @@ import type { TicketDiscountLabels, TicketDiscountTranslate } from './pod-ticket
 /**
  * Booking a recurring pod — the rules both apps' Pod Details and checkout share.
  *
- * A recurring pod is ONE pod with many dates. A member picks which dates to
- * book — the next one, all of them, or a hand-picked set — and pays each
- * date's ticket less the pod's multi-date discount. The SERVER prices the
+ * A recurring pod is ONE pod with many dates. A member ticks the dates to book
+ * (or "select all") and pays each date's own ticket less the pod's multi-date
+ * discount. Members only ever see the dates the venue accepted. The SERVER prices the
  * charge (`recurringCheckoutQuote`); this module only picks the dates and
  * previews the price on the date picker.
  *
@@ -31,20 +31,13 @@ export interface SeriesDateRow {
   status: SeriesDateStatus;
   seats_available?: number | null;
   my_seats: number;
+  /** This date's ticket price, before any discount. */
+  pod_amount: number;
   bookable: boolean;
 }
 
 /** The most dates any recurring pod may have (Pod Settings caps it lower). */
 export const POD_SERIES_MAX_DATES = 52;
-
-/** How the member chose their dates on the picker. */
-export type SeriesBookingChoice = 'NEXT' | 'ALL' | 'PICK';
-
-export const SERIES_BOOKING_CHOICES: readonly { value: SeriesBookingChoice; labelKey: string }[] = [
-  { value: 'NEXT', labelKey: 'mweb.podSeriesBooking.choiceNext' },
-  { value: 'ALL', labelKey: 'mweb.podSeriesBooking.choiceAll' },
-  { value: 'PICK', labelKey: 'mweb.podSeriesBooking.choicePick' },
-];
 
 /** How a date's status reads in the dates list. */
 export const SERIES_DATE_STATUS_KEY: Record<SeriesDateStatus, string> = {
@@ -64,20 +57,12 @@ export const bookedSeriesDates = (rows: readonly SeriesDateRow[]): SeriesDateRow
   rows.filter((row) => row.my_seats > 0);
 
 /**
- * The date ids a choice books: the next bookable date, every bookable date,
- * or the picked ones that can still be booked — always in date order, so the
- * first id is the date products and rentals ride on.
+ * The ticked dates that can still be booked — always in date order, not tick
+ * order, so the first is the date products and rentals ride on.
  */
-export function seriesDatesForChoice(
-  rows: readonly SeriesDateRow[],
-  choice: SeriesBookingChoice,
-  picked: readonly string[],
-): string[] {
-  const open = bookableSeriesDates(rows);
-  if (choice === 'NEXT') return open.slice(0, 1).map((row) => row.pod_doc_id);
-  if (choice === 'ALL') return open.map((row) => row.pod_doc_id);
+export function pickedSeriesDates(rows: readonly SeriesDateRow[], picked: readonly string[]): SeriesDateRow[] {
   const wanted = new Set(picked);
-  return open.filter((row) => wanted.has(row.pod_doc_id)).map((row) => row.pod_doc_id);
+  return bookableSeriesDates(rows).filter((row) => wanted.has(row.pod_doc_id));
 }
 
 /** The tier a booking of `dates` dates reaches, or null (one date, or no tier reached). */
@@ -92,14 +77,13 @@ export function resolveMultiDateTier(
   return best;
 }
 
-/** The picker's price preview: `dates` dates at `perDate` each, less the tier. */
+/** The picker's price preview: each picked date at its own price, less the tier the count reaches. */
 export function seriesBookingEstimate(
-  perDate: number,
-  dates: number,
+  perDatePrices: readonly number[],
   tiers: readonly MultiDateDiscountTier[] | null | undefined,
 ): { gross: number; pct: number; discount: number; total: number } {
-  const gross = round2(perDate * dates);
-  const pct = resolveMultiDateTier(tiers, dates)?.discount_pct ?? 0;
+  const gross = round2(perDatePrices.reduce((sum, price) => sum + price, 0));
+  const pct = resolveMultiDateTier(tiers, perDatePrices.length)?.discount_pct ?? 0;
   const discount = round2((gross * pct) / 100);
   return { gross, pct, discount, total: round2(gross - discount) };
 }
@@ -197,6 +181,7 @@ export const POD_SERIES_DATES_SDL = `
         min_dates
         discount_pct
       }
+      is_host
       dates {
         pod_doc_id
         slug
@@ -205,6 +190,7 @@ export const POD_SERIES_DATES_SDL = `
         status
         seats_available
         my_seats
+        pod_amount
         bookable
       }
     }

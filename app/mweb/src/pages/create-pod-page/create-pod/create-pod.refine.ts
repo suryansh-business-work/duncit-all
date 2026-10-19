@@ -38,10 +38,14 @@ export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.Refinem
 
 /** A recurring pod needs the day it stops repeating, after its first date. The
  * server checks the span and every date's slot; this only catches the empty
- * or backwards end day before the preview is asked for. Native twin. */
+ * or backwards end day before the preview is asked for — and, for hand-picked
+ * dates, that at least one day besides the first is tapped. Native twin. */
 export function refineRepeat(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate, maxPct: number) {
   if (!values.repeat_enabled) return;
   refineRepeatDiscount(values, ctx, t, maxPct);
+  if (values.repeat_frequency === 'CUSTOM' && values.repeat_custom_days.length === 0) {
+    ctx.addIssue({ code: 'custom', path: ['repeat_custom_days'], message: t('mweb.podSeries.needTwoDates') });
+  }
   if (!values.repeat_ends_on) {
     ctx.addIssue({ code: 'custom', path: ['repeat_ends_on'], message: t('mweb.podSeries.endsOnRequired') });
     return;

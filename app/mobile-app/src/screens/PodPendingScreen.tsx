@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useRoute, type RouteProp } from '@react-navigation/native';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 
 import {
   ClubAdminCard,
@@ -15,7 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
-import { useLoadingRegion } from '@/components/Skeleton';
+import { TipsLoader } from '@/components/TipsLoader';
 
 /** Waiting screen a host lands on after creating a pod whose venue slot request
  * is PENDING — banner + pod summary + venue contact + club-admin help cards.
@@ -25,7 +25,6 @@ import { useLoadingRegion } from '@/components/Skeleton';
  * the slot is approved the amber badge and banner turn green on the next load.
  * RN twin of mWeb's post-create pending page (rule 27). */
 export function PodPendingScreen() {
-  const loadingRegion = useLoadingRegion();
   const route = useRoute<RouteProp<RootStackParamList, 'PodPending'>>();
   const podId = route.params?.podId ?? '';
   const { view, isLoading, isRefreshing, error, refetch } = usePodPendingView(podId);
@@ -39,11 +38,7 @@ export function PodPendingScreen() {
 
   let body: ReactNode;
   if (isLoading) {
-    body = (
-      <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner {...loadingRegion} testID="pod-pending-loading" color="$primary" />
-      </YStack>
-    );
+    body = <TipsLoader testID="pod-pending-loading" />;
   } else if (error || !view) {
     body = (
       <Text role="alert" testID="pod-pending-error" padding={24} color="$danger">

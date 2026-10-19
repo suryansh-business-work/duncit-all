@@ -6,7 +6,7 @@ import {
   reelLengthMs,
   sceneAt,
   sceneSpans,
-  selectionExists,
+  resolveSelection,
 } from '../../src/pages/reels/editor/layout';
 
 const scene = (id: string, duration_ms: number, extra: Partial<ReelScene> = {}): ReelScene =>

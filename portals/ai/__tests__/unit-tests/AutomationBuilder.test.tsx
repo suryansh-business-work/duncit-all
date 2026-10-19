@@ -181,7 +181,8 @@ describe('Automation builder — activation, panels and canvas', () => {
     fireEvent.click(screen.getByTestId('automation-toggle-active'));
     await waitFor(() => expect(screen.getByTestId('automation-issues')).toHaveTextContent(en('ai.automation.builder.issues', { count: 1 })));
     expect(notifyError).toHaveBeenCalledWith('Fix the flow first');
-    expect(within(screen.getByTestId('automation-node-delay')).getByLabelText('No amount')).toBeInTheDocument();
+    // React Flow repaints the node a tick after the toolbar count updates.
+    expect(await within(screen.getByTestId('automation-node-delay')).findByLabelText('No amount')).toBeInTheDocument();
   });
 
   it('switches the side panel between inspector, test chat and runs', async () => {

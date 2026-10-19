@@ -270,9 +270,8 @@ describe('UserPickerField', () => {
     m.search = { data: { waCampaignUserSearch: [] }, loading: false };
     mount();
     const input = screen.getByRole('combobox', { name: /People/ });
+    fireEvent.mouseDown(input);
     fireEvent.change(input, { target: { value: 'Zed' } });
-    // With no options the popup only opens on an explicit open (ArrowDown).
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(await screen.findByText('Nobody matches that')).toBeInTheDocument();
   });
 

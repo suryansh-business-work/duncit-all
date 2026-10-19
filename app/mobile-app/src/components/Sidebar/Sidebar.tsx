@@ -24,6 +24,7 @@ import { SidebarSections } from './SidebarSections';
 import { SidebarSkeleton } from './SidebarSkeleton';
 import { SidebarUserContent } from './SidebarUserContent';
 import { useMenuFlags } from './useMenuFlags';
+import { useChatUnreadTotal } from '@/hooks/useChatUnreadTotal';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
@@ -54,6 +55,8 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const refreshing = !pending && (isLoading || policiesLoading);
   const roles = me?.roles ?? [];
   const flags = useMenuFlags();
+  // Unread lines across the member's pod and club rooms: the Chats tile's badge.
+  const unreadChats = useChatUnreadTotal();
   const showProducts = flags.products === true;
   const studioMode = useStudioModeStore((s) => s.mode);
   const setStudioMode = useStudioModeStore((s) => s.setMode);
@@ -136,6 +139,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
               roles={roles}
               mode={effectiveMode}
               flags={flags}
+              badgeCounts={{ chats: unreadChats }}
               onNavigate={go}
             />
           )}

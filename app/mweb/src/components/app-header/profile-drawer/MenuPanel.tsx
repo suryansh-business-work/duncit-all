@@ -15,6 +15,7 @@ import MenuSections from './MenuSections';
 import MenuSkeleton from './MenuSkeleton';
 import UserModeContent from './UserModeContent';
 import { useMenuFlags } from './useMenuFlags';
+import { useChatUnreadTotal } from '../../chat-state/useChatUnreadTotal';
 
 interface Props {
   /** Closes the menu — the page hands back to the previous route. */
@@ -53,6 +54,8 @@ export default function MenuPanel({
   const colorMode = useColorMode();
   const { mode, setMode } = useStudioMode();
   const flags = useMenuFlags();
+  // Unread lines across the member's pod and club rooms: the Chats tile's badge.
+  const unreadChats = useChatUnreadTotal(Boolean(me));
   const showProducts = flags.products === true;
   const [switchOpen, setSwitchOpen] = useState(false);
   const isDark = colorMode.mode === 'dark';
@@ -98,6 +101,7 @@ export default function MenuPanel({
             roles={roles}
             mode={effectiveMode}
             flags={flags}
+            badgeCounts={{ chats: unreadChats }}
             onNavigate={go}
           />
         )}

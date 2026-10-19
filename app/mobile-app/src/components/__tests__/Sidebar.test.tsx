@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, within } from '@testing-library/react-native';
 
 import { Sidebar } from '@/components/Sidebar';
 import { useQuickAccessStore } from '@/stores/quick-access.store';
@@ -32,7 +32,12 @@ jest.mock('@/hooks/useMe', () => ({
 jest.mock('@/hooks/useAccount', () => ({ useAccount: () => ({ me: { first_name: 'Asha' } }) }));
 jest.mock('@/hooks/useFeatureFlag', () => ({
   useFeatureFlag: (key: string) => mockFlags[key] ?? false,
+  // The menu reads the whole list (useMenuFlags): the same flags, as rows.
+  usePublicFeatureFlags: () =>
+    Object.entries(mockFlags).map(([key, enabled]) => ({ key, enabled })),
 }));
+let mockUnreadChats = 0;
+jest.mock('@/hooks/useChatUnreadTotal', () => ({ useChatUnreadTotal: () => mockUnreadChats }));
 jest.mock('@/hooks/usePolicies', () => ({
   usePublicPolicies: () => ({
     data: { publicPolicies: [{ id: '1', slug: 'terms', title: 'Terms' }] },
@@ -43,6 +48,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   useStudioModeStore.setState({ mode: 'USER' });
   useQuickAccessStore.setState({ raw: null });
+  mockUnreadChats = 0;
 });
 
 /** Opens one of the collapsed section cards. */
@@ -53,6 +59,19 @@ describe('Sidebar', () => {
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByTestId('sidebar-panel')).toBeOnTheScreen();
     expect(screen.queryByTestId('sidebar-backdrop')).toBeNull();
+  });
+
+  it('badges the Chats tile with the unread count, and shows no badge at zero', () => {
+    mockUnreadChats = 3;
+    const { unmount } = renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    expect(
+      within(screen.getByTestId('sidebar-grid-chats')).getByTestId('sidebar-grid-badge'),
+    ).toHaveTextContent('3');
+    unmount();
+
+    mockUnreadChats = 0;
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    expect(screen.queryByTestId('sidebar-grid-badge')).toBeNull();
   });
 
   it('shows the profile card, Quick Access, the five collapsed sections, logout and app version', () => {

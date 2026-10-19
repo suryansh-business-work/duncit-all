@@ -1722,6 +1722,45 @@ export {
   isNearHistoryTop,
   olderPageCursor,
 } from './chat-history';
+export {
+  EMOJI_QUERY,
+  MENTION_QUERY,
+  MENTION_TOKEN,
+  applyEmoji,
+  applyMention,
+  emojiQuery,
+  filterMentionCandidates,
+  mentionHandle,
+  mentionIdsInText,
+  mentionQuery,
+  mentionTarget,
+  splitMentions,
+  type MentionEdit,
+  type MentionMember,
+} from './chat-mentions';
+export {
+  CHAT_MUTE_DURATIONS,
+  CHAT_NEW_EVENT,
+  CHAT_PING_WINDOW_MS,
+  CHAT_REPLY_PREVIEW_MAX,
+  chatMuteCopy,
+  chatNewToastLine,
+  chatReplyPreview,
+  chatReplyText,
+  chatRoomFromPath,
+  createChatPingGate,
+  formatUnreadBadge,
+  isChatMuted,
+  isViewingRoom,
+  parseChatNewFrame,
+  type ChatAlertRoomKind,
+  type ChatMuteDuration,
+  type ChatNewFrame,
+  type ChatReplyPreview,
+  type ChatReplySnippet,
+  type ChatTranslate,
+  type OpenChatRoom,
+} from './chat-alerts';
 
 // Rented items: the contract the venue desk, Finance and both apps share.
 export {

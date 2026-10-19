@@ -3656,6 +3656,55 @@ lines = mergeEarlierMessages(page, lines);
 list.scrollTop = anchoredScrollTop(top, heightBefore, list.scrollHeight); // no jump
 ```
 
+## @-mentions in any chat composer — `chat-mentions`
+
+Lifted from the portals' staff chat so `@duncit/shell`, mWeb and the app find, insert and draw a
+mention the same way (`@duncit/shell` re-exports the originals). A member is mentioned by their
+first name (`mentionHandle`); the composer sends the picked members' ids, and the bubble resolves a
+tapped `@token` back to the user the server says was mentioned.
+
+| Export | Meaning |
+| --- | --- |
+| `MENTION_TOKEN` / `MENTION_QUERY` | An `@name` in text / the half-typed one under the caret. |
+| `mentionQuery(text, caret)` / `applyMention(text, caret, name)` | The fragment being typed / replace it with `@name `. |
+| `splitMentions(text)` | Plain and mention pieces, in order, for the bubble. |
+| `mentionHandle(fullName)` | The token a member is mentioned by — first name, with fallbacks. |
+| `filterMentionCandidates(members, query, selfId, limit?)` | Who to offer for `@query`, never the writer. |
+| `mentionIdsInText(text, picked)` | The ids to send — picks whose `@handle` is still in the text. |
+| `mentionTarget(token, mentioned)` | The user a tapped `@token` names, or `null`. |
+
+```ts
+const offer = filterMentionCandidates(members, mentionQuery(text, caret) ?? '', myId);
+const edit = applyMention(text, caret, mentionHandle(offer[0].full_name));
+send({ text: edit.text, mentions: mentionIdsInText(edit.text, [offer[0]]) });
+```
+
+## New-message alerts, mute, unread and reply quotes — `chat-alerts`
+
+The rules both apps follow for a pod's or a club's room. The server emits `chat:new` on the
+reader's app-wide socket when a message lands in a room they are not looking at (never the sender,
+never a blocked peer, never a muted room unless they were @-mentioned).
+
+| Export | Meaning |
+| --- | --- |
+| `CHAT_NEW_EVENT` / `parseChatNewFrame(raw)` | The event name / a payload as a typed frame, or `null`. |
+| `isViewingRoom(open, frame)` / `chatRoomFromPath(path)` | Whether the frame is for the open room / the room a mWeb path opens. |
+| `createChatPingGate(windowMs?, now?)` | One ping per burst, never two for the same message id. |
+| `CHAT_MUTE_DURATIONS` / `isChatMuted(state, now?)` / `chatMuteCopy(t)` | 8 hours, 1 week, Always / whether a mute is in force / the menu's words. |
+| `formatUnreadBadge(count, max?)` | `''` for zero, `99+` past the cap. |
+| `chatReplyPreview(reply)` / `chatReplyText(reply, t)` | What a quoted line shows, in data / in words. |
+| `chatNewToastLine(frame, t)` | "Name: words" for the in-app toast. |
+
+```ts
+const shouldPing = createChatPingGate();
+socket.on(CHAT_NEW_EVENT, (raw) => {
+  const frame = parseChatNewFrame(raw);
+  if (!frame || isViewingRoom(openRoom, frame)) return;
+  if (shouldPing(frame.message_id)) playPing();
+  toast(frame.title, chatNewToastLine(frame, t));
+});
+```
+
 ## The venue bill at Complete Pod — `venue-bill`
 
 Whoever completes a pod may enter the venue final bill. The server decides the money

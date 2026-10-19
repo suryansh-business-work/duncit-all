@@ -4079,10 +4079,45 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         one: '{count} new message',
         other: '{count} new messages',
       },
+      // The bell at the top of a pod's, club's or support chat (chat-alerts chatMuteCopy).
+      mute: {
+        menu: 'Mute notifications',
+        muted: 'Notifications muted',
+        mutedUntil: 'Muted until {date}',
+        unmute: 'Unmute',
+        failed: 'Could not change notifications for this chat. Please try again.',
+        eightHours: '8 hours',
+        oneWeek: '1 week',
+        always: 'Always',
+      },
+      // WhatsApp-style replies: the long-press row, the strip over the composer and the quote in a bubble.
+      reply: {
+        action: 'Reply',
+        replyingTo: 'Replying to {name}',
+        cancel: 'Cancel reply',
+        deleted: 'This message was deleted',
+        sticker: 'Sticker',
+        showOriginal: 'Show the original message from {name}',
+        you: 'You',
+      },
+      // The @ list over the composer and a highlighted mention in a bubble.
+      mention: {
+        suggestions: 'People to mention',
+        openProfile: 'Open the profile of {name}',
+      },
+      // The in-app alert for a message in another room.
+      alert: {
+        open: 'Open',
+        newMessageIn: 'New message in {title}',
+      },
     },
     chats: {
       searchChats: 'Search chats',
       searchChatsByPodName: 'Search chats by pod name…',
+      unread: {
+        one: '{count} unread message',
+        other: '{count} unread messages',
+      },
     },
     chatsPage: {
       searchChatsByPodName: 'Search chats by pod name',

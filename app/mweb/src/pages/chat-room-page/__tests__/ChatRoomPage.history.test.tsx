@@ -44,7 +44,14 @@ const range = (from: number, to: number) => Array.from({ length: to - from + 1 }
 const podRoom = (podMessages: unknown[]) => ({
   me: { __typename: 'User', user_id: 'me1' },
   podMessages,
-  podChatInfo: { __typename: 'PodChatInfo', chat_deletes_at: null, closed: false, can_moderate: false },
+  podChatInfo: {
+    __typename: 'PodChatInfo',
+    chat_deletes_at: null,
+    closed: false,
+    can_moderate: false,
+    is_muted: false,
+    muted_until: null,
+  },
   pod: {
     __typename: 'Pod',
     id: 'room1',
@@ -65,6 +72,8 @@ const clubRoom = (clubMessages: unknown[]) => ({
     club_name: 'Riders',
     retention_days: null,
     can_moderate: false,
+    is_muted: false,
+    muted_until: null,
   },
 });
 
@@ -82,6 +91,8 @@ function renderRoom(handlers: Record<string, OpHandler>, kind: 'POD' | 'CLUB' = 
     ChatParticipants: () => ({
       chatParticipants: { __typename: 'ChatParticipants', participant_count: 0, hosts: [], participants: [] },
     }),
+    // Opening the room marks it read.
+    MarkChatRead: () => ({ markChatRead: true }),
     ...handlers,
   });
   render(
@@ -134,6 +145,7 @@ describe('ChatRoomPage scroll-up history', () => {
     const ops = renderRoom({ PodMessages: pages({ newest: NEWEST }, podRoom), PodMessagePage: pages({}, podLines) });
     expect(await screen.findByText('line 60')).toBeInTheDocument();
     expect(ops.callsTo('PodMessages')[0].variables).toEqual({ pod_id: 'room1', limit: 30 });
+    expect(ops.callsTo('MarkChatRead')[0]?.variables).toEqual({ kind: 'POD', id: 'room1' });
     // The log sits at 0 before its first scroll to the newest line: that is not reading up.
     fireEvent.scroll(layOut(0));
     expect(ops.callsTo('PodMessagePage')).toHaveLength(0);

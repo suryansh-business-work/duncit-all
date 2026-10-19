@@ -1,0 +1,43 @@
+---
+/**
+ * Every section's opening: the small kicker, the big display heading and an
+ * optional line of copy. `split` puts the copy to the right of the heading on
+ * wide screens; `center` stacks everything in the middle.
+ */
+interface Props {
+  eyebrow?: string;
+  heading: string;
+  text?: string;
+  layout?: 'split' | 'center' | 'stack';
+  /** On the dark frame panels, the type takes the frame's own ink. */
+  onFrame?: boolean;
+  id?: string;
+}
+
+const { eyebrow, heading, text, layout = 'split', onFrame = false, id } = Astro.props;
+const wrap = {
+  split: 'flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-12',
+  center: 'mx-auto flex max-w-3xl flex-col items-center gap-5 text-center',
+  stack: 'flex max-w-2xl flex-col gap-5',
+}[layout];
+---
+
+<div class={wrap} data-reveal>
+  <div class="max-w-3xl">
+    {eyebrow && <p class:list={['kicker', onFrame && 'text-primary!']}>{eyebrow}</p>}
+    <h2 id={id} class:list={['display mt-3', onFrame ? 'text-on-frame' : 'text-ink']}>{heading}</h2>
+  </div>
+  {
+    text && (
+      <p
+        class:list={[
+          'text-base leading-relaxed sm:text-lg',
+          layout === 'split' && 'lg:max-w-sm',
+          onFrame ? 'text-on-frame-soft' : 'text-ink-soft',
+        ]}
+      >
+        {text}
+      </p>
+    )
+  }
+</div>

@@ -1,27 +1,24 @@
 ---
 import { siteContent } from '../config/site-config';
+import SectionHead from './SectionHead.astro';
 
-const siteConfig = await siteContent();
-const { steps, stepsSection } = siteConfig;
+const { steps, stepsSection } = await siteContent();
 ---
 
-<section id="how" class="scroll-mt-24 bg-surface/60 py-16">
-  <div class="mx-auto max-w-6xl px-5">
-    <div class="mx-auto max-w-2xl text-center">
-      <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">{stepsSection.eyebrow}</p>
-      <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{stepsSection.heading}</h2>
-    </div>
-    <ol class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+<section id="how" class="scroll-mt-28 px-3 py-6 sm:px-5">
+  <div class="mx-auto max-w-7xl rounded-panel-lg bg-surface px-5 py-16 shadow-soft sm:px-10 lg:px-16 lg:py-24">
+    <SectionHead eyebrow={stepsSection.eyebrow} heading={stepsSection.heading} layout="center" />
+    <ol class="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4" data-reveal-group>
       {
         steps.map((step, index) => (
-          <li class="relative rounded-2xl border border-line bg-surface p-6 shadow-sm">
-            <span class="absolute -top-3 left-6 rounded-full bg-primary px-2.5 py-0.5 font-head text-xs font-extrabold text-white">
+          <li class="lift relative flex flex-col overflow-hidden rounded-panel bg-cream p-7" data-reveal>
+            <span class="step-number font-head text-8xl font-extrabold leading-[0.8] tracking-tighter" aria-hidden="true">
               {index + 1}
             </span>
-            <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light text-primary-dark">
-              <i class={`fa-solid ${step.icon} text-xl`} aria-hidden="true" />
+            <span class="mt-6 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-on-accent">
+              <i class={`fa-solid ${step.icon} text-lg`} aria-hidden="true" />
             </span>
-            <h3 class="mt-5 font-head text-lg font-extrabold text-ink">{step.title}</h3>
+            <h3 class="mt-5 text-xl text-ink">{step.title}</h3>
             <p class="mt-2 text-sm leading-relaxed text-ink-soft">{step.text}</p>
           </li>
         ))
@@ -29,3 +26,12 @@ const { steps, stepsSection } = siteConfig;
     </ol>
   </div>
 </section>
+
+<style>
+  /* An outlined numeral: the order is there at a glance without shouting. */
+  .step-number {
+    color: transparent;
+    -webkit-text-stroke: 2px var(--color-ink);
+    opacity: 0.18;
+  }
+</style>

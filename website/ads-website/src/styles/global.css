@@ -7,7 +7,11 @@
   --color-primary: #ff5757;
   --color-primary-dark: #d92d2d;
   --color-primary-light: #ffe5e5;
+  /* Primary as TEXT (kickers, prices) on cream/surface: the coral itself is
+     only ~3:1 on white, so small type takes this deeper step (≥4.5:1). */
+  --color-primary-strong: #c4262a;
   --color-accent: #ff9f45;
+  --color-accent-light: #ffe9d4;
   --color-ink: #16131a;
   --color-ink-soft: #4b4651;
   --color-cream: #faf6f0;
@@ -15,25 +19,46 @@
   --color-surface: #ffffff;
   /* Hairlines — a token rather than black/5, which cannot invert. */
   --color-line: rgba(22, 19, 26, 0.08);
-  /* Ink that sits ON a filled or dark surface — the primary button, the header
-     while it is over the banner. A token so no component writes `#fff` itself;
-     it holds in both themes because what is behind it does not invert. */
+  /* Ink that sits ON a dark photograph or the frame — the hero copy over its
+     scrim. It holds in both themes because what is behind it does not invert. */
   --color-on-primary: #ffffff;
+  /* Ink on the coral and orange fills (buttons, the CTA panel, live slots).
+     Those fills do not invert, so neither does this: ≥4.5:1 on both. */
+  --color-on-accent: #16131a;
+  /* The dark matte the rounded panels sit on (hero, the "why" band), and the
+     type that reads on it. Dark/light respectively in either theme. */
+  --color-frame: #100e14;
+  --color-on-frame: #faf6f0;
+  --color-on-frame-soft: #a9a2b3;
+
+  --radius-panel: 2.25rem;
+  --radius-panel-lg: 2.75rem;
+  --shadow-soft: 0 1px 2px rgba(22, 19, 26, 0.06), 0 8px 24px rgba(22, 19, 26, 0.08);
+  --shadow-lift: 0 30px 80px -20px rgba(22, 19, 26, 0.35);
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 
   --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
 }
 
-/* Dark theme. Set by the no-flash script in the layout from the saved choice,
-   falling back to the operating system's. */
+/* Dark theme. Set by the no-flash script in the layout from the saved choice. */
 :root[data-theme='dark'] {
   --color-primary-light: rgba(255, 87, 87, 0.18);
+  --color-primary-strong: #ff7a7a;
+  --color-accent-light: rgba(255, 159, 69, 0.16);
   --color-ink: #f5f2f7;
   --color-ink-soft: #a9a2b3;
   --color-cream: #100e13;
   --color-surface: #1a171f;
   --color-line: rgba(255, 255, 255, 0.1);
+  --color-frame: #08070a;
 }
+
+/* Classes the shared widgets write into the page at runtime
+   (@duncit/brand/widgets/campaign-calculator-markup and calculator-note).
+   A build whose rate card was empty has none of them in its markup, so they
+   are named here for Tailwind to generate. */
+@source inline("placement-chip cursor-pointer sr-only inline-flex items-center items-baseline justify-between gap-2 gap-3 rounded-full border border-t border-line px-4 px-5 py-2 py-4 mt-5 text-sm text-xs text-right font-bold font-semibold font-extrabold font-head opacity-70 transition text-ink text-ink-soft text-primary text-primary-dark hidden sm:table-cell");
 
 @layer base {
   html {
@@ -55,8 +80,8 @@
   h1, h2, h3, h4 {
     font-family: var(--font-head);
     font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.08;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
   }
   a, button, [role="button"] {
     cursor: pointer;
@@ -74,18 +99,102 @@
   }
 }
 
-/* Glassmorphism — shared look across all Duncit websites. */
+/* The floating top bar's frosted surface — built from the tokens, so it
+   inverts with the theme. */
 @utility glass {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow: 0 8px 32px rgba(22, 19, 26, 0.12);
+  background: color-mix(in srgb, var(--color-surface) 74%, transparent);
+  backdrop-filter: blur(18px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  border: 1px solid var(--color-line);
+  box-shadow: var(--shadow-soft);
 }
-@utility glass-dark {
-  background: rgba(22, 19, 26, 0.45);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+/* The small uppercase label over every section heading. */
+@utility kicker {
+  font-family: var(--font-head);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary-strong);
+}
+
+/* A section's display heading: big, tight, one scale everywhere. */
+@utility display {
+  font-size: clamp(2.25rem, 1.4rem + 3.6vw, 4.5rem);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+/* A card that lifts toward the pointer. */
+@utility lift {
+  transition:
+    transform 500ms var(--ease-smooth),
+    box-shadow 500ms var(--ease-smooth);
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+/* Once a revealed card has arrived, hovering it should answer at once — not
+   wait out the reveal's slower curve and its stagger delay. */
+.reveal-ready .lift[data-reveal].is-revealed {
+  transition:
+    transform 500ms var(--ease-smooth),
+    box-shadow 500ms var(--ease-smooth);
+  transition-delay: 0ms;
+}
+
+/* The filled call to action: coral, ink text, a slight grow on hover. The
+   caller sets display, height and padding (`inline-flex min-h-12 px-7`). */
+@utility btn-primary {
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  font-family: var(--font-head);
+  font-weight: 800;
+  color: var(--color-on-accent);
+  box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--color-primary) 80%, transparent);
+  transition:
+    transform 350ms var(--ease-smooth),
+    box-shadow 350ms var(--ease-smooth);
+  &:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+}
+
+/* Soft drifting colour behind a section, and a card that gently bobs.
+   Decorative; both stop for anyone who asked for less motion. */
+@utility blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+  pointer-events: none;
+  animation: blob-drift 18s ease-in-out infinite alternate;
+}
+@utility bob {
+  animation: card-bob 6s ease-in-out infinite;
+}
+@keyframes blob-drift {
+  to {
+    transform: translate(40px, -30px) scale(1.08);
+  }
+}
+@keyframes card-bob {
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .blob,
+  .bob {
+    animation: none;
+  }
+  .lift:hover,
+  .btn-primary:hover {
+    transform: none;
+  }
 }

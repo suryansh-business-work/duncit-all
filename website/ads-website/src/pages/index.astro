@@ -26,6 +26,10 @@ const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
   <SiteHeader overlay />
   <main>
     <Hero />
+    <!-- Reels second, straight after the hero (hidden when there are none),
+         then the Earn section the Website portal can move into a slot below. -->
+    <ReelSlider graphqlUrl={siteConfig.graphqlUrl} site="ADS" t={t} />
+    <EarnShowcase href={siteUrls.earnwithUrl} graphqlUrl={siteConfig.graphqlUrl} site="ADS" t={t} />
     <!-- Where, then what it costs — an advertiser's two questions, in that
          order, before anything about the console. -->
     <Placements />
@@ -34,10 +38,10 @@ const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
     <Features />
     <Steps />
     <WhyChoose />
-    <EarnShowcase href={siteUrls.earnwithUrl} t={t} />
     <DownloadApps />
+    <div data-earn-slot="AFTER_DOWNLOAD"></div>
     <CtaBand />
+    <div data-earn-slot="BEFORE_FOOTER"></div>
   </main>
   <SiteFooter />
-  <ReelSlider graphqlUrl={siteConfig.graphqlUrl} site="ADS" t={t} />
 </Layout>

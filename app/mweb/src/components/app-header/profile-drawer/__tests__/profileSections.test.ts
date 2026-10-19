@@ -1,83 +1,42 @@
-import { describe, expect, it } from 'vitest';
-import {
-  PROFILE_GRID,
-  REFERRAL_TILE,
-  SHOP_ITEMS,
-  buildManageItems,
-} from '../profileSections';
+import { describe, expect, it, vi } from 'vitest';
+import { PROFILE_MENU_ITEMS, PROFILE_MENU_SECTIONS, type ProfileMenuKey } from '@duncit/utils';
+import { COIN_DESTINATION, MENU_DESTINATIONS, SECTION_ICONS, menuEntry } from '../profileSections';
 
-/** The drawer's Badges row arrives already translated, so the test passes the
- * label the same way the component does. */
-const BADGES_LABEL = 'Badges';
-const CONTACTS_LABEL = 'Your Contacts on Duncit';
+const KEYS = Object.keys(PROFILE_MENU_ITEMS) as ProfileMenuKey[];
 
-describe('profileSections', () => {
-  it('exposes exactly four quick-action tiles pointing at real routes', () => {
-    expect(PROFILE_GRID).toHaveLength(4);
-    expect(PROFILE_GRID.map((t) => t.label)).toEqual([
-      'Pod History',
-      'Help & Support',
-      'Earn with Duncit',
-      'Pod Ideas',
-    ]);
-    expect(PROFILE_GRID.map((t) => t.to)).toEqual([
-      '/pod-history',
-      '/support',
-      '/earn',
-      '/pod-ideas',
-    ]);
-    expect(PROFILE_GRID.every((t) => t.label && t.caption)).toBe(true);
+describe('profileSections (mWeb destinations)', () => {
+  it('gives every shared menu destination an absolute path and an icon', () => {
+    expect(Object.keys(MENU_DESTINATIONS).sort()).toEqual([...KEYS].sort());
+    for (const key of KEYS) {
+      expect(MENU_DESTINATIONS[key].to.startsWith('/')).toBe(true);
+      expect(MENU_DESTINATIONS[key].icon).toBeTruthy();
+    }
+    expect(COIN_DESTINATION.to).toBe('/duncit-coin');
   });
 
-  it('the referral tile points at /referral without a hardcoded amount', () => {
-    expect(REFERRAL_TILE.to).toBe('/referral');
-    expect(REFERRAL_TILE.caption).not.toMatch(/\d/);
+  it('keeps the paths the menu has always opened', () => {
+    expect(MENU_DESTINATIONS.following.to).toBe('/follow');
+    expect(MENU_DESTINATIONS['pod-history'].to).toBe('/pod-history');
+    expect(MENU_DESTINATIONS.help.to).toBe('/support');
+    expect(MENU_DESTINATIONS.orders.to).toBe('/orders');
+    expect(MENU_DESTINATIONS.addresses.to).toBe('/address-book');
+    expect(MENU_DESTINATIONS['gift-cards-redeem'].to).toBe('/gift-cards/redeem');
+    expect(MENU_DESTINATIONS.tour.to).toBe('/tour-guide');
   });
 
-  it('builds the manage list (account rows only) without Pod Plans by default', () => {
-    const labels = buildManageItems(false, true, BADGES_LABEL, CONTACTS_LABEL).map((i) => i.label);
-    expect(labels).toEqual([
-      'Manage Account',
-      'Saved Items',
-      CONTACTS_LABEL,
-      'Verification',
-      'Tour Guide',
-      'FAQs',
-      BADGES_LABEL,
-    ]);
+  it('has an icon tile for every section card', () => {
+    expect(Object.keys(SECTION_ICONS).sort()).toEqual(PROFILE_MENU_SECTIONS.map((s) => s.id).sort());
   });
 
-  it('inserts Pod Plans before FAQs when the flag is on', () => {
-    const labels = buildManageItems(true, true, BADGES_LABEL, CONTACTS_LABEL).map((i) => i.label);
-    expect(labels).toEqual([
-      'Manage Account',
-      'Saved Items',
-      CONTACTS_LABEL,
-      'Verification',
-      'Tour Guide',
-      'Pod Plans',
-      'FAQs',
-      BADGES_LABEL,
-    ]);
-  });
-
-  it('exposes the Shop e-commerce section as its own list of real routes', () => {
-    expect(SHOP_ITEMS.map((i) => i.label)).toEqual([
-      'Pod Shop',
-      'My Product Order History',
-      'Address Book',
-      'Cart',
-    ]);
-    expect(SHOP_ITEMS.map((i) => i.to)).toEqual(['/shop', '/orders', '/address-book', '/cart']);
-  });
-
-  it('every route is absolute', () => {
-    const all = [
-      ...PROFILE_GRID,
-      REFERRAL_TILE,
-      ...buildManageItems(true, true, BADGES_LABEL, CONTACTS_LABEL),
-      ...SHOP_ITEMS,
-    ];
-    expect(all.every((t) => t.to.startsWith('/'))).toBe(true);
+  it('builds an entry with the translated label, the badge and this app’s path', () => {
+    const t = vi.fn((key: string) => `[${key}]`);
+    expect(menuEntry('membership', t)).toEqual({
+      key: 'membership',
+      label: '[mweb.membership.sidebarLabel]',
+      badge: '[mweb.membership.comingSoon]',
+      to: '/membership',
+      icon: 'membership',
+    });
+    expect(menuEntry('cart', t).badge).toBeUndefined();
   });
 });

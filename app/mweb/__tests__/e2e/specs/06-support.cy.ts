@@ -68,7 +68,7 @@ describe('06 Support', () => {
     it('SP-01 FAQs, from the menu, lists the questions the server publishes', () => {
       firstFaq().then((faq) => {
         cy.interceptOperation('PublicFaqs');
-        openFromMenu('sidebar-item-FAQs', '/faqs');
+        openFromMenu('sidebar-item-faqs', '/faqs', 'support');
         cy.wait('@PublicFaqs');
         cy.byTestId('faqs-screen').should('be.visible');
         cy.byTestId('faqs-filter-all').should('have.attr', 'aria-pressed', 'true');

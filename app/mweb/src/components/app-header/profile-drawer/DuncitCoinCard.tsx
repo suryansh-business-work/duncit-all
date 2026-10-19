@@ -1,14 +1,15 @@
 import { Box, Skeleton, Stack, Typography, useTheme } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { COIN_TILE } from './profileSections';
+import { COIN_DESTINATION } from './profileSections';
 import { SURFACE_SX } from '../../../theme';
 import { COIN_GOLD_TINT, coinGold } from '../../../theme/coinGold';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { useUserInfo } from '../../../user-info/useUserInfo';
 
-/** The full-width Duncit Coin featured card (the coin's own gold, kept) — the
- * consumer's coin balance and the way into the ledger. User mode only. */
+/** The full-width Duncit Coin card — the coin's own gold glyph, the earn-back
+ * caption, the balance in the accent colour and the way into the ledger. User
+ * mode only. Native twin: Sidebar/SidebarDuncitCoinCard. */
 export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (to: string) => void }>) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -27,13 +28,13 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
         data-testid="sidebar-duncit-coin"
         direction="row"
         spacing={1.5}
-        onClick={() => onNavigate(COIN_TILE.to)}
+        onClick={() => onNavigate(COIN_DESTINATION.to)}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onNavigate(COIN_TILE.to);
+            onNavigate(COIN_DESTINATION.to);
           }
         }}
         sx={{
@@ -76,7 +77,7 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
         {pending ? (
           <Skeleton width={28} height={24} />
         ) : (
-          <Typography id="sidebar-duncit-coin-balance" data-testid="sidebar-duncit-coin-balance" noWrap sx={{ fontSize: 16, fontWeight: 700, color: gold }}>
+          <Typography id="sidebar-duncit-coin-balance" data-testid="sidebar-duncit-coin-balance" noWrap sx={{ fontSize: 16, fontWeight: 700, color: 'secondary.main' }}>
             {balance}
           </Typography>
         )}

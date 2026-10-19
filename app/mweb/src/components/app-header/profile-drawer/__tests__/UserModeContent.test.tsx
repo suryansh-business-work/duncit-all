@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
+import { QUICK_ACCESS_STORAGE_KEY, type ProfileMenuFlags } from '@duncit/utils';
 import UserModeContent from '../UserModeContent';
-import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { ACTIVE_ADS } from '../../../ads/useActiveAds';
 import type { StudioMode } from '../../../../studio-mode';
 
@@ -14,35 +14,41 @@ vi.mock('../../../../hooks/useBrandingAssets', () => ({
 const adsMock = {
   request: { query: ACTIVE_ADS, variables: { position: 'SIDEBAR' } },
   result: { data: { activeAds: [] } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
 };
 
-/** The Shop group lives behind the product system flag. */
-const flagsMock = (enabled: boolean) => ({
-  request: { query: PUBLIC_FEATURE_FLAGS },
-  result: { data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled }] } },
-  maxUsageCount: Number.POSITIVE_INFINITY,
-});
-
-function renderContent(props: {
-  me: any;
+interface RenderProps {
+  me?: any;
   roles?: string[];
   mode?: StudioMode;
-  showPodPlans: boolean;
-  onNavigate: (to: string) => void;
-  showProducts?: boolean;
-}) {
-  return render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock, flagsMock(props.showProducts !== false)]}>
+  flags?: ProfileMenuFlags;
+  badgeCounts?: Record<string, number>;
+  onNavigate?: (to: string) => void;
+}
+
+function content(props: RenderProps) {
+  return (
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
       <UserModeContent
-        me={props.me}
+        me={props.me ?? null}
         roles={props.roles ?? []}
         mode={props.mode ?? 'USER'}
-        showPodPlans={props.showPodPlans}
-        onNavigate={props.onNavigate}
+        flags={props.flags ?? {}}
+        badgeCounts={props.badgeCounts}
+        onNavigate={props.onNavigate ?? vi.fn()}
       />
-    </MockedProvider>,
+    </MockedProvider>
   );
 }
+
+const renderContent = (props: RenderProps = {}) => render(content(props));
+
+/** The grid's tile keys, in the order they are drawn. */
+const gridOrder = () =>
+  Array.from(screen.getByTestId('sidebar-quick-grid').querySelectorAll('[data-testid^="sidebar-grid-"]'))
+    .map((tile) => tile.getAttribute('data-testid') ?? '')
+    .filter((id) => id !== 'sidebar-grid-badge')
+    .map((id) => id.replace('sidebar-grid-', ''));
 
 const FULL_ME = {
   full_name: 'Jane Doe',
@@ -59,203 +65,177 @@ const FULL_ME = {
   whatsapp_number: '123',
 };
 
-describe('UserModeContent', () => {
+describe('UserModeContent — profile card', () => {
   beforeEach(() => {
     mockBranding.mockReset();
     mockBranding.mockReturnValue({ venuesCardVideoUrl: '' });
+    localStorage.clear();
   });
 
-  it('renders identity, quick actions, referral and manage list', async () => {
-    renderContent({ me: FULL_ME, showPodPlans: false, onNavigate: vi.fn() });
+  it('draws the identity and the completion nudge in one card', () => {
+    const onNavigate = vi.fn();
+    renderContent({ me: { full_name: 'Jane Doe', email: 'jane@example.com', first_name: 'Jane' }, onNavigate });
+    const card = screen.getByTestId('sidebar-profile-card');
+    expect(within(card).getByText('Jane Doe')).toBeInTheDocument();
+    expect(within(card).getByText('jane@example.com')).toBeInTheDocument();
+    // 1 of the 10 completion fields is filled.
+    expect(within(card).getByText('Your profile is 10% complete')).toBeInTheDocument();
+    expect(within(card).getByRole('progressbar', { name: 'Your profile is 10% complete' })).toHaveAttribute('aria-valuenow', '10');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open your profile' }));
+    expect(onNavigate).toHaveBeenLastCalledWith('/profile');
+    fireEvent.click(within(card).getByRole('button', { name: 'Complete your profile' }));
+    expect(onNavigate).toHaveBeenLastCalledWith('/account');
+  });
+
+  it('drops the nudge once the profile is complete', () => {
+    renderContent({ me: FULL_ME });
     expect(screen.getByText('Jane Doe')).toBeInTheDocument();
-    expect(screen.getByText('jane@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Pod History')).toBeInTheDocument();
-    // Chats and Following came down from the bottom bar into the grid; Venues
-    // went the other way, so the menu no longer carries a venues card.
-    expect(screen.getByTestId('sidebar-grid-chats')).toBeInTheDocument();
-    expect(screen.getByTestId('sidebar-grid-following')).toBeInTheDocument();
-    expect(screen.queryByText('Venues')).not.toBeInTheDocument();
-    expect(screen.getByText('Refer & Earn')).toBeInTheDocument();
-    expect(screen.getByText('FAQs')).toBeInTheDocument();
-    // Shop section — the e-commerce group parallel to Manage Account. It waits
-    // on the flag query, so it lands a tick after the rest of the drawer.
-    expect(await screen.findByText('Pod Shop')).toBeInTheDocument();
-    expect(screen.getByText('Address Book')).toBeInTheDocument();
-    expect(screen.getByText('Cart')).toBeInTheDocument();
+    expect(screen.queryByTestId('profile-completion')).not.toBeInTheDocument();
   });
 
-  it('drops the whole Shop group when products are switched off', async () => {
-    renderContent({ me: FULL_ME, showPodPlans: false, onNavigate: vi.fn(), showProducts: false });
-    // The rest of the drawer is unaffected — only the e-commerce group goes.
-    expect(await screen.findByText('Refer & Earn')).toBeInTheDocument();
-    expect(screen.queryByText('Pod Shop')).toBeNull();
-    expect(screen.queryByText('Cart')).toBeNull();
-    expect(screen.queryByText('My Product Order History')).toBeNull();
-  });
-
-  it('shows the incomplete banner when profile completion < 100%', () => {
-    renderContent({ me: {}, showPodPlans: false, onNavigate: vi.fn() });
-    expect(screen.getByText('Your profile is incomplete')).toBeInTheDocument();
-    expect(screen.getByText('0% complete')).toBeInTheDocument();
-  });
-
-  it('hides the incomplete banner when the profile is fully complete', () => {
-    renderContent({ me: FULL_ME, showPodPlans: false, onNavigate: vi.fn() });
-    expect(screen.queryByText('Your profile is incomplete')).not.toBeInTheDocument();
-  });
-
-  it('handles a null me without crashing (defaults to empty completion)', () => {
-    renderContent({ me: null, showPodPlans: false, onNavigate: vi.fn() });
+  it('handles a null me without crashing (0% complete)', () => {
+    renderContent({ me: null });
     expect(screen.getByText('User')).toBeInTheDocument();
-    expect(screen.getByText('0% complete')).toBeInTheDocument();
+    expect(screen.getByText('Your profile is 0% complete')).toBeInTheDocument();
+  });
+});
+
+describe('UserModeContent — Quick Access', () => {
+  beforeEach(() => {
+    mockBranding.mockReturnValue({ venuesCardVideoUrl: '' });
+    localStorage.clear();
   });
 
-  it('shows the Pod Plans row only when showPodPlans is true', () => {
-    const { rerender } = renderContent({ me: FULL_ME, showPodPlans: false, onNavigate: vi.fn() });
-    expect(screen.queryByText('Pod Plans')).not.toBeInTheDocument();
+  it('draws the six default tiles under the Quick Access heading, each opening its page', () => {
+    const onNavigate = vi.fn();
+    renderContent({ onNavigate });
+    expect(screen.getByRole('heading', { name: 'Quick Access' })).toBeInTheDocument();
+    expect(gridOrder()).toEqual(['chats', 'following', 'pod-history', 'earn', 'ideas', 'support']);
+    fireEvent.click(screen.getByRole('button', { name: 'Pod History' }));
+    expect(onNavigate).toHaveBeenLastCalledWith('/pod-history');
+    fireEvent.click(screen.getByTestId('sidebar-grid-following'));
+    expect(onNavigate).toHaveBeenLastCalledWith('/follow');
+    fireEvent.click(screen.getByRole('button', { name: 'Help & Support' }));
+    expect(onNavigate).toHaveBeenLastCalledWith('/support');
+  });
 
-    rerender(
-      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
-        <UserModeContent me={FULL_ME} roles={[]} mode="USER" showPodPlans onNavigate={vi.fn()} />
-      </MockedProvider>,
-    );
-    expect(screen.getByText('Pod Plans')).toBeInTheDocument();
+  it('shows a count only for a tile given one above zero, described in words', () => {
+    renderContent({ badgeCounts: { chats: 3, following: 0 } });
+    expect(screen.getAllByTestId('sidebar-grid-badge')).toHaveLength(1);
+    expect(screen.getByTestId('sidebar-grid-badge')).toHaveTextContent('3');
+    expect(screen.getByRole('button', { name: 'Chats' })).toHaveAccessibleDescription('3 unread');
+  });
+
+  it('restores the grid this browser kept, and ignores a corrupt value', () => {
+    localStorage.setItem(QUICK_ACCESS_STORAGE_KEY, JSON.stringify(['faqs', 'saved', 'chats', 'gigs', 'badges', 'referral']));
+    const { unmount } = renderContent();
+    expect(gridOrder()).toEqual(['faqs', 'saved', 'chats', 'gigs', 'badges', 'referral']);
+    unmount();
+
+    localStorage.setItem(QUICK_ACCESS_STORAGE_KEY, '{oops');
+    renderContent();
+    expect(gridOrder()).toEqual(['chats', 'following', 'pod-history', 'earn', 'ideas', 'support']);
+  });
+
+  it('edits the grid: unpick, refuse five, pick, reorder, then save to this browser', async () => {
+    renderContent();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Quick Access' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Quick Access' });
+    expect(within(dialog).getByTestId('quick-access-count')).toHaveTextContent('6 of 6 picked');
+    // Full: an unpicked destination cannot be added yet.
+    expect(within(dialog).getByTestId('quick-access-option-saved')).toBeDisabled();
+
+    fireEvent.click(within(dialog).getByTestId('quick-access-option-earn'));
+    expect(within(dialog).getByTestId('quick-access-count')).toHaveTextContent('5 of 6 picked');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(await within(dialog).findByTestId('quick-access-error')).toHaveTextContent('Pick exactly 6 shortcuts to save.');
+    expect(localStorage.getItem(QUICK_ACCESS_STORAGE_KEY)).toBeNull();
+
+    fireEvent.click(within(dialog).getByTestId('quick-access-option-saved'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Move Saved Items up' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    const expected = ['chats', 'following', 'pod-history', 'ideas', 'saved', 'support'];
+    await waitFor(() => expect(localStorage.getItem(QUICK_ACCESS_STORAGE_KEY)).toBe(JSON.stringify(expected)));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(gridOrder()).toEqual(expected);
+  });
+
+  it('keeps the dialog open with the reason when the browser will not keep the pick', async () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    try {
+      renderContent();
+      fireEvent.click(screen.getByRole('button', { name: 'Edit Quick Access' }));
+      const dialog = await screen.findByRole('dialog');
+      fireEvent.click(within(dialog).getByTestId('quick-access-option-earn'));
+      fireEvent.click(within(dialog).getByTestId('quick-access-option-faqs'));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+      expect(await within(dialog).findByTestId('quick-access-save-failed')).toBeInTheDocument();
+      // The new grid still holds for this visit.
+      expect(gridOrder()).toContain('faqs');
+      expect(gridOrder()).not.toContain('earn');
+    } finally {
+      setItem.mockRestore();
+    }
+  });
+
+  it('offers a flag-gated destination in the editor only while its flag is on', async () => {
+    const { unmount } = renderContent({ flags: { products: false } });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Quick Access' }));
+    await screen.findByRole('dialog');
+    expect(screen.queryByTestId('quick-access-option-cart')).not.toBeInTheDocument();
+    unmount();
+
+    renderContent({ flags: { products: true } });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Quick Access' }));
+    expect(await screen.findByTestId('quick-access-option-cart')).toBeInTheDocument();
+  });
+});
+
+describe('UserModeContent — Studio and Duncit Coin cards', () => {
+  beforeEach(() => {
+    mockBranding.mockReturnValue({ venuesCardVideoUrl: '' });
+    localStorage.clear();
   });
 
   it('gives a partner ONE "Studio" entry in any mode, and a consumer none', () => {
     const onNavigate = vi.fn();
-    // No partner role — no Studio entry at all.
-    const { unmount } = renderContent({ me: FULL_ME, roles: [], showPodPlans: false, onNavigate });
+    const { rerender } = renderContent({ me: FULL_ME, onNavigate });
     expect(screen.queryByTestId('sidebar-studio-options')).not.toBeInTheDocument();
-    unmount();
 
     // A host still in User mode already has the entry: it opens the Studio on
     // the first role they hold.
-    const { rerender } = renderContent({ me: FULL_ME, roles: ['HOST'], showPodPlans: false, onNavigate });
+    rerender(content({ me: FULL_ME, roles: ['HOST'], onNavigate }));
     fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
     expect(onNavigate).toHaveBeenLastCalledWith('/host/options');
 
-    rerender(
-      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
-        <UserModeContent me={FULL_ME} roles={['HOST']} mode="HOST" showPodPlans={false} onNavigate={onNavigate} />
-      </MockedProvider>,
-    );
-    // The role's options live on the Studio page the one entry opens — and the
-    // entry no longer carries a role's name.
-    expect(screen.queryByText('Pod Requests')).not.toBeInTheDocument();
-    expect(screen.queryByText('Withdrawal')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Host Options' })).not.toBeInTheDocument();
+    rerender(content({ me: FULL_ME, roles: ['HOST'], mode: 'HOST', onNavigate }));
     const entry = screen.getByRole('button', { name: 'Studio' });
-    expect(entry).toHaveAccessibleDescription('Every option for your partner roles in one place');
-    fireEvent.click(entry);
-    expect(onNavigate).toHaveBeenLastCalledWith('/host/options');
+    expect(entry).toHaveAccessibleDescription('Everything for your partner roles in one place');
     fireEvent.keyDown(entry, { key: 'Enter' });
-    expect(onNavigate).toHaveBeenCalledTimes(3);
-  });
-
-  it('opens the Studio on the role in effect, and drops the entry once every role is gone', () => {
-    const onNavigate = vi.fn();
-    const venue = (roles: string[]) => (
-      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
-        <UserModeContent me={FULL_ME} roles={roles} mode="VENUE" showPodPlans={false} onNavigate={onNavigate} />
-      </MockedProvider>
-    );
-    // A host who is also a venue owner, switched into Venue: still one entry,
-    // and it opens the Venue options — not the first role in the list.
-    const { rerender } = render(venue(['HOST', 'VENUE_OWNER']));
-    expect(screen.getAllByTestId('sidebar-studio-options')).toHaveLength(1);
-    fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
-    expect(onNavigate).toHaveBeenCalledWith('/venues/options');
+    expect(onNavigate).toHaveBeenCalledTimes(2);
     // The coin card is a consumer reward — it stays out of a studio.
     expect(screen.queryByTestId('sidebar-duncit-coin')).not.toBeInTheDocument();
-    // The Venue role revoked: the entry falls back to the role still held.
-    rerender(venue(['HOST']));
+  });
+
+  it('offers a brand manager the Studio only while products are on, and drops it once roles are gone', () => {
+    const onNavigate = vi.fn();
+    const { rerender } = renderContent({ me: FULL_ME, roles: ['ECOMM_MANAGER'], flags: { products: false }, onNavigate });
+    expect(screen.queryByTestId('sidebar-studio-options')).not.toBeInTheDocument();
+    rerender(content({ me: FULL_ME, roles: ['ECOMM_MANAGER'], flags: { products: true }, onNavigate }));
     fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
-    expect(onNavigate).toHaveBeenLastCalledWith('/host/options');
-    rerender(venue([]));
+    expect(onNavigate).toHaveBeenCalledWith('/products/options');
+    rerender(content({ me: FULL_ME, roles: [], flags: { products: true }, onNavigate }));
     expect(screen.queryByTestId('sidebar-studio-options')).not.toBeInTheDocument();
   });
 
-  it('navigates to /profile when the identity row is clicked', () => {
+  it('shows the Duncit Coin card in User mode, opening the ledger', () => {
     const onNavigate = vi.fn();
-    renderContent({ me: FULL_ME, showPodPlans: false, onNavigate });
-    fireEvent.click(screen.getByRole('button', { name: 'Open your profile' }));
-    expect(onNavigate).toHaveBeenCalledWith('/profile');
-  });
-
-  it('navigates to /account when the Complete button is clicked', () => {
-    const onNavigate = vi.fn();
-    renderContent({ me: {}, showPodPlans: false, onNavigate });
-    fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
-    expect(onNavigate).toHaveBeenCalledWith('/account');
-  });
-
-  it('navigates from quick action, referral and manage rows', async () => {
-    const onNavigate = vi.fn();
-    renderContent({ me: FULL_ME, showPodPlans: false, onNavigate });
-    await screen.findByText('Pod Shop');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Pod History' }));
-    expect(onNavigate).toHaveBeenCalledWith('/pod-history');
-
-    fireEvent.click(screen.getByTestId('sidebar-grid-chats'));
-    expect(onNavigate).toHaveBeenCalledWith('/chats');
-
-    fireEvent.click(screen.getByTestId('sidebar-grid-following'));
-    expect(onNavigate).toHaveBeenCalledWith('/follow');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Refer & Earn' }));
-    expect(onNavigate).toHaveBeenCalledWith('/referral');
-
-    fireEvent.click(screen.getByText('Pod Shop'));
-    expect(onNavigate).toHaveBeenCalledWith('/shop');
-
-    fireEvent.click(screen.getByText('Address Book'));
-    expect(onNavigate).toHaveBeenCalledWith('/address-book');
-  });
-
-  it('gives the orders placed from venue menus their own Food section, opening Your Food Orders', () => {
-    const onNavigate = vi.fn();
-    renderContent({ me: FULL_ME, showPodPlans: false, onNavigate, showProducts: false });
-    expect(screen.getByText('Food')).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('sidebar-item-Your Food Orders'));
-    expect(onNavigate).toHaveBeenCalledWith('/food-orders');
-  });
-
-  it('adds the Leaderboard, Membership and Gift Cards sections only when their server flags are on', () => {
-    const onNavigate = vi.fn();
-    const drawer = (on: boolean) => (
-      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
-        <UserModeContent
-          me={FULL_ME}
-          roles={[]}
-          mode="USER"
-          showPodPlans={false}
-          showLeaderboard={on}
-          showMembership={on}
-          showGiftCards={on}
-          onNavigate={onNavigate}
-        />
-      </MockedProvider>
-    );
-    const { rerender } = render(drawer(false));
-    expect(screen.queryByText('Leaderboard')).not.toBeInTheDocument();
-    expect(screen.queryByText('Membership')).not.toBeInTheDocument();
-    expect(screen.queryByText('Gift Cards')).not.toBeInTheDocument();
-
-    rerender(drawer(true));
-    expect(screen.getByText('Leaderboard')).toBeInTheDocument();
-    expect(screen.getByText('Membership')).toBeInTheDocument();
-    expect(screen.getByText('Gift Cards')).toBeInTheDocument();
-    expect(screen.getByTestId('sidebar-item-See the plans')).toHaveTextContent('Coming soon');
-
-    fireEvent.click(screen.getByTestId('sidebar-item-View Rankings'));
-    expect(onNavigate).toHaveBeenLastCalledWith('/leaderboard');
-    fireEvent.click(screen.getByTestId('sidebar-item-See the plans'));
-    expect(onNavigate).toHaveBeenLastCalledWith('/membership');
-    fireEvent.click(screen.getByTestId('sidebar-item-Buy a gift card'));
-    expect(onNavigate).toHaveBeenLastCalledWith('/gift-cards');
-    fireEvent.click(screen.getByTestId('sidebar-item-Redeem a gift card'));
-    expect(onNavigate).toHaveBeenLastCalledWith('/gift-cards/redeem');
+    renderContent({ me: FULL_ME, onNavigate });
+    fireEvent.click(screen.getByRole('button', { name: 'Duncit Coin' }));
+    expect(onNavigate).toHaveBeenCalledWith('/duncit-coin');
   });
 });

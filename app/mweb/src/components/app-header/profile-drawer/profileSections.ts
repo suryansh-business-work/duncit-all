@@ -1,9 +1,18 @@
+import {
+  GIG_JOBS_PATH,
+  MY_FOOD_ORDERS_PATH,
+  MY_RENTED_ITEMS_PATH,
+  PROFILE_MENU_ITEMS,
+  type ProfileMenuKey,
+  type ProfileMenuSectionId,
+} from '@duncit/utils';
 
 /**
- * Static configuration for the consumer profile drawer's card layout. Labels +
- * routes are reusable UI config (not business data); every destination is an
- * existing Duncit route. The icon is a key resolved to an MUI icon in the view,
- * so this module stays pure and unit-testable.
+ * The mWeb half of the account menu's catalogue. WHAT the menu lists, its copy,
+ * its flags and its grouping are shared with the native app in `@duncit/utils`
+ * `profile-menu`; WHERE each destination goes and the icon it wears are this
+ * app's own. The icon is a key resolved to an MUI icon by `profileIcon`, so this
+ * module stays pure. Native twin: components/Sidebar/profileSections.ts.
  */
 export type ProfileIconKey =
   | 'chats'
@@ -52,88 +61,74 @@ export type ProfileIconKey =
   | 'returns'
   | 'warehouses'
   | 'menu'
-  | 'gigs';
+  | 'gigs'
+  | 'explore'
+  | 'shopping';
 
-export interface ProfileTile {
-  key: string;
+interface Destination {
+  to: string;
+  icon: ProfileIconKey;
+}
+
+export const MENU_DESTINATIONS: Readonly<Record<ProfileMenuKey, Destination>> = {
+  chats: { to: '/chats', icon: 'chats' },
+  following: { to: '/follow', icon: 'following' },
+  'pod-history': { to: '/pod-history', icon: 'bookings' },
+  earn: { to: '/earn', icon: 'earn' },
+  ideas: { to: '/pod-ideas', icon: 'ideas' },
+  support: { to: '/support', icon: 'support' },
+  help: { to: '/support', icon: 'support' },
+  faqs: { to: '/faqs', icon: 'faqs' },
+  leaderboard: { to: '/leaderboard', icon: 'leaderboard' },
+  badges: { to: '/badges', icon: 'badges' },
+  gigs: { to: GIG_JOBS_PATH, icon: 'gigs' },
+  referral: { to: '/referral', icon: 'referral' },
+  membership: { to: '/membership', icon: 'membership' },
+  shop: { to: '/shop', icon: 'shop' },
+  cart: { to: '/cart', icon: 'cart' },
+  'food-orders': { to: MY_FOOD_ORDERS_PATH, icon: 'menu' },
+  'gift-cards-buy': { to: '/gift-cards', icon: 'giftcards' },
+  'gift-cards-redeem': { to: '/gift-cards/redeem', icon: 'giftcardRedeem' },
+  orders: { to: '/orders', icon: 'orders' },
+  addresses: { to: '/address-book', icon: 'addresses' },
+  rentals: { to: MY_RENTED_ITEMS_PATH, icon: 'rentals' },
+  account: { to: '/account', icon: 'account' },
+  saved: { to: '/saved', icon: 'saved' },
+  contacts: { to: '/contacts', icon: 'contacts' },
+  verification: { to: '/verification', icon: 'verification' },
+  tour: { to: '/tour-guide', icon: 'tour' },
+  plans: { to: '/pod-plans', icon: 'plans' },
+};
+
+/** The rounded tile on each section card. */
+export const SECTION_ICONS: Readonly<Record<ProfileMenuSectionId, ProfileIconKey>> = {
+  explore: 'explore',
+  work: 'gigs',
+  shopping: 'shopping',
+  account: 'account',
+  support: 'support',
+};
+
+/** The Duncit Coin card's destination. Shown in User mode only. */
+export const COIN_DESTINATION: Destination = { to: '/duncit-coin', icon: 'coin' };
+
+/** One menu destination, translated and ready to draw. */
+export interface MenuEntry {
+  key: ProfileMenuKey;
   label: string;
-  caption: string;
   icon: ProfileIconKey;
   to: string;
-  /** Optional pill after the label (e.g. "Coming soon"). Already translated by
-   * the caller — this module holds no copy. */
+  /** A pill after the label (Membership's "Coming soon"). */
   badge?: string;
 }
 
-/** The quick-action grid's own four tiles. Chats and Following are prepended by
- * the view, which has the translator the two of them need — they came down from
- * the bottom bar, where their labels were already localized. */
-export const PROFILE_GRID: readonly ProfileTile[] = [
-  { key: 'pod-history', label: 'Pod History', caption: 'Your bookings & history', icon: 'bookings', to: '/pod-history' },
-  { key: 'support', label: 'Help & Support', caption: 'Get quick help', icon: 'support', to: '/support' },
-  { key: 'earn', label: 'Earn with Duncit', caption: 'Host, list or sell', icon: 'earn', to: '/earn' },
-  { key: 'ideas', label: 'Pod Ideas', caption: 'Get inspired', icon: 'ideas', to: '/pod-ideas' },
-];
-
-/** The full-width featured Duncit Coin card. Shown in User mode only — the
- * partner studios are earning surfaces, and the coin balance is a consumer
- * reward, so it stays out of them. */
-export const COIN_TILE: ProfileTile = {
-  key: 'duncit-coin',
-  label: 'Duncit Coin',
-  caption: '',
-  icon: 'coin',
-  to: '/duncit-coin',
-};
-
-/** The full-width featured referral card. */
-export const REFERRAL_TILE: ProfileTile = {
-  key: 'referral',
-  label: 'Refer & Earn',
-  caption: 'Refer your friends and earn now',
-  icon: 'referral',
-  to: '/referral',
-};
-
-/**
- * The "Manage Account" grouped list — the account destinations not in the grid.
- * E-commerce rows live in their own {@link SHOP_ITEMS} section. `showPodPlans`
- * gates the Pod Plans row, `showTourGuide` the Tour Guide row. `badgesLabel` and
- * `contactsLabel` arrive already translated — this module holds no copy for new
- * rows (rule 38).
- */
-export function buildManageItems(
-  showPodPlans: boolean,
-  showTourGuide: boolean,
-  badgesLabel: string,
-  contactsLabel: string
-): ProfileTile[] {
-  const items: ProfileTile[] = [
-    { key: 'account', label: 'Manage Account', caption: '', icon: 'account', to: '/account' },
-    { key: 'saved', label: 'Saved Items', caption: '', icon: 'saved', to: '/saved' },
-    { key: 'contacts', label: contactsLabel, caption: '', icon: 'contacts', to: '/contacts' },
-    { key: 'verification', label: 'Verification', caption: '', icon: 'verification', to: '/verification' },
-  ];
-  if (showTourGuide) {
-    items.push({ key: 'tour', label: 'Tour Guide', caption: '', icon: 'tour', to: '/tour-guide' });
-  }
-  if (showPodPlans) {
-    // Pod Plans always slots in just before FAQs.
-    items.push({ key: 'plans', label: 'Pod Plans', caption: '', icon: 'plans', to: '/pod-plans' });
-  }
-  // Badges sits directly under FAQs, and is the last row of the section.
-  items.push(
-    { key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' },
-    { key: 'badges', label: badgesLabel, caption: '', icon: 'badges', to: '/badges' }
-  );
-  return items;
+/** A destination's translated label and badge, with this app's path and icon. */
+export function menuEntry(key: ProfileMenuKey, t: (key: string) => string): MenuEntry {
+  const item = PROFILE_MENU_ITEMS[key];
+  return {
+    key,
+    label: t(item.labelKey),
+    badge: item.badgeKey ? t(item.badgeKey) : undefined,
+    ...MENU_DESTINATIONS[key],
+  };
 }
-
-/** The "Shop" grouped list — the e-commerce destinations, a section that sits
- * parallel to Manage Account. Static (no flag gating), so a plain const. */
-export const SHOP_ITEMS: readonly ProfileTile[] = [
-  { key: 'shop', label: 'Pod Shop', caption: '', icon: 'shop', to: '/shop' },
-  { key: 'orders', label: 'My Product Order History', caption: '', icon: 'orders', to: '/orders' },
-  { key: 'addresses', label: 'Address Book', caption: '', icon: 'addresses', to: '/address-book' },
-  { key: 'cart', label: 'Cart', caption: '', icon: 'cart', to: '/cart' },
-];

@@ -42,7 +42,7 @@ const lift = 'hover:-translate-y-1.5 hover:shadow-lift';
     href ? (
       <SmartLink href={href} label={title} class={`${card} ${lift}`}>
         <span class={`inline-flex h-12 w-12 items-center justify-center rounded-2xl text-lg ${tile}`} aria-hidden="true">
-          <i class={`fa-${iconSet} ${icon}`} />
+          <i class:list={[`fa-${iconSet}`, icon]} />
         </span>
         <span class="flex items-start justify-between gap-3">
           <span class="font-head text-xl font-extrabold tracking-tight text-ink">{title}</span>
@@ -54,7 +54,7 @@ const lift = 'hover:-translate-y-1.5 hover:shadow-lift';
     ) : (
       <div class={card}>
         <span class={`inline-flex h-12 w-12 items-center justify-center rounded-2xl text-lg ${tile}`} aria-hidden="true">
-          <i class={`fa-${iconSet} ${icon}`} />
+          <i class:list={[`fa-${iconSet}`, icon]} />
         </span>
         <h3 class="font-head text-xl font-extrabold tracking-tight text-ink">{title}</h3>
         {text && <p class="text-[0.95rem] leading-relaxed text-ink-soft">{text}</p>}

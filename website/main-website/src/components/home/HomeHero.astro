@@ -87,7 +87,7 @@ const proofIcons = [
         <span class="flex" aria-hidden="true">
           {proofIcons.map((item) => (
             <span class={`inline-flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-frame ${item.tint}`}>
-              <i class={`fa-solid ${item.icon} text-sm`} />
+              <i class:list={['fa-solid', item.icon, 'text-sm']} />
             </span>
           ))}
         </span>
@@ -104,7 +104,7 @@ const proofIcons = [
           style={`animation-delay:${card.delay}`}
         >
           <span class={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-white ${card.tint}`}>
-            <i class={`fa-solid ${card.icon}`} />
+            <i class:list={['fa-solid', card.icon]} />
           </span>
           <span>
             <b class="block font-head text-sm font-extrabold">{card.title}</b>

@@ -17,7 +17,7 @@ const copies = [0, 1];
         <span class="flex items-center gap-12">
           {items.map((item) => (
             <span class="inline-flex items-center gap-4">
-              <i class={`fa-solid ${item.icon} text-primary-dark`} />
+              <i class:list={['fa-solid', item.icon, 'text-primary-dark']} />
               {item.label}
             </span>
           ))}

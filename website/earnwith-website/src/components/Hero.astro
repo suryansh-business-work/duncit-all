@@ -63,7 +63,7 @@ const { hero, paths } = siteConfig;
           {
             paths.map((path) => (
               <span class="-ml-2.5 grid h-10 w-10 place-items-center rounded-full border-[3px] border-frame bg-primary-fill text-on-primary first:ml-0">
-                <i class={`fa-solid ${path.icon} text-sm`} />
+                <i class:list={['fa-solid', path.icon, 'text-sm']} />
               </span>
             ))
           }

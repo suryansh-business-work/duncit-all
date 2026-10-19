@@ -63,7 +63,7 @@ const photos = [
                 {photo.sticker ?? <i class="fa-solid fa-bolt text-xl" />}
               </span>
               <figcaption class="mt-3.5 flex items-center gap-1.5 font-head text-[0.95rem] font-bold text-on-accent">
-                <i class={`fa-solid ${photo.icon} text-sm`} aria-hidden="true" />
+                <i class:list={['fa-solid', photo.icon, 'text-sm']} aria-hidden="true" />
                 {photo.caption}
               </figcaption>
             </figure>

@@ -29,7 +29,7 @@ const chips = [
         {
           chips.map((chip) => (
             <li class="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2.5 font-head text-sm font-bold text-ink shadow-soft">
-              <i class={`fa-solid ${chip.icon} ${chip.tone}`} aria-hidden="true" />
+              <i class:list={['fa-solid', chip.icon, chip.tone]} aria-hidden="true" />
               {chip.label}
             </li>
           ))

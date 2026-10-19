@@ -73,7 +73,7 @@ const floatPlacement = [
         {
           landing.proof.map((item) => (
             <li class="inline-flex items-center gap-2">
-              <i class={`fa-solid ${item.icon} text-tertiary`} aria-hidden="true" />
+              <i class:list={['fa-solid', item.icon, 'text-tertiary']} aria-hidden="true" />
               {item.label}
             </li>
           ))
@@ -92,7 +92,7 @@ const floatPlacement = [
         landing.floats.map((card, index) => (
           <div class:list={['absolute flex max-w-[15rem] animate-bob items-center gap-3 rounded-2xl bg-surface p-3.5 text-ink shadow-2xl', floatPlacement[index]]}>
             <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-dark text-on-primary">
-              <i class={`fa-solid ${card.icon}`} aria-hidden="true" />
+              <i class:list={['fa-solid', card.icon]} aria-hidden="true" />
             </span>
             <span>
               <b class="block font-head text-sm font-extrabold">{card.title}</b>

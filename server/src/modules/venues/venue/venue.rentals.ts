@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import type { IVenueCategory } from './venue.model';
 
 /**
  * The venue's rented items: "does this venue rent things out", and the list —
@@ -29,6 +30,8 @@ export const VENUE_RENTAL_LIMITS = {
   perGuestMax: 20,
   /** The venue's own rental terms, as rich-text HTML. */
   termsMax: 20_000,
+  /** Super → Category → Sub rows one item may be offered under. */
+  categories: 20,
 } as const;
 
 export interface IVenueRentalItem {
@@ -47,6 +50,34 @@ export interface IVenueRentalItem {
   per_guest_limit: number;
   /** Off = hidden from guests and refused at checkout, without deleting it. */
   is_available: boolean;
+  /**
+   * The Super → Category → Sub rows the item is offered under. A pod sees the
+   * item only when its club's Super + Sub category is one of them, so a venue's
+   * badminton racket never shows on its book-club pods. An item with none is
+   * offered to no pod (`rentalItemFitsPod`).
+   */
+  categories: IVenueCategory[];
+}
+
+/** Turns one picked Super → Category → Sub row into the stored triple, or refuses it (the venue's own validator). */
+export type RentalCategoryResolver = (entry: unknown) => Promise<IVenueCategory>;
+
+/** A pod's category: its club's Super + Sub (pod.products `resolveClubCategory`). */
+export interface PodCategory {
+  super_category_id: string | null;
+  sub_category_id: string | null;
+}
+
+/**
+ * Whether a pod may offer the item: one of the item's rows names the pod's
+ * Super + Sub. Fails closed — a pod with no category, or an item with none,
+ * offers nothing — mirroring how Pod Shop products match a pod.
+ */
+export function rentalItemFitsPod(item: Pick<IVenueRentalItem, 'categories'>, pod: PodCategory | null): boolean {
+  if (!pod?.super_category_id || !pod.sub_category_id) return false;
+  return (item.categories ?? []).some(
+    (row) => String(row.super_category_id) === pod.super_category_id && String(row.sub_category_id) === pod.sub_category_id
+  );
 }
 
 export interface VenueRentalInput {
@@ -87,7 +118,37 @@ function itemImages(raw: unknown, name: string): string[] {
   return images;
 }
 
-function normalizeRentalItem(input: unknown, known: Map<string, Types.ObjectId>): IVenueRentalItem {
+/**
+ * The item's category rows. A client that sends none (an older app) keeps
+ * what the item had; one that sends a list must name at least one row, each
+ * checked against the category tree by the venue's own validator.
+ */
+async function itemCategories(
+  raw: unknown,
+  previous: IVenueCategory[],
+  name: string,
+  resolve: RentalCategoryResolver
+): Promise<IVenueCategory[]> {
+  if (!Array.isArray(raw)) return previous;
+  const seen = new Set<string>();
+  // First row per sub category wins: the same sub twice adds nothing.
+  const rows = raw.filter((row) => {
+    const sub = text((row as { sub_category_id?: unknown } | null)?.sub_category_id);
+    if (sub && seen.has(sub)) return false;
+    seen.add(sub);
+    return true;
+  });
+  if (rows.length === 0) bad(`Choose at least one category for "${name}"`);
+  if (rows.length > VENUE_RENTAL_LIMITS.categories) {
+    bad(`"${name}" can be offered under at most ${VENUE_RENTAL_LIMITS.categories} categories`);
+  }
+  return Promise.all(rows.map((row) => resolve(row)));
+}
+
+function normalizeRentalItem(
+  input: unknown,
+  known: Map<string, IVenueRentalItem>
+): Omit<IVenueRentalItem, 'categories'> {
   // Every field is read defensively; none is trusted.
   const raw = (input ?? {}) as Record<string, unknown>;
   const name = text(raw.name);
@@ -103,7 +164,7 @@ function normalizeRentalItem(input: unknown, known: Map<string, Types.ObjectId>)
   const perGuest = wholeIn(raw.per_guest_limit ?? 1, 1, VENUE_RENTAL_LIMITS.perGuestMax, 'per-guest limit', name);
   return {
     // An item the venue already lists keeps its id, so bookings keep pointing at it.
-    _id: known.get(text(raw.id)) ?? new Types.ObjectId(),
+    _id: known.get(text(raw.id))?._id ?? new Types.ObjectId(),
     name,
     description,
     images: itemImages(raw.images, name),
@@ -116,26 +177,48 @@ function normalizeRentalItem(input: unknown, known: Map<string, Types.ObjectId>)
   };
 }
 
-function normalizeRentalItems(items: unknown[], current: IVenueRentalItem[]): IVenueRentalItem[] {
+async function normalizeRentalItems(
+  items: unknown[],
+  current: IVenueRentalItem[],
+  resolve: RentalCategoryResolver
+): Promise<IVenueRentalItem[]> {
   if (items.length > VENUE_RENTAL_LIMITS.items) bad(`A venue can list at most ${VENUE_RENTAL_LIMITS.items} rented items`);
-  const known = new Map(current.map((item) => [item._id.toHexString(), item._id]));
+  const known = new Map(current.map((item) => [item._id.toHexString(), item]));
   const list = items.map((item) => normalizeRentalItem(item, known));
   if (new Set(list.map((item) => item._id.toHexString())).size !== list.length) {
     bad('The same rented item was sent twice');
   }
-  return list;
+  return Promise.all(
+    list.map(async (item, index) => ({
+      ...item,
+      categories: await itemCategories(
+        (items[index] as { categories?: unknown } | null)?.categories,
+        known.get(item._id.toHexString())?.categories ?? [],
+        item.name,
+        resolve
+      ),
+    }))
+  );
 }
 
 /**
  * The rental fields to write, or `{}` when the input carried none — an older
  * client (or a console that does not edit rentals) leaves the list alone. A
  * venue that switches rentals off keeps its list for when it switches back.
+ * `resolveCategory` is the venue's category validator, passed in so this file
+ * stays free of the models.
  */
-export function buildVenueRentalPatch(input: VenueRentalInput, state: VenueRentalState) {
+export async function buildVenueRentalPatch(
+  input: VenueRentalInput,
+  state: VenueRentalState,
+  resolveCategory: RentalCategoryResolver
+) {
   if (VENUE_RENTAL_INPUT_KEYS.every((key) => input[key] === undefined || input[key] === null)) return {};
   const offers = typeof input.offers_rentals === 'boolean' ? input.offers_rentals : state.offers_rentals === true;
   const current = state.rental_items ?? [];
-  const items = Array.isArray(input.rental_items) ? normalizeRentalItems(input.rental_items, current) : current;
+  const items = Array.isArray(input.rental_items)
+    ? await normalizeRentalItems(input.rental_items, current, resolveCategory)
+    : current;
   const patch: { offers_rentals: boolean; rental_items: IVenueRentalItem[]; rental_terms_html?: string } = {
     offers_rentals: offers,
     rental_items: items,
@@ -161,6 +244,14 @@ export const toRentalItemPub = (item: IVenueRentalItem) => ({
   stock: item.stock,
   per_guest_limit: item.per_guest_limit ?? 1,
   is_available: item.is_available !== false,
+  categories: (item.categories ?? []).map((row) => ({
+    super_category_id: row.super_category_id ? String(row.super_category_id) : null,
+    category_id: row.category_id ? String(row.category_id) : null,
+    sub_category_id: row.sub_category_id ? String(row.sub_category_id) : null,
+    super_category_name: row.super_category_name ?? '',
+    category_name: row.category_name ?? '',
+    sub_category_name: row.sub_category_name ?? '',
+  })),
 });
 
 export const toVenueRentalPub = (venue: VenueRentalState) => ({
@@ -189,4 +280,5 @@ export const venueRentalConfig = () => ({
   rental_stock_max: VENUE_RENTAL_LIMITS.stockMax,
   rental_per_guest_max: VENUE_RENTAL_LIMITS.perGuestMax,
   rental_terms_max: VENUE_RENTAL_LIMITS.termsMax,
+  rental_category_limit: VENUE_RENTAL_LIMITS.categories,
 });

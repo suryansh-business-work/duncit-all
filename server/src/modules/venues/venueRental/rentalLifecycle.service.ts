@@ -49,6 +49,7 @@ async function close(
         damage_note: (extra.note ?? '').trim().slice(0, NOTE_MAX),
         refund_due: money.refund_due,
         refund_status: money.refund_due > 0 ? 'DUE' : 'NONE',
+        deposit_at_venue: money.deposit_at_venue,
         commission_pct: settings.commission_pct,
         commission_amount: money.commission_amount,
         venue_amount: money.venue_amount,
@@ -90,6 +91,7 @@ async function markByVenue(
     outcome: input.outcome,
     damage_claim: closed.damage_claim,
     refund_due: closed.refund_due,
+    deposit_at_venue: closed.deposit_at_venue,
     venue_amount: closed.venue_amount,
   });
   return closed;
@@ -143,8 +145,8 @@ async function restoreForPayments(paymentDocIds: readonly unknown[]): Promise<nu
 
 /**
  * Close every rental the venue never marked once its pod ended long enough
- * ago: the deposit goes back (or to the venue, when deposits are not
- * refundable) as if the item came back. Returns how many it closed.
+ * ago, as if the item came back: its deposit was settled at the venue, so it
+ * rides the venue's payout. Returns how many it closed.
  */
 async function runDepositAutoRelease(now = Date.now()): Promise<number> {
   const settings = await rentalSettingsService.get();

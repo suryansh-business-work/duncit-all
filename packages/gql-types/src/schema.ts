@@ -21837,6 +21837,8 @@ export type Payment = {
   platform_fee_pct: Scalars['Float']['output'];
   pod?: Maybe<Pod>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** The rented items this pod payment carried, as checkout froze them (empty when none). */
+  rental_lines: Array<PaymentRentalLine>;
   /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
   round_off: Scalars['Float']['output'];
   status: PaymentStatus;
@@ -22096,6 +22098,22 @@ export type PaymentReleaseStatus =
   | 'APPROVED'
   | 'PENDING'
   | 'REJECTED';
+
+/** One rented item on a pod payment, frozen at checkout: collected at the venue, its deposit settled there. */
+export type PaymentRentalLine = {
+  __typename?: 'PaymentRentalLine';
+  /** Refundable deposit for every unit of the line, handed back at the venue. */
+  deposit: Scalars['Float']['output'];
+  image_url: Scalars['String']['output'];
+  item_id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  rate: Scalars['Float']['output'];
+  rent: Scalars['Float']['output'];
+  unit: VenueRentalUnit;
+  /** 1 for a SLOT item, the pod's hours for an HOUR item. */
+  units: Scalars['Int']['output'];
+};
 
 /** One payment whose bill was rounded up to a whole rupee (Finance › Round Offs). */
 export type PaymentRoundOff = {
@@ -32408,6 +32426,8 @@ export type RentalBooking = {
   damage_claim: Scalars['Float']['output'];
   damage_note: Scalars['String']['output'];
   deposit_amount: Scalars['Float']['output'];
+  /** The deposit the venue hands the guest in cash at the venue when the item comes back. */
+  deposit_at_venue: Scalars['Float']['output'];
   guest_name: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image_url: Scalars['String']['output'];
@@ -32419,7 +32439,7 @@ export type RentalBooking = {
   pod_title: Scalars['String']['output'];
   quantity: Scalars['Int']['output'];
   rate: Scalars['Int']['output'];
-  /** Money owed back to the guest once the booking closed. */
+  /** Money Duncit owes back to the guest once the booking closed (never a deposit settled at the venue). */
   refund_due: Scalars['Float']['output'];
   refund_ref: Scalars['String']['output'];
   /** NONE, DUE, PAID, or IN_PAYMENT (returned with the payment's cancellation refund). */
@@ -32433,7 +32453,7 @@ export type RentalBooking = {
   unit: VenueRentalUnit;
   /** 1 for a SLOT item, the pod's hours for an HOUR item. */
   units: Scalars['Int']['output'];
-  /** What the venue earns from this booking: rent less commission, plus any deposit it kept. */
+  /** What Duncit pays the venue for this booking: rent less commission, plus the deposit it settled at the venue. */
   venue_amount: Scalars['Float']['output'];
   venue_id: Scalars['ID']['output'];
 };
@@ -32458,9 +32478,9 @@ export type RentalSettings = {
   booking_cutoff_hours: Scalars['Int']['output'];
   /** Duncit's commission on rent (never on the deposit), percent. */
   commission_pct: Scalars['Float']['output'];
-  /** An unmarked deposit is refunded automatically this many days after the pod ends. */
+  /** An unmarked rental is closed as returned automatically this many days after the pod ends. */
   deposit_auto_release_days: Scalars['Int']['output'];
-  /** Whether a deposit comes back once the venue marks the item returned. */
+  /** Whether the venue hands the deposit back at the venue once the item comes back. Either way Duncit pays the deposit to the venue. */
   deposit_refundable: Scalars['Boolean']['output'];
   /** Off hides Pod Rent everywhere and refuses new rentals. */
   enabled: Scalars['Boolean']['output'];
@@ -40885,6 +40905,8 @@ export type VenueRegistrationConfig = {
   gstin_doc_type: Scalars['String']['output'];
   /** The doc_types entry uploaded beside a PAN, not from the general list. */
   pan_doc_type: Scalars['String']['output'];
+  /** Category rows one rented item may be offered under. */
+  rental_category_limit: Scalars['Int']['output'];
   rental_deposit_max: Scalars['Int']['output'];
   rental_image_limit: Scalars['Int']['output'];
   rental_item_limit: Scalars['Int']['output'];
@@ -40909,6 +40931,8 @@ export type VenueRentalDepositGst = {
 /** One item a venue rents out to pod guests (a racket, court shoes). */
 export type VenueRentalItem = {
   __typename?: 'VenueRentalItem';
+  /** The Super → Category → Sub rows the item is offered under: a pod shows it only when its club's category is one of them. */
+  categories: Array<VenueCategory>;
   /** Refundable deposit per unit, rupees. 0 = none. */
   deposit: Scalars['Int']['output'];
   description: Scalars['String']['output'];
@@ -40925,6 +40949,8 @@ export type VenueRentalItem = {
 };
 
 export type VenueRentalItemInput = {
+  /** At least one row when sent. Omitted (an older client) keeps the item's categories. */
+  categories?: InputMaybe<Array<VenueCategoryInput>>;
   deposit?: InputMaybe<Scalars['Int']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   /** An existing item's id keeps it (and its bookings); omitted = a new item. */

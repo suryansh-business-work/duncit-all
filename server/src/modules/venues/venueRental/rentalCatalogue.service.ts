@@ -9,6 +9,8 @@ import { podRentalHours } from './rentalCheckout';
 import { podLifecycleFilter } from '@modules/pods/pod/pod.lifecycle';
 import { POD_VISIBLE_FILTER } from '@utils/hidden';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
+import { resolveClubCategory } from '@modules/pods/pod/pod.products';
+import { rentalItemFitsPod } from '@modules/venues/venue/venue.rentals';
 
 /**
  * The guest-facing reads: what a pod's venue rents out right now, and the
@@ -44,15 +46,18 @@ const emptyCatalogue = async () => ({
 
 async function podCatalogue(podId: string) {
   if (!Types.ObjectId.isValid(podId)) return emptyCatalogue();
-  const pod = await PodModel.findById(podId).select('venue_id pod_mode pod_date_time pod_end_date_time').lean();
+  const pod = await PodModel.findById(podId).select('club_id venue_id pod_mode pod_date_time pod_end_date_time').lean();
   if (!pod) return emptyCatalogue();
-  const [settings, finance, venue] = await Promise.all([
+  const [settings, finance, venue, podCategory] = await Promise.all([
     rentalSettingsService.get(),
     getFinanceSettings(),
     pod.venue_id ? VenueModel.findById(pod.venue_id).select('offers_rentals rental_items rental_terms_html').lean() : null,
+    resolveClubCategory(pod.club_id),
   ]);
-  const reason = closedReason(pod, settings, venue?.offers_rentals === true);
-  const listed = reason === 'NO_VENUE' ? [] : (venue?.rental_items ?? []).filter((i) => i.is_available !== false);
+  // Only the items the venue offers under this pod's category: a racket never shows on a book club.
+  const offered = (venue?.rental_items ?? []).filter((i) => i.is_available !== false && rentalItemFitsPod(i, podCategory));
+  const reason = closedReason(pod, settings, venue?.offers_rentals === true && offered.length > 0);
+  const listed = reason === 'NO_VENUE' ? [] : offered;
   const stock = await RentalStockModel.find({ pod_id: pod._id, item_id: { $in: listed.map((i) => i._id) } })
     .select('item_id booked')
     .lean();
@@ -119,12 +124,27 @@ async function rentablePods(limit?: number | null) {
     .lean();
   // The pod link is /club/<club public id>/pod/<pod public id>: one read for every club.
   const { ClubModel } = await import('@modules/clubs/club/club.model');
-  const clubs = await ClubModel.find({ _id: { $in: pods.map((p) => p.club_id) } }).select('club_id').lean();
+  const clubs = await ClubModel.find({ _id: { $in: pods.map((p) => p.club_id) } })
+    .select('club_id super_category_id category_id')
+    .lean();
   const clubSlug = new Map(clubs.map((c) => [String(c._id), c.club_id]));
+  // A club stores its Sub in `category_id` (pod.products `resolveClubCategory`).
+  const clubCategory = new Map(
+    clubs.map((c) => [
+      String(c._id),
+      {
+        super_category_id: c.super_category_id ? String(c.super_category_id) : null,
+        sub_category_id: c.category_id ? String(c.category_id) : null,
+      },
+    ])
+  );
   const { currency_symbol } = await getFinanceSettings();
-  return pods.map((pod) => {
+  const rows = pods.map((pod) => {
     const venue = byVenue.get(String(pod.venue_id));
-    const items = (venue?.rental_items ?? []).filter((item) => item.is_available !== false);
+    const category = clubCategory.get(String(pod.club_id)) ?? null;
+    const items = (venue?.rental_items ?? []).filter(
+      (item) => item.is_available !== false && rentalItemFitsPod(item, category)
+    );
     return {
       id: String(pod._id),
       pod_id: pod.pod_id,
@@ -138,6 +158,8 @@ async function rentablePods(limit?: number | null) {
       currency_symbol,
     };
   });
+  // A pod whose venue offers nothing under its category has nothing to rent.
+  return rows.filter((row) => row.item_count > 0);
 }
 
 export const rentalCatalogueService = { podCatalogue, myBookings, rentablePods };

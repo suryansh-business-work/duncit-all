@@ -34,6 +34,7 @@ import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { assertPodOpenForBooking } from '@utils/hidden';
 import { EMPTY_RENTALS, resolveRentalLines, type RentalResolution } from '@modules/venues/venueRental/rentalCheckout';
+import { paymentRentalLines } from '@modules/venues/venueRental/rentalLines';
 import {
   isFeatureEnabled,
   PRODUCT_VISIBILITY_FLAG,
@@ -96,6 +97,8 @@ export const toPub = (p: IPayment) => ({
   finalize_state: p.finalize_state ?? 'NOT_STARTED',
   needs_refund: p.needs_refund === true,
   coins_earned: p.coins_earned ?? 0,
+  // Frozen at checkout, so a later rate change cannot rewrite what was rented.
+  rental_lines: paymentRentalLines(p.metadata),
   created_at: p.created_at.toISOString(),
   updated_at: p.updated_at.toISOString(),
 });

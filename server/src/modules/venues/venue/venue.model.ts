@@ -326,6 +326,7 @@ const venueRentalItemSchema = new Schema<IVenueRentalItem>({
   stock: { type: Number, required: true, min: 1, max: VENUE_RENTAL_LIMITS.stockMax },
   per_guest_limit: { type: Number, default: 1, min: 1, max: VENUE_RENTAL_LIMITS.perGuestMax },
   is_available: { type: Boolean, default: true },
+  categories: { type: [venueCategorySchema], default: [] },
 });
 
 const venueFoodLicencesSchema = new Schema<IVenueFoodLicences>(

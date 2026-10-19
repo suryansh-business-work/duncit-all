@@ -1,8 +1,9 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { VenueModel } from '@modules/venues/venue/venue.model';
-import type { IVenueRentalItem } from '@modules/venues/venue/venue.rentals';
+import { rentalItemFitsPod, type IVenueRentalItem } from '@modules/venues/venue/venue.rentals';
 import { podLiveEnd } from '@modules/pods/pod/pod.lifecycle';
+import { resolveClubCategory } from '@modules/pods/pod/pod.products';
 import { rentalSettingsService } from './rentalSettings.service';
 import { RentalStockModel } from './rentalStock.model';
 import type { RentalLine } from './rentalLines';
@@ -25,6 +26,8 @@ export interface RentalSelection {
 
 export interface RentalPod {
   _id: Types.ObjectId | string;
+  /** Its club's Super + Sub is the pod's category: only items offered under it can be rented. */
+  club_id?: Types.ObjectId | string | null;
   venue_id?: Types.ObjectId | string | null;
   pod_mode?: string | null;
   pod_date_time?: Date | string | null;
@@ -127,7 +130,10 @@ export async function resolveRentalLines(
   if (selections.length === 0) return EMPTY_RENTALS;
   const picks = normalizeSelections(selections);
   await assertRentingOpen(pod);
-  const venue = await VenueModel.findById(pod.venue_id).select('offers_rentals rental_items rental_deposit_gst').lean();
+  const [venue, podCategory] = await Promise.all([
+    VenueModel.findById(pod.venue_id).select('offers_rentals rental_items rental_deposit_gst').lean(),
+    resolveClubCategory(pod.club_id),
+  ]);
   if (!venue?.offers_rentals) bad('This venue does not rent items');
   const items = new Map((venue?.rental_items ?? []).map((item) => [item._id.toHexString(), item]));
   const booked = await bookedFor(
@@ -138,6 +144,8 @@ export async function resolveRentalLines(
   const lines = picks.map(({ itemId, quantity }) => {
     const item = items.get(itemId);
     if (!item || item.is_available === false) return bad('That rented item is no longer available');
+    // Refused, not just hidden: the catalogue never offers it, so no client may send it.
+    if (!rentalItemFitsPod(item, podCategory)) bad(`"${item.name}" is not offered for this pod`);
     const cap = (item.per_guest_limit ?? 1) * Math.max(1, seats);
     if (quantity > cap) bad(`You can rent up to ${cap} of "${item.name}" for this booking`);
     const left = Math.max(0, item.stock - (booked.get(itemId) ?? 0));

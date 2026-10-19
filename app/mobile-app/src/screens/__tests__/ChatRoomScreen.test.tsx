@@ -16,10 +16,10 @@ jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: jest.fn(),
 }));
 
-const mockGoBack = jest.fn();
+const mockPopTo = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack, navigate: mockNavigate }),
+  useNavigation: () => ({ popTo: mockPopTo, navigate: mockNavigate }),
   useRoute: () => ({ params: { podId: 'p1', title: 'Coffee Chat' } }),
 }));
 
@@ -84,7 +84,7 @@ function mount(over: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
-  mockGoBack.mockClear();
+  mockPopTo.mockClear();
   mockNavigate.mockClear();
   reqPerm.mockReset();
   launch.mockReset();
@@ -104,12 +104,12 @@ describe('ChatRoomScreen', () => {
     expect(screen.getByTestId('chat-room-empty')).toBeOnTheScreen();
   });
 
-  it('renders messages and navigates back', () => {
+  it('renders messages and navigates back to the pod details', () => {
     mount({ messages: [message('m1', 'me1'), message('m2', 'u2')] });
     expect(screen.getByTestId('chat-message-m1')).toBeOnTheScreen();
     expect(screen.getByTestId('chat-message-m2')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('chat-room-back'));
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockPopTo).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Coffee Chat' });
   });
 
   it('dismisses the error banner', () => {

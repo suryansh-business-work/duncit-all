@@ -138,10 +138,17 @@ describe('ChatRoomPage', () => {
     expect(screen.getByText('2 participants')).toBeInTheDocument();
   });
 
-  it('navigates back to the chats list from the header', async () => {
+  it('navigates back to the pod details from the header', async () => {
     renderPage();
     await screen.findByText('hello other');
     // The back IconButton is the first button in the header.
+    fireEvent.click(screen.getAllByRole('button')[0]);
+    expect(mockNavigate).toHaveBeenCalledWith('/club/club1/pod/podX');
+  });
+
+  it('falls back to the chats list when the pod link is unknown', async () => {
+    renderPage([], { ...podActive, club_slug: null } as any);
+    await screen.findByText('hello other');
     fireEvent.click(screen.getAllByRole('button')[0]);
     expect(mockNavigate).toHaveBeenCalledWith('/chats');
   });

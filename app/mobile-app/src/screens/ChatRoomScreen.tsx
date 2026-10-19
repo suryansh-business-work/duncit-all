@@ -8,7 +8,6 @@ import { YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
-import { useGoBack } from '@/hooks/useGoBack';
 import { ChatClosedNotice } from '@/components/chat/ChatClosedNotice';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatErrorBanner } from '@/components/chat/ChatErrorBanner';
@@ -36,7 +35,6 @@ type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
  * ChatRoomPage. */
 export function ChatRoomScreen() {
   const { t } = useTranslation();
-  const goBack = useGoBack();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { podId, clubId, title } = useRoute<RouteProp<RootStackParamList, 'ChatRoom'>>().params;
   const isClub = !!clubId;
@@ -52,7 +50,13 @@ export function ChatRoomScreen() {
       navigation.navigate('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
     else navigation.navigate('PodDetails', { podId: roomId, title });
   };
-  const openProfile = (userId: string) => navigation.navigate('PublicProfile', { userId });
+  // Back lands on the room's pod or club: popTo returns to it when it is already
+  // in the stack, otherwise it replaces this chat with it.
+  const goBack = () => {
+    if (isClub) navigation.popTo('ClubDetails', { clubId: roomId, title: room.roomTitle ?? title });
+    else navigation.popTo('PodDetails', { podId: roomId, title });
+  };
+  const openProfile =(userId: string) => navigation.navigate('PublicProfile', { userId });
 
   const [text, setText] = useState('');
   const [emojiFor, setEmojiFor] = useState<EmojiTarget>(null);

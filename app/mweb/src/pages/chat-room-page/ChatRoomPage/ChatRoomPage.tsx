@@ -48,11 +48,12 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
   const podEnded = isPod && (room.closed || (pod ? !isPodActive(pod.pod_date_time, pod.pod_end_date_time) : false));
   const people = peopleData?.chatParticipants;
 
-  const openLinked = () => {
-    if (isPod && pod?.club_slug && pod?.pod_id) navigate(podUrl(pod.club_slug, pod.pod_id));
-    else if (!isPod && room.clubSlug) navigate(clubUrl(room.clubSlug));
-    else setError(t('mweb.chatRoom.podDetailsAreUnavailableForThis'));
-  };
+  const podLink = pod?.club_slug && pod?.pod_id ? podUrl(pod.club_slug, pod.pod_id) : null;
+  const linked = isPod ? podLink : room.clubSlug && clubUrl(room.clubSlug);
+  const openLinked = () =>
+    linked ? navigate(linked) : setError(t('mweb.chatRoom.podDetailsAreUnavailableForThis'));
+  // Back lands on the room's pod or club; the chats list only when that link is unknown.
+  const goBack = () => navigate(linked || (isPod ? '/chats' : '/chats?selectedtab_chats=CLUBS'));
   const messages = useMemo(() => {
     const merged = [...room.messages];
     const ids = new Set(room.messages.map((m) => m.id));
@@ -123,7 +124,7 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
       <ChatRoomHeader
         title={room.title}
         messageCount={messages.length}
-        onBack={() => navigate(isPod ? '/chats' : '/chats?selectedtab_chats=CLUBS')}
+        onBack={goBack}
         onOpenPod={openLinked}
       />
 

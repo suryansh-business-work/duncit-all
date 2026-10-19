@@ -94,6 +94,12 @@ describe('buildPodSeriesPlan', () => {
     expect(plan?.skip_dates).toEqual([]);
   });
 
+  it('sends a CUSTOM pod with no days picked yet as no extra dates, and still skips nothing', () => {
+    const plan = buildPodSeriesPlan({ ...physical, repeat_frequency: 'CUSTOM' }, 'UTC');
+    expect(plan?.custom_dates).toEqual([]);
+    expect(plan?.skip_dates).toEqual([]);
+  });
+
   it('sends no custom dates for a stepping frequency', () => {
     const plan = buildPodSeriesPlan({ ...physical, repeat_custom_days: ['2026-11-09'] }, 'UTC');
     expect(plan?.custom_dates).toEqual([]);

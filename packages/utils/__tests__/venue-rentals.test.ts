@@ -240,6 +240,21 @@ describe('the venue rental list', () => {
     expect(rentalCategoryLabels(legacy.items[0].categories)).toEqual([]);
   });
 
+  it('opens a stored row with null ids and names as blanks, and an item read before categories as one empty row', () => {
+    const blankRow = {
+      super_category_id: null,
+      category_id: null,
+      sub_category_id: null,
+      super_category_name: null as unknown as string,
+      category_name: null as unknown as string,
+      sub_category_name: null as unknown as string,
+    };
+    const [blank] = rentalItemsToValues({ ...stored, rental_items: [{ ...stored.rental_items[0], categories: [blankRow] }] }).items;
+    expect(blank.categories).toEqual([emptyRentalCategory()]);
+    const preCategories = { ...stored.rental_items[0], categories: undefined as unknown as [] };
+    expect(rentalItemsToValues({ ...stored, rental_items: [preCategories] }).items[0].categories).toEqual([emptyRentalCategory()]);
+  });
+
   it('opens the form on what is stored, without sharing the stored photo list', () => {
     const values = rentalItemsToValues(stored);
     expect(values.offers_rentals).toBe(true);

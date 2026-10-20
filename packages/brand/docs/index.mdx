@@ -143,8 +143,9 @@ at visit time on purpose — see their sections below — and `AppDownload`'s ph
 Given a `graphqlUrl`, `AppDownload` reads the public `appScreenshots` query once per
 build (or once per 10 minutes on the SSR CMS site) through
 `fetchAppScreenshots(graphqlUrl)` from `@duncit/brand/app-screenshots`. Those are the
-phone screenshots kept in Tech > Store Listing — Android's set, else the iPhone set — the
-images the stores already show. `AppPhone` plays them as a carousel:
+raw app screens kept in Tech > Store Listing > **Websites** — never the store sets, which
+are designed graphics that already draw a phone and a headline (a phone inside this
+phone). `AppPhone` plays them as a carousel:
 
 ```astro
 <AppPhone slides={['https://…/home.png', 'https://…/pod.png']} t={t} />

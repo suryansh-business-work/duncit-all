@@ -1,7 +1,8 @@
 /**
  * The app's real phone screenshots for the websites' app phone.
  *
- * They are the images kept in Tech > Store Listing (the ones the stores show),
+ * They are the raw app screens kept in Tech > Store Listing > Websites (never the
+ * store graphics, which already draw a phone of their own),
  * read through the public `appScreenshots` query. Its own query on purpose: a
  * site built against an API without the field loses only the slider, never the
  * branding beside it. Every failure answers an empty list, and the phone falls

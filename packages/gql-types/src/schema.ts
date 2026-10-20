@@ -26390,9 +26390,9 @@ export type Query = {
   appBuildsTable: AppBuildTablePage;
   appPopupsTable: AppPopupTablePage;
   /**
-   * The app's real phone screenshots from the store listing, for the websites'
-   * app phone. Public — the stores already show them. Android's phone set, or
-   * the iPhone set when Android has none; empty until either is filled.
+   * The raw app screens kept for the websites' app phone (Store Listing >
+   * Websites). Public — they are shown on the public sites. Never the store
+   * graphics, which already draw a phone of their own. Empty until filled.
    */
   appScreenshots: Array<Scalars['String']['output']>;
   appSettings: AppSettings;
@@ -36170,6 +36170,8 @@ export type StoreListing = {
   support_url: Scalars['String']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
   updated_by: Scalars['String']['output'];
+  /** Raw app screens the websites' app phone plays — never sent to a store. */
+  website_screenshots: Array<Scalars['String']['output']>;
   whats_new: Scalars['String']['output'];
 };
 
@@ -36201,6 +36203,7 @@ export type StoreListingInput = {
   short_description?: InputMaybe<Scalars['String']['input']>;
   subtitle?: InputMaybe<Scalars['String']['input']>;
   support_url?: InputMaybe<Scalars['String']['input']>;
+  website_screenshots?: InputMaybe<Array<Scalars['String']['input']>>;
   whats_new?: InputMaybe<Scalars['String']['input']>;
 };
 

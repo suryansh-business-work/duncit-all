@@ -52,6 +52,7 @@ const listing = (over: Record<string, unknown> = {}) => ({
   android_phone_screenshots: ['https://img.example.test/c.png', 'https://img.example.test/d.png'],
   android_tablet_7_screenshots: [],
   android_tablet_10_screenshots: [],
+  website_screenshots: [],
   android_feature_graphic: 'https://img.example.test/f.png',
   android_icon: 'https://img.example.test/i.png',
   updated_by: 'ops@example.test',

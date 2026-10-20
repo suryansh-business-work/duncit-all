@@ -30,6 +30,7 @@ const STORE_LISTING_FIELDS = gql`
     android_phone_screenshots
     android_tablet_7_screenshots
     android_tablet_10_screenshots
+    website_screenshots
     android_feature_graphic
     android_icon
     updated_by

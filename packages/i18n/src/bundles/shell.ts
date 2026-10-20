@@ -3233,6 +3233,10 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       androidFeatureGraphicHint: '1024×500 PNG or JPEG, no transparency. Required by Google Play.',
       androidIcon: 'App icon',
       androidIconHint: '512×512 PNG, 32-bit. Required by Google Play.',
+      sectionWebsites: 'Websites',
+      websiteScreenshots: 'Website app screens',
+      websiteScreenshotsHint:
+        'Up to 8 raw app screens (no frame, no headline) — the phone slider on every Duncit website plays them in this order. Never sent to a store.',
       upload: 'Upload',
       required: 'Required.',
       tooLong: 'At most {max} characters.',

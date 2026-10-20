@@ -1264,6 +1264,8 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         chatOneMessage: 'See you at 6! 🔥',
         chatTwo: 'Board game night',
         chatTwoMessage: 'Anyone bringing snacks?',
+        slideAlt: 'Duncit app screen {index} of {total}',
+        goToSlide: 'Show app screen {index} of {total}',
       },
       newsletter: {
         placeholder: 'you@example.com',

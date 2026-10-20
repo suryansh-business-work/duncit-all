@@ -96,6 +96,19 @@ export async function getStoreListing(): Promise<IStoreListing> {
   );
 }
 
+/**
+ * The app's real phone screenshots for the websites' app phone — the same
+ * images the stores already show the public. Android's phone set first, the
+ * iPhone set when Android has none. A read: it never creates the listing.
+ */
+export async function publicAppScreenshots(): Promise<string[]> {
+  const listing = await StoreListingModel.findOne({ singleton_key: 'store_listing' })
+    .select('android_phone_screenshots iphone_screenshots')
+    .lean<Pick<IStoreListing, 'android_phone_screenshots' | 'iphone_screenshots'>>();
+  const android = (listing?.android_phone_screenshots ?? []).filter(isHttpsUrl);
+  return android.length > 0 ? android : (listing?.iphone_screenshots ?? []).filter(isHttpsUrl);
+}
+
 function assertUrlList(field: string, values: unknown, max: number): string[] {
   if (!Array.isArray(values)) throw badInput(`${field} must be a list of image URLs.`);
   const urls = values.map((v) => String(v ?? '').trim()).filter(Boolean);

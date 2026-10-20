@@ -82,6 +82,12 @@ export const storeListingTypeDefs = gql`
     configured. Tech/Super admin only.
     """
     appStoreCategories: [String!]!
+    """
+    The app's real phone screenshots from the store listing, for the websites'
+    app phone. Public — the stores already show them. Android's phone set, or
+    the iPhone set when Android has none; empty until either is filled.
+    """
+    appScreenshots: [String!]!
   }
 
   extend type Mutation {

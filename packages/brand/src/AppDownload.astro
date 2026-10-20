@@ -11,6 +11,7 @@
  * one section on a light page that inverted the wrong way in dark mode.
  */
 import AppPhone from './AppPhone.astro';
+import { fetchAppScreenshots } from './app-screenshots';
 import { cmsBlockProps } from './cms-block';
 import { siteT, type SiteTranslate } from './site-i18n';
 
@@ -38,6 +39,12 @@ interface Props {
   soonLabel?: string;
   /** A real screenshot when there is one; the drawn app screen until then. */
   screenshot?: string | null;
+  /**
+   * The API to read the app's real screenshots from (Tech > Store Listing).
+   * Given, the phone plays them as a slider; without them it keeps `screenshot`
+   * or its drawn screen.
+   */
+  graphqlUrl?: string | null;
   id?: string;
   class?: string;
   t?: SiteTranslate;
@@ -52,11 +59,13 @@ const {
   stores,
   webUrl = null,
   screenshot = null,
+  graphqlUrl = null,
   id = 'download',
   class: className = '',
   t = siteT,
 } = Astro.props;
 const soonLabel = Astro.props.soonLabel || t('website.brand.appDownload.soon');
+const slides = await fetchAppScreenshots(graphqlUrl);
 ---
 
 <section id={id} class:list={['app-download', className]} data-cms-block="app-download" data-cms-props={cmsBlockProps(Astro.props)}>
@@ -125,7 +134,7 @@ const soonLabel = Astro.props.soonLabel || t('website.brand.appDownload.soon');
       </div>
     </div>
 
-    <AppPhone src={screenshot} />
+    <AppPhone src={screenshot} slides={slides} t={t} />
   </div>
 </section>
 

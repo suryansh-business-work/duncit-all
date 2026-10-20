@@ -13,6 +13,7 @@
     "./SiteMenu.astro": "./src/SiteMenu.astro",
     "./AppDownload.astro": "./src/AppDownload.astro",
     "./AppPhone.astro": "./src/AppPhone.astro",
+    "./app-screenshots": "./src/app-screenshots.ts",
     "./EarnShowcase.astro": "./src/EarnShowcase.astro",
     "./earn-section": "./src/earn-section.ts",
     "./ThemeToggle.astro": "./src/ThemeToggle.astro",

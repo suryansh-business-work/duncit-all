@@ -26389,6 +26389,12 @@ export type Query = {
   /** CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both. */
   appBuildsTable: AppBuildTablePage;
   appPopupsTable: AppPopupTablePage;
+  /**
+   * The app's real phone screenshots from the store listing, for the websites'
+   * app phone. Public — the stores already show them. Android's phone set, or
+   * the iPhone set when Android has none; empty until either is filled.
+   */
+  appScreenshots: Array<Scalars['String']['output']>;
   appSettings: AppSettings;
   /**
    * Apple's top-level iOS category ids (SOCIAL_NETWORKING, LIFESTYLE, …), read

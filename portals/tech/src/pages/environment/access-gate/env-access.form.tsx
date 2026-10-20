@@ -67,7 +67,6 @@ export default function EnvAccessForm({ pending, sending, verifying, onSend, onV
               onChange={(event) => field.onChange(cleanCode(event.target.value))}
               label={t('tech.environment.accessCodeLabel')}
               required
-              autoFocus
               autoComplete="one-time-code"
               error={!!fieldState.error}
               helperText={

@@ -1149,6 +1149,15 @@ export const paymentFinalizer = {
     // Outside the receipt step: a PDF that failed to render must not leave a
     // brand unaware it has an order to pack. Deduplicated per order and brand.
     if (!ctx.only) await notifyBrandsOfOrders(ctx.payment);
+    // The buyer is now in the pod's chat: one "you joined" notification, keyed on
+    // the payment so a retried run never sends a second. Never fails the run.
+    if (!ctx.only && payment.pod_id && payment.user_id) {
+      await import('@microservices/chat/rooms/chat.welcome')
+        .then(({ welcomeToPodChat }) =>
+          welcomeToPodChat(String(payment.user_id), payment.pod_id, `payment:${String(payment._id)}`)
+        )
+        .catch((error) => logs.server.warn('payment.finalize', 'welcomeToPodChat', { error }));
+    }
 
     // The run is over, so the lease goes back: a step that failed should be
     // retried on the reconciler's next sweep, not after the lease ages out.

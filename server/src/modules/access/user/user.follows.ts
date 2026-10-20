@@ -42,8 +42,15 @@ export const userFollowMethods = {
     }
     const oid = new Types.ObjectId(user_id);
     try {
-      await ClubFollowerModel.create({ user_id: oid, club_id: club._id });
+      const follow = await ClubFollowerModel.create({ user_id: oid, club_id: club._id });
       await UserModel.updateOne({ _id: oid }, { $inc: { 'counters.following_clubs_count': 1 } });
+      // Following a club IS joining its chat. Only a NEW follow row gets here —
+      // a re-follow hits 11000 below — and the key is that row, so once each.
+      import('@microservices/chat/rooms/chat.welcome')
+        .then(({ welcomeToChatRoom }) =>
+          welcomeToChatRoom(user_id, { kind: 'CLUB', id: String(club._id) }, `club-follow:${String(follow._id)}`)
+        )
+        .catch((error) => logs.server.warn('userFollows', 'welcomeToChatRoom', { error }));
     } catch (e: any) {
       if (e?.code !== 11000) throw e;
     }

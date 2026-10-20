@@ -278,6 +278,7 @@ const fullName = (user: any) =>
 async function afterFreeJoin(doc: IPodMember, userId: string, podId: string) {
   evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
   awardJoinPoints(userId, podId);
+  welcomeToChat(userId, podId, joinEventKey(doc));
   try {
     const { ticketService } = await import('@modules/pods/ticket/ticket.service');
     await ticketService.ensureForMembership(String(doc._id));
@@ -303,6 +304,19 @@ function awardJoinPoints(userId: string, podDocId: string): void {
     .catch(() => {});
 }
 
+/** "You joined the chat" for a new booking of `podId` — once per `joinKey`,
+ * fire-and-forget like the points above. Dynamic import keeps the chat
+ * microservice out of this file's import graph. */
+function welcomeToChat(userId: string, podId: unknown, joinKey: string): void {
+  import('@microservices/chat/rooms/chat.welcome')
+    .then(({ welcomeToPodChat }) => welcomeToPodChat(userId, podId, joinKey))
+    .catch((error) => logs.server.warn('podMember', 'welcomeToChat', { error }));
+}
+
+/** One membership's join event: the row plus when it (re)joined, so a rejoin
+ * after a backout is a new event and a replayed request is not. */
+const joinEventKey = (doc: { _id: unknown; joined_at?: Date | null }) =>
+  `pod-member:${String(doc._id)}:${doc.joined_at?.getTime() ?? 0}`;
 
 /** Best-effort in-app + push (Notification Center fan-out) to one user. */
 async function notifyUserInApp(userId: string, title: string, body: string) {
@@ -1497,6 +1511,8 @@ export const podMemberService = {
       logs.server.warn('podMember', 'recordPaidJoin', { error: e, msg: 'Backout fill failed' });
     }
     awardJoinPoints(userId, podDocId);
+    // Same key as the payment finalizer's, so the two paths welcome once.
+    welcomeToChat(userId, podDocId, `payment:${paymentDocId}`);
     return member;
   },
 
@@ -1576,6 +1592,7 @@ export const podMemberService = {
     await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
     awardJoinPoints(userId, String(pod._id));
+    welcomeToChat(userId, pod._id, joinEventKey(membership));
     try {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');
       await ticketService.ensureForMembership(String(membership._id));

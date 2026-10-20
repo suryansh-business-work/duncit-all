@@ -12,6 +12,7 @@ const seedPod = (extra: Record<string, unknown> = {}) =>
     pod_id: `welcome-pod-${++seq}`,
     pod_title: 'Evening Badminton',
     pod_hosts_id: [new Types.ObjectId()],
+    club_id: new Types.ObjectId(),
     pod_description: 'desc',
     pod_date_time: new Date('2026-08-01T18:00:00Z'),
     pod_end_date_time: new Date('2026-08-01T20:00:00Z'),

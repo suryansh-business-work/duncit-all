@@ -57,6 +57,17 @@ vi.mock('../../src/pages/email-templates-page/SendTestDialog', () => ({
     ) : null,
 }));
 
+vi.mock('../../src/pages/email-templates-page/ConnectFragmentsDialog', () => ({
+  default: (p: { open: boolean; onClose: () => void; onDone: (n: number) => void; onError: (msg: string) => void }) =>
+    p.open ? (
+      <div data-testid="connect-dialog">
+        <button type="button" onClick={() => p.onDone(3)}>connect-done</button>
+        <button type="button" onClick={() => p.onError('connect-bad')}>connect-err</button>
+        <button type="button" onClick={p.onClose}>connect-close</button>
+      </div>
+    ) : null,
+}));
+
 import EmailTemplatesPage from '../../src/pages/email-templates-page/EmailTemplatesPage';
 
 const draft = makeTpl({ template_id: 't9', slug: 's', name: 'N', subject: 'j', mjml: '' });
@@ -172,6 +183,28 @@ describe('EmailTemplatesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New template' }));
     fireEvent.click(screen.getByRole('button', { name: 'create-err' }));
     expect(m.editor.setSnack).toHaveBeenCalledWith({ kind: 'error', msg: 'create-bad' });
+  });
+
+  it('connects every bare template to its header/footer, then refreshes the list and says how many', async () => {
+    render(<EmailTemplatesPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Connect header & footer' }));
+    expect(screen.getByTestId('connect-dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'connect-done' }));
+    await waitFor(() => expect(m.editor.refetch).toHaveBeenCalled());
+    expect(m.editor.setSnack).toHaveBeenCalledWith({
+      kind: 'success',
+      msg: '3 template(s) connected to a header and footer',
+    });
+    await waitFor(() => expect(screen.queryByTestId('connect-dialog')).not.toBeInTheDocument());
+  });
+
+  it('reports a failed connect and closes the connect dialog on cancel', () => {
+    render(<EmailTemplatesPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Connect header & footer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'connect-err' }));
+    expect(m.editor.setSnack).toHaveBeenCalledWith({ kind: 'error', msg: 'connect-bad' });
+    fireEvent.click(screen.getByRole('button', { name: 'connect-close' }));
+    expect(screen.queryByTestId('connect-dialog')).not.toBeInTheDocument();
   });
 
   it('closes the create dialog', () => {

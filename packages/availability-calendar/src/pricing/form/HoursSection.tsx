@@ -50,9 +50,12 @@ export default function HoursSection({ control }: Readonly<Props>) {
           <Controller
             control={control}
             name="operating_hours"
-            render={({ fieldState }) =>
-              fieldState.error?.message ? <Alert severity="error">{fieldState.error.message}</Alert> : <span />
-            }
+            render={({ fieldState }) => {
+              // The day rows are mounted whenever this check can fail, so the
+              // resolver files the error on the field array's `root`.
+              const message = fieldState.error?.root?.message;
+              return message ? <Alert severity="error">{message}</Alert> : <span />;
+            }}
           />
           {fields.map((field, index) => (
             <Grid container spacing={1.5} key={field.id} sx={{ alignItems: 'flex-start' }}>

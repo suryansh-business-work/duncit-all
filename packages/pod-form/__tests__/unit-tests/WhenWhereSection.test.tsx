@@ -285,7 +285,8 @@ describe('WhenWhereSection (free pod on a priced slot)', () => {
     const note = screen.getByTestId('free-pod-venue-note');
     expect(note).toHaveAttribute('role', 'status');
     expect(note).toHaveTextContent(NOTE);
-    expect(note).toHaveTextContent(/not to confirm the slot until the host has spoken to them/);
+    // Bookings are instant, so there is no approval line about the venue holding the slot.
+    expect(note).not.toHaveTextContent(/not to confirm the slot/);
   });
 
   it('says nothing for a free pod on a slot priced 0 — it books instantly', () => {

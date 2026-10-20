@@ -79,8 +79,9 @@ export default function RuleTarget({ control, index }: Readonly<Props>) {
         <Controller
           control={control}
           name={`price_rules.${index}.from`}
-          render={({ field, fieldState }) => (
-            <IsoDateField label={t('venuePricing.rules.from')} value={field.value} onChange={field.onChange} error={fieldState.error?.message} />
+          render={({ field }) => (
+            // A range's one check ("from" after "to") is reported on "to".
+            <IsoDateField label={t('venuePricing.rules.from')} value={field.value} onChange={field.onChange} />
           )}
         />
       </Grid>

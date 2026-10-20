@@ -5,6 +5,7 @@ import {
   buildPodSeriesPlan,
   groupSlotRequestsBySeries,
   endOfDayInZone,
+  startOfDayInZone,
   customDateStart,
   ymdInZone,
   type PodSeriesPlanSource,
@@ -22,6 +23,21 @@ const physical: PodSeriesPlanSource = {
   pod_date_time: '2026-11-05T13:30:00.000Z',
   pod_end_date_time: '2026-11-05T15:30:00.000Z',
 };
+
+describe('startOfDayInZone', () => {
+  it('is local midnight of the day on the zone’s own clock, as epoch ms', () => {
+    // 00:00 in Kolkata (UTC+5:30) is 18:30 UTC the day before.
+    expect(startOfDayInZone('2026-11-05', 'Asia/Kolkata')).toBe(Date.parse('2026-11-04T18:30:00.000Z'));
+    // A zone behind UTC (EDT, UTC-4) starts its day later on the UTC clock.
+    expect(startOfDayInZone('2026-07-01', 'America/New_York')).toBe(Date.parse('2026-07-01T04:00:00.000Z'));
+    expect(startOfDayInZone(' 2026-11-05 ', 'UTC')).toBe(Date.parse('2026-11-05T00:00:00.000Z'));
+  });
+
+  it('is NaN for anything that is not a calendar day', () => {
+    expect(startOfDayInZone('05/11/2026', 'Asia/Kolkata')).toBeNaN();
+    expect(startOfDayInZone('', 'Asia/Kolkata')).toBeNaN();
+  });
+});
 
 describe('endOfDayInZone', () => {
   it('is the last millisecond of the day on the zone’s own clock', () => {
@@ -79,6 +95,14 @@ describe('buildPodSeriesPlan', () => {
     expect(buildPodSeriesPlan({ ...physical, repeat_ends_on: '' }, 'UTC')).toBeNull();
     expect(buildPodSeriesPlan({ ...physical, venue_slot_id: '' }, 'UTC')).toBeNull();
     expect(buildPodSeriesPlan({ ...physical, pod_mode: 'VIRTUAL', pod_date_time: null }, 'UTC')).toBeNull();
+  });
+
+  it('sends an instant venue booking for the first date in place of a slot', () => {
+    const booking = { start_at: '2026-11-05T13:30:00.000Z', end_at: '2026-11-05T15:30:00.000Z', space_label: '' };
+    const plan = buildPodSeriesPlan({ ...physical, venue_slot_id: '', venue_booking: booking }, 'UTC');
+    expect(plan).toMatchObject({ venue_id: 'venue-1', venue_slot_id: null, venue_booking: booking, pod_date_time: null });
+    // A picked slot wins: the booking is not sent beside it.
+    expect(buildPodSeriesPlan({ ...physical, venue_booking: booking }, 'UTC')).not.toHaveProperty('venue_booking');
   });
 
   it('sends a physical pod with no venue picked as a null venue, not an empty id', () => {

@@ -52,12 +52,13 @@ export function dateOverrideOn<R extends PriceRuleLike>(rules: readonly R[], day
 export function withoutDateOverride<R extends PriceRuleLike>(rules: readonly R[], day: string): R[] {
   const next: R[] = [];
   for (const rule of rules) {
-    if (rule.type !== DATE_OVERRIDE_RULE || !(rule.dates ?? []).includes(day)) {
+    const dates = rule.dates ?? [];
+    if (rule.type !== DATE_OVERRIDE_RULE || !dates.includes(day)) {
       next.push(rule);
       continue;
     }
-    const dates = (rule.dates ?? []).filter((date) => date !== day);
-    if (dates.length > 0) next.push({ ...rule, dates });
+    const rest = dates.filter((date) => date !== day);
+    if (rest.length > 0) next.push({ ...rule, dates: rest });
   }
   return next;
 }

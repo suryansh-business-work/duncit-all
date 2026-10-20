@@ -3,7 +3,7 @@ import { Alert, Box, Divider, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
-import { parseIsoDay } from '@duncit/datetime';
+import { formatIsoDay } from '@duncit/datetime';
 import SlotList from '../../DayDrawer/SlotList';
 import type { VenueSlotRow } from '../../types';
 import { errorText } from '../format';
@@ -51,7 +51,6 @@ export default function PricingDayDrawer(props: Readonly<Props>) {
   };
 
   const override = ymd ? overrideOn(pricing, ymd) : null;
-  const date = ymd ? parseIsoDay(ymd) : null;
 
   return (
     <Drawer anchor="right" open={!!ymd} onClose={onClose} data-testid="pricing-day-drawer" slotProps={{ paper: { sx: { width: { xs: '100%', sm: 420 } } } }}>
@@ -63,7 +62,7 @@ export default function PricingDayDrawer(props: Readonly<Props>) {
                 {t('venuePricing.day.title')}
               </Typography>
               <Typography variant="h6" component="h2" sx={{ fontWeight: 900 }}>
-                {date ? fmt.formatDate(date) : ymd}
+                {formatIsoDay(ymd, fmt.dateFormat)}
               </Typography>
             </Box>
             <DuncitIconButton size="small" onClick={onClose} aria-label={t('venuePricing.day.close')}>

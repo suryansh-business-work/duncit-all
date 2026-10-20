@@ -63,8 +63,8 @@ export function TimeField<T extends FieldValues>({ control, name, label, testId 
       render={({ field, fieldState }) => (
         <TimePicker
           label={label}
-          value={timeOfDayToDate(String(field.value ?? ''), '00:00')}
-          onChange={(next) => field.onChange(dateToTimeOfDay(next, String(field.value ?? '')))}
+          value={timeOfDayToDate(String(field.value), '00:00')}
+          onChange={(next) => field.onChange(dateToTimeOfDay(next, String(field.value)))}
           slotProps={{
             textField: {
               size: 'small',

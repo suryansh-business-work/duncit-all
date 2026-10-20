@@ -31,15 +31,17 @@ export default function SlotsSection({ control }: Readonly<Props>) {
       <Controller
         control={control}
         name="slots"
-        render={({ fieldState }) =>
-          fieldState.error?.message ? (
+        render={({ fieldState }) => {
+          // The resolver files an error on a field array with mounted rows under `root`.
+          const message = fieldState.error?.root?.message ?? fieldState.error?.message;
+          return message ? (
             <Alert severity="error" sx={{ mb: 1.5 }}>
-              {fieldState.error.message}
+              {message}
             </Alert>
           ) : (
             <Box />
-          )
-        }
+          );
+        }}
       />
       {fields.length === 0 && (
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>

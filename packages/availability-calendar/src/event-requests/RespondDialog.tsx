@@ -42,7 +42,6 @@ export default function RespondDialog({ requestId, choice, venueId, requesterNam
   const formId = `respond-event-request-${requestId}`;
 
   const submit = async (values: RespondEventRequestValues) => {
-    if (!choice) return;
     setError(null);
     try {
       const counterOffer = choice === 'COUNTER' ? offerInput(values) : null;

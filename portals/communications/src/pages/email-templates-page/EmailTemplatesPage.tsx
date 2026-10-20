@@ -65,7 +65,8 @@ export default function EmailTemplatesPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Tooltip title={t('tech.emailTemplates.connectFragmentsHint')}>
+          {/* describeChild: the hint describes the button; its name stays the visible label. */}
+          <Tooltip describeChild title={t('tech.emailTemplates.connectFragmentsHint')}>
             <DuncitButton startIcon={<LinkIcon />} onClick={() => setConnectOpen(true)}>
               {t('tech.emailTemplates.connectFragments')}
             </DuncitButton>

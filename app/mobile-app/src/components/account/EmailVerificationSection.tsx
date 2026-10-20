@@ -12,7 +12,9 @@ import {
   verifyEmailVerificationOtp,
 } from '@/services/email-verification.service';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+
+import { EmailOtpSendButton } from './EmailOtpSendButton';
+import { OtpVerifiedDialog } from './OtpVerifiedDialog';
 
 interface Props {
   email?: string | null;
@@ -39,7 +41,7 @@ export function EmailVerificationSection({
   autoSend = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { accent, muted } = useThemeColors();
+  const { accent } = useThemeColors();
   const [otp, setOtp] = useState('');
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -47,6 +49,7 @@ export function EmailVerificationSection({
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showVerified, setShowVerified] = useState(false);
 
   const sendOtp = async () => {
     setError(null);
@@ -81,6 +84,7 @@ export function EmailVerificationSection({
       await verifyEmailVerificationOtp(otp.trim());
       setMessage(t('mweb.common.emailVerified'));
       setOtp('');
+      setShowVerified(true);
       onVerified();
     } catch (e) {
       setError(e instanceof Error ? e.message : t('mweb.account.invalidOtp'));
@@ -91,8 +95,13 @@ export function EmailVerificationSection({
 
   // Verified needs no row of its own. The tick beside the name in ProfileHeader
   // already says it, and repeating it as a sentence spent a full row of the
-  // profile restating something the header had covered.
-  if (verified) return null;
+  // profile restating something the header had covered. The refetch flips
+  // `verified` right after a good code, so the confirmation dialog sits
+  // outside the card to outlive it.
+  const verifiedDialog = (
+    <OtpVerifiedDialog open={showVerified} email={email} onClose={() => setShowVerified(false)} />
+  );
+  if (verified) return verifiedDialog;
 
   const idleSendLabel = requested ? 'Resend OTP' : 'Send OTP';
   const sendLabel = sending ? 'Sending…' : idleSendLabel;
@@ -105,92 +114,79 @@ export function EmailVerificationSection({
   // top margin of its own. It lives here rather than on the parent so a verified
   // account — which renders nothing — leaves no empty band behind.
   return (
-    <SurfaceCard testID="email-verification" gap={12}>
-      <XStack alignItems="center" gap={8}>
-        <MaterialIcons name="mark-email-read" size={18} color={accent} />
-        <Text role="heading" fontSize={15} fontWeight="600" color="$color">
-          Verify email
-        </Text>
-      </XStack>
-      <Text fontSize={14} color="$muted">
-        {email || 'Add an email address to verify your account.'}
-      </Text>
-
-      {message ? (
-        <Text testID="email-verification-message" role="status" fontSize={12} color="$accent">
-          {message}
-        </Text>
-      ) : null}
-      {devOtp ? (
-        <Text testID="email-verification-dev-otp" fontSize={12} color="$muted">
-          Dev OTP: {devOtp}
-        </Text>
-      ) : null}
-      {error ? (
-        <Text testID="email-verification-error" role="alert" fontSize={12} color="$danger">
-          {error}
-        </Text>
-      ) : null}
-
-      <XStack gap={8} alignItems="center">
-        <Input
-          testID="email-verification-otp"
-          flex={1}
-          size="$4"
-          borderRadius={14}
-          backgroundColor="$soft"
-          color="$color"
-          placeholderTextColor="$muted"
-          borderColor={error || otpHint ? '$danger' : 'transparent'}
-          value={otp}
-          onChangeText={setOtp}
-          placeholder={t('mweb.common.enterOtp')}
-          keyboardType="number-pad"
-          autoComplete="sms-otp"
-          textContentType="oneTimeCode"
-          maxLength={6}
-          aria-label={t('mweb.account.emailVerificationOtp')}
-        />
-        <XStack
-          testID="email-verification-send"
-          role="button"
-          aria-label={idleSendLabel}
-          aria-disabled={sending || !email}
-          aria-busy={sending}
-          tabIndex={0}
-          onPress={() => {
-            if (!sending && email) fireAndForget(sendOtp());
-          }}
-          height={44}
-          paddingHorizontal={16}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={999}
-          backgroundColor="$soft"
-          opacity={sending || !email ? 0.5 : 1}
-          pressStyle={PRESS_STYLE.control}
-        >
-          <Text fontSize={13} fontWeight="600" color={muted}>
-            {sendLabel}
+    <>
+      {verifiedDialog}
+      <SurfaceCard testID="email-verification" gap={12}>
+        <XStack alignItems="center" gap={8}>
+          <MaterialIcons name="mark-email-read" size={18} color={accent} />
+          <Text role="heading" fontSize={15} fontWeight="600" color="$color">
+            Verify email
           </Text>
         </XStack>
-      </XStack>
-
-      {otpHint ? (
-        <Text testID="email-verification-hint" role="alert" fontSize={12} color="$danger">
-          Enter the OTP we sent
+        <Text fontSize={14} color="$muted">
+          {email || 'Add an email address to verify your account.'}
         </Text>
-      ) : null}
 
-      <PrimaryButton
-        testID="email-verification-submit"
-        // PrimaryButton swaps the label for a Spinner while loading, so a
-        // "Verifying…" branch here would never render.
-        label={t('mweb.common.verify')}
-        loading={verifying}
-        disabled={verifying || !otpValid}
-        onPress={verify}
-      />
-    </SurfaceCard>
+        {message ? (
+          <Text testID="email-verification-message" role="status" fontSize={12} color="$accent">
+            {message}
+          </Text>
+        ) : null}
+        {devOtp ? (
+          <Text testID="email-verification-dev-otp" fontSize={12} color="$muted">
+            Dev OTP: {devOtp}
+          </Text>
+        ) : null}
+        {error ? (
+          <Text testID="email-verification-error" role="alert" fontSize={12} color="$danger">
+            {error}
+          </Text>
+        ) : null}
+
+        <XStack gap={8} alignItems="center">
+          <Input
+            testID="email-verification-otp"
+            flex={1}
+            size="$4"
+            borderRadius={14}
+            backgroundColor="$soft"
+            color="$color"
+            placeholderTextColor="$muted"
+            borderColor={error || otpHint ? '$danger' : 'transparent'}
+            value={otp}
+            onChangeText={setOtp}
+            placeholder={t('mweb.common.enterOtp')}
+            keyboardType="number-pad"
+            autoComplete="sms-otp"
+            textContentType="oneTimeCode"
+            maxLength={6}
+            aria-label={t('mweb.account.emailVerificationOtp')}
+          />
+          <EmailOtpSendButton
+            idleLabel={idleSendLabel}
+            label={sendLabel}
+            sending={sending}
+            disabled={sending || !email}
+            onPress={() => fireAndForget(sendOtp())}
+          />
+        </XStack>
+
+        {otpHint ? (
+          <Text testID="email-verification-hint" role="alert" fontSize={12} color="$danger">
+            Enter the OTP we sent
+          </Text>
+        ) : null}
+
+        <PrimaryButton
+          testID="email-verification-submit"
+          // PrimaryButton swaps the label for a Spinner while loading, so a
+          // "Verifying…" branch here would never render.
+          label={t('mweb.common.verify')}
+          loading={verifying}
+          disabled={verifying || !otpValid}
+          onPress={verify}
+        />
+      </SurfaceCard>
+    </>
   );
 }

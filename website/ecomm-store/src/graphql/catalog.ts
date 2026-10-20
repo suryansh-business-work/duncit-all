@@ -190,7 +190,12 @@ export type StoreHomeSectionKind =
   | 'PRODUCT_SLIDER'
   | 'CATEGORY_ICONS'
   | 'RANGE_SHOWCASE'
-  | 'EARN_PROMO';
+  | 'EARN_PROMO'
+  | 'FREE_DELIVERY'
+  | 'PAGE_INTRO';
+
+/** The storefront pages whose sections the operator arranges. */
+export type StoreSectionPage = 'HOME' | 'DEALS';
 
 export interface StoreSectionItem {
   id: string;
@@ -228,21 +233,30 @@ export interface StoreHomeSection {
   ends_at: string | null;
 }
 
+/** One arranged section — the selection the home and every other arranged page read. */
+const SECTION_FIELDS = `
+  id
+  kind
+  title
+  subtitle
+  items { id eyebrow title subtitle image_url mobile_image_url cta_label link }
+  collection { id name slug }
+  products { ${CARD_FIELDS} }
+  categories { id name slug image_url }
+  pet_types { id name slug icon_url image_url description }
+  brands { id name slug logo_url tagline }
+  discount_tiers
+  ends_at
+`;
+
 export const STORE_HOME: TypedDocumentNode<{ storeHome: StoreHomeSection[] }, NoVars> = gql`
   query EcommStoreHome {
-    storeHome {
-      id
-      kind
-      title
-      subtitle
-      items { id eyebrow title subtitle image_url mobile_image_url cta_label link }
-      collection { id name slug }
-      products { ${CARD_FIELDS} }
-      categories { id name slug image_url }
-      pet_types { id name slug icon_url image_url description }
-      brands { id name slug logo_url tagline }
-      discount_tiers
-      ends_at
-    }
+    storeHome { ${SECTION_FIELDS} }
+  }
+`;
+
+export const STORE_PAGE_SECTIONS: TypedDocumentNode<{ storePageSections: StoreHomeSection[] }, { page: StoreSectionPage }> = gql`
+  query EcommStorePageSections($page: StoreSectionPage) {
+    storePageSections(page: $page) { ${SECTION_FIELDS} }
   }
 `;

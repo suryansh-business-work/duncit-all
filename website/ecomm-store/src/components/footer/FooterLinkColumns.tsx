@@ -3,9 +3,10 @@ import { Link } from '@mui/material';
 
 import { useStoreSettings } from '../../app/providers/StoreSettingsProvider';
 import { EARNWITH_URL } from '../../config/env';
-import { paths } from '../../lib/paths';
+import { isInternalLink, paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
 import { useNavigationData } from '../header/navigation';
+import { SmartLink } from '../SmartLink';
 import { FooterColumn } from './FooterColumn';
 import { NewTabHint } from './NewTabHint';
 import { POLICY_LINKS } from './policyLinks';
@@ -61,10 +62,10 @@ export function HelpColumn() {
   );
 }
 
-/** About the store, how to reach it, and Earn with Duncit. */
+/** About the store, how to reach it, Earn with Duncit, then the operator's extra links (Settings). */
 export function AboutColumn() {
   const { t } = useStoreT();
-  const { support_email: email, support_phone: phone } = useStoreSettings();
+  const { support_email: email, support_phone: phone, footer_links: extra } = useStoreSettings();
   return (
     <FooterColumn title={t('ecommStore.footer.about')}>
       <Link component={RouterLink} to={paths.page('about')}>
@@ -76,6 +77,12 @@ export function AboutColumn() {
         {t('ecommStore.menu.earnWith')}
         <NewTabHint />
       </Link>
+      {extra.map((link) => (
+        <SmartLink key={`${link.label}-${link.link}`} to={link.link}>
+          {link.label}
+          {isInternalLink(link.link) ? null : <NewTabHint />}
+        </SmartLink>
+      ))}
     </FooterColumn>
   );
 }

@@ -51,6 +51,12 @@ export const storeTypeDefs = /* GraphQL */ `
     social_links: [StoreSocialLink!]!
     "The payment methods the footer shows as accepted, with the marks the operator uploaded."
     payment_badges: [StorePaymentBadge!]!
+    "The phone home page's greeting line; blank shows the built-in one."
+    home_greeting: String!
+    "The desktop header's links after Shop by pet; empty lists the menu aisles."
+    nav_links: [StoreNavLink!]!
+    "Extra links in the footer's About column."
+    footer_links: [StoreNavLink!]!
     currency_symbol: String!
     "On: no Razorpay account is configured and Finance's test switch is on, so checkout captures without taking money."
     dummy_mode: Boolean!
@@ -58,6 +64,18 @@ export const storeTypeDefs = /* GraphQL */ `
     serviceable_pincodes_enabled: Boolean!
     "The festive window open right now, if any — the store swaps its logo, favicon and background for it."
     active_occasion: StoreActiveOccasion
+  }
+
+  "A header or footer link: a same-site path or an https URL."
+  type StoreNavLink {
+    label: String!
+    link: String!
+  }
+
+  "The storefront pages whose sections the operator arranges."
+  enum StoreSectionPage {
+    HOME
+    DEALS
   }
 
   type StorePaymentBadge {
@@ -455,6 +473,10 @@ export const storeTypeDefs = /* GraphQL */ `
     RANGE_SHOWCASE
     "A promotion for Earn with Duncit; a blank link goes to the Earn with Duncit site."
     EARN_PROMO
+    "The free-delivery strip; a blank title shows the built-in line with the threshold."
+    FREE_DELIVERY
+    "A heading block: title, subtitle and an optional call to action (a page's intro)."
+    PAGE_INTRO
   }
 
   type StoreSectionItem {
@@ -944,6 +966,8 @@ export const storeTypeDefs = /* GraphQL */ `
     storeSettings: StorePublicSettings!
     storeNavigation: StoreNavigation!
     storeHome: [StoreHomeSection!]!
+    "The live sections of one storefront page; omitted = the home page."
+    storePageSections(page: StoreSectionPage): [StoreHomeSection!]!
     storeSearch(input: StoreSearchInput!): StoreSearchPage!
     "A product page by slug; null when it is not on the shelf."
     storeProduct(slug: String!): StoreProduct

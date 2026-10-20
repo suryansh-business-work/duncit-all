@@ -9,7 +9,7 @@ import { useSchemaForm } from '../../../components/form/useSchemaForm';
 import type { Option } from '../../../lib/translate';
 import type { SectionKind, StoreSection } from '../queries';
 import { TWO_COLUMNS } from '../../../lib/layout';
-import { SECTION_KINDS, SECTION_KIND_HINT_KEYS, SECTION_KIND_KEYS } from '../section-kinds';
+import { SECTION_KINDS, SECTION_KIND_HINT_KEYS, SECTION_KIND_KEYS, TITLE_HINT_KEYS } from '../section-kinds';
 import SectionKindFields from './SectionKindFields';
 import { makeHomeSectionSchema, toHomeSectionInput, toHomeSectionValues, type HomeSectionValues } from './home-section.types';
 
@@ -30,7 +30,10 @@ export default function HomeSectionForm({
   const { t, form } = useSchemaForm<HomeSectionValues>(makeHomeSectionSchema, toHomeSectionValues(initial));
   const { control, handleSubmit } = form;
   const kind = useWatch({ control, name: 'kind' });
-  const endsHint = kind === 'FLASH_SALE' ? t('ecommPortal.homePage.saleEndsHint') : t('ecommPortal.homePage.blankForever');
+  const titleHintKey = TITLE_HINT_KEYS[kind];
+  // `{amount}` is shown as typed: it is the placeholder the store fills with its threshold.
+  const titleHint = titleHintKey ? t(titleHintKey, { vars: { amount: '{amount}' } }) : undefined;
+  const endsHint =kind === 'FLASH_SALE' ? t('ecommPortal.homePage.saleEndsHint') : t('ecommPortal.homePage.blankForever');
   return (
     <FormDialog
       formId="home-section-form"
@@ -55,7 +58,7 @@ export default function HomeSectionForm({
             </MenuItem>
           ))}
         </RhfTextField>
-        <RhfTextField control={control} name="title" label={t('shell.common.title')} />
+        <RhfTextField control={control} name="title" label={t('shell.common.title')} hint={titleHint} />
         <RhfTextField control={control} name="subtitle" label={t('ecommPortal.homePage.subtitleField')} />
         <Box sx={TWO_COLUMNS}>
           <RhfDateTimeField control={control} name="starts_at" label={t('ecommPortal.homePage.startsAt')} hint={t('ecommPortal.homePage.blankNow')} />

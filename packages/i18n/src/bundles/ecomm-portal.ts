@@ -38,6 +38,7 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       paymentLogs: 'Payment logs',
       support: 'Support',
       storeTickets: 'Store tickets',
+      sections: 'Sections',
     },
 
     // Words several screens share.
@@ -728,6 +729,15 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       linkReturns: 'Returns policy',
       linkTerms: 'Terms',
       linkAbout: 'About us',
+      kindFreeDelivery: 'Free-delivery strip',
+      kindPageIntro: 'Page heading',
+      hintFreeDelivery: 'A strip telling shoppers when delivery is free, with an optional button.',
+      hintPageIntro: 'A heading block — title, subtitle, an optional small line and button.',
+      freeDeliveryTitleHint: 'Blank shows the built-in line with the free-delivery amount; write {amount} where the amount should go.',
+      buttonItemHint: 'Add a button to send shoppers somewhere; leave empty for no button.',
+      pageIntroItemHint: 'Add one to show a small line above the title or a button; leave empty for the heading alone.',
+      addButton: 'Add button',
+      noButton: 'No button.',
     },
 
     reviews: {
@@ -1181,6 +1191,24 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       paymentBadgeImage: 'Mark',
       addPaymentBadge: 'Add payment method',
       paymentBadgeN: 'Payment method {n}',
+    },
+    sections: {
+      tabHome: 'Home',
+      tabDeals: 'Deals',
+      tabHeaderFooter: 'Header & footer',
+      dealsSubtitle: 'The store’s Deals page, band by band, top to bottom.',
+      dealsEmpty: 'The Deals page has no sections yet — it shows its built-in “Deals” heading.',
+      viewDeals: 'View Deals page',
+      headerFooterSubtitle: 'What every store page wears: the announcement bar, the phone greeting and the header and footer links.',
+      homeGreeting: 'Phone home greeting',
+      homeGreetingHint: 'Blank shows “Everything your pet loves”',
+      headerLinks: 'Header links',
+      headerLinksHint: 'Up to {max}. Empty: the menu aisles show automatically.',
+      footerLinks: 'Footer links',
+      footerLinksHint: 'Up to {max}, in the order the footer lists them.',
+      linkLabel: 'Label',
+      addLink: 'Add link',
+      linkN: 'Link {n}',
     },
   },
 };

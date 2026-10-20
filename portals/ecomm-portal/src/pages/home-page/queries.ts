@@ -13,7 +13,12 @@ export type SectionKind =
   | 'PRODUCT_SLIDER'
   | 'CATEGORY_ICONS'
   | 'RANGE_SHOWCASE'
-  | 'EARN_PROMO';
+  | 'EARN_PROMO'
+  | 'FREE_DELIVERY'
+  | 'PAGE_INTRO';
+
+/** The storefront page a section belongs to. */
+export type SectionPage = 'HOME' | 'DEALS';
 
 /** Where a product slider takes its products from. */
 export type ProductSource = 'MANUAL' | 'COLLECTION' | 'CATEGORY' | 'BESTSELLING' | 'NEWEST' | 'DISCOUNT' | 'FEATURED';
@@ -32,6 +37,7 @@ export interface StoreSectionItem {
 
 export interface StoreSection {
   id: string;
+  page: SectionPage;
   kind: SectionKind;
   title: string;
   subtitle: string;
@@ -52,6 +58,7 @@ export interface StoreSection {
 
 const SECTION_FIELDS = `
   id
+  page
   kind
   title
   subtitle
@@ -77,9 +84,10 @@ const SECTION_FIELDS = `
   ends_at
 `;
 
-export const STORE_SECTIONS: TypedDocumentNode<{ storeAdminSections: StoreSection[] }> = gql`
-  query StoreAdminSections {
-    storeAdminSections {
+/** One storefront page's sections, in the order the page draws them. */
+export const STORE_SECTIONS: TypedDocumentNode<{ storeAdminSections: StoreSection[] }, { page: SectionPage }> = gql`
+  query StoreAdminSections($page: StoreSectionPage) {
+    storeAdminSections(page: $page) {
       ${SECTION_FIELDS}
     }
   }

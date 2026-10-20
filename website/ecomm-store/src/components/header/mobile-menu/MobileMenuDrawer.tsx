@@ -9,6 +9,7 @@ import { useNavigationData } from '../navigation';
 import { SearchForm } from '../search-form';
 import { ExtrasSection } from './ExtrasSection';
 import { AccountSection, HelpSection, ShopLinks } from './MenuSections';
+import { OperatorLinks } from './OperatorLinks';
 import { PetSections } from './PetSections';
 
 interface MobileMenuDrawerProps {
@@ -21,8 +22,9 @@ interface MobileMenuDrawerProps {
 const PAPER_SX = { width: 'min(100vw, 360px)' } as const;
 
 /**
- * The whole store in a left drawer: search, pets and their aisles, the shop
- * links, the account, and help. Every link closes it as it navigates.
+ * The whole store in a left drawer: search, pets and their aisles, the
+ * operator's header links, the shop links, the account, and help. Every
+ * link closes it as it navigates.
  */
 export function MobileMenuDrawer({ id, open, onClose }: Readonly<MobileMenuDrawerProps>) {
   const { t } = useStoreT();
@@ -49,6 +51,7 @@ export function MobileMenuDrawer({ id, open, onClose }: Readonly<MobileMenuDrawe
         <Box component="nav" aria-label={t('ecommStore.menu.main')} sx={{ overflowY: 'auto', flexGrow: 1, pb: 4 }}>
           <PetSections nav={nav} onNavigate={onClose} />
           <Divider />
+          <OperatorLinks onNavigate={onClose} />
           <ShopLinks nav={nav} onNavigate={onClose} />
           <Divider />
           <AccountSection onNavigate={onClose} />

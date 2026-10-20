@@ -57,7 +57,7 @@ export const appConfig = {
       label: 'Storefront', labelKey: 'ecommPortal.nav.storefront',
       icon: 'storefront',
       children: [
-        { label: 'Home page', labelKey: 'ecommPortal.nav.homePage', to: '/home-page', icon: 'image' },
+        { label: 'Sections', labelKey: 'ecommPortal.nav.sections', to: '/sections', icon: 'image' },
         { label: 'Reviews', labelKey: 'ecommPortal.nav.reviews', to: '/reviews', icon: 'feedback' },
         { label: 'Policies & pages', labelKey: 'ecommPortal.nav.pages', to: '/pages', icon: 'article' },
       ],

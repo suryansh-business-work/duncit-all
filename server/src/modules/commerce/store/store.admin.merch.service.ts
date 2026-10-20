@@ -14,9 +14,12 @@ import { StoreBrandModel, StoreCategoryModel, StoreFacetModel, StorePetTypeModel
 import {
   STORE_COLLECTION_MODES,
   STORE_HOME_SECTION_KINDS,
+  STORE_SECTION_PAGES,
   STORE_SECTION_PRODUCT_SOURCES,
   StoreCollectionModel,
   StoreHomeSectionModel,
+  pageFilter,
+  type StoreSectionPage,
 } from './storeMerch.model';
 import { cardsFor, storeCatalogService } from './store.catalog.service';
 import {
@@ -214,6 +217,7 @@ export const sectionOut = (s: Doc) => ({
   discount_tiers: s.discount_tiers ?? [],
   product_source: s.product_source ?? 'COLLECTION',
   product_ids: (s.product_ids ?? []).map(String),
+  page: s.page ?? 'HOME',
   sort_order: s.sort_order ?? 0,
   is_active: s.is_active !== false,
   starts_at: iso(s.starts_at),
@@ -237,7 +241,19 @@ const SETTINGS_STRINGS = [
   'returns_policy_html',
   'terms_html',
   'about_html',
+  'home_greeting',
 ] as const;
+
+/** A same-site path (never `//host`) or an https URL — what a header or footer link may point at. */
+const isStoreLink = (link: string) => (link.startsWith('/') && !link.startsWith('//')) || link.startsWith('https://');
+
+/** Header / footer links as saved: named, pointing somewhere the store can open, at most 12. */
+function navLinksOf(input: Doc[]) {
+  return input
+    .map((l) => ({ label: String(l.label ?? '').trim().slice(0, 40), link: String(l.link ?? '').trim() }))
+    .filter((l) => l.label && isStoreLink(l.link))
+    .slice(0, 12);
+}
 
 const SETTINGS_FLAGS = [
   'store_enabled',
@@ -374,6 +390,8 @@ function settingsPatch(input: Doc) {
       .filter((b) => b.label && b.image_url.startsWith('https://'))
       .slice(0, 12);
   }
+  if (input.nav_links) patch.nav_links = navLinksOf(input.nav_links as Doc[]);
+  if (input.footer_links) patch.footer_links = navLinksOf(input.footer_links as Doc[]);
   return patch;
 }
 
@@ -652,17 +670,20 @@ export const storeAdminMerchService = {
     return cardsFor(objectIds.map((id) => byId.get(String(id))).filter(Boolean));
   },
 
-  /* --- home page ------------------------------------------------------ */
-  async sections() {
-    const rows = await StoreHomeSectionModel.find({}).sort({ sort_order: 1, _id: 1 }).lean();
+  /* --- page sections -------------------------------------------------- */
+  async sections(page?: string | null) {
+    const rows = await StoreHomeSectionModel.find(pageFilter(page)).sort({ sort_order: 1, _id: 1 }).lean();
     return rows.map(sectionOut);
   },
   async saveSection(id: string | null | undefined, input: Doc) {
     if (!STORE_HOME_SECTION_KINDS.includes(input.kind)) badInput('Choose what this section shows');
+    if (input.page != null && !STORE_SECTION_PAGES.includes(input.page)) badInput('Choose which page this section is on');
     const endsAt = dateOrNull(input.ends_at);
     if (input.kind === 'FLASH_SALE' && !endsAt) badInput('A flash sale needs an end time to count down to');
     const tiers = intList(input.discount_tiers, 1, 90, 8);
+    const page: StoreSectionPage | undefined = input.page ?? (id ? undefined : 'HOME');
     const doc = await upsert(StoreHomeSectionModel, id, {
+      ...(page ? { page } : {}),
       kind: input.kind,
       title: String(input.title ?? '').trim(),
       subtitle: String(input.subtitle ?? '').trim(),
@@ -676,7 +697,7 @@ export const storeAdminMerchService = {
       is_active: input.is_active !== false,
       starts_at: dateOrNull(input.starts_at),
       ends_at: endsAt,
-      ...(id ? {} : { sort_order: await StoreHomeSectionModel.countDocuments() }),
+      ...(id ? {} : { sort_order: await StoreHomeSectionModel.countDocuments(pageFilter(page)) }),
     });
     return sectionOut(doc);
   },

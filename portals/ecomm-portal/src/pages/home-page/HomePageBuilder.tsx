@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { useDateFormat } from '@duncit/app-settings';
@@ -10,7 +10,7 @@ import { storeLinks } from '../../lib/store-links';
 import { useTaxonomyOptions } from '../../queries/useTaxonomyOptions';
 import { STORE_COLLECTIONS } from '../collections/queries';
 import HomeSectionForm from './home-section-form';
-import { DELETE_SECTION, REORDER_SECTIONS, SAVE_SECTION, STORE_SECTIONS, type StoreSection } from './queries';
+import { DELETE_SECTION, REORDER_SECTIONS, SAVE_SECTION, STORE_SECTIONS, type SectionPage, type StoreSection } from './queries';
 import { SECTION_KIND_KEYS } from './section-kinds';
 
 const DOCS = { save: SAVE_SECTION, remove: DELETE_SECTION, reorder: REORDER_SECTIONS, list: STORE_SECTIONS };
@@ -36,10 +36,36 @@ function SectionMeta({ section }: Readonly<{ section: StoreSection }>) {
   );
 }
 
-/** The store's home page, band by band, top to bottom. */
-export default function HomePageBuilder() {
+/** What each storefront page's section list says about itself, and where to see it live. */
+const PAGE_COPY: Record<SectionPage, { subtitle: string; empty: string; viewLabel: string; href: () => string }> = {
+  HOME: {
+    subtitle: 'ecommPortal.homePage.subtitle',
+    empty: 'ecommPortal.homePage.empty',
+    viewLabel: 'ecommPortal.homePage.viewStore',
+    href: storeLinks.home,
+  },
+  DEALS: {
+    subtitle: 'ecommPortal.sections.dealsSubtitle',
+    empty: 'ecommPortal.sections.dealsEmpty',
+    viewLabel: 'ecommPortal.sections.viewDeals',
+    href: storeLinks.deals,
+  },
+};
+
+interface HomePageBuilderProps {
+  /** The storefront page whose sections this lists, saves and reorders. */
+  page: SectionPage;
+  /** The Sections console's tab strip, drawn under the heading. */
+  tabs?: ReactNode;
+}
+
+/**
+ * One storefront page, band by band, top to bottom. Every save names the page,
+ * and the list (so a reorder) only ever holds this page's sections.
+ */
+export default function HomePageBuilder({ page, tabs }: Readonly<HomePageBuilderProps>) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(STORE_SECTIONS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery(STORE_SECTIONS, { variables: { page }, fetchPolicy: 'cache-and-network' });
   const collections = useQuery(STORE_COLLECTIONS, { fetchPolicy: 'cache-and-network' });
   const taxonomy = useTaxonomyOptions();
   const editor = useListEditor<StoreSection>(DOCS);
@@ -47,21 +73,28 @@ export default function HomePageBuilder() {
     () => (collections.data?.storeAdminCollections ?? []).map((c) => ({ value: c.id, label: c.name })),
     [collections.data],
   );
+  const copy = PAGE_COPY[page];
   return (
     <ListEditorPage<StoreSection>
-      title={t('ecommPortal.nav.homePage')}
-      subtitle={t('ecommPortal.homePage.subtitle')}
+      title={t('ecommPortal.nav.sections')}
+      subtitle={t(copy.subtitle)}
       addLabel={t('ecommPortal.homePage.add')}
-      emptyText={t('ecommPortal.homePage.empty')}
+      emptyText={t(copy.empty)}
       items={data?.storeAdminSections ?? []}
       loading={loading}
       error={error}
       editor={editor}
-      extraActions={<ViewOnStoreButton href={storeLinks.home()} label={t('ecommPortal.homePage.viewStore')} />}
+      intro={tabs}
+      extraActions={<ViewOnStoreButton href={copy.href()} label={t(copy.viewLabel)} />}
       getName={(section) => section.title || t(SECTION_KIND_KEYS[section.kind])}
       renderSecondary={(section) => <SectionMeta section={section} />}
       renderForm={(props) => (
-        <HomeSectionForm {...props} collectionOptions={collectionOptions} categoryOptions={taxonomy.categoryOptions} />
+        <HomeSectionForm
+          {...props}
+          onSubmit={(input) => props.onSubmit({ ...input, page })}
+          collectionOptions={collectionOptions}
+          categoryOptions={taxonomy.categoryOptions}
+        />
       )}
     />
   );

@@ -65,6 +65,22 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     message: String
   }
 
+  "One template's line in a header/footer connect run."
+  type EmailFragmentPlanRow {
+    slug: String!
+    "The fragment it names (or would name); '(unmapped)' when none fits."
+    category: String!
+    note: String!
+    "already | linked | stripped | skipped | no-fragment"
+    action: String!
+  }
+
+  type EmailFragmentConnectResult {
+    rows: [EmailFragmentPlanRow!]!
+    "Templates that gained a header/footer — 0 on a dry run."
+    connected: Int!
+  }
+
   extend type Query {
     emailTemplates: [EmailTemplate!]!
     emailTemplate(template_id: ID!): EmailTemplate
@@ -98,6 +114,13 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     Subject, fragment and footer sentence are left as they are.
     """
     resetEmailTemplate(template_id: ID!): EmailTemplate!
+    """
+    Connect every template that sends without a header/footer to its fragment:
+    shipped templates follow their category, an admin's own template takes
+    fallback_key (left alone without one). An old built-in logo/footer is
+    stripped so nothing renders twice. dry_run reports without writing.
+    """
+    connectEmailTemplateFragments(fallback_key: String, dry_run: Boolean): EmailFragmentConnectResult!
     sendTestEmail(template_id: ID!, to: String!, vars: String): EmailTestResult!
   }
 `;

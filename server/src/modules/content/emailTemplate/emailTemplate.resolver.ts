@@ -10,6 +10,7 @@ import {
 import { emailPreviewVars, sendHtmlEmail } from '@services/email/email.service';
 import { STARTER_MJML } from '@services/email/catalogue/starter';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 
 /** The Communications console manages the templates. */
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
@@ -135,6 +136,26 @@ export const emailTemplateResolvers = {
     resetEmailTemplate: (_p: unknown, args: { template_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return emailTemplateService.reset(args.template_id);
+    },
+    connectEmailTemplateFragments: async (
+      _p: unknown,
+      args: { fallback_key?: string | null; dry_run?: boolean | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      const result = await emailTemplateService.connectFragments({
+        fallback: args.fallback_key || null,
+        dryRun: Boolean(args.dry_run),
+      });
+      if (!args.dry_run) {
+        logs.server.info('emailTemplate', 'connectEmailTemplateFragments', {
+          actor_id: ctx.user?.id,
+          fallback_key: args.fallback_key ?? null,
+          connected: result.connected,
+          msg: `${result.connected} template(s) connected to a header/footer from the Communications portal`,
+        });
+      }
+      return result;
     },
     sendTestEmail: async (
       _p: unknown,

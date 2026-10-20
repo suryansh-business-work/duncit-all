@@ -19,9 +19,9 @@ interface Props {
  * editor. A component this deep opening its own network connection is how a
  * panel ends up impossible to render in a test.
  *
- * "None" is a real choice and the default: every template that shipped before
- * fragments existed already draws its own header and footer, so turning them
- * all on at once would show two logos.
+ * "None" sends the body bare. Every shipped body is drawn WITHOUT a header and
+ * footer now, so None is only right for a body that draws its own — the
+ * page's "Connect header & footer" action links the rest in one go.
  *
  * It says WHY it is empty. A failed fragments query used to render as a
  * dropdown with one entry in it, which reads as "there is nothing to pick"
@@ -41,7 +41,7 @@ export default function FragmentPicker({
     if (error) return `Could not load fragments: ${error}`;
     if (loading && options.length === 0) return 'Loading fragments…';
     if (options.length === 0) return 'No fragments yet — add one on the Fragments page.';
-    if (!value) return 'Renders exactly as written, with nothing added.';
+    if (!value) return 'No header or footer — sends without the Duncit logo and footer.';
     if (chosen && !chosen.is_active) return 'That fragment is switched off — nothing is added.';
     return 'Its header and footer are rendered around this body.';
   };

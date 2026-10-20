@@ -9,6 +9,10 @@ import { emailFragmentService } from '@modules/content/emailFragment/emailFragme
 import { CATEGORY_NOTE_KEY } from '@modules/content/emailFragment/emailFragment.defaults';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from '@services/email/template-categories';
 import { STARTER_MJML } from '@services/email/catalogue/starter';
+import { connectTemplateFragments } from './emailTemplate.chrome';
+
+/** The header/footer a template started from the bare starter body gets. */
+const STARTER_FRAGMENT_KEY = 'notification';
 
 /** Walk the MJML source and extract every {{ var }} reference. */
 export function detectVariables(mjml: string): string[] {
@@ -282,7 +286,10 @@ export const emailTemplateService = {
       });
     return EmailTemplateModel.create({
       ...input,
-      // No body given: start from the shipped design, not a blank page.
+      // No body given: start from the shipped design, not a blank page. That
+      // starter is a bare body (no logo, no footer), so it also gets a fragment
+      // unless the admin picked one — otherwise the new template sends bare.
+      ...(input.mjml ? {} : { fragment_key: input.fragment_key ?? STARTER_FRAGMENT_KEY }),
       mjml: input.mjml || STARTER_MJML,
       template_id: crypto.randomUUID(),
     });
@@ -354,7 +361,18 @@ export const emailTemplateService = {
       )
     );
     await emailTemplateService.upgradeShippedDefaults();
+    // The upgraded bodies are BARE — no logo, no footer. A row that predates
+    // fragments still names none, so without this every one of them sent with
+    // no header and no footer. Shipped slugs only: an admin's own template is
+    // left for the portal's "Connect header & footer" action to place.
+    await connectTemplateFragments().catch((error) => {
+      logs.server.error('emailTemplate', 'connectTemplateFragments', { error });
+    });
   },
+
+  /** Communications portal action — see `connectTemplateFragments`. */
+  connectFragments: (options: { fallback?: string | null; dryRun?: boolean }) =>
+    connectTemplateFragments(options),
 
   /**
    * Move every stored template still holding an OLD shipped body onto the new
@@ -391,8 +409,8 @@ export const emailTemplateService = {
    * Render a stored template by slug for use from email.service.
    *
    * The body is wrapped in its category's header/footer fragment first, when it
-   * names one. A template that names none renders exactly as it did before
-   * fragments existed — which is why `fragment_key` defaults to null.
+   * names one. A template that names none renders bare — no logo, no footer —
+   * which is why boot connects every shipped row (`connectTemplateFragments`).
    */
   async render(slug: string, vars: Record<string, string> = {}) {
     const tpl = await loadTemplate(slug);

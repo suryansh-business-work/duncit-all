@@ -121,6 +121,26 @@ export interface Tpl {
   updated_at?: string | null;
 }
 
+/** Wrap every bare template in its header/footer fragment (dry_run: plan only). */
+export const CONNECT_FRAGMENTS = gql`
+  mutation ConnectEmailTemplateFragments($fallback_key: String, $dry_run: Boolean) {
+    connectEmailTemplateFragments(fallback_key: $fallback_key, dry_run: $dry_run) {
+      connected
+      rows {
+        slug
+        category
+        action
+      }
+    }
+  }
+`;
+
+export interface FragmentPlanRow {
+  slug: string;
+  category: string;
+  action: 'already' | 'linked' | 'stripped' | 'skipped' | 'no-fragment';
+}
+
 /** Every fragment, for the template's Header / footer picker. */
 export const FRAGMENT_OPTIONS = gql`
   query FragmentOptions {

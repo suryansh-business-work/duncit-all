@@ -8552,6 +8552,24 @@ export type EmailFragment = {
   updated_at?: Maybe<Scalars['String']['output']>;
 };
 
+export type EmailFragmentConnectResult = {
+  __typename?: 'EmailFragmentConnectResult';
+  /** Templates that gained a header/footer — 0 on a dry run. */
+  connected: Scalars['Int']['output'];
+  rows: Array<EmailFragmentPlanRow>;
+};
+
+/** One template's line in a header/footer connect run. */
+export type EmailFragmentPlanRow = {
+  __typename?: 'EmailFragmentPlanRow';
+  /** already | linked | stripped | skipped | no-fragment */
+  action: Scalars['String']['output'];
+  /** The fragment it names (or would name); '(unmapped)' when none fits. */
+  category: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
 /**
  * One attempt to send an email — including the ones that never left.
  *
@@ -13308,6 +13326,13 @@ export type Mutation = {
   connectBrandRazorpay: BrandIntegrationStatus;
   /** Partner: save the brand's ShipRocket API user and check it against ShipRocket right away. */
   connectBrandShiprocket: BrandIntegrationStatus;
+  /**
+   * Connect every template that sends without a header/footer to its fragment:
+   * shipped templates follow their category, an admin's own template takes
+   * fallback_key (left alone without one). An old built-in logo/footer is
+   * stripped so nothing renders twice. dry_run reports without writing.
+   */
+  connectEmailTemplateFragments: EmailFragmentConnectResult;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
   /** Host: arm the buzzer for a fresh round, or disarm it. */
@@ -16060,6 +16085,12 @@ export type MutationConnectBrandRazorpayArgs = {
 export type MutationConnectBrandShiprocketArgs = {
   brand_doc_id: Scalars['ID']['input'];
   input: BrandShiprocketInput;
+};
+
+
+export type MutationConnectEmailTemplateFragmentsArgs = {
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
+  fallback_key?: InputMaybe<Scalars['String']['input']>;
 };
 
 

@@ -342,6 +342,13 @@ services:
     ports:
       - "127.0.0.1:2144:8080"
 
+  gig-jobs:
+    image: ${DOCKERHUB_USERNAME}/duncit-gig-jobs:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-gig-jobs
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2145:8080"
+
   ecomm-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-staging}
     container_name: duncit-staging-ecomm-portal

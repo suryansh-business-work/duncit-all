@@ -349,6 +349,14 @@ services:
     ports:
       - "127.0.0.1:2044:8080"
 
+  # The Gig Jobs console (gig-jobs.duncit.com).
+  gig-jobs:
+    image: ${DOCKERHUB_USERNAME}/duncit-gig-jobs:${IMAGE_TAG:-latest}
+    container_name: duncit-gig-jobs
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2045:8080"
+
   # The pet store's console (ecomm-portal.duncit.com).
   ecomm-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-latest}

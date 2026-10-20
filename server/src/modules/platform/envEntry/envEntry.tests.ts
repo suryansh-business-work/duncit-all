@@ -16,6 +16,7 @@ import {
 } from './envEntry.connection';
 import type { EnvEntryConfig } from './envEntry.service';
 import { envAttemptService, type EnvTestAttempts } from './envAttempt.service';
+import { recordTest } from './envTestLog.service';
 import { normalizePhone } from '@modules/platform/otp/otp.service';
 import {
   msg91Identifier,
@@ -57,10 +58,6 @@ async function touch(id: string) {
   await EnvEntryModel.updateOne({ _id: id }, { $set: { last_used_at: new Date() } });
 }
 
-/** Stamp the test outcome (green check / red) shown in the entries table. */
-async function record(id: string, ok: boolean) {
-  await EnvEntryModel.updateOne({ _id: id }, { $set: { last_tested_at: new Date(), last_test_ok: ok } });
-}
 
 /** What a test answers once the entry's attempts for this window are used up. Nothing was sent to the vendor. */
 function capReached(attempts: EnvTestAttempts) {
@@ -77,11 +74,17 @@ function capReached(attempts: EnvTestAttempts) {
  * test spends one of the entry's attempts first; one over the cap is answered
  * without running, and without stamping an outcome the credentials never earned.
  */
-async function tracked<T extends { ok: boolean }>(id: string, fn: () => Promise<T>): Promise<T & { attempts: EnvTestAttempts }> {
+async function tracked<T extends { ok: boolean; message?: string | null }>(
+  id: string,
+  kind: string,
+  actor: string | null | undefined,
+  fn: () => Promise<T>
+): Promise<T & { attempts: EnvTestAttempts }> {
   const { allowed, attempts } = await envAttemptService.spend(id);
   if (!allowed) return capReached(attempts) as unknown as T & { attempts: EnvTestAttempts };
   const result = await fn();
-  await record(id, result.ok);
+  // Stamps the entry's green check AND appends the line to its test history.
+  await recordTest({ id, ok: result.ok, message: result.message, kind, actor });
   return { ...result, attempts };
 }
 
@@ -460,21 +463,24 @@ const impl = {
 
 /**
  * Public interface — every test records its pass/fail outcome on the entry
- * (last_tested_at + last_test_ok) so the table can show a green check.
+ * (last_tested_at + last_test_ok) so the table can show a green check, and a
+ * line in its test history naming who ran it (`actor`).
  * `rawConfig` throwing (not-found / category mismatch) propagates unchanged.
  */
+type Actor = string | null | undefined;
+
 export const envEntryTests = {
   connection: (id: string, to: string | null | undefined, userId: string | null) =>
-    tracked(id, () => impl.connection(id, to, userId)),
-  email: (id: string, to: string) => tracked(id, () => impl.email(id, to)),
-  imagekitUpload: (id: string, fileBase64: string, fileName: string) =>
-    tracked(id, () => impl.imagekitUpload(id, fileBase64, fileName)),
-  pexels: (id: string, query: string) => tracked(id, () => impl.pexels(id, query)),
-  twilioCall: (id: string, to: string) => tracked(id, () => impl.twilioCall(id, to)),
-  openai: (id: string, prompt: string) => tracked(id, () => impl.openai(id, prompt)),
-  gemini: (id: string, prompt: string) => tracked(id, () => impl.gemini(id, prompt)),
+    tracked(id, 'CONNECTION', userId, () => impl.connection(id, to, userId)),
+  email: (id: string, to: string, actor?: Actor) => tracked(id, 'EMAIL', actor, () => impl.email(id, to)),
+  imagekitUpload: (id: string, fileBase64: string, fileName: string, actor?: Actor) =>
+    tracked(id, 'IMAGEKIT_UPLOAD', actor, () => impl.imagekitUpload(id, fileBase64, fileName)),
+  pexels: (id: string, query: string, actor?: Actor) => tracked(id, 'PEXELS', actor, () => impl.pexels(id, query)),
+  twilioCall: (id: string, to: string, actor?: Actor) => tracked(id, 'TWILIO_CALL', actor, () => impl.twilioCall(id, to)),
+  openai: (id: string, prompt: string, actor?: Actor) => tracked(id, 'OPENAI', actor, () => impl.openai(id, prompt)),
+  gemini: (id: string, prompt: string, actor?: Actor) => tracked(id, 'GEMINI', actor, () => impl.gemini(id, prompt)),
   // Only a send stamps the entry: it is the step that proves the widget AND the
   // key, while a mistyped code at verify says nothing about either.
-  msg91: (id: string, input: Msg91TestInput) =>
-    input.action === 'SEND_OTP' ? tracked(id, () => impl.msg91(id, input)) : impl.msg91(id, input),
+  msg91: (id: string, input: Msg91TestInput, actor?: Actor) =>
+    input.action === 'SEND_OTP' ? tracked(id, 'MSG91_SEND', actor, () => impl.msg91(id, input)) : impl.msg91(id, input),
 };

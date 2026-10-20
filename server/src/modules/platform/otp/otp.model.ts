@@ -40,6 +40,9 @@ export const OTP_PURPOSES = [
   // booked. Its own purpose so a code minted for any sign-in or account change
   // can never place an order, and the other way round.
   'STORE_COD',
+  // Opening Tech → Environment Variables. Mailed to the root admin, not to the
+  // operator asking, so a signed-in session alone never reads a secret.
+  'ENV_ACCESS',
 ] as const;
 export type OtpPurpose = (typeof OTP_PURPOSES)[number];
 

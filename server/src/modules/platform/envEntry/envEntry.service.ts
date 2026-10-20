@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { EnvEntryModel, ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import { CATEGORY_FIELDS, SECRET_FIELDS } from './envEntry.fields';
+import { recordTest } from './envTestLog.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   aisensyConnection,
@@ -95,11 +96,6 @@ const ENV_ENTRY_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { category: 1, is_default: -1, name: 1 },
 };
-
-/** Record the outcome of any interactive/credential test on the entry. */
-export async function recordTestResult(id: string, ok: boolean) {
-  await EnvEntryModel.updateOne({ _id: id }, { $set: { last_tested_at: new Date(), last_test_ok: ok } });
-}
 
 function notFound(): never {
   throw new GraphQLError('Environment entry not found', { extensions: { code: 'NOT_FOUND' } });
@@ -338,13 +334,11 @@ export const envEntryService = {
     return pub(doc);
   },
 
-  async test(id: string) {
+  async test(id: string, actor?: string | null) {
     const doc = await EnvEntryModel.findById(id);
     if (!doc) notFound();
     const result = await testEnvConnection(doc.category as EnvCategory, (doc.config ?? {}) as EnvEntryConfig);
-    const set: any = { last_tested_at: new Date(), last_test_ok: result.ok };
-    if (result.ok) set.last_used_at = new Date();
-    await EnvEntryModel.updateOne({ _id: doc._id }, { $set: set });
+    await recordTest({ id: String(doc._id), ok: result.ok, message: result.message, kind: 'QUICK', actor });
     return result;
   },
 

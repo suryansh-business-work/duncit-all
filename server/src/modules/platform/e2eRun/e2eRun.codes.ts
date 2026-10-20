@@ -30,6 +30,7 @@ const TEMPLATE_PURPOSES: Readonly<Record<string, string>> = {
   'password-change-otp': 'PASSWORD_CHANGE',
   'account-deletion-otp': 'ACCOUNT_DELETION',
   'portal-login-otp': 'PORTAL_LOGIN',
+  'env-access-otp': 'ENV_ACCESS',
 };
 
 /** Long enough for every code's own expiry (10 minutes); Mongo removes it after. */

@@ -8,7 +8,11 @@ import {
 import { isWhatsappDestination } from '@utils/phone';
 import { recordManualSend, WA_OTP_EVENT_KEY } from '@modules/platform/whatsapp/whatsapp.manualLog';
 import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
-import { sendLoginOtpEmail, sendPasswordResetOtpEmail } from '@services/email/email.service';
+import {
+  sendEnvAccessOtpEmail,
+  sendLoginOtpEmail,
+  sendPasswordResetOtpEmail,
+} from '@services/email/email.service';
 import {
   msg91Identifier,
   msg91SendOtp,
@@ -173,6 +177,7 @@ async function deliverEmail(input: Readonly<OtpDeliveryInput>): Promise<IOtpDeli
 const EMAIL_SENDERS: Partial<Record<OtpPurpose, typeof sendPasswordResetOtpEmail>> = {
   PASSWORD_RESET: sendPasswordResetOtpEmail,
   LOGIN: sendLoginOtpEmail,
+  ENV_ACCESS: sendEnvAccessOtpEmail,
 };
 
 /**

@@ -71,6 +71,7 @@ export const ACCOUNT_BODIES: Record<string, string> = {
   'account-deletion-otp': otpBody('email.accountDeletionOtp', { tone: STOPPED }),
   'login-otp': otpBody('email.loginOtp', { expiryKey: 'email.loginOtp.expires' }),
   'portal-login-otp': otpBody('email.portalLoginOtp', { expiryKey: 'email.portalLoginOtp.expires' }),
+  'env-access-otp': otpBody('email.envAccessOtp', { expiryKey: 'email.envAccessOtp.expires', tone: PAUSED }),
 
   'admin-credentials': shell(
     'email.adminCredentials.title',

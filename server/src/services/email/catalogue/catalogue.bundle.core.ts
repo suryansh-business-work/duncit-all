@@ -56,6 +56,13 @@ export const CORE_EMAIL_FALLBACK: Record<string, string> = {
     'This code expires in {{expiresMinutes}} minutes and works only for {{portal}}.',
   'email.portalLoginOtp.ignore':
     'If you did not try to sign in, ignore this email — the code is useless on its own and nobody has been let in. Tell your administrator if you keep receiving these.',
+  'email.envAccessOtp.title': 'Environment Variables access code',
+  'email.envAccessOtp.body':
+    'Someone signed in to the Tech console asked to open Environment Variables. Share this code only if you know who asked and why.',
+  'email.envAccessOtp.expires':
+    'This code expires in {{expiresMinutes}} minutes and can be used once. Never forward it — it unlocks every key and secret on the platform.',
+  'email.envAccessOtp.ignore':
+    'If nobody on your team asked for this, do not share the code and review who has Tech console access.',
 
   // --- Admin and partner access ---------------------------------------------
   'email.adminCredentials.title': 'Duncit Super Admin Credentials',

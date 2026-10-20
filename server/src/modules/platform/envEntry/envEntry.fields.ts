@@ -442,6 +442,99 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   TRUECALLER: 'Truecaller (one-tap phone sign-in)',
 };
 
+/** One line under each category's title in the Tech portal: what the keys power. */
+export const CATEGORY_DESCRIPTIONS: Record<EnvCategory, string> = {
+  EMAIL: 'The mailbox every product email is sent from',
+  IMAGEKIT: 'Image and video uploads, storage and delivery',
+  PEXELS: 'Stock photos and videos for covers',
+  GOOGLE_OAUTH: 'Continue with Google on web, Android and iOS',
+  GOOGLE_MAPS: 'Maps, places search and geocoding',
+  TWILIO: 'Voice calls and the support line',
+  OPENAI: 'GPT models behind the AI features',
+  GEMINI: 'Google Gemini models behind the AI features',
+  SERVAM: 'Indian-language voice and text models',
+  RAZORPAY: 'Payments, refunds and payment webhooks',
+  SHIPROCKET: 'Shipping, pickups and delivery tracking',
+  SLACK: 'Team alerts and channel notifications',
+  AISENSY: 'WhatsApp messages, campaigns and OTP',
+  TURN: 'Relay that keeps staff calls connected',
+  GITHUB: 'Triggers and reads the app build workflows',
+  GOOGLE_PLAY: 'Android store releases and listings',
+  GOOGLE_DRIVE: 'Raw footage for Reel Studio',
+  MSG91: 'SMS one-time codes',
+  APPLE_SIGNIN: 'Sign in with Apple on web and iOS',
+  APP_STORE_CONNECT: 'iOS signing and App Store releases',
+  SONARQUBE: 'Code quality and security analysis',
+  GODADDY: 'Domain and DNS records at GoDaddy',
+  CLOUDFLARE: 'Domain and DNS records at Cloudflare',
+  SOCIAL_APPS: 'LinkedIn, Meta, X and YouTube publishing',
+  TRUECALLER: 'One-tap phone sign-in',
+};
+
+/**
+ * How the Tech portal's sidebar groups the categories, in display order. Every
+ * category belongs to exactly one group — the guard below throws on a miss.
+ */
+export const CATEGORY_GROUPS: readonly {
+  key: string;
+  label: string;
+  description: string;
+  categories: readonly EnvCategory[];
+}[] = [
+  {
+    key: 'MESSAGING',
+    label: 'Messaging & OTP',
+    description: 'Email, WhatsApp, SMS, calls and alerts',
+    categories: ['EMAIL', 'AISENSY', 'MSG91', 'TWILIO', 'SLACK', 'TURN'],
+  },
+  {
+    key: 'IDENTITY',
+    label: 'Sign-in & identity',
+    description: 'Social and phone sign-in providers',
+    categories: ['GOOGLE_OAUTH', 'APPLE_SIGNIN', 'TRUECALLER'],
+  },
+  {
+    key: 'AI',
+    label: 'AI models',
+    description: 'Text, voice and generation models',
+    categories: ['OPENAI', 'GEMINI', 'SERVAM'],
+  },
+  {
+    key: 'MEDIA',
+    label: 'Media, maps & content',
+    description: 'Uploads, stock media, maps and social publishing',
+    categories: ['IMAGEKIT', 'PEXELS', 'GOOGLE_MAPS', 'GOOGLE_DRIVE', 'SOCIAL_APPS'],
+  },
+  {
+    key: 'COMMERCE',
+    label: 'Payments & shipping',
+    description: 'Money in and parcels out',
+    categories: ['RAZORPAY', 'SHIPROCKET'],
+  },
+  {
+    key: 'RELEASES',
+    label: 'Builds & releases',
+    description: 'CI, store releases and code analysis',
+    categories: ['GITHUB', 'GOOGLE_PLAY', 'APP_STORE_CONNECT', 'SONARQUBE'],
+  },
+  {
+    key: 'DOMAINS',
+    label: 'Domains & DNS',
+    description: 'Registrar and DNS providers',
+    categories: ['GODADDY', 'CLOUDFLARE'],
+  },
+];
+
+/** The group a category sits in — total, because every category is placed exactly once. */
+export const CATEGORY_GROUP_OF = new Map(
+  CATEGORY_GROUPS.flatMap((group) => group.categories.map((category) => [category, group] as const))
+);
+
+const ungrouped = Object.keys(CATEGORY_LABELS).filter((c) => !CATEGORY_GROUP_OF.has(c as EnvCategory));
+if (ungrouped.length > 0) {
+  throw new Error(`Env categories with no sidebar group: ${ungrouped.join(', ')}. Add them to CATEGORY_GROUPS.`);
+}
+
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
 export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   EMAIL: 'https://support.google.com/a/answer/176600',

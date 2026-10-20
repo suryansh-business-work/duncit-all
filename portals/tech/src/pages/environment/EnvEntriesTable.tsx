@@ -8,6 +8,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveIcon from '@mui/icons-material/Remove';
+import HistoryIcon from '@mui/icons-material/History';
 import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EnvEntry } from './queries';
@@ -74,6 +75,8 @@ interface Props {
   onDelete: (e: EnvEntry) => void;
   onSetDefault: (e: EnvEntry) => void;
   onTest: (e: EnvEntry) => void;
+  /** Opens the entry's test history. */
+  onHistory?: (e: EnvEntry) => void;
 }
 
 export default function EnvEntriesTable({
@@ -84,6 +87,7 @@ export default function EnvEntriesTable({
   onDelete,
   onSetDefault,
   onTest,
+  onHistory,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EnvEntry>[]>(() => {
@@ -92,6 +96,7 @@ export default function EnvEntriesTable({
         justifyContent: "flex-end"
       }}>
         <Tooltip title={t('tech.environment.testConnection')}><DuncitIconButton size="small" onClick={() => onTest(e)}><ScienceIcon fontSize="small" /></DuncitIconButton></Tooltip>
+        {onHistory && <Tooltip title={t('tech.environment.testHistory')}><DuncitIconButton size="small" aria-label={t('tech.environment.testHistory')} data-testid="env-entry-history" onClick={() => onHistory(e)}><HistoryIcon fontSize="small" /></DuncitIconButton></Tooltip>}
         <Tooltip title={t('shell.common.edit')}><DuncitIconButton size="small" onClick={() => onEdit(e)}><EditIcon fontSize="small" /></DuncitIconButton></Tooltip>
         <Tooltip title={t('tech.environment.setDefault')}><DuncitIconButton size="small" aria-pressed={e.is_default} data-testid="env-entry-set-default" onClick={() => onSetDefault(e)}>{e.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}</DuncitIconButton></Tooltip>
         <Tooltip title={t('shell.common.delete')}><DuncitIconButton size="small" onClick={() => onDelete(e)}><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
@@ -127,9 +132,9 @@ export default function EnvEntriesTable({
         valueGetter: portalsValue,
       },
       { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 130, type: 'date' },
-      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 170, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 200, cellRenderer: renderActions },
     ];
-  }, [onDelete, onEdit, onSetDefault, onTest]);
+  }, [onDelete, onEdit, onHistory, onSetDefault, onTest, t]);
 
   return (
     <DuncitTable<EnvEntry>

@@ -109,6 +109,12 @@ export const envEntryTypeDefs = gql`
     docUrl: String
     "Link to the provider's API documentation, when there is one worth reading."
     apiDocsUrl: String
+    "One line on what the keys power — the subtitle under the category title."
+    description: String
+    "The sidebar group this category sits in."
+    groupKey: String!
+    groupLabel: String!
+    groupDescription: String
   }
 
   type EnvEntry {
@@ -306,7 +312,68 @@ export const envEntryTypeDefs = gql`
     to: String
   }
 
+  "Whether THIS session has typed the root admin's emailed code recently."
+  type EnvAccessStatus {
+    unlocked: Boolean!
+    "When the unlock ends. Null while locked."
+    expires_at: String
+    "The masked mailbox the code goes to."
+    sent_to: String!
+  }
+
+  type EnvAccessCodeRequest {
+    challenge_id: ID!
+    expires_at: String!
+    resend_after_seconds: Int!
+    sent_to: String!
+  }
+
+  "One press of an entry's Test button. Never carries a credential."
+  type EnvTestLogEntry {
+    id: ID!
+    entry_id: ID!
+    entry_name: String!
+    category: EnvCategory!
+    "Which test ran: QUICK, CONNECTION, EMAIL, IMAGEKIT_UPLOAD, PEXELS, TWILIO_CALL, OPENAI, GEMINI, MSG91_SEND."
+    kind: String!
+    ok: Boolean!
+    message: String!
+    "Who ran it, when known."
+    tested_by: String
+    created_at: String!
+  }
+
+  type EnvCategoryCounts {
+    category: EnvCategory!
+    total: Int!
+    active: Int!
+    tested: Int!
+    passing: Int!
+    failing: Int!
+    untested: Int!
+  }
+
+  "Counts for the Environment Variables mini dashboard. No value is ever read."
+  type EnvOverview {
+    total: Int!
+    active: Int!
+    tested: Int!
+    passing: Int!
+    failing: Int!
+    untested: Int!
+    "Every category this server knows."
+    services: Int!
+    "Categories with an active default entry serving."
+    services_ready: Int!
+    categories: [EnvCategoryCounts!]!
+  }
+
   extend type Query {
+    "Whether this session has unlocked Environment Variables."
+    envAccessStatus: EnvAccessStatus!
+    "Test history, newest first: one entry, one category, or everything."
+    envTestHistory(entryId: ID, category: EnvCategory, limit: Int): [EnvTestLogEntry!]!
+    envOverview: EnvOverview!
     envEntries(filter: EnvEntryFilter): [EnvEntry!]!
     envEntriesTable(query: TableQueryInput): EnvEntryTablePage!
     envEntry(id: ID!): EnvEntry
@@ -320,6 +387,11 @@ export const envEntryTypeDefs = gql`
   }
 
   extend type Mutation {
+    "Email a code to the root admin; typing it unlocks Environment Variables for this session."
+    requestEnvAccessCode: EnvAccessCodeRequest!
+    verifyEnvAccessCode(challengeId: ID!, code: String!): EnvAccessStatus!
+    "End this session's unlock now."
+    lockEnvAccess: EnvAccessStatus!
     createEnvEntry(input: CreateEnvEntryInput!): EnvEntry!
     updateEnvEntry(id: ID!, input: UpdateEnvEntryInput!): EnvEntry!
     deleteEnvEntry(id: ID!): Boolean!

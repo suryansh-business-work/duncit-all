@@ -2,6 +2,7 @@ import { Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 import EnvVariablesTab from '../environment/EnvVariablesTab';
+import EnvAccessGate from '../environment/access-gate';
 
 /**
  * MSG91 OTP Logs → MSG91 Settings: the MSG91 category of Environment
@@ -15,7 +16,10 @@ export default function Msg91SettingsPage() {
   return (
     <Stack spacing={2.5}>
       <PageHeader title={t('tech.msg91.settingsTitle')} subtitle={t('tech.msg91.settingsSubtitle')} />
-      <EnvVariablesTab category="MSG91" />
+      {/* The keys sit behind the same emailed root-admin code as Environment Variables. */}
+      <EnvAccessGate>
+        <EnvVariablesTab category="MSG91" />
+      </EnvAccessGate>
     </Stack>
   );
 }

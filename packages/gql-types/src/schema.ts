@@ -8947,6 +8947,24 @@ export type EntityIdBackfillResult = {
   repaired: Scalars['Int']['output'];
 };
 
+export type EnvAccessCodeRequest = {
+  __typename?: 'EnvAccessCodeRequest';
+  challenge_id: Scalars['ID']['output'];
+  expires_at: Scalars['String']['output'];
+  resend_after_seconds: Scalars['Int']['output'];
+  sent_to: Scalars['String']['output'];
+};
+
+/** Whether THIS session has typed the root admin's emailed code recently. */
+export type EnvAccessStatus = {
+  __typename?: 'EnvAccessStatus';
+  /** When the unlock ends. Null while locked. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  /** The masked mailbox the code goes to. */
+  sent_to: Scalars['String']['output'];
+  unlocked: Scalars['Boolean']['output'];
+};
+
 /** One category's cap, with its label for the settings form. */
 export type EnvAttemptLimit = {
   __typename?: 'EnvAttemptLimit';
@@ -9004,14 +9022,31 @@ export type EnvCategory =
   | 'TURN'
   | 'TWILIO';
 
+export type EnvCategoryCounts = {
+  __typename?: 'EnvCategoryCounts';
+  active: Scalars['Int']['output'];
+  category: EnvCategory;
+  failing: Scalars['Int']['output'];
+  passing: Scalars['Int']['output'];
+  tested: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  untested: Scalars['Int']['output'];
+};
+
 export type EnvCategoryDef = {
   __typename?: 'EnvCategoryDef';
   /** Link to the provider's API documentation, when there is one worth reading. */
   apiDocsUrl?: Maybe<Scalars['String']['output']>;
   category: EnvCategory;
+  /** One line on what the keys power — the subtitle under the category title. */
+  description?: Maybe<Scalars['String']['output']>;
   /** Link to where an operator obtains these credentials. */
   docUrl?: Maybe<Scalars['String']['output']>;
   fields: Array<EnvFieldDef>;
+  groupDescription?: Maybe<Scalars['String']['output']>;
+  /** The sidebar group this category sits in. */
+  groupKey: Scalars['String']['output'];
+  groupLabel: Scalars['String']['output'];
   label: Scalars['String']['output'];
 };
 
@@ -9135,6 +9170,22 @@ export type EnvMsg91TestInput = {
   retry_channel?: InputMaybe<Scalars['Int']['input']>;
 };
 
+/** Counts for the Environment Variables mini dashboard. No value is ever read. */
+export type EnvOverview = {
+  __typename?: 'EnvOverview';
+  active: Scalars['Int']['output'];
+  categories: Array<EnvCategoryCounts>;
+  failing: Scalars['Int']['output'];
+  passing: Scalars['Int']['output'];
+  /** Every category this server knows. */
+  services: Scalars['Int']['output'];
+  /** Categories with an active default entry serving. */
+  services_ready: Scalars['Int']['output'];
+  tested: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  untested: Scalars['Int']['output'];
+};
+
 export type EnvSecretFlag = {
   __typename?: 'EnvSecretFlag';
   key: Scalars['String']['output'];
@@ -9159,6 +9210,22 @@ export type EnvTestAttempts = {
   used: Scalars['Int']['output'];
   /** How long a window lasts, in hours. */
   window_hours: Scalars['Int']['output'];
+};
+
+/** One press of an entry's Test button. Never carries a credential. */
+export type EnvTestLogEntry = {
+  __typename?: 'EnvTestLogEntry';
+  category: EnvCategory;
+  created_at: Scalars['String']['output'];
+  entry_id: Scalars['ID']['output'];
+  entry_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Which test ran: QUICK, CONNECTION, EMAIL, IMAGEKIT_UPLOAD, PEXELS, TWILIO_CALL, OPENAI, GEMINI, MSG91_SEND. */
+  kind: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+  /** Who ran it, when known. */
+  tested_by?: Maybe<Scalars['String']['output']>;
 };
 
 export type EnvTestResult = {
@@ -13902,6 +13969,8 @@ export type Mutation = {
    * both ways in.
    */
   linkGoogleAccount: AuthPayload;
+  /** End this session's unlock now. */
+  lockEnvAccess: EnvAccessStatus;
   /**
    * Record a rejection the store's API could not report, with the reviewer's
    * words. The advice is written at once and the notices go out. Tech/Super
@@ -14257,6 +14326,8 @@ export type Mutation = {
    */
   requestEmailChangeOtp: OtpRequestResult;
   requestEmailVerificationOtp: OtpRequestResult;
+  /** Email a code to the root admin; typing it unlocks Environment Variables for this session. */
+  requestEnvAccessCode: EnvAccessCodeRequest;
   /**
    * Ask a host or venue for an event. Idempotent: a member with an open request
    * to this target gets that request back instead of a second one.
@@ -15320,6 +15391,7 @@ export type Mutation = {
   /** The venue takes its slot back while the offer is still enrolling; the offer returns to venues' lists and the venue pays the Pod Settings penalty. */
   venueWithdrawAutoPod: AutoPod;
   verifyEmailVerificationOtp: User;
+  verifyEnvAccessCode: EnvAccessStatus;
   verifyEventTicketQr: EventTicketVerifyResult;
   /**
    * Step two: prove the code and get the grant that sets the password.
@@ -21020,6 +21092,12 @@ export type MutationVenueWithdrawAutoPodArgs = {
 
 export type MutationVerifyEmailVerificationOtpArgs = {
   otp: Scalars['String']['input'];
+};
+
+
+export type MutationVerifyEnvAccessCodeArgs = {
+  challengeId: Scalars['ID']['input'];
+  code: Scalars['String']['input'];
 };
 
 
@@ -26822,6 +26900,8 @@ export type Query = {
   entityChangeFeedTable: EntityChangeLogTablePage;
   /** The complete change history of ONE directory record, newest first. */
   entityChangeLogsTable: EntityChangeLogTablePage;
+  /** Whether this session has unlocked Environment Variables. */
+  envAccessStatus: EnvAccessStatus;
   /** The test-attempt caps for every category. */
   envAttemptSettings: EnvAttemptSettings;
   envCategories: Array<EnvCategoryDef>;
@@ -26830,8 +26910,11 @@ export type Query = {
   envEntriesForPortal: Array<EnvEntry>;
   envEntriesTable: EnvEntryTablePage;
   envEntry?: Maybe<EnvEntry>;
+  envOverview: EnvOverview;
   /** Where one entry's test-attempt count stands. Spends nothing. */
   envTestAttempts: EnvTestAttempts;
+  /** Test history, newest first: one entry, one category, or everything. */
+  envTestHistory: Array<EnvTestLogEntry>;
   eventRequestCounts: EventRequestCounts;
   /** Every request of one kind — the Venues console (VENUE) or the Hosts console (HOST). */
   eventRequestsTable: EventRequestTablePage;
@@ -29327,6 +29410,13 @@ export type QueryEnvEntryArgs = {
 
 export type QueryEnvTestAttemptsArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryEnvTestHistoryArgs = {
+  category?: InputMaybe<EnvCategory>;
+  entryId?: InputMaybe<Scalars['ID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 

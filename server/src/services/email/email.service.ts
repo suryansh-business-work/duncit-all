@@ -838,6 +838,22 @@ export function sendLoginOtpEmail(opts: {
   });
 }
 
+/** The code that opens Tech → Environment Variables, mailed to the root admin. */
+export function sendEnvAccessOtpEmail(opts: {
+  to: string;
+  name: string;
+  otp: string;
+  expiresMinutes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Your Duncit Environment Variables access code',
+    template: 'env-access-otp',
+    category: 'authentication',
+    vars: opts,
+  });
+}
+
 /**
  * "Your password was changed" — the notice AFTER a password moves, whichever
  * door moved it.

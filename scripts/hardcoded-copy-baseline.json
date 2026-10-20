@@ -709,7 +709,6 @@
   "portals/tech/src/pages/environment/env-entry/env-entry.types.tsx": 1,
   "portals/tech/src/pages/environment/env-io.ts": 1,
   "portals/tech/src/pages/environment/EnvImportExport.tsx": 5,
-  "portals/tech/src/pages/environment/index.tsx": 1,
   "portals/tech/src/pages/environment/PortalEnvDrawer.tsx": 2,
   "portals/tech/src/pages/environment/PortalMappingTab.tsx": 1,
   "portals/tech/src/pages/environment/test-panels/CallTestPanel.tsx": 2,

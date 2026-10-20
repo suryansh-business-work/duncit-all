@@ -237,6 +237,7 @@ describe('home sections', () => {
   it('defaults a bare section: twelve products from a collection, no window', () => {
     expect(sectionOut({ _id: 's1', kind: 'BRANDS' })).toEqual({
       id: 's1',
+      page: 'HOME',
       kind: 'BRANDS',
       title: '',
       subtitle: '',
@@ -257,6 +258,7 @@ describe('home sections', () => {
   it('keeps a configured section and defaults a bare item', () => {
     const out = sectionOut({
       _id: 's2',
+      page: 'DEALS',
       kind: 'FLASH_SALE',
       title: 'T',
       subtitle: 'S',
@@ -275,6 +277,7 @@ describe('home sections', () => {
     expect(out.items[0]).toEqual({ id: 'i1', eyebrow: 'g', title: 'a', subtitle: 'b', image_url: 'c', mobile_image_url: 'd', cta_label: 'e', link: 'f' });
     expect(out.items[1]).toEqual({ id: '', eyebrow: '', title: '', subtitle: '', image_url: '', mobile_image_url: '', cta_label: '', link: '' });
     expect(out).toMatchObject({
+      page: 'DEALS',
       collection_id: 'k1',
       product_limit: 6,
       discount_tiers: [10, 20],

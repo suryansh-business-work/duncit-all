@@ -23,7 +23,7 @@ export default function EnvWorkspace() {
   const catalogue = useQuery<{ envCategories: EnvCategoryDef[] }>(ENV_CATEGORIES, { fetchPolicy: 'cache-first' });
   const overview = useQuery(ENV_OVERVIEW, { fetchPolicy: 'cache-and-network' });
   const categories = catalogue.data?.envCategories ?? [];
-  const sections = useEnvSections(categories, overview.data?.envOverview.categories ?? []);
+  const sections = useEnvSections(categories, overview.data?.envOverview?.categories ?? []);
   const { selected, category } = sections;
 
   let content: ReactNode;

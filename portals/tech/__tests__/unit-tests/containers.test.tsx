@@ -14,6 +14,24 @@ const a = vi.hoisted(() => ({
   run: vi.fn(),
   mutLoading: false,
   clientQuery: vi.fn(),
+  refetchQueries: vi.fn(),
+}));
+
+// The emailed-code gate in front of the page: this session is already unlocked.
+vi.mock('../../src/pages/environment/access-gate/useEnvAccess', () => ({
+  useEnvAccess: () => ({
+    access: { unlocked: true, expires_at: '2026-10-20T12:00:00.000Z', sent_to: 'ad***@duncit.com' },
+    loading: false,
+    error: undefined,
+    retry: vi.fn(),
+    pending: null,
+    sending: false,
+    verifying: false,
+    locking: false,
+    send: vi.fn(),
+    verify: vi.fn(),
+    lock: vi.fn(),
+  }),
 }));
 vi.mock('@apollo/client/react', async (io) => {
   const actual = await io<typeof import('@apollo/client/react')>();
@@ -21,7 +39,7 @@ vi.mock('@apollo/client/react', async (io) => {
     ...actual,
     useQuery: () => ({ data: a.queryData }),
     useMutation: () => [a.run, { loading: a.mutLoading }] as const,
-    useApolloClient: () => ({ query: a.clientQuery }),
+    useApolloClient: () => ({ query: a.clientQuery, refetchQueries: a.refetchQueries }),
   };
 });
 
@@ -155,17 +173,33 @@ beforeEach(() => {
   a.queryData = serverCategories;
   a.mutLoading = false;
   a.clientQuery.mockReset();
+  a.refetchQueries.mockReset();
+  a.refetchQueries.mockResolvedValue([]);
   st.assignRefetch = true;
 });
 
-describe('EnvironmentPage (tabs)', () => {
-  it('switches between Variables and Portal Mapping', () => {
+describe('EnvironmentPage (sidebar)', () => {
+  it('opens on the overview, then shows a category and Portal Mapping from the sidebar', () => {
     render(<EnvironmentPage />);
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.getByTestId('env-overview')).toBeInTheDocument();
+    expect(screen.getByTestId('env-secret-warning')).toBeInTheDocument();
+    expect(screen.queryByTestId('env-table')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('env-section-EMAIL'));
     expect(screen.getByTestId('env-table')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Portal Mapping' }));
+    expect(screen.queryByTestId('env-overview')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('env-section-mapping'));
     expect(screen.getByTestId('mapping-table')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Variables' }));
-    expect(screen.getByTestId('env-table')).toBeInTheDocument();
+    expect(screen.queryByTestId('env-table')).not.toBeInTheDocument();
+  });
+
+  it('narrows the sidebar to the categories the search matches', () => {
+    render(<EnvironmentPage />);
+    fireEvent.change(screen.getByTestId('env-sidebar-search'), { target: { value: 'twil' } });
+    expect(screen.getByTestId('env-section-TWILIO')).toBeInTheDocument();
+    expect(screen.queryByTestId('env-section-EMAIL')).not.toBeInTheDocument();
   });
 });
 

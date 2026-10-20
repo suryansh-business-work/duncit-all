@@ -18,6 +18,8 @@ import {
   VENUE_FOOD_TAX_MODES,
 } from './venue.constants';
 import { hasVenueCategory, pickVenueCategory, venueCategoryKey } from './venue.categories';
+import { venuePricingSchema } from '@modules/venues/venuePricing/venuePricing.schema.model';
+import type { VenuePricing } from '@modules/venues/venuePricing/venuePricing.types';
 
 export type VenueFoodTaxMode = (typeof VENUE_FOOD_TAX_MODES)[number];
 
@@ -259,6 +261,8 @@ export interface IVenue extends Document {
   venue_commission_pct: number;
   // Venue Settings (operating hours, weekly-off, holidays) + booking rules.
   settings: IVenueSettings;
+  /** The venue's own pricing (Venue Pricing Module); `model: null` = not set up, not bookable. */
+  pricing: VenuePricing;
   /** Admin-set cap on monthly host Pod Requests; null = the default of 10. */
   host_requests_limit_override: number | null;
   // Workflow
@@ -475,6 +479,7 @@ const venueSchema = new Schema<IVenue>(
     venue_share_pct: { type: Number, default: 0, min: 0, max: 100 },
     venue_commission_pct: { type: Number, default: 0, min: 0, max: 100 },
     settings: { type: venueSettingsSchema, default: () => ({}) },
+    pricing: { type: venuePricingSchema, default: () => ({}) },
     host_requests_limit_override: { type: Number, default: null, min: 0 },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },

@@ -1,7 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 import type { TabParamList } from '@/navigation/tabs';
-import type { GoogleSignupHandoff, RecoveryHandoff } from '@duncit/utils';
+import type { GoogleSignupHandoff, RecoveryHandoff, TruecallerSignupProof } from '@duncit/utils';
 
 import type { GiftCardSelection } from '@/utils/gift-cards';
 
@@ -20,7 +20,8 @@ export type RootStackParamList = {
    * CLAIMS it once: a param outlives the remount that re-reads it, and the
    * credential behind it must be spent exactly once.
    */
-  Signup: { googleSignup?: GoogleSignupHandoff } | undefined;
+  Signup:
+    { googleSignup?: GoogleSignupHandoff; truecallerSignup?: TruecallerSignupProof } | undefined;
   /** Optionally carrying the sign-in step's tab and boxes, so the code goes straight there. */
   ForgotPassword: { recovery?: RecoveryHandoff } | undefined;
   Survey: undefined;
@@ -79,7 +80,10 @@ export type RootStackParamList = {
   RegisterVenue: undefined;
   VenueManage: undefined;
   VenueEarnings: undefined;
+  /** /venues/slot-requests — the old path; opens Workshop & Event Requests. */
   VenueSlotRequests: undefined;
+  /** /venues/event-requests — Workshop & Event Requests (mWeb's exact path). */
+  VenueEventRequests: undefined;
   /** /venues/nearby-hosts — Venue Studio's Search Nearby Hosts (mWeb's exact path). */
   NearbyHosts: undefined;
   /** /host/nearby-venues — Host Studio's Search Nearby Venues (mWeb's exact path). */
@@ -90,8 +94,10 @@ export type RootStackParamList = {
   /** /pod-requests/:id — one Pod Request; its notifications land here. */
   PodRequestDetail: { id: string };
   ChangeRequests: undefined;
-  /** /venues/availability — the owner's slot calendar (mWeb's exact path). */
+  /** /venues/availability — the old path; opens the Venue Pricing Module. */
   VenueAvailability: undefined;
+  /** /venues/pricing — the Venue Pricing Module (mWeb's exact path). */
+  VenuePricing: undefined;
   /** /venues/settings — the owner's cancellation policy (mWeb's exact path). */
   VenueSettings: undefined;
   /** Auto Pods a venue may accept — the FIRST of the three enrolments. */

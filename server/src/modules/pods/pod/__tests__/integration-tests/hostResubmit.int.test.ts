@@ -94,7 +94,7 @@ describe('hostResubmitPod — venue-rejected booking cycle', () => {
     ).rejects.toThrow();
   });
 
-  it('resubmits with a new slot at another partner venue — same pod re-enters PENDING', async () => {
+  it('resubmits with a new slot at another partner venue — same pod is booked instantly and goes live', async () => {
     const venueId = await seedVenue();
     const slotId = await seedSlot(venueId);
     const pod = await seedDeclinedPod();
@@ -107,11 +107,10 @@ describe('hostResubmitPod — venue-rejected booking cycle', () => {
       pod_hosts_id: [new Types.ObjectId().toString()], // blocked field — must be ignored
     });
 
-    // Same pod row, updated details, offline + pending approval again.
+    // Same pod row, updated details, live again on a confirmed booking.
     expect(res.id).toBe(String(pod._id));
     expect(res.pod_title).toBe('Poetry evening v2');
-    expect(res.venue_approval_status).toBe('PENDING');
-    expect(res.is_active).toBe(false);
+    expect(res.is_active).toBe(true);
     expect(res.venue_slot_id).toBe(slotId);
 
     const refreshed = await PodModel.findById(pod._id);
@@ -119,13 +118,18 @@ describe('hostResubmitPod — venue-rejected booking cycle', () => {
     // The pod window is locked to the slot.
     const slot = await VenueSlotModel.findById(slotId);
     expect(refreshed!.pod_date_time.getTime()).toBe(slot!.start_at.getTime());
-    // The slot is held again and the venue owner is notified (in-app + email).
-    expect(slot!.status).toBe('PENDING');
+    // The slot is booked outright at its frozen price — no request email.
+    expect(slot!.status).toBe('BOOKED');
     expect(String(slot!.booked_by_pod_id)).toBe(String(pod._id));
+    expect(slot!.price_snapshot).toMatchObject({ venue_payout: 400 });
+    expect(slotRequestEmail).not.toHaveBeenCalled();
+    // A venue booking is confirmed the moment it is made, as on create and re-route.
+    expect(res.venue_approval_status).toBe('APPROVED');
+    // The partner venue is told its venue was booked (fired after the response).
+    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(notifyCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'New slot booking request', target_user_ids: [ownerId] })
+      expect.objectContaining({ title: 'New booking confirmed', target_user_ids: [ownerId] })
     );
-    expect(slotRequestEmail).toHaveBeenCalled();
   });
 
   it('books instantly when the host resubmits onto their own venue slot', async () => {
@@ -145,7 +149,7 @@ describe('hostResubmitPod — venue-rejected booking cycle', () => {
       venue_id: String(ownVenue._id),
       venue_slot_id: slot.id,
     });
-    expect(res.venue_approval_status).toBe('NONE');
+    expect(res.venue_approval_status).toBe('APPROVED');
     expect(res.is_active).toBe(true);
     expect((await VenueSlotModel.findById(slot.id))!.status).toBe('BOOKED');
     expect(slotRequestEmail).not.toHaveBeenCalled();
@@ -186,12 +190,12 @@ describe('hostResubmitPod — venue-rejected booking cycle', () => {
       podService.hostResubmit(String(pod._id), hostId, { venue_id: venueId, venue_slot_id: slotId })
     ).rejects.toThrow(/no longer available/i);
 
-    // Race: AVAILABLE at validation time, snatched before the hold.
+    // Race: AVAILABLE at validation time, snatched before the booking.
     await VenueSlotModel.updateOne({ _id: slotId }, { $set: { status: 'AVAILABLE' } });
-    const realHold = venueSlotService.holdForPod.bind(venueSlotService);
-    jest.spyOn(venueSlotService, 'holdForPod').mockImplementationOnce(async (...args) => {
+    const realBook = venueSlotService.bookForPod.bind(venueSlotService);
+    jest.spyOn(venueSlotService, 'bookForPod').mockImplementationOnce(async (...args) => {
       await VenueSlotModel.updateOne({ _id: slotId }, { $set: { status: 'BOOKED' } });
-      return realHold(...args);
+      return realBook(...args);
     });
     await expect(
       podService.hostResubmit(String(pod._id), hostId, { venue_id: venueId, venue_slot_id: slotId })

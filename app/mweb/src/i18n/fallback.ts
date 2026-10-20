@@ -27,7 +27,7 @@ import {
   type NestedCatalogue,
   type Translator,
 } from '@duncit/app-settings';
-import { VENUE_RENTALS_BUNDLE } from '@duncit/i18n';
+import { VENUE_PRICING_BUNDLE, VENUE_RENTALS_BUNDLE } from '@duncit/i18n';
 
 /**
  * mWeb's LOCAL FALLBACK bundle (CLAUDE.md rule 38).
@@ -71,6 +71,8 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   // The venue availability calendar and the venue settings form render here
   // through the same packages the Partners console mounts (rule 27).
   ...AVAILABILITY_BUNDLE,
+  // venuePricing.*: the Venue Pricing Module and Workshop & Event Requests, as the Partners console shows them.
+  ...VENUE_PRICING_BUNDLE,
   // The public venue / host pages, the publish card and the pod on the sign-in screens.
   ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,

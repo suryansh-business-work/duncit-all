@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.85.81",
+  "version": "1.86.17",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@12.2.0",
@@ -45,6 +45,7 @@
     "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts"
   },
   "dependencies": {
+    "@ajitpatel28/react-native-truecaller": "^1.1.0",
     "@duncit/ai-monitoring": "file:../../packages/ai-monitoring",
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",
     "@duncit/buttons-native": "file:../../packages/buttons-native",

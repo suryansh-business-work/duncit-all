@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Skeleton, Stack } from '@mui/material';
-import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded';
-import StudioPageHeader from '../../components/StudioPageHeader';
 import PillChips from '../../components/club-admin/PillChips';
 import SlotRequestCard from './SlotRequestCard';
 import { GroupedSlotRequests, mwebSeriesRequestLabels } from '@duncit/ui';
@@ -24,11 +22,12 @@ interface SeriesDecisionData {
 }
 
 /**
- * Slot Requests, for a venue owner on their phone.
+ * The slot requests still pending from before instant booking, on the
+ * Workshop & Event Requests page's "Past slot requests" tab.
  *
- * The same queue the partner console shows, because it is the same decision: a
- * pod stays unlisted until its slot is approved, so a request sitting unread
- * is a pod that cannot sell a seat. Making that wait for a laptop was the gap.
+ * Nothing creates new ones any more, but a leftover request keeps the same
+ * approve / decline the partner console offers until it expires — a pod
+ * stays unlisted until its slot is answered.
  */
 export default function VenueSlotRequestsPage() {
   const { t } = useTranslation();
@@ -113,11 +112,7 @@ export default function VenueSlotRequestsPage() {
   );
 
   return (
-    <Stack spacing={2.5} sx={{ p: 2 }} data-testid="venue-slot-requests-page">
-      <StudioPageHeader
-        icon={<EventAvailableRoundedIcon fontSize="small" />}
-        title={t('mweb.venueSlotRequests.slotRequests')}
-      />
+    <Stack spacing={2.5} data-testid="venue-slot-requests-page">
 
       {venues.length > 1 && (
         <PillChips
@@ -147,12 +142,6 @@ export default function VenueSlotRequestsPage() {
         </Stack>
       )}
 
-      {!requestsQuery.loading && requests.length === 0 && (
-        <Alert severity="info" data-testid="venue-slot-requests-page-empty">
-          No pending slot requests right now. New ones appear here the moment a host books one of
-          your slots.
-        </Alert>
-      )}
 
       <GroupedSlotRequests
         requests={requests}

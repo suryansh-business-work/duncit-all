@@ -1,56 +1,39 @@
-import { useQuery } from '@apollo/client/react';
 import { Controller } from 'react-hook-form';
 import { Alert, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { formatDurationBetween } from '../../../../utils/dateFormat';
 import type { FreePodVenueNotice } from '@duncit/utils';
 import FreeVenueNote from '../FreeVenueNote';
-import SlotPicker from '../SlotPicker';
-import { VENUE_AVAILABLE_SLOTS } from '../venueSlots';
 import VenuePicker from '../VenuePicker';
 import VenueContactCard from '../VenueContactCard';
+import InstantBookingPicker from './InstantBookingPicker';
+import RequestSlotPicker from './RequestSlotPicker';
+import { venueSpaces, type VenueSpace } from './venueSpaces';
 import VirtualMeetingFields from '../VirtualMeetingFields';
 import PodRepeatSection from '../fields/PodRepeatSection';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
-import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
+import type { CreatePodForm, CreatePodVenue } from '../create-pod.types';
 
-/** `label` is what the host sees; `slotSpaceLabel` is the VenueSlot.space_label
- * this space books ('' = whole venue), used to filter the slot list. */
-export type VenueSpace = { label: string; capacity: number; slotSpaceLabel: string };
-
-/** The venue's bookable spaces: its named capacity items, else the whole venue
- * as a single option. Always ≥1 when a venue is picked, so capacity selection is
- * always required before slots/prices show. Picking one fills No. of spots.
- * The whole-venue `label` stays in English: it is the stored value identifying
- * the space, so it is translated where it is DISPLAYED instead. */
-export const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
-  if (!venue) return [];
-  const items = venue.capacity_items ?? [];
-  if (items.length > 0) {
-    return items.map((item) => ({ label: item.label, capacity: item.capacity, slotSpaceLabel: item.label }));
-  }
-  return [{ label: 'Whole venue', capacity: venue.capacity ?? 0, slotSpaceLabel: '' }];
-};
-
-// Re-exported: the stepper's pricing query and its tests import it from here.
-export { VENUE_AVAILABLE_SLOTS };
+// Re-exported: the stepper's pricing query and its tests import them from here.
+export { VENUE_AVAILABLE_SLOTS } from '../venueSlots';
+export { venueSpaces, type VenueSpace };
 
 interface Props {
   form: CreatePodForm;
   venues: CreatePodVenue[];
   /** Ids of the venues that match the selected club — the venue picker is scoped to these. */
   clubVenueIds: Set<string>;
-  viewerUserId: string;
   /** A free pod on a priced slot: the host settles with the venue directly. */
   venueNotice: FreePodVenueNotice;
 }
 
-/** Step 3 — pick a venue partner in the pod's city (card rail) and book one of
- * its published availability slots (physical), or meeting details + schedule
- * (virtual). The slot sets the pod's date/time. */
-export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId, venueNotice }: Readonly<Props>) {
+/** Step 3 — pick a venue partner in the pod's city (card rail) and book it
+ * instantly at its own pricing (physical), or meeting details + schedule
+ * (virtual). A Pod Request's pod keeps the slot that request holds. The booked
+ * window sets the pod's date/time. */
+export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice }: Readonly<Props>) {
   const {
     control,
     watch,
@@ -61,7 +44,6 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
   const venueId = watch('venue_id');
-  const slotId = watch('venue_slot_id');
   const spaceLabel = watch('venue_space_label');
   // Only the whole-venue pseudo-space carries copy of ours; a named capacity
   // item is the venue partner's own wording and is shown as they typed it.
@@ -74,44 +56,34 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
     (venue) => clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId)
   );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
-  const ownVenue = Boolean(selectedVenue?.owner_user_id === viewerUserId);
+  // A Pod Request's pod books the slot that request holds; every other pod books instantly.
+  const fromRequest = Boolean(watch('partner_request_id'));
   const spaces = venueSpaces(selectedVenue);
   const selectedSpace = spaces.find((space) => space.label === spaceLabel) ?? null;
 
   const pickSpace = (label: string) => {
     setValue('venue_space_label', label, { shouldDirty: true, shouldValidate: true });
-    // Changing the space invalidates any slot picked under the old space.
-    setValue('venue_slot_id', '', { shouldDirty: true });
+    // Changing the space invalidates any time picked under the old space.
+    clearTime();
     const chosen = spaces.find((space) => space.label === label);
     if (chosen) setValue('no_of_spots', chosen.capacity, { shouldDirty: true, shouldValidate: true });
   };
+  function clearTime() {
+    setValue('venue_slot_id', '', { shouldDirty: true });
+    if (fromRequest) return;
+    setValue('pod_date_time', null, { shouldDirty: true });
+    setValue('pod_end_date_time', null, { shouldDirty: true });
+    setValue('venue_booking_pax', 0, { shouldDirty: true });
+    setValue('venue_booking_pets', false, { shouldDirty: true });
+  }
   const selectVenue = (id: string) => {
     setValue('venue_id', id, { shouldDirty: true, shouldValidate: true });
-    setValue('venue_slot_id', '', { shouldDirty: true });
+    clearTime();
     setValue('venue_space_label', '', { shouldDirty: true });
     setValue('no_of_spots', 0, { shouldDirty: true });
   };
 
-  // From a Pod Request, its held slot is only listed when the request's id is sent.
-  const slotsQuery = useQuery(VENUE_AVAILABLE_SLOTS, {
-    variables: { venue_id: venueId, partner_request_id: watch('partner_request_id') || null },
-    skip: mode !== 'PHYSICAL' || !venueId,
-    fetchPolicy: 'cache-and-network',
-  });
-  const slots = slotsQuery.data?.venueAvailableSlots ?? [];
-  // Only the picked space's slots — and only once a space is chosen (so no price
-  // shows before a capacity is selected).
-  const slotsForSpace = selectedSpace
-    ? slots.filter((slot) => (slot.space_label ?? '') === selectedSpace.slotSpaceLabel)
-    : [];
   const duration = formatDurationBetween(watch('pod_date_time'), watch('pod_end_date_time'));
-
-  const pickSlot = (slot: CreatePodSlot) => {
-    setValue('venue_slot_id', slot.id, { shouldDirty: true, shouldValidate: true });
-    // The slot window is the pod window — the server enforces the same.
-    setValue('pod_date_time', new Date(slot.start_at), { shouldDirty: true, shouldValidate: true });
-    setValue('pod_end_date_time', new Date(slot.end_at), { shouldDirty: true });
-  };
 
   if (mode !== 'PHYSICAL') {
     // Recurring: the repeat details follow the first date (virtual window).
@@ -153,21 +125,11 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
           />
         </Stack>
       )}
-      {selectedVenue && selectedSpace && (
-        <SlotPicker
-          slots={slotsForSpace}
-          loading={slotsQuery.loading && !slotsQuery.data}
-          selectedSlotId={slotId}
-          onPick={pickSlot}
-          error={errors.venue_slot_id?.message}
-          required
-        />
+      {selectedVenue && selectedSpace && !fromRequest && (
+        <InstantBookingPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} />
       )}
-      {selectedVenue && slotId && (
-        <Alert data-testid="create-pod-venue-approval-note" severity={ownVenue ? 'success' : 'info'}>
-          {ownVenue ? t('mweb.createPod.ownVenueNote') : t('mweb.createPod.venueApprovalNote')}
-        </Alert>
-      )}
+      {selectedVenue && selectedSpace && fromRequest && <RequestSlotPicker form={form} space={selectedSpace} />}
+      <PodRepeatSection form={form} />
       <FreeVenueNote notice={venueNotice} />
       {selectedVenue && <VenueContactCard venue={selectedVenue} />}
       {selectedVenue && (

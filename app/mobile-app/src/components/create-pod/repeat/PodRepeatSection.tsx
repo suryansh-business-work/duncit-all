@@ -43,7 +43,9 @@ export function PodRepeatSection({ form }: Readonly<{ form: CreatePodForm }>) {
   const limits = useSeriesLimits(values.repeat_enabled);
   const { currency } = usePublicFinance();
   const first = parseDateTimeText(values.pod_date_time_text);
-  const firstChosen = values.pod_mode === 'PHYSICAL' ? !!values.venue_slot_id : !!first;
+  // Physical: a held slot, or an instant booking's whole window.
+  const booked = !!values.venue_slot_id || !!parseDateTimeText(values.pod_end_date_time_text);
+  const firstChosen = values.pod_mode === 'PHYSICAL' ? booked : !!first;
   const firstDay = first ? ymdInZone(first.toISOString(), fmt.timeZone) : null;
   if (values.partner_request_id || !values.repeat_enabled || !firstChosen || !first || !firstDay)
     return null;

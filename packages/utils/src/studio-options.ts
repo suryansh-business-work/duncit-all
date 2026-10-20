@@ -139,9 +139,12 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
   VENUE: [
     { key: 'dashboard', labelKey: 'mweb.studioOptions.dashboard', hintKey: 'mweb.studioOptions.venueDashboardHint', icon: 'dashboard', path: '/venues/manage', route: 'VenueManage', portal: '/venues/dashboard' },
     { key: 'venues', labelKey: 'mweb.studioOptions.yourVenues', hintKey: 'mweb.studioOptions.yourVenuesHint', icon: 'venue', path: '/venues/list', route: 'VenueList', portal: '/register-venue' },
-    { key: 'slot-requests', labelKey: 'mweb.studioOptions.slotRequests', hintKey: 'mweb.studioOptions.slotRequestsHint', icon: 'calendar', path: '/venues/slot-requests', route: 'VenueSlotRequests', portal: '/venues/requests' },
+    // Workshop & Event Requests: members' event requests (accept / reject / counter)
+    // and, on a second tab, the old slot requests from before instant booking.
+    { key: 'slot-requests', labelKey: 'mweb.studioOptions.workshopEventRequests', hintKey: 'mweb.studioOptions.workshopEventRequestsHint', icon: 'requests', path: '/venues/event-requests', route: 'VenueEventRequests', portal: '/venues/requests' },
     { key: 'auto-pods', labelKey: 'mweb.studioOptions.autoPods', hintKey: 'mweb.studioOptions.venueAutoPodsHint', icon: 'autopods', path: '/venues/auto-pods', route: 'VenueAutoPods', portal: '/venues/auto-pods', autoPods: true },
-    { key: 'availability', labelKey: 'mweb.studioOptions.availability', hintKey: 'mweb.studioOptions.availabilityHint', icon: 'availability', path: '/venues/availability', route: 'VenueAvailability', portal: '/venues/availability' },
+    // The Venue Pricing Module (it replaced the availability calendar, and keeps a priced one).
+    { key: 'availability', labelKey: 'mweb.studioOptions.venuePricing', hintKey: 'mweb.studioOptions.venuePricingHint', icon: 'availability', path: '/venues/pricing', route: 'VenuePricing', portal: '/venues/pricing' },
     { key: 'settings', labelKey: 'mweb.studioOptions.venueSettings', hintKey: 'mweb.studioOptions.venueSettingsHint', icon: 'settings', path: '/venues/settings', route: 'VenueSettings', portal: '/venues/settings' },
     { key: 'earnings', labelKey: 'mweb.studioOptions.venueEarnings', hintKey: 'mweb.studioOptions.venueEarningsHint', icon: 'earnings', path: '/venues/earnings', route: 'VenueEarnings', portal: '/venues/earnings' },
     { key: 'publish', labelKey: 'mweb.studioOptions.publishVenue', hintKey: 'mweb.studioOptions.publishVenueHint', icon: 'publish', path: '/venues/publish', route: 'VenuePublish', portal: '/venues/publish' },
@@ -158,9 +161,6 @@ export const STUDIO_OPTION_LIST: Readonly<Record<PartnerStudioMode, readonly Stu
     { key: 'pods', labelKey: 'mweb.studioOptions.venuePods', hintKey: 'mweb.studioOptions.venuePodsHint', icon: 'pods', path: '/venues/pods', route: 'VenuePods', portal: '/venues/pods' },
     { key: 'change-requests', labelKey: 'mweb.studioOptions.changeRequests', hintKey: 'mweb.studioOptions.changeRequestsHint', icon: 'change', path: '/change-requests', route: 'ChangeRequests', portal: '/venues/change-requests' },
     { key: 'pod-requests', labelKey: 'mweb.studioOptions.podRequestsFromHosts', hintKey: 'mweb.studioOptions.podRequestsFromHostsHint', icon: 'requests', path: '/venues/pod-requests', route: 'VenuePodRequests', portal: '/venues/pod-requests' },
-    // What members asked for when the venue had nothing coming up. A Partner
-    // console screen — the apps open it there, like the brand catalogue.
-    { key: 'event-requests', labelKey: 'mweb.studioOptions.eventRequests', hintKey: 'mweb.studioOptions.venueEventRequestsHint', icon: 'requests', portal: '/venues/event-requests' },
     { key: 'nearby', labelKey: 'mweb.studioOptions.nearbyHosts', hintKey: 'mweb.studioOptions.nearbyHostsHint', icon: 'nearby', path: '/venues/nearby-hosts', route: 'NearbyHosts', portal: '/venues/nearby-hosts' },
     VERIFICATION,
     WITHDRAWAL,

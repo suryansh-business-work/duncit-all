@@ -22,16 +22,12 @@ describe('isFreePod', () => {
 });
 
 describe('freePodVenueNotice', () => {
-  const owed = { podType: 'FREE', slotPrice: 1500, ownVenue: false, slotConfirmed: false };
+  const owed = { podType: 'FREE', slotPrice: 1500, ownVenue: false };
 
-  it('asks the host to settle before the venue approves a priced slot', () => {
-    expect(freePodVenueNotice(owed)).toBe('SETTLE_BEFORE_APPROVAL');
-    // The two flags are optional — a caller that knows neither still gets the note.
-    expect(freePodVenueNotice({ podType: 'FREE', slotPrice: 1 })).toBe('SETTLE_BEFORE_APPROVAL');
-  });
-
-  it('drops the approval half when a Pod Request already confirmed the slot', () => {
-    expect(freePodVenueNotice({ ...owed, slotConfirmed: true })).toBe('SETTLE');
+  it('asks the host to settle a priced partner booking with the venue directly', () => {
+    expect(freePodVenueNotice(owed)).toBe('SETTLE');
+    // ownVenue is optional — a caller that does not know it still gets the note.
+    expect(freePodVenueNotice({ podType: 'FREE', slotPrice: 1 })).toBe('SETTLE');
   });
 
   it('says nothing for a paid pod, whatever the slot costs', () => {
@@ -42,7 +38,6 @@ describe('freePodVenueNotice', () => {
 
   it('says nothing for the host own venue, which books instantly', () => {
     expect(freePodVenueNotice({ ...owed, ownVenue: true })).toBe('NONE');
-    expect(freePodVenueNotice({ ...owed, ownVenue: true, slotConfirmed: true })).toBe('NONE');
   });
 
   it('says nothing when the slot is unpriced or not picked yet', () => {

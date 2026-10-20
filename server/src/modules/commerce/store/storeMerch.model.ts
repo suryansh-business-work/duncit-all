@@ -86,7 +86,13 @@ export type StoreHomeSectionKind =
   | 'PRODUCT_SLIDER'
   | 'CATEGORY_ICONS'
   | 'RANGE_SHOWCASE'
-  | 'EARN_PROMO';
+  | 'EARN_PROMO'
+  | 'FREE_DELIVERY'
+  | 'PAGE_INTRO';
+
+/** The storefront pages whose blocks the operator arranges in Sections. */
+export type StoreSectionPage = 'HOME' | 'DEALS';
+export const STORE_SECTION_PAGES: StoreSectionPage[] = ['HOME', 'DEALS'];
 
 export const STORE_HOME_SECTION_KINDS: StoreHomeSectionKind[] = [
   'HERO_SLIDER',
@@ -102,6 +108,8 @@ export const STORE_HOME_SECTION_KINDS: StoreHomeSectionKind[] = [
   'CATEGORY_ICONS',
   'RANGE_SHOWCASE',
   'EARN_PROMO',
+  'FREE_DELIVERY',
+  'PAGE_INTRO',
 ];
 
 /** Where a PRODUCT_SLIDER takes its products from. */
@@ -137,6 +145,8 @@ export interface IStoreSectionItem {
 }
 
 export interface IStoreHomeSection extends Document {
+  /** Which storefront page the block sits on. */
+  page: StoreSectionPage;
   kind: StoreHomeSectionKind;
   title: string;
   subtitle: string;
@@ -172,6 +182,7 @@ const sectionItemSchema = new Schema<IStoreSectionItem>(
 
 const homeSectionSchema = new Schema<IStoreHomeSection>(
   {
+    page: { type: String, enum: STORE_SECTION_PAGES, default: 'HOME', index: true },
     kind: { type: String, enum: STORE_HOME_SECTION_KINDS, required: true },
     title: { type: String, default: '', trim: true, maxlength: 120 },
     subtitle: { type: String, default: '', trim: true, maxlength: 240 },
@@ -191,3 +202,13 @@ const homeSectionSchema = new Schema<IStoreHomeSection>(
 );
 
 export const StoreHomeSectionModel = model<IStoreHomeSection>('StoreHomeSection', homeSectionSchema);
+
+/**
+ * The sections of one page; blank means HOME. HOME also matches blocks saved
+ * before sections had a page (no `page` field), so nothing drops off the home
+ * page while the boot migration has not run yet.
+ */
+export function pageFilter(page?: string | null): { page: string | { $in: (string | null)[] } } {
+  const wanted = page && STORE_SECTION_PAGES.includes(page as StoreSectionPage) ? page : 'HOME';
+  return wanted === 'HOME' ? { page: { $in: ['HOME', null] } } : { page: wanted };
+}

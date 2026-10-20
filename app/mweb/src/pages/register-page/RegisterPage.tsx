@@ -5,8 +5,10 @@ import {
   createGoogleSignupClaims,
   readGoogleSignupHandoff,
   readReferralCode,
+  TRUECALLER_COPY,
+  truecallerSignupPrefill,
 } from '@duncit/utils';
-import { Divider, Link, Stack, Typography } from '@mui/material';
+import { Alert, Divider, Link, Stack, Typography } from '@mui/material';
 import AuthBackground from '../../components/AuthBackground';
 import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
@@ -21,6 +23,7 @@ import GoogleDetailsStep from './GoogleDetailsStep';
 import SocialSignupDoor from './SocialSignupDoor';
 import VerifyWhatsappStep from './VerifyWhatsappStep';
 import { useSignupFlow } from './useSignupFlow';
+import { useTruecallerHandoff } from './useTruecallerHandoff';
 
 /**
  * Join Duncit — four steps.
@@ -61,7 +64,6 @@ export default function RegisterPage() {
     instead of silently costing them both their coins.
   */
   const linkedCode = readReferralCode(globalThis.location.search) ?? '';
-  const initialValues = { ...registerDefaults, referralCode: linkedCode };
 
   /*
     Both signup doors are gated by the same policies, so the list is fetched
@@ -71,6 +73,14 @@ export default function RegisterPage() {
   const signupPolicies = useSignupPolicies();
   const flow = useSignupFlow(linkedCode);
   const google = useGoogleSignup(flow.googleAccepted);
+  // A number Truecaller proved starts the form filled in, and skips the code.
+  useTruecallerHandoff(flow.setTruecallerProof);
+  const proof = flow.truecallerProof;
+  const initialValues = {
+    ...registerDefaults,
+    referralCode: linkedCode,
+    ...(proof ? truecallerSignupPrefill(proof) : {}),
+  };
 
   /*
     Arrived from the login screen's "no Duncit account yet" invite, holding the
@@ -142,7 +152,13 @@ export default function RegisterPage() {
                 <SocialSignupDoor google={google} signup={signupPolicies} creating={flow.creating} />
                 <Divider>{t('mweb.auth.orEmail')}</Divider>
 
+                {proof && (
+                  <Alert severity="success" data-testid="truecaller-verified">
+                    {t(TRUECALLER_COPY.verified)}
+                  </Alert>
+                )}
                 <RegisterForm
+                  key={proof?.whatsapp_token ?? 'blank'}
                   step={flow.step}
                   onStep={flow.setStep}
                   initialValues={initialValues}

@@ -5,9 +5,12 @@ import {
   applyVars,
   detectVariables,
   renderTemplateBody,
+  shippedDefault,
 } from './emailTemplate.service';
 import { emailPreviewVars, sendHtmlEmail } from '@services/email/email.service';
+import { STARTER_MJML } from '@services/email/catalogue/starter';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 
 /** The Communications console manages the templates. */
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
@@ -25,6 +28,9 @@ function parseVars(json?: string | null): Record<string, string> {
 }
 
 export const emailTemplateResolvers = {
+  EmailTemplate: {
+    is_shipped: (tpl: { slug: string }) => Boolean(shippedDefault(tpl.slug)),
+  },
   Query: {
     emailTemplates: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -71,6 +77,10 @@ export const emailTemplateResolvers = {
         // send path, so listing them would ask an admin to fill them in.
         detected_variables: detectVariables(args.mjml),
       };
+    },
+    emailStarterMjml: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return STARTER_MJML;
     },
   },
   Mutation: {
@@ -122,6 +132,30 @@ export const emailTemplateResolvers = {
     ) => {
       requireRole(ctx, ADMIN_ROLES);
       return emailTemplateService.delete(args.template_id);
+    },
+    resetEmailTemplate: (_p: unknown, args: { template_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return emailTemplateService.reset(args.template_id);
+    },
+    connectEmailTemplateFragments: async (
+      _p: unknown,
+      args: { fallback_key?: string | null; dry_run?: boolean | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      const result = await emailTemplateService.connectFragments({
+        fallback: args.fallback_key || null,
+        dryRun: Boolean(args.dry_run),
+      });
+      if (!args.dry_run) {
+        logs.server.info('emailTemplate', 'connectEmailTemplateFragments', {
+          actor_id: ctx.user?.id,
+          fallback_key: args.fallback_key ?? null,
+          connected: result.connected,
+          msg: `${result.connected} template(s) connected to a header/footer from the Communications portal`,
+        });
+      }
+      return result;
     },
     sendTestEmail: async (
       _p: unknown,

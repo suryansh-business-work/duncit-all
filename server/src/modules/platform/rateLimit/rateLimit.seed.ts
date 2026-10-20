@@ -134,6 +134,9 @@ const SEED_RULES = [
       'verify*Otp',
       'linkGoogleAccount',
       'linkAppleAccount',
+      // Mints a row per call, so it is metered with the sign-ins it starts.
+      // (loginWithTruecaller already matches login*; the web-state poll is not.)
+      'startTruecallerWebLogin',
     ],
     key_by: 'IP',
     algorithm: 'SLIDING_WINDOW',

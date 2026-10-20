@@ -93,7 +93,7 @@ const authSchema = new Schema(
     apple_linked_at: { type: Date, default: null },
     last_login_provider: {
       type: String,
-      enum: ['EMAIL', 'GOOGLE', 'APPLE', 'OTP', null],
+      enum: ['EMAIL', 'GOOGLE', 'APPLE', 'OTP', 'TRUECALLER', null],
       default: null,
     },
     last_login_at: { type: Date, default: null },

@@ -97,9 +97,12 @@ export const linking: LinkingOptions<RootStackParamList> = {
       RegisterVenue: 'register-venue',
       VenueManage: 'venues/manage',
       VenueEarnings: 'venues/earnings',
+      // Old paths kept resolving: both open the screens that replaced them.
       VenueSlotRequests: 'venues/slot-requests',
+      VenueEventRequests: 'venues/event-requests',
       // The owner's calendar and policy, on mWeb's exact paths.
       VenueAvailability: 'venues/availability',
+      VenuePricing: 'venues/pricing',
       VenueSettings: 'venues/settings',
       // Pod Requests, on mWeb's exact paths — notifications carry /pod-requests/:id.
       NearbyHosts: 'venues/nearby-hosts',

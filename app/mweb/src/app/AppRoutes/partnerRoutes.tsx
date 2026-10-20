@@ -1,4 +1,4 @@
-import { Route } from 'react-router';
+import { Navigate, Route } from 'react-router';
 import { BrandOrderDetailPage, BrandOrdersPage, BrandWarehousesPage, ChangeRequestsPage, ClubAdminDashboardPage, ClubAutoPodEditorPage, ClubAutoPodsPage, ClubEditPage, ClubMonitoringPage, ClubPodDetailsPage, ClubPodEditorPage, ClubPodsPage, ClubStudioPage, EarnPage, FreelancerProfilePage, GigDetailPage, GigEditorPage, GigsPage, HostAutoPodsPage, MyGigsPage, HostCategoriesPage, HostPublishPage, HostSharePage, NearbyHostsPage, PodRequestsPage, ProductsManagePage, StudioOptionsPage, TourGuidePage, VenueAutoPodsPage, VenueAvailabilityPage, VenueEarningsPage, VenueFoodPage, VenueRentedItemsPage, VenueListPage, VenueManagePage, VenuePodsPage, VenuePublishPage, VenueSettingsPage, VenueSlotRequestsPage } from './lazyPages';
 import { withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
@@ -40,6 +40,8 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
         <Route path="/host/categories" element={withAuth(<HostCategoriesPage />)} />
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
+        {/* Workshop & Event Requests; /venues/slot-requests is the old path of the same page. */}
+        <Route path="/venues/event-requests" element={withAuth(<VenueSlotRequestsPage />)} />
         <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />
         <Route path="/venues/nearby-hosts" element={withAuth(<NearbyHostsPage />)} />
         {/* The studio menu's Requests → Pod Requests, one inbox per side. */}
@@ -49,7 +51,9 @@ export function partnerRoutes({ locationId }: Readonly<Pick<AppRoutesProps, 'loc
             host, and it is where the offer email, the WhatsApp CTA and the
             notification all land. */}
         <Route path="/change-requests" element={withAuth(<ChangeRequestsPage />)} />
-        <Route path="/venues/availability" element={withAuth(<VenueAvailabilityPage />)} />
+        {/* The Venue Pricing Module; the old availability calendar URL lands on it. */}
+        <Route path="/venues/pricing" element={withAuth(<VenueAvailabilityPage />)} />
+        <Route path="/venues/availability" element={<Navigate to="/venues/pricing" replace />} />
         <Route path="/venues/settings" element={withAuth(<VenueSettingsPage />)} />
         {/* Club Studio. `/clubs/manage` and NOT `/club/manage`, which would sit
             under the `/club/:clubSlug` pattern and shadow a real club slug. */}

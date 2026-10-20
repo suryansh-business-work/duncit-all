@@ -5,6 +5,14 @@ import {
   emailTemplateService,
 } from '../../emailTemplate.service';
 import { emailTemplateResolvers } from '../../emailTemplate.resolver';
+import { TEMPLATE_DEFAULTS } from '../../emailTemplate.defaults';
+import {
+  LEGACY_FRAGMENT_FINGERPRINTS,
+  LEGACY_TEMPLATE_FINGERPRINTS,
+  SHIPPED_AFTER_REDESIGN,
+  shippedFingerprint,
+} from '../../emailTemplate.legacy';
+import { FRAGMENT_DEFAULTS } from '@modules/content/emailFragment/emailFragment.defaults';
 import { makeContext } from '@test/harness';
 
 describe('emailTemplate unit', () => {
@@ -34,5 +42,49 @@ describe('emailTemplate unit', () => {
 
   it('service exposes list/create helpers', () => {
     expect(typeof emailTemplateService.create).toBe('function');
+  });
+
+  it('starter body and reset are gated to admin roles, and is_shipped follows the catalogue', () => {
+    const user = makeContext({ roles: ['USER'] });
+    expect(() => (emailTemplateResolvers.Query as any).emailStarterMjml({}, {}, user)).toThrow(/access denied/i);
+    expect(() =>
+      (emailTemplateResolvers.Mutation as any).resetEmailTemplate({}, { template_id: 'x' }, user)
+    ).toThrow(/access denied/i);
+    expect(emailTemplateResolvers.EmailTemplate.is_shipped({ slug: 'password-reset-otp' })).toBe(true);
+    expect(emailTemplateResolvers.EmailTemplate.is_shipped({ slug: 'an-admin-made-one' })).toBe(false);
+  });
+});
+
+/**
+ * The upgrade table is what moves an untouched stored body onto the current
+ * design. A shipped template with no legacy fingerprint can never be upgraded,
+ * and the CURRENT default listed as legacy would mean the table was generated
+ * after the builders changed instead of before.
+ */
+describe('emailTemplate legacy fingerprints', () => {
+  it('lists earlier shipped bodies for every shipped template, never the current one', () => {
+    for (const tpl of TEMPLATE_DEFAULTS) {
+      const legacy = LEGACY_TEMPLATE_FINGERPRINTS[tpl.slug] ?? [];
+      // A template born after the redesign never had an earlier body — and one
+      // listed as born after must really have none, or the list is hiding a gap.
+      const hasLegacy = !SHIPPED_AFTER_REDESIGN.has(tpl.slug);
+      expect({ slug: tpl.slug, hasLegacy: legacy.length > 0 }).toEqual({ slug: tpl.slug, hasLegacy });
+      expect(legacy).not.toContain(shippedFingerprint(tpl.mjml));
+    }
+  });
+
+  it('only exempts templates that really ship today', () => {
+    const shipped = new Set(TEMPLATE_DEFAULTS.map((tpl) => tpl.slug));
+    for (const slug of SHIPPED_AFTER_REDESIGN) expect({ slug, shipped: shipped.has(slug) }).toEqual({ slug, shipped: true });
+  });
+
+  it('lists earlier header and footer fragments for every category, never the current ones', () => {
+    for (const frag of FRAGMENT_DEFAULTS) {
+      const legacy = LEGACY_FRAGMENT_FINGERPRINTS[frag.category];
+      expect(legacy.header.length).toBeGreaterThan(0);
+      expect(legacy.footer.length).toBeGreaterThan(0);
+      expect(legacy.header).not.toContain(shippedFingerprint(frag.header_mjml));
+      expect(legacy.footer).not.toContain(shippedFingerprint(frag.footer_mjml));
+    }
   });
 });

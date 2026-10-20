@@ -51,12 +51,12 @@ import { SosScreen } from '@/screens/SosScreen';
 import { SupportScreen } from '@/screens/SupportScreen';
 import { TicketDetailsScreen } from '@/screens/TicketDetailsScreen';
 import { VenueAutoPodsScreen } from '@/screens/VenueAutoPodsScreen';
-import { VenueAvailabilityScreen } from '@/screens/VenueAvailabilityScreen';
+import { VenuePricingScreen } from '@/screens/VenuePricingScreen';
 import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { VenueHealthScreen } from '@/screens/VenueHealthScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { VenueSettingsScreen } from '@/screens/VenueSettingsScreen';
-import { VenueSlotRequestsScreen } from '@/screens/VenueSlotRequestsScreen';
+import { VenueEventRequestsScreen } from '@/screens/VenueEventRequestsScreen';
 import { VerificationScreen } from '@/screens/VerificationScreen';
 import { WalletScreen } from '@/screens/WalletScreen';
 import { WhatsAppPreferenceScreen } from '@/screens/WhatsAppPreferenceScreen';
@@ -128,9 +128,13 @@ export function renderCoreScreens() {
       <Stack.Screen name="RegisterVenue" component={RegisterVenueScreen} />
       <Stack.Screen name="VenueManage" component={VenueManageScreen} />
       <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />
-      <Stack.Screen name="VenueSlotRequests" component={VenueSlotRequestsScreen} />
+      {/* The old Slot Requests route opens Workshop & Event Requests. */}
+      <Stack.Screen name="VenueSlotRequests" component={VenueEventRequestsScreen} />
+      <Stack.Screen name="VenueEventRequests" component={VenueEventRequestsScreen} />
       <Stack.Screen name="ChangeRequests" component={ChangeRequestsScreen} />
-      <Stack.Screen name="VenueAvailability" component={VenueAvailabilityScreen} />
+      {/* The old Availability route opens the Venue Pricing Module. */}
+      <Stack.Screen name="VenueAvailability" component={VenuePricingScreen} />
+      <Stack.Screen name="VenuePricing" component={VenuePricingScreen} />
       <Stack.Screen name="VenueSettings" component={VenueSettingsScreen} />
       <Stack.Screen name="NearbyHosts" component={NearbyHostsScreen} />
       <Stack.Screen name="NearbyVenues" component={NearbyVenuesScreen} />

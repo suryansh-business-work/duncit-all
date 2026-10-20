@@ -39,6 +39,10 @@ const SUPER_ADMIN_ROLE = 'SUPER_ADMIN';
 // Partner-portal roles: granting one (from ANY path — admin grant or an
 // onboarding approval) emails the user their Partners-account link + login
 // guidance and sends a push notification.
+/** The seeded root super admin's mailbox, lower-cased. */
+export const rootAdminEmail = () =>
+  (process.env.DEFAULT_SUPER_ADMIN_EMAIL || 'admin@duncit.com').toLowerCase();
+
 export const PARTNER_ROLE_LABELS: Record<string, string> = {
   HOST: 'Host',
   VENUE_OWNER: 'Venue Partner',
@@ -317,7 +321,7 @@ export const userRoleMethods = {
   async revokeAdmin(user_id: string) {
     const target = await UserModel.findById(user_id);
     if (!target) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    const rootEmail = (process.env.DEFAULT_SUPER_ADMIN_EMAIL || 'admin@duncit.com').toLowerCase();
+    const rootEmail = rootAdminEmail();
     if ((target.auth?.email ?? '').toLowerCase() === rootEmail) {
       throw new GraphQLError('The root super admin cannot be revoked', {
         extensions: { code: 'FORBIDDEN' },

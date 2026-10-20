@@ -48,7 +48,7 @@ function SpaceChip({
   );
 }
 
-/** The picked venue's total capacity + its bookable spaces (slots follow). */
+/** The picked venue's total capacity + its bookable spaces (the booking follows). */
 export function VenueSpaceCard({
   venue,
   spaces,
@@ -94,17 +94,5 @@ export function VenueSpaceCard({
         </Text>
       </YStack>
     </SurfaceCard>
-  );
-}
-
-/** Own venues book instantly; every other venue approves the slot first. */
-export function SlotApprovalNote({ ownVenue }: Readonly<{ ownVenue: boolean }>) {
-  const { t } = useTranslation();
-  return (
-    <YStack padding={12} borderRadius={14} backgroundColor={ownVenue ? '$successSoft' : '$soft'}>
-      <Text testID="create-pod-approval-note" fontSize={13} fontWeight="500" color="$color">
-        {ownVenue ? t('mweb.createPod.ownVenueNote') : t('mweb.createPod.venueApprovalNote')}
-      </Text>
-    </YStack>
   );
 }

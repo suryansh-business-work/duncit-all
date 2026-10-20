@@ -57,6 +57,14 @@ export interface BreakdownOptions {
    * shortfall is visible instead of quietly shrinking the venue's money.
    */
   clampVenueToPool?: boolean;
+  /**
+   * An instant booking's venue commission, frozen in its price snapshot.
+   * When set, the commission is charged ON TOP of the venue price: the venue
+   * receives its whole price and this amount comes off the host's side
+   * instead (settlement engine v3). Unset = the legacy rule, where the
+   * commission is taken out of the venue's price.
+   */
+  venueCommissionOnTopPaise?: number | null;
 }
 
 export interface PodFinanceBreakdown {
@@ -211,8 +219,14 @@ export function computePodFinanceBreakdown(
   // price so hostAmount goes negative honestly on a shortfall.
   const clampVenueToPool = options?.clampVenueToPool ?? true;
   const venueAmount = clampVenueToPool ? Math.min(venueAmountPaise, splitPool) : venueAmountPaise;
-  const hostAmount = splitPool - venueAmount;
-  const venueSide = venueSideOf(venueAmount, rates.venue_commission_percent);
+  const onTop = options?.venueCommissionOnTopPaise;
+  const onTopPaise = onTop == null ? null : Math.max(0, Math.round(onTop));
+  // On top: the venue keeps its price and the host's side carries the commission.
+  const venueSide =
+    onTopPaise === null
+      ? venueSideOf(venueAmount, rates.venue_commission_percent)
+      : { commission_paise: onTopPaise, receives_paise: venueAmount };
+  const hostAmount = splitPool - venueAmount - (onTopPaise ?? 0);
   const venueCommission = venueSide.commission_paise;
   // No commission is charged on a non-positive host side — the shortfall passes
   // through whole (and the reconciliation invariant still holds exactly).

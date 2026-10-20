@@ -7,7 +7,7 @@ import { PodSeriesFrequency } from '@/generated/graphql/graphql';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
-import { parseDateTimeText } from '../create-pod.form';
+import { parseDateTimeText, venueBookingOf } from '../create-pod.form';
 import type { CreatePodFormValues } from '../create-pod.types';
 
 export type SeriesPreview = ResultOf<typeof PodSeriesPreviewDocument>['podSeriesPreview'];
@@ -22,6 +22,8 @@ export function seriesPlanOf(values: CreatePodFormValues, timeZone: string): Pod
       ...values,
       pod_date_time: parseDateTimeText(values.pod_date_time_text)?.toISOString() ?? null,
       pod_end_date_time: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
+      // The first date's instant booking; a held slot id (a Pod Request) wins over it.
+      venue_booking: venueBookingOf(values),
       repeat_discount_tiers: values.repeat_discount_enabled
         ? multiDateTiersFromEditor(values.repeat_discount_tiers)
         : [],
@@ -65,6 +67,9 @@ export function useSeriesPreview(values: CreatePodFormValues, timeZone: string) 
       values.pod_mode,
       values.venue_id,
       values.venue_slot_id,
+      values.venue_space_label,
+      values.venue_booking_pax,
+      values.venue_booking_pets,
       values.pod_date_time_text,
       values.pod_end_date_time_text,
       timeZone,

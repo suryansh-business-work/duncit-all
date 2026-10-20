@@ -7,11 +7,35 @@ export const eventRequestTypeDefs = gql`
     VENUE
   }
 
-  "OPEN until the target publishes a pod (FULFILLED) or its owner dismisses it."
+  "OPEN until its owner answers (ACCEPTED, COUNTERED, REJECTED) or a published pod closes it (FULFILLED). DISMISSED is the legacy close."
   enum EventRequestStatus {
     OPEN
+    ACCEPTED
+    COUNTERED
+    REJECTED
     FULFILLED
     DISMISSED
+  }
+
+  "How the owner answers a workshop/event request."
+  enum EventRequestResponse {
+    ACCEPT
+    REJECT
+    COUNTER
+  }
+
+  "The window the owner offers, with the price their pricing module gave for it (frozen)."
+  type EventRequestOffer {
+    start_at: String!
+    end_at: String!
+    pax: Int!
+    quote: VenuePriceBreakdown
+  }
+
+  input EventRequestOfferInput {
+    start_at: String!
+    end_at: String!
+    pax: Int
   }
 
   "A member's ask that a host or venue with nothing upcoming runs an event."
@@ -28,6 +52,9 @@ export const eventRequestTypeDefs = gql`
     fulfilled_pod_id: ID
     closed_at: String
     created_at: String!
+    response_note: String!
+    responded_at: String
+    offer: EventRequestOffer
   }
 
   type EventRequestTablePage {
@@ -39,6 +66,9 @@ export const eventRequestTypeDefs = gql`
 
   type EventRequestCounts {
     open: Int!
+    accepted: Int!
+    countered: Int!
+    rejected: Int!
     fulfilled: Int!
     dismissed: Int!
     total: Int!
@@ -79,5 +109,7 @@ export const eventRequestTypeDefs = gql`
     requestEvent(input: RequestEventInput!): MyEventRequestState!
     "Close an OPEN request as FULFILLED or DISMISSED — its owner or the console's editors."
     updateEventRequestStatus(id: ID!, status: EventRequestStatus!): EventRequest!
+    "Accept, reject or counter (with a date/time priced by the venue pricing module) — its owner or the console's editors."
+    respondToEventRequest(id: ID!, response: EventRequestResponse!, note: String, offer: EventRequestOfferInput): EventRequest!
   }
 `;

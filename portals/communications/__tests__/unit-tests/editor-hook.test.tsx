@@ -89,6 +89,9 @@ describe('useEmailTemplateEditor — empty state', () => {
     await act(async () => {
       await result.current.onDelete();
     });
+    await act(async () => {
+      await result.current.onReset();
+    });
     act(() => {
       result.current.importDetected();
     });
@@ -237,6 +240,43 @@ describe('useEmailTemplateEditor — with data', () => {
     });
     expect(result.current.snack).toEqual({ kind: 'success', msg: 'Deleted' });
     expect(m.run).toHaveBeenCalled();
+  });
+
+  it('resets the design only after confirm, then reloads the draft from the shipped body', async () => {
+    const { result, rerender } = mount();
+    await waitFor(() => expect(result.current.draft?.mjml).toBe('<mjml>a</mjml>'));
+
+    m.confirmMock.mockResolvedValueOnce(false);
+    await act(async () => {
+      await result.current.onReset();
+    });
+    expect(m.run).not.toHaveBeenCalled();
+
+    // What the server holds once the reset lands — the list answers with it.
+    m.data = { emailTemplates: [{ ...tpl, mjml: '<mjml>shipped</mjml>' }] };
+    m.confirmMock.mockResolvedValueOnce(true);
+    await act(async () => {
+      await result.current.onReset();
+    });
+    expect(m.run).toHaveBeenCalledWith({ variables: { id: 't1' } });
+    expect(m.refetch).toHaveBeenCalled();
+    expect(result.current.snack).toEqual({ kind: 'success', msg: 'Reset to the shipped design' });
+    rerender();
+    await waitFor(() => expect(result.current.draft?.mjml).toBe('<mjml>shipped</mjml>'));
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('reports a failed reset and leaves the draft as it was', async () => {
+    const { result } = mount();
+    await waitFor(() => expect(result.current.draft).not.toBeNull());
+    m.confirmMock.mockResolvedValueOnce(true);
+    m.run.mockRejectedValueOnce(new Error('reset boom'));
+    await act(async () => {
+      await result.current.onReset();
+    });
+    expect(result.current.snack).toEqual({ kind: 'error', msg: 'reset boom' });
+    expect(result.current.draft?.mjml).toBe('<mjml>a</mjml>');
+    expect(result.current.busy).toBe(false);
   });
 
   it('imports detected variables not already present', async () => {

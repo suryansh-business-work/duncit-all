@@ -53,6 +53,7 @@ import {
   slackConnection,
   socialAppsConnection,
   sonarqubeConnection,
+  truecallerConnection,
 } from '../../envEntry.connection';
 import { SLACK_BOT_SCOPES } from '@modules/platform/slack/slack.gateway';
 import { discardEdit, openEdit, playAccessToken } from '@modules/platform/appBuild/googlePlay.gateway';
@@ -562,6 +563,53 @@ describe('appleSignInConnection', () => {
     const res = await appleSignInConnection(entry(creds));
     expect(res.ok).toBe(false);
     expect(res.message).toBe(message);
+  });
+});
+
+describe('truecallerConnection', () => {
+  it('needs the Android client ID or the app key before it asks anything', async () => {
+    const res = await truecallerConnection(entry({}));
+    expect(res).toMatchObject({ ok: false, message: 'Add the Android Client ID, the App Key, or both' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('passes an app-key-only entry without calling Truecaller, saying Android stays hidden', async () => {
+    const res = await truecallerConnection(entry({ app_key: 'KEY' }));
+    expect(res.ok).toBe(true);
+    expect(res.message).toMatch(/No Android Client ID/);
+    expect(res.details[0]).toMatch(/App Key is set/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('reads a refusal of the bogus code as the client being known, on the region asked for', async () => {
+    respond(400, { error: 'invalid_grant' });
+    const res = await truecallerConnection(entry({ android_client_id: ' cid ', region: 'EU' }));
+    expect(fetchMock.mock.calls[0][0]).toBe('https://oauth-account-eu.truecaller.com/v1/token');
+    const body = new URLSearchParams(String(lastInit().body));
+    expect(body.get('client_id')).toBe('cid');
+    expect(body.get('grant_type')).toBe('authorization_code');
+    expect(res).toMatchObject({ ok: true, message: 'Truecaller answered for client cid' });
+    expect(res.details).toEqual(['Token endpoint said: invalid_grant', expect.stringMatching(/No App Key/)]);
+  });
+
+  it.each(['invalid_client', 'unauthorized_client'])('fails when Truecaller answers %s', async (error) => {
+    respond(401, { error });
+    const res = await truecallerConnection(entry({ android_client_id: 'cid' }));
+    expect(fetchMock.mock.calls[0][0]).toBe('https://oauth-account-noneu.truecaller.com/v1/token');
+    expect(res).toMatchObject({ ok: false, message: 'Truecaller does not recognise this Android Client ID' });
+  });
+
+  it('reports a bare HTTP failure as one', async () => {
+    respond(503, {});
+    const res = await truecallerConnection(entry({ android_client_id: 'cid', app_key: 'KEY' }));
+    expect(res).toMatchObject({ ok: false, message: 'Truecaller answered HTTP 503' });
+  });
+
+  it('counts a 2xx without an error field as the client answering', async () => {
+    respond(200, {});
+    const res = await truecallerConnection(entry({ android_client_id: 'cid', app_key: 'KEY' }));
+    expect(res.ok).toBe(true);
+    expect(res.details[0]).toBe('Token endpoint said: ok');
   });
 });
 

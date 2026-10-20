@@ -13,7 +13,8 @@ type ListField =
   | 'ipad_screenshots'
   | 'android_phone_screenshots'
   | 'android_tablet_7_screenshots'
-  | 'android_tablet_10_screenshots';
+  | 'android_tablet_10_screenshots'
+  | 'website_screenshots';
 type ImageField = 'android_feature_graphic' | 'android_icon';
 
 interface ListProps {
@@ -82,7 +83,7 @@ function ImageField({ control, name, label, hint }: Readonly<SingleProps>) {
   );
 }
 
-/** Apple's two required sets, then everything Google Play shows. */
+/** Apple's two required sets, everything Google Play shows, then the websites' own screens. */
 export default function ScreenshotFields({ control }: Readonly<{ control: Control<StoreListingValues> }>) {
   const { t } = useTranslation();
   return (
@@ -135,6 +136,14 @@ export default function ScreenshotFields({ control }: Readonly<{ control: Contro
         name="android_icon"
         label={t('tech.storeListing.androidIcon')}
         hint={t('tech.storeListing.androidIconHint')}
+      />
+      <Typography variant="subtitle2">{t('tech.storeListing.sectionWebsites')}</Typography>
+      <ImageListField
+        control={control}
+        name="website_screenshots"
+        label={t('tech.storeListing.websiteScreenshots')}
+        hint={t('tech.storeListing.websiteScreenshotsHint')}
+        max={LISTING_LIMITS.play_screenshots}
       />
     </Stack>
   );

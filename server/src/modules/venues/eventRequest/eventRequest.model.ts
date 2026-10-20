@@ -1,4 +1,6 @@
 import mongoose, { Schema, type Document, type Types } from 'mongoose';
+import { priceSnapshotSchema } from '@modules/venues/venuePricing/venuePricing.schema.model';
+import type { VenuePriceBreakdown } from '@modules/venues/venuePricing/venuePricing.types';
 
 /**
  * "Run something here" — a member's ask, made from the empty state of a host's
@@ -15,8 +17,25 @@ import mongoose, { Schema, type Document, type Types } from 'mongoose';
 export const EVENT_REQUEST_TARGETS = ['HOST', 'VENUE'] as const;
 export type EventRequestTarget = (typeof EVENT_REQUEST_TARGETS)[number];
 
-export const EVENT_REQUEST_STATUSES = ['OPEN', 'FULFILLED', 'DISMISSED'] as const;
+/**
+ * OPEN → the owner answers it (ACCEPTED, REJECTED, or COUNTERED with their own
+ * date/time and the price their pricing module gives for it), and the next
+ * pod they publish closes any still-live one as FULFILLED. DISMISSED is the
+ * legacy close and the console's.
+ */
+export const EVENT_REQUEST_STATUSES = ['OPEN', 'ACCEPTED', 'COUNTERED', 'REJECTED', 'FULFILLED', 'DISMISSED'] as const;
 export type EventRequestStatus = (typeof EVENT_REQUEST_STATUSES)[number];
+
+/** Requests a published pod still answers: not yet closed one way or the other. */
+export const LIVE_EVENT_REQUEST_STATUSES: readonly EventRequestStatus[] = ['OPEN', 'ACCEPTED', 'COUNTERED'];
+
+/** The owner's offer: a window, the guests, and the price frozen when it was made. */
+export interface IEventRequestOffer {
+  start_at: Date;
+  end_at: Date;
+  pax: number;
+  quote: (VenuePriceBreakdown & { confirmed_at: Date }) | null;
+}
 
 /** The server's bound on the optional note — mirrored by @duncit/forms `EVENT_REQUEST_NOTE_MAX`. */
 export const EVENT_REQUEST_NOTE_MAX = 280;
@@ -35,9 +54,23 @@ export interface IEventRequest extends Document<Types.ObjectId> {
   closed_at: Date | null;
   /** The account that dismissed it, or null when a published pod closed it. */
   closed_by_id: Types.ObjectId | null;
+  /** The owner's answer: a note, and for ACCEPTED/COUNTERED the offered window and its price. */
+  response_note: string;
+  offer: IEventRequestOffer | null;
+  responded_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
+
+const offerSchema = new Schema<IEventRequestOffer>(
+  {
+    start_at: { type: Date, required: true },
+    end_at: { type: Date, required: true },
+    pax: { type: Number, default: 0, min: 0 },
+    quote: { type: priceSnapshotSchema, default: null },
+  },
+  { _id: false }
+);
 
 const eventRequestSchema = new Schema<IEventRequest>(
   {
@@ -51,6 +84,9 @@ const eventRequestSchema = new Schema<IEventRequest>(
     fulfilled_pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null },
     closed_at: { type: Date, default: null },
     closed_by_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    response_note: { type: String, default: '', trim: true, maxlength: EVENT_REQUEST_NOTE_MAX },
+    offer: { type: offerSchema, default: null },
+    responded_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

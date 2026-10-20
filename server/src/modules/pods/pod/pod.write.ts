@@ -8,7 +8,7 @@ import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { assertSpotsWithinLimits, resolveSpotLimits, type PodSpotLimits } from './pod.capacity';
-import { PodModel } from './pod.model';
+import { PodModel, type PodVenueApproval } from './pod.model';
 import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import { sendPodUpdatedEmail } from '@services/email/email.service';
 import { notifyPodRescheduled, podWhenWhereChanged } from './pod.rescheduleNotify';
@@ -35,7 +35,9 @@ import {
 } from './pod.validation';
 import {
   assertPartnerVenue,
+  bookInstantForPod,
   bookOrHoldSlotForPod,
+  resolveInstantBookingForCreate,
   resolveSlotForCreate,
   resolveVenueLocation,
   venueApprovalForCreate,
@@ -73,6 +75,20 @@ function randomAlpha(length: number): string {
   let out = '';
   for (let i = 0; i < length; i += 1) out += MEET_ALPHABET[randomInt(MEET_ALPHABET.length)];
   return out;
+}
+
+/**
+ * What the venue costs a new pod, for the economics guard: an instant booking
+ * its whole quote (venue price + Duncit's commission on top, both off the
+ * host's side); a slot by its pricing mode, a per-person slot at a full pod.
+ */
+function venueCostForCreate(
+  instant: { breakdown: { total: number } } | null,
+  slotDoc: Parameters<typeof slotVenueCharge>[0] | null,
+  spots: number
+): number {
+  if (instant) return instant.breakdown.total;
+  return slotDoc ? slotVenueCharge(slotDoc, { pax: spots }).total : 0;
 }
 
 export const podWriteMethods = {
@@ -124,6 +140,7 @@ export const podWriteMethods = {
       autoPodSlot?.autoPodId,
       partnerRequestSlot?.requestId
     );
+    const instant = await resolveInstantBookingForCreate(input, podMode);
 
     validateFutureDates(input.pod_date_time, input.pod_end_date_time, podMode === 'VIRTUAL');
     validateMeetingDetails(podMode, input);
@@ -138,8 +155,10 @@ export const podWriteMethods = {
       podAmount: input.pod_amount ?? 0,
       noOfSpots: input.no_of_spots ?? 0,
       venueId: venueLocation.venue_id,
-      // By the slot's pricing mode; a per-person slot is judged at a full pod.
-      venueAmount: slotDoc ? slotVenueCharge(slotDoc, { pax: input.no_of_spots ?? 0 }).total : 0,
+      venueAmount: venueCostForCreate(instant, slotDoc, input.no_of_spots ?? 0),
+      // An open slot freezes with the commission on top; an instant quote
+      // already includes it; held Auto Pod / Pod Request slots settle as before.
+      commissionOnTop: !instant && !!slotDoc && !autoPodSlot && !partnerRequestSlot,
     });
     const clubCategory = await resolveClubCategory(input.club_id);
     await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);
@@ -210,7 +229,11 @@ export const podWriteMethods = {
         ...ticketDiscount,
         // A pod awaiting the venue's slot approval stays offline until approved.
         is_active: needsVenueApproval ? false : input.is_active ?? true,
-        venue_approval_status: venueApprovalForCreate(autoPodSlot ?? partnerRequestSlot, needsVenueApproval),
+        // A booking at the venue's own price is confirmed the moment it is made.
+        venue_approval_status:
+          instant || slotDoc
+            ? 'APPROVED'
+            : venueApprovalForCreate(autoPodSlot ?? partnerRequestSlot, needsVenueApproval),
         source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
         series_id: opts?.series ? new Types.ObjectId(opts.series.id) : null,
         series_index: opts?.series?.index ?? null,
@@ -223,6 +246,7 @@ export const podWriteMethods = {
     await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot, {
       notifyVenue: !opts?.series?.quietVenue,
     });
+    if (instant) await bookInstantForPod(doc, instant.booking);
     if (partnerRequestSlot) {
       // The pod exists and holds the slot; closing the request is bookkeeping and
       // must never undo that, so a failure here is logged, not thrown.
@@ -391,14 +415,18 @@ export const podWriteMethods = {
       venueAmount: slotDoc
         ? slotVenueCharge(slotDoc, { pax: input.no_of_spots ?? doc.no_of_spots ?? 0 }).total
         : 0,
+      commissionOnTop: !!slotDoc,
     });
 
     const before = snapshotPod(doc);
     await applyPodEditCore(doc, input);
-    // Resubmission state: a partner slot re-enters the approval queue;
-    // anything else goes live right away.
+    // Resubmission state: a slot books instantly (confirmed, live); a
+    // virtual / no-venue resubmission needs no venue at all.
     doc.venue_slot_id = slotDoc ? slotDoc._id : null;
-    doc.venue_approval_status = slotDoc && needsVenueApproval ? 'PENDING' : 'NONE';
+    let approval: PodVenueApproval = 'NONE';
+    if (slotDoc && needsVenueApproval) approval = 'PENDING';
+    else if (slotDoc) approval = 'APPROVED';
+    doc.venue_approval_status = approval;
     doc.is_active = !(slotDoc && needsVenueApproval);
     await doc.save();
     if (slotDoc) await holdOrBookForResubmit(doc, slotDoc, needsVenueApproval);

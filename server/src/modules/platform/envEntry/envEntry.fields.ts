@@ -383,6 +383,34 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     },
     { name: 'youtube_client_secret', label: 'YouTube (Google) OAuth Client Secret', secret: true, hint: 'GOCSPX-…' },
   ],
+  // One-tap phone sign-in. Truecaller proves the SIM the person is holding, so
+  // a verified number stands in for the WhatsApp code on login and signup.
+  // Nothing here is a secret: the client ID ships inside the APK and the app
+  // key inside the iOS app, which is why the app builds read them from the
+  // public client config. The server re-checks every proof with Truecaller.
+  TRUECALLER: [
+    {
+      name: 'android_client_id',
+      label: 'Android Client ID (OAuth SDK)',
+      hint: 'Truecaller SDK console → your Android app → Client ID. Register package com.duncit.mobile with the release SHA-1',
+    },
+    {
+      name: 'app_key',
+      label: 'App Key (iOS + mobile web)',
+      hint: 'Truecaller SDK console → your iOS app / web app → App Key (partner key)',
+    },
+    {
+      name: 'ios_app_link',
+      label: 'iOS App Link',
+      hint: 'The universal link Truecaller gives the iOS app, e.g. https://si1a2b3c4d5e.truecallerdevs.com',
+    },
+    {
+      name: 'partner_name',
+      label: 'Partner name (mobile web)',
+      hint: 'The name Truecaller shows on the mobile-web consent sheet, e.g. Duncit. Set the web Callback URL to <server URL>/truecaller/callback',
+    },
+    { name: 'region', label: 'Region', hint: 'noneu (India and the rest of the world) or eu — blank means noneu' },
+  ],
 };
 
 /** How each category is named in the Tech portal and on the Analytics console. */
@@ -411,7 +439,101 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   GODADDY: 'GoDaddy (DNS)',
   CLOUDFLARE: 'Cloudflare (DNS)',
   SOCIAL_APPS: 'Social apps',
+  TRUECALLER: 'Truecaller (one-tap phone sign-in)',
 };
+
+/** One line under each category's title in the Tech portal: what the keys power. */
+export const CATEGORY_DESCRIPTIONS: Record<EnvCategory, string> = {
+  EMAIL: 'The mailbox every product email is sent from',
+  IMAGEKIT: 'Image and video uploads, storage and delivery',
+  PEXELS: 'Stock photos and videos for covers',
+  GOOGLE_OAUTH: 'Continue with Google on web, Android and iOS',
+  GOOGLE_MAPS: 'Maps, places search and geocoding',
+  TWILIO: 'Voice calls and the support line',
+  OPENAI: 'GPT models behind the AI features',
+  GEMINI: 'Google Gemini models behind the AI features',
+  SERVAM: 'Indian-language voice and text models',
+  RAZORPAY: 'Payments, refunds and payment webhooks',
+  SHIPROCKET: 'Shipping, pickups and delivery tracking',
+  SLACK: 'Team alerts and channel notifications',
+  AISENSY: 'WhatsApp messages, campaigns and OTP',
+  TURN: 'Relay that keeps staff calls connected',
+  GITHUB: 'Triggers and reads the app build workflows',
+  GOOGLE_PLAY: 'Android store releases and listings',
+  GOOGLE_DRIVE: 'Raw footage for Reel Studio',
+  MSG91: 'SMS one-time codes',
+  APPLE_SIGNIN: 'Sign in with Apple on web and iOS',
+  APP_STORE_CONNECT: 'iOS signing and App Store releases',
+  SONARQUBE: 'Code quality and security analysis',
+  GODADDY: 'Domain and DNS records at GoDaddy',
+  CLOUDFLARE: 'Domain and DNS records at Cloudflare',
+  SOCIAL_APPS: 'LinkedIn, Meta, X and YouTube publishing',
+  TRUECALLER: 'One-tap phone sign-in',
+};
+
+/**
+ * How the Tech portal's sidebar groups the categories, in display order. Every
+ * category belongs to exactly one group — the guard below throws on a miss.
+ */
+export const CATEGORY_GROUPS: readonly {
+  key: string;
+  label: string;
+  description: string;
+  categories: readonly EnvCategory[];
+}[] = [
+  {
+    key: 'MESSAGING',
+    label: 'Messaging & OTP',
+    description: 'Email, WhatsApp, SMS, calls and alerts',
+    categories: ['EMAIL', 'AISENSY', 'MSG91', 'TWILIO', 'SLACK', 'TURN'],
+  },
+  {
+    key: 'IDENTITY',
+    label: 'Sign-in & identity',
+    description: 'Social and phone sign-in providers',
+    categories: ['GOOGLE_OAUTH', 'APPLE_SIGNIN', 'TRUECALLER'],
+  },
+  {
+    key: 'AI',
+    label: 'AI models',
+    description: 'Text, voice and generation models',
+    categories: ['OPENAI', 'GEMINI', 'SERVAM'],
+  },
+  {
+    key: 'MEDIA',
+    label: 'Media, maps & content',
+    description: 'Uploads, stock media, maps and social publishing',
+    categories: ['IMAGEKIT', 'PEXELS', 'GOOGLE_MAPS', 'GOOGLE_DRIVE', 'SOCIAL_APPS'],
+  },
+  {
+    key: 'COMMERCE',
+    label: 'Payments & shipping',
+    description: 'Money in and parcels out',
+    categories: ['RAZORPAY', 'SHIPROCKET'],
+  },
+  {
+    key: 'RELEASES',
+    label: 'Builds & releases',
+    description: 'CI, store releases and code analysis',
+    categories: ['GITHUB', 'GOOGLE_PLAY', 'APP_STORE_CONNECT', 'SONARQUBE'],
+  },
+  {
+    key: 'DOMAINS',
+    label: 'Domains & DNS',
+    description: 'Registrar and DNS providers',
+    categories: ['GODADDY', 'CLOUDFLARE'],
+  },
+];
+
+/** The group a category sits in — total, because every category is placed exactly once. */
+export const CATEGORY_GROUP_OF = new Map(
+  CATEGORY_GROUPS.flatMap((group) => group.categories.map((category) => [category, group] as const))
+);
+
+const ungrouped = Object.keys(CATEGORY_LABELS).filter((c) => !CATEGORY_GROUP_OF.has(c as EnvCategory));
+if (ungrouped.length > 0) {
+  throw new Error(`Env categories with no sidebar group: ${ungrouped.join(', ')}. Add them to CATEGORY_GROUPS.`);
+}
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
 export const CATEGORY_DOCS: Record<EnvCategory, string> = {
@@ -439,6 +561,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   GODADDY: 'https://developer.godaddy.com/keys',
   CLOUDFLARE: 'https://dash.cloudflare.com/profile/api-tokens',
   SOCIAL_APPS: 'https://developers.facebook.com/apps/',
+  TRUECALLER: 'https://sdk-console-noneu.truecaller.com/',
 };
 
 /**
@@ -452,6 +575,7 @@ export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
     'https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api',
   GODADDY: 'https://developer.godaddy.com/doc/endpoint/domains',
   CLOUDFLARE: 'https://developers.cloudflare.com/api/resources/dns/subresources/records/',
+  TRUECALLER: 'https://docs.truecaller.com/truecaller-sdk/',
 };
 
 const secretSet = new Set<string>();
@@ -556,6 +680,11 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SOCIAL_META_APP_ID: { category: 'SOCIAL_APPS', field: 'meta_app_id' },
   SOCIAL_META_APP_SECRET: { category: 'SOCIAL_APPS', field: 'meta_app_secret' },
   SOCIAL_META_GRAPH_VERSION: { category: 'SOCIAL_APPS', field: 'meta_graph_version' },
+  TRUECALLER_ANDROID_CLIENT_ID: { category: 'TRUECALLER', field: 'android_client_id' },
+  TRUECALLER_APP_KEY: { category: 'TRUECALLER', field: 'app_key' },
+  TRUECALLER_IOS_APP_LINK: { category: 'TRUECALLER', field: 'ios_app_link' },
+  TRUECALLER_PARTNER_NAME: { category: 'TRUECALLER', field: 'partner_name' },
+  TRUECALLER_REGION: { category: 'TRUECALLER', field: 'region' },
   SOCIAL_X_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'x_client_id' },
   SOCIAL_X_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'x_client_secret' },
   SOCIAL_YOUTUBE_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'youtube_client_id' },

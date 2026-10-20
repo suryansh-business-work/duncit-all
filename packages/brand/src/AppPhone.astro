@@ -12,20 +12,50 @@ import { siteT, type SiteTranslate } from './site-i18n';
 
 interface Props {
   src?: string | null;
+  /**
+   * The app's real screens (Tech > Store Listing > Websites, see app-screenshots.ts),
+   * played as a carousel. Wins over `src`.
+   */
+  slides?: readonly string[];
   alt?: string;
   /** The site's build-time translator. Omit it and the shipped copy renders. */
   t?: SiteTranslate;
 }
-const { src = null, alt, t = siteT } = Astro.props;
+const { src = null, slides = [], alt, t = siteT } = Astro.props;
 const altText = alt ?? t('website.brand.appPhone.alt');
+const fromSrc = src ? [src] : [];
+const shots = slides.length > 0 ? [...slides] : fromSrc;
+const total = shots.length;
 ---
 
 <div class="app-phone">
   <div class="app-phone-shell">
     <span class="app-phone-notch"></span>
-    {src ? (
-      <img class="app-phone-shot" src={src} alt={altText} loading="lazy" />
-    ) : (
+    {total > 1 && (
+      <div
+        class="app-phone-slider"
+        data-app-phone-slider
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={altText}
+      >
+        <div class="app-phone-track" data-app-phone-track>
+          {shots.map((url, index) => (
+            <img
+              class="app-phone-shot"
+              src={url}
+              alt={t('website.brand.appPhone.slideAlt', { vars: { index: index + 1, total } })}
+              loading={index === 0 ? 'eager' : 'lazy'}
+              draggable="false"
+              aria-hidden={index === 0 ? undefined : 'true'}
+              data-app-phone-slide
+            />
+          ))}
+        </div>
+      </div>
+    )}
+    {total === 1 && <img class="app-phone-shot" src={shots[0]} alt={altText} loading="lazy" />}
+    {total === 0 && (
       <div class="app-phone-screen">
         <div class="app-phone-head">
           <div>
@@ -75,7 +105,65 @@ const altText = alt ?? t('website.brand.appPhone.alt');
       </div>
     )}
   </div>
+  {total > 1 && (
+    <div class="app-phone-dots">
+      {shots.map((_, index) => (
+        <button
+          type="button"
+          class="app-phone-dot"
+          data-app-phone-dot
+          aria-label={t('website.brand.appPhone.goToSlide', { vars: { index: index + 1, total } })}
+          aria-current={index === 0 ? 'true' : undefined}
+        ></button>
+      ))}
+    </div>
+  )}
 </div>
+
+<script>
+  // One carousel per phone: it advances on its own, pauses on hover, focus or a
+  // hidden tab, swipes, and never moves for a visitor who asked for less motion.
+  const INTERVAL_MS = 3500;
+  const SWIPE_PX = 40;
+  const still = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+  for (const slider of document.querySelectorAll<HTMLElement>('[data-app-phone-slider]')) {
+    const phone = slider.closest<HTMLElement>('.app-phone');
+    const track = slider.querySelector<HTMLElement>('[data-app-phone-track]');
+    const slides = [...slider.querySelectorAll<HTMLElement>('[data-app-phone-slide]')];
+    const dots = [...(phone?.querySelectorAll<HTMLButtonElement>('[data-app-phone-dot]') ?? [])];
+    if (!phone || !track || slides.length < 2) continue;
+    let current = 0;
+    let paused = false;
+    let startX: number | null = null;
+
+    const show = (next: number) => {
+      current = (next + slides.length) % slides.length;
+      track.style.transform = `translateX(-${current * 100}%)`;
+      slides.forEach((slide, i) => slide.setAttribute('aria-hidden', String(i !== current)));
+      dots.forEach((dot, i) => dot.setAttribute('aria-current', String(i === current)));
+    };
+
+    dots.forEach((dot, i) => dot.addEventListener('click', () => show(i)));
+    phone.addEventListener('mouseenter', () => (paused = true));
+    phone.addEventListener('mouseleave', () => (paused = false));
+    phone.addEventListener('focusin', () => (paused = true));
+    phone.addEventListener('focusout', () => (paused = false));
+    slider.addEventListener('pointerdown', (event) => (startX = event.clientX));
+    slider.addEventListener('pointerup', (event) => {
+      if (startX === null) return;
+      const moved = event.clientX - startX;
+      startX = null;
+      if (Math.abs(moved) >= SWIPE_PX) show(current + (moved < 0 ? 1 : -1));
+    });
+
+    if (!still) {
+      globalThis.setInterval(() => {
+        if (!paused && document.visibilityState === 'visible') show(current + 1);
+      }, INTERVAL_MS);
+    }
+  }
+</script>
 
 <style>
   /* Plain CSS: this package is outside every site's Tailwind scan. */
@@ -116,4 +204,15 @@ const altText = alt ?? t('website.brand.appPhone.alt');
   .app-phone-tabs { display: flex; align-items: center; justify-content: space-around; margin-top: auto; padding: .5rem 0; border-radius: 1rem; background: var(--color-surface, #fff); box-shadow: 0 1px 3px rgba(22,19,26,.08); }
   .app-phone-tabs i { font-size: 11px; color: var(--color-ink-soft, #4b4651); }
   .app-phone-tabs i.is-on { color: var(--color-primary, #ff5757); }
+
+  .app-phone-slider { overflow: hidden; border-radius: 1.7rem; touch-action: pan-y; }
+  .app-phone-track { display: flex; transition: transform .5s ease; }
+  .app-phone-track .app-phone-shot { flex: 0 0 100%; border-radius: 0; user-select: none; }
+  @media (prefers-reduced-motion: reduce) { .app-phone-track { transition: none; } }
+  .app-phone-dots { display: flex; justify-content: center; gap: .5rem; margin-top: .875rem; }
+  /* An 8px dot inside a 24px hit area (WCAG 2.2 target size). */
+  .app-phone-dot { position: relative; width: .5rem; height: .5rem; padding: 0; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--color-ink, #16131a) 25%, transparent); cursor: pointer; transition: width .3s ease, background-color .3s ease; }
+  .app-phone-dot::before { content: ''; position: absolute; inset: -.5rem; }
+  .app-phone-dot[aria-current='true'] { width: 1.25rem; background: var(--color-primary, #ff5757); }
+  .app-phone-dot:focus-visible { outline: 2px solid var(--color-primary, #ff5757); outline-offset: 3px; }
 </style>

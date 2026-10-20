@@ -17,7 +17,6 @@ export const CreatePodOptionsDocument = gql(`
       super_category_id
       category_id
       matched_venues_count
-      available_slots_count
       matched_venues {
         id
       }
@@ -121,12 +120,14 @@ export const PotentialPodEarningsDocument = gql(`
     $no_of_spots: Int!
     $venue_id: ID
     $venue_amount: Float
+    $venue_commission_on_top: Float
   ) {
     potentialPodEarnings(
       pod_amount: $pod_amount
       no_of_spots: $no_of_spots
       venue_id: $venue_id
       venue_amount: $venue_amount
+      venue_commission_on_top: $venue_commission_on_top
     ) {
       total_spots
       payable_spots

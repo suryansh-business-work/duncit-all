@@ -385,7 +385,7 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
      *
      * Its own section beside `partners` and `ads`, for the same reason: this is
      * what persuades somebody to start earning, not what they read once they
-     * have. The four paths deep-link into the app's survey gates, so these
+     * have. The five paths deep-link into the app's survey gates, so these
      * titles and the Earn screen's must say the same thing.
      *
      * NOT here, on purpose: the Font Awesome `icon` names, the role `key` /
@@ -442,7 +442,7 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         // sentence split so the accent word can be coloured — a translator may
         // need to reorder them, which is why neither half is a fragment.
         sectionEyebrow: 'Earn with Duncit',
-        sectionHeadingLead: 'Four Ways To',
+        sectionHeadingLead: 'Five Ways To',
         sectionHeadingAccent: 'Earn',
         venueTitle: 'Register Your Venue',
         venueText: 'List your venue, manage your availability and receive booking requests from hosts.',
@@ -460,6 +460,11 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         brandText: 'Promote your brand, sponsor events and connect with highly engaged communities.',
         brandImageAlt: 'A brand owner at their store',
         brandCta: 'Partner With Us',
+        gigTitle: 'Take Gig Jobs',
+        gigText:
+          'Photographer, caterer, DJ, decorator or sponsor? Take gig jobs from hosts, venues and brands. Set up in a minute, no meeting needed.',
+        gigImageAlt: 'A crew filming a live event',
+        gigCta: 'Become Freelancer',
         sectionText:
           'Pick how you want to earn. Each card opens a short sign-up survey in the Duncit app — we review it and get you set up.',
         // The rotated sticker on each card, and the two things each role does
@@ -476,6 +481,12 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         brandTag: 'Brands',
         brandChip1: 'List your products',
         brandChip2: 'Track your orders',
+        gigTag: 'Gigs',
+        gigChip1: 'Browse gig jobs',
+        gigChip2: 'Connect with posters',
+        // The slider's arrows.
+        previous: 'Previous way to earn',
+        next: 'Next way to earn',
       },
       why: {
         eyebrow: 'Why choose Duncit?',
@@ -1253,6 +1264,8 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         chatOneMessage: 'See you at 6! 🔥',
         chatTwo: 'Board game night',
         chatTwoMessage: 'Anyone bringing snacks?',
+        slideAlt: 'Duncit app screen {index} of {total}',
+        goToSlide: 'Show app screen {index} of {total}',
       },
       newsletter: {
         placeholder: 'you@example.com',

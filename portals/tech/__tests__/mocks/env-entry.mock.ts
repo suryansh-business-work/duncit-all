@@ -47,6 +47,8 @@ export const makeEnvCategoryDef = (over: Partial<EnvCategoryDef> = {}): EnvCateg
   category: 'EMAIL',
   label: 'Email',
   docUrl: null,
+  groupKey: 'MESSAGING',
+  groupLabel: 'Messaging & OTP',
   fields: [makeEnvFieldDef()],
   ...over,
 });

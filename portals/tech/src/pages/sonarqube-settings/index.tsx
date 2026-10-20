@@ -2,6 +2,7 @@ import { Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 import EnvVariablesTab from '../environment/EnvVariablesTab';
+import EnvAccessGate from '../environment/access-gate';
 
 /**
  * Security → SonarQube Settings: the SonarQube category of Environment
@@ -13,7 +14,10 @@ export default function SonarqubeSettingsPage() {
   return (
     <Stack spacing={2.5}>
       <PageHeader title={t('tech.sonarqube.settingsTitle')} subtitle={t('tech.sonarqube.settingsSubtitle')} />
-      <EnvVariablesTab category="SONARQUBE" />
+      {/* The keys sit behind the same emailed root-admin code as Environment Variables. */}
+      <EnvAccessGate>
+        <EnvVariablesTab category="SONARQUBE" />
+      </EnvAccessGate>
     </Stack>
   );
 }

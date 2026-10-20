@@ -210,13 +210,19 @@ the Venues / Hosts consoles; the server scopes the rows:
 ```tsx
 import { EventRequestsPage } from '@duncit/shell';
 
-<Route path="/venues/event-requests" element={authed(<EventRequestsPage targetType="VENUE" scope="owner" />)} />
+// The venue owner answers with Accept / Reject / Counter offer (@duncit/availability-calendar):
+<EventRequestsPage
+  targetType="VENUE"
+  scope="owner"
+  hideHeader
+  renderActions={(row, refresh) => <EventRequestRespondActions request={row} targetType="VENUE" onDone={refresh} />}
+/>
 <Route path="/event-requests" element={authed(<EventRequestsPage targetType="HOST" scope="console" />)} />
 ```
 
 | Export | Props | What it renders | Server operations |
 |---|---|---|---|
-| `EventRequestsPage` | `{ targetType: 'HOST' \| 'VENUE'; scope: 'owner' \| 'console' }` | Open / Fulfilled / Dismissed / Total tiles (a warning line if they fail), then a `DuncitTable`, newest first: Venue or Host (hidden on a host's own list), Requested by, Note, Status (enum filter), Requested, Closed, and Mark fulfilled / Dismiss on an OPEN row. A pod going live closes open requests on its own. | `owner` → `myReceivedEventRequestsTable` + `myReceivedEventRequestCounts`; `console` → `eventRequestsTable` + `eventRequestCounts` (Venues / Hosts console readers); both close a row with `updateEventRequestStatus`. |
+| `EventRequestsPage` | `{ targetType: 'HOST' \| 'VENUE'; scope: 'owner' \| 'console'; renderActions?: (row, refresh) => ReactNode; hideHeader?: boolean }` | Open / Accepted / Offer sent / Rejected / Fulfilled / Dismissed / Total tiles (a warning line if they fail), then a `DuncitTable`, newest first: Venue or Host (hidden on a host's own list), Requested by, Note, Status (enum filter), Your answer (the offered window, its frozen price and the owner's note), Requested, Closed, and Mark fulfilled / Dismiss on an OPEN row — or `renderActions` in their place. A pod going live closes open requests on its own. | `owner` → `myReceivedEventRequestsTable` + `myReceivedEventRequestCounts`; `console` → `eventRequestsTable` + `eventRequestCounts` (Venues / Hosts console readers); both close a row with `updateEventRequestStatus`. |
 
 Copy lives under `publicPage.eventRequests.*`, already in the shell fallback.
 

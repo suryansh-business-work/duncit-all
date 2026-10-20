@@ -5,6 +5,7 @@ import {
   VENUE_FOOD_TAX_MODES,
 } from '@modules/venues/venue/venue.constants';
 import type { VenueFoodTaxMode } from '@modules/venues/venue/venue.model';
+import { isDuplicateKeyError } from '@utils/mongo-error';
 
 export interface IFinanceSettings extends Document {
   singleton_key: string;
@@ -226,9 +227,24 @@ const financeSettingsSchema = new Schema<IFinanceSettings>(
 export const FinanceSettingsModel = model<IFinanceSettings>('FinanceSettings', financeSettingsSchema);
 
 export async function getFinanceSettings(): Promise<IFinanceSettings> {
-  let doc = await FinanceSettingsModel.findOne({ singleton_key: 'finance' });
-  if (!doc) doc = await FinanceSettingsModel.create({ singleton_key: 'finance' });
-  return doc;
+  const doc = await FinanceSettingsModel.findOne({ singleton_key: 'finance' });
+  if (doc) return doc;
+  // First read on a fresh database: two callers racing a plain create hit the
+  // unique singleton index (E11000). Upsert instead, and a racer that still
+  // loses reads the row the winner wrote.
+  try {
+    const created = await FinanceSettingsModel.findOneAndUpdate(
+      { singleton_key: 'finance' },
+      { $setOnInsert: { singleton_key: 'finance' } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    if (created) return created;
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) throw error;
+  }
+  const existing = await FinanceSettingsModel.findOne({ singleton_key: 'finance' });
+  if (!existing) throw new Error('Finance settings could not be created');
+  return existing;
 }
 
 /**

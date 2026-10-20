@@ -68,7 +68,7 @@ const seedPod = (over: Record<string, unknown> = {}) =>
   });
 
 describe('portal edit at any stage — slot re-route', () => {
-  it('rescues a venue-rejected pod: new slot re-enters the approval queue', async () => {
+  it('rescues a venue-rejected pod: the new slot is booked instantly and the pod goes live', async () => {
     const venueId = await seedVenue();
     const slotId = await seedSlot(venueId);
     const pod = await seedPod();
@@ -79,21 +79,29 @@ describe('portal edit at any stage — slot re-route', () => {
       { actorUserId: adminId, source: 'ADMIN' },
     );
 
-    expect(updated?.venue_approval_status).toBe('PENDING');
-    expect(updated?.is_active).toBe(false);
+    expect(updated?.venue_approval_status).toBe('APPROVED');
+    expect(updated?.is_active).toBe(true);
     expect(updated?.venue_slot_id).toBe(slotId);
-    // The venue owner is asked again — the slot is held, not booked.
-    expect((await VenueSlotModel.findById(slotId))?.status).toBe('PENDING');
-    expect(notificationService.create).toHaveBeenCalled();
+    // The slot is booked outright at its own price — nothing is held for an answer.
+    const slot = await VenueSlotModel.findById(slotId);
+    expect(slot?.status).toBe('BOOKED');
+    expect(String(slot?.booked_by_pod_id)).toBe(String(pod._id));
+    expect(slot?.price_snapshot).toMatchObject({ venue_payout: 400 });
+    expect(emailService.sendVenueSlotRequestEmail).not.toHaveBeenCalled();
     // The re-route is visible in the monitored trail.
     const audit = await PodAuditLogModel.findOne({ pod_id: pod._id, action: 'UPDATE' });
     expect(audit?.source).toBe('ADMIN');
     expect(audit?.changes.map((c) => c.field)).toEqual(
       expect.arrayContaining(['venue_slot_id', 'venue_approval_status']),
     );
+    // The partner venue is told its venue was booked (fired after the response).
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(notificationService.create).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'New booking confirmed', target_user_ids: [ownerId] }),
+    );
   });
 
-  it('releases the previously held slot when re-routing to another one', async () => {
+  it('releases the previously booked slot when re-routing to another one', async () => {
     const venueId = await seedVenue();
     const firstSlot = await seedSlot(venueId);
     const secondSlot = await seedSlot(venueId, { start_at: inDays(5), end_at: inDays(5.1) });
@@ -111,24 +119,27 @@ describe('portal edit at any stage — slot re-route', () => {
     );
 
     expect((await VenueSlotModel.findById(firstSlot))?.status).toBe('AVAILABLE');
-    expect((await VenueSlotModel.findById(secondSlot))?.status).toBe('PENDING');
+    const second = await VenueSlotModel.findById(secondSlot);
+    expect(second?.status).toBe('BOOKED');
+    expect(String(second?.booked_by_pod_id)).toBe(String(pod._id));
   });
 
-  it('keeps the pod AND its held slot when the new slot is snatched', async () => {
+  it('keeps the pod AND its booked slot when the new slot is snatched', async () => {
     const venueId = await seedVenue();
     const heldSlot = await seedSlot(venueId);
     const targetSlot = await seedSlot(venueId, { start_at: inDays(5), end_at: inDays(5.1) });
     const pod = await seedPod();
-    // The pod is already holding a slot — the state a re-route actually starts from.
+    // The pod already has a booked slot — the state a re-route actually starts from.
     await podService.update(
       String(pod._id),
       { venue_id: venueId, venue_slot_id: heldSlot },
       { actorUserId: adminId, source: 'ADMIN' },
     );
     const booked = await PodModel.findById(pod._id);
+    expect(booked?.venue_approval_status).toBe('APPROVED');
 
     jest
-      .spyOn(venueSlotService, 'holdForPod')
+      .spyOn(venueSlotService, 'bookForPod')
       .mockRejectedValue(new Error('This slot is no longer available. Pick another slot.'));
 
     await expect(
@@ -146,8 +157,10 @@ describe('portal edit at any stage — slot re-route', () => {
     expect(after?.venue_approval_status).toBe(booked?.venue_approval_status);
     expect(String(after?.pod_date_time)).toBe(String(booked?.pod_date_time));
     const stillHeld = await VenueSlotModel.findById(heldSlot);
-    expect(stillHeld?.status).toBe('PENDING');
+    expect(stillHeld?.status).toBe('BOOKED');
     expect(String(stillHeld?.booked_by_pod_id)).toBe(String(pod._id));
+    // The target slot was never claimed.
+    expect((await VenueSlotModel.findById(targetSlot))?.status).toBe('AVAILABLE');
   });
 
   it('takes the pod window from the slot it is re-routed onto', async () => {
@@ -188,7 +201,7 @@ describe('portal edit at any stage — slot re-route', () => {
     expect((await VenueSlotModel.findById(slotId))?.status).toBe('AVAILABLE');
   });
 
-  it('books instantly (no approval queue) when the host owns the venue', async () => {
+  it('books instantly when the host owns the venue, telling nobody', async () => {
     const venueId = await seedVenue({ owner_user_id: hostId });
     const [ownSlot] = await venueSlotService.create(hostId, {
       venue_id: venueId,
@@ -202,9 +215,12 @@ describe('portal edit at any stage — slot re-route', () => {
       { actorUserId: adminId, source: 'ADMIN' },
     );
 
-    expect(updated?.venue_approval_status).toBe('NONE');
+    expect(updated?.venue_approval_status).toBe('APPROVED');
     expect(updated?.is_active).toBe(true);
     expect((await VenueSlotModel.findById(ownSlot.id))?.status).toBe('BOOKED');
+    // The owner is the host: there is no one to tell.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(notificationService.create).not.toHaveBeenCalled();
   });
 
   it('refuses to claim venue inventory for a cancelled or completed pod', async () => {

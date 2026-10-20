@@ -17,6 +17,7 @@ import { probeDriveAccount } from '@modules/ai/reel/reel.drive';
 import { parseServiceAccount } from '@utils/googleServiceAccount';
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
+import { truecallerOAuthUrls } from '@modules/access/auth-truecaller/truecaller.config';
 import { sonarGet } from '@utils/sonarqube';
 import { scalarText } from '@modules/commerce/store/store.shared';
 import { godaddyConfigOf, godaddyDomain, godaddyRecords } from '@modules/platform/dns/godaddy.gateway';
@@ -625,6 +626,52 @@ export async function appleSignInConnection(str: EnvConfigReader): Promise<EnvCo
   return { ok: false, message: `Apple answered ${answer}`, details: [] };
 }
 
+// --- Truecaller ---------------------------------------------------------------
+
+const TRUECALLER_PROBE_CODE = 'duncit-connection-check';
+
+/**
+ * Ask Truecaller's OAuth token endpoint to redeem a code it never issued, as
+ * this entry's Android client. A client it does not know is refused as the
+ * client (`invalid_client` / `unauthorized_client`); a known one gets as far
+ * as the bogus code. The app key and app link are only provable by signing in
+ * on iOS and mobile web, so they are checked for presence alone.
+ */
+export async function truecallerConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const clientId = str('android_client_id').trim();
+  const appKey = str('app_key').trim();
+  if (!clientId && !appKey) {
+    return { ok: false, message: 'Add the Android Client ID, the App Key, or both', details: [] };
+  }
+  const notes = [
+    appKey ? 'App Key is set — iOS and mobile web are proven by signing in there.' : 'No App Key: iOS and mobile web show no Truecaller button.',
+  ];
+  if (!clientId) return { ok: true, message: 'No Android Client ID: the Android app shows no Truecaller button', details: notes };
+  const { token } = truecallerOAuthUrls(str('region').trim().toLowerCase() === 'eu' ? 'eu' : 'noneu');
+  const res = await fetchJson(token, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: clientId,
+      code: TRUECALLER_PROBE_CODE,
+      code_verifier: TRUECALLER_PROBE_CODE,
+    }).toString(),
+  });
+  const error = typeof res.data.error === 'string' ? res.data.error : '';
+  if (error === 'invalid_client' || error === 'unauthorized_client') {
+    return {
+      ok: false,
+      message: 'Truecaller does not recognise this Android Client ID',
+      details: ['Copy it again from the Truecaller SDK console, and check the Region matches where the app was registered.'],
+    };
+  }
+  if (res.ok || error) {
+    return { ok: true, message: `Truecaller answered for client ${clientId}`, details: [`Token endpoint said: ${error || 'ok'}`, ...notes] };
+  }
+  return { ok: false, message: `Truecaller answered HTTP ${res.status}`, details: notes };
+}
+
 // --- App Store Connect --------------------------------------------------------
 
 /**
@@ -801,6 +848,7 @@ const CONNECTION_CHECKS = {
   GODADDY: godaddyConnection,
   CLOUDFLARE: cloudflareConnection,
   SOCIAL_APPS: socialAppsConnection,
+  TRUECALLER: truecallerConnection,
   GOOGLE_OAUTH: googleOAuthConnection,
 } as const;
 

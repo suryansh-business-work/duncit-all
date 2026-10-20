@@ -67,6 +67,12 @@ export interface StoreActiveOccasion {
   ends_at: string;
 }
 
+/** A header or footer link the operator set: a same-site path or an https URL. */
+export interface StoreNavLink {
+  label: string;
+  link: string;
+}
+
 export interface StoreSettings {
   store_enabled: boolean;
   store_name: string;
@@ -99,6 +105,12 @@ export interface StoreSettings {
   about_html: string;
   social_links: StoreSocialLink[];
   payment_badges: StorePaymentBadge[];
+  /** The phone home page's greeting line; '' shows the built-in one. */
+  home_greeting: string;
+  /** The desktop header's links after Shop by pet; empty lists the menu aisles, Deals and Brands. */
+  nav_links: StoreNavLink[];
+  /** Extra links at the end of the footer's About column. */
+  footer_links: StoreNavLink[];
   currency_symbol: string;
   autoship_enabled: boolean;
   autoship_discount_pct: number;
@@ -150,6 +162,15 @@ export const STORE_SETTINGS: TypedDocumentNode<{ storeSettings: StoreSettings },
       payment_badges {
         label
         image_url
+      }
+      home_greeting
+      nav_links {
+        label
+        link
+      }
+      footer_links {
+        label
+        link
       }
       currency_symbol
       autoship_enabled

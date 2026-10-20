@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Input, Text, YStack } from 'tamagui';
-import { clubLacksOpenSlots, clubPlaceLabel, clubSlotsLabel } from '@duncit/utils';
+import { clubPlaceLabel } from '@duncit/utils';
 
 import { FieldLabel } from '@/components/Field';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ChipSelectField } from './ChipSelectField';
 import type { CreatePodClub, CreatePodLocation } from './create-pod.types';
-import { NoSlotsSheet } from './NoSlotsSheet';
 
 interface Props {
   clubs: CreatePodClub[];
@@ -20,15 +19,13 @@ interface Props {
   locality: string;
   /** Until a locality is picked there is nothing to choose from. */
   locked: boolean;
-  /** PHYSICAL shows each club's open slots and refuses a club with none. */
-  podMode: string;
 }
 
 /** Searchable club picker — a filter box over a chip list (host's own clubs),
  * each chip reading "Name | (pin) Locality, City". The search matches either.
- * It opens once a locality is picked. For a physical pod each chip names its
- * open slots, and a club with none opens the no-slots dialog instead of being
- * selected. mWeb twin: steps/ClubField. */
+ * It opens once a locality is picked. Any club can be picked: venues are booked
+ * instantly at their own pricing on step 3, so a club no longer needs open
+ * slots. mWeb twin: steps/ClubField. */
 export function ClubSearchField({
   clubs,
   locations,
@@ -38,31 +35,15 @@ export function ClubSearchField({
   required,
   locality,
   locked,
-  podMode,
 }: Readonly<Props>) {
   const [query, setQuery] = useState('');
-  const [blockedClub, setBlockedClub] = useState<CreatePodClub | null>(null);
   const { t } = useTranslation();
   const term = query.trim().toLowerCase();
-  const physical = podMode === 'PHYSICAL';
-  const options = clubs.map((club) => {
-    const slots = clubSlotsLabel(club, t);
-    return {
-      value: club.id,
-      label: club.club_name,
-      place: clubPlaceLabel(club, locations),
-      note: physical ? slots.label : undefined,
-      noteWarn: !slots.open,
-    };
-  });
-  const pick = (clubId: string) => {
-    const club = clubs.find((item) => item.id === clubId) ?? null;
-    if (clubLacksOpenSlots(club, podMode)) {
-      setBlockedClub(club);
-      return;
-    }
-    onChange(clubId);
-  };
+  const options = clubs.map((club) => ({
+    value: club.id,
+    label: club.club_name,
+    place: clubPlaceLabel(club, locations),
+  }));
   const filtered = term
     ? options.filter((option) =>
         [option.label, option.place].join(' ').toLowerCase().includes(term),
@@ -103,7 +84,7 @@ export function ClubSearchField({
             label=""
             options={filtered}
             value={value}
-            onChange={pick}
+            onChange={onChange}
             emptyHint={t('mweb.createPod.clubsEmpty')}
             testID="create-pod-club"
           />
@@ -114,7 +95,6 @@ export function ClubSearchField({
           {error}
         </Text>
       ) : null}
-      <NoSlotsSheet club={blockedClub} onClose={() => setBlockedClub(null)} />
     </YStack>
   );
 }

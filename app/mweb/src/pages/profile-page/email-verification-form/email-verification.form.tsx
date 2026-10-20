@@ -10,6 +10,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { OTP_6 } from '@duncit/regex';
 import type { EmailVerificationFormProps, EmailVerificationValues } from './email-verification.types';
 import { useTranslation } from '../../../i18n/useTranslation';
+import OtpVerifiedDialog from './OtpVerifiedDialog';
 
 const REQUEST_EMAIL_OTP = gql`
   mutation RequestEmailVerificationOtp {
@@ -45,6 +46,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showVerified, setShowVerified] = useState(false);
   const { control, handleSubmit } = useForm<EmailVerificationValues, any, EmailVerificationValues>({
     defaultValues: { otp: '' },
     resolver: zodResolver(emailVerificationSchema) as unknown as Resolver<EmailVerificationValues, any, EmailVerificationValues>,
@@ -55,6 +57,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
     try {
       await verifyOtp({ variables: { otp: values.otp } });
       setMessage(t('mweb.common.emailVerified'));
+      setShowVerified(true);
       onVerified();
     } catch (e: any) {
       setError(e?.message ?? 'Invalid OTP');
@@ -86,12 +89,19 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
 
   // Verified needs no row of its own. The tick beside the name in the profile
   // header already says it, and a success Alert repeating it spent a full band
-  // of the page restating something the header had covered.
+  // of the page restating something the header had covered. The refetch flips
+  // `verified` straight after a successful code, so the confirmation dialog is
+  // rendered outside the form to outlive it.
+  const verifiedDialog = (
+    <OtpVerifiedDialog open={showVerified} email={email} onClose={() => setShowVerified(false)} />
+  );
   if (verified) {
-    return null;
+    return verifiedDialog;
   }
 
   return (
+    <>
+    {verifiedDialog}
     <Stack id="email-verification" data-testid="email-verification-form" spacing={1.5}>
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
@@ -170,5 +180,6 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
         </Stack>
       </form>
     </Stack>
+    </>
   );
 }

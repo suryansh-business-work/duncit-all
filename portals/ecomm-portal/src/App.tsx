@@ -20,7 +20,8 @@ import CategoriesPage from './pages/categories/CategoriesPage';
 import FiltersPage from './pages/filters/FiltersPage';
 import CollectionsPage from './pages/collections/CollectionsPage';
 import CollectionEditorPage from './pages/collections/collection-editor';
-import HomePageBuilder from './pages/home-page/HomePageBuilder';
+import SectionsPage from './pages/sections/SectionsPage';
+import { sectionsTabPath } from './pages/sections/sections-tabs';
 import ReviewsPage from './pages/reviews/ReviewsPage';
 import CouponsPage from './pages/coupons/CouponsPage';
 import ServiceablePincodesPage from './pages/serviceable-pincodes/ServiceablePincodesPage';
@@ -60,7 +61,10 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/collections', element: <CollectionsPage /> },
   { path: '/collections/new', element: <CollectionEditorPage /> },
   { path: '/collections/:id', element: <CollectionEditorPage /> },
-  { path: '/home-page', element: <HomePageBuilder /> },
+  { path: '/sections', element: <Navigate to={sectionsTabPath('home')} replace /> },
+  { path: '/sections/:tab', element: <SectionsPage /> },
+  // The old Home page builder is now the Sections console's Home tab; old bookmarks still land there.
+  { path: '/home-page', element: <Navigate to={sectionsTabPath('home')} replace /> },
   { path: '/reviews', element: <ReviewsPage /> },
   { path: '/coupons', element: <CouponsPage /> },
   { path: '/carts', element: <CartsPage /> },

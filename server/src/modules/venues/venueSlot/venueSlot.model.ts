@@ -1,5 +1,7 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 import { SLOT_PRICING_MODES, type SlotPricingMode } from './slotCharge';
+import { priceSnapshotSchema } from '@modules/venues/venuePricing/venuePricing.schema.model';
+import type { VenuePriceBreakdown } from '@modules/venues/venuePricing/venuePricing.types';
 
 /** PENDING = a hold placed by a host's pod that is waiting for the venue
  * owner's approval; it books into BOOKED or releases back to AVAILABLE. */
@@ -65,6 +67,12 @@ export interface IVenueSlot extends Document {
    * rather than freed, so the venue never ends up offering a time it never opened.
    */
   requested_by_host: boolean;
+  /**
+   * The booking's price, frozen when it was confirmed. Set on every instant
+   * booking; settlement, refunds and earnings read it, so a later rate change
+   * never alters a booking. Null on legacy slots (they settle as before).
+   */
+  price_snapshot: (VenuePriceBreakdown & { confirmed_at: Date }) | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -98,6 +106,7 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     decided_pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null },
     decline_reason: { type: String, default: '', trim: true, maxlength: 280 },
     requested_by_host: { type: Boolean, default: false },
+    price_snapshot: { type: priceSnapshotSchema, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

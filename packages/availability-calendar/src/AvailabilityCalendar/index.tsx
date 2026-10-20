@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Box, Typography } from '@mui/material';
 import { format, startOfMonth } from 'date-fns';
 import { useTranslation } from '@duncit/app-settings';
@@ -17,6 +18,9 @@ interface Props {
   /** Latest selectable day — days after this are dimmed and non-interactive
    *  (e.g. the 60-day booking window). Omit for no upper bound. */
   maxDate?: Date;
+  /** Extra content under a day's badges ('yyyy-MM-dd' key) — the pricing
+   *  calendar draws the day's price there. */
+  renderDayFooter?: (dayKey: string) => ReactNode;
 }
 
 /** Day/Week/Month slot calendar showing per-day counts (A/B/×). Pure +
@@ -30,6 +34,7 @@ export default function AvailabilityCalendar({
   onSelect,
   holidays = [],
   maxDate,
+  renderDayFooter,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const weekdays = weekdayLabels(t).short;
@@ -71,6 +76,7 @@ export default function AvailabilityCalendar({
             isHoliday={holidaySet.has(format(date, 'yyyy-MM-dd'))}
             selectedDate={selectedDate}
             onSelect={onSelect}
+            footer={renderDayFooter?.(format(date, 'yyyy-MM-dd'))}
           />
         ))}
       </Box>

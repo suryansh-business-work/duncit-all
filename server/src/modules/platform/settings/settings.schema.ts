@@ -137,6 +137,14 @@ export const settingsTypeDefs = gql`
     apple_web_redirect_uri: String!
     "Where Apple posts the web flow's answer for the Android app and native web: <server>/apple/callback."
     apple_relay_url: String!
+    "Truecaller on the Android app — its OAuth client ID. Blank: the Android app offers no Truecaller button."
+    truecaller_android_client_id: String!
+    "Truecaller on the iOS app and mobile web — the partner app key. Blank: those doors offer no Truecaller button."
+    truecaller_app_key: String!
+    "The universal link Truecaller hands the iOS app back on."
+    truecaller_ios_app_link: String!
+    "The name the mobile-web Truecaller sheet shows."
+    truecaller_partner_name: String!
   }
 
   input UpdateAppSettingsInput {

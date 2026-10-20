@@ -14,6 +14,8 @@ import { LocaleModel } from '@modules/platform/localization/localization.model';
 import { UserModel } from '../../user.model';
 import { UserRoleModel } from '../../relations';
 import { userProfileMethods as svc } from '../../user.profile';
+import { validate } from '@utils/validate';
+import { updateMyProfileSchema } from '@modules/access/profile/profile.validator';
 
 /**
  * The signed-in user's own profile writes and the public reads. Every write
@@ -95,6 +97,29 @@ describe('updateMyProfile', () => {
     expect((await reload(user._id))?.profile?.dob).toBeNull();
 
     await expect(svc.updateMyProfile(id, { dob: 'not-a-date' } as never)).rejects.toThrow('Invalid date of birth');
+  });
+
+  it('keeps the saved address when a validated save does not carry one (removing the photo)', async () => {
+    const address = { line1: '12 MG Road', line2: 'Sector 4', landmark: '', city: 'Ghaziabad', state: 'Uttar Pradesh', pincode: '201003', country: 'India' };
+    const user = await seedUser({
+      profile: { first_name: 'Asha', last_name: 'Rao', profile_photo: 'https://img.test/a.jpg', address },
+    });
+    // Through the real validator, exactly as "Remove photo" arrives: it fills the
+    // absent address in as {}, which must not read as "clear the address".
+    const input = await validate(updateMyProfileSchema, { profile_photo: null });
+    const pub = await svc.updateMyProfile(String(user._id), input as never);
+    expect(pub?.profile_photo).toBeNull();
+    expect(pub?.address).toEqual(address);
+    expect((await reload(user._id))?.profile?.address).toMatchObject(address);
+  });
+
+  it('still clears the address when its parts are sent blank on purpose', async () => {
+    const user = await seedUser({
+      profile: { first_name: 'Asha', last_name: 'Rao', address: { line1: '12 MG Road', city: 'Pune' } },
+    });
+    const input = await validate(updateMyProfileSchema, { address: { line1: '', city: '' } });
+    const pub = await svc.updateMyProfile(String(user._id), input as never);
+    expect(pub?.address).toMatchObject({ line1: '', city: '' });
   });
 
   it('normalises a partial address, defaulting the country to India', async () => {

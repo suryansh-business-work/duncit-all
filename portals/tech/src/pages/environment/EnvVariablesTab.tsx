@@ -19,6 +19,9 @@ import EnvEntriesTable from './EnvEntriesTable';
 import EnvImportExport from './EnvImportExport';
 import { EnvEntryForm, toConfigPairs, type EnvEntryFormValues } from './env-entry';
 import TestDrawer from './test-panels';
+import EnvTestHistoryDialog from './workspace/EnvTestHistoryDialog';
+import { ENV_COUNT_QUERIES } from './workspace/workspace-queries';
+import { logs } from '@duncit/logs';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
@@ -41,6 +44,7 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
   const [editing, setEditing] = useState<EnvEntry | null>(null);
   const [creating, setCreating] = useState(false);
   const [testing, setTesting] = useState<EnvEntry | null>(null);
+  const [historyOf, setHistoryOf] = useState<EnvEntry | null>(null);
 
   const { data: catData } = useQuery<{ envCategories: EnvCategoryDef[] }>(ENV_CATEGORIES, { fetchPolicy: 'cache-first' });
   const [createMut, createState] = useMutation<any>(CREATE_ENV_ENTRY);
@@ -72,7 +76,13 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
   );
 
   // Stable so the test panels' `run` callbacks keep their identity across renders.
-  const refetchTable = useCallback(() => refetchRef.current?.(), []);
+  // The sidebar counts and the test history move with the table.
+  const refetchTable = useCallback(() => {
+    refetchRef.current?.();
+    client.refetchQueries({ include: ENV_COUNT_QUERIES }).catch((err: unknown) => {
+      logs.portal.tech.error('EnvVariablesTab', 'refreshCounts', { reason: parseApiError(err) });
+    });
+  }, [client]);
 
   const def = useMemo(() => categories.find((c) => c.category === active), [categories, active]);
   const busy = createState.loading || updateState.loading;
@@ -94,7 +104,7 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
       }
       setEditing(null);
       setCreating(false);
-      refetchRef.current?.();
+      refetchTable();
     } catch (err) {
       notify(parseApiError(err), 'error');
     }
@@ -105,7 +115,7 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
     try {
       await deleteMut({ variables: { id: e.id } });
       notify(`${e.name} deleted`, 'success');
-      refetchRef.current?.();
+      refetchTable();
     } catch (err) {
       notify(parseApiError(err), 'error');
     }
@@ -115,7 +125,7 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
     try {
       await setDefaultMut({ variables: { id: e.id } });
       notify(`${e.name} is now the default`, 'success');
-      refetchRef.current?.();
+      refetchTable();
     } catch (err) {
       notify(parseApiError(err), 'error');
     }
@@ -163,6 +173,7 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
         onDelete={handleDelete}
         onSetDefault={handleSetDefault}
         onTest={setTesting}
+        onHistory={setHistoryOf}
       />
 
       <EnvEntryForm
@@ -176,6 +187,7 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
       />
 
 
+      <EnvTestHistoryDialog entry={historyOf} onClose={() => setHistoryOf(null)} />
       <TestDrawer entry={testing} onClose={() => setTesting(null)} onTested={refetchTable} />
     </Stack>
   );

@@ -5,6 +5,9 @@ import { useTranslation } from '../i18n/useTranslation';
 interface Props {
   variant: 'processing' | 'success';
   size?: number;
+  /** Screen-reader name for the success tick when it is not a payment
+   * (e.g. an email just verified). Defaults to "Payment successful". */
+  label?: string;
 }
 
 // The checkmark is a fixed brand-success green regardless of colour mode —
@@ -68,13 +71,13 @@ function ProcessingDots({ size }: Readonly<{ size: number }>) {
   );
 }
 
-function SuccessCheck({ size }: Readonly<{ size: number }>) {
+function SuccessCheck({ size, label }: Readonly<{ size: number; label?: string }>) {
   const { t } = useTranslation();
   return (
     <Box
       data-testid="payment-lottie-success"
       role="img"
-      aria-label={t('mweb.paymentLottie.paymentSuccessful')}
+      aria-label={label ?? t('mweb.paymentLottie.paymentSuccessful')}
       sx={{
         width: size,
         height: size,
@@ -126,9 +129,9 @@ function SuccessCheck({ size }: Readonly<{ size: number }>) {
   );
 }
 
-export default function PaymentLottie({ variant, size = 120 }: Props) {
+export default function PaymentLottie({ variant, size = 120, label }: Props) {
   return variant === 'success' ? (
-    <SuccessCheck size={size} />
+    <SuccessCheck size={size} label={label} />
   ) : (
     <ProcessingDots size={size} />
   );

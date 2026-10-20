@@ -4,7 +4,19 @@ import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
 import { POD_TYPE_VALUES, type CreatePodFormValues } from './create-pod.types';
 
-/** Physical pods need a venue, a space/capacity and an approved slot; virtual pods
+/** A physical pod's time at the venue: a Pod Request books the slot it holds;
+ * every other pod books a window at the venue's own pricing (a slot id an
+ * older draft still carries books as before). Native twin. */
+function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (values.venue_slot_id) return;
+  if (values.partner_request_id) {
+    ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: t('mweb.createPod.validation.slotRequired') });
+  } else if (!values.pod_end_date_time) {
+    ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.bookingRequired') });
+  }
+}
+
+/** Physical pods need a venue, a space/capacity and a booked time; virtual pods
  * need a valid meeting link. Extracted from the schema's superRefine to keep it
  * under the cognitive-complexity limit. */
 export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
@@ -12,12 +24,10 @@ export function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.Refinem
     if (!values.venue_id) {
       ctx.addIssue({ code: 'custom', path: ['venue_id'], message: t('mweb.createPod.validation.venueRequired') });
     } else if (!values.venue_space_label) {
-      // A space (capacity) is chosen after the venue and gates the slot list.
+      // A space (capacity) is chosen after the venue and gates the booking pickers.
       ctx.addIssue({ code: 'custom', path: ['venue_space_label'], message: t('mweb.createPod.validation.spaceRequired') });
     }
-    if (!values.venue_slot_id) {
-      ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: t('mweb.createPod.validation.slotRequired') });
-    }
+    refineVenueTime(values, ctx, t);
   } else if (values.pod_mode === 'VIRTUAL') {
     // Picked from the shared list, not typed: the pod page decodes codes, so
     // free text rendered back as "Google meet". Native twin.

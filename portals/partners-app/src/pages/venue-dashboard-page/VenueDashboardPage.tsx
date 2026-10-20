@@ -5,6 +5,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { DuncitButton } from '@duncit/buttons';
+import { UpcomingBookings } from '@duncit/availability-calendar';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { emptyVenueOwnerStats } from '@duncit/utils';
 import { MY_VENUES } from '../register-venue-page/queries';
@@ -67,24 +68,33 @@ export default function VenueDashboardPage() {
             Venue Management
           </DuncitButton>
           <DuncitButton component={RouterLink} to="/venues/requests" size="small" variant="outlined" startIcon={<EventAvailableIcon />}>
-            Slot Requests{stats.pending_requests > 0 ? ` (${stats.pending_requests})` : ''}
+            {t('venuePricing.dashboard.requests')}
           </DuncitButton>
           {selectedVenue?.status === 'APPROVED' && (
             <DuncitButton
               component={RouterLink}
-              to={`/venues/${selectedVenue.id}/availability`}
+              to={`/venues/${selectedVenue.id}/pricing`}
               size="small"
               variant="contained"
               startIcon={<CalendarMonthIcon />}
             >
-              Availability Calendar
+              {t('venuePricing.dashboard.pricing')}
             </DuncitButton>
           )}
         </Stack>
       ),
     },
+    {
+      // Confirmed instant bookings: pod, when, and exactly what the venue is paid.
+      id: 'upcoming-bookings',
+      title: t('venuePricing.bookings.title'),
+      fitContent: true,
+      defaultLayout: { x: 0, y: 4, w: 12, h: 4 },
+      minH: 3,
+      content: <UpcomingBookings venueId={filter.venueIdOrNull} showVenue={!filter.venueIdOrNull} />,
+    },
     ...(selectedVenue?.status === 'APPROVED'
-      ? [publicPageWidget({ kind: 'VENUE', refId: selectedVenue.id, title: selectedVenue.venue_name ?? '' }, 4)]
+      ? [publicPageWidget({ kind: 'VENUE', refId: selectedVenue.id, title: selectedVenue.venue_name ?? '' }, 8)]
       : []),
   ];
 

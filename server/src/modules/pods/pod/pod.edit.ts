@@ -12,7 +12,7 @@ import {
   ticketDiscountMaxTickets,
   type TicketDiscountTier,
 } from './pod.ticketDiscount';
-import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { notifyInstantBooking, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { logs } from '@observability/log';
@@ -26,12 +26,14 @@ import {
 } from './pod.validation';
 import {
   assertPartnerVenue,
-  announceFreeSlotBooking,
   emailVenueSlotRequested,
   notifyVenueSlotRequested,
+  resolveInstantBookingForCreate,
   resolveSlotForCreate,
   resolveVenueLocation,
+  settleSlotBooking,
 } from './pod.venue';
+import type { InstantBookingRequest } from '@modules/venues/venuePricing/venuePricing.service';
 import { applyProductsForUpdate, assertMeetsMinPax, resolveClubCategory } from './pod.products';
 
 /** Meeting details are persisted for virtual pods only. */
@@ -311,6 +313,8 @@ interface SlotReroute {
   slotDoc: any;
   needsVenueApproval: boolean;
   previousSlotId: string | null;
+  /** An instant booking at the venue's own pricing, booked by the claim step. */
+  instant?: InstantBookingRequest | null;
 }
 
 /**
@@ -324,7 +328,7 @@ interface SlotReroute {
  * venue never booked. Returns null when no re-route was requested.
  */
 export async function prepareSlotReroute(doc: any, input: any): Promise<SlotReroute | null> {
-  if (input.venue_slot_id === undefined) return null;
+  if (input.venue_slot_id === undefined && !input.venue_booking) return null;
   // Venue inventory is only ever held by a pod that can still release it. A
   // cancelled or settled pod would strand the slot forever.
   if (doc.deleted_at) {
@@ -346,24 +350,36 @@ export async function prepareSlotReroute(doc: any, input: any): Promise<SlotRero
     // books instantly (a free pod) or waits for the venue (a paid one).
     pod_type: input.pod_type ?? doc.pod_type,
   };
+  const previousSlotId = doc.venue_slot_id ? String(doc.venue_slot_id) : null;
+  if (nextMode === 'PHYSICAL' && input.venue_booking && !input.venue_slot_id) {
+    // Re-routed onto an instant booking: priced and checked now, booked by the claim step.
+    const instantInput = { ...slotInput, venue_slot_id: null, venue_booking: input.venue_booking, no_of_spots: input.no_of_spots ?? doc.no_of_spots, reroute_pod_id: String(doc._id) };
+    const instant = await resolveInstantBookingForCreate(instantInput, nextMode);
+    input.venue_id = instantInput.venue_id;
+    input.pod_date_time = instantInput.pod_date_time;
+    input.pod_end_date_time = instantInput.pod_end_date_time;
+    delete input.venue_booking;
+    return { slotDoc: null, needsVenueApproval: false, previousSlotId, instant: instant?.booking ?? null };
+  }
+  delete input.venue_booking;
   const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(slotInput, nextMode);
   if (slotDoc) {
     input.venue_id = slotInput.venue_id;
     input.pod_date_time = slotInput.pod_date_time;
     input.pod_end_date_time = slotInput.pod_end_date_time;
   }
-  return {
-    slotDoc,
-    needsVenueApproval,
-    previousSlotId: doc.venue_slot_id ? String(doc.venue_slot_id) : null,
-  };
+  return { slotDoc, needsVenueApproval, previousSlotId };
 }
 
 /** Booking state implied by a resolved re-route, applied after the content edit. */
 export function applyRerouteState(doc: any, input: any, reroute: SlotReroute) {
   const pendingApproval = Boolean(reroute.slotDoc && reroute.needsVenueApproval);
   doc.venue_slot_id = reroute.slotDoc ? reroute.slotDoc._id : null;
-  doc.venue_approval_status = pendingApproval ? 'PENDING' : 'NONE';
+  // A venue booking (an open slot or an instant one) is confirmed when it is made.
+  let approval = 'NONE';
+  if (pendingApproval) approval = 'PENDING';
+  else if (reroute.slotDoc || reroute.instant) approval = 'APPROVED';
+  doc.venue_approval_status = approval;
   // A pod waiting on the venue's answer is never live. Otherwise a settled
   // booking brings the pod back online — unless the portal said otherwise,
   // in which case its explicit Active choice wins.
@@ -383,14 +399,24 @@ export async function claimRerouteSlot(
   actorSource: PodAuditSource,
 ) {
   const { slotDoc, needsVenueApproval, previousSlotId } = reroute;
+  let claimedSlotId = slotDoc ? String(slotDoc._id) : '';
   try {
-    if (slotDoc && needsVenueApproval) {
+    if (reroute.instant) {
+      const { venuePricingService } = await import('@modules/venues/venuePricing/venuePricing.service');
+      // The pod's own current booking does not block its new window (claim, then release).
+      const booked = await venuePricingService.bookForPod(String(doc._id), String(doc.venue_id), reroute.instant);
+      doc.venue_slot_id = booked._id;
+      await doc.save();
+      claimedSlotId = String(booked._id);
+      notifyInstantBooking(doc, booked).catch((error) =>
+        logs.server.error('pod', 'notifyInstantBooking', { error, pod_id: String(doc._id) })
+      );
+    } else if (slotDoc && needsVenueApproval) {
       await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
       await notifyVenueSlotRequested(doc, slotDoc);
       await emailVenueSlotRequested(doc, slotDoc);
     } else if (slotDoc) {
       await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
-      announceFreeSlotBooking(doc, slotDoc);
     }
   } catch (e) {
     Object.assign(doc, previous);
@@ -401,15 +427,16 @@ export async function claimRerouteSlot(
     });
     throw e;
   }
-  if (previousSlotId && previousSlotId !== String(slotDoc?._id ?? '')) {
+  if (previousSlotId && previousSlotId !== claimedSlotId) {
     await venueSlotService.releaseSlotForPod(previousSlotId, String(doc._id));
   }
+  // Only once the claim stands: freeze its price and tell the venue (never fails the booking).
+  if (slotDoc && !needsVenueApproval) await settleSlotBooking(doc, slotDoc);
 }
 
-/** Re-enter the booking cycle for a resubmitted slot: a partner slot is held
- * (PENDING approval, venue notified again); the host's own slot books
- * instantly. A concurrent snatch reverts the pod to its rejected state —
- * still fully editable — instead of deleting it. */
+/** Re-enter the booking cycle for a resubmitted slot: it books instantly at
+ * its price (no venue approval any more). A concurrent snatch reverts the pod
+ * to its rejected state — still fully editable — instead of deleting it. */
 export async function holdOrBookForResubmit(doc: any, slotDoc: any, needsVenueApproval: boolean) {
   try {
     if (needsVenueApproval) {
@@ -418,7 +445,6 @@ export async function holdOrBookForResubmit(doc: any, slotDoc: any, needsVenueAp
       await emailVenueSlotRequested(doc, slotDoc);
     } else {
       await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
-      announceFreeSlotBooking(doc, slotDoc);
     }
   } catch (e) {
     doc.venue_slot_id = null;
@@ -427,6 +453,7 @@ export async function holdOrBookForResubmit(doc: any, slotDoc: any, needsVenueAp
     await doc.save();
     throw e;
   }
+  if (!needsVenueApproval) await settleSlotBooking(doc, slotDoc);
 }
 
 /** Physical resubmission re-resolves the venue: a kept partner venue needs a

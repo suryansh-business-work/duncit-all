@@ -23,9 +23,6 @@ const makeSchema = (t: Translate) => {
     support_email: r.email(),
     support_phone: r.optionalText(20),
     whatsapp_number: r.optionalText(20),
-    announcement_enabled: z.boolean(),
-    announcement_text: r.optionalText(200),
-    announcement_link: r.link(),
     social_links: z.array(z.object({ label: r.requiredText(40), url: r.webUrl() })).max(12),
     payment_badges: z.array(z.object({ label: r.requiredText(40), image_url: r.httpsUrl() })).max(MAX_PAYMENT_BADGES),
   });
@@ -42,9 +39,6 @@ const toValues = (s: StoreSettings): GeneralValues => ({
   support_email: s.support_email,
   support_phone: s.support_phone,
   whatsapp_number: s.whatsapp_number,
-  announcement_enabled: s.announcement_enabled,
-  announcement_text: s.announcement_text,
-  announcement_link: s.announcement_link,
   social_links: s.social_links.map((link) => ({ label: link.label, url: link.url })),
   payment_badges: s.payment_badges.map((badge) => ({ label: badge.label, image_url: badge.image_url })),
 });
@@ -63,10 +57,6 @@ function GeneralFields({ control }: Readonly<{ control: Control<GeneralValues> }
         <RhfTextField control={control} name="support_phone" label={t('ecommPortal.settings.supportPhone')} type="tel" />
         <RhfTextField control={control} name="whatsapp_number" label={t('ecommPortal.settings.whatsapp')} type="tel" />
       </Box>
-      <Divider />
-      <RhfSwitch control={control} name="announcement_enabled" label={t('ecommPortal.settings.announcement')} hint={t('ecommPortal.settings.announcementHint')} />
-      <RhfTextField control={control} name="announcement_text" label={t('ecommPortal.settings.announcementText')} />
-      <RhfTextField control={control} name="announcement_link" label={t('ecommPortal.homePage.link')} />
       <Divider />
       <Typography component="h3" variant="subtitle2">
         {t('ecommPortal.settings.socialLinks')}

@@ -298,7 +298,14 @@ export const emailFragmentService = {
   async wrap(templateMjml: string, key?: string | null): Promise<string> {
     if (!key) return templateMjml;
     const fragment = await EmailFragmentModel.findOne({ key }).exec();
-    if (!fragment?.is_active) return templateMjml;
+    if (!fragment?.is_active) {
+      // Not silent: this email goes out with no header and no footer.
+      logs.server.warn('emailFragment', 'wrap', {
+        key,
+        msg: `Fragment "${key}" is ${fragment ? 'switched off' : 'missing'} — sending without a header/footer`,
+      });
+      return templateMjml;
+    }
     return composeFragment(templateMjml, fragment.header_mjml, fragment.footer_mjml).mjml;
   },
 };

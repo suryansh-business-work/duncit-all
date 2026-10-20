@@ -154,12 +154,15 @@ async function buildRows(): Promise<PodCancellationRow[]> {
     paymentTallies(podIds),
     VenueModel.find({ _id: { $in: venueIds } }).select('venue_name'),
     UserModel.find({ _id: { $in: hostIds } }).select('profile.first_name profile.last_name'),
-    VenueSlotModel.find({ _id: { $in: slotIds } }).select('price'),
+    VenueSlotModel.find({ _id: { $in: slotIds } }).select('price price_snapshot.venue_payout'),
   ]);
   const deleteAudit = latestByPod(audits, 'DELETE');
   const declineAudit = latestByPod(audits, 'VENUE_DECLINED');
   const venueNameById = new Map<string, string>(venues.map((v: any) => [String(v._id), v.venue_name]));
-  const priceBySlotId = new Map<string, number>(slots.map((s: any) => [String(s._id), s.price]));
+  // An instant booking reports its frozen payout; a legacy slot its listed price.
+  const priceBySlotId = new Map<string, number>(
+    slots.map((s: any) => [String(s._id), s.price_snapshot?.venue_payout ?? s.price])
+  );
   const hostNameById = new Map<string, string>(
     hosts.map((u: any) => [
       String(u._id),

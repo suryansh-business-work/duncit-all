@@ -18,6 +18,7 @@ import {
   type PasswordResetRequestResult,
 } from '@modules/access/auth/password-reset.service';
 import { anyDelivered, otpService } from '@modules/platform/otp/otp.service';
+import type { IOtpChallenge } from '@modules/platform/otp/otp.model';
 import { whatsappAuthService } from '@modules/access/auth-whatsapp/auth-whatsapp.service';
 import { OTP_TTL_MINUTES } from '@modules/platform/otp/otp.constants';
 import { userAuditService } from '@modules/access/userAudit/userAudit.service';
@@ -354,6 +355,19 @@ export const userAuthMethods = {
     signIn?: SignInContext
   ): Promise<{ token: string; user: any }> {
     const challenge = await otpService.verifyLatest('LOGIN', targetOf(input), input.otp);
+    return this.loginWithProvenChallenge(challenge, 'OTP', signIn);
+  },
+
+  /**
+   * Open the session a verified LOGIN challenge names — the half of OTP login
+   * after the code. Truecaller reaches it too, with a challenge it attested
+   * instead of a code that was typed, so both doors share one set of checks.
+   */
+  async loginWithProvenChallenge(
+    challenge: IOtpChallenge,
+    provider: 'OTP' | 'TRUECALLER',
+    signIn?: SignInContext
+  ): ReturnType<typeof authPayload> {
     const userId = String((challenge.context as { user_id?: string })?.user_id ?? '');
     // A challenge naming no account is refused like any unknown one — findById('') would throw a CastError.
     const user = isValidObjectId(userId) ? await UserModel.findById(userId) : null;
@@ -371,7 +385,7 @@ export const userAuthMethods = {
 
     await UserModel.updateOne(
       { _id: user._id },
-      { $set: { 'auth.last_login_provider': 'OTP', 'auth.last_login_at': new Date() } }
+      { $set: { 'auth.last_login_provider': provider, 'auth.last_login_at': new Date() } }
     );
     const fresh = await UserModel.findById(user._id);
     const payload = await authPayload(fresh);

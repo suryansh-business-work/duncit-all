@@ -1,22 +1,6 @@
-import type { ClubOpenSlots } from '@duncit/utils';
-
 /** The catalogue entities the host Create Pod stepper picks from. */
-export type CreatePodClub = ClubOpenSlots & {
-  id: string;
-  club_name: string;
-  location_id?: string | null;
-  /** Club's locality (a Location zone_name) — used by the locality filter. */
-  locality?: string | null;
-  super_category_id?: string | null;
-  /** Club's Sub-level category (matched against the host's sub_category_id). */
-  category_id?: string | null;
-  /** How many APPROVED+active venues auto-match this club (location + category). */
-  matched_venues_count?: number | null;
-  /** Ids of the venues that match this club — the venue picker is scoped to these. */
-  matched_venues?: { id: string }[] | null;
-  club_description?: string | null;
-  club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
-};
+/** One shape for mWeb and the native app (@duncit/utils). */
+export type { CreatePodClub } from '@duncit/utils';
 
 /** Rich location shape — enough for the header-style LocationDialog picker. */
 export interface CreatePodLocation {

@@ -1,2 +1,2 @@
 export { EventRequestsPage, type EventRequestsPageProps } from './EventRequestsPage';
-export type { EventRequestScope, EventRequestTarget } from './queries';
+export type { EventRequestRow, EventRequestScope, EventRequestTarget } from './queries';

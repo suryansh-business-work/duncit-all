@@ -3,7 +3,8 @@ import { createAuthed, EventRequestsPage, ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import PartnerLanding from './components/PartnerLanding';
 import RegisterVenuePage from './pages/RegisterVenuePage';
-import VenueAvailabilityPage from './pages/venue-availability-page/VenueAvailabilityPage';
+import VenueAvailabilityPage, { VenueAvailabilityRedirect } from './pages/venue-availability-page/VenueAvailabilityPage';
+import WorkshopEventRequestsPage from './pages/workshop-event-requests-page/WorkshopEventRequestsPage';
 import VenueDashboardPage from './pages/venue-dashboard-page/VenueDashboardPage';
 import PodRequestDetailPage from './pages/pod-requests/detail/PodRequestDetailPage';
 import NearbyHostsPage from './pages/pod-requests/search/NearbyHostsPage';
@@ -88,7 +89,8 @@ export default function App() {
       {/* Each studio's ONE sidebar entry: its Options page, listing every option. */}
       <Route path="/venues/options" element={authed(<StudioOptionsPage mode="VENUE" />)} />
       <Route path="/venues/dashboard" element={authed(<VenueDashboardPage />)} />
-      <Route path="/venues/requests" element={authed(<VenuePodsHub />)} />
+      {/* Workshop & Event Requests: members' requests, and the old slot requests' history. */}
+      <Route path="/venues/requests" element={authed(<WorkshopEventRequestsPage />)} />
       {/* Opened by the request email's Approve / Decline buttons (?action=…). */}
       <Route path="/venues/requests/:slotId" element={authed(<SlotDecisionPage />)} />
       {/* Pod Requests between venues and hosts — each studio scoped to its own side. */}
@@ -96,16 +98,19 @@ export default function App() {
       <Route path="/venues/pod-requests" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/pod-requests/:id" element={authed(<PodRequestDetailPage side="VENUE" />)} />
       {/* What members asked for when nothing was coming up — the shared page, scoped to the partner. */}
-      <Route path="/venues/event-requests" element={authed(<EventRequestsPage targetType="VENUE" scope="owner" />)} />
+      <Route path="/venues/event-requests" element={<Navigate to="/venues/requests" replace />} />
       <Route path="/venues/pods" element={authed(<VenuePodsHub />)} />
       {/* Change Requests stays scoped per studio, so a venue owner who also
           hosts is never shown the wrong queue. */}
       <Route path="/venues/change-requests" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/auto-pods" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/settings" element={authed(<VenuesHub />)} />
-      {/* The selected venue's calendar (Venue Options); the :venueId form still opens a named one. */}
-      <Route path="/venues/availability" element={authed(<VenueAvailabilityPage />)} />
-      <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
+      {/* The Venue Pricing Module for the selected venue; the :venueId form opens a named one.
+          The old availability URLs land on it. */}
+      <Route path="/venues/pricing" element={authed(<VenueAvailabilityPage />)} />
+      <Route path="/venues/:venueId/pricing" element={authed(<VenueAvailabilityPage />)} />
+      <Route path="/venues/availability" element={<Navigate to="/venues/pricing" replace />} />
+      <Route path="/venues/:venueId/availability" element={<VenueAvailabilityRedirect />} />
       <Route path="/venues/earnings" element={authed(<VenueEarningsPage />)} />
       <Route path="/venues/publish" element={authed(<VenuePublishPage />)} />
       <Route path="/venues/food-dashboard" element={authed(<VenueFoodDashboardPage />)} />

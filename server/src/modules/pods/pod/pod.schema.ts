@@ -404,6 +404,8 @@ export const podTypeDefs = /* GraphQL */ `
     location_id: ID
     venue_id: ID
     venue_slot_id: ID
+    "Book the venue instantly at its own pricing (instead of venue_slot_id). The server prices and checks it."
+    venue_booking: InstantBookingInput
     "The Pod Request whose confirmed slot this pod books (host only; the slot is adopted, no second venue approval)."
     partner_request_id: ID
     club_id: ID!
@@ -443,11 +445,13 @@ export const podTypeDefs = /* GraphQL */ `
     venue_id: ID
     """
     Re-route the pod to a different slot (Admin / Club Admin edit at any stage).
-    A partner's slot re-enters that venue's approval queue exactly like a host
-    resubmission; the previously held slot is released. Omit to leave the
+    The slot is booked instantly at its price (no venue approval any more);
+    the previously held slot is released. Omit to leave the
     pod's current booking untouched.
     """
     venue_slot_id: ID
+    "Re-route onto an instant booking at the venue's own pricing (portals). Booked before the old slot is released."
+    venue_booking: InstantBookingInput
     club_id: ID
     zone_name: String
     pod_mode: PodMode

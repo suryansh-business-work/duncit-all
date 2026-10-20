@@ -13,7 +13,6 @@ import PodRequestsPage from '../pod-requests/PodRequestsPage';
 import ChangeRequestsPage from '../change-requests-page';
 import VenueListingsPage from '../venue-listings-page/VenueListingsPage';
 import VenueSettingsPage from '../venue-settings-page/VenueSettingsPage';
-import SlotRequestsPage from '../slot-requests-page/SlotRequestsPage';
 import VenuePodsPage from '../venue-pods-page/VenuePodsPage';
 import VenueAutoPodsPage from '../venue-auto-pods-page/VenueAutoPodsPage';
 import ClubAdminClubsPage from '../club-admin-clubs-page/ClubAdminClubsPage';
@@ -59,12 +58,11 @@ export function VenuesHub() {
   return <StudioHub id="venues-hub" label={t('shell.nav.venues')} tabs={tabs} />;
 }
 
-/** Venue Studio → Pods: the pods at the venues, and the slot bookings to approve. */
+/** Venue Studio → Pods: the pods at the venues. (Slot requests moved to Workshop & Event Requests.) */
 export function VenuePodsHub() {
   const { t } = useTranslation();
   const tabs: StudioHubTab[] = [
     { to: '/venues/pods', label: t('shell.nav.pods'), render: () => <VenuePodsPage /> },
-    { to: '/venues/requests', label: t('shell.nav.slotRequests'), render: () => <SlotRequestsPage /> },
   ];
   return <StudioHub id="venue-pods-hub" label={t('shell.nav.pods')} tabs={tabs} />;
 }

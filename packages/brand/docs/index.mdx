@@ -136,7 +136,26 @@ caller is already holding. So the caller passes the URL, and this package owns o
 the mark is DRAWN.
 
 The exceptions are `ReelSlider` and the CMS widgets, which read live data in the browser
-at visit time on purpose — see their sections below.
+at visit time on purpose — see their sections below — and `AppDownload`'s phone.
+
+### The app phone shows the app's real screens
+
+Given a `graphqlUrl`, `AppDownload` reads the public `appScreenshots` query once per
+build (or once per 10 minutes on the SSR CMS site) through
+`fetchAppScreenshots(graphqlUrl)` from `@duncit/brand/app-screenshots`. Those are the
+raw app screens kept in Tech > Store Listing > **Websites** — never the store sets, which
+are designed graphics that already draw a phone and a headline (a phone inside this
+phone). `AppPhone` plays them as a carousel:
+
+```astro
+<AppPhone slides={['https://…/home.png', 'https://…/pod.png']} t={t} />
+```
+
+It advances every 3.5s, pauses on hover, focus or a hidden tab, swipes, has a dot per
+screen (24px targets), and stays still under `prefers-reduced-motion`. One screenshot
+renders on its own, and none draws the illustrated screen as before. The query is its own
+request, never part of `SITE_BRANDING_QUERY`: a build against an API without the field
+loses only the slider, not the logos and store links.
 
 `site-branding` is the shape of that build-time fetch, not a fetch: each site's own client
 sends `SITE_BRANDING_QUERY` and hands the answer to
@@ -464,7 +483,7 @@ so a migration can swap the snapshot back for the live block. `cmsBlockProps` (f
 | `newsletter` | `NewsletterSignup.astro` | `{ source, heading?, text?, placeholder?, button?, variant?, consent?, consentLinkLabel?, consentLinkHref?, captcha?, busyText?, okText?, errorText?, class? }` |
 | `reel-slider` | `ReelSlider.astro` | `{ site, eyebrow?, heading?, class? }` |
 | `earn-showcase` | `EarnShowcase.astro` | `{ href, eyebrow?, heading?, headingMuted?, text?, cta?, id?, class? }` |
-| `app-download` | `AppDownload.astro` | `{ eyebrow?, heading, headingAccent?, text?, perks?, stores: { icon, eyebrow, name, url? }[], webUrl?, soonLabel?, screenshot?, id?, class?, t? }` |
+| `app-download` | `AppDownload.astro` | `{ eyebrow?, heading, headingAccent?, text?, perks?, stores: { icon, eyebrow, name, url? }[], webUrl?, soonLabel?, screenshot?, id?, class? }` — `graphqlUrl` (omitted) turns on the real-screenshot slider |
 | `social-links` | `SocialLinks.astro` | `{ accounts?: { icon, label, href }[], heading?, class? }` |
 | `policy-strip` | `PolicyStrip.astro` (only when it has policies) | `{ policies: { slug, title }[], baseUrl?, heading?, allLabel?, class? }` |
 

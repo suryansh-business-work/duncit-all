@@ -505,14 +505,6 @@ export function useHomeData({
       .slice(0, 12);
   }, [data, followedClubSet, selectedSuperId]);
 
-  const hostPods = useMemo(() => {
-    const meId = headerData?.me?.user_id;
-    if (!meId) return [];
-    return filteredPods
-      .filter((pod: any) => (pod.pod_hosts_id ?? []).includes(meId))
-      .slice(0, 12);
-  }, [filteredPods, headerData?.me?.user_id]);
-
   const followedPosts = useMemo(() => {
     const userIds = new Set(followingUserIds);
     // A club-attached story belongs to its club's ring, not its author's.
@@ -549,7 +541,6 @@ export function useHomeData({
     categoryChips,
     vibeCategories,
     followedClubs,
-    hostPods,
     followedPosts,
     clubStories,
     myStories,

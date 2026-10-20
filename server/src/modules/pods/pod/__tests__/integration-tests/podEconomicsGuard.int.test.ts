@@ -131,12 +131,18 @@ describe('createPod economics guard', () => {
     expect(slot!.status).toBe('AVAILABLE'); // never held/booked
   });
 
-  it('creates a paid pod with a slot the total covers (guard passes with a venue)', async () => {
+  it('creates a paid pod with a slot the total covers and books it instantly (guard passes with a venue)', async () => {
     const venueId = await seedVenue();
     const slotId = await seedSlot(venueId, 300);
     const pod = await podService.create(makeSlotInput(venueId, slotId));
     expect(pod!.venue_slot_id).toBe(slotId);
-    expect(pod!.venue_approval_status).toBe('PENDING'); // partner slot → held
+    // A partner slot is booked at once — confirmed and live, nothing held.
+    expect(pod!.venue_approval_status).toBe('APPROVED');
+    expect(pod!.is_active).toBe(true);
+    const slot = await VenueSlotModel.findById(slotId);
+    expect(slot!.status).toBe('BOOKED');
+    expect(String(slot!.booked_by_pod_id)).toBe(pod!.id);
+    expect(slot!.price_snapshot).toMatchObject({ venue_price: 300, venue_payout: 300 });
   });
 });
 
@@ -157,7 +163,7 @@ describe('hostResubmitPod economics guard', () => {
     expect(slot!.status).toBe('AVAILABLE');
   });
 
-  it('resubmits a paid pod whose value covers the new slot price', async () => {
+  it('resubmits a paid pod whose value covers the new slot price — the slot is booked instantly', async () => {
     const venueId = await seedVenue();
     const slotId = await seedSlot(venueId, 300); // total ₹4,000 ≥ ₹300
     const pod = await seedDeclinedPod();
@@ -167,7 +173,11 @@ describe('hostResubmitPod economics guard', () => {
       venue_slot_id: slotId,
     });
     expect(res!.venue_slot_id).toBe(slotId);
-    expect(res!.venue_approval_status).toBe('PENDING');
+    expect(res!.is_active).toBe(true);
+    const slot = await VenueSlotModel.findById(slotId);
+    expect(slot!.status).toBe('BOOKED');
+    expect(String(slot!.booked_by_pod_id)).toBe(String(pod._id));
+    expect(slot!.price_snapshot).toMatchObject({ venue_payout: 300 });
   });
 
   it('applies the guard to merged values when the resubmission changes the price', async () => {

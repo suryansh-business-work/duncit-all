@@ -54,6 +54,7 @@ const LIST_FIELDS = [
   'android_phone_screenshots',
   'android_tablet_7_screenshots',
   'android_tablet_10_screenshots',
+  'website_screenshots',
 ] as const;
 const PLAIN_FIELDS = [
   'locale',
@@ -96,6 +97,19 @@ export async function getStoreListing(): Promise<IStoreListing> {
   );
 }
 
+/**
+ * The raw app screens the websites' app phone plays (Store Listing >
+ * Websites). Deliberately NOT the store sets: those are designed graphics with
+ * a phone frame and a headline already drawn in, which inside the websites'
+ * own phone read as a phone within a phone. A read: it never creates the listing.
+ */
+export async function publicAppScreenshots(): Promise<string[]> {
+  const listing = await StoreListingModel.findOne({ singleton_key: 'store_listing' })
+    .select('website_screenshots')
+    .lean<Pick<IStoreListing, 'website_screenshots'>>();
+  return (listing?.website_screenshots ?? []).filter(isHttpsUrl);
+}
+
 function assertUrlList(field: string, values: unknown, max: number): string[] {
   if (!Array.isArray(values)) throw badInput(`${field} must be a list of image URLs.`);
   const urls = values.map((v) => String(v ?? '').trim()).filter(Boolean);
@@ -126,7 +140,10 @@ function applyUrlFields(doc: IStoreListing, input: Record<string, unknown>): voi
   }
   for (const field of LIST_FIELDS) {
     if (input[field] === undefined) continue;
-    const max = field.startsWith('android_') ? LISTING_LIMITS.play_screenshots : LISTING_LIMITS.screenshots;
+    const max =
+      field.startsWith('android_') || field === 'website_screenshots'
+        ? LISTING_LIMITS.play_screenshots
+        : LISTING_LIMITS.screenshots;
     doc.set(field, assertUrlList(field, input[field], max));
   }
 }
@@ -176,6 +193,7 @@ export function pubStoreListing(doc: IStoreListing) {
     android_phone_screenshots: doc.android_phone_screenshots ?? [],
     android_tablet_7_screenshots: doc.android_tablet_7_screenshots ?? [],
     android_tablet_10_screenshots: doc.android_tablet_10_screenshots ?? [],
+    website_screenshots: doc.website_screenshots ?? [],
     android_feature_graphic: doc.android_feature_graphic,
     android_icon: doc.android_icon,
     updated_by: doc.updated_by,

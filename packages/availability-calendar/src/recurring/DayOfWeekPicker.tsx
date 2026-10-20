@@ -8,6 +8,10 @@ interface Props {
   onChange: (next: number[]) => void;
   weeklyOff?: number[];
   testId?: string;
+  /** Heading over the boxes; defaults to the recurring dialog's 'Repeat on'. */
+  label?: string;
+  /** A validation message under the boxes. */
+  error?: string;
 }
 
 type Translate = Translator['t'];
@@ -23,6 +27,8 @@ export default function DayOfWeekPicker({
   onChange,
   weeklyOff = [],
   testId,
+  label,
+  error,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = weekdayLabels(t);
@@ -41,7 +47,7 @@ export default function DayOfWeekPicker({
         sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', mb: 0.25 }}
       >
         <Typography variant="body2" sx={{ fontWeight: 800 }}>
-          {t('availability.recurring.repeatOn')}
+          {label ?? t('availability.recurring.repeatOn')}
         </Typography>
         <Stack direction="row" spacing={0.25}>
           {presets(t).map((preset) => (
@@ -82,6 +88,11 @@ export default function DayOfWeekPicker({
           />
         ))}
       </FormGroup>
+      {error && (
+        <Typography variant="caption" role="alert" sx={{ color: 'error.main' }}>
+          {error}
+        </Typography>
+      )}
     </Box>
   );
 }

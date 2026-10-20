@@ -319,9 +319,9 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
     },
     whenWhereSection: {
       // Under the slot picker, for a FREE pod on a slot the venue charges for.
-      // The venue is shown the same thing with the slot request.
+      // Bookings are instant now, so there is no approval for the venue to hold back.
       freePodVenueNote:
-        'This pod is free, so Duncit will not pay the venue for this slot. The host settles the venue’s charges with the venue directly, and the venue is asked not to confirm the slot until the host has spoken to them or transferred the amount.',
+        'This pod is free, so Duncit will not pay the venue for this slot. The host settles the venue’s charges with the venue directly.',
       venue: 'Venue',
     },
   },

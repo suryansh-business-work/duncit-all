@@ -80,7 +80,9 @@ describe('siteContent', () => {
     expect(getSiteTranslator).toHaveBeenCalledWith(siteUrls.graphqlUrl);
     expect(content.brand.name).toBe('website.earn.brand.name');
     expect(content.nav.links).toHaveLength(5);
-    expect(content.paths).toHaveLength(4);
+    // Five ways to earn: the four surveys, then Gig Jobs for freelancers.
+    expect(content.paths).toHaveLength(5);
+    expect(content.paths[4].href).toBe('https://mweb.duncit.com/earn/freelancer');
     expect(content.calculator.roles.map((r) => r.key)).toEqual(['host', 'club_admin']);
   });
 

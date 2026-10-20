@@ -422,6 +422,38 @@ export const otpService = {
   },
 
   /**
+   * Record a number that somebody OTHER than a code has already proven, and
+   * mint the grant for it.
+   *
+   * Truecaller verifies the SIM a person is signing in from; once the server
+   * has checked that verification itself, asking for a second code to the same
+   * number proves nothing new. The challenge is written already verified, with
+   * a random code nobody is ever told, so every step after this one —
+   * `redeemGrant`, `consume`, the number re-check — is the unchanged path a
+   * typed code takes. `attested_by` in the context says where the proof came
+   * from for anybody reading the row later.
+   */
+  async attest(
+    purpose: OtpPurpose,
+    target: Readonly<{ phone_extension: string; phone_number: string }>,
+    context: Readonly<Record<string, unknown>>
+  ): Promise<{ challenge: IOtpChallenge; token: string }> {
+    const now = new Date();
+    const challenge = await OtpChallengeModel.create({
+      purpose,
+      mediums: [],
+      deliveries: [],
+      ...target,
+      code_hash: sha(crypto.randomBytes(32).toString('hex')),
+      expires_at: new Date(now.getTime() + OTP_TTL_MS),
+      verified_at: now,
+      last_sent_at: now,
+      context,
+    });
+    return { challenge, token: await this.grant(challenge) };
+  },
+
+  /**
    * Trade a grant back for the challenge it was minted on.
    *
    * Every condition `consume` checks is checked again here, because a grant is

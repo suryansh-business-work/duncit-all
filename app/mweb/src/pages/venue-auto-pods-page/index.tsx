@@ -107,7 +107,7 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
         formatMoney={queue.formatMoney}
         // Straight to the venue's own availability calendar — the venue is
         // here BECAUSE it has no free slot, so the manage page was a detour.
-        onAddAvailability={() => navigate('/venues/availability')}
+        onAddAvailability={() => navigate('/venues/pricing')}
       />
     </Stack>
   );

@@ -54,8 +54,13 @@ const px = (size: string): number => Number.parseInt(size, 10);
  *
  * `previewKey` is the line an inbox shows beside the subject. Without it a
  * client reads the first text it finds — the logo's alt text — so every
- * standard body passes its own paragraph. The card's top and bottom edges are
- * the fragments'; this wrapper draws only its sides.
+ * standard body passes its own paragraph.
+ *
+ * The body is a CLOSED box — all four edges — so it reads as a card on its own
+ * too: in a preview with no fragment, a template whose fragment was removed,
+ * or under a header or footer an admin rewrote. With the shipped fragments on,
+ * its top edge is the rule under the header and its bottom edge the rule over
+ * the footer, which is why neither fragment draws a line of its own there.
  */
 export function shell(titleKey: string, body: string, previewKey?: string): string {
   const preview = previewKey ? `\n    <mj-preview>{{t:${previewKey}}}</mj-preview>` : '';
@@ -65,7 +70,7 @@ export function shell(titleKey: string, body: string, previewKey?: string): stri
 ${HEAD}
   </mj-head>
   <mj-body background-color="${C.canvas}" width="${S.bodyWidth}">
-    <mj-wrapper background-color="${C.surface}" border-left="1px solid ${C.border}" border-right="1px solid ${C.border}" padding="4px 0 16px 0">
+    <mj-wrapper background-color="${C.surface}" border="1px solid ${C.border}" padding="4px 0 16px 0">
 ${body}
     </mj-wrapper>
   </mj-body>

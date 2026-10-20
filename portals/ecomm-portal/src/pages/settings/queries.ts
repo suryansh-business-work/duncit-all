@@ -11,6 +11,7 @@ type TextSetting =
   | 'whatsapp_number'
   | 'announcement_text'
   | 'announcement_link'
+  | 'home_greeting'
   | 'razorpay_account'
   | 'seo_title'
   | 'seo_description'
@@ -101,6 +102,12 @@ export interface StoreOccasion {
   sort_order: number;
 }
 
+/** A link in the store's header or footer: a same-site path or an https:// address. */
+export interface StoreNavLink {
+  label: string;
+  link: string;
+}
+
 /** The store's own settings — identity, checkout rules, shipping, returns, autoship, SEO, pages and occasions. */
 export type StoreSettings = Record<TextSetting, string> &
   Record<FlagSetting, boolean> &
@@ -110,6 +117,9 @@ export type StoreSettings = Record<TextSetting, string> &
     cancel_reasons: string[];
     autoship_frequencies: number[];
     social_links: { label: string; url: string }[];
+    /** The header's own links; empty = the menu aisles. */
+    nav_links: StoreNavLink[];
+    footer_links: StoreNavLink[];
     /** The accepted payment methods the store footer shows. */
     payment_badges: { label: string; image_url: string }[];
     occasions: StoreOccasion[];
@@ -127,6 +137,15 @@ const SETTINGS_FIELDS = `
   announcement_enabled
   announcement_text
   announcement_link
+  home_greeting
+  nav_links {
+    label
+    link
+  }
+  footer_links {
+    label
+    link
+  }
   guest_checkout_enabled
   razorpay_account
   cod_enabled

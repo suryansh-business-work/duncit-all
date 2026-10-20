@@ -67,7 +67,7 @@ vi.mock('../steps/BasicsStep', () => ({
 vi.mock('../steps/LocationClubStep', () => ({
   default: () => <div>LocationClubStep</div>,
 }));
-vi.mock('../steps/VenueSlotStep', () => ({
+vi.mock('../steps/VenueSlotStep', async () => ({
   default: () => <div>VenueSlotStep</div>,
   VENUE_AVAILABLE_SLOTS: gql`
     query CreatePodVenueSlots($venue_id: ID!) {
@@ -76,6 +76,8 @@ vi.mock('../steps/VenueSlotStep', () => ({
       }
     }
   `,
+  // The stepper sizes the pod from the booked space — the real (pure) helper.
+  venueSpaces: (await vi.importActual<typeof import('../steps/venueSpaces')>('../steps/venueSpaces')).venueSpaces,
 }));
 vi.mock('../steps/PricingStep', () => ({
   default: () => <div>PricingStep</div>,

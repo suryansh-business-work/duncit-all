@@ -47,6 +47,9 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     about_html: String!
     social_links: [StoreSocialLink!]!
     payment_badges: [StorePaymentBadge!]!
+    home_greeting: String!
+    nav_links: [StoreNavLink!]!
+    footer_links: [StoreNavLink!]!
     serviceable_pincodes_enabled: Boolean! @deprecated(reason: "Read storeServiceablePincodesTable.")
     serviceable_pincodes: [String!]! @deprecated(reason: "Read storeServiceablePincodesTable.")
     occasions: [StoreOccasion!]!
@@ -71,6 +74,12 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     group: StoreLinkTargetGroup!
     label: String!
     path: String!
+  }
+
+  input StoreNavLinkInput {
+    label: String!
+    "A same-site path (/deals) or an https URL; anything else is dropped on save."
+    link: String!
   }
 
   input StorePaymentBadgeInput {
@@ -193,6 +202,9 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     about_html: String
     social_links: [StoreSocialLinkInput!]
     payment_badges: [StorePaymentBadgeInput!]
+    home_greeting: String
+    nav_links: [StoreNavLinkInput!]
+    footer_links: [StoreNavLinkInput!]
     "Ignored: serviceable pincodes are saved with storeSaveServiceablePincode."
     serviceable_pincodes_enabled: Boolean
     "Ignored: serviceable pincodes are saved with storeSaveServiceablePincode."
@@ -352,6 +364,7 @@ export const storeAdminTypeDefs = /* GraphQL */ `
 
   type StoreAdminSection {
     id: ID!
+    page: StoreSectionPage!
     kind: StoreHomeSectionKind!
     title: String!
     subtitle: String!
@@ -379,6 +392,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
   }
 
   input StoreSectionInput {
+    "Omitted: HOME for a new section, unchanged for an existing one."
+    page: StoreSectionPage
     kind: StoreHomeSectionKind!
     title: String
     subtitle: String
@@ -891,7 +906,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     storeAdminCollectionPreview(slug: String!): [StoreProductCard!]!
     "Cards for picked product ids, in the order given."
     storeAdminPickerProducts(ids: [ID!]!): [StoreProductCard!]!
-    storeAdminSections: [StoreAdminSection!]!
+    "One page's sections; omitted = the home page."
+    storeAdminSections(page: StoreSectionPage): [StoreAdminSection!]!
     storeAdminProductsTable(query: TableQueryInput): StoreAdminProductTablePage!
     storeAdminProduct(id: ID!): StoreAdminProduct!
     storeAdminWarehouses: [StoreWarehouse!]!

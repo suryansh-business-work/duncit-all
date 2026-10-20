@@ -23,6 +23,30 @@ import { logs } from '@observability/log';
 import { appDate, appDateTime, appTime } from '@utils/app-time';
 import { emailTranslationVars, recipientLocale } from '@services/email/email-i18n';
 import { isFreePod } from './pod.model';
+import type { IVenueSlot } from '@modules/venues/venueSlot/venueSlot.model';
+import type { InstantBookingRequest } from '@modules/venues/venuePricing/venuePricing.service';
+
+/** What instant booking reads (and writes back) on a create or re-route input. */
+export interface InstantBookingCreateInput {
+  venue_slot_id?: unknown;
+  venue_booking?: InstantBookingRequest | null;
+  venue_id?: string | null;
+  no_of_spots?: number | null;
+  /** A portal re-routing this pod: its own current booking does not block the new window. */
+  reroute_pod_id?: string | null;
+  pod_date_time?: unknown;
+  pod_end_date_time?: unknown;
+}
+
+/** The pod fields a venue booking reads, notifies with, and writes back. */
+type BookingPod = Parameters<typeof notifyFreeSlotBooked>[0] & {
+  venue_id?: unknown;
+  venue_slot_id?: unknown;
+  no_of_spots?: number | null;
+  pod_type?: string | null;
+  deleteOne: () => Promise<unknown>;
+  save: () => Promise<unknown>;
+};
 
 /** The localized key of the notice a venue gets with a FREE pod's request. */
 const FREE_POD_NOTICE_KEY = 't:email.venueSlotRequest.freePodNotice';
@@ -171,7 +195,8 @@ const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, Stri
 // auto-match a club by location + category (single source of truth in
 // venueService); a club with no location yet imposes no constraint.
 async function assertVenueAllowedForClub(input: any, venue: any) {
-  const club = !input.venue_slot_id && input.club_id ? await ClubModel.findById(input.club_id) : null;
+  const booked = input.venue_slot_id || input.venue_booking;
+  const club = !booked && input.club_id ? await ClubModel.findById(input.club_id) : null;
   if (!club?.location_id) return;
   const matched = await venueService.findMatchingForClub({
     location_id: String(club.location_id),
@@ -295,11 +320,12 @@ export async function buildPodPlaceFilter(filter?: { location_id?: string; zone_
   return or.length > 0 ? { $or: or } : null;
 }
 
-/** Slot bookings may target ANY approved venue partner (the venue approves the
- * request before the pod goes live); the manual no-slot path is still restricted
- * to the host's own approved venues. */
+/** A booking (an open slot, or an instant booking at the venue's own price) may
+ * target ANY approved venue partner; the manual no-slot path is still
+ * restricted to the host's own approved venues. */
 export async function assertPartnerVenue(input: any, userObjectId: Types.ObjectId) {
-  const venueMatch = input.venue_slot_id
+  const booking = !!(input.venue_slot_id || input.venue_booking);
+  const venueMatch = booking
     ? { _id: input.venue_id, status: 'APPROVED', is_active: true }
     : { _id: input.venue_id, owner_user_id: userObjectId, status: 'APPROVED', is_active: true };
   const venue = input.venue_id
@@ -307,7 +333,7 @@ export async function assertPartnerVenue(input: any, userObjectId: Types.ObjectI
     : null;
   if (!venue) {
     throw new GraphQLError(
-      input.venue_slot_id ? 'Select an approved venue' : 'Select one of your approved venues',
+      booking ? 'Select an approved venue' : 'Select one of your approved venues',
       { extensions: { code: 'BAD_USER_INPUT' } }
     );
   }
@@ -387,15 +413,52 @@ export async function resolveSlotForCreate(
       extensions: { code: 'CONFLICT' },
     });
   }
-  // Booking another partner's venue holds the slot until that venue
-  // approves; booking your own venue confirms instantly — and so does a FREE
-  // pod on a ₹0 slot: the venue asked nothing for it and the pod pays nothing.
-  const needsVenueApproval =
-    !isOwnSlot(input.pod_hosts_id, slotDoc) && !isFreeSlotForFreePod(input, slotDoc);
+  // No venue approval any more: a venue's open slot is booked instantly at
+  // its own price, whoever's venue it is.
   input.venue_id = String(slotDoc.venue_id);
   input.pod_date_time = slotDoc.start_at.toISOString();
   input.pod_end_date_time = slotDoc.end_at.toISOString();
-  return { slotDoc, needsVenueApproval };
+  return { slotDoc, needsVenueApproval: false };
+}
+
+/**
+ * An instant booking at the venue's own pricing (Venue Pricing Module): the
+ * server prices and checks the window — the client's date, time and price are
+ * never trusted. The pod's window becomes the booked window. Nothing is
+ * written here; `bookInstantForPod` books atomically once the pod exists.
+ */
+export async function resolveInstantBookingForCreate(input: InstantBookingCreateInput, podMode: PodMode) {
+  if (podMode !== 'PHYSICAL' || input.venue_slot_id || !input.venue_booking) return null;
+  if (!input.venue_id) throw new GraphQLError('Select a venue', { extensions: { code: 'BAD_USER_INPUT' } });
+  const { venuePricingService } = await import('@modules/venues/venuePricing/venuePricing.service');
+  const booking: InstantBookingRequest = { ...input.venue_booking, pax: input.venue_booking.pax ?? input.no_of_spots ?? 0 };
+  // A portal re-routing a pod: its own current booking does not block the new window.
+  const prepared = await venuePricingService.prepare(input.venue_id, booking, input.reroute_pod_id ?? undefined);
+  input.pod_date_time = prepared.start.toISOString();
+  input.pod_end_date_time = prepared.end.toISOString();
+  return { booking, breakdown: prepared.breakdown };
+}
+
+/**
+ * Books the pod's venue instantly and points the pod at the booking. A lost
+ * race (someone booked the time a moment ago) deletes the new pod and throws
+ * CONFLICT, exactly as a lost slot claim always has.
+ */
+export async function bookInstantForPod(doc: BookingPod, booking: InstantBookingRequest) {
+  const { venuePricingService } = await import('@modules/venues/venuePricing/venuePricing.service');
+  let slot;
+  try {
+    slot = await venuePricingService.bookForPod(String(doc._id), String(doc.venue_id), booking);
+  } catch (e) {
+    await doc.deleteOne();
+    throw e;
+  }
+  doc.venue_slot_id = slot._id;
+  await doc.save();
+  const { notifyInstantBooking } = await import('@modules/venues/venueSlot/venueSlot.service');
+  notifyInstantBooking(doc, slot).catch((error) =>
+    logs.server.error('pods', 'notifyInstantBooking', { error, pod_id: String(doc._id) })
+  );
 }
 
 /** The host books a slot at a venue they own. */
@@ -501,11 +564,34 @@ export async function bookOrHoldSlotForPod(
   }
 
   if (!needsVenueApproval) {
-    announceFreeSlotBooking(doc, slotDoc);
+    await settleSlotBooking(doc, slotDoc);
     return;
   }
   if (opts.notifyVenue === false) return;
   announceSlotRequest(doc, slotDoc);
+}
+
+/**
+ * After a pod books a venue's open slot (create, portal re-route or host
+ * resubmit — one rule for all three): freeze the price it was booked at, then
+ * tell the venue. The host's own venue hears nothing; a free pod on a ₹0 slot
+ * gets the free-slot note; every other partner booking is "New booking
+ * confirmed" — for a free pod with the notice that the host settles the venue
+ * directly, since the platform pays it nothing. Never fails the booking.
+ */
+export async function settleSlotBooking(doc: Omit<BookingPod, 'deleteOne' | 'save'>, slotDoc: IVenueSlot) {
+  const { venuePricingService } = await import('@modules/venues/venuePricing/venuePricing.service');
+  const booked = await venuePricingService.freezeSlotPrice(String(slotDoc._id), doc.no_of_spots ?? 0);
+  if (isOwnSlot(doc.pod_hosts_id, slotDoc)) return;
+  if (isFreeSlotForFreePod(doc, slotDoc)) {
+    announceFreeSlotBooking(doc, slotDoc);
+    return;
+  }
+  const notice = await freePodVenueNotice(doc);
+  const { notifyInstantBooking } = await import('@modules/venues/venueSlot/venueSlot.service');
+  notifyInstantBooking(doc, booked ?? slotDoc, notice).catch((error) =>
+    logs.server.error('pods', 'notifyInstantBooking', { error, pod_id: String(doc._id) })
+  );
 }
 
 /** Tells the venue a pod asked for one of its slots. A recurring series calls

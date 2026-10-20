@@ -4,6 +4,7 @@ import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries'
 import { Alert, Card, CardContent, CircularProgress, Stack } from '@mui/material';
 import SectionHeader from '../components/SectionHeader';
 import { emptyVenueOwnerStats, type VenueOwnerStats } from '@duncit/utils';
+import { UpcomingBookings } from '@duncit/availability-calendar';
 import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
 import VenueHealthCard from './venue-manage-page/VenueHealthCard';
 import NoVenuesAlert from './venue-manage-page/NoVenuesAlert';
@@ -77,6 +78,17 @@ export default function VenueManagePage() {
       <VenueStatTiles listed={venues.length} capacity={capacity} status={venue?.status ?? 'New'} />
 
       {venue?.id && <VenueOwnerStatsStrip stats={stats} />}
+
+      {venue?.id && (
+        <Stack spacing={1.5}>
+          <SectionHeader testId="venue-manage-bookings-header" title={t('venuePricing.bookings.title')} />
+          <Card>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <UpcomingBookings venueId={venue.id} />
+            </CardContent>
+          </Card>
+        </Stack>
+      )}
 
       <VenueEarningsLinkCard />
 

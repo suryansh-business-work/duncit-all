@@ -36,6 +36,8 @@ export const storeListingTypeDefs = gql`
     android_phone_screenshots: [String!]!
     android_tablet_7_screenshots: [String!]!
     android_tablet_10_screenshots: [String!]!
+    "Raw app screens the websites' app phone plays — never sent to a store."
+    website_screenshots: [String!]!
     android_feature_graphic: String!
     android_icon: String!
     updated_by: String!
@@ -69,6 +71,7 @@ export const storeListingTypeDefs = gql`
     android_phone_screenshots: [String!]
     android_tablet_7_screenshots: [String!]
     android_tablet_10_screenshots: [String!]
+    website_screenshots: [String!]
     android_feature_graphic: String
     android_icon: String
   }
@@ -82,6 +85,12 @@ export const storeListingTypeDefs = gql`
     configured. Tech/Super admin only.
     """
     appStoreCategories: [String!]!
+    """
+    The raw app screens kept for the websites' app phone (Store Listing >
+    Websites). Public — they are shown on the public sites. Never the store
+    graphics, which already draw a phone of their own. Empty until filled.
+    """
+    appScreenshots: [String!]!
   }
 
   extend type Mutation {

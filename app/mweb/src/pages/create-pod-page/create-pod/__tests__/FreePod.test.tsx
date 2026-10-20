@@ -56,7 +56,7 @@ const waterfall = {
 const earningsMock = (spy: () => void) => ({
   request: {
     query: POTENTIAL_POD_EARNINGS,
-    variables: { pod_amount: 500, no_of_spots: 6, venue_id: 'venue-partner', venue_amount: 800 },
+    variables: { pod_amount: 500, no_of_spots: 6, venue_id: 'venue-partner', venue_amount: 800, venue_commission_on_top: null },
   },
   result: () => {
     spy();
@@ -139,7 +139,6 @@ const choose = (testId: 'create-pod-free' | 'create-pod-paid') =>
   });
 
 const settleLine = fallbackT('mweb.createPod.freeVenueSettle');
-const holdLine = fallbackT('mweb.createPod.freeVenueHold');
 
 describe('Step 4 — a paid physical pod is unchanged', () => {
   it('shows the amount, suggested prices, the discount and the earnings panel, and no free note', () => {
@@ -243,17 +242,16 @@ describe('Step 4 — the venue note on a free pod', () => {
     const { last } = renderStep(physical({ pod_type: 'FREE', pod_amount: 0 }));
     const note = await screen.findByTestId('create-pod-free-note-venue');
     expect(note).toHaveTextContent(settleLine);
-    expect(note).toHaveTextContent(holdLine);
-    expect(last().notice).toBe('SETTLE_BEFORE_APPROVAL');
+    expect(note).not.toHaveTextContent(/asked not to confirm the slot/);
+    expect(last().notice).toBe('SETTLE');
   });
 
-  it('drops the approval line for a slot a Pod Request already confirmed', async () => {
+  it('says the same for a slot a Pod Request confirmed', async () => {
     const { last } = renderStep(physical({ pod_type: 'FREE', pod_amount: 0, partner_request_id: 'req-1' }), [
       { ...slotsMock('venue-partner', 800), request: { query: VENUE_AVAILABLE_SLOTS, variables: { venue_id: 'venue-partner', partner_request_id: 'req-1' } } },
     ]);
     const note = await screen.findByTestId('create-pod-free-note-venue');
     expect(note).toHaveTextContent(settleLine);
-    expect(note).not.toHaveTextContent(holdLine);
     expect(last().notice).toBe('SETTLE');
   });
 

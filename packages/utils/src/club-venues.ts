@@ -65,48 +65,62 @@ export function clubAdminVenueOptions<T extends BookableVenue>(
   return [...byId.values()].filter((venue) => allowed.has(venue.id));
 }
 
-/** The club field the open-slot gate reads (`Club.available_slots_count`). */
-export interface ClubOpenSlots {
-  available_slots_count?: number | null;
+/** A club as Create Pod offers it (step 1) — one shape for mWeb and the native app. */
+export interface CreatePodClub {
+  id: string;
+  club_name: string;
+  location_id?: string | null;
+  /** Club's locality (a Location zone_name) — used by the locality filter. */
+  locality?: string | null;
+  super_category_id?: string | null;
+  /** Club's Sub-level category (matched against the host's sub_category_id). */
+  category_id?: string | null;
+  /** How many APPROVED+active venues auto-match this club (location + category). */
+  matched_venues_count?: number | null;
+  /** Ids of the venues that match this club — the venue picker is scoped to these. */
+  matched_venues?: { id: string }[] | null;
+  club_description?: string | null;
+  club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
 }
 
-/**
- * Whether Create Pod must stop a host from picking this club: a physical pod
- * books a venue slot, and none of the club's venues has one open. A virtual pod
- * needs no venue, so it is never stopped. Both apps ask this on step 1.
- */
-export function clubLacksOpenSlots(
-  club: Readonly<ClubOpenSlots> | null | undefined,
-  podMode: string
-): boolean {
-  if (!club || podMode !== 'PHYSICAL') return false;
-  return (club.available_slots_count ?? 0) <= 0;
+/** The host-category fields the club filter reads. */
+export interface HostCategoryKeySource {
+  super_category_id?: string | null;
+  sub_category_id?: string | null;
 }
 
-/** What the "message the club admin" outcome reads as, per `PodHelpStatus`. */
-export const CLUB_SLOT_REQUEST_NOTICE_KEY = {
-  SENT: 'mweb.createPod.slotRequestSent',
-  ALREADY_REQUESTED: 'mweb.createPod.slotRequestAlready',
-  NO_CLUB_ADMIN: 'mweb.createPod.slotRequestNoAdmin',
-} as const;
+/** Composite key identifying one host category: `${super}|${sub}`. Shared by the
+ * Create Pod category picker and the club filter so selection and matching align. */
+export const hostCategoryKeyOf = (category: Readonly<HostCategoryKeySource>) =>
+  `${category.super_category_id ?? ''}|${category.sub_category_id ?? ''}`;
 
-export type ClubSlotRequestOutcome = keyof typeof CLUB_SLOT_REQUEST_NOTICE_KEY;
+export interface ClubFilterOptions {
+  hostCategories: readonly HostCategoryKeySource[];
+  selectedCategoryKey: string;
+  locationId: string;
+  locality: string;
+  podMode: string;
+}
 
-/** The translator `clubSlotsLabel` takes — both apps' `t()` fit it. */
-export type ClubSlotsTranslate = (
-  key: string,
-  options?: { count?: number; vars?: Record<string, string | number> },
-) => string;
-
-/**
- * "4 open slots" / "No open slots" — the line under each club on step 1 and in
- * the picked club's preview. `open` drives the warning tint.
- */
-export function clubSlotsLabel(
-  club: Readonly<ClubOpenSlots>,
-  t: ClubSlotsTranslate
-): { open: boolean; label: string } {
-  const count = club.available_slots_count ?? 0;
-  if (count > 0) return { open: true, label: t('mweb.createPod.clubSlots', { count }) };
-  return { open: false, label: t('mweb.createPod.clubNoSlots') };
+/** Clubs the host may attach a pod to: scoped by the SELECTED host category
+ * (Super + Sub) — or all of the host's categories when none is picked yet — then,
+ * for physical pods, by the chosen city and (optionally) locality. mWeb and the
+ * native app both read this. */
+export function filterClubs<C extends CreatePodClub>(clubs: readonly C[], opts: Readonly<ClubFilterOptions>): C[] {
+  const activeCategories = opts.selectedCategoryKey
+    ? opts.hostCategories.filter((category) => hostCategoryKeyOf(category) === opts.selectedCategoryKey)
+    : opts.hostCategories;
+  const keys = new Set(activeCategories.filter((category) => category.super_category_id).map(hostCategoryKeyOf));
+  const matchesCategory = (club: C) => {
+    // A host with no categories is not over-filtered.
+    if (keys.size === 0) return true;
+    if (!club.super_category_id) return false;
+    return keys.has(`${club.super_category_id}|${club.category_id ?? ''}`) || keys.has(`${club.super_category_id}|`);
+  };
+  return clubs.filter((club) => {
+    if (!matchesCategory(club)) return false;
+    if (opts.podMode === 'VIRTUAL') return true;
+    if (opts.locationId && club.location_id !== opts.locationId) return false;
+    return !opts.locality || (club.locality ?? '') === opts.locality;
+  });
 }

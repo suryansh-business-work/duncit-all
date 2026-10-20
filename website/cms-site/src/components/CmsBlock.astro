@@ -15,6 +15,8 @@ import PolicyStrip from '@duncit/brand/PolicyStrip.astro';
 import ApplyButton from '@duncit/brand/ApplyButton.astro';
 import type { SiteTranslate } from '@duncit/brand/site-i18n';
 import { list, record, text } from '../lib/props';
+// The internal address the server reads with; the `graphqlUrl` prop is the browser's.
+import { graphqlUrl as serverGraphqlUrl } from '../lib/cms-api';
 
 interface Props {
   block: string;
@@ -77,6 +79,7 @@ const accounts = list(props.accounts).map(record).map((a) => ({ icon: text(a.ico
     webUrl={text(props.webUrl) || null}
     soonLabel={text(props.soonLabel) || undefined}
     screenshot={text(props.screenshot) || null}
+    graphqlUrl={serverGraphqlUrl() || graphqlUrl}
     class={text(props.class) || undefined}
     t={t}
   />

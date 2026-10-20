@@ -9,7 +9,7 @@ interface Props {
   onBack: () => void;
 }
 
-/** Which venue's calendar this is, and the way back to the venue list. */
+/** Which venue's pricing this is, and the way back to the venue list. */
 export default function AvailabilityHeader({ venueName, onBack }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
@@ -35,12 +35,12 @@ export default function AvailabilityHeader({ venueName, onBack }: Readonly<Props
             fontWeight: 950,
             lineHeight: 1.1
           }}>
-          {t('partners.venueAvailabilityPage.slotAvailability')}
+          {t('venuePricing.page.title')}
         </Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          {t('partners.venueAvailabilityPage.slotAvailabilityHint')}
+          {t('venuePricing.page.subtitle')}
         </Typography>
       </Box>
     </Stack>

@@ -1,7 +1,42 @@
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { logs } from '@observability/log';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { INDIAN_PINCODE, StoreServiceablePincodeModel } from './storeServiceablePincode.model';
 import { StoreSettingsModel } from './storeSettings.model';
+import { StoreHomeSectionModel } from './storeMerch.model';
+
+/** The kinds after which the storefront used to slot the free-delivery strip on its own. */
+const PRODUCT_KINDS = new Set(['COLLECTION_CAROUSEL', 'PRODUCT_SLIDER']);
+
+/**
+ * Sections got a `page` (HOME / DEALS) and the free-delivery strip became a
+ * section the operator places. Blocks saved before that have no `page`: they
+ * are the home page's, and on that page the storefront drew the strip after
+ * the first product rail (else last). This writes exactly that: every legacy
+ * block gets `page: HOME`, and one FREE_DELIVERY section lands where the strip
+ * was — so the live store looks the same and the strip is now editable.
+ *
+ * Idempotent: it only acts while some block still has no `page`, and never adds
+ * a second FREE_DELIVERY section.
+ */
+export async function migrateStoreSections() {
+  const legacy = await StoreHomeSectionModel.find({ page: { $exists: false } })
+    .select('kind sort_order')
+    .sort({ sort_order: 1, _id: 1 })
+    .lean();
+  if (legacy.length === 0) return { sections_paged: 0, free_delivery_added: false };
+  const hasStrip = await StoreHomeSectionModel.exists({ kind: 'FREE_DELIVERY' });
+  let added = false;
+  if (!hasStrip) {
+    const firstRail = legacy.find((s) => PRODUCT_KINDS.has(s.kind));
+    const at = firstRail ? firstRail.sort_order + 1 : (legacy.at(-1)?.sort_order ?? -1) + 1;
+    await StoreHomeSectionModel.updateMany({ sort_order: { $gte: at } }, { $inc: { sort_order: 1 } });
+    await StoreHomeSectionModel.create({ page: 'HOME', kind: 'FREE_DELIVERY', sort_order: at, is_active: true });
+    added = true;
+  }
+  const paged = await StoreHomeSectionModel.updateMany({ page: { $exists: false } }, { $set: { page: 'HOME' } });
+  return { sections_paged: paged.modifiedCount, free_delivery_added: added };
+}
 
 /**
  * Catalogue repairs the pet store depends on. Idempotent: each step only fills
@@ -32,7 +67,10 @@ export async function migrateStoreCatalogue() {
     }));
   if (writes.length > 0) await InventoryProductModel.bulkWrite(writes);
 
-  return { brands_named: writes.length };
+  // Runs with the catalogue repair so it rides the same boot step.
+  const sections = await migrateStoreSections();
+  if (sections.sections_paged > 0) logs.server.info('bootstrap', 'storeSections', sections);
+  return { brands_named: writes.length, ...sections };
 }
 
 /**

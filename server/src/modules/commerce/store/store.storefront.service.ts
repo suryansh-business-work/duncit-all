@@ -4,7 +4,7 @@ import { isRazorpayConfigured } from '@modules/finance/payment/razorpay.gateway'
 import { getServiceability } from '@modules/commerce/shiprocket/shiprocket.gateway';
 import { logs } from '@observability/log';
 import { StoreBrandModel, StoreCategoryModel, StorePetTypeModel } from './storeTaxonomy.model';
-import { StoreCollectionModel, StoreHomeSectionModel } from './storeMerch.model';
+import { StoreCollectionModel, StoreHomeSectionModel, pageFilter } from './storeMerch.model';
 import { activeOccasionAt, getStoreSettings, type IStoreSettings } from './storeSettings.model';
 import { isPincodeServed, restrictsPincodes } from './storeServiceablePincode.model';
 import { StorePageModel } from './storePage.model';
@@ -107,6 +107,9 @@ export async function publicSettingsOut(s: IStoreSettings) {
     about_html: s.about_html,
     social_links: s.social_links.map((l) => ({ label: l.label, url: l.url })),
     payment_badges: (s.payment_badges ?? []).map((b) => ({ label: b.label, image_url: b.image_url })),
+    home_greeting: s.home_greeting ?? '',
+    nav_links: (s.nav_links ?? []).map((l) => ({ label: l.label, link: l.link })),
+    footer_links: (s.footer_links ?? []).map((l) => ({ label: l.label, link: l.link })),
     currency_symbol: fs.currency_symbol,
     // What the buyer will actually meet at checkout, not Finance's switch alone:
     // with a Razorpay account configured the sheet opens and dummy mode is moot.
@@ -313,11 +316,18 @@ export const storeStorefrontService = {
     return { pincode: clean, restricted, serviceable: /^\d{6}$/.test(clean) && served };
   },
 
-  async home() {
+  /** The live sections of one storefront page, in the operator's order; blank = the home page. */
+  async pageSections(page?: string | null) {
     const now = Date.now();
-    const sections = await StoreHomeSectionModel.find({ is_active: true }).sort({ sort_order: 1, _id: 1 }).lean();
+    const sections = await StoreHomeSectionModel.find({ is_active: true, ...pageFilter(page) })
+      .sort({ sort_order: 1, _id: 1 })
+      .lean();
     const live = sections.filter((s) => inWindow(s, now));
     return Promise.all(live.map(resolveSection));
+  },
+
+  home() {
+    return storeStorefrontService.pageSections('HOME');
   },
 
   async petType(slug: string) {

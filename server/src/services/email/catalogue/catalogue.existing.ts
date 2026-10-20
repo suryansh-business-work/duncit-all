@@ -183,6 +183,18 @@ const EXISTING_ROWS: readonly EmailDef[] = [
       v('portal', 'Which console the code is for.', 'Finance'),
     ],
   }),
+  describeEmail({
+    slug: 'env-access-otp',
+    name: 'Environment Variables Access OTP',
+    description:
+      'The code that opens Tech → Environment Variables. Always mailed to the root admin, whoever is asking, so a signed-in session alone never reaches a secret.',
+    audience: 'ADMIN',
+    category: 'authentication',
+    fires: 'Somebody opens Environment Variables in the Tech console',
+    subject: 'Your Duncit Environment Variables access code',
+    footerNote: '',
+    vars: otpVars('opening Environment Variables'),
+  }),
 
   // --- Bookings and pods --------------------------------------------------
   describeEmail({

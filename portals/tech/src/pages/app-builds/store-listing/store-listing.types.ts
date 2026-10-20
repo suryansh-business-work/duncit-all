@@ -83,6 +83,8 @@ export const storeListingSchema = (m: StoreListingMessages) =>
       android_phone_screenshots: neededImages(MIN_PLAY_PHONE_SCREENSHOTS, LISTING_LIMITS.play_screenshots, m),
       android_tablet_7_screenshots: images(LISTING_LIMITS.play_screenshots, m),
       android_tablet_10_screenshots: images(LISTING_LIMITS.play_screenshots, m),
+      // Never sent to a store: the websites' app phone plays these, so they are raw screens.
+      website_screenshots: images(LISTING_LIMITS.play_screenshots, m),
       android_feature_graphic: neededHttpsUrl(m),
       android_icon: neededHttpsUrl(m),
     })

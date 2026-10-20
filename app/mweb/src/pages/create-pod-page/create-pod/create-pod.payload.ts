@@ -1,4 +1,4 @@
-import { isVideoUrl, mediaTypeForUrl, ticketDiscountInput } from '@duncit/utils';
+import { instantBookingInput, isVideoUrl, mediaTypeForUrl, ticketDiscountInput } from '@duncit/utils';
 import { isFreePodType, type CreatePodFormValues } from './create-pod.types';
 
 const splitLines = (text: string) =>
@@ -12,6 +12,16 @@ const splitLines = (text: string) =>
 export const hasImageLine = (mediaText: string) =>
   splitLines(mediaText).some((url) => !isVideoUrl(url));
 
+/** The instant booking the form holds (window = the pod window). Native twin. */
+const venueBookingOf = (values: CreatePodFormValues) =>
+  instantBookingInput({
+    start: values.pod_date_time?.toISOString() ?? null,
+    end: values.pod_end_date_time?.toISOString() ?? null,
+    pax: values.venue_booking_pax,
+    pets: values.venue_booking_pets,
+    spaceLabel: values.venue_space_label,
+  });
+
 /** Maps the validated form values onto the server's CreatePodInput. */
 export function buildCreatePodInput(values: CreatePodFormValues) {
   const virtual = values.pod_mode === 'VIRTUAL';
@@ -20,9 +30,11 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     club_id: values.club_id,
     pod_mode: values.pod_mode,
     venue_id: virtual ? null : values.venue_id,
-    // The booked slot drives the pod window server-side; the venue must
-    // approve it before the pod goes live (own venues confirm instantly).
+    // A Pod Request's pod books the slot that request holds; every other
+    // physical pod books instantly at the venue's pricing, and the server sets
+    // the pod window from it. Neither waits for the venue's approval.
     venue_slot_id: virtual ? null : values.venue_slot_id || null,
+    venue_booking: virtual || values.venue_slot_id ? null : venueBookingOf(values),
     location_id: values.location_id || null,
     zone_name: virtual ? null : values.locality || null,
     meeting_platform: virtual ? values.meeting_platform.trim() || null : null,

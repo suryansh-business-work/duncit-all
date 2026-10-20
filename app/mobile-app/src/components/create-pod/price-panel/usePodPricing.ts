@@ -12,8 +12,13 @@ export interface PodPricingInput {
   /** Total capacity the host entered, including their own free seat. */
   noOfSpots: number;
   venueId: string | null;
-  /** Price of the picked venue slot, or null while none is picked. */
+  /** What the venue costs the pod, or null while nothing is booked: the instant
+   * booking's quoted total, or a Pod Request's held slot price. */
   slotPrice: number | null;
+  /** An instant booking's quote: what the venue is paid (venue price + GST)
+   * and Duncit's commission on top, which comes off the host's side — sent to
+   * the preview so it matches settlement. Absent for a held slot. */
+  venueQuote?: { payout: number; commissionOnTop: number } | null;
   isPhysical: boolean;
   /** A FREE pod is the only pod allowed to carry no ticket price. */
   isFree: boolean;
@@ -64,7 +69,7 @@ export function isVenueShortfall(input: PodPricingInput): boolean {
  * numbers; both guards clear themselves as soon as the price is raised.
  */
 export function usePodPricing(input: PodPricingInput): PodPricingState {
-  const { podAmount, noOfSpots, venueId, slotPrice, isPhysical, isFree } = input;
+  const { podAmount, noOfSpots, venueId, slotPrice, venueQuote, isPhysical, isFree } = input;
   const venuePicked = isPhysical && slotPrice !== null;
   // A free pod has no calculation at all: a ₹0 amount is what makes the
   // earnings hook send nothing, whatever the field still holds.
@@ -72,7 +77,8 @@ export function usePodPricing(input: PodPricingInput): PodPricingState {
     isFree ? 0 : podAmount,
     noOfSpots,
     venuePicked ? venueId : null,
-    venuePicked ? slotPrice : null,
+    venuePicked ? (venueQuote?.payout ?? slotPrice) : null,
+    venuePicked ? (venueQuote?.commissionOnTop ?? null) : null,
   );
 
   const ready = !isFree && podAmount > 0 && noOfSpots > 0;

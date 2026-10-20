@@ -76,19 +76,78 @@ jest.mock('@/components/LocationDialog', () => {
   };
 });
 
-const futureIso = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
+// Venues are booked instantly at their own pricing: a PER_SLOT venue whose one
+// free slot (on the hour, a day out) sets the pod's whole window when picked.
+const HOUR_MS = 3_600_000;
+const slotStartMs = Math.ceil((Date.now() + 24 * HOUR_MS) / HOUR_MS) * HOUR_MS;
 const slot = {
-  id: 's1',
-  start_at: futureIso(24),
-  end_at: futureIso(26),
-  price: 400,
-  capacity: 30,
-  status: 'AVAILABLE',
+  start_at: new Date(slotStartMs).toISOString(),
+  end_at: new Date(slotStartMs + 2 * HOUR_MS).toISOString(),
 };
+const slotTile = `slot-tile-${slot.start_at}|${slot.end_at}`;
+const venuePricing = {
+  model: 'PER_SLOT',
+  configured: true,
+  min_pax: 0,
+  max_pax: 0,
+  min_hours: 0,
+  max_hours: 0,
+  booking_increment_minutes: 60,
+  pet_fee: 0,
+};
+// What the server quotes for that slot: ₹400 + 18% GST to the venue, plus
+// Duncit's fee on top.
+const venuePriceQuote = {
+  model: 'PER_SLOT',
+  rate: 400,
+  pax: 0,
+  hours: 2,
+  base: 400,
+  rules: [],
+  min_spend_top_up: 0,
+  cleaning_fee: 0,
+  pet_fee: 0,
+  gst_pct: 18,
+  taxes: 72,
+  platform_fee_pct: 5,
+  platform_fee: 24,
+  venue_payout: 472,
+  total: 496,
+  deposit: 0,
+};
+
+function routeRequests(doc: { definitions: { name?: { value: string } }[] }) {
+  switch (doc.definitions[0]?.name?.value) {
+    case 'MobileHostBookingPricing':
+      return Promise.resolve({ venuePricing });
+    case 'MobileHostBookingCalendar':
+      return Promise.resolve({
+        venueBookingCalendar: {
+          buffer_minutes: 0,
+          min_notice_minutes: 0,
+          days: [
+            {
+              date: slot.start_at.slice(0, 10),
+              closed_reason: null,
+              open: null,
+              close: null,
+              busy: [],
+              slots: [{ start: slot.start_at, end: slot.end_at, price: 400, available: true }],
+            },
+          ],
+        },
+      });
+    case 'MobileHostVenuePriceQuote':
+      return Promise.resolve({ venuePriceQuote });
+    default:
+      return Promise.resolve({});
+  }
+}
 
 beforeEach(() => {
   mockFeatureFlag.mockReturnValue(true);
-  mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [slot] });
+  mockGraphqlRequest.mockReset();
+  mockGraphqlRequest.mockImplementation(routeRequests);
 });
 
 const clubs = [
@@ -102,8 +161,6 @@ const clubs = [
     category_id: 'sub-trail',
     matched_venues: [{ id: 'v1' }, { id: 'v9' }],
     matched_venues_count: 1,
-    // A physical pod can only pick a club with an open slot.
-    available_slots_count: 3,
   },
   { id: 'c2', club_name: 'Writers', location_id: 'l1', super_category_id: 'sc-sports' },
   // Right category, different city → dropped for an l1 physical pod.
@@ -211,14 +268,16 @@ async function fillBasics() {
   await screen.findByTestId('create-pod-offers-chip-Guided trail');
 }
 
-// Step 3 for a physical pod: venue → space (capacity) → a slot on the calendar.
+// Step 3 for a physical pod: venue → space (capacity) → a free slot at the
+// venue's own pricing, then the server's quote for it.
 async function bookSlot() {
   await screen.findByTestId('create-pod-venue-v1');
   press('create-pod-venue-v1');
-  // The space (capacity) selector gates the slot calendar — pick the whole venue.
+  // The space (capacity) selector gates the booking calendar — pick the whole venue.
   press('create-pod-space-Whole venue');
-  await screen.findByTestId('slot-tile-s1');
-  press('slot-tile-s1');
+  await screen.findByTestId(slotTile);
+  press(slotTile);
+  await screen.findByTestId('create-pod-venue-quote');
 }
 
 // Drives the flow up to the Pricing step for either mode.
@@ -281,18 +340,21 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('create-pod-venue-v1');
     expect(screen.queryByTestId('create-pod-venue-v9')).toBeNull();
     await bookSlot();
-    // Partner venue → approval note + contact card + window from slot.
-    expect(screen.getByTestId('create-pod-approval-note')).toHaveTextContent(/venue approves/);
+    // Booked instantly at the venue's pricing: the model, the server's quote,
+    // the contact card and the window from the slot — no approval step.
+    expect(screen.getByTestId('create-pod-booking-model')).toHaveTextContent('Priced per slot');
+    expect(screen.getByTestId('create-pod-venue-quote')).toHaveTextContent(/496/);
+    expect(screen.queryByTestId('create-pod-approval-note')).toBeNull();
     // A paid pod pays the venue through Duncit — no settle-it-yourself note.
     expect(screen.queryByTestId('create-pod-free-venue-note')).toBeNull();
     expect(screen.getByTestId('create-pod-venue-contact')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-duration')).toBeOnTheScreen();
-    // Back returns to the basics step, then forward again keeps the slot.
+    // Back returns to the basics step, then forward again keeps the booking.
     press('create-pod-back');
     await screen.findByTestId('field-pod_title');
     press('create-pod-submit');
     await screen.findByTestId('create-pod-venue-v1');
-    expect(screen.getByTestId('create-pod-approval-note')).toBeOnTheScreen();
+    expect(await screen.findByTestId(slotTile)).toHaveProp('aria-pressed', true);
     press('create-pod-submit');
 
     // Step 4: pricing + products + price panel. Both cards are offered to a
@@ -321,13 +383,20 @@ describe('CreatePodStepper', () => {
     expect(onPublish.mock.calls[0]?.[0]).toBe('draft-1');
     const input = onPublish.mock.calls[0]?.[1];
     expect(input.pod_title).toBe('Sunday community hike');
-    expect(input.venue_slot_id).toBe('s1');
+    // No slot id: the venue is booked by its window, which is the pod's window.
+    expect(input.venue_slot_id).toBeNull();
+    expect(input.venue_booking).toEqual({
+      start_at: slot.start_at,
+      end_at: slot.end_at,
+      pax: null,
+      pets: false,
+      space_label: '',
+    });
     expect(input.location_id).toBe('l1');
     expect(input.pod_type).toBe('PAID');
-    // The booked slot's window is the pod's window.
-    expect(new Date(input.pod_date_time).getTime()).toBe(
-      Math.floor(new Date(slot.start_at).getTime() / 60_000) * 60_000,
-    );
+    expect(new Date(input.pod_date_time).toISOString()).toBe(slot.start_at);
+    // The earnings preview is fed the venue payout and Duncit's fee on top.
+    expect(mockPotentialEarnings).toHaveBeenLastCalledWith(500, expect.any(Number), 'v1', 472, 24);
   });
 
   it('publishes a virtual pod (no venue, no slot, no place charges)', async () => {
@@ -397,11 +466,11 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('field-pod_title');
     press('create-pod-submit');
 
-    // Step 3: a ₹400 slot at a partner's venue (owner-1, not the viewer).
+    // Step 3: a slot quoted at ₹496 at a partner's venue (owner-1, not the viewer).
     await bookSlot();
     const venueNote = screen.getByTestId('create-pod-free-venue-note');
     expect(venueNote).toHaveTextContent(/settle the venue's charges with the venue directly/);
-    expect(venueNote).toHaveTextContent(/asked not to confirm the slot/);
+    expect(venueNote).not.toHaveTextContent(/asked not to confirm the slot/);
     expect(venueNote).toHaveProp('role', 'status');
     press('create-pod-submit');
 
@@ -435,7 +504,8 @@ describe('CreatePodStepper', () => {
       pod_mode: 'PHYSICAL',
       pod_type: 'FREE',
       pod_amount: 0,
-      venue_slot_id: 's1',
+      venue_slot_id: null,
+      venue_booking: { start_at: slot.start_at, end_at: slot.end_at },
       ticket_discount_enabled: false,
     });
   });
@@ -504,7 +574,6 @@ describe('CreatePodStepper', () => {
         location_id: 'l1',
         super_category_id: 'sc-sports',
         matched_venues: [{ id: 'v1' }],
-        available_slots_count: 2,
       },
       { id: 'mc2', club_name: 'Chess', location_id: 'l1', super_category_id: 'sc-games' },
     ];
@@ -699,13 +768,10 @@ describe('CreatePodStepper', () => {
     expect(screen.getByTestId('create-pod-club-mx2')).toBeOnTheScreen();
   });
 
-  it('refuses a physical club with no open slots and keeps step 1 unpicked', async () => {
+  it('lets a physical pod pick any club — venues are booked at their own pricing on step 3', () => {
     setup();
-    // c2 has no open slots: the press opens the no-slots sheet instead of picking it.
     press('create-pod-club-c2');
-    expect(screen.getByTestId('create-pod-club-c2')).toHaveProp('aria-checked', false);
-    press('create-pod-submit');
-    await waitFor(() => expect(screen.getByTestId('create-pod-club-error')).toBeOnTheScreen());
+    expect(screen.getByTestId('create-pod-club-c2')).toHaveProp('aria-checked', true);
   });
 
   it('blocks Next while the current step is invalid', async () => {
@@ -724,20 +790,45 @@ describe('CreatePodStepper', () => {
     expect(screen.queryByTestId('create-pod-venue-v1')).toBeNull();
   });
 
-  it('requires a booked slot before leaving the venue step', async () => {
+  it('requires a booked window before leaving the venue step', async () => {
     setup();
     await pickClub();
     await fillBasics();
     press('create-pod-submit');
     await screen.findByTestId('create-pod-venue-v1');
     press('create-pod-venue-v1');
-    // Pick a space so the slot calendar (and its error) render, but leave the slot unbooked.
+    // Pick a space so the booking calendar (and its error) render, but book nothing.
     press('create-pod-space-Whole venue');
-    await screen.findByTestId('slot-tile-s1');
+    await screen.findByTestId(slotTile);
     press('create-pod-submit');
     await waitFor(() =>
-      expect(screen.getByTestId('slot-calendar-error')).toHaveTextContent(/available slot/i),
+      expect(screen.getByTestId('slot-calendar-error')).toHaveTextContent(
+        'Pick a date and time the venue is free',
+      ),
     );
+    expect(screen.queryByTestId('create-pod-paid')).toBeNull();
+  });
+
+  it('refuses a venue that has not set up its pricing', async () => {
+    mockGraphqlRequest.mockImplementation((doc: Parameters<typeof routeRequests>[0]) =>
+      doc.definitions[0]?.name?.value === 'MobileHostBookingPricing'
+        ? Promise.resolve({ venuePricing: { ...venuePricing, configured: false } })
+        : routeRequests(doc),
+    );
+    setup();
+    await pickClub();
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-venue-v1');
+    press('create-pod-venue-v1');
+    press('create-pod-space-Whole venue');
+    expect(await screen.findByTestId('create-pod-pricing-not-set')).toBeOnTheScreen();
+    // Nothing can be booked, so validation holds the host on step 3.
+    await act(async () => {
+      press('create-pod-submit');
+    });
+    expectStep(3);
+    expect(screen.queryByTestId('create-pod-paid')).toBeNull();
   });
 
   it('surfaces a publish error message', async () => {

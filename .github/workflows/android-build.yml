@@ -266,6 +266,14 @@ jobs:
           release_password: ${{ env.REPORT_PASSWORD }}
           run_url: ${{ env.RUN_URL }}
 
+      - name: Read the Truecaller identifiers this build carries
+        # Tech → Environment → Truecaller, read from the public client config of the
+        # server this app is built for. Truecaller's SDK reads them from the native
+        # project, so they are baked in at prebuild (plugins/withTruecaller) and decide
+        # whether the module is linked at all (react-native.config.js). Blank leaves
+        # Truecaller out of the build; the step never fails it.
+        run: node scripts/truecaller-build-env.js >> "$GITHUB_ENV"
+
       - name: Generate the native android project
         # android/ is gitignored (CNG) — regenerated from app.json + config plugins.
         run: npx expo prebuild --platform android --no-install --clean

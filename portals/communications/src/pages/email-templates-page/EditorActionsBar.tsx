@@ -2,6 +2,7 @@ import { Box, FormControlLabel, Stack, Switch, Tooltip, Typography } from '@mui/
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -18,6 +19,8 @@ interface Props {
   onSave: () => void;
   onSendTest: () => void;
   onDelete: () => void;
+  /** Absent on a template Duncit does not ship — there is no body to put back. */
+  onReset?: () => void;
 }
 
 /**
@@ -42,6 +45,7 @@ export default function EditorActionsBar({
   onSave,
   onSendTest,
   onDelete,
+  onReset,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const status = statusLine(t, dirty, savedAt);
@@ -59,6 +63,15 @@ export default function EditorActionsBar({
       <DuncitButton startIcon={<SendIcon />} onClick={onSendTest}>
         Send test
       </DuncitButton>
+      {onReset && (
+        <Tooltip title={t('tech.emailTemplates.resetDesignHint')}>
+          <span>
+            <DuncitButton startIcon={<RestartAltIcon />} onClick={onReset} disabled={busy}>
+              {t('tech.emailTemplates.resetDesign')}
+            </DuncitButton>
+          </span>
+        </Tooltip>
+      )}
       <DuncitButton color="error" startIcon={<DeleteIcon />} onClick={onDelete}>
         Delete
       </DuncitButton>

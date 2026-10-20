@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client/react';
 import { Alert } from '@mui/material';
-import EventRepeatRoundedIcon from '@mui/icons-material/EventRepeatRounded';
-import { VenueAvailabilityEditor } from '@duncit/availability-calendar';
+import SellRoundedIcon from '@mui/icons-material/SellRounded';
+import { VenuePricingModule } from '@duncit/availability-calendar';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
 import { MY_VENUES_AVAILABILITY, type AvailabilityVenue } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -12,8 +12,8 @@ interface EditorProps {
   onVenueChanged: () => Promise<void>;
 }
 
-/** The calendar, or the reason it is closed: hosts can only book slots at an
- * approved venue, so an application still in flight has nothing to publish. */
+/** The pricing module, or the reason it is closed: hosts can only book an
+ * approved venue, so an application still in flight has nothing to price. */
 function AvailabilityEditor({ venue, onVenueChanged }: Readonly<EditorProps>) {
   const { t } = useTranslation();
   if (venue.status !== 'APPROVED') {
@@ -23,15 +23,16 @@ function AvailabilityEditor({ venue, onVenueChanged }: Readonly<EditorProps>) {
       </Alert>
     );
   }
-  return <VenueAvailabilityEditor venue={venue} onVenueChanged={onVenueChanged} />;
+  return <VenuePricingModule key={venue.id} venue={venue} onVenueChanged={onVenueChanged} />;
 }
 
 /**
- * Availability Calendar, for a venue owner on their phone.
+ * The Venue Pricing Module, for a venue owner on their phone (/venues/pricing;
+ * the old /venues/availability lands here).
  *
- * The calendar itself is the shared editor the Partners console mounts (rule
- * 40); this page only picks WHICH venue — through the same switcher Venue
- * Studio uses. Native twin: VenueAvailabilityScreen (rule 27).
+ * The module itself is the shared one the Partners console mounts (rule 40);
+ * this page only picks WHICH venue — through the same switcher Venue Studio
+ * uses.
  */
 export default function VenueAvailabilityPage() {
   const { t } = useTranslation();
@@ -44,13 +45,13 @@ export default function VenueAvailabilityPage() {
 
   return (
     <VenuePageFrame
-      icon={<EventRepeatRoundedIcon fontSize="small" />}
-      title={t('mweb.venueAvailabilityPage.title')}
+      icon={<SellRoundedIcon fontSize="small" />}
+      title={t('venuePricing.page.title')}
       venues={venues}
       venue={venue}
       onSelect={selectVenue}
       loading={loading && !data}
-      // The recurring dialog writes venue rules, then this page re-reads them:
+      // A holiday writes the venue's settings, then this page re-reads them:
       // the calendar dims for that round trip instead of sitting there stale.
       refreshing={loading && !!data}
       error={error}

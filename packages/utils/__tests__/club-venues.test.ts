@@ -7,11 +7,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  CLUB_SLOT_REQUEST_NOTICE_KEY,
   clubAdminVenueOptions,
-  clubLacksOpenSlots,
-  clubSlotsLabel,
+  filterClubs,
+  hostCategoryKeyOf,
   type BookableVenue,
+  type ClubFilterOptions,
+  type CreatePodClub,
 } from '../src/club-venues';
 
 const publicVenues: BookableVenue[] = [
@@ -53,47 +54,68 @@ describe('clubAdminVenueOptions', () => {
   });
 });
 
-describe('clubLacksOpenSlots', () => {
-  it('stops a physical pod in a club whose venues have no open slot', () => {
-    expect(clubLacksOpenSlots({ available_slots_count: 0 }, 'PHYSICAL')).toBe(true);
-    expect(clubLacksOpenSlots({ available_slots_count: null }, 'PHYSICAL')).toBe(true);
-    expect(clubLacksOpenSlots({}, 'PHYSICAL')).toBe(true);
-  });
-
-  it('lets a physical pod through once any venue has an open slot', () => {
-    expect(clubLacksOpenSlots({ available_slots_count: 3 }, 'PHYSICAL')).toBe(false);
-  });
-
-  it('never stops a virtual pod, nor a step with no club picked yet', () => {
-    expect(clubLacksOpenSlots({ available_slots_count: 0 }, 'VIRTUAL')).toBe(false);
-    expect(clubLacksOpenSlots(null, 'PHYSICAL')).toBe(false);
-    expect(clubLacksOpenSlots(undefined, 'PHYSICAL')).toBe(false);
+describe('hostCategoryKeyOf', () => {
+  it('joins super and sub category ids, leaving a missing side empty', () => {
+    expect(hostCategoryKeyOf({ super_category_id: 's-1', sub_category_id: 'sub-1' })).toBe('s-1|sub-1');
+    expect(hostCategoryKeyOf({ super_category_id: 's-1', sub_category_id: null })).toBe('s-1|');
+    expect(hostCategoryKeyOf({})).toBe('|');
   });
 });
 
-describe('CLUB_SLOT_REQUEST_NOTICE_KEY', () => {
-  it('names one createPod notice per request outcome', () => {
-    expect(Object.keys(CLUB_SLOT_REQUEST_NOTICE_KEY)).toEqual(['SENT', 'ALREADY_REQUESTED', 'NO_CLUB_ADMIN']);
-    for (const key of Object.values(CLUB_SLOT_REQUEST_NOTICE_KEY)) {
-      expect(key.startsWith('mweb.createPod.slotRequest')).toBe(true);
-    }
+describe('filterClubs', () => {
+  const clubs: CreatePodClub[] = [
+    { id: 'c-1', club_name: 'Run', super_category_id: 's-1', category_id: 'sub-1', location_id: 'blr', locality: 'Indiranagar' },
+    { id: 'c-2', club_name: 'Swim', super_category_id: 's-1', category_id: 'sub-2', location_id: 'blr', locality: 'HSR' },
+    { id: 'c-3', club_name: 'Chess', super_category_id: 's-2', category_id: 'sub-9', location_id: 'del', locality: null },
+    { id: 'c-4', club_name: 'Uncategorised', super_category_id: null, location_id: 'blr' },
+    // A Super with no Sub only matches a host category that is Super-only.
+    { id: 'c-5', club_name: 'Yoga', super_category_id: 's-1', location_id: 'hyd' },
+  ];
+  const hostCategories = [
+    { super_category_id: 's-1', sub_category_id: 'sub-1' },
+    // A Super-only host category matches every club under that Super.
+    { super_category_id: 's-2', sub_category_id: null },
+  ];
+  const opts = (over: Partial<ClubFilterOptions> = {}): ClubFilterOptions => ({
+    hostCategories,
+    selectedCategoryKey: '',
+    locationId: '',
+    locality: '',
+    podMode: 'PHYSICAL',
+    ...over,
   });
-});
+  const clubIds = (list: readonly CreatePodClub[]) => list.map((club) => club.id);
 
-describe('clubSlotsLabel', () => {
-  const t = (key: string, options?: { count?: number }) =>
-    options?.count === undefined ? key : `${key}:${options.count}`;
-
-  it('counts the open slots, plural-aware through t()', () => {
-    expect(clubSlotsLabel({ available_slots_count: 4 }, t)).toEqual({
-      open: true,
-      label: 'mweb.createPod.clubSlots:4',
-    });
+  it('scopes to all of the host categories while none is selected', () => {
+    expect(clubIds(filterClubs(clubs, opts()))).toEqual(['c-1', 'c-3']);
   });
 
-  it('says there are none when the count is zero or missing', () => {
-    for (const club of [{ available_slots_count: 0 }, { available_slots_count: null }, {}]) {
-      expect(clubSlotsLabel(club, t)).toEqual({ open: false, label: 'mweb.createPod.clubNoSlots' });
-    }
+  it('scopes to the selected category only', () => {
+    expect(clubIds(filterClubs(clubs, opts({ selectedCategoryKey: 's-1|sub-1' })))).toEqual(['c-1']);
+    expect(clubIds(filterClubs(clubs, opts({ selectedCategoryKey: 's-2|' })))).toEqual(['c-3']);
+  });
+
+  it('lets a Super-only host category take every club under that Super, with or without a Sub', () => {
+    const superOnly = [{ super_category_id: 's-1', sub_category_id: null }];
+    expect(clubIds(filterClubs(clubs, opts({ hostCategories: superOnly })))).toEqual(['c-1', 'c-2', 'c-5']);
+  });
+
+  it('does not over-filter a host with no usable categories', () => {
+    expect(clubIds(filterClubs(clubs, opts({ hostCategories: [] })))).toEqual(['c-1', 'c-2', 'c-3', 'c-4', 'c-5']);
+    const subOnly = [{ super_category_id: null, sub_category_id: 'sub-1' }];
+    expect(clubIds(filterClubs(clubs, opts({ hostCategories: subOnly })))).toEqual(['c-1', 'c-2', 'c-3', 'c-4', 'c-5']);
+  });
+
+  it('narrows a physical pod to the chosen city, then the chosen locality', () => {
+    const all = opts({ hostCategories: [] });
+    expect(clubIds(filterClubs(clubs, { ...all, locationId: 'blr' }))).toEqual(['c-1', 'c-2', 'c-4']);
+    expect(clubIds(filterClubs(clubs, { ...all, locationId: 'blr', locality: 'HSR' }))).toEqual(['c-2']);
+    // A club with no locality never matches a picked locality.
+    expect(clubIds(filterClubs(clubs, { ...all, locationId: 'del', locality: 'Saket' }))).toEqual([]);
+  });
+
+  it('skips the city and locality filter for a virtual pod', () => {
+    const virtual = opts({ podMode: 'VIRTUAL', locationId: 'mum', locality: 'Bandra' });
+    expect(clubIds(filterClubs(clubs, virtual))).toEqual(['c-1', 'c-3']);
   });
 });

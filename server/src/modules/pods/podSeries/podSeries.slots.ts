@@ -12,8 +12,10 @@ export interface SeriesSlotMatch {
   slotId: string | null;
   price: number | null;
   reason: IPodSeriesSkip['reason'] | null;
-  /** The venue has no slot here: one is requested, and opened when the venue accepts. */
+  /** Legacy: a date once requested from the venue. No longer produced — there are no requests. */
   onRequest: boolean;
+  /** An instant booking of this date's window at the venue's own pricing. */
+  booking?: Record<string, unknown> | null;
 }
 
 /** The host's first slot — the pattern, and the price, every later date repeats. */
@@ -65,11 +67,10 @@ interface NearSlot {
 
 /**
  * Pairs each date with the venue's slot for it. A date books the venue's
- * identical slot (same space, same times) when it is still AVAILABLE. When the
- * venue has no slot touching that window at all, the date is still offered —
- * ON REQUEST, at the first slot's price — and the slot is opened only if the
- * venue accepts. A date is refused when the venue is on leave, or when some
- * other slot already covers that time (taken, or a different window).
+ * identical slot (same space, same times) when it is still AVAILABLE. A date
+ * is refused when the venue is on leave, when some other slot already covers
+ * that time (taken, or a different window), or when the venue has no slot
+ * there at all — there are no requests to the venue any more.
  * One query for the slots and one for the venue's leave, however many dates.
  */
 export async function matchSeriesSlots(first: FirstSlot, windows: SeriesWindow[]): Promise<SeriesSlotMatch[]> {
@@ -101,6 +102,7 @@ export async function matchSeriesSlots(first: FirstSlot, windows: SeriesWindow[]
     }
     if (open) return { ...at, slotId: String(open._id), price: open.price ?? 0, reason: null, onRequest: false };
     if (touching.length) return { ...at, slotId: null, price: null, reason: 'TAKEN' as const, onRequest: false };
-    return { ...at, slotId: null, price: first.price ?? 0, reason: null, onRequest: true };
+    // No request to the venue any more: a date the venue has no slot for cannot run.
+    return { ...at, slotId: null, price: null, reason: 'NO_SLOT' as const, onRequest: false };
   });
 }

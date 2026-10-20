@@ -2,6 +2,7 @@ import { Stack, Typography } from '@mui/material';
 import type { SocialCredential } from '@duncit/utils';
 import GoogleSignInButton from './GoogleSignInButton';
 import { AppleSignInButton, useAppleWebConfig } from './apple-sign-in';
+import TruecallerCell from './truecaller/TruecallerCell';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -14,10 +15,11 @@ interface Props {
 }
 
 /**
- * Google and Apple as a row of round buttons, each captioned with the
- * provider's name — the redesigned login and signup screens share it so the
- * two doors cannot drift apart. Apple renders nothing until the Tech portal is
- * configured, so the row is just Google then. Native twin:
+ * Google, Apple and Truecaller as a row of round buttons, each captioned with
+ * the provider's name — the redesigned login and signup screens share it so
+ * the two doors cannot drift apart. Apple and Truecaller render nothing until
+ * the Tech portal is configured (Truecaller also only on Android), so the row
+ * is just Google then. Native twin:
  * app/mobile-app/src/components/SocialRoundButtons.
  */
 export default function SocialRoundButtons({ intent, loading, onCredential, onError }: Readonly<Props>) {
@@ -41,6 +43,7 @@ export default function SocialRoundButtons({ intent, loading, onCredential, onEr
         </Typography>
       </Stack>
       <AppleCell intent={intent} loading={loading} onCredential={onCredential} onError={onError} />
+      <TruecallerCell intent={intent} loading={loading} onError={onError} />
     </Stack>
   );
 }

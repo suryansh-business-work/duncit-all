@@ -15,6 +15,10 @@ export const ENV_CATEGORIES = gql`
       label
       docUrl
       apiDocsUrl
+      description
+      groupKey
+      groupLabel
+      groupDescription
       fields { name label secret number bool phone hint }
     }
   }
@@ -197,6 +201,10 @@ export interface EnvCategoryDef {
   fields: EnvFieldDef[];
   docUrl?: string | null;
   apiDocsUrl?: string | null;
+  description?: string | null;
+  groupKey: string;
+  groupLabel: string;
+  groupDescription?: string | null;
 }
 
 export interface EnvEntry {

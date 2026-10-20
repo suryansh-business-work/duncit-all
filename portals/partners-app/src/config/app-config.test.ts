@@ -27,7 +27,7 @@ const VENUE_OPTION_ROUTES = [
   '/venues/dashboard',
   '/register-venue',
   '/venues/requests',
-  '/venues/availability',
+  '/venues/pricing',
   '/venues/settings',
   '/venues/earnings',
   '/venues/publish',
@@ -35,7 +35,6 @@ const VENUE_OPTION_ROUTES = [
   '/venues/pods',
   '/venues/change-requests',
   '/venues/pod-requests',
-  '/venues/event-requests',
   '/venues/nearby-hosts',
   '/verification',
   '/wallet',
@@ -108,7 +107,7 @@ describe('buildNav', () => {
     expect(routes(buildNav(['VENUE_OWNER']))).not.toContain('/venues/auto-pods');
     expect(routes(buildNav(['VENUE_OWNER'], { autoPods: false }))).not.toContain('/venues/auto-pods');
     const [venue, food] = buildNav(['VENUE_OWNER'], { autoPods: true });
-    // In catalogue order: after Slot Requests, before Availability.
+    // In catalogue order: after Workshop & Event Requests, before the Venue Pricing Module.
     expect(childRoutes(venue)).toEqual([
       ...VENUE_OPTION_ROUTES.slice(0, 4),
       '/venues/auto-pods',

@@ -33,6 +33,7 @@ export const ENV_CATEGORIES = [
   'GODADDY',
   'CLOUDFLARE',
   'SOCIAL_APPS',
+  'TRUECALLER',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

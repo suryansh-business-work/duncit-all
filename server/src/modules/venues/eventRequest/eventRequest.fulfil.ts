@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { appDate, appTime } from '@utils/app-time';
 import { podLink } from '@modules/venues/venueFood/venueSubscriber.service';
-import { EventRequestModel, type EventRequestTarget } from './eventRequest.model';
+import { EventRequestModel, LIVE_EVENT_REQUEST_STATUSES, type EventRequestTarget } from './eventRequest.model';
 
 /**
  * A pod just went live: every OPEN request to its venue or to one of its hosts
@@ -74,7 +74,8 @@ async function run(facts: PodLiveFacts) {
   if (targets.length === 0) return;
   const podId = new Types.ObjectId(facts.podId);
   const result = await EventRequestModel.updateMany(
-    { status: 'OPEN', $or: targets },
+    // An accepted or countered ask is still waiting for its event, so it closes too.
+    { status: { $in: LIVE_EVENT_REQUEST_STATUSES }, $or: targets },
     { $set: { status: 'FULFILLED', fulfilled_pod_id: podId, closed_at: new Date(), closed_by_id: null } }
   );
   if (result.modifiedCount === 0) return;

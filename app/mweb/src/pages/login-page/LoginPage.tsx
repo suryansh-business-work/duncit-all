@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation } from 'react-router';
 import {
   claimGoogleSignupHandoff,
   createGoogleSignupClaims,
@@ -9,19 +9,13 @@ import {
 import AuthBackground from '../../components/AuthBackground';
 import { type LoginSubmitValues } from '../../forms/login';
 import { parseApiError } from '../../utils/parseApiError';
-import {
-  getSafeRedirectPath,
-  postAuthPath,
-  redirectPathFromLocation,
-  type RedirectLocation,
-} from '../../utils/redirect';
 import { LOGIN } from './queries';
+import { useFinishLogin } from './useFinishLogin';
 import GoogleLinkConsentDialog from './GoogleLinkConsentDialog';
 import GoogleSignupInviteDialog from './GoogleSignupInviteDialog';
 import LoginCard, { type LoginStep } from './LoginCard';
 import { useOtpLogin } from './useOtpLogin';
 import { useSocialLogin } from './useSocialLogin';
-import { useStartSession } from '../../user-info/useStartSession';
 
 /** Which carried credential this tab has already logged in with — module scope
  * so it outlives the remount it guards against (see RegisterPage's twin). */
@@ -32,20 +26,9 @@ export default function LoginPage() {
   // URL: it is a choice of method, not a place — a shared /login link should
   // always open on the options.
   const [step, setStep] = useState<LoginStep>('CHOOSE');
-  const navigate = useNavigate();
   const location = useLocation();
   const [loginMutation, { loading, error }] = useMutation<any>(LOGIN);
-  const { start: startSession, starting } = useStartSession();
-
-  const finishLogin = async (token: string, user: any) => {
-    await startSession(token);
-    const params = new URLSearchParams(location.search);
-    const stateFrom = (location.state as { from?: RedirectLocation } | null)?.from;
-    const redirect =
-      getSafeRedirectPath(params.get('redirect')) ||
-      getSafeRedirectPath(stateFrom ? redirectPathFromLocation(stateFrom) : '');
-    navigate(postAuthPath(user?.onboarding_survey_completed !== false, redirect), { replace: true });
-  };
+  const { finishLogin, starting } = useFinishLogin();
 
   // Continue with OTP shares the same landing: a correct code hands its token
   // to the same finishLogin every other method spends.

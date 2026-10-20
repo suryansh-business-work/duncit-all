@@ -63,12 +63,54 @@ describe('usePotentialEarnings', () => {
     // No client-side multiplication — the server bills (spots - 1).
     expect(mockRequest).toHaveBeenCalledWith(
       expect.anything(),
-      { pod_amount: 1000, no_of_spots: 2, venue_id: 'v1', venue_amount: 300 },
+      {
+        pod_amount: 1000,
+        no_of_spots: 2,
+        venue_id: 'v1',
+        venue_amount: 300,
+        venue_commission_on_top: null,
+      },
       { auth: true },
     );
     expect(result.current.projection?.payable_spots).toBe(1);
     expect(result.current.waterfall?.host_receives).toBe(454.58);
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it('sends an instant booking’s venue payout and Duncit’s commission on top', async () => {
+    mockRequest.mockResolvedValue(preview);
+    const { result } = renderHook(() => usePotentialEarnings(1000, 2, 'v1', 1180, 59));
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(result.current.waterfall).not.toBeNull());
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        pod_amount: 1000,
+        no_of_spots: 2,
+        venue_id: 'v1',
+        venue_amount: 1180,
+        venue_commission_on_top: 59,
+      },
+      { auth: true },
+    );
+  });
+
+  it('asks again when only the commission on top changes', async () => {
+    mockRequest.mockResolvedValue(preview);
+    const { rerender } = renderHook(
+      ({ fee }: { fee: number | null }) => usePotentialEarnings(1000, 2, 'v1', 1180, fee),
+      { initialProps: { fee: 59 } },
+    );
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(1));
+    rerender({ fee: 70 });
+    act(() => jest.advanceTimersByTime(400));
+    await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(2));
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ venue_commission_on_top: 70 }),
+      { auth: true },
+    );
   });
 
   it('clears a stale projection when the amount drops to zero', async () => {

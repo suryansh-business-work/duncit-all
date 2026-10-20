@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import LinkIcon from '@mui/icons-material/Link';
 import { DuncitButton } from '@duncit/buttons';
 import TemplateEditorPanel from './TemplateEditorPanel';
 import { FillViewport, SidebarList } from '@duncit/ui';
 import CreateTemplateDialog from './CreateTemplateDialog';
 import SendTestDialog from './SendTestDialog';
+import ConnectFragmentsDialog from './ConnectFragmentsDialog';
 import { useEmailTemplateEditor } from './useEmailTemplateEditor';
 import { fragmentFilterOptions, templateSidebarItems } from './sidebar-items';
 import { useTranslation } from '@duncit/app-settings';
@@ -16,6 +18,7 @@ export default function EmailTemplatesPage() {
   const editor = useEmailTemplateEditor();
   const [createOpen, setCreateOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
 
   // The header/footer filter lives in the URL, because that is how the
   // Fragments page answers "where is this fragment consumed?" — it links to
@@ -61,9 +64,17 @@ export default function EmailTemplatesPage() {
             looked up by <code>slug</code> from server code.
           </Typography>
         </Box>
-        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
-          New template
-        </DuncitButton>
+        <Stack direction="row" spacing={1}>
+          {/* describeChild: the hint describes the button; its name stays the visible label. */}
+          <Tooltip describeChild title={t('tech.emailTemplates.connectFragmentsHint')}>
+            <DuncitButton startIcon={<LinkIcon />} onClick={() => setConnectOpen(true)}>
+              {t('tech.emailTemplates.connectFragments')}
+            </DuncitButton>
+          </Tooltip>
+          <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+            New template
+          </DuncitButton>
+        </Stack>
       </Stack>
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
@@ -107,6 +118,7 @@ export default function EmailTemplatesPage() {
             onImportDetected={editor.importDetected}
             onSave={editor.save}
             onDelete={editor.onDelete}
+            onReset={editor.onReset}
             onSendTest={() => setTestOpen(true)}
           />
         ) : (
@@ -126,6 +138,21 @@ export default function EmailTemplatesPage() {
           await editor.refetch();
           editor.setSelected(id);
           editor.setSnack({ kind: 'success', msg: 'Template created' });
+        }}
+        onError={(msg) => editor.setSnack({ kind: 'error', msg })}
+      />
+
+      <ConnectFragmentsDialog
+        open={connectOpen}
+        fragmentOptions={editor.fragmentOptions}
+        onClose={() => setConnectOpen(false)}
+        onDone={async (connected) => {
+          setConnectOpen(false);
+          await editor.refetch();
+          editor.setSnack({
+            kind: 'success',
+            msg: t('tech.emailTemplates.connectFragmentsDone', { vars: { count: connected } }),
+          });
         }}
         onError={(msg) => editor.setSnack({ kind: 'error', msg })}
       />

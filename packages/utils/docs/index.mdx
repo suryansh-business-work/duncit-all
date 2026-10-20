@@ -213,6 +213,15 @@ exports:
   - 'VenueBillLine'
   - 'VenueBillTerms'
   - 'VenueBillTranslate'
+  - 'DATE_OVERRIDE_RULE'
+  - 'dateOverrideOn'
+  - 'dayRate'
+  - 'priceRuleMatches'
+  - 'toggleDayKey'
+  - 'weekdayOfDay'
+  - 'withDateOverride'
+  - 'withoutDateOverride'
+  - 'PriceRuleLike'
   - 'TicketDiscountLabels'
   - 'TicketDiscountLimits'
   - 'TicketDiscountTranslate'
@@ -526,9 +535,10 @@ exports:
   - 'podRowStatus'
   - 'canOpenPodAttendance'
   - 'clubAdminVenueOptions'
-  - 'clubLacksOpenSlots'
-  - 'CLUB_SLOT_REQUEST_NOTICE_KEY'
-  - 'clubSlotsLabel'
+  - 'filterClubs'
+  - 'hostCategoryKeyOf'
+  - 'venueSpaces'
+  - 'bookingCalendarProps'
   - 'podRowStatusLabel'
   - 'podRowStatusOptions'
   - 'POD_ROW_STATUS_COLORS'
@@ -1197,18 +1207,17 @@ coinLedgerLabelKey({ type: 'DEBIT', source: 'COIN_EXPIRY' })     // 'mweb.coin.e
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `isFreePod` | `(podType?: string \| null) => boolean` | `true` only for `'FREE'` — the one free pod type, physical or virtual. |
-| `freePodVenueNotice` | `({ podType, slotPrice, ownVenue, slotConfirmed }) => FreePodVenueNotice` | What Create Pod tells the host of a free pod about the venue's charges: `'NONE'`, `'SETTLE'` or `'SETTLE_BEFORE_APPROVAL'`. |
+| `freePodVenueNotice` | `({ podType, slotPrice, ownVenue }) => FreePodVenueNotice` | What Create Pod tells the host of a free pod about the venue's charges: `'NONE'` or `'SETTLE'`. |
 
 A free pod collects nothing, so Duncit pays the venue nothing: the host settles the venue's
 charges with the venue directly. The note appears only for a FREE pod on a slot priced above 0
 at a venue the host does not own — a slot priced 0 and the host's own venue book instantly and
-say nothing. A slot a Pod Request already confirmed (`slotConfirmed`) is `'SETTLE'`: the venue
-is still owed, but there is no approval left to hold back. mWeb and the native app both read
+say nothing. Bookings are instant (no venue approval), so there is no approval line to add.
+mWeb and the native app both read
 this one rule and only word and draw the note themselves.
 
 ```ts
-freePodVenueNotice({ podType: 'FREE', slotPrice: 1500 })                      // 'SETTLE_BEFORE_APPROVAL'
-freePodVenueNotice({ podType: 'FREE', slotPrice: 1500, slotConfirmed: true }) // 'SETTLE'
+freePodVenueNotice({ podType: 'FREE', slotPrice: 1500 })                      // 'SETTLE'
 freePodVenueNotice({ podType: 'FREE', slotPrice: 1500, ownVenue: true })      // 'NONE'
 freePodVenueNotice({ podType: 'FREE', slotPrice: 0 })                         // 'NONE'
 freePodVenueNotice({ podType: 'PAID', slotPrice: 1500 })                      // 'NONE'
@@ -1829,9 +1838,8 @@ Nothing here touches React or a date library.
 | `podRowStatus` | `(pod) => PodRowStatus` | Which of the six statuses a row is in, from `is_deleted`, `completed_at`, `venue_approval_status` and `is_active` — in that precedence, the same one the server's `PodRowStatus` enum filters by. |
 | `canOpenPodAttendance` | `(pod) => boolean` | Only an `ACTIVE` or `COMPLETED` pod offers the attendance board; a draft, a venue-blocked or a cancelled pod has no door to have stood at. |
 | `clubAdminVenueOptions` | `(publicVenues, owned, club) => T[]` | The venues a Club Admin may book a pod into: the public list (plus their own, so a venue-owning admin keeps theirs), narrowed to the club's `meetup_venues_id` **only when it has any**. An empty link list means "never attached", not "may use none" — reading it as a whitelist is what made the portals' picker dead. A venue with no `status` came from `publicVenues`, which the server already filtered, so it counts as bookable. |
-| `clubLacksOpenSlots` | `(club, podMode) => boolean` | Whether Create Pod step 1 must stop a host from picking this club: a **physical** pod books a venue slot and `available_slots_count` is 0 (or missing). A virtual pod, or no club picked yet, is never stopped. mWeb and the native app both ask it before setting `club_id`. |
-| `CLUB_SLOT_REQUEST_NOTICE_KEY` | `Record<ClubSlotRequestOutcome, string>` | The `mweb.createPod.slotRequest*` key each answer from `requestClubVenueSlots` shows, so both apps word the outcome identically. |
-| `clubSlotsLabel` | `(club, t) => { open, label }` | "4 open slots" / "No open slots" for a club (`mweb.createPod.clubSlots` / `clubNoSlots`). `open` is false at a zero or missing count and drives the warning tint on both apps. |
+| `filterClubs` | `(clubs, { hostCategories, selectedCategoryKey, locationId, locality, podMode }) => C[]` | The clubs Create Pod offers: the selected host category (Super + Sub) — or all of the host's categories when none is picked — then, for a physical pod, the city and (optionally) the locality. mWeb and native read this one rule. |
+| `hostCategoryKeyOf` | `(category) => string` | `super_id\|sub_id` — the key the category picker and `filterClubs` both match on. |
 | `podRowStatusLabel` / `podRowStatusOptions` | `(status, t)` / `(t)` | The chip's words, and the filter's rows ("All statuses" first, then `POD_ROW_STATUS_ORDER`). |
 | `POD_ROW_STATUS_COLORS` | `Record<PodRowStatus, StatusTone>` | The chip's tone — `default` / `info` / `success` / `warning` / `error`, which MUI's `Chip` takes as-is. |
 | `podAuditActionLabel` / `podAuditSourceLabel` / `podAuditRiskLabel` | `(value, t) => string` | What an audit entry says it was, who did it and how risky the monitor scored it. |
@@ -2030,6 +2038,29 @@ SOCIAL_PROMPT_COPY.EXISTS.accept; // 'mweb.signup.existingAccountLogin'
 and a navigation param survives a remount, so it is reading something possibly stale. Anything
 that is not a complete, non-blank pair reads as `null` — signup opened normally, which is the
 safe reading of a malformed one.
+
+### Truecaller proves the number, not an address
+
+`truecaller-auth` is a different kind of door: Truecaller vouches for the SIM somebody is
+holding, so the server's `loginWithTruecaller` either signs that number's account in or answers
+`SIGNUP_REQUIRED` with a `TruecallerSignupProof` — the same one-shot `whatsapp_token` a WhatsApp
+code earns. Signup then skips the code step for that number and only that number.
+
+| Export | What it answers |
+| --- | --- |
+| `readTruecallerSignupProof(value)` | A proof read off router state / a navigation param, or `null` for anything not whole |
+| `truecallerSignupPrefill(proof)` | The form values the proof may start signup from — name, email, number, `whatsappIsMobile: true` |
+| `truecallerTokenFor(proof, fields)` | The proof's token when the form's number is the proven one, else `null` (ask for a code) |
+| `TRUECALLER_SIGNUP_STATE_KEY` | The navigation-state key the proof travels under, login → signup |
+| `TRUECALLER_COPY` | Literal copy keys for the button, its failures and the signup banner |
+| `TRUECALLER_WEB_POLL_MS` / `TRUECALLER_WEB_TIMEOUT_MS` | How the mobile-web page waits for Truecaller's callback |
+
+```ts
+const proof = readTruecallerSignupProof(location.state?.truecallerSignup);
+const values = { ...registerDefaults, ...truecallerSignupPrefill(proof) };
+truecallerTokenFor(proof, { phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMobile: true });
+// 'otpId.secret' when that is the proven number — spend it on register; null → send a code
+```
 
 ## The referral link and its message
 
@@ -3461,7 +3492,8 @@ server refuses a discount that would leave a date unable to cover its venue.
 | `endOfDayInZone(ymd, timeZone)` | The last moment of a calendar day in the admin zone, as ISO — what `ends_on` carries. |
 | `ymdInZone(iso, timeZone)` | The calendar day an instant falls on in the admin zone — where the host's calendar marks a date. |
 | `customDateStart(firstIso, ymd, timeZone)` | A tapped calendar day at the first date's time of day, as ISO — what `custom_dates` carries. |
-| `buildPodSeriesPlan(source, timeZone)` | The plan to preview/publish, or null while repeat is off or the first date is not chosen. `CUSTOM` sends the tapped days (`repeat_custom_days`) and skips nothing. |
+| `startOfDayInZone(ymd, timeZone)` | Local midnight of a calendar day in the admin zone, as epoch ms — what the venue booking grid counts from. |
+| `buildPodSeriesPlan(source, timeZone)` | The plan to preview/publish, or null while repeat is off or the first date is not chosen. `CUSTOM` sends the tapped days (`repeat_custom_days`) and skips nothing. A physical pod with no slot id carries `venue_booking` (instant booking of the first date); each later date is the same window on its day, and a date the venue cannot take comes back `available: false` with `HOLIDAY` / `TAKEN` / `NO_SLOT`. |
 | `groupSlotRequestsBySeries(rows, keyOf)` | A venue's pending requests with each series folded into one group, dates in order. |
 | `POD_SERIES_PREVIEW_SDL` / `POD_SERIES_LIMITS_SDL` / `PUBLISH_POD_DRAFT_SERIES_SDL` / `VENUE_DECIDE_POD_SERIES_SDL` | The documents, as SDL strings. |
 
@@ -3471,6 +3503,38 @@ const plan = buildPodSeriesPlan(
   'Asia/Kolkata',
 );
 // plan.custom_dates → each day at the first date's time, e.g. '2026-11-09T13:30:00.000Z'
+```
+
+### Booking a venue instantly — `venue-booking`
+
+Create Pod books a venue at the venue's own pricing (Venue Pricing Module) — no request, no
+approval. The server owns every rule: `venueBookingCalendar` (at most 62 days a call) says which
+days and times are open, `venuePriceQuote` prices a window, and the publish re-checks both. This
+module only turns those answers into the host's pickers and the price card, identically in mWeb
+and the native app; it never computes a price.
+
+| Export | Meaning |
+| --- | --- |
+| `VENUE_BOOKING_MODEL_KEY` | How each pricing model (`PER_PAX`, `PER_SLOT`, `PER_HOUR`, `FLAT`) is named to the host, as a key. |
+| `bookingCalendarRange(fromYmd, days?)` | `{ from, to }` for one calendar read, capped at `MAX_BOOKING_CALENDAR_DAYS`. |
+| `bookingStepMinutes(rules)` / `bookingMinMinutes(rules)` / `bookingMaxMinutes(rules)` | The grid step (venue increment, else `DEFAULT_BOOKING_STEP_MINUTES`), the shortest window (PER_HOUR: `min_hours`, never under 30 min) and the longest (PER_HOUR `max_hours`, else none). |
+| `bookingStartOptions(day, rules, timeZone, nowMs)` | Start times on the grid (counted from local midnight, as the server checks it), inside opening hours, with room for the shortest window before closing and before any booked window. `rules.buffer_minutes` (from `venueBookingCalendar`) is kept clear around every booked window, and starts earlier than `nowMs` + `rules.min_notice_minutes` are hidden. |
+| `bookingEndOptions(day, rules, startIso, timeZone)` | End times for that start: on the grid, within min/max length, before closing, stopping short of the next booked window and its buffer. |
+| `bookingTiles(days, rules, timeZone, nowMs)` | What the calendar offers: a PER_SLOT venue's free slots, or every valid start time. Closed days (`closed_reason`) yield none, so they stay disabled. Shaped like `@duncit/slots`' `CalendarSlot`. |
+| `bookingDayOf(days, startIso, timeZone)` / `bookingSlotId(start, end)` | The loaded day holding a start; a slot tile's id. |
+| `clampBookingPax(pax, minPax, maxPax)` | PER_PAX guests held inside the venue's range (`max 0` = no cap). |
+| `WHOLE_VENUE_SPACE` / `bookingSpaceLabel(label)` | The stored "whole venue" space both apps offer when a venue lists no capacity items, and the `space_label` a booking sends for a picked space (`''` for the whole venue). |
+| `bookingCalendarProps({ tiles, loading, error, selectedId, onPick })` | The props both apps hand their `SlotCalendar` for an instant booking (a pick resolves back to its `BookingTile`; a window is required; prices stay off the calendar). |
+| `venueSpaces(venue)` | The bookable spaces of a venue: its named capacity items (`slotSpaceLabel` = the item label), else one `WHOLE_VENUE_SPACE` at the venue capacity (`slotSpaceLabel` `''`). Empty for no venue. |
+| `instantBookingInput(source)` | The `venue_booking` input (`start_at`, `end_at`, `pax`, `pets`, `space_label`), or null until a window is picked. |
+| `venueQuoteLines(quote, money)` | The price card: base, each rule applied, min-spend top-up, cleaning / pet fees, taxes and Duncit's fee (on top), as `{ labelKey, label?, vars, amount }` rows, plus `total` (the whole cost to the pod — what the shortfall check compares; the earnings preview sends the quote's `venue_payout` as `venue_amount` and its `platform_fee` as `venue_commission_on_top`) and the refundable `deposit` (paid at the venue, never in the total). |
+| `VENUE_BOOKING_PRICING_SDL` / `VENUE_BOOKING_CALENDAR_SDL` / `VENUE_PRICE_QUOTE_SDL` | The host-side documents, as SDL strings. |
+
+```ts
+const tiles = bookingTiles(calendar.days, pricing, 'Asia/Kolkata', Date.now());
+const ends = bookingEndOptions(day, pricing, picked.start_at, 'Asia/Kolkata');
+const booking = instantBookingInput({ start, end, pax: 0, pets: false, spaceLabel: '' });
+const { lines, total, deposit } = venueQuoteLines(data.venuePriceQuote, (v) => formatStatementMoney(v, '₹'));
 ```
 
 ### Booking a recurring pod — `pod-series-booking`
@@ -4295,3 +4359,34 @@ profileSectionSubtitleKeys(explore?.items ?? []);
 
 Renderers: mWeb `profile-drawer/UserModeContent` + `MenuSections`, native
 `components/Sidebar/SidebarUserContent` + `SidebarSections`.
+
+## The Venue Pricing Module calendar — `venue-price-rules`
+
+A venue owner edits one date of their pricing from a calendar: a DATE_OVERRIDE price, a blocked
+date. The server replaces the whole pricing on save, so the page edits the saved rule list and sends
+all of it back. The booking price is only ever computed on the server (`venuePriceQuote`); `dayRate`
+is the calendar cell's at-a-glance rate, built with the server's stacking rule (an override on the
+day wins outright; otherwise weekday surcharges and date ranges each apply on the base).
+
+```ts
+import { dateOverrideOn, dayRate, toggleDayKey, withDateOverride, withoutDateOverride } from '@duncit/utils';
+
+dayRate(1000, pricing.price_rules, '2026-10-24'); // 1200 with a +20% Saturday surcharge
+dateOverrideOn(pricing.price_rules, '2026-12-25'); // the override pricing Christmas, if any
+const rules = withDateOverride(pricing.price_rules, '2026-12-25', {
+  type: 'DATE_OVERRIDE', mode: 'FLAT', value: 500, label: '', dates: [],
+});
+withoutDateOverride(rules, '2026-12-25'); // back as it was — an emptied override is dropped
+toggleDayKey(pricing.blocked_dates, '2026-12-31'); // block / unblock, kept sorted
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `weekdayOfDay` | `(day) => number` | 0 = Sunday … 6, zone-independent. |
+| `priceRuleMatches` | `(rule, day, weekday) => boolean` | Whether one rule applies on the day. |
+| `dateOverrideOn` | `(rules, day) => rule \| undefined` | The override that prices the day. |
+| `withDateOverride` / `withoutDateOverride` | `(rules, day, override?) => rules` | Set / clear the day's own override. |
+| `toggleDayKey` | `(days, day) => string[]` | Add or remove a day, sorted. |
+| `dayRate` | `(baseRate, rules, day) => number` | The day's per-unit rate after its rules, never below zero. |
+
+Renderers: native `screens/VenuePricingScreen` (`components/venue-pricing`).

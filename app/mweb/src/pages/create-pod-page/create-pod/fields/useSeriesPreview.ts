@@ -5,6 +5,7 @@ import {
   POD_SERIES_LIMITS_SDL,
   POD_SERIES_PREVIEW_SDL,
   buildPodSeriesPlan,
+  instantBookingInput,
   multiDateTiersFromEditor,
   type MultiDateDiscountTier,
   type PodSeriesPlan,
@@ -40,11 +41,21 @@ interface PreviewData {
 
 /** The values the plan is built from — the form's, with Dates as ISO. */
 export function seriesPlanOf(values: CreatePodFormValues, timeZone: string): PodSeriesPlan | null {
+  const start = values.pod_date_time ? values.pod_date_time.toISOString() : null;
+  const end = values.pod_end_date_time ? values.pod_end_date_time.toISOString() : null;
   return buildPodSeriesPlan(
     {
       ...values,
-      pod_date_time: values.pod_date_time ? values.pod_date_time.toISOString() : null,
-      pod_end_date_time: values.pod_end_date_time ? values.pod_end_date_time.toISOString() : null,
+      pod_date_time: start,
+      pod_end_date_time: end,
+      // The first date's instant booking; a held slot id (an older draft) wins over it.
+      venue_booking: instantBookingInput({
+        start,
+        end,
+        pax: values.venue_booking_pax,
+        pets: values.venue_booking_pets,
+        spaceLabel: values.venue_space_label,
+      }),
       repeat_discount_tiers: values.repeat_discount_enabled
         ? multiDateTiersFromEditor(values.repeat_discount_tiers)
         : [],
@@ -86,6 +97,9 @@ export function useSeriesPreview(values: CreatePodFormValues) {
       values.pod_mode,
       values.venue_id,
       values.venue_slot_id,
+      values.venue_space_label,
+      values.venue_booking_pax,
+      values.venue_booking_pets,
       startMs,
       endMs,
       timeZone,

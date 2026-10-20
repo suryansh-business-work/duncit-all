@@ -24,6 +24,10 @@ jest.mock('@modules/venues/venueSlot/venueSlot.model', () => ({
 }));
 jest.mock('@modules/venues/venueSlot/venueSlot.service', () => ({
   venueSlotService: { transferAutoPodHold: jest.fn(), holdForPod: jest.fn(), bookForPod: jest.fn() },
+  notifyInstantBooking: jest.fn(() => Promise.resolve()),
+}));
+jest.mock('@modules/venues/venuePricing/venuePricing.service', () => ({
+  venuePricingService: { freezeSlotPrice: jest.fn(() => Promise.resolve(null)) },
 }));
 jest.mock('@modules/platform/whatsapp/whatsapp.service', () => ({ whatsappService: { send: jest.fn() } }));
 jest.mock('@modules/platform/whatsapp/whatsapp.assets', () => ({
@@ -57,7 +61,8 @@ import { LocationModel } from '@modules/platform/location/location.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { venueService } from '@modules/venues/venue/venue.service';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
-import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { notifyInstantBooking, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { venuePricingService } from '@modules/venues/venuePricing/venuePricing.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { sendVenueSlotRequestEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
@@ -78,6 +83,8 @@ const sendEmail = sendVenueSlotRequestEmail as jest.Mock;
 const urlConfigs = getUrlConfigs as jest.Mock;
 const notifCreate = notificationService.create as jest.Mock;
 const logError = logs.server.error as jest.Mock;
+const instantNotice = notifyInstantBooking as jest.Mock;
+const freezePrice = venuePricingService.freezeSlotPrice as jest.Mock;
 
 /** A mongoose query stand-in: awaitable, `.select()`-able and `.lean()`-able. */
 const q = (value: unknown) => {
@@ -728,13 +735,13 @@ describe('resolveSlotForCreate', () => {
     });
   });
 
-  it("another partner's venue needs its approval; the slot window overwrites the form's", async () => {
+  it("another partner's open slot books instantly (no venue approval); the slot window overwrites the form's", async () => {
     const doc = slotDoc();
     slots.findById.mockResolvedValue(doc);
     venues.findById.mockReturnValue(q({ settings: { holidays: ['2026-11-02'] } }));
     const input: any = { venue_slot_id: SLOT, pod_hosts_id: [USER], pod_date_time: 'stale', pod_end_date_time: 'stale' };
 
-    await expect(resolveSlotForCreate(input, 'PHYSICAL')).resolves.toEqual({ slotDoc: doc, needsVenueApproval: true });
+    await expect(resolveSlotForCreate(input, 'PHYSICAL')).resolves.toEqual({ slotDoc: doc, needsVenueApproval: false });
     expect(input).toMatchObject({
       venue_id: VENUE,
       pod_date_time: start.toISOString(),
@@ -751,11 +758,11 @@ describe('resolveSlotForCreate', () => {
     ).resolves.toMatchObject({ needsVenueApproval: false });
   });
 
-  it('a pod with no hosts listed needs the venue approval', async () => {
+  it('a pod with no hosts listed books instantly too', async () => {
     slots.findById.mockResolvedValue(slotDoc());
     venues.findById.mockReturnValue(q({ settings: {} }));
     await expect(resolveSlotForCreate({ venue_slot_id: SLOT }, 'PHYSICAL')).resolves.toMatchObject({
-      needsVenueApproval: true,
+      needsVenueApproval: false,
     });
   });
 });
@@ -808,17 +815,34 @@ describe('bookOrHoldSlotForPod', () => {
     expect(pod.deleteOne).toHaveBeenCalledTimes(1);
   });
 
-  it('books your own venue outright and tells nobody', async () => {
+  it('books your own venue outright, freezes its price and tells nobody', async () => {
     const pod = makePod();
     slotSvc.bookForPod.mockResolvedValue(undefined);
 
-    await bookOrHoldSlotForPod(pod, slot, false);
+    await bookOrHoldSlotForPod(pod, { ...slot, owner_user_id: USER }, false);
 
     expect(slotSvc.bookForPod).toHaveBeenCalledWith(SLOT, VENUE, String(podId));
+    expect(freezePrice).toHaveBeenCalledWith(SLOT, 0);
     expect(slotSvc.holdForPod).not.toHaveBeenCalled();
     await flush();
+    expect(instantNotice).not.toHaveBeenCalled();
     expect(notifCreate).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
+    expect(pod.deleteOne).not.toHaveBeenCalled();
+  });
+
+  it("books another partner's open slot instantly, freezes its price and tells the venue it is confirmed", async () => {
+    const pod = { ...makePod(), no_of_spots: 12 };
+    slotSvc.bookForPod.mockResolvedValue(undefined);
+    const frozen = { ...slot, price_snapshot: { venue_payout: 1500 } };
+    freezePrice.mockResolvedValueOnce(frozen);
+
+    await bookOrHoldSlotForPod(pod, slot, false);
+    await flush();
+
+    expect(freezePrice).toHaveBeenCalledWith(SLOT, 12);
+    expect(instantNotice).toHaveBeenCalledWith(pod, frozen, '');
+    expect(slotSvc.holdForPod).not.toHaveBeenCalled();
     expect(pod.deleteOne).not.toHaveBeenCalled();
   });
 

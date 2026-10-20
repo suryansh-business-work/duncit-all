@@ -8,6 +8,7 @@
  * plan the server is asked about. Booking it: pod-series-booking.ts.
  */
 import type { MultiDateDiscountTier } from './pod-series-booking';
+import type { InstantBooking } from './venue-booking';
 
 export type PodSeriesFrequency = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'CUSTOM';
 
@@ -92,11 +93,25 @@ export function endOfDayInZone(ymd: string, timeZone: string): string | null {
   return new Date(wall - zoneOffsetMs(new Date(wall), timeZone)).toISOString();
 }
 
+/**
+ * The first moment (local midnight) of calendar day `ymd` in `timeZone`, as
+ * epoch ms — what a venue's booking grid counts its minutes from. NaN for a
+ * value that is not a calendar day.
+ */
+export function startOfDayInZone(ymd: string, timeZone: string): number {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim());
+  if (!match) return Number.NaN;
+  const wall = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return wall - zoneOffsetMs(new Date(wall), timeZone);
+}
+
 /** What `podSeriesPreview` and `publishPodDraftSeries` are asked about. */
 export interface PodSeriesPlan {
   pod_mode: string;
   venue_id: string | null;
   venue_slot_id: string | null;
+  /** Instant booking of the FIRST date at the venue's own pricing (no slot id). */
+  venue_booking?: InstantBooking | null;
   pod_date_time: string | null;
   pod_end_date_time: string | null;
   frequency: PodSeriesFrequency;
@@ -121,28 +136,52 @@ export interface PodSeriesPlanSource {
   pod_mode: string;
   venue_id: string;
   venue_slot_id: string;
+  /** The first date booked instantly at the venue's pricing — when there is no slot id. */
+  venue_booking?: InstantBooking | null;
   pod_date_time: string | null;
   pod_end_date_time: string | null;
 }
 
+/** Where and when the series runs: a venue (slot or instant booking) for a physical pod, times for a virtual one. */
+function whereAndWhen(
+  source: PodSeriesPlanSource,
+  physical: boolean,
+  booking: InstantBooking | null
+): Pick<PodSeriesPlan, 'pod_mode' | 'venue_id' | 'venue_slot_id' | 'venue_booking' | 'pod_date_time' | 'pod_end_date_time'> {
+  if (!physical) {
+    return {
+      pod_mode: 'VIRTUAL',
+      venue_id: null,
+      venue_slot_id: null,
+      pod_date_time: source.pod_date_time,
+      pod_end_date_time: source.pod_end_date_time,
+    };
+  }
+  return {
+    pod_mode: 'PHYSICAL',
+    venue_id: source.venue_id || null,
+    venue_slot_id: source.venue_slot_id || null,
+    ...(booking ? { venue_booking: booking } : {}),
+    pod_date_time: null,
+    pod_end_date_time: null,
+  };
+}
+
 /**
  * The plan for a form, or null while there is none to ask about: repeat is
- * off, the end day is missing, or the first date is not chosen yet (a slot for
- * a physical pod, a start for a virtual one).
+ * off, the end day is missing, or the first date is not chosen yet (a slot or
+ * an instant booking for a physical pod, a start for a virtual one).
  */
 export function buildPodSeriesPlan(source: PodSeriesPlanSource, timeZone: string): PodSeriesPlan | null {
   if (!source.repeat_enabled) return null;
   const endsOn = endOfDayInZone(source.repeat_ends_on, timeZone);
   if (!endsOn) return null;
   const physical = source.pod_mode !== 'VIRTUAL';
-  if (physical ? !source.venue_slot_id : !source.pod_date_time) return null;
+  const booking = physical && !source.venue_slot_id ? (source.venue_booking ?? null) : null;
+  if (physical ? !source.venue_slot_id && !booking : !source.pod_date_time) return null;
   const firstStart = source.repeat_frequency === 'CUSTOM' ? source.pod_date_time : null;
   return {
-    pod_mode: physical ? 'PHYSICAL' : 'VIRTUAL',
-    venue_id: physical ? source.venue_id || null : null,
-    venue_slot_id: physical ? source.venue_slot_id : null,
-    pod_date_time: physical ? null : source.pod_date_time,
-    pod_end_date_time: physical ? null : source.pod_end_date_time,
+    ...whereAndWhen(source, physical, booking),
     frequency: source.repeat_frequency,
     ends_on: endsOn,
     // Hand-picked dates are the plan itself, so nothing is skipped from them.

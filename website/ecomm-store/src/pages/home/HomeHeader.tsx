@@ -2,6 +2,7 @@ import { Avatar, Box, Stack, Typography } from '@mui/material';
 import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
 
 import { useStoreSession } from '../../app/providers/SessionProvider';
+import { useStoreSettings } from '../../app/providers/StoreSettingsProvider';
 import { CircleButton } from '../../components/CircleButton';
 import { DeliverToPill } from '../../components/DeliverToPill';
 import { CartButton, HomeLink } from '../../components/header';
@@ -20,8 +21,12 @@ import { STORE_TOKENS as T } from '../../theme/tokens';
 export function HomeHeader() {
   const { t } = useStoreT();
   const { me, signedIn } = useStoreSession();
+  const { home_greeting: operatorGreeting } = useStoreSettings();
   const pet = me?.pet_profile;
-  const greeting = pet?.name ? t('ecommStore.home.forPet', { vars: { pet: pet.name } }) : t('ecommStore.home.greeting');
+  // A shopper with a named pet is greeted by that name; the operator's line
+  // (Settings) replaces only the built-in greeting everyone else sees.
+  const fallback = operatorGreeting.trim() || t('ecommStore.home.greeting');
+  const greeting = pet?.name ? t('ecommStore.home.forPet', { vars: { pet: pet.name } }) : fallback;
   return (
     <Box sx={{ display: { xs: 'block', md: 'none' } }}>
       <AnnouncementBar />

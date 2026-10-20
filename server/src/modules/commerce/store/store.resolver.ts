@@ -59,6 +59,7 @@ export const storeResolvers = {
     storeSettings: () => storeStorefrontService.settings(),
     storeNavigation: () => storeStorefrontService.navigation(),
     storeHome: () => storeStorefrontService.home(),
+    storePageSections: (_p: unknown, a: { page?: string | null }) => storeStorefrontService.pageSections(a.page),
     storeSearch: (_p: unknown, a: { input: StoreSearchInput }) => storeCatalogService.search(a.input ?? {}),
     storeProduct: (_p: unknown, a: Args) => storeCatalogService.productBySlug(a.slug),
     storeProductsByIds: (_p: unknown, a: Args) => storeCatalogService.productsByIds(a.ids ?? []),

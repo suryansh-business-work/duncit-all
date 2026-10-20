@@ -4,7 +4,10 @@ import { useNavigate } from 'react-router';
 import {
   initialSignupFlowState,
   signupFlowReducer,
+  truecallerDetailsShortcut,
   socialSignupNeedsName,
+  truecallerTokenFor,
+  type TruecallerSignupProof,
   type SignupFlowAction,
   type SignupFlowState,
   type SignupGoogleCredential,
@@ -58,6 +61,8 @@ export function useSignupFlow(linkedCode: string) {
   const [signupGoogle, { loading: creatingGoogle }] = useMutation<any>(SIGNUP_GOOGLE);
   const [signupApple, { loading: creatingApple }] = useMutation<any>(SIGNUP_APPLE);
   const [error, setError] = useState<string | null>(null);
+  /** A number Truecaller proved for this signup — its token stands in for the code. */
+  const [truecallerProof, setTruecallerProof] = useState<TruecallerSignupProof | null>(null);
   const [flow, dispatch] = useReducer(
     signupFlowReducer as FlowReducer,
     initialSignupFlowState<RegisterFormValues>(),
@@ -76,12 +81,6 @@ export function useSignupFlow(linkedCode: string) {
 
   const setStep = (step: SignupStep) => dispatch({ type: 'STEP', step });
 
-  /** The form is filled in; the code step turns it into an account. */
-  const submitForm = (values: RegisterFormValues) => {
-    setError(null);
-    dispatch({ type: 'FORM_FILLED', values });
-  };
-
   /*
     Google (and Apple) prove an address and nothing else, so the credential is
     held — unspent — while its own step (number and date of birth) and the code
@@ -93,9 +92,28 @@ export function useSignupFlow(linkedCode: string) {
     dispatch({ type: 'GOOGLE_ACCEPTED', credential: { ...credential, policyIds } });
   };
 
+  /** The form is filled in; the code step turns it into an account — unless
+   * Truecaller already proved this very number, which IS the code's proof. */
+  const submitForm = async (values: RegisterFormValues) => {
+    setError(null);
+    const proven = truecallerTokenFor(truecallerProof, values);
+    if (proven) {
+      await createWith(() => createFromForm(values, proven));
+      return;
+    }
+    dispatch({ type: 'FORM_FILLED', values });
+  };
+
   /** The Google step's answer: from here the two doors run the same code step. */
-  const submitDetails = (values: GoogleSignupValues) =>
+  const submitDetails = async (values: GoogleSignupValues) => {
+    const shortcut = truecallerDetailsShortcut(truecallerProof, values, flow.pendingGoogle);
+    if (shortcut) {
+      const { google, number, dob, token } = shortcut;
+      await createWith(() => createFromGoogle(google, number, dob, token));
+      return;
+    }
     dispatch({ type: 'DETAILS_GIVEN', values });
+  };
 
   const createFromForm = async (values: RegisterFormValues, whatsappToken: string) => {
     const { first_name, last_name } = splitName(values.name);
@@ -160,24 +178,25 @@ export function useSignupFlow(linkedCode: string) {
    * step itself knows nothing about either.
    */
   const createAccount = async (whatsappToken: string) => {
+    const { pendingGoogle, pendingForm, verifying, googleDob } = flow;
+    await createWith(async () => {
+      if (pendingGoogle && verifying && googleDob !== null) {
+        return createFromGoogle(pendingGoogle, verifying, googleDob, whatsappToken);
+      }
+      return pendingForm ? createFromForm(pendingForm, whatsappToken) : undefined;
+    });
+  };
+
+  /** Make the account one way or the other, and land in it. */
+  async function createWith(make: () => Promise<string | undefined>) {
     setError(null);
     try {
-      let token: string | undefined;
-      if (flow.pendingGoogle && flow.verifying && flow.googleDob !== null) {
-        token = await createFromGoogle(
-          flow.pendingGoogle,
-          flow.verifying,
-          flow.googleDob,
-          whatsappToken,
-        );
-      } else if (flow.pendingForm) {
-        token = await createFromForm(flow.pendingForm, whatsappToken);
-      }
+      const token = await make();
       if (token) await finish(token);
     } catch (e) {
       setError(parseApiError(e));
     }
-  };
+  }
 
   return {
     error,
@@ -195,6 +214,8 @@ export function useSignupFlow(linkedCode: string) {
        Google has no form to have asked it — the credential carries it. */
     pendingEmail: flow.pendingForm?.email,
     submitForm,
+    truecallerProof,
+    setTruecallerProof,
     googleAccepted,
     submitDetails,
     createAccount,

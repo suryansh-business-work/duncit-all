@@ -3,6 +3,7 @@ import { consoleReaders } from '@modules/portals/console-access';
 import type { TableQueryInput } from '@utils/table-query';
 import type { GraphQLContext } from '@context';
 import { eventRequestService, type RequestEventInput } from './eventRequest.service';
+import { respondToEventRequest, type EventRequestOfferInput } from './eventRequest.respond';
 
 type TargetArgs = { target_type: string };
 type TableArgs = TargetArgs & { query?: TableQueryInput | null };
@@ -38,5 +39,10 @@ export const eventRequestResolvers = {
       eventRequestService.request(requireAuth(ctx).id, args.input),
     updateEventRequestStatus: (_p: unknown, args: { id: string; status: string }, ctx: GraphQLContext) =>
       eventRequestService.updateStatus(requireAuth(ctx), args.id, args.status),
+    respondToEventRequest: (
+      _p: unknown,
+      args: { id: string; response: string; note?: string | null; offer?: EventRequestOfferInput | null },
+      ctx: GraphQLContext
+    ) => respondToEventRequest(requireAuth(ctx), args.id, args.response, args.note, args.offer),
   },
 };

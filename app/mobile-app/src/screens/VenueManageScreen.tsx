@@ -13,6 +13,7 @@ import {
   VenueSwitcher,
   useVenueStudioPods,
 } from '@/components/studio';
+import { UpcomingBookingsCard } from '@/components/venue-pricing/UpcomingBookingsCard';
 import { useVenueDashboard } from '@/hooks/useStudioDashboards';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueOwnerStats } from '@/hooks/useVenueOwnerStats';
@@ -20,9 +21,11 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Venue studio dashboard — figures and charts only: venues, capacity, status,
- * the slot-earnings strip, earnings, the pod figures, the bookings chart and
+ * the slot-earnings strip, the upcoming instant bookings, earnings, the pod
+ * figures, the bookings chart and
  * the venue's health (B3-1). Every
- * action (slot requests, publishing, pod and change requests, the venue list)
+ * action (workshop & event requests, pricing, publishing, pod and change
+ * requests, the venue list)
  * has its own Venue Options screen.
  *
  * A partner with more than one venue picks which one the screen is about from
@@ -55,6 +58,7 @@ export function VenueManageScreen() {
             <StatTile label={t('mweb.venueManagePage.status')} value={venue?.status ?? 'New'} />
           </XStack>
           {venue ? <VenueSlotEarningsTiles stats={stats} /> : null}
+          {venue ? <UpcomingBookingsCard venueId={venue.id} /> : null}
           {venues.length > 0 ? <VenueEarningsCard /> : null}
           {/* Hidden when there is no venue at all: it would fire a needless
               authenticated round trip. mWeb gates it the same way (rule 27). */}

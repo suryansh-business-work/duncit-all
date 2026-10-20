@@ -1,7 +1,9 @@
 import { Link as RouterLink } from 'react-router';
 import { Box } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import { DuncitButton } from '@duncit/buttons';
+import { mergeSx } from '@duncit/ui';
 
 import { visuallyHidden } from '../../../lib/a11y';
 import { isInternalLink } from '../../../lib/paths';
@@ -13,22 +15,25 @@ interface CtaPillProps {
   link: string;
   /** White pill with dark text, for a dark banner (the earn promo). */
   inverse?: boolean;
+  /** Medium: the slimmer pill a strip carries (the free-delivery line). */
+  size?: 'medium' | 'large';
+  sx?: SxProps<Theme>;
 }
 
 const INVERSE_SX = { bgcolor: T.onBrand, color: T.navBar, '&:hover': { bgcolor: T.onBrand } } as const;
 
 /**
- * A section's call to action: a large contained pill with an arrow. A store
- * path routes in-app; anything else opens in a new tab, cut off from the
- * opener, and says so to a screen reader.
+ * A section's call to action: a contained pill with an arrow. A store path
+ * routes in-app; anything else opens in a new tab, cut off from the opener,
+ * and says so to a screen reader.
  */
-export function CtaPill({ label, link, inverse = false }: Readonly<CtaPillProps>) {
+export function CtaPill({ label, link, inverse = false, size = 'large', sx }: Readonly<CtaPillProps>) {
   const { t } = useStoreT();
   const common = {
     variant: 'contained',
-    size: 'large',
+    size,
     endIcon: <ArrowForwardRoundedIcon aria-hidden />,
-    sx: { px: 3, ...(inverse ? INVERSE_SX : {}) },
+    sx: mergeSx({ ...(size === 'large' ? { px: 3 } : {}), ...(inverse ? INVERSE_SX : {}) }, sx),
   } as const;
   if (isInternalLink(link)) {
     return (

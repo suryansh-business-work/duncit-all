@@ -3,6 +3,7 @@ import type { SocialCredential } from '@duncit/utils';
 
 import { AppleAuthButton, useAppleConfigured } from '@/components/AppleAuthButton';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
+import { TruecallerCell } from '@/components/TruecallerButton';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -15,10 +16,10 @@ interface Props {
 }
 
 /**
- * Google and Apple as a row of round buttons, each captioned with the
- * provider's name — the redesigned login and signup screens share it so the
- * two doors cannot drift apart. Apple and its caption are absent until Tech
- * has configured it. mWeb twin: app/mweb/src/components/SocialRoundButtons.tsx.
+ * Google, Apple and Truecaller as a row of round buttons, each captioned with
+ * the provider's name — the redesigned login and signup screens share it so
+ * the two doors cannot drift apart. Apple and Truecaller are absent until Tech
+ * has configured them (Truecaller also needs a build that carries its SDK). mWeb twin: app/mweb/src/components/SocialRoundButtons.tsx.
  */
 export function SocialRoundButtons({ intent, loading, onCredential, onError }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -53,6 +54,7 @@ export function SocialRoundButtons({ intent, loading, onCredential, onError }: R
           </Text>
         </YStack>
       ) : null}
+      <TruecallerCell intent={intent} loading={loading} onError={onError} />
     </XStack>
   );
 }

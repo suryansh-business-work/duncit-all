@@ -31,6 +31,8 @@ interface Props {
   onImportDetected: () => void;
   onSave: () => void;
   onDelete: () => void;
+  /** Put the shipped body back. Offered only on a template that ships with Duncit. */
+  onReset: () => void;
   onSendTest: () => void;
   /** Whether edits save themselves once the typing stops. */
   autoSave: boolean;
@@ -61,6 +63,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
     onImportDetected,
     onSave,
     onDelete,
+    onReset,
     onSendTest,
     autoSave,
     onAutoSaveChange,
@@ -161,6 +164,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
         onSave={onSave}
         onSendTest={onSendTest}
         onDelete={onDelete}
+        onReset={draft.is_shipped ? onReset : undefined}
       />
     </Stack>
   );

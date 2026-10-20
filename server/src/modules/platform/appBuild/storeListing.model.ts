@@ -55,6 +55,11 @@ export interface IStoreListing extends Document {
   android_phone_screenshots: string[];
   android_tablet_7_screenshots: string[];
   android_tablet_10_screenshots: string[];
+  /**
+   * Raw app screens for the websites' app phone — NOT the designed store
+   * graphics above, which already carry a phone frame and a headline. Up to 8.
+   */
+  website_screenshots: string[];
   /** Play feature graphic, 1024×500. */
   android_feature_graphic: string;
   /** Play hi-res icon, 512×512. */
@@ -95,6 +100,7 @@ const storeListingSchema = new Schema<IStoreListing>(
     android_phone_screenshots: urls,
     android_tablet_7_screenshots: urls,
     android_tablet_10_screenshots: urls,
+    website_screenshots: urls,
     android_feature_graphic: text,
     android_icon: text,
     updated_by: text,

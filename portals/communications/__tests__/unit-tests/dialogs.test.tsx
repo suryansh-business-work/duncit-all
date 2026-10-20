@@ -33,6 +33,14 @@ describe('CreateTemplateDialog', () => {
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith('new-1'));
   });
 
+  it('sends only what was typed — no body, so the server starts it from the shipped design', async () => {
+    m.run.mockResolvedValue({ data: { createEmailTemplate: { template_id: 'new-2' } } });
+    render(<CreateTemplateDialog open onClose={vi.fn()} onCreated={vi.fn()} onError={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'form-create' }));
+    await waitFor(() => expect(m.run).toHaveBeenCalledTimes(1));
+    expect(m.run).toHaveBeenCalledWith({ variables: { input: { slug: 's', name: 'n', subject: 'j' } } });
+  });
+
   it('falls back to null when the id is missing', async () => {
     const onCreated = vi.fn();
     m.run.mockResolvedValue({ data: {} });

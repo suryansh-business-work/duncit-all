@@ -63,6 +63,7 @@ import { startAutomationScheduler } from '@modules/ai/automation/automation.sche
 import { buildReelRouter } from '@modules/ai/reel/reel.router';
 import { buildSocialOAuthRouter } from '@modules/crm/marketing/social/social.router';
 import { buildAppleRelayRouter } from '@modules/access/auth/apple.relay';
+import { buildTruecallerCallbackRouter } from '@modules/access/auth-truecaller/truecaller.web';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
@@ -168,6 +169,15 @@ async function bootstrap() {
     await safeSeed('podSeriesParentMigration', async () => {
       const { migrateSeriesParents } = await import('@modules/pods/podSeries/podSeries.migration');
       logs.server.info('bootstrap', 'podSeriesParentMigration', await migrateSeriesParents());
+    });
+  }
+  // Instant booking: every venue gets its pricing from the slots it already
+  // published; venues with none are logged as needing manual setup. Gated like
+  // the migrations above; idempotent (only unset pricing is filled).
+  if (process.env.RUN_VENUE_PRICING_BACKFILL === '1') {
+    await safeSeed('venuePricingBackfill', async () => {
+      const { backfillVenuePricing } = await import('@modules/venues/venuePricing/venuePricing.migration');
+      logs.server.info('bootstrap', 'venuePricingBackfill', await backfillVenuePricing());
     });
   }
   /*
@@ -927,6 +937,8 @@ async function bootstrap() {
   // Sign in with Apple's form_post for the Android app and native web, handed
   // back to the app with one redirect. Apple posts a form, so it lives here.
   app.use('/apple', buildAppleRelayRouter());
+  // Truecaller's mobile-web flow posts the person's token here (Tech → Environment → Truecaller).
+  app.use('/truecaller', buildTruecallerCallbackRouter());
 
   // Public developer REST API — approved venues + slot booking, x-api-key auth
   // (parses its own JSON, carries its own CORS for the Developers portal).

@@ -3,7 +3,6 @@ import { buildHomeStatusEntries, buildMyStatusViewer, buildOfficialEntry, initia
 
 const baseArgs = {
   followedClubs: [] as any[],
-  hostPods: [] as any[],
   followedUsers: [] as any[],
   followedPosts: [] as any[],
 };
@@ -20,7 +19,7 @@ describe('initials', () => {
 });
 
 describe('buildHomeStatusEntries (bug 2/3 order)', () => {
-  it('orders clubs → your hosted pods → users', () => {
+  it('orders club rings before people', () => {
     const entries = buildHomeStatusEntries({
       ...baseArgs,
       followedClubs: [
@@ -42,21 +41,33 @@ describe('buildHomeStatusEntries (bug 2/3 order)', () => {
           expires_at: new Date(Date.now() + 3_600_000).toISOString(),
         },
       ],
-      hostPods: [
-        { id: 'p1', pod_id: 'pod1', pod_title: 'Host Pod', club_slug: 'cl', pod_images_and_videos: [{ url: 'a.jpg', type: 'IMAGE' }] },
-      ],
       followedUsers: [{ user_id: 'u1', full_name: 'Asha Verma', first_name: 'Asha', profile_photo: 'u.jpg' }],
       followedPosts: [
         { id: 'sp1', author_id: 'u1', image_url: 'st.jpg', media_type: 'IMAGE', caption: 'Hi', created_at: 'now', expires_at: 'later' },
       ],
     }, identity);
-    expect(entries.map((e) => e.key)).toEqual(['club-c1', 'pod-p1', 'user-u1']);
+    expect(entries.map((e) => e.key)).toEqual(['club-c1', 'user-u1']);
     expect(entries[0].viewer.slides?.[0]?.mediaUrl).toBe('cs.jpg');
-    expect(entries[1].viewer.subLabel).toBe('Your pod status');
-    expect(entries[2].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
+    expect(entries[1].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
     // The user's story carries a post id so it can be liked/recorded/viewed.
-    expect(entries[2].viewer.kind).toBe('user');
-    expect(entries[2].viewer.slides?.[0]?.id).toBeDefined();
+    expect(entries[1].viewer.kind).toBe('user');
+    expect(entries[1].viewer.slides?.[0]?.id).toBeDefined();
+  });
+
+  it('gives a followed person no tile without a live story — same rule as the native rail', () => {
+    const entries = buildHomeStatusEntries({
+      ...baseArgs,
+      followedUsers: [
+        { user_id: 'quiet', full_name: 'Quiet One', first_name: 'Quiet', profile_photo: 'q.jpg' },
+        { user_id: 'expired', full_name: 'Old Story', first_name: 'Old' },
+        { user_id: 'live', full_name: 'Live One', first_name: 'Live' },
+      ],
+      followedPosts: [
+        { id: 'old', author_id: 'expired', image_url: 'o.jpg', expires_at: new Date(Date.now() - 1_000).toISOString() },
+        { id: 'new', author_id: 'live', image_url: 'n.jpg', expires_at: new Date(Date.now() + 3_600_000).toISOString() },
+      ],
+    }, identity);
+    expect(entries.map((e) => e.key)).toEqual(['user-live']);
   });
 
   it('drops a club whose only media is permanent club_moments — those never expire', () => {

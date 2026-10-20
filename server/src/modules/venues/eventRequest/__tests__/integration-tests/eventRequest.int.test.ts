@@ -17,6 +17,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { EVENT_REQUEST_NOTE_MAX, EventRequestModel } from '../../eventRequest.model';
 import { eventRequestResolvers } from '../../eventRequest.resolver';
 import { eventRequestService } from '../../eventRequest.service';
+import { respondToEventRequest } from '../../eventRequest.respond';
 import { assertTargetType, loadTarget, ownedTargetIds, ownsTarget, parseObjectId } from '../../eventRequest.target';
 
 let memberId: string;
@@ -336,6 +337,15 @@ describe("the owner's and the consoles' lists", () => {
       String(closed.request_id),
       'DISMISSED'
     );
+    // The owner answers a third ask with a REJECT: it counts under its own status.
+    const lata = await makeUser('Lata');
+    const rejected = await askVenue(lata);
+    await respondToEventRequest(
+      { id: ownerId, email: null, roles: [], assigned_city: null, assigned_zones: [] },
+      String(rejected.request_id),
+      'REJECT',
+      'Fully booked that month'
+    );
     await askVenue(memberId, null, otherVenue);
     await eventRequestService.request(memberId, { target_type: 'HOST', target_id: hostId });
     return { open, otherVenue };
@@ -344,17 +354,49 @@ describe("the owner's and the consoles' lists", () => {
   it("shows a partner only the requests to the venues they own, with counts by status", async () => {
     const { open } = await seedMixed();
     const table = await eventRequestService.ownerTable(ownerId, 'VENUE', { page: 1, page_size: 10 });
-    expect(table.total).toBe(2);
+    expect(table.total).toBe(3);
     expect(table.rows.every((row) => row.target_id === venueId)).toBe(true);
     expect(table.rows.map((row) => row.id)).toContain(open.request_id);
-    expect(await eventRequestService.ownerCounts(ownerId, 'VENUE')).toEqual({ open: 1, fulfilled: 0, dismissed: 1, total: 2 });
-    expect(await eventRequestService.ownerCounts(hostId, 'HOST')).toEqual({ open: 1, fulfilled: 0, dismissed: 0, total: 1 });
-    expect(await eventRequestService.ownerCounts(memberId, 'VENUE')).toEqual({ open: 0, fulfilled: 0, dismissed: 0, total: 0 });
+    expect(await eventRequestService.ownerCounts(ownerId, 'VENUE')).toEqual({
+      open: 1,
+      accepted: 0,
+      countered: 0,
+      rejected: 1,
+      fulfilled: 0,
+      dismissed: 1,
+      total: 3,
+    });
+    expect(await eventRequestService.ownerCounts(hostId, 'HOST')).toEqual({
+      open: 1,
+      accepted: 0,
+      countered: 0,
+      rejected: 0,
+      fulfilled: 0,
+      dismissed: 0,
+      total: 1,
+    });
+    expect(await eventRequestService.ownerCounts(memberId, 'VENUE')).toEqual({
+      open: 0,
+      accepted: 0,
+      countered: 0,
+      rejected: 0,
+      fulfilled: 0,
+      dismissed: 0,
+      total: 0,
+    });
   });
 
   it('shows the venues console every venue request, filterable by status, and none of the host ones', async () => {
     await seedMixed();
-    expect(await eventRequestService.consoleCounts('VENUE')).toEqual({ open: 2, fulfilled: 0, dismissed: 1, total: 3 });
+    expect(await eventRequestService.consoleCounts('VENUE')).toEqual({
+      open: 2,
+      accepted: 0,
+      countered: 0,
+      rejected: 1,
+      fulfilled: 0,
+      dismissed: 1,
+      total: 4,
+    });
     const openOnly = await eventRequestService.consoleTable('VENUE', {
       filters: [{ field: 'status', op: 'eq', value: 'OPEN' }],
     });
@@ -412,6 +454,9 @@ describe('eventRequest resolvers', () => {
     expect((await Query.eventRequestsTable(null, { target_type: 'VENUE' }, venuesDesk)).total).toBe(1);
     expect(await Query.eventRequestCounts(null, { target_type: 'HOST' }, hostsDesk)).toEqual({
       open: 0,
+      accepted: 0,
+      countered: 0,
+      rejected: 0,
       fulfilled: 0,
       dismissed: 0,
       total: 0,

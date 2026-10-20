@@ -24,6 +24,8 @@ import { SignupStepperRail } from './SignupStepperRail';
 import { VerifyWhatsappStep } from './VerifyWhatsappStep';
 import { useSignupFlow } from './useSignupFlow';
 import { useExistingAccountCheck } from './useExistingAccountCheck';
+import { useTruecallerHandoff } from './useTruecallerHandoff';
+import { TruecallerVerifiedNote } from './TruecallerVerifiedNote';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -43,6 +45,7 @@ export function SignupScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { policies, loaded } = useSignupPolicies();
   const flow = useSignupFlow();
+  useTruecallerHandoff(flow.setTruecallerProof);
   // The Google or Apple credential waiting on the acceptance sheet. Holding it
   // here is what keeps the account uncreated while the person decides: the
   // provider has proved who they are, and nothing else has happened yet.
@@ -149,7 +152,10 @@ export function SignupScreen() {
             onError={flow.setError}
           />
           <AuthDivider label={t('mweb.auth.orEmail')} />
+          <TruecallerVerifiedNote visible={!!flow.truecallerProof} />
           <SignupForm
+            key={flow.truecallerProof?.whatsapp_token ?? 'blank'}
+            initialValues={flow.formInitialValues}
             step={flow.step}
             onStep={flow.setStep}
             errorMessage={flow.error}

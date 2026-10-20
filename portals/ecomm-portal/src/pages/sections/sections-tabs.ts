@@ -11,4 +11,5 @@ export const SECTIONS_TABS = Object.keys(SECTIONS_TAB_KEYS) as SectionsTab[];
 
 export const sectionsTabPath = (tab: SectionsTab): string => `/sections/${tab}`;
 
-export const isSectionsTab = (value: string | undefined): value is SectionsTab => SECTIONS_TABS.some((tab) => tab === value);
+export const isSectionsTab = (value: string | undefined): value is SectionsTab =>
+  value !== undefined && (SECTIONS_TABS as readonly string[]).includes(value);

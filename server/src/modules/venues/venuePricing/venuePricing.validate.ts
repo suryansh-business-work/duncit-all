@@ -47,9 +47,16 @@ function weekdays(raw: unknown, what: string): number[] {
   return [...new Set(days)].sort((a, b) => a - b);
 }
 
+/** A string or a number as text; anything else (an object, null) as blank. */
+function str(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return '';
+}
+
 function window(open: unknown, close: unknown, what: string): { from: number; to: number } {
-  const from = clockMinutes(String(open ?? ''));
-  const to = clockMinutes(String(close ?? ''));
+  const from = clockMinutes(str(open));
+  const to = clockMinutes(str(close));
   if (from === null || to === null) bad(`${what}: use HH:mm times`);
   if ((to as number) <= (from as number)) bad(`${what}: the end must be after the start`);
   return { from: from as number, to: to as number };
@@ -96,22 +103,29 @@ function cleanRule(item: unknown, i: number): PriceRule {
   const value = Number(r.value);
   if (!Number.isFinite(value) || Math.abs(value) > MAX_RUPEES) bad(`${what}: enter a value`);
   if (mode === 'PERCENT' && (value < -100 || value > 1000)) bad(`${what}: percent must be between -100 and 1000`);
-  const rule: PriceRule = { type, label: String(r.label ?? '').trim().slice(0, 80), mode, value, days: [], dates: [], from: null, to: null };
-  if (type === 'WEEKDAY_SURCHARGE') {
+  const rule: PriceRule = { type, label: str(r.label).trim().slice(0, 80), mode, value, days: [], dates: [], from: null, to: null };
+  applyRuleTarget(rule, r, what);
+  return rule;
+}
+
+/** When a rule applies: its weekdays, its dates, or its date range — by type. */
+function applyRuleTarget(rule: PriceRule, r: Record<string, unknown>, what: string): void {
+  if (rule.type === 'WEEKDAY_SURCHARGE') {
     rule.days = weekdays(r.days, what);
     if (rule.days.length === 0) bad(`${what}: pick at least one day`);
-  } else if (type === 'DATE_OVERRIDE') {
+    return;
+  }
+  if (rule.type === 'DATE_OVERRIDE') {
     const dates = Array.isArray(r.dates) ? r.dates.map(String) : [];
     if (dates.length === 0 || dates.some((d: string) => !isYmd(d))) bad(`${what}: pick valid dates`);
-    rule.dates = [...new Set<string>(dates)].sort();
-  } else {
-    const from = typeof r.from === 'string' ? r.from : null;
-    const to = typeof r.to === 'string' ? r.to : null;
-    if (!isYmd(from) || !isYmd(to) || from > to) bad(`${what}: pick a valid date range`);
-    rule.from = from;
-    rule.to = to;
+    rule.dates = [...new Set<string>(dates)].sort((a, b) => a.localeCompare(b));
+    return;
   }
-  return rule;
+  const from = typeof r.from === 'string' ? r.from : null;
+  const to = typeof r.to === 'string' ? r.to : null;
+  if (!isYmd(from) || !isYmd(to) || from > to) bad(`${what}: pick a valid date range`);
+  rule.from = from;
+  rule.to = to;
 }
 
 function checkModelLimits(p: VenuePricing) {
@@ -147,12 +161,12 @@ export function cleanVenuePricing(input: unknown): VenuePricing {
     min_spend: money(raw.min_spend, 'Minimum spend'),
     slots: cleanSlots(raw.slots),
     operating_hours: cleanHours(raw.operating_hours),
-    price_rules: rules.map(cleanRule),
+    price_rules: rules.map((item, i) => cleanRule(item, i)),
     deposit: money(raw.deposit, 'Deposit'),
     cleaning_fee: money(raw.cleaning_fee, 'Cleaning fee'),
     pet_fee: money(raw.pet_fee, 'Pet fee'),
     gst_enabled: !!raw.gst_enabled,
-    blocked_dates: [...new Set<string>(blocked)].sort(),
+    blocked_dates: [...new Set<string>(blocked)].sort((a, b) => a.localeCompare(b)),
   };
   checkModelLimits(pricing);
   return pricing;

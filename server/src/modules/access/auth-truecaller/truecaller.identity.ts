@@ -41,7 +41,9 @@ function callingCodesOf(iso: string): string[] {
 }
 
 function splitNumber(phone: unknown, country: unknown) {
-  const digits = String(phone ?? '').replaceAll(/\D/g, '');
+  // Truecaller sends the number as a string or a bare number; anything else is no number.
+  const raw = typeof phone === 'number' ? String(phone) : text(phone);
+  const digits = raw.replaceAll(/\D/g, '');
   const iso = text(country).toUpperCase();
   const code = callingCodesOf(iso).find((c) => digits.startsWith(c));
   if (!code) throw truecallerRejected(`number does not match country ${iso || '(none)'}`);

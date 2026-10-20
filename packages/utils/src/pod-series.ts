@@ -142,6 +142,31 @@ export interface PodSeriesPlanSource {
   pod_end_date_time: string | null;
 }
 
+/** Where and when the series runs: a venue (slot or instant booking) for a physical pod, times for a virtual one. */
+function whereAndWhen(
+  source: PodSeriesPlanSource,
+  physical: boolean,
+  booking: InstantBooking | null
+): Pick<PodSeriesPlan, 'pod_mode' | 'venue_id' | 'venue_slot_id' | 'venue_booking' | 'pod_date_time' | 'pod_end_date_time'> {
+  if (!physical) {
+    return {
+      pod_mode: 'VIRTUAL',
+      venue_id: null,
+      venue_slot_id: null,
+      pod_date_time: source.pod_date_time,
+      pod_end_date_time: source.pod_end_date_time,
+    };
+  }
+  return {
+    pod_mode: 'PHYSICAL',
+    venue_id: source.venue_id || null,
+    venue_slot_id: source.venue_slot_id || null,
+    ...(booking ? { venue_booking: booking } : {}),
+    pod_date_time: null,
+    pod_end_date_time: null,
+  };
+}
+
 /**
  * The plan for a form, or null while there is none to ask about: repeat is
  * off, the end day is missing, or the first date is not chosen yet (a slot or
@@ -156,12 +181,7 @@ export function buildPodSeriesPlan(source: PodSeriesPlanSource, timeZone: string
   if (physical ? !source.venue_slot_id && !booking : !source.pod_date_time) return null;
   const firstStart = source.repeat_frequency === 'CUSTOM' ? source.pod_date_time : null;
   return {
-    pod_mode: physical ? 'PHYSICAL' : 'VIRTUAL',
-    venue_id: physical ? source.venue_id || null : null,
-    venue_slot_id: physical ? source.venue_slot_id || null : null,
-    ...(booking ? { venue_booking: booking } : {}),
-    pod_date_time: physical ? null : source.pod_date_time,
-    pod_end_date_time: physical ? null : source.pod_end_date_time,
+    ...whereAndWhen(source, physical, booking),
     frequency: source.repeat_frequency,
     ends_on: endsOn,
     // Hand-picked dates are the plan itself, so nothing is skipped from them.

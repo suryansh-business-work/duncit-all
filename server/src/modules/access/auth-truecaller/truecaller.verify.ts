@@ -66,7 +66,8 @@ export async function verifyAndroidCode(code: string, codeVerifier: string): Pro
   });
   const accessToken = field(token.data, 'access_token');
   if (typeof accessToken !== 'string' || !accessToken) {
-    throw truecallerRejected(`token exchange ${String(field(token.data, 'error') ?? token.status)}`);
+    const error = field(token.data, 'error');
+    throw truecallerRejected(`token exchange ${typeof error === 'string' ? error : token.status}`);
   }
   const info = await truecallerJson(urls.userinfo, {
     headers: { Authorization: `Bearer ${accessToken}` },

@@ -12,7 +12,7 @@ import {
   ticketDiscountMaxTickets,
   type TicketDiscountTier,
 } from './pod.ticketDiscount';
-import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { notifyInstantBooking, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { logs } from '@observability/log';
@@ -33,7 +33,6 @@ import {
   resolveVenueLocation,
   settleSlotBooking,
 } from './pod.venue';
-import { notifyInstantBooking } from '@modules/venues/venueSlot/venueSlot.service';
 import type { InstantBookingRequest } from '@modules/venues/venuePricing/venuePricing.service';
 import { applyProductsForUpdate, assertMeetsMinPax, resolveClubCategory } from './pod.products';
 

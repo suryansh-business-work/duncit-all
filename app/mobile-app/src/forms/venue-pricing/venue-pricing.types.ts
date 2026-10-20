@@ -78,7 +78,9 @@ const issue = (ctx: Ctx, path: (string | number)[], message: string) =>
   ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
 
 function checkLimits(values: VenuePricingValues, t: Translate, ctx: Ctx) {
-  if (values.model && values.model !== 'PER_SLOT' && !(numberOf(values.base_rate) > 0)) {
+  const rate = numberOf(values.base_rate);
+  // A blank rate reads as NaN, which is missing too.
+  if (values.model && values.model !== 'PER_SLOT' && (Number.isNaN(rate) || rate <= 0)) {
     issue(ctx, ['base_rate'], t('availability.pricingModule.validation.rateRequired'));
   }
   if (values.model === 'PER_PAX' && numberOf(values.min_pax) < 1) {

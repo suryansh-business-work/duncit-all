@@ -57,7 +57,9 @@ export default function ConnectFragmentsDialog({ open, fragmentOptions, onClose,
   }, [open]);
 
   const unmapped = plan ? count(plan, 'skipped') : 0;
-  const pending = plan ? count(plan, 'linked', 'stripped') + (fallback ? unmapped : 0) : 0;
+  // Unmapped templates are only connected when a fallback fragment is picked.
+  const viaFallback = fallback ? unmapped : 0;
+  const pending = plan ? count(plan, 'linked', 'stripped') + viaFallback : 0;
   const missing = plan?.filter((row) => row.action === 'no-fragment') ?? [];
 
   const apply = async () => {

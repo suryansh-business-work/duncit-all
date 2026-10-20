@@ -29,8 +29,15 @@ const KEYS = {
 /** Only characters these identifiers are made of — nothing that could break $GITHUB_ENV. */
 const clean = (value) => (typeof value === 'string' ? value.trim().replace(/[^\w.:/-]/g, '') : '');
 
+/** The URL without trailing slashes — a loop, not a backtracking regex. */
+const withoutTrailingSlashes = (value) => {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end -= 1;
+  return value.slice(0, end);
+};
+
 async function main() {
-  const base = String(process.env.EXPO_PUBLIC_API_URL || '').replace(/\/+$/, '');
+  const base = withoutTrailingSlashes(String(process.env.EXPO_PUBLIC_API_URL || ''));
   let config = {};
   if (base) {
     try {
@@ -42,9 +49,16 @@ async function main() {
       });
       const json = await res.json();
       config = json?.data?.publicClientConfig ?? {};
-      if (json?.errors) console.error('truecaller-build-env: server answered', JSON.stringify(json.errors).slice(0, 300));
+      if (json?.errors)
+        console.error(
+          'truecaller-build-env: server answered',
+          JSON.stringify(json.errors).slice(0, 300),
+        );
     } catch (error) {
-      console.error('truecaller-build-env: could not read the public client config —', String(error));
+      console.error(
+        'truecaller-build-env: could not read the public client config —',
+        String(error),
+      );
     }
   }
   for (const [env, field] of Object.entries(KEYS)) {
@@ -57,4 +71,7 @@ async function main() {
   );
 }
 
-main();
+main().catch((error) => {
+  console.error('truecaller-build-env: failed —', String(error));
+  process.exitCode = 1;
+});

@@ -30,7 +30,7 @@ import type { InstantBookingRequest } from '@modules/venues/venuePricing/venuePr
 export interface InstantBookingCreateInput {
   venue_slot_id?: unknown;
   venue_booking?: InstantBookingRequest | null;
-  venue_id?: unknown;
+  venue_id?: string | null;
   no_of_spots?: number | null;
   /** A portal re-routing this pod: its own current booking does not block the new window. */
   reroute_pod_id?: string | null;
@@ -433,7 +433,7 @@ export async function resolveInstantBookingForCreate(input: InstantBookingCreate
   const { venuePricingService } = await import('@modules/venues/venuePricing/venuePricing.service');
   const booking: InstantBookingRequest = { ...input.venue_booking, pax: input.venue_booking.pax ?? input.no_of_spots ?? 0 };
   // A portal re-routing a pod: its own current booking does not block the new window.
-  const prepared = await venuePricingService.prepare(String(input.venue_id), booking, input.reroute_pod_id ?? undefined);
+  const prepared = await venuePricingService.prepare(input.venue_id, booking, input.reroute_pod_id ?? undefined);
   input.pod_date_time = prepared.start.toISOString();
   input.pod_end_date_time = prepared.end.toISOString();
   return { booking, breakdown: prepared.breakdown };

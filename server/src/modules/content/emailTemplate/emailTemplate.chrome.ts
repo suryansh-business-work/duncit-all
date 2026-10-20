@@ -252,24 +252,29 @@ export async function connectTemplateFragments(
   const docs = await EmailTemplateModel.find({}, { slug: 1, mjml: 1, fragment_key: 1, footer_note: 1 })
     .sort({ slug: 1 })
     .lean();
-  const rows: FragmentPlanRow[] = [];
-  let connected = 0;
-  for (const doc of docs) {
-    const { row, changes } = planDocument(doc, known, fallback);
-    rows.push(row);
-    if (!changes || options.dryRun) continue;
-    const result = await EmailTemplateModel.updateOne(
-      { slug: doc.slug, mjml: doc.mjml, fragment_key: doc.fragment_key ?? null },
-      {
-        $set: {
-          mjml: changes.mjml,
-          fragment_key: changes.key,
-          ...(changes.note === undefined ? {} : { footer_note: changes.note }),
-        },
-      }
-    );
-    if (result.modifiedCount) connected += 1;
-  }
+  const plans = docs.map((doc) => ({ doc, ...planDocument(doc, known, fallback) }));
+  const rows: FragmentPlanRow[] = plans.map((plan) => plan.row);
+  // Every write is conditional on the body it was planned from, so they are
+  // independent of one another and can go out together.
+  const writes = options.dryRun
+    ? []
+    : plans.flatMap(({ doc, changes }) =>
+        changes
+          ? [
+              EmailTemplateModel.updateOne(
+                { slug: doc.slug, mjml: doc.mjml, fragment_key: doc.fragment_key ?? null },
+                {
+                  $set: {
+                    mjml: changes.mjml,
+                    fragment_key: changes.key,
+                    ...(changes.note === undefined ? {} : { footer_note: changes.note }),
+                  },
+                }
+              ),
+            ]
+          : []
+      );
+  const connected = (await Promise.all(writes)).filter((result) => result.modifiedCount).length;
   const bare = rows.filter((row) => row.action === 'skipped' || row.action === 'no-fragment');
   if (connected || bare.length) {
     logs.server.info('emailTemplate', 'connectTemplateFragments', {

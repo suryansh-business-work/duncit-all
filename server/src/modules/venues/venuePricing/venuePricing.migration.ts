@@ -48,7 +48,9 @@ function slotRows(slots: SlotRow[], timeZone: string): PricingSlot[] {
     if (!row.days_of_week.includes(start.weekday)) row.days_of_week.push(start.weekday);
     byWindow.set(key, row);
   }
-  return [...byWindow.values()].slice(0, MAX_SLOT_ROWS).map((r) => ({ ...r, days_of_week: r.days_of_week.sort() }));
+  return [...byWindow.values()]
+    .slice(0, MAX_SLOT_ROWS)
+    .map((r) => ({ ...r, days_of_week: [...r.days_of_week].sort((a, b) => a - b) }));
 }
 
 type HoursSettings = {
@@ -85,31 +87,34 @@ export async function backfillVenuePricing(): Promise<{ configured: number; manu
   const venues = await VenueModel.find({ $or: [{ 'pricing.model': null }, { pricing: { $exists: false } }] })
     .select('_id venue_no venue_name settings')
     .lean();
-  let configured = 0;
-  const manual: { venue_id: string; venue_no: string | null; venue_name: string }[] = [];
-  for (const venue of venues) {
-    try {
-      const slots = await VenueSlotModel.find({
-        venue_id: venue._id,
-        requested_by_host: { $ne: true },
-        status: { $ne: 'BLOCKED' },
-      })
-        .sort({ start_at: -1 })
-        .limit(RECENT_SLOTS)
-        .select('start_at end_at price pricing_mode capacity')
-        .lean<SlotRow[]>();
-      const pricing = inferPricing(slots, venue.settings, timeZone);
-      if (!pricing) {
-        manual.push({ venue_id: String(venue._id), venue_no: venue.venue_no ?? null, venue_name: venue.venue_name ?? '' });
-        continue;
+  type Manual = { venue_id: string; venue_no: string | null; venue_name: string };
+  // Each venue is read and written on its own, and a failure is logged and
+  // skipped, so the venues can be backfilled side by side.
+  const outcomes = await Promise.all(
+    venues.map(async (venue): Promise<'configured' | Manual | null> => {
+      try {
+        const slots = await VenueSlotModel.find({
+          venue_id: venue._id,
+          requested_by_host: { $ne: true },
+          status: { $ne: 'BLOCKED' },
+        })
+          .sort({ start_at: -1 })
+          .limit(RECENT_SLOTS)
+          .select('start_at end_at price pricing_mode capacity')
+          .lean<SlotRow[]>();
+        const pricing = inferPricing(slots, venue.settings, timeZone);
+        if (!pricing) return { venue_id: String(venue._id), venue_no: venue.venue_no ?? null, venue_name: venue.venue_name ?? '' };
+        const set = Object.fromEntries(Object.entries(pricing).map(([k, v]) => [`pricing.${k}`, v]));
+        await VenueModel.updateOne({ _id: venue._id, 'pricing.model': null }, { $set: set });
+        return 'configured';
+      } catch (error) {
+        logs.server.error('venuePricing', 'backfillVenuePricing', { venue_id: String(venue._id), error });
+        return null;
       }
-      const set = Object.fromEntries(Object.entries(pricing).map(([k, v]) => [`pricing.${k}`, v]));
-      await VenueModel.updateOne({ _id: venue._id, 'pricing.model': null }, { $set: set });
-      configured += 1;
-    } catch (error) {
-      logs.server.error('venuePricing', 'backfillVenuePricing', { venue_id: String(venue._id), error });
-    }
-  }
+    })
+  );
+  const configured = outcomes.filter((outcome) => outcome === 'configured').length;
+  const manual = outcomes.filter((outcome): outcome is Manual => outcome !== null && outcome !== 'configured');
   logs.server.info('venuePricing', 'backfillVenuePricing', { configured, manual_count: manual.length, manual });
   return { configured, manual };
 }

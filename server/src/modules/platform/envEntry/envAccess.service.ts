@@ -48,9 +48,9 @@ const locked = () =>
     extensions: { code: 'ENV_LOCKED' },
   });
 
-async function liveGrant(ctx: GraphQLContext) {
+function liveGrant(ctx: GraphQLContext) {
   const hash = sessionHash(ctx);
-  if (!hash) return null;
+  if (!hash) return Promise.resolve(null);
   return EnvAccessGrantModel.findOne({ session_hash: hash, expires_at: { $gt: new Date() } }).lean();
 }
 

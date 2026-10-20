@@ -34,7 +34,7 @@ export function weekdayOfYmd(ymd: string): number {
 
 /** True for a real 'YYYY-MM-DD' calendar date. */
 export function isYmd(value: string | null | undefined): value is string {
-  if (!value || value.length !== 10 || value[4] !== '-' || value[7] !== '-') return false;
+  if (value?.length !== 10 || value[4] !== '-' || value[7] !== '-') return false;
   const [y, m, d] = value.split('-').map(Number);
   if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return false;
   const at = new Date(Date.UTC(y, m - 1, d));

@@ -47,7 +47,7 @@ export default function RuleTarget({ control, index }: Readonly<Props>) {
               value=""
               error={fieldState.error?.message}
               onChange={(day) => {
-                if (day && !field.value.includes(day)) field.onChange([...field.value, day].sort());
+                if (day && !field.value.includes(day)) field.onChange([...field.value, day].sort((a, b) => a.localeCompare(b)));
               }}
               testId={`pricing-rule-${index}-add-date`}
             />

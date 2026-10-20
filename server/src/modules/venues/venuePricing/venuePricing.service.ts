@@ -171,7 +171,7 @@ export const venuePricingService = {
       venueId,
       spaceLabel ?? '',
       localInstant(days[0], 0, timeZone),
-      localInstant(days[days.length - 1], 24 * 60, timeZone)
+      localInstant(days.at(-1) ?? days[0], 24 * 60, timeZone)
     );
     const ctx = { pricing, settings: venue.settings, busy, now: new Date(), timeZone };
     return {

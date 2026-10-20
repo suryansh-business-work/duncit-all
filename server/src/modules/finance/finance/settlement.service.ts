@@ -669,11 +669,12 @@ export async function computePodSettlement(
   // side, shown as a negative host amount rather than quietly taken off the
   // venue. A snapshot booking also carries its commission on top (engine v3).
   const commissionOnTop = charge.commission_on_top != null;
+  const engineVersion = commissionOnTop ? SETTLEMENT_ENGINE_VERSION_ON_TOP : SETTLEMENT_ENGINE_VERSION;
   const waterfall = free
     ? freePodWaterfall()
     : toWaterfall(
         computePodFinanceBreakdown(toPaise(basis), Math.max(0, toPaise(venueAmount)), rates, venueChargeOptions(charge)),
-        commissionOnTop ? SETTLEMENT_ENGINE_VERSION_ON_TOP : SETTLEMENT_ENGINE_VERSION
+        engineVersion
       );
 
   // Legacy party lines, derived from the waterfall so older consumers keep a

@@ -47,20 +47,22 @@ function linesOf(t: Translate, b: PriceBreakdown): Line[] {
   if (b.taxes > 0) {
     lines.push({ id: 'gst', label: t('venuePricing.breakdown.gst', { vars: { pct: b.gst_pct } }), amount: `+${rupees(b.taxes)}` });
   }
-  lines.push({
-    id: 'payout',
-    label: t('venuePricing.breakdown.youReceive'),
-    amount: rupees(b.venue_payout),
-    strong: true,
-    tone: 'success.main',
-  });
-  lines.push({
-    id: 'fee',
-    label: t('venuePricing.breakdown.duncitFee', { vars: { pct: b.platform_fee_pct } }),
-    amount: rupees(b.platform_fee),
-    tone: 'text.secondary',
-  });
-  lines.push({ id: 'total', label: t('venuePricing.breakdown.total'), amount: rupees(b.total), strong: true });
+  lines.push(
+    {
+      id: 'payout',
+      label: t('venuePricing.breakdown.youReceive'),
+      amount: rupees(b.venue_payout),
+      strong: true,
+      tone: 'success.main',
+    },
+    {
+      id: 'fee',
+      label: t('venuePricing.breakdown.duncitFee', { vars: { pct: b.platform_fee_pct } }),
+      amount: rupees(b.platform_fee),
+      tone: 'text.secondary',
+    },
+    { id: 'total', label: t('venuePricing.breakdown.total'), amount: rupees(b.total), strong: true },
+  );
   if (b.deposit > 0) {
     lines.push({ id: 'deposit', label: t('venuePricing.breakdown.deposit'), amount: rupees(b.deposit), tone: 'text.secondary' });
   }

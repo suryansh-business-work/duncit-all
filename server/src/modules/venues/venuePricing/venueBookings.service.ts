@@ -13,7 +13,7 @@ const MAX_ROWS = 100;
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
-async function ownerScope(userId: string, venueId?: string | null) {
+function ownerScope(userId: string, venueId?: string | null) {
   const scope: Record<string, unknown> = { owner_user_id: new Types.ObjectId(userId) };
   if (venueId) {
     if (!Types.ObjectId.isValid(venueId)) throw new GraphQLError('Invalid venue', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -40,7 +40,7 @@ export const venueBookingsService = {
   /** Upcoming confirmed bookings at the owner's venues, soonest first. */
   async upcoming(userId: string, venueId?: string | null, limit?: number | null) {
     const slots = await VenueSlotModel.find({
-      ...(await ownerScope(userId, venueId)),
+      ...ownerScope(userId, venueId),
       status: 'BOOKED',
       booked_by_pod_id: { $ne: null },
       end_at: { $gt: new Date() },
@@ -65,7 +65,7 @@ export const venueBookingsService = {
   /** Slot requests from before instant booking, newest decision first. Read-only. */
   async requestHistory(userId: string, venueId?: string | null, limit?: number | null) {
     const slots = await VenueSlotModel.find({
-      ...(await ownerScope(userId, venueId)),
+      ...ownerScope(userId, venueId),
       $or: [{ decision: { $in: ['APPROVED', 'DECLINED'] } }, { status: 'PENDING' }],
     })
       .sort({ decided_at: -1, updated_at: -1 })

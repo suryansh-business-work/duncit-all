@@ -60,7 +60,7 @@ export async function webRequestState(nonce: string): Promise<TruecallerState | 
  * Spend a READY nonce: one conditional write, so a double-tap or a retried
  * request can never spend it twice.
  */
-export async function claimWebRequest(nonce: string) {
+export function claimWebRequest(nonce: string) {
   return TruecallerRequestModel.findOneAndUpdate(
     { key: nonce, kind: 'WEB', state: 'READY', expires_at: { $gt: new Date() } },
     { $set: { state: 'USED' } },

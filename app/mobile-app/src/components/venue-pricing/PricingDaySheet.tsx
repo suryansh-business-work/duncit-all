@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { Text, XStack, YStack } from 'tamagui';
-import { formatMoney } from '@duncit/utils';
+import { Text, YStack } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { DateOverrideForm, type RuleModeName } from '@/forms/venue-pricing';
+import type { RuleModeName } from '@/forms/venue-pricing';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { BookingDay } from '@/hooks/useVenueBookingCalendar';
 import { toErrorMessage } from '@/utils/errors';
 import { DaySlotsList } from './DaySlotsList';
+import { DayEditActions, DayNotes } from './PricingDayParts';
 
 export interface DayActions {
   setOverride: (mode: RuleModeName, value: number) => Promise<void>;
@@ -75,37 +74,7 @@ export function PricingDaySheet(props: Readonly<Props>) {
     >
       {dayKey ? (
         <YStack gap={14}>
-          {rate === null ? null : (
-            <Text testID="pricing-day-rate" fontSize={14} color="$color">
-              {t('availability.pricingModule.day.rate', { vars: { rate: formatMoney(rate) } })}
-            </Text>
-          )}
-          {blocked ? (
-            <Text testID="pricing-day-blocked" fontSize={13} color="$danger">
-              {t('availability.pricingModule.day.blockedNote')}
-            </Text>
-          ) : null}
-          {holiday ? (
-            <Text testID="pricing-day-holiday" fontSize={13} color="$danger">
-              {t('availability.pricingModule.day.holidayNote')}
-            </Text>
-          ) : null}
-          {booked ? (
-            <Text testID="pricing-day-booked" fontSize={13} color="$muted">
-              {t('availability.pricingModule.day.booked')}
-            </Text>
-          ) : null}
-          {booked
-            ? day?.busy.map((busyWindow) => (
-                <Text key={busyWindow.start} fontSize={13} color="$color">
-                  {t('availability.pricingModule.day.bookedWindow', {
-                    vars: {
-                      window: `${fmt.formatTime(busyWindow.start)} – ${fmt.formatTime(busyWindow.end)}`,
-                    },
-                  })}
-                </Text>
-              ))
-            : null}
+          <DayNotes day={day} booked={booked} blocked={blocked} holiday={holiday} rate={rate} />
           {props.slotModel ? <DaySlotsList slots={day?.slots ?? []} /> : null}
           {message ? (
             <Text
@@ -118,43 +87,15 @@ export function PricingDaySheet(props: Readonly<Props>) {
             </Text>
           ) : null}
           {booked ? null : (
-            <>
-              <DateOverrideForm
-                key={`${dayKey}-${props.override?.mode ?? ''}-${props.override?.value ?? ''}`}
-                current={props.override}
-                busy={busy}
-                onSave={(mode, value) => run(() => actions.setOverride(mode, value))}
-                onClear={() => run(actions.clearOverride)}
-              />
-              <XStack gap={8} flexWrap="wrap">
-                <DuncitButton
-                  testID="pricing-day-block"
-                  label={
-                    blocked
-                      ? t('availability.pricingModule.day.unblock')
-                      : t('availability.pricingModule.day.block')
-                  }
-                  onPress={() => run(actions.toggleBlock)}
-                  disabled={busy}
-                  variant="outline"
-                  tone={blocked ? 'neutral' : 'danger'}
-                  size="sm"
-                />
-                <DuncitButton
-                  testID="pricing-day-holiday-toggle"
-                  label={
-                    holiday
-                      ? t('availability.pricingModule.day.unholiday')
-                      : t('availability.pricingModule.day.holiday')
-                  }
-                  onPress={() => run(actions.toggleHoliday)}
-                  disabled={busy}
-                  variant="outline"
-                  tone="neutral"
-                  size="sm"
-                />
-              </XStack>
-            </>
+            <DayEditActions
+              dayKey={dayKey}
+              blocked={blocked}
+              holiday={holiday}
+              busy={busy}
+              override={props.override}
+              actions={actions}
+              run={run}
+            />
           )}
         </YStack>
       ) : null}

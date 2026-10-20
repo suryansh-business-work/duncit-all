@@ -7,16 +7,15 @@ import type {
   PricingSlot,
   VenueBookingCalendar,
   VenueBookingDay,
-  VenueClosedReason,
   VenueDaySlot,
   VenuePriceBreakdown,
   VenuePricing,
-  VenuePricingInput,
   VenuePricingModel,
 } from '@duncit/gql-types';
 import type { Translator } from '@duncit/app-settings';
 
-export type { PriceRuleMode, PriceRuleType, VenueClosedReason, VenuePricingInput, VenuePricingModel };
+export type { PriceRuleMode, PriceRuleType, VenuePricingModel };
+export type { VenueClosedReason, VenuePricingInput } from '@duncit/gql-types';
 
 /** The `t` a component receives from `useTranslation`. */
 export type Translate = Translator['t'];

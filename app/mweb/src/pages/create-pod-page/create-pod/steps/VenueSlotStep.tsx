@@ -4,7 +4,6 @@ import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { formatDurationBetween } from '../../../../utils/dateFormat';
 import type { FreePodVenueNotice } from '@duncit/utils';
 import FreeVenueNote from '../FreeVenueNote';
-import { VENUE_AVAILABLE_SLOTS } from '../venueSlots';
 import VenuePicker from '../VenuePicker';
 import VenueContactCard from '../VenueContactCard';
 import InstantBookingPicker from './InstantBookingPicker';
@@ -18,7 +17,8 @@ import { SURFACE_SX } from '../../../../theme';
 import type { CreatePodForm, CreatePodVenue } from '../create-pod.types';
 
 // Re-exported: the stepper's pricing query and its tests import them from here.
-export { VENUE_AVAILABLE_SLOTS, venueSpaces, type VenueSpace };
+export { VENUE_AVAILABLE_SLOTS } from '../venueSlots';
+export { venueSpaces, type VenueSpace };
 
 interface Props {
   form: CreatePodForm;

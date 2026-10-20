@@ -48,6 +48,12 @@ const MY_PROFILE_PATHS: Record<string, string> = {
 // proves them.
 
 /** Copy every supplied field of `paths` onto the `$set` doc, blanking empties to null. */
+/** True when an object input carries at least one key the client really sent ('' included — that clears it). */
+function sentAnyPart(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false;
+  return Object.values(value).some((part) => part !== undefined);
+}
+
 function assignMappedFields(
   set: Record<string, any>,
   input: UpdateMyProfileDTO,
@@ -145,8 +151,12 @@ export const userProfileMethods = {
     // Set directly, not through assignMappedFields: its blank-to-null would turn "No" into unanswered.
     if (input.is_pet_owner !== undefined) set['profile.is_pet_owner'] = input.is_pet_owner;
     assignMyDob(set, input);
-    // Save the whole main address as a normalized object (partial inputs fill in).
-    if ((input as any).address !== undefined) {
+    // Save the whole main address as a normalized object (partial inputs fill in)
+    // — but only when a part of it was actually sent. The validator hands an
+    // address nobody sent through as {}, and treating that as "set" blanked the
+    // saved address on every save that did not carry it: removing the profile
+    // photo wiped the address with it.
+    if (sentAnyPart((input as any).address)) {
       set['profile.address'] = toPostalAddress((input as any).address);
     }
     const updated = await applyUserUpdate(user_id, set);

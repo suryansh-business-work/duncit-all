@@ -2,7 +2,7 @@ import { useReducer, useState, type Reducer } from 'react';
 import {
   initialSignupFlowState,
   signupFlowReducer,
-  signupNumberOf,
+  truecallerDetailsShortcut,
   socialSignupNeedsName,
   truecallerSignupPrefill,
   truecallerTokenFor,
@@ -89,12 +89,11 @@ export function useSignupFlow() {
 
   /** The Google step's answer: from here the two doors run the same code step. */
   const submitDetails = async (values: GoogleSignupValues) => {
-    const proven = truecallerTokenFor(truecallerProof, values);
-    const google = flow.pendingGoogle;
-    if (proven && google) {
-      const named = values.name?.trim() ? { ...google, name: values.name.trim() } : google;
+    const shortcut = truecallerDetailsShortcut(truecallerProof, values, flow.pendingGoogle);
+    if (shortcut) {
+      const { google, number, dob, token } = shortcut;
       await createWith(async () => {
-        const result = await createFromGoogle(named, signupNumberOf(values), values.dob, proven);
+        const result = await createFromGoogle(google, number, dob, token);
         authenticate(result.token, result.surveyCompleted, true);
       });
       return;

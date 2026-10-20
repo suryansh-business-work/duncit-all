@@ -8,7 +8,13 @@
  * which number it covers, what it may prefill, and how to read it back off a
  * navigation — and nothing about how either app draws a button (rule 40).
  */
-import type { SignupNumberFields } from './signup-flow';
+import {
+  signupNumberOf,
+  type SignupGoogleCredential,
+  type SignupGoogleDetails,
+  type SignupNumber,
+  type SignupNumberFields,
+} from './signup-flow';
 
 /** Which Truecaller door a verification came through. */
 export type TruecallerPlatform = 'ANDROID' | 'IOS' | 'WEB';
@@ -97,4 +103,33 @@ export function truecallerTokenFor(
     digits(proof.phone_extension) === digits(fields.phoneExtension) &&
     digits(proof.phone_number) === digits(fields.phoneNumber);
   return sameNumber ? proof.whatsapp_token : null;
+}
+
+/** What the Google door creates the account with when its number is the proven one. */
+export interface TruecallerDetailsShortcut {
+  token: string;
+  google: SignupGoogleCredential;
+  number: SignupNumber;
+  dob: string;
+}
+
+/**
+ * The Google/Apple details step answered with the number Truecaller proved:
+ * everything needed to create the account straight away — the name the step
+ * asked laid onto the credential — or null to send a code as usual.
+ */
+export function truecallerDetailsShortcut(
+  proof: Readonly<TruecallerSignupProof> | null,
+  values: Readonly<SignupGoogleDetails>,
+  google: SignupGoogleCredential | null,
+): TruecallerDetailsShortcut | null {
+  const token = truecallerTokenFor(proof, values);
+  if (!token || !google) return null;
+  const name = values.name?.trim();
+  return {
+    token,
+    google: name ? { ...google, name } : google,
+    number: signupNumberOf(values),
+    dob: values.dob,
+  };
 }

@@ -20,7 +20,8 @@ export type RootStackParamList = {
    * CLAIMS it once: a param outlives the remount that re-reads it, and the
    * credential behind it must be spent exactly once.
    */
-  Signup: { googleSignup?: GoogleSignupHandoff; truecallerSignup?: TruecallerSignupProof } | undefined;
+  Signup:
+    { googleSignup?: GoogleSignupHandoff; truecallerSignup?: TruecallerSignupProof } | undefined;
   /** Optionally carrying the sign-in step's tab and boxes, so the code goes straight there. */
   ForgotPassword: { recovery?: RecoveryHandoff } | undefined;
   Survey: undefined;

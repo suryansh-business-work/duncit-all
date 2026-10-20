@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import {
   initialSignupFlowState,
   signupFlowReducer,
-  signupNumberOf,
+  truecallerDetailsShortcut,
   socialSignupNeedsName,
   truecallerTokenFor,
   type TruecallerSignupProof,
@@ -81,6 +81,17 @@ export function useSignupFlow(linkedCode: string) {
 
   const setStep = (step: SignupStep) => dispatch({ type: 'STEP', step });
 
+  /*
+    Google (and Apple) prove an address and nothing else, so the credential is
+    held — unspent — while its own step (number and date of birth) and the code
+    step run. There is no account to back out of until both have answered,
+    which is what the acceptance dialog's wording promises.
+  */
+  const googleAccepted = (credential: SocialCredential, policyIds: string[]) => {
+    setError(null);
+    dispatch({ type: 'GOOGLE_ACCEPTED', credential: { ...credential, policyIds } });
+  };
+
   /** The form is filled in; the code step turns it into an account — unless
    * Truecaller already proved this very number, which IS the code's proof. */
   const submitForm = async (values: RegisterFormValues) => {
@@ -93,24 +104,12 @@ export function useSignupFlow(linkedCode: string) {
     dispatch({ type: 'FORM_FILLED', values });
   };
 
-  /*
-    Google (and Apple) prove an address and nothing else, so the credential is
-    held — unspent — while its own step (number and date of birth) and the code
-    step run. There is no account to back out of until both have answered,
-    which is what the acceptance dialog's wording promises.
-  */
-  const googleAccepted = (credential: SocialCredential, policyIds: string[]) => {
-    setError(null);
-    dispatch({ type: 'GOOGLE_ACCEPTED', credential: { ...credential, policyIds } });
-  };
-
   /** The Google step's answer: from here the two doors run the same code step. */
   const submitDetails = async (values: GoogleSignupValues) => {
-    const proven = truecallerTokenFor(truecallerProof, values);
-    const google = flow.pendingGoogle;
-    if (proven && google) {
-      const named = values.name?.trim() ? { ...google, name: values.name.trim() } : google;
-      await createWith(() => createFromGoogle(named, signupNumberOf(values), values.dob, proven));
+    const shortcut = truecallerDetailsShortcut(truecallerProof, values, flow.pendingGoogle);
+    if (shortcut) {
+      const { google, number, dob, token } = shortcut;
+      await createWith(() => createFromGoogle(google, number, dob, token));
       return;
     }
     dispatch({ type: 'DETAILS_GIVEN', values });

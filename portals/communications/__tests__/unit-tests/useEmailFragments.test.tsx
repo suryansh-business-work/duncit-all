@@ -6,13 +6,18 @@ import {
   DELETE_FRAGMENT,
   FRAGMENTS,
   RESET_FRAGMENT,
+  STARTER_BODY,
   UPDATE_FRAGMENT,
   type Fragment,
 } from '../../src/pages/email-fragments-page/queries';
 
+const STARTER = '<mjml><mj-head></mj-head><mj-body width="600px"><mj-wrapper>BODY</mj-wrapper></mj-body></mjml>';
+
 const m = vi.hoisted(() => ({
   fragments: undefined as unknown,
   usage: undefined as unknown,
+  starter: undefined as unknown,
+  starterError: undefined as Error | undefined,
   refetch: vi.fn(),
   runners: new Map<unknown, ReturnType<typeof vi.fn>>(),
   impls: new Map<unknown, () => unknown>(),
@@ -33,10 +38,11 @@ vi.mock('@apollo/client/react', async (io) => {
   const actual = await io<typeof import('@apollo/client/react')>();
   return {
     ...actual,
-    useQuery: (doc: unknown) =>
-      doc === FRAGMENTS
-        ? { data: m.fragments, loading: false, refetch: m.refetch }
-        : { data: m.usage, loading: false },
+    useQuery: (doc: unknown) => {
+      if (doc === FRAGMENTS) return { data: m.fragments, loading: false, refetch: m.refetch };
+      if (doc === STARTER_BODY) return { data: m.starter, error: m.starterError, loading: false };
+      return { data: m.usage, loading: false };
+    },
     useMutation: (doc: unknown) => [m.spyFor(doc), {}] as const,
     useApolloClient: () => m.client,
   };
@@ -73,6 +79,8 @@ const runner = (doc: unknown, impl: () => unknown = () => ({ data: {} })) => {
 beforeEach(() => {
   m.fragments = { emailFragments: [frag('transactional'), frag('weekend')] };
   m.usage = undefined;
+  m.starter = { emailStarterMjml: STARTER };
+  m.starterError = undefined;
   m.refetch = vi.fn().mockResolvedValue({});
   m.runners.clear();
   m.impls.clear();
@@ -145,6 +153,37 @@ describe('useEmailFragments - preview', () => {
     expect(sent).toContain('<h-transactional/>');
     expect(sent).toContain('<f-transactional/>');
     await waitFor(() => expect(result.current.previewLoading).toBe(false), { timeout: 3000 });
+  });
+
+  it('wraps the draft around the server starter body: header first inside <mj-body>, footer last', async () => {
+    mount();
+    await waitFor(() => expect(m.clientQuery).toHaveBeenCalled(), { timeout: 3000 });
+    const sent = m.clientQuery.mock.calls[0][0].variables.mjml as string;
+    expect(sent.startsWith('<mjml><mj-head></mj-head><mj-body width="600px">')).toBe(true);
+    const header = sent.indexOf('<h-transactional/>');
+    const body = sent.indexOf('<mj-wrapper>BODY</mj-wrapper>');
+    const footer = sent.indexOf('<f-transactional/>');
+    expect(header).toBeGreaterThan(sent.indexOf('<mj-body'));
+    expect(body).toBeGreaterThan(header);
+    expect(footer).toBeGreaterThan(body);
+    expect(sent.indexOf('</mj-body>')).toBeGreaterThan(footer);
+  });
+
+  it('renders nothing until the starter body has loaded', async () => {
+    m.starter = undefined;
+    const { result } = mount();
+    await waitFor(() => expect(result.current.draft?.key).toBe('transactional'));
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    expect(m.clientQuery).not.toHaveBeenCalled();
+    expect(result.current.previewHtml).toBe('');
+  });
+
+  it('shows a failed starter-body request as a preview error', async () => {
+    m.starter = undefined;
+    m.starterError = new Error('starter unavailable');
+    const { result } = mount();
+    await waitFor(() => expect(result.current.previewErrors).toEqual(['starter unavailable']));
+    expect(m.clientQuery).not.toHaveBeenCalled();
   });
 
   it('shows renderer errors next to the preview', async () => {

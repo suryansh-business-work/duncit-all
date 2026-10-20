@@ -1031,6 +1031,11 @@ export const TECH_BUNDLE: NestedCatalogue = {
       anyHeaderFooter: 'Any header / footer',
       autoSave: 'Auto-save',
       autoSaveHint: 'Saves on its own a moment after you stop typing. Switch it off to save by hand.',
+      resetDesign: 'Reset design',
+      resetDesignHint:
+        'Put back the body Duncit ships, in the current design. The subject, header and footer, and footer sentence stay as they are.',
+      resetDesignConfirm: 'Replace the body of "{name}" with the one Duncit ships? Your edits to the body are lost.',
+      resetDesignDone: 'Reset to the shipped design',
       aSwitchedOffTemplateSendsNothing: 'A switched-off template sends nothing, even when code asks for it. Every skipped send is recorded in Telemetry › Logs.',
       countedFromEmailLogs: 'Counted from Email Logs, including test sends. Emptying the log lowers these numbers.',
       failedCount: 'Failed {count}',

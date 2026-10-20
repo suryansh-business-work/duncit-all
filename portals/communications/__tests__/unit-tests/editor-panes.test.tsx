@@ -22,11 +22,16 @@ vi.mock('@duncit/utils', () => ({ formatMjml: (s: string) => `FMT:${s}` }));
 // TemplateEditorPanel children (stubbed to isolate the panel's own wiring)
 vi.mock('../../src/pages/email-templates-page/PreviewVariablesPane', () => ({ default: () => <div data-testid="preview-pane" /> }));
 vi.mock('../../src/pages/email-templates-page/EditorActionsBar', () => ({
-  default: (p: { onSave: () => void; onSendTest: () => void; onDelete: () => void }) => (
+  default: (p: { onSave: () => void; onSendTest: () => void; onDelete: () => void; onReset?: () => void }) => (
     <div>
       <button type="button" onClick={p.onSave}>bar-save</button>
       <button type="button" onClick={p.onSendTest}>bar-test</button>
       <button type="button" onClick={p.onDelete}>bar-delete</button>
+      {p.onReset && (
+        <button type="button" onClick={p.onReset}>
+          bar-reset
+        </button>
+      )}
     </div>
   ),
 }));
@@ -82,6 +87,7 @@ const panelProps = (over: Partial<React.ComponentProps<typeof TemplateEditorPane
   onSave: vi.fn(),
   onSendTest: vi.fn(),
   onDelete: vi.fn(),
+  onReset: vi.fn(),
   ...over,
 });
 
@@ -103,6 +109,25 @@ describe('TemplateEditorPanel — header, switch and footer note', () => {
     fireEvent.mouseDown(screen.getByRole('combobox'));
     fireEvent.click(within(screen.getByRole('listbox')).getByText('Transactional'));
     expect(setDraft).toHaveBeenLastCalledWith({ ...tpl, fragment_key: 'transactional' });
+  });
+
+  it('offers Reset design only on a template that ships with Duncit', () => {
+    const onReset = vi.fn();
+    const { unmount } = render(
+      <MemoryRouter>
+        <TemplateEditorPanel {...panelProps({ draft: { ...tpl, is_shipped: true }, onReset })} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'bar-reset' }));
+    expect(onReset).toHaveBeenCalledTimes(1);
+    unmount();
+
+    render(
+      <MemoryRouter>
+        <TemplateEditorPanel {...panelProps({ draft: { ...tpl, is_shipped: false }, onReset })} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('button', { name: 'bar-reset' })).toBeNull();
   });
 
   it('says plainly that a switched-off template sends nothing', () => {
@@ -147,6 +172,7 @@ describe('TemplateEditorPanel', () => {
         onSave={onSave}
         onSendTest={onSendTest}
         onDelete={onDelete}
+        onReset={vi.fn()}
       />
       </MemoryRouter>,
     );

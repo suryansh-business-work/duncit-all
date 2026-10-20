@@ -23,6 +23,8 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     footer_note: String
     variables: [EmailTemplateVariable!]!
     is_active: Boolean!
+    "Ships with Duncit, so resetEmailTemplate can put its shipped body back."
+    is_shipped: Boolean!
     created_at: String
     updated_at: String
   }
@@ -32,7 +34,8 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     name: String!
     description: String
     subject: String!
-    mjml: String!
+    "Omitted: the shipped starter body (emailStarterMjml)."
+    mjml: String
     fragment_key: String
     footer_note: String
     variables: [EmailTemplateVariableInput!]
@@ -78,12 +81,23 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
       "The template's own footer sentence, so the preview shows it filled in."
       footer_note: String
     ): EmailTemplateRender!
+    """
+    A sample body drawn with the shipped email design — what a new template
+    starts from, and what the Fragments page previews a draft header and
+    footer around.
+    """
+    emailStarterMjml: String!
   }
 
   extend type Mutation {
     createEmailTemplate(input: CreateEmailTemplateInput!): EmailTemplate!
     updateEmailTemplate(template_id: ID!, input: UpdateEmailTemplateInput!): EmailTemplate!
     deleteEmailTemplate(template_id: ID!): Boolean!
+    """
+    Put back the body Duncit ships for this template — the current design.
+    Subject, fragment and footer sentence are left as they are.
+    """
+    resetEmailTemplate(template_id: ID!): EmailTemplate!
     sendTestEmail(template_id: ID!, to: String!, vars: String): EmailTestResult!
   }
 `;

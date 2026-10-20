@@ -1,7 +1,7 @@
 import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogTitle } from '@mui/material';
 import CreateTemplateForm from './CreateTemplateForm';
-import { CREATE, STARTER } from './queries';
+import { CREATE } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -22,9 +22,8 @@ export default function CreateTemplateDialog({ open, onClose, onCreated, onError
         onCancel={onClose}
         onCreate={async (input) => {
           try {
-            const r = await createTpl({
-              variables: { input: { ...input, mjml: STARTER } },
-            });
+            // No body: the server starts it from the shipped design.
+            const r = await createTpl({ variables: { input } });
             onCreated(r.data?.createEmailTemplate?.template_id ?? null);
           } catch (e: any) {
             onError(e.message);

@@ -62,7 +62,7 @@ export const RESET_FRAGMENT = gql`
   }
 `;
 
-/** The template renderer doubles as the fragment previewer — see PREVIEW_BODY. */
+/** The template renderer doubles as the fragment previewer — see STARTER_BODY. */
 export const RENDER = gql`
   query RenderFragment($mjml: String!) {
     renderEmailTemplate(mjml: $mjml) {
@@ -86,32 +86,32 @@ export interface Fragment {
 }
 
 /**
- * A stand-in for whatever template will sit between the header and the footer.
- * Deliberately plain: the point of this preview is the chrome above and below
- * it, and a decorated body would compete with what is being edited.
+ * The stand-in body a header and footer are previewed around — the server's
+ * own starter, drawn with the shipped email design, so the preview shows the
+ * fragment exactly as it will sit on a real email (closed card, same canvas,
+ * same dark mode) instead of around a hand-written approximation of one.
  */
-export const PREVIEW_BODY = `    <mj-section background-color="#ffffff" padding="24px">
-      <mj-column>
-        <mj-text font-size="18px" font-weight="700" color="#111827">Your template body</mj-text>
-        <mj-text color="#4b5563">This is where the email's own content is rendered. The header above and the footer below come from this fragment.</mj-text>
-      </mj-column>
-    </mj-section>`;
+export const STARTER_BODY = gql`
+  query EmailStarterMjml {
+    emailStarterMjml
+  }
+`;
 
 /**
- * Compose the DRAFT header and footer around the stand-in body.
+ * Compose the DRAFT header and footer around the stand-in body: the header just
+ * inside `<mj-body …>`, the footer just before `</mj-body>` — where the server
+ * puts the saved ones on a send.
  *
  * The server can wrap with the SAVED fragment, but an editor has to show what
  * is on screen right now — previewing the saved copy would hide every unsaved
  * change, which is the one thing a preview exists to prevent.
  */
-export function previewDocument(header: string, footer: string): string {
-  return `<mjml>
-  <mj-body background-color="#f4f4f4">
-${header}
-${PREVIEW_BODY}
-${footer}
-  </mj-body>
-</mjml>`;
+export function previewDocument(body: string, header: string, footer: string): string {
+  const open = body.search(/<mj-body\b/i);
+  const start = open === -1 ? -1 : body.indexOf('>', open) + 1;
+  const end = body.toLowerCase().lastIndexOf('</mj-body>');
+  if (start <= 0 || end < start) return body;
+  return `${body.slice(0, start)}\n${header}\n${body.slice(start, end)}\n${footer}\n${body.slice(end)}`;
 }
 
 export const CREATE_FRAGMENT = gql`

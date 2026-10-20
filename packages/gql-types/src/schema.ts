@@ -6327,7 +6327,8 @@ export type CreateEmailTemplateInput = {
   footer_note?: InputMaybe<Scalars['String']['input']>;
   fragment_key?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
-  mjml: Scalars['String']['input'];
+  /** Omitted: the shipped starter body (emailStarterMjml). */
+  mjml?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   slug: Scalars['String']['input'];
   subject: Scalars['String']['input'];
@@ -8216,6 +8217,12 @@ export type E2eVideoUploadAuthInput = {
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** A brand colour token the section is accented with. */
+export type EarnAccent =
+  | 'PRIMARY'
+  | 'SECONDARY'
+  | 'TERTIARY';
+
 /** The featured image on each Earn with Duncit card, keyed by the card's icon key — Duncit's default when none is set. */
 export type EarnCardImages = {
   __typename?: 'EarnCardImages';
@@ -8234,6 +8241,23 @@ export type EarnCardImagesInput = {
   host?: InputMaybe<Scalars['String']['input']>;
   venue?: InputMaybe<Scalars['String']['input']>;
 };
+
+/** Where the Earn section sits on the home page. */
+export type EarnPosition =
+  | 'AFTER_DOWNLOAD'
+  | 'AFTER_REELS'
+  | 'BEFORE_FOOTER';
+
+/** A marketing site that shows the Earn with Duncit section (earnwith is the earn site itself). */
+export type EarnSite =
+  | 'ADS'
+  | 'MAIN'
+  | 'PARTNERS';
+
+/** WALL = the drifting photo wall; SPLIT = copy beside a photo collage. */
+export type EarnVariant =
+  | 'SPLIT'
+  | 'WALL';
 
 export type EarningsSummary = {
   __typename?: 'EarningsSummary';
@@ -8638,6 +8662,8 @@ export type EmailTemplate = {
   /** The key of the header/footer fragment wrapping this body. Null renders it bare. */
   fragment_key?: Maybe<Scalars['String']['output']>;
   is_active: Scalars['Boolean']['output'];
+  /** Ships with Duncit, so resetEmailTemplate can put its shipped body back. */
+  is_shipped: Scalars['Boolean']['output'];
   mjml: Scalars['String']['output'];
   name: Scalars['String']['output'];
   slug: Scalars['String']['output'];
@@ -14221,6 +14247,11 @@ export type Mutation = {
   resetDashboardLayout: Scalars['Boolean']['output'];
   /** Restore one of the nine to the header and footer it shipped with. */
   resetEmailFragment: EmailFragment;
+  /**
+   * Put back the body Duncit ships for this template — the current design.
+   * Subject, fragment and footer sentence are left as they are.
+   */
+  resetEmailTemplate: EmailTemplate;
   /** Deprecated: code + new password in one call. Use completePasswordReset. */
   resetPasswordWithOtp: Scalars['Boolean']['output'];
   /**
@@ -14388,6 +14419,8 @@ export type Mutation = {
   saveShellWorkspaceState: ShellWorkspaceState;
   /** Save part of your chat setup. Anything omitted is left as it was. */
   saveStaffChatState: StaffChatState;
+  /** Saves one site's Earn section and pill. */
+  saveWebsiteEarnSection: WebsiteEarnSection;
   seedSuperAdmin: SeedAdminResult;
   /** Send a WhatsApp template campaign message through AiSensy. */
   sendAisensyCampaign: AisensySendResult;
@@ -18183,6 +18216,11 @@ export type MutationResetEmailFragmentArgs = {
 };
 
 
+export type MutationResetEmailTemplateArgs = {
+  template_id: Scalars['ID']['input'];
+};
+
+
 export type MutationResetPasswordWithOtpArgs = {
   input: ResetPasswordInput;
 };
@@ -18529,6 +18567,11 @@ export type MutationSaveShellWorkspaceStateArgs = {
 
 export type MutationSaveStaffChatStateArgs = {
   input: StaffChatStateInput;
+};
+
+
+export type MutationSaveWebsiteEarnSectionArgs = {
+  input: WebsiteEarnSectionInput;
 };
 
 
@@ -26551,6 +26594,12 @@ export type Query = {
   emailLogStats: EmailLogStats;
   /** Every email attempt, newest first. Filter by status, category, source, template. */
   emailLogsTable: EmailLogTablePage;
+  /**
+   * A sample body drawn with the shipped email design — what a new template
+   * starts from, and what the Fragments page previews a draft header and
+   * footer around.
+   */
+  emailStarterMjml: Scalars['String']['output'];
   emailTemplate?: Maybe<EmailTemplate>;
   emailTemplateBySlug?: Maybe<EmailTemplate>;
   /**
@@ -27354,6 +27403,8 @@ export type Query = {
   /** APPROVED, active venues for the consumer Venues page — optionally scoped to a location, with server-side search + Super→Cat→Sub category filter (a venue matches when ANY one of its categories carries every level given). No args = every public venue (legacy callers). */
   publicVenues: Array<Venue>;
   publicWebsiteContent: Array<WebsiteContentItem>;
+  /** Public: what one site's home page draws for its Earn section and pill. Asked for at page load. */
+  publicWebsiteEarnSection: WebsiteEarnSection;
   /** Public: a site's active navigation, ordered by group + sort order. */
   publicWebsiteNav: Array<WebsiteNavItem>;
   /** Public: a site's active reels in slider order, capped at the max reels setting. */
@@ -27601,6 +27652,8 @@ export type Query = {
   storeAdminCollectionPreview: Array<StoreProductCard>;
   storeAdminCollections: Array<StoreAdminCollection>;
   storeAdminFacets: Array<StoreFacet>;
+  /** Every live storefront page the store's data makes (pets, aisles, collections, brands, pages), for link pickers. */
+  storeAdminLinkTargets: Array<StoreLinkTarget>;
   storeAdminOrder: StoreAdminOrder;
   storeAdminPages: Array<StoreAdminPage>;
   storeAdminPetTypes: Array<StoreAdminPetType>;
@@ -27908,6 +27961,8 @@ export type Query = {
   warehouseApprovalRequests: Array<ApprovalRequest>;
   websiteContent: Array<WebsiteContentItem>;
   websiteContentTable: WebsiteContentItemTablePage;
+  /** Every site's Earn section, saved or default, for the Website portal. */
+  websiteEarnSections: Array<WebsiteEarnSection>;
   websiteNav: Array<WebsiteNavItem>;
   websiteNavTable: WebsiteNavItemTablePage;
   websiteReelSettings: WebsiteReelSettings;
@@ -30612,6 +30667,11 @@ export type QueryPublicVenuesArgs = {
 
 export type QueryPublicWebsiteContentArgs = {
   type: WebsitePageType;
+};
+
+
+export type QueryPublicWebsiteEarnSectionArgs = {
+  site: EarnSite;
 };
 
 
@@ -34827,11 +34887,16 @@ export type StoreActiveOccasion = {
   announcement_text: Scalars['String']['output'];
   background_color: Scalars['String']['output'];
   background_url: Scalars['String']['output'];
+  /** Off: the theme's colours only, no animation. */
+  effects_enabled: Scalars['Boolean']['output'];
   ends_at: Scalars['String']['output'];
   favicon_url: Scalars['String']['output'];
+  /** A short festive line over the home page's first banner; blank shows none. */
+  greeting: Scalars['String']['output'];
   label: Scalars['String']['output'];
   logo_url: Scalars['String']['output'];
   slug: Scalars['String']['output'];
+  theme: StoreOccasionTheme;
 };
 
 export type StoreAddressInput = {
@@ -35667,6 +35732,8 @@ export type StoreHomeSectionKind =
   /** A row of round category icons. */
   | 'CATEGORY_ICONS'
   | 'COLLECTION_CAROUSEL'
+  /** A promotion for Earn with Duncit; a blank link goes to the Earn with Duncit site. */
+  | 'EARN_PROMO'
   /** A countdown sale: ends_at is the deadline, discount_tiers the tabs. */
   | 'FLASH_SALE'
   | 'HERO_SLIDER'
@@ -35675,6 +35742,8 @@ export type StoreHomeSectionKind =
   /** A product carousel from a collection, a category, hand-picked products or a best-seller/newest/discount list. */
   | 'PRODUCT_SLIDER'
   | 'PROMO_BANNERS'
+  /** Large picture-and-words cards that lead into a range (Explore our range). */
+  | 'RANGE_SHOWCASE'
   | 'USP_STRIP';
 
 /** Why a cart line cannot be bought as it stands. */
@@ -35683,6 +35752,21 @@ export type StoreLineIssue =
   | 'QTY_REDUCED'
   | 'UNAVAILABLE'
   | 'VARIANT_GONE';
+
+/** A storefront page a home tile or banner can link to: its name and its same-site path. */
+export type StoreLinkTarget = {
+  __typename?: 'StoreLinkTarget';
+  group: StoreLinkTargetGroup;
+  label: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+};
+
+export type StoreLinkTargetGroup =
+  | 'BRAND'
+  | 'CATEGORY'
+  | 'COLLECTION'
+  | 'PAGE'
+  | 'PET_TYPE';
 
 /**
  * Everything the stores ask for when the app is listed, kept once and applied on
@@ -35770,20 +35854,23 @@ export type StoreNdrAction =
   | 'REATTEMPT'
   | 'RETURN';
 
-/** A festive window: while it is open the store swaps its logo, favicon and background. */
+/** A festive window: while it is open the store swaps its logo, favicon and background and wears its theme. */
 export type StoreOccasion = {
   __typename?: 'StoreOccasion';
   announcement_text: Scalars['String']['output'];
   background_color: Scalars['String']['output'];
   background_url: Scalars['String']['output'];
+  effects_enabled: Scalars['Boolean']['output'];
   ends_at: Scalars['String']['output'];
   favicon_url: Scalars['String']['output'];
+  greeting: Scalars['String']['output'];
   is_active: Scalars['Boolean']['output'];
   label: Scalars['String']['output'];
   logo_url: Scalars['String']['output'];
   slug: Scalars['String']['output'];
   sort_order: Scalars['Int']['output'];
   starts_at: Scalars['String']['output'];
+  theme: StoreOccasionTheme;
 };
 
 export type StoreOccasionInput = {
@@ -35792,8 +35879,11 @@ export type StoreOccasionInput = {
   /** A CSS colour; blank keeps the store's own page colour. */
   background_color?: InputMaybe<Scalars['String']['input']>;
   background_url?: InputMaybe<Scalars['String']['input']>;
+  /** Off plays no animation; omitted = on. */
+  effects_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ends_at: Scalars['String']['input'];
   favicon_url?: InputMaybe<Scalars['String']['input']>;
+  greeting?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   label: Scalars['String']['input'];
   logo_url?: InputMaybe<Scalars['String']['input']>;
@@ -35802,7 +35892,46 @@ export type StoreOccasionInput = {
   /** Higher wins when two windows overlap. */
   sort_order?: InputMaybe<Scalars['Int']['input']>;
   starts_at: Scalars['String']['input'];
+  /** Omitted keeps NONE, the house look. */
+  theme?: InputMaybe<StoreOccasionTheme>;
 };
+
+/** A festive look the storefront ships: its own colour tokens and light animation. NONE keeps the house look. */
+export type StoreOccasionTheme =
+  | 'APRIL_FOOLS'
+  | 'BAISAKHI'
+  | 'CHHATH_PUJA'
+  | 'CHILDRENS_DAY'
+  | 'CHRISTMAS'
+  | 'DIWALI'
+  | 'DURGA_PUJA'
+  | 'DUSSEHRA'
+  | 'EARTH_DAY'
+  | 'EASTER'
+  | 'EID'
+  | 'FATHERS_DAY'
+  | 'FRIENDSHIP_DAY'
+  | 'GANDHI_JAYANTI'
+  | 'GANESH_CHATURTHI'
+  | 'GURU_NANAK_JAYANTI'
+  | 'HALLOWEEN'
+  | 'HOLI'
+  | 'INDEPENDENCE_DAY'
+  | 'JANMASHTAMI'
+  | 'KARWA_CHAUTH'
+  | 'LOHRI'
+  | 'MAKAR_SANKRANTI'
+  | 'MOTHERS_DAY'
+  | 'NAVRATRI'
+  | 'NEW_YEAR'
+  | 'NONE'
+  | 'ONAM'
+  | 'PONGAL'
+  | 'RAKSHA_BANDHAN'
+  | 'REPUBLIC_DAY'
+  | 'VALENTINES_DAY'
+  | 'WOMENS_DAY'
+  | 'YOGA_DAY';
 
 export type StoreOptionValue = {
   __typename?: 'StoreOptionValue';
@@ -35989,6 +36118,17 @@ export type StoreParcelInput = {
   height_cm: Scalars['Float']['input'];
   length_cm: Scalars['Float']['input'];
   weight_kg: Scalars['Float']['input'];
+};
+
+export type StorePaymentBadge = {
+  __typename?: 'StorePaymentBadge';
+  image_url: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+};
+
+export type StorePaymentBadgeInput = {
+  image_url: Scalars['String']['input'];
+  label: Scalars['String']['input'];
 };
 
 export type StorePaymentState =
@@ -36221,6 +36361,8 @@ export type StorePublicSettings = {
   max_qty_per_line: Scalars['Int']['output'];
   min_order_value: Scalars['Float']['output'];
   og_image_url: Scalars['String']['output'];
+  /** The payment methods the footer shows as accepted, with the marks the operator uploaded. */
+  payment_badges: Array<StorePaymentBadge>;
   prepaid_discount_pct: Scalars['Float']['output'];
   return_reasons: Array<Scalars['String']['output']>;
   return_window_days: Scalars['Int']['output'];
@@ -36610,6 +36752,8 @@ export type StoreSectionInput = {
 export type StoreSectionItem = {
   __typename?: 'StoreSectionItem';
   cta_label: Scalars['String']['output'];
+  /** The small line above a title, or the badge on a tile. */
+  eyebrow: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image_url: Scalars['String']['output'];
   link: Scalars['String']['output'];
@@ -36620,6 +36764,7 @@ export type StoreSectionItem = {
 
 export type StoreSectionItemInput = {
   cta_label?: InputMaybe<Scalars['String']['input']>;
+  eyebrow?: InputMaybe<Scalars['String']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
   link?: InputMaybe<Scalars['String']['input']>;
   mobile_image_url?: InputMaybe<Scalars['String']['input']>;
@@ -36691,6 +36836,7 @@ export type StoreSettings = {
   min_order_value: Scalars['Float']['output'];
   occasions: Array<StoreOccasion>;
   og_image_url: Scalars['String']['output'];
+  payment_badges: Array<StorePaymentBadge>;
   prepaid_discount_pct: Scalars['Float']['output'];
   /** The Tech-portal Razorpay account online payments use; empty = the default one. */
   razorpay_account: Scalars['String']['output'];
@@ -36743,6 +36889,7 @@ export type StoreSettingsInput = {
   min_order_value?: InputMaybe<Scalars['Float']['input']>;
   occasions?: InputMaybe<Array<StoreOccasionInput>>;
   og_image_url?: InputMaybe<Scalars['String']['input']>;
+  payment_badges?: InputMaybe<Array<StorePaymentBadgeInput>>;
   prepaid_discount_pct?: InputMaybe<Scalars['Float']['input']>;
   /** A Tech-portal Razorpay entry id, or empty for the default one. */
   razorpay_account?: InputMaybe<Scalars['String']['input']>;
@@ -42211,6 +42358,46 @@ export type WebsiteContentItemTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<WebsiteContentItem>;
   total: Scalars['Int']['output'];
+};
+
+/** One site's Earn with Duncit section and floating pill, from Website portal > Earn with Duncit. Blank copy = the localized default. */
+export type WebsiteEarnSection = {
+  __typename?: 'WebsiteEarnSection';
+  accent: EarnAccent;
+  cta_label: Scalars['String']['output'];
+  /** Blank = the earnwith site's own address. */
+  cta_url: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  eyebrow: Scalars['String']['output'];
+  floating_enabled: Scalars['Boolean']['output'];
+  floating_label: Scalars['String']['output'];
+  heading: Scalars['String']['output'];
+  heading_muted: Scalars['String']['output'];
+  /** Blank = the bundled photo wall. */
+  images: Array<Scalars['String']['output']>;
+  position: EarnPosition;
+  site: EarnSite;
+  text: Scalars['String']['output'];
+  /** ISO time of the last save, or null while the site still runs on defaults. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+  variant: EarnVariant;
+};
+
+export type WebsiteEarnSectionInput = {
+  accent?: InputMaybe<EarnAccent>;
+  cta_label?: InputMaybe<Scalars['String']['input']>;
+  cta_url?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  eyebrow?: InputMaybe<Scalars['String']['input']>;
+  floating_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  floating_label?: InputMaybe<Scalars['String']['input']>;
+  heading?: InputMaybe<Scalars['String']['input']>;
+  heading_muted?: InputMaybe<Scalars['String']['input']>;
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  position?: InputMaybe<EarnPosition>;
+  site: EarnSite;
+  text?: InputMaybe<Scalars['String']['input']>;
+  variant?: InputMaybe<EarnVariant>;
 };
 
 export type WebsiteNavArea =

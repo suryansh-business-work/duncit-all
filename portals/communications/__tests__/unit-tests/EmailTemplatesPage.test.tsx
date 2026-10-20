@@ -93,6 +93,7 @@ const baseEditor = (over: Partial<Editor> = {}): Editor =>
     setSnack: vi.fn(),
     save: vi.fn(),
     onDelete: vi.fn(),
+    onReset: vi.fn(),
     importDetected: vi.fn(),
     validateMjml: vi.fn(),
     ...over,

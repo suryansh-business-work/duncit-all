@@ -5,8 +5,10 @@ import {
   applyVars,
   detectVariables,
   renderTemplateBody,
+  shippedDefault,
 } from './emailTemplate.service';
 import { emailPreviewVars, sendHtmlEmail } from '@services/email/email.service';
+import { STARTER_MJML } from '@services/email/catalogue/starter';
 import { GraphQLError } from 'graphql';
 
 /** The Communications console manages the templates. */
@@ -25,6 +27,9 @@ function parseVars(json?: string | null): Record<string, string> {
 }
 
 export const emailTemplateResolvers = {
+  EmailTemplate: {
+    is_shipped: (tpl: { slug: string }) => Boolean(shippedDefault(tpl.slug)),
+  },
   Query: {
     emailTemplates: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -71,6 +76,10 @@ export const emailTemplateResolvers = {
         // send path, so listing them would ask an admin to fill them in.
         detected_variables: detectVariables(args.mjml),
       };
+    },
+    emailStarterMjml: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return STARTER_MJML;
     },
   },
   Mutation: {
@@ -122,6 +131,10 @@ export const emailTemplateResolvers = {
     ) => {
       requireRole(ctx, ADMIN_ROLES);
       return emailTemplateService.delete(args.template_id);
+    },
+    resetEmailTemplate: (_p: unknown, args: { template_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return emailTemplateService.reset(args.template_id);
     },
     sendTestEmail: async (
       _p: unknown,

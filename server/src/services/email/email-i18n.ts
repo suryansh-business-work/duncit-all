@@ -220,6 +220,12 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.fragment.billing.label": "Billing",
   "email.fragment.legal.label": "Account notice",
   "email.fragment.internal.label": "Staff only",
+  // The body a new template starts from (Communications > Emails > Templates),
+  // also the stand-in the Fragments page previews a header and footer around.
+  "email.starter.title": "Your email heading",
+  "email.starter.body":
+    "Write the message here. The header above and the footer below come from this template's fragment.",
+  "email.starter.note": "A closing note for anything the reader should know.",
 };
 
 const PREFIX = "t:";

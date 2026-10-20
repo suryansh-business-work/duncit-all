@@ -8,6 +8,7 @@ import { LEGACY_TEMPLATE_FINGERPRINTS, shippedFingerprint } from './emailTemplat
 import { emailFragmentService } from '@modules/content/emailFragment/emailFragment.service';
 import { CATEGORY_NOTE_KEY } from '@modules/content/emailFragment/emailFragment.defaults';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from '@services/email/template-categories';
+import { STARTER_MJML } from '@services/email/catalogue/starter';
 
 /** Walk the MJML source and extract every {{ var }} reference. */
 export function detectVariables(mjml: string): string[] {
@@ -281,6 +282,8 @@ export const emailTemplateService = {
       });
     return EmailTemplateModel.create({
       ...input,
+      // No body given: start from the shipped design, not a blank page.
+      mjml: input.mjml || STARTER_MJML,
       template_id: crypto.randomUUID(),
     });
   },
@@ -298,6 +301,34 @@ export const emailTemplateService = {
   async delete(template_id: string) {
     const r = await EmailTemplateModel.deleteOne({ template_id });
     return r.deletedCount > 0;
+  },
+
+  /**
+   * Put the shipped body back on one template — the way out for a body an
+   * admin edited, which `upgradeShippedDefaults` deliberately never touches.
+   * Only the body moves: the subject, fragment and footer sentence are the
+   * admin's choices, not the design. Variables the shipped body uses are added.
+   */
+  async reset(template_id: string) {
+    const doc = await EmailTemplateModel.findOne({ template_id });
+    if (!doc) throw new GraphQLError('Template not found', { extensions: { code: 'NOT_FOUND' } });
+    const seed = CODE_DEFAULTS.get(doc.slug);
+    if (!seed) {
+      throw new GraphQLError('Only the templates that ship with Duncit can be reset', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const known = new Set((doc.variables ?? []).map((variable) => variable.key));
+    const added = detectVariables(seed.mjml)
+      .filter((key) => !known.has(key))
+      .map((key) => ({ key }));
+    const updated = await EmailTemplateModel.findOneAndUpdate(
+      { template_id },
+      { $set: { mjml: seed.mjml }, ...(added.length ? { $push: { variables: { $each: added } } } : {}) },
+      { new: true }
+    );
+    logs.server.info('emailTemplate', 'reset', { slug: doc.slug, msg: `${doc.slug} reset to the shipped body` });
+    return updated;
   },
 
   /**

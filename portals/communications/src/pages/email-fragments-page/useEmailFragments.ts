@@ -9,6 +9,7 @@ import {
   FRAGMENT_TEMPLATE_USAGE,
   RENDER,
   RESET_FRAGMENT,
+  STARTER_BODY,
   UPDATE_FRAGMENT,
   previewDocument,
   type Fragment,
@@ -34,6 +35,11 @@ export function useEmailFragments() {
     FRAGMENT_TEMPLATE_USAGE,
     { fetchPolicy: 'cache-and-network' }
   );
+  // The body every draft is previewed around; fetched once, it never changes.
+  const { data: starterData, error: starterError } = useQuery<{ emailStarterMjml: string }>(STARTER_BODY, {
+    fetchPolicy: 'cache-first',
+  });
+  const starter = starterData?.emailStarterMjml;
   const [updateFragment] = useMutation<any>(UPDATE_FRAGMENT);
   const [resetFragment] = useMutation<any>(RESET_FRAGMENT);
   const [createFragment] = useMutation<any>(CREATE_FRAGMENT);
@@ -89,13 +95,17 @@ export function useEmailFragments() {
   }, [draft, list, selected]);
 
   useEffect(() => {
-    if (!draft) return;
+    if (starterError) setPreviewErrors([starterError.message]);
+  }, [starterError]);
+
+  useEffect(() => {
+    if (!draft || !starter) return;
     setPreviewLoading(true);
     const id = setTimeout(async () => {
       try {
         const res = await client.query<any>({
           query: RENDER,
-          variables: { mjml: previewDocument(draft.header_mjml, draft.footer_mjml) },
+          variables: { mjml: previewDocument(starter, draft.header_mjml, draft.footer_mjml) },
           fetchPolicy: 'network-only',
         });
         setPreviewHtml(res.data?.renderEmailTemplate?.html ?? '');
@@ -107,7 +117,7 @@ export function useEmailFragments() {
       }
     }, 600);
     return () => clearTimeout(id);
-  }, [draft, client]);
+  }, [draft, starter, client]);
 
   const save = async () => {
     if (!draft) return;

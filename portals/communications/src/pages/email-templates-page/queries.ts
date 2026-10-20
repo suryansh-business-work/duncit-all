@@ -17,7 +17,17 @@ export const TEMPLATES = gql`
         sample
       }
       is_active
+      is_shipped
       updated_at
+    }
+  }
+`;
+
+/** Put the shipped body (the current design) back on one template. */
+export const RESET = gql`
+  mutation ResetTpl($id: ID!) {
+    resetEmailTemplate(template_id: $id) {
+      template_id
     }
   }
 `;
@@ -92,18 +102,6 @@ export const SEND_TEST = gql`
   }
 `;
 
-export const STARTER = `<mjml>
-  <mj-body>
-    <mj-section background-color="#ffffff">
-      <mj-column>
-        <mj-text font-size="20px" font-weight="700">Hello {{ name }}</mj-text>
-        <mj-text>Edit this template and click Preview.</mj-text>
-      </mj-column>
-    </mj-section>
-  </mj-body>
-</mjml>
-`;
-
 export interface Tpl {
   template_id: string;
   slug: string;
@@ -117,6 +115,8 @@ export interface Tpl {
   footer_note?: string;
   variables: { key: string; description?: string; sample?: string }[];
   is_active: boolean;
+  /** Ships with Duncit, so its shipped body can be put back (Reset design). */
+  is_shipped?: boolean;
   /** Server-written, never edited here — what "Recently updated" sorts on. */
   updated_at?: string | null;
 }

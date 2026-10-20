@@ -69,6 +69,24 @@ describe('EditorActionsBar', () => {
     expect(props.onAutoSaveChange).toHaveBeenCalledWith(false);
   });
 
+  it('offers no Reset design on a template Duncit does not ship', () => {
+    renderBar();
+    expect(screen.queryByRole('button', { name: 'Reset design' })).toBeNull();
+  });
+
+  it('offers Reset design on a shipped template and wires it', () => {
+    const onReset = vi.fn();
+    renderBar({ onReset });
+    fireEvent.click(screen.getByRole('button', { name: 'Reset design' }));
+    expect(onReset).toHaveBeenCalledTimes(1);
+  });
+
+  it('holds Reset design back while a save is in flight', () => {
+    const onReset = vi.fn();
+    renderBar({ onReset, busy: true });
+    expect(screen.getByRole('button', { name: 'Reset design' })).toBeDisabled();
+  });
+
   it('switches auto-save back on', () => {
     const props = renderBar({ autoSave: false });
     fireEvent.click(screen.getByRole('switch', { name: 'Auto-save' }));

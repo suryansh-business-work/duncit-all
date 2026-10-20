@@ -5,6 +5,7 @@ import {
   DELETE,
   FRAGMENT_OPTIONS,
   RENDER,
+  RESET,
   TEMPLATE_USAGE,
   TEMPLATES,
   UPDATE,
@@ -38,6 +39,7 @@ export function useEmailTemplateEditor() {
   }>(TEMPLATE_USAGE, { fetchPolicy: 'cache-and-network' });
   const [updateTpl] = useMutation<any>(UPDATE);
   const [deleteTpl] = useMutation<any>(DELETE);
+  const [resetTpl] = useMutation<{ resetEmailTemplate: Pick<Tpl, 'template_id'> }>(RESET);
   const client = useApolloClient();
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -194,6 +196,29 @@ export function useEmailTemplateEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSave, dirty, busy, snapshot]);
 
+  /** Put the shipped body back, then reload the draft from what the server now holds. */
+  const onReset = async () => {
+    if (!draft) return;
+    const ok = await confirm({
+      title: t('tech.emailTemplates.resetDesign'),
+      message: t('tech.emailTemplates.resetDesignConfirm', { vars: { name: draft.name } }),
+      destructive: true,
+      confirmLabel: t('tech.emailTemplates.resetDesign'),
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await resetTpl({ variables: { id: draft.template_id } });
+      loadedId.current = null;
+      await refetch();
+      setSnack({ kind: 'success', msg: t('tech.emailTemplates.resetDesignDone') });
+    } catch (e) {
+      setSnack({ kind: 'error', msg: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const onDelete = async () => {
     if (!draft) return;
     const ok = await confirm({
@@ -257,6 +282,7 @@ export function useEmailTemplateEditor() {
     snack,
     setSnack,
     save,
+    onReset,
     onDelete,
     importDetected,
     validateMjml,

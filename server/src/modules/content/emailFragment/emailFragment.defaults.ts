@@ -88,7 +88,11 @@ export const CATEGORY_LABEL_KEY: Record<EmailCategory, string> = {
 /** The header's label: a caption, uppercase and quiet. */
 const LABEL_STYLE = `font-size:${F.caption.size};line-height:${F.caption.line};font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${C.muted}`;
 
-/** The card's side edges — the body's wrapper draws the same two between them. */
+/**
+ * The card's side edges. The header is the card's top cap and the footer its
+ * bottom cap: the body between them is a closed box whose own top and bottom
+ * edges are the two rules (`shell` in catalogue/mjml), so neither cap draws one.
+ */
 const SIDES = `border-left="1px solid ${C.border}" border-right="1px solid ${C.border}"`;
 
 /**
@@ -108,11 +112,6 @@ const header = (category: EmailCategory) => `    <mj-wrapper padding="24px 0 0 0
             <mj-text align="right" padding="0"><table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr><td valign="middle">${badge(CATEGORY_ICON[category])}</td><td valign="middle" style="padding-left:10px;${LABEL_STYLE}">{{t:${CATEGORY_LABEL_KEY[category]}}}</td></tr></table></mj-text>
           </mj-column>
         </mj-group>
-      </mj-section>
-      <mj-section css-class="gutter" background-color="${C.surface}" ${SIDES} padding="0 ${S.gutter}">
-        <mj-column>
-          <mj-divider border-color="${C.border}" border-width="1px" padding="0" />
-        </mj-column>
       </mj-section>
     </mj-wrapper>`;
 
@@ -155,7 +154,7 @@ const unsubscribeLine = () => {
  * colour clears 4.5:1 on the canvas; the old grey copyright line did not.
  */
 const footer = (optOutable: boolean) => `    <mj-wrapper padding="0 0 32px 0">
-      <mj-section css-class="gutter" background-color="${C.panel}" border-top="1px solid ${C.border}" ${SIDES} border-bottom="1px solid ${C.border}" border-radius="0 0 ${S.cardRadius} ${S.cardRadius}" padding="24px ${S.gutter} 28px ${S.gutter}">
+      <mj-section css-class="gutter" background-color="${C.panel}" ${SIDES} border-bottom="1px solid ${C.border}" border-radius="0 0 ${S.cardRadius} ${S.cardRadius}" padding="24px ${S.gutter} 28px ${S.gutter}">
         <mj-column>
 ${footerText('{{footer_note}}', '10px')}
 ${footerText(`{{t:email.fragment.help}} ${footerLink('mailto:{{support_email}}', '{{support_email}}')}`)}${optOutable ? unsubscribeLine() : ''}

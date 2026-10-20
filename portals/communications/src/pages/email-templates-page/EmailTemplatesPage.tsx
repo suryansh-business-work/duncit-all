@@ -107,6 +107,7 @@ export default function EmailTemplatesPage() {
             onImportDetected={editor.importDetected}
             onSave={editor.save}
             onDelete={editor.onDelete}
+            onReset={editor.onReset}
             onSendTest={() => setTestOpen(true)}
           />
         ) : (

@@ -227,3 +227,12 @@ export const LEGACY_FRAGMENT_FINGERPRINTS: Readonly<
   legal: { header: ["c557645e873e4842", "daadff1680e656bf", "11c27c667bfd00ef"], footer: ["67c7106f77cc47bd", "c6e3bbeed6751875", "e83b6573821db755", "fccc06ce66c763eb"] },
   internal: { header: ["c557645e873e4842", "daadff1680e656bf", "f8a3e618cdc33cf3"], footer: ["67c7106f77cc47bd", "c6e3bbeed6751875", "e83b6573821db755", "cae8f313e83f0ee8"] },
 };
+
+/**
+ * Templates first shipped AFTER the redesign, so no earlier default of theirs
+ * ever existed and there is nothing to fingerprint. Their stored rows are
+ * created from the current body and never need an upgrade. Listed explicitly
+ * so a template that DID ship before (and is missing its fingerprints) still
+ * fails the unit test instead of slipping through as "new".
+ */
+export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set(['env-access-otp']);

@@ -138,8 +138,9 @@ export function CreatePodScreen() {
                 }
                 const created = await publish(id, input);
                 fireAndForget(useHomeStore.getState().fetch(true));
-                // A pod holding a venue slot awaits the venue's decision — land
-                // the host on the waiting screen instead of Host Management.
+                // Venue bookings are instant, so a new pod comes back APPROVED
+                // and lands where a live pod lands. PENDING is kept only for
+                // older pods still waiting on a venue (mWeb twin).
                 if (created.venue_approval_status === PodVenueApproval.Pending) {
                   navigation.replace('PodPending', { podId: created.id });
                 } else if (await challengeRequired(created.id)) {

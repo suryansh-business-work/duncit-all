@@ -46,7 +46,6 @@ const CLUBS: CreatePodClub[] = [
     locality: 'Indiranagar',
     matched_venues_count: 2,
     matched_venues: [{ id: 'venue-1' }, { id: 'venue-2' }],
-    available_slots_count: 2,
   },
   {
     id: 'club-2',
@@ -55,7 +54,6 @@ const CLUBS: CreatePodClub[] = [
     locality: 'Whitefield',
     matched_venues_count: 1,
     matched_venues: [{ id: 'venue-3' }],
-    available_slots_count: 1,
   },
   {
     id: 'club-3',
@@ -63,8 +61,6 @@ const CLUBS: CreatePodClub[] = [
     location_id: 'loc-2',
     locality: '',
     matched_venues_count: 1,
-    // Its venues have no open slot, so a physical pod cannot be planned here.
-    available_slots_count: 0,
   },
 ];
 
@@ -143,9 +139,8 @@ describe('LocationClubStep', () => {
     expect(screen.getByTestId('create-pod-club-option-club-1-place')).toHaveTextContent(
       'Indiranagar, Bengaluru',
     );
-    // A physical pod also hears how many open slots the club's venues have.
     expect(screen.getByTestId('create-pod-club-option-club-1')).toHaveAccessibleName(
-      'Sunset Club, Indiranagar, Bengaluru, 2 open slots',
+      'Sunset Club, Indiranagar, Bengaluru',
     );
     // A club with no area still says which city it is in.
     expect(screen.getByTestId('create-pod-club-option-club-3-place')).toHaveTextContent('Pune');
@@ -180,14 +175,13 @@ describe('LocationClubStep', () => {
     expect(clubInput()).toHaveValue('Whitefield Club | Whitefield, Bengaluru');
   });
 
-  it('refuses a club with no open slot for a physical pod and explains why', () => {
+  it('lets a physical pod pick any club — venues are booked at their own pricing on step 3', () => {
     step({ values: { location_id: 'loc-2' } });
 
     fireEvent.mouseDown(clubInput());
     fireEvent.click(screen.getByTestId('create-pod-club-option-club-3'));
 
-    expect(formRef?.getValues('club_id')).toBe('');
-    expect(screen.getByTestId('create-pod-no-slots-dialog')).toHaveTextContent('No slots available in this club');
+    expect(formRef?.getValues('club_id')).toBe('club-3');
   });
 
   it('renders a locality that has no clubs in it', () => {

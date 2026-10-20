@@ -17,7 +17,10 @@ import {
   type CreatePodFormValues,
   type CreatePodVenue,
 } from '@/components/create-pod/create-pod.types';
+import type { VenueQuoteState } from '@/components/create-pod/steps/VenueSlotStep/VenueQuoteCard';
+import { VenuePricingModel } from '@/generated/graphql/graphql';
 import { usePotentialEarnings } from '@/hooks/usePotentialEarnings';
+import { startOfDayInZone } from '@duncit/utils';
 import { appFormatter } from '@/utils/app-formatter';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -103,33 +106,84 @@ beforeEach(() => {
     .mockReturnValue({ projection: null, waterfall: null, isLoading: false });
 });
 
+const noQuote: VenueQuoteState = { quote: null, loading: false, error: null };
+
 function VenueSlotHarness({
   initial,
   venues = [venue],
-  viewerUserId = 'me-1',
   clubVenueIds = new Set(venues.map((item) => item.id)),
   pinnedVenueId,
+  venueQuote = noQuote,
 }: Readonly<{
   initial: Partial<CreatePodFormValues>;
   venues?: CreatePodVenue[];
-  viewerUserId?: string;
   clubVenueIds?: Set<string>;
   pinnedVenueId?: string;
+  venueQuote?: VenueQuoteState;
 }>) {
   const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
   return (
-    <VenueSlotStep
-      form={form}
-      venues={venues}
-      clubVenueIds={clubVenueIds}
-      viewerUserId={viewerUserId}
-      pinnedVenueId={pinnedVenueId}
-      venueNotice="NONE"
-    />
+    <>
+      <VenueSlotStep
+        form={form}
+        venues={venues}
+        clubVenueIds={clubVenueIds}
+        venueQuote={venueQuote}
+        currencySymbol="₹"
+        pinnedVenueId={pinnedVenueId}
+        venueNotice="NONE"
+      />
+      <Text testID="readout-slot">{form.watch('venue_slot_id')}</Text>
+      <Text testID="readout-start">{form.watch('pod_date_time_text')}</Text>
+      <Text testID="readout-end">{form.watch('pod_end_date_time_text')}</Text>
+    </>
   );
 }
+
+/** Routes the instant-booking reads by operation name; anything else (the app
+ * settings the date formatter fetches) answers empty. */
+function routeBookingReads(
+  pricing: Record<string, unknown> | Error,
+  calendar: Record<string, unknown> = { buffer_minutes: 0, min_notice_minutes: 0, days: [] },
+) {
+  mockGraphqlRequest.mockImplementation((doc: { definitions: { name?: { value: string } }[] }) => {
+    const name = doc.definitions[0]?.name?.value;
+    if (name === 'MobileHostBookingPricing') {
+      return pricing instanceof Error ? Promise.reject(pricing) : Promise.resolve({ venuePricing: pricing });
+    }
+    if (name === 'MobileHostBookingCalendar') return Promise.resolve({ venueBookingCalendar: calendar });
+    return Promise.resolve({});
+  });
+}
+
+const HOUR_MS = 3_600_000;
+const perHourPricing = {
+  model: 'PER_HOUR',
+  configured: true,
+  min_pax: 0,
+  max_pax: 0,
+  min_hours: 1,
+  max_hours: 0,
+  booking_increment_minutes: 60,
+  pet_fee: 0,
+};
+/** Two days out, open 10:00–13:00 in the admin zone. */
+function openDay() {
+  const fmt = appFormatter();
+  const date = fmt.dayKey(futureIso(48));
+  const midnight = startOfDayInZone(date, fmt.timeZone);
+  const at = (hour: number) => new Date(midnight + hour * HOUR_MS).toISOString();
+  return { date, at, open: at(10), close: at(13) };
+}
+const inputText = (iso: string) => format(new Date(iso), appFormatter().dateTimeInputFormat);
+const instantVenue = {
+  pod_mode: 'PHYSICAL' as const,
+  location_id: 'l1',
+  venue_id: 'v1',
+  venue_space_label: 'Whole venue',
+};
 
 /** Lets a test force a venue_space_label error to assert the danger-styled line. */
 function SpaceErrorHarness() {
@@ -147,7 +201,8 @@ function SpaceErrorHarness() {
         form={form}
         venues={[venue]}
         clubVenueIds={new Set(['v1'])}
-        viewerUserId="me-1"
+        venueQuote={{ quote: null, loading: false, error: null }}
+        currencySymbol="₹"
         venueNotice="NONE"
       />
       <Text
@@ -181,7 +236,8 @@ function SpaceHarness({ venues }: Readonly<{ venues: CreatePodVenue[] }>) {
         form={form}
         venues={venues}
         clubVenueIds={new Set(venues.map((item) => item.id))}
-        viewerUserId="other-user"
+        venueQuote={{ quote: null, loading: false, error: null }}
+        currencySymbol="₹"
         venueNotice="NONE"
       />
       <Text testID="spots-readout">{form.watch('no_of_spots_text')}</Text>
@@ -227,7 +283,7 @@ describe('VenueSlotStep', () => {
     expect(screen.getByTestId('create-pod-space-Whole venue')).toHaveTextContent(/0 spots/);
   });
 
-  it('filters slots to the picked space and coalesces a missing slot space label', async () => {
+  it("filters a Pod Request's slots to the picked space and coalesces a missing slot space label", async () => {
     const withSpaces: CreatePodVenue = {
       ...venue,
       capacity: 200,
@@ -248,7 +304,12 @@ describe('VenueSlotStep', () => {
     });
     renderWithProviders(
       <VenueSlotHarness
-        initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }}
+        initial={{
+          pod_mode: 'PHYSICAL',
+          location_id: 'l1',
+          venue_id: 'v1',
+          partner_request_id: 'req1',
+        }}
         venues={[withSpaces]}
       />,
     );
@@ -306,15 +367,20 @@ describe('VenueSlotStep', () => {
     );
   });
 
-  it('books a slot on your own venue with the instant-confirm note', async () => {
+  it("books a Pod Request's held slot with no venue-approval note", async () => {
+    const request = { pod_mode: 'PHYSICAL' as const, location_id: 'l1', venue_id: 'v1' };
     renderWithProviders(
-      <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
+      <VenueSlotHarness initial={{ ...request, partner_request_id: 'req1' }} />,
     );
-    // Slots are gated behind the space (capacity) selection now.
+    // Slots are gated behind the space (capacity) selection.
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
     await screen.findByTestId('slot-tile-s1');
     fireEvent.press(screen.getByTestId('slot-tile-s1'));
-    expect(screen.getByTestId('create-pod-approval-note')).toHaveTextContent(/your venue/);
+    await waitFor(() => expect(screen.getByTestId('readout-slot')).toHaveTextContent('s1'));
+    // Bookings are instant now — no "the venue must approve" line, and no
+    // instant-booking picker for a pod that keeps its request's slot.
+    expect(screen.queryByTestId('create-pod-approval-note')).toBeNull();
+    expect(screen.queryByTestId('create-pod-instant-booking')).toBeNull();
     // Free slots read as "Free" — the calendar shows one day's times, so switch
     // to the free slot's day first (day keys follow the admin time zone, and the
     // grid pages by month when the two days straddle a month end).
@@ -326,36 +392,179 @@ describe('VenueSlotStep', () => {
     expect(screen.getByTestId('slot-tile-s2')).toHaveTextContent(/Free/);
   });
 
-  it('changing venue clears the previously booked slot', async () => {
+  it('changing venue clears the previously booked slot and window', async () => {
+    routeBookingReads({ ...perHourPricing, configured: false });
     const second: CreatePodVenue = { ...venue, id: 'v2', venue_name: 'Terrace', locality: null };
+    const { at } = openDay();
     renderWithProviders(
       <VenueSlotHarness
-        initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1', venue_slot_id: 's1' }}
+        initial={{
+          ...instantVenue,
+          venue_slot_id: 's1',
+          pod_date_time_text: inputText(at(10)),
+          pod_end_date_time_text: inputText(at(12)),
+        }}
         venues={[venue, second]}
       />,
     );
-    // A slot is pre-booked → the approval note shows even before a space is picked.
-    await screen.findByTestId('create-pod-approval-note');
+    expect(screen.getByTestId('readout-slot')).toHaveTextContent('s1');
     fireEvent.press(screen.getByTestId('create-pod-venue-v2'));
-    await waitFor(() => expect(screen.queryByTestId('create-pod-approval-note')).toBeNull());
+    await waitFor(() => expect(screen.getByTestId('readout-slot')).toHaveTextContent(/^$/));
+    expect(screen.getByTestId('readout-start')).toHaveTextContent(/^$/);
+    expect(screen.getByTestId('readout-end')).toHaveTextContent(/^$/);
   });
 
-  it('tells hosts the venue has no open slots', async () => {
+  it("tells hosts a Pod Request's venue has no open slots", async () => {
     mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [] });
     renderWithProviders(
-      <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
+      <VenueSlotHarness
+        initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1', partner_request_id: 'r1' }}
+      />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
     expect(await screen.findByTestId('slot-calendar-empty')).toBeOnTheScreen();
   });
 
-  it('falls back to an empty slot list when the request fails', async () => {
+  it("falls back to an empty slot list when a Pod Request's slots fail to load", async () => {
     mockGraphqlRequest.mockRejectedValue(new Error('boom'));
     renderWithProviders(
-      <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
+      <VenueSlotHarness
+        initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1', partner_request_id: 'r1' }}
+      />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
     expect(await screen.findByTestId('slot-calendar-empty')).toBeOnTheScreen();
+  });
+
+  it('refuses to book a venue that has not set up its pricing', async () => {
+    routeBookingReads({ ...perHourPricing, configured: false });
+    renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
+    expect(await screen.findByTestId('create-pod-pricing-not-set')).toHaveTextContent(
+      /has not set up its pricing/,
+    );
+    expect(screen.queryByTestId('slot-calendar')).toBeNull();
+    // No slot list is asked for: instant booking reads the venue's own pricing.
+    const askedForSlots = mockGraphqlRequest.mock.calls.some(([doc]) =>
+      JSON.stringify(doc).includes('venueAvailableSlots'),
+    );
+    expect(askedForSlots).toBe(false);
+  });
+
+  it("says so when the venue's pricing fails to load", async () => {
+    routeBookingReads(new Error('down'));
+    renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
+    expect(await screen.findByTestId('create-pod-pricing-error')).toHaveTextContent(
+      /Could not load this venue's pricing/,
+    );
+  });
+
+  it('books a PER_HOUR window: a start, then an end on the venue grid', async () => {
+    const { date, at, open, close } = openDay();
+    routeBookingReads(perHourPricing, {
+      buffer_minutes: 0,
+      min_notice_minutes: 0,
+      days: [{ date, closed_reason: null, open, close, busy: [], slots: [] }],
+    });
+    renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
+    expect(await screen.findByTestId('create-pod-booking-model')).toHaveTextContent(
+      'Priced per hour',
+    );
+    // Starts every hour that still leaves one hour before closing: 10, 11, 12.
+    await screen.findByTestId(`slot-tile-${at(10)}`);
+    expect(screen.getByTestId(`slot-tile-${at(12)}`)).toBeOnTheScreen();
+    expect(screen.queryByTestId(`slot-tile-${at(13)}`)).toBeNull();
+
+    fireEvent.press(screen.getByTestId(`slot-tile-${at(10)}`));
+    // The shortest window is filled in at once; the host can stretch it.
+    await waitFor(() =>
+      expect(screen.getByTestId('readout-end')).toHaveTextContent(inputText(at(11))),
+    );
+    expect(screen.getByTestId('readout-start')).toHaveTextContent(inputText(at(10)));
+    expect(screen.getByTestId(`create-pod-booking-end-${at(13)}`)).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId(`create-pod-booking-end-${at(13)}`));
+    await waitFor(() =>
+      expect(screen.getByTestId('readout-end')).toHaveTextContent(inputText(at(13))),
+    );
+  });
+
+  it('books a PER_SLOT venue by its free slot, which sets both ends of the window', async () => {
+    const { date, at, open, close } = openDay();
+    routeBookingReads(
+      { ...perHourPricing, model: 'PER_SLOT' },
+      {
+        buffer_minutes: 0,
+        min_notice_minutes: 0,
+        days: [
+          {
+            date,
+            closed_reason: null,
+            open,
+            close,
+            busy: [],
+            slots: [
+              { start: at(10), end: at(11), price: 500, available: true },
+              { start: at(11), end: at(12), price: 500, available: false },
+            ],
+          },
+        ],
+      },
+    );
+    renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
+    const free = `${at(10)}|${at(11)}`;
+    await screen.findByTestId(`slot-tile-${free}`);
+    // A taken slot is never offered.
+    expect(screen.queryByTestId(`slot-tile-${at(11)}|${at(12)}`)).toBeNull();
+    fireEvent.press(screen.getByTestId(`slot-tile-${free}`));
+    await waitFor(() =>
+      expect(screen.getByTestId('readout-end')).toHaveTextContent(inputText(at(11))),
+    );
+    expect(screen.getByTestId('readout-start')).toHaveTextContent(inputText(at(10)));
+    expect(screen.getByTestId('readout-slot')).toHaveTextContent(/^$/);
+    // A slot carries its own end, so no end-time picker is shown.
+    expect(screen.queryByTestId('create-pod-booking-end')).toBeNull();
+  });
+
+  it("shows the server's quote for the picked window, read-only", async () => {
+    routeBookingReads(perHourPricing);
+    const quote: NonNullable<VenueQuoteState['quote']> = {
+      model: VenuePricingModel.PerHour,
+      rate: 500,
+      pax: 0,
+      hours: 2,
+      base: 1000,
+      rules: [],
+      min_spend_top_up: 0,
+      cleaning_fee: 0,
+      pet_fee: 0,
+      gst_pct: 18,
+      taxes: 180,
+      platform_fee_pct: 5,
+      platform_fee: 59,
+      venue_payout: 1180,
+      total: 1239,
+      deposit: 0,
+    };
+    renderWithProviders(
+      <VenueSlotHarness
+        initial={instantVenue}
+        venueQuote={{ quote, loading: false, error: null }}
+      />,
+    );
+    const card = await screen.findByTestId('create-pod-venue-quote');
+    expect(card).toHaveTextContent(/Venue price/);
+    expect(card).toHaveTextContent(/1,239/);
+  });
+
+  it('surfaces a failed quote instead of a price', async () => {
+    routeBookingReads(perHourPricing);
+    renderWithProviders(
+      <VenueSlotHarness
+        initial={instantVenue}
+        venueQuote={{ quote: null, loading: false, error: new Error('Venue is closed then') }}
+      />,
+    );
+    expect(await screen.findByTestId('create-pod-quote-error')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-venue-quote')).toBeNull();
   });
 
   it('renders meeting fields (and no slot picker) for virtual pods', () => {
@@ -432,7 +641,7 @@ describe('PricingStep', () => {
 
   it('passes the picked venue + slot price to the earnings preview (physical)', () => {
     renderWithProviders(<PricingHarness initial={{ pod_mode: 'PHYSICAL', venue_id: 'v1' }} />);
-    expect(mockedEarnings).toHaveBeenCalledWith(0, 0, 'v1', 400);
+    expect(mockedEarnings).toHaveBeenCalledWith(0, 0, 'v1', 400, null);
   });
 });
 
@@ -510,7 +719,7 @@ describe('PricePanel', () => {
     );
     // The query runs on the total collection (1000 × 30); the venue slot price
     // is passed once, not multiplied by the spot count.
-    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', 300);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', 300, null);
     // ₹X,XXX.XX everywhere — identical to the mWeb statement.
     expect(screen.getByText('Total collection (₹1,000.00 × 29)')).toBeOnTheScreen();
     expect(screen.getByText('₹29,000.00')).toBeOnTheScreen();
@@ -740,7 +949,7 @@ describe('PricePanel', () => {
         isPhysical={false}
       />,
     );
-    expect(mockedEarnings).toHaveBeenCalledWith(100, 0, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(100, 0, null, null, null);
     expect(
       screen.getByText('Set a ticket price and the number of spots to preview your earnings.'),
     ).toBeOnTheScreen();
@@ -772,7 +981,7 @@ describe('PricePanel', () => {
         isPhysical={false}
       />,
     );
-    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null, null);
     // No venue money: the Venue Take reads ₹0 and Duncit's host commission
     // sits in the Duncit & Govt row.
     expect(screen.getByText('Venue Take')).toBeOnTheScreen();
@@ -828,6 +1037,6 @@ describe('PricePanel', () => {
       />,
     );
     // Physical but no slot picked → no venue args, on the total collection.
-    expect(mockedEarnings).toHaveBeenCalledWith(100, 3, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(100, 3, null, null, null);
   });
 });

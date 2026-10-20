@@ -793,17 +793,44 @@ async function notifySlotDecision(
  * Best-effort: a failed message never undoes the booking.
  */
 export async function notifyFreeSlotBooked(pod: SlotDecisionPod, slot: IVenueSlot) {
+  await announceLiveBooking(
+    pod,
+    slot,
+    'Slot booked',
+    `"${pod.pod_title}" is a free pod and booked your free slot on ${appDateTime(slot.start_at)}. It is live now.`
+  );
+}
+
+/**
+ * A host booked the venue instantly at the venue's own price — there is no
+ * request to answer any more. Told the same way as a free-slot booking: an
+ * in-app note (push) to the owner plus the "pod is live" pair. Best-effort.
+ */
+export async function notifyInstantBooking(pod: SlotDecisionPod, slot: IVenueSlot, freePodNotice = '') {
+  // A free pod pays the venue nothing through Duncit: say so instead of a payout.
+  let payout = '';
+  if (freePodNotice) payout = ` ${freePodNotice}`;
+  else if (slot.price_snapshot) payout = ` You receive ₹${slot.price_snapshot.venue_payout}.`;
+  await announceLiveBooking(
+    pod,
+    slot,
+    'New booking confirmed',
+    `"${pod.pod_title}" booked your venue for ${appDateTime(slot.start_at)}.${payout} It is confirmed and live.`
+  );
+}
+
+async function announceLiveBooking(pod: SlotDecisionPod, slot: IVenueSlot, title: string, body: string) {
   try {
     const { notificationService } = await import('@modules/engagement/notification/notification.service');
     await notificationService.create({
-      title: 'Slot booked',
-      body: `"${pod.pod_title}" is a free pod and booked your free slot on ${appDateTime(slot.start_at)}. It is live now.`,
+      title,
+      body,
       scope: 'USER',
       target_user_ids: [String(slot.owner_user_id)],
       silent: false,
     });
   } catch (err) {
-    logs.server.error('venueSlot', 'notifyFreeSlotBooked', { error: err, msg: 'free slot note failed', slot_id: String(slot._id) });
+    logs.server.error('venueSlot', 'announceLiveBooking', { error: err, msg: 'booking note failed', slot_id: String(slot._id) });
   }
   try {
     const facts = await loadSlotDecisionFacts(pod, slot);
@@ -812,7 +839,7 @@ export async function notifyFreeSlotBooked(pod: SlotDecisionPod, slot: IVenueSlo
       await notifyEach(await podPublishedSends(facts));
     }
   } catch (err) {
-    logs.server.error('venueSlot', 'notifyFreeSlotBooked', { error: err, msg: 'free slot whatsapp failed', slot_id: String(slot._id) });
+    logs.server.error('venueSlot', 'announceLiveBooking', { error: err, msg: 'booking whatsapp failed', slot_id: String(slot._id) });
   }
 }
 

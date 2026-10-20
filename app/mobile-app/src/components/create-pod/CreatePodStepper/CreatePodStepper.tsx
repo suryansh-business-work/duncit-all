@@ -73,6 +73,7 @@ export function CreatePodStepper({
     spots,
     pricing,
     venueNotice,
+    venueQuote,
   } = useCreatePodScope({
     form,
     clubs,
@@ -103,7 +104,8 @@ export function CreatePodStepper({
         form={form}
         venues={venues}
         clubVenueIds={clubVenueIds}
-        viewerUserId={viewerUserId}
+        venueQuote={venueQuote}
+        currencySymbol={finance.currency_symbol}
         pinnedVenueId={pinnedVenueId}
         venueNotice={venueNotice}
         forClubAdmin={!!clubAdmin}

@@ -11,6 +11,7 @@ import {
   freePodWaterfall,
   resolveEffectiveRates,
   venueAmountForPod,
+  venueTermsForPod,
   waterfallForAmount,
   SETTLEMENT_ENGINE_VERSION,
   type SettlementWaterfall,
@@ -54,11 +55,13 @@ function projectionFor(
   podAmount: number,
   noOfSpots: number,
   venuePrice: number,
-  rates: BreakdownRates
+  rates: BreakdownRates,
+  commissionOnTop: number | null = null
 ): PodEarningsProjection {
   const billable = payableSpots(noOfSpots);
   const waterfall = waterfallForAmount(round2(podAmount * billable), venuePrice, rates, {
     clampVenueToPool: false,
+    venueCommissionOnTopPaise: commissionOnTop === null ? null : Math.round(commissionOnTop * 100),
   });
   return {
     total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
@@ -361,8 +364,8 @@ export const breakdownService = {
       // Unclamped like settlement itself — the venue is owed its booked price,
       // so the live view must quote the same venue money completion will pay
       // (a shortfall shows as a negative host amount here too).
-      const venueAmount = await venueAmountForPod(pod, 0);
-      waterfall = waterfallForAmount(collected, venueAmount, rates, { clampVenueToPool: false });
+      const venue = await venueTermsForPod(pod);
+      waterfall = waterfallForAmount(collected, venue.amount, rates, venue.options);
     }
 
     return {
@@ -410,7 +413,8 @@ export const breakdownService = {
     noOfSpots: number,
     venueId?: string | null,
     venueAmount?: number | null,
-    podType?: string | null
+    podType?: string | null,
+    venueCommissionOnTop?: number | null
   ): Promise<PodEarningsProjection> {
     if (!Number.isFinite(podAmount) || podAmount < 0) {
       throw new GraphQLError('Amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -422,8 +426,10 @@ export const breakdownService = {
     const rates = await resolveEffectiveRates({ hostUserId, venueId: venueId ?? null });
     // PREVIEW: the venue's fixed price is NEVER auto-reduced to fit the pool
     // — a shortfall renders as negative host earnings so the clients can show
-    // the real gap. Settlement runs the same unclamped branch.
-    return projectionFor(podAmount, noOfSpots, venuePrice, rates);
+    // the real gap. Settlement runs the same unclamped branch. An instant
+    // booking previews exactly as it will settle: commission on top (v3).
+    const onTop = Number(venueCommissionOnTop);
+    return projectionFor(podAmount, noOfSpots, venuePrice, rates, Number.isFinite(onTop) && onTop >= 0 ? onTop : null);
   },
 
   /**
@@ -556,6 +562,9 @@ export const breakdownService = {
     noOfSpots: number;
     venueId?: string | null;
     venueAmount?: number | null;
+    /** The venue price is a slot booking whose price freezes with Duncit's
+     * commission ON TOP (charged to the host's side), exactly as it settles. */
+    commissionOnTop?: boolean;
   }): Promise<void> {
     const podAmount = Number(input.podAmount) || 0;
     if (podAmount <= 0) return;
@@ -571,8 +580,12 @@ export const breakdownService = {
       hostUserId: input.hostUserId,
       venueId: input.venueId ?? null,
     });
+    const onTopPaise = input.commissionOnTop
+      ? Math.round((Math.round(venuePrice * 100) * rates.venue_commission_percent) / 100)
+      : null;
     const { host_receives } = waterfallForAmount(totalPodValue, venuePrice, rates, {
       clampVenueToPool: false,
+      venueCommissionOnTopPaise: onTopPaise,
     });
     if (host_receives <= 0) {
       throw new GraphQLError(

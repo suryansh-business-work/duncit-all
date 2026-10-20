@@ -133,7 +133,6 @@ describe('ClubSearchField', () => {
         error="Pick one"
         locality=""
         locked={false}
-        podMode="VIRTUAL"
       />,
     );
     expect(screen.getByTestId('create-pod-club-c2')).toBeOnTheScreen();
@@ -166,7 +165,6 @@ describe('ClubSearchField', () => {
         onChange={jest.fn()}
         locality=""
         locked={false}
-        podMode="VIRTUAL"
       />,
     );
 

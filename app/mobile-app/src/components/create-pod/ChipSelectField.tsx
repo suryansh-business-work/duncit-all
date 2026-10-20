@@ -11,9 +11,9 @@ export interface ChipOption {
   label: string;
   /** Where the option is, shown after the label as "| (pin) place" — only clubs set it. */
   place?: string;
-  /** A trailing status line — the club's open slots on Create Pod step 1. */
+  /** An optional trailing status line after the option's place. */
   note?: string;
-  /** Draw the note as a warning (no open slots). */
+  /** Draw the note as a warning. */
   noteWarn?: boolean;
 }
 
@@ -47,7 +47,7 @@ function noteColor(selected: boolean, warn: boolean): NoteColor {
   return warn ? '$warning' : '$muted';
 }
 
-/** "4 open slots" after a club's place. mWeb twin: the slot chip in steps/ClubOption. */
+/** An option's trailing status line, after its place. */
 function ChipNote({
   note,
   color,

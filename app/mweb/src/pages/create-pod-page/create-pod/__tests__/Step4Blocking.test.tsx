@@ -32,7 +32,7 @@ const waterfall = (hostReceives: number) => ({
 const earningsMock = (podAmount: number, hostReceives: number) => ({
   request: {
     query: POTENTIAL_POD_EARNINGS,
-    variables: { pod_amount: podAmount, no_of_spots: 3, venue_id: null, venue_amount: null },
+    variables: { pod_amount: podAmount, no_of_spots: 3, venue_id: null, venue_amount: null, venue_commission_on_top: null },
   },
   result: {
     data: {

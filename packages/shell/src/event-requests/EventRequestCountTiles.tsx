@@ -10,12 +10,15 @@ interface Props {
   failed: boolean;
 }
 
-/** Open / Fulfilled / Dismissed / Total — one aliased read, so the four always reconcile. */
+/** Every status's count and the total — one aliased read, so they always reconcile. */
 export function EventRequestCountTiles({ counts, loading, failed }: Readonly<Props>) {
   const { t } = useTranslation();
   if (failed) return <Alert severity="warning">{t('publicPage.eventRequests.countsFailed')}</Alert>;
   const tiles = [
     { id: 'open', label: t('publicPage.eventRequests.statusOpen'), value: counts?.open },
+    { id: 'accepted', label: t('publicPage.eventRequests.statusAccepted'), value: counts?.accepted },
+    { id: 'countered', label: t('publicPage.eventRequests.statusCountered'), value: counts?.countered },
+    { id: 'rejected', label: t('publicPage.eventRequests.statusRejected'), value: counts?.rejected },
     { id: 'fulfilled', label: t('publicPage.eventRequests.statusFulfilled'), value: counts?.fulfilled },
     { id: 'dismissed', label: t('publicPage.eventRequests.statusDismissed'), value: counts?.dismissed },
     { id: 'total', label: t('publicPage.eventRequests.total'), value: counts?.total },

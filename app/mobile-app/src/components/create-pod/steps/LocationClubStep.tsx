@@ -112,14 +112,12 @@ export function LocationClubStep({
                 required
                 locality={locality}
                 locked={pickLocality && !locality}
-                podMode={watch('pod_mode')}
               />
             )}
           />
         )}
         <ClubPreview
           club={pinnedClub ?? clubs.find((club) => club.id === watch('club_id')) ?? null}
-          showSlots={physical}
         />
       </SurfaceCard>
     </YStack>

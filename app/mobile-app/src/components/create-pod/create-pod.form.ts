@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  instantBookingInput,
   isMeetingPlatform,
   isVideoUrl,
   repeatDiscountFormIssues,
@@ -9,12 +10,7 @@ import {
 import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
 import { appFormatter } from '@/utils/app-formatter';
-import {
-  blankCreatePodForm,
-  type CreatePodClub,
-  type CreatePodFormValues,
-  type CreatePodHostCategory,
-} from './create-pod.types';
+import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
 import {
   hydrateTicketDiscount,
   refineTicketDiscount,
@@ -54,7 +50,8 @@ const splitMediaLines = (text: string) =>
 export const hasImageLine = (mediaText: string) =>
   splitMediaLines(mediaText).some((url) => !isVideoUrl(url));
 
-/** Physical pods must book a venue, a space (capacity) and one of its slots. */
+/** Physical pods must book a venue, a space (capacity) and a time there: a
+ * Pod Request's held slot, or a window at the venue's own pricing. */
 function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
     ctx.addIssue({
@@ -72,11 +69,24 @@ function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Trans
       message: t('mweb.createPod.validation.spaceRequired'),
     });
   }
-  if (values.pod_mode === 'PHYSICAL' && !values.venue_slot_id) {
+  if (values.pod_mode === 'PHYSICAL') refineVenueTime(values, ctx, t);
+}
+
+/** A held slot books as before; a Pod Request must keep its slot; every other
+ * physical pod needs its whole booked window. mWeb twin. */
+function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (values.venue_slot_id) return;
+  if (values.partner_request_id) {
     ctx.addIssue({
       code: 'custom',
       path: ['venue_slot_id'],
       message: t('mweb.createPod.validation.slotRequired'),
+    });
+  } else if (!parseDateTimeText(values.pod_end_date_time_text)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pod_date_time_text'],
+      message: t('mweb.createPod.validation.bookingRequired'),
     });
   }
 }
@@ -301,6 +311,8 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
         .string()
         .refine(intIn(0, 1999), t('mweb.createPod.validation.amountRange')),
       venue_space_label: z.string(),
+      venue_booking_pax: z.number().min(0).default(0),
+      venue_booking_pets: z.boolean().default(false),
       no_of_spots_text: z
         .string()
         .refine(intIn(0, 10000), t('mweb.createPod.validation.spotsRange')),
@@ -460,6 +472,16 @@ export const STEP_TITLES = STEP_TITLE_KEYS.map((key) => fallbackT(key));
 
 export const STEP_SUBTITLES = STEP_SUBTITLE_KEYS.map((key) => fallbackT(key));
 
+/** The instant booking the form holds (window = the pod window). */
+export const venueBookingOf = (values: CreatePodFormValues) =>
+  instantBookingInput({
+    start: parseDateTimeText(values.pod_date_time_text)?.toISOString() ?? null,
+    end: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
+    pax: values.venue_booking_pax,
+    pets: values.venue_booking_pets,
+    spaceLabel: values.venue_space_label,
+  });
+
 /** Maps validated form values onto the server's CreatePodInput. */
 export function buildCreatePodInput(values: CreatePodFormValues) {
   const virtual = values.pod_mode === 'VIRTUAL';
@@ -470,9 +492,11 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     club_id: values.club_id,
     pod_mode: values.pod_mode as PodMode,
     venue_id: virtual ? null : values.venue_id,
-    // The booked slot drives the pod window server-side; the venue must
-    // approve it before the pod goes live (own venues confirm instantly).
+    // A held slot (a Pod Request) books by id; every other physical pod books
+    // instantly at the venue's pricing and the server sets the window from it.
+    // Neither waits for the venue's approval. mWeb twin.
     venue_slot_id: virtual ? null : values.venue_slot_id || null,
+    venue_booking: virtual || values.venue_slot_id ? null : venueBookingOf(values),
     // A Pod Request's confirmed slot is adopted as-is (no second venue approval).
     partner_request_id: values.partner_request_id || null,
     location_id: values.location_id || null,
@@ -515,49 +539,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
   };
 }
 
-/** Composite key identifying one host category: `${super}|${sub}`. Shared by the
- * step-2 category picker and the club filter so selection and matching align. */
-export const hostCategoryKeyOf = (category: {
-  super_category_id?: string | null;
-  sub_category_id?: string | null;
-}) => `${category.super_category_id ?? ''}|${category.sub_category_id ?? ''}`;
-
-interface ClubFilterOptions {
-  hostCategories: CreatePodHostCategory[];
-  selectedCategoryKey: string;
-  locationId: string;
-  locality: string;
-  podMode: string;
-}
-
-/** Clubs the host may attach this pod to: scoped by the SELECTED host category
- * (Super + Sub) — or all of the host's categories when none is picked yet — then,
- * for physical pods, by the chosen city and (optionally) locality. */
-export function filterClubs(clubs: CreatePodClub[], opts: ClubFilterOptions): CreatePodClub[] {
-  const activeCategories = opts.selectedCategoryKey
-    ? opts.hostCategories.filter(
-        (category) => hostCategoryKeyOf(category) === opts.selectedCategoryKey,
-      )
-    : opts.hostCategories;
-  const keys = new Set(
-    activeCategories.filter((category) => category.super_category_id).map(hostCategoryKeyOf),
-  );
-  const matchesCategory = (club: CreatePodClub) => {
-    if (keys.size === 0) return true; // host has no categories → don't over-filter
-    if (!club.super_category_id) return false;
-    return (
-      keys.has(`${club.super_category_id}|${club.category_id ?? ''}`) ||
-      keys.has(`${club.super_category_id}|`)
-    );
-  };
-  return clubs.filter((club) => {
-    if (!matchesCategory(club)) return false;
-    if (opts.podMode === 'VIRTUAL') return true;
-    if (opts.locationId && club.location_id !== opts.locationId) return false;
-    if (opts.locality && (club.locality ?? '') !== opts.locality) return false;
-    return true;
-  });
-}
+/** The Create Pod club filter — one rule for mWeb and the native app (@duncit/utils). */
+export { filterClubs, hostCategoryKeyOf } from '@duncit/utils';
 
 /** The pod text + image URLs sent to the server moderation preflight. */
 export function buildModerationInput(values: CreatePodFormValues) {

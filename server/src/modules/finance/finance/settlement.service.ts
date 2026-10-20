@@ -123,6 +123,8 @@ export interface PodSettlement {
  * exists only in historical PaymentRelease.breakdown docs and is never
  * recomputed. */
 export const SETTLEMENT_ENGINE_VERSION = 2;
+/** v3: an instant booking's frozen price, with Duncit's venue commission on top of it. */
+export const SETTLEMENT_ENGINE_VERSION_ON_TOP = 3;
 
 /**
  * The pod-settlement share of one payment: its total minus the one-off product
@@ -361,6 +363,12 @@ export interface VenueCharge {
   slot_included: boolean;
   /** The venue's money — what the waterfall takes off the pool. */
   amount: number;
+  /**
+   * Duncit's venue commission charged ON TOP of `amount` (the host's side bears
+   * it) for a booking with a frozen price snapshot. Null = legacy slot: the
+   * commission comes out of the venue's price as before.
+   */
+  commission_on_top: number | null;
 }
 
 /** What venueChargeForPod reads off a pod. The seat fields count its people
@@ -450,31 +458,79 @@ export async function venueChargeForPod(
     bill: 0,
     slot_included: false,
     amount: 0,
+    commission_on_top: null,
   };
   // A free pod's venue is paid by the host directly, off the platform — the
   // platform owes it nothing, whatever the slot is priced at or a bill says.
   if (!pod.venue_id || isFreePod(pod)) return none;
   const slot = pod.venue_slot_id
-    ? await VenueSlotModel.findById(pod.venue_slot_id).select('price pricing_mode overtime_rate start_at end_at')
+    ? await VenueSlotModel.findById(pod.venue_slot_id).select('price pricing_mode overtime_rate start_at end_at price_snapshot')
     : null;
   const pax = usage?.pax ?? defaultPaxOf(pod);
   const overtimeHours = Math.max(0, Number(usage?.overtimeHours) || 0);
-  const slotCharge = slot ? slotVenueCharge(slot, { pax, overtimeHours }) : null;
+  const snapshot = slot?.price_snapshot ?? null;
+  // An instant booking settles on the price frozen when it was confirmed; only
+  // overtime (entered at completion) is still priced off the slot.
+  let slotCharge: ReturnType<typeof slotVenueCharge> | null = null;
+  if (slot) slotCharge = snapshot ? snapshotCharge(snapshot, slot, overtimeHours) : slotVenueCharge(slot, { pax, overtimeHours });
   const slotPrice = slotCharge ? slotCharge.total : 0;
   const bill = Math.max(0, round2(venueBill));
   const base = {
     slot_price: slotPrice,
     pricing_mode: slotCharge?.mode ?? 'FLAT',
-    pax: slotCharge?.mode === 'PER_PAX' ? Math.max(0, Math.floor(pax)) : 0,
+    pax: snapshot?.pax ?? (slotCharge?.mode === 'PER_PAX' ? Math.max(0, Math.floor(pax)) : 0),
     overtime_hours: slotCharge ? overtimeHours : 0,
     overtime_amount: slotCharge?.overtime ?? 0,
     slot_linked: !!slot,
     bill,
   };
   const evidenceOnly = includeSlotPrice == null && !!slot;
-  if (bill <= 0 || evidenceOnly) return { ...base, slot_included: false, amount: slotPrice };
+  // A snapshot booking's commission rides on top: its frozen fee for the slot,
+  // and the same percent on any bill that is paid.
+  const onTop = (slotPart: number, billPart: number) =>
+    snapshot ? round2(slotPart + (billPart * snapshot.platform_fee_pct) / 100) : null;
+  const slotFee = snapshot?.platform_fee ?? 0;
+  if (bill <= 0 || evidenceOnly) {
+    return { ...base, slot_included: false, amount: slotPrice, commission_on_top: onTop(slotFee, 0) };
+  }
   const slotIncluded = !!includeSlotPrice && slotPrice > 0;
-  return { ...base, slot_included: slotIncluded, amount: slotIncluded ? round2(slotPrice + bill) : bill };
+  return {
+    ...base,
+    slot_included: slotIncluded,
+    amount: slotIncluded ? round2(slotPrice + bill) : bill,
+    commission_on_top: onTop(slotIncluded ? slotFee : 0, bill),
+  };
+}
+
+/** A snapshot booking's charge in the slot-charge shape: the frozen payout, plus overtime off the slot. */
+function snapshotCharge(
+  snapshot: { model: string; venue_payout: number },
+  slot: { overtime_rate?: number | null },
+  overtimeHours: number
+): ReturnType<typeof slotVenueCharge> {
+  const modeOf: Record<string, SlotPricingMode> = { PER_PAX: 'PER_PAX', PER_HOUR: 'HOURLY' };
+  const overtime = round2(Math.max(0, Number(slot.overtime_rate) || 0) * overtimeHours);
+  return {
+    mode: modeOf[snapshot.model] ?? 'FLAT',
+    base: snapshot.venue_payout,
+    overtime,
+    total: round2(snapshot.venue_payout + overtime),
+  };
+}
+
+/** How a venue charge settles: unclamped, with the commission on top for a snapshot booking. */
+export function venueChargeOptions(charge: Pick<VenueCharge, 'commission_on_top'>): BreakdownOptions {
+  return {
+    clampVenueToPool: false,
+    venueCommissionOnTopPaise: charge.commission_on_top == null ? null : toPaise(charge.commission_on_top),
+  };
+}
+
+/** The venue's money for a pod before any bill, with the options it settles
+ * under — what the live views quote, so they match completion exactly. */
+export async function venueTermsForPod(pod: VenueChargePod): Promise<{ amount: number; options: BreakdownOptions }> {
+  const charge = await venueChargeForPod(pod, 0);
+  return { amount: charge.amount, options: venueChargeOptions(charge) };
 }
 
 /** The venue's money for a pod when only the amount is wanted — the live views
@@ -500,9 +556,9 @@ export function freePodWaterfall(): SettlementWaterfall {
 }
 
 /** Paise engine output → rupee waterfall for GraphQL/persistence. */
-export function toWaterfall(b: PodFinanceBreakdown): SettlementWaterfall {
+export function toWaterfall(b: PodFinanceBreakdown, version: number = SETTLEMENT_ENGINE_VERSION): SettlementWaterfall {
   return {
-    version: SETTLEMENT_ENGINE_VERSION,
+    version,
     amount: toRupees(b.amount_paise),
     gst_pct: b.rates.gst_percent,
     gst_amount: toRupees(b.gst_paise),
@@ -606,18 +662,18 @@ export async function computePodSettlement(
   const charge = await venueChargeForPod(pod, venueBillAmount, includeSlotPrice, usage);
   const venueBill = charge.bill;
   const venueAmount = charge.amount;
+  // The venue is owed its BOOKED slot price whatever the pod took at the door —
+  // it held the room. Clamping it to the pool is what silently paid a venue
+  // less than the price it agreed, and settling on attendance only makes that
+  // pool smaller. Unclamped, a shortfall lands where it belongs: on the host's
+  // side, shown as a negative host amount rather than quietly taken off the
+  // venue. A snapshot booking also carries its commission on top (engine v3).
+  const commissionOnTop = charge.commission_on_top != null;
   const waterfall = free
     ? freePodWaterfall()
     : toWaterfall(
-        computePodFinanceBreakdown(toPaise(basis), Math.max(0, toPaise(venueAmount)), rates, {
-          // The venue is owed its BOOKED slot price whatever the pod took at the
-          // door — it held the room. Clamping it to the pool is what silently paid
-          // a venue less than the price it agreed, and settling on attendance only
-          // makes that pool smaller. Unclamped, a shortfall lands where it
-          // belongs: on the host's side, shown as a negative host amount rather
-          // than quietly taken off the venue.
-          clampVenueToPool: false,
-        })
+        computePodFinanceBreakdown(toPaise(basis), Math.max(0, toPaise(venueAmount)), rates, venueChargeOptions(charge)),
+        commissionOnTop ? SETTLEMENT_ENGINE_VERSION_ON_TOP : SETTLEMENT_ENGINE_VERSION
       );
 
   // Legacy party lines, derived from the waterfall so older consumers keep a
@@ -641,7 +697,8 @@ export async function computePodSettlement(
         gst_amount: 0,
         duncit_pct: waterfall.venue_commission_pct,
         duncit_amount: waterfall.venue_commission_amount,
-        payout_pct: round2(100 - waterfall.venue_commission_pct),
+        // On top, the venue receives its whole price.
+        payout_pct: commissionOnTop ? 100 : round2(100 - waterfall.venue_commission_pct),
         payout_amount: waterfall.venue_receives,
       }
     : null;

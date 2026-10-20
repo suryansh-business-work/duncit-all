@@ -615,7 +615,7 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
 
   // ---- Partners (partners) --------------------------------------------
   { surface: 'partners', path: '/venues/dashboard', label: 'Venue Dashboard', group: 'Venue Owner',
-    description: 'Pick one venue (or all together) and read its slot-based earnings potential, capacity and pending booking-request counts, with quick jumps to Venue Management, Slot Requests and the availability calendar.' },
+    description: 'Pick one venue (or all together) and read its earnings potential, capacity and upcoming instant bookings, with quick jumps to Venue Management, Workshop & Event Requests and the Venue Pricing Module.' },
   { surface: 'partners', path: '/venues/auto-pods', label: 'Auto Pods', group: 'Venue Owner',
     description: 'Browse Auto Pod offers your venue can accept — an admin-written pod with no venue yet — and accept one by committing a free slot, which fixes its date and opens it to a host and a club admin.' },
   { surface: 'partners', path: '/register-venue', label: 'Venue Management', group: 'Venue Owner',
@@ -624,8 +624,10 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Fill in the multi-section venue registration form — venue type, description, images, capacity items, amenities, owner details and documents — and submit the space for review.' },
   { surface: 'partners', path: '/register-venue/current', label: 'Current Venue Application', group: 'Venue Owner',
     description: 'Reopen the venue application currently attached to your account to keep editing a draft, view it while it is under review, or fix and resubmit a rejected one.' },
-  { surface: 'partners', path: '/venues/requests', label: 'Slot Requests', group: 'Venue Owner',
-    description: 'Review hosts who booked a slot at your venue and approve the booking (which puts the pod live) or decline it with a reason, filtered by venue.' },
+  { surface: 'partners', path: '/venues/requests', label: 'Workshop & Event Requests', group: 'Venue Owner',
+    description: 'Accept, reject or counter members\' workshop and event requests (counter offers are priced by your Venue Pricing Module), and read old slot requests as history — pods book your venue instantly now.' },
+  { surface: 'partners', path: '/venues/pricing', label: 'Venue Pricing Module', group: 'Venue Owner',
+    description: 'Set your venue pricing once (per person, per slot, per hour or flat), with limits, fees and weekday/date rules, preview the price, and reprice, block or mark a holiday on any calendar date.' },
   { surface: 'partners', path: '/venues/pods', label: 'Pods', group: 'Venue Owner',
     description: 'Browse every pod booked at your venues across All/upcoming/completed/cancelled tabs, click a pod for its attendee list, and cancel a pod you can no longer host.' },
   { surface: 'partners', path: '/venues/food-dashboard', label: 'Food Dashboard', group: 'Venue Owner',

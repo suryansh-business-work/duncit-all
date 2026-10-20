@@ -120,6 +120,19 @@ export function useClubAdminPodEditor(clubId: string, podId?: string) {
   const pod = loaded?.pod ?? null;
   const club = loaded?.club ?? null;
 
+  /**
+   * What an edit sends about the venue. A newly picked window re-routes the pod
+   * onto that instant booking (the server claims it, then releases the old
+   * slot) — never with `venue_slot_id: null` beside it. Otherwise only a
+   * genuinely different slot is sent; re-saving the same one would needlessly
+   * release and re-book it.
+   */
+  const editInput = (payload: CreatePodInput, heldSlotId: string | null) => {
+    const { venue_slot_id, venue_booking, ...rest } = payload;
+    if (venue_booking) return { ...rest, venue_booking };
+    return (venue_slot_id ?? null) === heldSlotId ? rest : { ...rest, venue_slot_id };
+  };
+
   const submit = async (
     input: CreatePodInput,
     hostIds: string[],
@@ -140,13 +153,9 @@ export function useClubAdminPodEditor(clubId: string, podId?: string) {
       await graphqlRequest(ClubAdminCreatePodDocument, { input: payload }, { auth: true });
       return 'created';
     }
-    // Only a genuinely different slot is a re-route; re-saving the same one
-    // would needlessly release and re-request the venue's approval.
-    const { venue_slot_id, ...unchangedSlot } = payload;
-    const sameSlot = (venue_slot_id ?? null) === (pod.venue_slot_id ?? null);
     await graphqlRequest(
       ClubAdminUpdatePodDocument,
-      { pod_doc_id: pod.id, input: sameSlot ? unchangedSlot : payload },
+      { pod_doc_id: pod.id, input: editInput(payload, pod.venue_slot_id ?? null) },
       { auth: true },
     );
     return 'updated';

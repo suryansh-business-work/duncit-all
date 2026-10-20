@@ -13,11 +13,10 @@ import * as notify from '@services/notify/notify.service';
 import * as emailService from '@services/email/email.service';
 
 /**
- * A PHYSICAL pod may now be FREE. Booking a venue works as it always did — the
- * host's own slot books instantly, another partner's slot waits for the venue —
- * but the venue is quoted no money for a free pod, is told the host settles
- * with it directly, and nothing on the finance side treats the pod as
- * loss-making.
+ * A PHYSICAL pod may be FREE. Picking a venue's open slot books it instantly
+ * at the venue's own price — the host's own slot and any partner's slot alike,
+ * nothing waits for the venue — but a free pod still quotes the venue no
+ * platform money, and nothing on the finance side treats it as loss-making.
  */
 
 const hostId = new Types.ObjectId().toString();
@@ -25,6 +24,11 @@ const ownerId = new Types.ObjectId().toString();
 const inDays = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString();
 const IMG = { url: 'https://cdn.example.com/pod.jpg', type: 'IMAGE' };
 const NOTICE = /This pod is free, so please coordinate with the host/;
+/** The booking notes fire after the response; let them land. */
+const settle = async () => {
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setTimeout(resolve, 50));
+};
 
 let notifyCreate: jest.SpyInstance;
 let slotEmail: jest.SpyInstance;
@@ -81,15 +85,26 @@ const physicalInput = (venueId: string, slotId: string, over: Record<string, unk
 });
 
 describe('creating a free physical pod', () => {
-  it("books the host's own priced slot instantly — no request, nothing for the venue to approve", async () => {
+  it("books the host's own priced slot instantly and confirmed — nobody is notified, nothing to approve", async () => {
     const venueId = await seedVenue(hostId);
     const slotId = await seedSlot(hostId, venueId, 2500);
 
     const pod = await podService.create(physicalInput(venueId, slotId));
 
-    expect(pod).toMatchObject({ pod_type: 'FREE', pod_amount: 0, pod_mode: 'PHYSICAL', venue_approval_status: 'NONE' });
-    expect((await VenueSlotModel.findById(slotId))!.status).toBe('BOOKED');
+    expect(pod).toMatchObject({
+      pod_type: 'FREE',
+      pod_amount: 0,
+      pod_mode: 'PHYSICAL',
+      venue_approval_status: 'APPROVED',
+      is_active: true,
+    });
+    const slot = (await VenueSlotModel.findById(slotId))!;
+    expect(slot.status).toBe('BOOKED');
+    expect(String(slot.booked_by_pod_id)).toBe(pod!.id);
+    await settle();
+    // The owner is the host: no booking note, no request email.
     expect(notifyCreate).not.toHaveBeenCalled();
+    expect(slotEmail).not.toHaveBeenCalled();
   });
 
   it("books a partner's ₹0 slot instantly for a FREE pod, telling the venue it is live", async () => {
@@ -98,33 +113,43 @@ describe('creating a free physical pod', () => {
 
     const pod = await podService.create(physicalInput(venueId, slotId));
 
-    expect(pod).toMatchObject({ venue_approval_status: 'NONE', is_active: true });
+    expect(pod).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true });
     const slot = (await VenueSlotModel.findById(slotId))!;
     expect(slot.status).toBe('BOOKED');
     expect(String(slot.booked_by_pod_id)).toBe(pod!.id);
+    expect(slot.price_snapshot).toMatchObject({ venue_payout: 0, total: 0 });
     expect(await venueSlotService.listRequests(ownerId)).toEqual([]);
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    // No request went out — the venue gets the booking note, not a request.
+    await settle();
+    // No request went out — the venue gets the free-slot booking note.
     expect(slotEmail).not.toHaveBeenCalled();
     expect(notifyCreate).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Slot booked', target_user_ids: [ownerId] })
     );
   });
 
-  it("holds a partner's ₹0 slot for a PAID pod exactly as today", async () => {
+  it("books a partner's ₹0 slot instantly for a PAID pod and tells the venue the booking is confirmed", async () => {
     const venueId = await seedVenue(ownerId);
     const slotId = await seedSlot(ownerId, venueId, 0);
 
     const pod = await podService.create(physicalInput(venueId, slotId, { pod_type: 'PAID', pod_amount: 500 }));
 
-    expect(pod!.venue_approval_status).toBe('PENDING');
-    expect((await VenueSlotModel.findById(slotId))!.status).toBe('PENDING');
-    const [row] = await venueSlotService.listRequests(ownerId);
-    expect(row).toMatchObject({ pod_is_free: false, price: 0 });
+    expect(pod).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true });
+    const slot = (await VenueSlotModel.findById(slotId))!;
+    expect(slot.status).toBe('BOOKED');
+    expect(String(slot.booked_by_pod_id)).toBe(pod!.id);
+    expect(slot.price_snapshot).toMatchObject({ venue_payout: 0, total: 0 });
+    expect(await venueSlotService.listRequests(ownerId)).toEqual([]);
+
+    await settle();
+    expect(slotEmail).not.toHaveBeenCalled();
+    expect(notifyCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'New booking confirmed', target_user_ids: [ownerId] })
+    );
+    expect(notifyCreate).not.toHaveBeenCalledWith(expect.objectContaining({ title: 'Slot booked' }));
   });
 
-  it('re-routes a free pod onto a partner ₹0 slot instantly, and onto a priced one as a request', async () => {
+  it('re-routes a free pod onto a partner ₹0 slot and then onto a priced one, booking each instantly', async () => {
     const venueId = await seedVenue(ownerId);
     const freeSlot = await seedSlot(ownerId, venueId, 0);
     const [priced] = await venueSlotService.create(ownerId, {
@@ -147,27 +172,33 @@ describe('creating a free physical pod', () => {
       venue_approval_status: 'DECLINED',
     });
 
-    const instant = await podService.update(String(pod._id), { venue_slot_id: freeSlot });
-    expect(instant).toMatchObject({ venue_approval_status: 'NONE', is_active: true });
+    const onFree = await podService.update(String(pod._id), { venue_slot_id: freeSlot });
+    expect(onFree).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true, venue_slot_id: freeSlot });
     expect((await VenueSlotModel.findById(freeSlot))!.status).toBe('BOOKED');
 
-    const held = await podService.update(String(pod._id), { venue_slot_id: priced.id });
-    expect(held).toMatchObject({ venue_approval_status: 'PENDING', is_active: false });
-    expect((await VenueSlotModel.findById(priced.id))!.status).toBe('PENDING');
+    const onPriced = await podService.update(String(pod._id), { venue_slot_id: priced.id });
+    expect(onPriced).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true, venue_slot_id: priced.id });
+    const pricedSlot = (await VenueSlotModel.findById(priced.id))!;
+    expect(pricedSlot.status).toBe('BOOKED');
+    expect(String(pricedSlot.booked_by_pod_id)).toBe(String(pod._id));
+    expect(pricedSlot.price_snapshot).toMatchObject({ venue_payout: 900 });
+    // The seat it moved off goes back on sale.
     expect((await VenueSlotModel.findById(freeSlot))!.status).toBe('AVAILABLE');
+    expect(await venueSlotService.listRequests(ownerId)).toEqual([]);
   });
 
-  it('leaves a paid pod PENDING on a ₹0 slot when an edit makes it free — the venue still answers it', async () => {
+  it("keeps a paid pod's instant ₹0-slot booking confirmed when an edit makes the pod free", async () => {
     const venueId = await seedVenue(ownerId);
     const slotId = await seedSlot(ownerId, venueId, 0);
     const pod = await podService.create(physicalInput(venueId, slotId, { pod_type: 'PAID', pod_amount: 500 }));
 
     const edited = await podService.update(pod!.id, { pod_type: 'FREE', pod_amount: 0 });
 
-    expect(edited).toMatchObject({ pod_type: 'FREE', venue_approval_status: 'PENDING' });
-    expect((await VenueSlotModel.findById(slotId))!.status).toBe('PENDING');
-    const [row] = await venueSlotService.listRequests(ownerId);
-    expect(row.pod_is_free).toBe(true);
+    expect(edited).toMatchObject({ pod_type: 'FREE', venue_approval_status: 'APPROVED', is_active: true, venue_slot_id: slotId });
+    const slot = (await VenueSlotModel.findById(slotId))!;
+    expect(slot.status).toBe('BOOKED');
+    expect(String(slot.booked_by_pod_id)).toBe(pod!.id);
+    expect(await venueSlotService.listRequests(ownerId)).toEqual([]);
   });
 
   it('resubmits a declined free pod onto a partner ₹0 slot instantly', async () => {
@@ -192,42 +223,51 @@ describe('creating a free physical pod', () => {
 
     const out = await podService.hostResubmit(String(pod._id), hostId, { venue_id: venueId, venue_slot_id: slotId });
 
-    expect(out).toMatchObject({ venue_approval_status: 'NONE', is_active: true });
+    expect(out).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true });
     expect((await VenueSlotModel.findById(slotId))!.status).toBe('BOOKED');
   });
 
-  it("sends a priced partner slot to the venue with the free-pod notice and quotes it no money", async () => {
+  it('books a priced partner slot instantly for a FREE pod and quotes the venue no platform money', async () => {
     const venueId = await seedVenue(ownerId);
     const slotId = await seedSlot(ownerId, venueId, 5000);
 
     // ₹5,000 would fail a paid ₹0 pod's economics; a free pod is exempt.
     const pod = await podService.create(physicalInput(venueId, slotId));
-    expect(pod!.venue_approval_status).toBe('PENDING');
+    expect(pod).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true });
+    expect((await VenueSlotModel.findById(slotId))!.status).toBe('BOOKED');
 
-    // The notifications fire after the response; let them land.
-    await new Promise((resolve) => setImmediate(resolve));
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(notifyCreate.mock.calls[0][0].body).toMatch(NOTICE);
-    expect(slotEmail.mock.calls[0][0].extra_vars.free_pod_notice).toMatch(NOTICE);
-    expect(slotEmail.mock.calls[0][0].extra_vars['t:email.venueSlotRequest.earningsNote']).toMatch(NOTICE);
+    await settle();
+    // No request any more: the venue is told the booking is confirmed.
+    expect(slotEmail).not.toHaveBeenCalled();
+    expect(notifyCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'New booking confirmed', target_user_ids: [ownerId] })
+    );
 
-    const [row] = await venueSlotService.listRequests(ownerId);
-    expect(row).toMatchObject({ pod_is_free: true, price: 0 });
+    // The platform owes the venue nothing for a free pod.
     const decision = await venueSlotService.decisionDetail(ownerId, slotId);
     expect(decision).toMatchObject({ pod_is_free: true, price: 0, venue_commission_amount: 0, venue_receives: 0 });
   });
 
-  it('quotes a paid pod on the same kind of slot exactly as before', async () => {
+  it("books a paid pod's priced partner slot instantly, freezing its price and telling the venue its payout", async () => {
     const venueId = await seedVenue(ownerId);
     const slotId = await seedSlot(ownerId, venueId, 300);
 
-    await podService.create(physicalInput(venueId, slotId, { pod_type: 'PAID', pod_amount: 1000 }));
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    const pod = await podService.create(physicalInput(venueId, slotId, { pod_type: 'PAID', pod_amount: 1000 }));
+    expect(pod).toMatchObject({ venue_approval_status: 'APPROVED', is_active: true });
+    const slot = (await VenueSlotModel.findById(slotId))!;
+    expect(slot.status).toBe('BOOKED');
+    // The venue gets exactly its price; Duncit's commission rides on top.
+    const snapshot = slot.price_snapshot!;
+    expect(snapshot).toMatchObject({ venue_price: 300, venue_payout: 300 });
+    expect(snapshot.platform_fee).toBeCloseTo((300 * snapshot.platform_fee_pct) / 100, 2);
+    expect(snapshot.total).toBeCloseTo(300 + snapshot.platform_fee, 2);
 
-    expect(notifyCreate.mock.calls[0][0].body).not.toMatch(NOTICE);
-    expect(slotEmail.mock.calls[0][0].extra_vars).toBeUndefined();
-    const [row] = await venueSlotService.listRequests(ownerId);
-    expect(row).toMatchObject({ pod_is_free: false, price: 300 });
+    await settle();
+    expect(slotEmail).not.toHaveBeenCalled();
+    const note = notifyCreate.mock.calls.find(([arg]) => arg.title === 'New booking confirmed')?.[0];
+    expect(note).toMatchObject({ target_user_ids: [ownerId] });
+    expect(note.body).toContain('You receive ₹300.');
+    expect(note.body).not.toMatch(NOTICE);
     const decision = await venueSlotService.decisionDetail(ownerId, slotId);
     expect(decision.pod_is_free).toBe(false);
     expect(decision.venue_receives).toBeGreaterThan(0);

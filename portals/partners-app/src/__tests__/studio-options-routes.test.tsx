@@ -8,12 +8,14 @@
  * here rather than in front of a partner.
  */
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
-import { createRoutesFromElements, matchRoutes } from 'react-router';
+import { createRoutesFromElements, matchRoutes, Navigate } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { STUDIO_OPTIONS_ENTRY, STUDIO_OPTION_LIST, type PartnerStudioMode } from '@duncit/utils';
 import App from '../App';
 import { sectionRoleFor } from '../config/partner-sections';
 import { EventRequestsPage } from '@duncit/shell';
+import { VenueAvailabilityRedirect } from '../pages/venue-availability-page/VenueAvailabilityPage';
+import WorkshopEventRequestsPage from '../pages/workshop-event-requests-page/WorkshopEventRequestsPage';
 
 const routesElement = App() as ReactElement<{ children: ReactNode }>;
 const routes = createRoutesFromElements(routesElement.props.children);
@@ -53,9 +55,18 @@ describe('studio options routes', () => {
     }
   });
 
-  it('keeps the named-venue availability link working beside the selected-venue one', () => {
-    expect(patternFor('/venues/availability')).toBe('/venues/availability');
-    expect(patternFor('/venues/venue-1/availability')).toBe('/venues/:venueId/availability');
+  it('opens the Venue Pricing Module for the selected venue and for a named one', () => {
+    expect(patternFor('/venues/pricing')).toBe('/venues/pricing');
+    expect(patternFor('/venues/venue-1/pricing')).toBe('/venues/:venueId/pricing');
+    expect(sectionRoleFor('/venues/pricing')).toBe('VENUE_OWNER');
+  });
+
+  it('keeps the old availability links working, landing them on the pricing module', () => {
+    const selected = matchRoutes(routes, '/venues/availability')?.at(-1)?.route.element;
+    expect(findElement(selected, Navigate)?.props).toEqual({ to: '/venues/pricing', replace: true });
+    const named = matchRoutes(routes, '/venues/venue-1/availability')?.at(-1)?.route;
+    expect(named?.path).toBe('/venues/:venueId/availability');
+    expect(findElement(named?.element, VenueAvailabilityRedirect)).not.toBeNull();
   });
 });
 
@@ -74,17 +85,25 @@ const findElement = (node: ReactNode, type: unknown): ReactElement<Record<string
 };
 
 describe('event requests routes', () => {
-  it.each([
-    ['/venues/event-requests', 'VENUE', 'VENUE_OWNER'],
-    ['/host/event-requests', 'HOST', 'HOST'],
-  ])('opens %s on the shared Event Requests page, scoped to the partner’s own', (path, targetType, role) => {
+  it('opens /host/event-requests on the shared Event Requests page, scoped to the host’s own', () => {
+    const path = '/host/event-requests';
     expect(patternFor(path)).toBe(path);
     // Kept to the studio it belongs to, like the rest of that studio's pages.
-    expect(sectionRoleFor(path)).toBe(role);
+    expect(sectionRoleFor(path)).toBe('HOST');
 
     const route = matchRoutes(routes, path)?.at(-1)?.route;
     const page = findElement(route?.element, EventRequestsPage);
     // "owner" is the partner's own requests; the consoles mount it as "console".
-    expect(page?.props).toEqual({ targetType, scope: 'owner' });
+    expect(page?.props).toEqual({ targetType: 'HOST', scope: 'owner' });
+  });
+
+  it('opens a venue’s requests on Workshop & Event Requests, and lands the old link there', () => {
+    expect(sectionRoleFor('/venues/requests')).toBe('VENUE_OWNER');
+    const merged = matchRoutes(routes, '/venues/requests')?.at(-1)?.route;
+    expect(findElement(merged?.element, WorkshopEventRequestsPage)).not.toBeNull();
+
+    const old = matchRoutes(routes, '/venues/event-requests')?.at(-1)?.route;
+    expect(old?.path).toBe('/venues/event-requests');
+    expect(findElement(old?.element, Navigate)?.props).toEqual({ to: '/venues/requests', replace: true });
   });
 });

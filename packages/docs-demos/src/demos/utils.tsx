@@ -23,6 +23,8 @@ import { fitScaleDemos } from './utils/fit-scale';
 import { gigJobsDemos } from './utils/gig-jobs';
 import { profileMenuDemos } from './utils/profile-menu';
 import { chatRoomDemos } from './utils/chat-rooms';
+import { venuePriceRulesDemos } from './utils/venue-price-rules';
+import { venueBookingDemos } from './utils/venue-booking';
 import { defineDemos } from '../types';
 
 export default defineDemos('utils', [
@@ -46,4 +48,6 @@ export default defineDemos('utils', [
   ...gigJobsDemos,
   ...profileMenuDemos,
   ...chatRoomDemos,
+  ...venuePriceRulesDemos,
+  ...venueBookingDemos,
 ]);

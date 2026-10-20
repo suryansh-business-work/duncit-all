@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import { useDateFormat } from '@duncit/app-settings';
@@ -15,7 +15,6 @@ import {
   type EventRequestCounts,
   type EventRequestRow,
   type EventRequestScope,
-  type EventRequestStatus,
   type EventRequestTarget,
 } from './queries';
 
@@ -24,6 +23,13 @@ const logger = createLogger('portal');
 export interface EventRequestsPageProps {
   targetType: EventRequestTarget;
   scope: EventRequestScope;
+  /**
+   * The row's actions in place of Mark fulfilled / Dismiss — the venue owner's
+   * Accept / Reject / Counter offer. `refresh` re-reads the table and counts.
+   */
+  renderActions?: (row: EventRequestRow, refresh: () => void) => ReactNode;
+  /** Replaces the default heading (the merged Workshop & Event Requests page has its own). */
+  hideHeader?: boolean;
 }
 
 /** Literal keys per (scope, target), so the translation gate sees each one. */
@@ -44,7 +50,7 @@ const getRowId = (row: EventRequestRow) => row.id;
  * staff (Venues / Hosts consoles, scope `console`). A pod going live closes the
  * open ones on its own; the buttons close one by hand.
  */
-export function EventRequestsPage({ targetType, scope }: Readonly<EventRequestsPageProps>) {
+export function EventRequestsPage({ targetType, scope, renderActions, hideHeader = false }: Readonly<EventRequestsPageProps>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const { formatDateTime } = useDateFormat({ timeZoneAware: true });
@@ -68,7 +74,7 @@ export function EventRequestsPage({ targetType, scope }: Readonly<EventRequestsP
   const [update] = useMutation(UPDATE_EVENT_REQUEST_STATUS);
 
   const onUpdate = useCallback(
-    async (row: EventRequestRow, status: Exclude<EventRequestStatus, 'OPEN'>) => {
+    async (row: EventRequestRow, status: 'FULFILLED' | 'DISMISSED') => {
       setBusyId(row.id);
       try {
         await update({ variables: { id: row.id, status } });
@@ -85,6 +91,11 @@ export function EventRequestsPage({ targetType, scope }: Readonly<EventRequestsP
     [refetchCounts, t, update],
   );
 
+  const refresh = useCallback(() => {
+    refetchRef.current?.();
+    refetchCounts().catch((error: unknown) => logger.warn('EventRequestsPage', 'counts', { error }));
+  }, [refetchCounts]);
+
   const columns = useMemo(
     () =>
       eventRequestColumns({
@@ -96,13 +107,16 @@ export function EventRequestsPage({ targetType, scope }: Readonly<EventRequestsP
         onUpdate: (row, status) => {
           onUpdate(row, status).catch(() => undefined);
         },
+        renderActions: renderActions ? (row) => renderActions(row, refresh) : undefined,
       }),
-    [busyId, formatDateTime, onUpdate, scope, t, targetType],
+    [busyId, formatDateTime, onUpdate, refresh, renderActions, scope, t, targetType],
   );
 
   return (
     <Stack spacing={2.5} data-testid={`event-requests-page-${scope}-${targetType.toLowerCase()}`}>
-      <PageHeader title={t('publicPage.eventRequests.title')} subtitle={t(SUBTITLE_KEY[scope][targetType])} />
+      {hideHeader ? null : (
+        <PageHeader title={t('publicPage.eventRequests.title')} subtitle={t(SUBTITLE_KEY[scope][targetType])} />
+      )}
       <EventRequestCountTiles
         counts={countsQuery.data?.[reads.countsField] ?? null}
         loading={countsQuery.loading}

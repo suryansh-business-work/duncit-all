@@ -113,7 +113,6 @@ function Harness({
       form={form}
       venues={VENUES}
       clubVenueIds={clubVenueIds}
-      viewerUserId="u-me"
       venueNotice={venueNotice}
     />
   );
@@ -214,25 +213,16 @@ describe('VenueSlotStep — a physical pod', () => {
 // FreePod.test.tsx; this step only has to draw what it is handed.
 describe('VenueSlotStep — a free pod on a priced slot', () => {
   const settleLine = fallbackT('mweb.createPod.freeVenueSettle');
-  const holdLine = fallbackT('mweb.createPod.freeVenueHold');
   const physical = { pod_mode: 'PHYSICAL', venue_id: 'venue-2', venue_slot_id: 'slot-1' } as const;
 
-  it('tells the host to settle with the venue, which holds its approval until then', async () => {
-    const { getByTestId } = step({ values: physical, venueNotice: 'SETTLE_BEFORE_APPROVAL' });
+  it('tells the host to settle with the venue directly — bookings are instant, so no approval line', async () => {
+    const { getByTestId } = step({ values: physical, venueNotice: 'SETTLE' });
     await settle();
 
     const note = getByTestId('create-pod-free-venue-note');
     expect(note).toHaveAttribute('role', 'status');
     expect(note).toHaveTextContent(settleLine);
-    expect(note).toHaveTextContent(holdLine);
-  });
-
-  it('drops the approval line when a Pod Request already confirmed the slot', async () => {
-    const { getByTestId } = step({ values: physical, venueNotice: 'SETTLE' });
-    await settle();
-
-    expect(getByTestId('create-pod-free-venue-note')).toHaveTextContent(settleLine);
-    expect(getByTestId('create-pod-free-venue-note')).not.toHaveTextContent(holdLine);
+    expect(note).not.toHaveTextContent(/asked not to confirm the slot/);
   });
 
   it('says nothing when there is nothing to settle', async () => {

@@ -68,7 +68,19 @@ const toPub = (doc: IEventRequest) => ({
   fulfilled_pod_id: doc.fulfilled_pod_id ? String(doc.fulfilled_pod_id) : null,
   closed_at: iso(doc.closed_at),
   created_at: iso(doc.created_at) ?? '',
+  response_note: doc.response_note ?? '',
+  responded_at: iso(doc.responded_at),
+  offer: doc.offer
+    ? {
+        start_at: iso(doc.offer.start_at) ?? '',
+        end_at: iso(doc.offer.end_at) ?? '',
+        pax: doc.offer.pax ?? 0,
+        quote: doc.offer.quote ? { ...doc.offer.quote, confirmed_at: iso(doc.offer.quote.confirmed_at) } : null,
+      }
+    : null,
 });
+
+export const eventRequestToPub = toPub;
 
 /** What the member's empty state shows: whether their ask is already in, and
  * whether this is their own venue / host page (nothing to ask then). */
@@ -118,9 +130,20 @@ const countsOf = async (match: Record<string, unknown>) => {
   ]);
   const by = (status: EventRequestStatus) => rows.find((row) => row._id === status)?.n ?? 0;
   const open = by('OPEN');
+  const accepted = by('ACCEPTED');
+  const countered = by('COUNTERED');
+  const rejected = by('REJECTED');
   const fulfilled = by('FULFILLED');
   const dismissed = by('DISMISSED');
-  return { open, fulfilled, dismissed, total: open + fulfilled + dismissed };
+  return {
+    open,
+    accepted,
+    countered,
+    rejected,
+    fulfilled,
+    dismissed,
+    total: open + accepted + countered + rejected + fulfilled + dismissed,
+  };
 };
 
 const page = async (base: Record<string, unknown>, input?: TableQueryInput | null) => {

@@ -16,7 +16,9 @@ import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../../create-
 import { FreeVenueNote } from '../../FreeVenueNote';
 import type { FreePodVenueNotice } from '@duncit/utils';
 
-import { SlotApprovalNote, VenueSpaceCard } from './VenueSpaceCard';
+import { InstantBookingPicker } from './InstantBookingPicker';
+import type { VenueQuoteState } from './VenueQuoteCard';
+import { VenueSpaceCard } from './VenueSpaceCard';
 import { spaceSlots, venueMapQuery, venueSpaces, type VenueSpace } from './venueSpaces';
 
 interface Props {
@@ -24,7 +26,9 @@ interface Props {
   venues: CreatePodVenue[];
   /** Ids of the venues that match the selected club — the venue picker is scoped to these. */
   clubVenueIds: Set<string>;
-  viewerUserId: string;
+  /** The server's quote for the picked window (the stepper owns it). */
+  venueQuote: VenueQuoteState;
+  currencySymbol: string;
   /** A Pod Request's venue — always offered, whatever club or city is picked. */
   pinnedVenueId?: string;
   /** A free pod on a priced slot: the host settles with the venue directly. */
@@ -33,24 +37,22 @@ interface Props {
   forClubAdmin?: boolean;
 }
 
-/** Step 3 — pick a venue partner in the pod's city and book one of its
- * published availability slots (physical), or meeting details + schedule
- * (virtual). The slot sets the pod's date/time. mWeb twin. */
+/** Step 3 — pick a venue partner in the pod's city and book it instantly at
+ * its own pricing (physical), or meeting details + schedule (virtual). A Pod
+ * Request's pod keeps the slot that request holds. The booked window sets the
+ * pod's date/time. mWeb twin. */
 export function VenueSlotStep({
   form,
   venues,
   clubVenueIds,
-  viewerUserId,
+  venueQuote,
+  currencySymbol,
   pinnedVenueId,
   venueNotice,
   forClubAdmin = false,
 }: Readonly<Props>) {
-  const {
-    control,
-    watch,
-    setValue,
-    formState: { errors },
-  } = form;
+  const { control, watch, setValue, formState } = form;
+  const { errors } = formState;
   const { t } = useTranslation();
   const { dateTimeInputFormat } = useDateFormat();
   const spaceError = errors.venue_space_label?.message;
@@ -67,12 +69,15 @@ export function VenueSlotStep({
       (clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId)),
   );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
-  const ownVenue = selectedVenue?.owner_user_id === viewerUserId;
+  // A Pod Request's pod books the slot that request holds; every other pod —
+  // a club admin's edit too — books instantly (a held slot is kept until a new
+  // window is picked).
+  const bookBySlot = Boolean(watch('partner_request_id'));
   const spaces = venueSpaces(selectedVenue);
   const spaceLabel = watch('venue_space_label');
   const selectedSpace = spaces.find((space) => space.label === spaceLabel) ?? null;
   const { slots, isLoading } = useVenueSlots(
-    mode === 'PHYSICAL' ? venueId : '',
+    mode === 'PHYSICAL' && bookBySlot ? venueId : '',
     watch('partner_request_id'),
   );
   const slotsForSpace = spaceSlots(slots, selectedSpace);
@@ -80,13 +85,22 @@ export function VenueSlotStep({
   // Each chip carries its own space, so picking one fills spots with no lookup.
   const pickSpace = (space: VenueSpace) => {
     setValue('venue_space_label', space.label, { shouldDirty: true, shouldValidate: true });
-    // Changing the space invalidates any slot picked under the old space.
-    setValue('venue_slot_id', '', { shouldDirty: true });
+    // Changing the space invalidates any time picked under the old space.
+    clearTime();
     setValue('no_of_spots_text', String(space.capacity), {
       shouldDirty: true,
       shouldValidate: true,
     });
   };
+
+  function clearTime() {
+    setValue('venue_slot_id', '', { shouldDirty: true });
+    if (bookBySlot) return;
+    setValue('pod_date_time_text', '', { shouldDirty: true });
+    setValue('pod_end_date_time_text', '', { shouldDirty: true });
+    setValue('venue_booking_pax', 0, { shouldDirty: true });
+    setValue('venue_booking_pets', false, { shouldDirty: true });
+  }
 
   const startDateTime = parseDateTimeText(watch('pod_date_time_text'));
   const duration = formatDurationBetween(
@@ -127,7 +141,7 @@ export function VenueSlotStep({
             selectedId={field.value}
             onSelect={(next) => {
               field.onChange(next);
-              setValue('venue_slot_id', '', { shouldDirty: true });
+              clearTime();
               setValue('venue_space_label', '', { shouldDirty: true });
               setValue('no_of_spots_text', '0', { shouldDirty: true });
             }}
@@ -145,7 +159,16 @@ export function VenueSlotStep({
           onPick={pickSpace}
         />
       ) : null}
-      {selectedVenue && selectedSpace ? (
+      {selectedVenue && selectedSpace && !bookBySlot ? (
+        <InstantBookingPicker
+          form={form}
+          venueId={selectedVenue.id}
+          spaceLabel={selectedSpace.label}
+          quote={venueQuote}
+          currencySymbol={currencySymbol}
+        />
+      ) : null}
+      {selectedVenue && selectedSpace && bookBySlot ? (
         <Controller
           control={control}
           name="venue_slot_id"
@@ -161,7 +184,6 @@ export function VenueSlotStep({
           )}
         />
       ) : null}
-      {selectedVenue && slotId ? <SlotApprovalNote ownVenue={ownVenue} /> : null}
       <FreeVenueNote notice={venueNotice} forClubAdmin={forClubAdmin} />
       {selectedVenue ? <VenueContactCard venue={selectedVenue} /> : null}
       {mapQuery ? <MapEmbed query={mapQuery} height={200} /> : null}

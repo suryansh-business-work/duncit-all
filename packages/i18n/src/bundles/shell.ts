@@ -945,7 +945,6 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       requests: 'Requests',
       yourPods: 'Your Pods',
       venueManagement: 'Venue Management',
-      slotRequests: 'Slot Requests',
       yourBrands: 'Your Brands',
       help: 'Help',
     },

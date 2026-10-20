@@ -10,6 +10,8 @@ import {
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
 
 const future = (hours = 24) => new Date(Date.now() + hours * 3_600_000);
+const START = future();
+const END = new Date(START.getTime() + 2 * 3_600_000);
 
 const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => ({
   ...blankCreatePodForm,
@@ -20,10 +22,11 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   pod_title: 'Sunday community hike',
   club_id: 'club-1',
   venue_id: 'venue-1',
-  venue_slot_id: 'slot-1',
   venue_space_label: 'Whole venue',
   pod_description: 'A relaxed group hike around the lake.',
-  pod_date_time: future(),
+  // Booked instantly at the venue's pricing: the window is the pod window.
+  pod_date_time: START,
+  pod_end_date_time: END,
   // The blank default is invalid on purpose — a paid pod must carry a price.
   pod_amount: 499,
   media_text: 'https://cdn/img.jpg',
@@ -49,10 +52,18 @@ describe('createPodSchema', () => {
     expect(paths).toContain('pod_description');
   });
 
-  it('requires a venue, a space/capacity and a booked slot for physical pods', () => {
+  it('requires a venue, a space/capacity and a booked window for physical pods', () => {
     expect(issuesOf(valid({ venue_id: '' }))).toContain('venue_id');
     expect(issuesOf(valid({ venue_space_label: '' }))).toContain('venue_space_label');
-    expect(issuesOf(valid({ venue_slot_id: '' }))).toContain('venue_slot_id');
+    // An instant booking needs its end too — a start alone is no booking.
+    expect(issuesOf(valid({ pod_end_date_time: null }))).toContain('pod_date_time');
+    // It needs no slot id: only a Pod Request books one.
+    expect(issuesOf(valid({ venue_slot_id: '' }))).not.toContain('venue_slot_id');
+  });
+
+  it("requires a Pod Request's pod to keep the slot that request holds", () => {
+    expect(issuesOf(valid({ partner_request_id: 'req-1', venue_slot_id: '' }))).toContain('venue_slot_id');
+    expect(createPodSchema.safeParse(valid({ partner_request_id: 'req-1', venue_slot_id: 'slot-1' })).success).toBe(true);
   });
 
   it('requires at least one "what this pod offers" entry', () => {
@@ -198,10 +209,32 @@ describe('buildCreatePodInput', () => {
     expect(input.product_requests).toEqual([{ product_id: 'p1', quantity: 3 }]);
     expect(input.place_charges).toEqual([{ label: 'Entry', amount: 50, note: '' }]);
     expect(input.venue_id).toBe('venue-1');
-    expect(input.venue_slot_id).toBe('slot-1');
+    // Booked instantly: the window, the whole venue ('') and no slot id.
+    expect(input.venue_slot_id).toBeNull();
+    expect(input.venue_booking).toEqual({
+      start_at: START.toISOString(),
+      end_at: END.toISOString(),
+      pax: null,
+      pets: false,
+      space_label: '',
+    });
     expect(input.location_id).toBe('loc-1');
     expect(input.meeting_url).toBeNull();
     expect(input.is_active).toBe(true);
+  });
+
+  it('sends PER_PAX guests, pets and a named space with the booking', () => {
+    const input = buildCreatePodInput(
+      valid({ venue_booking_pax: 24, venue_booking_pets: true, venue_space_label: 'Lawn' }),
+    );
+    expect(input.venue_booking).toMatchObject({ pax: 24, pets: true, space_label: 'Lawn' });
+  });
+
+  it("books a Pod Request's held slot by id, with no instant booking", () => {
+    const input = buildCreatePodInput(valid({ partner_request_id: 'req-1', venue_slot_id: 'slot-1' }));
+    expect(input.venue_slot_id).toBe('slot-1');
+    expect(input.venue_booking).toBeNull();
+    expect(input.partner_request_id).toBe('req-1');
   });
 
   it('maps reel_url to the hosted URL, or null when blank', () => {
@@ -234,6 +267,7 @@ describe('buildCreatePodInput', () => {
     );
     expect(input.venue_id).toBeNull();
     expect(input.venue_slot_id).toBeNull();
+    expect(input.venue_booking).toBeNull();
     expect(input.meeting_platform).toBe('GOOGLE_MEET');
     expect(input.meeting_url).toBe('https://meet.duncit.com/x');
     expect(input.meeting_notes).toBe('Join early');
@@ -249,6 +283,8 @@ describe('draft serialize/hydrate', () => {
       pod_end_date_time: end,
       what_this_pod_offers: ['A'],
       reel_url: 'https://cdn/reel.mp4',
+      venue_booking_pax: 12,
+      venue_booking_pets: true,
     });
     const draft = serializeDraft(values, 2);
     expect(draft.pod_title).toBe('Sunday community hike');
@@ -259,6 +295,9 @@ describe('draft serialize/hydrate', () => {
     expect(restored.pod_end_date_time?.getTime()).toBe(end.getTime());
     expect(restored.what_this_pod_offers).toEqual(['A']);
     expect(restored.reel_url).toBe('https://cdn/reel.mp4');
+    // The booking choice is restored with the draft.
+    expect(restored.venue_booking_pax).toBe(12);
+    expect(restored.venue_booking_pets).toBe(true);
   });
 
   it('falls back to a blank form for invalid payloads', () => {

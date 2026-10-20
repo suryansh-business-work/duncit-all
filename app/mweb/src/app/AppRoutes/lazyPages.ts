@@ -37,7 +37,8 @@ export const VerificationPage = lazy(() => import('../../pages/verification-page
 export const WalletPage = lazy(() => import('../../pages/wallet-page'));
 export const VenueManagePage = lazy(() => import('../../pages/VenueManagePage'));
 export const VenueEarningsPage = lazy(() => import('../../pages/venue-earnings-page'));
-export const VenueSlotRequestsPage = lazy(() => import('../../pages/venue-slot-requests-page'));
+// Workshop & Event Requests (its history tab holds the old slot-request queue).
+export const VenueSlotRequestsPage = lazy(() => import('../../pages/venue-requests-page'));
 export const NearbyHostsPage = lazy(() => import('../../pages/nearby-partners-page/NearbyHostsPage'));
 export const ChangeRequestsPage = lazy(() => import('../../pages/change-requests-page'));
 export const VenueAvailabilityPage = lazy(() => import('../../pages/venue-availability-page'));

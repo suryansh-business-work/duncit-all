@@ -64,6 +64,8 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
         .max(1999)
         .nullable(),
       venue_space_label: z.string(),
+      venue_booking_pax: z.number().min(0),
+      venue_booking_pets: z.boolean(),
       no_of_spots: z
         .number({ error: t('mweb.createPod.validation.spotsNumber') })
         .min(0)

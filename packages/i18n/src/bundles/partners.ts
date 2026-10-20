@@ -498,9 +498,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
     venueAvailabilityPage: {
       back: 'Back',
       next: 'Next',
-      slotAvailability: 'Slot availability',
-      slotAvailabilityHint:
-        'Pick a date to add or manage time slots. Hosts will only see your Available slots when creating a pod.',
       backToVenues: 'Back to venues',
       approvalRequired:
         'Availability is only editable once your venue is approved (current status: {status}).',

@@ -98,8 +98,10 @@ export const podSeriesTypeDefs = gql`
   input PodSeriesPlanInput {
     pod_mode: String!
     venue_id: ID
-    "The slot of the FIRST date. Later dates book the identical slot (same space and times); where the venue has none, one is requested and opened when the venue accepts."
+    "The slot of the FIRST date. Later dates book the identical slot (same space and times); a date where the venue has none cannot run."
     venue_slot_id: ID
+    "Instant booking of the FIRST date at the venue's own pricing. Every later date is the same window on its day, each booked and priced on its own."
+    venue_booking: InstantBookingInput
     "Virtual pods: the first date's start and end."
     pod_date_time: String
     pod_end_date_time: String

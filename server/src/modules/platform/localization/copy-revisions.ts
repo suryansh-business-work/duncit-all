@@ -345,4 +345,8 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "website.earn.steps.earnText": ["Provide great experiences and earn every month."],
   // Gig Jobs joined the earn paths as the fifth way to earn.
   "website.earn.paths.sectionHeadingLead": ["Four Ways To"],
+  // Instant venue booking: there is no venue approval to hold back any more.
+  "podForm.whenWhereSection.freePodVenueNote": [
+    "This pod is free, so Duncit will not pay the venue for this slot. The host settles the venue’s charges with the venue directly, and the venue is asked not to confirm the slot until the host has spoken to them or transferred the amount.",
+  ],
 };

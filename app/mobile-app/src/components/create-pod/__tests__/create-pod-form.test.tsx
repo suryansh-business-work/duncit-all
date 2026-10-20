@@ -85,8 +85,8 @@ describe('createPodSchema', () => {
     ]);
   });
 
-  it('requires title, club, description and a venue + slot for physical pods', () => {
-    const paths = issuesOf(
+  it('requires title, club, description, a venue and a booked window for physical pods', () => {
+    const result = createPodSchema.safeParse(
       valid({
         pod_title: 'x',
         club_id: '',
@@ -95,15 +95,34 @@ describe('createPodSchema', () => {
         venue_slot_id: '',
       }),
     );
-    expect(paths).toEqual(
-      expect.arrayContaining([
-        'pod_title',
-        'club_id',
-        'pod_description',
-        'venue_id',
-        'venue_slot_id',
-      ]),
+    const issues = result.success ? [] : result.error.issues;
+    expect(issues.map((issue) => issue.path.join('.'))).toEqual(
+      expect.arrayContaining(['pod_title', 'club_id', 'pod_description', 'venue_id']),
     );
+    // No held slot and no end time → the instant booking's window is missing.
+    expect(issues.find((issue) => issue.path.join('.') === 'pod_date_time_text')?.message).toBe(
+      'Pick a date and time the venue is free',
+    );
+    expect(issues.map((issue) => issue.path.join('.'))).not.toContain('venue_slot_id');
+  });
+
+  it('accepts an instant booking: no slot id, the whole window picked', () => {
+    expect(
+      createPodSchema.safeParse(valid({ venue_slot_id: '', pod_end_date_time_text: futureEndText }))
+        .success,
+    ).toBe(true);
+  });
+
+  it("still requires a Pod Request's held slot", () => {
+    expect(
+      issuesOf(
+        valid({
+          venue_slot_id: '',
+          partner_request_id: 'req1',
+          pod_end_date_time_text: futureEndText,
+        }),
+      ),
+    ).toContain('venue_slot_id');
   });
 
   it('requires at least one "what this pod offers" entry', () => {
@@ -281,6 +300,44 @@ describe('buildCreatePodInput', () => {
     expect(input.partner_request_id).toBeNull();
   });
 
+  it('books a held slot by id and sends no instant booking beside it', () => {
+    const input = buildCreatePodInput(valid({ pod_end_date_time_text: futureEndText }));
+    expect(input.venue_slot_id).toBe('slot-1');
+    expect(input.venue_booking).toBeNull();
+  });
+
+  it('sends the instant booking window, guests, pets and space when no slot is held', () => {
+    const input = buildCreatePodInput(
+      valid({
+        venue_slot_id: '',
+        pod_end_date_time_text: futureEndText,
+        venue_booking_pax: 12,
+        venue_booking_pets: true,
+      }),
+    );
+    expect(input.venue_slot_id).toBeNull();
+    expect(input.venue_booking).toEqual({
+      start_at: parseDateTimeText(futureText)?.toISOString(),
+      end_at: parseDateTimeText(futureEndText)?.toISOString(),
+      pax: 12,
+      pets: true,
+      space_label: 'Main Hall',
+    });
+  });
+
+  it('books the whole venue as an empty space label and leaves pax to the server at 0', () => {
+    const input = buildCreatePodInput(
+      valid({
+        venue_slot_id: '',
+        venue_space_label: 'Whole venue',
+        pod_end_date_time_text: futureEndText,
+      }),
+    );
+    expect(input.venue_booking).toEqual(
+      expect.objectContaining({ space_label: '', pax: null, pets: false }),
+    );
+  });
+
   it('publishes a pod against its Pod Request when it was started from one', () => {
     expect(buildCreatePodInput(valid({ partner_request_id: 'req1' })).partner_request_id).toBe(
       'req1',
@@ -314,6 +371,7 @@ describe('buildCreatePodInput', () => {
     ).toBe(false);
     expect(input.venue_id).toBeNull();
     expect(input.venue_slot_id).toBeNull();
+    expect(input.venue_booking).toBeNull();
     expect(input.meeting_platform).toBeNull();
     expect(input.meeting_notes).toBeNull();
   });

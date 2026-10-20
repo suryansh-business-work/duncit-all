@@ -289,10 +289,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       productsManage: { title: 'Manage products' },
       venuesManage: { title: 'Manage venues' },
       venueEarnings: { title: 'Venue earnings' },
-      slotRequests: { title: 'Slot requests' },
+      workshopEventRequests: { title: 'Workshop & event requests' },
       changeRequests: { title: 'Change requests' },
       venueHealth: { title: 'Venue health' },
-      venueAvailability: { title: 'Venue availability' },
+      venuePricing: { title: 'Venue pricing' },
       venueSettings: { title: 'Venue settings' },
       clubStudio: { title: 'Club studio' },
       clubDashboard: { title: 'Club dashboard' },
@@ -2562,23 +2562,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       clubNoRatings: 'No ratings yet',
       clubAdmins: 'Club admins',
       clubDetailsLoadFailed: 'Could not load the club details. Please try again.',
-      // Open venue slots per club — a physical pod cannot be planned without one.
-      clubSlots: {
-        one: '{count} open slot',
-        other: '{count} open slots',
-      },
-      clubNoSlots: 'No open slots',
-      noSlotsTitle: 'No slots available in this club',
-      noSlotsBody:
-        'None of the venues in {club} has an open slot right now, so you cannot create a physical pod in this club. Please select another club.',
-      noSlotsAskHint:
-        'You can also message the club admin. They will be asked to talk to the venues of this club and get slots opened.',
-      noSlotsChooseAnother: 'Choose another club',
-      noSlotsNotifyAdmin: 'Message the club admin',
-      slotRequestSent: 'Message sent. The club admin has been asked on WhatsApp and email to get slots opened.',
-      slotRequestAlready: 'You have already messaged the admin of this club today.',
-      slotRequestNoAdmin: 'This club has no club admin yet. Our team has been told and will follow up.',
-      slotRequestFailed: 'Could not send the message. Please try again.',
       // Step 3 — Venue & Slot.
       selectVenue: 'Select venue',
       noVenues: 'No venues match this club yet — pick another club or go virtual.',
@@ -2587,9 +2570,43 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       spaceCapacity: 'Space & capacity',
       spaceHint: 'Pick a space — its capacity sets No. of spots. Slots show after this.',
       spaceOption: '{label} · {capacity} spots',
-      ownVenueNote: 'This is your venue — the slot books instantly and the pod goes live on publish.',
-      venueApprovalNote:
-        'The pod goes live only after the venue approves this slot. The venue contact below is shared for follow-up.',
+      // Instant booking at the venue's own pricing (Venue Pricing Module).
+      pricingNotSet: 'This venue has not set up its pricing yet, so it cannot be booked. Please pick another venue.',
+      pricingLoadFailed: "Could not load this venue's pricing. Please try again.",
+      calendarLoadFailed: "Could not load this venue's availability. Please try again.",
+      bookingModel: {
+        perPax: 'Priced per guest',
+        perSlot: 'Priced per slot',
+        perHour: 'Priced per hour',
+        flat: 'Flat price for the booking',
+      },
+      bookingGuests: 'Guests',
+      bookingGuestsRange: 'Between {min} and {max} guests',
+      bookingGuestsMin: 'At least {min} guests',
+      bookingPets: 'Pets are coming (the venue charges a pet fee)',
+      bookingStart: 'Start time',
+      bookingEnd: 'End time',
+      bookingEndHint: 'Times the venue is free after your start',
+      bookingNoEnd: 'No end time fits after this start. Please pick another start.',
+      quoteTitle: 'Venue price',
+      quoteHint: 'Set by the venue and paid from the ticket money at settlement. You pay nothing now.',
+      quoteFailed: 'Could not price this booking. Please try another time.',
+      quote: {
+        basePax: '{pax} guests × {rate}',
+        baseHour: '{hours} h × {rate}',
+        baseSlot: 'Slot price',
+        baseFlat: 'Venue price',
+        ruleWeekday: 'Day price change',
+        ruleDate: 'Date price change',
+        ruleRange: 'Seasonal price change',
+        minSpend: 'Minimum spend top-up',
+        cleaning: 'Cleaning fee',
+        pets: 'Pet fee',
+        taxes: 'GST ({pct}%)',
+        duncitFee: 'Duncit fee ({pct}%)',
+        total: 'Total venue cost',
+        deposit: 'Refundable deposit {amount}, paid at the venue. It is not part of this total.',
+      },
       callVenue: 'Call Venue',
       getDirections: 'Get Directions',
       venueContact: 'Venue contact for follow-up',
@@ -2637,17 +2654,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       freePodBody:
         'People join without paying, and Duncit collects and pays nothing for this pod.',
       // Only for a free pod on a slot the venue charges for (never the host's
-      // own venue): the venue's money is settled off the platform. The second
-      // line is dropped when a Pod Request has already confirmed the slot.
+      // own venue): the venue's money is settled off the platform.
       freeVenueSettle:
         "Because this pod is free, Duncit will not pay the venue. You will need to settle the venue's charges with the venue directly.",
-      freeVenueHold:
-        'The venue has been asked not to confirm the slot until you have spoken to them or transferred the amount.',
-      // The same two lines when a club admin creates the pod for a host.
+      // The same line when a club admin creates the pod for a host.
       freeVenueSettleClubAdmin:
         "Because this pod is free, Duncit will not pay the venue. The host will need to settle the venue's charges with the venue directly.",
-      freeVenueHoldClubAdmin:
-        'The venue has been asked not to confirm the slot until the host has spoken to them or transferred the amount.',
       ticketPriceLabel: 'Ticket price (₹ per person)',
       ticketPricePlaceholder: 'Enter ticket price',
       ticketPriceHint: 'Gross ticket price, max 1999.',
@@ -2765,6 +2777,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         venueRequired: 'Select a venue',
         spaceRequired: 'Pick a space / capacity',
         slotRequired: 'Pick an available slot from the venue calendar',
+        bookingRequired: 'Pick a date and time the venue is free',
         meetingUrlRequired: 'Meeting link is required',
         meetingUrlInvalid: 'Meeting link must be valid',
         // mWeb only — its picker hands back a Date, so a blank one is the only
@@ -5507,14 +5520,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       brandDashboardHint: 'Products, stock and sales at a glance',
       yourVenues: 'Your Venues',
       yourVenuesHint: 'Add a venue or edit the ones you run',
-      slotRequests: 'Slot Requests',
-      slotRequestsHint: 'Approve or decline pods asking for your slots',
+      workshopEventRequests: 'Workshop & Event Requests',
+      workshopEventRequestsHint: 'Accept, reject or counter what members ask for at your venue',
       autoPods: 'Auto Pods',
       venueAutoPodsHint: 'Pods Duncit offers to run in your free slots',
       hostAutoPodsHint: 'Ready-made pods you can claim and host',
       clubAutoPodsHint: 'Ready-made pods for your clubs',
-      availability: 'Availability Calendar',
-      availabilityHint: 'Publish the slots hosts can book',
+      venuePricing: 'Venue Pricing Module',
+      venuePricingHint: 'Your prices, open dates and hours. Hosts book instantly',
       venueSettings: 'Venue Settings',
       venueSettingsHint: 'Cancellation policy and booking rules',
       venueEarnings: 'Venue Earnings',
@@ -5540,7 +5553,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       podRequestsFromVenues: 'Pod Requests From Venues',
       podRequestsFromVenuesHint: 'Venues asking you to host a pod there',
       eventRequests: 'Event Requests',
-      venueEventRequestsHint: 'Members asking for an event at your venue',
       hostEventRequestsHint: 'Members asking you to host an event',
       nearbyHosts: 'Search Nearby Hosts',
       nearbyHostsHint: 'Find hosts near your venue and invite them',
@@ -5783,7 +5795,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     // /venues/availability — the calendar the shared editor renders (rule 27).
     venueAvailabilityPage: {
-      title: 'Slot availability',
       subtitle:
         'Pick a date to add or manage time slots. Hosts only see your Available slots when creating a pod.',
       noVenues: 'Register a venue first — availability belongs to a venue you own.',
@@ -5857,7 +5868,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       requested: 'Requested',
       slot: 'Slot',
       slotPrice: 'Slot price',
-      slotRequests: 'Slot Requests',
     },
     verification: {
       addressLine2Optional: 'Address line 2 (optional)',

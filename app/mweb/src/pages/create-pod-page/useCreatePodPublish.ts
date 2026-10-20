@@ -34,9 +34,9 @@ export function useCreatePodPublish() {
       return false;
     }
   };
-  /** A recurring pod: every date that could run is now a pod, each waiting on
-   * its venue (or live, at the host's own venue). Say how many, and which
-   * dates were skipped, then land on Host Management where they are listed. */
+  /** A recurring pod: every date that could run is booked at its venue. Say
+   * how many, and which dates were skipped, then land on Host Management where
+   * they are listed. */
   const publishSeries = async (id: string, input: unknown, plan: PodSeriesPlan) => {
     const res = await publishSeriesMut({ variables: { draft_id: id, input, plan } });
     const result = res.data?.publishPodDraftSeries;
@@ -54,8 +54,9 @@ export function useCreatePodPublish() {
     const res = await publishMut({ variables: { draft_id: id, input } });
     const created = res.data?.publishPodDraft;
     if (!created) throw new Error(t('mweb.createPod.createFailed'));
-    // A pod holding a venue slot awaits the venue's decision — land the host on
-    // the waiting page instead of Host Management (native twin, rule 27).
+    // Venue bookings are instant now, so a new pod comes back APPROVED and lands
+    // where a live pod lands. PENDING is kept only for older pods still waiting
+    // on a venue (native twin, rule 27).
     if (created.venue_approval_status === 'PENDING') {
       navigate(`/host/pod-pending/${created.id}`);
     } else if (await challengeRequired(created.id)) {

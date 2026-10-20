@@ -70,16 +70,19 @@ const { EventRequestCountTiles } = await import('../src/event-requests/EventRequ
 const queries = await import('../src/event-requests/queries');
 
 const QUERY: TableQueryState = { search: '', page: 1, pageSize: 25, sortBy: null, sortDir: 'desc', filters: [] };
-const COUNTS: EventRequestCounts = { open: 3, fulfilled: 1, dismissed: 2, total: 6 };
+const COUNTS: EventRequestCounts = { open: 3, accepted: 0, countered: 0, rejected: 0, fulfilled: 1, dismissed: 2, total: 6 };
 
 const row = (over: Partial<EventRequestRow> = {}): EventRequestRow => ({
   id: 'req-1',
+  target_id: 'venue-1',
   target_name: 'Blue Door Cafe',
   requester_name: 'Asha Rao',
   note: 'A quiz night?',
   status: 'OPEN',
   closed_at: null,
   created_at: '2026-10-01T09:30:00.000Z',
+  response_note: '',
+  offer: null,
   ...over,
 });
 
@@ -196,12 +199,12 @@ describe('EventRequestsPage — the target column', () => {
 
   it('names the venue on the owner’s venue list (a partner may own several)', () => {
     render(<EventRequestsPage targetType="VENUE" scope="owner" />);
-    expect(headers()).toEqual(['Venue', 'Requested by', 'Note', 'Status', 'Requested', 'Closed', 'Actions']);
+    expect(headers()).toEqual(['Venue', 'Requested by', 'Note', 'Status', 'Your answer', 'Requested', 'Closed', 'Actions']);
   });
 
   it('leaves it out of the owner’s host list, whose one target is themself', () => {
     render(<EventRequestsPage targetType="HOST" scope="owner" />);
-    expect(headers()).toEqual(['Requested by', 'Note', 'Status', 'Requested', 'Closed', 'Actions']);
+    expect(headers()).toEqual(['Requested by', 'Note', 'Status', 'Your answer', 'Requested', 'Closed', 'Actions']);
   });
 
   it('names the host on the console’s host list', () => {
@@ -211,14 +214,19 @@ describe('EventRequestsPage — the target column', () => {
 });
 
 describe('EventRequestsPage — the count tiles', () => {
-  it('shows the four totals from the scope’s counts field', () => {
-    counts.data = { myReceivedEventRequestCounts: { open: 4, fulfilled: 5, dismissed: 7, total: 16 } };
+  it('shows every status’s total from the scope’s counts field', () => {
+    counts.data = {
+      myReceivedEventRequestCounts: { open: 4, accepted: 2, countered: 3, rejected: 1, fulfilled: 5, dismissed: 7, total: 22 },
+    };
     render(<EventRequestsPage targetType="VENUE" scope="owner" />);
 
     expect(within(screen.getByTestId('event-requests-tile-open')).getByText('4')).toBeInTheDocument();
+    expect(within(screen.getByTestId('event-requests-tile-accepted')).getByText('2')).toBeInTheDocument();
+    expect(within(screen.getByTestId('event-requests-tile-countered')).getByText('3')).toBeInTheDocument();
+    expect(within(screen.getByTestId('event-requests-tile-rejected')).getByText('1')).toBeInTheDocument();
     expect(within(screen.getByTestId('event-requests-tile-fulfilled')).getByText('5')).toBeInTheDocument();
     expect(within(screen.getByTestId('event-requests-tile-dismissed')).getByText('7')).toBeInTheDocument();
-    expect(within(screen.getByTestId('event-requests-tile-total')).getByText('16')).toBeInTheDocument();
+    expect(within(screen.getByTestId('event-requests-tile-total')).getByText('22')).toBeInTheDocument();
   });
 
   it('holds skeletons while the first read is in flight', () => {
@@ -251,7 +259,7 @@ describe('EventRequestCountTiles', () => {
   it('reads no totals at all as zeros once nothing is loading', () => {
     render(<EventRequestCountTiles counts={null} loading={false} failed={false} />);
 
-    for (const id of ['open', 'fulfilled', 'dismissed', 'total']) {
+    for (const id of ['open', 'accepted', 'countered', 'rejected', 'fulfilled', 'dismissed', 'total']) {
       expect(within(screen.getByTestId(`event-requests-tile-${id}`)).getByText('0')).toBeInTheDocument();
     }
   });
@@ -262,17 +270,40 @@ describe('EventRequestsPage — the cells', () => {
     render(<EventRequestsPage targetType="VENUE" scope="console" />);
   });
 
-  it('labels each status, and offers the three statuses as the filter', () => {
+  it('labels each status, and offers all six statuses as the filter', () => {
     // The tiles above carry the same words, so read inside the cell only.
     const cell = renderCell('status', row({ id: 'a', status: 'FULFILLED' }));
     expect(within(cell.getByTestId('cell-status-a')).getByText('Fulfilled')).toBeInTheDocument();
     expect(valueOf('status', row({ status: 'DISMISSED' }))).toBe('Dismissed');
+    expect(valueOf('status', row({ status: 'COUNTERED' }))).toBe('Offer sent');
     const status = column('status');
     expect(status.type === 'enum' ? status.options : []).toEqual([
       { value: 'OPEN', label: 'Open' },
+      { value: 'ACCEPTED', label: 'Accepted' },
+      { value: 'COUNTERED', label: 'Offer sent' },
+      { value: 'REJECTED', label: 'Rejected' },
       { value: 'FULFILLED', label: 'Fulfilled' },
       { value: 'DISMISSED', label: 'Dismissed' },
     ]);
+  });
+
+  it('shows the owner’s answer — the offered window, its frozen price and their note', () => {
+    const answered = row({
+      id: 'ans-1',
+      status: 'COUNTERED',
+      response_note: 'Saturday works better',
+      offer: { start_at: '2026-12-05T12:30:00.000Z', end_at: '2026-12-05T15:30:00.000Z', pax: 20, quote: { total: 5900, venue_payout: 5000 } },
+    });
+    const cell = within(renderCell('offer', answered).getByTestId('cell-offer-ans-1'));
+    expect(cell.getByText('Offered: at 2026-12-05T12:30:00.000Z · 20 guests')).toBeInTheDocument();
+    expect(cell.getByText(/^Total .*5,900.* · you receive .*5,000/)).toBeInTheDocument();
+    expect(cell.getByText('Your note: Saturday works better')).toBeInTheDocument();
+    expect(column('offer')).toMatchObject({ sortable: false, filterable: false });
+  });
+
+  it('leaves the answer cell empty until the owner has answered', () => {
+    const blank = renderCell('offer', row({ id: 'none-1' }));
+    expect(blank.getByTestId('cell-offer-none-1')).toBeEmptyDOMElement();
   });
 
   it('formats the dates with the admin-configured format, and an open request as never closed', () => {
@@ -292,6 +323,26 @@ describe('EventRequestsPage — the cells', () => {
 
     const closed = renderCell('actions', row({ id: 'done-1', status: 'FULFILLED' }));
     expect(closed.getByTestId('cell-actions-done-1')).toBeEmptyDOMElement();
+  });
+});
+
+describe('EventRequestsPage — the owner’s own actions', () => {
+  it('renders the given actions in place of Mark fulfilled / Dismiss, and hands them a refresh of table and totals', () => {
+    const renderActions = vi.fn((r: EventRequestRow, refresh: () => void) => (
+      <button type="button" data-testid={`answer-${r.id}`} onClick={refresh}>
+        Answer
+      </button>
+    ));
+    render(<EventRequestsPage targetType="VENUE" scope="owner" renderActions={renderActions} hideHeader />);
+
+    expect(screen.queryByRole('heading', { name: 'Event Requests' })).not.toBeInTheDocument();
+    renderCell('actions', row({ id: 'req-11' }));
+    expect(screen.queryByTestId('event-request-fulfil-req-11')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('answer-req-11'));
+
+    expect(renderActions).toHaveBeenCalledWith(expect.objectContaining({ id: 'req-11' }), expect.any(Function));
+    expect(h.refetchTable).toHaveBeenCalledTimes(1);
+    expect(h.refetchCounts).toHaveBeenCalledTimes(1);
   });
 });
 

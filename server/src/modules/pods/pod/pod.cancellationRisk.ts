@@ -33,11 +33,11 @@ import { UserModel } from '@modules/access/user/user.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
-import type { BreakdownRates } from '@modules/finance/finance/breakdown.math';
+import type { BreakdownOptions, BreakdownRates } from '@modules/finance/finance/breakdown.math';
 import {
   collectedForPod,
   resolveEffectiveRates,
-  venueAmountForPod,
+  venueTermsForPod,
   waterfallForAmount,
   type SettlementWaterfall,
 } from '@modules/finance/finance/settlement.service';
@@ -63,6 +63,8 @@ const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 export interface PodFinanceNow {
   collected: number;
   venueAmount: number;
+  /** How the venue money settles (commission on top for an instant booking). */
+  venueOptions?: BreakdownOptions;
   rates: BreakdownRates | null;
   waterfall: SettlementWaterfall | null;
   /** True when completing the pod would settle the host below ₹0. */
@@ -81,7 +83,7 @@ export async function podFinanceNow(pod: any): Promise<PodFinanceNow> {
   if (isFreePod(pod)) {
     return { collected: 0, venueAmount: 0, rates: null, waterfall: null, negative: false };
   }
-  const venueAmount = await venueAmountForPod(pod, 0);
+  const { amount: venueAmount, options: venueOptions } = await venueTermsForPod(pod);
   if (venueAmount <= 0) {
     return { collected: 0, venueAmount, rates: null, waterfall: null, negative: false };
   }
@@ -92,10 +94,8 @@ export async function podFinanceNow(pod: any): Promise<PodFinanceNow> {
       venueId: pod.venue_id ?? null,
     }),
   ]);
-  const waterfall = waterfallForAmount(collected, venueAmount, rates, {
-    clampVenueToPool: false,
-  });
-  return { collected, venueAmount, rates, waterfall, negative: waterfall.host_receives < 0 };
+  const waterfall = waterfallForAmount(collected, venueAmount, rates, venueOptions);
+  return { collected, venueAmount, venueOptions, rates, waterfall, negative: waterfall.host_receives < 0 };
 }
 
 /**
@@ -117,7 +117,7 @@ export function spotsNeededToCover(
       finance.collected + extra * ticketPrice,
       finance.venueAmount,
       finance.rates,
-      { clampVenueToPool: false }
+      finance.venueOptions ?? { clampVenueToPool: false }
     );
     if (next.host_receives >= 0) return extra;
   }

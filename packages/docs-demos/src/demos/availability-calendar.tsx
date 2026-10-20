@@ -12,6 +12,7 @@ import type { PreviewSummary } from '@duncit/slots';
 import { defineDemo, defineDemos } from '../types';
 // The past-slot demo and its draft mock live beside this file.
 import { pastSlotDemo } from './availability-calendar/past-slot-demo';
+import { priceBreakdownDemo, pricingInputDemo } from './availability-calendar/pricing-demos';
 
 interface SlotMock {
   start_at: string;
@@ -154,5 +155,7 @@ export default defineDemos('availability-calendar', [
     }),
   }),
 
+  priceBreakdownDemo,
+  pricingInputDemo,
   pastSlotDemo,
 ]);

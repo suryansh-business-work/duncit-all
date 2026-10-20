@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { filterProductsForClub, freePodVenueNotice, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import { filterClubs } from '../create-pod.form';
-import { VENUE_AVAILABLE_SLOTS } from '../steps/VenueSlotStep';
+import { VENUE_AVAILABLE_SLOTS, venueSpaces } from '../steps/VenueSlotStep';
+import { useVenueQuote } from '../useVenueQuote';
 import { useEarningsPreview } from '../price-panel';
 import type {
   CreatePodClub,
@@ -65,29 +66,37 @@ export function useStepperSelections(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId, form]);
 
-  // The picked slot feeds the Pricing panel (slot price + GST + earnings).
+  // What the venue costs the pod feeds the Pricing panel: a held slot's price
+  // (a Pod Request), else the server's quote total for the instant booking
+  // (venue price + GST + Duncit's fee on top) — never a raw slot price.
   const venueId = form.watch('venue_id');
   const slotId = form.watch('venue_slot_id');
   const slotsQuery = useQuery(VENUE_AVAILABLE_SLOTS, {
     variables: { venue_id: venueId, partner_request_id: form.watch('partner_request_id') || null },
-    skip: podMode !== 'PHYSICAL' || !venueId,
+    skip: podMode !== 'PHYSICAL' || !venueId || !slotId,
     fetchPolicy: 'cache-first',
   });
   const selectedSlot = (slotsQuery.data?.venueAvailableSlots ?? []).find((slot) => slot.id === slotId) ?? null;
+  const { quote } = useVenueQuote(form);
+  const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
+  const space = venueSpaces(selectedVenue).find((item) => item.label === form.watch('venue_space_label'));
+  const venueAmount = slotId ? (selectedSlot?.price ?? null) : (quote?.total ?? null);
+  const bookedCapacity = slotId ? selectedSlot?.capacity : space?.capacity;
 
   // How big this pod may be: floored by the sub-category's admin-set minimum
   // (a doubles game needs 4) and capped by the venue space the host booked. The
   // pod's sub-category is its club's `category_id`. Native twin (rule 27).
   const spots = spotsBounds({
     minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
-    venueCapacity: podMode === 'PHYSICAL' ? selectedSlot?.capacity : null,
+    venueCapacity: podMode === 'PHYSICAL' ? bookedCapacity : null,
   });
 
   // Step-4 money lives here so the footer can block Create Pod on the same two
   // rules the panel renders (zero earnings / venue price not covered).
   const podType = form.watch('pod_type');
   const preview = useEarningsPreview({
-    slotPrice: selectedSlot ? selectedSlot.price : null,
+    slotPrice: venueAmount,
+    venueQuote: !slotId && quote ? { payout: quote.venue_payout, commissionOnTop: quote.platform_fee } : null,
     podAmount: Number(form.watch('pod_amount')) || 0,
     noOfSpots: Number(form.watch('no_of_spots')) || 0,
     venueId: venueId || null,
@@ -100,9 +109,8 @@ export function useStepperSelections(
   // again before publishing. The rule itself is shared with native (rule 27).
   const venueNotice = freePodVenueNotice({
     podType,
-    slotPrice: podMode === 'PHYSICAL' ? selectedSlot?.price : null,
-    ownVenue: venues.find((venue) => venue.id === venueId)?.owner_user_id === viewerUserId,
-    slotConfirmed: Boolean(form.watch('partner_request_id')),
+    slotPrice: podMode === 'PHYSICAL' ? venueAmount : null,
+    ownVenue: selectedVenue?.owner_user_id === viewerUserId,
   });
 
   return { podMode, clubsInCity, clubsForLocation, clubVenueIds, availableProducts, spots, preview, venueNotice };

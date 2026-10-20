@@ -80,7 +80,10 @@ export type RootStackParamList = {
   RegisterVenue: undefined;
   VenueManage: undefined;
   VenueEarnings: undefined;
+  /** /venues/slot-requests — the old path; opens Workshop & Event Requests. */
   VenueSlotRequests: undefined;
+  /** /venues/event-requests — Workshop & Event Requests (mWeb's exact path). */
+  VenueEventRequests: undefined;
   /** /venues/nearby-hosts — Venue Studio's Search Nearby Hosts (mWeb's exact path). */
   NearbyHosts: undefined;
   /** /host/nearby-venues — Host Studio's Search Nearby Venues (mWeb's exact path). */
@@ -91,8 +94,10 @@ export type RootStackParamList = {
   /** /pod-requests/:id — one Pod Request; its notifications land here. */
   PodRequestDetail: { id: string };
   ChangeRequests: undefined;
-  /** /venues/availability — the owner's slot calendar (mWeb's exact path). */
+  /** /venues/availability — the old path; opens the Venue Pricing Module. */
   VenueAvailability: undefined;
+  /** /venues/pricing — the Venue Pricing Module (mWeb's exact path). */
+  VenuePricing: undefined;
   /** /venues/settings — the owner's cancellation policy (mWeb's exact path). */
   VenueSettings: undefined;
   /** Auto Pods a venue may accept — the FIRST of the three enrolments. */

@@ -16,6 +16,7 @@ interface HarnessProps {
   venueId: string | null;
   isPhysical: boolean;
   isFree?: boolean;
+  venueQuote?: { payout: number; commissionOnTop: number } | null;
   onPreview?: (preview: EarningsPreview) => void;
 }
 
@@ -78,7 +79,7 @@ const waterfall = {
 
 const projection = { total_spots: 30, payable_spots: 29, waterfall };
 
-const venueVariables = { pod_amount: 1000, no_of_spots: 30, venue_id: 'v1', venue_amount: 300 };
+const venueVariables = { pod_amount: 1000, no_of_spots: 30, venue_id: 'v1', venue_amount: 300, venue_commission_on_top: null };
 
 const venueMocks = [
   financeMock,
@@ -254,7 +255,7 @@ describe('PricePanel (four-way earnings split, host first)', () => {
           {
             request: {
               query: POTENTIAL_POD_EARNINGS,
-              variables: { pod_amount: 1000, no_of_spots: 30, venue_id: null, venue_amount: null },
+              variables: { pod_amount: 1000, no_of_spots: 30, venue_id: null, venue_amount: null, venue_commission_on_top: null },
             },
             result: { data: { potentialPodEarnings: onlineProjection } },
           },
@@ -265,5 +266,34 @@ describe('PricePanel (four-way earnings split, host first)', () => {
     );
     expect(await screen.findByText('₹21,012.71')).toBeInTheDocument();
     expect(screen.getAllByText('₹0.00')).toHaveLength(2); // venue + club admin
+  });
+
+  it('prices an instant booking at the venue payout, with Duncit’s commission on top sent apart', async () => {
+    // The quote's total is ₹384: the venue is paid ₹354 (price + GST) and Duncit's ₹30 rides on top.
+    render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
+        mocks={[
+          financeMock,
+          {
+            request: {
+              query: POTENTIAL_POD_EARNINGS,
+              variables: { pod_amount: 1000, no_of_spots: 30, venue_id: 'v1', venue_amount: 354, venue_commission_on_top: 30 },
+            },
+            result: { data: { potentialPodEarnings: projection } },
+          },
+        ]}
+      >
+        <Harness
+          slotPrice={384}
+          venueQuote={{ payout: 354, commissionOnTop: 30 }}
+          podAmount={1000}
+          noOfSpots={30}
+          venueId="v1"
+          isPhysical
+        />
+      </MockedProvider>,
+    );
+    // Only the matching variables resolve, so the host's earning proves what was sent.
+    expect(await screen.findByText('₹20,742.71')).toBeInTheDocument();
   });
 });

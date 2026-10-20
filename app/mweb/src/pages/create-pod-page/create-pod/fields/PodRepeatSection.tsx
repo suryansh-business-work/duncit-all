@@ -18,9 +18,9 @@ const NO_DATES: SeriesPreviewDate[] = [];
  * monthly or on hand-picked days — and until when. The server works out every
  * date and its slot; the host sees them on a calendar and can leave any out
  * before publishing. It publishes as ONE pod with those dates; members book
- * the dates they want, with the multi-date discount set here. Each date goes
- * to the venue as its own slot request — grouped, so the venue can answer all
- * at once. The One time | Recurring choice sits above the date
+ * the dates they want, with the multi-date discount set here. Each date is
+ * booked instantly at the venue's pricing, on its own; a date the venue
+ * cannot take shows as "Cannot run". The One time | Recurring choice sits above the date
  * (PodRepeatModeToggle). Native twin: PodRepeatSection.
  */
 export default function PodRepeatSection({ form }: Readonly<{ form: CreatePodForm }>) {
@@ -34,7 +34,9 @@ export default function PodRepeatSection({ form }: Readonly<{ form: CreatePodFor
     (d) => d.available && (custom || !values.repeat_skip_dates.includes(d.start_at))
   );
   const first = values.pod_date_time;
-  const chosen = values.pod_mode === 'VIRTUAL' ? !!first : !!values.venue_slot_id && !!first;
+  // Physical: a slot (Pod Request) or an instant booking's whole window.
+  const booked = !!values.venue_slot_id || !!values.pod_end_date_time;
+  const chosen = values.pod_mode === 'VIRTUAL' ? !!first : booked && !!first;
 
   // A Pod Request's slot is one agreed date — it has nothing to repeat — and
   // there is nothing to repeat before the first date is chosen.

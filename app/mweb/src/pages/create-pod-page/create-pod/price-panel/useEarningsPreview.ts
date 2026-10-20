@@ -4,8 +4,13 @@ import { payableSpots } from '@duncit/utils';
 import { POTENTIAL_POD_EARNINGS, type EarningsProjection } from './queries';
 
 export interface EarningsPreviewInput {
-  /** Price of the venue slot the host picked (null when none is picked). */
+  /** What the venue costs the pod (null when nothing is booked): the instant
+   * booking's quoted total, or a Pod Request's held slot price. */
   slotPrice: number | null;
+  /** An instant booking's quote: what the venue is paid (venue price + GST)
+   * and Duncit's commission on top, which comes off the host's side — sent to
+   * the preview so it matches settlement. Absent for a held slot. */
+  venueQuote?: { payout: number; commissionOnTop: number } | null;
   podAmount: number;
   noOfSpots: number;
   venueId: string | null;
@@ -69,7 +74,7 @@ function useDebouncedInputs(podAmount: number, noOfSpots: number) {
  * be positive. mWeb + native apply identical thresholds (rule 27).
  */
 export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): EarningsPreview {
-  const { slotPrice, podAmount, noOfSpots, venueId, isPhysical, isFree } = input;
+  const { slotPrice, venueQuote, podAmount, noOfSpots, venueId, isPhysical, isFree } = input;
   const sent = useDebouncedInputs(podAmount, noOfSpots);
   const hasVenue = isPhysical && slotPrice !== null;
   const { data, loading } = useQuery<any>(POTENTIAL_POD_EARNINGS, {
@@ -77,7 +82,8 @@ export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): Earni
       pod_amount: sent.podAmount,
       no_of_spots: sent.noOfSpots,
       venue_id: hasVenue ? venueId : null,
-      venue_amount: hasVenue ? slotPrice : null,
+      venue_amount: hasVenue ? (venueQuote?.payout ?? slotPrice) : null,
+      venue_commission_on_top: hasVenue ? (venueQuote?.commissionOnTop ?? null) : null,
     },
     // A free pod has no calculation at all — its ₹0 would skip the query
     // anyway, but the debounced copy still holds the old price for 400ms after

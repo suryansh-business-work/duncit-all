@@ -243,8 +243,8 @@ describe('notifyFreeSlotBooked', () => {
 
     expect(logError).toHaveBeenCalledWith(
       'venueSlot',
-      'notifyFreeSlotBooked',
-      expect.objectContaining({ msg: 'free slot note failed', slot_id: String(slot._id) })
+      'announceLiveBooking',
+      expect.objectContaining({ msg: 'booking note failed', slot_id: String(slot._id) })
     );
     expect(sentEvents().map((s) => s.event)).toEqual(['VENUE_POD_PUBLISHED', 'HOST_POD_PUBLISHED']);
   });
@@ -256,8 +256,8 @@ describe('notifyFreeSlotBooked', () => {
 
     expect(logError).toHaveBeenCalledWith(
       'venueSlot',
-      'notifyFreeSlotBooked',
-      expect.objectContaining({ msg: 'free slot whatsapp failed', slot_id: String(slot._id) })
+      'announceLiveBooking',
+      expect.objectContaining({ msg: 'booking whatsapp failed', slot_id: String(slot._id) })
     );
   });
 });

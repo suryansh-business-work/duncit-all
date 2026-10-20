@@ -88,6 +88,7 @@ export { ProfilePage } from './chrome/ProfilePage';
 export {
   EventRequestsPage,
   type EventRequestsPageProps,
+  type EventRequestRow,
   type EventRequestScope,
   type EventRequestTarget,
 } from './event-requests';

@@ -12,20 +12,16 @@
 export type FreePodVenueNotice =
   /** Nothing to settle: a paid pod, no slot picked, an unpriced slot or the host's own venue. */
   | 'NONE'
-  /** The venue is owed and has already confirmed the slot (a Pod Request's slot). */
-  | 'SETTLE'
-  /** The venue is owed and will hold its approval until the host has settled. */
-  | 'SETTLE_BEFORE_APPROVAL';
+  /** The venue is owed: bookings are instant, so the host settles with the venue directly. */
+  | 'SETTLE';
 
 export interface FreePodVenueInput {
   /** The pod's type as the form holds it — only `'FREE'` is free. */
   podType?: string | null;
   /** Price of the picked venue slot; null/undefined while none is picked. */
   slotPrice?: number | null;
-  /** The host owns the venue — its slots book instantly and cost them nothing. */
+  /** The host owns the venue — it costs them nothing. */
   ownVenue?: boolean;
-  /** The slot comes from a confirmed Pod Request, so no second approval follows. */
-  slotConfirmed?: boolean;
 }
 
 /** The only free pod type — the model virtual free pods already use. */
@@ -42,7 +38,7 @@ export function freePodVenueNotice(input: Readonly<FreePodVenueInput>): FreePodV
   if (!isFreePod(input.podType) || input.ownVenue) return 'NONE';
   const slotPrice = Number(input.slotPrice);
   if (Number.isNaN(slotPrice) || slotPrice <= 0) return 'NONE';
-  return input.slotConfirmed ? 'SETTLE' : 'SETTLE_BEFORE_APPROVAL';
+  return 'SETTLE';
 }
 
 /**

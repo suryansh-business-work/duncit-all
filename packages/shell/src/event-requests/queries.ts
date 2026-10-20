@@ -1,23 +1,37 @@
 import { gql } from '@apollo/client';
 
 export type EventRequestTarget = 'HOST' | 'VENUE';
-export type EventRequestStatus = 'OPEN' | 'FULFILLED' | 'DISMISSED';
+export type EventRequestStatus = 'OPEN' | 'ACCEPTED' | 'COUNTERED' | 'REJECTED' | 'FULFILLED' | 'DISMISSED';
 /** `owner` — the requests addressed to the signed-in partner (Partners portal);
  * `console` — every request of the kind (Venues / Hosts consoles). */
 export type EventRequestScope = 'owner' | 'console';
 
+/** The window the owner offered (Accept / Counter offer) and the two figures of its frozen quote. */
+export interface EventRequestOffer {
+  start_at: string;
+  end_at: string;
+  pax: number;
+  quote: { total: number; venue_payout: number } | null;
+}
+
 export interface EventRequestRow {
   id: string;
+  target_id: string;
   target_name: string;
   requester_name: string;
   note: string;
   status: EventRequestStatus;
   closed_at: string | null;
   created_at: string;
+  response_note: string;
+  offer: EventRequestOffer | null;
 }
 
 export interface EventRequestCounts {
   open: number;
+  accepted: number;
+  countered: number;
+  rejected: number;
   fulfilled: number;
   dismissed: number;
   total: number;
@@ -27,17 +41,28 @@ const ROW = `
   total
   rows {
     id
+    target_id
     target_name
     requester_name
     note
     status
     closed_at
     created_at
+    response_note
+    offer {
+      start_at
+      end_at
+      pax
+      quote { total venue_payout }
+    }
   }
 `;
 
 const COUNTS = `
   open
+  accepted
+  countered
+  rejected
   fulfilled
   dismissed
   total

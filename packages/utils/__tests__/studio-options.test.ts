@@ -30,7 +30,6 @@ describe('STUDIO_OPTION_LIST', () => {
       'pods',
       'change-requests',
       'pod-requests',
-      'event-requests',
       'nearby',
       'verification',
       'withdrawal',
@@ -68,25 +67,39 @@ describe('STUDIO_OPTION_LIST', () => {
     expect(portalOnly).toEqual(['/ecomm-brand', '/ecomm-brand/integrations', '/ecomm-brand/returns', '/ecomm-brand/deletion-refunds']);
   });
 
-  it('opens Event Requests in the Partner console for both a venue and a host, each with its own hint', () => {
-    const eventRequests = (mode: 'VENUE' | 'HOST') => STUDIO_OPTION_LIST[mode].find((option) => option.key === 'event-requests');
-    expect(eventRequests('VENUE')).toMatchObject({
-      labelKey: 'mweb.studioOptions.eventRequests',
-      hintKey: 'mweb.studioOptions.venueEventRequestsHint',
-      portal: '/venues/event-requests',
-    });
-    expect(eventRequests('HOST')).toMatchObject({
+  it('opens Event Requests in the Partner console for a host, with its own hint', () => {
+    const eventRequests = STUDIO_OPTION_LIST.HOST.find((option) => option.key === 'event-requests');
+    expect(eventRequests).toMatchObject({
       labelKey: 'mweb.studioOptions.eventRequests',
       hintKey: 'mweb.studioOptions.hostEventRequestsHint',
       portal: '/host/event-requests',
     });
-    for (const mode of ['VENUE', 'HOST'] as const) {
-      expect(eventRequests(mode)?.path).toBeUndefined();
-      expect(eventRequests(mode)?.route).toBeUndefined();
-    }
+    expect(eventRequests?.path).toBeUndefined();
+    expect(eventRequests?.route).toBeUndefined();
     // Members never ask a club or a brand for an event.
     expect(STUDIO_OPTION_LIST.CLUB.some((option) => option.key === 'event-requests')).toBe(false);
     expect(STUDIO_OPTION_LIST.ECOMM.some((option) => option.key === 'event-requests')).toBe(false);
+  });
+
+  it('merges a venue’s event requests into Workshop & Event Requests, open in the app and the console', () => {
+    expect(keys('VENUE')).not.toContain('event-requests');
+    expect(STUDIO_OPTION_LIST.VENUE.find((option) => option.key === 'slot-requests')).toMatchObject({
+      labelKey: 'mweb.studioOptions.workshopEventRequests',
+      hintKey: 'mweb.studioOptions.workshopEventRequestsHint',
+      path: '/venues/event-requests',
+      route: 'VenueEventRequests',
+      portal: '/venues/requests',
+    });
+  });
+
+  it('opens the Venue Pricing Module where the availability calendar used to be', () => {
+    expect(STUDIO_OPTION_LIST.VENUE.find((option) => option.key === 'availability')).toMatchObject({
+      labelKey: 'mweb.studioOptions.venuePricing',
+      hintKey: 'mweb.studioOptions.venuePricingHint',
+      path: '/venues/pricing',
+      route: 'VenuePricing',
+      portal: '/venues/pricing',
+    });
   });
 
   it('lets a brand work its orders and ShipRocket warehouses in the app as well as the console', () => {
@@ -186,7 +199,6 @@ describe('studioOptionGroups', () => {
       'pods',
       'change-requests',
       'pod-requests',
-      'event-requests',
       'nearby',
       'verification',
       'withdrawal',

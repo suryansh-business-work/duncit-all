@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Box, Typography } from '@mui/material';
 import { format, isSameDay, isSameMonth } from 'date-fns';
 import { useTranslation } from '@duncit/app-settings';
@@ -15,11 +16,12 @@ interface DayCellProps {
   isHoliday: boolean;
   selectedDate: Date | null;
   onSelect: (date: Date) => void;
+  footer?: ReactNode;
 }
 
 /** A single day tile with its A/P/B/× slot counts. Hoisted to module scope so
  *  it is never re-created per render (S6478). */
-export function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, selectedDate, onSelect }: Readonly<DayCellProps>) {
+export function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, selectedDate, onSelect, footer }: Readonly<DayCellProps>) {
   const { t } = useTranslation();
   const isOtherMonth = view === 'month' && !isSameMonth(date, monthStart);
   const isPast = date < today;
@@ -77,6 +79,7 @@ export function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoli
         </Typography>
       )}
       <DayBadges bucket={bucket} isSelected={isSelected} />
+      {footer}
     </Box>
   );
 }

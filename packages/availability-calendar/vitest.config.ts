@@ -5,7 +5,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./__tests__/setup.ts'],
-    include: ['__tests__/**/*.test.{ts,tsx}'],
+    // The forms' schema suites sit beside them as *.form.cy.tsx (the form structure rule).
+    include: ['__tests__/**/*.test.{ts,tsx}', 'src/**/*.form.cy.{ts,tsx}'],
     // Most suites here mount the whole recurring dialog — MUI Dialog, four
     // accordions, MUI X pickers — under MockedProvider. On the serialised Shared
     // packages runner the package takes ~60s end to end and single renders have

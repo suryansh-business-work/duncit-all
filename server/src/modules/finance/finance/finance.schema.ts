@@ -710,6 +710,8 @@ export const financeTypeDefs = /* GraphQL */ `
       venue_amount: Float
       "FREE returns an all-zero projection with is_free: true. Omitted = the paid projection."
       pod_type: PodType
+      "An instant booking: the quote's platform_fee, charged on top of venue_amount (then the quote's venue_payout) and borne by the host."
+      venue_commission_on_top: Float
     ): PodEarningsProjection!
     """
     The admin consoles' projection for a pod they are writing. Prices at the

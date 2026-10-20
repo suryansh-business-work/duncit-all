@@ -171,6 +171,15 @@ async function bootstrap() {
       logs.server.info('bootstrap', 'podSeriesParentMigration', await migrateSeriesParents());
     });
   }
+  // Instant booking: every venue gets its pricing from the slots it already
+  // published; venues with none are logged as needing manual setup. Gated like
+  // the migrations above; idempotent (only unset pricing is filled).
+  if (process.env.RUN_VENUE_PRICING_BACKFILL === '1') {
+    await safeSeed('venuePricingBackfill', async () => {
+      const { backfillVenuePricing } = await import('@modules/venues/venuePricing/venuePricing.migration');
+      logs.server.info('bootstrap', 'venuePricingBackfill', await backfillVenuePricing());
+    });
+  }
   /*
     Give the Club Admins who predate the onboarding record one.
 

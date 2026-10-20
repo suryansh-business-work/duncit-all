@@ -1,7 +1,7 @@
 /** Option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
 import type {
-  ClubOpenSlots,
+  CreatePodClub,
   PodPickerProduct,
   PodSeriesFrequency,
   TicketDiscountTier,
@@ -43,6 +43,10 @@ export interface CreatePodFormValues {
   venue_slot_id: string;
   /** Selected venue space/type (a capacity item label) — drives No. of spots. */
   venue_space_label: string;
+  /** Instant booking (no slot id): PER_PAX guests (0 = not per guest) and
+   * whether pets come (pet fee). The window is the pod's start/end. */
+  venue_booking_pax: number;
+  venue_booking_pets: boolean;
   /** Hidden: the Pod Request whose confirmed slot this pod books ('' = none). */
   partner_request_id: string;
   meeting_platform: string;
@@ -99,6 +103,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   venue_id: '',
   venue_slot_id: '',
   venue_space_label: '',
+  venue_booking_pax: 0,
+  venue_booking_pets: false,
   partner_request_id: '',
   meeting_platform: '',
   meeting_url: '',
@@ -132,22 +138,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   repeat_discount_tiers: [],
 };
 
-export interface CreatePodClub extends ClubOpenSlots {
-  id: string;
-  club_name: string;
-  location_id?: string | null;
-  /** Club's locality (a Location zone_name) — used by the locality filter. */
-  locality?: string | null;
-  super_category_id?: string | null;
-  /** Club's Sub-level category (matched against the host's sub_category_id). */
-  category_id?: string | null;
-  /** How many APPROVED+active venues auto-match this club (location + category). */
-  matched_venues_count?: number | null;
-  /** Ids of the venues that match this club — the venue picker is scoped to these. */
-  matched_venues?: { id: string }[] | null;
-  club_description?: string | null;
-  club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
-}
+/** One shape for mWeb and the native app (@duncit/utils). */
+export type { CreatePodClub } from '@duncit/utils';
 
 /** A city's locality/zone with its live active-club count. */
 export interface CreatePodLocationZone {

@@ -1837,6 +1837,15 @@ export type AppleSignupInput = {
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type AppliedPriceRule = {
+  __typename?: 'AppliedPriceRule';
+  amount: Scalars['Float']['output'];
+  label: Scalars['String']['output'];
+  mode: PriceRuleMode;
+  type: PriceRuleType;
+  value: Scalars['Float']['output'];
+};
+
 /** A single label → value row the admin inbox renders (survey answers, feedback…). */
 export type ApprovalDetail = {
   __typename?: 'ApprovalDetail';
@@ -2134,7 +2143,8 @@ export type AuthProvider =
   | 'APPLE'
   | 'EMAIL'
   | 'GOOGLE'
-  | 'OTP';
+  | 'OTP'
+  | 'TRUECALLER';
 
 export type AutoPod = {
   __typename?: 'AutoPod';
@@ -3574,6 +3584,12 @@ export type BulkUpdateVenueSlotsInput = {
   to?: InputMaybe<Scalars['String']['input']>;
   venue_id: Scalars['ID']['input'];
   weekdays?: InputMaybe<Array<Scalars['Int']['input']>>;
+};
+
+export type BusyWindow = {
+  __typename?: 'BusyWindow';
+  end: Scalars['String']['output'];
+  start: Scalars['String']['output'];
 };
 
 /**
@@ -6505,6 +6521,8 @@ export type CreatePodInput = {
   /** Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
+  /** Book the venue instantly at its own pricing (instead of venue_slot_id). The server prices and checks it. */
+  venue_booking?: InputMaybe<InstantBookingInput>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -7299,6 +7317,20 @@ export type DataCloneTargets = {
   ready: Scalars['Boolean']['output'];
   sourceDatabase: Scalars['String']['output'];
   targetDatabase: Scalars['String']['output'];
+};
+
+/** Opening hours of one weekday (0 = Sunday). */
+export type DayHours = {
+  __typename?: 'DayHours';
+  close: Scalars['String']['output'];
+  day: Scalars['Int']['output'];
+  open: Scalars['String']['output'];
+};
+
+export type DayHoursInput = {
+  close: Scalars['String']['input'];
+  day: Scalars['Int']['input'];
+  open: Scalars['String']['input'];
 };
 
 /**
@@ -8950,6 +8982,7 @@ export type EnvCategory =
   | 'SLACK'
   | 'SOCIAL_APPS'
   | 'SONARQUBE'
+  | 'TRUECALLER'
   | 'TURN'
   | 'TWILIO';
 
@@ -9136,8 +9169,11 @@ export type EventRequest = {
   fulfilled_pod_id?: Maybe<Scalars['ID']['output']>;
   id: Scalars['ID']['output'];
   note: Scalars['String']['output'];
+  offer?: Maybe<EventRequestOffer>;
   requester_id: Scalars['ID']['output'];
   requester_name: Scalars['String']['output'];
+  responded_at?: Maybe<Scalars['String']['output']>;
+  response_note: Scalars['String']['output'];
   status: EventRequestStatus;
   target_id: Scalars['ID']['output'];
   target_name: Scalars['String']['output'];
@@ -9146,17 +9182,44 @@ export type EventRequest = {
 
 export type EventRequestCounts = {
   __typename?: 'EventRequestCounts';
+  accepted: Scalars['Int']['output'];
+  countered: Scalars['Int']['output'];
   dismissed: Scalars['Int']['output'];
   fulfilled: Scalars['Int']['output'];
   open: Scalars['Int']['output'];
+  rejected: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
 };
 
-/** OPEN until the target publishes a pod (FULFILLED) or its owner dismisses it. */
+/** The window the owner offers, with the price their pricing module gave for it (frozen). */
+export type EventRequestOffer = {
+  __typename?: 'EventRequestOffer';
+  end_at: Scalars['String']['output'];
+  pax: Scalars['Int']['output'];
+  quote?: Maybe<VenuePriceBreakdown>;
+  start_at: Scalars['String']['output'];
+};
+
+export type EventRequestOfferInput = {
+  end_at: Scalars['String']['input'];
+  pax?: InputMaybe<Scalars['Int']['input']>;
+  start_at: Scalars['String']['input'];
+};
+
+/** How the owner answers a workshop/event request. */
+export type EventRequestResponse =
+  | 'ACCEPT'
+  | 'COUNTER'
+  | 'REJECT';
+
+/** OPEN until its owner answers (ACCEPTED, COUNTERED, REJECTED) or a published pod closes it (FULFILLED). DISMISSED is the legacy close. */
 export type EventRequestStatus =
+  | 'ACCEPTED'
+  | 'COUNTERED'
   | 'DISMISSED'
   | 'FULFILLED'
-  | 'OPEN';
+  | 'OPEN'
+  | 'REJECTED';
 
 export type EventRequestTablePage = {
   __typename?: 'EventRequestTablePage';
@@ -11101,6 +11164,15 @@ export type ImportFeatureFlagInput = {
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
   key: Scalars['String']['input'];
   name: Scalars['String']['input'];
+};
+
+/** The window a host books; the server prices it, never the client. */
+export type InstantBookingInput = {
+  end_at: Scalars['String']['input'];
+  pax?: InputMaybe<Scalars['Int']['input']>;
+  pets?: InputMaybe<Scalars['Boolean']['input']>;
+  space_label?: InputMaybe<Scalars['String']['input']>;
+  start_at: Scalars['String']['input'];
 };
 
 export type Interview = {
@@ -13841,6 +13913,11 @@ export type Mutation = {
   /** Trade a correct code for the same session a password would have produced. */
   loginWithPortalOtp: AuthPayload;
   /**
+   * Continue with Truecaller from login or signup. A known number signs in; an
+   * unknown one comes back with the proof that lets signup skip the WhatsApp code.
+   */
+  loginWithTruecaller: TruecallerAuthResult;
+  /**
    * Tech portal only: the Google consent URL to open in a new tab. The callback
    * at /gmail/oauth/callback finishes the connection and returns the operator
    * to the Tech portal.
@@ -14278,6 +14355,8 @@ export type Mutation = {
   respondPodPartnerSlot: PodPartnerRequest;
   /** The invited user accepts or declines. */
   respondToCoHostInvite: Pod;
+  /** Accept, reject or counter (with a date/time priced by the venue pricing module) — its owner or the console's editors. */
+  respondToEventRequest: EventRequest;
   /** The offered partner answering: APPROVE takes the place, PASS declines it. */
   respondToPodChange: PodChangeRequest;
   /** Saves that revision's snapshot again — itself a new revision, so a restore can be undone. */
@@ -14696,6 +14775,8 @@ export type Mutation = {
   startMediaOrganizer: BackgroundJob;
   startRecordedUserCall: UserContactAction;
   startSupportChat: SupportChatSession;
+  /** Mobile web: mint the nonce Truecaller will post this person's token against. Public. */
+  startTruecallerWebLogin: TruecallerWebRequest;
   /**
    * Auth-required: start setting up an authenticator app. Refused (CONFLICT)
    * while one is already on; asking again replaces an unfinished setup.
@@ -15179,6 +15260,8 @@ export type Mutation = {
   /** Venue owner / venues console: edit a food coupon. */
   updateVenueFoodCoupon: VenueFoodCoupon;
   updateVenueLead: VenueLead;
+  /** Owner or admin saves the venue's pricing. Existing bookings keep their frozen price. */
+  updateVenuePricing: VenuePricing;
   /** Owner (or admin) updates operating hours, weekly-off, holidays + booking rules. */
   updateVenueSettings: Venue;
   updateVenueSlot: VenueSlot;
@@ -17528,6 +17611,11 @@ export type MutationLoginWithPortalOtpArgs = {
 };
 
 
+export type MutationLoginWithTruecallerArgs = {
+  input: TruecallerAuthInput;
+};
+
+
 export type MutationMailAutomationConnectUrlArgs = {
   login_hint?: InputMaybe<Scalars['String']['input']>;
 };
@@ -18271,6 +18359,14 @@ export type MutationRespondPodPartnerSlotArgs = {
 export type MutationRespondToCoHostInviteArgs = {
   accept: Scalars['Boolean']['input'];
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRespondToEventRequestArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  offer?: InputMaybe<EventRequestOfferInput>;
+  response: EventRequestResponse;
 };
 
 
@@ -19229,6 +19325,12 @@ export type MutationStartRecordedUserCallArgs = {
 
 export type MutationStartSupportChatArgs = {
   text?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStartTruecallerWebLoginArgs = {
+  intent: TruecallerIntent;
+  lang?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -20759,6 +20861,12 @@ export type MutationUpdateVenueFoodCouponArgs = {
 export type MutationUpdateVenueLeadArgs = {
   id: Scalars['ID']['input'];
   input: VenueLeadInput;
+};
+
+
+export type MutationUpdateVenuePricingArgs = {
+  input: VenuePricingInput;
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -24689,8 +24797,10 @@ export type PodSeriesPlanInput = {
   pod_mode: Scalars['String']['input'];
   /** Dates (ISO starts) the host unticked in the preview. */
   skip_dates?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Instant booking of the FIRST date at the venue's own pricing. Every later date is the same window on its day, each booked and priced on its own. */
+  venue_booking?: InputMaybe<InstantBookingInput>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
-  /** The slot of the FIRST date. Later dates book the identical slot (same space and times); where the venue has none, one is requested and opened when the venue accepts. */
+  /** The slot of the FIRST date. Later dates book the identical slot (same space and times); a date where the venue has none cannot run. */
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -25413,6 +25523,54 @@ export type PreviewVenueFoodCouponInput = {
   venue_id: Scalars['ID']['input'];
 };
 
+export type PriceRule = {
+  __typename?: 'PriceRule';
+  dates?: Maybe<Array<Scalars['String']['output']>>;
+  days?: Maybe<Array<Scalars['Int']['output']>>;
+  from?: Maybe<Scalars['String']['output']>;
+  label?: Maybe<Scalars['String']['output']>;
+  mode: PriceRuleMode;
+  to?: Maybe<Scalars['String']['output']>;
+  type: PriceRuleType;
+  value: Scalars['Float']['output'];
+};
+
+export type PriceRuleInput = {
+  dates?: InputMaybe<Array<Scalars['String']['input']>>;
+  days?: InputMaybe<Array<Scalars['Int']['input']>>;
+  from?: InputMaybe<Scalars['String']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  mode: PriceRuleMode;
+  to?: InputMaybe<Scalars['String']['input']>;
+  type: PriceRuleType;
+  value: Scalars['Float']['input'];
+};
+
+export type PriceRuleMode =
+  | 'FLAT'
+  | 'PERCENT';
+
+export type PriceRuleType =
+  | 'DATE_OVERRIDE'
+  | 'DATE_RANGE'
+  | 'WEEKDAY_SURCHARGE';
+
+/** A PER_SLOT venue's bookable window, repeated on days_of_week (0 = Sunday). */
+export type PricingSlot = {
+  __typename?: 'PricingSlot';
+  days_of_week: Array<Scalars['Int']['output']>;
+  end_time: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  start_time: Scalars['String']['output'];
+};
+
+export type PricingSlotInput = {
+  days_of_week: Array<Scalars['Int']['input']>;
+  end_time: Scalars['String']['input'];
+  price: Scalars['Float']['input'];
+  start_time: Scalars['String']['input'];
+};
+
 /** Brand-admin analytics for one product: orders/units/earnings (from order data) + views/clicks (tracked forward). */
 export type ProductAnalytics = {
   __typename?: 'ProductAnalytics';
@@ -25861,6 +26019,14 @@ export type PublicClientConfig = {
   /** Google sign-in on the iOS app — its iOS OAuth client. Blank: the app falls back to google_client_id. */
   google_ios_client_id: Scalars['String']['output'];
   google_maps_api_key: Scalars['String']['output'];
+  /** Truecaller on the Android app — its OAuth client ID. Blank: the Android app offers no Truecaller button. */
+  truecaller_android_client_id: Scalars['String']['output'];
+  /** Truecaller on the iOS app and mobile web — the partner app key. Blank: those doors offer no Truecaller button. */
+  truecaller_app_key: Scalars['String']['output'];
+  /** The universal link Truecaller hands the iOS app back on. */
+  truecaller_ios_app_link: Scalars['String']['output'];
+  /** The name the mobile-web Truecaller sheet shows. */
+  truecaller_partner_name: Scalars['String']['output'];
 };
 
 export type PublicFeatureFlag = {
@@ -27115,10 +27281,14 @@ export type Query = {
   /**  Venue health for a venue owned by the signed-in user.  */
   myVenueHealth?: Maybe<HealthScore>;
   myVenuePayouts: Array<PaymentReleaseRequest>;
+  /** Old slot requests at the caller's venues, read-only history. */
+  myVenueSlotRequestHistory: Array<VenueSlotRequestHistoryRow>;
   /** A venue's printable table label — the scan panel with the venue's name under it — base64-encoded. headline is printed as given, in the owner's language. */
   myVenueTableLabelPdfBase64: Scalars['String']['output'];
   /** Every table's QR sticker (Venue.food_tables), a page each, base64-encoded. Each QR opens the menu with its table filled in. table_heading is the translated word printed before a numbered table. */
   myVenueTableStickersPdfBase64: Scalars['String']['output'];
+  /** Upcoming confirmed bookings at the caller's venues (one venue when venue_id is given), soonest first. */
+  myVenueUpcomingBookings: Array<VenueBooking>;
   myVenues: Array<Venue>;
   /** Owner-scoped table page over the caller's venues (shared table engine). */
   myVenuesTable: VenueTablePage;
@@ -27664,6 +27834,7 @@ export type Query = {
   /** The Razorpay accounts the store can take online payments with. */
   storeAdminRazorpayAccounts: Array<StoreRazorpayAccount>;
   storeAdminReturn: StoreReturn;
+  /** One page's sections; omitted = the home page. */
   storeAdminSections: Array<StoreAdminSection>;
   storeAdminSettings: StoreSettings;
   storeAdminWarehouses: Array<StoreWarehouse>;
@@ -27699,6 +27870,8 @@ export type Query = {
   storePackagingExport: Array<StorePackagingRow>;
   /** One of the store's own pages by slug; null when there is none (or it is switched off). */
   storePage?: Maybe<StorePage>;
+  /** The live sections of one storefront page; omitted = the home page. */
+  storePageSections: Array<StoreHomeSection>;
   /** Every payment the pet store took, for its Logs › Payment logs page. */
   storePaymentsTable: PaymentTablePage;
   storePetType?: Maybe<StorePetTypePage>;
@@ -27818,6 +27991,8 @@ export type Query = {
   translationGroups: TranslationGroupTablePage;
   /** Admin table of translation keys, filterable surface-wise and page-wise. */
   translationsTable: TranslationTablePage;
+  /** Mobile web: has Truecaller answered the request this page started? Public. */
+  truecallerWebState: TruecallerWebState;
   /** Upload rules for the calling client's surface (any signed-in user). */
   uploadSettings: UploadSetting;
   user?: Maybe<User>;
@@ -27869,6 +28044,8 @@ export type Query = {
   venueAutoPods: Array<AutoPod>;
   /** partner_request_id: also return the slot that Pod Request holds (its host only) — Create Pod step 3 shows it as picked. */
   venueAvailableSlots: Array<VenueSlot>;
+  /** Bookable days and times between two dates (YYYY-MM-DD, at most 62 days). */
+  venueBookingCalendar: VenueBookingCalendar;
   /** Venue owner / venues console: the food coupons of one venue. */
   venueFoodCouponsTable: VenueFoodCouponTablePage;
   /** Public: one order, for whoever holds its access key (or the account that placed it). */
@@ -27894,6 +28071,10 @@ export type Query = {
    * venues — the list is capped at 500 rows, these numbers are not.
    */
   venuePodsSummary: VenuePodSummary;
+  /** Prices a window at the venue. draft = the owner's unsaved pricing (preview). */
+  venuePriceQuote: VenuePriceBreakdown;
+  /** A venue's pricing — Create Pod and the Venue Pricing Module both read it. */
+  venuePricing: VenuePricing;
   venueRegistrationConfig: VenueRegistrationConfig;
   /** Venue owner or venues console: the venue's rental bookings. */
   venueRentalBookingsTable: RentalBookingTablePage;
@@ -27905,6 +28086,8 @@ export type Query = {
   venueSlotRequests: Array<VenueSlotRequest>;
   venueSlots: Array<VenueSlot>;
   venues: Array<Venue>;
+  /** Venues console: approved venues still waiting for their pricing (not bookable). */
+  venuesNeedingPricingSetup: Array<VenuePricingSetupGap>;
   /** Admin/onboarding table page over all venues (shared table engine). */
   venuesTable: VenueTablePage;
   /** Poll a running FFmpeg compression job for its real progress percentage. */
@@ -29998,6 +30181,12 @@ export type QueryMyVenueHealthArgs = {
 };
 
 
+export type QueryMyVenueSlotRequestHistoryArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryMyVenueTableLabelPdfBase64Args = {
   headline: Scalars['String']['input'];
   venue_id: Scalars['ID']['input'];
@@ -30008,6 +30197,12 @@ export type QueryMyVenueTableStickersPdfBase64Args = {
   headline: Scalars['String']['input'];
   table_heading: Scalars['String']['input'];
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyVenueUpcomingBookingsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -30555,6 +30750,7 @@ export type QueryPotentialPodEarningsArgs = {
   pod_amount: Scalars['Float']['input'];
   pod_type?: InputMaybe<PodType>;
   venue_amount?: InputMaybe<Scalars['Float']['input']>;
+  venue_commission_on_top?: InputMaybe<Scalars['Float']['input']>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -31030,6 +31226,11 @@ export type QueryStoreAdminReturnArgs = {
 };
 
 
+export type QueryStoreAdminSectionsArgs = {
+  page?: InputMaybe<StoreSectionPage>;
+};
+
+
 export type QueryStoreCartArgs = {
   cart_token?: InputMaybe<Scalars['String']['input']>;
 };
@@ -31125,6 +31326,11 @@ export type QueryStorePackagingExportArgs = {
 
 export type QueryStorePageArgs = {
   slug: Scalars['String']['input'];
+};
+
+
+export type QueryStorePageSectionsArgs = {
+  page?: InputMaybe<StoreSectionPage>;
 };
 
 
@@ -31403,6 +31609,11 @@ export type QueryTranslationsTableArgs = {
 };
 
 
+export type QueryTruecallerWebStateArgs = {
+  request_nonce: Scalars['String']['input'];
+};
+
+
 export type QueryUploadSettingsArgs = {
   surface: UploadSurface;
 };
@@ -31534,6 +31745,14 @@ export type QueryVenueAvailableSlotsArgs = {
 };
 
 
+export type QueryVenueBookingCalendarArgs = {
+  from: Scalars['String']['input'];
+  space_label?: InputMaybe<Scalars['String']['input']>;
+  to: Scalars['String']['input'];
+  venue_id: Scalars['ID']['input'];
+};
+
+
 export type QueryVenueFoodCouponsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
   venue_id: Scalars['ID']['input'];
@@ -31601,6 +31820,18 @@ export type QueryVenuePodsArgs = {
 
 export type QueryVenuePodsSummaryArgs = {
   venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryVenuePriceQuoteArgs = {
+  booking: InstantBookingInput;
+  draft?: InputMaybe<VenuePricingInput>;
+  venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenuePricingArgs = {
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -35206,6 +35437,7 @@ export type StoreAdminSection = {
   is_active: Scalars['Boolean']['output'];
   items: Array<StoreSectionItem>;
   kind: StoreHomeSectionKind;
+  page: StoreSectionPage;
   product_ids: Array<Scalars['ID']['output']>;
   product_limit: Scalars['Int']['output'];
   product_source: StoreSectionProductSource;
@@ -35736,8 +35968,12 @@ export type StoreHomeSectionKind =
   | 'EARN_PROMO'
   /** A countdown sale: ends_at is the deadline, discount_tiers the tabs. */
   | 'FLASH_SALE'
+  /** The free-delivery strip; a blank title shows the built-in line with the threshold. */
+  | 'FREE_DELIVERY'
   | 'HERO_SLIDER'
   | 'NEWSLETTER'
+  /** A heading block: title, subtitle and an optional call to action (a page's intro). */
+  | 'PAGE_INTRO'
   | 'PET_TYPES'
   /** A product carousel from a collection, a category, hand-picked products or a best-seller/newest/discount list. */
   | 'PRODUCT_SLIDER'
@@ -35839,6 +36075,19 @@ export type StoreListingInput = {
   subtitle?: InputMaybe<Scalars['String']['input']>;
   support_url?: InputMaybe<Scalars['String']['input']>;
   whats_new?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A header or footer link: a same-site path or an https URL. */
+export type StoreNavLink = {
+  __typename?: 'StoreNavLink';
+  label: Scalars['String']['output'];
+  link: Scalars['String']['output'];
+};
+
+export type StoreNavLinkInput = {
+  label: Scalars['String']['input'];
+  /** A same-site path (/deals) or an https URL; anything else is dropped on save. */
+  link: Scalars['String']['input'];
 };
 
 export type StoreNavigation = {
@@ -36355,11 +36604,17 @@ export type StorePublicSettings = {
   /** On: no Razorpay account is configured and Finance's test switch is on, so checkout captures without taking money. */
   dummy_mode: Scalars['Boolean']['output'];
   favicon_url: Scalars['String']['output'];
+  /** Extra links in the footer's About column. */
+  footer_links: Array<StoreNavLink>;
   free_shipping_above: Scalars['Float']['output'];
   guest_checkout_enabled: Scalars['Boolean']['output'];
+  /** The phone home page's greeting line; blank shows the built-in one. */
+  home_greeting: Scalars['String']['output'];
   logo_url: Scalars['String']['output'];
   max_qty_per_line: Scalars['Int']['output'];
   min_order_value: Scalars['Float']['output'];
+  /** The desktop header's links after Shop by pet; empty lists the menu aisles. */
+  nav_links: Array<StoreNavLink>;
   og_image_url: Scalars['String']['output'];
   /** The payment methods the footer shows as accepted, with the marks the operator uploaded. */
   payment_badges: Array<StorePaymentBadge>;
@@ -36740,6 +36995,8 @@ export type StoreSectionInput = {
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   items?: InputMaybe<Array<StoreSectionItemInput>>;
   kind: StoreHomeSectionKind;
+  /** Omitted: HOME for a new section, unchanged for an existing one. */
+  page?: InputMaybe<StoreSectionPage>;
   /** MANUAL slider: the picked products, in order. */
   product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   product_limit?: InputMaybe<Scalars['Int']['input']>;
@@ -36771,6 +37028,11 @@ export type StoreSectionItemInput = {
   subtitle?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
+
+/** The storefront pages whose sections the operator arranges. */
+export type StoreSectionPage =
+  | 'DEALS'
+  | 'HOME';
 
 /** Where a PRODUCT_SLIDER takes its products from. */
 export type StoreSectionProductSource =
@@ -36829,11 +37091,14 @@ export type StoreSettings = {
   cod_requires_otp: Scalars['Boolean']['output'];
   favicon_url: Scalars['String']['output'];
   flat_shipping_fee: Scalars['Float']['output'];
+  footer_links: Array<StoreNavLink>;
   free_shipping_above: Scalars['Float']['output'];
   guest_checkout_enabled: Scalars['Boolean']['output'];
+  home_greeting: Scalars['String']['output'];
   logo_url: Scalars['String']['output'];
   max_qty_per_line: Scalars['Int']['output'];
   min_order_value: Scalars['Float']['output'];
+  nav_links: Array<StoreNavLink>;
   occasions: Array<StoreOccasion>;
   og_image_url: Scalars['String']['output'];
   payment_badges: Array<StorePaymentBadge>;
@@ -36882,11 +37147,14 @@ export type StoreSettingsInput = {
   cod_requires_otp?: InputMaybe<Scalars['Boolean']['input']>;
   favicon_url?: InputMaybe<Scalars['String']['input']>;
   flat_shipping_fee?: InputMaybe<Scalars['Float']['input']>;
+  footer_links?: InputMaybe<Array<StoreNavLinkInput>>;
   free_shipping_above?: InputMaybe<Scalars['Float']['input']>;
   guest_checkout_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  home_greeting?: InputMaybe<Scalars['String']['input']>;
   logo_url?: InputMaybe<Scalars['String']['input']>;
   max_qty_per_line?: InputMaybe<Scalars['Int']['input']>;
   min_order_value?: InputMaybe<Scalars['Float']['input']>;
+  nav_links?: InputMaybe<Array<StoreNavLinkInput>>;
   occasions?: InputMaybe<Array<StoreOccasionInput>>;
   og_image_url?: InputMaybe<Scalars['String']['input']>;
   payment_badges?: InputMaybe<Array<StorePaymentBadgeInput>>;
@@ -38982,6 +39250,73 @@ export type TriggerStressRunInput = {
   virtual_users: Scalars['Int']['input'];
 };
 
+/**
+ * What a Truecaller SDK handed the app. Android sends authorization_code +
+ * code_verifier, iOS the signed payload + signature + signature_algorithm,
+ * mobile web only the request_nonce it started with. The server re-checks each
+ * with Truecaller; nothing else the client knows about the person is read.
+ */
+export type TruecallerAuthInput = {
+  authorization_code?: InputMaybe<Scalars['String']['input']>;
+  code_verifier?: InputMaybe<Scalars['String']['input']>;
+  payload?: InputMaybe<Scalars['String']['input']>;
+  platform: TruecallerPlatform;
+  request_nonce?: InputMaybe<Scalars['String']['input']>;
+  signature?: InputMaybe<Scalars['String']['input']>;
+  signature_algorithm?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type TruecallerAuthResult = {
+  __typename?: 'TruecallerAuthResult';
+  auth?: Maybe<AuthPayload>;
+  signup?: Maybe<TruecallerSignupProof>;
+  status: TruecallerAuthStatus;
+};
+
+export type TruecallerAuthStatus =
+  /** The number belongs to an account; auth holds its session. */
+  | 'SIGNED_IN'
+  /** Nobody has this number yet; signup holds the proof that replaces the WhatsApp code. */
+  | 'SIGNUP_REQUIRED';
+
+/** Which screen started a mobile-web Truecaller request — only its wording differs. */
+export type TruecallerIntent =
+  | 'LOGIN'
+  | 'SIGNUP';
+
+/** Which Truecaller door the verification came through. */
+export type TruecallerPlatform =
+  | 'ANDROID'
+  | 'IOS'
+  | 'WEB';
+
+/** A Truecaller-verified number on its way to signup, with the name Truecaller holds for it. */
+export type TruecallerSignupProof = {
+  __typename?: 'TruecallerSignupProof';
+  /** Blank when Truecaller has none. A suggestion for the form, never treated as verified. */
+  email: Scalars['String']['output'];
+  first_name: Scalars['String']['output'];
+  last_name: Scalars['String']['output'];
+  phone_extension: Scalars['String']['output'];
+  phone_number: Scalars['String']['output'];
+  /** Spent by register / signupWithGoogle / signupWithApple exactly like a WhatsApp code's token. */
+  whatsapp_token: Scalars['String']['output'];
+};
+
+export type TruecallerWebRequest = {
+  __typename?: 'TruecallerWebRequest';
+  /** Open this on an Android browser; Truecaller's sheet appears when the app is installed. */
+  deep_link: Scalars['String']['output'];
+  request_nonce: Scalars['String']['output'];
+};
+
+export type TruecallerWebState =
+  | 'EXPIRED'
+  | 'PENDING'
+  | 'READY'
+  | 'REJECTED'
+  | 'USED';
+
 export type TwoFactorEnableResult = {
   __typename?: 'TwoFactorEnableResult';
   accounts: ConnectedAccounts;
@@ -39729,11 +40064,13 @@ export type UpdatePodInput = {
   /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
+  /** Re-route onto an instant booking at the venue's own pricing (portals). Booked before the old slot is released. */
+  venue_booking?: InputMaybe<InstantBookingInput>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   /**
    * Re-route the pod to a different slot (Admin / Club Admin edit at any stage).
-   * A partner's slot re-enters that venue's approval queue exactly like a host
-   * resubmission; the previously held slot is released. Omit to leave the
+   * The slot is booked instantly at its price (no venue approval any more);
+   * the previously held slot is released. Omit to leave the
    * pod's current booking untouched.
    */
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
@@ -40501,6 +40838,48 @@ export type VenueAutoExtendInput = {
   until?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** A confirmed instant booking at the owner's venue. */
+export type VenueBooking = {
+  __typename?: 'VenueBooking';
+  end_at: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  price_snapshot?: Maybe<VenuePriceBreakdown>;
+  slot_id: Scalars['ID']['output'];
+  space_label: Scalars['String']['output'];
+  start_at: Scalars['String']['output'];
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+  /** Exactly what the venue is paid for it. */
+  venue_payout: Scalars['Float']['output'];
+};
+
+export type VenueBookingCalendar = {
+  __typename?: 'VenueBookingCalendar';
+  booking_increment_minutes: Scalars['Int']['output'];
+  /** Gap the venue keeps around every booking; pickers must leave it free. */
+  buffer_minutes: Scalars['Int']['output'];
+  configured: Scalars['Boolean']['output'];
+  days: Array<VenueBookingDay>;
+  max_hours: Scalars['Float']['output'];
+  max_pax: Scalars['Int']['output'];
+  min_hours: Scalars['Float']['output'];
+  /** Earliest a booking may start from now. */
+  min_notice_minutes: Scalars['Int']['output'];
+  min_pax: Scalars['Int']['output'];
+  model?: Maybe<VenuePricingModel>;
+};
+
+export type VenueBookingDay = {
+  __typename?: 'VenueBookingDay';
+  busy: Array<BusyWindow>;
+  close?: Maybe<Scalars['String']['output']>;
+  closed_reason?: Maybe<VenueClosedReason>;
+  date: Scalars['String']['output'];
+  open?: Maybe<Scalars['String']['output']>;
+  slots: Array<VenueDaySlot>;
+};
+
 /** Outcome of a venue owner cancelling a pod booked at their venue. */
 export type VenueCancelPodResult = {
   __typename?: 'VenueCancelPodResult';
@@ -40595,6 +40974,22 @@ export type VenueCategoryInput = {
   category_id: Scalars['ID']['input'];
   sub_category_id: Scalars['ID']['input'];
   super_category_id: Scalars['ID']['input'];
+};
+
+export type VenueClosedReason =
+  | 'BLOCKED'
+  | 'CLOSED'
+  | 'HOLIDAY'
+  | 'PAST'
+  | 'TOO_FAR'
+  | 'WEEKLY_OFF';
+
+export type VenueDaySlot = {
+  __typename?: 'VenueDaySlot';
+  available: Scalars['Boolean']['output'];
+  end: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  start: Scalars['String']['output'];
 };
 
 export type VenueDocument = {
@@ -41180,6 +41575,89 @@ export type VenuePodSummary = {
   upcoming: Scalars['Int']['output'];
 };
 
+/** How a booking's price was built. Frozen on the booking when it is confirmed. */
+export type VenuePriceBreakdown = {
+  __typename?: 'VenuePriceBreakdown';
+  base: Scalars['Float']['output'];
+  cleaning_fee: Scalars['Float']['output'];
+  confirmed_at?: Maybe<Scalars['String']['output']>;
+  date: Scalars['String']['output'];
+  /** Refundable, payable at the venue. */
+  deposit: Scalars['Float']['output'];
+  gst_pct: Scalars['Float']['output'];
+  hours: Scalars['Float']['output'];
+  min_spend_top_up: Scalars['Float']['output'];
+  model: VenuePricingModel;
+  pax: Scalars['Int']['output'];
+  pet_fee: Scalars['Float']['output'];
+  /** Duncit's fee, charged on top of the venue price. */
+  platform_fee: Scalars['Float']['output'];
+  platform_fee_pct: Scalars['Float']['output'];
+  rate: Scalars['Float']['output'];
+  rules: Array<AppliedPriceRule>;
+  rules_total: Scalars['Float']['output'];
+  taxes: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+  /** Exactly what the venue is paid. */
+  venue_payout: Scalars['Float']['output'];
+  venue_price: Scalars['Float']['output'];
+};
+
+/** A venue's own pricing (Venue Pricing Module). configured = false: not bookable yet. */
+export type VenuePricing = {
+  __typename?: 'VenuePricing';
+  base_rate: Scalars['Float']['output'];
+  blocked_dates: Array<Scalars['String']['output']>;
+  booking_increment_minutes: Scalars['Int']['output'];
+  cleaning_fee: Scalars['Float']['output'];
+  configured: Scalars['Boolean']['output'];
+  deposit: Scalars['Float']['output'];
+  gst_enabled: Scalars['Boolean']['output'];
+  max_hours: Scalars['Float']['output'];
+  max_pax: Scalars['Int']['output'];
+  min_hours: Scalars['Float']['output'];
+  min_pax: Scalars['Int']['output'];
+  min_spend: Scalars['Float']['output'];
+  model?: Maybe<VenuePricingModel>;
+  operating_hours: Array<DayHours>;
+  pet_fee: Scalars['Float']['output'];
+  price_rules: Array<PriceRule>;
+  slots: Array<PricingSlot>;
+};
+
+export type VenuePricingInput = {
+  base_rate?: InputMaybe<Scalars['Float']['input']>;
+  blocked_dates?: InputMaybe<Array<Scalars['String']['input']>>;
+  booking_increment_minutes?: InputMaybe<Scalars['Int']['input']>;
+  cleaning_fee?: InputMaybe<Scalars['Float']['input']>;
+  deposit?: InputMaybe<Scalars['Float']['input']>;
+  gst_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  max_hours?: InputMaybe<Scalars['Float']['input']>;
+  max_pax?: InputMaybe<Scalars['Int']['input']>;
+  min_hours?: InputMaybe<Scalars['Float']['input']>;
+  min_pax?: InputMaybe<Scalars['Int']['input']>;
+  min_spend?: InputMaybe<Scalars['Float']['input']>;
+  model?: InputMaybe<VenuePricingModel>;
+  operating_hours?: InputMaybe<Array<DayHoursInput>>;
+  pet_fee?: InputMaybe<Scalars['Float']['input']>;
+  price_rules?: InputMaybe<Array<PriceRuleInput>>;
+  slots?: InputMaybe<Array<PricingSlotInput>>;
+};
+
+export type VenuePricingModel =
+  | 'FLAT'
+  | 'PER_HOUR'
+  | 'PER_PAX'
+  | 'PER_SLOT';
+
+/** An approved venue that cannot be booked yet because its pricing is not set up. */
+export type VenuePricingSetupGap = {
+  __typename?: 'VenuePricingSetupGap';
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+  venue_no?: Maybe<Scalars['String']['output']>;
+};
+
 /** Registration option catalogs — clients render these instead of hardcoding. */
 export type VenueRegistrationConfig = {
   __typename?: 'VenueRegistrationConfig';
@@ -41431,6 +41909,20 @@ export type VenueSlotRequest = {
   venue_name: Scalars['String']['output'];
   /** True for a whole-day / whole-date-range booking. */
   whole_day: Scalars['Boolean']['output'];
+};
+
+/** A slot request from before instant booking — kept read-only. */
+export type VenueSlotRequestHistoryRow = {
+  __typename?: 'VenueSlotRequestHistoryRow';
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decision: Scalars['String']['output'];
+  decline_reason: Scalars['String']['output'];
+  end_at: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  slot_id: Scalars['ID']['output'];
+  start_at: Scalars['String']['output'];
+  status: VenueSlotStatus;
+  venue_name: Scalars['String']['output'];
 };
 
 export type VenueSlotStatus =

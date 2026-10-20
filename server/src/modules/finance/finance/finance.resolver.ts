@@ -233,6 +233,7 @@ export const financeResolvers = {
         venue_id?: string | null;
         venue_amount?: number | null;
         pod_type?: string | null;
+        venue_commission_on_top?: number | null;
       },
       ctx: GraphQLContext
     ) => {
@@ -243,7 +244,8 @@ export const financeResolvers = {
         args.no_of_spots,
         args.venue_id ?? null,
         args.venue_amount ?? null,
-        args.pod_type ?? null
+        args.pod_type ?? null,
+        args.venue_commission_on_top ?? null
       );
     },
     adminPotentialPodEarnings: async (

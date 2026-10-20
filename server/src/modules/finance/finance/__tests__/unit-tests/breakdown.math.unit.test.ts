@@ -233,3 +233,35 @@ describe('payingAttendees', () => {
     expect(payingAttendees(['host-1'], ['host-1'])).toBe(0);
   });
 });
+
+describe('computePodFinanceBreakdown — venue commission on top (instant bookings)', () => {
+  const opts = (onTop: number) => ({ clampVenueToPool: false, venueCommissionOnTopPaise: onTop });
+
+  it('pays the venue its whole price and takes the commission off the host side', () => {
+    const legacy = computePodFinanceBreakdown(100_000, 30_000, DEFAULT_RATES, { clampVenueToPool: false });
+    const onTop = computePodFinanceBreakdown(100_000, 30_000, DEFAULT_RATES, opts(3_000));
+    expect(legacy.venue_receives_paise).toBe(27_000);
+    expect(onTop.venue_receives_paise).toBe(30_000);
+    expect(onTop.venue_commission_paise).toBe(3_000);
+    expect(onTop.host_amount_paise).toBe(legacy.host_amount_paise - 3_000);
+  });
+
+  it('still reconciles to the paisa', () => {
+    const b = computePodFinanceBreakdown(123_457, 41_111, { ...DEFAULT_RATES, club_admin_percent: 5 }, opts(4_111));
+    expect(b.gst_paise + b.host_receives_paise + b.venue_receives_paise + b.duncit_revenue_paise).toBe(123_457);
+    expect(b.venue_amount_paise + b.venue_commission_paise + b.host_amount_paise + b.club_admin_paise).toBe(b.pool_paise);
+  });
+
+  it('a shortfall lands on the host as a negative amount, never on the venue', () => {
+    const b = computePodFinanceBreakdown(10_000, 9_000, DEFAULT_RATES, opts(900));
+    expect(b.venue_receives_paise).toBe(9_000);
+    expect(b.host_amount_paise).toBeLessThan(0);
+    expect(b.host_commission_paise).toBe(0);
+  });
+
+  it('null keeps the legacy rule', () => {
+    const a = computePodFinanceBreakdown(100_000, 30_000, DEFAULT_RATES, { clampVenueToPool: false, venueCommissionOnTopPaise: null });
+    const b = computePodFinanceBreakdown(100_000, 30_000, DEFAULT_RATES, { clampVenueToPool: false });
+    expect(a).toEqual(b);
+  });
+});

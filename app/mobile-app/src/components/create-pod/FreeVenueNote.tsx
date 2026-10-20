@@ -16,8 +16,7 @@ interface Props {
 /**
  * A free pod on a slot the venue charges for: Duncit pays the venue nothing, so
  * the host settles with the venue directly. Shown on the venue step and again
- * before publishing; draws nothing when there is nothing to settle. The second
- * line is dropped once a Pod Request has already confirmed the slot.
+ * before publishing; draws nothing when there is nothing to settle.
  * mWeb twin: FreeVenueNote (rule 27).
  */
 export function FreeVenueNote({
@@ -31,9 +30,6 @@ export function FreeVenueNote({
   const settle = forClubAdmin
     ? t('mweb.createPod.freeVenueSettleClubAdmin')
     : t('mweb.createPod.freeVenueSettle');
-  const hold = forClubAdmin
-    ? t('mweb.createPod.freeVenueHoldClubAdmin')
-    : t('mweb.createPod.freeVenueHold');
   return (
     <XStack
       testID={testID}
@@ -50,11 +46,6 @@ export function FreeVenueNote({
         <Text fontSize={13} color="$color">
           {settle}
         </Text>
-        {notice === 'SETTLE_BEFORE_APPROVAL' ? (
-          <Text fontSize={13} color="$color">
-            {hold}
-          </Text>
-        ) : null}
       </YStack>
     </XStack>
   );

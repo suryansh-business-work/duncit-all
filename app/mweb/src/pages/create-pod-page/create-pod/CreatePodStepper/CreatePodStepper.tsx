@@ -145,7 +145,7 @@ export default function CreatePodStepper({
     <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
     <Stack key="venue" spacing={2}>
       <PodRepeatModeToggle form={form} />
-      <VenueSlotStep form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} venueNotice={venueNotice} />
+      <VenueSlotStep form={form} venues={venues} clubVenueIds={clubVenueIds} venueNotice={venueNotice} />
     </Stack>,
     <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} venueNotice={venueNotice} />,
   ];

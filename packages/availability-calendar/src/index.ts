@@ -37,3 +37,31 @@ export {
 } from '@duncit/slots';
 export type { SlotDraft, SlotIssueCode } from '@duncit/slots';
 export type { CalendarView, NewSlotInput, VenueSlotRow, VenueSlotStatus, VenueSpace } from './types';
+// The Venue Pricing Module (instant booking): the owner's pricing form, the
+// live server quote, and the priced calendar — one component for the Partners
+// console and mWeb.
+export { default as VenuePricingModule } from './pricing/VenuePricingModule';
+export { default as PriceBreakdownView } from './pricing/preview/PriceBreakdownView';
+export {
+  VenuePricingForm,
+  buildVenuePricingSchema,
+  toFormValues,
+  toPricingInput,
+  type VenuePricingFormValues,
+} from './pricing/form';
+export { usePriceQuote, bookingOf, wallInstant } from './pricing/preview/usePriceQuote';
+export { BREAKDOWN_FIELDS, UPDATE_VENUE_PRICING, VENUE_BOOKING_CALENDAR, VENUE_PRICE_QUOTE, VENUE_PRICING } from './pricing/queries';
+export { modelLabel, rateLabel, ruleValueLabel, rupees } from './pricing/format';
+export type { BookingCalendarData, BookingDay, PriceBreakdown, SampleBooking, VenuePricingData } from './pricing/types';
+// Workshop & Event Requests: the owner's answer (accept / reject / counter
+// offer priced by the pricing module), and the old slot requests' history.
+export { default as VenueEventRequestList } from './event-requests/VenueEventRequestList';
+export { default as EventRequestRespondActions } from './event-requests/EventRequestRespondActions';
+export type { RespondableRequest } from './event-requests/EventRequestRespondActions';
+export { default as OfferSummary } from './event-requests/OfferSummary';
+export { EVENT_REQUEST_STATUS_COLOR, eventRequestStatusLabel, isAnswerable } from './event-requests/status';
+export { EVENT_REQUEST_OFFER_FIELDS, RESPOND_TO_EVENT_REQUEST } from './event-requests/queries';
+export type { EventRequestOfferView, VenueEventRequest } from './event-requests/queries';
+export { default as SlotRequestHistory } from './bookings/SlotRequestHistory';
+export { default as UpcomingBookings } from './bookings/UpcomingBookings';
+export type { SlotRequestHistoryRow, UpcomingBooking } from './bookings/queries';

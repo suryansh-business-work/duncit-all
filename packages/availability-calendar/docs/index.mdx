@@ -50,6 +50,34 @@ exports:
   - 'VenueSlotStatus'
   - 'VenueSpace'
   - 'NewSlotInput'
+  - 'VenuePricingModule'
+  - 'VenuePricingForm'
+  - 'buildVenuePricingSchema'
+  - 'toFormValues'
+  - 'toPricingInput'
+  - 'PriceBreakdownView'
+  - 'usePriceQuote'
+  - 'bookingOf'
+  - 'wallInstant'
+  - 'VENUE_PRICING'
+  - 'UPDATE_VENUE_PRICING'
+  - 'VENUE_PRICE_QUOTE'
+  - 'VENUE_BOOKING_CALENDAR'
+  - 'BREAKDOWN_FIELDS'
+  - 'modelLabel'
+  - 'rateLabel'
+  - 'ruleValueLabel'
+  - 'rupees'
+  - 'VenueEventRequestList'
+  - 'EventRequestRespondActions'
+  - 'OfferSummary'
+  - 'eventRequestStatusLabel'
+  - 'EVENT_REQUEST_STATUS_COLOR'
+  - 'isAnswerable'
+  - 'RESPOND_TO_EVENT_REQUEST'
+  - 'EVENT_REQUEST_OFFER_FIELDS'
+  - 'SlotRequestHistory'
+  - 'UpcomingBookings'
 ---
 
 ## Why this exists
@@ -470,9 +498,48 @@ have been offered. So the rule is enforced three times over: the pickers refuse 
 exempt from the past check because `wholeDayWindow` has already clamped its start off a
 midnight that has gone by.
 
+## Venue Pricing Module (instant booking)
+
+Hosts no longer request a slot and wait: they book instantly at the venue's own price. The
+owner sets that price here, and `VenuePricingModule` is the whole page body (Partners console
+`/venues/pricing`, mWeb `/venues/pricing`; the old `/availability` URLs redirect to it):
+
+```tsx
+import { VenuePricingModule } from '@duncit/availability-calendar';
+
+<VenuePricingModule venue={venue} onVenueChanged={refetchVenues} />;
+```
+
+- **The form** (`VenuePricingForm`, RHF + Zod, `pricing/form/venue-pricing.*`): pricing model
+  (per guest / per hour / per slot / flat), rate, guest and hour limits, the booking step, a
+  per-slot venue's slots with their weekdays, or "Open dates & hours" for the other models,
+  minimum spend, cleaning / pet fees, the refundable deposit, GST, and price rules (weekday
+  surcharge, date override, date range — percent or flat, negative = discount). Saved whole
+  with `updateVenuePricing`; a `BAD_USER_INPUT` names the field and is shown as sent.
+- **The live preview** prices a sample booking the owner can change with
+  `venuePriceQuote(draft: <unsaved form>)`, debounced (`usePriceQuote`). `PriceBreakdownView`
+  draws the server's lines — base, each rule, fees, venue price, GST, what the venue receives,
+  Duncit's fee on top, total, deposit. **No price is computed on the client.**
+- **The priced calendar** reuses `AvailabilityCalendar` (its new `renderDayFooter` prop draws a
+  day's rate and the rule that changes it) over `venueBookingCalendar` (closed / booked state,
+  a per-slot venue's slots). Existing slot rows keep their badges. A date opens a drawer that
+  quotes that day once, sets or clears its own `DATE_OVERRIDE`, blocks it
+  (`pricing.blocked_dates`) or marks a holiday (the venue settings' `holidays`), and still lists
+  that day's old slot rows with their block / delete.
+
+## Workshop & Event Requests
+
+`EventRequestRespondActions` answers a request with Accept / Reject / Counter offer
+(`respondToEventRequest`); a counter offer for a venue is priced live by the pricing module and
+frozen on the request. The Partners console passes it to the shell's `EventRequestsPage` through
+`renderActions`; mWeb lists the same requests as cards with `VenueEventRequestList`.
+`SlotRequestHistory` is the read-only history of slot requests from before instant booking, and
+`UpcomingBookings` the venue dashboard's next confirmed bookings with their payout.
+
 ## Localization
 
 Every sentence here is an `availability.*` key from `packages/i18n/src/bundles/availability.ts`
+(the pricing module and requests use `venuePricing.*` from `bundles/venue-pricing.ts`)
 — a namespace of its own rather than the portal shell's, because mWeb ships `mweb.*` and would
 have printed raw keys the moment it opened the calendar offline. All three surfaces (the
 shell, mWeb, native) ship that bundle, so one copy renders everywhere (rules 27 + 38).
@@ -483,7 +550,9 @@ No third-party runtime dependencies; MUI, `@mui/x-date-pickers`, `date-fns`, Rea
 `@apollo/client` and `graphql` are peers supplied by the consuming surface. The workspace deps
 are `@duncit/slots` (the rules), `@duncit/datetime` (admin-configured date/time formats),
 `@duncit/app-settings` (`useTranslation`), `@duncit/buttons` and `@duncit/dialogs` (the shared
-confirm — rule 12).
+confirm — rule 12). The pricing module adds `@duncit/forms` (RHF fields, the time pattern),
+`@duncit/gql-types` (generated types), `@duncit/logs` and `@duncit/utils` (money), with
+`react-hook-form`, `zod` and `@hookform/resolvers` as peers.
 
 The prop-driven pieces still take no client, which is what lets the Onboarding portal — on
 entirely different, role-gated operations — keep sharing them. Only `VenueAvailabilityEditor`,

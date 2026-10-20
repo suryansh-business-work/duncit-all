@@ -347,9 +347,7 @@ describe('Step 4 for a free physical pod', () => {
 
   it('words the venue note for the host when a club admin creates the pod', () => {
     mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
-    renderWithProviders(
-      <PricingHarness initial={freePod} venueNotice="SETTLE" forClubAdmin />,
-    );
+    renderWithProviders(<PricingHarness initial={freePod} venueNotice="SETTLE" forClubAdmin />);
     const note = screen.getByTestId('create-pod-free-note-venue');
     expect(note).toHaveTextContent(/The host will need to settle the venue's charges/);
     expect(note).not.toHaveTextContent(/You will need/);

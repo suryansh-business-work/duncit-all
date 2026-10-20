@@ -53,7 +53,11 @@ export function BookingGuestFields({ form, pricing }: Readonly<Props>) {
   return (
     <YStack gap={12}>
       {perPax ? (
-        <Field label={t('mweb.createPod.bookingGuests')} hint={range} testID="create-pod-booking-guests">
+        <Field
+          label={t('mweb.createPod.bookingGuests')}
+          hint={range}
+          testID="create-pod-booking-guests"
+        >
           <Input
             testID="create-pod-booking-guests-input"
             keyboardType="numeric"

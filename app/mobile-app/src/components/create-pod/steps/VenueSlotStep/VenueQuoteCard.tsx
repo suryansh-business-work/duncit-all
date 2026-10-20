@@ -15,10 +15,19 @@ interface Props extends VenueQuoteState {
   currencySymbol: string;
 }
 
-function Row({ label, value, strong = false }: Readonly<{ label: string; value: string; strong?: boolean }>) {
+function Row({
+  label,
+  value,
+  strong = false,
+}: Readonly<{ label: string; value: string; strong?: boolean }>) {
   return (
     <XStack justifyContent="space-between" gap={12}>
-      <Text flex={1} fontSize={13} fontWeight={strong ? '700' : '400'} color={strong ? '$color' : '$muted'}>
+      <Text
+        flex={1}
+        fontSize={13}
+        fontWeight={strong ? '700' : '400'}
+        color={strong ? '$color' : '$muted'}
+      >
         {label}
       </Text>
       <Text fontSize={13} fontWeight={strong ? '700' : '500'} color="$color">
@@ -54,7 +63,11 @@ export function VenueQuoteCard({ quote, loading, error, currencySymbol }: Readon
         {t('mweb.createPod.quoteTitle')}
       </Text>
       {lines.map((line) => (
-        <Row key={line.id} label={line.label ?? t(line.labelKey, { vars: line.vars })} value={money(line.amount)} />
+        <Row
+          key={line.id}
+          label={line.label ?? t(line.labelKey, { vars: line.vars })}
+          value={money(line.amount)}
+        />
       ))}
       <YStack height={1} backgroundColor="$borderColor" />
       <Row label={t('mweb.createPod.quote.total')} value={money(total)} strong />

@@ -151,9 +151,12 @@ function routeBookingReads(
   mockGraphqlRequest.mockImplementation((doc: { definitions: { name?: { value: string } }[] }) => {
     const name = doc.definitions[0]?.name?.value;
     if (name === 'MobileHostBookingPricing') {
-      return pricing instanceof Error ? Promise.reject(pricing) : Promise.resolve({ venuePricing: pricing });
+      return pricing instanceof Error
+        ? Promise.reject(pricing)
+        : Promise.resolve({ venuePricing: pricing });
     }
-    if (name === 'MobileHostBookingCalendar') return Promise.resolve({ venueBookingCalendar: calendar });
+    if (name === 'MobileHostBookingCalendar')
+      return Promise.resolve({ venueBookingCalendar: calendar });
     return Promise.resolve({});
   });
 }
@@ -369,9 +372,7 @@ describe('VenueSlotStep', () => {
 
   it("books a Pod Request's held slot with no venue-approval note", async () => {
     const request = { pod_mode: 'PHYSICAL' as const, location_id: 'l1', venue_id: 'v1' };
-    renderWithProviders(
-      <VenueSlotHarness initial={{ ...request, partner_request_id: 'req1' }} />,
-    );
+    renderWithProviders(<VenueSlotHarness initial={{ ...request, partner_request_id: 'req1' }} />);
     // Slots are gated behind the space (capacity) selection.
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
     await screen.findByTestId('slot-tile-s1');
@@ -418,7 +419,12 @@ describe('VenueSlotStep', () => {
     mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [] });
     renderWithProviders(
       <VenueSlotHarness
-        initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1', partner_request_id: 'r1' }}
+        initial={{
+          pod_mode: 'PHYSICAL',
+          location_id: 'l1',
+          venue_id: 'v1',
+          partner_request_id: 'r1',
+        }}
       />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
@@ -429,7 +435,12 @@ describe('VenueSlotStep', () => {
     mockGraphqlRequest.mockRejectedValue(new Error('boom'));
     renderWithProviders(
       <VenueSlotHarness
-        initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1', partner_request_id: 'r1' }}
+        initial={{
+          pod_mode: 'PHYSICAL',
+          location_id: 'l1',
+          venue_id: 'v1',
+          partner_request_id: 'r1',
+        }}
       />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));

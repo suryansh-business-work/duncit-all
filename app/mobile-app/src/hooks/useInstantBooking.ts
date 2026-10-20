@@ -72,7 +72,10 @@ export function useInstantBooking(venueId: string, spaceLabel: string) {
 
   const pricingState = useLoad(
     venueId,
-    () => graphqlRequest(HostBookingPricingDocument, { venue_id: venueId }, { auth: true }).then((res) => res.venuePricing),
+    () =>
+      graphqlRequest(HostBookingPricingDocument, { venue_id: venueId }, { auth: true }).then(
+        (res) => res.venuePricing,
+      ),
     attempt,
     'pricing',
   );
@@ -83,9 +86,11 @@ export function useInstantBooking(venueId: string, spaceLabel: string) {
   const calendarState = useLoad<CalendarAnswer>(
     configured && spaceLabel ? `${venueId}|${space}|${range.from}` : '',
     () =>
-      graphqlRequest(HostBookingCalendarDocument, { venue_id: venueId, ...range, space_label: space }, { auth: true }).then(
-        (res) => res.venueBookingCalendar,
-      ),
+      graphqlRequest(
+        HostBookingCalendarDocument,
+        { venue_id: venueId, ...range, space_label: space },
+        { auth: true },
+      ).then((res) => res.venueBookingCalendar),
     attempt,
     'calendar',
   );
@@ -95,7 +100,11 @@ export function useInstantBooking(venueId: string, spaceLabel: string) {
   const rules = useMemo(
     () =>
       pricing && calendar
-        ? { ...pricing, buffer_minutes: calendar.buffer_minutes, min_notice_minutes: calendar.min_notice_minutes }
+        ? {
+            ...pricing,
+            buffer_minutes: calendar.buffer_minutes,
+            min_notice_minutes: calendar.min_notice_minutes,
+          }
         : null,
     [pricing, calendar],
   );

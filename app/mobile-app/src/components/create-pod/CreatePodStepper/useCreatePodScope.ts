@@ -80,10 +80,16 @@ export function useCreatePodScope({
   const venueId = form.watch('venue_id');
   const slotId = form.watch('venue_slot_id');
   const physical = podMode === 'PHYSICAL';
-  const { slots } = useVenueSlots(physical && slotId ? venueId : '', form.watch('partner_request_id'));
+  const { slots } = useVenueSlots(
+    physical && slotId ? venueId : '',
+    form.watch('partner_request_id'),
+  );
   const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
   const values = form.watch();
-  const venueQuote = useVenueQuote(physical ? venueId : '', physical && !slotId ? venueBookingOf(values) : null);
+  const venueQuote = useVenueQuote(
+    physical ? venueId : '',
+    physical && !slotId ? venueBookingOf(values) : null,
+  );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   const space = venueSpaces(selectedVenue).find((item) => item.label === values.venue_space_label);
   const venueAmount = slotId ? (selectedSlot?.price ?? null) : (venueQuote.quote?.total ?? null);

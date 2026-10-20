@@ -2,7 +2,12 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { buildSlotLabels } from '@duncit/slots';
-import { bookingCalendarProps, bookingSlotId, venueBookingModelKey, type BookingTile } from '@duncit/utils';
+import {
+  bookingCalendarProps,
+  bookingSlotId,
+  venueBookingModelKey,
+  type BookingTile,
+} from '@duncit/utils';
 
 import { SlotCalendar } from '@/components/slots';
 import { VenuePricingModel } from '@/generated/graphql/graphql';
@@ -26,7 +31,11 @@ interface Props {
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
-function Notice({ testID, text, tone }: Readonly<{ testID: string; text: string; tone: '$danger' | '$color' }>) {
+function Notice({
+  testID,
+  text,
+  tone,
+}: Readonly<{ testID: string; text: string; tone: '$danger' | '$color' }>) {
   return (
     <YStack padding={12} borderRadius={14} backgroundColor="$soft">
       <Text testID={testID} role="alert" fontSize={13} fontWeight="500" color={tone}>
@@ -43,7 +52,13 @@ function Notice({ testID, text, tone }: Readonly<{ testID: string; text: string;
  * or already booked through, cannot be picked. The window becomes the pod's
  * window and the server's quote shows below. mWeb twin: InstantBookingPicker.
  */
-export function InstantBookingPicker({ form, venueId, spaceLabel, quote, currencySymbol }: Readonly<Props>) {
+export function InstantBookingPicker({
+  form,
+  venueId,
+  spaceLabel,
+  quote,
+  currencySymbol,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
   const booking = useInstantBooking(venueId, spaceLabel);
@@ -55,12 +70,25 @@ export function InstantBookingPicker({ form, venueId, spaceLabel, quote, currenc
     return perSlot ? base : { ...base, availableSlots: t('mweb.createPod.bookingStart') };
   }, [t, perSlot]);
 
-  if (booking.pricingLoading) return <Spinner color="$primary" aria-label={t('mweb.a11y.loading')} />;
+  if (booking.pricingLoading)
+    return <Spinner color="$primary" aria-label={t('mweb.a11y.loading')} />;
   if (booking.pricingFailed) {
-    return <Notice testID="create-pod-pricing-error" text={t('mweb.createPod.pricingLoadFailed')} tone="$danger" />;
+    return (
+      <Notice
+        testID="create-pod-pricing-error"
+        text={t('mweb.createPod.pricingLoadFailed')}
+        tone="$danger"
+      />
+    );
   }
   if (!booking.pricing || !booking.configured) {
-    return <Notice testID="create-pod-pricing-not-set" text={t('mweb.createPod.pricingNotSet')} tone="$color" />;
+    return (
+      <Notice
+        testID="create-pod-pricing-not-set"
+        text={t('mweb.createPod.pricingNotSet')}
+        tone="$color"
+      />
+    );
   }
   const { pricing } = booking;
 
@@ -70,12 +98,17 @@ export function InstantBookingPicker({ form, venueId, spaceLabel, quote, currenc
     // A slot id an older draft carried no longer applies once a window is picked.
     form.setValue('venue_slot_id', '', { shouldDirty: true });
     form.setValue('pod_date_time_text', format(new Date(from), fmt.dateTimeInputFormat), DIRTY);
-    form.setValue('pod_end_date_time_text', to ? format(new Date(to), fmt.dateTimeInputFormat) : '', DIRTY);
+    form.setValue(
+      'pod_end_date_time_text',
+      to ? format(new Date(to), fmt.dateTimeInputFormat) : '',
+      DIRTY,
+    );
   };
   const pick = (tile: BookingTile) =>
     setWindow(tile.start_at, perSlot ? tile.end_at : (booking.endsFor(tile.start_at)[0] ?? null));
   const ends = perSlot ? [] : booking.endsFor(startIso);
-  const selectedId = perSlot && startIso && endIso ? bookingSlotId(startIso, endIso) : (startIso ?? '');
+  const selectedId =
+    perSlot && startIso && endIso ? bookingSlotId(startIso, endIso) : (startIso ?? '');
   const errors = form.formState.errors;
   // With no start picked, the (hidden) start box's typed-format error would
   // read as nonsense under a calendar: ask for a time instead.
@@ -90,7 +123,11 @@ export function InstantBookingPicker({ form, venueId, spaceLabel, quote, currenc
       </Text>
       <BookingGuestFields form={form} pricing={pricing} />
       {booking.calendarFailed ? (
-        <Notice testID="create-pod-calendar-error" text={t('mweb.createPod.calendarLoadFailed')} tone="$danger" />
+        <Notice
+          testID="create-pod-calendar-error"
+          text={t('mweb.createPod.calendarLoadFailed')}
+          tone="$danger"
+        />
       ) : (
         <SlotCalendar
           {...bookingCalendarProps({
@@ -109,7 +146,12 @@ export function InstantBookingPicker({ form, venueId, spaceLabel, quote, currenc
           <Text fontSize={14} fontWeight="600" color="$color">
             {t('mweb.createPod.bookingEnd')}
           </Text>
-          <XStack gap={8} flexWrap="wrap" role="radiogroup" aria-label={t('mweb.createPod.bookingEnd')}>
+          <XStack
+            gap={8}
+            flexWrap="wrap"
+            role="radiogroup"
+            aria-label={t('mweb.createPod.bookingEnd')}
+          >
             {ends.map((option) => (
               <TimeChip
                 key={option}

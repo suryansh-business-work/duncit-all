@@ -1066,6 +1066,8 @@ export const TECH_BUNDLE: NestedCatalogue = {
       apiDocs: 'API documentation',
       appleConnectionHint:
         'Signs a client secret with this key and asks Apple to redeem a code it never issued. Apple checks the key before the code, so this proves the Team ID, Key ID, private key and Services ID belong together. Nobody is signed in.',
+      truecallerConnectionHint:
+        'Asks Truecaller to redeem a code it never issued as this Android Client ID. An unknown client is refused as the client, so this proves the ID and region. The App Key is only proven by signing in on iOS or mobile web. Nobody is signed in.',
       appStoreConnectHint:
         'Signs in to the App Store Connect API with this key, looks the app up by its bundle ID and lists one certificate. Nothing is created — it proves the Issuer ID, Key ID and .p8 belong together, and that the key has the Admin access Generate signing files needs.',
       googleOAuthConnectionHint:

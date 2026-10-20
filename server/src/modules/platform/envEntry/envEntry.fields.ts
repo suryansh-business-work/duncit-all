@@ -383,6 +383,34 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     },
     { name: 'youtube_client_secret', label: 'YouTube (Google) OAuth Client Secret', secret: true, hint: 'GOCSPX-…' },
   ],
+  // One-tap phone sign-in. Truecaller proves the SIM the person is holding, so
+  // a verified number stands in for the WhatsApp code on login and signup.
+  // Nothing here is a secret: the client ID ships inside the APK and the app
+  // key inside the iOS app, which is why the app builds read them from the
+  // public client config. The server re-checks every proof with Truecaller.
+  TRUECALLER: [
+    {
+      name: 'android_client_id',
+      label: 'Android Client ID (OAuth SDK)',
+      hint: 'Truecaller SDK console → your Android app → Client ID. Register package com.duncit.mobile with the release SHA-1',
+    },
+    {
+      name: 'app_key',
+      label: 'App Key (iOS + mobile web)',
+      hint: 'Truecaller SDK console → your iOS app / web app → App Key (partner key)',
+    },
+    {
+      name: 'ios_app_link',
+      label: 'iOS App Link',
+      hint: 'The universal link Truecaller gives the iOS app, e.g. https://si1a2b3c4d5e.truecallerdevs.com',
+    },
+    {
+      name: 'partner_name',
+      label: 'Partner name (mobile web)',
+      hint: 'The name Truecaller shows on the mobile-web consent sheet, e.g. Duncit. Set the web Callback URL to <server URL>/truecaller/callback',
+    },
+    { name: 'region', label: 'Region', hint: 'noneu (India and the rest of the world) or eu — blank means noneu' },
+  ],
 };
 
 /** How each category is named in the Tech portal and on the Analytics console. */
@@ -411,6 +439,7 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   GODADDY: 'GoDaddy (DNS)',
   CLOUDFLARE: 'Cloudflare (DNS)',
   SOCIAL_APPS: 'Social apps',
+  TRUECALLER: 'Truecaller (one-tap phone sign-in)',
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -439,6 +468,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   GODADDY: 'https://developer.godaddy.com/keys',
   CLOUDFLARE: 'https://dash.cloudflare.com/profile/api-tokens',
   SOCIAL_APPS: 'https://developers.facebook.com/apps/',
+  TRUECALLER: 'https://sdk-console-noneu.truecaller.com/',
 };
 
 /**
@@ -452,6 +482,7 @@ export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
     'https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api',
   GODADDY: 'https://developer.godaddy.com/doc/endpoint/domains',
   CLOUDFLARE: 'https://developers.cloudflare.com/api/resources/dns/subresources/records/',
+  TRUECALLER: 'https://docs.truecaller.com/truecaller-sdk/',
 };
 
 const secretSet = new Set<string>();
@@ -556,6 +587,11 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SOCIAL_META_APP_ID: { category: 'SOCIAL_APPS', field: 'meta_app_id' },
   SOCIAL_META_APP_SECRET: { category: 'SOCIAL_APPS', field: 'meta_app_secret' },
   SOCIAL_META_GRAPH_VERSION: { category: 'SOCIAL_APPS', field: 'meta_graph_version' },
+  TRUECALLER_ANDROID_CLIENT_ID: { category: 'TRUECALLER', field: 'android_client_id' },
+  TRUECALLER_APP_KEY: { category: 'TRUECALLER', field: 'app_key' },
+  TRUECALLER_IOS_APP_LINK: { category: 'TRUECALLER', field: 'ios_app_link' },
+  TRUECALLER_PARTNER_NAME: { category: 'TRUECALLER', field: 'partner_name' },
+  TRUECALLER_REGION: { category: 'TRUECALLER', field: 'region' },
   SOCIAL_X_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'x_client_id' },
   SOCIAL_X_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'x_client_secret' },
   SOCIAL_YOUTUBE_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'youtube_client_id' },

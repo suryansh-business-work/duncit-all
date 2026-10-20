@@ -611,6 +611,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       appleSignUp: 'Sign up with Apple',
       appleConnecting: 'Connecting to Apple…',
       appleFailed: 'Apple sign-in failed. Please try again.',
+      truecallerShort: 'Truecaller',
+      truecallerSignIn: 'Sign in with Truecaller',
+      truecallerSignUp: 'Sign up with Truecaller',
+      truecallerFailed: 'Truecaller sign-in failed. Please try again.',
+      truecallerNotInstalled: 'Truecaller isn’t installed on this phone. Use another way to continue.',
+      truecallerDeclined: 'Truecaller didn’t share your number. Use another way to continue.',
       // The Terms & Privacy footer. The lead-in changes per screen and the two
       // links must stay tappable inside the sentence, so it is assembled from
       // parts rather than one template with markup in it.
@@ -796,6 +802,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       detailsTitle: 'A few details',
       detailsSubtitle: 'Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
       appleDetailsSubtitle: 'Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
+      truecallerVerified: 'Your number is verified with Truecaller. Finish your details — no WhatsApp code needed for this number.',
       sameAsMobile: 'This is also my mobile number',
       sameAsMobileHint: 'Untick if your mobile number is different — we will leave the phone number on your profile blank.',
       // The contact step asks the server about the email and the number as

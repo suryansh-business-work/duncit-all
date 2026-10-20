@@ -1,0 +1,1 @@
+export { TruecallerCell } from './TruecallerCell';

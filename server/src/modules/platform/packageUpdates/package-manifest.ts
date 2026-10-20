@@ -41,6 +41,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "app/mobile-app/package.json",
     private: true,
     dependencies: [
+      { name: "@ajitpatel28/react-native-truecaller", range: "^1.1.0", kind: "dependencies" },
       { name: "@duncit/ai-monitoring", range: "file:../../packages/ai-monitoring", kind: "dependencies" },
       { name: "@duncit/auth-tokens", range: "file:../../packages/auth-tokens", kind: "dependencies" },
       { name: "@duncit/buttons-native", range: "file:../../packages/buttons-native", kind: "dependencies" },
@@ -3688,6 +3689,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "bullmq", range: "^6.3.11", kind: "dependencies" },
       { name: "busboy", range: "^1.6.0", kind: "dependencies" },
       { name: "cors", range: "^2.8.6", kind: "dependencies" },
+      { name: "countries-list", range: "^3.4.1", kind: "dependencies" },
       { name: "date-fns", range: "^4.4.0", kind: "dependencies" },
       { name: "date-fns-tz", range: "^3.2.0", kind: "dependencies" },
       { name: "docx", range: "^9.8.1", kind: "dependencies" },

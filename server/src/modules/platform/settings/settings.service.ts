@@ -956,6 +956,10 @@ export const settingsService = {
       appleBundleId,
       appleServicesId,
       appleWebRedirectUri,
+      truecallerAndroidClientId,
+      truecallerAppKey,
+      truecallerIosAppLink,
+      truecallerPartnerName,
       { serverUrl },
     ] = await Promise.all([
       getRuntimeEnvValue("GOOGLE_CLIENT_ID"),
@@ -965,6 +969,10 @@ export const settingsService = {
       getRuntimeEnvValue("APPLE_BUNDLE_ID"),
       getRuntimeEnvValue("APPLE_SERVICES_ID"),
       getRuntimeEnvValue("APPLE_WEB_REDIRECT_URI"),
+      getRuntimeEnvValue("TRUECALLER_ANDROID_CLIENT_ID"),
+      getRuntimeEnvValue("TRUECALLER_APP_KEY"),
+      getRuntimeEnvValue("TRUECALLER_IOS_APP_LINK"),
+      getRuntimeEnvValue("TRUECALLER_PARTNER_NAME"),
       getUrlConfigs(),
     ]);
     return {
@@ -977,6 +985,10 @@ export const settingsService = {
       apple_services_id: appleServicesId.trim(),
       apple_web_redirect_uri: appleWebRedirectUri.trim(),
       apple_relay_url: `${trimTrailingSlash(serverUrl)}/apple/callback`,
+      truecaller_android_client_id: truecallerAndroidClientId.trim(),
+      truecaller_app_key: truecallerAppKey.trim(),
+      truecaller_ios_app_link: truecallerIosAppLink.trim(),
+      truecaller_partner_name: truecallerPartnerName.trim(),
     };
   },
 

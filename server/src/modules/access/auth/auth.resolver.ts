@@ -36,6 +36,7 @@ import type {
 import type { GraphQLContext } from '@context';
 import type { SignInContext } from '@modules/access/user/user.signin';
 import type { SocialProvider } from './auth.social';
+import { truecallerResolvers } from '@modules/access/auth-truecaller/truecaller.resolver';
 
 /** What a signup door carries besides the account itself. Never part of the
  * validated DTO — the validator schemas strip unknown keys on purpose, so acceptance
@@ -83,8 +84,11 @@ const signInContext = (ctx: GraphQLContext): SignInContext => ({
   origin: String(ctx.req.headers.origin ?? ''),
 });
 
+const truecaller = truecallerResolvers(signInContext);
+
 export const authResolvers = {
   Query: {
+    ...truecaller.Query,
     myConnectedAccounts: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       return userService.myConnectedAccounts(await requireUserId(ctx));
     },
@@ -101,6 +105,7 @@ export const authResolvers = {
     },
   },
   Mutation: {
+    ...truecaller.Mutation,
     register: async (
       _p: unknown,
       args: { input: SignupPolicyInput & { referral_code?: string | null } }

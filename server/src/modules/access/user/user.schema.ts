@@ -12,6 +12,7 @@ export const userTypeDefs = gql`
     GOOGLE
     APPLE
     OTP
+    TRUECALLER
   }
 
   enum ProfileVisibility {

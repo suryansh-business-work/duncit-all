@@ -41,6 +41,7 @@ const SDL_CATEGORIES = [
   'GODADDY',
   'CLOUDFLARE',
   'SOCIAL_APPS',
+  'TRUECALLER',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -76,6 +77,7 @@ export const envEntryTypeDefs = gql`
     GODADDY
     CLOUDFLARE
     SOCIAL_APPS
+    TRUECALLER
   }
 
   type EnvConfigPair {

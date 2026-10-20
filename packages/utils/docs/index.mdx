@@ -2031,6 +2031,29 @@ and a navigation param survives a remount, so it is reading something possibly s
 that is not a complete, non-blank pair reads as `null` — signup opened normally, which is the
 safe reading of a malformed one.
 
+### Truecaller proves the number, not an address
+
+`truecaller-auth` is a different kind of door: Truecaller vouches for the SIM somebody is
+holding, so the server's `loginWithTruecaller` either signs that number's account in or answers
+`SIGNUP_REQUIRED` with a `TruecallerSignupProof` — the same one-shot `whatsapp_token` a WhatsApp
+code earns. Signup then skips the code step for that number and only that number.
+
+| Export | What it answers |
+| --- | --- |
+| `readTruecallerSignupProof(value)` | A proof read off router state / a navigation param, or `null` for anything not whole |
+| `truecallerSignupPrefill(proof)` | The form values the proof may start signup from — name, email, number, `whatsappIsMobile: true` |
+| `truecallerTokenFor(proof, fields)` | The proof's token when the form's number is the proven one, else `null` (ask for a code) |
+| `TRUECALLER_SIGNUP_STATE_KEY` | The navigation-state key the proof travels under, login → signup |
+| `TRUECALLER_COPY` | Literal copy keys for the button, its failures and the signup banner |
+| `TRUECALLER_WEB_POLL_MS` / `TRUECALLER_WEB_TIMEOUT_MS` | How the mobile-web page waits for Truecaller's callback |
+
+```ts
+const proof = readTruecallerSignupProof(location.state?.truecallerSignup);
+const values = { ...registerDefaults, ...truecallerSignupPrefill(proof) };
+truecallerTokenFor(proof, { phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMobile: true });
+// 'otpId.secret' when that is the proven number — spend it on register; null → send a code
+```
+
 ## The referral link and its message
 
 `referralLink(code, baseUrl)` and `readReferralCode(search)` are two halves of one agreement:

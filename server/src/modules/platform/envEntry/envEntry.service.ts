@@ -16,6 +16,7 @@ import {
   shiprocketConnection,
   slackConnection,
   socialAppsConnection,
+  truecallerConnection,
   type EnvConfigReader,
 } from './envEntry.connection';
 
@@ -214,6 +215,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   GODADDY: godaddyConnection,
   CLOUDFLARE: cloudflareConnection,
   SOCIAL_APPS: socialAppsConnection,
+  TRUECALLER: truecallerConnection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

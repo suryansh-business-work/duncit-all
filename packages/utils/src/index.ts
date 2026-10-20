@@ -34,6 +34,18 @@ export {
   type SocialProvider,
 } from './social-auth';
 export {
+  readTruecallerSignupProof,
+  TRUECALLER_COPY,
+  TRUECALLER_SIGNUP_STATE_KEY,
+  TRUECALLER_WEB_POLL_MS,
+  TRUECALLER_WEB_TIMEOUT_MS,
+  truecallerSignupPrefill,
+  truecallerTokenFor,
+  type TruecallerIntent,
+  type TruecallerPlatform,
+  type TruecallerSignupProof,
+} from './truecaller-auth';
+export {
   backoutAttemptsLeft,
   buildPodParticipationTimeline,
   isBackoutMaxed,

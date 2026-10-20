@@ -107,6 +107,7 @@
     "bullmq": "^6.3.11",
     "busboy": "^1.6.0",
     "cors": "^2.8.6",
+    "countries-list": "^3.4.1",
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
     "docx": "^9.8.1",

@@ -2,7 +2,11 @@ import { useReducer, useState, type Reducer } from 'react';
 import {
   initialSignupFlowState,
   signupFlowReducer,
+  signupNumberOf,
   socialSignupNeedsName,
+  truecallerSignupPrefill,
+  truecallerTokenFor,
+  type TruecallerSignupProof,
   type SignupFlowAction,
   type SignupFlowState,
   type SignupGoogleCredential,
@@ -13,7 +17,7 @@ import {
 } from '@duncit/utils';
 import type { GoogleSignupValues } from '@duncit/forms/schemas';
 
-import { type SignupFormValues } from '@/forms/signup';
+import { signupDefaults, type SignupFormValues } from '@/forms/signup';
 import { useTranslation } from '@/hooks/useTranslation';
 import { register, signupWithApple, signupWithGoogle } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
@@ -48,6 +52,8 @@ export function useSignupFlow() {
 
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  /** A number Truecaller proved for this signup — its token stands in for the code. */
+  const [truecallerProof, setTruecallerProof] = useState<TruecallerSignupProof | null>(null);
   const [flow, dispatch] = useReducer(
     signupFlowReducer as FlowReducer,
     initialSignupFlowState<SignupFormValues>(),
@@ -56,8 +62,17 @@ export function useSignupFlow() {
   const setStep = (step: SignupStep) => dispatch({ type: 'STEP', step });
 
   /** The form is filled in; the code step turns it into an account. */
-  const submitForm = (values: SignupFormValues) => {
+  /** Truecaller already proved this very number: its proof IS the code's. */
+  const submitForm = async (values: SignupFormValues) => {
     setError(null);
+    const proven = truecallerTokenFor(truecallerProof, values);
+    if (proven) {
+      await createWith(async () => {
+        const result = await createFromForm(values, proven);
+        authenticate(result.token, result.surveyCompleted, false);
+      });
+      return;
+    }
     dispatch({ type: 'FORM_FILLED', values });
   };
 
@@ -73,7 +88,19 @@ export function useSignupFlow() {
   };
 
   /** The Google step's answer: from here the two doors run the same code step. */
-  const submitDetails = (values: GoogleSignupValues) => dispatch({ type: 'DETAILS_GIVEN', values });
+  const submitDetails = async (values: GoogleSignupValues) => {
+    const proven = truecallerTokenFor(truecallerProof, values);
+    const google = flow.pendingGoogle;
+    if (proven && google) {
+      const named = values.name?.trim() ? { ...google, name: values.name.trim() } : google;
+      await createWith(async () => {
+        const result = await createFromGoogle(named, signupNumberOf(values), values.dob, proven);
+        authenticate(result.token, result.surveyCompleted, true);
+      });
+      return;
+    }
+    dispatch({ type: 'DETAILS_GIVEN', values });
+  };
 
   const createFromForm = (values: SignupFormValues, whatsappToken: string) =>
     register(
@@ -123,29 +150,32 @@ export function useSignupFlow() {
    * form to have asked it, hence the extra prompt on that door alone.
    */
   const createAccount = async (whatsappToken: string) => {
-    setError(null);
-    setCreating(true);
-    try {
-      if (flow.pendingGoogle && flow.verifying && flow.googleDob !== null) {
-        const result = await createFromGoogle(
-          flow.pendingGoogle,
-          flow.verifying,
-          flow.googleDob,
-          whatsappToken,
-        );
+    const { pendingGoogle, pendingForm, verifying, googleDob } = flow;
+    await createWith(async () => {
+      if (pendingGoogle && verifying && googleDob !== null) {
+        const result = await createFromGoogle(pendingGoogle, verifying, googleDob, whatsappToken);
         authenticate(result.token, result.surveyCompleted, true);
         return;
       }
-      if (flow.pendingForm) {
-        const result = await createFromForm(flow.pendingForm, whatsappToken);
+      if (pendingForm) {
+        const result = await createFromForm(pendingForm, whatsappToken);
         authenticate(result.token, result.surveyCompleted, false);
       }
+    });
+  };
+
+  /** Make the account one way or the other; a refusal lands on the screen. */
+  async function createWith(make: () => Promise<void>) {
+    setError(null);
+    setCreating(true);
+    try {
+      await make();
     } catch (e) {
       setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));
     } finally {
       setCreating(false);
     }
-  };
+  }
 
   return {
     error,
@@ -163,6 +193,12 @@ export function useSignupFlow() {
        Google has no form to have asked it — the credential carries it. */
     pendingEmail: flow.pendingForm?.email,
     submitForm,
+    truecallerProof,
+    setTruecallerProof,
+    /** What the form starts from: Truecaller's name and number once one is proven. */
+    formInitialValues: truecallerProof
+      ? { ...signupDefaults, ...truecallerSignupPrefill(truecallerProof) }
+      : undefined,
     googleAccepted,
     submitDetails,
     createAccount,

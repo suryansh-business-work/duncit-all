@@ -51,7 +51,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     categoryChips,
     vibeCategories,
     followedClubs,
-    hostPods,
     followedPosts,
     clubStories,
     myStories,
@@ -123,7 +122,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         me={me ? { ...me, my_stories: myStories } : me}
         branding={branding}
         followedClubs={followedClubs}
-        hostPods={hostPods}
         followedPosts={followedPosts}
         clubStories={clubStories}
         followedUsers={followedUsers}

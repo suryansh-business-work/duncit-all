@@ -127,14 +127,6 @@ const clubStory = {
   expires_at: new Date(Date.now() + 3600000).toISOString(),
 };
 
-const pod = {
-  id: 'p1',
-  pod_id: 'pod9',
-  pod_title: 'Sunset Pod',
-  club_slug: 'acme',
-  pod_images_and_videos: [{ url: 'http://x/pod.jpg', type: 'IMAGE' }],
-};
-
 const user = {
   user_id: 'u1',
   full_name: 'Asha Kumar',
@@ -172,7 +164,6 @@ function renderRail(props: Partial<Parameters<typeof HomeStatusRail>[0]> = {}) {
   const merged = {
     me,
     followedClubs: [],
-    hostPods: [],
     followedUsers: [],
     followedPosts: [],
     clubStories: [clubStory],
@@ -194,11 +185,15 @@ describe('HomeStatusRail', () => {
     expect(screen.queryByTestId('viewer')).toBeNull();
   });
 
-  it('renders a tile per followed club, pod and user', () => {
-    renderRail({ followedClubs: [club], hostPods: [pod], followedUsers: [user], followedPosts: [post] });
+  it('renders a tile per followed club and person with a live story', () => {
+    renderRail({ followedClubs: [club], followedUsers: [user], followedPosts: [post] });
     expect(screen.getByText('Acme Club')).toBeInTheDocument();
-    expect(screen.getByText('Sunset Pod')).toBeInTheDocument();
     expect(screen.getByText('Asha')).toBeInTheDocument();
+  });
+
+  it('leaves out a followed person who has no live story', () => {
+    renderRail({ followedUsers: [user], followedPosts: [] });
+    expect(screen.queryByText('Asha')).toBeNull();
   });
 
   it('opens the "mine" viewer from the my-status tile and wires delete + viewers', async () => {

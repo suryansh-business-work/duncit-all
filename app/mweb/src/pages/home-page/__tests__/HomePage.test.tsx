@@ -77,7 +77,6 @@ const baseReturn = () => ({
   categoryChips: [{ id: 'chip-1' }],
   vibeCategories: [],
   followedClubs: [],
-  hostPods: [],
   followedPosts: [],
   myStories: [],
   followedUsers: [],

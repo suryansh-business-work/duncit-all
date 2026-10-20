@@ -232,7 +232,6 @@ describe('useHomeData', () => {
     expect(result.current.categoryChips).toEqual([]);
     expect(result.current.vibeCategories).toEqual([]);
     expect(result.current.previousPods).toEqual([]);
-    expect(result.current.hostPods).toEqual([]);
     expect(result.current.followedPosts).toEqual([]);
     expect(result.current.myStories).toEqual([]);
   });
@@ -281,9 +280,6 @@ describe('useHomeData', () => {
 
     // followed clubs (club1 is followed and in scope)
     expect(result.current.followedClubs.map((c: any) => c.id)).toEqual(['club1']);
-
-    // hostPods: pods where I am a host (p_future3)
-    expect(result.current.hostPods.map((p: any) => p.id)).toContain('p_future3');
 
     // followedPosts (author u2) + myStories (author me1)
     expect(result.current.followedPosts.map((p: any) => p.id)).toEqual(['st1']);

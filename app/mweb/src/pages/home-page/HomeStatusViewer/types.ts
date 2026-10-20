@@ -34,7 +34,7 @@ export interface HomeStatusViewerItem {
   /** Origin of the story — gates like (user) vs viewers/delete (mine) (Bugs 4,5,7).
    * An `ad` story carries none of those: it is sponsored media, not somebody's post.
    * `official` is the pinned Duncit group from Marketing > Status. */
-  kind?: 'mine' | 'user' | 'club' | 'pod' | 'ad' | 'official';
+  kind?: 'mine' | 'user' | 'club' | 'ad' | 'official';
 }
 
 export interface HomeStatusViewerProps {

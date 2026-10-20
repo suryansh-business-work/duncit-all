@@ -30,7 +30,6 @@ function firstMedia(items?: Array<{ url?: string | null; type?: string | null }>
 
 interface BuildArgs {
   followedClubs: any[];
-  hostPods: any[];
   followedUsers: any[];
   followedPosts: any[];
   /** Live club-attached stories — a club ring is built from these, never from
@@ -83,38 +82,18 @@ function clubEntry(club: any, clubStories: any[]): HomeStatusEntry | null {
   };
 }
 
-function podEntry(pod: any): HomeStatusEntry {
-  const media = firstMedia(pod.pod_images_and_videos);
-  return {
-    key: `pod-${pod.id}`,
-    label: pod.pod_title,
-    imageUrl: media?.type === 'VIDEO' ? null : media?.url,
-    videoUrl: media?.type === 'VIDEO' ? media?.url : null,
-    initials: initials(pod.pod_title),
-    active: true,
-    viewer: {
-      kind: 'pod',
-      label: pod.pod_title,
-      subLabel: 'Your pod status',
-      mediaUrl: media?.url,
-      mediaType: media?.type,
-      slides: (pod.pod_images_and_videos ?? []).map((item: any, index: number) => ({
-        mediaUrl: item.url,
-        mediaType: item.type,
-        subLabel: `Pod status ${index + 1}/${pod.pod_images_and_videos.length}`,
-      })),
-      targetUrl: pod.club_slug && pod.pod_id ? `/club/${pod.club_slug}/pod/${pod.pod_id}` : undefined,
-      internal: true,
-    },
-  };
-}
-
-function userEntry(user: any, followedPosts: any[]): HomeStatusEntry {
+/**
+ * A followed person gets a ring only while they have a LIVE story — the same
+ * rule as a club and as the native rail. A tile with no story behind it opened
+ * on their profile photo and looked like a status that was never posted.
+ */
+function userEntry(user: any, followedPosts: any[]): HomeStatusEntry | null {
   // A story past its 24h life never becomes a slide, even when the feed was
   // fetched before the boundary.
   const posts = followedPosts.filter(
     (post) => post.author_id === user.user_id && isStoryLive(post.expires_at),
   );
+  if (posts.length === 0) return null;
   const firstPost = posts[0];
   const firstIsVideo = firstPost?.media_type === 'VIDEO';
   const name = user.first_name || user.full_name || 'User';
@@ -167,17 +146,16 @@ function randomShuffle<T>(items: T[]): T[] {
  * already-seen tiles pushed to the end (no ring). The "my status" tile is handled
  * separately by the rail. `shuffle` is injectable so tests stay deterministic. */
 export function buildHomeStatusEntries(
-  { followedClubs, hostPods, followedUsers, followedPosts, clubStories = [] }: BuildArgs,
+  { followedClubs, followedUsers, followedPosts, clubStories = [] }: BuildArgs,
   shuffle: StatusShuffle = randomShuffle,
 ): HomeStatusEntry[] {
+  // Only live stories make a ring: a club or a person without one has no tile.
+  // Hosted pods used to join the rail too, permanently "unseen" — their cover
+  // media is not a story and never expired.
   const all = [
-    // A club without a live story has no ring at all.
-    ...followedClubs
-      .map((c) => clubEntry(c, clubStories))
-      .filter((entry): entry is HomeStatusEntry => entry !== null),
-    ...hostPods.map((p) => podEntry(p)),
+    ...followedClubs.map((c) => clubEntry(c, clubStories)),
     ...followedUsers.map((u) => userEntry(u, followedPosts)),
-  ];
+  ].filter((entry): entry is HomeStatusEntry => entry !== null);
   const unseen = all.filter((entry) => entry.active);
   const seen = all.filter((entry) => !entry.active);
   return [...shuffle(unseen), ...seen];

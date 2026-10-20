@@ -146,10 +146,17 @@ const menuLabel = label ?? t('website.nav.menu');
     background: var(--color-surface, #fff);
     box-shadow: -12px 0 40px rgba(9, 7, 18, 0.35);
     transform: translateX(100%);
-    transition: transform 260ms ease;
+    /* Closed means gone, not just slid aside: nothing of it shows and its links
+       are out of the tab order. Visibility flips only after the slide-out. */
+    visibility: hidden;
+    transition:
+      transform 260ms ease,
+      visibility 0s linear 260ms;
   }
   .site-menu-drawer.is-open {
     transform: translateX(0);
+    visibility: visible;
+    transition: transform 260ms ease;
   }
   @media (prefers-reduced-motion: reduce) {
     .site-menu-drawer {
@@ -242,6 +249,12 @@ const menuLabel = label ?? t('website.nav.menu');
     var backdrop = document.querySelector('.site-menu-backdrop');
     var opener = document.querySelector('[data-site-menu-open]');
     if (!drawer || !backdrop || !opener) return;
+
+    // The headers render the menu inside a blurred glass pill, and
+    // `backdrop-filter` makes that pill the containing block for `position:
+    // fixed` — the drawer would pin to the pill, not the viewport. On <body>
+    // it is fixed to the screen again; its scoped styles travel with it.
+    document.body.append(backdrop, drawer);
 
     function open() {
       backdrop.hidden = false;

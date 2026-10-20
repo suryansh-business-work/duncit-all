@@ -343,4 +343,6 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "website.earn.steps.bookingsText": ["Get booking requests from real users."],
   "website.earn.steps.earnTitle": ["Earn"],
   "website.earn.steps.earnText": ["Provide great experiences and earn every month."],
+  // Gig Jobs joined the earn paths as the fifth way to earn.
+  "website.earn.paths.sectionHeadingLead": ["Four Ways To"],
 };

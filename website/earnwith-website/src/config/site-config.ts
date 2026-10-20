@@ -118,13 +118,15 @@ const build = (t: SiteTranslate) => ({
       t('website.earn.hero.ribbon5'),
     ],
   },
-  // The same four journeys the app offers, each deep-linking into its survey
-  // gate — the site and the Earn screen must not drift apart.
+  // The same five journeys the app offers (@duncit/onboarding journeys), each
+  // deep-linking into its start — the site and the Earn screen must not drift apart.
   pathsSection: {
     eyebrow: t('website.earn.paths.sectionEyebrow'),
     headingLead: t('website.earn.paths.sectionHeadingLead'),
     headingAccent: t('website.earn.paths.sectionHeadingAccent'),
     text: t('website.earn.paths.sectionText'),
+    previous: t('website.earn.paths.previous'),
+    next: t('website.earn.paths.next'),
   },
   paths: [
     {
@@ -170,6 +172,18 @@ const build = (t: SiteTranslate) => ({
       cta: t('website.earn.paths.brandCta'),
       tag: t('website.earn.paths.brandTag'),
       chips: [t('website.earn.paths.brandChip1'), t('website.earn.paths.brandChip2')],
+    },
+    {
+      icon: 'fa-briefcase',
+      title: t('website.earn.paths.gigTitle'),
+      text: t('website.earn.paths.gigText'),
+      image: photo('2608517', 800),
+      imageAlt: t('website.earn.paths.gigImageAlt'),
+      // Self-serve: the freelancer profile, not a survey gate.
+      href: `${mwebUrl}/earn/freelancer`,
+      cta: t('website.earn.paths.gigCta'),
+      tag: t('website.earn.paths.gigTag'),
+      chips: [t('website.earn.paths.gigChip1'), t('website.earn.paths.gigChip2')],
     },
   ] as EarnPath[],
   why: {

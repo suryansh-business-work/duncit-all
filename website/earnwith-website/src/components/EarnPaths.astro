@@ -6,7 +6,7 @@ import SectionHead from './home/SectionHead.astro';
 const siteConfig = await siteContent();
 const { paths, pathsSection } = siteConfig;
 
-// Each journey gets its own colourway so the four read as four different
+// Each journey gets its own colourway so the cards read as different
 // doors. `frame-scope` on the dark one hands its contents the dark palette.
 const LOOKS = [
   { card: 'bg-primary-fill text-on-primary', chip: 'bg-frame/20', arrow: 'bg-on-primary text-primary-fill', tag: 'bg-accent text-on-accent -rotate-6' },
@@ -25,12 +25,33 @@ const LOOKS = [
       text={pathsSection.text}
     />
 
-    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4" data-reveal-group>
+    <!-- A slider, not a grid: five doors no longer fit one row, and a fifth card
+         alone on a second row reads as an afterthought. Native scroll-snap, so
+         touch, trackpad and keyboard (the track is focusable) all work without
+         the script; the arrows are a convenience on top. -->
+    <div class="mt-2 flex justify-end gap-2">
+      <button type="button" class="paths-arrow" data-paths-prev aria-controls="pathsTrack" aria-label={pathsSection.previous}>
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="paths-arrow" data-paths-next aria-controls="pathsTrack" aria-label={pathsSection.next}>
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div
+      id="pathsTrack"
+      class="paths-track -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto px-4 pt-4 pb-6 sm:-mx-5 sm:scroll-px-5 sm:px-5"
+      role="region"
+      aria-label={`${pathsSection.headingLead} ${pathsSection.headingAccent}`}
+      tabindex="0"
+      data-paths-track
+      data-reveal-group
+    >
       {
         paths.map((path, index) => {
           const look = LOOKS[index % LOOKS.length];
           return (
-            <div data-reveal>
+            <div class="paths-slide shrink-0 snap-start" data-reveal>
               <SmartLink
                 href={path.href}
                 label={path.cta}
@@ -76,6 +97,56 @@ const LOOKS = [
 </section>
 
 <style>
+  /* One card and a peek on a phone, two on a tablet, four on a desktop — the
+     next card always shows a sliver, so the row reads as "there is more". */
+  .paths-slide {
+    width: 85%;
+  }
+  @media (min-width: 640px) {
+    .paths-slide {
+      width: calc((100% - 1.25rem) / 2);
+    }
+  }
+  @media (min-width: 1024px) {
+    .paths-slide {
+      width: calc((100% - 3 * 1.25rem) / 4);
+    }
+  }
+  .paths-track {
+    scrollbar-width: none;
+  }
+  .paths-track::-webkit-scrollbar {
+    display: none;
+  }
+  .paths-track:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 4px;
+  }
+  .paths-arrow {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+  }
+  .paths-arrow:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  .paths-arrow:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  .paths-arrow:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
   /* The whole card is the link: it lifts, and its arrow turns to point out. */
   :global(.path-card) {
     transition:
@@ -110,3 +181,32 @@ const LOOKS = [
     }
   }
 </style>
+
+<script>
+  // The arrows page the track by one card and grey out at either end.
+  const track = document.querySelector<HTMLElement>('[data-paths-track]');
+  const prev = document.querySelector<HTMLButtonElement>('[data-paths-prev]');
+  const next = document.querySelector<HTMLButtonElement>('[data-paths-next]');
+
+  if (track && prev && next) {
+    const still = matchMedia('(prefers-reduced-motion: reduce)');
+    const step = () => {
+      const slide = track.querySelector<HTMLElement>('.paths-slide');
+      const gap = Number.parseFloat(getComputedStyle(track).columnGap) || 0;
+      return (slide?.offsetWidth ?? track.clientWidth) + gap;
+    };
+    const sync = () => {
+      const max = track.scrollWidth - track.clientWidth;
+      prev.disabled = track.scrollLeft <= 1;
+      next.disabled = track.scrollLeft >= max - 1;
+    };
+    const go = (direction: number) =>
+      track.scrollBy({ left: direction * step(), behavior: still.matches ? 'auto' : 'smooth' });
+
+    prev.addEventListener('click', () => go(-1));
+    next.addEventListener('click', () => go(1));
+    track.addEventListener('scroll', sync, { passive: true });
+    addEventListener('resize', sync);
+    sync();
+  }
+</script>

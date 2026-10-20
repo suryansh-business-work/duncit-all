@@ -18,7 +18,7 @@ jest.mock('@observability/log', () => ({
 jest.mock('@modules/finance/finance/settlement.service', () => ({
   collectedForPod: jest.fn(),
   resolveEffectiveRates: jest.fn(),
-  venueAmountForPod: jest.fn(),
+  venueTermsForPod: jest.fn(),
   waterfallForAmount: jest.fn(),
 }));
 jest.mock('@modules/platform/settings/settings.service', () => ({
@@ -46,7 +46,7 @@ import { logs } from '@observability/log';
 import {
   collectedForPod,
   resolveEffectiveRates,
-  venueAmountForPod,
+  venueTermsForPod,
   waterfallForAmount,
 } from '@modules/finance/finance/settlement.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -71,7 +71,9 @@ import {
 
 const collected = collectedForPod as jest.Mock;
 const rates = resolveEffectiveRates as jest.Mock;
-const venueCost = venueAmountForPod as jest.Mock;
+const venueCost = venueTermsForPod as jest.Mock;
+/** A legacy (slot-priced) pod settles unclamped with the commission taken from the venue. */
+const LEGACY_TERMS = { clampVenueToPool: false, venueCommissionOnTopPaise: null };
 const waterfall = waterfallForAmount as jest.Mock;
 const autoCancel = settingsService.getPodAutoCancelSettings as jest.Mock;
 const notify = notifyEach as jest.Mock;
@@ -105,7 +107,7 @@ let collectedByPod: Map<string, number>;
 beforeEach(() => {
   collectedByPod = new Map();
   autoCancel.mockResolvedValue(SETTINGS);
-  venueCost.mockImplementation(async (pod: any) => (pod.venue_id ? VENUE_COST : 0));
+  venueCost.mockImplementation(async (pod: any) => ({ amount: pod.venue_id ? VENUE_COST : 0, options: LEGACY_TERMS }));
   collected.mockImplementation(async (podId: unknown) => collectedByPod.get(String(podId)) ?? 0);
   rates.mockResolvedValue(RATES);
   waterfall.mockImplementation((amount: number, venueAmount: number) => fakeWaterfall(amount, venueAmount));
@@ -180,7 +182,7 @@ describe('podFinanceNow', () => {
       waterfall: null,
       negative: false,
     });
-    expect(venueCost).toHaveBeenCalledWith(pod, 0);
+    expect(venueCost).toHaveBeenCalledWith(pod);
     expect(collected).not.toHaveBeenCalled();
     expect(rates).not.toHaveBeenCalled();
   });
@@ -194,10 +196,12 @@ describe('podFinanceNow', () => {
     const finance = await podFinanceNow(pod);
 
     expect(rates).toHaveBeenCalledWith({ hostUserId: host, venueId: venue });
-    expect(waterfall).toHaveBeenCalledWith(400, VENUE_COST, RATES, { clampVenueToPool: false });
+    expect(waterfall).toHaveBeenCalledWith(400, VENUE_COST, RATES, LEGACY_TERMS);
     expect(finance).toEqual({
       collected: 400,
       venueAmount: VENUE_COST,
+      // The options it settles under, so the "spots needed" walk prices the same way.
+      venueOptions: LEGACY_TERMS,
       rates: RATES,
       waterfall: fakeWaterfall(400, VENUE_COST),
       negative: true,

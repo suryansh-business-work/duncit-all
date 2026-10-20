@@ -94,7 +94,9 @@ async function identityOf(input: Readonly<TruecallerAuthInput>): Promise<Truecal
 export const truecallerAuthService = {
   startWeb: (intent: TruecallerIntent, lang?: string | null) => startWebRequest(intent, String(lang ?? '')),
 
-  webState: (nonce: string) => webRequestState(required(nonce, 'request_nonce')),
+  async webState(nonce: string) {
+    return webRequestState(required(nonce, 'request_nonce'));
+  },
 
   async continueWithTruecaller(input: Readonly<TruecallerAuthInput>, signIn?: SignInContext) {
     const identity = await identityOf(input);

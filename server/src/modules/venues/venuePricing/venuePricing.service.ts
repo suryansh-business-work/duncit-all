@@ -106,7 +106,7 @@ const pricingOf = (venue: { pricing?: unknown }): VenuePricing => {
   const stored = (typeof raw?.toObject === 'function' ? raw.toObject() : (raw ?? {})) as Record<string, unknown>;
   const filled = { ...stored };
   for (const [field, fallback] of Object.entries(PRICING_DEFAULTS)) {
-    if (filled[field] === null || filled[field] === undefined) filled[field] = fallback;
+    filled[field] ??= fallback;
   }
   return filled as unknown as VenuePricing;
 };

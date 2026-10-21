@@ -78,7 +78,7 @@ function enqueue<T>(cache: Bucket, id: string, fetchMissing: Fetcher<T>): Promis
   if (!cache.open) {
     const batch: Batch = { ids: [], done: Promise.resolve() };
     batch.done = new Promise<void>((resolve) => {
-      Promise.resolve().then(() => process.nextTick(resolve));
+      queueMicrotask(() => process.nextTick(resolve));
     })
       .then(() => {
         cache.open = null;

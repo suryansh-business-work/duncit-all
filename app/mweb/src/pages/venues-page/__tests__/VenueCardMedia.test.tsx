@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import VenueCardMedia from '../VenueCardMedia';
 
@@ -85,14 +85,21 @@ describe('VenueCardMedia', () => {
 
   // …and clears it again once the slide settles, or the card would open on a
   // swipe and then never open on a tap.
-  it('opens the venue again once the slide has settled', async () => {
+  it('opens the venue again once the slide has settled', () => {
     const onOpen = vi.fn();
     render(<VenueCardMedia images={[HALL, STAGE]} venueName="Sunset Hall" onOpen={onOpen} />);
 
-    fireEvent.click(screen.getByLabelText(/next/i));
-    await waitFor(() => {
+    vi.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByLabelText(/next/i));
+      // react-slick calls afterChange once its slide animation (500ms default speed) ends.
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
       fireEvent.click(screen.getAllByLabelText('Sunset Hall')[0]);
       expect(onOpen).toHaveBeenCalled();
-    });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

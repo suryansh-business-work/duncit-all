@@ -5,6 +5,7 @@ import {
   type AiMonitoringConfig,
   type AiMonitoringCopy,
 } from '@duncit/ai-monitoring';
+import { logs } from '@duncit/logs';
 
 import { AiMonitoringConfigDocument } from '@/graphql/ai-monitoring';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -49,9 +50,11 @@ export function useAiMonitoringConfig(): AiMonitoringState {
 
   useEffect(() => {
     let active = true;
-    loadConfig().then((next) => {
-      if (active && next) setConfig(next);
-    });
+    loadConfig()
+      .then((next) => {
+        if (active && next) setConfig(next);
+      })
+      .catch((error) => logs.mobileApp.error('useAiMonitoringConfig', 'loadConfig', { error }));
     return () => {
       active = false;
     };

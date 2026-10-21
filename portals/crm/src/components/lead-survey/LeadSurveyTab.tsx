@@ -18,6 +18,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import LinkIcon from '@mui/icons-material/Link';
 import { DuncitButton } from '@duncit/buttons';
+import { fireAndForget, logs } from '@duncit/logs';
 import { QueryGuard } from '@duncit/ui';
 import { LeadDetailCard } from '../LeadDetailCard';
 import {
@@ -154,7 +155,7 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
         <DialogContent><DialogContentText>{t('crm.components.thisPermanentlyRemovesThisGenerationResponse')}</DialogContentText></DialogContent>
         <DialogActions>
           <DuncitButton onClick={() => setConfirmDelete(null)}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton color="error" variant="contained" disabled={deleting} onClick={() => { const id = confirmDelete!; setConfirmDelete(null); run(() => del({ variables: { entry_id: id } })); }}>
+          <DuncitButton color="error" variant="contained" disabled={deleting} onClick={() => { const id = confirmDelete!; setConfirmDelete(null); fireAndForget(run(() => del({ variables: { entry_id: id } })), logs.portal.crm, 'LeadSurveyTab', 'delete'); }}>
             {t('shell.common.delete')}
           </DuncitButton>
         </DialogActions>

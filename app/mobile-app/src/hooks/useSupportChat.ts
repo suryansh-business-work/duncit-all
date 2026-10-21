@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { logs } from '@duncit/logs';
 import { CHAT_HISTORY_PAGE } from '@duncit/utils';
 
 import { config } from '@/constants/config';
@@ -136,7 +137,7 @@ export function useSupportChat() {
       } finally {
         if (active) setIsLoading(false);
       }
-    })();
+    })().catch((error) => logs.mobileApp.error('useSupportChat', 'boot', { error }));
     return () => {
       active = false;
     };
@@ -163,14 +164,16 @@ export function useSupportChat() {
       if (typingTimer.current) clearTimeout(typingTimer.current);
       typingTimer.current = setTimeout(() => setTyping(''), 2500);
     };
-    getAuthToken().then((token) => {
-      if (cancelled || !token) return;
-      socketRef.current = connectSupportSocket(token, sessionId, {
-        onMessage,
-        onSessionUpdate,
-        onTyping,
-      });
-    });
+    getAuthToken()
+      .then((token) => {
+        if (cancelled || !token) return;
+        socketRef.current = connectSupportSocket(token, sessionId, {
+          onMessage,
+          onSessionUpdate,
+          onTyping,
+        });
+      })
+      .catch((error) => logs.mobileApp.error('useSupportChat', 'connectSocket', { error }));
     return () => {
       cancelled = true;
       socketRef.current?.emit('leave_support_session', sessionId);

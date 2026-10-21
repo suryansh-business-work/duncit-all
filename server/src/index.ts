@@ -233,6 +233,14 @@ async function bootstrap() {
       });
     }
   });
+  // Address repair: puts back the address parts a photo-only profile save
+  // blanked before a674d8e26, from the change log. Only fills parts that are
+  // still blank and untouched since, so it is safe on every boot.
+  await safeSeed('wipedAddressRepair', async () => {
+    const { repairWipedAddresses } = await import('@modules/access/user/user.addressRepair');
+    const result = await repairWipedAddresses();
+    if (result.users > 0) logs.server.info('bootstrap', 'wipedAddressRepair', result);
+  });
   // Catalogue repair: brand names copied from the brand record. Only fills
   // empty values, so it is safe on every boot.
   await safeSeed('storeCatalogue', async () => {

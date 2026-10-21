@@ -141,7 +141,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
             fullWidth
             disabled={loading}
             onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleGenerate();
+              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleGenerate().catch((err: Error) => setError(err.message));
             }}
             helperText={t('admin.ai.tip')}
           />

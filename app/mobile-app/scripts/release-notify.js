@@ -246,5 +246,10 @@ if (require.main === module) {
     }
   })();
   const buildName = path.basename(file).replace(/\.apk$/i, '');
-  notifyReleaseSafe({ apkPath: file, version, buildName }).then(() => process.exit(0));
+  notifyReleaseSafe({ apkPath: file, version, buildName })
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(`⚠  release-notify skipped: ${err.message}`);
+      process.exit(0);
+    });
 }

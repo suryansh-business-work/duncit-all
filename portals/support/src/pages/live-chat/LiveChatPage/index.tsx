@@ -157,10 +157,10 @@ export default function LiveChatPage() {
           if (selected) actions.reopen(selected.id);
         }}
         onDownload={(format) => {
-          if (selected) actions.download(selected.id, format);
+          if (selected) actions.download(selected.id, format).catch((e: Error) => actions.notify(e.message));
         }}
         onEmail={(email) => {
-          if (selected) actions.email(selected.id, email);
+          if (selected) actions.email(selected.id, email).catch((e: Error) => actions.notify(e.message));
         }}
         onText={setText}
         onAttachments={setAttachments}

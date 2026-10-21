@@ -101,11 +101,12 @@ function drawHeroFallback(doc: Doc, box: Box, title: string, fonts: PosterFonts)
   const cx = box.x + box.width / 2;
   const cy = box.y + box.height / 2;
   doc.rect(box.x, box.y, box.width, box.height).fill(POSTER_COLORS.tint);
-  for (const scale of [1.5, 1.08, 0.66]) {
+  const ringScales = [1.5, 1.08, 0.66];
+  for (const [i, scale] of ringScales.entries()) {
     doc
       .circle(cx, cy, box.height * scale)
       .lineWidth(box.height * 0.11)
-      .strokeColor(scale === 0.66 ? POSTER_COLORS.tintMark : POSTER_COLORS.tintRing)
+      .strokeColor(i === ringScales.length - 1 ? POSTER_COLORS.tintMark : POSTER_COLORS.tintRing)
       .stroke();
   }
   const letter = monogram(title);

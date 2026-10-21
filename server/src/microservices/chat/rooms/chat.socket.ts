@@ -1,4 +1,5 @@
 import { getIo, type AuthedSocket } from '@realtime/io';
+import { logs } from '@observability/log';
 import { isRoomMember, socketRoomOf, type ChatRoomRef } from './chat.access';
 
 type Ack = (ok: boolean, err?: string) => void;
@@ -21,7 +22,9 @@ export function attachChatHandlers() {
 
   io.on('connection', (socket: AuthedSocket) => {
     socket.on('join_pod', (podId: string, ack?: Ack) => {
-      joinRoom(socket, { kind: 'POD', id: podId }, ack);
+      joinRoom(socket, { kind: 'POD', id: podId }, ack).catch((error) =>
+        logs.server.error('chat.socket', 'join_pod', { room: `POD:${podId}`, error })
+      );
     });
     socket.on('leave_pod', (podId: string) => {
       socket.leave(`pod:${podId}`);
@@ -34,7 +37,9 @@ export function attachChatHandlers() {
     // A club's room: the same events, under their own names so a client in a
     // pod room and a club room at once never mixes the two.
     socket.on('join_club', (clubId: string, ack?: Ack) => {
-      joinRoom(socket, { kind: 'CLUB', id: clubId }, ack);
+      joinRoom(socket, { kind: 'CLUB', id: clubId }, ack).catch((error) =>
+        logs.server.error('chat.socket', 'join_club', { room: `CLUB:${clubId}`, error })
+      );
     });
     socket.on('leave_club', (clubId: string) => {
       socket.leave(`club:${clubId}`);

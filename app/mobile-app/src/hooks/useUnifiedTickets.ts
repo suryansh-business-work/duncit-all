@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { logs } from '@duncit/logs';
 
 import {
   EmailTicketTranscriptDocument,
@@ -87,24 +88,26 @@ export function useTicketDetails(ticketId: string) {
   useEffect(() => {
     if (!ticketId) return undefined;
     let cancelled = false;
-    getAuthToken().then((token) => {
-      if (cancelled || !token) return;
-      const s = io(config.apiUrl, {
-        path: '/socket.io',
-        auth: { token },
-        transports: ['websocket', 'polling'],
-      });
-      socketRef.current = s;
-      s.on('ticket:update', (updated: TicketDetail) => {
-        if (updated.id !== ticketId) return;
-        // A growing thread means a new reply arrived while the user is viewing —
-        // mark it read so the other side's tick turns Seen. A pure read-state
-        // update (same count) must NOT re-mark, which would loop.
-        if (updated.messages.length > countRef.current) markRead();
-        countRef.current = updated.messages.length;
-        setTicket(updated);
-      });
-    });
+    getAuthToken()
+      .then((token) => {
+        if (cancelled || !token) return;
+        const s = io(config.apiUrl, {
+          path: '/socket.io',
+          auth: { token },
+          transports: ['websocket', 'polling'],
+        });
+        socketRef.current = s;
+        s.on('ticket:update', (updated: TicketDetail) => {
+          if (updated.id !== ticketId) return;
+          // A growing thread means a new reply arrived while the user is viewing —
+          // mark it read so the other side's tick turns Seen. A pure read-state
+          // update (same count) must NOT re-mark, which would loop.
+          if (updated.messages.length > countRef.current) markRead();
+          countRef.current = updated.messages.length;
+          setTicket(updated);
+        });
+      })
+      .catch((error) => logs.mobileApp.error('useUnifiedTickets', 'connectSocket', { error }));
     return () => {
       cancelled = true;
       socketRef.current?.disconnect();

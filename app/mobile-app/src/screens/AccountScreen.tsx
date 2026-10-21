@@ -21,6 +21,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useAccount } from '@/hooks/useAccount';
 import { useLogout } from '@/hooks/useLogout';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { ProfileVisibility } from '@/generated/graphql/graphql';
 import type { RootStackParamList } from '@/navigation/types';
 import { formatDate } from '@/utils/date-format';
@@ -61,10 +62,10 @@ export function AccountScreen() {
             me={me}
             onEdit={() => setEditOpen(true)}
             onLogout={() => {
-              logout();
+              fireAndForget(logout());
             }}
             onChanged={() => {
-              refresh();
+              fireAndForget(refresh());
             }}
           />
         </SurfaceCard>

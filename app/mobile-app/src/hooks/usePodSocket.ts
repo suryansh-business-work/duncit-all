@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import { logs } from '@duncit/logs';
 
 import { config } from '@/constants/config';
 import { getAuthToken } from '@/services/auth-token';
@@ -84,10 +85,12 @@ export function usePodSocket({
     let socket: Socket | undefined;
     let cancelled = false;
 
-    getAuthToken().then((token) => {
-      if (cancelled || !token) return;
-      socket = createPodSocket(token, podId, kind, handlers);
-    });
+    getAuthToken()
+      .then((token) => {
+        if (cancelled || !token) return;
+        socket = createPodSocket(token, podId, kind, handlers);
+      })
+      .catch((error) => logs.mobileApp.error('usePodSocket', 'connect', { error, podId, kind }));
 
     return () => {
       cancelled = true;

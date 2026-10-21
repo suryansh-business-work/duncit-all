@@ -1,6 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { InputAdornment, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
+import { fireAndForget, logs } from '@duncit/logs';
 
 interface Props {
   /** The host's stored override. 0 means "no override — inherit the default". */
@@ -42,11 +43,16 @@ export default function HostReviewCommission({ value, defaultPct, saving, onSave
     if (!valid || text === savedRef.current) return;
     const attempted = text;
     // onSave never rejects — the container turns every failure into `false`
-    // plus an inline alert, so there is nothing to catch here. On failure
+    // plus an inline alert; a rejection anyway is logged, not dropped. On failure
     // savedRef is left alone, which is what makes the next blur retry.
-    onSave(Number(attempted)).then((ok) => {
-      if (ok) savedRef.current = attempted;
-    });
+    fireAndForget(
+      onSave(Number(attempted)).then((ok) => {
+        if (ok) savedRef.current = attempted;
+      }),
+      logs.portal.onboarding,
+      'HostReviewCommission',
+      'save'
+    );
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {

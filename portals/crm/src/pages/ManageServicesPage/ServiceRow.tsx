@@ -4,6 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
+import { fireAndForget, logs } from '@duncit/logs';
 import { useTranslation } from '@duncit/shell';
 import type { CrmService } from '../../api/crm.types';
 import type { EditRow } from './types';
@@ -80,7 +81,7 @@ export function ServiceRow({
             if (editing) {
               setDraft({ ...draft, is_active: e.target.checked });
             } else {
-              toggleActive(row);
+              fireAndForget(toggleActive(row), logs.portal.crm, 'ServiceRow', 'toggleActive');
             }
           }}
           disabled={busy && !editing}

@@ -99,7 +99,7 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                submit();
+                submit().catch((err) => notifyError(err.message));
               }
             }}
             disabled={posting}

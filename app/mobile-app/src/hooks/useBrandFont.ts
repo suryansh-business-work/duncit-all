@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import * as Font from 'expo-font';
+import { logs } from '@duncit/logs';
 
 import { useBranding } from '@/hooks/useBranding';
 
@@ -39,16 +40,15 @@ export function useBrandFont(): string | undefined {
     }
     let active = true;
     (async () => {
-      try {
-        const css = await (await fetch(fontCssUrl(family))).text();
-        const fontUrl = extractFontUrl(css);
-        if (!fontUrl) return;
-        await Font.loadAsync({ [family]: fontUrl });
-        if (active) setLoadedFamily(family);
-      } catch {
-        // Best-effort: an unreachable font keeps the default typeface.
-      }
-    })();
+      const css = await (await fetch(fontCssUrl(family))).text();
+      const fontUrl = extractFontUrl(css);
+      if (!fontUrl) return;
+      await Font.loadAsync({ [family]: fontUrl });
+      if (active) setLoadedFamily(family);
+    })().catch((error) =>
+      // Best-effort: an unreachable font keeps the default typeface.
+      logs.mobileApp.warn('useBrandFont', 'loadFont', { error, family }),
+    );
     return () => {
       active = false;
     };

@@ -66,7 +66,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       // A cold start with a stored token means the user already onboarded.
       set({ token, surveyCompleted: true, referralPromptPending: false, ready: true });
       // Push registration stays best-effort and never blocks the startup gate.
-      if (token) syncExpoPushToken();
+      if (token) {
+        syncExpoPushToken().catch((error) =>
+          logs.mobileApp.error('startup', 'push-token-sync', { error }),
+        );
+      }
     } catch (error) {
       // A damaged/unavailable secure-store entry is equivalent to signed out.
       // Most importantly, release startup always leaves the native splash.
@@ -76,7 +80,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   authenticate: (token, surveyCompleted, referralPrompt = false) => {
     set({ token, surveyCompleted, referralPromptPending: referralPrompt });
-    syncExpoPushToken();
+    syncExpoPushToken().catch((error) =>
+      logs.mobileApp.error('auth', 'push-token-sync', { error }),
+    );
   },
   dismissReferralPrompt: () => set({ referralPromptPending: false }),
   completeSurvey: () => set({ surveyCompleted: true }),

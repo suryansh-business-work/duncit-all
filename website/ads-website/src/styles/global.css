@@ -131,7 +131,9 @@
   transition:
     transform 500ms var(--ease-smooth),
     box-shadow 500ms var(--ease-smooth);
-  &:hover {
+}
+@layer utilities {
+  .lift:hover {
     transform: translateY(-6px);
     box-shadow: var(--shadow-lift);
   }
@@ -161,7 +163,9 @@
   transition:
     transform 350ms var(--ease-smooth),
     box-shadow 350ms var(--ease-smooth);
-  &:hover {
+}
+@layer utilities {
+  .btn-primary:hover {
     transform: translateY(-2px) scale(1.02);
   }
 }

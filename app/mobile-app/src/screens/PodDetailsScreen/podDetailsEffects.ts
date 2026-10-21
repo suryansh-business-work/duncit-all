@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { logs } from '@duncit/logs';
 
 import type { PodDetail } from '@/hooks/useDetails';
 import { useExploreStore } from '@/stores/explore.store';
@@ -29,7 +30,7 @@ export function useRefetchOnFocus(refetch: () => Promise<void>) {
         didFocus.current = true;
         return;
       }
-      refetch();
+      refetch().catch((error) => logs.mobileApp.error('PodDetails', 'refetchOnFocus', { error }));
     }, [refetch]),
   );
 }

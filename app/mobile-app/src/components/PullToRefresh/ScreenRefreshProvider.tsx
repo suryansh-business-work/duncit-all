@@ -81,6 +81,7 @@ export function ScreenRefreshProvider({ children }: Readonly<{ children: ReactNo
           }
         }
       })
+      .catch((error) => logs.mobileApp.error('pull-to-refresh', 'ScreenRefreshProvider', { error }))
       .finally(() => setRefreshing(false));
   }, []);
 

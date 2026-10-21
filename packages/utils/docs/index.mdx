@@ -216,6 +216,8 @@ exports:
   - 'DATE_OVERRIDE_RULE'
   - 'dateOverrideOn'
   - 'dayRate'
+  - 'dayRateParts'
+  - 'priceRuleChange'
   - 'priceRuleMatches'
   - 'toggleDayKey'
   - 'weekdayOfDay'
@@ -539,6 +541,10 @@ exports:
   - 'hostCategoryKeyOf'
   - 'venueSpaces'
   - 'bookingCalendarProps'
+  - 'bookingClosedTiles'
+  - 'bookingRateText'
+  - 'bookingTileCaption'
+  - 'venuePricingTerms'
   - 'podRowStatusLabel'
   - 'podRowStatusOptions'
   - 'POD_ROW_STATUS_COLORS'
@@ -3511,7 +3517,8 @@ Create Pod books a venue at the venue's own pricing (Venue Pricing Module) — n
 approval. The server owns every rule: `venueBookingCalendar` (at most 62 days a call) says which
 days and times are open, `venuePriceQuote` prices a window, and the publish re-checks both. This
 module only turns those answers into the host's pickers and the price card, identically in mWeb
-and the native app; it never computes a price.
+and the native app; it never prices a booking. Tiles only show each day's rate at a glance
+(`dayRate`, the server's rule stacking).
 
 | Export | Meaning |
 | --- | --- |
@@ -3520,11 +3527,14 @@ and the native app; it never computes a price.
 | `bookingStepMinutes(rules)` / `bookingMinMinutes(rules)` / `bookingMaxMinutes(rules)` | The grid step (venue increment, else `DEFAULT_BOOKING_STEP_MINUTES`), the shortest window (PER_HOUR: `min_hours`, never under 30 min) and the longest (PER_HOUR `max_hours`, else none). |
 | `bookingStartOptions(day, rules, timeZone, nowMs)` | Start times on the grid (counted from local midnight, as the server checks it), inside opening hours, with room for the shortest window before closing and before any booked window. `rules.buffer_minutes` (from `venueBookingCalendar`) is kept clear around every booked window, and starts earlier than `nowMs` + `rules.min_notice_minutes` are hidden. |
 | `bookingEndOptions(day, rules, startIso, timeZone)` | End times for that start: on the grid, within min/max length, before closing, stopping short of the next booked window and its buffer. |
-| `bookingTiles(days, rules, timeZone, nowMs)` | What the calendar offers: a PER_SLOT venue's free slots, or every valid start time. Closed days (`closed_reason`) yield none, so they stay disabled. Shaped like `@duncit/slots`' `CalendarSlot`. |
+| `bookingTiles(days, rules, timeZone, nowMs)` | What the calendar offers: a PER_SLOT venue's free slots, or every valid start time. Closed days (`closed_reason`) yield none. Each tile carries the day's `price` once `rules` holds the venue's `base_rate` / `price_rules`: the slot price after rules (PER_SLOT), the booking price (FLAT), or the rate per guest / hour with the day's FLAT rule changes apart in `price_extra` (the server adds those once to the booking). Shaped like `@duncit/slots`' `CalendarSlot`. |
+| `bookingClosedTiles(days, timeZone)` | One disabled whole-day tile per HOLIDAY / BLOCKED day, so the calendar labels the day closed instead of hiding it. Pass `wholeDay: t('mweb.createPod.venueTerms.closed')` in the calendar labels. |
+| `bookingRateText(model, rate, t, money)` / `bookingTileCaption(tile, model, t, money)` | A rate with its unit ("₹300 / guest"); a tile's second line — the closed reason, else its price (plus any flat change), else `''`. |
 | `bookingDayOf(days, startIso, timeZone)` / `bookingSlotId(start, end)` | The loaded day holding a start; a slot tile's id. |
 | `clampBookingPax(pax, minPax, maxPax)` | PER_PAX guests held inside the venue's range (`max 0` = no cap). |
 | `WHOLE_VENUE_SPACE` / `bookingSpaceLabel(label)` | The stored "whole venue" space both apps offer when a venue lists no capacity items, and the `space_label` a booking sends for a picked space (`''` for the whole venue). |
-| `bookingCalendarProps({ tiles, loading, error, selectedId, onPick })` | The props both apps hand their `SlotCalendar` for an instant booking (a pick resolves back to its `BookingTile`; a window is required; prices stay off the calendar). |
+| `bookingCalendarProps({ tiles, loading, error, selectedId, onPick, model, t, money })` | The props both apps hand their `SlotCalendar` for an instant booking (a pick resolves back to its `BookingTile`; a window is required; each tile's price, with its unit, is written into its `caption`, so the calendar's unit-less price line stays off). |
+| `venuePricingTerms(pricing, { t, money, clock, date, weekday, today })` (`venue-booking-terms`) | The read-only summary card shown before a time is picked: sections `booking` (model, rate, guest / hour limits, booking step), `rules` (price changes still to come — weekdays Monday first, upcoming override dates, unexpired ranges), `fees` (minimum spend, cleaning, pet fee, GST, refundable deposit settled at the venue) and `hours` (weekdays sharing a window grouped, then the closed days; none for PER_SLOT). Each row is `{ id, label, value }`, already translated; empty sections are dropped. |
 | `venueSpaces(venue)` | The bookable spaces of a venue: its named capacity items (`slotSpaceLabel` = the item label), else one `WHOLE_VENUE_SPACE` at the venue capacity (`slotSpaceLabel` `''`). Empty for no venue. |
 | `instantBookingInput(source)` | The `venue_booking` input (`start_at`, `end_at`, `pax`, `pets`, `space_label`), or null until a window is picked. |
 | `venueQuoteLines(quote, money)` | The price card: base, each rule applied, min-spend top-up, cleaning / pet fees, taxes and Duncit's fee (on top), as `{ labelKey, label?, vars, amount }` rows, plus `total` (the whole cost to the pod — what the shortfall check compares; the earnings preview sends the quote's `venue_payout` as `venue_amount` and its `platform_fee` as `venue_commission_on_top`) and the refundable `deposit` (paid at the venue, never in the total). |
@@ -3535,6 +3545,14 @@ const tiles = bookingTiles(calendar.days, pricing, 'Asia/Kolkata', Date.now());
 const ends = bookingEndOptions(day, pricing, picked.start_at, 'Asia/Kolkata');
 const booking = instantBookingInput({ start, end, pax: 0, pets: false, spaceLabel: '' });
 const { lines, total, deposit } = venueQuoteLines(data.venuePriceQuote, (v) => formatStatementMoney(v, '₹'));
+const sections = venuePricingTerms(pricing, {
+  t,
+  money: (v) => formatStatementMoney(v, '₹'),
+  clock: fmt.formatClock,
+  date: fmt.formatDay,
+  weekday: (d) => weekdayLabels(t).short[d],
+  today: fmt.dayKey(Date.now()),
+});
 ```
 
 ### Booking a recurring pod — `pod-series-booking`
@@ -3695,6 +3713,34 @@ chatPreviewAction('POD', false)               // 'BOOK_POD' — "Book a spot to 
 chatPreviewAction('CLUB', false)              // 'JOIN_CLUB' — the button follows the club
 chatRoomPath('CLUB', 'c1')                    // '/chats/club/c1'
 mergeEarlierMessages([{ id: 'a' }], [{ id: 'a' }, { id: 'b' }]) // a, b
+```
+
+## The venue ↔ host chat of a venue booking — `venue-chat`
+
+Every pod booked at a venue has one private thread between the pod's hosts and the venue's owner
+(a recurring pod's dates share the parent's thread). Its lines are kept apart from the pod's group
+chat, so guests never see them. The server decides who may read and post; mWeb, the app and the
+Partners app share the operations and the merge below.
+
+| Export | Meaning |
+| --- | --- |
+| `VENUE_CHAT_ROOM_SDL` | `venueChatRoom(pod_id)`: pod title and time, the venue's name and photo, and the caller's side (`HOST` / `VENUE`). |
+| `VENUE_CHAT_MESSAGES_SDL` | One page of lines, oldest first (`limit`, `before`). |
+| `SEND_VENUE_CHAT_MESSAGE_SDL` | Post a `TEXT` line, or an `IMAGE` with an uploaded https URL. |
+| `VENUE_CHAT_SOCKET` | `join_venue_chat` / `leave_venue_chat` with the pod id; lines arrive as `venue_chat_message`. |
+| `venueChatPath(podId)` | The thread's route on mWeb and in the app: `/venue-chat/<pod id>` (also the push link). |
+| `mergeVenueChatLines(current, incoming)` | Lines on screen plus a page, a send or a socket frame: each id once, oldest first. |
+| `VENUE_CHAT_PAGE` | Lines per page (50). |
+| `venueChatPodIdFromPath(path)` | The pod id back out of `/venue-chat/<pod id>` (the push link), or null. |
+| `hasVenueChat(pod)` | Whether a pod has a thread: only one booked at a venue (`venue_id`). The "Chat with venue / host" rows show on that. |
+| `isVenueChatUnavailable(code)` | Whether a failure's code (`FORBIDDEN`) means "this thread is not yours" — the not-available state, not a retry. |
+| `venueChatCounterpart(room)` | The header: a host sees the venue's name and photo plus the pod; the venue sees the pod's title. Both get the pod's time. |
+
+```ts
+venueChatPath('6650a1')                                    // '/venue-chat/6650a1'
+venueChatPodIdFromPath('/venue-chat/6650a1')               // '6650a1'
+venueChatCounterpart({ ...room, my_side: 'HOST' }).name    // the venue's name
+mergeVenueChatLines([sent], [sent])                        // one copy — the socket echo is dropped
 ```
 
 ## Scroll-up history in every chat room — `chat-history`
@@ -4388,5 +4434,7 @@ toggleDayKey(pricing.blocked_dates, '2026-12-31'); // block / unblock, kept sort
 | `withDateOverride` / `withoutDateOverride` | `(rules, day, override?) => rules` | Set / clear the day's own override. |
 | `toggleDayKey` | `(days, day) => string[]` | Add or remove a day, sorted. |
 | `dayRate` | `(baseRate, rules, day) => number` | The day's per-unit rate after its rules, never below zero. |
+| `dayRateParts` | `(baseRate, rules, day) => { rate, flat }` | The same rules split as the server applies them to a booking: `rate` with every PERCENT change (never below zero), `flat` the FLAT changes added once to the booking. |
+| `priceRuleChange` | `(mode, value, money) => string` | A rule's change as the owner set it: `+20%`, `-₹500`. |
 
 Renderers: native `screens/VenuePricingScreen` (`components/venue-pricing`).

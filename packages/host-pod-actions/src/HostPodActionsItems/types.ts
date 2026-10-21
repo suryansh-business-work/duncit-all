@@ -46,4 +46,9 @@ export interface HostPodMenuItemsProps {
   /** Already-translated, because the label lives in `changeRequest.*` — a
    * namespace this package's own labels deliberately do not reach into. */
   requestChangeLabel?: string;
+  /** "Chat with venue" — opens the pod's private thread with its venue. Only
+   * appears where the surface passes it (a pod booked at a venue). */
+  onChatWithVenue?: () => void;
+  /** Already-translated: the label lives in the surface's `venueChat.*`. */
+  chatWithVenueLabel?: string;
 }

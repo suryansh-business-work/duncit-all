@@ -23,4 +23,8 @@ export interface HostPodRowActions {
   /** Already translated: the label lives in `changeRequest.*`, a namespace
    * @duncit/host-pod-actions' own label builders do not reach into. */
   requestChangeLabel: string;
+  /** "Chat with venue" — the pod's private thread with its venue; absent for a pod with no venue. */
+  onChatWithVenue?: () => void;
+  /** Already translated, like `requestChangeLabel`. */
+  chatWithVenueLabel?: string;
 }

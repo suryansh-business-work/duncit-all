@@ -19,6 +19,8 @@ interface RowActions {
    */
   onRequestChange?: (pod: StudioPod) => void;
   requestChangeLabel?: string;
+  /** "Chat with host" behind the same menu — Venue Studio only. */
+  onChat?: (pod: StudioPod) => void;
 }
 
 export interface StudioPodsBodyProps extends RowActions {
@@ -45,6 +47,7 @@ export function StudioPodsBody({
   onCancelPod,
   onRequestChange,
   requestChangeLabel,
+  onChat,
   sectionId,
 }: Readonly<StudioPodsBodyProps>) {
   const { t } = useTranslation();
@@ -95,6 +98,7 @@ export function StudioPodsBody({
           onCancel={onCancelPod}
           onRequestChange={onRequestChange}
           requestChangeLabel={requestChangeLabel}
+          onChat={onChat}
           testId={`${sectionId}-row-${pod.id}`}
         />
       ))}
@@ -136,6 +140,7 @@ export default function StudioPodsSection({
   onCancelPod,
   onRequestChange,
   requestChangeLabel,
+  onChat,
   sectionId = 'studio-pods',
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -176,6 +181,7 @@ export default function StudioPodsSection({
             onCancelPod={onCancelPod}
             onRequestChange={onRequestChange}
             requestChangeLabel={requestChangeLabel}
+            onChat={onChat}
             sectionId={sectionId}
           />
         </Stack>

@@ -15,6 +15,8 @@ interface Props {
   /** Already-translated label for the request item, so one menu serves both
    * studios without deciding for itself which role it is looking at. */
   requestChangeLabel?: string;
+  /** Venue Studio only — "Chat with host", the booking's private thread. */
+  onChat?: () => void;
   /** Test id for the row's trigger button, e.g. `studio-pod-row-123-actions`. */
   testId?: string;
 }
@@ -30,6 +32,7 @@ export default function StudioPodRowMenu({
   onCancel,
   onRequestChange,
   requestChangeLabel,
+  onChat,
   testId,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -59,6 +62,11 @@ export default function StudioPodRowMenu({
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
       <Menu data-testid="studio-pod-actions" anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+        {onChat && (
+          <MenuItem data-testid="studio-pod-action-venue-chat" onClick={pick(onChat)}>
+            <ListItemText primary={t('mweb.venueChat.chatWithHost')} />
+          </MenuItem>
+        )}
         {onCancel && (
           <MenuItem data-testid="studio-pod-action-cancel" disabled={disabled} onClick={pick(onCancel)}>
             <ListItemText

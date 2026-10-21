@@ -1708,6 +1708,9 @@ export {
   VENUE_PRICE_QUOTE_SDL,
   WHOLE_VENUE_SPACE,
   bookingCalendarProps,
+  bookingClosedTiles,
+  bookingRateText,
+  bookingTileCaption,
   bookingCalendarRange,
   bookingDayOf,
   bookingEndOptions,
@@ -1725,6 +1728,7 @@ export {
   type BookingCalendarDay,
   type BookingRules,
   type BookingTile,
+  type BookingTranslate,
   type InstantBooking,
   type InstantBookingSource,
   type VenueBookingModel,
@@ -1733,6 +1737,14 @@ export {
   type VenueSpace,
   type VenueSpaceSource,
 } from './venue-booking';
+export {
+  TERMS_DATES_SHOWN,
+  venuePricingTerms,
+  type VenueTermsFormat,
+  type VenueTermsRow,
+  type VenueTermsSection,
+  type VenueTermsSource,
+} from './venue-booking-terms';
 export {
   adminMultiDateDiscountLabels,
   bookableSeriesDates,
@@ -1763,6 +1775,23 @@ export {
   type ChatPreviewAction,
   type ChatPreviewKind,
 } from './chat-preview';
+export {
+  SEND_VENUE_CHAT_MESSAGE_SDL,
+  VENUE_CHAT_MESSAGES_SDL,
+  VENUE_CHAT_PAGE,
+  VENUE_CHAT_ROOM_SDL,
+  VENUE_CHAT_SOCKET,
+  hasVenueChat,
+  isVenueChatUnavailable,
+  mergeVenueChatLines,
+  venueChatCounterpart,
+  venueChatPath,
+  venueChatPodIdFromPath,
+  type VenueChatCounterpart,
+  type VenueChatLine,
+  type VenueChatRoomInfo,
+  type VenueChatSide,
+} from './venue-chat';
 export {
   CHAT_HISTORY_PAGE,
   CHAT_HISTORY_TRIGGER_PX,
@@ -1977,6 +2006,8 @@ export {
   DATE_OVERRIDE_RULE,
   dateOverrideOn,
   dayRate,
+  dayRateParts,
+  priceRuleChange,
   priceRuleMatches,
   toggleDayKey,
   weekdayOfDay,

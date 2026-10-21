@@ -22,8 +22,11 @@ export function attachVenueChatHandlers() {
         ack?.(false, 'ERROR');
       });
     });
+    // A recurring pod's date was joined under its parent's room — leave that one.
     socket.on('leave_venue_chat', (podId: string) => {
-      socket.leave(venueChatRoomOf(podId));
+      venueChatThread(podId)
+        .then((thread) => socket.leave(venueChatRoomOf(thread?.podId ?? podId)))
+        .catch((error) => logs.server.error('venueChat.socket', 'leave_venue_chat', { pod: podId, error }));
     });
   });
 }

@@ -1,3 +1,4 @@
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { Avatar, Box, ButtonBase, IconButton, Paper, Stack, Typography } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { formatTime } from '../../utils/dateFormat';
@@ -9,7 +10,8 @@ import MessageText from './MessageText';
 interface MessageBubbleProps {
   message: any;
   mine: boolean;
-  onOpenReact: (el: HTMLElement, id: string) => void;
+  /** Opens the reaction picker; absent where lines take no reactions (the bubble is then not a button). */
+  onOpenReact?: (el: HTMLElement, id: string) => void;
   /** Opens the message's React / Reply / Delete / Report menu. */
   onOpenActions?: (el: HTMLElement, id: string) => void;
   /** Opens a photo full screen, where it can be zoomed. */
@@ -18,6 +20,26 @@ interface MessageBubbleProps {
   onJumpTo?: (id: string) => void;
   /** A highlighted @mention was activated. */
   onOpenProfile?: (userId: string) => void;
+}
+
+/**
+ * What makes the bubble open the reaction picker: a button reached by Tab that
+ * answers a double-click, Enter or Space (2.1.1). Without a picker the bubble
+ * is plain text — no role, no tab stop.
+ */
+function reactTriggerProps(onOpenReact: MessageBubbleProps['onOpenReact'], id: string) {
+  if (!onOpenReact) return {};
+  return {
+    role: 'button',
+    tabIndex: 0,
+    onDoubleClick: (e: MouseEvent<HTMLElement>) => onOpenReact(e.currentTarget, id),
+    onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onOpenReact(e.currentTarget, id);
+      }
+    },
+  };
 }
 
 export default function MessageBubble({
@@ -72,16 +94,7 @@ export default function MessageBubble({
         </Avatar>
       )}
       <Paper
-        // The bubble opens the reaction picker: double-click, or Enter / Space (2.1.1).
-        role="button"
-        tabIndex={0}
-        onDoubleClick={(e) => onOpenReact(e.currentTarget, m.id)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onOpenReact(e.currentTarget, m.id);
-          }
-        }}
+        {...reactTriggerProps(onOpenReact, m.id)}
         sx={{
           p: 1.15,
           px: 1.5,
@@ -89,7 +102,7 @@ export default function MessageBubble({
           bgcolor: mine ? 'primary.main' : 'background.paper',
           color: mine ? 'primary.contrastText' : 'text.primary',
           ...bubbleRadiusSx(mine),
-          cursor: 'pointer',
+          cursor: onOpenReact ? 'pointer' : 'default',
           border: mine ? 0 : '1px solid var(--duncit-card-border)',
           boxShadow: 'none',
         }}

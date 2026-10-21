@@ -533,6 +533,24 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       whyAreYouCancelling: 'Why are you cancelling?',
     },
 
+    // The venue owner's private chat with the hosts of a pod booked at their venue.
+    // The words every surface shares (button, empty, refusal, failures) are mweb.venueChat.*.
+    venueChat: {
+      backToPods: 'Back to pods',
+      host: 'Host',
+      messageLabel: 'Message',
+      messagePlaceholder: 'Write to the host',
+      messagesLabel: 'Messages with the host',
+      notFound: 'This chat could not be found.',
+      photoAlt: 'Photo from {name}',
+      send: 'Send',
+      sending: 'Sending…',
+      title: 'Chat · {pod}',
+      tooLong: 'Keep it under {max} characters.',
+      writeSomething: 'Write a message first.',
+      you: 'You',
+    },
+
     // E-Commerce Brand → Integrations: Razorpay / ShipRocket accounts saved
     // once and picked for each brand in the brand wizard.
     integrations: {

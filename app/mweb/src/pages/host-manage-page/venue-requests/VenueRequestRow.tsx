@@ -51,6 +51,8 @@ export default function VenueRequestRow({
   onSlotRequest,
   onRequestChange,
   requestChangeLabel,
+  onChatWithVenue,
+  chatWithVenueLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
@@ -123,6 +125,8 @@ export default function VenueRequestRow({
           onSlotRequest={onSlotRequest}
           onRequestChange={onRequestChange}
           requestChangeLabel={requestChangeLabel}
+          onChatWithVenue={onChatWithVenue}
+          chatWithVenueLabel={chatWithVenueLabel}
         />
       </Stack>
 

@@ -5,12 +5,15 @@ import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import CategoryIcon from '@mui/icons-material/CategoryOutlined';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import { useNavigate } from 'react-router';
+import { DuncitButton } from '@duncit/buttons';
 import HostStatusAction from './HostStatusAction';
 import PodQuickStats from './PodQuickStats';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 import PodMetaRow from '../../components/pod-details/PodMetaRow';
 import { useTranslation } from '../../i18n/useTranslation';
-import { podSeatsTaken } from '@duncit/utils';
+import { hasVenueChat, podSeatsTaken, venueChatPath } from '@duncit/utils';
 
 interface Props {
   pod: any;
@@ -74,7 +77,8 @@ function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
  */
 export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddStatus, categoryCrumbs = [] }: Readonly<Props>) {
   const { t } = useTranslation();
-  const hostLine = (pod.host_names ?? []).filter(Boolean).join(', ');
+  const navigate = useNavigate();
+  const hostLine =(pod.host_names ?? []).filter(Boolean).join(', ');
   const modeLabel = pod.pod_mode === 'VIRTUAL' ? t('mweb.podDetails.virtual') : t('mweb.podDetails.physical');
   const spotsTaken = podSeatsTaken(pod);
   const spotsTotal = pod.no_of_spots ?? 0;
@@ -94,6 +98,20 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
         </Box>
         {isHost && <HostStatusAction onAddStatus={onAddStatus} />}
       </Stack>
+      {/* The host's private thread with the venue the pod is booked at. */}
+      {isHost && hasVenueChat(pod) && (
+        <Box>
+          <DuncitButton
+            size="small"
+            variant="outlined"
+            startIcon={<ChatBubbleOutlineIcon />}
+            onClick={() => navigate(venueChatPath(pod.id))}
+            data-testid="pod-overview-venue-chat"
+          >
+            {t('mweb.venueChat.chatWithVenue')}
+          </DuncitButton>
+        </Box>
+      )}
       {categoryCrumbs.length > 0 && (
         <PodMetaRow icon={<CategoryIcon />}>
           <CategoryBreadcrumb crumbs={categoryCrumbs} />

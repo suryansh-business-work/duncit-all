@@ -88,6 +88,8 @@ interface Props {
   /** "Request Change …" behind the same menu — Venue Studio and Club Studio. */
   onRequestChange?: (pod: StudioPod) => void;
   requestChangeLabel?: string;
+  /** Venue Studio only: "Chat with host" behind the same menu. */
+  onChat?: (pod: StudioPod) => void;
   /** Test id for this row, e.g. `studio-pods-row-<pod.id>`. */
   testId?: string;
 }
@@ -103,6 +105,7 @@ export default function StudioPodRow({
   onCancel,
   onRequestChange,
   requestChangeLabel,
+  onChat,
   testId,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -182,12 +185,13 @@ export default function StudioPodRow({
         </Stack>
       </RowSurface>
 
-      {(onCancel ?? onRequestChange) && (
+      {(onCancel ?? onRequestChange ?? onChat) && (
         <StudioPodRowMenu
           pod={pod}
           onCancel={bindPod(pod, onCancel)}
           onRequestChange={bindPod(pod, onRequestChange)}
           requestChangeLabel={requestChangeLabel}
+          onChat={bindPod(pod, onChat)}
           testId={partTestId(testId, 'actions')}
         />
       )}

@@ -7,7 +7,7 @@ import { STUDIO_ROUTE } from '@/utils/studio-mode';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
-const mockLogout = jest.fn();
+const mockLogout = jest.fn().mockResolvedValue(undefined);
 const mockFlags: Record<string, boolean> = {};
 
 jest.mock('@react-navigation/native', () => ({

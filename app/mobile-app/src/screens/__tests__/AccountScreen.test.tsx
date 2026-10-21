@@ -34,7 +34,7 @@ jest.mock('@react-navigation/native', () => ({
 
 const mockedUseAccount = useAccount as jest.Mock;
 const mockedUseLogout = useLogout as jest.Mock;
-const logout = jest.fn();
+const logout = jest.fn().mockResolvedValue(undefined);
 const updateProfile = jest.fn().mockResolvedValue(undefined);
 const refresh = jest.fn().mockResolvedValue(undefined);
 

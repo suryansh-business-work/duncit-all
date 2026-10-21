@@ -7,6 +7,7 @@ import { XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { useLogout } from '@/hooks/useLogout';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { useMe } from '@/hooks/useMe';
 import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -164,7 +165,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
         <SidebarFooter
           onLogout={() => {
             onClose();
-            logout();
+            fireAndForget(logout());
           }}
         />
       </SafeAreaView>

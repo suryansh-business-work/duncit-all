@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Dialog, DialogContent, Stack } from '@mui/material';
+import { logs } from '@duncit/logs';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import {
   ADD_COMMENT,
@@ -64,7 +65,7 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
 
   /** Double-tap likes only (never unlikes), reusing the existing toggle. */
   const likeOnDoubleTap = () => {
-    if (post && !post.liked_by_me) onLike();
+    if (post && !post.liked_by_me) onLike().catch((error) => logs.mWeb.error('PostDialog', 'likeOnDoubleTap', { error }));
   };
 
   const onSend = async () => {

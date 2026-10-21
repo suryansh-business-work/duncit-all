@@ -1,5 +1,6 @@
 import * as Linking from 'expo-linking';
 import { parse } from 'graphql';
+import { logs } from '@duncit/logs';
 import { consentAllows, SHORT_LINK_CONSENT_PARAM } from '@duncit/utils';
 import { getItem, setItem } from './secure-storage';
 import { graphqlRequest } from './graphql.client';
@@ -217,13 +218,15 @@ async function adoptPendingClick(): Promise<string | null> {
  * consent is given. Returns the unsubscribe for both listeners.
  */
 export function initShortLinkAttribution(): () => void {
-  // getInitialURL itself can reject; captureFromUrl cannot (every failure
-  // path inside resolves), so the listener call carries no dead .catch.
+  // getInitialURL itself can reject; captureFromUrl should not (every failure
+  // path inside resolves), so the listener's .catch only logs a broken invariant.
   capture = Linking.getInitialURL()
     .then((url) => captureAndBind(url))
     .catch(() => null);
   const subscription = Linking.addEventListener('url', (event) => {
-    captureAndBind(event.url);
+    captureAndBind(event.url).catch((error) =>
+      logs.mobileApp.error('short-link-attribution', 'captureFromUrl', { error }),
+    );
   });
   const stopConsent = useConsentStore.subscribe((state, previous) => {
     const granted = consentAllows(state.choice, 'marketing');

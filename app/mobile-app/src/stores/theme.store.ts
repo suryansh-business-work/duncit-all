@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { logs } from '@duncit/logs';
 
 import { getThemePref, setThemePref, type ThemePref } from '@/services/theme';
 
@@ -26,6 +27,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   toggle: () => {
     const next: ThemePref = get().scheme === 'dark' ? 'light' : 'dark';
     set({ scheme: next });
-    setThemePref(next);
+    setThemePref(next).catch((error) => logs.mobileApp.error('theme', 'persistPref', { error }));
   },
 }));

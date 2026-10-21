@@ -170,7 +170,7 @@ export default function ChatRoomPage({ kind = 'POD' }: Readonly<{ kind?: ChatRoo
         onClosePicker={() => setPicker(false)}
         onPicked={(url) => {
           setPicker(false);
-          composer.submit(url);
+          composer.submit(url).catch((err) => setError(parseApiError(err) || t('mweb.chatRoom.sendFailed')));
         }}
       />
       <MessageActionsMenu

@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Snackbar } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { logs } from '@duncit/logs';
 import { useUploadCaps, type CropRect, type VideoTrim } from '@duncit/media-picker';
 import { apolloClient } from '../../../apollo';
 import { ADD_POD_STATUS, CREATE_STATUS_POST } from '../queries';
@@ -126,7 +127,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
         onConfirm={(crop, cropPreset) => {
           const pick = cropPick;
           setCropPick(null);
-          if (pick) runUpload(pick.file, pick.pending, crop, cropPreset);
+          if (pick) runUpload(pick.file, pick.pending, crop, cropPreset).catch((error) => logs.mWeb.error('StatusUploadProvider', 'runUpload', { error }));
         }}
       />
       <StatusVideoPreviewDialog
@@ -135,7 +136,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
         onConfirm={(trim) => {
           const pick = videoPick;
           setVideoPick(null);
-          if (pick) runUpload(pick.file, pick.pending, null, null, trim);
+          if (pick) runUpload(pick.file, pick.pending, null, null, trim).catch((error) => logs.mWeb.error('StatusUploadProvider', 'runUpload', { error }));
         }}
       />
       {upload.active && <StatusUploadProgress upload={upload} />}

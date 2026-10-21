@@ -22,7 +22,7 @@ import { captureShortLinkClick } from './lib/short-link-journey';
 import { requireAuthForShortLinkLanding } from './lib/session-guard';
 import { loadUserInfo } from './user-info/load';
 import { urlConfigs } from './config/url-configs';
-import { configureLogs, httpTransport } from '@duncit/logs';
+import { configureLogs, httpTransport, logs } from '@duncit/logs';
 import { getOrCreateDuid } from '@duncit/user-core';
 import { ColorModeProvider } from './ColorModeContext';
 import { AppLocaleProvider, DuncitLocalizationProvider } from '@duncit/app-settings';
@@ -47,7 +47,7 @@ const PUBLIC_CLIENT_CONFIG = gql`
   }
 `;
 
-initPwa();
+initPwa().catch((error) => logs.mWeb.error('main', 'initPwa', { error }));
 
 // Global image fallback: replace any broken/404 <img> with a placeholder
 document.addEventListener(
@@ -102,7 +102,9 @@ configureLogs(
 // Read the short-link click id BEFORE anything else runs. RequireAuth rewrites
 // the URL to /login?redirect=… for signed-out visitors — by then the parameter
 // is gone from location.search.
-captureShortLinkClick(globalThis.window.location.search);
+captureShortLinkClick(globalThis.window.location.search).catch((error) =>
+  logs.mWeb.error('main', 'captureShortLinkClick', { error }),
+);
 // …then send the visitor to sign in, because a short link is measured by the
 // account it produces. Runs AFTER the capture so the click id is already on
 // its way: this only rewrites the URL, it does not reload.

@@ -17,6 +17,7 @@ import { checkBookable, dayAvailability, type BusyWindow } from './venuePricing.
 import { cleanVenuePricing, PricingInputError } from './venuePricing.validate';
 import { isYmd, localInstant, localParts, ymdRange } from './venuePricing.time';
 import { VenueBookingLockModel } from './venueBookingLock.model';
+import { venuePricingSchema } from './venuePricing.schema.model';
 import type { VenuePriceBreakdown, VenuePricing } from './venuePricing.types';
 
 const MAX_CALENDAR_DAYS = 62;
@@ -88,10 +89,26 @@ function parseWindow(req: InstantBookingRequest) {
  * whose fields are prototype getters, so spreading it (as `pricingFor` does)
  * copied none of them and every non-nullable field went out as null. A venue
  * stored before pricing existed gets the schema defaults the same way.
+ *
+ * Defaults only fill a MISSING field: one stored as an explicit null (an older
+ * partial write) comes back null, so every null falls back to its schema
+ * default here too.
  */
+const PRICING_DEFAULTS: Record<string, unknown> = Object.fromEntries(
+  Object.entries(venuePricingSchema.paths).map(([field, path]) => {
+    const fallback: unknown = path.options.default;
+    return [field, typeof fallback === 'function' ? fallback() : fallback];
+  })
+);
+
 const pricingOf = (venue: { pricing?: unknown }): VenuePricing => {
   const raw = venue.pricing as { toObject?: () => unknown } | null | undefined;
-  return (typeof raw?.toObject === 'function' ? raw.toObject() : (raw ?? {})) as VenuePricing;
+  const stored = (typeof raw?.toObject === 'function' ? raw.toObject() : (raw ?? {})) as Record<string, unknown>;
+  const filled = { ...stored };
+  for (const [field, fallback] of Object.entries(PRICING_DEFAULTS)) {
+    filled[field] ??= fallback;
+  }
+  return filled as unknown as VenuePricing;
 };
 
 /** A pricing input checked by the shared rules, as a GraphQL error on failure. */

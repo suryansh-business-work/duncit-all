@@ -14631,6 +14631,8 @@ export type Mutation = {
   sendStaffMessage: StaffMessage;
   sendSupportChatMessage: SupportChatMessage;
   sendTestEmail: EmailTestResult;
+  /** Post to a venue booking's chat (TEXT, or IMAGE with an uploaded https URL). */
+  sendVenueChatMessage: PodMessage;
   /** Start or schedule a WhatsApp send. Returns immediately; the walk continues in the background. */
   sendWaCampaign: WaCampaign;
   /** Send one test message to one number, through the same path a campaign uses. */
@@ -18877,6 +18879,14 @@ export type MutationSendTestEmailArgs = {
   template_id: Scalars['ID']['input'];
   to: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationSendVenueChatMessageArgs = {
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  pod_id: Scalars['ID']['input'];
+  text?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<PodMessageType>;
 };
 
 
@@ -28166,6 +28176,10 @@ export type Query = {
   venueAvailableSlots: Array<VenueSlot>;
   /** Bookable days and times between two dates (YYYY-MM-DD, at most 62 days). */
   venueBookingCalendar: VenueBookingCalendar;
+  /** One page of the thread, oldest first: the newest `limit` before `before`. */
+  venueChatMessages: Array<PodMessage>;
+  /** A venue booking's chat — only its hosts and the venue's owner may read it. */
+  venueChatRoom: VenueChatRoom;
   /** Venue owner / venues console: the food coupons of one venue. */
   venueFoodCouponsTable: VenueFoodCouponTablePage;
   /** Public: one order, for whoever holds its access key (or the account that placed it). */
@@ -31877,6 +31891,18 @@ export type QueryVenueBookingCalendarArgs = {
   space_label?: InputMaybe<Scalars['String']['input']>;
   to: Scalars['String']['input'];
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueChatMessagesArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  pod_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueChatRoomArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -41105,6 +41131,25 @@ export type VenueCategoryInput = {
   sub_category_id: Scalars['ID']['input'];
   super_category_id: Scalars['ID']['input'];
 };
+
+/** The private chat between a pod's hosts and the venue it is booked at. */
+export type VenueChatRoom = {
+  __typename?: 'VenueChatRoom';
+  /** The caller's side. */
+  my_side: VenueChatSide;
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  /** The pod the thread belongs to (a recurring pod's parent). */
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+  venue_photo?: Maybe<Scalars['String']['output']>;
+};
+
+/** Which side of a venue booking's chat a member is on. */
+export type VenueChatSide =
+  | 'HOST'
+  | 'VENUE';
 
 export type VenueClosedReason =
   | 'BLOCKED'

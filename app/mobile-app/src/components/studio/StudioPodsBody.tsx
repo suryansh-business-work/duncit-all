@@ -27,6 +27,8 @@ export interface PodActions {
   onCancelPod?: (pod: StudioPod) => void;
   onRequestChange?: (pod: StudioPod) => void;
   requestChangeLabel?: string;
+  /** "Chat with host" — Venue Studio only: the booking's private thread. */
+  onChat?: (pod: StudioPod) => void;
 }
 
 interface StudioPodsBodyProps extends PodActions {
@@ -50,6 +52,7 @@ export function StudioPodsBody({
   onCancelPod,
   onRequestChange,
   requestChangeLabel,
+  onChat,
 }: Readonly<StudioPodsBodyProps>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
@@ -134,7 +137,9 @@ export function StudioPodsBody({
               when={formatDateTime(pod.pod_date_time)}
               currencySymbol={state.figures.currency_symbol}
               onOpen={onOpenPod ? () => onOpenPod(pod) : undefined}
-              onOpenActions={onCancelPod || onRequestChange ? () => setActionsPod(pod) : undefined}
+              onOpenActions={
+                onCancelPod || onRequestChange || onChat ? () => setActionsPod(pod) : undefined
+              }
             />
           </YStack>
         ))}
@@ -162,6 +167,15 @@ export function StudioPodsBody({
             : undefined
         }
         requestChangeLabel={requestChangeLabel}
+        onChat={
+          onChat && actionsPod
+            ? () => {
+                const pod = actionsPod;
+                setActionsPod(null);
+                onChat(pod);
+              }
+            : undefined
+        }
       />
     </YStack>
   );

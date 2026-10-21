@@ -54,4 +54,7 @@ export interface PodActionsSheetProps {
    * optional menu item for the same reason: a surface with no board to answer
    * it on should not offer it. */
   onRequestChange?: () => void;
+  /** "Chat with venue" — the pod's private thread with its venue. Only passed
+   * for a pod booked at a venue, like the mWeb menu row (rule 27). */
+  onChatWithVenue?: () => void;
 }

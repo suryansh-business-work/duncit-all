@@ -22,6 +22,8 @@ const SHARED_MWEB_PREFIXES = [
   'mweb.address.validation.',
   // Warehouse ShipRocket states (@duncit/utils pickupShiprocketState) — one wording in all three.
   'mweb.brandWarehouses.state',
+  // The venue ↔ host chat's shared words (button, empty, refusal, failures) — one wording on every surface.
+  'mweb.venueChat.',
 ];
 
 const sharedMwebCopy = Object.fromEntries(

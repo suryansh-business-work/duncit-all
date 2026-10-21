@@ -10,6 +10,7 @@ import PodRequestDetailPage from './pages/pod-requests/detail/PodRequestDetailPa
 import NearbyHostsPage from './pages/pod-requests/search/NearbyHostsPage';
 import NearbyVenuesPage from './pages/pod-requests/search/NearbyVenuesPage';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
+import VenueChatPage from './pages/venue-chat-page/VenueChatPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
 import HostDashboardPage from './pages/host-dashboard-page/HostDashboardPage';
 import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
@@ -100,6 +101,7 @@ export default function App() {
       {/* What members asked for when nothing was coming up — the shared page, scoped to the partner. */}
       <Route path="/venues/event-requests" element={<Navigate to="/venues/requests" replace />} />
       <Route path="/venues/pods" element={authed(<VenuePodsHub />)} />
+      <Route path="/venues/pods/:podId/chat" element={authed(<VenueChatPage />)} />
       {/* Change Requests stays scoped per studio, so a venue owner who also
           hosts is never shown the wrong queue. */}
       <Route path="/venues/change-requests" element={authed(<VenueRequestsHub />)} />
@@ -164,10 +166,7 @@ export default function App() {
       <Route path="/club-admin/options" element={authed(<StudioOptionsPage mode="CLUB" />)} />
       <Route path="/club-admin/dashboard" element={authed(<ClubAdminDashboardPage />)} />
       <Route path="/club-admin/clubs" element={authed(<ClubsHub />)} />
-      <Route
-        path="/club-admin/change-requests"
-        element={authed(<ChangeRequestsPage role="CLUB_ADMIN" />)}
-      />
+      <Route path="/club-admin/change-requests" element={authed(<ChangeRequestsPage role="CLUB_ADMIN" />)} />
       <Route path="/club-admin/clubs/:clubId" element={authed(<ClubAdminClubPodsPage />)} />
       <Route path="/club-admin/monitoring" element={authed(<ClubsHub />)} />
       <Route path="/club-admin/auto-pods" element={authed(<ClubsHub />)} />

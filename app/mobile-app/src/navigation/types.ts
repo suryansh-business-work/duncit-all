@@ -176,6 +176,8 @@ export type RootStackParamList = {
   Policy: { slug: string };
   /** A pod's room (`podId`) or a club's room (`clubId`). */
   ChatRoom: { podId?: string; clubId?: string; title: string };
+  /** The private thread between a pod's hosts and its venue — mWeb's /venue-chat/:podId. */
+  VenueChat: { podId: string };
   // Always the slug pair (/club/:clubSlug/pod/:podSlug) — both in-app taps and
   // shared mWeb deep links — so the web URL matches mWeb exactly; resolved to a
   // doc id via podBySlugs. podId/title stay for back-compat with older links.
@@ -274,6 +276,7 @@ export type MenuStackRoute = Exclude<
   | 'Survey'
   | 'ReferralPrompt'
   | 'ChatRoom'
+  | 'VenueChat'
   | 'PodDetails'
   | 'PodFeedback'
   | 'ClubDetails'

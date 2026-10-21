@@ -48,6 +48,7 @@ export function StudioPodsSection({
   onCancelPod,
   onRequestChange,
   requestChangeLabel,
+  onChat,
 }: Readonly<StudioPodsSectionProps>) {
   const { t } = useTranslation();
   const copy = VARIANT_COPY[variant];
@@ -65,6 +66,7 @@ export function StudioPodsSection({
         onCancelPod={onCancelPod}
         onRequestChange={onRequestChange}
         requestChangeLabel={requestChangeLabel}
+        onChat={onChat}
       />
     </SurfaceCard>
   );

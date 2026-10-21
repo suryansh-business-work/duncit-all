@@ -1,4 +1,4 @@
-import { chatRoomFromPath, type OpenChatRoom } from '@duncit/utils';
+import { chatRoomFromPath, venueChatPodIdFromPath, type OpenChatRoom } from '@duncit/utils';
 
 /** Param-less in-app deep-link routes reachable from a notification. */
 type ParamlessRoute =
@@ -37,6 +37,7 @@ export type NotificationLinkTarget =
   | { kind: 'pod'; clubSlug: string; podSlug: string }
   | { kind: 'podRequest'; id: string }
   | { kind: 'chat'; room: OpenChatRoom }
+  | { kind: 'venueChat'; podId: string }
   | { kind: 'none' };
 
 /**
@@ -46,6 +47,7 @@ export type NotificationLinkTarget =
  *   - /post/:id → the PostDetail screen (post-activity notifications)
  *   - /club/:clubSlug/pod/:podSlug → PodDetails (pod like/comment notifications)
  *   - /pod-requests/:id → PodRequestDetail (every Pod Request notification)
+ *   - /venue-chat/:podId → VenueChat (a line in a venue booking's thread)
  *   - a known param-less path (e.g. /earn, /pod-ideas) → its screen
  *   - anything else → no navigation
  */
@@ -65,6 +67,10 @@ export function resolveNotificationLink(link: string | null | undefined): Notifi
   // A pod or club room's push (`chat.notify.ts`): `/chats/:id`, `/chats/club/:id`.
   const room = chatRoomFromPath(link);
   if (room) return { kind: 'chat', room };
+
+  // A venue booking's private thread (`venueChat.notify.ts`): `/venue-chat/:podId`.
+  const venueChatPodId = venueChatPodIdFromPath(link);
+  if (venueChatPodId) return { kind: 'venueChat', podId: venueChatPodId };
 
   const route = IN_APP_ROUTES[link];
   if (route) return { kind: 'screen', route };

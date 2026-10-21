@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, YStack } from 'tamagui';
 import {
   changeRequestMenuKey,
@@ -7,6 +9,7 @@ import {
 } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import type { RootStackParamList } from '@/navigation/types';
 import type { StudioPod } from './studio-pods';
 import { StudioPodsSection } from './StudioPodsSection';
 import type { StudioPodsState } from './useStudioPods';
@@ -31,6 +34,7 @@ interface Props {
  */
 export function VenueStudioPods({ state, testID, rows, emptyKey }: Readonly<Props>) {
   const { t } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [detail, setDetail] = useState<StudioPod | null>(null);
   const [cancelling, setCancelling] = useState<StudioPod | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -62,6 +66,7 @@ export function VenueStudioPods({ state, testID, rows, emptyKey }: Readonly<Prop
         onCancelPod={setCancelling}
         onRequestChange={setChangePod}
         requestChangeLabel={t(changeRequestMenuKey('VENUE'))}
+        onChat={(pod) => navigation.navigate('VenueChat', { podId: pod.id })}
       />
       <VenuePodDetailSheet
         pod={detail}

@@ -50,6 +50,11 @@ export function NotificationsBell() {
       navigation.navigate('PodRequestDetail', { id: target.id });
       return;
     }
+    if (target.kind === 'venueChat') {
+      setOpen(false);
+      navigation.navigate('VenueChat', { podId: target.podId });
+      return;
+    }
     if (target.kind === 'screen') {
       setOpen(false);
       navigation.navigate(target.route);

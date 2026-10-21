@@ -41,7 +41,7 @@ async function assertRoomOpen(room: ChatRoomRef) {
 
 /** The same content rules a pod's own text is held to: no contact details,
  * outside links, payment asks, abuse or adult content. */
-function assertCleanText(text: string) {
+export function assertCleanText(text: string) {
   const [first] = moderateText('message', text);
   if (first) {
     throw new GraphQLError(first.message, {

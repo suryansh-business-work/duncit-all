@@ -20,3 +20,7 @@ export { attachStaffChatHandlers } from './staff/staffChat.socket';
 export { supportChatTypeDefs } from './support/supportChat.schema';
 export { supportChatResolvers } from './support/supportChat.resolver';
 export { attachSupportChatHandlers } from './support/supportChat.socket';
+
+export { venueChatTypeDefs } from './venue/venueChat.schema';
+export { venueChatResolvers } from './venue/venueChat.resolver';
+export { attachVenueChatHandlers } from './venue/venueChat.socket';

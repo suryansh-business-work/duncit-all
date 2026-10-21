@@ -1,6 +1,7 @@
 import { AddressBookScreen } from '@/screens/AddressBookScreen';
 import { BadgesScreen } from '@/screens/BadgesScreen';
 import { ChatRoomScreen } from '@/screens/ChatRoomScreen';
+import { VenueChatScreen } from '@/screens/VenueChatScreen';
 import { ChatsScreen } from '@/screens/ChatsScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { FreeJoinSuccessScreen } from '@/screens/FreeJoinSuccessScreen';
@@ -73,6 +74,7 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="SupportTickets" component={SupportTicketsScreen} />
       <Stack.Screen name="Policy" component={PolicyScreen} />
       <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
+      <Stack.Screen name="VenueChat" component={VenueChatScreen} />
       <Stack.Screen name="PodDetails" component={PodDetailsScreen} />
       <Stack.Screen name="PodFeedback" component={PodFeedbackScreen} />
       <Stack.Screen name="ClubDetails" component={ClubDetailsScreen} />

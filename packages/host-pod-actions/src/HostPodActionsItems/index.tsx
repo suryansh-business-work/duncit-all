@@ -9,6 +9,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import ReplayIcon from '@mui/icons-material/Replay';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import PodLinkRows from './PodLinkRows';
 import type { HostPodMenuItemsProps } from './types';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
@@ -48,6 +49,8 @@ export default function HostPodActionsItems({
   onClubAdmin,
   onRequestChange,
   requestChangeLabel,
+  onChatWithVenue,
+  chatWithVenueLabel,
 }: Readonly<HostPodMenuItemsProps>) {
   const { labels } = useHostPodActionsConfig();
 
@@ -90,6 +93,14 @@ export default function HostPodActionsItems({
             <PendingActionsIcon fontSize="small" color="warning" />
           </ListItemIcon>
           <ListItemText primary={labels.slotRequest} />
+        </MenuItem>
+      )}
+      {onChatWithVenue && chatWithVenueLabel && (
+        <MenuItem onClick={pick(onChatWithVenue)} data-testid={`host-pod-action-venue-chat-${podId}`}>
+          <ListItemIcon>
+            <ChatBubbleOutlineIcon fontSize="small" color="primary" />
+          </ListItemIcon>
+          <ListItemText primary={chatWithVenueLabel} />
         </MenuItem>
       )}
       {showAttendeeActions && canComplete && (

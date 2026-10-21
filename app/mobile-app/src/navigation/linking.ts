@@ -169,6 +169,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
       SupportTickets: 'support/tickets',
       Policy: 'policies/:slug',
       ChatRoom: 'chats/:podId',
+      // A venue booking's private thread, on mWeb's exact path (also the push link).
+      VenueChat: 'venue-chat/:podId',
       // Pod + club deep links use the exact mWeb URL grammar (slug-based) so a
       // link shared from mWeb opens the same screen in the app. The screens
       // resolve the slug → doc id via podBySlugs / clubBySlug.

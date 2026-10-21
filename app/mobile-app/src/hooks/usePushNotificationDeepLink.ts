@@ -39,6 +39,10 @@ export function navigateForPushLink(navigation: Nav, link: unknown) {
     );
     return;
   }
+  if (target.kind === 'venueChat') {
+    navigation.navigate('VenueChat', { podId: target.podId });
+    return;
+  }
   if (target.kind === 'screen') {
     navigation.navigate(target.route);
   }

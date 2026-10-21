@@ -105,6 +105,7 @@ import {
   attachChatHandlers,
   attachStaffChatHandlers,
   attachSupportChatHandlers,
+  attachVenueChatHandlers,
   startChatRetentionScheduler,
 } from '@microservices/chat';
 import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
@@ -1093,6 +1094,7 @@ async function bootstrap() {
   attachStaffChatHandlers();
   attachBouncerHandlers();
   attachSupportChatHandlers();
+  attachVenueChatHandlers();
   attachCallHandlers();
   attachChallengeHandlers();
 

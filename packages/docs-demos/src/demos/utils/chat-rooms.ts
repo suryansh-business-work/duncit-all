@@ -6,6 +6,12 @@ import {
   mentionHandle,
   mentionIdsInText,
   mentionTarget,
+  hasVenueChat,
+  isVenueChatUnavailable,
+  venueChatCounterpart,
+  venueChatPath,
+  venueChatPodIdFromPath,
+  type VenueChatSide,
 } from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
 
@@ -14,6 +20,16 @@ interface MentionMock {
   selfId: string;
   query: string;
   text: string;
+}
+
+interface VenueChatMock {
+  my_side: VenueChatSide;
+  pod_id: string;
+  pod_title: string;
+  venue_id: string;
+  venue_name: string;
+  venue_photo: string;
+  errorCode: string;
 }
 
 interface AlertMock {
@@ -80,6 +96,31 @@ export const chatRoomDemos: PackageDemo[] = [
         pings: pings.join(' · '),
         ...Object.fromEntries(mock.mutes.map((m) => [m.label, isChatMuted(m) ? 'muted' : 'alerts'])),
         badges: mock.unread.map((n) => `${n} → "${formatUnreadBadge(n)}"`).join(' · '),
+      };
+    },
+  }),
+  defineDemo<VenueChatMock>({
+    id: 'venue-chat',
+    title: 'The venue thread: who each side sees, and where it opens',
+    note:
+      "Switch my_side to VENUE: the header turns from the venue to the pod. Empty venue_id and the pod has no thread, so no 'Chat with venue' row. Set errorCode to FORBIDDEN for the not-available state.",
+    mock: {
+      my_side: 'HOST',
+      pod_id: '6650a1c2d3e4f5a6b7c8d9e0',
+      pod_title: 'Sunday Badminton Doubles',
+      venue_id: 'v1',
+      venue_name: 'Play Arena',
+      venue_photo: 'https://ik.imagekit.io/duncit/venues/play-arena.jpg',
+      errorCode: '',
+    },
+    compute: (mock) => {
+      const path = venueChatPath(mock.pod_id);
+      return {
+        header: venueChatCounterpart({ ...mock, pod_date_time: '2026-10-25T06:00:00.000Z' }),
+        hasThread: hasVenueChat(mock),
+        path,
+        pushLinkOpens: venueChatPodIdFromPath(path),
+        notAvailable: isVenueChatUnavailable(mock.errorCode),
       };
     },
   }),

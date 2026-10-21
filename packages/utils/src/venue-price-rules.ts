@@ -76,20 +76,48 @@ export function toggleDayKey(days: readonly string[], day: string): string[] {
 
 const toPaise = (rupees: number) => Math.round((Number(rupees) || 0) * 100);
 
-/** The day's per-unit rate after its price rules, in rupees (paise-rounded like the server). */
-export function dayRate(baseRate: number, rules: readonly PriceRuleLike[], day: string): number {
+/** The paise the day's rules add to `baseRate`, kept apart by mode: a PERCENT
+ * rule scales the rate, a FLAT rule adds its amount once. */
+function ruleTotals(baseRate: number, rules: readonly PriceRuleLike[], day: string) {
   const weekday = weekdayOfDay(day);
   const basePaise = toPaise(baseRate);
   const matching = rules.filter((rule) => priceRuleMatches(rule, day, weekday));
   const overrides = matching.filter((rule) => rule.type === DATE_OVERRIDE_RULE);
   const used = overrides.length > 0 ? overrides : matching;
-  const totalPaise = used.reduce(
-    (sum, rule) =>
-      sum +
-      (rule.mode === PERCENT_MODE
-        ? Math.round((basePaise * (Number(rule.value) || 0)) / 100)
-        : toPaise(rule.value)),
-    0,
-  );
-  return Math.max(0, basePaise + totalPaise) / 100;
+  let percentPaise = 0;
+  let flatPaise = 0;
+  for (const rule of used) {
+    if (rule.mode === PERCENT_MODE) percentPaise += Math.round((basePaise * (Number(rule.value) || 0)) / 100);
+    else flatPaise += toPaise(rule.value);
+  }
+  return { basePaise, percentPaise, flatPaise };
+}
+
+/** The day's per-unit rate after its price rules, in rupees (paise-rounded like the server). */
+export function dayRate(baseRate: number, rules: readonly PriceRuleLike[], day: string): number {
+  const { basePaise, percentPaise, flatPaise } = ruleTotals(baseRate, rules, day);
+  return Math.max(0, basePaise + percentPaise + flatPaise) / 100;
+}
+
+/**
+ * The day's price split the way the server applies its rules to a booking:
+ * `rate` is the per-unit rate with every PERCENT rule (never below zero), and
+ * `flat` the FLAT rules' sum, which the server adds to the whole booking — not
+ * to each guest or hour. For a per-guest or per-hour venue the host sees both.
+ */
+export function dayRateParts(
+  baseRate: number,
+  rules: readonly PriceRuleLike[],
+  day: string,
+): { rate: number; flat: number } {
+  const { basePaise, percentPaise, flatPaise } = ruleTotals(baseRate, rules, day);
+  return { rate: Math.max(0, basePaise + percentPaise) / 100, flat: flatPaise / 100 };
+}
+
+/** "+20%", "-₹500" — a rule's change as the owner set it; `money` formats a FLAT amount. */
+export function priceRuleChange(mode: string, value: number, money: (rupees: number) => string): string {
+  const amount = Number(value) || 0;
+  const sign = amount < 0 ? '-' : '+';
+  const magnitude = Math.abs(amount);
+  return mode === PERCENT_MODE ? `${sign}${magnitude}%` : `${sign}${money(magnitude)}`;
 }

@@ -1,4 +1,4 @@
-import { formatMoney } from '@duncit/utils';
+import { formatMoney, priceRuleChange } from '@duncit/utils';
 import type { PriceRuleMode, PriceRuleType, Translate, VenueClosedReason, VenuePricingModel } from './types';
 
 /** Rupees with paise when there are any — a quote is exact, so it is never rounded for display. */
@@ -9,9 +9,7 @@ export function rupees(value: number): string {
 
 /** "+20%", "-₹500" — a rule's adjustment as the owner set it. */
 export function ruleValueLabel(mode: PriceRuleMode, value: number): string {
-  const sign = value < 0 ? '-' : '+';
-  const magnitude = Math.abs(value);
-  return mode === 'PERCENT' ? `${sign}${magnitude}%` : `${sign}${rupees(magnitude)}`;
+  return priceRuleChange(mode, value, rupees);
 }
 
 /** Literal keys per model, so the translation gate sees each one. */

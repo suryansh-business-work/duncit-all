@@ -83,7 +83,16 @@ function parseWindow(req: InstantBookingRequest) {
   return { start, end };
 }
 
-const pricingOf = (venue: { pricing?: unknown }): VenuePricing => venue.pricing as VenuePricing;
+/**
+ * The venue's pricing as a PLAIN object. `pricing` is a Mongoose subdocument
+ * whose fields are prototype getters, so spreading it (as `pricingFor` does)
+ * copied none of them and every non-nullable field went out as null. A venue
+ * stored before pricing existed gets the schema defaults the same way.
+ */
+const pricingOf = (venue: { pricing?: unknown }): VenuePricing => {
+  const raw = venue.pricing as { toObject?: () => unknown } | null | undefined;
+  return (typeof raw?.toObject === 'function' ? raw.toObject() : (raw ?? {})) as VenuePricing;
+};
 
 /** A pricing input checked by the shared rules, as a GraphQL error on failure. */
 function checkedPricing(raw: unknown): VenuePricing {

@@ -8,6 +8,7 @@ import {
 } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import {
+  CHAT_HISTORY_PAGE,
   hasOlderPage,
   isNearHistoryTop,
   mergeEarlierMessages,
@@ -45,6 +46,8 @@ interface ChatHistoryOptions<T> {
   fetchOlder: (before: string) => Promise<T[]>;
   /** A line's timestamp, as the server's `before` cursor reads it. */
   timeOf: (message: T) => string;
+  /** Lines one page asks for — the rooms' CHAT_HISTORY_PAGE unless the thread pages differently. */
+  pageSize?: number;
 }
 
 /**
@@ -59,6 +62,7 @@ export function useChatHistory<T extends { id: string }>({
   setMessages,
   fetchOlder,
   timeOf,
+  pageSize = CHAT_HISTORY_PAGE,
 }: ChatHistoryOptions<T>) {
   const [hasOlder, setHasOlder] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
@@ -71,13 +75,16 @@ export function useChatHistory<T extends { id: string }>({
     latest.current = { messages, fetchOlder, timeOf };
   });
 
-  const startHistory = useCallback((firstPageLength: number) => {
-    generation.current += 1;
-    inFlight.current = false;
-    setLoadingOlder(false);
-    setOlderFailed(false);
-    setHasOlder(hasOlderPage(firstPageLength));
-  }, []);
+  const startHistory = useCallback(
+    (firstPageLength: number) => {
+      generation.current += 1;
+      inFlight.current = false;
+      setLoadingOlder(false);
+      setOlderFailed(false);
+      setHasOlder(hasOlderPage(firstPageLength, pageSize));
+    },
+    [pageSize],
+  );
 
   const loadOlder = useCallback(async () => {
     const current = latest.current;
@@ -91,7 +98,7 @@ export function useChatHistory<T extends { id: string }>({
       const page = await current.fetchOlder(before);
       if (started !== generation.current) return;
       setMessages((shown) => mergeEarlierMessages(page, shown));
-      setHasOlder(hasOlderPage(page.length));
+      setHasOlder(hasOlderPage(page.length, pageSize));
     } catch (error) {
       if (started !== generation.current) return;
       // The top of the list says so and offers the page again; nothing shown is lost.
@@ -103,7 +110,7 @@ export function useChatHistory<T extends { id: string }>({
         setLoadingOlder(false);
       }
     }
-  }, [hasOlder, setMessages]);
+  }, [hasOlder, setMessages, pageSize]);
 
   const reachTop = useCallback(() => fireAndForget(loadOlder()), [loadOlder]);
   const onScroll = useHistoryTopScroll(reachTop);

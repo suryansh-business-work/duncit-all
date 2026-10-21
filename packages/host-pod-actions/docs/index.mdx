@@ -150,6 +150,22 @@ here because it lives in `changeRequest.*` — a namespace owned by `@duncit/pod
 which this package deliberately does not depend on. A surface with no board to answer the request
 on passes neither prop and keeps the menu it had.
 
+### "Chat with venue" is opt-in
+
+Pass `onChatWithVenue` and an already-translated `chatWithVenueLabel` and the menu grows one row,
+right under the slot request: it opens the pod's private thread with the venue it is booked at
+(`venueChatPath(pod.id)` from `@duncit/utils`). Pass them only for a pod that has a venue —
+`hasVenueChat(pod)` answers that — since a pod with no venue has no thread. The label is handed in
+because it lives in the surface's `venueChat.*` copy, like `requestChangeLabel` above.
+
+```tsx
+<HostPodActionsMenu
+  {...menuHandlers(pod)}
+  onChatWithVenue={hasVenueChat(pod) ? () => navigate(venueChatPath(pod.id)) : undefined}
+  chatWithVenueLabel={t('mweb.venueChat.chatWithVenue')}
+/>
+```
+
 ### "Host again" is opt-in
 
 Pass `onHostAgain` to the provider and every row's menu grows a **Host again** item, right

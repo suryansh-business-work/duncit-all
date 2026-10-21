@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router';
 import { accountRoutes } from './accountRoutes';
 import { coreRoutes } from './coreRoutes';
-import { AddressBookPage, CartPage, ChatRoomPage, ChatsPage, CheckoutPage, ClubsPage, ContactsPage, ExplorePage, ForgotPasswordPage, HappeningNearbyPage, LoginPage, NotFoundPage, OrderDetailPage, OrdersHistoryPage, PreviousPodsPage, ProductCheckoutPage, ProductDetailPage, RegisterPage, SavedItemsPage, SearchPage, ShopTabsPage } from './lazyPages';
+import { AddressBookPage, CartPage, ChatRoomPage, ChatsPage, CheckoutPage, ClubsPage, ContactsPage, ExplorePage, ForgotPasswordPage, HappeningNearbyPage, LoginPage, NotFoundPage, OrderDetailPage, OrdersHistoryPage, PreviousPodsPage, ProductCheckoutPage, ProductDetailPage, RegisterPage, SavedItemsPage, SearchPage, ShopTabsPage, VenueChatPage } from './lazyPages';
 import { partnerRoutes } from './partnerRoutes';
 import { redirectIfAuthed, withAuth, withProducts, type AppRoutesProps } from './routeGuards';
 
@@ -64,6 +64,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/chats" element={withAuth(<ChatsPage superCategorySlug={superCategory} />)} />
         <Route path="/chats/club/:id" element={withAuth(<ChatRoomPage kind="CLUB" />)} />
         <Route path="/chats/:id" element={withAuth(<ChatRoomPage />)} />
+        <Route path="/venue-chat/:podId" element={withAuth(<VenueChatPage />)} />
         <Route path="/register" element={redirectIfAuthed(<RegisterPage />)} />
         <Route path="/login" element={redirectIfAuthed(<LoginPage />)} />
         <Route path="/forgot-password" element={redirectIfAuthed(<ForgotPasswordPage />)} />

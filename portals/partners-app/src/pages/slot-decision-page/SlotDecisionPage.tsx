@@ -12,6 +12,7 @@ import DecisionHeader from './DecisionHeader';
 import DeclineForm from './DeclineForm';
 import EarningsBreakdown from './EarningsBreakdown';
 import SlotSummary from './SlotSummary';
+import ChatWithHostButton from '../venue-chat-page/ChatWithHostButton';
 import { useTranslation } from '@duncit/shell';
 
 /**
@@ -148,9 +149,11 @@ export default function SlotDecisionPage() {
         )}
       </Card>
 
-      <Stack direction="row" sx={{
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{
         justifyContent: "center"
       }}>
+        {/* Once booked, the venue and the pod's hosts can talk set-up, deposits and timings. */}
+        {!declined && request.pod_id && <ChatWithHostButton podId={request.pod_id} />}
         <DuncitButton onClick={() => navigate('/venues/requests')}>{t('partners.slotDecisionPage.seeAllSlotRequests')}</DuncitButton>
       </Stack>
     </Stack>

@@ -126,6 +126,24 @@ async function loadOlderPage(kind: ChatRoomKind, id: string, before: string) {
 
 const messageTime = (message: ChatMessage) => message.createdAt;
 
+/** Uploads a picked photo to the chat folder and answers its URL — shared by
+ * every room that sends photos (the group chats and the venue thread). */
+export async function uploadChatImage(asset: ChatImageAsset & { base64: string }): Promise<string> {
+  const mimeType = asset.mimeType ?? 'image/jpeg';
+  const fileName = asset.fileName ?? `chat-${Date.now()}.jpg`;
+  const uploaded = await graphqlRequest(
+    UploadImageDocument,
+    {
+      fileBase64: `data:${mimeType};base64,${asset.base64}`,
+      fileName,
+      mimeType,
+      folder: '/chat',
+    },
+    { auth: true },
+  );
+  return uploaded.uploadImageToImagekit.url;
+}
+
 /** Posts one line to the room — the server echoes it over the socket. */
 function postTo(
   kind: ChatRoomKind,
@@ -246,22 +264,12 @@ export function useChatRoom(
 
   const sendImage = useCallback(
     async (asset: ChatImageAsset) => {
-      if (!asset.base64) return;
+      const { base64 } = asset;
+      if (!base64) return;
       setSending(true);
       try {
-        const mimeType = asset.mimeType ?? 'image/jpeg';
-        const fileName = asset.fileName ?? `chat-${Date.now()}.jpg`;
-        const uploaded = await graphqlRequest(
-          UploadImageDocument,
-          {
-            fileBase64: `data:${mimeType};base64,${asset.base64}`,
-            fileName,
-            mimeType,
-            folder: '/chat',
-          },
-          { auth: true },
-        );
-        await postTo(kind, roomId, PodMessageType.Image, '', uploaded.uploadImageToImagekit.url);
+        const url = await uploadChatImage({ ...asset, base64 });
+        await postTo(kind, roomId, PodMessageType.Image, '', url);
       } catch (e) {
         setError(toErrorMessage(e, 'Could not send image.'));
       } finally {

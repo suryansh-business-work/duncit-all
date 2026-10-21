@@ -9,9 +9,10 @@ const BOTTOM_NAV_CONTENT_OFFSET = 'var(--duncit-bottom-nav-content-offset, 148px
 /** The bottom bar's own height. */
 const BOTTOM_NAV_HEIGHT = 'var(--duncit-bottom-nav-height, 64px)';
 
-/** A chat room is a full-height page whose composer belongs right on top of
- * the bottom bar, not a scrolling page that needs the breathing gap. */
-export const isFullHeightRoute = (pathname: string) => /^\/chats\/.+/.test(pathname);
+/** A chat room (a pod's, a club's or a venue thread) is a full-height page whose
+ * composer belongs right on top of the bottom bar, not a scrolling page that
+ * needs the breathing gap. */
+export const isFullHeightRoute = (pathname: string) => /^\/(chats|venue-chat)\/.+/.test(pathname);
 
 /** What the page region reserves for the bottom bar on this route. */
 export function bottomNavReserve(showBottomNav: boolean, pathname: string): string {

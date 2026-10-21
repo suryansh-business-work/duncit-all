@@ -5,6 +5,7 @@ import { buildSlotLabels } from '@duncit/slots';
 import {
   bookingCalendarProps,
   bookingSlotId,
+  formatStatementMoney,
   venueBookingModelKey,
   type BookingTile,
 } from '@duncit/utils';
@@ -19,6 +20,7 @@ import type { CreatePodForm } from '../../create-pod.types';
 import { TimeChip } from '../../TimeChipRows';
 import { BookingGuestFields } from './BookingGuestFields';
 import { VenueQuoteCard, type VenueQuoteState } from './VenueQuoteCard';
+import { VenueTermsCard } from './VenueTermsCard';
 
 interface Props {
   form: CreatePodForm;
@@ -66,7 +68,11 @@ export function InstantBookingPicker({
   const endIso = parseDateTimeText(form.watch('pod_end_date_time_text'))?.toISOString() ?? '';
   const perSlot = booking.pricing?.model === VenuePricingModel.PerSlot;
   const labels = useMemo(() => {
-    const base = buildSlotLabels(t, 'mweb.slots');
+    // The only whole-day tiles here are the days the venue closed itself.
+    const base = {
+      ...buildSlotLabels(t, 'mweb.slots'),
+      wholeDay: t('mweb.createPod.venueTerms.closed'),
+    };
     return perSlot ? base : { ...base, availableSlots: t('mweb.createPod.bookingStart') };
   }, [t, perSlot]);
 
@@ -121,6 +127,7 @@ export function InstantBookingPicker({
       <Text testID="create-pod-booking-model" fontSize={13} fontWeight="600" color="$muted">
         {t(venueBookingModelKey(pricing.model))}
       </Text>
+      {startIso ? null : <VenueTermsCard pricing={pricing} currencySymbol={currencySymbol} />}
       <BookingGuestFields form={form} pricing={pricing} />
       {booking.calendarFailed ? (
         <Notice
@@ -136,6 +143,9 @@ export function InstantBookingPicker({
             error: timeError,
             selectedId,
             onPick: pick,
+            model: pricing.model,
+            t,
+            money: (value) => formatStatementMoney(value, currencySymbol),
           })}
           fmt={fmt}
           labels={labels}

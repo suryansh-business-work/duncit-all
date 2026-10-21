@@ -36,6 +36,7 @@ export function PodActionsSheet({
   onCancel,
   onClubAdmin,
   onRequestChange,
+  onChatWithVenue,
 }: Readonly<PodActionsSheetProps>) {
   const { t } = useTranslation();
   const { color: ink, danger, primary, success, warning } = useThemeColors();
@@ -96,6 +97,15 @@ export function PodActionsSheet({
           tint={warning}
           onPress={onSlotRequest}
         />
+        {onChatWithVenue ? (
+          <ActionRow
+            testID="pod-action-venue-chat"
+            icon="chat-bubble-outline"
+            label={t('mweb.venueChat.chatWithVenue')}
+            tint={primary}
+            onPress={onChatWithVenue}
+          />
+        ) : null}
         {showAttendeeActions && canComplete ? (
           <ActionRow
             testID="pod-action-complete"

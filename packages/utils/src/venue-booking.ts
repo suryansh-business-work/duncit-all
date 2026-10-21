@@ -6,12 +6,14 @@
  * server owns every rule: `venueBookingCalendar` says which days and times are
  * open, `venuePriceQuote` prices a window, and the booking write re-checks
  * both. This module only turns those answers into what the pickers offer and
- * what the price card lists — it never computes a price.
+ * what the price card lists — it never prices a booking. The tiles only show
+ * each day's rate at a glance (`dayRate`, the server's rule stacking).
  *
  * Times are ISO instants. The booking grid is counted from local midnight in
  * the admin time zone, exactly as the server checks `booking_increment_minutes`.
  */
 import { startOfDayInZone } from './pod-series';
+import { dayRate, dayRateParts, priceRuleChange, type PriceRuleLike } from './venue-price-rules';
 
 export type VenueBookingModel = 'PER_PAX' | 'PER_SLOT' | 'PER_HOUR' | 'FLAT';
 
@@ -61,6 +63,10 @@ export interface BookingRules {
   buffer_minutes?: number | null;
   /** From `venueBookingCalendar`: the earliest a booking may start from now. */
   min_notice_minutes?: number | null;
+  /** From `venuePricing`: the per-unit rate the tiles show (PER_PAX/PER_HOUR/FLAT). */
+  base_rate?: number | null;
+  /** From `venuePricing`: the owner's price rules, applied to each tile's day. */
+  price_rules?: readonly PriceRuleLike[] | null;
 }
 
 /** One pickable time: a PER_SLOT slot, or a start time for the other models.
@@ -69,7 +75,53 @@ export interface BookingTile {
   id: string;
   start_at: string;
   end_at: string | null;
+  /** The day's rate after its price rules: the slot's price (PER_SLOT), the
+   * booking's (FLAT), or the rate per guest / hour. Null when not known. */
   price: number | null;
+  /** PER_PAX / PER_HOUR: the day's FLAT rules, added once to the booking. */
+  price_extra?: number;
+  /** A day the venue closed itself (holiday or blocked): shown, never pickable. */
+  closed_reason?: string | null;
+  whole_day?: boolean;
+  disabled?: boolean;
+}
+
+/** The `t` either app passes in (both apps' translators fit it). */
+export type BookingTranslate = (key: string, opts?: { vars?: Record<string, string | number> }) => string;
+
+const CLOSED_KEY: Record<string, string> = {
+  HOLIDAY: 'mweb.createPod.venueTerms.closedHoliday',
+  BLOCKED: 'mweb.createPod.venueTerms.closedBlocked',
+};
+
+/** The rate with its unit: "₹300 / guest", "₹1,000 / hour", or just the price. */
+export function bookingRateText(
+  model: string | null | undefined,
+  rate: number,
+  t: BookingTranslate,
+  money: (value: number) => string
+): string {
+  const price = money(rate);
+  if (model === 'PER_PAX') return t('mweb.createPod.venueTerms.ratePerGuest', { vars: { price } });
+  if (model === 'PER_HOUR') return t('mweb.createPod.venueTerms.ratePerHour', { vars: { price } });
+  return price;
+}
+
+/** A tile's second line: why a closed day is shut, else its price (with any
+ * flat change the day adds to the booking), else nothing. */
+export function bookingTileCaption(
+  tile: Readonly<BookingTile>,
+  model: string | null | undefined,
+  t: BookingTranslate,
+  money: (value: number) => string
+): string {
+  const closedKey = tile.closed_reason ? CLOSED_KEY[tile.closed_reason] : undefined;
+  if (closedKey) return t(closedKey);
+  if (tile.price === null) return '';
+  const rate = bookingRateText(model, tile.price, t, money);
+  if (!tile.price_extra) return rate;
+  const extra = priceRuleChange('FLAT', tile.price_extra, money);
+  return t('mweb.createPod.venueTerms.rateWithExtra', { vars: { rate, extra } });
 }
 
 /**
@@ -84,9 +136,13 @@ export function bookingCalendarProps(args: {
   error?: string;
   selectedId: string;
   onPick: (tile: BookingTile) => void;
+  /** The venue's model, the app's `t` and money format write each tile's price line. */
+  model: string | null | undefined;
+  t: BookingTranslate;
+  money: (value: number) => string;
 }) {
   return {
-    slots: args.tiles,
+    slots: args.tiles.map((tile) => ({ ...tile, caption: bookingTileCaption(tile, args.model, args.t, args.money) })),
     loading: args.loading,
     error: args.error,
     selectedSlotId: args.selectedId,
@@ -95,6 +151,7 @@ export function bookingCalendarProps(args: {
       if (picked) args.onPick(picked);
     },
     required: true,
+    // The price is each tile's caption: the calendar's own price line has no unit.
     showPrice: false,
   };
 }
@@ -220,18 +277,59 @@ export function bookingTiles(
   timeZone: string,
   nowMs: number
 ): BookingTile[] {
+  const priceRules = rules.price_rules ?? [];
   if (rules.model === 'PER_SLOT') {
     return days.flatMap((day) =>
       day.closed_reason
         ? []
         : day.slots
             .filter((slot) => slot.available)
-            .map((slot) => ({ id: bookingSlotId(slot.start, slot.end), start_at: slot.start, end_at: slot.end, price: slot.price }))
+            .map((slot) => ({
+              id: bookingSlotId(slot.start, slot.end),
+              start_at: slot.start,
+              end_at: slot.end,
+              price: dayRate(slot.price, priceRules, day.date),
+            }))
     );
   }
-  return days.flatMap((day) =>
-    bookingStartOptions(day, rules, timeZone, nowMs).map((start) => ({ id: start, start_at: start, end_at: null, price: null }))
-  );
+  return days.flatMap((day) => {
+    const price = dayPrice(rules, priceRules, day.date);
+    return bookingStartOptions(day, rules, timeZone, nowMs).map((start) => ({ id: start, start_at: start, end_at: null, ...price }));
+  });
+}
+
+/** A start tile's price for its day: FLAT folds every rule into the one
+ * booking price; per guest / hour keeps the flat changes apart. */
+function dayPrice(
+  rules: Readonly<BookingRules>,
+  priceRules: NonNullable<BookingRules['price_rules']>,
+  date: string
+): Pick<BookingTile, 'price' | 'price_extra'> {
+  if (rules.base_rate === null || rules.base_rate === undefined) return { price: null };
+  if (rules.model === 'FLAT') return { price: dayRate(rules.base_rate, priceRules, date) };
+  const { rate, flat } = dayRateParts(rules.base_rate, priceRules, date);
+  return flat ? { price: rate, price_extra: flat } : { price: rate };
+}
+
+/** One disabled tile on each day the venue closed itself (a holiday or a
+ * blocked date), so the calendar labels the day closed instead of hiding it. */
+export function bookingClosedTiles(days: readonly BookingCalendarDay[], timeZone: string): BookingTile[] {
+  return days.flatMap((day) => {
+    const reason = day.closed_reason;
+    const midnight = startOfDayInZone(day.date, timeZone);
+    if (!reason || !CLOSED_KEY[reason] || Number.isNaN(midnight)) return [];
+    return [
+      {
+        id: `closed|${day.date}`,
+        start_at: new Date(midnight).toISOString(),
+        end_at: null,
+        price: null,
+        closed_reason: reason,
+        whole_day: true,
+        disabled: true,
+      },
+    ];
+  });
 }
 
 /** The calendar day holding `startIso`, if it is in the loaded range. */
@@ -427,18 +525,43 @@ export const VENUE_PRICE_QUOTE_SDL = `
   }
 `;
 
-/** The venue's pricing gate and limits for the host's pickers. */
+/** The venue's pricing gate and limits for the host's pickers, and the terms
+ * its summary card shows before a time is picked (`venuePricingTerms`). */
 export const VENUE_BOOKING_PRICING_SDL = `
   query VenueBookingPricing($venue_id: ID!) {
     venuePricing(venue_id: $venue_id) {
       model
       configured
+      base_rate
       min_pax
       max_pax
       min_hours
       max_hours
       booking_increment_minutes
+      min_spend
+      slots {
+        price
+        days_of_week
+      }
+      operating_hours {
+        day
+        open
+        close
+      }
+      price_rules {
+        type
+        label
+        days
+        dates
+        from
+        to
+        mode
+        value
+      }
+      deposit
+      cleaning_fee
       pet_fee
+      gst_enabled
     }
   }
 `;

@@ -21,6 +21,7 @@ import {
   type VenuePodRow,
 } from './queries';
 import { useTranslation } from '@duncit/shell';
+import ChatWithHostButton from '../venue-chat-page/ChatWithHostButton';
 
 function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return <InfoRow variant="split" label={label} value={value} sx={{ py: 0.5 }} />;
@@ -99,6 +100,7 @@ export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) 
             </Stack>
           </DialogContent>
           <DialogActions>
+            <ChatWithHostButton podId={row.id} />
             <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
           </DialogActions>
         </>

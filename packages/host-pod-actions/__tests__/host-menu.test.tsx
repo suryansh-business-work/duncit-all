@@ -214,6 +214,24 @@ describe('HostPodActionsMenu rows', () => {
     expect(onSlotRequest).toHaveBeenCalledTimes(1);
   });
 
+  // Only a pod booked at a venue has a venue thread; the surface decides that
+  // by passing the handler, and the label comes translated from the surface.
+  it('offers Chat with venue only when the surface passes it, and reports the pick', async () => {
+    await open();
+    expect(screen.queryByTestId('host-pod-action-venue-chat-pod-9')).toBeNull();
+    cleanup();
+
+    await open({ onChatWithVenue: vi.fn(), podId: 'pod-9' });
+    expect(screen.queryByTestId('host-pod-action-venue-chat-pod-9')).toBeNull();
+    cleanup();
+
+    const onChatWithVenue = vi.fn();
+    await open({ onChatWithVenue, chatWithVenueLabel: 'Chat with venue', podId: 'pod-9' });
+    fireEvent.click(screen.getByText('Chat with venue'));
+
+    expect(onChatWithVenue).toHaveBeenCalledTimes(1);
+  });
+
   it('offers Challenges only on a surface that owns that page, and reports the pick to it', async () => {
     await open();
     expect(screen.queryByText(labels.challenges)).toBeNull();

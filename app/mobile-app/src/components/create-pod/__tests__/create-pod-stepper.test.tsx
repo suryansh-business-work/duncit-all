@@ -94,6 +94,14 @@ const venuePricing = {
   max_hours: 0,
   booking_increment_minutes: 60,
   pet_fee: 0,
+  base_rate: 0,
+  min_spend: 0,
+  slots: [{ price: 400, days_of_week: [0, 1, 2, 3, 4, 5, 6] }],
+  operating_hours: [],
+  price_rules: [],
+  deposit: 0,
+  cleaning_fee: 0,
+  gst_enabled: false,
 };
 // What the server quotes for that slot: ₹400 + 18% GST to the venue, plus
 // Duncit's fee on top.

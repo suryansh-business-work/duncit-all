@@ -33,6 +33,8 @@ export default function HostPodRow({
   onSlotRequest,
   onRequestChange,
   requestChangeLabel,
+  onChatWithVenue,
+  chatWithVenueLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
@@ -108,6 +110,8 @@ export default function HostPodRow({
           onSlotRequest={onSlotRequest}
           onRequestChange={onRequestChange}
           requestChangeLabel={requestChangeLabel}
+          onChatWithVenue={onChatWithVenue}
+          chatWithVenueLabel={chatWithVenueLabel}
         />
       </Stack>
       {rejected && (

@@ -12,6 +12,9 @@ import {
   WHOLE_VENUE_SPACE,
   bookingCalendarProps,
   bookingCalendarRange,
+  bookingClosedTiles,
+  bookingRateText,
+  bookingTileCaption,
   bookingDayOf,
   bookingEndOptions,
   bookingMaxMinutes,
@@ -335,24 +338,143 @@ describe('instantBookingInput', () => {
   });
 });
 
+/** Echoes the key and its vars, so a test reads exactly what was asked for. */
+const t = (key: string, opts?: { vars?: Record<string, string | number> }) =>
+  opts?.vars ? `${key} ${JSON.stringify(opts.vars)}` : key;
+const money = (value: number) => `₹${value}`;
+
 describe('bookingCalendarProps', () => {
   const tiles: BookingTile[] = [
-    { id: 'a', start_at: '2026-11-05T03:30:00.000Z', end_at: null, price: null },
+    { id: 'a', start_at: '2026-11-05T03:30:00.000Z', end_at: null, price: 300 },
     { id: 'b', start_at: '2026-11-05T04:30:00.000Z', end_at: null, price: null },
   ];
+  const base = { t, money, model: 'FLAT' };
 
-  it('requires a window and keeps prices off the calendar', () => {
-    const props = bookingCalendarProps({ tiles, loading: true, error: 'boom', selectedId: 'b', onPick: vi.fn() });
-    expect(props).toMatchObject({ slots: tiles, loading: true, error: 'boom', selectedSlotId: 'b', required: true, showPrice: false });
+  it('requires a window and writes each price into the tile caption, not the price line', () => {
+    const props = bookingCalendarProps({ ...base, tiles, loading: true, error: 'boom', selectedId: 'b', onPick: vi.fn() });
+    expect(props).toMatchObject({ loading: true, error: 'boom', selectedSlotId: 'b', required: true, showPrice: false });
+    expect(props.slots).toEqual([
+      { ...tiles[0], caption: '₹300' },
+      { ...tiles[1], caption: '' },
+    ]);
   });
 
   it('resolves a picked calendar tile back to its booking tile, ignoring unknown ids', () => {
     const onPick = vi.fn();
-    const props = bookingCalendarProps({ tiles, loading: false, selectedId: '', onPick });
+    const props = bookingCalendarProps({ ...base, tiles, loading: false, selectedId: '', onPick });
     props.onPick({ id: 'b' });
     expect(onPick).toHaveBeenCalledWith(tiles[1]);
     props.onPick({ id: 'gone' });
     expect(onPick).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('bookingRateText', () => {
+  it('puts the unit on per-guest and per-hour rates only', () => {
+    expect(bookingRateText('PER_PAX', 300, t, money)).toBe('mweb.createPod.venueTerms.ratePerGuest {"price":"₹300"}');
+    expect(bookingRateText('PER_HOUR', 1000, t, money)).toBe('mweb.createPod.venueTerms.ratePerHour {"price":"₹1000"}');
+    expect(bookingRateText('FLAT', 5000, t, money)).toBe('₹5000');
+    expect(bookingRateText('PER_SLOT', 800, t, money)).toBe('₹800');
+    expect(bookingRateText(null, 800, t, money)).toBe('₹800');
+  });
+});
+
+describe('bookingTileCaption', () => {
+  const tile = (over: Partial<BookingTile> = {}): BookingTile => ({
+    id: 'x',
+    start_at: '2026-11-05T03:30:00.000Z',
+    end_at: null,
+    price: 300,
+    ...over,
+  });
+
+  it('names why a closed day is shut, before any price', () => {
+    expect(bookingTileCaption(tile({ closed_reason: 'HOLIDAY' }), 'PER_PAX', t, money)).toBe('mweb.createPod.venueTerms.closedHoliday');
+    expect(bookingTileCaption(tile({ closed_reason: 'BLOCKED', price: null }), 'FLAT', t, money)).toBe(
+      'mweb.createPod.venueTerms.closedBlocked'
+    );
+  });
+
+  it('shows nothing for an unknown price, and ignores a closed reason it has no label for', () => {
+    expect(bookingTileCaption(tile({ price: null }), 'FLAT', t, money)).toBe('');
+    expect(bookingTileCaption(tile({ closed_reason: 'PAST' }), 'FLAT', t, money)).toBe('₹300');
+  });
+
+  it('adds the day’s flat change to a per-unit rate, signed', () => {
+    expect(bookingTileCaption(tile({ price_extra: 500 }), 'PER_PAX', t, money)).toBe(
+      'mweb.createPod.venueTerms.rateWithExtra {"rate":"mweb.createPod.venueTerms.ratePerGuest {\\"price\\":\\"₹300\\"}","extra":"+₹500"}'
+    );
+    expect(bookingTileCaption(tile({ price_extra: -200 }), 'FLAT', t, money)).toBe(
+      'mweb.createPod.venueTerms.rateWithExtra {"rate":"₹300","extra":"-₹200"}'
+    );
+    expect(bookingTileCaption(tile({ price: 0 }), 'PER_SLOT', t, money)).toBe('₹0');
+  });
+});
+
+describe('bookingTiles with the venue rate and rules', () => {
+  // 2026-11-07 is a Saturday: +20% weekend, +₹500 flat cleaning-up charge.
+  const saturday = day({ date: '2026-11-07', open: '2026-11-07T03:30:00.000Z', close: '2026-11-07T05:30:00.000Z' });
+  const priceRules = [
+    { type: 'WEEKDAY_SURCHARGE', days: [6], mode: 'PERCENT', value: 20 },
+    { type: 'WEEKDAY_SURCHARGE', days: [6], mode: 'FLAT', value: 500 },
+  ];
+
+  it('prices per-guest starts at the day rate and keeps the flat change apart', () => {
+    const tiles = bookingTiles([saturday, day()], rules({ model: 'PER_PAX', base_rate: 300, price_rules: priceRules }), TZ, EARLY);
+    expect(tiles[0]).toMatchObject({ price: 360, price_extra: 500 });
+    // Thursday: no rule matches, so no extra.
+    const thursday = tiles.find((tile) => tile.start_at.startsWith('2026-11-05'));
+    expect(thursday).toEqual({ id: thursday?.id, start_at: thursday?.start_at, end_at: null, price: 300 });
+  });
+
+  it('folds every rule into a FLAT booking price', () => {
+    const [tile] = bookingTiles([saturday], rules({ model: 'FLAT', base_rate: 1000, price_rules: priceRules }), TZ, EARLY);
+    expect(tile).toMatchObject({ price: 1700 });
+    expect(tile.price_extra).toBeUndefined();
+  });
+
+  it('applies the day rules to each PER_SLOT slot price', () => {
+    const slotted = { ...saturday, slots: [{ start: '2026-11-07T03:30:00.000Z', end: '2026-11-07T05:30:00.000Z', price: 1000, available: true }] };
+    const [tile] = bookingTiles([slotted], rules({ model: 'PER_SLOT', price_rules: priceRules }), TZ, EARLY);
+    expect(tile.price).toBe(1700);
+  });
+
+  it('leaves the price unknown without a base rate', () => {
+    const [tile] = bookingTiles([saturday], rules({ model: 'PER_HOUR', base_rate: null }), TZ, EARLY);
+    expect(tile.price).toBeNull();
+  });
+});
+
+describe('bookingClosedTiles', () => {
+  it('adds one disabled whole-day tile for each holiday or blocked day, at local midnight', () => {
+    const days = [
+      day({ date: '2026-11-05', closed_reason: 'HOLIDAY' }),
+      day({ date: '2026-11-06', closed_reason: 'BLOCKED' }),
+      day({ date: '2026-11-07', closed_reason: 'WEEKLY_OFF' }),
+      day({ date: '2026-11-08', closed_reason: 'PAST' }),
+      day({ date: '2026-11-09' }),
+      day({ date: 'not-a-day', closed_reason: 'HOLIDAY' }),
+    ];
+    expect(bookingClosedTiles(days, TZ)).toEqual([
+      {
+        id: 'closed|2026-11-05',
+        start_at: '2026-11-04T18:30:00.000Z',
+        end_at: null,
+        price: null,
+        closed_reason: 'HOLIDAY',
+        whole_day: true,
+        disabled: true,
+      },
+      {
+        id: 'closed|2026-11-06',
+        start_at: '2026-11-05T18:30:00.000Z',
+        end_at: null,
+        price: null,
+        closed_reason: 'BLOCKED',
+        whole_day: true,
+        disabled: true,
+      },
+    ]);
   });
 });
 

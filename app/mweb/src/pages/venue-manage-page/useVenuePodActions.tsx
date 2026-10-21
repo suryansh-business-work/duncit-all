@@ -1,7 +1,9 @@
 import { useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 import {
   changeRequestMenuKey,
   venueCancelSuccessMessage,
+  venueChatPath,
   type VenueCancelPodResult,
 } from '@duncit/utils';
 import { useRequestPodChange } from '@duncit/pod-change-requests';
@@ -26,6 +28,8 @@ export interface VenuePodActions {
     onCancelPod: (pod: StudioPod) => void;
     onRequestChange: (pod: StudioPod) => void;
     requestChangeLabel: string;
+    /** "Chat with host" — the booking's private thread with the pod's hosts. */
+    onChat: (pod: StudioPod) => void;
   };
   /** The detail sheet, the cancel dialog and the change request — render once. */
   dialogs: ReactNode;
@@ -39,6 +43,7 @@ export interface VenuePodActions {
  */
 export function useVenuePodActions({ currencySymbol, refetch, onPodsChanged }: Options): VenuePodActions {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [openPod, setOpenPod] = useState<StudioPod | null>(null);
   const [podToCancel, setPodToCancel] = useState<StudioPod | null>(null);
   // "Request Change Venue" — the venue owner asking Duncit to move the pod
@@ -60,6 +65,7 @@ export function useVenuePodActions({ currencySymbol, refetch, onPodsChanged }: O
       onRequestChange: (pod) =>
         change.open({ podDocId: pod.id, role: 'VENUE', attendeeCount: pod.attendee_count }),
       requestChangeLabel: t(changeRequestMenuKey('VENUE')),
+      onChat: (pod) => navigate(venueChatPath(pod.id)),
     },
     dialogs: (
       <>

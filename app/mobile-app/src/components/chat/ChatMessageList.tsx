@@ -21,12 +21,15 @@ interface Props {
   /** Scroll-up history: older pages load as the reader nears the top. */
   history: ChatHistory;
   meId?: string | null;
-  /** Long press on a bubble: opens that message's actions. */
-  onOpenActions: (message: ChatMessage) => void;
+  /** Long press on a bubble: opens that message's actions. Absent in a thread
+   * with no message menu (a venue chat). */
+  onOpenActions?: (message: ChatMessage) => void;
   /** Swipe right on a bubble: answer it. Absent in a closed room. */
   onReply?: (messageId: string) => void;
   /** A highlighted @mention was tapped. */
   onOpenProfile?: (userId: string) => void;
+  /** The sentence an empty room shows; the group chat's when omitted. */
+  emptyText?: string;
 }
 
 /** Room left above a line scrolled to from a quote, so it is not under the header. */
@@ -42,6 +45,7 @@ export function ChatMessageList({
   onOpenActions,
   onReply,
   onOpenProfile,
+  emptyText,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // Where each loaded line sits in the list, so a quote can scroll to its original.
@@ -79,7 +83,7 @@ export function ChatMessageList({
           color="$muted"
           paddingVertical={40}
         >
-          {t('mweb.chat.noMessagesYet')}
+          {emptyText ?? t('mweb.chat.noMessagesYet')}
         </Text>
       ) : (
         messages.map((message) => (
@@ -90,7 +94,7 @@ export function ChatMessageList({
             <ChatMessageBubble
               message={message}
               mine={message.user_id === meId}
-              onReact={message.deleted ? undefined : () => onOpenActions(message)}
+              onReact={message.deleted || !onOpenActions ? undefined : () => onOpenActions(message)}
               onReply={onReply}
               onJumpTo={jumpTo}
               onOpenProfile={onOpenProfile}

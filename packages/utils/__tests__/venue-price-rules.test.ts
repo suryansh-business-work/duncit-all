@@ -10,6 +10,8 @@ import {
   DATE_OVERRIDE_RULE,
   dateOverrideOn,
   dayRate,
+  dayRateParts,
+  priceRuleChange,
   priceRuleMatches,
   toggleDayKey,
   weekdayOfDay,
@@ -114,5 +116,40 @@ describe('toggleDayKey', () => {
     expect(toggleDayKey(['2026-12-31', '2026-12-01'], '2026-12-25')).toEqual(['2026-12-01', '2026-12-25', '2026-12-31']);
     expect(toggleDayKey(['2026-12-01', '2026-12-25'], '2026-12-25')).toEqual(['2026-12-01']);
     expect(toggleDayKey([], '2026-12-25')).toEqual(['2026-12-25']);
+  });
+});
+
+describe('dayRateParts', () => {
+  const plus500 = { ...saturdayPlus20, mode: 'FLAT', value: 500 };
+
+  it('keeps PERCENT changes in the rate and FLAT changes apart', () => {
+    expect(dayRateParts(300, [saturdayPlus20, plus500], SATURDAY)).toEqual({ rate: 360, flat: 500 });
+    expect(dayRateParts(300, [saturdayPlus20, plus500], '2026-10-23')).toEqual({ rate: 300, flat: 0 });
+  });
+
+  it('follows the override-wins stacking, and holds the rate at zero', () => {
+    expect(dayRateParts(300, [saturdayPlus20, override([SATURDAY], -100)], SATURDAY)).toEqual({ rate: 300, flat: -100 });
+    expect(dayRateParts(300, [override([SATURDAY], -150, 'PERCENT')], SATURDAY)).toEqual({ rate: 0, flat: 0 });
+  });
+
+  it('agrees with dayRate for a one-unit booking', () => {
+    const rules = [saturdayPlus20, plus500];
+    const { rate, flat } = dayRateParts(1000, rules, SATURDAY);
+    expect(rate + flat).toBe(dayRate(1000, rules, SATURDAY));
+  });
+});
+
+describe('priceRuleChange', () => {
+  const money = (value: number) => `₹${value}`;
+
+  it('signs a percent or a money amount as the owner set it', () => {
+    expect(priceRuleChange('PERCENT', 20, money)).toBe('+20%');
+    expect(priceRuleChange('PERCENT', -15, money)).toBe('-15%');
+    expect(priceRuleChange('FLAT', 500, money)).toBe('+₹500');
+    expect(priceRuleChange('FLAT', -250, money)).toBe('-₹250');
+  });
+
+  it('reads an unusable value as no change', () => {
+    expect(priceRuleChange('PERCENT', Number.NaN, money)).toBe('+0%');
   });
 });

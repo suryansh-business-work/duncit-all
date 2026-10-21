@@ -19,13 +19,16 @@ interface ChatMessageListProps {
   podEnded: boolean | null;
   messages: ChatMessage[];
   myId: unknown;
-  onOpenReact: (el: HTMLElement, id: string) => void;
-  onOpenActions: (el: HTMLElement, id: string) => void;
+  /** Absent in a thread without reactions or a message menu (a venue chat). */
+  onOpenReact?: (el: HTMLElement, id: string) => void;
+  onOpenActions?: (el: HTMLElement, id: string) => void;
   /** Scroll-up history: whether an older page may exist, and how to load it. */
   canLoadOlder: boolean;
   loadOlder: () => Promise<void>;
   /** A highlighted @mention was activated. */
   onOpenProfile: (userId: string) => void;
+  /** The sentence an empty room shows; the group chat's when omitted. */
+  emptyText?: string;
 }
 
 /** Brings a loaded line into view and focuses it; an unloaded one is left alone. */
@@ -51,6 +54,7 @@ export default function ChatMessageList({
   canLoadOlder,
   loadOlder,
   onOpenProfile,
+  emptyText,
 }: Readonly<ChatMessageListProps>) {
   const { t } = useTranslation();
   const { formatDate, timeZone } = useDateFormat();
@@ -96,7 +100,7 @@ export default function ChatMessageList({
             data-testid="chat-room-empty"
             sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}
           >
-            {t('mweb.chat.noMessagesYet')}
+            {emptyText ?? t('mweb.chat.noMessagesYet')}
           </Typography>
         )}
         {messages.map((m: ChatMessage, i: number) => (

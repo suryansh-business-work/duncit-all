@@ -1,4 +1,4 @@
-import { canAmendPod, canCompletePod, podScanWindow } from '@duncit/utils';
+import { canAmendPod, canCompletePod, hasVenueChat, podScanWindow } from '@duncit/utils';
 
 import { isVenueRejected } from '@/utils/venue-approval';
 import { PodActionsSheet } from '@/components/host-manage/PodActionsSheet';
@@ -44,6 +44,15 @@ export function HostPodActionsSheet({ s }: Readonly<{ s: HostPodSheetState }>) {
         if (actionsPod) navigation.navigate('PodPending', { podId: actionsPod.id });
         setActionsPod(null);
       }}
+      // Only a pod booked at a venue has a thread with it.
+      onChatWithVenue={
+        hasVenueChat(actionsPod)
+          ? () => {
+              if (actionsPod) navigation.navigate('VenueChat', { podId: actionsPod.id });
+              setActionsPod(null);
+            }
+          : undefined
+      }
       onComplete={() => {
         if (actionsPod) {
           s.setCompletePod({

@@ -11,12 +11,28 @@ import {
   VENUE_PRICE_QUOTE_SDL,
   type BookingCalendarDay,
   type VenueQuote,
+  type VenueTermsSource,
 } from '@duncit/utils';
 
+/** `venuePricing` as VENUE_BOOKING_PRICING_SDL selects it: the pickers' limits
+ * and the terms card's fields (its lists only as far as they are selected). */
 export type VenueBookingPricing = Pick<
   VenuePricing,
-  'model' | 'configured' | 'min_pax' | 'max_pax' | 'min_hours' | 'max_hours' | 'booking_increment_minutes' | 'pet_fee'
->;
+  | 'model'
+  | 'configured'
+  | 'base_rate'
+  | 'min_pax'
+  | 'max_pax'
+  | 'min_hours'
+  | 'max_hours'
+  | 'booking_increment_minutes'
+  | 'min_spend'
+  | 'deposit'
+  | 'cleaning_fee'
+  | 'pet_fee'
+  | 'gst_enabled'
+> &
+  Pick<VenueTermsSource, 'slots' | 'operating_hours' | 'price_rules'>;
 
 /** The venue's pricing gate and limits — step 3 asks once a venue is picked. */
 export const VENUE_BOOKING_PRICING: TypedDocumentNode<

@@ -18,6 +18,8 @@ interface Props {
   onRequestChange?: () => void;
   /** Already translated: the label lives in the shared `changeRequest.*`. */
   requestChangeLabel?: string;
+  /** Venue Studio only — "Chat with host", the booking's private thread. */
+  onChat?: () => void;
 }
 
 /**
@@ -36,9 +38,10 @@ export function StudioPodActionsSheet({
   cancelDisabledText,
   onRequestChange,
   requestChangeLabel,
+  onChat,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { danger, warning } = useThemeColors();
+  const { danger, primary, warning } = useThemeColors();
   // The same shared rule the MUI menu applies (rule 27): a finished or cancelled
   // pod has nothing left to hand over, and the row says so rather than hiding.
   const changeBlockedKey = pod ? changeRequestBlockedKey(pod, null) : null;
@@ -54,6 +57,15 @@ export function StudioPodActionsSheet({
       variant="sheet"
     >
       <YStack gap={10}>
+        {onChat ? (
+          <ActionRow
+            testID="studio-pod-action-venue-chat"
+            icon="chat-bubble-outline"
+            label={t('mweb.venueChat.chatWithHost')}
+            tint={primary}
+            onPress={onChat}
+          />
+        ) : null}
         {onRequestChange && requestChangeLabel ? (
           <YStack gap={4}>
             <ActionRow

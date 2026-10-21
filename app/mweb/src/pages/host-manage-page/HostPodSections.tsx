@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
-import { changeRequestMenuKey, hostPodChallengesPath, splitHostPods } from '@duncit/utils';
+import { changeRequestMenuKey, hasVenueChat, hostPodChallengesPath, splitHostPods, venueChatPath } from '@duncit/utils';
 import { useHostPodActions } from '@duncit/host-pod-actions';
 import { useRequestPodChange } from '@duncit/pod-change-requests';
 import { notifySuccess } from '../../components/notify';
@@ -62,6 +62,9 @@ export default function HostPodSections({
         attendeeCount: pod.seats_taken ?? pod.pod_attendees?.length ?? 0,
       }),
     requestChangeLabel: t(changeRequestMenuKey('HOST')),
+    // Only a pod booked at a venue has a thread with it.
+    onChatWithVenue: hasVenueChat(pod) ? () => navigate(venueChatPath(pod.id)) : undefined,
+    chatWithVenueLabel: t('mweb.venueChat.chatWithVenue'),
   });
 
   return (

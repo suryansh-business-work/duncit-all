@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { format } from 'date-fns';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import { buildSlotLabels } from '@duncit/slots';
 import {
   bookingCalendarProps,
@@ -17,7 +17,7 @@ import { useInstantBooking } from '@/hooks/useInstantBooking';
 import { useTranslation } from '@/hooks/useTranslation';
 import { parseDateTimeText } from '../../create-pod.form';
 import type { CreatePodForm } from '../../create-pod.types';
-import { TimeChip } from '../../TimeChipRows';
+import { BookingEndPicker } from './BookingEndPicker';
 import { BookingGuestFields } from './BookingGuestFields';
 import { VenueQuoteCard, type VenueQuoteState } from './VenueQuoteCard';
 import { VenueTermsCard } from './VenueTermsCard';
@@ -152,34 +152,7 @@ export function InstantBookingPicker({
         />
       )}
       {!perSlot && startIso ? (
-        <YStack gap={8} testID="create-pod-booking-end">
-          <Text fontSize={14} fontWeight="600" color="$color">
-            {t('mweb.createPod.bookingEnd')}
-          </Text>
-          <XStack
-            gap={8}
-            flexWrap="wrap"
-            role="radiogroup"
-            aria-label={t('mweb.createPod.bookingEnd')}
-          >
-            {ends.map((option) => (
-              <TimeChip
-                key={option}
-                testID={`create-pod-booking-end-${option}`}
-                ariaLabel={fmt.formatTime(option)}
-                selected={option === endIso}
-                blocked={false}
-                paddingHorizontal={14}
-                onPress={() => setWindow(startIso, option)}
-              >
-                {fmt.formatTime(option)}
-              </TimeChip>
-            ))}
-          </XStack>
-          <Text fontSize={12} color={ends.length ? '$muted' : '$danger'}>
-            {ends.length ? t('mweb.createPod.bookingEndHint') : t('mweb.createPod.bookingNoEnd')}
-          </Text>
-        </YStack>
+        <BookingEndPicker ends={ends} endIso={endIso} onPick={(end) => setWindow(startIso, end)} />
       ) : null}
       <VenueQuoteCard {...quote} currencySymbol={currencySymbol} />
     </YStack>

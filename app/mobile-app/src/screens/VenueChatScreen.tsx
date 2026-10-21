@@ -22,6 +22,35 @@ import { useVenueChatSocket } from '@/hooks/useVenueChatSocket';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
+/** A thread that cannot open: not this user's (go back) or failed to load (retry). */
+function VenueChatClosed({
+  unavailable,
+  onBack,
+  onRetry,
+}: Readonly<{ unavailable: boolean; onBack: () => void; onRetry: () => void }>) {
+  const { t } = useTranslation();
+  if (unavailable) {
+    return (
+      <EmptyState
+        testID="venue-chat-unavailable"
+        icon="chat-bubble-outline"
+        title={t('mweb.venueChat.unavailable')}
+        actionLabel={t('mweb.common.goBack')}
+        onAction={onBack}
+      />
+    );
+  }
+  return (
+    <EmptyState
+      testID="venue-chat-failed"
+      icon="error-outline"
+      title={t('mweb.venueChat.loadFailed')}
+      actionLabel={t('mweb.venueChat.retry')}
+      onAction={onRetry}
+    />
+  );
+}
+
 /** `/venue-chat/:podId` — the private thread between a pod's hosts and the venue
  * it is booked at: the group chat's list, bubbles and composer, with the other
  * side in the header. RN twin of mWeb's VenueChatPage. */
@@ -80,15 +109,7 @@ export function VenueChatScreen() {
           onBack={goBack}
         />
         {closed ? (
-          <EmptyState
-            testID={chat.unavailable ? 'venue-chat-unavailable' : 'venue-chat-failed'}
-            icon={chat.unavailable ? 'chat-bubble-outline' : 'error-outline'}
-            title={
-              chat.unavailable ? t('mweb.venueChat.unavailable') : t('mweb.venueChat.loadFailed')
-            }
-            actionLabel={chat.unavailable ? t('mweb.common.goBack') : t('mweb.venueChat.retry')}
-            onAction={chat.unavailable ? goBack : chat.reload}
-          />
+          <VenueChatClosed unavailable={chat.unavailable} onBack={goBack} onRetry={chat.reload} />
         ) : (
           <KeyboardScreen>
             <ChatErrorBanner error={error} onDismiss={() => setError(null)} />

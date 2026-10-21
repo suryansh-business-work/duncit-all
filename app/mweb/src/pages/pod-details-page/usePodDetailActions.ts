@@ -102,13 +102,21 @@ export function usePodDetailActions({
 
   useEffect(() => {
     if (!referralFromUrl || !id) return;
+    // A failed redeem is the member's to see; a failed refresh after a good one is only logged.
     redeem({ variables: { token: referralFromUrl } })
-      .then(() => {
-        setSnack(t('mweb.podDetails.joinedViaReferral'));
-        setConfettiOpen(true);
-        refetch().catch((error) => logs.mWeb.error('PodDetails', 'refetchAfterReferral', { error }));
-      })
-      .catch((e) => setSnack(e.message));
+      .then(
+        () => {
+          setSnack(t('mweb.podDetails.joinedViaReferral'));
+          setConfettiOpen(true);
+          return true;
+        },
+        (e: Error) => {
+          setSnack(e.message);
+          return false;
+        },
+      )
+      .then((joined) => (joined ? refetch() : undefined))
+      .catch((error) => logs.mWeb.error('PodDetails', 'refetchAfterReferral', { error }));
   }, [referralFromUrl, id, redeem, refetch, t]);
 
   const onToggleSave = async () => {

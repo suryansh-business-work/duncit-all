@@ -84,23 +84,34 @@ export async function repairWipedAddresses(): Promise<{ users: number; parts: nu
   const wiped = await wipedParts();
   if (wiped.size === 0) return { users: 0, parts: 0 };
   const latest = await lastWrites([...wiped.keys()]);
-  let users = 0;
-  let parts = 0;
-  for (const [userId, blanked] of wiped) {
-    const before = await UserModel.findById(userId).lean<{ profile?: { address?: Record<string, unknown> } }>();
-    if (!before) continue;
-    const current = before.profile?.address ?? {};
-    const set: Record<string, string> = {};
-    for (const [part, { value, at }] of blanked) {
-      const field = `profile.address.${part}`;
-      const untouchedSince = (latest.get(`${userId}:${field}`) ?? at) <= at;
-      if (untouchedSince && !current[part]) set[field] = value;
-    }
-    if (Object.keys(set).length === 0) continue;
-    const after = await UserModel.findByIdAndUpdate(userId, { $set: set }, { new: true });
-    await userAuditService.record({ userId, before, after });
-    users += 1;
-    parts += Object.keys(set).length;
+  // Each user is read, written and logged on their own, so they repair side by side.
+  const restored = await Promise.all(
+    [...wiped].map(([userId, blanked]) => restoreUser(userId, blanked, latest))
+  );
+  return {
+    users: restored.filter((count) => count > 0).length,
+    parts: restored.reduce((sum, count) => sum + count, 0),
+  };
+}
+
+/** Restore one user's still-blank, untouched parts; answers how many were put back. */
+async function restoreUser(
+  userId: string,
+  blanked: Map<string, { value: string; at: number }>,
+  latest: Map<string, number>
+): Promise<number> {
+  const before = await UserModel.findById(userId).lean<{ profile?: { address?: Record<string, unknown> } }>();
+  if (!before) return 0;
+  const current = before.profile?.address ?? {};
+  const set: Record<string, string> = {};
+  for (const [part, { value, at }] of blanked) {
+    const field = `profile.address.${part}`;
+    const untouchedSince = (latest.get(`${userId}:${field}`) ?? at) <= at;
+    if (untouchedSince && !current[part]) set[field] = value;
   }
-  return { users, parts };
+  const count = Object.keys(set).length;
+  if (count === 0) return 0;
+  const after = await UserModel.findByIdAndUpdate(userId, { $set: set }, { new: true });
+  await userAuditService.record({ userId, before, after });
+  return count;
 }

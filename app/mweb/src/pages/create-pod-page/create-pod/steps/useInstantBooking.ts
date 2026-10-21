@@ -1,6 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { bookingCalendarRange, bookingDayOf, bookingEndOptions, bookingSpaceLabel, bookingTiles } from '@duncit/utils';
+import {
+  bookingCalendarRange,
+  bookingClosedTiles,
+  bookingDayOf,
+  bookingEndOptions,
+  bookingSpaceLabel,
+  bookingTiles,
+} from '@duncit/utils';
 import { useDateFormat } from '../../../../utils/dateFormat';
 import { VENUE_BOOKING_CALENDAR, VENUE_BOOKING_PRICING } from '../venueBooking';
 
@@ -35,8 +42,12 @@ export function useInstantBooking(venueId: string, spaceLabel: string) {
         : null,
     [pricing, calendar]
   );
+  // What the host can pick, then the days the venue closed itself, labelled.
   const tiles = useMemo(
-    () => (rules && days ? bookingTiles(days, rules, fmt.timeZone, fmt.clock.nowMs()) : []),
+    () =>
+      rules && days
+        ? [...bookingTiles(days, rules, fmt.timeZone, fmt.clock.nowMs()), ...bookingClosedTiles(days, fmt.timeZone)]
+        : [],
     [rules, days, fmt]
   );
   /** The end times a start allows (empty when its day is not loaded). */

@@ -171,6 +171,14 @@ const perHourPricing = {
   max_hours: 0,
   booking_increment_minutes: 60,
   pet_fee: 0,
+  base_rate: 500,
+  min_spend: 0,
+  slots: [],
+  operating_hours: [],
+  price_rules: [],
+  deposit: 2000,
+  cleaning_fee: 0,
+  gst_enabled: false,
 };
 /** Two days out, open 10:00–13:00 in the admin zone. */
 function openDay() {
@@ -480,12 +488,21 @@ describe('VenueSlotStep', () => {
     expect(await screen.findByTestId('create-pod-booking-model')).toHaveTextContent(
       'Priced per hour',
     );
-    // Starts every hour that still leaves one hour before closing: 10, 11, 12.
-    await screen.findByTestId(`slot-tile-${at(10)}`);
+    // Before a time is picked, the venue's own terms: its rate per hour, the
+    // shortest booking and the deposit settled at the venue.
+    const terms = screen.getByTestId('create-pod-venue-terms');
+    expect(terms).toHaveTextContent(/₹500\.00 \/ hour/);
+    expect(terms).toHaveTextContent(/At least 1 hours/);
+    expect(terms).toHaveTextContent(/₹2,000\.00, settled at the venue/);
+    // Starts every hour that still leaves one hour before closing: 10, 11, 12,
+    // each tile priced at the venue's rate.
+    expect(await screen.findByTestId(`slot-tile-${at(10)}`)).toHaveTextContent(/₹500\.00 \/ hour/);
     expect(screen.getByTestId(`slot-tile-${at(12)}`)).toBeOnTheScreen();
     expect(screen.queryByTestId(`slot-tile-${at(13)}`)).toBeNull();
 
     fireEvent.press(screen.getByTestId(`slot-tile-${at(10)}`));
+    // Once a time is picked the live quote takes over from the terms.
+    await waitFor(() => expect(screen.queryByTestId('create-pod-venue-terms')).toBeNull());
     // The shortest window is filled in at once; the host can stretch it.
     await waitFor(() =>
       expect(screen.getByTestId('readout-end')).toHaveTextContent(inputText(at(11))),
@@ -533,6 +550,22 @@ describe('VenueSlotStep', () => {
     expect(screen.getByTestId('readout-slot')).toHaveTextContent(/^$/);
     // A slot carries its own end, so no end-time picker is shown.
     expect(screen.queryByTestId('create-pod-booking-end')).toBeNull();
+  });
+
+  it('labels a holiday the venue set as closed, and it cannot be picked', async () => {
+    const { date, open, close } = openDay();
+    routeBookingReads(perHourPricing, {
+      buffer_minutes: 0,
+      min_notice_minutes: 0,
+      days: [{ date, closed_reason: 'HOLIDAY', open, close, busy: [], slots: [] }],
+    });
+    renderWithProviders(<VenueSlotHarness initial={instantVenue} />);
+    const closed = await screen.findByTestId(`slot-tile-closed|${date}`);
+    expect(closed).toHaveTextContent(/Closed/);
+    expect(closed).toHaveTextContent(/Holiday/);
+    expect(closed).toHaveProp('aria-disabled', true);
+    fireEvent.press(closed);
+    expect(screen.getByTestId('readout-start')).toHaveTextContent(/^$/);
   });
 
   it("shows the server's quote for the picked window, read-only", async () => {

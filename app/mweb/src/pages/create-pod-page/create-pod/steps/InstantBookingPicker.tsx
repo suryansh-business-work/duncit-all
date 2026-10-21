@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { Alert, Chip, CircularProgress, MenuItem, Stack, TextField } from '@mui/material';
 import { buildSlotLabels } from '@duncit/slots';
 import { SlotCalendar } from '@duncit/slots/mui';
-import { bookingCalendarProps, bookingSlotId, venueBookingModelKey, type BookingTile } from '@duncit/utils';
+import { bookingCalendarProps, bookingSlotId, formatStatementMoney, venueBookingModelKey, type BookingTile } from '@duncit/utils';
+import { usePricing } from '../../../../hooks/usePricing';
 import { useDateFormat } from '../../../../utils/dateFormat';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
@@ -10,6 +11,7 @@ import { useVenueQuote } from '../useVenueQuote';
 import BookingGuestFields from './BookingGuestFields';
 import { useInstantBooking } from './useInstantBooking';
 import VenueQuoteCard from './VenueQuoteCard';
+import VenueTermsCard from './VenueTermsCard';
 
 interface Props {
   form: CreatePodForm;
@@ -30,6 +32,7 @@ const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 export default function InstantBookingPicker({ form, venueId, spaceLabel }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
+  const { currency } = usePricing();
   const booking = useInstantBooking(venueId, spaceLabel);
   const quote = useVenueQuote(form);
   const start = form.watch('pod_date_time');
@@ -38,7 +41,8 @@ export default function InstantBookingPicker({ form, venueId, spaceLabel }: Read
   const endIso = end ? end.toISOString() : '';
   const perSlot = booking.pricing?.model === 'PER_SLOT';
   const labels = useMemo(() => {
-    const base = buildSlotLabels(t, 'mweb.slots');
+    // The only whole-day tiles here are the days the venue closed itself.
+    const base = { ...buildSlotLabels(t, 'mweb.slots'), wholeDay: t('mweb.createPod.venueTerms.closed') };
     return perSlot ? base : { ...base, availableSlots: t('mweb.createPod.bookingStart') };
   }, [t, perSlot]);
 
@@ -72,6 +76,7 @@ export default function InstantBookingPicker({ form, venueId, spaceLabel }: Read
         data-testid="create-pod-booking-model"
         sx={{ alignSelf: 'flex-start' }}
       />
+      {!startIso && <VenueTermsCard pricing={pricing} />}
       <BookingGuestFields form={form} pricing={pricing} />
       {booking.calendarError ? (
         <Alert severity="error" data-testid="create-pod-calendar-error">{t('mweb.createPod.calendarLoadFailed')}</Alert>
@@ -83,6 +88,9 @@ export default function InstantBookingPicker({ form, venueId, spaceLabel }: Read
             error: timeError,
             selectedId,
             onPick: pick,
+            model: pricing.model,
+            t,
+            money: (value) => formatStatementMoney(value, currency),
           })}
           fmt={fmt}
           labels={labels}

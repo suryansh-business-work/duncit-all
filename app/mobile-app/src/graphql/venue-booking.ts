@@ -11,12 +11,36 @@ export const HostBookingPricingDocument = gql(`
     venuePricing(venue_id: $venue_id) {
       model
       configured
+      base_rate
       min_pax
       max_pax
       min_hours
       max_hours
       booking_increment_minutes
+      min_spend
+      slots {
+        price
+        days_of_week
+      }
+      operating_hours {
+        day
+        open
+        close
+      }
+      price_rules {
+        type
+        label
+        days
+        dates
+        from
+        to
+        mode
+        value
+      }
+      deposit
+      cleaning_fee
       pet_fee
+      gst_enabled
     }
   }
 `);

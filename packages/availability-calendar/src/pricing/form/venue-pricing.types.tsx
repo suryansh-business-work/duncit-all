@@ -42,6 +42,12 @@ function ruleValues(rule: PricingRule): PricingRuleValues {
   };
 }
 
+/** A slot as `PricingSlotInput` takes it — only its own fields, never the
+ * `__typename` a slot read back from the server carries. */
+export function slotValues(s: Readonly<PricingSlotValues>): PricingSlotValues {
+  return { start_time: s.start_time, end_time: s.end_time, price: s.price, days_of_week: [...s.days_of_week] };
+}
+
 /** The saved pricing as form values; an unconfigured venue starts on per-guest pricing. */
 export function toFormValues(p: VenuePricingData | null | undefined): VenuePricingFormValues {
   const hours = p?.operating_hours ?? [];
@@ -54,7 +60,7 @@ export function toFormValues(p: VenuePricingData | null | undefined): VenuePrici
     max_hours: p?.max_hours ?? 0,
     booking_increment_minutes: p?.booking_increment_minutes ?? 60,
     min_spend: p?.min_spend ?? 0,
-    slots: (p?.slots ?? []).map((s) => ({ ...s, days_of_week: [...s.days_of_week] })),
+    slots: (p?.slots ?? []).map(slotValues),
     // An empty list means "the venue's usual hours" on the server.
     custom_hours: hours.length > 0,
     operating_hours: WEEK.map((day) => {
@@ -95,7 +101,7 @@ export function toPricingInput(v: VenuePricingFormValues): VenuePricingInput {
     max_hours: v.max_hours,
     booking_increment_minutes: v.booking_increment_minutes,
     min_spend: v.min_spend,
-    slots: v.model === 'PER_SLOT' ? v.slots : [],
+    slots: v.model === 'PER_SLOT' ? v.slots.map(slotValues) : [],
     operating_hours: v.custom_hours
       ? v.operating_hours.filter((h) => h.enabled).map(({ day, open, close }) => ({ day, open, close }))
       : [],

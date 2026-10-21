@@ -14,7 +14,7 @@ import {
 } from '../src/pricing/format';
 import { dayPrice, rulesOn } from '../src/pricing/calendar/day-price';
 import { bookingOf, defaultSample, wallInstant } from '../src/pricing/preview/usePriceQuote';
-import { savedPricingInput, toFormValues, toRuleInput } from '../src/pricing/form';
+import { savedPricingInput, toFormValues, toPricingInput, toRuleInput } from '../src/pricing/form';
 import { EVENT_REQUEST_STATUS_COLOR, eventRequestStatusLabel, isAnswerable } from '../src/event-requests/status';
 import { buildRespondSchema, offerInput, respondDefaults } from '../src/event-requests/respond-form';
 import type { PricingRule } from '../src/pricing/types';
@@ -179,6 +179,19 @@ describe('pricing form values', () => {
   it('keeps an unconfigured venue without a model when a calendar edit resends its pricing', () => {
     expect(savedPricingInput(makePricing({ model: null, configured: false })).model).toBeNull();
     expect(savedPricingInput(makePricing({ model: 'FLAT' })).model).toBe('FLAT');
+  });
+
+  // A slot read back from the server carries Apollo's __typename, which
+  // PricingSlotInput rejects — the save, the preview's draft and a calendar
+  // edit must send only the slot's own fields.
+  it('sends a saved slot without the __typename it was read with', () => {
+    const slot = { __typename: 'PricingSlot', start_time: '13:00', end_time: '14:00', price: 399, days_of_week: [0, 1, 2, 3, 4, 5, 6] };
+    const pricing = makePricing({ model: 'PER_SLOT', slots: [slot] as never });
+    const expected = [{ start_time: '13:00', end_time: '14:00', price: 399, days_of_week: [0, 1, 2, 3, 4, 5, 6] }];
+
+    expect(toFormValues(pricing).slots).toEqual(expected);
+    expect(savedPricingInput(pricing).slots).toEqual(expected);
+    expect(toPricingInput({ ...toFormValues(pricing), slots: [slot] as never }).slots).toEqual(expected);
   });
 });
 

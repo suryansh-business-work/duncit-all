@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Autocomplete, Stack, TextField } from '@mui/material';
+import { fireAndForget, logs } from '@duncit/logs';
 import {
   COUNTRY_OPTIONS,
   findCountry,
@@ -31,9 +32,14 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
   // Load the selected state's cities on demand (the dataset is a lazy chunk).
   useEffect(() => {
     let active = true;
-    loadCitiesForState(form.country_code, form.state_code).then((next) => {
-      if (active) setCities(next);
-    });
+    fireAndForget(
+      loadCitiesForState(form.country_code, form.state_code).then((next) => {
+        if (active) setCities(next);
+      }),
+      logs.portal.admin,
+      'LocationHierarchyFields',
+      'loadCities'
+    );
     return () => {
       active = false;
     };

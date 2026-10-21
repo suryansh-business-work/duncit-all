@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { fireAndForget, logs } from '@duncit/logs';
 import { fetchIncidents, fetchServices, fetchSummary } from '../api';
 import type {
   Incident,
@@ -80,10 +81,10 @@ export function useStatusData(): StatusData {
       }
     };
 
-    const refreshSummary = () => track(loadSummary).catch(() => undefined);
-    const refreshIncidents = () => track(loadIncidents).catch(() => undefined);
+    const refreshSummary = () => fireAndForget(track(loadSummary), logs.website.status, 'useStatusData', 'summary');
+    const refreshIncidents = () => fireAndForget(track(loadIncidents), logs.website.status, 'useStatusData', 'incidents');
 
-    track(loadServices).catch(() => undefined);
+    fireAndForget(track(loadServices), logs.website.status, 'useStatusData', 'services');
     refreshSummary();
     refreshIncidents();
     const summaryTimer = setInterval(refreshSummary, SUMMARY_REFRESH_MS);

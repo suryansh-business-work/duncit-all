@@ -53,7 +53,7 @@ export function startDocToc(nav: HTMLElement): void {
   const build = () => {
     const headings = [...target.querySelectorAll<HTMLElement>(selector)].filter((h) => h.textContent?.trim());
     reading?.disconnect();
-    list.replaceChildren(...headings.map(tocItem));
+    list.replaceChildren(...headings.map((heading, index) => tocItem(heading, index)));
     nav.classList.toggle('hidden', headings.length < 2);
     reading = typeof IntersectionObserver === 'undefined' ? null : watchReading(headings, list);
   };

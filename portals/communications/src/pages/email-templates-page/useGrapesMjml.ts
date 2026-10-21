@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Editor } from 'grapesjs';
+import { fireAndForget, logs } from '@duncit/logs';
 
 interface Args {
   /** The MJML the editor loads. Only read when the canvas is first built. */
@@ -86,7 +87,7 @@ export function useGrapesMjml({ initialMjml, onChange, host }: Args): Result {
       }
     };
 
-    build();
+    fireAndForget(build(), logs.portal.communications, 'useGrapesMjml', 'build');
     return () => {
       disposed = true;
       built?.destroy();

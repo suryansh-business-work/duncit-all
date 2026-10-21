@@ -39,20 +39,22 @@ export default function PortalModeGate({
 
   useEffect(() => {
     let active = true;
-    const check = async () => {
-      try {
-        const res = await fetch(graphqlUrl, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ query: QUERY, variables: { key: portalKey } }),
+    // One chain that ends in its own catch, so nothing is left floating.
+    const check = () => {
+      fetch(graphqlUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: QUERY, variables: { key: portalKey } }),
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          const next = json?.data?.portalMode?.mode as PortalModeState | undefined;
+          if (active && next) setMode(next);
+        })
+        .catch(() => {
+          // Fail open — never block on a transient error.
+          if (active) setMode('LIVE');
         });
-        const json = await res.json();
-        const next = json?.data?.portalMode?.mode as PortalModeState | undefined;
-        if (active && next) setMode(next);
-      } catch {
-        // Fail open — never block on a transient error.
-        if (active) setMode('LIVE');
-      }
     };
     check();
     const timer = globalThis.setInterval(check, pollMs);

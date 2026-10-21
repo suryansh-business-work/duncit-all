@@ -153,7 +153,7 @@ export default function EventTicketsPage() {
         busy={checkInState.loading}
         onClose={() => setGroup(null)}
         onSubmit={(companions) => {
-          if (group) onCheckIn(group.ticket, companions);
+          if (group) onCheckIn(group.ticket, companions).catch((e: Error) => notifyError(e.message));
         }}
       />
     </Stack>

@@ -170,7 +170,7 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
           data-testid="crm-ask-ai-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); } }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input).catch((err) => setError(parseApiError(err))); } }}
         />
         <DuncitIconButton color="primary" onClick={() => send(input)} disabled={loading || !input.trim()} aria-label={t('crm.components.send')}>
           <SendIcon />

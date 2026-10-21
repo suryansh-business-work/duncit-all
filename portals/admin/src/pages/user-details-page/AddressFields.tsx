@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Autocomplete, Grid, TextField } from '@mui/material';
+import { fireAndForget, logs } from '@duncit/logs';
 import {
   findState,
   getStatesForCountry,
@@ -52,9 +53,14 @@ export default function AddressFields({
   // Cities for the chosen state load lazily (the dataset is its own chunk).
   useEffect(() => {
     let active = true;
-    loadCitiesForState(COUNTRY_CODE, stateCode).then((next) => {
-      if (active) setCities(next);
-    });
+    fireAndForget(
+      loadCitiesForState(COUNTRY_CODE, stateCode).then((next) => {
+        if (active) setCities(next);
+      }),
+      logs.portal.admin,
+      'AddressFields',
+      'loadCities'
+    );
     return () => {
       active = false;
     };

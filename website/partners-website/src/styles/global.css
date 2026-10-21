@@ -143,7 +143,9 @@
   transition:
     transform 500ms var(--ease-soft),
     box-shadow 500ms var(--ease-soft);
-  &:hover {
+}
+@layer utilities {
+  .lift:hover {
     transform: translateY(-8px);
     box-shadow: 0 30px 60px -24px rgba(16, 14, 20, 0.45);
   }

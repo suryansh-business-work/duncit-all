@@ -137,12 +137,16 @@
     box-shadow 350ms var(--ease-smooth),
     background-color 200ms ease,
     border-color 200ms ease;
-  &:hover {
+}
+@layer utilities {
+  .btn:hover {
     transform: translateY(-2px) scale(1.02);
   }
   @media (prefers-reduced-motion: reduce) {
-    transition: none;
-    &:hover {
+    .btn {
+      transition: none;
+    }
+    .btn:hover {
       transform: none;
     }
   }
@@ -155,16 +159,18 @@
   filter: blur(70px);
   pointer-events: none;
   animation: blob-drift 18s ease-in-out infinite alternate;
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
 }
 
 /* A floating card that gently bobs. */
 @utility bob {
   animation: bob 6s ease-in-out infinite;
+}
+@layer utilities {
   @media (prefers-reduced-motion: reduce) {
-    animation: none;
+    .blob,
+    .bob {
+      animation: none;
+    }
   }
 }
 

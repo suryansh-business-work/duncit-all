@@ -42,6 +42,13 @@ export function useCaptcha(graphqlUrl: string): CaptchaState {
       })
       .finally(() => {
         if (current) setLoading(false);
+      })
+      // Unreachable by construction: the client turns every failure into null
+      // (the retry state above) and never rejects. The catch only ends the
+      // chain; if that ever changes, the widget still lands in its retry state.
+      /* v8 ignore next 3 */
+      .catch(() => {
+        if (current) setFailed(true);
       });
     return () => {
       current = false;

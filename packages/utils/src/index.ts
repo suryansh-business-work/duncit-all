@@ -657,6 +657,7 @@ export {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,
   attendeeSeatCount,
+  clampSpots,
   payableSpots,
   payingAttendees,
   payingSeats,

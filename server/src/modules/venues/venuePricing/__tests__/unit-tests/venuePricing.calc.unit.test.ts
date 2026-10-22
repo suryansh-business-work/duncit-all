@@ -2,7 +2,7 @@
  * The one venue price calculation: every model, rule stacking, limits,
  * fees, GST, the commission on top, rounding, and the Asia/Kolkata day.
  */
-import { applicableRules, isPricingConfigured, quoteVenuePrice } from '../../venuePricing.calc';
+import { applicableRules, guestRange, isPricingConfigured, quoteVenuePrice, spotsProblem } from '../../venuePricing.calc';
 import type { QuoteRequest, VenuePricing } from '../../venuePricing.types';
 
 const TZ = 'Asia/Kolkata';
@@ -187,5 +187,46 @@ describe('helpers', () => {
   it('applicableRules labels a rule by its type when it has no label', () => {
     const { applied } = applicableRules([{ ...saturdayPlus20 }], '2027-01-02', 6, 10000);
     expect(applied[0]).toMatchObject({ label: 'Weekday surcharge', amount: 20 });
+  });
+});
+
+describe('guest range as spot bounds', () => {
+  const hourly: VenuePricing = { ...base, model: 'PER_HOUR', base_rate: 1000, min_pax: 4, max_pax: 20 };
+
+  it('reads the venue guest range for every model, 0s when pricing is unset', () => {
+    expect(guestRange(hourly)).toEqual({ min: 4, max: 20 });
+    expect(guestRange({ ...hourly, model: 'FLAT' })).toEqual({ min: 4, max: 20 });
+    expect(guestRange({ ...hourly, model: null })).toEqual({ min: 0, max: 0 });
+    expect(guestRange(null)).toEqual({ min: 0, max: 0 });
+  });
+
+  it('floors fractional limits and treats missing ones as none', () => {
+    expect(guestRange({ ...hourly, min_pax: 3.7, max_pax: 19.9 })).toEqual({ min: 3, max: 19 });
+    expect(guestRange({ model: 'PER_HOUR' })).toEqual({ min: 0, max: 0 });
+  });
+
+  it('accepts spots inside the range and under the space capacity, edges included', () => {
+    expect(spotsProblem(hourly, 4, 30)).toBeNull();
+    expect(spotsProblem(hourly, 20, 30)).toBeNull();
+    expect(spotsProblem(hourly, 12, 12)).toBeNull();
+  });
+
+  it('refuses spots outside the venue guest range, naming the range', () => {
+    expect(spotsProblem(hourly, 3, 30)).toBe('This venue takes 4 to 20 guests — pick spots in that range');
+    expect(spotsProblem(hourly, 21, 30)).toBe('This venue takes 4 to 20 guests — pick spots in that range');
+  });
+
+  it('with no maximum, only refuses spots below the minimum', () => {
+    const open = { ...hourly, max_pax: 0 };
+    expect(spotsProblem(open, 2, 0)).toBe('This venue takes at least 4 guests — pick at least that many spots');
+    expect(spotsProblem(open, 500, 0)).toBeNull();
+  });
+
+  it('refuses spots above the space capacity even inside the venue range', () => {
+    expect(spotsProblem(hourly, 15, 10)).toBe('This space holds 10 people — pick 10 spots or fewer');
+  });
+
+  it('lets any spots through when neither the venue nor the space caps them', () => {
+    expect(spotsProblem({ ...base, model: null }, 9999, 0)).toBeNull();
   });
 });

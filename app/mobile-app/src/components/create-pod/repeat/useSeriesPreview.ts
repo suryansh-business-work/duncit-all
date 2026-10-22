@@ -68,7 +68,7 @@ export function useSeriesPreview(values: CreatePodFormValues, timeZone: string) 
       values.venue_id,
       values.venue_slot_id,
       values.venue_space_label,
-      values.venue_booking_pax,
+      values.no_of_spots_text,
       values.venue_booking_pets,
       values.pod_date_time_text,
       values.pod_end_date_time_text,

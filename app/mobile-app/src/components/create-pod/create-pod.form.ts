@@ -311,7 +311,6 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
         .string()
         .refine(intIn(0, 1999), t('mweb.createPod.validation.amountRange')),
       venue_space_label: z.string(),
-      venue_booking_pax: z.number().min(0).default(0),
       venue_booking_pets: z.boolean().default(false),
       no_of_spots_text: z
         .string()
@@ -477,7 +476,7 @@ export const venueBookingOf = (values: CreatePodFormValues) =>
   instantBookingInput({
     start: parseDateTimeText(values.pod_date_time_text)?.toISOString() ?? null,
     end: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
-    pax: values.venue_booking_pax,
+    pax: Number(values.no_of_spots_text) || 0,
     pets: values.venue_booking_pets,
     spaceLabel: values.venue_space_label,
   });

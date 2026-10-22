@@ -17,6 +17,8 @@ interface Props {
   boundsHint?: string;
   /** When true, spots are fixed (no range to choose) — shown read-only. */
   readOnly?: boolean;
+  /** Why a read-only count is fixed, when it is not the venue space. */
+  fixedHint?: string;
 }
 
 /**
@@ -35,6 +37,7 @@ export function SpotsStepper({
   slidable = false,
   boundsHint,
   readOnly = false,
+  fixedHint,
 }: Readonly<Props>) {
   const { color } = useThemeColors();
   const { t } = useTranslation();
@@ -45,7 +48,7 @@ export function SpotsStepper({
   // The bounds sentence outranks the generic hint wherever there is one — the
   // MUI twin says the same thing in the same place (rule 27).
   const stepperHint = readOnly
-    ? t('mweb.createPod.spotsFixedHint')
+    ? (fixedHint ?? t('mweb.createPod.spotsFixedHint'))
     : (boundsHint ?? t('mweb.createPod.spotsHint'));
 
   if (slidable) {

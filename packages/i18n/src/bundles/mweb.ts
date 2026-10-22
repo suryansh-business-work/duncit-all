@@ -2580,7 +2580,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         perHour: 'Priced per hour',
         flat: 'Flat price for the booking',
       },
-      bookingGuests: 'Guests',
       bookingGuestsRange: 'Between {min} and {max} guests',
       bookingGuestsMin: 'At least {min} guests',
       bookingPets: 'Pets are coming (the venue charges a pet fee)',
@@ -2728,6 +2727,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       spotsHint: 'Number of available tickets.',
       spotsFixedHint: 'Set by the venue space you picked.',
       spotsBoundsHint: 'This activity needs at least {min}, and the space you booked holds {max}.',
+      spotsVenueHint: 'Pick {min} to {max} spots. This venue and space take up to {max} guests.',
+      spotsSetOnVenueStep: 'Set with your venue booking. Go back a step to change it.',
       decreaseSpots: 'Decrease spots',
       increaseSpots: 'Increase spots',
       // The earnings panel. Every number on it is a server waterfall value —

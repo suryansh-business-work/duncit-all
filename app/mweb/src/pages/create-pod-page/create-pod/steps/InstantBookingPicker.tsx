@@ -2,7 +2,14 @@ import { useMemo } from 'react';
 import { Alert, Chip, CircularProgress, MenuItem, Stack, TextField } from '@mui/material';
 import { buildSlotLabels } from '@duncit/slots';
 import { SlotCalendar } from '@duncit/slots/mui';
-import { bookingCalendarProps, bookingSlotId, formatStatementMoney, venueBookingModelKey, type BookingTile } from '@duncit/utils';
+import {
+  bookingCalendarProps,
+  bookingSlotId,
+  formatStatementMoney,
+  venueBookingModelKey,
+  type BookingTile,
+  type SpotsBounds,
+} from '@duncit/utils';
 import { usePricing } from '../../../../hooks/usePricing';
 import { useDateFormat } from '../../../../utils/dateFormat';
 import { useTranslation } from '../../../../i18n/useTranslation';
@@ -18,6 +25,8 @@ interface Props {
   venueId: string;
   /** The picked space, as the form stores it. */
   spaceLabel: string;
+  /** The range the pod's spots (= the booking's guests) may take. */
+  spots: SpotsBounds;
 }
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
@@ -29,7 +38,7 @@ const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
  * or already booked through, cannot be picked. The window becomes the pod's
  * window and the server's quote shows below. Native twin: InstantBookingPicker.
  */
-export default function InstantBookingPicker({ form, venueId, spaceLabel }: Readonly<Props>) {
+export default function InstantBookingPicker({ form, venueId, spaceLabel, spots }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
   const { currency } = usePricing();
@@ -77,7 +86,7 @@ export default function InstantBookingPicker({ form, venueId, spaceLabel }: Read
         sx={{ alignSelf: 'flex-start' }}
       />
       {!startIso && <VenueTermsCard pricing={pricing} />}
-      <BookingGuestFields form={form} pricing={pricing} />
+      <BookingGuestFields form={form} pricing={pricing} spots={spots} />
       {booking.calendarError ? (
         <Alert severity="error" data-testid="create-pod-calendar-error">{t('mweb.createPod.calendarLoadFailed')}</Alert>
       ) : (

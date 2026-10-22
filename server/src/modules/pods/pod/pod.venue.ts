@@ -431,7 +431,11 @@ export async function resolveInstantBookingForCreate(input: InstantBookingCreate
   if (podMode !== 'PHYSICAL' || input.venue_slot_id || !input.venue_booking) return null;
   if (!input.venue_id) throw new GraphQLError('Select a venue', { extensions: { code: 'BAD_USER_INPUT' } });
   const { venuePricingService } = await import('@modules/venues/venuePricing/venuePricing.service');
-  const booking: InstantBookingRequest = { ...input.venue_booking, pax: input.venue_booking.pax ?? input.no_of_spots ?? 0 };
+  // The pod's spots ARE the booking's guests — one number, so the venue is
+  // priced for exactly the seats the pod sells. An older build's separate
+  // guest count only stands in when no spots were sent.
+  const spots = Math.floor(Number(input.no_of_spots) || 0);
+  const booking: InstantBookingRequest = { ...input.venue_booking, pax: spots > 0 ? spots : (input.venue_booking.pax ?? 0) };
   // A portal re-routing a pod: its own current booking does not block the new window.
   const prepared = await venuePricingService.prepare(input.venue_id, booking, input.reroute_pod_id ?? undefined);
   input.pod_date_time = prepared.start.toISOString();

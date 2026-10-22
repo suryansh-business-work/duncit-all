@@ -52,7 +52,7 @@ export function seriesPlanOf(values: CreatePodFormValues, timeZone: string): Pod
       venue_booking: instantBookingInput({
         start,
         end,
-        pax: values.venue_booking_pax,
+        pax: values.no_of_spots,
         pets: values.venue_booking_pets,
         spaceLabel: values.venue_space_label,
       }),
@@ -98,7 +98,7 @@ export function useSeriesPreview(values: CreatePodFormValues) {
       values.venue_id,
       values.venue_slot_id,
       values.venue_space_label,
-      values.venue_booking_pax,
+      values.no_of_spots,
       values.venue_booking_pets,
       startMs,
       endMs,

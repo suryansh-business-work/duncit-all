@@ -37,12 +37,15 @@ export const SPOTS_HARD_MAX = 10000;
 
 /**
  * The range a host may size a pod within: never below the sub-category's
- * minimum (an admin says a doubles game needs 4), never above the capacity of
- * the venue space they booked.
+ * minimum (an admin says a doubles game needs 4) or the venue's minimum guests,
+ * never above the capacity of the venue space they booked or the venue's
+ * maximum guests — anything up to the cap, not only the cap itself. Spots ARE
+ * the venue booking's guests, so the venue's guest range holds for every
+ * pricing model, not only per-guest pricing.
  *
- * A virtual pod has no venue, so it is only floored, not capped. When the venue
- * capacity is at or below the minimum there is nothing to choose — `slidable`
- * is false and the caller shows a fixed number instead of a dead slider.
+ * A virtual pod has no venue, so it is only floored, not capped. When the cap
+ * is at or below the floor there is nothing to choose — `slidable` is false and
+ * the caller shows a fixed number instead of a dead slider.
  *
  * Shared so mWeb, native and the portal pod-form agree on the bounds even
  * though their controls are different components (rules 27 + 40).
@@ -50,15 +53,26 @@ export const SPOTS_HARD_MAX = 10000;
 export function spotsBounds(input: {
   minPax?: number | null;
   venueCapacity?: number | null;
+  /** The venue's minimum guests (Venue Pricing Module); 0 = none. */
+  venueMinPax?: number | null;
+  /** The venue's maximum guests (Venue Pricing Module); 0 = no limit. */
+  venueMaxPax?: number | null;
 }): SpotsBounds {
-  const min = Math.max(0, Math.floor(Number(input.minPax) || 0));
-  const capacity = Math.floor(Number(input.venueCapacity) || 0);
-  const hasCapacity = capacity > 0;
-  const max = Math.max(min, hasCapacity ? capacity : SPOTS_HARD_MAX);
+  const min = Math.max(wholeCount(input.minPax), wholeCount(input.venueMinPax));
+  const caps = [wholeCount(input.venueCapacity), wholeCount(input.venueMaxPax)].filter((cap) => cap > 0);
+  const hasCapacity = caps.length > 0;
+  const max = Math.max(min, hasCapacity ? Math.min(...caps) : SPOTS_HARD_MAX);
   // A slider needs BOTH ends to be real. With no venue the ceiling is the
   // schema's 10,000, and dragging across that range is useless — those pods keep
   // the numeric stepper, still floored by the minimum.
   return { min, max, slidable: hasCapacity && max > min };
+}
+
+const wholeCount = (value?: number | null) => Math.max(0, Math.floor(Number(value) || 0));
+
+/** `value` held inside `bounds` — what a spots field snaps to when its range moves. */
+export function clampSpots(value: number, bounds: Readonly<SpotsBounds>): number {
+  return Math.min(bounds.max, Math.max(bounds.min, Math.floor(Number(value) || 0)));
 }
 
 /**

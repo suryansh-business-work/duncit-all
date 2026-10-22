@@ -2,7 +2,9 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { guestRange } from '@modules/venues/venuePricing/venuePricing.calc';
 import { podSeatsTaken } from './pod.seats';
 
 /**
@@ -30,7 +32,8 @@ export interface PodSpotLimits {
   max: number;
   /** Seats already held: attendees plus every extra seat a booking bought. */
   seats_taken: number;
-  /** The booked space's capacity, or 0 when the pod books no capped space. */
+  /** The most the venue takes — its booked space's capacity or its maximum
+   * guests, whichever is smaller — or 0 when nothing caps the pod. */
   venue_capacity: number;
   /** The activity's own floor, from the club's sub-category (0 = none). */
   min_pax: number;
@@ -45,6 +48,14 @@ async function venueCapacityOf(pod: any): Promise<number> {
   if (!pod?.venue_slot_id) return 0;
   const slot = await VenueSlotModel.findById(pod.venue_slot_id).select('capacity').lean();
   return Math.max(0, Math.floor(Number(slot?.capacity) || 0));
+}
+
+/** The venue's own guest range (Venue Pricing Module) — a pod's spots are its
+ * booking's guests, so it bounds every venue pod. 0s when the venue has none. */
+async function venueGuestsOf(pod: { venue_id?: unknown } | null | undefined): Promise<{ min: number; max: number }> {
+  if (!pod?.venue_id || !Types.ObjectId.isValid(String(pod.venue_id))) return { min: 0, max: 0 };
+  const venue = await VenueModel.findById(String(pod.venue_id)).select('pricing.model pricing.min_pax pricing.max_pax').lean();
+  return guestRange(venue?.pricing);
 }
 
 /** The fewest people the pod's activity needs, from its club's sub-category. */
@@ -87,7 +98,10 @@ export async function resolveSpotLimits(
       can_decrease: false,
     };
   }
-  const [venueCapacity, minPax] = await Promise.all([venueCapacityOf(pod), minPaxOf(pod)]);
+  const [slotCapacity, activityMin, guests] = await Promise.all([venueCapacityOf(pod), minPaxOf(pod), venueGuestsOf(pod)]);
+  const caps = [slotCapacity, guests.max].filter((cap) => cap > 0);
+  const venueCapacity = caps.length > 0 ? Math.min(...caps) : 0;
+  const minPax = Math.max(activityMin, guests.min);
   const floor = options.canDecrease ? Math.max(minPax, seatsTaken) : Math.max(minPax, seatsTaken, current);
   const ceiling = venueCapacity > 0 ? venueCapacity : SPOTS_HARD_MAX;
   // A pod already sized past its space's capacity (the space was shrunk after
@@ -140,7 +154,7 @@ export async function assertSpotsWithinLimits(
   }
   if (limits.venue_capacity > 0 && spots > limits.venue_capacity) {
     throw new GraphQLError(
-      `The booked space holds ${limits.venue_capacity} people — the pod cannot have more spots than that`,
+      `This venue and space take up to ${limits.venue_capacity} people — the pod cannot have more spots than that`,
       { extensions: { code: 'BAD_USER_INPUT' } }
     );
   }

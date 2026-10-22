@@ -43,9 +43,8 @@ export interface CreatePodFormValues {
   venue_slot_id: string;
   /** Selected venue space/type (a capacity item label) — drives No. of spots. */
   venue_space_label: string;
-  /** Instant booking (no slot id): PER_PAX guests (0 = not per guest) and
-   * whether pets come (pet fee). The window is the pod's start/end. */
-  venue_booking_pax: number;
+  /** Instant booking (no slot id): whether pets come (pet fee). Its guests are
+   * the pod's spots; its window is the pod's start/end. */
   venue_booking_pets: boolean;
   /** Hidden: the Pod Request whose confirmed slot this pod books ('' = none). */
   partner_request_id: string;
@@ -103,7 +102,6 @@ export const blankCreatePodForm: CreatePodFormValues = {
   venue_id: '',
   venue_slot_id: '',
   venue_space_label: '',
-  venue_booking_pax: 0,
   venue_booking_pets: false,
   partner_request_id: '',
   meeting_platform: '',

@@ -12,7 +12,7 @@ import { resolveEffectiveRates } from '@modules/finance/finance/settlement.servi
 import { withTransaction } from '@utils/mongoTransaction';
 import { getAppTimeZone } from '@utils/app-time';
 import { logs } from '@observability/log';
-import { isPricingConfigured, quoteVenuePrice } from './venuePricing.calc';
+import { isPricingConfigured, quoteVenuePrice, spotsProblem } from './venuePricing.calc';
 import { checkBookable, dayAvailability, type BusyWindow } from './venuePricing.availability';
 import { cleanVenuePricing, PricingInputError } from './venuePricing.validate';
 import { isYmd, localInstant, localParts, ymdRange } from './venuePricing.time';
@@ -143,6 +143,13 @@ const spaceCapacity = (venue: SpaceVenue, label: string): number =>
     ? Number(venue.capacity) || 0
     : Number((venue.capacity_items ?? []).find((c) => c.label === label)?.capacity) || 0;
 
+/** A booking's guests ARE the pod's spots: refused outside the venue's guest
+ * range or above the space's capacity, whatever the venue charges by. */
+function assertSpotsFit(pricing: VenuePricing, venue: SpaceVenue, space: string, pax: InstantBookingRequest['pax']) {
+  const problem = spotsProblem(pricing, Math.floor(Number(pax) || 0), spaceCapacity(venue, space));
+  if (problem) fail('BAD_USER_INPUT', problem);
+}
+
 export const venuePricingService = {
   /** Approved venues whose pricing is unset — hosts cannot book them until it is. */
   async setupGaps() {
@@ -220,6 +227,7 @@ export const venuePricingService = {
     const venue = await loadVenue(venueId);
     if (venue.status !== 'APPROVED' || !venue.is_active) fail('BAD_USER_INPUT', 'Select an approved venue');
     const pricing = pricingOf(venue);
+    assertSpotsFit(pricing, venue, (req.space_label ?? '').trim(), req.pax);
     const breakdown = quoteOrFail(pricing, req, await moneyRates(venueId));
     const { start, end } = parseWindow(req);
     const busy = await busyWindows(
@@ -340,6 +348,7 @@ export const venuePricingService = {
       );
       const check = checkBookable({ pricing, settings: venue.settings, busy, now: new Date(), timeZone: getAppTimeZone() }, start, end);
       if (!check.ok) fail('CONFLICT', check.message);
+      assertSpotsFit(pricing, venue, space, req.pax);
       const breakdown = quoteOrFail(pricing, req, rates);
       const [slot] = await VenueSlotModel.create(
         [

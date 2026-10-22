@@ -3,6 +3,7 @@ import {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,
   attendeeSeatCount,
+  clampSpots,
   payableSpots,
   payingAttendees,
   payingSeats,
@@ -119,6 +120,58 @@ describe('spotsBounds', () => {
   it('floors fractional input', () => {
     expect(spotsBounds({ minPax: 4.7, venueCapacity: 30.9 })).toEqual({ min: 4, max: 30, slidable: true });
   });
+
+  // The venue's guest range (Venue Pricing Module) is a second floor and cap:
+  // the tighter of each wins, and anything up to the cap stays pickable.
+  it('caps at the smaller of the space capacity and the venue maximum guests', () => {
+    expect(spotsBounds({ minPax: 2, venueCapacity: 50, venueMaxPax: 20 })).toEqual({ min: 2, max: 20, slidable: true });
+    expect(spotsBounds({ minPax: 2, venueCapacity: 15, venueMaxPax: 20 })).toEqual({ min: 2, max: 15, slidable: true });
+  });
+
+  it('floors at the larger of the activity minimum and the venue minimum guests', () => {
+    expect(spotsBounds({ minPax: 4, venueCapacity: 30, venueMinPax: 10 })).toEqual({ min: 10, max: 30, slidable: true });
+    expect(spotsBounds({ minPax: 12, venueCapacity: 30, venueMinPax: 10 })).toEqual({ min: 12, max: 30, slidable: true });
+  });
+
+  // A venue with no space capacity is still capped by its maximum guests.
+  it('caps by the venue maximum alone when the space has no capacity', () => {
+    expect(spotsBounds({ venueCapacity: 0, venueMinPax: 5, venueMaxPax: 25 })).toEqual({ min: 5, max: 25, slidable: true });
+  });
+
+  it('treats a venue maximum of 0 as no limit', () => {
+    expect(spotsBounds({ venueCapacity: 0, venueMinPax: 5, venueMaxPax: 0 })).toEqual({
+      min: 5,
+      max: SPOTS_HARD_MAX,
+      slidable: false,
+    });
+  });
+
+  it('collapses rather than inverts when the venue maximum is below the floor', () => {
+    expect(spotsBounds({ minPax: 10, venueCapacity: 30, venueMaxPax: 6 })).toEqual({ min: 10, max: 10, slidable: false });
+  });
+});
+
+describe('clampSpots', () => {
+  const bounds = { min: 5, max: 20, slidable: true };
+
+  it('keeps a value already inside the range', () => {
+    expect(clampSpots(12, bounds)).toBe(12);
+    expect(clampSpots(5, bounds)).toBe(5);
+    expect(clampSpots(20, bounds)).toBe(20);
+  });
+
+  it('snaps a value above the cap down to it, and below the floor up to it', () => {
+    expect(clampSpots(50, bounds)).toBe(20);
+    expect(clampSpots(2, bounds)).toBe(5);
+  });
+
+  it('floors fractions and reads a non-number as 0 before clamping', () => {
+    expect(clampSpots(12.9, bounds)).toBe(12);
+    expect(clampSpots(Number.NaN, bounds)).toBe(5);
+  });
+});
+
+describe('spotsBounds (input hygiene)', () => {
 
   // A negative minimum is no floor and a negative capacity is no venue — the
   // bounds never invert into a range the stepper cannot render.

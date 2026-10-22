@@ -14,7 +14,7 @@ import { VenueContactCard } from '../../VenueContactCard';
 import { parseDateTimeText } from '../../create-pod.form';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../../create-pod.types';
 import { FreeVenueNote } from '../../FreeVenueNote';
-import type { FreePodVenueNotice } from '@duncit/utils';
+import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
 
 import { InstantBookingPicker } from './InstantBookingPicker';
 import type { VenueQuoteState } from './VenueQuoteCard';
@@ -35,6 +35,8 @@ interface Props {
   venueNotice: FreePodVenueNotice;
   /** A club admin is creating the pod for a host — the note speaks of the host. */
   forClubAdmin?: boolean;
+  /** The range the pod's spots may take — picked here, with the booking. */
+  spots: SpotsBounds;
 }
 
 /** Step 3 — pick a venue partner in the pod's city and book it instantly at
@@ -50,6 +52,7 @@ export function VenueSlotStep({
   pinnedVenueId,
   venueNotice,
   forClubAdmin = false,
+  spots,
 }: Readonly<Props>) {
   const { control, watch, setValue, formState } = form;
   const { errors } = formState;
@@ -98,7 +101,6 @@ export function VenueSlotStep({
     if (bookBySlot) return;
     setValue('pod_date_time_text', '', { shouldDirty: true });
     setValue('pod_end_date_time_text', '', { shouldDirty: true });
-    setValue('venue_booking_pax', 0, { shouldDirty: true });
     setValue('venue_booking_pets', false, { shouldDirty: true });
   }
 
@@ -166,6 +168,7 @@ export function VenueSlotStep({
           spaceLabel={selectedSpace.label}
           quote={venueQuote}
           currencySymbol={currencySymbol}
+          spots={spots}
         />
       ) : null}
       {selectedVenue && selectedSpace && bookBySlot ? (

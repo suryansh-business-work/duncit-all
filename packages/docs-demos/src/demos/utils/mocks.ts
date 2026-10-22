@@ -190,6 +190,15 @@ export interface SpotsMock {
   price_per_spot: number;
 }
 
+/** The four limits a venue pod's spots are held inside, plus what the host typed. */
+export interface SpotsRangeMock {
+  activity_min: number;
+  space_capacity: number;
+  venue_min_guests: number;
+  venue_max_guests: number;
+  typed_spots: number;
+}
+
 /** One Auto Pod offer as a queue query returns it, plus the city the viewing host has selected. */
 export interface AutoPodAnyOrderMock {
   row: AutoPodRow;

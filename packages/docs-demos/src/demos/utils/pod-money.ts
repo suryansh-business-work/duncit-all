@@ -3,6 +3,8 @@ import {
   formatMoney,
   maxRedeemableCoins,
   payableSpots,
+  clampSpots,
+  spotsBounds,
   roundUpBill,
   settleBill,
   payingSeats,
@@ -19,7 +21,7 @@ import {
   podSeatsTaken,
 } from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
-import type { SpotsMock, SeatsSoldMock, TicketDiscountMock } from './mocks';
+import type { SpotsMock, SpotsRangeMock, SeatsSoldMock, TicketDiscountMock } from './mocks';
 import { mwebT } from './translators';
 
 export const podMoneyDemos: PackageDemo[] = [
@@ -37,6 +39,27 @@ export const podMoneyDemos: PackageDemo[] = [
         'Pod earns': formatMoney(payable * mock.price_per_spot),
         'If the host were billed too': formatMoney(mock.total_spots * mock.price_per_spot),
         'The rule, in words': HOST_FREE_SPOT_NOTE,
+      };
+    },
+  }),
+
+  defineDemo<SpotsRangeMock>({
+    id: 'spots-venue-range',
+    title: 'Spots are the venue booking’s guests',
+    note:
+      'Create Pod shows ONE number. It may be anything from the higher floor (activity minimum, venue minimum guests) up to the lower cap (space capacity, venue maximum guests) — not only the cap. Set venue_max_guests to 0 for no venue limit.',
+    mock: { activity_min: 4, space_capacity: 50, venue_min_guests: 2, venue_max_guests: 20, typed_spots: 35 },
+    compute: (mock) => {
+      const bounds = spotsBounds({
+        minPax: mock.activity_min,
+        venueCapacity: mock.space_capacity,
+        venueMinPax: mock.venue_min_guests,
+        venueMaxPax: mock.venue_max_guests,
+      });
+      return {
+        'spotsBounds(...)': `${bounds.min} – ${bounds.max}${bounds.slidable ? ' (slider)' : ' (fixed)'}`,
+        'clampSpots(typed_spots, bounds)': clampSpots(mock.typed_spots, bounds),
+        'Booking guests sent with the pod': clampSpots(mock.typed_spots, bounds),
       };
     },
   }),

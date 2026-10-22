@@ -109,6 +109,7 @@ export function CreatePodStepper({
         pinnedVenueId={pinnedVenueId}
         venueNotice={venueNotice}
         forClubAdmin={!!clubAdmin}
+        spots={spots}
       />
       {clubAdmin ? null : <PodRepeatSection form={form} />}
     </YStack>,

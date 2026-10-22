@@ -82,6 +82,9 @@ const freeSlot = {
 };
 const finance = { platform_fee_pct: 5, gst_pct: 18, currency_symbol: '₹' };
 
+// The stepper owns the spot bounds; this step only shows the picker for them.
+const SPOTS = { min: 1, max: 40, slidable: true };
+
 const venue: CreatePodVenue = {
   id: 'v1',
   owner_user_id: 'me-1',
@@ -134,6 +137,7 @@ function VenueSlotHarness({
         currencySymbol="₹"
         pinnedVenueId={pinnedVenueId}
         venueNotice="NONE"
+        spots={SPOTS}
       />
       <Text testID="readout-slot">{form.watch('venue_slot_id')}</Text>
       <Text testID="readout-start">{form.watch('pod_date_time_text')}</Text>
@@ -215,6 +219,7 @@ function SpaceErrorHarness() {
         venueQuote={{ quote: null, loading: false, error: null }}
         currencySymbol="₹"
         venueNotice="NONE"
+        spots={SPOTS}
       />
       <Text
         testID="force-space-error"
@@ -250,6 +255,7 @@ function SpaceHarness({ venues }: Readonly<{ venues: CreatePodVenue[] }>) {
         venueQuote={{ quote: null, loading: false, error: null }}
         currencySymbol="₹"
         venueNotice="NONE"
+        spots={SPOTS}
       />
       <Text testID="spots-readout">{form.watch('no_of_spots_text')}</Text>
     </>

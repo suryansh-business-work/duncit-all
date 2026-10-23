@@ -519,7 +519,7 @@ changeRequests: {
       assignClubAdmin: 'Assign a different club admin',
       drawerTitle: 'Find a replacement',
       drawerVenueHint:
-        'Approved venues that host this pod’s category, in its city. Pick one and then a slot — the pod’s date moves with it.',
+        'Approved venues that host this pod’s category, in its city. Pick one — it answers with the time and price it can run the pod at, and the pod moves to it once it approves.',
       drawerHostHint:
         'Approved hosts onboarded into this pod’s category. A host has no city of their own, so this list is matched on category alone — check the number before you ask.',
       drawerClubAdminHint:
@@ -528,16 +528,10 @@ changeRequests: {
       colDetail: 'Details',
       colEmail: 'Email',
       colPhone: 'Phone',
-      colSlot: 'Slot',
-      colPrice: 'Price',
-      colCapacity: 'Capacity',
-      pickSlot: 'Pick a slot at {venue}',
-      backToCandidates: 'Back to the list',
       sendRequest: 'Send request',
       sendDone: 'Request sent. They will get an email, a WhatsApp message and an app notification.',
       noCandidates:
         'Nobody matches this pod’s category and city yet. Onboard a partner, or cancel the pod and refund everyone.',
-      noSlots: 'This venue has no free slots. Pick a different venue.',
       alreadyOffered:
         'Waiting on {name}. You can act again once they approve or pass.',
       passedBy: 'Passed by {names}',

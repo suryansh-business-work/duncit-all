@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import PodRequestDetailPage from '../PodRequestDetailPage';
 import { urlConfigs } from '../../../../config/url-configs';
@@ -9,7 +9,7 @@ import {
   type ScriptedAnswer,
   type SentOperation,
 } from '../../../../__tests__/groupC-link';
-import { hostSummary, requestDetail, requestSlot, venueSlot } from '../../__tests__/fixtures';
+import { hostSummary, requestDetail, requestSlot } from '../../__tests__/fixtures';
 
 configure({ asyncUtilTimeout: 5000 });
 afterEach(cleanup);
@@ -18,6 +18,20 @@ beforeEach(() => {
 });
 
 type Side = 'HOST' | 'VENUE';
+
+/** The proposal form is the shared package's (tested there); here it is a button that proposes. */
+const OFFER = vi.hoisted(() => ({ start_at: '2026-12-02T12:30:00.000Z', end_at: '2026-12-02T14:30:00.000Z', space_label: '', pax: 10, model: 'FLAT', rate: 5000 }));
+vi.mock('@duncit/availability-calendar', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  ProposeWindowBlock: ({ onPropose }: { onPropose: (offer: typeof OFFER) => unknown }) => (
+    <div data-testid="pod-request-propose">
+      <h3>Propose a time and price</h3>
+      <button type="button" onClick={() => onPropose(OFFER)}>
+        Send proposal
+      </button>
+    </div>
+  ),
+}));
 
 const detail = (over: Record<string, unknown> = {}) => ({ podPartnerRequest: requestDetail(over) });
 
@@ -206,37 +220,30 @@ describe('PodRequestDetailPage — the next step', () => {
     await waitFor(() => expect(screen.queryByText('Only a pending request can be withdrawn')).toBeNull());
   });
 
-  it("has the receiving venue pick one of its slots and send it", async () => {
+  it('has the receiving venue propose a time, the guests and a price, and send it', async () => {
     const sent: SentOperation[] = [];
     mount(
       {
         PartnersPodRequest: detail({ direction: 'HOST_TO_VENUE', viewer_side: 'VENUE', status: 'ACCEPTED' }),
-        PartnersPodRequestVenueSlots: { venueAvailableSlots: [venueSlot()] },
-        PartnersRequestPodRequestSlot: mutationResult('requestPodPartnerSlot', 'SLOT_REQUESTED'),
+        ProposePodPartnerWindow: mutationResult('proposePodPartnerWindow', 'SLOT_REQUESTED'),
       },
       'VENUE',
       sent,
     );
 
-    expect(await screen.findByRole('heading', { name: 'Pick a slot' })).toBeTruthy();
-    const send = screen.getByRole('button', { name: 'Send Slot Request' }) as HTMLButtonElement;
-    expect(send.disabled).toBe(true);
-    expect(sentVariables(sent, 'PartnersPodRequestVenueSlots')).toEqual({ venue_id: 'venue-1' });
-
-    fireEvent.click(await screen.findByTestId('slot-tile-open-1'));
-    expect(send.disabled).toBe(false);
-    fireEvent.click(send);
+    expect(await screen.findByRole('heading', { name: 'Propose a time and price' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Send proposal' }));
 
     await waitFor(() =>
-      expect(sentVariables(sent, 'PartnersRequestPodRequestSlot')).toEqual({ id: 'req-1', slot_id: 'open-1' }),
+      expect(sentVariables(sent, 'ProposePodPartnerWindow')).toEqual({ id: 'req-1', offer: OFFER }),
     );
   });
 
   it('has the sender wait while the other side picks a slot', async () => {
     mount({ PartnersPodRequest: detail({ status: 'ACCEPTED', viewer_side: 'VENUE' }) }, 'VENUE');
 
-    expect(await screen.findByText('Waiting for the other side to pick a slot.')).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Pick a slot' })).toBeNull();
+    expect(await screen.findByText('Waiting for the other side to propose a time and price.')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Propose a time and price' })).toBeNull();
   });
 
   it('shows the requested slot and lets the sender confirm it', async () => {
@@ -250,9 +257,9 @@ describe('PodRequestDetailPage — the next step', () => {
       sent,
     );
 
-    expect(await screen.findByRole('heading', { name: 'Slot' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Proposed booking' })).toBeTruthy();
     expect(screen.getByText('Court 2')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm slot' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm proposal' }));
 
     await waitFor(() =>
       expect(sentVariables(sent, 'PartnersRespondPodRequestSlot')).toEqual({ id: 'req-1', confirm: true }),
@@ -270,7 +277,7 @@ describe('PodRequestDetailPage — the next step', () => {
       sent,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Decline slot' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Decline proposal' }));
 
     await waitFor(() =>
       expect(sentVariables(sent, 'PartnersRespondPodRequestSlot')).toEqual({ id: 'req-1', confirm: false }),
@@ -280,9 +287,9 @@ describe('PodRequestDetailPage — the next step', () => {
   it('has the picker wait for confirmation and names a whole-venue slot', async () => {
     mount({ PartnersPodRequest: detail({ status: 'SLOT_REQUESTED', slot: requestSlot({ space_label: '' }) }) });
 
-    expect(await screen.findByText('Waiting for the other side to confirm the slot.')).toBeTruthy();
+    expect(await screen.findByText('Waiting for the other side to confirm the proposal.')).toBeTruthy();
     expect(screen.getByText('Whole venue')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Confirm slot' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Confirm proposal' })).toBeNull();
   });
 
   it("sends the host to the app's Create Pod with this request once the slot is confirmed", async () => {
@@ -347,7 +354,7 @@ describe('PodRequestDetailPage — the next step', () => {
     mount({ PartnersPodRequest: detail({ status: 'EXPIRED' }) });
 
     expect(await screen.findByText('Expired')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /Accept|Withdraw|Confirm slot|Send Slot Request/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Accept|Withdraw|Confirm proposal|Send proposal/ })).toBeNull();
     expect(screen.queryByRole('link', { name: /Create Pod|View pod/ })).toBeNull();
     expect(screen.getByText('Contact details are shared once the pod is created.')).toBeTruthy();
   });

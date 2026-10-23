@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { AutoPodModel } from './autoPod.model';
+import type { AutoPodVenueOffer } from './autoPod.offer';
 import { autoPodService, categoryPathOf, type AutoPodQueueScope } from './autoPod.service';
 import { autoPodAudience } from './autoPod.audience';
 import {
@@ -125,6 +126,12 @@ export const autoPodResolvers = {
       ctx: GraphQLContext
     ) => autoPodService.venueSlots(requireAuth(ctx).id, args.auto_pod_doc_id, args.venue_id),
 
+    autoPodVenueQuote: (
+      _p: unknown,
+      args: { auto_pod_doc_id: string; venue_id: string; offer: AutoPodVenueOffer },
+      ctx: GraphQLContext
+    ) => autoPodService.venueQuote(requireAuth(ctx).id, args.auto_pod_doc_id, args.venue_id, args.offer),
+
     autoPodHostProjection: async (
       _p: unknown,
       args: { auto_pod_doc_id: string; pod_amount: number; no_of_spots: number },
@@ -202,15 +209,11 @@ export const autoPodResolvers = {
     // inside the claim itself — the same rules that gate creating a pod.
     venueAcceptAutoPod: (
       _p: unknown,
-      args: { auto_pod_doc_id: string; venue_id: string; slot_id: string },
+      args: { auto_pod_doc_id: string; venue_id: string; slot_id?: string | null; offer?: AutoPodVenueOffer | null },
       ctx: GraphQLContext
     ) =>
-      venueAcceptAutoPod(
-        requireAuth(ctx).id,
-        args.auto_pod_doc_id,
-        args.venue_id,
-        args.slot_id
-      ),
+      // An installed app still sending only slot_id is refused inside with an update-the-app message.
+      venueAcceptAutoPod(requireAuth(ctx).id, args.auto_pod_doc_id, args.venue_id, args.offer),
 
     hostAssignAutoPod: (
       _p: unknown,

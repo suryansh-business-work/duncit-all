@@ -46,7 +46,9 @@ exports:
   - 'CLUB_WITHDRAW_AUTO_POD'
   - 'CLUB_CLAIM_AUTO_POD'
   - 'MY_VENUES_FOR_AUTO_POD'
-  - 'AUTO_POD_VENUE_SLOTS'
+  - 'AUTO_POD_VENUE_QUOTE'
+  - 'autoPodVenueQuoteSource'
+  - 'autoPodVenueOffer'
   - 'MY_ADMIN_CLUBS_FOR_AUTO_POD'
   - 'MY_HOST_CATEGORIES_FOR_AUTO_POD'
   - 'AUTO_POD_LOCATIONS'
@@ -236,14 +238,14 @@ import { AutoPodCategoryFilter } from '@duncit/auto-pods';
 
 | Dialog | Role | What it collects |
 | --- | --- | --- |
-| `VenueAcceptDialog` | Venue | Which of the chosen venue's free slots — each priced as the venue would be paid |
+| `VenueAcceptDialog` | Venue | A time inside the venue's opening hours and how it is paid (`WindowOfferForm` from `@duncit/availability-calendar`), priced live by `autoPodVenueQuote` |
 | `HostClaimDialog` | Host | Step 4's calculator (`HostEarningsFields`): a ticket price and a spots slider bounded by the server's own limits, re-priced on every change — and, on a VIRTUAL offer, the meeting platform, link, start and end (`HostMeetingFields`); the template carries none of these |
 | `ClubClaimDialog` | Club Admin | Which of their clubs (only category-matching ones) |
 
-Accepting and picking a slot are **one** action: an acceptance with no date
-would leave the pod nothing to run on. The slot is booked the instant the
-accept succeeds and stays booked until the pod exists, so no ordinary pod can
-take it in between.
+Accepting and fixing the time are **one** action: an acceptance with no date
+would leave the pod nothing to run on. The venue proposes a window and its
+terms; the booking is made, price frozen, the instant the accept succeeds and
+stays booked until the pod exists, so no ordinary pod can take it in between.
 
 The venue itself is chosen **above the queue**, with `AutoPodVenuePicker`: an
 owner may run several venues, and the queue is what THAT venue could take (ANY
@@ -255,12 +257,11 @@ legacy `venue_category`, `AutoPodVenueOption` carries both, and the line is
 `labels.venueCategories(venueCategoryPaths(venue))` — `venueCategoryPaths` and
 `venueHostsSubCategory` live in `@duncit/utils` so the native twin reads the
 same list. `venueCategoryPath(venue)` still answers the PRIMARY's path alone.
-Only a venue with no category at all gets the `noVenueCategory` warning. `VenueAcceptDialog` takes that `venue` and asks only for
-the slot, read from `AUTO_POD_VENUE_SLOTS`: the next few days (Pod Settings'
-*Auto Pods — slot window*), nearest first, each carrying `venue_receives` —
-what the venue is paid after Finance's deductions — and `viable`, false when
-the pod's money could not cover it (`labels.slotNotViable`, and the button
-stays shut). The chosen slot's pay shows as `labels.potentialEarning(amount)`.
+Only a venue with no category at all gets the `noVenueCategory` warning. `VenueAcceptDialog` takes that `venue` and asks for
+a time inside its opening hours, a pricing option and an amount (the guests are
+the offer's spots). `AUTO_POD_VENUE_QUOTE` prices it live — the venue's
+charges, Duncit's commission on top, or why it cannot be booked — and
+`VENUE_ACCEPT_AUTO_POD` sends it as `offer` (`autoPodVenueOffer` drops the guests).
 
 Every card counts the offer down: `AutoPodCard` renders `AutoPodExpiryNote`
 off `row.expires_at` (set on every list — Pod Settings' *Auto Pods —

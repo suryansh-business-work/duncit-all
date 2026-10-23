@@ -82,6 +82,16 @@ export { default as OfferTermsPanel } from './offers/OfferTermsPanel';
 export { default as OfferHistory } from './offers/OfferHistory';
 export { default as OfferDecisionActions } from './offers/OfferDecisionActions';
 export { offerTermsLabel } from './offers/format';
+export * from './offers/window-offer';
+export { default as ProposeWindowBlock } from './offers/pod-request/ProposeWindowBlock';
+export { default as ProposedTerms } from './offers/pod-request/ProposedTerms';
+export {
+  POD_PARTNER_WINDOW_QUOTE,
+  POD_REQUEST_OFFER_FIELDS,
+  PROPOSE_POD_PARTNER_WINDOW,
+  podRequestQuoteSource,
+  type PodRequestProposedOffer,
+} from './offers/pod-request/queries';
 export {
   ACCEPT_VENUE_OFFER,
   COUNTER_VENUE_OFFER,

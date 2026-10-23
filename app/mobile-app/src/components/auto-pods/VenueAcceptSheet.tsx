@@ -1,13 +1,13 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import { autoPodCityLabel, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 
-import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { LoadingIndicator } from '@/components/LoadingIndicator';
-import { OptionChipRow } from '@/components/home/HomeFilterParts';
+import { WindowOfferForm } from '@/forms/window-offer';
 import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueAcceptAutoPod } from '@/hooks/useVenueAcceptAutoPod';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface Props {
   row: AutoPodRow | null;
@@ -16,35 +16,20 @@ interface Props {
   labels: AutoPodLabels;
   onClose: () => void;
   onAccepted: () => void;
-  formatWhen: (iso: string) => string;
-  formatMoney: (amount: number) => string;
-  /** Where this surface sends a venue with no free slots. */
-  onAddAvailability?: () => void;
 }
 
 /**
- * Accepting an Auto Pod and committing a slot are ONE step: an acceptance with
+ * Accepting an Auto Pod and fixing its time are ONE step: an acceptance with
  * no date would leave hosts and club admins nothing to enrol against. The
- * venue is the one chosen at the top of the queue; the slots are its free ones
- * in the next few days, nearest first, and the chosen one says what it pays
- * the venue after Duncit's deductions. The slot is booked the instant this
- * succeeds and stays booked until the pod exists.
+ * venue (chosen at the top of the queue) picks a window it is open and free
+ * for and the price it charges; the server prices it with Duncit's commission
+ * on top, and the window is booked at that price the instant this succeeds.
  *
- * The Tamagui twin of `@duncit/auto-pods`' `VenueAcceptDialog` (rule 27); the
- * slot picker is a chip column rather than an MUI select, which is the pattern
- * every other native sheet uses for a short single-select list.
+ * The Tamagui twin of `@duncit/auto-pods`' `VenueAcceptDialog` (rule 27).
  */
-export function VenueAcceptSheet({
-  row,
-  venue,
-  labels,
-  onClose,
-  onAccepted,
-  formatWhen,
-  formatMoney,
-  onAddAvailability,
-}: Readonly<Props>) {
-  const { warning, success } = useThemeColors();
+export function VenueAcceptSheet({ row, venue, labels, onClose, onAccepted }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const { warning } = useThemeColors();
   const accept = useVenueAcceptAutoPod(
     row?.id ?? null,
     venue,
@@ -53,52 +38,26 @@ export function VenueAcceptSheet({
     onAccepted,
   );
 
-  const slotOptions = accept.slots.map((slot) => {
-    const space = slot.space_label ? ` · ${slot.space_label}` : '';
-    return [
-      slot.id,
-      `${formatWhen(slot.start_at)}${space} · ${formatMoney(slot.price)}`,
-    ] as readonly [string, string];
-  });
-
-  let earningLine = null;
-  if (accept.selected?.viable) {
-    earningLine = (
-      <Text testID="auto-pod-slot-earning" fontSize={13} fontWeight="600" color={success}>
-        {labels.potentialEarning(formatMoney(accept.selected.venue_receives))}
-      </Text>
-    );
-  } else if (accept.selected) {
-    earningLine = (
-      <Text testID="auto-pod-slot-not-viable" fontSize={13} color={warning}>
-        {labels.slotNotViable}
-      </Text>
+  if (row && venue && accept.venueInCity) {
+    return (
+      <WindowOfferForm
+        testID="auto-pod-accept-sheet"
+        venueId={venue.id}
+        title={labels.confirmAccept}
+        subtitle={[
+          row.pod_title,
+          labels.acceptingWith(venue.venue_name),
+          t('windowOffer.autoPodHint'),
+        ].join(' · ')}
+        submitLabel={labels.acceptCta}
+        busy={accept.busy}
+        error={accept.failure || undefined}
+        priceOf={accept.priceOf}
+        onClose={onClose}
+        onSubmit={(offer) => fireAndForget(accept.accept(offer))}
+      />
     );
   }
-
-  const footer = (
-    <XStack gap={10}>
-      <YStack flex={1}>
-        <DuncitButton
-          testID="auto-pod-accept-cancel"
-          label={labels.dismiss}
-          onPress={onClose}
-          variant="soft"
-          tone="neutral"
-        />
-      </YStack>
-      <YStack flex={1}>
-        <DuncitButton
-          testID="auto-pod-accept-confirm"
-          label={labels.acceptCta}
-          onPress={() => {
-            accept.accept().catch(() => undefined);
-          }}
-          disabled={!accept.canAccept}
-        />
-      </YStack>
-    </XStack>
-  );
 
   return (
     <DuncitDialog
@@ -108,7 +67,6 @@ export function VenueAcceptSheet({
       title={labels.confirmAccept}
       subtitle={labels.confirmAcceptBody}
       closeLabel={labels.dismiss}
-      footer={footer}
     >
       <YStack gap={14}>
         {row ? (
@@ -116,75 +74,20 @@ export function VenueAcceptSheet({
             {row.pod_title}
           </Text>
         ) : null}
-
         {row?.location ? (
           <Text testID="auto-pod-accept-city" fontSize={13} color="$color">
             {labels.pinnedTo(autoPodCityLabel(row.location))}
           </Text>
         ) : null}
-
         {venue ? (
-          <Text testID="auto-pod-accepting-with" fontSize={13} color="$color">
-            {labels.acceptingWith(venue.venue_name)}
+          <Text testID="auto-pod-no-venue-in-city" fontSize={13} color={warning}>
+            {labels.noVenueInCity(autoPodCityLabel(row?.location))}
           </Text>
         ) : (
           <Text testID="auto-pod-pick-venue-first" fontSize={13} color="$muted">
             {labels.pickVenueFirst}
           </Text>
         )}
-
-        {venue && !accept.venueInCity ? (
-          <Text testID="auto-pod-no-venue-in-city" fontSize={13} color={warning}>
-            {labels.noVenueInCity(autoPodCityLabel(row?.location))}
-          </Text>
-        ) : null}
-
-        <YStack gap={8}>
-          <Text fontSize={13} fontWeight="600" color="$color">
-            {labels.pickSlot}
-          </Text>
-          {accept.windowDays > 0 ? (
-            <Text testID="auto-pod-slot-window" fontSize={12} color="$muted">
-              {labels.slotWindow(accept.windowDays)}
-            </Text>
-          ) : null}
-          {/* Reading a venue's free slots is a round trip; without this the
-              chip column just sits empty and reads as "no slots". */}
-          {accept.slotsLoading ? <LoadingIndicator testID="auto-pod-slots-loading" /> : null}
-          <OptionChipRow
-            layout="column"
-            testIDPrefix="auto-pod-slot"
-            options={slotOptions}
-            value={accept.slotId}
-            onSelect={accept.setSlotId}
-          />
-          {earningLine}
-        </YStack>
-
-        {accept.showNoSlots ? (
-          <YStack gap={10} alignItems="flex-start">
-            <Text testID="auto-pod-no-slots" fontSize={13} color="$muted">
-              {labels.noSlots}
-            </Text>
-            {onAddAvailability ? (
-              <DuncitButton
-                testID="auto-pod-add-availability"
-                label={labels.addAvailability}
-                onPress={onAddAvailability}
-                variant="soft"
-                size="sm"
-              />
-            ) : null}
-          </YStack>
-        ) : null}
-
-        {accept.busy ? <LoadingIndicator testID="auto-pod-accept-busy" /> : null}
-
-        {accept.failure ? (
-          <Text role="alert" testID="auto-pod-accept-error" fontSize={13} color="$danger">
-            {accept.failure}
-          </Text>
-        ) : null}
       </YStack>
     </DuncitDialog>
   );

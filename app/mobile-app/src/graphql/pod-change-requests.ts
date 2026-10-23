@@ -140,8 +140,14 @@ export const RespondToPodChangeDocument = gql(`
     $request_id: ID!
     $decision: PodChangeDecision!
     $reason: String
+    $venue_window: PodChangeVenueWindowInput
   ) {
-    respondToPodChange(request_id: $request_id, decision: $decision, reason: $reason) {
+    respondToPodChange(
+      request_id: $request_id
+      decision: $decision
+      reason: $reason
+      venue_window: $venue_window
+    ) {
       id
       status
       resolution
@@ -154,6 +160,15 @@ export const WithdrawPodChangeDocument = gql(`
     withdrawPodChange(request_id: $request_id) {
       id
       status
+    }
+  }
+`);
+
+/** The offered venue: what a window and price terms would cost this pod — or why it cannot take it. */
+export const PodChangeVenueQuoteDocument = gql(`
+  query MobilePodChangeVenueQuote($request_id: ID!, $venue_window: PodChangeVenueWindowInput!) {
+    podChangeVenueQuote(request_id: $request_id, venue_window: $venue_window) {
+      ...MobileOfferQuoteResult
     }
   }
 `);

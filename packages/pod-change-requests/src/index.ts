@@ -14,10 +14,11 @@ export {
   OFFER_POD_CHANGE,
   POD_CHANGE_CANDIDATES,
   POD_CHANGE_REQUESTS_TABLE,
-  POD_CHANGE_VENUE_SLOTS,
+  POD_CHANGE_VENUE_QUOTE,
+  podChangeVenueQuoteSource,
+  podChangeVenueWindow,
   REQUEST_POD_CHANGE,
   RESPOND_TO_POD_CHANGE,
   WITHDRAW_POD_CHANGE,
   type PodChangeCandidateRow,
-  type PodChangeSlotRow,
 } from './queries';

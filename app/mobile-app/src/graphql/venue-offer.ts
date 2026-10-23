@@ -38,34 +38,45 @@ export const VenueOfferCalendarDocument = gql(`
   }
 `);
 
+/**
+ * A window-and-terms price as every offer surface draws it (VenueQuoteCard):
+ * Create Pod, Pod Requests, an Auto Pod's venue accept and a venue taking over
+ * a pod — one selection, so the four answers share one type.
+ */
+export const OfferQuoteResultFragment = gql(`
+  fragment MobileOfferQuoteResult on VenueOfferQuoteResult {
+    ok
+    message
+    quote {
+      model
+      rate
+      pax
+      hours
+      base
+      rules {
+        type
+        label
+        amount
+      }
+      min_spend_top_up
+      cleaning_fee
+      pet_fee
+      gst_pct
+      taxes
+      platform_fee_pct
+      platform_fee
+      venue_payout
+      total
+      deposit
+    }
+  }
+`);
+
 /** The server's price for the host's offer — or why it cannot be sent. */
 export const VenueOfferQuoteDocument = gql(`
   query MobileVenueOfferQuote($venue_id: ID!, $offer: VenueOfferInput!) {
     venueOfferQuote(venue_id: $venue_id, offer: $offer) {
-      ok
-      message
-      quote {
-        model
-        rate
-        pax
-        hours
-        base
-        rules {
-          type
-          label
-          amount
-        }
-        min_spend_top_up
-        cleaning_fee
-        pet_fee
-        gst_pct
-        taxes
-        platform_fee_pct
-        platform_fee
-        venue_payout
-        total
-        deposit
-      }
+      ...MobileOfferQuoteResult
     }
   }
 `);

@@ -72,19 +72,12 @@ describe('VenueAutoPodsPage', () => {
     await waitFor(() => expect(sent.some((op) => op.name === QUEUE && op.variables.venue_id === 'v2')).toBe(true));
   });
 
-  it('opens the accept dialog for an offer with the venue’s free slots', async () => {
-    const sent: SentOperation[] = [];
-    mount(
-      {
-        [QUEUE]: { venueAutoPods: [open] },
-        AutoPodVenueSlots: { autoPodVenueSlots: { __typename: 'AutoPodVenueSlots', window_days: 7, expires_at: null, slots: [] } },
-      },
-      sent,
-    );
-    fireEvent.click(await screen.findByRole('button', { name: 'Accept & pick a slot' }));
-    expect(await screen.findByRole('dialog')).toBeTruthy();
-    await waitFor(() => expect(sent.some((op) => op.name === 'AutoPodVenueSlots')).toBe(true));
-    expect(sent.find((op) => op.name === 'AutoPodVenueSlots')?.variables).toEqual({ auto_pod_doc_id: 'ap1', venue_id: 'v1' });
+  it('opens the accept dialog for an offer, asking the venue for its time and price', async () => {
+    mount({ [QUEUE]: { venueAutoPods: [open] } }, []);
+    fireEvent.click(await screen.findByRole('button', { name: 'Accept & set a time' }));
+    const dialog = within(await screen.findByRole('dialog'));
+    expect(dialog.getByLabelText('Amount (₹)')).toBeTruthy();
+    expect(dialog.getByLabelText('Pricing option')).toBeTruthy();
   });
 
   it('shows the live state of an enrolled offer and no cancel once it is past enrolling', async () => {

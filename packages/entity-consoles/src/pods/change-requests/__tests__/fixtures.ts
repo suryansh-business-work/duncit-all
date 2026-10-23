@@ -1,4 +1,4 @@
-import type { PodChangeCandidateRow, PodChangeSlotRow } from '@duncit/pod-change-requests';
+import type { PodChangeCandidateRow } from '@duncit/pod-change-requests';
 import type { PodChangeOffer, PodChangeRow } from '@duncit/utils';
 
 /**
@@ -73,17 +73,6 @@ export const makeCandidate = (over: Partial<PodChangeCandidateRow> = {}): PodCha
   ...over,
 });
 
-export const makeSlot = (over: Partial<PodChangeSlotRow> = {}): PodChangeSlotRow => ({
-  id: 'slot-1',
-  venue_id: 'venue-2',
-  start_at: '2026-10-04T13:00:00.000Z',
-  end_at: '2026-10-04T16:00:00.000Z',
-  price: 2500,
-  capacity: 24,
-  space_label: 'Upper deck',
-  ...over,
-});
-
 const gqlContact = (contact: PodChangeRow['requested_by']) => ({ __typename: 'PodChangeContact', ...contact });
 
 const gqlOffer = (offer: PodChangeOffer) => ({
@@ -104,5 +93,3 @@ export const gqlRequest = (row: PodChangeRow) => ({
 });
 
 export const gqlCandidate = (row: PodChangeCandidateRow) => ({ __typename: 'PodChangeCandidate', ...row });
-
-export const gqlSlot = (row: PodChangeSlotRow) => ({ __typename: 'PodChangeVenueSlot', ...row });

@@ -63,6 +63,11 @@ export const CHANGE_REQUEST_BUNDLE: NestedCatalogue = {
     passBody: 'Duncit will offer it to somebody else. The pod keeps its current partner meanwhile.',
     passReasonLabel: 'Anything Duncit should know? (optional)',
     approved: 'Done — the pod is yours.',
+    venueWindowTitle: 'When can your venue run it?',
+    venueWindowHint:
+      'Pick a time when your venue is open and how you are paid. The pod moves to your venue at this time and price.',
+    venueWindowSubmit: 'Take this pod',
+    venueWindowCancel: 'Cancel',
     passed: 'Passed. Duncit will ask somebody else.',
     withdraw: 'Withdraw',
     withdrawTitle: 'Withdraw this request?',

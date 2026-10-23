@@ -387,6 +387,19 @@ describe('Auto Pod slot holds', () => {
     expect(freed?.booked_by_auto_pod_id).toBeNull();
   });
 
+  it('deletes a window the venue booked for the Auto Pod instead of freeing it for sale', async () => {
+    const venueId = await seedVenue();
+    const own = await seedSlot(venueId, 3, 3.1);
+    const swept = await seedSlot(venueId, 5, 5.1);
+    const holder = { status: 'BOOKED', booked_by_auto_pod_id: new Types.ObjectId(autoPodId), requested_by_host: true };
+    await VenueSlotModel.updateMany({ _id: { $in: [own.id, swept.id] } }, { $set: holder });
+
+    await venueSlotService.releaseAutoPodSlot(own.id, autoPodId);
+    expect(await VenueSlotModel.findById(own.id)).toBeNull();
+    await venueSlotService.releaseForAutoPod(autoPodId);
+    expect(await VenueSlotModel.findById(swept.id)).toBeNull();
+  });
+
   it('releases every slot an Auto Pod holds and leaves others alone', async () => {
     const venueId = await seedVenue();
     const held = await seedSlot(venueId, 3, 3.1);

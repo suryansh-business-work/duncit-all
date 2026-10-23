@@ -5,6 +5,7 @@
  * counts, the admin table and the money each card projects. Finance, Pod
  * Settings, the venue-slot service and the pod mapper are faked.
  */
+import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 
 jest.mock('@observability/log', () => ({
@@ -25,6 +26,7 @@ jest.mock('@modules/venues/venueSlot/venueSlot.service', () => ({
   ensureOwnedVenue: jest.fn(),
   venueSlotService: { releaseForAutoPod: jest.fn(), listAvailable: jest.fn() },
 }));
+jest.mock('@modules/venues/venueOffer/venueOffer.service', () => ({ venueOfferService: { preview: jest.fn() } }));
 jest.mock('@modules/platform/settings/settings.service', () => ({
   settingsService: { getAppSettings: jest.fn() },
 }));
@@ -33,7 +35,9 @@ jest.mock('@modules/access/accountHealth/accountHealth.service', () => ({
 }));
 
 import { mapPodToPublic, loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
-import { breakdownService, venueSlotProjections } from '@modules/finance/finance/breakdown.service';
+import { breakdownService } from '@modules/finance/finance/breakdown.service';
+import { venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
+import { UPDATE_APP_FOR_AUTO_POD } from '../../autoPod.offer';
 import { ensureOwnedVenue, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -57,7 +61,7 @@ import {
 } from './autoPod.fixtures';
 
 const earnings = breakdownService.potentialPodEarnings as jest.Mock;
-const projections = venueSlotProjections as jest.Mock;
+const preview = venueOfferService.preview as jest.Mock;
 const ownedVenue = ensureOwnedVenue as jest.Mock;
 const listAvailable = venueSlotService.listAvailable as jest.Mock;
 const appSettings = settingsService.getAppSettings as jest.Mock;
@@ -301,63 +305,39 @@ describe('the money each card projects', () => {
   });
 });
 
-describe('autoPodService.venueSlots', () => {
+describe('autoPodService.venueSlots (deprecated)', () => {
+  it('refuses with an update-the-app message, reading nothing', async () => {
+    const id = await insertAutoPod();
+    await expect(autoPodService.venueSlots(String(oid()), String(id), String(oid()))).rejects.toEqual(
+      fails('BAD_USER_INPUT', UPDATE_APP_FOR_AUTO_POD)
+    );
+    expect(ownedVenue).not.toHaveBeenCalled();
+    expect(listAvailable).not.toHaveBeenCalled();
+  });
+});
+
+describe('autoPodService.venueQuote', () => {
   const venueId = String(new Types.ObjectId('65e000000000000000000001'));
   const owner = String(new Types.ObjectId('65e000000000000000000002'));
-  const slotAt = (hours: number) => new Date(Date.now() + hours * HOUR_MS).toISOString();
+  const terms = { start_at: '2027-01-04T10:00:00.000Z', end_at: '2027-01-04T12:00:00.000Z', model: 'PER_GUEST' as const, rate: 300 };
 
-  beforeEach(() => {
+  it("prices a window for the offer's spots at one of the caller's venues, its own hold excepted", async () => {
     ownedVenue.mockResolvedValue({ _id: venueId });
-    listAvailable.mockResolvedValue([
-      { id: 's1', start_at: slotAt(24), end_at: slotAt(26), whole_day: false, space_label: 'Court 1', capacity: 8, price: 600 },
-      { id: 's2', start_at: slotAt(48), end_at: slotAt(50), whole_day: true, space_label: '', capacity: 0, price: 900 },
-      { id: 'late', start_at: slotAt(24 * 8), end_at: slotAt(24 * 8 + 2), whole_day: false, space_label: '', capacity: 4, price: 100 },
-    ]);
-    projections.mockResolvedValue([
-      { venue_receives: 540, venue_commission_pct: 10, host_receives: 100, viable: true },
-      { venue_receives: 810, venue_commission_pct: 10, host_receives: -50, viable: false },
-    ]);
-  });
+    const answer = { ok: true, message: null, quote: { total: 3300 } };
+    preview.mockResolvedValue(answer);
+    const id = await insertAutoPod({ no_of_spots: 10 });
 
-  it('lists the free slots inside the window, each priced as the venue is paid', async () => {
-    const id = await insertAutoPod({ pod_amount: 500, no_of_spots: 10, host_claim: hostClaim() });
-    const result: any = await autoPodService.venueSlots(owner, String(id), venueId);
-
+    expect(await autoPodService.venueQuote(owner, String(id), venueId, terms)).toBe(answer);
     expect(ownedVenue).toHaveBeenCalledWith(owner, venueId);
-    expect(listAvailable).toHaveBeenCalledWith(venueId);
-    expect(projections).toHaveBeenCalledWith(
-      expect.objectContaining({ venueId, podAmount: 500, noOfSpots: 10, slotPrices: [600, 900] })
-    );
-    expect(result.window_days).toBe(7);
-    expect(typeof result.expires_at).toBe('string');
-    expect(result.slots.map((s: any) => [s.id, s.viable, s.venue_receives])).toEqual([
-      ['s1', true, 540],
-      ['s2', false, 810],
-    ]);
-    expect(result.slots[0]).toMatchObject({ space_label: 'Court 1', capacity: 8, price: 600, whole_day: false });
+    expect(preview).toHaveBeenCalledWith(venueId, { ...terms, pax: 10, pets: false }, { field: 'booked_by_auto_pod_id', id: String(id) });
   });
 
-  it('flags no slot on an offer nobody has priced yet', async () => {
+  it("refuses a venue the caller does not own before pricing anything", async () => {
+    const forbidden = new GraphQLError('Not your venue', { extensions: { code: 'FORBIDDEN' } });
+    ownedVenue.mockRejectedValueOnce(forbidden);
     const id = await insertAutoPod();
-    const result: any = await autoPodService.venueSlots(owner, String(id), venueId);
-    expect(projections).toHaveBeenCalledWith(expect.objectContaining({ hostUserId: null, podAmount: 0 }));
-    expect(result.slots.every((s: any) => s.viable)).toBe(true);
-  });
-
-  it('refuses a virtual offer, a taken one and one no longer enrolling', async () => {
-    const virtual = await insertAutoPod({ pod_mode: 'VIRTUAL' });
-    const taken = await insertAutoPod({ stage: 'CLAIMING', venue_claim: venueClaim() });
-    const live = await insertAutoPod({ stage: 'LIVE' });
-
-    await expect(autoPodService.venueSlots(owner, String(virtual), venueId)).rejects.toEqual(
-      fails('BAD_REQUEST', 'A virtual Auto Pod has no venue — it needs only a host and a club')
-    );
-    for (const id of [taken, live]) {
-      await expect(autoPodService.venueSlots(owner, String(id), venueId)).rejects.toEqual(
-        fails('CONFLICT', 'This Auto Pod has already been accepted by another venue.')
-      );
-    }
-    expect(ownedVenue).not.toHaveBeenCalled();
+    await expect(autoPodService.venueQuote(owner, String(id), venueId, terms)).rejects.toBe(forbidden);
+    expect(preview).not.toHaveBeenCalled();
   });
 });
 

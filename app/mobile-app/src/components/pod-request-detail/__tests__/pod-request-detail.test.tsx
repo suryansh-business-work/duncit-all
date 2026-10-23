@@ -4,9 +4,8 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react-nativ
 import { ActionBlock } from '@/components/pod-request-detail/ActionBlock';
 import { ContactBlock } from '@/components/pod-request-detail/ContactBlock';
 import { CounterpartCard } from '@/components/pod-request-detail/CounterpartCard';
-import { PickSlotBlock } from '@/components/pod-request-detail/PickSlotBlock';
 import { SlotSummary } from '@/components/pod-request-detail/SlotSummary';
-import { VenueAvailableSlotsDocument } from '@/graphql/create-pod';
+import { VenueOfferModel } from '@/generated/graphql/graphql';
 import type { PodRequestActions } from '@/hooks/usePodRequestActions';
 import type { PodRequestDetail } from '@/hooks/usePodRequestDetail';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -20,29 +19,33 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
-// The slot calendar is the shared one Create Pod uses and is tested on its own;
-// here it only has to list the slots it is handed and report a pick.
-jest.mock('@/components/create-pod/SlotPicker', () => {
+const OFFER = {
+  start_at: '2030-01-05T13:00:00.000Z',
+  end_at: '2030-01-05T16:00:00.000Z',
+  space_label: '',
+  model: VenueOfferModel.PerGuest,
+  rate: 300,
+  pax: 20,
+};
+
+// The window-and-terms sheet is shared and tested on its own; here it only has
+// to be opened for the right venue, price through this request and send.
+const mockSheet = jest.fn();
+jest.mock('@/forms/window-offer', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Pressable: P, Text: T } = require('react-native');
+  const { Pressable: P } = require('react-native');
   return {
-    SlotPicker: ({
-      slots,
-      onPick,
-    }: {
-      slots: { id: string }[];
-      onPick: (slot: { id: string }) => void;
-    }) => (
-      <>
-        {slots.map((slot) => (
-          <P key={slot.id} testID={`slot-${slot.id}`} onPress={() => onPick(slot)}>
-            <T>{slot.id}</T>
-          </P>
-        ))}
-      </>
-    ),
+    WindowOfferForm: (props: {
+      venueId: string;
+      onSubmit: (offer: unknown) => void;
+      priceOf: (offer: unknown) => unknown;
+    }) => {
+      mockSheet(props);
+      return <P testID="propose-sheet-submit" onPress={() => props.onSubmit(mockOffer())} />;
+    },
   };
 });
+const mockOffer = () => OFFER;
 
 const venue = {
   id: 'v1',
@@ -80,7 +83,8 @@ const actions = (over: Partial<PodRequestActions> = {}): PodRequestActions => ({
   busy: false,
   respond: jest.fn().mockResolvedValue(true),
   withdraw: jest.fn().mockResolvedValue(true),
-  requestSlot: jest.fn().mockResolvedValue(true),
+  proposeWindow: jest.fn().mockResolvedValue(true),
+  priceWindow: jest.fn().mockResolvedValue({ ok: true, message: null, quote: null }),
   respondSlot: jest.fn().mockResolvedValue(true),
   ...over,
 });
@@ -134,21 +138,35 @@ describe('ActionBlock', () => {
     expect(a.withdraw).toHaveBeenCalledWith('r1');
   });
 
-  it('PICK_SLOT: the receiver picks one of the venue’s slots and sends it', async () => {
-    mockRequest.mockResolvedValue({ venueAvailableSlots: [slot('s1', '')] });
+  it('PICK_SLOT: the receiver proposes a time and a price on the venue’s calendar', async () => {
     const a = actions();
     renderWithProviders(
       <ActionBlock request={detail({ status: 'ACCEPTED' } as never)} actions={a} />,
     );
-    await waitFor(() => expect(screen.getByTestId('slot-s1')).toBeOnTheScreen());
-    expect(mockRequest).toHaveBeenCalledWith(
-      VenueAvailableSlotsDocument,
-      { venue_id: 'v1', partner_request_id: null },
-      { auth: true },
+    expect(screen.queryByTestId('propose-sheet-submit')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-request-open-propose'));
+    expect(a.clearError).toHaveBeenCalled();
+    const sheet = mockSheet.mock.calls.at(-1)?.[0];
+    expect(sheet.venueId).toBe('v1');
+    // The sheet prices through this request's own quote.
+    await sheet.priceOf(OFFER);
+    expect(a.priceWindow).toHaveBeenCalledWith('r1', OFFER);
+
+    fireEvent.press(screen.getByTestId('propose-sheet-submit'));
+    expect(a.proposeWindow).toHaveBeenCalledWith('r1', OFFER);
+    // A sent proposal closes the sheet.
+    await waitFor(() => expect(screen.queryByTestId('propose-sheet-submit')).toBeNull());
+  });
+
+  it('PICK_SLOT keeps the sheet open when the proposal is refused', async () => {
+    const a = actions({ proposeWindow: jest.fn().mockResolvedValue(false) });
+    renderWithProviders(
+      <ActionBlock request={detail({ status: 'ACCEPTED' } as never)} actions={a} />,
     );
-    fireEvent.press(screen.getByTestId('slot-s1'));
-    fireEvent.press(screen.getByTestId('pod-request-send-slot'));
-    expect(a.requestSlot).toHaveBeenCalledWith('r1', 's1');
+    fireEvent.press(screen.getByTestId('pod-request-open-propose'));
+    fireEvent.press(screen.getByTestId('propose-sheet-submit'));
+    await waitFor(() => expect(a.proposeWindow).toHaveBeenCalled());
+    expect(screen.getByTestId('propose-sheet-submit')).toBeOnTheScreen();
   });
 
   it('PICK_SLOT without a venue draws nothing', () => {
@@ -158,20 +176,19 @@ describe('ActionBlock', () => {
         actions={actions()}
       />,
     );
-    expect(screen.queryByTestId('pod-request-pick-slot')).toBeNull();
-    expect(mockRequest).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('pod-request-propose')).toBeNull();
   });
 
   it.each([
     [
       'WAIT_SLOT',
       { direction: 'HOST_TO_VENUE', status: 'ACCEPTED' },
-      'Waiting for the other side to pick a slot.',
+      'Waiting for the other side to propose a time and price.',
     ],
     [
       'WAIT_CONFIRM',
       { status: 'SLOT_REQUESTED' },
-      'Waiting for the other side to confirm the slot.',
+      'Waiting for the other side to confirm the proposal.',
     ],
     [
       'HOST_CREATES',
@@ -183,7 +200,7 @@ describe('ActionBlock', () => {
     expect(screen.getByTestId('pod-request-waiting')).toHaveTextContent(text);
   });
 
-  it('CONFIRM_SLOT: the sender confirms or declines the picked slot', () => {
+  it('CONFIRM_SLOT: the sender confirms or declines the proposed time and price', () => {
     const a = actions();
     renderWithProviders(
       <ActionBlock
@@ -191,7 +208,9 @@ describe('ActionBlock', () => {
         actions={a}
       />,
     );
-    expect(screen.getByTestId('pod-request-slot-answer-accept')).toHaveTextContent('Confirm slot');
+    expect(screen.getByTestId('pod-request-slot-answer-accept')).toHaveTextContent(
+      'Confirm proposal',
+    );
     fireEvent.press(screen.getByTestId('pod-request-slot-answer-accept'));
     fireEvent.press(screen.getByTestId('pod-request-slot-answer-decline'));
     expect(a.respondSlot).toHaveBeenNthCalledWith(1, 'r1', true);
@@ -217,56 +236,6 @@ describe('ActionBlock', () => {
       expect(screen.queryByTestId('pod-request-create-pod')).toBeNull();
     },
   );
-});
-
-describe('PickSlotBlock', () => {
-  it('splits a venue with several spaces, one at a time, and clears the pick on a switch', async () => {
-    mockRequest.mockResolvedValue({
-      venueAvailableSlots: [slot('a1', 'Court A'), slot('w1', ''), slot('a2', 'Court A')],
-    });
-    const onSend = jest.fn().mockResolvedValue(true);
-    renderWithProviders(<PickSlotBlock venueId="v1" busy={false} onSend={onSend} />);
-    await waitFor(() => expect(screen.getByTestId('slot-a1')).toBeOnTheScreen());
-
-    // The first space is on to start; only its slots show.
-    expect(screen.getByTestId('pod-request-space-Court A')).toHaveTextContent('Court A');
-    expect(screen.getByTestId('pod-request-space-whole')).toHaveTextContent('Whole venue');
-    expect(screen.getByTestId('slot-a2')).toBeOnTheScreen();
-    expect(screen.queryByTestId('slot-w1')).toBeNull();
-    expect(screen.getByTestId('pod-request-send-slot').props['aria-disabled']).toBe(true);
-
-    fireEvent.press(screen.getByTestId('slot-a1'));
-    expect(screen.getByTestId('pod-request-send-slot').props['aria-disabled']).toBe(false);
-    fireEvent.press(screen.getByTestId('pod-request-space-whole'));
-    expect(screen.getByTestId('slot-w1')).toBeOnTheScreen();
-    expect(screen.queryByTestId('slot-a1')).toBeNull();
-    // Switching space dropped the earlier pick.
-    expect(screen.getByTestId('pod-request-send-slot').props['aria-disabled']).toBe(true);
-
-    fireEvent.press(screen.getByTestId('slot-w1'));
-    fireEvent.press(screen.getByTestId('pod-request-send-slot'));
-    expect(onSend).toHaveBeenCalledWith('w1');
-  });
-
-  it('shows no space chips for a single space, and locks while sending', async () => {
-    mockRequest.mockResolvedValue({ venueAvailableSlots: [slot('s1', '')] });
-    const onSend = jest.fn();
-    renderWithProviders(<PickSlotBlock venueId="v1" busy onSend={onSend} />);
-    await waitFor(() => expect(screen.getByTestId('slot-s1')).toBeOnTheScreen());
-    expect(screen.queryByTestId('pod-request-space-whole')).toBeNull();
-    fireEvent.press(screen.getByTestId('slot-s1'));
-    expect(screen.getByTestId('pod-request-send-slot').props['aria-disabled']).toBe(true);
-  });
-
-  it('says when the venue has no open slots', async () => {
-    mockRequest.mockResolvedValue({ venueAvailableSlots: [] });
-    renderWithProviders(<PickSlotBlock venueId="v1" busy={false} onSend={jest.fn()} />);
-    await waitFor(() =>
-      expect(screen.getByTestId('pod-request-no-slots')).toHaveTextContent(
-        'This venue has no open slots right now.',
-      ),
-    );
-  });
 });
 
 describe('CounterpartCard', () => {
@@ -333,6 +302,24 @@ describe('SlotSummary', () => {
     );
     expect(screen.getByText('05/01/2030 · Whole day')).toBeOnTheScreen();
     expect(screen.getByText('Court A')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-request-proposed-terms')).toBeNull();
+  });
+
+  it('shows a proposal’s price terms: the option and amount, the total and the venue’s share', async () => {
+    mockRequest.mockResolvedValue({
+      publicFinanceSettings: { gst_pct: 18, currency_symbol: '₹' },
+    });
+    const offer = {
+      model: 'PER_GUEST',
+      rate: 300,
+      pax: 20,
+      quote: { venue_payout: 6000, platform_fee: 600, total: 6600 },
+    };
+    renderWithProviders(<SlotSummary slot={{ ...slot('s1', ''), offer } as never} />);
+    const terms = screen.getByTestId('pod-request-proposed-terms');
+    await waitFor(() => expect(within(terms).getByText(/300(\.00)? per guest/)).toBeOnTheScreen());
+    expect(within(terms).getByText(/Booking total .*6,600/)).toBeOnTheScreen();
+    expect(within(terms).getByText(/Venue receives .*6,000/)).toBeOnTheScreen();
   });
 });
 

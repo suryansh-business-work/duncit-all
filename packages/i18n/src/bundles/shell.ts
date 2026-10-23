@@ -1069,7 +1069,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       tickDone: 'Enrolled',
       needsAction: 'Needs your action',
       claimedByYou: 'You enrolled',
-      acceptCta: 'Accept & pick a slot',
+      acceptCta: 'Accept & set a time',
       assignMyselfCta: 'Assign Myself',
       claimForClubCta: 'Claim for my club',
       pickVenue: 'Which venue?',
@@ -1079,7 +1079,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // Enrolments happen in any order, so the body names "the others" rather
       // than a fixed sequence.
       confirmAcceptAnyOrder:
-        'Your slot is booked for this pod straight away. It goes live once everyone else has enrolled too.',
+        'Your venue is booked for this pod straight away, at the time and price you set. It goes live once everyone else has enrolled too.',
       confirmAssign: 'Host this Auto Pod?',
       confirmAssignClubNext:
         'You become the host of this pod. It goes live once the Club Admin accepts it.',

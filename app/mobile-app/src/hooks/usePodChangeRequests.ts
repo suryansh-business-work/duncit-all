@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import type { PodChangePenalties, PodChangeRole, PodChangeRow } from '@duncit/utils';
 
 import { PodChangeDecision, PodChangeRole as GqlPodChangeRole } from '@/generated/graphql/graphql';
+import { windowTermsOf, type WindowOffer } from '@/forms/window-offer';
 import {
   PodChangeBoardDocument,
+  PodChangeVenueQuoteDocument,
   RequestPodChangeDocument,
   RespondToPodChangeDocument,
   WithdrawPodChangeDocument,
@@ -124,19 +126,41 @@ export function usePodChangeRequests() {
     [run],
   );
 
+  /** `window`: a venue taking over the pod answers with the window and price it takes it at. */
   const respond = useCallback(
-    (requestId: string, decision: 'APPROVE' | 'PASS', reason: string, done: string) =>
+    (
+      requestId: string,
+      decision: 'APPROVE' | 'PASS',
+      reason: string,
+      done: string,
+      window?: WindowOffer,
+    ) =>
       run(
         () =>
           graphqlRequest(
             RespondToPodChangeDocument,
-            { request_id: requestId, decision: GQL_DECISION[decision], reason },
+            {
+              request_id: requestId,
+              decision: GQL_DECISION[decision],
+              reason,
+              venue_window: window ? windowTermsOf(window) : undefined,
+            },
             { auth: true },
           ),
         done,
       ),
     [run],
   );
+
+  /** What a venue's window and terms would cost the pod it is taking over. */
+  const priceTakeover = useCallback(async (requestId: string, window: WindowOffer) => {
+    const res = await graphqlRequest(
+      PodChangeVenueQuoteDocument,
+      { request_id: requestId, venue_window: windowTermsOf(window) },
+      { auth: true },
+    );
+    return res.podChangeVenueQuote;
+  }, []);
 
   const withdraw = useCallback(
     (requestId: string, done: string) =>
@@ -157,6 +181,7 @@ export function usePodChangeRequests() {
     reload: load,
     file,
     respond,
+    priceTakeover,
     withdraw,
   };
 }

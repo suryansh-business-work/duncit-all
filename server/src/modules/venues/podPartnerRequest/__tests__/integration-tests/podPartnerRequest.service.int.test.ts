@@ -1,8 +1,9 @@
 /**
  * Pod Request edges the end-to-end suite does not walk: input validation on
- * send, who may send to whom, withdrawing, picking a slot too early or from
- * another venue, losing the race after the hold, the lists and quotas each
- * side reads, and the pod-created / expiry bookkeeping.
+ * send, who may send to whom, withdrawing, proposing a window too early or
+ * from an app that still picks slots, losing the race after the hold, the live
+ * price, the lists and quotas each side reads, and the pod-created / expiry
+ * bookkeeping.
  */
 import { Types } from 'mongoose';
 
@@ -18,7 +19,11 @@ import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { moderationService } from '@modules/moderation/moderation.service';
-import { PARTNER_REQUEST_NOTE_MAX, podPartnerRequestService as svc } from '../../podPartnerRequest.service';
+import {
+  PARTNER_REQUEST_NOTE_MAX,
+  podPartnerRequestService as svc,
+  UPDATE_APP_FOR_POD_REQUEST,
+} from '../../podPartnerRequest.service';
 import { PodPartnerRequestModel } from '../../podPartnerRequest.model';
 import { PartnerRequestQuotaModel } from '../../podPartnerRequest.quota';
 import {
@@ -26,6 +31,7 @@ import {
   markPartnerRequestPodCreated,
   runPartnerRequestExpirySweep,
 } from '../../podPartnerRequest.lifecycle';
+import { proposal } from './proposal.fixture';
 
 const inDays = (d: number) => new Date(Date.now() + d * 86_400_000);
 let phoneSeq = 0;
@@ -43,18 +49,6 @@ async function seedUser(first: string, isHost: boolean) {
 async function seedVenue(owner: string, over: Record<string, unknown> = {}) {
   const venue = await VenueModel.create({ owner_user_id: owner, status: 'APPROVED', is_active: true, venue_name: 'Hall', ...over });
   return String(venue._id);
-}
-
-async function seedSlot(venueId: string, owner: string, days = 3) {
-  const slot = await VenueSlotModel.create({
-    venue_id: new Types.ObjectId(venueId),
-    owner_user_id: new Types.ObjectId(owner),
-    start_at: inDays(days),
-    end_at: inDays(days + 0.1),
-    price: 500,
-    status: 'AVAILABLE',
-  });
-  return String(slot._id);
 }
 
 const codeOf = async (run: Promise<unknown>) => {
@@ -199,30 +193,46 @@ describe('respond and cancel', () => {
   });
 });
 
-describe('requestSlot edges', () => {
-  it('refuses picking a slot before the request is accepted', async () => {
+describe('proposal edges', () => {
+  it('refuses proposing before the request is accepted, holding nothing', async () => {
     const sent = await svc.send(ownerId, toHost());
-    const slotId = await seedSlot(venueId, ownerId);
-    expect(await codeOf(svc.requestSlot(hostId, sent.id, slotId))).toBe('CONFLICT');
-    expect(await VenueSlotModel.findById(slotId).lean()).toMatchObject({ status: 'AVAILABLE' });
+    expect(await codeOf(svc.proposeWindow(hostId, sent.id, proposal()))).toBe('CONFLICT');
+    expect(await VenueSlotModel.countDocuments({ venue_id: venueId })).toBe(0);
   });
 
-  it("refuses a malformed slot id and another venue's slot", async () => {
+  it('tells an app that still picks a published slot to update', async () => {
     const sent = await svc.send(ownerId, toHost());
     await svc.respond(hostId, sent.id, true);
-    expect(await codeOf(svc.requestSlot(hostId, sent.id, 'nope'))).toBe('BAD_USER_INPUT');
-    const elsewhere = await seedSlot(await seedVenue(ownerId), ownerId);
-    expect(await codeOf(svc.requestSlot(hostId, sent.id, elsewhere))).toBe('CONFLICT');
+    await expect(svc.requestSlot(hostId, sent.id, new Types.ObjectId().toString())).rejects.toMatchObject({
+      message: UPDATE_APP_FOR_POD_REQUEST,
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
   });
 
-  it('gives the held slot back when the request moved on between the hold and the write', async () => {
+  it('refuses terms the venue cannot be offered, and guests the venue cannot hold', async () => {
     const sent = await svc.send(ownerId, toHost());
     await svc.respond(hostId, sent.id, true);
-    const slotId = await seedSlot(venueId, ownerId);
+    expect(await codeOf(svc.proposeWindow(hostId, sent.id, proposal(3, { rate: 0 })))).toBe('BAD_USER_INPUT');
+    await VenueModel.updateOne({ _id: venueId }, { $set: { capacity: 5 } });
+    expect(await codeOf(svc.proposeWindow(hostId, sent.id, proposal(3, { pax: 6 })))).toBe('BAD_USER_INPUT');
+  });
+
+  it('prices a proposal for the receiver before it is sent, and refuses the sender', async () => {
+    const sent = await svc.send(ownerId, toHost());
+    await svc.respond(hostId, sent.id, true);
+    const priced = await svc.windowQuote(hostId, sent.id, proposal());
+    expect(priced).toMatchObject({ ok: true, message: null, quote: { model: 'FLAT', venue_payout: 2000, confirmed_at: null } });
+    expect(await svc.windowQuote(hostId, sent.id, proposal(3, { rate: 0 }))).toMatchObject({ ok: false, quote: null });
+    expect(await codeOf(svc.windowQuote(ownerId, sent.id, proposal()))).toBe('FORBIDDEN');
+  });
+
+  it('deletes the hold when the request moved on between the hold and the write', async () => {
+    const sent = await svc.send(ownerId, toHost());
+    await svc.respond(hostId, sent.id, true);
     const race = jest.spyOn(PodPartnerRequestModel, 'findOneAndUpdate').mockResolvedValueOnce(null);
-    expect(await codeOf(svc.requestSlot(hostId, sent.id, slotId))).toBe('CONFLICT');
+    expect(await codeOf(svc.proposeWindow(hostId, sent.id, proposal()))).toBe('CONFLICT');
     race.mockRestore();
-    expect(await VenueSlotModel.findById(slotId).lean()).toMatchObject({ status: 'AVAILABLE', booked_by_partner_request_id: null });
+    expect(await VenueSlotModel.countDocuments({ booked_by_partner_request_id: new Types.ObjectId(sent.id) })).toBe(0);
     expect(await PodPartnerRequestModel.findById(sent.id).lean()).toMatchObject({ status: 'ACCEPTED', slot_id: null });
   });
 
@@ -272,10 +282,9 @@ describe('pod bookkeeping', () => {
   async function confirmed() {
     const sent = await svc.send(ownerId, toHost());
     await svc.respond(hostId, sent.id, true);
-    const slotId = await seedSlot(venueId, ownerId);
-    await svc.requestSlot(hostId, sent.id, slotId);
+    const proposed = await svc.proposeWindow(hostId, sent.id, proposal());
     await svc.respondSlot(ownerId, sent.id, true);
-    return { id: sent.id, slotId };
+    return { id: sent.id, slotId: String(proposed.slot?.id) };
   }
 
   it('refuses a malformed or unknown request id, and a pod without the confirmed slot', async () => {
@@ -309,7 +318,7 @@ describe('pod bookkeeping', () => {
     warn.mockRestore();
   });
 
-  it('expires a confirmed request whose slot started, but not one whose slot is still ahead', async () => {
+  it('expires a confirmed request whose window started, deleting its hold, but not one still ahead', async () => {
     const { id, slotId } = await confirmed();
     const later = await svc.send(ownerId, toHost({ host_user_id: await seedUser('Dev', true) }));
     await PodPartnerRequestModel.updateOne(
@@ -320,7 +329,7 @@ describe('pod bookkeeping', () => {
 
     expect(await runPartnerRequestExpirySweep()).toBe(1);
     expect(await PodPartnerRequestModel.findById(id).lean()).toMatchObject({ status: 'EXPIRED' });
-    expect(await VenueSlotModel.findById(slotId).lean()).toMatchObject({ status: 'AVAILABLE' });
+    expect(await VenueSlotModel.findById(slotId).lean()).toBeNull();
     expect(await PodPartnerRequestModel.findById(later.id).lean()).toMatchObject({ status: 'SLOT_CONFIRMED' });
   });
 

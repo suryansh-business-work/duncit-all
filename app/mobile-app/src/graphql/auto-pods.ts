@@ -225,8 +225,12 @@ export const MyAutoPodActionCountsDocument = gql(`
 /** Accepting and committing a slot are one step — an acceptance with no date
  * leaves the host and club admin nothing to enrol against. */
 export const VenueAcceptAutoPodDocument = gql(`
-  mutation MobileVenueAcceptAutoPod($auto_pod_doc_id: ID!, $venue_id: ID!, $slot_id: ID!) {
-    venueAcceptAutoPod(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id, slot_id: $slot_id) {
+  mutation MobileVenueAcceptAutoPod(
+    $auto_pod_doc_id: ID!
+    $venue_id: ID!
+    $offer: AutoPodVenueOfferInput!
+  ) {
+    venueAcceptAutoPod(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id, offer: $offer) {
       id
       stage
       viewer_claimed
@@ -383,24 +387,15 @@ export const MyVenuesForAutoPodDocument = gql(`
  * decides how many), nearest first, each with what the venue would be paid
  * after Finance's deductions — and whether the pod's money could cover it.
  */
-export const AutoPodVenueSlotsDocument = gql(`
-  query MobileAutoPodVenueSlots($auto_pod_doc_id: ID!, $venue_id: ID!) {
-    autoPodVenueSlots(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id) {
-      window_days
-      expires_at
-      slots {
-        id
-        start_at
-        end_at
-        whole_day
-        space_label
-        capacity
-        price
-        venue_receives
-        venue_commission_pct
-        host_receives
-        viable
-      }
+/** What a window and price terms would cost this offer at the venue — or why it cannot accept. */
+export const AutoPodVenueQuoteDocument = gql(`
+  query MobileAutoPodVenueQuote(
+    $auto_pod_doc_id: ID!
+    $venue_id: ID!
+    $offer: AutoPodVenueOfferInput!
+  ) {
+    autoPodVenueQuote(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id, offer: $offer) {
+      ...MobileOfferQuoteResult
     }
   }
 `);

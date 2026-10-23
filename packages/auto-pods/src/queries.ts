@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { BREAKDOWN_FIELDS, type WindowOfferInput, type WindowQuoteSource } from '@duncit/availability-calendar';
 
 /**
  * Every Auto Pod document the MUI surfaces send. They live here rather than in
@@ -108,8 +109,8 @@ export const AUTO_POD_ACTION_COUNTS = gql`
 `;
 
 export const VENUE_ACCEPT_AUTO_POD = gql`
-  mutation VenueAcceptAutoPod($auto_pod_doc_id: ID!, $venue_id: ID!, $slot_id: ID!) {
-    venueAcceptAutoPod(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id, slot_id: $slot_id) {
+  mutation VenueAcceptAutoPod($auto_pod_doc_id: ID!, $venue_id: ID!, $offer: AutoPodVenueOfferInput!) {
+    venueAcceptAutoPod(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id, offer: $offer) {
       ${AUTO_POD_FIELDS}
     }
   }
@@ -231,33 +232,32 @@ export const MY_VENUES_FOR_AUTO_POD = gql`
   }
 `;
 
-/**
- * The chosen venue's free slots for ONE offer: the next few days (Pod
- * Settings decides how many), nearest first, each with what the venue would
- * be paid after Finance's deductions — and whether the pod's money could
- * cover it at all.
- */
-export const AUTO_POD_VENUE_SLOTS = gql`
-  query AutoPodVenueSlots($auto_pod_doc_id: ID!, $venue_id: ID!) {
-    autoPodVenueSlots(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id) {
-      window_days
-      expires_at
-      slots {
-        id
-        start_at
-        end_at
-        whole_day
-        space_label
-        capacity
-        price
-        venue_receives
-        venue_commission_pct
-        host_receives
-        viable
-      }
+/** What a window and price terms would cost at the chosen venue, before it accepts (ok false + why when it cannot). */
+export const AUTO_POD_VENUE_QUOTE = gql`
+  query AutoPodVenueQuote($auto_pod_doc_id: ID!, $venue_id: ID!, $offer: AutoPodVenueOfferInput!) {
+    autoPodVenueQuote(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id, offer: $offer) {
+      ok
+      message
+      quote { ${BREAKDOWN_FIELDS} }
     }
   }
 `;
+
+/** The proposal as the Auto Pod takes it: no guests — they are the offer's spots. */
+export const autoPodVenueOffer = ({ start_at, end_at, space_label, model, rate }: WindowOfferInput) => ({
+  start_at,
+  end_at,
+  space_label,
+  model,
+  rate,
+});
+
+/** How the venue accept dialog prices the time it proposes. */
+export const autoPodVenueQuoteSource = (autoPodId: string, venueId: string): WindowQuoteSource => ({
+  document: AUTO_POD_VENUE_QUOTE,
+  field: 'autoPodVenueQuote',
+  variables: (offer) => ({ auto_pod_doc_id: autoPodId, venue_id: venueId, offer: autoPodVenueOffer(offer) }),
+});
 
 /** Clubs the caller administers — a claim is made FOR one of them. */
 export const MY_ADMIN_CLUBS_FOR_AUTO_POD = gql`

@@ -7,11 +7,13 @@ import { GraphQLError } from 'graphql';
 
 import {
   CANCEL_POD_PARTNER_REQUEST,
-  REQUEST_POD_PARTNER_SLOT,
   RESPOND_POD_PARTNER_REQUEST,
   RESPOND_POD_PARTNER_SLOT,
 } from '../queries';
+import { PROPOSE_POD_PARTNER_WINDOW } from '@duncit/availability-calendar';
 import { usePodRequestActions } from '../usePodRequestActions';
+
+const OFFER = { start_at: '2026-12-02T12:30:00.000Z', end_at: '2026-12-02T14:30:00.000Z', space_label: '', pax: 10, model: 'FLAT', rate: 5000 };
 
 const moved = (field: string, status: string) => ({
   data: { [field]: { __typename: 'PodPartnerRequest', id: 'req-1', status } },
@@ -41,10 +43,10 @@ describe('usePodRequestActions', () => {
       (a: ReturnType<typeof usePodRequestActions>) => a.withdraw('req-1'),
     ],
     [
-      'requestSlot',
-      { query: REQUEST_POD_PARTNER_SLOT, variables: { id: 'req-1', slot_id: 'slot-7' } },
-      moved('requestPodPartnerSlot', 'SLOT_REQUESTED'),
-      (a: ReturnType<typeof usePodRequestActions>) => a.requestSlot('req-1', 'slot-7'),
+      'proposeWindow',
+      { query: PROPOSE_POD_PARTNER_WINDOW, variables: { id: 'req-1', offer: OFFER } },
+      moved('proposePodPartnerWindow', 'SLOT_REQUESTED'),
+      (a: ReturnType<typeof usePodRequestActions>) => a.proposeWindow('req-1', OFFER),
     ],
     [
       'respondSlot',
@@ -103,10 +105,10 @@ describe('usePodRequestActions', () => {
 
   it('dismisses an error with clearError', async () => {
     const { result } = renderActions([
-      { request: { query: REQUEST_POD_PARTNER_SLOT, variables: { id: 'req-1', slot_id: 's' } }, error: new Error('Nope') },
+      { request: { query: PROPOSE_POD_PARTNER_WINDOW, variables: { id: 'req-1', offer: OFFER } }, error: new Error('Nope') },
     ]);
     await act(async () => {
-      await result.current.requestSlot('req-1', 's');
+      await result.current.proposeWindow('req-1', OFFER);
     });
     expect(result.current.error).toBe('Nope');
 

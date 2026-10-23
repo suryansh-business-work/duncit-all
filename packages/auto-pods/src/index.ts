@@ -62,6 +62,8 @@ export {
   MY_VENUES_FOR_AUTO_POD,
   VENUE_ACCEPT_AUTO_POD,
   VENUE_AUTO_PODS,
-  AUTO_POD_VENUE_SLOTS,
+  AUTO_POD_VENUE_QUOTE,
+  autoPodVenueOffer,
+  autoPodVenueQuoteSource,
   type AutoPodQueueVariables,
 } from './queries';

@@ -232,6 +232,15 @@ export const autoPodTypeDefs = gql`
     viable: Boolean!
   }
 
+  "The window a venue commits to an Auto Pod and the price terms it asks (the guests are the offer's spots)."
+  input AutoPodVenueOfferInput {
+    start_at: String!
+    end_at: String!
+    space_label: String
+    model: VenueOfferModel!
+    rate: Float!
+  }
+
   type AutoPodVenueSlots {
     "How many days ahead the list reaches — Pod Settings' auto_pod_slot_window_days."
     window_days: Int!
@@ -327,12 +336,11 @@ export const autoPodTypeDefs = gql`
     what ONE of the caller's venues could accept (its category and city).
     """
     venueAutoPods(location_id: ID, venue_id: ID): [AutoPod!]!
-    """
-    The free slots one of the caller's venues could commit to an offer, in the
-    next auto_pod_slot_window_days days, nearest first — each with what the
-    venue would be paid after Finance's deductions.
-    """
+    "Deprecated: published slots. Refused with an update-the-app message — venues accept with a window and a price."
     autoPodVenueSlots(auto_pod_doc_id: ID!, venue_id: ID!): AutoPodVenueSlots!
+      @deprecated(reason: "Venues accept an Auto Pod with a window and terms: use autoPodVenueQuote + venueAcceptAutoPod(offer).")
+    "What a window and price terms would cost this offer at one of the caller's venues, before accepting (ok false + message when it cannot)."
+    autoPodVenueQuote(auto_pod_doc_id: ID!, venue_id: ID!, offer: AutoPodVenueOfferInput!): VenueOfferQuoteResult!
     "What a ticket price and spot count would earn the CALLING host on this offer, plus the spot limits."
     autoPodHostProjection(auto_pod_doc_id: ID!, pod_amount: Float!, no_of_spots: Int!): AutoPodHostProjection!
     """
@@ -382,8 +390,17 @@ export const autoPodTypeDefs = gql`
     everyone enrolled is told.
     """
     deleteAutoPod(auto_pod_doc_id: ID!): Boolean!
-    "Venue enrols: accepts the offer and commits one of its own slots."
-    venueAcceptAutoPod(auto_pod_doc_id: ID!, venue_id: ID!, slot_id: ID!): AutoPod!
+    """
+    Venue enrols: accepts the offer and commits a window at its own price terms
+    (priced with its charges, Duncit's commission on top, frozen at accept).
+    slot_id is deprecated: a call without offer is refused with an update-the-app message.
+    """
+    venueAcceptAutoPod(
+      auto_pod_doc_id: ID!
+      venue_id: ID!
+      slot_id: ID @deprecated(reason: "Send offer (a window and price terms) instead.")
+      offer: AutoPodVenueOfferInput
+    ): AutoPod!
     """
     Host enrols: assigns themselves, setting the pod's ticket price and spots.
     Only once a venue has fixed the slot on a physical offer. location_id is

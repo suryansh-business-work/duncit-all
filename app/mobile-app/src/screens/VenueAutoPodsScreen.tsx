@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { YStack } from 'tamagui';
 import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
@@ -19,7 +17,6 @@ import { useAutoPodEarnings } from '@/hooks/useAutoPodEarnings';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
 import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
 import { useLocations } from '@/hooks/useLocations';
-import type { RootStackParamList } from '@/navigation/types';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
@@ -38,7 +35,6 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
  * `@duncit/utils`' auto-pod helpers.
  */
 export function VenueAutoPodsScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { selectedId } = useLocations();
   const [venue, setVenue] = useState<AutoPodVenueOption | null>(null);
   const { labels, formatWhen, formatMoney, rows, isLoading, hasError, refetch } = useAutoPodScreen(
@@ -122,17 +118,9 @@ export function VenueAutoPodsScreen() {
         onClose={() => setOffer(null)}
         onAccepted={() => {
           setOffer(null);
-          // The slot is committed server-side; re-read rather than patch, so a
+          // The window is booked server-side; re-read rather than patch, so a
           // race lost to another venue shows as lost.
           refetch();
-        }}
-        formatWhen={formatWhen}
-        formatMoney={formatMoney}
-        // Straight to the venue's own availability calendar: the venue is
-        // here BECAUSE it has no free slot, so Manage venue was a detour.
-        onAddAvailability={() => {
-          setOffer(null);
-          navigation.navigate('VenueAvailability');
         }}
       />
     </StackScreen>

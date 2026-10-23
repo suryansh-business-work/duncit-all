@@ -7,7 +7,7 @@ import RespondButtons from '../pod-requests/components/RespondButtons';
 import type { PodRequestDetail } from '../pod-requests/queries';
 import type { PodRequestActions } from '../pod-requests/usePodRequestActions';
 import { useTranslation } from '../../i18n/useTranslation';
-import PickSlotBlock from './PickSlotBlock';
+import { ProposeWindowBlock } from '@duncit/availability-calendar';
 
 interface Props {
   request: PodRequestDetail;
@@ -18,7 +18,7 @@ const ignore = () => undefined;
 
 /**
  * What the viewer's side can do now (the shared `podRequestNextAction`):
- * answer it, withdraw it, pick the slot, answer the slot, create the pod — or
+ * answer it, withdraw it, propose the time and price, answer it, create the pod — or
  * the line that says whose move it is.
  */
 export default function ActionBlock({ request, actions }: Readonly<Props>) {
@@ -58,10 +58,10 @@ export default function ActionBlock({ request, actions }: Readonly<Props>) {
       );
     case 'PICK_SLOT':
       return request.venue ? (
-        <PickSlotBlock
-          venueId={request.venue.id}
+        <ProposeWindowBlock
+          requestId={request.id}
           busy={actions.busy}
-          onSend={(slotId) => actions.requestSlot(request.id, slotId)}
+          onPropose={(offer) => actions.proposeWindow(request.id, offer)}
         />
       ) : null;
     case 'WAIT_SLOT':

@@ -6,30 +6,30 @@ import { makeCandidate } from './fixtures';
 describe('CandidateList', () => {
   it('shows two placeholders and no cards while the candidates load', () => {
     const { container } = render(
-      <CandidateList rows={[makeCandidate()]} role="VENUE" loading busy={false} onPick={vi.fn()} />,
+      <CandidateList rows={[makeCandidate()]} loading busy={false} onPick={vi.fn()} />,
     );
     expect(container.querySelectorAll('.MuiSkeleton-root')).toHaveLength(2);
     expect(screen.queryByText('Dialogues Cafe, Koramangala')).not.toBeInTheDocument();
   });
 
   it('says nobody matches when the list is empty', () => {
-    render(<CandidateList rows={[]} role="HOST" loading={false} busy={false} onPick={vi.fn()} />);
+    render(<CandidateList rows={[]} loading={false} busy={false} onPick={vi.fn()} />);
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Nobody matches this pod’s category and city yet. Onboard a partner, or cancel the pod and refund everyone.',
     );
   });
 
-  it('lists a venue with its detail and contacts, continuing to the slot picker', () => {
+  it('lists a venue with its detail and contacts, and sends it the offer', () => {
     const onPick = vi.fn();
     const row = makeCandidate();
-    render(<CandidateList rows={[row]} role="VENUE" loading={false} busy={false} onPick={onPick} />);
+    render(<CandidateList rows={[row]} loading={false} busy={false} onPick={onPick} />);
 
     expect(screen.getByText('Dialogues Cafe, Koramangala')).toBeInTheDocument();
     expect(screen.getByText('Cafe · 3.1 km away')).toBeInTheDocument();
     expect(screen.getByText('+91 99000 11122')).toBeInTheDocument();
     expect(screen.getByText('kiran@dialogues.in')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Slot' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send request' }));
     expect(onPick).toHaveBeenCalledWith(row);
   });
 
@@ -37,7 +37,7 @@ describe('CandidateList', () => {
     const onPick = vi.fn();
     const row = makeCandidate({ id: 'cand-2', label: 'Meera Iyer', detail: '', phone: '', email: '' });
     const { container } = render(
-      <CandidateList rows={[row]} role="HOST" loading={false} busy={false} onPick={onPick} />,
+      <CandidateList rows={[row]} loading={false} busy={false} onPick={onPick} />,
     );
 
     expect(screen.getByText('Meera Iyer')).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('CandidateList', () => {
     render(
       <CandidateList
         rows={[makeCandidate(), makeCandidate({ id: 'cand-3', label: 'Toit, Indiranagar' })]}
-        role="CLUB_ADMIN"
+       
         loading={false}
         busy
         onPick={vi.fn()}

@@ -514,6 +514,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/auto-pods/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/availability-calendar", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
@@ -1402,6 +1403,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/availability-calendar", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },

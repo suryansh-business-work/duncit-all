@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
+    "@duncit/availability-calendar": "workspace:*",
     "@duncit/buttons": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/ui": "workspace:*",

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { useQuery } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -40,7 +39,6 @@ interface Props {
  * Native twin: `VenueAutoPodsScreen`.
  */
 export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
-  const navigate = useNavigate();
   // The picker's own list (same query, answered from the cache), narrowed the
   // way the picker narrows it, so the queue opens on the venue the Venue
   // Options page selected instead of the picker's first-row default.
@@ -103,11 +101,6 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
         open={target !== null}
         onClose={() => setTarget(null)}
         onAccepted={queue.reload}
-        formatWhen={queue.formatWhen}
-        formatMoney={queue.formatMoney}
-        // Straight to the venue's own availability calendar — the venue is
-        // here BECAUSE it has no free slot, so the manage page was a detour.
-        onAddAvailability={() => navigate('/venues/pricing')}
       />
     </Stack>
   );

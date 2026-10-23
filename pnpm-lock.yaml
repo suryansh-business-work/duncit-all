@@ -842,6 +842,9 @@ importers:
 
   packages/auto-pods:
     dependencies:
+      '@duncit/availability-calendar':
+        specifier: workspace:*
+        version: link:../availability-calendar
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../buttons
@@ -2536,6 +2539,9 @@ importers:
       '@duncit/app-settings':
         specifier: workspace:*
         version: link:../app-settings
+      '@duncit/availability-calendar':
+        specifier: workspace:*
+        version: link:../availability-calendar
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../buttons

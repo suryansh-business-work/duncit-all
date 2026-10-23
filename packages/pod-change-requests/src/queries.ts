@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { BREAKDOWN_FIELDS, type WindowOfferInput, type WindowQuoteSource } from '@duncit/availability-calendar';
 
 /**
  * The Change Requests documents, spelled out in full.
@@ -87,8 +88,13 @@ export const REQUEST_POD_CHANGE = gql`
 `;
 
 export const RESPOND_TO_POD_CHANGE = gql`
-  mutation RespondToPodChange($request_id: ID!, $decision: PodChangeDecision!, $reason: String) {
-    respondToPodChange(request_id: $request_id, decision: $decision, reason: $reason) { ${ROW} }
+  mutation RespondToPodChange(
+    $request_id: ID!
+    $decision: PodChangeDecision!
+    $reason: String
+    $venue_window: PodChangeVenueWindowInput
+  ) {
+    respondToPodChange(request_id: $request_id, decision: $decision, reason: $reason, venue_window: $venue_window) { ${ROW} }
   }
 `;
 
@@ -128,19 +134,32 @@ export const POD_CHANGE_CANDIDATES = gql`
   }
 `;
 
-export const POD_CHANGE_VENUE_SLOTS = gql`
-  query PodChangeVenueSlots($request_id: ID!, $venue_id: ID!) {
-    podChangeVenueSlots(request_id: $request_id, venue_id: $venue_id) {
-      id
-      venue_id
-      start_at
-      end_at
-      price
-      capacity
-      space_label
+/** What the offered venue's window and terms would cost, before it takes the pod over. */
+export const POD_CHANGE_VENUE_QUOTE = gql`
+  query PodChangeVenueQuote($request_id: ID!, $venue_window: PodChangeVenueWindowInput!) {
+    podChangeVenueQuote(request_id: $request_id, venue_window: $venue_window) {
+      ok
+      message
+      quote { ${BREAKDOWN_FIELDS} }
     }
   }
 `;
+
+/** The window as a takeover sends it: no guests — they are the pod's spots. */
+export const podChangeVenueWindow = ({ start_at, end_at, space_label, model, rate }: WindowOfferInput) => ({
+  start_at,
+  end_at,
+  space_label,
+  model,
+  rate,
+});
+
+/** How a venue's takeover window is priced. */
+export const podChangeVenueQuoteSource = (requestId: string): WindowQuoteSource => ({
+  document: POD_CHANGE_VENUE_QUOTE,
+  field: 'podChangeVenueQuote',
+  variables: (offer) => ({ request_id: requestId, venue_window: podChangeVenueWindow(offer) }),
+});
 
 export const OFFER_POD_CHANGE = gql`
   mutation OfferPodChange($input: OfferPodChangeInput!) {
@@ -168,13 +187,3 @@ export interface PodChangeCandidateRow {
   club_name: string;
 }
 
-/** A free slot at a candidate venue. */
-export interface PodChangeSlotRow {
-  id: string;
-  venue_id: string;
-  start_at: string;
-  end_at: string | null;
-  price: number;
-  capacity: number;
-  space_label: string;
-}

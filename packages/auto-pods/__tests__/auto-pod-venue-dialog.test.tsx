@@ -1,10 +1,10 @@
 /**
  * The venue's enrolment dialog.
  *
- * Accepting and committing a slot are ONE action (an acceptance with no slot
+ * Accepting and fixing the time are ONE action (an acceptance with no date
  * leaves the offer half-claimed with nothing for a host to see), the venue is
- * the one chosen at the top of the queue, and every slot the dialog offers
- * carries what the venue would be paid for it. It may never report success
+ * the one chosen at the top of the queue, and it proposes its own time and
+ * price, priced by the server before it is sent. It may never report success
  * the server never gave: with nothing answering, no callback fires.
  */
 import type { ReactNode } from 'react';
@@ -15,9 +15,22 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mwebAutoPodLabels, type AutoPodLocation, type AutoPodRow } from '@duncit/utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { VenueAcceptDialog, type AutoPodVenueSlot } from '../src/venue/VenueAcceptDialog';
+import { VenueAcceptDialog } from '../src/venue/VenueAcceptDialog';
 import type { AutoPodVenueOption } from '../src/venue/AutoPodVenuePicker';
-import { AUTO_POD_VENUE_SLOTS, VENUE_ACCEPT_AUTO_POD } from '../src/queries';
+import { AUTO_POD_VENUE_QUOTE, VENUE_ACCEPT_AUTO_POD, autoPodVenueOffer } from '../src/queries';
+
+// MUI X wants a LocalizationProvider and a real calendar; a plain input that
+// hands back a Date is all the proposal form reads.
+vi.mock('@mui/x-date-pickers/DatePicker', () => ({
+  DatePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (d: Date | null) => void }) => (
+    <input aria-label={label} value={value ? value.toISOString() : ''} onChange={(e) => onChange(new Date(e.target.value))} />
+  ),
+}));
+vi.mock('@mui/x-date-pickers/TimePicker', () => ({
+  TimePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (d: Date | null) => void }) => (
+    <input aria-label={label} value={value ? value.toISOString() : ''} onChange={(e) => onChange(new Date(e.target.value))} />
+  ),
+}));
 
 const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
   options?.vars ? `${key}:${JSON.stringify(options.vars)}` : key;
@@ -27,7 +40,7 @@ const testTheme = createTheme();
 const settle = async () => {
   await act(async () => {
     await new Promise((resolve) => {
-      setTimeout(resolve, 0);
+      setTimeout(resolve, 450);
     });
   });
 };
@@ -75,38 +88,49 @@ const venue = (over: Partial<AutoPodVenueOption> = {}): AutoPodVenueOption => ({
   ...over,
 });
 
-const slot = (over: Partial<AutoPodVenueSlot> & Record<string, unknown> = {}) => ({
-  __typename: 'AutoPodVenueSlot',
-  id: 'slot-1',
-  start_at: '2026-09-01T10:00:00.000Z',
-  end_at: '2026-09-01T12:00:00.000Z',
-  whole_day: false,
-  space_label: 'Court 2',
-  capacity: 12,
-  price: 250,
-  venue_receives: 225,
-  venue_commission_pct: 10,
-  host_receives: 900,
-  viable: true,
-  ...over,
-});
+const breakdown = {
+  __typename: 'VenuePriceBreakdown',
+  model: 'FLAT',
+  rate: 2000,
+  pax: 8,
+  hours: 2,
+  date: '2026-09-01',
+  base: 2000,
+  rules: [],
+  rules_total: 0,
+  min_spend_top_up: 0,
+  cleaning_fee: 0,
+  pet_fee: 0,
+  venue_price: 2000,
+  gst_pct: 0,
+  taxes: 0,
+  venue_payout: 2000,
+  platform_fee_pct: 10,
+  platform_fee: 200,
+  total: 2200,
+  deposit: 0,
+};
 
-const slotsMock = (slots: readonly Record<string, unknown>[], windowDays = 7): MockedResponse => ({
-  request: { query: AUTO_POD_VENUE_SLOTS, variables: { auto_pod_doc_id: 'ap-1', venue_id: 'v-1' } },
-  result: {
-    data: {
-      autoPodVenueSlots: {
-        __typename: 'AutoPodVenueSlots',
-        window_days: windowDays,
-        expires_at: '2026-09-03T10:00:00.000Z',
-        slots,
-      },
-    },
+const quoteMock = (seen: Record<string, unknown>[] = []): MockedResponse => ({
+  request: { query: AUTO_POD_VENUE_QUOTE, variables: () => true },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+  result: (variables: Record<string, unknown>) => {
+    seen.push(variables);
+    return { data: { autoPodVenueQuote: { __typename: 'VenueOfferQuoteResult', ok: true, message: null, quote: breakdown } } } as never;
   },
 });
 
-const formatWhen = (iso: string) => `when:${iso}`;
-const formatMoney = (amount: number) => `₹${amount}`;
+const acceptMock = (seen: Record<string, unknown>[], answer: MockedResponse['result'] | Error): MockedResponse => ({
+  request: { query: VENUE_ACCEPT_AUTO_POD, variables: () => true },
+  ...(answer instanceof Error
+    ? { error: answer }
+    : {
+        result: (variables: Record<string, unknown>) => {
+          seen.push(variables);
+          return answer as never;
+        },
+      }),
+});
 
 const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
@@ -115,218 +139,110 @@ const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
     </MockedProvider>,
   );
 
-/** Pick an option out of a MUI select by its visible label. */
-const choose = async (label: string, option: string | RegExp) => {
-  fireEvent.mouseDown(screen.getByLabelText(label));
-  await settle();
-  fireEvent.click(await screen.findByRole('option', { name: option }));
-  await settle();
-};
+const typeAmount = (value: string) => fireEvent.change(screen.getByLabelText('Amount (₹)'), { target: { value } });
 
 const press = async (name: string) => {
   fireEvent.click(screen.getByRole('button', { name }));
   await settle();
 };
 
-const pressEverything = async () => {
-  for (const control of [...document.body.querySelectorAll<HTMLElement>('button:not([disabled])')].slice(0, 15)) {
-    if (!control.isConnected) continue;
-    fireEvent.click(control);
-    await settle();
-  }
-};
-
 afterEach(() => {
   vi.clearAllMocks();
 });
 
+describe('autoPodVenueOffer', () => {
+  it('drops the guests — an Auto Pod books for its own spots', () => {
+    expect(
+      autoPodVenueOffer({ start_at: 'S', end_at: 'E', space_label: 'Court 2', pax: 30, model: 'PER_HOUR', rate: 900 }),
+    ).toEqual({ start_at: 'S', end_at: 'E', space_label: 'Court 2', model: 'PER_HOUR', rate: 900 });
+  });
+});
+
 describe('VenueAcceptDialog', () => {
-  const props = {
-    labels,
-    onClose: vi.fn(),
-    onAccepted: vi.fn(),
-    formatWhen,
-    formatMoney,
-  };
+  const props = { labels, onClose: vi.fn(), onAccepted: vi.fn() };
 
   it('renders nothing at all while it is closed', () => {
     wrap(<VenueAcceptDialog {...props} row={row()} venue={venue()} open={false} />);
     expect(document.body.querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('opens without a row rather than naming a pod it does not have', async () => {
+  it('opens without a row rather than naming a pod it does not have, and asks for no time', async () => {
     wrap(<VenueAcceptDialog {...props} row={null} venue={venue()} open />);
     await settle();
     expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
     expect(document.body.textContent).not.toContain('Weekly Badminton');
+    expect(screen.queryByLabelText('Amount (₹)')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: labels.acceptCta })).toBeDisabled();
   });
 
-  it('asks for a venue when none was picked at the top, and offers no slots', async () => {
+  it('asks for a venue when none was picked at the top', async () => {
     wrap(<VenueAcceptDialog {...props} row={row()} venue={null} open />);
     await settle();
     expect(document.body.textContent).toContain(labels.pickVenueFirst);
+    expect(screen.queryByLabelText('Amount (₹)')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: labels.acceptCta })).toBeDisabled();
   });
 
-  it('names the pod and the venue, lists its slots nearest first with the window, and prices the chosen one', async () => {
-    wrap(<VenueAcceptDialog {...props} row={row()} venue={venue()} open />, [
-      slotsMock([slot(), slot({ id: 'slot-2', start_at: '2026-09-02T10:00:00.000Z', space_label: 'Court 5', price: 400, venue_receives: 360 })]),
-    ]);
-    await settle();
-    await settle();
-
-    expect(document.body.textContent).toContain('Weekly Badminton');
-    expect(document.body.textContent).toContain(labels.acceptingWith('Indiranagar Court'));
-    expect(document.body.textContent).toContain(labels.slotWindow(7));
-    expect(screen.getByRole('button', { name: labels.acceptCta })).toBeDisabled();
-
-    fireEvent.mouseDown(screen.getByLabelText(labels.pickSlot));
-    await settle();
-    const options = await screen.findAllByRole('option');
-    expect(options[0].textContent).toBe('when:2026-09-01T10:00:00.000Z · Court 2 · ₹250');
-    expect(options[1].textContent).toBe('when:2026-09-02T10:00:00.000Z · Court 5 · ₹400');
-    fireEvent.click(options[1]);
-    await settle();
-
-    expect(screen.getByTestId('auto-pod-slot-earning')).toHaveTextContent(labels.potentialEarning('₹360'));
-    expect(screen.getByRole('button', { name: labels.acceptCta })).toBeEnabled();
-  });
-
-  it('labels a slot with no space by its time and price alone', async () => {
-    wrap(<VenueAcceptDialog {...props} row={row()} venue={venue()} open />, [slotsMock([slot({ space_label: '' })])]);
-    await settle();
-    await settle();
-    fireEvent.mouseDown(screen.getByLabelText(labels.pickSlot));
-    await settle();
-    const option = await screen.findByRole('option', { name: /when:/ });
-    expect(option.textContent).toBe('when:2026-09-01T10:00:00.000Z · ₹250');
-  });
-
-  it('says why a slot the pod cannot cover is not acceptable, and keeps the button shut', async () => {
-    wrap(<VenueAcceptDialog {...props} row={row()} venue={venue()} open />, [
-      slotsMock([slot({ viable: false, host_receives: -50 })]),
-    ]);
-    await settle();
-    await settle();
-    await choose(labels.pickSlot, /Court 2/);
-    expect(document.body.textContent).toContain(labels.slotNotViable);
-    expect(screen.queryByTestId('auto-pod-slot-earning')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: labels.acceptCta })).toBeDisabled();
-  });
-
-  // A pinned offer only takes a venue from its own city — the server refuses
-  // any other, so the dialog says so and never asks for slots.
   it('refuses a venue outside the city the offer is pinned to', async () => {
     wrap(
-      <VenueAcceptDialog
-        {...props}
-        row={row({ location: BENGALURU })}
-        venue={venue({ id: 'v-9', venue_name: 'Chennai Court', location_id: 'loc-maa' })}
-        open
-      />,
+      <VenueAcceptDialog {...props} row={row({ location: BENGALURU })} venue={venue({ location_id: 'loc-mum' })} open />,
     );
     await settle();
-    await settle();
-    expect(document.body.textContent).toContain(labels.pinnedTo('Bengaluru, Karnataka'));
     expect(document.body.textContent).toContain(labels.noVenueInCity('Bengaluru, Karnataka'));
+    expect(screen.queryByLabelText('Amount (₹)')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: labels.acceptCta })).toBeDisabled();
   });
 
-  it('sends a venue with no free slots in the window where it can publish some', async () => {
-    const onAddAvailability = vi.fn();
-    wrap(<VenueAcceptDialog {...props} row={row()} venue={venue()} open onAddAvailability={onAddAvailability} />, [
-      slotsMock([]),
-    ]);
+  it('names the pod and the venue, and prices the time and terms the venue proposes', async () => {
+    const seen: Record<string, unknown>[] = [];
+    wrap(<VenueAcceptDialog {...props} row={row({ location: BENGALURU })} venue={venue()} open />, [quoteMock(seen)]);
+    expect(document.body.textContent).toContain('Weekly Badminton');
+    expect(document.body.textContent).toContain(labels.acceptingWith('Indiranagar Court'));
+    expect(screen.queryByLabelText('Guests')).not.toBeInTheDocument();
+
+    typeAmount('2000');
     await settle();
-    await settle();
-    expect(document.body.textContent).toContain(labels.noSlots);
-    await press(labels.addAvailability);
-    expect(onAddAvailability).toHaveBeenCalledTimes(1);
+    expect(await screen.findByTestId('price-breakdown')).toHaveTextContent('₹2,200');
+    expect(seen[0]).toMatchObject({ auto_pod_doc_id: 'ap-1', venue_id: 'v-1', offer: { model: 'FLAT', rate: 2000, space_label: '' } });
+    expect(seen[0]).not.toHaveProperty('offer.pax');
   });
 
-  it('states there are no slots without offering a way out the surface did not give it', async () => {
-    wrap(<VenueAcceptDialog {...props} row={row()} venue={venue()} open />, [slotsMock([])]);
-    await settle();
-    await settle();
-    expect(document.body.textContent).toContain(labels.noSlots);
-    expect(screen.queryByRole('button', { name: labels.addAvailability })).not.toBeInTheDocument();
-  });
-
-  it('forgets the chosen slot when the venue at the top changes', async () => {
-    const { rerender } = wrap(<VenueAcceptDialog {...props} row={row()} venue={venue()} open />, [
-      slotsMock([slot()]),
-    ]);
-    await settle();
-    await settle();
-    await choose(labels.pickSlot, /Court 2/);
-    expect(screen.getByRole('button', { name: labels.acceptCta })).toBeEnabled();
-
-    rerender(
-      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
-        <ThemeProvider theme={testTheme}>
-          <VenueAcceptDialog {...props} row={row()} venue={venue({ id: 'v-2', venue_name: 'Koramangala Court' })} open />
-        </ThemeProvider>
-      </MockedProvider>,
-    );
-    await settle();
-    expect(screen.getByRole('button', { name: labels.acceptCta })).toBeDisabled();
-  });
-
-  it('accepts the offer on the chosen slot and tells the caller, once', async () => {
+  it('accepts the offer at the proposed time and price and tells the caller, once', async () => {
     const onAccepted = vi.fn();
     const onClose = vi.fn();
+    const sent: Record<string, unknown>[] = [];
     wrap(<VenueAcceptDialog {...props} onAccepted={onAccepted} onClose={onClose} row={row()} venue={venue()} open />, [
-      slotsMock([slot()]),
-      {
-        request: {
-          query: VENUE_ACCEPT_AUTO_POD,
-          variables: { auto_pod_doc_id: 'ap-1', venue_id: 'v-1', slot_id: 'slot-1' },
-        },
-        result: { data: { venueAcceptAutoPod: null } },
-      },
+      quoteMock(),
+      acceptMock(sent, { data: { venueAcceptAutoPod: null } }),
     ]);
-    await settle();
-    await settle();
-    await choose(labels.pickSlot, /Court 2/);
+    typeAmount('2000');
     await press(labels.acceptCta);
+    expect(sent[0]).toMatchObject({ auto_pod_doc_id: 'ap-1', venue_id: 'v-1', offer: { model: 'FLAT', rate: 2000 } });
     expect(onAccepted).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the server’s refusal and reports nothing when the slot was taken first', async () => {
+  it('shows the server’s refusal, reports nothing, and clears it when dismissed', async () => {
     const onAccepted = vi.fn();
-    wrap(<VenueAcceptDialog {...props} onAccepted={onAccepted} row={row()} venue={venue()} open />, [
-      slotsMock([slot()]),
-      {
-        request: {
-          query: VENUE_ACCEPT_AUTO_POD,
-          variables: { auto_pod_doc_id: 'ap-1', venue_id: 'v-1', slot_id: 'slot-1' },
-        },
-        error: new Error('That slot has just been booked'),
-      },
-    ]);
-    await settle();
-    await settle();
-    await choose(labels.pickSlot, /Court 2/);
-    await press(labels.acceptCta);
-    expect(document.body.textContent).toContain('That slot has just been booked');
-    expect(onAccepted).not.toHaveBeenCalled();
-  });
-
-  it('clears the last refusal when the dialog is dismissed', async () => {
     const onClose = vi.fn();
-    wrap(<VenueAcceptDialog {...props} onClose={onClose} row={row()} venue={venue()} open />, [slotsMock([slot()])]);
-    await settle();
-    await settle();
+    wrap(<VenueAcceptDialog {...props} onAccepted={onAccepted} onClose={onClose} row={row()} venue={venue()} open />, [
+      quoteMock(),
+      acceptMock([], new Error('Another venue took this offer first')),
+    ]);
+    typeAmount('2000');
+    await press(labels.acceptCta);
+    expect(screen.getByTestId('auto-pod-venue-accept-error')).toHaveTextContent(/./);
+    expect(onAccepted).not.toHaveBeenCalled();
+
     await press(labels.dismiss);
     expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('auto-pod-venue-accept-error')).not.toBeInTheDocument();
   });
 
   it('never reports an acceptance the server did not confirm', async () => {
     const onAccepted = vi.fn();
-    wrap(<VenueAcceptDialog {...props} onAccepted={onAccepted} row={row()} venue={venue()} open />);
-    await settle();
-    await pressEverything();
+    wrap(<VenueAcceptDialog {...props} onAccepted={onAccepted} row={row()} venue={venue()} open />, [quoteMock()]);
+    await press(labels.acceptCta);
     expect(onAccepted).not.toHaveBeenCalled();
   });
 });

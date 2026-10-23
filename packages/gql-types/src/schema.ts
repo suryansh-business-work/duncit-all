@@ -2400,6 +2400,15 @@ export type AutoPodVenueClaim = {
   venue_slot_id: Scalars['ID']['output'];
 };
 
+/** The window a venue commits to an Auto Pod and the price terms it asks (the guests are the offer's spots). */
+export type AutoPodVenueOfferInput = {
+  end_at: Scalars['String']['input'];
+  model: VenueOfferModel;
+  rate: Scalars['Float']['input'];
+  space_label?: InputMaybe<Scalars['String']['input']>;
+  start_at: Scalars['String']['input'];
+};
+
 /** One of a venue's free slots, priced as the venue would be paid for the offer. */
 export type AutoPodVenueSlot = {
   __typename?: 'AutoPodVenueSlot';
@@ -14077,6 +14086,8 @@ export type Mutation = {
   processBackoutRefund: BackoutRefundRequest;
   /** Ops: one PDF (label, invoice or manifest) for the given orders, as a file to print or save. */
   productOrderShipmentFile: ShipmentFile;
+  /** Receiver: propose a window, the guests and the price terms; the time is held until the sender answers. */
+  proposePodPartnerWindow: PodPartnerRequest;
   /** Create at AiSensy what a drafted scenario is missing: its template, or — once Meta approved it — its campaign. The row's provision_step says which. */
   provisionWhatsappScenario: WaScenarioBoard;
   publishCmsFragment: CmsFragment;
@@ -14400,7 +14411,10 @@ export type Mutation = {
    * is why the host verifies them one at a time.
    */
   requestPodCompanionOtp: PhoneOtpRequestResult;
-  /** Receiver: pick one of the venue's open slots (held until the sender answers). */
+  /**
+   * Deprecated: picking a published slot. Refused with an update-the-app message.
+   * @deprecated Pod Requests propose a window and terms: use proposePodPartnerWindow.
+   */
   requestPodPartnerSlot: PodPartnerRequest;
   /** Buyer: ask to return items of a delivered pod-shop order. One return per brand on the order. */
   requestPodShopReturn: Array<PodShopReturn>;
@@ -14463,13 +14477,18 @@ export type Mutation = {
   resolveTicket: Ticket;
   /** Receiver: accept (true) or decline (false). */
   respondPodPartnerRequest: PodPartnerRequest;
-  /** Sender: confirm (true) or decline (false) the picked slot. */
+  /** Sender: confirm (true — the proposed terms become the booking's price) or decline (false) the proposal. */
   respondPodPartnerSlot: PodPartnerRequest;
   /** The invited user accepts or declines. */
   respondToCoHostInvite: Pod;
   /** Accept, reject or counter (with a date/time priced by the venue pricing module) — its owner or the console's editors. */
   respondToEventRequest: EventRequest;
-  /** The offered partner answering: APPROVE takes the place, PASS declines it. */
+  /**
+   * The offered partner answering: APPROVE takes the place, PASS declines it.
+   * A venue approves with venue_window (its window and price terms, booked at
+   * once with the price frozen); a venue APPROVE without one is refused with an
+   * update-the-app message.
+   */
   respondToPodChange: PodChangeRequest;
   /** Saves that revision's snapshot again — itself a new revision, so a restore can be undone. */
   restoreCmsSiteRevision: CmsSite;
@@ -15400,7 +15419,11 @@ export type Mutation = {
   upsertTranslation: Translation;
   /** Partner: pick a saved connection (one that passed its check) for a brand. */
   useBrandIntegration: BrandIntegrationStatus;
-  /** Venue enrols: accepts the offer and commits one of its own slots. */
+  /**
+   * Venue enrols: accepts the offer and commits a window at its own price terms
+   * (priced with its charges, Duncit's commission on top, frozen at accept).
+   * slot_id is deprecated: a call without offer is refused with an update-the-app message.
+   */
   venueAcceptAutoPod: AutoPod;
   /** Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings. */
   venueCancelPod: VenueCancelPodResult;
@@ -17882,6 +17905,12 @@ export type MutationProductOrderShipmentFileArgs = {
 };
 
 
+export type MutationProposePodPartnerWindowArgs = {
+  id: Scalars['ID']['input'];
+  offer: VenueOfferInput;
+};
+
+
 export type MutationProvisionWhatsappScenarioArgs = {
   event_key: Scalars['String']['input'];
 };
@@ -18518,6 +18547,7 @@ export type MutationRespondToPodChangeArgs = {
   decision: PodChangeDecision;
   reason?: InputMaybe<Scalars['String']['input']>;
   request_id: Scalars['ID']['input'];
+  venue_window?: InputMaybe<PodChangeVenueWindowInput>;
 };
 
 
@@ -21116,7 +21146,8 @@ export type MutationUseBrandIntegrationArgs = {
 
 export type MutationVenueAcceptAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
-  slot_id: Scalars['ID']['input'];
+  offer?: InputMaybe<AutoPodVenueOfferInput>;
+  slot_id?: InputMaybe<Scalars['ID']['input']>;
   venue_id: Scalars['ID']['input'];
 };
 
@@ -21519,9 +21550,12 @@ export type OccasionalIconInput = {
 export type OfferPodChangeInput = {
   request_id: Scalars['ID']['input'];
   user_id: Scalars['ID']['input'];
-  /** VENUE requests only — the venue being offered the pod. */
+  /** VENUE requests only — the venue being offered the pod. It answers with its own window and price. */
   venue_id?: InputMaybe<Scalars['ID']['input']>;
-  /** VENUE requests only — the slot it would run in. */
+  /**
+   * Deprecated: refused. The venue answers with its own window and price (respondToPodChange venue_window).
+   * @deprecated Venues answer with a window and price terms.
+   */
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -22083,6 +22117,8 @@ export type PartnerRequestSlot = {
   __typename?: 'PartnerRequestSlot';
   end_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /** The proposed window's terms and price (null for a slot picked before proposals). */
+  offer?: Maybe<VenueBookingOffer>;
   price: Scalars['Float']['output'];
   space_label: Scalars['String']['output'];
   start_at: Scalars['String']['output'];
@@ -23781,6 +23817,15 @@ export type PodChangeStatus =
   | 'OPEN'
   | 'RESOLVED'
   | 'WITHDRAWN';
+
+/** VENUE requests: the window and price terms the venue takes the pod at (the guests are the pod's spots). */
+export type PodChangeVenueWindowInput = {
+  end_at: Scalars['String']['input'];
+  model: VenueOfferModel;
+  rate: Scalars['Float']['input'];
+  space_label?: InputMaybe<Scalars['String']['input']>;
+  start_at: Scalars['String']['input'];
+};
 
 export type PodChatInfo = {
   __typename?: 'PodChatInfo';
@@ -26512,10 +26557,11 @@ export type Query = {
   autoPodAudience: AutoPodAudience;
   /** What a ticket price and spot count would earn the CALLING host on this offer, plus the spot limits. */
   autoPodHostProjection: AutoPodHostProjection;
+  /** What a window and price terms would cost this offer at one of the caller's venues, before accepting (ok false + message when it cannot). */
+  autoPodVenueQuote: VenueOfferQuoteResult;
   /**
-   * The free slots one of the caller's venues could commit to an offer, in the
-   * next auto_pod_slot_window_days days, nearest first — each with what the
-   * venue would be paid after Finance's deductions.
+   * Deprecated: published slots. Refused with an update-the-app message — venues accept with a window and a price.
+   * @deprecated Venues accept an Auto Pod with a window and terms: use autoPodVenueQuote + venueAcceptAutoPod(offer).
    */
   autoPodVenueSlots: AutoPodVenueSlots;
   automationFlow?: Maybe<AutomationFlow>;
@@ -27578,7 +27624,12 @@ export type Query = {
   podChangeRequest: PodChangeRequest;
   /** Admin: one role's queue of change requests, server-paged. */
   podChangeRequests: PodChangeRequestPage;
-  /** Admin: free slots at a candidate venue, for a VENUE request. */
+  /** The offered venue: what a window and price terms would cost this pod (ok false + message when it cannot). */
+  podChangeVenueQuote: VenueOfferQuoteResult;
+  /**
+   * Deprecated: refused — the venue answers with its own window and price.
+   * @deprecated Venues answer a change request with a window and price terms.
+   */
   podChangeVenueSlots: Array<PodChangeSlot>;
   /** A pod room's retention and moderation facts, for its members. */
   podChatInfo: PodChatInfo;
@@ -27617,6 +27668,8 @@ export type Query = {
   podPartnerRequest: PodPartnerRequest;
   /** This month's sending allowance: as a host, or for one venue you own. */
   podPartnerRequestQuota: PartnerRequestQuota;
+  /** Receiver: the price of a window and terms before proposing them (ok false + message when it cannot be proposed). */
+  podPartnerWindowQuote: VenueOfferQuoteResult;
   /** One pod request with every payout on it (finance roles only). */
   podPaymentRelease: PodPaymentReleaseDetail;
   /** Payment Release, one row per pod request (finance roles only). */
@@ -28570,6 +28623,13 @@ export type QueryAutoPodHostProjectionArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   no_of_spots: Scalars['Int']['input'];
   pod_amount: Scalars['Float']['input'];
+};
+
+
+export type QueryAutoPodVenueQuoteArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
+  offer: AutoPodVenueOfferInput;
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -30723,6 +30783,12 @@ export type QueryPodChangeRequestsArgs = {
 };
 
 
+export type QueryPodChangeVenueQuoteArgs = {
+  request_id: Scalars['ID']['input'];
+  venue_window: PodChangeVenueWindowInput;
+};
+
+
 export type QueryPodChangeVenueSlotsArgs = {
   request_id: Scalars['ID']['input'];
   venue_id: Scalars['ID']['input'];
@@ -30822,6 +30888,12 @@ export type QueryPodPartnerRequestArgs = {
 export type QueryPodPartnerRequestQuotaArgs = {
   side: PartnerSide;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryPodPartnerWindowQuoteArgs = {
+  id: Scalars['ID']['input'];
+  offer: VenueOfferInput;
 };
 
 

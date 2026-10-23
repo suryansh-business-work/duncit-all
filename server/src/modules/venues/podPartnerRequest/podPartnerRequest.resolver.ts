@@ -4,6 +4,7 @@ import type { PartnerRequestDirection } from './podPartnerRequest.model';
 import { podPartnerSearch, type NearbyArgs } from './podPartnerRequest.search';
 import { podPartnerRequestService, type SendPartnerRequestInput } from './podPartnerRequest.service';
 import type { PartnerSide } from './podPartnerRequest.view';
+import type { VenueOfferRequest } from '@modules/venues/venueOffer/venueOffer.types';
 
 /**
  * Every operation is scoped to the caller: a venue owner only acts on their own
@@ -25,6 +26,8 @@ export const podPartnerRequestResolvers = {
       podPartnerRequestService.get(requireAuth(ctx).id, args.id),
     podPartnerRequestQuota: (_p: unknown, args: { side: PartnerSide; venue_id?: string | null }, ctx: GraphQLContext) =>
       podPartnerRequestService.quota(requireAuth(ctx).id, args.side, args.venue_id),
+    podPartnerWindowQuote: (_p: unknown, args: { id: string; offer: VenueOfferRequest }, ctx: GraphQLContext) =>
+      podPartnerRequestService.windowQuote(requireAuth(ctx).id, args.id, args.offer),
   },
   Mutation: {
     sendPodPartnerRequest: (_p: unknown, args: { input: SendPartnerRequestInput }, ctx: GraphQLContext) =>
@@ -35,6 +38,8 @@ export const podPartnerRequestResolvers = {
       podPartnerRequestService.cancel(requireAuth(ctx).id, args.id),
     requestPodPartnerSlot: (_p: unknown, args: { id: string; slot_id: string }, ctx: GraphQLContext) =>
       podPartnerRequestService.requestSlot(requireAuth(ctx).id, args.id, args.slot_id),
+    proposePodPartnerWindow: (_p: unknown, args: { id: string; offer: VenueOfferRequest }, ctx: GraphQLContext) =>
+      podPartnerRequestService.proposeWindow(requireAuth(ctx).id, args.id, args.offer),
     respondPodPartnerSlot: (_p: unknown, args: { id: string; confirm: boolean }, ctx: GraphQLContext) =>
       podPartnerRequestService.respondSlot(requireAuth(ctx).id, args.id, args.confirm),
   },

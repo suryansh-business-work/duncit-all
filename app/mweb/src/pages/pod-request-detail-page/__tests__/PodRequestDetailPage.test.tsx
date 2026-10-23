@@ -2,13 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { gql } from '@apollo/client';
 import type { MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { GraphQLError } from 'graphql';
 import { MemoryRouter, Route, Routes } from 'react-router';
 
 import PodRequestDetailPage from '..';
 import { POD_PARTNER_REQUEST, type PodRequestDetail } from '../../pod-requests/queries';
-import { VENUE_AVAILABLE_SLOTS } from '../../create-pod-page/create-pod/venueSlots';
 import { interpolatedCopy } from '../../pod-requests/__tests__/interpolatedCopy';
 
 /*
@@ -22,10 +21,24 @@ const actions = vi.hoisted(() => ({
   busy: false,
   respond: vi.fn(async () => true),
   withdraw: vi.fn(async () => true),
-  requestSlot: vi.fn(async () => true),
+  proposeWindow: vi.fn(async () => true),
   respondSlot: vi.fn(async () => true),
 }));
 vi.mock('../../pod-requests/usePodRequestActions', () => ({ usePodRequestActions: () => actions }));
+/** The proposal form is the shared package's (tested there); here it is a button that proposes. */
+const OFFER = vi.hoisted(() => ({ start_at: '2026-12-02T12:30:00.000Z', end_at: '2026-12-02T14:30:00.000Z', space_label: '', pax: 10, model: 'FLAT', rate: 5000 }));
+vi.mock('@duncit/availability-calendar', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  ProposeWindowBlock: ({ onPropose }: { onPropose: (offer: typeof OFFER) => unknown }) => (
+    <div data-testid="pod-request-propose">
+      <h3>Propose a time and price</h3>
+      <button type="button" onClick={() => onPropose(OFFER)}>
+        Send proposal
+      </button>
+    </div>
+  ),
+}));
+
 
 vi.mock('../../../utils/dateFormat', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../utils/dateFormat')>()),
@@ -34,18 +47,6 @@ vi.mock('../../../utils/dateFormat', async (importOriginal) => ({
     formatDateTime: (d: string) => `dt:${d}`,
     formatTime: (d: string) => `time:${d}`,
   }),
-}));
-
-vi.mock('../../create-pod-page/create-pod/SlotPicker', () => ({
-  default: ({ slots, onPick }: { slots: { id: string }[]; onPick: (s: { id: string }) => void }) => (
-    <div data-testid="slot-picker">
-      {slots.map((slot) => (
-        <button key={slot.id} type="button" onClick={() => onPick(slot)} data-testid={`slot-${slot.id}`}>
-          {slot.id}
-        </button>
-      ))}
-    </div>
-  ),
 }));
 
 /** ContactBlock's own lookup of the pod's public address (the document is private to it). */
@@ -206,7 +207,7 @@ describe('PodRequestDetailPage — who it is with', () => {
     await showPage(
       request({
         status: 'SLOT_REQUESTED',
-        slot: { id: 's1', start_at: 'S', end_at: 'E', whole_day: false, price: 500, space_label: 'Court A' },
+        slot: { id: 's1', start_at: 'S', end_at: 'E', whole_day: false, price: 500, space_label: 'Court A', offer: null },
       }),
     );
 
@@ -219,7 +220,7 @@ describe('PodRequestDetailPage — who it is with', () => {
     await showPage(
       request({
         status: 'SLOT_REQUESTED',
-        slot: { id: 's1', start_at: 'S', end_at: 'E', whole_day: true, price: 0, space_label: '' },
+        slot: { id: 's1', start_at: 'S', end_at: 'E', whole_day: true, price: 0, space_label: '', offer: null },
       }),
     );
 
@@ -271,46 +272,36 @@ describe('PodRequestDetailPage — the next move', () => {
     expect(screen.getByTestId('pod-request-withdraw')).toBeDisabled();
   });
 
-  it("PICK_SLOT: the receiver picks one of the venue's open slots and sends it", async () => {
-    await showPage(request({ status: 'ACCEPTED' }), [
-      {
-        request: { query: VENUE_AVAILABLE_SLOTS, variables: { venue_id: 'venue-1' } },
-        result: {
-          data: {
-            venueAvailableSlots: [
-              {
-                __typename: 'VenueSlot',
-                id: 'slot-9',
-                start_at: '2026-10-10T10:00:00.000Z',
-                end_at: '2026-10-10T12:00:00.000Z',
-                whole_day: false,
-                price: 0,
-                space_label: '',
-                capacity: 20,
-                status: 'OPEN',
-              },
-            ],
-          },
-        },
-      },
-    ]);
+  it('PICK_SLOT: the receiver proposes a time, the guests and a price, and sends it', async () => {
+    await showPage(request({ status: 'ACCEPTED' }));
 
-    expect(screen.getByTestId('pod-request-pick-slot')).toBeInTheDocument();
-    fireEvent.click(await screen.findByTestId('slot-slot-9'));
-    fireEvent.click(screen.getByTestId('pod-request-send-slot'));
+    expect(screen.getByTestId('pod-request-propose')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Send proposal' }));
 
-    expect(actions.requestSlot).toHaveBeenCalledWith('req-1', 'slot-9');
+    await waitFor(() => expect(actions.proposeWindow).toHaveBeenCalledWith('req-1', OFFER));
+  });
+
+  it('shows the proposed terms and price under the booking', async () => {
+    const quote = { __typename: 'VenuePriceBreakdown', model: 'FLAT', rate: 5000, pax: 10, hours: 2, date: '2026-10-10', base: 5000, rules: [], rules_total: 0, min_spend_top_up: 0, cleaning_fee: 0, pet_fee: 0, venue_price: 5000, gst_pct: 0, taxes: 0, venue_payout: 5000, platform_fee_pct: 10, platform_fee: 500, total: 5500, deposit: 0 };
+    await showPage(
+      request({
+        status: 'SLOT_REQUESTED',
+        slot: { id: 's1', start_at: 'S', end_at: 'E', whole_day: false, price: 5000, space_label: '', offer: { __typename: 'VenueBookingOffer', model: 'FLAT', rate: 5000, pax: 10, quote } } as never,
+      }),
+    );
+
+    expect(within(screen.getByTestId('pod-request-slot')).getByTestId('pod-request-proposed-terms')).toBeInTheDocument();
   });
 
   it('PICK_SLOT without a venue on the request offers nothing to pick', async () => {
     await showPage(request({ status: 'ACCEPTED', venue: null }));
 
-    expect(screen.queryByTestId('pod-request-pick-slot')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pod-request-propose')).not.toBeInTheDocument();
   });
 
   it.each([
-    ['WAIT_SLOT', { direction: 'HOST_TO_VENUE', status: 'ACCEPTED' }, 'Waiting for the other side to pick a slot.'],
-    ['WAIT_CONFIRM', { status: 'SLOT_REQUESTED' }, 'Waiting for the other side to confirm the slot.'],
+    ['WAIT_SLOT', { direction: 'HOST_TO_VENUE', status: 'ACCEPTED' }, 'Waiting for the other side to propose a time and price.'],
+    ['WAIT_CONFIRM', { status: 'SLOT_REQUESTED' }, 'Waiting for the other side to confirm the proposal.'],
     [
       'HOST_CREATES',
       { status: 'SLOT_CONFIRMED', viewer_side: 'VENUE' },
@@ -324,10 +315,10 @@ describe('PodRequestDetailPage — the next move', () => {
     expect(screen.getByTestId('pod-request-contact-hidden')).toBeInTheDocument();
   });
 
-  it('CONFIRM_SLOT: the sender confirms or declines the picked slot', async () => {
+  it('CONFIRM_SLOT: the sender confirms or declines the proposed time and price', async () => {
     await showPage(request({ direction: 'HOST_TO_VENUE', status: 'SLOT_REQUESTED' }));
 
-    expect(screen.getByTestId('pod-request-slot-answer-accept')).toHaveTextContent('Confirm slot');
+    expect(screen.getByTestId('pod-request-slot-answer-accept')).toHaveTextContent('Confirm proposal');
     fireEvent.click(screen.getByTestId('pod-request-slot-answer-accept'));
     fireEvent.click(screen.getByTestId('pod-request-slot-answer-decline'));
 

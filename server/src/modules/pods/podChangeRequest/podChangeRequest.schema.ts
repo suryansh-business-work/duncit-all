@@ -152,10 +152,19 @@ export const podChangeRequestTypeDefs = /* GraphQL */ `
   input OfferPodChangeInput {
     request_id: ID!
     user_id: ID!
-    "VENUE requests only — the venue being offered the pod."
+    "VENUE requests only — the venue being offered the pod. It answers with its own window and price."
     venue_id: ID
-    "VENUE requests only — the slot it would run in."
-    venue_slot_id: ID
+    "Deprecated: refused. The venue answers with its own window and price (respondToPodChange venue_window)."
+    venue_slot_id: ID @deprecated(reason: "Venues answer with a window and price terms.")
+  }
+
+  "VENUE requests: the window and price terms the venue takes the pod at (the guests are the pod's spots)."
+  input PodChangeVenueWindowInput {
+    start_at: String!
+    end_at: String!
+    space_label: String
+    model: VenueOfferModel!
+    rate: Float!
   }
 
   extend type Query {
@@ -165,8 +174,11 @@ export const podChangeRequestTypeDefs = /* GraphQL */ `
     podChangeRequest(id: ID!): PodChangeRequest!
     "Admin: partners matching this pod's category (and city, where they have one)."
     podChangeCandidates(request_id: ID!): [PodChangeCandidate!]!
-    "Admin: free slots at a candidate venue, for a VENUE request."
+    "Deprecated: refused — the venue answers with its own window and price."
     podChangeVenueSlots(request_id: ID!, venue_id: ID!): [PodChangeSlot!]!
+      @deprecated(reason: "Venues answer a change request with a window and price terms.")
+    "The offered venue: what a window and price terms would cost this pod (ok false + message when it cannot)."
+    podChangeVenueQuote(request_id: ID!, venue_window: PodChangeVenueWindowInput!): VenueOfferQuoteResult!
     "The signed-in partner's Change Requests section."
     myPodChangeBoard: PodChangeBoard!
   }
@@ -188,11 +200,17 @@ export const podChangeRequestTypeDefs = /* GraphQL */ `
     Finance, not by a live gateway call.
     """
     cancelPodForChange(request_id: ID!, reason: String!): PodChangeRequest!
-    "The offered partner answering: APPROVE takes the place, PASS declines it."
+    """
+    The offered partner answering: APPROVE takes the place, PASS declines it.
+    A venue approves with venue_window (its window and price terms, booked at
+    once with the price frozen); a venue APPROVE without one is refused with an
+    update-the-app message.
+    """
     respondToPodChange(
       request_id: ID!
       decision: PodChangeDecision!
       reason: String
+      venue_window: PodChangeVenueWindowInput
     ): PodChangeRequest!
   }
 `;

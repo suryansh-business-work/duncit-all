@@ -49,18 +49,26 @@ export async function loadVenue(venueId: string, session?: ClientSession) {
   return venue!;
 }
 
+/** Who holds a booking: a pod, an Auto Pod waiting for its host and club, or a Pod Request. */
+export type HoldField = 'booked_by_pod_id' | 'booked_by_auto_pod_id' | 'booked_by_partner_request_id';
+export interface HoldRef {
+  field: HoldField;
+  id: string;
+}
+
 export async function busyWindows(
   venueId: string,
   spaceLabel: string,
   from: Date,
   to: Date,
   session?: ClientSession,
-  ignorePodId?: string
+  /** A pod id, or any holder: its own hold never blocks it moving (or re-proposing) its window. */
+  ignore?: string | HoldRef
 ) {
+  const own: HoldRef | null = typeof ignore === 'string' ? { field: 'booked_by_pod_id', id: ignore } : ignore ?? null;
   const rows = await VenueSlotModel.find({
     venue_id: new Types.ObjectId(venueId),
-    // A pod moving its own booking is not blocked by the booking it is leaving.
-    ...(ignorePodId ? { booked_by_pod_id: { $ne: new Types.ObjectId(ignorePodId) } } : {}),
+    ...(own ? { [own.field]: { $ne: new Types.ObjectId(own.id) } } : {}),
     status: { $in: BUSY_STATUSES },
     start_at: { $lt: to },
     end_at: { $gt: from },

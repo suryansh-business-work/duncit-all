@@ -3,7 +3,7 @@
  * shared by mWeb, the native app and the Partners app (rules 29 + 56).
  *
  * The server decides who is in a thread (the pod's hosts and the venue's
- * owner) and which pod owns it (a recurring pod's parent). Lines come back as
+ * owner) and which pod owns it. Lines come back as
  * the `PodMessage` shape every chat bubble already renders.
  */
 

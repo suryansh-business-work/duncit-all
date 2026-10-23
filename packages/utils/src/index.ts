@@ -1679,26 +1679,7 @@ export {
   type LoadingTipKey,
 } from './loading-tips';
 export { fitScale, fitSize } from './fit-scale';
-export {
-  POD_SERIES_FREQUENCIES,
-  POD_SERIES_SKIP_REASON_KEY,
-  POD_SERIES_PREVIEW_SDL,
-  POD_SERIES_LIMITS_SDL,
-  PUBLISH_POD_DRAFT_SERIES_SDL,
-  VENUE_DECIDE_POD_SERIES_SDL,
-  groupSlotRequestsBySeries,
-  buildPodSeriesPlan,
-  endOfDayInZone,
-  startOfDayInZone,
-  customDateStart,
-  ymdInZone,
-  type PodSeriesFrequency,
-  type PodSeriesPlan,
-  type PodSeriesPlanSource,
-  type PodSeriesSkipReason,
-  type SeriesGroupable,
-  type SlotRequestGroup,
-} from './pod-series';
+export { startOfDayInZone } from './zone-day';
 export {
   DEFAULT_BOOKING_STEP_MINUTES,
   MAX_BOOKING_CALENDAR_DAYS,
@@ -1746,26 +1727,6 @@ export {
   type VenueTermsSection,
   type VenueTermsSource,
 } from './venue-booking-terms';
-export {
-  adminMultiDateDiscountLabels,
-  bookableSeriesDates,
-  bookedSeriesDates,
-  JOIN_FREE_POD_DATES_SDL,
-  multiDateTiersForEditor,
-  multiDateTiersFromEditor,
-  mwebMultiDateDiscountLabels,
-  POD_SERIES_DATES_SDL,
-  POD_SERIES_MAX_DATES,
-  RECURRING_CHECKOUT_QUOTE_SDL,
-  repeatDiscountFormIssues,
-  resolveMultiDateTier,
-  SERIES_DATE_STATUS_KEY,
-  seriesBookingEstimate,
-  pickedSeriesDates,
-  type MultiDateDiscountTier,
-  type SeriesDateRow,
-  type SeriesDateStatus,
-} from './pod-series-booking';
 export { MY_BOOKING_CLASHES_SDL, uniqueClashingPods, type PodBookingClash } from './pod-booking-clash';
 export {
   CHAT_PREVIEW_PAGE,

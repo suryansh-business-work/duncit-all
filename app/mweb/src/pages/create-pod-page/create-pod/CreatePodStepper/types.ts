@@ -1,4 +1,3 @@
-import type { PodSeriesPlan } from '@duncit/utils';
 import type { buildCreatePodInput, buildModerationInput, serializeDraft } from '../create-pod.form';
 import type {
   CreatePodClub,
@@ -27,12 +26,7 @@ export interface CreatePodStepperProps {
   viewerUserId: string;
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
   onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;
-  /** `plan` is set when the host chose Recurring: publish the draft as a series. */
-  onPublish: (
-    draftId: string,
-    input: ReturnType<typeof buildCreatePodInput>,
-    plan: PodSeriesPlan | null
-  ) => Promise<void>;
+  onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
   /** Set when the host arrives from a confirmed Pod Request: step 3 keeps
    * this venue on offer whatever the club matches. */
   pinnedVenueId?: string;

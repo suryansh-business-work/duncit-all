@@ -17,7 +17,7 @@ import { CheckoutSkeleton, EmptyCheckout } from './CheckoutFallbacks';
 import CheckoutView from './CheckoutView';
 import type { CheckoutContext } from './useCheckoutContext';
 
-type Bill = ReturnType<typeof usePodCheckoutBill> & { dates?: number };
+type Bill = ReturnType<typeof usePodCheckoutBill>;
 
 /** What createRazorpayOrder answers: the sheet's data, or a booking already paid in full. */
 type CreatedOrder = RazorpayOrderData & { free: boolean; payment: CheckoutPaymentRow | null };
@@ -25,20 +25,16 @@ type CreatedOrder = RazorpayOrderData & { free: boolean; payment: CheckoutPaymen
 interface Props {
   ctx: CheckoutContext;
   bill: Bill;
-  /** The bill is still being priced (a server quote in flight). */
-  billLoading?: boolean;
 }
 
 /**
- * A pod checkout once its bill is priced: the pay handlers, the success page
- * and the view. The bill is the caller's — one date priced locally
- * (`usePodCheckoutBill`), or several dates of a recurring pod priced by the
- * server (`useRecurringCheckoutBill`) — and this flow is the same for both.
+ * A pod checkout once its bill is priced (`usePodCheckoutBill`): the pay
+ * handlers, the success page and the view.
  */
-export default function CheckoutFlow({ ctx, bill, billLoading = false }: Readonly<Props>) {
+export default function CheckoutFlow({ ctx, bill }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { state, search, checkoutPodId, dateIds, pod, podLoading, podError, session, rentals, seats } = ctx;
+  const { state, search, checkoutPodId, pod, podLoading, podError, session, rentals, seats } = ctx;
   const [doCheckout] = useMutation<{ dummyCheckout: CheckoutPaymentRow | null }>(DUMMY_CHECKOUT);
   const [doRazorpayOrder] = useMutation<{ createRazorpayOrder: CreatedOrder | null }>(CREATE_RAZORPAY_ORDER);
   const [alreadyBookedOpen, setAlreadyBookedOpen] = useState(false);
@@ -103,8 +99,6 @@ export default function CheckoutFlow({ ctx, bill, billLoading = false }: Readonl
       coupon_code: session.coupon?.ok ? session.coupon.code : null,
       redeem_coins: coins.applied,
       selected_rentals: rentals.selections,
-      // A recurring pod's dates, each paid for on its own under one order.
-      ...(dateIds.length > 0 ? { date_pod_ids: dateIds } : {}),
     };
     await session.persistMainAddress(values);
     try {
@@ -156,7 +150,7 @@ export default function CheckoutFlow({ ctx, bill, billLoading = false }: Readonl
       />
     );
   }
-  if (session.financeLoading || podLoading || billLoading || !breakup) return <CheckoutSkeleton />;
+  if (session.financeLoading || podLoading || !breakup) return <CheckoutSkeleton />;
 
   return (
     <CheckoutView
@@ -168,7 +162,6 @@ export default function CheckoutFlow({ ctx, bill, billLoading = false }: Readonl
       bill={{ unitAmount, base, coins, payBreakup, coinSummary, discounts }}
       breakup={breakup}
       seats={seats}
-      dates={bill.dates}
       rentals={rentals}
       submit={submit}
       payment={payment}

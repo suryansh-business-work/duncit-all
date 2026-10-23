@@ -1,4 +1,3 @@
-import { PUBLISH_POD_DRAFT_SERIES_SDL } from '@duncit/utils';
 import { gql } from '@apollo/client';
 import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
 
@@ -85,8 +84,6 @@ export const SAVE_POD_DRAFT = gql`
     savePodDraft(draft_id: $draft_id, input: $input) { id }
   }
 `;
-/** Publishes the draft as a recurring series — one pod per date that can run. */
-export const PUBLISH_POD_DRAFT_SERIES = gql(PUBLISH_POD_DRAFT_SERIES_SDL);
 
 export const PUBLISH_POD_DRAFT = gql`
   mutation PublishPodDraft($draft_id: ID!, $input: CreatePodInput!) {

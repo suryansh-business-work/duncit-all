@@ -10,7 +10,6 @@ import InstantBookingPicker from './InstantBookingPicker';
 import RequestSlotPicker from './RequestSlotPicker';
 import { venueSpaces, type VenueSpace } from './venueSpaces';
 import VirtualMeetingFields from '../VirtualMeetingFields';
-import PodRepeatSection from '../fields/PodRepeatSection';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
@@ -87,8 +86,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
   const duration = formatDurationBetween(watch('pod_date_time'), watch('pod_end_date_time'));
 
   if (mode !== 'PHYSICAL') {
-    // Recurring: the repeat details follow the first date (virtual window).
-    return <Stack spacing={2}><VirtualMeetingFields form={form} /><PodRepeatSection form={form} /></Stack>;
+    return <VirtualMeetingFields form={form} />;
   }
 
   return (
@@ -130,7 +128,6 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
         <InstantBookingPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} spots={spots} />
       )}
       {selectedVenue && selectedSpace && fromRequest && <RequestSlotPicker form={form} space={selectedSpace} />}
-      <PodRepeatSection form={form} />
       <FreeVenueNote notice={venueNotice} />
       {selectedVenue && <VenueContactCard venue={selectedVenue} />}
       {selectedVenue && (

@@ -3478,40 +3478,13 @@ const problem = reportSubmitError(pickedCategory, details); // a translation key
 | `REPORT_COPY` | `Record<ReportableKind, ReportKindCopy>` | The content menu's label, Delete and Report keys for a story or post. |
 | `reportSubmitError` | `(category, details) => string \| null` | The first thing wrong with a report about to be sent, as a key. |
 
-## Recurring pods — `pod-series`
-
-A host can make a pod **Recurring**: its first date (a venue slot, or a virtual window) repeats
-daily, weekly, every two weeks or monthly until an end day — or runs only on the days the host
-taps on the calendar (`CUSTOM`). The end day is held within Pod Settings' span (`podSeriesLimits`).
-The server works out every date and its slot (`podSeriesPreview`): the venue's identical free slot
-when it has one, otherwise the date is **on request** — the venue gets the request and the slot is
-opened only if it accepts. `publishPodDraftSeries` publishes **one pod** with those dates. Feeds,
-the shop, counts and Pod Details show it once; underneath, each date keeps its own seats, tickets,
-attendance, refunds, settlement and venue request. The plan also carries the multi-date discount
-the host set (prefilled from Admin > Pods > Pod Settings); the host's share funds it, so the
-server refuses a discount that would leave a date unable to cover its venue.
+## Calendar days in the admin zone — `zone-day`
 
 | Export | Meaning |
 | --- | --- |
-| `POD_SERIES_FREQUENCIES` | The repeat choices with their label keys (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`, `CUSTOM`). |
-| `POD_SERIES_SKIP_REASON_KEY` | Why a date cannot run (no slot, venue on leave, taken, removed, failed), as a key. |
-| `endOfDayInZone(ymd, timeZone)` | The last moment of a calendar day in the admin zone, as ISO — what `ends_on` carries. |
-| `ymdInZone(iso, timeZone)` | The calendar day an instant falls on in the admin zone — where the host's calendar marks a date. |
-| `customDateStart(firstIso, ymd, timeZone)` | A tapped calendar day at the first date's time of day, as ISO — what `custom_dates` carries. |
-| `startOfDayInZone(ymd, timeZone)` | Local midnight of a calendar day in the admin zone, as epoch ms — what the venue booking grid counts from. |
-| `buildPodSeriesPlan(source, timeZone)` | The plan to preview/publish, or null while repeat is off or the first date is not chosen. `CUSTOM` sends the tapped days (`repeat_custom_days`) and skips nothing. A physical pod with no slot id carries `venue_booking` (instant booking of the first date); each later date is the same window on its day, and a date the venue cannot take comes back `available: false` with `HOLIDAY` / `TAKEN` / `NO_SLOT`. |
-| `groupSlotRequestsBySeries(rows, keyOf)` | A venue's pending requests with each series folded into one group, dates in order. |
-| `POD_SERIES_PREVIEW_SDL` / `POD_SERIES_LIMITS_SDL` / `PUBLISH_POD_DRAFT_SERIES_SDL` / `VENUE_DECIDE_POD_SERIES_SDL` | The documents, as SDL strings. |
+| `startOfDayInZone(ymd, timeZone)` | Local midnight of a calendar day in the admin zone, as epoch ms — what the venue booking grid counts from. An unknown zone reads as UTC; NaN for a value that is not a calendar day. |
 
-```ts
-const plan = buildPodSeriesPlan(
-  { ...form, repeat_frequency: 'CUSTOM', repeat_custom_days: ['2026-11-09', '2026-11-20'] },
-  'Asia/Kolkata',
-);
-// plan.custom_dates → each day at the first date's time, e.g. '2026-11-09T13:30:00.000Z'
-```
-
-### Booking a venue instantly — `venue-booking`
+## Booking a venue instantly — `venue-booking`
 
 Create Pod books a venue at the venue's own pricing (Venue Pricing Module) — no request, no
 approval. The server owns every rule: `venueBookingCalendar` (at most 62 days a call) says which
@@ -3555,35 +3528,7 @@ const sections = venuePricingTerms(pricing, {
 });
 ```
 
-### Booking a recurring pod — `pod-series-booking`
-
-A member sees only the dates the venue accepted. They tick the dates to book (or **Select all**),
-each priced on its own, and pay those tickets less the multi-date discount. One date is booked like
-any pod; several dates of a paid pod go through one checkout that the server prices
-(`recurringCheckoutQuote`) and charges as one payment per date under a single Razorpay order.
-
-| Export | Meaning |
-| --- | --- |
-| `MultiDateDiscountTier` | `{ min_dates, discount_pct }` — percent off a booking of at least that many dates. |
-| `SeriesDateRow` / `SeriesDateStatus` | One date as `podSeriesDates` returns it (with its own `pod_amount`), and how it stands. |
-| `SERIES_DATE_STATUS_KEY` | The status labels, as keys. |
-| `bookableSeriesDates(rows)` / `bookedSeriesDates(rows)` | The dates open to book, and the viewer's booked dates. |
-| `pickedSeriesDates(rows, picked)` | The ticked dates that can still be booked, in date order (the first carries products). |
-| `resolveMultiDateTier(tiers, dates)` / `seriesBookingEstimate(perDatePrices, tiers)` | The tier reached, and the picker's price preview over each picked date's price. |
-| `multiDateTiersForEditor` / `multiDateTiersFromEditor` | Map tiers to and from the shared tier editor (`TicketDiscountField`). |
-| `mwebMultiDateDiscountLabels(t)` / `adminMultiDateDiscountLabels(t)` | The tier editor's words, counted in dates. |
-| `POD_SERIES_MAX_DATES` | The most dates any recurring pod may have (Pod Settings caps it lower). |
-| `POD_SERIES_DATES_SDL` / `JOIN_FREE_POD_DATES_SDL` / `RECURRING_CHECKOUT_QUOTE_SDL` | The documents, as SDL strings. |
-
-```ts
-const picked = pickedSeriesDates(rows, tickedIds);
-const { total, pct } = seriesBookingEstimate(
-  picked.map((row) => row.pod_amount),
-  [{ min_dates: 4, discount_pct: 10 }],
-);
-```
-
-### Time clash before a booking — `pod-booking-clash`
+## Time clash before a booking — `pod-booking-clash`
 
 Just before a join or a checkout, Pod Details asks the server (`myBookingClashes`) which of the
 member's JOINED pods overlap the pod(s) being booked, then lists them with Force book / Cancel
@@ -3593,7 +3538,7 @@ booking. Advisory only: no booking path refuses on it.
 | --- | --- |
 | `MY_BOOKING_CLASHES_SDL` | The query, as an SDL string (mWeb wraps it with `gql`; native re-declares it for codegen). |
 | `PodBookingClash` | One overlapping booked pod: its id, slugs, title, start and resolved end, and the target it clashes with. |
-| `uniqueClashingPods(clashes)` | Each clashing pod once, earliest first — several booked dates can clash with the same pod. |
+| `uniqueClashingPods(clashes)` | Each clashing pod once, earliest first. |
 
 ```ts
 const pods = uniqueClashingPods(data.myBookingClashes);
@@ -3717,9 +3662,8 @@ mergeEarlierMessages([{ id: 'a' }], [{ id: 'a' }, { id: 'b' }]) // a, b
 
 ## The venue ↔ host chat of a venue booking — `venue-chat`
 
-Every pod booked at a venue has one private thread between the pod's hosts and the venue's owner
-(a recurring pod's dates share the parent's thread). Its lines are kept apart from the pod's group
-chat, so guests never see them. The server decides who may read and post; mWeb, the app and the
+Every pod booked at a venue has one private thread between the pod's hosts and the venue's owner.
+Its lines are kept apart from the pod's group chat, so guests never see them. The server decides who may read and post; mWeb, the app and the
 Partners app share the operations and the merge below.
 
 | Export | Meaning |

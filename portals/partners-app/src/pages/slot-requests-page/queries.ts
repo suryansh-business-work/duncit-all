@@ -1,8 +1,4 @@
 import { gql } from '@apollo/client';
-import { VENUE_DECIDE_POD_SERIES_SDL } from '@duncit/utils';
-
-/** Accept or decline every still-pending date of a recurring pod at once. */
-export const VENUE_DECIDE_POD_SERIES = gql(VENUE_DECIDE_POD_SERIES_SDL);
 
 export const VENUE_SLOT_REQUESTS = gql`
   query VenueSlotRequests($venue_id: ID) {
@@ -22,9 +18,6 @@ export const VENUE_SLOT_REQUESTS = gql`
       host_email
       host_phone
       pod_is_free
-      series_id
-      series_index
-      series_total
     }
   }
 `;
@@ -63,10 +56,6 @@ export interface SlotRequestRow {
   host_name: string;
   host_email: string;
   host_phone: string;
-  /** Set when the pod is one date of a recurring series. */
-  series_id?: string | null;
-  series_index?: number | null;
-  series_total?: number | null;
   /** A FREE pod: the host settles the venue directly, so price is 0 and the
    * card shows the free-pod notice instead of it. */
   pod_is_free: boolean;

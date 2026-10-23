@@ -12,12 +12,12 @@
  * Times are ISO instants. The booking grid is counted from local midnight in
  * the admin time zone, exactly as the server checks `booking_increment_minutes`.
  */
-import { startOfDayInZone } from './pod-series';
+import { startOfDayInZone } from './zone-day';
 import { dayRate, dayRateParts, priceRuleChange, type PriceRuleLike } from './venue-price-rules';
 
 export type VenueBookingModel = 'PER_PAX' | 'PER_SLOT' | 'PER_HOUR' | 'FLAT';
 
-/** What a pod sends as `venue_booking` (CreatePodInput / PodSeriesPlanInput). */
+/** What a pod sends as `venue_booking` (CreatePodInput). */
 export interface InstantBooking {
   start_at: string;
   end_at: string;

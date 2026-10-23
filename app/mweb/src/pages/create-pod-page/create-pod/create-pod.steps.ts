@@ -5,7 +5,7 @@ import type { CreatePodFormValues } from './create-pod.types';
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ['host_category_key', 'location_id', 'locality', 'pod_mode', 'club_id'],
   ['pod_title', 'pod_description', 'media_text', 'reel_url', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
-  ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time', 'repeat_ends_on', 'repeat_custom_days', 'repeat_discount_tiers'],
+  ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
   ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'ticket_discount_enabled', 'ticket_discount_tiers', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
 ];
 

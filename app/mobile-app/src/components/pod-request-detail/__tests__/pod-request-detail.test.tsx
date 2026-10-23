@@ -183,12 +183,12 @@ describe('ActionBlock', () => {
     [
       'WAIT_SLOT',
       { direction: 'HOST_TO_VENUE', status: 'ACCEPTED' },
-      'Waiting for the other side to pick a slot.',
+      'Waiting for the other side to propose a time and price.',
     ],
     [
       'WAIT_CONFIRM',
       { status: 'SLOT_REQUESTED' },
-      'Waiting for the other side to confirm the slot.',
+      'Waiting for the other side to confirm the proposal.',
     ],
     [
       'HOST_CREATES',
@@ -200,7 +200,7 @@ describe('ActionBlock', () => {
     expect(screen.getByTestId('pod-request-waiting')).toHaveTextContent(text);
   });
 
-  it('CONFIRM_SLOT: the sender confirms or declines the picked slot', () => {
+  it('CONFIRM_SLOT: the sender confirms or declines the proposed time and price', () => {
     const a = actions();
     renderWithProviders(
       <ActionBlock
@@ -208,7 +208,9 @@ describe('ActionBlock', () => {
         actions={a}
       />,
     );
-    expect(screen.getByTestId('pod-request-slot-answer-accept')).toHaveTextContent('Confirm slot');
+    expect(screen.getByTestId('pod-request-slot-answer-accept')).toHaveTextContent(
+      'Confirm proposal',
+    );
     fireEvent.press(screen.getByTestId('pod-request-slot-answer-accept'));
     fireEvent.press(screen.getByTestId('pod-request-slot-answer-decline'));
     expect(a.respondSlot).toHaveBeenNthCalledWith(1, 'r1', true);
@@ -315,7 +317,7 @@ describe('SlotSummary', () => {
     };
     renderWithProviders(<SlotSummary slot={{ ...slot('s1', ''), offer } as never} />);
     const terms = screen.getByTestId('pod-request-proposed-terms');
-    await waitFor(() => expect(within(terms).getByText(/300 per guest/)).toBeOnTheScreen());
+    await waitFor(() => expect(within(terms).getByText(/300(\.00)? per guest/)).toBeOnTheScreen());
     expect(within(terms).getByText(/Booking total .*6,600/)).toBeOnTheScreen();
     expect(within(terms).getByText(/Venue receives .*6,000/)).toBeOnTheScreen();
   });

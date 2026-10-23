@@ -315,10 +315,10 @@ describe('PodRequestDetailPage — the next move', () => {
     expect(screen.getByTestId('pod-request-contact-hidden')).toBeInTheDocument();
   });
 
-  it('CONFIRM_SLOT: the sender confirms or declines the picked slot', async () => {
+  it('CONFIRM_SLOT: the sender confirms or declines the proposed time and price', async () => {
     await showPage(request({ direction: 'HOST_TO_VENUE', status: 'SLOT_REQUESTED' }));
 
-    expect(screen.getByTestId('pod-request-slot-answer-accept')).toHaveTextContent('Confirm slot');
+    expect(screen.getByTestId('pod-request-slot-answer-accept')).toHaveTextContent('Confirm proposal');
     fireEvent.click(screen.getByTestId('pod-request-slot-answer-accept'));
     fireEvent.click(screen.getByTestId('pod-request-slot-answer-decline'));
 

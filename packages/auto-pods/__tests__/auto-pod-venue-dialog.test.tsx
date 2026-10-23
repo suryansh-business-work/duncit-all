@@ -188,7 +188,7 @@ describe('VenueAcceptDialog', () => {
       <VenueAcceptDialog {...props} row={row({ location: BENGALURU })} venue={venue({ location_id: 'loc-mum' })} open />,
     );
     await settle();
-    expect(document.body.textContent).toContain(labels.noVenueInCity('Bengaluru'));
+    expect(document.body.textContent).toContain(labels.noVenueInCity('Bengaluru, Karnataka'));
     expect(screen.queryByLabelText('Amount (₹)')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: labels.acceptCta })).toBeDisabled();
   });

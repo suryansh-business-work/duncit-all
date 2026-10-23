@@ -120,6 +120,13 @@ describe('WindowOfferForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
     expect(impossibleDay).not.toHaveBeenCalled();
   });
+
+  it('asks for a day when none is picked, and sends nothing', async () => {
+    const onSubmit = renderForm([quoteMock()], { values: { date: '', rate: '500' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(await screen.findByText('Pick at least one date')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });
 
 describe('ProposeWindowBlock', () => {

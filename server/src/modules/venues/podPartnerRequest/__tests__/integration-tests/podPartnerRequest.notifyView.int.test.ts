@@ -111,9 +111,9 @@ describe('notifyPartner', () => {
   const start = inDays(4);
   it.each<[PartnerRequestEvent, string, string]>([
     ['REJECTED', 'Pod Request declined', 'Flow Sports Life declined your Pod Request.'],
-    ['SLOT_REQUESTED', 'Slot request received', `Flow Sports Life picked ${appDateTime(start)}. Confirm the slot to continue.`],
+    ['SLOT_REQUESTED', 'Time and price proposed', `Flow Sports Life proposed ${appDateTime(start)} with a price. Confirm it to continue.`],
     ['SLOT_CONFIRMED', 'Slot confirmed', `Flow Sports Life confirmed ${appDateTime(start)}. The pod can be created now.`],
-    ['SLOT_DECLINED', 'Slot declined', `Flow Sports Life could not do ${appDateTime(start)}. Pick another slot.`],
+    ['SLOT_DECLINED', 'Proposal declined', `Flow Sports Life could not do ${appDateTime(start)}. Propose another time.`],
     ['POD_CREATED', 'Pod created', 'The pod with Flow Sports Life is live. Contact details are now shared on the request.'],
   ])('%s carries its own copy, naming the slot time where it matters', async (event, title, body) => {
     const doc = await seedRequest({ slot_start_at: start });

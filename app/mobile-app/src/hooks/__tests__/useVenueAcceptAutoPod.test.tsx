@@ -65,7 +65,7 @@ describe('useVenueAcceptAutoPod — pricing', () => {
 
   it('asks nothing without an offer or a venue', async () => {
     const { result } = mount({ autoPodId: null, venue, pinned: null });
-    await expect(result.current.priceOf(OFFER)).rejects.toThrow('No offer or venue to price');
+    await expect(result.current.priceOf(OFFER)).rejects.toThrow('AUTO_POD_QUOTE_WITHOUT_OFFER');
     expect(mockRequest).not.toHaveBeenCalled();
   });
 });

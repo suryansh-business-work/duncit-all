@@ -1,7 +1,8 @@
 /**
- * Which days and times a venue can be booked, from its pricing (hours or
- * slots), its settings (weekly off, holidays, booking rules) and what is
- * already on its calendar. Pure — the service loads the inputs. The same
+ * Which days and times a venue can be booked, from its settings (opening
+ * hours, weekly off, holidays, booking rules), its blocked dates and what is
+ * already on its calendar. The host prices each booking (venueOffer), so the
+ * venue's own pricing model no longer shapes availability. Pure — the service loads the inputs. The same
  * rules decide what Create Pod lets a host pick AND what the booking write
  * accepts, so a time the picker offered is a time the server will book.
  */
@@ -44,21 +45,18 @@ export interface DaySlot {
 export interface DayAvailability {
   date: string;
   closed_reason: ClosedReason | null;
-  /** Opening window, null when closed or for a PER_SLOT venue. */
+  /** Opening window, null when closed. */
   open: Date | null;
   close: Date | null;
   busy: BusyWindow[];
   slots: DaySlot[];
 }
 
-/** The day's opening hours in minutes, or null when the venue does not open. */
-export function hoursOn(pricing: VenuePricing, settings: AvailabilitySettings | null | undefined, ymd: string) {
-  const weekday = weekdayOfYmd(ymd);
-  if ((settings?.weekly_off_days ?? []).includes(weekday)) return null;
-  const rows = pricing.operating_hours ?? [];
-  const row = rows.length > 0 ? rows.find((r) => r.day === weekday) : settings?.operating_hours;
-  const open = clockMinutes(row?.open ?? null);
-  const close = clockMinutes(row?.close ?? null);
+/** The day's opening hours in minutes (the venue's one daily window), or null when it does not open. */
+export function hoursOn(settings: AvailabilitySettings | null | undefined, ymd: string) {
+  if ((settings?.weekly_off_days ?? []).includes(weekdayOfYmd(ymd))) return null;
+  const open = clockMinutes(settings?.operating_hours?.open ?? null);
+  const close = clockMinutes(settings?.operating_hours?.close ?? null);
   if (open === null || close === null || close <= open) return null;
   return { open, close };
 }
@@ -91,26 +89,7 @@ export function dayAvailability(ctx: AvailabilityContext, ymd: string): DayAvail
   const closed = closedReason(ctx, ymd);
   const empty = { date: ymd, open: null, close: null, busy, slots: [] };
   if (closed) return { ...empty, closed_reason: closed };
-  const bufferMs = Math.max(0, Number(ctx.settings?.rules?.buffer_minutes) || 0) * 60_000;
-  const notBefore = earliestStart(ctx);
-
-  if (ctx.pricing.model === 'PER_SLOT') {
-    const weekday = weekdayOfYmd(ymd);
-    const slots = (ctx.pricing.slots ?? [])
-      .filter((s) => (s.days_of_week ?? []).includes(weekday))
-      .flatMap((s) => {
-        const from = clockMinutes(s.start_time);
-        const to = clockMinutes(s.end_time);
-        if (from === null || to === null || to <= from) return [];
-        const win = { start: localInstant(ymd, from, ctx.timeZone), end: localInstant(ymd, to, ctx.timeZone) };
-        const free = win.start.getTime() >= notBefore && !busy.some((b) => overlaps(win, b, bufferMs));
-        return [{ ...win, price: Number(s.price) || 0, available: free }];
-      })
-      .sort((a, b) => a.start.getTime() - b.start.getTime());
-    return { ...empty, closed_reason: slots.length ? null : 'CLOSED', slots };
-  }
-
-  const hours = hoursOn(ctx.pricing, ctx.settings, ymd);
+  const hours = hoursOn(ctx.settings, ymd);
   if (!hours) return { ...empty, closed_reason: 'CLOSED' };
   return {
     ...empty,
@@ -129,10 +108,6 @@ export function checkBookable(ctx: AvailabilityContext, start: Date, end: Date):
   if (day.closed_reason) return { ok: false, message: `The venue is not open for bookings on this date (${day.closed_reason})` };
   if (start.getTime() < earliestStart(ctx)) return { ok: false, message: 'This time is too soon for the venue to accept' };
   const win = { start, end };
-  if (ctx.pricing.model === 'PER_SLOT') {
-    const slot = day.slots.find((s) => s.start.getTime() === start.getTime() && s.end.getTime() === end.getTime());
-    return slot?.available ? { ok: true } : { ok: false, message: 'This slot is no longer available' };
-  }
   if (!day.open || !day.close || start < day.open || end > day.close) {
     return { ok: false, message: 'Pick a time inside the venue opening hours' };
   }

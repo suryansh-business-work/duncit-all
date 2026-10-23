@@ -467,23 +467,12 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
     },
 
     slotRequestsPage: {
-      approveThisSlotBooking: 'Approve this slot booking?',
-      awaitingDecision: 'Awaiting decision',
-      declineThisSlotBooking: 'Decline this slot booking?',
-      filterRequestsByVenue: 'Filter requests by venue',
       // A free pod's venue charges are settled with the host directly, off the
       // platform — shown instead of the slot price and the earnings breakdown.
       freePodNotice:
         'Please coordinate with the host. The host will contact you about your charges. Please do not confirm the slot until the host has called you to discuss or has transferred the amount.',
       freePodTitle: 'This pod is free',
-      noPendingSlotRequestsRightNow: 'No pending slot requests right now. New requests appear here the moment a host books one of your slots.',
-      reasonOptional: 'Reason (optional)',
-      requested: 'Requested',
-      sharedWithTheHostSoThey: 'Shared with the host so they can follow up',
-      slot: 'Slot',
       slotPrice: 'Slot price',
-      slotRequests: 'Slot Requests',
-      viewRequest: 'View request',
     },
 
     supportPage: {
@@ -532,6 +521,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       bookedSlots: 'Booked Slots',
       bookedValue: 'Booked Value',
       pendingRequests: 'Pending Requests',
+      pendingRequestsHint: 'Booking requests from hosts waiting for your answer',
       pickOneVenueOrViewAll: 'Pick one venue or view all together',
       potentialEarnings: 'Potential Earnings',
       registerVenue: 'Register venue',

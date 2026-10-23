@@ -1,8 +1,9 @@
 /**
  * The owner answers a workshop/event request: Accept, Reject, or Counter with
- * their own date/time. Any offered window is priced by the venue's pricing
- * module (the one calculation) and the price is frozen on the request, so the
- * member sees exactly what the venue quoted even if its rates change later.
+ * their own date/time. A venue that names its terms (per guest, per hour, per
+ * slot or flat) has the window priced by the one venue calculation with its
+ * charges, and the price is frozen on the request, so the member sees exactly
+ * what the venue quoted even if its rates change later.
  */
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
@@ -12,6 +13,9 @@ import { logs } from '@observability/log';
 import { EVENT_REQUEST_NOTE_MAX, EventRequestModel, type IEventRequest } from './eventRequest.model';
 import { fail, ownsTarget, parseObjectId } from './eventRequest.target';
 import { eventRequestToPub } from './eventRequest.service';
+import { quoteOffer, termsProblem } from '@modules/venues/venueOffer/venueOffer.quote';
+import type { VenueOfferModel, VenueOfferTerms } from '@modules/venues/venueOffer/venueOffer.types';
+import { getAppTimeZone } from '@utils/app-time';
 
 export const EVENT_REQUEST_RESPONSES = ['ACCEPT', 'REJECT', 'COUNTER'] as const;
 export type EventRequestResponse = (typeof EVENT_REQUEST_RESPONSES)[number];
@@ -20,13 +24,34 @@ export interface EventRequestOfferInput {
   start_at: string;
   end_at: string;
   pax?: number | null;
+  /** A venue's price terms for the window; without them the offer carries a time only. */
+  model?: VenueOfferModel | null;
+  rate?: number | null;
+}
+
+/** The venue's quote for its own terms, frozen on the request. */
+async function quoteVenueTerms(venueId: string, terms: VenueOfferTerms, start: Date, end: Date, pax: number) {
+  const problem = termsProblem(terms);
+  if (problem) throw fail('BAD_USER_INPUT', problem);
+  const { loadVenue, moneyRates, pricingOf } = await import('@modules/venues/venuePricing/venuePricing.service');
+  const [venue, rates] = await Promise.all([loadVenue(venueId), moneyRates(venueId)]);
+  const result = quoteOffer(pricingOf(venue), terms, {
+    start,
+    end,
+    pax,
+    commissionPct: rates.commissionPct,
+    gstPct: rates.gstPct,
+    timeZone: getAppTimeZone(),
+  });
+  if (!result.ok) throw fail('BAD_USER_INPUT', result.message);
+  return { ...result.breakdown, confirmed_at: new Date() };
 }
 
 const STATUS_OF = { ACCEPT: 'ACCEPTED', REJECT: 'REJECTED', COUNTER: 'COUNTERED' } as const;
 /** An answer can still change while nothing is closed: open, or already answered with an offer. */
 const ANSWERABLE = ['OPEN', 'ACCEPTED', 'COUNTERED'];
 
-async function priceOffer(user: AuthUser, doc: IEventRequest, offer: EventRequestOfferInput) {
+async function priceOffer(doc: IEventRequest, offer: EventRequestOfferInput) {
   const start = new Date(offer.start_at);
   const end = new Date(offer.end_at);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
@@ -34,15 +59,14 @@ async function priceOffer(user: AuthUser, doc: IEventRequest, offer: EventReques
   }
   if (start.getTime() <= Date.now()) throw fail('BAD_USER_INPUT', 'Offer a time in the future');
   const pax = Math.max(0, Math.floor(Number(offer.pax) || 0));
-  // Only a venue has a pricing module; a host's offer carries a time, not a price.
-  if (doc.target_type !== 'VENUE') return { start_at: start, end_at: end, pax, quote: null };
-  const { venuePricingService } = await import('@modules/venues/venuePricing/venuePricing.service');
-  const quote = await venuePricingService.quote(user.id, String(doc.target_id), {
-    start_at: start.toISOString(),
-    end_at: end.toISOString(),
+  // Only a venue that names its terms quotes a price; otherwise the offer carries a time.
+  if (doc.target_type !== 'VENUE' || !offer.model) return { start_at: start, end_at: end, pax, quote: null };
+  return {
+    start_at: start,
+    end_at: end,
     pax,
-  });
-  return { start_at: start, end_at: end, pax, quote: { ...quote, confirmed_at: new Date() } };
+    quote: await quoteVenueTerms(String(doc.target_id), { model: offer.model, rate: Number(offer.rate) }, start, end, pax),
+  };
 }
 
 /** Best-effort in-app note to the member who asked. Never fails the answer. */
@@ -85,7 +109,7 @@ export async function respondToEventRequest(
   const text = String(note ?? '').trim();
   if (text.length > EVENT_REQUEST_NOTE_MAX) throw fail('BAD_USER_INPUT', `Keep the note under ${EVENT_REQUEST_NOTE_MAX} characters`);
 
-  const priced = offer && action !== 'REJECT' ? await priceOffer(user, doc, offer) : null;
+  const priced = offer && action !== 'REJECT' ? await priceOffer(doc, offer) : null;
   const closing = action === 'REJECT';
   const updated = await EventRequestModel.findOneAndUpdate(
     { _id: doc._id, status: { $in: ANSWERABLE } },

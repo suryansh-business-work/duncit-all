@@ -955,7 +955,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       requestedAt: 'Requested at',
       reviewPaymentRelease: 'Review Payment Release',
       settledOnAttendedSeats: 'Settled on (attended seats)',
-      venueAmountBookedSlotPrice: 'Venue amount (slot price and/or final bill)',
+      venueAmountBookedSlotPrice: 'Venue amount (agreed booking amount and/or final bill)',
       venueBill: 'Venue bill',
       venueBilling: 'Venue Billing',
       venueRental: 'Venue Rented Items',

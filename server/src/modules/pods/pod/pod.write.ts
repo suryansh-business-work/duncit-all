@@ -35,10 +35,11 @@ import {
 } from './pod.validation';
 import {
   assertPartnerVenue,
-  bookInstantForPod,
   bookOrHoldSlotForPod,
-  resolveInstantBookingForCreate,
+  placeVenueOfferForPod,
   resolveSlotForCreate,
+  resolveVenueOfferForCreate,
+  type VenueOfferCreateInput,
   resolveVenueLocation,
   venueApprovalForCreate,
 } from './pod.venue';
@@ -60,6 +61,7 @@ import {
   applyTicketDiscountForUpdate,
   claimRerouteSlot,
   holdOrBookForResubmit,
+  placeOfferForResubmit,
   HOST_RESUBMIT_BLOCKED_FIELDS,
   meetingFieldsForCreate,
   prepareSlotReroute,
@@ -77,17 +79,28 @@ function randomAlpha(length: number): string {
 }
 
 /**
- * What the venue costs a new pod, for the economics guard: an instant booking
- * its whole quote (venue price + Duncit's commission on top, both off the
- * host's side); a slot by its pricing mode, a per-person slot at a full pod.
+ * What the venue costs a new pod, for the economics guard: a venue offer its
+ * whole quote (venue price + Duncit's commission on top, both off the host's
+ * side); a slot by its pricing mode, a per-person slot at a full pod.
  */
 function venueCostForCreate(
-  instant: { breakdown: { total: number } } | null,
+  offer: { quote: { total: number } } | null,
   slotDoc: Parameters<typeof slotVenueCharge>[0] | null,
   spots: number
 ): number {
-  if (instant) return instant.breakdown.total;
+  if (offer) return offer.quote.total;
   return slotDoc ? slotVenueCharge(slotDoc, { pax: spots }).total : 0;
+}
+
+/** A new pod's venue state: a slot or an offer the venue must answer keeps it offline until it does. */
+function venueStateForCreate(
+  slot: { slotDoc: unknown; needsVenueApproval: boolean },
+  offer: { own: boolean } | null,
+  preApprovedSlot: { slotId: string } | null
+): { pending: boolean; approval: 'NONE' | 'PENDING' | 'APPROVED' } {
+  if (offer) return { pending: !offer.own, approval: offer.own ? 'APPROVED' : 'PENDING' };
+  if (slot.slotDoc) return { pending: slot.needsVenueApproval, approval: slot.needsVenueApproval ? 'PENDING' : 'APPROVED' };
+  return { pending: false, approval: venueApprovalForCreate(preApprovedSlot, false) };
 }
 
 export const podWriteMethods = {
@@ -136,7 +149,8 @@ export const podWriteMethods = {
       autoPodSlot?.autoPodId,
       partnerRequestSlot?.requestId
     );
-    const instant = await resolveInstantBookingForCreate(input, podMode);
+    const offer = await resolveVenueOfferForCreate(input, podMode);
+    const venueState = venueStateForCreate({ slotDoc, needsVenueApproval }, offer, autoPodSlot ?? partnerRequestSlot);
 
     validateFutureDates(input.pod_date_time, input.pod_end_date_time, podMode === 'VIRTUAL');
     validateMeetingDetails(podMode, input);
@@ -151,10 +165,10 @@ export const podWriteMethods = {
       podAmount: input.pod_amount ?? 0,
       noOfSpots: input.no_of_spots ?? 0,
       venueId: venueLocation.venue_id,
-      venueAmount: venueCostForCreate(instant, slotDoc, input.no_of_spots ?? 0),
-      // An open slot freezes with the commission on top; an instant quote
+      venueAmount: venueCostForCreate(offer, slotDoc, input.no_of_spots ?? 0),
+      // An open slot freezes with the commission on top; an offer's quote
       // already includes it; held Auto Pod / Pod Request slots settle as before.
-      commissionOnTop: !instant && !!slotDoc && !autoPodSlot && !partnerRequestSlot,
+      commissionOnTop: !offer && !!slotDoc && !autoPodSlot && !partnerRequestSlot,
     });
     const clubCategory = await resolveClubCategory(input.club_id);
     await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);
@@ -223,13 +237,9 @@ export const podWriteMethods = {
         product_requests: productRequests,
         product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
         ...ticketDiscount,
-        // A pod awaiting the venue's slot approval stays offline until approved.
-        is_active: needsVenueApproval ? false : input.is_active ?? true,
-        // A booking at the venue's own price is confirmed the moment it is made.
-        venue_approval_status:
-          instant || slotDoc
-            ? 'APPROVED'
-            : venueApprovalForCreate(autoPodSlot ?? partnerRequestSlot, needsVenueApproval),
+        // A pod awaiting the venue's answer stays offline until it is accepted.
+        is_active: venueState.pending ? false : input.is_active ?? true,
+        venue_approval_status: venueState.approval,
         source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
       },
       input.club_id,
@@ -237,7 +247,7 @@ export const podWriteMethods = {
     );
 
     await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot);
-    if (instant) await bookInstantForPod(doc, instant.booking);
+    if (offer) await placeVenueOfferForPod(doc, offer);
     if (partnerRequestSlot) {
       // The pod exists and holds the slot; closing the request is bookkeeping and
       // must never undo that, so a failure here is logged, not thrown.
@@ -384,10 +394,28 @@ export const podWriteMethods = {
       input.pod_date_time = slotInput.pod_date_time;
       input.pod_end_date_time = slotInput.pod_end_date_time;
     }
-    // Without a fresh slot a partner venue cannot be kept: the rejected
-    // request must move to a new slot (or the host's own venue / a plain
-    // location). assertPartnerVenue enforces exactly that split.
-    await applyResubmitPhysicalVenue(doc, input, slotDoc, nextMode, userId);
+    // A fresh offer to a venue: checked and priced now, placed once the edit is saved.
+    const offerInput: VenueOfferCreateInput = {
+      venue_slot_id: slotInput.venue_slot_id,
+      venue_offer: input.venue_offer,
+      venue_booking: input.venue_booking,
+      venue_id: input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null),
+      no_of_spots: input.no_of_spots ?? doc.no_of_spots,
+      pod_hosts_id: slotInput.pod_hosts_id,
+      reroute_pod_id: String(doc._id),
+    };
+    const offer = await resolveVenueOfferForCreate(offerInput, nextMode);
+    delete input.venue_offer;
+    delete input.venue_booking;
+    if (offer) {
+      input.venue_id = offerInput.venue_id;
+      input.pod_date_time = offerInput.pod_date_time;
+      input.pod_end_date_time = offerInput.pod_end_date_time;
+    }
+    // Without a fresh slot or offer a partner venue cannot be kept: the
+    // rejected request must move to a new booking (or the host's own venue / a
+    // plain location). assertPartnerVenue enforces exactly that split.
+    await applyResubmitPhysicalVenue(doc, input, slotDoc, nextMode, userId, !!offer);
 
     // Same Step-4 economics guard as create, on the MERGED (input over stored)
     // values — a resubmitted paid pod must still cover its venue price and
@@ -399,10 +427,8 @@ export const podWriteMethods = {
       podAmount: input.pod_amount ?? doc.pod_amount ?? 0,
       noOfSpots: input.no_of_spots ?? doc.no_of_spots ?? 0,
       venueId: resubmitVenueId,
-      venueAmount: slotDoc
-        ? slotVenueCharge(slotDoc, { pax: input.no_of_spots ?? doc.no_of_spots ?? 0 }).total
-        : 0,
-      commissionOnTop: !!slotDoc,
+      venueAmount: venueCostForCreate(offer, slotDoc, input.no_of_spots ?? doc.no_of_spots ?? 0),
+      commissionOnTop: !offer && !!slotDoc,
     });
 
     const before = snapshotPod(doc);
@@ -410,13 +436,12 @@ export const podWriteMethods = {
     // Resubmission state: a slot books instantly (confirmed, live); a
     // virtual / no-venue resubmission needs no venue at all.
     doc.venue_slot_id = slotDoc ? slotDoc._id : null;
-    let approval: PodVenueApproval = 'NONE';
-    if (slotDoc && needsVenueApproval) approval = 'PENDING';
-    else if (slotDoc) approval = 'APPROVED';
-    doc.venue_approval_status = approval;
-    doc.is_active = !(slotDoc && needsVenueApproval);
+    const state = venueStateForCreate({ slotDoc, needsVenueApproval }, offer, null);
+    doc.venue_approval_status = state.approval satisfies PodVenueApproval;
+    doc.is_active = !state.pending;
     await doc.save();
     if (slotDoc) await holdOrBookForResubmit(doc, slotDoc, needsVenueApproval);
+    if (offer) await placeOfferForResubmit(doc, offer);
     await podAuditService.record({
       pod: doc,
       action: 'RESUBMIT',

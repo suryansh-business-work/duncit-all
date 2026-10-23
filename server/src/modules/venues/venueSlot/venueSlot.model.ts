@@ -2,6 +2,8 @@ import { Schema, model, Types, type Document } from 'mongoose';
 import { SLOT_PRICING_MODES, type SlotPricingMode } from './slotCharge';
 import { priceSnapshotSchema } from '@modules/venues/venuePricing/venuePricing.schema.model';
 import type { VenuePriceBreakdown } from '@modules/venues/venuePricing/venuePricing.types';
+import { venueOfferSchema } from '@modules/venues/venueOffer/venueOffer.schema.model';
+import type { VenueOffer } from '@modules/venues/venueOffer/venueOffer.types';
 
 /** PENDING = a hold placed by a host's pod that is waiting for the venue
  * owner's approval; it books into BOOKED or releases back to AVAILABLE. */
@@ -73,6 +75,12 @@ export interface IVenueSlot extends Document {
    * never alters a booking. Null on legacy slots (they settle as before).
    */
   price_snapshot: (VenuePriceBreakdown & { confirmed_at: Date }) | null;
+  /**
+   * A host's offer for this booking (venueOffer). The slot is created for the
+   * pod with `requested_by_host`, so a refusal, an expiry or a cancellation
+   * deletes it rather than leaving the venue an "available" time it never opened.
+   */
+  offer: VenueOffer | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -107,6 +115,7 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     decline_reason: { type: String, default: '', trim: true, maxlength: 280 },
     requested_by_host: { type: Boolean, default: false },
     price_snapshot: { type: priceSnapshotSchema, default: null },
+    offer: { type: venueOfferSchema, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

@@ -1,7 +1,8 @@
 /**
- * Venue pricing and instant booking. A host books a venue at the price the
- * venue set; there is no request and no approval. The booking is a VenueSlot
- * written BOOKED for the pod with its price frozen in `price_snapshot`.
+ * A venue's charges (fees, minimum spend, price rules, GST, blocked dates) and
+ * its booking calendar. Hosts no longer book at a price the venue set: they
+ * send an offer (modules/venues/venueOffer), priced by the same calculation.
+ * The helpers exported below are shared with the offer service.
  */
 import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
@@ -9,21 +10,22 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel, type IVenueSlot } from '@modules/venues/venueSlot/venueSlot.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { resolveEffectiveRates } from '@modules/finance/finance/settlement.service';
-import { withTransaction } from '@utils/mongoTransaction';
 import { getAppTimeZone } from '@utils/app-time';
 import { logs } from '@observability/log';
-import { isPricingConfigured, quoteVenuePrice, spotsProblem } from './venuePricing.calc';
-import { checkBookable, dayAvailability, type BusyWindow } from './venuePricing.availability';
+import { isPricingConfigured, quoteVenuePrice } from './venuePricing.calc';
+import { dayAvailability, type BusyWindow } from './venuePricing.availability';
 import { cleanVenuePricing, PricingInputError } from './venuePricing.validate';
 import { isYmd, localInstant, localParts, ymdRange } from './venuePricing.time';
-import { VenueBookingLockModel } from './venueBookingLock.model';
 import { venuePricingSchema } from './venuePricing.schema.model';
 import type { VenuePriceBreakdown, VenuePricing } from './venuePricing.types';
+
+/** What an app build from before host offers is told when it tries to book a venue. */
+export const UPDATE_APP_TO_BOOK = 'Venues are booked with an offer now. Please update the app to book this venue.';
 
 const MAX_CALENDAR_DAYS = 62;
 const BUSY_STATUSES = ['BOOKED', 'PENDING', 'BLOCKED'];
 
-const fail = (code: string, message: string): never => {
+export const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
 };
 
@@ -38,7 +40,7 @@ export interface InstantBookingRequest {
 
 const spaceFilter = (label: string) => (label === '' ? { $in: ['', null] } : label);
 
-async function loadVenue(venueId: string, session?: ClientSession) {
+export async function loadVenue(venueId: string, session?: ClientSession) {
   if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue');
   const venue = await VenueModel.findById(venueId)
     .select('owner_user_id status is_active pricing settings capacity capacity_items')
@@ -47,7 +49,7 @@ async function loadVenue(venueId: string, session?: ClientSession) {
   return venue!;
 }
 
-async function busyWindows(
+export async function busyWindows(
   venueId: string,
   spaceLabel: string,
   from: Date,
@@ -70,12 +72,12 @@ async function busyWindows(
   return rows.map((r): BusyWindow => ({ start: r.start_at, end: r.end_at }));
 }
 
-async function moneyRates(venueId: string) {
+export async function moneyRates(venueId: string) {
   const [rates, fs] = await Promise.all([resolveEffectiveRates({ venueId }), getFinanceSettings()]);
   return { commissionPct: rates.venue_commission_percent, gstPct: Number(fs.gst_pct) || 0 };
 }
 
-function parseWindow(req: InstantBookingRequest) {
+export function parseWindow(req: Pick<InstantBookingRequest, 'start_at' | 'end_at'>) {
   const start = new Date(req.start_at);
   const end = new Date(req.end_at);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
@@ -101,7 +103,7 @@ const PRICING_DEFAULTS: Record<string, unknown> = Object.fromEntries(
   })
 );
 
-const pricingOf = (venue: { pricing?: unknown }): VenuePricing => {
+export const pricingOf = (venue: { pricing?: unknown }): VenuePricing => {
   const raw = venue.pricing as { toObject?: () => unknown } | null | undefined;
   const stored = (typeof raw?.toObject === 'function' ? raw.toObject() : (raw ?? {})) as Record<string, unknown>;
   const filled = { ...stored };
@@ -136,19 +138,12 @@ function quoteOrFail(pricing: VenuePricing, req: InstantBookingRequest, rates: {
   return (result as { ok: true; breakdown: VenuePriceBreakdown }).breakdown;
 }
 
-type SpaceVenue = { capacity?: number | null; capacity_items?: { label: string; capacity: number }[] | null };
+export type SpaceVenue = { capacity?: number | null; capacity_items?: { label: string; capacity: number }[] | null };
 
-const spaceCapacity = (venue: SpaceVenue, label: string): number =>
+export const spaceCapacity = (venue: SpaceVenue, label: string): number =>
   label === ''
     ? Number(venue.capacity) || 0
     : Number((venue.capacity_items ?? []).find((c) => c.label === label)?.capacity) || 0;
-
-/** A booking's guests ARE the pod's spots: refused outside the venue's guest
- * range or above the space's capacity, whatever the venue charges by. */
-function assertSpotsFit(pricing: VenuePricing, venue: SpaceVenue, space: string, pax: InstantBookingRequest['pax']) {
-  const problem = spotsProblem(pricing, Math.floor(Number(pax) || 0), spaceCapacity(venue, space));
-  if (problem) fail('BAD_USER_INPUT', problem);
-}
 
 export const venuePricingService = {
   /** Approved venues whose pricing is unset — hosts cannot book them until it is. */
@@ -186,9 +181,11 @@ export const venuePricingService = {
    * for Create Pod. Either way the number comes from the one calculation.
    */
   async quote(userId: string, venueId: string, req: InstantBookingRequest, draft?: unknown) {
+    // Hosts book with an offer now (venueOfferQuote); only the owner's preview prices here.
+    if (draft == null) fail('FAILED_PRECONDITION', UPDATE_APP_TO_BOOK);
     const venue = await loadVenue(venueId);
-    if (draft != null && String(venue.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
-    const pricing = draft == null ? pricingOf(venue) : checkedPricing(draft);
+    if (String(venue.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
+    const pricing = checkedPricing(draft);
     return quoteOrFail(pricing, req, await moneyRates(venueId));
   },
 
@@ -220,53 +217,6 @@ export const venuePricingService = {
       min_notice_minutes: Math.max(0, Number(venue.settings?.rules?.min_notice_minutes) || 0),
       days: days.map((ymd) => dayAvailability(ctx, ymd)),
     };
-  },
-
-  /** The price a pod would book at, checked against the calendar — no write. Used before the pod row exists. */
-  async prepare(venueId: string, req: InstantBookingRequest, ignorePodId?: string) {
-    const venue = await loadVenue(venueId);
-    if (venue.status !== 'APPROVED' || !venue.is_active) fail('BAD_USER_INPUT', 'Select an approved venue');
-    const pricing = pricingOf(venue);
-    assertSpotsFit(pricing, venue, (req.space_label ?? '').trim(), req.pax);
-    const breakdown = quoteOrFail(pricing, req, await moneyRates(venueId));
-    const { start, end } = parseWindow(req);
-    const busy = await busyWindows(
-      venueId,
-      req.space_label ?? '',
-      new Date(start.getTime() - 86_400_000),
-      new Date(end.getTime() + 86_400_000),
-      undefined,
-      ignorePodId
-    );
-    const check = checkBookable({ pricing, settings: venue.settings, busy, now: new Date(), timeZone: getAppTimeZone() }, start, end);
-    if (!check.ok) fail('CONFLICT', check.message);
-    return { breakdown, start, end };
-  },
-
-  /**
-   * A recurring pod's dates, each judged as its own instant booking: the
-   * price it would book at, or why it cannot run. One calendar read for the
-   * whole series. Nothing is held — each date books when it is published.
-   */
-  async planWindows(venueId: string, req: InstantBookingRequest, windows: { start: Date; end: Date }[]) {
-    if (windows.length === 0) return [];
-    const venue = await loadVenue(venueId);
-    const pricing = pricingOf(venue);
-    const rates = await moneyRates(venueId);
-    const timeZone = getAppTimeZone();
-    const from = new Date(Math.min(...windows.map((w) => w.start.getTime())) - 86_400_000);
-    const to = new Date(Math.max(...windows.map((w) => w.end.getTime())) + 86_400_000);
-    const busy = await busyWindows(venueId, req.space_label ?? '', from, to);
-    const ctx = { pricing, settings: venue.settings, busy, now: new Date(), timeZone };
-    return windows.map(({ start, end }) => {
-      const day = dayAvailability(ctx, localParts(start, timeZone).ymd);
-      if (day.closed_reason === 'HOLIDAY') return { reason: 'HOLIDAY' as const, total: null };
-      if (!checkBookable(ctx, start, end).ok) {
-        return { reason: day.closed_reason ? ('NO_SLOT' as const) : ('TAKEN' as const), total: null };
-      }
-      const quote = quoteVenuePrice(pricing, { ...rates, start, end, pax: Number(req.pax) || 0, pets: !!req.pets, timeZone });
-      return quote.ok ? { reason: null, total: quote.breakdown.total } : { reason: 'NO_SLOT' as const, total: null };
-    });
   },
 
   /**
@@ -315,62 +265,5 @@ export const venuePricingService = {
       logs.server.error('venuePricing', 'freezeSlotPrice', { error, slot_id: slotId });
       return null;
     }
-  },
-
-  /**
-   * Books the window for the pod, atomically. Inside one transaction it bumps
-   * the venue's lock row, re-reads the calendar, re-prices, and writes the
-   * BOOKED slot with its frozen price. A concurrent booking of the same venue
-   * conflicts on the lock row; the retry sees it and refuses the overlap.
-   */
-  async bookForPod(podId: string, venueId: string, req: InstantBookingRequest): Promise<IVenueSlot> {
-    const venueOid = new Types.ObjectId(venueId);
-    await VenueBookingLockModel.updateOne({ venue_id: venueOid }, { $setOnInsert: { version: 0 } }, { upsert: true }).catch(
-      (error: { code?: number }) => {
-        // Two first bookings racing to create the row: the loser's row already exists.
-        if (error?.code !== 11000) throw error;
-      }
-    );
-    const rates = await moneyRates(venueId);
-    const space = (req.space_label ?? '').trim();
-    return withTransaction(async (session) => {
-      await VenueBookingLockModel.updateOne({ venue_id: venueOid }, { $inc: { version: 1 } }, { session });
-      const venue = await loadVenue(venueId, session);
-      const pricing = pricingOf(venue);
-      const { start, end } = parseWindow(req);
-      const busy = await busyWindows(
-        venueId,
-        space,
-        new Date(start.getTime() - 86_400_000),
-        new Date(end.getTime() + 86_400_000),
-        session,
-        podId
-      );
-      const check = checkBookable({ pricing, settings: venue.settings, busy, now: new Date(), timeZone: getAppTimeZone() }, start, end);
-      if (!check.ok) fail('CONFLICT', check.message);
-      assertSpotsFit(pricing, venue, space, req.pax);
-      const breakdown = quoteOrFail(pricing, req, rates);
-      const [slot] = await VenueSlotModel.create(
-        [
-          {
-            venue_id: venueOid,
-            owner_user_id: venue.owner_user_id,
-            start_at: start,
-            end_at: end,
-            // Legacy readers (dashboards, slot cards) see the venue's money as a flat price.
-            price: breakdown.venue_payout,
-            pricing_mode: 'FLAT',
-            space_label: space,
-            capacity: spaceCapacity(venue, space) || breakdown.pax,
-            status: 'BOOKED',
-            booked_by_pod_id: new Types.ObjectId(podId),
-            price_snapshot: { ...breakdown, confirmed_at: new Date() },
-          },
-        ],
-        { session }
-      );
-      logs.server.info('venuePricing', 'bookForPod', { pod_id: podId, venue_id: venueId, total: breakdown.total });
-      return slot;
-    });
   },
 };

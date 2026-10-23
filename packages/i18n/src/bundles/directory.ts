@@ -332,7 +332,7 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       sharePct: 'Venue share %',
       sharePctHint: "The venue's slice. 0 falls back to the platform default at settlement.",
       commissionPct: 'Venue commission %',
-      commissionPctHint: "What Duncit takes from the venue's payout. 0 uses the default.",
+      commissionPctHint: "Duncit's commission, added on top of every host offer this venue accepts — the venue is paid the agreed amount in full. 0 uses the Finance default.",
       isActive: 'Live and taking bookings',
       deactivateWarning:
         'Saving with this off deactivates the venue and emails the owner. Its existing pods are not cancelled.',

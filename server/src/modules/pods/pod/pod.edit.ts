@@ -12,7 +12,7 @@ import {
   ticketDiscountMaxTickets,
   type TicketDiscountTier,
 } from './pod.ticketDiscount';
-import { notifyInstantBooking, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { logs } from '@observability/log';
@@ -28,12 +28,13 @@ import {
   assertPartnerVenue,
   emailVenueSlotRequested,
   notifyVenueSlotRequested,
-  resolveInstantBookingForCreate,
+  placeVenueOfferForPod,
   resolveSlotForCreate,
   resolveVenueLocation,
+  resolveVenueOfferForCreate,
   settleSlotBooking,
+  type ResolvedVenueOffer,
 } from './pod.venue';
-import type { InstantBookingRequest } from '@modules/venues/venuePricing/venuePricing.service';
 import { applyProductsForUpdate, assertMeetsMinPax, resolveClubCategory } from './pod.products';
 
 /** Meeting details are persisted for virtual pods only. */
@@ -313,8 +314,8 @@ interface SlotReroute {
   slotDoc: any;
   needsVenueApproval: boolean;
   previousSlotId: string | null;
-  /** An instant booking at the venue's own pricing, booked by the claim step. */
-  instant?: InstantBookingRequest | null;
+  /** An offer to the venue, placed by the claim step. */
+  offer?: ResolvedVenueOffer | null;
 }
 
 /**
@@ -328,7 +329,7 @@ interface SlotReroute {
  * venue never booked. Returns null when no re-route was requested.
  */
 export async function prepareSlotReroute(doc: any, input: any): Promise<SlotReroute | null> {
-  if (input.venue_slot_id === undefined && !input.venue_booking) return null;
+  if (input.venue_slot_id === undefined && !input.venue_booking && !input.venue_offer) return null;
   // Venue inventory is only ever held by a pod that can still release it. A
   // cancelled or settled pod would strand the slot forever.
   if (doc.deleted_at) {
@@ -351,16 +352,25 @@ export async function prepareSlotReroute(doc: any, input: any): Promise<SlotRero
     pod_type: input.pod_type ?? doc.pod_type,
   };
   const previousSlotId = doc.venue_slot_id ? String(doc.venue_slot_id) : null;
-  if (nextMode === 'PHYSICAL' && input.venue_booking && !input.venue_slot_id) {
-    // Re-routed onto an instant booking: priced and checked now, booked by the claim step.
-    const instantInput = { ...slotInput, venue_slot_id: null, venue_booking: input.venue_booking, no_of_spots: input.no_of_spots ?? doc.no_of_spots, reroute_pod_id: String(doc._id) };
-    const instant = await resolveInstantBookingForCreate(instantInput, nextMode);
-    input.venue_id = instantInput.venue_id;
-    input.pod_date_time = instantInput.pod_date_time;
-    input.pod_end_date_time = instantInput.pod_end_date_time;
+  if (nextMode === 'PHYSICAL' && (input.venue_offer || input.venue_booking) && !input.venue_slot_id) {
+    // Re-routed onto an offer: priced and checked now, placed by the claim step.
+    const offerInput = {
+      ...slotInput,
+      venue_slot_id: null,
+      venue_offer: input.venue_offer,
+      venue_booking: input.venue_booking,
+      no_of_spots: input.no_of_spots ?? doc.no_of_spots,
+      reroute_pod_id: String(doc._id),
+    };
+    const offer = await resolveVenueOfferForCreate(offerInput, nextMode);
+    input.venue_id = offerInput.venue_id;
+    input.pod_date_time = offerInput.pod_date_time;
+    input.pod_end_date_time = offerInput.pod_end_date_time;
+    delete input.venue_offer;
     delete input.venue_booking;
-    return { slotDoc: null, needsVenueApproval: false, previousSlotId, instant: instant?.booking ?? null };
+    return { slotDoc: null, needsVenueApproval: false, previousSlotId, offer };
   }
+  delete input.venue_offer;
   delete input.venue_booking;
   const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(slotInput, nextMode);
   if (slotDoc) {
@@ -373,12 +383,13 @@ export async function prepareSlotReroute(doc: any, input: any): Promise<SlotRero
 
 /** Booking state implied by a resolved re-route, applied after the content edit. */
 export function applyRerouteState(doc: any, input: any, reroute: SlotReroute) {
-  const pendingApproval = Boolean(reroute.slotDoc && reroute.needsVenueApproval);
+  const pendingApproval = Boolean((reroute.slotDoc && reroute.needsVenueApproval) || (reroute.offer && !reroute.offer.own));
   doc.venue_slot_id = reroute.slotDoc ? reroute.slotDoc._id : null;
-  // A venue booking (an open slot or an instant one) is confirmed when it is made.
+  // An open slot, or an offer at the host's own venue, is confirmed when it is
+  // made; an offer to another venue waits for that venue's answer.
   let approval = 'NONE';
   if (pendingApproval) approval = 'PENDING';
-  else if (reroute.slotDoc || reroute.instant) approval = 'APPROVED';
+  else if (reroute.slotDoc || reroute.offer) approval = 'APPROVED';
   doc.venue_approval_status = approval;
   // A pod waiting on the venue's answer is never live. Otherwise a settled
   // booking brings the pod back online — unless the portal said otherwise,
@@ -401,16 +412,10 @@ export async function claimRerouteSlot(
   const { slotDoc, needsVenueApproval, previousSlotId } = reroute;
   let claimedSlotId = slotDoc ? String(slotDoc._id) : '';
   try {
-    if (reroute.instant) {
-      const { venuePricingService } = await import('@modules/venues/venuePricing/venuePricing.service');
+    if (reroute.offer) {
       // The pod's own current booking does not block its new window (claim, then release).
-      const booked = await venuePricingService.bookForPod(String(doc._id), String(doc.venue_id), reroute.instant);
-      doc.venue_slot_id = booked._id;
-      await doc.save();
-      claimedSlotId = String(booked._id);
-      notifyInstantBooking(doc, booked).catch((error) =>
-        logs.server.error('pod', 'notifyInstantBooking', { error, pod_id: String(doc._id) })
-      );
+      const placed = await placeVenueOfferForPod(doc, reroute.offer, { deleteOnConflict: false });
+      claimedSlotId = String(placed._id);
     } else if (slotDoc && needsVenueApproval) {
       await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
       await notifyVenueSlotRequested(doc, slotDoc);
@@ -456,6 +461,23 @@ export async function holdOrBookForResubmit(doc: any, slotDoc: any, needsVenueAp
   if (!needsVenueApproval) await settleSlotBooking(doc, slotDoc);
 }
 
+/** Place a resubmitted pod's fresh offer. A lost race reverts the pod to its
+ * rejected state — still fully editable — instead of deleting it. */
+export async function placeOfferForResubmit(
+  doc: Parameters<typeof placeVenueOfferForPod>[0] & { venue_approval_status?: string; is_active?: boolean },
+  offer: ResolvedVenueOffer
+) {
+  try {
+    await placeVenueOfferForPod(doc, offer, { deleteOnConflict: false });
+  } catch (e) {
+    doc.venue_slot_id = null;
+    doc.venue_approval_status = 'DECLINED';
+    doc.is_active = false;
+    await doc.save();
+    throw e;
+  }
+}
+
 /** Physical resubmission re-resolves the venue: a kept partner venue needs a
  * fresh slot, otherwise the host's own venue / a plain location applies.
  * assertPartnerVenue enforces that split and the resolved id is written back. */
@@ -465,13 +487,14 @@ export async function applyResubmitPhysicalVenue(
   slotDoc: any,
   nextMode: string,
   userId: string,
+  hasOffer = false,
 ) {
   if (nextMode !== 'PHYSICAL') return;
   const declaredVenueId = doc.venue_id ? String(doc.venue_id) : null;
   const finalVenueId = input.venue_id === undefined ? declaredVenueId : input.venue_id;
   if (!finalVenueId) return;
   await assertPartnerVenue(
-    { venue_id: finalVenueId, venue_slot_id: slotDoc ? String(slotDoc._id) : undefined },
+    { venue_id: finalVenueId, venue_slot_id: slotDoc ? String(slotDoc._id) : undefined, venue_offer: hasOffer || undefined },
     new Types.ObjectId(userId),
   );
   input.venue_id = finalVenueId;

@@ -25,7 +25,8 @@ export function makeVenueOfferCounterSchema(t: Translate) {
         const rate = Number(value);
         return value !== '' && Number.isFinite(rate) && rate > 0;
       }, t('availability.offers.validation.rate'))
-      .refine((value) => Number(value) <= VENUE_OFFER_RATE_MAX, t('availability.offers.validation.rateTooLarge')),
+      // Only a real number can be too large; anything else already failed the check above.
+      .refine((value) => !Number.isFinite(Number(value)) || Number(value) <= VENUE_OFFER_RATE_MAX, t('availability.offers.validation.rateTooLarge')),
     note: z
       .string()
       .trim()

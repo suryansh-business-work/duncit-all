@@ -18,8 +18,11 @@ import { useRespondQuote } from './useRespondQuote';
 /** The server keeps a request note to 280 characters. */
 const NOTE_MAX = 280;
 
-/** Accept / reject need only an optional note; a counter offer also needs a valid window and price terms. */
-export const buildRespondSchema = (t: Translate, choice: RespondChoice) => {
+/**
+ * Accept / reject need only an optional note; a counter offer also needs a valid
+ * window, and — when it is a venue's (`priced`) — a pricing option and an amount.
+ */
+export const buildRespondSchema = (t: Translate, choice: RespondChoice, priced = true) => {
   const base = z.object({
     note: z.string().trim().max(NOTE_MAX, t('venuePricing.respond.noteTooLong')),
     date: z.string(),
@@ -38,6 +41,7 @@ export const buildRespondSchema = (t: Translate, choice: RespondChoice) => {
       ctx.addIssue({ code: 'custom', message: t('venuePricing.validation.endAfterStart'), path: ['end'] });
     }
     if (!Number.isInteger(v.pax) || v.pax < 0) ctx.addIssue({ code: 'custom', message: t('venuePricing.validation.wholeNumber'), path: ['pax'] });
+    if (!priced) return;
     if (!isVenueOfferModel(v.model)) ctx.addIssue({ code: 'custom', message: t('availability.offers.validation.model'), path: ['model'] });
     else if (!offerTerms(v)) ctx.addIssue({ code: 'custom', message: t('availability.offers.validation.rate'), path: ['rate'] });
   });
@@ -55,12 +59,13 @@ interface Props {
 /** The respond dialog's form: a note, and for a counter offer the date, time, guests and price terms with the server's quote. */
 export default function RespondEventRequestForm({ formId, choice, venueId, defaultValues, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const schema = useMemo(() => buildRespondSchema(t, choice), [t, choice]);
+  const priced = !!venueId;
+  const schema = useMemo(() => buildRespondSchema(t, choice, priced), [t, choice, priced]);
   const { control, handleSubmit, watch } = useForm<RespondEventRequestValues>({ resolver: zodResolver(schema), defaultValues });
   const values = watch();
   const counter = choice === 'COUNTER';
   const valid = schema.safeParse(values).success;
-  const quote = useRespondQuote(venueId, counter && valid ? offerInput(values) : null);
+  const quote = useRespondQuote(venueId, counter && priced && valid ? offerInput(values) : null);
 
   return (
     <form id={formId} noValidate onSubmit={handleSubmit(async (next) => onSubmit(next))}>
@@ -91,6 +96,8 @@ export default function RespondEventRequestForm({ formId, choice, venueId, defau
             <Grid size={6}>
               <TimeField control={control} name="end" label={t('venuePricing.respond.end')} />
             </Grid>
+            {priced && (
+              <>
             <Grid size={{ xs: 12, sm: 6 }}>
               <RhfTextField control={control} name="model" select label={t('availability.offers.pricingOption')}>
                 {VENUE_OFFER_COUNTER_MODELS.map((option) => (
@@ -109,6 +116,8 @@ export default function RespondEventRequestForm({ formId, choice, venueId, defau
                 slotProps={{ htmlInput: { min: 0, step: 'any', inputMode: 'decimal' } }}
               />
             </Grid>
+              </>
+            )}
           </>
         )}
         <Grid size={12}>

@@ -26,9 +26,14 @@ export default function AnswerOfferDialog({ request, choice, payout, onClose, on
   const { t } = useTranslation();
   const fmt = useDateFormat({ timeZoneAware: true });
   const accept = choice === 'accept';
-  const mutation = useOfferMutation(accept ? ACCEPT_VENUE_OFFER : REJECT_VENUE_OFFER, request.slot_id, onClose, onDone);
   const schema = useMemo(() => makeVenueOfferRejectSchema(t), [t]);
   const { control, handleSubmit, reset } = useForm<VenueOfferRejectValues>({ resolver: zodResolver(schema), defaultValues: venueOfferRejectDefaults });
+  // Every way out — cancel, or the answer going through — starts the next answer blank.
+  const finish = () => {
+    reset(venueOfferRejectDefaults);
+    onClose();
+  };
+  const mutation = useOfferMutation(accept ? ACCEPT_VENUE_OFFER : REJECT_VENUE_OFFER, request.slot_id, finish, onDone);
   const formId = `answer-offer-${request.slot_id}`;
   const vars = {
     pod: request.pod_title,
@@ -37,9 +42,8 @@ export default function AnswerOfferDialog({ request, choice, payout, onClose, on
     amount: rupees(payout),
   };
   const close = () => {
-    reset(venueOfferRejectDefaults);
     mutation.clearError();
-    onClose();
+    finish();
   };
   const submit = handleSubmit(async ({ reason }) => {
     if (accept) await mutation.run({}, t('availability.offers.done.accepted'));

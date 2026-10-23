@@ -7,11 +7,15 @@ import {
   venueOfferInput,
   type VenueQuote,
 } from '@duncit/utils';
+import { useDebouncedValue } from '@duncit/ui';
 
 import { usePodFormData } from '../context';
 import { useTranslation } from '../i18n/useTranslation';
 import type { PodFormValues } from '../types';
 import { PODFORM_OFFER_MODEL_KEY, VENUE_OFFER_QUOTE } from './offerQueries';
+
+/** The amount is priced once typing stops, not once per keystroke. */
+const QUOTE_DEBOUNCE_MS = 300;
 
 interface QuoteAnswer {
   venueOfferQuote: { ok: boolean; message: string | null; quote: VenueQuote | null };
@@ -32,6 +36,7 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
     control,
     name: ['pod_date_time', 'pod_end_date_time', 'venue_offer_model', 'venue_offer_rate', 'no_of_spots'],
   });
+  const settledRate = useDebouncedValue(rate, QUOTE_DEBOUNCE_MS);
   const offer = venueOfferInput({
     start: start ? start.toISOString() : null,
     end: end ? end.toISOString() : null,
@@ -39,7 +44,7 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
     pets: false,
     spaceLabel: '',
     model,
-    rate,
+    rate: settledRate,
   });
   const { data } = useQuery<QuoteAnswer>(VENUE_OFFER_QUOTE, {
     variables: { venue_id: venueId, offer },

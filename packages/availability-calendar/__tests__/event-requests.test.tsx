@@ -8,8 +8,7 @@ import { notifySuccess } from '@duncit/dialogs';
 import EventRequestRespondActions, { type RespondableRequest } from '../src/event-requests/EventRequestRespondActions';
 import OfferSummary from '../src/event-requests/OfferSummary';
 import VenueEventRequestList from '../src/event-requests/VenueEventRequestList';
-import { MY_VENUE_EVENT_REQUESTS, RESPOND_TO_EVENT_REQUEST, type VenueEventRequest } from '../src/event-requests/queries';
-import { VENUE_PRICE_QUOTE } from '../src/pricing/queries';
+import { MY_VENUE_EVENT_REQUESTS, RESPOND_TO_EVENT_REQUEST, VENUE_OFFER_QUOTE, type VenueEventRequest } from '../src/event-requests/queries';
 import { breakdownResult, makeBreakdown } from './pricing-fixtures';
 
 vi.mock('@mui/x-date-pickers/DatePicker', async () => ({ DatePicker: (await import('./picker-stub')).PickerStub }));
@@ -50,13 +49,18 @@ function respondMock(sent: Record<string, any>[], fail?: Error | GraphQLError): 
   };
 }
 
-function quoteMock(seen: Record<string, any>[], fail?: GraphQLError): MockedResponse {
+/** Records each counter quote asked for; answers with a price, a refusal, or an error. */
+function quoteMock(seen: Record<string, any>[], answer: { refusal?: string; error?: GraphQLError } = {}): MockedResponse {
   return {
-    request: { query: VENUE_PRICE_QUOTE, variables: () => true },
+    request: { query: VENUE_OFFER_QUOTE, variables: () => true },
     maxUsageCount: Number.POSITIVE_INFINITY,
     result: (variables: Record<string, any>) => {
       seen.push(variables);
-      return (fail ? { errors: [fail] } : { data: { venuePriceQuote: breakdownResult(makeBreakdown()) } }) as never;
+      if (answer.error) return { errors: [answer.error] } as never;
+      const venueOfferQuote = answer.refusal
+        ? { __typename: 'VenueOfferQuoteResult', ok: false, message: answer.refusal, quote: null }
+        : { __typename: 'VenueOfferQuoteResult', ok: true, message: null, quote: breakdownResult(makeBreakdown()) };
+      return { data: { venueOfferQuote } } as never;
     },
   };
 }
@@ -161,7 +165,9 @@ describe('Workshop & event requests', () => {
   });
 
   describe('counter offer', () => {
-    it("prices the offered window with the venue's pricing and sends it", async () => {
+    const amount = () => dialog().getByLabelText('Amount (₹)');
+
+    it("prices the venue's counter from its pricing option and amount, and sends the terms", async () => {
       const sent: Record<string, any>[] = [];
       const quotes: Record<string, any>[] = [];
       renderActions([respondMock(sent), quoteMock(quotes)]);
@@ -169,18 +175,30 @@ describe('Workshop & event requests', () => {
 
       expect(dialog().getByText('Offer another time')).toBeInTheDocument();
       expect(dialog().getByText('Price at your venue')).toBeInTheDocument();
-      // Starts on tomorrow evening for 10 guests, priced from the venue's SAVED pricing.
+      // Nothing to price until the venue names an amount (the option starts on a flat price).
+      expect(dialog().queryByTestId('price-breakdown')).not.toBeInTheDocument();
+      expect(quotes).toHaveLength(0);
+
+      fireEvent.change(amount(), { target: { value: '6000' } });
       expect(await dialog().findByTestId('price-breakdown', undefined, SETTLED)).toHaveTextContent('Total₹6,600');
-      expect(quotes[0]).toEqual({ venue_id: 'venue-1', booking: { start_at: at(2, 18), end_at: at(2, 20), pax: 10, pets: false }, draft: null });
+      expect(quotes[0]).toEqual({
+        venue_id: 'venue-1',
+        offer: { start_at: at(2, 18), end_at: at(2, 20), pax: 10, model: 'FLAT', rate: 6000 },
+      });
 
       fireEvent.change(dialog().getByLabelText('Guests'), { target: { value: '30' } });
       fireEvent.change(dialog().getByLabelText('Date'), { target: { value: '2026-12-05T00:00' } });
       expect(dialog().getByRole('progressbar', { name: 'Working out the price' })).toBeInTheDocument();
-      await waitFor(() => expect(quotes.at(-1)?.booking).toMatchObject({ start_at: at(5, 18), pax: 30 }), SETTLED);
+      await waitFor(() => expect(quotes.at(-1)?.offer).toMatchObject({ start_at: at(5, 18), pax: 30, rate: 6000 }), SETTLED);
 
       fireEvent.click(dialog().getByRole('button', { name: 'Send offer' }));
       await waitFor(() => expect(sent).toHaveLength(1));
-      expect(sent[0]).toEqual({ id: 'req-1', response: 'COUNTER', note: null, offer: { start_at: at(5, 18), end_at: at(5, 20), pax: 30 } });
+      expect(sent[0]).toEqual({
+        id: 'req-1',
+        response: 'COUNTER',
+        note: null,
+        offer: { start_at: at(5, 18), end_at: at(5, 20), pax: 30, model: 'FLAT', rate: 6000 },
+      });
     });
 
     it('reopens on the current offer', async () => {
@@ -191,11 +209,24 @@ describe('Workshop & event requests', () => {
       expect(dialog().getByLabelText('Date')).toHaveValue(new Date(2026, 11, 8).toISOString());
     });
 
+    it('refuses a venue counter with no amount, and asks no price for it', async () => {
+      const sent: Record<string, any>[] = [];
+      const quotes: Record<string, any>[] = [];
+      renderActions([respondMock(sent), quoteMock(quotes)]);
+      fireEvent.click(screen.getByTestId('event-request-counter-req-1'));
+      fireEvent.change(amount(), { target: { value: '0' } });
+      fireEvent.click(dialog().getByRole('button', { name: 'Send offer' }));
+      expect(await dialog().findByText('Enter an amount above 0')).toBeInTheDocument();
+      expect(sent).toHaveLength(0);
+      expect(quotes).toHaveLength(0);
+    });
+
     it('refuses a window that ends before it starts, and asks no price for it', async () => {
       const sent: Record<string, any>[] = [];
       const quotes: Record<string, any>[] = [];
       renderActions([respondMock(sent), quoteMock(quotes)]);
       fireEvent.click(screen.getByTestId('event-request-counter-req-1'));
+      fireEvent.change(amount(), { target: { value: '6000' } });
       await dialog().findByTestId('price-breakdown', undefined, SETTLED);
 
       fireEvent.change(dialog().getByLabelText('Ends'), { target: { value: '2026-12-02T17:00' } });
@@ -217,10 +248,19 @@ describe('Workshop & event requests', () => {
       expect(sent).toHaveLength(0);
     });
 
-    it("says when the venue's pricing cannot price the window", async () => {
-      renderActions([respondMock([]), quoteMock([], new GraphQLError('Venue is closed on that date'))]);
+    it('shows why the server could not price the terms', async () => {
+      renderActions([respondMock([]), quoteMock([], { refusal: 'Venue is closed on that date' })]);
       fireEvent.click(screen.getByTestId('event-request-counter-req-1'));
+      fireEvent.change(amount(), { target: { value: '6000' } });
       expect(await dialog().findByText('Venue is closed on that date', undefined, SETTLED)).toBeInTheDocument();
+      expect(dialog().queryByTestId('price-breakdown')).not.toBeInTheDocument();
+    });
+
+    it('says when the quote itself fails', async () => {
+      renderActions([respondMock([]), quoteMock([], { error: new GraphQLError('Pricing is down') })]);
+      fireEvent.click(screen.getByTestId('event-request-counter-req-1'));
+      fireEvent.change(amount(), { target: { value: '6000' } });
+      expect(await dialog().findByText('Pricing is down', undefined, SETTLED)).toBeInTheDocument();
     });
 
     it("prices nothing for a host's request — the offer is only a time", async () => {
@@ -229,6 +269,7 @@ describe('Workshop & event requests', () => {
       renderActions([respondMock(sent), quoteMock(quotes)], {}, 'HOST');
       fireEvent.click(screen.getByTestId('event-request-counter-req-1'));
       expect(dialog().queryByText('Price at your venue')).not.toBeInTheDocument();
+      expect(dialog().queryByLabelText('Amount (₹)')).not.toBeInTheDocument();
       fireEvent.click(dialog().getByRole('button', { name: 'Send offer' }));
       await waitFor(() => expect(sent).toHaveLength(1));
       expect(sent[0].offer).toEqual({ start_at: at(2, 18), end_at: at(2, 20), pax: 10 });

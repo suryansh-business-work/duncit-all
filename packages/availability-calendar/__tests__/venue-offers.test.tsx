@@ -119,7 +119,7 @@ describe('OfferTermsPanel', () => {
     withApollo([], <OfferTermsPanel offer={makeOffer()} podIsFree={false} />);
     expect(screen.getByText('Host offered')).toBeInTheDocument();
     expect(screen.getByTestId('offer-status')).toHaveTextContent('Waiting for your answer');
-    expect(screen.getByText(/You receive/)).toHaveTextContent('6,000');
+    expect(screen.getByText(/^You receive ₹/)).toHaveTextContent('6,000');
     expect(screen.getByText(/The host pays/)).toHaveTextContent('6,600');
     expect(screen.getByTestId('price-breakdown')).toBeInTheDocument();
   });
@@ -133,7 +133,7 @@ describe('OfferTermsPanel', () => {
     withApollo([], <OfferTermsPanel offer={offer} podIsFree={false} />);
     expect(screen.getByText('Your counter')).toBeInTheDocument();
     expect(screen.getByTestId('offer-status')).toHaveTextContent('You countered — waiting for the host');
-    expect(screen.getByText(/You receive/)).toHaveTextContent('7,000');
+    expect(screen.getByText(/^You receive ₹/)).toHaveTextContent('7,000');
   });
 
   it('quotes nothing for a free pod, and shows no chip for a status it does not know', () => {

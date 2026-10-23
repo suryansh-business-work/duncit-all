@@ -277,6 +277,11 @@ describe('bookingDayOf', () => {
   });
 });
 
+/** Echoes the key and its vars, so a test reads exactly what was asked for. */
+const t = (key: string, opts?: { vars?: Record<string, string | number> }) =>
+  opts?.vars ? `${key} ${JSON.stringify(opts.vars)}` : key;
+const money = (value: number) => `₹${value}`;
+
 describe('bookingCalendarProps', () => {
   const tiles: BookingTile[] = [
     { id: 'a', start_at: '2026-11-05T03:30:00.000Z', end_at: null, price: 300 },

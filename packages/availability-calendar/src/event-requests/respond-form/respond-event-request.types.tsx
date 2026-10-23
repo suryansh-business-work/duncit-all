@@ -42,11 +42,16 @@ export function offerTerms(values: Readonly<Pick<RespondEventRequestValues, 'mod
   return { model: values.model, rate };
 }
 
-/** The offer as the mutation takes it (instants on this device's clock), with its price terms. */
-export function offerInput(values: RespondEventRequestValues) {
+/**
+ * The offer as the mutation takes it (instants on this device's clock). A venue's
+ * counter is `priced` and carries its terms; a host's counter is only a time.
+ */
+export function offerInput(values: RespondEventRequestValues, priced = true) {
   const start_at = wallInstant(values.date, values.start);
   const end_at = wallInstant(values.date, values.end);
+  if (!start_at || !end_at) return null;
+  const window = { start_at, end_at, pax: Math.max(0, Math.floor(values.pax || 0)) };
+  if (!priced) return window;
   const terms = offerTerms(values);
-  if (!start_at || !end_at || !terms) return null;
-  return { start_at, end_at, pax: Math.max(0, Math.floor(values.pax || 0)), ...terms };
+  return terms ? { ...window, ...terms } : null;
 }

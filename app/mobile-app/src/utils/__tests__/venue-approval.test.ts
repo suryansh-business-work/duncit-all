@@ -6,7 +6,7 @@ import {
 } from '@/utils/venue-approval';
 
 describe('venueOfferChip', () => {
-  it("names a pending pod the venue countered, so the host knows it is their move", () => {
+  it('names a pending pod the venue countered, so the host knows it is their move', () => {
     expect(venueOfferChip('PENDING', 'COUNTERED', 'Venue countered')).toEqual({
       label: 'Venue countered',
       tone: 'warning',
@@ -14,7 +14,9 @@ describe('venueOfferChip', () => {
   });
 
   it('falls back to the approval chip for every other state', () => {
-    expect(venueOfferChip('PENDING', 'SENT', 'Venue countered')).toEqual(venueApprovalChip('PENDING'));
+    expect(venueOfferChip('PENDING', 'SENT', 'Venue countered')).toEqual(
+      venueApprovalChip('PENDING'),
+    );
     expect(venueOfferChip('DECLINED', 'COUNTERED', 'Venue countered')).toEqual(
       venueApprovalChip('DECLINED'),
     );

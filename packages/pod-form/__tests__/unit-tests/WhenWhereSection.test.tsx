@@ -328,9 +328,13 @@ describe('WhenWhereSection (offer terms)', () => {
     await user.type(screen.getByLabelText(/Amount you offer/), '300');
     expect(ref.current?.getValues('venue_offer_model')).toBe('PER_GUEST');
     expect(ref.current?.getValues('venue_offer_rate')).toBe('300');
-    expect(screen.getByTestId('pod-form-offer-total')).toHaveTextContent('₹3,894');
-    const quoteCall = useQueryMock.mock.calls.find(([, options]) => options?.variables?.offer && !options.skip);
-    expect(quoteCall?.[1].variables.offer).toMatchObject({ model: 'PER_GUEST', rate: 300, pax: 10, space_label: '' });
+    expect(await screen.findByTestId('pod-form-offer-total')).toHaveTextContent('₹3,894');
+    // The amount is priced once typing settles: every quote asked for is the whole amount, never '3' or '30'.
+    const quoteCalls = useQueryMock.mock.calls.filter(([, options]) => options?.variables?.offer && !options.skip);
+    expect(quoteCalls.length).toBeGreaterThan(0);
+    for (const [, options] of quoteCalls) {
+      expect(options.variables.offer).toMatchObject({ model: 'PER_GUEST', rate: 300, pax: 10, space_label: '' });
+    }
   });
 
   it('says why the venue cannot take the offer, with no currency set', () => {

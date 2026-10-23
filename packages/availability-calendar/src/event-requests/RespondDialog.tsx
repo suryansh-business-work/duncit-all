@@ -44,7 +44,7 @@ export default function RespondDialog({ requestId, choice, venueId, requesterNam
   const submit = async (values: RespondEventRequestValues) => {
     setError(null);
     try {
-      const counterOffer = choice === 'COUNTER' ? offerInput(values) : null;
+      const counterOffer = choice === 'COUNTER' ? offerInput(values, !!venueId) : null;
       await respond({ variables: { id: requestId, response: choice, note: values.note.trim() || null, offer: counterOffer } });
     } catch (e) {
       setError(errorText(e, t('venuePricing.respond.failed')));

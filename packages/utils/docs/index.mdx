@@ -3557,7 +3557,7 @@ for the Partners console, mWeb and the native app. Every copy key is a literal (
 | `currentOfferTerms(offer)` | The terms on the table and whose they are: the venue's counter while there is one (`by: 'VENUE'`), else the host's offer (`by: 'HOST'`). |
 | `venueOfferActions(offer)` | What the venue may do now: `SENT` → accept, reject, counter; `COUNTERED` → reject or change the counter (it cannot accept its own terms); settled → nothing. |
 | `venueOfferInboxStatus(offer)` | How the status reads to the venue, and the chip tone; `''` for an unknown status. |
-| `VENUE_OFFER_INBOX_MODEL_KEY` / `venueOfferInboxModelKey(model)` | Each pricing option's name and amount-line keys ("{rate} per guest"); null for an unknown option. |
+| `VENUE_OFFER_INBOX_MODEL_KEY` / `venueOfferInboxModelKey(model)` | Each pricing option's name and amount-line keys (`"{rate} per guest"`); null for an unknown option. |
 | `venueOfferHistoryKey(entry)` | One negotiation step's sentence key by who took it (`HOST:OFFER`, `VENUE:COUNTER`, …); `''` for an unknown one. |
 
 ```ts

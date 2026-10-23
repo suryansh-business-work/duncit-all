@@ -196,28 +196,61 @@ function uniqueSiblings(items: readonly AppNavItem[]): AppNavItem[] {
   );
 }
 
+/** A sidebar category of the Venue Studio, and the options it holds, in the order it lists them. */
+interface NavCategory {
+  label: string;
+  labelKey: string;
+  icon: string;
+  keys: readonly string[];
+}
+
 /**
- * A `nestedNav` studio's sidebar: its options one by one, under two collapsible
- * groups — the studio's own ("Venue Options", opening with a link to the
- * Options page itself) and its food desk. Auto Pods follows its flag exactly as
- * the Options page does, and a studio with no food desk gets no Food group.
+ * The Venue Studio's options sorted into what a venue owner is doing: setting
+ * the venue up, running its pods, answering requests, being paid. The Food
+ * desk keeps its own group (the catalogue's `group: 'food'`), and Dashboard
+ * sits on top with the Options page.
+ */
+const VENUE_TOP_KEYS: readonly string[] = ['dashboard'];
+const VENUE_NAV_CATEGORIES: readonly NavCategory[] = [
+  { label: 'Venues', labelKey: 'shell.nav.venues', icon: 'storefront', keys: ['venues', 'availability', 'settings', 'publish', 'verification'] },
+  { label: 'Pods', labelKey: 'shell.nav.pods', icon: 'community', keys: ['pods', 'rented-items'] },
+  { label: 'Requests', labelKey: 'shell.nav.requests', icon: 'host-request', keys: ['slot-requests', 'pod-requests', 'change-requests', 'auto-pods', 'nearby'] },
+  { label: 'Finance', labelKey: 'shell.nav.finance', icon: 'payments', keys: ['earnings', 'withdrawal'] },
+];
+
+const pick = (options: readonly StudioOptionItem[], keys: readonly string[]) =>
+  keys.flatMap((key) => options.filter((option) => option.key === key));
+
+/**
+ * A `nestedNav` studio's sidebar: All options and Dashboard on top, then every
+ * other option under its category (collapsible), then the food desk. An option
+ * no category names still shows — under Venues — so a new catalogue entry is
+ * never dropped from the sidebar. Auto Pods follows its flag exactly as the
+ * Options page does; an empty category, or a studio with no food desk, gets
+ * no group.
  */
 export function studioNestedNavItems(section: PartnerSection, autoPods: boolean): AppNavItem[] {
   const entry = STUDIO_OPTIONS_ENTRY[section.mode];
   const { main, food } = studioOptionGroups(studioOptionsFor(section.mode, [section.role], { autoPods, console: true }));
   const allOptions: AppNavItem = { label: 'All options', labelKey: 'shell.nav.allOptions', to: entry.portal, icon: 'widgets' };
-  const groups: AppNavItem[] = [
-    {
-      label: entry.labelKey,
-      labelKey: entry.labelKey,
-      icon: section.icon,
-      children: uniqueSiblings([allOptions, ...main.map(optionNavItem)]),
-    },
-  ];
+  const named = new Set([...VENUE_TOP_KEYS, ...VENUE_NAV_CATEGORIES.flatMap((category) => category.keys)]);
+  const unnamed = main.filter((option) => !named.has(option.key));
+  const top = uniqueSiblings([allOptions, ...pick(main, VENUE_TOP_KEYS).map(optionNavItem)]);
+  const groups: AppNavItem[] = VENUE_NAV_CATEGORIES.map((category, index) => ({
+    label: category.label,
+    labelKey: category.labelKey,
+    icon: category.icon,
+    children: uniqueSiblings([...pick(main, category.keys), ...(index === 0 ? unnamed : [])].map(optionNavItem)),
+  })).filter((group) => group.children.length > 0);
   if (food.length > 0) {
-    groups.push({ label: 'Food', labelKey: 'shell.nav.food', icon: 'menuBook', children: uniqueSiblings(food.map(foodNavItem)) });
+    groups.splice(groups.length - 1, 0, {
+      label: 'Food',
+      labelKey: 'shell.nav.food',
+      icon: 'menuBook',
+      children: uniqueSiblings(food.map(foodNavItem)),
+    });
   }
-  return groups;
+  return [...top, ...groups];
 }
 
 /** What the studio the user is in puts in the sidebar: its ONE Options entry,
@@ -229,7 +262,7 @@ function studioNav(section: PartnerSection, autoPods: boolean): AppNavItem[] {
 /**
  * Sidebar nav for the signed-in user: ONE studio at a time — its Options entry,
  * which opens the page listing every option the studio has (the Venue Studio
- * lists its options under two groups instead, see studioNestedNavItems) — then
+ * lists its options under categories instead, see studioNestedNavItems) — then
  * the role-independent tail. The studio switcher above it moves between studios.
  *
  * Somebody who holds no studio yet sees the ways in instead (Be a Host, become

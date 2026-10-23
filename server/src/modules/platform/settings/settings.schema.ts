@@ -70,12 +70,6 @@ export const settingsTypeDefs = gql`
     pod_chat_retention_hours: Int!
     "Club chat messages older than this many days are permanently deleted (1-3650)."
     club_chat_retention_days: Int!
-    "The most dates one recurring pod series may create (2-52)."
-    pod_series_max_occurrences: Int!
-    "How many days past its first date a recurring pod series may run (7-365)."
-    pod_series_max_span_days: Int!
-    "The multi-date booking discount a new recurring pod starts with."
-    pod_multi_date_discount_tiers: [MultiDateDiscountTier!]!
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires."
     auto_pod_venue_expiry_hours: Int!
     "How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol; past that it is released."
@@ -202,12 +196,6 @@ export const settingsTypeDefs = gql`
     pod_chat_retention_hours: Int
     "Club chat messages older than this many days are permanently deleted (1-3650)."
     club_chat_retention_days: Int
-    "The most dates one recurring pod series may create (2-52)."
-    pod_series_max_occurrences: Int
-    "How many days past its first date a recurring pod series may run (7-365)."
-    pod_series_max_span_days: Int
-    "The multi-date booking discount a new recurring pod starts with ([] for none)."
-    pod_multi_date_discount_tiers: [MultiDateDiscountTierInput!]
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720)."
     auto_pod_venue_expiry_hours: Int
     "How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol before it is released (1-720)."

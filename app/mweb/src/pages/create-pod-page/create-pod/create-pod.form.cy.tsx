@@ -223,9 +223,10 @@ describe('buildCreatePodInput', () => {
     expect(input.is_active).toBe(true);
   });
 
-  it('sends PER_PAX guests, pets and a named space with the booking', () => {
+  // One number: the pod's spots ARE the booking's guests, whatever the model.
+  it("sends the pod's spots as the booking's guests, with pets and a named space", () => {
     const input = buildCreatePodInput(
-      valid({ venue_booking_pax: 24, venue_booking_pets: true, venue_space_label: 'Lawn' }),
+      valid({ no_of_spots: 24, venue_booking_pets: true, venue_space_label: 'Lawn' }),
     );
     expect(input.venue_booking).toMatchObject({ pax: 24, pets: true, space_label: 'Lawn' });
   });
@@ -283,7 +284,6 @@ describe('draft serialize/hydrate', () => {
       pod_end_date_time: end,
       what_this_pod_offers: ['A'],
       reel_url: 'https://cdn/reel.mp4',
-      venue_booking_pax: 12,
       venue_booking_pets: true,
     });
     const draft = serializeDraft(values, 2);
@@ -296,7 +296,6 @@ describe('draft serialize/hydrate', () => {
     expect(restored.what_this_pod_offers).toEqual(['A']);
     expect(restored.reel_url).toBe('https://cdn/reel.mp4');
     // The booking choice is restored with the draft.
-    expect(restored.venue_booking_pax).toBe(12);
     expect(restored.venue_booking_pets).toBe(true);
   });
 

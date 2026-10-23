@@ -17,7 +17,7 @@ const venueBookingOf = (values: CreatePodFormValues) =>
   instantBookingInput({
     start: values.pod_date_time?.toISOString() ?? null,
     end: values.pod_end_date_time?.toISOString() ?? null,
-    pax: values.venue_booking_pax,
+    pax: values.no_of_spots,
     pets: values.venue_booking_pets,
     spaceLabel: values.venue_space_label,
   });

@@ -26,7 +26,7 @@ import { startClusterJob } from '@utils/clusterJob';
 import { getUrlConfigs } from '@config/url-configs';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { PodModel, SERIES_DATES } from '@modules/pods/pod/pod.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import { loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
 import { liveEndWithin } from '@modules/pods/pod/pod.lifecycle';
 import { BackoutRequestModel } from '@modules/pods/podMember/backoutRequest.model';
@@ -254,7 +254,6 @@ async function remindAttendees(
   clocks: SweepClocks
 ) {
   const pods = await PodModel.find({
-    ...SERIES_DATES,
     is_active: true,
     pod_date_time: crossing(now + clocks.pod_reminder_lead_hours * HOUR_MS, cutoff),
   })
@@ -283,7 +282,6 @@ async function remindAttendees(
 async function remindAttendeesSameDay(now: number, cutoff: Date, mwebUrl: string, clocks: SweepClocks) {
   if (clocks.pod_sameday_reminder_hours <= 0) return;
   const pods = await PodModel.find({
-    ...SERIES_DATES,
     is_active: true,
     pod_date_time: crossing(now + clocks.pod_sameday_reminder_hours * HOUR_MS, cutoff),
   })
@@ -342,7 +340,6 @@ async function venueNamesOf(pods: SweptPod[]): Promise<Map<string, string>> {
  */
 async function remindVenues(now: number, cutoff: Date, clocks: SweepClocks) {
   const pods = await PodModel.find({
-    ...SERIES_DATES,
     is_active: true,
     venue_id: { $ne: null },
     pod_date_time: crossing(now + clocks.pod_reminder_lead_hours * HOUR_MS, cutoff),
@@ -408,7 +405,6 @@ async function remindHostsToComplete(now: number, cutoff: Date, clocks: SweepClo
   // different end from the deadline it prints a dozen lines below.
   const window = crossing(now - reminderHours * HOUR_MS, cutoff);
   const pods = await PodModel.find({
-    ...SERIES_DATES,
     is_active: true,
     completed_at: null,
     ...liveEndWithin(window),
@@ -497,7 +493,7 @@ async function remindVenuesOfPendingSlots(now: number, cutoff: Date, clocks: Swe
  * — the same line `podHasHappened` draws in podMember.service.
  */
 async function noticeReplacementNotFound(now: number, cutoff: Date, mwebUrl: string) {
-  const pods = await PodModel.find({ ...SERIES_DATES, pod_date_time: crossing(now, cutoff) })
+  const pods = await PodModel.find({ pod_date_time: crossing(now, cutoff) })
     .select('pod_id pod_title pod_date_time club_id pod_images_and_videos')
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
@@ -586,7 +582,6 @@ function feedbackAsk(
 async function endedPods(now: number, cutoff: Date, delayHours: number): Promise<SweptPod[]> {
   const ended = crossing(now - delayHours * HOUR_MS, cutoff);
   return PodModel.find({
-    ...SERIES_DATES,
     is_active: true,
     ...liveEndWithin(ended),
   })

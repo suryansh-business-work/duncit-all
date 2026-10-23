@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
-import { refinePublish, refineRepeat, refineVenueOrMeeting } from './create-pod.refine';
+import { refinePublish, refineVenueOrMeeting } from './create-pod.refine';
 import { refineTicketDiscount } from './create-pod.ticket-discount';
 
 export { hasImageLine, buildCreatePodInput, buildModerationInput, MODERATION_FIELD_MAP } from './create-pod.payload';
@@ -64,7 +64,6 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
         .max(1999)
         .nullable(),
       venue_space_label: z.string(),
-      venue_booking_pax: z.number().min(0),
       venue_booking_pets: z.boolean(),
       no_of_spots: z
         .number({ error: t('mweb.createPod.validation.spotsNumber') })
@@ -107,18 +106,9 @@ export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxP
       ticket_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
-      repeat_enabled: z.boolean(),
-      repeat_frequency: z.enum(['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'CUSTOM']),
-      repeat_ends_on: z.string(),
-      repeat_skip_dates: z.array(z.string()),
-      repeat_custom_days: z.array(z.string()),
-      // Shape only — the tier rules run in refineRepeat below.
-      repeat_discount_enabled: z.boolean(),
-      repeat_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),
     })
     .superRefine((values, ctx) => {
       refineVenueOrMeeting(values, ctx, t);
-      refineRepeat(values, ctx, t, ticketDiscountMaxPct);
       if (values.pod_date_time.getTime() <= Date.now()) {
         ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });
       }

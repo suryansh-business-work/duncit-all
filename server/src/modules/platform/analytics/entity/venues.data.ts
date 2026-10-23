@@ -1,7 +1,7 @@
 import type { Types } from 'mongoose';
 import { VenueModel, type VenueStatus } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
-import { PodModel, SERIES_DATES } from '@modules/pods/pod/pod.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodAuditLogModel } from '@modules/pods/podAudit/podAudit.model';
 import { dayKeyExpr, inRange } from './window';
 import { average, distinctTally, pct, tally, total } from './shapes';
@@ -79,7 +79,7 @@ export interface VenuePeriod {
 async function loadVenuePods(from: Date, to: Date): Promise<VenuePod[]> {
   const [held, atVenues] = await Promise.all([
     loadHeldPods(from, to),
-    PodModel.find({ ...SERIES_DATES, pod_date_time: inRange(from, to), venue_id: { $ne: null } })
+    PodModel.find({ pod_date_time: inRange(from, to), venue_id: { $ne: null } })
       .select('venue_id')
       .lean<Array<{ _id: Types.ObjectId; venue_id: Types.ObjectId }>>(),
   ]);

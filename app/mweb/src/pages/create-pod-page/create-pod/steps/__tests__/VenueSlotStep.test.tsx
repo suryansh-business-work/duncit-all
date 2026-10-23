@@ -38,6 +38,8 @@ import {
 } from '../../create-pod.types';
 
 const testTheme = createTheme();
+// The stepper owns the spot bounds; this step only shows the picker for them.
+const SPOTS = { min: 1, max: 40, slidable: true };
 
 beforeAll(() => {
   globalThis.ResizeObserver ??= class {
@@ -114,6 +116,7 @@ function Harness({
       venues={VENUES}
       clubVenueIds={clubVenueIds}
       venueNotice={venueNotice}
+      spots={SPOTS}
     />
   );
 }

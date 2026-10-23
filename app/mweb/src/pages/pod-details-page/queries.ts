@@ -36,9 +36,6 @@ export const POD_DETAILS = gql`
       pod_type
       pod_amount
       pod_occurrence
-      # A recurring pod is booked by date (series/useSeriesBooking).
-      series_role
-      series_parent_id
       no_of_spots
       seats_taken
       seats_available

@@ -3,7 +3,9 @@ import type { CreatePodFormState } from './useCreatePodForm';
 
 import { useVenueQuote } from '@/hooks/useVenueQuote';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
+import { useVenueGuestRange } from '@/hooks/venueBookingPricing';
 import {
+  clampSpots,
   filterProductsForClub,
   freePodVenueNotice,
   pruneProductRequests,
@@ -95,13 +97,31 @@ export function useCreatePodScope({
   const venueAmount = slotId ? (selectedSlot?.price ?? null) : (venueQuote.quote?.total ?? null);
   const bookedCapacity = slotId ? selectedSlot?.capacity : space?.capacity;
 
+  // An instant booking's guests are the pod's spots, so the venue's own guest
+  // range (Venue Pricing Module) bounds them too. A Pod Request's held slot
+  // keeps its own capacity.
+  const instant = physical && !slotId && !form.watch('partner_request_id');
+  const guestRange = useVenueGuestRange(instant ? venueId : '');
+
   // How big this pod may be: floored by the sub-category's admin-set minimum
-  // (a doubles game needs 4) and capped by the venue space the host booked. The
-  // pod's sub-category is its club's `category_id`. mWeb twin (rule 27).
+  // (a doubles game needs 4) and the venue's minimum guests, capped by the venue
+  // space the host booked and the venue's maximum guests. The pod's
+  // sub-category is its club's `category_id`. mWeb twin (rule 27).
   const spots = spotsBounds({
     minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
     venueCapacity: physical ? bookedCapacity : null,
+    venueMinPax: guestRange?.min_pax,
+    venueMaxPax: guestRange?.max_pax,
   });
+  // Spots snap into a range that moved (another space, or the venue's guest
+  // range arriving) — anything up to the cap stays as picked. mWeb twin.
+  useEffect(() => {
+    const current = Number(form.getValues('no_of_spots_text')) || 0;
+    if (!physical || current <= 0) return;
+    const next = clampSpots(current, spots);
+    if (next !== current)
+      form.setValue('no_of_spots_text', String(next), { shouldDirty: true, shouldValidate: true });
+  }, [form, physical, spots.min, spots.max]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Step 4's money state lives HERE because it gates the Create Pod button: a
   // ₹0 projected payout, or a pod worth less than the venue slot, blocks

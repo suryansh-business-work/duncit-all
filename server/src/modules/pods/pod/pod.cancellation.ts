@@ -22,7 +22,6 @@ import { loadClubSlugMap, notFound, podOwnerId, toPub } from './pod.shared';
 import { findHostedPod } from './pod.validation';
 import { assertOwnedVenue } from './pod.venue';
 import { applyProductDeltas } from './pod.products';
-import { syncSeriesParentOf } from '@modules/pods/podSeries/podSeries.parent';
 import {
   emailHostAutoCancelled,
   refundAndNotifyCancellation,
@@ -406,7 +405,6 @@ export const podCancellationMethods = {
       actorUserId,
       note: REVOKE_CANCELLATION_NOTE,
     });
-    await syncSeriesParentOf(restored._id);
     const slugMap = await loadClubSlugMap([restored]);
     return toPub(restored, slugMap);
   },

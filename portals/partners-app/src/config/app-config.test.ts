@@ -21,24 +21,18 @@ const OPTIONS: Record<PartnerRole, string> = {
 const optionsRoutes = (items: readonly AppNavItem[]) => routes(items).filter((to) => to.endsWith('/options'));
 const childRoutes = (item: AppNavItem | undefined) => (item?.children ?? []).map((child) => child.to);
 
-/** The Venue Options group's routes, in order, without the flag-owned Auto Pods. */
-const VENUE_OPTION_ROUTES = [
-  '/venues/options',
-  '/venues/dashboard',
-  '/register-venue',
-  '/venues/requests',
-  '/venues/pricing',
-  '/venues/settings',
-  '/venues/earnings',
-  '/venues/publish',
-  '/venues/rented-items',
-  '/venues/pods',
-  '/venues/change-requests',
-  '/venues/pod-requests',
-  '/venues/nearby-hosts',
-  '/verification',
-  '/wallet',
+/** The Venue Studio's categories, in sidebar order, and their routes without the flag-owned Auto Pods. */
+const VENUE_CATEGORIES: readonly [string, string[]][] = [
+  ['shell.nav.venues', ['/register-venue', '/venues/pricing', '/venues/settings', '/venues/publish', '/verification']],
+  ['shell.nav.pods', ['/venues/pods', '/venues/rented-items']],
+  ['shell.nav.requests', ['/venues/requests', '/venues/pod-requests', '/venues/change-requests', '/venues/nearby-hosts']],
+  ['shell.nav.food', ['/venues/food-dashboard', '/venues/food-menu', '/venues/food-orders', '/venues/food-coupons']],
+  ['shell.nav.finance', ['/venues/earnings', '/wallet']],
 ];
+/** The venue part of the sidebar: two top rows, then one group per category. */
+const venueNav = (options?: Parameters<typeof buildNav>[1]) =>
+  buildNav(['VENUE_OWNER'], options).slice(0, 2 + VENUE_CATEGORIES.length);
+const group = (nav: readonly AppNavItem[], labelKey: string) => nav.find((item) => item.labelKey === labelKey);
 
 describe('buildNav', () => {
   it('shows ONE highlighted Options entry for the studio, then the account tail', () => {
@@ -56,69 +50,56 @@ describe('buildNav', () => {
     expect(labels(nav.slice(1))).toEqual(tail);
   });
 
-  it('gives the Venue Studio two groups — Venue Options and Food — then the account tail', () => {
+  it('opens the Venue Studio with All options and Dashboard, then its categories, then the account tail', () => {
     const nav = buildNav(['VENUE_OWNER']);
-    expect(nav).toHaveLength(2 + tail.length);
-    const [venue, food] = nav;
-    // A group header is not a link: its children are.
-    expect(venue).toMatchObject({ labelKey: 'mweb.studioOptions.venueEntry', icon: 'storefront' });
-    expect(venue.to).toBeUndefined();
-    expect(venue.featured).toBeUndefined();
-    expect(food).toMatchObject({ label: 'Food', labelKey: 'shell.nav.food' });
-    expect(food.to).toBeUndefined();
-    expect(labels(nav.slice(2))).toEqual(tail);
+    expect(nav).toHaveLength(2 + VENUE_CATEGORIES.length + tail.length);
+    expect(nav[0]).toEqual({ label: 'All options', labelKey: 'shell.nav.allOptions', to: '/venues/options', icon: 'widgets' });
+    expect(nav[1]).toMatchObject({ labelKey: 'mweb.studioOptions.dashboard', to: '/venues/dashboard' });
+    // A category header is not a link: its children are.
+    const categories = nav.slice(2, 2 + VENUE_CATEGORIES.length);
+    expect(categories.map((item) => item.labelKey)).toEqual(VENUE_CATEGORIES.map(([labelKey]) => labelKey));
+    for (const category of categories) {
+      expect(category.to).toBeUndefined();
+      expect(category.icon).toEqual(expect.any(String));
+    }
+    expect(labels(nav.slice(2 + VENUE_CATEGORIES.length))).toEqual(tail);
   });
 
-  it('opens the Venue Options group with All options, then every venue option outside the food desk', () => {
-    const [venue] = buildNav(['VENUE_OWNER']);
-    expect(childRoutes(venue)).toEqual(VENUE_OPTION_ROUTES);
-    expect(venue.children?.[0]).toEqual({
-      label: 'All options',
-      labelKey: 'shell.nav.allOptions',
-      to: '/venues/options',
-      icon: 'widgets',
-    });
-    expect(venue.children?.slice(1, 3).map((child) => child.labelKey)).toEqual([
-      'mweb.studioOptions.dashboard',
-      'mweb.studioOptions.yourVenues',
-    ]);
+  it.each(VENUE_CATEGORIES)('lists the %s category’s options in its own order', (labelKey, expected) => {
+    expect(childRoutes(group(venueNav(), labelKey))).toEqual(expected);
   });
 
-  it('lists the food desk under Food: Dashboard, Menu, Food Orders, Food Coupons', () => {
-    const [venue, food] = buildNav(['VENUE_OWNER']);
-    expect(childRoutes(food)).toEqual([
-      '/venues/food-dashboard',
-      '/venues/food-menu',
-      '/venues/food-orders',
-      '/venues/food-coupons',
-    ]);
-    expect(food.children?.map((child) => child.labelKey)).toEqual([
+  it('reaches every venue option exactly once, so categorising drops nothing', () => {
+    const reached = routes(venueNav({ autoPods: true }));
+    const expected = ['/venues/options', '/venues/dashboard', ...VENUE_CATEGORIES.flatMap(([, to]) => to), '/venues/auto-pods'];
+    expect([...reached].sort()).toEqual([...expected].sort());
+  });
+
+  it('reads the food desk plainly under Food: Dashboard, Menu, Food Orders, Food Coupons', () => {
+    expect(group(venueNav(), 'shell.nav.food')?.children?.map((child) => child.labelKey)).toEqual([
       // "Food" is the group's own name, so these two read plainly under it.
       'shell.nav.dashboard',
       'shell.nav.foodMenu',
       'mweb.studioOptions.foodOrders',
       'mweb.studioOptions.foodCoupons',
     ]);
-    // A food page is in the Food group only.
-    expect(childRoutes(venue).filter((to) => to?.startsWith('/venues/food-'))).toEqual([]);
   });
 
-  it('lists Auto Pods in the Venue Options group only while its flag is on', () => {
+  it('lists Auto Pods under Requests only while its flag is on', () => {
     expect(routes(buildNav(['VENUE_OWNER']))).not.toContain('/venues/auto-pods');
     expect(routes(buildNav(['VENUE_OWNER'], { autoPods: false }))).not.toContain('/venues/auto-pods');
-    const [venue, food] = buildNav(['VENUE_OWNER'], { autoPods: true });
-    // In catalogue order: after Workshop & Event Requests, before the Venue Pricing Module.
-    expect(childRoutes(venue)).toEqual([
-      ...VENUE_OPTION_ROUTES.slice(0, 4),
+    expect(childRoutes(group(venueNav({ autoPods: true }), 'shell.nav.requests'))).toEqual([
+      '/venues/requests',
+      '/venues/pod-requests',
+      '/venues/change-requests',
       '/venues/auto-pods',
-      ...VENUE_OPTION_ROUTES.slice(4),
+      '/venues/nearby-hosts',
     ]);
-    expect(childRoutes(food)).not.toContain('/venues/auto-pods');
   });
 
-  it('keeps every row of a group unique by label and by route, and gives each an icon', () => {
-    for (const group of buildNav(['VENUE_OWNER'], { autoPods: true }).slice(0, 2)) {
-      const children = group.children ?? [];
+  it('keeps every row of a category unique by label and by route, and gives each an icon', () => {
+    for (const category of venueNav({ autoPods: true }).slice(2)) {
+      const children = category.children ?? [];
       expect(new Set(children.map((child) => child.label)).size).toBe(children.length);
       expect(new Set(children.map((child) => child.to)).size).toBe(children.length);
       for (const child of children) expect(child.icon).toEqual(expect.any(String));

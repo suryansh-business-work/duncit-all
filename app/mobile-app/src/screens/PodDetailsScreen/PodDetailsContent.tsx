@@ -16,15 +16,11 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { usePublicFinance } from '@/hooks/usePublicFinance';
 import type { CartLineMeta } from '@/stores/cart.store';
 import type { RootStackParamList } from '@/navigation/types';
-import { formatMoney } from '@/utils/checkout-math';
 
 import { PodChallengesSection } from '@/components/challenge/PodChallengesSection';
 
-import { PodSeriesDates } from '@/components/details/series/PodSeriesDates';
-
 import { PodShopSection } from './PodShopSection';
 import type { PodDetailActions } from './usePodDetailActions';
-import type { SeriesBooking } from './useSeriesBooking';
 
 type PodDetailsData = ReturnType<typeof usePodDetails>;
 
@@ -43,7 +39,6 @@ interface PodDetailsContentProps extends Pick<
   navigation: NativeStackNavigationProp<RootStackParamList>;
   goBack: () => void;
   actions: PodDetailActions;
-  series: SeriesBooking;
   bookingBarHeight: number;
   isPodHost: boolean;
   isFree: boolean;
@@ -108,14 +103,6 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
           onJoinMeeting={() => actions.onJoinMeeting(pod.id)}
         />
       </Reveal>
-      <PodSeriesDates
-        series={props.series}
-        currentPodId={pod.id}
-        formatPrice={
-          props.isFree ? undefined : (amount) => formatMoney(props.finance.currency, amount)
-        }
-        onOpenDate={(datePodId) => navigation.push('PodDetails', { podId: datePodId })}
-      />
       <YStack height={20} />
       <Reveal index={2}>
         <PodSocialBar
@@ -157,14 +144,13 @@ export function PodDetailsContent(props: Readonly<PodDetailsContentProps>) {
         </YStack>
       </Reveal>
       <YStack height={20} />
-      {/* A recurring pod has one chat room, on the pod itself — every date shares it. */}
       <ChatPreviewCard
         kind="POD"
-        id={pod.series_parent_id ?? pod.id}
+        id={pod.id}
         reloadKey={props.membershipState?.status ?? undefined}
         onOpen={() =>
           navigation.navigate('ChatRoom', {
-            podId: pod.series_parent_id ?? pod.id,
+            podId: pod.id,
             title: pod.pod_title,
           })
         }

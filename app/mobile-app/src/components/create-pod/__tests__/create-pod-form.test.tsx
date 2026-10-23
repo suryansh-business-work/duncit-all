@@ -306,12 +306,13 @@ describe('buildCreatePodInput', () => {
     expect(input.venue_booking).toBeNull();
   });
 
-  it('sends the instant booking window, guests, pets and space when no slot is held', () => {
+  // One number: the pod's spots ARE the booking's guests, whatever the model.
+  it('sends the instant booking window, spots as guests, pets and space when no slot is held', () => {
     const input = buildCreatePodInput(
       valid({
         venue_slot_id: '',
         pod_end_date_time_text: futureEndText,
-        venue_booking_pax: 12,
+        no_of_spots_text: '12',
         venue_booking_pets: true,
       }),
     );

@@ -62,6 +62,9 @@ export function PricingStep({
     : undefined;
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
+  // An instant booking's spots are its guests, picked with the booking on the
+  // venue step — shown here, not changed here, so the quote always matches.
+  const setOnVenueStep = isPhysical && !watch('partner_request_id');
   const isFree = watch('pod_type') === 'FREE';
 
   return (
@@ -90,10 +93,11 @@ export function PricingStep({
               error={fieldState.error?.message}
               min={spots.min}
               max={spots.max}
-              slidable={spots.slidable}
+              slidable={spots.slidable && !setOnVenueStep}
               boundsHint={boundsHint}
-              // Only fixed when the venue leaves no room to choose.
-              readOnly={isPhysical && !spots.slidable}
+              // Fixed when booked with the venue, or the venue leaves no room to choose.
+              readOnly={setOnVenueStep || (isPhysical && !spots.slidable)}
+              fixedHint={setOnVenueStep ? t('mweb.createPod.spotsSetOnVenueStep') : undefined}
             />
           )}
         />

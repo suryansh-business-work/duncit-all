@@ -9,23 +9,14 @@ import type { CreatePodFormValues, PodModerationViolation } from '../create-pod.
 import type { BlockedViolation } from '../ModerationBlockedDialog';
 import type { CreatePodStepperProps } from './types';
 import type { CreatePodFormState } from './useCreatePodForm';
-import { seriesPlanOf } from '../repeat/useSeriesPreview';
 
 type StepperSubmitArgs = Pick<CreatePodStepperProps, 'clubAdmin' | 'onModerate' | 'onPublish'> & {
   state: CreatePodFormState;
-  /** The admin-set zone a recurring plan's end day is read in. */
-  timeZone: string;
 };
 
 /** The stepper's end-of-flow handlers: moderation preflight, publish, the Club
  * Admin's draft save and the jump back to a flagged step. */
-export function buildStepperSubmit({
-  clubAdmin,
-  onModerate,
-  onPublish,
-  state,
-  timeZone,
-}: StepperSubmitArgs) {
+export function buildStepperSubmit({ clubAdmin, onModerate, onPublish, state }: StepperSubmitArgs) {
   const { t, form, step, setStep, setBusy, setError, setBlocked, hosts, persist } = state;
 
   // Map each flagged violation to its form field + step, set an inline error, and
@@ -60,7 +51,7 @@ export function buildStepperSubmit({
       return;
     }
     const id = await persist(step);
-    await onPublish(id, buildCreatePodInput(values), seriesPlanOf(values, timeZone));
+    await onPublish(id, buildCreatePodInput(values));
   };
 
   /**

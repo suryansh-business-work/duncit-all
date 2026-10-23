@@ -200,13 +200,7 @@ export const podListingMethods = {
       .limit(POD_LIST_MAX)
       .lean();
     if (memberships.length === 0) return [];
-    // A booking on a date of a recurring pod lists the recurring pod, once.
-    const booked = await PodModel.find({ _id: { $in: memberships.map((m) => m.pod_id) } })
-      .select('series_role series_parent_id')
-      .lean();
-    const podIds = [
-      ...new Set(booked.map((p) => String(p.series_role === 'DATE' && p.series_parent_id ? p.series_parent_id : p._id))),
-    ].map((id) => new Types.ObjectId(id));
+    const podIds = memberships.map((m) => m.pod_id);
     const docs = await PodModel.find({
       _id: { $in: podIds },
       is_active: true,

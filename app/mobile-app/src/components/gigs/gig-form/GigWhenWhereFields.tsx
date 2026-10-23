@@ -2,7 +2,7 @@ import { Controller, useController, type Control } from 'react-hook-form';
 import { GIG_EVENT_TYPES, gigEventTypeKey, type GigJobFormValues } from '@duncit/utils';
 
 import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
-import { RepeatEndDateField } from '@/components/create-pod/repeat/RepeatEndDateField';
+import { GigDateField } from './GigDateField';
 import { FormTextField } from '@/components/FormTextField';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GigPlaceField } from '../GigPlaceField';
@@ -38,7 +38,7 @@ export function GigWhenWhereFields({ control }: Readonly<{ control: Control<GigJ
         control={control}
         name="event_date"
         render={({ field, fieldState }) => (
-          <RepeatEndDateField
+          <GigDateField
             testID="gig-form-date"
             label={t('gigJobs.form.eventDate')}
             hint={t('gigJobs.card.noDate')}

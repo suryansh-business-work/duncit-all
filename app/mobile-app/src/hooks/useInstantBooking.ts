@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { ResultOf } from '@graphql-typed-document-node/core';
 import { logs } from '@duncit/logs';
 import {
   bookingCalendarRange,
@@ -11,12 +10,13 @@ import {
   type BookingCalendarDay,
 } from '@duncit/utils';
 
-import { HostBookingCalendarDocument, HostBookingPricingDocument } from '@/graphql/venue-booking';
+import { HostBookingCalendarDocument } from '@/graphql/venue-booking';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { loadVenueBookingPricing } from './venueBookingPricing';
 
-export type VenueBookingPricing = ResultOf<typeof HostBookingPricingDocument>['venuePricing'];
+export type { VenueBookingPricing } from './venueBookingPricing';
 
 /** The calendar read: the venue's buffer and notice, and its days. */
 interface CalendarAnswer {
@@ -73,10 +73,7 @@ export function useInstantBooking(venueId: string, spaceLabel: string) {
 
   const pricingState = useLoad(
     venueId,
-    () =>
-      graphqlRequest(HostBookingPricingDocument, { venue_id: venueId }, { auth: true }).then(
-        (res) => res.venuePricing,
-      ),
+    () => loadVenueBookingPricing(venueId, attempt > 0),
     attempt,
     'pricing',
   );

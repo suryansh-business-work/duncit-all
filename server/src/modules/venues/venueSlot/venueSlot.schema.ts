@@ -32,10 +32,9 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     host_name: String!
     host_email: String!
     host_phone: String!
-    "Set when the pod is one date of a recurring series — the venue can answer every date at once."
-    series_id: ID
-    series_index: Int
-    series_total: Int
+    series_id: ID @deprecated(reason: "Recurring pods are retired; always null.")
+    series_index: Int @deprecated(reason: "Recurring pods are retired; always null.")
+    series_total: Int @deprecated(reason: "Recurring pods are retired; always null.")
   }
 
   "The owner's answer to a booking request. NONE = still waiting."

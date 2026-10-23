@@ -22,25 +22,16 @@ const notMember = (room: ChatRoomRef) =>
     extensions: { code: 'FORBIDDEN' },
   });
 
-/** The pods whose bookings a pod's chat counts: the pod itself, or — for a
- * recurring pod, which has ONE room — every one of its dates. */
-export async function chatBookingPodIds(pod: { _id: unknown; series_role?: string | null }): Promise<unknown[]> {
-  if (pod.series_role !== 'PARENT') return [pod._id];
-  const dates = await PodModel.find({ series_parent_id: pod._id }).select('_id').lean();
-  return dates.map((d) => d._id);
-}
-
-/** A pod's chat is its hosts, its attendees and anyone JOINED to it — for a
- * recurring pod, anyone JOINED to any of its dates. */
+/** A pod's chat is its hosts, its attendees and anyone JOINED to it. */
 export async function isPodMember(podId: string, userId: string): Promise<boolean> {
   if (!Types.ObjectId.isValid(podId)) return false;
-  const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees series_role').lean();
+  const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees').lean();
   if (!pod) return false;
   const uid = String(userId);
   if ((pod.pod_hosts_id || []).map(String).includes(uid)) return true;
   if ((pod.pod_attendees || []).map(String).includes(uid)) return true;
   const m = await PodMemberModel.findOne({
-    pod_id: { $in: await chatBookingPodIds(pod) },
+    pod_id: pod._id,
     user_id: userId,
     status: 'JOINED',
   }).lean();

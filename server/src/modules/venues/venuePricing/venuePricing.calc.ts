@@ -41,6 +41,38 @@ export function isPricingConfigured(pricing: Partial<VenuePricing> | null | unde
   return Number(pricing.base_rate) > 0;
 }
 
+/**
+ * The venue's guest range as spot bounds, for EVERY model: a pod's spots are
+ * its booking's guests, so a venue that takes 2–20 guests takes a 2–20 spot pod
+ * whatever it charges by. 0 = no floor / no limit.
+ */
+export function guestRange(pricing: Partial<VenuePricing> | null | undefined): { min: number; max: number } {
+  if (!pricing?.model) return { min: 0, max: 0 };
+  return {
+    min: Math.max(0, Math.floor(Number(pricing.min_pax) || 0)),
+    max: Math.max(0, Math.floor(Number(pricing.max_pax) || 0)),
+  };
+}
+
+/** Why `spots` cannot book this venue's space, or null when they fit: the
+ * venue's guest range and the space's capacity (0 = uncapped). */
+export function spotsProblem(
+  pricing: Partial<VenuePricing> | null | undefined,
+  spots: number,
+  spaceCapacity: number
+): string | null {
+  const { min, max } = guestRange(pricing);
+  if (spots < min || (max > 0 && spots > max)) {
+    return max > 0
+      ? `This venue takes ${min} to ${max} guests — pick spots in that range`
+      : `This venue takes at least ${min} guests — pick at least that many spots`;
+  }
+  if (spaceCapacity > 0 && spots > spaceCapacity) {
+    return `This space holds ${spaceCapacity} people — pick ${spaceCapacity} spots or fewer`;
+  }
+  return null;
+}
+
 function ruleMatches(rule: PriceRule, ymd: string, weekday: number): boolean {
   if (rule.type === 'WEEKDAY_SURCHARGE') return (rule.days ?? []).includes(weekday);
   if (rule.type === 'DATE_OVERRIDE') return (rule.dates ?? []).includes(ymd);

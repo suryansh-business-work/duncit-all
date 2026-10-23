@@ -30,9 +30,13 @@ interface Props {
 export default function PricingStep({ form, products, showProducts, preview, spots, venueNotice }: Readonly<Props>) {
   const { control, register, watch, setValue } = form;
   const { t } = useTranslation();
-  const spotsLabels = mwebSpotsLabels(t);
   const isFree = watch('pod_type') === 'FREE';
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
+  // An instant booking's spots are its guests, picked with the booking on the
+  // venue step — shown here, not changed here, so the quote always matches.
+  const setOnVenueStep = isPhysical && !watch('partner_request_id');
+  const baseLabels = mwebSpotsLabels(t);
+  const spotsLabels = setOnVenueStep ? { ...baseLabels, fixedHint: t('mweb.createPod.spotsSetOnVenueStep') } : baseLabels;
   const boundsHint = spots.slidable
     ? t('mweb.createPod.spotsBoundsHint', { vars: { min: spots.min, max: spots.max } })
     : undefined;
@@ -53,10 +57,10 @@ export default function PricingStep({ form, products, showProducts, preview, spo
               error={fieldState.error?.message}
               min={spots.min}
               max={spots.max}
-              slidable={spots.slidable}
+              slidable={spots.slidable && !setOnVenueStep}
               boundsHint={boundsHint}
-              // Only fixed when the venue leaves no room to choose.
-              readOnly={isPhysical && !spots.slidable}
+              // Fixed when booked with the venue, or the venue leaves no room to choose.
+              readOnly={setOnVenueStep || (isPhysical && !spots.slidable)}
             />
           )}
         />

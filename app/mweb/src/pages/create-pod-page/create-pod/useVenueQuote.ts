@@ -13,7 +13,7 @@ export function bookingOfForm(form: CreatePodForm): InstantBooking | null {
     'venue_slot_id',
     'pod_date_time',
     'pod_end_date_time',
-    'venue_booking_pax',
+    'no_of_spots',
     'venue_booking_pets',
     'venue_space_label',
   ]);

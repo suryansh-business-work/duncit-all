@@ -6,7 +6,7 @@ import { PickerTrigger } from '@/components/venue-availability/PickerTrigger';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { CalendarSheet } from '../DateTimeSheet';
+import { CalendarSheet } from '@/components/create-pod/DateTimeSheet';
 
 interface Props {
   label: string;
@@ -14,20 +14,20 @@ interface Props {
   /** 'yyyy-MM-dd', or '' when none is picked. */
   value: string;
   onChange: (day: string) => void;
-  /** The pod's first date — the series cannot end before it. */
+  /** The earliest day that can be picked. */
   minDate: Date | null;
-  /** The last day the series may reach (the Pod Settings span), or none. */
+  /** The latest day that can be picked, or none. */
   maxDate?: Date | null;
   error?: string;
-  /** Gig Jobs reuses the field for an optional day; the pod repeat end is required. */
+  /** Whether a day must be picked. */
   required?: boolean;
   testID?: string;
 }
 
-/** The day a recurring pod stops repeating, picked from the app's calendar
+/** One day, picked from the app's calendar
  * sheet without a time — the Tamagui stand-in for mWeb's MUI X DatePicker
  * (rule 27), shown in the admin's date format, stored as 'yyyy-MM-dd'. */
-export function RepeatEndDateField({
+export function GigDateField({
   label,
   hint,
   value,
@@ -36,7 +36,7 @@ export function RepeatEndDateField({
   maxDate = null,
   error,
   required = true,
-  testID = 'pod-repeat-ends-on',
+  testID = 'gig-form-date',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();

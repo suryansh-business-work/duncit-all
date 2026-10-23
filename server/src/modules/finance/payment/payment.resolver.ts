@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { paymentService } from './payment.service';
-import { groupCheckoutService, isGroupCheckout } from './payment.group';
+import { assertNotMultiDateCheckout, multiDateCheckoutRetired } from './payment.multiDateRetired';
 import { paymentDetailService } from './payment.detail.service';
 import { paymentRefundService } from './payment.refund.service';
 import { paymentRoundOffService } from './payment.roundoff.service';
@@ -111,9 +111,9 @@ export const paymentResolvers = {
       requireAuth(ctx);
       return paymentService.quoteCheckout(args.input);
     },
-    recurringCheckoutQuote: (_p: unknown, args: { input: Parameters<typeof groupCheckoutService.quote>[0] }, ctx: GraphQLContext) => {
-      const u = requireAuth(ctx);
-      return groupCheckoutService.quote(args.input, u.id);
+    recurringCheckoutQuote: (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      throw multiDateCheckoutRetired();
     },
     paymentInvoicePdfBase64: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
       // The buyer can download their own invoice; admins (support/finance) any.
@@ -143,14 +143,14 @@ export const paymentResolvers = {
       const u = requireAuth(ctx);
       const input = await validate(dummyCheckoutSchema, args.input);
       await assertCheckoutEligible(u.id);
-      if (isGroupCheckout(input)) return groupCheckoutService.dummyCheckout(input, u.id);
+      assertNotMultiDateCheckout(input);
       return paymentService.dummyCheckout(input, u.id);
     },
     createRazorpayOrder: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
       const input = await validate(razorpayOrderSchema, args.input);
       await assertCheckoutEligible(u.id);
-      if (isGroupCheckout(input)) return groupCheckoutService.createRazorpayCheckout(input, u.id);
+      assertNotMultiDateCheckout(input);
       return paymentService.createRazorpayCheckout(input, u.id);
     },
     verifyRazorpayPayment: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

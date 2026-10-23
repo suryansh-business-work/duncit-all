@@ -51,18 +51,15 @@ async function roomName(room: ChatRoomRef): Promise<string | null> {
   return club ? (club.club_name ?? '') : null;
 }
 
-/**
- * The chat room a booking of `podId` belongs to — a recurring pod has ONE room,
- * on its parent, so booking one of its dates joins the parent's room.
- */
+/** The chat room a booking of `podId` belongs to: the pod's own room. */
 export async function podChatRoomOf(podId: unknown): Promise<ChatRoomRef | null> {
   if (!Types.ObjectId.isValid(String(podId))) return null;
-  const pod = await PodModel.findById(podId).select('_id series_parent_id').lean();
+  const pod = await PodModel.findById(podId).select('_id').lean();
   if (!pod) return null;
-  return { kind: 'POD', id: String(pod.series_parent_id ?? pod._id) };
+  return { kind: 'POD', id: String(pod._id) };
 }
 
-/** Welcome a member to the chat of the pod they just booked (any date of it). */
+/** Welcome a member to the chat of the pod they just booked. */
 export async function welcomeToPodChat(userId: string, podId: unknown, joinKey: string): Promise<void> {
   try {
     const room = await podChatRoomOf(podId);

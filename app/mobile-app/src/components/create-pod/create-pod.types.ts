@@ -1,11 +1,6 @@
 /** Option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
-import type {
-  CreatePodClub,
-  PodPickerProduct,
-  PodSeriesFrequency,
-  TicketDiscountTier,
-} from '@duncit/utils';
+import type { CreatePodClub, PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
 
 import type { CreatePodInput } from '@/generated/graphql/graphql';
 import { fallbackT } from '@/i18n/fallback';
@@ -43,9 +38,8 @@ export interface CreatePodFormValues {
   venue_slot_id: string;
   /** Selected venue space/type (a capacity item label) — drives No. of spots. */
   venue_space_label: string;
-  /** Instant booking (no slot id): PER_PAX guests (0 = not per guest) and
-   * whether pets come (pet fee). The window is the pod's start/end. */
-  venue_booking_pax: number;
+  /** Instant booking (no slot id): whether pets come (pet fee). Its guests are
+   * the pod's spots; its window is the pod's start/end. */
   venue_booking_pets: boolean;
   /** Hidden: the Pod Request whose confirmed slot this pod books ('' = none). */
   partner_request_id: string;
@@ -77,20 +71,6 @@ export interface CreatePodFormValues {
   payment_terms: string;
   /** Client-side publish gate — host must accept the Organizer Terms (last step). */
   agreed_to_terms: boolean;
-  /** Recurring pod: off = one time. On, the first date repeats at
-   * `repeat_frequency` until `repeat_ends_on` (yyyy-MM-dd, admin zone). mWeb twin. */
-  repeat_enabled: boolean;
-  repeat_frequency: PodSeriesFrequency;
-  repeat_ends_on: string;
-  /** Dates (ISO starts) the host unticked in the preview. */
-  repeat_skip_dates: string[];
-  /** CUSTOM only: the days (yyyy-MM-dd, admin zone) the host tapped on the
-   * calendar, after the first date. mWeb twin. */
-  repeat_custom_days: string[];
-  /** Multi-date booking discount, in the shared tier editor's shape (a tier's
-   * `min_tickets` is its number of dates). Prefilled from Pod Settings. mWeb twin. */
-  repeat_discount_enabled: boolean;
-  repeat_discount_tiers: TicketDiscountTier[];
 }
 
 export const blankCreatePodForm: CreatePodFormValues = {
@@ -103,7 +83,6 @@ export const blankCreatePodForm: CreatePodFormValues = {
   venue_id: '',
   venue_slot_id: '',
   venue_space_label: '',
-  venue_booking_pax: 0,
   venue_booking_pets: false,
   partner_request_id: '',
   meeting_platform: '',
@@ -129,13 +108,6 @@ export const blankCreatePodForm: CreatePodFormValues = {
   ticket_discount_tiers: [],
   payment_terms: '',
   agreed_to_terms: false,
-  repeat_enabled: false,
-  repeat_frequency: 'WEEKLY',
-  repeat_ends_on: '',
-  repeat_skip_dates: [],
-  repeat_custom_days: [],
-  repeat_discount_enabled: false,
-  repeat_discount_tiers: [],
 };
 
 /** One shape for mWeb and the native app (@duncit/utils). */

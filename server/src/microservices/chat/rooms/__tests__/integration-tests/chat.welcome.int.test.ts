@@ -70,14 +70,6 @@ describe('welcoming a new member to a chat room', () => {
     expect(await ChatMuteModel.exists({ _id: other._id })).not.toBeNull();
   });
 
-  it("joins a recurring pod's ONE room on its parent when a date is booked", async () => {
-    const parent = await seedPod({ series_role: 'PARENT' });
-    const date = await seedPod({ series_role: 'DATE', series_parent_id: parent._id });
-
-    expect(await podChatRoomOf(date._id)).toEqual({ kind: 'POD', id: String(parent._id) });
-    expect(await podChatRoomOf(parent._id)).toEqual({ kind: 'POD', id: String(parent._id) });
-  });
-
   it('links a club welcome to the club chat, and sends nothing for a club or pod that is gone', async () => {
     const club = await ClubModel.create({
       club_id: `welcome-club-${++seq}`,

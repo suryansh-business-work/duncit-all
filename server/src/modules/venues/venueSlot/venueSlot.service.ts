@@ -7,7 +7,6 @@ import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import { notifyVenueSubscribers } from '@modules/venues/venueFood/venueSubscriber.service';
 import { fulfilEventRequests } from '@modules/venues/eventRequest/eventRequest.fulfil';
 import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
-import { syncSeriesParentOf } from '@modules/pods/podSeries/podSeries.parent';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
@@ -213,7 +212,8 @@ async function findOverlap(
   return VenueSlotModel.findOne(q);
 }
 
-/** A slot a host asked for that the venue has not approved — never the venue's to offer. */
+/** A slot a retired recurring pod asked the venue to open, not yet approved —
+ * never the venue's to offer. */
 const UNAPPROVED_HOST_REQUEST = { requested_by_host: true, decision: { $ne: 'APPROVED' } };
 
 async function loadSlot(slotId: string) {
@@ -875,7 +875,7 @@ async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActo
   slot.decided_at = new Date();
   slot.decided_pod_id = podId;
   slot.decline_reason = note;
-  // A slot the host asked the venue to open was never the venue's: it goes.
+  // A slot a (retired) recurring pod asked the venue to open was never the venue's: it goes.
   if (slot.requested_by_host) await VenueSlotModel.deleteOne({ _id: slot._id });
   else await (slot as any).save();
   const beforePod = await PodModel.findById(podId);
@@ -886,8 +886,6 @@ async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActo
     { new: true }
   );
   if (!pod) return;
-  // A refused date of a recurring pod drops out; the pod keeps its other dates.
-  await syncSeriesParentOf(pod._id);
   await notifySlotDecision(pod, slot, false, note, actor.source === 'VENUE_OWNER');
   await podAuditService.record({
     pod,
@@ -924,9 +922,6 @@ function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
     host_name: hostName,
     host_email: host?.auth?.email ?? '',
     host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
-    series_id: pod.series_id ? String(pod.series_id) : null,
-    series_index: pod.series_index ?? null,
-    series_total: pod.series_total ?? null,
   };
 }
 
@@ -1144,52 +1139,6 @@ export const venueSlotService = {
     return { matched: slots.length, affected, skipped };
   },
 
-  /**
-   * Opens the slot a recurring pod's date asks for on a day the venue has none:
-   * a copy of the host's first slot (space, price, pricing, capacity) at the
-   * date's window, flagged `requested_by_host`. The pod's ordinary hold then
-   * makes it a PENDING request, so the venue answers it like any other.
-   * Refuses (CONFLICT) when anything in that space already covers the window.
-   */
-  async openHostRequestSlot(
-    template: {
-      venue_id: Types.ObjectId;
-      owner_user_id: Types.ObjectId;
-      space_label?: string | null;
-      price?: number;
-      pricing_mode?: SlotPricingMode;
-      overtime_rate?: number;
-      capacity?: number;
-    },
-    start: Date,
-    end: Date
-  ): Promise<IVenueSlot> {
-    const clash = await findOverlap(String(template.venue_id), start, end, template.space_label ?? '');
-    if (clash) fail('CONFLICT', 'The venue already has a slot at this time.');
-    return VenueSlotModel.create({
-      venue_id: template.venue_id,
-      owner_user_id: template.owner_user_id,
-      start_at: start,
-      end_at: end,
-      price: template.price ?? 0,
-      pricing_mode: template.pricing_mode ?? 'FLAT',
-      overtime_rate: template.overtime_rate ?? 0,
-      space_label: template.space_label ?? '',
-      capacity: template.capacity ?? 0,
-      requested_by_host: true,
-    });
-  },
-
-  /** Deletes a host-requested slot no pod ended up holding (its pod failed to publish). */
-  async dropUnheldHostRequestSlot(slotId: string): Promise<void> {
-    await VenueSlotModel.deleteOne({
-      _id: new Types.ObjectId(slotId),
-      requested_by_host: true,
-      status: 'AVAILABLE',
-      booked_by_pod_id: null,
-    });
-  },
-
   /** Atomic hold: AVAILABLE → PENDING for a pod that needs the venue owner's
    * approval before going live (host booking another partner's venue). */
   async holdForPod(slotId: string, venueId: string, podId: string): Promise<IVenueSlot> {
@@ -1226,7 +1175,7 @@ export const venueSlotService = {
     if (!slots.length) return [];
     const podIds = slots.map((s) => s.booked_by_pod_id).filter(Boolean);
     const pods = await PodModel.find({ _id: { $in: podIds } }).select(
-      'pod_title pod_description pod_hosts_id pod_type series_id series_index series_total'
+      'pod_title pod_description pod_hosts_id pod_type'
     );
     const podMap = new Map(pods.map((p) => [String(p._id), p]));
     const hostIds = pods.flatMap((p) => (p.pod_hosts_id ?? []).slice(0, 1));
@@ -1260,7 +1209,7 @@ export const venueSlotService = {
 
     const [pod, venue, rates] = await Promise.all([
       PodModel.findById(podId).select(
-        'pod_title pod_description pod_hosts_id pod_type no_of_spots series_id series_index series_total'
+        'pod_title pod_description pod_hosts_id pod_type no_of_spots'
       ),
       VenueModel.findById(slot.venue_id).select('venue_name'),
       resolveEffectiveRates({ venueId: String(slot.venue_id) }),
@@ -1318,7 +1267,6 @@ export const venueSlotService = {
       { new: true }
     );
     if (pod) {
-      await syncSeriesParentOf(pod._id);
       await notifySlotDecision(pod, slot, true);
       await podAuditService.record({
         pod,

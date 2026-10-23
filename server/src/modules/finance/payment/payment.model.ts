@@ -246,8 +246,9 @@ paymentSchema.index(
   { name: 'round_off_created_at', partialFilterExpression: { round_off: { $gt: 0 } } }
 );
 
-// The dates of one multi-date booking (payment.group.ts), found together when
-// the first date's payment is verified. Partial: most payments are not grouped.
+// The dates of one multi-date booking of a (now retired) recurring pod, found
+// together when the first date's payment is verified. Partial: most payments
+// are not grouped.
 paymentSchema.index(
   { 'metadata.checkout_group.id': 1 },
   { partialFilterExpression: { 'metadata.checkout_group.id': { $exists: true } } }

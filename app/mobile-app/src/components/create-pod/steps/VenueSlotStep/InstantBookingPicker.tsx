@@ -8,6 +8,7 @@ import {
   formatStatementMoney,
   venueBookingModelKey,
   type BookingTile,
+  type SpotsBounds,
 } from '@duncit/utils';
 
 import { SlotCalendar } from '@/components/slots';
@@ -29,6 +30,8 @@ interface Props {
   spaceLabel: string;
   quote: VenueQuoteState;
   currencySymbol: string;
+  /** The range the pod's spots (= the booking's guests) may take. */
+  spots: SpotsBounds;
 }
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
@@ -60,6 +63,7 @@ export function InstantBookingPicker({
   spaceLabel,
   quote,
   currencySymbol,
+  spots,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
@@ -128,7 +132,7 @@ export function InstantBookingPicker({
         {t(venueBookingModelKey(pricing.model))}
       </Text>
       {startIso ? null : <VenueTermsCard pricing={pricing} currencySymbol={currencySymbol} />}
-      <BookingGuestFields form={form} pricing={pricing} />
+      <BookingGuestFields form={form} pricing={pricing} spots={spots} />
       {booking.calendarFailed ? (
         <Notice
           testID="create-pod-calendar-error"

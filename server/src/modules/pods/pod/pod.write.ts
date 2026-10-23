@@ -49,7 +49,6 @@ import {
   resolveClubCategory,
 } from './pod.products';
 import { insertPodWithFreeSlug, resolvePodSlugForCreate } from './pod.slug';
-import { syncSeriesParent } from '../podSeries/podSeries.parent';
 import {
   assertRequestReadyForPod,
   markPartnerRequestPodCreated,
@@ -106,9 +105,6 @@ export const podWriteMethods = {
       autoPodSlot?: { slotId: string; autoPodId: string };
       autoPodId?: string;
       partnerRequestSlot?: { slotId: string; requestId: string };
-      /** One date of a recurring series. `quietVenue` skips the per-date
-       * venue message — the series sends one for all its dates. */
-      series?: { id: string; index: number; total: number; quietVenue: boolean };
     }
   ) {
     const autoPodSlot = opts?.autoPodSlot ?? null;
@@ -235,17 +231,12 @@ export const podWriteMethods = {
             ? 'APPROVED'
             : venueApprovalForCreate(autoPodSlot ?? partnerRequestSlot, needsVenueApproval),
         source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
-        series_id: opts?.series ? new Types.ObjectId(opts.series.id) : null,
-        series_index: opts?.series?.index ?? null,
-        series_total: opts?.series?.total ?? null,
       },
       input.club_id,
       slugBase
     );
 
-    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot, {
-      notifyVenue: !opts?.series?.quietVenue,
-    });
+    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot, partnerRequestSlot);
     if (instant) await bookInstantForPod(doc, instant.booking);
     if (partnerRequestSlot) {
       // The pod exists and holds the slot; closing the request is bookkeeping and
@@ -270,11 +261,7 @@ export const podWriteMethods = {
     return toPub(doc, slugMap);
   },
 
-  async createForPartner(
-    userId: string,
-    input: any,
-    series?: { id: string; index: number; total: number; quietVenue: boolean }
-  ) {
+  async createForPartner(userId: string, input: any) {
     const userObjectId = new Types.ObjectId(userId);
     await assertActiveHost(userId);
     const podMode = normalizePodMode(input.pod_mode);
@@ -288,7 +275,7 @@ export const podWriteMethods = {
     return this.create(
       { ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] },
       { actorUserId: userId, source: 'HOST' },
-      partnerRequestSlot || series ? { ...(partnerRequestSlot ? { partnerRequestSlot } : {}), series } : undefined,
+      partnerRequestSlot ? { partnerRequestSlot } : undefined,
     );
   },
 
@@ -476,8 +463,7 @@ export const podWriteMethods = {
   /** Host self-service edit — title, description, media and a bigger pod (2A). */
   async hostUpdate(id: string, userId: string, input: any): Promise<ReturnType<typeof toPub>> {
     const doc = await findHostedPod(id, userId);
-    if (doc.series_role === 'PARENT') return this.hostUpdateRecurring(doc, userId, input);
-    // A completed pod (or date) is settled history: what people paid for and
+    // A completed pod is settled history: what people paid for and
     // what Finance approved must stay as it was.
     if (doc.completed_at) {
       throw new GraphQLError('This pod is completed and can no longer be edited', {
@@ -541,50 +527,6 @@ export const podWriteMethods = {
 
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
-  },
-
-  /**
-   * The host edits a recurring pod: the edit is made on every date that has
-   * not ended yet — each through the ordinary edit, so each is screened,
-   * checked against its own slot's capacity and announced to its own
-   * attendees — then the recurring pod takes the result. The first date goes
-   * first: if it is refused, no date is changed.
-   */
-  async hostUpdateRecurring(
-    parent: Awaited<ReturnType<typeof findHostedPod>>,
-    userId: string,
-    input: Record<string, unknown>
-  ): Promise<ReturnType<typeof toPub>> {
-    const dates = await PodModel.find({
-      series_parent_id: parent._id,
-      completed_at: null,
-      pod_date_time: { $gt: new Date() },
-    })
-      .select('_id')
-      .sort({ pod_date_time: 1 })
-      .lean();
-    if (dates.length === 0) {
-      throw new GraphQLError('Every date of this pod has already started', { extensions: { code: 'BAD_REQUEST' } });
-    }
-    for (const date of dates) await this.hostUpdate(String(date._id), userId, input);
-    const source = await PodModel.findById(dates[0]._id).lean();
-    const before = snapshotPod(parent);
-    for (const field of [
-      'pod_title',
-      'pod_description',
-      'pod_images_and_videos',
-      'reel_url',
-      'no_of_spots',
-      'ticket_discount_enabled',
-      'ticket_discount_tiers',
-    ] as const) {
-      parent.set(field, source?.[field] ?? parent.get(field));
-    }
-    await parent.save();
-    await syncSeriesParent(parent._id);
-    await podAuditService.record({ pod: parent, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });
-    const slugMap = await loadClubSlugMap([parent]);
-    return toPub(parent, slugMap);
   },
 
   async addStatus(id: string, viewerId: string, media: any, isAdmin = false) {

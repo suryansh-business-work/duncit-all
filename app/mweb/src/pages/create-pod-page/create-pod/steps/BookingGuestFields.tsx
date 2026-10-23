@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { FormControlLabel, Stack, Switch, TextField } from '@mui/material';
-import { clampBookingPax } from '@duncit/utils';
+import { FormControlLabel, Stack, Switch } from '@mui/material';
+import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
+import type { SpotsBounds } from '@duncit/utils';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
 import type { VenueBookingPricing } from '../venueBooking';
@@ -8,55 +8,39 @@ import type { VenueBookingPricing } from '../venueBooking';
 interface Props {
   form: CreatePodForm;
   pricing: VenueBookingPricing;
+  /** The range the pod may be sized within (activity + venue + space). */
+  spots: SpotsBounds;
 }
 
 const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 
 /**
- * The booking's guests (PER_PAX venues only, held inside the venue's range —
- * the pod's spots follow it) and whether pets come (only when the venue has a
- * pet fee). Native twin: BookingGuestFields.
+ * The pod's spots — which ARE the booking's guests, so there is one number,
+ * held inside the activity's minimum, the venue's guest range and the space's
+ * capacity, and quoted as it changes — and whether pets come (only when the
+ * venue has a pet fee). Native twin: BookingGuestFields.
  */
-export default function BookingGuestFields({ form, pricing }: Readonly<Props>) {
+export default function BookingGuestFields({ form, pricing, spots }: Readonly<Props>) {
   const { t } = useTranslation();
-  const perPax = pricing.model === 'PER_PAX';
-  const pax = form.watch('venue_booking_pax');
   const pets = form.watch('venue_booking_pets');
-
-  const commitPax = (value: number) => {
-    const next = clampBookingPax(value, pricing.min_pax, pricing.max_pax);
-    form.setValue('venue_booking_pax', next, DIRTY);
-    form.setValue('no_of_spots', next, DIRTY);
-  };
-
-  // A per-guest venue prices nothing at 0 guests: start from the spots the
-  // space filled in, held inside the venue's range.
-  useEffect(() => {
-    if (perPax && !form.getValues('venue_booking_pax')) commitPax(form.getValues('no_of_spots'));
-    // Only when the venue's model or range changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPax, pricing.min_pax, pricing.max_pax]);
-
-  const range =
-    pricing.max_pax > 0
-      ? t('mweb.createPod.bookingGuestsRange', { vars: { min: Math.max(1, pricing.min_pax), max: pricing.max_pax } })
-      : t('mweb.createPod.bookingGuestsMin', { vars: { min: Math.max(1, pricing.min_pax) } });
+  const boundsHint = spots.slidable
+    ? t('mweb.createPod.spotsVenueHint', { vars: { min: spots.min, max: spots.max } })
+    : undefined;
 
   return (
     <Stack spacing={1.5}>
-      {perPax && (
-        <TextField
-          data-testid="create-pod-booking-guests"
-          type="number"
-          label={t('mweb.createPod.bookingGuests')}
-          value={pax || ''}
-          onChange={(e) => form.setValue('venue_booking_pax', Number(e.target.value) || 0, { shouldDirty: true })}
-          onBlur={(e) => commitPax(Number(e.target.value) || 0)}
-          helperText={range}
-          slotProps={{ htmlInput: { min: pricing.min_pax, max: pricing.max_pax || undefined, inputMode: 'numeric' } }}
-          fullWidth
-        />
-      )}
+      <SpotsStepper
+        labels={mwebSpotsLabels(t)}
+        value={Number(form.watch('no_of_spots')) || 0}
+        onChange={(next) => form.setValue('no_of_spots', next, DIRTY)}
+        error={form.formState.errors.no_of_spots?.message}
+        min={spots.min}
+        max={spots.max}
+        slidable={spots.slidable}
+        boundsHint={boundsHint}
+        // Only fixed when the venue and space leave no room to choose.
+        readOnly={spots.max <= spots.min}
+      />
       {pricing.pet_fee > 0 && (
         <FormControlLabel
           control={

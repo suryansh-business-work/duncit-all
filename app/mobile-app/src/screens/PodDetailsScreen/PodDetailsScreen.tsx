@@ -22,7 +22,6 @@ import { useMirrorLikeToExplore, useRefetchOnFocus } from './podDetailsEffects';
 import { PodDetailsContent } from './PodDetailsContent';
 import { PodDetailsOverlays } from './PodDetailsOverlays';
 import { usePodDetailActions } from './usePodDetailActions';
-import { useSeriesBooking } from './useSeriesBooking';
 
 /** Pod details — hero gallery + overview card + schedule/map + social bar + pod
  * shop + the accordion stack. Mirrors mWeb's PodDetailsPage. */
@@ -53,8 +52,6 @@ export function PodDetailsScreen() {
     savedInitially,
   );
   const actions = usePodDetailActions(pod, refetch);
-  // A recurring pod is one pod with many dates: Book opens its date picker.
-  const series = useSeriesBooking(pod, actions.seats, navigation);
   // A virtual pod is joined from anywhere, so its listing city is not a place
   // the viewer has to be in. Mirrors mWeb.
   const locationPrompt = useLocationMismatch(
@@ -100,7 +97,6 @@ export function PodDetailsScreen() {
         navigation={navigation}
         goBack={goBack}
         actions={actions}
-        series={series}
         bookingBarHeight={bookingBarHeight}
         isPodHost={isPodHost}
         isFree={isFree}
@@ -171,8 +167,6 @@ export function PodDetailsScreen() {
           pod={pod}
           navigation={navigation}
           actions={actions}
-          series={series}
-          currency={finance.currency}
           isFree={isFree}
           isPodHost={isPodHost}
           membershipState={membershipState}

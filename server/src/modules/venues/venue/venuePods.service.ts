@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { PodModel, SERIES_DATES } from '@modules/pods/pod/pod.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { bucketForPod } from '@modules/finance/finance/breakdown.service';
 import { VenueModel } from './venue.model';
@@ -46,7 +46,6 @@ export const venuePodsService = {
     // lean(): plain DB shapes, so legacy pods keep their genuinely-missing fields.
     // Every booking the venue hosts — so each date of a recurring pod.
     const pods = await PodModel.find({
-      ...SERIES_DATES,
       venue_id: { $in: venues.map((v) => v._id) },
       venue_approval_status: 'APPROVED',
     })

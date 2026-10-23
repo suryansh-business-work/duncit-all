@@ -10,13 +10,6 @@ import { podTypeLabel } from '@/utils/pod-format';
 import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from '@/utils/venue-approval';
 import { formatDateTime } from '@/utils/date-format';
 
-/** A recurring pod counts its dates; one of its dates says which it is; a one-time pod has no label. */
-function seriesLabelOf(pod: HostPod, t: ReturnType<typeof useTranslation>['t']): string | null {
-  if (!pod.series_total) return null;
-  if (!pod.series_index) return t('mweb.podSeries.badgeDates', { count: pod.series_total });
-  return t('mweb.podSeries.badge', { vars: { index: pod.series_index, total: pod.series_total } });
-}
-
 function formatWhen(value?: string | null) {
   if (!value) return '—';
   const date = new Date(value);
@@ -75,7 +68,6 @@ export function HostPodsList({ pods, visible, isLoading, onOpen, onActions }: Re
         cover={coverImageUrl(pod.pod_images_and_videos)}
         approval={venueApprovalChip(pod.venue_approval_status)}
         rejectedNote={isVenueRejected(pod.venue_approval_status) ? VENUE_REJECTED_NOTE : null}
-        seriesLabel={seriesLabelOf(pod, t)}
         onOpen={() => onOpen(pod)}
         onActions={() => onActions(pod)}
       />

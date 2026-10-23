@@ -901,7 +901,8 @@ export async function settle(paymentDocId: string, methodLabel: string, componen
 }
 
 /**
- * The other dates of a multi-date booking (payment.group.ts): one Razorpay
+ * The other dates of a multi-date booking of a (now retired) recurring pod,
+ * kept so a booking paid before the retirement still settles: one Razorpay
  * order paid for every date, and each date has its own payment, so once the
  * first date's payment is proven the rest are settled on the same proof. A
  * date already settled — by an earlier verify or the reconciler — is skipped.

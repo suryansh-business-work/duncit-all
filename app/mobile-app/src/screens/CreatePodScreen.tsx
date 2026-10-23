@@ -47,7 +47,6 @@ export function CreatePodScreen() {
     saveDraft,
     moderate,
     publish,
-    publishSeries,
   } = useCreatePod(
     route.params?.draftId,
     route.params?.partnerRequestId,
@@ -123,19 +122,7 @@ export function CreatePodScreen() {
               finance={finance}
               onSaveDraft={saveDraft}
               onModerate={moderate}
-              onPublish={async (id, input, plan) => {
-                if (plan) {
-                  const result = await publishSeries(id, input, plan);
-                  fireAndForget(useHomeStore.getState().fetch(true));
-                  const created = result.created_count;
-                  const skipped = result.skipped.length;
-                  navigation.replace('HostManage', {
-                    notice: skipped
-                      ? t('mweb.podSeries.publishedSkipped', { vars: { created, skipped } })
-                      : t('mweb.podSeries.published', { vars: { created } }),
-                  });
-                  return;
-                }
+              onPublish={async (id, input) => {
                 const created = await publish(id, input);
                 fireAndForget(useHomeStore.getState().fetch(true));
                 // Venue bookings are instant, so a new pod comes back APPROVED

@@ -1,5 +1,11 @@
 import gql from 'graphql-tag';
 
+/**
+ * Recurring pods are retired. Their types and operations stay in the schema
+ * ONLY so app builds already installed keep validating: Pod Details asks for
+ * podSeriesDates (now always null, so it shows a one-time pod), and every
+ * recurring operation is refused with a message to update the app.
+ */
 export const podSeriesTypeDefs = gql`
   "A recurring pod's visible row, or one of its dates."
   enum PodSeriesRole {
@@ -175,11 +181,11 @@ export const podSeriesTypeDefs = gql`
 
   extend type Query {
     "Every date a recurring plan would run on, each with its slot or why it cannot."
-    podSeriesPreview(input: PodSeriesPlanInput!): PodSeriesPreview!
+    podSeriesPreview(input: PodSeriesPlanInput!): PodSeriesPreview! @deprecated(reason: "Recurring pods are retired.")
     "The limits a recurring plan is held to — so Create Pod can bound the end day before previewing."
-    podSeriesLimits: PodSeriesLimits!
+    podSeriesLimits: PodSeriesLimits! @deprecated(reason: "Recurring pods are retired.")
     "Every date of the recurring pod that pod_doc_id is (or is a date of); null for a one-time pod."
-    podSeriesDates(pod_doc_id: ID!): PodSeriesDates
+    podSeriesDates(pod_doc_id: ID!): PodSeriesDates @deprecated(reason: "Recurring pods are retired.")
   }
 
   extend type Mutation {
@@ -188,12 +194,12 @@ export const podSeriesTypeDefs = gql`
       draft_id: ID!
       input: CreatePodInput!
       plan: PodSeriesPlanInput!
-    ): PodSeriesPublishResult!
+    ): PodSeriesPublishResult! @deprecated(reason: "Recurring pods are retired.")
     "Venue owner: accept or decline every still-pending date of a series at once."
-    venueDecidePodSeries(series_id: ID!, approve: Boolean!, reason: String): PodSeriesDecisionResult!
+    venueDecidePodSeries(series_id: ID!, approve: Boolean!, reason: String): PodSeriesDecisionResult! @deprecated(reason: "Recurring pods are retired.")
     "Host: cancel every date of the series that has not started yet. Returns how many."
-    hostCancelPodSeries(series_id: ID!, reason_subject: String!, reason_note: String): Int!
+    hostCancelPodSeries(series_id: ID!, reason_subject: String!, reason_note: String): Int! @deprecated(reason: "Recurring pods are retired.")
     "Joins the picked dates of a FREE recurring pod, one free seat each."
-    joinFreePodDates(pod_doc_id: ID!, date_pod_ids: [ID!]!): PodSeriesJoinResult!
+    joinFreePodDates(pod_doc_id: ID!, date_pod_ids: [ID!]!): PodSeriesJoinResult! @deprecated(reason: "Recurring pods are retired.")
   }
 `;

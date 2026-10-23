@@ -1,8 +1,16 @@
 import { useEffect } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { filterProductsForClub, freePodVenueNotice, pruneProductRequests, spotsBounds } from '@duncit/utils';
+import {
+  clampSpots,
+  filterProductsForClub,
+  freePodVenueNotice,
+  pruneProductRequests,
+  spotsBounds,
+  type SpotsBounds,
+} from '@duncit/utils';
 import { filterClubs } from '../create-pod.form';
 import { VENUE_AVAILABLE_SLOTS, venueSpaces } from '../steps/VenueSlotStep';
+import { VENUE_BOOKING_PRICING } from '../venueBooking';
 import { useVenueQuote } from '../useVenueQuote';
 import { useEarningsPreview } from '../price-panel';
 import type {
@@ -23,6 +31,19 @@ interface SelectionSources {
   viewerUserId: string;
   /** The venue of a confirmed Pod Request — on offer whatever the club matches. */
   pinnedVenueId?: string;
+}
+
+/** A physical pod's spots snap into a range that moved (another space, or the
+ * venue's guest range arriving) — anything up to the cap stays as picked. */
+function useClampedSpots(form: CreatePodForm, physical: boolean, spots: SpotsBounds) {
+  useEffect(() => {
+    const current = Number(form.getValues('no_of_spots')) || 0;
+    if (!physical || current <= 0) return;
+    const next = clampSpots(current, spots);
+    if (next !== current) form.setValue('no_of_spots', next, { shouldDirty: true, shouldValidate: true });
+    // The bounds object is rebuilt every render; its two ends are what move.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, physical, spots.min, spots.max]);
 }
 
 /** Everything the steps derive from the live selections: the scoped clubs,
@@ -83,13 +104,28 @@ export function useStepperSelections(
   const venueAmount = slotId ? (selectedSlot?.price ?? null) : (quote?.total ?? null);
   const bookedCapacity = slotId ? selectedSlot?.capacity : space?.capacity;
 
+  // An instant booking's guests are the pod's spots, so the venue's own guest
+  // range (Venue Pricing Module) bounds them too — the same cached read Step 3's
+  // picker makes. A Pod Request's held slot keeps its own capacity.
+  const instant = podMode === 'PHYSICAL' && Boolean(venueId) && !slotId && !form.watch('partner_request_id');
+  const pricingQuery = useQuery(VENUE_BOOKING_PRICING, {
+    variables: { venue_id: venueId },
+    skip: !instant,
+    fetchPolicy: 'cache-first',
+  });
+  const venuePricing = instant ? pricingQuery.data?.venuePricing : null;
+
   // How big this pod may be: floored by the sub-category's admin-set minimum
-  // (a doubles game needs 4) and capped by the venue space the host booked. The
-  // pod's sub-category is its club's `category_id`. Native twin (rule 27).
+  // (a doubles game needs 4) and the venue's minimum guests, capped by the venue
+  // space the host booked and the venue's maximum guests. The pod's
+  // sub-category is its club's `category_id`. Native twin (rule 27).
   const spots = spotsBounds({
     minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
     venueCapacity: podMode === 'PHYSICAL' ? bookedCapacity : null,
+    venueMinPax: venuePricing?.min_pax,
+    venueMaxPax: venuePricing?.max_pax,
   });
+  useClampedSpots(form, podMode === 'PHYSICAL', spots);
 
   // Step-4 money lives here so the footer can block Create Pod on the same two
   // rules the panel renders (zero earnings / venue price not covered).

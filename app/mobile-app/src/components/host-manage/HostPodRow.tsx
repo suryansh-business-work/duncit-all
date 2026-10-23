@@ -25,8 +25,6 @@ interface Props {
   approval: VenueApprovalChip | null;
   /** Rejection note shown under a Venue Rejected pod. */
   rejectedNote: string | null;
-  /** "Recurring · 2 of 12" for one date of a series, else null. */
-  seriesLabel?: string | null;
   onOpen: () => void;
   /** Opens the actions sheet — every per-pod action now lives behind it. */
   onActions: () => void;
@@ -45,7 +43,6 @@ export function HostPodRow({
   cover,
   approval,
   rejectedNote,
-  seriesLabel = null,
   onOpen,
   onActions,
 }: Readonly<Props>) {
@@ -73,11 +70,6 @@ export function HostPodRow({
               {when}
               {zoneName ? ` · ${zoneName}` : ''}
             </Text>
-            {seriesLabel ? (
-              <Text testID={`host-pod-series-${id}`} fontSize={12} color="$muted" numberOfLines={1}>
-                {seriesLabel}
-              </Text>
-            ) : null}
             {approval ? (
               <YStack paddingTop={4}>
                 <ApprovalPill approval={approval} testID={`host-pod-approval-${id}`} />

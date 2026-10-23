@@ -12,7 +12,6 @@ import {
   assertRoomMember,
   blockedPeerIds,
   canModerateRoom,
-  chatBookingPodIds,
   isPodMember,
   isRoomMember,
   roomOfMessage,
@@ -110,13 +109,11 @@ async function assertMentions(room: ChatRoomRef, requested: ReadonlyArray<string
   return result.ids;
 }
 
-/** The pods whose rooms a user can open: hosted, attended, or — a recurring
- * pod's one room — the parent of a date they booked. */
+/** The pods whose rooms a user can open: hosted or attended. */
 export async function myPodRoomsFilter(userId: string) {
   const uid = new mongoose.Types.ObjectId(userId);
-  const recurring = await PodModel.distinct('series_parent_id', { series_role: 'DATE', pod_attendees: uid });
   return {
-    $or: [{ pod_hosts_id: uid }, { pod_attendees: uid }, { _id: { $in: recurring } }],
+    $or: [{ pod_hosts_id: uid }, { pod_attendees: uid }],
     is_active: true,
   };
 }
@@ -234,7 +231,6 @@ export const chatService = {
   async listMyChatRooms(userId: string) {
     // Pods I host or attend or am a podMember of. The club is joined so each
     // room carries its Super-category (classification) and slug (pod-detail nav).
-    // A recurring pod has one room, on its parent: a date I booked opens it.
     const pods = await PodModel.find(await myPodRoomsFilter(userId))
       .select(
         'pod_id pod_title pod_date_time pod_end_date_time pod_attendees no_of_spots club_id pod_images_and_videos'
@@ -263,20 +259,16 @@ export const chatService = {
   /** Host(s) + participants of a pod's chat, for the detail people panel.
    * Members only — mirrors the read gate on the messages. */
   async chatParticipants(podId: string, userId: string) {
-    const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees series_role').lean();
+    const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees').lean();
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     const hostIds = (pod.pod_hosts_id || []).map(String);
-    // A recurring pod's room holds everyone on any of its dates.
-    const attendeeIds =
-      pod.series_role === 'PARENT'
-        ? (await PodModel.distinct('pod_attendees', { series_parent_id: pod._id })).map(String)
-        : (pod.pod_attendees || []).map(String);
+    const attendeeIds = (pod.pod_attendees || []).map(String);
     const uid = String(userId);
     const member =
       hostIds.includes(uid) ||
       attendeeIds.includes(uid) ||
       !!(await PodMemberModel.findOne({
-        pod_id: { $in: await chatBookingPodIds(pod) },
+        pod_id: pod._id,
         user_id: userId,
         status: 'JOINED',
       }).lean());

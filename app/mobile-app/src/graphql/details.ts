@@ -82,8 +82,6 @@ export const PodDetailsDocument = gql(`
       payment_terms
       pod_hits
       pod_occurrence
-      series_role
-      series_parent_id
       place_charges {
         label
         amount

@@ -31,10 +31,7 @@ export interface PodBookingClash {
   pod_end_date_time: string;
 }
 
-/**
- * Each clashing pod once, earliest first — booking several dates of a
- * recurring pod can return the same booked pod against more than one date.
- */
+/** Each clashing pod once, earliest first. */
 export function uniqueClashingPods<T extends Pick<PodBookingClash, 'pod_id' | 'pod_date_time'>>(clashes: readonly T[]): T[] {
   const seen = new Map<string, T>();
   for (const clash of clashes) if (!seen.has(clash.pod_id)) seen.set(clash.pod_id, clash);

@@ -3,7 +3,6 @@ import { createAuthed, EventRequestsPage, ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import PartnerLanding from './components/PartnerLanding';
 import RegisterVenuePage from './pages/RegisterVenuePage';
-import VenueAvailabilityPage, { VenueAvailabilityRedirect } from './pages/venue-availability-page/VenueAvailabilityPage';
 import WorkshopEventRequestsPage from './pages/workshop-event-requests-page/WorkshopEventRequestsPage';
 import VenueDashboardPage from './pages/venue-dashboard-page/VenueDashboardPage';
 import PodRequestDetailPage from './pages/pod-requests/detail/PodRequestDetailPage';
@@ -46,6 +45,7 @@ import VenueFoodMenuPage from './pages/venue-food-menu-page/VenueFoodMenuPage';
 import VenueFoodOrdersPage from './pages/venue-food-orders-page/VenueFoodOrdersPage';
 import VenueFoodCouponsPage from './pages/venue-food-coupons-page/VenueFoodCouponsPage';
 import VenueRentedItemsPage from './pages/venue-rented-items-page/VenueRentedItemsPage';
+import { venueSetupRoutes } from './pages/venue-setup/venueSetupRoutes';
 import HostPublishPage from './pages/publish-page/HostPublishPage';
 import {
   ClubsHub,
@@ -107,12 +107,7 @@ export default function App() {
       <Route path="/venues/change-requests" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/auto-pods" element={authed(<VenueRequestsHub />)} />
       <Route path="/venues/settings" element={authed(<VenuesHub />)} />
-      {/* The Venue Pricing Module for the selected venue; the :venueId form opens a named one.
-          The old availability URLs land on it. */}
-      <Route path="/venues/pricing" element={authed(<VenueAvailabilityPage />)} />
-      <Route path="/venues/:venueId/pricing" element={authed(<VenueAvailabilityPage />)} />
-      <Route path="/venues/availability" element={<Navigate to="/venues/pricing" replace />} />
-      <Route path="/venues/:venueId/availability" element={<VenueAvailabilityRedirect />} />
+      {venueSetupRoutes(authed)}
       <Route path="/venues/earnings" element={authed(<VenueEarningsPage />)} />
       <Route path="/venues/publish" element={authed(<VenuePublishPage />)} />
       <Route path="/venues/food-dashboard" element={authed(<VenueFoodDashboardPage />)} />

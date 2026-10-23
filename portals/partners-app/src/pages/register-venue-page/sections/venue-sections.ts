@@ -12,7 +12,9 @@ export interface VenueSectionDef {
 }
 
 /**
- * The registration sections, in order.
+ * The registration sections, in order. A venue's type, capacity, food,
+ * amenities and holidays are set up from Venue Options instead (their own
+ * Partner console pages), so registering asks only who and where.
  *
  * Kept out of `SectionRail.tsx` so the form hook can read it without pulling
  * that file's icon elements in: the hook needs the same list to know which
@@ -21,15 +23,6 @@ export interface VenueSectionDef {
  */
 export const VENUE_SECTIONS: VenueSectionDef[] = [
   { key: 'details', label: 'Venue Details', hint: 'Name, images, category & location' },
-  { key: 'type-capacity', label: 'Type & Capacity', hint: 'Venue type + capacity list' },
-  {
-    key: 'food',
-    label: 'Food Menu',
-    labelKey: 'partners.registerVenuePage.foodSection',
-    hint: 'Menu, photos & online ordering',
-    hintKey: 'partners.registerVenuePage.foodSectionHint',
-  },
-  { key: 'amenities', label: 'Amenities & Security', hint: 'Facilities, amenities & safety' },
   { key: 'documents', label: 'Venue Documents', hint: 'Uploads with document type' },
   { key: 'owner', label: 'Owner Details', hint: 'Contact for slot requests' },
   {
@@ -39,7 +32,6 @@ export const VENUE_SECTIONS: VenueSectionDef[] = [
     hint: 'Bank details for venue payouts',
     hintKey: 'partners.registerVenuePage.payoutSectionHint',
   },
-  { key: 'leaves', label: 'Leaves & Holidays', hint: 'Closed dates — never bookable' },
   { key: 'review', label: 'Review & Submit', hint: 'Check everything and submit' },
 ];
 

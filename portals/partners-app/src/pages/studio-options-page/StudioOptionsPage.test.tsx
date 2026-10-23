@@ -72,7 +72,7 @@ describe('StudioOptionsPage', () => {
     fireEvent.click(await screen.findByRole('option', { name: /Rooftop/ }));
     expect(localStorage.getItem(SELECTED_VENUE_KEY)).toBe('v-1');
     expect(screen.getByRole('combobox').textContent).toContain('Rooftop');
-    expect(screen.getByTestId('studio-option-item-availability').getAttribute('href')).toBe('/venues/pricing');
+    expect(screen.getByTestId('studio-option-item-fees').getAttribute('href')).toBe('/venues/fees');
   });
 
   it('invites a venue owner with no venue to add one', async () => {

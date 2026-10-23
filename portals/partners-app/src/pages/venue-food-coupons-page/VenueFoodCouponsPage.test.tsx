@@ -68,7 +68,7 @@ describe('VenueFoodCouponsPage list', () => {
     const sent: SentOperation[] = [];
     mountCoupons([couponRow()], { VenueFoodOrderVenues: { myVenues: [foodVenue({ offers_food: false })] } }, sent);
     const hint = await screen.findByTestId('venue-food-coupons-no-food');
-    expect(within(hint).getByRole('link', { name: 'Edit venue' }).getAttribute('href')).toBe('/register-venue/v1?selectedtab=food');
+    expect(within(hint).getByRole('link', { name: 'Edit venue' }).getAttribute('href')).toBe('/venues/food-settings');
     expect(sentNamed(sent, 'VenueFoodCouponsTable')).toHaveLength(0);
   });
 });

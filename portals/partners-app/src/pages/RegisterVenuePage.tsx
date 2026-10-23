@@ -28,8 +28,8 @@ function StatusAlerts({ status, notes }: Readonly<{ status?: string; notes?: str
   if (status === 'APPROVED') {
     return (
       <Alert severity="success">
-        Approved — you can update the description, images, capacity, owner details and add new
-        documents. Everything else is locked; locked fields appear greyed out.
+        Approved — you can update the description, images, owner details and add new documents here.
+        Type, capacity, hours, amenities and food are set up from Venue Options.
       </Alert>
     );
   }

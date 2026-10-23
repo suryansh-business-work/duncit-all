@@ -14,7 +14,6 @@ import { STUDIO_OPTIONS_ENTRY, STUDIO_OPTION_LIST, type PartnerStudioMode } from
 import App from '../App';
 import { sectionRoleFor } from '../config/partner-sections';
 import { EventRequestsPage } from '@duncit/shell';
-import { VenueAvailabilityRedirect } from '../pages/venue-availability-page/VenueAvailabilityPage';
 import WorkshopEventRequestsPage from '../pages/workshop-event-requests-page/WorkshopEventRequestsPage';
 
 const routesElement = App() as ReactElement<{ children: ReactNode }>;
@@ -55,18 +54,26 @@ describe('studio options routes', () => {
     }
   });
 
-  it('opens the Venue Pricing Module for the selected venue and for a named one', () => {
-    expect(patternFor('/venues/pricing')).toBe('/venues/pricing');
-    expect(patternFor('/venues/venue-1/pricing')).toBe('/venues/:venueId/pricing');
-    expect(sectionRoleFor('/venues/pricing')).toBe('VENUE_OWNER');
+  it('opens each venue setup page on its own route, kept to the venue studio', () => {
+    for (const path of [
+      '/venues/calendar',
+      '/venues/type-capacity',
+      '/venues/amenities',
+      '/venues/leaves',
+      '/venues/fees',
+      '/venues/price-rules',
+      '/venues/food-settings',
+    ]) {
+      expect(patternFor(path)).toBe(path);
+      expect(sectionRoleFor(path)).toBe('VENUE_OWNER');
+    }
   });
 
-  it('keeps the old availability links working, landing them on the pricing module', () => {
-    const selected = matchRoutes(routes, '/venues/availability')?.at(-1)?.route.element;
-    expect(findElement(selected, Navigate)?.props).toEqual({ to: '/venues/pricing', replace: true });
-    const named = matchRoutes(routes, '/venues/venue-1/availability')?.at(-1)?.route;
-    expect(named?.path).toBe('/venues/:venueId/availability');
-    expect(findElement(named?.element, VenueAvailabilityRedirect)).not.toBeNull();
+  it('lands the old pricing and availability links on the venue’s fees', () => {
+    for (const path of ['/venues/pricing', '/venues/venue-1/pricing', '/venues/availability', '/venues/venue-1/availability']) {
+      const element = matchRoutes(routes, path)?.at(-1)?.route.element;
+      expect(findElement(element, Navigate)?.props, path).toEqual({ to: '/venues/fees', replace: true });
+    }
   });
 });
 

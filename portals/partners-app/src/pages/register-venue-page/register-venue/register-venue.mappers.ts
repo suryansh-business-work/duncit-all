@@ -136,14 +136,12 @@ const toCapacityItems = (values: RegisterVenueValues) =>
  * every venue form sends (the owner picks the Razorpay account here, so it is named). */
 export const toFoodInput = (values: RegisterVenueValues) => toVenueFoodInput(values, { sendAccount: true });
 
+/** The venue form's step-1 save: its details only. The venue's type,
+ * capacity, food and amenities are set up from Venue Options, so they are left
+ * out and the server keeps what it has. */
 export function toStep1Input(values: RegisterVenueValues) {
-  const capacityItems = toCapacityItems(values);
   return {
     venue_name: values.venue_name,
-    venue_type: values.venue_type,
-    capacity: capacityItems.reduce((sum, item) => sum + item.capacity, 0),
-    capacity_items: capacityItems,
-    ...toFoodInput(values),
     // Primary first. Only whole triples go: a row still being picked is not a
     // category yet (the section's validation is what refuses to save one).
     venue_categories: values.venue_categories.filter(isCompleteCategory).map((category) => ({
@@ -152,9 +150,6 @@ export function toStep1Input(values: RegisterVenueValues) {
       sub_category_id: category.sub_id,
     })),
     description: values.description,
-    amenities: values.amenities,
-    facilities: values.facilities,
-    security: values.security,
     cover_image_url: values.cover_image_url,
     gallery: values.gallery,
     videos: values.videos,
@@ -179,6 +174,42 @@ export function toStep2Input(values: RegisterVenueValues) {
     gstin: values.has_gstin ? values.gstin : '',
     pan: values.has_pan ? values.pan : '',
   };
+}
+
+/** What a Venue Options setup page saves through `updateVenueSetup` — only
+ * its own fields. An approved venue edits its menu on Food > Menu, so its food
+ * save leaves the menu out (`withMenu: false`); a venue still on its way to
+ * approval sets its menu up on Food Settings too. */
+export type SetupSectionKey = 'type-capacity' | 'amenities' | 'food';
+
+/** Type, Capacity & Hours: the venue type and its spaces (blank rows dropped). */
+export const toSetupTypeCapacityInput = (values: RegisterVenueValues) => ({
+  venue_type: values.venue_type,
+  capacity_items: toCapacityItems(values),
+});
+
+/** Amenities & Security: the three chip lists. */
+export const toSetupAmenitiesInput = (values: RegisterVenueValues) => ({
+  amenities: values.amenities,
+  facilities: values.facilities,
+  security: values.security,
+});
+
+/** Food Settings: the shared food mapping, with the menu only when `withMenu`. */
+export function toSetupFoodInput(values: RegisterVenueValues, options: { withMenu: boolean }) {
+  // A GST number goes only when the owner typed one; the server takes it only while the venue has none.
+  const typed = values.food_gstin.trim().toUpperCase();
+  const gstin = typed ? { gstin: typed } : {};
+  const food = toFoodInput(values);
+  if (!('food_menu' in food) || options.withMenu) return { ...food, ...gstin };
+  const { offers_food, food_ordering, food_licences, food_tables } = food;
+  return { offers_food, food_ordering, food_licences, food_tables, ...gstin };
+}
+
+export function toSetupInput(section: SetupSectionKey, values: RegisterVenueValues, options = { withMenu: false }) {
+  if (section === 'type-capacity') return toSetupTypeCapacityInput(values);
+  if (section === 'amenities') return toSetupAmenitiesInput(values);
+  return toSetupFoodInput(values, options);
 }
 
 /** The sections an approved venue can save through updateApprovedVenue. */

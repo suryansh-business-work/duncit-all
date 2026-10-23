@@ -210,9 +210,14 @@ interface NavCategory {
  * desk keeps its own group (the catalogue's `group: 'food'`), and Dashboard
  * sits on top with the Options page.
  */
-const VENUE_TOP_KEYS: readonly string[] = ['dashboard'];
+const VENUE_TOP_KEYS: readonly string[] = ['dashboard', 'calendar'];
 const VENUE_NAV_CATEGORIES: readonly NavCategory[] = [
-  { label: 'Venues', labelKey: 'shell.nav.venues', icon: 'storefront', keys: ['venues', 'availability', 'settings', 'publish', 'verification'] },
+  {
+    label: 'Venues',
+    labelKey: 'shell.nav.venues',
+    icon: 'storefront',
+    keys: ['venues', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'settings', 'publish', 'verification'],
+  },
   { label: 'Pods', labelKey: 'shell.nav.pods', icon: 'community', keys: ['pods', 'rented-items'] },
   { label: 'Requests', labelKey: 'shell.nav.requests', icon: 'host-request', keys: ['slot-requests', 'pod-requests', 'change-requests', 'auto-pods', 'nearby'] },
   { label: 'Finance', labelKey: 'shell.nav.finance', icon: 'payments', keys: ['earnings', 'withdrawal'] },
@@ -222,7 +227,7 @@ const pick = (options: readonly StudioOptionItem[], keys: readonly string[]) =>
   keys.flatMap((key) => options.filter((option) => option.key === key));
 
 /**
- * A `nestedNav` studio's sidebar: All options and Dashboard on top, then every
+ * A `nestedNav` studio's sidebar: All options, Dashboard and Calendar on top, then every
  * other option under its category (collapsible), then the food desk. An option
  * no category names still shows — under Venues — so a new catalogue entry is
  * never dropped from the sidebar. Auto Pods follows its flag exactly as the

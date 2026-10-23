@@ -1,12 +1,18 @@
 export { default as RegisterVenueForm } from './register-venue.form';
 export { registerVenueSchema, SECTION_FIELDS } from './register-venue.schema';
+export type { VenueSchemaScope } from './register-venue.schema';
 export {
   venueToValues,
   toApprovedUpdateInput,
   toStep1Input,
   toStep2Input,
   toStep3Input,
+  toSetupInput,
+  toSetupAmenitiesInput,
+  toSetupFoodInput,
+  toSetupTypeCapacityInput,
 } from './register-venue.mappers';
+export type { SetupSectionKey } from './register-venue.mappers';
 export { useRegisterVenueForm } from './useRegisterVenueForm';
 export type { EditableSectionKey, SectionState } from './useRegisterVenueForm';
 export {

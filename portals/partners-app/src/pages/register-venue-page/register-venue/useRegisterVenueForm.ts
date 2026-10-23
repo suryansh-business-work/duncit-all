@@ -33,12 +33,10 @@ export type SectionState = 'complete' | 'incomplete';
 /** Full order — what "the section after this one" means, review included. */
 const SECTION_ORDER: VenueSectionKey[] = VENUE_SECTIONS.map((section) => section.key);
 
-/** Sections updateApprovedVenue can persist (amenities are locked post-approval)
- * — the ones the approved form shows its save bar on. */
+/** Sections updateApprovedVenue can persist — the ones the approved form shows
+ * its save bar on (payout is locked post-approval). */
 export const APPROVED_EDIT_SECTIONS: ReadonlySet<VenueSectionKey> = new Set<EditableSectionKey>([
   'details',
-  'type-capacity',
-  'food',
   'documents',
   'owner',
 ]);
@@ -55,7 +53,7 @@ const APPROVED_LOCKED_FIELDS = new Set<keyof RegisterVenueValues>([
 ]);
 
 /** Sections the server stores in step 1 (`submitVenueStep1`). */
-const STEP1_SECTIONS = new Set<EditableSectionKey>(['details', 'type-capacity', 'food', 'amenities']);
+const STEP1_SECTIONS = new Set<EditableSectionKey>(['details']);
 
 interface Options {
   venue: any;
@@ -175,11 +173,6 @@ export function useRegisterVenueForm({
       }
     }
   }
-  // Every amenity group is optional, so the schema passes a blank section —
-  // only tick it once the owner has actually picked something.
-  if (values.amenities.length + values.facilities.length + values.security.length === 0) {
-    sectionState.amenities = 'incomplete';
-  }
 
   const persistStep1 = async () => {
     const res = await saveStep1({
@@ -191,9 +184,6 @@ export function useRegisterVenueForm({
   };
 
   const persistSection = async (section: EditableSectionKey) => {
-    // Amenities, facilities and security are step-1 data on the server. Sent
-    // through step 3 they were never stored, and the server refused the save
-    // ("Complete documentation step first") before Documents had been saved.
     if (STEP1_SECTIONS.has(section)) {
       await persistStep1();
     } else {

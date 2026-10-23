@@ -123,12 +123,20 @@ const missingTaxDocuments = (
  * pre-existing, unlocalized debt this change does not touch. `taxDocTypes`
  * names the document each GSTIN / PAN switch requires while it is on;
  * `foodLimits` are the config's caps for the food menu and its ordering;
- * `categoryLimit` is the config's cap on the venue's categories. */
+ * `categoryLimit` is the config's cap on the venue's categories.
+ *
+ * `scope`: `'registration'` (the venue form) leaves the venue's type,
+ * capacity and food to Venue Options — they are not asked for there, so they
+ * cannot hold the application back; `'setup'` (the Venue Options pages that
+ * edit them) requires them as before. */
+export type VenueSchemaScope = 'registration' | 'setup';
+
 export const registerVenueSchema = (
   t: Translate = fallbackT,
   taxDocTypes: TaxDocTypes = NO_TAX_DOCS,
   foodLimits: FoodLimits = NO_FOOD_LIMITS,
   categoryLimit: number = NO_CATEGORY_LIMIT,
+  scope: VenueSchemaScope = 'registration',
 ) => z.object({
   venue_name: zodRules.requiredText('Venue name', 2, 120),
   description: z
@@ -158,10 +166,11 @@ export const registerVenueSchema = (
     .string()
     .trim()
     .regex(POSTAL_CODE_PATTERN, 'Enter a valid PIN code (3–12 alphanumerics)'),
-  venue_type: z.string().trim().min(1, 'Select a venue type'),
-  capacity_items: z
-    .array(capacityItemSchema)
-    .min(1, 'Add at least one capacity entry for your venue'),
+  venue_type: scope === 'setup' ? z.string().trim().min(1, 'Select a venue type') : z.string(),
+  capacity_items:
+    scope === 'setup'
+      ? z.array(capacityItemSchema).min(1, 'Add at least one capacity entry for your venue')
+      : z.array(capacityItemSchema),
   offers_food: z.boolean(),
   food_menu: foodMenuShape,
   food_ordering: foodOrderingShape,
@@ -213,7 +222,9 @@ export const registerVenueSchema = (
   ifsc_code: z.string().trim(),
   upi_id: z.string().trim(),
 })
-  .superRefine(makeFoodRefinement(t, foodLimits))
+  .superRefine((values, ctx) => {
+    if (scope === 'setup') makeFoodRefinement(t, foodLimits)(values, ctx);
+  })
   // Which payout fields are required depends on the selected method, so this
   // is a superRefine rather than per-field .min() — RHF keeps every payout
   // field registered while the reader switches the Payout Method dropdown.

@@ -78,11 +78,6 @@ const foodVenue = {
   food_menu: [dosa],
   food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0 },
 };
-/** What the form sends for that menu: the dish keeps its id; a dish stored before
- * videos and display pricing existed goes with none, and the saving read as a percent. */
-const dosaInput = { ...dosa, videos: [], original_price: null, saving_display: 'PERCENT' };
-/** A venue that never gave licences or tables sends them blank. */
-const blankLicencesInput = { fssai_number: '', fssai_document_url: '', liquor_licence_number: '', liquor_document_url: '' };
 /** A dish with no name — the one thing the food section refuses. */
 const namelessDish = { ...dosa, id: undefined, name: '' };
 
@@ -181,40 +176,35 @@ const save = async (apiRef: { current: Api | null }, section: EditableSectionKey
 };
 
 describe('useRegisterVenueForm — section completion', () => {
-  it('marks every section incomplete for a blank draft, amenities included until one is picked', () => {
+  it('marks the registration sections incomplete for a blank draft', () => {
     const { apiRef } = mount();
     expect(apiRef.current?.venueId).toBeNull();
     expect(apiRef.current?.active).toBe('details');
-    expect(apiRef.current?.sectionState).toEqual({
+    expect(apiRef.current?.sectionState).toMatchObject({
       details: 'incomplete',
-      'type-capacity': 'incomplete',
-      // "No food" is a complete answer, so the untouched switch has nothing to fix.
-      food: 'complete',
-      amenities: 'incomplete',
       documents: 'incomplete',
       owner: 'incomplete',
       payout: 'incomplete',
     });
   });
 
-  it('leaves amenities incomplete for a stored venue that picked none — every group is optional', () => {
+  it('marks every registration section complete once a stored venue hydrates the form', () => {
     const { apiRef } = mount({ venue: savedVenue });
-    expect(apiRef.current?.sectionState).toMatchObject({ details: 'complete', amenities: 'incomplete', payout: 'complete' });
-  });
-
-  it('marks every section complete once a stored venue with a picked amenity hydrates the form', () => {
-    const { apiRef } = mount({ venue: { ...savedVenue, amenities: ['AC'] } });
     expect(apiRef.current?.venueId).toBe('venue-1');
-    expect(apiRef.current?.sectionState).toEqual({
+    expect(apiRef.current?.sectionState).toMatchObject({
       details: 'complete',
-      'type-capacity': 'complete',
-      food: 'complete',
-      amenities: 'complete',
       documents: 'complete',
       owner: 'complete',
       payout: 'complete',
     });
     expect(apiRef.current?.form.getValues('owner_dob')).toBe('1990-05-10');
+  });
+
+  it('does not hold registration back for a venue type, capacity or menu — Venue Options sets those up', () => {
+    const { apiRef } = mount({
+      venue: { ...foodVenue, venue_type: '', capacity_items: [], food_menu: [namelessDish] },
+    });
+    expect(apiRef.current?.sectionState).toMatchObject({ details: 'complete', documents: 'complete', owner: 'complete' });
   });
 
   it('turns a section incomplete as soon as one of its fields breaks', async () => {
@@ -226,21 +216,6 @@ describe('useRegisterVenueForm — section completion', () => {
     expect(apiRef.current?.sectionState.details).toBe('complete');
   });
 
-  it('marks a broken menu against Food Menu, and leaves Type & Capacity ticked', () => {
-    const { apiRef } = mount({ venue: { ...foodVenue, food_menu: [namelessDish] } });
-
-    expect(apiRef.current?.sectionState.food).toBe('incomplete');
-    expect(apiRef.current?.sectionState['type-capacity']).toBe('complete');
-  });
-
-  it('marks ordering switched on without a Razorpay account against Food Menu', () => {
-    const { apiRef } = mount({
-      venue: { ...foodVenue, food_ordering: { enabled: true, razorpay_integration_id: null, discount_pct: 0 } },
-    });
-
-    expect(apiRef.current?.sectionState.food).toBe('incomplete');
-    expect(apiRef.current?.sectionState['type-capacity']).toBe('complete');
-  });
 });
 
 describe('useRegisterVenueForm — saving a section', () => {
@@ -253,7 +228,7 @@ describe('useRegisterVenueForm — saving a section', () => {
     expect(sent).toEqual([]);
   });
 
-  it('creates the venue with step 1 and advances to type & capacity', async () => {
+  it('creates the venue with step 1, its details only, and advances to documents', async () => {
     const { apiRef, sent, onPersisted } = mount({ venue: draftVenue });
 
     expect(await save(apiRef, 'details')).toBe(true);
@@ -262,74 +237,18 @@ describe('useRegisterVenueForm — saving a section', () => {
     expect(sent[0].variables.venue_id).toBeNull();
     expect(sent[0].variables.input).toMatchObject({
       venue_name: 'Cafe Mocha',
-      venue_type: 'Cafe',
-      capacity: 30,
-      capacity_items: [{ label: 'Main hall', capacity: 30 }],
       // The stored venue answers only the legacy single triple: it goes back as a one-entry list.
       venue_categories: [{ super_category_id: 'super-1', category_id: 'cat-1', sub_category_id: 'sub-1' }],
       city: 'Bengaluru',
       postal_code: '560038',
     });
+    // Set up from Venue Options — left out, so the server keeps what it has.
+    for (const key of ['venue_type', 'capacity', 'capacity_items', 'offers_food', 'amenities']) {
+      expect(sent[0].variables.input).not.toHaveProperty(key);
+    }
     expect(apiRef.current?.venueId).toBe('venue-1');
-    expect(apiRef.current?.active).toBe('type-capacity');
+    expect(apiRef.current?.active).toBe('documents');
     expect(onPersisted).toHaveBeenCalledTimes(1);
-  });
-
-  it('walks Type & Capacity on to Food Menu, and Food Menu on to Amenities — both through step 1', async () => {
-    const { apiRef, sent } = mount({ venue: foodVenue });
-
-    expect(await save(apiRef, 'type-capacity')).toBe(true);
-    expect(apiRef.current?.active).toBe('food');
-
-    expect(await save(apiRef, 'food')).toBe(true);
-    expect(apiRef.current?.active).toBe('amenities');
-
-    expect(sent.map((call) => call.name)).toEqual(['V1', 'V1']);
-    expect(sent[1].variables.input).toMatchObject({
-      offers_food: true,
-      food_menu: [dosaInput],
-      food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0 },
-    });
-  });
-
-  it('refuses a Food Menu save while a dish has no name, without contacting the server', async () => {
-    const { apiRef, sent } = mount({ venue: { ...foodVenue, food_menu: [namelessDish] } });
-
-    expect(await save(apiRef, 'food')).toBe(false);
-
-    expect(sent).toEqual([]);
-    expect(apiRef.current?.active).toBe('details');
-  });
-
-  it('refuses a Food Menu save that turns ordering on with no Razorpay account', async () => {
-    const { apiRef, sent } = mount({
-      venue: { ...foodVenue, food_ordering: { enabled: true, razorpay_integration_id: null, discount_pct: 0 } },
-    });
-
-    expect(await save(apiRef, 'food')).toBe(false);
-
-    expect(sent).toEqual([]);
-    expect(apiRef.current?.sectionState.food).toBe('incomplete');
-  });
-
-  it('no longer holds Type & Capacity back for a food field', async () => {
-    const { apiRef } = mount({ venue: { ...foodVenue, food_menu: [namelessDish] } });
-
-    expect(await save(apiRef, 'type-capacity')).toBe(true);
-
-    expect(apiRef.current?.active).toBe('food');
-    expect(apiRef.current?.error).toBeNull();
-  });
-
-  it('saves amenities through step 1, where the server stores them — never step 3', async () => {
-    const { apiRef, sent } = mount({ venue: draftVenue });
-
-    expect(await save(apiRef, 'amenities')).toBe(true);
-
-    expect(sent.map((call) => call.name)).toEqual(['V1']);
-    expect(sent[0].variables.input).toHaveProperty('amenities');
-    expect(sent[0].variables.input).toHaveProperty('facilities');
-    expect(sent[0].variables.input).toHaveProperty('security');
   });
 
   it('saves step 1 first for a documents save so the server step gate is satisfied', async () => {
@@ -364,7 +283,7 @@ describe('useRegisterVenueForm — saving a section', () => {
     expect(apiRef.current?.active).toBe('payout');
   });
 
-  it('saves the payout method through step 3 and moves on to leaves', async () => {
+  it('saves the payout method through step 3 and moves on to review', async () => {
     const { apiRef, sent } = mount({ venue: savedVenue });
 
     expect(await save(apiRef, 'payout')).toBe(true);
@@ -373,7 +292,7 @@ describe('useRegisterVenueForm — saving a section', () => {
     expect(sent.map((call) => call.name)).toEqual(['V3']);
     expect(sent[0].variables.venue_id).toBe('venue-1');
     expect(sent[0].variables.input.bank_account).toEqual(upiBankAccount);
-    expect(apiRef.current?.active).toBe('leaves');
+    expect(apiRef.current?.active).toBe('review');
   });
 
   it('keeps an invalid section unsaved without contacting the server', async () => {
@@ -395,7 +314,7 @@ describe('useRegisterVenueForm — saving a section', () => {
 
 describe('useRegisterVenueForm — submitting for review', () => {
   it('jumps to the first failing section instead of submitting', async () => {
-    const { apiRef, sent } = mount({ venue: { ...savedVenue, venue_type: '' } });
+    const { apiRef, sent } = mount({ venue: { ...savedVenue, owner_phone: 'call me' } });
 
     let id: string | null | undefined;
     await act(async () => {
@@ -403,7 +322,7 @@ describe('useRegisterVenueForm — submitting for review', () => {
     });
 
     expect(id).toBeNull();
-    expect(apiRef.current?.active).toBe('type-capacity');
+    expect(apiRef.current?.active).toBe('owner');
     expect(apiRef.current?.error).toBe('Fix the highlighted fields before submitting.');
     expect(sent).toEqual([]);
   });
@@ -515,67 +434,27 @@ describe('useRegisterVenueForm — approved-venue spot edits', () => {
 
     let ok: boolean | undefined;
     await act(async () => {
-      apiRef.current?.form.setValue('capacity_items', [{ label: '', capacity: 5 }]);
-      ok = await apiRef.current?.saveApprovedSection('type-capacity');
+      apiRef.current?.form.setValue('owner_phone', 'call me');
+      ok = await apiRef.current?.saveApprovedSection('owner');
     });
 
     expect(ok).toBe(false);
     expect(sent).toEqual([]);
   });
 
-  it('saves Food Menu on an approved venue with the food input and nothing else', async () => {
+  it('saves neither capacity nor food here any more — Venue Options does', async () => {
     const { apiRef, sent } = mount({ venue: foodVenue, mode: 'edit-approved' });
 
-    let ok: boolean | undefined;
-    await act(async () => {
-      apiRef.current?.form.setValue('food_menu.0.price', 150);
-      ok = await apiRef.current?.saveApprovedSection('food');
-    });
-
-    expect(ok).toBe(true);
-    expect(sent.map((call) => call.name)).toEqual(['UpdateApprovedVenue']);
-    expect(sent[0].variables).toEqual({
-      venue_id: 'venue-1',
-      input: {
-        offers_food: true,
-        food_menu: [{ ...dosaInput, price: 150 }],
-        food_ordering: { enabled: false, razorpay_integration_id: null, discount_pct: 0, tax_override: false },
-        food_licences: blankLicencesInput,
-        food_tables: [],
-      },
-    });
-    expect(apiRef.current?.saved).toBe('Changes saved.');
-  });
-
-  it('saves capacity on an approved venue without naming a food field, so the menu is left alone', async () => {
-    const { apiRef, sent } = mount({ venue: foodVenue, mode: 'edit-approved' });
-
-    let ok: boolean | undefined;
-    await act(async () => {
-      ok = await apiRef.current?.saveApprovedSection('type-capacity');
-    });
-
-    expect(ok).toBe(true);
-    // The server only writes the keys it is sent — no food key, no food write.
-    expect(sent[0].variables.input).toEqual({ capacity_items: [{ label: 'Main hall', capacity: 30 }] });
-  });
-
-  it('holds an approved Food Menu save back for a nameless dish, but not an approved capacity save', async () => {
-    const { apiRef, sent } = mount({ venue: { ...foodVenue, food_menu: [namelessDish] }, mode: 'edit-approved' });
-
-    let foodOk: boolean | undefined;
     let capacityOk: boolean | undefined;
-    await act(async () => {
-      foodOk = await apiRef.current?.saveApprovedSection('food');
-    });
-    expect(foodOk).toBe(false);
-    expect(sent).toEqual([]);
-
+    let foodOk: boolean | undefined;
     await act(async () => {
       capacityOk = await apiRef.current?.saveApprovedSection('type-capacity');
+      foodOk = await apiRef.current?.saveApprovedSection('food');
     });
-    expect(capacityOk).toBe(true);
-    expect(sent.map((call) => call.name)).toEqual(['UpdateApprovedVenue']);
+
+    expect(capacityOk).toBe(false);
+    expect(foodOk).toBe(false);
+    expect(sent).toEqual([]);
   });
 
   it('surfaces a failed approved update and leaves no success message', async () => {
@@ -703,7 +582,7 @@ describe('useRegisterVenueForm — several categories', () => {
       });
     });
 
-    expect(await save(apiRef, 'type-capacity')).toBe(false);
+    expect(await save(apiRef, 'documents')).toBe(false);
     expect(apiRef.current?.active).toBe('details');
     expect(apiRef.current?.error).toBe('Complete the Venue Details section first.');
     expect(sent).toEqual([]);

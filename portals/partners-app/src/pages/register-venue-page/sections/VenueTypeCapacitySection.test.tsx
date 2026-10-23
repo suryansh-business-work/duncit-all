@@ -83,10 +83,13 @@ describe('VenueTypeCapacitySection — capacity list', () => {
     expect(screen.queryByText('Total: 30')).toBeNull();
   });
 
-  it('says an empty list needs at least one entry', async () => {
-    const { form } = mountSection((sectionForm) => (
-      <VenueTypeCapacitySection form={sectionForm} config={sectionConfig} mode="register" />
-    ));
+  it('says an empty list needs at least one entry on the Type, Capacity & Hours page', async () => {
+    const { form } = mountSection(
+      (sectionForm) => <VenueTypeCapacitySection form={sectionForm} config={sectionConfig} mode="register" />,
+      {},
+      {},
+      'setup'
+    );
 
     await act(async () => {
       await form().trigger(['venue_type', 'capacity_items']);

@@ -81,7 +81,10 @@ describe('Studio Options screens', () => {
       .getAllByTestId(/^studio-option-(?!.*-external$)[a-z-]+$/)
       .map((row) => row.props.testID);
     expect(rendered).toEqual(
-      STUDIO_OPTION_LIST[mode].map((option) => `studio-option-${option.key}`),
+      // Console-only options (the Partner portal's venue setup pages) are not listed in the app.
+      STUDIO_OPTION_LIST[mode]
+        .filter((option) => !option.consoleOnly)
+        .map((option) => `studio-option-${option.key}`),
     );
   });
 

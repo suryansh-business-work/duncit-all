@@ -88,6 +88,10 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+/** A studio's catalogue as the apps list it: everything but the console-only pages. */
+const appOptionIds = (mode: PartnerStudioMode) =>
+  STUDIO_OPTION_LIST[mode].filter((option) => !option.consoleOnly).map((option) => `studio-option-${option.key}`);
+
 describe('StudioOptionsPage', () => {
   // The order Native and the Partner console show too: all three render the
   // one shared catalogue, so this pins mWeb to it option for option.
@@ -101,7 +105,8 @@ describe('StudioOptionsPage', () => {
     const rendered = within(screen.getByTestId('studio-options-list'))
       .getAllByTestId(/^studio-option-(?!.*-external$)[a-z-]+$/)
       .map((row) => row.getAttribute('data-testid'));
-    expect(rendered).toEqual(STUDIO_OPTION_LIST[mode].map((option) => `studio-option-${option.key}`));
+    // Console-only options (the Partner portal's venue setup pages) are not listed here.
+    expect(rendered).toEqual(appOptionIds(mode));
   });
 
 
@@ -170,7 +175,7 @@ describe('StudioOptionsPage', () => {
     const rendered = within(screen.getByTestId('studio-options-list'))
       .getAllByTestId(/^studio-option-(?!.*-external$)[a-z-]+$/)
       .map((row) => row.getAttribute('data-testid'));
-    expect(rendered).toEqual(STUDIO_OPTION_LIST.VENUE.map((option) => `studio-option-${option.key}`));
+    expect(rendered).toEqual(appOptionIds('VENUE'));
     expect(screen.queryByTestId('studio-option-create')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Venue' })).toHaveAttribute('aria-selected', 'true');
 

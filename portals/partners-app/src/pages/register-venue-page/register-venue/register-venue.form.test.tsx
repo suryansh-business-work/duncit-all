@@ -191,7 +191,7 @@ describe('RegisterVenueForm — navigation', () => {
     for (const label of ['Type & Capacity', 'Food Menu', 'Amenities & Security', 'Leaves & Holidays']) {
       expect(screen.queryByRole('tab', { name: label })).toBeNull();
     }
-    for (const label of ['Venue Details', 'Venue Documents', 'Owner Details', 'Payout Method', 'Review & Submit']) {
+    for (const label of ['Venue Details', 'Venue Documents', 'Owner Details', 'Payout method', 'Review & Submit']) {
       expect(screen.getByRole('tab', { name: label })).toBeTruthy();
     }
   });

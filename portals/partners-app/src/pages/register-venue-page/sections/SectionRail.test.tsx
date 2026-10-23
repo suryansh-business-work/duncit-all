@@ -34,7 +34,7 @@ describe('SectionRail', () => {
       expect.stringContaining('Venue Details'),
       expect.stringContaining('Venue Documents'),
       expect.stringContaining('Owner Details'),
-      expect.stringContaining('Payout Method'),
+      expect.stringContaining('Payout method'),
       expect.stringContaining('Review & Submit'),
     ]);
     const current = items.filter((item) => item.getAttribute('aria-current') === 'true');
@@ -64,7 +64,7 @@ describe('SectionRail', () => {
     const onSelect = vi.fn();
     renderWithProviders(<SectionRail active="details" sectionState={sectionState} onSelect={onSelect} mode="register" />);
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Payout Method' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Payout method' }));
 
     expect(onSelect).toHaveBeenCalledWith('payout');
   });

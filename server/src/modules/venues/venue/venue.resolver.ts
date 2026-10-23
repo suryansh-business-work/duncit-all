@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { venueService } from './venue.service';
+import { venueService, type VenueSetupInput } from './venue.service';
 import { venuePodsService } from './venuePods.service';
 import { userService } from '@modules/access/user/user.service';
 import {
@@ -155,6 +155,9 @@ export const venueResolvers = {
     // may also change a saved GST number. Ownership is checked in the service.
     updateApprovedVenue: async (_p: unknown, args: { venue_id: string; input: any }, ctx: GraphQLContext) =>
       venueService.updateApproved(uid(ctx), args.venue_id, args.input, !!ctx.user && hasRole(ctx.user, VENUE_EDIT)),
+    // Owner only — the Venues console edits the same fields through adminUpdateVenue.
+    updateVenueSetup: async (_p: unknown, args: { venue_id: string; input: VenueSetupInput }, ctx: GraphQLContext) =>
+      venueService.updateSetup(uid(ctx), args.venue_id, args.input),
     approveVenue: async (
       _p: unknown,
       args: { venue_doc_id: string; notes?: string; tags?: string[] },

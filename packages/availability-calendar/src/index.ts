@@ -43,12 +43,20 @@ export type { CalendarView, NewSlotInput, VenueSlotRow, VenueSlotStatus, VenueSp
 export { default as VenuePricingModule } from './pricing/VenuePricingModule';
 export { default as PriceBreakdownView } from './pricing/preview/PriceBreakdownView';
 export {
+  FeesSection,
+  RulesSection,
   VenuePricingForm,
   buildVenuePricingSchema,
+  savedPricingInput,
   toFormValues,
   toPricingInput,
   type VenuePricingFormValues,
 } from './pricing/form';
+// The Partner console's own pages for one part of a venue's pricing — its fees,
+// its price rules — and its booking calendar build on these.
+export { usePricingModule } from './pricing/usePricingModule';
+export { default as DayToggles } from './pricing/calendar/DayToggles';
+export { holidaysWith, pricingWithBlocked } from './pricing/calendar/day-edits';
 export { usePriceQuote, bookingOf, wallInstant } from './pricing/preview/usePriceQuote';
 export { BREAKDOWN_FIELDS, UPDATE_VENUE_PRICING, VENUE_BOOKING_CALENDAR, VENUE_PRICE_QUOTE, VENUE_PRICING } from './pricing/queries';
 export { modelLabel, rateLabel, ruleValueLabel, rupees } from './pricing/format';

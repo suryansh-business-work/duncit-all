@@ -434,8 +434,10 @@ export const venueTypeDefs = /* GraphQL */ `
 
   input VenueStep1Input {
     venue_name: String!
-    venue_type: String!
-    capacity: Int!
+    "Omitted keeps the stored type (owners set it from Venue Options > Type, Capacity & Hours)."
+    venue_type: String
+    "Omitted keeps the stored total; capacity_items wins when sent."
+    capacity: Int
     capacity_items: [VenueCapacityItemInput!]
     offers_food: Boolean
     food_menu: [VenueFoodItemInput!]
@@ -529,6 +531,28 @@ export const venueTypeDefs = /* GraphQL */ `
     owner_phone: String
     owner_dob: String
     owner_address: String
+  }
+
+  """
+  The parts of a venue its owner sets up from Venue Options, at any status
+  (draft, under review or approved). Omitted fields keep what is stored.
+  """
+  input VenueSetupInput {
+    "One of venueRegistrationConfig.venue_types. Locked for the owner once the venue is approved."
+    venue_type: String
+    capacity_items: [VenueCapacityItemInput!]
+    amenities: [String!]
+    facilities: [String!]
+    security: [String!]
+    offers_food: Boolean
+    "The whole menu, for a venue not yet approved (an approved one edits it on Food > Menu). Omitted keeps the stored menu."
+    food_menu: [VenueFoodItemInput!]
+    food_ordering: VenueFoodOrderingInput
+    food_licences: VenueFoodLicencesInput
+    "Omitted keeps the stored list."
+    food_tables: [String!]
+    "The venue's GST number for its food invoices. Accepted only while the venue has none."
+    gstin: String
   }
 
   "Derived lifecycle bucket of a pod at a venue."
@@ -628,6 +652,8 @@ export const venueTypeDefs = /* GraphQL */ `
     submitVenueFinal(venue_id: ID): Venue!
     "Owner edits the editable subset of an APPROVED venue (documents append-only)."
     updateApprovedVenue(venue_id: ID!, input: UpdateApprovedVenueInput!): Venue!
+    "Owner sets up their venue's type, capacity, amenities and food settings, at any status."
+    updateVenueSetup(venue_id: ID!, input: VenueSetupInput!): Venue!
     approveVenue(venue_doc_id: ID!, notes: String, tags: [String!]): Venue!
     rejectVenue(venue_doc_id: ID!, notes: String!): Venue!
     adminCreateVenue(

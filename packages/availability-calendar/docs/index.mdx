@@ -52,6 +52,13 @@ exports:
   - 'NewSlotInput'
   - 'VenuePricingModule'
   - 'VenuePricingForm'
+  - 'FeesSection'
+  - 'RulesSection'
+  - 'savedPricingInput'
+  - 'usePricingModule'
+  - 'DayToggles'
+  - 'holidaysWith'
+  - 'pricingWithBlocked'
   - 'buildVenuePricingSchema'
   - 'toFormValues'
   - 'toPricingInput'
@@ -526,6 +533,22 @@ import { VenuePricingModule } from '@duncit/availability-calendar';
   quotes that day once, sets or clears its own `DATE_OVERRIDE`, blocks it
   (`pricing.blocked_dates`) or marks a holiday (the venue settings' `holidays`), and still lists
   that day's old slot rows with their block / delete.
+
+### One part at a time (Partners console)
+
+The Partners console no longer mounts the whole module: a venue's **Fees & Minimum Spend** and
+**Price Rules** are pages of their own, and its **Calendar** shows bookings, blocked dates and
+holidays without prices. They are built from the module's own pieces:
+`FeesSection` and `RulesSection` (the form's sections, on a `VenuePricingFormValues` form),
+`usePricingModule` (the saved pricing and its two writes), `savedPricingInput` (the saved
+pricing as a whole input — a page overlays only its own fields on it, so a fees save never
+touches the rules and the other way round), `DayToggles` with `pricingWithBlocked` /
+`holidaysWith` (one date's block and holiday).
+
+```tsx
+const { pricing, save } = usePricingModule(venueId);
+await save({ ...savedPricingInput(pricing), price_rules: toPricingInput(values).price_rules });
+```
 
 ## Workshop & Event Requests
 

@@ -15365,6 +15365,8 @@ export type Mutation = {
   updateVenuePricing: VenuePricing;
   /** Owner (or admin) updates operating hours, weekly-off, holidays + booking rules. */
   updateVenueSettings: Venue;
+  /** Owner sets up their venue's type, capacity, amenities and food settings, at any status. */
+  updateVenueSetup: Venue;
   updateVenueSlot: VenueSlot;
   /** Change the rate card. Applies to sends made from now on — past sends keep the rate they froze. */
   updateWaPricing: WaPricing;
@@ -20992,6 +20994,12 @@ export type MutationUpdateVenuePricingArgs = {
 export type MutationUpdateVenueSettingsArgs = {
   input: VenueSettingsInput;
   venue_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateVenueSetupArgs = {
+  input: VenueSetupInput;
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -41974,6 +41982,28 @@ export type VenueSettingsInput = {
   weekly_off_days?: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
+/**
+ * The parts of a venue its owner sets up from Venue Options, at any status
+ * (draft, under review or approved). Omitted fields keep what is stored.
+ */
+export type VenueSetupInput = {
+  amenities?: InputMaybe<Array<Scalars['String']['input']>>;
+  capacity_items?: InputMaybe<Array<VenueCapacityItemInput>>;
+  facilities?: InputMaybe<Array<Scalars['String']['input']>>;
+  food_licences?: InputMaybe<VenueFoodLicencesInput>;
+  /** The whole menu, for a venue not yet approved (an approved one edits it on Food > Menu). Omitted keeps the stored menu. */
+  food_menu?: InputMaybe<Array<VenueFoodItemInput>>;
+  food_ordering?: InputMaybe<VenueFoodOrderingInput>;
+  /** Omitted keeps the stored list. */
+  food_tables?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** The venue's GST number for its food invoices. Accepted only while the venue has none. */
+  gstin?: InputMaybe<Scalars['String']['input']>;
+  offers_food?: InputMaybe<Scalars['Boolean']['input']>;
+  security?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** One of venueRegistrationConfig.venue_types. Locked for the owner once the venue is approved. */
+  venue_type?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type VenueSlot = {
   __typename?: 'VenueSlot';
   booked_by_pod_id?: Maybe<Scalars['ID']['output']>;
@@ -42130,7 +42160,8 @@ export type VenueStep1Input = {
   address_line1: Scalars['String']['input'];
   address_line2?: InputMaybe<Scalars['String']['input']>;
   amenities?: InputMaybe<Array<Scalars['String']['input']>>;
-  capacity: Scalars['Int']['input'];
+  /** Omitted keeps the stored total; capacity_items wins when sent. */
+  capacity?: InputMaybe<Scalars['Int']['input']>;
   capacity_items?: InputMaybe<Array<VenueCapacityItemInput>>;
   city: Scalars['String']['input'];
   country?: InputMaybe<Scalars['String']['input']>;
@@ -42169,7 +42200,8 @@ export type VenueStep1Input = {
   /** Single-category clients: the primary. Ignored when venue_categories is sent. */
   venue_category?: InputMaybe<VenueCategoryInput>;
   venue_name: Scalars['String']['input'];
-  venue_type: Scalars['String']['input'];
+  /** Omitted keeps the stored type (owners set it from Venue Options > Type, Capacity & Hours). */
+  venue_type?: InputMaybe<Scalars['String']['input']>;
   /** At most venueRegistrationConfig.venue_video_limit YouTube video links or uploaded clips. Omitted keeps the stored list. */
   videos?: InputMaybe<Array<Scalars['String']['input']>>;
 };

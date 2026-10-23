@@ -634,7 +634,7 @@
   "portals/partners-app/src/pages/register-venue-page/sections/LeavesSection.tsx": 2,
   "portals/partners-app/src/pages/register-venue-page/sections/OwnerSection.tsx": 1,
   "portals/partners-app/src/pages/register-venue-page/sections/ReviewSection.tsx": 2,
-  "portals/partners-app/src/pages/register-venue-page/sections/venue-sections.ts": 14,
+  "portals/partners-app/src/pages/register-venue-page/sections/venue-sections.ts": 8,
   "portals/partners-app/src/pages/register-venue-page/sections/VenueImagesField.tsx": 3,
   "portals/partners-app/src/pages/register-venue-page/sections/VenueTypeCapacitySection.tsx": 1,
   "portals/partners-app/src/pages/register-venue-page/useVenueGeocoder.ts": 3,

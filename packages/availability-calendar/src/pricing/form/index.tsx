@@ -1,4 +1,6 @@
 export { default as VenuePricingForm, buildVenuePricingSchema } from './venue-pricing.form';
+export { default as FeesSection } from './FeesSection';
+export { default as RulesSection } from './RulesSection';
 export {
   blankRule,
   blankSlot,

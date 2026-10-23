@@ -18,7 +18,12 @@ describe('STUDIO_OPTION_LIST', () => {
       'venues',
       'slot-requests',
       'auto-pods',
-      'availability',
+      'calendar',
+      'type-capacity',
+      'amenities',
+      'leaves',
+      'fees',
+      'price-rules',
       'settings',
       'earnings',
       'publish',
@@ -26,6 +31,7 @@ describe('STUDIO_OPTION_LIST', () => {
       'food-menu',
       'food-orders',
       'food-coupons',
+      'food-settings',
       'rented-items',
       'pods',
       'change-requests',
@@ -51,6 +57,15 @@ describe('STUDIO_OPTION_LIST', () => {
         expect(option.hintKey).toMatch(/^mweb\.studioOptions\..+Hint$/);
         expect(option.portal.startsWith('/')).toBe(true);
       }
+    }
+  });
+
+  it('gives a console-only option no mWeb path or native route', () => {
+    const consoleOnly = Object.values(STUDIO_OPTION_LIST).flatMap((list) => list.filter((option) => option.consoleOnly));
+    expect(consoleOnly.length).toBeGreaterThan(0);
+    for (const option of consoleOnly) {
+      expect(option.path).toBeUndefined();
+      expect(option.route).toBeUndefined();
     }
   });
 
@@ -92,14 +107,21 @@ describe('STUDIO_OPTION_LIST', () => {
     });
   });
 
-  it('opens the Venue Pricing Module where the availability calendar used to be', () => {
-    expect(STUDIO_OPTION_LIST.VENUE.find((option) => option.key === 'availability')).toMatchObject({
-      labelKey: 'mweb.studioOptions.venuePricing',
-      hintKey: 'mweb.studioOptions.venuePricingHint',
-      path: '/venues/pricing',
-      route: 'VenuePricing',
-      portal: '/venues/pricing',
-    });
+  it('no longer lists the Venue Pricing Module: a venue sets up its fees and price rules on their own pages', () => {
+    expect(keys('VENUE')).not.toContain('availability');
+    const setup = STUDIO_OPTION_LIST.VENUE.filter((option) =>
+      ['calendar', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'food-settings'].includes(option.key),
+    );
+    expect(setup.map((option) => option.portal)).toEqual([
+      '/venues/calendar',
+      '/venues/type-capacity',
+      '/venues/amenities',
+      '/venues/leaves',
+      '/venues/fees',
+      '/venues/price-rules',
+      '/venues/food-settings',
+    ]);
+    expect(setup.every((option) => option.consoleOnly)).toBe(true);
   });
 
   it('lets a brand work its orders and ShipRocket warehouses in the app as well as the console', () => {
@@ -147,6 +169,17 @@ describe('studioOptionsFor', () => {
     expect(studioOptionsFor('HOST', ['HOST'], { autoPods: false, console: true }).map((o) => o.key)).not.toContain('auto-pods');
   });
 
+  it('lists the console-only venue pages in the Partner console only', () => {
+    const consoleKeys = studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: true, console: true }).map((o) => o.key);
+    const inApp = studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: true }).map((o) => o.key);
+    for (const key of ['calendar', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'food-settings']) {
+      expect(consoleKeys).toContain(key);
+      expect(inApp).not.toContain(key);
+    }
+    // Nothing else differs between the two lists for a venue.
+    expect(inApp).toEqual(consoleKeys.filter((key) => !STUDIO_OPTION_LIST.VENUE.find((o) => o.key === key)?.consoleOnly));
+  });
+
   it('gives each app-only option the same mWeb path and native route the apps open', () => {
     const appOnly = STUDIO_OPTION_LIST.HOST.filter((option) => option.appOnly);
     expect(appOnly.map(({ key, path, route }) => ({ key, path, route }))).toEqual([
@@ -162,17 +195,17 @@ describe('studioOptionsFor', () => {
 });
 
 describe('the food group', () => {
-  const FOOD_KEYS = ['food-dashboard', 'food-menu', 'food-orders', 'food-coupons'];
+  const FOOD_KEYS = ['food-dashboard', 'food-menu', 'food-orders', 'food-coupons', 'food-settings'];
 
-  it('marks the venue’s four food options, and no other option in any studio', () => {
+  it('marks the venue’s five food options, and no other option in any studio', () => {
     const grouped = Object.entries(STUDIO_OPTION_LIST).flatMap(([mode, list]) =>
       list.filter((option) => option.group !== undefined).map((option) => `${mode}:${option.key}:${option.group}`),
     );
     expect(grouped).toEqual(FOOD_KEYS.map((key) => `VENUE:${key}:food`));
   });
 
-  it('opens all four in the apps and in the Partner console, each on its own page', () => {
-    const food = STUDIO_OPTION_LIST.VENUE.filter((option) => option.group === 'food');
+  it('opens the four food desks in the apps and in the Partner console, each on its own page', () => {
+    const food = STUDIO_OPTION_LIST.VENUE.filter((option) => option.group === 'food' && !option.consoleOnly);
     expect(food.map(({ path, route, portal }) => ({ path, route, portal }))).toEqual([
       { path: '/venues/food-dashboard', route: 'VenueFoodDashboard', portal: '/venues/food-dashboard' },
       { path: '/venues/food-menu', route: 'VenueFoodMenu', portal: '/venues/food-menu' },
@@ -185,13 +218,18 @@ describe('the food group', () => {
 describe('studioOptionGroups', () => {
   it('splits the venue options into the main menu and the food menu, each in catalogue order', () => {
     const { main, food } = studioOptionGroups(STUDIO_OPTION_LIST.VENUE);
-    expect(food.map((option) => option.key)).toEqual(['food-dashboard', 'food-menu', 'food-orders', 'food-coupons']);
+    expect(food.map((option) => option.key)).toEqual(['food-dashboard', 'food-menu', 'food-orders', 'food-coupons', 'food-settings']);
     expect(main.map((option) => option.key)).toEqual([
       'dashboard',
       'venues',
       'slot-requests',
       'auto-pods',
-      'availability',
+      'calendar',
+      'type-capacity',
+      'amenities',
+      'leaves',
+      'fees',
+      'price-rules',
       'settings',
       'earnings',
       'publish',
@@ -213,7 +251,7 @@ describe('studioOptionGroups', () => {
     // The flag-filtered list splits the same way: Auto Pods off stays off.
     const off = studioOptionGroups(studioOptionsFor('VENUE', ['VENUE_OWNER'], { autoPods: false }));
     expect(off.main.map((option) => option.key)).not.toContain('auto-pods');
-    expect(off.food).toHaveLength(4);
+    expect(off.food).toHaveLength(5);
   });
 });
 

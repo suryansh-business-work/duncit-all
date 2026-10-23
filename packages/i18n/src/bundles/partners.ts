@@ -505,6 +505,29 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       venueNotFoundOrItIsn: "Venue not found, or it isn't yours.",
     },
 
+    // The Venue Options pages that set a venue up (type, capacity, hours,
+    // amenities, food, fees, price rules, calendar), at any status.
+    venueSetup: {
+      save: 'Save',
+      saved: 'Saved.',
+      saveFailed: 'Could not save. Try again.',
+      loadFailed: 'Could not load this venue. Try again.',
+      typeLocked: 'Your venue type is fixed once the venue is approved. Ask Duncit support to change it.',
+      hoursTitle: 'Opening hours',
+      hoursSubtitle: 'When your venue opens and closes every day it is open.',
+      opensAt: 'Opens at',
+      closesAt: 'Closes at',
+      closeAfterOpen: 'Closing time must be after opening time',
+      timeRequired: 'Pick a time',
+      weeklyOff: 'Weekly off days',
+      weeklyOffHint: 'Days your venue is closed every week.',
+      calendarTitle: 'Calendar',
+      calendarHint: 'Tap a date to block it or mark it a holiday. Bookings already made are kept.',
+      blocked: 'Blocked',
+      dayTitle: 'Date',
+      close: 'Close',
+    },
+
     venueDashboardPage: {
       bookedSlots: 'Booked Slots',
       bookedValue: 'Booked Value',

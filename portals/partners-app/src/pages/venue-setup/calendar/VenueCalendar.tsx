@@ -1,21 +1,17 @@
 import { useMemo, useState } from 'react';
 import { format, parse } from 'date-fns';
 import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import {
   AvailabilityCalendar,
   CalendarLegend,
   holidaysWith,
-  periodLabel,
+  MonthNavigator,
   pricingWithBlocked,
-  shiftAnchor,
   slotCoversDay,
   usePricingModule,
   useVenueSlots,
   viewRange,
 } from '@duncit/availability-calendar';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import CalendarDayDrawer from './CalendarDayDrawer';
 
@@ -66,20 +62,7 @@ export default function VenueCalendar({ venueId, holidays, onVenueChanged }: Rea
           <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 900 }}>
             {t('partners.venueSetup.calendarTitle')}
           </Typography>
-          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-            <DuncitIconButton onClick={() => setAnchor(shiftAnchor('month', anchor, -1))} aria-label={t('availability.toolbar.previous')}>
-              <ChevronLeftIcon />
-            </DuncitIconButton>
-            <Typography variant="subtitle1" sx={{ fontWeight: 900, minWidth: 140, textAlign: 'center' }}>
-              {periodLabel('month', anchor, range)}
-            </Typography>
-            <DuncitIconButton onClick={() => setAnchor(shiftAnchor('month', anchor, 1))} aria-label={t('availability.toolbar.next')}>
-              <ChevronRightIcon />
-            </DuncitIconButton>
-            <DuncitButton size="small" onClick={() => setAnchor(new Date())}>
-              {t('availability.toolbar.today')}
-            </DuncitButton>
-          </Stack>
+          <MonthNavigator anchor={anchor} range={range} onChange={setAnchor} />
         </Stack>
         {slots.error && (
           <Alert severity="error" sx={{ mb: 2 }}>

@@ -57,6 +57,7 @@ exports:
   - 'savedPricingInput'
   - 'usePricingModule'
   - 'DayToggles'
+  - 'MonthNavigator'
   - 'holidaysWith'
   - 'pricingWithBlocked'
   - 'buildVenuePricingSchema'
@@ -543,7 +544,8 @@ holidays without prices. They are built from the module's own pieces:
 `usePricingModule` (the saved pricing and its two writes), `savedPricingInput` (the saved
 pricing as a whole input — a page overlays only its own fields on it, so a fees save never
 touches the rules and the other way round), `DayToggles` with `pricingWithBlocked` /
-`holidaysWith` (one date's block and holiday).
+`holidaysWith` (one date's block and holiday), and `MonthNavigator` (the month header's
+previous / month / next / Today controls, shared with the Pricing calendar).
 
 ```tsx
 const { pricing, save } = usePricingModule(venueId);

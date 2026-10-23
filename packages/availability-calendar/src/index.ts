@@ -56,6 +56,7 @@ export {
 // its price rules — and its booking calendar build on these.
 export { usePricingModule } from './pricing/usePricingModule';
 export { default as DayToggles } from './pricing/calendar/DayToggles';
+export { default as MonthNavigator } from './MonthNavigator';
 export { holidaysWith, pricingWithBlocked } from './pricing/calendar/day-edits';
 export { usePriceQuote, bookingOf, wallInstant } from './pricing/preview/usePriceQuote';
 export { BREAKDOWN_FIELDS, UPDATE_VENUE_PRICING, VENUE_BOOKING_CALENDAR, VENUE_PRICE_QUOTE, VENUE_PRICING } from './pricing/queries';

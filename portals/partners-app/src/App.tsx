@@ -10,6 +10,7 @@ import NearbyHostsPage from './pages/pod-requests/search/NearbyHostsPage';
 import NearbyVenuesPage from './pages/pod-requests/search/NearbyVenuesPage';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenueChatPage from './pages/venue-chat-page/VenueChatPage';
+import VenueChatsPage from './pages/venue-chats-page/VenueChatsPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
 import HostDashboardPage from './pages/host-dashboard-page/HostDashboardPage';
 import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
@@ -101,6 +102,7 @@ export default function App() {
       {/* What members asked for when nothing was coming up — the shared page, scoped to the partner. */}
       <Route path="/venues/event-requests" element={<Navigate to="/venues/requests" replace />} />
       <Route path="/venues/pods" element={authed(<VenuePodsHub />)} />
+      <Route path="/venues/chats" element={authed(<VenueChatsPage />)} />
       <Route path="/venues/pods/:podId/chat" element={authed(<VenueChatPage />)} />
       {/* Change Requests stays scoped per studio, so a venue owner who also
           hosts is never shown the wrong queue. */}

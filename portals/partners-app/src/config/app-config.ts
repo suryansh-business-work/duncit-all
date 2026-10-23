@@ -164,6 +164,7 @@ const OPTION_NAV_ICON: Readonly<Record<StudioOptionIcon, string>> = {
   warehouses: 'warehouse',
   refunds: 'revenue',
   categories: 'widgets',
+  chat: 'chat',
 };
 
 const optionNavItem = (option: StudioOptionItem): AppNavItem => ({
@@ -218,7 +219,7 @@ const VENUE_NAV_CATEGORIES: readonly NavCategory[] = [
     icon: 'storefront',
     keys: ['venues', 'type-capacity', 'amenities', 'leaves', 'fees', 'price-rules', 'settings', 'publish', 'verification'],
   },
-  { label: 'Pods', labelKey: 'shell.nav.pods', icon: 'community', keys: ['pods', 'rented-items'] },
+  { label: 'Pods', labelKey: 'shell.nav.pods', icon: 'community', keys: ['pods', 'chat', 'rented-items'] },
   { label: 'Requests', labelKey: 'shell.nav.requests', icon: 'host-request', keys: ['slot-requests', 'pod-requests', 'change-requests', 'auto-pods', 'nearby'] },
   { label: 'Finance', labelKey: 'shell.nav.finance', icon: 'payments', keys: ['earnings', 'withdrawal'] },
 ];

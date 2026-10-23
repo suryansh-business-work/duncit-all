@@ -37,7 +37,7 @@ const VENUE_CATEGORIES: readonly [string, string[]][] = [
       '/verification',
     ],
   ],
-  ['shell.nav.pods', ['/venues/pods', '/venues/rented-items']],
+  ['shell.nav.pods', ['/venues/pods', '/venues/chats', '/venues/rented-items']],
   ['shell.nav.requests', ['/venues/requests', '/venues/pod-requests', '/venues/change-requests', '/venues/nearby-hosts']],
   ['shell.nav.food', ['/venues/food-dashboard', '/venues/food-menu', '/venues/food-orders', '/venues/food-coupons', '/venues/food-settings']],
   ['shell.nav.finance', ['/venues/earnings', '/wallet']],

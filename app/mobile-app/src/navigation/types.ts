@@ -136,6 +136,8 @@ export type RootStackParamList = {
   VenueList: undefined;
   VenuePublish: undefined;
   VenuePods: undefined;
+  /** Venue Options → Venue Chat: every host conversation at the picked venue. */
+  VenueChats: undefined;
   /** Venue Options → the food desk: Food Dashboard, Food Orders, Food Coupons. */
   VenueFoodDashboard: undefined;
   VenueFoodMenu: undefined;

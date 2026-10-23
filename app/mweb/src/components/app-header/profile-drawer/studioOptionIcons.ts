@@ -36,4 +36,6 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, ProfileIconKe
   refunds: 'returns',
   // The host's categories — the badge each approved category is.
   categories: 'badges',
+  // A venue's host conversations — the drawer's own chats glyph.
+  chat: 'chats',
 };

@@ -34,6 +34,7 @@ export const STUDIO_OPTION_ICON: Readonly<Record<StudioOptionIcon, IconName>> = 
   warehouses: 'warehouse',
   refunds: 'currency-exchange',
   categories: 'category',
+  chat: 'forum',
 };
 
 /**

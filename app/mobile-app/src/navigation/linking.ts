@@ -128,6 +128,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       HostShare: 'host/share',
       HostCategories: 'host/categories',
       VenuePods: 'venues/pods',
+      VenueChats: 'venues/chats',
       // The venue's food desk, on mWeb's paths.
       VenueFoodDashboard: 'venues/food-dashboard',
       VenueFoodMenu: 'venues/food-menu',

@@ -9,6 +9,7 @@ import CurrencyExchangeOutlined from '@mui/icons-material/CurrencyExchangeOutlin
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import EventOutlined from '@mui/icons-material/EventOutlined';
+import ForumOutlined from '@mui/icons-material/ForumOutlined';
 import GroupsOutlined from '@mui/icons-material/GroupsOutlined';
 import HubOutlined from '@mui/icons-material/HubOutlined';
 import InboxOutlined from '@mui/icons-material/InboxOutlined';
@@ -53,4 +54,5 @@ export const STUDIO_OPTION_ICONS: Readonly<Record<StudioOptionIcon, SvgIconCompo
   warehouses: WarehouseOutlined,
   refunds: CurrencyExchangeOutlined,
   categories: CategoryOutlined,
+  chat: ForumOutlined,
 };

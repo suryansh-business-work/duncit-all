@@ -135,6 +135,7 @@ export const ChatsPage = lazy(() => import('../../pages/ChatsPage'));
 export const ChatRoomPage = lazy(() => import('../../pages/ChatRoomPage'));
 // The private thread between a pod's hosts and its venue (also the push link).
 export const VenueChatPage = lazy(() => import('../../pages/venue-chat-page'));
+export const VenueChatsPage = lazy(() => import('../../pages/venue-chats-page'));
 export const MenuPage = lazy(() => import('../../pages/menu-page'));
 export const VenueAutoPodsPage = lazy(() => import('../../pages/venue-auto-pods-page'));
 export const HostAutoPodsPage = lazy(() => import('../../pages/host-auto-pods-page'));

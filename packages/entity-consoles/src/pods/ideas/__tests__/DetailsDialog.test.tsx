@@ -171,7 +171,8 @@ describe('DetailsDialog / deleting a comment', () => {
   it('holds the confirm open while deleting, then removes the comment and reports the change', async () => {
     const deleteComment: MockedResponse = {
       request: { query: DELETE_COMMENT, variables: { id: 'idea-1', commentId: 'c1' } },
-      delay: 80,
+      // Long enough that a slow CI runner still sees the in-flight state.
+      delay: 600,
       result: { data: { deletePodIdeaComment: { __typename: 'PodIdea', id: 'idea-1', comments_count: 0 } } },
     };
     renderDialog([
@@ -185,8 +186,11 @@ describe('DetailsDialog / deleting a comment', () => {
     const confirm = await screen.findByRole('dialog', { name: 'Delete this comment?' });
     fireEvent.click(within(confirm).getByRole('button', { name: 'Delete' }));
 
-    expect(await within(confirm).findByText('Deleting…')).toBeInTheDocument();
-    expect(within(confirm).getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    // Both read the same in-flight render, so assert them together.
+    await waitFor(() => {
+      expect(within(confirm).getByText('Deleting…')).toBeInTheDocument();
+      expect(within(confirm).getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    });
     fireEvent.keyDown(confirm, { key: 'Escape' });
     expect(screen.getByRole('dialog', { name: 'Delete this comment?' })).toBeInTheDocument();
 

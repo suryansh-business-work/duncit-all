@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Grid, LinearProgress, MenuItem, Stack, Typography } from '@mui/material';
+import { Alert, Grid, LinearProgress, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { RhfTextField } from '@duncit/forms';
-import { makeVenueOfferCounterSchema, VENUE_OFFER_COUNTER_MODELS } from '@duncit/forms/schemas';
-import { VENUE_OFFER_INBOX_MODEL_KEY } from '@duncit/utils';
+import { makeVenueOfferCounterSchema } from '@duncit/forms/schemas';
 import PriceBreakdownView from '../../pricing/preview/PriceBreakdownView';
+import OfferTermsFields from '../OfferTermsFields';
 import { useCounterQuote } from '../useCounterQuote';
 import { counterTermsOf, type CounterOfferValues } from './counter-offer.types';
 
@@ -30,24 +30,7 @@ export default function CounterOfferForm({ formId, slotId, defaultValues, onSubm
   return (
     <form id={formId} noValidate onSubmit={handleSubmit(async (values) => onSubmit(values))}>
       <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <RhfTextField control={control} name="model" select label={t('availability.offers.pricingOption')}>
-            {VENUE_OFFER_COUNTER_MODELS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {t(VENUE_OFFER_INBOX_MODEL_KEY[option].label)}
-              </MenuItem>
-            ))}
-          </RhfTextField>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <RhfTextField
-            control={control}
-            name="rate"
-            type="number"
-            label={t('availability.offers.amount')}
-            slotProps={{ htmlInput: { min: 0, step: 'any', inputMode: 'decimal' } }}
-          />
-        </Grid>
+        <OfferTermsFields control={control} />
         <Grid size={12}>
           <RhfTextField control={control} name="note" multiline minRows={2} label={t('availability.offers.note')} />
         </Grid>

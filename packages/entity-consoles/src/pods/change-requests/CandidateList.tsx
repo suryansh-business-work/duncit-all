@@ -4,7 +4,6 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import type { PodChangeCandidateRow } from '@duncit/pod-change-requests';
-import type { PodChangeRole } from '@duncit/utils';
 
 /** One contact line with its icon. Hoisted so it is never redefined (S6478). */
 function ContactLine({
@@ -22,7 +21,6 @@ function ContactLine({
 
 interface Props {
   rows: readonly PodChangeCandidateRow[];
-  role: PodChangeRole;
   loading: boolean;
   busy: boolean;
   onPick: (row: PodChangeCandidateRow) => void;
@@ -34,12 +32,11 @@ interface Props {
  *
  * Cards rather than a table on purpose: the whole point of the drawer is to
  * decide WHO to ring, and a phone number in a 90px column is not readable.
- * A VENUE row continues to the slot picker; the other two send the offer
- * straight away, because there is nothing left to choose.
+ * Every row sends the offer straight away; a venue answers with its own time
+ * and price when it approves.
  */
 export default function CandidateList({
   rows,
-  role,
   loading,
   busy,
   onPick,
@@ -59,9 +56,7 @@ export default function CandidateList({
     return <Alert severity="warning">{t('admin.changeRequests.noCandidates')}</Alert>;
   }
 
-  const cta = role === 'VENUE'
-    ? t('admin.changeRequests.colSlot')
-    : t('admin.changeRequests.sendRequest');
+  const cta = t('admin.changeRequests.sendRequest');
 
   return (
     <Stack spacing={1}>

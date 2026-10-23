@@ -1,6 +1,5 @@
 import Alert from '@mui/material/Alert';
 import Typography from '@mui/material/Typography';
-import { DuncitButton } from '@duncit/buttons';
 import { autoPodCityLabel, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 import type { AutoPodVenueOption } from './AutoPodVenuePicker';
 
@@ -39,32 +38,5 @@ export function VenueAcceptContext({ row, venue, venueInCity, labels }: Readonly
         <Alert severity="warning">{labels.noVenueInCity(autoPodCityLabel(row?.location))}</Alert>
       ) : null}
     </>
-  );
-}
-
-interface NoSlotsProps {
-  labels: AutoPodLabels;
-  /** Absent when the surface has nowhere to send the venue to add availability. */
-  onAddAvailability?: () => void;
-}
-
-/**
- * Shown when the venue is eligible but has nothing free in the window.
- *
- * The call to action is optional because not every surface can route to the
- * availability screen; without one the notice still explains the emptiness
- * rather than leaving a bare disabled picker.
- */
-export function NoSlotsNotice({ labels, onAddAvailability }: Readonly<NoSlotsProps>) {
-  const action = onAddAvailability ? (
-    <DuncitButton color="inherit" size="small" onClick={onAddAvailability} data-testid="auto-pod-add-availability">
-      {labels.addAvailability}
-    </DuncitButton>
-  ) : undefined;
-
-  return (
-    <Alert severity="info" action={action} data-testid="auto-pod-no-slots">
-      {labels.noSlots}
-    </Alert>
   );
 }

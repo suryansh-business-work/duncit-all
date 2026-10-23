@@ -22,7 +22,9 @@ exports:
   - 'WITHDRAW_POD_CHANGE'
   - 'POD_CHANGE_REQUESTS_TABLE'
   - 'POD_CHANGE_CANDIDATES'
-  - 'POD_CHANGE_VENUE_SLOTS'
+  - 'POD_CHANGE_VENUE_QUOTE'
+  - 'podChangeVenueQuoteSource'
+  - 'podChangeVenueWindow'
   - 'OFFER_POD_CHANGE'
   - 'CANCEL_POD_FOR_CHANGE'
 ---
@@ -62,7 +64,7 @@ from — so it lives here rather than four times over (rule 40).
 | File | Venue / Host / Club Admin | `requestPodChange` — Account Health points deducted, one live request per pod per role |
 | Queue | Platform admin | The request appears under its role's tab in Admin > Pods > Change Requests |
 | Offer | Platform admin | `offerPodChange` — mail + WhatsApp + in-app notification to one matching partner |
-| Answer | The offered partner | `respondToPodChange` — APPROVE takes the place, PASS returns it to the queue |
+| Answer | The offered partner | `respondToPodChange` — APPROVE takes the place (a venue sends `venue_window`: its time and price, from the board's take-over dialog), PASS returns it to the queue |
 | Or cancel | Platform admin | `cancelPodForChange` — the pod is cancelled and every attendee refunded |
 
 ## Reference
@@ -76,7 +78,8 @@ from — so it lives here rather than four times over (rule 40).
 | `useTranslation` / `fallbackT` | `changeRequest.*`, layered over the host surface's bundle. |
 | `MY_POD_CHANGE_BOARD` | The one partner-facing read: both lists plus the three current penalties. |
 | `POD_CHANGE_REQUESTS_TABLE` | The admin queue, server-paged, one role per call. |
-| `POD_CHANGE_CANDIDATES` / `POD_CHANGE_VENUE_SLOTS` | What the admin's assign drawer lists. |
+| `POD_CHANGE_CANDIDATES` | What the admin's assign drawer lists; a venue is offered by `venue_id` alone. |
+| `POD_CHANGE_VENUE_QUOTE` / `podChangeVenueQuoteSource` / `podChangeVenueWindow` | How a venue's take-over window is priced and sent (no guests — they are the pod's spots). |
 
 ## Using it on a pod row
 

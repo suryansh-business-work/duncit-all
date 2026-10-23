@@ -21,6 +21,7 @@
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/auto-pods"
   },
   "dependencies": {
+    "@duncit/availability-calendar": "workspace:*",
     "@duncit/buttons": "workspace:*",
     "@duncit/datetime": "workspace:*",
     "@duncit/ui": "workspace:*",

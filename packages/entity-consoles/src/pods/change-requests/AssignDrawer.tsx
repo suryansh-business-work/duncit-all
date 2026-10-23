@@ -2,18 +2,15 @@ import { useEffect, useId, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import {
   OFFER_POD_CHANGE,
   POD_CHANGE_CANDIDATES,
-  POD_CHANGE_VENUE_SLOTS,
   type PodChangeCandidateRow,
-  type PodChangeSlotRow,
 } from '@duncit/pod-change-requests';
 import type { PodChangeRole, PodChangeRow } from '@duncit/utils';
 import CandidateList from './CandidateList';
-import SlotList from './SlotList';
 
 const HINT_KEY: Record<PodChangeRole, string> = {
   VENUE: 'admin.changeRequests.drawerVenueHint',
@@ -30,19 +27,14 @@ interface Props {
 /**
  * "Find a replacement" — the side drawer behind the queue's swap action.
  *
- * Two steps for a venue and one for everybody else: a venue brings a SLOT, and
- * the pod's date and time move to it, so the admin picks the venue and then the
- * time. A host and a club admin bring only themselves.
- *
- * Nothing is reserved by opening this. The slot is checked when the offer is
- * sent and booked only when the venue approves — holding a slot for an offer
- * that may be passed would take a sellable evening off that venue's calendar
- * for as long as they ignore it.
+ * One step for every role: the admin picks who is asked. A venue answers with
+ * its own time and price when it approves (respondToPodChange venue_window), so
+ * nothing is picked or reserved for it here — holding a time for an offer that
+ * may be passed would take a sellable evening off that venue's calendar.
  */
 export default function AssignDrawer({ request, onClose, onOffered }: Readonly<Props>) {
   const { t } = useTranslation();
   const titleId = useId();
-  const [venue, setVenue] = useState<PodChangeCandidateRow | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
 
   const candidates = useQuery<any>(POD_CHANGE_CANDIDATES, {
@@ -50,29 +42,18 @@ export default function AssignDrawer({ request, onClose, onOffered }: Readonly<P
     skip: !request,
     fetchPolicy: 'cache-and-network',
   });
-  // The picked venue's id for the offer; absent only for a candidate with no
-  // venue behind it, which has no slots to pick from either.
-  const venueId = venue?.venue_id ?? undefined;
-  const slots = useQuery<any>(POD_CHANGE_VENUE_SLOTS, {
-    variables: { request_id: request?.id ?? '', venue_id: venue?.venue_id ?? '' },
-    skip: !request || !venue?.venue_id,
-    fetchPolicy: 'cache-and-network',
-  });
   const [offer, offerState] = useMutation<any>(OFFER_POD_CHANGE);
 
-  // A drawer opened on a different request must never keep the venue picked
-  // for the previous one — that pairing is what the offer is built from.
+  // A drawer opened on a different request starts with no stale error.
   useEffect(() => {
-    setVenue(null);
     setErrorText(null);
   }, [request?.id]);
 
   if (!request) return null;
 
   const rows: PodChangeCandidateRow[] = candidates.data?.podChangeCandidates ?? [];
-  const slotRows: PodChangeSlotRow[] = slots.data?.podChangeVenueSlots ?? [];
 
-  const send = (input: { user_id: string; venue_id?: string; venue_slot_id?: string }) => {
+  const send = (input: { user_id: string; venue_id?: string }) => {
     setErrorText(null);
     offer({ variables: { input: { request_id: request.id, ...input } } })
       .then(() => {
@@ -83,13 +64,9 @@ export default function AssignDrawer({ request, onClose, onOffered }: Readonly<P
       .catch((error: Error) => setErrorText(error.message));
   };
 
-  const pickCandidate = (row: PodChangeCandidateRow) => {
-    if (request.role === 'VENUE') {
-      setVenue(row);
-      return;
-    }
-    send({ user_id: row.user_id });
-  };
+  // A venue is offered by its venue; it brings its own time and price when it approves.
+  const pickCandidate = (row: PodChangeCandidateRow) =>
+    send(request.role === 'VENUE' ? { user_id: row.user_id, venue_id: row.venue_id ?? undefined } : { user_id: row.user_id });
 
   return (
     <Drawer
@@ -124,38 +101,12 @@ export default function AssignDrawer({ request, onClose, onOffered }: Readonly<P
 
         {errorText && <Alert severity="error">{errorText}</Alert>}
 
-        {venue ? (
-          <Stack spacing={1.5}>
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-              <DuncitButton size="small" variant="outlined" onClick={() => setVenue(null)}>
-                {t('admin.changeRequests.backToCandidates')}
-              </DuncitButton>
-              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                {t('admin.changeRequests.pickSlot', { vars: { venue: venue.label } })}
-              </Typography>
-            </Stack>
-            <SlotList
-              rows={slotRows}
-              loading={slots.loading && !slots.data}
-              busy={offerState.loading}
-              onPick={(slot) =>
-                send({
-                  user_id: venue.user_id,
-                  venue_id: venueId,
-                  venue_slot_id: slot.id,
-                })
-              }
-            />
-          </Stack>
-        ) : (
-          <CandidateList
-            rows={rows}
-            role={request.role}
-            loading={candidates.loading && !candidates.data}
-            busy={offerState.loading}
-            onPick={pickCandidate}
-          />
-        )}
+        <CandidateList
+          rows={rows}
+          loading={candidates.loading && !candidates.data}
+          busy={offerState.loading}
+          onPick={pickCandidate}
+        />
       </Stack>
     </Drawer>
   );

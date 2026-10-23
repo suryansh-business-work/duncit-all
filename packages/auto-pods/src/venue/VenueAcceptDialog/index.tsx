@@ -1,25 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation } from '@apollo/client/react';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
-import LinearProgress from '@mui/material/LinearProgress';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { WindowOfferForm, windowOfferDefaults, type WindowOfferInput } from '@duncit/availability-calendar';
 import { DuncitButton } from '@duncit/buttons';
 import type { AutoPodRow, AutoPodLabels } from '@duncit/utils';
-import { AUTO_POD_VENUE_SLOTS, VENUE_ACCEPT_AUTO_POD } from '../../queries';
+import { VENUE_ACCEPT_AUTO_POD, autoPodVenueQuoteSource, autoPodVenueOffer } from '../../queries';
 import { enrolmentFailure } from '../../failure-message';
 import type { AutoPodVenueOption } from '../AutoPodVenuePicker';
-import { NoSlotsNotice, VenueAcceptContext } from '../VenueAcceptSections';
-import { SlotEarnings } from './SlotEarnings';
-import type { AutoPodVenueSlot, VenueSlotsData } from './types';
-
-export type { AutoPodVenueSlot } from './types';
+import { VenueAcceptContext } from '../VenueAcceptSections';
 
 export interface VenueAcceptDialogProps {
   row: AutoPodRow | null;
@@ -29,53 +23,30 @@ export interface VenueAcceptDialogProps {
   open: boolean;
   onClose: () => void;
   onAccepted: () => void;
-  formatWhen: (iso: string) => string;
-  formatMoney: (amount: number) => string;
-  /** Where this surface sends a venue with no free slots. */
-  onAddAvailability?: () => void;
 }
 
 /**
- * Accepting an Auto Pod and committing a slot are ONE step: an acceptance with
- * no date would leave hosts and club admins nothing to enrol against. The
- * venue is the one chosen at the top of the queue; the slots are its free ones
- * in the next few days (Pod Settings decides how many), nearest first, each
- * priced as the venue would be paid after Finance's deductions. The slot is
- * booked the instant this succeeds and stays booked until the pod exists.
+ * Accepting an Auto Pod and fixing its time are ONE step: an acceptance with no
+ * date would leave hosts and club admins nothing to enrol against. The venue
+ * (chosen at the top of the queue) proposes a time inside its opening hours and
+ * how it is paid; the server prices it (its charges, Duncit's commission on
+ * top) and books it, price frozen, the instant this succeeds. The guests are
+ * the offer's spots.
  */
-export function VenueAcceptDialog({
-  row,
-  venue,
-  labels,
-  open,
-  onClose,
-  onAccepted,
-  formatWhen,
-  formatMoney,
-  onAddAvailability,
-}: Readonly<VenueAcceptDialogProps>) {
-  const [slotId, setSlotId] = useState('');
+export function VenueAcceptDialog({ row, venue, labels, open, onClose, onAccepted }: Readonly<VenueAcceptDialogProps>) {
   const [failure, setFailure] = useState<string | null>(null);
+  const [accept, acceptState] = useMutation(VENUE_ACCEPT_AUTO_POD);
 
   // A pinned offer only takes a venue from its own city — the server refuses
-  // any other, so the dialog says so rather than listing slots it cannot use.
+  // any other, so the dialog says so rather than offering a time it cannot use.
   const pinnedLocationId = row?.location?.location_id ?? null;
   const venueInCity = !!venue && (!pinnedLocationId || venue.location_id === pinnedLocationId);
-
-  const slotsQuery = useQuery<VenueSlotsData>(AUTO_POD_VENUE_SLOTS, {
-    variables: { auto_pod_doc_id: row?.id ?? '', venue_id: venue?.id ?? '' },
-    skip: !open || !row || !venue || !venueInCity,
-    fetchPolicy: 'network-only',
-  });
-  const payload = slotsQuery.data?.autoPodVenueSlots;
-  const slots = payload?.slots ?? [];
-  const selected = slots.find((slot) => slot.id === slotId) ?? null;
-
-  const [accept, acceptState] = useMutation<any>(VENUE_ACCEPT_AUTO_POD);
+  const formId = `auto-pod-venue-accept-${row?.id ?? 'none'}`;
+  const quote = useMemo(() => autoPodVenueQuoteSource(row?.id ?? '', venue?.id ?? ''), [row?.id, venue?.id]);
+  const defaults = useMemo(() => windowOfferDefaults(), []);
 
   // A fresh offer, or a different venue, is a fresh choice.
   useEffect(() => {
-    setSlotId('');
     setFailure(null);
   }, [row?.id, venue?.id]);
 
@@ -84,33 +55,16 @@ export function VenueAcceptDialog({
     onClose();
   };
 
-  // What an accept would commit — only once an offer, a venue in the right
-  // city and a slot the pod can cover are all in hand. The button is the only
-  // way in, and it stays shut until then.
-  const target =
-    row && venue && venueInCity && selected?.viable && !acceptState.loading
-      ? { autoPodId: row.id, venueId: venue.id, slotId: selected.id }
-      : null;
-
-  const acceptWith = async (chosen: NonNullable<typeof target>) => {
+  const acceptWith = async (autoPodId: string, venueId: string, offer: WindowOfferInput) => {
     setFailure(null);
     try {
-      await accept({
-        variables: { auto_pod_doc_id: chosen.autoPodId, venue_id: chosen.venueId, slot_id: chosen.slotId },
-      });
+      await accept({ variables: { auto_pod_doc_id: autoPodId, venue_id: venueId, offer: autoPodVenueOffer(offer) } });
       onAccepted();
       handleClose();
     } catch (err) {
       setFailure(enrolmentFailure(err, labels.claimedElsewhere));
     }
   };
-  const handleAccept = target ? () => acceptWith(target) : undefined;
-
-  const slotLabel = (slot: AutoPodVenueSlot) => {
-    const space = slot.space_label ? ` · ${slot.space_label}` : '';
-    return `${formatWhen(slot.start_at)}${space} · ${formatMoney(slot.price)}`;
-  };
-  const noSlots = venueInCity && !slotsQuery.loading && !!payload && slots.length === 0;
 
   return (
     <Dialog open={open} onClose={handleClose} data-testid="auto-pod-venue-accept-dialog" fullWidth maxWidth="sm">
@@ -121,41 +75,25 @@ export function VenueAcceptDialog({
             {labels.confirmAcceptBody}
           </Typography>
           <VenueAcceptContext row={row} venue={venue} venueInCity={venueInCity} labels={labels} />
-
-          <TextField
-            select
-            fullWidth
-            label={labels.pickSlot}
-            value={slotId}
-            onChange={(e) => setSlotId(e.target.value)}
-            disabled={!venueInCity || slots.length === 0}
-            helperText={payload ? labels.slotWindow(payload.window_days) : undefined}
-            data-testid="auto-pod-slot-select"
-          >
-            {slots.map((slot) => (
-              <MenuItem key={slot.id} value={slot.id} data-testid={`auto-pod-slot-option-${slot.id}`}>
-                {slotLabel(slot)}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          {/* Reading a venue's free slots is a round trip; without this the
-              picker just sits empty and reads as "no slots". */}
-          {slotsQuery.loading ? <LinearProgress data-testid="auto-pod-slots-loading" /> : null}
-
-          <SlotEarnings slot={selected} labels={labels} formatMoney={formatMoney} />
-
-          {noSlots ? <NoSlotsNotice labels={labels} onAddAvailability={onAddAvailability} /> : null}
-
+          {row && venue && venueInCity ? (
+            <WindowOfferForm
+              key={formId}
+              formId={formId}
+              defaultValues={defaults}
+              quote={quote}
+              onSubmit={(offer) => acceptWith(row.id, venue.id, offer)}
+            />
+          ) : null}
           {failure ? <Alert severity="error" data-testid="auto-pod-venue-accept-error">{failure}</Alert> : null}
         </Stack>
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={handleClose} data-testid="auto-pod-venue-accept-dismiss">{labels.dismiss}</DuncitButton>
         <DuncitButton
+          type="submit"
+          form={formId}
           variant="contained"
-          onClick={handleAccept}
-          disabled={!handleAccept}
+          disabled={!row || !venueInCity}
           loading={acceptState.loading}
           data-testid="auto-pod-venue-accept-confirm"
         >

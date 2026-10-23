@@ -92,6 +92,12 @@ exports:
   - 'OfferHistory'
   - 'OfferDecisionActions'
   - 'offerTermsLabel'
+  - 'WindowOfferForm'
+  - 'useWindowQuote'
+  - 'windowOfferDefaults'
+  - 'windowOfferInput'
+  - 'ProposeWindowBlock'
+  - 'ProposedTerms'
   - 'VENUE_BOOKING_REQUESTS'
   - 'VENUE_OFFER_FIELDS'
   - 'VENUE_COUNTER_QUOTE'
@@ -591,6 +597,14 @@ Partners console and mWeb: pass `venueId` (or `null` for every venue) and it lis
   `counterVenueOffer`) and Reject (`declineVenueSlotRequest` with an optional reason). While the
   venue's counter waits, Counter becomes "Change counter" and Accept is gone. A request from before
   offers keeps Accept and Reject only.
+
+`WindowOfferForm` proposes a booking outside an existing offer: a day, a start and an end, the
+space (a choice only when several are given), the guests (`askPax`) and a pricing option with an
+amount, priced live through a `WindowQuoteSource` (`{ document, field, variables(offer) }` — each
+flow's own query answering `{ ok, message, quote }`). The caller owns the submit button
+(`form={formId}`). Pod Requests use it through `ProposeWindowBlock` (`podPartnerWindowQuote` →
+`proposePodPartnerWindow`) and show what was proposed with `ProposedTerms`; Auto Pods'
+`VenueAcceptDialog` and the Change Requests take-over dialog pass their own sources.
 
 The Partners request page (`/venues/requests/:slotId`) builds from the same three pieces;
 `VENUE_OFFER_FIELDS` is the selection to add to its own query. Which actions show, and how a

@@ -4,13 +4,16 @@ import { Alert, Skeleton, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useConfirm } from '@duncit/dialogs';
 import type { PodChangeRole, PodChangeRow } from '@duncit/utils';
+import type { WindowOfferInput } from '@duncit/availability-calendar';
 import { useTranslation } from '../i18n';
 import {
   MY_POD_CHANGE_BOARD,
   RESPOND_TO_POD_CHANGE,
   WITHDRAW_POD_CHANGE,
+  podChangeVenueWindow,
 } from '../queries';
 import BoardList from './BoardList';
+import VenueTakeoverDialog from './VenueTakeoverDialog';
 
 interface Props {
   /**
@@ -44,6 +47,7 @@ export default function ChangeRequestBoard({
   const { t } = useTranslation();
   const confirm = useConfirm();
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [takeover, setTakeover] = useState<PodChangeRow | null>(null);
   const board = useQuery<any>(MY_POD_CHANGE_BOARD, { fetchPolicy: 'cache-and-network' });
   const [respond, respondState] = useMutation<any>(RESPOND_TO_POD_CHANGE);
   const [withdraw, withdrawState] = useMutation<any>(WITHDRAW_POD_CHANGE);
@@ -64,11 +68,28 @@ export default function ChangeRequestBoard({
       .catch((error: Error) => setErrorText(error.message));
   };
 
+  // A venue takes a pod over at a time and price of its own; host and club roles just approve.
   const approve = (row: PodChangeRow) => {
+    if (row.role === 'VENUE') {
+      setTakeover(row);
+      return;
+    }
     run(
       respond({ variables: { request_id: row.id, decision: 'APPROVE', reason: '' } }),
       t('changeRequest.approved')
     );
+  };
+
+  const takeOver = async (row: PodChangeRow, offer: WindowOfferInput) => {
+    setErrorText(null);
+    try {
+      await respond({ variables: { request_id: row.id, decision: 'APPROVE', reason: '', venue_window: podChangeVenueWindow(offer) } });
+      setTakeover(null);
+      onChanged?.(t('changeRequest.approved'));
+      await board.refetch();
+    } catch (error) {
+      setErrorText(error instanceof Error ? error.message : String(error));
+    }
   };
 
   const pass = (row: PodChangeRow) => {
@@ -163,6 +184,7 @@ export default function ChangeRequestBoard({
         busy={busy}
         onWithdraw={pull}
       />
+      <VenueTakeoverDialog row={takeover} busy={respondState.loading} onClose={() => setTakeover(null)} onSubmit={takeOver} />
     </Stack>
   );
 }

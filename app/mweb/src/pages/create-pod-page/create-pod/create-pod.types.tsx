@@ -50,9 +50,13 @@ export interface CreatePodFormValues {
   venue_slot_id: string;
   /** Selected venue space/type (a capacity item label) — drives No. of spots. */
   venue_space_label: string;
-  /** Instant booking (no slot id): whether pets come (pet fee). Its guests are
+  /** Venue offer (no slot id): whether pets come (pet fee). Its guests are
    * the pod's spots; its window is pod_date_time..pod_end_date_time. */
   venue_booking_pets: boolean;
+  /** Venue offer: how the host pays the venue (a VenueOfferModel), '' until picked. */
+  venue_offer_model: string;
+  /** Venue offer: the amount typed for that option, in rupees ('' until typed). */
+  venue_offer_rate: string;
   meeting_platform: string;
   meeting_url: string;
   meeting_notes: string;
@@ -93,6 +97,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   venue_slot_id: '',
   venue_space_label: '',
   venue_booking_pets: false,
+  venue_offer_model: '',
+  venue_offer_rate: '',
   meeting_platform: '',
   meeting_url: '',
   meeting_notes: '',

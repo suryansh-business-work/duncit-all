@@ -1,19 +1,32 @@
 import { z } from 'zod';
-import { isMeetingPlatform } from '@duncit/utils';
+import { isMeetingPlatform, isVenueOfferModel, offerRateOf } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
 import { POD_TYPE_VALUES, type CreatePodFormValues } from './create-pod.types';
 
+/** The host's offer to the venue: how they pay it and how much. */
+function refineVenueOffer(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (!isVenueOfferModel(values.venue_offer_model)) {
+    ctx.addIssue({ code: 'custom', path: ['venue_offer_model'], message: t('mweb.createPod.validation.offerModelRequired') });
+  }
+  if (offerRateOf(values.venue_offer_rate) <= 0) {
+    ctx.addIssue({ code: 'custom', path: ['venue_offer_rate'], message: t('mweb.createPod.validation.offerRateRequired') });
+  }
+}
+
 /** A physical pod's time at the venue: a Pod Request books the slot it holds;
- * every other pod books a window at the venue's own pricing (a slot id an
- * older draft still carries books as before). Native twin. */
+ * every other pod sends the venue an offer for a window (a slot id an older
+ * draft still carries books as before). Native twin. */
 function refineVenueTime(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.venue_slot_id) return;
   if (values.partner_request_id) {
     ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: t('mweb.createPod.validation.slotRequired') });
-  } else if (!values.pod_end_date_time) {
+    return;
+  }
+  if (!values.pod_end_date_time) {
     ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.bookingRequired') });
   }
+  refineVenueOffer(values, ctx, t);
 }
 
 /** Physical pods need a venue, a space/capacity and a booked time; virtual pods

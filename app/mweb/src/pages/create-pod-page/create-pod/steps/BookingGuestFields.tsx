@@ -3,11 +3,9 @@ import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
 import type { SpotsBounds } from '@duncit/utils';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
-import type { VenueBookingPricing } from '../venueBooking';
 
 interface Props {
   form: CreatePodForm;
-  pricing: VenueBookingPricing;
   /** The range the pod may be sized within (activity + venue + space). */
   spots: SpotsBounds;
 }
@@ -17,10 +15,10 @@ const DIRTY = { shouldDirty: true, shouldValidate: true } as const;
 /**
  * The pod's spots — which ARE the booking's guests, so there is one number,
  * held inside the activity's minimum, the venue's guest range and the space's
- * capacity, and quoted as it changes — and whether pets come (only when the
- * venue has a pet fee). Native twin: BookingGuestFields.
+ * capacity, and quoted as it changes — and whether pets come (the quote adds
+ * the venue's pet fee, if it has one). Native twin: BookingGuestFields.
  */
-export default function BookingGuestFields({ form, pricing, spots }: Readonly<Props>) {
+export default function BookingGuestFields({ form, spots }: Readonly<Props>) {
   const { t } = useTranslation();
   const pets = form.watch('venue_booking_pets');
   const boundsHint = spots.slidable
@@ -41,18 +39,16 @@ export default function BookingGuestFields({ form, pricing, spots }: Readonly<Pr
         // Only fixed when the venue and space leave no room to choose.
         readOnly={spots.max <= spots.min}
       />
-      {pricing.pet_fee > 0 && (
-        <FormControlLabel
-          control={
-            <Switch
-              data-testid="create-pod-booking-pets"
-              checked={pets}
-              onChange={(e) => form.setValue('venue_booking_pets', e.target.checked, DIRTY)}
-            />
-          }
-          label={t('mweb.createPod.bookingPets')}
-        />
-      )}
+      <FormControlLabel
+        control={
+          <Switch
+            data-testid="create-pod-booking-pets"
+            checked={pets}
+            onChange={(e) => form.setValue('venue_booking_pets', e.target.checked, DIRTY)}
+          />
+        }
+        label={t('mweb.createPod.bookingPets')}
+      />
     </Stack>
   );
 }

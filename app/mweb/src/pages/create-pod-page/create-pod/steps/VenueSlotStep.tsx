@@ -6,7 +6,7 @@ import type { FreePodVenueNotice, SpotsBounds } from '@duncit/utils';
 import FreeVenueNote from '../FreeVenueNote';
 import VenuePicker from '../VenuePicker';
 import VenueContactCard from '../VenueContactCard';
-import InstantBookingPicker from './InstantBookingPicker';
+import VenueOfferPicker from './VenueOfferPicker';
 import RequestSlotPicker from './RequestSlotPicker';
 import { venueSpaces, type VenueSpace } from './venueSpaces';
 import VirtualMeetingFields from '../VirtualMeetingFields';
@@ -30,10 +30,10 @@ interface Props {
   spots: SpotsBounds;
 }
 
-/** Step 3 — pick a venue partner in the pod's city (card rail) and book it
- * instantly at its own pricing (physical), or meeting details + schedule
- * (virtual). A Pod Request's pod keeps the slot that request holds. The booked
- * window sets the pod's date/time. */
+/** Step 3 — pick a venue partner in the pod's city (card rail) and send it an
+ * offer for a window (physical), or meeting details + schedule (virtual). A Pod
+ * Request's pod keeps the slot that request holds. The offered window sets the
+ * pod's date/time. */
 export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice, spots }: Readonly<Props>) {
   const {
     control,
@@ -57,7 +57,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
     (venue) => clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId)
   );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
-  // A Pod Request's pod books the slot that request holds; every other pod books instantly.
+  // A Pod Request's pod books the slot that request holds; every other pod sends an offer.
   const fromRequest = Boolean(watch('partner_request_id'));
   const spaces = venueSpaces(selectedVenue);
   const selectedSpace = spaces.find((space) => space.label === spaceLabel) ?? null;
@@ -125,7 +125,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, venueNotice,
         </Stack>
       )}
       {selectedVenue && selectedSpace && !fromRequest && (
-        <InstantBookingPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} spots={spots} />
+        <VenueOfferPicker form={form} venueId={selectedVenue.id} spaceLabel={selectedSpace.label} spots={spots} />
       )}
       {selectedVenue && selectedSpace && fromRequest && <RequestSlotPicker form={form} space={selectedSpace} />}
       <FreeVenueNote notice={venueNotice} />

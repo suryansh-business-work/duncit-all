@@ -9,6 +9,7 @@ import {
   venueApprovalChip,
 } from '@duncit/host-pod-actions';
 import PodThumb from './PodThumb';
+import VenueCounteredChip from './VenueCounteredChip';
 import type { HostPodRowActions } from './hostPodRowActions';
 import { formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -79,6 +80,7 @@ export default function HostPodRow({
                 sx={{ mt: 0.5, height: 24 }}
               />
             )}
+            <VenueCounteredChip podId={pod.id} status={pod.venue_offer_status} />
           </Box>
         </Box>
         <Chip

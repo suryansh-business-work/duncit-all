@@ -6,16 +6,19 @@ import { SURFACE_SX } from '../../../../theme';
 
 interface Props {
   quote: VenueQuote | null;
+  /** Why the offer cannot be sent, as the server put it. */
+  message?: string | null;
   loading: boolean;
   error: unknown;
 }
 
 /**
- * The venue's price for the picked window, exactly as the server quoted it:
- * base, each rule applied, any min-spend top-up, fees, taxes and Duncit's fee
- * on top. Read-only — the host cannot change it. Native twin: VenueQuoteCard.
+ * The host's offer, priced exactly as the server quoted it: the offered base,
+ * each of the venue's price rules, any min-spend top-up, its fees, taxes and
+ * Duncit's fee on top — or why the offer cannot be sent. Read-only: the host
+ * changes the offer, not the price. Native twin: VenueQuoteCard.
  */
-export default function VenueQuoteCard({ quote, loading, error }: Readonly<Props>) {
+export default function VenueQuoteCard({ quote, message, loading, error }: Readonly<Props>) {
   const { t } = useTranslation();
   const { currency } = usePricing();
   const money = (value: number) => formatStatementMoney(value, currency);
@@ -24,6 +27,13 @@ export default function VenueQuoteCard({ quote, loading, error }: Readonly<Props
     return (
       <Alert severity="warning" data-testid="create-pod-quote-error">
         {parseApiError(error) || t('mweb.createPod.quoteFailed')}
+      </Alert>
+    );
+  }
+  if (message) {
+    return (
+      <Alert severity="warning" data-testid="create-pod-offer-problem">
+        {message}
       </Alert>
     );
   }

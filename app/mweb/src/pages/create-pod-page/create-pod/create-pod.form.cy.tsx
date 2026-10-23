@@ -24,9 +24,11 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   venue_id: 'venue-1',
   venue_space_label: 'Whole venue',
   pod_description: 'A relaxed group hike around the lake.',
-  // Booked instantly at the venue's pricing: the window is the pod window.
+  // An offer to the venue: the window is the pod window, priced per guest.
   pod_date_time: START,
   pod_end_date_time: END,
+  venue_offer_model: 'PER_GUEST',
+  venue_offer_rate: '300',
   // The blank default is invalid on purpose — a paid pod must carry a price.
   pod_amount: 499,
   media_text: 'https://cdn/img.jpg',
@@ -55,10 +57,20 @@ describe('createPodSchema', () => {
   it('requires a venue, a space/capacity and a booked window for physical pods', () => {
     expect(issuesOf(valid({ venue_id: '' }))).toContain('venue_id');
     expect(issuesOf(valid({ venue_space_label: '' }))).toContain('venue_space_label');
-    // An instant booking needs its end too — a start alone is no booking.
+    // An offer needs its end too — a start alone is no booking.
     expect(issuesOf(valid({ pod_end_date_time: null }))).toContain('pod_date_time');
     // It needs no slot id: only a Pod Request books one.
     expect(issuesOf(valid({ venue_slot_id: '' }))).not.toContain('venue_slot_id');
+  });
+
+  it('requires the offer to name how the venue is paid, and a positive amount', () => {
+    expect(issuesOf(valid({ venue_offer_model: '' }))).toContain('venue_offer_model');
+    expect(issuesOf(valid({ venue_offer_model: 'PER_PAX' }))).toContain('venue_offer_model');
+    expect(issuesOf(valid({ venue_offer_rate: '' }))).toContain('venue_offer_rate');
+    expect(issuesOf(valid({ venue_offer_rate: '0' }))).toContain('venue_offer_rate');
+    // A Pod Request's held slot and a virtual pod carry no offer.
+    const fromRequest = valid({ partner_request_id: 'req-1', venue_slot_id: 'slot-1', venue_offer_model: '', venue_offer_rate: '' });
+    expect(createPodSchema.safeParse(fromRequest).success).toBe(true);
   });
 
   it("requires a Pod Request's pod to keep the slot that request holds", () => {
@@ -209,32 +221,35 @@ describe('buildCreatePodInput', () => {
     expect(input.product_requests).toEqual([{ product_id: 'p1', quantity: 3 }]);
     expect(input.place_charges).toEqual([{ label: 'Entry', amount: 50, note: '' }]);
     expect(input.venue_id).toBe('venue-1');
-    // Booked instantly: the window, the whole venue ('') and no slot id.
+    // Offered to the venue: the window, the whole venue (''), the terms and no slot id.
     expect(input.venue_slot_id).toBeNull();
-    expect(input.venue_booking).toEqual({
+    expect(input).not.toHaveProperty('venue_booking');
+    expect(input.venue_offer).toEqual({
       start_at: START.toISOString(),
       end_at: END.toISOString(),
-      pax: null,
-      pets: false,
       space_label: '',
+      pax: 0,
+      pets: false,
+      model: 'PER_GUEST',
+      rate: 300,
     });
     expect(input.location_id).toBe('loc-1');
     expect(input.meeting_url).toBeNull();
     expect(input.is_active).toBe(true);
   });
 
-  // One number: the pod's spots ARE the booking's guests, whatever the model.
-  it("sends the pod's spots as the booking's guests, with pets and a named space", () => {
+  // One number: the pod's spots ARE the offer's guests, whatever the terms.
+  it("sends the pod's spots as the offer's guests, with pets, a named space and the typed amount", () => {
     const input = buildCreatePodInput(
-      valid({ no_of_spots: 24, venue_booking_pets: true, venue_space_label: 'Lawn' }),
+      valid({ no_of_spots: 24, venue_booking_pets: true, venue_space_label: 'Lawn', venue_offer_model: 'FLAT', venue_offer_rate: '5000' }),
     );
-    expect(input.venue_booking).toMatchObject({ pax: 24, pets: true, space_label: 'Lawn' });
+    expect(input.venue_offer).toMatchObject({ pax: 24, pets: true, space_label: 'Lawn', model: 'FLAT', rate: 5000 });
   });
 
-  it("books a Pod Request's held slot by id, with no instant booking", () => {
+  it("books a Pod Request's held slot by id, with no offer", () => {
     const input = buildCreatePodInput(valid({ partner_request_id: 'req-1', venue_slot_id: 'slot-1' }));
     expect(input.venue_slot_id).toBe('slot-1');
-    expect(input.venue_booking).toBeNull();
+    expect(input.venue_offer).toBeNull();
     expect(input.partner_request_id).toBe('req-1');
   });
 
@@ -268,7 +283,7 @@ describe('buildCreatePodInput', () => {
     );
     expect(input.venue_id).toBeNull();
     expect(input.venue_slot_id).toBeNull();
-    expect(input.venue_booking).toBeNull();
+    expect(input.venue_offer).toBeNull();
     expect(input.meeting_platform).toBe('GOOGLE_MEET');
     expect(input.meeting_url).toBe('https://meet.duncit.com/x');
     expect(input.meeting_notes).toBe('Join early');

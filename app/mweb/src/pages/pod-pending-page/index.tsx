@@ -10,11 +10,13 @@ import ClubAdminCard from './ClubAdminCard';
 import PendingBanner from './PendingBanner';
 import PodPendingHeader from './PodPendingHeader';
 import PodPendingSummaryCard from './PodPendingSummaryCard';
+import VenueOfferCard from './VenueOfferCard';
 import VenuePendingCard from './VenuePendingCard';
 import { HOST_POD_PENDING_VIEW, type PodPendingView } from './queries';
 
-/** Waiting page a host lands on after creating a pod whose venue slot request is
- * PENDING — banner + pod summary + venue contact + club-admin help cards.
+/** Waiting page a host lands on after creating a pod whose venue offer is
+ * PENDING — banner + pod summary + the offer (the venue's counter to accept or
+ * reject) + venue contact + club-admin help cards.
  *
  * The venue's answer arrives outside this page, so it carries both ways to ask
  * again: the header's refresh button and a pull-down over the content. Once the
@@ -45,6 +47,7 @@ export default function PodPendingPage() {
       <>
         <PendingBanner status={view.pod.venue_approval_status} />
         <PodPendingSummaryCard view={view} />
+        <VenueOfferCard podId={view.pod.id} onAnswered={refetch} />
         {view.venue && (
           <VenuePendingCard venue={view.venue} status={view.pod.venue_approval_status} />
         )}

@@ -122,14 +122,14 @@ export function useClubAdminPodEditor(clubId: string, podId?: string) {
 
   /**
    * What an edit sends about the venue. A newly picked window re-routes the pod
-   * onto that instant booking (the server claims it, then releases the old
-   * slot) — never with `venue_slot_id: null` beside it. Otherwise only a
+   * onto an offer for it (the server places it, then releases the old slot) —
+   * never with `venue_slot_id: null` beside it. Otherwise only a
    * genuinely different slot is sent; re-saving the same one would needlessly
    * release and re-book it.
    */
   const editInput = (payload: CreatePodInput, heldSlotId: string | null) => {
-    const { venue_slot_id, venue_booking, ...rest } = payload;
-    if (venue_booking) return { ...rest, venue_booking };
+    const { venue_slot_id, venue_offer, ...rest } = payload;
+    if (venue_offer) return { ...rest, venue_offer };
     return (venue_slot_id ?? null) === heldSlotId ? rest : { ...rest, venue_slot_id };
   };
 

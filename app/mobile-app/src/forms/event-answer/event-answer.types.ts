@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { EVENT_REQUEST_NOTE_MAX, makeEventRequestSchema } from '@duncit/forms/schemas';
+import { isVenueOfferModel } from '@duncit/utils';
 
 import type { Translate } from '@/i18n/fallback';
 
@@ -7,7 +8,8 @@ import type { Translate } from '@/i18n/fallback';
  * The owner's answer to a workshop/event request. Accept and Reject carry an
  * optional note — the same 280-character rule the member's own request
  * follows (`makeEventRequestSchema`, one rule for both sides). A counter
- * offer adds the window and the guests; the server prices it.
+ * offer adds the window, the guests and the price terms (a pricing option and
+ * an amount); the server prices it.
  */
 export const makeAnswerNoteSchema = (t: Translate) => makeEventRequestSchema(t);
 export type AnswerNoteValues = z.infer<ReturnType<typeof makeAnswerNoteSchema>>;
@@ -16,6 +18,10 @@ export interface CounterOfferValues {
   start: Date | null;
   end: Date | null;
   guests: string;
+  /** A `VenueOfferModel`. */
+  model: string;
+  /** The amount as typed. */
+  rate: string;
   note: string;
 }
 
@@ -25,6 +31,8 @@ export function makeCounterOfferSchema(t: Translate) {
       start: z.date().nullable(),
       end: z.date().nullable(),
       guests: z.string(),
+      model: z.string(),
+      rate: z.string(),
       note: z
         .string()
         .trim()
@@ -45,6 +53,9 @@ export function makeCounterOfferSchema(t: Translate) {
       if (guests !== '' && !(Number.isInteger(Number(guests)) && Number(guests) >= 0)) {
         fail('guests', t('availability.eventInbox.validation.guests'));
       }
+      if (!isVenueOfferModel(values.model))
+        fail('model', t('availability.offers.validation.model'));
+      else if (!(Number(values.rate) > 0)) fail('rate', t('availability.offers.validation.rate'));
     });
 }
 
@@ -52,5 +63,7 @@ export const counterOfferDefaults: CounterOfferValues = {
   start: null,
   end: null,
   guests: '',
+  model: 'FLAT',
+  rate: '',
   note: '',
 };

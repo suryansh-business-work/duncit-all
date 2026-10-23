@@ -37,6 +37,7 @@ export const HostPodsDocument = gql(`
       zone_name
       place_label
       venue_approval_status
+      venue_offer_status
       is_active
       created_at
     }

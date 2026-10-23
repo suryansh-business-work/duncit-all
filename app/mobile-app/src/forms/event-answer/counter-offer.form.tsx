@@ -1,15 +1,16 @@
 import { useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { isVenueOfferModel } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { FormTextField } from '@/components/FormTextField';
 import { DateTimePickerField } from '@/components/venue-availability/DateTimePickerField';
 import { BreakdownLines } from '@/components/venue-pricing/BreakdownLines';
-import type { EventRequestOfferInput } from '@/generated/graphql/graphql';
+import type { EventRequestOfferInput, VenueOfferModel } from '@/generated/graphql/graphql';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useVenuePriceQuote } from '@/hooks/useVenuePriceQuote';
+import { useOfferQuote } from '@/hooks/useOfferQuote';
 import { appNow } from '@/utils/app-formatter';
 import { formResolver } from '@/utils/form-resolver';
 import { FieldError } from '@/forms/venue-pricing/ControlledTimeField';
@@ -18,6 +19,7 @@ import {
   makeCounterOfferSchema,
   type CounterOfferValues,
 } from './event-answer.types';
+import { CounterTermsFields } from './counter-terms.fields';
 
 interface Props {
   /** The venue the request is for — its pricing module prices the offer. */
@@ -27,18 +29,25 @@ interface Props {
   onSend: (offer: EventRequestOfferInput, note: string) => void;
 }
 
-const offerOf = (values: CounterOfferValues): EventRequestOfferInput | null =>
-  values.start && values.end && values.end > values.start
+/** The offer the server prices and the mutation carries, or null until the window and an amount above 0 are set. */
+const offerOf = (values: CounterOfferValues) =>
+  values.start &&
+  values.end &&
+  values.end > values.start &&
+  isVenueOfferModel(values.model) &&
+  Number(values.rate) > 0
     ? {
         start_at: values.start.toISOString(),
         end_at: values.end.toISOString(),
         pax: Number(values.guests) || 0,
+        model: values.model as VenueOfferModel,
+        rate: Number(values.rate),
       }
     : null;
 
 /**
- * Counter a request with the owner's own date, time and guests. The server's
- * quote for that window shows as it is picked — the same price it freezes on
+ * Counter a request with the owner's own date, time, guests and price terms.
+ * The server's quote (`venueOfferQuote`) for them shows as they are picked — the same price it freezes on
  * the offer when it is sent, so the member sees exactly this.
  */
 export function CounterOfferForm({ venueId, busy, onClose, onSend }: Readonly<Props>) {
@@ -50,7 +59,7 @@ export function CounterOfferForm({ venueId, busy, onClose, onSend }: Readonly<Pr
   });
   const values = watch();
   const offer = offerOf(values);
-  const quote = useVenuePriceQuote(venueId, offer, null, t('availability.eventInbox.quoteFailed'));
+  const quote = useOfferQuote(venueId, offer);
   const send = handleSubmit((valid) => {
     const validOffer = offerOf(valid);
     if (validOffer) onSend(validOffer, valid.note);
@@ -128,6 +137,7 @@ export function CounterOfferForm({ venueId, busy, onClose, onSend }: Readonly<Pr
           keyboardType="number-pad"
           digitsOnly
         />
+        <CounterTermsFields control={control} />
         <FormTextField
           control={control}
           name="note"
@@ -140,7 +150,7 @@ export function CounterOfferForm({ venueId, busy, onClose, onSend }: Readonly<Pr
             <Text role="heading" fontSize={15} fontWeight="600" color="$color">
               {t('availability.eventInbox.quoteTitle')}
             </Text>
-            {quote.isLoading ? (
+            {quote.loading ? (
               <XStack gap={8} alignItems="center">
                 <Spinner color="$primary" />
                 <Text fontSize={13} color="$muted">
@@ -148,9 +158,9 @@ export function CounterOfferForm({ venueId, busy, onClose, onSend }: Readonly<Pr
                 </Text>
               </XStack>
             ) : null}
-            {quote.error ? (
+            {quote.error || quote.message ? (
               <Text role="alert" fontSize={13} color="$danger">
-                {quote.error}
+                {quote.message ?? t('availability.eventInbox.quoteFailed')}
               </Text>
             ) : null}
             {quote.quote && !quote.error ? (

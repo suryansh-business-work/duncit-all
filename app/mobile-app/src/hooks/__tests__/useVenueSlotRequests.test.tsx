@@ -1,6 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { VenueSlotRequestsDocument } from '@/graphql/venue-slot-requests';
+import {
+  CounterVenueOfferDocument,
+  VenueSlotRequestsDocument,
+} from '@/graphql/venue-slot-requests';
 import { ALL_VENUES, useVenueSlotRequests } from '@/hooks/useVenueSlotRequests';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useSelectedVenueStore } from '@/stores/selected-venue.store';
@@ -56,5 +59,65 @@ describe('useVenueSlotRequests', () => {
     expect(result.current.venueId).toBe('v1');
     expect(useSelectedVenueStore.getState().venueId).toBe('v1');
     await waitFor(() => askedFor('v1'));
+  });
+});
+
+describe('useVenueSlotRequests answers', () => {
+  it('sends a counter with its terms and note, says so, and re-reads the list', async () => {
+    const { result } = renderHook(() => useVenueSlotRequests());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    mockRequest.mockClear();
+    mockRequest.mockResolvedValue({
+      myVenues: VENUES,
+      venueSlotRequests: [],
+      counterVenueOffer: { slot_id: 's1' },
+    });
+
+    await act(() => result.current.counter('s1', { model: 'FLAT', rate: 7000 }, 'Weekend rate'));
+
+    expect(mockRequest).toHaveBeenCalledWith(
+      CounterVenueOfferDocument,
+      { slot_id: 's1', terms: { model: 'FLAT', rate: 7000 }, note: 'Weekend rate' },
+      { auth: true },
+    );
+    expect(result.current.feedback).toEqual({
+      ok: true,
+      text: 'Your counter was sent to the host.',
+    });
+    expect(mockRequest).toHaveBeenCalledWith(VenueSlotRequestsDocument, expect.anything(), {
+      auth: true,
+    });
+  });
+
+  it('sends no note when none is written', async () => {
+    const { result } = renderHook(() => useVenueSlotRequests());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(() => result.current.counter('s1', { model: 'PER_HOUR', rate: 1500 }, ''));
+    expect(mockRequest).toHaveBeenCalledWith(
+      CounterVenueOfferDocument,
+      { slot_id: 's1', terms: { model: 'PER_HOUR', rate: 1500 }, note: null },
+      { auth: true },
+    );
+  });
+
+  it("shows the server's reason, or a plain failure, when an answer is refused", async () => {
+    const { result } = renderHook(() => useVenueSlotRequests());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    mockRequest.mockRejectedValueOnce(new Error('This booking has already started'));
+    await act(() => result.current.approve('s1'));
+    expect(result.current.feedback).toEqual({
+      ok: false,
+      text: 'This booking has already started',
+    });
+
+    mockRequest.mockRejectedValueOnce('offline');
+    await act(() => result.current.decline('s1', ''));
+    expect(result.current.feedback).toEqual({
+      ok: false,
+      text: 'That did not work. Please try again.',
+    });
+    act(() => result.current.clearFeedback());
+    expect(result.current.feedback).toBeNull();
   });
 });

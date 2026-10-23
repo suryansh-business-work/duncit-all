@@ -349,8 +349,8 @@ async function runCoinLeg(ctx: CoreContext): Promise<void> {
   }
 }
 
-/** A later date of a multi-date booking (payment.group.ts): the first date's
- * payment carries the booking's coupon redemption and its receipt. */
+/** A later date of a multi-date booking of a (now retired) recurring pod: the
+ * first date's payment carries the booking's coupon redemption and its receipt. */
 const isGroupSibling = (payment: { metadata?: Record<string, unknown> | null }) => {
   const group = payment.metadata?.checkout_group as { primary?: boolean } | undefined;
   return !!group && group.primary !== true;

@@ -24,7 +24,7 @@
  */
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { isFreePod, PodModel, SERIES_DATES, type IPodCancellationRisk } from './pod.model';
+import { isFreePod, PodModel, type IPodCancellationRisk } from './pod.model';
 import { podLifecycleFilter } from './pod.lifecycle';
 import { podSeatsAvailable, podSeatsTaken } from './pod.seats';
 import { loadPodClubSlugMap, podNotificationLink } from './pod.service';
@@ -524,7 +524,6 @@ export async function runPodCancellationRiskSweep(): Promise<{ flagged: number; 
   if (settings.enabled) {
     const { currency_symbol } = await getFinanceSettings();
     const cursor = PodModel.find({
-      ...SERIES_DATES,
       ...podLifecycleFilter('UPCOMING', new Date(now)),
       is_active: true,
       venue_id: { $ne: null },

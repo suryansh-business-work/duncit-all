@@ -63,11 +63,6 @@ export const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       type: m.type ?? 'IMAGE',
     })),
     reel_url: d.reel_url ?? null,
-    series_id: d.series_id ? String(d.series_id) : null,
-    series_index: d.series_index ?? null,
-    series_total: d.series_total ?? null,
-    series_role: d.series_role ?? null,
-    series_parent_id: d.series_parent_id ? String(d.series_parent_id) : null,
     // Carried raw for the `Pod.reel_has_audio` field resolver, which probes a
     // reel this stored answer does not cover yet.
     reel_audio: d.reel_audio ?? null,

@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { PodModel, SERIES_DATES } from '@modules/pods/pod/pod.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { TicketModel } from '@modules/pods/ticket/ticket.model';
 import { BouncerFeedbackModel } from '@modules/support/bouncer/bouncer.model';
@@ -45,8 +45,7 @@ interface RawPod {
 
 /** `location` narrows it to one city (see city.ts); empty reads every city. */
 export async function loadHeldPods(from: Date, to: Date, location: Record<string, unknown> = {}): Promise<HeldPod[]> {
-  // Held pods are the ones that ran: each date of a recurring pod counts.
-  const pods = await PodModel.find({ ...SERIES_DATES, pod_date_time: inRange(from, to), ...location })
+  const pods = await PodModel.find({ pod_date_time: inRange(from, to), ...location })
     .select('club_id pod_hosts_id location_id pod_date_time no_of_spots pod_attendees extra_seats pod_amount pod_mode pod_type')
     .lean<RawPod[]>();
   return pods.map((pod) => ({

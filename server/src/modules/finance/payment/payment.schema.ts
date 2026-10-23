@@ -458,9 +458,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     ticket_discount_pct: Int!
   }
 
-  "A recurring pod's dates being priced together, with the buyer's coupon and coins."
+  "Retired with recurring pods — kept so installed apps that still send it get a clear refusal."
   input RecurringCheckoutQuoteInput {
-    "The recurring pod."
     pod_id: ID!
     date_pod_ids: [ID!]!
     seats: Int
@@ -470,7 +469,7 @@ export const paymentTypeDefs = /* GraphQL */ `
     redeem_coins: Int
   }
 
-  "What a multi-date booking is charged: each date is its own payment, these are their sums."
+  "Retired with recurring pods (see recurringCheckoutQuote)."
   type RecurringCheckoutQuote {
     dates: Int!
     currency_symbol: String!
@@ -521,8 +520,7 @@ export const paymentTypeDefs = /* GraphQL */ `
 
   input DummyCheckoutInput {
     pod_id: ID
-    "Recurring pod: the dates being booked together (pod_id is then the recurring pod). One payment per date."
-    date_pod_ids: [ID!]
+    date_pod_ids: [ID!] @deprecated(reason: "Recurring pods are retired; a non-empty list is refused.")
     amount: Float!
     "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
     seats: Int
@@ -560,8 +558,7 @@ export const paymentTypeDefs = /* GraphQL */ `
   "Live checkout — same contact/billing fields as the dummy flow (no simulate_failure)."
   input RazorpayOrderInput {
     pod_id: ID
-    "Recurring pod: the dates being booked together (pod_id is then the recurring pod). One payment per date, one order."
-    date_pod_ids: [ID!]
+    date_pod_ids: [ID!] @deprecated(reason: "Recurring pods are retired; a non-empty list is refused.")
     amount: Float!
     "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
     seats: Int
@@ -792,8 +789,9 @@ export const paymentTypeDefs = /* GraphQL */ `
     "One of the caller's own payments. Null when it does not exist or is not theirs — the checkout confirmation poll reads this instead of the whole history."
     myPayment(payment_doc_id: ID!): Payment
     checkoutQuote(input: CheckoutQuoteInput!): CheckoutQuote!
-    "The exact bill for booking several dates of a recurring pod in one checkout."
+    "Retired with recurring pods: always refused. Kept so installed apps get a clear message."
     recurringCheckoutQuote(input: RecurringCheckoutQuoteInput!): RecurringCheckoutQuote!
+      @deprecated(reason: "Recurring pods are retired.")
     paymentInvoicePdfBase64(payment_doc_id: ID!): String!
     "Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout)."
     productShippingQuote(input: ProductShippingQuoteInput!): ProductShippingQuote!

@@ -525,8 +525,7 @@ export async function bookOrHoldSlotForPod(
   slotDoc: any,
   needsVenueApproval: boolean,
   autoPodSlot?: { slotId: string; autoPodId: string } | null,
-  partnerRequestSlot?: { slotId: string; requestId: string } | null,
-  opts: { notifyVenue?: boolean } = {}
+  partnerRequestSlot?: { slotId: string; requestId: string } | null
 ) {
   if (!slotDoc) return;
   // A Pod Request already holds this slot: hand it over in one conditional
@@ -571,7 +570,6 @@ export async function bookOrHoldSlotForPod(
     await settleSlotBooking(doc, slotDoc);
     return;
   }
-  if (opts.notifyVenue === false) return;
   announceSlotRequest(doc, slotDoc);
 }
 

@@ -61,7 +61,7 @@ export interface IVenueSlot extends Document {
   /** Owner's reason for declining (also mirrored into the pod audit note). */
   decline_reason: string;
   /**
-   * Opened for a recurring pod's date on a day the venue had no slot — the
+   * Opened for a (now retired) recurring pod's date on a day the venue had no slot — the
    * host's request IS the slot. It becomes the venue's own slot only once the
    * venue approves it; refused, expired or released before that, it is deleted
    * rather than freed, so the venue never ends up offering a time it never opened.

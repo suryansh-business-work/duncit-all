@@ -191,8 +191,7 @@ const ROLLUP_STAGES = [
  * catch — hiding it would quietly drop it out of Duncit's cost of running pods.
  * The status chip names it, so nobody mistakes it for a live pod.
  */
-// Expenses are logged against the pod that ran: each date of a recurring pod.
-const INCLUDE_CANCELLED = { includeDeleted: true, seriesDates: true };
+const INCLUDE_CANCELLED = { includeDeleted: true };
 
 function toPodRow(doc: any) {
   return {

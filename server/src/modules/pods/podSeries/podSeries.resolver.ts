@@ -1,55 +1,30 @@
+import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
-import { podSeriesService, type SeriesPlanInput } from './podSeries.service';
-import { podSeriesReadService } from './podSeries.read';
 
-type PlanArgs = SeriesPlanInput & { skip_dates?: string[] | null };
+/** Recurring pods are retired (see podSeries.schema.ts): an installed app that
+ * still offers them is told to update instead of half-creating anything. */
+const retired = () =>
+  new GraphQLError('Recurring pods are no longer available. Please update the app.', {
+    extensions: { code: 'BAD_USER_INPUT' },
+  });
+
+const refuse = (_p: unknown, _args: unknown, ctx: GraphQLContext): never => {
+  requireAuth(ctx);
+  throw retired();
+};
 
 export const podSeriesResolvers = {
   Query: {
-    podSeriesPreview: async (_p: unknown, args: { input: PlanArgs }, ctx: GraphQLContext) => {
-      requireAuth(ctx);
-      return podSeriesService.preview(args.input);
-    },
-    podSeriesLimits: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
-      requireAuth(ctx);
-      return podSeriesService.limits();
-    },
-    podSeriesDates: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
-      podSeriesReadService.dates(args.pod_doc_id, ctx.user ? String(ctx.user.id) : null),
+    podSeriesPreview: refuse,
+    podSeriesLimits: refuse,
+    // Every pod is a one-time pod now, which is what null tells Pod Details.
+    podSeriesDates: () => null,
   },
   Mutation: {
-    publishPodDraftSeries: async (
-      _p: unknown,
-      args: { draft_id: string; input: Record<string, unknown>; plan: PlanArgs },
-      ctx: GraphQLContext
-    ) => {
-      const user = requireAuth(ctx);
-      return podSeriesService.publishFromDraft(user.id, args.draft_id, args.input, args.plan);
-    },
-    venueDecidePodSeries: async (
-      _p: unknown,
-      args: { series_id: string; approve: boolean; reason?: string | null },
-      ctx: GraphQLContext
-    ) => {
-      const user = requireAuth(ctx);
-      return podSeriesService.venueDecide(user.id, args.series_id, args.approve, args.reason);
-    },
-    hostCancelPodSeries: async (
-      _p: unknown,
-      args: { series_id: string; reason_subject: string; reason_note?: string | null },
-      ctx: GraphQLContext
-    ) => {
-      const user = requireAuth(ctx);
-      return podSeriesService.hostCancelUpcoming(user.id, args.series_id, args.reason_subject, args.reason_note);
-    },
-    joinFreePodDates: async (
-      _p: unknown,
-      args: { pod_doc_id: string; date_pod_ids: string[] },
-      ctx: GraphQLContext
-    ) => {
-      const user = requireAuth(ctx);
-      return podSeriesReadService.joinFreeDates(user.id, args.pod_doc_id, args.date_pod_ids);
-    },
+    publishPodDraftSeries: refuse,
+    venueDecidePodSeries: refuse,
+    hostCancelPodSeries: refuse,
+    joinFreePodDates: refuse,
   },
 };

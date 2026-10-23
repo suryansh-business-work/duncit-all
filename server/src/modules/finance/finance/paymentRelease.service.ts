@@ -674,26 +674,6 @@ async function sendFreePodProductInvoices(doc: IPaymentRelease) {
   }
 }
 
-/**
- * A recurring pod's PARENT row holds no slot, seats or money — each DATE row
- * settles on its own. Completing or billing the parent would raise a venue
- * bill on top of every date's, so it is refused outright.
- */
-function assertSettlesOnItsOwn(pod: { series_role?: string | null }) {
-  if (pod.series_role !== 'PARENT') return;
-  throw new GraphQLError('A recurring pod is completed and settled date by date. Open the date you want to complete.', {
-    extensions: { code: 'BAD_USER_INPUT' },
-  });
-}
-
-/** A completed date of a recurring pod may finish the whole pod: the parent
- * re-derives from its dates now rather than waiting on the sweep, which only
- * looks a day back and would miss a date completed later than that. */
-async function syncParentOfCompleted(podId: unknown) {
-  const { syncSeriesParentOf } = await import('@modules/pods/podSeries/podSeries.parent');
-  await syncSeriesParentOf(String(podId));
-}
-
 // Approval is the moment the pod is officially completed (first release wins).
 // When this approval is the one that stamps it, the unsold stock is released
 // and the monitored trail gets its COMPLETE entry.
@@ -703,7 +683,6 @@ async function completePodOnApproval(doc: IPaymentRelease) {
     { $set: { completed_at: new Date() } }
   );
   if (stamped.modifiedCount === 0) return;
-  await syncParentOfCompleted(doc.pod_id);
   // Completion frees the pod's unsold reserved stock back to the brand.
   const { podService } = await import('@modules/pods/pod/pod.service');
   await podService.releaseCompletedPodStock(doc.pod_id).catch((e: Error) => {
@@ -833,7 +812,6 @@ async function markPodSubmitted(pod: any, actorId: string | null) {
     { $set: { completed_at: new Date() } }
   );
   if (stamped.modifiedCount === 0) return;
-  await syncParentOfCompleted(pod._id);
   // Completion frees the pod's unsold reserved stock back to the brand.
   const { podService } = await import('@modules/pods/pod/pod.service');
   await podService.releaseCompletedPodStock(pod._id).catch((e: Error) => {
@@ -1052,7 +1030,6 @@ export const paymentReleaseService = {
     }
     const pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
-    assertSettlesOnItsOwn(pod);
     if (isFreePod(pod)) throw freePodNoPayout();
     const beneficiary = await beneficiaryFor(kind, pod, input.host_user_id);
     const evidence = (input.evidence_media ?? [])
@@ -1116,7 +1093,6 @@ export const paymentReleaseService = {
   async completePod(input: any, actor: { id: string; isAdmin: boolean }) {
     const pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
-    assertSettlesOnItsOwn(pod);
     assertMayComplete(pod, actor);
 
     await assertNotSubmitted(pod);

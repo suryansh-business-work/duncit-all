@@ -29,7 +29,6 @@ import {
   podTimeLabel,
 } from './pod.shared';
 import { applyProductDeltas } from './pod.products';
-import { cancelUpcomingDates, syncSeriesParentOf } from '@modules/pods/podSeries/podSeries.parent';
 import { notifyPartnersOfCancellation } from './pod.cancelPartners';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { addOnMoneyOf } from '@modules/venues/venueRental/rentalLines';
@@ -75,10 +74,6 @@ export async function softDeletePod(
   const doc = await PodModel.findById(id).setOptions({ includeDeleted: true });
   if (!doc) notFound();
   if (doc!.deleted_at) return false;
-  // A recurring pod is cancelled date by date; the parent follows its dates.
-  if (doc!.series_role === 'PARENT') {
-    return (await cancelUpcomingDates(doc!._id, (dateId) => softDeletePod(dateId, audit))) !== null;
-  }
   // Claim the delete FIRST, then release. The filter carries deleted_at itself,
   // so the soft-delete hook leaves it alone and the write only lands while the
   // pod is still live — only the winner goes on to release. Releasing before
@@ -109,7 +104,6 @@ export async function softDeletePod(
     actorUserId: audit?.actorUserId,
     note: audit?.note,
   });
-  if (claimed.series_role === 'DATE') await syncSeriesParentOf(claimed._id);
   return true;
 }
 
@@ -191,16 +185,6 @@ export async function refundAndNotifyCancellation(
   // to the actor; the SYSTEM sweep has no actor but still mails the host itself.
   excludeUserId = actorUserId
 ): Promise<number | null> {
-  // A recurring pod is cancelled date by date, each refunded and announced on
-  // its own; the dates that already ran are left alone.
-  if (doc.series_role === 'PARENT') {
-    return cancelUpcomingDates(doc._id, async (dateId) => {
-      const date = await PodModel.findById(dateId);
-      return date
-        ? refundAndNotifyCancellation(date, actorUserId, reason, initiatedBy, refundPct, excludeUserId)
-        : null;
-    });
-  }
   const podTitle = doc.pod_title;
   const logComponent = CANCEL_LOG_COMPONENT[initiatedBy];
   const pct = Math.min(100, Math.max(0, Number(refundPct) || 0));

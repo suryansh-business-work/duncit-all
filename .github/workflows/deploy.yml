@@ -2395,7 +2395,6 @@ jobs:
           REDIS_QUEUE_URL=redis://redis-queue:6379
           RUN_POD_TYPE_MIGRATION=1
           RUN_CLUB_ADMIN_BACKFILL=1
-          RUN_POD_SERIES_PARENT_MIGRATION=1
           RUN_VENUE_PRICING_BACKFILL=1
           DATA_CLONE_TARGET_DB=duncit-staging
           EOF
@@ -2447,10 +2446,6 @@ jobs:
           # call. Gated rather than always-on: hard-deleting a record does not
           # revoke the role, so an ungated boot would recreate a record an
           # operator had just removed. Idempotent for anyone who has one.
-          # RUN_POD_SERIES_PARENT_MIGRATION: the same shape. Recurring pods
-          # published as one pod per date get the one parent pod people browse
-          # and book from; their dates, bookings and money are untouched. Only
-          # looks at series without a parent, so leaving it on is a no-op.
           # Staging runs against its OWN Mongo database on the same Atlas
           # cluster — everything (users, pods, Tech-portal env entries, ...) is
           # fully separate, so values saved in the staging Tech portal apply to

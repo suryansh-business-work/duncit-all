@@ -228,15 +228,11 @@ export const podTypeDefs = /* GraphQL */ `
     pod_type: PodType!
     pod_amount: Int!
     pod_occurrence: PodOccurrence!
-    "The recurring pod this row belongs to; null for a one-time pod."
-    series_id: ID
-    "This date's position in its series (from 1), and how many dates the series has."
-    series_index: Int
-    series_total: Int
-    "PARENT: the recurring pod people browse and book from. DATE: one of its dates. Null for a one-time pod."
-    series_role: PodSeriesRole
-    "A DATE's recurring pod (its PARENT row)."
-    series_parent_id: ID
+    series_id: ID @deprecated(reason: "Recurring pods are retired; always null.")
+    series_index: Int @deprecated(reason: "Recurring pods are retired; always null.")
+    series_total: Int @deprecated(reason: "Recurring pods are retired; always null.")
+    series_role: PodSeriesRole @deprecated(reason: "Recurring pods are retired; always null.")
+    series_parent_id: ID @deprecated(reason: "Recurring pods are retired; always null.")
     no_of_spots: Int!
     pod_info: String
     what_this_pod_offers: [String!]!

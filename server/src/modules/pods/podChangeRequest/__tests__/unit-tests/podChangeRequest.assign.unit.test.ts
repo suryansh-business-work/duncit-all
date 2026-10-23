@@ -1,9 +1,10 @@
 /**
  * The swap itself, once a replacement has said yes. Every model and service is
  * faked; what is under test is what each role's swap writes onto the pod (or
- * the club), the order the venue slot is claimed and released in — claim
+ * the club), the order the venue booking is claimed and released in — claim
  * first, so a lost race leaves the pod on its original booking — and every
- * refusal on the way.
+ * refusal on the way. A venue takes the pod at the window and price terms it
+ * answered with; the booking is written at once with that price frozen.
  */
 import { Types } from 'mongoose';
 
@@ -13,9 +14,16 @@ jest.mock('@observability/log', () => ({
 jest.mock('@modules/clubs/club/club.model', () => ({ ClubModel: { findById: jest.fn(), findOne: jest.fn() } }));
 jest.mock('@modules/clubs/club/club.service', () => ({ clubService: { syncClubAdminRoles: jest.fn() } }));
 jest.mock('@modules/venues/venue/venue.model', () => ({ VenueModel: { findById: jest.fn(), findOne: jest.fn() } }));
-jest.mock('@modules/venues/venueSlot/venueSlot.model', () => ({ VenueSlotModel: { findOne: jest.fn() } }));
 jest.mock('@modules/venues/venueSlot/venueSlot.service', () => ({
-  venueSlotService: { bookForPod: jest.fn(), releaseSlotForPod: jest.fn() },
+  venueSlotService: { releaseSlotForPod: jest.fn() },
+}));
+jest.mock('@modules/venues/venueOffer/venueOffer.hold', () => ({ holdWindow: jest.fn() }));
+jest.mock('@modules/venues/venueOffer/venueOffer.service', () => ({
+  venueOfferService: { prepare: jest.fn() },
+  checkAndPrice: jest.fn(),
+}));
+jest.mock('@modules/finance/finance/breakdown.service', () => ({
+  breakdownService: { assertViablePodEconomics: jest.fn() },
 }));
 jest.mock('@modules/pods/pod/pod.service', () => ({
   assertActiveHost: jest.fn(),
@@ -32,19 +40,27 @@ import { logs } from '@observability/log';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { clubService } from '@modules/clubs/club/club.service';
 import { VenueModel } from '@modules/venues/venue/venue.model';
-import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { holdWindow } from '@modules/venues/venueOffer/venueOffer.hold';
+import { venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
+import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import { assertActiveHost, resolveVenueLocation } from '@modules/pods/pod/pod.service';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import { notifyAttendeesOfVenueChange } from '../../podChangeRequest.notify';
-import { applyReplacement, assertOfferableSlot, logAssignFailure } from '../../podChangeRequest.assign';
+import {
+  applyReplacement,
+  logAssignFailure,
+  UPDATE_APP_FOR_VENUE_CHANGE,
+  venueWindowRequest,
+} from '../../podChangeRequest.assign';
 import type { IPodChangeOffer, IPodChangeRequest } from '../../podChangeRequest.model';
 
 const clubFind = ClubModel.findById as jest.Mock;
 const syncRoles = clubService.syncClubAdminRoles as jest.Mock;
 const venueFind = VenueModel.findById as jest.Mock;
-const slotFindOne = VenueSlotModel.findOne as jest.Mock;
-const bookForPod = venueSlotService.bookForPod as jest.Mock;
+const hold = holdWindow as jest.Mock;
+const prepare = venueOfferService.prepare as jest.Mock;
+const viable = breakdownService.assertViablePodEconomics as jest.Mock;
 const releaseSlot = venueSlotService.releaseSlotForPod as jest.Mock;
 const activeHost = assertActiveHost as jest.Mock;
 const resolvePlace = resolveVenueLocation as jest.Mock;
@@ -64,6 +80,8 @@ const NEW_VENUE = id(14);
 const LOCATION = id(15);
 const START = new Date('2026-11-01T12:00:00Z');
 const END = new Date('2026-11-01T14:00:00Z');
+/** The window and price terms the venue took the pod at. */
+const WINDOW = { start_at: START.toISOString(), end_at: END.toISOString(), model: 'FLAT' as const, rate: 4000 };
 
 const fails = (code: string, message: string) =>
   expect.objectContaining({ message, extensions: expect.objectContaining({ code }) });
@@ -82,7 +100,7 @@ const offer = (over: Record<string, unknown> = {}) =>
   ({
     user_id: REPLACEMENT,
     venue_id: NEW_VENUE,
-    venue_slot_id: NEW_SLOT,
+    venue_slot_id: null,
     display_name: 'Ravi Kumar',
     ...over,
   }) as unknown as IPodChangeOffer;
@@ -93,6 +111,8 @@ const makePod = (over: Record<string, unknown> = {}) => ({
   venue_id: id(16),
   venue_slot_id: OLD_SLOT,
   pod_hosts_id: [REQUESTER, CO_HOST],
+  pod_amount: 499,
+  no_of_spots: 12,
   venue_approval_status: 'PENDING',
   is_active: false,
   save: jest.fn().mockResolvedValue(undefined),
@@ -100,14 +120,14 @@ const makePod = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-/** `findOne().lean()` and `findById().select()` as one-link chains. */
-const leanOf = (value: unknown) => ({ lean: () => Promise.resolve(value) });
+/** `findById().select()` as a one-link chain. */
 const selectOf = (value: unknown) => ({ select: () => Promise.resolve(value) });
 
 beforeEach(() => {
-  slotFindOne.mockReturnValue(leanOf({ _id: NEW_SLOT, start_at: new Date(Date.now() + 86_400_000) }));
   venueFind.mockReturnValue(selectOf({ venue_name: 'Play Arena', owner_user_id: REPLACEMENT }));
-  bookForPod.mockResolvedValue({ _id: NEW_SLOT, start_at: START, end_at: END });
+  prepare.mockResolvedValue({ quote: { total: 4400 } });
+  viable.mockResolvedValue(undefined);
+  hold.mockResolvedValue({ _id: NEW_SLOT, start_at: START, end_at: END });
   releaseSlot.mockResolvedValue(undefined);
   resolvePlace.mockResolvedValue({ venue_id: NEW_VENUE, location_id: LOCATION, zone_name: 'HSR' });
   activeHost.mockResolvedValue(undefined);
@@ -116,35 +136,41 @@ beforeEach(() => {
   syncRoles.mockResolvedValue(undefined);
 });
 
-describe('assertOfferableSlot', () => {
-  it('returns a free, future slot of that venue', async () => {
-    const slot = await assertOfferableSlot(String(NEW_VENUE), String(NEW_SLOT));
-    expect(slot._id).toBe(NEW_SLOT);
-    expect(slotFindOne).toHaveBeenCalledWith({ _id: NEW_SLOT, venue_id: NEW_VENUE, status: 'AVAILABLE' });
-  });
-
-  it('refuses a malformed id, a taken slot and one that has started', async () => {
-    await expect(assertOfferableSlot(String(NEW_VENUE), 'nope')).rejects.toEqual(fails('BAD_USER_INPUT', 'Invalid slot'));
-    slotFindOne.mockReturnValueOnce(leanOf(null));
-    await expect(assertOfferableSlot(String(NEW_VENUE), String(NEW_SLOT))).rejects.toEqual(
-      fails('CONFLICT', 'That slot is no longer available. Pick another one.')
-    );
-    slotFindOne.mockReturnValueOnce(leanOf({ start_at: new Date(Date.now() - 1000) }));
-    await expect(assertOfferableSlot(String(NEW_VENUE), String(NEW_SLOT))).rejects.toEqual(
-      fails('BAD_USER_INPUT', 'That slot has already started. Pick a later one.')
-    );
+describe('venueWindowRequest', () => {
+  it("prices the venue's window for the pod's spots, never for pets", () => {
+    expect(venueWindowRequest({ no_of_spots: 12 }, WINDOW)).toEqual({ ...WINDOW, pax: 12, pets: false });
+    expect(venueWindowRequest({}, WINDOW)).toMatchObject({ pax: 0 });
   });
 });
 
 describe('applyReplacement — VENUE', () => {
-  it('books the new slot BEFORE releasing the old one, and moves the pod onto it approved', async () => {
+  it('books the venue window at its frozen price BEFORE releasing the old booking, and moves the pod onto it approved', async () => {
     const pod = makePod();
+    const theOffer = offer();
 
-    const outcome = await applyReplacement(request('VENUE'), pod, offer());
+    const outcome = await applyReplacement(request('VENUE'), pod, theOffer, WINDOW);
 
-    expect(bookForPod).toHaveBeenCalledWith(String(NEW_SLOT), String(NEW_VENUE), String(POD));
+    // The pod's ticket money must cover the venue at these terms, priced for its spots.
+    expect(prepare).toHaveBeenCalledWith(String(NEW_VENUE), { ...WINDOW, pax: 12, pets: false }, String(POD));
+    expect(viable).toHaveBeenCalledWith({
+      hostUserId: String(REQUESTER),
+      podAmount: 499,
+      noOfSpots: 12,
+      venueId: String(NEW_VENUE),
+      venueAmount: 4400,
+    });
+    expect(hold).toHaveBeenCalledWith(
+      expect.objectContaining({
+        venueId: String(NEW_VENUE),
+        holder: { field: 'booked_by_pod_id', id: String(POD) },
+        status: 'BOOKED',
+        offerStatus: 'ACCEPTED',
+        proposedBy: 'VENUE',
+        agreed: true,
+      })
+    );
     expect(releaseSlot).toHaveBeenCalledWith(String(OLD_SLOT), String(POD));
-    expect(bookForPod.mock.invocationCallOrder[0]).toBeLessThan(releaseSlot.mock.invocationCallOrder[0]);
+    expect(hold.mock.invocationCallOrder[0]).toBeLessThan(releaseSlot.mock.invocationCallOrder[0]);
     expect(pod.save.mock.invocationCallOrder[0]).toBeLessThan(releaseSlot.mock.invocationCallOrder[0]);
     expect(resolvePlace).toHaveBeenCalledWith({
       venue_id: String(NEW_VENUE),
@@ -163,6 +189,8 @@ describe('applyReplacement — VENUE', () => {
       venue_approval_status: 'APPROVED',
       is_active: true,
     });
+    // The offer now names the booking it became, for the request's history.
+    expect(theOffer.venue_slot_id).toBe(NEW_SLOT);
     expect(audit).toHaveBeenCalledWith({
       pod,
       action: 'UPDATE',
@@ -178,48 +206,47 @@ describe('applyReplacement — VENUE', () => {
     });
   });
 
-  it('releases nothing when the pod held no slot, or the same one', async () => {
-    const slotless = makePod({ venue_slot_id: null });
-    await applyReplacement(request('VENUE'), slotless, offer());
-    const same = makePod({ venue_slot_id: NEW_SLOT });
-    await applyReplacement(request('VENUE'), same, offer());
+  it('releases nothing when the pod held no booking', async () => {
+    await applyReplacement(request('VENUE'), makePod({ venue_slot_id: null }), offer(), WINDOW);
     expect(releaseSlot).not.toHaveBeenCalled();
   });
 
-  it('keeps the pod on its booking when the new slot cannot be claimed', async () => {
+  it('keeps the pod on its booking when the window cannot be held', async () => {
     const pod = makePod();
-    bookForPod.mockRejectedValueOnce(new Error('slot already booked'));
-    await expect(applyReplacement(request('VENUE'), pod, offer())).rejects.toThrow('slot already booked');
+    hold.mockRejectedValueOnce(new Error('That time is already booked'));
+    await expect(applyReplacement(request('VENUE'), pod, offer(), WINDOW)).rejects.toThrow('That time is already booked');
     expect(pod.save).not.toHaveBeenCalled();
     expect(releaseSlot).not.toHaveBeenCalled();
     expect(pod.venue_slot_id).toBe(OLD_SLOT);
   });
 
-  it('records an open-ended slot as having no end', async () => {
-    bookForPod.mockResolvedValueOnce({ _id: NEW_SLOT, start_at: START });
+  it('holds nothing when the pod money cannot cover the venue at these terms', async () => {
+    viable.mockRejectedValueOnce(new Error('Increase the ticket price so the pod covers the venue.'));
+    await expect(applyReplacement(request('VENUE'), makePod(), offer(), WINDOW)).rejects.toThrow('covers the venue');
+    expect(hold).not.toHaveBeenCalled();
+  });
+
+  it('records an open-ended booking as having no end', async () => {
+    hold.mockResolvedValueOnce({ _id: NEW_SLOT, start_at: START });
     const pod = makePod();
-    await applyReplacement(request('VENUE'), pod, offer());
+    await applyReplacement(request('VENUE'), pod, offer(), WINDOW);
     expect(pod).toMatchObject({ pod_end_date_time: null });
   });
 
-  it('refuses an offer with no slot, a vanished venue, a venue no longer theirs and a gone slot', async () => {
-    await expect(applyReplacement(request('VENUE'), makePod(), offer({ venue_slot_id: null }))).rejects.toEqual(
-      fails('BAD_REQUEST', 'This offer carries no venue slot')
+  it('refuses an offer with no venue, an answer with no window (an app from before), a vanished venue and one no longer theirs', async () => {
+    await expect(applyReplacement(request('VENUE'), makePod(), offer({ venue_id: null }), WINDOW)).rejects.toEqual(
+      fails('BAD_REQUEST', 'This offer carries no venue')
     );
-    await expect(applyReplacement(request('VENUE'), makePod(), offer({ venue_id: null }))).rejects.toEqual(
-      fails('BAD_REQUEST', 'This offer carries no venue slot')
+    await expect(applyReplacement(request('VENUE'), makePod(), offer())).rejects.toEqual(
+      fails('BAD_USER_INPUT', UPDATE_APP_FOR_VENUE_CHANGE)
     );
     venueFind.mockReturnValueOnce(selectOf(null));
-    await expect(applyReplacement(request('VENUE'), makePod(), offer())).rejects.toEqual(fails('NOT_FOUND', 'Venue not found'));
+    await expect(applyReplacement(request('VENUE'), makePod(), offer(), WINDOW)).rejects.toEqual(fails('NOT_FOUND', 'Venue not found'));
     venueFind.mockReturnValueOnce(selectOf({ venue_name: 'Play Arena', owner_user_id: id(99) }));
-    await expect(applyReplacement(request('VENUE'), makePod(), offer())).rejects.toEqual(
+    await expect(applyReplacement(request('VENUE'), makePod(), offer(), WINDOW)).rejects.toEqual(
       fails('FORBIDDEN', 'This venue is no longer yours')
     );
-    slotFindOne.mockReturnValueOnce(leanOf(null));
-    await expect(applyReplacement(request('VENUE'), makePod(), offer())).rejects.toEqual(
-      fails('CONFLICT', 'That slot is no longer available. Pick another one.')
-    );
-    expect(bookForPod).not.toHaveBeenCalled();
+    expect(hold).not.toHaveBeenCalled();
   });
 });
 

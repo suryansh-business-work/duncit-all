@@ -3,8 +3,11 @@ import { logs } from '@observability/log';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { clubService } from '@modules/clubs/club/club.service';
 import { VenueModel } from '@modules/venues/venue/venue.model';
-import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { holdWindow } from '@modules/venues/venueOffer/venueOffer.hold';
+import { checkAndPrice, venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
+import type { VenueOfferModel, VenueOfferRequest } from '@modules/venues/venueOffer/venueOffer.types';
+import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import { assertActiveHost, resolveVenueLocation } from '@modules/pods/pod/pod.service';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import { changeRequestFail } from './podChangeRequest.common';
@@ -33,6 +36,23 @@ import { appDateTime } from '@utils/app-time';
  * `podAuditService.record` per swap.
  */
 
+/** A VENUE replacement answers with its own window and price terms (the guests are the pod's spots). */
+export interface PodChangeVenueWindow {
+  start_at: string;
+  end_at: string;
+  space_label?: string | null;
+  model: VenueOfferModel;
+  rate: number;
+}
+
+/** Venues take a change request with a time and a price now; an app that does not send one is told to update. */
+export const UPDATE_APP_FOR_VENUE_CHANGE = 'Venues take over a pod with a time and a price now. Please update the app to accept it.';
+
+/** The window + terms a venue answered with, as an offer request for this pod. */
+export function venueWindowRequest(pod: { no_of_spots?: number | null }, window: PodChangeVenueWindow): VenueOfferRequest {
+  return { ...window, pax: pod.no_of_spots ?? 0, pets: false };
+}
+
 /** What the caller is told so it can word the request's timeline. */
 export interface ReplacementOutcome {
   summary: string;
@@ -43,19 +63,22 @@ export interface ReplacementOutcome {
 /**
  * CLAIM THEN RELEASE — never the reverse.
  *
- * The new slot is booked first; only once it is secured is the old one freed.
- * Invert it and a lost race leaves the pod holding nothing while its old seat is
- * already back on sale. On a failed claim nothing has changed yet, so there is
- * no state to restore — the pod still holds its original booking.
+ * The venue's window is booked first, at the price it answered with (priced
+ * with its charges and Duncit's commission on top, frozen now — this pod
+ * settles on it); only once it is secured is the old booking let go. Invert it
+ * and a lost race leaves the pod holding nothing while its old seat is already
+ * back on sale. On a failed claim nothing has changed yet, so there is no state
+ * to restore — the pod still holds its original booking.
  */
 async function replaceVenue(
   request: IPodChangeRequest,
   pod: any,
-  offer: IPodChangeOffer
+  offer: IPodChangeOffer,
+  window: PodChangeVenueWindow | null
 ): Promise<ReplacementOutcome> {
   const venueId = offer.venue_id ? String(offer.venue_id) : '';
-  const slotId = offer.venue_slot_id ? String(offer.venue_slot_id) : '';
-  if (!venueId || !slotId) changeRequestFail('BAD_REQUEST', 'This offer carries no venue slot');
+  if (!venueId) changeRequestFail('BAD_REQUEST', 'This offer carries no venue');
+  if (!window) changeRequestFail('BAD_USER_INPUT', UPDATE_APP_FOR_VENUE_CHANGE);
 
   const venue = await VenueModel.findById(venueId).select('venue_name owner_user_id');
   if (!venue) changeRequestFail('NOT_FOUND', 'Venue not found');
@@ -63,13 +86,33 @@ async function replaceVenue(
     changeRequestFail('FORBIDDEN', 'This venue is no longer yours');
   }
 
-  // Re-checked at APPROVAL, not only when the offer went out: an offer can sit
-  // unanswered for days, and booking a slot whose start has passed would move a
-  // pod with paying attendees to a date in the past.
-  await assertOfferableSlot(venueId, slotId);
+  const podId = String(pod._id);
+  const req = venueWindowRequest(pod, window);
+  // The pod's ticket money must still cover the venue at these terms — the
+  // same rule every new booking faces. Priced again inside the lock below.
+  const preview = await venueOfferService.prepare(venueId, req, podId);
+  await breakdownService.assertViablePodEconomics({
+    hostUserId: pod.pod_hosts_id?.[0] ? String(pod.pod_hosts_id[0]) : null,
+    podAmount: pod.pod_amount ?? 0,
+    noOfSpots: pod.no_of_spots ?? 0,
+    venueId,
+    venueAmount: preview.quote.total,
+  });
 
   const previousSlotId = pod.venue_slot_id ? String(pod.venue_slot_id) : null;
-  const slot = await venueSlotService.bookForPod(slotId, venueId, String(pod._id));
+  const slot = await holdWindow({
+    venueId,
+    req,
+    holder: { field: 'booked_by_pod_id', id: podId },
+    status: 'BOOKED',
+    offerStatus: 'ACCEPTED',
+    proposedBy: 'VENUE',
+    agreed: true,
+    closedBy: 'VENUE',
+    priceInLock: (lockedVenue, session) => checkAndPrice(lockedVenue, venueId, req, { session, ignore: podId }),
+  });
+  const slotId = String(slot._id);
+  offer.venue_slot_id = slot._id as Types.ObjectId;
 
   const before = { ...pod.toObject?.() };
   const place = await resolveVenueLocation({
@@ -208,36 +251,12 @@ async function replaceClubAdmin(
 export async function applyReplacement(
   request: IPodChangeRequest,
   pod: any,
-  offer: IPodChangeOffer
+  offer: IPodChangeOffer,
+  venueWindow: PodChangeVenueWindow | null = null
 ): Promise<ReplacementOutcome> {
-  if (request.role === 'VENUE') return replaceVenue(request, pod, offer);
+  if (request.role === 'VENUE') return replaceVenue(request, pod, offer, venueWindow);
   if (request.role === 'HOST') return replaceHost(request, pod, offer);
   return replaceClubAdmin(request, pod, offer);
-}
-
-/**
- * A slot an admin picked for a VENUE offer, held nowhere yet.
- *
- * Nothing is reserved when the offer goes out: the slot is booked the moment
- * the venue approves. Holding it for an offer that may be passed would take a
- * sellable slot off that venue's calendar for as long as they ignore it. This
- * only checks that the slot is real, free and theirs, so the admin is told at
- * the point of choosing rather than the venue at the point of accepting.
- */
-export async function assertOfferableSlot(venueId: string, slotId: string) {
-  if (!Types.ObjectId.isValid(slotId)) changeRequestFail('BAD_USER_INPUT', 'Invalid slot');
-  const slot = await VenueSlotModel.findOne({
-    _id: new Types.ObjectId(slotId),
-    venue_id: new Types.ObjectId(venueId),
-    status: 'AVAILABLE',
-  }).lean();
-  if (!slot) {
-    changeRequestFail('CONFLICT', 'That slot is no longer available. Pick another one.');
-  }
-  if (new Date((slot as any).start_at).getTime() <= Date.now()) {
-    changeRequestFail('BAD_USER_INPUT', 'That slot has already started. Pick a later one.');
-  }
-  return slot as any;
 }
 
 /** Best-effort: a slot booking that fails AFTER the pod moved must be loud. */

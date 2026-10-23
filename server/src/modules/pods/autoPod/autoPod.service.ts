@@ -1,3 +1,5 @@
+import { UPDATE_APP_FOR_AUTO_POD, type AutoPodVenueOffer } from './autoPod.offer';
+import { venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
 import { Types } from 'mongoose';
 import { AutoPodModel, type IAutoPod, type IAutoPodViewerWindow } from './autoPod.model';
 import {
@@ -22,8 +24,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { venueSubCategoryIds } from '@modules/venues/venue/venue.categories';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { buildProductRequests, validateHasImage } from '@modules/pods/pod/pod.service';
-import { breakdownService, venueSlotProjections } from '@modules/finance/finance/breakdown.service';
-import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
+import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import { ensureOwnedVenue, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
@@ -958,54 +959,23 @@ export const autoPodService = {
   },
 
   /**
-   * The free slots one of the caller's venues could commit to an offer: the
-   * next `auto_pod_slot_window_days` days, nearest first, each priced as the
-   * venue would be PAID — the slot price less the venue commission Finance
-   * deducts (under the enrolled host's rates when there is one, the platform
-   * defaults otherwise). A slot the pod's money could not cover is flagged
-   * rather than hidden, so the venue learns why it cannot be chosen.
+   * Deprecated: the published slots a venue could commit to an offer. Venues
+   * accept with a window and their own price now (venueAcceptAutoPod offer;
+   * priced first with autoPodVenueQuote), so an app still asking for slots is
+   * told to update.
    */
-  async venueSlots(userId: string, autoPodId: string, venueId: string) {
+  async venueSlots(_userId: string, _autoPodId: string, _venueId: string): Promise<never> {
+    return autoPodFail('BAD_USER_INPUT', UPDATE_APP_FOR_AUTO_POD);
+  },
+
+  /** What a window and price terms would cost this offer at the venue, before accepting. Never throws for a refusal. */
+  async venueQuote(userId: string, autoPodId: string, venueId: string, offer: AutoPodVenueOffer) {
     const doc = await this.loadById(autoPodId);
-    if (doc.pod_mode === 'VIRTUAL') {
-      autoPodFail('BAD_REQUEST', 'A virtual Auto Pod has no venue — it needs only a host and a club');
-    }
-    if (!PRE_LIVE_STAGES.includes(doc.stage as any) || doc.venue_claim) {
-      autoPodFail('CONFLICT', 'This Auto Pod has already been accepted by another venue.');
-    }
-    const venue = await ensureOwnedVenue(userId, venueId);
-    const windows = await this.windows();
-    const { slotWindowDays } = windows;
-    const until = Date.now() + slotWindowDays * DAY_MS;
-    const available = await venueSlotService.listAvailable(String(venue._id));
-    const inWindow = available.filter((slot) => new Date(slot.start_at).getTime() <= until);
-    const projections = await venueSlotProjections({
-      hostUserId: doc.host_claim ? String(doc.host_claim.user_id) : null,
-      venueId: String(venue._id),
-      podAmount: doc.pod_amount ?? 0,
-      noOfSpots: doc.no_of_spots ?? 0,
-      // Each slot as the venue would charge it, by its pricing mode.
-      slotPrices: inWindow.map((slot) => slotVenueCharge(slot, { pax: doc.no_of_spots ?? 0 }).total),
+    await ensureOwnedVenue(userId, venueId);
+    return venueOfferService.preview(venueId, { ...offer, pax: doc.no_of_spots ?? 0, pets: false }, {
+      field: 'booked_by_auto_pod_id',
+      id: autoPodId,
     });
-    // The venue goes first, so the offer is still unpriced: the host prices it
-    // afterwards against THIS slot's price, and that write is where coverage
-    // is judged. Only an offer that already carries a price can be found short.
-    const unpriced = (doc.pod_amount ?? 0) <= 0;
-    return {
-      window_days: slotWindowDays,
-      expires_at: offerExpiresAt(doc, windows),
-      slots: inWindow.map((slot, index) => ({
-        id: slot.id,
-        start_at: slot.start_at,
-        end_at: slot.end_at,
-        whole_day: slot.whole_day,
-        space_label: slot.space_label,
-        capacity: slot.capacity,
-        price: slotVenueCharge(slot, { pax: doc.no_of_spots ?? 0 }).total,
-        ...projections[index],
-        viable: unpriced || projections[index].viable,
-      })),
-    };
   },
 
   /**

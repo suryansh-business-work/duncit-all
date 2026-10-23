@@ -22,8 +22,15 @@ import {
   loadLivePod,
   podAttendeeCount,
 } from './podChangeRequest.common';
-import { candidatesForRequest, slotsForVenue } from './podChangeRequest.candidates';
-import { applyReplacement, assertOfferableSlot, logAssignFailure } from './podChangeRequest.assign';
+import { candidatesForRequest } from './podChangeRequest.candidates';
+import {
+  applyReplacement,
+  logAssignFailure,
+  UPDATE_APP_FOR_VENUE_CHANGE,
+  venueWindowRequest,
+  type PodChangeVenueWindow,
+} from './podChangeRequest.assign';
+import { venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
 import { hydrateRequests, withoutRequesterContacts } from './podChangeRequest.rows';
 import {
   notifyAdmins,
@@ -275,7 +282,9 @@ export const podChangeRequestService = {
     requestId: string,
     userId: string,
     decision: 'APPROVE' | 'PASS',
-    passReason: string
+    passReason: string,
+    /** VENUE requests: the window and price terms the venue takes the pod at. */
+    venueWindow: PodChangeVenueWindow | null = null
   ) {
     const doc = await loadRequest(requestId);
     if (doc.status !== 'OFFERED' || doc.offer?.status !== 'PENDING') {
@@ -309,7 +318,7 @@ export const podChangeRequestService = {
 
     let outcome;
     try {
-      outcome = await applyReplacement(doc, pod, doc.offer);
+      outcome = await applyReplacement(doc, pod, doc.offer, venueWindow);
     } catch (error) {
       logAssignFailure(doc, error);
       throw error;
@@ -382,11 +391,23 @@ export const podChangeRequestService = {
     });
   },
 
-  /** Free slots at one candidate venue — the second half of a VENUE offer. */
-  async venueSlots(requestId: string, venueId: string) {
+  /** Deprecated: published slots at a candidate venue. The venue answers with its own time and price now. */
+  async venueSlots(_requestId: string, _venueId: string): Promise<never> {
+    return changeRequestFail('BAD_USER_INPUT', 'Venues answer a change request with their own time and price now — offer the venue only.');
+  },
+
+  /**
+   * What the window and price terms a venue is about to answer with would cost
+   * this pod — for the offered venue only. Never throws for a refusal.
+   */
+  async venueQuote(requestId: string, userId: string, window: PodChangeVenueWindow) {
     const doc = await loadRequest(requestId);
-    if (doc.role !== 'VENUE') changeRequestFail('BAD_REQUEST', 'Only a venue request picks a slot');
-    return slotsForVenue(venueId);
+    if (doc.role !== 'VENUE' || doc.status !== 'OFFERED' || !doc.offer?.venue_id) {
+      changeRequestFail('BAD_REQUEST', 'This request is not waiting on a venue');
+    }
+    if (String(doc.offer.user_id) !== userId) changeRequestFail('FORBIDDEN', 'This offer was not made to you');
+    const pod = await loadLivePod(String(doc.pod_id));
+    return venueOfferService.preview(String(doc.offer.venue_id), venueWindowRequest(pod, window), String(pod._id));
   },
 
   /**
@@ -417,13 +438,10 @@ export const podChangeRequestService = {
     const pod = await loadLivePod(String(doc.pod_id));
     if (pod.deleted_at) changeRequestFail('BAD_REQUEST', 'This pod has been cancelled');
 
-    let slotStart: Date | null = null;
+    // A venue is offered the pod only; it answers with its own window and price.
     if (doc.role === 'VENUE') {
-      if (!input.venue_id || !input.venue_slot_id) {
-        changeRequestFail('BAD_USER_INPUT', 'Pick a venue and one of its slots');
-      }
-      const slot = await assertOfferableSlot(String(input.venue_id), String(input.venue_slot_id));
-      slotStart = new Date(slot.start_at);
+      if (!input.venue_id || !Types.ObjectId.isValid(input.venue_id)) changeRequestFail('BAD_USER_INPUT', 'Pick a venue');
+      if (input.venue_slot_id) changeRequestFail('BAD_USER_INPUT', UPDATE_APP_FOR_VENUE_CHANGE);
     }
 
     const candidate = await UserModel.findById(input.user_id)
@@ -434,7 +452,7 @@ export const podChangeRequestService = {
     doc.offer = {
       user_id: new Types.ObjectId(input.user_id),
       venue_id: input.venue_id ? new Types.ObjectId(input.venue_id) : null,
-      venue_slot_id: input.venue_slot_id ? new Types.ObjectId(input.venue_slot_id) : null,
+      venue_slot_id: null,
       club_id: doc.role === 'CLUB_ADMIN' ? doc.from_club_id ?? pod.club_id ?? null : null,
       display_name: contactName(candidate) || String((candidate as any)?.auth?.email ?? ''),
       status: 'PENDING',
@@ -453,7 +471,7 @@ export const podChangeRequestService = {
     );
     await doc.save();
 
-    await notifyChangeOffer(doc, pod, String(input.user_id), slotStart);
+    await notifyChangeOffer(doc, pod, String(input.user_id), null);
     const [row] = await hydrateRequests([doc]);
     return row;
   },

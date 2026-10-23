@@ -20,8 +20,11 @@ import { autoPodNotify } from './autoPod.notify';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
-import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
+import { holdWindow } from '@modules/venues/venueOffer/venueOffer.hold';
+import { checkAndPrice, venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
+import type { VenueOfferRequest } from '@modules/venues/venueOffer/venueOffer.types';
+import { UPDATE_APP_FOR_AUTO_POD, type AutoPodVenueOffer } from './autoPod.offer';
+import type { HoldRef } from '@modules/venues/venuePricing/venuePricing.service';
 import { venueSlotService, ensureOwnedVenue } from '@modules/venues/venueSlot/venueSlot.service';
 import { venueHostsSubCategory } from '@modules/venues/venue/venue.categories';
 import {
@@ -99,23 +102,25 @@ async function claimWrite(
 }
 
 /**
- * A venue accepts an Auto Pod and commits one of its own slots — accept and
- * date/time/slot are ONE action, because an acceptance without a slot would
- * leave the offer half-claimed with nothing for a host to see.
+ * A venue accepts an Auto Pod and commits a window of its own at its own price
+ * terms — accept and date/time/price are ONE action, because an acceptance
+ * without a booking would leave the offer half-claimed with nothing for a host
+ * to see. The terms are priced with the venue's charges and Duncit's commission
+ * on top, and frozen at accept: that is what the pod settles on.
  *
- * Ordering: the venue books its OWN slot first, then races every other venue on
- * the conditional claim. A loser — or any failure after the booking —
- * compensates by releasing the slot IT booked (keyed on both ids, so it can
- * never touch the winner's slot). Booking first also means the slot is
- * continuously BOOKED from acceptance until the pod goes live — no window in
- * which an ordinary pod could take it.
+ * Ordering: the venue books its window first (inside the venue's booking lock),
+ * then races every other venue on the conditional claim. A loser — or any
+ * failure after the booking — compensates by deleting the hold IT made (keyed
+ * on both ids, so it can never touch the winner's booking). Booking first also
+ * means the time is held continuously from acceptance until the pod goes live.
  */
 export async function venueAcceptAutoPod(
   userId: string,
   autoPodId: string,
   venueId: string,
-  slotId: string
+  offer: AutoPodVenueOffer | null | undefined
 ) {
+  if (!offer) autoPodFail('BAD_USER_INPUT', UPDATE_APP_FOR_AUTO_POD);
   const doc = await loadOffer(autoPodId);
   if (doc.pod_mode === 'VIRTUAL') {
     autoPodFail('BAD_REQUEST', 'A virtual Auto Pod has no venue — it needs only a host and a club');
@@ -139,31 +144,33 @@ export async function venueAcceptAutoPod(
     mismatch: mismatchMessage(doc, 'the venue'),
   });
 
-  if (!Types.ObjectId.isValid(slotId)) autoPodFail('BAD_USER_INPUT', 'Invalid slot_id');
-  const slot = await VenueSlotModel.findById(slotId);
-  if (!slot) autoPodFail('NOT_FOUND', 'Selected slot not found');
-  if (String(slot!.owner_user_id) !== userId || String(slot!.venue_id) !== String(venueId)) {
-    autoPodFail('FORBIDDEN', 'That slot does not belong to this venue');
-  }
-  if (slot!.start_at.getTime() <= Date.now()) {
-    autoPodFail('BAD_USER_INPUT', 'Pick a slot in the future');
-  }
-
-  // What the venue charges for this slot by its pricing mode — an hourly slot
-  // by its length, a per-pax slot by the offer's spots (completion can adjust).
-  const slotCharge = slotVenueCharge(slot, { pax: doc.no_of_spots ?? 0 }).total;
-
-  // The venue learns HERE, before it commits, whether its price can be covered
-  // — under the real host's rates when a host is already on it.
+  const req: VenueOfferRequest = { ...offer, pax: doc.no_of_spots ?? 0, pets: false };
+  const holder: HoldRef = { field: 'booked_by_auto_pod_id', id: autoPodId };
+  // Priced and checked first, so the venue learns before it commits whether the
+  // offer's ticket money can cover it — under the real host's rates when a host
+  // is already on it. The hold below re-checks and re-prices inside the lock.
+  const preview = await venueOfferService.prepare(String(venueId), req, holder);
   await breakdownService.assertViablePodEconomics({
     hostUserId: doc.host_claim ? String(doc.host_claim.user_id) : null,
     podAmount: doc.pod_amount ?? 0,
     noOfSpots: doc.no_of_spots ?? 0,
     venueId: String(venueId),
-    venueAmount: slotCharge,
+    venueAmount: preview.quote.total,
   });
 
-  await venueSlotService.bookForAutoPod(slotId, venueId, userId, autoPodId);
+  const slot = await holdWindow({
+    venueId: String(venueId),
+    req,
+    holder,
+    status: 'BOOKED',
+    offerStatus: 'ACCEPTED',
+    proposedBy: 'VENUE',
+    agreed: true,
+    closedBy: 'VENUE',
+    priceInLock: (lockedVenue, session) => checkAndPrice(lockedVenue, String(venueId), req, { session, ignore: holder }),
+  });
+  const slotId = String(slot._id);
+  const agreedTotal = slot.price_snapshot?.total ?? preview.quote.total;
 
   const write = (loc: EnrolmentLocation) =>
     AutoPodModel.findOneAndUpdate(
@@ -176,9 +183,10 @@ export async function venueAcceptAutoPod(
               venue_slot_id: new Types.ObjectId(slotId),
               owner_user_id: new Types.ObjectId(userId),
               venue_name: venue.venue_name ?? '',
-              pod_date_time: slot!.start_at,
-              pod_end_date_time: slot!.end_at ?? null,
-              slot_price: slotCharge,
+              pod_date_time: slot.start_at,
+              pod_end_date_time: slot.end_at ?? null,
+              // What the booking costs the pod: the agreed price with Duncit's commission on top.
+              slot_price: agreedTotal,
               accepted_at: new Date(),
             },
           },
@@ -189,7 +197,7 @@ export async function venueAcceptAutoPod(
             'VENUE_ENROLL',
             userId,
             venue.venue_name ?? '',
-            `Venue accepted and picked a slot${pinNote(loc.pin)}`
+            `Venue accepted with a time and a price${pinNote(loc.pin)}`
           ),
         },
       },
@@ -200,14 +208,14 @@ export async function venueAcceptAutoPod(
   try {
     claimed = await claimWrite(doc._id as Types.ObjectId, location, write);
   } catch (err) {
-    // Whatever failed, the slot this attempt booked must not stay held.
+    // Whatever failed, the hold this attempt made must not stay.
     await venueSlotService.releaseAutoPodSlot(slotId, autoPodId).catch((error) =>
       logs.server.error('autoPod', 'releaseAfterFailedAccept', { error, auto_pod_id: autoPodId })
     );
     throw err;
   }
   if (!claimed) {
-    // Lost the race: give back only the slot this attempt booked.
+    // Lost the race: delete only the hold this attempt made.
     await venueSlotService.releaseAutoPodSlot(slotId, autoPodId);
     autoPodFail('CONFLICT', 'This Auto Pod has already been accepted by another venue.');
   }

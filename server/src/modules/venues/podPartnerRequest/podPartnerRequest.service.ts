@@ -3,7 +3,12 @@ import { Types } from 'mongoose';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { assertActiveHost } from '@modules/pods/pod/pod.validation';
 import { moderationService } from '@modules/moderation/moderation.service';
-import { holdSlotForPartnerRequest, releasePartnerRequestSlot } from '@modules/venues/venueSlot/venueSlot.partnerHold';
+import { releasePartnerRequestSlot } from '@modules/venues/venueSlot/venueSlot.partnerHold';
+import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { holdWindow, freezeAgreedTerms } from '@modules/venues/venueOffer/venueOffer.hold';
+import { checkAndPrice, loadBookableVenue, venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
+import type { VenueOfferRequest } from '@modules/venues/venueOffer/venueOffer.types';
+import type { HoldRef } from '@modules/venues/venuePricing/venuePricing.service';
 import { logs } from '@observability/log';
 import {
   PodPartnerRequestModel,
@@ -50,6 +55,21 @@ async function transition(id: Types.ObjectId, from: string, set: Record<string, 
   const doc = await PodPartnerRequestModel.findOneAndUpdate({ _id: id, status: from }, { $set: set }, { new: true });
   if (!doc) fail('CONFLICT', 'This request has moved on — refresh to see where it is.');
   return doc as IPodPartnerRequest;
+}
+
+/** Pod Requests agree a window and a price now; an app that still picks a published slot is told to update. */
+export const UPDATE_APP_FOR_POD_REQUEST = 'Pod Requests now agree a time and a price. Please update the app to continue.';
+
+const holdOf = (id: Types.ObjectId | string): HoldRef => ({ field: 'booked_by_partner_request_id', id: String(id) });
+
+/** The proposal the confirming side agrees to: its terms become the booking's price. */
+async function freezeProposal(doc: IPodPartnerRequest, by: PartnerSide) {
+  if (!doc.slot_id) return;
+  const slot = await VenueSlotModel.findOne({ _id: doc.slot_id, booked_by_partner_request_id: doc._id });
+  // A slot picked before proposals (legacy) carries no offer and settles as it always did.
+  if (!slot?.offer) return;
+  freezeAgreedTerms(slot, by);
+  await slot.save();
 }
 
 export interface SendPartnerRequestInput {
@@ -125,12 +145,39 @@ export const podPartnerRequestService = {
     return (await toViews([next], senderOf(next.direction)))[0];
   },
 
-  /** The receiver picks one of the venue's open slots; it is held for this request until answered. */
-  async requestSlot(callerId: string, id: string, slotId: string) {
+/** Deprecated: picking one of the venue's published slots. Proposals carry a window and a price now. */
+  async requestSlot(_callerId: string, _id: string, _slotId: string): Promise<never> {
+    return fail('BAD_USER_INPUT', UPDATE_APP_FOR_POD_REQUEST);
+  },
+
+  /** What a proposal would cost, before it is sent — the receiver's live price. Never throws for a refusal. */
+  async windowQuote(callerId: string, id: string, input: VenueOfferRequest) {
     const { doc, side } = await loadFor(callerId, id);
-    if (side !== receiverOf(doc.direction)) fail('FORBIDDEN', 'The other side picks the slot');
-    if (doc.status !== 'ACCEPTED') fail('CONFLICT', 'A slot can be picked once the request is accepted');
-    const slot = await holdSlotForPartnerRequest(slotId, String(doc.venue_id), String(doc._id));
+    if (side !== receiverOf(doc.direction)) fail('FORBIDDEN', 'The other side proposes the time');
+    return venueOfferService.preview(String(doc.venue_id), input, holdOf(doc._id as Types.ObjectId));
+  },
+
+  /**
+   * The receiver proposes a window, the guests and the price terms; the time is
+   * held for this request (a BOOKED hold made for it) until the sender answers.
+   */
+  async proposeWindow(callerId: string, id: string, input: VenueOfferRequest) {
+    const { doc, side } = await loadFor(callerId, id);
+    if (side !== receiverOf(doc.direction)) fail('FORBIDDEN', 'The other side proposes the time');
+    if (doc.status !== 'ACCEPTED') fail('CONFLICT', 'A time can be proposed once the request is accepted');
+    const venueId = String(doc.venue_id);
+    await loadBookableVenue(venueId);
+    const holder = holdOf(doc._id as Types.ObjectId);
+    const slot = await holdWindow({
+      venueId,
+      req: input,
+      holder,
+      status: 'BOOKED',
+      offerStatus: 'SENT',
+      proposedBy: side,
+      agreed: false,
+      priceInLock: (venue, session) => checkAndPrice(venue, venueId, input, { session, ignore: holder }),
+    });
     let next: IPodPartnerRequest;
     try {
       next = await transition(doc._id as Types.ObjectId, 'ACCEPTED', {
@@ -141,7 +188,7 @@ export const podPartnerRequestService = {
         slot_requested_at: new Date(),
       });
     } catch (err) {
-      // Lost the race on the request: give the slot back, it was held for nothing.
+      // Lost the race on the request: the hold was made for nothing and goes.
       await releasePartnerRequestSlot(String(slot._id), String(doc._id));
       throw err;
     }
@@ -156,6 +203,13 @@ export const podPartnerRequestService = {
     const reqId = doc._id as Types.ObjectId;
     if (confirm) {
       const next = await transition(reqId, 'SLOT_REQUESTED', { status: 'SLOT_CONFIRMED', slot_confirmed_at: new Date() });
+      try {
+        await freezeProposal(next, side);
+      } catch (err) {
+        // The price could not be frozen: the confirmation does not stand, so the pod cannot be built on it.
+        await PodPartnerRequestModel.updateOne({ _id: reqId, status: 'SLOT_CONFIRMED' }, { $set: { status: 'SLOT_REQUESTED', slot_confirmed_at: null } });
+        throw err;
+      }
       await notifyPartner(next, 'SLOT_CONFIRMED', receiverOf(next.direction));
       return (await toViews([next], senderOf(next.direction)))[0];
     }

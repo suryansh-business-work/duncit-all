@@ -78,17 +78,18 @@ function randomAlpha(length: number): string {
   return out;
 }
 
+type CreateSlot = Parameters<typeof slotVenueCharge>[0] & { price_snapshot?: { total: number } | null };
+
 /**
- * What the venue costs a new pod, for the economics guard: a venue offer its
- * whole quote (venue price + Duncit's commission on top, both off the host's
- * side); a slot by its pricing mode, a per-person slot at a full pod.
+ * What the venue costs a new pod, for the economics guard: a venue offer, or a
+ * held booking whose price was already agreed (an Auto Pod or Pod Request
+ * window), its whole quote — venue price + Duncit's commission on top, both off
+ * the host's side; any other slot by its pricing mode, a per-person slot at a
+ * full pod.
  */
-function venueCostForCreate(
-  offer: { quote: { total: number } } | null,
-  slotDoc: Parameters<typeof slotVenueCharge>[0] | null,
-  spots: number
-): number {
+function venueCostForCreate(offer: { quote: { total: number } } | null, slotDoc: CreateSlot | null, spots: number): number {
   if (offer) return offer.quote.total;
+  if (slotDoc?.price_snapshot) return slotDoc.price_snapshot.total;
   return slotDoc ? slotVenueCharge(slotDoc, { pax: spots }).total : 0;
 }
 
@@ -166,9 +167,10 @@ export const podWriteMethods = {
       noOfSpots: input.no_of_spots ?? 0,
       venueId: venueLocation.venue_id,
       venueAmount: venueCostForCreate(offer, slotDoc, input.no_of_spots ?? 0),
-      // An open slot freezes with the commission on top; an offer's quote
-      // already includes it; held Auto Pod / Pod Request slots settle as before.
-      commissionOnTop: !offer && !!slotDoc && !autoPodSlot && !partnerRequestSlot,
+      // An open slot freezes with the commission on top; an offer's quote, and a
+      // held booking's agreed price, already include it. A held slot from before
+      // agreed prices (no snapshot) settles as it always did.
+      commissionOnTop: !offer && !!slotDoc && !slotDoc.price_snapshot && !autoPodSlot && !partnerRequestSlot,
     });
     const clubCategory = await resolveClubCategory(input.club_id);
     await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);

@@ -23,9 +23,11 @@ jest.mock('../../podChangeRequest.candidates', () => ({
 }));
 jest.mock('../../podChangeRequest.assign', () => ({
   applyReplacement: jest.fn(),
-  assertOfferableSlot: jest.fn(),
   logAssignFailure: jest.fn(),
+  UPDATE_APP_FOR_VENUE_CHANGE: 'Venues take over a pod with a time and a price now. Please update the app to accept it.',
+  venueWindowRequest: (pod: { no_of_spots?: number | null }, window: object) => ({ ...window, pax: pod.no_of_spots ?? 0, pets: false }),
 }));
+jest.mock('@modules/venues/venueOffer/venueOffer.service', () => ({ venueOfferService: { preview: jest.fn() } }));
 jest.mock('../../podChangeRequest.rows', () => ({
   hydrateRequests: jest.fn(async (docs: any[]) =>
     docs.map((d) => ({ id: String(d._id), status: d.status, change_request_no: d.change_request_no }))
@@ -45,8 +47,9 @@ jest.mock('@modules/pods/pod/pod.service', () => ({ podService: { remove: jest.f
 import { logs } from '@observability/log';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
-import { candidatesForRequest, slotsForVenue } from '../../podChangeRequest.candidates';
-import { applyReplacement, assertOfferableSlot, logAssignFailure } from '../../podChangeRequest.assign';
+import { candidatesForRequest } from '../../podChangeRequest.candidates';
+import { applyReplacement, logAssignFailure, UPDATE_APP_FOR_VENUE_CHANGE } from '../../podChangeRequest.assign';
+import { venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
 import {
   notifyAdmins,
   notifyChangeOffer,
@@ -65,9 +68,10 @@ import { podChangeRequestService } from '../../podChangeRequest.service';
 const penalties = settingsService.getChangeRequestHealthPenalties as jest.Mock;
 const charge = accountHealthService.applySystemPenalty as jest.Mock;
 const candidates = candidatesForRequest as jest.Mock;
-const venueSlots = slotsForVenue as jest.Mock;
 const replace = applyReplacement as jest.Mock;
-const offerableSlot = assertOfferableSlot as jest.Mock;
+const preview = venueOfferService.preview as jest.Mock;
+/** The window and price terms a venue answers a VENUE request with. */
+const WINDOW = { start_at: '2026-11-01T12:00:00.000Z', end_at: '2026-11-01T14:00:00.000Z', model: 'FLAT' as const, rate: 4000 };
 const assignFailed = logAssignFailure as jest.Mock;
 const admins = notifyAdmins as jest.Mock;
 const offered = notifyChangeOffer as jest.Mock;
@@ -93,7 +97,6 @@ beforeEach(() => {
   penalties.mockResolvedValue({ VENUE: 3, HOST: 2, CLUB_ADMIN: 1 });
   charge.mockResolvedValue(undefined);
   replace.mockResolvedValue({ summary: 'Ravi took over the pod.', moved_to: 'Ravi' });
-  offerableSlot.mockResolvedValue({ start_at: new Date('2026-11-01T12:00:00Z') });
 });
 
 /* --------------------------------------------------------------- fixtures */
@@ -404,10 +407,12 @@ describe('podChangeRequestService.respond', () => {
 
     const row: any = await podChangeRequestService.respond(String(id), String(ravi), 'APPROVE', '');
 
-    const [request, pod, offer] = replace.mock.calls[0];
+    const [request, pod, offer, venueWindow] = replace.mock.calls[0];
     expect(String(request._id)).toBe(String(id));
     expect(String(pod._id)).toBe(String(w.pod));
     expect(String(offer.user_id)).toBe(String(ravi));
+    // A host takes the place as it is; only a venue answers with a window.
+    expect(venueWindow).toBeNull();
     const doc = await stored(id);
     expect(doc).toMatchObject({ status: 'RESOLVED', resolution: 'REPLACED', is_open: false });
     expect(doc.resolved_at).toBeInstanceOf(Date);
@@ -417,6 +422,14 @@ describe('podChangeRequestService.respond', () => {
     expect(resolved).toHaveBeenCalledWith(expect.anything(), 'Sunday Smash', 'Ravi took over the pod.');
     expect(admins).toHaveBeenCalledWith('Change Request resolved', `${doc.change_request_no}: Ravi took over the pod.`);
     expect(row.status).toBe('RESOLVED');
+  });
+
+  it('APPROVE by a venue passes its window and price terms to the swap', async () => {
+    const w = await seedWorld();
+    const ravi = await seedUser('Ravi', 'Kumar');
+    const id = await seedOffered(w, ravi, 'VENUE');
+    await podChangeRequestService.respond(String(id), String(ravi), 'APPROVE', '', WINDOW);
+    expect(replace.mock.calls[0][3]).toEqual(WINDOW);
   });
 
   it('leaves the request untouched, and logs, when the swap fails', async () => {
@@ -521,16 +534,44 @@ describe('podChangeRequestService — admin reads', () => {
     await expect(podChangeRequestService.candidates(row.id)).rejects.toEqual(fails('NOT_FOUND', 'Pod not found'));
   });
 
-  it('venueSlots only for a venue request', async () => {
+  it('venueSlots is refused: a venue answers with its own time and price now', async () => {
     const w = await seedWorld();
-    const host: any = await file(w, w.host, 'HOST');
     const venue: any = await file(w, w.owner, 'VENUE');
-    venueSlots.mockResolvedValue([{ id: 's1' }]);
-    await expect(podChangeRequestService.venueSlots(host.id, 'v1')).rejects.toEqual(
-      fails('BAD_REQUEST', 'Only a venue request picks a slot')
+    await expect(podChangeRequestService.venueSlots(venue.id, 'v1')).rejects.toEqual(
+      fails('BAD_USER_INPUT', 'Venues answer a change request with their own time and price now — offer the venue only.')
     );
-    await expect(podChangeRequestService.venueSlots(venue.id, 'v1')).resolves.toEqual([{ id: 's1' }]);
-    expect(venueSlots).toHaveBeenCalledWith('v1');
+  });
+
+  it("venueQuote prices the offered venue's window for the pod's spots — for that venue only", async () => {
+    const w = await seedWorld({ no_of_spots: 12 });
+    const ravi = await seedUser('Ravi', 'Kumar');
+    const venueOffered = oid();
+    const id = await seedOffered(w, ravi, 'VENUE', {
+      offer: {
+        user_id: ravi,
+        venue_id: venueOffered,
+        venue_slot_id: null,
+        club_id: null,
+        display_name: 'Ravi Kumar',
+        status: 'PENDING',
+        offered_by: oid(),
+        offered_at: new Date('2026-10-01T00:00:00Z'),
+        responded_at: null,
+        pass_reason: '',
+      },
+    });
+    const answer = { ok: true, message: null, quote: { total: 4400 } };
+    preview.mockResolvedValue(answer);
+
+    await expect(podChangeRequestService.venueQuote(String(id), String(ravi), WINDOW)).resolves.toBe(answer);
+    expect(preview).toHaveBeenCalledWith(String(venueOffered), { ...WINDOW, pax: 12, pets: false }, String(w.pod));
+    await expect(podChangeRequestService.venueQuote(String(id), String(oid()), WINDOW)).rejects.toEqual(
+      fails('FORBIDDEN', 'This offer was not made to you')
+    );
+    const hostRequest = await seedOffered(w, ravi, 'HOST');
+    await expect(podChangeRequestService.venueQuote(String(hostRequest), String(ravi), WINDOW)).rejects.toEqual(
+      fails('BAD_REQUEST', 'This request is not waiting on a venue')
+    );
   });
 });
 
@@ -552,28 +593,25 @@ describe('podChangeRequestService.offer', () => {
     expect(String(doc.offer.user_id)).toBe(String(ravi));
     expect(String(doc.offer.offered_by)).toBe(String(adminId));
     expect(lastEvent(doc)).toMatchObject({ action: 'OFFERED', actor_name: 'Duncit Ops', note: 'Offered to Ravi Kumar' });
-    expect(offerableSlot).not.toHaveBeenCalled();
     const [, pod, to, slotStart] = offered.mock.calls[0];
     expect(String(pod._id)).toBe(String(w.pod));
     expect(to).toBe(String(ravi));
     expect(slotStart).toBeNull();
   });
 
-  it('checks the venue slot before offering a venue place, and passes its start along', async () => {
+  it('offers a venue place with the venue only — the venue answers with its own window and price', async () => {
     const w = await seedWorld();
     const row: any = await file(w, w.owner, 'VENUE');
     const other = await seedUser('', '', 'other-venue@example.com');
     const venue = String(oid());
-    const slot = String(oid());
 
-    await podChangeRequestService.offer(row.id, String(oid()), { user_id: String(other), venue_id: venue, venue_slot_id: slot });
+    await podChangeRequestService.offer(row.id, String(oid()), { user_id: String(other), venue_id: venue });
 
-    expect(offerableSlot).toHaveBeenCalledWith(venue, slot);
     const doc = await stored(row.id);
     expect(doc.offer.display_name).toBe('other-venue@example.com');
     expect(String(doc.offer.venue_id)).toBe(venue);
-    expect(String(doc.offer.venue_slot_id)).toBe(slot);
-    expect(offered.mock.calls[0][3]).toEqual(new Date('2026-11-01T12:00:00Z'));
+    expect(doc.offer.venue_slot_id).toBeNull();
+    expect(offered.mock.calls[0][3]).toBeNull();
   });
 
   it('offers a club admin place on the club the request came from', async () => {
@@ -584,7 +622,7 @@ describe('podChangeRequestService.offer', () => {
     expect(String((await stored(row.id)).offer.club_id)).toBe(String(w.club));
   });
 
-  it('refuses an offered or closed request, no candidate, a missing slot pick and a vanished partner', async () => {
+  it('refuses an offered or closed request, no candidate, no venue, a slot pick from an old portal and a vanished partner', async () => {
     const w = await seedWorld();
     const offeredId = await seedOffered(w, oid());
     await expect(podChangeRequestService.offer(String(offeredId), String(oid()), { user_id: String(oid()) })).rejects.toEqual(
@@ -598,15 +636,18 @@ describe('podChangeRequestService.offer', () => {
     await expect(podChangeRequestService.offer(venueRow.id, String(oid()), { user_id: 'nope' })).rejects.toEqual(
       fails('BAD_USER_INPUT', 'Pick somebody to offer it to')
     );
-    await expect(
-      podChangeRequestService.offer(venueRow.id, String(oid()), { user_id: String(oid()), venue_id: String(oid()) })
-    ).rejects.toEqual(fails('BAD_USER_INPUT', 'Pick a venue and one of its slots'));
+    await expect(podChangeRequestService.offer(venueRow.id, String(oid()), { user_id: String(oid()) })).rejects.toEqual(
+      fails('BAD_USER_INPUT', 'Pick a venue')
+    );
     await expect(
       podChangeRequestService.offer(venueRow.id, String(oid()), {
         user_id: String(oid()),
         venue_id: String(oid()),
         venue_slot_id: String(oid()),
       })
+    ).rejects.toEqual(fails('BAD_USER_INPUT', UPDATE_APP_FOR_VENUE_CHANGE));
+    await expect(
+      podChangeRequestService.offer(venueRow.id, String(oid()), { user_id: String(oid()), venue_id: String(oid()) })
     ).rejects.toEqual(fails('NOT_FOUND', 'That partner no longer has an account'));
     expect((await stored(venueRow.id)).status).toBe('OPEN');
     expect(offered).not.toHaveBeenCalled();

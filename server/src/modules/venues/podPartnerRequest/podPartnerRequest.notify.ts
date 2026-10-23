@@ -21,9 +21,9 @@ const COPY: Record<PartnerRequestEvent, (from: string, when: string) => { title:
   REQUESTED: (from) => ({ title: 'New Pod Request', body: `${from} would like to run a pod with you. Review the request.` }),
   ACCEPTED: (from) => ({ title: 'Pod Request accepted', body: `${from} accepted your Pod Request. Pick a slot next.` }),
   REJECTED: (from) => ({ title: 'Pod Request declined', body: `${from} declined your Pod Request.` }),
-  SLOT_REQUESTED: (from, when) => ({ title: 'Slot request received', body: `${from} picked ${when}. Confirm the slot to continue.` }),
+  SLOT_REQUESTED: (from, when) => ({ title: 'Time and price proposed', body: `${from} proposed ${when} with a price. Confirm it to continue.` }),
   SLOT_CONFIRMED: (from, when) => ({ title: 'Slot confirmed', body: `${from} confirmed ${when}. The pod can be created now.` }),
-  SLOT_DECLINED: (from, when) => ({ title: 'Slot declined', body: `${from} could not do ${when}. Pick another slot.` }),
+  SLOT_DECLINED: (from, when) => ({ title: 'Proposal declined', body: `${from} could not do ${when}. Propose another time.` }),
   POD_CREATED: (from) => ({ title: 'Pod created', body: `The pod with ${from} is live. Contact details are now shared on the request.` }),
 };
 

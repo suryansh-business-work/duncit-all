@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { podChangeRequestService } from './podChangeRequest.service';
+import type { PodChangeVenueWindow } from './podChangeRequest.assign';
 import type { PodChangeRole } from './podChangeRequest.model';
 
 /**
@@ -45,6 +46,11 @@ export const podChangeRequestResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return podChangeRequestService.venueSlots(args.request_id, args.venue_id);
     },
+    podChangeVenueQuote: (
+      _p: unknown,
+      args: { request_id: string; venue_window: PodChangeVenueWindow },
+      ctx: GraphQLContext
+    ) => podChangeRequestService.venueQuote(args.request_id, requireAuth(ctx).id, args.venue_window),
     myPodChangeBoard: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return podChangeRequestService.board(user.id);
@@ -81,7 +87,12 @@ export const podChangeRequestResolvers = {
     },
     respondToPodChange: (
       _p: unknown,
-      args: { request_id: string; decision: 'APPROVE' | 'PASS'; reason?: string | null },
+      args: {
+        request_id: string;
+        decision: 'APPROVE' | 'PASS';
+        reason?: string | null;
+        venue_window?: PodChangeVenueWindow | null;
+      },
       ctx: GraphQLContext
     ) => {
       const user = requireAuth(ctx);
@@ -89,7 +100,8 @@ export const podChangeRequestResolvers = {
         args.request_id,
         user.id,
         args.decision,
-        args.reason ?? ''
+        args.reason ?? '',
+        args.venue_window ?? null
       );
     },
   },

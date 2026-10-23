@@ -5,6 +5,7 @@ import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { venueCategoriesOf } from '@modules/venues/venue/venue.categories';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { offerView } from '@modules/venues/venueOffer/venueOffer.view';
 import type { IPodPartnerRequest } from './podPartnerRequest.model';
 
 export type PartnerSide = 'HOST' | 'VENUE';
@@ -107,9 +108,12 @@ async function contactFor(doc: IPodPartnerRequest, viewer: PartnerSide) {
 
 async function slotOf(doc: IPodPartnerRequest) {
   if (!doc.slot_id) return null;
-  const slot = await VenueSlotModel.findById(doc.slot_id).select('start_at end_at whole_day price space_label').lean();
+  const slot = await VenueSlotModel.findById(doc.slot_id)
+    .select('venue_id booked_by_pod_id decided_pod_id start_at end_at whole_day price space_label offer')
+    .lean();
   if (!slot) return null;
   return {
+    offer: offerView(slot),
     id: String(slot._id),
     start_at: slot.start_at.toISOString(),
     end_at: slot.end_at.toISOString(),

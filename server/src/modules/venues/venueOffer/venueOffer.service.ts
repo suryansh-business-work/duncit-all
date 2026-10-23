@@ -12,7 +12,6 @@ import { Types, type ClientSession } from 'mongoose';
 import { VenueSlotModel, type IVenueSlot } from '@modules/venues/venueSlot/venueSlot.model';
 import { applyApproval, applyDecline } from '@modules/venues/venueSlot/venueSlot.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { withTransaction } from '@utils/mongoTransaction';
 import { getAppTimeZone, appDateTime } from '@utils/app-time';
 import { logs } from '@observability/log';
 import {
@@ -23,12 +22,13 @@ import {
   parseWindow,
   pricingOf,
   spaceCapacity,
+  type HoldRef,
 } from '@modules/venues/venuePricing/venuePricing.service';
 import { checkBookable } from '@modules/venues/venuePricing/venuePricing.availability';
-import { VenueBookingLockModel } from '@modules/venues/venuePricing/venueBookingLock.model';
+import { holdWindow } from './venueOffer.hold';
 import { quoteOffer, termsProblem } from './venueOffer.quote';
 import { offerView } from './venueOffer.view';
-import type { OfferQuote, VenueOfferHistoryEntry, VenueOfferRequest, VenueOfferTerms } from './venueOffer.types';
+import type { OfferQuote, VenueOfferRequest, VenueOfferTerms } from './venueOffer.types';
 
 const DAY_MS = 86_400_000;
 const NOTE_MAX = 280;
@@ -55,7 +55,7 @@ async function assertWindowFree(
   venueId: string,
   space: string,
   window: { start: Date; end: Date },
-  opts: { session?: ClientSession; ignorePodId?: string } = {}
+  opts: { session?: ClientSession; ignore?: string | HoldRef } = {}
 ) {
   const busy = await busyWindows(
     venueId,
@@ -63,7 +63,7 @@ async function assertWindowFree(
     new Date(window.start.getTime() - DAY_MS),
     new Date(window.end.getTime() + DAY_MS),
     opts.session,
-    opts.ignorePodId
+    opts.ignore
   );
   const check = checkBookable(
     { pricing: pricingOf(venue), settings: venue.settings, busy, now: new Date(), timeZone: getAppTimeZone() },
@@ -92,6 +92,35 @@ async function priced(
   });
   if (!result.ok) fail('BAD_USER_INPUT', result.message);
   return { ...(result as Extract<typeof result, { ok: true }>).breakdown, confirmed_at: new Date() };
+}
+
+/**
+ * An offer for a window of this venue, checked against what is booked now and
+ * priced: the terms are sound, the guests fit the space, the venue is open then
+ * and the time is free (the holder's own hold excepted). Run it inside the lock
+ * transaction to write a hold on it; outside, for a preview.
+ */
+export async function checkAndPrice(
+  venue: Venue,
+  venueId: string,
+  req: VenueOfferRequest,
+  opts: { session?: ClientSession; ignore?: string | HoldRef } = {}
+) {
+  assertTerms(req);
+  const space = (req.space_label ?? '').trim();
+  const pax = guestsOf(req);
+  assertGuestsFit(venue, space, pax);
+  const window = parseWindow(req);
+  await assertWindowFree(venue, venueId, space, window, opts);
+  const quote = await priced(venue, venueId, req, window, { pax, pets: !!req.pets });
+  return { quote, ...window, space, pax };
+}
+
+/** An approved, active venue, or BAD_USER_INPUT. */
+export async function loadBookableVenue(venueId: string, session?: ClientSession) {
+  const venue = await loadVenue(venueId, session);
+  if (venue.status !== 'APPROVED' || !venue.is_active) fail('BAD_USER_INPUT', 'Select an approved venue');
+  return venue;
 }
 
 /** In-app note to the pod's hosts. Best-effort: never fails the move. */
@@ -146,23 +175,16 @@ export const venueOfferService = {
    * approved and open then, the guests fit the space, the terms are sound.
    * `ignorePodId` lets a pod moving its booking ignore the booking it leaves.
    */
-  async prepare(venueId: string, req: VenueOfferRequest, ignorePodId?: string) {
-    const venue = await loadVenue(venueId);
-    if (venue.status !== 'APPROVED' || !venue.is_active) fail('BAD_USER_INPUT', 'Select an approved venue');
-    assertTerms(req);
-    const space = (req.space_label ?? '').trim();
-    const pax = guestsOf(req);
-    assertGuestsFit(venue, space, pax);
-    const window = parseWindow(req);
-    await assertWindowFree(venue, venueId, space, window, { ignorePodId });
-    const quote = await priced(venue, venueId, req, window, { pax, pets: !!req.pets });
-    return { quote, ...window, space, pax, ownerUserId: String(venue.owner_user_id) };
+  async prepare(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef) {
+    const venue = await loadBookableVenue(venueId);
+    const priced = await checkAndPrice(venue, venueId, req, { ignore });
+    return { ...priced, ownerUserId: String(venue.owner_user_id) };
   },
 
   /** Create Pod's live price: the breakdown, or why the offer cannot be sent (never throws for that). */
-  async preview(venueId: string, req: VenueOfferRequest) {
+  async preview(venueId: string, req: VenueOfferRequest, ignore?: string | HoldRef) {
     try {
-      const { quote } = await this.prepare(venueId, req);
+      const { quote } = await this.prepare(venueId, req, ignore);
       return { ok: true, message: null, quote: { ...quote, confirmed_at: null } };
     } catch (error) {
       if (error instanceof GraphQLError) return { ok: false, message: error.message, quote: null };
@@ -177,65 +199,18 @@ export const venueOfferService = {
    * own venue is confirmed at once with the quote frozen.
    */
   async place(podId: string, venueId: string, req: VenueOfferRequest, own: boolean): Promise<IVenueSlot> {
-    const venueOid = new Types.ObjectId(venueId);
-    await VenueBookingLockModel.updateOne({ venue_id: venueOid }, { $setOnInsert: { version: 0 } }, { upsert: true }).catch(
-      (error: { code?: number }) => {
-        // Two first bookings racing to create the row: the loser's row already exists.
-        if (error?.code !== 11000) throw error;
-      }
-    );
-    const space = (req.space_label ?? '').trim();
-    const pax = guestsOf(req);
-    return withTransaction(async (session) => {
-      await VenueBookingLockModel.updateOne({ venue_id: venueOid }, { $inc: { version: 1 } }, { session });
-      const venue = await loadVenue(venueId, session);
-      assertTerms(req);
-      assertGuestsFit(venue, space, pax);
-      const window = parseWindow(req);
-      await assertWindowFree(venue, venueId, space, window, { session, ignorePodId: podId });
-      const quote = await priced(venue, venueId, req, window, { pax, pets: !!req.pets });
-      const now = new Date();
-      const history: VenueOfferHistoryEntry[] = [{ by: 'HOST', action: 'OFFER', model: req.model, rate: req.rate, total: quote.total, note: '', at: now }];
-      if (own) history.push({ by: 'VENUE', action: 'ACCEPT', model: req.model, rate: req.rate, total: quote.total, note: '', at: now });
-      const [slot] = await VenueSlotModel.create(
-        [
-          {
-            venue_id: venueOid,
-            owner_user_id: venue.owner_user_id,
-            start_at: window.start,
-            end_at: window.end,
-            // Legacy readers (dashboards, slot cards) see the venue's money as a flat price.
-            price: quote.venue_payout,
-            pricing_mode: 'FLAT',
-            overtime_rate: req.model === 'PER_HOUR' ? req.rate : 0,
-            space_label: space,
-            capacity: spaceCapacity(venue, space) || pax,
-            status: own ? 'BOOKED' : 'PENDING',
-            booked_by_pod_id: new Types.ObjectId(podId),
-            // Made for this pod: a refusal, expiry or cancellation deletes it, never frees it.
-            requested_by_host: true,
-            decision: own ? 'APPROVED' : 'NONE',
-            decided_at: own ? now : null,
-            decided_pod_id: own ? new Types.ObjectId(podId) : null,
-            price_snapshot: own ? quote : null,
-            offer: {
-              model: req.model,
-              rate: req.rate,
-              pax,
-              pets: !!req.pets,
-              quote,
-              status: own ? 'ACCEPTED' : 'SENT',
-              round: 1,
-              counter: null,
-              history,
-            },
-          },
-        ],
-        { session }
-      );
-      logs.server.info('venueOffer', 'place', { pod_id: podId, venue_id: venueId, own, total: quote.total });
-      return slot;
+    const slot = await holdWindow({
+      venueId,
+      req,
+      holder: { field: 'booked_by_pod_id', id: podId },
+      status: own ? 'BOOKED' : 'PENDING',
+      offerStatus: own ? 'ACCEPTED' : 'SENT',
+      proposedBy: 'HOST',
+      agreed: own,
+      priceInLock: (venue, session) => checkAndPrice(venue, venueId, req, { session, ignore: podId }),
     });
+    logs.server.info('venueOffer', 'place', { pod_id: podId, venue_id: venueId, own, total: slot.offer?.quote.total ?? null });
+    return slot;
   },
 
   /** The venue answers an offer with its own terms; the host then accepts or rejects them. */

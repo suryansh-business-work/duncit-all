@@ -56,6 +56,8 @@ export const podPartnerRequestTypeDefs = gql`
     whole_day: Boolean!
     price: Float!
     space_label: String!
+    "The proposed window's terms and price (null for a slot picked before proposals)."
+    offer: VenueBookingOffer
   }
 
   "The other side's contact — only ever filled once the pod is created."
@@ -145,6 +147,8 @@ export const podPartnerRequestTypeDefs = gql`
     podPartnerRequest(id: ID!): PodPartnerRequest!
     "This month's sending allowance: as a host, or for one venue you own."
     podPartnerRequestQuota(side: PartnerSide!, venue_id: ID): PartnerRequestQuota!
+    "Receiver: the price of a window and terms before proposing them (ok false + message when it cannot be proposed)."
+    podPartnerWindowQuote(id: ID!, offer: VenueOfferInput!): VenueOfferQuoteResult!
   }
 
   extend type Mutation {
@@ -154,9 +158,12 @@ export const podPartnerRequestTypeDefs = gql`
     respondPodPartnerRequest(id: ID!, accept: Boolean!): PodPartnerRequest!
     "Sender: withdraw before it is answered."
     cancelPodPartnerRequest(id: ID!): PodPartnerRequest!
-    "Receiver: pick one of the venue's open slots (held until the sender answers)."
+    "Deprecated: picking a published slot. Refused with an update-the-app message."
     requestPodPartnerSlot(id: ID!, slot_id: ID!): PodPartnerRequest!
-    "Sender: confirm (true) or decline (false) the picked slot."
+      @deprecated(reason: "Pod Requests propose a window and terms: use proposePodPartnerWindow.")
+    "Receiver: propose a window, the guests and the price terms; the time is held until the sender answers."
+    proposePodPartnerWindow(id: ID!, offer: VenueOfferInput!): PodPartnerRequest!
+    "Sender: confirm (true — the proposed terms become the booking's price) or decline (false) the proposal."
     respondPodPartnerSlot(id: ID!, confirm: Boolean!): PodPartnerRequest!
   }
 `;

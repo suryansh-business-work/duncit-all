@@ -1,39 +1,10 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { VenueModel } from '@modules/venues/venue/venue.model';
-import { VenueSlotModel, type IVenueSlot } from './venueSlot.model';
+import { VenueSlotModel } from './venueSlot.model';
 
 const conflict = (message: string): never => {
   throw new GraphQLError(message, { extensions: { code: 'CONFLICT' } });
 };
-
-/**
- * A host↔venue Pod Request holds the slot its picker chose: AVAILABLE →
- * BOOKED under `booked_by_partner_request_id`, in one conditional write, so the
- * slot cannot be sold twice between the pick and the pod. Refuses a slot that
- * has started or falls on one of the venue's holidays — the same two rules an
- * ordinary booking faces.
- */
-export async function holdSlotForPartnerRequest(slotId: string, venueId: string, requestId: string): Promise<IVenueSlot> {
-  if (!Types.ObjectId.isValid(slotId)) {
-    throw new GraphQLError('Invalid slot_id', { extensions: { code: 'BAD_USER_INPUT' } });
-  }
-  const slot = await VenueSlotModel.findOne({ _id: slotId, venue_id: venueId }).select('start_at status').lean();
-  if (slot?.status !== 'AVAILABLE') return conflict('This slot is no longer available. Pick another slot.');
-  if (slot.start_at.getTime() <= Date.now()) return conflict('This slot has already started. Pick a later one.');
-  const venue = await VenueModel.findById(venueId).select('settings.holidays').lean();
-  const { venueLocalYmd } = await import('@modules/venues/autoExtend/slotGenerator');
-  if ((venue?.settings?.holidays ?? []).includes(venueLocalYmd(slot.start_at))) {
-    return conflict('The venue is on leave on this date. Pick another slot.');
-  }
-  const held = await VenueSlotModel.findOneAndUpdate(
-    { _id: new Types.ObjectId(slotId), venue_id: new Types.ObjectId(venueId), status: 'AVAILABLE' },
-    { $set: { status: 'BOOKED', booked_by_partner_request_id: new Types.ObjectId(requestId) } },
-    { new: true }
-  );
-  if (!held) return conflict('This slot is no longer available. Pick another slot.');
-  return held;
-}
 
 /**
  * The request id whose held slot `userId` may see among a venue's open slots:
@@ -51,12 +22,16 @@ export async function heldRequestFor(userId: string, requestId: string): Promise
   return ok ? requestId : null;
 }
 
-/** Frees the slot THIS request holds — matched on both ids, so it can never free another booking. */
+/**
+ * Lets go of the hold THIS request has — matched on both ids, so it can never
+ * touch another booking. A window proposed for the request was made for it and
+ * is deleted; a published slot picked before (legacy) goes back on sale.
+ */
 export async function releasePartnerRequestSlot(slotId: string, requestId: string): Promise<void> {
-  await VenueSlotModel.updateOne(
-    { _id: new Types.ObjectId(slotId), booked_by_partner_request_id: new Types.ObjectId(requestId) },
-    { $set: { status: 'AVAILABLE', booked_by_partner_request_id: null } }
-  );
+  const own = { _id: new Types.ObjectId(slotId), booked_by_partner_request_id: new Types.ObjectId(requestId) };
+  const deleted = await VenueSlotModel.deleteOne({ ...own, requested_by_host: true });
+  if (deleted.deletedCount > 0) return;
+  await VenueSlotModel.updateOne(own, { $set: { status: 'AVAILABLE', booked_by_partner_request_id: null } });
 }
 
 /**

@@ -9,6 +9,8 @@ jest.mock('../../podPartnerRequest.service', () => ({
     respond: jest.fn(),
     cancel: jest.fn(),
     requestSlot: jest.fn(),
+    proposeWindow: jest.fn(),
+    windowQuote: jest.fn(),
     respondSlot: jest.fn(),
     get: jest.fn(),
     list: jest.fn(),
@@ -33,6 +35,7 @@ const search = podPartnerSearch as unknown as Record<string, jest.Mock>;
 const CALLER = '507f1f77bcf86cd799439011';
 const caller = () => makeContext({ id: CALLER, roles: ['USER'] });
 const anon = () => makeContext(null);
+const offer = { start_at: '2027-01-04T04:30:00.000Z', end_at: '2027-01-04T06:30:00.000Z', pax: 10, model: 'FLAT', rate: 2000 };
 const searchArgs = { location_id: '507f1f77bcf86cd799439012', zone_name: 'Bandra', radius_km: 3, category_ids: ['c1'] };
 
 const cases: [string, Resolver, Record<string, unknown>, jest.Mock, unknown[]][] = [
@@ -47,6 +50,7 @@ const cases: [string, Resolver, Record<string, unknown>, jest.Mock, unknown[]][]
   ],
   ['podPartnerRequest', Query.podPartnerRequest, { id: 'r1' }, svc.get, [CALLER, 'r1']],
   ['podPartnerRequestQuota', Query.podPartnerRequestQuota, { side: 'HOST', venue_id: null }, svc.quota, [CALLER, 'HOST', null]],
+  ['podPartnerWindowQuote', Query.podPartnerWindowQuote, { id: 'r1', offer }, svc.windowQuote, [CALLER, 'r1', offer]],
   [
     'sendPodPartnerRequest',
     Mutation.sendPodPartnerRequest,
@@ -57,6 +61,7 @@ const cases: [string, Resolver, Record<string, unknown>, jest.Mock, unknown[]][]
   ['respondPodPartnerRequest', Mutation.respondPodPartnerRequest, { id: 'r1', accept: false }, svc.respond, [CALLER, 'r1', false]],
   ['cancelPodPartnerRequest', Mutation.cancelPodPartnerRequest, { id: 'r1' }, svc.cancel, [CALLER, 'r1']],
   ['requestPodPartnerSlot', Mutation.requestPodPartnerSlot, { id: 'r1', slot_id: 's1' }, svc.requestSlot, [CALLER, 'r1', 's1']],
+  ['proposePodPartnerWindow', Mutation.proposePodPartnerWindow, { id: 'r1', offer }, svc.proposeWindow, [CALLER, 'r1', offer]],
   ['respondPodPartnerSlot', Mutation.respondPodPartnerSlot, { id: 'r1', confirm: true }, svc.respondSlot, [CALLER, 'r1', true]],
 ];
 

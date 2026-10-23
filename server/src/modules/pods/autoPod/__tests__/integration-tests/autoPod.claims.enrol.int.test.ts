@@ -1,12 +1,13 @@
 /**
- * The three enrolments — a venue accepting with a slot, a host assigning
+ * The three enrolments — a venue accepting with a window and a price, a host assigning
  * themselves, a club admin claiming for a club — against a real Mongo. What is
  * under test is the guard order (paused, turn order, ownership, category,
  * city), the location pin each first enrolment writes, and the single
  * conditional write that decides a race: exactly one partner per role wins,
- * and a losing venue gives back only the slot it booked. Finance, the
- * slot-booking service, the pod funnel and the notifications are faked.
+ * and a losing venue deletes only the hold it made. Finance, the venue offer
+ * pricing + locked hold, the pod funnel and the notifications are faked.
  */
+import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 
 jest.mock('@observability/log', () => ({
@@ -29,8 +30,13 @@ jest.mock('@modules/finance/finance/breakdown.service', () => ({
 }));
 jest.mock('@modules/venues/venueSlot/venueSlot.service', () => ({
   ensureOwnedVenue: jest.fn(),
-  venueSlotService: { bookForAutoPod: jest.fn(), releaseAutoPodSlot: jest.fn(), releaseForAutoPod: jest.fn() },
+  venueSlotService: { releaseAutoPodSlot: jest.fn(), releaseForAutoPod: jest.fn() },
 }));
+jest.mock('@modules/venues/venueOffer/venueOffer.service', () => ({
+  venueOfferService: { prepare: jest.fn(), preview: jest.fn() },
+  checkAndPrice: jest.fn(),
+}));
+jest.mock('@modules/venues/venueOffer/venueOffer.hold', () => ({ holdWindow: jest.fn() }));
 jest.mock('@modules/clubs/clubAdmin/clubAdmin.service', () => ({
   clubAdminService: { assertClubAdmin: jest.fn() },
 }));
@@ -51,6 +57,9 @@ import {
 } from '@modules/pods/pod/pod.service';
 import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import { ensureOwnedVenue, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { venueOfferService } from '@modules/venues/venueOffer/venueOffer.service';
+import { holdWindow } from '@modules/venues/venueOffer/venueOffer.hold';
+import { UPDATE_APP_FOR_AUTO_POD } from '../../autoPod.offer';
 import { clubAdminService } from '@modules/clubs/clubAdmin/clubAdmin.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { AutoPodModel } from '../../autoPod.model';
@@ -79,7 +88,8 @@ const futureDates = validateFutureDates as jest.Mock;
 const meetingDetails = validateMeetingDetails as jest.Mock;
 const viable = breakdownService.assertViablePodEconomics as jest.Mock;
 const ownedVenue = ensureOwnedVenue as jest.Mock;
-const book = venueSlotService.bookForAutoPod as jest.Mock;
+const hold = holdWindow as jest.Mock;
+const prepare = venueOfferService.prepare as jest.Mock;
 const releaseSlot = venueSlotService.releaseAutoPodSlot as jest.Mock;
 const clubAdmin = clubAdminService.assertClubAdmin as jest.Mock;
 const appSettings = settingsService.getAppSettings as jest.Mock;
@@ -89,6 +99,24 @@ const fails = (code: string, message: string) =>
   expect.objectContaining({ message, extensions: expect.objectContaining({ code }) });
 const lastEvent = (doc: any) => doc.events[doc.events.length - 1];
 const flush = () => new Promise((resolve) => setImmediate(resolve));
+/** The window and price terms a venue accepts with. */
+const TERMS = {
+  start_at: new Date(Date.now() + 3 * 86_400_000).toISOString(),
+  end_at: new Date(Date.now() + 3 * 86_400_000 + 2 * HOUR_MS).toISOString(),
+  model: 'FLAT' as const,
+  rate: 700,
+};
+/** Each venue's hold id, as the locked write would create it (set in setup). */
+const holdByVenue = new Map<string, Types.ObjectId>();
+async function fakeHold(opts: { venueId: string }) {
+  return {
+    _id: holdByVenue.get(opts.venueId) ?? new Types.ObjectId(),
+    start_at: new Date(TERMS.start_at),
+    end_at: new Date(TERMS.end_at),
+    // Priced with the venue's charges and Duncit's commission on top, frozen at accept.
+    price_snapshot: { total: 770 },
+  };
+}
 const MISMATCH = (who: string) => `This Auto Pod is in Bengaluru, Karnataka — ${who} must be in that city too`;
 
 beforeEach(() => {
@@ -101,7 +129,8 @@ beforeEach(() => {
   enrolled.mockResolvedValue(undefined);
   activeHost.mockResolvedValue(undefined);
   viable.mockResolvedValue(undefined);
-  book.mockResolvedValue(undefined);
+  prepare.mockResolvedValue({ quote: { total: 770 } });
+  hold.mockImplementation(fakeHold);
   releaseSlot.mockResolvedValue(undefined);
   clubAdmin.mockResolvedValue(undefined);
 });
@@ -125,40 +154,55 @@ describe('venueAcceptAutoPod', () => {
       ...over.venue,
     }));
     const slot = await seedSlot({ venue_id: venueId, owner_user_id: owner, price: 700, ...over.slot });
+    holdByVenue.set(String(venueId), slot);
     const offer = await insertAutoPod({ sub_category_id: sub, ...over.offer });
     return { owner, sub, city, venueId, slot, offer };
   }
 
-  it('books its own slot, enrols, pins the venue city and pauses its clock', async () => {
+  it('books its window at its own price, enrols, pins the venue city and pauses its clock', async () => {
     const s = await setup();
     await AutoPodModel.updateOne(
       { _id: s.offer },
       { $set: { viewer_windows: [{ user_id: s.owner, started_at: new Date(Date.now() - HOUR_MS), consumed_ms: 0 }] } }
     );
 
-    const pub: any = await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot));
+    const pub: any = await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS);
 
     expect(viable).toHaveBeenCalledWith({
       hostUserId: null,
       podAmount: 0,
       noOfSpots: 0,
       venueId: String(s.venueId),
-      venueAmount: 700,
+      venueAmount: 770,
     });
-    expect(book).toHaveBeenCalledWith(String(s.slot), String(s.venueId), String(s.owner), String(s.offer));
+    // Priced for the offer's spots, held for the Auto Pod inside the lock, agreed (frozen) at accept.
+    expect(prepare).toHaveBeenCalledWith(String(s.venueId), expect.objectContaining({ ...TERMS, pax: 0, pets: false }), {
+      field: 'booked_by_auto_pod_id',
+      id: String(s.offer),
+    });
+    expect(hold).toHaveBeenCalledWith(
+      expect.objectContaining({
+        venueId: String(s.venueId),
+        holder: { field: 'booked_by_auto_pod_id', id: String(s.offer) },
+        status: 'BOOKED',
+        offerStatus: 'ACCEPTED',
+        proposedBy: 'VENUE',
+        agreed: true,
+      })
+    );
     expect(pub.stage).toBe('CLAIMING');
     expect(pub.venue_claim).toMatchObject({
       venue_id: String(s.venueId),
       venue_slot_id: String(s.slot),
       owner_user_id: String(s.owner),
       venue_name: 'Play Arena',
-      slot_price: 700,
+      slot_price: 770,
     });
     expect(pub.location).toMatchObject({ location_id: String(s.city), bound_by: 'VENUE' });
     expect(lastEvent(pub)).toMatchObject({
       action: 'VENUE_ENROLL',
       actor_name: 'Play Arena',
-      note: 'Venue accepted and picked a slot — pinned to Bengaluru, Karnataka',
+      note: 'Venue accepted with a time and a price — pinned to Bengaluru, Karnataka',
     });
     const stored: any = await loadRaw(s.offer);
     expect(stored.viewer_windows[0].started_at).toBeNull();
@@ -168,31 +212,32 @@ describe('venueAcceptAutoPod', () => {
     expect(releaseSlot).not.toHaveBeenCalled();
   });
 
-  it('prices the slot under the host already on the offer', async () => {
+  it('prices the window under the host already on the offer, for its spots', async () => {
     const host = oid();
     const s = await setup({ offer: { pod_amount: 500, no_of_spots: 10, host_claim: hostClaim(host), stage: 'CLAIMING' } });
-    await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot));
+    await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS);
     expect(viable).toHaveBeenCalledWith(expect.objectContaining({ hostUserId: String(host), podAmount: 500, noOfSpots: 10 }));
+    expect(prepare.mock.calls[0][1]).toMatchObject({ pax: 10 });
   });
 
-  it('refuses a paused, virtual, taken or finished offer before touching any slot', async () => {
+  it('refuses a paused, virtual, taken or finished offer before holding anything', async () => {
     const paused = await setup({ offer: { is_active: false } });
     await expect(
-      venueAcceptAutoPod(String(paused.owner), String(paused.offer), String(paused.venueId), String(paused.slot))
+      venueAcceptAutoPod(String(paused.owner), String(paused.offer), String(paused.venueId), TERMS)
     ).rejects.toEqual(fails('CONFLICT', 'This Auto Pod is paused — try again once the admin resumes it'));
 
     const virtual = await setup({ offer: { pod_mode: 'VIRTUAL' } });
     await expect(
-      venueAcceptAutoPod(String(virtual.owner), String(virtual.offer), String(virtual.venueId), String(virtual.slot))
+      venueAcceptAutoPod(String(virtual.owner), String(virtual.offer), String(virtual.venueId), TERMS)
     ).rejects.toEqual(fails('BAD_REQUEST', 'A virtual Auto Pod has no venue — it needs only a host and a club'));
 
     for (const offer of [{ stage: 'CLAIMING', venue_claim: venueClaim() }, { stage: 'EXPIRED' }]) {
       const s = await setup({ offer });
       await expect(
-        venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot))
+        venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS)
       ).rejects.toEqual(fails('CONFLICT', 'This Auto Pod has already been accepted by another venue.'));
     }
-    expect(book).not.toHaveBeenCalled();
+    expect(hold).not.toHaveBeenCalled();
   });
 
   it('accepts on the strength of the venue’s SECOND category', async () => {
@@ -204,10 +249,10 @@ describe('venueAcceptAutoPod', () => {
         venue_categories: [{ sub_category_id: oid() }, { sub_category_id: offerSub }],
       },
     });
-    await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot));
+    await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS);
     const doc: any = await loadRaw(s.offer);
     expect(String(doc.venue_claim.venue_id)).toBe(String(s.venueId));
-    expect(book).toHaveBeenCalledTimes(1);
+    expect(hold).toHaveBeenCalledTimes(1);
   });
 
   it('refuses a venue whose list does not carry the category, whatever its stale legacy triple says', async () => {
@@ -220,9 +265,9 @@ describe('venueAcceptAutoPod', () => {
       },
     });
     await expect(
-      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot))
+      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS)
     ).rejects.toEqual(fails('BAD_USER_INPUT', "This Auto Pod's category does not match that venue"));
-    expect(book).not.toHaveBeenCalled();
+    expect(hold).not.toHaveBeenCalled();
   });
 
   it('refuses a venue that is not approved, in another category, cityless or in another city', async () => {
@@ -237,47 +282,43 @@ describe('venueAcceptAutoPod', () => {
     for (const [over, code, message] of cases) {
       const s = await setup(over);
       await expect(
-        venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot))
+        venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS)
       ).rejects.toEqual(fails(code, message));
     }
-    expect(book).not.toHaveBeenCalled();
+    expect(hold).not.toHaveBeenCalled();
   });
 
-  it('refuses a slot that is malformed, missing, someone else’s or already started', async () => {
+  it('refuses a call without a window and price (an app from before offers), and a window the venue cannot take', async () => {
     const s = await setup();
-    const call = (slotId: string, venueId = String(s.venueId)) =>
-      venueAcceptAutoPod(String(s.owner), String(s.offer), venueId, slotId);
-    const foreign = await seedSlot({ venue_id: s.venueId, owner_user_id: oid() });
-    const otherVenue = await seedSlot({ venue_id: oid(), owner_user_id: s.owner });
-    const started = await seedSlot({ venue_id: s.venueId, owner_user_id: s.owner, start_at: new Date(Date.now() - 1000) });
-
-    await expect(call('bad')).rejects.toEqual(fails('BAD_USER_INPUT', 'Invalid slot_id'));
-    await expect(call(String(oid()))).rejects.toEqual(fails('NOT_FOUND', 'Selected slot not found'));
-    await expect(call(String(foreign))).rejects.toEqual(fails('FORBIDDEN', 'That slot does not belong to this venue'));
-    await expect(call(String(otherVenue))).rejects.toEqual(fails('FORBIDDEN', 'That slot does not belong to this venue'));
-    await expect(call(String(started))).rejects.toEqual(fails('BAD_USER_INPUT', 'Pick a slot in the future'));
-    expect(book).not.toHaveBeenCalled();
+    await expect(venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), null)).rejects.toEqual(
+      fails('BAD_USER_INPUT', UPDATE_APP_FOR_AUTO_POD)
+    );
+    const closed = new GraphQLError('The venue is closed then', { extensions: { code: 'CONFLICT' } });
+    prepare.mockRejectedValueOnce(closed);
+    await expect(venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS)).rejects.toBe(closed);
+    expect(hold).not.toHaveBeenCalled();
     expect((await loadRaw(s.offer))?.venue_claim).toBeNull();
   });
 
-  it('books nothing when the pod money cannot cover the slot', async () => {
+  it('holds nothing when the pod money cannot cover the venue’s price', async () => {
     const s = await setup();
     viable.mockRejectedValueOnce(new Error('Host earnings would be negative'));
     await expect(
-      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot))
+      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS)
     ).rejects.toThrow('Host earnings would be negative');
-    expect(book).not.toHaveBeenCalled();
+    expect(hold).not.toHaveBeenCalled();
   });
 
-  it('gives back only its own slot when another venue won while it was booking', async () => {
+  it('deletes only its own hold when another venue won while it was booking', async () => {
     const s = await setup();
     const winner = venueClaim();
-    book.mockImplementationOnce(async () => {
+    hold.mockImplementationOnce(async (opts: { venueId: string }) => {
       await AutoPodModel.updateOne({ _id: s.offer }, { $set: { venue_claim: winner, stage: 'CLAIMING' } });
+      return fakeHold(opts);
     });
 
     await expect(
-      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot))
+      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS)
     ).rejects.toEqual(fails('CONFLICT', 'This Auto Pod has already been accepted by another venue.'));
 
     expect(releaseSlot).toHaveBeenCalledWith(String(s.slot), String(s.offer));
@@ -288,30 +329,32 @@ describe('venueAcceptAutoPod', () => {
 
   it('is not a loss when someone pinned the same city a moment earlier — it retries as a match', async () => {
     const s = await setup();
-    book.mockImplementationOnce(async () => {
+    hold.mockImplementationOnce(async (opts: { venueId: string }) => {
       await AutoPodModel.updateOne({ _id: s.offer }, { $set: { location: pinnedTo(s.city, 'CLUB') } });
+      return fakeHold(opts);
     });
 
-    const pub: any = await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot));
+    const pub: any = await venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS);
 
     expect(pub.venue_claim.owner_user_id).toBe(String(s.owner));
     expect(pub.location.bound_by).toBe('CLUB');
-    expect(lastEvent(pub).note).toBe('Venue accepted and picked a slot');
+    expect(lastEvent(pub).note).toBe('Venue accepted with a time and a price');
     expect(releaseSlot).not.toHaveBeenCalled();
   });
 
   it('loses when someone pinned a different city a moment earlier', async () => {
     const s = await setup();
-    book.mockImplementationOnce(async () => {
+    hold.mockImplementationOnce(async (opts: { venueId: string }) => {
       await AutoPodModel.updateOne({ _id: s.offer }, { $set: { location: pinnedTo(oid(), 'CLUB') } });
+      return fakeHold(opts);
     });
     await expect(
-      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot))
+      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS)
     ).rejects.toEqual(fails('CONFLICT', 'This Auto Pod has already been accepted by another venue.'));
     expect(releaseSlot).toHaveBeenCalledWith(String(s.slot), String(s.offer));
   });
 
-  it('releases its slot when the claim write itself fails, and logs a failed release', async () => {
+  it('deletes its hold when the claim write itself fails, and logs a failed release', async () => {
     const s = await setup();
     const dbError = new Error('write failed');
     const releaseError = new Error('release failed');
@@ -321,7 +364,7 @@ describe('venueAcceptAutoPod', () => {
     releaseSlot.mockRejectedValueOnce(releaseError);
 
     await expect(
-      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), String(s.slot))
+      venueAcceptAutoPod(String(s.owner), String(s.offer), String(s.venueId), TERMS)
     ).rejects.toBe(dbError);
     await flush();
     write.mockRestore();
@@ -342,6 +385,7 @@ describe('venueAcceptAutoPod', () => {
         const owner = oid();
         const venueId = oid();
         const slot = await seedSlot({ venue_id: venueId, owner_user_id: owner });
+        holdByVenue.set(String(venueId), slot);
         return { owner, venueId, slot };
       })
     );
@@ -355,7 +399,7 @@ describe('venueAcceptAutoPod', () => {
     }));
 
     const results = await Promise.allSettled(
-      contenders.map((c) => venueAcceptAutoPod(String(c.owner), String(offer), String(c.venueId), String(c.slot)))
+      contenders.map((c) => venueAcceptAutoPod(String(c.owner), String(offer), String(c.venueId), TERMS))
     );
 
     const won = results.filter((r) => r.status === 'fulfilled');

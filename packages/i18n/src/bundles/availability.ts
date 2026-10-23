@@ -475,6 +475,7 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       termsLine: '{model} · {rate}',
       youReceive: 'You receive {amount}',
       hostPays: 'The host pays {amount}, with Duncit’s fee',
+      venueReceives: 'The venue receives {amount}',
       freePod: 'Free pod: the host settles your charges with you directly, so no amount is quoted here.',
       noOffer: 'This request came in before booking offers. Accept or reject it.',
       model: {

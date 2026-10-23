@@ -19,6 +19,7 @@ import type { SendAssets } from '@modules/platform/whatsapp/whatsapp.media';
 import { getUrlConfigs } from '@config/url-configs';
 import { appDate, appDateTime, appTime } from '@utils/app-time';
 import { currentTerms, offerView } from '@modules/venues/venueOffer/venueOffer.view';
+import { freezeAgreedTerms } from '@modules/venues/venueOffer/venueOffer.hold';
 import type { VenueOfferAction, VenueOfferParty } from '@modules/venues/venueOffer/venueOffer.types';
 
 function fail(code: string, msg: string): never {
@@ -934,16 +935,9 @@ async function tellVenueOwner(slot: IVenueSlot, title: string, body: string) {
  * accepting the venue's counter are the two ways in.
  */
 export async function applyApproval(slot: IVenueSlot, actor: ApproveActor) {
-  if (slot.offer) {
-    const terms = currentTerms(slot.offer);
-    recordOfferStep(slot, actor.source === 'HOST' ? 'HOST' : 'VENUE', 'ACCEPT');
-    slot.offer.status = 'ACCEPTED';
-    slot.price_snapshot = { ...terms.quote, confirmed_at: new Date() };
-    slot.price = terms.quote.venue_payout;
-    // Extra hours at completion are priced at the hourly rate the two sides agreed.
-    slot.overtime_rate = terms.model === 'PER_HOUR' ? terms.rate : 0;
-    slot.markModified('offer');
-  }
+  // The agreed terms become the booking's price; extra hours at completion are
+  // priced at the hourly rate the two sides agreed.
+  freezeAgreedTerms(slot, actor.source === 'HOST' ? 'HOST' : 'VENUE');
   slot.status = 'BOOKED';
   slot.decision = 'APPROVED';
   slot.decided_at = new Date();
@@ -1470,21 +1464,18 @@ export const venueSlotService = {
    * booked, never the winning venue's — which the blanket release below would.
    */
   async releaseAutoPodSlot(slotId: string, autoPodId: string): Promise<void> {
-    await VenueSlotModel.updateOne(
-      {
-        _id: new Types.ObjectId(slotId),
-        booked_by_auto_pod_id: new Types.ObjectId(autoPodId),
-      },
-      { $set: { status: 'AVAILABLE', booked_by_auto_pod_id: null } }
-    );
+    const own = { _id: new Types.ObjectId(slotId), booked_by_auto_pod_id: new Types.ObjectId(autoPodId) };
+    // A window the venue booked for this Auto Pod was made for it: it goes.
+    const deleted = await VenueSlotModel.deleteOne({ ...own, requested_by_host: true });
+    if (deleted.deletedCount > 0) return;
+    await VenueSlotModel.updateOne(own, { $set: { status: 'AVAILABLE', booked_by_auto_pod_id: null } });
   },
 
-  /** Free the slot an Auto Pod held (cancelled or expired before it went live). */
+  /** Let go of what an Auto Pod held (cancelled or expired before it went live): its own window goes, a published slot is freed. */
   async releaseForAutoPod(autoPodId: string): Promise<void> {
-    await VenueSlotModel.updateMany(
-      { booked_by_auto_pod_id: new Types.ObjectId(autoPodId) },
-      { $set: { status: 'AVAILABLE', booked_by_auto_pod_id: null } }
-    );
+    const own = { booked_by_auto_pod_id: new Types.ObjectId(autoPodId) };
+    await VenueSlotModel.deleteMany({ ...own, requested_by_host: true });
+    await VenueSlotModel.updateMany(own, { $set: { status: 'AVAILABLE', booked_by_auto_pod_id: null } });
   },
 
   // Release any slot tied to a pod (called when the pod is deleted/cancelled).

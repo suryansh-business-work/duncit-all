@@ -34,6 +34,8 @@ exports:
   - 'makeNativeParityPodConfig'
   - 'buildPodInput'
   - 'podToFormValues'
+  - 'bookingKeyOf'
+  - 'keepsExistingBooking'
   - 'linesToMedia'
   - 'getProductRequestTotal'
   - 'blankPodFormValues'
@@ -424,7 +426,9 @@ both surfaces render can be asserted without mounting either.
 | `makeNativeParityPodConfig` | `({ showProducts }: { showProducts: boolean }) => PodFormConfig` | The native-parity flag set. |
 | `makePodSchema` | `(config: PodFormConfig, t: Translate, ticketDiscountMaxPct?: number) => PodSchema` | A Zod object with config-gated `superRefine`s. Every message comes from `podForm.validation.*` (and `podForm.ticketDiscount.*` for the tiers), so the schema is rebuilt when the language changes. `ticketDiscountMaxPct` is the admin's `publicAppSettings.ticket_discount_max_pct`; `PodForm` reads it itself, and the default (`DEFAULT_TICKET_DISCOUNT_MAX_PCT`, 50) only serves a caller outside the React tree. |
 | `buildPodInput` | `(values: PodFormValues, { draft?, config }) => Record<string, unknown>` | The GraphQL create/update input. |
-| `podToFormValues` | `(pod: any) => PodFormValues` | Form values, blank-defaulted. |
+| `podToFormValues` | `(pod: any) => PodFormValues` | Form values, blank-defaulted; `kept_booking` remembers the pod's venue and window. |
+| `bookingKeyOf` | `(values) => string` | The venue + window of a pod as one comparable key. |
+| `keepsExistingBooking` | `(values) => boolean` | True when an edit leaves the venue and window unchanged and types no offer terms — the edit then sends no venue change, so fixing a title never sends the venue a new request. |
 | `isFreePodType` / `normalizePodType` / `LEGACY_POD_TYPES` | `(podType) => boolean` / `(podType) => 'FREE' | 'PAID'` / `readonly string[]` | The server's `PodType` is exactly FREE | PAID. `normalizePodType` collapses the five legacy names (`NATIVE_FREE`, …) onto the value that replaced them — `podToFormValues` and `buildPodInput` both run it, so a legacy value never reaches the server. |
 | `linesToMedia` | `(text: string) => { url: string; type: 'IMAGE' \| 'VIDEO' }[]` | Typed media list. |
 | `getProductRequestTotal` | `(requests: PodProductRequest[], products: any[]) => number` | Sum of `unit_cost × quantity`. |

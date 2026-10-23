@@ -37,6 +37,9 @@ export interface PodFormValues {
   venue_offer_model: string;
   /** Venue offer: the amount typed for that option, in rupees ('' until typed). */
   venue_offer_rate: string;
+  /** On an edit: the venue + window the pod was loaded with (bookingKeyOf), so an
+   * edit that keeps them keeps its booking. '' for a new pod. */
+  kept_booking: string;
   location_id: string;
   zone_name: string;
   meeting_platform: string;
@@ -279,6 +282,7 @@ export const blankPodFormValues: PodFormValues = {
   venue_slot_id: '',
   venue_offer_model: '',
   venue_offer_rate: '',
+  kept_booking: '',
   location_id: '',
   zone_name: '',
   meeting_platform: '',

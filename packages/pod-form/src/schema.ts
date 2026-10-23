@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { DEFAULT_TICKET_DISCOUNT_MAX_PCT, isVenueOfferModel, isVideoUrl, offerRateOf } from '@duncit/utils';
 import type { PodFormConfig, PodFormValues } from './types';
 import type { Translate } from './i18n/useTranslation';
+import { keepsExistingBooking } from './kept-booking';
 import { refineTicketDiscount, ticketDiscountTierSchema } from './ticket-discount';
 
 /** Returns true when the string parses as an http(s) URL. */
@@ -84,7 +85,7 @@ function refineVenue(
  * its already-booked slot (and its dates) never forces a new offer.
  */
 function refineVenueOffer(values: PodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  if (values.venue_slot_id) return;
+  if (values.venue_slot_id || keepsExistingBooking(values)) return;
   if (!values.pod_date_time || !values.pod_end_date_time) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_slot_id'], message: t('podForm.validation.slotRequired') });
   }
@@ -226,6 +227,7 @@ export function makePodSchema(
       venue_slot_id: z.string().default(''),
       venue_offer_model: z.string().default(''),
       venue_offer_rate: z.string().default(''),
+      kept_booking: z.string().default(''),
       location_id: z.string().default(''),
       zone_name: z.string().default(''),
       meeting_platform: z

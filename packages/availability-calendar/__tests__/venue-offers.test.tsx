@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import { GraphQLError } from 'graphql';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
@@ -10,6 +10,7 @@ import OfferRequestCard from '../src/offers/OfferRequestCard';
 import OfferHistory from '../src/offers/OfferHistory';
 import OfferTermsPanel from '../src/offers/OfferTermsPanel';
 import { offerTermsLabel } from '../src/offers/format';
+import { useCounterQuote } from '../src/offers/useCounterQuote';
 import {
   ACCEPT_VENUE_OFFER,
   COUNTER_VENUE_OFFER,
@@ -416,5 +417,22 @@ describe('VenueOfferInbox', () => {
     fireEvent.click(await screen.findByTestId('offer-accept-slot-1'));
     fireEvent.click(dialog().getByTestId('answer-offer-submit'));
     await waitFor(() => expect(seen.length).toBeGreaterThanOrEqual(2), SETTLED);
+  });
+});
+
+describe('useCounterQuote', () => {
+  it('asks the server nothing and shows no price while the counter is not valid yet', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[mockOf(VENUE_COUNTER_QUOTE, () => ({ data: { venueCounterQuote: null } }), seen)]}>
+        {children}
+      </MockedProvider>
+    );
+    const { result } = renderHook(() => useCounterQuote('slot-1', null), { wrapper });
+    expect(result.current).toEqual({ result: null, loading: false, error: undefined });
+    // Even after the debounce settles, no terms means no quote is requested.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(seen).toEqual([]);
+    expect(result.current.result).toBeNull();
   });
 });

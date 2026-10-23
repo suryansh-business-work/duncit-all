@@ -252,7 +252,7 @@ describe('quoteOffer — the host names the terms, the venue adds its charges', 
     expect(b.total).toBe(8470);
   });
 
-  it('PER_HOUR prices the hours booked, not bounded by the venue's old hour limits', () => {
+  it("PER_HOUR prices the hours booked, not bounded by the venue's old hour limits", () => {
     const b = quote({ model: 'PER_HOUR', rate: 1000 }, req({ start: ist('2027-01-04', '10:00'), end: ist('2027-01-04', '13:30') }));
     expect(b.hours).toBe(3.5);
     expect(b.base).toBe(3500);

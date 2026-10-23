@@ -59,7 +59,7 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
   // ONE entry per studio, its Options page, and every option keeps its route.
   { role: 'CLUB_ADMIN', mode: 'CLUB', icon: 'groups', paths: ['/club-admin'] },
   // The Venue Studio is the exception: its options sit in the sidebar under
-  // two groups, Venue Options and Food (app-config studioNestedNavItems).
+  // categories — Venues, Pods, Requests, Food, Finance (app-config studioNestedNavItems).
   { role: 'VENUE_OWNER', mode: 'VENUE', icon: 'storefront', nestedNav: true, paths: ['/venues', '/register-venue'] },
   {
     role: 'HOST',

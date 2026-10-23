@@ -130,21 +130,6 @@ describe('venue booking chat', () => {
     expect(older.map((l) => l.text)).toEqual(['one']);
   });
 
-  it('keeps one thread for a recurring pod: a date resolves to its parent', async () => {
-    const { host, owner, venue } = await seedBooking();
-    const parent = await seedPod(host._id, venue._id as Types.ObjectId, { series_role: 'PARENT' });
-    const date = await seedPod(host._id, venue._id as Types.ObjectId, {
-      series_role: 'DATE',
-      series_parent_id: parent._id,
-    });
-
-    await send(date._id, host._id, { text: 'Every Friday works?' });
-
-    const lines = await page(parent._id, owner._id);
-    expect(lines.map((l) => l.text)).toEqual(['Every Friday works?']);
-    expect(lines[0].pod_id).toBe(String(parent._id));
-  });
-
   it('rejects an empty line, a bad photo URL, other message types, an overlong line and blocked content', async () => {
     const { host, pod } = await seedBooking();
 

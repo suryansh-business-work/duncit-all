@@ -5,7 +5,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { ClubFollowerModel } from '@modules/access/user/relations/clubFollower.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { escapeRegExp } from '@utils/regex';
-import { assertRoomMember, chatBookingPodIds, type ChatRoomRef } from './chat.access';
+import { assertRoomMember, type ChatRoomRef } from './chat.access';
 
 /** Everyone in a room, with what a notification about it says and links to. */
 export interface RoomAudience {
@@ -17,28 +17,20 @@ export interface RoomAudience {
 const NONE: RoomAudience = { ids: [], title: '', link: '' };
 
 /**
- * A room's members, one read per source: a pod's hosts, attendees (every date's,
- * for a recurring pod's one room) and JOINED members; a club's admins, hosts and
+ * A room's members, one read per source: a pod's hosts, attendees and JOINED members; a club's admins, hosts and
  * followers. Duplicates are removed. The same people `isRoomMember` admits.
  */
 export async function roomAudience(room: ChatRoomRef): Promise<RoomAudience> {
   if (!Types.ObjectId.isValid(room.id)) return NONE;
   if (room.kind === 'POD') {
     const pod = await PodModel.findById(room.id)
-      .select('pod_title pod_hosts_id pod_attendees series_role')
+      .select('pod_title pod_hosts_id pod_attendees')
       .lean();
     if (!pod) return NONE;
-    const bookingPods = await chatBookingPodIds(pod);
-    const [dateAttendees, joined] = await Promise.all([
-      pod.series_role === 'PARENT'
-        ? PodModel.distinct('pod_attendees', { series_parent_id: pod._id })
-        : Promise.resolve([] as unknown[]),
-      PodMemberModel.find({ pod_id: { $in: bookingPods }, status: 'JOINED' }).select('user_id').lean(),
-    ]);
+    const joined = await PodMemberModel.find({ pod_id: pod._id, status: 'JOINED' }).select('user_id').lean();
     const ids = [
       ...(pod.pod_hosts_id || []).map(String),
       ...(pod.pod_attendees || []).map(String),
-      ...dateAttendees.map(String),
       ...joined.map((m) => String(m.user_id)),
     ];
     return { ids: [...new Set(ids)], title: pod.pod_title ?? '', link: `/chats/${room.id}` };

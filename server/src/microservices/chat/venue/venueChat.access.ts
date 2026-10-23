@@ -5,7 +5,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 
 /** A venue booking's chat, as one member sees it. */
 export interface VenueChatThread {
-  /** The pod the thread belongs to — a recurring pod's parent, never one of its dates. */
+  /** The pod the thread belongs to. */
   podId: string;
   podTitle: string;
   podDateTime: Date | null;
@@ -24,16 +24,11 @@ const forbidden = () =>
 
 /**
  * The thread for a pod booked at a venue, or null when there is none (no such
- * pod, or a pod that is not at a venue). A recurring pod's date resolves to its
- * parent, so a series keeps ONE thread, like its group chat.
+ * pod, or a pod that is not at a venue).
  */
 export async function venueChatThread(podId: string): Promise<VenueChatThread | null> {
   if (!Types.ObjectId.isValid(podId)) return null;
-  const select = 'pod_title pod_date_time pod_hosts_id venue_id series_role series_parent_id';
-  let pod = await PodModel.findById(podId).select(select).lean();
-  if (pod?.series_role === 'DATE' && pod.series_parent_id) {
-    pod = await PodModel.findById(pod.series_parent_id).select(select).lean();
-  }
+  const pod = await PodModel.findById(podId).select('pod_title pod_date_time pod_hosts_id venue_id').lean();
   if (!pod?.venue_id) return null;
   const venue = await VenueModel.findById(pod.venue_id).select('owner_user_id venue_name cover_image_url').lean();
   if (!venue) return null;

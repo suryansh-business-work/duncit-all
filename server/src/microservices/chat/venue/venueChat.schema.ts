@@ -7,7 +7,7 @@ export const venueChatTypeDefs = /* GraphQL */ `
 
   "The private chat between a pod's hosts and the venue it is booked at."
   type VenueChatRoom {
-    "The pod the thread belongs to (a recurring pod's parent)."
+    "The pod the thread belongs to."
     pod_id: ID!
     pod_title: String!
     pod_date_time: String

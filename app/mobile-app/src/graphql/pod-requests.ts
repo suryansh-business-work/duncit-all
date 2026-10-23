@@ -66,6 +66,16 @@ export const PodPartnerRequestDocument = gql(`
         whole_day
         price
         space_label
+        offer {
+          model
+          rate
+          pax
+          quote {
+            venue_payout
+            platform_fee
+            total
+          }
+        }
       }
       pod_id
       contact {
@@ -107,11 +117,21 @@ export const CancelPodPartnerRequestDocument = gql(`
   }
 `);
 
-export const RequestPodPartnerSlotDocument = gql(`
-  mutation MobileRequestPodPartnerSlot($id: ID!, $slot_id: ID!) {
-    requestPodPartnerSlot(id: $id, slot_id: $slot_id) {
+/** The receiver proposes a window, guests and price terms; the time is held for the sender's answer. */
+export const ProposePodPartnerWindowDocument = gql(`
+  mutation MobileProposePodPartnerWindow($id: ID!, $offer: VenueOfferInput!) {
+    proposePodPartnerWindow(id: $id, offer: $offer) {
       id
       status
+    }
+  }
+`);
+
+/** What a proposed window and terms would cost — or why they cannot be proposed. */
+export const PodPartnerWindowQuoteDocument = gql(`
+  query MobilePodPartnerWindowQuote($id: ID!, $offer: VenueOfferInput!) {
+    podPartnerWindowQuote(id: $id, offer: $offer) {
+      ...MobileOfferQuoteResult
     }
   }
 `);

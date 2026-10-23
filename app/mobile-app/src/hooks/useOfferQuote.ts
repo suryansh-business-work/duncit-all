@@ -1,15 +1,11 @@
-import { useEffect, useState } from 'react';
-import type { ResultOf, VariablesOf } from '@graphql-typed-document-node/core';
-import { logs } from '@duncit/logs';
+import type { VariablesOf } from '@graphql-typed-document-node/core';
 
 import { VenueOfferQuoteDocument } from '@/graphql/venue-offer';
+import { useQuoteRequest } from '@/hooks/useQuoteRequest';
 import { graphqlRequest } from '@/services/graphql.client';
 
-type OfferQuoteResult = ResultOf<typeof VenueOfferQuoteDocument>['venueOfferQuote'];
-export type HostVenueQuote = NonNullable<OfferQuoteResult['quote']>;
+export type { HostVenueQuote } from '@/hooks/useQuoteRequest';
 type OfferInput = VariablesOf<typeof VenueOfferQuoteDocument>['offer'];
-
-const QUOTE_DEBOUNCE_MS = 300;
 
 /**
  * The server's price for the host's offer (`venueOfferQuote`): the offered
@@ -20,45 +16,19 @@ const QUOTE_DEBOUNCE_MS = 300;
  * earnings preview, from the one answer. mWeb twin: useOfferQuote.
  */
 export function useOfferQuote(venueId: string, offer: OfferInput | null) {
-  const key = venueId && offer ? JSON.stringify(offer) : '';
-  const [quote, setQuote] = useState<HostVenueQuote | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setQuote(null);
-    setMessage(null);
-    setError(null);
-    if (!key) {
-      setLoading(false);
-      return undefined;
-    }
-    let active = true;
-    setLoading(true);
-    const sent: OfferInput = JSON.parse(key);
-    const timer = setTimeout(() => {
-      graphqlRequest(VenueOfferQuoteDocument, { venue_id: venueId, offer: sent }, { auth: true })
-        .then((res) => {
-          if (!active) return;
-          const answer = res.venueOfferQuote;
-          setQuote(answer.ok ? (answer.quote ?? null) : null);
-          setMessage(answer.ok ? null : (answer.message ?? null));
-        })
-        .catch((err: unknown) => {
-          if (!active) return;
-          setError(err);
-          logs.mobileApp.warn('useOfferQuote', 'quote', { error: err, venue_id: venueId });
-        })
-        .finally(() => {
-          if (active) setLoading(false);
-        });
-    }, QUOTE_DEBOUNCE_MS);
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [venueId, key]);
-
-  return { quote, message, loading, error };
+  const key = venueId && offer ? JSON.stringify([venueId, offer]) : null;
+  return useQuoteRequest(
+    key,
+    async () => {
+      // Only asked while `key` is set, i.e. while there is an offer.
+      if (!offer) throw new Error('VENUE_OFFER_QUOTE_WITHOUT_OFFER');
+      const res = await graphqlRequest(
+        VenueOfferQuoteDocument,
+        { venue_id: venueId, offer },
+        { auth: true },
+      );
+      return res.venueOfferQuote;
+    },
+    'useOfferQuote',
+  );
 }

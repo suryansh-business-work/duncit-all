@@ -11,7 +11,7 @@ import type { PodRequestDetail } from '@/hooks/usePodRequestDetail';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { PickSlotBlock } from './PickSlotBlock';
+import { ProposeWindowBlock } from './ProposeWindowBlock';
 
 interface Props {
   request: PodRequestDetail;
@@ -28,7 +28,8 @@ function Waiting({ text }: Readonly<{ text: string }>) {
 
 /**
  * What the viewer's side can do now (the shared `podRequestNextAction`):
- * answer it, withdraw it, pick the slot, answer the slot, create the pod — or
+ * answer it, withdraw it, propose a time and a price, answer the proposal,
+ * create the pod — or
  * the line that says whose move it is. mWeb twin: ActionBlock.
  */
 export function ActionBlock({ request, actions }: Readonly<Props>) {
@@ -62,11 +63,7 @@ export function ActionBlock({ request, actions }: Readonly<Props>) {
       );
     case 'PICK_SLOT':
       return request.venue ? (
-        <PickSlotBlock
-          venueId={request.venue.id}
-          busy={actions.busy}
-          onSend={(slotId) => actions.requestSlot(request.id, slotId)}
-        />
+        <ProposeWindowBlock requestId={request.id} venueId={request.venue.id} actions={actions} />
       ) : null;
     case 'WAIT_SLOT':
       return <Waiting text={t('podRequests.waitingSlot')} />;

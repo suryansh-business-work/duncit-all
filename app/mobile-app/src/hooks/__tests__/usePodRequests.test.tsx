@@ -1,12 +1,13 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { PartnerSide } from '@/generated/graphql/graphql';
+import { PartnerSide, VenueOfferModel } from '@/generated/graphql/graphql';
 import {
   CancelPodPartnerRequestDocument,
   MyPodPartnerRequestsDocument,
   PodPartnerRequestDocument,
+  PodPartnerWindowQuoteDocument,
   PodRequestPodLinkDocument,
-  RequestPodPartnerSlotDocument,
+  ProposePodPartnerWindowDocument,
   RespondPodPartnerRequestDocument,
   RespondPodPartnerSlotDocument,
 } from '@/graphql/pod-requests';
@@ -86,7 +87,31 @@ describe('usePodRequests', () => {
   });
 });
 
+const OFFER = {
+  start_at: '2027-03-01T10:00:00.000Z',
+  end_at: '2027-03-01T13:00:00.000Z',
+  space_label: '',
+  model: VenueOfferModel.PerGuest,
+  rate: 300,
+  pax: 20,
+};
+
 describe('usePodRequestActions', () => {
+  it("prices a proposal with the request's own quote, and leaves the list alone", async () => {
+    const reload = jest.fn();
+    const answer = { ok: false, message: 'The venue is closed then', quote: null };
+    mockRequest.mockResolvedValue({ podPartnerWindowQuote: answer });
+    const { result } = renderHook(() => usePodRequestActions(reload));
+
+    await expect(result.current.priceWindow('r3', OFFER)).resolves.toEqual(answer);
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      PodPartnerWindowQuoteDocument,
+      { id: 'r3', offer: OFFER },
+      { auth: true },
+    );
+    expect(reload).not.toHaveBeenCalled();
+  });
+
   it('sends each move with its own mutation, then reloads', async () => {
     const reload = jest.fn().mockResolvedValue(undefined);
     mockRequest.mockResolvedValue({});
@@ -113,11 +138,11 @@ describe('usePodRequestActions', () => {
     );
 
     await act(async () => {
-      await result.current.requestSlot('r3', 's9');
+      await result.current.proposeWindow('r3', OFFER);
     });
     expect(mockRequest).toHaveBeenLastCalledWith(
-      RequestPodPartnerSlotDocument,
-      { id: 'r3', slot_id: 's9' },
+      ProposePodPartnerWindowDocument,
+      { id: 'r3', offer: OFFER },
       { auth: true },
     );
 

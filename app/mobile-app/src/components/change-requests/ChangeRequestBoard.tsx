@@ -1,64 +1,15 @@
 import { useState } from 'react';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Spinner, YStack } from 'tamagui';
 import type { PodChangeRole, PodChangeRow } from '@duncit/utils';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
-import { ChangeRequestCard } from '@/components/change-requests/ChangeRequestCard';
+import { BoardList } from '@/components/change-requests/BoardList';
+import { VenueTakeoverSheet } from '@/components/change-requests/VenueTakeoverSheet';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePodChangeRequests } from '@/hooks/usePodChangeRequests';
-
-/** A titled list with its own empty line. Hoisted (never a nested component). */
-function BoardList({
-  title,
-  emptyText,
-  rows,
-  testID,
-  busy,
-  when,
-  filedOn,
-  onApprove,
-  onPass,
-  onWithdraw,
-}: Readonly<{
-  title: string;
-  emptyText: string;
-  rows: readonly PodChangeRow[];
-  testID: string;
-  busy: boolean;
-  when: (iso: string) => string;
-  filedOn: (iso: string) => string;
-  onApprove?: (row: PodChangeRow) => void;
-  onPass?: (row: PodChangeRow) => void;
-  onWithdraw?: (row: PodChangeRow) => void;
-}>) {
-  return (
-    <YStack testID={testID} gap={12}>
-      <Text testID={`${testID}-title`} role="heading" fontSize={16} fontWeight="600" color="$color">
-        {title}
-      </Text>
-      {rows.length === 0 ? (
-        <NoticeCard tone="info" title={emptyText} />
-      ) : (
-        rows.map((row) => (
-          <ChangeRequestCard
-            key={row.id}
-            row={row}
-            testID={`${testID}-${row.id}`}
-            when={when(row.pod.pod_date_time)}
-            filedOn={filedOn(row.created_at)}
-            busy={busy}
-            onApprove={onApprove ? () => onApprove(row) : undefined}
-            onPass={onPass ? () => onPass(row) : undefined}
-            onWithdraw={onWithdraw ? () => onWithdraw(row) : undefined}
-          />
-        ))
-      )}
-    </YStack>
-  );
-}
 
 interface Props {
   /** Narrow to one studio's role. Omitted, every role is listed — which is what
@@ -82,6 +33,9 @@ export function ChangeRequestBoard({ role, testID = 'change-requests' }: Readonl
   const state = usePodChangeRequests();
   const [passing, setPassing] = useState<PodChangeRow | null>(null);
   const [withdrawing, setWithdrawing] = useState<PodChangeRow | null>(null);
+  // A venue takes a pod over with a time and a price, not a bare "approve".
+  const [takingOver, setTakingOver] = useState<PodChangeRow | null>(null);
+  const takeoverVenueId = takingOver?.offer?.venue_id ?? '';
 
   const byRole = (rows: readonly PodChangeRow[]) =>
     role ? rows.filter((row) => row.role === role) : [...rows];
@@ -116,6 +70,10 @@ export function ChangeRequestBoard({ role, testID = 'change-requests' }: Readonl
         when={formatDateTime}
         filedOn={formatDateTime}
         onApprove={(row) => {
+          if (row.role === 'VENUE' && row.offer?.venue_id) {
+            setTakingOver(row);
+            return;
+          }
           state.respond(row.id, 'APPROVE', '', t('changeRequest.approved')).catch(() => undefined);
         }}
         onPass={setPassing}
@@ -166,6 +124,23 @@ export function ChangeRequestBoard({ role, testID = 'change-requests' }: Readonl
           }
         }}
       />
+
+      {takingOver && takeoverVenueId ? (
+        <VenueTakeoverSheet
+          row={takingOver}
+          venueId={takeoverVenueId}
+          busy={state.busy}
+          priceOf={state.priceTakeover}
+          onClose={() => setTakingOver(null)}
+          onApprove={(window) => {
+            const row = takingOver;
+            state
+              .respond(row.id, 'APPROVE', '', t('changeRequest.approved'), window)
+              .then((ok) => ok && setTakingOver(null))
+              .catch(() => undefined);
+          }}
+        />
+      ) : null}
 
       {state.isLoading ? (
         <Spinner

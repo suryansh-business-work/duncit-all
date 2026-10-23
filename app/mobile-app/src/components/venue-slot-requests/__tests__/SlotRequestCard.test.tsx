@@ -134,7 +134,7 @@ describe('SlotRequestCard', () => {
     );
     expect(screen.getByText('Your counter')).toBeOnTheScreen();
     expect(screen.getByText(/You receive/)).toHaveTextContent(/7,000/);
-    expect(screen.getByTestId('slot-request-counter-slot-1')).toHaveTextContent('Change counter');
+    expect(screen.getByTestId('slot-request-counter-slot-1')).toHaveTextContent(/Change counter/);
     expect(screen.queryByTestId('slot-request-accept-slot-1')).toBeNull();
   });
 

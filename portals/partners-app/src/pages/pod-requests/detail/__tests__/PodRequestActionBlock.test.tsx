@@ -15,7 +15,7 @@ const actionsStub = (busy: boolean): PodRequestActions => ({
   busy,
   respond: vi.fn(async () => true),
   withdraw: vi.fn(async () => true),
-  sendSlot: vi.fn(async () => true),
+  proposeWindow: vi.fn(async () => true),
   respondSlot: vi.fn(async () => true),
 });
 
@@ -43,15 +43,15 @@ describe('PodRequestActionBlock', () => {
     cleanup();
 
     mount({ status: 'SLOT_REQUESTED', viewer_side: 'VENUE' }, actionsStub(true));
-    expect((screen.getByRole('button', { name: 'Confirm slot' }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole('button', { name: 'Decline slot' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Confirm proposal' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Decline proposal' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('offers no slot picker when the request carries no venue', () => {
     mount({ direction: 'HOST_TO_VENUE', viewer_side: 'VENUE', status: 'ACCEPTED', venue: null }, actionsStub(false));
 
-    expect(screen.queryByRole('heading', { name: 'Pick a slot' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Send Slot Request' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Propose a time and price' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Send proposal' })).toBeNull();
   });
 
   it('hands the answer to the shared actions with this request id', () => {

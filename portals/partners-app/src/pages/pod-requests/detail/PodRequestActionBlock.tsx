@@ -9,7 +9,7 @@ import { urlConfigs } from '../../../config/url-configs';
 import type { PodRequestDetail } from '../queries';
 import { studioPodsPath } from '../side';
 import type { PodRequestActions } from '../usePodRequestActions';
-import SlotPickBlock from './SlotPickBlock';
+import { ProposeWindowBlock } from '@duncit/availability-calendar';
 
 interface Props {
   request: PodRequestDetail;
@@ -76,10 +76,10 @@ export default function PodRequestActionBlock({ request, actions }: Readonly<Pro
       );
     case 'PICK_SLOT':
       return request.venue ? (
-        <SlotPickBlock
-          venueId={request.venue.id}
+        <ProposeWindowBlock
+          requestId={id}
           busy={actions.busy}
-          onSend={(slotId) => run(actions.sendSlot(id, slotId))}
+          onPropose={(offer) => actions.proposeWindow(id, offer)}
         />
       ) : null;
     case 'WAIT_SLOT':

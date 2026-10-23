@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { POD_REQUEST_OFFER_FIELDS, type PodRequestProposedOffer } from '@duncit/availability-calendar';
 import type {
   NearbyHost,
   NearbyVenue,
@@ -9,7 +10,6 @@ import type {
   PartnerSide,
   PartnerVenueSummary,
   PodPartnerRequest,
-  VenueSlot,
 } from '@duncit/gql-types';
 import type { VenueCategoryLabels } from '@duncit/utils';
 
@@ -78,26 +78,13 @@ export const POD_REQUEST_DETAIL = gql`
         end_at
         whole_day
         space_label
+        ${POD_REQUEST_OFFER_FIELDS}
       }
       contact {
         phone
         email
         address
       }
-    }
-  }
-`;
-
-/** The venue's open slots, for the side that picks one. */
-export const POD_REQUEST_VENUE_SLOTS = gql`
-  query PartnersPodRequestVenueSlots($venue_id: ID!) {
-    venueAvailableSlots(venue_id: $venue_id) {
-      id
-      start_at
-      end_at
-      whole_day
-      price
-      space_label
     }
   }
 `;
@@ -200,15 +187,6 @@ export const CANCEL_POD_REQUEST = gql`
   }
 `;
 
-export const REQUEST_POD_REQUEST_SLOT = gql`
-  mutation PartnersRequestPodRequestSlot($id: ID!, $slot_id: ID!) {
-    requestPodPartnerSlot(id: $id, slot_id: $slot_id) {
-      id
-      status
-    }
-  }
-`;
-
 export const RESPOND_POD_REQUEST_SLOT = gql`
   mutation PartnersRespondPodRequestSlot($id: ID!, $confirm: Boolean!) {
     respondPodPartnerSlot(id: $id, confirm: $confirm) {
@@ -229,11 +207,12 @@ export type PodRequestDetail = RequestCore &
   Pick<PodPartnerRequest, 'note' | 'distance_km' | 'pod_id'> & {
     venue?: (Omit<PartnerVenueSummary, '__typename'> & VenueCategoryLabels) | null;
     host?: Omit<PartnerHostSummary, '__typename'> | null;
-    slot?: Pick<PartnerRequestSlot, 'id' | 'start_at' | 'end_at' | 'whole_day' | 'space_label'> | null;
+    slot?: (Pick<PartnerRequestSlot, 'id' | 'start_at' | 'end_at' | 'whole_day' | 'space_label'> & {
+      offer?: PodRequestProposedOffer | null;
+    }) | null;
     contact?: Omit<PartnerContact, '__typename'> | null;
   };
 
-export type PodRequestSlot = Pick<VenueSlot, 'id' | 'start_at' | 'end_at' | 'whole_day' | 'price' | 'space_label'>;
 export type PodRequestQuota = Pick<PartnerRequestQuota, 'limit' | 'remaining'>;
 export type NearbyHostResult = Omit<NearbyHost, '__typename'>;
 export type NearbyVenueResult = Omit<NearbyVenue, '__typename' | 'capacity' | 'venue_type'> & VenueCategoryLabels;

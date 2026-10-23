@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
@@ -32,7 +31,6 @@ import useAutoPodsQueue from '../../components/auto-pods/useAutoPodsQueue';
  * longer take it. First venue to accept wins.
  */
 export default function VenueAutoPodsPage() {
-  const navigate = useNavigate();
   const [selected, setSelected] = useState<AutoPodRow | null>(null);
   const [venue, setVenue] = useState<AutoPodVenueOption | null>(null);
   const [location, setLocation] = useState<AdminLocationValue>(EMPTY_LOCATION);
@@ -94,11 +92,6 @@ export default function VenueAutoPodsPage() {
         open={!!selected}
         onClose={() => setSelected(null)}
         onAccepted={queue.refetch}
-        formatWhen={queue.formatWhen}
-        formatMoney={queue.formatMoney}
-        // Venues > this venue > Availability: the calendar the venue has to
-        // publish a slot on before it can accept anything.
-        onAddAvailability={() => navigate(venue ? `/venues/${venue.id}/availability` : '/register-venue')}
       />
     </Stack>
   );

@@ -1,5 +1,6 @@
 import { Card, Stack, Typography } from '@mui/material';
 import EventRoundedIcon from '@mui/icons-material/EventRounded';
+import { ProposedTerms } from '@duncit/availability-calendar';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { PodRequestSlot } from '../pod-requests/queries';
@@ -8,7 +9,7 @@ interface Props {
   slot: PodRequestSlot;
 }
 
-/** The slot on the request — picked by the receiver, confirmed by the sender. */
+/** The booking on the request — proposed by the receiver, confirmed by the sender. */
 export default function SlotSummary({ slot }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
@@ -18,6 +19,7 @@ export default function SlotSummary({ slot }: Readonly<Props>) {
 
   return (
     <Card sx={{ p: 2 }} data-testid="pod-request-slot">
+      <Stack spacing={1.5}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <EventRoundedIcon color="primary" />
         <Stack sx={{ minWidth: 0 }}>
@@ -31,6 +33,8 @@ export default function SlotSummary({ slot }: Readonly<Props>) {
             {slot.space_label || t('mweb.slots.wholeVenue')}
           </Typography>
         </Stack>
+      </Stack>
+      {slot.offer && <ProposedTerms offer={slot.offer} />}
       </Stack>
     </Card>
   );

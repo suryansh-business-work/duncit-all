@@ -1,4 +1,5 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
+import { POD_REQUEST_OFFER_FIELDS, type PodRequestProposedOffer } from '@duncit/availability-calendar';
 import type { PodRequestDirection, PodRequestSide, PodRequestStatus } from '@duncit/utils';
 
 /** The venue half of a request, as a host sees it before any pod: the place, never the owner's contact. */
@@ -30,6 +31,8 @@ export interface PodRequestSlot {
   whole_day: boolean;
   price: number;
   space_label: string;
+  /** The proposed terms and price (null for a slot picked before proposals). */
+  offer: PodRequestProposedOffer | null;
 }
 
 /** One request as the studio lists render it. */
@@ -119,6 +122,7 @@ export const POD_PARTNER_REQUEST: TypedDocumentNode<{ podPartnerRequest: PodRequ
         whole_day
         price
         space_label
+        ${POD_REQUEST_OFFER_FIELDS}
       }
       pod_id
       contact {
@@ -146,15 +150,6 @@ export const RESPOND_POD_PARTNER_REQUEST: TypedDocumentNode<
 export const CANCEL_POD_PARTNER_REQUEST: TypedDocumentNode<Moved<'cancelPodPartnerRequest'>, { id: string }> = gql`
   mutation CancelPodPartnerRequest($id: ID!) {
     cancelPodPartnerRequest(id: $id) {
-      id
-      status
-    }
-  }
-`;
-
-export const REQUEST_POD_PARTNER_SLOT: TypedDocumentNode<Moved<'requestPodPartnerSlot'>, { id: string; slot_id: string }> = gql`
-  mutation RequestPodPartnerSlot($id: ID!, $slot_id: ID!) {
-    requestPodPartnerSlot(id: $id, slot_id: $slot_id) {
       id
       status
     }

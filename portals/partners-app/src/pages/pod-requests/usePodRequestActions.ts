@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
+import { PROPOSE_POD_PARTNER_WINDOW, type WindowOfferInput } from '@duncit/availability-calendar';
 import { parseApiError } from '@duncit/utils';
 import {
   CANCEL_POD_REQUEST,
   MY_POD_REQUESTS,
   POD_REQUEST_DETAIL,
-  REQUEST_POD_REQUEST_SLOT,
   RESPOND_POD_REQUEST,
   RESPOND_POD_REQUEST_SLOT,
 } from './queries';
@@ -16,8 +16,8 @@ export interface PodRequestNotice {
 }
 
 /**
- * The four answers a party gives a request — accept/decline, withdraw, send a
- * slot, confirm/decline the slot. Each refetches the lists and the open
+ * The four answers a party gives a request — accept/decline, withdraw, propose
+ * a time and price, confirm/decline the proposal. Each refetches the lists and the open
  * request, and a refusal from the server lands in `notice` rather than vanishing.
  */
 export function usePodRequestActions() {
@@ -25,7 +25,7 @@ export function usePodRequestActions() {
   const reload = { refetchQueries: [MY_POD_REQUESTS, POD_REQUEST_DETAIL], awaitRefetchQueries: true };
   const [respond, respondState] = useMutation(RESPOND_POD_REQUEST, reload);
   const [cancel, cancelState] = useMutation(CANCEL_POD_REQUEST, reload);
-  const [requestSlot, slotState] = useMutation(REQUEST_POD_REQUEST_SLOT, reload);
+  const [propose, proposeState] = useMutation(PROPOSE_POD_PARTNER_WINDOW, reload);
   const [respondSlot, respondSlotState] = useMutation(RESPOND_POD_REQUEST_SLOT, reload);
 
   const attempt = useCallback(async (work: () => Promise<unknown>): Promise<boolean> => {
@@ -42,10 +42,10 @@ export function usePodRequestActions() {
   return {
     notice,
     clearNotice: () => setNotice(null),
-    busy: respondState.loading || cancelState.loading || slotState.loading || respondSlotState.loading,
+    busy: respondState.loading || cancelState.loading || proposeState.loading || respondSlotState.loading,
     respond: (id: string, accept: boolean) => attempt(() => respond({ variables: { id, accept } })),
     withdraw: (id: string) => attempt(() => cancel({ variables: { id } })),
-    sendSlot: (id: string, slotId: string) => attempt(() => requestSlot({ variables: { id, slot_id: slotId } })),
+    proposeWindow: (id: string, offer: WindowOfferInput) => attempt(() => propose({ variables: { id, offer } })),
     respondSlot: (id: string, confirm: boolean) => attempt(() => respondSlot({ variables: { id, confirm } })),
   };
 }

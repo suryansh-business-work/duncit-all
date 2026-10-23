@@ -11,6 +11,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { slotSpanLabel } from '@duncit/slots';
 import { BackHeader } from '@duncit/ui';
+import { ProposedTerms } from '@duncit/availability-calendar';
 import { parseApiError } from '@duncit/utils';
 import { POD_REQUEST_DETAIL, type PodRequestDetail, type PodRequestSide } from '../queries';
 import { podRequestsPath } from '../side';
@@ -86,6 +87,7 @@ export default function PodRequestDetailPage({ side }: Readonly<{ side: PodReque
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {slot.space_label || t('shell.slots.wholeVenue')}
               </Typography>
+              {slot.offer && <ProposedTerms offer={slot.offer} />}
             </Stack>
           )}
           <PodRequestActionBlock request={request} actions={actions} />

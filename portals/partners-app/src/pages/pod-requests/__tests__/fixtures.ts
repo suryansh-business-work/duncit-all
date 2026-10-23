@@ -57,6 +57,7 @@ export const requestSlot = (over: Record<string, unknown> = {}) => ({
   end_at: '2026-10-10T14:30:00.000Z',
   whole_day: false,
   space_label: 'Court 2',
+  offer: null,
   ...over,
 });
 
@@ -75,17 +76,6 @@ export const requestDetail = (over: Record<string, unknown> = {}) => ({
   host: hostSummary(),
   slot: null,
   contact: null,
-  ...over,
-});
-
-export const venueSlot = (over: Record<string, unknown> = {}) => ({
-  __typename: 'VenueSlot',
-  id: 'open-1',
-  start_at: '2026-10-12T12:30:00.000Z',
-  end_at: '2026-10-12T14:30:00.000Z',
-  whole_day: false,
-  price: 800,
-  space_label: '',
   ...over,
 });
 
